@@ -525,3 +525,9 @@ Logo zielone DK widoczne w light i dark. Zakaz Niemiesa zapisany.
 ### Zrodla
 - Brand: `D:\Marketing\- POLSKA\- BRANDING i MARKA -\DOBRA KALORIA\01 - LOGO\SVG`
 - Geex: `html[data-theme=dark]` + klasy `.logo-lite` / `.logo-dark`
+
+### Git / GitHub
+- Repo prywatne: https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn
+- Branch: `main` (commit `c337bea`)
+- Auth: `gh` (konto inyfinn / keyring) - token z czatu NIE zapisany w repo
+- `.gitignore`: tooling/bin, thumbs, postgres, sekrety
