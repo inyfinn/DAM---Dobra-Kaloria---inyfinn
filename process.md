@@ -345,7 +345,7 @@ Poprzedni dam-explorer.js nadpisany (v2 nie backupowany - byl juz wersjonowany w
 1. Screenshoty 1024 + 375: `ui-complete/screenshots/loop-*-v3*` / `loop-2-375-batony.png`
 2. Fix: elementy tylko przy ELEMENTY/ELEMENTS (nie sam MATERIALY); BRAK czerwone w CSS
 3. Cache bust `?v=20260717ux5`
-4. `QA-AUDIT.md` â†’ QA_FAIL_COUNT: 0
+4. `QA-AUDIT.md` ? QA_FAIL_COUNT: 0
 5. Weryfikacja DOM: nosniki ludzkie, MIXY, wizki ENFACE/FRONT/BACK, drukarnia KUBARA
 
 
@@ -421,7 +421,7 @@ Para ikon Kopiuj / Pokaz w eksploratorze wszedzie; mapowanie bazy dysku per user
 6. `activity.html` - lista audit (bridge lub localStorage)
 7. `launch.py` - startuje bridge + static UI
 8. CSS: `.dam-path-actions`, `.dam-file-reveal`, `.dam-basepath-*`, `.dam-audit-*` w dam-brand.css
-9. memory.md Â§32-33
+9. memory.md ?32-33
 
 ### Efekt/Fix
 - Indeks D:/Marketing/... mapowany na baze usera (np. M:\ -> M:\- POLSKA\...)
@@ -439,7 +439,7 @@ Brak (nowe pliki + dopiski)
 - Bridge: `python apps/desktop/local_bridge.py` (port 8766)
 
 ### Zrodla
-- wymaganie usera 2026-07-17 (screenshot warianty + mapowanie Dâ†”M)
+- wymaganie usera 2026-07-17 (screenshot warianty + mapowanie D?M)
 - Windows: `explorer /select,"path"` (MS docs Explorer command-line)
 
 ---
@@ -456,7 +456,7 @@ Naprawa rozwijania panelu wiadomosci (dzialalo tylko na czesci stron) + zasada: 
 4. `main.js`: wczesny return gdy `data-dam-popups=1`.
 5. Style tabow/resize/msg w `dam-brand.css` na tokenach (`--primary-color` itd.), bez inline one-off.
 6. Cache `?v=20260717chrome1` ujednolicony na wszystkich HTML.
-7. memory.md Â§34 + design-system/MASTER.md sekcja Chrome.
+7. memory.md ?34 + design-system/MASTER.md sekcja Chrome.
 
 ### Efekt/Fix
 Wiadomosci / powiadomienia / profil dzialaja tak samo na costs, dashboard, settings itd.
@@ -471,7 +471,7 @@ Wiadomosci / powiadomienia / profil dzialaja tak samo na costs, dashboard, setti
 ## 2026-07-17 - Hub produktu: DK/GC + nosniki + wizki + lightbox
 
 ### Komenda/Akcja
-Filtr DK/GC przy tytule (slot 1); widok wizualizacji kafelki/lista/skala (slot 2); naprawa blednego BATON; miniatury + lightbox; „Nie widzisz wariantu? Dodaj go”.
+Filtr DK/GC przy tytule (slot 1); widok wizualizacji kafelki/lista/skala (slot 2); naprawa blednego BATON; miniatury + lightbox; ?Nie widzisz wariantu? Dodaj go?.
 
 ### Log/Status
 1. `dam-labels.js`: folder tylko `data - indeks` -> UNKNOWN (nie BAT); infer z prefiksu pliku/folderu KAR6X; detectMarketFromPath PL/GC.
@@ -479,11 +479,11 @@ Filtr DK/GC przy tytule (slot 1); widok wizualizacji kafelki/lista/skala (slot 2
 3. `dam-explorer.js`: resolveCarrierCode + override; toolbar slot1 DK/GC chips; slot2 Kafelki/Lista/Skala; thumbs via `/media`; lightbox prev/next/X; modal dodawania wariantu -> POST `/carrier-override`.
 4. `dam-brand-filter.js`: `renderChips` dla strefy produktu.
 5. `local_bridge.py`: GET `/media`, POST `/carrier-override`.
-6. memory.md §35; cache `?v=20260717hub1`.
+6. memory.md ?35; cache `?v=20260717hub1`.
 
 ### Efekt/Fix
 - BABKA CYTRYNOWA: KARTON 6x MINI BATONIKI + MINI BATONIK (bez fake BATON).
-- 6300622 pod „Pokaz starsze” jako KAR6X.
+- 6300622 pod ?Pokaz starsze? jako KAR6X.
 - Prawdziwe miniatury; lightbox z nawigacja i X.
 - DK/GC i ustawienia widoku przy tytule produktu.
 
@@ -492,11 +492,11 @@ Filtr DK/GC przy tytule (slot 1); widok wizualizacji kafelki/lista/skala (slot 2
 - brak naglowka BATON PASS
 - KAR6X expanded: 28 thumbs, naturalWidth > 0, media bridge PASS
 - lightbox is-open + prev/next/close PASS
-- „Nie widzisz wariantu? Dodaj go” widoczne PASS
+- ?Nie widzisz wariantu? Dodaj go? widoczne PASS
 
 ### Zrodla
 - wymaganie usera 2026-07-17 (screenshoty 1/2 + folder 13.02.2025 - 6300622.00)
-- memory.md §35
+- memory.md ?35
 
 ---
 
@@ -511,7 +511,7 @@ Przywrocenie logo Dobra Kaloria w sidebarze; kontrast light/dark; dokumentacja; 
 3. Podmieniono `logo-lite` / `logo-dark` / `logo-dobra-kaloria` na zielony `#008244`.
 4. `dam-shell.js`: `LOGO_SRC_LIGHT` / `LOGO_SRC_DARK` + `applyDobraKaloriaLogo` per slot.
 5. `dam-brand.css`: widocznosc logo + min-height sidebara; cache `?v=20260717logo1`.
-6. Docs: `design-system/components/logo.md`, memory.md §36, README wyczerpujacy bez sekretow.
+6. Docs: `design-system/components/logo.md`, memory.md ?36, README wyczerpujacy bez sekretow.
 7. `.gitignore`: tooling/bin, thumbs, postgres, .cursor, sekrety.
 
 ### Efekt/Fix
@@ -531,3 +531,85 @@ Logo zielone DK widoczne w light i dark. Zakaz Niemiesa zapisany.
 - Branch: `main` (commit `c337bea`)
 - Auth: `gh` (konto inyfinn / keyring) - token z czatu NIE zapisany w repo
 - `.gitignore`: tooling/bin, thumbs, postgres, sekrety
+
+---
+
+## 2026-07-17 - Viz modal: Przejdz vs Eksplorator Windows
+
+### Komenda/Akcja
+Naprawa mylacych przyciskow w modalu Wizualizacje (SALTY NUT itd.).
+
+### Log/Status
+1. "Eksplorator produktu" robil `explorer.html?product=` (jak Indeks) - ZLE nazwa.
+2. Przemianowano na **Przejdz do produktu** (hub DAM).
+3. **Eksplorator produktu** = `DamPaths.openFolderInExplorer` - folder w Windows Explorer.
+4. Ikony: arrow-right, folder-open, copy, share-alt (`.dam-btn-icon`).
+5. Karty galerii: te same etykiety + przycisk folderu.
+
+### Efekt/Fix
+Dwa rozne CTA: hub HTML vs Windows folder. Ikony obowiazkowe.
+
+### Test/Ewaluacja
+- Hard refresh `visualizations.html?v=20260717vizbtns1`
+- Bridge :8766 wymagany do otwarcia folderu
+
+### Zrodla
+- memory.md ?38, ui-ux-pro-max (ikony + touch 44px)
+
+---
+
+## 2026-07-17 - Viz Studio (Z tlem / Bez tla + lightbox)
+
+### Komenda/Akcja
+Redesign wizualizacji w hubie produktu: sortowanie tlem, hero per perspektywa, studio z sidebar/meta/zoom.
+
+### Log/Status
+1. Brief/PLAN: `ui-complete/00-brief.md`, `PLAN.md`
+2. Labels: `vizBackground`, `vizSizeHint`, `vizFormatHint`, `vizLangFromFile`
+3. Explorer: `buildVizStudioModel`, `renderVizGroups`, `openLightbox` (studio)
+4. CSS: `.dam-viz-studio`, `.dam-lightbox--studio` w `dam-brand.css`
+5. Bridge: `GET /media-meta` (PIL) - wymaga restartu procesu :8766
+6. Fix: syntax error w catch stringu (blokowal IIFE) + em-dash w meta -> `x`/`-`
+7. Ralph: screenshoty + `QA-AUDIT.md` FAIL=0
+
+### Efekt/Fix
+Sciana L/S zniknela z karty; klik hero otwiera studio z wariantami i meta.
+
+### Test/Ewaluacja
+- Babka KAR6X: taby 16/12, hero ENFACE/FRONT/BACK
+- Studio meta: 3508 x 2480, 2.3 MB, RGB, DPI 72, JPEG
+- `loop-final-{375,768,1024}.png`
+
+### Zrodla
+- `memory.md` ?37, `design-system/components/viz-studio.md`
+- ui-complete / ui-ux-pro-max (Geex tokens)
+
+---
+
+## 2026-07-17 - Synology: wywolanie okna Uzyskaj lacze (bez modalu instrukcji)
+
+### Komenda/Akcja
+Usunac reczny modal udostepniania; DAM ma otwierac okno Synology Drive Client. Commit + push.
+
+### Log/Status
+1. Odrzucony UX: modal z 5 krokami PPM (user: "to miales wywolac okno synology").
+2. Probe: Shell.Application.Verbs nie listuje Synology; AF_UNIX ui.sock z tej Pythona niedostepny.
+3. Dziala: IContextMenu (IShellFolder.GetUIObjectOf) -> submenu Synology Drive -> "Uzyskaj lacze" (hr=0).
+4. Produkcja: `apps/desktop/synology_get_link.ps1` + bridge `POST /synology-share`.
+5. Front: `DamPaths.shareViaSynology` w `dam-paths.js`; `dam-viz.js` bez `openSynologyModal`.
+6. Docs: `memory.md` §27, `help.html` FAQ.
+
+### Efekt/Fix
+Klik "Udostepnij" otwiera natywne okno Synology (Get link). Modal instrukcji usuniety.
+
+### Backup
+Brak (tylko kod UI/bridge).
+
+### Test/Ewaluacja
+- `synology_get_link.ps1` na pliku PNG z D:\Marketing\- EKSPORT\... -> `ok:true`, verb Uzyskaj lacze
+- Bridge restart wymagany po zmianie `local_bridge.py`
+
+### Zrodla
+- Win32 IContextMenu / IShellFolder (MSDN shell)
+- Synology Drive Client context menu (lokalnie na stacji)
+

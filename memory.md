@@ -85,7 +85,8 @@ Data: **2026-07-16**. Wykonawca: Composer 2.5. Workspace: **tylko `P:\DAM`**.
     - Klik miniatury -> modal podgladu (tytul, warianty jezykowe, akcje).
     - Carrier label ludzki: `DamLabels.carrierLabel` / `parseCarrierCode`.
 
-27. **Synology Share fallback:** z przegladarki NIE mozna kliknac menu Synology Drive Client. Modal "Udostepnianie Synology" kopiuje sciezke lokalna do schowka + instrukcja PPM w Eksploratorze. Pole na wklejenie linku QuickConnect. Ustawienie `localStorage.dam_synology_enabled` (domyslnie true). Gdy false -> przycisk "Udostepnij" disabled + tooltip.
+27. **Synology Share (2026-07-17, poprawka):** przycisk "Udostepnij" **wywoluje okno Synology Drive Client** (menu: Synology Drive > Uzyskaj lacze / Get link) przez bridge `POST /synology-share` + skrypt `apps/desktop/synology_get_link.ps1` (IContextMenu). **Bez** modalu z instrukcja PPM. Wymaga: Synology Drive Client + `local_bridge.py` :8766. Ustawienie `localStorage.dam_synology_enabled` (domyslnie true). Gdy false -> przycisk disabled. Gdy bridge offline -> toast z komunikatem (nie fallback instrukcji).
+   - Poprzednia wersja (bledna UX): modal z 5 krokami recznymi - odrzucona przez usera 2026-07-17.
 
 28. **Tooltips:** `dam-tooltips.js` - globalny helper, atrybuty `data-dam-tip` na kluczowych przyciskach. Szanuje `localStorage.dam_tooltips=off`. Ustawienie w `settings.html`.
 
@@ -139,6 +140,20 @@ Data: **2026-07-16**. Wykonawca: Composer 2.5. Workspace: **tylko `P:\DAM`**.
     - Dark mode: ten sam zielony (czytelny); zapas `logo-dk-white.svg` tylko gdy potrzeba.
     - Runtime: `dam-shell.js` `applyDobraKaloriaLogo()`; CSS w `dam-brand.css`; docs: `design-system/components/logo.md`.
     - Nie commituj tokenow GitHub / sciezek lokalnych z haslami / `.env`.
+
+37. **Viz Studio (2026-07-17):**
+    - Karty: taby **Z tlem / Bez tla** (`DamLabels.vizBackground`: PNG/webp=bez tla; JPG/TIF=z tlem; override z nazwy).
+    - Hero: jeden plik na perspektywe (`pickHeroFile` - preferuj L + JPG/PNG); klik -> studio lightbox.
+    - Studio: sidebar (Tlo, Widok, Jezyk, Warianty L/S + hinty, Metadane), stage wiekszy (~30%), zoom `search-plus`/`search-minus`, prev/next perspektywy.
+    - Meta: bridge `GET /media-meta?path=` (PIL: width/height, colorspace RGB/CMYK, dpi, size).
+    - Skala hero: `localStorage` + slider "Skala podgladu" (domyslnie 140px).
+    - Pliki: `dam-explorer.js`, `dam-labels.js`, `dam-brand.css`, `local_bridge.py`. QA: `ui-complete/QA-AUDIT.md`.
+
+38. **Wizualizacje - przyciski modalu (KRYTYCZNE, 2026-07-17):**
+    - **Przejdz do produktu** = hub DAM (`explorer.html?product=...`) - dawniej mylnie "Eksplorator produktu" / Indeks.
+    - **Eksplorator produktu** = `DamPaths.openFolderInExplorer(path)` - otwiera **folder** w Windows Explorer (rodzic pliku), NIE zaznacza pliku, NIE nawiguje do HTML.
+    - Kazdy CTA w modalu/karcie: ikona + tekst (`uil-arrow-right`, `uil-folder-open`, `uil-copy`, `uil-share-alt`), klasa `.dam-btn-icon`, min-height 44px.
+    - Pliki: `dam-viz.js`, `dam-paths.js`, `dam-brand.css`.
 
 23. **Wizualizacje:** thumbs w `apps/web/data/thumbs` (FRONT priorytet); jezyki z nazwy folderu rewizji (SK HU HR); DK+GC w indeksie; sync G:`GC WIZUALIZACJE` -> D: `4 - VISUALS` bez nadpisywania (`sync-gc-viz-from-g.py`).
 

@@ -246,6 +246,99 @@
     });
   }
 
+  /**
+   * Otworz folder produktu w Eksploratorze Windows (NIGDY nie otwiera pliku).
+   * Gdy podano plik - bierze katalog rodzica. Gdy folder - otwiera ten folder.
+   */
+  function openFolderInExplorer(indexPath) {
+    if (!hasBasePath()) {
+      openSetupModal();
+      showToast("Najpierw ustaw sciezke bazowa");
+      return Promise.resolve({ ok: false, error: "no_base_path" });
+    }
+    var local = toLocal(indexPath);
+    var folder = looksLikeFile(local) ? parentOf(local) : local;
+    logAction("open_folder_explorer", {
+      path: indexPath,
+      local_path: folder,
+      detail: "Eksplorator produktu - otworz folder"
+    });
+
+    return checkBridge().then(function (ok) {
+      if (!ok) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(folder);
+        }
+        showToast("Bridge offline - skopiowano sciezke folderu. Wlacz local_bridge.py (port 8766).");
+        return { ok: false, error: "bridge_offline", path: folder };
+      }
+      return fetch(BRIDGE + "/reveal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: folder })
+      }).then(function (r) { return r.json(); }).then(function (res) {
+        if (res && res.ok) {
+          showToast("Otwarto folder w Eksploratorze Windows");
+        } else {
+          showToast("Nie znaleziono folderu: " + folder + (res && res.error ? " (" + res.error + ")" : ""));
+        }
+        return res;
+      });
+    });
+  }
+
+  /**
+   * Udostepnij przez Synology Drive: wywoluje okno klienta
+   * (menu kontekstowe Synology Drive > Uzyskaj lacze / Get link).
+   */
+  function shareViaSynology(indexPath) {
+    if (!hasBasePath()) {
+      openSetupModal();
+      showToast("Najpierw ustaw sciezke bazowa");
+      return Promise.resolve({ ok: false, error: "no_base_path" });
+    }
+    var local = toLocal(indexPath);
+    if (!looksLikeFile(local)) {
+      showToast("Wybierz plik do udostepnienia");
+      return Promise.resolve({ ok: false, error: "not_a_file" });
+    }
+    logAction("share_synology", {
+      path: indexPath,
+      local_path: local,
+      detail: "Synology Drive - Uzyskaj lacze"
+    });
+
+    return checkBridge().then(function (ok) {
+      if (!ok) {
+        showToast("Bridge offline - wlacz local_bridge.py (port 8766), zeby otworzyc okno Synology.");
+        return { ok: false, error: "bridge_offline", path: local };
+      }
+      showToast("Otwieram okno Synology Drive...");
+      return fetch(BRIDGE + "/synology-share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: local })
+      }).then(function (r) { return r.json(); }).then(function (res) {
+        if (res && res.ok) {
+          showToast("Otwarto okno Synology Drive (Uzyskaj lacze)");
+        } else {
+          var err = (res && res.error) || "unknown";
+          if (err === "synology_get_link_not_found") {
+            showToast("Brak pozycji Synology Drive > Uzyskaj lacze. Sprawdz klienta Synology na tym PC.");
+          } else if (err === "path_not_found") {
+            showToast("Nie znaleziono pliku: " + local);
+          } else {
+            showToast("Nie udalo sie otworzyc Synology (" + err + ")");
+          }
+        }
+        return res;
+      }).catch(function () {
+        showToast("Blad polaczenia z bridge (synology-share)");
+        return { ok: false, error: "fetch_failed", path: local };
+      });
+    });
+  }
+
   function pathActionsHtml(indexPath, opts) {
     opts = opts || {};
     var cls = opts.className ? " " + opts.className : "";
@@ -364,6 +457,8 @@
     parentOf: parentOf,
     copyPath: copyPath,
     revealInExplorer: revealInExplorer,
+    openFolderInExplorer: openFolderInExplorer,
+    shareViaSynology: shareViaSynology,
     pathActionsHtml: pathActionsHtml,
     bindPathActions: bindPathActions,
     logAction: logAction,

@@ -178,10 +178,14 @@
             '</p>' +
             '<div class="dam-viz-modal__variants">' + langBadges + '</div>' +
             '<div class="dam-viz-modal__actions">' +
-              '<button type="button" class="geex-btn geex-btn--primary" id="damVizModalOpenExplorer" data-pid="' + esc(first.product_id || "") + '" data-dam-tip="Otworzy eksplorator dla tego produktu">Eksplorator produktu</button>' +
-              '<button type="button" class="geex-btn" id="damVizModalCopyPath" data-path="' + esc(first.path || "") + '" data-dam-tip="Kopiuje lokalna sciezke pliku">Kopiuj sciezke</button>' +
-              '<button type="button" class="geex-btn" id="damVizModalReveal" data-path="' + esc(first.path || "") + '" data-dam-tip="Otwiera folder i zaznacza plik w Eksploratorze Windows">Pokaz w eksploratorze</button>' +
-              '<button type="button" class="geex-btn' + (syEnabled ? '' : ' disabled') + '" id="damVizModalShare"' + shareBtnDisabled + ' title="' + esc(shareBtnTitle) + '" data-dam-tip="' + esc(shareBtnTitle) + '">Udostepnij</button>' +
+              '<button type="button" class="geex-btn geex-btn--primary dam-btn-icon" id="damVizModalGoProduct" data-pid="' + esc(first.product_id || "") + '" data-dam-tip="Otwiera karte produktu w hubie DAM (Explorer HTML)">' +
+                '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdz do produktu</span></button>' +
+              '<button type="button" class="geex-btn dam-btn-icon" id="damVizModalWinExplorer" data-path="' + esc(first.path || "") + '" data-dam-tip="Otwiera folder produktu w Eksploratorze Windows (sciezka folderu, nie plik)">' +
+                '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Eksplorator produktu</span></button>' +
+              '<button type="button" class="geex-btn dam-btn-icon" id="damVizModalCopyPath" data-path="' + esc(first.path || "") + '" data-dam-tip="Kopiuje lokalna sciezke pliku">' +
+                '<i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj sciezke</span></button>' +
+              '<button type="button" class="geex-btn dam-btn-icon' + (syEnabled ? '' : ' disabled') + '" id="damVizModalShare"' + shareBtnDisabled + ' title="' + esc(shareBtnTitle) + '" data-dam-tip="' + esc(shareBtnTitle) + '">' +
+                '<i class="uil uil-share-alt" aria-hidden="true"></i><span>Udostepnij</span></button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -209,12 +213,29 @@
       });
     });
 
-    // Eksplorator produktu
-    var openExpBtn = document.getElementById("damVizModalOpenExplorer");
-    if (openExpBtn) {
-      openExpBtn.addEventListener("click", function () {
+    // Przejdz do produktu (hub DAM / explorer.html) - dawniej mylnie "Eksplorator produktu"
+    var goProductBtn = document.getElementById("damVizModalGoProduct");
+    if (goProductBtn) {
+      goProductBtn.addEventListener("click", function () {
         var pid = this.getAttribute("data-pid");
         window.location.href = "explorer.html?product=" + encodeURIComponent(pid);
+      });
+    }
+
+    // Eksplorator produktu = Windows Explorer, folder sciezki (nie plik)
+    var winExpBtn = document.getElementById("damVizModalWinExplorer");
+    if (winExpBtn) {
+      winExpBtn.addEventListener("click", function () {
+        var path = this.getAttribute("data-path") || "";
+        if (!path) {
+          showToast("Brak sciezki produktu");
+          return;
+        }
+        if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+          window.DamPaths.openFolderInExplorer(path);
+          return;
+        }
+        if (window.DamPaths) window.DamPaths.revealInExplorer(path);
       });
     }
 
@@ -235,21 +256,17 @@
       });
     }
 
-    var revealBtn = document.getElementById("damVizModalReveal");
-    if (revealBtn) {
-      revealBtn.addEventListener("click", function () {
-        var path = this.getAttribute("data-path");
-        if (window.DamPaths) window.DamPaths.revealInExplorer(path);
-      });
-    }
-
-    // Udostepnij
+    // Udostepnij -> okno Synology Drive (Uzyskaj lacze)
     var shareBtn = document.getElementById("damVizModalShare");
     if (shareBtn) {
       shareBtn.addEventListener("click", function () {
         if (!syEnabled) return;
-        openSynologyModal(first.path || "");
         modal.remove();
+        if (window.DamPaths && typeof window.DamPaths.shareViaSynology === "function") {
+          window.DamPaths.shareViaSynology(first.path || "");
+        } else {
+          showToast("DamPaths niedostepne - odswiez strone");
+        }
       });
     }
 
@@ -269,85 +286,8 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Modal Synology Share                                                 */
+  /* Synology Share: okno klienta przez local_bridge (/synology-share)    */
   /* ------------------------------------------------------------------ */
-
-  function openSynologyModal(indexPath) {
-    var existing = document.getElementById("damSynologyModal");
-    if (existing) existing.remove();
-
-    var localPath = window.DamPaths ? window.DamPaths.toLocal(indexPath) : indexPath;
-
-    var html =
-      '<div class="dam-viz-modal-overlay" id="damSynologyModal" role="dialog" aria-modal="true" aria-label="Udostepnianie Synology">' +
-        '<div class="dam-viz-modal-box" style="max-width:500px">' +
-          '<button type="button" class="dam-viz-modal-close" id="damSynModalClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
-          '<div class="dam-viz-modal__body" style="padding-top:24px">' +
-            '<h4 class="dam-viz-modal__title"><i class="uil uil-share-alt" style="color:#AB54DB"></i> Udostepnianie Synology Drive</h4>' +
-            '<div style="background:#f8f4fd;border-radius:8px;padding:12px 14px;margin:12px 0;font-size:13px">' +
-              '<div style="font-weight:600;margin-bottom:8px;color:#464255">Sciezka lokalna (skopiowana):</div>' +
-              '<code id="damSynPath" style="font-size:11px;word-break:break-all;color:#8B3DB8">' + esc(localPath) + '</code>' +
-            '</div>' +
-            '<div style="font-size:13px;color:#464255;margin-bottom:12px">' +
-              '<strong>Jak udostepnic przez Synology Drive:</strong>' +
-              '<ol style="margin:8px 0 0 16px;padding:0;line-height:1.8">' +
-                '<li>Otworz plik w Eksploratorze Windows</li>' +
-                '<li>Kliknij prawym przyciskiem myszy na pliku</li>' +
-                '<li>Wybierz <strong>Synology Drive</strong> &rarr; <strong>Uzyskaj lacze</strong></li>' +
-                '<li>Zaznacz opcje <strong>Lacze publiczne</strong></li>' +
-                '<li>Kliknij ikone kopiowania linku</li>' +
-              '</ol>' +
-            '</div>' +
-            '<div style="margin-bottom:12px">' +
-              '<label style="font-size:12px;font-weight:600;color:#8b8d97;display:block;margin-bottom:4px">Wklej link QuickConnect tu:</label>' +
-              '<div style="display:flex;gap:6px">' +
-                '<input type="text" id="damSynLinkInput" placeholder="https://quickconnect.to/..." style="flex:1;border:1px solid #E7E7E7;border-radius:8px;padding:8px 12px;font-size:13px" />' +
-                '<button type="button" class="geex-btn geex-btn--primary" id="damSynCopyLink" data-dam-tip="Kopiuje wklejony link do schowka">Kopiuj link</button>' +
-              '</div>' +
-            '</div>' +
-            '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-              '<button type="button" class="geex-btn" id="damSynCopyPath">Kopiuj sciezke</button>' +
-              '<button type="button" class="geex-btn" id="damSynReveal">Pokaz w eksploratorze</button>' +
-              '<button type="button" class="geex-btn" id="damSynModalClose2">Zamknij</button>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-
-    document.body.insertAdjacentHTML("beforeend", html);
-
-    var modal = document.getElementById("damSynologyModal");
-
-    if (window.DamPaths) {
-      window.DamPaths.copyPath(indexPath);
-    } else {
-      copyToClipboard(localPath).then(function () {
-        showToast("Sciezka skopiowana do schowka");
-      });
-    }
-
-    document.getElementById("damSynCopyPath").addEventListener("click", function () {
-      if (window.DamPaths) window.DamPaths.copyPath(indexPath);
-      else copyToClipboard(localPath).then(function () { showToast("Skopiowano sciezke"); });
-    });
-    document.getElementById("damSynReveal").addEventListener("click", function () {
-      if (window.DamPaths) window.DamPaths.revealInExplorer(indexPath);
-    });
-
-    document.getElementById("damSynCopyLink").addEventListener("click", function () {
-      var link = (document.getElementById("damSynLinkInput") || {}).value || "";
-      if (!link.trim()) { showToast("Wklej najpierw link QuickConnect"); return; }
-      copyToClipboard(link.trim()).then(function () { showToast("Skopiowano link QuickConnect"); });
-    });
-
-    function closeModal() { modal.remove(); }
-    document.getElementById("damSynModalClose").addEventListener("click", closeModal);
-    document.getElementById("damSynModalClose2").addEventListener("click", closeModal);
-    modal.addEventListener("click", function (e) { if (e.target === modal) closeModal(); });
-    document.addEventListener("keydown", function onEsc(e) {
-      if (e.key === "Escape") { closeModal(); document.removeEventListener("keydown", onEsc); }
-    });
-  }
 
   /* ------------------------------------------------------------------ */
   /* Render card galerii                                                  */
@@ -386,8 +326,12 @@
           '<h5 class="dam-viz-card__title">' + esc(productName) + '</h5>' +
           (carrierLbl ? '<p class="dam-viz-card__meta">' + esc(carrierLbl) + '</p>' : '') +
           '<div class="dam-viz-card__actions">' +
-            '<a class="geex-btn geex-btn--primary" href="explorer.html?product=' + encodeURIComponent(first.product_id || "") + '" title="Otworz eksplorator" data-dam-tip="Eksplorator produktu">Eksplorator</a>' +
-            '<button type="button" class="geex-btn dam-viz-share-btn" data-group-pid="' + esc(group.pid) + '" title="Udostepnij" data-dam-tip="Udostepnij plik przez Synology Drive">Udostepnij</button>' +
+            '<a class="geex-btn geex-btn--primary dam-btn-icon" href="explorer.html?product=' + encodeURIComponent(first.product_id || "") + '" title="Przejdz do produktu" data-dam-tip="Otwiera karte produktu w hubie DAM">' +
+              '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdz do produktu</span></a>' +
+            '<button type="button" class="geex-btn dam-btn-icon dam-viz-win-explorer-btn" data-path="' + esc(first.path || "") + '" title="Eksplorator produktu" data-dam-tip="Otwiera folder w Eksploratorze Windows">' +
+              '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Eksplorator</span></button>' +
+            '<button type="button" class="geex-btn dam-btn-icon dam-viz-share-btn" data-group-pid="' + esc(group.pid) + '" title="Udostepnij" data-dam-tip="Udostepnij plik przez Synology Drive">' +
+              '<i class="uil uil-share-alt" aria-hidden="true"></i><span>Udostepnij</span></button>' +
           '</div>' +
         '</div>' +
       '</article>'
@@ -425,6 +369,23 @@
       });
     });
 
+    // Przycisk Eksplorator Windows (folder)
+    grid.querySelectorAll(".dam-viz-win-explorer-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var path = this.getAttribute("data-path") || "";
+        if (!path) {
+          showToast("Brak sciezki produktu");
+          return;
+        }
+        if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+          window.DamPaths.openFolderInExplorer(path);
+          return;
+        }
+        if (window.DamPaths) window.DamPaths.revealInExplorer(path);
+      });
+    });
+
     // Przycisk Udostepnij
     grid.querySelectorAll(".dam-viz-share-btn").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
@@ -437,7 +398,11 @@
           showToast("Wlacz Synology Drive w Ustawieniach");
           return;
         }
-        openSynologyModal(group.items[0].path || "");
+        if (window.DamPaths && typeof window.DamPaths.shareViaSynology === "function") {
+          window.DamPaths.shareViaSynology(group.items[0].path || "");
+        } else {
+          showToast("DamPaths niedostepne - odswiez strone");
+        }
       });
     });
   }

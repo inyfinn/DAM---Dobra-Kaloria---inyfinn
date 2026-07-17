@@ -174,11 +174,20 @@
   }
 
   function vizPerspective(name) {
-    var u = String(name || "").toUpperCase().replace(/Ł/g, "L");
+    var u = String(name || "").toUpperCase()
+      .replace(/Ł/g, "L")
+      .replace(/Ą/g, "A")
+      .replace(/Ę/g, "E")
+      .replace(/Ó/g, "O")
+      .replace(/Ś/g, "S")
+      .replace(/Ż|Ź/g, "Z")
+      .replace(/Ć/g, "C")
+      .replace(/Ń/g, "N");
     if (/TYL[-_]?ENFACE|BACK[-_]?ENFACE|TYL[-_]?ENCAFE/.test(u)) return "TYL-ENFACE";
     if (/ENFACE|ENCAFE/.test(u)) return "ENFACE";
-    if (/\bBACK\b|\bTYL\b/.test(u)) return "BACK";
+    if (/\bBACK\b|[-_]TYL([-_.]|$)|[-_]TYL$/.test(u)) return "BACK";
     if (/\bFRONT\b/.test(u)) return "FRONT";
+    if (/\bSIDE\b|[-_]BOK([-_.]|$)/.test(u)) return "BOK";
     return "INNE";
   }
 
@@ -189,6 +198,51 @@
     if (/(^|[-_])L([-_.]|$)/.test(u) && !/XL/.test(u)) return "L";
     if (/(^|[-_])S([-_.]|$)/.test(u)) return "S";
     return "";
+  }
+
+  /** Z tlem (JPG/TIF) vs bez tla (PNG) - nadpisania z nazwy */
+  function vizBackground(name) {
+    var n = String(name || "");
+    var u = n.toUpperCase();
+    var ext = (n.split(".").pop() || "").toLowerCase();
+    if (/BEZ[-_]?TLA|NO[-_]?BG|TRANSPARENT|ALPHA|CUTOUT/.test(u)) return "bez-tla";
+    if (/Z[-_]?TLEM|WITH[-_]?BG|NA[-_]?TLE/.test(u)) return "z-tlem";
+    if (ext === "png" || ext === "webp") return "bez-tla";
+    return "z-tlem";
+  }
+
+  function vizSizeHint(size) {
+    var map = {
+      XL: "XL - maksymalna rozdzielczosc (archiwum / print)",
+      L: "L - duza (produkcja, prezentacje)",
+      S: "S - mala (web, szybki podglad)",
+      "S-SKLEP": "S-SKLEP - pod sklep / marketplace"
+    };
+    return map[size] || (size ? size + " - wariant rozmiaru" : "Rozmiar nieoznaczony");
+  }
+
+  function vizFormatHint(ext) {
+    var e = String(ext || "").toUpperCase();
+    var map = {
+      JPG: "JPG - ze tlem (splaszczone, RGB)",
+      JPEG: "JPEG - ze tlem (splaszczone, RGB)",
+      PNG: "PNG - bez tla (przezroczystosc)",
+      TIF: "TIF - archiwum / druk (wysoka jakosc)",
+      TIFF: "TIFF - archiwum / druk (wysoka jakosc)",
+      WEBP: "WEBP - web (lekki)"
+    };
+    return map[e] || (e + " - format pliku");
+  }
+
+  function vizBgLabel(bg) {
+    return bg === "bez-tla" ? "Bez tla" : "Z tlem";
+  }
+
+  function vizLangFromFile(f) {
+    if (f && f.lang) return String(f.lang).toLowerCase();
+    var u = String((f && f.name) || "").toUpperCase();
+    var m = u.match(/(?:^|[-_])(PL|EN|DE|CZ|SK|HU|HR|RO|BG|LT|LV|EE|UA|RU|FR|IT|ES|NL|DK|SE|NO|FI)(?:[-_.]|$)/);
+    return m ? m[1].toLowerCase() : "pl";
   }
 
   function fileRole(name, layer) {
@@ -222,6 +276,11 @@
     detectDrukarnia: detectDrukarnia,
     vizPerspective: vizPerspective,
     vizSize: vizSize,
+    vizBackground: vizBackground,
+    vizSizeHint: vizSizeHint,
+    vizFormatHint: vizFormatHint,
+    vizBgLabel: vizBgLabel,
+    vizLangFromFile: vizLangFromFile,
     fileRole: fileRole,
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -26,7 +26,8 @@
     filter:           "",
     expandedTagGroups:{},
     vizViewMode:      localStorage.getItem(VIZ_VIEW_KEY) || "tiles",
-    vizScale:         parseInt(localStorage.getItem(VIZ_SCALE_KEY) || "96", 10) || 96
+    vizScale:         parseInt(localStorage.getItem(VIZ_SCALE_KEY) || "140", 10) || 140,
+    vizBgFilter:      "z-tlem"
   };
 
   /* ------------------------------------------------------------------ */
@@ -396,7 +397,7 @@
   /* ------------------------------------------------------------------ */
 
   function groupVizFiles(vizFiles) {
-    var PERSP_ORDER = ["ENFACE", "TYL-ENFACE", "FRONT", "BACK", "INNE"];
+    var PERSP_ORDER = ["ENFACE", "FRONT", "BACK", "TYL-ENFACE", "BOK", "INNE"];
     var groups = {};
     (vizFiles || []).forEach(function (f) {
       var persp = DL ? DL.vizPerspective(f.name) : "INNE";
@@ -408,6 +409,66 @@
     return PERSP_ORDER.filter(function (p) { return groups[p]; }).map(function (p) {
       return { perspective: p, bySizes: groups[p] };
     });
+  }
+
+  function vizBgOf(f) {
+    return DL && DL.vizBackground ? DL.vizBackground(f.name) : "z-tlem";
+  }
+
+  function vizLangOf(f) {
+    return DL && DL.vizLangFromFile ? DL.vizLangFromFile(f) : (f.lang || "pl");
+  }
+
+  function pickHeroFile(files) {
+    if (!files || !files.length) return null;
+    var SIZE_RANK = { XL: 3, L: 4, S: 2, "S-SKLEP": 1, "": 0 };
+    var EXT_RANK = { jpg: 5, jpeg: 5, png: 4, webp: 3, tif: 1, tiff: 1 };
+    var scored = files.slice().map(function (f) {
+      var sz = DL ? DL.vizSize(f.name) : "";
+      var ext = fileExt(f.name).toLowerCase();
+      return { f: f, score: (SIZE_RANK[sz] || 0) * 10 + (EXT_RANK[ext] || 0) + ((f.size || 0) / 1e9) };
+    });
+    scored.sort(function (a, b) { return b.score - a.score; });
+    return scored[0].f;
+  }
+
+  function enrichVizFile(f) {
+    return {
+      file: f,
+      persp: DL ? DL.vizPerspective(f.name) : "INNE",
+      size: DL ? DL.vizSize(f.name) : "",
+      bg: vizBgOf(f),
+      lang: vizLangOf(f),
+      ext: fileExt(f.name).toUpperCase()
+    };
+  }
+
+  function buildVizStudioModel(vizFiles) {
+    var items = (vizFiles || []).map(enrichVizFile);
+    var byBg = { "z-tlem": [], "bez-tla": [] };
+    items.forEach(function (it) {
+      (byBg[it.bg] || byBg["z-tlem"]).push(it);
+    });
+    var PERSP_ORDER = ["ENFACE", "FRONT", "BACK", "TYL-ENFACE", "BOK", "INNE"];
+    function heroesFor(list) {
+      var map = {};
+      list.forEach(function (it) {
+        if (!map[it.persp]) map[it.persp] = [];
+        map[it.persp].push(it.file);
+      });
+      return PERSP_ORDER.filter(function (p) { return map[p]; }).map(function (p) {
+        return { perspective: p, hero: pickHeroFile(map[p]), files: map[p], count: map[p].length };
+      });
+    }
+    var langs = {};
+    items.forEach(function (it) { langs[it.lang] = true; });
+    return {
+      items: items,
+      heroesZ: heroesFor(byBg["z-tlem"]),
+      heroesBez: heroesFor(byBg["bez-tla"]),
+      langs: Object.keys(langs).sort(),
+      counts: { "z-tlem": byBg["z-tlem"].length, "bez-tla": byBg["bez-tla"].length }
+    };
   }
 
   /* ------------------------------------------------------------------ */
@@ -498,57 +559,62 @@
   function renderVizGroups(vizFiles) {
     var allFiles = vizFiles || [];
     if (!allFiles.length) return "";
-    var groups = groupVizFiles(allFiles);
-    if (!groups.length) return "";
+    var model = buildVizStudioModel(allFiles);
+    state._vizStudio = model;
+    state._lightboxFiles = allFiles;
 
-    var mode = state.vizViewMode || "tiles";
-    var scale = Math.max(48, Math.min(220, state.vizScale || 96));
-    var SIZE_ORDER = ["XL", "L", "S", "S-SKLEP", ""];
-    var flat = [];
+    var activeBg = state.vizBgFilter || "z-tlem";
+    if (activeBg === "z-tlem" && !model.counts["z-tlem"] && model.counts["bez-tla"]) activeBg = "bez-tla";
+    if (activeBg === "bez-tla" && !model.counts["bez-tla"] && model.counts["z-tlem"]) activeBg = "z-tlem";
+    state.vizBgFilter = activeBg;
 
-    var html = '<div class="dam-viz-groups dam-viz-groups--' + esc(mode) + '" style="--dam-viz-size:' + scale + 'px">';
-    groups.forEach(function (g) {
-      html += '<div class="dam-viz-persp-group">' +
-        '<div class="dam-viz-persp-title">' + esc(g.perspective) + "</div>" +
-        '<div class="dam-viz-persp-files">';
-      SIZE_ORDER.forEach(function (sz) {
-        var files = g.bySizes[sz] || [];
-        files.forEach(function (f) {
-          var ext = fileExt(f.name).toUpperCase();
-          var sizeLabel = sz || "";
-          var cands = thumbCandidates(f);
-          var idx = flat.length;
-          flat.push(f);
-          if (mode === "list") {
-            html += '<div class="dam-viz-list-row" data-lightbox-idx="' + idx + '">' +
-              '<button type="button" class="dam-viz-list-row__open" data-lightbox-idx="' + idx + '">' +
-                '<img class="dam-viz-list-row__thumb" src="' + cands[0] + '" alt="" ' +
-                  'data-fallbacks="' + esc(cands.slice(1).join("|")) + '" onerror="window.__damThumbFallback&&window.__damThumbFallback(this)">' +
-                '<span class="dam-viz-list-row__name">' + esc(f.name) + "</span>" +
-              "</button>" +
-              pathActions(f.path) +
-            "</div>";
-          } else {
-            html += '<div class="dam-viz-mini" data-lightbox-idx="' + idx + '">' +
-              '<button type="button" class="dam-viz-mini__thumb" data-lightbox-idx="' + idx + '" data-dam-tip="Podglad wizualizacji">' +
-                '<img src="' + cands[0] + '" alt="' + esc(f.name) + '" ' +
-                  'data-fallbacks="' + esc(cands.slice(1).join("|")) + '" ' +
-                  'onerror="window.__damThumbFallback&&window.__damThumbFallback(this)">' +
-                '<span class="dam-viz-mini__placeholder" hidden><i class="uil uil-image" aria-hidden="true"></i></span>' +
-              "</button>" +
-              '<div class="dam-viz-mini__meta">' +
-                (sizeLabel ? '<span class="dam-viz-badge dam-viz-badge--index">' + esc(sizeLabel) + "</span> " : "") +
-                '<span class="dam-viz-badge dam-viz-badge--' + (ext === "PNG" ? "brand" : "lang") + '">' + esc(ext) + "</span>" +
-              "</div>" +
-              '<div class="dam-viz-mini__actions">' + pathActions(f.path) + "</div>" +
-            "</div>";
-          }
-        });
+    var heroes = activeBg === "bez-tla" ? model.heroesBez : model.heroesZ;
+    var html = '<div class="dam-viz-studio" data-viz-root="1" style="--dam-viz-hero:' + Math.max(120, Math.min(280, state.vizScale || 140)) + 'px">' +
+      '<div class="dam-viz-bg-tabs" role="tablist" aria-label="Tlo wizualizacji">' +
+        '<button type="button" role="tab" class="dam-viz-bg-tab' + (activeBg === "z-tlem" ? " is-active" : "") + '" data-viz-bg="z-tlem" aria-selected="' + (activeBg === "z-tlem") + '">' +
+          'Z tlem <span class="dam-viz-bg-tab__n">' + model.counts["z-tlem"] + "</span></button>" +
+        '<button type="button" role="tab" class="dam-viz-bg-tab' + (activeBg === "bez-tla" ? " is-active" : "") + '" data-viz-bg="bez-tla" aria-selected="' + (activeBg === "bez-tla") + '">' +
+          'Bez tla <span class="dam-viz-bg-tab__n">' + model.counts["bez-tla"] + "</span></button>" +
+      "</div>";
+
+    if (!heroes.length) {
+      html += '<p class="dam-viz-empty">Brak plikow w tej grupie.</p></div>';
+      return html;
+    }
+
+    html += '<div class="dam-viz-hero-grid">';
+    heroes.forEach(function (h) {
+      var f = h.hero;
+      if (!f) return;
+      var cands = thumbCandidates(f);
+      var sizes = {};
+      h.files.forEach(function (ff) {
+        var s = DL ? DL.vizSize(ff.name) : "";
+        if (s) sizes[s] = (sizes[s] || 0) + 1;
       });
-      html += "</div></div>";
+      var sizeChips = Object.keys(sizes).map(function (s) {
+        return '<span class="dam-viz-badge dam-viz-badge--index" title="' + esc(DL ? DL.vizSizeHint(s) : s) + '">' + esc(s) + "</span>";
+      }).join(" ");
+      var globalIdx = allFiles.indexOf(f);
+      html += '<article class="dam-viz-hero" data-persp="' + esc(h.perspective) + '">' +
+        '<button type="button" class="dam-viz-hero__open" data-lightbox-idx="' + globalIdx + '" data-dam-tip="Otworz studio podgladu">' +
+          '<span class="dam-viz-hero__frame">' +
+            '<img src="' + cands[0] + '" alt="' + esc(h.perspective + " - " + (f.name || "")) + '" ' +
+              'data-fallbacks="' + esc(cands.slice(1).join("|")) + '" ' +
+              'onerror="window.__damThumbFallback&&window.__damThumbFallback(this)">' +
+            '<span class="dam-viz-mini__placeholder" hidden><i class="uil uil-image" aria-hidden="true"></i></span>' +
+          "</span>" +
+          '<span class="dam-viz-hero__caption">' +
+            '<span class="dam-viz-hero__persp">' + esc(h.perspective) + "</span>" +
+            '<span class="dam-viz-hero__meta">' + h.count + " plikow " + sizeChips + "</span>" +
+          "</span>" +
+        "</button>" +
+        '<div class="dam-viz-hero__actions">' + pathActions(f.path) + "</div>" +
+      "</article>";
     });
-    html += "</div>";
-    state._lightboxFiles = flat;
+    html += "</div>" +
+      '<p class="dam-viz-hint">Jeden podglad na widok (najwyzsza jakosc). Kliknij, aby otworzyc studio: L/S, formaty, zoom, jezyki.</p>' +
+    "</div>";
     return html;
   }
 
@@ -872,8 +938,7 @@
     var allRevisions = state.product.revisions || [];
     var groups = groupRevisionsByCarrier(allRevisions);
     var pName = DL ? DL.cleanProductDisplayName(state.product.display_name || state.product.name) : (state.product.display_name || state.product.name);
-    var mode = state.vizViewMode || "tiles";
-    var scale = state.vizScale || 96;
+    var scale = state.vizScale || 140;
 
     var html2 = '<div class="dam-explorer-panel">' +
       '<div class="dam-product-toolbar">' +
@@ -884,12 +949,10 @@
         "</div>" +
         '<div class="dam-product-toolbar__slot1" id="damProductBrandMount" data-dam-tip="Filtr marki DK / GC"></div>' +
         '<div class="dam-product-toolbar__slot2" id="damVizViewControls">' +
-          '<div class="dam-viz-viewbar" role="group" aria-label="Widok wizualizacji">' +
-            '<button type="button" class="dam-viz-viewbtn' + (mode === "tiles" ? " is-active" : "") + '" data-viz-mode="tiles" data-dam-tip="Kafelki">Kafelki</button>' +
-            '<button type="button" class="dam-viz-viewbtn' + (mode === "list" ? " is-active" : "") + '" data-viz-mode="list" data-dam-tip="Lista">Lista</button>' +
-            '<label class="dam-viz-scale" data-dam-tip="Skala miniatur">' +
-              '<span>Skala</span>' +
-              '<input type="range" id="damVizScale" min="48" max="180" step="8" value="' + scale + '">' +
+          '<div class="dam-viz-viewbar" role="group" aria-label="Skala podgladu wizualizacji">' +
+            '<label class="dam-viz-scale" data-dam-tip="Skala podgladu hero">' +
+              '<span>Skala podgladu</span>' +
+              '<input type="range" id="damVizScale" min="120" max="280" step="10" value="' + scale + '">' +
             "</label>" +
           "</div>" +
         "</div>" +
@@ -952,16 +1015,23 @@
     var scaleEl = document.getElementById("damVizScale");
     if (scaleEl) {
       scaleEl.addEventListener("input", function () {
-        state.vizScale = parseInt(this.value, 10) || 96;
+        state.vizScale = parseInt(this.value, 10) || 140;
         localStorage.setItem(VIZ_SCALE_KEY, String(state.vizScale));
-        mount.querySelectorAll(".dam-viz-groups").forEach(function (el) {
-          el.style.setProperty("--dam-viz-size", state.vizScale + "px");
+        mount.querySelectorAll(".dam-viz-studio").forEach(function (el) {
+          el.style.setProperty("--dam-viz-hero", state.vizScale + "px");
         });
       });
       scaleEl.addEventListener("change", function () {
         renderMain();
       });
     }
+
+    mount.querySelectorAll("[data-viz-bg]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.vizBgFilter = this.getAttribute("data-viz-bg") || "z-tlem";
+        renderMain();
+      });
+    });
 
     mount.querySelectorAll("[data-lightbox-idx]").forEach(function (el) {
       el.addEventListener("click", function (e) {
@@ -1040,45 +1110,227 @@
   };
 
   function openLightbox(startIdx) {
-    var files = state._lightboxFiles || [];
-    if (!files.length) return;
-    var idx = Math.max(0, Math.min(files.length - 1, startIdx || 0));
+    var allFiles = state._lightboxFiles || [];
+    if (!allFiles.length) return;
+    var model = state._vizStudio || buildVizStudioModel(allFiles);
+    var items = (model.items || []).length ? model.items : allFiles.map(enrichVizFile);
+
+    var startFile = allFiles[Math.max(0, Math.min(allFiles.length - 1, startIdx || 0))];
+    var startItem = items.find(function (it) { return it.file === startFile; }) || items[0];
+    if (!startItem) return;
+
+    var studio = {
+      persp: startItem.persp,
+      lang: startItem.lang,
+      bg: startItem.bg,
+      file: startItem.file,
+      zoom: 1
+    };
+
+    function filteredItems() {
+      return items.filter(function (it) {
+        return it.persp === studio.persp &&
+          it.bg === studio.bg &&
+          (!studio.lang || it.lang === studio.lang);
+      });
+    }
+
+    function perspList() {
+      var seen = {};
+      var order = ["ENFACE", "FRONT", "BACK", "TYL-ENFACE", "BOK", "INNE"];
+      items.forEach(function (it) {
+        if (it.bg === studio.bg && (!studio.lang || it.lang === studio.lang)) seen[it.persp] = true;
+      });
+      return order.filter(function (p) { return seen[p]; });
+    }
+
+    function langList() {
+      var seen = {};
+      items.forEach(function (it) {
+        if (it.bg === studio.bg && it.persp === studio.persp) seen[it.lang] = true;
+      });
+      return Object.keys(seen).sort();
+    }
+
+    function ensureSelection() {
+      var list = filteredItems();
+      if (!list.length) {
+        var any = items.filter(function (it) { return it.persp === studio.persp && it.bg === studio.bg; });
+        if (any.length) studio.lang = any[0].lang;
+        list = filteredItems();
+      }
+      if (!list.length) return;
+      var still = list.some(function (it) { return it.file === studio.file; });
+      if (!still) studio.file = pickHeroFile(list.map(function (it) { return it.file; })) || list[0].file;
+    }
+
+    function metaUrl(indexPath) {
+      var local = window.DamPaths ? window.DamPaths.toLocal(indexPath) : indexPath;
+      return "http://127.0.0.1:8766/media-meta?path=" + encodeURIComponent(local);
+    }
+
+    function loadMeta(f) {
+      var box = document.getElementById("damLbMeta");
+      if (!box || !f) return;
+      box.innerHTML = '<span class="dam-lb-meta__loading">Ladowanie metadanych…</span>';
+      var sizeKnown = f.size ? fmtSize(f.size) : "";
+      fetch(metaUrl(f.path)).then(function (r) { return r.json(); }).then(function (data) {
+        if (!data || !data.ok) {
+          box.innerHTML = (sizeKnown ? '<div><strong>Rozmiar</strong> ' + esc(sizeKnown) + "</div>" : "") +
+            '<div class="dam-lb-meta__muted">Brak meta z bridge (uruchom :8766)</div>';
+          return;
+        }
+        var dims = (data.width && data.height) ? (data.width + " x " + data.height + " px") : "-";
+        var cs = data.colorspace || data.mode || "-";
+        var weight = data.size_bytes ? fmtSize(data.size_bytes) : sizeKnown || "-";
+        var dpi = data.dpi ? (Array.isArray(data.dpi) ? data.dpi.join(" x ") : String(data.dpi)) : "";
+        box.innerHTML =
+          '<div><strong>Rozdzielczosc</strong> ' + esc(dims) + "</div>" +
+          '<div><strong>Waga</strong> ' + esc(weight) + "</div>" +
+          '<div><strong>Przestrzen</strong> ' + esc(cs) +
+            (data.has_alpha ? ' <span class="dam-viz-badge dam-viz-badge--brand">alpha</span>' : "") +
+          "</div>" +
+          (dpi ? '<div><strong>DPI</strong> ' + esc(dpi) + "</div>" : "") +
+          '<div><strong>Format</strong> ' + esc((data.format || fileExt(f.name)).toUpperCase()) + "</div>";
+      }).catch(function () {
+        box.innerHTML = sizeKnown
+          ? '<div><strong>Rozmiar</strong> ' + esc(sizeKnown) + '</div><div class="dam-lb-meta__muted">Bridge offline</div>'
+          : '<div class="dam-lb-meta__muted">Bridge offline</div>';
+      });
+    }
 
     function paint() {
-      var f = files[idx];
+      ensureSelection();
       var overlay = document.getElementById("damLightbox");
       if (!overlay) return;
-      var img = overlay.querySelector(".dam-lightbox__img");
-      var title = overlay.querySelector(".dam-lightbox__title");
-      var counter = overlay.querySelector(".dam-lightbox__counter");
+      var f = studio.file;
       var cands = thumbCandidates(f);
+      var img = overlay.querySelector(".dam-lightbox__img");
       if (img) {
         img.onerror = function () { window.__damThumbFallback(img); };
         img.setAttribute("data-fallbacks", cands.slice(1).join("|"));
-        img.src = cands[0];
+        img.src = mediaUrl(f.path) || cands[0];
         img.alt = f.name || "";
+        img.style.transform = "scale(" + studio.zoom + ")";
       }
+      var title = overlay.querySelector(".dam-lightbox__title");
       if (title) title.textContent = f.name || "";
-      if (counter) counter.textContent = (idx + 1) + " / " + files.length;
+
+      var bgBox = document.getElementById("damLbBg");
+      if (bgBox) {
+        var bgOpts = [
+          { id: "z-tlem", label: "Z tlem" },
+          { id: "bez-tla", label: "Bez tla" }
+        ].filter(function (o) {
+          return items.some(function (it) { return it.bg === o.id; });
+        });
+        bgBox.innerHTML = bgOpts.map(function (o) {
+          return '<button type="button" class="dam-lb-chip' + (o.id === studio.bg ? " is-active" : "") + '" data-lb-bg="' + esc(o.id) + '">' + esc(o.label) + "</button>";
+        }).join("");
+      }
+
+      var persps = perspList();
+      var perspBox = document.getElementById("damLbPersp");
+      if (perspBox) {
+        perspBox.innerHTML = persps.map(function (p) {
+          return '<button type="button" class="dam-lb-chip' + (p === studio.persp ? " is-active" : "") + '" data-lb-persp="' + esc(p) + '">' + esc(p) + "</button>";
+        }).join("");
+      }
+
+      var langs = langList();
+      var langWrap = document.getElementById("damLbLangWrap");
+      var langBox = document.getElementById("damLbLang");
+      if (langWrap && langBox) {
+        if (langs.length > 1) {
+          langWrap.hidden = false;
+          langBox.innerHTML = langs.map(function (l) {
+            return '<button type="button" class="dam-lb-chip' + (l === studio.lang ? " is-active" : "") + '" data-lb-lang="' + esc(l) + '">' + esc(l.toUpperCase()) + "</button>";
+          }).join("");
+        } else {
+          langWrap.hidden = true;
+        }
+      }
+
+      var variants = filteredItems();
+      var varBox = document.getElementById("damLbVariants");
+      if (varBox) {
+        varBox.innerHTML = variants.map(function (it) {
+          var active = it.file === studio.file;
+          var sizeH = DL ? DL.vizSizeHint(it.size) : it.size;
+          var fmtH = DL ? DL.vizFormatHint(it.ext) : it.ext;
+          return '<button type="button" class="dam-lb-variant' + (active ? " is-active" : "") + '" data-lb-file="' + esc(it.file.path) + '" title="' + esc(sizeH + " · " + fmtH) + '">' +
+            '<span class="dam-lb-variant__row">' +
+              (it.size ? '<span class="dam-viz-badge dam-viz-badge--index">' + esc(it.size) + "</span>" : "") +
+              '<span class="dam-viz-badge dam-viz-badge--' + (it.ext === "PNG" ? "brand" : "lang") + '">' + esc(it.ext) + "</span>" +
+            "</span>" +
+            '<span class="dam-lb-variant__hint">' + esc((it.size ? sizeH : "Wariant") + " · " + fmtH) + "</span>" +
+            '<span class="dam-lb-variant__name">' + esc(it.file.name) + "</span>" +
+          "</button>";
+        }).join("") || '<p class="dam-lb-meta__muted">Brak wariantow dla tego widoku.</p>';
+      }
+
+      var zoomLabel = document.getElementById("damLbZoomLabel");
+      if (zoomLabel) zoomLabel.textContent = Math.round(studio.zoom * 100) + "%";
+
       var prev = overlay.querySelector("[data-lb-prev]");
       var next = overlay.querySelector("[data-lb-next]");
-      if (prev) prev.disabled = idx <= 0;
-      if (next) next.disabled = idx >= files.length - 1;
+      var pi = persps.indexOf(studio.persp);
+      if (prev) prev.disabled = pi <= 0;
+      if (next) next.disabled = pi < 0 || pi >= persps.length - 1;
+
+      var actions = document.getElementById("damLightboxActions");
+      if (actions) {
+        actions.innerHTML = pathActions(f.path || "");
+        if (window.DamPaths) window.DamPaths.bindPathActions(actions);
+      }
+      loadMeta(f);
     }
 
     var existing = document.getElementById("damLightbox");
     if (existing) existing.remove();
 
     var html =
-      '<div class="dam-lightbox" id="damLightbox" role="dialog" aria-modal="true" aria-label="Podglad wizualizacji">' +
+      '<div class="dam-lightbox dam-lightbox--studio" id="damLightbox" role="dialog" aria-modal="true" aria-label="Studio podgladu wizualizacji">' +
         '<button type="button" class="dam-lightbox__close" data-lb-close aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
-        '<button type="button" class="dam-lightbox__nav dam-lightbox__nav--prev" data-lb-prev aria-label="Poprzedni"><i class="uil uil-angle-left"></i></button>' +
-        '<button type="button" class="dam-lightbox__nav dam-lightbox__nav--next" data-lb-next aria-label="Nastepny"><i class="uil uil-angle-right"></i></button>' +
-        '<div class="dam-lightbox__stage"><img class="dam-lightbox__img" alt=""></div>' +
-        '<div class="dam-lightbox__footer">' +
-          '<div class="dam-lightbox__title"></div>' +
-          '<div class="dam-lightbox__counter"></div>' +
-          '<div class="dam-lightbox__actions" id="damLightboxActions"></div>' +
+        '<div class="dam-lightbox__layout">' +
+          '<aside class="dam-lightbox__side" aria-label="Opcje pliku">' +
+            '<div class="dam-lb-section">' +
+              '<div class="dam-lb-section__title">Tlo</div>' +
+              '<div class="dam-lb-chips" id="damLbBg"></div>' +
+            "</div>" +
+            '<div class="dam-lb-section">' +
+              '<div class="dam-lb-section__title">Widok</div>' +
+              '<div class="dam-lb-chips" id="damLbPersp"></div>' +
+            "</div>" +
+            '<div class="dam-lb-section" id="damLbLangWrap" hidden>' +
+              '<div class="dam-lb-section__title">Jezyk</div>' +
+              '<div class="dam-lb-chips" id="damLbLang"></div>' +
+            "</div>" +
+            '<div class="dam-lb-section">' +
+              '<div class="dam-lb-section__title">Warianty (L / S / format)</div>' +
+              '<div class="dam-lb-variants" id="damLbVariants"></div>' +
+            "</div>" +
+            '<div class="dam-lb-section">' +
+              '<div class="dam-lb-section__title">Metadane</div>' +
+              '<div class="dam-lb-meta" id="damLbMeta"></div>' +
+            "</div>" +
+            '<div class="dam-lb-section" id="damLightboxActions"></div>' +
+          "</aside>" +
+          '<div class="dam-lightbox__main">' +
+            '<div class="dam-lightbox__toolbar">' +
+              '<button type="button" class="dam-lb-tool" data-lb-prev aria-label="Poprzedni widok"><i class="uil uil-angle-left"></i></button>' +
+              '<button type="button" class="dam-lb-tool" data-lb-zoom-out aria-label="Pomniejsz"><i class="uil uil-search-minus"></i></button>' +
+              '<span class="dam-lb-zoom-label" id="damLbZoomLabel">100%</span>' +
+              '<button type="button" class="dam-lb-tool" data-lb-zoom-in aria-label="Powieksz"><i class="uil uil-search-plus"></i></button>' +
+              '<button type="button" class="dam-lb-tool" data-lb-next aria-label="Nastepny widok"><i class="uil uil-angle-right"></i></button>' +
+            "</div>" +
+            '<div class="dam-lightbox__stage">' +
+              '<img class="dam-lightbox__img" alt="">' +
+            "</div>" +
+            '<div class="dam-lightbox__footer">' +
+              '<div class="dam-lightbox__title"></div>' +
+            "</div>" +
+          "</div>" +
         "</div>" +
       "</div>";
     document.body.insertAdjacentHTML("beforeend", html);
@@ -1088,30 +1340,68 @@
       overlay.remove();
       document.removeEventListener("keydown", onKey);
     }
+    function stepPersp(dir) {
+      var persps = perspList();
+      var i = persps.indexOf(studio.persp);
+      var n = i + dir;
+      if (n < 0 || n >= persps.length) return;
+      studio.persp = persps[n];
+      studio.zoom = 1;
+      paint();
+    }
     function onKey(e) {
       if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft" && idx > 0) { idx -= 1; paint(); syncActions(); }
-      if (e.key === "ArrowRight" && idx < files.length - 1) { idx += 1; paint(); syncActions(); }
-    }
-    function syncActions() {
-      var box = document.getElementById("damLightboxActions");
-      if (box && files[idx]) box.innerHTML = pathActions(files[idx].path || "");
-      if (window.DamPaths) window.DamPaths.bindPathActions(box);
+      if (e.key === "ArrowLeft") stepPersp(-1);
+      if (e.key === "ArrowRight") stepPersp(1);
+      if (e.key === "+" || e.key === "=") { studio.zoom = Math.min(3, studio.zoom + 0.15); paint(); }
+      if (e.key === "-") { studio.zoom = Math.max(0.4, studio.zoom - 0.15); paint(); }
     }
 
     overlay.querySelector("[data-lb-close]").addEventListener("click", close);
-    overlay.querySelector("[data-lb-prev]").addEventListener("click", function () {
-      if (idx > 0) { idx -= 1; paint(); syncActions(); }
+    overlay.querySelector("[data-lb-prev]").addEventListener("click", function () { stepPersp(-1); });
+    overlay.querySelector("[data-lb-next]").addEventListener("click", function () { stepPersp(1); });
+    overlay.querySelector("[data-lb-zoom-in]").addEventListener("click", function () {
+      studio.zoom = Math.min(3, +(studio.zoom + 0.2).toFixed(2));
+      paint();
     });
-    overlay.querySelector("[data-lb-next]").addEventListener("click", function () {
-      if (idx < files.length - 1) { idx += 1; paint(); syncActions(); }
+    overlay.querySelector("[data-lb-zoom-out]").addEventListener("click", function () {
+      studio.zoom = Math.max(0.4, +(studio.zoom - 0.2).toFixed(2));
+      paint();
     });
     overlay.addEventListener("click", function (e) {
       if (e.target === overlay) close();
+      var bgBtn = e.target.closest("[data-lb-bg]");
+      if (bgBtn) {
+        studio.bg = bgBtn.getAttribute("data-lb-bg") || "z-tlem";
+        studio.zoom = 1;
+        var nextPersps = perspList();
+        if (nextPersps.indexOf(studio.persp) < 0 && nextPersps.length) studio.persp = nextPersps[0];
+        paint();
+        return;
+      }
+      var perspBtn = e.target.closest("[data-lb-persp]");
+      if (perspBtn) {
+        studio.persp = perspBtn.getAttribute("data-lb-persp");
+        studio.zoom = 1;
+        paint();
+        return;
+      }
+      var langBtn = e.target.closest("[data-lb-lang]");
+      if (langBtn) {
+        studio.lang = langBtn.getAttribute("data-lb-lang");
+        studio.zoom = 1;
+        paint();
+        return;
+      }
+      var varBtn = e.target.closest("[data-lb-file]");
+      if (varBtn) {
+        var path = varBtn.getAttribute("data-lb-file");
+        var hit = items.find(function (it) { return it.file.path === path; });
+        if (hit) { studio.file = hit.file; studio.zoom = 1; paint(); }
+      }
     });
     document.addEventListener("keydown", onKey);
     paint();
-    syncActions();
   }
 
   function openAddVariantModal() {

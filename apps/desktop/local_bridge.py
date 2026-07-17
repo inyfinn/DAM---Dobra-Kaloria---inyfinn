@@ -8,6 +8,7 @@ CORS: allows http://127.0.0.1:8765
 Endpoints:
   GET  /health
   POST /reveal   {"path": "M:\\\\...\\\\file.png"}  -> explorer /select
+  POST /synology-share {"path": "..."} -> Synology Drive "Uzyskaj lacze" / Get link
   POST /validate-base {"path": "D:\\\\Marketing"} -> checks 3 root folders
   POST /audit    {"action","user","path","detail",...}
   GET  /audit?limit=100
@@ -26,8 +27,10 @@ from urllib.parse import parse_qs, urlparse
 
 HOST = "127.0.0.1"
 PORT = 8766
+DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(__file__).resolve().parents[1] / "web"
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
+SYNOLOGY_SCRIPT = DESKTOP_DIR / "synology_get_link.ps1"
 REQUIRED_ROOT_FOLDERS = ("-- ARCHIWUM --", "- EKSPORT", "- POLSKA")
 CORS_ORIGIN = "http://127.0.0.1:8765"
 
@@ -61,6 +64,77 @@ def reveal_in_explorer(target: str) -> dict:
         return {"ok": True, "path": target, "command": "select" if os.path.isfile(target) else "open"}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc), "path": target}
+
+
+def invoke_synology_share(target: str) -> dict:
+    """Open Synology Drive Client share dialog (context menu: Uzyskaj lacze / Get link)."""
+    target = normalize_path(target)
+    if not os.path.exists(target):
+        return {"ok": False, "error": "path_not_found", "path": target}
+    if not os.path.isfile(target):
+        return {"ok": False, "error": "not_a_file", "path": target}
+    if not SYNOLOGY_SCRIPT.is_file():
+        return {"ok": False, "error": "script_missing", "path": str(SYNOLOGY_SCRIPT)}
+
+    cmd = [
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        str(SYNOLOGY_SCRIPT),
+        "-FilePath",
+        target,
+    ]
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=45,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "timeout", "path": target}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc), "path": target}
+
+    stdout = (proc.stdout or "").strip()
+    stderr = (proc.stderr or "").strip()
+    # Script prints one JSON object; take the last non-empty line.
+    payload = None
+    for line in reversed(stdout.splitlines()):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            payload = json.loads(line)
+            break
+        except json.JSONDecodeError:
+            continue
+
+    if isinstance(payload, dict):
+        payload.setdefault("path", target)
+        if payload.get("ok"):
+            return payload
+        return {
+            "ok": False,
+            "error": payload.get("error") or "synology_invoke_failed",
+            "path": target,
+            "raw": payload,
+            "stderr": stderr or None,
+        }
+
+    return {
+        "ok": False,
+        "error": "invalid_script_output",
+        "path": target,
+        "exit_code": proc.returncode,
+        "stdout": stdout[:500],
+        "stderr": stderr[:500] if stderr else None,
+    }
 
 
 def validate_base(path: str) -> dict:
@@ -151,6 +225,51 @@ def serve_media(path: str) -> tuple[int, bytes, str]:
         return 200, fh.read(), mime
 
 
+def media_meta(path: str) -> dict:
+    """Read width/height/mode/colorspace/size for a local image (PIL)."""
+    target = normalize_path(path)
+    if not os.path.isfile(target):
+        return {"ok": False, "error": "not_found", "path": target}
+    size_bytes = os.path.getsize(target)
+    out: dict = {
+        "ok": True,
+        "path": target,
+        "size_bytes": size_bytes,
+        "ext": Path(target).suffix.lower().lstrip("."),
+        "width": None,
+        "height": None,
+        "mode": None,
+        "colorspace": None,
+        "dpi": None,
+        "format": None,
+    }
+    try:
+        from PIL import Image  # type: ignore
+
+        with Image.open(target) as im:
+            out["width"], out["height"] = im.size
+            out["mode"] = im.mode
+            out["format"] = im.format
+            dpi = im.info.get("dpi")
+            if dpi:
+                out["dpi"] = dpi
+            # Heuristic color space
+            mode = (im.mode or "").upper()
+            if mode in ("CMYK",):
+                out["colorspace"] = "CMYK"
+            elif mode in ("RGB", "RGBA", "P", "LA", "L"):
+                out["colorspace"] = "RGB" if mode != "L" else "Grayscale"
+                if mode in ("RGBA", "LA") or (mode == "P" and "transparency" in im.info):
+                    out["has_alpha"] = True
+            else:
+                out["colorspace"] = mode or "unknown"
+            if "icc_profile" in im.info:
+                out["has_icc"] = True
+    except Exception as exc:  # noqa: BLE001
+        out["pil_error"] = str(exc)
+    return out
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         print("[dam-bridge]", fmt % args)
@@ -205,6 +324,14 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._bytes(200, body, ctype)
             return
+        if parsed.path == "/media-meta":
+            qs = parse_qs(parsed.query)
+            path = (qs.get("path") or [""])[0]
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required"})
+                return
+            self._json(200, media_meta(path))
+            return
         self._json(404, {"ok": False, "error": "not_found"})
 
     def do_POST(self):  # noqa: N802
@@ -223,6 +350,13 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(400, {"ok": False, "error": "path_required"})
                 return
             self._json(200, reveal_in_explorer(path))
+            return
+        if parsed.path == "/synology-share":
+            path = (data.get("path") or "").strip()
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required"})
+                return
+            self._json(200, invoke_synology_share(path))
             return
         if parsed.path == "/validate-base":
             path = (data.get("path") or "").strip()
