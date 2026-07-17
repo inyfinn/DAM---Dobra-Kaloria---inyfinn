@@ -1,0 +1,317 @@
+﻿<!doctype html>
+<html lang="pl" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>DAM ETA - Ustawienia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
+  <link rel="stylesheet" href="./assets/css/style.css">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260717chrome1">
+  <link rel="stylesheet" href="./assets/css/dam-app.css">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260717logo2">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
+  <style>
+    .dam-settings-card {
+      background: #fff;
+      border: 1px solid #E7E7E7;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .dam-settings-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #464255;
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dam-settings-card h4 i { color: #AB54DB; font-size: 18px; }
+    .dam-setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .dam-setting-row:last-child { border-bottom: none; }
+    .dam-setting-info { flex: 1; }
+    .dam-setting-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #464255;
+      margin: 0 0 2px;
+    }
+    .dam-setting-desc {
+      font-size: 11px;
+      color: #8b8d97;
+      margin: 0;
+    }
+    .dam-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .dam-toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      cursor: pointer;
+    }
+    .dam-toggle input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .dam-toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: #E7E7E7;
+      transition: background 0.18s ease;
+    }
+    .dam-toggle input:checked + .dam-toggle-track {
+      background: #AB54DB;
+    }
+    .dam-toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+      transition: left 0.18s ease;
+    }
+    .dam-toggle input:checked ~ .dam-toggle-thumb {
+      left: 21px;
+    }
+    .dam-save-btn {
+      background: #AB54DB;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+    .dam-save-btn:hover { background: #9340C8; }
+  </style>
+</head>
+<body class="geex-dashboard dam-app">
+  <div class="dam-sidebar-backdrop" id="damSidebarBackdrop"></div>
+  <header class="geex-header">
+    <div class="geex-header__wrapper">
+      <div class="geex-header__logo-wrapper">
+        <a href="index.html" class="geex-header__logo">
+          <img class="logo-lite" src="assets/img/logo-dark.svg" alt="DAM ETA" />
+          <img class="logo-dark" src="assets/img/logo-lite.svg" alt="DAM ETA" />
+        </a>
+        <button type="button" class="geex-btn geex-btn--primary dam-menu-toggle d-lg-none" id="damSidebarToggle" aria-label="Menu">
+          <i class="uil uil-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="geex-main-content">
+    <div class="geex-sidebar" id="damSidebar">
+      <a href="#" class="geex-sidebar__close" id="damSidebarClose" aria-label="Zamknij menu"><i class="uil uil-times"></i></a>
+      <div class="geex-sidebar__wrapper">
+        <nav class="geex-sidebar__menu-wrapper">
+          <ul class="geex-sidebar__menu"><!-- wypelni dam-shell.js --></ul>
+        </nav>
+      </div>
+    </div>
+
+    <div class="geex-content">
+      <div class="geex-content__header">
+        <div class="geex-content__header__content">
+          <h2 class="geex-content__header__title">Ustawienia</h2>
+          <p class="geex-content__header__subtitle">Preferencje interfejsu i integracji</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="dam-settings-card">
+            <h4><i class="uil uil-folder"></i> Sciezka bazowa dysku</h4>
+            <p style="font-size:12px;color:#8b8d97;margin:0 0 12px">Folder, w ktorym widzisz <strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong> i <strong>- POLSKA</strong>. Indeks uzywa <code>D:/Marketing</code>; Ty mozesz miec np. <code>M:\</code>.</p>
+            <label for="settingBasePath" style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">Twoja sciezka bazowa</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input type="text" id="settingBasePath" class="form-control" placeholder="D:\Marketing" style="flex:1;min-width:220px;border-radius:8px" data-dam-tip="Mapowanie D:/Marketing na Twoj dysk (np. M:\)">
+              <button type="button" class="geex-btn" id="settingBasePathTest" data-dam-tip="Sprawdz czy sa 3 foldery glowne">Sprawdz</button>
+            </div>
+            <p id="settingBasePathMsg" style="font-size:12px;margin:8px 0 0;display:none"></p>
+          </div>
+
+          <div class="dam-settings-card">
+            <h4><i class="uil uil-comment-question"></i> Podpowiedzi (tooltips)</h4>
+            <div class="dam-setting-row">
+              <div class="dam-setting-info">
+                <div class="dam-setting-name">Pokazuj podpowiedzi</div>
+                <div class="dam-setting-desc">Krotkie opisy po najechaniu na przyciski i kontrolki</div>
+              </div>
+              <div class="dam-toggle-wrap">
+                <label class="dam-toggle" for="settingTooltips" data-dam-tip="Wlacz lub wylacz tooltips w calym interfejsie">
+                  <input type="checkbox" id="settingTooltips" checked>
+                  <span class="dam-toggle-track"></span>
+                  <span class="dam-toggle-thumb"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="dam-settings-card">
+            <h4><i class="uil uil-cloud-share"></i> Synology Drive</h4>
+            <div class="dam-setting-row">
+              <div class="dam-setting-info">
+                <div class="dam-setting-name">Udostepnianie Synology</div>
+                <div class="dam-setting-desc">Aktywuje przycisk "Udostepnij" w galerii wizualizacji. Wymaga Synology Drive Client zainstalowanego na stacji roboczej.</div>
+              </div>
+              <div class="dam-toggle-wrap">
+                <label class="dam-toggle" for="settingSynology" data-dam-tip="Wlacz integracje z Synology Drive Client">
+                  <input type="checkbox" id="settingSynology" checked>
+                  <span class="dam-toggle-track"></span>
+                  <span class="dam-toggle-thumb"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="dam-settings-card">
+            <h4><i class="uil uil-filter"></i> Domyslne marki</h4>
+            <div class="dam-setting-row">
+              <div class="dam-setting-info">
+                <div class="dam-setting-name">DK (Polska)</div>
+                <div class="dam-setting-desc">Produkty marki Dobra Kaloria - rynek krajowy</div>
+              </div>
+              <div class="dam-toggle-wrap">
+                <label class="dam-toggle" for="settingBrandDK" data-dam-tip="Domyslnie pokazuj produkty DK">
+                  <input type="checkbox" id="settingBrandDK" checked>
+                  <span class="dam-toggle-track"></span>
+                  <span class="dam-toggle-thumb"></span>
+                </label>
+              </div>
+            </div>
+            <div class="dam-setting-row">
+              <div class="dam-setting-info">
+                <div class="dam-setting-name">GC (Eksport)</div>
+                <div class="dam-setting-desc">Produkty Good Choice - eksport zagraniczny</div>
+              </div>
+              <div class="dam-toggle-wrap">
+                <label class="dam-toggle" for="settingBrandGC" data-dam-tip="Domyslnie pokazuj produkty GC">
+                  <input type="checkbox" id="settingBrandGC" checked>
+                  <span class="dam-toggle-track"></span>
+                  <span class="dam-toggle-thumb"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="dam-settings-card" style="background:#f8f4fd;border-color:rgba(171,84,219,0.18)">
+            <h4><i class="uil uil-info-circle"></i> Wersja DAM ETA</h4>
+            <p style="font-size:12px;color:#8b8d97;margin:0">DAM ETA v4 - ETA Innovations &copy; 2026<br>Stack: Geex static, pliki indeksowane lokalnie (P:).</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px">
+        <button type="button" class="dam-save-btn" id="settingsSave" data-dam-tip="Zapisz wszystkie ustawienia">Zapisz ustawienia</button>
+        <span id="settingsSaveMsg" style="margin-left:12px;font-size:12px;color:#2CBF44;display:none">Zapisano!</span>
+      </div>
+    </div>
+  </main>
+
+  <script src="./assets/vendor/js/jquery/jquery-3.5.1.min.js"></script>
+  <script src="./assets/vendor/js/bootstrap/bootstrap.min.js"></script>
+  <script src="./assets/js/main.js"></script>
+  <script src="./assets/js/dam-app.js?v=20260717ux6"></script>
+  <script src="./assets/js/dam-api.js?v=20260717ux6"></script>
+  <script src="./assets/js/dam-i18n.js?v=20260717ux6"></script>
+  <script src="./assets/js/dam-shell.js?v=20260717logo1"></script>
+  <script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
+  <script src="./assets/js/dam-paths.js?v=20260717ux12"></script>
+  <script>
+    (function() {
+      var tooltipEl = document.getElementById("settingTooltips");
+      var synologyEl = document.getElementById("settingSynology");
+      var brandDkEl = document.getElementById("settingBrandDK");
+      var brandGcEl = document.getElementById("settingBrandGC");
+      var basePathEl = document.getElementById("settingBasePath");
+      var baseMsg = document.getElementById("settingBasePathMsg");
+
+      tooltipEl.checked = localStorage.getItem("dam_tooltips") !== "off";
+      synologyEl.checked = localStorage.getItem("dam_synology_enabled") !== "false";
+      var brands = {};
+      try { brands = JSON.parse(localStorage.getItem("dam_brands") || "{}"); } catch(e) {}
+      brandDkEl.checked = brands.DK !== false;
+      brandGcEl.checked = brands.GC !== false;
+      basePathEl.value = localStorage.getItem("dam_base_path") || "D:\\Marketing";
+
+      [tooltipEl, synologyEl, brandDkEl, brandGcEl].forEach(function(inp) {
+        var track = inp.parentElement.querySelector(".dam-toggle-track");
+        var thumb = inp.parentElement.querySelector(".dam-toggle-thumb");
+        if (!thumb) return;
+        thumb.style.left = inp.checked ? "21px" : "3px";
+        if (track) track.style.background = inp.checked ? "#AB54DB" : "#E7E7E7";
+        inp.addEventListener("change", function() {
+          thumb.style.left = this.checked ? "21px" : "3px";
+          if (track) track.style.background = this.checked ? "#AB54DB" : "#E7E7E7";
+        });
+      });
+
+      function showBaseMsg(text, ok) {
+        baseMsg.style.display = "block";
+        baseMsg.style.color = ok ? "#2CBF44" : "#FF5653";
+        baseMsg.textContent = text;
+      }
+
+      document.getElementById("settingBasePathTest").addEventListener("click", function() {
+        var raw = (basePathEl.value || "").trim();
+        if (!raw) { showBaseMsg("Podaj sciezke.", false); return; }
+        if (!window.DamPaths) { showBaseMsg("Zapis lokalny OK (modul sciezek niedostepny).", true); return; }
+        window.DamPaths.validateBaseRemote(raw).then(function(res) {
+          if (res && res.ok) showBaseMsg("OK - znaleziono 3 foldery glowne.", true);
+          else if (res && res.missing) showBaseMsg("Brakuje: " + res.missing.join(", "), false);
+          else showBaseMsg("Bridge offline - nie da sie zweryfikowac folderow.", false);
+        }).catch(function() {
+          showBaseMsg("Bridge offline (port 8766).", false);
+        });
+      });
+
+      document.getElementById("settingsSave").addEventListener("click", function() {
+        localStorage.setItem("dam_tooltips", tooltipEl.checked ? "on" : "off");
+        localStorage.setItem("dam_synology_enabled", synologyEl.checked ? "true" : "false");
+        localStorage.setItem("dam_brands", JSON.stringify({ DK: brandDkEl.checked, GC: brandGcEl.checked }));
+        var raw = (basePathEl.value || "").trim();
+        if (raw && window.DamPaths) {
+          window.DamPaths.setBasePath(raw);
+          window.DamPaths.logAction("set_base_path", { local_path: raw, detail: "Zapisano w Ustawieniach" });
+        } else if (raw) {
+          localStorage.setItem("dam_base_path", raw);
+        }
+        var msg = document.getElementById("settingsSaveMsg");
+        msg.style.display = "inline";
+        setTimeout(function() { msg.style.display = "none"; }, 2500);
+        if (window.DamTooltips) {
+          tooltipEl.checked ? window.DamTooltips.enable() : window.DamTooltips.disable();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

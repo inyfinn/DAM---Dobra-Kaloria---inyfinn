@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "currency": "PLN",
+  "avg_monthly_hours": 168,
+  "default_person": {
+    "net": 5500,
+    "employer_mult": 1.4,
+    "role": "Wspolpracownik",
+    "allocation": 0.25
+  },
+  "people": {
+    "Krzysztof Wieczorek": {
+      "net": 6000,
+      "employer_mult": 1.5,
+      "role": "Grafik",
+      "allocation": 0.6
+    },
+    "Anna Polanska": {
+      "net": 7000,
+      "employer_mult": 1.4,
+      "role": "Koordynacja / PM",
+      "allocation": 0.35
+    },
+    "Anna Polańska": {
+      "net": 7000,
+      "employer_mult": 1.4,
+      "role": "Koordynacja / PM",
+      "allocation": 0.35
+    },
+    "Marek Paluszewski": {
+      "net": 8000,
+      "employer_mult": 1.4,
+      "role": "Recenzja",
+      "allocation": 0.15
+    },
+    "Karolina Kubara": {
+      "net": 6500,
+      "employer_mult": 1.4,
+      "role": "Marketing",
+      "allocation": 0.2
+    },
+    "Maciej Labus": {
+      "net": 6000,
+      "employer_mult": 1.4,
+      "role": "Techniczny",
+      "allocation": 0.2
+    },
+    "Maciej Łabuś": {
+      "net": 6000,
+      "employer_mult": 1.4,
+      "role": "Techniczny",
+      "allocation": 0.2
+    },
+    "Ewa Prazmowska-Bekiersz": {
+      "net": 7000,
+      "employer_mult": 1.4,
+      "role": "Zarzadzanie",
+      "allocation": 0.1
+    },
+    "Ewa Prażmowska-Bekiersz": {
+      "net": 7000,
+      "employer_mult": 1.4,
+      "role": "Zarzadzanie",
+      "allocation": 0.1
+    }
+  },
+  "task_hours": {
+    "wizualizacja": 16,
+    "wykonanie wizualizacji": 16,
+    "projekt graficzny": 16,
+    "projekt": 12,
+    "kartonik": 8,
+    "folia": 8,
+    "akceptacja": 2,
+    "akceptacja podgladu": 2,
+    "akceptacja podglądu": 2,
+    "wydruk": 4,
+    "drukarnia": 4,
+    "wysylanie": 3,
+    "wysyłanie": 3,
+    "przeslanie": 4,
+    "przesłanie": 4,
+    "data wydruku": 2,
+    "marketing": 8,
+    "kampania": 8,
+    "default": 4
+  },
+  "direct_costs": {
+    "folia": { "label": "Surowiec / folia", "amount": 400, "keywords": ["folia"] },
+    "kartonik": { "label": "Surowiec / kartonik", "amount": 350, "keywords": ["kartonik"] },
+    "drukarnia": { "label": "Wydruk / drukarnia", "amount": 800, "keywords": ["drukarn", "wydruk", "wysylanie zamowienia", "wysyłanie zamówienia"] },
+    "dostawa": { "label": "Dostawa / wysylka", "amount": 150, "keywords": ["dostaw", "wysyl", "wysył"] },
+    "marketing": { "label": "Marketing / kampania", "amount": 500, "keywords": ["marketing", "kampania", "e-commerce"] }
+  },
+  "bucket_projects": ["MARKETING", "E-COMMERCE", "ZMIANY BIEZACYCH OPAKOWAN", "ZMIANY BIEŻĄCYCH OPAKOWAŃ"],
+  "include_project_prefixes": ["(DK)", "MARKETING", "E-COMMERCE", "ZMIANY"],
+  "notes": "Stawki startowe do korekty. hourly = (net * employer_mult) / avg_monthly_hours. Godziny zadan z mapy task_hours."
+}

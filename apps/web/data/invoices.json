@@ -1,0 +1,122 @@
+{
+  "invoices": [
+    {
+      "id": "FV/2026/07/001",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "DK Tuba Prezentowa 516g - projekt graficzny",
+      "amount": 1850.00,
+      "currency": "PLN",
+      "issue_date": "2026-07-10",
+      "due_date": "2026-07-24",
+      "status": "pending",
+      "type": "Projekt graficzny"
+    },
+    {
+      "id": "FV/2026/07/002",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "DK Roślinna parówka wędzona 160g - wizualizacja 3D",
+      "amount": 2200.00,
+      "currency": "PLN",
+      "issue_date": "2026-07-12",
+      "due_date": "2026-07-26",
+      "status": "pending",
+      "type": "Wizualizacja 3D"
+    },
+    {
+      "id": "FV/2026/06/008",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "Krem orzechowy proteina lemon cheesecake 200g - projekt + wizka",
+      "amount": 3100.00,
+      "currency": "PLN",
+      "issue_date": "2026-06-20",
+      "due_date": "2026-07-04",
+      "status": "paid",
+      "type": "Projekt graficzny"
+    },
+    {
+      "id": "FV/2026/06/007",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "Banoffee kakao DOYPACK 65g - plik do druku",
+      "amount": 650.00,
+      "currency": "PLN",
+      "issue_date": "2026-06-15",
+      "due_date": "2026-06-29",
+      "status": "paid",
+      "type": "Plik do druku"
+    },
+    {
+      "id": "FV/2026/06/006",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "Mini batoniki cynamonka 102g - projekt graficzny",
+      "amount": 1700.00,
+      "currency": "PLN",
+      "issue_date": "2026-06-10",
+      "due_date": "2026-06-24",
+      "status": "paid",
+      "type": "Projekt graficzny"
+    },
+    {
+      "id": "FV/2026/05/005",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "Tiramisu czekolada kakao DOYPACK 65g - komplety opakowania",
+      "amount": 2850.00,
+      "currency": "PLN",
+      "issue_date": "2026-05-28",
+      "due_date": "2026-06-11",
+      "status": "paid",
+      "type": "Projekt graficzny"
+    },
+    {
+      "id": "FV/2026/05/004",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "Nuggets XXL 175g - wizualizacja 3D CZ/SK",
+      "amount": 1950.00,
+      "currency": "PLN",
+      "issue_date": "2026-05-15",
+      "due_date": "2026-05-29",
+      "status": "overdue",
+      "type": "Wizualizacja 3D"
+    },
+    {
+      "id": "FV/2026/04/003",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "Specyfikacja techniczna - folia doypack linia MCT",
+      "amount": 800.00,
+      "currency": "PLN",
+      "issue_date": "2026-04-20",
+      "due_date": "2026-05-04",
+      "status": "paid",
+      "type": "Specyfikacja techniczna"
+    },
+    {
+      "id": "FV/2026/04/002",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "Batony proteinowe - plik do druku kartonik",
+      "amount": 450.00,
+      "currency": "PLN",
+      "issue_date": "2026-04-05",
+      "due_date": "2026-04-19",
+      "status": "paid",
+      "type": "Plik do druku"
+    },
+    {
+      "id": "FV/2026/03/001",
+      "client": "ETA Innovations sp. z o.o.",
+      "project": "Koncepcje napojow chia - wstepne projekty (3 smaki)",
+      "amount": 2400.00,
+      "currency": "PLN",
+      "issue_date": "2026-03-15",
+      "due_date": "2026-03-29",
+      "status": "paid",
+      "type": "Projekt graficzny"
+    }
+  ],
+  "summary": {
+    "total_invoices": 10,
+    "total_paid": 7,
+    "total_pending": 2,
+    "total_overdue": 1,
+    "total_amount_PLN": 17950.00,
+    "paid_amount_PLN": 14750.00
+  }
+}

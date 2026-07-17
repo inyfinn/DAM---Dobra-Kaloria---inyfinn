@@ -1,0 +1,78 @@
+# Env and secrets
+.env
+.env.*
+!.env.example
+**/hosts.yml
+**/*token*
+**/*secret*
+*.pem
+*.p12
+
+# Dependencies
+node_modules/
+vendor/
+
+# Vault (blobs)
+storage/originals/**
+!storage/originals/.gitkeep
+storage/derivatives/**
+!storage/derivatives/.gitkeep
+
+# Tooling - NEVER commit binaries / local stacks (~1GB+)
+tooling/bin/
+tooling/downloads/**
+!tooling/downloads/.gitkeep
+tooling/choco-cache/**
+!tooling/choco-cache/.gitkeep
+tooling/npm-cache/**
+!tooling/npm-cache/.gitkeep
+tooling/composer-home/**
+!tooling/composer-home/.gitkeep
+
+# Postgres data cluster (local)
+data/postgres/
+data/postgres-logs/
+data/postgres/data/**
+!data/postgres/.gitkeep
+data/postgres/*.log
+
+# Generated thumbs (regenerate locally)
+apps/web/data/thumbs/
+apps/web/data/audit-log.jsonl
+
+# Geex logo backups / local only
+*.geex-backup.svg
+
+# Cursor / local agent noise
+.cursor/
+ui-complete/
+
+# Theme vendor noise (keep geex-html-main source, skip zip + vendor docs)
+THEME/*.zip
+THEME/documentation/
+THEME/geex-html-main/**/*.map
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+*.bak-*
+.idea/
+.vscode/
+*.swp
+
+# Build / Python
+__pycache__/
+*.pyc
+.venv/
+apps/desktop/.venv/
+dist/
+build/
+*.egg-info/
+
+# Laravel
+apps/api/storage/logs/*
+apps/api/storage/framework/cache/*
+apps/api/storage/framework/sessions/*
+apps/api/storage/framework/views/*
+apps/api/bootstrap/cache/*
+!apps/api/storage/logs/.gitkeep

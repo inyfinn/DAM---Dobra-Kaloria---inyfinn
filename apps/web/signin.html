@@ -1,0 +1,65 @@
+﻿<!doctype html>
+<html lang="pl" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>DAM ETA - Wejscie</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
+  <link rel="stylesheet" href="./assets/css/style.css">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260717chrome1">
+  <link rel="stylesheet" href="./assets/css/dam-app.css">
+	<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260717logo2">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
+  <script>
+    if (localStorage.theme) document.documentElement.setAttribute("data-theme", localStorage.theme);
+    // Tryb roboczy: od razu sesja admina i przejscie do panelu
+    (function () {
+      var ALWAYS_ADMIN = true;
+      if (!ALWAYS_ADMIN) return;
+      localStorage.setItem("dam_token", "demo-admin-dev-token");
+      localStorage.setItem("dam_role", "admin");
+      localStorage.setItem("dam_user_name", "Administrator DAM");
+      localStorage.setItem("dam_user", JSON.stringify({
+        email: "admin@dam.local",
+        role: "admin",
+        name: "Administrator DAM"
+      }));
+      location.replace("dashboard.html");
+    })();
+  </script>
+</head>
+<body class="geex-dashboard authentication-page dam-app">
+  <main class="geex-content">
+    <div class="geex-content__authentication">
+      <div class="geex-content__authentication__content">
+        <div class="geex-content__authentication__content__wrapper">
+          <div class="geex-content__authentication__content__logo">
+            <a href="dashboard.html">
+              <img class="logo-lite dam-logo-dk" src="assets/img/logo-dobra-kaloria.svg" alt="Dobra Kaloria">
+              <img class="logo-dark dam-logo-dk" src="assets/img/logo-dobra-kaloria.svg" alt="Dobra Kaloria">
+            </a>
+          </div>
+          <div class="geex-content__authentication__form">
+            <h2 class="geex-content__authentication__title">DAM ETA</h2>
+            <p class="geex-content__authentication__subtitle">
+              Tryb roboczy: jestes zalogowany jako administrator. Microsoft Entra ID wylaczony na razie.
+            </p>
+            <a class="geex-btn geex-btn--primary" href="dashboard.html" style="display:block;text-align:center;padding:12px 20px;border-radius:10px">
+              Wejdz do panelu
+            </a>
+            <p class="form-text mt-3 mb-0" style="color:#888;font-size:12px">
+              Logowanie Microsoft wlaczymy pozniej. Lokalne konto demo: admin@dam.local
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="geex-content__authentication__img">
+        <img src="./assets/img/authentication.svg" alt="">
+      </div>
+    </div>
+  </main>
+</body>
+</html>
