@@ -197,6 +197,27 @@
     sessionStorage.setItem(NAV_STACK_KEY, JSON.stringify(stack));
   }
 
+  /* Aktualizuj wierzcholek stosu (np. index.html -> index.html?q=test) bez push */
+  function replaceNavStackTop(url) {
+    if (!url) return;
+    var stack = [];
+    try { stack = JSON.parse(sessionStorage.getItem(NAV_STACK_KEY) || "[]"); } catch (e) { stack = []; }
+    if (!Array.isArray(stack)) stack = [];
+    if (!stack.length) {
+      stack.push(url);
+    } else {
+      var topFile = String(stack[stack.length - 1]).split("?")[0];
+      var nextFile = String(url).split("?")[0];
+      if (topFile === nextFile) {
+        stack[stack.length - 1] = url;
+      } else {
+        stack.push(url);
+      }
+    }
+    if (stack.length > 40) stack = stack.slice(-40);
+    sessionStorage.setItem(NAV_STACK_KEY, JSON.stringify(stack));
+  }
+
   function parentHrefForKey(key) {
     var meta = PAGE_TRAIL[key];
     if (!meta || !meta.parent) return "dashboard.html";
@@ -622,6 +643,45 @@
     });
   }
 
+  var ADMIN_MODE_KEY = "dam_admin_mode";
+
+  function isAdminRole() {
+    var role =
+      (window.DamApi && typeof window.DamApi.role === "function" && window.DamApi.role()) ||
+      localStorage.getItem("dam_role") ||
+      "";
+    return String(role).toLowerCase() === "admin";
+  }
+
+  function isAdminModeOn() {
+    return isAdminRole() && localStorage.getItem(ADMIN_MODE_KEY) === "1";
+  }
+
+  function setAdminMode(on) {
+    var next = !!on && isAdminRole();
+    localStorage.setItem(ADMIN_MODE_KEY, next ? "1" : "0");
+    syncAdminModeSwitchUi();
+    try {
+      window.dispatchEvent(
+        new CustomEvent("dam:admin-mode", { detail: { on: next } })
+      );
+    } catch (e) { /* ignore */ }
+  }
+
+  function adminSwitchHtml() {
+    return (
+      '<li class="geex-content__header__quickaction__item dam-admin-switch-item" id="damAdminSwitchItem" hidden>' +
+        '<label class="dam-switch dam-admin-header-switch" for="damAdminModeSwitch" ' +
+          'title="Tryb admina: edycja tagów (Shift+klik), statusy wariantów, miniatury" ' +
+          'data-dam-tip="Włącz edycję tagów i narzędzi admina. Wyłączony = zwykły widok.">' +
+          '<input type="checkbox" class="dam-switch__input" id="damAdminModeSwitch" />' +
+          '<span class="dam-switch__track" aria-hidden="true"></span>' +
+          '<span class="dam-switch__label">Admin</span>' +
+        "</label>" +
+      "</li>"
+    );
+  }
+
   function headerQuickactionHtml() {
     return (
       '<div class="geex-content__header__customizer">' +
@@ -649,42 +709,132 @@
               '<span class="geex-content__header__badge dam-badge--notif" id="damNotifBadge" hidden>0</span></a>' +
             '<div class="geex-content__header__popup geex-content__header__popup--notification" role="dialog" aria-label="Powiadomienia"></div>' +
           "</li>" +
+          adminSwitchHtml() +
           '<li class="geex-content__header__quickaction__item">' +
             '<a href="#" class="geex-content__header__quickaction__link" aria-label="Profil" data-dam-tip="Menu użytkownika">' +
               '<img class="user-img" src="assets/img/avatar/avatar-male.svg" alt="" /></a>' +
-            '<div class="geex-content__header__popup geex-content__header__popup--author">' +
-              '<div class="geex-content__header__popup__header">' +
-                '<div class="geex-content__header__popup__header__img"><img src="assets/img/avatar/avatar-male.svg" alt="" /></div>' +
-                '<div class="geex-content__header__popup__header__content">' +
-                  '<h3 class="geex-content__header__popup__header__title">Użytkownik</h3>' +
-                  '<span class="geex-content__header__popup__header__subtitle"></span>' +
-                "</div></div>" +
-              '<div class="geex-content__header__popup__content"><ul class="geex-content__header__popup__items">' +
-                '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="profile.html"><i class="uil uil-user"></i> Profil</a></li>' +
-                '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="settings.html"><i class="uil uil-cog"></i> Ustawienia</a></li>' +
-                '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="privacy.html"><i class="uil uil-shield"></i> Prywatność</a></li>' +
-                '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="terms.html"><i class="uil uil-file-alt"></i> Regulamin</a></li>' +
-                '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="help.html"><i class="uil uil-question-circle"></i> Pomoc</a></li>' +
-              "</ul></div>" +
-              '<div class="geex-content__header__popup__footer">' +
-                '<a href="#" class="geex-content__header__popup__footer__link"><i class="uil uil-arrow-up-left"></i>Wyloguj</a>' +
-              "</div>" +
+            '<div class="geex-content__header__popup geex-content__header__popup--author dam-user-menu" role="menu" aria-label="Menu użytkownika">' +
+              authorPopupInnerHtml() +
             "</div>" +
           "</li>" +
         "</ul></div>"
     );
   }
 
+  function ensureAdminModeSwitch() {
+    var list = document.querySelector(
+      ".geex-content__header__action .geex-content__header__quickaction"
+    );
+    if (!list) return;
+    var profileItem = null;
+    list.querySelectorAll(":scope > .geex-content__header__quickaction__item").forEach(function (item) {
+      if (item.querySelector("img.user-img")) profileItem = item;
+    });
+    var existing = document.getElementById("damAdminSwitchItem");
+    if (!existing) {
+      var wrap = document.createElement("div");
+      wrap.innerHTML = adminSwitchHtml();
+      existing = wrap.firstChild;
+    }
+    // ZAWSZE tuż przed avatarem (po PL / jezyku, nie przed nim)
+    if (profileItem) {
+      if (existing.nextElementSibling !== profileItem) {
+        list.insertBefore(existing, profileItem);
+      }
+    } else if (!existing.parentNode) {
+      list.appendChild(existing);
+    }
+    // Usun lokalne przełączniki trybu admina ze stron (jedyny switch = header)
+    document.querySelectorAll("#damAdminToggle, #vizAdminToggle, label.dam-admin-toggle").forEach(function (el) {
+      var kill = el.id === "vizAdminToggle" ? el.closest("label.dam-admin-toggle") || el : el;
+      if (kill && kill.parentNode) kill.parentNode.removeChild(kill);
+    });
+    syncAdminModeSwitchUi();
+    bindAdminModeSwitch();
+  }
+
+  function syncAdminModeSwitchUi() {
+    var item = document.getElementById("damAdminSwitchItem");
+    var input = document.getElementById("damAdminModeSwitch");
+    var label = item && item.querySelector(".dam-admin-header-switch");
+    if (!item || !input) return;
+    var admin = isAdminRole();
+    item.hidden = !admin;
+    if (!admin) {
+      input.checked = false;
+      if (label) label.classList.add("is-off");
+      return;
+    }
+    var on = localStorage.getItem(ADMIN_MODE_KEY) === "1";
+    input.checked = on;
+    if (label) label.classList.toggle("is-off", !on);
+  }
+
+  function bindAdminModeSwitch() {
+    var input = document.getElementById("damAdminModeSwitch");
+    if (!input || input._damAdminBound) return;
+    input._damAdminBound = true;
+    input.addEventListener("change", function () {
+      setAdminMode(!!input.checked);
+    });
+    input.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+  }
+
+  function authorPopupInnerHtml() {
+    return (
+      '<div class="geex-content__header__popup__header dam-user-menu__identity">' +
+        '<div class="geex-content__header__popup__header__img dam-user-menu__avatar"><img src="assets/img/avatar/avatar-male.svg" alt="" /></div>' +
+        '<div class="geex-content__header__popup__header__content dam-user-menu__meta">' +
+          '<h3 class="geex-content__header__popup__header__title dam-user-menu__name">Użytkownik</h3>' +
+          '<span class="geex-content__header__popup__header__subtitle dam-user-menu__role"></span>' +
+        "</div></div>" +
+      '<nav class="dam-user-menu__nav" aria-label="Konto">' +
+        '<ul class="geex-content__header__popup__items dam-user-menu__items">' +
+          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="profile.html" role="menuitem"><i class="uil uil-user"></i><span>Profil</span></a></li>' +
+          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="settings.html" role="menuitem"><i class="uil uil-cog"></i><span>Ustawienia</span></a></li>' +
+          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="help.html" role="menuitem"><i class="uil uil-question-circle"></i><span>Pomoc</span></a></li>' +
+        "</ul>" +
+      "</nav>" +
+      '<div class="dam-user-menu__legal" aria-label="Dokumenty">' +
+        '<a class="dam-user-menu__legal-link" href="privacy.html">Prywatność</a>' +
+        '<span class="dam-user-menu__legal-sep" aria-hidden="true">·</span>' +
+        '<a class="dam-user-menu__legal-link" href="terms.html">Regulamin</a>' +
+        '<span class="dam-user-menu__legal-sep" aria-hidden="true">·</span>' +
+        '<a class="dam-user-menu__legal-link" href="license.html">Licencja</a>' +
+      "</div>" +
+      '<div class="geex-content__header__popup__footer dam-user-menu__footer">' +
+        '<a href="#" class="geex-content__header__popup__footer__link dam-user-menu__logout" role="menuitem"><i class="uil uil-signout"></i><span>Wyloguj</span></a>' +
+      "</div>"
+    );
+  }
+
+  function ensureUserMenuMarkup() {
+    var popup = document.querySelector(".geex-content__header__popup--author");
+    if (!popup) return;
+    if (popup.classList.contains("dam-user-menu") && popup.querySelector(".dam-user-menu__legal")) {
+      return;
+    }
+    popup.classList.add("dam-user-menu");
+    popup.setAttribute("role", "menu");
+    popup.setAttribute("aria-label", "Menu użytkownika");
+    popup.innerHTML = authorPopupInnerHtml();
+  }
+
   function ensureHeaderChrome() {
     var header = document.querySelector(".geex-content__header");
     if (!header) return;
+    // Header content (title/subtitle) zostaje ze strony - chrome action ZAWSZE
     var existing = header.querySelector(".geex-content__header__action");
     // inbox.html ma pusty #damHeaderAction - wypelnij, nie wychodz wczesnie
     if (existing) {
       if (!existing.querySelector(".geex-content__header__quickaction")) {
         existing.innerHTML = headerQuickactionHtml();
       }
+      ensureUserMenuMarkup();
       normalizeHeaderIcons();
+      ensureAdminModeSwitch();
       return;
     }
 
@@ -693,7 +843,9 @@
     wrap.id = "damHeaderAction";
     wrap.innerHTML = headerQuickactionHtml();
     header.appendChild(wrap);
+    ensureUserMenuMarkup();
     normalizeHeaderIcons();
+    ensureAdminModeSwitch();
   }
 
   /**
@@ -1027,33 +1179,46 @@
   }
 
   function polishUserMenu() {
-    var map = [
-      { keys: ["Profile", "Profil"], out: tt("user.profile", "Profil"), href: "profile.html" },
-      { keys: ["Settings", "Ustawienia"], out: tt("user.settings", "Ustawienia"), href: "settings.html" },
-      { keys: ["Billing", "Rozliczenia"], out: tt("user.billing", "Rozliczenia"), href: "billing.html" },
-      { keys: ["Activity", "Aktywność"], out: tt("user.activity", "Aktywność"), href: "activity.html" },
-      { keys: ["Help", "Pomoc"], out: tt("user.help", "Pomoc"), href: "help.html" },
-      { keys: ["Logout", "Wyloguj"], out: tt("user.logout", "Wyloguj"), href: null }
-    ];
-    document.querySelectorAll(".geex-content__header__popup--author .geex-content__header__popup__link").forEach(function (a) {
-      var t = (a.textContent || "").trim();
-      map.forEach(function (m) {
-        m.keys.forEach(function (k) {
-          if (t === k || t.indexOf(k) !== -1) {
-            var html = a.innerHTML;
-            m.keys.forEach(function (kk) {
-              html = html.replace(kk, m.out);
-            });
-            a.innerHTML = html;
-            if (m.href) a.href = m.href;
-          }
-        });
-      });
+    var labels = {
+      profile: tt("user.profile", "Profil"),
+      settings: tt("user.settings", "Ustawienia"),
+      help: tt("user.help", "Pomoc"),
+      logout: tt("user.logout", "Wyloguj"),
+      privacy: tt("user.privacy", "Prywatność"),
+      terms: tt("user.terms", "Regulamin"),
+      license: tt("user.license", "Licencja"),
+    };
+    var byHref = {
+      "profile.html": labels.profile,
+      "settings.html": labels.settings,
+      "help.html": labels.help,
+    };
+    document.querySelectorAll(".dam-user-menu__link").forEach(function (a) {
+      var href = (a.getAttribute("href") || "").split("/").pop();
+      var label = byHref[href];
+      if (!label) return;
+      var icon = a.querySelector("i");
+      a.innerHTML = "";
+      if (icon) a.appendChild(icon);
+      var span = document.createElement("span");
+      span.textContent = label;
+      a.appendChild(span);
     });
-    var foot = document.querySelector(".geex-content__header__popup--author .geex-content__header__popup__footer__link");
+    var legalMap = {
+      "privacy.html": labels.privacy,
+      "terms.html": labels.terms,
+      "license.html": labels.license,
+    };
+    document.querySelectorAll(".dam-user-menu__legal-link").forEach(function (a) {
+      var href = (a.getAttribute("href") || "").split("/").pop();
+      if (legalMap[href]) a.textContent = legalMap[href];
+    });
+    var foot = document.querySelector(
+      ".dam-user-menu__logout, .geex-content__header__popup--author .geex-content__header__popup__footer__link"
+    );
     if (foot) {
-      foot.innerHTML = '<i class="uil uil-arrow-up-left"></i> ' + tt("user.logout", "Wyloguj");
-      foot.removeAttribute("href");
+      foot.innerHTML = '<i class="uil uil-signout"></i><span>' + labels.logout + "</span>";
+      foot.setAttribute("href", "#");
     }
   }
 
@@ -1328,7 +1493,7 @@
     // Status bazy danych (obok Pliki online)
     if (!window.DamDbStatus) {
       var dbs = document.createElement("script");
-      dbs.src = "assets/js/dam-db-status.js?v=20260718carrierFix1";
+      dbs.src = "assets/js/dam-db-status.js?v=20260718adminHdr1";
       document.head.appendChild(dbs);
     } else if (typeof window.DamDbStatus.start === "function") {
       window.DamDbStatus.start();
@@ -1337,7 +1502,7 @@
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=20260718help1";
+      sc.src = "assets/js/dam-shortcuts.js?v=20260718lifeHelp1";
       document.head.appendChild(sc);
     }
 
@@ -1348,6 +1513,7 @@
 
     ensureHeaderChrome();
     normalizeHeaderIcons();
+    ensureAdminModeSwitch();
     bindDamHeaderPopups();
     updateSidebarBrand();
     updateUserPopup();
@@ -1364,6 +1530,7 @@
       buildMessagesPopup();
       buildNotificationsPopup();
       polishGeexChrome();
+      ensureAdminModeSwitch();
       if (window.DamI18n && typeof window.DamI18n.apply === "function") {
         window.DamI18n.apply();
       }
@@ -1371,8 +1538,10 @@
 
     // Re-apply after i18n / Geex main.js (odpinamy slideToggle jeśli wrocil)
     function refreshChrome() {
+      ensureHeaderChrome();
       bindDamHeaderPopups();
       normalizeHeaderIcons();
+      ensureAdminModeSwitch();
       if (window.jQuery) {
         try {
           window.jQuery(".geex-content__header__action .geex-content__header__quickaction__link").off("click");
@@ -1386,6 +1555,9 @@
     }
     setTimeout(refreshChrome, 80);
     setTimeout(refreshChrome, 400);
+    // Po rehydrate sesji rola moze dojsc pozniej - odswiez widocznosc switcha
+    setTimeout(ensureAdminModeSwitch, 900);
+    setTimeout(ensureAdminModeSwitch, 2000);
   }
 
   // Run after DOM ready
@@ -1402,6 +1574,11 @@
     polishChrome: polishGeexChrome,
     injectNavTrail: injectNavTrail,
     setTrailLeaf: setTrailLeaf,
-    goBack: goBackNav
+    goBack: goBackNav,
+    replaceNavStackTop: replaceNavStackTop,
+    currentNavUrl: currentNavUrl,
+    isAdminMode: isAdminModeOn,
+    setAdminMode: setAdminMode,
+    syncAdminModeSwitch: ensureAdminModeSwitch
   };
 })();

@@ -2452,7 +2452,7 @@ Pelne podkategorie/indeksy w popoverze (PL/EN); historia: real undo + 30s cancel
 ### Zrodla
 - apps/web/assets/js/dam-tag-edit.js, dam-inbox.js, dam-brand.css
 - apps/desktop/local_bridge.py
-- memory.md §100
+- memory.md ?100
 
 ---
 
@@ -2469,19 +2469,19 @@ Naprawa login_required mimo UI zalogowanego; human copy Inbox; modal Dostosuj pu
 5. ui-taste Pass 1-3: screenshot+Read (purple checks, left panel+preview, dirty dialog).
 
 ### Efekt/Fix
-Zapis/zg?oszenia znów dzia?aj? po rehydrate z bound-session. Modal bez pomara?czowych checkboxów, z podgl?dem i ochron? przed utrat? zmian.
+Zapis/zg?oszenia zn?w dzia?aj? po rehydrate z bound-session. Modal bez pomara?czowych checkbox?w, z podgl?dem i ochron? przed utrat? zmian.
 
 ### Test/Ewaluacja
 - Pass: POST /auth/rehydrate ? ok + token; /auth/me z nowym Bearer ? ok (admin).
 - Pass 1: cb 26-28px purple, panel left, preview Produkty.
-- Pass 2: dirty confirm Zapisz zmiany / Nie zapisuj / Wró? do wyboru.
-- Pass 3: Wró? ? modal zostaje; preview is-visible z-index 3.
+- Pass 2: dirty confirm Zapisz zmiany / Nie zapisuj / Wr?? do wyboru.
+- Pass 3: Wr?? ? modal zostaje; preview is-visible z-index 3.
 
 ### Zrodla
 - apps/desktop/auth_store.py, local_bridge.py
 - apps/web/assets/js/dam-api.js, dam-shell.js, dam-dashboard-widgets.js
 - apps/web/assets/css/dam-dashboard.css, inbox.html, dashboard.html
-- memory.md §101
+- memory.md ?101
 
 ---
 
@@ -2547,3 +2547,459 @@ Repo na GitHubie zsynchronizowane z lokalnym stanem + dump dnia.
 
 ### Zrodla
 - README.md, DATABASE/README.md, PROGRESS.md, docs/ADR/ADR-009-postgres-synology.md
+
+---
+
+## 2026-07-18 - Dashboard viz-row responsive + ikony (vizRow2)
+
+### Komenda/Akcja
+ui-taste 3 rundy: overflow tagow, rowne ikony, Eksplorer = uil-sitemap fioletowy.
+
+### Log/Status
+1. Usunieto gap:100px; overflow:hidden na widget/media; thumb 72px; title line-clamp 2.
+2. dam-nav-circles--stack pionowo; explorer purple filled + uil-sitemap; Win/SVG i image 16px szare.
+3. Sitemap w inbox/viz/projects/profile (DAM Eksplorer). Folder Windows zostaje SVG/folder.
+
+### Test/Ewaluacja
+- Pass 1 900px: brak overflow, stack column, explorer sitemap purple.
+- Pass 2 768px: mediaOverflows=false, badge w contenerze.
+- Pass 3 1280px: ikony 32/16 rowne; sitemap.
+
+### Zrodla
+- dam-dashboard.css?v=20260718vizRow2, dam-brand.css?v=20260718vizRow1, dam-dashboard-widgets.js
+
+---
+
+## 2026-07-18 - Nosnik skrot DOY (carrierShort1)
+
+### Komenda/Akcja
+User: po zmianie tagu pojawia sie DOYPACK / pelna nazwa folderu zamiast skrotu DOY ze slownika.
+
+### Log/Status
+1. Root: label_pl=DOYPACK + CARRIER_FOLDER_PREFIX DOY->DOYPACK.
+2. dam-labels: CARRIER_SHORTS + carrierLabel=short; label_pl tylko tooltip.
+3. Bridge: prefix folderu = skrot; stare DOYPACK nadal match.
+4. viz/badges/tag-edit: normalizacja do skrotu.
+
+### Efekt/Fix
+Tag i meta = DOY; rename na dysku = DOY - ...
+
+### Zrodla
+- naming-dictionary.json (short), dam-labels.js, local_bridge.py, dam-viz.js, dam-badges.js, dam-tag-edit.js
+
+---
+
+## 2026-07-18 - Header: Admin switch + kompakt Baza (adminHdr1)
+
+### Komenda/Akcja
+User: ikona bazy -50%; prze????czanie trybu admina tylko obok avatara (switch); header zawsze; zmienia si?? tylko title/subtitle.
+
+### Log/Status
+1. .dam-db-status__refresh 48???24px, pill min-height 56???28, ikona 12px; Pliki online dopasowane.
+2. Switch Admin w headerze tu?? przed avatar (po PL); usuni??te #damAdminToggle / #vizAdminToggle.
+3. Event dam:admin-mode dla explorer/viz/tag-edit.
+
+### Efekt/Fix
+Jedyny switch Admin = header. Baza kompaktowa. Chrome header globalny.
+
+### Test/Ewaluacja
+- CDP: refresh 24x24, icon 12px, order lang???admin???avatar.
+- Screenshot dashboard/explorer/viz: brak lokalnego Tryb admina; title/subtitle per page.
+
+### Zrodla
+- dam-brand.css, dam-shell.js, dam-explorer.js, dam-viz.js, dam-tag-edit.js (?v=20260718adminHdr1)
+
+---
+
+## 2026-07-18 - Nosnik: UI pelna nazwa, dysk skrot (carrierUiLong2)
+
+### Komenda/Akcja
+User: DOY/FOL/BAT to tylko skroty w Eksploratorze Windows; w programie zawsze DOYPACK/FOLIA/BATON. Multi = Multijezyczny (OK). Napraw bledne foldery z logu.
+
+### Log/Status
+1. Potwierdzenie: `DamLabels.carrierLabel` = pelna nazwa; `carrierShort` + `CARRIER_FOLDER_PREFIX` = skrot na dysku.
+2. Z `change-log.json`: 2 foldery `DOYPACK - ...` pod DATE ORANGE -> rename na `DOY - ...` (skrypt `fix_doypack_folder_prefixes.py --apply`).
+3. Pasek historii: `Typ: DOY -> DOY` -> UI pokazuje `Typ: DOYPACK -> DOYPACK` (`humanCarrierForLog`); JSON zostaje kod.
+4. memory.md ?102 przepisany (cofnieta bledna zasada "skrot globalnie").
+5. Cache `?v=20260718carrierUiLong2`.
+
+### Efekt/Fix
+- UI karty: FOLIA / DOYPACK / REKAW.
+- Dysk: `DOY - 17.02.2025 - 6300624.00 - SK HU HR`, `DOY - 20.09.2024 - 6300490.00 - GB AR`.
+- Zrodlo prawdy operacji = change-log (nie szukanie na slepo).
+
+### Test/Ewaluacja
+- Screenshot viz + Read: badge i meta = DOYPACK/FOLIA.
+- CDP: `DamLabels.carrierLabel('DOY') === 'DOYPACK'`.
+- Get-ChildItem X: DATE ORANGE = prefiks DOY.
+
+### Zrodla
+- dam-labels.js, dam-badges.js, dam-tag-edit.js, dam-inbox.js, local_bridge.py, change-log.json, memory.md ?102
+
+
+---
+
+## 2026-07-18 - Lifecycle F/X/D + produkt TEST (life2)
+
+### Komenda/Akcja
+Admin status produktu/wariantu F/X/D z rename folderow, archiwum z wrapperem, historia previous_path. Produkt TEST do weryfikacji.
+
+### Log/Status
+1. Modul lifecycle_status.py + endpoint bridge /lifecycle-status.
+2. UI admin: F/X/D/Odznacz na liscie produktow, toolbarze produktu i wierszu wariantu.
+3. Indeks: strip suffix lifecycle + parse TEST-TEST; skip ARCHIWUM przy skanie.
+4. Utworzono TEST LIFECYCLE w Batony z wariantem TEST-TEST.
+5. Smoke API: rename F potem clear - OK; historia w lifecycle-status.json.
+6. Intensive QA 10 passes (screenshot+Read): kontrolki widoczne, collapsed logo OK.
+
+### Efekt/Fix
+Gotowe do testow uzytkownika na TEST LIFECYCLE. Pelny rollout po OK od usera.
+
+### Test/Ewaluacja
+- dry_run F/D/X/product-D OK
+- apply F + clear na TEST-TEST OK
+- UI explorer admin: PRODUKT + wariant F/X/D
+
+### Zrodla
+lifecycle_status.py, local_bridge.py, dam-explorer.js, dam-brand.css, build-file-index.py, memory.md ?103
+
+---
+
+## 2026-07-18 - Policy nosnikow w bazie + ustawieniach (namingPolicy1)
+
+### Komenda/Akcja
+User: regu?a nie tylko w memory - zawsze i wszedzie; zapis w bazie i ustawieniach programu.
+
+### Log/Status
+1. `naming-dictionary.json` v2: `policy` + `short` na kazdym nosniku.
+2. `app-settings.json` lustro policy; KV keys: naming-dictionary + app-settings.
+3. Seed do Postgres `dam_kv_store` (`_seed_naming_policy_to_postgres` przy starcie bridge).
+4. Bridge: `load_carrier_folder_prefix()` czyta slownik; pull KV nie cofa nowszej wersji lokalnej.
+5. `DamLabels.CARRIER_POLICY` z slownika; settings.html karta ?Nazewnictwo nosnikow? + tabela.
+6. docs/NAMING.md + memory ?102.
+
+### Efekt/Fix
+UI = label_pl, dysk = short - egzekwowane z DB/slownika, widoczne w Ustawieniach.
+
+### Test/Ewaluacja
+- PG: naming version 2, DOY.short=DOY, DOY.label_pl=DOYPACK, app-settings OK.
+- Bridge prefix: DOY->DOY, FOLIA->FOL.
+
+### Zrodla
+- naming-dictionary.json, app-settings.json, local_bridge.py, dam-labels.js, settings.html, docs/NAMING.md
+
+---
+
+## 2026-07-18 - Instrukcje programu w bazie (instr1)
+
+### Komenda/Akcja
+User: wszystkie newralgiczne ustalenia (tez status aktywny/nieaktywny) musza byc w bazie jako instrukcje - zeby agent nie zapominal.
+
+### Log/Status
+1. Utworzono `program-instructions.json` (13 instrukcji, 10 critical) - naming, lifecycle F/X/D, change-log, UI, auth.
+2. KV Postgres: `program-instructions` + rozszerzone: `change-log`, `lifecycle-status`, `product-status`.
+3. Bridge: `GET /program-instructions`, seed przy starcie, push lifecycle po zmianie statusu.
+4. Ustawienia: karta ?Instrukcje programu (baza)?.
+5. AGENTS.md + `.cursor/rules/program-instructions.mdc` + docs/PROGRAM_INSTRUCTIONS.md + memory ?101b.
+
+### Efekt/Fix
+Zrodlo prawdy regu? = baza. Historia statusow/operacji tez w KV.
+
+### Test/Ewaluacja
+- PG: program-instructions count 13; change-log entries 6; lifecycle-status + product-status OK.
+
+### Zrodla
+- program-instructions.json, local_bridge.py, settings.html, AGENTS.md, .cursor/rules/program-instructions.mdc
+
+---
+
+## 2026-07-18 - Dashboard 4 najnowsze + siatka 11 + nav tiles
+
+### Komenda/Akcja
+User: 4 najnowsze wizualizacje (nie oats/cornflakes), indeks w tagach, +N klikalne, nav tiles zamiast topornych kol, notify jako pasek, siatka ~11x33 (stats 3x2, side 2), 5 passes QA.
+
+### Log/Status
+1. Ranking pickNewestViz: anti-bulk mtime + match Asana (flavor+family) + sort start projektu > mtime > rev; 1 produkt/projekt; bez pending/000000/test.
+2. Widget title/i18n: 4 najnowsze; badge: brand+carrier+index; DamBadges +more expand.
+3. CSS: layout 11 kol, grid 9 w main gap 16, stats span 3x2, viz span 5x9, strip span 4x2, side span 2; nav tiles 26px radius 7px.
+4. Cache: dam-brand/dashboard CSS + widgets/badges JS na dashboard.html.
+
+### Efekt/Fix
+Oats/Cornflakes (bulk GC sync) poza lista. Top: Lemon Cheesecake, Cynamonka, Ciasto sliwkowe, Banoffee Kakao (+ indeksy). Tiramisu = #5 po dacie startu Asana C/03.
+
+### Test/Ewaluacja
+- CDP: btn 26x26 r=7px; gap 16; layout 11 cols; notify strip; 4 rows z indeksem.
+- Pass 1-2/5 screenshot desktop; pass 768 black (emulation) - powrot do 1440; pass 5 final z Banoffee.
+- Vision captions mylnie mowia circles - CDP/geometry = rounded squares.
+
+### Zrodla
+- dam-dashboard-widgets.js, dam-dashboard.css, dam-brand.css, dam-badges.js, dashboard.html, i18n pl/en
+
+---
+
+## 2026-07-18 - Tagi: casing globalny (tagCase1)
+
+### Komenda/Akcja
+User: nie mieszac WERSALIKOW z zapisem jak w zdaniu na badge'ach; globalnie jak Kulki Surowe vs DOYPACK.
+
+### Log/Status
+1. `DamLabels.formatTagLabel` - kody (carrier/brand/lang) = wersaliki; ludzkie = Title Case.
+2. Kategorie w naming-dictionary: Kulki/Batony/... (v3).
+3. dam-badges + dam-tag-bar + subcat pills uzywaja formattera; opakowanie doypack->DOYPACK.
+4. Instrukcja `ui.tag_casing_global` w program-instructions (KV).
+
+### Efekt/Fix
+Karty: Kulki + Kulki Surowe + DOYPACK. Filtr: Banoffee, Mini Batoniki, DOYPACK.
+
+### Test/Ewaluacja
+- CDP: category=Kulki, subcat=Kulki Surowe, carrier=DOYPACK/FOLIA; pills Title Case + DOYPACK.
+
+### Zrodla
+- dam-labels.js, dam-badges.js, dam-tag-bar.js, naming-dictionary.json, program-instructions.json
+
+---
+
+## 2026-07-18 - Projekty: jedno X + persist search przy Wstecz
+
+### Komenda/Akcja
+User: dwa X w wyszukiwarce Projektow; po Wstecz wracac do widoku z zapytaniem (nie reset).
+
+### Log/Status
+1. #damProjectsSearch -> type=text; CSS hide webkit/ms search cancel.
+2. dam-projects.js: persist query w sessionStorage + URL ?q= + replaceNavStackTop.
+3. dam-shell.js: API 
+eplaceNavStackTop.
+4. Cache bust index + project shell.
+
+### Efekt/Fix
+Jedno X (custom). Wstecz z project.html -> index.html?q=test z polem i filtrem 1/181.
+
+### Test/Ewaluacja
+- CDP: type=text, clearCount=1, stackTop=index.html?q=test.
+- goBack z project: href=index.html?q=test, value=test, status 1/181.
+- Screenshot: projects-search-one-x.png, projects-search-restored-after-back.png.
+
+### Zrodla
+- index.html, dam-projects.js, dam-shell.js, dam-brand.css, project.html
+
+---
+
+## 2026-07-18 - PL pod angielska nazwa GC (Wizualizacje)
+
+### Komenda/Akcja
+User: przy angielskiej nazwie (np. MINCED) zawsze po `<br>` polska w nawiasie ze spacjami `( Mielone )`; rozmiar jak meta, kolor jak tytul.
+
+### Log/Status
+1. `product-name-pl.json` (EN?PL) + seed KV `product-name-pl`.
+2. `DamLabels.productNamePl` / `productNamePlParen` (tylko brand GC).
+3. `dam-viz.js`: tytul karty + modal z `.dam-viz-card__title-pl`.
+4. CSS: 11px, weight 600, color `#464255`.
+5. Instrukcja `ui.product_name_pl_under_en` w program-instructions (15). Cache `?v=20260718namePl1`.
+
+### Efekt/Fix
+MINCED ? MINCED + ( Mielone ); NUGGETS ? ( Nuggetsy ); itd. na kartach GC.
+
+### Test/Ewaluacja
+- CDP: `mincedHtml = MINCED<br><span class="dam-viz-card__title-pl">( Mielone )</span>`; mapSize=43.
+- Screenshot + Read: viz-minced-pl-name.png ? Pass.
+
+### Zrodla
+- product-name-pl.json, dam-labels.js, dam-viz.js, dam-brand.css, program-instructions.json, local_bridge.py
+
+---
+
+## 2026-07-18 - PL: nawiasy szare jak meta, tekst polowa szarosci
+
+### Komenda/Akcja
+User: nawiasy jak meta (#8b8d97); tekst PL tylko w polowie tak szary.
+
+### Log/Status
+1. `productNamePlMarkup` - osobne spany paren/text.
+2. CSS: paren `#8b8d97`, text `#696877`. Cache `namePl2`.
+
+### Efekt/Fix
+`( Kie?baski ostre )` - nawiasy = meta, slowo ciemniejsze od meta, jasniejsze od tytulu.
+
+### Test/Ewaluacja
+- CDP: paren=rgb(139,141,151)=meta; text=rgb(105,104,119); title=rgb(70,66,85).
+- Screenshot: viz-pl-parens-gray.png.
+
+### Zrodla
+- dam-labels.js, dam-viz.js, dam-brand.css, visualizations.html
+
+---
+
+## 2026-07-18 - product-people: nakarmienie autorow do wyszukiwarki
+
+### Komenda/Akcja
+User: nakarm osoba/autor kontekstem Sylwii/Szymona/KW (bez glosnych TAG na kartach).
+
+### Log/Status
+1. `product-people.json` (by_id/by_index/by_id_prefix + aliasy).
+2. `enrich-search-tags.py` merge + by_tag imion + search_blob.
+3. KV `product-people` + instrukcja `search.product_people`.
+4. Seed + enrich: 60 produktow z authors; sylwia=23, krzysztof=51 (Asana+mapa).
+
+### Efekt/Fix
+Szukajka `sylwia` filtruje wizki (Mielone, Prebiotyk, Kalendarz?); badge imienia na karcie = nie.
+
+### Test/Ewaluacja
+- DamSearch.search('sylwia'): mode=tag, 23 hits.
+- Viz CDP: q=sylwia ? 17 kart, badgeHit=false.
+- Screenshot: viz-search-sylwia.png.
+
+### Zrodla
+- product-people.json, enrich-search-tags.py, local_bridge.py, program-instructions.json
+
+---
+
+## 2026-07-18 - Dashboard viz scale (intensive QA 10)
+
+### Komenda/Akcja
+User: widget "4 najnowsze wizualizacje" za maly (~469px), za duzo pustego miejsca; responsywne skalowanie; 10 rund ui-taste + ui-ux-pro-max.
+
+### Log/Status
+1. Design Read: Geex B2B dashboard density (dials 5/3/5) - fill width, nie redesign.
+2. CSS `dam-dashboard.css`: layout main/side = `1fr` + clamp side; viz-latest span 9 + 2x2 grid (@container >=560px); fluid thumb/title/badges/icons (cqi).
+3. Mobile (<=720): ikony w rzedzie, thumb 56px, line-clamp 3.
+4. Geex `.geex-content { width: 75-80% }` -> override `width: 100%` na dashboardzie.
+5. Cache `?v=20260718dashVizScale8`.
+
+### Efekt/Fix
+Lista viz: ~667-779px (bylo ~469); thumb ~107px (bylo 56); 2x2 na desktopie; tytuly czytelniejsze.
+
+### Test/Ewaluacja
+Intensive QA 10 passes (screenshot+Read): 375 / 768 / 1280+ / collapsed sidebar. CDP: listW, thumb, 2-col grid.
+
+### Zrodla
+- apps/web/assets/css/dam-dashboard.css
+- apps/web/dashboard.html
+
+---
+
+## 2026-07-18 - Docs: README, agents, LANG_PROVENANCE + commit/push
+
+### Komenda/Akcja
+User: zrob dokumentacje z agentow i jezykow (README, memory), commit i push wszystko.
+
+### Log/Status
+1. `agents/README.md`, `docs/LANG_PROVENANCE.md`, update README / memory / PROGRAM_INSTRUCTIONS / AGENTS.
+2. git add + commit + push origin main.
+
+### Zrodla
+- README.md, agents/, docs/LANG_PROVENANCE.md, memory.md
+
+---
+
+## 2026-07-18 - Doprecyzowanie: DK zawsze PL; extra z dowodu
+
+### Komenda/Akcja
+User: DK zawsze polskie (PL). Czasem PL/GB - wtedy GB z nazw/oznaczenia. GC bez zgadywania.
+
+### Log/Status
+1. `apply_brand_lang_baseline` w build-file-index.py (DK+=pl; GC bez baseline).
+2. Zaktualizowano lang-provenance.md, program-instructions, memory ?107.
+3. Rebuild file-index.
+
+### Efekt/Fix
+DK ma PL zawsze; GB i inne extra tylko z tokenu lub override.
+
+### Zrodla
+- agents/shared/lang-provenance.md
+- apps/web/scripts/build-file-index.py
+- apps/web/data/program-instructions.json
+
+---
+
+## 2026-07-18 - Prompt: pochodzenie jezyka (nie hardcode produktu)
+
+### Komenda/Akcja
+User: twarda zasada to rozumienie SKAD bierze sie jezyk (wszystkie kody), nie "6300572=CZ+SK". Finalize prompt; 3 podejscia globalnie.
+
+### Log/Status
+1. Drafty A/B/C: `agents/shared/lang-provenance.DRAFTS.md` (kaskada / evidence / provenance).
+2. Kanon: `agents/shared/lang-provenance.md` (A+B+C).
+3. Wpiecie: AGENTS.md, Builder+QA AGENT.md, memory ?107, `program-instructions` id `data.lang_provenance_only`.
+
+### Efekt/Fix
+Regula = metoda wykrywania z dowodu; przyklad 6300572 tylko jako audyt metody.
+
+### Zrodla
+- agents/shared/lang-provenance.md
+- agents/shared/lang-provenance.DRAFTS.md
+- apps/web/data/program-instructions.json
+
+---
+
+## 2026-07-18 - Jezyki: zero halucynacji (6300572 CZ/SK)
+
+### Komenda/Akcja
+User: 6300572 to CZ/SK (plik `GC_Burger_CZ_SK_6300572_...ai`), nie GB. Przeanalizowac wszystkie produkty/warianty; program tylko surowe dane albo `?`; reczne ustawienia nigdy nie nadpisywane. 5 rund sprawdzania.
+
+### Log/Status
+1. Root cause: brak langs w folderze SLEEVE + brak parsowania z nazw plikow + domysl GC->gb w UI/indeksie.
+2. `build-file-index.py`: `parse_langs_from_text`, `infer_langs_from_files`, `apply_lang_overrides`, brak brand default.
+3. `lang-overrides.json` (manual wins). Front: dam-viz/labels/badges + usuniete domysly w dam-api/projects/project.
+4. Rebuild file-index (~181 produktow, viz~391).
+5. 5 rund QA (dane + UI).
+
+### Efekt/Fix
+6300572: langs=['cz','sk']; modal: tagi CZ+SK, chipy `CZ - 6300572` / `SK - 6300572`, meta bez Wielkiej Brytanii. GB-only bez tokenu GB/UK w plikach: 0. SKLEP!=SK: 0.
+
+### Test/Ewaluacja
+- R1: index 6300572 -> cz+sk (disk AI: CZ_SK).
+- R2: disk PROJECT potwierdza CZ_SK, brak GB.
+- R3: gb-only z evidence w nazwach plikow: 20 ok / 0 false.
+- R4: multi-lang z tokenow plikow (CZ_SK itd.).
+- R5: empty langs zostaja puste (-> UI `?`); override store gotowy.
+- Screenshot+Read: viz-modal-6300572-cz-sk.png PASS.
+
+### Zrodla
+- build-file-index.py, lang-overrides.json, dam-viz.js, dam-labels.js, dam-badges.js, dam-api.js, dam-projects.js, dam-project.js
+
+---
+
+## 2026-07-18 - Carrier row + inbox hist/product (intensive 10)
+
+### Komenda/Akcja
+Przebudowa .dam-carrier-toggle-row (grid body|end, chevron po prawej), typografia global --dam-fs-base, inbox .dam-inbox-hist-item + .dam-inbox-item__product.
+
+### Log/Status
+1. Markup carrier: __body + __end (akcje + chevron ostatni); click na caly pasek poza controls
+2. CSS: min-height 56, wrap meta, 0 overlaps (CDP), chevron gap ~10px
+3. Folder .dam-folder-item__name + label nosnika = 14px / 500-600
+4. Inbox hist jak .dam-inbox-mod (44px btn); product head+meta; nav circles w rzedzie (nie stack)
+5. Cache: ?v=20260718carrierInbox11
+
+### Test/Ewaluacja
+Intensive QA 10 passes (screenshot+Read): user/admin explorer, 768 wrap, expand click, inbox historia, compact product, sidebar collapsed.
+PASS: brak nachodzenia, chevron right, typografia tokenami.
+
+### Zrodla
+- ui-taste / ui-ux-pro-max (intensive 10)
+- dam-brand.css, dam-explorer.js, dam-inbox.js
+
+---
+
+## 2026-07-18 - product-people: nakarmienie autorow do wyszukiwarki
+
+### Komenda/Akcja
+User: nakarm osoba/autor kontekstem Sylwii/Szymona/KW (bez glosnych TAG na kartach).
+
+### Log/Status
+1. `product-people.json` (by_id/by_index/by_id_prefix + aliasy).
+2. `enrich-search-tags.py` merge + by_tag imion + search_blob.
+3. KV `product-people` + instrukcja `search.product_people`.
+4. Seed + enrich: 60 produktow z authors; sylwia=23, krzysztof=51 (Asana+mapa).
+
+### Efekt/Fix
+Szukajka `sylwia` filtruje wizki (Mielone, Prebiotyk, Kalendarz?); badge imienia na karcie = nie.
+
+### Test/Ewaluacja
+- DamSearch.search('sylwia'): mode=tag, 23 hits.
+- Viz CDP: q=sylwia ? 17 kart, badgeHit=false; pill Autor Sylwia aktywny.
+- Screenshot: viz-search-sylwia.png.
+
+### Zrodla
+- product-people.json, enrich-search-tags.py, local_bridge.py, program-instructions.json
+

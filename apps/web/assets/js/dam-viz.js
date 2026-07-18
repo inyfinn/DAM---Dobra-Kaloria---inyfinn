@@ -60,34 +60,35 @@
   }
 
   function carrierHuman(carrier, item) {
-    if (item && item.carrier_label) return item.carrier_label;
-    if (!carrier || /^(OTHER|UNKNOWN|WARIANT)$/i.test(String(carrier))) return "";
-    // Usun daty / indeksy z etykiety prezentacyjnej (nie: BATON (20.09.2024))
-    var clean = String(carrier)
-      .replace(/\s*\(?\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\)?/g, "")
-      .replace(/\s*\d{6,7}(?:\.\d{2})?\s*/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (/^(OTHER|UNKNOWN|WARIANT)$/i.test(clean)) return "";
-    if (window.DamLabels && typeof window.DamLabels.carrierLabel === "function") {
-      var code = window.DamLabels.parseCarrierCode
-        ? window.DamLabels.parseCarrierCode(clean || carrier)
-        : clean;
-      if (code === "UNKNOWN" && /^[A-Z0-9\-]+$/i.test(clean)) {
-        code = window.DamLabels.matchCarrierInText
-          ? window.DamLabels.matchCarrierInText(clean) || clean.toUpperCase()
-          : clean.toUpperCase();
-      }
-      var label = window.DamLabels.carrierLabel(code, clean, {
-        isMix: item && (item.is_mix || item.mix),
-        productName: item && item.product_name,
-        tags: item && item.tags,
-      });
-      if (label && label !== code && !/^(OTHER|UNKNOWN|WARIANT)$/i.test(label)) return label;
+    // UI: pelna nazwa (DOYPACK). Skrot DOY tylko na dysku przy rename.
+    if (!window.DamLabels || typeof window.DamLabels.carrierLabel !== "function") {
+      return String(carrier || "").split(/\s*-\s*/)[0] || "";
     }
-    clean = clean.replace(/\s*\((?:BAR|BAT|FOIL|DOYPACK|MINI)\)\s*$/i, "").trim();
-    if (/^(OTHER|UNKNOWN|WARIANT)$/i.test(clean)) return "";
-    return clean || "";
+    var folderHint =
+      (item && (item.revision_folder || item.folder || item.revisionFolder || item.path)) || "";
+    var raw = String(carrier || (item && item.carrier) || folderHint || "").trim();
+    if (
+      item &&
+      item.carrier_label &&
+      !/\d{2}[./-]\d{2}[./-]\d{2,4}/.test(item.carrier_label) &&
+      item.carrier_label.indexOf(" - ") === -1
+    ) {
+      raw = String(item.carrier_label) + " " + raw;
+    }
+    if (!raw || /^(OTHER|UNKNOWN|WARIANT)$/i.test(raw)) return "";
+    var code = window.DamLabels.parseCarrierCode
+      ? window.DamLabels.parseCarrierCode(raw)
+      : raw;
+    if (code === "UNKNOWN" && window.DamLabels.matchCarrierInText) {
+      code = window.DamLabels.matchCarrierInText(raw) || code;
+    }
+    return (
+      window.DamLabels.carrierLabel(code, raw || folderHint, {
+        isMix: item && (item.is_mix || item.mix),
+        productName: item && (item.product_name || item.productName),
+        tags: item && item.tags,
+      }) || ""
+    );
   }
 
   function showToast(msg) {
@@ -259,7 +260,6 @@
     var out = [];
     (data.products || []).forEach(function (p) {
       var brand = p.brand || "DK";
-      var defaultLang = brand === "DK" ? "pl" : "gb";
       var pid = p.id || "p";
       var name = p.display_name || p.name || pid;
       (p.revisions || []).forEach(function (r) {
@@ -269,7 +269,13 @@
            TEZ rewizje bez wizki - plik/folder istnieje, ale brak wizualizacji.
            Domyslnie (onlyLatest=true) - jak dawniej, calkowicie pominiete. */
         if (!hasViz && onlyLatest) return;
-        var langs = (r.langs && r.langs.length) ? r.langs.slice() : [defaultLang];
+        /* Langs z indeksu. DK ma PL z buildera (baseline). Zakaz GC=gb bez dowodu. */
+        var langs = (r.langs && r.langs.length) ? r.langs.slice() : [];
+        if (!langs.length && String(brand || "").toUpperCase() === "DK") {
+          langs = ["pl"];
+        }
+        var langUnknown = !langs.length;
+        if (langUnknown) langs = ["?"];
         var indexBase = resolveIndexBase({
           index_base: r.index_base,
           index: r.index,
@@ -294,11 +300,13 @@
             index_base: indexBase,
             revision_folder: r.folder,
             revision_path: r.path,
-            langs: langs,
+            langs: langUnknown ? [] : langs,
             lang: lang,
-            lang_label: labels[lang] || String(lang).toUpperCase(),
+            lang_label: lang === "?" ? "?" : (labels[lang] || String(lang).toUpperCase()),
+            lang_unknown: langUnknown || lang === "?",
+            langs_manual: !!r.langs_manual,
             path: hasViz ? (firstWizkiPath(r) || r.path || "") : (r.path || ""),
-            thumb_url: hasViz ? thumbStem(pid, indexBase, lang) : "",
+            thumb_url: hasViz ? thumbStem(pid, indexBase, lang === "?" ? "unknown" : lang) : "",
             has_viz: hasViz,
             is_latest: !!r.is_latest,
             tags: p.tags || []
@@ -922,9 +930,10 @@
             carrierLabel: carrierHuman(first.carrier || "", first),
             carrierGuessed: !!first.carrier_guessed,
             carrierPrevious: first.carrier_previous || "",
-            langs: first.langs || (first.lang ? [first.lang] : []),
+            langs: (first.langs && first.langs.length) ? first.langs : (first.lang && first.lang !== "?" ? [first.lang] : []),
             lang: first.lang,
             langLabel: first.lang_label || labelForLang(first.lang),
+            langUnknown: !!(first.lang_unknown || first.lang === "?" || first.lang === "unknown"),
             index: displayIndex(first),
             showNoIndex: !displayIndex(first),
             multiLang: ctx.multiLang,
@@ -1030,6 +1039,9 @@
       "</div>" +
       '<h4 class="dam-viz-modal__title">' +
       esc(productName) +
+      (window.DamLabels && typeof window.DamLabels.productNamePlMarkup === "function"
+        ? window.DamLabels.productNamePlMarkup(productName, first.brand || brand, esc)
+        : "") +
       "</h4>" +
       '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable' +
       '" id="damVizModalMeta" data-dam-tip="' +
@@ -1052,7 +1064,7 @@
       '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damVizModalGoProduct" data-pid="' +
       esc(first.product_id || "") +
       '" data-dam-tip="Otwiera produkt w Eksplorerze">' +
-      '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Przejdź</span></button>' +
+      '<i class="uil uil-sitemap" aria-hidden="true"></i><span>Przejdź</span></button>' +
       '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-win-btn" id="damVizModalWinExplorer" data-path="' +
       esc(first.path || "") +
       '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows">' +
@@ -1169,10 +1181,16 @@
       var meta = document.getElementById("damVizModalMeta");
       if (meta) {
         var idxShow = displayIndex(v);
+        var langBit = "";
+        if (v.lang_unknown || v.lang === "?" || v.lang === "unknown") {
+          langBit = " · ?";
+        } else if (v.lang) {
+          langBit = " · " + (v.lang_label || labelForLang(v.lang));
+        }
         meta.textContent =
           (carrierHuman(v.carrier || "", v) || "Nosnik") +
           (idxShow ? " · Indeks " + idxShow : "") +
-          (v.lang ? " · " + (v.lang_label || labelForLang(v.lang)) : "");
+          langBit;
       }
       ["damVizModalWinExplorer", "damVizModalCopyPath", "damVizModalShare"].forEach(function (id) {
         var btn = document.getElementById(id);
@@ -1321,9 +1339,10 @@
           carrierLabel: carrierHuman(v.carrier || "", v),
           carrierGuessed: !!v.carrier_guessed,
           carrierPrevious: v.carrier_previous || "",
-          langs: v.langs || (v.lang ? [v.lang] : []),
+          langs: (v.langs && v.langs.length) ? v.langs : (v.lang && v.lang !== "?" ? [v.lang] : []),
           lang: v.lang,
           langLabel: v.lang_label || labelForLang(v.lang),
+          langUnknown: !!(v.lang_unknown || v.lang === "?" || v.lang === "unknown"),
           index: displayIndex(v),
           showNoIndex: !displayIndex(v),
           multiLang: ctx.multiLang,
@@ -1633,6 +1652,13 @@
     var isMultiIndex = Object.keys(indexes).length > 1;
     var carrierLbl = carrierHuman(first.carrier || "", first);
     var productName = first.product_name || group.pid || "Produkt";
+    if (window.DamLabels && typeof window.DamLabels.cleanProductDisplayName === "function") {
+      productName = window.DamLabels.cleanProductDisplayName(productName) || productName;
+    }
+    var productNamePlHtml =
+      window.DamLabels && typeof window.DamLabels.productNamePlMarkup === "function"
+        ? window.DamLabels.productNamePlMarkup(productName, brand, esc)
+        : "";
     var indexLbl = displayIndex(first);
     var demo = isDemo(first);
     var hidden = isHidden(first);
@@ -1652,9 +1678,14 @@
             carrierLabel: carrierLbl,
             carrierGuessed: !!first.carrier_guessed,
             carrierPrevious: first.carrier_previous || "",
-            langs: Object.keys(langs).length ? Object.keys(langs) : first.langs || (first.lang ? [first.lang] : []),
+            langs: Object.keys(langs).length
+              ? Object.keys(langs)
+              : (first.langs && first.langs.length)
+                ? first.langs
+                : (first.lang && first.lang !== "?" ? [first.lang] : []),
             lang: first.lang,
             langLabel: first.lang_label || labelForLang(first.lang),
+            langUnknown: !!(first.lang_unknown || first.lang === "?" || first.lang === "unknown"),
             index: indexLbl,
             showNoIndex: !indexLbl,
             multiLang: isMultiLang,
@@ -1701,7 +1732,10 @@
           '<div class="dam-viz-card__badges">' +
             badgesHtml +
           '</div>' +
-          '<h5 class="dam-viz-card__title">' + esc(productName) + '</h5>' +
+          '<h5 class="dam-viz-card__title">' +
+            esc(productName) +
+            productNamePlHtml +
+            "</h5>" +
           '<p class="dam-viz-card__meta' +
             (carrierLbl ? "" : " dam-viz-card__meta--empty") +
             '">' +
@@ -1712,7 +1746,7 @@
               ? '<button type="button" class="geex-btn geex-btn--primary dam-btn-icon dam-viz-request-btn" data-group-pid="' + esc(group.pid) + '" title="Zglos zapotrzebowanie" data-dam-tip="Zglos zapotrzebowanie na wizualizacje dla tego wariantu">' +
                 '<i class="uil uil-bell-plus" aria-hidden="true"></i><span>Zglos</span></button>'
               : '<a class="geex-btn geex-btn--primary dam-btn-icon" href="explorer.html?product=' + encodeURIComponent(first.product_id || "") + '" title="Przejdź" data-dam-tip="Otwiera produkt w Eksplorerze">' +
-                '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Przejdź</span></a>') +
+                '<i class="uil uil-sitemap" aria-hidden="true"></i><span>Przejdź</span></a>') +
             '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-viz-win-explorer-btn dam-win-btn" data-path="' + esc(first.path || "") + '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows">' +
               (window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
                 ? window.DamIcons.winExplorerSvg()
@@ -1839,7 +1873,11 @@
         var slug = (p.subcategory_slug || "").trim();
         if (!slug || seen[slug]) return;
         seen[slug] = true;
-        list.push({ slug: slug, label: p.subcategory_label || slug });
+        var subLbl = p.subcategory_label || slug;
+        if (window.DamLabels && typeof window.DamLabels.formatTagLabel === "function") {
+          subLbl = window.DamLabels.formatTagLabel(subLbl, "subcategory");
+        }
+        list.push({ slug: slug, label: subLbl });
       });
       list.sort(function (a, b) {
         return a.label.localeCompare(b.label, "pl");
@@ -2026,29 +2064,18 @@
 
     bindCardZoomControl();
 
-    var adminToggle = document.getElementById("vizAdminToggle");
-    var adminToggleWrap = adminToggle && adminToggle.closest(".dam-admin-toggle");
     var changeLogBar = document.getElementById("damChangeLogBar");
-    if (adminToggle) {
-      if (!isAdminRole()) {
-        if (adminToggleWrap) adminToggleWrap.style.display = "none";
-        else adminToggle.style.display = "none";
-        if (changeLogBar) changeLogBar.hidden = true;
-        localStorage.setItem(ADMIN_KEY, "0");
-      } else {
-        if (adminToggleWrap) adminToggleWrap.style.display = "";
-        adminToggle.checked = isAdminMode();
-        function syncAdminOutline() {
-          if (!adminToggleWrap) return;
-          adminToggleWrap.classList.toggle("dam-admin-control", !!adminToggle.checked);
-        }
-        syncAdminOutline();
-        adminToggle.addEventListener("change", function () {
-          localStorage.setItem(ADMIN_KEY, this.checked ? "1" : "0");
-          syncAdminOutline();
-          applyFilters();
-        });
-      }
+    if (!isAdminRole()) {
+      if (changeLogBar) changeLogBar.hidden = true;
+      localStorage.setItem(ADMIN_KEY, "0");
+    } else if (!window._damVizAdminBound) {
+      window._damVizAdminBound = true;
+      window.addEventListener("dam:admin-mode", function () {
+        applyFilters();
+      });
+      window.addEventListener("storage", function (e) {
+        if (e.key === ADMIN_KEY) applyFilters();
+      });
     }
 
     /* Fala D: discrepancy dysk vs ostatnie zatwierdzenie -> carrier_guessed + tip */
@@ -2131,9 +2158,10 @@
             carrierLabel: carrierHuman(v.carrier || "", v),
             carrierGuessed: !!v.carrier_guessed,
             carrierPrevious: v.carrier_previous || "",
-            langs: v.langs || (v.lang ? [v.lang] : []),
+            langs: (v.langs && v.langs.length) ? v.langs : (v.lang && v.lang !== "?" ? [v.lang] : []),
             lang: v.lang,
             langLabel: v.lang_label || labelForLang(v.lang),
+            langUnknown: !!(v.lang_unknown || v.lang === "?" || v.lang === "unknown"),
             index: displayIndex(v),
             showNoIndex: !displayIndex(v),
             demo: isDemo(v),

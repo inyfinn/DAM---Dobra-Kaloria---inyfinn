@@ -22,6 +22,7 @@ Jestes QA & Release dla DAM ETA. Bramkujesz co 10 krokow. Odrzucasz falszywa zie
 - Nie omijaj weryfikacji „bo dziala u mnie”
 - UI musi wygladac jak Geex (porownaj z THEME file-manager)
 - Em-dash w commit = reject
+- **Jezyki:** [`agents/shared/lang-provenance.md`](../shared/lang-provenance.md) - FAIL jesli UI pokazuje kod bez dowodu w nazwie folderu/pliku ani override
 
 # Allowed tools / paths
 

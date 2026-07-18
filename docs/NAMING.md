@@ -33,19 +33,34 @@ STAN: brak = robocza, `-F` = Finished, `-FQ` = Final Quality (druk).
 
 Rozmiar: `S` = krotsza krawedz < 1300 px, `L` = >= 1300 px.
 
-## Nosniki (UI zawsze PL)
+## Nosniki — policy (baza + ustawienia)
 
-| Folder / EN | Kod | Etykieta PL |
-|-------------|-----|-------------|
-| DOYPACK | DOY | DOYPACK |
-| BATON / BAR | BAT | BATON |
-| MINI BATON | MINI | MINI BATON |
-| KARTON 6x MINI | KAR6X | KARTON 6x MINI |
-| KARTON / CARTON | KAR | KARTON |
-| FOLIA / FOIL | FOLIA | FOLIA |
-| REKAW / SLEEVE | REKAW | REKAW |
-| TUBA / TUBE | TUBA | TUBA |
-| ETYKIETA / LABEL | ETY | ETYKIETA |
+Zrodlo: `naming-dictionary.json` → Postgres `dam_kv_store.naming-dictionary`
+oraz lustro w `app-settings.json` (`dam_kv_store.app-settings`).
+Karta w `settings.html` → „Nazewnictwo nośników”.
+
+| Warstwa | Pole | Przyklad |
+|---------|------|----------|
+| **Program (UI)** | `label_pl` | DOYPACK, FOLIA, BATON |
+| **Dysk Windows** | `short` | DOY, FOL, BAT |
+
+`policy.carrier_display_in_ui = label_pl`  
+`policy.carrier_prefix_on_disk = short`
+
+Skroty istnieja **tylko** zeby nazwy w Eksploratorze zajmowaly mniej miejsca.
+Rename folderu/pliku zawsze pisze `short`. Badge / meta / picker zawsze `label_pl`.
+
+| Prefiks folderu | Kod | UI (`label_pl`) |
+|-----------------|-----|-----------------|
+| DOY | DOY | DOYPACK |
+| BAT | BAT | BATON |
+| MINI | MINI | MINI BATON |
+| KAR6X | KAR6X | KARTON 6x MINI |
+| KAR | KAR | KARTON |
+| FOL | FOLIA | FOLIA |
+| REKAW | REKAW | RĘKAW |
+| TUBA | TUBA | TUBA |
+| ETY | ETY | ETYKIETA |
 
 Jezyki (CZ, SK, GB...) **nie** wchodza w nazwe nosnika - osobny tag.
 

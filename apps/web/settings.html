@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718navActive1">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718userMenu1">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <style>
@@ -165,6 +165,34 @@
             <p id="settingRestartMsg" style="font-size:12px;margin:8px 0 0;display:none"></p>
           </div>
 
+          <div class="dam-settings-card" id="damProgramInstructions" style="border-color:rgba(171,84,219,0.35)">
+            <h4><i class="uil uil-book-open"></i> Instrukcje programu (baza)</h4>
+            <p class="dam-setting-desc" style="margin:0 0 10px">Newralgiczne ustalenia (status F/X/D, nazewnictwo, zakazy). Zapisane w Postgres <code>dam_kv_store.program-instructions</code>. Agent i kod muszą tego przestrzegać - to nie jest opcjonalna notatka.</p>
+            <p id="damInstrMeta" style="font-size:11px;color:#8b8d97;margin:0 0 10px"></p>
+            <div id="damInstrList" style="max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+
+          <div class="dam-settings-card" id="damNamingPolicy">
+            <h4><i class="uil uil-tag-alt"></i> Nazewnictwo nośników</h4>
+            <p class="dam-setting-desc" style="margin:0 0 12px">Zasada programu zapisana w bazie (<code>dam_kv_store</code> → <code>naming-dictionary</code> + <code>app-settings</code>) i w słowniku lokalnym. Nie jest to przełącznik użytkownika — obowiązuje zawsze.</p>
+            <div class="dam-setting-row">
+              <div class="dam-setting-info">
+                <div class="dam-setting-name">W programie (UI)</div>
+                <div class="dam-setting-desc" id="damNamingUiRule">Pełne nazwy: DOYPACK, FOLIA, BATON…</div>
+              </div>
+              <span class="dam-status-badge" id="damNamingUiBadge" style="background:#EDE7F6;color:#6A1B9A;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px">label_pl</span>
+            </div>
+            <div class="dam-setting-row">
+              <div class="dam-setting-info">
+                <div class="dam-setting-name">Na dysku Windows (rename)</div>
+                <div class="dam-setting-desc" id="damNamingDiskRule">Skróty folderów: DOY, FOL, BAT…</div>
+              </div>
+              <span class="dam-status-badge" id="damNamingDiskBadge" style="background:#FFF3E0;color:#E65100;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px">short</span>
+            </div>
+            <p id="damNamingPolicyDesc" style="font-size:11px;color:#8b8d97;margin:12px 0 8px"></p>
+            <div id="damNamingCarrierTable" style="max-height:220px;overflow:auto;border:1px solid #f0f0f0;border-radius:8px"></div>
+          </div>
+
           <div class="dam-settings-card">
             <h4><i class="uil uil-comment-question"></i> Podpowiedzi (tooltips)</h4>
             <div class="dam-setting-row">
@@ -269,13 +297,187 @@
   <script src="./assets/js/dam-api.js?v=20260718auth1"></script>
   <script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-  <script src="./assets/js/dam-shell.js?v=20260718navActive1"></script>
+  <script src="./assets/js/dam-shell.js?v=20260718userMenu1"></script>
   <script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
   <script src="./assets/js/dam-paths.js?v=20260718btn1"></script>
-  <script src="./assets/js/dam-labels.js?v=20260718v7f"></script>
-  <script src="./assets/js/dam-badges.js?v=20260718v7f"></script>
-  <script src="./assets/js/dam-tag-edit.js?v=20260718v7f"></script>
+  <script src="./assets/js/dam-labels.js?v=20260718namePl1"></script>
+  <script src="./assets/js/dam-badges.js?v=20260718namePl1"></script>
+  <script src="./assets/js/dam-tag-edit.js?v=20260718tagCase1"></script>
   <script>
+    (function () {
+      var list = document.getElementById("damInstrList");
+      var meta = document.getElementById("damInstrMeta");
+      if (!list) return;
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function priColor(p) {
+        if (p === "critical") return "#C62828";
+        if (p === "high") return "#E65100";
+        return "#8b8d97";
+      }
+      function render(data) {
+        var items = (data && data.instructions) || [];
+        if (meta) {
+          meta.textContent =
+            "Wersja " +
+            (data.version || "?") +
+            " · " +
+            items.length +
+            " instrukcji · KV: program-instructions · " +
+            String(data.updated_at || "").replace("T", " ").slice(0, 16);
+        }
+        if (!items.length) {
+          list.innerHTML = '<p class="dam-widget__meta">Brak instrukcji - uzupełnij program-instructions.json i zrestartuj bridge.</p>';
+          return;
+        }
+        var critical = items.filter(function (i) {
+          return i.priority === "critical";
+        });
+        var rest = items.filter(function (i) {
+          return i.priority !== "critical";
+        });
+        var ordered = critical.concat(rest);
+        list.innerHTML = ordered
+          .map(function (i) {
+            var must = (i.must || [])
+              .slice(0, 3)
+              .map(function (m) {
+                return "<li>" + esc(m) + "</li>";
+              })
+              .join("");
+            return (
+              '<div style="border:1px solid #f0f0f0;border-radius:10px;padding:10px 12px;background:#fff">' +
+              '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">' +
+              '<span style="font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:' +
+              priColor(i.priority) +
+              '">' +
+              esc(i.priority || "normal") +
+              "</span>" +
+              '<span style="font-size:10px;color:#8b8d97">' +
+              esc(i.category || "") +
+              "</span>" +
+              '<code style="font-size:10px;color:#6A1B9A">' +
+              esc(i.id || "") +
+              "</code></div>" +
+              '<div style="font-size:13px;font-weight:700;color:#464255;margin-bottom:4px">' +
+              esc(i.title_pl || i.id) +
+              "</div>" +
+              '<div style="font-size:12px;color:#5c5a66;line-height:1.4;margin-bottom:6px">' +
+              esc(i.body_pl || "") +
+              "</div>" +
+              (must
+                ? '<ul style="margin:0;padding-left:18px;font-size:11px;color:#8b8d97">' +
+                  must +
+                  "</ul>"
+                : "") +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+      var bridge =
+        (window.DamPaths && DamPaths.bridgeUrl && DamPaths.bridgeUrl()) ||
+        "http://127.0.0.1:8766";
+      fetch(bridge + "/program-instructions")
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (data) {
+          if (data && data.ok) {
+            render(data);
+            return;
+          }
+          throw new Error("bridge");
+        })
+        .catch(function () {
+          fetch("data/program-instructions.json?v=20260718instr1")
+            .then(function (r) {
+              return r.json();
+            })
+            .then(render)
+            .catch(function () {
+              list.innerHTML =
+                '<p class="dam-widget__meta">Nie udało się wczytać instrukcji (bridge offline / brak pliku).</p>';
+            });
+        });
+    })();
+
+    (function () {
+      var table = document.getElementById("damNamingCarrierTable");
+      if (!table) return;
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function render(dict) {
+        var policy = (dict && dict.policy) || (window.DamLabels && DamLabels.CARRIER_POLICY) || {};
+        var ui = policy.carrier_display_in_ui || "label_pl";
+        var disk = policy.carrier_prefix_on_disk || "short";
+        var uiEl = document.getElementById("damNamingUiRule");
+        var diskEl = document.getElementById("damNamingDiskRule");
+        var descEl = document.getElementById("damNamingPolicyDesc");
+        var uiBadge = document.getElementById("damNamingUiBadge");
+        var diskBadge = document.getElementById("damNamingDiskBadge");
+        if (uiEl) uiEl.textContent = ui === "short"
+          ? "Skróty w UI (nietypowe — sprawdź słownik)"
+          : "Pełne nazwy: DOYPACK, FOLIA, BATON…";
+        if (diskEl) diskEl.textContent = disk === "short"
+          ? "Skróty folderów: DOY, FOL, BAT…"
+          : "Pełne nazwy także na dysku";
+        if (uiBadge) uiBadge.textContent = ui;
+        if (diskBadge) diskBadge.textContent = disk;
+        if (descEl) descEl.textContent = policy.description_pl || "";
+        var carriers = (dict && dict.carriers) || {};
+        var keys = Object.keys(carriers).sort();
+        if (!keys.length) {
+          table.innerHTML = '<p class="dam-widget__meta" style="padding:12px">Brak słownika naming-dictionary.</p>';
+          return;
+        }
+        table.innerHTML =
+          '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
+          "<thead><tr style=\"background:#faf8fc;text-align:left\">" +
+          "<th style=\"padding:8px 10px\">Kod</th>" +
+          "<th style=\"padding:8px 10px\">W programie</th>" +
+          "<th style=\"padding:8px 10px\">Na dysku</th>" +
+          "</tr></thead><tbody>" +
+          keys
+            .map(function (code) {
+              var c = carriers[code] || {};
+              return (
+                "<tr style=\"border-top:1px solid #f0f0f0\">" +
+                "<td style=\"padding:6px 10px;font-weight:600\">" +
+                esc(code) +
+                "</td>" +
+                "<td style=\"padding:6px 10px\">" +
+                esc(c.label_pl || code) +
+                "</td>" +
+                "<td style=\"padding:6px 10px;color:#E65100\">" +
+                esc(c.short || code) +
+                "</td></tr>"
+              );
+            })
+            .join("") +
+          "</tbody></table>";
+      }
+      fetch("data/naming-dictionary.json?v=20260718namingPolicy1")
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (dict) {
+          if (window.DamLabels && DamLabels.applyNamingDict) DamLabels.applyNamingDict(dict);
+          render(dict);
+        })
+        .catch(function () {
+          render(window.DamNaming || null);
+        });
+    })();
+
     (function() {
       var box = document.getElementById("damIntegrationsList");
       if (!box) return;

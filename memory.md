@@ -1,6 +1,20 @@
 # memory.md - DAM ETA (zasady trwale)
 
-Data: **2026-07-16**. Wykonawca: Composer 2.5. Workspace: **tylko `P:\DAM`**.
+Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-07-18**.  
+Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
+
+## Indeks dokumentacji (czytaj to pierwsze)
+
+| Temat | Plik |
+|-------|------|
+| Start repo | [`README.md`](README.md) |
+| Agenci | [`agents/README.md`](agents/README.md), [`AGENTS.md`](AGENTS.md) |
+| Jezyki / rynki | [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md), kanon [`agents/shared/lang-provenance.md`](agents/shared/lang-provenance.md) |
+| Reguly w bazie | [`docs/PROGRAM_INSTRUCTIONS.md`](docs/PROGRAM_INSTRUCTIONS.md) + `apps/web/data/program-instructions.json` |
+| Log operacyjny | [`process.md`](process.md) |
+| Postep | [`PROGRESS.md`](PROGRESS.md) |
+
+**Konflikt:** wygrywa `program-instructions` (KV), nie ten plik.
 
 ## Hard rules
 
@@ -680,7 +694,7 @@ Data: **2026-07-16**. Wykonawca: Composer 2.5. Workspace: **tylko `P:\DAM`**.
  - Shared `.dam-nav-circles` + `.dam-viz-icon-btn` (36px).
  - Projekty toolbar: search wypelnia rzad; status `#damProjectsStatus` pod toolbar (`dam-projects-status-line`); bez martwej dziury.
  - Ramki kart `--ok` / `--incomplete`: alpha obrysu **0.35** (bylo 0.5), wash ~0.05.
- - Dashboard „3 najnowsze wizualizacje”: thumb **100×100** `object-fit: contain`, gap 100px do nazwy/tagow, 3 kola + klik w img → viz.
+ - Dashboard „4 najnowsze wizualizacje” (2026-07-18): ranking = **projekt Asana (start)** + **mtime pliku bez bulk-sync** (≥4 produktow w tej samej minucie = ignoruj) + dedupe 1 produkt/projekt; tagi: marka + nosnik + **indeks**; akcje = male zaokraglone kwadraty 26px (`.dam-nav-circles--tiles`); `+N` badge rozija pozostale tagi.
  - Cache: `?v=20260718ui35f` (app/brand/dashboard CSS + inbox/projects/dashboard HTML).
 
 98. **Zgłoszenia: taby Typy / Wizualizacje / Historia + undo (2026-07-18, inboxTabs6):**
@@ -710,3 +724,87 @@ Data: **2026-07-16**. Wykonawca: Composer 2.5. Workspace: **tylko `P:\DAM`**.
  - Dostosuj pulpit: checkbox Geex `#AB54DB` 28px (2×), panel w lewo + hover preview 350ms (kolejka animacji, hover = wyższy z-index), DnD + strzałki, dirty guard: Zapisz zmiany / Nie zapisuj / Wróć do wyboru.
  - Inbox subtitle: ludzki copy (bez „robotycznego” równości).
  - Cache: `?v=20260718authRehydrate1` (api/shell), `dashCustom2` (dashboard widgets/css).
+
+101c. **Tagi casing globalny (2026-07-18, tagCase2):**
+ - Tagi globalne: `DamLabels.formatTagLabel(label, kind)`.
+ - Kody (brand/lang/carrier/index): WERSALIKI jak w slowniku (DOYPACK, GC, GB).
+ - Ludzkie (category/subcategory/smak/typ): jak w zdaniu - `Kulki`, `Kulki Surowe`, `Mini Batoniki`.
+ - Opakowanie w filtrze: mapuj do `label_pl` (doypack -> DOYPACK).
+ - Instrukcja: `ui.tag_casing_global` w program-instructions. Cache `?v=20260718tagCase2`.
+
+101d. **PL pod angielska nazwa GC (2026-07-18, namePl2):**
+ - Karty Wizualizacji (GC): po tytule EN zawsze `<br>` + `( Polska )` ze spacjami w nawiasie, np. `MINCED` → `( Mielone )`.
+ - Rozmiar jak `.dam-viz-card__meta` (11px). Nawiasy: bardzo stonowane `#c5c6cd` + opacity 0.72 (slabsze niz meta). Tekst PL: `#696877`.
+ - Slownik: `data/product-name-pl.json` + KV `product-name-pl`; API przez seed bridge.
+ - `DamLabels.productNamePlMarkup` + `.dam-viz-card__title-pl-paren` / `__title-pl-text`. Instrukcja: `ui.product_name_pl_under_en`.
+ - Cache: `?v=20260718namePl3`.
+
+101b. **Instrukcje programu w BAZIE (2026-07-18, instr1) - KRYTYCZNE:**
+ - Wszystkie newralgiczne ustalenia (nazewnictwo, F/X/D, aktywny/nieaktywny, zakazy) → `program-instructions.json` + Postgres `dam_kv_store.program-instructions`.
+ - API: `GET /program-instructions`. UI: Ustawienia → „Instrukcje programu (baza)”.
+ - `memory.md` = notatka; przy konflikcie wygrywa program-instructions.
+ - Po decyzji usera: najpierw dopisz instrukcje + seed KV, potem kod. Regula: `.cursor/rules/program-instructions.mdc`.
+
+102. **Nosnik: UI = pelna nazwa, dysk = skrot (2026-07-18, namingPolicy1):**
+ - **Zrodlo prawdy (nie tylko memory):** `naming-dictionary.json` → Postgres `dam_kv_store.naming-dictionary` + lustro `app-settings.json` / `dam_kv_store.app-settings`. Karta Ustawienia → „Nazewnictwo nośników”. Instrukcja: `naming.carrier_ui_vs_disk` w program-instructions.
+ - `policy.carrier_display_in_ui = label_pl` (DOYPACK/FOLIA/BATON w UI).
+ - `policy.carrier_prefix_on_disk = short` (DOY/FOL/BAT na dysku przy rename).
+ - Kazdy nosnik ma `label_pl` + `short`. Bridge laduje `CARRIER_FOLDER_PREFIX` ze slownika (`load_carrier_folder_prefix`); seed przy starcie bridge.
+ - Skroty tylko po to, zeby nazwy w Eksploratorze zajmowaly mniej miejsca - NIE etykieta UI.
+ - Stare foldery `DOYPACK - ...` → `KNOWN_CARRIER_PREFIXES` + skrypt `fix_doypack_folder_prefixes.py --apply`.
+ - Operacje: `change-log.json` (+ assignment-log). Cache: `?v=20260718namingPolicy1`.
+
+98. **Tryb admina = switch w headerze (2026-07-18, adminHdr1):**
+ - Jedyny przełącznik: switch **Admin** w geex-content__header__quickaction, **tuż po lewej od avatara** (po PL).
+ - Zakaz lokalnych toggle na explorer/viz (#damAdminToggle, #vizAdminToggle, label.dam-admin-toggle).
+ - Persist: localStorage.dam_admin_mode; event dam:admin-mode. Widoczny tylko dla 
+ole=admin.
+ - Pill Baza / Pliki: rozmiar zewnetrzny bez zmian (min-height 56). Tylko .dam-db-status__refresh = 24px (-50% vs 48).
+ - Cache: ?v=20260718adminHdr4.
+
+
+103. **Lifecycle status F/X/D (2026-07-18, life2) - TEST GATE:**
+ - Admin oznacza produkt lub wariant: **F** (aktualne), **X** (nieaktualne/archiwum), **D** (demo), **Odznacz**.
+ - Dysk: dopina  - F /  - X /  - D do nazwy folderu. Historia: pps/web/data/lifecycle-status.json + change-log.json (previous_name + previous_path).
+ - Produkt X: cascade na warianty + przeniesienie do — ARCHIWUM kategorii. Wariant X: archiwum z wrapperem produktu (PRODUKT\\WARIANT - X).
+ - Produkt D: cascade - D na warianty; odznaczenie wariantu z D przy produkcie D -> clear literki produktu.
+ - Bridge: POST/GET /lifecycle-status (admin). Modul: pps/desktop/lifecycle_status.py.
+ - Produkt testowy: TEST LIFECYCLE / indeks TEST-TEST w Batony/nerkowcowe. Nie ruszac realnych produktow az user potwierdzi.
+ - UI: Geex dials 5/3/5. Cache ?v=20260718life2.
+
+104. **Silent launch (2026-07-18):** zakaz widocznego CMD przy starcie/relaunch. schedule_relaunch bez ping/cmd/start; pythonw + CREATE_NO_WINDOW. run-dam.vbs zostaje styl 1 (SW_HIDE psuje WebView2). Pomoc F1: sekcja F/X/D lifecycle.
+105. **Projekty: jedno X + persist wyszukiwania (2026-07-18, searchPersist1):**
+ - Pole #damProjectsSearch = 	ype=text (nie search) + CSS ukrywa natywny clear; zostaje tylko .dam-search-clear.
+ - Stan zapytania: sessionStorage.dam_projects_view + URL index.html?q=... (history.replaceState) + aktualizacja wierzcholka dam_nav_stack (DamShell.replaceNavStackTop).
+ - Wstecz z project.html wraca do listy z tym samym q (nie resetuje widoku).
+ - Cache: index.html dam-brand.css?v=20260718searchClear1, dam-projects.js?v=20260718searchPersist1, dam-shell.js?v=20260718navStackQ1.
+
+
+106. **Dashboard viz scale (2026-07-18, dashVizScale8):**
+ - Widget `.dam-widget--viz-latest` = pelna szerokosc main (span 9), siatka 2x2 od ~560cqi, fluid thumbs/typo.
+ - Layout: `.dam-dash-layout` = `minmax(0,1fr) clamp(260px,20vw,360px)` (nie sztywne 11 kolumn).
+ - Override Geex: `.geex-content:has(.dam-dash-layout) { width: 100% !important }`.
+ - Cache: `dam-dashboard.css?v=20260718dashVizScale8`.
+
+107. **Jezyki/rynki - POCHODZENIE SYGNALU (2026-07-18, doprecyzowanie DK) - HARD:**
+ - Kanon: `agents/shared/lang-provenance.md`.
+ - **DK zawsze PL** (pewnik marki). Extra (np. GB w PL/GB) tylko z nazw folderow/plikow albo recznego oznaczenia.
+ - **GC bez baseline** - GB/CZ/SK/... tylko z tokenu w nazwie albo override; inaczej `?`.
+ - Zakaz: GC->gb z marki; DK->gb bez dowodu; hardcode indeksu jako regula.
+ - `lang-overrides.json` nigdy nie nadpisywane rebuildem.
+ - program-instructions: `data.lang_provenance_only`.
+
+108. **Osoba przy produkcie = wyszukiwanie, nie badge TAG (2026-07-18, people1):**
+ - Cel: wpisac w szukajke „Sylwia” / „Krzysztof” / „Szymon” i trafic w produkty, ktorymi sie zajmowali.
+ - **Nie** robic widocznych tagow typu „TAG Krzysztof” na kartach (chyba ze user poprosi).
+ - Zrodlo: `apps/web/data/product-people.json` + KV `product-people` + Asana CSV w `enrich-search-tags.py`.
+ - Po zmianie mapy: `python apps/web/scripts/enrich-search-tags.py` (+ seed KV). Instrukcja: `search.product_people`.
+ - QA: `sylwia` → ~23 produktow (Mielone, Energia, Odpornosc, Prebiotyk, Kalendarz, Datesy…); bez badge imienia na karcie.
+ - **Heurystyka (do integracji Asana):** 1) Asana Assignee = prawda. 2) Nowy produkt bez zadania KW w Asanie → domyslnie Sylwia. 3) Szymon tylko jako slabe zgadywanie / koordynacja, NIE gdy Asana milczy i nie ma silnego sygnalu. Integracja Asana = pozniej (user usera).
+
+
+109. **Carrier toggle row + inbox hist (2026-07-18, carrierInbox11):**
+ - Pasek nosnika: grid `minmax(0,1fr) auto`; chevron ZAWSZE w `.dam-carrier-toggle-row__end` (po path actions).
+ - Caly pasek toggle (Enter/Space); ignore: button/a/input/tag-edit/lifecycle/path-actions.
+ - Typografia: `.dam-carrier-toggle__label` i `.dam-folder-item__name` = `var(--dam-fs-base)` (jak viz-card title / prod-row title).
+ - Inbox: hist-item jak mod strip; product nav = `dam-nav-circles--row` (nie stack).

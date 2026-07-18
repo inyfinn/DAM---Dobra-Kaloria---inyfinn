@@ -107,8 +107,8 @@
       host.innerHTML = "";
       return;
     }
+    /* TYLKO surowe langs. Zakaz domyslu market=PL -> pl. */
     var langs = p.langs || [];
-    if (!langs.length && p.market === "PL") langs = ["pl"];
     var carrierLbl = "";
     if (window.DamLabels && typeof window.DamLabels.carrierLabel === "function") {
       carrierLbl = window.DamLabels.carrierLabel(p.carrier || "", p.path || "", {

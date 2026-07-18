@@ -3,6 +3,8 @@
  * Wszystkie kategorie widoczne od razu. Gdy w kategorii > ROW_LIMIT tagow:
  * pierwsze N widoczne, "rozwin" dla TEJ kategorii rozwija wiersz w dol
  * i przesuwa reszte UI nizej (bez globalnego przycinania).
+ *
+ * Casing: globalnie przez DamLabels.formatTagLabel (tagi sa globalne).
  */
 (function () {
   "use strict";
@@ -23,21 +25,6 @@
     autor: "dam-tag-group--autor",
     osoba: "dam-tag-group--autor",
   };
-  /* Ludzkie etykiety (data-tag zostaje kanoniczny do wyszukiwania) */
-  var TAG_DISPLAY = {
-    bat: "BAT",
-    "mini baton": "mini baton",
-    "mini batoniki": "mini batoniki",
-    "karton 6x": "karton 6x",
-    "doy 6x": "doy 6x",
-    niemiesne: "niemięsne",
-    roslinne: "roślinne",
-    sniadaniowe: "śniadaniowe",
-    napoj: "napój",
-    sleeve: "sleeve",
-    doypack: "doypack",
-    bigpak: "bigpak",
-  };
 
   function esc(s) {
     return String(s || "")
@@ -47,9 +34,13 @@
       .replace(/"/g, "&quot;");
   }
 
-  function tagLabel(t) {
+  function tagLabel(t, groupKey) {
     var key = String(t || "");
-    return TAG_DISPLAY[key] || key;
+    var kind = groupKey === "opakowanie" ? "opakowanie" : groupKey === "typ" ? "typ" : groupKey === "smak" ? "smak" : "autor";
+    if (window.DamLabels && typeof window.DamLabels.formatTagLabel === "function") {
+      return window.DamLabels.formatTagLabel(key, kind);
+    }
+    return key;
   }
 
   function fetchTagGroups(cb) {
@@ -128,13 +119,14 @@
           '<span class="dam-tag-group-pills">';
 
         visible.forEach(function (t) {
+          var display = tagLabel(t, gk);
           html +=
             '<button type="button" class="dam-tag-pill" data-tag="' +
             esc(t) +
             '" title="' +
-            esc(tagLabel(t)) +
+            esc(display) +
             '">' +
-            esc(tagLabel(t)) +
+            esc(display) +
             "</button>";
         });
 

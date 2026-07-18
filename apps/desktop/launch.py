@@ -36,6 +36,18 @@ WATCH_INDEX = WEB_ROOT / "scripts" / "watch-file-index.py"
 ICON = DESKTOP_DIR / "dam_app.ico"
 LAUNCH_SCRIPT = Path(__file__).resolve()
 _MUTEX_HANDLE = None  # musi zyc do konca procesu (GC CloseHandle zwalnia mutex)
+# Windows: ukryj konsole dzieci (bez mrugania CMD / ping)
+CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
+
+def _silent_python() -> str:
+    """Preferuj pythonw.exe - brak okna konsoli przy starcie/relaunch."""
+    exe = Path(sys.executable)
+    if exe.name.lower() == "python.exe":
+        pw = exe.with_name("pythonw.exe")
+        if pw.is_file():
+            return str(pw)
+    return str(exe)
 
 
 def win_message(title: str, text: str, icon: int = 0x10) -> None:
@@ -244,11 +256,15 @@ def json_bytes(payload: dict) -> bytes:
 def start_bridge(ui_port: int, bridge_port: int) -> subprocess.Popen | None:
     if not LOCAL_BRIDGE.exists():
         return None
+    flags = CREATE_NO_WINDOW if sys.platform == "win32" else 0
     return subprocess.Popen(
-        [sys.executable, str(LOCAL_BRIDGE)],
+        [_silent_python(), str(LOCAL_BRIDGE)],
         cwd=str(DESKTOP_DIR),
         env=env_for_bridge(ui_port, bridge_port),
-        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+        creationflags=flags,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
 
@@ -257,10 +273,14 @@ def start_index_watcher() -> subprocess.Popen | None:
     if not WATCH_INDEX.is_file():
         return None
     try:
+        flags = CREATE_NO_WINDOW if sys.platform == "win32" else 0
         return subprocess.Popen(
-            [sys.executable, str(WATCH_INDEX), "--interval", "5"],
+            [_silent_python(), str(WATCH_INDEX), "--interval", "5"],
             cwd=str(WEB_ROOT.parent.parent),
-            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+            creationflags=flags,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
     except Exception:
         return None
@@ -297,27 +317,40 @@ def require_pywebview():
 
 
 def schedule_relaunch() -> None:
-    """Uruchom ponownie launch.py po zwolnieniu mutexa (opoznienie ~1.5s)."""
-    exe = sys.executable
+    """Uruchom ponownie launch.py po zwolnieniu mutexa (opoznienie ~1.5s).
+
+    Windows: BEZ cmd / ping / start - te komendy pokazywaly czarne okno konsoli.
+    Delay + relaunch w ukrytym procesie pythonw + CREATE_NO_WINDOW.
+    """
+    exe = _silent_python()
     script = str(LAUNCH_SCRIPT)
+    cwd = str(DESKTOP_DIR)
     if sys.platform == "win32":
-        # DETACHED: nowe okno zyjace po zamknieciu biezacego procesu.
-        # ping = prosty delay bez timeout.exe (czasem zablokowany polityka).
-        cmd = (
-            f'ping -n 3 127.0.0.1 >nul & '
-            f'start "" "{exe}" "{script}"'
+        # Delay + relaunch bez shell/cmd/ping (te pokazywaly czarne okno).
+        code = (
+            "import time,subprocess;"
+            "time.sleep(1.5);"
+            "subprocess.Popen(%r, cwd=%r, creationflags=%d, "
+            "stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)"
+        ) % ([exe, script], cwd, CREATE_NO_WINDOW)
+        flags = (
+            subprocess.DETACHED_PROCESS
+            | subprocess.CREATE_NEW_PROCESS_GROUP
+            | CREATE_NO_WINDOW
         )
         subprocess.Popen(
-            cmd,
-            shell=True,
-            cwd=str(DESKTOP_DIR),
-            creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+            [exe, "-c", code],
+            cwd=cwd,
+            creationflags=flags,
             close_fds=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
         return
     subprocess.Popen(
         [exe, script],
-        cwd=str(DESKTOP_DIR),
+        cwd=cwd,
         start_new_session=True,
     )
 

@@ -1,8 +1,8 @@
 """
 Wzbogaca file-index.json + search-index.json:
 - tag_groups smak/typ/opakowanie: 12-24 najczestszych
-- tag_groups autor: z Asana CSV (Assignee x indeks)
-- authors / search_blob na produktach i entries
+- tag_groups autor: z Asana CSV (Assignee x indeks) + product-people.json
+- authors / search_blob / by_tag (imiona) na produktach i entries
 """
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 FILE_INDEX = DATA / "file-index.json"
 SEARCH_INDEX = DATA / "search-index.json"
+PRODUCT_PEOPLE = DATA / "product-people.json"
 ASANA_CANDIDATES = [
     DATA / "asana-tasks-kw.csv",
     Path.home() / "Desktop" / "Zadania_Krzysztof_–_kubara.pl.csv",
@@ -94,6 +95,65 @@ def load_author_by_index(csv_path: Path) -> dict[str, str]:
     return out
 
 
+def load_product_people() -> dict:
+    if not PRODUCT_PEOPLE.is_file():
+        return {}
+    try:
+        return json.loads(PRODUCT_PEOPLE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def people_for_product(p: dict, pp: dict) -> list[str]:
+    """Lista imion z product-people.json (by_id / by_index / by_id_prefix)."""
+    if not pp:
+        return []
+    found: list[str] = []
+
+    def add(names: list | str | None) -> None:
+        if not names:
+            return
+        if isinstance(names, str):
+            names = [names]
+        for n in names:
+            fn = first_name(str(n)) or str(n).strip()
+            if fn and fn not in found:
+                found.append(fn)
+
+    by_id = pp.get("by_id") or {}
+    pid = str(p.get("id") or "")
+    add(by_id.get(pid))
+
+    for pref, names in (pp.get("by_id_prefix") or {}).items():
+        if pid.startswith(str(pref)):
+            add(names)
+
+    by_index = pp.get("by_index") or {}
+    for base in p.get("index_bases") or []:
+        add(by_index.get(str(base).upper()))
+        add(by_index.get(str(base)))
+
+    return found
+
+
+def author_search_tokens(authors: list[str], pp: dict) -> list[str]:
+    """Imiona + aliasy (nazwiska) do search_blob / by_tag."""
+    people = (pp or {}).get("people") or {}
+    tokens: list[str] = []
+    for a in authors:
+        if a and a not in tokens:
+            tokens.append(a)
+        meta = people.get(a) or {}
+        full = (meta.get("full") or "").strip()
+        if full and full not in tokens:
+            tokens.append(full)
+        for al in meta.get("aliases") or []:
+            al = str(al).strip()
+            if al and al not in tokens:
+                tokens.append(al)
+    return tokens
+
+
 def pick_group_tags(counter: Counter[str], allowed: set[str], lo: int = 12, hi: int = 24) -> list[str]:
     ranked = [(t, n) for t, n in counter.most_common() if t in allowed and n > 0]
     # uzupelnij z allowed jesli malo
@@ -140,38 +200,71 @@ def main() -> int:
     else:
         print("WARN: brak CSV Asana - autor bez mapowania indeksow")
 
+    pp = load_product_people()
+    if pp:
+        print(
+            f"product-people: by_id={len(pp.get('by_id') or {})} "
+            f"by_index={len(pp.get('by_index') or {})} "
+            f"prefix={len(pp.get('by_id_prefix') or {})}"
+        )
+    else:
+        print("WARN: brak product-people.json")
+
     author_counter: Counter[str] = Counter()
+    by_tag: dict[str, list[str]] = defaultdict(list)
+    # zachowaj istniejace by_tag (smak/typ/...)
+    for tag, ids in (si.get("by_tag") or {}).items():
+        for pid in ids or []:
+            by_tag[tag].append(pid)
+
     for p in products:
         authors: list[str] = []
         for base in p.get("index_bases") or []:
             a = author_by_index.get(str(base).upper())
             if a and a not in authors:
                 authors.append(a)
-                author_counter[a] += 1
+        # kontekst statusow / Asany / dziennika (product-people.json)
+        for a in people_for_product(p, pp):
+            if a not in authors:
+                authors.append(a)
         # fallback: szukaj w tags/osoba
         tg = p.get("tag_groups") or {}
         for a in tg.get("osoba") or []:
             fn = first_name(a) or a
             if fn and fn not in authors:
                 authors.append(fn)
-                author_counter[fn] += 1
+        for a in authors:
+            author_counter[a] += 1
         p["authors"] = authors
         tg = dict(tg)
         tg["autor"] = sorted(authors)
+        tg["osoba"] = sorted(authors)
         p["tag_groups"] = tg
-        # search blob
+        tokens = author_search_tokens(authors, pp)
         blob_parts = [
             p.get("display_name") or "",
             p.get("name") or "",
             " ".join(p.get("tags") or []),
-            " ".join(authors),
+            " ".join(tokens),
             " ".join(p.get("indexes") or []),
         ]
         p["search_blob"] = norm(" ".join(blob_parts))
+        pid = p.get("id")
+        if pid:
+            for tok in tokens:
+                key = norm(tok)
+                if key and pid not in by_tag[key]:
+                    by_tag[key].append(pid)
+                # tez samo imie Title Case jako tag filtrujacy
+                fn = first_name(tok)
+                if fn:
+                    fk = norm(fn)
+                    if fk and pid not in by_tag[fk]:
+                        by_tag[fk].append(pid)
 
     autor_tags = [t for t, _ in author_counter.most_common(24)]
-    # doloz imiona z listy userow jesli brakuje
-    for name in [
+    # doloz imiona z listy userow / product-people
+    for name in list((pp.get("people") or {}).keys()) + [
         "Krzysztof", "Anna", "Marek", "Ewa", "Karolina", "Maciej", "Szymon",
         "Sylwia", "Agata", "Andzelika", "Beata", "Dagmara", "Justyna",
         "Malgorzata", "Marta", "Ryszard",
@@ -205,12 +298,13 @@ def main() -> int:
             continue
         e["authors"] = p.get("authors") or []
         e["tag_groups"] = p.get("tag_groups") or e.get("tag_groups") or {}
+        tokens = author_search_tokens(e["authors"], pp)
         e["search_blob"] = norm(
             " ".join(
                 [
                     e.get("display_name") or e.get("name") or "",
                     " ".join(e.get("tags") or []),
-                    " ".join(e.get("authors") or []),
+                    " ".join(tokens),
                     " ".join(e.get("indexes") or []),
                 ]
             )
@@ -218,14 +312,19 @@ def main() -> int:
 
     si["tag_groups"] = tag_groups
     fi["tag_groups"] = tag_groups
+    si["by_tag"] = {k: sorted(set(v)) for k, v in sorted(by_tag.items())}
 
     FILE_INDEX.write_text(json.dumps(fi, ensure_ascii=False, indent=2), encoding="utf-8")
     SEARCH_INDEX.write_text(json.dumps(si, ensure_ascii=False, indent=2), encoding="utf-8")
     print(
         "OK tag_groups:",
         {k: len(v) for k, v in tag_groups.items() if k != "inne"},
-        "products",
-        len(products),
+        "products_with_authors",
+        sum(1 for p in products if p.get("authors")),
+        "by_tag_sylwia",
+        len(si["by_tag"].get("sylwia") or []),
+        "by_tag_krzysztof",
+        len(si["by_tag"].get("krzysztof") or []),
     )
     return 0
 

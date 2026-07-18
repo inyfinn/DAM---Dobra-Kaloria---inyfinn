@@ -27,6 +27,7 @@ SEARCH_OUT = WEB / "data" / "search-index.json"
 THUMBS_DIR = WEB / "data" / "thumbs"
 NAMING_DICT_PATH = WEB / "data" / "naming-dictionary.json"
 PRODUCT_ALIASES_PATH = WEB / "data" / "product-aliases.json"
+LANG_OVERRIDES_PATH = WEB / "data" / "lang-overrides.json"
 
 
 def _load_naming_dict() -> dict:
@@ -360,16 +361,25 @@ PACKAGING_SET = {norm(h) for h in PACKAGING_HINTS}
 CURATED_VOCAB = PERSON_SET | FLAVOR_SET | PRODUCT_TYPE_SET | PACKAGING_SET
 
 
+LIFECYCLE_SUFFIX_RE = re.compile(r"\s+-\s+[FXD]$", re.IGNORECASE)
+
+
+def strip_lifecycle_suffix(name: str) -> str:
+    """Usun koncowke statusu folderu: - F / - X / - D."""
+    return LIFECYCLE_SUFFIX_RE.sub("", (name or "").rstrip()).rstrip()
+
+
 def parse_display_name(product_name: str) -> tuple[str, list[str]]:
     bracket_tags: list[str] = []
-    for m in BRACKET_HINT_RE.finditer(product_name):
+    clean_name = strip_lifecycle_suffix(product_name)
+    for m in BRACKET_HINT_RE.finditer(clean_name):
         hint = norm(m.group(1))
         if hint and not is_noise_tag(hint):
             bracket_tags.append(hint)
-    display = DISPLAY_BRACKET_RE.sub("", product_name).strip()
+    display = DISPLAY_BRACKET_RE.sub("", clean_name).strip()
     display = re.sub(r"\s+", " ", display)
     if not display:
-        display = product_name
+        display = clean_name or product_name
     return display, bracket_tags
 
 
@@ -497,9 +507,15 @@ def parse_index(name: str) -> tuple[str | None, str | None, str | None]:
     """Wyciagnij indeks produktu. Preferuj NNNNNNN.RR; akceptuj tez same cyfry (bez .00)."""
     if not name:
         return None, None, None
+    name = strip_lifecycle_suffix(name)
     # Placeholder typu 6300XXX - nie traktuj jako prawdziwy indeks
     if re.search(r"\d{3,}X{2,}", name, flags=re.IGNORECASE):
         return None, None, None
+    # Indeks testowy / alfanumeryczny: TEST-TEST (lifecycle QA)
+    m_test = re.search(r"\b(TEST-[A-Z0-9]+)\b", name, flags=re.IGNORECASE)
+    if m_test:
+        full = m_test.group(1).upper()
+        return full, None, full
     m = INDEX_RE.search(name)
     if m:
         base, rev = m.group("base"), m.group("rev")
@@ -995,9 +1011,7 @@ def apply_product_aliases(products: list[dict]) -> None:
             continue
         alias_langs: set[str] = set()
         for prod in present:
-            # Domyslny jezyk marki (PL dla DK, GB dla GC) - foldery czesto NIE tagują
-            # explicit swojego glownego jezyka (tylko jezyki dodatkowe/eksportowe).
-            alias_langs.add("pl" if prod.get("brand") == "DK" else "gb")
+            # TYLKO surowe langs z rewizji - bez domyslu marki (GC!=gb).
             for r in prod.get("revisions") or []:
                 alias_langs.update(r.get("langs") or [])
         for prod in present:
@@ -1106,7 +1120,10 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
             if inferred:
                 carrier = inferred
 
-        folder_langs = parse_folder_langs(child.name)
+        # Jezyki: surowe nazwy (folder+pliki) + baseline DK=PL. GC bez baseline.
+        # Dodatkowe (np. GB przy DK) TYLKO z tokenow w nazwach. Override: apply_lang_overrides.
+        raw_langs = infer_langs_from_files(child.name, pool)
+        file_langs, langs_source = apply_brand_lang_baseline(brand, raw_langs)
         revisions.append(
             {
                 "folder": child.name,
@@ -1121,7 +1138,9 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
                 "files_by_role": files_by_role,
                 "wizki": wizki_files,
                 "wizki_count": len(wizki_files),
-                "langs": folder_langs,
+                "langs": file_langs,
+                "langs_manual": False,
+                "langs_source": langs_source,
             }
         )
 
@@ -1226,28 +1245,142 @@ def parse_folder_langs(folder_name: str) -> list[str]:
 
 _LANG_CODES_ORDER = (
     "pl", "de", "en", "gb", "uk", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
-    "fr", "it", "es", "nl", "ru", "ua", "hr", "si", "bg",
+    "fr", "it", "es", "nl", "ru", "ua", "hr", "si", "bg", "ar",
 )
 
 
-def detect_lang_explicit(filename: str) -> str | None:
-    n = norm(filename)
+def parse_langs_from_text(text: str) -> list[str]:
+    """Wszystkie kody jezyka z nazwy pliku/folderu (CZ_SK -> [cz, sk]). Bez domyslow."""
+    n = norm(text or "")
+    if not n:
+        return []
+    found: list[str] = []
+    seen: set[str] = set()
     for code in _LANG_CODES_ORDER:
-        if re.search(rf"(^|[^a-z]){code}([^a-z]|$)", n):
-            if code == "en":
-                return "gb"
-            if code == "ua":
-                return "uk"
-            return code
-    return None
+        if re.search(rf"(^|[^a-z]){re.escape(code)}([^a-z]|$)", n):
+            mapped = LANG_ALIASES.get(code, code)
+            if mapped == "en":
+                mapped = "gb"
+            if mapped == "ua":
+                mapped = "uk"
+            if mapped in KNOWN_LANG_CODES and mapped not in seen:
+                seen.add(mapped)
+                found.append(mapped)
+    return found
+
+
+def infer_langs_from_files(folder_name: str, files: list[dict] | None) -> list[str]:
+    """Surowe dane: jezyki z nazwy folderu + nazw plikow (source/print/viz/wizki)."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for code in parse_folder_langs(folder_name) + parse_langs_from_text(folder_name):
+        if code not in seen:
+            seen.add(code)
+            out.append(code)
+    for f in files or []:
+        name = (f.get("name") if isinstance(f, dict) else "") or ""
+        for code in parse_langs_from_text(name):
+            if code not in seen:
+                seen.add(code)
+                out.append(code)
+    return out
+
+
+def apply_brand_lang_baseline(brand: str, raw_langs: list[str] | None) -> tuple[list[str], str]:
+    """DK zawsze ma PL (pewnik marki). Dodatkowe kody TYLKO z raw (folder/plik).
+
+    GC: bez baseline (GC!=gb). Extra jezyki tylko z nazw albo override.
+    Zwraca (langs, langs_source).
+    """
+    brand_u = (brand or "DK").upper()
+    raw: list[str] = []
+    seen: set[str] = set()
+    for code in raw_langs or []:
+        c = (code or "").lower().strip()
+        if not c or c in ("?", "unknown", "xx"):
+            continue
+        if c == "en":
+            c = "gb"
+        if c == "ua":
+            c = "uk"
+        if c not in seen and c in KNOWN_LANG_CODES:
+            seen.add(c)
+            raw.append(c)
+
+    if brand_u == "DK":
+        out = ["pl"]
+        for c in raw:
+            if c != "pl":
+                out.append(c)
+        if len(out) > 1:
+            return out, "brand_dk+raw"
+        return out, "brand_dk"
+
+    # GC i inne: tylko dowod z nazw
+    if raw:
+        return raw, "raw"
+    return [], "unknown"
+
+
+def detect_lang_explicit(filename: str) -> str | None:
+    langs = parse_langs_from_text(filename)
+    return langs[0] if langs else None
 
 
 def detect_lang(filename: str) -> str:
-    return detect_lang_explicit(filename) or "pl"
+    """DEPRECATED fallback - nie wymyslaj PL. Puste = nieznany."""
+    return detect_lang_explicit(filename) or ""
 
 
 def lang_label(code: str) -> str:
+    if not code or code in ("?", "unknown", "xx"):
+        return "?"
     return LANG_LABELS.get(code, code.upper())
+
+
+def load_lang_overrides() -> dict:
+    try:
+        data = json.loads(LANG_OVERRIDES_PATH.read_text(encoding="utf-8"))
+        return data.get("overrides") or {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def apply_lang_overrides(products: list[dict]) -> None:
+    """Reczne langs (admin) = najwyższy priorytet. NIGDY nie nadpisuj auto po rebuildzie."""
+    overrides = load_lang_overrides()
+    if not overrides:
+        return
+    for p in products:
+        for r in p.get("revisions") or []:
+            idx = str(r.get("index") or "")
+            path = str(r.get("path") or "").replace("\\", "/")
+            folder = str(r.get("folder") or "")
+            hit = None
+            for key in (idx, path, folder, path.replace("/", "\\")):
+                if key and key in overrides:
+                    hit = overrides[key]
+                    break
+            if not hit:
+                continue
+            manual = hit.get("langs")
+            if not isinstance(manual, list) or not manual:
+                continue
+            cleaned = []
+            seen: set[str] = set()
+            for raw in manual:
+                code = LANG_ALIASES.get(str(raw).strip().lower(), str(raw).strip().lower())
+                if code == "en":
+                    code = "gb"
+                if code == "ua":
+                    code = "uk"
+                if code in KNOWN_LANG_CODES and code not in seen:
+                    seen.add(code)
+                    cleaned.append(code)
+            if cleaned:
+                r["langs"] = cleaned
+                r["langs_manual"] = True
+                r["langs_source"] = "manual"
 
 
 def is_viz_image(f: dict) -> bool:
@@ -1417,7 +1550,6 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
     out: list[dict] = []
     for p in products:
         brand = p.get("brand") or "DK"
-        default_lang = "pl" if brand == "DK" else "gb"
         pid = p.get("id") or "p"
         latest_revs = [r for r in p.get("revisions") or [] if r.get("is_latest")]
         if not latest_revs:
@@ -1444,14 +1576,15 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
             lang_files: dict[str, list[dict]] = defaultdict(list)
 
             for f in wizki:
-                explicit = detect_lang_explicit(f.get("name") or "")
-                if explicit:
-                    lang_files[explicit].append(f)
+                # Wszystkie kody z nazwy (CZ_SK -> cz i sk), nie tylko pierwszy.
+                explicits = parse_langs_from_text(f.get("name") or "")
+                if explicits:
+                    for lg in explicits:
+                        lang_files[lg].append(f)
                 elif revision_langs:
                     for lg in revision_langs:
                         lang_files[lg].append(f)
-                else:
-                    lang_files[default_lang].append(f)
+                # Brak sygnalu: NIE wrzucaj do gb/pl - zostaw na "?" ponizej.
 
             if not lang_files and revision_langs:
                 for lg in revision_langs:
@@ -1461,7 +1594,15 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
             if not target_langs and revision_langs:
                 target_langs = list(revision_langs)
             if not target_langs:
-                target_langs = [default_lang]
+                # DK: baseline PL. GC: unknown / UI "?" (zakaz GC->gb).
+                if brand == "DK" and wizki:
+                    target_langs = ["pl"]
+                    lang_files["pl"] = list(wizki)
+                elif wizki:
+                    target_langs = ["unknown"]
+                    lang_files["unknown"] = list(wizki)
+                else:
+                    continue
 
             for lang in target_langs:
                 # Thumb z slotu WIZKI - preferuj plik z indeksem TEJ rewizji
@@ -1495,10 +1636,12 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
                 except (OSError, PermissionError) as exc:
                     print(f"  thumb skip {thumb_name}: {exc}")
                     continue
-                langs_out = revision_langs if revision_langs else [lang]
-                # Jezyk: folder-langs > jawny kod z pliku > default marki (tylko gdy brak sygnalu)
+                langs_out = revision_langs if revision_langs else (
+                    [] if lang in ("?", "unknown", "xx") else [lang]
+                )
                 pname = p.get("display_name") or p["name"]
                 carrier_code = r.get("carrier") or ""
+                lang_unknown = lang in ("?", "unknown", "xx") or not langs_out
                 out.append(
                     {
                         "product_id": pid,
@@ -1522,8 +1665,10 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
                         "revision_folder": r.get("folder"),
                         "revision_path": r.get("path"),
                         "langs": langs_out,
-                        "lang": lang,
-                        "lang_label": lang_label(lang),
+                        "langs_manual": bool(r.get("langs_manual")),
+                        "lang": "?" if lang_unknown else lang,
+                        "lang_label": "?" if lang_unknown else lang_label(lang),
+                        "lang_unknown": lang_unknown,
                         "thumb_url": f"data/thumbs/{thumb_name}?v={int(Path(thumb_src['path']).stat().st_mtime) if Path(thumb_src['path']).exists() else 0}",
                         "file": thumb_src["name"],
                         "path": thumb_src["path"],
@@ -1557,6 +1702,10 @@ def scan_root(root: Path, brand: str, max_products: int, products_so_far: int) -
             print(f"  skip cat {cat_name}: {e}")
             continue
         for prod in sorted(prod_dirs, key=lambda p: p.name):
+            # Pomijaj folder archiwum kategorii (— ARCHIWUM) - warianty wrocą po restore
+            pname = prod.name or ""
+            if pname.strip().upper().endswith("ARCHIWUM"):
+                continue
             item = scan_product(cat_name, prod, root, brand)
             if item:
                 products.append(item)
@@ -1603,6 +1752,7 @@ def main() -> None:
     attach_marketing_links(products)
     discover_marketing_materials(products, MARKETING_ROOT)
     apply_product_aliases(products)
+    apply_lang_overrides(products)
 
     search = build_search(products)
     viz = collect_viz_latest(products, THUMBS_DIR)

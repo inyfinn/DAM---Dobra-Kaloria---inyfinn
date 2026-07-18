@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718navActive1">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718userMenu1">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
 </head>
@@ -117,7 +117,11 @@
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="aktualne nieaktualne status shift baza">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak oznaczyć wariant jako nieaktualny?</div>
-            <p class="dam-faq-a">Admin + Tryb admina: <kbd>Shift</kbd>+klik na zielonym tagu <strong>Aktualne</strong> (przełącza na Nieaktualne i odwrotnie). Zapis idzie do bazy (carrier-overrides). Potem możesz ukryć go wyłączając „Pokaż wszystko”.</p>
+            <p class="dam-faq-a">Admin + Tryb admina: przyciski <kbd>F</kbd> / <kbd>X</kbd> / <kbd>D</kbd> / Odznacz przy produkcie lub wariancie w Eksploratorze (albo Shift+klik na tagu statusu). <strong>X</strong> dopina <code> - X</code> do nazwy folderu i przenosi do <code>— ARCHIWUM</code> (wariant z wrapperem produktu). Historia poprzedniej nazwy i ścieżki jest zapisywana.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="lifecycle F X D demo archiwum folder status produkt wariant">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznaczają przyciski F, X, D przy produkcie?</div>
+            <p class="dam-faq-a"><strong>F</strong> = aktualny/skończony (<code> - F</code> w nazwie folderu). <strong>X</strong> = nieaktualny/archiwum (<code> - X</code> + przeniesienie do <code>— ARCHIWUM</code> kategorii). <strong>D</strong> = demo/szkic (<code> - D</code>; na produkcie także warianty dostają D). <strong>Odznacz</strong> zdejmuje literkę i przywraca z archiwum gdy trzeba. Wymaga Admin + Tryb admina. Testuj na produkcie <em>TEST LIFECYCLE</em> (indeks TEST-TEST).</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="multijezyczny jezyk badge wariant">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznacza badge Multijezyczny?</div>
@@ -174,7 +178,7 @@
   <script src="./assets/js/dam-api.js?v=20260718auth1"></script>
   <script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-  <script src="./assets/js/dam-shell.js?v=20260718navActive1"></script>
+  <script src="./assets/js/dam-shell.js?v=20260718userMenu1"></script>
   <script>
     (function () {
       var input = document.getElementById("damHelpSearch");

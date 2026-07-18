@@ -27,6 +27,7 @@
   var state = {
     fileIndex:        null,
     statusStore:      null,
+    lifecycleStore:   null,
     carrierOverrides: { overrides: {} },
     elementsLinks:    { links: {} },
     adminMode:        false,
@@ -254,12 +255,18 @@
   function mergeStatusStore(fileDefaults) {
     var merged = {
       updated_at: (fileDefaults && fileDefaults.updated_at) || new Date().toISOString(),
-      revisions: Object.assign({}, (fileDefaults && fileDefaults.revisions) || {})
+      revisions: Object.assign({}, (fileDefaults && fileDefaults.revisions) || {}),
+      products: Object.assign({}, (fileDefaults && fileDefaults.products) || {})
     };
     var local = loadLocalStatus();
     if (local.revisions) {
       Object.keys(local.revisions).forEach(function (k) {
         merged.revisions[k] = local.revisions[k];
+      });
+    }
+    if (local.products) {
+      Object.keys(local.products).forEach(function (k) {
+        merged.products[k] = local.products[k];
       });
     }
     if (local.updated_at) merged.updated_at = local.updated_at;
@@ -302,27 +309,36 @@
 
   function setRevisionStatus(rev, status) {
     if (!rev || !status) return;
-    var key = revisionStatusKey(rev);
-    var local = loadLocalStatus();
-    if (!local.revisions) local.revisions = {};
-    local.revisions[key] = { status: status, note: "" };
-    if (rev.index) local.revisions[rev.index] = { status: status, note: "" };
-    local.updated_at = new Date().toISOString();
-    saveLocalStatus(local);
-    state.statusStore = mergeStatusStore(state.statusStore);
-
-    /* Persist do carrier-overrides (JSON + Postgres przez bridge) */
-    var ov = overrideForRev(rev) || {};
-    var entry = Object.assign({}, ov, {
+    var product = state.product;
+    applyLifecycleStatus({
+      scope: "variant",
       status: status,
-      carrier: ov.carrier || resolveCarrierCode(rev) || "",
-      note: ov.note || ("Status: " + status)
+      path: rev.path || "",
+      productPath: (product && product.path) || "",
+      productId: (product && product.id) || "",
+      index: rev.index || ""
+    }).then(function (res) {
+      if (!res || !res.ok) return;
+      /* Dodatkowo mirror w carrier-overrides (UI filtry) */
+      var ov = overrideForRev(rev) || {};
+      var entry = Object.assign({}, ov, {
+        status: status === "clear" ? "starsza" : status,
+        carrier: ov.carrier || resolveCarrierCode(rev) || "",
+        note: ov.note || ("Lifecycle: " + status)
+      });
+      var pathKey = (res.final_variant_path || rev.path || rev.index || "");
+      saveCarrierOverride(pathKey, entry);
     });
-    var pathKey = rev.path || rev.index || key;
-    showToast("Zapisuję status…");
-    saveCarrierOverride(pathKey, entry).then(function (res) {
-      showToast(res && res.offline ? "Zapisano lokalnie (bridge offline)" : "Zapisano w bazie");
-      renderAll();
+  }
+
+  function setProductLifecycleStatus(product, status) {
+    if (!product) return;
+    applyLifecycleStatus({
+      scope: "product",
+      status: status,
+      path: product.path || "",
+      productPath: product.path || "",
+      productId: product.id || ""
     });
   }
 
@@ -687,7 +703,7 @@
   }
 
   function vizLangOf(f) {
-    return DL && DL.vizLangFromFile ? DL.vizLangFromFile(f) : (f.lang || "pl");
+    return DL && DL.vizLangFromFile ? DL.vizLangFromFile(f) : (f.lang || "");
   }
 
   function pickHeroFile(files) {
@@ -775,11 +791,13 @@
     var st = status || "starsza";
     var mod =
       st === "aktualne" ? "aktualne" :
-      st === "nieaktualne" ? "nieaktualne" : "starsza";
+      st === "nieaktualne" ? "nieaktualne" :
+      st === "demo" ? "demo" : "starsza";
     var label =
       mod === "aktualne" ? "Aktualne" :
-      mod === "nieaktualne" ? "Nieaktualne" : "Starsza";
-    var tip = "Status wariantu. Admin + Shift+klik: wybierz Aktualne / Nieaktualne z listy (zapis do bazy).";
+      mod === "nieaktualne" ? "Nieaktualne" :
+      mod === "demo" ? "Demo" : "Starsza";
+    var tip = "Status wariantu (F/X/D). Admin: Aktualne / Nieaktualne / Demo / Odznacz - zmienia nazwe folderu na dysku.";
     var path = (rev && rev.path) || "";
     var idx = (rev && rev.index) || "";
     return (
@@ -790,6 +808,228 @@
       esc(label) +
       "</button>"
     );
+  }
+
+  function authHeaders() {
+    var h = { "Content-Type": "application/json" };
+    var tok =
+      (window.DamApi && typeof window.DamApi.token === "function" && window.DamApi.token()) ||
+      localStorage.getItem("dam_token") ||
+      "";
+    if (tok) h.Authorization = "Bearer " + tok;
+    return h;
+  }
+
+  function getProductStatus(product) {
+    if (!product) return "clear";
+    var store = state.statusStore;
+    var keys = [product.id, product.path, product.name].filter(Boolean);
+    for (var i = 0; i < keys.length; i++) {
+      if (store && store.products && store.products[keys[i]] && store.products[keys[i]].status) {
+        return store.products[keys[i]].status;
+      }
+    }
+    if (state.lifecycleStore && state.lifecycleStore.products) {
+      for (var j = 0; j < keys.length; j++) {
+        var row = state.lifecycleStore.products[keys[j]];
+        if (row && row.status) return row.status;
+      }
+    }
+    return "clear";
+  }
+
+  function lifecycleLetterLabel(status) {
+    if (status === "aktualne") return "F";
+    if (status === "nieaktualne") return "X";
+    if (status === "demo") return "D";
+    return "";
+  }
+
+  function renderLifecycleControls(opts) {
+    opts = opts || {};
+    if (!state.adminMode) return "";
+    var scope = opts.scope || "variant";
+    var current = opts.current || "clear";
+    var path = opts.path || "";
+    var productPath = opts.productPath || "";
+    var productId = opts.productId || "";
+    var index = opts.index || "";
+    var ridx = opts.ridx || "";
+    var items = [
+      { status: "aktualne", label: "F", title: "Aktualne (skonczony) - dopina - F", cls: "ok" },
+      { status: "nieaktualne", label: "X", title: "Nieaktualne (archiwum) - dopina - X", cls: "no" },
+      { status: "demo", label: "D", title: "Demo / szkic - dopina - D", cls: "demo" },
+      { status: "clear", label: "Odznacz", title: "Usun literke statusu z nazwy folderu", cls: "clear" }
+    ];
+    var html = '<div class="dam-lifecycle" data-scope="' + esc(scope) + '" role="group" aria-label="Status lifecycle">';
+    items.forEach(function (it) {
+      var on = current === it.status || (current === "clear" && it.status === "clear" && !lifecycleLetterLabel(current));
+      if (it.status === "clear") on = !lifecycleLetterLabel(current) && (current === "clear" || current === "starsza" || !current);
+      html +=
+        '<button type="button" class="dam-lifecycle__btn dam-lifecycle__btn--' +
+        it.cls +
+        (on ? " is-on" : "") +
+        ' dam-admin-control" data-lifecycle="1" data-scope="' +
+        esc(scope) +
+        '" data-status="' +
+        esc(it.status) +
+        '" data-path="' +
+        esc(path) +
+        '" data-product-path="' +
+        esc(productPath) +
+        '" data-product-id="' +
+        esc(productId) +
+        '" data-revision-index="' +
+        esc(index) +
+        '" data-ridx="' +
+        esc(ridx) +
+        '" data-dam-tip="' +
+        esc(it.title) +
+        '" aria-pressed="' +
+        (on ? "true" : "false") +
+        '" title="' +
+        esc(it.title) +
+        '">' +
+        esc(it.label) +
+        "</button>";
+    });
+    html += "</div>";
+    return html;
+  }
+
+  function waitForIndexRebuild(timeoutMs) {
+    var started = Date.now();
+    var limit = timeoutMs || 45000;
+    function poll() {
+      return fetch(bridgeUrl() + "/index/status", { headers: authHeaders() })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (d) {
+          var running = d && d.rebuild && d.rebuild.running;
+          if (!running) return d;
+          if (Date.now() - started > limit) return d;
+          return new Promise(function (resolve) {
+            setTimeout(function () {
+              resolve(poll());
+            }, 600);
+          });
+        })
+        .catch(function () {
+          return {};
+        });
+    }
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        resolve(poll());
+      }, 400);
+    });
+  }
+
+  function applyLifecycleStatus(opts) {
+    opts = opts || {};
+    if (!isAdminRole() || !state.adminMode) {
+      showToast("Tryb admina wymagany");
+      return Promise.resolve({ ok: false });
+    }
+    var body = {
+      scope: opts.scope || "variant",
+      status: opts.status || "clear",
+      path: opts.path || "",
+      product_path: opts.productPath || "",
+      product_id: opts.productId || "",
+      revision_index: opts.index || "",
+      dry_run: !!opts.dryRun
+    };
+    if (!body.path) {
+      showToast("Brak sciezki do zmiany statusu");
+      return Promise.resolve({ ok: false });
+    }
+    showToast("Zmieniam status na dysku…");
+    return fetch(bridgeUrl() + "/lifecycle-status", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(body)
+    })
+      .then(function (r) {
+        return r.json().then(function (data) {
+          return { http: r.status, data: data };
+        });
+      })
+      .then(function (res) {
+        if (!res.data || !res.data.ok) {
+          showToast("Blad: " + ((res.data && res.data.error) || "lifecycle-status"));
+          return res.data || { ok: false };
+        }
+        var letter = res.data.letter || "odznaczono";
+        showToast(
+          "Zapisano status " +
+            (res.data.status || "") +
+            (letter && letter !== "odznaczono" ? " (- " + letter + ")" : "")
+        );
+        if (window.DamPaths && typeof window.DamPaths.logAction === "function") {
+          window.DamPaths.logAction("lifecycle_status", {
+            scope: body.scope,
+            status: body.status,
+            path: body.path,
+            detail: res.data
+          });
+        }
+        /* Lokalny mirror statusu */
+        var local = loadLocalStatus();
+        if (!local.revisions) local.revisions = {};
+        if (!local.products) local.products = {};
+        if (body.scope === "variant") {
+          var st = res.data.status || body.status;
+          var key = res.data.final_variant_path || body.path;
+          local.revisions[key] = { status: st, note: "Lifecycle", letter: res.data.letter || null };
+          if (body.revision_index || opts.index) {
+            local.revisions[body.revision_index || opts.index] = local.revisions[key];
+          }
+        } else {
+          var pst = res.data.status || body.status;
+          if (body.product_id) {
+            local.products[body.product_id] = {
+              status: pst,
+              letter: res.data.letter || null,
+              path: res.data.final_product_path || body.path
+            };
+          }
+        }
+        local.updated_at = new Date().toISOString();
+        saveLocalStatus(local);
+        state.statusStore = mergeStatusStore(state.statusStore);
+        /* Po FS rename: przebuduj indeks z dysku, potem odswiez UI */
+        showToast("Przebudowuję indeks…");
+        return fetch(bridgeUrl() + "/index/rebuild", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({})
+        })
+          .then(function (r) {
+            return r.json().catch(function () {
+              return {};
+            });
+          })
+          .then(function () {
+            return waitForIndexRebuild(45000);
+          })
+          .then(function () {
+            return refreshIndex();
+          })
+          .then(function () {
+            return res.data;
+          })
+          .catch(function () {
+            return refreshIndex().then(function () {
+              return res.data;
+            });
+          });
+      })
+      .catch(function (err) {
+        showToast("Bridge offline: " + (err && err.message ? err.message : err));
+        return { ok: false, error: "bridge_offline" };
+      });
   }
 
   function pathActions(path) {
@@ -999,11 +1239,21 @@
   }
 
   function renderAdminRevButtons(rev, idx) {
-    if (!state.adminMode) return "";
-    return '<div class="dam-admin-rev-actions">' +
-      '<button type="button" class="dam-admin-btn dam-admin-btn--ok dam-admin-control" data-ridx="' + idx + '" data-status="aktualne">Aktualne</button>' +
-      '<button type="button" class="dam-admin-btn dam-admin-btn--no dam-admin-control" data-ridx="' + idx + '" data-status="nieaktualne">Nieaktualne</button>' +
-    "</div>";
+    if (!state.adminMode || !rev) return "";
+    var cur = getRevisionStatus(rev);
+    return (
+      '<div class="dam-admin-rev-actions">' +
+      renderLifecycleControls({
+        scope: "variant",
+        current: cur,
+        path: rev.path || "",
+        productPath: (state.product && state.product.path) || "",
+        productId: (state.product && state.product.id) || "",
+        index: rev.index || "",
+        ridx: idx
+      }) +
+      "</div>"
+    );
   }
 
   /* ------------------------------------------------------------------ */
@@ -1059,7 +1309,7 @@
         '" ' +
         'aria-label="Indeks produktu" />' +
         '<button type="button" class="dam-index-action" data-mode="edit" ' +
-        'data-dam-tip="Wlacz edycje indeksu w tym folderze">Edytuj indeks</button>' +
+        'data-dam-tip="Wlacz edycje indeksu w tym folderze" aria-label="Edytuj indeks">Edytuj</button>' +
         "</span> "
     );
   }
@@ -1209,9 +1459,9 @@
         renderVizGroups(allViz) +
         renderMarketingSection(product.related_materials) +
         extraCurrHtml +
-        (state.showAllRevisions ? "" : olderHtml) +
-        (state.adminMode ? renderAdminRevButtons(rev, "curr") : "");
+        (state.showAllRevisions ? "" : olderHtml);
     }
+    var variantLifeHtml = state.adminMode ? renderAdminRevButtons(rev, "curr") : "";
 
     var cardCls =
       "dam-carrier-card" +
@@ -1220,45 +1470,46 @@
 
     return (
       '<div class="' + cardCls + '" id="' + cardId + '">' +
-        '<div class="dam-carrier-toggle-row">' +
-          '<div class="dam-carrier-head">' +
-            '<div class="dam-carrier-toggle" role="button" tabindex="0" data-toggle-code="' +
-            esc(resolvedCode) +
-            '" aria-expanded="' +
-            isExpanded +
-            '" aria-label="' +
-            esc(label) +
-            '">' +
-              '<div class="dam-carrier-toggle__left">' +
-                '<span class="dam-carrier-toggle__label dam-tag-editable" data-tag-kind="carrier" data-tag-value="' +
-                esc(resolvedCode) +
-                '" data-revision-path="' +
-                esc(rev.path || "") +
-                '" data-current-code="' +
-                esc(resolvedCode) +
-                '" data-product-id="' +
-                esc((product && product.id) || "") +
-                '" data-product-name="' +
-                esc((product && (product.display_name || product.name || product.title)) || "") +
-                '" data-dam-tip="Nosnik. Klik: filtr. Admin: Shift+klik lub podwojny klik - wybierz z listy.">' +
-                esc(label) +
-                "</span>" +
-                '<div class="dam-carrier-toggle__chips">' +
-                tags +
-                "</div>" +
+        '<div class="dam-carrier-toggle-row" role="button" tabindex="0" data-toggle-code="' +
+        esc(resolvedCode) +
+        '" aria-expanded="' +
+        isExpanded +
+        '" aria-label="' +
+        esc(label) +
+        '">' +
+          '<div class="dam-carrier-toggle-row__body">' +
+            '<div class="dam-carrier-toggle__left">' +
+              '<span class="dam-carrier-toggle__label dam-tag-editable" data-tag-kind="carrier" data-tag-value="' +
+              esc(resolvedCode) +
+              '" data-revision-path="' +
+              esc(rev.path || "") +
+              '" data-current-code="' +
+              esc(resolvedCode) +
+              '" data-product-id="' +
+              esc((product && product.id) || "") +
+              '" data-product-name="' +
+              esc((product && (product.display_name || product.name || product.title)) || "") +
+              '" data-dam-tip="Nosnik. Klik: filtr. Admin: Shift+klik lub podwojny klik - wybierz z listy.">' +
+              esc(label) +
+              "</span>" +
+              '<div class="dam-carrier-toggle__chips">' +
+              tags +
               "</div>" +
-              '<i class="uil dam-carrier-chevron ' +
-              (isExpanded ? "uil-angle-up" : "uil-angle-down") +
-              '" aria-hidden="true"></i>' +
-            "</div>" +
-            '<div class="dam-carrier-head__meta">' +
-              statusOutside +
-              dateOutside +
-              indexOutside +
             "</div>" +
           "</div>" +
-          '<div class="dam-carrier-toggle__actions" data-dam-tip="Kopiuj ścieżkę / otwórz folder w Windows">' +
-            pathActions(rev.path || "") +
+          '<div class="dam-carrier-head__meta">' +
+            statusOutside +
+            dateOutside +
+            indexOutside +
+            variantLifeHtml +
+          "</div>" +
+          '<div class="dam-carrier-toggle-row__end">' +
+            '<div class="dam-carrier-toggle__actions" data-dam-tip="Kopiuj ścieżkę / otwórz folder w Windows">' +
+              pathActions(rev.path || "") +
+            "</div>" +
+            '<i class="uil dam-carrier-chevron ' +
+            (isExpanded ? "uil-angle-up" : "uil-angle-down") +
+            '" aria-hidden="true"></i>' +
           "</div>" +
         "</div>" +
         (state.showAllRevisions && olderHtml ? olderHtml : "") +
@@ -1484,13 +1735,32 @@
               '<span class="dam-viz-badge dam-viz-badge--variants">Warianty</span>' +
             "</div>"
           : "";
+        var pStatus = getProductStatus(p);
+        var lifeHtml = state.adminMode
+          ? '<div class="dam-prod-row__lifecycle" data-stop-nav="1">' +
+            renderLifecycleControls({
+              scope: "product",
+              current: pStatus,
+              path: p.path || "",
+              productPath: p.path || "",
+              productId: p.id || ""
+            }) +
+            "</div>"
+          : "";
+        var letter = lifecycleLetterLabel(pStatus);
+        var letterChip = letter
+          ? '<span class="dam-lifecycle-chip dam-lifecycle-chip--' + letter.toLowerCase() + '" title="Status produktu">' +
+            esc(letter) +
+            "</span>"
+          : "";
         return '<div class="dam-prod-row' + (hasVariants ? " dam-prod-row--variants" : "") + '" data-pid="' + esc(p.id) + '">' +
           '<div class="dam-prod-row__main">' +
-            '<div class="dam-prod-row__title">' + esc(name) + "</div>" +
+            '<div class="dam-prod-row__title">' + esc(name) + letterChip + "</div>" +
             (tagsHtml ? '<div class="dam-prod-row__tags">' + tagsHtml + "</div>" : "") +
             '<div class="dam-prod-row__sub">' +
               renderIndexChips(p.indexes) +
             "</div>" +
+            lifeHtml +
           "</div>" +
           variantsHtml +
         "</div>";
@@ -1531,11 +1801,15 @@
         });
       });
       mount.querySelectorAll(".dam-prod-row").forEach(function (row) {
-        row.addEventListener("click", function () {
+        row.addEventListener("click", function (e) {
+          if (e.target && e.target.closest && e.target.closest("[data-stop-nav], .dam-lifecycle, .dam-lifecycle__btn")) {
+            return;
+          }
           var p = (state.fileIndex.products || []).find(function (x) { return x.id === this.getAttribute("data-pid"); }.bind(this));
           if (p) openProduct(p);
         });
       });
+      bindLifecycleControls(mount);
       return;
     }
 
@@ -1576,6 +1850,18 @@
             '<span class="dam-switch__track" aria-hidden="true"></span>' +
             '<span class="dam-switch__label">Pokaż wszystko</span>' +
           "</label>" +
+          (state.adminMode
+            ? '<div class="dam-product-toolbar__lifecycle">' +
+              '<span class="dam-product-toolbar__life-label">Produkt</span>' +
+              renderLifecycleControls({
+                scope: "product",
+                current: getProductStatus(state.product),
+                path: state.product.path || "",
+                productPath: state.product.path || "",
+                productId: state.product.id || ""
+              }) +
+              "</div>"
+            : "") +
         "</div>" +
         '<div class="dam-product-toolbar__slot2" id="damVizViewControls">' +
           '<div class="dam-viz-viewbar" role="group" aria-label="Skala podglądu wizualizacji">' +
@@ -1741,7 +2027,12 @@
       });
     });
 
-    // Bind carrier toggle (div[role=button] - tagi wewnatrz sa prawdziwymi <button>)
+    // Caly pasek nośnika rozwija szczegoly (chevron / puste miejsce).
+    // Sterowanie (button/a/input/tagi/edycja/F-X-D/akcje) NIE toggle'uje.
+    var CARRIER_TOGGLE_IGNORE =
+      "button, a, input, select, textarea, label, " +
+      ".dam-tag-editable, .dam-index-chip--admin, .dam-carrier-toggle__actions, " +
+      ".dam-admin-rev-actions, .dam-admin-control, .dam-lifecycle, .dam-lifecycle__btn, .dam-lifecycle-btn";
     function toggleCarrierFromEl(el) {
       var code = el.getAttribute("data-toggle-code");
       if (!code) return;
@@ -1754,26 +2045,14 @@
         }, 60);
       }
     }
-    mount.querySelectorAll("[data-toggle-code]").forEach(function (btn) {
-      btn.addEventListener("click", function (e) {
-        if (
-          e.target.closest(
-            "button, a, input, select, textarea, .dam-index-chip--admin, .dam-carrier-toggle__actions, .dam-carrier-head__meta"
-          )
-        ) {
-          return;
-        }
+    mount.querySelectorAll(".dam-carrier-toggle-row[data-toggle-code]").forEach(function (row) {
+      row.addEventListener("click", function (e) {
+        if (e.target.closest(CARRIER_TOGGLE_IGNORE)) return;
         toggleCarrierFromEl(this);
       });
-      btn.addEventListener("keydown", function (e) {
+      row.addEventListener("keydown", function (e) {
         if (e.key !== "Enter" && e.key !== " ") return;
-        if (
-          e.target.closest(
-            "button, a, input, select, textarea, .dam-index-chip--admin"
-          )
-        ) {
-          return;
-        }
+        if (e.target.closest(CARRIER_TOGGLE_IGNORE)) return;
         e.preventDefault();
         toggleCarrierFromEl(this);
       });
@@ -1789,29 +2068,7 @@
       });
     });
 
-    // Bind admin status buttons
-    mount.querySelectorAll(".dam-admin-btn").forEach(function (btn) {
-      btn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        var ridx = this.getAttribute("data-ridx");
-        var status = this.getAttribute("data-status");
-        var allRevs = state.product.revisions || [];
-        var groups2 = groupRevisionsByCarrier(allRevs);
-        groups2.forEach(function (g) {
-          var cur = getCurrentRevisions(g.revisions);
-          var older = getOlderRevisions(g.revisions, cur);
-          if (ridx === "curr") {
-            setRevisionStatus(cur[0], status);
-          } else if (ridx.startsWith("extra_")) {
-            var i = parseInt(ridx.replace("extra_", ""), 10);
-            if (cur[i + 1]) setRevisionStatus(cur[i + 1], status);
-          } else if (ridx.startsWith("older_")) {
-            var i2 = parseInt(ridx.replace("older_", ""), 10);
-            if (older[i2]) setRevisionStatus(older[i2], status);
-          }
-        });
-      });
-    });
+    bindLifecycleControls(mount);
 
     // Elementy: otwórz / wskaz / odlacz
     mount.querySelectorAll("[data-elements-open]").forEach(function (btn) {
@@ -2694,13 +2951,75 @@
     return String(role).toLowerCase() === "admin";
   }
 
+  function bindLifecycleControls(mount) {
+    if (!mount) return;
+    mount.querySelectorAll("[data-lifecycle='1']").forEach(function (btn) {
+      if (btn._damLifeBound) return;
+      btn._damLifeBound = true;
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var scope = this.getAttribute("data-scope") || "variant";
+        var status = this.getAttribute("data-status") || "clear";
+        var path = this.getAttribute("data-path") || "";
+        var productPath = this.getAttribute("data-product-path") || "";
+        var productId = this.getAttribute("data-product-id") || "";
+        var index = this.getAttribute("data-revision-index") || "";
+        if (scope === "product") {
+          var prod =
+            (state.fileIndex &&
+              (state.fileIndex.products || []).find(function (x) {
+                return x.id === productId || x.path === path;
+              })) ||
+            state.product;
+          if (prod) setProductLifecycleStatus(prod, status);
+          else {
+            applyLifecycleStatus({
+              scope: "product",
+              status: status,
+              path: path,
+              productPath: productPath || path,
+              productId: productId
+            });
+          }
+          return;
+        }
+        /* variant: prefer path z przycisku; fallback przez ridx w karcie */
+        if (path) {
+          applyLifecycleStatus({
+            scope: "variant",
+            status: status,
+            path: path,
+            productPath: productPath || (state.product && state.product.path) || "",
+            productId: productId || (state.product && state.product.id) || "",
+            index: index
+          });
+          return;
+        }
+        var ridx = this.getAttribute("data-ridx") || "";
+        var allRevs = (state.product && state.product.revisions) || [];
+        var groups2 = groupRevisionsByCarrier(allRevs);
+        groups2.forEach(function (g) {
+          var cur = getCurrentRevisions(g.revisions);
+          var older = getOlderRevisions(g.revisions, cur);
+          if (ridx === "curr" && cur[0]) setRevisionStatus(cur[0], status);
+          else if (ridx.indexOf("extra_") === 0) {
+            var i = parseInt(ridx.replace("extra_", ""), 10);
+            if (cur[i + 1]) setRevisionStatus(cur[i + 1], status);
+          } else if (ridx.indexOf("older_") === 0) {
+            var i2 = parseInt(ridx.replace("older_", ""), 10);
+            if (older[i2]) setRevisionStatus(older[i2], status);
+          }
+        });
+      });
+    });
+  }
+
   function bindAdminControls() {
-    var toggle = document.getElementById("damAdminToggle");
     var exportBtn = document.getElementById("damStatusExport");
     var adminSlot = document.querySelector(".dam-admin-slot");
     if (!isAdminRole()) {
       if (adminSlot) adminSlot.style.display = "none";
-      else if (toggle) toggle.style.display = "none";
       if (exportBtn) exportBtn.hidden = true;
       var barHidden = document.getElementById("damAdminBar");
       if (barHidden) barHidden.style.display = "none";
@@ -2710,23 +3029,22 @@
     }
     if (adminSlot) adminSlot.style.display = "";
     function syncAdminUi() {
-      if (toggle) {
-        toggle.setAttribute("aria-pressed", state.adminMode ? "true" : "false");
-        toggle.classList.toggle("is-on", !!state.adminMode);
-      }
+      state.adminMode = localStorage.getItem(ADMIN_KEY) === "1";
       if (exportBtn) exportBtn.hidden = !state.adminMode;
       var bar = document.getElementById("damAdminBar");
       if (bar) bar.style.display = state.adminMode ? "flex" : "none";
     }
-    if (toggle && !toggle._damBound) {
-      toggle._damBound = true;
-      state.adminMode = localStorage.getItem(ADMIN_KEY) === "1";
-      syncAdminUi();
-      toggle.addEventListener("click", function () {
-        state.adminMode = !state.adminMode;
-        localStorage.setItem(ADMIN_KEY, state.adminMode ? "1" : "0");
+    if (!window._damExplorerAdminBound) {
+      window._damExplorerAdminBound = true;
+      window.addEventListener("dam:admin-mode", function () {
         syncAdminUi();
         renderAll();
+      });
+      window.addEventListener("storage", function (e) {
+        if (e.key === ADMIN_KEY) {
+          syncAdminUi();
+          renderAll();
+        }
       });
     }
     if (exportBtn && !exportBtn._damBound) {
@@ -2842,15 +3160,36 @@
   /* Data loading                                                         */
   /* ------------------------------------------------------------------ */
 
+  function loadLifecycleStore() {
+    return fetch(bridgeUrl() + "/lifecycle-status", { headers: authHeaders() })
+      .then(function (r) {
+        if (!r.ok) return null;
+        return r.json();
+      })
+      .then(function (d) {
+        state.lifecycleStore = d && d.ok ? d : { products: {}, revisions: {}, history: [] };
+        return state.lifecycleStore;
+      })
+      .catch(function () {
+        state.lifecycleStore = { products: {}, revisions: {}, history: [] };
+        return state.lifecycleStore;
+      });
+  }
+
   function loadStatusStore() {
-    return fetch("data/product-status.json?v=20260717ux3")
+    return fetch("data/product-status.json?v=20260718life1")
       .then(function (r) { return r.ok ? r.json() : { updated_at: null, revisions: {} }; })
       .catch(function ()  { return { updated_at: null, revisions: {} }; })
       .then(function (fileData) { state.statusStore = mergeStatusStore(fileData); });
   }
 
   function loadAllMeta() {
-    return Promise.all([loadStatusStore(), loadCarrierOverrides(), loadElementsLinks()]);
+    return Promise.all([
+      loadStatusStore(),
+      loadCarrierOverrides(),
+      loadElementsLinks(),
+      loadLifecycleStore()
+    ]);
   }
 
   function bindExplorerData(bundle) {
@@ -3021,6 +3360,8 @@
     exportStatus: exportStatusJson,
     getElementsLink: getElementsLink,
     setRevisionStatus: setRevisionStatus,
+    setProductStatus: setProductLifecycleStatus,
+    applyLifecycleStatus: applyLifecycleStatus,
     init: init,
   };
 

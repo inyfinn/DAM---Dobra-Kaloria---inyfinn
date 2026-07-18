@@ -20,9 +20,36 @@
       "default_lang": "gb"
     }
   },
-  "version": 1,
+  "policy": {
+    "tag_casing": {
+      "note_pl": "Tagi globalne: kody (DK, DOYPACK, GB) zostaja WERSALIKAMI. Etykiety ludzkie (Kulki, Kulki Surowe, Mini batoniki) jak w zdaniu z duza litera. Nie mieszac stylow.",
+      "code_kinds": [
+        "brand",
+        "lang",
+        "carrier",
+        "index"
+      ],
+      "code_style": "uppercase_as_stored",
+      "human_kinds": [
+        "category",
+        "subcategory",
+        "smak",
+        "typ",
+        "status",
+        "flag",
+        "autor"
+      ],
+      "human_style": "title_case"
+    },
+    "updated_at": "2026-07-18",
+    "description_pl": "W programie zawsze pelna nazwa nosnika (DOYPACK, FOLIA, BATON). Na dysku Windows (rename folderu/pliku) zawsze skrot (DOY, FOL, BAT). Skroty istnieja tylko po to, zeby nazwy w Eksploratorze zajmowaly mniej miejsca.",
+    "carrier_display_in_ui": "label_pl",
+    "carrier_prefix_on_disk": "short"
+  },
+  "version": 3,
   "carriers": {
     "BAT": {
+      "short": "BAT",
       "aliases": [
         "BAT",
         "BATON",
@@ -31,6 +58,7 @@
       "label_pl": "BATON"
     },
     "DOY": {
+      "short": "DOY",
       "aliases": [
         "DOY",
         "DOYPACK",
@@ -39,6 +67,7 @@
       "label_pl": "DOYPACK"
     },
     "ETY": {
+      "short": "ETY",
       "aliases": [
         "ETY",
         "ETYKIETA",
@@ -47,6 +76,7 @@
       "label_pl": "ETYKIETA"
     },
     "KAR": {
+      "short": "KAR",
       "aliases": [
         "KAR",
         "KARTON",
@@ -55,6 +85,7 @@
       "label_pl": "KARTON"
     },
     "OBW": {
+      "short": "OBW",
       "aliases": [
         "OBW",
         "OBWOLUTA"
@@ -62,6 +93,7 @@
       "label_pl": "OBWOLUTA"
     },
     "MINI": {
+      "short": "MINI",
       "aliases": [
         "MINI",
         "MINI BATON",
@@ -70,6 +102,7 @@
       "label_pl": "MINI BATON"
     },
     "SASZ": {
+      "short": "SASZ",
       "aliases": [
         "SASZ",
         "SACHET"
@@ -77,12 +110,14 @@
       "label_pl": "SASZETKA"
     },
     "SHOT": {
+      "short": "SHOT",
       "aliases": [
         "SHOT"
       ],
       "label_pl": "SHOT"
     },
     "TUBA": {
+      "short": "TUBA",
       "aliases": [
         "TUBA",
         "TUBE"
@@ -90,6 +125,7 @@
       "label_pl": "TUBA"
     },
     "DOY6X": {
+      "short": "DOY6X",
       "aliases": [
         "DOY6X",
         "DOY 6X",
@@ -98,6 +134,7 @@
       "label_pl": "DOYPACK 6x MINI"
     },
     "FOLIA": {
+      "short": "FOL",
       "aliases": [
         "FOLIA",
         "FOL",
@@ -106,6 +143,7 @@
       "label_pl": "FOLIA"
     },
     "KAR6X": {
+      "short": "KAR6X",
       "aliases": [
         "KAR6X",
         "KAR 6X",
@@ -115,6 +153,7 @@
       "label_pl": "KARTON 6x MINI"
     },
     "REKAW": {
+      "short": "REKAW",
       "aliases": [
         "REKAW",
         "RĘKAW",
@@ -124,6 +163,7 @@
       "label_pl": "RĘKAW"
     },
     "WIZKA": {
+      "short": "WIZKA",
       "aliases": [
         "WIZKA",
         "WIZKI"
@@ -131,6 +171,7 @@
       "label_pl": "WIZUALIZACJE"
     },
     "BIGPAK": {
+      "short": "BIGPAK",
       "aliases": [
         "BIGPAK",
         "BIGPACK",
@@ -139,6 +180,7 @@
       "label_pl": "BIGPAK"
     },
     "ETY-BUT": {
+      "short": "ETY-BUT",
       "aliases": [
         "ETY-BUT",
         "ETY BUT",
@@ -147,6 +189,7 @@
       "label_pl": "ETYKIETA BUTELKA"
     },
     "ETY-SLO": {
+      "short": "ETY-SLO",
       "aliases": [
         "ETY-SLO",
         "ETY SLO",
@@ -194,7 +237,7 @@
   "categories": [
     {
       "id": "BATONY",
-      "title": "BATONY",
+      "title": "Batony",
       "labels": [
         "BATONY",
         "BARS"
@@ -202,7 +245,7 @@
     },
     {
       "id": "KULKI",
-      "title": "KULKI",
+      "title": "Kulki",
       "labels": [
         "KULKI",
         "BALLS"
@@ -210,7 +253,7 @@
     },
     {
       "id": "ROSLINNE",
-      "title": "ROŚLINNE",
+      "title": "Roślinne",
       "labels": [
         "ROSLINNE",
         "ROŚLINNE",
@@ -220,7 +263,7 @@
     },
     {
       "id": "SYPKIE",
-      "title": "SYPKIE",
+      "title": "Sypkie",
       "labels": [
         "SYPKIE",
         "BREAKFAST"
@@ -228,7 +271,7 @@
     },
     {
       "id": "NAPOJE",
-      "title": "NAPOJE",
+      "title": "Napoje",
       "labels": [
         "NAPOJE",
         "DRINKS"
@@ -236,7 +279,7 @@
     },
     {
       "id": "PRZETWORY",
-      "title": "PRZETWORY",
+      "title": "Przetwory",
       "labels": [
         "PRZETWORY",
         "SPREADS",
@@ -246,7 +289,7 @@
     },
     {
       "id": "DATESY",
-      "title": "DATESY",
+      "title": "Datesy",
       "labels": [
         "DATESY",
         "DATES"

@@ -24,6 +24,7 @@ Jestes Architectem DAM ETA. Prowadzisz architekture 5 warstw, ADR, DOMAIN, ROADM
 - Dwie osie wersjonowania explicite w ADR-002
 - Em-dash ban
 - Zrodla: oficjalne docs + pliki na P
+- **Jezyki:** [`agents/shared/lang-provenance.md`](../shared/lang-provenance.md) - w ADR/naming zakaz nowych domyslow marki/rynku; regula = pochodzenie sygnalu
 
 # Allowed tools / paths
 

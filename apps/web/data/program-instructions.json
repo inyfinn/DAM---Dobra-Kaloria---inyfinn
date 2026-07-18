@@ -1,0 +1,360 @@
+{
+  "version": 4,
+  "title_pl": "Instrukcje programu DAM ETA",
+  "updated_at": "2026-07-18T21:40:00+02:00",
+  "instructions": [
+    {
+      "id": "data.lang_provenance_only",
+      "must": [
+        "Kod jezyka tylko z: (1) lang-overrides.json, (2) token w nazwie folderu rewizji, (3) token w nazwie pliku w rewizji",
+        "Brak sygnalu = puste langs / UI '?'",
+        "Zapisywac lang_source: override|folder|file|unknown",
+        "Stosowac agents/shared/lang-provenance.md przy kazdej zmianie wykrywania jezykow"
+      ],
+      "body_pl": "Twarda zasada to POCHODZENIE sygnalu jezyka dla wszystkich kodow (pl/de/gb/cz/sk/...), nie hardcode konkretnego indeksu. Agent musi umiec wskazac fragment nazwy folderu lub pliku (albo override), z ktorego wynika kod. Domysl z marki (GC=gb, DK=pl) albo ze sciezki EKSPORT/POLSKA jest zakazany. Rebuild nie nadpisuje lang-overrides.json. Przyklad metody (nie regula produktu): 6300572 ma CZ+SK bo w PROJECT jest ...CZ_SK...ai.",
+      "category": "data",
+      "must_not": [
+        "Domyslac jezyka z marki, rynku, screenshota opakowania",
+        "Traktowac 'indeks X = jezyk Y' jako regula biznesowa zamiast dowodu z nazwy",
+        "Nadpisywac reczne override przy rebuildzie indeksu"
+      ],
+      "priority": "critical",
+      "title_pl": "Jezyk tylko z dowodu (folder/plik/override) - zero zgadywania",
+      "related_kv": [
+        "lang-overrides",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "agents/shared/lang-provenance.md",
+        "apps/web/scripts/build-file-index.py",
+        "apps/web/data/lang-overrides.json",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/assets/js/dam-labels.js"
+      ]
+    },
+    {
+      "id": "meta.source_of_truth",
+      "must": [
+        "Przed zmianą reguły biznesowej: przeczytaj program-instructions z KV/cache",
+        "Po decyzji użytkownika: natychmiast dopisz/zaktualizuj instrukcję i wypchnij do Postgres",
+        "Nie odwracaj reguły bez jawnej nowej instrukcji z datą"
+      ],
+      "body_pl": "Wszystkie newralgiczne reguły (nazewnictwo, status F/X/D, aktywny/nieaktywny, zakazy UI, zachowanie admina) muszą być zapisane w dam_kv_store jako program-instructions. Agent nie może 'pamiętać inaczej' między sesjami - przed zmianą zachowania czyta ten magazyn. memory.md / process.md tylko odzwierciedlają i logują.",
+      "category": "meta",
+      "must_not": [
+        "Traktować memory.md jako jedyne źródło prawdy",
+        "Zmieniać zachowanie 'bo tak wyglądało w poprzedniej sesji' bez wpisu w program-instructions"
+      ],
+      "priority": "critical",
+      "title_pl": "Instrukcje żyją w bazie, nie tylko w memory",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "naming.carrier_ui_vs_disk",
+      "must": [
+        "UI (badge, meta karty, picker, pasek historii): label_pl (DOYPACK, FOLIA, BATON)",
+        "Rename folderu/pliku na dysku: short (DOY, FOL, BAT) przez CARRIER_FOLDER_PREFIX ze słownika",
+        "Źródło mapowania: naming-dictionary.policy + carriers[].label_pl/short (+ app-settings.naming)"
+      ],
+      "body_pl": "DOY, FOL, BAT to tylko skróty w Eksploratorze Windows, żeby nazwy zajmowały mniej miejsca. W programie zawsze rozwinięte: DOYPACK, FOLIA, BATON. Skrót stosujesz wyłącznie przy zmianie nazwy / aktualizacji folderu na dysku.",
+      "category": "naming",
+      "must_not": [
+        "Pokazywać DOY/FOL/BAT jako główną etykietę UI",
+        "Zapisywać na dysku prefiksu DOYPACK/BATON/FOLIA przy nowym rename (stare foldery wolno wykrywać i skracać)"
+      ],
+      "priority": "critical",
+      "title_pl": "Nośnik: w programie pełna nazwa, na dysku skrót",
+      "related_kv": [
+        "naming-dictionary",
+        "app-settings"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "apps/web/assets/js/dam-labels.js",
+        "apps/desktop/local_bridge.py",
+        "apps/web/settings.html#damNamingPolicy"
+      ]
+    },
+    {
+      "id": "naming.multi_means_multilang",
+      "must": [
+        "Używać ui.multi_lang_label z naming-dictionary (domyślnie Multijęzyczny)"
+      ],
+      "body_pl": "Tag Multi na kartach oznacza wariant wielojęzyczny (multi_lang_label), nie 'multi-pack' ani inny typ nośnika.",
+      "category": "naming",
+      "must_not": [
+        "Mylenie Multi z typem opakowania / nośnikiem"
+      ],
+      "priority": "high",
+      "title_pl": "Multi = Multijęzyczny",
+      "related_kv": [
+        "naming-dictionary"
+      ],
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "ops.change_log_is_truth",
+      "must": [
+        "Przy cofaniu/naprawie: apps/web/data/change-log.json (+ carrier-assignment-log, lifecycle-status)",
+        "Po operacji admina: upewnij się że wpis w logu istnieje"
+      ],
+      "body_pl": "Każda istotna operacja (rename nośnika, indeks, lifecycle) trafia do change-log i powiązanych logów. Przy naprawie błędnych rename najpierw czytaj change-log.json / carrier-assignment-log, nie przeszukuj dysku na ślepo.",
+      "category": "operations",
+      "must_not": [
+        "Zgadywanie ścieżek folderów bez wpisu w logu gdy log jest dostępny"
+      ],
+      "priority": "critical",
+      "title_pl": "Operacje programu są w logu - nie szukaj na ślepo",
+      "related_kv": [
+        "carrier-assignment-log"
+      ],
+      "updated_at": "2026-07-18",
+      "related_files": [
+        "apps/web/data/change-log.json",
+        "apps/web/data/lifecycle-status.json"
+      ]
+    },
+    {
+      "id": "lifecycle.status_fxd",
+      "must": [
+        "F = aktualne / skończony; X = nieaktualne / archiwum; D = demo / prototyp",
+        "Dysk: dopinać ' - F' / ' - X' / ' - D' do nazwy folderu (lifecycle_status.py)",
+        "Produkt X: cascade na warianty + przeniesienie do archiwum kategorii",
+        "Wariant X: archiwum z wrapperem produktu",
+        "Produkt D: cascade - D na warianty; odznaczenie wariantu z D przy produkcie D czyści literkę produktu",
+        "API: POST/GET /lifecycle-status (tylko admin)",
+        "UI tag: Aktualne / Nieaktualne (dam-badge-tag data-tag-kind=status); Admin Shift/dbl"
+      ],
+      "body_pl": "Admin oznacza stan literką w nazwie folderu na dysku. F = aktualne, X = nieaktualne (archiwum), D = demo. Odznacz = usuń literkę. Historia previous_name + previous_path w lifecycle-status + change-log.",
+      "category": "lifecycle",
+      "must_not": [
+        "Zmieniać status realnych produktów bez potwierdzenia użytkownika gdy trwa TEST GATE",
+        "Gubić previous_path przy rename statusu (musi dać się cofnąć)"
+      ],
+      "notes_pl": "Produkt testowy: TEST LIFECYCLE / indeks TEST-TEST. Litera archiwum na dysku: folder — ARCHIWUM (jak na Marketing).",
+      "priority": "critical",
+      "title_pl": "Status produktu/wariantu: F / X / D",
+      "related_kv": [
+        "lifecycle-status",
+        "product-status",
+        "carrier-overrides"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "apps/desktop/lifecycle_status.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-explorer.js"
+      ]
+    },
+    {
+      "id": "lifecycle.product_status_mirror",
+      "must": [
+        "Po sukcesie /lifecycle-status wywołać mirror_lifecycle_to_product_status",
+        "Tag statusu w UI: Aktualne / Nieaktualne (nie surowe F/X w badge jeśli jest ludzka etykieta)"
+      ],
+      "body_pl": "Po zmianie lifecycle most zapisuje też mirror do product-status.json (revisions + products), żeby Eksplorer/Wizualizacje widziały Aktualne/Nieaktualne spójnie z dyskiem.",
+      "category": "lifecycle",
+      "priority": "high",
+      "title_pl": "Status w UI + mirror w product-status",
+      "updated_at": "2026-07-18",
+      "related_files": [
+        "apps/web/data/product-status.json",
+        "apps/web/data/lifecycle-status.json"
+      ]
+    },
+    {
+      "id": "ui.em_dash_ban",
+      "must": [
+        "Używać tylko '-'"
+      ],
+      "body_pl": "W UI, commitach i copy agentów zakaz znaków — i –. Tylko zwykły myślnik -.",
+      "category": "ui",
+      "must_not": [
+        "Wstawiać U+2014 lub U+2013 w tekstach programu / commitach"
+      ],
+      "priority": "critical",
+      "title_pl": "Zakaz em-dash w copy",
+      "updated_at": "2026-07-16"
+    },
+    {
+      "id": "ui.verify_screenshot",
+      "must": [
+        "Screenshot expanded + collapsed sidebar gdy dotyczy logo",
+        "Sprawdzić konkretnie to, o co prosił user"
+      ],
+      "body_pl": "Po każdej zmianie CSS/HTML/JS wpływającej na wygląd: odśwież z cache bust, zrób screenshot narzędziem przeglądarki, przeczytaj plik obrazu (vision). Bez tego nie oddawać.",
+      "category": "ui",
+      "must_not": [
+        "Oddać 'powinno działać' bez screenshot→Read"
+      ],
+      "priority": "critical",
+      "title_pl": "Weryfikacja UI = screenshot + Read",
+      "updated_at": "2026-07-18",
+      "related_files": [
+        ".cursor/rules/verify-ui-after-changes.mdc"
+      ]
+    },
+    {
+      "id": "ui.geex_only",
+      "must": [
+        "Tokeny dam-tokens.css / dam-brand.css"
+      ],
+      "body_pl": "Motyw wyłącznie Geex (#AB54DB). Nie budować Next.js skina ani obcego design systemu w panelu DAM.",
+      "category": "ui",
+      "must_not": [
+        "Wprowadzać Tailwind/shadcn jako deliverable panelu DAM"
+      ],
+      "priority": "critical",
+      "title_pl": "UI tylko Geex",
+      "updated_at": "2026-07-16"
+    },
+    {
+      "id": "admin.header_switch_only",
+      "must": [
+        "localStorage.dam_admin_mode + event dam:admin-mode",
+        "Widoczny tylko dla role=admin"
+      ],
+      "body_pl": "Jedyny przełącznik Admin: w headerze tuż po lewej od avatara. Zakaz lokalnych toggle na explorer/viz.",
+      "category": "admin",
+      "must_not": [
+        "#damAdminToggle / #vizAdminToggle / label.dam-admin-toggle"
+      ],
+      "priority": "high",
+      "title_pl": "Tryb admina tylko switch w headerze",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "auth.roles_and_privilege",
+      "must": [
+        "Sprawdzać Authorization: Bearer na bridge"
+      ],
+      "body_pl": "Role: admin | power_user | user. Decyzje mutate (rename, lifecycle, carrier-types, overrides, undo/redo, index rebuild) tylko admin z Bearer. Body.role / admin_mode NIE dają privilege.",
+      "category": "auth",
+      "must_not": [
+        "Ufanie spoofowanemu role w JSON body"
+      ],
+      "priority": "critical",
+      "title_pl": "Role i privilege na bridge",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "storage.marketing_sensitive",
+      "must": [
+        "Walidacja folderów -- ARCHIWUM --, - EKSPORT, - POLSKA",
+        "Backup / previous_path przy destrukcyjnych rename"
+      ],
+      "body_pl": "Ścieżka bazowa to ustawienie użytkownika (np. X:\\Marketing). Operacje rename/move tylko przez most z logiem. Nie kasować hurtowo, nie zgadywać liter dysku.",
+      "category": "storage",
+      "must_not": [
+        "Destrukcja bez logu i bez możliwości cofnięcia gdy da się zachować historię"
+      ],
+      "priority": "critical",
+      "title_pl": "Dysk Marketing jest wrażliwy",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "carrier.do_not_guess",
+      "must": [
+        "Zgłaszać do potwierdzenia zamiast zgadywać"
+      ],
+      "body_pl": "Rozpoznanie: 1) overrides, 2) prefiks pliku wizki, 3) prefiks folderu. Gdy brak tokenu - puste / do potwierdzenia, nie zgadywać FOLIA/DOY.",
+      "category": "naming",
+      "must_not": [
+        "Ustawiać nośnik na podstawie samej daty w nazwie folderu"
+      ],
+      "priority": "critical",
+      "title_pl": "Nośnika nie zgaduj",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "ui.tag_casing_global",
+      "must": [
+        "DamLabels.formatTagLabel(label, kind) przy kazdym renderze badge/pill",
+        "category/subcategory/smak/typ = Title Case; carrier/brand/lang/index = jak w slowniku (wersaliki)",
+        "opakowanie w filtrze mapuj do label_pl nosnika (doypack -> DOYPACK)"
+      ],
+      "body_pl": "Tagi sa globalne (karty, filtr, explorer, inbox). Kody (DK, GC, DOYPACK, FOLIA, GB, indeks) zostaja WERSALIKAMI jak w slowniku. Etykiety ludzkie (Kulki, Kulki Surowe, Mini batoniki, Warianty) piszemy jak w zdaniu z duza litera. Nie mieszac stylow na jednej karcie (nie KULKI obok Kulki Surowe). Formatter: DamLabels.formatTagLabel.",
+      "category": "ui",
+      "must_not": [
+        "CSS text-transform:uppercase na etykietach ludzkich tagow",
+        "Rozne casingi tej samej kategorii w roznych widokach"
+      ],
+      "priority": "critical",
+      "title_pl": "Tagi globalne: wersaliki albo jak w zdaniu - bez mieszania",
+      "related_kv": [
+        "naming-dictionary",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "apps/web/assets/js/dam-labels.js",
+        "apps/web/assets/js/dam-badges.js",
+        "apps/web/assets/js/dam-tag-bar.js"
+      ]
+    },
+    {
+      "id": "ui.product_name_pl_under_en",
+      "must": [
+        "DamLabels.productNamePlParen + .dam-viz-card__title-pl",
+        "Slownik w dam_kv_store.product-name-pl",
+        "Format: ( Nazwa ) ze spacjami w nawiasie"
+      ],
+      "body_pl": "Gdy produkt ma angielska nazwe (marka GC), pod tytulem zawsze pokazuj polskie tlumaczenie po nowej linii w nawiasie ze spacjami, np. MINCED / ( Mielone ). Rozmiar jak meta karty, kolor jak tytul. Slownik: product-name-pl.json (KV).",
+      "category": "ui",
+      "must_not": [
+        "Ukrywac PL gdy jest w slowniku",
+        "Szary kolor jak meta - ma byc kolor tytulu"
+      ],
+      "priority": "high",
+      "title_pl": "Angielska nazwa GC + polska w nawiasie pod tytulem",
+      "related_kv": [
+        "product-name-pl"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "apps/web/assets/js/dam-labels.js",
+        "apps/web/assets/js/dam-viz.js"
+      ]
+    },
+    {
+      "id": "search.product_people",
+      "must": [
+        "Mapa kto↔produkt w product-people.json (+ KV product-people)",
+        "enrich-search-tags.py wlewa autorow do authors / search_blob / by_tag / tag_groups.autor",
+        "Szukajka: sylwia / krzysztof / szymon znajduje przypisane produkty"
+      ],
+      "body_pl": "Osoba przy produkcie sluzy do WYSZUKIWANIA (statusy Sylwii, spis Szymona, dziennik KW), nie do glosnych badge TAG na kartach. Zrodlo: apps/web/data/product-people.json. Po aktualizacji mapy: python apps/web/scripts/enrich-search-tags.py (+ seed KV).",
+      "category": "search",
+      "must_not": [
+        "Renderowac imion jako glowne badge na kartach wizualizacji (chyba ze user poprosi)",
+        "Kasowac mape przy rebuildzie file-index bez ponownego enrich"
+      ],
+      "priority": "high",
+      "title_pl": "Osoba przy produkcie = wyszukiwanie, nie TAG na karcie",
+      "related_kv": [
+        "product-people",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "apps/web/data/product-people.json",
+        "apps/web/scripts/enrich-search-tags.py",
+        "apps/web/assets/js/dam-search.js"
+      ]
+    }
+  ],
+  "description_pl": "Newralgiczne ustalenia użytkownika. Źródło prawdy dla kodu i agentów: Postgres dam_kv_store.program-instructions (+ lokalny cache ten plik). memory.md jest tylko notatką operacyjną - przy konflikcie wygrywa ten magazyn. Po każdej nowej krytycznej decyzji: dopisz instrukcję tutaj, zapisz przez bridge (seed KV), dopiero potem zmieniaj kod.",
+  "source_of_truth": {
+    "related": [
+      "naming-dictionary",
+      "app-settings",
+      "lifecycle-status",
+      "change-log",
+      "carrier-assignment-log"
+    ],
+    "local_cache": "apps/web/data/program-instructions.json",
+    "postgres_kv": "program-instructions",
+    "settings_ui": "settings.html#damProgramInstructions"
+  }
+}

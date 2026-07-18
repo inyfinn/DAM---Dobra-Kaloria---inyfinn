@@ -9,6 +9,8 @@ Endpoints:
   GET  /health
   POST /reveal   {"path": "M:\\\\...\\\\file.png"}  -> explorer /select
   POST /rename-index {"folder","from_index","to_index","dry_run?"} -> rename index in folder tree
+  POST /lifecycle-status {"scope":"product|variant","status":"aktualne|nieaktualne|demo|clear","path",...}
+                         -> suffix - F/- X/- D, archiwum, historia previous_name/path
   POST /synology-share {"path": "..."} -> Synology Drive "Uzyskaj lacze" / Get link
   POST /validate-base {"path": "X:\\\\Marketing"} -> checks 3 root folders
   GET  /detect-marketing-bases -> kandydaci na tym komputerze (X:/D:/M:)
@@ -30,6 +32,7 @@ Endpoints:
   GET  /tag-proposals  lista kolejki (po TTL: eskalacja do inbox, BEZ auto-zapisu)
   POST /tag-proposals/decide  zatwierdz/odrzuc/pick_other - TYLKO sesja admin
   GET/POST /carrier-types  wlasne typy nosnikow (dodaj/usun + reassign historii)
+  GET  /program-instructions  newralgiczne reguly programu (KV + lokalny cache)
   POST /viz-request  Faza 5/6: "Zglos zapotrzebowanie" wielokanalowe (mail/Teams/Asana stub + w aplikacji)
   GET  /inbox-items  lista wpisow panelu (viz-request i inne, tagi + read flag)
   POST /inbox-items/mark-read  {"id"} -> oznacz przeczytane
@@ -67,6 +70,11 @@ try:
     import dam_db
 except ImportError:
     dam_db = None  # type: ignore
+
+try:
+    import lifecycle_status as lifecycle_status_mod
+except ImportError:
+    lifecycle_status_mod = None  # type: ignore
 
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
@@ -122,7 +130,15 @@ def reveal_in_explorer(target: str) -> dict:
         cmd = f'explorer "{target}"'
 
     try:
-        subprocess.Popen(cmd, shell=True)
+        _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+        subprocess.Popen(
+            cmd,
+            shell=True,
+            creationflags=_no_win,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         return {"ok": True, "path": target, "command": "select" if os.path.isfile(target) else "open"}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc), "path": target}
@@ -149,6 +165,7 @@ def invoke_synology_share(target: str) -> dict:
         target,
     ]
     try:
+        _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
         proc = subprocess.run(
             cmd,
             capture_output=True,
@@ -157,6 +174,7 @@ def invoke_synology_share(target: str) -> dict:
             errors="replace",
             timeout=45,
             check=False,
+            creationflags=_no_win,
         )
     except subprocess.TimeoutExpired:
         return {"ok": False, "error": "timeout", "path": target}
@@ -393,7 +411,14 @@ def _run_index_rebuild() -> None:
     try:
         if not BUILD_INDEX.is_file():
             raise FileNotFoundError(str(BUILD_INDEX))
-        rc = subprocess.call([sys.executable, str(BUILD_INDEX)])
+        _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+        rc = subprocess.call(
+            [sys.executable, str(BUILD_INDEX)],
+            creationflags=_no_win,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         with _index_lock:
             _index_state["last_rc"] = rc
             _index_state["last_ok"] = rc == 0
@@ -715,7 +740,50 @@ TAG_PROPOSALS_FILE = WEB_ROOT / "data" / "tag-proposals.json"
 CARRIER_TYPES_FILE = WEB_ROOT / "data" / "carrier-types.json"
 ASSIGNMENT_LOG_FILE = WEB_ROOT / "data" / "carrier-assignment-log.json"
 CHANGE_LOG_FILE = WEB_ROOT / "data" / "change-log.json"
+LIFECYCLE_STORE_FILE = WEB_ROOT / "data" / "lifecycle-status.json"
+PRODUCT_STATUS_FILE = WEB_ROOT / "data" / "product-status.json"
 PROPOSAL_TTL_HOURS = 72
+
+
+def mirror_lifecycle_to_product_status(result: dict, payload: dict) -> None:
+    """Dopisz status do product-status.json (revisions + products) po FS change."""
+    data = _load_json(PRODUCT_STATUS_FILE, {"updated_at": "", "revisions": {}, "products": {}})
+    data.setdefault("revisions", {})
+    data.setdefault("products", {})
+    status = result.get("status") or "clear"
+    letter = result.get("letter")
+    note = f"Lifecycle {letter or 'clear'}"
+    scope = (result.get("scope") or payload.get("scope") or "").lower()
+    if scope == "variant":
+        keys = [
+            result.get("final_variant_path") or "",
+            payload.get("path") or "",
+            payload.get("revision_index") or payload.get("index") or "",
+        ]
+        for key in keys:
+            key = str(key or "").strip()
+            if not key:
+                continue
+            data["revisions"][key] = {"status": status, "note": note, "letter": letter}
+    else:
+        pid = str(payload.get("product_id") or "").strip()
+        ppath = result.get("final_product_path") or payload.get("path") or ""
+        if pid:
+            data["products"][pid] = {
+                "status": status,
+                "note": note,
+                "letter": letter,
+                "path": ppath,
+            }
+        if ppath:
+            data["products"][ppath] = {
+                "status": status,
+                "note": note,
+                "letter": letter,
+                "path": ppath,
+            }
+    data["updated_at"] = utc_now()
+    _save_json(PRODUCT_STATUS_FILE, data)
 
 # Slot folderow w rewizji - tu rename'ujemy AI/PDF/wizki (Fala D).
 _REVISION_FILE_SLOT_HINTS = (
@@ -770,38 +838,103 @@ KNOWN_CARRIER_PREFIXES = (
     "ETYKIETA",
 ) + KNOWN_CARRIER_CODES
 
-# Mapowanie kodu API (BAT/DOY) -> prefiks folderu na dysku
-CARRIER_FOLDER_PREFIX = {
-    "BAT": "BATON",
-    "BAR": "BATON",
-    "MINI": "MINI BATON",
-    "DOY": "DOYPACK",
-    "DOY6X": "DOYPACK 6x MINI",
-    "KAR": "KARTON",
-    "KAR6X": "KARTON 6x MINI",
-    "FOL": "FOLIA",
-    "FOIL": "FOLIA",
-    "FOLIA": "FOLIA",
+# Mapowanie kodu API (BAT/DOY) -> prefiks folderu na dysku.
+# ZRODLO PRAWDY: apps/web/data/naming-dictionary.json (policy + carriers[].short)
+# + kopia w Postgres dam_kv_store / naming-dictionary. Pelne DOYPACK/BATON w UI;
+# na dysku zawsze skrot (DOY/BAT/FOL). Stare foldery z pelnym prefiksem
+# wykrywa KNOWN_CARRIER_PREFIXES przy rename.
+NAMING_DICTIONARY_FILE = WEB_ROOT / "data" / "naming-dictionary.json"
+APP_SETTINGS_FILE = WEB_ROOT / "data" / "app-settings.json"
+PROGRAM_INSTRUCTIONS_FILE = WEB_ROOT / "data" / "program-instructions.json"
+
+_CARRIER_FOLDER_PREFIX_FALLBACK = {
+    "BAT": "BAT",
+    "BAR": "BAT",
+    "MINI": "MINI",
+    "DOY": "DOY",
+    "DOY6X": "DOY6X",
+    "KAR": "KAR",
+    "KAR6X": "KAR6X",
+    "FOL": "FOL",
+    "FOIL": "FOL",
+    "FOLIA": "FOL",
     "REKAW": "REKAW",
     "SLEEVE": "REKAW",
-    "SASZ": "SASZETKA",
-    "OBW": "OBWOLUTA",
-    "ETY": "ETYKIETA",
-    "ETY-BUT": "ETYKIETA BUTELKA",
-    "ETY-SLO": "ETYKIETA SŁOIK",
-    "WIZKA": "WIZUALIZACJE",
+    "SASZ": "SASZ",
+    "OBW": "OBW",
+    "ETY": "ETY",
+    "ETY-BUT": "ETY-BUT",
+    "ETY-SLO": "ETY-SLO",
+    "TUBA": "TUBA",
+    "SHOT": "SHOT",
+    "BIGPAK": "BIGPAK",
+    "WIZKA": "WIZKA",
     "NONE": "",
 }
+
+
+def load_carrier_folder_prefix(dict_data: dict | None = None) -> dict[str, str]:
+    """Prefiks folderu z naming-dictionary.policy + carriers[].short|label_pl."""
+    data = dict_data
+    if data is None:
+        try:
+            if NAMING_DICTIONARY_FILE.is_file():
+                data = json.loads(NAMING_DICTIONARY_FILE.read_text(encoding="utf-8"))
+            else:
+                data = {}
+        except (OSError, json.JSONDecodeError):
+            data = {}
+    policy = (data or {}).get("policy") or {}
+    use_short = str(policy.get("carrier_prefix_on_disk") or "short").lower() == "short"
+    out = dict(_CARRIER_FOLDER_PREFIX_FALLBACK)
+    for code, meta in ((data or {}).get("carriers") or {}).items():
+        if not isinstance(meta, dict):
+            continue
+        code_u = str(code).strip().upper()
+        short = str(meta.get("short") or code_u).strip().upper()
+        label = str(meta.get("label_pl") or code_u).strip()
+        prefix = short if use_short else label
+        out[code_u] = prefix
+        for alias in meta.get("aliases") or []:
+            a = str(alias).strip().upper()
+            if a:
+                out[a] = prefix
+    out["NONE"] = ""
+    return out
+
+
+CARRIER_FOLDER_PREFIX = load_carrier_folder_prefix()
+
+
+def reload_naming_policy_from_disk() -> dict:
+    """Odswiez CARRIER_FOLDER_PREFIX po pull KV / zapisie slownika."""
+    global CARRIER_FOLDER_PREFIX
+    CARRIER_FOLDER_PREFIX = load_carrier_folder_prefix()
+    return {
+        "ok": True,
+        "prefix_sample": {
+            "DOY": CARRIER_FOLDER_PREFIX.get("DOY"),
+            "FOLIA": CARRIER_FOLDER_PREFIX.get("FOLIA"),
+            "BAT": CARRIER_FOLDER_PREFIX.get("BAT"),
+        },
+    }
 
 
 # Tier 2 (ADR-009): te pliki JSON sa wspolne w Postgres dam_kv_store.
 # Lokalny plik = cache (odswiezany natychmiast po wlasnym zapisie + co 30 min).
 KV_STORE_KEYS = frozenset({
     "product-aliases",
+    "product-name-pl",
+    "product-people",
     "naming-dictionary",
+    "app-settings",
+    "program-instructions",
     "tag-proposals",
     "carrier-types",
     "carrier-assignment-log",
+    "change-log",
+    "lifecycle-status",
+    "product-status",
     "notification-groups",
     "inbox-items",
     "carrier-overrides",
@@ -883,13 +1016,106 @@ def _pull_kv_cache_from_postgres() -> int:
             payload = pg_db.kv_get(store_key, None)
             if payload is None:
                 continue
+            # Nie cofaj lokalnego seedu do starszej wersji z PG
+            if store_key in ("naming-dictionary", "program-instructions") and isinstance(
+                payload, dict
+            ):
+                local_path = WEB_ROOT / "data" / f"{store_key}.json"
+                local = _load_json(local_path, {})
+                local_ver = int((local or {}).get("version") or 0)
+                remote_ver = int(payload.get("version") or 0)
+                if local_ver > remote_ver:
+                    continue
+                # program-instructions: wiecej instrukcji lokalnie = nowszy seed
+                if store_key == "program-instructions":
+                    local_n = len((local or {}).get("instructions") or [])
+                    remote_n = len(payload.get("instructions") or [])
+                    if local_n > remote_n and local_ver >= remote_ver:
+                        continue
             path = WEB_ROOT / "data" / f"{store_key}.json"
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
             n += 1
         except Exception as exc:
             print(f"kv_cache pull error ({store_key}):", exc)
+    if n:
+        reload_naming_policy_from_disk()
     return n
+
+
+def _seed_naming_policy_to_postgres() -> None:
+    """Wypchnij naming-dictionary + app-settings + program-instructions do dam_kv_store."""
+    naming: dict = {}
+    if NAMING_DICTIONARY_FILE.is_file():
+        try:
+            naming = json.loads(NAMING_DICTIONARY_FILE.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            naming = {}
+    policy = naming.get("policy") or {}
+
+    instructions: dict = {}
+    if PROGRAM_INSTRUCTIONS_FILE.is_file():
+        try:
+            instructions = json.loads(PROGRAM_INSTRUCTIONS_FILE.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            instructions = {}
+
+    instr_list = instructions.get("instructions") if isinstance(instructions, dict) else []
+    critical_ids = [
+        i.get("id")
+        for i in (instr_list or [])
+        if isinstance(i, dict) and i.get("priority") == "critical" and i.get("id")
+    ]
+
+    app_settings = {
+        "version": 2,
+        "naming": {
+            "source_kv": "naming-dictionary",
+            "carrier_display_in_ui": policy.get("carrier_display_in_ui") or "label_pl",
+            "carrier_prefix_on_disk": policy.get("carrier_prefix_on_disk") or "short",
+            "description_pl": policy.get("description_pl") or "",
+            "dictionary_version": naming.get("version"),
+        },
+        "instructions": {
+            "source_kv": "program-instructions",
+            "version": instructions.get("version") if instructions else 0,
+            "count": len(instr_list or []),
+            "critical_ids": critical_ids,
+            "settings_anchor": "settings.html#damProgramInstructions",
+        },
+        "updated_at": policy.get("updated_at")
+        or (instructions.get("updated_at") if instructions else "")
+        or "",
+    }
+    _save_json(APP_SETTINGS_FILE, app_settings)
+    if naming:
+        _save_json(NAMING_DICTIONARY_FILE, naming)
+    if instructions:
+        _save_json(PROGRAM_INSTRUCTIONS_FILE, instructions)
+    # Historia operacji / statusow / slownik EN->PL - tez do KV
+    name_pl_file = WEB_ROOT / "data" / "product-name-pl.json"
+    people_file = WEB_ROOT / "data" / "product-people.json"
+    for path in (
+        CHANGE_LOG_FILE,
+        LIFECYCLE_STORE_FILE,
+        PRODUCT_STATUS_FILE,
+        name_pl_file,
+        people_file,
+    ):
+        if path.is_file():
+            try:
+                _save_json(path, _load_json(path, {}))
+            except Exception as exc:  # noqa: BLE001
+                print(f"kv seed skip {path.name}:", exc)
+    reload_naming_policy_from_disk()
+    print(
+        "program policy seeded:",
+        f"ui={app_settings['naming']['carrier_display_in_ui']}",
+        f"disk={app_settings['naming']['carrier_prefix_on_disk']}",
+        f"instructions={app_settings['instructions']['count']}",
+        f"critical={len(critical_ids)}",
+        f"DOY->{CARRIER_FOLDER_PREFIX.get('DOY')}",
+    )
 
 
 def load_tag_proposals() -> dict:
@@ -2493,6 +2719,40 @@ class Handler(BaseHTTPRequestHandler):
             limit = int((qs.get("limit") or ["40"])[0])
             self._json(200, load_change_log(limit))
             return
+        if parsed.path == "/program-instructions":
+            data = _load_json(PROGRAM_INSTRUCTIONS_FILE, None)
+            if not isinstance(data, dict):
+                self._json(404, {"ok": False, "error": "program_instructions_missing"})
+                return
+            qs = parse_qs(parsed.query)
+            cat = (qs.get("category") or [""])[0].strip().lower()
+            pri = (qs.get("priority") or [""])[0].strip().lower()
+            items = list(data.get("instructions") or [])
+            if cat:
+                items = [i for i in items if str((i or {}).get("category") or "").lower() == cat]
+            if pri:
+                items = [i for i in items if str((i or {}).get("priority") or "").lower() == pri]
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "version": data.get("version"),
+                    "updated_at": data.get("updated_at"),
+                    "title_pl": data.get("title_pl"),
+                    "description_pl": data.get("description_pl"),
+                    "source_of_truth": data.get("source_of_truth"),
+                    "count": len(items),
+                    "instructions": items,
+                },
+            )
+            return
+        if parsed.path == "/lifecycle-status":
+            if lifecycle_status_mod is None:
+                self._json(500, {"ok": False, "error": "lifecycle_module_missing"})
+                return
+            store = lifecycle_status_mod.load_lifecycle_store(LIFECYCLE_STORE_FILE)
+            self._json(200, {"ok": True, **store})
+            return
         if parsed.path == "/tag-proposals/timeline":
             qs = parse_qs(parsed.query)
             pid = (qs.get("proposal_id") or [""])[0].strip()
@@ -2694,6 +2954,39 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(400, {"ok": False, "error": "folder_from_to_required"})
                 return
             result = rename_index_in_folder(folder, from_index, to_index, dry_run=dry_run)
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/lifecycle-status":
+            user = self._require_admin()
+            if user is None:
+                return
+            if lifecycle_status_mod is None:
+                self._json(500, {"ok": False, "error": "lifecycle_module_missing"})
+                return
+            payload = data if isinstance(data, dict) else {}
+            result = lifecycle_status_mod.apply_lifecycle_status(
+                scope=str(payload.get("scope") or ""),
+                status=str(payload.get("status") or ""),
+                path=str(payload.get("path") or payload.get("folder") or ""),
+                product_path=str(payload.get("product_path") or ""),
+                product_id=str(payload.get("product_id") or ""),
+                revision_index=str(payload.get("revision_index") or payload.get("index") or ""),
+                actor=(user.get("email") or user.get("name") or ""),
+                dry_run=bool(payload.get("dry_run")),
+                store_path=LIFECYCLE_STORE_FILE,
+                append_change_log=append_change_log,
+            )
+            # Po sukcesie: wypchnij lifecycle + mirror product-status do PG (KV)
+            if result.get("ok") and not result.get("dry_run"):
+                try:
+                    store = lifecycle_status_mod.load_lifecycle_store(LIFECYCLE_STORE_FILE)
+                    _save_json(LIFECYCLE_STORE_FILE, store)
+                except Exception:  # noqa: BLE001
+                    pass
+                try:
+                    mirror_lifecycle_to_product_status(result, payload)
+                except Exception:  # noqa: BLE001
+                    pass
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/rename-revision-prefix":
@@ -2903,6 +3196,10 @@ def main() -> None:
         seed_owner_from_env()
     except Exception as exc:
         print("auth/db seed:", exc)
+    try:
+        _seed_naming_policy_to_postgres()
+    except Exception as exc:
+        print("naming policy seed:", exc)
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     threading.Thread(target=_kv_cache_watcher, daemon=True).start()
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)

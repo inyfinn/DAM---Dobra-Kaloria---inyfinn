@@ -1,0 +1,225 @@
+{
+  "redo": [],
+  "entries": [
+    {
+      "id": "chg_1784400747310",
+      "ts": "2026-07-18T18:52:27.310713+00:00",
+      "note": "Naprawa: pelny prefiks folderu -> skrot (UI nadal pelna nazwa)",
+      "actor": "system:fix_doypack_folder_prefixes",
+      "action": "rename_carrier",
+      "category": "carrier",
+      "carrier_to": "DOY",
+      "carrier_from": "DOYPACK",
+      "file_renames": [],
+      "folder_rename": {
+        "new_name": "DOY - 20.09.2024 - 6300490.00 - GB AR",
+        "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOY - 20.09.2024 - 6300490.00 - GB AR",
+        "old_name": "DOYPACK - 20.09.2024 - 6300490.00 - GB AR",
+        "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 20.09.2024 - 6300490.00 - GB AR"
+      }
+    },
+    {
+      "id": "chg_1784400747302",
+      "ts": "2026-07-18T18:52:27.302345+00:00",
+      "note": "Naprawa: pelny prefiks folderu -> skrot (UI nadal pelna nazwa)",
+      "actor": "system:fix_doypack_folder_prefixes",
+      "action": "rename_carrier",
+      "category": "carrier",
+      "carrier_to": "DOY",
+      "carrier_from": "DOYPACK",
+      "file_renames": [],
+      "folder_rename": {
+        "new_name": "DOY - 17.02.2025 - 6300624.00 - SK HU HR",
+        "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOY - 17.02.2025 - 6300624.00 - SK HU HR",
+        "old_name": "DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR",
+        "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR"
+      }
+    },
+    {
+      "id": "chg_1784399410829",
+      "ts": "2026-07-18T18:30:10.829525+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "rename_carrier",
+      "category": "carrier",
+      "carrier_to": "DOY",
+      "product_id": "date-orange-balls-raw",
+      "carrier_from": "",
+      "file_renames": [
+        {
+          "new_name": "GC-DOY-balls_cocoa-orange_GB_СZ_SK_HU_HR_edit - 6300624.00_F.ai",
+          "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\2 - PROJECT\\GC-DOY-balls_cocoa-orange_GB_СZ_SK_HU_HR_edit - 6300624.00_F.ai",
+          "old_name": "GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_edit_F.ai",
+          "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\2 - PROJECT\\GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_edit_F.ai"
+        },
+        {
+          "new_name": "GC-DOY-balls_cocoa-orange_GB_СZ - SK_HU_HR - 6300624.00_FQ.ai",
+          "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\2 - PROJECT\\GC-DOY-balls_cocoa-orange_GB_СZ - SK_HU_HR - 6300624.00_FQ.ai",
+          "old_name": "GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_FQ.ai",
+          "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\2 - PROJECT\\GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_FQ.ai"
+        },
+        {
+          "new_name": "GC-DOY-balls_cocoa-orange_GB_СZ - SK_HU_HR - 6300624.00_FQ.pdf",
+          "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\2 - PROJECT\\GC-DOY-balls_cocoa-orange_GB_СZ - SK_HU_HR - 6300624.00_FQ.pdf",
+          "old_name": "GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_FQ.pdf",
+          "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\2 - PROJECT\\GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_FQ.pdf"
+        },
+        {
+          "new_name": "GC-DOY-balls_cocoa-orange_GB_СZ_SK_HU_HR_FQ_podgląd - 6300624.00.pdf",
+          "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\2 - PROJECT\\GC-DOY-balls_cocoa-orange_GB_СZ_SK_HU_HR_FQ_podgląd - 6300624.00.pdf",
+          "old_name": "GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_FQ_podgląd.pdf",
+          "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\2 - PROJECT\\GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_FQ_podgląd.pdf"
+        },
+        {
+          "new_name": "GC-DOY-balls_cocoa-orange_GB_СZ_SK_HU_HR_edit_PREV - 6300624.00.png",
+          "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\4 - VISUALS\\GC-DOY-balls_cocoa-orange_GB_СZ_SK_HU_HR_edit_PREV - 6300624.00.png",
+          "old_name": "GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_edit_PREV-.png",
+          "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR\\4 - VISUALS\\GC_balls_cocoa-orange_GB_СZ_SK_HU_HR_6300624_2025_02_17_edit_PREV-.png"
+        }
+      ],
+      "product_name": "DATE ORANGE",
+      "folder_rename": {
+        "new_name": "DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR",
+        "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 17.02.2025 - 6300624.00 - SK HU HR",
+        "old_name": "17.02.2025 - 6300624.00 - SK HU HR",
+        "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\17.02.2025 - 6300624.00 - SK HU HR"
+      }
+    },
+    {
+      "id": "chg_1784399460961",
+      "ts": "2026-07-18T18:31:00.961344+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "rename_carrier",
+      "category": "carrier",
+      "carrier_to": "DOY",
+      "product_id": "date-orange-balls-raw",
+      "carrier_from": "DOY",
+      "file_renames": [
+        {
+          "new_name": "GC-DOY-balls_cocoa-orange - GB_AR - 6300490.00_FQ.ai",
+          "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 20.09.2024 - 6300490.00 - GB AR\\2 - PROJECT\\GC-DOY-balls_cocoa-orange - GB_AR - 6300490.00_FQ.ai",
+          "old_name": "GC_balls_cocoa-orange_GB_AR_6300490_2024_09_26_FQ.ai",
+          "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 20.09.2024 - 6300490.00 - GB AR\\2 - PROJECT\\GC_balls_cocoa-orange_GB_AR_6300490_2024_09_26_FQ.ai"
+        },
+        {
+          "new_name": "GC-DOY-balls_cocoa-orange - GB_AR - 6300490.00_FQ.pdf",
+          "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 20.09.2024 - 6300490.00 - GB AR\\2 - PROJECT\\GC-DOY-balls_cocoa-orange - GB_AR - 6300490.00_FQ.pdf",
+          "old_name": "GC_balls_cocoa-orange_GB_AR_6300490_2024_09_26_FQ.pdf",
+          "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 20.09.2024 - 6300490.00 - GB AR\\2 - PROJECT\\GC_balls_cocoa-orange_GB_AR_6300490_2024_09_26_FQ.pdf"
+        },
+        {
+          "new_name": "GC-DOY-balls_cocoa-orange - GB_AR_FQ - 6300490.00_preview.pdf",
+          "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 20.09.2024 - 6300490.00 - GB AR\\2 - PROJECT\\GC-DOY-balls_cocoa-orange - GB_AR_FQ - 6300490.00_preview.pdf",
+          "old_name": "GC_balls_cocoa-orange_GB_AR_6300490_2024_09_26_FQ_preview.pdf",
+          "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 20.09.2024 - 6300490.00 - GB AR\\2 - PROJECT\\GC_balls_cocoa-orange_GB_AR_6300490_2024_09_26_FQ_preview.pdf"
+        }
+      ],
+      "product_name": "DATE ORANGE",
+      "folder_rename": {
+        "new_name": "DOYPACK - 20.09.2024 - 6300490.00 - GB AR",
+        "new_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\DOYPACK - 20.09.2024 - 6300490.00 - GB AR",
+        "old_name": "20.09.2024 - 6300490.00 - GB AR",
+        "old_path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE ORANGE — [ balls_raw ]\\20.09.2024 - 6300490.00 - GB AR"
+      }
+    },
+    {
+      "id": "chg_1784400909203",
+      "ts": "2026-07-18T18:55:09.203630+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "test-lifecycle-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1784400909202"
+    },
+    {
+      "id": "chg_1784400909374",
+      "ts": "2026-07-18T18:55:09.374015+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "test-lifecycle-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1784400909368"
+    },
+    {
+      "id": "chg_1784403405820",
+      "ts": "2026-07-18T19:36:45.820583+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 07.05.2026 - 6300684.01 - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "babka-cytrynowa-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 07.05.2026 - 6300684.01 - F",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 07.05.2026 - 6300684.01"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 07.05.2026 - 6300684.01 - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 07.05.2026 - 6300684.01"
+      },
+      "revision_index": "6300684.01",
+      "lifecycle_history_id": "lc_1784403405819"
+    },
+    {
+      "id": "chg_1784404768232",
+      "ts": "2026-07-18T19:59:28.232873+00:00",
+      "action": "lifecycle_status",
+      "scope": "variant",
+      "status": "demo",
+      "letter": "D",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "product_id": "test-lifecycle-nerkowcowy",
+      "revision_index": "TEST-TEST",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - D",
+      "folder_rename": {
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST",
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - D"
+      },
+      "path_renames": [
+        {
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - D",
+          "kind": "variant"
+        }
+      ],
+      "lifecycle_history_id": "lc_1784404768232",
+      "notes": []
+    }
+  ]
+}

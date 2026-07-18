@@ -97,6 +97,14 @@
     );
   }
 
+  function humanCarrierForLog(code) {
+    if (!code) return "?";
+    if (window.DamLabels && typeof window.DamLabels.carrierLabel === "function") {
+      return window.DamLabels.carrierLabel(code, code) || String(code);
+    }
+    return String(code);
+  }
+
   function formatChangeLogEntry(entry) {
     if (!entry) return "Brak historii zmian";
     var ts = String(entry.ts || "").replace("T", " ").slice(0, 16);
@@ -105,7 +113,12 @@
     if (entry.action === "rename_index" || cat === "index") {
       label = "Indeks: " + (entry.index_from || "?") + " -> " + (entry.index_to || "?");
     } else if (entry.carrier_from || entry.carrier_to) {
-      label = "Typ: " + (entry.carrier_from || "?") + " -> " + (entry.carrier_to || "?");
+      // UI: pelne nazwy; w JSON zostaje kod/skrot (API + dysk)
+      label =
+        "Typ: " +
+        humanCarrierForLog(entry.carrier_from) +
+        " -> " +
+        humanCarrierForLog(entry.carrier_to);
     } else {
       label = cat || "Zmiana";
     }
@@ -585,13 +598,13 @@
     var goDisabled = !pid ? " is-disabled" : "";
     var winDisabled = !path ? " is-disabled" : "";
     return (
-      '<div class="dam-nav-circles" onclick="event.stopPropagation()">' +
-      '<a class="dam-viz-icon-btn' +
+      '<div class="dam-nav-circles dam-nav-circles--row" onclick="event.stopPropagation()">' +
+      '<a class="dam-viz-icon-btn dam-viz-icon-btn--explorer' +
       goDisabled +
       '" href="' +
       esc(explorerHref) +
       '" title="Przejdź do Eksplorera" aria-label="Przejdź do Eksplorera" data-dam-tip="Otwórz produkt w Eksplorerze">' +
-      '<i class="uil uil-folder-open" aria-hidden="true"></i></a>' +
+      '<i class="uil uil-sitemap" aria-hidden="true"></i></a>' +
       '<button type="button" class="dam-viz-icon-btn dam-win-btn' +
       winDisabled +
       '" data-path="' +
@@ -682,7 +695,7 @@
       '" title="Przejdź" data-dam-tip="Otwórz produkt w Eksplorerze"' +
       (!pid ? ' aria-disabled="true" tabindex="-1"' : "") +
       ">" +
-      '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Przejdź</span></a>' +
+      '<i class="uil uil-sitemap" aria-hidden="true"></i><span>Przejdź</span></a>' +
       '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-project-win-btn dam-win-btn' +
       winDisabled +
       '" data-path="' +
@@ -696,27 +709,9 @@
     );
   }
 
-  function productContextHtml(it) {
+  function changeChipHtml(it) {
     if (it.type !== "tag_proposal") return "";
-    var name = it.product_name || it.product_id || "Produkt bez nazwy";
-    var pid = it.product_id || "";
-    var path = it.path || it.revision_path || "";
-    var indexHtml = it.product_index
-      ? '<div class="dam-inbox-item__product-index">' +
-        '<button type="button" class="dam-viz-badge dam-badge-tag dam-viz-badge--index" data-tag-kind="index" data-tag-value="' +
-        esc(it.product_index) +
-        '" data-dam-tip="Indeks produktu" title="Indeks produktu">' +
-        esc(it.product_index) +
-        "</button></div>"
-      : "";
-    var nameHtml = pid
-      ? '<a class="dam-inbox-item__product-name" href="explorer.html?product=' +
-        encodeURIComponent(pid) +
-        '" onclick="event.stopPropagation()" title="Otwórz w Eksplorerze" data-dam-tip="Eksplorer - hub plików produktu">' +
-        esc(name) +
-        "</a>"
-      : '<span class="dam-inbox-item__product-name">' + esc(name) + "</span>";
-    var changeChip =
+    return (
       '<div class="dam-inbox-item__change" title="Proponowana zmiana typu">' +
       '<span class="dam-inbox-item__change-from">' +
       esc(it.current_value || "?") +
@@ -724,16 +719,59 @@
       '<i class="uil uil-arrow-right" aria-hidden="true"></i>' +
       '<span class="dam-inbox-item__change-to">' +
       esc(proposedLabel(it.proposed_value)) +
-      "</span></div>";
+      "</span></div>"
+    );
+  }
+
+  function productContextHtml(it, opts) {
+    if (it.type !== "tag_proposal") return "";
+    opts = opts || {};
+    var expanded = !!opts.expanded;
+    var name = it.product_name || it.product_id || "Produkt bez nazwy";
+    var pid = it.product_id || "";
+    var path = it.path || it.revision_path || "";
+    var title = String(it.title || "");
+    var nameRedundant =
+      title.indexOf(name) === 0 ||
+      title === name ||
+      title.indexOf(name + " ·") === 0;
+    var indexHtml = it.product_index
+      ? '<button type="button" class="dam-viz-badge dam-badge-tag dam-viz-badge--index" data-tag-kind="index" data-tag-value="' +
+        esc(it.product_index) +
+        '" data-dam-tip="Indeks produktu" title="Indeks produktu">' +
+        esc(it.product_index) +
+        "</button>"
+      : "";
+    var nameHtml =
+      !expanded && nameRedundant
+        ? ""
+        : pid
+          ? '<a class="dam-inbox-item__product-name" href="explorer.html?product=' +
+            encodeURIComponent(pid) +
+            '" onclick="event.stopPropagation()" title="Otwórz w Eksplorerze" data-dam-tip="Eksplorer - hub plików produktu">' +
+            esc(name) +
+            "</a>"
+          : '<span class="dam-inbox-item__product-name">' + esc(name) + "</span>";
+    var changeChip = changeChipHtml(it);
+    var metaBits =
+      (indexHtml ? '<div class="dam-inbox-item__product-index">' + indexHtml + "</div>" : "") +
+      (expanded ? proposalBadgesHtml(it) : "");
+    if (!expanded) {
+      /* Collapsed: change + nav + date żyją w .dam-inbox-item__row-end */
+      return "";
+    }
     return (
-      '<div class="dam-inbox-item__product">' +
-      '<div class="dam-inbox-item__product-main">' +
-      indexHtml +
-      nameHtml +
-      changeChip +
-      proposalBadgesHtml(it) +
+      '<div class="dam-inbox-item__product is-expanded">' +
+      '<div class="dam-inbox-item__product-body">' +
+      (nameHtml
+        ? '<div class="dam-inbox-item__product-head">' + nameHtml + "</div>"
+        : "") +
+      (metaBits
+        ? '<div class="dam-inbox-item__product-meta">' + metaBits + "</div>"
+        : "") +
       "</div>" +
-      '<div class="dam-inbox-item__product-foot">' +
+      '<div class="dam-inbox-item__product-end" onclick="event.stopPropagation()">' +
+      changeChip +
       navCirclesHtml({ productId: pid, path: path }) +
       "</div></div>"
     );
@@ -800,13 +838,14 @@
     return (
       '<div class="dam-inbox-hist-item" data-proposal-id="' +
       esc(it.id) +
+      '" onclick="event.stopPropagation()">' +
+      '<div class="dam-inbox-hist-item__bar" title="' +
+      esc(note) +
       '">' +
       '<div class="dam-inbox-hist-item__actions">' +
       bits.join("") +
       "</div>" +
-      '<p class="dam-inbox-hist-item__note">' +
-      note +
-      "</p></div>"
+      "</div></div>"
     );
   }
 
@@ -1127,6 +1166,8 @@
             esc(stLabel) +
             "</span>";
         }
+        var showPreview =
+          preview && !isOpen && it.type !== "tag_proposal";
         return (
           '<li class="dam-inbox-item' +
           (unread ? " is-unread" : "") +
@@ -1141,24 +1182,41 @@
           sourceIcon(it.tags, it.type) +
           '"></i></div>' +
           '<div class="dam-inbox-item__body">' +
-          '<div class="dam-inbox-item__top">' +
+          '<div class="dam-inbox-item__row">' +
+          '<div class="dam-inbox-item__row-body">' +
           "<strong>" +
           esc(it.title) +
           "</strong>" +
-          '<span class="dam-inbox-item__meta-right">' +
+          (showPreview
+            ? '<div class="dam-inbox-item__preview">' + esc(preview) + "</div>"
+            : "") +
+          "</div>" +
+          '<div class="dam-inbox-item__row-end">' +
+          (!isOpen &&
+          it.type === "tag_proposal" &&
+          String(it.title || "").indexOf("→") === -1 &&
+          String(it.title || "").indexOf("->") === -1
+            ? changeChipHtml(it)
+            : "") +
           statusChip +
           '<span class="dam-inbox-item__date">' +
           esc(fmtDate(it.created_at || it.submitted_at || it.date || it.due)) +
           "</span>" +
+          actorFootHtml(it) +
+          (!isOpen && it.type === "tag_proposal"
+            ? '<span class="dam-inbox-item__row-nav" onclick="event.stopPropagation()">' +
+              navCirclesHtml({
+                productId: it.product_id || "",
+                path: it.path || it.revision_path || "",
+              }) +
+              "</span>"
+            : "") +
           '<i class="uil ' +
           (isOpen ? "uil-angle-up" : "uil-angle-down") +
           ' dam-inbox-item__chevron" aria-hidden="true"></i>' +
-          "</span></div>" +
+          "</div></div>" +
+          productContextHtml(it, { expanded: isOpen }) +
           (isHistoria(it) ? historyActionsHtml(it) : "") +
-          productContextHtml(it) +
-          (preview && !isOpen
-            ? '<div class="dam-inbox-item__preview">' + esc(preview) + "</div>"
-            : "") +
           '<div class="dam-inbox-item__detail" ' +
           (isOpen ? "" : "hidden") +
           ">" +
@@ -1170,7 +1228,6 @@
           (it.tags || []).map(tagPill).join("") +
           "</div>" +
           '<div class="dam-inbox-item__foot-end">' +
-          actorFootHtml(it) +
           '<div class="dam-inbox-item__actions">' +
           openBtn +
           (unread && id && String(id).indexOf("asana-") !== 0 && String(id).indexOf("prop_") !== 0
@@ -1202,7 +1259,7 @@
       li.addEventListener("click", function (e) {
         if (
           e.target.closest(
-            "a, button, select, .dam-inbox-mod, .dam-inbox-hist-item, .dam-inbox-item__actions, .dam-inbox-item__product-foot, .dam-nav-circles"
+            "a, button, select, .dam-inbox-mod, .dam-inbox-hist-item, .dam-inbox-item__actions, .dam-inbox-item__product-end, .dam-inbox-item__product-foot, .dam-inbox-item__row-nav, .dam-nav-circles"
           )
         ) {
           return;

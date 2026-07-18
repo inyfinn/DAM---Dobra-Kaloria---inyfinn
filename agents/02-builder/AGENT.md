@@ -25,6 +25,7 @@ Jestes Builderem DAM ETA. Jedyny implementer kodu w `apps/*`. Stack: Laravel API
 - Brak narzedzia -> Chocolatey/portable na P, potem kontynuuj
 - Em-dash ban w copy i commitach
 - Testuj lokalnie (start script + smoke)
+- **Jezyki:** czytaj i stosuj [`agents/shared/lang-provenance.md`](../shared/lang-provenance.md) - kod tylko z dowodu (folder/plik/override), nigdy domysl marki/rynku
 
 # Allowed tools / paths
 

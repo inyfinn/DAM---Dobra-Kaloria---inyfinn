@@ -129,8 +129,13 @@ python apps/desktop/seed_kubara_users.py
 | Plik | Rola |
 |------|------|
 | `file-index.json` / `search-index.json` | indeks produktow (rebuild: `build-file-index.py`) |
+| `program-instructions.json` | newralgiczne reguly biznesowe (lustro KV) |
+| `lang-overrides.json` | reczne jezyki wariantu (nigdy nie kasowane rebuildem) |
 | `naming-dictionary.json` | nosniki / jezyki / kategorie PL (jedno zrodlo dla Python + JS) |
 | `product-aliases.json` | ten sam produkt DK<->GC (indeks lub reczne dopiecie) |
+| `product-name-pl.json` | PL pod angielska nazwa GC |
+| `product-people.json` | osoby przy produktach (szukajka, nie badge TAG) |
+| `lifecycle-status.json` / `change-log.json` | status F/X/D + historia operacji |
 | `carrier-types.json` / `carrier-assignment-log.json` | wlasne typy nosnikow + historia przypisan |
 | `tag-proposals.json` | kolejka moderacji (72h auto-apply) |
 | `notification-groups.json` | odbiorcy zgloszen (grupa `grafik`) |
@@ -160,18 +165,47 @@ apps/
 DATABASE/       # dumpy Postgres (sql.gz) - ADR-009, prywatne repo
 THEME/          # Motyw Geex
 design-system/  # MASTER.md, logo
-docs/           # VISION, ARCHITECTURE, ADR, DEPLOYMENT
+docs/           # VISION, ARCHITECTURE, ADR, DEPLOYMENT, LANG_PROVENANCE, PROGRAM_INSTRUCTIONS
 scripts/ops/    # skrot, release ZIP, smoke
-agents/         # Architect / Builder / QA
-memory.md       # zasady dlugoterminowe
+agents/         # Architect / Builder / QA + shared (lang-provenance)
+memory.md       # zasady dlugoterminowe (notatka; przy konflikcie wygrywa program-instructions)
 process.md      # log operacyjny
 PROGRESS.md     # postep
 ```
 
 ---
 
+## Agenci (Architect / Builder / QA)
+
+Pelna mapa: [`agents/README.md`](agents/README.md) oraz [`AGENTS.md`](AGENTS.md).
+
+| Rola | Folder | Kiedy |
+|------|--------|--------|
+| Architect | `agents/01-architect/` | ADR, DOMAIN, ROADMAP, PROGRESS |
+| Builder | `agents/02-builder/` | kod `apps/*`, indeks, bridge, UI Geex |
+| QA | `agents/03-qa/` | GATE, smoke, screenshot UI |
+
+Wspolne reguly jezykow: [`agents/shared/lang-provenance.md`](agents/shared/lang-provenance.md).
+
+**Prawda biznesowa** zyje w `program-instructions` (KV + [`apps/web/data/program-instructions.json`](apps/web/data/program-instructions.json)), nie tylko w `memory.md`. Patrz [`docs/PROGRAM_INSTRUCTIONS.md`](docs/PROGRAM_INSTRUCTIONS.md).
+
+---
+
+## Jezyki / rynki (pochodzenie sygnalu)
+
+Szczegoly: [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md).
+
+- **DK:** zawsze **PL**. Dodatkowe (np. GB w PL/GB) tylko z nazw folderow/plikow albo ręcznego `lang-overrides.json`.
+- **GC:** bez automatycznego GB. Kazdy kod z tokenu w nazwie albo override; brak sygnalu = `?` w UI.
+- Rebuild indeksu: `python apps/web/scripts/build-file-index.py` (nie nadpisuje override).
+
+---
+
 ## Changelog (2026-07-18)
 
+- **Jezyki (lang provenance):** DK=PL zawsze; extra / GC tylko z dowodu w nazwach lub override; dokumentacja w `docs/LANG_PROVENANCE.md` + `agents/shared/`
+- **Agenci:** `agents/README.md`, reguly wpięte w AGENT.md rol
+- **program-instructions:** krytyczne reguly w KV/cache (m.in. `data.lang_provenance_only`)
 - **Postgres Synology (ADR-009):** wspolna baza multi-PC, DDNS first, OFFLINE=SQLite, dumpy w `DATABASE/`
 - **Auth:** `/auth/rehydrate` z bound-session; bez fake sesji z samego `localStorage`; `DAM_DEV_ALWAYS_ADMIN=false`
 - **Sidebar:** aktywna pozycja (fiolet Geex + pasek), bez underline linkow nawigacji
@@ -239,12 +273,19 @@ GitHub Release: tag + upload ZIP (tworzone przy publikacji).
 | Plik | Rola |
 |------|------|
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Wdrozenie bez instalacji |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architektura |
+| [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md) | Skad biora sie jezyki / rynki |
+| [`docs/PROGRAM_INSTRUCTIONS.md`](docs/PROGRAM_INSTRUCTIONS.md) | Reguly w bazie (KV), nie tylko memory |
+| [`docs/NAMING.md`](docs/NAMING.md) | Nazewnictwo nosnikow / slotow |
 | [`docs/ADR/ADR-007-local-sqlite.md`](docs/ADR/ADR-007-local-sqlite.md) | SQLite lokalny / offline |
 | [`docs/ADR/ADR-008-device-session-binding.md`](docs/ADR/ADR-008-device-session-binding.md) | machine/session ID |
 | [`docs/ADR/ADR-009-postgres-synology.md`](docs/ADR/ADR-009-postgres-synology.md) | Wspolny Postgres na NAS |
 | [`DATABASE/README.md`](DATABASE/README.md) | Dumpy `pg_dump`, retencja 72 dni |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architektura |
-| `memory.md` / `process.md` / `PROGRESS.md` | Operacje agentow |
+| [`agents/README.md`](agents/README.md) | Mapa agentow Architect / Builder / QA |
+| [`AGENTS.md`](AGENTS.md) | Skrot startu sesji agenta |
+| [`memory.md`](memory.md) | Zasady trwale (notatka operacyjna) |
+| [`process.md`](process.md) | Log i proces |
+| [`PROGRESS.md`](PROGRESS.md) | Postep / GATE |
 
 ---
 

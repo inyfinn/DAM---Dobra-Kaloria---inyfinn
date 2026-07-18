@@ -79,13 +79,22 @@
     var out = {};
     var naming = (global.DamNaming && global.DamNaming.carriers) || {};
     Object.keys(naming).forEach(function (code) {
-      out[code] = naming[code].label_pl || code;
+      var short =
+        naming[code].short ||
+        (global.DamLabels && global.DamLabels.CARRIER_SHORTS && global.DamLabels.CARRIER_SHORTS[code]) ||
+        code;
+      var long = naming[code].label_pl || code;
+      // Lista w UI: pelna nazwa; skrot w nawiasie (na dysku bedzie DOY)
+      out[code] = short && short !== long ? long + " (" + short + ")" : long;
     });
     try {
       var custom = JSON.parse(localStorage.getItem("dam_carrier_types_cache") || "null");
       if (custom && custom.custom_types) {
         Object.keys(custom.custom_types).forEach(function (code) {
-          out[code] = custom.custom_types[code].label_pl || code;
+          var ct = custom.custom_types[code];
+          var short = (ct && ct.short) || code;
+          var long = (ct && ct.label_pl) || code;
+          out[code] = short && short !== long ? long + " (" + short + ")" : long;
         });
       }
       if (custom && custom.deleted_types) {
@@ -247,15 +256,15 @@
   /* Tylko admin: auto-wlacz tryb edycji, zeby od razu stosowac zmiany. */
   function autoEnableAdminModeIfPrivileged() {
     if (!isAdmin() || adminModeOn()) return;
+    if (global.DamShell && typeof global.DamShell.setAdminMode === "function") {
+      global.DamShell.setAdminMode(true);
+      return;
+    }
     try {
       localStorage.setItem(ADMIN_MODE_KEY, "1");
+      global.dispatchEvent(new CustomEvent("dam:admin-mode", { detail: { on: true } }));
     } catch (e) {
       /* localStorage niedostepny - kontynuuj bez auto-wlaczenia */
-    }
-    var toggle = document.getElementById("vizAdminToggle");
-    if (toggle && !toggle.checked) {
-      toggle.checked = true;
-      toggle.dispatchEvent(new Event("change", { bubbles: true }));
     }
   }
 
@@ -708,6 +717,14 @@
     return bridgeUrl();
   }
 
+  function humanCarrierForLog(code) {
+    if (!code) return "?";
+    if (global.DamLabels && typeof global.DamLabels.carrierLabel === "function") {
+      return global.DamLabels.carrierLabel(code, code) || String(code);
+    }
+    return String(code);
+  }
+
   function formatChangeLogEntry(entry) {
     if (!entry) return "Brak historii zmian";
     var ts = String(entry.ts || "").replace("T", " ").slice(0, 16);
@@ -716,7 +733,12 @@
     if (entry.action === "rename_index" || cat === "index") {
       label = "Indeks: " + (entry.index_from || "?") + " -> " + (entry.index_to || "?");
     } else if (entry.carrier_from || entry.carrier_to) {
-      label = "Typ: " + (entry.carrier_from || "?") + " -> " + (entry.carrier_to || "?");
+      // UI: pelne nazwy; w JSON zostaje kod/skrot (API + dysk)
+      label =
+        "Typ: " +
+        humanCarrierForLog(entry.carrier_from) +
+        " -> " +
+        humanCarrierForLog(entry.carrier_to);
     } else {
       label = cat || "Zmiana";
     }
@@ -807,9 +829,9 @@
       });
     }
     refreshChangeLogBar();
-    var adminToggle = document.getElementById("vizAdminToggle");
-    if (adminToggle) {
-      adminToggle.addEventListener("change", refreshChangeLogBar);
+    if (!global._damTagEditAdminBound) {
+      global._damTagEditAdminBound = true;
+      global.addEventListener("dam:admin-mode", refreshChangeLogBar);
     }
   }
 

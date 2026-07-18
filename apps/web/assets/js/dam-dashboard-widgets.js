@@ -162,6 +162,186 @@
     return d.getFullYear() + "-" + m;
   }
 
+  function normDashText(s) {
+    return String(s || "")
+      .toLowerCase()
+      .replace(/ą/g, "a")
+      .replace(/ć/g, "c")
+      .replace(/ę/g, "e")
+      .replace(/ł/g, "l")
+      .replace(/ń/g, "n")
+      .replace(/ó/g, "o")
+      .replace(/ś/g, "s")
+      .replace(/ź|ż/g, "z")
+      .replace(/[`'’]/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function parseRevisionDate(folder, fallback) {
+    var m = String(folder || "").match(/(\d{2})\.(\d{2})\.(\d{4})/);
+    if (m) return m[3] + "-" + m[2] + "-" + m[1];
+    return fallback || "";
+  }
+
+  var VIZ_FLAVOR_RE =
+    /(cynamonka|sliwk|tiramisu|banoffee|lemon|cheesecake|malina|porzeczk|cytryn|wanili|szarlot|karmel|arachid|migdal|czekolad|chocolate|oats|cornflake|sezam|daktyl|mango|yuzu|marakuja|piernik|imbirow|jagod|nugget|burger|parow|tuba|shot|chia|pasztet)/g;
+
+  function vizFlavorSet(text) {
+    var n = normDashText(text);
+    var out = {};
+    var m;
+    VIZ_FLAVOR_RE.lastIndex = 0;
+    while ((m = VIZ_FLAVOR_RE.exec(n))) out[m[1]] = true;
+    return out;
+  }
+
+  function vizFamily(name, category) {
+    var s = normDashText(name) + " " + normDashText(category);
+    if (/(kulki|balls|deserowe)/.test(s)) return "kulki";
+    if (/(proteina|krem|\bgi\b)/.test(s)) return "krem";
+    if (/(pasztet|pate|kielbas|parow|sznycel|burger|plant|roslinn|wedlin|klops|rolad)/.test(s)) {
+      return "plant";
+    }
+    if (/(baton|ciasto|cynamonka|nerkow|cashew|mini)/.test(s)) return "baton";
+    if (/tuba/.test(s)) return "tuba";
+    if (/(kulki|balls)/.test(normDashText(category))) return "kulki";
+    if (/(baton|bars)/.test(normDashText(category))) return "baton";
+    if (/przetwor/.test(normDashText(category))) return "krem";
+    if (/(roslinn|plant)/.test(normDashText(category))) return "plant";
+    return "other";
+  }
+
+  function buildAsanaProjectCatalog(ctx) {
+    var catalog = [];
+    var seen = {};
+    function add(name, start) {
+      var n = normDashText(name);
+      if (!n || seen[n]) return;
+      if (/e commerce|marketing|zmiany biezacych/.test(n)) return;
+      seen[n] = true;
+      catalog.push({
+        name: name,
+        norm: n,
+        start: start || "",
+        flavors: vizFlavorSet(n),
+        fam: vizFamily(n, ""),
+      });
+    }
+    (((ctx.projectCosts && ctx.projectCosts.projects) || [])).forEach(function (p) {
+      add(p.name || p.label || "", p.start || "");
+    });
+    (((ctx.asana && ctx.asana.tasks) || [])).forEach(function (task) {
+      if (task.project) add(task.project, "");
+    });
+    return catalog;
+  }
+
+  function matchAsanaProject(productName, category, catalog) {
+    var pn = normDashText(productName);
+    var pf = vizFamily(pn, category || "");
+    var pflav = vizFlavorSet(pn);
+    var best = null;
+    var bestScore = -1;
+    catalog.forEach(function (c) {
+      if (pf !== "other" && c.fam !== "other" && pf !== c.fam) return;
+      var shared = 0;
+      Object.keys(pflav).forEach(function (f) {
+        if (c.flavors[f]) shared += 1;
+      });
+      if (!shared) return;
+      if (shared > bestScore) {
+        bestScore = shared;
+        best = c;
+      }
+    });
+    return bestScore >= 1 ? best : null;
+  }
+
+  function bulkMtimeMinutes(vizRows) {
+    var counts = {};
+    (vizRows || []).forEach(function (v) {
+      var mt = String(v.mtime || "");
+      if (mt.length < 16) return;
+      var key = mt.slice(0, 16);
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    var bulk = {};
+    Object.keys(counts).forEach(function (k) {
+      if (counts[k] >= 4) bulk[k] = true;
+    });
+    return bulk;
+  }
+
+  /**
+   * Najnowsze wizualizacje: data modyfikacji pliku (bez bulk-sync) + projekt Asana.
+   * Oats/Cornflakes z masowym mtime (GC sync) wypadaja; zostaja produkty z projektem.
+   */
+  function pickNewestViz(ctx, limit) {
+    var viz = ((ctx.fileIndex && ctx.fileIndex.viz_latest) || []).slice();
+    var byPid = {};
+    viz.forEach(function (v) {
+      var pid = v.product_id || "";
+      if (!pid) return;
+      if (!byPid[pid] || String(v.mtime || "") > String(byPid[pid].mtime || "")) {
+        byPid[pid] = v;
+      }
+    });
+    var bulk = bulkMtimeMinutes(
+      Object.keys(byPid).map(function (k) {
+        return byPid[k];
+      })
+    );
+    var catalog = buildAsanaProjectCatalog(ctx);
+    var rows = [];
+    Object.keys(byPid).forEach(function (pid) {
+      var v = byPid[pid];
+      var name = v.product_name || pid;
+      if (/test-lifecycle/i.test(pid) || /^test\b/i.test(name)) return;
+      var idx = String(v.index || v.product_index || v.index_base || "");
+      if (idx.indexOf("000000") === 0) return;
+      if (!idx || idx === "pending" || /^noid/i.test(idx)) return;
+      var mt = String(v.mtime || "");
+      var mtClean = mt.length >= 16 && bulk[mt.slice(0, 16)] ? "" : mt;
+      if (!mtClean) return;
+      var asana = matchAsanaProject(name, v.category || "", catalog);
+      if (!asana) return;
+      var revDate = parseRevisionDate(v.revision_folder, "");
+      rows.push({
+        row: v,
+        mtClean: mtClean,
+        revDate: revDate,
+        asanaStart: asana.start || "",
+        asanaKey: asana.norm || asana.name || "",
+        brand: v.brand || "",
+      });
+    });
+    /* Ranking: projekt Asana (start) > data pliku (anti-bulk) > data rewizji */
+    rows.sort(function (a, b) {
+      var cmp = String(b.asanaStart || "").localeCompare(String(a.asanaStart || ""));
+      if (cmp) return cmp;
+      cmp = String(b.mtClean || "").localeCompare(String(a.mtClean || ""));
+      if (cmp) return cmp;
+      cmp = String(b.revDate || "").localeCompare(String(a.revDate || ""));
+      if (cmp) return cmp;
+      if (a.brand === "DK" && b.brand !== "DK") return -1;
+      if (b.brand === "DK" && a.brand !== "DK") return 1;
+      return 0;
+    });
+    /* Jeden produkt na projekt Asana (unikaj GI + Proteina z tego samego C/xx) */
+    var seenAsana = {};
+    var unique = [];
+    rows.forEach(function (r) {
+      var key = r.asanaKey || r.row.product_id;
+      if (seenAsana[key]) return;
+      seenAsana[key] = true;
+      unique.push(r);
+    });
+    return unique.slice(0, limit || 4).map(function (r) {
+      return r.row;
+    });
+  }
+
   /* ---------- widget defs ---------- */
 
   function defineWidgets() {
@@ -388,33 +568,20 @@
       },
       {
         id: "newest_viz_3",
-        title: t("dash.widget.newest_viz", "3 najnowsze wizualizacje"),
+        title: t("dash.widget.newest_viz", "4 najnowsze wizualizacje"),
         size: "md",
         defaultOn: true,
         render: function (el, ctx) {
-          var sorted = ((ctx.fileIndex && ctx.fileIndex.viz_latest) || [])
-            .slice()
-            .sort(function (a, b) {
-              return String(b.mtime || "").localeCompare(String(a.mtime || ""));
-            });
-          var seenPid = {};
-          var list = [];
-          sorted.forEach(function (v) {
-            var pid = v.product_id || v.path || "";
-            if (seenPid[pid]) return;
-            seenPid[pid] = true;
-            list.push(v);
-          });
-          list = list.slice(0, 3);
+          var list = pickNewestViz(ctx, 4);
           if (!list.length) {
             el.outerHTML = shell(
               this,
-              '<p class="dam-widget__meta">Brak wizualizacji w indeksie</p>'
+              '<p class="dam-widget__meta">Brak wizualizacji powiazanych z projektem Asana</p>'
             );
             return;
           }
           var html =
-            '<ul class="dam-widget__list">' +
+            '<ul class="dam-widget__list dam-widget__list--viz">' +
             list
               .map(function (v) {
                 var name = v.product_name || v.product_id || "Wizualizacja";
@@ -431,13 +598,11 @@
                   global.DamIcons && typeof DamIcons.winExplorerSvg === "function"
                     ? DamIcons.winExplorerSvg()
                     : '<i class="uil uil-folder" aria-hidden="true"></i>';
+                var indexVal = v.index || v.product_index || v.index_base || "";
                 var badges =
                   global.DamBadges && typeof DamBadges.render === "function"
                     ? DamBadges.render({
                         brand: v.brand || "",
-                        category: v.category || "",
-                        subcategory: v.subcategory_slug || "",
-                        subcategoryLabel: v.subcategory_label || "",
                         carrier: v.carrier || "",
                         carrierLabel:
                           global.DamLabels && typeof DamLabels.carrierLabel === "function"
@@ -447,49 +612,47 @@
                                 tags: v.tags,
                               })
                             : v.carrier_label || v.carrier || "",
-                        langs: v.langs || (v.lang ? [v.lang] : []),
-                        lang: v.lang,
-                        index: v.index || v.product_index || "",
+                        index: indexVal,
                         productName: name,
                         productId: pid,
                         tags: v.tags,
                         revisionFolder: v.revision_folder,
                         revisionFullPath: path,
                         compact: true,
-                        maxPerKind: 2,
-                        maxTotal: 5,
+                        maxPerKind: 1,
+                        maxTotal: 4,
                         showCarrierPlaceholder: false,
                       })
                     : '<span class="dam-widget__meta">' +
                       escapeHtml(
-                        [v.carrier_label || v.carrier || "", String(v.lang || "").toUpperCase()]
+                        [indexVal, v.carrier_label || v.carrier || ""]
                           .filter(Boolean)
                           .join(" / ")
                       ) +
                       "</span>";
                 return (
                   '<li class="dam-widget__viz-row">' +
-                  '<div class="dam-nav-circles">' +
-                  '<a class="dam-viz-icon-btn" href="' +
+                  '<div class="dam-nav-circles dam-nav-circles--stack dam-nav-circles--tiles">' +
+                  '<a class="dam-viz-icon-btn dam-viz-icon-btn--explorer" href="' +
                   escapeHtml(explorerHref) +
-                  '" title="Przejdź do Eksplorera" aria-label="Przejdź do Eksplorera" data-dam-tip="Otwórz produkt w Eksplorerze">' +
-                  '<i class="uil uil-folder-open" aria-hidden="true"></i></a>' +
+                  '" title="Przejdz do Eksplorera" aria-label="Przejdz do Eksplorera" data-dam-tip="Otworz produkt w Eksplorerze">' +
+                  '<i class="uil uil-sitemap" aria-hidden="true"></i></a>' +
                   '<button type="button" class="dam-viz-icon-btn dam-win-btn" data-path="' +
                   escapeHtml(path) +
-                  '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows"' +
+                  '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plikow Windows"' +
                   (!path ? " disabled" : "") +
                   ">" +
                   winIcon +
                   "</button>" +
                   '<a class="dam-viz-icon-btn" href="' +
                   escapeHtml(vizHref) +
-                  '" title="Wizualizacje" aria-label="Wizualizacje" data-dam-tip="Otwórz wizualizacje produktu">' +
+                  '" title="Wizualizacje" aria-label="Wizualizacje" data-dam-tip="Otworz wizualizacje produktu">' +
                   '<i class="uil uil-image" aria-hidden="true"></i></a>' +
                   "</div>" +
                   '<div class="dam-widget__viz-media">' +
                   '<a class="dam-widget__thumb-link" href="' +
                   escapeHtml(vizHref) +
-                  '" title="Wizualizacje" data-dam-tip="Otwórz wizualizacje produktu">' +
+                  '" title="Wizualizacje" data-dam-tip="Otworz wizualizacje produktu">' +
                   '<img class="dam-widget__thumb" src="' +
                   escapeHtml(thumb) +
                   '" alt="' +
@@ -509,13 +672,19 @@
               })
               .join("") +
             "</ul>";
-          el.outerHTML = shell(this, html);
+          el.outerHTML = shell(this, html, "dam-widget--viz-latest");
+          if (global.DamBadges && typeof DamBadges.bindClicks === "function") {
+            var host = document.querySelector(
+              '[data-widget-id="newest_viz_3"] .dam-widget__list--viz'
+            );
+            if (host) DamBadges.bindClicks(host, "dashboard");
+          }
         }
       },
       {
         id: "notify_new_viz",
         title: t("dash.widget.notify", "Powiadomienia o wizualizacjach"),
-        size: "md",
+        size: "strip",
         defaultOn: true,
         render: function (el, ctx) {
           var enabled = global.DamNotify && DamNotify.isEnabled();
@@ -524,7 +693,7 @@
           var id = "damNotifyToggle";
           el.outerHTML = shell(
             this,
-            '<div class="dam-widget__notify">' +
+            '<div class="dam-widget__notify dam-widget__notify--strip">' +
               '<label class="dam-widget__toggle" for="' +
               id +
               '">' +

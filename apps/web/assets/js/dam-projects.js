@@ -18,6 +18,8 @@
     "artwork", "prev", "print_pdf", "viz_3d", "tech", "marketing", "karta", "presentation",
   ];
 
+  var VIEW_STATE_KEY = "dam_projects_view";
+
   var state = {
     all: [],
     source: "",
@@ -25,6 +27,50 @@
     variantsHint: "",
     metaById: {},
   };
+
+  function readStoredQuery() {
+    try {
+      var params = new URLSearchParams(window.location.search || "");
+      var fromUrl = params.get("q");
+      if (fromUrl != null && String(fromUrl).length) return String(fromUrl);
+    } catch (e1) { /* ignore */ }
+    try {
+      var raw = sessionStorage.getItem(VIEW_STATE_KEY);
+      if (!raw) return "";
+      var data = JSON.parse(raw);
+      return data && data.query != null ? String(data.query) : "";
+    } catch (e2) {
+      return "";
+    }
+  }
+
+  function persistViewState(query) {
+    var q = String(query || "");
+    try {
+      sessionStorage.setItem(VIEW_STATE_KEY, JSON.stringify({ query: q, ts: Date.now() }));
+    } catch (e) { /* ignore */ }
+    var next = q ? "index.html?q=" + encodeURIComponent(q) : "index.html";
+    try {
+      var cur = (window.location.pathname.split("/").pop() || "index.html") + (window.location.search || "");
+      if (cur !== next) {
+        history.replaceState(null, "", next);
+      }
+    } catch (e2) { /* ignore */ }
+    if (window.DamShell && typeof window.DamShell.replaceNavStackTop === "function") {
+      window.DamShell.replaceNavStackTop(next);
+    } else {
+      try {
+        var stack = JSON.parse(sessionStorage.getItem("dam_nav_stack") || "[]");
+        if (Array.isArray(stack) && stack.length) {
+          var topFile = String(stack[stack.length - 1]).split("?")[0];
+          if (topFile === "index.html") {
+            stack[stack.length - 1] = next;
+            sessionStorage.setItem("dam_nav_stack", JSON.stringify(stack));
+          }
+        }
+      } catch (e3) { /* ignore */ }
+    }
+  }
 
   function statusMeta(status) {
     if (status === "complete") {
@@ -224,8 +270,8 @@
   function renderCardBadges(p, opts) {
     opts = opts || {};
     var meta = state.metaById[p.id] || {};
+    /* TYLKO surowe langs. Zakaz domyslu market=PL -> pl. */
     var langs = meta.langs || p.langs || [];
-    if (!langs.length && p.market === "PL") langs = ["pl"];
     if (window.DamBadges && typeof window.DamBadges.render === "function") {
       var carrierLbl = "";
       if (window.DamLabels && typeof window.DamLabels.carrierLabel === "function") {
@@ -387,7 +433,7 @@
       '<a class="geex-btn dam-btn-icon dam-project-go-btn" href="explorer.html?product=' +
       encodeURIComponent(p.id) +
       '" title="Przejdź" data-dam-tip="Otwórz produkt w Eksplorerze">' +
-      '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Przejdź</span></a>' +
+      '<i class="uil uil-sitemap" aria-hidden="true"></i><span>Przejdź</span></a>' +
       '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-project-win-btn dam-win-btn" data-path="' +
       pathEsc +
       '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows">' +
@@ -578,8 +624,14 @@
     }
 
     if (search) {
+      var restored = readStoredQuery();
+      if (restored) {
+        search.value = restored;
+        state.query = restored;
+      }
       var onSearch = function () {
         state.query = search.value || "";
+        persistViewState(state.query);
         renderGrid(grid, statusEl);
       };
       search.addEventListener("input", onSearch);
@@ -590,6 +642,8 @@
           onSearch();
         }
       });
+      /* Sync URL/stack even when query restored from session (no input event) */
+      persistViewState(state.query);
     }
 
     if (refreshBtn) {

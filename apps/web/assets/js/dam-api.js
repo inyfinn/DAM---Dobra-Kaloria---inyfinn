@@ -190,8 +190,12 @@
       product.display_name ||
       product.name ||
       product.id;
-    var langs = (rev && rev.langs) || [];
-    if (!langs.length && product.brand !== "GC") langs = ["pl"];
+    /* Indeks + baseline DK=PL. Extra / GC tylko z dowodu (bez GC=gb). */
+    var langs = ((rev && rev.langs) || []).slice();
+    var brandCode = product.brand || "DK";
+    if (brandCode === "DK" && langs.indexOf("pl") < 0) {
+      langs = ["pl"].concat(langs);
+    }
 
     return {
       id: product.id,

@@ -10,11 +10,11 @@
     return (
       '<svg class="' +
       cls +
-      '" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">' +
-      '<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" ' +
+      '" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">' +
+      '<path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ' +
       'd="M3.25 8.25V17.5c0 .97.78 1.75 1.75 1.75h14c.97 0 1.75-.78 1.75-1.75V9.5c0-.97-.78-1.75-1.75-1.75h-7.1L10.2 6.4A1.1 1.1 0 0 0 9.4 6.1H5c-.97 0-1.75.78-1.75 2.15z"/>' +
-      '<rect x="8.15" y="12.1" width="7.7" height="5.2" rx="0.85" fill="none" stroke="currentColor" stroke-width="1.5"/>' +
-      '<path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" d="M9.7 15.85h4.6"/>' +
+      '<rect x="8.15" y="12.1" width="7.7" height="5.2" rx="0.85" fill="none" stroke="currentColor" stroke-width="1.7"/>' +
+      '<path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M9.7 15.85h4.6"/>' +
       "</svg>"
     );
   }

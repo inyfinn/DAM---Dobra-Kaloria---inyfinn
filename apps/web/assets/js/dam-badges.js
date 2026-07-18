@@ -47,6 +47,14 @@
     return langShort(code);
   }
 
+  /** Globalny casing tagow - DamLabels.formatTagLabel (kody vs zdanie). */
+  function tagText(label, kind) {
+    if (global.DamLabels && typeof global.DamLabels.formatTagLabel === "function") {
+      return global.DamLabels.formatTagLabel(label, kind);
+    }
+    return String(label == null ? "" : label);
+  }
+
   function detectContext() {
     var path = (global.location && global.location.pathname) || "";
     var page = path.split("/").pop() || "";
@@ -76,9 +84,9 @@
       items.push({
         kind: "brand",
         value: brand,
-        label: brand,
+        label: tagText(brand, "brand"),
         cls: "dam-viz-badge--brand",
-        tip: "Marka " + brand,
+        tip: "Marka " + tagText(brand, "brand"),
       });
     }
     if (opts.category) {
@@ -86,6 +94,7 @@
         global.DamLabels && typeof global.DamLabels.categoryTitle === "function"
           ? global.DamLabels.categoryTitle(opts.category)
           : opts.category;
+      catTitle = tagText(catTitle, "category");
       items.push({
         kind: "category",
         value: opts.category,
@@ -95,12 +104,13 @@
       });
     }
     if (opts.subcategory) {
+      var subLbl = tagText(opts.subcategoryLabel || opts.subcategory, "subcategory");
       items.push({
         kind: "subcategory",
         value: opts.subcategory,
-        label: opts.subcategoryLabel || opts.subcategory,
+        label: subLbl,
         cls: "dam-viz-badge--subcat",
-        tip: "Podkategoria: " + (opts.subcategoryLabel || opts.subcategory),
+        tip: "Podkategoria: " + subLbl,
       });
     }
 
@@ -113,18 +123,38 @@
             tags: opts.tags,
           })
         : opts.carrier);
+    // Znormalizuj do pelnej nazwy UI (DOYPACK); skrot DOY tylko na dysku
+    if (carrierLbl && global.DamLabels && typeof global.DamLabels.carrierLabel === "function") {
+      var norm = global.DamLabels.carrierLabel(opts.carrier || carrierLbl, opts.revisionFolder || carrierLbl, {
+        isMix: opts.mix,
+        productName: opts.productName,
+        tags: opts.tags,
+      });
+      if (norm) carrierLbl = norm;
+    }
     if (carrierLbl && FORBIDDEN_CARRIER_RE.test(String(carrierLbl).trim())) carrierLbl = "";
+    var carrierDisk =
+      (global.DamLabels && typeof global.DamLabels.carrierShort === "function"
+        ? global.DamLabels.carrierShort(opts.carrier || carrierLbl, opts.revisionFolder || carrierLbl)
+        : "") || "";
     /* Tooltip admin-only content: baza (co to jest) widzi KAZDY; dopisek po
        kropce z odstepem TYLKO gdy tryb admina jest wlaczony (2026-07-18,
        wymog uzytkownika - nikt bez wlaczonego trybu admina nie moze widziec
        podpowiedzi "Admin: ..."). */
     var adminOn = isAdminEditMode();
     if (carrierLbl) {
-      var carrierTip = (opts.carrierGuessed ? "Nosnik (zgadniety). " : "Nosnik. ") + "Klik: filtr wedlug " + carrierLbl + ".";
+      var carrierTip =
+        (opts.carrierGuessed ? "Nosnik (zgadniety). " : "Nosnik. ") +
+        carrierLbl +
+        (carrierDisk && carrierDisk !== carrierLbl ? " (na dysku: " + carrierDisk + "). " : ". ") +
+        "Klik: filtr wedlug " +
+        carrierLbl +
+        ".";
       if (opts.carrierPrevious) {
         carrierTip += " Wczesniej zatwierdzono: " + opts.carrierPrevious + ".";
       }
       if (adminOn) carrierTip += " Admin: Shift+klik lub podwojny klik - wybierz z listy.";
+      carrierLbl = tagText(carrierLbl, "carrier");
       items.push({
         kind: "carrier",
         value: carrierLbl,
@@ -162,7 +192,7 @@
       items.push({
         kind: "flag",
         value: "variants",
-        label: ui("multi_index_label", "Warianty"),
+        label: tagText(ui("multi_index_label", "Warianty"), "flag"),
         cls: "dam-viz-badge--variants",
         tip: "Wiele wariantow / indeksow",
       });
@@ -178,9 +208,10 @@
         kind: "flag",
         value: "multilang",
         /* Compact (karty / pasek carrier): krotka etykieta, pelna w tipie. */
-        label: opts.compact
-          ? ui("multi_lang_short", "Multi")
-          : ui("multi_lang_label", "Multijezyczny"),
+        label: tagText(
+          opts.compact ? ui("multi_lang_short", "Multi") : ui("multi_lang_label", "Multijęzyczny"),
+          "flag"
+        ),
         cls: "dam-viz-badge--multilang",
         tip: "Wiele wersji jezykowych",
       });
@@ -208,6 +239,14 @@
         label: short1,
         cls: "dam-viz-badge--lang",
         tip: langFull(lg1) || short1,
+      });
+    } else if (opts.langUnknown || opts.lang === "?" || opts.langLabel === "?") {
+      items.push({
+        kind: "lang",
+        value: "unknown",
+        label: "?",
+        cls: "dam-viz-badge--lang dam-viz-badge--lang-unknown",
+        tip: "Jezyk nieznany - brak kodu w nazwie folderu/pliku (ustaw recznie)",
       });
     } else if (opts.langLabel && !opts.compact) {
       items.push({
@@ -243,7 +282,7 @@
       items.push({
         kind: "flag",
         value: "demo",
-        label: ui("demo_label", "Demo"),
+        label: tagText(ui("demo_label", "Demo"), "flag"),
         cls: "dam-viz-badge--demo",
         tip: demoTip,
         style: "background:rgba(240,180,0,0.16);color:#8A6A00",
@@ -324,16 +363,34 @@
     if (it.kind === "flag" && it.value !== "mix" && it.value !== "demo" && it.value !== "variants" && it.value !== "multilang" && it.value !== "hidden") {
       clickable = false;
     }
-    if (it.kind === "more") clickable = false;
+    if (it.kind === "more") clickable = true;
     var tag = clickable ? "button" : "span";
     var typeAttr = tag === "button" ? ' type="button"' : "";
     var editableCls =
-      clickable && EDITABLE_TAG_KINDS[it.kind] ? " dam-tag-editable" : "";
+      clickable && it.kind !== "more" && EDITABLE_TAG_KINDS[it.kind]
+        ? " dam-tag-editable"
+        : "";
     var extraData = "";
     if (it.data) {
       Object.keys(it.data).forEach(function (k) {
         extraData += ' data-' + k + '="' + esc(it.data[k]) + '"';
       });
+    }
+    if (it.kind === "more" && it.moreItems && it.moreItems.length) {
+      try {
+        extraData +=
+          ' data-more-items="' +
+          esc(JSON.stringify(it.moreItems.map(function (m) {
+            return {
+              kind: m.kind || "",
+              value: m.value || "",
+              label: m.label || "",
+              cls: m.cls || "",
+              tip: m.tip || "",
+            };
+          }))) +
+          '"';
+      } catch (eMore) { /* ignore */ }
     }
     if (isAdminEditMode() && editableCls) {
       tip += " Admin: Shift+klik lub podwojny klik - wybierz z listy.";
@@ -382,7 +439,8 @@
       });
       var keep = Math.max(1, maxTotal - 1 - priority.length);
       var head = rest.slice(0, keep);
-      var restN = rest.length - head.length;
+      var hidden = rest.slice(keep);
+      var restN = hidden.length;
       items = head.concat(priority);
       if (restN > 0) {
         items.push({
@@ -391,6 +449,7 @@
           label: "+" + restN,
           cls: "dam-viz-badge--more",
           tip: "Pokaz pozostale (" + restN + ")",
+          moreItems: hidden,
         });
       }
     }
@@ -564,7 +623,37 @@
       if (!btn || !el.contains(btn)) return;
       var kind = btn.getAttribute("data-tag-kind") || "";
       var value = btn.getAttribute("data-tag-value") || "";
-      if (kind === "more") return;
+      if (kind === "more") {
+        e.preventDefault();
+        e.stopPropagation();
+        var host =
+          btn.closest(".dam-widget__viz-badges") ||
+          btn.closest(".dam-badges") ||
+          btn.parentElement;
+        var raw = btn.getAttribute("data-more-items") || "[]";
+        var extras = [];
+        try {
+          extras = JSON.parse(raw);
+        } catch (eParse) {
+          extras = [];
+        }
+        if (host && extras.length) {
+          var html = extras
+            .map(function (it) {
+              return badgeHtml({
+                kind: it.kind,
+                value: it.value,
+                label: it.label,
+                cls: it.cls,
+                tip: it.tip,
+              });
+            })
+            .join("");
+          btn.insertAdjacentHTML("beforebegin", html);
+          btn.remove();
+        }
+        return;
+      }
 
       /* Tag (UKRYTE) - tylko admin: odklikuje ukrycie */
       if (kind === "flag" && value === "hidden") {

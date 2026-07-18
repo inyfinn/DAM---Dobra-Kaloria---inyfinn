@@ -4,7 +4,7 @@
 (function (global) {
   "use strict";
 
-  /* Zgodnie z naming-dictionary.json - UI zawsze PL (nigdy FOIL/SLEEVE/CARTON) */
+  /* Pelne nazwy PL w UI programu (badge, meta). Skroty DOY/BAT/FOL = tylko dysk Windows. */
   var CARRIER_LABELS = {
     KAR6X: "KARTON 6x MINI",
     KAR: "KARTON",
@@ -28,6 +28,32 @@
     LABEL: "ETYKIETA",
     WARIANT: "WARIANT",
     WIZKA: "WIZUALIZACJE",
+  };
+
+  /* Skroty kanoniczne TYLKO do rename folderow/plikow na dysku (sciagawka nazewnictwa) */
+  var CARRIER_SHORTS = {
+    KAR6X: "KAR6X",
+    KAR: "KAR",
+    DOY6X: "DOY6X",
+    DOY: "DOY",
+    BAT: "BAT",
+    BAR: "BAT",
+    MINI: "MINI",
+    BIGPAK: "BIGPAK",
+    OBW: "OBW",
+    TUBA: "TUBA",
+    FOLIA: "FOL",
+    FOL: "FOL",
+    FOIL: "FOL",
+    SASZ: "SASZ",
+    "ETY-BUT": "ETY-BUT",
+    "ETY-SLO": "ETY-SLO",
+    ETY: "ETY",
+    REKAW: "REKAW",
+    SLEEVE: "REKAW",
+    LABEL: "ETY",
+    WIZKA: "WIZKA",
+    SHOT: "SHOT",
   };
 
   /* Pelne polskie znaki (2026-07-18) - "nauczylem sie" byla zasada bez diakrytykow,
@@ -72,6 +98,13 @@
     mix_prefix: "MIX - ",
   };
 
+  /* Z naming-dictionary.policy (+ Postgres dam_kv_store). UI=label_pl, dysk=short. */
+  var CARRIER_POLICY = {
+    carrier_display_in_ui: "label_pl",
+    carrier_prefix_on_disk: "short",
+    description_pl: "",
+  };
+
   /* Kolejnosc: dluzsze tokeny pierwsze (KAR6X przed KAR) */
   var CARRIER_DETECT = [
     { re: /\bKAR\s*6\s*X\b|\bKAR6X\b|\bKARTON\s*6/i, code: "KAR6X" },
@@ -84,7 +117,7 @@
     { re: /\bBATON\b|\bBAT\b|\bBAR\b/i, code: "BAT" },
     { re: /\bBIGPAK\b|\bBIG[\s\-]?PAK\b|\bBIGPACK\b/i, code: "BIGPAK" },
     { re: /\bTUBA\b|\bTUBE\b/i, code: "TUBA" },
-    { re: /\bFOLIA\b|\bFOIL\b/i, code: "FOLIA" },
+    { re: /\bFOLIA\b|\bFOIL\b|\bFOL\b(?![A-Z])/i, code: "FOLIA" },
     { re: /\bSASZ|\bSACHET\b/i, code: "SASZ" },
     { re: /\bR[EĘ]KAW\b|\bSLEEVE\b|\bOWIJKA\b/i, code: "REKAW" },
     { re: /\bOBWOLUT|\bOBW\b/i, code: "OBW" },
@@ -94,13 +127,13 @@
 
   /** Klucz kanoniczny kategorii (PL) → aliasy folderów DK/GC */
   var CATEGORY_CANON = [
-    { id: "BATONY", labels: ["BATONY", "BARS"], title: "BATONY" },
-    { id: "KULKI", labels: ["KULKI", "BALLS"], title: "KULKI" },
-    { id: "ROSLINNE", labels: ["ROSLINNE", "ROŚLINNE", "PLANT BASED", "PLANT-BASED"], title: "ROŚLINNE" },
-    { id: "SYPKIE", labels: ["SYPKIE", "BREAKFAST"], title: "SYPKIE" },
-    { id: "NAPOJE", labels: ["NAPOJE", "DRINKS"], title: "NAPOJE" },
-    { id: "PRZETWORY", labels: ["PRZETWORY", "SPREADS", "CREAMS", "KREMY"], title: "PRZETWORY" },
-    { id: "DATESY", labels: ["DATESY", "DATES"], title: "DATESY" },
+    { id: "BATONY", labels: ["BATONY", "BARS"], title: "Batony" },
+    { id: "KULKI", labels: ["KULKI", "BALLS"], title: "Kulki" },
+    { id: "ROSLINNE", labels: ["ROSLINNE", "ROŚLINNE", "PLANT BASED", "PLANT-BASED"], title: "Roślinne" },
+    { id: "SYPKIE", labels: ["SYPKIE", "BREAKFAST"], title: "Sypkie" },
+    { id: "NAPOJE", labels: ["NAPOJE", "DRINKS"], title: "Napoje" },
+    { id: "PRZETWORY", labels: ["PRZETWORY", "SPREADS", "CREAMS", "KREMY"], title: "Przetwory" },
+    { id: "DATESY", labels: ["DATESY", "DATES"], title: "Datesy" },
   ];
 
   var DRUKARNIE = ["POLZDOB", "CONGRAPH", "MULTIPOL", "FOLDRUK", "KUBARA"];
@@ -128,9 +161,95 @@
   function categoryTitle(folderName) {
     var id = categoryCanonId(folderName);
     for (var i = 0; i < CATEGORY_CANON.length; i++) {
-      if (CATEGORY_CANON[i].id === id) return CATEGORY_CANON[i].title;
+      if (CATEGORY_CANON[i].id === id) return formatTagLabel(CATEGORY_CANON[i].title, "category");
     }
-    return stripCategoryNumber(folderName) || folderName;
+    return formatTagLabel(stripCategoryNumber(folderName) || folderName, "category");
+  }
+
+  /**
+   * Globalny casing tagow (UI). Kody = WERSALIKI jak w slowniku.
+   * Etykiety ludzkie = jak w zdaniu (Title Case). Nie mieszac stylow.
+   * kind: brand|lang|carrier|index|category|subcategory|smak|typ|opakowanie|status|flag|autor
+   */
+  /* Kanoniczne PL dla slugow bez diakrytykow (tagi globalne) */
+  var HUMAN_TAG_FIXES = {
+    niemiesne: "Niemięsne",
+    napoj: "Napój",
+    napoje: "Napoje",
+    roslinne: "Roślinne",
+    sniadaniowe: "Śniadaniowe",
+    sniadanie: "Śniadanie",
+  };
+
+  function formatTagLabel(label, kind) {
+    var s = String(label == null ? "" : label).trim();
+    if (!s) return s;
+    var k = String(kind || "").toLowerCase();
+    var codeKinds = { brand: 1, lang: 1, carrier: 1, index: 1 };
+    if (codeKinds[k]) return s;
+
+    if (k === "opakowanie") {
+      var pack = mapPackagingTagToCarrierLabel(s);
+      if (pack) return pack;
+    }
+
+    var fixKey = s.toLocaleLowerCase("pl").replace(/[_]+/g, " ");
+    if (HUMAN_TAG_FIXES[fixKey]) return HUMAN_TAG_FIXES[fixKey];
+
+    var letters = s.replace(/[^a-zA-ZĄĆĘŁŃÓŚŹŻąćęłńóśźż]/g, "");
+    var allCaps = letters.length > 0 && letters === letters.toUpperCase() && letters !== letters.toLowerCase();
+    var allLower = letters.length > 0 && letters === letters.toLowerCase();
+    /* MIX zostaje WERSALIKAMI (krotki kod produktu) */
+    if (k === "flag" && /^mix$/i.test(s)) return "MIX";
+    if (allCaps && letters.length <= 3) return s;
+    if (allCaps || allLower) return toTitleCasePl(s);
+    return s;
+  }
+
+  function toTitleCasePl(s) {
+    return String(s || "")
+      .toLocaleLowerCase("pl")
+      .replace(/(^|[\s\-_/])(\S)/g, function (_m, sep, ch) {
+        return sep + ch.toLocaleUpperCase("pl");
+      });
+  }
+
+  function mapPackagingTagToCarrierLabel(tag) {
+    var raw = String(tag || "").trim();
+    if (!raw) return "";
+    var key = raw.toLowerCase().replace(/[_]+/g, " ");
+    var PACK_TO_CODE = {
+      doypack: "DOY",
+      doy: "DOY",
+      "doy 6x": "DOY6X",
+      "doypack 6x": "DOY6X",
+      baton: "BAT",
+      bat: "BAT",
+      bar: "BAT",
+      "mini baton": "MINI",
+      "mini batoniki": "MINI",
+      mini: "MINI",
+      karton: "KAR",
+      "karton 6x": "KAR6X",
+      folia: "FOLIA",
+      foil: "FOLIA",
+      fol: "FOLIA",
+      rekaw: "REKAW",
+      "rękaw": "REKAW",
+      sleeve: "REKAW",
+      bigpak: "BIGPAK",
+      bigpack: "BIGPAK",
+      saszetka: "SASZ",
+      tuba: "TUBA",
+      etykieta: "ETY",
+    };
+    var code = PACK_TO_CODE[key];
+    if (!code) {
+      var parsed = parseCarrierCode(raw);
+      if (parsed && parsed !== "UNKNOWN") code = parsed;
+    }
+    if (!code) return "";
+    return carrierLabelLong(code, code) || "";
   }
 
   function cleanProductDisplayName(name) {
@@ -229,11 +348,12 @@
     var dateM = raw.match(/\b(\d{2})[.\s_\-](\d{2})[.\s_\-](\d{4})\b/);
     var date = "";
     if (dateM) date = dateM[3] + "-" + dateM[2] + "-" + dateM[1];
-    var label = carrier !== "UNKNOWN" ? (CARRIER_LABELS[carrier] || carrier) : "";
+    var label = carrier !== "UNKNOWN" ? (CARRIER_LABELS[carrier] || CARRIER_SHORTS[carrier] || carrier) : "";
     // Nigdy nie pokazuj "nieokreslony" gdy w nazwie jest czytelny token nosnika
     if (!label) {
       var token = headToken(raw);
-      if (token && !/^\d/.test(token)) label = token;
+      var fromTok = matchCarrierInText(token);
+      if (fromTok) label = CARRIER_LABELS[fromTok] || CARRIER_SHORTS[fromTok] || fromTok;
     }
     return { brand: brand, carrier: carrier, index: index, date: date, label: label || "" };
   }
@@ -271,40 +391,53 @@
 
   var CARRIER_FORBIDDEN_RE = /^(OTHER|UNKNOWN|WARIANT)$/i;
 
+  function resolveCarrierCode(code, gramFromName) {
+    if ((!code || CARRIER_FORBIDDEN_RE.test(code)) && gramFromName) {
+      var rescued = parseCarrierCode(gramFromName);
+      if (rescued && !CARRIER_FORBIDDEN_RE.test(rescued)) return rescued;
+      var tok = headToken(gramFromName);
+      var fromTok = matchCarrierInText(tok);
+      if (fromTok) return fromTok;
+      return "UNKNOWN";
+    }
+    return code || "UNKNOWN";
+  }
+
   /**
-   * Zwraca "" (brak tagu) gdy typ nie jest znany - NIGDY literal "OTHER"/"UNKNOWN"/"WARIANT".
-   * "Lepiej nic nie pisac, niz pisac OTHER" (2026-07-18). Zgadywanie z "?" - patrz Faza 2.
+   * Skrót (DOY / BAT / FOL) - TYLKO nazewnictwo folderow/plikow na dysku (Windows).
+   * W UI programu NIE uzywac jako glownej etykiety.
+   */
+  function carrierShort(code, gramFromName) {
+    var c = resolveCarrierCode(code, gramFromName);
+    if (!c || CARRIER_FORBIDDEN_RE.test(c)) return "";
+    return CARRIER_SHORTS[c] || c;
+  }
+
+  /** Alias: pelna nazwa PL (DOYPACK, BATON, FOLIA). */
+  function carrierLabelLong(code, gramFromName) {
+    var c = resolveCarrierCode(code, gramFromName);
+    if (!c || CARRIER_FORBIDDEN_RE.test(c)) return "";
+    return CARRIER_LABELS[c] || CARRIER_SHORTS[c] || c;
+  }
+
+  /**
+   * Etykieta UI nosnika - z policy.carrier_display_in_ui (domyslnie label_pl = DOYPACK).
+   * Skrot (DOY) tylko gdy policy wymusi short LUB przy rename na dysku (bridge).
    */
   function carrierLabel(code, gramFromName, opts) {
     opts = opts || {};
-    // gramFromName bywa pelna nazwa folderu - wyciagnij nosnik z niej zanim powiesz brak typu
-    if ((!code || CARRIER_FORBIDDEN_RE.test(code)) && gramFromName) {
-      var rescued = parseCarrierCode(gramFromName);
-      if (rescued && !CARRIER_FORBIDDEN_RE.test(rescued)) code = rescued;
-      else {
-        var tok = headToken(gramFromName);
-        // Normalizuj EN -> PL gdy token to FOIL/SLEEVE/CARTON/BAR
-        var fromTok = matchCarrierInText(tok);
-        if (fromTok) code = fromTok;
-        else if (tok && !/^\d/.test(tok) && tok.length >= 2 && tok.length <= 24) {
-          /* nie zwracaj golego EN tokenu jako typu */
-          code = "UNKNOWN";
-        } else {
-          return "";
-        }
+    var preferShort = CARRIER_POLICY.carrier_display_in_ui === "short";
+    var base = preferShort ? carrierShort(code, gramFromName) : carrierLabelLong(code, gramFromName);
+    if (!base) return "";
+    var mix = opts.isMix || isMixProduct(opts.productName || gramFromName, opts.tags);
+    if (mix) return (UI_STRINGS.mix_prefix || "MIX - ") + base;
+    if (opts.withGram && !preferShort) {
+      var gramOnly = extractGram(gramFromName);
+      var short = carrierShort(code, gramFromName);
+      if (gramOnly && (short === "BAT" || short === "DOY" || short === "TUBA" || short === "MINI")) {
+        return base + " (" + gramOnly + ")";
       }
     }
-    if (!code || CARRIER_FORBIDDEN_RE.test(code)) return "";
-    var base = CARRIER_LABELS[code] || code;
-    if (!base || CARRIER_FORBIDDEN_RE.test(base)) return "";
-    var mix = opts.isMix || isMixProduct(opts.productName || gramFromName, opts.tags);
-    if (mix) base = (UI_STRINGS.mix_prefix || "MIX - ") + base;
-    var gramOnly = extractGram(gramFromName);
-    if (!mix && gramOnly && (code === "BAT" || code === "DOY" || code === "TUBA" || code === "BAR")) {
-      return base + " (" + gramOnly + ")";
-    }
-    var m = String(gramFromName || "").match(/(\d+)\s*[gG]/);
-    if (!mix && m && (code === "BAT" || code === "BAR")) return "BATON (" + m[1] + " g)";
     return base;
   }
 
@@ -317,9 +450,10 @@
 
   function langShort(code) {
     var c = String(code || "").toLowerCase();
+    if (!c || c === "?" || c === "unknown" || c === "xx") return "?";
     if (c === "en") c = "gb";
     if (c === "ua") c = "uk";
-    return c ? c.toUpperCase() : "";
+    return c ? c.toUpperCase() : "?";
   }
 
   /** PL vs eksport z kanonicznej sciezki indeksu */
@@ -415,8 +549,34 @@
   function vizLangFromFile(f) {
     if (f && f.lang) return String(f.lang).toLowerCase();
     var u = String((f && f.name) || "").toUpperCase();
-    var m = u.match(/(?:^|[-_])(PL|EN|DE|CZ|SK|HU|HR|RO|BG|LT|LV|EE|UA|RU|FR|IT|ES|NL|DK|SE|NO|FI)(?:[-_.]|$)/);
-    return m ? m[1].toLowerCase() : "pl";
+    /* Wszystkie kody z nazwy; pierwszy jako primary. Brak = "" (nie "pl"/"gb"). */
+    var re = /(?:^|[-_ ])(PL|EN|GB|DE|CZ|SK|HU|HR|RO|BG|LT|LV|EE|UA|UK|RU|FR|IT|ES|NL|DK|SE|NO|FI|AR)(?:[-_. ]|$)/g;
+    var m;
+    var found = [];
+    while ((m = re.exec(u)) !== null) {
+      var c = m[1].toLowerCase();
+      if (c === "en") c = "gb";
+      if (c === "ua") c = "uk";
+      if (found.indexOf(c) === -1) found.push(c);
+    }
+    return found.length ? found[0] : "";
+  }
+
+  function vizLangsFromFile(f) {
+    if (f && Array.isArray(f.langs) && f.langs.length) {
+      return f.langs.map(function (x) { return String(x).toLowerCase(); });
+    }
+    var u = String((f && (f.name || f.path)) || "").toUpperCase();
+    var re = /(?:^|[-_ ])(PL|EN|GB|DE|CZ|SK|HU|HR|RO|BG|LT|LV|EE|UA|UK|RU|FR|IT|ES|NL|DK|SE|NO|FI|AR)(?:[-_. ]|$)/g;
+    var m;
+    var found = [];
+    while ((m = re.exec(u)) !== null) {
+      var c = m[1].toLowerCase();
+      if (c === "en") c = "gb";
+      if (c === "ua") c = "uk";
+      if (found.indexOf(c) === -1) found.push(c);
+    }
+    return found;
   }
 
   function fileRole(name, layer) {
@@ -453,18 +613,95 @@
     return ext === "zip" || ext === "rar" || ext === "7z";
   }
 
+  /* EN (GC) -> PL. Zrodlo: data/product-name-pl.json (+ KV). */
+  var PRODUCT_NAME_PL = {};
+
+  function applyProductNamePl(dict) {
+    if (!dict || typeof dict !== "object") return;
+    var names = dict.names || dict;
+    if (!names || typeof names !== "object") return;
+    Object.keys(names).forEach(function (k) {
+      var key = String(k || "")
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, " ");
+      var val = String(names[k] || "").trim();
+      if (key && val) PRODUCT_NAME_PL[key] = val;
+    });
+  }
+
+  /**
+   * Polska nazwa dla angielskiego produktu (GC).
+   * Pusta gdy brak mapowania albo nazwa juz PL / taka sama.
+   */
+  function productNamePl(name, brand) {
+    var raw = cleanProductDisplayName(name) || String(name || "").trim();
+    if (!raw) return "";
+    var b = String(brand || "").toUpperCase();
+    /* GC = angielskie nazwy folderow; DK zwykle juz PL */
+    if (b && b !== "GC") return "";
+    var key = raw.toUpperCase().replace(/\s+/g, " ");
+    var pl = PRODUCT_NAME_PL[key] || "";
+    if (!pl) return "";
+    if (pl.toUpperCase() === key) return "";
+    return pl;
+  }
+
+  /** Tekst w nawiasie ze spacjami: "( Mielone )" */
+  function productNamePlParen(name, brand) {
+    var pl = productNamePl(name, brand);
+    return pl ? "( " + pl + " )" : "";
+  }
+
+  /**
+   * Markup PL pod EN: nawiasy jak meta (#8b8d97), tekst w polowie szarosci tytulu.
+   * escFn - funkcja escape HTML (np. z dam-viz).
+   */
+  function productNamePlMarkup(name, brand, escFn) {
+    var pl = productNamePl(name, brand);
+    if (!pl) return "";
+    var e = typeof escFn === "function" ? escFn : function (s) { return String(s || ""); };
+    return (
+      '<br><span class="dam-viz-card__title-pl">' +
+      '<span class="dam-viz-card__title-pl-paren">(</span> ' +
+      '<span class="dam-viz-card__title-pl-text">' +
+      e(pl) +
+      '</span> ' +
+      '<span class="dam-viz-card__title-pl-paren">)</span>' +
+      "</span>"
+    );
+  }
+
   function applyNamingDict(dict) {
     if (!dict || typeof dict !== "object") return;
+    if (dict.policy && typeof dict.policy === "object") {
+      if (dict.policy.carrier_display_in_ui) {
+        CARRIER_POLICY.carrier_display_in_ui = String(dict.policy.carrier_display_in_ui);
+      }
+      if (dict.policy.carrier_prefix_on_disk) {
+        CARRIER_POLICY.carrier_prefix_on_disk = String(dict.policy.carrier_prefix_on_disk);
+      }
+      if (dict.policy.description_pl) {
+        CARRIER_POLICY.description_pl = String(dict.policy.description_pl);
+      }
+    }
     if (dict.carriers) {
       Object.keys(dict.carriers).forEach(function (code) {
         var c = dict.carriers[code];
         if (c && c.label_pl) CARRIER_LABELS[code] = c.label_pl;
+        if (c && c.short) CARRIER_SHORTS[code] = String(c.short).toUpperCase();
+        else if (!CARRIER_SHORTS[code]) CARRIER_SHORTS[code] = code;
       });
-      CARRIER_LABELS.SLEEVE = CARRIER_LABELS.REKAW || "REKAW";
+      CARRIER_LABELS.SLEEVE = CARRIER_LABELS.REKAW || "RĘKAW";
       CARRIER_LABELS.FOIL = CARRIER_LABELS.FOLIA || "FOLIA";
       CARRIER_LABELS.FOL = CARRIER_LABELS.FOLIA || "FOLIA";
       CARRIER_LABELS.LABEL = CARRIER_LABELS.ETY || "ETYKIETA";
       CARRIER_LABELS.BAR = CARRIER_LABELS.BAT || "BATON";
+      CARRIER_SHORTS.SLEEVE = CARRIER_SHORTS.REKAW || "REKAW";
+      CARRIER_SHORTS.FOIL = CARRIER_SHORTS.FOLIA || "FOL";
+      CARRIER_SHORTS.FOL = CARRIER_SHORTS.FOLIA || "FOL";
+      CARRIER_SHORTS.LABEL = CARRIER_SHORTS.ETY || "ETY";
+      CARRIER_SHORTS.BAR = CARRIER_SHORTS.BAT || "BAT";
     }
     if (dict.languages) {
       Object.keys(dict.languages).forEach(function (code) {
@@ -496,8 +733,21 @@
     /* fallback: lokalne CARRIER_LABELS */
   }
 
+  try {
+    var xhrPl = new XMLHttpRequest();
+    xhrPl.open("GET", "data/product-name-pl.json", false);
+    xhrPl.send(null);
+    if (xhrPl.status >= 200 && xhrPl.status < 300 && xhrPl.responseText) {
+      applyProductNamePl(JSON.parse(xhrPl.responseText));
+    }
+  } catch (e2) {
+    /* opcjonalny slownik EN->PL */
+  }
+
   global.DamLabels = {
     CARRIER_LABELS: CARRIER_LABELS,
+    CARRIER_SHORTS: CARRIER_SHORTS,
+    CARRIER_POLICY: CARRIER_POLICY,
     LANG_LABELS: LANG_LABELS,
     UI_STRINGS: UI_STRINGS,
     CATEGORY_CANON: CATEGORY_CANON,
@@ -506,7 +756,15 @@
     stripCategoryNumber: stripCategoryNumber,
     categoryCanonId: categoryCanonId,
     categoryTitle: categoryTitle,
+    formatTagLabel: formatTagLabel,
+    toTitleCasePl: toTitleCasePl,
+    mapPackagingTagToCarrierLabel: mapPackagingTagToCarrierLabel,
     cleanProductDisplayName: cleanProductDisplayName,
+    PRODUCT_NAME_PL: PRODUCT_NAME_PL,
+    applyProductNamePl: applyProductNamePl,
+    productNamePl: productNamePl,
+    productNamePlParen: productNamePlParen,
+    productNamePlMarkup: productNamePlMarkup,
     isMixProduct: isMixProduct,
     isBogusRevision: isBogusRevision,
     parseCarrierCode: parseCarrierCode,
@@ -515,6 +773,8 @@
     matchCarrierInText: matchCarrierInText,
     inferCarrierFromFileName: inferCarrierFromFileName,
     inferCarrierFromRevision: inferCarrierFromRevision,
+    carrierShort: carrierShort,
+    carrierLabelLong: carrierLabelLong,
     carrierLabel: carrierLabel,
     langLabel: langLabel,
     langShort: langShort,
@@ -528,6 +788,7 @@
     vizFormatHint: vizFormatHint,
     vizBgLabel: vizBgLabel,
     vizLangFromFile: vizLangFromFile,
+    vizLangsFromFile: vizLangsFromFile,
     fileRole: fileRole,
     isVizImage: isVizImage,
     isArchive: isArchive,

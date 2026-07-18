@@ -112,8 +112,34 @@
               kbd("Eksportuj status"),
               "Pobiera product-status.json z tej przeglądarki (Aktualne/Nieaktualne). Podmień plik na serwerze, żeby zespół widział te same statusy."
             ) +
+            keyRow(
+              kbd("F") + " / " + kbd("X") + " / " + kbd("D"),
+              "Przy produkcie lub wariancie (Eksplorer): oznacza status na dysku - dopina literkę do nazwy folderu."
+            ) +
           "</ul>" +
           '<p class="dam-help-hint">Bez włączonego „Tryb admina” Shift nie edytuje tagów - tylko filtruje jak zwykły klik. Edycja dotyczy każdego tagu, nie tylko typu nośnika czy statusu.</p>' +
+          '<div class="dam-help-cards" style="margin-top:12px">' +
+            card(
+              "uil-check-circle",
+              "F = Aktualny (skończony)",
+              "Dopina do nazwy folderu końcówkę <code> - F</code>. Dla całego produktu: też wariantom. Folder zostaje na miejscu."
+            ) +
+            card(
+              "uil-times-circle",
+              "X = Nieaktualny (archiwum)",
+              "Dopina <code> - X</code>. Produkt: cały folder idzie do <code>— ARCHIWUM</code> kategorii. Sam wariant: do archiwum w strukturze <code>PRODUKT\\WARIANT - X</code> (łatwy powrót)."
+            ) +
+            card(
+              "uil-flask",
+              "D = Demo / szkic",
+              "Dopina <code> - D</code>. Produkt Demo: warianty też dostają <code> - D</code>. Odznaczenie wariantu z Demo przy produkcie Demo zdejmuje literkę także z produktu."
+            ) +
+            card(
+              "uil-history",
+              "Odznacz + historia",
+              "Usuwa literkę z nazwy. Przywraca z archiwum jeśli było X. Program zapisuje poprzednią nazwę i ścieżkę (change-log / lifecycle) - da się cofnąć."
+            ) +
+          "</div>" +
         "</section>";
     }
 
