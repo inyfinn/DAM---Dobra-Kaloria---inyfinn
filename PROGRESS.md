@@ -1,24 +1,28 @@
 # PROGRESS.md - DAM ETA
 
-| Krok | Status | Notatka |
-|------|--------|---------|
-| K00-K20 foundation+docs | done | |
-| THEME Geex UI | done | index/project/signin wired to API |
-| Desktop shell | done stub | launch.py + start-*.ps1 |
-| Auth Entra/roles | done | login local + Azure stub + EnsureRole |
-| Asana/Teams | done stub | jobs + notify endpoint |
-| Postgres + Laravel | done | :5433 dam_eta, migrate, seed |
-| Ingest pointerow | done | `dam:ingest-pointers` + fixture polska-demo + API POST |
-| UI <-> API E2E | done | login → 3 karty z checklist_status → project detail |
-| K41+ M:/D: roots | pending | ustaw `DAM_INGEST_ROOTS` gdy sciezki POLSKA dostepne |
-| OIDC credentials | pending | AZURE_AD_* od admina |
+Ostatnia aktualizacja: **2026-07-18**
 
-## Jak uruchomic
+| Obszar | Status | Notatka |
+|--------|--------|---------|
+| Geex UI + desktop launch | done | skrot DAM ETA |
+| Auth lokalny (bcrypt) | done | SQLite `users` |
+| **Sesja = machine_id + device_id + session_id** | **done** | ADR-008; weryfikacja przed startem |
+| SQLite lokalna (repo) | done | `apps/desktop/data/dam-local.sqlite` - ADR-007 amended |
+| Global search + tagi | done | Smak/Typ/Opakowanie/Autor |
+| Taxonomia Typ vs Smak | done | muffin = Smak; kulki/BAT = Typ |
+| Modal wiz + FRONT-S + zoom | done | chip zawsze; repair-viz-thumbs |
+| Nosniki PS + admin rename | done | POST /rename-index |
+| Audit log | done | `audit_log` w SQLite |
+| Deployment docs + release ZIP | done | `docs/DEPLOYMENT.md`, `build-release-zip.ps1` |
+| Postgres / Docker | cancelled (user) | opcjonalnie Laravel |
+| Entra ID pelne | pending | ADR-006 |
+| Wspolna baza na NAS (multi-PC) | planned | SQLite WAL na udziale - osobna decyzja |
 
-1. Postgres: juz na `P:\DAM\data\postgres` port **5433**
-2. API: `P:\DAM\tooling\bin\php.bat artisan serve --host=127.0.0.1 --port=8000` (cwd `apps\api`)
-3. UI: `P:\DAM\scripts\ops\start-browser.ps1` → http://127.0.0.1:8765
-4. Login: `admin@dam.local` / `DamAdmin123!`
-5. Ingest: przycisk w UI albo `php artisan dam:ingest-pointers`
+## Uruchomienie dla usera
 
-Ostatnia aktualizacja: 2026-07-16 (E2E UI+API+ingest wdrozony)
+1. Skrot **DAM ETA** na pulpicie.
+2. Launcher sprawdza ID maszyny (ADR-008).
+3. Baza = `apps/desktop/data/dam-local.sqlite` (nie Marketing).
+4. ROOT plikow: Ustawienia → folder Marketing.
+
+Nie: Docker, Postgres, MySQL, reczne porty.

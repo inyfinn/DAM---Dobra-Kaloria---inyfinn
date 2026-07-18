@@ -26,36 +26,29 @@
     var tasks = data.tasks || [];
     var openTasks = tasks.filter(function (t) { return t.status === "open"; });
 
-    // Card1: liczba produktow (projects from API or demo)
+    // Card1/3/4: projekty + kompletnosc (API z fallbackiem lokalnym w DamApi)
     var card1Val = document.getElementById("damCard1Val");
-    if (card1Val) {
-      // Try API
-      var token = localStorage.getItem("dam_token");
-      if (token) {
-        fetch("http://127.0.0.1:8000/api/projects", {
-          headers: { Authorization: "Bearer " + token, Accept: "application/json" }
+    var card3Val = document.getElementById("damCard3Val");
+    var card4Val = document.getElementById("damCard4Val");
+    if (window.DamApi && (card1Val || card3Val || card4Val)) {
+      DamApi.projects()
+        .then(function (res) {
+          var rows = (res && res.data) || [];
+          var complete = rows.filter(function (p) { return p.completeness === "complete"; }).length;
+          if (card1Val) card1Val.textContent = String(rows.length);
+          if (card3Val) card3Val.textContent = String(complete);
+          if (card4Val) card4Val.textContent = String(rows.length - complete);
         })
-          .then(function (r) { return r.json(); })
-          .then(function (d) {
-            card1Val.textContent = (d.data ? d.data.length : (d.length || "3"));
-          })
-          .catch(function () { card1Val.textContent = "3"; });
-      } else {
-        card1Val.textContent = "3";
-      }
+        .catch(function () {
+          if (card1Val) card1Val.textContent = "3";
+          if (card3Val) card3Val.textContent = "1";
+          if (card4Val) card4Val.textContent = "2";
+        });
     }
 
     // Card2: otwarte zadania Asana
     var card2Val = document.getElementById("damCard2Val");
     if (card2Val) card2Val.textContent = data.open || openTasks.length;
-
-    // Card3 / Card4: checklist completeness from demo projects (API later)
-    var card3Val = document.getElementById("damCard3Val");
-    var card4Val = document.getElementById("damCard4Val");
-    var completeProjects = 1;
-    var incompleteProjects = 2;
-    if (card3Val) card3Val.textContent = String(completeProjects);
-    if (card4Val) card4Val.textContent = String(incompleteProjects);
 
     // Balance card - sum of open project costs from project-costs.json
     var balanceTitle = document.getElementById("damBalanceTitle");

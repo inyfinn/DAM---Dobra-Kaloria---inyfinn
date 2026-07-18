@@ -27,7 +27,9 @@
 		if (localStorage.layout) document.documentElement.setAttribute("data-nav", localStorage.navbar);
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260717vizstudio1">
+<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718vizsw1">
+<link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718sidebar2">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718typ4">
 </head>
 
 <body class="geex-dashboard file-manager">
@@ -498,10 +500,10 @@
 			</ul>
 		</nav>
         <div class="geex-sidebar__footer">
-			<span class="geex-sidebar__footer__title">Geex Modern Dashboard</span>
-			<p class="geex-sidebar__footer__copyright">� 2026 ETA Innovations</p>
-			<p class="geex-sidebar__footer__author">Made with <span class="heart-icon">�</span> by <a href="#">ThemeWant</a></p>
-        </div>
+			<span class="geex-sidebar__footer__title">DAM ETA</span>
+			<p class="geex-sidebar__footer__copyright">Panel assetow opakowan</p>
+			<p class="geex-sidebar__footer__author"><a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> &copy; 2026</p>
+		</div>
 	</div>
 </div>
 	
@@ -867,7 +869,7 @@
                     <div class="dam-search-wrap">
                       <div class="dam-search-input-wrap">
                         <i class="uil uil-search" aria-hidden="true"></i>
-                        <input type="text" id="damFileSearch" class="form-control dam-search-input" placeholder="Szukaj indeksu lub skojarzenia (np. 6300, czekolada)" autocomplete="off" data-dam-tip="Wpisz indeks produktu lub słowo kluczowe" />
+                        <input type="text" id="damFileSearch" class="form-control dam-search-input" placeholder="Szukaj indeksu lub skojarzenia (np. 6300, czekolada)" autocomplete="off" data-dam-tip="Wpisz indeks produktu lub s?owo kluczowe" />
                       </div>
                       <div id="damSearchResults" class="dam-search-results" style="display:none"></div>
                     </div>
@@ -881,7 +883,7 @@
                       </label>
                       <button type="button" id="damStatusExport" class="geex-btn" style="padding:8px 12px;border-radius:8px;display:none" title="Pobierz product-status.json">Eksportuj status</button>
                       <span id="damExplorerMeta" style="font-size:12px;color:#8b8d97"></span>
-                      <button type="button" id="damIndexRefresh" class="geex-btn" style="padding:8px 12px;border-radius:8px" title="Odswiez widok z indeksu" data-dam-tip="Przeladuj indeks plikow z dysku">Odswiez</button>
+                      <button type="button" id="damIndexRefresh" class="geex-btn" style="padding:8px 12px;border-radius:8px" title="Przeladuj widok z biezacego indeksu" data-dam-tip="Odswiez = przeladuj UI z juz zbudowanego indeksu. Nie skanuje calego Marketing od zera.">Odswiez</button>
                     </div>
                   </div>
                   <div id="damAdminBar" class="dam-admin-bar">
@@ -2255,18 +2257,20 @@
 	<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.27.0/dist/apexcharts.min.js"></script>
 	<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.6.6/dragula.min.js" referrerpolicy="origin"></script>
-	<script src="./assets/js/main.js"></script>
+	<script src="./assets/js/main.js?v=20260718typ4"></script>
 	<!-- endinject-->
 	<!-- DAM scripts -->
-	<script src="./assets/js/dam-api.js?v=20260717ux6"></script>
+	<script src="./assets/js/dam-api.js?v=20260718zipviz1"></script>
 	<script src="./assets/js/dam-i18n.js?v=20260717ux6"></script>
-	<script src="./assets/js/dam-shell.js?v=20260717logo1"></script>
-	<script src="./assets/js/dam-search.js?v=20260717ux6"></script>
-	<script src="./assets/js/dam-labels.js?v=20260717vizstudio1"></script>
-	<script src="./assets/js/dam-paths.js?v=20260717hub1"></script>
-	<script src="./assets/js/dam-brand-filter.js?v=20260717hub1"></script>
+	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
+	<script src="./assets/js/dam-shell.js?v=20260718inyf1"></script>
+	<script src="./assets/js/dam-search.js?v=20260718tags1"></script>
+	<script src="./assets/js/dam-tag-bar.js?v=20260718typ4"></script>
+	<script src="./assets/js/dam-labels.js?v=20260718carrier1"></script>
+	<script src="./assets/js/dam-paths.js?v=20260718userbase1"></script>
+	<script src="./assets/js/dam-brand-filter.js?v=20260718brandsync1"></script>
 	<script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-explorer.js?v=20260717vizstudio2"></script>
+	<script src="./assets/js/dam-explorer.js?v=20260718typ4"></script>
 </body>
 
 </html>

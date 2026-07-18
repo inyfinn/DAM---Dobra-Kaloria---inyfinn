@@ -8,9 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260717chrome1">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718vizsw1">
   <link rel="stylesheet" href="./assets/css/dam-app.css">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260717logo2">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718noid1">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <style>
@@ -147,13 +147,22 @@
         <div class="col-lg-6">
           <div class="dam-settings-card">
             <h4><i class="uil uil-folder"></i> Sciezka bazowa dysku</h4>
-            <p style="font-size:12px;color:#8b8d97;margin:0 0 12px">Folder, w ktorym widzisz <strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong> i <strong>- POLSKA</strong>. Indeks uzywa <code>D:/Marketing</code>; Ty mozesz miec np. <code>M:\</code>.</p>
-            <label for="settingBasePath" style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">Twoja sciezka bazowa</label>
+            <p style="font-size:12px;color:#8b8d97;margin:0 0 12px">To <strong>Twoje</strong> ustawienie (konto / profil). Aplikacja nie narzuca stalej litery dysku. Folder musi zawierac <strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>. Przycisk „Podpowiedz” tylko sugeruje, nie zapisuje.</p>
+            <label for="settingBasePath" style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">Twoja sciezka bazowa Marketing</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <input type="text" id="settingBasePath" class="form-control" placeholder="D:\Marketing" style="flex:1;min-width:220px;border-radius:8px" data-dam-tip="Mapowanie D:/Marketing na Twoj dysk (np. M:\)">
+              <input type="text" id="settingBasePath" class="form-control" placeholder="np. X:\Marketing" style="flex:1;min-width:220px;border-radius:8px" data-dam-tip="Ustawiasz Ty - zalezy od konta i stacji">
+              <button type="button" class="geex-btn" id="settingBasePathDetect" data-dam-tip="Tylko podpowiedz z dysku - nie zapisuje samo">Podpowiedz</button>
               <button type="button" class="geex-btn" id="settingBasePathTest" data-dam-tip="Sprawdz czy sa 3 foldery glowne">Sprawdz</button>
             </div>
             <p id="settingBasePathMsg" style="font-size:12px;margin:8px 0 0;display:none"></p>
+            <p id="settingBasePathDetectInfo" style="font-size:11px;color:#8b8d97;margin:8px 0 0;display:none"></p>
+          </div>
+
+          <div class="dam-settings-card">
+            <h4><i class="uil uil-refresh"></i> Okno aplikacji</h4>
+            <p style="font-size:12px;color:#8b8d97;margin:0 0 12px">Zamyka biezace okno DAM ETA i uruchamia je ponownie (desktop). Przydatne po zmianie sciezki lub gdy UI sie zawiesi.</p>
+            <button type="button" class="geex-btn geex-btn--primary" id="settingRestartApp" data-dam-tip="Zamknij i uruchom ponownie okno aplikacji">Zrestartuj okno aplikacji</button>
+            <p id="settingRestartMsg" style="font-size:12px;margin:8px 0 0;display:none"></p>
           </div>
 
           <div class="dam-settings-card">
@@ -224,7 +233,7 @@
 
           <div class="dam-settings-card" style="background:#f8f4fd;border-color:rgba(171,84,219,0.18)">
             <h4><i class="uil uil-info-circle"></i> Wersja DAM ETA</h4>
-            <p style="font-size:12px;color:#8b8d97;margin:0">DAM ETA v4 - ETA Innovations &copy; 2026<br>Stack: Geex static, pliki indeksowane lokalnie (P:).</p>
+            <p style="font-size:12px;color:#8b8d97;margin:0">DAM ETA - <a href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> &copy; 2026<br>Stack: Geex static, pliki indeksowane lokalnie.</p>
           </div>
         </div>
       </div>
@@ -240,11 +249,12 @@
   <script src="./assets/vendor/js/bootstrap/bootstrap.min.js"></script>
   <script src="./assets/js/main.js"></script>
   <script src="./assets/js/dam-app.js?v=20260717ux6"></script>
-  <script src="./assets/js/dam-api.js?v=20260717ux6"></script>
+  <script src="./assets/js/dam-api.js?v=20260718auth1"></script>
   <script src="./assets/js/dam-i18n.js?v=20260717ux6"></script>
-  <script src="./assets/js/dam-shell.js?v=20260717logo1"></script>
+  <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
+  <script src="./assets/js/dam-shell.js?v=20260718inyf1"></script>
   <script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-  <script src="./assets/js/dam-paths.js?v=20260717ux12"></script>
+  <script src="./assets/js/dam-paths.js?v=20260718userbase1"></script>
   <script>
     (function() {
       var tooltipEl = document.getElementById("settingTooltips");
@@ -253,6 +263,7 @@
       var brandGcEl = document.getElementById("settingBrandGC");
       var basePathEl = document.getElementById("settingBasePath");
       var baseMsg = document.getElementById("settingBasePathMsg");
+      var detectInfo = document.getElementById("settingBasePathDetectInfo");
 
       tooltipEl.checked = localStorage.getItem("dam_tooltips") !== "off";
       synologyEl.checked = localStorage.getItem("dam_synology_enabled") !== "false";
@@ -260,7 +271,21 @@
       try { brands = JSON.parse(localStorage.getItem("dam_brands") || "{}"); } catch(e) {}
       brandDkEl.checked = brands.DK !== false;
       brandGcEl.checked = brands.GC !== false;
-      basePathEl.value = localStorage.getItem("dam_base_path") || "D:\\Marketing";
+      // Puste = user jeszcze nie ustawil - NIE wstawiamy stalej litery dysku
+      basePathEl.value = localStorage.getItem("dam_base_path") || "";
+
+      if (window.DamPaths && typeof window.DamPaths.ensureUserBase === "function") {
+        window.DamPaths.ensureUserBase().then(function(res) {
+          if (res && res.base) basePathEl.value = res.base;
+          if (res && res.detect && res.detect.candidates) {
+            var bits = res.detect.candidates.map(function(c) {
+              return c.path + (c.ok ? " OK" : " brak");
+            });
+            detectInfo.style.display = "block";
+            detectInfo.textContent = "Podpowiedzi z dysku (nie zapisane same): " + bits.join(" | ");
+          }
+        });
+      }
 
       [tooltipEl, synologyEl, brandDkEl, brandGcEl].forEach(function(inp) {
         var track = inp.parentElement.querySelector(".dam-toggle-track");
@@ -285,9 +310,35 @@
         if (!raw) { showBaseMsg("Podaj sciezke.", false); return; }
         if (!window.DamPaths) { showBaseMsg("Zapis lokalny OK (modul sciezek niedostepny).", true); return; }
         window.DamPaths.validateBaseRemote(raw).then(function(res) {
-          if (res && res.ok) showBaseMsg("OK - znaleziono 3 foldery glowne.", true);
+          if (res && res.ok) showBaseMsg("OK - znaleziono 3 foldery glowne na tym komputerze.", true);
           else if (res && res.missing) showBaseMsg("Brakuje: " + res.missing.join(", "), false);
           else showBaseMsg("Bridge offline - nie da sie zweryfikowac folderow.", false);
+        }).catch(function() {
+          showBaseMsg("Bridge offline (port 8766).", false);
+        });
+      });
+
+      document.getElementById("settingBasePathDetect").addEventListener("click", function() {
+        if (!window.DamPaths || !window.DamPaths.detectMarketingBasesRemote) {
+          showBaseMsg("Wykrywanie wymaga desktop bridge.", false);
+          return;
+        }
+        window.DamPaths.detectMarketingBasesRemote().then(function(res) {
+          if (!res || !res.candidates) {
+            showBaseMsg("Bridge nie zwrocil kandydatow.", false);
+            return;
+          }
+          var bits = res.candidates.map(function(c) {
+            return c.path + (c.ok ? " OK" : " brak");
+          });
+          detectInfo.style.display = "block";
+          detectInfo.textContent = "Na tym PC: " + bits.join(" | ");
+          if (res.recommended) {
+            basePathEl.value = res.recommended;
+            showBaseMsg("Podpowiedz: " + res.recommended + " - kliknij Zapisz, jesli OK.", true);
+          } else {
+            showBaseMsg("Brak podpowiedzi - wpisz sciezke i zapisz.", false);
+          }
         }).catch(function() {
           showBaseMsg("Bridge offline (port 8766).", false);
         });
@@ -310,6 +361,52 @@
         if (window.DamTooltips) {
           tooltipEl.checked ? window.DamTooltips.enable() : window.DamTooltips.disable();
         }
+      });
+
+      var restartBtn = document.getElementById("settingRestartApp");
+      var restartMsg = document.getElementById("settingRestartMsg");
+      function showRestartMsg(text, ok) {
+        restartMsg.style.display = "block";
+        restartMsg.style.color = ok ? "#2CBF44" : "#FF5653";
+        restartMsg.textContent = text;
+      }
+      function callRestartApi() {
+        var api = window.pywebview && window.pywebview.api;
+        if (!api || typeof api.restart_window !== "function") {
+          showRestartMsg("Restart dziala tylko w aplikacji desktop (DAM ETA).", false);
+          return Promise.resolve(null);
+        }
+        return Promise.resolve(api.restart_window()).then(function(res) {
+          if (res && res.ok) {
+            showRestartMsg("Restartuje okno…", true);
+          } else {
+            showRestartMsg((res && res.error) || "Nie udalo sie zrestartowac.", false);
+          }
+          return res;
+        }).catch(function(err) {
+          showRestartMsg(String(err && err.message || err || "Blad restartu"), false);
+        });
+      }
+      restartBtn.addEventListener("click", function() {
+        if (!window.confirm("Zamknac i uruchomic ponownie okno DAM ETA?")) return;
+        restartBtn.disabled = true;
+        var done = false;
+        function runOnce() {
+          if (done) return;
+          done = true;
+          callRestartApi().then(function(res) {
+            if (!(res && res.ok)) restartBtn.disabled = false;
+          });
+        }
+        if (window.pywebview && window.pywebview.api) {
+          runOnce();
+          return;
+        }
+        window.addEventListener("pywebviewready", function onReady() {
+          window.removeEventListener("pywebviewready", onReady);
+          runOnce();
+        });
+        setTimeout(runOnce, 600);
       });
     })();
   </script>

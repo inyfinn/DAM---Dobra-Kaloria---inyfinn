@@ -4,24 +4,49 @@
 (function (global) {
   "use strict";
 
+  /* Zgodnie z EKSPORT WIZEK PS.jsx (NOŚNIK + detectPackagingTypeFromString) */
   var CARRIER_LABELS = {
-    KAR6X: "KARTON 6x MINI BATONIKI",
+    KAR6X: "KARTON 6x MINI",
     KAR: "KARTON",
     DOY6X: "DOYPACK 6x MINI",
     DOY: "DOYPACK",
     BAT: "BATON",
     BAR: "BATON",
-    MINI: "MINI BATONIK",
+    MINI: "MINI BATON",
     BIGPAK: "BIGPAK",
     OBW: "OBWOLUTA",
     TUBA: "TUBA",
+    FOLIA: "FOLIA",
+    SASZ: "SASZETKA",
     "ETY-BUT": "ETYKIETA BUTELKA",
-    "ETY-SLO": "ETYKIETA SŁOIK",
+    "ETY-SLO": "ETYKIETA SLOIK",
     ETY: "ETYKIETA",
-    REKAW: "RĘKAW / OWIJKA",
+    REKAW: "REKAW",
+    SLEEVE: "SLEEVE",
+    LABEL: "LABEL",
     WARIANT: "WARIANT",
     WIZKA: "WIZUALIZACJE",
   };
+
+  /* Kolejnosc: dluzsze tokeny pierwsze (KAR6X przed KAR) */
+  var CARRIER_DETECT = [
+    { re: /\bKAR\s*6\s*X\b|\bKAR6X\b|\bKARTON\s*6/i, code: "KAR6X" },
+    { re: /\bDOY\s*6\s*X\b|\bDOY6X\b|\bDOYPACK\s*6/i, code: "DOY6X" },
+    { re: /\bETY[\s\-_]?BUT|\bLAB[\s\-_]?GLASS|\bETYKIETA[\s\-]?BUTEL/i, code: "ETY-BUT" },
+    { re: /\bETY[\s\-_]?SLO|\bLAB[\s\-_]?JAR|\bETYKIETA[\s\-]?S[LŁ]O/i, code: "ETY-SLO" },
+    { re: /\bDOYPACK\b|\bDOY\b|\bPOUCH\b/i, code: "DOY" },
+    { re: /\bKARTON\b|\bKAR\b(?!\d)/i, code: "KAR" },
+    { re: /\bMINI\b/i, code: "MINI" },
+    { re: /\bBATON\b|\bBAT\b|\bBAR\b/i, code: "BAT" },
+    { re: /\bBIGPAK\b|\bBIG[\s\-]?PAK\b|\bBIGPACK\b/i, code: "BIGPAK" },
+    { re: /\bTUBA\b|\bTUBE\b/i, code: "TUBA" },
+    { re: /\bFOLIA\b|\bFOIL\b/i, code: "FOLIA" },
+    { re: /\bSASZ|\bSACHET\b/i, code: "SASZ" },
+    { re: /\bR[EĘ]KAW\b|\bSLEEVE\b|\bOWIJKA\b/i, code: "REKAW" },
+    { re: /\bOBWOLUT|\bOBW\b/i, code: "OBW" },
+    { re: /\bETYKIETA\b|\bETY\b|\bLABEL\b/i, code: "ETY" },
+    { re: /\bWIZKA\b|\bWIZKI\b/i, code: "WIZKA" },
+  ];
 
   /** Klucz kanoniczny kategorii (PL) → aliasy folderów DK/GC */
   var CATEGORY_CANON = [
@@ -89,36 +114,101 @@
     return false;
   }
 
+  function matchCarrierInText(text) {
+    var s = String(text || "");
+    if (!s) return "";
+    for (var i = 0; i < CARRIER_DETECT.length; i++) {
+      if (CARRIER_DETECT[i].re.test(s)) return CARRIER_DETECT[i].code;
+    }
+    return "";
+  }
+
   function parseCarrierCode(revisionFolder) {
-    var head = String(revisionFolder || "").split(/\s*-\s*/)[0].trim().toUpperCase();
-    head = head.replace(/_/g, " ");
-    if (/^KAR6X\b/.test(head) || /^KARTON\s*6/.test(head)) return "KAR6X";
-    if (/^DOY6X\b/.test(head) || /^DOYPACK\s*6/.test(head)) return "DOY6X";
-    if (/^KAR\b/.test(head) || /^KARTON\b/.test(head)) return "KAR";
-    if (/^DOY\b/.test(head) || /^DOYPACK\b/.test(head)) return "DOY";
-    if (/^MINI\b/.test(head)) return "MINI";
-    if (/^BAT\b/.test(head) || /^BATON\b/.test(head) || /^BAR\b/.test(head)) return "BAT";
-    if (/^BIGPAK\b/.test(head) || /^BIGPACK\b/.test(head)) return "BIGPAK";
-    if (/^TUBA\b/.test(head) || /^TUBE\b/.test(head)) return "TUBA";
-    if (/^OBW/.test(head)) return "OBW";
-    if (/^ETY/.test(head) || /^LABEL/.test(head)) return "ETY";
-    // KRYTYCZNE: folder tylko data/indeks (np. "13.02.2025 - 6300622.00") - NIE zgaduj BATON
-    if (/^\d{2}\.\d{2}\.\d{4}/.test(head) || /^\d{7}/.test(head)) return "UNKNOWN";
+    var raw = String(revisionFolder || "").trim();
+    if (!raw) return "UNKNOWN";
+    var head = raw.split(/\s*-\s*/)[0].trim();
+    // 1) Prefiks przed pierwszym " - " (FOLIA - 09.02.2024 - 6300450.00)
+    var fromHead = matchCarrierInText(head);
+    if (fromHead) return fromHead;
+    // 2) Cala nazwa folderu (gdy nosnik jest w srodku)
+    var fromAll = matchCarrierInText(raw);
+    if (fromAll) return fromAll;
+    // 3) Folder tylko data/indeks - nie zgaduj
+    var headU = head.toUpperCase().replace(/_/g, " ");
+    if (/^\d{2}\.\d{2}\.\d{4}/.test(headU) || /^\d{7}/.test(headU)) return "UNKNOWN";
     return "UNKNOWN";
+  }
+
+  /** Indeks jak extractIndexFromString() w EKSPORT WIZEK PS.jsx */
+  function extractIndexFromString(source) {
+    if (!source) return "";
+    var s = String(source);
+    s = s.replace(/1200px/gi, "_").replace(/300dpi/gi, "_").replace(/_A[0-6]/gi, "_").replace(/_v\d+/gi, "_");
+    var folDot = s.match(/(FOL\d+\.\d{2})/i);
+    if (folDot) return folDot[1].toUpperCase();
+    var fol = s.match(/(FOL\d+)/i);
+    if (fol) return fol[1].toUpperCase();
+    var withDot = s.match(/(\d{5,9}\.\d{2})/g);
+    if (withDot) {
+      var bestD = withDot[0];
+      for (var i = 1; i < withDot.length; i++) {
+        if (withDot[i].length >= bestD.length) bestD = withDot[i];
+      }
+      return bestD;
+    }
+    var plain = s.match(/(\d{5,9})/g);
+    if (plain) {
+      var best = plain[0];
+      for (var j = 1; j < plain.length; j++) {
+        if (plain[j].length >= best.length) best = plain[j];
+      }
+      return best;
+    }
+    return "";
+  }
+
+  /** Meta z nazwy folderu wariantu / pliku - jak parsujDaneProduktu w EKSPORT WIZEK PS */
+  function parseRevisionMeta(folderOrName, pathHint) {
+    var raw = String(folderOrName || "");
+    var path = String(pathHint || "");
+    var brand = detectMarketFromPath(path) || "";
+    var brandMatch = raw.match(/^(DK|GC|GK)\b/i) || path.match(/[\\\/](-?\s*DK|-?\s*GC)[\\\/]/i);
+    if (!brand && brandMatch) {
+      var b = String(brandMatch[1] || "").toUpperCase().replace(/[^A-Z]/g, "");
+      brand = b === "GK" || b === "GC" ? "GC" : "DK";
+    }
+    if (!brand && /DOBRA\s*KALORIA|[/\\]-?\s*DK\b/i.test(path + " " + raw)) brand = "DK";
+    if (!brand && /GOOD\s*CALORI|[/\\]-?\s*GC\b/i.test(path + " " + raw)) brand = "GC";
+
+    var carrier = parseCarrierCode(raw);
+    var index = extractIndexFromString(raw) || extractIndexFromString(path);
+    var dateM = raw.match(/\b(\d{2})[.\s_\-](\d{2})[.\s_\-](\d{4})\b/);
+    var date = "";
+    if (dateM) date = dateM[3] + "-" + dateM[2] + "-" + dateM[1];
+    var label = carrier !== "UNKNOWN" ? (CARRIER_LABELS[carrier] || carrier) : "";
+    // Nigdy nie pokazuj "nieokreslony" gdy w nazwie jest czytelny token nosnika
+    if (!label) {
+      var token = headToken(raw);
+      if (token && !/^\d/.test(token)) label = token;
+    }
+    return { brand: brand, carrier: carrier, index: index, date: date, label: label || "" };
+  }
+
+  function headToken(folder) {
+    var head = String(folder || "").split(/\s*-\s*/)[0].trim();
+    return head.replace(/_/g, " ").toUpperCase();
   }
 
   /** Prefiks nazwy pliku wizki: KAR6X-..., MINI-..., BAT-... */
   function inferCarrierFromFileName(fileName) {
-    var n = String(fileName || "").toUpperCase();
-    if (/^KAR6X[-_]/.test(n) || /KARTON\s*6/.test(n)) return "KAR6X";
-    if (/^DOY6X[-_]/.test(n)) return "DOY6X";
-    if (/^MINI[-_]/.test(n)) return "MINI";
-    if (/^BAT[-_]/.test(n) || /^BATON[-_]/.test(n) || /^BAR[-_]/.test(n)) return "BAT";
-    if (/^DOY[-_]/.test(n) || /^DOYPACK[-_]/.test(n)) return "DOY";
-    if (/^KAR[-_]/.test(n) || /^KARTON[-_]/.test(n)) return "KAR";
-    if (/^TUBA[-_]/.test(n) || /^TUBE[-_]/.test(n)) return "TUBA";
-    if (/^BIGPAK[-_]/.test(n)) return "BIGPAK";
-    return "";
+    var n = String(fileName || "");
+    // Prefiks kanoniczny: DK-FOLIA-... albo DK_FOLIA_...
+    var m = n.match(/^(?:DK|GC)[-_]([A-Z0-9ŁłĘęÓóĄąŚśŹźŻż\-]+)[-_]/i);
+    if (m) {
+      var fromPref = matchCarrierInText(m[1]);
+      if (fromPref) return fromPref;
+    }
+    return matchCarrierInText(n) || "";
   }
 
   function inferCarrierFromRevision(rev) {
@@ -136,12 +226,21 @@
   }
 
   function carrierLabel(code, gramFromName) {
-    if (code === "UNKNOWN" || !code) {
-      return "Nosnik nieokreslony";
+    // gramFromName bywa pelna nazwa folderu - wyciagnij nosnik z niej zanim powiesz UNKNOWN
+    if ((!code || code === "UNKNOWN") && gramFromName) {
+      var rescued = parseCarrierCode(gramFromName);
+      if (rescued && rescued !== "UNKNOWN") code = rescued;
+      else {
+        var tok = headToken(gramFromName);
+        if (tok && !/^\d/.test(tok) && tok.length >= 2 && tok.length <= 24) return tok;
+        return "WARIANT";
+      }
     }
+    if (code === "UNKNOWN" || !code) return "WARIANT";
     var base = CARRIER_LABELS[code] || code || "WARIANT";
-    if (gramFromName && (code === "BAT" || code === "DOY" || code === "TUBA")) {
-      return base + " (" + gramFromName + ")";
+    var gramOnly = extractGram(gramFromName);
+    if (gramOnly && (code === "BAT" || code === "DOY" || code === "TUBA" || code === "BAR")) {
+      return base + " (" + gramOnly + ")";
     }
     var m = String(gramFromName || "").match(/(\d+)\s*[gG]/);
     if (m && (code === "BAT" || code === "BAR")) return "BATON (" + m[1] + " g)";
@@ -251,10 +350,32 @@
     if (ext === "AI" || ext === "PSD" || ext === "INDD") return "edytowalny";
     if (/FQ/.test(u) && ext === "PDF") return "druk";
     if (/\bPREV\b/.test(u) || /[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u)) return "podglad";
-    if (ext === "ZIP" || layer === "print") return "druk";
+    // ZIP/RAR: zwykle pakiet do druku. NIGDY wizualizacja (nawet gdy lezy w 4-WIZKI).
+    if (ext === "ZIP" || ext === "RAR" || ext === "7Z") {
+      if (layer === "source" && !/PAKIET|FQ|DRUK|KUBARA|PRODUKCYJ|POLZDOB/.test(u)) return "inny";
+      return "druk";
+    }
+    if (layer === "print") return "druk";
     if (layer === "visual") return "wizualizacja";
     if (layer === "elements") return "element";
     return "inny";
+  }
+
+  /** Tylko obrazy rastra moga byc "wizualizacja" w studio / galerii. */
+  function isVizImage(nameOrFile) {
+    var name = typeof nameOrFile === "string"
+      ? nameOrFile
+      : (nameOrFile && (nameOrFile.name || nameOrFile.path)) || "";
+    var ext = String(name).split(".").pop().toLowerCase();
+    return ["jpg", "jpeg", "png", "webp", "gif", "tif", "tiff"].indexOf(ext) >= 0;
+  }
+
+  function isArchive(nameOrFile) {
+    var name = typeof nameOrFile === "string"
+      ? nameOrFile
+      : (nameOrFile && (nameOrFile.name || nameOrFile.path)) || "";
+    var ext = String(name).split(".").pop().toLowerCase();
+    return ext === "zip" || ext === "rar" || ext === "7z";
   }
 
   global.DamLabels = {
@@ -268,6 +389,9 @@
     isMixProduct: isMixProduct,
     isBogusRevision: isBogusRevision,
     parseCarrierCode: parseCarrierCode,
+    parseRevisionMeta: parseRevisionMeta,
+    extractIndexFromString: extractIndexFromString,
+    matchCarrierInText: matchCarrierInText,
     inferCarrierFromFileName: inferCarrierFromFileName,
     inferCarrierFromRevision: inferCarrierFromRevision,
     carrierLabel: carrierLabel,
@@ -282,5 +406,7 @@
     vizBgLabel: vizBgLabel,
     vizLangFromFile: vizLangFromFile,
     fileRole: fileRole,
+    isVizImage: isVizImage,
+    isArchive: isArchive,
   };
 })(typeof window !== "undefined" ? window : globalThis);

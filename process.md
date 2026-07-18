@@ -597,7 +597,7 @@ Usunac reczny modal udostepniania; DAM ma otwierac okno Synology Drive Client. C
 3. Dziala: IContextMenu (IShellFolder.GetUIObjectOf) -> submenu Synology Drive -> "Uzyskaj lacze" (hr=0).
 4. Produkcja: `apps/desktop/synology_get_link.ps1` + bridge `POST /synology-share`.
 5. Front: `DamPaths.shareViaSynology` w `dam-paths.js`; `dam-viz.js` bez `openSynologyModal`.
-6. Docs: `memory.md` §27, `help.html` FAQ.
+6. Docs: `memory.md` ?27, `help.html` FAQ.
 
 ### Efekt/Fix
 Klik "Udostepnij" otwiera natywne okno Synology (Get link). Modal instrukcji usuniety.
@@ -613,3 +613,562 @@ Brak (tylko kod UI/bridge).
 - Win32 IContextMenu / IShellFolder (MSDN shell)
 - Synology Drive Client context menu (lokalnie na stacji)
 
+## 2026-07-18 - Sync Marka dropdown <-> chipy DK/GC + customizer button
+
+### Komenda/Akcja
+Synchronizacja filtra marki (toolbar "Marka: ..." z chipami DK/GC w produkcie) oraz zmniejszenie napisu "Dostosuj wyglad".
+
+### Log/Status
+1. dam-brand-filter.js: commitBrands + syncAllUi - jedna zmiana aktualizuje wszystkie triggery i chipy
+2. pruneChipInstances - explorer remountuje #damProductBrandMount przy kazdym renderMain
+3. dam-explorer.js: jeden addListener(onBrandFilterChange) zamiast stackowania callbackow
+4. dam-viz.js: ten sam wzorzec addListener
+5. dam-app.css: .geex-btn__customizer span 11px / line-height 1.15; ikona bez zmian
+6. Cache bust: brandsync1 / customizer1 na explorer + visualizations
+
+### Efekt/Fix
+Odznaczenie GC w dropdownie odznacza chip GC (i odwrotnie). Przycisk customizera mniejszy wizualnie.
+
+### Test/Ewaluacja
+- Desktop (pywebview / skrot DAM ETA) - przeladowac Eksplorator, otworzyc produkt, toggle Marka vs DK/GC
+- Nie opierac QA na http://127.0.0.1:8765 (dev-only)
+
+### Zrodla
+- memory.md Desktop first
+- apps/web/assets/js/dam-brand-filter.js
+
+## 2026-07-18 - file-index jako baza + fix sidebar collapse
+
+### Komenda/Akcja
+Projekty z mockow (3) -> file-index.json (187). Naprawa logo/zwijania sidebara.
+
+### Log/Status
+1. dam-api.js: offline czyta apps/web/data/file-index.json; kompletnosc z files_by_role (artwork/viz/print)
+2. dam-projects.js: link do explorer.html?product= + checklista
+3. dam-brand.css: collapsed logo 36px; przycisk expand wystaje poza panel (right:-16px)
+4. dam-shell.js: setSidebarCollapsed + klik logo przy zwinieciu rozwija menu
+5. Cache bust fileindex1 / sidebar2
+
+### Efekt/Fix
+Lista Projektow pokazuje caly indeks z repo. Sidebar da sie przywrocic; logo nie ucina sie na zwinietym.
+
+### Test/Ewaluacja
+- Desktop: Projekty -> ~187 kart; status "(indeks dysku w projekcie)"
+- Zwin menu -> logo 36px, strzalka po prawej -> klik rozwija; albo klik logo
+
+### Zrodla
+- apps/web/data/file-index.json (product_count 187, viz_count 341)
+- dam-paths.js: prefix sciezki vs stala struktura
+
+## 2026-07-18 - konta bcrypt + ROOT offline + fix slots
+
+### Komenda/Akcja
+User: fetch z bazy; pliki z ROOT; offline kropka; konta szyfrowane; sesja=urzadzenie; konto KW.
+
+### Log/Status
+1. Fix `rolesFromRevision`: null rev nie crashuje na `.slots` (7 produktow bez revisions).
+2. Projekty: metadane z file-index (baza lokalna), nie Laravel-first.
+3. Auth: `auth_store.py` SQLite + bcrypt; bridge `/auth/login|register|me`; seed KW admin.
+4. Sesja device_id - logout nie kasuje tokenu. signin.html prawdziwy formularz.
+5. `dam-root-status.js`: czerwona kropka + Wskaz sciezke; `/files/status` probe X:\Marketing OK.
+
+### Efekt/Fix
+Projekty laduja sie; pliki online widoczne; konto KW w lokalnej bazie.
+
+### Test/Ewaluacja
+- Zaloguj: krzysztof.wieczorek@kubara.pl (haslo lokalne)
+- Ustaw ROOT -> zielona kropka Pliki online
+- Projekty: ~187 kart bez bledu slots
+
+### Zrodla
+- apps/desktop/auth_store.py, local_bridge.py
+- apps/web/assets/js/dam-api.js, dam-root-status.js, signin.html
+
+## 2026-07-18 - sciezka Marketing = wybor UZYTKOWNIKA
+
+### Komenda/Akcja
+User: zalezy od konta / kto zalogowany / co sobie ustawi. Zawsze liczy sie ustawienie usera, nie stala.
+
+### Log/Status
+1. Usunieto auto-nadpisywanie `dam_base_path` przez detect (X:/D:).
+2. `ensureUserBase`: jesli user ustawil -> nie ruszac; pierwszy start -> tylko backup tego USERNAME; detect = sugestia.
+3. `machine-config.json`: `{ users: { <USERNAME>: { base_path } } }`.
+4. UI: brak domyslnego `X:\Marketing` w polu; Podpowiedz nie zapisuje sama.
+
+### Efekt/Fix
+Prawda sciezki = `dam_base_path` usera. Indeks tylko do remap struktury.
+
+### Test/Ewaluacja
+- Ustawienia: wpisz swoja baze -> Zapisz; restart nie zmienia na X: samo
+- Drugie konto Windows moze miec inna baze w machine-config.users
+
+### Zrodla
+- apps/web/assets/js/dam-paths.js
+- apps/desktop/local_bridge.py, machine-config.json
+
+## 2026-07-18 - skrot DAM ETA nie startuje (zombie)
+
+
+### Komenda/Akcja
+Diagnostyka: skrot -> wscript -> run-dam.vbs -> pythonw launch.py
+
+### Log/Status
+1. Znaleziono zombie: launch.py + 2x local_bridge na 8765/8766, **bez widocznego okna** -> mutex blokowal nowy start ("juz uruchomiony").
+2. Zabito PID 688/49980/56716.
+3. `acquire_single_instance`: focus okna albo auto-kill zombie + retry; mutex handle trzymany w `_MUTEX_HANDLE`.
+4. `run-dam.vbs`: pelna sciezka `C:\Python314\pythonw.exe` + log `launch-last-error.txt`.
+
+### Efekt/Fix
+Skr?t powinien znowu otwierac okno; przy kolejnym zombie auto-odzyskanie.
+
+### Test/Ewaluacja
+- Dwuklik "DAM ETA" na pulpicie
+- Jesli fail: sprawdz `apps/desktop/launch-last-error.txt`
+
+### Zrodla
+- apps/desktop/launch.py, run-dam.vbs
+
+## 2026-07-18 - X:Marketing + restart okna + structure-mcp
+
+### Komenda/Akcja
+1) Restart okna w Ustawieniach. 2) Indeks z X:\Marketing (nie D:). 3) Potwierdzenie wiedzy migracji structure-mcp.
+
+### Log/Status
+1. structure-mcp: `X:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\CURSOR\MCP - Filesystem\structure-mcp\` (memory: sloty 0-4, flat migrate, legacy M:). MCP config: POLSKA/EKSPORT = X:\Marketing, legacy = M:\ (obecnie niedostepny).
+2. Skan X: LIVE: DK 144 + GC 43 = **187 produktow**; ~406 folderow wariantow. Indeks nie jest "ubogi" wzgledem drzewa X: - tyle jest w plaskiej strukturze.
+3. `build-file-index.py`: auto `X:/Marketing` > `D:/Marketing`; przebudowa: products=187, viz=179 (czesciowe thumbs: WinError 389 cloud).
+4. Domyslne sciezki UI: `X:\Marketing` (settings + dam-paths).
+5. `launch.py`: `DamJsApi.restart_window` + opozniony relaunch (mutex). `settings.html`: przycisk "Zrestartuj okno aplikacji".
+
+### Efekt/Fix
+Indeks wskazuje X:; restart tylko w desktopie. Liczba 187 = stan drzewa X:, nie blad skanera. Wiecej bytow bedzie gdy: (a) M: legacy zmountowany i doscanowany / domigrowany, albo (b) UI liczy warianty/indeksy zamiast folderow produktu.
+
+### Test/Ewaluacja
+- Desktop: Ustawienia -> Zrestartuj okno aplikacji (confirm -> zamkniecie + relaunch)
+- Ustawienia: baza `X:\Marketing` -> Sprawdz (3 foldery)
+- Projekty / Eksplorator: ~187 kart, sciezki `X:/Marketing/...`
+
+### Zrodla
+- structure-mcp/memory.md (2026-07-17)
+- user-structure MCP structure_get_config
+- apps/web/scripts/build-file-index.py
+- apps/desktop/launch.py
+
+---
+
+## 2026-07-18 - SQLite zamiast Dockera/Postgres (ADR-007)
+
+### Komenda/Akcja
+Uzytkownik: Docker nie wchodzi w gre dla normalnego usera; pytac o MySQL / cos natywnego.
+
+### Log/Status
+1. Decyzja: **SQLite** (nie MySQL - MySQL tez wymaga demona).
+2. `apps/desktop/dam_db.py` - WAL, audit_log, status `docker_required: false`.
+3. Bridge: audit -> SQLite (+ mirror JSONL); `/db/status`; usunieto `pg_store.py`.
+4. `docker-compose.yml` - profil `dev-postgres` tylko opcjonalnie.
+5. ADR-007 + amend ADR-001. memory.md ?41.
+
+### Efekt/Fix
+Odpalenie skrotu DAM ETA = baza w tle (plik SQLite). Bez Dockera, bez instalacji serwera DB.
+
+### Test/Ewaluacja
+- `python -c "import dam_db; print(dam_db.status())"` ? ok, wal=True, users>=1
+- GET `/db/status` na bridge po starcie launchera
+
+### Zrodla
+- docs/ADR/ADR-007-local-sqlite.md
+- apps/desktop/dam_db.py
+
+---
+
+## 2026-07-18 - Przyciski kart projektow (Geex)
+
+### Komenda/Akcja
+ui-taste: Checklista wygladala spoza DS (czarna obwodka `geex-btn--transparent`).
+
+### Log/Status
+1. Przyczyna: `geex-btn--transparent` w THEME = border 2px dark (button.html).
+2. Fix: secondary = domyslny `geex-btn` (szary Geex), primary bez glow; ikony uil jak THEME.
+3. Label primary skrocony do "Eksplorator" (jak viz).
+
+### Efekt/Fix
+CDP: Checklista `border: 0`, bg `rgb(236,234,243)`, radius 14px, min-height 44px.
+
+### Zrodla
+- THEME/geex-html-main/button.html
+- apps/web/assets/js/dam-projects.js
+- apps/web/assets/css/dam-app.css
+
+---
+
+## 2026-07-18 - Kontrast UI + ikony brak?w + wspolna baza
+
+### Komenda/Akcja
+ui-taste + ui-ux-pro-max: nieczytelne blekitne teksty, niewyr?wnanie; braki jako `Brak: viz_3d`; baza musi byc TA SAMA dla wszystkich.
+
+### Log/Status
+1. Przyczyna blekitu: Geex `--secondary-color: #B7DBF9` uzyty na subtitle - nieczytelny na bieli.
+2. Fix signin: subtitle/title left-align z formem; kolor `--dark-color` / `#17161E`; tabs bez secondary-color.
+3. Karty: mini-checklista jak Eksplorator (`dam-check-ok/brak` + Unicons); etykiety: Wizualizacje, Projekt graficzny, Pliki do druku.
+4. Baza: `X:\Marketing\.dam-eta\dam-shared.sqlite` (WAL, busy_timeout 60s); seed z lokalnej; fallback lokalny.
+5. ADR-007 amended; memory.md ?41+?43.
+
+### Efekt/Fix
+- CDP signin: subColor `rgb(23,22,30)`, titleLeft==emailLeft.
+- CDP karty: lab `rgb(23,22,30)`, html `Wizualizacje Pliki do druku` (bez kodow API).
+- `dam_db.status()`: shared=True, path Marketing `.dam-eta`.
+
+### Test/Ewaluacja
+Pass 1-5 screenshot (signin 375/768/1280 + karty 1280).
+
+### Zrodla
+- apps/desktop/dam_db.py
+- apps/web/signin.html, dam-projects.js, dam-app.css
+- docs/ADR/ADR-007-local-sqlite.md
+
+---
+
+## 2026-07-18 - Hierarchia CTA (jeden solid)
+
+### Komenda/Akcja
+ui-ux-pro-max: w grupie akcji tylko jeden przycisk ciezki (solid); drugi obrys/mniej absorbujacy.
+
+### Log/Status
+1. `project.html`: Przelicz = `geex-btn--primary`; Powiadom = `geex-btn--primary-transparent`.
+2. Wzorzec `.dam-action-stack` w dam-app.css; memory.md ?44.
+3. Modal sciezki Marketing: Save primary, Suggest outline, Skip szary.
+4. Sloty checklisty: ikony + Wizualizacje (bez "3D").
+
+### Test/Ewaluacja
+CDP: recompute bg solid purple; notify border purple + transparent fill.
+
+### Zrodla
+- THEME/geex-html-main/button.html (primary vs primary-transparent)
+- apps/web/project.html, dam-project.js, dam-app.css
+
+---
+
+## 2026-07-18 - Logo + wyszukiwarka na Projektach
+
+### Komenda/Akcja
+Logo zniknelo na Projekty; brak wyszukiwarki jak w Eksploratorze.
+
+### Log/Status
+1. Przyczyna logo: `index.html` nie mial `.geex-sidebar__header` / `.geex-sidebar__logo`.
+2. Fix: markup logo w index + `ensureSidebarLogo()` w dam-shell (wszystkie strony).
+3. Toolbar Projektow: `#damProjectsSearch` - ten sam placeholder i anatomia co Eksplorator; filtr lokalny.
+
+### Test/Ewaluacja
+Screenshot: logo DK w sidebarze; search "Szukaj indeksu lub skojarzenia..."; filtr `xmas` zaw??a karty.
+
+---
+
+## 2026-07-18 - ZIP nie jest wizualizacja
+
+### Komenda/Akcja
+Studio pokazywalo DK-6300753.00-Pakiet.zip (643 MB) jako WARIANT wizualizacji. Niedopuszczalne.
+
+### Log/Status
+1. ZIP lezal w 4 - WIZKI - indexer wrzucal caly slot do viz/wizki.
+2. Fix indexer: resolve_file_role - archiwa nigdy viz; Pakiet/FQ/3-DRUK -> print; viz tylko obrazki.
+3. Fix UI: filterVizImageFiles w dam-explorer; checklista/API bez ZIP jako viz.
+4. Patch file-index.json: 7 archiwow przeniesionych viz->print (m.in. 6300753 Pakiet).
+5. Asana CSV: apps/web/data/asana-tasks-kw.csv (433 taski) jako baza pod projekty/sciezki.
+
+### Test/Ewaluacja
+6300753: ZIP tylko w print; wizki = jpg/png FRONT/TYL. DamLabels.isVizImage(zip)=false.
+
+---
+
+## 2026-07-18 - Projekty UX: copy, ikony, liczniki, baza
+
+### Komenda/Akcja
+Ingest niezrozumialy; 187 vs wiecej produktow; ikony nie rowno; dwie ikony; Materialy kompletne; Dostosuj wyglad + baza.
+
+### Log/Status
+1. Przycisk: Wczytaj z dysku (nie Ingest pointerow).
+2. Liczniki: 187 produktow na X: Marketing = poprawne foldery; 473 warianty; 322 bazy indeksow. M: offline. ARCHIWUM osobno.
+3. Checklist: Materialy kompletne / Brakuje materialow + 3 role (jedna ikona statusu). CSS align + unicons-line.
+4. Baza: X:\Marketing\.dam-eta\dam-shared.sqlite EXISTS (users/sessions/audit). Preferencje w Dostosuj wyglad = kolejny krok (zapis do SQLite).
+
+### Test/Ewaluacja
+Status UI: 187 produktow ? 473 wariantow. CDP icon/lab delta 0.
+
+---
+
+## 2026-07-18 - Modal wizualizacji: przyciski + warianty
+
+### Komenda/Akcja
+Przyciski za duze; Kopiuj/Udostepnij jako ikony w kole; 3x Polska daje ten sam efekt.
+
+### Log/Status
+1. Przyczyna: klik ustawial img.src = sciezke X:/ (browser nie laduje) + kopiowal sciezke.
+2. Fix: thumb_url / bridge media; etykiety = indeks gdy wiele rewizji; Multijezyczny tylko przy >1 jezyku.
+3. Akcje: 1 wiersz - Produkt, Eksplorator, okragle Kopiuj/Udostepnij.
+4. Indexer: pick_thumb preferuje plik z indeksem rewizji.
+5. Dysku: folder 6300767 zawiera pliki nazwane 6300524 (kopia bez rename) - wizualnie identyczne.
+
+### Test/Ewaluacja
+Do weryfikacji w visualizations.html?v=vizmodal1
+
+---
+
+## 2026-07-18 - DB + global search/tags + konta
+
+### Komenda/Akcja
+Czy baza dziala; Odswiez vs Wczytaj; tagi Autor + 12-24; global search na Projekty/Wizualizacje; konta test; awatary.
+
+### Log/Status
+1. Baza OK: `X:\Marketing\.dam-eta\dam-shared.sqlite` - 18 userow po seed.
+2. Seed: `seed_kubara_users.py`, haslo `test`, login Agata/KW zweryfikowany.
+3. Odswiez = reload z indeksu; Wczytaj z dysku = ingest/skan (tooltips).
+4. `enrich-search-tags.py`: smak 24, typ 22, opakowanie 14, autor 16 (Asana CSV).
+5. `dam-tag-bar.js` + collapse ~700px; wired explorer/projects/viz.
+6. Awatary: female/male SVG wg email w `dam-shell.js`.
+
+### Test/Ewaluacja
+- login agata.karon@kubara.pl / test = OK
+- tag_groups w search-index.json = OK
+
+---
+
+## 2026-07-18 - Nosnik FOLIA + meta PS + rename indeksu (admin)
+
+### Komenda/Akcja
+Usunac "Nosnik nieokreslony" gdy FOLIA widoczna; meta jak w EKSPORT WIZEK PS; tryb admina = edycja indeksu z rename na dysku.
+
+### Log/Status
+1. Przyczyna: `parseCarrierCode` nie znal FOLIA + UI doklejal "Nosnik nieokreslony ? " + folder.
+2. Fix labels: FOLIA/REKAW/SLEEVE/? + skan calej nazwy; `parseRevisionMeta` / `extractIndexFromString` (jak JSX).
+3. Explorer: label = czysty nosnik; chippy Marka/Indeks/Data; meta produktu Marka+Indeksy.
+4. Admin: input indeksu + Zastosuj -> bridge `POST /rename-index` (tylko pod Marketing, confirm).
+5. Cache: explorer `?v=20260718carrier1`.
+
+### Test/Ewaluacja
+- Odswiez explorer: ORZESZKI KUKURYDZA MIOD / FOLIA -> etykieta "FOLIA" (nie UNKNOWN).
+- Admin: edycja indeksu wymaga confirm; dry path poza Marketing odrzucony.
+
+---
+
+## 2026-07-18 - Header wiadomosci/powiadomienia + logo login
+
+### Komenda/Akcja
+Skala i czytelnosc popupow Wiadomosci/Powiadomienia (Geex); logo na logowaniu wycentrowane nad napisami.
+
+### Log/Status
+1. Badge: realne liczby (Asana+Teams / ops), pill 20px, nie fake 84.
+2. Popup: naglowek + wiekszy padding, ikony z tonem, zrodlo (DAM/Asana/Teams), bez podkre?len.
+3. Login: logo DK centered nad tytulem (height 56px force - fix collapse).
+4. Cache: `?v=20260718notif1`.
+
+### Test/Ewaluacja
+- Pass screenshot: settings powiadomienia (ikony+tagi), wiadomosci Asana bez underline.
+- Pass screenshot: signin - logo nad "Witaj w DAM ETA", centers match.
+
+---
+
+## 2026-07-18 - Tag bar per-kategoria + ikony akcji wiz
+
+### Komenda/Akcja
+Tagi nie przycinac globalnie; kategoria >10 rozwija sie w dol. Eksplorator/Udostepnij = ikona; Przejdz do produktu = tekst.
+
+### Log/Status
+1. `dam-tag-bar.js`: usunieto max-height collapse; per group ROW_LIMIT=10 + `+N`/`mniej`.
+2. Karty + modal `dam-viz.js`: `dam-btn-icon-only` dla folder/share.
+3. Cache `?v=20260718tags2`.
+
+### Test/Ewaluacja
+- visualizations: Smak/Typ/Opakowanie/Autor widoczne naraz; +N przy Smaku spycha siatke.
+- karta: Przejdz do produktu z napisem; obok same ikony.
+
+---
+
+## 2026-07-18 - Badge wiz: czytelny opis rewizji
+
+### Komenda/Akcja
+Wyjasnienie badge `(.01 > .00)` + zmiana copy na ludzki jezyk.
+
+### Log/Status
+1. Znaczenie: indeks pakowania ma sufiks rewizji; wyzszy (`.01`) = nowsza wersja niz `.00`.
+2. Galeria bierze `viz_latest` = tylko aktualne.
+3. `viz.badge` PL/EN + tip na badge w `visualizations.html`.
+
+### Efekt/Fix
+Badge: "Tylko najnowsze wersje produktow" (+ tip o `.01` vs `.00`).
+
+---
+
+## 2026-07-18 - Bridge offline + skroty F1/F5 + header polish
+
+### Komenda/Akcja
+Naprawa false-offline (brak mostu przy samym http.server), UI offline, F1/F5, kontrast badge, cienkie ikony.
+
+### Log/Status
+1. Diagnoza: UI = `python -m http.server 8765`, bridge 8766 nie dzialal -> "Bridge offline".
+2. Start `local_bridge.py` + `serve_browser.py` (UI+bridge) + supervisor w `launch.py`.
+3. `dam-root-status.js`: rozroznienie most/sciezka, `body.dam-bridge-offline`, szybszy poll offline.
+4. `dam-shortcuts.js`: F1 modal pomocy, F5/Ctrl+R odswiez.
+5. `dam-shell.js`: `normalizeHeaderIcons` (Unicons), badge msg/notif.
+6. CSS: pasek offline, wiekszy pill, badge #B45309 / #0E7490, modal pomocy.
+7. Cache `?v=20260718shell3`.
+
+### Efekt/Fix
+Most online gdy bridge dziala; offline widoczny (pasek + pill); F1/F5; czytelniejsze badge i ikony.
+
+### Test/Ewaluacja
+- `GET http://127.0.0.1:8766/health` = ok; machine-config `X:\\Marketing`
+- Pass: Pliki online po starcie mostu; offline pill + `#damOfflineBar` 5px
+- Pass: F1 modal pomocy; badge computed `#B45309` / `#0E7490`
+- Pass: header icons = Unicons line (`dam-header-icon`)
+
+---
+
+## 2026-07-18 - Switch "Tylko najnowsze" + typografia toolbar/kart
+
+### Komenda/Akcja
+Badge rewizji -> switch; ujednolicenie fontow kontroli; wycentrowanie kart wiz.
+
+### Log/Status
+1. HTML: `#vizLatestOnly` + klasy `dam-control` / `dam-control--select`.
+2. `dam-viz.js`: persist + expand starszych rewizji z products gdy OFF.
+3. Tokeny `--dam-fs-*` / `--dam-control-*`; CSS switch + center body kart.
+4. Cache `?v=20260718vizsw1`.
+
+### Test/Ewaluacja
+- ON: 278 wariantow; OFF: 285; lang/brand/switch fs=12px; title 14px center.
+
+---
+
+## 2026-07-18 - Autor inyfinn.art + CTA Przejdz + ui-taste intensive
+
+### Komenda/Akcja
+Usunac ETA Innovations z footera; CTA krotkie; skill ui-taste 10 rund przy mocnym polishu.
+
+### Log/Status
+1. `dam-shell.js` + i18n PL/EN + HTML footery: inyfinn.art (link).
+2. `dam-viz.js`: przycisk "Przejdz".
+3. settings/help + viz.subtitle uproszczony.
+4. `ui-taste/SKILL.md` ÿ0.E: Intensive mode = 10 passes + self-critique.
+5. Cache `?v=20260718inyf1`.
+
+### Test/Ewaluacja
+- Screenshot: footer `inyfinn.art ÿ 2026`, karty z CTA "Przejdz".
+
+---
+
+## 2026-07-18 - NOID fix + kalkulator picker (intensive QA)
+
+### Komenda/Akcja
+Usunac NOID z UI; pokazac prawdziwy indeks (np. 6300760); przebudowac wybor projektu w kalkulatorze kosztow.
+
+### Log/Status
+1. Root cause: `parse_index` wymagalo `NNNNNNN.RR`; foldery maja same cyfry -> fallback `noid`.
+2. `build-file-index.py`: INDEX_PLAIN_RE + zakaz 6300XXX; thumb stem `pending` zamiast `noid`.
+3. `repair-missing-indexes.py`: naprawiono 18 rewizji / 11 viz (limonka = 6300760).
+4. `dam-viz.js`: `resolveIndexBase` / badge indeksu / nigdy nie pokazuj noid.
+5. `dam-cost.js` + CSS: picker (bucket + search + select + wybrany projekt), RWD 375/768/1280.
+6. Cache `?v=20260718noid1`. memory.md ?57.
+
+### Test/Ewaluacja
+- Intensive QA: DAKTYL LIMONKA badge `6300760`, body `noid` count = 0.
+- Costs: brak chmury tagow; Marketing bucket = 3 projekty; mobile stack OK.
+
+### Zrodla
+- DamLabels.extractIndexFromString
+- build-file-index.py parse_index
+
+---
+
+## 2026-07-18 - Typ vs Smak + mobile menu (ui-taste 5 passes)
+
+### Komenda/Akcja
+Poprawic taksonomie tagow (Typ != Smak) i ucinanie menu mobile u gory.
+
+### Log/Status
+1. Design read: Geex DAM filter redesign-preserve; dials 5/3/5.
+2. Indexer: `muffin` -> Smak; Typ = baton / mini baton / mini batoniki / BAT / sleeve / karton 6x / kulki / sypkie / niemiesne?
+3. `repair-tag-taxonomy.py` + sync `enrich-search-tags.py`.
+4. `dam-tag-bar.js`: etykiety + auto-mount cold-load; explorer renderTagChips przed ciezkim load.
+5. Mobile drawer: main.js bez width:toggle; CSS left:0 / transform:none / pad-top 44px + safe-area.
+6. Cache `?v=20260718typ4`.
+
+### Efekt/Fix
+- Typ pokazuje mini baton, BAT, sleeve, karton 6x; muffin w Smak.
+- Produkt 6300754 (KULKI MALINA): typ kulki, smak malina.
+- Sidebar mobile: logoTop?49, clipped=false.
+
+### Test/Ewaluacja (ui-taste 5 passes)
+- Pass 1 (mobile~618): hierarchia Typ/Smak OK; nosniki widoczne.
+- Pass 2 (sidebar open): logo + X widoczne, transform none.
+- Pass 3: smak rozwiniety - muffin w Smak; typ bez muffina.
+- Pass 4 (768): drawer open, logoTop 49, nie uciete.
+- Pass 5 (desktop): pelna taksonomia + search 6300754.
+
+### Zrodla
+- User brief (Typ = nosnik/format; Smak osobno)
+- apps/web/scripts/build-file-index.py, repair-tag-taxonomy.py
+- apps/web/assets/js/dam-tag-bar.js, dam-explorer.js, main.js
+- apps/web/assets/css/dam-brand.css
+
+---
+
+## 2026-07-18 - Przeniesienie SQLite z Marketing do repo
+
+### Komenda/Akcja
+User: zakaz zapisu `X:\Marketing\.dam-eta`; tylko repo; baza ma dzialac; status DB/indeks/dysk.
+
+### Log/Status
+1. Znaleziono `X:\Marketing\.dam-eta\dam-shared.sqlite` (ADR-007 stary kanon).
+2. `dam_db.py`: kanon = `apps/desktop/data/dam-local.sqlite`; zero zapisu na Marketing.
+3. Migracja danych do repo; usunieto `X:\Marketing\.dam-eta` (2x - stary most odtworzyl raz).
+4. Restart bridge 8766; ADR-007 + memory ?41/41b.
+
+### Efekt/Fix
+- `/db/status` -> repo `dam-local.sqlite`, location=repo, `.dam-eta` nie istnieje.
+- Auth: 1 user (admin Kubara). Indeks JSON w repo: 187 produktow. Marketing online (probe POLSKA).
+
+### Test/Ewaluacja
+- health ok; db/status path w repo; files/status online=true; Test-Path X:\Marketing\.dam-eta = False.
+
+---
+
+## 2026-07-18 - Modal wiz: chip 1x, FRONT-S, zoom, +50%
+
+### Komenda/Akcja
+User: zawsze chip wariantu (nawet 1 indeks); ujednolicic modal; miniatura FRONT-S nie SKLEP2-XL (MALINA); admin wybiera miniature; modal +50%; zoom +/- / lupa.
+
+### Log/Status
+1. `dam-viz.js`: zawsze render `.dam-viz-modal__variant`; zoom toolbar; admin Miniatura + overrides.
+2. `dam-brand.css`: modal max-width 1020px, hero ~420-520px, style zoom.
+3. `pick_thumb_file`: tier 0 = czysty FRONT-S (bez SKLEP/XL); prefer DK-*.
+4. `repair-viz-thumbs.py`: forced_unlink=17 SKLEP/XL; MALINA -> `DK-?-FRONT-S.png`.
+5. Bridge `POST /thumb-override` -> `apps/web/data/thumb-overrides.json`.
+6. `#vizAdminToggle` na visualizations.html; cache `?v=20260718vizmod2`.
+
+### Efekt/Fix
+- Chip widoczny takze przy 1 indeksie (np. CZARNA PORZECZKA / MALINA).
+- MALINA: FRONT-S.png zamiast FRONT-S-SKLEP2-XL.
+- Modal wiekszy + zoom; admin moze nadpisac miniature.
+
+### Test/Ewaluacja
+- pick_thumb_file(malina) = DK-?-FRONT-S.png; repair OK viz=279.
+
+---
+
+## 2026-07-18 - Commit + docs + machine_id + release
+
+### Komenda/Akcja
+User: pelny commit, README, dokumentacja, memory, push, release ZIP; weryfikacja ID maszyny/sesji przed startem.
+
+### Log/Status
+1. machine_identity.py + verify w launch.py
+2. Auth machine_id/session_id; bridge /auth/identity
+3. dam-api.js clear przy mismatch
+4. README, DEPLOYMENT, ADR-008, memory §59
+5. build-release-zip.ps1 + GitHub release
+
+### Efekt/Fix
+Sesja nie przenosi sie miedzy PC; artefakt ZIP + tag release.
+
+### Zrodla
+ADR-007/008; Windows MachineGuid

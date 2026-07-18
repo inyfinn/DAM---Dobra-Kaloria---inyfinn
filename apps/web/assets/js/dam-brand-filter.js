@@ -1,13 +1,20 @@
 /**
- * DAM ETA - Brand Filter Dropdown (shared component)
+ * DAM ETA - Brand Filter (shared)
  * Wspolny komponent dla explorer.html i visualizations.html.
  * Persist: localStorage.dam_brands { DK: true, GC: true }
+ *
+ * Zrodlo prawdy: localStorage. Kazda zmiana (dropdown LUB chipy DK/GC)
+ * aktualizuje WSZYSTKIE widoki (label "Marka: ..." + chipy is-active).
  * API: window.DamBrandFilter
  */
 (function () {
   "use strict";
 
   var STORAGE_KEY = "dam_brands";
+  var listeners = [];
+  var dropdownInstances = [];
+  var chipInstances = [];
+  var syncing = false;
 
   function loadBrands() {
     try {
@@ -37,6 +44,68 @@
     return "Marka: brak";
   }
 
+  function cloneBrands(b) {
+    return { DK: !!b.DK, GC: !!b.GC };
+  }
+
+  function notifyListeners(brands) {
+    listeners.forEach(function (fn) {
+      try { fn(cloneBrands(brands)); } catch (e) { /* ignore */ }
+    });
+  }
+
+  /** Odswiez label dropdownow + chipy - bez ponownego notify */
+  function syncAllUi(brands) {
+    pruneChipInstances();
+    dropdownInstances.forEach(function (inst) {
+      if (!inst.trigger || !document.documentElement.contains(inst.trigger)) return;
+      inst.brands.DK = !!brands.DK;
+      inst.brands.GC = !!brands.GC;
+      inst.trigger.textContent = brandLabel(inst.brands);
+      if (inst.panelEl && inst.panelEl.style.display === "block" && typeof inst.renderPanel === "function") {
+        inst.renderPanel();
+      }
+    });
+    chipInstances.forEach(function (inst) {
+      inst.brands.DK = !!brands.DK;
+      inst.brands.GC = !!brands.GC;
+      if (typeof inst.paint === "function") inst.paint(true);
+    });
+  }
+
+  /** Zapisz + sync UI + listeners (jedno miejsce zmiany stanu) */
+  function commitBrands(brands, opts) {
+    opts = opts || {};
+    brands = cloneBrands(brands);
+    // Pojedyncze toggle: nie pozwol odznaczyc obu (zostaw klikniety).
+    // Jawne "Odznacz wszystko" moze wyczyścic obie (opts.allowEmpty).
+    if (!brands.DK && !brands.GC && !opts.allowEmpty) {
+      if (opts.preferKey) brands[opts.preferKey] = true;
+      else brands.DK = true;
+    }
+    saveBrands(brands);
+    syncing = true;
+    try {
+      syncAllUi(brands);
+    } finally {
+      syncing = false;
+    }
+    if (!opts.silent) notifyListeners(brands);
+    return brands;
+  }
+
+  function addListenerOnce(fn) {
+    if (!fn) return;
+    if (listeners.indexOf(fn) === -1) listeners.push(fn);
+  }
+
+  /** Usun chipy z DOM-u ktory juz nie istnieje (explorer robi remount) */
+  function pruneChipInstances() {
+    chipInstances = chipInstances.filter(function (inst) {
+      return inst.el && document.documentElement.contains(inst.el);
+    });
+  }
+
   /**
    * Inicjalizuje dropdown filtra marki w podanym elemencie docelowym.
    * @param {string|Element} target - selektor CSS lub element DOM przycisku
@@ -46,16 +115,33 @@
     var triggerEl = typeof target === "string"
       ? document.getElementById(target) || document.querySelector(target)
       : target;
-    if (!triggerEl) return;
+    if (!triggerEl) return null;
+
+    // Idempotent: nie podpinaj drugiego raza tego samego triggera
+    for (var i = 0; i < dropdownInstances.length; i++) {
+      if (dropdownInstances[i].trigger === triggerEl) {
+        addListenerOnce(onChange);
+        dropdownInstances[i].brands = loadBrands();
+        triggerEl.textContent = brandLabel(dropdownInstances[i].brands);
+        return {
+          getBrands: function () { return cloneBrands(dropdownInstances[i].brands); },
+          setBrands: function (b) { commitBrands(b); }
+        };
+      }
+    }
 
     var brands = loadBrands();
-
-    // Sync initial label
     triggerEl.textContent = brandLabel(brands);
     triggerEl.setAttribute("aria-haspopup", "true");
     triggerEl.setAttribute("aria-expanded", "false");
 
     var panelEl = null;
+    var inst = {
+      trigger: triggerEl,
+      brands: brands,
+      panelEl: null,
+      renderPanel: null
+    };
 
     function getOrCreatePanel() {
       if (panelEl) return panelEl;
@@ -64,6 +150,7 @@
       panelEl.setAttribute("role", "dialog");
       panelEl.setAttribute("aria-label", "Filtr marki");
       document.body.appendChild(panelEl);
+      inst.panelEl = panelEl;
       return panelEl;
     }
 
@@ -79,10 +166,10 @@
         '<div class="dam-filter-dropdown__header">Filtr marki</div>' +
         '<div class="dam-filter-dropdown__checks">' +
           '<label class="dam-filter-cb-label">' +
-            '<input type="checkbox" class="dam-filter-cb" data-brand="DK" ' + (brands.DK ? "checked" : "") + '> DK (Polska)' +
+            '<input type="checkbox" class="dam-filter-cb" data-brand="DK" ' + (inst.brands.DK ? "checked" : "") + '> DK (Polska)' +
           '</label>' +
           '<label class="dam-filter-cb-label">' +
-            '<input type="checkbox" class="dam-filter-cb" data-brand="GC" ' + (brands.GC ? "checked" : "") + '> GC (Eksport)' +
+            '<input type="checkbox" class="dam-filter-cb" data-brand="GC" ' + (inst.brands.GC ? "checked" : "") + '> GC (Eksport)' +
           '</label>' +
         '</div>' +
         '<div class="dam-filter-dropdown__btns">' +
@@ -92,62 +179,56 @@
           '<button type="button" class="dam-filter-btn" data-brandact="invert">Odwroc</button>' +
         '</div>';
 
-      // Bind checkboxes
       panel.querySelectorAll(".dam-filter-cb").forEach(function (cb) {
         cb.addEventListener("change", function () {
-          brands[this.getAttribute("data-brand")] = this.checked;
-          saveBrands(brands);
-          triggerEl.textContent = brandLabel(brands);
-          renderPanel(); // re-render to sync checkboxes
-          notifyAll(brands);
+          var next = cloneBrands(inst.brands);
+          next[this.getAttribute("data-brand")] = this.checked;
+          commitBrands(next, { preferKey: this.getAttribute("data-brand") });
         });
       });
 
-      // Bind action buttons
       panel.querySelectorAll(".dam-filter-btn").forEach(function (btn) {
         btn.addEventListener("click", function () {
           var act = this.getAttribute("data-brandact");
-          if (act === "all" || act === "clear") {
-            brands.DK = act === "all";
-            brands.GC = act === "all";
-          } else if (act === "none") {
-            brands.DK = false;
-            brands.GC = false;
+          var next = cloneBrands(inst.brands);
+          if (act === "all") {
+            next.DK = true;
+            next.GC = true;
+            commitBrands(next);
+          } else if (act === "clear" || act === "none") {
+            next.DK = false;
+            next.GC = false;
+            commitBrands(next, { allowEmpty: true });
           } else if (act === "invert") {
-            brands.DK = !brands.DK;
-            brands.GC = !brands.GC;
+            next.DK = !next.DK;
+            next.GC = !next.GC;
+            commitBrands(next, { preferKey: "DK", allowEmpty: true });
+          } else {
+            commitBrands(next, { preferKey: "DK" });
           }
-          saveBrands(brands);
-          triggerEl.textContent = brandLabel(brands);
-          renderPanel();
-          notifyAll(brands);
         });
       });
     }
 
+    inst.renderPanel = renderPanel;
+
     function openPanel() {
-      var panel = getOrCreatePanel();
       renderPanel();
-      panel.style.display = "block";
+      getOrCreatePanel().style.display = "block";
       triggerEl.setAttribute("aria-expanded", "true");
       triggerEl.classList.add("is-active");
     }
 
     function closePanel() {
-      if (panelEl) {
-        panelEl.style.display = "none";
-      }
+      if (panelEl) panelEl.style.display = "none";
       triggerEl.setAttribute("aria-expanded", "false");
       triggerEl.classList.remove("is-active");
     }
 
     function togglePanel() {
       var panel = getOrCreatePanel();
-      if (panel.style.display === "block") {
-        closePanel();
-      } else {
-        openPanel();
-      }
+      if (panel.style.display === "block") closePanel();
+      else openPanel();
     }
 
     triggerEl.addEventListener("click", function (e) {
@@ -155,83 +236,73 @@
       togglePanel();
     });
 
-    // Klik poza zamyka
     document.addEventListener("click", function (e) {
       if (panelEl && panelEl.style.display === "block") {
-        if (!panelEl.contains(e.target) && e.target !== triggerEl) {
-          closePanel();
-        }
+        if (!panelEl.contains(e.target) && e.target !== triggerEl) closePanel();
       }
     });
 
-    // ESC zamyka
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && panelEl && panelEl.style.display === "block") {
-        closePanel();
-      }
+      if (e.key === "Escape" && panelEl && panelEl.style.display === "block") closePanel();
     });
 
-    if (onChange) {
-      listeners.push(onChange);
-    }
-
-    instances.push({ trigger: triggerEl, getBrands: function () { return brands; } });
+    addListenerOnce(onChange);
+    dropdownInstances.push(inst);
 
     return {
-      getBrands: function () { return brands; },
-      setBrands: function (b) {
-        brands.DK = !!b.DK;
-        brands.GC = !!b.GC;
-        saveBrands(brands);
-        triggerEl.textContent = brandLabel(brands);
-        if (panelEl) renderPanel();
-        notifyAll(brands);
-      }
+      getBrands: function () { return cloneBrands(inst.brands); },
+      setBrands: function (b) { commitBrands(b); }
     };
   }
 
-  var listeners = [];
-  var instances = [];
-
-  function notifyAll(brands) {
-    listeners.forEach(function (fn) {
-      try { fn(brands); } catch (e) { /* ignore */ }
-    });
-  }
-
-  /** Sync brands from localStorage (e.g. when called from another page) */
-  function syncFromStorage() {
-    return loadBrands();
-  }
-
-  /** Inline chips DK/GC (product toolbar slot 1) */
+  /** Inline chips DK/GC (product toolbar) - zawsze zsynchronizowane z dropdownem */
   function renderChips(container, onChange) {
     var el = typeof container === "string" ? document.querySelector(container) : container;
-    if (!el) return;
-    var brands = loadBrands();
+    if (!el) return null;
+    pruneChipInstances();
 
-    function paint() {
+    var existing = null;
+    for (var i = 0; i < chipInstances.length; i++) {
+      if (chipInstances[i].el === el) {
+        existing = chipInstances[i];
+        break;
+      }
+    }
+
+    if (existing) {
+      addListenerOnce(onChange);
+      existing.brands = loadBrands();
+      existing.paint(true);
+      return { getBrands: function () { return cloneBrands(existing.brands); } };
+    }
+
+    var brands = loadBrands();
+    var inst = { el: el, brands: brands, paint: null };
+
+    function paint(fromSync) {
+      if (!fromSync) inst.brands = loadBrands();
       el.innerHTML =
         '<div class="dam-brand-chips" role="group" aria-label="Filtr marki">' +
-          '<button type="button" class="dam-brand-chip-btn' + (brands.DK ? " is-active" : "") + '" data-brand="DK" aria-pressed="' + !!brands.DK + '">DK</button>' +
-          '<button type="button" class="dam-brand-chip-btn' + (brands.GC ? " is-active" : "") + '" data-brand="GC" aria-pressed="' + !!brands.GC + '">GC</button>' +
+          '<button type="button" class="dam-brand-chip-btn' + (inst.brands.DK ? " is-active" : "") + '" data-brand="DK" aria-pressed="' + !!inst.brands.DK + '">DK</button>' +
+          '<button type="button" class="dam-brand-chip-btn' + (inst.brands.GC ? " is-active" : "") + '" data-brand="GC" aria-pressed="' + !!inst.brands.GC + '">GC</button>' +
         "</div>";
       el.querySelectorAll("[data-brand]").forEach(function (btn) {
         btn.addEventListener("click", function () {
+          if (syncing) return;
           var key = this.getAttribute("data-brand");
-          brands[key] = !brands[key];
-          if (!brands.DK && !brands.GC) brands[key] = true;
-          saveBrands(brands);
-          paint();
-          notifyAll(brands);
-          if (onChange) onChange(brands);
+          var next = cloneBrands(inst.brands);
+          next[key] = !next[key];
+          commitBrands(next, { preferKey: key });
         });
       });
     }
 
-    if (onChange) listeners.push(onChange);
-    paint();
-    return { getBrands: function () { return brands; } };
+    inst.paint = paint;
+    addListenerOnce(onChange);
+    chipInstances.push(inst);
+    paint(true);
+
+    return { getBrands: function () { return cloneBrands(inst.brands); } };
   }
 
   window.DamBrandFilter = {
@@ -240,7 +311,8 @@
     saveBrands: saveBrands,
     brandLabel: brandLabel,
     renderChips: renderChips,
-    syncFromStorage: syncFromStorage,
-    addListener: function (fn) { listeners.push(fn); }
+    syncFromStorage: loadBrands,
+    commitBrands: commitBrands,
+    addListener: addListenerOnce
   };
 })();

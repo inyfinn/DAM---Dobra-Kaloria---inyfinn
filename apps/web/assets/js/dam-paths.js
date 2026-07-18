@@ -1,23 +1,33 @@
 /**
  * DAM ETA - sciezki lokalne, reveal w Eksploratorze, audit log.
- * Indeks trzyma kanoniczne D:/Marketing/...
- * Kazdy user ustawia swoja baze (folder z -- ARCHIWUM --, - EKSPORT, - POLSKA).
  *
- * localStorage:
- *   dam_base_path      np. "M:\" albo "D:\Marketing"
- *   dam_index_base     np. "D:/Marketing" (opcjonalnie; auto z indeksu)
- *   dam_audit_log      lokalny cache ostatnich akcji
+ * Struktura katalogow ZAWSZE ta sama (-- ARCHIWUM --, - EKSPORT, - POLSKA).
+ * Prefix Marketing = TYLKO to, co UZYTKOWNIK ustawi (po pierwszym uruchomieniu).
+ * Brak stalej litery dysku w aplikacji. Wykrywanie to podpowiedz, nie nadpisanie.
+ *
+ * localStorage (per profil / konto):
+ *   dam_base_path      baza ustawiona przez usera (swieta)
+ *   dam_index_base     prefix z file-index (tylko do remap; nie jest "zrodlem prawdy")
+ *   dam_audit_log
+ *
+ * Desktop: machine-config.json trzyma preferencje per konto Windows (USERNAME).
  */
 (function () {
   "use strict";
 
-  var BRIDGE = "http://127.0.0.1:8766";
+  function bridgeBase() {
+    if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
+      return window.DamRuntime.bridgeUrl();
+    }
+    return "http://127.0.0.1:8766";
+  }
+
   var BASE_KEY = "dam_base_path";
   var INDEX_BASE_KEY = "dam_index_base";
   var AUDIT_KEY = "dam_audit_log";
-  var DEFAULT_INDEX_BASE = "D:/Marketing";
   var REQUIRED = ["-- ARCHIWUM --", "- EKSPORT", "- POLSKA"];
   var bridgeOk = null;
+  var _ensurePromise = null;
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -42,10 +52,15 @@
   function getIndexBase() {
     var stored = localStorage.getItem(INDEX_BASE_KEY);
     if (stored) return trimSlash(stored);
-    return DEFAULT_INDEX_BASE;
+    // Brak stalej litery dysku - remap i tak zdejmie [A-Z]:/Marketing
+    return "";
   }
 
   function setIndexBase(p) {
+    if (!p) {
+      localStorage.removeItem(INDEX_BASE_KEY);
+      return;
+    }
     localStorage.setItem(INDEX_BASE_KEY, trimSlash(p));
   }
 
@@ -54,11 +69,12 @@
     var paths = roots.map(function (r) { return trimSlash(r.path || r); });
     if (!paths.length) return getIndexBase();
     var parts = paths[0].split("/");
-    // D:/Marketing/- POLSKA/... -> D:/Marketing
+    // Tylko do remap (prefix w indeksie). NIE jest sciezka usera.
     if (parts.length >= 2) {
-      var candidate = parts.slice(0, 2).join("/"); // D: + Marketing
-      // If all roots share D:/Marketing
-      var shared = paths.every(function (p) { return p.indexOf(candidate) === 0; });
+      var candidate = parts.slice(0, 2).join("/");
+      var shared = paths.every(function (p) {
+        return p.toLowerCase().indexOf(candidate.toLowerCase()) === 0;
+      });
       if (shared) {
         setIndexBase(candidate);
         return candidate;
@@ -72,7 +88,7 @@
   }
 
   function setBasePath(p) {
-    // Zachowaj root dysku: "M:\" / "M:" -> "M:\"; "D:\Marketing" bez trailing slash
+    // Zachowaj root dysku: "M:\" / "M:" -> "M:\"; inaczej bez trailing slash
     var win = String(p || "").trim().replace(/\//g, "\\");
     if (/^[A-Za-z]:\\?$/.test(win)) {
       win = win.charAt(0).toUpperCase() + ":\\";
@@ -80,6 +96,16 @@
       win = win.replace(/\\+$/, "");
     }
     localStorage.setItem(BASE_KEY, win);
+    // Backup preferencji tego konta Windows (nie nadpisuje innych userow)
+    fetch(bridgeBase() + "/machine-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ base_path: win })
+    }).catch(function () { /* opcjonalne */ });
+    // Po ustawieniu ROOT - sprawdz czy fetch plikow dziala
+    if (window.DamRootStatus && typeof window.DamRootStatus.check === "function") {
+      setTimeout(function () { window.DamRootStatus.check(); }, 200);
+    }
   }
 
   function hasBasePath() {
@@ -91,19 +117,32 @@
   }
 
   /**
-   * Mapuj sciezke z indeksu (D:/Marketing/...) na lokalna baze uzytkownika.
+   * Wytnij prefix Marketing z dowolnej litery dysku (X:/ D:/ ...) albo ze starego dam_index_base.
+   * Zwraca sciezke wzgledna: "- POLSKA/..." albo "".
+   */
+  function relativeFromMarketing(indexPath) {
+    var src = trimSlash(indexPath);
+    if (!src) return "";
+    var m = src.match(/^[A-Za-z]:\/Marketing\/?(.*)$/i);
+    if (m) return m[1] || "";
+    var prefix = trimSlash(getIndexBase());
+    if (prefix && src.toLowerCase().indexOf(prefix.toLowerCase()) === 0) {
+      return src.slice(prefix.length).replace(/^\//, "");
+    }
+    if (/^(- POLSKA|- EKSPORT|-- ARCHIWUM --)\b/i.test(src)) return src;
+    return src;
+  }
+
+  /**
+   * Mapuj sciezke z indeksu na lokalna baze TEJ MASZYNY.
+   * Indeks moze miec X:/Marketing/... a Ty na innym kompie D:\Marketing -> remap OK.
+   * Stary localStorage dam_index_base=D: przy indeksie X: NIE psuje juz sciezki.
    */
   function toLocal(indexPath) {
     if (!indexPath) return "";
     var base = getBasePath();
+    var rel = relativeFromMarketing(indexPath);
     if (!base) return toWin(indexPath);
-    var idxBase = getIndexBase();
-    var src = trimSlash(indexPath);
-    var prefix = trimSlash(idxBase);
-    var rel = src;
-    if (src.toLowerCase().indexOf(prefix.toLowerCase()) === 0) {
-      rel = src.slice(prefix.length).replace(/^\//, "");
-    }
     var joined = trimSlash(normSlashes(base)) + (rel ? "/" + rel : "");
     return toWin(joined);
   }
@@ -161,7 +200,7 @@
       meta: opts.meta || {}
     };
     pushLocalAudit(entry);
-    fetch(BRIDGE + "/audit", {
+    fetch(bridgeBase() + "/audit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(entry)
@@ -170,7 +209,7 @@
   }
 
   function checkBridge() {
-    return fetch(BRIDGE + "/health")
+    return fetch(bridgeBase() + "/health")
       .then(function (r) { return r.json(); })
       .then(function (d) {
         bridgeOk = !!(d && d.ok);
@@ -183,11 +222,80 @@
   }
 
   function validateBaseRemote(path) {
-    return fetch(BRIDGE + "/validate-base", {
+    return fetch(bridgeBase() + "/validate-base", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ path: path })
     }).then(function (r) { return r.json(); });
+  }
+
+  function detectMarketingBasesRemote() {
+    return fetch(bridgeBase() + "/detect-marketing-bases")
+      .then(function (r) { return r.json(); });
+  }
+
+  function readMachineConfigRemote() {
+    return fetch(bridgeBase() + "/machine-config")
+      .then(function (r) { return r.json(); });
+  }
+
+  /**
+   * Preferencja UZYTKOWNIKA jest swieta.
+   * - Jesli dam_base_path jest ustawione: NIGDY nie nadpisuj (ani X:, ani D:, ani detect).
+   * - Pierwszy start (pusto): przywroc tylko wlasny backup tego konta Windows (machine-config),
+   *   bez auto-wyboru "recommended". Podpowiedz zostaje w modalu / przycisku Wykryj.
+   */
+  function ensureUserBase() {
+    if (_ensurePromise) return _ensurePromise;
+    _ensurePromise = Promise.all([
+      detectMarketingBasesRemote().catch(function () { return null; }),
+      readMachineConfigRemote().catch(function () { return null; }),
+      fetch("data/file-index.json?v=" + Date.now())
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; })
+    ]).then(function (pack) {
+      var detect = pack[0];
+      var machine = pack[1];
+      var index = pack[2];
+      if (index && index.roots) detectIndexBaseFromRoots(index.roots);
+
+      var current = getBasePath();
+      if (current) {
+        return {
+          base: current,
+          source: "user",
+          detect: detect,
+          suggestion: (detect && detect.recommended) || ""
+        };
+      }
+
+      // Pierwszy start: przywroc tylko to, co TEN user wczesniej zapisal
+      var saved = machine && machine.base_path ? String(machine.base_path).trim() : "";
+      if (saved) {
+        localStorage.setItem(BASE_KEY, saved);
+        return {
+          base: saved,
+          source: "user-backup",
+          detect: detect,
+          suggestion: (detect && detect.recommended) || ""
+        };
+      }
+
+      return {
+        base: "",
+        source: "unset",
+        detect: detect,
+        suggestion: (detect && detect.recommended) || ""
+      };
+    }).finally(function () {
+      setTimeout(function () { _ensurePromise = null; }, 2000);
+    });
+    return _ensurePromise;
+  }
+
+  /** @deprecated uzyj ensureUserBase - alias kompatybilnosci */
+  function ensureMachineBase() {
+    return ensureUserBase();
   }
 
   function copyPath(indexPath) {
@@ -228,10 +336,10 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(local);
         }
-        showToast("Bridge offline - skopiowano sciezke. Wlacz local_bridge.py (port 8766).");
+        showToast("Funkcja niedostepna - uruchom aplikacje DAM ETA (skrot na pulpicie).");
         return { ok: false, error: "bridge_offline", path: local, folder: hint };
       }
-      return fetch(BRIDGE + "/reveal", {
+      return fetch(bridgeBase() + "/reveal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: local })
@@ -269,10 +377,10 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(folder);
         }
-        showToast("Bridge offline - skopiowano sciezke folderu. Wlacz local_bridge.py (port 8766).");
+        showToast("Funkcja niedostepna - uruchom aplikacje DAM ETA (skrot na pulpicie).");
         return { ok: false, error: "bridge_offline", path: folder };
       }
-      return fetch(BRIDGE + "/reveal", {
+      return fetch(bridgeBase() + "/reveal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: folder })
@@ -310,11 +418,11 @@
 
     return checkBridge().then(function (ok) {
       if (!ok) {
-        showToast("Bridge offline - wlacz local_bridge.py (port 8766), zeby otworzyc okno Synology.");
+        showToast("Funkcja niedostepna - uruchom aplikacje DAM ETA (skrot na pulpicie).");
         return { ok: false, error: "bridge_offline", path: local };
       }
       showToast("Otwieram okno Synology Drive...");
-      return fetch(BRIDGE + "/synology-share", {
+      return fetch(bridgeBase() + "/synology-share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: local })
@@ -385,17 +493,18 @@
     modal.className = "dam-basepath-overlay";
     modal.innerHTML =
       '<div class="dam-basepath-box" role="dialog" aria-modal="true" aria-labelledby="damBasePathTitle">' +
-        '<h3 id="damBasePathTitle">Sciezka bazowa dysku Marketing</h3>' +
-        '<p class="dam-basepath-lead">Podaj folder, w ktorym widzisz trzy katalogi: ' +
+        '<h3 id="damBasePathTitle">Twoja sciezka Marketing</h3>' +
+        '<p class="dam-basepath-lead">Zalezy od Ciebie i konta, na ktorym jestes zalogowany. Podaj folder, w ktorym widzisz: ' +
           '<strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>' +
-        '<p class="dam-basepath-examples">Przyklady: <code>D:\\Marketing</code> &nbsp;|&nbsp; <code>M:\\</code> &nbsp;|&nbsp; <code>C:\\Marketing</code></p>' +
-        '<label class="dam-basepath-label" for="damBasePathInput">Twoja sciezka bazowa</label>' +
-        '<input type="text" id="damBasePathInput" class="dam-basepath-input" placeholder="D:\\Marketing" ' +
-          'value="' + esc(getBasePath() || "D:\\Marketing") + '" />' +
+        '<p class="dam-basepath-examples">Przyklady (tylko podpowiedz): <code>X:\\Marketing</code> | <code>D:\\Marketing</code> | <code>M:\\</code></p>' +
+        '<label class="dam-basepath-label" for="damBasePathInput">Sciezka bazowa (Twoje ustawienie)</label>' +
+        '<input type="text" id="damBasePathInput" class="dam-basepath-input" placeholder="np. X:\\Marketing" ' +
+          'value="' + esc(getBasePath() || "") + '" />' +
         '<p id="damBasePathMsg" class="dam-basepath-msg" hidden></p>' +
-        '<div class="dam-basepath-actions">' +
+        '<div class="dam-basepath-actions dam-action-stack">' +
           '<button type="button" class="geex-btn geex-btn--primary" id="damBasePathSave">Zapisz i kontynuuj</button>' +
-          '<button type="button" class="geex-btn geex-btn--secondary" id="damBasePathSkip">Pozniej (Ustawienia)</button>' +
+          '<button type="button" class="geex-btn geex-btn--primary-transparent" id="damBasePathSuggest">Podpowiedz z dysku</button>' +
+          '<button type="button" class="geex-btn" id="damBasePathSkip">Pozniej (Ustawienia)</button>' +
         "</div>" +
       "</div>";
     document.body.appendChild(modal);
@@ -411,6 +520,18 @@
     document.getElementById("damBasePathSkip").addEventListener("click", function () {
       modal.remove();
     });
+    document.getElementById("damBasePathSuggest").addEventListener("click", function () {
+      detectMarketingBasesRemote().then(function (res) {
+        if (res && res.recommended) {
+          document.getElementById("damBasePathInput").value = res.recommended;
+          setMsg("Podpowiedz: " + res.recommended + " (zapisz, jesli OK).", true);
+        } else {
+          setMsg("Brak podpowiedzi - wpisz sciezke recznie.", false);
+        }
+      }).catch(function () {
+        setMsg("Bridge offline - wpisz sciezke recznie.", false);
+      });
+    });
     document.getElementById("damBasePathSave").addEventListener("click", function () {
       var raw = (document.getElementById("damBasePathInput").value || "").trim();
       if (!raw) {
@@ -420,32 +541,43 @@
       setBasePath(raw);
       validateBaseRemote(raw).then(function (res) {
         if (res && res.ok) {
-          setMsg("OK - znaleziono wymagane foldery.", true);
-          logAction("set_base_path", { local_path: raw, detail: "Ustawiono sciezke bazowa" });
+          setMsg("OK - zapisano Twoje ustawienie.", true);
+          logAction("set_base_path", { local_path: raw, detail: "Uzytkownik ustawil sciezke bazowa" });
           setTimeout(function () { modal.remove(); }, 500);
         } else if (res && res.missing && res.missing.length) {
-          setMsg("Zapisano, ale brakuje: " + res.missing.join(", ") + ". Sprawdz sciezke.", false);
+          setMsg("Zapisano Twoj wybor; brakuje: " + res.missing.join(", ") + ".", false);
           setTimeout(function () { modal.remove(); }, 1800);
         } else {
-          // Bridge offline - still save; user responsibility
-          setMsg("Zapisano lokalnie (walidacja bridge offline).", true);
+          setMsg("Zapisano Twoj wybor (walidacja bridge offline).", true);
           setTimeout(function () { modal.remove(); }, 700);
         }
       }).catch(function () {
-        setMsg("Zapisano lokalnie.", true);
+        setMsg("Zapisano Twoj wybor.", true);
         setTimeout(function () { modal.remove(); }, 600);
       });
     });
+
+    // Podpowiedz w polu TYLKO gdy pusto - nie zapisuje sama
+    detectMarketingBasesRemote().then(function (res) {
+      var input = document.getElementById("damBasePathInput");
+      if (input && !input.value && res && res.recommended) {
+        input.placeholder = "podpowiedz: " + res.recommended;
+      }
+    }).catch(function () { /* ignore */ });
   }
 
   function maybePromptSetup() {
-    if (hasBasePath()) return;
-    // Delay so shell renders first
-    setTimeout(openSetupModal, 600);
+    ensureUserBase().then(function (res) {
+      if (res && res.base) return;
+      if (hasBasePath()) return;
+      setTimeout(openSetupModal, 600);
+    }).catch(function () {
+      if (!hasBasePath()) setTimeout(openSetupModal, 600);
+    });
   }
 
   window.DamPaths = {
-    BRIDGE: BRIDGE,
+    bridgeUrl: bridgeBase,
     REQUIRED: REQUIRED,
     getBasePath: getBasePath,
     setBasePath: setBasePath,
@@ -453,6 +585,7 @@
     getIndexBase: getIndexBase,
     setIndexBase: setIndexBase,
     detectIndexBaseFromRoots: detectIndexBaseFromRoots,
+    relativeFromMarketing: relativeFromMarketing,
     toLocal: toLocal,
     parentOf: parentOf,
     copyPath: copyPath,
@@ -465,6 +598,9 @@
     getAuditLog: getAuditLog,
     checkBridge: checkBridge,
     validateBaseRemote: validateBaseRemote,
+    detectMarketingBasesRemote: detectMarketingBasesRemote,
+    ensureUserBase: ensureUserBase,
+    ensureMachineBase: ensureMachineBase,
     openSetupModal: openSetupModal,
     maybePromptSetup: maybePromptSetup,
     showToast: showToast

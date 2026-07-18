@@ -1,5 +1,76 @@
 /* DAM ETA app layer on Geex - layout only; colors from dam-tokens.css */
 
+/* Safety: box-sizing reset (bez Bootstrapa layout sie rozjezdza) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------------ */
+/* Globalna synchronizacja layoutu: sidebar <-> tresc                  */
+/* Jedna zmienna steruje szerokoscia sidebara i wcieciem contentu,     */
+/* wiec nigdy na siebie nie nachodza (desktop >= 1200px).              */
+/* ------------------------------------------------------------------ */
+:root {
+  --dam-sidebar-w: clamp(280px, 19vw, 340px);
+  --dam-edge: 22px;
+  --dam-content-gap: 30px;
+}
+
+@media (min-width: 1200px) {
+  .geex-sidebar {
+    width: var(--dam-sidebar-w);
+    min-width: var(--dam-sidebar-w);
+    max-width: var(--dam-sidebar-w);
+  }
+
+  .geex-main-content {
+    padding-inline-start: calc(var(--dam-sidebar-w) + var(--dam-edge) + var(--dam-content-gap));
+  }
+
+  body.dam-sidebar-collapsed .geex-main-content {
+    padding-inline-start: calc(72px + var(--dam-edge) + var(--dam-content-gap));
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Dashboard: karty podsumowania jako responsywna siatka               */
+/* ------------------------------------------------------------------ */
+.geex-content__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+  gap: 32px;
+  align-items: start;
+}
+
+.geex-content__summary__count {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+}
+
+.geex-content__summary__count__single {
+  display: flex;
+  width: 100%;
+  min-height: 150px;
+  margin: 0;
+}
+
+.geex-content__summary__balance {
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+}
+
+@media (max-width: 1365.98px) {
+  .geex-content__summary {
+    grid-template-columns: 1fr;
+  }
+}
+
 .dam-app .geex-header__wrapper {
   min-height: 64px;
   max-height: 72px;
@@ -55,16 +126,117 @@
 
 .dam-project-card__sub {
   margin: 0;
-  color: var(--sec-color);
+  /* dark-color - max kontrast; NIGDY --secondary-color (#B7DBF9) ani --sec-color */
+  color: var(--dark-color, #17161E);
   font-size: 0.875rem;
+  font-weight: 500;
   line-height: 1.45;
   max-width: 40ch;
+  opacity: 0.78;
 }
 
 .dam-meta {
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
   font-size: 0.8125rem;
-  color: var(--body-color);
+  color: var(--body-color, #464255);
+  opacity: 0.85;
+}
+
+/* Mini-checklista na karcie = ten sam wzorzec co Eksplorator */
+.dam-card-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 12px;
+  flex: 1;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  text-align: left;
+}
+
+.dam-card-checklist__head {
+  font-size: 12px;
+  font-weight: 600;
+  color: #28C76F;
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+
+.dam-card-checklist__head--miss {
+  color: #FF5653;
+}
+
+.dam-card-checklist .dam-check-ok,
+.dam-card-checklist .dam-check-brak {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.25;
+  min-height: 22px;
+  padding: 1px 0;
+}
+
+.dam-card-checklist .dam-check-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15em;
+  height: 1.15em;
+  margin: 0;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+  speak: none;
+}
+
+/* Font ikon musi byc unicons-line (nie Poppins z body) */
+.dam-card-checklist .dam-check-icon::before {
+  font-family: "unicons-line" !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block;
+  width: 1em;
+  height: 1em;
+}
+
+.dam-card-checklist .dam-check-label {
+  display: block;
+  line-height: 1.15em;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+}
+
+.dam-card-checklist .dam-check-ok .dam-check-icon {
+  color: #28C76F;
+}
+
+.dam-card-checklist .dam-check-brak .dam-check-icon {
+  color: #FF5653;
+}
+
+.dam-card-checklist .dam-check-ok .dam-check-label {
+  color: #17161E;
+  font-weight: 500;
+}
+
+.dam-card-checklist .dam-check-brak .dam-check-label {
+  color: #17161E;
+  font-weight: 600;
+}
+
+.dam-card-checklist .dam-check-role-icon {
+  display: none; /* jedna ikona na wiersz - status */
+}
+
+.dam-card-checklist .dam-check-brak .dam-check-role-icon {
+  color: #E23D3A;
 }
 
 .dam-status {
@@ -92,57 +264,215 @@
   color: #9a6a14;
 }
 
-.dam-missing-list {
-  margin: 0;
-  padding-left: 1.1rem;
-  color: var(--body-color);
-  font-size: 0.875rem;
-  flex: 1;
+/* Akcje karty = para Geex (THEME button.html): primary + default gray, bez black outline */
+.dam-project-card__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 4px;
 }
 
-.dam-missing-list--empty {
-  color: var(--success-color);
-}
-
-.dam-project-card .geex-btn--primary,
-.dam-project-card .geex-btn__primary,
-.dam-auth-microsoft.geex-btn--primary,
-a.geex-btn--primary,
-a.geex-btn__primary {
-  align-self: flex-start;
+.dam-project-card__actions .geex-btn {
+  min-width: 0;
+  width: 100%;
   min-height: 44px;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  padding: 0.65rem 1.25rem;
-  border-radius: 8px;
-  border: 0;
+  gap: 8px;
+  padding: 12px 10px;
+  border-radius: 14px;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  box-shadow: none;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+@media (max-width: 479px) {
+  .dam-project-card__actions .geex-btn {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
+.dam-project-card__actions .geex-btn > i {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.dam-project-card__actions .geex-btn--primary {
   background: var(--primary-color) !important;
   color: var(--white-color) !important;
-  font-weight: 600;
-  text-decoration: none;
-  box-shadow: 0 10px 24px rgba(171, 84, 219, 0.28);
 }
 
-.dam-project-card .geex-btn--primary:hover,
-.dam-auth-microsoft.geex-btn--primary:hover,
-a.geex-btn--primary:hover {
+.dam-project-card__actions .geex-btn--primary:hover {
   background: #9a45c9 !important;
   color: var(--white-color) !important;
 }
 
-.dam-project-card .geex-btn:hover {
-  transform: translateY(-1px);
+/* Secondary = Geex default gray (nie --transparent z czarna obwodka) */
+.dam-project-card__actions .geex-btn:not(.geex-btn--primary) {
+  background: var(--gray-color) !important;
+  color: var(--body-color) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.dam-project-card__actions .geex-btn:not(.geex-btn--primary):hover {
+  background: var(--primary-color) !important;
+  color: var(--white-color) !important;
+}
+
+.dam-project-card__actions .geex-btn:not(.geex-btn--primary):hover > i {
+  color: var(--white-color) !important;
 }
 
 .dam-project-card .geex-btn:active {
-  transform: translateY(1px) scale(0.98);
+  transform: scale(0.98);
 }
 
 .dam-project-card .geex-btn:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
+}
+
+/* Bez neon glow na primary (Geex nie uzywa outer glow) */
+.dam-auth-microsoft.geex-btn--primary,
+a.geex-btn--primary,
+a.geex-btn__primary {
+  box-shadow: none;
+}
+
+/*
+ * Hierarchia CTA (KRYTYCZNE): w grupie akcji max JEDEN solid primary.
+ * Reszta: geex-btn--primary-transparent (obrys) albo zwykly geex-btn (szary).
+ */
+.dam-action-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.dam-action-stack .geex-btn {
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.dam-action-stack .geex-btn--primary-transparent {
+  /* Obrys Geex - mniej absorbujacy niz solid */
+  box-shadow: none;
+}
+
+.dam-action-desc,
+.dam-page-sub,
+.dam-page-status {
+  color: var(--dark-color, #17161E) !important;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+  opacity: 0.82;
+  /* NIGDY --secondary-color (#B7DBF9) ani Bootstrap text-muted blekit */
+}
+
+.dam-page-status {
+  margin: 0.35rem 0 0;
+}
+
+.dam-slot-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.dam-slot-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 4px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+}
+
+.dam-slot-row:last-child {
+  border-bottom: 0;
+}
+
+.dam-slot-row .dam-check-icon {
+  font-size: 18px;
+  line-height: 1;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.dam-slot-row.dam-check-ok .dam-check-icon {
+  color: #28C76F;
+}
+
+.dam-slot-row.dam-check-brak .dam-check-icon {
+  color: #FF5653;
+}
+
+.dam-slot-row .dam-check-label {
+  color: #17161E;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dam-slot-row .dam-check-role-icon {
+  font-size: 14px;
+  color: #464255;
+  margin-right: 2px;
+}
+
+.dam-slot-row.dam-check-brak .dam-check-role-icon {
+  color: #E23D3A;
+}
+
+.dam-slot-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.15rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dam-slot-badge--ok {
+  background: var(--success-color-transparent, rgba(40, 199, 111, 0.12));
+  color: #1f9d57;
+}
+
+.dam-slot-badge--miss {
+  background: var(--danger-color-transparent, rgba(255, 86, 83, 0.12));
+  color: #d64542;
+}
+
+/* Projekty: toolbar wyszukiwania = ten sam wzorzec co Eksplorator */
+.dam-projects-toolbar {
+  margin-bottom: 1.25rem;
+}
+
+.dam-projects-toolbar .dam-search-wrap {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.dam-projects-toolbar #damProjectsStatus {
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--dark-color, #17161E);
+  opacity: 0.75;
 }
 
 .dam-checklist-row {
@@ -230,6 +560,37 @@ a.geex-btn--primary:hover {
   .geex-content {
     padding-inline: 1rem;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Header: "Dostosuj wyglad" - mniejszy tekst, ciaśniejsza interlinia  */
+/* Ikona zostaje w oryginalnym rozmiarze                               */
+/* ------------------------------------------------------------------ */
+.geex-btn.geex-btn__customizer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 12px;
+  line-height: 1.15;
+}
+
+.geex-btn.geex-btn__customizer > i,
+.geex-btn.geex-btn__customizer > svg {
+  flex: 0 0 auto;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.geex-btn.geex-btn__customizer > span {
+  display: inline-block;
+  max-width: 5.5rem;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  white-space: normal;
+  text-align: left;
 }
 
 @media (prefers-reduced-motion: reduce) {

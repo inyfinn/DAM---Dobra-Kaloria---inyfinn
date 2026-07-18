@@ -7,6 +7,16 @@
 
   var DL = window.DamLabels;
 
+  function bridgeUrl() {
+    if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
+      return window.DamRuntime.bridgeUrl();
+    }
+    if (window.DamPaths && typeof window.DamPaths.bridgeUrl === "function") {
+      return window.DamPaths.bridgeUrl();
+    }
+    return "http://127.0.0.1:8766";
+  }
+
   var STATUS_KEY = "dam_product_status";
   var ADMIN_KEY  = "dam_admin_mode";
   var RECENT_KEY = "dam_explorer_recent";
@@ -74,9 +84,40 @@
     if (ext === "ai")  return "uil uil-vector-square";
     if (ext === "psd" || ext === "indd") return "uil uil-layer-group";
     if (ext === "pdf") return "uil uil-file-alt";
-    if (ext === "zip") return "uil uil-archive";
+    if (ext === "zip" || ext === "rar" || ext === "7z") return "uil uil-archive";
     if (ext === "png" || ext === "jpg" || ext === "jpeg" || ext === "webp" || ext === "tif" || ext === "tiff") return "uil uil-image";
     return "uil uil-file";
+  }
+
+  /** ZIP/RAR nigdy nie sa wizualizacja - tylko obrazy w studio / galerii. */
+  function isVizImageFile(f) {
+    if (DL && typeof DL.isVizImage === "function") return DL.isVizImage(f);
+    var e = fileExt((f && f.name) || "");
+    return ["jpg", "jpeg", "png", "webp", "gif", "tif", "tiff"].indexOf(e) >= 0;
+  }
+
+  function isArchiveFile(f) {
+    if (DL && typeof DL.isArchive === "function") return DL.isArchive(f);
+    var e = fileExt((f && f.name) || "");
+    return e === "zip" || e === "rar" || e === "7z";
+  }
+
+  function filterVizImageFiles(files) {
+    return (files || []).filter(isVizImageFile);
+  }
+
+  /** Archiwa z slotu viz (blednie) traktuj jak druk - zwykle Pakiet.zip. */
+  function printFilesFromRevision(rev) {
+    var fbr = (rev && rev.files_by_role) || {};
+    var prt = (fbr.print || []).slice();
+    var misplaced = []
+      .concat(fbr.viz || [])
+      .concat((rev && rev.wizki) || [])
+      .filter(isArchiveFile);
+    misplaced.forEach(function (f) {
+      if (!prt.some(function (p) { return p.path === f.path; })) prt.push(f);
+    });
+    return prt;
   }
 
   /* ------------------------------------------------------------------ */
@@ -245,14 +286,9 @@
   }
 
   function carrierLabel(code, folder) {
-    if (!DL) return code;
-    if (code === "UNKNOWN") {
-      // Pokaz date/indeks zamiast zgadywac
-      var f = String(folder || "");
-      return f || "Nosnik nieokreslony";
-    }
-    var gram = DL.extractGram(folder);
-    return DL.carrierLabel(code, gram);
+    if (!DL) return code || headTokenSafe(folder) || "WARIANT";
+    // DamLabels.carrierLabel ratuje FOLIA/DOY z nazwy folderu; nie doklejaj raw folderu
+    return DL.carrierLabel(code, folder);
   }
 
   function isBogus(folder) {
@@ -312,9 +348,8 @@
   function computeChecklist(rev, allProductRevisions, product) {
     var fbr = rev.files_by_role || {};
     var src  = fbr.source || [];
-    var prt  = fbr.print  || [];
-    var viz  = fbr.viz    || [];
-    var wizki = rev.wizki || [];
+    var viz  = filterVizImageFiles(fbr.viz || []);
+    var wizki = filterVizImageFiles(rev.wizki || []);
 
     // AI / edytowalny
     var hasAI = src.some(function (f) {
@@ -331,8 +366,8 @@
       return /\bPREV\b/.test(u) || (/[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u));
     });
 
-    // Pliki do druku
-    var drukFiles = prt.filter(function (f) { return f && f.name; });
+    // Pliki do druku (+ ZIP z 3-DRUK / Pakiet nawet gdy lezal w WIZKI)
+    var drukFiles = printFilesFromRevision(rev).filter(function (f) { return f && f.name; });
     var hasDruk = drukFiles.length > 0;
     // Also check source for FQ PDF
     if (!hasDruk) {
@@ -346,7 +381,7 @@
       if (!drukarnia && DL) drukarnia = DL.detectDrukarnia(f.name);
     });
 
-    // Wizualizacje
+    // Wizualizacje = tylko obrazy (nie ZIP)
     var hasViz = viz.length > 0 || wizki.length > 0;
 
     // Elementy: tylko folder ELEMENTY/ELEMENTS (nie sam "MATERIALY")
@@ -542,7 +577,7 @@
   function mediaUrl(indexPath) {
     if (!indexPath) return "";
     var local = window.DamPaths ? window.DamPaths.toLocal(indexPath) : indexPath;
-    return "http://127.0.0.1:8766/media?path=" + encodeURIComponent(local);
+    return bridgeUrl() + "/media?path=" + encodeURIComponent(local);
   }
 
   function thumbCandidates(f) {
@@ -557,7 +592,7 @@
   }
 
   function renderVizGroups(vizFiles) {
-    var allFiles = vizFiles || [];
+    var allFiles = filterVizImageFiles(vizFiles || []);
     if (!allFiles.length) return "";
     var model = buildVizStudioModel(allFiles);
     state._vizStudio = model;
@@ -649,32 +684,84 @@
   /* Carrier card                                                         */
   /* ------------------------------------------------------------------ */
 
+  function headTokenSafe(folder) {
+    var head = String(folder || "").split(/\s*-\s*/)[0].trim();
+    head = head.replace(/_/g, " ").toUpperCase();
+    if (!head || /^\d/.test(head)) return "";
+    return head;
+  }
+
+  function revisionMeta(rev, product) {
+    var folder = (rev && rev.folder) || "";
+    var path = (rev && rev.path) || "";
+    var meta = DL && typeof DL.parseRevisionMeta === "function"
+      ? DL.parseRevisionMeta(folder, path)
+      : { brand: "", carrier: "", index: "", date: "", label: "" };
+    if (!meta.brand && product) meta.brand = getProductBrand(product);
+    if (!meta.index && rev && rev.index) meta.index = rev.index;
+    if (!meta.date && rev && rev.date) meta.date = rev.date;
+    if ((!meta.label || meta.carrier === "UNKNOWN") && folder) {
+      meta.label = carrierLabel(meta.carrier || codeFromRev(rev), folder);
+    }
+    return meta;
+  }
+
+  function codeFromRev(rev) {
+    if (DL && typeof DL.inferCarrierFromRevision === "function") {
+      return DL.inferCarrierFromRevision(rev);
+    }
+    return DL ? DL.parseCarrierCode((rev && rev.folder) || "") : "UNKNOWN";
+  }
+
+  function renderIndexChip(rev, meta) {
+    var idx = meta.index || rev.index || "";
+    if (!idx) return "";
+    if (!state.adminMode) {
+      return '<span class="dam-index-chip" title="Indeks produktu">' + esc(idx) + "</span> ";
+    }
+    return '<span class="dam-index-chip dam-index-chip--admin" title="Tryb admina: edytuj indeks i zastosuj w folderze">' +
+      '<input type="text" class="dam-index-edit" value="' + esc(idx) + '" ' +
+        'data-from-index="' + esc(idx) + '" ' +
+        'data-folder="' + esc(rev.path || "") + '" ' +
+        'aria-label="Edytuj indeks" />' +
+      '<button type="button" class="dam-index-apply" data-dam-tip="Zastosuj zmiane indeksu we wszystkich plikach tego folderu">Zastosuj</button>' +
+    "</span> ";
+  }
+
   function renderCarrierCard(code, currentRevs, olderRevs, product, allProductRevisions) {
     var rev = currentRevs[0]; // primary current revision
     if (!rev) return "";
 
-    var label = carrierLabel(code, rev.folder);
-    if (code === "UNKNOWN") {
-      label = "Nosnik nieokreslony";
-      if (rev.folder) label += " · " + rev.folder;
+    var meta = revisionMeta(rev, product);
+    var resolvedCode = (code && code !== "UNKNOWN") ? code : (meta.carrier || codeFromRev(rev) || "UNKNOWN");
+    var label = carrierLabel(resolvedCode, rev.folder);
+    // Nigdy: "Nosnik nieokreslony · FOLIA..." - jesli jest nosnik, pokaz tylko niego
+    if (!label || /^NOSNIK/i.test(label)) {
+      label = meta.label || headTokenSafe(rev.folder) || "WARIANT";
     }
     var st = getRevisionStatus(rev);
-    var cardId = "dam-carrier-" + esc(code);
-    var isExpanded = !!state.expandedCarriers[code];
-    var showOlder = !!state.showOlderCarriers[code];
+    var cardId = "dam-carrier-" + esc(resolvedCode);
+    var isExpanded = !!state.expandedCarriers[resolvedCode] || !!state.expandedCarriers[code];
+    var showOlder = !!state.showOlderCarriers[resolvedCode] || !!state.showOlderCarriers[code];
 
-    // Gather all viz files from current revision(s)
+    // Gather viz images only (ZIP/Pakiet nigdy nie trafia do studia)
     var allViz = [];
     currentRevs.forEach(function (r) {
-      allViz = allViz.concat((r.files_by_role && r.files_by_role.viz) || []).concat(r.wizki || []);
+      allViz = allViz.concat(
+        filterVizImageFiles((r.files_by_role && r.files_by_role.viz) || [])
+      ).concat(filterVizImageFiles(r.wizki || []));
     });
 
     var cl = computeChecklist(rev, allProductRevisions, product);
 
-    // Current revision tags
+    // Current revision tags: Marka · Indeks · Data · status
     var tags = "";
-    if (rev.index) tags += '<span class="dam-index-chip">' + esc(rev.index) + "</span> ";
-    if (rev.date)  tags += '<span class="dam-date-chip">' + esc(rev.date) + "</span> ";
+    if (meta.brand) {
+      tags += '<span class="dam-brand-chip' + (meta.brand === "GC" ? " dam-brand-chip--gc" : "") +
+        '" title="Marka">' + esc(meta.brand) + "</span> ";
+    }
+    tags += renderIndexChip(rev, meta);
+    if (meta.date || rev.date) tags += '<span class="dam-date-chip">' + esc(meta.date || rev.date) + "</span> ";
     tags += statusBadge(st);
 
     // Extra current revisions (admin marked multiple)
@@ -692,7 +779,7 @@
     var olderHtml = "";
     if (olderRevs.length > 0) {
       olderHtml = '<div class="dam-carrier-older">' +
-        '<button type="button" class="dam-show-older-btn" data-code="' + esc(code) + '">' +
+        '<button type="button" class="dam-show-older-btn" data-code="' + esc(resolvedCode) + '">' +
           (showOlder ? "Ukryj starsze" : "Pokaz starsze (" + olderRevs.length + ")") +
         "</button>";
       if (showOlder) {
@@ -718,7 +805,7 @@
       detailHtml =
         renderChecklist(cl) +
         renderFileSection("Projekt / zrodlo", fbr.source, "source") +
-        renderFileSection("Pliki do druku",   fbr.print,  "print") +
+        renderFileSection("Pliki do druku",   printFilesFromRevision(rev),  "print") +
         renderVizGroups(allViz) +
         renderMarketingSection(product.related_materials) +
         extraCurrHtml +
@@ -728,7 +815,7 @@
 
     return '<div class="dam-carrier-card' + (isExpanded ? " is-expanded" : "") + '" id="' + cardId + '">' +
       '<div class="dam-carrier-toggle-row">' +
-        '<button type="button" class="dam-carrier-toggle" data-toggle-code="' + esc(code) + '" aria-expanded="' + isExpanded + '">' +
+        '<button type="button" class="dam-carrier-toggle" data-toggle-code="' + esc(resolvedCode) + '" aria-expanded="' + isExpanded + '">' +
           '<div class="dam-carrier-toggle__left">' +
             '<span class="dam-carrier-toggle__label">' + esc(label) + "</span>" +
             '<div class="dam-carrier-toggle__chips">' + tags + "</div>" +
@@ -940,12 +1027,30 @@
     var pName = DL ? DL.cleanProductDisplayName(state.product.display_name || state.product.name) : (state.product.display_name || state.product.name);
     var scale = state.vizScale || 140;
 
+    var productBrand = getProductBrand(state.product);
+    var productIndexes = [];
+    groups.forEach(function (g) {
+      (g.revisions || []).forEach(function (r) {
+        var ix = (r && r.index) || (DL && DL.extractIndexFromString ? DL.extractIndexFromString(r.folder || "") : "");
+        if (ix && productIndexes.indexOf(ix) < 0) productIndexes.push(ix);
+      });
+    });
+    var metaBits = '<span class="dam-product-meta__bit"><span class="dam-product-meta__k">Marka</span> ' +
+      '<span class="dam-brand-chip' + (productBrand === "GC" ? " dam-brand-chip--gc" : "") + '">' + esc(productBrand) + "</span></span>";
+    if (productIndexes.length) {
+      metaBits += '<span class="dam-product-meta__bit"><span class="dam-product-meta__k">Indeksy</span> ' +
+        productIndexes.slice(0, 6).map(function (ix) {
+          return '<span class="dam-index-chip">' + esc(ix) + "</span>";
+        }).join(" ") + "</span>";
+    }
+
     var html2 = '<div class="dam-explorer-panel">' +
       '<div class="dam-product-toolbar">' +
         '<div class="dam-product-toolbar__main">' +
           '<h5 class="dam-explorer-panel__title">' + esc(pName) + "</h5>" +
           '<p class="dam-explorer-panel__lead">' + groups.length + " typ" + (groups.length === 1 ? "" : "y") +
             " nosnika. Kliknij, aby rozwinac szczegoly.</p>" +
+          '<div class="dam-product-meta">' + metaBits + "</div>" +
         "</div>" +
         '<div class="dam-product-toolbar__slot1" id="damProductBrandMount" data-dam-tip="Filtr marki DK / GC"></div>' +
         '<div class="dam-product-toolbar__slot2" id="damVizViewControls">' +
@@ -985,23 +1090,22 @@
     }
   }
 
+  function onBrandFilterChange(brands) {
+    state.brands = brands;
+    renderSidebar();
+    renderMain();
+  }
+
   function bindProductToolbar(mount) {
     var brandMount = document.getElementById("damProductBrandMount");
     if (brandMount && window.DamBrandFilter && typeof window.DamBrandFilter.renderChips === "function") {
-      window.DamBrandFilter.renderChips(brandMount, function (brands) {
-        state.brands = brands;
-        renderSidebar();
-        renderMain();
-      });
+      // Listener globalny jest jeden (boot). Tu tylko remount chipow.
+      window.DamBrandFilter.renderChips(brandMount);
     } else if (brandMount) {
       brandMount.innerHTML =
         '<button type="button" class="dam-filter-trigger" id="damProductBrandTrigger"></button>';
       if (window.DamBrandFilter) {
-        window.DamBrandFilter.init("#damProductBrandTrigger", function (brands) {
-          state.brands = brands;
-          renderSidebar();
-          renderMain();
-        });
+        window.DamBrandFilter.init("#damProductBrandTrigger");
       }
     }
 
@@ -1046,9 +1150,34 @@
   }
 
   function bindCarrierInteractions(mount) {
+    // Admin: edycja indeksu nie rozwija karty
+    mount.querySelectorAll(".dam-index-edit, .dam-index-apply").forEach(function (el) {
+      el.addEventListener("click", function (e) { e.stopPropagation(); });
+    });
+    mount.querySelectorAll(".dam-index-apply").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var wrap = this.closest(".dam-index-chip--admin");
+        var input = wrap && wrap.querySelector(".dam-index-edit");
+        if (!input) return;
+        applyIndexRename(input);
+      });
+    });
+    mount.querySelectorAll(".dam-index-edit").forEach(function (input) {
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+          applyIndexRename(this);
+        }
+      });
+    });
+
     // Bind carrier toggle
     mount.querySelectorAll("[data-toggle-code]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
+      btn.addEventListener("click", function (e) {
+        if (e.target.closest(".dam-index-chip--admin")) return;
         var code = this.getAttribute("data-toggle-code");
         state.expandedCarriers[code] = !state.expandedCarriers[code];
         renderMain();
@@ -1166,7 +1295,7 @@
 
     function metaUrl(indexPath) {
       var local = window.DamPaths ? window.DamPaths.toLocal(indexPath) : indexPath;
-      return "http://127.0.0.1:8766/media-meta?path=" + encodeURIComponent(local);
+      return bridgeUrl() + "/media-meta?path=" + encodeURIComponent(local);
     }
 
     function loadMeta(f) {
@@ -1177,7 +1306,7 @@
       fetch(metaUrl(f.path)).then(function (r) { return r.json(); }).then(function (data) {
         if (!data || !data.ok) {
           box.innerHTML = (sizeKnown ? '<div><strong>Rozmiar</strong> ' + esc(sizeKnown) + "</div>" : "") +
-            '<div class="dam-lb-meta__muted">Brak meta z bridge (uruchom :8766)</div>';
+            '<div class="dam-lb-meta__muted">Metadane niedostepne - uruchom aplikacje DAM ETA.</div>';
           return;
         }
         var dims = (data.width && data.height) ? (data.width + " x " + data.height + " px") : "-";
@@ -1492,6 +1621,78 @@
     });
   }
 
+  function applyIndexRename(input) {
+    if (!state.adminMode) {
+      showToast("Wlacz tryb admina, aby edytowac indeks");
+      return;
+    }
+    var fromIndex = String(input.getAttribute("data-from-index") || "").trim();
+    var toIndex = String(input.value || "").trim();
+    var folder = String(input.getAttribute("data-folder") || "").trim();
+    if (!folder) {
+      showToast("Brak sciezki folderu wariantu");
+      return;
+    }
+    if (!fromIndex || !toIndex) {
+      showToast("Podaj poprawny indeks");
+      return;
+    }
+    if (fromIndex === toIndex) {
+      showToast("Indeks bez zmian");
+      return;
+    }
+    if (!/^(FOL\d+|\d{5,9})(\.\d{2})?$/i.test(toIndex)) {
+      showToast("Niepoprawny format indeksu (np. 6300450 lub 6300450.00)");
+      return;
+    }
+    var msg = "Zmienic indeks \"" + fromIndex + "\" -> \"" + toIndex +
+      "\" we wszystkich nazwach plikow i podfolderow wewnatrz:\n\n" + folder +
+      "\n\nTo realna zmiana na dysku. Kontynuowac?";
+    if (!window.confirm(msg)) return;
+
+    showToast("Zmieniam indeks w folderze…");
+    fetch(bridgeUrl() + "/rename-index", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        folder: folder,
+        from_index: fromIndex,
+        to_index: toIndex,
+        dry_run: false
+      })
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.data || !res.data.ok) {
+          showToast("Blad: " + ((res.data && res.data.error) || "rename-index"));
+          return;
+        }
+        var n = (res.data.renamed || []).length;
+        showToast("Zmieniono " + n + " nazw. Odswiez indeks dysku, jesli listy sie rozjezdzaja.");
+        // Aktualizacja w pamieci UI
+        if (state.product && state.product.revisions) {
+          state.product.revisions.forEach(function (rev) {
+            if (!rev) return;
+            if (String(rev.path || "").replace(/\\/g, "/").indexOf(folder.replace(/\\/g, "/")) === 0 ||
+                String(rev.path || "") === folder) {
+              if (rev.index === fromIndex) rev.index = toIndex;
+              if (rev.folder) rev.folder = String(rev.folder).split(fromIndex).join(toIndex);
+              if (rev.path) rev.path = String(rev.path).split(fromIndex).join(toIndex);
+            }
+          });
+        }
+        if (window.DamPaths && window.DamPaths.logAction) {
+          window.DamPaths.logAction("rename_index", {
+            path: folder,
+            detail: fromIndex + " -> " + toIndex + " (" + n + ")"
+          });
+        }
+        renderMain();
+      })
+      .catch(function (err) {
+        showToast("Bridge niedostepny: " + (err && err.message ? err.message : "fetch"));
+      });
+  }
+
   function saveCarrierOverride(pathKey, entry) {
     if (!state.carrierOverrides.overrides) state.carrierOverrides.overrides = {};
     state.carrierOverrides.overrides[pathKey] = entry;
@@ -1506,7 +1707,7 @@
     if (window.DamPaths && window.DamPaths.logAction) {
       window.DamPaths.logAction("carrier_override", { path: pathKey, detail: entry.carrier + " / " + entry.status });
     }
-    return fetch("http://127.0.0.1:8766/carrier-override", {
+    return fetch(bridgeUrl() + "/carrier-override", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ path: pathKey, entry: entry })
@@ -1601,42 +1802,47 @@
   /* Tag chips (search helper)                                            */
   /* ------------------------------------------------------------------ */
 
-  var TAG_CAP = 8;
-  var TAG_GROUP_LABELS = { smak: "Smak", typ: "Typ", opakowanie: "Opakowanie", osoba: "Osoba" };
-  var TAG_GROUP_CLASS  = { smak: "dam-tag-group--smak", typ: "dam-tag-group--typ", opakowanie: "dam-tag-group--opakowanie", osoba: "dam-tag-group--osoba" };
-
   function renderTagChips() {
+    if (window.DamTagBar && typeof window.DamTagBar.bind === "function") {
+      /* bind jest idempotentny (refresh); zawsze wywoluj po load indeksu */
+      state._tagBar = window.DamTagBar.bind({
+        tagsEl: "damSearchTags",
+        inputEl: "damFileSearch",
+      });
+      return;
+    }
+    /* fallback bez dam-tag-bar.js */
     var tagsEl = document.getElementById("damSearchTags");
-    var input  = document.getElementById("damFileSearch");
+    var input = document.getElementById("damFileSearch");
     if (!tagsEl || !window._DAM_SEARCH_INDEX) return;
     var groups = window._DAM_SEARCH_INDEX.tag_groups || {};
     var html = "";
-    ["smak", "typ", "opakowanie", "osoba"].forEach(function (gk) {
+    ["smak", "typ", "opakowanie", "autor", "osoba"].forEach(function (gk) {
       var tags = groups[gk] || [];
       if (!tags.length) return;
-      var expanded = state.expandedTagGroups[gk];
-      var visible = expanded ? tags : tags.slice(0, TAG_CAP);
-      html += '<div class="dam-tag-group-row ' + (TAG_GROUP_CLASS[gk] || "") + '">' +
-        '<span class="dam-tag-group-label">' + esc(TAG_GROUP_LABELS[gk] || gk) + ":</span>" +
-        '<span class="dam-tag-group-pills">';
-      visible.forEach(function (t) {
-        html += '<button type="button" class="dam-tag-pill" data-tag="' + esc(t) + '">' + esc(t) + "</button>";
+      html +=
+        '<div class="dam-tag-group-row">' +
+        '<span class="dam-tag-group-label">' +
+        esc(gk) +
+        ":</span><span class="dam-tag-group-pills">";
+      tags.slice(0, 24).forEach(function (t) {
+        html +=
+          '<button type="button" class="dam-tag-pill" data-tag="' +
+          esc(t) +
+          '">' +
+          esc(t) +
+          "</button>";
       });
-      if (tags.length > TAG_CAP && !expanded) {
-        html += '<button type="button" class="dam-tag-more" data-group="' + gk + '">wiecej</button>';
-      }
       html += "</span></div>";
     });
     tagsEl.innerHTML = html;
     tagsEl.querySelectorAll(".dam-tag-pill").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        if (input) { input.value = this.getAttribute("data-tag"); input.dispatchEvent(new Event("input")); input.focus(); }
-      });
-    });
-    tagsEl.querySelectorAll(".dam-tag-more").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        state.expandedTagGroups[this.getAttribute("data-group")] = true;
-        renderTagChips();
+        if (input) {
+          input.value = this.getAttribute("data-tag");
+          input.dispatchEvent(new Event("input"));
+          input.focus();
+        }
       });
     });
   }
@@ -1756,6 +1962,13 @@
     var main = document.getElementById("damExplorerMain");
     if (!main) return;
 
+    /* Tag bar NAJPIERW - zanim brand/admin cos rzuci */
+    try {
+      renderTagChips();
+      setTimeout(renderTagChips, 50);
+      setTimeout(renderTagChips, 600);
+    } catch (e) { /* ignore */ }
+
     // Hide Geex demo sections below the live explorer shell
     var shell = document.querySelector(".dam-explorer-shell");
     if (shell) {
@@ -1773,20 +1986,20 @@
     var sub = document.querySelector(".geex-content__header__subtitle");
     if (sub) sub.textContent = "Pelna struktura produktow ETA - DK i GC";
 
-    // Inicjuj dropdown filtru marki w toolbarze
-    if (window.DamBrandFilter) {
-      var triggerBtn = document.getElementById("damBrandFilterTrigger");
-      if (triggerBtn) {
-        window.DamBrandFilter.init(triggerBtn, function (brands) {
-          state.brands = brands;
-          renderAll();
-        });
-        // Sync initial state
+    // Filtr marki: jeden listener + dropdown. Chipy DK/GC w produkcie
+    // synchronizuja sie przez DamBrandFilter.commitBrands / syncAllUi.
+    try {
+      if (window.DamBrandFilter) {
+        window.DamBrandFilter.addListener(onBrandFilterChange);
+        var triggerBtn = document.getElementById("damBrandFilterTrigger");
+        if (triggerBtn) {
+          window.DamBrandFilter.init(triggerBtn);
+        }
         state.brands = window.DamBrandFilter.loadBrands();
       }
-    }
+      bindAdminControls();
+    } catch (e) { /* ignore */ }
 
-    bindAdminControls();
     setStatus("Ladowanie indeksu...");
 
     var loader = Promise.all([
@@ -1798,12 +2011,14 @@
 
     loader.then(function (pair) {
       bindExplorerData(pair[0]);
+      renderTagChips();
       applyDeepLink();
     }).catch(function (err) {
       setStatus("Blad indeksu: " + err.message);
       main.innerHTML =
         '<div class="dam-explorer-empty"><p style="color:#FF5653">Nie zaladowano file-index.json</p>' +
         "<p>Uruchom: <code>python apps/web/scripts/build-file-index.py</code></p></div>";
+      renderTagChips();
     });
 
     var refreshBtn = document.getElementById("damIndexRefresh");

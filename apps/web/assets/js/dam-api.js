@@ -1,9 +1,311 @@
 (function () {
   "use strict";
   var API = window.DAM_API_BASE || "http://127.0.0.1:8000/api";
+  var API_TIMEOUT_MS = 2500;
+  var INDEX_URL = "data/file-index.json";
+
+  /* ------------------------------------------------------------------ */
+  /* Lokalna baza plikow (w repo)                                        */
+  /* Struktura katalogow jest zawsze ta sama; prefix sciezki (D:/ P:/)   */
+  /* tylko odblokowuje otwieranie plikow. Metadane = file-index.json.    */
+  /* ------------------------------------------------------------------ */
+
+  var _indexPromise = null;
+  var _projectsCache = null;
+
+  function fileExt(name) {
+    var m = String(name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+    return m ? m[1] : "";
+  }
+
+  function pickLatestRevision(product) {
+    var revs = (product && product.revisions) || [];
+    if (!revs.length) return null;
+    var latest = null;
+    for (var i = 0; i < revs.length; i++) {
+      if (revs[i].is_latest) {
+        latest = revs[i];
+        break;
+      }
+    }
+    if (latest) return latest;
+    return revs.slice().sort(function (a, b) {
+      return String(b.index || "").localeCompare(String(a.index || ""));
+    })[0];
+  }
+
+  function fileExtName(name) {
+    var m = String(name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+    return m ? m[1] : "";
+  }
+
+  function isVizImageName(name) {
+    return ["jpg", "jpeg", "png", "webp", "gif", "tif", "tiff"].indexOf(fileExtName(name)) >= 0;
+  }
+
+  function isArchiveName(name) {
+    return ["zip", "rar", "7z"].indexOf(fileExtName(name)) >= 0;
+  }
+
+  /** Mapowanie rol z indeksu dysku -> checklista DAM */
+  function rolesFromRevision(rev) {
+    var fbr = (rev && rev.files_by_role) || {};
+    var src = fbr.source || [];
+    var prt = fbr.print || [];
+    var viz = (fbr.viz || []).filter(function (f) { return isVizImageName(f.name); });
+    var wizki = ((rev && rev.wizki) || []).filter(function (f) { return isVizImageName(f.name); });
+    var elements = fbr.elements || [];
+    var archivePrint = []
+      .concat(fbr.viz || [])
+      .concat((rev && rev.wizki) || [])
+      .filter(function (f) { return isArchiveName(f.name); });
+
+    var hasArtwork = src.some(function (f) {
+      var e = fileExt(f.name);
+      return e === "ai" || e === "psd" || e === "indd" || e === "pdf" || e === "tif" || e === "tiff";
+    }) || src.length > 0;
+
+    var hasViz = viz.length > 0 || wizki.length > 0;
+
+    var hasPrint = prt.length > 0 || archivePrint.length > 0 || src.some(function (f) {
+      var u = String(f.name || "").toUpperCase();
+      return /FQ/.test(u) && fileExt(f.name) === "pdf";
+    });
+
+    var hasTech = elements.length > 0 || ((rev && rev.slots) || []).some(function (s) {
+      var su = String(s).toUpperCase();
+      return su.indexOf("ELEMENTY") >= 0 || su.indexOf("ELEMENTS") >= 0 || su.indexOf("TECH") >= 0;
+    });
+
+    return {
+      artwork: hasArtwork,
+      viz_3d: hasViz,
+      print_pdf: hasPrint,
+      tech: hasTech,
+    };
+  }
+
+  function asset(role, done) {
+    return { asset_role: role, current_revision_id: done ? 1 : null };
+  }
+
+  function productToProject(product, seq) {
+    var rev = pickLatestRevision(product);
+    var roles = rolesFromRevision(rev);
+    // Wymagane z indeksu dysku: projekt + wizki + druk.
+    // "tech/elementy" rzadko sa w indeksie - pokazywane w checklistcie, nie blokuja kompletnosci listy.
+    var missing = [];
+    ["artwork", "viz_3d", "print_pdf"].forEach(function (r) {
+      if (!roles[r]) missing.push(r);
+    });
+    var status = missing.length ? "incomplete" : "complete";
+    var index =
+      (rev && rev.index) ||
+      (product.indexes && product.indexes[0]) ||
+      (product.index_bases && product.index_bases[0]) ||
+      "";
+    var title =
+      (window.DamLabels && typeof window.DamLabels.cleanProductDisplayName === "function"
+        ? window.DamLabels.cleanProductDisplayName(product.display_name || product.name)
+        : null) ||
+      product.display_name ||
+      product.name ||
+      product.id;
+
+    return {
+      id: product.id,
+      seq: seq,
+      product_index: index,
+      title: title,
+      market: product.brand === "GC" ? "GC" : "PL",
+      brand: product.brand || "DK",
+      path: product.path || (rev && rev.path) || "",
+      rel: product.rel || "",
+      completeness: status,
+      missing_roles: missing,
+      revision_count: (product.revisions || []).length,
+      variants: [
+        {
+          id: product.id + "::" + (rev && rev.index ? rev.index : "0"),
+          checklist_status: { status: status, missing_roles: missing },
+          assets: [
+            asset("artwork", roles.artwork),
+            asset("viz_3d", roles.viz_3d),
+            asset("print_pdf", roles.print_pdf),
+            asset("tech", roles.tech),
+          ],
+        },
+      ],
+    };
+  }
+
+  function loadFileIndex() {
+    if (_indexPromise) return _indexPromise;
+    _indexPromise = fetch(INDEX_URL + "?v=" + Date.now())
+      .then(function (r) {
+        if (!r.ok) throw new Error("Brak file-index.json (" + r.status + ")");
+        return r.json();
+      })
+      .then(function (data) {
+        if (window.DamPaths && typeof window.DamPaths.detectIndexBaseFromRoots === "function") {
+          window.DamPaths.detectIndexBaseFromRoots(data.roots || []);
+        }
+        var products = data.products || [];
+        _projectsCache = products.map(function (p, i) {
+          return productToProject(p, i + 1);
+        });
+        return { index: data, projects: _projectsCache };
+      })
+      .catch(function (e) {
+        _indexPromise = null;
+        throw e;
+      });
+    return _indexPromise;
+  }
+
+  function localProjects() {
+    return loadFileIndex().then(function (pack) {
+      return pack.projects;
+    });
+  }
+
+  function localProjectById(id) {
+    return localProjects().then(function (rows) {
+      var key = String(id);
+      for (var i = 0; i < rows.length; i++) {
+        if (String(rows[i].id) === key) return rows[i];
+        if (String(rows[i].product_index) === key) return rows[i];
+        if (String(rows[i].seq) === key) return rows[i];
+      }
+      return rows[0] || null;
+    });
+  }
+
+  function localVariantById(variantId) {
+    return localProjects().then(function (rows) {
+      var key = String(variantId);
+      for (var i = 0; i < rows.length; i++) {
+        var v = rows[i].variants && rows[i].variants[0];
+        if (v && String(v.id) === key) return v;
+      }
+      return (rows[0] && rows[0].variants && rows[0].variants[0]) || {
+        checklist_status: { status: "incomplete", missing_roles: [] },
+      };
+    });
+  }
+
+  function offlineQueuePush(entry) {
+    try {
+      var q = JSON.parse(localStorage.getItem("dam_offline_queue") || "[]");
+      q.push(Object.assign({ at: new Date().toISOString() }, entry));
+      localStorage.setItem("dam_offline_queue", JSON.stringify(q.slice(-50)));
+    } catch (e) { /* ignore */ }
+  }
+
+  /* ------------------------------------------------------------------ */
+
+  function bridgeAuthUrl() {
+    if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
+      return window.DamRuntime.bridgeUrl();
+    }
+    return "http://127.0.0.1:8766";
+  }
+
+  var _identityCache = null;
+
+  function clearLocalAuth() {
+    [
+      "dam_token",
+      "dam_device_id",
+      "dam_machine_id",
+      "dam_session_id",
+      "dam_role",
+      "dam_user_name",
+      "dam_user",
+    ].forEach(function (k) {
+      try {
+        localStorage.removeItem(k);
+      } catch (e) { /* ignore */ }
+    });
+  }
+
+  async function fetchIdentity() {
+    if (_identityCache && _identityCache.machine_id) return _identityCache;
+    try {
+      var r = await fetch(bridgeAuthUrl() + "/auth/identity", { cache: "no-store" });
+      var data = await r.json();
+      if (data && data.ok && data.machine_id) {
+        _identityCache = data;
+        localStorage.setItem("dam_machine_id", data.machine_id);
+        if (data.device_id) localStorage.setItem("dam_device_id", data.device_id);
+        return data;
+      }
+    } catch (e) { /* bridge offline */ }
+    try {
+      var ri = await fetch("data/dam-identity.json?_=" + Date.now(), { cache: "no-store" });
+      var idata = await ri.json();
+      if (idata && idata.machine_id) {
+        _identityCache = idata;
+        localStorage.setItem("dam_machine_id", idata.machine_id);
+        if (idata.device_id) localStorage.setItem("dam_device_id", idata.device_id);
+        return idata;
+      }
+    } catch (e2) { /* ignore */ }
+    return _identityCache || {};
+  }
+
+  function deviceId() {
+    var key = "dam_device_id";
+    var id = localStorage.getItem(key);
+    if (id && String(id).indexOf("dam-dev-") === 0) return id;
+    if (_identityCache && _identityCache.device_id) {
+      localStorage.setItem(key, _identityCache.device_id);
+      return _identityCache.device_id;
+    }
+    id = localStorage.getItem("dam_machine_id");
+    if (id && String(id).indexOf("dam-mid-") === 0) {
+      var derived = "dam-dev-" + String(id).replace("dam-mid-", "");
+      localStorage.setItem(key, derived);
+      return derived;
+    }
+    /* Legacy random - zostanie nadpisany po /auth/identity lub loginie */
+    if (id) return id;
+    id = "dev_pending_" + Date.now().toString(36);
+    localStorage.setItem(key, id);
+    return id;
+  }
+
+  function machineId() {
+    return (
+      localStorage.getItem("dam_machine_id") ||
+      (_identityCache && _identityCache.machine_id) ||
+      ""
+    );
+  }
 
   function token() {
     return localStorage.getItem("dam_token") || "";
+  }
+
+  function persistSession(data) {
+    if (!data || !data.token) return;
+    localStorage.setItem("dam_token", data.token);
+    if (data.device_id) localStorage.setItem("dam_device_id", data.device_id);
+    if (data.machine_id) localStorage.setItem("dam_machine_id", data.machine_id);
+    if (data.session_id) localStorage.setItem("dam_session_id", data.session_id);
+    if (data.user) {
+      localStorage.setItem("dam_role", data.user.role || "user");
+      localStorage.setItem("dam_user_name", data.user.name || "");
+      localStorage.setItem("dam_user", JSON.stringify({
+        email: data.user.email || "",
+        role: data.user.role || "user",
+        name: data.user.name || "",
+        auth_provider: data.user.auth_provider || "local",
+        title: "GRAFIK",
+        department: "MARKETING",
+        company: "KUBARA"
+      }));
+    }
   }
 
   function authHeaders() {
@@ -14,6 +316,14 @@
     };
   }
 
+  function apiFetch(url, opts) {
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var options = Object.assign({}, opts || {});
+    if (ctrl) options.signal = ctrl.signal;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, API_TIMEOUT_MS);
+    return fetch(url, options).finally(function () { clearTimeout(timer); });
+  }
+
   async function parse(r) {
     var data = null;
     try {
@@ -22,8 +332,9 @@
       data = null;
     }
     if (r.status === 401) {
-      localStorage.removeItem("dam_token");
-      location.href = "signin.html";
+      // Sesja urzadzenia: nie kasuj tokenu automatycznie przy chwilowym 401 API Laravel.
+      // Tylko przekieruj gdy naprawde brak lokalnej sesji.
+      if (!token()) location.href = "signin.html";
       throw new Error("Unauthenticated");
     }
     if (!r.ok) {
@@ -32,77 +343,264 @@
     return data;
   }
 
+  function isNetworkError(e) {
+    return (
+      e instanceof TypeError ||
+      (e && (e.name === "AbortError" || /fetch|network|abort/i.test(String(e.message))))
+    );
+  }
+
   window.DamApi = {
     base: API,
+    offline: false,
     token: token,
     role: function () {
       return localStorage.getItem("dam_role") || "";
     },
     requireAuth: function () {
-      if (!token()) {
+      var t = token();
+      // Stary tryb demo - wymus zalogowanie prawdziwym kontem (raz)
+      if (!t || t === "demo-admin-dev-token") {
+        if (t === "demo-admin-dev-token") {
+          localStorage.removeItem("dam_token");
+          localStorage.removeItem("dam_role");
+        }
         location.href = "signin.html";
         return false;
       }
       return true;
     },
+    /** Jawne zasilenie z lokalnej bazy (file-index) */
+    loadLocalIndex: loadFileIndex,
     async health() {
-      return parse(await fetch(API + "/health"));
+      try {
+        return await parse(await apiFetch(API + "/health"));
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        this.offline = true;
+        return { ok: true, mode: "offline", source: "file-index" };
+      }
     },
+    deviceId: deviceId,
+    machineId: machineId,
+    fetchIdentity: fetchIdentity,
+    clearLocalAuth: clearLocalAuth,
     async login(email, password) {
-      var r = await fetch(API + "/auth/login", {
+      // 1) Lokalna baza kont (bridge) - bcrypt + machine_id / session_id
+      try {
+        var ident = await fetchIdentity();
+        var br = await fetch(bridgeAuthUrl() + "/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            device_id: (ident && ident.device_id) || deviceId(),
+            machine_id: (ident && ident.machine_id) || machineId(),
+          }),
+        });
+        var bdata = await br.json();
+        if (bdata && bdata.ok && bdata.token) {
+          persistSession(bdata);
+          return bdata;
+        }
+        if (bdata && bdata.error === "invalid_credentials") {
+          throw new Error("Nieprawidlowy email lub haslo.");
+        }
+        if (bdata && bdata.error === "machine_id_required") {
+          throw new Error("Brak ID maszyny - uruchom DAM przez skrot desktop.");
+        }
+      } catch (e) {
+        if (e && e.message && /Nieprawidlowy|Brak ID/.test(e.message)) throw e;
+        /* bridge offline - sprobuj Laravel */
+      }
+      try {
+        var r = await apiFetch(API + "/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ email: email, password: password }),
+        });
+        var data = await parse(r);
+        persistSession(data);
+        return data;
+      } catch (e2) {
+        throw e2 instanceof Error ? e2 : new Error("Logowanie nieudane");
+      }
+    },
+    async register(email, password, name) {
+      var r = await fetch(bridgeAuthUrl() + "/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ email: email, password: password }),
+        body: JSON.stringify({ email: email, password: password, name: name || "" }),
       });
-      var data = await parse(r);
-      localStorage.setItem("dam_token", data.token);
-      localStorage.setItem("dam_role", data.user.role);
-      localStorage.setItem("dam_user_name", data.user.name || "");
-      return data;
+      var data = await r.json();
+      if (!data || !data.ok) {
+        var err = (data && data.error) || "register_failed";
+        if (err === "email_taken") throw new Error("Konto z tym emailem juz istnieje.");
+        if (err === "password_too_short") throw new Error("Haslo min. 8 znakow.");
+        throw new Error("Nie udalo sie utworzyc konta.");
+      }
+      // Po rejestracji od razu zaloguj na tym urzadzeniu
+      return this.login(email, password);
     },
     logout: async function () {
-      try {
-        if (token()) {
-          await fetch(API + "/auth/logout", { method: "POST", headers: authHeaders() });
-        }
-      } catch (e) { /* ignore */ }
-      localStorage.removeItem("dam_token");
-      localStorage.removeItem("dam_role");
-      location.href = "signin.html";
+      // Sesja = urzadzenie: NIGDY nie kasujemy tokenu ani device_id.
+      if (window.DamPaths && typeof window.DamPaths.showToast === "function") {
+        window.DamPaths.showToast("Sesja urzadzenia pozostaje aktywna (bez wylogowania).");
+      }
+      return { ok: true, mode: "device_session_kept" };
     },
     async me() {
-      return parse(await fetch(API + "/auth/me", { headers: authHeaders() }));
+      try {
+        var ident = await fetchIdentity();
+        var storedMid = localStorage.getItem("dam_machine_id") || "";
+        if (
+          storedMid &&
+          ident.machine_id &&
+          storedMid !== ident.machine_id
+        ) {
+          clearLocalAuth();
+          location.href = "signin.html";
+          throw new Error("machine_mismatch");
+        }
+        var url =
+          bridgeAuthUrl() +
+          "/auth/me?device_id=" +
+          encodeURIComponent((ident && ident.device_id) || deviceId()) +
+          "&machine_id=" +
+          encodeURIComponent((ident && ident.machine_id) || machineId());
+        var r = await fetch(url, { headers: authHeaders() });
+        var data = await r.json();
+        if (data && (data.error === "machine_mismatch" || data.error === "device_mismatch")) {
+          clearLocalAuth();
+          location.href = "signin.html";
+          throw new Error(data.error);
+        }
+        if (data && data.ok && data.user) {
+          persistSession({
+            token: token(),
+            device_id: data.device_id,
+            machine_id: data.machine_id,
+            session_id: data.session_id,
+            user: data.user,
+          });
+          return { data: data.user, source: "bridge" };
+        }
+      } catch (e) {
+        if (e && /mismatch/.test(String(e.message || e))) throw e;
+      }
+      try {
+        return await parse(await apiFetch(API + "/auth/me", { headers: authHeaders() }));
+      } catch (e2) {
+        if (!isNetworkError(e2)) throw e2;
+        this.offline = true;
+        var u = {};
+        try { u = JSON.parse(localStorage.getItem("dam_user") || "{}"); } catch (e3) { u = {}; }
+        return {
+          data: {
+            name: localStorage.getItem("dam_user_name") || "",
+            role: localStorage.getItem("dam_role") || "",
+            email: u.email || "",
+          },
+        };
+      }
     },
     async projects() {
-      return parse(await fetch(API + "/projects", { headers: authHeaders() }));
+      // Metadane ZAWSZE z lokalnej bazy (file-index). Pliki = ROOT usera.
+      try {
+        var rows = await localProjects();
+        return { data: rows, source: "file-index", count: rows.length };
+      } catch (localErr) {
+        try {
+          return await parse(await apiFetch(API + "/projects", { headers: authHeaders() }));
+        } catch (e) {
+          throw localErr instanceof Error ? localErr : new Error(String(localErr));
+        }
+      }
     },
     async project(id) {
-      return parse(await fetch(API + "/projects/" + id, { headers: authHeaders() }));
+      try {
+        return await parse(await apiFetch(API + "/projects/" + id, { headers: authHeaders() }));
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        this.offline = true;
+        var row = await localProjectById(id);
+        if (!row) throw new Error("Brak projektu w file-index: " + id);
+        return { data: row, source: "file-index" };
+      }
     },
     async completeness(variantId) {
-      return parse(await fetch(API + "/variants/" + variantId + "/completeness", { headers: authHeaders() }));
+      try {
+        return await parse(await apiFetch(API + "/variants/" + variantId + "/completeness", { headers: authHeaders() }));
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        this.offline = true;
+        var v = await localVariantById(variantId);
+        return v.checklist_status;
+      }
     },
     async recompute(variantId) {
-      return parse(await fetch(API + "/variants/" + variantId + "/completeness/recompute", {
-        method: "POST",
-        headers: authHeaders(),
-      }));
+      try {
+        return await parse(await apiFetch(API + "/variants/" + variantId + "/completeness/recompute", {
+          method: "POST",
+          headers: authHeaders(),
+        }));
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        this.offline = true;
+        var st = (await localVariantById(variantId)).checklist_status;
+        offlineQueuePush({ action: "recompute", variant: variantId });
+        return { status: st.status, missing_roles: st.missing_roles, mode: "offline" };
+      }
     },
     async ingestPointers(index) {
-      return parse(await fetch(API + "/ingest/pointers", {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ index: index || null }),
-      }));
+      try {
+        return await parse(await apiFetch(API + "/ingest/pointers", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ index: index || null }),
+        }));
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        this.offline = true;
+        _indexPromise = null;
+        _projectsCache = null;
+        var pack = await loadFileIndex();
+        offlineQueuePush({ action: "ingest_pointers" });
+        return {
+          data: {
+            projects: pack.projects.length,
+            assets: pack.projects.reduce(function (n, p) {
+              return n + ((p.variants && p.variants[0] && p.variants[0].assets) || []).length;
+            }, 0),
+            viz: (pack.index && pack.index.viz_count) || 0,
+          },
+          mode: "offline",
+          source: "file-index",
+        };
+      }
     },
     async notifyIntegrations(variantId) {
-      return parse(await fetch(API + "/variants/" + variantId + "/integrations/notify", {
-        method: "POST",
-        headers: authHeaders(),
-      }));
+      try {
+        return await parse(await apiFetch(API + "/variants/" + variantId + "/integrations/notify", {
+          method: "POST",
+          headers: authHeaders(),
+        }));
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        this.offline = true;
+        offlineQueuePush({ action: "notify_integrations", variant: variantId });
+        return { message: "Zakolejkowano powiadomienie (Asana + Teams) - wysylka po polaczeniu z API", mode: "offline" };
+      }
     },
     async authSettings() {
-      return parse(await fetch(API + "/auth/settings", { headers: authHeaders() }));
+      try {
+        return await parse(await apiFetch(API + "/auth/settings", { headers: authHeaders() }));
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        this.offline = true;
+        return { data: { providers: ["local"], mode: "offline" } };
+      }
     },
   };
 })();

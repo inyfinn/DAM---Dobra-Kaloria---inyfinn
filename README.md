@@ -4,62 +4,106 @@ Wewnetrzny **Digital Asset Management** dla opakowan i materialow marketingowych
 
 Repozytorium: [inyfinn/DAM---Dobra-Kaloria---inyfinn](https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn)
 
-> Workspace lokalny (Windows): dysk roboczy aplikacji. Dyski marketingowe (`D:` / `M:`) to zrodlo assetow - **nie** commitujemy ich zawartosci do Gita.
+> Cel produktowy: jedna instalacja (udzial / serwer plikow), skrot na pulpicie, **uruchom i dziala** - bez Dockera i bez recznej konfiguracji portow.  
+> Sesja jest zawsze zwiazana z **ID maszyny + kontem Windows** (ADR-008), zeby nikt nie dziedziczyl cudzego logowania.
 
 ---
 
 ## Co robi system
 
-- Katalog produktow i wariantow opakowan (nosniki: baton, karton 6x, mini, doypack, …)
+- Katalog produktow i wariantow opakowan (nosniki: baton, karton 6x, mini, doypack, kulki, …)
 - Indeks plikow z dysku Marketing (projekty, wizualizacje, druk, marketing)
 - Checklist kompletnosci assetow per rewizja
-- Podglad wizualizacji (miniatury, lightbox, widok kafelki / lista / skala)
-- Mapowanie sciezki bazowej per uzytkownik (ten sam indeks `D:/Marketing/...`, lokalny remap np. na `M:\`)
-- Lokalny bridge (Reveal w Eksploratorze Windows, media, audit, override nosnikow)
+- Galeria wizualizacji (miniatury FRONT-S, modal + zoom, chip wariantu nawet przy 1 indeksie)
+- Mapowanie sciezki bazowej Marketing per uzytkownik Windows
+- Lokalny bridge (Eksplorator Windows, media, audit, override nosnikow / miniatur)
+- Konta lokalne (bcrypt) + sesja urzadzenia (`machine_id` / `device_id` / `session_id`)
 - UI na motywie **Geex** (Bootstrap 5) z tokenami DAM
 
 ---
 
-## Wymagania
+## Wymagania (uzytkownik koncowy)
 
 - Windows 10/11
-- Python 3.10+ (launcher + local bridge)
-- Przegladarka Chromium / Edge (UI serwowane lokalnie)
-- Opcjonalnie: Postgres + PHP/Laravel (`apps/api`) - warstwa API w rozbudowie
+- Microsoft Edge **WebView2** Runtime (zwykle juz jest w systemie)
+- Dostep do dysku Marketing (mapowany jako `X:` / `D:` / inny)
+- Python 3.10+ **tylko na maszynie, gdzie IT zainstaluje skrot** (user nie instaluje nic recznie)
 
 ---
 
 ## Szybki start
 
+### Dla uzytkownika
+
+**Dwuklik skrotu „DAM ETA” na pulpicie** - otwiera sie okno aplikacji.
+
+Przy starcie launcher:
+
+1. Liczy `machine_id` (MachineGuid + host + user Windows + serial dysku).
+2. Sprawdza `bound-session.json` - sesja z innego PC = wyczyszczona + komunikat.
+3. Startuje most lokalny + UI w WebView2.
+
+### Pierwsza instalacja skrotu (IT / raz na PC)
+
 ```powershell
-# Z katalogu repozytorium
-python apps/desktop/launch.py
+cd <sciezka-do-DAM>
+pip install -r apps/desktop/requirements.txt
+powershell -ExecutionPolicy Bypass -File scripts/ops/install-desktop-shortcut.ps1
 ```
 
-Albo osobno:
+Alternatywnie:
 
 ```powershell
-# Static UI :8765
-python -m http.server 8765 --directory apps/web
-
-# Local bridge :8766 (reveal, media, audit, overrides)
-python apps/desktop/local_bridge.py
-```
-
-Skrypty pomocnicze:
-
-```powershell
-powershell -File scripts/ops/start-browser.ps1
 powershell -File scripts/ops/start-desktop.ps1
 ```
 
-Otworz: `http://127.0.0.1:8765/` (dashboard / explorer / visualizations).
+### Tryb developerski
 
-### Pierwsze uruchomienie
+```powershell
+python apps/desktop/serve_browser.py
+# albo: python -m http.server 8765 --bind 127.0.0.1 --directory apps/web
+# + python apps/desktop/local_bridge.py
+```
 
-1. Ustaw **sciezke bazowa** dysku Marketing (folder z `-- ARCHIWUM --`, `- EKSPORT`, `- POLSKA`).
-2. Bridge musi dzialac na porcie **8766**, zeby dzialaly: Pokaz w eksploratorze, miniatury `/media`, audit.
-3. Indeks plikow: `apps/web/data/file-index.json` (generowany skryptami sync/index - nie trzymamy tu blobow oryginalow).
+### Pierwsze uruchomienie po instalacji
+
+1. Zaloguj sie (konta lokalne / seed Kubara).
+2. Ustaw **sciezke bazowa** Marketing (folder z `-- ARCHIWUM --`, `- EKSPORT`, `- POLSKA`).
+3. Indeks: `apps/web/data/file-index.json` (rebuild: `python apps/web/scripts/build-file-index.py`).
+
+---
+
+## Tozsamosc maszyny i sesja (wazne)
+
+| Identyfikator | Skad | Po co |
+|---------------|------|--------|
+| `machine_id` | OS (MachineGuid, host, Windows user, volume) | unikalny PC+konto |
+| `device_id` | z `machine_id` | klucz sesji w SQLite |
+| `session_id` | losowy przy loginie | audyt / rozroznienie logowan |
+| `token` | losowy, hash w DB | Bearer do `/auth/me` |
+
+Szczegoly: [`docs/ADR/ADR-008-device-session-binding.md`](docs/ADR/ADR-008-device-session-binding.md).
+
+Endpointy mostu:
+
+- `GET /auth/identity` - biezace ID maszyny
+- `POST /auth/login` - email, haslo, machine_id
+- `GET /auth/me?device_id=&machine_id=` - walidacja sesji
+
+---
+
+## Baza danych
+
+- **Kanon:** `apps/desktop/data/dam-local.sqlite` (WAL, gitignored)
+- Tabele: `users`, `device_sessions`, `audit_log`
+- **Zakaz** zapisu metadata aplikacji na Marketing (bez `.dam-eta` na `X:\`) - ADR-007
+- Indeks produktow = JSON w `apps/web/data/` (nie SQL)
+
+Seed kont testowych:
+
+```powershell
+python apps/desktop/seed_kubara_users.py
+```
 
 ---
 
@@ -67,27 +111,32 @@ Otworz: `http://127.0.0.1:8765/` (dashboard / explorer / visualizations).
 
 ```
 apps/
-  web/          # UI Geex + JS DAM (explorer, viz, shell, paths)
-  desktop/      # launch.py + local_bridge.py
-  api/          # Laravel API (opcjonalnie / w budowie)
-THEME/          # Motyw Geex (zrodlo estetyki)
-design-system/  # Tokeny i komponenty (MASTER.md, logo.md, …)
-docs/           # Architektura, ADR, roadmap
-scripts/        # Ops / sync / indeks
-agents/         # Role agentow (Architect / Builder / QA)
-memory.md       # Zasady dlugoterminowe
-process.md      # Log operacyjny
-PROGRESS.md     # Postep prac
+  web/          # UI Geex + JS DAM
+  desktop/      # launch.py, local_bridge.py, SQLite, machine_identity.py
+  api/          # Laravel API (opcjonalnie)
+THEME/          # Motyw Geex
+design-system/  # MASTER.md, logo
+docs/           # VISION, ARCHITECTURE, ADR, DEPLOYMENT
+scripts/ops/    # skrot, release ZIP, smoke
+agents/         # Architect / Builder / QA
+memory.md       # zasady dlugoterminowe
+process.md      # log operacyjny
+PROGRESS.md     # postep
 ```
 
 ---
 
-## UI i branding
+## Release (ZIP)
 
-- Motyw: **Geex** (`THEME/geex-html-main`), tokeny: `apps/web/assets/css/dam-tokens.css`
-- Logo sidebara/headera: **Dobra Kaloria zielone** (`#008244`) - szczegoly w `design-system/components/logo.md`
-- **Nie** uzywamy wariantu logo „Niemiesa”
-- Light/Dark: logo musi byc czytelne (zakaz bialego wordmarku na jasnym tle)
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ops/build-release-zip.ps1
+```
+
+Artefakt: `dist/DAM-ETA-<wersja>.zip` (bez `.git`, thumbs, sqlite, `.env`).
+
+Wdrozenie na udzial: rozpakuj ZIP, zainstaluj skrot na PC userow - patrz [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+GitHub Release: tag + upload ZIP (tworzone przy publikacji).
 
 ---
 
@@ -96,47 +145,45 @@ PROGRESS.md     # Postep prac
 | Modul | Opis |
 |-------|------|
 | Eksplorator | Kategorie, produkty, nosniki, checklist, sciezki |
-| Wizualizacje | Siatka produktow, share Synology (UI), filtry |
+| Wizualizacje | Siatka, modal +50%, zoom, chip indeksu, FRONT-S thumbs |
 | Sciezki | Kopiuj + Pokaz w Eksploratorze (`DamPaths`) |
-| Override nosnika | „Nie widzisz wariantu? Dodaj go” -> JSON + bridge |
-| Chrome | Header: szukaj, wiadomosci, powiadomienia, profil (`dam-shell.js`) |
+| Tagi | Smak / Typ / Opakowanie / Autor (`dam-tag-bar.js`) |
+| Chrome | Header, wiadomosci, profil (`dam-shell.js`) |
 
 ---
 
-## Dane lokalne (nie w Gicie / duze)
+## Dane lokalne (nie w Gicie)
 
-Do `.gitignore` naleza m.in.:
-
-- `tooling/bin/` (Postgres, PHP, cache - gigabajty)
-- `data/postgres/` (klaster DB)
-- `apps/web/data/thumbs/` (wygenerowane miniatury)
-- `.env`, sekrety, `node_modules`, `vendor`
-
-Indeksy JSON (`file-index.json`, `product-status.json`, …) moga byc w repo jako snapshot roboczy; oryginalne pliki graficzne zostaja na dysku Marketing.
+- `apps/desktop/data/*.sqlite*`
+- `apps/desktop/machine-config.json`
+- `apps/desktop/data/bound-session.json`
+- `apps/web/data/thumbs/`, `dam-runtime.json`, `dam-identity.json`
+- `tooling/bin/`, `data/postgres/`, `.env`
 
 ---
 
 ## Bezpieczenstwo
 
-- **Nie** commituj tokenow GitHub, hasel, `.env`, sciezek z danymi osobowymi klientow.
-- Tokeny trzymaj w menedzerze hasel / `gh auth` / zmiennych srodowiskowych lokalnie.
-- Audit operacji (copy/reveal) trafia do `apps/web/data/audit-log.jsonl` (lokalnie) - nie publikuj logow z danymi uzytkownikow bez potrzeby.
+- Nie commituj tokenow, hasel, `.env`, sciezek z danymi osobowymi.
+- Sesja zwiazana z maszyna - skopiowany token na inny PC jest odrzucany.
+- Audit: tabela `audit_log` + opcjonalnie `audit-log.jsonl`.
 
 ---
 
-## Dokumentacja wewnetrzna
+## Dokumentacja
 
 | Plik | Rola |
 |------|------|
-| `memory.md` | Zasady, zakazy, edge-case'y |
-| `process.md` | Log i przebieg operacji |
-| `design-system/MASTER.md` | Design system |
-| `docs/` | VISION / ARCHITECTURE / ADR |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Wdrozenie bez instalacji |
+| [`docs/ADR/ADR-007-local-sqlite.md`](docs/ADR/ADR-007-local-sqlite.md) | SQLite w repo |
+| [`docs/ADR/ADR-008-device-session-binding.md`](docs/ADR/ADR-008-device-session-binding.md) | machine/session ID |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architektura |
+| `memory.md` / `process.md` / `PROGRESS.md` | Operacje agentow |
 
 ---
 
 ## Licencja / wlasnosc
 
-Kod i konfiguracja: wewnetrzny projekt ETA Innovations / Dobra Kaloria.  
-Motyw Geex: zgodnie z licencja dostawcy motywu w `THEME/`.  
-Znaki towarowe i logo Dobra Kaloria: wlasnosc marki - uzycie wylacznie w tym systemie wewnetrznym.
+Kod: wewnetrzny projekt ETA Innovations / Dobra Kaloria.  
+Motyw Geex: licencja dostawcy w `THEME/`.  
+Znaki i logo Dobra Kaloria: wylacznie uzytek wewnetrzny w tym systemie.

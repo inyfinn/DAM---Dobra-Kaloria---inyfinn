@@ -8,9 +8,19 @@
 *.pem
 *.p12
 
+# Lokalna baza kont (hashe bcrypt) - nie commitowac
+apps/desktop/data/*.sqlite
+apps/desktop/data/*.sqlite-*
+apps/desktop/data/bound-session.json
+apps/desktop/machine-config.json
+apps/web/data/dam-runtime.json
+apps/web/data/dam-identity.json
+
 # Dependencies
 node_modules/
-vendor/
+/vendor/
+apps/api/vendor/
+# UWAGA: apps/web/assets/vendor/ (Bootstrap, jQuery) MUSI byc w repo - nie ignorowac
 
 # Vault (blobs)
 storage/originals/**

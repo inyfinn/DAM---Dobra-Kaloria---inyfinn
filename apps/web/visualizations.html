@@ -25,7 +25,9 @@
 		if (localStorage.layout) document.documentElement.setAttribute("data-nav", localStorage.navbar);
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260717synshare1">
+<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718vizsw1">
+<link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718sidebar2">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718vizmod2">
 </head>
 
 <body class="geex-dashboard demo-invoice">
@@ -496,10 +498,10 @@
 			</ul>
 		</nav>
         <div class="geex-sidebar__footer">
-			<span class="geex-sidebar__footer__title">Geex Modern Dashboard</span>
-			<p class="geex-sidebar__footer__copyright">© 2026 ETA Innovations</p>
-			<p class="geex-sidebar__footer__author">Made with <span class="heart-icon">♥</span> by <a href="#">ThemeWant</a></p>
-        </div>
+			<span class="geex-sidebar__footer__title">DAM ETA</span>
+			<p class="geex-sidebar__footer__copyright">Panel assetow opakowan</p>
+			<p class="geex-sidebar__footer__author"><a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> &copy; 2026</p>
+		</div>
 	</div>
 </div>
 	
@@ -862,19 +864,35 @@
 		<div class="geex-content__wrapper">
 			<div class="geex-content__section-wrapper">
 				<!-- VIZ GALLERY -->
-				<div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
-					<span class="geex-badge geex-badge--success-transparent" style="padding:6px 12px;border-radius:8px;font-size:12px" data-i18n="viz.badge">Tylko aktualne rewizje (.01 &gt; .00)</span>
-					<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-						<div class="dam-filter-bar">
-							<button type="button" id="vizBrandFilterTrigger" class="dam-filter-trigger" data-dam-tip="Filtruj wizualizacje wedlug marki DK lub GC">Marka: DK+GC</button>
+				<div class="dam-global-search-block">
+					<div class="dam-explorer-toolbar dam-viz-toolbar">
+						<div class="dam-search-wrap">
+							<div class="dam-search-input-wrap">
+								<i class="uil uil-search" aria-hidden="true"></i>
+								<input type="text" id="vizSearch" class="form-control dam-search-input" placeholder="Szukaj indeksu lub skojarzenia (np. 6300, czekolada, Krzysztof)" autocomplete="off" data-dam-tip="Szuka w wizualizacjach na tej stronie" />
+							</div>
 						</div>
-						<select id="vizLangFilter" class="form-select" style="width:auto;min-width:140px;border-radius:8px">
-							<option value="">Wszystkie jezyki</option>
-						</select>
-						<input type="text" id="vizSearch" class="form-control" placeholder="Indeks lub nazwa..." style="width:220px;border-radius:8px" data-dam-tip="Szukaj po indeksie, nazwie lub marce" />
+						<div class="dam-explorer-toolbar__actions">
+							<label class="dam-switch" for="vizLatestOnly" data-dam-tip="Wlacz: tylko najnowsza rewizja indeksu (np. .01 zamiast .00). Wylacz: pokazuje tez starsze wersje.">
+								<input type="checkbox" id="vizLatestOnly" class="dam-switch__input" checked />
+								<span class="dam-switch__track" aria-hidden="true"></span>
+								<span class="dam-switch__label" data-i18n="viz.badge">Tylko najnowsze</span>
+							</label>
+							<div class="dam-filter-bar">
+								<button type="button" id="vizBrandFilterTrigger" class="dam-filter-trigger dam-control" data-dam-tip="Filtruj wizualizacje wedlug marki DK lub GC">Marka: DK+GC</button>
+							</div>
+							<select id="vizLangFilter" class="form-select dam-control dam-control--select" aria-label="Filtr jezyka">
+								<option value="">Wszystkie jezyki</option>
+							</select>
+							<label class="dam-admin-toggle" title="Wybieranie miniatury w modalu wizualizacji" data-dam-tip="Tryb admina: w modalu pojawia sie przycisk Miniatura">
+								<input type="checkbox" id="vizAdminToggle" />
+								Tryb admina
+							</label>
+						</div>
 					</div>
+					<div id="vizSearchTags" class="dam-tag-groups" aria-label="Skojarzenia"></div>
 				</div>
-				<div id="vizStatus" style="font-size:12px;color:#8b8d97;margin-bottom:10px"></div>
+				<div id="vizStatus" class="dam-toolbar-status"></div>
 				<div id="vizGrid" class="dam-viz-grid"></div>
 				<!-- END VIZ GALLERY -->
 			</div>
@@ -891,13 +909,15 @@
 	<!-- DAM scripts -->
 	<script src="./assets/js/dam-api.js"></script>
 	<script src="./assets/js/dam-i18n.js?v=20260717ux6"></script>
-	<script src="./assets/js/dam-shell.js?v=20260717logo1"></script>
-	<script src="./assets/js/dam-search.js?v=20260717ux6"></script>
+	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
+	<script src="./assets/js/dam-shell.js?v=20260718inyf1"></script>
+	<script src="./assets/js/dam-search.js?v=20260718tags1"></script>
+	<script src="./assets/js/dam-tag-bar.js?v=20260718typ2"></script>
 	<script src="./assets/js/dam-labels.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-paths.js?v=20260717synshare1"></script>
-	<script src="./assets/js/dam-brand-filter.js?v=20260717ux12"></script>
+	<script src="./assets/js/dam-paths.js?v=20260718userbase1"></script>
+	<script src="./assets/js/dam-brand-filter.js?v=20260718brandsync1"></script>
 	<script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-viz.js?v=20260717synshare1"></script>
+	<script src="./assets/js/dam-viz.js?v=20260718vizmod2"></script>
 </body>
 
 </html>

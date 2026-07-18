@@ -1,4 +1,8 @@
 ﻿$ErrorActionPreference = "Stop"
-Set-Location "P:\DAM"
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $env:PYTHONUTF8 = "1"
-python "P:\DAM\apps\desktop\launch.py"
+Set-Location (Join-Path $RepoRoot "apps\desktop")
+pythonw launch.py
+if ($LASTEXITCODE -ne 0) {
+  python launch.py
+}

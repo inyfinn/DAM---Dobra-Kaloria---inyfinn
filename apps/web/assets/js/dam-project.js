@@ -4,8 +4,8 @@
   // Human-readable labels for asset roles - no tech jargon
   var ROLE_LABEL = {
     artwork: "Projekt graficzny",
-    viz_3d: "Wizualizacja 3D",
-    print_pdf: "Plik do druku",
+    viz_3d: "Wizualizacje",
+    print_pdf: "Pliki do druku",
     tech: "Specyfikacja techniczna",
     photo: "Fotografia produktowa",
     packaging_text: "Teksty na opakowanie"
@@ -14,8 +14,8 @@
   // Human labels for missing roles in status
   var MISSING_LABEL = {
     artwork: "Projekt graficzny",
-    viz_3d: "Wizualizacja 3D",
-    print_pdf: "Plik do druku",
+    viz_3d: "Wizualizacje",
+    print_pdf: "Pliki do druku",
     tech: "Specyfikacja techniczna",
     photo: "Fotografia produktowa",
     packaging_text: "Teksty na opakowanie"
@@ -34,20 +34,30 @@
     return roles.map(function (r) { return MISSING_LABEL[r] || r; }).join(", ");
   }
 
+  var ROLE_ICON = {
+    artwork: "uil-palette",
+    viz_3d: "uil-cube",
+    print_pdf: "uil-file-alt",
+    tech: "uil-clipboard-notes",
+    photo: "uil-camera",
+    packaging_text: "uil-text",
+  };
+
   function rowHtml(role, ok) {
     var label = humanizeRole(role);
-    var icon = ok
-      ? '<i class="uil uil-check-circle" style="color:#00A389;font-size:18px"></i>'
-      : '<i class="uil uil-times-circle" style="color:#ff5653;font-size:18px"></i>';
+    var roleIcon = ROLE_ICON[role] || "uil-file";
+    var cls = ok ? "dam-check-ok" : "dam-check-brak";
+    var mark = ok ? "uil-check-circle" : "uil-times-circle";
+    var badge = ok ? "Gotowe" : "Brakuje";
     return (
-      '<div class="dam-checklist-row" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f0f0f0">' +
-      '<div style="display:flex;align-items:center;gap:12px">' +
-      icon +
-      '<div>' +
-      '<strong style="font-size:14px">' + label + '</strong>' +
-      '</div></div>' +
-      '<span class="geex-badge ' + (ok ? "geex-badge--success-transparent" : "geex-badge--danger-transparent") + '">' +
-      (ok ? "Gotowe" : "Brak") +
+      '<div class="dam-slot-row ' + cls + '">' +
+      '<i class="uil ' + mark + ' dam-check-icon" aria-hidden="true"></i>' +
+      '<span class="dam-check-label">' +
+      '<i class="uil ' + roleIcon + ' dam-check-role-icon" aria-hidden="true"></i> ' +
+      label +
+      "</span>" +
+      '<span class="dam-slot-badge' + (ok ? " dam-slot-badge--ok" : " dam-slot-badge--miss") + '">' +
+      badge +
       "</span></div>"
     );
   }

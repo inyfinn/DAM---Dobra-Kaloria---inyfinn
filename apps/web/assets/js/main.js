@@ -220,24 +220,50 @@
 		$("body").removeClass("overlay_active");
 	})
 
-  	// Sidebar Toggle
+  	// Sidebar Toggle (mobile: CSS drawer; bez jQuery width:toggle / translateX)
+  	function damIsMobileNav() {
+		return window.matchMedia && window.matchMedia("(max-width: 1199px)").matches;
+	}
+	function damOpenSidebar() {
+		var $side = $(".geex-sidebar");
+		$side.addClass("active").stop(true, true);
+		if (damIsMobileNav()) {
+			$side.css({ display: "", width: "", transform: "", left: "", marginLeft: "" });
+			$("body").addClass("overlay_active");
+		} else {
+			$side.animate({ width: "toggle" });
+			$("body").addClass("overlay_active");
+		}
+	}
+	function damCloseSidebar() {
+		var $side = $(".geex-sidebar");
+		$side.removeClass("active").stop(true, true);
+		if (damIsMobileNav()) {
+			$side.css({ display: "", width: "", transform: "", left: "", marginLeft: "" });
+			$("body").removeClass("overlay_active");
+		} else {
+			$side.animate({ width: "toggle" });
+			$("body").removeClass("overlay_active");
+		}
+	}
   	$(".geex-btn__toggle-sidebar").click(function(e) {
 		e.preventDefault();
-		$(".geex-sidebar").toggleClass("active");
-		$(".geex-sidebar").animate({ 
-			width: "toggle" 
-		});
-		$("body").addClass("overlay_active");
+		if ($(".geex-sidebar").hasClass("active")) {
+			damCloseSidebar();
+		} else {
+			damOpenSidebar();
+		}
   	});
 
   	// Sidebar Close
   	$(".geex-sidebar__close").click(function(e) {
 		e.preventDefault();
-		$(".geex-sidebar").removeClass("active");
-		$(".geex-sidebar").animate({ 
-			width: "toggle" 
-		});
-		$("body").removeClass("overlay_active");
+		damCloseSidebar();
+	});
+	$(document).on("click", "body.overlay_active", function(e) {
+		if (!damIsMobileNav()) return;
+		if ($(e.target).closest(".geex-sidebar, .geex-btn__toggle-sidebar").length) return;
+		damCloseSidebar();
   	});
 
 	// Datepicker Open

@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-DAM file index builder (read-only scan of D: products -> write JSON on P:DAM).
+DAM file index builder (read-only scan of Marketing products -> JSON in apps/web/data).
+
+Preferuje X:/Marketing (aktualny mount), potem D:/Marketing.
+Nazewnictwo / sloty 0-4: knowledge z structure-mcp (nie kopiujemy kodu migratora).
 
 Usage:
   python apps/web/scripts/build-file-index.py
-  python apps/web/scripts/build-file-index.py --root "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK"
+  python apps/web/scripts/build-file-index.py --root "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK"
 """
 from __future__ import annotations
 
@@ -23,9 +26,19 @@ OUT = WEB / "data" / "file-index.json"
 SEARCH_OUT = WEB / "data" / "search-index.json"
 THUMBS_DIR = WEB / "data" / "thumbs"
 
-DEFAULT_ROOT = Path(r"D:/Marketing/- POLSKA/01 - PRODUKTY/- DK")
-GC_ROOT = Path(r"D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC")
-MARKETING_ROOT = Path(r"D:/Marketing/- POLSKA")
+
+def resolve_marketing_base() -> Path:
+    """X: (live) > D: (legacy staging) — pierwszy istniejacy z - POLSKA."""
+    for candidate in (Path(r"X:/Marketing"), Path(r"D:/Marketing")):
+        if (candidate / "- POLSKA").is_dir():
+            return candidate
+    return Path(r"X:/Marketing")
+
+
+MARKETING_BASE = resolve_marketing_base()
+DEFAULT_ROOT = MARKETING_BASE / "- POLSKA" / "01 - PRODUKTY" / "- DK"
+GC_ROOT = MARKETING_BASE / "- EKSPORT" / "01 - PRODUCTS" / "- GC"
+MARKETING_ROOT = MARKETING_BASE / "- POLSKA"
 
 ROOTS = [
     {"brand": "DK", "path": DEFAULT_ROOT},
@@ -74,6 +87,8 @@ IMAGE_VIZ_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".tif", ".tiff"}
 THUMB_MAX_EDGE = 480
 
 INDEX_RE = re.compile(r"(?P<base>\d{6,8})\.(?P<rev>\d{2})")
+# Foldery typu "DOY - 23.06.2026 - 6300760" (bez .00) - jak DamLabels.extractIndexFromString
+INDEX_PLAIN_RE = re.compile(r"(?<!\d)(?P<base>\d{6,8})(?!\d)")
 DATE_DOT_RE = re.compile(r"(\d{2})\.(\d{2})\.(\d{4})")
 DATE_SPACE_RE = re.compile(r"(\d{2})\s+(\d{2})\s+(\d{4})")
 CARRIER_RE = re.compile(
@@ -95,8 +110,15 @@ SLOT_MAP = {
 
 SCAN_EXT = {
     ".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".gif",
-    ".psd", ".ai", ".pdf", ".eps", ".svg", ".indd", ".zip", ".rar",
+    ".psd", ".ai", ".pdf", ".eps", ".svg", ".indd", ".zip", ".rar", ".7z",
 }
+
+# Wizualizacje = TYLKO obrazy. ZIP/RAR nigdy nie sa wizkami (nawet w folderze 4-WIZKI).
+VIZ_IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".gif"}
+ARCHIVE_EXT = {".zip", ".rar", ".7z"}
+PRINT_ARCHIVE_KW = (
+    "pakiet", "fq", "druk", "drukarnia", "kubara", "produkcyj", "polzdob", "do druku",
+)
 
 PERSON_HINTS = [
     "krzysztof", "szymon", "anna", "ania", "marek", "karolina", "maciej", "ewa",
@@ -104,37 +126,85 @@ PERSON_HINTS = [
 ]
 FLAVOR_HINTS = [
     "czekolada", "kakao", "malina", "malinowa", "cynamon", "banoffee", "tiramisu",
-    "orzech", "proteina", "slivka", "śliwka", "cytryna", "lemon", "matcha",
+    "orzech", "orzechowe", "proteina", "slivka", "śliwka", "cytryna", "lemon", "matcha",
     "porzeczka", "wanilia", "nerkowcowy", "tarta", "chia", "mct",
     "jagoda", "jagodowy", "kokos", "migdal", "migdał", "arachid", "miod", "miód",
-    "deserowe", "owocowe",
+    "deserowe", "owocowe", "karmel", "pistacja", "truskawka", "morela", "mango",
+    "imbir", "kawa", "sezam", "cynamonka", "muffin",
 ]
+# Typ = forma produktu + nosniki z nazewnictwa DK (BAT, mini baton, sleeve, karton 6x…)
 PRODUCT_HINTS = [
-    "kulki", "baton", "doypack", "tuba", "nuggets", "kiełbas", "parow",
-    "krem", "napoj", "sypkie", "roslinne", "roślinne", "burger", "gyros",
-    "kotlet", "pasztet", "muffin", "owies", "jaglanka", "boost", "dates",
-    "mix", "mini",
+    "kulki", "baton", "mini baton", "mini batoniki", "batoniki",
+    "nuggets", "kiełbas", "parow", "krem", "napoj", "sypkie",
+    "roslinne", "roślinne", "burger", "gyros", "kotlet", "pasztet",
+    "owies", "jaglanka", "boost", "dates", "mix", "mixy",
+    "niemiesne", "funkcjonalny", "sniadaniowe",
+    "bat", "sleeve", "karton 6x",
 ]
 PACKAGING_HINTS = [
-    "karton", "folia", "kar6x", "tuba", "doypack", "sasz", "pet",
-    "szklo", "kub", "box",
+    "karton", "folia", "karton 6x", "kar6x", "tuba", "doypack", "doy 6x", "doy6x",
+    "sleeve", "rekaw", "bat", "sasz", "pet", "szklo", "kub", "box", "bigpak",
 ]
 
+# Stuby zbyt krotkie / szum - NIE blokuj "bat" (nosnik BAT)
 TAG_DENYLIST = frozenset({
-    "ety", "fol", "kar6", "bat", "doy", "nerkowc", "wizka", "datesy",
+    "ety", "fol", "kar6", "doy", "nerkowc", "wizka", "datesy",
 })
 
 TAG_LABEL_MAP = {
     "doy": "doypack",
     "datesy": "dates",
     "nerkowc": "nerkowcowy",
+    "mini": "mini baton",
+    "kar6x": "karton 6x",
+    "doy6x": "doy 6x",
+    "rekaw": "sleeve",
+    "bar": "bat",
+    "batoniki": "mini batoniki",
 }
 
 TAG_PREFER_OVER = {
     "doypack": "doy",
     "nerkowcowy": "nerkowc",
     "dates": "datesy",
+    "mini baton": "mini",
+    "karton 6x": "kar6x",
+    "doy 6x": "doy6x",
+    "sleeve": "rekaw",
+    "mini batoniki": "batoniki",
 }
+
+# parse_carrier / folder prefix -> kanoniczny tag
+CARRIER_TO_TAG = {
+    "BAT": "bat",
+    "BAR": "bat",
+    "MINI": "mini baton",
+    "KAR6X": "karton 6x",
+    "KAR": "karton",
+    "DOY": "doypack",
+    "DOY6X": "doy 6x",
+    "DOYPACK": "doypack",
+    "SLEEVE": "sleeve",
+    "REKAW": "sleeve",
+    "FOLIA": "folia",
+    "FOL": "folia",
+    "FOIL": "folia",
+    "TUBA": "tuba",
+    "BIGPAK": "bigpak",
+    "SASZ": "sasz",
+    "OBW": "obwoluta",
+}
+
+# Nosniki ktore w UI trafiaja do wiersza Typ (jezyk biznesowy DK)
+TYP_NOSNIKI = frozenset({
+    "bat", "sleeve", "karton 6x", "mini baton", "mini batoniki",
+})
+
+TYP_PRIORITY = (
+    "baton", "mini baton", "mini batoniki", "bat", "kulki", "sypkie",
+    "niemiesne", "sleeve", "karton 6x", "nuggets", "krem", "napoj",
+    "mix", "mixy", "roslinne", "burger", "dates", "boost",
+)
 
 BRACKET_HINT_RE = re.compile(r"\[\s*([^\]]+?)\s*\]")
 
@@ -215,11 +285,17 @@ def finalize_tags(tags: list[str]) -> list[str]:
     return [t for t in normalized if t not in drop]
 
 
-def build_tag_groups(tags: list[str], cap: int = 8) -> dict[str, list[str]]:
+def _sort_typ_tags(tags: list[str]) -> list[str]:
+    prio = {name: i for i, name in enumerate(TYP_PRIORITY)}
+    return sorted(tags, key=lambda t: (prio.get(t, 500), t))
+
+
+def build_tag_groups(tags: list[str], cap: int = 32) -> dict[str, list[str]]:
     groups: dict[str, list[str]] = {
         "smak": [],
         "typ": [],
         "opakowanie": [],
+        "autor": [],
         "osoba": [],
         "inne": [],
     }
@@ -230,25 +306,31 @@ def build_tag_groups(tags: list[str], cap: int = 8) -> dict[str, list[str]]:
             continue
         seen.add(t)
         if t in PERSON_SET:
+            groups["autor"].append(t)
             groups["osoba"].append(t)
         elif t in FLAVOR_SET:
             groups["smak"].append(t)
-        elif t in PACKAGING_SET or t in {"kar6x", "folia", "karton", "tuba", "doypack", "mini"}:
-            groups["opakowanie"].append(t)
-        elif t in PRODUCT_TYPE_SET or t in {"kulki", "baton", "nuggets", "krem", "napoj", "sypkie", "mix"}:
+        elif t in TYP_NOSNIKI or t in PRODUCT_TYPE_SET:
+            # Typ: forma produktu + nosniki (BAT, mini baton, sleeve, karton 6x…)
             groups["typ"].append(t)
+        elif t in PACKAGING_SET:
+            groups["opakowanie"].append(t)
         elif t in CURATED_VOCAB:
             groups["inne"].append(t)
+    groups["typ"] = _sort_typ_tags(groups["typ"])[:cap]
     for key in groups:
+        if key == "typ":
+            continue
         groups[key] = sorted(groups[key])[:cap]
     return groups
 
 
-def merge_global_tag_groups(products: list[dict], cap: int = 8) -> dict[str, list[str]]:
+def merge_global_tag_groups(products: list[dict], cap: int = 32) -> dict[str, list[str]]:
     merged: dict[str, set[str]] = {
         "smak": set(),
         "typ": set(),
         "opakowanie": set(),
+        "autor": set(),
         "osoba": set(),
         "inne": set(),
     }
@@ -259,15 +341,66 @@ def merge_global_tag_groups(products: list[dict], cap: int = 8) -> dict[str, lis
                 ct = canonicalize_tag(t)
                 if ct and not is_noise_tag(ct) and ct not in TAG_DENYLIST:
                     merged[key].add(ct)
-    return {k: sorted(v)[:cap] for k, v in merged.items()}
+    out: dict[str, list[str]] = {}
+    for k, v in merged.items():
+        items = list(v)
+        if k == "typ":
+            out[k] = _sort_typ_tags(items)[:cap]
+        else:
+            out[k] = sorted(items)[:cap]
+    return out
 
 
 def parse_index(name: str) -> tuple[str | None, str | None, str | None]:
-    m = INDEX_RE.search(name)
-    if not m:
+    """Wyciagnij indeks produktu. Preferuj NNNNNNN.RR; akceptuj tez same cyfry (bez .00)."""
+    if not name:
         return None, None, None
-    base, rev = m.group("base"), m.group("rev")
-    return base, rev, f"{base}.{rev}"
+    # Placeholder typu 6300XXX - nie traktuj jako prawdziwy indeks
+    if re.search(r"\d{3,}X{2,}", name, flags=re.IGNORECASE):
+        return None, None, None
+    m = INDEX_RE.search(name)
+    if m:
+        base, rev = m.group("base"), m.group("rev")
+        return base, rev, f"{base}.{rev}"
+    # Ostatni match wygrywa (indeks zwykle na koncu nazwy folderu)
+    plains = list(INDEX_PLAIN_RE.finditer(name))
+    if not plains:
+        return None, None, None
+    base = plains[-1].group("base")
+    return base, "00", f"{base}.00"
+
+
+def infer_index_from_files(files: list[dict]) -> tuple[str | None, str | None, str | None]:
+    """Gdy folder wariantu nie ma indeksu (ETY-SLO), wez z nazw plikow wizki/.ai."""
+    best: tuple[str | None, str | None, str | None] = (None, None, None)
+    best_rev = -1
+    for f in files or []:
+        blob = " ".join(
+            [
+                str(f.get("name") or ""),
+                str(f.get("path") or ""),
+                str(f.get("rel") or ""),
+            ]
+        )
+        base, rev, full = parse_index(blob)
+        if not full:
+            continue
+        rev_n = int(rev) if rev and str(rev).isdigit() else 0
+        if rev_n >= best_rev:
+            best_rev = rev_n
+            best = (base, rev, full)
+    return best
+
+
+def safe_thumb_stem(product_id: str, index_base: str, lang: str) -> str:
+    """Unikalna nazwa miniatury - NIGDY wspolne unknown_pl.jpg dla wielu produktow."""
+    pid = re.sub(r"[^a-zA-Z0-9_-]+", "-", (product_id or "p").strip())[:96].strip("-").lower()
+    raw = (index_base or "").strip()
+    if not raw or raw.lower() == "noid":
+        raw = "pending"
+    base = re.sub(r"[^0-9A-Za-z]+", "", raw) or "pending"
+    lg = re.sub(r"[^a-z0-9]+", "", (lang or "xx").lower()) or "xx"
+    return f"{pid}__{base}_{lg}.jpg"
 
 
 def parse_date(name: str) -> str | None:
@@ -303,9 +436,10 @@ def classify_slot_role(name: str) -> str | None:
             return "print"
         if mapped == "wizki":
             return "viz"
-    source_kw = ("zrodlo", "projekt", "brief", "psd", "akceptacja", "source")
+    # Folder bez numeru: "DRUK", "DRUKARNIA", "WIZKI"...
+    source_kw = ("zrodlo", "projekt", "brief", "psd", "akceptacja", "source", "material")
     print_kw = ("druk", "drukarnia", "produkcyjny", "pdf produkcyjny")
-    viz_kw = ("wizki", "wizka", "wizualiz", "wizualizacje")
+    viz_kw = ("wizki", "wizka", "wizualiz", "wizualizacje", "visuals")
     if any(k in n for k in source_kw) or n.endswith(" ai") or " ai " in n or n == "ai":
         return "source"
     if any(k in n for k in print_kw):
@@ -317,6 +451,42 @@ def classify_slot_role(name: str) -> str | None:
 
 def is_wizki_dir(name: str) -> bool:
     return classify_slot_role(name) == "viz"
+
+
+def is_archive_name(name: str) -> bool:
+    return Path(name).suffix.lower() in ARCHIVE_EXT
+
+
+def is_viz_image_name(name: str) -> bool:
+    return Path(name).suffix.lower() in VIZ_IMAGE_EXT
+
+
+def archive_looks_like_print(name: str) -> bool:
+    """ZIP zwykle = pakiet do druku (szczegolnie *Pakiet*, FQ, KUBARA)."""
+    n = norm(name)
+    return any(k in n for k in PRINT_ARCHIVE_KW)
+
+
+def resolve_file_role(slot_role: str, filename: str) -> str | None:
+    """
+    Slot daje domyslna role, ale:
+    - archiwum NIGDY nie jest wizualizacja,
+    - archiwum w 3-DRUK / z nazwa pakietu/FQ -> print,
+    - w slotcie viz zostaja tylko obrazy.
+    """
+    if not slot_role:
+        return None
+    if is_archive_name(filename):
+        if slot_role == "print" or archive_looks_like_print(filename):
+            return "print"
+        if slot_role == "viz":
+            # ZIP wlozony do 4-WIZKI (np. DK-...-Pakiet.zip) = nie wizka
+            return "print"
+        return slot_role  # source / inne
+    if slot_role == "viz" and not is_viz_image_name(filename):
+        # PDF/AI w folderze wizki nie trafia do galerii wizualizacji
+        return None
+    return slot_role
 
 
 def is_noise_tag(tag: str) -> bool:
@@ -366,12 +536,17 @@ def extract_tags(parts: list[str], extra_bracket: list[str] | None = None) -> li
 
     for p in parts:
         c = parse_carrier(p)
-        if c and c != "OTHER":
-            cn = norm(c)
-            if len(cn) >= 4 and not is_noise_tag(cn):
-                tags.add(cn)
-            elif cn in CURATED_VOCAB and not is_noise_tag(cn):
-                tags.add(cn)
+        if not c or c == "OTHER":
+            continue
+        mapped = CARRIER_TO_TAG.get(c.upper()) or CARRIER_TO_TAG.get(norm(c).upper())
+        if mapped:
+            tags.add(norm(mapped))
+            continue
+        cn = norm(c)
+        if cn in CURATED_VOCAB and not is_noise_tag(cn):
+            tags.add(cn)
+        elif len(cn) >= 4 and not is_noise_tag(cn):
+            tags.add(cn)
 
     curated = sorted(t for t in tags if t in CURATED_VOCAB)
     other = sorted(t for t in tags if t not in CURATED_VOCAB and not is_noise_tag(t))
@@ -416,17 +591,22 @@ def scan_revision_slots(child: Path, root: Path) -> tuple[list[str], dict[str, l
                 continue
             sn = sub.name
             slots.append(sn)
-            role = classify_slot_role(sn)
-            if not role:
+            slot_role = classify_slot_role(sn)
+            if not slot_role:
                 continue
             scanned = scan_slot_files(sub, root)
-            files_by_role[role].extend(scanned)
-            if role == "viz":
-                wizki_files.extend(scanned)
+            for f in scanned:
+                role = resolve_file_role(slot_role, f.get("name") or "")
+                if not role:
+                    continue
+                files_by_role.setdefault(role, []).append(f)
+                if role == "viz" and is_viz_image_name(f.get("name") or ""):
+                    wizki_files.append(f)
     except (PermissionError, OSError):
         pass
     for role in files_by_role:
         files_by_role[role].sort(key=lambda x: x.get("name", ""))
+    wizki_files.sort(key=lambda x: x.get("name", ""))
     return slots, files_by_role, wizki_files
 
 
@@ -534,11 +714,17 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
         if not child.is_dir():
             continue
         base, rev, full = parse_index(child.name)
-        if not full:
-            base, rev, full = None, None, None
         carrier = parse_carrier(child.name)
         date_s = parse_date(child.name)
         slots, files_by_role, wizki_files = scan_revision_slots(child, root)
+
+        # ETY-SLO / foldery bez indeksu w nazwie: wyciagnij z plikow wizki/source
+        if not full:
+            pool: list[dict] = list(wizki_files or [])
+            fbr = files_by_role or {}
+            for role_key in ("source", "print", "viz", "elements"):
+                pool.extend(fbr.get(role_key) or [])
+            base, rev, full = infer_index_from_files(pool)
 
         folder_langs = parse_folder_langs(child.name)
         revisions.append(
@@ -656,37 +842,62 @@ def is_viz_image(f: dict) -> bool:
     return ext in {"jpg", "jpeg", "png", "webp", "gif", "tif", "tiff"}
 
 
-def pick_thumb_file(files: list[dict]) -> dict | None:
-    """Priority: FRONT-S/S-SKLEP, FRONT jpg, FRONT any, PREV, latest image."""
+def pick_thumb_file(files: list[dict], preferred_index: str | None = None) -> dict | None:
+    """Priority: FRONT-S (lekki podglad), potem S-SKLEP, FRONT-L/XL, inne FRONT, PREV.
+
+    NIGDY nie preferuj SKLEP2-XL / *-XL nad zwyklym FRONT-S.png - galeria ma byc szybka.
+    """
     imgs = [f for f in files if is_viz_image(f)]
     if not imgs:
         return None
+    # Nigdy nie bierz FRONT z innego indeksu (np. 6300524 w folderze 6300767)
+    if preferred_index:
+        pref = re.sub(r"\D", "", str(preferred_index))[:7]
+        if len(pref) >= 6:
+            matched = [f for f in imgs if pref in (f.get("name") or "")]
+            if matched:
+                imgs = matched
 
     def tier(name: str) -> int:
         n = name.upper()
         # demote technical / non-packaging shots
         if any(x in n for x in ("AUTO", "PROBE", "DIELINE", "DIE-LINE", "TEMPLATE", "WYKROJNIK", "PDF.PNG", "_PDF")):
             return 9
-        if "FRONT" in n and ("S-SKLEP" in n or "FRONT-S" in n or re.search(r"FRONT[-_]?S\b", n) or "-S." in name.upper() or "_S." in n):
-            return 1
-        if "FRONT" in n and ("-L." in n or "FRONT-L" in n or "-XL" in n):
+        is_front = "FRONT" in n
+        is_sklep = "SKLEP" in n
+        is_xl = bool(re.search(r"[-_]XL\b", n) or "XL." in n)
+        is_l = bool(re.search(r"FRONT[-_]?L\b", n) or re.search(r"[-_]L\.", n))
+        # Czysty FRONT-S (bez SKLEP / XL) - preferowany do miniatur
+        is_front_s = is_front and not is_sklep and not is_xl and (
+            "FRONT-S" in n
+            or bool(re.search(r"FRONT[-_]?S\b", n))
+            or bool(re.search(r"[-_]S\.", n))
+        )
+        if is_front_s:
+            return 0
+        if is_front and is_sklep and not is_xl:
             return 2
-        if "FRONT" in n:
+        if is_front and (is_xl or is_l):
             return 3
-        if "PREV" in n or "WIZKA" in n or "WIZ_" in n:
+        if is_front:
             return 4
+        if "PREV" in n or "WIZKA" in n or "WIZ_" in n:
+            return 5
         if "TYL" in n or "BACK" in n:
-            return 6
-        return 5
+            return 7
+        return 6
 
     best_tier = min(tier(f.get("name") or "") for f in imgs)
     pool = [f for f in imgs if tier(f.get("name") or "") == best_tier]
 
     def rank(f: dict) -> tuple:
+        name = (f.get("name") or "").upper()
         ext = (f.get("ext") or "").lower()
-        jpg_bonus = 1 if ext in ("jpg", "jpeg") else 0
+        # W tierze FRONT-S: preferuj DK-*-FRONT-S.png (nie DOY- bez marki / nie XL)
+        dk_bonus = 1 if name.startswith("DK-") or name.startswith("GC-") else 0
+        # png/jpg ok; nie premiuj jpg kosztem poprawnego FRONT-S.png
         mtime = f.get("mtime") or ""
-        return (jpg_bonus, mtime)
+        return (dk_bonus, mtime, 1 if ext in ("png", "jpg", "jpeg", "webp") else 0)
 
     return max(pool, key=rank)
 
@@ -772,10 +983,18 @@ def build_search(products: list[dict]) -> dict:
 
 def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
     thumbs_dir.mkdir(parents=True, exist_ok=True)
+    # Usun stare kolizyjne unknown_*.jpg (Banoffee/Karmel/Lemon nadpisywaly sie)
+    for stale in thumbs_dir.glob("unknown_*.jpg"):
+        try:
+            stale.unlink()
+        except OSError:
+            pass
+
     out: list[dict] = []
     for p in products:
         brand = p.get("brand") or "DK"
         default_lang = "pl" if brand == "DK" else "gb"
+        pid = p.get("id") or "p"
         latest_revs = [r for r in p.get("revisions") or [] if r.get("is_latest")]
         if not latest_revs:
             revs = list(p.get("revisions") or [])
@@ -790,6 +1009,12 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
             latest_revs = [revs[-1]]
 
         for r in latest_revs:
+            # Upewnij indeks z plikow jesli nadal pusty
+            if not r.get("index_base"):
+                ib, ir, full = infer_index_from_files(r.get("wizki") or [])
+                if full:
+                    r["index_base"], r["index_rev"], r["index"] = ib, ir, full
+
             revision_langs: list[str] = list(r.get("langs") or [])
             wizki = r.get("wizki") or []
             lang_files: dict[str, list[dict]] = defaultdict(list)
@@ -811,29 +1036,45 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
             target_langs = sorted(lang_files.keys())
             if not target_langs and revision_langs:
                 target_langs = list(revision_langs)
+            if not target_langs:
+                target_langs = [default_lang]
 
             for lang in target_langs:
-                # Thumb always from whole VISUALS folder (FRONT priority),
-                # even when a lang-only file (e.g. ...GB...PREV) exists.
+                # Thumb z slotu WIZKI - preferuj plik z indeksem TEJ rewizji
                 files_for_lang = lang_files.get(lang) or []
                 thumb_pool = list(wizki) if wizki else files_for_lang
-                thumb_src = pick_thumb_file(thumb_pool)
+                index_base = r.get("index_base") or ""
+                if not index_base or str(index_base).lower() == "noid":
+                    ib, ir, full = parse_index(r.get("folder") or "")
+                    if not full:
+                        ib, ir, full = infer_index_from_files(r.get("wizki") or [])
+                    if full:
+                        r["index_base"], r["index_rev"], r["index"] = ib, ir, full
+                        index_base = ib or ""
+                if not index_base:
+                    index_base = "pending"
+                thumb_src = pick_thumb_file(thumb_pool, index_base)
                 if not thumb_src:
-                    thumb_src = pick_thumb_file(files_for_lang)
+                    thumb_src = pick_thumb_file(files_for_lang, index_base)
                 if not thumb_src:
                     continue
-                index_base = r.get("index_base") or "unknown"
-                thumb_name = f"{index_base}_{lang}.jpg"
+                thumb_name = safe_thumb_stem(pid, index_base, lang)
                 thumb_path = thumbs_dir / thumb_name
+                # Odswiez gdy zrodlo nowsze niz miniatura
                 try:
-                    write_web_thumb(Path(thumb_src["path"]), thumb_path)
+                    src_path = Path(thumb_src["path"])
+                    need = True
+                    if thumb_path.is_file() and src_path.is_file():
+                        need = src_path.stat().st_mtime > thumb_path.stat().st_mtime + 0.5
+                    if need:
+                        write_web_thumb(src_path, thumb_path)
                 except (OSError, PermissionError) as exc:
                     print(f"  thumb skip {thumb_name}: {exc}")
                     continue
                 langs_out = revision_langs if revision_langs else [lang]
                 out.append(
                     {
-                        "product_id": p["id"],
+                        "product_id": pid,
                         "product_name": p.get("display_name") or p["name"],
                         "category": p["category"],
                         "brand": brand,
@@ -844,7 +1085,7 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
                         "langs": langs_out,
                         "lang": lang,
                         "lang_label": lang_label(lang),
-                        "thumb_url": f"data/thumbs/{thumb_name}",
+                        "thumb_url": f"data/thumbs/{thumb_name}?v={int(Path(thumb_src['path']).stat().st_mtime) if Path(thumb_src['path']).exists() else 0}",
                         "file": thumb_src["name"],
                         "path": thumb_src["path"],
                         "rel": thumb_src.get("rel"),
