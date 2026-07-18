@@ -15,6 +15,10 @@
   var indexData = null;
   var SHOW_ALL_KEY = "dam_viz_show_all";
   var LATEST_KEY_LEGACY = "dam_viz_latest_only";
+  var CARD_ZOOM_KEY = "dam_viz_card_zoom";
+  var CARD_ZOOM_MIN = 80;
+  var CARD_ZOOM_MAX = 170;
+  var CARD_BASE_MIN_PX = 220;
 
   var PLACEHOLDER_SVG =
     "data:image/svg+xml," +
@@ -36,6 +40,23 @@
   function labelForLang(code) {
     if (!code) return "";
     return langLabels[code] || String(code).toUpperCase();
+  }
+
+  /* Przy parowaniu z folderem innego jezyka (Dodaj miniature) - zgadnij kod
+     jezyka z nazwy folderu/pliku, np. "...GB_DE_630369.00/DE/plik.jpg" -> de. */
+  function guessLangFromPath(path) {
+    var codes = Object.keys(langLabels || {});
+    if (!codes.length) return "";
+    var tokens = String(path || "")
+      .toUpperCase()
+      .split(/[\\/_\-. ]+/)
+      .filter(Boolean);
+    for (var i = tokens.length - 1; i >= 0; i--) {
+      for (var j = 0; j < codes.length; j++) {
+        if (tokens[i] === codes[j].toUpperCase()) return codes[j];
+      }
+    }
+    return "";
   }
 
   function carrierHuman(carrier, item) {
@@ -367,7 +388,7 @@
     return short || idx || "Aktualna";
   }
 
-  /** Pelny tooltip chipa wariantu: pelna nazwa jezyka + sciezka folderu. */
+  /** Pelny tekst (aria-label / fallback) chipa wariantu: jezyk + sciezka. */
   function variantChipTip(v) {
     var langFull = v.lang_label || labelForLang(v.lang) || "";
     var parts = [];
@@ -375,6 +396,110 @@
     if (v.revision_folder) parts.push(v.revision_folder);
     if (v.path) parts.push(v.path);
     return parts.join(" · ");
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Popover wariantu: KRAJ (naglowek) + Sciezka + Kopiuj sciezke.        */
+  /* Dziala na hover (auto-hide) i na klik (przypiety - dla osob, ktore  */
+  /* nie najedzja myszka, tylko klikaja - 2026-07-18 wymog uzytkownika). */
+  /* ------------------------------------------------------------------ */
+  var variantInfoPopoverEl = null;
+  var variantInfoPinned = false;
+  var docClickAwayBound = false;
+
+  function closeVariantInfoPopover() {
+    if (variantInfoPopoverEl) {
+      variantInfoPopoverEl.remove();
+      variantInfoPopoverEl = null;
+    }
+    variantInfoPinned = false;
+  }
+
+  function variantInfoHtml(v) {
+    var short =
+      (window.DamLabels && typeof window.DamLabels.langShort === "function"
+        ? window.DamLabels.langShort(v.lang)
+        : String(v.lang || "").toUpperCase()) || "?";
+    var full = v.lang_label || labelForLang(v.lang) || "";
+    var path = v.path || v.revision_path || "";
+    var html =
+      '<div class="dam-variant-info__head">' +
+      '<span class="dam-variant-info__country">' +
+      esc(short) +
+      "</span>" +
+      (full ? '<span class="dam-variant-info__country-full">' + esc(full) + "</span>" : "") +
+      "</div>";
+    if (path) {
+      html +=
+        '<div class="dam-variant-info__path-label">Sciezka:</div>' +
+        '<div class="dam-variant-info__path">' +
+        esc(path) +
+        "</div>" +
+        '<button type="button" class="dam-variant-info__copy" data-copy-path="' +
+        esc(path) +
+        '"><i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj sciezke</span></button>';
+    } else {
+      html += '<div class="dam-variant-info__path-label">Brak sciezki dla tego wariantu</div>';
+    }
+    return html;
+  }
+
+  function positionPopoverNear(anchorEl, popEl) {
+    var rect = anchorEl.getBoundingClientRect();
+    var pw = Math.min(popEl.offsetWidth || 300, window.innerWidth - 24);
+    var left = rect.left + rect.width / 2 - pw / 2;
+    var maxLeft = window.innerWidth - pw - 12;
+    if (left > maxLeft) left = maxLeft;
+    if (left < 12) left = 12;
+    var ph = popEl.offsetHeight || 90;
+    var top = rect.bottom + 8;
+    if (top + ph + 12 > window.innerHeight) top = rect.top - ph - 8;
+    if (top < 8) top = 8;
+    popEl.style.left = Math.round(left) + "px";
+    popEl.style.top = Math.round(top) + "px";
+  }
+
+  function openVariantInfoPopover(anchorEl, v, pinned) {
+    if (!v) return;
+    closeVariantInfoPopover();
+    var pop = document.createElement("div");
+    pop.id = "damVariantInfoPopover";
+    pop.className = "dam-variant-info-popover";
+    pop.innerHTML = variantInfoHtml(v);
+    document.body.appendChild(pop);
+    variantInfoPopoverEl = pop;
+    variantInfoPinned = !!pinned;
+    positionPopoverNear(anchorEl, pop);
+    var copyBtn = pop.querySelector("[data-copy-path]");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        copyToClipboard(copyBtn.getAttribute("data-copy-path") || "").then(
+          function () {
+            showToast("Skopiowano sciezke do schowka");
+          },
+          function () {
+            showToast("Nie udalo sie skopiowac");
+          }
+        );
+      });
+    }
+    pop.addEventListener("mouseleave", function () {
+      if (!variantInfoPinned) closeVariantInfoPopover();
+    });
+    if (!docClickAwayBound) {
+      docClickAwayBound = true;
+      document.addEventListener(
+        "click",
+        function (e) {
+          if (!variantInfoPopoverEl) return;
+          if (variantInfoPopoverEl.contains(e.target)) return;
+          if (e.target.closest && e.target.closest(".dam-viz-modal__variant")) return;
+          closeVariantInfoPopover();
+        },
+        true
+      );
+    }
   }
 
   function mediaPreviewUrl(indexPath) {
@@ -565,22 +690,29 @@
     return i > 0 ? p.slice(0, i) : p;
   }
 
-  function openThumbPicker(v, onPicked) {
-    var dir = folderDirFromPath(v.path || "");
+  /* Generyczny picker folderu/pliku - startuje w startDir, ale admin moze
+     nawigowac gore/w dol (potrzebne przy parowaniu z folderem INNEGO jezyka,
+     2026-07-18). Native dialog (desktop) i tak pozwala na dowolna nawigacje;
+     to dotyczy glownie fallback-grid w przegladarce. */
+  function openFolderPicker(startDir, onPicked) {
     var api = window.pywebview && window.pywebview.api;
     if (api && typeof api.pick_thumb === "function") {
-      Promise.resolve(api.pick_thumb(dir))
+      Promise.resolve(api.pick_thumb(startDir))
         .then(function (res) {
           if (res && res.ok && res.path) onPicked(res);
-          else if (res && res.cancelled) showToast("Anulowano wybor miniatury");
-          else openThumbGridPicker(dir, onPicked);
+          else if (res && res.cancelled) showToast("Anulowano wybor pliku");
+          else openThumbGridPicker(startDir, onPicked);
         })
         .catch(function () {
-          openThumbGridPicker(dir, onPicked);
+          openThumbGridPicker(startDir, onPicked);
         });
       return;
     }
-    openThumbGridPicker(dir, onPicked);
+    openThumbGridPicker(startDir, onPicked);
+  }
+
+  function openThumbPicker(v, onPicked) {
+    openFolderPicker(folderDirFromPath(v.path || ""), onPicked);
   }
 
   function openThumbGridPicker(dir, onPicked) {
@@ -591,63 +723,116 @@
     overlay.className = "dam-thumb-picker-overlay";
     overlay.innerHTML =
       '<div class="dam-thumb-picker-box">' +
-      '<div class="dam-thumb-picker__head"><strong>Wybierz miniature</strong>' +
+      '<div class="dam-thumb-picker__head"><strong>Wybierz plik</strong>' +
       '<button type="button" class="dam-admin-control" id="damThumbPickerClose" aria-label="Zamknij">×</button></div>' +
-      '<p class="dam-thumb-picker__path"></p>' +
+      '<div class="dam-thumb-picker__nav">' +
+      '<button type="button" class="dam-admin-control" id="damThumbPickerUp" data-dam-tip="Folder wyzej">' +
+      '<i class="uil uil-arrow-up" aria-hidden="true"></i></button>' +
+      '<input type="text" id="damThumbPickerPathInput" class="dam-thumb-picker__path-input" placeholder="Wklej lub wpisz sciezke folderu (np. jezyka DE)" />' +
+      '<button type="button" class="dam-admin-control" id="damThumbPickerGo">Idz</button>' +
+      "</div>" +
       '<div class="dam-thumb-picker__grid" id="damThumbPickerGrid">Ladowanie…</div></div>';
     document.body.appendChild(overlay);
-    overlay.querySelector(".dam-thumb-picker__path").textContent = dir || "";
+    var pathInput = document.getElementById("damThumbPickerPathInput");
+    var upBtn = document.getElementById("damThumbPickerUp");
     document.getElementById("damThumbPickerClose").onclick = function () {
       overlay.remove();
     };
     overlay.addEventListener("click", function (e) {
       if (e.target === overlay) overlay.remove();
     });
-    fetch(bridgeBase() + "/folder-images?path=" + encodeURIComponent(dir))
-      .then(function (r) {
-        return r.json();
-      })
-      .then(function (data) {
-        var grid = document.getElementById("damThumbPickerGrid");
-        if (!grid) return;
-        var files = (data && data.files) || [];
-        if (!files.length) {
-          grid.innerHTML = "<p>Brak obrazow w folderze.</p>";
-          return;
-        }
-        grid.innerHTML = files
-          .map(function (f) {
-            var prev = mediaPreviewUrl(f.path);
-            return (
-              '<button type="button" class="dam-thumb-picker__item dam-admin-control" data-path="' +
-              esc(f.path) +
-              '" data-file="' +
-              esc(f.name) +
-              '">' +
-              (prev
-                ? '<img src="' + esc(prev) + '" alt="">'
-                : '<span>' + esc(f.name) + "</span>") +
-              '<span class="dam-thumb-picker__name">' +
-              esc(f.name) +
-              "</span></button>"
-            );
-          })
-          .join("");
-        grid.querySelectorAll(".dam-thumb-picker__item").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            onPicked({
-              ok: true,
-              path: btn.getAttribute("data-path"),
-              file: btn.getAttribute("data-file"),
+
+    function loadDir(target) {
+      var grid = document.getElementById("damThumbPickerGrid");
+      if (grid) grid.innerHTML = "Ladowanie…";
+      if (pathInput) pathInput.value = target || "";
+      fetch(bridgeBase() + "/folder-images?path=" + encodeURIComponent(target))
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (data) {
+          grid = document.getElementById("damThumbPickerGrid");
+          if (!grid) return;
+          if (!data || !data.ok) {
+            grid.innerHTML = "<p>Nie udalo sie otworzyc: " + esc((data && data.error) || "?") + "</p>";
+            return;
+          }
+          if (pathInput) pathInput.value = data.path || target || "";
+          if (upBtn) upBtn.disabled = !data.parent;
+          upBtn.onclick = data.parent
+            ? function () {
+                loadDir(data.parent);
+              }
+            : null;
+          var folders = data.folders || [];
+          var files = data.files || [];
+          if (!folders.length && !files.length) {
+            grid.innerHTML = "<p>Folder jest pusty (brak podfolderow i obrazow).</p>";
+            return;
+          }
+          var html = "";
+          html += folders
+            .map(function (f) {
+              return (
+                '<button type="button" class="dam-thumb-picker__item dam-thumb-picker__item--folder dam-admin-control" data-open-folder="' +
+                esc(f.path) +
+                '"><i class="uil uil-folder" aria-hidden="true"></i>' +
+                '<span class="dam-thumb-picker__name">' +
+                esc(f.name) +
+                "</span></button>"
+              );
+            })
+            .join("");
+          html += files
+            .map(function (f) {
+              var prev = mediaPreviewUrl(f.path);
+              return (
+                '<button type="button" class="dam-thumb-picker__item dam-admin-control" data-path="' +
+                esc(f.path) +
+                '" data-file="' +
+                esc(f.name) +
+                '">' +
+                (prev
+                  ? '<img src="' + esc(prev) + '" alt="">'
+                  : '<span>' + esc(f.name) + "</span>") +
+                '<span class="dam-thumb-picker__name">' +
+                esc(f.name) +
+                "</span></button>"
+              );
+            })
+            .join("");
+          grid.innerHTML = html;
+          grid.querySelectorAll("[data-open-folder]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              loadDir(btn.getAttribute("data-open-folder"));
             });
-            overlay.remove();
           });
+          grid.querySelectorAll("[data-path]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              onPicked({
+                ok: true,
+                path: btn.getAttribute("data-path"),
+                file: btn.getAttribute("data-file"),
+              });
+              overlay.remove();
+            });
+          });
+        })
+        .catch(function () {
+          grid = document.getElementById("damThumbPickerGrid");
+          if (grid) grid.innerHTML = "<p>Nie udalo sie wczytac listy (most lokalny?).</p>";
         });
-      })
-      .catch(function () {
-        var grid = document.getElementById("damThumbPickerGrid");
-        if (grid) grid.innerHTML = "<p>Nie udalo sie wczytac listy obrazow (most lokalny?).</p>";
+    }
+
+    document.getElementById("damThumbPickerGo").addEventListener("click", function () {
+      if (pathInput && pathInput.value.trim()) loadDir(pathInput.value.trim());
+    });
+    if (pathInput) {
+      pathInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && pathInput.value.trim()) loadDir(pathInput.value.trim());
       });
+    }
+    loadDir(dir);
   }
 
   function applyOverrideToItem(v) {
@@ -707,9 +892,7 @@
           esc(v.path || "") +
           '" data-thumb="' +
           esc(thumb) +
-          '" title="' +
-          esc(variantChipTip(v)) +
-          '" data-dam-tip="' +
+          '" aria-label="' +
           esc(variantChipTip(v)) +
           '">' +
           (thumb
@@ -738,6 +921,7 @@
             carrier: first.carrier,
             carrierLabel: carrierHuman(first.carrier || "", first),
             carrierGuessed: !!first.carrier_guessed,
+            carrierPrevious: first.carrier_previous || "",
             langs: first.langs || (first.lang ? [first.lang] : []),
             lang: first.lang,
             langLabel: first.lang_label || labelForLang(first.lang),
@@ -804,15 +988,19 @@
 
     var adminActions = "";
     if (admin) {
+      /* Miniatura (ustaw podglad jako miniature) wywalona - nie miala sensu
+         obok Dodaj. Zostaje jedna spojna grupa: Demo / Ukryj / Dodaj miniature
+         (Dodaj miniature = parowanie brakujacej wizualizacji z folderem innego
+         jezyka/wariantu, patrz damVizModalAddManual). */
       adminActions =
-        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalSetThumb" data-dam-tip="Wybierz plik miniatury z folderu produktu">' +
-        '<i class="uil uil-image" aria-hidden="true"></i><span>Miniatura</span></button>' +
+        '<div class="dam-viz-modal__actions-admin-group">' +
         '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalDemo" data-dam-tip="Oznacz jako Demo (zolta obwodka)">' +
         '<i class="uil uil-star" aria-hidden="true"></i><span>Demo</span></button>' +
         '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalHide" data-dam-tip="Ukryj kafelek dla zwyklego uzytkownika">' +
         '<i class="uil uil-eye-slash" aria-hidden="true"></i><span>Ukryj</span></button>' +
-        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalAddManual" data-dam-tip="Dodaj kafelek recznie z pliku">' +
-        '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span></button>';
+        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalAddManual" data-dam-tip="Brak wizualizacji? Wskaz folder z wizualizacjami innego jezyka/wariantu i sparuj z tym produktem">' +
+        '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj miniature</span></button>' +
+        "</div>";
     }
 
     var html =
@@ -843,12 +1031,12 @@
       '<h4 class="dam-viz-modal__title">' +
       esc(productName) +
       "</h4>" +
-      '<p class="dam-viz-modal__carrier' +
-      (admin ? " dam-viz-modal__carrier--editable" : "") +
+      '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable' +
       '" id="damVizModalMeta" data-dam-tip="' +
-      (admin
-        ? "Nosnik. Podwojny klik lub Shift+klik: zmiana typu"
-        : "Nosnik / indeks biezacego wariantu") +
+      esc(
+        "Nosnik / indeks biezacego wariantu. Podwojny klik lub Shift+klik: zaproponuj zmiane typu." +
+          (admin ? " Admin: zmiana zostanie zapisana natychmiast." : "")
+      ) +
       '">' +
       esc(
         (carrierHuman(first.carrier || "", first) || "BRAK TYPU") +
@@ -863,12 +1051,15 @@
       '<div class="dam-viz-modal__actions-main">' +
       '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damVizModalGoProduct" data-pid="' +
       esc(first.product_id || "") +
-      '" data-dam-tip="Otwiera karte produktu w Eksploratorze DAM">' +
-      '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdz</span></button>' +
-      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damVizModalWinExplorer" data-path="' +
+      '" data-dam-tip="Otwiera produkt w Eksplorerze">' +
+      '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Przejdź</span></button>' +
+      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-win-btn" id="damVizModalWinExplorer" data-path="' +
       esc(first.path || "") +
-      '" aria-label="Otworz w Eksploratorze Windows" title="Otworz w Eksploratorze Windows" data-dam-tip="Otwiera folder w Eksploratorze Windows">' +
-      '<i class="uil uil-folder-open" aria-hidden="true"></i><span>otwórz</span></button>' +
+      '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows">' +
+      (window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
+        ? window.DamIcons.winExplorerSvg()
+        : '<i class="uil uil-folder" aria-hidden="true"></i>') +
+      "<span>Folder</span></button>" +
       '<button type="button" class="dam-viz-icon-btn" id="damVizModalCopyPath" data-path="' +
       esc(first.path || "") +
       '" aria-label="Kopiuj sciezke" title="Kopiuj sciezke" data-dam-tip="Kopiuje lokalna sciezke pliku">' +
@@ -996,8 +1187,26 @@
     }
 
     modal.querySelectorAll(".dam-viz-modal__variant").forEach(function (el) {
+      var hoverTimer = null;
+      el.addEventListener("mouseenter", function () {
+        clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(function () {
+          if (variantInfoPinned) return;
+          var idx = parseInt(el.getAttribute("data-vidx"), 10) || 0;
+          openVariantInfoPopover(el, items[idx], false);
+        }, 280);
+      });
+      el.addEventListener("mouseleave", function () {
+        clearTimeout(hoverTimer);
+        if (!variantInfoPinned) closeVariantInfoPopover();
+      });
       el.addEventListener("click", function () {
-        selectVariant(parseInt(this.getAttribute("data-vidx"), 10) || 0);
+        clearTimeout(hoverTimer);
+        var idx = parseInt(this.getAttribute("data-vidx"), 10) || 0;
+        selectVariant(idx);
+        /* Klik = tez pokazuje popover (przypiety), nie tylko hover -
+           dla osob, ktore wola kliknac niz najechac (2026-07-18). */
+        openVariantInfoPopover(this, items[idx], true);
       });
     });
 
@@ -1111,6 +1320,7 @@
           carrier: v.carrier,
           carrierLabel: carrierHuman(v.carrier || "", v),
           carrierGuessed: !!v.carrier_guessed,
+          carrierPrevious: v.carrier_previous || "",
           langs: v.langs || (v.lang ? [v.lang] : []),
           lang: v.lang,
           langLabel: v.lang_label || labelForLang(v.lang),
@@ -1141,20 +1351,10 @@
     function syncAdminControls(v) {
       if (!admin || !v) return;
       var pid = v.product_id || "";
-      var thumbOn = hasThumbOverride(pid);
       var demoOn = isDemo(v);
       var hideOn = isHidden(v);
       var manualN = countManualForProduct(pid);
 
-      setBtnLabel(
-        document.getElementById("damVizModalSetThumb"),
-        thumbOn ? "uil uil-redo" : "uil uil-image",
-        thumbOn ? "Reset" : "Miniatura",
-        thumbOn
-          ? "Cofnij wybor miniatury (przywroc domyslna)"
-          : "Wybierz plik miniatury z folderu produktu",
-        thumbOn
-      );
       setBtnLabel(
         document.getElementById("damVizModalDemo"),
         "uil uil-star",
@@ -1176,52 +1376,12 @@
       setBtnLabel(
         document.getElementById("damVizModalAddManual"),
         manualN > 0 ? "uil uil-minus" : "uil uil-plus",
-        manualN > 0 ? "Usun" : "Dodaj",
+        manualN > 0 ? "Usun sparowanie" : "Dodaj miniature",
         manualN > 0
-          ? "Usun ostatni recznie dodany kafelek (cofnie). Shift+klik: dodaj kolejny."
-          : "Dodaj kafelek recznie z pliku",
+          ? "Usun ostatnie sparowanie (cofnie). Shift+klik: sparuj kolejny folder."
+          : "Brak wizualizacji? Wskaz folder z wizualizacjami innego jezyka/wariantu i sparuj z tym produktem",
         manualN > 0
       );
-    }
-
-    var setThumbBtn = document.getElementById("damVizModalSetThumb");
-    if (setThumbBtn) {
-      setThumbBtn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        var v = items[activeIdx] || first;
-        if (!v || !v.product_id) {
-          showToast("Brak produktu");
-          return;
-        }
-        if (hasThumbOverride(v.product_id)) {
-          clearThumbOverride(v.product_id);
-          items = uniqueModalVariants(withAliasItems(group.items)).map(applyOverrideToItem);
-          first = items[0] || first;
-          var hero = document.getElementById("damVizModalHero");
-          var fresh = items[activeIdx] || first;
-          if (hero) hero.src = (fresh && fresh.thumb_url) || PLACEHOLDER_SVG;
-          refreshCardThumb(group.pid, (items[0] && items[0].thumb_url) || "");
-          showToast("Przywrocono domyslna miniature");
-          refreshModalBadgesAndAdmin();
-          applyFilters();
-          return;
-        }
-        openThumbPicker(v, function (picked) {
-          var thumbUrl = mediaPreviewUrl(picked.path) || "";
-          saveThumbOverride(v.product_id, {
-            path: picked.path || "",
-            file: picked.file || "",
-            thumb_url: thumbUrl,
-            updated_at: new Date().toISOString(),
-          });
-          refreshCardThumb(group.pid, thumbUrl);
-          var heroEl = document.getElementById("damVizModalHero");
-          if (heroEl && thumbUrl) heroEl.src = thumbUrl;
-          showToast("Ustawiono miniature dla " + (v.product_name || v.product_id));
-          refreshModalBadgesAndAdmin();
-          applyFilters();
-        });
-      });
     }
 
     var demoBtn = document.getElementById("damVizModalDemo");
@@ -1260,12 +1420,48 @@
         var manualN = countManualForProduct(v.product_id);
         if (manualN > 0 && !e.shiftKey) {
           var removed = removeLastManual(v.product_id);
-          showToast(removed ? "Usunieto reczny kafelek" : "Brak recznego kafelka");
+          showToast(removed ? "Usunieto sparowanie" : "Brak sparowanego kafelka");
           refreshModalBadgesAndAdmin();
           applyFilters();
           return;
         }
-        openThumbPicker(v, function (picked) {
+        /* Start w folderze PRODUKTU (nie tylko biezacej rewizji), zeby admin
+           mogl wejsc w sasiedni folder jezyka, ktorego wizualizacja jest
+           taka sama jak biezaca (np. GB == DE). */
+        var meta = productMeta(v.product_id) || {};
+        var startDir = meta.path || folderDirFromPath(v.path || "");
+        openFolderPicker(startDir, function (picked) {
+          var guessedLang = guessLangFromPath(picked.path) || guessLangFromPath(picked.file);
+          var langCode = guessedLang;
+          if (!langCode) {
+            langCode = (
+              window.prompt(
+                "Nie rozpoznano kodu jezyka z folderu.\nWpisz kod jezyka tej wizualizacji (np. de, fr, gb):",
+                ""
+              ) || ""
+            )
+              .trim()
+              .toLowerCase();
+          }
+          if (!langCode) {
+            showToast("Sparowanie odwolane - brak kodu jezyka");
+            return;
+          }
+          var langLbl = labelForLang(langCode);
+          var sure = window.confirm(
+            "Sparowac wizualizacje z folderu:\n" +
+              picked.path +
+              "\n\njako jezyk " +
+              langCode.toUpperCase() +
+              (langLbl ? " (" + langLbl + ")" : "") +
+              ' dla produktu "' +
+              (v.product_name || v.product_id) +
+              '"?\n\nBedzie uzywana jako wizualizacja tego produktu w tym jezyku.'
+          );
+          if (!sure) {
+            showToast("Sparowanie odwolane");
+            return;
+          }
           var entry = {
             product_id: v.product_id,
             product_name: v.product_name,
@@ -1275,22 +1471,31 @@
             carrier_label: v.carrier_label,
             index: v.index,
             index_base: v.index_base || "manual",
-            lang: v.lang || "pl",
-            lang_label: v.lang_label || "Polska",
-            langs: v.langs || [v.lang || "pl"],
+            lang: langCode,
+            lang_label: langLbl || langCode.toUpperCase(),
+            langs: [langCode],
             path: picked.path,
             file: picked.file,
             thumb_url: mediaPreviewUrl(picked.path),
             tags: v.tags || [],
             manual: true,
+            paired_from: picked.path,
             mtime: new Date().toISOString(),
           };
           vizFlags.manual = vizFlags.manual || [];
           vizFlags.manual.push(entry);
           persistVizFlags();
           postVizFlag({ action: "manual", entry: entry, flags: vizFlags });
+          logChange({
+            action: "pair_viz",
+            product_id: v.product_id,
+            product_name: v.product_name,
+            detail: "Sparowano " + langCode.toUpperCase() + " -> " + picked.path,
+            before: null,
+            after: entry,
+          });
           all.push(entry);
-          showToast("Dodano kafelek recznie");
+          showToast("Sparowano wizualizacje (" + langCode.toUpperCase() + ")");
           refreshModalBadgesAndAdmin();
           applyFilters();
         });
@@ -1307,7 +1512,7 @@
     }
 
     var metaEl = document.getElementById("damVizModalMeta");
-    if (metaEl && admin && window.DamTagEdit) {
+    if (metaEl && window.DamTagEdit) {
       var metaLast = 0;
       metaEl.addEventListener("click", function (e) {
         var now = Date.now();
@@ -1379,13 +1584,18 @@
     }
 
     document.getElementById("damVizModalClose").addEventListener("click", function () {
+      closeVariantInfoPopover();
       modal.remove();
     });
     modal.addEventListener("click", function (e) {
-      if (e.target === modal) modal.remove();
+      if (e.target === modal) {
+        closeVariantInfoPopover();
+        modal.remove();
+      }
     });
     document.addEventListener("keydown", function onEsc(e) {
       if (e.key === "Escape") {
+        closeVariantInfoPopover();
         modal.remove();
         document.removeEventListener("keydown", onEsc);
       }
@@ -1441,6 +1651,7 @@
             carrier: first.carrier,
             carrierLabel: carrierLbl,
             carrierGuessed: !!first.carrier_guessed,
+            carrierPrevious: first.carrier_previous || "",
             langs: Object.keys(langs).length ? Object.keys(langs) : first.langs || (first.lang ? [first.lang] : []),
             lang: first.lang,
             langLabel: first.lang_label || labelForLang(first.lang),
@@ -1500,10 +1711,13 @@
             (noViz
               ? '<button type="button" class="geex-btn geex-btn--primary dam-btn-icon dam-viz-request-btn" data-group-pid="' + esc(group.pid) + '" title="Zglos zapotrzebowanie" data-dam-tip="Zglos zapotrzebowanie na wizualizacje dla tego wariantu">' +
                 '<i class="uil uil-bell-plus" aria-hidden="true"></i><span>Zglos</span></button>'
-              : '<a class="geex-btn geex-btn--primary dam-btn-icon" href="explorer.html?product=' + encodeURIComponent(first.product_id || "") + '" title="Przejdz do produktu" data-dam-tip="Otwiera karte produktu w hubie DAM">' +
-                '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdz</span></a>') +
-            '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-viz-win-explorer-btn" data-path="' + esc(first.path || "") + '" aria-label="Eksplorator" title="Eksplorator Windows" data-dam-tip="Otwiera folder w Eksploratorze Windows">' +
-              '<i class="uil uil-folder-open" aria-hidden="true"></i></button>' +
+              : '<a class="geex-btn geex-btn--primary dam-btn-icon" href="explorer.html?product=' + encodeURIComponent(first.product_id || "") + '" title="Przejdź" data-dam-tip="Otwiera produkt w Eksplorerze">' +
+                '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Przejdź</span></a>') +
+            '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-viz-win-explorer-btn dam-win-btn" data-path="' + esc(first.path || "") + '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows">' +
+              (window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
+                ? window.DamIcons.winExplorerSvg()
+                : '<i class="uil uil-folder" aria-hidden="true"></i>') +
+            "</button>" +
             (noViz
               ? ""
               : '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-viz-share-btn" data-group-pid="' + esc(group.pid) + '" aria-label="Udostepnij" title="Udostepnij" data-dam-tip="Udostepnij plik przez Synology Drive">' +
@@ -1608,6 +1822,90 @@
     });
   }
 
+  /* Podkategorie (np. "Kulki Surowe" / balls raw) - osobny rzad pilli, bo
+     "typ" w tag_groups to kategoria (kulki/batony), a nie ta subtelniejsza
+     podkategoria z folderu produktu. Zrodlo: _DAM_FILE_INDEX.products. */
+  var SUBCAT_ROW_LIMIT = 7;
+  var subcatExpanded = false;
+  var subcatPillCache = [];
+
+  function renderSubcatPills(products) {
+    var el = document.getElementById("vizSubcatTags");
+    if (!el) return;
+    if (products) {
+      var seen = {};
+      var list = [];
+      (products || []).forEach(function (p) {
+        var slug = (p.subcategory_slug || "").trim();
+        if (!slug || seen[slug]) return;
+        seen[slug] = true;
+        list.push({ slug: slug, label: p.subcategory_label || slug });
+      });
+      list.sort(function (a, b) {
+        return a.label.localeCompare(b.label, "pl");
+      });
+      subcatPillCache = list;
+      subcatExpanded = false;
+    }
+    var list = subcatPillCache || [];
+    if (!list.length) {
+      el.innerHTML = "";
+      return;
+    }
+    var isLong = list.length > SUBCAT_ROW_LIMIT;
+    var visible = isLong && !subcatExpanded ? list.slice(0, SUBCAT_ROW_LIMIT) : list;
+    var hiddenCount = isLong && !subcatExpanded ? list.length - SUBCAT_ROW_LIMIT : 0;
+    var html =
+      '<div class="dam-tag-groups__inner"><div class="dam-tag-group-row dam-tag-group--podkategoria' +
+      (isLong ? " dam-tag-group-row--long" : "") +
+      (subcatExpanded ? " is-expanded" : "") +
+      '">' +
+      '<span class="dam-tag-group-label">Podkategoria:</span><span class="dam-tag-group-pills">' +
+      visible
+        .map(function (it) {
+          return (
+            '<button type="button" class="dam-tag-pill" data-subcat="' +
+            esc(it.slug) +
+            '" title="' +
+            esc(it.label) +
+            '">' +
+            esc(it.label) +
+            "</button>"
+          );
+        })
+        .join("");
+    if (isLong) {
+      if (!subcatExpanded) {
+        html +=
+          '<button type="button" class="dam-tag-more" data-expand-subcat="1" aria-expanded="false" title="Pokaz wszystkie podkategorie">+' +
+          hiddenCount +
+          "</button>";
+      } else {
+        html +=
+          '<button type="button" class="dam-tag-more" data-expand-subcat="1" aria-expanded="true" title="Zwin liste podkategorii">mniej</button>';
+      }
+    }
+    html += "</span></div></div>";
+    el.innerHTML = html;
+    el.querySelectorAll("[data-subcat]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var search = document.getElementById("vizSearch");
+        if (!search) return;
+        search.value = this.getAttribute("data-subcat") || "";
+        search.dispatchEvent(new Event("input", { bubbles: true }));
+        search.focus();
+      });
+    });
+    el.querySelectorAll("[data-expand-subcat]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        subcatExpanded = !subcatExpanded;
+        renderSubcatPills(null);
+      });
+    });
+  }
+
   function productMeta(pid) {
     var fi = window._DAM_FILE_INDEX;
     if (!fi || !fi.products) return null;
@@ -1617,10 +1915,21 @@
     return null;
   }
 
+  /* "balls_raw" / "balls-raw" -> "balls raw" - zeby query i blob mialy ta sama
+     tokenizacje niezaleznie od separatora uzytego w slug/nazwie folderu. */
+  function normalizeSearchText(s) {
+    return String(s || "")
+      .toLowerCase()
+      .replace(/[_\-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   function applyFilters() {
     var lang = (document.getElementById("vizLangFilter") || {}).value || "";
     var q = ((document.getElementById("vizSearch") || {}).value || "").trim().toLowerCase();
-    var parts = q ? q.split(/\s+/).filter(Boolean) : [];
+    var qNorm = normalizeSearchText(q);
+    var parts = qNorm ? qNorm.split(/\s+/).filter(Boolean) : [];
 
     filtered = all.filter(function (v) {
       var brand = v.brand || "DK";
@@ -1636,24 +1945,31 @@
       if (!parts.length) return true;
       var meta = productMeta(v.product_id) || {};
       var tg = meta.tag_groups || {};
-      var blob = [
-        v.product_name || "",
-        v.index || "",
-        v.index_base || "",
-        v.carrier || "",
-        v.file || "",
-        v.lang_label || "",
-        v.brand || "",
-        (meta.tags || []).join(" "),
-        (meta.authors || []).join(" "),
-        (tg.smak || []).join(" "),
-        (tg.typ || []).join(" "),
-        (tg.opakowanie || []).join(" "),
-        (tg.autor || tg.osoba || []).join(" "),
-        meta.search_blob || "",
-      ]
-        .join(" ")
-        .toLowerCase();
+      var blob = normalizeSearchText(
+        [
+          v.product_name || "",
+          v.index || "",
+          v.index_base || "",
+          v.carrier || "",
+          v.file || "",
+          v.lang_label || "",
+          v.brand || "",
+          v.subcategory_slug || "",
+          v.subcategory_label || "",
+          meta.name || "",
+          meta.display_name || "",
+          meta.path || "",
+          meta.subcategory_slug || "",
+          meta.subcategory_label || "",
+          (meta.tags || []).join(" "),
+          (meta.authors || []).join(" "),
+          (tg.smak || []).join(" "),
+          (tg.typ || []).join(" "),
+          (tg.opakowanie || []).join(" "),
+          (tg.autor || tg.osoba || []).join(" "),
+          meta.search_blob || "",
+        ].join(" ")
+      );
       var digits = q.replace(/\D/g, "");
       if (digits.length >= 4 && (v.index_base || "").indexOf(digits) !== -1) return true;
       return parts.every(function (part) {
@@ -1663,6 +1979,44 @@
     render();
   }
 
+  /* Suwak skali kafelkow:
+     80-100% = pomniejsza tylko wizualizacje w thumb (img-scale),
+     100-170% = wizualizacja wypelnia krawedzie L/P, potem rosnie kafelek. */
+  function applyCardZoom(pct) {
+    var n = Math.round(Number(pct) || 100);
+    if (n < CARD_ZOOM_MIN) n = CARD_ZOOM_MIN;
+    if (n > CARD_ZOOM_MAX) n = CARD_ZOOM_MAX;
+    var imgScale = n <= 100 ? n / 100 : 1;
+    var cardScale = n <= 100 ? 1 : n / 100;
+    var root = document.getElementById("vizGrid") || document.documentElement;
+    root.style.setProperty("--dam-viz-img-scale", String(imgScale));
+    root.style.setProperty("--dam-viz-card-scale", String(cardScale));
+    root.style.setProperty("--dam-viz-card-min", Math.round(CARD_BASE_MIN_PX * cardScale) + "px");
+    var label = document.getElementById("vizCardZoomLabel");
+    if (label) label.textContent = n + "%";
+    var input = document.getElementById("vizCardZoom");
+    if (input && String(input.value) !== String(n)) input.value = String(n);
+    try {
+      localStorage.setItem(CARD_ZOOM_KEY, String(n));
+    } catch (e) {}
+    return n;
+  }
+
+  function bindCardZoomControl() {
+    var input = document.getElementById("vizCardZoom");
+    if (!input || input._damZoomBound) return;
+    input._damZoomBound = true;
+    var saved = parseInt(localStorage.getItem(CARD_ZOOM_KEY) || "100", 10);
+    if (isNaN(saved)) saved = 100;
+    applyCardZoom(saved);
+    input.addEventListener("input", function () {
+      applyCardZoom(this.value);
+    });
+    input.addEventListener("change", function () {
+      applyCardZoom(this.value);
+    });
+  }
+
   function init() {
     var grid = document.getElementById("vizGrid");
     if (!grid) return;
@@ -1670,12 +2024,16 @@
     // Synology enabled?
     synologyEnabled = (localStorage.getItem("dam_synology_enabled") !== "false");
 
+    bindCardZoomControl();
+
     var adminToggle = document.getElementById("vizAdminToggle");
     var adminToggleWrap = adminToggle && adminToggle.closest(".dam-admin-toggle");
+    var changeLogBar = document.getElementById("damChangeLogBar");
     if (adminToggle) {
       if (!isAdminRole()) {
         if (adminToggleWrap) adminToggleWrap.style.display = "none";
         else adminToggle.style.display = "none";
+        if (changeLogBar) changeLogBar.hidden = true;
         localStorage.setItem(ADMIN_KEY, "0");
       } else {
         if (adminToggleWrap) adminToggleWrap.style.display = "";
@@ -1692,6 +2050,39 @@
         });
       }
     }
+
+    /* Fala D: discrepancy dysk vs ostatnie zatwierdzenie -> carrier_guessed + tip */
+    fetch("./data/carrier-assignment-log.json", { cache: "no-store" })
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (log) {
+        var entries = (log && log.entries) || [];
+        if (!entries.length || !all.length) return;
+        var byParent = {};
+        entries.forEach(function (e) {
+          var rp = String(e.revision_path || "").replace(/\//g, "\\");
+          var parent = rp.replace(/\\[^\\]+$/, "").toLowerCase();
+          if (!parent) return;
+          byParent[parent] = e;
+        });
+        var dirty = false;
+        all.forEach(function (v) {
+          var rp = String(v.revision_path || "").replace(/\//g, "\\");
+          var parent = rp.replace(/\\[^\\]+$/, "").toLowerCase();
+          var last = byParent[parent];
+          if (!last) return;
+          var assigned = String(last.carrier_code || "").toUpperCase();
+          var disk = String(v.carrier || "").toUpperCase();
+          if (assigned && disk && assigned !== disk && assigned !== "NONE") {
+            v.carrier_guessed = true;
+            v.carrier_previous = assigned;
+            dirty = true;
+          }
+        });
+        if (dirty) applyFilters();
+      })
+      .catch(function () {});
 
     window.damVizApplyBrandTag = function (brand) {
       var b = String(brand || "").toUpperCase();
@@ -1739,6 +2130,7 @@
             carrier: v.carrier,
             carrierLabel: carrierHuman(v.carrier || "", v),
             carrierGuessed: !!v.carrier_guessed,
+            carrierPrevious: v.carrier_previous || "",
             langs: v.langs || (v.lang ? [v.lang] : []),
             lang: v.lang,
             langLabel: v.lang_label || labelForLang(v.lang),
@@ -1886,6 +2278,7 @@
       indexData = data;
       langLabels = data.lang_labels || {};
       window._DAM_FILE_INDEX = data;
+      renderSubcatPills(data.products);
       showAll = readShowAll();
       var showAllEl = document.getElementById("vizShowAll") || document.getElementById("vizLatestOnly");
       if (showAllEl) {

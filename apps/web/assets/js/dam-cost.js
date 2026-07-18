@@ -1,5 +1,5 @@
 /**
- * DAM ETA - Kalkulator kosztow (czytelny wybor projektu + breakdown)
+ * DAM ETA - Kalkulator kosztów (czytelny wybor projektu + breakdown)
  * Loads data/project-costs.json (built from Asana + cost-rates).
  */
 (function () {
@@ -184,7 +184,7 @@
       '<button type="button" class="dam-cost-bucket' +
       (state.bucket === "product" ? " is-active" : "") +
       '" data-bucket="product">' +
-      escapeHtml(t("cost.bucket_product", "Produkty opakowan")) +
+      escapeHtml(t("cost.bucket_product", "Produkty opakowań")) +
       "</button>" +
       '<button type="button" class="dam-cost-bucket' +
       (state.bucket === "general" ? " is-active" : "") +
@@ -218,7 +218,7 @@
       '">' +
       (options ||
         '<option value="">' +
-          escapeHtml(t("cost.none_match", "Brak projektow w tym filtrze")) +
+          escapeHtml(t("cost.none_match", "Brak projektów w tym filtrze")) +
           "</option>") +
       "</select>" +
       "</label>" +
@@ -512,7 +512,7 @@
         if (!data.projects || !data.projects.length) {
           document.getElementById("damCostMeta").innerHTML =
             '<p class="dam-cost-empty">' +
-            escapeHtml(t("cost.empty", "Brak projektow do wyliczenia.")) +
+            escapeHtml(t("cost.empty", "Brak projektów do wyliczenia.")) +
             "</p>";
           return;
         }
@@ -525,7 +525,7 @@
         var meta = document.getElementById("damCostMeta");
         if (meta) {
           meta.innerHTML =
-            '<p style="color:#FF5653">Nie udalo sie zaladowac kosztow: ' +
+            '<p style="color:#FF5653">Nie udalo sie zaladowac kosztów: ' +
             escapeHtml(err.message) +
             "</p>" +
             '<p class="dam-cost-card__note">Uruchom: python apps/web/scripts/build-project-costs.py</p>';

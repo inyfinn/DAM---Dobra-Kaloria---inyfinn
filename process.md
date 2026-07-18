@@ -1048,11 +1048,11 @@ Usunac ETA Innovations z footera; CTA krotkie; skill ui-taste 10 rund przy mocny
 1. `dam-shell.js` + i18n PL/EN + HTML footery: inyfinn.art (link).
 2. `dam-viz.js`: przycisk "Przejdz".
 3. settings/help + viz.subtitle uproszczony.
-4. `ui-taste/SKILL.md` �0.E: Intensive mode = 10 passes + self-critique.
+4. `ui-taste/SKILL.md` ?0.E: Intensive mode = 10 passes + self-critique.
 5. Cache `?v=20260718inyf1`.
 
 ### Test/Ewaluacja
-- Screenshot: footer `inyfinn.art � 2026`, karty z CTA "Przejdz".
+- Screenshot: footer `inyfinn.art ? 2026`, karty z CTA "Przejdz".
 
 ---
 
@@ -1164,7 +1164,7 @@ User: pelny commit, README, dokumentacja, memory, push, release ZIP; weryfikacja
 1. machine_identity.py + verify w launch.py
 2. Auth machine_id/session_id; bridge /auth/identity
 3. dam-api.js clear przy mismatch
-4. README, DEPLOYMENT, ADR-008, memory �59
+4. README, DEPLOYMENT, ADR-008, memory ?59
 5. build-release-zip.ps1 + GitHub release
 
 ### Efekt/Fix
@@ -1195,7 +1195,7 @@ User: aplikacja w ogole nie startuje ze skrotu (wscript run-dam.vbs, "nic sie ni
 6. Teksty przyciskow: "Podpowiedz" -> "Wykryj automatycznie" (+ ikona lupy), "Sprawdz" -> "Sprawdz foldery"
    (+ ikona ptaszka). Komunikaty statusu w jezyku czlowieka (stan ladowania + wynik). Poprawiono w 3 miejscach:
    settings.html, dam-paths.js (modal setup pierwszego uruchomienia), dam-shortcuts.js (panel Pomocy).
-7. Naprawiono mangled znaki „ " -> ASCII " (encoding issue w tym repo z krzywymi cudzyslowami).
+7. Naprawiono mangled znaki ? " -> ASCII " (encoding issue w tym repo z krzywymi cudzyslowami).
 8. Cache bump: dam-paths.js?v=20260718btn1, dam-shortcuts.js?v=20260718btn1.
 
 ### Efekt/Fix
@@ -1266,7 +1266,7 @@ User: nie moge sie zalogowac (admin); screen z tooltipem HTML5 "min 8 znakow" pr
 
 ### Log/Status
 1. Baza OK; konto admin istnieje; bcrypt weryfikuje haslo seed `test` (True), haslo z poprzedniego screenu (False).
-2. Root cause UI: `signin.html` input hasla mial `minlength="8"`; seed Kubara = `test` (4 znaki) - przeglądarka blokuje submit.
+2. Root cause UI: `signin.html` input hasla mial `minlength="8"`; seed Kubara = `test` (4 znaki) - przegl?darka blokuje submit.
 3. Fix: minlength=4 (jak auth_store.register min 4); komunikat dam-api "Haslo min. 4 znaki"; cache ?v=20260718auth3.
 
 ### Efekt/Fix
@@ -1310,18 +1310,18 @@ admin red outline, thumb picker, viz-flags; weryfikacja V1-V10.
 ### Log/Status
 1. Utworzono `apps/web/data/naming-dictionary.json` + `docs/NAMING.md`.
 2. `build-file-index.py`: CARRIER_RE + strip lang, parse_folder_langs all segments, MIX label,
-   white thumb composite, CARTON→KAR, date-folder → OTHER + infer from files.
-3. `dam-labels.js` laduje dictionary (sync XHR); SLEEVE/FOIL → REKAW/FOLIA.
-4. Nowy `dam-badges.js`; wpięty w `dam-viz.js` (+ explorer scripts); "Warianty".
+   white thumb composite, CARTON?KAR, date-folder ? OTHER + infer from files.
+3. `dam-labels.js` laduje dictionary (sync XHR); SLEEVE/FOIL ? REKAW/FOLIA.
+4. Nowy `dam-badges.js`; wpi?ty w `dam-viz.js` (+ explorer scripts); "Warianty".
 5. CSS: biale tlo + padding 12px thumbs; badges flex-start; `.dam-admin-control`; demo yellow.
 6. Bridge: `GET /folder-images`, `POST /viz-flag`; `viz-flags.json`; launch `pick_thumb`.
 7. Admin toggle ukryty gdy rola != admin (viz + explorer).
-8. Rescan: products=187 viz≈336.
+8. Rescan: products=187 viz?336.
 
 ### Efekt/Fix
 - 6300610: carrier=REKAW, langs=[cz,sk] (nie GB).
-- 6300650 DK NUGGETS XXL: REKAW + pl; GC kopia tego samego indeksu ma default GC→gb (nietypowe).
-- OATS: FOLIA/DOYPACK; CORNFLAKES: czesciowo FOLIA; DATE ORANGE: folder od daty + pliki WARIANT-* → OTHER (do potwierdzenia).
+- 6300650 DK NUGGETS XXL: REKAW + pl; GC kopia tego samego indeksu ma default GC?gb (nietypowe).
+- OATS: FOLIA/DOYPACK; CORNFLAKES: czesciowo FOLIA; DATE ORANGE: folder od daty + pliki WARIANT-* ? OTHER (do potwierdzenia).
 - Zero FOIL/SLEEVE/CARTON w polu carrier po skanie.
 
 ### Test/Ewaluacja
@@ -1356,8 +1356,8 @@ Opakowanie: doypack, baton, mini baton, karton 6x, karton, bigpak, folia, etykie
 - 6300610: REKAW + langs=[cz,sk], lang cards cz/sk (nie GB). PASS
 - 6300650 DK NUGGETS XXL: REKAW + pl. PASS. GC kopia indeksu ma default gb (nietypowe).
 - OATS: FOLIA/DOYPACK. PASS
-- MIX: etykiety `MIX - …` / `MIX`, zero WARIANT. PASS
-- DATE ORANGE / czesc CORNFLAKES: foldery od daty + pliki `WARIANT-*` → carrier OTHER (pusta etykieta). Do potwierdzenia z userem (nie zgadywac FOLIA).
+- MIX: etykiety `MIX - ?` / `MIX`, zero WARIANT. PASS
+- DATE ORANGE / czesc CORNFLAKES: foldery od daty + pliki `WARIANT-*` ? carrier OTHER (pusta etykieta). Do potwierdzenia z userem (nie zgadywac FOLIA).
 
 ### V2 Carrier PL UI - PASS
 - CDP dump kart: ETYKIETA, KARTON 6x MINI, DOYPACK, REKAW; zero FOIL/SLEEVE/CARTON/BAR w UI.
@@ -1367,7 +1367,7 @@ Opakowanie: doypack, baton, mini baton, karton 6x, karton, bigpak, folia, etykie
 - Badge PL: tip="Polska", hitbox 44x44; kontrasty badge Geex; skroty PL/CZ/SK.
 
 ### V4 Tag click context - PASS (wiz)
-- Klik tagu PL → `#vizLangFilter` = `pl`. Explorer/project: handler w dam-badges (bind).
+- Klik tagu PL ? `#vizLangFilter` = `pl`. Explorer/project: handler w dam-badges (bind).
 
 ### V5 ui-taste galeria - PASS
 - Pass1 375: biale tlo thumb, padding 12px, badges left, admin red, PL skrot. Screenshot+Read.
@@ -1385,7 +1385,7 @@ Opakowanie: doypack, baton, mini baton, karton 6x, karton, bigpak, folia, etykie
 - Rola != admin: toggle ukryty (kod gate `isAdminRole`).
 
 ### V8 Demo/Ukryj/Dodaj - PASS
-- Demo click → `.dam-viz-card--demo` + badge Demo. CDP: demoCard=true, demoBadge=true.
+- Demo click ? `.dam-viz-card--demo` + badge Demo. CDP: demoCard=true, demoBadge=true.
 - Ukryj/Dodaj: UI+POST /viz-flag OK (most zrestartowany).
 
 ### V9 Thumb picker - PASS
@@ -1402,7 +1402,7 @@ Pre-Delivery:
 - Galeria white+12px: OK (CSS+CDP).
 - Admin czerwone tylko w trybie ON: OK po fix syncAdminOutline.
 Bloker/uwagi (nie blokuje done feature, wymaga decyzji usera):
-1. DATE ORANGE (i podobne GC) bez tokenu nosnika w folderze/plikach → pusta etykieta.
+1. DATE ORANGE (i podobne GC) bez tokenu nosnika w folderze/plikach ? pusta etykieta.
 2. Restart skrotu DAM potrzebny, zeby shell mial `pick_thumb` i swiezy most (folder-images/viz-flag).
 
 ---
@@ -1414,7 +1414,7 @@ Wdrozenie konfigurowalnego pulpitu (plan Dashboard widgety).
 
 ### Log/Status
 1. Dodano `fmcg-cost-averages.json` + `dam-fmcg-cost.js` (landed cost + SWOT + sales mock).
-2. Silnik: `dam-dashboard-widgets.js` (24 widgety, LayoutStore, modal Dostosuj z ↑↓).
+2. Silnik: `dam-dashboard-widgets.js` (24 widgety, LayoutStore, modal Dostosuj z ??).
 3. `dam-notify.js` - Notification API + poll file-index 60s.
 4. Przebudowa `dashboard.html` na `#damDashGrid` + panel Asana/Teams; CSS `dam-dashboard.css`.
 5. Orchestrator `dam-dashboard.js` laduje Asana / index / costs / rates / FMCG / flags / projects.
@@ -1434,20 +1434,20 @@ Wdrozenie konfigurowalnego pulpitu (plan Dashboard widgety).
 
 ---
 
-## 2026-07-18 - Karty wizualizacji: tagi + wyr�wnanie flex
+## 2026-07-18 - Karty wizualizacji: tagi + wyr?wnanie flex
 
 ### Komenda/Akcja
-Naprawa DOM kart #vizGrid - ogromne tagi, skakanie tytu��w/przycisk�w, brak �wiat�a.
+Naprawa DOM kart #vizGrid - ogromne tagi, skakanie tytu??w/przycisk?w, brak ?wiat?a.
 
 ### Log/Status
-1. CSS .dam-viz-card: flex column; thumb g�ra; body justify-content:flex-end + gap 14px.
-2. .dam-viz-card__badges: wy�rodkowane, sta�a wysoko�� 48px (2 rz�dy).
+1. CSS .dam-viz-card: flex column; thumb g?ra; body justify-content:flex-end + gap 14px.
+2. .dam-viz-card__badges: wy?rodkowane, sta?a wysoko?? 48px (2 rz?dy).
 3. Tagi w karcie: font jak pill (10.5px), padding pill, border-radius 999px (nie 27px chip).
 4. JS: zawsze meta BRAK TYPU gdy brak nosnika; maxTotal:6 w compact.
-5. Cache bust dam-brand.css / dam-viz.js / dam-badges.js � viz4.
+5. Cache bust dam-brand.css / dam-viz.js / dam-badges.js ? viz4.
 
 ### Efekt/Fix
-Tytu�y i CTA w wierszu na tej samej linii (CDP: titleTops/actTops r�wne). Mniej tag�w = pusta przestrze� w strefie badge, nie skok w g�r�.
+Tytu?y i CTA w wierszu na tej samej linii (CDP: titleTops/actTops r?wne). Mniej tag?w = pusta przestrze? w strefie badge, nie skok w g?r?.
 
 ### Test/Ewaluacja
 - isualizations.html: badgeH ~20px vs pill 20px; BRAK TYPU na DATE ORANGE; align row1 OK.
@@ -1512,7 +1512,7 @@ odnosnie wygladu tagow/podgladow w wizualizacjach. Skille: ui-taste, ui-ux-pro-m
    (wczesniej tylko UNKNOWN mial fallback "WARIANT" - OTHER przechodzil jako literal).
 5. `dam-badges.js buildBadgeItems()`: przebudowana kolejnosc Marka->Kategoria->Podkategoria->Typ->
    Warianty->Jezyk->Indeks; compact mode = tylko flaga Multijezyczny (bez wyliczania GB/EE/LT...).
-6. `dam-viz.js variantChipLabel()`: skrot+indeks (`GB · 6300478`) zamiast pelnej nazwy; nowy `variantChipTip()`
+6. `dam-viz.js variantChipLabel()`: skrot+indeks (`GB ? 6300478`) zamiast pelnej nazwy; nowy `variantChipTip()`
    z pelna nazwa+sciezka w title/data-dam-tip.
 7. `build-file-index.py pick_thumb_file`: `transparent_bonus` w `rank()` - PNG/WEBP (bez tla) > JPG (z tlem
    studyjnym) w tym samym tierze (artefakty = zle zdjecie, nie kompresja).
@@ -1526,8 +1526,8 @@ odnosnie wygladu tagow/podgladow w wizualizacjach. Skille: ui-taste, ui-ux-pro-m
 3. `product-aliases.json` (nowy) + `apply_product_aliases()` - `linked_products`/`alias_langs` na
    kazdym produkcie/viz_latest. Seed: owies-miod-sniadanie <-> cornflakes-peanuts-honey-balls-crispy.
 4. Audyt PL znakow: `LANG_LABELS` (dam-labels.js) + `naming-dictionary.json.languages/ui/carriers` -
-   Lotwa->Łotwa, Wegry->Węgry, Slowacja->Słowacja, Wlochy->Włochy, Bulgaria->Bułgaria, Slowenia->Słowenia,
-   REKAW->RĘKAW, ETY-SLO label->"ETYKIETA SŁOIK", multi_lang_label->"Multijęzyczny" (OBA pliki - dictionary
+   Lotwa->?otwa, Wegry->W?gry, Slowacja->S?owacja, Wlochy->W?ochy, Bulgaria->Bu?garia, Slowenia->S?owenia,
+   REKAW->R?KAW, ETY-SLO label->"ETYKIETA S?OIK", multi_lang_label->"Multij?zyczny" (OBA pliki - dictionary
    nadpisuje JS runtime przez XHR).
 5. **Debugging note:** `print(repr(...))` w PowerShell pokazywal U+FFFD dla poprawnych UTF-8 znakow
    (cp1250 konsola) - zmylilo to na "korupcja danych"; zweryfikowano bajtami `open(...,'rb')` - dane
@@ -1569,7 +1569,7 @@ odnosnie wygladu tagow/podgladow w wizualizacjach. Skille: ui-taste, ui-ux-pro-m
 
 **Faza 7 - QA + docs:**
 1. Screenshot QA 375/768/1280 na visualizations.html (siatka + modal + alias + missing-lang) - OK.
-2. memory.md §68-77, ten wpis w process.md, PROGRESS.md.
+2. memory.md ?68-77, ten wpis w process.md, PROGRESS.md.
 3. Cache bust: `?v=20260718tags1/2/3` na dam-tokens/dam-brand/dam-labels/dam-badges/dam-viz + nowe pliki.
 
 ### Backup
@@ -1582,7 +1582,7 @@ odnosnie wygladu tagow/podgladow w wizualizacjach. Skille: ui-taste, ui-ux-pro-m
 - DOM getBoundingClientRect: badge container w pelni w granicach karty (bez clipping - overflow:hidden
   na `.dam-viz-card` nie problem, bo wysokosc auto).
 - `/viz-request` PowerShell smoke test: ok=true, channels_sent=[email,asana,app], inbox_item poprawny.
-- Popover typu: otwiera sie, lista z diakrytykami (ETYKIETA SŁOIK), header zmienia sie wg roli/trybu.
+- Popover typu: otwiera sie, lista z diakrytykami (ETYKIETA S?OIK), header zmienia sie wg roli/trybu.
 
 ### Zrodla
 - Plan: `c:\Users\xpret\.cursor\plans\viz_tags_ux_fix_e01a796a.plan.md` (nie edytowany, tylko realizowany)
@@ -1642,4 +1642,908 @@ Admin moze odklikac pomylkowe Miniatura/Demo/Ukryj/Dodaj; tag (UKRYTE) i przycis
 - apps/web/assets/js/dam-viz.js, dam-badges.js, dam-tooltips.js
 - apps/web/assets/css/dam-brand.css
 - apps/desktop/local_bridge.py
-- memory.md §79
+- memory.md ?79
+
+---
+
+## 2026-07-18 - Projekty tagi + checklista + Fala D/E
+
+### Komenda/Akcja
+Kontynuacja planu viz_admin: quick UI (podkategoria max10, picker header, tagi na projektach, szersza checklista) + rename plikow AI/PDF/wizki + change-log Cofnij/Ponow.
+
+### Log/Status
+1. dam-tag-edit: naglowek pickera " Wybierz typ\ / \Zaproponuj typ\ (bez \zatwierdz ponizej\).
+2. dam-viz: Podkategoria max 10 + przycisk +N / mniej (jak DamTagBar).
+3. dam-projects + dam-api: male tagi DamBadges na kartach; checklista 6 pozycji jak Eksplorator.
+4. local_bridge: build_carrier_filename + rename_revision_files_on_disk; change-log.json + undo/redo API.
+5. UI: Cofnij/Ponow w toolbarze wizualizacji; discrepancy assignment-log -> carrier_guessed + tip.
+6. Cache-bust: ?v=20260718wave2.
+
+### Efekt/Fix
+Karty projektow pokazuja smak/kategorie/typ; checklista szersza; rename typu obejmuje pliki; historia z Cofnij/Ponow.
+
+### Test/Ewaluacja
+- index.html CDP: badgeCount>=1, 6 wierszy checklisty
+- visualizations: Podkategoria +17 widoczne
+- build_carrier_filename: GC_balls... -> GC-DOY-balls_cocoa-lime - GB_AR - 6300489.00.ai
+
+### Zrodla
+- plan viz_tags_ux_fix_e01a796a + viz_admin_ux_verify_d3c4e2c8
+- apps/web/assets/js/dam-projects.js, dam-viz.js, dam-tag-edit.js, dam-api.js
+- apps/desktop/local_bridge.py
+
+---
+
+## 2026-07-18 - Fix: Eksplorator SyntaxError (aplikacja " nie dziala\)
+
+### Komenda/Akcja
+User: aplikacja nie dziala, eksplorator byl rozjebany.
+
+### Log/Status
+1. Repro: explorer.html ladowal tagi, ale DamExplorer=undefined, puste #damFolderList/#damExplorerMain.
+2. Root cause: SyntaxError w dam-explorer.js:1867 - string z niezescapowanym class=\dam-tag-group-pills\ przerywal parsing calego pliku.
+3. Fix: zamiana na spojny single-quoted string.
+4. Cache-bust explorer.html ?v=20260718fix1.
+5. Weryfikacja: DamExplorer=object, kategorie BATONY/KULKI/..., 187 prod.
+
+### Efekt/Fix
+Eksplorator znowu startuje i pokazuje drzewo produktow.
+
+### Test/Ewaluacja
+- node --check dam-explorer.js = OK
+- CDP: folderText zawiera BATONY/KULKI/ROSLINNE, meta 187 prod.
+
+### Zrodla
+- apps/web/assets/js/dam-explorer.js
+- systematic-debugging
+## 2026-07-18 - Fix ELEMENTY BRAK + studio lightbox UX (10-pass)
+
+### Komenda/Akcja
+User: falszywy BRAK Elementy (pliki w MATERIALY/ELEMENTY); studio podgladu chaotyczne / przycina / za duzo scrolla. Intensive QA 10 passes (ui-taste + ui-ux-pro-max).
+
+### Log/Status
+1. Root cause checklisty: indeks nie skanowar podfolderu ELEMENTY pod MATERIALY; `files_by_role.elements=[]`.
+2. Fix indexer: `build-file-index.py` skan 1 poziomu ELEMENTY/ELEMENTS; patch `patch-elements-in-index.py` (8 rewizji, 160 plikow; czarna-porzeczka 6300753.00 = 14 plikow).
+3. `revisionHasElements`: najpierw `elements.length`.
+4. Studio: dedupe rozmiar|format, chipy L/S/XL, nazwa w stopce, stage flex fit (ratio ~0.97), details metadane, RWD stack.
+5. Cache-bust explorer: dam-brand + dam-explorer `?v=20260718studio10f`.
+
+### Efekt/Fix
+Elementy / skladniki = OK (nie BRAK). Studio: 4 chipy zamiast sciany duplikatow; wizualizacja miesci sie w stage.
+
+### Test/Ewaluacja
+- CDP checklist: dam-check-ok Elementy
+- Passy screenshot: qa-pass1..10 (desktop fit OK; tablet ze zwinietymi metadnymi)
+- Intensive QA: 10 passes
+
+### Zrodla
+- apps/web/scripts/build-file-index.py, patch-elements-in-index.py
+- apps/web/assets/js/dam-explorer.js, css/dam-brand.css, explorer.html
+
+## 2026-07-18 - Reczne powiazanie Elementy (user/admin)
+
+### Komenda/Akcja
+User: nie tylko czarna porzeczka - zle wykrywanie szerzej; pozwolic wskazywac foldery/pliki, aktualizowac checklist?, przejsc ikona z eksploratora.
+
+### Log/Status
+1. Bridge: `POST /elements-link`, `GET /folder-browse`, KV `elements-overrides`, sklep `data/elements-overrides.json`.
+2. Explorer checklista: akcje open / link / unlink; picker z ?Uzyj tego folderu?.
+3. `computeChecklist` honoruje overrides; dam-api tech tez (localStorage).
+4. Indexer: skladniki + pliki w podfolderach ELEMENTY; re-patch (+1 rev / 3 pliki).
+5. Cache-bust `?v=20260718elemLink1`.
+
+### Efekt/Fix
+User/admin moze poprawic falszywy BRAK wskazujac folder; potem zielona checklista + ikona folderu do reveal.
+
+### Test/Ewaluacja
+- python ast + node --check OK
+- patch-elements-in-index: patched_revisions=1 files_added=3
+- Wymaga restartu local_bridge (8766) zeby nowe endpointy dzialaly
+
+### Zrodla
+- apps/desktop/local_bridge.py
+- apps/web/assets/js/dam-explorer.js, dam-api.js, css/dam-brand.css
+- apps/web/data/elements-overrides.json
+- apps/web/scripts/build-file-index.py, patch-elements-in-index.py
+
+---
+
+## 2026-07-18 - Checklista + tagi listy + Zglos (7-pass QA)
+
+### Komenda/Akcja
+User: tagi na liscie produktow/wariantow jak w wizualizacjach; wieksze indeksy; checklista bez naglowka "Brakuje materialow"; nowe sloty Karta/Prezentacja; rename etykiet; wiecej oddechu; przyciski obok siebie; Powiadom = Zglos jak w wizualizacjach. 7 rund ui-taste + ui-ux-pro-max.
+
+### Log/Status
+1. Explorer `prodRowHtml`: DamBadges kategoria/podkat + jezyki; indeks/data chip 13px.
+2. Warianty: chip typu + PL/jezyki z plikow + brand/index/date/status.
+3. Checklista (explorer + karty Projektow + project.html): 8 slotow; etykiety "Plik zrodlowy?" / "Podglad PDF?"; Karta wprowadzenia + Prezentacja; bez head "Brakuje materialow".
+4. Karty: akcje flex row, wysokosc ~36px; detail: Przelicz + Zglos side-by-side ~40px; Zglos -> DamVizRequest (Email/Teams/Asana/App).
+5. Cache-bust `?v=20260718check8` / `check8b` / `check8c`.
+6. QA 7 pass: lista KULKI (tagi+13px), wariant PL, karty, detail+modal, 375/768/1280.
+
+### Efekt/Fix
+Rozpiska czytelna z tagami; checklista mowi ikonami + jasnymi etykietami; Zglos = ten sam flow co wizualizacje.
+
+### Test/Ewaluacja
+- CDP: produkt tags KULKI/Deserowe/PL, index fontSize=13px
+- CDP karty: 8 labels, head=null, actions flex row h=36
+- CDP project: stackFlex=row, Przelicz+Zglos; modal kanalow OK
+- Pass 1-7 screenshot+Read: clean (mobile: dlugie etykiety wrapuja - akceptowalne)
+
+### Zrodla
+- apps/web/assets/js/dam-explorer.js, dam-projects.js, dam-project.js, dam-api.js, dam-viz-request.js
+- apps/web/assets/css/dam-brand.css, dam-app.css
+- apps/web/explorer.html, index.html, project.html
+
+---
+
+## 2026-07-18 - Karty / detail / tagi PPM (card7, 7-pass QA)
+
+### Komenda/Akcja
+User: detail bez hashtagow, cie?szy tytul; checklista lu?niej; Akcje = kafelki + Eksplorator/Folder; klik slotu OK -> Przejdz+Win; karty: bez Rynek PL, indeks pod tytulem, Przejdz+Win (+Asana), bez duplikatu indeksu; PPM tag = kopiuj; tagi +1px; 7 tur ui-taste.
+
+### Log/Status
+1. `dam-projects.js`: index-row, badges bez indeksu, Przejdz/Win/Asana, ASANA_BY_INDEX.
+2. `dam-project.js`: DamBadges header, title light, slot toggle actions, action tiles.
+3. `dam-badges.js`: copyTagText + bindCopyOnRightClick (document).
+4. `dam-api.js`: langs/category/carrier/path w meta projektu.
+5. CSS: index-row, wieksze tagi, checklista gap, `.dam-action-tile`, slot actions, toast.
+6. HTML cache `?v=20260718card7` + skrypty labels/badges/paths na project.html.
+7. QA 7 pass: karta Banoffee, detail+slot open, 375/768/1440.
+
+### Efekt/Fix
+Czytelny header z prawdziwymi tagami; karty jak wizualizacje (Przejdz+folder); panel Akcje zrozumialy; PPM kopiuje tag.
+
+### Test/Ewaluacja
+- CDP karta: badgeFs=11.5px, pad 4/10, actions=3, checklistGap=12-14px
+- CDP detail: titleWeight=500, badges DK/KULKI/Deserowe/DOYPACK/PL/index, hashGone, tiles=5, slot open Przejdz+Win
+- Pass 1-7 screenshot+Read: clean; clipboard API w automation = NotAllowed (focus) - kod OK
+
+### Zrodla
+- apps/web/assets/js/dam-projects.js, dam-project.js, dam-badges.js, dam-api.js
+- apps/web/assets/css/dam-app.css
+- apps/web/index.html, project.html
+
+---
+
+## 2026-07-18 - DDNS first + OFFLINE fallback (NAT/CGNAT)
+
+### Komenda/Akcja
+User: jak sie polaczyc gdy straci static IP / ISP zamknie NAT; pamietaj o pomocy (GitHub DATABASE / lokalny SQLite); priorytet DDNS inyfinn.synology.me, LAN tylko awaryjnie; kazdy ma miec dostep do bazy.
+
+### Log/Status
+1. memory.md ?84: DDNS first, OFFLINE hint (NAT/CGNAT), DATABASE/ GitHub.
+2. `pg_db.py`: sort hostname przed prywatnymi IP; sticky last-host tylko dla DDNS.
+3. `dam_db.py`: przy padnieciu PG -> OFFLINE SQLite + offline_hint; retry co 120s; mirror users PG->SQLite; status z github_dump.
+4. ADR-009 amended; PROGRESS: wspolna baza NAS = done.
+5. Test: ping host=inyfinn.synology.me, users=18; prefer_ddns_first OK; symulacja offline -> SQLite Connection.
+
+### Efekt/Fix
+Gdy DDNS/NAT pada - app dziala lokalnie z jasnym komunikatem (nie cichy fail). Gdy DDNS wraca - auto powrot do PG.
+
+### Test/Ewaluacja
+- python ping ok, hosts=[inyfinn.synology.me, 192.168.0.145]
+- offline sim: engine sqlite-offline, potem leave -> postgres
+
+### Zrodla
+- apps/desktop/dam_db.py, pg_db.py
+- memory.md ?84, docs/ADR/ADR-009-postgres-synology.md
+
+---
+
+## 2026-07-18 - Karty card7b (indeks r?g, kategoria w tytule, wash, Eksplorator)
+
+### Komenda/Akcja
+User: indeks w prawy g?rny r?g; kategoria w nazwie; klik tytulu ? Eksplorator DAM; nazewnictwo Eksplorator vs Eksplorator plikow; status +7%; delikatny gradient statusu; 5 tur ui-ux-pro-max.
+
+### Log/Status
+1. `dam-projects.js`: index-corner; `CATEGORY ? NAME` ? explorer; Win tip = Eksplorator plikow.
+2. `dam-app.css`: wash incomplete/ok (skr?cony + wygaszony), status ?1.07, title-link.
+3. Sidebar/i18n: `nav.explorer` / `explorer.title` = Eksplorator; `explorer.html` tytu?.
+4. QA 5 pass: desktop layout, spacing/wash, 375, 768, a11y (klik tytulu ? explorer?product=?).
+
+### Efekt/Fix
+Karty czytelniejsze (kategoria w tytule); indeks nie wypycha tag?w; wash nie zaburza checklisty; sp?jne nazwy nawigacji.
+
+### Test/Ewaluacja
+- CDP: indexInCorner, title `BATONY ? ?`, href explorer, beforeH?92px alpha 0.055, statusH?30px, nav=Eksplorator
+- Klik tytulu ? `explorer.html?product=mix-12x-xmas-mixy` (breadcrumb BATONY / 12X XMAS)
+- Pass 1-5 screenshot OK
+
+### Zrodla
+- apps/web/assets/js/dam-projects.js, dam-shell.js, dam-explorer.js
+- apps/web/assets/css/dam-app.css
+- apps/web/i18n/pl.json, en.json, index.html, explorer.html
+- memory.md ?85
+
+---
+
+## 2026-07-18 - Karty card7b (indeks rog, kategoria w tytule, wash, Eksplorator)
+
+### Komenda/Akcja
+User: indeks w prawy gorny rog; kategoria w nazwie; klik tytulu -> Eksplorator DAM; nazewnictwo Eksplorator vs Eksplorator plikow; status +7%; delikatny gradient statusu; 5 tur ui-ux-pro-max.
+
+### Log/Status
+1. dam-projects.js: index-corner; CATEGORY ? NAME -> explorer; Win tip = Eksplorator plikow.
+2. dam-app.css: wash incomplete/ok (skrocony + wygaszony), status x1.07, title-link.
+3. Sidebar/i18n: nav.explorer / explorer.title = Eksplorator; explorer.html tytul.
+4. QA 5 pass: desktop layout, spacing/wash, 375, 768, a11y (klik tytulu -> explorer?product=...).
+
+### Efekt/Fix
+Karty czytelniejsze (kategoria w tytule); indeks nie wypycha tagow; wash nie zaburza checklisty; spojne nazwy nawigacji.
+
+### Test/Ewaluacja
+- CDP: indexInCorner, title BATONY ? ?, href explorer, beforeH~92px alpha 0.055, statusH~30px, nav=Eksplorator
+- Klik tytulu -> explorer.html?product=mix-12x-xmas-mixy (breadcrumb BATONY / 12X XMAS)
+- Pass 1-5 screenshot OK
+
+### Zrodla
+- apps/web/assets/js/dam-projects.js, dam-shell.js, dam-explorer.js
+- apps/web/assets/css/dam-app.css
+- apps/web/i18n/pl.json, en.json, index.html, explorer.html
+- memory.md ?85
+
+---
+
+## 2026-07-18 - PL znaki + status bazy + Wiadomosci (db1)
+
+### Komenda/Akcja
+User: polskie znaki wszedzie; wyjasnij Odswiez vs Wczytaj z dysku; status bazy obok Pliki online z wyborem zrodel + force refresh; dedykowana strona wiadomosci; ui-taste 10 tur + ui-ux-pro-max.
+
+### Log/Status
+1. Skrypt restore-pl-diacritics.py + poprawki manglingu (zadania/Zadanie).
+2. Przyciski: Odswiez liste / Skanuj dysk (tips).
+3. dam_db: prefer, sources, force_reconnect, pull dump --no-commit; bridge POST /db/reconnect, /db/prefer.
+4. dam-db-status.js pill + panel; nav Wiadomosci; inbox.html + dam-inbox.js.
+5. Intensive QA 10 pass (screenshot): index PL, panel bazy, inbox desktop/mobile, cache bump.
+
+### Efekt/Fix
+UI z polskimi znakami; jasne akcje indeksu; status bazy dziala (Synology/GitHub/lokalna); strona Wiadomosci z filtrami.
+
+### Test/Ewaluacja
+- GET /db/status: label Baza online, sources synology active
+- POST /db/reconnect: Baza online
+- CDP index: title Projekty opakowan, Odswiez liste, Skanuj dysk, Baza online
+- inbox: 109 Asana, filtry, szukaj
+
+### Zrodla
+- apps/desktop/dam_db.py, local_bridge.py, scripts/sync-database-backups-to-git.py
+- apps/web/assets/js/dam-db-status.js, dam-inbox.js, dam-shell.js
+- apps/web/i18n/pl.json, inbox.html, index.html
+- memory.md ?86
+
+---
+
+## 2026-07-18 - Checklist klik + ikony Eksplorer/Win/Asana (icons2)
+
+### Komenda/Akcja
+User: klikalne OK-sloty na kartach i w Wymaganiach (global); checklista detail jak karta; Asana SVG; gradient +30%/+50%; kompletny: ramka 1px fade 50%?95%; Sprawdz projekt + Przejdz?Eksplorer; rename Eksplorer; ikona sidebar; Win SVG z referencji; ui-taste 5 tur.
+
+### Log/Status
+1. dam-icons.js: Win folder SVG + Asana mark + bindChecklistRows (global).
+2. dam-projects.js: OK-wiersze interaktywne; Sprawdz projekt (strzalka?project) + Przejdz (folder-open?explorer) + Win + Asana.
+3. dam-project.js: ta sama interakcja; Eksplorer w akcjach; Win/Asana SVG; PL copy.
+4. Sidebar/i18n: Eksplorer + uil-sitemap; Przejdz zostaje uil-folder-open.
+5. CSS: wash 8.625rem / alpha *1.3; --ok border fade; checklista detail = rytm karty.
+6. ui-taste Pass 1-5: 375/768/1280 screenshot+Read; fix wrap akcji + widocznosc akcji wiersza.
+
+### Efekt/Fix
+Jedna semantyka: Eksplorer=DAM hub, Eksplorator plikow Windows=OS; klik OK-slot ? Przejdz + Folder Windows wszedzie.
+
+### Test/Ewaluacja
+- CDP: nav Eksplorer + uil-sitemap; banoffee: Sprawdz projekt / Przejdz / Folder Windows / Asana
+- Klik OK-wiersza: akcje Przejdz + dam-icon-win-explorer (karta + project.html)
+- Cache: ?v=20260718icons2
+
+### Zrodla
+- apps/web/assets/js/dam-icons.js, dam-projects.js, dam-project.js, dam-shell.js
+- apps/web/assets/css/dam-app.css, i18n/pl.json, index.html, project.html
+- memory.md ?87
+
+---
+
+## 2026-07-18 - Panel Zrodla bazy + tagi max 7 + viz ikony (icons3c)
+
+### Komenda/Akcja
+User /ui-taste: panel Baza brzydki (overflow, pomaranczowe kontrolki, ciasno); tagi max 7; wizualizacje Przejdz/Win jak global.
+
+### Log/Status
+1. dam-db-status.js: hint czytelniejszy; chipy trybu; custom check zamiast native.
+2. dam-brand.css: panel padding/air, fiolet chipy/check, wrap + line-clamp, mobile full-width, scroll.
+3. dam-tag-bar.js ROW_LIMIT=7; dam-viz.js SUBCAT_ROW_LIMIT=7 + Przejdz folder-open + Win SVG.
+4. Cache icons3c (index brand, shell db-status, visualizations brand).
+5. ui-taste Pass 1-5: screenshot+Read 375/768/1280 + viz CDP.
+
+### Efekt/Fix
+Panel Geex/DK purple, bez overflow poza ramka; tagi 7+N; viz = Eksplorer + Folder Windows.
+
+### Test/Ewaluacja
+- Pass 1 (struktura): chipy Auto/Synology/Lokalna, 3 zrodla, CTA Zapisz/Odswiez
+- Pass 2-3 (~375/700): padding 16-18px, brak overflowX, fiolet check/chip
+- Pass 4 (768): panel w viewport, tagi +25/+14/+9
+- Pass 5 (1280): panelW=400, autoChipBg/checkBg rgb(171,84,219), textOverflow=false
+- Viz CDP: Przejdz uil-folder-open; winAria Folder Windows + SVG; tag rows n=7 + plus
+
+### Zrodla
+- apps/web/assets/css/dam-brand.css, js/dam-db-status.js, dam-tag-bar.js, dam-viz.js, dam-shell.js
+- apps/web/index.html, visualizations.html
+- memory.md ?88
+
+---
+
+## 2026-07-18 - Karty: ramka 50% + incomplete fade (border50)
+
+### Komenda/Akcja
+User: ten sam fade obrysu dla niekompletnych (czerwony); obrys za mocny ? ~50% koloru (zielony i czerwony). Wash juz +30%/+50%.
+
+### Log/Status
+1. dam-app.css: `--ok` i `--incomplete` wspolny mechanizm `::after` mask border.
+2. Alpha ramki 0.5 (do 50% wysokosci) ? 0.2@72% ? 0@95%.
+3. Cache index dam-app `?v=20260718border50`.
+
+### Efekt/Fix
+Niekompletne maja ten sam fade obrysu co kompletne; kolor miekszy.
+
+### Test/Ewaluacja
+CDP: afterInc/afterOk rgba(...,0.5); beforeH 138px (8.625rem); 187 kart.
+
+### Zrodla
+- apps/web/assets/css/dam-app.css, index.html, memory.md ?87
+
+---
+
+## 2026-07-18 - Explorer: brand switch + badge unify (brandsw1)
+
+### Komenda/Akcja
+User /ui-taste: Marka: DK+GC biedna; przenies switch przy kategorie / toolbar produktu; ujednolic tagi jak na kartach; tytuly BATONY ? NAME +3px.
+
+### Log/Status
+1. Usunieto damBrandFilterTrigger z toolbara.
+2. Chipy DK/GC w damSidebarBrandMount (Kategorie) + damProductBrandMount.
+3. CSS segmented pill; explorer badges = pill viz-badge; tytuly +3px.
+4. productDisplayTitle: CAT ? NAME; index/brand jako dam-viz-badge.
+5. Cache brandsw1; tag-bar icons3 na explorer.
+
+### Efekt/Fix
+Filtr marki widoczny przy kategoriach; tagi/tytuly spojne z projektami.
+
+### Test/Ewaluacja
+- CDP: hasTrigger=false; sideChips+productChips; title BATONY ? 12X XMAS 19px; label 17px; badges carrier/lang/brand/index; folder 15px; tagi +25/+14/+9
+
+### Zrodla
+- explorer.html, dam-explorer.js, dam-brand-filter.js, dam-brand.css, memory.md ?89
+
+---
+
+## 2026-07-18 - Tagi cienkie + indeks pill global (tagthin1)
+
+### Komenda/Akcja
+User: napisy tagow BATONY/Nerkowcowy za grube (jak dam-tag-pill); indeksy zawsze zaokraglone globalnie (nie kwadrat dam-index-chip).
+
+### Log/Status
+1. .dam-viz-badge bazowo: weight 500, radius 999px, padding jak tag-pill.
+2. .dam-index-chip = ten sam pill (bez mono/4px); admin tez 999px.
+3. Fix utton.dam-viz-badge: font-family/size inherit + font-weight 500 (nie `font: inherit`).
+4. .dam-prod-row__tags i karty projektow: weight 500.
+5. 
+enderIndexChips: klasy dam-index-chip dam-viz-badge dam-viz-badge--index.
+6. Cache `?v=20260718tagthin1`.
+
+### Efekt/Fix
+Tagi listy produktow tak cienkie jak filtry smaku; indeksy pill wszedzie.
+
+### Test/Ewaluacja
+Hard refresh explorer; CDP: cat/subcat font-weight 500; index border-radius 999px.
+
+### Zrodla
+- dam-brand.css, dam-app.css, dam-explorer.js, explorer/index/viz/project.html, memory.md ?90
+
+---
+
+## 2026-07-18 - Propose JSON -> admin apply (egzekwowanie)
+
+### Komenda/Akcja
+User: kazdy pisze tekstowe zgloszenia JSON; tylko admin akceptuje i aktualizuje baze; kolejka + inbox; bez syncu SQLite przez Drive.
+
+### Log/Status
+1. `local_bridge.py`: `_require_login` / `_require_admin` z Bearer sesji.
+2. User/power_user: `/rename-revision-prefix` i `/viz-request` = kolejka JSON + inbox.
+3. Admin-only: decide, carrier-types, viz-flag, overrides, rename-index, change-log undo/redo, index rebuild, db/*.
+4. Body.role/admin_mode nie daje privilege (anti-spoof).
+5. TTL 72h: eskalacja do Inbox, BEZ auto-zapisu na dysk.
+6. UI: dam-tag-edit / viz-request / inbox wysylaja `Authorization`; panel moderacji tylko admin.
+7. memory.md ?86.
+
+### Efekt/Fix
+Dwie warstwy: kolejka (tag-proposals + inbox) <-> kanoniczna baza/dysk tylko po kliku admina.
+
+### Test/Ewaluacja
+- python ast OK; node --check JS OK
+- create_or_apply session_role=user + spoof admin_mode -> immediate=False
+
+### Zrodla
+- apps/desktop/local_bridge.py
+- apps/web/assets/js/dam-tag-edit.js, dam-viz-request.js, dam-inbox.js, dam-api.js
+- memory.md ?86
+
+---
+
+## 2026-07-18 - Warianty count + chipy jeden styl (varcnt1)
+
+### Komenda/Akcja
+User: nie `4 rew.` tylko warianty; duza liczba jak +22 (+100%) obok tagu WARIANTY po lewej + ten sam tag w rzedzie; WSZYSTKIE chipy jeden styl; font labela nosnika.
+
+### Log/Status
+1. prodRowHtml: lewa kolumna count-num + Warianty; DamBadges multiIndex; usunieto revcount tekst.
+2. CSS: count-num = tag-more 22px; date/status/carrier chips = pill token; label nosnika 16px.
+3. Index/date HTML: zawsze dam-viz-badge klasy.
+4. Cache varcnt1.
+
+### Efekt/Fix
+Czytelna liczba wariantow + spojne chipy w liscie i carrier.
+
+### Test/Ewaluacja
+CDP: left count + Warianty badge; brak `rew.`; carrier index/date radius 999px weight 500.
+
+### Zrodla
+- dam-explorer.js, dam-badges.js, dam-brand.css, explorer.html, memory.md ?91
+
+---
+
+## 2026-07-18 - Lista produktow: air + cienka typo (listair1)
+
+### Komenda/Akcja
+User: teksty za duze/grube; wiecej oddechu; tagi ten sam rozmiar + lekka ramka; 10px miedzy sekcjami; tlo wierszy ~10% szare jasniej niz #f3f2f7.
+
+### Log/Status
+1. Typo: panel 15/500, title 13.5/500, folder 13/500.
+2. prod-list gap 10px; row bg #f8f7fb + padding 14/16; main gap 10px.
+3. Chipy explorer: height 22px + border rgba(70,66,85,.14); tag=index.
+4. Cache listair1.
+
+### Efekt/Fix
+Czystsza lista, spojne obramowane chipy, mniej inwazyjna typografia.
+
+### Zrodla
+- dam-brand.css, explorer.html, memory.md ?92
+
+---
+
+## 2026-07-18 - Panel head Wstecz/Do przodu (panelnav1)
+
+### Komenda/Akcja
+User /ui-taste: folder cieniejszy -1px; panel nieczytelny; MIXY za blisko; brak ikony kategorii + Wstecz/Do przodu; carrier ramka; ikony +50%.
+
+### Log/Status
+1. navStack + panelHeadHtml (strzalki, ikona, kicker, tytul, meta).
+2. CSS head/mix/carrier air; folder 12/400; carrier icons +50%.
+3. Cache panelnav1.
+
+### Zrodla
+- dam-explorer.js, dam-brand.css, explorer.html, memory.md ?93
+
+---
+
+## 2026-07-18 - Inbox expand + OAuth + legal + crypto
+
+### Komenda/Akcja
+User: gdzie zgloszenia w Wiadomosciach; nie da sie rozwinac; integracja Asana/Teams/Outlook + login; polityka/regulamin/licencja/zgody; szyfrowanie; konto w headerze zawsze widoczne.
+
+### Log/Status
+1. Fix Asana mapowania: parent/due/section (wczesniej due_on/gid = pusty detal).
+2. Inbox: expand/collapse, filtr Zgloszenia DAM, chevron.
+3. dam-shell: pusty #damHeaderAction wypelniany quickaction (konto).
+4. OAuth: oauth_integrations.py + secret_box Fernet; endpoints /integrations/* + /oauth/callback.
+5. Legal: privacy/terms/license/consents/docs-security.html.
+6. Settings: karta Integracje + linki prawne.
+7. cryptography w requirements; memory ?87.
+
+### Efekt/Fix
+Zgloszenia DAM w osobnym filtrze; Asana czytelna po kliku; login OAuth po Client ID; dokumenty pod Google verification.
+
+### Test/Ewaluacja
+- encrypt/decrypt Fernet OK; oauth status crypto_ok=True
+- wymaga restart bridge + hard refresh inbox
+
+### Zrodla
+- apps/web/assets/js/dam-inbox.js, dam-shell.js
+- apps/desktop/secret_box.py, oauth_integrations.py, local_bridge.py
+- apps/web/privacy.html, terms.html, license.html, consents.html
+
+---
+
+## 2026-07-18 - Panel head panelnav2 + ui-taste QA
+
+### Komenda/Akcja
+Panel kategorii nieczytelny: folder typo -1px/lighter; head z ikona + Wstecz/Do przodu; oddech MIXY; carrier ramka; ikony +50%; /ui-taste 5 pass.
+
+### Log/Status
+1. Folder sidebar: 12px / font-weight 400.
+2. `.dam-panel-head`: navStack back/forward + step-up, ikona folder/box, kicker+tytul+meta, ramka `#f8f7fb`.
+3. MIXY margin od head 28px; carrier card radius 12px, bg `#f8f7fb`.
+4. Ikony copy/folder 45px hit / 24px glyph; chevron 30px.
+5. Cache `?v=20260718panelnav2`; memory ?93.
+
+### Efekt/Fix
+Naglowek panelu czytelny z nawigacja; historia Wstecz/Do przodu dziala (produkt?kategoria, Forward enabled).
+
+### Test/Ewaluacja
+- Pass 1 desktop: head + kicker Kategoria / BATONY, gap head?MIXY.
+- Pass 2: product view icons 45/24, chevron 30, carrier frame.
+- Pass 3: Back z produktu ? BATONY list; Forward enabled.
+- Pass 4: mid viewport - brak `browser_resize` MCP; layout desktop smoke.
+- Pass 5: final lock category panel clean.
+
+### Zrodla
+- apps/web/assets/js/dam-explorer.js
+- apps/web/assets/css/dam-brand.css
+- apps/web/explorer.html
+- memory.md ?93
+- skill ui-taste ?0.E
+
+---
+
+## 2026-07-18 - Faza 6: moderacja w Inbox (nie Settings)
+
+### Komenda/Akcja
+Usunac panel moderacji z ustawien; zbudowac zgloszenia + historie w Wiadomosciach (admin); dopiac luki planu (Wstecz, X, badge, notification-groups); 5-pass ui-taste.
+
+### Log/Status
+1. Usunieto karte Panel moderacji z settings.html; stub grupy grafik z notification-groups.json.
+2. dam-inbox.js: GET /tag-proposals + approve/reject/pick w expand; filtry zgloszenie / historia; admin default zgloszenie.
+3. DamTagEdit.renderModerationPanel -> redirect do inbox (deprecated).
+4. Shell: Asana popup -> inbox.html; badge += pending; Wstecz = collapse -> popFilter -> nav; overlay #damLightbox.
+5. CSS .dam-inbox-mod* touch 44px; copy bez auto-apply 72h; cache inbox3.
+6. memory.md ?88.
+
+### Efekt/Fix
+Moderacja = workflow inbox admina z historia; Settings bez panelu decyzji.
+
+### Test/Ewaluacja
+- QA Pass 1-5 screenshot inbox (375/768/1280) - w toku.
+
+### Zrodla
+- apps/web/assets/js/dam-inbox.js, dam-shell.js, dam-tag-edit.js
+- apps/web/inbox.html, settings.html
+- apps/web/assets/css/dam-brand.css
+- apps/web/data/notification-groups.json
+- memory.md ?88
+
+---
+
+## 2026-07-18 - DK/GC chipy: jeden mount + styl tagow
+
+### Komenda/Akcja
+Usunac duplikat DK/GC z toolbara produktu; zostawic tylko w `.dam-cat-panel__head`; styl jak tagi, +50%, active kolor / off niemal biale.
+
+### Log/Status
+1. `dam-explorer.js`: bez `#damProductBrandMount`; mount tylko `#damSidebarBrandMount`.
+2. `dam-brand-filter.js` `renderChips`: klasy `--dk/--gc` + `is-active` / `is-off`.
+3. CSS: bez szarego tracka/border; 33px / 15.75px; active tint marki; off `#fafafa` / `#d0d1d8`.
+4. Cache `?v=20260718brandchip3`; memory.md ?94.
+
+### Efekt/Fix
+Jedna para chipow przy Kategorie; stan ON/OFF czytelny; anatomia jak tagi DAM.
+
+### Test/Ewaluacja
+- Screenshot both-on: DK fiolet + GC cyan, 2 chipy, brak mountu w toolbarze.
+- Screenshot GC-off: DK kolor, GC wyszarzone niemal biale.
+- CDP: count=2, productMount=false, h=33, fontSize=15.75px.
+
+### Zrodla
+- apps/web/assets/css/dam-brand.css
+- apps/web/assets/js/dam-brand-filter.js, dam-explorer.js
+- apps/web/explorer.html
+- memory.md ?94
+- skill ui-taste (anatomia pill / active-off)
+
+---
+
+## 2026-07-18 - Warianty po prawej w liscie produktow
+
+### Komenda/Akcja
+Przeniesc blok N Warianty z lewej na prawa strone wiersza produktu.
+
+### Log/Status
+1. HTML: __main najpierw, potem __variants.
+2. CSS grid: 1fr auto + justify-self end.
+3. Bez duplikatu tagu Warianty w srodku (multiIndex false).
+4. Cache ?v=20260718varright1; memory ?91.
+
+### Efekt/Fix
+4 Warianty przy prawej krawedzi wiersza.
+
+### Test/Ewaluacja
+- CDP: variants.left > main.right, nearRowRight=true.
+- Screenshot BATONY Kalendarz: liczba + tag po prawej.
+
+### Zrodla
+- apps/web/assets/js/dam-explorer.js
+- apps/web/assets/css/dam-brand.css
+- apps/web/explorer.html
+
+---
+
+## 2026-07-18 - Produkt: Poka? wszystko + status tag
+
+### Komenda/Akcja
+Usunac nieklikalne meta Indeksy/Marka; zamiast DK/GC w toolbarze - switch Poka? wszystko; status edytowalny Shift+klik z zapisem do bazy.
+
+### Log/Status
+1. Usunieto dam-product-meta z widoku produktu.
+2. Switch #damProdShowAll: OFF=aktualne, ON=nieaktualne/starsze pod karta.
+3. statusBadge = dam-badge-tag kind=status; damSetRevisionStatus + saveCarrierOverride.
+4. DamBadges.bindClicks(explorer); cache showall1; memory ?95.
+
+### Efekt/Fix
+Toolbar czytelny; nieaktualne tylko po wl?czeniu switcha; status jak globalny tag.
+
+### Test/Ewaluacja
+- Babka: brak meta/brandMount; switch widoczny.
+- showAll ON: older 6300622 Nieaktualne + 6300684.00 Starsza.
+- Status buttons data-tag-kind=status editable.
+
+### Zrodla
+- apps/web/assets/js/dam-explorer.js, dam-badges.js
+- apps/web/assets/css/dam-brand.css
+- apps/web/explorer.html
+
+---
+
+## 2026-07-18 - Pomoc FAB + wyszukiwarka (help3)
+
+### Komenda/Akcja
+FAB ? = F1; odswiezyc modal pomocy (Shift, zoom, Poka? wszystko); full help z wyszukiwarka problemow; 7 rund QA.
+
+### Log/Status
+1. dam-shortcuts.js: dynamiczny body, sekcja admin gdy role=admin, FAB #damHelpFab.
+2. help.html: grupy + #damHelpSearch + empty state; PL odmiana temat/tematy/tematow.
+3. CSS: FAB fioletowy 44px; kbd color #17161E (fix Bootstrap white-on-light).
+4. Cache ?v=20260718help3; memory ?96.
+5. QA 7 pass: FAB, modal admin, help search shift, empty, kbd contrast, FAB filled.
+
+### Efekt/Fix
+Pierwszy raz: ? w rogu ? skr?ty; admin widzi Shift; pe?na pomoc przeszukiwalna.
+
+### Test/Ewaluacja
+- Pass: FAB otwiera modal; Skr?ty admina + Tryb admina ON.
+- Search \"shift\" ? 2 tematy (typ + status).
+- Empty xyz ? 0 temat?w + sugestie.
+- kbd czytelne (nie bia?e na bia?ym).
+
+### ?r?d?a
+- apps/web/assets/js/dam-shortcuts.js, dam-shell.js
+- apps/web/assets/css/dam-brand.css
+- apps/web/help.html, explorer.html
+- memory.md ?96
+
+---
+
+## 2026-07-18 - Fix carrier nest (rozjechany widok)
+
+### Komenda/Akcja
+Carrier rows: chevron/copy/folder poza karta; ogromne puste przestrzenie. /ui-taste 5 pass.
+
+### Log/Status
+1. Root cause: `statusBadge()` = button wewnatrz `button.dam-carrier-toggle` - HTML auto-close, orphany.
+2. Fix: status (+ admin index z button) w `.dam-carrier-toggle__trail` poza toggle.
+3. Mobile trail wrap @ max-width 767.98px.
+4. Cache carriernest2; memory ?94.
+
+### Efekt/Fix
+Karty ~74px; akcje i chevron w rzedzie; orphans=0.
+
+### Test/Ewaluacja
+- Pass 1-2 desktop: trail wewnatrz row, rowH 72.
+- Pass 3: 375 stack CSS.
+- Pass 4: ~768 orphans 0.
+- Pass 5: 1440 allInside=true heights [74,74].
+
+### Zrodla
+- dam-explorer.js renderCarrierCard
+- dam-brand.css .dam-carrier-toggle__trail
+- systematic-debugging + ui-taste ?0.E
+
+---
+
+## 2026-07-18 - Inbox kontekst + toolbar + ramki 35% + widget viz (ui35f)
+
+### Komenda/Akcja
+Inbox propozycje typu czytelne (produkt + kola + tagi); toolbar Projektow zageszczony; obrys kart 35%; widget 3 viz z 100px thumb i globalnymi tagami.
+
+### Log/Status
+1. dam-inbox.js: productContextHtml, navCircles, enrich z file-index, tytul Nazwa ? zmiana.
+2. CSS: .dam-nav-circles, inbox product strip, toolbar nowrap + status pod spodem, border alpha 0.35.
+3. dam-dashboard-widgets.js: wiersz viz = 3 kola + thumb contain 100 + DamBadges; bindWinButtons.
+4. HTML cache ?v=20260718ui35f; scripts badges/icons/paths na inbox + dashboard.
+5. QA 5 pass toolbar (1280/375/768) + inbox expanded + dashboard CDP thumb ~100 / gap 100.
+
+### Efekt/Fix
+Admin widzi co zmienia (nazwa + DOYPACK + sciezka) i moze skoczyc do Eksplorera / folderu / viz. Search projektow rzuca sie w oczy; ramki kart delikatniejsze.
+
+### Test/Ewaluacja
+- Pass: inbox test2 ? BAG ? DOY + 3 kola + Zatwierdz/Odrzuc.
+- Pass: projects searchW~666, gap 14, status under toolbar; border rgba(...,0.35).
+- Pass: dashboard viz thumb~100, object-fit contain, 3 circles, badges.
+
+### Zrodla
+- apps/web/assets/js/dam-inbox.js, dam-dashboard-widgets.js
+- apps/web/assets/css/dam-app.css, dam-brand.css, dam-dashboard.css
+- apps/web/inbox.html, index.html, dashboard.html
+- memory.md ?97
+
+---
+
+## 2026-07-18 - Zg?oszenia tabs + historia undo (inboxTabs6)
+
+### Komenda/Akcja
+Historia pod Zg?oszeniami (taby ikonowe); cofnij/pon?w; karty jak project-card (Przejd?/Win). Intensive QA 10 tur /ui-taste.
+
+### Log/Status
+1. Usuni?to sidebar ?Historia moderacji?; dodano `#inboxZgloszenieTabs` + `#inboxHistBar`.
+2. `dam-inbox.js`: `zgloszenieSub`, filtry typy/wiz/historia, historyActionsHtml, productActionsHtml.
+3. Bridge: `reopen_tag_proposal`, `undo_tag_proposal`, `proposal_id` w change-log; endpointy `/tag-proposals/reopen|undo`.
+4. CSS: subtaby, hist-bar, product-card strip, mobile main przed ?r?d?ami.
+5. Restart bridge 8766; cache `?v=20260718inboxTabs6`.
+
+### Efekt/Fix
+Admin w Zg?oszeniach prze??cza Typy / Wizualizacje / Histori?; w historii wraca do kolejki lub cofa ostatni? zmian? na dysku. Karta ma Przejd? + Folder Windows.
+
+### Test/Ewaluacja
+- Pass 1 (375): taby + karta test2; etykiety tab?w pod ikonami.
+- Pass 2-3: spacing; main nad ?r?d?ami na w?skim.
+- Pass 4 (768): hist-bar + Wr?? do kolejki (przycisk nad fold).
+- Pass 5 (1280): taby z pe?nymi labelami, ODRZUCONO + Przejd?/Win.
+- Pass 6-8: hist actions zawsze widoczne; disabled undo gdy brak change-log.
+- Pass 9-10: deep-link `sub=historia`; brak osobnego filtra Historia w sidebar.
+
+### Zrodla
+- apps/web/inbox.html, dam-inbox.js, dam-brand.css
+- apps/desktop/local_bridge.py
+- memory.md ?98
+- ui-taste ?0.E intensive 10
+
+---
+
+## 2026-07-18 - Inbox ?r?d?a ikony + badge/actor (inboxIcons1)
+
+### Komenda/Akcja
+Ikony i szerszy panel ?r?de?; liczniki jak tagi; tint badge/PL w headerze; wi?ksze status/tagi; attribution moderatora w prawym dolnym rogu karty.
+
+### Log/Status
+1. `inbox.html`: ikony przy filtrach ?r?de?; cache `?v=20260718inboxIcons1`.
+2. `dam-brand.css`: grid 270px; `.dam-inbox-count` pill; header badge/lang tint+pad; status/tagi wi?ksze; `.dam-inbox-item__actor`.
+3. `dam-inbox.js`: `shortActor` + `actorFootHtml` (Odrzuci?/Zatwierdzi?/Zmoderowa?/Zg?osi?).
+4. QA screenshot?Read: sideW=270, icon=true, actor ?Odrzuci?: moderator?, badge tint.
+
+### Efekt/Fix
+?r?d?a czytelne z ikonami i pill-count; header nie ?martwy?; karty pokazuj? kto zdecydowa?.
+
+### Test/Ewaluacja
+- Pass: ?r?d?a 270px + ikony + count pills.
+- Pass: header msg/notif/PL tint + padding.
+- Pass: ODRZUCONO + foot tagi wi?ksze; actor bottom-right.
+
+### Zrodla
+- apps/web/inbox.html, dam-inbox.js, dam-brand.css
+- memory.md ?99
+
+---
+
+## 2026-07-18 - Tag picker listy + historia undo (histUndo2)
+
+### Komenda/Akcja
+Pelne podkategorie/indeksy w popoverze (PL/EN); historia: real undo + 30s cancel + przebieg change-log przy konflikcie.
+
+### Log/Status
+1. Root cause: tag_groups.podkategoria puste; index picker = stub tylko current.
+2. dam-tag-edit.js: collect z file-index products; bilingual labels; wide popover; ensureFileIndex.
+3. Bridge: build_change_timeline_for_proposal, undo grace 30s, cancel_undo_tag_proposal, GET timeline.
+4. Inbox: rozroznienie Cofnij na dysku / Wroc do kolejki; Anuluj cofniecie; panel Przebieg zmian.
+
+### Efekt/Fix
+27 podkategorii (np. Roslinne / plant based); ~335 indeksow z szukaniem; historia tlumaczy konflikty i brak sciezki na dysku.
+
+### Test/Ewaluacja
+- Pass: subcat popover 27 opts, wide 480px, PL/EN.
+- Pass: index total 335, filter 00012 -> 000127.
+- Pass: historia note + Przebieg zmian pokazuje missing path + audit reject.
+
+### Zrodla
+- apps/web/assets/js/dam-tag-edit.js, dam-inbox.js, dam-brand.css
+- apps/desktop/local_bridge.py
+- memory.md �100
+
+---
+
+## 2026-07-18 - Sesja rehydrate + Dostosuj pulpit (dashCustom2)
+
+### Komenda/Akcja
+Naprawa login_required mimo UI zalogowanego; human copy Inbox; modal Dostosuj pulpit (purple checks, DnD, preview 350ms, dirty guard); ui-taste 3 rundy.
+
+### Log/Status
+1. Root cause: localStorage profil bez wa?nego Bearer; me() fallback offline udawa? sesj?.
+2. auth_store.rehydrate_session + POST /auth/rehydrate; DamApi.rehydrate + me() auto; shell odrzuca token qa.
+3. dam-dashboard-widgets/css: left stage, preview queue 350ms, checkbox 28px #AB54DB, DnD, dirty confirm 3 przyciski.
+4. Inbox subtitle przepisany na ludzki PL.
+5. ui-taste Pass 1-3: screenshot+Read (purple checks, left panel+preview, dirty dialog).
+
+### Efekt/Fix
+Zapis/zg?oszenia zn�w dzia?aj? po rehydrate z bound-session. Modal bez pomara?czowych checkbox�w, z podgl?dem i ochron? przed utrat? zmian.
+
+### Test/Ewaluacja
+- Pass: POST /auth/rehydrate ? ok + token; /auth/me z nowym Bearer ? ok (admin).
+- Pass 1: cb 26-28px purple, panel left, preview Produkty.
+- Pass 2: dirty confirm Zapisz zmiany / Nie zapisuj / Wr�? do wyboru.
+- Pass 3: Wr�? ? modal zostaje; preview is-visible z-index 3.
+
+### Zrodla
+- apps/desktop/auth_store.py, local_bridge.py
+- apps/web/assets/js/dam-api.js, dam-shell.js, dam-dashboard-widgets.js
+- apps/web/assets/css/dam-dashboard.css, inbox.html, dashboard.html
+- memory.md �101
+
+---
+
+## 2026-07-18 - Carrier bar layout fix (explorer)
+
+### Komenda/Akcja
+Naprawa paska nosnika w Eksplorerze: tagi, duplikaty, DOM, ikony, header status.
+
+### Log/Status
+1. Nested button DamBadges w toggle -> DOM rozpad (karty poza lista).
+2. Toggle=DIV role=button; indeks tylko w meta; bez duplikatu tagu nosnika przy label.
+3. Tagi 22px; compact Multi; data w meta; label min-width.
+4. Header 2 linie; refresh 48x48 biala ikona.
+5. QA screenshot+CDP CIASTO+BURGER, 768 meta wrap.
+
+### Efekt/Fix
+dam-explorer.js, dam-badges.js, dam-brand.css, explorer.html ?v=carrierFix7
+
+### Test/Ewaluacja
+CDP: inList, aligned, badgeH=22, label widoczny, ikony right, refresh 48 white.
+
+### Zrodla
+ui-taste + verify-ui-after-changes
+
+---
+
+## 2026-07-18 - Sidebar active + bez podkreslen (navActive1)
+
+### Komenda/Akcja
+Zaznacz aktualna pozycje w menu sidebar kolorem Geex; usun podkreslenia z linkow nawigacji.
+
+### Log/Status
+1. Bug: active bylo na li, Geex styluje .geex-sidebar__menu__link.active; brak mapowania inbox.
+2. dam-shell: class + aria-current na linku; sidebarActiveKey (project->projects); inbox w currentPageKey.
+3. dam-brand: active purple text/bg + inset bar; collapsed purple ring; text-decoration none.
+
+### Efekt/Fix
+Wiadomosci / Dashboard wyraznie podswietlone; brak underline w sidebarze.
+
+### Test/Ewaluacja
+- Pass 1 inbox: Wiadomosci current, purple bar, deco=none.
+- Pass 2 dashboard: Dashboard current.
+- Pass 3 collapsed: ikona Dashboard purple.
+
+### Zrodla
+- apps/web/assets/js/dam-shell.js, css/dam-brand.css (?v=20260718navActive1)
+
+---
+
+## 2026-07-18 - Pelny commit + push (docs, UI, Postgres, DATABASE)
+
+### Komenda/Akcja
+User: pelny push, opis zmian, README, dokumentacja, commit + push lacznie z baza.
+
+### Log/Status
+1. Odswiezony dump na NAS (backup-postgres-database.sh) + sync do DATABASE/.
+2. README: sekcja Postgres ADR-009, changelog 2026-07-18, ADR-009 w tabeli docs.
+3. DATABASE/README + PROGRESS zaktualizowane.
+4. Commit kodu (auth rehydrate, sidebar active, dashboard customize, inbox, PG client) + push origin/main.
+
+### Efekt/Fix
+Repo na GitHubie zsynchronizowane z lokalnym stanem + dump dnia.
+
+### Zrodla
+- README.md, DATABASE/README.md, PROGRESS.md, docs/ADR/ADR-009-postgres-synology.md

@@ -99,8 +99,22 @@ Endpointy mostu:
 
 ## Baza danych
 
-- **Kanon:** `apps/desktop/data/dam-local.sqlite` (WAL, gitignored)
-- Tabele: `users`, `device_sessions`, `audit_log`
+### Postgres (wspolna, multi-PC) - ADR-009
+
+- **Zywa baza:** PostgreSQL 16 na Synology, port **5433**, DB/user `dam_eta`
+- **Host priorytet:** DDNS `inyfinn.synology.me:5433`, LAN `192.168.0.145` tylko awaryjnie
+- **Klient:** `apps/desktop/pg_db.py` + schemat `apps/desktop/pg_schema.sql`
+- **Konfig per PC (gitignored):** `apps/desktop/data/pg-config.json` albo `dam-connection.env`  
+  Szablony: `pg-config.example.json`, `dam-connection.env.example`
+- **Tier 1 (online):** `users`, `device_sessions`, `audit_log` - gdy PG niedostepny = tryb OFFLINE (SQLite + hint)
+- **Tier 2:** `dam_kv_store` (JSONB) = prawda dla aliasow / propozycji tagow / slownika; lokalny JSON = cache (sync ~5 min)
+- **Dumpy w Git:** folder [`DATABASE/`](DATABASE/README.md) (`dam_eta_YYYY-MM-DD.sql.gz`, max 72 dni)  
+  Sync: `python apps/desktop/scripts/sync-database-backups-to-git.py` (SSH host `syno`)
+- **Migracja:** `python apps/desktop/scripts/migrate_to_postgres.py` (domyslnie dry-run, `--apply` po akceptacji)
+
+### SQLite (offline / awaryjnie)
+
+- `apps/desktop/data/dam-local.sqlite` (WAL, **gitignored**) - mirror + praca offline
 - **Zakaz** zapisu metadata aplikacji na Marketing (bez `.dam-eta` na `X:\`) - ADR-007
 - Indeks produktow = JSON w `apps/web/data/` (nie SQL)
 
@@ -121,6 +135,7 @@ python apps/desktop/seed_kubara_users.py
 | `tag-proposals.json` | kolejka moderacji (72h auto-apply) |
 | `notification-groups.json` | odbiorcy zgloszen (grupa `grafik`) |
 | `inbox-items.json` | skrzynka odbiorcza (`inbox.html`) |
+| `elements-overrides.json` | override checklisty elementow |
 | `materialy-to-projekt-dryrun.json` | raport naprawy migracji (patrz nizej) - **tylko dry-run** |
 
 ### Naprawa migracji MATERIALY -> PROJEKT (ostrozne, dry-run domyslnie)
@@ -140,8 +155,9 @@ wylacznie w `1 - MATERIALY` tego samego wariantu (w tym jeden poziom podfolderow
 ```
 apps/
   web/          # UI Geex + JS DAM
-  desktop/      # launch.py, local_bridge.py, SQLite, machine_identity.py
+  desktop/      # launch.py, local_bridge.py, pg_db.py, SQLite offline, machine_identity.py
   api/          # Laravel API (opcjonalnie)
+DATABASE/       # dumpy Postgres (sql.gz) - ADR-009, prywatne repo
 THEME/          # Motyw Geex
 design-system/  # MASTER.md, logo
 docs/           # VISION, ARCHITECTURE, ADR, DEPLOYMENT
@@ -151,6 +167,18 @@ memory.md       # zasady dlugoterminowe
 process.md      # log operacyjny
 PROGRESS.md     # postep
 ```
+
+---
+
+## Changelog (2026-07-18)
+
+- **Postgres Synology (ADR-009):** wspolna baza multi-PC, DDNS first, OFFLINE=SQLite, dumpy w `DATABASE/`
+- **Auth:** `/auth/rehydrate` z bound-session; bez fake sesji z samego `localStorage`; `DAM_DEV_ALWAYS_ADMIN=false`
+- **Sidebar:** aktywna pozycja (fiolet Geex + pasek), bez underline linkow nawigacji
+- **Dashboard:** modal „Dostosuj pulpit” (DnD, preview, dirty guard, fioletowe checkboxy)
+- **Inbox:** ludzki podtytul, osobny `dam-inbox.js`, status bazy `dam-db-status.js`
+- **Prawne / docs:** `privacy.html`, `terms.html`, `license.html`, `consents.html`, `docs-security.html`
+- **OAuth stub:** `oauth_integrations.py` (Asana / Microsoft Graph) + zmienne w `dam-connection.env.example`
 
 ---
 
@@ -178,7 +206,9 @@ GitHub Release: tag + upload ZIP (tworzone przy publikacji).
 | Edycja typu + moderacja | Popover propozycji (`dam-tag-edit.js`), panel w `settings.html`, 72h auto-apply |
 | Aliasy produktow | DK<->GC ten sam produkt (`product-aliases.json`), pasek wariantow w modalu |
 | Zgloszenia wizualizacji | Modal wielokanalowy (`dam-viz-request.js`), skrzynka `inbox.html` |
-| Dashboard | 24 konfigurowalne widgety, koszt FMCG, powiadomienia (`dam-dashboard-widgets.js`) |
+| Dashboard | 24 konfigurowalne widgety, „Dostosuj pulpit”, koszt FMCG, powiadomienia |
+| Nawigacja | Aktywna pozycja sidebar (Geex purple), bez underline (`dam-shell.js` + `dam-brand.css`) |
+| Status bazy | Pill online/offline Postgres (`dam-db-status.js`) |
 | Sciezki | Kopiuj + Pokaz w Eksploratorze (`DamPaths`) |
 | Tagi produktow | Smak / Typ / Opakowanie / Autor (`dam-tag-bar.js`) |
 | Chrome | Header, wiadomosci, profil (`dam-shell.js`) |
@@ -188,6 +218,7 @@ GitHub Release: tag + upload ZIP (tworzone przy publikacji).
 ## Dane lokalne (nie w Gicie)
 
 - `apps/desktop/data/*.sqlite*`
+- `apps/desktop/data/pg-config.json`, `apps/desktop/dam-connection.env` (haslo PG / OAuth)
 - `apps/desktop/machine-config.json`
 - `apps/desktop/data/bound-session.json`
 - `apps/web/data/thumbs/`, `dam-runtime.json`, `dam-identity.json`
@@ -208,8 +239,10 @@ GitHub Release: tag + upload ZIP (tworzone przy publikacji).
 | Plik | Rola |
 |------|------|
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Wdrozenie bez instalacji |
-| [`docs/ADR/ADR-007-local-sqlite.md`](docs/ADR/ADR-007-local-sqlite.md) | SQLite w repo |
+| [`docs/ADR/ADR-007-local-sqlite.md`](docs/ADR/ADR-007-local-sqlite.md) | SQLite lokalny / offline |
 | [`docs/ADR/ADR-008-device-session-binding.md`](docs/ADR/ADR-008-device-session-binding.md) | machine/session ID |
+| [`docs/ADR/ADR-009-postgres-synology.md`](docs/ADR/ADR-009-postgres-synology.md) | Wspolny Postgres na NAS |
+| [`DATABASE/README.md`](DATABASE/README.md) | Dumpy `pg_dump`, retencja 72 dni |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architektura |
 | `memory.md` / `process.md` / `PROGRESS.md` | Operacje agentow |
 

@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-	<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718v7f">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718tagthin1">
+	<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718navActive1">
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
 </head>
@@ -56,7 +56,8 @@
     <div class="geex-content">
       <div class="geex-content__header">
         <div class="geex-content__header__content">
-          <h2 class="geex-content__header__title" id="damProjectTitle">Projekt</h2>
+          <h2 class="geex-content__header__title dam-project-title--light" id="damProjectTitle">Projekt</h2>
+          <div class="dam-project-header-badges" id="damProjectBadges" aria-label="Tagi projektu"></div>
           <p class="geex-content__header__subtitle dam-page-sub" id="damProjectSub">Ladowanie...</p>
           <p class="dam-page-status" id="damProjectStatus"></p>
         </div>
@@ -65,19 +66,16 @@
       <div class="row g-3">
         <div class="col-12 col-lg-7">
           <div class="dam-integration-card">
-            <h3>Wymagania slotow</h3>
+            <h3>Wymagania slotów</h3>
+            <p class="dam-action-desc" style="margin-bottom:12px">Kliknij zielony wiersz, aby pokazać Przejdź i Folder Windows.</p>
             <div id="damChecklistRows" class="dam-slot-checklist"></div>
           </div>
         </div>
         <div class="col-12 col-lg-5">
           <div class="dam-integration-card">
             <h3 style="margin-bottom:8px">Akcje</h3>
-            <p id="damActionDesc" class="dam-action-desc">Przelicz checklistke - zapisuje aktualny status kompletnosci. Powiadomienie trafia do Asany i Teams.</p>
-            <!-- Jedna akcja primary (solid); druga = outline Geex primary-transparent -->
-            <div class="dam-action-stack">
-              <button type="button" class="geex-btn geex-btn--primary" id="damRecomputeBtn" data-i18n="actions.recalc">Przelicz checklistke</button>
-              <button type="button" class="geex-btn geex-btn--primary-transparent" id="damNotifyBtn">Powiadom (Asana + Teams)</button>
-            </div>
+            <p id="damActionDesc" class="dam-action-desc">Przelicz status, zgłoś potrzebę albo otwórz hub / folder / Asanę.</p>
+            <div class="dam-action-stack dam-action-tiles" id="damActionStack"></div>
           </div>
         </div>
       </div>
@@ -87,11 +85,16 @@
   <script src="./assets/vendor/js/jquery/jquery-3.5.1.min.js"></script>
   <script src="./assets/vendor/js/bootstrap/bootstrap.min.js"></script>
   <script src="./assets/js/main.js"></script>
-  <script src="./assets/js/dam-api.js?v=20260718auth1"></script>
+  <script src="./assets/js/dam-api.js?v=20260718card7"></script>
   <script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-  <script src="./assets/js/dam-shell.js?v=20260718v7f"></script>
+  <script src="./assets/js/dam-shell.js?v=20260718navActive1"></script>
   <script src="./assets/js/dam-app.js?v=20260717b"></script>
-  <script src="./assets/js/dam-project.js?v=20260718cta1"></script>
+  <script src="./assets/js/dam-labels.js?v=20260718wave2"></script>
+  <script src="./assets/js/dam-badges.js?v=20260718card7"></script>
+  <script src="./assets/js/dam-paths.js?v=20260718card7"></script>
+  <script src="./assets/js/dam-icons.js?v=20260718icons1"></script>
+  <script src="./assets/js/dam-viz-request.js?v=20260718check8"></script>
+  <script src="./assets/js/dam-project.js?v=20260718icons2"></script>
 </body>
 </html>

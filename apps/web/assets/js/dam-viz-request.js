@@ -78,17 +78,26 @@
 
   function open(ctx) {
     close();
+    ctx = ctx || {};
     var sel = loadLastChannels();
+    var title = ctx.title || "Zglos zapotrzebowanie na wizualizacje";
+    var subLine = ctx.sub
+      ? esc(ctx.sub)
+      : esc(ctx.productName || "") +
+        (ctx.langFull ? " &middot; " + esc(ctx.langFull) : "") +
+        (ctx.index ? " &middot; Indeks " + esc(ctx.index) : "");
 
     var html =
-      '<div class="dam-viz-request-overlay" id="damVizRequestModal" role="dialog" aria-modal="true" aria-label="Zglos zapotrzebowanie na wizualizacje">' +
+      '<div class="dam-viz-request-overlay" id="damVizRequestModal" role="dialog" aria-modal="true" aria-label="' +
+      esc(title) +
+      '">' +
       '<div class="dam-viz-request-box">' +
       '<button type="button" class="dam-viz-request-close" id="damVizRequestClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
-      '<h4 class="dam-viz-request-title"><i class="uil uil-bell-plus"></i> Zglos zapotrzebowanie na wizualizacje</h4>' +
+      '<h4 class="dam-viz-request-title"><i class="uil uil-bell-plus"></i> ' +
+      esc(title) +
+      "</h4>" +
       '<p class="dam-viz-request-sub">' +
-      esc(ctx.productName || "") +
-      (ctx.langFull ? " &middot; " + esc(ctx.langFull) : "") +
-      (ctx.index ? " &middot; Indeks " + esc(ctx.index) : "") +
+      subLine +
       "</p>" +
       '<div class="dam-viz-request-channels">' +
       CHANNELS.map(function (c) {
@@ -154,9 +163,12 @@
         saveChannels(channels);
         sendBtn.disabled = true;
         sendBtn.classList.add("is-loading");
+        var headers =
+          (global.DamApi && typeof global.DamApi.authHeaders === "function" && global.DamApi.authHeaders()) ||
+          { "Content-Type": "application/json", Authorization: "Bearer " + (localStorage.getItem("dam_token") || "") };
         fetch(bridgeUrl() + "/viz-request", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: headers,
           body: JSON.stringify({
             product_id: ctx.productId,
             product_name: ctx.productName,
@@ -167,6 +179,7 @@
             carrier_label: ctx.carrierLabel,
             index: ctx.index,
             path: ctx.path,
+            kind: ctx.kind || "viz",
             channels: channels,
             requested_by: userLabel(),
           }),

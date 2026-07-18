@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Eksplorator plikow - DAM ETA</title>
+  <title>Eksplorator - DAM ETA</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -28,8 +28,8 @@
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
-<link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718v7f">
+<link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718carrierFix2">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718navActive1">
 </head>
 
 <body class="geex-dashboard file-manager">
@@ -261,7 +261,7 @@
 			<div class="geex-header__action__item">
 				<button class="geex-btn geex-btn__customizer">
 					<i class="uil uil-pen"></i> 
-					<span>Dostosuj wyglad</span>
+					<span>Dostosuj wygląd</span>
 				</button>
 			</div> 
 		</div>
@@ -501,7 +501,7 @@
 		</nav>
         <div class="geex-sidebar__footer">
 			<span class="geex-sidebar__footer__title">DAM ETA</span>
-			<p class="geex-sidebar__footer__copyright">Panel assetow opakowan</p>
+			<p class="geex-sidebar__footer__copyright">Panel assetów opakowań</p>
 			<p class="geex-sidebar__footer__author"><a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> &copy; 2026</p>
 		</div>
 	</div>
@@ -512,7 +512,7 @@
 
 <div class="geex-customizer">
 	<div class="geex-customizer__header">
-		<h4 class="geex-customizer__title">Dostosuj wyglad</h4>
+		<h4 class="geex-customizer__title">Dostosuj wygląd</h4>
 		<button class="geex-btn geex-btn__customizer-close">
 			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 				<path d="M18 7.05L16.95 6L12 10.95L7.05 6L6 7.05L10.95 12L6 16.95L7.05 18L12 13.05L16.95 18L18 16.95L13.05 12L18 7.05Z" fill="#BCBFDB"/>
@@ -603,8 +603,8 @@
 		<div class="geex-content">
 			<div class="geex-content__header">
 				<div class="geex-content__header__content">
-					<h2 class="geex-content__header__title" data-i18n="explorer.title">Eksplorator plikow</h2>
-					<p class="geex-content__header__subtitle">Pelna struktura produktow DK i GC z indeksu dysku</p>
+					<h2 class="geex-content__header__title" data-i18n="explorer.title">Eksplorator</h2>
+					<p class="geex-content__header__subtitle">Pełna struktura produktów DK i GC z indeksu dysku</p>
 				</div>
 				
 <div class="geex-content__header__action">
@@ -614,7 +614,7 @@
         </button>
         <button class="geex-btn geex-btn__customizer"> 
             <i class="uil uil-pen"></i> 
-            <span>Dostosuj wyglad</span>  
+            <span>Dostosuj wygląd</span>  
         </button>
     </div> 
     <div class="geex-content__header__action__wrap">
@@ -840,7 +840,7 @@
                             <li class="geex-content__header__popup__item">
                                 <a class="geex-content__header__popup__link" href="#">
                                     <i class="uil uil-users-alt"></i>
-                                    Aktywnosc
+                                    Aktywność
                                 </a>
                             </li>
                             <li class="geex-content__header__popup__item">
@@ -874,16 +874,12 @@
                       <div id="damSearchResults" class="dam-search-results" style="display:none"></div>
                     </div>
                     <div class="dam-explorer-toolbar__actions">
-                      <div class="dam-filter-bar">
-                        <button type="button" id="damBrandFilterTrigger" class="dam-filter-trigger" data-dam-tip="Filtruj produkty wedlug marki DK lub GC">Marka: DK+GC</button>
+                      <div class="dam-admin-slot">
+                        <button type="button" id="damStatusExport" class="geex-btn dam-admin-extra" hidden title="Eksport statusów wariantów (JSON)" data-dam-tip="Pobierz plik product-status.json z oznaczeniami Aktualne/Nieaktualne z tej przeglądarki. Zastąp nim plik P:\DAM\data\product-status.json, żeby statusy były wspólne dla zespołu.">Eksportuj status</button>
+                        <button type="button" id="damAdminToggle" class="geex-btn dam-admin-btn" aria-pressed="false" title="Tryb admina: edycja tagów (Shift+klik) i statusów wariantów" data-dam-tip="Włącza edycję WSZYSTKICH tagów: Shift+klik (lub podwójny klik) otwiera listę opcji. Bez tego Shift filtruje jak zwykły klik.">Admin</button>
                       </div>
-                      <label class="dam-admin-toggle" title="Oznaczaj rewizje jako aktualne / nieaktualne">
-                        <input type="checkbox" id="damAdminToggle" />
-                        Tryb admina
-                      </label>
-                      <button type="button" id="damStatusExport" class="geex-btn" style="padding:8px 12px;border-radius:8px;display:none" title="Pobierz product-status.json">Eksportuj status</button>
                       <span id="damExplorerMeta" style="font-size:12px;color:#8b8d97"></span>
-                      <button type="button" id="damIndexRefresh" class="geex-btn" style="padding:8px 12px;border-radius:8px" title="Przeladuj widok z biezacego indeksu" data-dam-tip="Odswiez = przeladuj UI z juz zbudowanego indeksu. Nie skanuje calego Marketing od zera.">Odswiez</button>
+                      <button type="button" id="damIndexRefresh" class="geex-btn" style="padding:8px 12px;border-radius:8px" title="Przeładuj widok z bieżącego indeksu (bez skanu dysku)" data-dam-tip="Odśwież listę = przeładuj UI z już zbudowanego indeksu. Nie skanuje całego Marketing od zera.">Odśwież listę</button>
                     </div>
                   </div>
                   <div id="damAdminBar" class="dam-admin-bar">
@@ -894,8 +890,11 @@
                   <p id="damExplorerStatus" style="font-size:12px;color:#8b8d97;margin:0 0 8px"></p>
                   <div class="row g-3">
                     <div class="col-lg-3">
-                      <div class="geex-card" style="padding:12px;border-radius:12px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.06);max-height:70vh;overflow:auto">
-                        <div style="font-size:12px;font-weight:600;color:#8b8d97;padding:4px 8px 8px">Kategorie</div>
+                      <div class="geex-card dam-cat-panel" style="padding:12px;border-radius:12px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.06);max-height:70vh;overflow:auto">
+                        <div class="dam-cat-panel__head">
+                          <div class="dam-cat-panel__title">Kategorie</div>
+                          <div id="damSidebarBrandMount" class="dam-sidebar-brand-mount" data-dam-tip="Filtr marki DK / GC" aria-label="Filtr marki"></div>
+                        </div>
                         <div id="damFolderList"></div>
                       </div>
                     </div>
@@ -988,7 +987,7 @@
                                             <a href="#" class="geex-content__chat__header__filter__content__list__link">Edytuj</a>
                                         </li>
                                         <li class="geex-content__chat__header__filter__content__list__item">
-                                            <a href="#" class="geex-content__chat__header__filter__content__list__link">Usun</a>
+                                            <a href="#" class="geex-content__chat__header__filter__content__list__link">Usuń</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -1037,7 +1036,7 @@
                                             <a href="#" class="geex-content__chat__header__filter__content__list__link">Edytuj</a>
                                         </li>
                                         <li class="geex-content__chat__header__filter__content__list__item">
-                                            <a href="#" class="geex-content__chat__header__filter__content__list__link">Usun</a>
+                                            <a href="#" class="geex-content__chat__header__filter__content__list__link">Usuń</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -2263,16 +2262,49 @@
 	<script src="./assets/js/dam-api.js?v=20260718zipviz1"></script>
 	<script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
 	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-	<script src="./assets/js/dam-shell.js?v=20260718v7f"></script>
+	<script src="./assets/js/dam-shell.js?v=20260718navActive1"></script>
 	<script src="./assets/js/dam-search.js?v=20260718tags1"></script>
-	<script src="./assets/js/dam-tag-bar.js?v=20260718typ4"></script>
+	<script src="./assets/js/dam-tag-bar.js?v=20260718icons3"></script>
 	<script src="./assets/js/dam-labels.js?v=20260718v7f"></script>
-	<script src="./assets/js/dam-badges.js?v=20260718v7f"></script>
-	<script src="./assets/js/dam-tag-edit.js?v=20260718v7f"></script>
+	<script src="./assets/js/dam-badges.js?v=20260718carrierFix5"></script>
+	<script src="./assets/js/dam-tag-edit.js?v=20260718histUndo1"></script>
 	<script src="./assets/js/dam-paths.js?v=20260718btn1"></script>
-	<script src="./assets/js/dam-brand-filter.js?v=20260718brandsync1"></script>
+	<script src="./assets/js/dam-icons.js?v=20260718uxbatch1"></script>
+	<script src="./assets/js/dam-brand-filter.js?v=20260718showall1"></script>
 	<script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-explorer.js?v=20260718v7f"></script>
+	<script src="./assets/js/dam-explorer.js?v=20260718carrierFix5"></script>
+	<script>
+	/* Stary cache HTML/JS trzymal SyntaxError - doladuj fix z unikalnym bust. */
+	(function () {
+	  function ensureExplorer() {
+	    var folder = document.getElementById("damFolderList");
+	    var empty = !folder || !folder.children || folder.children.length === 0;
+	    if (window.DamExplorer && !empty) return;
+	    if (window.DamExplorer && typeof window.DamExplorer.init === "function" && empty) {
+	      try { window.DamExplorer.init(); return; } catch (e) {}
+	    }
+	    if (window.__damExplorerRetry) {
+	      location.replace("explorer.html?nocache=" + Date.now());
+	      return;
+	    }
+	    window.__damExplorerRetry = 1;
+	    var s = document.createElement("script");
+	    s.src = "./assets/js/dam-explorer.js?v=fix2r" + Date.now();
+	    s.onload = function () {
+	      if (window.DamExplorer && typeof window.DamExplorer.init === "function") {
+	        try { window.DamExplorer.init(); } catch (e2) {}
+	      }
+	      setTimeout(ensureExplorer, 400);
+	    };
+	    document.head.appendChild(s);
+	  }
+	  if (document.readyState === "loading") {
+	    document.addEventListener("DOMContentLoaded", function () { setTimeout(ensureExplorer, 80); });
+	  } else {
+	    setTimeout(ensureExplorer, 80);
+	  }
+	})();
+	</script>
 </body>
 
 </html>

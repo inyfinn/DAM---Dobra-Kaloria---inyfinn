@@ -255,7 +255,7 @@
     };
   }
 
-  /** Inline chips DK/GC (product toolbar) - zawsze zsynchronizowane z dropdownem */
+  /** Inline chips DK/GC (sidebar Kategorie) - zsynchronizowane z DamBrandFilter */
   function renderChips(container, onChange) {
     var el = typeof container === "string" ? document.querySelector(container) : container;
     if (!el) return null;
@@ -281,10 +281,20 @@
 
     function paint(fromSync) {
       if (!fromSync) inst.brands = loadBrands();
+      var dkOn = !!inst.brands.DK;
+      var gcOn = !!inst.brands.GC;
       el.innerHTML =
         '<div class="dam-brand-chips" role="group" aria-label="Filtr marki">' +
-          '<button type="button" class="dam-brand-chip-btn' + (inst.brands.DK ? " is-active" : "") + '" data-brand="DK" aria-pressed="' + !!inst.brands.DK + '">DK</button>' +
-          '<button type="button" class="dam-brand-chip-btn' + (inst.brands.GC ? " is-active" : "") + '" data-brand="GC" aria-pressed="' + !!inst.brands.GC + '">GC</button>' +
+          '<button type="button" class="dam-brand-chip-btn dam-brand-chip-btn--dk' +
+            (dkOn ? " is-active" : " is-off") +
+            '" data-brand="DK" aria-pressed="' +
+            dkOn +
+            '" title="Dobra Kaloria (PL)">DK</button>' +
+          '<button type="button" class="dam-brand-chip-btn dam-brand-chip-btn--gc' +
+            (gcOn ? " is-active" : " is-off") +
+            '" data-brand="GC" aria-pressed="' +
+            gcOn +
+            '" title="Good Choice (eksport)">GC</button>' +
         "</div>";
       el.querySelectorAll("[data-brand]").forEach(function (btn) {
         btn.addEventListener("click", function () {

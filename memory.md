@@ -46,7 +46,7 @@ Data: **2026-07-16**. Wykonawca: Composer 2.5. Workspace: **tylko `P:\DAM`**.
 ## 2026-07-17 - Branding + auth roboczy
 
 20. **Logo:** Dobra Kaloria (bialy + czarne napisy) - pps/web/assets/img/logo-dobra-kaloria.svg (kopia z D: tylko odczyt). Geex logo nie uzywac w UI.
-21. **Auth roboczy:** DAM_DEV_ALWAYS_ADMIN = true w dam-shell.js. Brak Microsoft Entra na teraz. Sesja zawsze admin@dam.local. signin.html auto-redirect do dashboard.html.
+21. **Auth roboczy (aktualizacja 2026-07-18):** `DAM_DEV_ALWAYS_ADMIN = false`. Prawdziwa sesja bridge (Bearer). Gdy token nieważny: `/auth/rehydrate` z bound-session (ta sama maszyna), inaczej signin. Nie udawać logowania samym `dam_user` w localStorage.
 
 17. **Messages popup:** domyslna wysokosc 520px (content +250 vs Geex 200); skalowanie w dol przez uchwyt; zapis w localStorage `dam_msg_popup_h`; style w `dam-brand.css` (musi byc linkowany).
 
@@ -522,3 +522,191 @@ Data: **2026-07-16**. Wykonawca: Composer 2.5. Workspace: **tylko `P:\DAM`**.
     - Admin + **Pokaz wszystko** widzi ukryte (bez showAll ukryte sa odfiltrowane nawet dla admina).
     - Tooltipy: `z-index: 20050`, tip nad stopka modala (preferAbove), bez tipowania `role=dialog`.
     - Toast: top-right (nie zaslania admin buttons). Cache-bust: `?v=20260718admin2/3`.
+
+80. **Projekty + rename plikow + change-log (2026-07-18 wave2):**
+ - Karty Projektow: DamBadges (marka/kategoria/podkategoria/typ/indeks) jak wizualizacje; checklista 6 pozycji (AI, podglad, druk, wizki, elementy, marketing).
+ - Podkategoria w filtrach viz: max 10 widocznych, reszta za +N.
+ - Picker typu: naglowek tylko \Wybierz typ\ / \Zaproponuj typ\.
+ - Po Zatwierdz: rename folderu + pliki AI/PDF/wizki (GC-DOY-product - LANG - index.ext), wpis change-log.
+ - Cofnij/Ponow: GET/POST /change-log*, plik data/change-log.json.
+ - Discrepancy: assignment-log vs dysk -> carrier_guessed + tip \Wczesniej zatwierdzono X\.
+ - Cache-bust: ?v=20260718wave2.
+
+81. **ELEMENTY: auto + reczne powiazania (2026-07-18):**
+ - Auto: `1 - MATERIALY/ELEMENTY` (+ skladniki/ingredients), skan 1 poziomu w srodku ELEMENTY; patch `patch-elements-in-index.py`; indexer `scan_elements_files`.
+ - Reczne poprawki (user/admin): `data/elements-overrides.json` + bridge `POST /elements-link`, `GET /folder-browse`. UI checklisty: ikona folderu (reveal), link (wskaz folder/plik), unlink.
+ - Po wskazaniu: checklista = OK (`powiazane: N pl.`); ikona otwiera wskazany folder w Eksploratorze.
+ - Studio lightbox: kompaktowa siatka, stage flex fit. Cache explorer: `?v=20260718elemLink1`.
+
+82. **Checklista 8 slotow + tagi listy + Zglos (2026-07-18 check8):**
+ - Lista produktow (explorer): tagi jak wizualizacje - kategoria + podkategoria + jezyki; indeks/data chip = **13px**.
+ - Warianty: typ nosnika + jezyki (z `rev.langs` lub z plikow) + brand/index/date/status.
+ - Checklista bez naglowka "Brakuje materialow" - status tylko ikonami. Etykiety: "Plik zrodlowy projektu graficznego", "Podglad PDF projektu", + **Karta wprowadzenia**, **Prezentacja** (karty_wprowadzenia / strategia|pptx).
+ - Karty Projektow: przyciski obok siebie (~36px). Detail: **Przelicz** + **Zglos** (nie "Powiadom") = `DamVizRequest` jak wizualizacje.
+ - Cache: `?v=20260718check8c` (index/project CSS), explorer check8b.
+
+83. **Karty + detail polish card7 (2026-07-18):**
+ - Karty: bez "Rynek PL" i bez duplikatu indeksu w meta; **indeks-tag pod tytulem**, potem reszta tagow (kolejnosc DamBadges + PL); tagi +1px font/+1px pad; akcje = **Przejdz** + folder Windows (+ Asana gdy zmapowany).
+ - Detail: tytul font-weight 500; header = DamBadges (nie `#hash::index`); checklista wiecej oddechu; klik OK-slotu -> Przejdz + Folder; panel Akcje = kafelki ikona+tekst+opis (Przelicz/Zglos/Eksplorator/Folder/Asana).
+ - Global: PPM na `.dam-viz-badge` / `.dam-badge-tag` = kopiuj tekst tagu + toast `#damGlobalToast`.
+ - Asana stub: `ASANA_BY_INDEX["6300728.00"]` = link usera; rozszerzac mapa gdy beda kolejne.
+ - Cache: `?v=20260718card7`. Nadpisane przez card7b (§85).
+
+84. **Postgres Synology - DDNS first + offline (2026-07-18):**
+ - **Zrodlo prawdy online:** Postgres Docker na NAS (`dam-eta-postgres`), port hosta **5433**, DB/user `dam_eta`.
+ - **Host priorytet:** zawsze `inyfinn.synology.me` (DDNS). LAN `192.168.0.145` tylko awaryjnie gdy DDNS nie odpowiada. Nie hardkodowac samego numeru IP jako primary. QuickConnect / `:5001` = DSM UI, **nie** Postgres.
+ - **Gdy brak polaczenia** (timeout, refused, CGNAT, ISP zamknal NAT, zmienne IP bez forwardu): `dam_db` wchodzi w **OFFLINE** - lokalny SQLite `apps/desktop/data/dam-local.sqlite` + jasny hint (status `offline_mode` / `offline_hint`). Co ~120 s retry DDNS. Nie udawac, ze wszystko jest online.
+ - **Przypomnienie diagnostyczne:** konfiguracja serwera moze byc OK, a problem = brak otwartego NAT / CGNAT / ISP nie daje publicznego IP. Wtedy DDNS moze wskazywac zly/nieosiagalny adres.
+ - **Kopia wspolna dla wszystkich:** dumpy w `DATABASE/` (GitHub) + sync godzinowy; sciezka Marketing: `X:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\CURSOR\Database DAM`. Kazdy z repo ma dostep do ostatniego dumpa nawet gdy PG pada.
+ - Config lokalny (gitignored): `apps/desktop/data/pg-config.json` / `dam-connection.env`. Szablony: `pg-config.example.json`, `dam-connection.env.example`. ADR-009.
+
+85. **CGNAT / brak publicznego IP - jak sie polaczyc do PG (2026-07-18):**
+ - **DDNS + port-forward NIE dziala przy CGNAT** - ISP nie wpuszcza ruchu przychodzacego do domu. Same `inyfinn.synology.me` nie pomoze.
+ - **Rozwiazanie docelowe przy CGNAT: mesh VPN (Tailscale / ZeroTier / Netbird)** na NAS + kazdym PC. Ruch wychodzi z obu stron (hole-punch / relay) - bez otwartego NAT. Potem host PG = Tailscale IP lub MagicDNS NAS (np. `100.x.x.x:5433`), nie publiczny DDNS.
+ - Alternatywy: (A) kupno publicznego/"bialego" IP od ISP + dalej DDNS+5433; (B) VPS z publicznym IP + reverse WireGuard z NAS; (C) IPv6 jesli ISP daje prawdziwe IPv6. Cloudflare Tunnel / QuickConnect = OK dla WWW/DSM, **nie** jako surowy Postgres.
+ - Preferencja dla zespolu DAM: **Tailscale na Synology (Package Center) + Tailscale na Windows**. Po wdrozeniu dodac host Tailscale na poczatek `DAM_PG_HOSTS` (przed DDNS albo zamiast DDNS spoza domu). Port 5433 wtedy NIE musi byc na routerze WAN.
+
+86. **Propose JSON -> admin apply (2026-07-18):**
+ - **User / power_user:** tylko zgłoszenia tekstowe (JSON). Zapis do `tag-proposals.json` + wpis w `inbox-items.json`. Brak zapisu kanonicznego / dysku.
+ - **Admin:** jedyny kto `decide` / apply (rename, carrier-types, viz-flag, overrides, change-log undo/redo, index rebuild, db/*). Sesja z `Authorization: Bearer` - body.role / admin_mode NIE daja privilege (anti-spoof).
+ - Po TTL 72h: **eskalacja do Inbox**, NIE auto-zapis na dysk.
+ - Viz-request: kazdy zalogowany -> inbox. Drive/Git sync pliku SQLite = zakazany (ADR-009).
+ - Bridge: `_require_login` / `_require_admin` w `local_bridge.py`.
+
+87. **Inbox + OAuth + legal (2026-07-18):**
+ - Wiadomosci: filtr **Zgloszenia DAM**; klik wiersza = expand detalu (Asana: parent/due/section). Pusty `#damHeaderAction` MUSI byc wypelniany quickaction (konto zawsze widoczne).
+ - OAuth Asana + Microsoft (Teams/Outlook Graph): `oauth_integrations.py`, tokeny Fernet w `data/oauth-tokens.json`, klucz `.dam-secret.key`. Connect w Ustawieniach po Client ID w `dam-connection.env`.
+ - Dokumenty: `privacy.html`, `terms.html`, `license.html`, `consents.html`, `docs-security.html` (dla weryfikacji Google/Microsoft).
+ - Hasla: bcrypt; OAuth: Fernet; nigdy plaintext tokenow w Git.
+
+88. **Moderacja TYLKO w Wiadomosciach (2026-07-18, Faza 6):**
+ - Zakaz panelu moderacji w `settings.html` / dashboard. Admin decyduje w `inbox.html` (expand zgłoszenia: Zatwierdz / inny typ / Odrzuc).
+ - Filtr **Historia moderacji** = decyzje (approved/rejected/…). Deep-link: `inbox.html?tag=zgloszenie&proposal_id=…` lub `?focus=`.
+ - Admin default filtr = `zgloszenie`. Badge wiadomosci += pending z `/tag-proposals`.
+ - Wstecz na inboxie: zamknij expand → cofnij filtr → dopiero nawigacja. Lightbox/modale: Wstecz zamyka overlay (`#damLightbox` itd.).
+ - Copy: 72h = eskalacja/przypomnienie, **bez** auto-apply na dysk (nadpisuje starszy plan P7).
+ - Grupa `grafik`: `apps/web/data/notification-groups.json` (edytowalna); stub listy w Ustawieniach.
+ - Cache: `?v=20260718inbox3`.
+
+85. **Karty card7b (2026-07-18):**
+ - Indeks z powrotem w **prawym gornym rogu** karty (`.dam-project-card__index-corner`); pozostale tagi bezposrednio pod tytulem.
+ - Tytul = `KATEGORIA · NAZWA` (link → `explorer.html?product=…`). Przycisk **Przejdz** nadal → `project.html` (checklist).
+ - Nazewnictwo: **Eksplorator** = hub DAM (`explorer.html`); **Eksplorator plikow** = Windows (ikona folderu). Sidebar/i18n PL: `nav.explorer` = "Eksplorator".
+ - Status badge +7% (`calc(...*1.07)`). Soft wash `::before`: incomplete czerwony / ok zielony, ~5.75rem, alpha ~0.055 (tylko strefa status→tagi).
+ - Cache: `?v=20260718card7b` / `card7b2` (CSS).
+
+86. **PL znaki + status bazy + Wiadomosci (2026-07-18):**
+ - Polskie znaki w `pl.json` + hardcoded UI (skrypt `apps/web/scripts/restore-pl-diacritics.py`). Unikac slepego replace `zadan`→`zadań` (psulo `zadania`).
+ - Przyciski projektow: **Odśwież listę** = reload z indeksu; **Skanuj dysk** = ingest Marketing (bylo "Wczytaj z dysku").
+ - Pill **Baza online** obok Pliki online (`dam-db-status.js`): panel zrodel Synology / GitHub dump / lokalna SQLite; tryb auto|postgres|sqlite; `POST /db/prefer`, `POST /db/reconnect` (force, bez czekania 120s); Odśwież moze `pull_dump` przez sync script `--no-commit`.
+ - Prefer zapis: `apps/desktop/data/db-prefer.json`. GitHub NIE jest silnikiem live - tylko dump/backup.
+ - Strona **Wiadomości** = `inbox.html` + `dam-inbox.js` w sidebarze; filtry zrodel, szukaj, mark-read.
+ - Po zmianie API bazy: **restart local_bridge** (stary proces nie ma POST /db/*).
+ - Cache: `?v=20260718db1` / `db1b`.
+
+87. **Eksplorer vs Windows + checklista klik (2026-07-18, icons2):**
+ - **Eksplorer** = hub DAM (`explorer.html`). Sidebar: label `Eksplorer`, ikona `uil-sitemap` (nie folder-open).
+ - **Eksplorator plikow / Folder Windows** = OS Explorer. Ikona: custom SVG `DamIcons.winExplorerSvg` (folder + wewnetrzny drawer/dysk).
+ - Karty: **Sprawdz projekt** (strzalka → `project.html`) + **Przejdz** (`uil-folder-open` → `explorer.html?product=`) + Win + Asana mark SVG.
+ - OK-wiersze checklisty (karta + detail): klik → Przejdz + Folder Windows. Shared: `dam-icons.js` `bindChecklistRows`.
+ - Wash incomplete/ok: wysokosc 8.625rem (+50%), alpha *1.3 (+30%).
+ - Ramka 1px fade (50% koloru do 50% wysokosci → 0 przy 95%): `--ok` zielony + `--incomplete` czerwony (ten sam mechanizm). Nie 100% alpha.
+ - Cache: `?v=20260718border50` (dam-app).
+
+89. **Explorer brand switch + badge unify (2026-07-18, brandsw1):**
+ - Usunieto biedny `#damBrandFilterTrigger` z toolbara. Filtr marki = chipy DK/GC (bylo: `#damSidebarBrandMount` + `#damProductBrandMount`). **Nadpisane przez §94** - tylko sidebar Kategorie.
+ - Tagi explorera: `dam-viz-badge` pill jak karty projektow (index/brand/carrier/lang). Tytuly: `KATEGORIA · NAZWA` (+3px: title 19px, carrier 17px, folder 15px).
+ - Cache explorer: `?v=20260718brandsw1`.
+
+90. **Tagi cienkie + indeks pill global (2026-07-18, tagthin1):**
+ - `.dam-viz-badge` i `.dam-index-chip` = pill `border-radius: 999px`, `font-weight: 500` jak `.dam-tag-pill` (nigdy kwadrat 4px / mono / 600).
+ - Fix: `button.dam-viz-badge` NIE uzywa `font: inherit` (kradlo weight 600 z rodzica).
+ - Indeksy w liscie produktow: klasy `dam-index-chip dam-viz-badge dam-viz-badge--index`.
+ - Cache: `?v=20260718tagthin1` (brand + app + explorer.js).
+
+91. **Warianty count + chipy jeden styl (2026-07-18, varcnt1 → varright1):**
+ - Lista produktow: zamiast `N rew.` → blok `[N]` + tag `Warianty` **po prawej** wiersza (`grid: 1fr auto`). Nie po lewej.
+ - Bez duplikatu tagu Warianty w srodku rzedu (`multiIndex: false` gdy jest `__variants`).
+ - Global: `.dam-date-chip`, `.dam-status-badge`, carrier chips, index = ten sam pill token (10.5px / 500 / 999px). Label nosnika = 16px jak tytul wiersza.
+ - Cache: `?v=20260718varright1`.
+
+92. **Lista produktow air + cienka typo (2026-07-18, listair1):**
+ - Tytuly/foldery: panel 15/500, wiersz 13.5/500, folder 13/500 (nie 19/600).
+ - Wiecej oddechu: gap 10px miedzy wierszami i tytul↔tagi↔indeksy; padding wiersza 14/16; tlo `#f8f7fb` (jasniej niz `#f3f2f7`).
+ - Chipy (tag + indeks): stale `height: 22px`, `border: 1px solid rgba(70,66,85,.14)`.
+ - Cache: `?v=20260718listair1`.
+
+93. **Panel head: Wstecz/Do przodu + ikona kategorii (2026-07-18, panelnav2):**
+ - `.dam-panel-head`: strzalki historii (`navStack`) + step-up (produkt→kat→root), ikona folder/box, kicker + tytul + meta; ramka `#f8f7fb`.
+ - MIXY odstep 28px od head; carrier card ramka 12px `#f8f7fb`; ikony copy/folder 45px / chevron 30px (+50%).
+ - Folder sidebar: 12px / weight 400.
+ - Cache: `?v=20260718panelnav2`.
+
+94. **Carrier nest ban (2026-07-18, carriernest2):**
+ - NIGDY `<button>` / `<input>` wewnatrz `.dam-carrier-toggle` (statusBadge, admin index apply) - browser zamyka toggle i wyrzuca chevron+akcje poza karte.
+ - Status + akcje w `.dam-carrier-toggle__trail` poza toggle; cache `?v=20260718carriernest2`.
+
+88. **Panel Zrodla bazy + tagi max 7 + viz ikony (2026-07-18, icons3c):**
+ - Panel `#damDbStatusPanel`: zero natywnych radio/checkbox (pomarancz OS). Chipy `.dam-db-mode-chip` (aktywny = `#AB54DB` / bialy tekst) + `.dam-db-check` (fioletowe kwadraty).
+ - Hint: `Auto bierze pierwsze dzialajace zrodlo. Wymus Synology albo lokalna baze ponizej.` Wiecej paddingu (22px), wrap tekstow, line-clamp 2/3 na detail/note, `overflow-y: auto`, mobile full-width.
+ - Tagi global: `DamTagBar.ROW_LIMIT = 7` + viz `SUBCAT_ROW_LIMIT = 7` (+N).
+ - Wizualizacje: Przejdz = `uil-folder-open` + tip Eksplorer; Win = `DamIcons.winExplorerSvg` + "Folder Windows".
+ - Cache: `?v=20260718icons3c` (brand + db-status + viz).
+
+94. **DK/GC chipy tylko przy Kategorie (2026-07-18, brandchip3):**
+ - Jeden mount: `#damSidebarBrandMount` w `.dam-cat-panel__head`. **Bez** `#damProductBrandMount` / duplikatu w toolbarze produktu.
+ - Styl jak tagi (`.dam-tag-pill` / badge marki): brak szarego tracka i obrysu; `border: none`.
+ - Active = kolor marki (DK fiolet / GC cyan); off = niemal biale `#fafafa` + tekst `#d0d1d8`. Domyslnie obie ON.
+ - Rozmiar +50% vs pill 22px/10.5px → `height: 33px`, `font-size: 15.75px`.
+ - Cache explorer: `?v=20260718brandchip3`.
+
+95. **Produkt: Pokaż wszystko + status tag (2026-07-18, showall1):**
+ - Usunieto `.dam-product-meta` (Marka + nieklikalne Indeksy) - nie pokazuj tego, czego nie da sie kliknac.
+ - Toolbar produktu: switch **Pokaż wszystko** (jak viz). OFF = tylko aktualne nosniki; ON = nieaktualne/starsze (lista pod karta).
+ - Persist: `localStorage.dam_explorer_show_all`.
+ - Tag statusu `Aktualne`/`Nieaktualne`: `dam-badge-tag` + `data-tag-kind=status`. Admin + Shift/dbl → toggle; zapis `carrier-overrides` (bridge/PG) + local `product-status`.
+ - Hook: `window.damSetRevisionStatus`. DamBadges.bindClicks na `#damExplorerMain`.
+ - Cache: `?v=20260718showall1`.
+
+96. **Pomoc FAB + odświeżona pomoc (2026-07-18, help3):**
+ - FAB `#damHelpFab` (fioletowy `?`, 44px, prawy dolny) = to samo co **F1** (`DamShortcuts.openHelp`).
+ - Modal `#damHelpModal`: skróty ogólne + **Skróty admina** tylko gdy `role===admin` (Shift+tag typ/status, dbl-klik, DK/GC); start kroków; tagi; moduły; offline.
+ - `help.html`: grupy tematów + wyszukiwarka `#damHelpSearch` (keywords + empty state). PL odmiana: 1 temat / 2-4 tematy / 5+ tematów.
+ - `kbd` na stronie pomocy: jawny `color:#17161E` (Bootstrap kbd = biały tekst - niewidoczny).
+ - Cache: `?v=20260718help3` (`dam-brand.css`, `dam-shell.js` → `dam-shortcuts.js`).
+
+97. **Inbox kontekst + toolbar projektów + ramki 35% + widget viz (2026-07-18, ui35f):**
+ - Inbox propozycja typu: tytul `Nazwa · BAG → DOY`; zawsze widoczny blok produktu (kola Eksplorer / Folder Windows / Wizualizacje + `DamBadges`); enrich z `file-index` po `product_id`.
+ - Shared `.dam-nav-circles` + `.dam-viz-icon-btn` (36px).
+ - Projekty toolbar: search wypelnia rzad; status `#damProjectsStatus` pod toolbar (`dam-projects-status-line`); bez martwej dziury.
+ - Ramki kart `--ok` / `--incomplete`: alpha obrysu **0.35** (bylo 0.5), wash ~0.05.
+ - Dashboard „3 najnowsze wizualizacje”: thumb **100×100** `object-fit: contain`, gap 100px do nazwy/tagow, 3 kola + klik w img → viz.
+ - Cache: `?v=20260718ui35f` (app/brand/dashboard CSS + inbox/projects/dashboard HTML).
+
+98. **Zgłoszenia: taby Typy / Wizualizacje / Historia + undo (2026-07-18, inboxTabs6):**
+ - Sidebar: **bez** osobnej „Historia moderacji”; historia = tab wewnątrz **Zgłoszenia DAM**.
+ - Taby ikonowe `#inboxZgloszenieTabs`: `typy` | `wizualizacja` | `historia` (`zgloszenieSub` w `dam-inbox.js`).
+ - Deep-link: `inbox.html?tag=zgloszenie&sub=historia` (legacy `?tag=historia` → zgloszenie+historia).
+ - Historia: pasek Cofnij ostatnią / Ponów (`/change-log/undo|redo`); przy wpisie **Cofnij zmianę** (`POST /tag-proposals/undo`) lub **Wróć do kolejki** (`POST /tag-proposals/reopen`).
+ - Bridge: `proposal_id` w change-log; undo tylko gdy to ostatni wpis na dysku.
+ - Karta propozycji: indeks (gdy jest), zmiana BAG→DOY, DamBadges, **Przejdź** + Folder Windows (jak project-card) + kola nawigacji.
+ - Cache: `?v=20260718inboxTabs6`.
+
+99. **Inbox Źródła ikony + badge/PL + actor (2026-07-18, inboxIcons1):**
+ - Sidebar Źródła: szerokość **270px** (+50); ikony Unicons przy każdym filtrze; liczniki `.dam-inbox-count` jak pill/tag.
+ - Header: `#damMsgBadge` / `#damNotifBadge` / `.dam-lang-code` – tint + większy padding (bez „martwej” bieli).
+ - Karty: status i foot-tagi ~+10%; prawy dół **Odrzucił / Zatwierdził / Zmoderował / Zgłosił: nick** (`actorFootHtml`, nick z local-part maila).
+ - Cache: `?v=20260718inboxIcons1`.
+
+100. **Tag picker pełne listy + historia undo (2026-07-18, histUndo2):**
+ - Podkategorie: z `_DAM_FILE_INDEX.products` (nie `tag_groups.podkategoria` - klucz nie istnieje). Label **PL / EN** (`Roślinne / plant based`). Popover `--wide` 360-480px.
+ - Indeksy: wszystkie bazy z products (~335) + szukaj; nie tylko bieżący.
+ - Historia: **Cofnij zmianę na dysku** ≠ Wróć do kolejki; po undo status `undone` + **30 s Anuluj cofnięcie** (`/tag-proposals/cancel-undo`); konflikt = timeline + audit (`GET /tag-proposals/timeline`); brak ścieżki na dysku = hint usunięcia.
+ - Cache: `?v=20260718histUndo2` (inbox), `histUndo1` (viz/explorer tag-edit + brand.css).
+
+101. **Sesja rehydrate + Dostosuj pulpit (2026-07-18, authRehydrate1 / dashCustom2):**
+ - Root cause `login_required` przy „zalogowanym” UI: localStorage (`dam_user` / `dam_role`) bez ważnego Bearer; bridge odrzuca token (`qa` / wygasły). `DamApi.me()` nie może udawać sesji samym profilem.
+ - Fix: `POST /auth/rehydrate` (bound-session + machine_id → nowy token); `DamApi.rehydrate()` + auto w `me()` przy `invalid_session`/`no_token`; `enforceAuth` odrzuca `qa` / demo token.
+ - Dostosuj pulpit: checkbox Geex `#AB54DB` 28px (2×), panel w lewo + hover preview 350ms (kolejka animacji, hover = wyższy z-index), DnD + strzałki, dirty guard: Zapisz zmiany / Nie zapisuj / Wróć do wyboru.
+ - Inbox subtitle: ludzki copy (bez „robotycznego” równości).
+ - Cache: `?v=20260718authRehydrate1` (api/shell), `dashCustom2` (dashboard widgets/css).

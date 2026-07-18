@@ -17,6 +17,11 @@ apps/desktop/machine-config.json
 apps/web/data/dam-runtime.json
 apps/web/data/dam-identity.json
 
+# Postgres na Synology (ADR-009) - haslo/host per-maszyna, nigdy w Git
+apps/desktop/data/pg-config.json
+apps/desktop/dam-connection.env
+.tmp-syno-deploy/
+
 # Dependencies
 node_modules/
 /vendor/

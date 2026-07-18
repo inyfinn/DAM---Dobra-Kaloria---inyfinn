@@ -7,8 +7,8 @@
   "use strict";
 
   // Tryb roboczy: zawsze zalogowany jako admin (bez Microsoft).
-  // Wylacz (false) gdy wlaczymy prawdziwe Entra ID.
-  // false = prawdziwe konta (bcrypt + sesja urzadzenia). Nie wymuszaj demo-admin.
+  // Wyłącz (false) gdy włączymy prawdziwe Entra ID.
+  // false = prawdziwe konta (bcrypt + sesja urządzenia). Nie wymuszaj demo-admin.
   var DAM_DEV_ALWAYS_ADMIN = false;
   // Dobra Kaloria (NIE Niemiesa). Zrodlo brand: Marketing/.../DOBRA KALORIA/01 - LOGO/SVG
   // Light: zielony (#008244) - czytelny na jasnym sidebarze. Dark: ten sam zielony (kontrast OK).
@@ -72,7 +72,7 @@
     {
       key: "explorer",
       href: "explorer.html",
-      icon: "uil-folder-open",
+      icon: "uil-sitemap",
       i18n: "nav.explorer"
     },
     {
@@ -86,6 +86,12 @@
       href: "index.html",
       icon: "uil-box",
       i18n: "nav.projects"
+    },
+    {
+      key: "inbox",
+      href: "inbox.html",
+      icon: "uil-envelope",
+      i18n: "nav.inbox"
     },
     {
       key: "invoices",
@@ -115,6 +121,7 @@
     if (path === "visualizations" || path === "viz") return "visualizations";
     if (path === "index" || path === "projects") return "projects";
     if (path === "project") return "project";
+    if (path === "inbox") return "inbox";
     if (path === "invoices") return "invoices";
     if (path === "costs") return "costs";
     if (path === "integrations") return "integrations";
@@ -129,18 +136,18 @@
   /** Hierarchia jak kategorie w sklepie: Panel > Sekcja > [opcjonalnie szczegol] */
   var PAGE_TRAIL = {
     dashboard: { labelKey: "nav.home", label: "Panel", parent: null, href: "dashboard.html" },
-    explorer: { labelKey: "nav.explorer", label: "Eksplorator plikow", parent: "dashboard", href: "explorer.html" },
+    explorer: { labelKey: "nav.explorer", label: "Eksplorer", parent: "dashboard", href: "explorer.html" },
     visualizations: { labelKey: "nav.visualizations", label: "Wizualizacje", parent: "dashboard", href: "visualizations.html" },
     projects: { labelKey: "nav.projects", label: "Projekty", parent: "dashboard", href: "index.html" },
     project: { labelKey: "nav.project", label: "Projekt", parent: "projects", href: "project.html" },
     invoices: { labelKey: "nav.invoices", label: "Faktury", parent: "dashboard", href: "invoices.html" },
-    costs: { labelKey: "nav.costs", label: "Kalkulator kosztow", parent: "dashboard", href: "costs.html" },
+    costs: { labelKey: "nav.costs", label: "Kalkulator kosztów", parent: "dashboard", href: "costs.html" },
     integrations: { labelKey: "nav.integrations", label: "Integracje", parent: "dashboard", href: "integrations.html" },
     profile: { labelKey: "user.profile", label: "Profil", parent: "dashboard", href: "profile.html" },
     settings: { labelKey: "user.settings", label: "Ustawienia", parent: "dashboard", href: "settings.html" },
     billing: { labelKey: "user.billing", label: "Rozliczenia", parent: "dashboard", href: "billing.html" },
-    activity: { labelKey: "user.activity", label: "Aktywnosc", parent: "dashboard", href: "activity.html" },
-    inbox: { labelKey: "nav.inbox", label: "Skrzynka odbiorcza", parent: "dashboard", href: "inbox.html" },
+    activity: { labelKey: "user.activity", label: "Aktywność", parent: "dashboard", href: "activity.html" },
+    inbox: { labelKey: "nav.inbox", label: "Wiadomości", parent: "dashboard", href: "inbox.html" },
     help: { labelKey: "user.help", label: "Pomoc", parent: "dashboard", href: "help.html" }
   };
 
@@ -163,11 +170,12 @@
     }
     var fallbacks = {
       "nav.dashboard": "Dashboard",
-      "nav.explorer": "Eksplorator plikow",
+      "nav.explorer": "Eksplorer",
       "nav.visualizations": "Wizualizacje",
       "nav.projects": "Projekty",
+      "nav.inbox": "Wiadomości",
       "nav.invoices": "Faktury",
-      "nav.costs": "Kalkulator kosztow",
+      "nav.costs": "Kalkulator kosztów",
       "nav.integrations": "Integracje",
       "nav.logout": "Wyloguj"
     };
@@ -196,17 +204,19 @@
     return parent ? parent.href : "dashboard.html";
   }
 
-  /* Faza 6 (2026-07-18, P-audyt X/Wstecz): jesli jest otwarty podglad/modal
-     (lightbox wizualizacji, popover edycji tagu, modal zgloszenia), "Wstecz"
+  /* Faza 6 (2026-07-18, P-audyt X/Wstecz): jeśli jest otwarty podgląd/modal
+     (lightbox wizualizacji, popover edycji tagu, modal zgłoszenia), "Wstecz"
      ZAMYKA GO i nie nawiguje do innej strony. Wyjatek zgodny z prosba usera. */
   function closeTopmostOverlayIfAny() {
     var overlaySelectors = [
+      "#damLightbox",
       "#damVizModal",
       "#damVizRequestModal",
       "#damTagEditPopover",
       "#damThumbPicker",
       "#damAddVariantModal",
       "#damBasepathModal",
+      "#damElementsPicker",
     ];
     for (var i = 0; i < overlaySelectors.length; i++) {
       var el = document.querySelector(overlaySelectors[i]);
@@ -220,6 +230,13 @@
 
   function goBackNav() {
     if (closeTopmostOverlayIfAny()) return;
+    /* Na inboxie: Wstecz cofa ostatnia akcje (expand, potem filtr), nie nawigacje */
+    if (window.DamInbox && typeof window.DamInbox.collapseExpanded === "function") {
+      if (window.DamInbox.collapseExpanded()) return;
+    }
+    if (window.DamInbox && typeof window.DamInbox.popFilter === "function") {
+      if (window.DamInbox.popFilter()) return;
+    }
     var stack = [];
     try { stack = JSON.parse(sessionStorage.getItem(NAV_STACK_KEY) || "[]"); } catch (e) { stack = []; }
     if (!Array.isArray(stack)) stack = [];
@@ -298,7 +315,7 @@
     }).join("");
 
     var html =
-      '<nav class="dam-nav-trail" id="damNavTrail" aria-label="' + escapeHtml(backLabel) + ' / sciezka">' +
+      '<nav class="dam-nav-trail" id="damNavTrail" aria-label="' + escapeHtml(backLabel) + ' / ścieżka">' +
       '<button type="button" class="dam-nav-back" id="damNavBack" aria-label="' + escapeHtml(backLabel) + '">' +
       '<i class="uil uil-arrow-left" aria-hidden="true"></i>' +
       '<span class="dam-nav-back__label">' + escapeHtml(backLabel) + "</span>" +
@@ -340,7 +357,7 @@
     var titleEl = document.getElementById("damProjectTitle");
     if (currentPageKey() === "project" && titleEl) {
       var t = (titleEl.textContent || "").trim();
-      if (t && t !== "Projekt" && t.toLowerCase() !== "ladowanie...") leaf = t;
+      if (t && t !== "Projekt" && t.toLowerCase() !== "ładowanie...") leaf = t;
     }
     renderNavTrail(leaf);
   }
@@ -349,7 +366,7 @@
     if (!DAM_DEV_ALWAYS_ADMIN) return;
     localStorage.setItem("dam_token", "demo-admin-dev-token");
     localStorage.setItem("dam_role", "admin");
-    // Uzytkownik: Krzysztof Wieczorek (Grafik Marketing, Kubara)
+    // Użytkownik: Krzysztof Wieczorek (Grafik Marketing, Kubara)
     var stored = localStorage.getItem("dam_user_name");
     if (!stored || stored === "Administrator DAM") {
       localStorage.setItem("dam_user_name", "Krzysztof Wieczorek");
@@ -385,15 +402,28 @@
       return;
     }
     var token = localStorage.getItem("dam_token");
-    if (!token || token === "demo-admin-dev-token") {
-      if (token === "demo-admin-dev-token") {
+    if (!token || token === "demo-admin-dev-token" || token === "qa") {
+      if (token === "demo-admin-dev-token" || token === "qa") {
         localStorage.removeItem("dam_token");
         localStorage.removeItem("dam_role");
+      }
+      /* Brak tokena: sprobuj rehydrate z bound-session (desktop), inaczej signin. */
+      if (window.DamApi && typeof window.DamApi.rehydrate === "function") {
+        window.DamApi.rehydrate()
+          .then(function (rh) {
+            if (!(rh && rh.ok && rh.token)) {
+              window.location.href = "signin.html?reason=no_token";
+            }
+          })
+          .catch(function () {
+            window.location.href = "signin.html?reason=no_token";
+          });
+        return;
       }
       window.location.href = "signin.html";
       return;
     }
-    /* Weryfikacja machine_id vs sesja (token skopiowany na inny PC = wyloguj) */
+    /* Weryfikacja sesji na bridgu (+ auto-rehydrate gdy token niewazny). */
     if (window.DamApi && typeof window.DamApi.me === "function") {
       window.DamApi.me().catch(function () {});
     }
@@ -416,7 +446,7 @@
       a.href = "dashboard.html";
       a.setAttribute("title", "Dobra Kaloria - DAM ETA");
     });
-    // Usun stare napisy Geex przy logo (jesli sa w markupie)
+    // Usuń stare napisy Geex przy logo (jeśli sa w markupie)
     document.querySelectorAll(".geex-sidebar__logo, .geex-header__logo").forEach(function (wrap) {
       wrap.querySelectorAll("span, h1, h2, h3, h4, h5, p, small").forEach(function (el) {
         var t = (el.textContent || "").toLowerCase();
@@ -428,19 +458,28 @@
   }
 
   // Build sidebar nav HTML
+  /** Klucz pozycji w sidebarze (projekt = Projekty). */
+  function sidebarActiveKey() {
+    var k = currentPageKey();
+    if (k === "project") return "projects";
+    return k;
+  }
+
   function buildSidebarNav() {
-    var active = currentPageKey();
+    var active = sidebarActiveKey();
     return NAV_ITEMS.map(function (item) {
       var label = navItemLabel(item);
-      var isActive = item.key === active ? " active" : "";
-      return '<li class="geex-sidebar__menu__item' + isActive + '">' +
-        '<a href="' + item.href + '" class="geex-sidebar__menu__link" title="' + label + '" aria-label="' + label + '">' +
+      var on = item.key === active;
+      return '<li class="geex-sidebar__menu__item' + (on ? " active" : "") + '">' +
+        '<a href="' + item.href + '" class="geex-sidebar__menu__link' + (on ? " active" : "") + '"' +
+        (on ? ' aria-current="page"' : "") +
+        ' title="' + label + '" aria-label="' + label + '">' +
         '<i class="uil ' + item.icon + '" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
         '<span class="dam-nav-label" data-i18n="' + item.i18n + '">' + label + '</span>' +
         '</a></li>';
     }).join("") +
     '<li class="geex-sidebar__menu__item" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px">' +
-    '<a href="#" class="geex-sidebar__menu__link dam-logout-btn" id="damShellLogout" title="Sesja urzadzenia" aria-label="Sesja urzadzenia">' +
+    '<a href="#" class="geex-sidebar__menu__link dam-logout-btn" id="damShellLogout" title="Sesja urządzenia" aria-label="Sesja urządzenia">' +
     '<i class="uil uil-sign-out-alt" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
     '<span class="dam-nav-label" data-i18n="nav.logout">' + navItemLabel({ i18n: "nav.logout" }) + '</span>' +
     '</a></li>';
@@ -448,11 +487,12 @@
 
   // Build header menu nav HTML (top bar)
   function buildHeaderNav() {
-    var active = currentPageKey();
+    var active = sidebarActiveKey();
     return NAV_ITEMS.map(function (item) {
-      var isActive = item.key === active ? " active" : "";
-      return '<li class="geex-header__menu__item' + isActive + '">' +
-        '<a href="' + item.href + '" class="geex-header__menu__link">' +
+      var on = item.key === active;
+      return '<li class="geex-header__menu__item' + (on ? " active" : "") + '">' +
+        '<a href="' + item.href + '" class="geex-header__menu__link' + (on ? " active" : "") + '"' +
+        (on ? ' aria-current="page"' : "") + '>' +
         '<i class="uil ' + item.icon + '" style="font-size:18px;margin-right:6px"></i>' +
         '<span data-i18n="' + item.i18n + '">' + navItemLabel(item) + '</span>' +
         '</a></li>';
@@ -468,7 +508,7 @@
     var footer = document.querySelector(".geex-sidebar__footer");
     if (footer) {
       var brand = window.DamI18n ? window.DamI18n.t("nav.brand") : "DAM ETA";
-      var brandSub = window.DamI18n ? window.DamI18n.t("nav.brand_sub") : "Panel assetow opakowan";
+      var brandSub = window.DamI18n ? window.DamI18n.t("nav.brand_sub") : "Panel assetów opakowań";
       var madeBy = window.DamI18n ? window.DamI18n.t("footer.made_by") : "inyfinn.art";
       var year = new Date().getFullYear();
       footer.innerHTML =
@@ -534,7 +574,7 @@
    */
   /**
    * Geex demo wstawia grube fill-SVG. Zastepujemy cienkimi Unicons (line),
-   * zeby header wygladal jak reszta DAM / theme.
+   * zeby header wyglądal jak reszta DAM / theme.
    */
   function normalizeHeaderIcons() {
     var list = document.querySelector(
@@ -582,20 +622,10 @@
     });
   }
 
-  function ensureHeaderChrome() {
-    var header = document.querySelector(".geex-content__header");
-    if (!header) return;
-    if (header.querySelector(".geex-content__header__action")) {
-      normalizeHeaderIcons();
-      return;
-    }
-
-    var wrap = document.createElement("div");
-    wrap.className = "geex-content__header__action";
-    wrap.id = "damHeaderAction";
-    wrap.innerHTML =
+  function headerQuickactionHtml() {
+    return (
       '<div class="geex-content__header__customizer">' +
-        '<button type="button" class="geex-btn geex-btn__toggle-sidebar" aria-label="Menu boczne" data-dam-tip="Otworz / zamknij menu">' +
+        '<button type="button" class="geex-btn geex-btn__toggle-sidebar" aria-label="Menu boczne" data-dam-tip="Otwórz / zamknij menu">' +
           '<i class="uil uil-align-center-alt"></i></button>' +
       "</div>" +
       '<div class="geex-content__header__action__wrap">' +
@@ -608,10 +638,10 @@
               '<i class="uil uil-search"></i></div>' +
           "</li>" +
           '<li class="geex-content__header__quickaction__item">' +
-            '<a href="#" class="geex-content__header__quickaction__link" id="damMsgBellLink" aria-label="Wiadomosci" data-dam-tip="Wiadomosci Asana i Teams">' +
+            '<a href="#" class="geex-content__header__quickaction__link" id="damMsgBellLink" aria-label="Wiadomości" data-dam-tip="Wiadomości Asana i Teams">' +
               '<i class="uil uil-comment-alt-dots" style="font-size:22px;color:#464255"></i>' +
               '<span class="geex-content__header__badge dam-badge--msg" id="damMsgBadge" hidden>0</span></a>' +
-            '<div class="geex-content__header__popup geex-content__header__popup--message" role="dialog" aria-label="Wiadomosci"></div>' +
+            '<div class="geex-content__header__popup geex-content__header__popup--message" role="dialog" aria-label="Wiadomości"></div>' +
           "</li>" +
           '<li class="geex-content__header__quickaction__item">' +
             '<a href="#" class="geex-content__header__quickaction__link" id="damNotifBellLink" aria-label="Powiadomienia" data-dam-tip="Powiadomienia operacyjne">' +
@@ -620,20 +650,20 @@
             '<div class="geex-content__header__popup geex-content__header__popup--notification" role="dialog" aria-label="Powiadomienia"></div>' +
           "</li>" +
           '<li class="geex-content__header__quickaction__item">' +
-            '<a href="#" class="geex-content__header__quickaction__link" aria-label="Profil" data-dam-tip="Menu uzytkownika">' +
+            '<a href="#" class="geex-content__header__quickaction__link" aria-label="Profil" data-dam-tip="Menu użytkownika">' +
               '<img class="user-img" src="assets/img/avatar/avatar-male.svg" alt="" /></a>' +
             '<div class="geex-content__header__popup geex-content__header__popup--author">' +
               '<div class="geex-content__header__popup__header">' +
                 '<div class="geex-content__header__popup__header__img"><img src="assets/img/avatar/avatar-male.svg" alt="" /></div>' +
                 '<div class="geex-content__header__popup__header__content">' +
-                  '<h3 class="geex-content__header__popup__header__title">Uzytkownik</h3>' +
+                  '<h3 class="geex-content__header__popup__header__title">Użytkownik</h3>' +
                   '<span class="geex-content__header__popup__header__subtitle"></span>' +
                 "</div></div>" +
               '<div class="geex-content__header__popup__content"><ul class="geex-content__header__popup__items">' +
                 '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="profile.html"><i class="uil uil-user"></i> Profil</a></li>' +
                 '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="settings.html"><i class="uil uil-cog"></i> Ustawienia</a></li>' +
-                '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="billing.html"><i class="uil uil-dollar-alt"></i> Rozliczenia</a></li>' +
-                '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="activity.html"><i class="uil uil-users-alt"></i> Aktywnosc</a></li>' +
+                '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="privacy.html"><i class="uil uil-shield"></i> Prywatność</a></li>' +
+                '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="terms.html"><i class="uil uil-file-alt"></i> Regulamin</a></li>' +
                 '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="help.html"><i class="uil uil-question-circle"></i> Pomoc</a></li>' +
               "</ul></div>" +
               '<div class="geex-content__header__popup__footer">' +
@@ -641,14 +671,34 @@
               "</div>" +
             "</div>" +
           "</li>" +
-        "</ul></div>";
+        "</ul></div>"
+    );
+  }
+
+  function ensureHeaderChrome() {
+    var header = document.querySelector(".geex-content__header");
+    if (!header) return;
+    var existing = header.querySelector(".geex-content__header__action");
+    // inbox.html ma pusty #damHeaderAction - wypelnij, nie wychodz wczesnie
+    if (existing) {
+      if (!existing.querySelector(".geex-content__header__quickaction")) {
+        existing.innerHTML = headerQuickactionHtml();
+      }
+      normalizeHeaderIcons();
+      return;
+    }
+
+    var wrap = document.createElement("div");
+    wrap.className = "geex-content__header__action";
+    wrap.id = "damHeaderAction";
+    wrap.innerHTML = headerQuickactionHtml();
     header.appendChild(wrap);
     normalizeHeaderIcons();
   }
 
   /**
    * Globalne otwieranie popupow headera - class .is-open.
-   * Geex main.js uzywa jQuery slideToggle, ktore psuje panel wiadomosci (stala wysokosc).
+   * Geex main.js uzywa jQuery slideToggle, ktore psuje panel wiadomości (stala wysokosc).
    */
   function bindDamHeaderPopups() {
     var root = document.querySelector(".geex-content__header__action");
@@ -757,12 +807,48 @@
     var teamsMessages = [
       { from: "Anna Polanska", time: "10 min temu", msg: "Prosze sprawdz projekt Tuba Prezentowa - oczekuje na akceptacje." },
       { from: "Marek Paluszewski", time: "1 godz. temu", msg: "Karta wprowadzenia dla DK TUBA gotowa do przejrzenia." },
-      { from: "Karolina Kubara", time: "2 godz. temu", msg: "Potrzebujemy grafiki do kategorii dla nowej linii produktow." },
+      { from: "Karolina Kubara", time: "2 godz. temu", msg: "Potrzebujemy grafiki do kategorii dla nowej linii produktów." },
       { from: "Maciej Labus", time: "wczoraj", msg: "Specyfikacja techniczna zaktualizowana - prosze weryfikowac." }
     ];
 
-    var totalMsg = asanaTasks.length + teamsMessages.length;
+    var pendingMod = 0;
+    try {
+      pendingMod = parseInt(localStorage.getItem("dam_pending_moderation") || "0", 10) || 0;
+    } catch (e2) {
+      pendingMod = 0;
+    }
+    var totalMsg = asanaTasks.length + teamsMessages.length + pendingMod;
     setHeaderBadge("damMsgBadge", totalMsg);
+    /* Odśwież licznik pending zgloszen (admin) w tle */
+    try {
+      var bridge =
+        (window.DamPaths && window.DamPaths.bridgeUrl && window.DamPaths.bridgeUrl()) ||
+        "http://127.0.0.1:8766";
+      var hdrs =
+        (window.DamApi && window.DamApi.authHeaders && window.DamApi.authHeaders()) || {
+          Authorization: "Bearer " + (localStorage.getItem("dam_token") || ""),
+        };
+      fetch(bridge + "/tag-proposals", { headers: hdrs })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (d) {
+          var n = (d.proposals || []).filter(function (p) {
+            return p.status === "pending";
+          }).length;
+          try {
+            localStorage.setItem("dam_pending_moderation", String(n));
+          } catch (e3) {
+            /* ignore */
+          }
+          setHeaderBadge("damMsgBadge", asanaTasks.length + teamsMessages.length + n);
+        })
+        .catch(function () {
+          /* ignore */
+        });
+    } catch (e4) {
+      /* ignore */
+    }
 
     var asanaHTML = asanaTasks.length
       ? asanaTasks.map(function (task) {
@@ -776,7 +862,7 @@
             ? '<div class="geex-content__header__popup__item__desc dam-msg-desc">' + escHtml(task.parent) + "</div>"
             : "";
           return '<li class="geex-content__header__popup__item">' +
-            '<a class="geex-content__header__popup__link" href="dashboard.html">' +
+            '<a class="geex-content__header__popup__link" href="inbox.html?tag=asana">' +
             '<div class="geex-content__header__popup__item__img" aria-hidden="true">' +
             '<i class="uil uil-check-square"></i></div>' +
             '<div class="geex-content__header__popup__item__content">' +
@@ -787,7 +873,7 @@
             '<div class="dam-msg-section-row">' + section + "</div>" +
             "</div></a></li>";
         }).join("")
-      : '<li class="dam-msg-empty">Brak otwartych zadan Asana albo jeszcze sie laduja.</li>';
+      : '<li class="dam-msg-empty">Brak otwartych zadań Asana albo jeszcze sie laduja.</li>';
 
     var teamsHTML = teamsMessages.map(function (m) {
       return '<li class="geex-content__header__popup__item">' +
@@ -805,7 +891,7 @@
 
     msgPopup.innerHTML =
       '<div class="dam-popup-head">' +
-        '<h3 class="dam-popup-head__title">Wiadomosci</h3>' +
+        '<h3 class="dam-popup-head__title">Wiadomości</h3>' +
         '<span class="dam-popup-head__count">' + escHtml(formatBadgeCount(totalMsg) || "0") + "</span>" +
       "</div>" +
       '<div class="dam-msg-tabs" role="tablist">' +
@@ -817,7 +903,7 @@
         '<div id="damMsgTeams" hidden><ul class="geex-content__header__popup__items">' + teamsHTML + "</ul></div>" +
       "</div>" +
       '<div class="dam-msg-footer-link"><a href="inbox.html">Wszystkie zadania</a></div>' +
-      '<div class="dam-msg-resize-handle" title="Przeciagnij, aby zmienic wysokosc" aria-label="Zmien wysokosc okna wiadomosci"></div>';
+      '<div class="dam-msg-resize-handle" title="Przeciagnij, aby zmienic wysokosc" aria-label="Zmien wysokosc okna wiadomości"></div>';
 
     msgPopup.querySelectorAll(".dam-msg-tab").forEach(function (tab) {
       tab.addEventListener("click", function (e) {
@@ -945,7 +1031,7 @@
       { keys: ["Profile", "Profil"], out: tt("user.profile", "Profil"), href: "profile.html" },
       { keys: ["Settings", "Ustawienia"], out: tt("user.settings", "Ustawienia"), href: "settings.html" },
       { keys: ["Billing", "Rozliczenia"], out: tt("user.billing", "Rozliczenia"), href: "billing.html" },
-      { keys: ["Activity", "Aktywnosc"], out: tt("user.activity", "Aktywnosc"), href: "activity.html" },
+      { keys: ["Activity", "Aktywność"], out: tt("user.activity", "Aktywność"), href: "activity.html" },
       { keys: ["Help", "Pomoc"], out: tt("user.help", "Pomoc"), href: "help.html" },
       { keys: ["Logout", "Wyloguj"], out: tt("user.logout", "Wyloguj"), href: null }
     ];
@@ -973,7 +1059,7 @@
 
   function polishBalanceMenu() {
     var links = document.querySelectorAll(".geex-content__summary__balance__more__content a");
-    if (links[0]) links[0].textContent = tt("dash.cost_details", "Szczegoly kosztu");
+    if (links[0]) links[0].textContent = tt("dash.cost_details", "Szczegóły kosztu");
     if (links[1]) {
       links[1].textContent = tt("dash.cost_calc", "Kalkulator");
       links[1].href = "costs.html";
@@ -982,8 +1068,21 @@
 
   /** Translate leftover Geex English chrome (Customizer, Edit/Delete, Search...). */
   function polishGeexChrome() {
-    var customizerLabel = tt("customizer.title", "Dostosuj wyglad");
-    document.querySelectorAll(".geex-btn__customizer span, .geex-customizer__title").forEach(function (el) {
+    var customizerLabel = tt("customizer.title", "Dostosuj wygląd");
+    document.querySelectorAll(".geex-btn__customizer > span").forEach(function (el) {
+      var parts = String(customizerLabel || "").trim().split(/\s+/);
+      if (parts.length >= 2) {
+        el.innerHTML =
+          '<span class="dam-status-line">' +
+          parts[0] +
+          '</span><span class="dam-status-line">' +
+          parts.slice(1).join(" ") +
+          "</span>";
+      } else {
+        el.textContent = customizerLabel;
+      }
+    });
+    document.querySelectorAll(".geex-customizer__title").forEach(function (el) {
       el.textContent = customizerLabel;
     });
 
@@ -1001,20 +1100,20 @@
     });
 
     var editLbl = tt("common.edit", "Edytuj");
-    var delLbl = tt("common.delete", "Usun");
+    var delLbl = tt("common.delete", "Usuń");
     document.querySelectorAll("a, button, .geex-content__chat__header__filter__content__list__link").forEach(function (el) {
       var t = (el.textContent || "").trim();
       if (t === "Edit" || t === "Edytuj") el.textContent = editLbl;
-      else if (t === "Delete" || t === "Usun") el.textContent = delLbl;
+      else if (t === "Delete" || t === "Usuń") el.textContent = delLbl;
     });
 
     polishUserMenu();
     polishBalanceMenu();
 
     var langTitle = document.querySelector(".dam-lang-popup .geex-content__header__popup__title");
-    if (langTitle) langTitle.textContent = tt("header.lang_title", "Jezyk");
+    if (langTitle) langTitle.textContent = tt("header.lang_title", "Język");
     var langTrigger = document.querySelector(".dam-lang-trigger");
-    if (langTrigger) langTrigger.setAttribute("title", tt("header.lang_title", "Jezyk"));
+    if (langTrigger) langTrigger.setAttribute("title", tt("header.lang_title", "Język"));
   }
 
   /* Uniwersalne awatary plciowe (nie zdjecia osob) - ui-taste placeholders */
@@ -1083,13 +1182,13 @@
     applyUserAvatar();
     polishUserMenu();
     document.querySelectorAll(".geex-content__header__popup--author .geex-content__header__popup__footer__link, #damShellLogout, .dam-logout-btn").forEach(function (link) {
-      link.textContent = "Sesja urzadzenia";
-      link.setAttribute("title", "Sesja = ID urzadzenia - bez wylogowania");
+      link.textContent = "Sesja urządzenia";
+      link.setAttribute("title", "Sesja = ID urządzenia - bez wylogowania");
       link.addEventListener("click", function (e) {
         e.preventDefault();
         if (window.DamApi && typeof DamApi.logout === "function") DamApi.logout();
         else if (window.DamPaths && DamPaths.showToast) {
-          DamPaths.showToast("Sesja urzadzenia pozostaje aktywna.");
+          DamPaths.showToast("Sesja urządzenia pozostaje aktywna.");
         }
       });
     });
@@ -1117,8 +1216,8 @@
     var btn = document.getElementById("damSidebarCollapse");
     if (btn) {
       btn.setAttribute("aria-pressed", collapsed ? "true" : "false");
-      btn.setAttribute("title", collapsed ? "Rozwin menu" : "Zwin menu");
-      btn.setAttribute("aria-label", collapsed ? "Rozwin menu" : "Zwin menu");
+      btn.setAttribute("title", collapsed ? "Rozwiń menu" : "Zwiń menu");
+      btn.setAttribute("aria-label", collapsed ? "Rozwiń menu" : "Zwiń menu");
     }
   }
 
@@ -1159,6 +1258,37 @@
     applySidebarCollapse();
   }
 
+  function bindSearchClearInputs() {
+    document.querySelectorAll(".dam-search-input-wrap").forEach(function (wrap) {
+      if (wrap._damClearBound) return;
+      var input = wrap.querySelector("input.dam-search-input, input[type='search']");
+      if (!input) return;
+      wrap._damClearBound = true;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "dam-search-clear";
+      btn.setAttribute("aria-label", "Wyczyść wyszukiwanie");
+      btn.setAttribute("data-dam-tip", "Usuń tekst z pola wyszukiwania");
+      btn.innerHTML = '<i class="uil uil-times" aria-hidden="true"></i>';
+      btn.hidden = true;
+      wrap.appendChild(btn);
+      function syncClear() {
+        btn.hidden = !(input.value || "").length;
+      }
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        input.value = "";
+        syncClear();
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("search", { bubbles: true }));
+        input.focus();
+      });
+      input.addEventListener("input", syncClear);
+      input.addEventListener("search", syncClear);
+      syncClear();
+    });
+  }
+
   // Main init
   function init() {
     ensureAppIcons();
@@ -1167,6 +1297,8 @@
     applyDobraKaloriaLogo();
     applySidebarCollapse();
 
+    bindSearchClearInputs();
+
     var sidebarMenu = document.querySelector(".geex-sidebar__menu");
     if (sidebarMenu) {
       sidebarMenu.innerHTML = buildSidebarNav();
@@ -1174,7 +1306,7 @@
       var logoutBtn = document.getElementById("damShellLogout");
       if (logoutBtn) {
         var span = logoutBtn.querySelector("span");
-        if (span) span.textContent = "Sesja urzadzenia";
+        if (span) span.textContent = "Sesja urządzenia";
         logoutBtn.addEventListener("click", function (e) {
           e.preventDefault();
           if (window.DamApi && typeof DamApi.logout === "function") DamApi.logout();
@@ -1184,19 +1316,28 @@
     // Po wstrzyknieciu collapse - logo musi nadal byc (re-ensure)
     ensureSidebarLogo();
 
-    // Status ROOT plikow (czerwona kropka gdy offline)
+    // Status ROOT plików (czerwona kropka gdy offline)
     if (!window.DamRootStatus) {
       var rs = document.createElement("script");
-      rs.src = "assets/js/dam-root-status.js?v=20260718root3";
+      rs.src = "assets/js/dam-root-status.js?v=20260718carrierFix1";
       document.head.appendChild(rs);
     } else if (typeof window.DamRootStatus.start === "function") {
       window.DamRootStatus.start();
     }
 
-    // F1 pomoc / F5 odswiez
+    // Status bazy danych (obok Pliki online)
+    if (!window.DamDbStatus) {
+      var dbs = document.createElement("script");
+      dbs.src = "assets/js/dam-db-status.js?v=20260718carrierFix1";
+      document.head.appendChild(dbs);
+    } else if (typeof window.DamDbStatus.start === "function") {
+      window.DamDbStatus.start();
+    }
+
+    // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=20260718btn1";
+      sc.src = "assets/js/dam-shortcuts.js?v=20260718help1";
       document.head.appendChild(sc);
     }
 
@@ -1228,7 +1369,7 @@
       }
     });
 
-    // Re-apply after i18n / Geex main.js (odpinamy slideToggle jesli wrocil)
+    // Re-apply after i18n / Geex main.js (odpinamy slideToggle jeśli wrocil)
     function refreshChrome() {
       bindDamHeaderPopups();
       normalizeHeaderIcons();

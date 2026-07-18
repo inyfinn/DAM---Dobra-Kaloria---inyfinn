@@ -841,9 +841,60 @@ def classify_special_document(filename: str) -> str | None:
     return None
 
 
+def _is_elements_dirname(name: str) -> bool:
+    n = norm(name)
+    return (
+        "elementy" in n
+        or "elements" in n
+        or "skladniki" in n
+        or "ingredients" in n
+        or n == "element"
+        or n.startswith("element ")
+    )
+
+
+def scan_elements_files(slot_dir: Path, root: Path) -> list[dict]:
+    """Pliki elementow: bezposrednio w folderze + 1 poziom podfolderow
+    (np. ELEMENTY/PNG/*.png)."""
+    files: list[dict] = []
+    seen: set[str] = set()
+    try:
+        for f in slot_dir.iterdir():
+            if f.is_file() and f.suffix.lower() in SCAN_EXT:
+                try:
+                    ent = file_entry(f, root)
+                    key = ent.get("path") or f.name
+                    if key not in seen:
+                        seen.add(key)
+                        files.append(ent)
+                except (PermissionError, OSError):
+                    pass
+            elif f.is_dir():
+                try:
+                    for nested in f.iterdir():
+                        if nested.is_file() and nested.suffix.lower() in SCAN_EXT:
+                            try:
+                                ent = file_entry(nested, root)
+                                key = ent.get("path") or nested.name
+                                if key not in seen:
+                                    seen.add(key)
+                                    files.append(ent)
+                            except (PermissionError, OSError):
+                                pass
+                except (PermissionError, OSError):
+                    pass
+    except (PermissionError, OSError):
+        pass
+    files.sort(key=lambda x: x.get("name", ""))
+    return files
+
+
 def scan_revision_slots(child: Path, root: Path) -> tuple[list[str], dict[str, list[dict]], list[dict]]:
+    """Skan slotow rewizji. ELEMENTY czesto leza jako PODFOLDER
+    `1 - MATERIALY/ELEMENTY` - wczesniej nie byly indeksowane (falszywy BRAK
+    w checklistcie). Od 2026-07-18: zagniezdzenie + skladniki + 1 poziom w ELEMENTY."""
     slots: list[str] = []
-    files_by_role: dict[str, list[dict]] = {"source": [], "print": [], "viz": []}
+    files_by_role: dict[str, list[dict]] = {"source": [], "print": [], "viz": [], "elements": []}
     wizki_files: list[dict] = []
     try:
         for sub in child.iterdir():
@@ -851,8 +902,22 @@ def scan_revision_slots(child: Path, root: Path) -> tuple[list[str], dict[str, l
                 continue
             sn = sub.name
             slots.append(sn)
+            # Slot sam w sobie = ELEMENTY (rzadkie, ale bywa)
+            if _is_elements_dirname(sn):
+                for f in scan_elements_files(sub, root):
+                    files_by_role.setdefault("elements", []).append(f)
+                continue
             slot_role = classify_slot_role(sn)
             if not slot_role:
+                # Mimo braku roli glownej - szukaj ELEMENTY w srodku (np. MATERIALY)
+                try:
+                    for nested in sub.iterdir():
+                        if nested.is_dir() and _is_elements_dirname(nested.name):
+                            slots.append(sn + "/" + nested.name)
+                            for f in scan_elements_files(nested, root):
+                                files_by_role.setdefault("elements", []).append(f)
+                except (PermissionError, OSError):
+                    pass
                 continue
             scanned = scan_slot_files(sub, root)
             for f in scanned:
@@ -865,6 +930,15 @@ def scan_revision_slots(child: Path, root: Path) -> tuple[list[str], dict[str, l
                 special = classify_special_document(f.get("name") or "")
                 if special:
                     files_by_role.setdefault(special, []).append(f)
+            # MATERIALY / PROJEKT: 1 poziom ELEMENTY/ELEMENTS/SKLADNIKI
+            try:
+                for nested in sub.iterdir():
+                    if nested.is_dir() and _is_elements_dirname(nested.name):
+                        slots.append(sn + "/" + nested.name)
+                        for f in scan_elements_files(nested, root):
+                            files_by_role.setdefault("elements", []).append(f)
+            except (PermissionError, OSError):
+                pass
     except (PermissionError, OSError):
         pass
     for role in files_by_role:

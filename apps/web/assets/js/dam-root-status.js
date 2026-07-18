@@ -1,7 +1,7 @@
 /**
- * Status ROOT plikow (nie API metadanych).
- * Online = da sie odczytac folder usera z -- ARCHIWUM -- / - EKSPORT / - POLSKA.
- * Offline = czerwona kropka + przycisk "Wskaz sciezke" + delikatny pasek u gory okna.
+ * Status ROOT plików (nie API metadanych).
+ * Online = da sie odczytać folder usera z -- ARCHIWUM -- / - EKSPORT / - POLSKA.
+ * Offline = czerwona kropka + przycisk "Wskaż ścieżkę" + delikatny pasek u gory okna.
  */
 (function () {
   "use strict";
@@ -62,9 +62,12 @@
     el.innerHTML =
       '<span class="dam-root-status__dot" aria-hidden="true"></span>' +
       '<span class="dam-root-status__text">' +
-        '<span class="dam-root-status__label">Pliki</span>' +
+        '<span class="dam-root-status__label">' +
+          '<span class="dam-status-line">Pliki</span>' +
+          '<span class="dam-status-line">online</span>' +
+        "</span>" +
       "</span>" +
-      '<button type="button" class="dam-root-status__btn" id="damRootResetBtn" hidden>Wskaz sciezke</button>';
+      '<button type="button" class="dam-root-status__btn" id="damRootResetBtn" hidden>Wskaż ścieżkę</button>';
     host.insertBefore(el, host.firstChild);
     var btn = el.querySelector("#damRootResetBtn");
     if (btn && !btn.getAttribute("data-bound")) {
@@ -95,24 +98,30 @@
     if (!el) return;
     el.classList.toggle("is-offline", !online);
     el.classList.toggle("is-online", !!online);
-    el.title = detail || (online ? "ROOT plikow online" : "ROOT plikow offline");
+    el.title = detail || (online ? "ROOT plików online" : "ROOT plików offline");
     var label = el.querySelector(".dam-root-status__label");
     var btn = el.querySelector("#damRootResetBtn");
     if (label) {
-      if (online) {
-        label.textContent = "Pliki online";
-      } else if (reason === "bridge") {
-        label.textContent = "Most offline";
-      } else if (reason === "no_root") {
-        label.textContent = "Brak sciezki";
-      } else {
-        label.textContent = "Pliki offline";
+      var line1 = "Pliki";
+      var line2 = online ? "online" : "offline";
+      if (!online && reason === "bridge") {
+        line1 = "Most";
+        line2 = "offline";
+      } else if (!online && reason === "no_root") {
+        line1 = "Brak";
+        line2 = "ścieżki";
       }
+      label.innerHTML =
+        '<span class="dam-status-line">' +
+        line1 +
+        '</span><span class="dam-status-line">' +
+        line2 +
+        "</span>";
     }
     if (btn) {
       btn.hidden = !!online;
       btn.setAttribute("data-reason", reason || "");
-      btn.textContent = reason === "bridge" ? "Jak uruchomic" : "Wskaz sciezke";
+      btn.textContent = reason === "bridge" ? "Jak uruchomić" : "Wskaż ścieżkę";
     }
     setBodyOffline(!online);
     if (_lastOnline !== online) {
@@ -124,7 +133,7 @@
   function check() {
     var root = rootPath();
     if (!root) {
-      setState(false, "Brak ROOT - ustaw sciezke Marketing", "no_root");
+      setState(false, "Brak ROOT - ustaw ścieżkę Marketing", "no_root");
       return Promise.resolve({ online: false, reason: "no_root" });
     }
     var url = bridgeBase() + "/files/status?root=" + encodeURIComponent(root);
@@ -136,14 +145,14 @@
           ? ("ROOT OK: " + (res.root || root))
           : ("Offline: " + (res && res.missing && res.missing.length
             ? ("brak " + res.missing.join(", "))
-            : "nie mozna odczytac plikow"));
+            : "nie można odczytać plików"));
         setState(online, detail, online ? "ok" : "path");
         return res;
       })
       .catch(function () {
         setState(
           false,
-          "Most plikow (bridge) nie odpowiada na porcie 8766. Uruchom DAM ETA albo serve_browser.py.",
+          "Most plików (bridge) nie odpowiada na porcie 8766. Uruchom DAM ETA albo serve_browser.py.",
           "bridge"
         );
         return { online: false, reason: "bridge" };

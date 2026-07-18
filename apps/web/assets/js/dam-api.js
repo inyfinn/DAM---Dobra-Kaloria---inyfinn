@@ -47,8 +47,8 @@
     return ["zip", "rar", "7z"].indexOf(fileExtName(name)) >= 0;
   }
 
-  /** Mapowanie rol z indeksu dysku -> checklista DAM */
-  function rolesFromRevision(rev) {
+  /** Mapowanie rol z indeksu dysku -> checklista DAM (szersza, jak Eksplorator) */
+  function rolesFromRevision(rev, product) {
     var fbr = (rev && rev.files_by_role) || {};
     var src = fbr.source || [];
     var prt = fbr.print || [];
@@ -60,10 +60,16 @@
       .concat((rev && rev.wizki) || [])
       .filter(function (f) { return isArchiveName(f.name); });
 
+    /* AI/edytowalny - jak Eksplorator (nie kazdy PDF w source) */
     var hasArtwork = src.some(function (f) {
       var e = fileExt(f.name);
-      return e === "ai" || e === "psd" || e === "indd" || e === "pdf" || e === "tif" || e === "tiff";
-    }) || src.length > 0;
+      return e === "ai" || e === "psd" || e === "indd";
+    });
+
+    var hasPrev = src.some(function (f) {
+      var u = String(f.name || "").toUpperCase();
+      return /\bPREV\b/.test(u) || (/[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u));
+    });
 
     var hasViz = viz.length > 0 || wizki.length > 0;
 
@@ -74,26 +80,99 @@
 
     var hasTech = elements.length > 0 || ((rev && rev.slots) || []).some(function (s) {
       var su = String(s).toUpperCase();
-      return su.indexOf("ELEMENTY") >= 0 || su.indexOf("ELEMENTS") >= 0 || su.indexOf("TECH") >= 0;
+      return su.indexOf("ELEMENTY") >= 0 || su.indexOf("ELEMENTS") >= 0 ||
+        su.indexOf("SKLADNIKI") >= 0 || su.indexOf("INGREDIENTS") >= 0 || su.indexOf("TECH") >= 0;
     });
+    /* Reczne powiazanie Elementy (explorer -> elements-overrides.json) */
+    if (!hasTech && rev) {
+      try {
+        var elLinks = JSON.parse(localStorage.getItem("dam_elements_links") || "{}");
+        var map = (elLinks && elLinks.links) || {};
+        var rk = String(rev.path || "").replace(/\\/g, "/").replace(/\/+$/, "");
+        var idx = String(rev.index || "").trim();
+        if ((rk && map[rk] && map[rk].path) || (idx && map[idx] && map[idx].path)) {
+          hasTech = true;
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    var hasMarketing = ((product && product.related_materials) || []).some(function (m) {
+      return m && m.file_count > 0;
+    });
+
+    var hasKarta =
+      ((fbr.karty_wprowadzenia || []).length > 0) ||
+      src.some(function (f) {
+        var u = String(f.name || "").toUpperCase();
+        return /KARTA/.test(u) && /WPROWADZ/.test(u);
+      });
+
+    var hasPresentation =
+      ((fbr.strategia || []).length > 0) ||
+      src.some(function (f) {
+        var e = fileExtName(f.name);
+        var u = String(f.name || "").toUpperCase();
+        return (e === "pptx" || e === "ppt" || e === "key") &&
+          (/PREZENT|STRATEG|POZYCJON/.test(u));
+      });
 
     return {
       artwork: hasArtwork,
+      prev: hasPrev,
       viz_3d: hasViz,
       print_pdf: hasPrint,
       tech: hasTech,
+      marketing: hasMarketing,
+      karta: hasKarta,
+      presentation: hasPresentation,
     };
   }
 
-  function asset(role, done) {
-    return { asset_role: role, current_revision_id: done ? 1 : null };
+  function firstFilePath(files) {
+    if (!files || !files.length) return "";
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      if (f && (f.path || f.folder)) return f.path || f.folder || "";
+    }
+    return "";
+  }
+
+  function rolePathsFromRevision(rev, product) {
+    var fbr = (rev && rev.files_by_role) || {};
+    var base = (rev && rev.path) || (product && product.path) || "";
+    var vizFiles = (fbr.viz || []).concat((rev && rev.wizki) || []);
+    var paths = {
+      artwork: firstFilePath(fbr.source) || base,
+      prev: firstFilePath(
+        (fbr.source || []).filter(function (f) {
+          var u = String(f.name || "").toUpperCase();
+          return /\bPREV\b/.test(u) || (/[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u));
+        })
+      ) || base,
+      viz_3d: firstFilePath(vizFiles) || base,
+      print_pdf: firstFilePath(fbr.print) || base,
+      tech: firstFilePath(fbr.elements) || base,
+      marketing: firstFilePath((product && product.related_materials) || []) || base,
+      karta: firstFilePath(fbr.karty_wprowadzenia) || base,
+      presentation: firstFilePath(fbr.strategia) || base,
+    };
+    return paths;
+  }
+
+  function asset(role, done, path) {
+    return {
+      asset_role: role,
+      current_revision_id: done ? 1 : null,
+      path: path || "",
+    };
   }
 
   function productToProject(product, seq) {
     var rev = pickLatestRevision(product);
-    var roles = rolesFromRevision(rev);
+    var roles = rolesFromRevision(rev, product);
+    var rolePaths = rolePathsFromRevision(rev, product);
     // Wymagane z indeksu dysku: projekt + wizki + druk.
-    // "tech/elementy" rzadko sa w indeksie - pokazywane w checklistcie, nie blokuja kompletnosci listy.
+    // prev / tech / marketing - w checklistcie, nie blokuja statusu listy.
     var missing = [];
     ["artwork", "viz_3d", "print_pdf"].forEach(function (r) {
       if (!roles[r]) missing.push(r);
@@ -111,6 +190,8 @@
       product.display_name ||
       product.name ||
       product.id;
+    var langs = (rev && rev.langs) || [];
+    if (!langs.length && product.brand !== "GC") langs = ["pl"];
 
     return {
       id: product.id,
@@ -119,6 +200,11 @@
       title: title,
       market: product.brand === "GC" ? "GC" : "PL",
       brand: product.brand || "DK",
+      category: product.category || "",
+      subcategory_slug: product.subcategory_slug || "",
+      subcategory_label: product.subcategory_label || "",
+      carrier: (rev && rev.carrier) || product.carrier || "",
+      langs: langs,
       path: product.path || (rev && rev.path) || "",
       rel: product.rel || "",
       completeness: status,
@@ -129,10 +215,14 @@
           id: product.id + "::" + (rev && rev.index ? rev.index : "0"),
           checklist_status: { status: status, missing_roles: missing },
           assets: [
-            asset("artwork", roles.artwork),
-            asset("viz_3d", roles.viz_3d),
-            asset("print_pdf", roles.print_pdf),
-            asset("tech", roles.tech),
+            asset("artwork", roles.artwork, rolePaths.artwork),
+            asset("prev", roles.prev, rolePaths.prev),
+            asset("viz_3d", roles.viz_3d, rolePaths.viz_3d),
+            asset("print_pdf", roles.print_pdf, rolePaths.print_pdf),
+            asset("tech", roles.tech, rolePaths.tech),
+            asset("marketing", roles.marketing, rolePaths.marketing),
+            asset("karta", roles.karta, rolePaths.karta),
+            asset("presentation", roles.presentation, rolePaths.presentation),
           ],
         },
       ],
@@ -354,6 +444,7 @@
     base: API,
     offline: false,
     token: token,
+    authHeaders: authHeaders,
     role: function () {
       return localStorage.getItem("dam_role") || "";
     },
@@ -450,6 +541,24 @@
       }
       return { ok: true, mode: "device_session_kept" };
     },
+    async rehydrate() {
+      var ident = await fetchIdentity();
+      var r = await fetch(bridgeAuthUrl() + "/auth/rehydrate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          session_id: localStorage.getItem("dam_session_id") || "",
+          device_id: (ident && ident.device_id) || deviceId(),
+          machine_id: (ident && ident.machine_id) || machineId(),
+        }),
+      });
+      var data = await r.json();
+      if (data && data.ok && data.token) {
+        persistSession(data);
+        return data;
+      }
+      return data || { ok: false, error: "rehydrate_failed" };
+    },
     async me() {
       try {
         var ident = await fetchIdentity();
@@ -486,14 +595,36 @@
           });
           return { data: data.user, source: "bridge" };
         }
+        /* Token wygasl / "qa" / stary localStorage: odswiez z bound-session (bez hasla). */
+        if (
+          data &&
+          (data.error === "invalid_session" ||
+            data.error === "no_token" ||
+            data.error === "login_required")
+        ) {
+          var rh = await this.rehydrate();
+          if (rh && rh.ok && rh.user) {
+            return { data: rh.user, source: "bridge-rehydrate" };
+          }
+          clearLocalAuth();
+          location.href = "signin.html?reason=session_expired";
+          throw new Error("session_expired");
+        }
       } catch (e) {
-        if (e && /mismatch/.test(String(e.message || e))) throw e;
+        if (e && /mismatch|session_expired/.test(String(e.message || e))) throw e;
       }
       try {
         return await parse(await apiFetch(API + "/auth/me", { headers: authHeaders() }));
       } catch (e2) {
         if (!isNetworkError(e2)) throw e2;
         this.offline = true;
+        /* Offline: NIE udawaj zalogowania samym profiliem bez tokena. */
+        var tok = token();
+        if (!tok || tok === "demo-admin-dev-token" || tok === "qa") {
+          clearLocalAuth();
+          location.href = "signin.html?reason=offline_no_session";
+          throw new Error("offline_no_session");
+        }
         var u = {};
         try { u = JSON.parse(localStorage.getItem("dam_user") || "{}"); } catch (e3) { u = {}; }
         return {
@@ -502,6 +633,7 @@
             role: localStorage.getItem("dam_role") || "",
             email: u.email || "",
           },
+          source: "offline-cache",
         };
       }
     },

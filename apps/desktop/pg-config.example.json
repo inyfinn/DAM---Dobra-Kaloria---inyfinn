@@ -1,0 +1,12 @@
+{
+  "_readme": "Priorytet: DDNS inyfinn.synology.me (port 5433 na routerze). LAN 192.168.0.145 tylko jako awaryjny fallback gdy DDNS nie odpowiada. Kopiuj do data/pg-config.json albo dam-connection.env.",
+  "hosts": [
+    "inyfinn.synology.me",
+    "192.168.0.145"
+  ],
+  "host": "inyfinn.synology.me",
+  "port": 5433,
+  "dbname": "dam_eta",
+  "user": "dam_eta",
+  "password": "REPLACE_ME"
+}

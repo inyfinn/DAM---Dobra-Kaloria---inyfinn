@@ -21,8 +21,25 @@
     return r === "admin" || r === "power_user";
   }
 
+  /** Tylko admin zatwierdza kanoniczna baze / dysk (power_user tez tylko zglaszа). */
+  function isAdmin() {
+    return role() === "admin";
+  }
+
   function adminModeOn() {
     return localStorage.getItem("dam_admin_mode") === "1" || localStorage.getItem("dam_viz_admin_mode") === "1";
+  }
+
+  function bridgeAuthHeaders() {
+    if (global.DamApi && typeof global.DamApi.authHeaders === "function") {
+      return global.DamApi.authHeaders();
+    }
+    var t = localStorage.getItem("dam_token") || "";
+    return {
+      Authorization: "Bearer " + t,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    };
   }
 
   function userLabel() {
@@ -152,31 +169,67 @@
       product_name: ctx.productName,
       current_carrier_code: ctx.currentCode || "",
       new_carrier_code: newCode,
+      /* role/admin_mode: UX; bridge bierze privilege z Bearer sesji */
       role: role(),
-      admin_mode: adminModeOn(),
+      admin_mode: isAdmin() && adminModeOn(),
       user_email: userLabel(),
       user_name: userLabel(),
     };
     return fetch(bridgeUrl() + "/rename-revision-prefix", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: bridgeAuthHeaders(),
       body: JSON.stringify(payload),
     })
       .then(function (r) {
-        return r.json();
+        return r.json().then(function (res) {
+          res._http = r.status;
+          return res;
+        });
       })
       .then(function (res) {
         if (!res.ok) {
-          showToast("Blad: " + (res.error || "nie udalo sie zapisac"));
+          showToast(
+            "Blad: " +
+              (res.error || "nie udalo sie zapisac") +
+              (res.hint ? " - " + res.hint : "")
+          );
           return res;
         }
         if (res.immediate) {
           var shown = newCode === NONE_CODE ? "BRAK TYPU" : newCode;
-          showToast("Typ zmieniony na " + shown + " - zapisano na dysku.");
+          var nFiles = res.file_rename_count || (res.file_renames && res.file_renames.length) || 0;
+          showToast(
+            "Typ zmieniony na " +
+              shown +
+              " - zapisano na dysku" +
+              (nFiles ? " (+" + nFiles + " plikow)" : "") +
+              "."
+          );
+          /* Po zatwierdzeniu znika "?" (carrier_guessed) - odswiez badge w DOM */
+          try {
+            document.querySelectorAll(".dam-viz-badge--guessed").forEach(function (el) {
+              var rp = el.getAttribute("data-revision-path") || "";
+              if (
+                rp &&
+                (rp === (ctx.revisionPath || "") ||
+                  rp === (res.old_path || "") ||
+                  rp === (res.new_path || ""))
+              ) {
+                el.classList.remove("dam-viz-badge--guessed");
+                el.setAttribute("data-current-code", newCode === NONE_CODE ? "" : newCode);
+                if (newCode !== NONE_CODE) {
+                  el.setAttribute("data-tag-value", shown);
+                  el.textContent = shown;
+                }
+              }
+            });
+          } catch (ignore) {}
           if (typeof ctx.onApplied === "function") ctx.onApplied(res);
           else if (global.location) setTimeout(function () { global.location.reload(); }, 600);
         } else {
-          showToast("Zgloszenie wyslane do moderacji (admin/power_user). Auto-zatwierdzenie po 72h bez decyzji.");
+          showToast(
+            "Zgloszenie JSON wyslane do kolejki. Admin zatwierdza w Ustawieniach / Inbox. Bez auto-zapisu."
+          );
         }
         return res;
       })
@@ -189,72 +242,339 @@
    * @param {HTMLElement} anchorEl - element klikniety (tag typu)
    * @param {object} ctx - {revisionPath, productId, productName, currentCode, onApplied}
    */
+  var ADMIN_MODE_KEY = "dam_admin_mode";
+
+  /* Tylko admin: auto-wlacz tryb edycji, zeby od razu stosowac zmiany. */
+  function autoEnableAdminModeIfPrivileged() {
+    if (!isAdmin() || adminModeOn()) return;
+    try {
+      localStorage.setItem(ADMIN_MODE_KEY, "1");
+    } catch (e) {
+      /* localStorage niedostepny - kontynuuj bez auto-wlaczenia */
+    }
+    var toggle = document.getElementById("vizAdminToggle");
+    if (toggle && !toggle.checked) {
+      toggle.checked = true;
+      toggle.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
   function openCarrierPicker(anchorEl, ctx) {
+    openTagPicker(anchorEl, Object.assign({ kind: "carrier" }, ctx || {}));
+  }
+
+  function tagPickerHead(kind) {
+    var k = String(kind || "carrier");
+    if (k === "status") return "Wybierz status";
+    if (k === "brand") return "Wybierz marke";
+    if (k === "lang") return "Wybierz jezyk";
+    if (k === "category") return "Wybierz kategorie";
+    if (k === "subcategory") return "Wybierz podkategorie";
+    if (k === "index") return "Wybierz / wpisz indeks";
+    if (k === "carrier") return isAdmin() && adminModeOn() ? "Wybierz typ" : "Zaproponuj typ";
+    return "Wybierz wartosc tagu";
+  }
+
+  /** PL / EN gdy slug angielski rozni sie od etykiety PL. */
+  function bilingualSubcatLabel(slug, plLabel) {
+    var s = String(slug || "").trim();
+    var pl = String(plLabel || s).trim() || s;
+    if (!s) return pl;
+    if (pl.toLowerCase() === s.toLowerCase()) return pl;
+    return pl + " / " + s;
+  }
+
+  function fileIndexProducts() {
+    var fi = global._DAM_FILE_INDEX;
+    return (fi && Array.isArray(fi.products) && fi.products) || [];
+  }
+
+  function ensureFileIndex() {
+    if (fileIndexProducts().length) {
+      return Promise.resolve(global._DAM_FILE_INDEX);
+    }
+    if (global.DamSearch && typeof global.DamSearch.reload === "function") {
+      return global.DamSearch.reload()
+        .then(function () {
+          return global._DAM_FILE_INDEX;
+        })
+        .catch(function () {
+          return fetch("data/file-index.json?v=" + Date.now())
+            .then(function (r) {
+              return r.ok ? r.json() : null;
+            })
+            .then(function (d) {
+              if (d) global._DAM_FILE_INDEX = d;
+              return d;
+            });
+        });
+    }
+    return fetch("data/file-index.json?v=" + Date.now())
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (d) {
+        if (d) global._DAM_FILE_INDEX = d;
+        return d;
+      })
+      .catch(function () {
+        return null;
+      });
+  }
+
+  function collectSubcategoryOptions(cur) {
+    var map = {};
+    fileIndexProducts().forEach(function (p) {
+      var slug = String(p.subcategory_slug || "").trim();
+      if (!slug) return;
+      var key = slug.toLowerCase();
+      if (map[key]) return;
+      var pl = String(p.subcategory_label || slug).trim() || slug;
+      map[key] = { code: slug, pl: pl, label: bilingualSubcatLabel(slug, pl) };
+    });
+    if (cur) {
+      var ck = String(cur).toLowerCase();
+      if (!map[ck]) {
+        map[ck] = { code: cur, pl: cur, label: bilingualSubcatLabel(cur, cur) };
+      }
+    }
+    return Object.keys(map)
+      .map(function (k) {
+        return map[k];
+      })
+      .sort(function (a, b) {
+        return a.pl.localeCompare(b.pl, "pl");
+      })
+      .map(function (it) {
+        return {
+          code: it.code,
+          label: it.label,
+          search: (it.pl + " " + it.code + " " + it.label).toLowerCase(),
+        };
+      });
+  }
+
+  function collectIndexOptions(cur) {
+    var map = {};
+    function addIx(raw) {
+      var v = String(raw || "").trim();
+      if (!v) return;
+      var base = v.indexOf(".") > 0 ? v.split(".")[0] : v;
+      if (!/^\d{4,}/.test(base)) return;
+      map[base] = base;
+    }
+    fileIndexProducts().forEach(function (p) {
+      (p.index_bases || []).forEach(addIx);
+      (p.indexes || []).forEach(addIx);
+      (p.revisions || []).forEach(function (r) {
+        addIx(r && r.index);
+      });
+    });
+    if (cur) {
+      var c = String(cur).trim();
+      var cb = c.indexOf(".") > 0 ? c.split(".")[0] : c;
+      if (cb) map[cb] = cb;
+    }
+    var list = Object.keys(map)
+      .sort(function (a, b) {
+        return a.localeCompare(b, "pl", { numeric: true });
+      })
+      .map(function (ix) {
+        return { code: ix, label: ix, search: ix };
+      });
+    list.unshift({ code: "", label: "Bez indeksu", search: "brak indeksu bez" });
+    return list;
+  }
+
+  function tagPickerOptions(kind, ctx) {
+    var k = String(kind || "carrier");
+    var cur = String((ctx && ctx.value) || "").trim();
+    if (k === "status") {
+      return [
+        { code: "aktualne", label: "Aktualne", search: "aktualne" },
+        { code: "nieaktualne", label: "Nieaktualne", search: "nieaktualne starsza" },
+      ];
+    }
+    if (k === "brand") {
+      return [
+        { code: "DK", label: "DK", search: "dk dobra kaloria" },
+        { code: "GC", label: "GC", search: "gc good calories" },
+      ];
+    }
+    if (k === "lang") {
+      return ["pl", "en", "de", "fr", "es", "it", "cs", "sk", "uk", "gb", "lt", "lv", "ee"].map(function (lg) {
+        var short =
+          global.DamLabels && typeof global.DamLabels.langShort === "function"
+            ? global.DamLabels.langShort(lg)
+            : lg.toUpperCase();
+        return { code: lg, label: short || lg.toUpperCase(), search: lg + " " + short };
+      });
+    }
+    if (k === "category") {
+      var cats = (global.DamLabels && global.DamLabels.CATEGORY_CANON) || [];
+      return cats.map(function (c) {
+        return { code: c.id, label: c.title, search: (c.id + " " + c.title).toLowerCase() };
+      });
+    }
+    if (k === "subcategory") {
+      return collectSubcategoryOptions(cur);
+    }
+    if (k === "carrier") {
+      var types = allCarrierTypes();
+      var list = [{ code: NONE_CODE, label: "BRAK TYPU", search: "brak typu none" }];
+      Object.keys(types)
+        .sort(function (a, b) {
+          return types[a].localeCompare(types[b]);
+        })
+        .forEach(function (code) {
+          list.push({ code: code, label: types[code], search: (types[code] + " " + code).toLowerCase() });
+        });
+      return list;
+    }
+    if (k === "index") {
+      return collectIndexOptions(cur);
+    }
+    if (cur) return [{ code: cur, label: cur, search: cur.toLowerCase() }];
+    return [];
+  }
+
+  function applyTagPickerChoice(kind, ctx, newCode) {
+    var k = String(kind || "carrier");
+    if (k === "carrier") {
+      return submitCarrierChange(ctx, newCode || NONE_CODE);
+    }
+    if (k === "status") {
+      if (typeof global.damSetRevisionStatus === "function") {
+        global.damSetRevisionStatus({
+          path: ctx.revisionPath || "",
+          index: ctx.revisionIndex || "",
+          status: newCode,
+        });
+      }
+      return Promise.resolve({ ok: true });
+    }
+    if (k === "brand") {
+      if (!confirmBrandTagChange(ctx.revisionPath || "", newCode)) {
+        return Promise.resolve({ ok: false });
+      }
+      showToast("Marka ustawiona na " + newCode + " (wymaga zatwierdzenia w bazie / inbox).");
+      if (global.location) setTimeout(function () { global.location.reload(); }, 500);
+      return Promise.resolve({ ok: true });
+    }
+    showToast("Wybrano " + newCode + " dla tagu " + k + ". Zgloszenie trafia do moderacji (Wiadomosci).");
+    return Promise.resolve({ ok: true });
+  }
+
+  function openTagPicker(anchorEl, ctx) {
+    ctx = ctx || {};
+    var kind = ctx.kind || (anchorEl && anchorEl.getAttribute("data-tag-kind")) || "carrier";
+    if (kind === "carrier") {
+      ctx = Object.assign(
+        {
+          revisionPath: anchorEl.getAttribute("data-revision-path") || "",
+          currentCode: anchorEl.getAttribute("data-current-code") || ctx.value || "",
+          productId: anchorEl.getAttribute("data-product-id") || "",
+          productName: anchorEl.getAttribute("data-product-name") || "",
+        },
+        ctx
+      );
+    }
+    if (!ctx.value && anchorEl) {
+      ctx.value = anchorEl.getAttribute("data-tag-value") || ctx.value || "";
+    }
+
     closePopover();
-    refreshCarrierTypesCache();
-    var types = allCarrierTypes();
+    autoEnableAdminModeIfPrivileged();
+    if (kind === "carrier") refreshCarrierTypesCache();
+
+    var needsIndex = kind === "subcategory" || kind === "index";
+    var ready = needsIndex ? ensureFileIndex() : Promise.resolve(null);
+    ready
+      .then(function () {
+        var options = tagPickerOptions(kind, ctx);
+        renderTagPicker(anchorEl, ctx, kind, options);
+      })
+      .catch(function () {
+        var options = tagPickerOptions(kind, ctx);
+        renderTagPicker(anchorEl, ctx, kind, options);
+      });
+  }
+
+  function renderTagPicker(anchorEl, ctx, kind, options) {
+    if (!options.length) {
+      showToast("Brak listy opcji dla tego tagu.");
+      return;
+    }
+
     var rect = anchorEl.getBoundingClientRect();
     var pop = document.createElement("div");
     pop.id = "damTagEditPopover";
-    pop.className = "dam-tag-edit-popover";
+    pop.className =
+      "dam-tag-edit-popover" +
+      (kind === "subcategory" || kind === "index" ? " dam-tag-edit-popover--wide" : "");
     pop.style.top = window.scrollY + rect.bottom + 6 + "px";
     pop.style.left = window.scrollX + rect.left + "px";
 
-    var canDirect = isPrivileged() && adminModeOn();
-    var headTxt = canDirect ? "Wybierz typ (zatwierdz ponizej)" : "Zaproponuj typ (zatwierdz ponizej)";
-    var pendingCode = ctx.currentCode || "";
+    var pendingCode = ctx.currentCode || ctx.value || "";
+    if (kind === "index" && pendingCode.indexOf(".") > 0) {
+      pendingCode = pendingCode.split(".")[0];
+    }
+    var headTxt = tagPickerHead(kind);
+    var canDirect = isAdmin() && adminModeOn();
 
     var html =
       '<div class="dam-tag-edit-popover__head">' +
       "<span>" + esc(headTxt) + "</span>" +
       '<button type="button" class="dam-tag-edit-popover__close" aria-label="Zamknij" data-close data-dam-tip="Zamknij bez zapisu">' +
       '<i class="uil uil-times"></i></button></div>' +
-      '<div class="dam-tag-edit-popover__list">' +
-      '<button type="button" class="dam-tag-edit-popover__opt dam-tag-edit-popover__opt--none' +
-      (pendingCode === "" || pendingCode === NONE_CODE ? " is-selected" : "") +
-      '" data-code="' +
-      NONE_CODE +
-      '" data-dam-tip="Usun prefiks typu z nazwy folderu">' +
-      "BRAK TYPU</button>";
+      '<div class="dam-tag-edit-popover__search-wrap">' +
+      '<i class="uil uil-search" aria-hidden="true"></i>' +
+      '<input type="text" id="damTagEditSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj..." autocomplete="off" />' +
+      "</div>" +
+      '<div class="dam-tag-edit-popover__list">';
 
-    Object.keys(types)
-      .sort(function (a, b) {
-        return types[a].localeCompare(types[b]);
-      })
-      .forEach(function (code) {
-        var isCur = code === ctx.currentCode;
-        var isSel = code === pendingCode;
-        html +=
-          '<button type="button" class="dam-tag-edit-popover__opt' +
-          (isCur ? " is-current" : "") +
-          (isSel ? " is-selected" : "") +
-          '" data-code="' +
-          esc(code) +
-          '">' +
-          esc(types[code]) +
-          (isCur ? ' <i class="uil uil-check"></i>' : "") +
-          "</button>";
-      });
-    html += "</div>";
-
+    options.forEach(function (opt) {
+      var isCur =
+        String(opt.code) === String(pendingCode) ||
+        String(opt.label) === String(ctx.value) ||
+        (kind === "subcategory" &&
+          String(opt.code).toLowerCase() === String(ctx.value || "").toLowerCase());
+      var isSel = String(opt.code) === String(pendingCode);
+      html +=
+        '<button type="button" class="dam-tag-edit-popover__opt' +
+        (isCur ? " is-current" : "") +
+        (isSel ? " is-selected" : "") +
+        '" data-code="' +
+        esc(opt.code) +
+        '" data-search-label="' +
+        esc(String(opt.search || opt.label || opt.code).toLowerCase()) +
+        '"><span class="dam-tag-edit-popover__opt-label">' +
+        esc(opt.label) +
+        "</span>" +
+        (isCur ? ' <i class="uil uil-check"></i>' : "") +
+        "</button>";
+    });
+    html += '<p class="dam-tag-edit-popover__empty" data-empty hidden>Brak opcji dla tego wyszukiwania.</p></div>';
     html +=
       '<div class="dam-tag-edit-popover__actions">' +
-      '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm data-dam-tip="Zatwierdz wybor i zapisz">' +
-      '<i class="uil uil-check" aria-hidden="true"></i><span>Zatwierdz</span></button>' +
+      '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm data-dam-tip="' +
+      (canDirect ? "Zatwierdz wybor" : "Zglos propozycje") +
+      '"><i class="uil uil-check" aria-hidden="true"></i><span>' +
+      (canDirect ? "Zatwierdz" : "Zglos") +
+      "</span></button>" +
       '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel data-dam-tip="Anuluj bez zapisu">' +
-      '<i class="uil uil-times" aria-hidden="true"></i><span>Anuluj</span></button>' +
-      "</div>";
+      '<i class="uil uil-times" aria-hidden="true"></i><span>Anuluj</span></button></div>';
 
-    if (isPrivileged()) {
+    if (kind === "carrier" && isAdmin()) {
       html +=
         '<div class="dam-tag-edit-popover__foot">' +
-        '<button type="button" class="dam-tag-edit-popover__addtype" data-add-type data-dam-tip="Dodaj nowy typ do slownika">' +
+        '<button type="button" class="dam-tag-edit-popover__addtype" data-add-type data-dam-tip="Dodaj nowy typ do slownika (tylko admin)">' +
         '<i class="uil uil-plus"></i> Dodaj typ</button></div>';
     }
+
     pop.innerHTML = html;
     document.body.appendChild(pop);
 
-    /* Trzymaj footer (Zatwierdz/Anuluj) w viewportcie */
     requestAnimationFrame(function () {
       var pr = pop.getBoundingClientRect();
       var margin = 12;
@@ -274,8 +594,7 @@
     function setPending(code) {
       pendingCode = code;
       pop.querySelectorAll("[data-code]").forEach(function (btn) {
-        var c = btn.getAttribute("data-code");
-        btn.classList.toggle("is-selected", c === code);
+        btn.classList.toggle("is-selected", btn.getAttribute("data-code") === String(code));
       });
     }
 
@@ -287,18 +606,36 @@
       });
     });
 
+    var searchInput = pop.querySelector("#damTagEditSearch");
+    var emptyMsg = pop.querySelector("[data-empty]");
+    function applySearch() {
+      var q = (searchInput.value || "").trim().toLowerCase();
+      var visibleCount = 0;
+      pop.querySelectorAll("[data-code]").forEach(function (btn) {
+        var label = btn.getAttribute("data-search-label") || "";
+        var match = !q || label.indexOf(q) !== -1;
+        btn.hidden = !match;
+        if (match) visibleCount++;
+      });
+      if (emptyMsg) emptyMsg.hidden = visibleCount > 0;
+    }
+    if (searchInput) {
+      searchInput.addEventListener("input", applySearch);
+      searchInput.addEventListener("keydown", function (e) {
+        e.stopPropagation();
+      });
+      requestAnimationFrame(function () {
+        searchInput.focus();
+      });
+    }
+
     var confirmBtn = pop.querySelector("[data-confirm]");
     if (confirmBtn) {
       confirmBtn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        if (!pendingCode && pendingCode !== NONE_CODE) {
-          showToast("Wybierz typ z listy (albo BRAK TYPU).");
-          return;
-        }
-        var code = pendingCode || NONE_CODE;
         closePopover();
-        submitCarrierChange(ctx, code);
+        applyTagPickerChoice(kind, ctx, pendingCode);
       });
     }
 
@@ -315,7 +652,7 @@
         var label = window.prompt("Nazwa PL nowego typu:", code) || code;
         fetch(bridgeUrl() + "/carrier-types", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: bridgeAuthHeaders(),
           body: JSON.stringify({ action: "add", code: code.trim().toUpperCase(), label_pl: label, actor: userLabel() }),
         })
           .then(function (r) {
@@ -339,9 +676,9 @@
     }, 0);
   }
 
-  /** Panel moderacji (admin/power_user) - lista propozycji + akcje. */
+  /** Panel moderacji - decyzje TYLKO admin (sesja Bearer). */
   function fetchProposals() {
-    return fetch(bridgeUrl() + "/tag-proposals")
+    return fetch(bridgeUrl() + "/tag-proposals", { headers: bridgeAuthHeaders() })
       .then(function (r) {
         return r.json();
       })
@@ -353,98 +690,143 @@
   function decideProposal(id, decision, newValue) {
     return fetch(bridgeUrl() + "/tag-proposals/decide", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ proposal_id: id, decision: decision, new_value: newValue || "", decided_by: userLabel() }),
+      headers: bridgeAuthHeaders(),
+      body: JSON.stringify({ proposal_id: id, decision: decision, new_value: newValue || "" }),
     }).then(function (r) {
       return r.json();
     });
   }
 
+  /** @deprecated Moderacja tylko w inbox.html (Wiadomosci). Zachowane API dla starych wywolan. */
   function renderModerationPanel(container) {
     if (!container) return;
-    if (!isPrivileged()) {
-      container.innerHTML = '<p class="dam-widget__meta">Panel moderacji jest widoczny tylko dla admina / power usera.</p>';
+    container.innerHTML =
+      '<p class="dam-widget__meta">Moderacja tagow jest w <a href="inbox.html?tag=zgloszenie">Wiadomosci → Zgloszenia DAM</a>. Historia decyzji: filtr „Historia moderacji”.</p>';
+  }
+
+  function bridgeBase() {
+    return bridgeUrl();
+  }
+
+  function formatChangeLogEntry(entry) {
+    if (!entry) return "Brak historii zmian";
+    var ts = String(entry.ts || "").replace("T", " ").slice(0, 16);
+    var cat = String(entry.category || entry.action || "");
+    var label = "";
+    if (entry.action === "rename_index" || cat === "index") {
+      label = "Indeks: " + (entry.index_from || "?") + " -> " + (entry.index_to || "?");
+    } else if (entry.carrier_from || entry.carrier_to) {
+      label = "Typ: " + (entry.carrier_from || "?") + " -> " + (entry.carrier_to || "?");
+    } else {
+      label = cat || "Zmiana";
+    }
+    return label + (ts ? " · " + ts : "");
+  }
+
+  function refreshChangeLogBar() {
+    var bar = document.getElementById("damChangeLogBar");
+    var hint = document.getElementById("damChangeLogHint");
+    var undoBtn = document.getElementById("damChangeUndo");
+    var redoBtn = document.getElementById("damChangeRedo");
+    if (!bar) return;
+    if (!isAdmin()) {
+      bar.hidden = true;
       return;
     }
-    container.innerHTML = '<p class="dam-widget__meta">Wczytywanie zgloszen...</p>';
-    fetchProposals().then(function (data) {
-      var pending = (data.proposals || []).filter(function (p) {
-        return p.status === "pending";
+    bar.hidden = false;
+    fetch(bridgeBase() + "/change-log?limit=20")
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        if (!data || !data.ok) {
+          if (hint) hint.textContent = "Bridge offline";
+          if (undoBtn) undoBtn.disabled = true;
+          if (redoBtn) redoBtn.disabled = true;
+          return;
+        }
+        var entries = data.entries || [];
+        var last = entries.length ? entries[entries.length - 1] : null;
+        if (hint) {
+          if (last) {
+            hint.textContent = formatChangeLogEntry(last);
+            hint.title = hint.textContent;
+          } else {
+            hint.textContent = "Brak historii zmian";
+          }
+        }
+        if (undoBtn) undoBtn.disabled = !data.can_undo;
+        if (redoBtn) redoBtn.disabled = !data.can_redo;
+      })
+      .catch(function () {
+        if (hint) hint.textContent = "Bridge offline";
+        if (undoBtn) undoBtn.disabled = true;
+        if (redoBtn) redoBtn.disabled = true;
       });
-      if (!pending.length) {
-        container.innerHTML = '<p class="dam-widget__meta">Brak oczekujacych zgloszen.</p>';
-        return;
-      }
-      var types = allCarrierTypes();
-      var html = '<ul class="dam-moderation-list">';
-      pending.forEach(function (p) {
-        html +=
-          '<li class="dam-moderation-item" data-id="' + esc(p.id) + '">' +
-          '<div class="dam-moderation-item__main">' +
-          "<strong>" + esc(p.product_name || p.revision_path) + "</strong>" +
-          '<div class="dam-widget__meta">' +
-          esc(p.current_value || "brak") + " &rarr; " + esc(p.proposed_value === NONE_CODE ? "BRAK TYPU" : p.proposed_value) +
-          " &middot; zglosil: " + esc(p.submitted_by) +
-          " &middot; wygasa: " + esc(String(p.expires_at || "").replace("T", " ").slice(0, 16)) +
-          "</div></div>" +
-          '<div class="dam-moderation-item__actions">' +
-          '<button type="button" class="dam-moderation-btn dam-moderation-btn--approve" data-action="approve" title="Zatwierdz"><i class="uil uil-check-circle"></i></button>' +
-          '<select class="dam-moderation-select" data-action="pick">' +
-          '<option value="">Wybierz inny typ...</option>' +
-          '<option value="' + NONE_CODE + '">BRAK TYPU</option>' +
-          Object.keys(types)
-            .sort()
-            .map(function (c) {
-              return '<option value="' + esc(c) + '">' + esc(types[c]) + "</option>";
-            })
-            .join("") +
-          "</select>" +
-          '<button type="button" class="dam-moderation-btn dam-moderation-btn--reject" data-action="reject" title="Odrzuc"><i class="uil uil-times-circle"></i></button>' +
-          "</div></li>";
-      });
-      html += "</ul>";
-      container.innerHTML = html;
+  }
 
-      container.querySelectorAll(".dam-moderation-item").forEach(function (li) {
-        var id = li.getAttribute("data-id");
-        var approveBtn = li.querySelector('[data-action="approve"]');
-        var rejectBtn = li.querySelector('[data-action="reject"]');
-        var pickSelect = li.querySelector('[data-action="pick"]');
-        if (approveBtn) {
-          approveBtn.addEventListener("click", function () {
-            decideProposal(id, "approve").then(function () {
-              showToast("Zatwierdzono.");
-              renderModerationPanel(container);
-            });
-          });
-        }
-        if (rejectBtn) {
-          rejectBtn.addEventListener("click", function () {
-            decideProposal(id, "reject").then(function () {
-              showToast("Odrzucono.");
-              renderModerationPanel(container);
-            });
-          });
-        }
-        if (pickSelect) {
-          pickSelect.addEventListener("change", function () {
-            if (!pickSelect.value) return;
-            decideProposal(id, "pick_other", pickSelect.value).then(function () {
-              showToast("Zastosowano inny typ: " + pickSelect.value);
-              renderModerationPanel(container);
-            });
-          });
-        }
+  function bindChangeLogBar() {
+    var undoBtn = document.getElementById("damChangeUndo");
+    var redoBtn = document.getElementById("damChangeRedo");
+    if (!undoBtn && !redoBtn) return;
+    function postAction(path, okMsg) {
+      return fetch(bridgeBase() + path, {
+        method: "POST",
+        headers: bridgeAuthHeaders(),
+        body: JSON.stringify({ actor: userLabel() }),
+      })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (res) {
+          if (!res.ok) {
+            showToast("Blad: " + (res.error || "operacja nieudana"));
+            return res;
+          }
+          showToast(okMsg);
+          refreshChangeLogBar();
+          setTimeout(function () {
+            if (global.location) global.location.reload();
+          }, 500);
+          return res;
+        })
+        .catch(function () {
+          showToast("Bridge offline");
+        });
+    }
+    if (undoBtn) {
+      undoBtn.addEventListener("click", function () {
+        if (!confirm("Cofnac ostatnia zmiane na dysku (typ, indeks lub pliki)?")) return;
+        postAction("/change-log/undo", "Cofnieto ostatnia zmiane.");
       });
+    }
+    if (redoBtn) {
+      redoBtn.addEventListener("click", function () {
+        if (!confirm("Ponowic cofnieta zmiane na dysku?")) return;
+        postAction("/change-log/redo", "Ponowiono zmiane.");
+      });
+    }
+    refreshChangeLogBar();
+    var adminToggle = document.getElementById("vizAdminToggle");
+    if (adminToggle) {
+      adminToggle.addEventListener("change", refreshChangeLogBar);
+    }
+  }
+
+  if (typeof document !== "undefined") {
+    document.addEventListener("DOMContentLoaded", function () {
+      bindChangeLogBar();
     });
   }
 
   global.DamTagEdit = {
     openCarrierPicker: openCarrierPicker,
+    openTagPicker: openTagPicker,
     renderModerationPanel: renderModerationPanel,
     isPrivileged: isPrivileged,
     adminModeOn: adminModeOn,
     confirmBrandTagChange: confirmBrandTagChange,
+    refreshChangeLogBar: refreshChangeLogBar,
     NONE_CODE: NONE_CODE,
   };
 })(typeof window !== "undefined" ? window : globalThis);

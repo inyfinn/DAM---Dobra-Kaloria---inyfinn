@@ -1,3 +1,34 @@
 {
-  "proposals": []
+  "proposals": [
+    {
+      "id": "prop_1784393454325",
+      "field": "carrier",
+      "status": "rejected",
+      "decided_at": "2026-07-18T16:56:06+00:00",
+      "decided_by": "moderator",
+      "expires_at": "2026-07-21T16:50:54+00:00",
+      "product_id": "test-prop-1",
+      "product_name": "test propose",
+      "submitted_at": "2026-07-18T16:50:54+00:00",
+      "submitted_by": "ola@test.pl",
+      "current_value": "BAG",
+      "revision_path": "X:/Marketing/- POLSKA/- DK/_TEST_PROP_DUMMY",
+      "proposed_value": "DOY"
+    },
+    {
+      "id": "prop_1784393454775",
+      "field": "carrier",
+      "status": "pending",
+      "decided_at": null,
+      "decided_by": null,
+      "expires_at": "2026-07-21T16:50:54+00:00",
+      "product_id": "",
+      "product_name": "test2",
+      "submitted_at": "2026-07-18T16:50:54+00:00",
+      "submitted_by": "ola@test.pl",
+      "current_value": "BAG",
+      "revision_path": "X:/Marketing/- POLSKA/- DK/_TEST_PROP_DUMMY2",
+      "proposed_value": "DOY"
+    }
+  ]
 }

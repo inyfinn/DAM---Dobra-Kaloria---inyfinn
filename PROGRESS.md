@@ -16,7 +16,7 @@ Ostatnia aktualizacja: **2026-07-18**
 | Deployment docs + release ZIP | done | `docs/DEPLOYMENT.md`, `build-release-zip.ps1` |
 | Postgres / Docker | cancelled (user) | opcjonalnie Laravel |
 | Entra ID pelne | pending | ADR-006 |
-| Wspolna baza na NAS (multi-PC) | planned | SQLite WAL na udziale - osobna decyzja |
+| Wspolna baza na NAS (multi-PC) | **done** | Postgres :5433 ADR-009; DDNS first; OFFLINE=SQLite+hint |
 | Naming dictionary (PL nosniki/jezyki) | **done** | V1-V10 PASS; DATE ORANGE = OTHER (do potwierdzenia) |
 | Wspolne tagi dam-badges + Warianty | **done** | explorer=wiz; cache vizadm2 |
 | Tryb admina (rola + czerwona obwodka) | **done** | pick_thumb, viz-flags, folder-images |
@@ -29,12 +29,19 @@ Ostatnia aktualizacja: **2026-07-18**
 | Modal: aliasy w pasku wariantow (Faza 5) | **done** | withAliasItems(), jezyki wyszarzone + zglos zapotrzebowanie |
 | Zgloszenia wielokanalowe + inbox (Faza 6) | **done (stub email/Teams/Asana)** | POST /viz-request, inbox.html, notification-groups.json |
 | X / Wstecz UX audyt (Faza 6) | **done** | dam-modal-x, goBackNav() zamyka overlay zamiast nawigowac |
+| Auth rehydrate (bound-session) | **done** | POST /auth/rehydrate; bez fake sesji z localStorage |
+| Sidebar active + bez underline | **done** | aria-current + Geex purple; cache navActive1 |
+| Dashboard „Dostosuj pulpit” UX | **done** | DnD, preview 350ms, dirty guard, fioletowe checkboxy |
+| Inbox copy + dam-inbox.js | **done** | ludzki podtytul; 72h reminder w copy |
+| OAuth stub Asana/MS Graph | **done** | oauth_integrations.py + env.example |
+| Strony prawne / security docs | **done** | privacy, terms, license, consents, docs-security |
+| Dump Postgres w DATABASE/ | **done** | sync godzinowy NAS + sync-database-backups-to-git.py |
 
 ## Uruchomienie dla usera
 
 1. Skrot **DAM ETA** na pulpicie.
 2. Launcher sprawdza ID maszyny (ADR-008).
-3. Baza = `apps/desktop/data/dam-local.sqlite` (nie Marketing).
-4. ROOT plikow: Ustawienia → folder Marketing.
+3. Baza online = Postgres `inyfinn.synology.me:5433` (DDNS). Offline = lokalny SQLite + dump `DATABASE/`.
+4. ROOT plikow: Ustawienia -> folder Marketing.
 
-Nie: Docker, Postgres, MySQL, reczne porty.
+Postgres zyje na Synology (Docker). User nie instaluje Dockera na PC.

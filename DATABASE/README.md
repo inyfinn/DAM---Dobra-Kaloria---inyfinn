@@ -1,36 +1,47 @@
-# DATABASE — backupy PostgreSQL (ADR-009)
+# DATABASE - backupy PostgreSQL (ADR-009)
 
-Oficjalna baza DAM ETA: **PostgreSQL na Synology** (`192.168.0.145:5433`, kontener `dam-eta-postgres`).
+Oficjalna baza DAM ETA: **PostgreSQL 16** na Synology (kontener `dam-eta-postgres`, port hosta **5433**).
 
 ## Co tu lezy
 
-Pliki `dam_eta_YYYY-MM-DD.sql.gz` — wynik `pg_dump` (pełny dump logiczny, nie surowy katalog PGDATA).
+Pliki `dam_eta_YYYY-MM-DD.sql.gz` - wynik `pg_dump` (pelny dump logiczny, nie surowy katalog PGDATA).
+
+Zawieraja schemat + dane Tier 1/2 (`users`, `device_sessions`, `audit_log`, `dam_kv_store`).
 
 ## Retencja
 
-- **1 plik na dzień kalendarzowy** (godzinowy job nadpisuje plik *dzisiejszy*).
-- **Maks. 72 dni** — przy nowym dniu kasowany jest najstarszy dump.
-- Rotacja w skryptach: `apps/desktop/scripts/backup-postgres-database.sh` (NAS) oraz `sync-database-backups-to-git.py` (Windows → Git).
+- **1 plik na dzien kalendarzowy** (godzinowy job nadpisuje plik *dzisiejszy*).
+- **Maks. 72 dni** - przy nowym dniu kasowany jest najstarszy dump.
+- Rotacja: `apps/desktop/scripts/backup-postgres-database.sh` (NAS) oraz `sync-database-backups-to-git.py` (Windows -> Git).
 
-## Bezpieczeństwo
+## Sync do Git (Windows)
 
-- Dump zawiera hashe haseł i dane sesji — **tylko prywatne repo**.
-- Hasło Postgresa **nigdy** nie trafia do tych plików (jest w `.env` na NAS i w gitignorowanym `apps/desktop/data/pg-config.json`).
-- Nie wystawiaj portu `5433` na internet. Dostęp spoza LAN = VPN do domu.
+```powershell
+python apps/desktop/scripts/sync-database-backups-to-git.py
+# opcjonalnie z push:
+python apps/desktop/scripts/sync-database-backups-to-git.py --push
+```
 
-## Dostęp do żywej bazy
+Wymaga SSH hosta `syno` w `~/.ssh/config`. Nie commituje hasel - tylko `.sql.gz`.
 
-Po odblokowaniu portu **5433** na routerze:
+## Bezpieczenstwo
 
-| Skąd | Host |
+- Dump zawiera hashe hasel i dane sesji - **tylko prywatne repo**.
+- Haslo Postgresa **nigdy** nie trafia do tych plikow (jest w `.env` na NAS i w gitignorowanym `apps/desktop/data/pg-config.json`).
+- Port 5433 jest swiadomie na routerze (DDNS multi-PC); nie wystawiaj hasla w publicznym Gicie.
+
+## Dostep do zywej bazy
+
+| Skad | Host |
 |------|------|
-| Dom (LAN) | `192.168.0.145:5433` (szybszy) |
-| Gdziekolwiek (internet) | `inyfinn.synology.me:5433` |
+| Domyslnie (wszedzie) | `inyfinn.synology.me:5433` (DDNS) |
+| Awaryjnie (LAN) | `192.168.0.145:5433` |
 
-Aplikacja próbuje hosty po kolei (patrz `apps/desktop/pg-config.json` / `dam-connection.env`).
+Aplikacja proboje hosty po kolei (patrz `pg-config.example.json` / `dam-connection.env.example`).
 
 **To NIE jest baza:**
-- `https://inyfinn.synology.me:5001/` — panel DSM
-- `http://QuickConnect.to/inyfinn` — QuickConnect (też panel / usługi Synology)
 
-Tier 1 (logowanie/sesje) czyta Postgres **na żywo**. Tier 2 (aliasy, propozycje tagów…) ma lokalny cache odświeżany co **5 min**, gdy działa `local_bridge.py`.
+- `https://inyfinn.synology.me:5001/` - panel DSM
+- QuickConnect - tez panel / uslugi Synology
+
+Tier 1 (logowanie/sesje) czyta Postgres **na zywo**. Tier 2 (aliasy, propozycje tagow) ma lokalny cache odswiezany co **5 min**, gdy dziala `local_bridge.py`. Offline = lokalny SQLite + ten dump jako odtworzenie.

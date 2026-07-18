@@ -17,15 +17,18 @@ Endpoints:
   GET  /auth/me  Authorization: Bearer <token>
   GET  /files/status?root=...  czy ROOT plikow online
   GET  /folder-images?path=...  lista obrazow w folderze Marketing (picker miniatury)
+  GET  /folder-browse?path=...&mode=assets  foldery + pliki (AI/PDF/PNG...) do wskazania ELEMENTY
+  POST /elements-link  reczne powiazanie folderu/plikow Elementy -> apps/web/data/elements-overrides.json
   POST /viz-flag  demo/hidden/manual -> apps/web/data/viz-flags.json
   POST /thumb-override  wybor miniatury -> apps/web/data/thumb-overrides.json
   POST /audit    {"action","user","path","detail",...}
   GET  /audit?limit=100
   GET  /index/status  mtime file-index + postgres
   POST /index/rebuild  przebudowa indeksu + miniatur (async)
-  POST /rename-revision-prefix  Faza 4: propozycja/natychmiastowa zmiana typu (prefiks folderu)
-  GET  /tag-proposals  lista kolejki moderacji (auto-apply po 72h liczony lazily)
-  POST /tag-proposals/decide  zatwierdz/odrzuc/wybierz inny typ (admin/power_user)
+  POST /rename-revision-prefix  kazdy zalogowany: kolejka JSON (tag-proposals).
+                                 Natychmiastowy zapis dysku TYLKO sesja admin + admin_mode.
+  GET  /tag-proposals  lista kolejki (po TTL: eskalacja do inbox, BEZ auto-zapisu)
+  POST /tag-proposals/decide  zatwierdz/odrzuc/pick_other - TYLKO sesja admin
   GET/POST /carrier-types  wlasne typy nosnikow (dodaj/usun + reassign historii)
   POST /viz-request  Faza 5/6: "Zglos zapotrzebowanie" wielokanalowe (mail/Teams/Asana stub + w aplikacji)
   GET  /inbox-items  lista wpisow panelu (viz-request i inne, tagi + read flag)
@@ -40,7 +43,7 @@ import subprocess
 import sys
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -50,9 +53,15 @@ from auth_store import (
     list_users,
     login as auth_login,
     register_user,
+    rehydrate_session as auth_rehydrate,
     resolve_session,
     seed_owner_from_env,
 )
+
+try:
+    import oauth_integrations
+except ImportError:
+    oauth_integrations = None  # type: ignore
 
 try:
     import dam_db
@@ -506,6 +515,34 @@ def rename_index_in_folder(
             "dry_run": bool(dry_run),
         }
     )
+    if not dry_run and renamed and len(errors) == 0:
+        path_renames = []
+        for item in renamed:
+            old_p = Path(normalize_path(item.get("from") or ""))
+            new_p = Path(normalize_path(item.get("to") or ""))
+            path_renames.append(
+                {
+                    "old_path": item.get("from"),
+                    "new_path": item.get("to"),
+                    "old_name": old_p.name,
+                    "new_name": new_p.name,
+                }
+            )
+        new_folder = str(root)
+        for item in renamed:
+            if normalize_path(item.get("from") or "") == normalize_path(folder):
+                new_folder = item.get("to") or new_folder
+                break
+        append_change_log(
+            {
+                "action": "rename_index",
+                "category": "index",
+                "index_from": from_index,
+                "index_to": to_index,
+                "folder": new_folder,
+                "path_renames": path_renames,
+            }
+        )
     return {
         "ok": len(errors) == 0,
         "folder": str(root),
@@ -519,29 +556,185 @@ def rename_index_in_folder(
 
 def append_carrier_override(path_key: str, entry: dict) -> dict:
     overrides_file = WEB_ROOT / "data" / "carrier-overrides.json"
-    data = {"overrides": {}}
-    if overrides_file.exists():
-        try:
-            data = json.loads(overrides_file.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            data = {"overrides": {}}
+    data = _load_json(overrides_file, {"overrides": {}})
     if "overrides" not in data or not isinstance(data["overrides"], dict):
         data["overrides"] = {}
     data["overrides"][path_key] = entry
-    # also key by index if present in folder/path
     m = re.search(r"(\d{7}(?:\.\d+)?)", path_key)
     if m:
         data["overrides"][m.group(1)] = entry
     data["updated_at"] = utc_now()
-    overrides_file.parent.mkdir(parents=True, exist_ok=True)
-    overrides_file.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _save_json(overrides_file, data)
     return {"ok": True, "path": path_key, "entry": entry}
+
+
+ELEMENTS_LINK_EXTS = {
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".tif", ".tiff",
+    ".ai", ".psd", ".indd", ".pdf", ".zip", ".rar", ".7z",
+    ".svg", ".eps", ".pptx", ".ppt",
+}
+
+
+def _count_elements_files(target: Path) -> int:
+    """Policz pliki elementow w folderze (max 2 poziomy w dol)."""
+    if target.is_file():
+        return 1 if target.suffix.lower() in ELEMENTS_LINK_EXTS else 0
+    if not target.is_dir():
+        return 0
+    n = 0
+    try:
+        for child in target.iterdir():
+            if child.is_file() and child.suffix.lower() in ELEMENTS_LINK_EXTS:
+                n += 1
+            elif child.is_dir():
+                try:
+                    for nested in child.iterdir():
+                        if nested.is_file() and nested.suffix.lower() in ELEMENTS_LINK_EXTS:
+                            n += 1
+                        if n >= 500:
+                            return n
+                except OSError:
+                    pass
+            if n >= 500:
+                return n
+    except OSError:
+        return n
+    return n
+
+
+def upsert_elements_link(payload: dict) -> dict:
+    """Reczne powiazanie Elementy/skladniki: folder lub plik wskazany przez usera/admina."""
+    store = WEB_ROOT / "data" / "elements-overrides.json"
+    data = _load_json(store, {"links": {}, "updated_at": ""})
+    if "links" not in data or not isinstance(data["links"], dict):
+        data["links"] = {}
+    action = (payload.get("action") or "link").strip().lower()
+    rev_key = (payload.get("revision_path") or payload.get("path_key") or "").strip().replace("\\", "/")
+    index_key = (payload.get("index") or "").strip()
+    if action == "unlink":
+        if not rev_key and not index_key:
+            return {"ok": False, "error": "revision_path_or_index_required"}
+        removed = False
+        if rev_key and rev_key in data["links"]:
+            data["links"].pop(rev_key, None)
+            removed = True
+        if index_key and index_key in data["links"]:
+            data["links"].pop(index_key, None)
+            removed = True
+        # usun tez wpisy wskazujace ten sam folder (gdy klucz indeksowy)
+        if rev_key:
+            for k, v in list(data["links"].items()):
+                if isinstance(v, dict) and str(v.get("revision_path") or "").replace("\\", "/") == rev_key:
+                    data["links"].pop(k, None)
+                    removed = True
+        data["updated_at"] = utc_now()
+        _save_json(store, data)
+        return {"ok": True, "action": "unlink", "removed": removed, "links": data["links"]}
+
+    target_raw = (payload.get("target_path") or payload.get("path") or "").strip()
+    if not rev_key or not target_raw:
+        return {"ok": False, "error": "revision_path_and_target_required"}
+    target = Path(normalize_path(target_raw))
+    if not target.exists():
+        return {"ok": False, "error": "path_not_found", "path": str(target)}
+    if not _is_under_marketing(target if target.is_dir() else target.parent):
+        return {"ok": False, "error": "path_outside_marketing", "path": str(target)}
+    kind = "folder" if target.is_dir() else "file"
+    folder_path = target if target.is_dir() else target.parent
+    file_count = _count_elements_files(target if target.is_dir() else folder_path)
+    entry = {
+        "path": str(target).replace("\\", "/"),
+        "folder": str(folder_path).replace("\\", "/"),
+        "kind": kind,
+        "file_count": file_count,
+        "revision_path": rev_key,
+        "index": index_key,
+        "product_id": (payload.get("product_id") or "").strip(),
+        "linked_by": (payload.get("linked_by") or "user").strip() or "user",
+        "linked_at": utc_now(),
+        "note": (payload.get("note") or "").strip(),
+    }
+    data["links"][rev_key] = entry
+    if index_key:
+        data["links"][index_key] = entry
+    data["updated_at"] = utc_now()
+    _save_json(store, data)
+    return {"ok": True, "action": "link", "entry": entry, "store": str(store)}
+
+
+def list_folder_browse(path: str, mode: str = "assets") -> dict:
+    """Lista folderow + plikow (nie tylko obrazow) do wskazania ELEMENTY w przegladarce."""
+    target = Path(normalize_path(path or ""))
+    if not target.exists():
+        return {"ok": False, "error": "path_not_found", "path": str(target), "files": [], "folders": []}
+    if target.is_file():
+        target = target.parent
+    if not target.is_dir():
+        return {"ok": False, "error": "not_a_directory", "path": str(target), "files": [], "folders": []}
+    if not _is_under_marketing(target):
+        return {"ok": False, "error": "path_outside_marketing", "path": str(target), "files": [], "folders": []}
+    exts = ELEMENTS_LINK_EXTS if (mode or "assets") == "assets" else IMAGE_EXTS
+    files: list[dict] = []
+    folders: list[dict] = []
+    try:
+        for child in sorted(target.iterdir(), key=lambda p: p.name.lower()):
+            if child.is_dir():
+                if len(folders) < 200:
+                    folders.append({"name": child.name, "path": str(child).replace("\\", "/")})
+                continue
+            if not child.is_file():
+                continue
+            if child.suffix.lower() not in exts:
+                continue
+            files.append(
+                {
+                    "name": child.name,
+                    "path": str(child).replace("\\", "/"),
+                    "ext": child.suffix.lower().lstrip("."),
+                    "size": child.stat().st_size,
+                }
+            )
+            if len(files) >= 200:
+                break
+    except OSError as exc:
+        return {"ok": False, "error": str(exc), "path": str(target), "files": [], "folders": []}
+    parent = target.parent
+    parent_ok = str(parent) != str(target) and _is_under_marketing(parent)
+    return {
+        "ok": True,
+        "path": str(target).replace("\\", "/"),
+        "files": files,
+        "folders": folders,
+        "file_count": _count_elements_files(target),
+        "parent": str(parent).replace("\\", "/") if parent_ok else "",
+        "mode": mode or "assets",
+    }
 
 
 TAG_PROPOSALS_FILE = WEB_ROOT / "data" / "tag-proposals.json"
 CARRIER_TYPES_FILE = WEB_ROOT / "data" / "carrier-types.json"
 ASSIGNMENT_LOG_FILE = WEB_ROOT / "data" / "carrier-assignment-log.json"
+CHANGE_LOG_FILE = WEB_ROOT / "data" / "change-log.json"
 PROPOSAL_TTL_HOURS = 72
+
+# Slot folderow w rewizji - tu rename'ujemy AI/PDF/wizki (Fala D).
+_REVISION_FILE_SLOT_HINTS = (
+    "PROJEKT", "PROJECT", "DRUK", "PRINT", "WIZKI", "WIZUAL", "VISUAL", "PAKIET",
+)
+_FILE_DATE_RE = re.compile(r"(?:_|-)(20\d{2})(?:_|-)(\d{2})(?:_|-)(\d{2})")
+_FILE_INDEX_RE = re.compile(r"(6300\d{3})(?:\.(\d{2}))?")
+_FILE_BRAND_RE = re.compile(r"^(DK|GC)[_-]", re.I)
+_FILE_ROLE_RE = re.compile(r"[_-](F|FQ|PREV|PREVIEW)$", re.I)
+_FILE_LANG_RE = re.compile(r"[_-]([A-Za-z]{2}(?:[_-][A-Za-z]{2})+)$")
+_FILE_CARRIER_TOKENS = sorted(
+    {
+        "DOY6X", "KAR6X", "DOYPACK", "KARTON", "BATON", "FOLIA", "REKAW", "SASZETKA",
+        "DOY", "KAR", "BAT", "BAR", "MINI", "FOL", "FOIL", "SASZ", "TUBA", "ETY",
+        "SHOT", "OBW", "SLEEVE",
+    },
+    key=len,
+    reverse=True,
+)
 
 # Znane kody nosnikow (do wykrycia i ZAMIANY istniejacego prefiksu, nie doklejania
 # drugiego przed pierwszym - "FOLIA - ..." -> "DOY - ...", nie "DOY - FOLIA - ...").
@@ -601,7 +794,42 @@ CARRIER_FOLDER_PREFIX = {
 }
 
 
+# Tier 2 (ADR-009): te pliki JSON sa wspolne w Postgres dam_kv_store.
+# Lokalny plik = cache (odswiezany natychmiast po wlasnym zapisie + co 30 min).
+KV_STORE_KEYS = frozenset({
+    "product-aliases",
+    "naming-dictionary",
+    "tag-proposals",
+    "carrier-types",
+    "carrier-assignment-log",
+    "notification-groups",
+    "inbox-items",
+    "carrier-overrides",
+    "elements-overrides",
+    "viz-flags",
+    "thumb-overrides",
+})
+
+
+def _path_to_store_key(path: Path) -> str | None:
+    name = path.name
+    if not name.endswith(".json"):
+        return None
+    key = name[:-5]
+    return key if key in KV_STORE_KEYS else None
+
+
+def _pg_available() -> bool:
+    try:
+        import pg_db
+
+        return pg_db.is_configured()
+    except Exception:
+        return False
+
+
 def _load_json(path: Path, default):
+    """Czytaj lokalny cache. (Prawda jest w PG - watcher odswieza co 30 min.)"""
     if not path.exists():
         return default
     try:
@@ -611,8 +839,57 @@ def _load_json(path: Path, default):
 
 
 def _save_json(path: Path, data) -> None:
+    """Zapis lokalnego cache + (gdy PG skonfigurowany) upsert do dam_kv_store
+    z SELECT ... FOR UPDATE - chroni przed utrata rownoleglych decyzji moderacji."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    store_key = _path_to_store_key(path)
+    if not store_key or not _pg_available():
+        return
+    try:
+        import pg_db
+
+        conn = pg_db.connect()
+        try:
+            cur = conn.cursor()
+            # Blokada wiersza - druga stacja poczeka zanim nadpisze
+            pg_db.kv_get_for_update(store_key, None, cur)
+            pg_db.kv_set_in_txn(store_key, data, updated_by="local_bridge", cur=cur)
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        print(f"kv_store save warning ({store_key}):", exc)
+
+
+def _pull_kv_cache_from_postgres() -> int:
+    """Pobierz wszystkie Tier-2 stores z PG i nadpisz lokalne pliki cache. Zwraca liczbe."""
+    if not _pg_available():
+        return 0
+    try:
+        import pg_db
+    except Exception:
+        return 0
+    n = 0
+    try:
+        keys = pg_db.kv_all_keys()
+    except Exception as exc:
+        print("kv_cache pull error (list):", exc)
+        return 0
+    for store_key in keys:
+        if store_key not in KV_STORE_KEYS:
+            continue
+        try:
+            payload = pg_db.kv_get(store_key, None)
+            if payload is None:
+                continue
+            path = WEB_ROOT / "data" / f"{store_key}.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            n += 1
+        except Exception as exc:
+            print(f"kv_cache pull error ({store_key}):", exc)
+    return n
 
 
 def load_tag_proposals() -> dict:
@@ -634,6 +911,358 @@ def append_assignment_log(revision_path: str, carrier_code: str, actor: str) -> 
     _save_json(ASSIGNMENT_LOG_FILE, log)
 
 
+def get_last_assignment(revision_path: str) -> dict | None:
+    """Ostatnie zatwierdzone przypisanie typu dla sciezki (lub poprzedniej nazwy folderu)."""
+    log = _load_json(ASSIGNMENT_LOG_FILE, {"entries": []})
+    needle = normalize_path(revision_path).lower()
+    parent = str(Path(normalize_path(revision_path)).parent).lower()
+    last = None
+    for e in log.get("entries") or []:
+        rp = normalize_path(e.get("revision_path") or "").lower()
+        if rp == needle or (rp.startswith(parent + "\\") or rp.startswith(parent + "/")):
+            # Match exact path or same product folder (folder rename changes leaf)
+            if rp == needle or Path(rp).parent.as_posix().lower() == Path(needle).parent.as_posix().lower():
+                last = e
+    return last
+
+
+def append_change_log(entry: dict) -> dict:
+    """Fala E: chronologiczny change-log (rename folder/plikow) z before/after."""
+    data = _load_json(CHANGE_LOG_FILE, {"entries": [], "redo": []})
+    data.setdefault("entries", [])
+    data.setdefault("redo", [])
+    row = {
+        "id": f"chg_{int(datetime.now(timezone.utc).timestamp() * 1000)}",
+        "ts": utc_now(),
+        **entry,
+    }
+    data["entries"].append(row)
+    # Nowa akcja kasuje galaz redo
+    data["redo"] = []
+    _save_json(CHANGE_LOG_FILE, data)
+    return row
+
+
+def load_change_log(limit: int = 50) -> dict:
+    data = _load_json(CHANGE_LOG_FILE, {"entries": [], "redo": []})
+    entries = list(data.get("entries") or [])
+    redo = list(data.get("redo") or [])
+    return {
+        "ok": True,
+        "entries": entries[-max(1, min(limit, 200)) :],
+        "redo": redo[-max(1, min(limit, 50)) :],
+        "can_undo": bool(entries),
+        "can_redo": bool(redo),
+    }
+
+
+def _extract_index_from_folder(folder_name: str) -> str:
+    m = _FILE_INDEX_RE.search(folder_name or "")
+    if not m:
+        return ""
+    base = m.group(1)
+    rev = m.group(2) or "00"
+    return f"{base}.{rev}"
+
+
+def build_carrier_filename(name: str, carrier_code: str, index: str) -> str | None:
+    """GC_balls_cocoa-lime_2024_07_05_GB_AR.ai
+    -> GC-DOY-balls_cocoa-lime - GB_AR - 6300489.00.ai
+    (Fala D: wstaw kod nosnika, usun date, doklej indeks)."""
+    if "." not in name:
+        return None
+    stem, ext = name.rsplit(".", 1)
+    bm = _FILE_BRAND_RE.match(stem)
+    if not bm:
+        return None
+    brand = bm.group(1).upper()
+    rest = stem[bm.end() :]
+
+    rest_u = rest.upper()
+    for tok in _FILE_CARRIER_TOKENS:
+        if rest_u.startswith(tok + "_") or rest_u.startswith(tok + "-"):
+            rest = rest[len(tok) + 1 :]
+            break
+
+    rest = _FILE_DATE_RE.sub("", rest)
+
+    role = ""
+    rm = _FILE_ROLE_RE.search(rest)
+    if rm:
+        role = rm.group(1)
+        rest = rest[: rm.start()]
+
+    file_index = (index or "").strip()
+    im = _FILE_INDEX_RE.search(rest)
+    if im:
+        if not file_index:
+            file_index = f"{im.group(1)}.{im.group(2) or '00'}"
+        # Usun indeks z srodka/konca (z poprzedzajacym separatorem jesli jest)
+        start = im.start()
+        if start > 0 and rest[start - 1] in "_-":
+            start -= 1
+        rest = rest[:start] + rest[im.end() :]
+
+    lang = ""
+    lm = _FILE_LANG_RE.search(rest)
+    if lm:
+        lang = lm.group(1).replace("-", "_")
+        rest = rest[: lm.start()]
+
+    product = rest.strip("_- ")
+    product = re.sub(r"[_-]{2,}", "_", product)
+    if not product:
+        product = "produkt"
+
+    code = (carrier_code or "").strip().upper()
+    if code in ("NONE", "BRAK", "BRAK_TYPU", "__NONE__", ""):
+        mid = f"{brand}-{product}"
+    else:
+        mid = f"{brand}-{code}-{product}"
+
+    parts = [mid]
+    if lang:
+        parts.append(lang)
+    if file_index:
+        if "." not in file_index:
+            file_index = f"{file_index}.00"
+        idx_bit = file_index + (f"_{role}" if role else "")
+        parts.append(idx_bit)
+    elif role:
+        parts.append(role)
+
+    return " - ".join(parts) + "." + ext
+
+
+def _iter_revision_files(revision_dir: Path):
+    """Pliki w slotach PROJEKT/DRUK/WIZKI (1 poziom + pliki w root rewizji)."""
+    if not revision_dir.is_dir():
+        return
+    try:
+        children = list(revision_dir.iterdir())
+    except OSError:
+        return
+    for child in children:
+        if child.is_file():
+            yield child
+            continue
+        if not child.is_dir():
+            continue
+        name_u = child.name.upper()
+        if not any(h in name_u for h in _REVISION_FILE_SLOT_HINTS):
+            continue
+        try:
+            for f in child.iterdir():
+                if f.is_file():
+                    yield f
+        except OSError:
+            continue
+
+
+def rename_revision_files_on_disk(
+    revision_path: str,
+    new_code: str,
+    *,
+    dry_run: bool = False,
+) -> dict:
+    """Fala D: rename AI/PDF/PNG w drzewie rewizji wg reguly brand-carrier-product - lang - index."""
+    p = Path(normalize_path(revision_path))
+    if not p.is_dir():
+        return {"ok": False, "error": "revision_not_found", "renames": []}
+    index = _extract_index_from_folder(p.name)
+    planned: list[dict] = []
+    for f in _iter_revision_files(p):
+        new_name = build_carrier_filename(f.name, new_code, index)
+        if not new_name or new_name == f.name:
+            continue
+        dest = f.parent / new_name
+        planned.append({
+            "old_path": str(f),
+            "new_path": str(dest),
+            "old_name": f.name,
+            "new_name": new_name,
+        })
+
+    if dry_run:
+        return {"ok": True, "dry_run": True, "renames": planned, "count": len(planned)}
+
+    done = []
+    errors = []
+    for item in planned:
+        src = Path(item["old_path"])
+        dest = Path(item["new_path"])
+        if dest.exists() and dest != src:
+            errors.append({"path": str(src), "error": "target_exists", "target": str(dest)})
+            continue
+        try:
+            src.rename(dest)
+            done.append(item)
+        except OSError as exc:
+            errors.append({"path": str(src), "error": str(exc)})
+    return {
+        "ok": len(errors) == 0,
+        "dry_run": False,
+        "renames": done,
+        "errors": errors,
+        "count": len(done),
+    }
+
+
+def _apply_path_renames_forward(path_renames: list) -> list:
+    """Ponow: old_path -> new_path (kolejnosc jak przy apply)."""
+    reverses = []
+    for pr in path_renames or []:
+        src = Path(normalize_path(pr.get("old_path") or ""))
+        dest = Path(normalize_path(pr.get("new_path") or ""))
+        if not src.exists():
+            reverses.append({"ok": False, "error": "missing", "from": str(src), "to": str(dest)})
+            continue
+        if dest.exists():
+            reverses.append({"ok": False, "error": "target_exists", "from": str(src), "to": str(dest)})
+            continue
+        try:
+            src.rename(dest)
+            reverses.append({"ok": True, "from": str(src), "to": str(dest)})
+        except OSError as exc:
+            reverses.append({"ok": False, "error": str(exc), "from": str(src), "to": str(dest)})
+    return reverses
+
+
+def _apply_path_renames_reverse(path_renames: list) -> list:
+    """Cofnij: new_path -> old_path (odwrotna kolejnosc)."""
+    reverses = []
+    for pr in reversed(path_renames or []):
+        src = Path(normalize_path(pr.get("new_path") or ""))
+        dest = Path(normalize_path(pr.get("old_path") or ""))
+        if not src.exists():
+            reverses.append({"ok": False, "error": "missing", "from": str(src), "to": str(dest)})
+            continue
+        if dest.exists():
+            reverses.append({"ok": False, "error": "target_exists", "from": str(src), "to": str(dest)})
+            continue
+        try:
+            src.rename(dest)
+            reverses.append({"ok": True, "from": str(src), "to": str(dest)})
+        except OSError as exc:
+            reverses.append({"ok": False, "error": str(exc), "from": str(src), "to": str(dest)})
+    return reverses
+
+
+def undo_last_change(actor: str = "") -> dict:
+    """Cofnij ostatni wpis change-log (rename folder + pliki) na dysku."""
+    data = _load_json(CHANGE_LOG_FILE, {"entries": [], "redo": []})
+    entries = data.get("entries") or []
+    if not entries:
+        return {"ok": False, "error": "nothing_to_undo"}
+    entry = entries.pop()
+    data["redo"] = data.get("redo") or []
+    data["redo"].append(entry)
+
+    reverses = []
+    action = str(entry.get("action") or "")
+    path_renames = entry.get("path_renames") or []
+
+    if action == "rename_index" or path_renames:
+        reverses = _apply_path_renames_reverse(path_renames)
+    else:
+        # Najpierw pliki (new->old), potem folder
+        for fr in reversed(entry.get("file_renames") or []):
+            src = Path(normalize_path(fr.get("new_path") or ""))
+            dest = Path(normalize_path(fr.get("old_path") or ""))
+            if src.is_file() and not dest.exists():
+                try:
+                    src.rename(dest)
+                    reverses.append({"ok": True, "from": str(src), "to": str(dest)})
+                except OSError as exc:
+                    reverses.append({"ok": False, "error": str(exc), "from": str(src)})
+            else:
+                reverses.append({"ok": False, "error": "missing_or_exists", "from": str(src), "to": str(dest)})
+
+        folder = entry.get("folder_rename") or {}
+        if folder.get("new_path") and folder.get("old_path"):
+            src = Path(normalize_path(folder["new_path"]))
+            dest = Path(normalize_path(folder["old_path"]))
+            if src.is_dir() and not dest.exists():
+                try:
+                    src.rename(dest)
+                    reverses.append({"ok": True, "from": str(src), "to": str(dest), "kind": "folder"})
+                except OSError as exc:
+                    reverses.append({"ok": False, "error": str(exc), "kind": "folder"})
+
+    folder = entry.get("folder_rename") or {}
+    _save_json(CHANGE_LOG_FILE, data)
+    undo_path = (
+        folder.get("old_path")
+        or entry.get("folder")
+        or (path_renames[0].get("old_path") if path_renames else "")
+        or ""
+    )
+    append_audit({
+        "action": "change_log_undo",
+        "path": undo_path,
+        "detail": entry.get("id") or "",
+        "user": actor or "system",
+    })
+    return {"ok": True, "undone": entry, "reverses": reverses}
+
+
+def redo_last_change(actor: str = "") -> dict:
+    """Ponow ostatnio cofniety wpis change-log."""
+    data = _load_json(CHANGE_LOG_FILE, {"entries": [], "redo": []})
+    redo = data.get("redo") or []
+    if not redo:
+        return {"ok": False, "error": "nothing_to_redo"}
+    entry = redo.pop()
+    reverses = []
+    action = str(entry.get("action") or "")
+    path_renames = entry.get("path_renames") or []
+
+    if action == "rename_index" or path_renames:
+        reverses = _apply_path_renames_forward(path_renames)
+    else:
+        folder = entry.get("folder_rename") or {}
+        if folder.get("old_path") and folder.get("new_path"):
+            src = Path(normalize_path(folder["old_path"]))
+            dest = Path(normalize_path(folder["new_path"]))
+            if src.is_dir() and not dest.exists():
+                try:
+                    src.rename(dest)
+                    reverses.append({"ok": True, "from": str(src), "to": str(dest), "kind": "folder"})
+                except OSError as exc:
+                    reverses.append({"ok": False, "error": str(exc), "kind": "folder"})
+        base = Path(normalize_path(folder.get("new_path") or folder.get("old_path") or ""))
+        for fr in entry.get("file_renames") or []:
+            old_name = fr.get("old_name") or Path(fr.get("old_path") or "").name
+            new_name = fr.get("new_name") or Path(fr.get("new_path") or "").name
+            found = None
+            if base.is_dir():
+                for f in _iter_revision_files(base):
+                    if f.name == old_name:
+                        found = f
+                        break
+            if found:
+                dest = found.parent / new_name
+                try:
+                    if not dest.exists():
+                        found.rename(dest)
+                        reverses.append({"ok": True, "from": str(found), "to": str(dest)})
+                except OSError as exc:
+                    reverses.append({"ok": False, "error": str(exc)})
+
+    folder = entry.get("folder_rename") or {}
+    data.setdefault("entries", []).append(entry)
+    data["redo"] = redo
+    _save_json(CHANGE_LOG_FILE, data)
+    redo_path = folder.get("new_path") or entry.get("folder") or ""
+    append_audit({
+        "action": "change_log_redo",
+        "path": redo_path,
+        "detail": entry.get("id") or "",
+        "user": actor or "system",
+    })
+    return {"ok": True, "redone": entry, "reverses": reverses}
+
+
 def _match_carrier_prefix(name):
     """Zwraca (matched_head, rest_with_separator). rest zaczyna sie od ' - ' gdy bylo."""
     head = name.split(" - ")[0].strip()
@@ -646,12 +1275,15 @@ def _match_carrier_prefix(name):
     return None, name
 
 
-def rename_revision_prefix_on_disk(revision_path: str, new_code: str) -> dict:
-    """Zamienia WYLACZNIE prefiks folderu rewizji na dysku (2026-07-18, P6/P7).
-    "FOLIA - 20.09.2024 - 6300488.00" -> "DOYPACK - 20.09.2024 - 6300488.00".
-    "DOYPACK 6x MINI - ..." -> "BATON - ..." (naprawa blednego nosnika).
-    NONE / BRAK TYPU: usuwa prefiks (zostaje data/indeks).
-    Nigdy nie dotyka niczego innego (jezyki/gramatura/data zostaja bez zmian)."""
+def rename_revision_prefix_on_disk(
+    revision_path: str,
+    new_code: str,
+    *,
+    rename_files: bool = True,
+    dry_run_files: bool = False,
+) -> dict:
+    """Zamienia prefiks folderu rewizji na dysku (2026-07-18, P6/P7) + opcjonalnie
+    pliki AI/PDF/wizki (Fala D). Folder: jezyki/gramatura/data bez zmian."""
     p = Path(normalize_path(revision_path))
     if not p.is_dir():
         return {"ok": False, "error": "revision_not_found", "path": str(p)}
@@ -671,6 +1303,7 @@ def rename_revision_prefix_on_disk(revision_path: str, new_code: str) -> dict:
                 "old_name": name,
                 "new_name": name,
                 "noop": True,
+                "file_renames": [],
             }
         new_name = rest.lstrip(" -").strip() if rest else ""
         if not new_name:
@@ -691,18 +1324,47 @@ def rename_revision_prefix_on_disk(revision_path: str, new_code: str) -> dict:
         p.rename(dest)
     except OSError as exc:
         return {"ok": False, "error": str(exc)}
-    return {"ok": True, "old_path": str(p), "new_path": str(dest), "old_name": name, "new_name": new_name}
+
+    file_result = {"renames": [], "count": 0}
+    if rename_files:
+        file_result = rename_revision_files_on_disk(
+            str(dest), new_code_clean, dry_run=dry_run_files
+        )
+
+    return {
+        "ok": True,
+        "old_path": str(p),
+        "new_path": str(dest),
+        "old_name": name,
+        "new_name": new_name,
+        "file_renames": file_result.get("renames") or [],
+        "file_rename_count": file_result.get("count") or 0,
+        "file_rename_errors": file_result.get("errors") or [],
+        "carrier_guessed": False,
+    }
 
 
-def create_or_apply_tag_proposal(payload: dict) -> dict:
-    """Faza 4 (P5/P7): kazda rola moze PROPONOWAC typ. Admin/power_user z wlaczonym
-    trybem edycji -> zmiana natychmiastowa. Zwykly user (albo bez trybu edycji)
-    -> zapis do kolejki moderacji, auto-apply po 72h bez decyzji."""
+def create_or_apply_tag_proposal(
+    payload: dict,
+    *,
+    session_role: str = "user",
+    session_email: str = "",
+    admin_mode: bool = False,
+) -> dict:
+    """Propose -> admin apply (ADR-009 / memory §86).
+
+    Kazdy zalogowany pisze TYLKO do kolejki JSON (tag-proposals + inbox).
+    Natychmiastowy zapis na dysk / kanoniczna baza: wylacznie sesja role=admin
+    z wlaczonym trybem admina. Body.role / body.admin_mode SA IGNOROWANE
+    (anti-spoof) - privilege bierze sie z sesji Bearer.
+    """
     revision_path = (payload.get("revision_path") or "").strip()
     new_code = (payload.get("new_carrier_code") or "").strip().upper()
-    role = (payload.get("role") or "user").strip()
-    admin_mode = bool(payload.get("admin_mode"))
-    submitted_by = (payload.get("user_email") or payload.get("user_name") or "anonim").strip()
+    role = (session_role or "user").strip().lower()
+    submitted_by = (
+        session_email
+        or (payload.get("user_email") or payload.get("user_name") or "anonim")
+    ).strip()
     current_value = (payload.get("current_carrier_code") or "").strip().upper()
 
     if not revision_path:
@@ -711,17 +1373,37 @@ def create_or_apply_tag_proposal(payload: dict) -> dict:
         return {"ok": False, "error": "revision_path_and_new_carrier_code_required"}
     # NONE = jawne "BRAK TYPU" (dozwolone)
 
-    can_apply_immediately = role in ("admin", "power_user") and admin_mode
+    can_apply_immediately = role == "admin" and bool(admin_mode)
     if can_apply_immediately:
-        result = rename_revision_prefix_on_disk(revision_path, new_code)
+        rename_files = bool(payload.get("rename_files", True))
+        result = rename_revision_prefix_on_disk(
+            revision_path, new_code, rename_files=rename_files
+        )
         if result.get("ok"):
             append_audit({
                 "action": "rename_revision_prefix",
                 "path": result["new_path"],
-                "detail": f"{current_value or '?'} -> {new_code}",
+                "detail": f"{current_value or '?'} -> {new_code}"
+                + (f" (+{result.get('file_rename_count', 0)} plikow)" if rename_files else ""),
                 "user": submitted_by,
             })
             append_assignment_log(result["new_path"], new_code, submitted_by)
+        append_change_log({
+            "action": "rename_carrier",
+            "category": "carrier",
+                "actor": submitted_by,
+                "carrier_from": current_value,
+                "carrier_to": new_code,
+                "folder_rename": {
+                    "old_path": result.get("old_path"),
+                    "new_path": result.get("new_path"),
+                    "old_name": result.get("old_name"),
+                    "new_name": result.get("new_name"),
+                },
+                "file_renames": result.get("file_renames") or [],
+                "product_id": payload.get("product_id") or "",
+                "product_name": payload.get("product_name") or "",
+            })
         return {"ok": result.get("ok", False), "applied": True, "immediate": True, **result}
 
     data = load_tag_proposals()
@@ -752,11 +1434,29 @@ def create_or_apply_tag_proposal(payload: dict) -> dict:
         "detail": f"{current_value or '?'} -> {new_code} (pending)",
         "user": submitted_by,
     })
+    # Tymczasowa kolejka <-> inbox: admin widzi zapotrzebowanie od razu
+    append_inbox_item({
+        "type": "tag_proposal",
+        "title": f"Propozycja typu: {current_value or '?'} -> {new_code}",
+        "detail": (
+            f"{entry.get('product_name') or revision_path}\n"
+            f"Zglosil: {submitted_by}\n"
+            f"Sciezka: {revision_path}\n"
+            f"proposal_id: {proposal_id}"
+        ),
+        "tags": ["moderacja", "tag", "propozycja"],
+        "requested_by": submitted_by,
+        "product_id": entry.get("product_id") or "",
+        "path": revision_path,
+        "proposal_id": proposal_id,
+        "read": False,
+    })
     return {"ok": True, "applied": False, "immediate": False, "proposal": entry}
 
 
-def auto_apply_expired_proposals() -> int:
-    """Wywolywane lazily na GET /tag-proposals - 72h bez decyzji = auto-apply (P7)."""
+def escalate_expired_proposals() -> int:
+    """Po TTL NIE zapisujemy na dysk automatycznie (tylko admin apply).
+    Eskalacja: flaga + wpis inbox dla admina."""
     data = load_tag_proposals()
     proposals = data.get("proposals") or []
     now = datetime.now(timezone.utc)
@@ -764,34 +1464,52 @@ def auto_apply_expired_proposals() -> int:
     for entry in proposals:
         if entry.get("status") != "pending":
             continue
+        if entry.get("escalated_at"):
+            continue
         try:
             expires_at = datetime.fromisoformat(entry["expires_at"])
         except (KeyError, ValueError):
             continue
         if now < expires_at:
             continue
-        result = rename_revision_prefix_on_disk(entry["revision_path"], entry["proposed_value"])
-        entry["status"] = "auto_applied" if result.get("ok") else "auto_apply_failed"
-        entry["decided_by"] = "system_72h"
-        entry["decided_at"] = now.isoformat(timespec="seconds")
-        if result.get("ok"):
-            append_assignment_log(result["new_path"], entry["proposed_value"], "system_72h")
-            append_audit({
-                "action": "tag_proposal_auto_applied",
-                "path": result["new_path"],
-                "detail": f"{entry.get('current_value') or '?'} -> {entry['proposed_value']}",
-                "user": entry.get("submitted_by"),
-            })
+        entry["escalated_at"] = now.isoformat(timespec="seconds")
+        append_inbox_item({
+            "type": "tag_proposal_expired",
+            "title": f"Propozycja wygasla - decyzja admina: {entry.get('proposed_value')}",
+            "detail": (
+                f"{entry.get('product_name') or entry.get('revision_path')}\n"
+                f"Zglosil: {entry.get('submitted_by')}\n"
+                f"proposal_id: {entry.get('id')}\n"
+                "System NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach."
+            ),
+            "tags": ["moderacja", "tag", "wygaslo"],
+            "requested_by": entry.get("submitted_by") or "system",
+            "product_id": entry.get("product_id") or "",
+            "path": entry.get("revision_path") or "",
+            "proposal_id": entry.get("id"),
+            "read": False,
+        })
+        append_audit({
+            "action": "tag_proposal_escalated",
+            "path": entry.get("revision_path") or "",
+            "detail": f"TTL minął, czeka na admina: {entry.get('id')}",
+            "user": "system",
+        })
         changed += 1
     if changed:
         save_tag_proposals(data)
     return changed
 
 
-def decide_tag_proposal(payload: dict) -> dict:
+def auto_apply_expired_proposals() -> int:
+    """Kompatybilnosc nazwy - teraz tylko eskalacja do inbox (bez auto-zapisu)."""
+    return escalate_expired_proposals()
+
+
+def decide_tag_proposal(payload: dict, *, decided_by: str = "") -> dict:
     proposal_id = (payload.get("proposal_id") or "").strip()
     decision = (payload.get("decision") or "").strip()  # approve | reject | pick_other
-    decided_by = (payload.get("decided_by") or "moderator").strip()
+    decided_by = (decided_by or payload.get("decided_by") or "admin").strip()
     override_value = (payload.get("new_value") or "").strip().upper()
 
     if not proposal_id or decision not in ("approve", "reject", "pick_other"):
@@ -829,7 +1547,413 @@ def decide_tag_proposal(payload: dict) -> dict:
             "detail": f"{entry.get('current_value') or '?'} -> {final_value}",
             "user": decided_by,
         })
+        append_change_log({
+            "action": "rename_carrier_approved",
+            "category": "carrier",
+            "actor": decided_by,
+            "proposal_id": proposal_id,
+            "carrier_from": entry.get("current_value") or "",
+            "carrier_to": final_value,
+            "folder_rename": {
+                "old_path": result.get("old_path"),
+                "new_path": result.get("new_path"),
+                "old_name": result.get("old_name"),
+                "new_name": result.get("new_name"),
+            },
+            "file_renames": result.get("file_renames") or [],
+            "product_id": entry.get("product_id") or "",
+            "product_name": entry.get("product_name") or "",
+        })
     return {"ok": result.get("ok", False), "proposal": entry, **{k: v for k, v in result.items() if k != "ok"}}
+
+
+def reopen_tag_proposal(payload: dict, *, actor: str = "") -> dict:
+    """Wroc decyzje do kolejki (pending) - bez zmian na dysku."""
+    proposal_id = (payload.get("proposal_id") or "").strip()
+    actor = (actor or payload.get("actor") or "admin").strip()
+    if not proposal_id:
+        return {"ok": False, "error": "proposal_id_required"}
+    data = load_tag_proposals()
+    proposals = data.get("proposals") or []
+    entry = next((p for p in proposals if p.get("id") == proposal_id), None)
+    if not entry:
+        return {"ok": False, "error": "proposal_not_found"}
+    st = str(entry.get("status") or "")
+    if st == "pending":
+        return {"ok": True, "proposal": entry, "note": "already_pending"}
+    if st not in ("rejected", "approved", "approve_failed", "undone", "awaiting_admin"):
+        return {"ok": False, "error": "cannot_reopen_status", "status": st}
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    entry["status"] = "pending"
+    entry["reopened_at"] = now
+    entry["reopened_by"] = actor
+    entry["reopen_from"] = st
+    for key in ("decided_by", "decided_at", "final_value"):
+        entry.pop(key, None)
+    save_tag_proposals(data)
+    append_audit({
+        "action": "tag_proposal_reopened",
+        "path": entry.get("revision_path") or "",
+        "detail": proposal_id,
+        "user": actor,
+    })
+    return {"ok": True, "proposal": entry}
+
+
+
+def _short_actor(s: str) -> str:
+    v = (s or "").strip()
+    if "@" in v:
+        return v.split("@", 1)[0]
+    return v or "?"
+
+
+def _folder_rename_summary(entry: dict) -> str:
+    fr = entry.get("folder_rename") or {}
+    old_n = Path(normalize_path(fr.get("old_path") or "")).name
+    new_n = Path(normalize_path(fr.get("new_path") or "")).name
+    if old_n and new_n and old_n != new_n:
+        return f"{old_n} -> {new_n}"
+    action = str(entry.get("action") or entry.get("category") or "zmiana")
+    return action
+
+
+def _path_probe(path: str) -> dict:
+    pth = Path(normalize_path(path or ""))
+    if not path:
+        return {"path": "", "exists": False, "kind": "unknown"}
+    if pth.exists():
+        return {"path": str(pth), "exists": True, "kind": "dir" if pth.is_dir() else "file"}
+    return {
+        "path": str(pth),
+        "exists": False,
+        "kind": "missing",
+        "hint": "Sciezka nie istnieje na dysku (usunieta albo przeniesiona poza DAM).",
+    }
+
+
+def build_change_timeline_for_proposal(proposal_id: str) -> dict:
+    """Przebieg change-log + audit dla sciezki propozycji (konflikty / kolejne zmiany)."""
+    data = load_tag_proposals()
+    proposals = data.get("proposals") or []
+    entry = next((p for p in proposals if p.get("id") == proposal_id), None)
+    if not entry:
+        return {"ok": False, "error": "proposal_not_found"}
+
+    rev = normalize_path(entry.get("revision_path") or "")
+    rev_l = rev.lower()
+    parent_l = Path(rev).parent.as_posix().lower() if rev else ""
+
+    clog = _load_json(CHANGE_LOG_FILE, {"entries": [], "redo": []})
+    entries = list(clog.get("entries") or [])
+    redo = list(clog.get("redo") or [])
+
+    own_idx = -1
+    for i, e in enumerate(entries):
+        if str(e.get("proposal_id") or "") == proposal_id:
+            own_idx = i
+
+    timeline = []
+    for i, e in enumerate(entries):
+        fr = e.get("folder_rename") or {}
+        new_p = normalize_path(fr.get("new_path") or e.get("folder") or "")
+        old_p = normalize_path(fr.get("old_path") or "")
+        related = str(e.get("proposal_id") or "") == proposal_id
+        if not related and rev_l:
+            for cand in (new_p, old_p, e.get("folder") or ""):
+                cl = normalize_path(cand).lower()
+                if cl == rev_l or (parent_l and (cl.startswith(parent_l + "/") or cl.startswith(parent_l + "\\"))):
+                    related = True
+                    break
+        if not related and own_idx >= 0 and i > own_idx:
+            related = True
+        if not related:
+            continue
+        probe = _path_probe(new_p or old_p or rev)
+        timeline.append({
+            "id": e.get("id") or "",
+            "ts": e.get("ts") or "",
+            "actor": _short_actor(e.get("actor") or e.get("user") or ""),
+            "proposal_id": e.get("proposal_id") or "",
+            "action": e.get("action") or e.get("category") or "",
+            "summary": _folder_rename_summary(e),
+            "is_this": str(e.get("proposal_id") or "") == proposal_id,
+            "is_after": own_idx >= 0 and i > own_idx,
+            "disk": probe,
+        })
+
+    audit_hits = []
+    try:
+        for row in read_audit(80):
+            ap = normalize_path(row.get("path") or "").lower()
+            if not ap or not rev_l:
+                continue
+            if ap != rev_l and not (parent_l and (ap.startswith(parent_l + "/") or ap.startswith(parent_l + "\\"))):
+                continue
+            act = str(row.get("action") or "")
+            if (
+                act in (
+                    "change_log_undo",
+                    "change_log_redo",
+                    "tag_proposal_approved",
+                    "tag_proposal_rejected",
+                    "tag_proposal_reopened",
+                    "tag_proposal_undone",
+                    "tag_proposal_cancel_undo",
+                )
+                or "delete" in act
+                or "remove" in act
+                or "rename" in act
+            ):
+                audit_hits.append({
+                    "ts": row.get("ts") or row.get("at") or "",
+                    "actor": _short_actor(row.get("user") or row.get("actor") or ""),
+                    "action": act,
+                    "detail": row.get("detail") or "",
+                    "path": row.get("path") or "",
+                })
+    except Exception:
+        pass
+
+    last = entries[-1] if entries else None
+    can_undo_now = bool(last) and str(last.get("proposal_id") or "") == proposal_id
+    current_disk = _path_probe(rev)
+    return {
+        "ok": True,
+        "proposal_id": proposal_id,
+        "can_undo_now": can_undo_now,
+        "current_disk": current_disk,
+        "timeline": timeline,
+        "audit": audit_hits[:12],
+        "redo_available": [
+            {
+                "id": r.get("id") or "",
+                "ts": r.get("ts") or "",
+                "proposal_id": r.get("proposal_id") or "",
+                "summary": _folder_rename_summary(r),
+                "actor": _short_actor(r.get("actor") or r.get("user") or ""),
+            }
+            for r in redo[-10:]
+        ],
+    }
+
+
+def undo_tag_proposal(payload: dict, *, actor: str = "") -> dict:
+    """Cofnij zatwierdzona zmiane typu na dysku (gdy to ostatni change-log).
+    Po sukcesie: status=undone + undo_grace_until (+30s).
+    Przy konflikcie: pelny przebieg change-log (timeline)."""
+    proposal_id = (payload.get("proposal_id") or "").strip()
+    actor = (actor or payload.get("actor") or "admin").strip()
+    if not proposal_id:
+        return {"ok": False, "error": "proposal_id_required"}
+    data = load_tag_proposals()
+    proposals = data.get("proposals") or []
+    entry = next((p for p in proposals if p.get("id") == proposal_id), None)
+    if not entry:
+        return {"ok": False, "error": "proposal_not_found"}
+    st = str(entry.get("status") or "")
+    if st == "rejected":
+        return {
+            "ok": False,
+            "error": "rejected_no_disk_change",
+            "hint": (
+                "Ta decyzja to odrzucenie - na dysku nic nie zmieniono. "
+                "Uzyj \"Wroc do kolejki\", jesli chcesz zdecydowac ponownie."
+            ),
+            "timeline": build_change_timeline_for_proposal(proposal_id).get("timeline") or [],
+        }
+    if st not in ("approved", "approve_failed"):
+        return {"ok": False, "error": "nothing_to_undo_on_disk", "status": st}
+
+    clog = _load_json(CHANGE_LOG_FILE, {"entries": [], "redo": []})
+    entries = list(clog.get("entries") or [])
+    if not entries:
+        now = datetime.now(timezone.utc)
+        grace = (now + timedelta(seconds=30)).isoformat(timespec="seconds")
+        entry["status"] = "undone"
+        entry["undone_at"] = now.isoformat(timespec="seconds")
+        entry["undone_by"] = actor
+        entry["undo_grace_until"] = grace
+        entry["disk_undo"] = False
+        entry["undo_hint"] = "Brak wpisu change-log - tylko status, bez cofniecia na dysku."
+        save_tag_proposals(data)
+        append_audit({
+            "action": "tag_proposal_undone",
+            "path": entry.get("revision_path") or "",
+            "detail": proposal_id + "|no_changelog",
+            "user": actor,
+        })
+        return {
+            "ok": True,
+            "proposal": entry,
+            "disk_undo": False,
+            "grace_seconds": 30,
+            "undo_grace_until": grace,
+            "hint": entry["undo_hint"],
+            "timeline": build_change_timeline_for_proposal(proposal_id).get("timeline") or [],
+        }
+
+    last = entries[-1]
+    if str(last.get("proposal_id") or "") != proposal_id:
+        report = build_change_timeline_for_proposal(proposal_id)
+        return {
+            "ok": False,
+            "error": "not_last_change",
+            "hint": (
+                "Po tej zmianie nastapily kolejne na dysku. "
+                "Najpierw cofnij nowsze (Cofnij ostatnia / przebieg ponizej), "
+                "albo ponow po cofnieciu. Program nie cofnie w srodek historii."
+            ),
+            "last_proposal_id": last.get("proposal_id") or "",
+            "last_change_id": last.get("id") or "",
+            "last_summary": _folder_rename_summary(last),
+            "last_actor": _short_actor(last.get("actor") or last.get("user") or ""),
+            "last_ts": last.get("ts") or "",
+            "timeline": report.get("timeline") or [],
+            "audit": report.get("audit") or [],
+            "current_disk": report.get("current_disk") or {},
+            "redo_available": report.get("redo_available") or [],
+        }
+
+    fr = last.get("folder_rename") or {}
+    expected_new = normalize_path(fr.get("new_path") or "")
+    probe = _path_probe(expected_new or entry.get("revision_path") or "")
+    if expected_new and not probe.get("exists"):
+        report = build_change_timeline_for_proposal(proposal_id)
+        return {
+            "ok": False,
+            "error": "path_missing",
+            "hint": (
+                "Nie mozna cofnac rename: folder/plik z tej zmiany nie istnieje na dysku. "
+                "Ktos mogl go usunac albo przeniesc poza logi DAM. "
+                "Ponizej przebieg zmian i wskazowki z audytu."
+            ),
+            "current_disk": probe,
+            "timeline": report.get("timeline") or [],
+            "audit": report.get("audit") or [],
+        }
+
+    disk = undo_last_change(actor)
+    if not disk.get("ok"):
+        report = build_change_timeline_for_proposal(proposal_id)
+        disk["timeline"] = report.get("timeline") or []
+        disk["audit"] = report.get("audit") or []
+        disk["current_disk"] = probe
+        return disk
+
+    reverses = disk.get("reverses") or []
+    failed = [r for r in reverses if not r.get("ok")]
+    if failed:
+        report = build_change_timeline_for_proposal(proposal_id)
+        return {
+            "ok": False,
+            "error": "partial_undo_failed",
+            "hint": (
+                "Cofniecie na dysku nie powiodlo sie w calosci "
+                "(brak pliku, konflikt nazw albo reczna zmiana po drodze)."
+            ),
+            "reverses": reverses,
+            "timeline": report.get("timeline") or [],
+            "audit": report.get("audit") or [],
+            "current_disk": probe,
+        }
+
+    now = datetime.now(timezone.utc)
+    grace = (now + timedelta(seconds=30)).isoformat(timespec="seconds")
+    entry["status"] = "undone"
+    entry["undone_at"] = now.isoformat(timespec="seconds")
+    entry["undone_by"] = actor
+    entry["undo_grace_until"] = grace
+    entry["undo_change_id"] = (disk.get("undone") or {}).get("id") or ""
+    entry["disk_undo"] = True
+    for key in ("decided_by", "decided_at", "final_value"):
+        if key in entry and f"prev_{key}" not in entry:
+            entry[f"prev_{key}"] = entry.get(key)
+    save_tag_proposals(data)
+    append_audit({
+        "action": "tag_proposal_undone",
+        "path": entry.get("revision_path") or "",
+        "detail": proposal_id,
+        "user": actor,
+    })
+    return {
+        "ok": True,
+        "proposal": entry,
+        "disk_undo": True,
+        "grace_seconds": 30,
+        "undo_grace_until": grace,
+        "undone": disk.get("undone"),
+        "reverses": reverses,
+        "hint": "Cofnieto na dysku. Masz 30 s na Anuluj cofniecie (Ponow).",
+        "redo_available": build_change_timeline_for_proposal(proposal_id).get("redo_available") or [],
+    }
+
+
+def cancel_undo_tag_proposal(payload: dict, *, actor: str = "") -> dict:
+    """W ciagu 30 s po cofnieciu: ponow zmiane na dysku i przywroc status approved."""
+    proposal_id = (payload.get("proposal_id") or "").strip()
+    actor = (actor or payload.get("actor") or "admin").strip()
+    if not proposal_id:
+        return {"ok": False, "error": "proposal_id_required"}
+    data = load_tag_proposals()
+    proposals = data.get("proposals") or []
+    entry = next((p for p in proposals if p.get("id") == proposal_id), None)
+    if not entry:
+        return {"ok": False, "error": "proposal_not_found"}
+    if str(entry.get("status") or "") != "undone":
+        return {"ok": False, "error": "not_in_undo_grace", "status": entry.get("status")}
+
+    grace_raw = str(entry.get("undo_grace_until") or "")
+    try:
+        grace_dt = datetime.fromisoformat(grace_raw.replace("Z", "+00:00"))
+        if grace_dt.tzinfo is None:
+            grace_dt = grace_dt.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > grace_dt:
+            return {
+                "ok": False,
+                "error": "grace_expired",
+                "hint": "Minelo 30 s. Uzyj Ponow na pasku Historii (ostatnio wycofane), jesli nadal w redo.",
+            }
+    except ValueError:
+        pass
+
+    clog = _load_json(CHANGE_LOG_FILE, {"entries": [], "redo": []})
+    redo = list(clog.get("redo") or [])
+    want = str(entry.get("undo_change_id") or "")
+    if entry.get("disk_undo") and redo:
+        top = redo[-1]
+        if want and str(top.get("id") or "") != want:
+            return {
+                "ok": False,
+                "error": "redo_mismatch",
+                "hint": "Na stosie redo jest inna zmiana. Sprawdz \"Ostatnio wycofane\" na pasku Historii.",
+                "redo_top": top.get("id") or "",
+            }
+        redone = redo_last_change(actor)
+        if not redone.get("ok"):
+            return redone
+    elif entry.get("disk_undo"):
+        return {"ok": False, "error": "nothing_to_redo", "hint": "Brak wpisu na stosie redo."}
+
+    entry["status"] = "approved"
+    if entry.get("prev_decided_by"):
+        entry["decided_by"] = entry.pop("prev_decided_by")
+    if entry.get("prev_decided_at"):
+        entry["decided_at"] = entry.pop("prev_decided_at")
+    if "prev_final_value" in entry:
+        entry["final_value"] = entry.pop("prev_final_value")
+    for k in ("undone_at", "undone_by", "undo_grace_until", "undo_change_id", "disk_undo", "undo_hint"):
+        entry.pop(k, None)
+    entry["cancel_undo_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    entry["cancel_undo_by"] = actor
+    save_tag_proposals(data)
+    append_audit({
+        "action": "tag_proposal_cancel_undo",
+        "path": entry.get("revision_path") or "",
+        "detail": proposal_id,
+        "user": actor,
+    })
+    return {"ok": True, "proposal": entry, "hint": "Anulowano cofniecie - zmiana znow obowiazuje."}
 
 
 def manage_carrier_type(payload: dict) -> dict:
@@ -984,18 +2108,12 @@ def append_thumb_override(product_id: str, entry: dict) -> dict:
     if not pid:
         return {"ok": False, "error": "product_id_required"}
     overrides_file = WEB_ROOT / "data" / "thumb-overrides.json"
-    data: dict = {}
-    if overrides_file.exists():
-        try:
-            raw = json.loads(overrides_file.read_text(encoding="utf-8"))
-            data = raw if isinstance(raw, dict) else {}
-        except json.JSONDecodeError:
-            data = {}
-    overrides_file.parent.mkdir(parents=True, exist_ok=True)
-    # Cofniecie wyboru miniatury (admin)
+    data = _load_json(overrides_file, {})
+    if not isinstance(data, dict):
+        data = {}
     if entry.get("clear"):
         data.pop(pid, None)
-        overrides_file.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        _save_json(overrides_file, data)
         return {"ok": True, "product_id": pid, "cleared": True, "store": str(overrides_file)}
     row = {
         "path": (entry.get("path") or "").strip(),
@@ -1004,7 +2122,7 @@ def append_thumb_override(product_id: str, entry: dict) -> dict:
         "updated_at": utc_now(),
     }
     data[pid] = row
-    overrides_file.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _save_json(overrides_file, data)
     return {"ok": True, "product_id": pid, "entry": row, "store": str(overrides_file)}
 
 
@@ -1012,19 +2130,26 @@ IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff"}
 
 
 def list_folder_images(path: str) -> dict:
-    """Lista obrazow w folderze Marketing (do pickera miniatury w przegladarce)."""
+    """Lista obrazow + podfolderow w folderze Marketing (picker miniatury/parowania w przegladarce).
+    Zwraca rowniez `parent` (jesli wciaz pod Marketing) - admin moze nawigowac
+    w gore/w dol, zeby wskazac folder wizualizacji INNEGO jezyka/wariantu (parowanie, 2026-07-18)."""
     target = Path(normalize_path(path or ""))
     if not target.exists():
-        return {"ok": False, "error": "path_not_found", "path": str(target), "files": []}
+        return {"ok": False, "error": "path_not_found", "path": str(target), "files": [], "folders": []}
     if target.is_file():
         target = target.parent
     if not target.is_dir():
-        return {"ok": False, "error": "not_a_directory", "path": str(target), "files": []}
+        return {"ok": False, "error": "not_a_directory", "path": str(target), "files": [], "folders": []}
     if not _is_under_marketing(target):
-        return {"ok": False, "error": "path_outside_marketing", "path": str(target), "files": []}
+        return {"ok": False, "error": "path_outside_marketing", "path": str(target), "files": [], "folders": []}
     files: list[dict] = []
+    folders: list[dict] = []
     try:
         for child in sorted(target.iterdir(), key=lambda p: p.name.lower()):
+            if child.is_dir():
+                if len(folders) < 200:
+                    folders.append({"name": child.name, "path": str(child).replace("\\", "/")})
+                continue
             if not child.is_file():
                 continue
             if child.suffix.lower() not in IMAGE_EXTS:
@@ -1040,31 +2165,34 @@ def list_folder_images(path: str) -> dict:
             if len(files) >= 200:
                 break
     except OSError as exc:
-        return {"ok": False, "error": str(exc), "path": str(target), "files": []}
-    return {"ok": True, "path": str(target).replace("\\", "/"), "files": files}
+        return {"ok": False, "error": str(exc), "path": str(target), "files": [], "folders": []}
+    parent = target.parent
+    parent_ok = str(parent) != str(target) and _is_under_marketing(parent)
+    return {
+        "ok": True,
+        "path": str(target).replace("\\", "/"),
+        "files": files,
+        "folders": folders,
+        "parent": str(parent).replace("\\", "/") if parent_ok else "",
+    }
 
 
 def read_viz_flags() -> dict:
     flags_file = WEB_ROOT / "data" / "viz-flags.json"
     default = {"demo": {}, "hidden": {}, "manual": [], "updated_at": ""}
-    if not flags_file.exists():
+    raw = _load_json(flags_file, default)
+    if not isinstance(raw, dict):
         return default
-    try:
-        raw = json.loads(flags_file.read_text(encoding="utf-8"))
-        if not isinstance(raw, dict):
-            return default
-        return {
-            "demo": raw.get("demo") if isinstance(raw.get("demo"), dict) else {},
-            "hidden": raw.get("hidden") if isinstance(raw.get("hidden"), dict) else {},
-            "manual": raw.get("manual") if isinstance(raw.get("manual"), list) else [],
-            "updated_at": raw.get("updated_at") or "",
-        }
-    except json.JSONDecodeError:
-        return default
+    return {
+        "demo": raw.get("demo") if isinstance(raw.get("demo"), dict) else {},
+        "hidden": raw.get("hidden") if isinstance(raw.get("hidden"), dict) else {},
+        "manual": raw.get("manual") if isinstance(raw.get("manual"), list) else [],
+        "updated_at": raw.get("updated_at") or "",
+    }
 
 
 def write_viz_flags(payload: dict) -> dict:
-    """Zapis flag demo/hidden/manual tylko do apps/web/data."""
+    """Zapis flag demo/hidden/manual tylko do apps/web/data (+ PG Tier 2)."""
     flags_file = WEB_ROOT / "data" / "viz-flags.json"
     current = read_viz_flags()
     action = (payload.get("action") or "").strip().lower()
@@ -1087,8 +2215,7 @@ def write_viz_flags(payload: dict) -> dict:
         if isinstance(entry, dict) and entry.get("path"):
             current.setdefault("manual", []).append(entry)
     current["updated_at"] = utc_now()
-    flags_file.parent.mkdir(parents=True, exist_ok=True)
-    flags_file.write_text(json.dumps(current, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _save_json(flags_file, current)
     return {"ok": True, "flags": current, "store": str(flags_file)}
 
 
@@ -1195,6 +2322,49 @@ class Handler(BaseHTTPRequestHandler):
             return auth[7:].strip()
         return ""
 
+    def _session_user(self) -> dict | None:
+        """User z Bearer tokena (Postgres/SQLite). None = brak / niewazna sesja."""
+        res = resolve_session(self._bearer())
+        if not res.get("ok"):
+            return None
+        user = res.get("user") or {}
+        if not user.get("email") and not user.get("role"):
+            return None
+        return user
+
+    def _require_login(self) -> dict | None:
+        user = self._session_user()
+        if not user:
+            self._json(
+                401,
+                {
+                    "ok": False,
+                    "error": "login_required",
+                    "hint": "Zaloguj sie - zgłoszenia i zapis wymagają sesji.",
+                },
+            )
+            return None
+        return user
+
+    def _require_admin(self) -> dict | None:
+        user = self._require_login()
+        if user is None:
+            return None
+        if (user.get("role") or "").strip().lower() != "admin":
+            self._json(
+                403,
+                {
+                    "ok": False,
+                    "error": "admin_required",
+                    "hint": (
+                        "Tylko admin zatwierdza zmiany w bazie / na dysku. "
+                        "Użytkownik może tylko zgłosić propozycję (JSON w kolejce)."
+                    ),
+                },
+            )
+            return None
+        return user
+
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)
         if parsed.path == "/health":
@@ -1275,9 +2445,24 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, list_folder_images(path))
             return
+        if parsed.path == "/folder-browse":
+            qs = parse_qs(parsed.query)
+            path = (qs.get("path") or [""])[0]
+            mode = (qs.get("mode") or ["assets"])[0]
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required", "files": [], "folders": []})
+                return
+            self._json(200, list_folder_browse(path, mode=mode))
+            return
         if parsed.path in ("/db/status", "/pg/status"):
-            # /pg/status zostawiony jako alias (stary klient) - zawsze SQLite
+            # /pg/status = alias historyczny do /db/status
             self._json(200, dam_db.status() if dam_db else {"ok": False, "error": "dam_db_missing"})
+            return
+        if parsed.path == "/db/prefer":
+            if not dam_db:
+                self._json(500, {"ok": False, "error": "dam_db_missing"})
+                return
+            self._json(200, {"ok": True, "prefer": dam_db.load_prefer()})
             return
         if parsed.path == "/media":
             qs = parse_qs(parsed.query)
@@ -1303,11 +2488,79 @@ class Handler(BaseHTTPRequestHandler):
             auto_apply_expired_proposals()
             self._json(200, load_tag_proposals())
             return
+        if parsed.path == "/change-log":
+            qs = parse_qs(parsed.query)
+            limit = int((qs.get("limit") or ["40"])[0])
+            self._json(200, load_change_log(limit))
+            return
+        if parsed.path == "/tag-proposals/timeline":
+            qs = parse_qs(parsed.query)
+            pid = (qs.get("proposal_id") or [""])[0].strip()
+            result = build_change_timeline_for_proposal(pid)
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/carrier-assignment":
+            # Discrepancy: dysk vs ostatnie zatwierdzenie (Fala D znak ?)
+            qs = parse_qs(parsed.query)
+            rev = (qs.get("path") or qs.get("revision_path") or [""])[0].strip()
+            disk = (qs.get("disk_carrier") or [""])[0].strip().upper()
+            last = get_last_assignment(rev) if rev else None
+            assigned = ((last or {}).get("carrier_code") or "").strip().upper()
+            discrepancy = bool(assigned and disk and assigned != disk and assigned not in ("NONE", "BRAK"))
+            self._json(200, {
+                "ok": True,
+                "revision_path": rev,
+                "disk_carrier": disk,
+                "assigned_carrier": assigned,
+                "discrepancy": discrepancy,
+                "last": last,
+                "tip": (
+                    f"Wczesniej zatwierdzono {assigned}, na dysku jest {disk}."
+                    if discrepancy
+                    else ""
+                ),
+            })
+            return
         if parsed.path == "/carrier-types":
             self._json(200, _load_json(CARRIER_TYPES_FILE, {"custom_types": {}, "deleted_types": {}}))
             return
         if parsed.path == "/inbox-items":
             self._json(200, _load_json(INBOX_ITEMS_FILE, {"items": []}))
+            return
+        if parsed.path == "/integrations/status":
+            if oauth_integrations is None:
+                self._json(500, {"ok": False, "error": "oauth_module_missing"})
+                return
+            self._json(200, oauth_integrations.status())
+            return
+        if parsed.path == "/oauth/callback":
+            # Redirect z Asana / Microsoft - wymiana code, potem HTML z komunikatem
+            if oauth_integrations is None:
+                self._json(500, {"ok": False, "error": "oauth_module_missing"})
+                return
+            qs = parse_qs(parsed.query)
+            code = (qs.get("code") or [""])[0]
+            state = (qs.get("state") or [""])[0]
+            err = (qs.get("error") or [""])[0]
+            if err:
+                html = (
+                    "<!doctype html><meta charset=utf-8><title>OAuth</title>"
+                    f"<h1>Logowanie przerwane</h1><p>{err}</p>"
+                    '<p><a href="http://127.0.0.1:8765/settings.html">Wróć do Ustawień</a></p>'
+                )
+                self._bytes(400, html.encode("utf-8"), "text/html; charset=utf-8")
+                return
+            result = oauth_integrations.complete_callback(code, state)
+            ok = result.get("ok")
+            html = (
+                "<!doctype html><meta charset=utf-8><title>OAuth</title>"
+                f"<h1>{'Połączono' if ok else 'Błąd OAuth'}</h1>"
+                f"<p>{result.get('provider') or ''} - {result.get('error') or 'OK'}</p>"
+                '<p><a href="http://127.0.0.1:8765/settings.html#damIntegrations">'
+                "Wróć do Ustawień / Integracje</a></p>"
+                "<script>setTimeout(function(){location.href='http://127.0.0.1:8765/settings.html#damIntegrations'},1500)</script>"
+            )
+            self._bytes(200 if ok else 400, html.encode("utf-8"), "text/html; charset=utf-8")
             return
         self._json(404, {"ok": False, "error": "not_found"})
 
@@ -1350,13 +2603,18 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, write_machine_config(path))
             return
         if parsed.path == "/auth/register":
+            # Domyslnie zawsze role=user. Role admin/power_user tylko gdy sesja admina.
+            requested_role = (data.get("role") or "user").strip().lower()
+            admin = self._session_user()
+            if not admin or (admin.get("role") or "") != "admin":
+                requested_role = "user"
             self._json(
                 200,
                 register_user(
                     data.get("email") or "",
                     data.get("password") or "",
                     data.get("name") or "",
-                    data.get("role") or "user",
+                    requested_role,
                 ),
             )
             return
@@ -1371,13 +2629,33 @@ class Handler(BaseHTTPRequestHandler):
                 ),
             )
             return
+        if parsed.path == "/auth/rehydrate":
+            payload = data if isinstance(data, dict) else {}
+            self._json(
+                200,
+                auth_rehydrate(
+                    payload.get("session_id") or "",
+                    payload.get("device_id") or "",
+                    payload.get("machine_id") or "",
+                ),
+            )
+            return
         if parsed.path == "/audit":
-            self._json(200, append_audit(data if isinstance(data, dict) else {}))
+            user = self._require_login()
+            if user is None:
+                return
+            payload = data if isinstance(data, dict) else {}
+            payload.setdefault("user", user.get("email") or user.get("name") or "")
+            self._json(200, append_audit(payload))
             return
         if parsed.path == "/index/rebuild":
+            if self._require_admin() is None:
+                return
             self._json(200, start_index_rebuild())
             return
         if parsed.path == "/carrier-override":
+            if self._require_admin() is None:
+                return
             path = (data.get("path") or "").strip()
             entry = data.get("entry") or {}
             if not path or not isinstance(entry, dict):
@@ -1385,7 +2663,15 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, append_carrier_override(path, entry))
             return
+        if parsed.path == "/elements-link":
+            if self._require_admin() is None:
+                return
+            result = upsert_elements_link(data if isinstance(data, dict) else {})
+            self._json(200 if result.get("ok") else 400, result)
+            return
         if parsed.path == "/thumb-override":
+            if self._require_admin() is None:
+                return
             pid = (data.get("product_id") or "").strip()
             if not pid:
                 self._json(400, {"ok": False, "error": "product_id_required"})
@@ -1393,9 +2679,13 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, append_thumb_override(pid, data if isinstance(data, dict) else {}))
             return
         if parsed.path == "/viz-flag":
+            if self._require_admin() is None:
+                return
             self._json(200, write_viz_flags(data if isinstance(data, dict) else {}))
             return
         if parsed.path == "/rename-index":
+            if self._require_admin() is None:
+                return
             folder = (data.get("folder") or data.get("path") or "").strip()
             from_index = (data.get("from_index") or "").strip()
             to_index = (data.get("to_index") or "").strip()
@@ -1407,22 +2697,120 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/rename-revision-prefix":
-            result = create_or_apply_tag_proposal(data if isinstance(data, dict) else {})
+            user = self._require_login()
+            if user is None:
+                return
+            # admin_mode z body tylko jako UX flag - privilege i tak z sesji
+            admin_mode = bool(data.get("admin_mode")) and (user.get("role") or "") == "admin"
+            result = create_or_apply_tag_proposal(
+                data if isinstance(data, dict) else {},
+                session_role=(user.get("role") or "user"),
+                session_email=(user.get("email") or user.get("name") or ""),
+                admin_mode=admin_mode,
+            )
             self._json(200 if result.get("ok") else 400, result)
             return
+        if parsed.path == "/rename-revision-files":
+            # Dry-run wolny dla zalogowanych; apply tylko admin
+            user = self._require_login()
+            if user is None:
+                return
+            rev = (data.get("revision_path") or "").strip()
+            code = (data.get("new_carrier_code") or "").strip()
+            dry = bool(data.get("dry_run", True))
+            if not rev or not code:
+                self._json(400, {"ok": False, "error": "revision_path_and_new_carrier_code_required"})
+                return
+            if not dry and (user.get("role") or "") != "admin":
+                self._json(403, {"ok": False, "error": "admin_required", "hint": "Apply rename plików = tylko admin."})
+                return
+            self._json(200, rename_revision_files_on_disk(rev, code, dry_run=dry))
+            return
+        if parsed.path == "/change-log/undo":
+            user = self._require_admin()
+            if user is None:
+                return
+            actor = (user.get("email") or data.get("actor") or "").strip()
+            self._json(200, undo_last_change(actor))
+            return
+        if parsed.path == "/change-log/redo":
+            user = self._require_admin()
+            if user is None:
+                return
+            actor = (user.get("email") or data.get("actor") or "").strip()
+            self._json(200, redo_last_change(actor))
+            return
         if parsed.path == "/tag-proposals/decide":
-            result = decide_tag_proposal(data if isinstance(data, dict) else {})
+            user = self._require_admin()
+            if user is None:
+                return
+            result = decide_tag_proposal(
+                data if isinstance(data, dict) else {},
+                decided_by=(user.get("email") or user.get("name") or "admin"),
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/tag-proposals/reopen":
+            user = self._require_admin()
+            if user is None:
+                return
+            result = reopen_tag_proposal(
+                data if isinstance(data, dict) else {},
+                actor=(user.get("email") or user.get("name") or "admin"),
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/tag-proposals/undo":
+            user = self._require_admin()
+            if user is None:
+                return
+            result = undo_tag_proposal(
+                data if isinstance(data, dict) else {},
+                actor=(user.get("email") or user.get("name") or "admin"),
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/tag-proposals/cancel-undo":
+            user = self._require_admin()
+            if user is None:
+                return
+            result = cancel_undo_tag_proposal(
+                data if isinstance(data, dict) else {},
+                actor=(user.get("email") or user.get("name") or "admin"),
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/tag-proposals/timeline":
+            user = self._require_admin()
+            if user is None:
+                return
+            pid = ""
+            if isinstance(data, dict):
+                pid = (data.get("proposal_id") or "").strip()
+            if not pid:
+                qs = parse_qs(parsed.query or "")
+                pid = (qs.get("proposal_id") or [""])[0].strip()
+            result = build_change_timeline_for_proposal(pid)
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/carrier-types":
+            if self._require_admin() is None:
+                return
             result = manage_carrier_type(data if isinstance(data, dict) else {})
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/viz-request":
-            result = create_viz_request(data if isinstance(data, dict) else {})
+            user = self._require_login()
+            if user is None:
+                return
+            payload = data if isinstance(data, dict) else {}
+            payload["requested_by"] = user.get("email") or user.get("name") or payload.get("requested_by") or ""
+            result = create_viz_request(payload)
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/inbox-items/mark-read":
+            if self._require_login() is None:
+                return
             item_id = (data.get("id") or "").strip()
             store = _load_json(INBOX_ITEMS_FILE, {"items": []})
             for it in store.get("items") or []:
@@ -1431,33 +2819,92 @@ class Handler(BaseHTTPRequestHandler):
             _save_json(INBOX_ITEMS_FILE, store)
             self._json(200, {"ok": True})
             return
+        if parsed.path == "/integrations/connect":
+            user = self._require_login()
+            if user is None:
+                return
+            if oauth_integrations is None:
+                self._json(500, {"ok": False, "error": "oauth_module_missing"})
+                return
+            provider = (data.get("provider") or "").strip().lower()
+            result = oauth_integrations.start_login(
+                provider, user_email=(user.get("email") or "")
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/integrations/disconnect":
+            user = self._require_admin()
+            if user is None:
+                return
+            if oauth_integrations is None:
+                self._json(500, {"ok": False, "error": "oauth_module_missing"})
+                return
+            provider = (data.get("provider") or "").strip().lower()
+            self._json(200, oauth_integrations.disconnect(provider))
+            return
+        if parsed.path in ("/db/reconnect", "/db/refresh"):
+            if self._require_admin() is None:
+                return
+            if not dam_db:
+                self._json(500, {"ok": False, "error": "dam_db_missing"})
+                return
+            pull_dump = bool(data.get("pull_dump") or data.get("github") or False)
+            self._json(200, dam_db.force_reconnect(pull_dump=pull_dump))
+            return
+        if parsed.path == "/db/prefer":
+            if self._require_admin() is None:
+                return
+            if not dam_db:
+                self._json(500, {"ok": False, "error": "dam_db_missing"})
+                return
+            prefer = dam_db.save_prefer(data if isinstance(data, dict) else {})
+            status = dam_db.force_reconnect(pull_dump=False)
+            status["prefer"] = prefer
+            self._json(200, status)
+            return
         self._json(404, {"ok": False, "error": "not_found"})
 
 
 def _tag_proposal_watcher() -> None:
-    """Faza 4 (plan: "cron/watcher co ~15 min") - auto-apply propozycji po 72h
-    NIEZALEZNIE od tego czy ktos otworzyl panel moderacji (lazy check w GET
-    /tag-proposals zostaje jako dodatkowa siec bezpieczenstwa)."""
+    """Co ~15 min: eskalacja wygaslych propozycji do inbox (BEZ auto-zapisu na dysk)."""
     while True:
         try:
-            n = auto_apply_expired_proposals()
+            n = escalate_expired_proposals()
             if n:
-                print(f"tag-proposals watcher: auto-applied {n}")
+                print(f"tag-proposals watcher: escalated {n} to inbox (awaiting admin)")
         except Exception as exc:
             print("tag-proposals watcher error:", exc)
         time.sleep(15 * 60)
+
+
+def _kv_cache_watcher() -> None:
+    """ADR-009: co 5 min (gdy program/bridge dziala) pobierz wszystkie Tier-2
+    stores z Postgresa do lokalnego cache. Tier 1 (auth/sesje) jest ZAWSZE zywe
+    - bez cache. Pierwszy pull zaraz po starcie."""
+    first = True
+    while True:
+        if not first:
+            time.sleep(5 * 60)
+        first = False
+        try:
+            n = _pull_kv_cache_from_postgres()
+            if n:
+                print(f"kv_cache watcher: refreshed {n} stores from postgres")
+        except Exception as exc:
+            print("kv_cache watcher error:", exc)
 
 
 def main() -> None:
     AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
     try:
         if dam_db is not None:
-            print("sqlite:", dam_db.init_db())
+            print("db:", dam_db.init_db())
         auth_init_db()
         seed_owner_from_env()
     except Exception as exc:
         print("auth/db seed:", exc)
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
+    threading.Thread(target=_kv_cache_watcher, daemon=True).start()
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"DAM local bridge http://{HOST}:{PORT}")
     try:

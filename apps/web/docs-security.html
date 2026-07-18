@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pl" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bezpieczeństwo - DAM ETA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
+  <link rel="stylesheet" href="./assets/css/style.css">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718inbox2">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718navActive1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
+</head>
+<body class="geex-dashboard dam-app">
+  <div class="dam-sidebar-backdrop" id="damSidebarBackdrop"></div>
+  <header class="geex-header">
+    <div class="geex-header__wrapper">
+      <div class="geex-header__logo-wrapper">
+        <a href="dashboard.html" class="geex-header__logo">
+          <img class="logo-lite" src="assets/img/logo-dark.svg" alt="DAM ETA" />
+          <img class="logo-dark" src="assets/img/logo-lite.svg" alt="DAM ETA" />
+        </a>
+      </div>
+    </div>
+  </header>
+  <main class="geex-main-content">
+    <div class="geex-sidebar" id="damSidebar">
+      <a href="#" class="geex-sidebar__close" id="damSidebarClose" aria-label="Zamknij menu"><i class="uil uil-times"></i></a>
+      <div class="geex-sidebar__wrapper"><nav class="geex-sidebar__menu-wrapper"><ul class="geex-sidebar__menu"></ul></nav></div>
+    </div>
+    <div class="geex-content">
+      <div class="geex-content__header">
+        <div class="geex-content__header__content">
+          <h2 class="geex-content__header__title">Bezpieczeństwo techniczne</h2>
+          <p class="geex-content__header__subtitle">Jak chronimy dane użytkowników w DAM ETA</p>
+        </div>
+        <div class="geex-content__header__action" id="damHeaderAction"></div>
+      </div>
+      <article style="max-width:860px;background:#fff;border:1px solid #ececf2;border-radius:14px;padding:28px 32px;line-height:1.65;color:#464255">
+        <table class="table" style="font-size:13px">
+          <thead><tr><th>Dane</th><th>Metoda</th><th>Gdzie</th></tr></thead>
+          <tbody>
+            <tr><td>Hasło konta</td><td><strong>bcrypt</strong> (rounds=12), bez odwracania</td><td>Postgres / SQLite <code>users.password_hash</code></td></tr>
+            <tr><td>Token sesji</td><td>losowy URL-safe + SHA-256 w DB</td><td><code>device_sessions.token_hash</code></td></tr>
+            <tr><td>Tokeny OAuth</td><td><strong>Fernet</strong> (AES-128-CBC + HMAC)</td><td><code>data/oauth-tokens.json</code> (gitignored)</td></tr>
+            <tr><td>Klucz Fernet</td><td>lokalny plik / <code>DAM_SECRET_KEY</code></td><td><code>data/.dam-secret.key</code></td></tr>
+            <tr><td>Hasło Postgres</td><td>env / pg-config (gitignore)</td><td>nie w repo</td></tr>
+          </tbody>
+        </table>
+        <p>Hasła nigdy nie są szyfrowane odwracalnie - tylko hash. Tokeny API stron trzecich - szyfrowanie odwracalne, bo aplikacja musi je wysyłać do Asana/Graph.</p>
+        <p><a href="privacy.html">Polityka prywatności</a></p>
+      </article>
+    </div>
+  </main>
+  <script src="./assets/vendor/js/jquery/jquery-3.5.1.min.js"></script>
+  <script src="./assets/vendor/js/bootstrap/bootstrap.min.js"></script>
+  <script src="./assets/js/main.js"></script>
+  <script src="./assets/js/dam-app.js?v=20260718inbox2"></script>
+  <script src="./assets/js/dam-api.js?v=20260718inbox2"></script>
+  <script src="./assets/js/dam-shell.js?v=20260718navActive1"></script>
+</body>
+</html>

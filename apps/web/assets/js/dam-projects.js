@@ -3,11 +3,20 @@
 
   /* Etykiety ludzkie - jak w Eksploratorze (nie kody API: artwork / viz_3d) */
   var ROLE_META = {
-    artwork: { label: "Projekt graficzny", icon: "uil-palette" },
-    viz_3d: { label: "Wizualizacje", icon: "uil-cube" },
+    artwork: { label: "Plik źródłowy projektu graficznego", icon: "uil-palette" },
+    prev: { label: "Podgląd PDF projektu", icon: "uil-eye" },
     print_pdf: { label: "Pliki do druku", icon: "uil-file-alt" },
-    tech: { label: "Specyfikacja techniczna", icon: "uil-clipboard-notes" },
+    viz_3d: { label: "Wizualizacje", icon: "uil-cube" },
+    tech: { label: "Elementy / składniki", icon: "uil-clipboard-notes" },
+    marketing: { label: "Materiały marketingowe", icon: "uil-megaphone" },
+    karta: { label: "Karta wprowadzenia", icon: "uil-file-bookmark-alt" },
+    presentation: { label: "Prezentacja", icon: "uil-presentation" },
   };
+
+  /* Szersza checklista: 8 pozycji (karta + prezentacja). */
+  var CHECK_ROLES = [
+    "artwork", "prev", "print_pdf", "viz_3d", "tech", "marketing", "karta", "presentation",
+  ];
 
   var state = {
     all: [],
@@ -31,54 +40,333 @@
     return ROLE_META[role] || { label: String(role || "Element"), icon: "uil-times-circle" };
   }
 
-  var CHECK_ROLES = ["artwork", "viz_3d", "print_pdf"];
+  function fileExt(name) {
+    var m = String(name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+    return m ? m[1] : "";
+  }
+
+  function isVizImageName(name) {
+    var e = fileExt(name);
+    return e === "png" || e === "jpg" || e === "jpeg" || e === "webp" || e === "tif" || e === "tiff";
+  }
+
+  function isArchiveName(name) {
+    return ["zip", "rar", "7z"].indexOf(fileExt(name)) >= 0;
+  }
+
+  function pickLatestRevision(product) {
+    var revs = (product && product.revisions) || [];
+    if (!revs.length) return null;
+    for (var i = 0; i < revs.length; i++) {
+      if (revs[i] && revs[i].is_latest) return revs[i];
+    }
+    return revs[0];
+  }
+
+  /* Mini-checklista jak Eksplorator - z najnowszej rewizji produktu. */
+  function computeWideChecklist(product) {
+    var rev = pickLatestRevision(product);
+    var fbr = (rev && rev.files_by_role) || {};
+    var src = fbr.source || [];
+    var prt = fbr.print || [];
+    var viz = (fbr.viz || []).filter(function (f) {
+      return isVizImageName(f.name);
+    });
+    var wizki = ((rev && rev.wizki) || []).filter(function (f) {
+      return isVizImageName(f.name);
+    });
+    var elements = fbr.elements || [];
+    var archivePrint = []
+      .concat(fbr.viz || [])
+      .concat((rev && rev.wizki) || [])
+      .filter(function (f) {
+        return isArchiveName(f.name);
+      });
+
+    var artwork = src.some(function (f) {
+      var e = fileExt(f.name);
+      return e === "ai" || e === "psd" || e === "indd";
+    });
+
+    var prev = src.some(function (f) {
+      var u = String(f.name || "").toUpperCase();
+      return /\bPREV\b/.test(u) || (/[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u));
+    });
+
+    var print_pdf =
+      prt.length > 0 ||
+      archivePrint.length > 0 ||
+      src.some(function (f) {
+        var u = String(f.name || "").toUpperCase();
+        return /FQ/.test(u) && fileExt(f.name) === "pdf";
+      });
+
+    var viz_3d = viz.length > 0 || wizki.length > 0;
+
+    var tech =
+      elements.length > 0 ||
+      ((rev && rev.slots) || []).some(function (s) {
+        var su = String(s).toUpperCase();
+        return su.indexOf("ELEMENTY") >= 0 || su.indexOf("ELEMENTS") >= 0 || su.indexOf("TECH") >= 0;
+      });
+
+    var marketing = ((product && product.related_materials) || []).some(function (m) {
+      return m && m.file_count > 0;
+    });
+
+    var karta =
+      ((fbr.karty_wprowadzenia || []).length > 0) ||
+      src.some(function (f) {
+        var u = String(f.name || "").toUpperCase();
+        return /KARTA/.test(u) && /WPROWADZ/.test(u);
+      });
+
+    var presentation =
+      ((fbr.strategia || []).length > 0) ||
+      src.some(function (f) {
+        var e = fileExt(f.name);
+        var u = String(f.name || "").toUpperCase();
+        return (e === "pptx" || e === "ppt" || e === "key") &&
+          (/PREZENT|STRATEG|POZYCJON/.test(u));
+      });
+
+    return {
+      artwork: !!artwork,
+      prev: !!prev,
+      print_pdf: !!print_pdf,
+      viz_3d: !!viz_3d,
+      tech: !!tech,
+      marketing: !!marketing,
+      karta: !!karta,
+      presentation: !!presentation,
+    };
+  }
 
   function renderGaps(p) {
+    var meta = state.metaById[p.id] || {};
+    var flags = meta.checklist || null;
     var missing = p.missing_roles || [];
     var missSet = {};
     missing.forEach(function (r) {
       missSet[r] = true;
     });
-    var isComplete = p.completeness === "complete" || missing.length === 0;
+    var folderPath = p.path || "";
+    var pathEsc = String(folderPath).replace(/"/g, "&quot;");
+    var winIcon =
+      window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
+        ? window.DamIcons.winExplorerSvg()
+        : '<i class="uil uil-folder" aria-hidden="true"></i>';
 
-    /* Jedna ikona na wiersz (status), bez drugiej ikony roli. Pelna lista: co jest / czego brak. */
     var rows = CHECK_ROLES.map(function (r) {
       var m = roleMeta(r);
-      var bad = !!missSet[r];
-      var cls = bad ? "dam-check-brak" : "dam-check-ok";
-      var icon = bad ? "uil-times-circle" : "uil-check-circle";
+      var ok;
+      if (flags && typeof flags[r] === "boolean") {
+        ok = flags[r];
+      } else if (r === "artwork" || r === "viz_3d" || r === "print_pdf") {
+        ok = !missSet[r];
+      } else if (r === "tech") {
+        var assets = (((p.variants || [])[0] || {}).assets) || [];
+        ok = assets.some(function (a) {
+          return a.asset_role === "tech" && a.current_revision_id;
+        });
+      } else {
+        ok = false;
+      }
+      var cls = ok ? "dam-check-ok" : "dam-check-brak";
+      var icon = ok ? "uil-check-circle" : "uil-times-circle";
+      var actions = "";
+      if (ok) {
+        actions =
+          '<span class="dam-check-row__actions" hidden>' +
+          '<a class="geex-btn geex-btn--sm dam-btn-icon dam-check-go" href="explorer.html?product=' +
+          encodeURIComponent(p.id) +
+          '" title="Przejdź do Eksplorera" data-dam-tip="Otwórz slot w Eksplorerze">' +
+          '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdź</span></a>' +
+          '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-btn-icon-only dam-win-btn dam-check-win" data-path="' +
+          pathEsc +
+          '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwórz folder w Eksploratorze plików Windows">' +
+          winIcon +
+          "</button></span>";
+      }
       return (
         '<div class="' +
         cls +
-        '">' +
+        (ok ? " dam-check-row--interactive" : "") +
+        '" data-path="' +
+        pathEsc +
+        '"' +
+        (ok ? ' tabindex="0" role="button"' : "") +
+        ">" +
         '<i class="uil ' +
         icon +
         ' dam-check-icon" aria-hidden="true"></i>' +
         '<span class="dam-check-label">' +
         m.label +
-        "</span></div>"
+        "</span>" +
+        actions +
+        "</div>"
       );
     }).join("");
 
-    var head = isComplete
-      ? '<div class="dam-card-checklist__head">Materialy kompletne</div>'
-      : '<div class="dam-card-checklist__head dam-card-checklist__head--miss">Brakuje materialow</div>';
-
     return (
-      '<div class="dam-card-checklist" aria-label="Kompletnosc materialow">' +
-      head +
+      '<div class="dam-card-checklist" aria-label="Kompletność materiałów">' +
       rows +
       "</div>"
+    );
+  }
+
+  /* Znane linki Asana (rozszerzac gdy beda mapowania) */
+  var ASANA_BY_INDEX = {
+    "6300728.00":
+      "https://app.asana.com/1/1143952495030509/project/1212679241997947/list/1212717099105923",
+  };
+
+  function renderCardBadges(p, opts) {
+    opts = opts || {};
+    var meta = state.metaById[p.id] || {};
+    var langs = meta.langs || p.langs || [];
+    if (!langs.length && p.market === "PL") langs = ["pl"];
+    if (window.DamBadges && typeof window.DamBadges.render === "function") {
+      var carrierLbl = "";
+      if (window.DamLabels && typeof window.DamLabels.carrierLabel === "function") {
+        carrierLbl = window.DamLabels.carrierLabel(meta.carrier || "", meta.revisionFolder || meta.carrier || "", {
+          productName: p.title,
+          tags: meta.tags,
+        }) || "";
+      }
+      return (
+        '<div class="dam-project-card__badges">' +
+        window.DamBadges.render({
+          brand: meta.brand || p.brand || (p.market === "GC" ? "GC" : "DK"),
+          category: meta.category || p.category,
+          subcategory: meta.subcategory_slug || p.subcategory_slug,
+          subcategoryLabel: meta.subcategory_label || p.subcategory_label,
+          carrier: meta.carrier || p.carrier,
+          carrierLabel: carrierLbl,
+          carrierGuessed: !!meta.carrier_guessed,
+          langs: langs,
+          index: opts.includeIndex ? (p.product_index || meta.index || "") : "",
+          multiLang: langs.length > 1,
+          multiIndex: !!meta.multiIndex,
+          mix: !!(
+            window.DamLabels &&
+            DamLabels.isMixProduct &&
+            DamLabels.isMixProduct(p.title, meta.tags)
+          ),
+          productName: p.title,
+          productId: p.id,
+          tags: meta.tags,
+          revisionFolder: meta.revisionFolder,
+          showCarrierPlaceholder: false,
+          compact: true,
+          maxPerKind: 2,
+          maxTotal: 8,
+        }) +
+        "</div>"
+      );
+    }
+    var tg = meta.tag_groups || {};
+    var chips = []
+      .concat(tg.smak || [])
+      .concat(tg.typ || [])
+      .concat(tg.opakowańie || [])
+      .slice(0, 6);
+    if (!chips.length && (meta.tags || []).length) chips = meta.tags.slice(0, 6);
+    if (!chips.length) return "";
+    return (
+      '<div class="dam-project-card__badges">' +
+      chips
+        .map(function (t) {
+          return '<span class="dam-viz-badge dam-viz-badge--cat">' + String(t).replace(/</g, "&lt;") + "</span>";
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
+  function renderIndexCorner(p) {
+    var idx = p.product_index || (state.metaById[p.id] && state.metaById[p.id].index) || "";
+    if (!idx) return "";
+    if (window.DamBadges && typeof window.DamBadges.render === "function") {
+      return (
+        '<div class="dam-project-card__index-corner">' +
+        window.DamBadges.render({
+          index: idx,
+          compact: true,
+          maxTotal: 1,
+          showCarrierPlaceholder: false,
+        }) +
+        "</div>"
+      );
+    }
+    return (
+      '<div class="dam-project-card__index-corner">' +
+      '<button type="button" class="dam-viz-badge dam-badge-tag dam-viz-badge--index" data-tag-kind="index" data-tag-value="' +
+      String(idx).replace(/"/g, "&quot;") +
+      '">' +
+      String(idx).replace(/</g, "&lt;") +
+      "</button></div>"
+    );
+  }
+
+  function cardCategoryLabel(p) {
+    var meta = state.metaById[p.id] || {};
+    var raw = meta.category || p.category || "";
+    if (!raw) return "";
+    if (window.DamLabels && typeof window.DamLabels.categoryTitle === "function") {
+      return window.DamLabels.categoryTitle(raw) || "";
+    }
+    return String(raw)
+      .replace(/^\s*\d+\s*[-–—]\s*/u, "")
+      .trim();
+  }
+
+  function cardTitleHtml(p) {
+    var name = p.title || "Projekt";
+    var cat = cardCategoryLabel(p);
+    var label = cat ? cat + " · " + name : name;
+    var href = "explorer.html?product=" + encodeURIComponent(p.id);
+    return (
+      '<h3 class="dam-project-card__title">' +
+      '<a class="dam-project-card__title-link" href="' +
+      href +
+      '" title="Otwórz w Eksplorerze" data-dam-tip="Eksplorer - hub plików produktu">' +
+      String(label).replace(/</g, "&lt;") +
+      "</a></h3>"
     );
   }
 
   function renderCard(p) {
     var meta = statusMeta(p.completeness);
     var listHtml = renderGaps(p);
+    var indexHtml = renderIndexCorner(p);
+    var badgesHtml = renderCardBadges(p, { includeIndex: false });
+    var folderPath = p.path || "";
+    var pathEsc = String(folderPath).replace(/"/g, "&quot;");
+    var asanaUrl = ASANA_BY_INDEX[String(p.product_index || "").trim()] || "";
+    var asanaIcon =
+      window.DamIcons && typeof window.DamIcons.asanaSvg === "function"
+        ? window.DamIcons.asanaSvg()
+        : '<i class="uil uil-external-link-alt" aria-hidden="true"></i>';
+    var winIcon =
+      window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
+        ? window.DamIcons.winExplorerSvg()
+        : '<i class="uil uil-folder" aria-hidden="true"></i>';
+    var asanaBtn = asanaUrl
+      ? '<a class="geex-btn dam-btn-icon dam-btn-icon-only dam-project-asana-btn" href="' +
+        asanaUrl +
+        '" target="_blank" rel="noopener noreferrer" aria-label="Asana" title="Otwórz w Asanie" data-dam-tip="Projekt w Asanie">' +
+        asanaIcon +
+        "</a>"
+      : "";
     return (
       '<div class="col-12 col-md-6 col-xl-4">' +
       '<article class="dam-project-card ' +
       meta.cls +
+      '" data-product-id="' +
+      String(p.id).replace(/"/g, "&quot;") +
+      '" data-path="' +
+      pathEsc +
       '">' +
       '<div class="dam-project-card__top">' +
       '<span class="dam-status ' +
@@ -86,23 +374,26 @@
       '">' +
       meta.label +
       "</span>" +
-      '<span class="dam-meta">' +
-      (p.product_index || "") +
-      "</span></div>" +
-      '<h3 class="dam-project-card__title">' +
-      (p.title || "Projekt") +
-      "</h3>" +
-      '<p class="dam-project-card__sub">' +
-      (p.market ? "Rynek " + p.market : "Wariant DAM") +
-      "</p>" +
+      indexHtml +
+      "</div>" +
+      cardTitleHtml(p) +
+      badgesHtml +
       listHtml +
       '<div class="dam-project-card__actions">' +
-      '<a class="geex-btn geex-btn--primary geex-btn--sm" href="explorer.html?product=' +
+      '<a class="geex-btn geex-btn--primary dam-btn-icon dam-project-check-btn" href="project.html?id=' +
       encodeURIComponent(p.id) +
-      '" title="Otworz w eksploratorze"><i class="uil uil-folder-open" aria-hidden="true"></i><span>Eksplorator</span></a>' +
-      '<a class="geex-btn geex-btn--sm" href="project.html?id=' +
+      '" title="Sprawdź projekt" data-dam-tip="Checklista i szczegóły projektu">' +
+      '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Sprawdź projekt</span></a>' +
+      '<a class="geex-btn dam-btn-icon dam-project-go-btn" href="explorer.html?product=' +
       encodeURIComponent(p.id) +
-      '" title="Checklista kompletnosci"><i class="uil uil-check-square" aria-hidden="true"></i><span>Checklista</span></a>' +
+      '" title="Przejdź" data-dam-tip="Otwórz produkt w Eksplorerze">' +
+      '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Przejdź</span></a>' +
+      '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-project-win-btn dam-win-btn" data-path="' +
+      pathEsc +
+      '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows">' +
+      winIcon +
+      "</button>" +
+      asanaBtn +
       "</div>" +
       "</article></div>"
     );
@@ -118,7 +409,7 @@
     var tags = (meta.tags || []).join(" ");
     var authors = (meta.authors || []).join(" ");
     var tg = meta.tag_groups || {};
-    var groupTags = ["smak", "typ", "opakowanie", "autor", "osoba"]
+    var groupTags = ["smak", "typ", "opakowańie", "autor", "osoba"]
       .map(function (k) {
         return (tg[k] || []).join(" ");
       })
@@ -133,6 +424,9 @@
       tags,
       authors,
       groupTags,
+      meta.subcategory_slug || "",
+      meta.subcategory_label || "",
+      meta.category || "",
       meta.search_blob || "",
     ]
       .join(" ")
@@ -155,14 +449,23 @@
     var rows = filteredRows();
     if (!state.all.length) {
       grid.innerHTML =
-        '<div class="col-12"><p class="dam-page-status">Brak projektow. Kliknij <strong>Wczytaj z dysku</strong> (admin) albo odswiez indeks w Eksploratorze.</p></div>';
+        '<div class="col-12"><p class="dam-page-status">Brak projektów. Kliknij <strong>Wczytaj z dysku</strong> (admin) albo odśwież indeks w Eksplorerze.</p></div>';
     } else if (!rows.length) {
       grid.innerHTML =
-        '<div class="col-12"><p class="dam-page-status">Brak wynikow dla: <strong>' +
+        '<div class="col-12"><p class="dam-page-status">Brak wyników dla: <strong>' +
         (state.query || "") +
         "</strong></p></div>";
     } else {
       grid.innerHTML = rows.map(renderCard).join("");
+      if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
+        grid._damBadgesBound = false;
+        window.DamBadges.bindClicks(grid, "project");
+      }
+      if (window.DamIcons && typeof window.DamIcons.bindChecklistRows === "function") {
+        window.DamIcons.bindChecklistRows(grid);
+      } else if (window.DamIcons && typeof window.DamIcons.bindWinButtons === "function") {
+        window.DamIcons.bindWinButtons(grid);
+      }
     }
     if (statusEl) {
       var src =
@@ -174,17 +477,17 @@
       var variantsHint = state.variantsHint ? " · " + state.variantsHint + " wariantow" : "";
       if (state.query) {
         statusEl.textContent =
-          rows.length + " / " + state.all.length + " produktow" + variantsHint + src;
+          rows.length + " / " + state.all.length + " produktów" + variantsHint + src;
       } else {
         statusEl.textContent =
-          state.all.length + " produktow" + variantsHint + src;
+          state.all.length + " produktów" + variantsHint + src;
       }
     }
   }
 
   async function loadProjects(grid, statusEl) {
     try {
-      if (statusEl) statusEl.textContent = "Ladowanie...";
+      if (statusEl) statusEl.textContent = "Ładowanie...";
       var res = await DamApi.projects();
       state.all = (res && res.data) || [];
       state.source = (res && res.source) || "";
@@ -199,11 +502,25 @@
           idx.products.forEach(function (p) {
             revs += (p.revisions || []).length;
             if (p.id) {
+              var latest = pickLatestRevision(p);
+              var langs = (latest && latest.langs) || [];
+              var indexes = p.indexes || p.index_bases || [];
               map[p.id] = {
                 tags: p.tags || [],
                 authors: p.authors || [],
                 tag_groups: p.tag_groups || {},
                 search_blob: p.search_blob || "",
+                brand: p.brand || "DK",
+                category: p.category || "",
+                subcategory_slug: p.subcategory_slug || "",
+                subcategory_label: p.subcategory_label || "",
+                carrier: (latest && latest.carrier) || p.carrier || "",
+                carrier_guessed: !!(latest && latest.carrier_guessed),
+                revisionFolder: (latest && latest.folder) || "",
+                langs: langs,
+                index: (latest && latest.index) || (indexes[0] || ""),
+                multiIndex: indexes.length > 1,
+                checklist: computeWideChecklist(p),
               };
             }
           });
@@ -214,7 +531,7 @@
       renderGrid(grid, statusEl);
     } catch (e) {
       grid.innerHTML = '<div class="col-12"><p class="text-danger">' + e.message + "</p></div>";
-      if (statusEl) statusEl.textContent = "Blad API";
+      if (statusEl) statusEl.textContent = "Błąd API";
     }
   }
 
@@ -246,9 +563,9 @@
               statusEl.textContent =
                 "Wczytano: " +
                 (res.data.projects || 0) +
-                " produktow, " +
+                " produktów, " +
                 (res.data.assets || 0) +
-                " plikow";
+                " plików";
             }
             await loadProjects(grid, statusEl);
           } catch (e) {

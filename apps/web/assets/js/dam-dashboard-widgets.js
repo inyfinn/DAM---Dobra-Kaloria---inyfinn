@@ -229,14 +229,14 @@
             : "-";
           el.outerHTML = shell(
             this,
-            statBody(n, t("dash.widget.checklists_gap_meta", "Do uzupelnienia")),
+            statBody(n, t("dash.widget.checklists_gap_meta", "Do uzupełnienia")),
             "dam-widget--stat dam-widget--fill-warning"
           );
         }
       },
       {
         id: "cost_month",
-        title: t("dash.balance_label", "Szacowany koszt miesiaca"),
+        title: t("dash.balance_label", "Szacowany koszt miesiąca"),
         size: "md",
         defaultOn: false,
         accent: true,
@@ -320,7 +320,7 @@
       },
       {
         id: "cost_swot_risk",
-        title: t("dash.widget.swot", "SWOT / ryzyko kosztowe"),
+        title: t("dash.widget.swot", "SWOT / ryzyko kosztówe"),
         size: "lg",
         defaultOn: false,
         render: function (el, ctx) {
@@ -361,7 +361,7 @@
       },
       {
         id: "projects_this_month",
-        title: t("dash.widget.projects_month", "Projekty w tym miesiacu"),
+        title: t("dash.widget.projects_month", "Projekty w tym miesiącu"),
         size: "sm",
         defaultOn: true,
         render: function (el, ctx) {
@@ -418,34 +418,93 @@
             list
               .map(function (v) {
                 var name = v.product_name || v.product_id || "Wizualizacja";
-                var carrierTxt =
-                  window.DamLabels && typeof window.DamLabels.carrierLabel === "function"
-                    ? window.DamLabels.carrierLabel(v.carrier, v.revision_folder || v.carrier, {
-                        isMix: v.is_mix,
-                        productName: v.product_name,
-                        tags: v.tags,
-                      })
-                    : /^(OTHER|UNKNOWN|WARIANT)$/i.test(String(v.carrier_label || v.carrier || ""))
-                    ? ""
-                    : v.carrier_label || v.carrier || "";
-                var langShort =
-                  window.DamLabels && typeof window.DamLabels.langShort === "function"
-                    ? window.DamLabels.langShort(v.lang)
-                    : String(v.lang || "").toUpperCase();
-                var sub = [carrierTxt, langShort].filter(Boolean).join(" / ");
+                var pid = v.product_id || "";
+                var path = v.revision_path || v.path || "";
+                var vizHref = pid
+                  ? "visualizations.html?product=" + encodeURIComponent(pid)
+                  : "visualizations.html";
+                var explorerHref = pid
+                  ? "explorer.html?product=" + encodeURIComponent(pid)
+                  : "explorer.html";
                 var thumb = v.thumb_url || "assets/img/placeholder-product.svg";
+                var winIcon =
+                  global.DamIcons && typeof DamIcons.winExplorerSvg === "function"
+                    ? DamIcons.winExplorerSvg()
+                    : '<i class="uil uil-folder" aria-hidden="true"></i>';
+                var badges =
+                  global.DamBadges && typeof DamBadges.render === "function"
+                    ? DamBadges.render({
+                        brand: v.brand || "",
+                        category: v.category || "",
+                        subcategory: v.subcategory_slug || "",
+                        subcategoryLabel: v.subcategory_label || "",
+                        carrier: v.carrier || "",
+                        carrierLabel:
+                          global.DamLabels && typeof DamLabels.carrierLabel === "function"
+                            ? DamLabels.carrierLabel(v.carrier, v.revision_folder || v.carrier, {
+                                isMix: v.is_mix,
+                                productName: v.product_name,
+                                tags: v.tags,
+                              })
+                            : v.carrier_label || v.carrier || "",
+                        langs: v.langs || (v.lang ? [v.lang] : []),
+                        lang: v.lang,
+                        index: v.index || v.product_index || "",
+                        productName: name,
+                        productId: pid,
+                        tags: v.tags,
+                        revisionFolder: v.revision_folder,
+                        revisionFullPath: path,
+                        compact: true,
+                        maxPerKind: 2,
+                        maxTotal: 5,
+                        showCarrierPlaceholder: false,
+                      })
+                    : '<span class="dam-widget__meta">' +
+                      escapeHtml(
+                        [v.carrier_label || v.carrier || "", String(v.lang || "").toUpperCase()]
+                          .filter(Boolean)
+                          .join(" / ")
+                      ) +
+                      "</span>";
                 return (
-                  "<li>" +
+                  '<li class="dam-widget__viz-row">' +
+                  '<div class="dam-nav-circles">' +
+                  '<a class="dam-viz-icon-btn" href="' +
+                  escapeHtml(explorerHref) +
+                  '" title="Przejdź do Eksplorera" aria-label="Przejdź do Eksplorera" data-dam-tip="Otwórz produkt w Eksplorerze">' +
+                  '<i class="uil uil-folder-open" aria-hidden="true"></i></a>' +
+                  '<button type="button" class="dam-viz-icon-btn dam-win-btn" data-path="' +
+                  escapeHtml(path) +
+                  '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows"' +
+                  (!path ? " disabled" : "") +
+                  ">" +
+                  winIcon +
+                  "</button>" +
+                  '<a class="dam-viz-icon-btn" href="' +
+                  escapeHtml(vizHref) +
+                  '" title="Wizualizacje" aria-label="Wizualizacje" data-dam-tip="Otwórz wizualizacje produktu">' +
+                  '<i class="uil uil-image" aria-hidden="true"></i></a>' +
+                  "</div>" +
+                  '<div class="dam-widget__viz-media">' +
+                  '<a class="dam-widget__thumb-link" href="' +
+                  escapeHtml(vizHref) +
+                  '" title="Wizualizacje" data-dam-tip="Otwórz wizualizacje produktu">' +
                   '<img class="dam-widget__thumb" src="' +
                   escapeHtml(thumb) +
-                  '" alt="" loading="lazy" />' +
-                  '<div style="min-width:0">' +
-                  '<a href="visualizations.html">' +
+                  '" alt="' +
+                  escapeHtml(name) +
+                  '" loading="lazy" />' +
+                  "</a>" +
+                  '<div class="dam-widget__viz-body">' +
+                  '<a href="' +
+                  escapeHtml(vizHref) +
+                  '">' +
                   escapeHtml(name) +
                   "</a>" +
-                  '<div class="dam-widget__meta">' +
-                  escapeHtml(sub) +
-                  "</div></div></li>"
+                  '<div class="dam-widget__viz-badges">' +
+                  badges +
+                  "</div></div></div></li>"
                 );
               })
               .join("") +
@@ -476,7 +535,7 @@
               " />" +
               "<span>" +
               escapeHtml(
-                t("dash.widget.notify_label", "Powiadom gdy pojawi sie nowa wizualizacja")
+                t("dash.widget.notify_label", "Powiadom gdy pojawi się nowa wizualizacja")
               ) +
               "</span></label>" +
               '<span class="dam-widget__meta" id="damNotifyStatus">' +
@@ -504,7 +563,7 @@
       },
       {
         id: "tasks_next",
-        title: t("dash.widget.tasks_next", "Nastepne zadania"),
+        title: t("dash.widget.tasks_next", "Następne zadania"),
         size: "md",
         defaultOn: true,
         render: function (el, ctx) {
@@ -599,7 +658,7 @@
       },
       {
         id: "assignees_load",
-        title: t("dash.widget.assignees", "Obciazenie osob"),
+        title: t("dash.widget.assignees", "Obciążenie osób"),
         size: "md",
         defaultOn: false,
         render: function (el, ctx) {
@@ -647,7 +706,7 @@
       },
       {
         id: "sales_mock",
-        title: t("dash.widget.sales", "Sprzedaz (szacunek)"),
+        title: t("dash.widget.sales", "Sprzedaż (szacunek)"),
         size: "md",
         defaultOn: false,
         render: function (el, ctx) {
@@ -681,7 +740,7 @@
       },
       {
         id: "langs_mix",
-        title: t("dash.widget.langs", "Jezyki / MIX"),
+        title: t("dash.widget.langs", "Języki / MIX"),
         size: "md",
         defaultOn: false,
         render: function (el, ctx) {
@@ -701,7 +760,7 @@
           var html =
             '<p class="dam-widget__value" style="font-size:1.35rem">' +
             Object.keys(langs).length +
-            ' jezykow · MIX: ' +
+            ' językow · MIX: ' +
             mix +
             "</p>" +
             '<ul class="dam-widget__list">' +
@@ -722,7 +781,7 @@
       },
       {
         id: "carriers_top",
-        title: t("dash.widget.carriers", "Top opakowan"),
+        title: t("dash.widget.carriers", "Top opakowań"),
         size: "md",
         defaultOn: false,
         render: function (el, ctx) {
@@ -737,7 +796,7 @@
                     tags: v.tags,
                   })
                 : v.carrier_label || v.carrier || "";
-            /* Typ nieznany - nie liczymy go do "Top opakowan" (bez OTHER/WARIANT) */
+            /* Typ nieznany - nie liczymy go do "Top opakowań" (bez OTHER/WARIANT) */
             if (!c || /^(OTHER|UNKNOWN|WARIANT)$/i.test(c)) return;
             map[c] = (map[c] || 0) + 1;
           });
@@ -783,7 +842,7 @@
               " wiz</p>" +
               '<span class="dam-widget__meta">' +
               escapeHtml(String(fi.product_count || 0)) +
-              " produktow · " +
+              " produktów · " +
               escapeHtml(when) +
               "</span>"
           );
@@ -841,7 +900,7 @@
       },
       {
         id: "quick_links",
-        title: t("dash.widget.quick_links", "Szybkie skroty"),
+        title: t("dash.widget.quick_links", "Szybkie skróty"),
         size: "md",
         defaultOn: true,
         render: function (el) {
@@ -850,7 +909,7 @@
             '<div class="dam-widget__links">' +
               '<a href="visualizations.html"><i class="uil uil-image-v"></i> Wizualizacje</a>' +
               '<a href="costs.html"><i class="uil uil-calculator-alt"></i> Koszty</a>' +
-              '<a href="explorer.html"><i class="uil uil-folder"></i> Eksplorator</a>' +
+              '<a href="explorer.html"><i class="uil uil-sitemap"></i> Eksplorer</a>' +
               '<a href="invoices.html"><i class="uil uil-invoice"></i> Faktury</a>' +
               "</div>"
           );
@@ -922,16 +981,58 @@
         console.warn("DAM widget fail", id, e);
         placeholder.outerHTML = shell(
           w,
-          '<p class="dam-widget__meta">Blad renderu widgetu</p>'
+          '<p class="dam-widget__meta">Błąd renderu widgetu</p>'
         );
       }
     });
+    if (global.DamIcons && typeof DamIcons.bindWinButtons === "function") {
+      DamIcons.bindWinButtons(mount);
+    }
+    if (global.DamBadges && typeof DamBadges.bindClicks === "function") {
+      DamBadges.bindClicks(mount);
+    }
   }
 
   /* ---------- customize modal ---------- */
 
+  var PREVIEW_MS = 350;
+  var _previewQueue = Promise.resolve();
+  var _previewActiveId = "";
+  var _previewHideTimer = null;
+  var _baselineSnapshot = "";
+  var _confirmOpen = false;
+
+  function snapshotDraft() {
+    if (!draftOrder) return "";
+    return JSON.stringify(
+      draftOrder.map(function (r) {
+        return { id: r.id, on: !!r.on };
+      })
+    );
+  }
+
+  function syncDraftFromChecks(modal) {
+    if (!draftOrder || !modal) return;
+    var onMap = {};
+    modal.querySelectorAll('input[type="checkbox"][data-id]').forEach(function (c) {
+      onMap[c.getAttribute("data-id")] = c.checked;
+    });
+    draftOrder.forEach(function (row) {
+      row.on = !!onMap[row.id];
+    });
+  }
+
+  function isDraftDirty(modal) {
+    syncDraftFromChecks(modal);
+    return snapshotDraft() !== _baselineSnapshot;
+  }
+
   function ensureModal() {
     var existing = document.getElementById("damDashCustomize");
+    if (existing && !existing.querySelector(".dam-dash-modal__stage")) {
+      existing.remove();
+      existing = null;
+    }
     if (existing) return existing;
     var wrap = document.createElement("div");
     wrap.id = "damDashCustomize";
@@ -942,15 +1043,28 @@
     wrap.setAttribute("aria-labelledby", "damDashCustomizeTitle");
     wrap.innerHTML =
       '<div class="dam-dash-modal__backdrop" data-dam-close="1"></div>' +
+      '<div class="dam-dash-modal__stage">' +
       '<div class="dam-dash-modal__panel">' +
       '<h3 id="damDashCustomizeTitle">Dostosuj pulpit</h3>' +
-      "<p>Wybierz widgety i kolejnosc. Koszt miesiaca nie jest domyslnie wlaczony.</p>" +
+      "<p>Wybierz widgety i ustaw kolejność. Przeciągnij wiersz albo użyj strzałek. Koszt miesiąca jest wyłączony domyślnie. Najedź na wiersz, żeby zobaczyć podgląd po prawej.</p>" +
       '<ul class="dam-dash-modal__list" id="damDashCustomizeList"></ul>' +
       '<div class="dam-dash-modal__footer">' +
       '<button type="button" class="geex-btn" id="damDashReset">Przywroc domyslne</button>' +
       '<button type="button" class="geex-btn" data-dam-close="1">Anuluj</button>' +
       '<button type="button" class="geex-btn geex-btn--primary" id="damDashSave">Zapisz</button>' +
-      "</div></div>";
+      "</div></div>" +
+      '<aside class="dam-dash-modal__preview" id="damDashPreview" aria-live="polite" hidden>' +
+      '<div class="dam-dash-modal__preview-inner" id="damDashPreviewInner"></div>' +
+      "</aside></div>" +
+      '<div class="dam-dash-modal__confirm" id="damDashDirtyConfirm" hidden>' +
+      '<div class="dam-dash-modal__confirm-card" role="alertdialog" aria-labelledby="damDashDirtyTitle">' +
+      '<h4 id="damDashDirtyTitle">Masz niezapisane zmiany</h4>' +
+      "<p>Chcesz zapisac ustawienia pulpitu, czy wyjsc bez zapisu?</p>" +
+      '<div class="dam-dash-modal__confirm-actions">' +
+      '<button type="button" class="geex-btn geex-btn--primary" data-dirty="save">Zapisz zmiany</button>' +
+      '<button type="button" class="geex-btn" data-dirty="discard">Nie zapisuj</button>' +
+      '<button type="button" class="geex-btn" data-dirty="back">Wróć do wyboru</button>' +
+      "</div></div></div>";
     document.body.appendChild(wrap);
     return wrap;
   }
@@ -980,6 +1094,92 @@
       });
   }
 
+  function previewHtmlForWidget(w) {
+    if (!w) return "";
+    var hint = w.defaultOn
+      ? "Widget widoczny domyslnie na pulpicie."
+      : "Widget opcjonalny. Wlacz, jesli go potrzebujesz.";
+    return (
+      '<div class="dam-dash-preview-card" data-widget-id="' +
+      escapeHtml(w.id) +
+      '">' +
+      '<div class="dam-dash-preview-card__badge">Podgląd</div>' +
+      '<div class="dam-dash-preview-card__title">' +
+      escapeHtml(w.title) +
+      "</div>" +
+      '<p class="dam-dash-preview-card__hint">' +
+      hint +
+      "</p>" +
+      '<div class="dam-dash-preview-card__mock" aria-hidden="true">' +
+      '<span class="dam-dash-preview-card__bar"></span>' +
+      '<span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short"></span>' +
+      '<span class="dam-dash-preview-card__chip"></span>' +
+      "</div></div>"
+    );
+  }
+
+  function waitMs(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function showPreview(widgetId) {
+    var preview = document.getElementById("damDashPreview");
+    var inner = document.getElementById("damDashPreviewInner");
+    if (!preview || !inner) return;
+    if (_previewHideTimer) {
+      clearTimeout(_previewHideTimer);
+      _previewHideTimer = null;
+    }
+    _previewActiveId = widgetId || "";
+    var w = findWidget(widgetId);
+    _previewQueue = _previewQueue.then(function () {
+      if (_previewActiveId !== widgetId) return;
+      var wasVisible = !preview.hidden && preview.classList.contains("is-visible");
+      if (wasVisible) {
+        preview.classList.remove("is-visible");
+        preview.classList.add("is-leaving");
+        return waitMs(PREVIEW_MS).then(function () {
+          if (_previewActiveId !== widgetId) return;
+          preview.classList.remove("is-leaving");
+          inner.innerHTML = previewHtmlForWidget(w);
+          preview.hidden = false;
+          preview.classList.add("is-visible");
+          preview.style.zIndex = "3";
+          return waitMs(PREVIEW_MS);
+        });
+      }
+      inner.innerHTML = previewHtmlForWidget(w);
+      preview.hidden = false;
+      preview.classList.remove("is-leaving");
+      preview.classList.add("is-visible");
+      preview.style.zIndex = "3";
+      return waitMs(PREVIEW_MS);
+    });
+  }
+
+  function hidePreviewSoon() {
+    if (_previewHideTimer) clearTimeout(_previewHideTimer);
+    _previewHideTimer = setTimeout(function () {
+      _previewHideTimer = null;
+      _previewActiveId = "";
+      var preview = document.getElementById("damDashPreview");
+      if (!preview) return;
+      _previewQueue = _previewQueue.then(function () {
+        if (_previewActiveId) return;
+        preview.classList.remove("is-visible");
+        preview.classList.add("is-leaving");
+        return waitMs(PREVIEW_MS).then(function () {
+          if (_previewActiveId) return;
+          preview.classList.remove("is-leaving");
+          preview.hidden = true;
+          preview.style.zIndex = "";
+        });
+      });
+    }, 80);
+  }
+
   function paintModalList() {
     var list = document.getElementById("damDashCustomizeList");
     if (!list || !draftOrder) return;
@@ -990,15 +1190,21 @@
         return (
           '<li class="dam-dash-modal__row" data-idx="' +
           idx +
-          '">' +
-          '<label><input type="checkbox" data-id="' +
+          '" data-id="' +
+          escapeHtml(row.id) +
+          '" draggable="true">' +
+          '<span class="dam-dash-modal__drag" aria-hidden="true" title="Przeciagnij">' +
+          '<i class="uil uil-draggabledots"></i></span>' +
+          '<label class="dam-dash-modal__check">' +
+          '<input type="checkbox" data-id="' +
           escapeHtml(row.id) +
           '"' +
           (row.on ? " checked" : "") +
           " />" +
+          "<span>" +
           escapeHtml(w.title) +
           (w.defaultOn ? "" : ' <span class="dam-widget__meta">(opcjonalny)</span>') +
-          "</label>" +
+          "</span></label>" +
           '<div class="dam-dash-modal__move">' +
           '<button type="button" data-move="up" data-idx="' +
           idx +
@@ -1016,33 +1222,167 @@
       .join("");
   }
 
+  function bindListInteractions(modal) {
+    var list = document.getElementById("damDashCustomizeList");
+    if (!list) return;
+    var dragFrom = -1;
+
+    list.querySelectorAll(".dam-dash-modal__row").forEach(function (row) {
+      row.addEventListener("mouseenter", function () {
+        var id = row.getAttribute("data-id");
+        if (id) showPreview(id);
+      });
+      row.addEventListener("mouseleave", function () {
+        hidePreviewSoon();
+      });
+      row.addEventListener("dragstart", function (e) {
+        dragFrom = parseInt(row.getAttribute("data-idx"), 10);
+        row.classList.add("is-dragging");
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", String(dragFrom));
+        }
+      });
+      row.addEventListener("dragend", function () {
+        row.classList.remove("is-dragging");
+        list.querySelectorAll(".is-drop-target").forEach(function (el) {
+          el.classList.remove("is-drop-target");
+        });
+        dragFrom = -1;
+      });
+      row.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+        row.classList.add("is-drop-target");
+      });
+      row.addEventListener("dragleave", function () {
+        row.classList.remove("is-drop-target");
+      });
+      row.addEventListener("drop", function (e) {
+        e.preventDefault();
+        row.classList.remove("is-drop-target");
+        var to = parseInt(row.getAttribute("data-idx"), 10);
+        var from = dragFrom;
+        if (from < 0 || to < 0 || from === to || !draftOrder) return;
+        var item = draftOrder.splice(from, 1)[0];
+        draftOrder.splice(to, 0, item);
+        paintModalList();
+        bindListInteractions(modal);
+      });
+    });
+
+    list.querySelectorAll('input[type="checkbox"][data-id]').forEach(function (c) {
+      c.addEventListener("change", function () {
+        syncDraftFromChecks(modal);
+      });
+    });
+  }
+
+  function applySave(modal, onSaved, closeFn) {
+    syncDraftFromChecks(modal);
+    var order = draftOrder
+      .filter(function (row) {
+        return row.on;
+      })
+      .map(function (row) {
+        return row.id;
+      });
+    if (!order.length) order = defaultOrder();
+    saveLayout({ order: order });
+    _baselineSnapshot = snapshotDraft();
+    closeFn();
+    if (typeof onSaved === "function") onSaved();
+  }
+
+  function openDirtyConfirm(modal, onSaved, forceClose) {
+    var box = document.getElementById("damDashDirtyConfirm");
+    if (!box) {
+      forceClose();
+      return;
+    }
+    _confirmOpen = true;
+    box.hidden = false;
+    function finishConfirm() {
+      _confirmOpen = false;
+      box.hidden = true;
+      box.removeEventListener("click", onConfirmClick);
+    }
+    function onConfirmClick(e) {
+      var btn = e.target && e.target.closest ? e.target.closest("[data-dirty]") : null;
+      if (!btn) return;
+      var act = btn.getAttribute("data-dirty");
+      if (act === "save") {
+        finishConfirm();
+        applySave(modal, onSaved, forceClose);
+        return;
+      }
+      if (act === "discard") {
+        finishConfirm();
+        forceClose();
+        return;
+      }
+      if (act === "back") {
+        finishConfirm();
+      }
+    }
+    box.addEventListener("click", onConfirmClick);
+  }
+
   function openCustomize(onSaved) {
     var modal = ensureModal();
     buildDraftFromLayout();
+    _baselineSnapshot = snapshotDraft();
+    _confirmOpen = false;
+    _previewActiveId = "";
+    _previewQueue = Promise.resolve();
+    var dirtyBox = document.getElementById("damDashDirtyConfirm");
+    if (dirtyBox) dirtyBox.hidden = true;
+    var preview = document.getElementById("damDashPreview");
+    if (preview) {
+      preview.hidden = true;
+      preview.classList.remove("is-visible", "is-leaving");
+    }
     paintModalList();
+    bindListInteractions(modal);
     modal.hidden = false;
     var prevFocus = document.activeElement;
     var saveBtn = document.getElementById("damDashSave");
     if (saveBtn) saveBtn.focus();
 
-    function close() {
+    function forceClose() {
       modal.hidden = true;
       modal.removeEventListener("click", onClick);
       document.removeEventListener("keydown", onKey);
       if (prevFocus && prevFocus.focus) prevFocus.focus();
     }
 
+    function requestClose() {
+      if (_confirmOpen) return;
+      if (isDraftDirty(modal)) {
+        openDirtyConfirm(modal, onSaved, forceClose);
+        return;
+      }
+      forceClose();
+    }
+
     function onKey(e) {
       if (e.key === "Escape") {
         e.preventDefault();
-        close();
+        if (_confirmOpen) {
+          var box = document.getElementById("damDashDirtyConfirm");
+          if (box) box.hidden = true;
+          _confirmOpen = false;
+          return;
+        }
+        requestClose();
       }
     }
 
     function onClick(e) {
       var tEl = e.target;
+      if (tEl.closest && tEl.closest("#damDashDirtyConfirm")) return;
       if (tEl.closest && tEl.closest("[data-dam-close]")) {
-        close();
+        requestClose();
         return;
       }
       var moveBtn = tEl.closest ? tEl.closest("[data-move]") : null;
@@ -1054,12 +1394,14 @@
           draftOrder[idx - 1] = draftOrder[idx];
           draftOrder[idx] = tmp;
           paintModalList();
+          bindListInteractions(modal);
         }
         if (move === "down" && idx < draftOrder.length - 1) {
           var tmp2 = draftOrder[idx + 1];
           draftOrder[idx + 1] = draftOrder[idx];
           draftOrder[idx] = tmp2;
           paintModalList();
+          bindListInteractions(modal);
         }
         return;
       }
@@ -1067,28 +1409,11 @@
         resetLayout();
         buildDraftFromLayout();
         paintModalList();
+        bindListInteractions(modal);
         return;
       }
       if (tEl.closest && tEl.closest("#damDashSave")) {
-        var checks = modal.querySelectorAll('input[type="checkbox"][data-id]');
-        var onMap = {};
-        checks.forEach(function (c) {
-          onMap[c.getAttribute("data-id")] = c.checked;
-        });
-        draftOrder.forEach(function (row) {
-          row.on = !!onMap[row.id];
-        });
-        var order = draftOrder
-          .filter(function (row) {
-            return row.on;
-          })
-          .map(function (row) {
-            return row.id;
-          });
-        if (!order.length) order = defaultOrder();
-        saveLayout({ order: order });
-        close();
-        if (typeof onSaved === "function") onSaved();
+        applySave(modal, onSaved, forceClose);
       }
     }
 

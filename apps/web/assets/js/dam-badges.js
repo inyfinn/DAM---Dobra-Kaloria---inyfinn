@@ -7,6 +7,15 @@
 
   var MAX_PER_KIND = 4;
   var FORBIDDEN_CARRIER_RE = /^(OTHER|UNKNOWN|WARIANT)$/i;
+  var EDITABLE_TAG_KINDS = {
+    brand: 1,
+    category: 1,
+    subcategory: 1,
+    carrier: 1,
+    lang: 1,
+    status: 1,
+    index: 1,
+  };
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -43,7 +52,10 @@
     var page = path.split("/").pop() || "";
     if (page.indexOf("visualizations") === 0) return "viz";
     if (page.indexOf("explorer") === 0) return "explorer";
-    if (page.indexOf("project") === 0) return "project";
+    /* Lista projektow = index.html; szczegoly = project.html */
+    if (page.indexOf("project") === 0 || page === "index.html" || page === "index") {
+      return "project";
+    }
     return "viz";
   }
 
@@ -102,15 +114,23 @@
           })
         : opts.carrier);
     if (carrierLbl && FORBIDDEN_CARRIER_RE.test(String(carrierLbl).trim())) carrierLbl = "";
+    /* Tooltip admin-only content: baza (co to jest) widzi KAZDY; dopisek po
+       kropce z odstepem TYLKO gdy tryb admina jest wlaczony (2026-07-18,
+       wymog uzytkownika - nikt bez wlaczonego trybu admina nie moze widziec
+       podpowiedzi "Admin: ..."). */
+    var adminOn = isAdminEditMode();
     if (carrierLbl) {
+      var carrierTip = (opts.carrierGuessed ? "Nosnik (zgadniety). " : "Nosnik. ") + "Klik: filtr wedlug " + carrierLbl + ".";
+      if (opts.carrierPrevious) {
+        carrierTip += " Wczesniej zatwierdzono: " + opts.carrierPrevious + ".";
+      }
+      if (adminOn) carrierTip += " Admin: Shift+klik lub podwojny klik - wybierz z listy.";
       items.push({
         kind: "carrier",
         value: carrierLbl,
         label: carrierLbl,
         cls: "dam-viz-badge--carrier dam-tag-editable" + (opts.carrierGuessed ? " dam-viz-badge--guessed" : ""),
-        tip: (opts.carrierGuessed
-          ? "Nosnik (zgadniety). Klik: filtr. Admin: podwojny klik lub Shift+klik = zmiana typu: "
-          : "Nosnik. Klik: filtr. Admin: podwojny klik lub Shift+klik = zmiana typu: ") + carrierLbl,
+        tip: carrierTip,
         guessed: !!opts.carrierGuessed,
         data: {
           "revision-path": opts.revisionFullPath || "",
@@ -121,12 +141,14 @@
       });
     } else if (opts.showCarrierPlaceholder) {
       /* Brak typu i brak zgadniecia - user moze wciaz proponowac (Faza 4, P5). */
+      var noCarrierTip = "Brak typu. Klik: zaproponuj typ.";
+      if (adminOn) noCarrierTip += " Admin: Shift+klik - wybierz z listy.";
       items.push({
         kind: "carrier",
         value: "",
         label: ui("no_carrier_label", "Dodaj typ"),
         cls: "dam-viz-badge--index-miss dam-tag-editable",
-        tip: "Brak typu - kliknij, aby zaproponowac/ustawic (admin: tez Shift+klik)",
+        tip: noCarrierTip,
         data: {
           "revision-path": opts.revisionFullPath || "",
           "current-code": "",
@@ -155,7 +177,10 @@
       items.push({
         kind: "flag",
         value: "multilang",
-        label: ui("multi_lang_label", "Multijezyczny"),
+        /* Compact (karty / pasek carrier): krotka etykieta, pelna w tipie. */
+        label: opts.compact
+          ? ui("multi_lang_short", "Multi")
+          : ui("multi_lang_label", "Multijezyczny"),
         cls: "dam-viz-badge--multilang",
         tip: "Wiele wersji jezykowych",
       });
@@ -213,12 +238,14 @@
     }
 
     if (opts.demo) {
+      var demoTip = "Demo (zolta obwodka) - wizualizacja prototypowa.";
+      if (adminOn) demoTip += " Admin: kliknij, aby odkliknac.";
       items.push({
         kind: "flag",
         value: "demo",
         label: ui("demo_label", "Demo"),
         cls: "dam-viz-badge--demo",
-        tip: "Demo (zolta obwodka). Admin: kliknij, aby odkliknac",
+        tip: demoTip,
         style: "background:rgba(240,180,0,0.16);color:#8A6A00",
         data: {
           "product-id": opts.productId || "",
@@ -300,11 +327,16 @@
     if (it.kind === "more") clickable = false;
     var tag = clickable ? "button" : "span";
     var typeAttr = tag === "button" ? ' type="button"' : "";
+    var editableCls =
+      clickable && EDITABLE_TAG_KINDS[it.kind] ? " dam-tag-editable" : "";
     var extraData = "";
     if (it.data) {
       Object.keys(it.data).forEach(function (k) {
         extraData += ' data-' + k + '="' + esc(it.data[k]) + '"';
       });
+    }
+    if (isAdminEditMode() && editableCls) {
+      tip += " Admin: Shift+klik lub podwojny klik - wybierz z listy.";
     }
     return (
       "<" +
@@ -312,6 +344,7 @@
       typeAttr +
       ' class="dam-viz-badge dam-badge-tag ' +
       esc(it.cls || "") +
+      editableCls +
       '"' +
       style +
       ' data-tag-kind="' +
@@ -342,10 +375,10 @@
     var maxTotal = opts.maxTotal;
     if (maxTotal && items.length > maxTotal) {
       var priority = items.filter(function (it) {
-        return it.kind === "flag" && (it.value === "hidden" || it.value === "demo");
+        return it.kind === "flag" && (it.value === "hidden" || it.value === "demo" || it.value === "variants");
       });
       var rest = items.filter(function (it) {
-        return !(it.kind === "flag" && (it.value === "hidden" || it.value === "demo"));
+        return !(it.kind === "flag" && (it.value === "hidden" || it.value === "demo" || it.value === "variants"));
       });
       var keep = Math.max(1, maxTotal - 1 - priority.length);
       var head = rest.slice(0, keep);
@@ -402,6 +435,7 @@
 
     if (context === "project") {
       var pInput =
+        document.getElementById("damProjectsSearch") ||
         document.getElementById("damProjectSearch") ||
         document.querySelector("[data-dam-project-search]");
       if (pInput) {
@@ -411,14 +445,32 @@
     }
   }
 
+  function openTagEdit(btn) {
+    if (!global.DamTagEdit) return;
+    if (typeof global.DamTagEdit.openTagPicker === "function") {
+      global.DamTagEdit.openTagPicker(btn, {
+        kind: btn.getAttribute("data-tag-kind") || "",
+        value: btn.getAttribute("data-tag-value") || "",
+        revisionPath: btn.getAttribute("data-revision-path") || "",
+        revisionIndex: btn.getAttribute("data-revision-index") || "",
+        currentCode: btn.getAttribute("data-current-code") || "",
+        productId: btn.getAttribute("data-product-id") || "",
+        productName: btn.getAttribute("data-product-name") || "",
+      });
+      return;
+    }
+    if (typeof global.DamTagEdit.openCarrierPicker === "function") {
+      global.DamTagEdit.openCarrierPicker(btn, {
+        revisionPath: btn.getAttribute("data-revision-path") || "",
+        currentCode: btn.getAttribute("data-current-code") || "",
+        productId: btn.getAttribute("data-product-id") || "",
+        productName: btn.getAttribute("data-product-name") || "",
+      });
+    }
+  }
+
   function openCarrierEdit(btn) {
-    if (!global.DamTagEdit || typeof global.DamTagEdit.openCarrierPicker !== "function") return;
-    global.DamTagEdit.openCarrierPicker(btn, {
-      revisionPath: btn.getAttribute("data-revision-path") || "",
-      currentCode: btn.getAttribute("data-current-code") || "",
-      productId: btn.getAttribute("data-product-id") || "",
-      productName: btn.getAttribute("data-product-name") || "",
-    });
+    openTagEdit(btn);
   }
 
   function isAdminEditMode() {
@@ -431,11 +483,81 @@
     );
   }
 
+  function copyTagText(btn) {
+    var text =
+      (btn && (btn.getAttribute("data-tag-value") || btn.textContent || "")) || "";
+    text = String(text).trim();
+    if (!text) return Promise.reject(new Error("pusty tag"));
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  function toastCopied(msg) {
+    if (typeof global.damShowToast === "function") {
+      global.damShowToast(msg);
+      return;
+    }
+    var el = document.getElementById("damGlobalToast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "damGlobalToast";
+      el.className = "dam-global-toast";
+      el.setAttribute("role", "status");
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.classList.add("is-on");
+    clearTimeout(el._t);
+    el._t = setTimeout(function () {
+      el.classList.remove("is-on");
+    }, 1600);
+  }
+
+  function bindCopyOnRightClick(root) {
+    var el = typeof root === "string" ? document.querySelector(root) : root || document;
+    if (!el || el._damBadgeCopyBound) return;
+    el._damBadgeCopyBound = true;
+    el.addEventListener("contextmenu", function (e) {
+      var btn = e.target.closest(
+        ".dam-viz-badge, .dam-badge-tag, button.dam-viz-badge, span.dam-viz-badge"
+      );
+      if (!btn || (el !== document && !el.contains(btn))) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var label = String(btn.textContent || "").trim();
+      copyTagText(btn)
+        .then(function () {
+          toastCopied("Skopiowano: " + label);
+        })
+        .catch(function () {
+          toastCopied("Nie udalo sie skopiowac");
+        });
+    });
+  }
+
   function bindClicks(root, context) {
     var el = typeof root === "string" ? document.querySelector(root) : root;
     if (!el || el._damBadgesBound) return;
     el._damBadgesBound = true;
     var lastClick = { t: 0, btn: null };
+    bindCopyOnRightClick(el);
 
     el.addEventListener("click", function (e) {
       var btn = e.target.closest(".dam-badge-tag[data-tag-kind]");
@@ -471,36 +593,41 @@
         return;
       }
 
-      var editable = btn.classList.contains("dam-tag-editable");
-      var isPlaceholder = editable && !value;
+      var editable =
+        btn.classList.contains("dam-tag-editable") || !!EDITABLE_TAG_KINDS[kind];
+      var isPlaceholder = editable && !value && kind === "carrier";
       var adminEdit = isAdminEditMode();
       var ctx = context || detectContext();
       var now = Date.now();
+      var dblClick = lastClick.btn === btn && now - lastClick.t <= 500;
 
-      /* Placeholder "Dodaj typ" - pojedynczy klik otwiera picker (wszystkie role) */
-      if (isPlaceholder && global.DamTagEdit) {
+      /* Admin + Shift lub podwojny klik: zawsze lista opcji (kazdy tag) */
+      if (adminEdit && editable && global.DamTagEdit && (e.shiftKey || dblClick)) {
         e.preventDefault();
         e.stopPropagation();
-        openCarrierEdit(btn);
+        lastClick = { t: 0, btn: null };
+        openTagEdit(btn);
         return;
       }
 
-      /* Admin + typ: Shift+klik od razu, podwojny klik <=500ms (bez filtra na 1. klik) */
+      /* Status bez Shift: nie blokuj rozwiniecia wiersza / karty */
+      if (kind === "status" && adminEdit) {
+        lastClick = { t: now, btn: btn };
+        return;
+      }
+
+      /* Placeholder "Dodaj typ" - pojedynczy klik otwiera picker (wszyscy) */
+      if (isPlaceholder && global.DamTagEdit) {
+        e.preventDefault();
+        e.stopPropagation();
+        openTagEdit(btn);
+        return;
+      }
+
+      /* Admin: pojedynczy klik = filtr (po krotkim opoznieniu) */
       if (adminEdit && editable && global.DamTagEdit) {
         e.preventDefault();
         e.stopPropagation();
-        if (e.shiftKey) {
-          clearTimeout(btn._damFilterTimer);
-          openCarrierEdit(btn);
-          lastClick = { t: 0, btn: null };
-          return;
-        }
-        if (lastClick.btn === btn && now - lastClick.t <= 500) {
-          clearTimeout(btn._damFilterTimer);
-          openCarrierEdit(btn);
-          lastClick = { t: 0, btn: null };
-          return;
-        }
         lastClick = { t: now, btn: btn };
         clearTimeout(btn._damFilterTimer);
         btn._damFilterTimer = setTimeout(function () {
@@ -518,36 +645,7 @@
       ) {
         e.preventDefault();
         e.stopPropagation();
-        openCarrierEdit(btn);
-        return;
-      }
-
-      /* Brand w trybie admina: Shift lub dbl -> confirm DK/GC vs sciezka */
-      if (
-        adminEdit &&
-        kind === "brand" &&
-        global.DamTagEdit &&
-        typeof global.DamTagEdit.confirmBrandTagChange === "function"
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        var rev =
-          btn.getAttribute("data-revision-path") ||
-          (btn.closest("[data-path]") && btn.closest("[data-path]").getAttribute("data-path")) ||
-          "";
-        var other = value === "GC" ? "DK" : value === "DK" ? "GC" : "";
-        if (e.shiftKey || (lastClick.btn === btn && now - lastClick.t <= 500)) {
-          lastClick = { t: 0, btn: null };
-          if (other && global.DamTagEdit.confirmBrandTagChange(rev, other)) {
-            applyTagFilter(kind, other, ctx);
-          }
-          return;
-        }
-        lastClick = { t: now, btn: btn };
-        clearTimeout(btn._damFilterTimer);
-        btn._damFilterTimer = setTimeout(function () {
-          applyTagFilter(kind, value, ctx);
-        }, 520);
+        openTagEdit(btn);
         return;
       }
 
@@ -559,10 +657,23 @@
     });
   }
 
+  /* Globalnie: PPM na dowolnym tagu = kopiuj tekst do schowka */
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () {
+        bindCopyOnRightClick(document);
+      });
+    } else {
+      bindCopyOnRightClick(document);
+    }
+  }
+
   global.DamBadges = {
     render: render,
     buildBadgeItems: buildBadgeItems,
     bindClicks: bindClicks,
+    bindCopyOnRightClick: bindCopyOnRightClick,
+    copyTagText: copyTagText,
     applyTagFilter: applyTagFilter,
     detectContext: detectContext,
     MAX_PER_KIND: MAX_PER_KIND,

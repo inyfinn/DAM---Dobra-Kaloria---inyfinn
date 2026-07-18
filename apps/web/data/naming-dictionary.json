@@ -1,93 +1,309 @@
 {
-  "version": 1,
+  "ui": {
+    "demo_label": "Demo",
+    "mix_prefix": "MIX - ",
+    "no_index_label": "Bez indeksu",
+    "multi_lang_label": "Multijęzyczny",
+    "multi_index_label": "Warianty"
+  },
+  "sizes": {
+    "L": "krótsza krawędź >= 1300 px",
+    "S": "krótsza krawędź < 1300 px"
+  },
   "brands": {
-    "DK": { "path_hint": "- POLSKA/01 - PRODUKTY/- DK", "default_lang": "pl" },
-    "GC": { "path_hint": "- EKSPORT/01 - PRODUCTS/- GC", "default_lang": "gb" }
+    "DK": {
+      "path_hint": "- POLSKA/01 - PRODUKTY/- DK",
+      "default_lang": "pl"
+    },
+    "GC": {
+      "path_hint": "- EKSPORT/01 - PRODUCTS/- GC",
+      "default_lang": "gb"
+    }
   },
+  "version": 1,
   "carriers": {
-    "KAR6X": { "label_pl": "KARTON 6x MINI", "aliases": ["KAR6X", "KAR 6X", "KARTON 6", "CARTON 6x MINI"] },
-    "KAR": { "label_pl": "KARTON", "aliases": ["KAR", "KARTON", "CARTON"] },
-    "DOY6X": { "label_pl": "DOYPACK 6x MINI", "aliases": ["DOY6X", "DOY 6X", "DOYPACK 6"] },
-    "DOY": { "label_pl": "DOYPACK", "aliases": ["DOY", "DOYPACK", "POUCH"] },
-    "BAT": { "label_pl": "BATON", "aliases": ["BAT", "BATON", "BAR"] },
-    "MINI": { "label_pl": "MINI BATON", "aliases": ["MINI", "MINI BATON", "MINI BAR"] },
-    "BIGPAK": { "label_pl": "BIGPAK", "aliases": ["BIGPAK", "BIGPACK", "BIG PAK"] },
-    "FOLIA": { "label_pl": "FOLIA", "aliases": ["FOLIA", "FOL", "FOIL"] },
-    "REKAW": { "label_pl": "RĘKAW", "aliases": ["REKAW", "RĘKAW", "SLEEVE", "OWIJKA"] },
-    "TUBA": { "label_pl": "TUBA", "aliases": ["TUBA", "TUBE"] },
-    "ETY": { "label_pl": "ETYKIETA", "aliases": ["ETY", "ETYKIETA", "LABEL"] },
-    "ETY-BUT": { "label_pl": "ETYKIETA BUTELKA", "aliases": ["ETY-BUT", "ETY BUT", "LABEL-GLASS"] },
-    "ETY-SLO": { "label_pl": "ETYKIETA SŁOIK", "aliases": ["ETY-SLO", "ETY SLO", "LABEL-JAR"] },
-    "SASZ": { "label_pl": "SASZETKA", "aliases": ["SASZ", "SACHET"] },
-    "OBW": { "label_pl": "OBWOLUTA", "aliases": ["OBW", "OBWOLUTA"] },
-    "SHOT": { "label_pl": "SHOT", "aliases": ["SHOT"] },
-    "WIZKA": { "label_pl": "WIZUALIZACJE", "aliases": ["WIZKA", "WIZKI"] }
+    "BAT": {
+      "aliases": [
+        "BAT",
+        "BATON",
+        "BAR"
+      ],
+      "label_pl": "BATON"
+    },
+    "DOY": {
+      "aliases": [
+        "DOY",
+        "DOYPACK",
+        "POUCH"
+      ],
+      "label_pl": "DOYPACK"
+    },
+    "ETY": {
+      "aliases": [
+        "ETY",
+        "ETYKIETA",
+        "LABEL"
+      ],
+      "label_pl": "ETYKIETA"
+    },
+    "KAR": {
+      "aliases": [
+        "KAR",
+        "KARTON",
+        "CARTON"
+      ],
+      "label_pl": "KARTON"
+    },
+    "OBW": {
+      "aliases": [
+        "OBW",
+        "OBWOLUTA"
+      ],
+      "label_pl": "OBWOLUTA"
+    },
+    "MINI": {
+      "aliases": [
+        "MINI",
+        "MINI BATON",
+        "MINI BAR"
+      ],
+      "label_pl": "MINI BATON"
+    },
+    "SASZ": {
+      "aliases": [
+        "SASZ",
+        "SACHET"
+      ],
+      "label_pl": "SASZETKA"
+    },
+    "SHOT": {
+      "aliases": [
+        "SHOT"
+      ],
+      "label_pl": "SHOT"
+    },
+    "TUBA": {
+      "aliases": [
+        "TUBA",
+        "TUBE"
+      ],
+      "label_pl": "TUBA"
+    },
+    "DOY6X": {
+      "aliases": [
+        "DOY6X",
+        "DOY 6X",
+        "DOYPACK 6"
+      ],
+      "label_pl": "DOYPACK 6x MINI"
+    },
+    "FOLIA": {
+      "aliases": [
+        "FOLIA",
+        "FOL",
+        "FOIL"
+      ],
+      "label_pl": "FOLIA"
+    },
+    "KAR6X": {
+      "aliases": [
+        "KAR6X",
+        "KAR 6X",
+        "KARTON 6",
+        "CARTON 6x MINI"
+      ],
+      "label_pl": "KARTON 6x MINI"
+    },
+    "REKAW": {
+      "aliases": [
+        "REKAW",
+        "RĘKAW",
+        "SLEEVE",
+        "OWIJKA"
+      ],
+      "label_pl": "RĘKAW"
+    },
+    "WIZKA": {
+      "aliases": [
+        "WIZKA",
+        "WIZKI"
+      ],
+      "label_pl": "WIZUALIZACJE"
+    },
+    "BIGPAK": {
+      "aliases": [
+        "BIGPAK",
+        "BIGPACK",
+        "BIG PAK"
+      ],
+      "label_pl": "BIGPAK"
+    },
+    "ETY-BUT": {
+      "aliases": [
+        "ETY-BUT",
+        "ETY BUT",
+        "LABEL-GLASS"
+      ],
+      "label_pl": "ETYKIETA BUTELKA"
+    },
+    "ETY-SLO": {
+      "aliases": [
+        "ETY-SLO",
+        "ETY SLO",
+        "LABEL-JAR"
+      ],
+      "label_pl": "ETYKIETA SŁOIK"
+    }
   },
-  "carrier_detect_order": [
-    "KAR6X", "DOY6X", "ETY-BUT", "ETY-SLO", "DOY", "KAR", "MINI", "BAT",
-    "BIGPAK", "TUBA", "FOLIA", "SASZ", "REKAW", "OBW", "ETY", "SHOT", "WIZKA"
-  ],
-  "languages": {
-    "pl": "Polska",
-    "de": "Niemcy",
-    "gb": "Wielka Brytania",
-    "uk": "Ukraina",
-    "cz": "Czechy",
-    "sk": "Słowacja",
-    "hu": "Węgry",
-    "ro": "Rumunia",
-    "lt": "Litwa",
-    "lv": "Łotwa",
-    "ee": "Estonia",
-    "fr": "Francja",
-    "it": "Włochy",
-    "es": "Hiszpania",
-    "nl": "Holandia",
-    "ru": "Rosja",
-    "hr": "Chorwacja",
-    "si": "Słowenia",
-    "bg": "Bułgaria",
-    "at": "Austria",
-    "be": "Belgia",
-    "dk": "Dania",
-    "se": "Szwecja",
-    "no": "Norwegia",
-    "fi": "Finlandia",
-    "pt": "Portugalia",
-    "gr": "Grecja",
-    "ie": "Irlandia",
-    "ch": "Szwajcaria"
-  },
-  "lang_aliases": { "en": "gb", "ua": "uk" },
-  "categories": [
-    { "id": "BATONY", "labels": ["BATONY", "BARS"], "title": "BATONY" },
-    { "id": "KULKI", "labels": ["KULKI", "BALLS"], "title": "KULKI" },
-    { "id": "ROSLINNE", "labels": ["ROSLINNE", "ROŚLINNE", "PLANT BASED", "PLANT-BASED"], "title": "ROŚLINNE" },
-    { "id": "SYPKIE", "labels": ["SYPKIE", "BREAKFAST"], "title": "SYPKIE" },
-    { "id": "NAPOJE", "labels": ["NAPOJE", "DRINKS"], "title": "NAPOJE" },
-    { "id": "PRZETWORY", "labels": ["PRZETWORY", "SPREADS", "CREAMS", "KREMY"], "title": "PRZETWORY" },
-    { "id": "DATESY", "labels": ["DATESY", "DATES"], "title": "DATESY" }
-  ],
-  "perspectives": {
-    "FRONT": ["FRONT"],
-    "BACK": ["BACK", "TYL", "TYŁ"],
-    "LEFT": ["LEFT", "LEWO"],
-    "RIGHT": ["RIGHT", "PRAWO"],
-    "MOCKUP": ["MOCKUP"],
-    "CLOSED": ["CLOSED", "ZAMKNIETE", "ZAMKNIĘTE"],
-    "OPEN": ["OPEN", "OTWARTE"]
-  },
-  "sizes": { "S": "krótsza krawędź < 1300 px", "L": "krótsza krawędź >= 1300 px" },
   "ai_states": {
     "": "robocza",
     "-F": "Finished - layout skonczony",
     "-FQ": "Finished Quality - zatwierdzony do druku"
   },
-  "ui": {
-    "multi_index_label": "Warianty",
-    "multi_lang_label": "Multijęzyczny",
-    "no_index_label": "Bez indeksu",
-    "demo_label": "Demo",
-    "mix_prefix": "MIX - "
-  }
+  "languages": {
+    "at": "Austria",
+    "be": "Belgia",
+    "bg": "Bułgaria",
+    "ch": "Szwajcaria",
+    "cz": "Czechy",
+    "de": "Niemcy",
+    "dk": "Dania",
+    "ee": "Estonia",
+    "es": "Hiszpania",
+    "fi": "Finlandia",
+    "fr": "Francja",
+    "gb": "Wielka Brytania",
+    "gr": "Grecja",
+    "hr": "Chorwacja",
+    "hu": "Węgry",
+    "ie": "Irlandia",
+    "it": "Włochy",
+    "lt": "Litwa",
+    "lv": "Łotwa",
+    "nl": "Holandia",
+    "no": "Norwegia",
+    "pl": "Polska",
+    "pt": "Portugalia",
+    "ro": "Rumunia",
+    "ru": "Rosja",
+    "se": "Szwecja",
+    "si": "Słowenia",
+    "sk": "Słowacja",
+    "uk": "Ukraina"
+  },
+  "categories": [
+    {
+      "id": "BATONY",
+      "title": "BATONY",
+      "labels": [
+        "BATONY",
+        "BARS"
+      ]
+    },
+    {
+      "id": "KULKI",
+      "title": "KULKI",
+      "labels": [
+        "KULKI",
+        "BALLS"
+      ]
+    },
+    {
+      "id": "ROSLINNE",
+      "title": "ROŚLINNE",
+      "labels": [
+        "ROSLINNE",
+        "ROŚLINNE",
+        "PLANT BASED",
+        "PLANT-BASED"
+      ]
+    },
+    {
+      "id": "SYPKIE",
+      "title": "SYPKIE",
+      "labels": [
+        "SYPKIE",
+        "BREAKFAST"
+      ]
+    },
+    {
+      "id": "NAPOJE",
+      "title": "NAPOJE",
+      "labels": [
+        "NAPOJE",
+        "DRINKS"
+      ]
+    },
+    {
+      "id": "PRZETWORY",
+      "title": "PRZETWORY",
+      "labels": [
+        "PRZETWORY",
+        "SPREADS",
+        "CREAMS",
+        "KREMY"
+      ]
+    },
+    {
+      "id": "DATESY",
+      "title": "DATESY",
+      "labels": [
+        "DATESY",
+        "DATES"
+      ]
+    }
+  ],
+  "lang_aliases": {
+    "en": "gb",
+    "ua": "uk"
+  },
+  "perspectives": {
+    "BACK": [
+      "BACK",
+      "TYL",
+      "TYŁ"
+    ],
+    "LEFT": [
+      "LEFT",
+      "LEWO"
+    ],
+    "OPEN": [
+      "OPEN",
+      "OTWARTE"
+    ],
+    "FRONT": [
+      "FRONT"
+    ],
+    "RIGHT": [
+      "RIGHT",
+      "PRAWO"
+    ],
+    "CLOSED": [
+      "CLOSED",
+      "ZAMKNIETE",
+      "ZAMKNIĘTE"
+    ],
+    "MOCKUP": [
+      "MOCKUP"
+    ]
+  },
+  "carrier_detect_order": [
+    "KAR6X",
+    "DOY6X",
+    "ETY-BUT",
+    "ETY-SLO",
+    "DOY",
+    "KAR",
+    "MINI",
+    "BAT",
+    "BIGPAK",
+    "TUBA",
+    "FOLIA",
+    "SASZ",
+    "REKAW",
+    "OBW",
+    "ETY",
+    "SHOT",
+    "WIZKA"
+  ]
 }

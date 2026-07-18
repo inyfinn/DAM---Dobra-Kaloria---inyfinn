@@ -7,7 +7,7 @@
 (function () {
   "use strict";
 
-  var ROW_LIMIT = 10;
+  var ROW_LIMIT = 7;
   var GROUP_ORDER = ["smak", "typ", "opakowanie", "autor", "osoba"];
   var GROUP_LABELS = {
     smak: "Smak",

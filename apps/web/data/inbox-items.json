@@ -1,3 +1,38 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": "inbox_1784393455108",
+      "path": "X:/Marketing/- POLSKA/- DK/_TEST_PROP_DUMMY2",
+      "read": true,
+      "tags": [
+        "moderacja",
+        "tag",
+        "propozycja"
+      ],
+      "type": "tag_proposal",
+      "title": "Propozycja typu: BAG -> DOY",
+      "detail": "test2\nZglosil: ola@test.pl\nSciezka: X:/Marketing/- POLSKA/- DK/_TEST_PROP_DUMMY2\nproposal_id: prop_1784393454775",
+      "created_at": "2026-07-18T16:50:55.108644+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784393454775",
+      "requested_by": "ola@test.pl"
+    },
+    {
+      "id": "inbox_1784393454704",
+      "path": "X:/Marketing/- POLSKA/- DK/_TEST_PROP_DUMMY",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "propozycja"
+      ],
+      "type": "tag_proposal",
+      "title": "Propozycja typu: BAG -> DOY",
+      "detail": "test propose\nZglosil: ola@test.pl\nSciezka: X:/Marketing/- POLSKA/- DK/_TEST_PROP_DUMMY\nproposal_id: prop_1784393454325",
+      "created_at": "2026-07-18T16:50:54.704612+00:00",
+      "product_id": "test-prop-1",
+      "proposal_id": "prop_1784393454325",
+      "requested_by": "ola@test.pl"
+    }
+  ]
 }
