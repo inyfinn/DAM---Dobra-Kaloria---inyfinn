@@ -20,10 +20,17 @@ Pliki `dam_eta_YYYY-MM-DD.sql.gz` — wynik `pg_dump` (pełny dump logiczny, nie
 
 ## Dostęp do żywej bazy
 
-| Skąd | Działa? |
-|------|---------|
-| PC w sieci LAN Synology | Tak |
-| Poza domem bez VPN | **Nie** — `192.168.0.145` nie jest publiczne |
-| Poza domem z VPN (WireGuard / Synology VPN) | Tak |
+Po odblokowaniu portu **5433** na routerze:
+
+| Skąd | Host |
+|------|------|
+| Dom (LAN) | `192.168.0.145:5433` (szybszy) |
+| Gdziekolwiek (internet) | `inyfinn.synology.me:5433` |
+
+Aplikacja próbuje hosty po kolei (patrz `apps/desktop/pg-config.json` / `dam-connection.env`).
+
+**To NIE jest baza:**
+- `https://inyfinn.synology.me:5001/` — panel DSM
+- `http://QuickConnect.to/inyfinn` — QuickConnect (też panel / usługi Synology)
 
 Tier 1 (logowanie/sesje) czyta Postgres **na żywo**. Tier 2 (aliasy, propozycje tagów…) ma lokalny cache odświeżany co **5 min**, gdy działa `local_bridge.py`.
