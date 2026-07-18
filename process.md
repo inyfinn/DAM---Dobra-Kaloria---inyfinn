@@ -1048,11 +1048,11 @@ Usunac ETA Innovations z footera; CTA krotkie; skill ui-taste 10 rund przy mocny
 1. `dam-shell.js` + i18n PL/EN + HTML footery: inyfinn.art (link).
 2. `dam-viz.js`: przycisk "Przejdz".
 3. settings/help + viz.subtitle uproszczony.
-4. `ui-taste/SKILL.md` �0.E: Intensive mode = 10 passes + self-critique.
+4. `ui-taste/SKILL.md` �0.E: Intensive mode = 10 passes + self-critique.
 5. Cache `?v=20260718inyf1`.
 
 ### Test/Ewaluacja
-- Screenshot: footer `inyfinn.art � 2026`, karty z CTA "Przejdz".
+- Screenshot: footer `inyfinn.art � 2026`, karty z CTA "Przejdz".
 
 ---
 
@@ -1164,7 +1164,7 @@ User: pelny commit, README, dokumentacja, memory, push, release ZIP; weryfikacja
 1. machine_identity.py + verify w launch.py
 2. Auth machine_id/session_id; bridge /auth/identity
 3. dam-api.js clear przy mismatch
-4. README, DEPLOYMENT, ADR-008, memory �59
+4. README, DEPLOYMENT, ADR-008, memory �59
 5. build-release-zip.ps1 + GitHub release
 
 ### Efekt/Fix
@@ -1172,3 +1172,474 @@ Sesja nie przenosi sie miedzy PC; artefakt ZIP + tag release.
 
 ### Zrodla
 ADR-007/008; Windows MachineGuid
+
+---
+
+## 2026-07-18 - FIX: skrot nie startowal (SW_HIDE) + WebView2 profil + teksty przyciskow
+
+### Komenda/Akcja
+User: aplikacja w ogole nie startuje ze skrotu (wscript run-dam.vbs, "nic sie nie dzieje"); ma dzialac bez recznego zarzadzania portami; sprawdz baze danych; teksty przyciskow przy wykrywaniu sciezki sa dziwne - zrob bardziej intuicyjne.
+
+### Log/Status
+1. Reprodukcja: Start-Process wscript.exe run-dam.vbs + polling MainWindowTitle co 1.5s.
+   - PRZED fixem: 120s bez okna. Proces (pythonw, local_bridge, watch-file-index, msedgewebview2 renderer)
+     zyje i dziala poprawnie w tle - tylko GLOWNE OKNO nigdy sie nie pokazuje.
+   - Kontrolowany test: Start-Process pythonw.exe -WindowStyle Hidden = brak okna (60s). WindowStyle Normal = okno po ~3s.
+2. Root cause: run-dam.vbs uzywal sh.Run(cmd, 0, False) - styl okna 0 = SW_HIDE. pythonw.exe nie ma konsoli,
+   ale SW_HIDE w STARTUPINFO blokuje initial-show WinForms/WebView2 window (pywebview edgechromium backend).
+3. Fix run-dam.vbs: styl okna 1 (SW_SHOWNORMAL) w obu wariantach sh.Run + sh.CurrentDirectory = desktopDir.
+4. Test bazy: /db/status (sqlite, wal, 18 users, location=repo) + pelny login+session cykl (auth/login,
+   auth/me z machine_id/device_id) - dziala w 100%.
+5. WebView2 startuje kazdy raz z nowym folderem %TEMP% (private_mode domyslnie True w pywebview) - kosztowny
+   cold start. Fix: webview.start(private_mode=False, storage_path=apps/desktop/data/webview2-profile).
+6. Teksty przyciskow: "Podpowiedz" -> "Wykryj automatycznie" (+ ikona lupy), "Sprawdz" -> "Sprawdz foldery"
+   (+ ikona ptaszka). Komunikaty statusu w jezyku czlowieka (stan ladowania + wynik). Poprawiono w 3 miejscach:
+   settings.html, dam-paths.js (modal setup pierwszego uruchomienia), dam-shortcuts.js (panel Pomocy).
+7. Naprawiono mangled znaki „ " -> ASCII " (encoding issue w tym repo z krzywymi cudzyslowami).
+8. Cache bump: dam-paths.js?v=20260718btn1, dam-shortcuts.js?v=20260718btn1.
+
+### Efekt/Fix
+- Skrot dziala: dwuklik -> okno w ~1.5-2s (potwierdzone 2x testem end-to-end identycznym jak user).
+- Baza SQLite w pelni sprawna (login/session/machine binding).
+- WebView2 ma trwaly profil (szybszy restart, bez smiecenia %TEMP%).
+- Przyciski "Wykryj automatycznie" / "Sprawdz foldery" - jasne, ludzkie komunikaty (przetestowane w przegladarce,
+  oba flow: sukces + informacja co dalej).
+
+### Backup
+Brak - zmiany tekstowe/logiczne, nie destrukcyjne. Stary run-dam.vbs mial jedynie bledny parametr.
+
+### Test/Ewaluacja
+- Start-Process wscript.exe run-dam.vbs -> MainWindowTitle "DAM ETA - Dobra Kaloria" po 1.6s (2. przebieg testu).
+- /db/status: {"ok":true,"engine":"sqlite","users":18,"location":"repo"}.
+- auth/login + auth/me: pelny cykl OK z machine_id/device_id/session_id.
+- Browser QA (cursor-ide-browser): screenshot + klik obu przyciskow, komunikaty renderuja sie czysto (bez mojibake).
+
+### Zrodla
+- pywebview src: webview/platforms/edgechromium.py (clear_user_data, private_mode) + webview/__init__.py (storage_path)
+- WScript.Shell.Run docs (intWindowStyle 0=Hide,1=Normal) - Microsoft WSH reference
+
+---
+
+## 2026-07-18 - Dashboard: siatka kart 2x2 + kolory + nowy sygnet kosztow
+
+### Komenda/Akcja
+User: karty statystyk zle sie ukladaja (flexbox/grid) na Dashboardzie; dopracuj kolorki; stary kolorek/grafika z motywu Geex w panelu kosztu jest zla - zamienic na cos zwiazanego z kosztami, sygnet lekko widoczny.
+
+### Log/Status
+1. Root cause ukladu: dam-app.css .geex-content__summary__count = grid-template-columns: repeat(auto-fit, minmax(215px,1fr)).
+   Przy 4 kartach i typowej szerokosci okna (np. domyslne okno WebView2 1360px, ponizej breakpointu 1365.98px gdy
+   .summary staje sie kolumna) auto-fit dobiera 3 kolumny -> 4. karta osierocona w nowym rzedzie.
+2. Fix: grid-template-columns: repeat(2, minmax(0,1fr)) na sztywno (2x2 zawsze); repeat(1,...) pod 575.98px.
+3. Kolory: "Zadania Asana" mialo klase danger-bg (czerwony) - alarmujacy kolor dla neutralnej liczby zadan.
+   Zmiana na info-bg. Ale Geex --info-color (#58CDFF) ma kontrast ~1.8:1 z bialym tekstem (fail WCAG AA) -
+   nadpisano w dam-tokens.css na #5B8DEF (kontrast ~5:1, dam-brand.css mial juz ten kolor jako fallback niewykorzystany).
+   Literowka klasy primay-bg -> primary-bg (poprawiona, karta 1 "Produkty").
+4. balance-bg.svg (dashboard.html + invoices.html, dzielony plik): usuniete losowe pastelowe blob-y demo Geex
+   (koral, krem, blekit) niezwiazane z marka/tresc. Nowy motyw: sygnet - 2 nakladajace sie kola (monety) w
+   barwach marki (Geex fiolet + DK zielony), niska opacity + 2 piersciene (obrys monety), subtelny watermark.
+5. Cache bump: dam-tokens.css / dam-app.css -> ?v=20260718cost1 (wszystkie 14 stron HTML), balance-bg.svg?v=20260718cost1.
+
+### Efekt/Fix (zweryfikowane CDP getBoundingClientRect + screenshoty)
+- 375px: 4 karty w 1 kolumnie (stack). 768px: 2x2. 1360px (domyslne okno app): 2x2 - bug 3+1 zniknal.
+  1920px (layout z panelem kosztu z boku): 2x2 kart + panel kosztu 460px, bez zmian proporcji.
+- Karta "Zadania Asana": rgb(91,141,239) = #5B8DEF (bylo czerwone danger-bg).
+- Nowy sygnet (2 kola + piersciene, fiolet+zielon) widoczny w rogu panelu kosztu na kazdej szerokosci (460-991px),
+  bez ucinania przez border-radius.
+
+### Backup
+Brak - zmiany CSS/HTML/SVG nie destrukcyjne, cache-bust zapewnia odswiezenie u uzytkownikow.
+
+### Test/Ewaluacja
+- Browser QA (cursor-ide-browser + CDP Emulation.setDeviceMetricsOverride): 375/768/1360/1920px.
+- Page.captureScreenshot z explicit clip (poza widocznym viewportem tabu) do weryfikacji sygnetu w panelu.
+- ReadLints: brak bledow w dashboard.html, invoices.html, dam-app.css, dam-tokens.css.
+
+### Zrodla
+- WCAG 2.1 contrast ratio formula (relative luminance) - obliczenia rece dla #58CDFF vs #5B8DEF na bialym tekscie.
+
+---
+
+## 2026-07-18 - Login: minlength=8 blokowal haslo seed "test"
+
+### Komenda/Akcja
+User: nie moge sie zalogowac (admin); screen z tooltipem HTML5 "min 8 znakow" przy hasle `test` + stary komunikat invalid_credentials.
+
+### Log/Status
+1. Baza OK; konto admin istnieje; bcrypt weryfikuje haslo seed `test` (True), haslo z poprzedniego screenu (False).
+2. Root cause UI: `signin.html` input hasla mial `minlength="8"`; seed Kubara = `test` (4 znaki) - przeglądarka blokuje submit.
+3. Fix: minlength=4 (jak auth_store.register min 4); komunikat dam-api "Haslo min. 4 znaki"; cache ?v=20260718auth3.
+
+### Efekt/Fix
+Logowanie emailem admina + haslem `test` nie jest juz blokowane przez walidacje HTML5.
+
+### Test/Ewaluacja
+- Python: `_verify_password("test", hash)` True; `login(..., "test")` ok/admin.
+- UI: po restarcie skrotu DAM - zalogowac `krzysztof.wieczorek@kubara.pl` / `test`.
+
+### Zrodla
+- apps/desktop/seed_kubara_users.py PASSWORD=test
+- apps/desktop/auth_store.py password min 4
+- HTML constraint validation (minlength przed eventem submit)
+
+---
+
+## 2026-07-18 - Sidebar collapsed: teksty zamiast samych ikon
+
+### Komenda/Akcja
+User: zwiniety sidebar pokazuje obciete etykiety zamiast samych ikon.
+
+### Log/Status
+1. Root cause: w dam-brand.css selector
+   `body.dam-sidebar-collapsed ... menu__link span` byl przypadkowo zlaczone z `.dam-footer-author-link`
+   i dostawal tylko color/font-weight zamiast `display:none`.
+2. Fix: osobne reguly - span/dam-nav-label display:none; link font-size:0 + ikony 20px;
+   title/aria-label na linkach w dam-shell.js; cache ?v=20260718side1.
+
+### Test/Ewaluacja
+- Browser 1360px: body.dam-sidebar-collapsed, sideW=72, spansStillVisible=0, ikony visible 20px.
+- Screenshot: kolumna ikon bez etykiet.
+
+---
+
+## 2026-07-18 - DAM admin viz overhaul (rozpoznawanie, tagi, admin, wizki)
+
+### Komenda/Akcja
+Plan: naming-dictionary, fix parse_carrier/langs/MIX/PL, dam-badges, Warianty, white thumbs,
+admin red outline, thumb picker, viz-flags; weryfikacja V1-V10.
+
+### Log/Status
+1. Utworzono `apps/web/data/naming-dictionary.json` + `docs/NAMING.md`.
+2. `build-file-index.py`: CARRIER_RE + strip lang, parse_folder_langs all segments, MIX label,
+   white thumb composite, CARTON→KAR, date-folder → OTHER + infer from files.
+3. `dam-labels.js` laduje dictionary (sync XHR); SLEEVE/FOIL → REKAW/FOLIA.
+4. Nowy `dam-badges.js`; wpięty w `dam-viz.js` (+ explorer scripts); "Warianty".
+5. CSS: biale tlo + padding 12px thumbs; badges flex-start; `.dam-admin-control`; demo yellow.
+6. Bridge: `GET /folder-images`, `POST /viz-flag`; `viz-flags.json`; launch `pick_thumb`.
+7. Admin toggle ukryty gdy rola != admin (viz + explorer).
+8. Rescan: products=187 viz≈336.
+
+### Efekt/Fix
+- 6300610: carrier=REKAW, langs=[cz,sk] (nie GB).
+- 6300650 DK NUGGETS XXL: REKAW + pl; GC kopia tego samego indeksu ma default GC→gb (nietypowe).
+- OATS: FOLIA/DOYPACK; CORNFLAKES: czesciowo FOLIA; DATE ORANGE: folder od daty + pliki WARIANT-* → OTHER (do potwierdzenia).
+- Zero FOIL/SLEEVE/CARTON w polu carrier po skanie.
+
+### Test/Ewaluacja
+V1-V10: wyniki ponizej (PASS/FAIL + dowody).
+
+### Zrodla
+- docs/NAMING.md, apps/web/data/naming-dictionary.json
+- plan dam_admin_viz_overhaul
+
+---
+
+## 2026-07-18 - Switch "Pokaz wszystkie" + Opakowanie tags
+
+### Komenda/Akcja
+User: "Tylko najnowsze" myli; odwrocic na "Pokaz wszystkie" (ON=stare+demo, OFF=aktualne).
+Opakowanie: pelna lista nosnikow z sciagawki (nie tylko 6 tagow).
+
+### Log/Status
+1. visualizations.html + dam-viz.js: switch `vizShowAll`, default OFF, tooltip o prototypach/demach/starych.
+2. Migracja localStorage z `dam_viz_latest_only` (odwrocona).
+3. PACKAGING/OPAKOWANIE_CANON w build-file-index + enrich-search-tags; nosniki z Typ do Opakowanie.
+4. repair-tag-taxonomy + enrich: 16 tagow opakowania.
+
+### Efekt/Fix
+Opakowanie: doypack, baton, mini baton, karton 6x, karton, bigpak, folia, etykieta, etykieta butelka, etykieta sloik, rekaw, tuba, shot, doy 6x, sasz, obwoluta.
+
+---
+
+## 2026-07-18 - Bramki V1-V10 (admin viz overhaul)
+
+### V1 Recognition - PASS (z uwaga)
+- 6300610: REKAW + langs=[cz,sk], lang cards cz/sk (nie GB). PASS
+- 6300650 DK NUGGETS XXL: REKAW + pl. PASS. GC kopia indeksu ma default gb (nietypowe).
+- OATS: FOLIA/DOYPACK. PASS
+- MIX: etykiety `MIX - …` / `MIX`, zero WARIANT. PASS
+- DATE ORANGE / czesc CORNFLAKES: foldery od daty + pliki `WARIANT-*` → carrier OTHER (pusta etykieta). Do potwierdzenia z userem (nie zgadywac FOLIA).
+
+### V2 Carrier PL UI - PASS
+- CDP dump kart: ETYKIETA, KARTON 6x MINI, DOYPACK, REKAW; zero FOIL/SLEEVE/CARTON/BAR w UI.
+- Skrypt: 0 EN carrier codes w viz_latest.
+
+### V3 Lang tooltip + touch - PASS
+- Badge PL: tip="Polska", hitbox 44x44; kontrasty badge Geex; skroty PL/CZ/SK.
+
+### V4 Tag click context - PASS (wiz)
+- Klik tagu PL → `#vizLangFilter` = `pl`. Explorer/project: handler w dam-badges (bind).
+
+### V5 ui-taste galeria - PASS
+- Pass1 375: biale tlo thumb, padding 12px, badges left, admin red, PL skrot. Screenshot+Read.
+- Pass3 375 scroll: 2 karty, spojne badges. Screenshot+Read.
+- Pass4 768: 2 kolumny, white thumbs. Screenshot+Read.
+- Pass5 1280: sidebar+galeria, wariantow (nie rewizji). Screenshot+Read.
+- Pass2 spacing: OK na Pass1/3.
+
+### V6 Modal + explorer badges - PASS
+- Modal: kategoria+nosnik+PL+indeks; zoom/warianty/Przejdz bez regresji; white+12px.
+- Admin btns Miniatura/Demo/Ukryj/Dodaj z `.dam-admin-control`. Screenshot+Read.
+
+### V7 Admin red outline - PASS
+- ON: toggle + przyciski admin czerwone; OFF: brak Miniatura w modalu, 0 admin btns.
+- Rola != admin: toggle ukryty (kod gate `isAdminRole`).
+
+### V8 Demo/Ukryj/Dodaj - PASS
+- Demo click → `.dam-viz-card--demo` + badge Demo. CDP: demoCard=true, demoBadge=true.
+- Ukryj/Dodaj: UI+POST /viz-flag OK (most zrestartowany).
+
+### V9 Thumb picker - PASS
+- Browser: Miniatura otwiera `#damThumbPicker` z lista plikow z 4-WIZKI (GET /folder-images).
+- Desktop: `DamJsApi.pick_thumb` w launch.py (wymaga restartu skrotu DAM).
+- Zapis: istniejacy POST /thumb-override.
+
+### V10 Bramka koncowa - PASS z blokerami jawnymi
+Pre-Delivery:
+- Kontrast/focus/touch tagow: OK (44px, data-dam-tip).
+- Em-dash ban w copy UI: OK (ASCII).
+- Brak FOIL/SLEEVE w etykietach kart: OK.
+- Modal zoom/warianty/Przejdz: OK.
+- Galeria white+12px: OK (CSS+CDP).
+- Admin czerwone tylko w trybie ON: OK po fix syncAdminOutline.
+Bloker/uwagi (nie blokuje done feature, wymaga decyzji usera):
+1. DATE ORANGE (i podobne GC) bez tokenu nosnika w folderze/plikach → pusta etykieta.
+2. Restart skrotu DAM potrzebny, zeby shell mial `pick_thumb` i swiezy most (folder-images/viz-flag).
+
+---
+
+## 2026-07-18 - Dashboard widgety + FMCG + notify
+
+### Komenda/Akcja
+Wdrozenie konfigurowalnego pulpitu (plan Dashboard widgety).
+
+### Log/Status
+1. Dodano `fmcg-cost-averages.json` + `dam-fmcg-cost.js` (landed cost + SWOT + sales mock).
+2. Silnik: `dam-dashboard-widgets.js` (24 widgety, LayoutStore, modal Dostosuj z ↑↓).
+3. `dam-notify.js` - Notification API + poll file-index 60s.
+4. Przebudowa `dashboard.html` na `#damDashGrid` + panel Asana/Teams; CSS `dam-dashboard.css`.
+5. Orchestrator `dam-dashboard.js` laduje Asana / index / costs / rates / FMCG / flags / projects.
+6. i18n PL/EN: `dash.customize*`, `dash.widget.*`.
+7. QA ui-taste: 1280 / 768 / 375 screenshoty; dedupe najnowszych viz; usunieto zdublowany tytul.
+
+### Efekt/Fix
+- Domyslny layout bez kosztu miesiaca; user wlacza w Dostosuj pulpit.
+- Persistencja `localStorage dam_dash_layout_v1:<userKey>`.
+
+### Test/Ewaluacja
+- Browser `http://127.0.0.1:8765/dashboard.html`: 7 widgetow domyslnych, modal 24 pozycji, dane 187/109/91.
+- Em-dash scan nowych plikow: clean.
+
+### Zrodla
+- Plan `dashboard_widgety_*.plan.md`; Geex summary cards; project-costs + cost-rates.
+
+---
+
+## 2026-07-18 - Karty wizualizacji: tagi + wyr�wnanie flex
+
+### Komenda/Akcja
+Naprawa DOM kart #vizGrid - ogromne tagi, skakanie tytu��w/przycisk�w, brak �wiat�a.
+
+### Log/Status
+1. CSS .dam-viz-card: flex column; thumb g�ra; body justify-content:flex-end + gap 14px.
+2. .dam-viz-card__badges: wy�rodkowane, sta�a wysoko�� 48px (2 rz�dy).
+3. Tagi w karcie: font jak pill (10.5px), padding pill, border-radius 999px (nie 27px chip).
+4. JS: zawsze meta BRAK TYPU gdy brak nosnika; maxTotal:6 w compact.
+5. Cache bust dam-brand.css / dam-viz.js / dam-badges.js � viz4.
+
+### Efekt/Fix
+Tytu�y i CTA w wierszu na tej samej linii (CDP: titleTops/actTops r�wne). Mniej tag�w = pusta przestrze� w strefie badge, nie skok w g�r�.
+
+### Test/Ewaluacja
+- isualizations.html: badgeH ~20px vs pill 20px; BRAK TYPU na DATE ORANGE; align row1 OK.
+
+### Zrodla
+- Feedback UI (tagi vs .dam-tag-pill); ui-taste redesign-preserve Geex.
+
+---
+
+## 2026-07-18 - Regula weryfikacji UI + logo collapsed + tagi
+
+### Komenda/Akcja
+1) Globalna regula: zawsze weryfikuj UI screenshotem.
+2) Logo collapsed nieczytelne; collapse vs Wstecz; tagi kart +padding/font.
+
+### Log/Status
+1. Dodano .cursor/rules/verify-ui-after-changes.mdc (alwaysApply) + wpis w memory.md / AGENTS.md.
+2. Logo collapsed: object-fit: contain (bylo cover - tielo \"dobr\"), 48px, biale tlo.
+3. Collapse: 	op: -29px - srodek w linii z #damNavBack (deltaCenter=0).
+4. Tagi kart: font pill+1px (11.5), weight 500, padding 5px 11px; strefa badge 56px.
+
+### Test/Ewaluacja
+- CDP: collapseCenter=backCenter=44; badgeFw=500; badgeH=24; actTops row1 rowne.
+- Screenshot: logo pokazuje \"dobra kaloria\" (nie crop \"dobr\").
+
+## 2026-07-18 - skrot DAM ETA nie otwiera sie (porty)
+
+### Komenda/Akcja
+Diagnostyka skrotu Desktop\DAM ETA.lnk -> wscript -> run-dam.vbs -> pythonw launch.py
+
+### Log/Status
+1. Port 8765 zajety przez 2x http.server + serve_browser.py; 8766 przez 2x local_bridge (sesja dev/agenta).
+2. Brak pythonw/launch i brak okna DAM - skrot wygladal na martwy.
+3. Zabito zombie PID (serve_browser, http.server 8765, stare bridge).
+4. Uruchomiono run-dam.vbs - okno "DAM ETA - Dobra Kaloria" (pythonw) na 8765/8766.
+5. launch.py: _kill_stale_dam_processes obejmuje tez serve_browser + http.server:8765/web; wywolanie przed pick_free_port.
+
+### Efekt/Fix
+Aplikacja znowu otwarta. Kolejny start skrotu powinien sam sprzatac wiszace serwery deweloperskie.
+
+### Test/Ewaluacja
+- Dwuklik DAM ETA na pulpicie - okno widoczne
+- netstat: 8765/8766 tylko procesy launch/bridge
+
+### Zrodla
+- apps/desktop/launch.py, run-dam.vbs
+
+## 2026-07-18 - Tagi wizualizacji v2: 7 faz (rozmiary, OTHER, moderacja, aliasy, zgloszenia)
+
+### Komenda/Akcja
+Realizacja planu `viz_tags_ux_fix_e01a796a.plan.md` (7 faz) po ostrej reklamacji uzytkownika
+odnosnie wygladu tagow/podgladow w wizualizacjach. Skille: ui-taste, ui-ux-pro-max, systematic-debugging.
+
+### Log/Status (per faza)
+
+**Faza 1 - rozmiary tagow + fix OTHER:**
+1. `dam-tokens.css`: nowe tokeny `--dam-tag-fs-pill: 10.5px`, `--dam-tag-fs-badge: 14px`.
+2. `dam-brand.css`: `.dam-viz-badge` font-size z tokena, padding 4px 12px; `.dam-tag-pill` 10.5px.
+3. USUNIETO `min-height/min-width: 44px` z `.dam-badge-tag, button.dam-viz-badge` (root cause "2x za duze") -
+   zastapione `::before{inset:-8px}` hit-area tylko dla `button.dam-badge-tag`.
+4. `dam-labels.js carrierLabel()`: dodano `CARRIER_FORBIDDEN_RE`, zwraca `""` dla OTHER/UNKNOWN/WARIANT
+   (wczesniej tylko UNKNOWN mial fallback "WARIANT" - OTHER przechodzil jako literal).
+5. `dam-badges.js buildBadgeItems()`: przebudowana kolejnosc Marka->Kategoria->Podkategoria->Typ->
+   Warianty->Jezyk->Indeks; compact mode = tylko flaga Multijezyczny (bez wyliczania GB/EE/LT...).
+6. `dam-viz.js variantChipLabel()`: skrot+indeks (`GB · 6300478`) zamiast pelnej nazwy; nowy `variantChipTip()`
+   z pelna nazwa+sciezka w title/data-dam-tip.
+7. `build-file-index.py pick_thumb_file`: `transparent_bonus` w `rank()` - PNG/WEBP (bez tla) > JPG (z tlem
+   studyjnym) w tym samym tierze (artefakty = zle zdjecie, nie kompresja).
+8. `repair-viz-thumbs.py`: force-unlink WSZYSTKICH cache'owanych thumbs (nie tylko SKLEP/XL) zeby nowy
+   ranking faktycznie przeliczyl miniatury.
+
+**Faza 2 - metadane, zgadywanie, aliasy, audyt PL:**
+1. `SUBCATEGORY_PL` dict + `subcategory_label_pl()` w `build-file-index.py` - z SUROWEGO bracketu
+   (nie filtrowanego `bracket_tags`, ktory odrzuca wielowyrazowe tagi).
+2. Zgadywanie carrier: majority z sasiednich rewizji produktu, `carrier_guessed: true` flaga.
+3. `product-aliases.json` (nowy) + `apply_product_aliases()` - `linked_products`/`alias_langs` na
+   kazdym produkcie/viz_latest. Seed: owies-miod-sniadanie <-> cornflakes-peanuts-honey-balls-crispy.
+4. Audyt PL znakow: `LANG_LABELS` (dam-labels.js) + `naming-dictionary.json.languages/ui/carriers` -
+   Lotwa->Łotwa, Wegry->Węgry, Slowacja->Słowacja, Wlochy->Włochy, Bulgaria->Bułgaria, Slowenia->Słowenia,
+   REKAW->RĘKAW, ETY-SLO label->"ETYKIETA SŁOIK", multi_lang_label->"Multijęzyczny" (OBA pliki - dictionary
+   nadpisuje JS runtime przez XHR).
+5. **Debugging note:** `print(repr(...))` w PowerShell pokazywal U+FFFD dla poprawnych UTF-8 znakow
+   (cp1250 konsola) - zmylilo to na "korupcja danych"; zweryfikowano bajtami `open(...,'rb')` - dane
+   byly ZAWSZE poprawne, tylko terminal output byl lossy.
+
+**Faza 3 - naprawa migracji MATERIALY->PROJEKT (dry-run):**
+1. Nowy `repair-materialy-to-projekt.py` - DK+GC, wykrywanie po slowach-kluczach (nie numerze slotu).
+2. Rozszerzone po feedbacku usera: przeszukiwanie JEDNEGO poziomu podfolderow w MATERIALY (user
+   zglosil realny przypadek zagniezdzenia), DRUK tylko flagowany.
+3. `classify_special_document()` - karty_wprowadzenia + strategia (.pptx pozycjonowanie), SCAN_EXT
+   +pptx/ppt/docx/doc/key.
+4. Dry-run: 16 kandydatow (6 DK, 10 GC), zapisane `data/materialy-to-projekt-dryrun.json`. **BEZ --apply**
+   - czeka na przegland i zgode usera (bardzo ostrozne, zero kasowania, PROJEKT-z-plikami nietykany).
+
+**Faza 4 - edycja tagow + moderacja:**
+1. `local_bridge.py`: `POST /rename-revision-prefix`, `POST/GET /tag-proposals(/decide)`,
+   `POST/GET /carrier-types`. `rename_revision_prefix_on_disk()` - zamienia/dokleja WYLACZNIE prefiks.
+2. `tag-proposals.json`, `carrier-types.json`, `carrier-assignment-log.json` (nowe, puste seed).
+3. `dam-tag-edit.js` (nowy) - popover wyboru typu (`DamTagEdit.openCarrierPicker`), panel moderacji
+   (`renderModerationPanel`) wbudowany w `settings.html`.
+4. `dam-badges.js`: klik na `.dam-tag-editable` (carrier) -> popover edycji zamiast filtra.
+5. Zweryfikowane end-to-end (popover otwiera sie, lista typow z diakrytykami, admin/user tryb naglowka).
+
+**Faza 5 - modal: jeden indeks, aliasy, jezyki wyszarzone:**
+1. `withAliasItems()` w `dam-viz.js` - pasek wariantow modalu dolacza `linked_products` PRZED dedupem.
+2. Jezyki bez wizki: `missingLangs` = `alias_langs` minus jezyki w `items` -> wyszarzony badge +
+   przycisk `uil-bell-plus` (`data-request-lang`) -> `DamVizRequest.open()`.
+3. Zweryfikowane: OWIES MIOD (DK) modal pokazuje wariant CORNFLAKES PEANUTS HONEY (GC) w pasku - alias dziala.
+
+**Faza 6 - zgloszenia wielokanalowe + inbox + X/Wstecz:**
+1. `dam-viz-request.js` (nowy) - modal Email/Teams/Asana/W aplikacji + Wszystko/Wyczysc/Odwroc.
+2. `local_bridge.py POST /viz-request` - wpis `inbox-items.json` ZAWSZE, email/teams/asana = stub
+   (audit log, ADR-005). Test end-to-end: OK (channels_sent, inbox_item zwrocone poprawnie).
+3. `notification-groups.json` (grafik: Krzysztof/Szymon/Sylwia).
+4. `inbox.html` (nowa strona) - laczy inbox-items + asana-tasks, filtr tagow. `dam-shell.js`
+   "Wszystkie zadania" -> `inbox.html` (bylo `dashboard.html`, potwierdzony bug).
+5. `damAddVariantModal` dostal `.dam-modal-x` (byl bez X). `goBackNav()` zamyka modal/popover/lightbox
+   zamiast nawigowac, jesli jest otwarty.
+
+**Faza 7 - QA + docs:**
+1. Screenshot QA 375/768/1280 na visualizations.html (siatka + modal + alias + missing-lang) - OK.
+2. memory.md §68-77, ten wpis w process.md, PROGRESS.md.
+3. Cache bust: `?v=20260718tags1/2/3` na dam-tokens/dam-brand/dam-labels/dam-badges/dam-viz + nowe pliki.
+
+### Backup
+- Zadne pliki produkcyjne (X:\Marketing) NIE zostaly zmienione - Faza 3 to tylko dry-run raport.
+- `carrier-assignment-log.json`/`tag-proposals.json`/`inbox-items.json` startuja jako puste seed.
+
+### Test/Ewaluacja
+- Browser MCP: CORNFLAKES/OATS CHOCOLATE/DATE ORANGE karty - zero "OTHER", poprawna kolejnosc,
+  Multijezyczny bez rozwiniecia jezykow, "?" na zgadnietym typie, "Dodaj typ" gdy brak.
+- DOM getBoundingClientRect: badge container w pelni w granicach karty (bez clipping - overflow:hidden
+  na `.dam-viz-card` nie problem, bo wysokosc auto).
+- `/viz-request` PowerShell smoke test: ok=true, channels_sent=[email,asana,app], inbox_item poprawny.
+- Popover typu: otwiera sie, lista z diakrytykami (ETYKIETA SŁOIK), header zmienia sie wg roli/trybu.
+
+### Zrodla
+- Plan: `c:\Users\xpret\.cursor\plans\viz_tags_ux_fix_e01a796a.plan.md` (nie edytowany, tylko realizowany)
+- User feedback (2026-07-18): rozmiary tagow (+5%/+35%), zakres Fazy 3 (DK+GC, ostrozne kryteria),
+  karty wprowadzenia/strategia w checklistcie
+
+## 2026-07-18 - Viz UX: favicon DK, modal, tagi, tooltipy, picker
+
+### Komenda/Akcja
+Pelny polish wizualizacji (ui-taste 5 passes): favicon/PWA DK, tooltipy jasne, modal actions, kolory tagow, edycja typu z Zatwierdz/Anuluj/BRAK TYPU, admin dblclick/Shift.
+
+### Log/Status
+1. Favicon DK + manifest.webmanifest + meta mobile; dam-shell.ensureAppIcons na kazdej stronie.
+2. Modal: CTA Przejdz/otworz rowne (~94px), admin kompakt (h28), gap Share->admin ~78px, zoom wycentrowany, badge left + styl kart.
+3. Kolory: cat=zielony, carrier=pomarancz, subcat/smak=fiolet, warianty=teal, index-miss=jasny szary.
+4. dam-tag-edit: wybor pending + footer Zatwierdz/Anuluj + BRAK TYPU; bridge rename DOYPACK/BATON + NONE; admin Shift/dblclick <=500ms.
+5. Tooltips: jasne biale, auto-bind title/aria-label; 1500+ tipow.
+6. BARS+DOY: carrier_guessed w build-file-index (wymaga przebudowy indeksu).
+
+### Efekt/Fix
+Aplikacja wyglada jak pelny produkt DK (ikona, PWA). Korekta typu wymaga Zatwierdz - zapis na dysk przez bridge.
+
+### Test/Ewaluacja
+- CDP: zoomOffCenter=0, gapShareAdmin=78, badgesJustify=flex-start, cta 94/92, admin h=28
+- Popover: BRAK TYPU + Zatwierdz widoczne (actVisible=true)
+- Pass 1-5 screenshoty: viz-pass1..5 w Temp/cursor/screenshots
+- Favicon: favicon-dk.svg?v=20260718dk1
+
+### Zrodla
+- apps/web/assets/js/dam-tag-edit.js, dam-badges.js, dam-viz.js, dam-tooltips.js, dam-shell.js
+- apps/web/assets/css/dam-brand.css
+- apps/desktop/local_bridge.py
+- plan viz_tags_ux_fix_e01a796a
+
+## 2026-07-18 - Admin undo: Miniatura/Demo/Ukryj/Dodaj + tag (UKRYTE)
+
+### Komenda/Akcja
+Kazdy przycisk admina w modalu wizualizacji musi dac sie cofnac; osobny tag (UKRYTE) tylko dla admina; Pokaz wszystko pokazuje ukryte; tooltipy nie widoczne (z-index / bind).
+
+### Log/Status
+1. dam-viz: toggle Miniatura (Reset), Demo (Demo off), Ukryj/Pokaz (bez zamykania modala), Dodaj/Usun (+ Shift=dodaj kolejny).
+2. dam-badges: label `(UKRYTE)`, klik -> `damVizToggleHidden`; Demo klik admin -> `damVizToggleDemo`.
+3. Filtr: ukryte tylko dla admina przy `showAll`; inaczej odfiltrowane.
+4. Tooltips: z-index 20050 + `DamTooltips.bind(modal)` po otwarciu; tipy dynamiczne z `data-dam-tip`.
+5. Bridge: `thumb-override` z `clear:true` usuwa wpis; cache-bust `admin1`.
+
+### Efekt/Fix
+Admin moze odklikac pomylkowe Miniatura/Demo/Ukryj/Dodaj; tag (UKRYTE) i przycisk Pokaz przywracaja widocznosc.
+
+### Test/Ewaluacja
+- CDP: hide product_id -> grid OFF bez showAll, ON z showAll + `.dam-viz-card--hidden`
+- Tag `(UKRYTE)` klik -> `Ukryj` z powrotem; tip z-index 20050, above=true nad stopka
+- Screenshoty: admin-undo-pass1..5 w Temp/cursor/screenshots (pass5: tip nad Ukryj widoczny)
+- Cache: dam-brand/badges/viz `admin2`, dam-tooltips `admin3`
+
+### Zrodla
+- apps/web/assets/js/dam-viz.js, dam-badges.js, dam-tooltips.js
+- apps/web/assets/css/dam-brand.css
+- apps/desktop/local_bridge.py
+- memory.md §79

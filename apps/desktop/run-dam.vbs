@@ -28,10 +28,17 @@ For Each c In candidates
   End If
 Next
 
+' WAZNE: styl okna 1 (SW_SHOWNORMAL), NIE 0 (SW_HIDE).
+' pythonw.exe i tak nie ma konsoli - styl 0 nie chowa konsoli, tylko
+' blokuje na starcie widocznosc glownego okna WebView2 (pywebview/WinForms
+' dziedziczy stan "hidden" ze STARTUPINFO procesu). Efekt: aplikacja
+' dziala w tle (most, watcher, WebView2), ale okno nigdy sie nie pojawia.
+sh.CurrentDirectory = desktopDir
+
 On Error Resume Next
 If pythonw = "" Then
   ' Fallback: PATH
-  sh.Run "pythonw """ & launchPy & """", 0, False
+  sh.Run "pythonw """ & launchPy & """", 1, False
   If Err.Number <> 0 Then
     Err.Clear
     sh.Run "python """ & launchPy & """", 1, False
@@ -44,7 +51,7 @@ If pythonw = "" Then
     End If
   End If
 Else
-  sh.Run """" & pythonw & """ """ & launchPy & """", 0, False
+  sh.Run """" & pythonw & """ """ & launchPy & """", 1, False
   If Err.Number <> 0 Then
     WriteLog "Blad uruchomienia: " & Err.Description & " (" & Err.Number & ")" & vbCrLf & _
              "Cmd: " & pythonw & " " & launchPy

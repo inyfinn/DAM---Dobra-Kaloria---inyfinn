@@ -1,6 +1,5 @@
 /**
- * DAM ETA - Dashboard controller
- * Fills summary cards and task list from Asana data + API
+ * DAM ETA - Dashboard orchestrator (widget grid + side panel)
  */
 (function () {
   "use strict";
@@ -9,129 +8,64 @@
     if (!str) return "-";
     try {
       var d = new Date(str);
-      return d.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
-    } catch (e) { return str; }
+      return d.toLocaleDateString("pl-PL", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+    } catch (e) {
+      return str;
+    }
   }
 
   function sectionBadge(section) {
     if (!section) return "";
     var cls = "geex-badge--primary-transparent";
     if (section === "Dzis" || section === "Dziś") cls = "geex-badge--danger-transparent";
-    else if (section === "Ten Tydzien" || section === "Ten Tydzień") cls = "geex-badge--warning-transparent";
-    else if (section === "Odlozone w czasie" || section === "Odłożone w czasie") cls = "geex-badge--success-transparent";
-    return '<span class="geex-badge ' + cls + '" style="font-size:11px">' + (section || "") + '</span>';
+    else if (section === "Ten Tydzien" || section === "Ten Tydzień")
+      cls = "geex-badge--warning-transparent";
+    else if (section === "Odlozone w czasie" || section === "Odłożone w czasie")
+      cls = "geex-badge--success-transparent";
+    return (
+      '<span class="geex-badge ' +
+      cls +
+      '" style="font-size:11px">' +
+      (section || "") +
+      "</span>"
+    );
   }
 
-  function fillCards(data) {
-    var tasks = data.tasks || [];
-    var openTasks = tasks.filter(function (t) { return t.status === "open"; });
-
-    // Card1/3/4: projekty + kompletnosc (API z fallbackiem lokalnym w DamApi)
-    var card1Val = document.getElementById("damCard1Val");
-    var card3Val = document.getElementById("damCard3Val");
-    var card4Val = document.getElementById("damCard4Val");
-    if (window.DamApi && (card1Val || card3Val || card4Val)) {
-      DamApi.projects()
-        .then(function (res) {
-          var rows = (res && res.data) || [];
-          var complete = rows.filter(function (p) { return p.completeness === "complete"; }).length;
-          if (card1Val) card1Val.textContent = String(rows.length);
-          if (card3Val) card3Val.textContent = String(complete);
-          if (card4Val) card4Val.textContent = String(rows.length - complete);
-        })
-        .catch(function () {
-          if (card1Val) card1Val.textContent = "3";
-          if (card3Val) card3Val.textContent = "1";
-          if (card4Val) card4Val.textContent = "2";
-        });
-    }
-
-    // Card2: otwarte zadania Asana
-    var card2Val = document.getElementById("damCard2Val");
-    if (card2Val) card2Val.textContent = data.open || openTasks.length;
-
-    // Balance card - sum of open project costs from project-costs.json
-    var balanceTitle = document.getElementById("damBalanceTitle");
-    var balanceTime = document.getElementById("damBalanceTime");
-    if (balanceTime) {
-      var now = new Date();
-      balanceTime.textContent = now.toLocaleDateString("pl-PL", {
-        weekday: "long", year: "numeric", month: "long", day: "numeric"
-      });
-    }
-    if (balanceTitle) {
-      balanceTitle.textContent = "...";
-      fetch("data/project-costs.json?v=" + Date.now())
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (data) {
-          if (!data) {
-            balanceTitle.textContent = "-";
-            return;
-          }
-          window._DAM_PROJECT_COSTS = data;
-          var sum = typeof data.sum_open_projects === "number"
-            ? data.sum_open_projects
-            : (data.projects || []).reduce(function (acc, p) {
-                return acc + (p.open_tasks > 0 ? (p.total || 0) : 0);
-              }, 0);
-          balanceTitle.textContent = Math.round(sum).toLocaleString("pl-PL") + " PLN";
-          var chip = document.getElementById("damBalanceChip") ||
-            document.querySelector(".geex-content__summary__balance__time + *");
-          // Prefer explicit chip with i18n if present
-          var autoChip = document.querySelector("[data-i18n='dash.balance_chip']");
-          if (autoChip) autoChip.textContent = "Wyliczone automatycznie";
-        })
-        .catch(function () {
-          balanceTitle.textContent = "-";
-        });
-    }
-  }
-
-  function fillTaskList(data) {
-    var tasks = (data.tasks || []).filter(function (t) { return t.status === "open"; }).slice(0, 12);
-    var container = document.getElementById("damTaskList");
-    if (!container) return;
-
-    if (!tasks.length) {
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:#888">Brak otwartych zadan Asana</div>';
-      return;
-    }
-
-    container.innerHTML = tasks.map(function (task) {
-      var assignee = task.assignee || "-";
-      var due = formatDate(task.due);
-      var project = task.project || task.parent || "-";
-      var section = sectionBadge(task.section);
-
-      return '<div class="geex-content__todo__list__single">' +
-        '<div class="geex-content__todo__list__single__text" style="flex:2;min-width:0">' +
-        '<h6 style="margin:0;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + task.name + '">' + task.name + '</h6>' +
-        '<p style="margin:0;font-size:11px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + project + '</p>' +
-        '</div>' +
-        '<div class="geex-content__todo__list__single__text" style="min-width:80px">' +
-        '<span style="font-size:12px">' + assignee.split(" ")[0] + '</span>' +
-        '</div>' +
-        '<div class="geex-content__todo__list__single__text" style="min-width:80px">' +
-        '<span style="font-size:12px;color:' + (task.due && new Date(task.due) < new Date() ? "#ff5653" : "#888") + '">' + due + '</span>' +
-        '</div>' +
-        '<div class="geex-content__todo__list__single__text">' +
-        section +
-        '</div>' +
-        '</div>';
-    }).join("");
+  function panelItem(title, meta) {
+    return (
+      '<li class="dam-dash-panel__item">' +
+      '<p class="dam-dash-panel__item-title">' +
+      title +
+      "</p>" +
+      '<p class="dam-dash-panel__item-meta">' +
+      meta +
+      "</p></li>"
+    );
   }
 
   function fillSidePanel(data) {
-    var tasks = (data.tasks || []).filter(function (t) { return t.status === "open"; }).slice(0, 6);
+    var tasks = (data.tasks || [])
+      .filter(function (t) {
+        return t.status === "open";
+      })
+      .slice(0, 6);
     var asanaList = document.getElementById("damPanelAsanaList");
     var teamsList = document.getElementById("damPanelTeamsList");
     if (asanaList) {
-      asanaList.innerHTML = tasks.map(function (task) {
-        return '<li style="padding:10px 0;border-bottom:1px solid #f0f0f0">' +
-          '<div style="font-size:13px;font-weight:500">' + task.name + '</div>' +
-          '<div style="font-size:11px;color:#888">' + (task.section || "") + (task.due ? " - " + task.due : "") + '</div>' +
-          '</li>';
-      }).join("") || '<li style="padding:12px;color:#888">Brak otwartych zadan</li>';
+      asanaList.innerHTML =
+        tasks
+          .map(function (task) {
+            return panelItem(
+              task.name,
+              (task.section || "") + (task.due ? " - " + formatDate(task.due) : "")
+            );
+          })
+          .join("") ||
+        '<li class="dam-dash-panel__item dam-dash-panel__item--empty">Brak otwartych zadan</li>';
     }
     if (teamsList) {
       var teams = [
@@ -139,27 +73,167 @@
         { from: "Marek Paluszewski", msg: "Karta wprowadzenia gotowa do przejrzenia." },
         { from: "Karolina Kubara", msg: "Potrzebujemy grafiki do nowej linii." }
       ];
-      teamsList.innerHTML = teams.map(function (m) {
-        return '<li style="padding:10px 0;border-bottom:1px solid #f0f0f0">' +
-          '<div style="font-size:13px;font-weight:500">' + m.from + '</div>' +
-          '<div style="font-size:12px;color:#555">' + m.msg + '</div></li>';
-      }).join("");
+      teamsList.innerHTML = teams
+        .map(function (m) {
+          return panelItem(m.from, m.msg);
+        })
+        .join("");
+    }
+
+    wirePanelTabs();
+  }
+
+  function wirePanelTabs() {
+    var tabs = document.querySelectorAll(".dam-dash-panel__tab");
+    tabs.forEach(function (tab) {
+      tab.addEventListener("shown.bs.tab", function () {
+        tabs.forEach(function (t) {
+          t.classList.toggle("is-active", t === tab);
+        });
+      });
+      tab.addEventListener("click", function () {
+        tabs.forEach(function (t) {
+          t.classList.toggle("is-active", t === tab);
+        });
+      });
+    });
+  }
+
+  function loadVizFlags() {
+    return fetch("data/viz-flags.json?v=" + Date.now())
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (data) {
+        if (data) return data;
+        try {
+          return JSON.parse(localStorage.getItem("dam_viz_flags") || "{}");
+        } catch (e) {
+          return { demo: {}, hidden: {} };
+        }
+      })
+      .catch(function () {
+        return { demo: {}, hidden: {} };
+      });
+  }
+
+  function buildCtx(parts) {
+    var ctx = {
+      asana: parts.asana || { tasks: [] },
+      projects: parts.projects || [],
+      fileIndex: parts.fileIndex || {},
+      projectCosts: parts.projectCosts || null,
+      costRates: parts.costRates || null,
+      fmcg: parts.fmcg || null,
+      vizFlags: parts.vizFlags || { demo: {}, hidden: {} },
+      vizLatest: (parts.fileIndex && parts.fileIndex.viz_latest) || []
+    };
+    if (window.DamFmcg) {
+      ctx.landed = DamFmcg.computeMonthLanded(ctx);
+    }
+    return ctx;
+  }
+
+  function render(ctx) {
+    var grid = document.getElementById("damDashGrid");
+    if (window.DamDashWidgets && grid) {
+      DamDashWidgets.renderGrid(grid, ctx);
     }
   }
 
-  function init() {
-    fetch("data/asana-tasks.json")
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        window._DAM_ASANA_TASKS = (data.tasks || []).filter(function (t) { return t.status === "open"; });
-        fillCards(data);
-        fillTaskList(data);
-        fillSidePanel(data);
-        if (window.DamShell) DamShell.loadAsanaTasks(function () {});
-      })
-      .catch(function (e) {
-        console.warn("DAM Dashboard: could not load asana-tasks.json", e);
+  function wireCustomize(ctxRef) {
+    var btn = document.getElementById("damDashCustomizeBtn");
+    if (!btn || !window.DamDashWidgets) return;
+    btn.addEventListener("click", function () {
+      DamDashWidgets.openCustomize(function () {
+        render(ctxRef.current);
+        if (window.DamI18n && typeof DamI18n.apply === "function") {
+          try {
+            DamI18n.apply(document);
+          } catch (e) { /* ignore */ }
+        }
       });
+    });
+  }
+
+  function init() {
+    var ctxRef = { current: {} };
+    wireCustomize(ctxRef);
+
+    var pAsana = fetch("data/asana-tasks.json")
+      .then(function (r) {
+        return r.json();
+      })
+      .catch(function () {
+        return { tasks: [], open: 0 };
+      });
+
+    var pIndex = fetch("data/file-index.json?v=" + Date.now())
+      .then(function (r) {
+        return r.ok ? r.json() : {};
+      })
+      .catch(function () {
+        return {};
+      });
+
+    var pCosts = fetch("data/project-costs.json?v=" + Date.now())
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .catch(function () {
+        return null;
+      });
+
+    var pRates = fetch("data/cost-rates.json?v=" + Date.now())
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .catch(function () {
+        return null;
+      });
+
+    var pFmcg = window.DamFmcg
+      ? DamFmcg.loadAverages()
+      : Promise.resolve(null);
+
+    var pFlags = loadVizFlags();
+
+    var pProjects = window.DamApi
+      ? DamApi.projects()
+          .then(function (res) {
+            return (res && res.data) || [];
+          })
+          .catch(function () {
+            return [];
+          })
+      : Promise.resolve([]);
+
+    Promise.all([pAsana, pIndex, pCosts, pRates, pFmcg, pFlags, pProjects]).then(
+      function (all) {
+        var asana = all[0] || { tasks: [] };
+        window._DAM_ASANA_TASKS = (asana.tasks || []).filter(function (t) {
+          return t.status === "open";
+        });
+        window._DAM_PROJECT_COSTS = all[2];
+
+        ctxRef.current = buildCtx({
+          asana: asana,
+          fileIndex: all[1],
+          projectCosts: all[2],
+          costRates: all[3],
+          fmcg: all[4],
+          vizFlags: all[5],
+          projects: all[6]
+        });
+
+        render(ctxRef.current);
+        fillSidePanel(asana);
+
+        if (window.DamShell && typeof DamShell.loadAsanaTasks === "function") {
+          DamShell.loadAsanaTasks(function () {});
+        }
+      }
+    );
   }
 
   if (document.readyState === "loading") {
@@ -167,4 +241,7 @@
   } else {
     init();
   }
+
+  // expose helpers used by legacy markup if any
+  window._DAM_DASH = { formatDate: formatDate, sectionBadge: sectionBadge };
 })();

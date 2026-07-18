@@ -13,10 +13,15 @@ Repozytorium: [inyfinn/DAM---Dobra-Kaloria---inyfinn](https://github.com/inyfinn
 
 - Katalog produktow i wariantow opakowan (nosniki: baton, karton 6x, mini, doypack, kulki, …)
 - Indeks plikow z dysku Marketing (projekty, wizualizacje, druk, marketing)
-- Checklist kompletnosci assetow per rewizja
+- Checklist kompletnosci assetow per rewizja (+ karty wprowadzenia, strategie pozycjonowania)
 - Galeria wizualizacji (miniatury FRONT-S, modal + zoom, chip wariantu nawet przy 1 indeksie)
+- Tagi wizualizacji: Marka -> Kategoria -> Podkategoria -> Typ -> Warianty -> Jezyk -> Indeks,
+  zgadywanie typu nosnika z sasiednich rewizji (z ikonka "?"), aliasy produktow DK<->GC
+- Moderacja tagow: kazdy user proponuje, admin/power_user zatwierdza - auto-apply po 72h
+- Zgloszenia "Zglos zapotrzebowanie" (Email / Teams / Asana / w aplikacji) + skrzynka `inbox.html`
+- Dashboard z konfigurowalnymi widgetami (24 widgety, FMCG landed cost, powiadomienia nowej wizualizacji)
 - Mapowanie sciezki bazowej Marketing per uzytkownik Windows
-- Lokalny bridge (Eksplorator Windows, media, audit, override nosnikow / miniatur)
+- Lokalny bridge (Eksplorator Windows, media, audit, override nosnikow / miniatur, propozycje tagow)
 - Konta lokalne (bcrypt) + sesja urzadzenia (`machine_id` / `device_id` / `session_id`)
 - UI na motywie **Geex** (Bootstrap 5) z tokenami DAM
 
@@ -105,6 +110,29 @@ Seed kont testowych:
 python apps/desktop/seed_kubara_users.py
 ```
 
+### Dane w repo (`apps/web/data/`, wersjonowane, nie sekrety)
+
+| Plik | Rola |
+|------|------|
+| `file-index.json` / `search-index.json` | indeks produktow (rebuild: `build-file-index.py`) |
+| `naming-dictionary.json` | nosniki / jezyki / kategorie PL (jedno zrodlo dla Python + JS) |
+| `product-aliases.json` | ten sam produkt DK<->GC (indeks lub reczne dopiecie) |
+| `carrier-types.json` / `carrier-assignment-log.json` | wlasne typy nosnikow + historia przypisan |
+| `tag-proposals.json` | kolejka moderacji (72h auto-apply) |
+| `notification-groups.json` | odbiorcy zgloszen (grupa `grafik`) |
+| `inbox-items.json` | skrzynka odbiorcza (`inbox.html`) |
+| `materialy-to-projekt-dryrun.json` | raport naprawy migracji (patrz nizej) - **tylko dry-run** |
+
+### Naprawa migracji MATERIALY -> PROJEKT (ostrozne, dry-run domyslnie)
+
+```powershell
+python apps/web/scripts/repair-materialy-to-projekt.py            # raport, ZERO zmian na dysku
+python apps/web/scripts/repair-materialy-to-projekt.py --apply    # po przegladzie raportu
+```
+
+Zasada: jesli `2 - PROJEKT` ma juz pliki - nietykane. Jesli pusty, szuka `.ai/.psd/.indd/.pdf`
+wylacznie w `1 - MATERIALY` tego samego wariantu (w tym jeden poziom podfolderow). Nigdy nie kasuje.
+
 ---
 
 ## Struktura repo
@@ -145,9 +173,14 @@ GitHub Release: tag + upload ZIP (tworzone przy publikacji).
 | Modul | Opis |
 |-------|------|
 | Eksplorator | Kategorie, produkty, nosniki, checklist, sciezki |
-| Wizualizacje | Siatka, modal +50%, zoom, chip indeksu, FRONT-S thumbs |
+| Wizualizacje | Siatka, modal +50%, zoom, chip indeksu, FRONT-S thumbs, "Pokaz wszystko" z placeholderami |
+| Tagi wizualizacji | Kolejnosc Marka/Kategoria/Podkategoria/Typ/Warianty/Jezyk/Indeks (`dam-badges.js`) |
+| Edycja typu + moderacja | Popover propozycji (`dam-tag-edit.js`), panel w `settings.html`, 72h auto-apply |
+| Aliasy produktow | DK<->GC ten sam produkt (`product-aliases.json`), pasek wariantow w modalu |
+| Zgloszenia wizualizacji | Modal wielokanalowy (`dam-viz-request.js`), skrzynka `inbox.html` |
+| Dashboard | 24 konfigurowalne widgety, koszt FMCG, powiadomienia (`dam-dashboard-widgets.js`) |
 | Sciezki | Kopiuj + Pokaz w Eksploratorze (`DamPaths`) |
-| Tagi | Smak / Typ / Opakowanie / Autor (`dam-tag-bar.js`) |
+| Tagi produktow | Smak / Typ / Opakowanie / Autor (`dam-tag-bar.js`) |
 | Chrome | Header, wiadomosci, profil (`dam-shell.js`) |
 
 ---

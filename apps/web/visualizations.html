@@ -1,10 +1,15 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en" dir="ltr">
 
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta name="theme-color" content="#008244">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="DAM ETA">
+	<meta name="mobile-web-app-capable" content="yes">
 	<title>Wizualizacje - DAM ETA</title>
 
 	<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,7 +20,9 @@
 	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 	<link rel="stylesheet" href="assets/css/style.css">
 	<!-- endinject -->
-	<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
+	<link rel="icon" type="image/svg+xml" href="assets/img/favicon-dk.svg?v=20260718dk1">
+	<link rel="apple-touch-icon" href="assets/img/logo-dk-green.svg">
+	<link rel="manifest" href="manifest.webmanifest">
 	<!-- Fonts -->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
 	
@@ -25,9 +32,9 @@
 		if (localStorage.layout) document.documentElement.setAttribute("data-nav", localStorage.navbar);
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
-<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718vizsw1">
-<link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718sidebar2">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718vizmod2">
+<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
+<link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718admin2">
 </head>
 
 <body class="geex-dashboard demo-invoice">
@@ -873,10 +880,10 @@
 							</div>
 						</div>
 						<div class="dam-explorer-toolbar__actions">
-							<label class="dam-switch" for="vizLatestOnly" data-dam-tip="Wlacz: tylko najnowsza rewizja indeksu (np. .01 zamiast .00). Wylacz: pokazuje tez starsze wersje.">
-								<input type="checkbox" id="vizLatestOnly" class="dam-switch__input" checked />
+							<label class="dam-switch" for="vizShowAll" data-dam-tip="Wlacz: pokazuje prototypy, dema oraz starsze i nieaktualne wizualizacje. Wylacz: tylko aktualne.">
+								<input type="checkbox" id="vizShowAll" class="dam-switch__input" />
 								<span class="dam-switch__track" aria-hidden="true"></span>
-								<span class="dam-switch__label" data-i18n="viz.badge">Tylko najnowsze</span>
+								<span class="dam-switch__label">Pokaz wszystkie</span>
 							</label>
 							<div class="dam-filter-bar">
 								<button type="button" id="vizBrandFilterTrigger" class="dam-filter-trigger dam-control" data-dam-tip="Filtruj wizualizacje wedlug marki DK lub GC">Marka: DK+GC</button>
@@ -908,16 +915,19 @@
   	<!-- endinject-->
 	<!-- DAM scripts -->
 	<script src="./assets/js/dam-api.js"></script>
-	<script src="./assets/js/dam-i18n.js?v=20260717ux6"></script>
+	<script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
 	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-	<script src="./assets/js/dam-shell.js?v=20260718inyf1"></script>
+	<script src="./assets/js/dam-shell.js?v=20260718v7f"></script>
 	<script src="./assets/js/dam-search.js?v=20260718tags1"></script>
 	<script src="./assets/js/dam-tag-bar.js?v=20260718typ2"></script>
-	<script src="./assets/js/dam-labels.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-paths.js?v=20260718userbase1"></script>
+	<script src="./assets/js/dam-labels.js?v=20260718v7f"></script>
+	<script src="./assets/js/dam-badges.js?v=20260718admin2"></script>
+	<script src="./assets/js/dam-tag-edit.js?v=20260718v7f"></script>
+	<script src="./assets/js/dam-viz-request.js?v=20260718v7f"></script>
+	<script src="./assets/js/dam-paths.js?v=20260718btn1"></script>
 	<script src="./assets/js/dam-brand-filter.js?v=20260718brandsync1"></script>
-	<script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-viz.js?v=20260718vizmod2"></script>
+	<script src="./assets/js/dam-tooltips.js?v=20260718admin3"></script>
+	<script src="./assets/js/dam-viz.js?v=20260718admin2"></script>
 </body>
 
 </html>

@@ -437,7 +437,7 @@
       if (!data || !data.ok) {
         var err = (data && data.error) || "register_failed";
         if (err === "email_taken") throw new Error("Konto z tym emailem juz istnieje.");
-        if (err === "password_too_short") throw new Error("Haslo min. 8 znakow.");
+        if (err === "password_too_short") throw new Error("Haslo min. 4 znaki.");
         throw new Error("Nie udalo sie utworzyc konta.");
       }
       // Po rejestracji od razu zaloguj na tym urzadzeniu

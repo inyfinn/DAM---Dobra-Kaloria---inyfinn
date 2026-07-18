@@ -29,8 +29,13 @@
     padding-inline-start: calc(var(--dam-sidebar-w) + var(--dam-edge) + var(--dam-content-gap));
   }
 
+  /* Sidebar fixed przy lewej krawedzi + lekki gutter (--dam-edge) */
   body.dam-sidebar-collapsed .geex-main-content {
     padding-inline-start: calc(72px + var(--dam-edge) + var(--dam-content-gap));
+  }
+
+  body.dam-sidebar-collapsed .geex-sidebar {
+    inset-inline-start: var(--dam-edge) !important;
   }
 }
 
@@ -44,9 +49,13 @@
   align-items: start;
 }
 
+/* auto-fit z minmax() dobiera liczbe kolumn wedlug szerokosci kontenera - dla
+   4 kart to potrafi dac 3+1 (osierocona karta w drugim rzedzie, zle wyrownana).
+   Zamiast tego: staly 2x2 (jak oryginalny Geex flex:0 0 47%), zawsze rowny
+   uklad niezaleznie od szerokosci; 1 kolumna tylko na bardzo waskich ekranach. */
 .geex-content__summary__count {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   width: 100%;
   min-width: 0;
@@ -67,6 +76,12 @@
 
 @media (max-width: 1365.98px) {
   .geex-content__summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .geex-content__summary__count {
     grid-template-columns: 1fr;
   }
 }

@@ -101,18 +101,18 @@
 
     var currentInfo = SUPPORTED_LANGS.find(function (l) { return l.code === currentLang; }) || SUPPORTED_LANGS[0];
 
-    li.innerHTML = '<a href="#" class="geex-content__header__quickaction__link dam-lang-trigger" title="Jezyk">' +
-      '<span class="dam-lang-flag" style="font-size:18px;line-height:1">' + currentInfo.flag + '</span>' +
+    li.innerHTML = '<a href="#" class="geex-content__header__quickaction__link dam-lang-trigger" title="Jezyk" aria-label="Jezyk">' +
+      '<span class="dam-lang-code">' + currentInfo.label + '</span>' +
       '</a>' +
-      '<div class="geex-content__header__popup dam-lang-popup" style="min-width:160px;right:0;left:auto">' +
+      '<div class="geex-content__header__popup dam-lang-popup" style="min-width:180px;right:0;left:auto">' +
       '<h3 class="geex-content__header__popup__title" style="font-size:13px;padding:12px 16px 8px" data-i18n="header.lang_title">Jezyk</h3>' +
       '<div class="geex-content__header__popup__content">' +
       '<ul class="geex-content__header__popup__items">' +
       SUPPORTED_LANGS.map(function (l) {
         return '<li class="geex-content__header__popup__item">' +
           '<a class="geex-content__header__popup__link dam-lang-option' + (l.code === currentLang ? " active" : "") + '" ' +
-          'data-lang="' + l.code + '" href="#" style="display:flex;align-items:center;gap:8px">' +
-          '<span style="font-size:16px">' + l.flag + '</span>' +
+          'data-lang="' + l.code + '" href="#" style="display:flex;align-items:center;gap:10px">' +
+          '<span class="dam-lang-code">' + l.label + '</span>' +
           '<span>' + l.name + '</span>' +
           '</a></li>';
       }).join("") +
@@ -130,11 +130,11 @@
         e.stopPropagation();
         var lang = this.getAttribute("data-lang");
         loadLang(lang, function () {
-          // Update flag in trigger
+          // Update language code pill in trigger (no emoji)
           var info = SUPPORTED_LANGS.find(function (l) { return l.code === lang; });
           if (info) {
-            var flag = li.querySelector(".dam-lang-flag");
-            if (flag) flag.textContent = info.flag;
+            var codeEl = li.querySelector(".dam-lang-trigger .dam-lang-code");
+            if (codeEl) codeEl.textContent = info.label;
           }
           // Update active class
           li.querySelectorAll(".dam-lang-option").forEach(function (o) {

@@ -33,16 +33,17 @@ FLAVOR = {
     "morela", "mango", "imbir", "kawa", "sezam", "solony", "cynamonka", "arachid",
     "muffin",
 }
-# Typ = forma + nosniki (BAT/mini baton/sleeve/karton 6x). muffin = SMAK.
+# Typ = forma produktu. muffin = SMAK. Nosniki = PACK (Opakowanie).
 TYP = {
-    "kulki", "baton", "mini baton", "mini batoniki", "bat", "nuggets", "krem",
+    "kulki", "mini batoniki", "nuggets", "krem",
     "napoj", "sypkie", "roslinne", "burger", "gyros", "kotlet", "pasztet",
     "owies", "jaglanka", "boost", "dates", "mix", "mixy", "niemiesne",
-    "funkcjonalny", "sniadaniowe", "sleeve", "karton 6x",
+    "funkcjonalny", "sniadaniowe",
 }
 PACK = {
-    "karton", "folia", "karton 6x", "tuba", "doypack", "doy 6x", "sleeve",
-    "sasz", "pet", "szklo", "kub", "box", "bigpak",
+    "doypack", "doy 6x", "baton", "mini baton", "karton 6x", "karton",
+    "bigpak", "folia", "etykieta", "etykieta butelka", "etykieta sloik",
+    "rekaw", "tuba", "shot", "sasz", "obwoluta",
 }
 
 
@@ -118,7 +119,18 @@ def main() -> int:
 
     smak = pick_group_tags(tag_counter, FLAVOR, 12, 24)
     typ = pick_group_tags(tag_counter, TYP, 12, 24)
-    opak = pick_group_tags(tag_counter, PACK, 12, 24)
+    # Opakowanie: pelna lista nosnikow (kolejnosc kanoniczna), nie ucinaj do 6
+    opak = pick_group_tags(tag_counter, PACK, len(PACK), max(24, len(PACK)))
+    # wymus kanoniczna kolejnosc
+    opak_ordered = [t for t in [
+        "doypack", "baton", "mini baton", "karton 6x", "karton", "bigpak",
+        "folia", "etykieta", "etykieta butelka", "etykieta sloik", "rekaw",
+        "tuba", "shot", "doy 6x", "sasz", "obwoluta",
+    ] if t in set(opak) or t in PACK]
+    for t in opak:
+        if t not in opak_ordered:
+            opak_ordered.append(t)
+    opak = opak_ordered
 
     asana = find_asana()
     author_by_index: dict[str, str] = {}

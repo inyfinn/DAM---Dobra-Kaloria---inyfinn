@@ -17,6 +17,18 @@ Ostatnia aktualizacja: **2026-07-18**
 | Postgres / Docker | cancelled (user) | opcjonalnie Laravel |
 | Entra ID pelne | pending | ADR-006 |
 | Wspolna baza na NAS (multi-PC) | planned | SQLite WAL na udziale - osobna decyzja |
+| Naming dictionary (PL nosniki/jezyki) | **done** | V1-V10 PASS; DATE ORANGE = OTHER (do potwierdzenia) |
+| Wspolne tagi dam-badges + Warianty | **done** | explorer=wiz; cache vizadm2 |
+| Tryb admina (rola + czerwona obwodka) | **done** | pick_thumb, viz-flags, folder-images |
+| Dashboard widgety + FMCG + notify | **done** | 24 widgety, layout localStorage, koszt OFF domyslnie |
+| Tagi wiz - rozmiary + fix OTHER (Faza 1) | **done** | tokeny pill/badge, brak min-height 44px, kolejnosc tagow |
+| Podkategoria PL + zgadywanie typu (Faza 2) | **done** | SUBCATEGORY_PL, carrier_guessed, audyt PL znakow |
+| Alias produktow DK<->GC (Faza 2) | **done** | product-aliases.json, seed owies-miod<->cornflakes |
+| Naprawa MATERIALY->PROJEKT (Faza 3) | **dry-run only** | 16 kandydatow (6 DK/10 GC), czeka na `--apply` po zgodzie |
+| Moderacja tagow - kolejka 72h (Faza 4) | **done** | tag-proposals.json, panel w settings.html, carrier-types.json |
+| Modal: aliasy w pasku wariantow (Faza 5) | **done** | withAliasItems(), jezyki wyszarzone + zglos zapotrzebowanie |
+| Zgloszenia wielokanalowe + inbox (Faza 6) | **done (stub email/Teams/Asana)** | POST /viz-request, inbox.html, notification-groups.json |
+| X / Wstecz UX audyt (Faza 6) | **done** | dam-modal-x, goBackNav() zamyka overlay zamiast nawigowac |
 
 ## Uruchomienie dla usera
 

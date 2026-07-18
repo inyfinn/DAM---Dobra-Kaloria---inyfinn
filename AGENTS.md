@@ -23,3 +23,4 @@ Przy starcie zadania w danej roli **wklej / przeczytaj** odpowiedni `AGENT.md`.
 - Desktop + browser
 - Em-dash ban
 - Auth: Entra ID / Synology LDAP + role `admin` | `power_user` | `user` (ADR-006)
+- **Weryfikacja UI:** po zmianach wizualnych zawsze screenshot + Read (regula `.cursor/rules/verify-ui-after-changes.mdc`). Bez tego nie oddawac.

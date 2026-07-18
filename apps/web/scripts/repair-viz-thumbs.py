@@ -38,20 +38,18 @@ def main() -> int:
         except json.JSONDecodeError:
             overrides = {}
 
-    old_viz = data.get("viz_latest") or []
     forced = 0
-    for v in old_viz:
-        fn = (v.get("file") or "").upper()
-        if "SKLEP" in fn or "-XL" in fn or "_XL" in fn:
-            stem = safe_thumb_stem(
-                v.get("product_id") or "x",
-                v.get("index_base") or "pending",
-                v.get("lang") or "pl",
-            )
-            tp = THUMBS_DIR / stem
-            if tp.is_file():
-                tp.unlink()
-                forced += 1
+    # 2026-07-18: pick_thumb_file teraz premiuje PNG/WEBP (bez tla) nad JPG (z tlem
+    # studyjnym) w tym samym tierze. collect_viz_latest odswieza miniature TYLKO gdy
+    # zrodlo jest nowsze niz cache (mtime) - zmiana logiki wyboru pliku sama nie
+    # wywoluje rebuildu. Wymuszamy unlink WSZYSTKICH cache'owanych miniatur, aby kazda
+    # zostala przeliczona wg nowego rankingu (SKLEP/XL to i tak byl tylko podzbior).
+    for tp in THUMBS_DIR.glob("*.jpg"):
+        try:
+            tp.unlink()
+            forced += 1
+        except OSError:
+            pass
 
     viz = collect_viz_latest(products, THUMBS_DIR)
 

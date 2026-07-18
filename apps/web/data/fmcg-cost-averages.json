@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "currency": "PLN",
+  "estimate": true,
+  "source_note": "Placeholder averages for PL FMCG packaging ops until real ERP/printer quotes arrive. Labor rates stay in cost-rates.json / project-costs.json. Packaging material and print bands are industry-style midpoints (flexo short-run + warehouse packing), not invoices.",
+  "risk_uplift_pct": 8,
+  "per_open_variant": {
+    "raw_material_per_1000": {
+      "label": "Surowiec opakowania / 1000 szt.",
+      "amount": 420,
+      "note": "Srednia folia/kartonik short-run PL"
+    },
+    "production_labor": {
+      "label": "Robocizna produkcji / wariant",
+      "amount": 180,
+      "note": "Przezbrojenie + kontrola jakosci"
+    },
+    "warehouse_packing": {
+      "label": "Kompletacja magazynowa / wariant",
+      "amount": 95,
+      "note": "Pakowanie i etykietowanie wewnetrzne"
+    },
+    "proofing": {
+      "label": "Proof / akceptacja kolorow",
+      "amount": 320,
+      "note": "Proof cyfrowy lub kontrakcja"
+    },
+    "print_flexo_offset": {
+      "label": "Druk fleksograficzny / offset mini",
+      "amount": 1100,
+      "note": "Sredni koszt setup + krotki naklad"
+    }
+  },
+  "design_hours_per_open_variant": 4,
+  "sales_mock": {
+    "estimate": true,
+    "monthly_revenue_pln": 185000,
+    "monthly_units": 42000,
+    "trend_pct": 4.2,
+    "top_skus": [
+      { "name": "Batoniki / mini", "share_pct": 28 },
+      { "name": "Balls / oats", "share_pct": 22 },
+      { "name": "Export MIX", "share_pct": 18 }
+    ],
+    "note": "Szacunek do czasu danych rzeczywistych ze sprzedazy"
+  },
+  "swot": {
+    "strengths": [
+      "Wlasny indeks DAM i checklisty zmniejszaja ryzyko brakow plikow",
+      "Stawki labor z cost-rates sa jawne i da sie je korygowac"
+    ],
+    "weaknesses": [
+      "Brak realnych kwot z drukarni w modelu landed cost",
+      "Zaleznosc od kilku osob kluczowych (grafik / PM)"
+    ],
+    "opportunities": [
+      "Automatyzacja checklist i thumbs skraca cykl akceptacji",
+      "Ujednolicenie nosnikow obniża liczbę setupow druku"
+    ],
+    "threats": [
+      "Wzrost cen folii i farb flexo w short-run",
+      "Opóźnienia proofow wydłużają koszt miesiąca otwartych projektow"
+    ]
+  }
+}

@@ -287,8 +287,13 @@
 
   function carrierLabel(code, folder) {
     if (!DL) return code || headTokenSafe(folder) || "WARIANT";
+    var product = state.product || {};
     // DamLabels.carrierLabel ratuje FOLIA/DOY z nazwy folderu; nie doklejaj raw folderu
-    return DL.carrierLabel(code, folder);
+    return DL.carrierLabel(code, folder, {
+      isMix: DL.isMixProduct(product.display_name || product.name, product.tags),
+      productName: product.display_name || product.name,
+      tags: product.tags,
+    });
   }
 
   function isBogus(folder) {
@@ -675,8 +680,8 @@
   function renderAdminRevButtons(rev, idx) {
     if (!state.adminMode) return "";
     return '<div class="dam-admin-rev-actions">' +
-      '<button type="button" class="dam-admin-btn dam-admin-btn--ok" data-ridx="' + idx + '" data-status="aktualne">Aktualne</button>' +
-      '<button type="button" class="dam-admin-btn dam-admin-btn--no" data-ridx="' + idx + '" data-status="nieaktualne">Nieaktualne</button>' +
+      '<button type="button" class="dam-admin-btn dam-admin-btn--ok dam-admin-control" data-ridx="' + idx + '" data-status="aktualne">Aktualne</button>' +
+      '<button type="button" class="dam-admin-btn dam-admin-btn--no dam-admin-control" data-ridx="' + idx + '" data-status="nieaktualne">Nieaktualne</button>' +
     "</div>";
   }
 
@@ -1547,6 +1552,7 @@
     var html =
       '<div class="dam-basepath-overlay" id="damAddVariantModal">' +
         '<div class="dam-basepath-box" role="dialog" aria-modal="true" aria-labelledby="damAddVariantTitle">' +
+          '<button type="button" class="dam-modal-x" id="damAddVariantClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
           '<h3 id="damAddVariantTitle">Dodaj / popraw wariant</h3>' +
           '<p class="dam-basepath-lead">Wklej sciezke folderu wariantu (z D: lub Twojej bazy). Okresl typ nosnika i status. Rynek (DK/GC) rozpoznamy ze sciezki.</p>' +
           '<label class="dam-basepath-label" for="damAddVariantPath">Sciezka folderu</label>' +
@@ -1583,6 +1589,11 @@
 
     document.getElementById("damAddVariantPath").addEventListener("input", updateMarket);
     document.getElementById("damAddVariantCancel").addEventListener("click", function () { modal.remove(); });
+    document.getElementById("damAddVariantClose").addEventListener("click", function () { modal.remove(); });
+    modal.addEventListener("click", function (e) { if (e.target === modal) modal.remove(); });
+    document.addEventListener("keydown", function onEsc(e) {
+      if (e.key === "Escape") { modal.remove(); document.removeEventListener("keydown", onEsc); }
+    });
     document.getElementById("damAddVariantSave").addEventListener("click", function () {
       var pathRaw = (document.getElementById("damAddVariantPath").value || "").trim();
       var carrier = document.getElementById("damAddVariantCarrier").value;
@@ -1772,26 +1783,55 @@
     showToast("Pobrano product-status.json");
   }
 
+  function isAdminRole() {
+    var role =
+      (window.DamApi && typeof window.DamApi.role === "function" && window.DamApi.role()) ||
+      localStorage.getItem("dam_role") ||
+      "";
+    return String(role).toLowerCase() === "admin";
+  }
+
   function bindAdminControls() {
     var toggle = document.getElementById("damAdminToggle");
     var exportBtn = document.getElementById("damStatusExport");
+    var toggleWrap = toggle && toggle.closest(".dam-admin-toggle");
+    if (!isAdminRole()) {
+      if (toggleWrap) toggleWrap.style.display = "none";
+      else if (toggle) toggle.style.display = "none";
+      if (exportBtn) exportBtn.style.display = "none";
+      var barHidden = document.getElementById("damAdminBar");
+      if (barHidden) barHidden.style.display = "none";
+      state.adminMode = false;
+      localStorage.setItem(ADMIN_KEY, "0");
+      return;
+    }
+    if (toggleWrap) toggleWrap.style.display = "";
     if (toggle && !toggle._damBound) {
       toggle._damBound = true;
       state.adminMode = localStorage.getItem(ADMIN_KEY) === "1";
       toggle.checked = state.adminMode;
+      function syncExplorerAdminOutline() {
+        if (toggleWrap) toggleWrap.classList.toggle("dam-admin-control", !!state.adminMode);
+      }
+      syncExplorerAdminOutline();
       toggle.addEventListener("change", function () {
         state.adminMode = !!this.checked;
         localStorage.setItem(ADMIN_KEY, state.adminMode ? "1" : "0");
+        syncExplorerAdminOutline();
         var bar = document.getElementById("damAdminBar");
         var expBtn = document.getElementById("damStatusExport");
         if (bar) bar.style.display = state.adminMode ? "flex" : "none";
-        if (expBtn) expBtn.style.display = state.adminMode ? "inline-flex" : "none";
+        if (expBtn) {
+          expBtn.style.display = state.adminMode ? "inline-flex" : "none";
+          expBtn.classList.toggle("dam-admin-control", state.adminMode);
+        }
         renderAll();
       });
     }
     if (exportBtn && !exportBtn._damBound) {
       exportBtn._damBound = true;
       exportBtn.addEventListener("click", exportStatusJson);
+      exportBtn.classList.add("dam-admin-control");
       exportBtn.style.display = state.adminMode ? "inline-flex" : "none";
     }
     var bar = document.getElementById("damAdminBar");

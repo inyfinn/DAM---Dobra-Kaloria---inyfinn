@@ -76,7 +76,7 @@
               '<article class="dam-help-card">' +
                 '<i class="uil uil-image" aria-hidden="true"></i>' +
                 "<div><strong>Wizualizacje</strong>" +
-                "<p>Galeria aktualnych wizualizacji produktow. Pokazuje tylko najnowsze wersje (np. indeks .01 zamiast starego .00).</p></div>" +
+                "<p>Galeria wizualizacji produktow. Domyslnie tylko aktualne. Switch \"Pokaz wszystkie\" dolacza prototypy, dema oraz starsze/nieaktualne wersje.</p></div>" +
               "</article>" +
               '<article class="dam-help-card">' +
                 '<i class="uil uil-comment-alt-dots" aria-hidden="true"></i>' +
@@ -96,7 +96,7 @@
               '<article class="dam-help-card">' +
                 '<i class="uil uil-setting" aria-hidden="true"></i>' +
                 "<div><strong>Ustawienia</strong>" +
-                "<p>Sciezka bazowa Marketing, marki, jezyk. Przycisk Podpowiedz tylko sugeruje - zapisujesz po Sprawdz / Zapisz.</p></div>" +
+                "<p>Sciezka bazowa Marketing, marki, jezyk. \"Wykryj automatycznie\" tylko podpowiada - Ty zapisujesz przyciskiem Zapisz.</p></div>" +
               "</article>" +
             "</div>" +
           "</section>" +

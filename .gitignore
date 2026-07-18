@@ -12,6 +12,7 @@
 apps/desktop/data/*.sqlite
 apps/desktop/data/*.sqlite-*
 apps/desktop/data/bound-session.json
+apps/desktop/data/webview2-profile/
 apps/desktop/machine-config.json
 apps/web/data/dam-runtime.json
 apps/web/data/dam-identity.json

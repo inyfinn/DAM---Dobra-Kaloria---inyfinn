@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pl" dir="ltr">
 <head>
   <meta charset="UTF-8">
@@ -8,9 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718vizsw1">
-  <link rel="stylesheet" href="./assets/css/dam-app.css">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718noid1">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718v7f">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <style>
@@ -147,12 +147,12 @@
         <div class="col-lg-6">
           <div class="dam-settings-card">
             <h4><i class="uil uil-folder"></i> Sciezka bazowa dysku</h4>
-            <p style="font-size:12px;color:#8b8d97;margin:0 0 12px">To <strong>Twoje</strong> ustawienie (konto / profil). Aplikacja nie narzuca stalej litery dysku. Folder musi zawierac <strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>. Przycisk „Podpowiedz” tylko sugeruje, nie zapisuje.</p>
+            <p style="font-size:12px;color:#8b8d97;margin:0 0 12px">To <strong>Twoje</strong> ustawienie (konto / profil). Aplikacja nie narzuca stalej litery dysku. Folder musi zawierac <strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>. Przycisk "Wykryj automatycznie" tylko podpowiada - nie zapisuje sam.</p>
             <label for="settingBasePath" style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">Twoja sciezka bazowa Marketing</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <input type="text" id="settingBasePath" class="form-control" placeholder="np. X:\Marketing" style="flex:1;min-width:220px;border-radius:8px" data-dam-tip="Ustawiasz Ty - zalezy od konta i stacji">
-              <button type="button" class="geex-btn" id="settingBasePathDetect" data-dam-tip="Tylko podpowiedz z dysku - nie zapisuje samo">Podpowiedz</button>
-              <button type="button" class="geex-btn" id="settingBasePathTest" data-dam-tip="Sprawdz czy sa 3 foldery glowne">Sprawdz</button>
+              <button type="button" class="geex-btn dam-btn-icon" id="settingBasePathDetect" data-dam-tip="Przeszukuje dyski tego komputera i podpowiada sciezke - nie zapisuje sam"><i class="uil uil-search" aria-hidden="true"></i><span>Wykryj automatycznie</span></button>
+              <button type="button" class="geex-btn dam-btn-icon" id="settingBasePathTest" data-dam-tip="Sprawdza, czy w podanej sciezce sa wymagane foldery"><i class="uil uil-check-circle" aria-hidden="true"></i><span>Sprawdz foldery</span></button>
             </div>
             <p id="settingBasePathMsg" style="font-size:12px;margin:8px 0 0;display:none"></p>
             <p id="settingBasePathDetectInfo" style="font-size:11px;color:#8b8d97;margin:8px 0 0;display:none"></p>
@@ -238,6 +238,16 @@
         </div>
       </div>
 
+      <div class="row" style="margin-top:16px">
+        <div class="col-lg-12">
+          <div class="dam-settings-card">
+            <h4><i class="uil uil-shield-check"></i> Panel moderacji tagow</h4>
+            <p class="dam-setting-desc" style="margin:0 0 12px">Propozycje typu (nosnika) od uzytkownikow - zatwierdz, odrzuc, albo wybierz inny typ. Bez decyzji propozycja stosuje sie automatycznie po 72h.</p>
+            <div id="damModerationPanel"><p class="dam-widget__meta">Wczytywanie...</p></div>
+          </div>
+        </div>
+      </div>
+
       <div style="margin-top:8px">
         <button type="button" class="dam-save-btn" id="settingsSave" data-dam-tip="Zapisz wszystkie ustawienia">Zapisz ustawienia</button>
         <span id="settingsSaveMsg" style="margin-left:12px;font-size:12px;color:#2CBF44;display:none">Zapisano!</span>
@@ -250,12 +260,21 @@
   <script src="./assets/js/main.js"></script>
   <script src="./assets/js/dam-app.js?v=20260717ux6"></script>
   <script src="./assets/js/dam-api.js?v=20260718auth1"></script>
-  <script src="./assets/js/dam-i18n.js?v=20260717ux6"></script>
+  <script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-  <script src="./assets/js/dam-shell.js?v=20260718inyf1"></script>
+  <script src="./assets/js/dam-shell.js?v=20260718v7f"></script>
   <script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-  <script src="./assets/js/dam-paths.js?v=20260718userbase1"></script>
+  <script src="./assets/js/dam-paths.js?v=20260718btn1"></script>
+  <script src="./assets/js/dam-labels.js?v=20260718v7f"></script>
+  <script src="./assets/js/dam-badges.js?v=20260718v7f"></script>
+  <script src="./assets/js/dam-tag-edit.js?v=20260718v7f"></script>
   <script>
+    (function() {
+      var modPanel = document.getElementById("damModerationPanel");
+      if (modPanel && window.DamTagEdit) {
+        window.DamTagEdit.renderModerationPanel(modPanel);
+      }
+    })();
     (function() {
       var tooltipEl = document.getElementById("settingTooltips");
       var synologyEl = document.getElementById("settingSynology");
@@ -282,7 +301,7 @@
               return c.path + (c.ok ? " OK" : " brak");
             });
             detectInfo.style.display = "block";
-            detectInfo.textContent = "Podpowiedzi z dysku (nie zapisane same): " + bits.join(" | ");
+            detectInfo.textContent = "Znaleziono na dysku (nie zapisane automatycznie): " + bits.join(" | ");
           }
         });
       }
@@ -307,40 +326,42 @@
 
       document.getElementById("settingBasePathTest").addEventListener("click", function() {
         var raw = (basePathEl.value || "").trim();
-        if (!raw) { showBaseMsg("Podaj sciezke.", false); return; }
-        if (!window.DamPaths) { showBaseMsg("Zapis lokalny OK (modul sciezek niedostepny).", true); return; }
+        if (!raw) { showBaseMsg("Wpisz najpierw sciezke do folderu Marketing.", false); return; }
+        if (!window.DamPaths) { showBaseMsg("Zapisano lokalnie (weryfikacja niedostepna offline).", true); return; }
+        showBaseMsg("Sprawdzam foldery...", true);
         window.DamPaths.validateBaseRemote(raw).then(function(res) {
-          if (res && res.ok) showBaseMsg("OK - znaleziono 3 foldery glowne na tym komputerze.", true);
-          else if (res && res.missing) showBaseMsg("Brakuje: " + res.missing.join(", "), false);
-          else showBaseMsg("Bridge offline - nie da sie zweryfikowac folderow.", false);
+          if (res && res.ok) showBaseMsg("Wszystko w porzadku - ta sciezka zawiera wymagane foldery.", true);
+          else if (res && res.missing) showBaseMsg("Brakuje folderow: " + res.missing.join(", "), false);
+          else showBaseMsg("Nie mozna sprawdzic - most lokalny jest offline.", false);
         }).catch(function() {
-          showBaseMsg("Bridge offline (port 8766).", false);
+          showBaseMsg("Nie mozna sprawdzic - most lokalny jest offline (port 8766).", false);
         });
       });
 
       document.getElementById("settingBasePathDetect").addEventListener("click", function() {
         if (!window.DamPaths || !window.DamPaths.detectMarketingBasesRemote) {
-          showBaseMsg("Wykrywanie wymaga desktop bridge.", false);
+          showBaseMsg("Automatyczne wykrywanie wymaga aplikacji desktop (most lokalny offline).", false);
           return;
         }
+        showBaseMsg("Szukam folderu Marketing na dyskach tego komputera...", true);
         window.DamPaths.detectMarketingBasesRemote().then(function(res) {
           if (!res || !res.candidates) {
-            showBaseMsg("Bridge nie zwrocil kandydatow.", false);
+            showBaseMsg("Nie znaleziono zadnych propozycji - wpisz sciezke recznie.", false);
             return;
           }
           var bits = res.candidates.map(function(c) {
             return c.path + (c.ok ? " OK" : " brak");
           });
           detectInfo.style.display = "block";
-          detectInfo.textContent = "Na tym PC: " + bits.join(" | ");
+          detectInfo.textContent = "Znaleziono na dysku (nie zapisane automatycznie): " + bits.join(" | ");
           if (res.recommended) {
             basePathEl.value = res.recommended;
-            showBaseMsg("Podpowiedz: " + res.recommended + " - kliknij Zapisz, jesli OK.", true);
+            showBaseMsg("Znaleziono: " + res.recommended + " - kliknij \"Zapisz ustawienia\", jesli to prawidlowa sciezka.", true);
           } else {
-            showBaseMsg("Brak podpowiedzi - wpisz sciezke i zapisz.", false);
+            showBaseMsg("Nie znaleziono folderu Marketing automatycznie - wpisz sciezke recznie.", false);
           }
         }).catch(function() {
-          showBaseMsg("Bridge offline (port 8766).", false);
+          showBaseMsg("Nie mozna wykryc - most lokalny jest offline (port 8766).", false);
         });
       });
 
@@ -378,7 +399,7 @@
         }
         return Promise.resolve(api.restart_window()).then(function(res) {
           if (res && res.ok) {
-            showRestartMsg("Restartuje okno…", true);
+            showRestartMsg("Restartuje okno?", true);
           } else {
             showRestartMsg((res && res.error) || "Nie udalo sie zrestartowac.", false);
           }

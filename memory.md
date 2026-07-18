@@ -15,6 +15,7 @@ Data: **2026-07-16**. Wykonawca: Composer 2.5. Workspace: **tylko `P:\DAM`**.
 9. **Role v1:** dokladnie `admin` | `power_user` | `user`. Mapowanie grup Azure/LDAP konfigurowalne.
 10. **Em-dash ban:** zakaz `—` i `–` w UI, commit messages, copy agentow. Tylko `-`.
 11. **Nie kopiowac** kodu structure-mcp do DAM; tylko wiedza domenowa (sloty 0-4, indeksy).
+12. **Weryfikacja UI (2026-07-18):** po kazdej zmianie wizualnej - screenshot przegladarki + Read obrazu. Zakaz oddania "na oko"/sam CDP. Sidebar collapsed: logo w calosci czytelne (`object-fit: contain`, nie crop). Regula: `.cursor/rules/verify-ui-after-changes.mdc`.
 
 ## Stack
 
@@ -312,3 +313,212 @@ Data: **2026-07-16**. Wykonawca: Composer 2.5. Workspace: **tylko `P:\DAM`**.
     - Cel: instalacja na udziale; zero dziedziczenia cudzej sesji miedzy PC.
     - Docs: `docs/ADR/ADR-008-device-session-binding.md`, `docs/DEPLOYMENT.md`.
     - Release ZIP: `scripts/ops/build-release-zip.ps1` -> `dist/DAM-ETA-*.zip`.
+
+60. **Skrot VBS - ZAKAZ SW_HIDE (KRYTYCZNE, 2026-07-18, root cause "nic sie nie dzieje"):**
+    - `run-dam.vbs` wolal `sh.Run ..., 0, False` (styl okna 0 = SW_HIDE). `pythonw.exe` i tak nie ma konsoli,
+      ale STARTUPINFO ze `SW_HIDE` blokuje **pierwsze pojawienie sie** okna WinForms/WebView2 (pywebview) -
+      caly backend (most, watcher, WebView2 renderer) startuje poprawnie w tle, ale okno NIGDY sie nie pokazuje.
+    - Fix: styl okna **1** (SW_SHOWNORMAL) w obu `sh.Run` (fallback PATH i pythonw z pelna sciezka) +
+      `sh.CurrentDirectory = desktopDir` przed `Run`.
+    - Zweryfikowane empirycznie: `Start-Process wscript.exe run-dam.vbs` + polling `MainWindowTitle` co 1.5s;
+      przed fixem brak okna po 120s (proces zyje, WebView2 renderer dziala), po fixie okno widoczne ~1.5-2s.
+    - Nie diagnozowac tego przez samo sprawdzenie `Get-Process` po chwili - proces bedzie zawsze zyc; test
+      MUSI sprawdzac `MainWindowHandle` / `MainWindowTitle`.
+
+61. **WebView2 profil trwaly (szybszy start, 2026-07-18):**
+    - Domyslnie pywebview (`private_mode=True`) tworzy NOWY folder w `%TEMP%\tmpXXXXXXXX\EBWebView` przy
+      KAZDYM starcie i usuwa go po zamknieciu (`clear_user_data()` w `edgechromium.py`) - to "cold start"
+      WebView2 (bez cache) kazde uruchomienie.
+    - Fix w `launch.py`: `webview.start(..., private_mode=False, storage_path=apps/desktop/data/webview2-profile)`.
+      Profil zostaje na dysku miedzy sesjami (gitignored). TypeError fallback dla starszych pywebview.
+
+62. **Teksty przyciskow - jeden human-friendly wzorzec (ui-taste, 2026-07-18):**
+    - Zakaz gołych imperatywow bez obiektu ("Podpowiedz", "Sprawdz") - user zglosil jako "dziwne".
+    - Wzorzec: "Wykryj automatycznie" (z ikona lupy) / "Sprawdz foldery" (z ikona ptaszka) - `dam-btn-icon`.
+    - Komunikaty: stan ladowania ("Szukam folderu Marketing...", "Sprawdzam foldery...") + wynik w jezyku
+      czlowieka ("Wszystko w porzadku - ta sciezka zawiera wymagane foldery.", "Znaleziono: X - kliknij...").
+    - Zero krzywych cudzyslowow „ " w kodzie (mangled na `?`/`` w tym projekcie) - tylko ASCII `"`.
+    - Zmiana w: `settings.html`, `dam-paths.js` (modal setup), `dam-shortcuts.js` (panel pomocy).
+
+63. **Dashboard/Faktury - karty statystyk 2x2 + kolory (KRYTYCZNE, 2026-07-18):**
+    - `.geex-content__summary__count` NIE uzywac `grid-template-columns: repeat(auto-fit, minmax(...))` dla stalej liczby
+      kart (4) - auto-fit dobiera liczbe kolumn wg szerokosci kontenera i przy 4 elementach czesto daje 3+1
+      (osierocona karta w nowym rzedzie, zle wyrownana). Fix: `repeat(2, minmax(0, 1fr))` na sztywno (2x2 zawsze),
+      `repeat(1, ...)` tylko pod 575.98px. Zweryfikowane CDP `getBoundingClientRect` na 375/768/1360/1920px.
+    - Kolory kart: **zakaz** `.danger-bg` (czerwony) dla neutralnych metryk (np. liczba zadan Asana) - czerwony =
+      alarm, myli usera. Uzyc `.info-bg`. Geex domyslny `--info-color: #58CDFF` ma kontrast ~1.8:1 z bialym tekstem
+      (WCAG AA wymaga 4.5:1) - nadpisane w `dam-tokens.css` na `#5B8DEF` (kontrast ~5:1).
+    - Literowka klasy `primay-bg` (bez "r") -> `primary-bg` (poprawna, istniejaca w `style.css`).
+    - Wzorzec 4 kart: primary (fiolet, total), info (niebieski, w toku/neutralne), success (zielon, kompletne),
+      warning (oranz, braki). `danger` tylko dla realnie blokujacych stanow.
+    - `assets/img/balance-bg.svg` (dzielony przez `dashboard.html` + `invoices.html`): usunieto losowe
+      pastelowe blob-y z demo Geex (koral #EF9A91, krem #F1E6B9, blekit #B7DBF9 - kolory bez zwiazku z marka/kosztem).
+      Nowy motyw: "sygnet" (2 nakladajace sie kola = monety) w barwach marki (Geex fiolet #AB54DB + DK zielony
+      #008244), niska opacity (0.14-0.16) + 2 cienkie piersciene (obrys monety) - subtelny, zwiazany z kosztami,
+      "lekko widoczny" w tle panelu (nie przycisk, nie logo).
+    - Cache bump: `dam-tokens.css?v=20260718cost1`, `dam-app.css?v=20260718cost1`, `balance-bg.svg?v=20260718cost1`
+      (wszystkie strony HTML zaktualizowane razem, jedna wersja).
+
+65. **Wizualizacje: switch "Pokaz wszystkie" (2026-07-18):**
+    - Domyslnie OFF = tylko aktualne (najnowsze rewizje), bez Demo.
+    - ON = starsze/nieaktualne + Demo/prototypy. Tooltip to tlumaczy.
+    - Klucz localStorage: `dam_viz_show_all` (stary `dam_viz_latest_only` migrujemy odwrotnie).
+
+66. **Tagi Opakowanie = pelna lista nosnikow (2026-07-18):**
+    - Opakowanie: doypack, baton, mini baton, karton 6x, karton, bigpak, folia, etykieta,
+      etykieta butelka, etykieta sloik, rekaw, tuba, shot (+ doy 6x, sasz, obwoluta).
+    - Nosniki NIE w wierszu Typ (Typ = forma: kulki, sypkie, nuggets…).
+
+64. **Naming dictionary + rozpoznawanie nosnikow/jezykow (2026-07-18):**
+    - Jedno zrodlo: `apps/web/data/naming-dictionary.json` (+ sciagawka `docs/NAMING.md`).
+      Python (`build-file-index.py`) i JS (`dam-labels.js`) czytaja ten sam slownik.
+    - `parse_carrier`: SLEEVE/FOIL/CARTON → REKAW/FOLIA/KAR; kody CZ/SK odcinane z prefiksu nosnika.
+    - `parse_folder_langs`: skanuje WSZYSTKIE segmenty ` - ` (nie tylko ostatni).
+    - Jezyk wiz: folder-langs → jawny kod z pliku → default marki (DK=pl, GC=gb) tylko gdy brak sygnalu.
+    - MIX → etykieta `MIX - <nosnik>` (nigdy gole WARIANT). UI nosnikow zawsze PL.
+    - Foldery zaczynajace sie od daty → carrier OTHER, potem inferencja z nazw plikow; DATE/WARIANT-*
+      bez tokenu nosnika zostaje puste (zglaszac do potwierdzenia, nie zgadywac FOLIA/DOY).
+    - Wspolne tagi: `dam-badges.js` (explorer + wizualizacje); "Warianty" zamiast "Wiele rewizji".
+    - Tryb admina tylko gdy `DamApi.role()==="admin"`; klasa `.dam-admin-control` (czerwona obwodka).
+    - Miniatura: pywebview `pick_thumb` + browser `GET /folder-images`; flagi `viz-flags.json` + `POST /viz-flag`.
+    - Cache UI: `?v=20260718vizadm1` (dam-brand, dam-labels, dam-badges, dam-viz, dam-explorer).
+
+67. **Dashboard widgety (2026-07-18):**
+    - Konfigurowalny pulpit: `dam-dashboard-widgets.js` + `dam-dashboard.css` + modal Dostosuj.
+    - Layout w `localStorage` klucz `dam_dash_layout_v1:<email|anon>`. Domyslnie BEZ kosztu miesiaca.
+    - 24 widgety (katalog w registry). FMCG landed: `data/fmcg-cost-averages.json` + `dam-fmcg-cost.js`.
+    - Powiadomienia nowej wiz: `dam-notify.js` (Notification API, poll 60s, klucz `dam_notify_new_viz`).
+    - Sprzedaz / SWOT / landed = szacunki az do danych realnych (etykieta chip).
+    - Cache: `?v=20260718dash3`.
+
+## 2026-07-18 - Tagi wizualizacji v2: rozmiary, OTHER, moderacja, aliasy, zgloszenia (7 faz)
+
+68. **Rozmiary tagow - matematyka (KRYTYCZNE, nie zmieniac bez pytania):**
+    - Pill wyszukiwania (Smak/Typ/Opakowanie, `.dam-tag-pill`): `font-size: var(--dam-tag-fs-pill, 10.5px)` (+5% od bazowych 10px).
+    - Badge karty/modalu (`.dam-viz-badge`): `font-size: var(--dam-tag-fs-badge, 14px)` (= pill x1.35).
+    - Tokeny w `dam-tokens.css`. **Zakaz** przywracania `min-height/min-width: 44px` na `.dam-viz-badge` -
+      to byl root cause "tagi 2x za duze" (2026-07-18). Touch-target 44px tylko dla klikalnych `button.dam-badge-tag`
+      przez niewidoczny `::before{inset:-8px}` (hit-area), NIE przez wizualne rozdecie chipa.
+    - `maxTotal` w `DamBadges.render()` (dam-badges.js) limituje SUMA tagow na karcie (nie tylko per-kind) -
+      przy dodawaniu nowego typu tagu na karte ZAWSZE podnies `maxTotal` w wywolaniu w `dam-viz.js`,
+      inaczej nowy tag ucina sie w "+N" (bug znaleziony 2026-07-18: dodanie Kategorii+Podkategorii
+      bez podniesienia `maxTotal` z 6 na 9 chowalo Multijezyczny/Indeks).
+
+69. **OTHER/WARIANT - nigdy w UI (KRYTYCZNE):**
+    - Root cause: `DamLabels.carrierLabel()` (dam-labels.js) i `naming-dictionary.json.ui.multi_lang_label`
+      to DWA rownoleglych zrodla - dictionary ladowany przez XHR NADPISUJE JS defaults (`applyNamingDict`).
+      Napraw ZAWSZE w OBU miejscach, inaczej zmiana w jednym pliku "nie dziala" (co wygladalo jak bug cache).
+    - `carrierLabel()` zwraca `""` (nie renderuje sie) dla OTHER/UNKNOWN/WARIANT - NIGDY literal.
+    - Zgadywanie typu (Faza 2): `build-file-index.py scan_product()` - majority carrier z sasiednich
+      rewizji TEGO SAMEGO produktu. Ustawia `carrier_guessed: true` na rewizji/viz_latest. UI: badge
+      typu + male "?" (`.dam-viz-badge--guessed::after`), widoczne dla WSZYSTKICH rol (nie tylko admin).
+    - Brak typu i brak zgadniecia -> badge "Dodaj typ" (`showCarrierPlaceholder`), klikalny dla wszystkich.
+
+70. **Podkategoria PL (bracket produktu) - diakrytyki (KRYTYCZNE):**
+    - `SUBCATEGORY_PL` w `build-file-index.py` mapuje nawias `[ balls_crispy ]` -> "Kulki Kruche" itd.
+      Zrodlo bracketow = `BRACKET_HINT_RE` na SUROWEJ nazwie produktu (NIE filtrowana `bracket_tags`
+      z `is_noise_tag` - ta odrzuca wielowyrazowe tagi typu "balls_crispy"/"plant based", potrzebne dla
+      Typ/Smak, ale Podkategoria potrzebuje wszystkich).
+    - Audyt polskich znakow 2026-07-18: `LANG_LABELS` (dam-labels.js) I `naming-dictionary.json.languages`
+      mialy Lotwa/Wegry/Slowacja/Wlochy/Bulgaria/Slowenia BEZ diakrytykow (nie mojibake - po prostu
+      nigdy nie wpisane z akcentem). Naprawione w OBU plikach. `REKAW`->`RĘKAW`, `ETY-SLO`->"ETYKIETA SŁOIK".
+    - **WAZNE:** `repr()`/`print()` w PowerShell/cp1250 konsoli PSUJE polskie znaki na WYJSCIU (pokazuje
+      U+FFFD) mimo ze plik na dysku ma poprawny UTF-8 - zawsze weryfikuj przez `open(..., 'rb').read()`
+      (bajty) albo w przegladarce, NIE przez `print(repr(...))` w terminalu Windows.
+
+71. **Alias produktow DK<->GC (P1/P9):** `apps/web/data/product-aliases.json` - grupy `{canonical_id,
+    linked_by, members:[{product_id,brand}]}`. `apply_product_aliases()` w `build-file-index.py` dopisuje
+    kazdemu czlonkowi `linked_products` + `alias_langs` (suma jezykow wszystkich czlonkow + default marki
+    PL/GB). Frontend: `dam-viz.js withAliasItems()` rozszerza pasek wariantow modalu o wszystkie
+    `linked_products` PRZED dedupem. Seed: `owies-miod-sniadanie` (DK) <-> `cornflakes-peanuts-honey-balls-crispy`
+    (GC), wspolny indeks 6300699. Nowe pary: reczna edycja JSON (UI picker - Faza 4/przyszlosc).
+
+72. **Moderacja tagow (Faza 4) - kolejka propozycji:**
+    - `local_bridge.py`: `POST /rename-revision-prefix` (dowolna rola) - admin/power_user + `dam_admin_mode=1`
+      -> zmiana NATYCHMIASTOWA na dysku (`rename_revision_prefix_on_disk` - zamienia WYLACZNIE prefiks
+      folderu, wykrywa istniejacy znany kod i GO ZASTĘPUJE, nie doklejuje drugiego przed pierwszym).
+      Inaczej -> `tag-proposals.json` (status pending, `expires_at=+72h`).
+    - `GET /tag-proposals` lazily wywoluje `auto_apply_expired_proposals()` (72h bez decyzji = auto-apply).
+    - `POST /tag-proposals/decide` {proposal_id, decision: approve|reject|pick_other} - panel w
+      `settings.html#damModerationPanel` (`dam-tag-edit.js renderModerationPanel`), widoczny dla admin/power_user.
+    - `carrier-types.json` (custom_types/deleted_types) - "Dodaj typ" w popover (`dam-tag-edit.js`).
+      Usuniecie typu z `replacement` -> zbiorczo `rename_revision_prefix_on_disk` dla wszystkich wpisow
+      w `carrier-assignment-log.json` z tym kodem (historia przypisan, appended na kazdej zmianie).
+    - Frontend klik na tag typu (`.dam-tag-editable`) -> `DamTagEdit.openCarrierPicker()` (popover),
+      NIE filtr wyszukiwania (to bylo domyslne zachowanie `dam-badges.js` przed Faza 4).
+
+73. **Zgloszenie "Zglos zapotrzebowanie" (Faza 5/6, P10):**
+    - Modal `dam-viz-request.js` (`DamVizRequest.open(ctx)`): checkboxy Email/Teams/Asana/W aplikacji +
+      Wszystko/Wyczysc/Odwroc + Anuluj/Wyslij + X. Pamieta wybor: `localStorage.dam_viz_request_channels`.
+    - Backend `POST /viz-request` (local_bridge.py): wpis w `inbox-items.json` ZAWSZE (niezaleznie od
+      kanalow), Email/Teams/Asana na razie STUB (log do audit-log, gotowe pod prawdziwe credentiale
+      ADR-005). Odbiorcy "grafik": `apps/web/data/notification-groups.json` (edytuj plik, nie kod).
+    - Modal wizualizacji: jezyki bez realnej wizki (`alias_langs` minus `items` obecne langi) ->
+      wyszarzony badge (`.dam-viz-badge--lang-missing`) + przycisk zgloszenia (`uil-bell-plus`).
+    - Siatka glowna: TYLKO pozycje z realna wizka (bez zmian - juz bylo). "Pokaz wszystkie" = reszta.
+
+74. **Inbox (Faza 6):** `inbox.html` (nowa strona) - laczy `GET /inbox-items` (bridge) + `data/asana-tasks.json`,
+    filtr po tagach (wizualizacja/asana/teams/mail/projekt/prywatna). "Wszystkie zadania" w panelu wiadomosci
+    (`dam-shell.js`) linkuje TU (bylo: `dashboard.html` - literalny bug zglaszany przez usera, potwierdzony w kodzie).
+    `PAGE_TRAIL.inbox` dodany dla breadcrumb.
+
+75. **X / Wstecz - audyt UX (Faza 6):**
+    - Generyczna klasa `.dam-modal-x` (dam-brand.css) dla przyciskow zamkniecia - dodana do
+      `damAddVariantModal` (byl bez X, tylko "Anuluj"). Thumb-picker juz mial X (`×` + click-outside).
+    - `dam-shell.js goBackNav()`: jesli otwarty modal/popover/lightbox (`#damVizModal`, `#damVizRequestModal`,
+      `#damTagEditPopover`, `#damThumbPicker`, `#damAddVariantModal`) -> **Wstecz go zamyka**, NIE nawiguje
+      do innej strony (`closeTopmostOverlayIfAny()`). Nawigacja miedzy stronami (pelny stack) - bez zmian,
+      poza tym wyjatkiem (user: "cofa ostatnia akcje, nie cala karte - WYJATEK: podglad zamyka Wstecz").
+
+76. **Naprawa migracji MATERIALY->PROJEKT/DRUK (Faza 3) - NIE AUTOMATYCZNA:**
+    - Skrypt `apps/web/scripts/repair-materialy-to-projekt.py` (DK+GC, generyczny po slowach-kluczach
+      MATERIA/PROJEKT-PROJECT/DRUK-PRINT w nazwie slotu, nie po numerze - warianty nazw sa niekonsekwentne:
+      "2 - PROJEKT"/"2 - Projekt"/"2 – PROJEKT"/"2- PROJEKT"/"PROJEKT" bez numeru).
+    - Zasada: PROJEKT ma pliki -> NIE RUSZAMY. PROJEKT pusty -> szukaj .ai/.psd/.indd/.pdf w MATERIALY
+      (w tym JEDEN poziom podfolderow, np. "...Folder do druku" - user zglosil ze migracja czasem tam
+      zagniezdzila pliki) -> raport `data/materialy-to-projekt-dryrun.json`. DRUK tylko FLAGOWANY
+      (nigdy automatycznie przenoszony - inna semantyka checklisty). Brak zrodla -> zostaw, checklist
+      i tak pokaze brak (to jest prawda o danych, nie zgadujemy).
+    - **Domyslnie tylko dry-run.** `--apply` wymaga wyraznej zgody usera PO przegladzie raportu - ZERO
+      usuwania, `shutil.move` tylko gdy dest nie istnieje, audit log kazdego przeniesienia.
+    - Test run 2026-07-18: 16 kandydatow (6 DK, 10 GC) - w tym potwierdzony przypadek usera
+      (ORZESZKI MIOD/6300524, plik w `1 - MATERIAŁY/DK_..._Folder`).
+    - Rozszerzona checklista: `classify_special_document()` rozpoznaje "karty_wprowadzenia" (zwykle w
+      MATERIALY) i "strategia" (.pptx z "strategi"/"pozycjonowani"/"koncepcj" w nazwie, rowniez MATERIALY).
+      `SCAN_EXT` rozszerzony o .pptx/.ppt/.docx/.doc/.key.
+
+77. **Cache-bust wspolny tej rundy:** znormalizowane na jedna wersje `?v=20260718v7f` na WSZYSTKICH
+    stronach HTML dla: `dam-tokens.css`, `dam-brand.css`, `dam-labels.js`, `dam-badges.js`, `dam-viz.js`,
+    `dam-tag-edit.js`, `dam-viz-request.js`, `dam-shell.js`, `dam-explorer.js`, `dam-dashboard-widgets.js`.
+    Przy nastepnej duzej zmianie w tych plikach - NOWY sufiks na WSZYSTKICH stronach na raz (skrypt
+    PowerShell `-replace` na `apps/web/*.html`, potem koniecznie sprawdzic brak BOM: `Set-Content
+    -Encoding UTF8` w Windows PowerShell 5.1 DOPISUJE BOM - zawsze stripuj bajtami po masowej zamianie).
+
+78. **Domkniecie checklisty planu (2026-07-18, po wlasnej weryfikacji):** dwie realne dziury znalezione
+    i naprawione po zaimplementowaniu 7 faz:
+    - 72h auto-apply propozycji tagow bylo TYLKO lazy (na GET /tag-proposals) - plan wymagal
+      "cron/watcher co ~15 min" niezaleznie od tego czy ktos otworzyl panel. Dodano
+      `_tag_proposal_watcher()` (daemon thread w `local_bridge.py main()`), lazy check zostaje jako
+      dodatkowa siec bezpieczenstwa.
+    - "Pokaz wszystko" nie ujawnial rewizji BEZ wizki jako wyszarzonych placeholderow (byly calkowicie
+      pomijane w `expandVizFromProducts` - `dam-viz.js`). Naprawione: gdy `onlyLatest=false` (showAll),
+      rewizje z `wizki_count===0` dostaja `has_viz: false`, karta renderuje `.dam-viz-card--no-viz`
+      (szary diagonalny wzor + `.dam-viz-thumb__noviz` "Brak wizualizacji") z przyciskiem "Zglos"
+      (`.dam-viz-request-btn` -> `DamVizRequest.open()`) zamiast Przejdz/Udostepnij.
+
+78. **App chrome + tag edit (2026-07-18 vizux):**
+    - Favicon/PWA: `assets/img/favicon-dk.svg` + `manifest.webmanifest`; `dam-shell.ensureAppIcons()`.
+    - Tooltipy: jasne (`.dam-tooltip` biale), `dam-tooltips.js` binduje `data-dam-tip`/`title`/`aria-label`.
+    - Kolory badge: cat=zielony, carrier/opakowanie=pomarancz, subcat/smak=fiolet, warianty=teal (nie czerwony).
+    - Admin tryb: pojedynczy klik tagu typu = filtr (opozniony 520ms); **podwojny klik <=500ms** lub **Shift+klik** = picker.
+    - Picker: wybor pending, footer **Zatwierdz** (zielony) + **Anuluj** (czerwony X), opcja **BRAK TYPU** (`NONE` w bridge).
+    - Zmiana marki DK/GC vs sciezka folderu: `confirm()` ostrzezenie.
+    - Cache-bust tej rundy: `?v=20260718vizux2`.
+
+79. **Admin modal undo + (UKRYTE) (2026-07-18):**
+    - Miniatura / Demo / Ukryj / Dodaj sa **odwracalne** (toggle): Reset / Demo off / Pokaz / Usun.
+    - Ukryj **nie zamyka** modala. Tag admin-only **`(UKRYTE)`** - klik odklika ukrycie.
+    - Ukrycie jest na **product_id** (caly kafelek), nie na pojedynczy jezyk/indeks.
+    - Admin + **Pokaz wszystko** widzi ukryte (bez showAll ukryte sa odfiltrowane nawet dla admina).
+    - Tooltipy: `z-index: 20050`, tip nad stopka modala (preferAbove), bez tipowania `role=dialog`.
+    - Toast: top-right (nie zaslania admin buttons). Cache-bust: `?v=20260718admin2/3`.

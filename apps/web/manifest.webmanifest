@@ -1,0 +1,25 @@
+{
+  "name": "DAM ETA - Dobra Kaloria",
+  "short_name": "DAM ETA",
+  "description": "Digital Asset Management - Dobra Kaloria / Good Calories",
+  "start_url": "./visualizations.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#008244",
+  "lang": "pl",
+  "icons": [
+    {
+      "src": "assets/img/favicon-dk.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/img/logo-dk-green.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

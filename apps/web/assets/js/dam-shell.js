@@ -15,6 +15,52 @@
   var LOGO_SRC_LIGHT = "assets/img/logo-dk-green.svg";
   var LOGO_SRC_DARK = "assets/img/logo-dk-green.svg";
   var LOGO_SRC = LOGO_SRC_LIGHT;
+  var FAVICON_SRC = "assets/img/favicon-dk.svg";
+  var MANIFEST_HREF = "manifest.webmanifest";
+
+  /** Favicon DK + meta PWA (telefon / Add to Home Screen). */
+  function ensureAppIcons() {
+    var head = document.head;
+    if (!head) return;
+
+    function upsertLink(rel, attrs) {
+      var sel = 'link[rel="' + rel + '"]';
+      if (attrs.sizes) sel += '[sizes="' + attrs.sizes + '"]';
+      var el = head.querySelector(sel);
+      if (!el) {
+        el = document.createElement("link");
+        el.setAttribute("rel", rel);
+        head.appendChild(el);
+      }
+      Object.keys(attrs).forEach(function (k) {
+        el.setAttribute(k, attrs[k]);
+      });
+      return el;
+    }
+
+    function upsertMeta(name, content) {
+      var el = head.querySelector('meta[name="' + name + '"]');
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("name", name);
+        head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    }
+
+    upsertLink("icon", { type: "image/svg+xml", href: FAVICON_SRC + "?v=20260718dk1" });
+    upsertLink("shortcut icon", { type: "image/svg+xml", href: FAVICON_SRC + "?v=20260718dk1" });
+    upsertLink("apple-touch-icon", { href: LOGO_SRC_LIGHT });
+    upsertLink("manifest", { href: MANIFEST_HREF });
+    upsertMeta("theme-color", "#008244");
+    upsertMeta("apple-mobile-web-app-capable", "yes");
+    upsertMeta("apple-mobile-web-app-status-bar-style", "default");
+    upsertMeta("apple-mobile-web-app-title", "DAM ETA");
+    upsertMeta("mobile-web-app-capable", "yes");
+    if (!document.title || /geex/i.test(document.title)) {
+      /* nie nadpisuj sensownych tytulow stron */
+    }
+  }
 
   var NAV_ITEMS = [
     {
@@ -94,6 +140,7 @@
     settings: { labelKey: "user.settings", label: "Ustawienia", parent: "dashboard", href: "settings.html" },
     billing: { labelKey: "user.billing", label: "Rozliczenia", parent: "dashboard", href: "billing.html" },
     activity: { labelKey: "user.activity", label: "Aktywnosc", parent: "dashboard", href: "activity.html" },
+    inbox: { labelKey: "nav.inbox", label: "Skrzynka odbiorcza", parent: "dashboard", href: "inbox.html" },
     help: { labelKey: "user.help", label: "Pomoc", parent: "dashboard", href: "help.html" }
   };
 
@@ -149,7 +196,30 @@
     return parent ? parent.href : "dashboard.html";
   }
 
+  /* Faza 6 (2026-07-18, P-audyt X/Wstecz): jesli jest otwarty podglad/modal
+     (lightbox wizualizacji, popover edycji tagu, modal zgloszenia), "Wstecz"
+     ZAMYKA GO i nie nawiguje do innej strony. Wyjatek zgodny z prosba usera. */
+  function closeTopmostOverlayIfAny() {
+    var overlaySelectors = [
+      "#damVizModal",
+      "#damVizRequestModal",
+      "#damTagEditPopover",
+      "#damThumbPicker",
+      "#damAddVariantModal",
+      "#damBasepathModal",
+    ];
+    for (var i = 0; i < overlaySelectors.length; i++) {
+      var el = document.querySelector(overlaySelectors[i]);
+      if (el) {
+        el.remove();
+        return true;
+      }
+    }
+    return false;
+  }
+
   function goBackNav() {
+    if (closeTopmostOverlayIfAny()) return;
     var stack = [];
     try { stack = JSON.parse(sessionStorage.getItem(NAV_STACK_KEY) || "[]"); } catch (e) { stack = []; }
     if (!Array.isArray(stack)) stack = [];
@@ -361,17 +431,18 @@
   function buildSidebarNav() {
     var active = currentPageKey();
     return NAV_ITEMS.map(function (item) {
+      var label = navItemLabel(item);
       var isActive = item.key === active ? " active" : "";
       return '<li class="geex-sidebar__menu__item' + isActive + '">' +
-        '<a href="' + item.href + '" class="geex-sidebar__menu__link">' +
-        '<i class="uil ' + item.icon + '" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
-        '<span data-i18n="' + item.i18n + '">' + navItemLabel(item) + '</span>' +
+        '<a href="' + item.href + '" class="geex-sidebar__menu__link" title="' + label + '" aria-label="' + label + '">' +
+        '<i class="uil ' + item.icon + '" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
+        '<span class="dam-nav-label" data-i18n="' + item.i18n + '">' + label + '</span>' +
         '</a></li>';
     }).join("") +
     '<li class="geex-sidebar__menu__item" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px">' +
-    '<a href="#" class="geex-sidebar__menu__link dam-logout-btn" id="damShellLogout">' +
-    '<i class="uil uil-sign-out-alt" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
-    '<span data-i18n="nav.logout">' + navItemLabel({ i18n: "nav.logout" }) + '</span>' +
+    '<a href="#" class="geex-sidebar__menu__link dam-logout-btn" id="damShellLogout" title="Sesja urzadzenia" aria-label="Sesja urzadzenia">' +
+    '<i class="uil uil-sign-out-alt" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
+    '<span class="dam-nav-label" data-i18n="nav.logout">' + navItemLabel({ i18n: "nav.logout" }) + '</span>' +
     '</a></li>';
   }
 
@@ -435,6 +506,25 @@
         '<img class="logo-dark dam-logo-dk" src="' + LOGO_SRC_DARK + '" alt="Dobra Kaloria" width="150" height="48" />';
       header.insertBefore(logo, header.firstChild);
     }
+
+    var bottomLogo = wrapper.querySelector(".dam-sidebar-logo-collapsed");
+    if (!bottomLogo) {
+      bottomLogo = document.createElement("a");
+      bottomLogo.href = "dashboard.html";
+      bottomLogo.className = "dam-sidebar-logo-collapsed";
+      bottomLogo.setAttribute("aria-label", "Dobra Kaloria - DAM ETA");
+      bottomLogo.setAttribute("title", "Dobra Kaloria - DAM ETA");
+      bottomLogo.innerHTML =
+        '<img class="logo-lite dam-logo-dk" src="' + LOGO_SRC_LIGHT + '" alt="Dobra Kaloria" width="48" height="48" />' +
+        '<img class="logo-dark dam-logo-dk" src="' + LOGO_SRC_DARK + '" alt="Dobra Kaloria" width="48" height="48" />';
+      wrapper.appendChild(bottomLogo);
+      bottomLogo.addEventListener("click", function (e) {
+        if (!document.body.classList.contains("dam-sidebar-collapsed")) return;
+        e.preventDefault();
+        setSidebarCollapsed(false);
+      });
+    }
+
     applyDobraKaloriaLogo();
   }
 
@@ -726,7 +816,7 @@
         '<div id="damMsgAsana"><ul class="geex-content__header__popup__items">' + asanaHTML + "</ul></div>" +
         '<div id="damMsgTeams" hidden><ul class="geex-content__header__popup__items">' + teamsHTML + "</ul></div>" +
       "</div>" +
-      '<div class="dam-msg-footer-link"><a href="dashboard.html">Wszystkie zadania</a></div>' +
+      '<div class="dam-msg-footer-link"><a href="inbox.html">Wszystkie zadania</a></div>' +
       '<div class="dam-msg-resize-handle" title="Przeciagnij, aby zmienic wysokosc" aria-label="Zmien wysokosc okna wiadomosci"></div>';
 
     msgPopup.querySelectorAll(".dam-msg-tab").forEach(function (tab) {
@@ -1071,6 +1161,7 @@
 
   // Main init
   function init() {
+    ensureAppIcons();
     enforceAuth();
     ensureSidebarLogo();
     applyDobraKaloriaLogo();
@@ -1105,7 +1196,7 @@
     // F1 pomoc / F5 odswiez
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=20260718keys1";
+      sc.src = "assets/js/dam-shortcuts.js?v=20260718btn1";
       document.head.appendChild(sc);
     }
 

@@ -1,4 +1,4 @@
-﻿"""
+"""
 DAM ETA - lokalna aplikacja desktop (pywebview + WebView2).
 
 Uruchomienie: dwuklik skrotu "DAM ETA" na pulpicie albo:
@@ -97,21 +97,35 @@ def _focus_existing_window() -> bool:
 
 
 def _kill_stale_dam_processes() -> int:
-    """Ubija zombie launch.py / local_bridge.py bez widocznego okna (nie siebie)."""
+    """Ubija zombie launch / bridge / serve_browser / http.server:8765 (nie siebie).
+
+    Dev czasem zostawia `serve_browser.py` albo `python -m http.server 8765`
+    bez okna desktop - wtedy skrot wyglada jakby "nie chcial sie otworzyc"
+    (mutex / porty / Pliki offline).
+    """
     if sys.platform != "win32":
         return 0
     my_pid = os.getpid()
     launch_key = str(LAUNCH_SCRIPT).lower().replace("/", "\\")
     bridge_key = str(LOCAL_BRIDGE).lower().replace("/", "\\")
+    serve_key = str((DESKTOP_DIR / "serve_browser.py").resolve()).lower().replace("/", "\\")
+    web_key = str(WEB_ROOT.resolve()).lower().replace("/", "\\")
     try:
         ps = (
             f"$mine={my_pid};"
             f"$a='{launch_key.replace(chr(39), chr(39)+chr(39))}';"
             f"$b='{bridge_key.replace(chr(39), chr(39)+chr(39))}';"
+            f"$c='{serve_key.replace(chr(39), chr(39)+chr(39))}';"
+            f"$w='{web_key.replace(chr(39), chr(39)+chr(39))}';"
             "Get-CimInstance Win32_Process -Filter \"Name='pythonw.exe' OR Name='python.exe'\" | "
             "Where-Object { "
             "  $_.ProcessId -ne $mine -and $_.CommandLine -and ("
-            "    $_.CommandLine.ToLower().Contains($a) -or $_.CommandLine.ToLower().Contains($b)"
+            "    $_.CommandLine.ToLower().Contains($a) -or "
+            "    $_.CommandLine.ToLower().Contains($b) -or "
+            "    $_.CommandLine.ToLower().Contains($c) -or "
+            "    ($_.CommandLine.ToLower().Contains('http.server') -and "
+            "     $_.CommandLine.ToLower().Contains('8765') -and "
+            "     $_.CommandLine.ToLower().Contains('web'))"
             "  )"
             "} | ForEach-Object { "
             "  Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; $_.ProcessId "
@@ -309,10 +323,55 @@ def schedule_relaunch() -> None:
 
 
 class DamJsApi:
-    """API JS -> Python (pywebview). Ustawienia: restart okna."""
+    """API JS -> Python (pywebview). Ustawienia: restart okna + picker miniatury."""
 
     def __init__(self) -> None:
         self._restart_scheduled = False
+
+    def pick_thumb(self, directory: str = "") -> dict:
+        """Natywny dialog wyboru pliku obrazu (miniatura) w folderze produktu."""
+        try:
+            import webview  # type: ignore
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+
+        start_dir = (directory or "").strip()
+        if start_dir and not os.path.isdir(start_dir):
+            parent = os.path.dirname(start_dir)
+            if os.path.isdir(parent):
+                start_dir = parent
+            else:
+                start_dir = ""
+
+        windows = list(getattr(webview, "windows", []) or [])
+        if not windows:
+            return {"ok": False, "error": "no_window"}
+        win = windows[0]
+        try:
+            file_types = (
+                "Obrazy (*.png;*.jpg;*.jpeg;*.webp;*.gif;*.tif;*.tiff)",
+                "Wszystkie (*.*)",
+            )
+            result = win.create_file_dialog(
+                webview.OPEN_DIALOG,
+                directory=start_dir or None,
+                allow_multiple=False,
+                file_types=file_types,
+            )
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+
+        if not result:
+            return {"ok": False, "cancelled": True}
+        path = result[0] if isinstance(result, (list, tuple)) else result
+        path = str(path or "").strip()
+        if not path or not os.path.isfile(path):
+            return {"ok": False, "cancelled": True}
+        return {
+            "ok": True,
+            "path": path.replace("\\", "/"),
+            "file": os.path.basename(path),
+        }
 
     def restart_window(self) -> dict:
         if self._restart_scheduled:
@@ -374,6 +433,9 @@ def main() -> None:
     if not acquire_single_instance():
         raise SystemExit(0)
 
+    # Przed bindowaniem: zwolnij 8765/8766 zajete przez stare serve_browser / http.server
+    _kill_stale_dam_processes()
+
     ui_port = pick_free_port(DEFAULT_UI_PORT)
     bridge_port = pick_free_port(DEFAULT_BRIDGE_PORT)
 
@@ -418,10 +480,24 @@ def main() -> None:
         except Exception:
             pass
 
+    # Profil WebView2 trwaly (nie nowy folder tymczasowy przy KAZDYM starcie).
+    # Domyslnie pywebview tworzy folder w %TEMP% i usuwa go po zamknieciu -
+    # to oznacza "cold start" (zero cache) przy kazdym uruchomieniu aplikacji.
+    webview_profile = DESKTOP_DIR / "data" / "webview2-profile"
+    webview_profile.mkdir(parents=True, exist_ok=True)
+
     try:
-        webview.start(gui="edgechromium", debug=False)
+        webview.start(
+            gui="edgechromium",
+            debug=False,
+            private_mode=False,
+            storage_path=str(webview_profile),
+        )
     except TypeError:
-        webview.start(debug=False)
+        try:
+            webview.start(gui="edgechromium", debug=False)
+        except TypeError:
+            webview.start(debug=False)
     except Exception as exc:
         win_message(
             APP_TITLE,

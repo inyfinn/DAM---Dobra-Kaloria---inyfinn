@@ -496,15 +496,15 @@
         '<h3 id="damBasePathTitle">Twoja sciezka Marketing</h3>' +
         '<p class="dam-basepath-lead">Zalezy od Ciebie i konta, na ktorym jestes zalogowany. Podaj folder, w ktorym widzisz: ' +
           '<strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>' +
-        '<p class="dam-basepath-examples">Przyklady (tylko podpowiedz): <code>X:\\Marketing</code> | <code>D:\\Marketing</code> | <code>M:\\</code></p>' +
+        '<p class="dam-basepath-examples">Przyklady: <code>X:\\Marketing</code> | <code>D:\\Marketing</code> | <code>M:\\</code></p>' +
         '<label class="dam-basepath-label" for="damBasePathInput">Sciezka bazowa (Twoje ustawienie)</label>' +
         '<input type="text" id="damBasePathInput" class="dam-basepath-input" placeholder="np. X:\\Marketing" ' +
           'value="' + esc(getBasePath() || "") + '" />' +
         '<p id="damBasePathMsg" class="dam-basepath-msg" hidden></p>' +
         '<div class="dam-basepath-actions dam-action-stack">' +
           '<button type="button" class="geex-btn geex-btn--primary" id="damBasePathSave">Zapisz i kontynuuj</button>' +
-          '<button type="button" class="geex-btn geex-btn--primary-transparent" id="damBasePathSuggest">Podpowiedz z dysku</button>' +
-          '<button type="button" class="geex-btn" id="damBasePathSkip">Pozniej (Ustawienia)</button>' +
+          '<button type="button" class="geex-btn geex-btn--primary-transparent dam-btn-icon" id="damBasePathSuggest"><i class="uil uil-search" aria-hidden="true"></i><span>Wykryj automatycznie</span></button>' +
+          '<button type="button" class="geex-btn" id="damBasePathSkip">Zrobie to pozniej</button>' +
         "</div>" +
       "</div>";
     document.body.appendChild(modal);
@@ -521,15 +521,16 @@
       modal.remove();
     });
     document.getElementById("damBasePathSuggest").addEventListener("click", function () {
+      setMsg("Szukam folderu Marketing na dyskach tego komputera...", true);
       detectMarketingBasesRemote().then(function (res) {
         if (res && res.recommended) {
           document.getElementById("damBasePathInput").value = res.recommended;
-          setMsg("Podpowiedz: " + res.recommended + " (zapisz, jesli OK).", true);
+          setMsg("Znaleziono: " + res.recommended + " - kliknij \"Zapisz i kontynuuj\", jesli to prawidlowa sciezka.", true);
         } else {
-          setMsg("Brak podpowiedzi - wpisz sciezke recznie.", false);
+          setMsg("Nie znaleziono folderu Marketing automatycznie - wpisz sciezke recznie.", false);
         }
       }).catch(function () {
-        setMsg("Bridge offline - wpisz sciezke recznie.", false);
+        setMsg("Nie mozna wykryc - most lokalny jest offline. Wpisz sciezke recznie.", false);
       });
     });
     document.getElementById("damBasePathSave").addEventListener("click", function () {
@@ -557,11 +558,11 @@
       });
     });
 
-    // Podpowiedz w polu TYLKO gdy pusto - nie zapisuje sama
+    // Wypelnia pole podpowiedzia TYLKO gdy jest puste - nie zapisuje automatycznie
     detectMarketingBasesRemote().then(function (res) {
       var input = document.getElementById("damBasePathInput");
       if (input && !input.value && res && res.recommended) {
-        input.placeholder = "podpowiedz: " + res.recommended;
+        input.placeholder = "wykryto: " + res.recommended;
       }
     }).catch(function () { /* ignore */ });
   }

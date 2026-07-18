@@ -16,10 +16,20 @@ Endpoints:
   POST /auth/register|login  lokalne konta (bcrypt) + sesja urzadzenia
   GET  /auth/me  Authorization: Bearer <token>
   GET  /files/status?root=...  czy ROOT plikow online
+  GET  /folder-images?path=...  lista obrazow w folderze Marketing (picker miniatury)
+  POST /viz-flag  demo/hidden/manual -> apps/web/data/viz-flags.json
+  POST /thumb-override  wybor miniatury -> apps/web/data/thumb-overrides.json
   POST /audit    {"action","user","path","detail",...}
   GET  /audit?limit=100
   GET  /index/status  mtime file-index + postgres
   POST /index/rebuild  przebudowa indeksu + miniatur (async)
+  POST /rename-revision-prefix  Faza 4: propozycja/natychmiastowa zmiana typu (prefiks folderu)
+  GET  /tag-proposals  lista kolejki moderacji (auto-apply po 72h liczony lazily)
+  POST /tag-proposals/decide  zatwierdz/odrzuc/wybierz inny typ (admin/power_user)
+  GET/POST /carrier-types  wlasne typy nosnikow (dodaj/usun + reassign historii)
+  POST /viz-request  Faza 5/6: "Zglos zapotrzebowanie" wielokanalowe (mail/Teams/Asana stub + w aplikacji)
+  GET  /inbox-items  lista wpisow panelu (viz-request i inne, tagi + read flag)
+  POST /inbox-items/mark-read  {"id"} -> oznacz przeczytane
 """
 from __future__ import annotations
 
@@ -528,6 +538,446 @@ def append_carrier_override(path_key: str, entry: dict) -> dict:
     return {"ok": True, "path": path_key, "entry": entry}
 
 
+TAG_PROPOSALS_FILE = WEB_ROOT / "data" / "tag-proposals.json"
+CARRIER_TYPES_FILE = WEB_ROOT / "data" / "carrier-types.json"
+ASSIGNMENT_LOG_FILE = WEB_ROOT / "data" / "carrier-assignment-log.json"
+PROPOSAL_TTL_HOURS = 72
+
+# Znane kody nosnikow (do wykrycia i ZAMIANY istniejacego prefiksu, nie doklejania
+# drugiego przed pierwszym - "FOLIA - ..." -> "DOY - ...", nie "DOY - FOLIA - ...").
+KNOWN_CARRIER_CODES = (
+    "KAR6X", "DOY6X", "ETY-BUT", "ETY-SLO", "DOY", "KAR", "MINI", "BAT", "BAR",
+    "BIGPAK", "TUBA", "FOLIA", "FOL", "FOIL", "SASZ", "REKAW", "SLEEVE", "OBW",
+    "ETY", "SHOT", "WIZKA",
+)
+
+# Etykiety PL / warianty nazw folderow (najdluzsze pierwsze) - rename DOYPACK -> BAT
+KNOWN_CARRIER_PREFIXES = (
+    "DOYPACK 6X MINI",
+    "DOYPACK 6x MINI",
+    "KARTON 6X MINI",
+    "KARTON 6x MINI",
+    "MINI BATON",
+    "ETYKIETA BUTELKA",
+    "ETYKIETA SLOIK",
+    "ETYKIETA SŁOIK",
+    "BIGPAK",
+    "DOYPACK",
+    "KARTON",
+    "BATON",
+    "FOLIA",
+    "REKAW",
+    "RĘKAW",
+    "SASZETKA",
+    "OBWOLUTA",
+    "WIZUALIZACJE",
+    "WIZKA",
+    "TUBA",
+    "SHOT",
+    "ETYKIETA",
+) + KNOWN_CARRIER_CODES
+
+# Mapowanie kodu API (BAT/DOY) -> prefiks folderu na dysku
+CARRIER_FOLDER_PREFIX = {
+    "BAT": "BATON",
+    "BAR": "BATON",
+    "MINI": "MINI BATON",
+    "DOY": "DOYPACK",
+    "DOY6X": "DOYPACK 6x MINI",
+    "KAR": "KARTON",
+    "KAR6X": "KARTON 6x MINI",
+    "FOL": "FOLIA",
+    "FOIL": "FOLIA",
+    "FOLIA": "FOLIA",
+    "REKAW": "REKAW",
+    "SLEEVE": "REKAW",
+    "SASZ": "SASZETKA",
+    "OBW": "OBWOLUTA",
+    "ETY": "ETYKIETA",
+    "ETY-BUT": "ETYKIETA BUTELKA",
+    "ETY-SLO": "ETYKIETA SŁOIK",
+    "WIZKA": "WIZUALIZACJE",
+    "NONE": "",
+}
+
+
+def _load_json(path: Path, default):
+    if not path.exists():
+        return default
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return default
+
+
+def _save_json(path: Path, data) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def load_tag_proposals() -> dict:
+    return _load_json(TAG_PROPOSALS_FILE, {"proposals": []})
+
+
+def save_tag_proposals(data: dict) -> None:
+    _save_json(TAG_PROPOSALS_FILE, data)
+
+
+def append_assignment_log(revision_path: str, carrier_code: str, actor: str) -> None:
+    log = _load_json(ASSIGNMENT_LOG_FILE, {"entries": []})
+    log["entries"].append({
+        "ts": utc_now(),
+        "revision_path": revision_path,
+        "carrier_code": carrier_code,
+        "actor": actor,
+    })
+    _save_json(ASSIGNMENT_LOG_FILE, log)
+
+
+def _match_carrier_prefix(name):
+    """Zwraca (matched_head, rest_with_separator). rest zaczyna sie od ' - ' gdy bylo."""
+    head = name.split(" - ")[0].strip()
+    rest = name[len(head):]
+    head_upper = head.upper()
+    for code in sorted(KNOWN_CARRIER_PREFIXES, key=lambda s: -len(s)):
+        cu = code.upper()
+        if head_upper == cu or head_upper.startswith(cu + " "):
+            return head, rest
+    return None, name
+
+
+def rename_revision_prefix_on_disk(revision_path: str, new_code: str) -> dict:
+    """Zamienia WYLACZNIE prefiks folderu rewizji na dysku (2026-07-18, P6/P7).
+    "FOLIA - 20.09.2024 - 6300488.00" -> "DOYPACK - 20.09.2024 - 6300488.00".
+    "DOYPACK 6x MINI - ..." -> "BATON - ..." (naprawa blednego nosnika).
+    NONE / BRAK TYPU: usuwa prefiks (zostaje data/indeks).
+    Nigdy nie dotyka niczego innego (jezyki/gramatura/data zostaja bez zmian)."""
+    p = Path(normalize_path(revision_path))
+    if not p.is_dir():
+        return {"ok": False, "error": "revision_not_found", "path": str(p)}
+    parent = p.parent
+    name = p.name
+    matched_known, rest = _match_carrier_prefix(name)
+    new_code_clean = (new_code or "").strip().upper()
+    if not new_code_clean:
+        return {"ok": False, "error": "new_code_required"}
+
+    if new_code_clean in ("NONE", "BRAK", "BRAK_TYPU", "__NONE__"):
+        if matched_known is None:
+            return {
+                "ok": True,
+                "old_path": str(p),
+                "new_path": str(p),
+                "old_name": name,
+                "new_name": name,
+                "noop": True,
+            }
+        new_name = rest.lstrip(" -").strip() if rest else ""
+        if not new_name:
+            return {"ok": False, "error": "cannot_strip_to_empty_name"}
+    else:
+        folder_prefix = CARRIER_FOLDER_PREFIX.get(new_code_clean, new_code_clean)
+        if matched_known is not None:
+            tail = rest if rest.startswith(" - ") else ((" - " + rest.lstrip(" -")) if rest else "")
+            new_name = folder_prefix + tail
+        else:
+            sep = "" if name.startswith(" - ") else " - "
+            new_name = folder_prefix + sep + name
+
+    dest = parent / new_name
+    if dest.exists() and dest != p:
+        return {"ok": False, "error": "target_exists", "target": str(dest)}
+    try:
+        p.rename(dest)
+    except OSError as exc:
+        return {"ok": False, "error": str(exc)}
+    return {"ok": True, "old_path": str(p), "new_path": str(dest), "old_name": name, "new_name": new_name}
+
+
+def create_or_apply_tag_proposal(payload: dict) -> dict:
+    """Faza 4 (P5/P7): kazda rola moze PROPONOWAC typ. Admin/power_user z wlaczonym
+    trybem edycji -> zmiana natychmiastowa. Zwykly user (albo bez trybu edycji)
+    -> zapis do kolejki moderacji, auto-apply po 72h bez decyzji."""
+    revision_path = (payload.get("revision_path") or "").strip()
+    new_code = (payload.get("new_carrier_code") or "").strip().upper()
+    role = (payload.get("role") or "user").strip()
+    admin_mode = bool(payload.get("admin_mode"))
+    submitted_by = (payload.get("user_email") or payload.get("user_name") or "anonim").strip()
+    current_value = (payload.get("current_carrier_code") or "").strip().upper()
+
+    if not revision_path:
+        return {"ok": False, "error": "revision_path_and_new_carrier_code_required"}
+    if not new_code:
+        return {"ok": False, "error": "revision_path_and_new_carrier_code_required"}
+    # NONE = jawne "BRAK TYPU" (dozwolone)
+
+    can_apply_immediately = role in ("admin", "power_user") and admin_mode
+    if can_apply_immediately:
+        result = rename_revision_prefix_on_disk(revision_path, new_code)
+        if result.get("ok"):
+            append_audit({
+                "action": "rename_revision_prefix",
+                "path": result["new_path"],
+                "detail": f"{current_value or '?'} -> {new_code}",
+                "user": submitted_by,
+            })
+            append_assignment_log(result["new_path"], new_code, submitted_by)
+        return {"ok": result.get("ok", False), "applied": True, "immediate": True, **result}
+
+    data = load_tag_proposals()
+    proposals = data.setdefault("proposals", [])
+    now = datetime.now(timezone.utc)
+    expires = now.timestamp() + PROPOSAL_TTL_HOURS * 3600
+    proposal_id = f"prop_{int(now.timestamp() * 1000)}"
+    entry = {
+        "id": proposal_id,
+        "field": "carrier",
+        "revision_path": revision_path,
+        "product_id": payload.get("product_id") or "",
+        "product_name": payload.get("product_name") or "",
+        "current_value": current_value,
+        "proposed_value": new_code,
+        "status": "pending",
+        "submitted_by": submitted_by,
+        "submitted_at": now.isoformat(timespec="seconds"),
+        "expires_at": datetime.fromtimestamp(expires, tz=timezone.utc).isoformat(timespec="seconds"),
+        "decided_by": None,
+        "decided_at": None,
+    }
+    proposals.append(entry)
+    save_tag_proposals(data)
+    append_audit({
+        "action": "tag_proposal_submitted",
+        "path": revision_path,
+        "detail": f"{current_value or '?'} -> {new_code} (pending)",
+        "user": submitted_by,
+    })
+    return {"ok": True, "applied": False, "immediate": False, "proposal": entry}
+
+
+def auto_apply_expired_proposals() -> int:
+    """Wywolywane lazily na GET /tag-proposals - 72h bez decyzji = auto-apply (P7)."""
+    data = load_tag_proposals()
+    proposals = data.get("proposals") or []
+    now = datetime.now(timezone.utc)
+    changed = 0
+    for entry in proposals:
+        if entry.get("status") != "pending":
+            continue
+        try:
+            expires_at = datetime.fromisoformat(entry["expires_at"])
+        except (KeyError, ValueError):
+            continue
+        if now < expires_at:
+            continue
+        result = rename_revision_prefix_on_disk(entry["revision_path"], entry["proposed_value"])
+        entry["status"] = "auto_applied" if result.get("ok") else "auto_apply_failed"
+        entry["decided_by"] = "system_72h"
+        entry["decided_at"] = now.isoformat(timespec="seconds")
+        if result.get("ok"):
+            append_assignment_log(result["new_path"], entry["proposed_value"], "system_72h")
+            append_audit({
+                "action": "tag_proposal_auto_applied",
+                "path": result["new_path"],
+                "detail": f"{entry.get('current_value') or '?'} -> {entry['proposed_value']}",
+                "user": entry.get("submitted_by"),
+            })
+        changed += 1
+    if changed:
+        save_tag_proposals(data)
+    return changed
+
+
+def decide_tag_proposal(payload: dict) -> dict:
+    proposal_id = (payload.get("proposal_id") or "").strip()
+    decision = (payload.get("decision") or "").strip()  # approve | reject | pick_other
+    decided_by = (payload.get("decided_by") or "moderator").strip()
+    override_value = (payload.get("new_value") or "").strip().upper()
+
+    if not proposal_id or decision not in ("approve", "reject", "pick_other"):
+        return {"ok": False, "error": "proposal_id_and_valid_decision_required"}
+
+    data = load_tag_proposals()
+    proposals = data.get("proposals") or []
+    entry = next((p for p in proposals if p.get("id") == proposal_id), None)
+    if not entry:
+        return {"ok": False, "error": "proposal_not_found"}
+    if entry.get("status") != "pending":
+        return {"ok": False, "error": "proposal_already_decided", "status": entry.get("status")}
+
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    if decision == "reject":
+        entry["status"] = "rejected"
+        entry["decided_by"] = decided_by
+        entry["decided_at"] = now
+        save_tag_proposals(data)
+        append_audit({"action": "tag_proposal_rejected", "path": entry["revision_path"], "user": decided_by})
+        return {"ok": True, "proposal": entry}
+
+    final_value = override_value if decision == "pick_other" and override_value else entry["proposed_value"]
+    result = rename_revision_prefix_on_disk(entry["revision_path"], final_value)
+    entry["status"] = "approved" if result.get("ok") else "approve_failed"
+    entry["decided_by"] = decided_by
+    entry["decided_at"] = now
+    entry["final_value"] = final_value
+    save_tag_proposals(data)
+    if result.get("ok"):
+        append_assignment_log(result["new_path"], final_value, decided_by)
+        append_audit({
+            "action": "tag_proposal_approved",
+            "path": result["new_path"],
+            "detail": f"{entry.get('current_value') or '?'} -> {final_value}",
+            "user": decided_by,
+        })
+    return {"ok": result.get("ok", False), "proposal": entry, **{k: v for k, v in result.items() if k != "ok"}}
+
+
+def manage_carrier_type(payload: dict) -> dict:
+    """Dodaj/usun wlasny typ (Faza 4, warstwa nad naming-dictionary.json).
+    Usuniecie wymaga replacement (kod docelowy albo None=wyczysc) - historia
+    przypisan w carrier-assignment-log.json pozwala pozniej zbiorczo naprawic."""
+    action = (payload.get("action") or "").strip()
+    code = (payload.get("code") or "").strip().upper()
+    data = _load_json(CARRIER_TYPES_FILE, {"custom_types": {}, "deleted_types": {}})
+    data.setdefault("custom_types", {})
+    data.setdefault("deleted_types", {})
+
+    if action == "add":
+        label_pl = (payload.get("label_pl") or code).strip()
+        if not code:
+            return {"ok": False, "error": "code_required"}
+        data["custom_types"][code] = {"label_pl": label_pl, "added_at": utc_now(), "added_by": payload.get("actor") or ""}
+        data["deleted_types"].pop(code, None)
+        _save_json(CARRIER_TYPES_FILE, data)
+        append_audit({"action": "carrier_type_added", "detail": f"{code}: {label_pl}", "user": payload.get("actor") or ""})
+        return {"ok": True, "custom_types": data["custom_types"]}
+
+    if action == "delete":
+        if not code:
+            return {"ok": False, "error": "code_required"}
+        replacement = (payload.get("replacement") or "").strip().upper() or None
+        data["custom_types"].pop(code, None)
+        data["deleted_types"][code] = {
+            "replacement": replacement,
+            "deleted_at": utc_now(),
+            "deleted_by": payload.get("actor") or "",
+        }
+        _save_json(CARRIER_TYPES_FILE, data)
+        # Zbiorcze przepisanie historycznych przypisan (jesli wskazano replacement)
+        reassigned = 0
+        if replacement:
+            log = _load_json(ASSIGNMENT_LOG_FILE, {"entries": []})
+            for e in log.get("entries") or []:
+                if e.get("carrier_code") == code:
+                    rev = e.get("revision_path") or ""
+                    if rev and Path(normalize_path(rev)).is_dir():
+                        res = rename_revision_prefix_on_disk(rev, replacement)
+                        if res.get("ok"):
+                            reassigned += 1
+        append_audit({
+            "action": "carrier_type_deleted",
+            "detail": f"{code} -> {replacement or 'brak (wyczyszczone)'} ({reassigned} przepisanych)",
+            "user": payload.get("actor") or "",
+        })
+        return {"ok": True, "deleted": code, "replacement": replacement, "reassigned_count": reassigned}
+
+    return {"ok": False, "error": "unknown_action"}
+
+
+NOTIFICATION_GROUPS_FILE = WEB_ROOT / "data" / "notification-groups.json"
+INBOX_ITEMS_FILE = WEB_ROOT / "data" / "inbox-items.json"
+
+
+def load_notification_group(name: str) -> list[dict]:
+    data = _load_json(NOTIFICATION_GROUPS_FILE, {})
+    return data.get(name) or []
+
+
+def append_inbox_item(entry: dict) -> dict:
+    """Wpis 'w aplikacji' - ZAWSZE tworzony niezaleznie od wybranych kanalow
+    zewnetrznych (Faza 6, P10). apps/web/data/inbox-items.json, tagi = zrodlo."""
+    data = _load_json(INBOX_ITEMS_FILE, {"items": []})
+    data.setdefault("items", [])
+    entry = dict(entry)
+    entry.setdefault("id", f"inbox_{int(datetime.now(timezone.utc).timestamp() * 1000)}")
+    entry.setdefault("created_at", utc_now())
+    entry.setdefault("read", False)
+    data["items"].insert(0, entry)
+    data["items"] = data["items"][:500]  # nie rosnij w nieskonczonosc
+    _save_json(INBOX_ITEMS_FILE, data)
+    return entry
+
+
+def create_viz_request(payload: dict) -> dict:
+    """Faza 5/6 (P10): "Zglos zapotrzebowanie" - wielokanalowe zgloszenie.
+    Email/Teams/Asana to na razie STUBY (ADR-005) - logujemy intencje w audit +
+    inbox, gotowe do podlaczenia realnych credentiali. Wpis w panelu ZAWSZE."""
+    product_name = payload.get("product_name") or "Produkt"
+    lang_full = payload.get("lang_full") or payload.get("lang") or ""
+    index = payload.get("index") or ""
+    channels = payload.get("channels") or {}
+    requested_by = payload.get("requested_by") or "anonim"
+
+    human_desc = (
+        f"Prosze o wykonanie wizualizacji na {product_name}"
+        + (f" ({lang_full})" if lang_full else "")
+        + (f" - indeks {index}" if index else "")
+        + f". Zglosil: {requested_by}."
+    )
+    folder_link = payload.get("path") or ""
+    detail_lines = [human_desc]
+    if folder_link:
+        detail_lines.append(f"Folder: {folder_link}")
+    if payload.get("brand"):
+        detail_lines.append(f"Marka: {payload.get('brand')}")
+    if payload.get("category"):
+        detail_lines.append(f"Kategoria: {payload.get('category')}")
+    if payload.get("carrier_label"):
+        detail_lines.append(f"Typ: {payload.get('carrier_label')}")
+    full_detail = "\n".join(detail_lines)
+
+    channels_sent: list[str] = []
+    tags = ["wizualizacja", "zgloszenie"]
+
+    if channels.get("email"):
+        recipients = [g.get("email") for g in load_notification_group("grafik") if g.get("email")]
+        append_audit({
+            "action": "viz_request_email_stub",
+            "detail": f"TO: {', '.join(recipients)} | {human_desc}",
+            "user": requested_by,
+        })
+        channels_sent.append("email")
+        tags.append("mail")
+    if channels.get("teams"):
+        append_audit({"action": "viz_request_teams_stub", "detail": human_desc, "user": requested_by})
+        channels_sent.append("teams")
+        tags.append("teams")
+    if channels.get("asana"):
+        append_audit({"action": "viz_request_asana_stub", "detail": full_detail, "user": requested_by})
+        channels_sent.append("asana")
+        tags.append("asana")
+    if channels.get("app") or not channels_sent:
+        channels_sent.append("app")
+        tags.append("prywatna")
+
+    inbox_entry = append_inbox_item({
+        "type": "viz_request",
+        "title": f"Zgloszenie wizualizacji: {product_name}",
+        "detail": full_detail,
+        "tags": sorted(set(tags)),
+        "requested_by": requested_by,
+        "product_id": payload.get("product_id"),
+        "path": folder_link,
+    })
+    append_audit({
+        "action": "viz_request_created",
+        "detail": human_desc,
+        "user": requested_by,
+        "path": folder_link,
+    })
+    return {"ok": True, "channels_sent": channels_sent, "inbox_item": inbox_entry}
+
+
 def append_thumb_override(product_id: str, entry: dict) -> dict:
     """Zapis wyboru miniatury w repo (apps/web/data) - nigdy na Marketing."""
     pid = (product_id or "").strip()
@@ -541,6 +991,12 @@ def append_thumb_override(product_id: str, entry: dict) -> dict:
             data = raw if isinstance(raw, dict) else {}
         except json.JSONDecodeError:
             data = {}
+    overrides_file.parent.mkdir(parents=True, exist_ok=True)
+    # Cofniecie wyboru miniatury (admin)
+    if entry.get("clear"):
+        data.pop(pid, None)
+        overrides_file.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return {"ok": True, "product_id": pid, "cleared": True, "store": str(overrides_file)}
     row = {
         "path": (entry.get("path") or "").strip(),
         "file": (entry.get("file") or "").strip(),
@@ -548,9 +1004,92 @@ def append_thumb_override(product_id: str, entry: dict) -> dict:
         "updated_at": utc_now(),
     }
     data[pid] = row
-    overrides_file.parent.mkdir(parents=True, exist_ok=True)
     overrides_file.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return {"ok": True, "product_id": pid, "entry": row, "store": str(overrides_file)}
+
+
+IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff"}
+
+
+def list_folder_images(path: str) -> dict:
+    """Lista obrazow w folderze Marketing (do pickera miniatury w przegladarce)."""
+    target = Path(normalize_path(path or ""))
+    if not target.exists():
+        return {"ok": False, "error": "path_not_found", "path": str(target), "files": []}
+    if target.is_file():
+        target = target.parent
+    if not target.is_dir():
+        return {"ok": False, "error": "not_a_directory", "path": str(target), "files": []}
+    if not _is_under_marketing(target):
+        return {"ok": False, "error": "path_outside_marketing", "path": str(target), "files": []}
+    files: list[dict] = []
+    try:
+        for child in sorted(target.iterdir(), key=lambda p: p.name.lower()):
+            if not child.is_file():
+                continue
+            if child.suffix.lower() not in IMAGE_EXTS:
+                continue
+            files.append(
+                {
+                    "name": child.name,
+                    "path": str(child).replace("\\", "/"),
+                    "ext": child.suffix.lower().lstrip("."),
+                    "size": child.stat().st_size,
+                }
+            )
+            if len(files) >= 200:
+                break
+    except OSError as exc:
+        return {"ok": False, "error": str(exc), "path": str(target), "files": []}
+    return {"ok": True, "path": str(target).replace("\\", "/"), "files": files}
+
+
+def read_viz_flags() -> dict:
+    flags_file = WEB_ROOT / "data" / "viz-flags.json"
+    default = {"demo": {}, "hidden": {}, "manual": [], "updated_at": ""}
+    if not flags_file.exists():
+        return default
+    try:
+        raw = json.loads(flags_file.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            return default
+        return {
+            "demo": raw.get("demo") if isinstance(raw.get("demo"), dict) else {},
+            "hidden": raw.get("hidden") if isinstance(raw.get("hidden"), dict) else {},
+            "manual": raw.get("manual") if isinstance(raw.get("manual"), list) else [],
+            "updated_at": raw.get("updated_at") or "",
+        }
+    except json.JSONDecodeError:
+        return default
+
+
+def write_viz_flags(payload: dict) -> dict:
+    """Zapis flag demo/hidden/manual tylko do apps/web/data."""
+    flags_file = WEB_ROOT / "data" / "viz-flags.json"
+    current = read_viz_flags()
+    action = (payload.get("action") or "").strip().lower()
+    if isinstance(payload.get("flags"), dict):
+        incoming = payload["flags"]
+        current["demo"] = incoming.get("demo") if isinstance(incoming.get("demo"), dict) else current["demo"]
+        current["hidden"] = incoming.get("hidden") if isinstance(incoming.get("hidden"), dict) else current["hidden"]
+        if isinstance(incoming.get("manual"), list):
+            current["manual"] = incoming["manual"]
+    elif action in ("demo", "hidden"):
+        key = (payload.get("key") or "").strip()
+        if key:
+            bucket = current.setdefault(action, {})
+            if payload.get("value"):
+                bucket[key] = True
+            else:
+                bucket.pop(key, None)
+    elif action == "manual":
+        entry = payload.get("entry")
+        if isinstance(entry, dict) and entry.get("path"):
+            current.setdefault("manual", []).append(entry)
+    current["updated_at"] = utc_now()
+    flags_file.parent.mkdir(parents=True, exist_ok=True)
+    flags_file.write_text(json.dumps(current, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {"ok": True, "flags": current, "store": str(flags_file)}
 
 
 def serve_media(path: str) -> tuple[int, bytes, str]:
@@ -728,6 +1267,14 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/index/status":
             self._json(200, index_status())
             return
+        if parsed.path == "/folder-images":
+            qs = parse_qs(parsed.query)
+            path = (qs.get("path") or [""])[0]
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required", "files": []})
+                return
+            self._json(200, list_folder_images(path))
+            return
         if parsed.path in ("/db/status", "/pg/status"):
             # /pg/status zostawiony jako alias (stary klient) - zawsze SQLite
             self._json(200, dam_db.status() if dam_db else {"ok": False, "error": "dam_db_missing"})
@@ -751,6 +1298,16 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(400, {"ok": False, "error": "path_required"})
                 return
             self._json(200, media_meta(path))
+            return
+        if parsed.path == "/tag-proposals":
+            auto_apply_expired_proposals()
+            self._json(200, load_tag_proposals())
+            return
+        if parsed.path == "/carrier-types":
+            self._json(200, _load_json(CARRIER_TYPES_FILE, {"custom_types": {}, "deleted_types": {}}))
+            return
+        if parsed.path == "/inbox-items":
+            self._json(200, _load_json(INBOX_ITEMS_FILE, {"items": []}))
             return
         self._json(404, {"ok": False, "error": "not_found"})
 
@@ -835,6 +1392,9 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, append_thumb_override(pid, data if isinstance(data, dict) else {}))
             return
+        if parsed.path == "/viz-flag":
+            self._json(200, write_viz_flags(data if isinstance(data, dict) else {}))
+            return
         if parsed.path == "/rename-index":
             folder = (data.get("folder") or data.get("path") or "").strip()
             from_index = (data.get("from_index") or "").strip()
@@ -846,7 +1406,46 @@ class Handler(BaseHTTPRequestHandler):
             result = rename_index_in_folder(folder, from_index, to_index, dry_run=dry_run)
             self._json(200 if result.get("ok") else 400, result)
             return
+        if parsed.path == "/rename-revision-prefix":
+            result = create_or_apply_tag_proposal(data if isinstance(data, dict) else {})
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/tag-proposals/decide":
+            result = decide_tag_proposal(data if isinstance(data, dict) else {})
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/carrier-types":
+            result = manage_carrier_type(data if isinstance(data, dict) else {})
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/viz-request":
+            result = create_viz_request(data if isinstance(data, dict) else {})
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/inbox-items/mark-read":
+            item_id = (data.get("id") or "").strip()
+            store = _load_json(INBOX_ITEMS_FILE, {"items": []})
+            for it in store.get("items") or []:
+                if it.get("id") == item_id:
+                    it["read"] = True
+            _save_json(INBOX_ITEMS_FILE, store)
+            self._json(200, {"ok": True})
+            return
         self._json(404, {"ok": False, "error": "not_found"})
+
+
+def _tag_proposal_watcher() -> None:
+    """Faza 4 (plan: "cron/watcher co ~15 min") - auto-apply propozycji po 72h
+    NIEZALEZNIE od tego czy ktos otworzyl panel moderacji (lazy check w GET
+    /tag-proposals zostaje jako dodatkowa siec bezpieczenstwa)."""
+    while True:
+        try:
+            n = auto_apply_expired_proposals()
+            if n:
+                print(f"tag-proposals watcher: auto-applied {n}")
+        except Exception as exc:
+            print("tag-proposals watcher error:", exc)
+        time.sleep(15 * 60)
 
 
 def main() -> None:
@@ -858,6 +1457,7 @@ def main() -> None:
         seed_owner_from_env()
     except Exception as exc:
         print("auth/db seed:", exc)
+    threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"DAM local bridge http://{HOST}:{PORT}")
     try:

@@ -4,7 +4,7 @@
 (function (global) {
   "use strict";
 
-  /* Zgodnie z EKSPORT WIZEK PS.jsx (NOŚNIK + detectPackagingTypeFromString) */
+  /* Zgodnie z naming-dictionary.json - UI zawsze PL (nigdy FOIL/SLEEVE/CARTON) */
   var CARRIER_LABELS = {
     KAR6X: "KARTON 6x MINI",
     KAR: "KARTON",
@@ -17,15 +17,59 @@
     OBW: "OBWOLUTA",
     TUBA: "TUBA",
     FOLIA: "FOLIA",
+    FOL: "FOLIA",
+    FOIL: "FOLIA",
     SASZ: "SASZETKA",
     "ETY-BUT": "ETYKIETA BUTELKA",
-    "ETY-SLO": "ETYKIETA SLOIK",
+    "ETY-SLO": "ETYKIETA SŁOIK",
     ETY: "ETYKIETA",
-    REKAW: "REKAW",
-    SLEEVE: "SLEEVE",
-    LABEL: "LABEL",
+    REKAW: "RĘKAW",
+    SLEEVE: "RĘKAW",
+    LABEL: "ETYKIETA",
     WARIANT: "WARIANT",
     WIZKA: "WIZUALIZACJE",
+  };
+
+  /* Pelne polskie znaki (2026-07-18) - "nauczylem sie" byla zasada bez diakrytykow,
+     user wymaga poprawnych znakow WSZĘDZIE w projekcie. */
+  var LANG_LABELS = {
+    pl: "Polska",
+    de: "Niemcy",
+    gb: "Wielka Brytania",
+    uk: "Ukraina",
+    cz: "Czechy",
+    sk: "Słowacja",
+    hu: "Węgry",
+    ro: "Rumunia",
+    lt: "Litwa",
+    lv: "Łotwa",
+    ee: "Estonia",
+    fr: "Francja",
+    it: "Włochy",
+    es: "Hiszpania",
+    nl: "Holandia",
+    ru: "Rosja",
+    hr: "Chorwacja",
+    si: "Słowenia",
+    bg: "Bułgaria",
+    at: "Austria",
+    be: "Belgia",
+    dk: "Dania",
+    se: "Szwecja",
+    no: "Norwegia",
+    fi: "Finlandia",
+    pt: "Portugalia",
+    gr: "Grecja",
+    ie: "Irlandia",
+    ch: "Szwajcaria",
+  };
+
+  var UI_STRINGS = {
+    multi_index_label: "Warianty",
+    multi_lang_label: "Multijęzyczny",
+    no_index_label: "Bez indeksu",
+    demo_label: "Demo",
+    mix_prefix: "MIX - ",
   };
 
   /* Kolejnosc: dluzsze tokeny pierwsze (KAR6X przed KAR) */
@@ -225,26 +269,57 @@
     return "UNKNOWN";
   }
 
-  function carrierLabel(code, gramFromName) {
-    // gramFromName bywa pelna nazwa folderu - wyciagnij nosnik z niej zanim powiesz UNKNOWN
-    if ((!code || code === "UNKNOWN") && gramFromName) {
+  var CARRIER_FORBIDDEN_RE = /^(OTHER|UNKNOWN|WARIANT)$/i;
+
+  /**
+   * Zwraca "" (brak tagu) gdy typ nie jest znany - NIGDY literal "OTHER"/"UNKNOWN"/"WARIANT".
+   * "Lepiej nic nie pisac, niz pisac OTHER" (2026-07-18). Zgadywanie z "?" - patrz Faza 2.
+   */
+  function carrierLabel(code, gramFromName, opts) {
+    opts = opts || {};
+    // gramFromName bywa pelna nazwa folderu - wyciagnij nosnik z niej zanim powiesz brak typu
+    if ((!code || CARRIER_FORBIDDEN_RE.test(code)) && gramFromName) {
       var rescued = parseCarrierCode(gramFromName);
-      if (rescued && rescued !== "UNKNOWN") code = rescued;
+      if (rescued && !CARRIER_FORBIDDEN_RE.test(rescued)) code = rescued;
       else {
         var tok = headToken(gramFromName);
-        if (tok && !/^\d/.test(tok) && tok.length >= 2 && tok.length <= 24) return tok;
-        return "WARIANT";
+        // Normalizuj EN -> PL gdy token to FOIL/SLEEVE/CARTON/BAR
+        var fromTok = matchCarrierInText(tok);
+        if (fromTok) code = fromTok;
+        else if (tok && !/^\d/.test(tok) && tok.length >= 2 && tok.length <= 24) {
+          /* nie zwracaj golego EN tokenu jako typu */
+          code = "UNKNOWN";
+        } else {
+          return "";
+        }
       }
     }
-    if (code === "UNKNOWN" || !code) return "WARIANT";
-    var base = CARRIER_LABELS[code] || code || "WARIANT";
+    if (!code || CARRIER_FORBIDDEN_RE.test(code)) return "";
+    var base = CARRIER_LABELS[code] || code;
+    if (!base || CARRIER_FORBIDDEN_RE.test(base)) return "";
+    var mix = opts.isMix || isMixProduct(opts.productName || gramFromName, opts.tags);
+    if (mix) base = (UI_STRINGS.mix_prefix || "MIX - ") + base;
     var gramOnly = extractGram(gramFromName);
-    if (gramOnly && (code === "BAT" || code === "DOY" || code === "TUBA" || code === "BAR")) {
+    if (!mix && gramOnly && (code === "BAT" || code === "DOY" || code === "TUBA" || code === "BAR")) {
       return base + " (" + gramOnly + ")";
     }
     var m = String(gramFromName || "").match(/(\d+)\s*[gG]/);
-    if (m && (code === "BAT" || code === "BAR")) return "BATON (" + m[1] + " g)";
+    if (!mix && m && (code === "BAT" || code === "BAR")) return "BATON (" + m[1] + " g)";
     return base;
+  }
+
+  function langLabel(code) {
+    var c = String(code || "").toLowerCase();
+    if (c === "en") c = "gb";
+    if (c === "ua") c = "uk";
+    return LANG_LABELS[c] || (c ? c.toUpperCase() : "");
+  }
+
+  function langShort(code) {
+    var c = String(code || "").toLowerCase();
+    if (c === "en") c = "gb";
+    if (c === "ua") c = "uk";
+    return c ? c.toUpperCase() : "";
   }
 
   /** PL vs eksport z kanonicznej sciezki indeksu */
@@ -378,10 +453,56 @@
     return ext === "zip" || ext === "rar" || ext === "7z";
   }
 
+  function applyNamingDict(dict) {
+    if (!dict || typeof dict !== "object") return;
+    if (dict.carriers) {
+      Object.keys(dict.carriers).forEach(function (code) {
+        var c = dict.carriers[code];
+        if (c && c.label_pl) CARRIER_LABELS[code] = c.label_pl;
+      });
+      CARRIER_LABELS.SLEEVE = CARRIER_LABELS.REKAW || "REKAW";
+      CARRIER_LABELS.FOIL = CARRIER_LABELS.FOLIA || "FOLIA";
+      CARRIER_LABELS.FOL = CARRIER_LABELS.FOLIA || "FOLIA";
+      CARRIER_LABELS.LABEL = CARRIER_LABELS.ETY || "ETYKIETA";
+      CARRIER_LABELS.BAR = CARRIER_LABELS.BAT || "BATON";
+    }
+    if (dict.languages) {
+      Object.keys(dict.languages).forEach(function (code) {
+        LANG_LABELS[code] = dict.languages[code];
+      });
+    }
+    if (dict.ui) {
+      Object.keys(dict.ui).forEach(function (k) {
+        UI_STRINGS[k] = dict.ui[k];
+      });
+    }
+    if (dict.categories && dict.categories.length) {
+      CATEGORY_CANON.length = 0;
+      dict.categories.forEach(function (c) {
+        CATEGORY_CANON.push(c);
+      });
+    }
+    global.DamNaming = dict;
+  }
+
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "data/naming-dictionary.json", false);
+    xhr.send(null);
+    if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+      applyNamingDict(JSON.parse(xhr.responseText));
+    }
+  } catch (e) {
+    /* fallback: lokalne CARRIER_LABELS */
+  }
+
   global.DamLabels = {
     CARRIER_LABELS: CARRIER_LABELS,
+    LANG_LABELS: LANG_LABELS,
+    UI_STRINGS: UI_STRINGS,
     CATEGORY_CANON: CATEGORY_CANON,
     DRUKARNIE: DRUKARNIE,
+    applyNamingDict: applyNamingDict,
     stripCategoryNumber: stripCategoryNumber,
     categoryCanonId: categoryCanonId,
     categoryTitle: categoryTitle,
@@ -395,6 +516,8 @@
     inferCarrierFromFileName: inferCarrierFromFileName,
     inferCarrierFromRevision: inferCarrierFromRevision,
     carrierLabel: carrierLabel,
+    langLabel: langLabel,
+    langShort: langShort,
     detectMarketFromPath: detectMarketFromPath,
     extractGram: extractGram,
     detectDrukarnia: detectDrukarnia,

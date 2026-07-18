@@ -1,0 +1,1734 @@
+{
+  "generated_at": "2026-07-18T13:13:45+00:00",
+  "brand_filter": "DK+GC",
+  "total_candidates": 16,
+  "with_movable_files": 16,
+  "empty_no_source_found": 0,
+  "druk_only_flagged": 0,
+  "candidates": [
+    {
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00",
+      "projekt_slot": "2 - PROJEKT",
+      "materialy_candidates": [
+        {
+          "name": "DK_kalend_adwnet_2026_04_12.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/MAKIETA/DK_kalend_adwnet_2026_04_12.ai",
+          "from_slot": "1 - MATERIAŁY/MAKIETA"
+        },
+        {
+          "name": "DK_kalend_adwnet_2026_04_12.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/MAKIETA/DK_kalend_adwnet_2026_04_12.pdf",
+          "from_slot": "1 - MATERIAŁY/MAKIETA"
+        },
+        {
+          "name": "DK_kalend_adwnet_2026_04_12_BEZ_OKIENKA.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/MAKIETA/DK_kalend_adwnet_2026_04_12_BEZ_OKIENKA.pdf",
+          "from_slot": "1 - MATERIAŁY/MAKIETA"
+        },
+        {
+          "name": "DK_kalend_adwnet_2026_04_12_okienka.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/MAKIETA/DK_kalend_adwnet_2026_04_12_okienka.ai",
+          "from_slot": "1 - MATERIAŁY/MAKIETA"
+        },
+        {
+          "name": "DK_kalend_adwnet_2026_04_12_okienka.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/MAKIETA/DK_kalend_adwnet_2026_04_12_okienka.pdf",
+          "from_slot": "1 - MATERIAŁY/MAKIETA"
+        },
+        {
+          "name": "DK_kalend_adwnet_2026_07_01.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/MAKIETA/DK_kalend_adwnet_2026_07_01.ai",
+          "from_slot": "1 - MATERIAŁY/MAKIETA"
+        },
+        {
+          "name": "DK_kalend_adwnet_2026_07_15.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/MAKIETA/DK_kalend_adwnet_2026_07_15.ai",
+          "from_slot": "1 - MATERIAŁY/MAKIETA"
+        },
+        {
+          "name": "CG01715H 127 213X235X60-siatka.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/WYKROJNIK/CG01715H 127 213X235X60-siatka.pdf",
+          "from_slot": "1 - MATERIAŁY/WYKROJNIK"
+        },
+        {
+          "name": "CG01715I 127 213X232X59-siatka.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/WYKROJNIK/CG01715I 127 213X232X59-siatka.pdf",
+          "from_slot": "1 - MATERIAŁY/WYKROJNIK"
+        },
+        {
+          "name": "CG01778D 127 WKŁADKA ADWENTOWA FALA 234X212-siatka.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/WYKROJNIK/CG01778D 127 WKŁADKA ADWENTOWA FALA 234X212-siatka.pdf",
+          "from_slot": "1 - MATERIAŁY/WYKROJNIK"
+        },
+        {
+          "name": "CG01778E 127 WKŁADKA ADWENTOWA FALA 231X212-siatka.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/17.04.2026 - 6300XXX.00/1 - MATERIAŁY/WYKROJNIK/CG01778E 127 WKŁADKA ADWENTOWA FALA 231X212-siatka.pdf",
+          "from_slot": "1 - MATERIAŁY/WYKROJNIK"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "DK",
+      "product_name": "- MIX - KALENDARZ ADWENTOWY — [ mixy ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2025 - 6300525.00",
+      "projekt_slot": "2 - PROJEKT",
+      "materialy_candidates": [
+        {
+          "name": "DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2025 - 6300525.00/1 - MATERIAŁY/DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ/DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ.ai",
+          "from_slot": "1 - MATERIAŁY/DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ"
+        },
+        {
+          "name": "DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2025 - 6300525.00/1 - MATERIAŁY/DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ/DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ.pdf",
+          "from_slot": "1 - MATERIAŁY/DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ"
+        },
+        {
+          "name": "DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ_podglad.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2025 - 6300525.00/1 - MATERIAŁY/DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ/DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ_podglad.pdf",
+          "from_slot": "1 - MATERIAŁY/DK_6x_mini_muffin_jagod_2025_03_20_6300525_FQ"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "DK",
+      "product_name": "MUFFIN JAGODOWY — [ nerkowcowy ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/PROTEINA - KARMEL MCT — [ funkcjonalny ]/BAT - 35 g - 22.10.2025 - 6300702.00",
+      "projekt_slot": "2 - PROJEKT",
+      "materialy_candidates": [
+        {
+          "name": "DK_folia_proteina_MCT_IG_2025_10_22_6300702_FQ.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/PROTEINA - KARMEL MCT — [ funkcjonalny ]/BAT - 35 g - 22.10.2025 - 6300702.00/1 - MATERIAŁY/10_22_2025_6300702/DK_folia_proteina_MCT_IG_2025_10_22_6300702_FQ.ai",
+          "from_slot": "1 - MATERIAŁY/10_22_2025_6300702"
+        },
+        {
+          "name": "DK_folia_proteina_MCT_IG_2025_10_22_6300702_FQ.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/PROTEINA - KARMEL MCT — [ funkcjonalny ]/BAT - 35 g - 22.10.2025 - 6300702.00/1 - MATERIAŁY/10_22_2025_6300702/DK_folia_proteina_MCT_IG_2025_10_22_6300702_FQ.pdf",
+          "from_slot": "1 - MATERIAŁY/10_22_2025_6300702"
+        },
+        {
+          "name": "DK_folia_proteina_MCT_IG_2025_10_22_6300702_podgląd.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/PROTEINA - KARMEL MCT — [ funkcjonalny ]/BAT - 35 g - 22.10.2025 - 6300702.00/1 - MATERIAŁY/10_22_2025_6300702/DK_folia_proteina_MCT_IG_2025_10_22_6300702_podgląd.pdf",
+          "from_slot": "1 - MATERIAŁY/10_22_2025_6300702"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "DK",
+      "product_name": "PROTEINA - KARMEL MCT — [ funkcjonalny ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00",
+      "projekt_slot": "2 - PROJEKT",
+      "materialy_candidates": [
+        {
+          "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_-B6E6641B.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_Folder/DK_kulki_sniad_miod_orzeszki_6300524_2025_-B6E6641B.pdf",
+          "from_slot": "1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_Folder"
+        },
+        {
+          "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_0-012FE2B7.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_Folder/DK_kulki_sniad_miod_orzeszki_6300524_2025_0-012FE2B7.ai",
+          "from_slot": "1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_Folder"
+        },
+        {
+          "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_Folder/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.ai",
+          "from_slot": "1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_Folder"
+        },
+        {
+          "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_Folder/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.pdf",
+          "from_slot": "1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "DK",
+      "product_name": "ORZESZKI MIOD — [ sniadanie ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KASZANKA — [ niemięsne ]/2026 04-24 - 22.04.2026 - 6300XXX.00",
+      "projekt_slot": "2 - PROJEKT",
+      "materialy_candidates": [
+        {
+          "name": "DK_Kaszanka_GRILL07-16-04-2026.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KASZANKA — [ niemięsne ]/2026 04-24 - 22.04.2026 - 6300XXX.00/1 - MATERIAŁY/DK_Kaszanka_GRILL07-16-04-2026_Folder/DK_Kaszanka_GRILL07-16-04-2026.ai",
+          "from_slot": "1 - MATERIAŁY/DK_Kaszanka_GRILL07-16-04-2026_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "DK",
+      "product_name": "KASZANKA — [ niemięsne ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00",
+      "projekt_slot": "2 - PROJEKT",
+      "materialy_candidates": [
+        {
+          "name": "DK_kielbaska_wegierska_FQ_2020_11_10-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_kielbaska_wegierska_FQ_2020_11_10-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_kielbaska_wegierska_FQ_2020_11_10.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_kielbaska_wegierska_FQ_2020_11_10.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_kielbaska_wegierska_FQ_2020_11_10_FQ-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_kielbaska_wegierska_FQ_2020_11_10_FQ-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_kielbaska_wegierska_FQ_2020_11_10_FQ-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_kielbaska_wegierska_FQ_2020_11_10_FQ-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_kielbaska_wegierska_FQ_2020_11_10_FQ.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_kielbaska_wegierska_FQ_2020_11_10_FQ.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_kielbaska_wegierska_FQ_2020_11_10_FQ.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_kielbaska_wegierska_FQ_2020_11_10_FQ.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_kielbaska_wegierska_FQ_2020_11_10_FQ_podglad-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_kielbaska_wegierska_FQ_2020_11_10_FQ_podglad-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_kielbaska_wegierska_FQ_2020_11_10_FQ_podglad.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_kielbaska_wegierska_FQ_2020_11_10_FQ_podglad.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_27-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_27-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_27.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_27.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28 copy-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28 copy-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28 copy.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28 copy.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28_edit_F-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28_edit_F-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28_edit_F.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28_edit_F.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ_podglad-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ_podglad-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ_podglad.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_05_28_Fol000059_FQ_podglad.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_12_08_export-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_12_08_export-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_12_08_export.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_12_08_export.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_12_15_export-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_12_15_export-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_12_15_export.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_12_15_export.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_12_16_export-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_12_16_export-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2021_12_16_export.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2021_12_16_export.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_23_edit-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_23_edit-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_23_edit.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_23_edit.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_24_edit-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_24_edit-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_24_edit.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_24_edit.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ_podglad-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ_podglad-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ_podglad.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_05_24_Kar000115_FQ_podglad.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_2022_edit-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_2022_edit-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_2022_edit.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_2022_edit.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140_podglad-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140_podglad-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140_podglad.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_26_FQ_Kar000140_podglad.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_26_F_Kar000140-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_26_F_Kar000140-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2022_09_26_F_Kar000140.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2022_09_26_F_Kar000140.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_05_XXL_edit-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_05_XXL_edit-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_05_XXL_edit.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_05_XXL_edit.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_F-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_F-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_F.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_F.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ_podglad-1.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ_podglad-1.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ_podglad.pdf",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_6300344_FQ_podglad.pdf",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_edit-1.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_edit-1.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "DK_wegierska_kielbaska_przepis_2023_05_09_XXL_edit.ai",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/DK_wegierska_kielbaska_przepis_2023_05_09_XXL_edit.ai",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2-1.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2-1.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2021_przepisy-1.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2021_przepisy-1.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2021_przepisy.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2021_przepisy.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2021_przepisy_export-1.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2021_przepisy_export-1.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2021_przepisy_export.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2021_przepisy_export.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2022_przepisy-1.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2022_przepisy-1.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2022_przepisy.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2022_przepisy.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2022_XXL-1.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2022_XXL-1.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        },
+        {
+          "name": "wegierskie_UPDATE2022_XXL.psd",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/KIELBASKA WEGIERSKA — [ niemięsne ]/ARCHIWUM - 09.05.2023 - 6300344.00/1 - MATERIAŁY/02_kielbaska_wegierska/wegierskie_UPDATE2022_XXL.psd",
+          "from_slot": "1 - MATERIAŁY/02_kielbaska_wegierska"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "DK",
+      "product_name": "KIELBASKA WEGIERSKA — [ niemięsne ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_bar_cashews_coconut_6300479_20-AB1E6049.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_6300479_20-AB1E6049.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_6300479_2024_07-08D7E705.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_6300479_2024_07-08D7E705.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-135D5193.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-135D5193.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-36C4720D.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-36C4720D.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-385CD2EB.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-385CD2EB.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-45D4DB8E.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-45D4DB8E.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-7C26FC2F.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-7C26FC2F.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-9D23544C.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-9D23544C.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-BB1C0FB2.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-BB1C0FB2.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-C2DE70FB.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-C2DE70FB.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-DCEB18D6.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-DCEB18D6.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_630-F571CFF5.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_630-F571CFF5.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300-020EF1F0.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300-020EF1F0.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300-2098E007.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300-2098E007.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300-26923D15.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300-26923D15.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300-566BA274.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300-566BA274.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300-770BB440.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300-770BB440.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300-C2FF8788.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300-C2FF8788.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300-CAAC4FF9.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300-CAAC4FF9.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_-141D637A.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_-141D637A.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_-4766AB11.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_-4766AB11.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_-85559930.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_-85559930.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_-8A91AB22.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_-8A91AB22.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_-A459A98D.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_-A459A98D.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_-FFC22C8B.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_-FFC22C8B.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_2-218DAEA4.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_2-218DAEA4.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_2-57606455.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_2-57606455.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_2-E47EDC7C.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_2-E47EDC7C.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_2024_07_16.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_2024_07_16.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_2024_07_17.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_2024_07_17.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300479_2024_07_18.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300479_2024_07_18.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-0D027306.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-0D027306.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-1BC90189.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-1BC90189.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-20C72FEB.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-20C72FEB.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-33DB9C71.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-33DB9C71.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-41C939BC.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-41C939BC.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-5766738D.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-5766738D.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-5EF954B6.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-5EF954B6.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-76C909EE.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-76C909EE.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-78DC56B8.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-78DC56B8.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-8B7449E5.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-8B7449E5.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-9E688982.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-9E688982.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-CC4977B5.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-CC4977B5.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-D6EDAA70.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-D6EDAA70.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_-ECFFAC9D.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_-ECFFAC9D.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_2-11DB005E.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_2-11DB005E.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_2-33F77068.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_2-33F77068.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_2-62AA5213.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_2-62AA5213.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_2-7382BC5F.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_2-7382BC5F.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_2-D08120A6.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_2-D08120A6.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_2-D83EFBA7.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_2-D83EFBA7.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_2-EFE1FE5A.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_2-EFE1FE5A.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_cashews_coconut_GB_AR_6300480_2024_08_06.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CASHEWS COCONUT — [ date ]/20.09.2024 - 6300480.00 - GB AR/1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder/GC_bar_cashews_coconut_GB_AR_6300480_2024_08_06.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_cashews_coconut_6300479_2024_07_05_GB_AR_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "CASHEWS COCONUT — [ date ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR-1.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR-2.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR-2.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2-2066B21A.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2-2066B21A.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2-26AF31E1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2-26AF31E1.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2-77689625.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2-77689625.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2-C0903E97.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2-C0903E97.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2-C3A4D5FD.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2-C3A4D5FD.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2-C81F3D0A.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2-C81F3D0A.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_20-456A43BC.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_20-456A43BC.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_20-4BC1AB35.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_20-4BC1AB35.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_20-BDAD4A9F.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_20-BDAD4A9F.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_0-096305EF.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_0-096305EF.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_0-2116F863.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_0-2116F863.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_0-4867C714.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_0-4867C714.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_0-637C52AB.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_0-637C52AB.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_0-9BB0C9AD.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_0-9BB0C9AD.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_0-FC22A4F9.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_0-FC22A4F9.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15-1.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15-1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15-1.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15-2.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15-2.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15-2.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15-2.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_15.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17-1.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17-1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17-1.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17-2.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17-2.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17-2.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17-2.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_17.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18-1.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18-1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18-1.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18-2.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18-2.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18-2.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18-2.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_07_18.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06-1.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06-1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06-1.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06-2.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06-2.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06-2.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06-2.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_08_06.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20-1.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20-2.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20-2.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20_FQ-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20_FQ-1.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20_FQ-1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20_FQ-1.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20_FQ.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20_FQ.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20_FQ.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_20_FQ.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_25_FQ-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_25_FQ-1.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_25_FQ-1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_25_FQ-1.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_25_FQ.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_25_FQ.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_25_FQ.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_25_FQ.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_30_FQ-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_30_FQ-1.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_30_FQ-1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_30_FQ-1.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_30_FQ.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_30_FQ.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_crunchy_nut_GB_AR_6300481_2024_09_30_FQ.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/CRUNCHY PEANUTS — [ date ]/BAR - 20.09.2024 - GB_AR_6300481.00 - GB AR/1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder/GC_bar_crunchy_nut_GB_AR_6300481_2024_09_30_FQ.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_crunchy_nut_6300481_2024_06_03_GB_AR_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "CRUNCHY PEANUTS — [ date ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_-06D4669F.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_-06D4669F.pdf",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_-4A4D8CB5.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_-4A4D8CB5.pdf",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6-3B6F51A5.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6-3B6F51A5.ai",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6-A564BB33.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6-A564BB33.ai",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6300494_2024_09-67CD5CED.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6300494_2024_09-67CD5CED.pdf",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6300494_2024_09-F28EF2A8.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6300494_2024_09-F28EF2A8.pdf",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6300494_2024_09_30-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30-1.ai",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6300494_2024_09_30.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30.ai",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ-1.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ-1.ai",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ-1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ-1.pdf",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ.ai",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        },
+        {
+          "name": "GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/GINGERBREAD — [ cashews ]/DOY6X - 30.09.2024 - 6300494.00 - GB AR/1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ.pdf",
+          "from_slot": "1 - MATERIALS/GC_minibar_gingerbread_GB_AR_6300494_2024_09_30_FQ"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "GINGERBREAD — [ cashews ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_bar_mango_cashews_6300484_2024_0-ADA5D7BF.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_6300484_2024_0-ADA5D7BF.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-352249AE.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-352249AE.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-58E3D443.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-58E3D443.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-A382F0C5.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-A382F0C5.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-A6E9DA9E.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-A6E9DA9E.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-C80C7D97.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-C80C7D97.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-D150A403.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-D150A403.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-D1B9A47A.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-D1B9A47A.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-D322477D.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-D322477D.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-D69929D4.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-D69929D4.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-DA799FCD.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-DA799FCD.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484-DD2E4116.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484-DD2E4116.pdf",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484_-12029E79.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484_-12029E79.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484_-1C0B59C9.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484_-1C0B59C9.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484_-41374802.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484_-41374802.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484_-41619877.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484_-41619877.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484_-4A6A3C3E.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484_-4A6A3C3E.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484_-8D8947FE.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484_-8D8947FE.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484_-97467DBD.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484_-97467DBD.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484_-BCC87CFB.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484_-BCC87CFB.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        },
+        {
+          "name": "GC_bar_mango_cashews_GB_AR_6300484_-C7965829.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/MANGO CASHEWS — [ bars_date ]/BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR/1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder/GC_bar_mango_cashews_GB_AR_6300484_-C7965829.ai",
+          "from_slot": "1 - MATERIALS/GC_bar_mango_cashews_6300484_2024_07_05_GB_AR_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "MANGO CASHEWS — [ bars_date ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/12.06.2025 - 6300664.00",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_protein_bar_peanut_sal-64380309.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/12.06.2025 - 6300664.00/1 - MATERIALS/GC_protein_bar_peanut_salt_2025_06_12_GB_ES_PT_FR_6300664_Folder/GC_protein_bar_peanut_sal-64380309.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_2025_06_12_GB_ES_PT_FR_6300664_Folder"
+        },
+        {
+          "name": "GC_protein_bar_peanut_sal-E5DDF961.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/12.06.2025 - 6300664.00/1 - MATERIALS/GC_protein_bar_peanut_salt_2025_06_12_GB_ES_PT_FR_6300664_Folder/GC_protein_bar_peanut_sal-E5DDF961.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_2025_06_12_GB_ES_PT_FR_6300664_Folder"
+        },
+        {
+          "name": "GC_protein_bar_peanut_salt-2F76FFE4.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/12.06.2025 - 6300664.00/1 - MATERIALS/GC_protein_bar_peanut_salt_2025_06_12_GB_ES_PT_FR_6300664_Folder/GC_protein_bar_peanut_salt-2F76FFE4.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_2025_06_12_GB_ES_PT_FR_6300664_Folder"
+        },
+        {
+          "name": "GC_protein_bar_peanut_salt-76AC55D4.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/12.06.2025 - 6300664.00/1 - MATERIALS/GC_protein_bar_peanut_salt_2025_06_12_GB_ES_PT_FR_6300664_Folder/GC_protein_bar_peanut_salt-76AC55D4.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_2025_06_12_GB_ES_PT_FR_6300664_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "PEANUT CREAM SALT — [ bars_protein ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/20.09.2024 - 6300485.00 - GB AR",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_protein_bar_peanut_s-0EFF1833.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/20.09.2024 - 6300485.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder/GC_protein_bar_peanut_s-0EFF1833.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_peanut_s-1810CB11.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/20.09.2024 - 6300485.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder/GC_protein_bar_peanut_s-1810CB11.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_peanut_s-AB859F30.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/20.09.2024 - 6300485.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder/GC_protein_bar_peanut_s-AB859F30.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_peanut_s-BFCEE9F2.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/20.09.2024 - 6300485.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder/GC_protein_bar_peanut_s-BFCEE9F2.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_peanut_sa-15B474CB.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/20.09.2024 - 6300485.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder/GC_protein_bar_peanut_sa-15B474CB.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_peanut_sa-6AC55A75.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM SALT — [ bars_protein ]/20.09.2024 - 6300485.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder/GC_protein_bar_peanut_sa-6AC55A75.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_salt_6300485_2024_05_28_GB_AR_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "PEANUT CREAM SALT — [ bars_protein ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/12.06.2025 - 6300665.00 - GB ES PT FR",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_pr-3745EDE1.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/12.06.2025 - 6300665.00 - GB ES PT FR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_2025_06_12_GB_ES_PT_FR_6300665_Folder/GC_pr-3745EDE1.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_2025_06_12_GB_ES_PT_FR_6300665_Folder"
+        },
+        {
+          "name": "GC_pro-0F74F154.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/12.06.2025 - 6300665.00 - GB ES PT FR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_2025_06_12_GB_ES_PT_FR_6300665_Folder/GC_pro-0F74F154.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_2025_06_12_GB_ES_PT_FR_6300665_Folder"
+        },
+        {
+          "name": "GC_pro-F765FD50.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/12.06.2025 - 6300665.00 - GB ES PT FR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_2025_06_12_GB_ES_PT_FR_6300665_Folder/GC_pro-F765FD50.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_2025_06_12_GB_ES_PT_FR_6300665_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "PEANUT CREAM VANILLA — [ bars_protein ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_protein_bar_pe-11CBDABE.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pe-11CBDABE.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pe-3DF2DA64.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pe-3DF2DA64.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pe-6836DF30.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pe-6836DF30.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pe-8ABAA5C7.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pe-8ABAA5C7.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pe-90B2D2F6.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pe-90B2D2F6.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pe-9A4D7757.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pe-9A4D7757.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pe-D6E2B5D7.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pe-D6E2B5D7.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pe-D965A39A.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pe-D965A39A.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pe-F3FC6617.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pe-F3FC6617.pdf",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pea-1C704E71.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pea-1C704E71.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pea-26FA5182.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pea-26FA5182.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pea-388D555F.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pea-388D555F.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pea-875B9DF4.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pea-875B9DF4.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pea-A695E8B8.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pea-A695E8B8.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pea-C193C74D.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pea-C193C74D.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        },
+        {
+          "name": "GC_protein_bar_pea-E09DB3B2.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/01 - BARS/PEANUT CREAM VANILLA — [ bars_protein ]/20.09.2024 - 6300486.00 - GB AR/1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder/GC_protein_bar_pea-E09DB3B2.ai",
+          "from_slot": "1 - MATERIALS/GC_protein_bar_peanut_vanilia_6300486_2024_05_28_GB_AR_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "PEANUT CREAM VANILLA — [ bars_protein ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_balls_cocoa-cherry_2024_05_27_GB_AR.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_2024_05_27_GB_AR.ai",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_07_16.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_07_16.ai",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_07_16.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_07_16.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_07_19.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_07_19.ai",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_07_19.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_07_19.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_08_02.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_08_02.ai",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_08_02.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_08_02.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09-21A358D9.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09-21A358D9.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09-448980E6.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09-448980E6.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09-A9943DD8.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09-A9943DD8.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_-4BBD34C0.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_-4BBD34C0.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_-7F9A874D.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_-7F9A874D.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_-A8E0B619.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_-A8E0B619.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_20_FQ.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_20_FQ.ai",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_20_FQ.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_20_FQ.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_25_FQ.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_25_FQ.ai",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_25_FQ.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_25_FQ.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_26_FQ.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_26_FQ.ai",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        },
+        {
+          "name": "GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_26_FQ.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/DATE CHERRY — [ balls_raw ]/DOY - 20.09.2024 - 6300488.00 - GB AR/1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder/GC_balls_cocoa-cherry_GB_AR_6300488_2024_09_26_FQ.pdf",
+          "from_slot": "1 - MATERIALS/GC_balls_cocoa-cherry_2024_05_27_GB_AR_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "DATE CHERRY — [ balls_raw ]"
+    },
+    {
+      "revision_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)",
+      "projekt_slot": "2 - PROJECT",
+      "materialy_candidates": [
+        {
+          "name": "GC_crispy_balls_chocola-1B1BD6D2.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocola-1B1BD6D2.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocola-34F7F66F.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocola-34F7F66F.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocola-4D5D55DB.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocola-4D5D55DB.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocola-52142205.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocola-52142205.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocola-5CDF9A4A.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocola-5CDF9A4A.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocola-87A741E4.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocola-87A741E4.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocola-8FF4459C.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocola-8FF4459C.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocola-979FA293.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocola-979FA293.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocola-E1AAD380.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocola-E1AAD380.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-04CE4EAC.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-04CE4EAC.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-0AE891CA.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-0AE891CA.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-325FF1A3.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-325FF1A3.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-3DA6DA10.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-3DA6DA10.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-43702CCE.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-43702CCE.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-62423F0E.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-62423F0E.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-68A16134.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-68A16134.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-71CCAE05.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-71CCAE05.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-90ADD75E.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-90ADD75E.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-A62268BC.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-A62268BC.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-BB11E79E.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-BB11E79E.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-C0956290.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-C0956290.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-CD0BD348.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-CD0BD348.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-DB9FF26C.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-DB9FF26C.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-EA8613A3.pdf",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-EA8613A3.pdf",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolat-FE487BAC.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolat-FE487BAC.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolate-0CEB9355.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolate-0CEB9355.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolate-40045589.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolate-40045589.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolate-AFBA4383.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolate-AFBA4383.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolate-B3B2215B.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolate-B3B2215B.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolate-B49D1928.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolate-B49D1928.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolate-C3ADDF39.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolate-C3ADDF39.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        },
+        {
+          "name": "GC_crispy_balls_chocolate-D4E09CDB.ai",
+          "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/OATS CHOCOLATE — [ balls_crispy ]/FOL - 20.09.2024 - 6300477.00 - GB AR (2)/1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder/GC_crispy_balls_chocolate-D4E09CDB.ai",
+          "from_slot": "1 - MATERIALS/GC_crispy_balls_chocolate_2024_07_05_GB_AR_6300477_F_Folder"
+        }
+      ],
+      "druk_info_only": null,
+      "brand": "GC",
+      "product_name": "OATS CHOCOLATE — [ balls_crispy ]"
+    }
+  ]
+}

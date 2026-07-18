@@ -17,7 +17,7 @@ import re
 import shutil
 import time
 import unicodedata
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
 
@@ -25,6 +25,18 @@ WEB = Path(__file__).resolve().parents[1]
 OUT = WEB / "data" / "file-index.json"
 SEARCH_OUT = WEB / "data" / "search-index.json"
 THUMBS_DIR = WEB / "data" / "thumbs"
+NAMING_DICT_PATH = WEB / "data" / "naming-dictionary.json"
+PRODUCT_ALIASES_PATH = WEB / "data" / "product-aliases.json"
+
+
+def _load_naming_dict() -> dict:
+    try:
+        return json.loads(NAMING_DICT_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+NAMING = _load_naming_dict()
 
 
 def resolve_marketing_base() -> Path:
@@ -45,26 +57,27 @@ ROOTS = [
     {"brand": "GC", "path": GC_ROOT},
 ]
 
-KNOWN_LANG_CODES = frozenset({
+_LANGS_FROM_DICT = NAMING.get("languages") or {}
+KNOWN_LANG_CODES = frozenset(_LANGS_FROM_DICT.keys()) | frozenset({
     "pl", "de", "gb", "uk", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
     "fr", "it", "es", "nl", "ru", "hr", "si", "bg", "at", "be", "dk",
     "se", "no", "fi", "pt", "gr", "ie", "ch",
 })
-
+LANG_ALIASES = dict(NAMING.get("lang_aliases") or {"en": "gb", "ua": "uk"})
 LANG_LABELS = {
     "pl": "Polska",
     "de": "Niemcy",
     "gb": "Wielka Brytania",
     "uk": "Ukraina",
     "cz": "Czechy",
-    "sk": "Słowacja",
-    "hu": "Węgry",
+    "sk": "Slowacja",
+    "hu": "Wegry",
     "ro": "Rumunia",
     "lt": "Litwa",
     "lv": "Lotwa",
     "ee": "Estonia",
     "fr": "Francja",
-    "it": "Włochy",
+    "it": "Wlochy",
     "es": "Hiszpania",
     "nl": "Holandia",
     "ru": "Rosja",
@@ -82,6 +95,7 @@ LANG_LABELS = {
     "ie": "Irlandia",
     "ch": "Szwajcaria",
 }
+LANG_LABELS.update(_LANGS_FROM_DICT)
 
 IMAGE_VIZ_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".tif", ".tiff"}
 THUMB_MAX_EDGE = 480
@@ -91,10 +105,33 @@ INDEX_RE = re.compile(r"(?P<base>\d{6,8})\.(?P<rev>\d{2})")
 INDEX_PLAIN_RE = re.compile(r"(?<!\d)(?P<base>\d{6,8})(?!\d)")
 DATE_DOT_RE = re.compile(r"(\d{2})\.(\d{2})\.(\d{4})")
 DATE_SPACE_RE = re.compile(r"(\d{2})\s+(\d{2})\s+(\d{4})")
+# Prefiks nosnika - dluzsze tokeny pierwsze; jezyki (CZ SK) odcinane osobno
 CARRIER_RE = re.compile(
-    r"^(KAR\d*X|KAR\d+|BAT|MINI|DOY|DOYPACK|TUBA|FOL|WIZKA|SASZ|KUB|BOX|PET|SZKLO)[\s\-]",
+    r"^(?P<code>"
+    r"KAR\s*6\s*X|KAR6X|DOY\s*6\s*X|DOY6X|ETY[\s\-_]?BUT|ETY[\s\-_]?SLO|"
+    r"DOYPACK|DOY|KARTON|CARTON|KAR|MINI|BATON|BAT|BAR|BIGPAK|BIGPACK|"
+    r"FOLIA|FOIL|FOL|R[EĘ]KAW|SLEEVE|OWIJKA|TUBA|TUBE|"
+    r"ETYKIETA|ETY|LABEL|SASZ|SACHET|OBW|SHOT|WIZKA"
+    r")(?:\s+|$|-)",
     re.I,
 )
+CARRIER_CODE_NORM = {
+    "KAR6X": "KAR6X", "KAR 6X": "KAR6X", "KAR 6 X": "KAR6X",
+    "DOY6X": "DOY6X", "DOY 6X": "DOY6X", "DOY 6 X": "DOY6X",
+    "DOYPACK": "DOY", "DOY": "DOY",
+    "KARTON": "KAR", "CARTON": "KAR", "KAR": "KAR",
+    "MINI": "MINI",
+    "BATON": "BAT", "BAT": "BAT", "BAR": "BAT",
+    "BIGPAK": "BIGPAK", "BIGPACK": "BIGPAK",
+    "FOLIA": "FOLIA", "FOIL": "FOLIA", "FOL": "FOLIA",
+    "REKAW": "REKAW", "RĘKAW": "REKAW", "SLEEVE": "REKAW", "OWIJKA": "REKAW",
+    "TUBA": "TUBA", "TUBE": "TUBA",
+    "ETYKIETA": "ETY", "ETY": "ETY", "LABEL": "ETY",
+    "ETY-BUT": "ETY-BUT", "ETY BUT": "ETY-BUT",
+    "ETY-SLO": "ETY-SLO", "ETY SLO": "ETY-SLO",
+    "SASZ": "SASZ", "SACHET": "SASZ",
+    "OBW": "OBW", "SHOT": "SHOT", "WIZKA": "WIZKA",
+}
 DISPLAY_BRACKET_RE = re.compile(r"\s*[—\-]\s*\[\s*([^\]]+?)\s*\]\s*")
 
 SLOT_MAP = {
@@ -111,7 +148,14 @@ SLOT_MAP = {
 SCAN_EXT = {
     ".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".gif",
     ".psd", ".ai", ".pdf", ".eps", ".svg", ".indd", ".zip", ".rar", ".7z",
+    ".pptx", ".ppt", ".docx", ".doc", ".key",
 }
+
+# Checklista rozszerzona (2026-07-18, user): oprocz zrodlo/podglad/druk/wizki/elementy,
+# rozpoznaj dodatkowo Karty wprowadzenia (zwykle w 1-MATERIALY) i Strategie/koncepcje
+# pozycjonowania (prezentacje .pptx w 1-MATERIALY). Opcjonalne, nie blokuja checklisty.
+KARTY_WPROWADZENIA_KW = ("karta wprowadz", "karty wprowadz", "wprowadzenie", "intro card", "onboarding")
+STRATEGIA_KW = ("strategi", "pozycjonowani", "koncepcj", "positioning", "brand book", "brandbook")
 
 # Wizualizacje = TYLKO obrazy. ZIP/RAR nigdy nie sa wizkami (nawet w folderze 4-WIZKI).
 VIZ_IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".gif"}
@@ -132,23 +176,34 @@ FLAVOR_HINTS = [
     "deserowe", "owocowe", "karmel", "pistacja", "truskawka", "morela", "mango",
     "imbir", "kawa", "sezam", "cynamonka", "muffin",
 ]
-# Typ = forma produktu + nosniki z nazewnictwa DK (BAT, mini baton, sleeve, karton 6x…)
+# Typ = forma produktu (nosniki BAT/FOLIA/… sa w PACKAGING_HINTS / Opakowanie)
 PRODUCT_HINTS = [
-    "kulki", "baton", "mini baton", "mini batoniki", "batoniki",
+    "kulki", "mini batoniki", "batoniki",
     "nuggets", "kiełbas", "parow", "krem", "napoj", "sypkie",
     "roslinne", "roślinne", "burger", "gyros", "kotlet", "pasztet",
     "owies", "jaglanka", "boost", "dates", "mix", "mixy",
     "niemiesne", "funkcjonalny", "sniadaniowe",
-    "bat", "sleeve", "karton 6x",
 ]
+# Nosniki = Opakowanie (pelna lista z docs/NAMING.md / naming-dictionary)
 PACKAGING_HINTS = [
-    "karton", "folia", "karton 6x", "kar6x", "tuba", "doypack", "doy 6x", "doy6x",
-    "sleeve", "rekaw", "bat", "sasz", "pet", "szklo", "kub", "box", "bigpak",
+    "doypack", "doy 6x", "doy6x",
+    "baton", "bat", "mini baton", "mini",
+    "karton 6x", "kar6x", "karton",
+    "bigpak", "folia", "fol",
+    "etykieta", "etykieta butelka", "etykieta sloik", "ety-but", "ety-slo", "ety",
+    "rekaw", "sleeve", "tuba", "shot",
+    "sasz", "obwoluta", "pet", "szklo", "kub", "box",
+]
+# Kanoniczna lista zawsze widoczna w pasku tagow Opakowanie
+OPAKOWANIE_CANON = [
+    "doypack", "baton", "mini baton", "karton 6x", "karton", "bigpak",
+    "folia", "etykieta", "etykieta butelka", "etykieta sloik", "rekaw", "tuba",
+    "shot", "doy 6x", "sasz", "obwoluta",
 ]
 
 # Stuby zbyt krotkie / szum - NIE blokuj "bat" (nosnik BAT)
 TAG_DENYLIST = frozenset({
-    "ety", "fol", "kar6", "doy", "nerkowc", "wizka", "datesy",
+    "kar6", "nerkowc", "wizka", "datesy",
 })
 
 TAG_LABEL_MAP = {
@@ -158,8 +213,17 @@ TAG_LABEL_MAP = {
     "mini": "mini baton",
     "kar6x": "karton 6x",
     "doy6x": "doy 6x",
-    "rekaw": "sleeve",
-    "bar": "bat",
+    "sleeve": "rekaw",
+    "bar": "baton",
+    "bat": "baton",
+    "fol": "folia",
+    "foil": "folia",
+    "ety": "etykieta",
+    "ety-but": "etykieta butelka",
+    "ety but": "etykieta butelka",
+    "ety-slo": "etykieta sloik",
+    "ety slo": "etykieta sloik",
+    "label": "etykieta",
     "batoniki": "mini batoniki",
 }
 
@@ -170,43 +234,94 @@ TAG_PREFER_OVER = {
     "mini baton": "mini",
     "karton 6x": "kar6x",
     "doy 6x": "doy6x",
-    "sleeve": "rekaw",
+    "rekaw": "sleeve",
+    "baton": "bat",
+    "folia": "fol",
+    "etykieta": "ety",
     "mini batoniki": "batoniki",
 }
 
-# parse_carrier / folder prefix -> kanoniczny tag
+# parse_carrier / folder prefix -> kanoniczny tag (Opakowanie)
 CARRIER_TO_TAG = {
-    "BAT": "bat",
-    "BAR": "bat",
+    "BAT": "baton",
+    "BAR": "baton",
     "MINI": "mini baton",
     "KAR6X": "karton 6x",
     "KAR": "karton",
     "DOY": "doypack",
     "DOY6X": "doy 6x",
     "DOYPACK": "doypack",
-    "SLEEVE": "sleeve",
-    "REKAW": "sleeve",
+    "SLEEVE": "rekaw",
+    "REKAW": "rekaw",
     "FOLIA": "folia",
     "FOL": "folia",
     "FOIL": "folia",
     "TUBA": "tuba",
+    "ETY": "etykieta",
+    "ETY-BUT": "etykieta butelka",
+    "ETY-SLO": "etykieta sloik",
     "BIGPAK": "bigpak",
     "SASZ": "sasz",
     "OBW": "obwoluta",
+    "SHOT": "shot",
 }
 
-# Nosniki ktore w UI trafiaja do wiersza Typ (jezyk biznesowy DK)
-TYP_NOSNIKI = frozenset({
-    "bat", "sleeve", "karton 6x", "mini baton", "mini batoniki",
-})
+# Nosniki NIE trafiaja do Typ - tylko do Opakowanie
+TYP_NOSNIKI = frozenset()
 
 TYP_PRIORITY = (
-    "baton", "mini baton", "mini batoniki", "bat", "kulki", "sypkie",
-    "niemiesne", "sleeve", "karton 6x", "nuggets", "krem", "napoj",
+    "baton", "mini baton", "mini batoniki", "kulki", "sypkie",
+    "niemiesne", "nuggets", "krem", "napoj",
     "mix", "mixy", "roslinne", "burger", "dates", "boost",
 )
 
 BRACKET_HINT_RE = re.compile(r"\[\s*([^\]]+?)\s*\]")
+
+# Podkategoria (nawias w nazwie produktu) -> ZAWSZE polski, z pelnymi diakrytykami
+# (2026-07-18, wymog usera "wszedzie w calym projekcie musisz naprawic polskie znaki").
+# Klucz = norm() ze slugiem (bez diakrytykow, spacje/podkreslniki -> spacja) - patrz norm().
+SUBCATEGORY_PL = {
+    "balls crispy": "Kulki Kruche",
+    "balls raw": "Kulki Surowe",
+    "bars date": "Batony Daktylowe",
+    "bars functional": "Batony Funkcjonalne",
+    "bars mix": "Batony Mix",
+    "bars protein": "Batony Proteinowe",
+    "boosty": "Boosty",
+    "cashews": "Nerkowce",
+    "daktylowy": "Daktylowy",
+    "date": "Daktylowe",
+    "deserowe": "Deserowe",
+    "funkcjonalne": "Funkcjonalne",
+    "funkcjonalny": "Funkcjonalny",
+    "ig": "Niski IG",
+    "krem orzechowy": "Krem Orzechowy",
+    "mixy": "Mixy",
+    "nerkowcowy": "Nerkowcowy",
+    "niemiesne": "Niemięsne",
+    "niemi sne": "Niemięsne",  # folder ma uszkodzony bajt w "ę" (U+FFFD) - tylko etykieta, plik NIE zmieniany
+    "orzechowe": "Orzechowe",
+    "owocowe": "Owocowe",
+    "plant based": "Roślinne",
+    "postbiotyk": "Postbiotyk",
+    "proteinowy": "Proteinowy",
+    "raw": "Raw",
+    "sniadanie": "Śniadanie",
+    "sniadaniowe": "Śniadaniowe",
+    "ziomki": "Ziomki",
+}
+
+
+def subcategory_label_pl(bracket_tags: list[str]) -> tuple[str, str]:
+    """Pierwszy nawias z nazwy produktu -> (slug, etykieta PL). "" gdy brak / nieznany."""
+    for raw in bracket_tags or []:
+        slug = norm(raw)
+        if not slug:
+            continue
+        label = SUBCATEGORY_PL.get(slug)
+        if label:
+            return slug, label
+    return "", ""
 
 MARKETING_LINKS = [
     {
@@ -310,11 +425,11 @@ def build_tag_groups(tags: list[str], cap: int = 32) -> dict[str, list[str]]:
             groups["osoba"].append(t)
         elif t in FLAVOR_SET:
             groups["smak"].append(t)
-        elif t in TYP_NOSNIKI or t in PRODUCT_TYPE_SET:
-            # Typ: forma produktu + nosniki (BAT, mini baton, sleeve, karton 6x…)
-            groups["typ"].append(t)
-        elif t in PACKAGING_SET:
+        elif t in PACKAGING_SET or t in {norm(x) for x in OPAKOWANIE_CANON}:
             groups["opakowanie"].append(t)
+        elif t in TYP_NOSNIKI or t in PRODUCT_TYPE_SET:
+            # Typ: forma produktu (kulki, sypkie…) - nosniki sa w Opakowanie
+            groups["typ"].append(t)
         elif t in CURATED_VOCAB:
             groups["inne"].append(t)
     groups["typ"] = _sort_typ_tags(groups["typ"])[:cap]
@@ -325,7 +440,7 @@ def build_tag_groups(tags: list[str], cap: int = 32) -> dict[str, list[str]]:
     return groups
 
 
-def merge_global_tag_groups(products: list[dict], cap: int = 32) -> dict[str, list[str]]:
+def merge_global_tag_groups(products: list[dict], cap: int = 48) -> dict[str, list[str]]:
     merged: dict[str, set[str]] = {
         "smak": set(),
         "typ": set(),
@@ -341,11 +456,38 @@ def merge_global_tag_groups(products: list[dict], cap: int = 32) -> dict[str, li
                 ct = canonicalize_tag(t)
                 if ct and not is_noise_tag(ct) and ct not in TAG_DENYLIST:
                     merged[key].add(ct)
+        # Nosnik z rewizji zawsze do Opakowanie
+        for r in p.get("revisions") or []:
+            code = (r.get("carrier") or "").upper()
+            mapped = CARRIER_TO_TAG.get(code)
+            if mapped:
+                ct = canonicalize_tag(mapped)
+                if ct:
+                    merged["opakowanie"].add(ct)
+    # Pelna sciagawka nosnikow zawsze w UI (nawet gdy rzadkie w katalogu)
+    for t in OPAKOWANIE_CANON:
+        ct = canonicalize_tag(t)
+        if ct:
+            merged["opakowanie"].add(ct)
     out: dict[str, list[str]] = {}
     for k, v in merged.items():
         items = list(v)
         if k == "typ":
             out[k] = _sort_typ_tags(items)[:cap]
+        elif k == "opakowanie":
+            # kanoniczna kolejnosc z listy, potem reszta alfa
+            order = [canonicalize_tag(t) for t in OPAKOWANIE_CANON]
+            seen = set()
+            ordered = []
+            for t in order:
+                if t in v and t not in seen:
+                    ordered.append(t)
+                    seen.add(t)
+            for t in sorted(v):
+                if t not in seen:
+                    ordered.append(t)
+                    seen.add(t)
+            out[k] = ordered[:cap]
         else:
             out[k] = sorted(items)[:cap]
     return out
@@ -415,12 +557,116 @@ def parse_date(name: str) -> str | None:
     return None
 
 
+def normalize_carrier_code(raw: str) -> str:
+    key = re.sub(r"\s+", " ", (raw or "").strip().upper())
+    if not key:
+        return "OTHER"
+    if key in CARRIER_CODE_NORM:
+        return CARRIER_CODE_NORM[key]
+    compact = key.replace(" ", "").replace("_", "")
+    for alias, code in CARRIER_CODE_NORM.items():
+        if alias.replace(" ", "").replace("_", "") == compact:
+            return code
+    return key
+
+
+def _strip_trailing_lang_tokens(tokens: list[str]) -> list[str]:
+    out = list(tokens)
+    while out:
+        t = out[-1].strip().lower()
+        t = LANG_ALIASES.get(t, t)
+        if len(t) == 2 and t in KNOWN_LANG_CODES:
+            out.pop()
+            continue
+        break
+    return out
+
+
+def looks_like_date_token(s: str) -> bool:
+    t = (s or "").strip()
+    if not t:
+        return False
+    if DATE_DOT_RE.search(t) or DATE_SPACE_RE.search(t):
+        return True
+    return bool(re.match(r"^\d{2}[./-]\d{2}[./-]\d{2,4}$", t))
+
+
 def parse_carrier(name: str) -> str:
-    m = CARRIER_RE.match(name.strip())
-    if m:
-        return m.group(1).upper()
-    part = name.split(" - ")[0].strip()
-    return part[:24] if part else "OTHER"
+    """Nosnik z prefiksu folderu; kody jezykow (CZ SK) nie wchodza w carrier."""
+    head = (name or "").split(" - ")[0].strip()
+    if looks_like_date_token(head):
+        return "OTHER"
+    tokens = _strip_trailing_lang_tokens(re.split(r"[\s_]+", head) if head else [])
+    cleaned = " ".join(tokens).strip()
+    if cleaned and looks_like_date_token(cleaned):
+        return "OTHER"
+    if cleaned:
+        m = CARRIER_RE.match(cleaned)
+        if m:
+            return normalize_carrier_code(m.group("code"))
+    m2 = CARRIER_RE.match((name or "").strip())
+    if m2:
+        return normalize_carrier_code(m2.group("code"))
+    # Nie zwracaj daty / losowego prefiksu produktu jako nosnika
+    if cleaned and not looks_like_date_token(cleaned):
+        # jesli wyglada jak znany alias w srodku tekstu
+        for alias, code in sorted(CARRIER_CODE_NORM.items(), key=lambda kv: -len(kv[0])):
+            if re.search(rf"\b{re.escape(alias)}\b", cleaned, re.I):
+                return code
+    return "OTHER"
+
+
+def infer_carrier_from_files(files: list[dict]) -> str:
+    """Nosnik z nazw plikow wizki/source gdy folder zaczyna sie od daty."""
+    for f in files or []:
+        name = f.get("name") or ""
+        # Pomin generyczny WARIANT- jako nosnik
+        m = CARRIER_RE.search(name.replace("_", " ").replace("-", " "))
+        if m:
+            code = normalize_carrier_code(m.group("code"))
+            if code and code != "WIZKA":
+                return code
+        # Prefiks DK-FOLIA- / GC-DOY-
+        m2 = re.match(r"^(?:DK|GC)[-_]([A-Za-z0-9ŁłĘę]+)", name, re.I)
+        if m2:
+            code = normalize_carrier_code(m2.group(1))
+            if code in (NAMING.get("carriers") or {}) or code in CARRIER_CODE_NORM.values():
+                return code
+    return ""
+
+
+def is_mix_product(name: str, tags: list | None = None) -> bool:
+    n = name or ""
+    if re.search(r"\bMIX\b", n, re.I) or re.match(r"^\s*-\s*MIX", n, re.I):
+        return True
+    if tags and any(str(t).lower() == "mix" for t in tags):
+        return True
+    return False
+
+
+def carrier_label_pl(code: str, *, product_name: str = "", tags: list | None = None) -> str:
+    if not code or code in ("OTHER", "UNKNOWN", "WARIANT"):
+        if is_mix_product(product_name, tags):
+            return ((NAMING.get("ui") or {}).get("mix_prefix") or "MIX - ").rstrip(" -")
+        return ""
+    carriers = NAMING.get("carriers") or {}
+    entry = carriers.get(code) or {}
+    fallback = {
+        "FOLIA": "FOLIA",
+        "REKAW": "REKAW",
+        "DOY": "DOYPACK",
+        "KAR": "KARTON",
+        "KAR6X": "KARTON 6x MINI",
+        "BAT": "BATON",
+        "MINI": "MINI BATON",
+        "TUBA": "TUBA",
+        "ETY": "ETYKIETA",
+    }
+    label = entry.get("label_pl") or fallback.get(code) or code
+    if is_mix_product(product_name, tags):
+        prefix = (NAMING.get("ui") or {}).get("mix_prefix") or "MIX - "
+        return f"{prefix}{label}"
+    return label
 
 
 def classify_slot_role(name: str) -> str | None:
@@ -581,6 +827,20 @@ def scan_slot_files(slot_dir: Path, root: Path) -> list[dict]:
     return files
 
 
+def classify_special_document(filename: str) -> str | None:
+    """Karty wprowadzenia / strategie pozycjonowania - dodatkowy tag NIEZALEZNY
+    od podstawowej roli (source/print/...), tylko dla checklisty rozszerzonej."""
+    n = norm(filename)
+    if not n:
+        return None
+    if any(k in n for k in KARTY_WPROWADZENIA_KW):
+        return "karty_wprowadzenia"
+    ext = Path(filename).suffix.lower()
+    if ext in (".pptx", ".ppt", ".key") and any(k in n for k in STRATEGIA_KW):
+        return "strategia"
+    return None
+
+
 def scan_revision_slots(child: Path, root: Path) -> tuple[list[str], dict[str, list[dict]], list[dict]]:
     slots: list[str] = []
     files_by_role: dict[str, list[dict]] = {"source": [], "print": [], "viz": []}
@@ -602,6 +862,9 @@ def scan_revision_slots(child: Path, root: Path) -> tuple[list[str], dict[str, l
                 files_by_role.setdefault(role, []).append(f)
                 if role == "viz" and is_viz_image_name(f.get("name") or ""):
                     wizki_files.append(f)
+                special = classify_special_document(f.get("name") or "")
+                if special:
+                    files_by_role.setdefault(special, []).append(f)
     except (PermissionError, OSError):
         pass
     for role in files_by_role:
@@ -632,6 +895,45 @@ def count_files_in_dir(path: Path) -> int:
     except (PermissionError, OSError):
         pass
     return count
+
+
+def load_product_aliases() -> list[dict]:
+    try:
+        data = json.loads(PRODUCT_ALIASES_PATH.read_text(encoding="utf-8"))
+        return data.get("groups") or []
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
+def apply_product_aliases(products: list[dict]) -> None:
+    """DK<->GC "ten sam produkt" (2026-07-18, P1/P9). Powiazanie z product-aliases.json
+    (indeks lub reczne wskazanie folderu przez admina/power_user - Faza 4) - dopisuje
+    kazdemu czlonkowi grupy `linked_products` + `alias_langs` (suma jezykow z WSZYSTKICH
+    czlonkow), tak aby modal wizualizacji mogl pokazac warianty jezykowe ponad marka."""
+    groups = load_product_aliases()
+    if not groups:
+        return
+    by_id = {p["id"]: p for p in products}
+    for group in groups:
+        member_ids = [m.get("product_id") for m in group.get("members") or [] if m.get("product_id")]
+        present = [by_id[mid] for mid in member_ids if mid in by_id]
+        if len(present) < 2:
+            continue
+        alias_langs: set[str] = set()
+        for prod in present:
+            # Domyslny jezyk marki (PL dla DK, GB dla GC) - foldery czesto NIE tagują
+            # explicit swojego glownego jezyka (tylko jezyki dodatkowe/eksportowe).
+            alias_langs.add("pl" if prod.get("brand") == "DK" else "gb")
+            for r in prod.get("revisions") or []:
+                alias_langs.update(r.get("langs") or [])
+        for prod in present:
+            prod["linked_products"] = [
+                {"product_id": other["id"], "brand": other.get("brand")}
+                for other in present
+                if other["id"] != prod["id"]
+            ]
+            prod["alias_langs"] = sorted(alias_langs)
+            prod["alias_canonical_id"] = group.get("canonical_id") or member_ids[0]
 
 
 def attach_marketing_links(products: list[dict]) -> None:
@@ -719,12 +1021,16 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
         slots, files_by_role, wizki_files = scan_revision_slots(child, root)
 
         # ETY-SLO / foldery bez indeksu w nazwie: wyciagnij z plikow wizki/source
+        pool: list[dict] = list(wizki_files or [])
+        fbr = files_by_role or {}
+        for role_key in ("source", "print", "viz", "elements"):
+            pool.extend(fbr.get(role_key) or [])
         if not full:
-            pool: list[dict] = list(wizki_files or [])
-            fbr = files_by_role or {}
-            for role_key in ("source", "print", "viz", "elements"):
-                pool.extend(fbr.get(role_key) or [])
             base, rev, full = infer_index_from_files(pool)
+        if not carrier or carrier == "OTHER":
+            inferred = infer_carrier_from_files(pool)
+            if inferred:
+                carrier = inferred
 
         folder_langs = parse_folder_langs(child.name)
         revisions.append(
@@ -744,6 +1050,29 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
                 "langs": folder_langs,
             }
         )
+
+    # Kategoria BATONY/BARS + nosnik DOYPACK: czesto bledny prefiks folderu
+    # (kategoria OK, typ/nosnik nie). Oznacz jako zgadniety -> "?" w UI + korekta admina.
+    cat_u = (cat_name or "").upper()
+    is_bars_cat = "BAR" in cat_u or "BATON" in cat_u
+    if is_bars_cat:
+        for r in revisions:
+            if r.get("carrier") in ("DOY", "DOY6X"):
+                r["carrier_guessed"] = True
+
+    # Zgadywanie nosnika z sasiednich rewizji TEGO SAMEGO produktu (2026-07-18).
+    # "Lepiej nic nie pisac, niz OTHER - ale jesli mozna zgadnac po sasiedzie, zgadnij"
+    # (user). Nigdy nie nadpisujemy prawdy - flaga carrier_guessed pokazuje "?" w UI,
+    # user (kazda rola) moze poprawic -> Faza 4 (kolejka moderacji + /rename-revision-prefix).
+    known_carriers = [
+        r["carrier"] for r in revisions if r["carrier"] and r["carrier"] not in ("OTHER", "UNKNOWN", "WARIANT")
+    ]
+    if known_carriers:
+        majority_carrier = Counter(known_carriers).most_common(1)[0][0]
+        for r in revisions:
+            if not r["carrier"] or r["carrier"] in ("OTHER", "UNKNOWN", "WARIANT"):
+                r["carrier"] = majority_carrier
+                r["carrier_guessed"] = True
 
     groups: dict[tuple, list] = defaultdict(list)
     for r in revisions:
@@ -768,6 +1097,11 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
     tag_groups = build_tag_groups(tags)
     indexes = sorted({r["index"] for r in revisions if r.get("index")})
     index_bases = sorted({r["index_base"] for r in revisions if r.get("index_base")})
+    # Podkategoria: WSZYSTKIE nawiasy z nazwy (nie tylko te co przeszly filtr
+    # is_noise_tag dla Smak/Typ - "balls_crispy"/"plant based" sa wielowyrazowe
+    # i sa tam odrzucane, ale jako Podkategoria maja byc widoczne, patrz P4).
+    raw_brackets = [norm(m.group(1)) for m in BRACKET_HINT_RE.finditer(product_name)]
+    subcat_slug, subcat_label = subcategory_label_pl(raw_brackets)
 
     return {
         "id": norm(product_name).replace(" ", "-")[:80],
@@ -775,6 +1109,8 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
         "display_name": display_name,
         "category": cat_name,
         "brand": brand,
+        "subcategory_slug": subcat_slug,
+        "subcategory_label": subcat_label,
         "root_key": str(root).replace("\\", "/"),
         "path": str(product_dir).replace("\\", "/"),
         "rel": str(product_dir.relative_to(root)).replace("\\", "/"),
@@ -789,25 +1125,28 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
 
 
 def parse_folder_langs(folder_name: str) -> list[str]:
-    """Parse trailing country codes after last ' - ' (e.g. SK HU HR)."""
-    parts = [p.strip() for p in folder_name.split(" - ")]
-    if len(parts) < 2:
-        return []
-    tail = parts[-1]
-    tokens = re.split(r"[\s,;/]+", tail)
+    """Kody jezykow z WSZYSTKICH segmentow ' - ' oraz z prefiksu nosnika (SLEEVE CZ SK)."""
     langs: list[str] = []
     seen: set[str] = set()
-    for tok in tokens:
+
+    def add_token(tok: str) -> None:
         code = tok.strip().lower()
         if len(code) != 2:
-            continue
-        if code == "en":
-            code = "gb"
-        if code == "ua":
-            code = "uk"
+            return
+        code = LANG_ALIASES.get(code, code)
         if code in KNOWN_LANG_CODES and code not in seen:
             seen.add(code)
             langs.append(code)
+
+    parts = [p.strip() for p in (folder_name or "").split(" - ") if p.strip()]
+    if not parts:
+        return []
+    for part in parts:
+        # pomin segmenty wygladajace jak data / indeks
+        if DATE_DOT_RE.search(part) or re.fullmatch(r"\d{5,9}(?:\.\d{2})?", part):
+            continue
+        for tok in re.split(r"[\s,;/]+", part):
+            add_token(tok)
     return langs
 
 
@@ -895,9 +1234,13 @@ def pick_thumb_file(files: list[dict], preferred_index: str | None = None) -> di
         ext = (f.get("ext") or "").lower()
         # W tierze FRONT-S: preferuj DK-*-FRONT-S.png (nie DOY- bez marki / nie XL)
         dk_bonus = 1 if name.startswith("DK-") or name.startswith("GC-") else 0
+        # Bez tla (PNG/WEBP, przezroczyste) > z tlem (JPG/JPEG/TIFF, studyjne zdjecie) -
+        # oryginalny plik produktu nie ma szarego tla/artefaktow, wiec miniatura
+        # galerii tez nie powinna (2026-07-18, zgloszenie usera). Patrz DamLabels.vizBackground.
+        transparent_bonus = 1 if ext in ("png", "webp") else 0
         # png/jpg ok; nie premiuj jpg kosztem poprawnego FRONT-S.png
         mtime = f.get("mtime") or ""
-        return (dk_bonus, mtime, 1 if ext in ("png", "jpg", "jpeg", "webp") else 0)
+        return (dk_bonus, transparent_bonus, mtime, 1 if ext in ("png", "jpg", "jpeg", "webp") else 0)
 
     return max(pool, key=rank)
 
@@ -908,7 +1251,14 @@ def write_web_thumb(src: Path, dest: Path, max_edge: int = THUMB_MAX_EDGE) -> No
         from PIL import Image
 
         with Image.open(src) as im:
-            im = im.convert("RGB")
+            # Przezroczystosc na BIALE - bez szarego letterbox w galerii
+            if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
+                rgba = im.convert("RGBA")
+                bg = Image.new("RGBA", rgba.size, (255, 255, 255, 255))
+                bg.paste(rgba, mask=rgba.split()[-1])
+                im = bg.convert("RGB")
+            else:
+                im = im.convert("RGB")
             im.thumbnail((max_edge, max_edge), Image.Resampling.LANCZOS)
             im.save(dest, "JPEG", quality=85, optimize=True)
         return
@@ -1072,16 +1422,31 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
                     print(f"  thumb skip {thumb_name}: {exc}")
                     continue
                 langs_out = revision_langs if revision_langs else [lang]
+                # Jezyk: folder-langs > jawny kod z pliku > default marki (tylko gdy brak sygnalu)
+                pname = p.get("display_name") or p["name"]
+                carrier_code = r.get("carrier") or ""
                 out.append(
                     {
                         "product_id": pid,
-                        "product_name": p.get("display_name") or p["name"],
+                        "product_name": pname,
                         "category": p["category"],
                         "brand": brand,
-                        "carrier": r.get("carrier"),
+                        "subcategory_slug": p.get("subcategory_slug") or "",
+                        "subcategory_label": p.get("subcategory_label") or "",
+                        "linked_products": p.get("linked_products") or [],
+                        "alias_langs": p.get("alias_langs") or [],
+                        "carrier": carrier_code,
+                        "carrier_label": carrier_label_pl(
+                            carrier_code,
+                            product_name=pname,
+                            tags=p.get("tags") or [],
+                        ),
+                        "carrier_guessed": bool(r.get("carrier_guessed")),
+                        "is_mix": is_mix_product(pname, p.get("tags") or []),
                         "index": r.get("index"),
                         "index_base": index_base,
                         "revision_folder": r.get("folder"),
+                        "revision_path": r.get("path"),
                         "langs": langs_out,
                         "lang": lang,
                         "lang_label": lang_label(lang),
@@ -1163,6 +1528,7 @@ def main() -> None:
 
     attach_marketing_links(products)
     discover_marketing_materials(products, MARKETING_ROOT)
+    apply_product_aliases(products)
 
     search = build_search(products)
     viz = collect_viz_latest(products, THUMBS_DIR)

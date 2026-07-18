@@ -108,34 +108,64 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   cursor: pointer;
 }
 
-/* Badge: czytelna skala + kontrast AA (nie jasny zolty/turkus + bialy) */
+/* Badge: anatomia jak .dam-tag-more (pill, biale tlo, cienki border) */
 .geex-content__header__action .geex-content__header__badge {
   position: absolute;
-  top: 2px;
-  inset-inline-end: 0;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
+  top: 0;
+  inset-inline-end: -4px;
+  min-width: 22px;
+  height: auto;
+  padding: 2px 8px;
   font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
+  font-weight: 600;
+  line-height: 1.35;
   border-radius: 999px;
-  border: 2px solid var(--sectionTwo-color, #fff);
-  box-shadow: 0 1px 3px rgba(23, 22, 30, 0.12);
-  background: #B45309;
-  color: #fff;
+  border: 1px solid rgba(171, 84, 219, 0.35);
+  box-shadow: none;
+  background: #fff;
+  color: #AB54DB;
 }
 
 .geex-content__header__action .geex-content__header__badge.dam-badge--msg,
 .geex-content__header__action .geex-content__header__badge:not(.dam-badge--notif):not(.bg-info) {
-  background: #B45309;
-  color: #fff;
+  border-color: rgba(180, 83, 9, 0.4);
+  background: #fff;
+  color: #B45309;
 }
 
 .geex-content__header__action .geex-content__header__badge.dam-badge--notif,
 .geex-content__header__action .geex-content__header__badge.bg-info {
-  background: #0E7490;
-  color: #fff;
+  border-color: rgba(14, 116, 144, 0.4);
+  background: #fff;
+  color: #0E7490;
+}
+
+/* Jezyk: kod PL/EN jak tag-more, bez emoji */
+.dam-lang-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 2px 10px;
+  border: 1px solid rgba(171, 84, 219, 0.35);
+  border-radius: 999px;
+  background: #fff;
+  color: #AB54DB;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+.dam-lang-trigger:hover .dam-lang-code {
+  background: rgba(171, 84, 219, 0.08);
+}
+.dam-lang-option .dam-lang-code {
+  min-width: 32px;
+  flex: 0 0 auto;
+}
+.dam-lang-option.active .dam-lang-code {
+  background: rgba(171, 84, 219, 0.12);
 }
 
 /* Cienkie ikony Unicons zamiast grubych fill-SVG z demo Geex */
@@ -1621,24 +1651,34 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   background: #fff;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 .dam-viz-card__body {
-  padding: 12px 14px 14px;
+  flex: 1 1 auto;
+  padding: 20px 14px 18px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  min-height: 204px;
+  box-sizing: border-box;
 }
 
 .dam-viz-card__title {
   font-size: var(--dam-fs-base, 14px);
   font-weight: 600;
-  margin: 0 0 4px;
+  margin: 0;
   color: #464255;
   text-align: center;
   width: 100%;
   line-height: 1.3;
+  min-height: 1.3em;
 }
 
 .dam-viz-card__meta {
@@ -1647,15 +1687,25 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   margin: 0;
   text-align: center;
   width: 100%;
+  line-height: 1.35;
+  min-height: 1.35em;
+}
+
+.dam-viz-card__meta--empty {
+  color: #b0b2bb;
+  font-style: italic;
 }
 
 .dam-viz-thumb {
+  flex: 0 0 auto;
   height: 160px;
-  background: #f4f4f6;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 .dam-viz-thumb__img {
@@ -1663,7 +1713,7 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   height: 100%;
   object-fit: contain;
   display: block;
-  background: #f4f4f6;
+  background: #ffffff;
 }
 
 .dam-viz-thumb__img--placeholder {
@@ -1674,33 +1724,104 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
 .dam-viz-card__badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 5px 6px;
+  margin: 0;
   justify-content: center;
+  align-content: flex-start;
+  align-items: flex-start;
   width: 100%;
+  /* 2 rzedy (font pill+1px, padding +2) - stale, zeby CTA nie skakaly */
+  min-height: 56px;
+  max-height: 56px;
+  overflow: hidden;
+}
+
+/* Karty: jak .dam-tag-pill (weight 500), font +1px, padding +2px na strone */
+.dam-viz-card .dam-viz-badge,
+.dam-viz-card button.dam-viz-badge {
+  font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
+  font-weight: 500;
+  padding: 5px 11px;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .dam-viz-badge {
-  font-size: var(--dam-fs-xs, 11px);
+  font-size: var(--dam-tag-fs-badge, 14px);
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 4px 12px;
   border-radius: 6px;
   letter-spacing: 0.02em;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
+/* Semantyka kolorow tagow (2026-07-18):
+   marka=fiolet, kategoria/typ=zielony, smak/subcat=fiolet, opakowanie/nosnik=pomarancz,
+   warianty=teal (nie czerwony), jezyk=mietowy, brak indeksu=szary jasniejszy tekst */
 .dam-viz-badge--brand {
   background: rgba(171, 84, 219, 0.12);
   color: #AB54DB;
 }
 
+.dam-viz-badge--cat {
+  background: rgba(40, 199, 111, 0.14);
+  color: #1B8F52;
+}
+
 .dam-viz-badge--lang {
-  background: rgba(44, 191, 68, 0.12);
-  color: #2CBF44;
+  background: rgba(45, 180, 160, 0.14);
+  color: #0F8A78;
 }
 
 .dam-viz-badge--index {
   background: rgba(70, 66, 85, 0.08);
   color: #464255;
+}
+
+.dam-viz-badge--index-miss {
+  background: rgba(120, 120, 130, 0.12);
+  color: #a8aab4; /* ~15% jasniej niz typowy szary tekst kategorii */
+}
+
+.dam-viz-badge--subcat {
+  background: rgba(171, 84, 219, 0.10);
+  color: #7A3AA8;
+}
+
+.dam-viz-badge--carrier {
+  background: rgba(255, 159, 67, 0.16);
+  color: #C96A12;
+}
+
+.dam-viz-badge--variants {
+  background: rgba(13, 148, 136, 0.12);
+  color: #0F766E;
+}
+
+.dam-viz-badge--multilang {
+  background: rgba(255, 159, 67, 0.12);
+  color: #C96A12;
+}
+
+/* Typ zgadniety (bez potwierdzenia) - ikonka "?" doklejana w JS (Faza 2) */
+.dam-viz-badge--guessed::after {
+  content: "?";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.14);
+  color: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 12px;
 }
 
 .dam-viz-card__path {
@@ -1714,13 +1835,14 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
 }
 
 .dam-viz-card__actions {
-  margin-top: 10px;
+  margin-top: 4px;
   display: flex;
   gap: 8px;
   flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .dam-viz-card__actions .geex-btn {
@@ -1847,15 +1969,53 @@ body.file-manager .geex-content__header__subtitle {
   z-index: 3;
 }
 
+/* Zwiniety pasek = JEDEN fixed panel (collapse + ikony + logo).
+   NIGDY position:relative w main - to tworzylo pusty pas po lewej. */
 body.dam-sidebar-collapsed .geex-sidebar {
+  position: fixed !important;
+  top: 22px !important;
+  inset-inline-start: var(--dam-edge, 16px) !important;
+  left: var(--dam-edge, 16px) !important;
   width: 72px !important;
   min-width: 72px !important;
   max-width: 72px !important;
-  padding: 18px 10px !important;
-  overflow-x: visible !important;
-  overflow-y: auto;
+  padding: 12px 10px 14px !important;
+  /* max 80vh; min 500px gdy viewport pozwala; scroll wewnatrz */
+  height: min(80vh, calc(100dvh - 44px)) !important;
+  min-height: 500px !important;
+  max-height: min(80vh, calc(100dvh - 44px)) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+  z-index: 100;
+  /* cienki scroll 2px */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(171, 84, 219, 0.45) transparent;
 }
+body.dam-sidebar-collapsed .geex-sidebar::-webkit-scrollbar {
+  width: 2px;
+}
+body.dam-sidebar-collapsed .geex-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+body.dam-sidebar-collapsed .geex-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(171, 84, 219, 0.45);
+  border-radius: 2px;
+}
+/* Zwinięte menu: TYLKO ikony - etykiety ukryte (wczesniej selector zle zlaczone z footerem) */
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link span,
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link .dam-nav-label {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
 .dam-footer-author-link {
   color: inherit;
   text-decoration: none;
@@ -1871,51 +2031,108 @@ body.dam-sidebar-collapsed .geex-sidebar__footer,
 body.dam-sidebar-collapsed .geex-sidebar__close {
   display: none !important;
 }
+
+/* Zwiniety sidebar: logo tylko na dole, nie u gory */
+body.dam-sidebar-collapsed .geex-sidebar__header .geex-sidebar__logo {
+  display: none !important;
+}
+
+.dam-sidebar-logo-collapsed {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  padding: 8px 4px 10px;
+  flex-shrink: 0;
+  min-height: 56px;
+}
+
+.dam-sidebar-logo-collapsed img.dam-logo-dk,
+.dam-sidebar-logo-collapsed img.logo-lite,
+.dam-sidebar-logo-collapsed img.logo-dark,
+.dam-sidebar-logo-collapsed img {
+  /* Pelny wordmark - NIGDY cover (ucinato "dobr") */
+  width: 48px !important;
+  height: 48px !important;
+  max-width: 48px !important;
+  max-height: 48px !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  border-radius: 8px;
+  background: #fff;
+  padding: 3px;
+  box-sizing: border-box;
+}
+
+body.dam-sidebar-collapsed .dam-sidebar-logo-collapsed {
+  display: flex !important;
+}
+
+body.dam-sidebar-collapsed .geex-sidebar__wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 100%;
+  height: 100%;
+  position: relative;
+}
+
+body.dam-sidebar-collapsed .geex-sidebar__menu-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;
+  max-height: none;
+}
+
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link {
   justify-content: center;
+  align-items: center;
+  gap: 0;
   padding-left: 0;
   padding-right: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0; /* ukryj ewentualny tekst poza <span>/<i> */
+  line-height: 0;
+  min-height: 40px;
+  height: 40px;
+}
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__item {
+  margin: 0;
 }
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i {
   margin-right: 0 !important;
+  margin-left: 0 !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  width: 22px !important;
+  text-align: center;
+  flex-shrink: 0;
 }
 body.dam-sidebar-collapsed .geex-sidebar__header {
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
+  justify-content: center;
+  gap: 0;
   padding: 0;
+  min-height: 36px;
+  margin: 0 0 4px;
+  position: relative;
+  flex-shrink: 0;
 }
 body.dam-sidebar-collapsed .geex-sidebar__logo {
-  min-width: 0 !important;
-  width: 44px !important;
-  max-width: 44px !important;
-  min-height: 44px !important;
-  padding: 0 !important;
-  margin: 0 auto;
-  justify-content: center;
-  overflow: hidden;
+  display: none !important;
 }
-body.dam-sidebar-collapsed .geex-sidebar__logo img.dam-logo-dk,
-body.dam-sidebar-collapsed .geex-sidebar__logo img.logo-lite,
-body.dam-sidebar-collapsed .geex-sidebar__logo img.logo-dark,
-body.dam-sidebar-collapsed .geex-sidebar__logo img {
-  height: 36px !important;
-  width: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
-  min-width: 0 !important;
-  object-fit: contain !important;
-  flex-shrink: 1 !important;
-}
-/* Przycisk zawsze wystaje poza waski panel - da sie przywrocic */
+/* Collapse wewnatrz tego samego panelu (nie wystaje poza pasek) */
 body.dam-sidebar-collapsed .dam-sidebar-collapse-btn {
-  position: absolute;
-  top: 8px;
-  right: -16px;
-  width: 30px;
-  height: 30px;
-  box-shadow: 0 4px 14px rgba(23, 22, 30, 0.16);
+  position: static;
+  top: auto;
+  right: auto;
+  transform: none;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
+  box-shadow: 0 2px 8px rgba(23, 22, 30, 0.1);
 }
 body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   transform: rotate(180deg);
@@ -1999,11 +2216,11 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-tag-pill {
   border: none;
   border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 10px;
+  padding: 3px 9px;
+  font-size: var(--dam-tag-fs-pill, 10.5px);
   font-weight: 500;
   cursor: pointer;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 .dam-tag-group--smak .dam-tag-pill,
 .dam-prod-tag.dam-tag-group--smak {
@@ -2465,6 +2682,31 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 18px 48px rgba(28, 28, 40, 0.2);
+  position: relative;
+}
+
+/* X zamkniecia - generyczny, uzywany we wszystkich modalach (Faza 6 audyt, 2026-07-18) */
+.dam-modal-x {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border: none;
+  background: #f4f4f6;
+  color: #8b8d97;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+.dam-modal-x:hover {
+  background: #ff5b5b;
+  color: #fff;
 }
 .dam-basepath-box h3 {
   margin: 0 0 10px;
@@ -2614,16 +2856,18 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 }
 .dam-explorer-toast {
   position: fixed;
-  bottom: 24px;
+  /* Top-right: nie zaslania stopki modala (Miniatura/Demo/Ukryj/Dodaj) */
+  top: 24px;
   right: 24px;
-  z-index: 9999;
+  bottom: auto;
+  z-index: 20040;
   background: #464255;
   color: #fff;
   padding: 10px 16px;
   border-radius: 8px;
   font-size: 13px;
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(-8px);
   transition: opacity 0.2s, transform 0.2s;
   pointer-events: none;
   max-width: 360px;
@@ -3367,12 +3611,21 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   width: 100%;
   min-height: 420px;
   max-height: min(520px, 52vh);
-  background: #f4f4f6;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 16px 16px 0 0;
   overflow: hidden;
+  padding: 12px;
+  box-sizing: border-box;
+  touch-action: none;
+}
+.dam-viz-modal__thumb.is-zoomed {
+  cursor: grab;
+}
+.dam-viz-modal__thumb.is-zoomed.is-panning {
+  cursor: grabbing;
 }
 .dam-viz-modal__thumb img {
   width: 100%;
@@ -3380,14 +3633,23 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   object-fit: contain;
   transform-origin: center center;
   transition: transform 0.12s ease;
+  background: #ffffff;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.dam-viz-modal__thumb.is-panning img {
+  transition: none;
 }
 .dam-viz-modal__zoom {
   position: absolute;
-  left: 12px;
+  left: 50%;
   bottom: 12px;
+  transform: translateX(-50%);
   z-index: 3;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 4px 6px;
   border-radius: 10px;
@@ -3501,6 +3763,54 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   word-break: break-all;
 }
 
+/* Faza 5 (2026-07-18): jezyki bez wizki - wyszarzone + przycisk zgloszenia */
+.dam-viz-modal__missing-langs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.dam-viz-modal__missing-langs-label {
+  font-size: 11px;
+  color: #8b8d97;
+  font-weight: 600;
+  margin-right: 2px;
+}
+.dam-viz-badge--lang-missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--dam-tag-fs-badge, 14px);
+  font-weight: 600;
+  padding: 4px 6px 4px 12px;
+  border-radius: 6px;
+  background: rgba(139, 141, 151, 0.1);
+  color: #8b8d97;
+}
+.dam-viz-missing-lang-request {
+  border: none;
+  background: rgba(171, 84, 219, 0.14);
+  color: #AB54DB;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  position: relative;
+}
+.dam-viz-missing-lang-request::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+.dam-viz-missing-lang-request:hover {
+  background: rgba(171, 84, 219, 0.28);
+}
+
 .dam-viz-modal__actions {
   display: flex;
   flex-wrap: nowrap;
@@ -3508,15 +3818,68 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   gap: 8px;
   margin-top: 14px;
   width: 100%;
+  justify-content: flex-start;
 }
 
-.dam-viz-modal__actions .geex-btn {
-  flex: 1 1 auto;
+.dam-viz-modal__actions-main {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 auto;
   min-width: 0;
-  min-height: 36px;
-  padding: 0.4rem 0.75rem;
+}
+
+.dam-viz-modal__actions-admin {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin-left: 70px; /* odstep od Share - osobna grupa admin */
+}
+
+.dam-viz-modal__actions .geex-btn,
+.dam-viz-modal__actions .dam-viz-modal__cta {
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0.35rem 0.9rem;
   font-size: 12px;
   white-space: nowrap;
+  border-radius: var(--btn-radius, 50px);
+}
+
+.dam-viz-modal__cta {
+  min-width: 118px;
+  justify-content: center;
+}
+
+#damVizModalBadges.dam-viz-card__badges,
+.dam-viz-modal__body #damVizModalBadges {
+  justify-content: flex-start;
+  align-content: flex-start;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  margin-bottom: 8px;
+}
+
+.dam-viz-modal__body #damVizModalBadges .dam-viz-badge,
+.dam-viz-modal__body #damVizModalBadges button.dam-viz-badge {
+  font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
+  font-weight: 500;
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+.dam-viz-modal__carrier--editable {
+  cursor: pointer;
+  text-decoration: underline dotted rgba(171, 84, 219, 0.45);
+  text-underline-offset: 3px;
+}
+.dam-viz-modal__carrier--editable:hover {
+  color: #AB54DB;
 }
 
 .dam-viz-icon-btn {
@@ -3548,12 +3911,18 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   cursor: not-allowed;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 720px) {
   .dam-viz-modal__actions {
     flex-wrap: wrap;
   }
-  .dam-viz-modal__actions .geex-btn {
-    flex: 1 1 calc(50% - 8px);
+  .dam-viz-modal__actions-admin {
+    margin-left: 0;
+    margin-top: 4px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .dam-viz-modal__cta {
+    min-width: 100px;
   }
 }
 
@@ -3608,22 +3977,26 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   flex: 0 0 40px;
 }
 
-/* Tooltip styles */
+/* Tooltip: NAD modalem (9999) i popoverem (10060). Szeroki, cienki tekst. */
 .dam-tooltip {
-  position: absolute;
-  z-index: 9998;
-  background: rgba(70, 66, 85, 0.92);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
+  position: fixed;
+  z-index: 20050;
+  background: #ffffff;
+  color: #3d3a4a;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(171, 84, 219, 0.22);
   pointer-events: none;
-  max-width: 260px;
+  min-width: 160px;
+  max-width: min(520px, calc(100vw - 24px));
   white-space: normal;
-  line-height: 1.4;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+  box-shadow: 0 10px 28px rgba(70, 66, 85, 0.18);
 }
 
 /* ROOT plikow: online / offline - wiekszy pill (~+12px), padding 8px */
@@ -3918,6 +4291,576 @@ body.dam-bridge-offline .dam-offline-bar {
 }
 body.dam-help-open {
   overflow: hidden;
+}
+
+/* Admin mode: ten sam radius co Geex, kompaktowy padding, delikatny akcent (nie osobny styl) */
+.dam-admin-control {
+  outline: none;
+  border: 1.5px solid rgba(171, 84, 219, 0.55) !important;
+  border-radius: var(--btn-radius, 50px) !important;
+  background: #fff !important;
+  color: #464255 !important;
+  padding: 0.2rem 0.55rem !important;
+  min-height: 28px !important;
+  font-size: 11px !important;
+  gap: 4px !important;
+  box-shadow: none !important;
+}
+.dam-admin-control > i {
+  font-size: 13px !important;
+}
+.dam-admin-control:hover {
+  background: rgba(171, 84, 219, 0.08) !important;
+  border-color: #AB54DB !important;
+  color: #AB54DB !important;
+}
+.dam-admin-toggle.dam-admin-control {
+  padding: 4px 8px !important;
+}
+.dam-viz-modal__actions-admin .dam-admin-control {
+  flex: 0 0 auto;
+}
+.dam-admin-control.is-on {
+  background: rgba(171, 84, 219, 0.12) !important;
+  border-color: #AB54DB !important;
+  color: #AB54DB !important;
+}
+
+/* Demo: delikatna zolta obwodka */
+.dam-viz-card--demo {
+  box-shadow: inset 0 0 0 1px rgba(240, 180, 0, 0.55);
+}
+.dam-viz-card--hidden {
+  opacity: 0.72;
+}
+
+/* Faza 5/P2 (2026-07-18): "Pokaz wszystko" - folder istnieje, brak wizki */
+.dam-viz-card--no-viz {
+  opacity: 0.8;
+  background: repeating-linear-gradient(
+    135deg,
+    #fafafa,
+    #fafafa 10px,
+    #f4f4f6 10px,
+    #f4f4f6 20px
+  );
+}
+.dam-viz-thumb__noviz {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  color: #a0a2ab;
+}
+.dam-viz-thumb__noviz i {
+  font-size: 28px;
+}
+.dam-viz-thumb__noviz span {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.dam-viz-badge--hidden {
+  background: rgba(70, 66, 85, 0.12);
+  color: #555;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.dam-viz-badge--hidden:hover {
+  background: rgba(171, 84, 219, 0.14);
+  color: #AB54DB;
+}
+
+/* Tagi klikalne - smukle wizualnie, touch target >= 44px przez niewidoczna hit-area
+   (ui-ux-pro-max touch-target-size: "extend hit area beyond visual bounds if needed").
+   NIE nadymac wizualnego chipa - stad brak min-height/min-width tutaj (2026-07-18 fix). */
+.dam-badge-tag,
+button.dam-viz-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  font: inherit;
+  line-height: 1.2;
+  position: relative;
+}
+button.dam-badge-tag::before,
+button.dam-viz-badge::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+.dam-badge-tag:focus-visible,
+button.dam-viz-badge:focus-visible,
+.dam-admin-control:focus-visible {
+  outline: 2px solid #AB54DB;
+  outline-offset: 2px;
+}
+.dam-viz-badge--more {
+  background: rgba(0, 0, 0, 0.06);
+  color: #555;
+}
+
+/* Faza 6 (2026-07-18): inbox.html */
+.dam-inbox-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.dam-inbox-tag {
+  border: 1px solid #ececf2;
+  background: #fff;
+  color: #464255;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.dam-inbox-tag:hover {
+  border-color: #AB54DB;
+}
+.dam-inbox-tag.is-active {
+  background: #AB54DB;
+  border-color: #AB54DB;
+  color: #fff;
+}
+.dam-inbox-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dam-inbox-item {
+  border: 1px solid #ececf2;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px 16px;
+}
+.dam-inbox-item.is-unread {
+  border-left: 3px solid #AB54DB;
+}
+.dam-inbox-item__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dam-inbox-item__top strong {
+  font-size: 13px;
+  color: #464255;
+}
+.dam-inbox-item__date {
+  font-size: 11px;
+  color: #8b8d97;
+  white-space: nowrap;
+}
+.dam-inbox-item__detail {
+  font-size: 12px;
+  color: #6b6d78;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.dam-inbox-item__tags {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dam-inbox-item__tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(171, 84, 219, 0.1);
+  color: #7A3AA8;
+}
+
+/* Faza 5/6 (2026-07-18): modal "Zglos zapotrzebowanie" */
+.dam-viz-request-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10070;
+  background: rgba(20, 20, 28, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.dam-viz-request-box {
+  background: #fff;
+  border-radius: 14px;
+  max-width: 420px;
+  width: 100%;
+  padding: 20px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+.dam-viz-request-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: #f4f4f6;
+  color: #8b8d97;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.dam-viz-request-close:hover {
+  background: #ff5b5b;
+  color: #fff;
+}
+.dam-viz-request-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #464255;
+  margin: 0 28px 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dam-viz-request-sub {
+  font-size: 12px;
+  color: #8b8d97;
+  margin: 0 0 16px;
+}
+.dam-viz-request-channels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.dam-viz-request-channel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #ececf2;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #464255;
+  min-height: 44px;
+}
+.dam-viz-request-channel:hover {
+  border-color: #AB54DB;
+}
+.dam-viz-request-channel input {
+  width: 16px;
+  height: 16px;
+  accent-color: #AB54DB;
+}
+.dam-viz-request-bulk {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.dam-viz-request-bulk button {
+  flex: 1;
+  border: 1px solid #ececf2;
+  background: #fff;
+  color: #464255;
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 8px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.dam-viz-request-bulk button:hover {
+  background: #f5f6fa;
+}
+.dam-viz-request-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Faza 4 (2026-07-18): popover edycji typu + panel moderacji */
+.dam-tag-edit-popover {
+  position: absolute;
+  z-index: 10060;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  min-width: 240px;
+  max-width: 300px;
+  max-height: min(56vh, 360px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #ececf2;
+}
+.dam-tag-edit-popover__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #464255;
+  border-bottom: 1px solid #ececf2;
+  flex: 0 0 auto;
+  background: #fff;
+}
+.dam-tag-edit-popover__close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #8b8d97;
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.dam-tag-edit-popover__close:hover {
+  color: #ff5b5b;
+}
+.dam-tag-edit-popover__list {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(36vh, 220px);
+}
+.dam-tag-edit-popover__opt.is-selected {
+  background: rgba(171, 84, 219, 0.12);
+  color: #7A3AA8;
+  font-weight: 600;
+}
+.dam-tag-edit-popover__opt--none {
+  border-bottom: 1px dashed #ececf2;
+  margin-bottom: 4px;
+  color: #8b8d97;
+}
+.dam-tag-edit-popover__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid #ececf2;
+  background: #fafafc;
+  flex: 0 0 auto;
+}
+.dam-tag-edit-popover__confirm,
+.dam-tag-edit-popover__cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--btn-radius, 50px);
+  border: 1.5px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dam-tag-edit-popover__confirm {
+  background: rgba(40, 199, 111, 0.14);
+  border-color: #28c76f;
+  color: #1B8F52;
+}
+.dam-tag-edit-popover__confirm:hover {
+  background: rgba(40, 199, 111, 0.24);
+}
+.dam-tag-edit-popover__cancel {
+  background: rgba(255, 91, 91, 0.1);
+  border-color: #ff5b5b;
+  color: #e11d48;
+}
+.dam-tag-edit-popover__cancel:hover {
+  background: rgba(255, 91, 91, 0.2);
+}
+.dam-tag-edit-popover__foot {
+  flex: 0 0 auto;
+  border-top: 1px solid #ececf2;
+}
+.dam-tag-edit-popover__opt {
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #464255;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+}
+.dam-tag-edit-popover__opt:hover {
+  background: #f5f6fa;
+}
+.dam-tag-edit-popover__opt.is-current {
+  color: #AB54DB;
+  font-weight: 600;
+}
+.dam-tag-edit-popover__foot {
+  border-top: 1px solid #ececf2;
+  padding: 6px;
+}
+.dam-tag-edit-popover__addtype {
+  width: 100%;
+  border: 1px dashed #AB54DB;
+  background: none;
+  color: #AB54DB;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.dam-tag-edit-popover__addtype:hover {
+  background: rgba(171, 84, 219, 0.08);
+}
+
+.dam-moderation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dam-moderation-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #ececf2;
+  border-radius: 10px;
+  background: #fff;
+}
+.dam-moderation-item__main strong {
+  font-size: 13px;
+  color: #464255;
+}
+.dam-moderation-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.dam-moderation-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.dam-moderation-btn--approve {
+  color: #00b074;
+}
+.dam-moderation-btn--approve:hover {
+  background: rgba(0, 176, 116, 0.12);
+}
+.dam-moderation-btn--reject {
+  color: #ff5b5b;
+}
+.dam-moderation-btn--reject:hover {
+  background: rgba(255, 91, 91, 0.12);
+}
+.dam-moderation-select {
+  font-size: 12px;
+  border: 1px solid #ececf2;
+  border-radius: 8px;
+  padding: 6px 8px;
+  min-height: 36px;
+  color: #464255;
+  background: #fff;
+}
+
+/* Picker miniatury (przegladarka) */
+.dam-thumb-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(20, 20, 28, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.dam-thumb-picker-box {
+  background: #fff;
+  border-radius: 14px;
+  max-width: 720px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: auto;
+  padding: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+.dam-thumb-picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.dam-thumb-picker__path {
+  font-size: 12px;
+  color: #8b8d97;
+  word-break: break-all;
+  margin: 0 0 12px;
+}
+.dam-thumb-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+.dam-thumb-picker__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  border-radius: 10px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.dam-thumb-picker__item img {
+  width: 100%;
+  height: 90px;
+  object-fit: contain;
+  background: #fff;
+}
+.dam-thumb-picker__name {
+  font-size: 11px;
+  color: #555;
+  word-break: break-all;
+  text-align: left;
 }
 
 

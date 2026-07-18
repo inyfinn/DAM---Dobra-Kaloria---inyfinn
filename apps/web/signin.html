@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pl" dir="ltr">
 <head>
   <meta charset="UTF-8">
@@ -8,9 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718vizsw1">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718notif1">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718noid1">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718v7f">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <script>
@@ -175,7 +175,7 @@
                 <label for="authPassword">Haslo</label>
               </div>
               <input type="password" id="authPassword" name="password" required
-                     minlength="8" placeholder="Haslo" autocomplete="current-password">
+                     minlength="4" placeholder="Haslo" autocomplete="current-password">
               <i class="uil-eye toggle-password-type" id="togglePassword" role="button"
                  tabindex="0" aria-label="Pokaz lub ukryj haslo"></i>
             </div>
@@ -206,8 +206,8 @@
   </main>
 
   <script src="./assets/js/main.js"></script>
-  <script src="./assets/js/dam-runtime.js?v=20260718auth2"></script>
-  <script src="./assets/js/dam-api.js?v=20260718auth2"></script>
+  <script src="./assets/js/dam-runtime.js?v=20260718auth3"></script>
+  <script src="./assets/js/dam-api.js?v=20260718auth3"></script>
   <script>
     (function () {
       var mode = "login";
@@ -228,6 +228,9 @@
         tabRegister.setAttribute("aria-selected", m === "register" ? "true" : "false");
         nameWrap.hidden = m !== "register";
         pass.autocomplete = m === "register" ? "new-password" : "current-password";
+        /* Seed lokalny: haslo "test" (4). Rejestracja: jak auth_store (min 4). */
+        pass.minLength = 4;
+        pass.setAttribute("minlength", "4");
         submitBtn.textContent = m === "register" ? "Utworz konto" : "Zaloguj";
         footer.innerHTML = m === "register"
           ? 'Masz juz konto? <a href="#" id="switchToLogin">Zaloguj sie</a>'
