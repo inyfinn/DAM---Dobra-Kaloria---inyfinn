@@ -342,6 +342,126 @@
         "apps/web/scripts/enrich-search-tags.py",
         "apps/web/assets/js/dam-search.js"
       ]
+    },
+    {
+      "id": "branding.disk_read_only",
+      "must": [
+        "Dysk X:/Marketing tylko do odczytu",
+        "Indeks JSON + UI, zero rename na dysku"
+      ],
+      "body_pl": "Branding DAM i katalog produktu bazują na skanach read-only. Zakaz modyfikacji struktury Marketing.",
+      "category": "branding",
+      "must_not": [
+        "Rename/move na X:/Marketing bez osobnej instrukcji"
+      ],
+      "priority": "critical",
+      "title_pl": "Marketing read-only",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "branding.perspectives",
+      "must": [
+        "ENFACE, TYL_ENFACE, FRONT, BACK zgodnie z brand-perspectives.json"
+      ],
+      "body_pl": "Cztery perspektywy opakowania — parser WIZKI rozróżnia ENFACE vs FRONT.",
+      "category": "branding",
+      "must_not": [
+        "Mylić ENFACE z FRONT w UI"
+      ],
+      "priority": "high",
+      "title_pl": "Perspektywy opakowania",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "branding.video_is_video",
+      "must": [
+        "media_type video zawsze odtwarzacz video, nie statyczna miniatura jako substytut"
+      ],
+      "body_pl": "Filmy z 05 SOCIAL MEDIA = video w UI Branding.",
+      "category": "branding",
+      "must_not": [
+        "Udawać mp4 jako zwykły obrazek bez controls"
+      ],
+      "priority": "critical",
+      "title_pl": "Wideo to wideo",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "product.catalog_card",
+      "must": [
+        "project.html pokazuje sekcję Katalog produktu z product-catalog.json",
+        "null = em dash + hint"
+      ],
+      "body_pl": "Karta katalogowa: wymiary, waga, cena, paletyzacja, pakowanie.",
+      "category": "product",
+      "must_not": [
+        "Wymyślać wymiarów bez danych użytkownika"
+      ],
+      "priority": "high",
+      "title_pl": "Karta katalogowa na project.html",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "packaging.tag_format",
+      "must": [
+        "Badge pakowania: {nF} · {kolumny}×{szt}",
+        "ID JSON: pak:{nf}-{grid}",
+        "tier low"
+      ],
+      "body_pl": "Np. 2F · 2×12 dla Datesy. Nie używać nazwy folderu produktu jako tagu kartonu.",
+      "category": "packaging",
+      "must_not": [
+        "Tag DATESY na kartonie zbiorczym"
+      ],
+      "priority": "high",
+      "title_pl": "Format tagu pakowania zbiorczego",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "packaging.tag_tiers",
+      "must": [
+        "primary zawsze widoczne",
+        "pakowanie = tier low, domyślnie w +N",
+        "Explorer/Viz bez low bez toggle"
+      ],
+      "body_pl": "Toggle Odsłoń wszystko pokazuje tagi low/minimal.",
+      "category": "packaging",
+      "must_not": [
+        "Pokazywać 2F·2×12 domyślnie w Explorer bez toggle"
+      ],
+      "priority": "high",
+      "title_pl": "Tiery tagów pakowania",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "search.associations",
+      "must": [
+        "Wyszukiwanie rozszerza query o product-associations reverse",
+        "Warstwa search-only"
+      ],
+      "body_pl": "Synonimy: śliwka → ciasto śliwkowe, jabłecznik → jabłko-cynamon.",
+      "category": "search",
+      "must_not": [
+        "Osobna grupa UI Skojarzenia"
+      ],
+      "priority": "high",
+      "title_pl": "Wyszukiwanie skojarzeniowe",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "naming.good_calories",
+      "must": [
+        "UI: Good Calories, nie Good Choice",
+        "GC = skrót marki eksportowej"
+      ],
+      "body_pl": "Rename marki w settings, privacy, dam-brand-filter.",
+      "category": "naming",
+      "must_not": [
+        "Good Choice w UI DAM"
+      ],
+      "priority": "high",
+      "title_pl": "Good Calories w UI",
+      "updated_at": "2026-07-19"
     }
   ],
   "description_pl": "Newralgiczne ustalenia użytkownika. Źródło prawdy dla kodu i agentów: Postgres dam_kv_store.program-instructions (+ lokalny cache ten plik). memory.md jest tylko notatką operacyjną - przy konflikcie wygrywa ten magazyn. Po każdej nowej krytycznej decyzji: dopisz instrukcję tutaj, zapisz przez bridge (seed KV), dopiero potem zmieniaj kod.",

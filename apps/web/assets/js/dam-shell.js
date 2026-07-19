@@ -134,6 +134,12 @@
       i18n: "nav.visualizations"
     },
     {
+      key: "branding",
+      href: "branding.html",
+      icon: "uil-palette",
+      i18n: "nav.branding"
+    },
+    {
       key: "projects",
       href: "index.html",
       icon: "uil-box",
@@ -171,6 +177,7 @@
     if (path === "dashboard" || path === "index-4" || path === "") return "dashboard";
     if (path === "explorer" || path === "file-manager") return "explorer";
     if (path === "visualizations" || path === "viz") return "visualizations";
+    if (path === "branding") return "branding";
     if (path === "index" || path === "projects") return "projects";
     if (path === "project") return "project";
     if (path === "inbox") return "inbox";
@@ -190,6 +197,7 @@
     dashboard: { labelKey: "nav.home", label: "Panel", parent: null, href: "dashboard.html" },
     explorer: { labelKey: "nav.explorer", label: "Eksplorer", parent: "dashboard", href: "explorer.html" },
     visualizations: { labelKey: "nav.visualizations", label: "Wizualizacje", parent: "dashboard", href: "visualizations.html" },
+    branding: { labelKey: "nav.branding", label: "Branding", parent: "dashboard", href: "branding.html" },
     projects: { labelKey: "nav.projects", label: "Projekty", parent: "dashboard", href: "index.html" },
     project: { labelKey: "nav.project", label: "Projekt", parent: "projects", href: "project.html" },
     invoices: { labelKey: "nav.invoices", label: "Faktury", parent: "dashboard", href: "invoices.html" },
@@ -224,6 +232,7 @@
       "nav.dashboard": "Dashboard",
       "nav.explorer": "Eksplorer",
       "nav.visualizations": "Wizualizacje",
+      "nav.branding": "Branding",
       "nav.projects": "Projekty",
       "nav.inbox": "Wiadomości",
       "nav.invoices": "Faktury",

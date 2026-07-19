@@ -229,7 +229,7 @@
       '<div class="dam-catalog-card dam-catalog-card--price"><p class="dam-catalog-card__label">Cena</p>' +
       '<p class="dam-catalog-card__value">' +
       esc(priceHtml) +
-      "</p><p class="dam-catalog-card__hint">" +
+      "</p><p class=\"dam-catalog-card__hint\">" +
       esc(priceHint) +
       "</p>" +
       shopLink +

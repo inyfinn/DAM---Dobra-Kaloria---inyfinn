@@ -314,6 +314,29 @@ def main() -> None:
 
     OUT_PATH.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Wrote {OUT_PATH} ({len(projects_out)} projects, open_sum={open_sum})")
+
+    wyk_path = WEB / "data" / "wykrojniki-registry.json"
+    if wyk_path.is_file():
+        wyk = json.loads(wyk_path.read_text(encoding="utf-8"))
+        hints = []
+        for entry in (wyk.get("entries") or {}).values():
+            if not isinstance(entry, dict):
+                continue
+            if entry.get("zapas") is None and entry.get("status") is None:
+                continue
+            hints.append(
+                {
+                    "kod": entry.get("kod"),
+                    "zapas": entry.get("zapas"),
+                    "linked_product_ids": entry.get("linked_product_ids") or [],
+                }
+            )
+        hook_path = WEB / "data" / "project-cost-wykrojnik-hints.json"
+        hook_path.write_text(
+            json.dumps({"generated_at": out["generated_at"], "hints": hints}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"Wrote {hook_path} hints={len(hints)}")
     # print Cynamonka sample
     for p in projects_out:
         if "cynamon" in norm(p["name"]):

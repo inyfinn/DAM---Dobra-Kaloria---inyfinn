@@ -1369,6 +1369,126 @@
       },
       "revision_index": "",
       "lifecycle_history_id": "lc_1784413385346"
+    },
+    {
+      "id": "chg_1784421306713",
+      "ts": "2026-07-19T00:35:06.713972+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "test-lifecycle-nerkowcowy-f",
+      "path_renames": [
+        {
+          "kind": "variant_cascade",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\BAT - 35 g - 18.07.2026 - TEST-TEST",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\BAT - 35 g - 18.07.2026 - TEST-TEST - F"
+        },
+        {
+          "kind": "variant_cascade",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\DOY - 35 g - 18.07.2026 - TEST-TEST2",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\DOY - 35 g - 18.07.2026 - TEST-TEST2 - F"
+        },
+        {
+          "kind": "product",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1784421306704"
+    },
+    {
+      "id": "chg_1784421416824",
+      "ts": "2026-07-19T00:36:56.824750+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - D",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": "D",
+      "status": "demo",
+      "product_id": "test-lifecycle-nerkowcowy-d",
+      "path_renames": [
+        {
+          "kind": "variant_cascade",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - D",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST"
+        },
+        {
+          "kind": "variant_cascade",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\DOY - 35 g - 18.07.2026 - TEST-TEST2 - D",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\DOY - 35 g - 18.07.2026 - TEST-TEST2"
+        },
+        {
+          "kind": "product",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - D",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - D",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1784421416803"
+    },
+    {
+      "id": "chg_1784421417166",
+      "ts": "2026-07-19T00:36:57.166580+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "test-lifecycle-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - D"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - D"
+      },
+      "revision_index": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST",
+      "lifecycle_history_id": "lc_1784421417143"
+    },
+    {
+      "id": "chg_1784421417324",
+      "ts": "2026-07-19T00:36:57.324707+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\BAT - 35 g - 18.07.2026 - TEST-TEST - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "test-lifecycle-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\BAT - 35 g - 18.07.2026 - TEST-TEST - F",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\BAT - 35 g - 18.07.2026 - TEST-TEST - D"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\BAT - 35 g - 18.07.2026 - TEST-TEST - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\BAT - 35 g - 18.07.2026 - TEST-TEST - D"
+      },
+      "revision_index": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F",
+      "lifecycle_history_id": "lc_1784421417301"
     }
   ]
 }

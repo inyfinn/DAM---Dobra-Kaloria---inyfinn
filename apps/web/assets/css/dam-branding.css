@@ -1,0 +1,182 @@
+.dam-branding-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dam-branding-tab {
+  border: 1px solid var(--dam-border, rgba(0, 0, 0, 0.1));
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dam-branding-tab.is-active {
+  background: #008244;
+  border-color: #008244;
+  color: #fff;
+}
+
+.dam-branding-toolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.dam-branding-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.dam-branding-card {
+  border: 1px solid var(--dam-border, rgba(0, 0, 0, 0.08));
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dam-branding-card__thumb {
+  aspect-ratio: 1;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dam-branding-card__thumb img,
+.dam-branding-card__thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.dam-branding-card__body {
+  padding: 10px;
+}
+
+.dam-branding-card__name {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.dam-branding-card__meta {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.dam-branding-muted {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.dam-branding-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dam-branding-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.dam-branding-modal__card {
+  position: relative;
+  z-index: 1;
+  width: min(920px, 96vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.dam-branding-modal__close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dam-branding-modal__media {
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.dam-brandbook-tokens {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.dam-brandbook-swatch {
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dam-branding-layout-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--dam-hub-grid-gap, 12px);
+}
+
+.dam-branding-layout-preset {
+  border: 1px solid var(--dam-hub-border, #ececf2);
+  border-radius: var(--dam-hub-card-radius, 12px);
+  padding: var(--dam-hub-card-pad, 16px);
+  background: var(--dam-surface, #fff);
+}
+
+.dam-branding-layout-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dam-surface-muted, #f5f6fa);
+  border: 1px dashed var(--dam-hub-border, #ececf2);
+  border-radius: 8px;
+  min-height: 80px;
+  font-size: var(--dam-fs-sm, 12px);
+  color: var(--dam-hub-muted, #8f8b9f);
+}
+
+.dam-branding-campaign-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--dam-brand-green, #008244);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .dam-branding-toolbar {
+    grid-template-columns: 1fr;
+  }
+}

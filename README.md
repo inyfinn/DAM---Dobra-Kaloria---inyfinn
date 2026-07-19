@@ -24,6 +24,9 @@ Repozytorium: [inyfinn/DAM---Dobra-Kaloria---inyfinn](https://github.com/inyfinn
 - Lokalny bridge (Eksplorator Windows, media, audit, override nosnikow / miniatur, propozycje tagow)
 - Konta lokalne (bcrypt) + sesja urzadzenia (`machine_id` / `device_id` / `session_id`)
 - UI na motywie **Geex** (Bootstrap 5) z tokenami DAM
+- **Branding DAM Hub:** modul marketingu (perspektywy WIZKI, kampanie, layout), karta katalogowa produktu, pakowanie zbiorcze (`2F·2×12`), rejestr wykrojnikow
+
+Szczegoly modulu branding: [`docs/BRANDING-HUB.md`](docs/BRANDING-HUB.md).
 
 ---
 
@@ -142,6 +145,21 @@ python apps/desktop/seed_kubara_users.py
 | `inbox-items.json` | skrzynka odbiorcza (`inbox.html`) |
 | `elements-overrides.json` | override checklisty elementow |
 | `materialy-to-projekt-dryrun.json` | raport naprawy migracji (patrz nizej) - **tylko dry-run** |
+| `branding-index.json` / `branding-search-index.json` | assety marketingowe (rebuild: `build-branding-index.py`) |
+| `campaigns.json` | kampanie z folderow Marketing (generowane z build branding) |
+| `product-catalog.json` | karta katalogowa na `project.html` |
+| `bulk-packaging.json` | tagi pakowania zbiorczego per SKU |
+| `wykrojniki-registry.json` | rejestr wykrojnikow (import XLSX) |
+
+### Indeks branding (Marketing, read-only)
+
+```powershell
+python apps/web/scripts/build-branding-index.py
+# opcjonalnie: --marketing "X:/Marketing"
+```
+
+Bridge (dev): `POST http://127.0.0.1:8766/branding/rebuild`  
+Dokumentacja: [`docs/BRANDING-HUB.md`](docs/BRANDING-HUB.md).
 
 ### Naprawa migracji MATERIALY -> PROJEKT (ostrozne, dry-run domyslnie)
 
@@ -201,6 +219,16 @@ Szczegoly: [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md).
 
 ---
 
+## Changelog (2026-07-19)
+
+- **Branding DAM Hub:** `branding.html` (filtry, kampanie, Key visuale, layout builder), `dam-branding.js`, `dam-hub-shared.css`
+- **Indeks marketing:** `build-branding-index.py` + `campaigns.json`, bridge `/branding-index`, `/branding/rebuild`
+- **Katalog produktu:** karta na `project.html`, bridge `/product-catalog`, `fetch-product-prices.py`
+- **Pakowanie zbiorcze:** `bulk-packaging.json`, badge tier low, toggle „Odsłon wszystko” (explorer, viz, projekty)
+- **Wykrojniki:** rejestr XLSX, koszty w `build-project-costs.py`, kolejka mapowan (API)
+- **Dashboard:** widget `branding_latest`; **Pomoc:** slownik branding w `help.html`
+- Dokumentacja: [`docs/BRANDING-HUB.md`](docs/BRANDING-HUB.md)
+
 ## Changelog (2026-07-18)
 
 - **Jezyki (lang provenance):** DK=PL zawsze; extra / GC tylko z dowodu w nazwach lub override; dokumentacja w `docs/LANG_PROVENANCE.md` + `agents/shared/`
@@ -246,6 +274,10 @@ GitHub Release: tag + upload ZIP (tworzone przy publikacji).
 | Sciezki | Kopiuj + Pokaz w Eksploratorze (`DamPaths`) |
 | Tagi produktow | Smak / Typ / Opakowanie / Autor (`dam-tag-bar.js`) |
 | Chrome | Header, wiadomosci, profil (`dam-shell.js`) |
+| Branding | Siatka marketingu, filtry WIZKI, kampanie, modal wideo/wektor (`branding.html`) |
+| Karta katalogowa | EAN, ceny, kategoria sklepu na `project.html` |
+| Pakowanie zbiorcze | Badge `2F·2×12`, toggle tier low (`dam-badges.js`, `dam-hub-shared.css`) |
+| Wykrojniki | Rejestr + koszty projektu + kolejka mapowan (bridge) |
 
 ---
 
@@ -277,6 +309,7 @@ GitHub Release: tag + upload ZIP (tworzone przy publikacji).
 | [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md) | Skad biora sie jezyki / rynki |
 | [`docs/PROGRAM_INSTRUCTIONS.md`](docs/PROGRAM_INSTRUCTIONS.md) | Reguly w bazie (KV), nie tylko memory |
 | [`docs/NAMING.md`](docs/NAMING.md) | Nazewnictwo nosnikow / slotow |
+| [`docs/BRANDING-HUB.md`](docs/BRANDING-HUB.md) | Branding, katalog, pakowanie zbiorcze, wykrojniki |
 | [`docs/ADR/ADR-007-local-sqlite.md`](docs/ADR/ADR-007-local-sqlite.md) | SQLite lokalny / offline |
 | [`docs/ADR/ADR-008-device-session-binding.md`](docs/ADR/ADR-008-device-session-binding.md) | machine/session ID |
 | [`docs/ADR/ADR-009-postgres-synology.md`](docs/ADR/ADR-009-postgres-synology.md) | Wspolny Postgres na NAS |

@@ -13,6 +13,7 @@ from pathlib import Path
 WEB = Path(__file__).resolve().parents[1]
 OUT = WEB / "data" / "branding-index.json"
 SEARCH_OUT = WEB / "data" / "branding-search-index.json"
+CAMPAIGNS_OUT = WEB / "data" / "campaigns.json"
 STATUS_FILE = WEB / "data" / "branding-build-status.json"
 
 ARCHIVE_MARKERS = ("-- ARCHIWUM --", "00 - ARCHIWUM", "/ARCHIWUM/", "\\ARCHIWUM\\")
@@ -201,8 +202,24 @@ def main() -> int:
         "assets": assets,
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    search_idx = build_search_index(assets)
     SEARCH_OUT.write_text(
-        json.dumps(build_search_index(assets), ensure_ascii=False, indent=2),
+        json.dumps(search_idx, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    camp_list = []
+    for cid, aids in sorted((search_idx.get("campaigns") or {}).items()):
+        camp_list.append(
+            {
+                "id": cid,
+                "nazwa": cid,
+                "rok": int(cid[:4]) if cid[:4].isdigit() else None,
+                "asset_ids": aids,
+                "asset_count": len(aids),
+            }
+        )
+    CAMPAIGNS_OUT.write_text(
+        json.dumps({"version": 1, "campaigns": camp_list}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     STATUS_FILE.write_text(

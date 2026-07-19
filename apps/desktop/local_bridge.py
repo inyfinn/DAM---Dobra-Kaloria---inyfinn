@@ -3371,6 +3371,32 @@ class Handler(BaseHTTPRequestHandler):
             )
             self._json(200, {"ok": True, "product_id": product_id})
             return
+        if parsed.path == "/wykrojnik-mapping-queue":
+            if self._require_admin() is None:
+                return
+            queue_file = WEB_ROOT / "data" / "wykrojnik-mapping-queue.json"
+            queue = _load_json(queue_file, {"version": 1, "pending": [], "resolved": []})
+            action = (data.get("action") or "add").strip().lower()
+            if action == "add":
+                item = data.get("item") or {}
+                if not isinstance(item, dict):
+                    self._json(400, {"ok": False, "error": "item_required"})
+                    return
+                queue.setdefault("pending", []).append(item)
+            elif action == "resolve":
+                item_id = (data.get("id") or "").strip()
+                pending = [x for x in queue.get("pending") or [] if str(x.get("id")) != item_id]
+                resolved = queue.get("resolved") or []
+                for it in queue.get("pending") or []:
+                    if str(it.get("id")) == item_id:
+                        it["resolved_at"] = utc_now()
+                        resolved.append(it)
+                queue["pending"] = pending
+                queue["resolved"] = resolved
+            queue["updated_at"] = utc_now()
+            queue_file.write_text(json.dumps(queue, ensure_ascii=False, indent=2), encoding="utf-8")
+            self._json(200, {"ok": True, "pending": len(queue.get("pending") or [])})
+            return
         if parsed.path == "/carrier-override":
             if self._require_admin() is None:
                 return

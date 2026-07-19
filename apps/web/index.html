@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
+  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719">
   <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719ver102">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
@@ -87,6 +88,7 @@
       <div class="dam-projects-grid-toolbar">
         <p id="damProjectsStatus" class="dam-page-status dam-projects-status-line" aria-live="polite">Łączenie...</p>
         <div class="dam-projects-grid-toolbar__actions">
+          <label class="dam-tag-reveal-toggle"><input type="checkbox" id="damRevealLowTags" /> Odsłoń wszystko</label>
           <button type="button" class="geex-btn" id="damProjectsRefresh" title="Przeładuj listę z bieżącego indeksu (szybkie, bez skanu dysku)" data-dam-tip="Odśwież listę = przeładuj karty z już wczytanego indeksu w pamięci/bridge. Nie skanuje folderów Marketing.">Odśwież listę</button>
           <button type="button" class="geex-btn geex-btn--primary" id="damIngestBtn" title="Przeskanuj foldery Marketing i przebuduj indeks (admin)" data-dam-tip="Skanuj dysk = pełny ingest Marketing: czyta foldery, aktualizuje indeks produktów. Trwa dłużej niż Odśwież listę.">Skanuj dysk</button>
         </div>
@@ -113,6 +115,6 @@
   <script src="./assets/js/dam-icons.js?v=20260718icons1"></script>
   <script src="./assets/js/dam-search.js?v=20260718scopeRadio2"></script>
   <script src="./assets/js/dam-tag-bar.js?v=20260718tagAjax3"></script>
-  <script src="./assets/js/dam-projects.js?v=20260718scopeRadio2"></script>
+  <script src="./assets/js/dam-projects.js?v=hub20260719"></script>
 </body>
 </html>

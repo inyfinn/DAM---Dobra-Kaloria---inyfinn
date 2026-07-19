@@ -20,6 +20,22 @@
   var CARD_ZOOM_MAX = 170;
   var CARD_BASE_MIN_PX = 220;
 
+  function badgeTierOpt() {
+    var B = window.DamBadges;
+    return {
+      includeTagTiers:
+        B && typeof B.getIncludeTagTiers === "function" ? B.getIncludeTagTiers() : ["primary"],
+    };
+  }
+
+  function packagingTagsFrom(v) {
+    if (!v) return [];
+    if (v.tag_groups && v.tag_groups.pakowanie && v.tag_groups.pakowanie.length) {
+      return v.tag_groups.pakowanie;
+    }
+    return [];
+  }
+
   var PLACEHOLDER_SVG =
     "data:image/svg+xml," +
     encodeURIComponent(
@@ -950,6 +966,8 @@
             showCarrierPlaceholder: true,
             maxPerKind: 4,
             overflow: true,
+            packagingTags: packagingTagsFrom(first),
+            includeTagTiers: badgeTierOpt().includeTagTiers,
           })
         : '<span class="dam-viz-badge dam-viz-badge--brand">' + esc(brand) + "</span>";
 
@@ -1359,6 +1377,8 @@
           showCarrierPlaceholder: true,
           maxPerKind: 4,
           overflow: true,
+          packagingTags: packagingTagsFrom(v),
+          includeTagTiers: badgeTierOpt().includeTagTiers,
         });
       }
       syncAdminControls(v);
@@ -1706,6 +1726,8 @@
                to typowo 7 tagow - maxTotal musi je wszystkie objac (bylo 6, ucinalo
                Multijezyczny w "+N" po dodaniu Kategorii/Podkategorii do karty). */
             maxTotal: 9,
+            packagingTags: packagingTagsFrom(first),
+            includeTagTiers: badgeTierOpt().includeTagTiers,
           })
         : '<span class="dam-viz-badge dam-viz-badge--brand">' + esc(brand) + "</span>";
 
@@ -2179,6 +2201,8 @@
             showCarrierPlaceholder: true,
             maxPerKind: 4,
             overflow: true,
+            packagingTags: packagingTagsFrom(v),
+            includeTagTiers: badgeTierOpt().includeTagTiers,
           });
           var setOn = function (btn, on, label, tip, icon) {
             if (!btn) return;
@@ -2426,6 +2450,20 @@
         },
       });
     }
+
+    var revealLow = document.getElementById("damRevealLowTags");
+    if (revealLow && window.DamBadges && typeof window.DamBadges.setRevealLowTags === "function") {
+      try {
+        revealLow.checked = localStorage.getItem("dam_reveal_low_tags") === "1";
+      } catch (eRev) { /* ignore */ }
+      revealLow.addEventListener("change", function () {
+        window.DamBadges.setRevealLowTags(revealLow.checked);
+        applyFilters();
+      });
+    }
+    document.addEventListener("dam-tag-tiers-changed", function () {
+      applyFilters();
+    });
 
     window.DamViz = {
       applyFilters: applyFilters,

@@ -307,6 +307,11 @@
           compact: true,
           maxPerKind: 2,
           maxTotal: 8,
+          packagingTags: (meta.tag_groups && meta.tag_groups.pakowanie) || [],
+          includeTagTiers:
+            window.DamBadges && typeof window.DamBadges.getIncludeTagTiers === "function"
+              ? window.DamBadges.getIncludeTagTiers()
+              : ["primary"],
         }) +
         "</div>"
       );
@@ -727,6 +732,20 @@
         inputEl: "damProjectsSearch",
       });
     }
+
+    var revealLow = document.getElementById("damRevealLowTags");
+    if (revealLow && window.DamBadges && typeof window.DamBadges.setRevealLowTags === "function") {
+      try {
+        revealLow.checked = localStorage.getItem("dam_reveal_low_tags") === "1";
+      } catch (eRev) { /* ignore */ }
+      revealLow.addEventListener("change", function () {
+        window.DamBadges.setRevealLowTags(revealLow.checked);
+        renderGrid(grid, statusEl);
+      });
+    }
+    document.addEventListener("dam-tag-tiers-changed", function () {
+      renderGrid(grid, statusEl);
+    });
 
     await loadProjects(grid, statusEl);
   }

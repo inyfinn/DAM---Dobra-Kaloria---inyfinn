@@ -10,20 +10,35 @@
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
   <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719ver102">
-  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=20260719branding1">
+  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719">
+  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=hub20260719">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
 </head>
 <body class="geex-dashboard dam-app">
+  <div class="dam-sidebar-backdrop" id="damSidebarBackdrop"></div>
   <header class="geex-header">
-    <motion.div class="geex-header__wrapper">
+    <div class="geex-header__wrapper">
       <div class="geex-header__logo-wrapper">
         <a href="dashboard.html" class="geex-header__logo">
           <img class="logo-lite" src="assets/img/logo-dark.svg" alt="DAM" />
+          <img class="logo-dark" src="assets/img/logo-lite.svg" alt="DAM" />
         </a>
+        <button type="button" class="geex-btn geex-btn--primary dam-menu-toggle d-lg-none" id="damSidebarToggle" aria-label="Menu">
+          <i class="uil uil-bars"></i>
+        </button>
       </div>
     </div>
   </header>
   <main class="geex-main-content">
+    <div class="geex-sidebar" id="damSidebar">
+      <a href="#" class="geex-sidebar__close" id="damSidebarClose" aria-label="Zamknij menu"><i class="uil uil-times"></i></a>
+      <div class="geex-sidebar__wrapper">
+        <nav class="geex-sidebar__menu-wrapper">
+          <ul class="geex-sidebar__menu"></ul>
+        </nav>
+      </div>
+    </div>
     <div class="geex-content">
       <div class="geex-content__header">
         <div class="geex-content__header__content">
@@ -36,6 +51,7 @@
       </div>
       <div class="dam-branding-tabs" role="tablist">
         <button type="button" class="dam-branding-tab is-active" data-tab="browse">Przeglądaj</button>
+        <button type="button" class="dam-branding-tab" data-tab="keyvisuale">Key visuale</button>
         <button type="button" class="dam-branding-tab" data-tab="campaigns">Kampanie</button>
         <button type="button" class="dam-branding-tab" data-tab="channels">Kanały</button>
         <button type="button" class="dam-branding-tab" data-tab="brandbook">Brandbook</button>
@@ -43,54 +59,79 @@
       </div>
       <div class="dam-branding-toolbar">
         <input type="search" id="damBrandingSearch" class="geex-content__form__input" placeholder="Szukaj assetów, SKU, kampanii…" />
-        <select id="damBrandingMedia" class="geex-content__form__input">
+        <select id="damBrandingMedia" class="geex-content__form__input" aria-label="Typ medium">
           <option value="">Wszystkie media</option>
           <option value="raster">Raster</option>
           <option value="vector">Wektor</option>
           <option value="video">Wideo</option>
         </select>
-        <select id="damBrandingPerspective" class="geex-content__form__input">
+        <select id="damBrandingPerspective" class="geex-content__form__input" aria-label="Perspektywa">
           <option value="">Perspektywa</option>
           <option value="ENFACE">ENFACE</option>
           <option value="FRONT">FRONT</option>
           <option value="BACK">BACK</option>
           <option value="TYL_ENFACE">TYŁ-ENFACE</option>
         </select>
-        <select id="damBrandingBrand" class="geex-content__form__input">
+        <select id="damBrandingSize" class="geex-content__form__input" aria-label="Rozmiar">
+          <option value="">Rozmiar</option>
+          <option value="XL">XL</option>
+          <option value="L">L</option>
+          <option value="S">S</option>
+          <option value="S_SKLEP">S-SKLEP</option>
+        </select>
+        <select id="damBrandingBackground" class="geex-content__form__input" aria-label="Tło">
+          <option value="">Tło</option>
+          <option value="transparent">Przezroczyste (PNG)</option>
+          <option value="white">Białe (JPG)</option>
+        </select>
+        <select id="damBrandingChannel" class="geex-content__form__input" aria-label="Kanał">
+          <option value="">Kanał</option>
+          <option value="www">WWW</option>
+          <option value="meta">Meta</option>
+          <option value="instagram">Instagram</option>
+          <option value="google">Google</option>
+        </select>
+        <select id="damBrandingBrand" class="geex-content__form__input" aria-label="Marka">
           <option value="">Marka</option>
           <option value="DK">DK</option>
           <option value="GC">GC</option>
         </select>
+        <label class="dam-tag-reveal-toggle"><input type="checkbox" id="damBrandingIncludeArchive" /> Pokaż archiwum</label>
       </div>
       <div id="damBrandingPanelBrowse" class="dam-branding-panel">
-        <motion.div id="damBrandingGrid" class="dam-branding-grid"></div>
+        <div id="damBrandingGrid" class="dam-branding-grid"></div>
+      </div>
+      <div id="damBrandingPanelKeyvisuale" class="dam-branding-panel" hidden>
+        <p class="dam-hub-section-desc">Presety perspektyw opakowania (ENFACE, FRONT, BACK, TYŁ-ENFACE) z folderów WIZKI.</p>
+        <div id="damBrandingKeyGrid" class="dam-branding-grid"></div>
       </div>
       <div id="damBrandingPanelCampaigns" class="dam-branding-panel" hidden>
-        <div id="damBrandingCampaignTree" class="dam-branding-campaign-tree"></motion.div>
+        <div id="damBrandingCampaignTree" class="dam-branding-campaign-tree"></div>
       </div>
       <div id="damBrandingPanelChannels" class="dam-branding-panel" hidden>
-        <p class="dam-branding-muted">Filtruj po kanale w wyszukiwarce (meta, instagram, www…).</p>
+        <p class="dam-hub-section-desc">Filtruj po kanale w polu Kanał (meta, instagram, www, google).</p>
       </div>
       <div id="damBrandingPanelBrandbook" class="dam-branding-panel" hidden>
         <div id="damBrandbookTokens" class="dam-brandbook-tokens"></div>
       </div>
-      <motion.div id="damBrandingPanelLayout" class="dam-branding-panel" hidden>
-        <p class="dam-branding-muted">Layout builder — presety (wkrótce PNG export).</p>
+      <div id="damBrandingPanelLayout" class="dam-branding-panel" hidden>
+        <p class="dam-hub-section-desc">Presety layoutu sklepu (848×1200, slidery kategorii). Eksport PNG w kolejnej iteracji.</p>
+        <div id="damBrandingLayoutPresets" class="dam-branding-layout-presets"></div>
       </div>
     </div>
   </main>
   <div class="dam-branding-modal" id="damBrandingModal" hidden>
     <div class="dam-branding-modal__backdrop" data-close="1"></div>
-    <div class="dam-branding-modal__card" role="dialog" aria-modal="true">
+    <div class="dam-branding-modal__card" role="dialog" aria-modal="true" aria-labelledby="damBrandingModalTitle">
       <button type="button" class="dam-branding-modal__close" data-close="1" aria-label="Zamknij">×</button>
       <div id="damBrandingModalMedia" class="dam-branding-modal__media"></div>
       <div id="damBrandingModalMeta" class="dam-branding-modal__meta"></div>
     </div>
-  </motion.div>
+  </div>
   <script src="./assets/vendor/js/jquery/jquery-3.5.1.min.js"></script>
   <script src="./assets/js/dam-api.js?v=20260719golive1"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-  <script src="./assets/js/dam-shell.js?v=20260719branding1"></script>
-  <script src="./assets/js/dam-branding.js?v=20260719branding1"></script>
+  <script src="./assets/js/dam-shell.js?v=hub20260719"></script>
+  <script src="./assets/js/dam-branding.js?v=hub20260719"></script>
 </body>
 </html>

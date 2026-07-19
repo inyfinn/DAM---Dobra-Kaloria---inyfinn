@@ -4252,6 +4252,17 @@
     var main = document.getElementById("damExplorerMain");
     if (!main) return;
 
+    var revealLow = document.getElementById("damRevealLowTags");
+    if (revealLow && window.DamBadges && typeof window.DamBadges.setRevealLowTags === "function") {
+      try {
+        revealLow.checked = localStorage.getItem("dam_reveal_low_tags") === "1";
+      } catch (eRev) { /* ignore */ }
+      revealLow.addEventListener("change", function () {
+        window.DamBadges.setRevealLowTags(revealLow.checked);
+        if (typeof renderProductList === "function") renderProductList();
+      });
+    }
+
     /* Tag bar NAJPIERW - zanim brand/admin cos rzuci */
     try {
       renderTagChips();

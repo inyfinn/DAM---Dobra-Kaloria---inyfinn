@@ -685,6 +685,63 @@
         }
       },
       {
+        id: "branding_latest",
+        title: t("dash.widget.branding_latest", "Najnowsze materiały branding"),
+        size: "md",
+        defaultOn: true,
+        render: function (el) {
+          var self = this;
+          fetch("data/branding-index.json?v=hub20260719")
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (data) {
+              var bridge =
+                global.DamRuntime && typeof DamRuntime.bridgeUrl === "function"
+                  ? DamRuntime.bridgeUrl()
+                  : "http://127.0.0.1:8766";
+              var assets = (data.assets || []).filter(function (a) {
+                return a.media_type === "raster" && /\.(png|jpe?g)$/i.test(a.name || "");
+              });
+              assets.sort(function (a, b) {
+                return String(b.mtime || "").localeCompare(String(a.mtime || ""));
+              });
+              var list = assets.slice(0, 4);
+              if (!list.length) {
+                el.outerHTML = shell(
+                  self,
+                  '<p class="dam-widget__meta">Brak assetów w indeksie branding.</p>'
+                );
+                return;
+              }
+              var html =
+                '<ul class="dam-widget__list">' +
+                list
+                  .map(function (a) {
+                    var thumb = bridge + "/media?path=" + encodeURIComponent(a.path || "");
+                    return (
+                      '<li><a class="dam-widget__row-link" href="branding.html?q=' +
+                      encodeURIComponent(a.name || "") +
+                      '"><img class="dam-widget__thumb dam-widget__thumb--sm" src="' +
+                      escapeHtml(thumb) +
+                      '" alt="" loading="lazy" />' +
+                      escapeHtml(a.name || a.id) +
+                      "</a></li>"
+                    );
+                  })
+                  .join("") +
+                '</ul><p class="dam-widget__meta"><a href="branding.html">Otwórz Branding</a></p>';
+              el.outerHTML = shell(self, html);
+            })
+            .catch(function () {
+              el.outerHTML = shell(
+                self,
+                '<p class="dam-widget__meta">Indeks branding niedostępny.</p>'
+              );
+            });
+        },
+      },
+      {
         id: "notify_new_viz",
         title: t("dash.widget.notify", "Powiadomienia o wizualizacjach"),
         size: "strip",

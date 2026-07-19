@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19T02:29:34",
+  "generated_at": "2026-07-19T02:37:11",
   "roots": [
     {
       "brand": "DK",
@@ -11,7 +11,7 @@
     }
   ],
   "root": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-  "elapsed_sec": 6.0,
+  "elapsed_sec": 3.78,
   "category_count": 12,
   "product_count": 181,
   "viz_count": 393,
@@ -25940,9 +25940,9 @@
           "is_latest": true
         },
         {
-          "folder": "DOY - 35 g - 18.07.2026 - TEST-TEST2 - F",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F/DOY - 35 g - 18.07.2026 - TEST-TEST2 - F",
-          "rel": "01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F/DOY - 35 g - 18.07.2026 - TEST-TEST2 - F",
+          "folder": "DOY - 35 g - 18.07.2026 - TEST-TEST2 - D",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F/DOY - 35 g - 18.07.2026 - TEST-TEST2 - D",
+          "rel": "01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F/DOY - 35 g - 18.07.2026 - TEST-TEST2 - D",
           "carrier": "DOY",
           "index_base": "TEST-TEST2",
           "index_rev": null,

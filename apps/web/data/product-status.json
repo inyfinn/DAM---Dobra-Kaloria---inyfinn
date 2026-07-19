@@ -7,10 +7,10 @@
       "status": "aktualne"
     },
     "test-lifecycle-nerkowcowy-f": {
-      "note": "Lifecycle F",
-      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F",
-      "letter": "F",
-      "status": "aktualne"
+      "note": "Lifecycle clear",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]",
+      "letter": null,
+      "status": "clear"
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]": {
       "note": "Lifecycle clear",
@@ -168,5 +168,5 @@
       "status": "aktualne"
     }
   },
-  "updated_at": "2026-07-18T22:23:05.728361+00:00"
+  "updated_at": "2026-07-19T00:35:07.611882+00:00"
 }

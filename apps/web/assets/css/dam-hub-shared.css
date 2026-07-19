@@ -1,0 +1,59 @@
+/**
+ * DAM Hub — wspólne tokeny i komponenty: karta katalogowa, branding, badge pakowanie.
+ * Kolory semantyczne: tylko var(--dam-*). Layout sekcji w plikach stron.
+ */
+:root {
+  --dam-hub-card-radius: var(--dam-radius-md, 12px);
+  --dam-hub-card-pad: 16px;
+  --dam-hub-grid-gap: 12px;
+  --dam-hub-pack-bg: rgba(0, 130, 68, 0.1);
+  --dam-hub-pack-fg: #006b38;
+  --dam-hub-muted: var(--dam-text-muted, #8f8b9f);
+  --dam-hub-border: var(--dam-border, #ececf2);
+  --dam-hub-shadow: 0 4px 18px rgba(23, 22, 30, 0.06);
+}
+
+.dam-catalog-card,
+.dam-branding-card {
+  border-radius: var(--dam-hub-card-radius);
+  border: 1px solid var(--dam-hub-border);
+  background: var(--dam-surface, #fff);
+}
+
+.dam-catalog-pack-badge .dam-badge-tag--tier-low,
+.dam-viz-badge--pakowanie.dam-badge-tag--tier-low {
+  background: var(--dam-hub-pack-bg);
+  color: var(--dam-hub-pack-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.dam-tag-reveal-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--dam-fs-sm, 12px);
+  color: var(--dam-text, #464255);
+  cursor: pointer;
+  min-height: 44px;
+  padding: 4px 0;
+}
+
+.dam-tag-reveal-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--dam-brand-green, #008244);
+}
+
+.dam-hub-section-title {
+  font-size: var(--dam-fs-lg, 16px);
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--dam-dark, #17161e);
+}
+
+.dam-hub-section-desc {
+  font-size: var(--dam-fs-base, 14px);
+  color: var(--dam-hub-muted);
+  margin: 0 0 12px;
+  max-width: 65ch;
+}

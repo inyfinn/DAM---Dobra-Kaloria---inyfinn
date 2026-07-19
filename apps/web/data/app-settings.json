@@ -9,7 +9,7 @@
   "version": 2,
   "updated_at": "2026-07-18",
   "instructions": {
-    "count": 17,
+    "count": 25,
     "version": 4,
     "source_kv": "program-instructions",
     "critical_ids": [
@@ -24,7 +24,9 @@
       "auth.roles_and_privilege",
       "storage.marketing_sensitive",
       "carrier.do_not_guess",
-      "ui.tag_casing_global"
+      "ui.tag_casing_global",
+      "branding.disk_read_only",
+      "branding.video_is_video"
     ],
     "settings_anchor": "settings.html#damProgramInstructions"
   }
