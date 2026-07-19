@@ -4049,3 +4049,18 @@ Przyszli agenci maja obowiazkowa wykladnie kodu z konkretnymi "dlaczego dziala/n
 
 ### Zrodla
 agents/shared/code-doctrine.md, AGENTS.md, .cursor/rules/code-doctrine.mdc, memory.md, process.md, .gitignore.
+
+## 2026-07-20 - Skill dam-dobrakaloria (doktryna + petla przelotow)
+
+### Komenda/Akcja
+User: stworz skill "DAM-DobraKaloria" na bazie code-doctrine.md + praktyki pracy/testowania kodu; zdefiniuj petle kod->test->screenshot->poprawka jako przelot/tura/pass/podejscie (min. 3 przeloty), runda = seria przelotow na jednym elemencie; podpowiedz agentom, by uzywali w tym projekcie.
+
+### Log/Status
+1. Utworzono skill: C:\Users\xpret\.cursor\skills\dam-dobrakaloria\SKILL.md (personal, auto-invoke po opisie: repo DAM, dam-*.js/css, local_bridge, indeksy JSON). 5 sekcji: zrodla prawdy, skrot doktryny, PETLA PRZELOTOW (1 przelot = kod + test node--check/CDP + screenshot+Read + defekty/poprawka; min. 3 przeloty; runda = przeloty na 1 elemencie do czysta), definition-of-done checklist, mapa plikow.
+2. Wskazniki na skill dopisane: AGENTS.md (blok CZYTAJ ZAWSZE), agents/shared/code-doctrine.md (sekcja 0), .cursor/rules/code-doctrine.mdc (lokalnie).
+
+### Efekt/Fix
+Agenci w tym repo dostaja jeden skill z doktryna + rytualem weryfikacji; slownik przelot/tura/runda ujednolicony z jezykiem usera.
+
+### Zrodla
+~/.cursor/skills/dam-dobrakaloria/SKILL.md, AGENTS.md, agents/shared/code-doctrine.md, .cursor/rules/code-doctrine.mdc.

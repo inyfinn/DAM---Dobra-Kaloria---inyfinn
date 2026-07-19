@@ -12,6 +12,14 @@ skojarzen (2026-07-20). Kazdy kolejny agent DOPISUJE lekcje (patrz sekcja 12).
 
 ## 0. Jak uzywac tego dokumentu
 
+> **SKILL projektu:** `dam-dobrakaloria` (Cursor Agent Skill, `~/.cursor/skills/dam-dobrakaloria/`).
+> Zawiera skrot tej doktryny + obowiazkowa petle weryfikacji:
+> **kod -> test (node --check / CDP) -> screenshot+Read -> poprawka = 1 PRZELOT**
+> (synonimy usera: tura / pass / podejscie). Minimum 3 przeloty na zadanie wizualne.
+> **RUNDA** = seria przelotow na JEDNYM elemencie az do czystego wyniku
+> ("10 rund" = 10 elementow, nie 10 screenshotow calosci). Jesli skill jest
+> dostepny w srodowisku - uzywaj go przy kazdym zadaniu w tym repo.
+
 - Przed KAZDA zmiana w `apps/web/**` przeczytaj sekcje 1-6 (fundamenty) i te
   studium przypadku (7-8), ktore dotyka Twojego obszaru.
 - Gdy cos "nie dziala u usera, a u mnie tak" - sekcja 3 (cache) i sekcja 5 (weryfikacja).

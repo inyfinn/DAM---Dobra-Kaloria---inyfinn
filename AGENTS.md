@@ -6,6 +6,12 @@
 > wspolbiezni agenci, weryfikacja CDP vs screenshot). Obowiazkowa lektura przed
 > KAZDA zmiana w `apps/web/**`. Po rozwiazaniu nowego, nieoczywistego problemu
 > DOPISZ lekcje w sekcji 12 tego dokumentu.
+>
+> **SKILL projektu: `dam-dobrakaloria`** (Cursor Agent Skill) - doktryna + praktyki
+> + obowiazkowa petla weryfikacji: kod -> test (node --check / CDP) ->
+> screenshot+Read -> poprawka = 1 PRZELOT (tura/pass/podejscie); minimum 3 przeloty
+> na zadanie wizualne; RUNDA = seria przelotow na jednym elemencie do czysta.
+> Jesli masz ten skill dostepny - uzyj go przy kazdym zadaniu w tym repo.
 
 Pelna dokumentacja: [`agents/README.md`](agents/README.md).  
 Przy starcie zadania w danej roli **wklej / przeczytaj** odpowiedni `AGENT.md`.
