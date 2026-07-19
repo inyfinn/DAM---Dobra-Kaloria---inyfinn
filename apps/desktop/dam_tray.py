@@ -28,12 +28,24 @@ def start_tray(
     on_quit: Callable[[], None] | None = None,
 ) -> threading.Event | None:
     """Uruchom ikone w tle. Zwraca event ustawiany przy calkowitym zamknieciu."""
-    if threading.current_thread() is not threading.main_thread():
-        # pystray wymaga glownego watku na czesci platform; launch.py odpala w daemon thread.
+    log_dir = Path(__file__).resolve().parent / "logs"
+    try:
+        log_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
         pass
+
+    def _log(msg: str) -> None:
+        try:
+            line = __import__("time").strftime("%Y-%m-%d %H:%M:%S") + " " + msg + "\n"
+            (log_dir / "tray.log").open("a", encoding="utf-8").write(line)
+        except OSError:
+            pass
+
     try:
         import pystray
-    except ImportError:
+        from PIL import Image  # noqa: F401
+    except ImportError as exc:
+        _log("ImportError: " + str(exc))
         return None
 
     stop = threading.Event()
@@ -59,7 +71,11 @@ def start_tray(
     icon_holder["icon"] = icon
 
     def _run() -> None:
-        icon.run()
+        try:
+            icon.run()
+        except Exception as exc:
+            _log("icon.run error: " + str(exc))
 
     threading.Thread(target=_run, name="dam-tray", daemon=True).start()
+    _log("tray started: " + title)
     return stop

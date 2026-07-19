@@ -958,7 +958,7 @@
 
   function folderLabelFromPath(path) {
     var p = String(path || "").toUpperCase();
-    if (p.indexOf("08 - KAMAPANIE") !== -1) return "Kampanie";
+    if (p.indexOf("08 - KAMAPANIE") !== -1) return "Kampania";
     if (p.indexOf("05 - SOCIAL") !== -1) return "Social media";
     if (p.indexOf("06 - STRONY") !== -1) return "Strony WWW";
     if (p.indexOf("07 - E-COMMERCE") !== -1) return "E-commerce";
@@ -1011,6 +1011,42 @@
     var short = raw.split(/[\\/]/).pop();
     if (short.length > 28) return short.slice(0, 26) + "…";
     return short;
+  }
+
+  /** Normalizacja PL do deduplikacji tagów (Kampania ≈ Kampanie). */
+  function brandingTagStem(label) {
+    var s = String(label || "")
+      .toLowerCase()
+      .replace(/ą/g, "a")
+      .replace(/ć/g, "c")
+      .replace(/ę/g, "e")
+      .replace(/ł/g, "l")
+      .replace(/ń/g, "n")
+      .replace(/ó/g, "o")
+      .replace(/ś/g, "s")
+      .replace(/ź|ż/g, "z")
+      .replace(/[^a-z0-9]/g, "");
+    if (!s) return "";
+    if (s === "kampanie" || s === "kampanii") return "kampania";
+    if (s.endsWith("ie") && s.length > 4) return s.slice(0, -2) + "ia";
+    if (s.endsWith("y") && s.length > 4) return s.slice(0, -1) + "a";
+    return s;
+  }
+
+  function hasSimilarBrandingTag(items, label) {
+    var stem = brandingTagStem(label);
+    if (!stem) return false;
+    return (items || []).some(function (it) {
+      return brandingTagStem(it.label || it.value) === stem;
+    });
+  }
+
+  function brandingSearchSynonymsForLabel(label) {
+    var stem = brandingTagStem(label);
+    if (stem === "kampania") return "kampanie kampanie reklamowe reklama";
+    if (stem === "baner") return "banery banner";
+    if (stem === "slider") return "slidery slajd";
+    return "";
   }
 
   function buildBrandingBadgeItems(asset) {
@@ -1148,13 +1184,13 @@
     });
 
     var folderLbl = folderLabelFromPath(asset.path);
-    if (folderLbl) {
+    if (folderLbl && !hasSimilarBrandingTag(items, folderLbl)) {
       pushItem({
         kind: "folder",
         value: folderLbl,
         label: folderLbl,
         cls: "dam-viz-badge--cat",
-        tip: "Obszar na dysku Marketing",
+        tip: "Obszar na dysku Marketing (synonimy w wyszukiwaniu)",
         tier: "minimal",
       });
     }
@@ -1201,14 +1237,17 @@
     }
 
     if (asset.campaign_id) {
-      pushItem({
-        kind: "campaign",
-        value: asset.campaign_id,
-        label: campaignBadgeLabel(asset) || "Kampania",
-        cls: "dam-viz-badge--mix",
-        tip: "Kampania: " + asset.campaign_id,
-        tier: "primary",
-      });
+      var campLbl = campaignBadgeLabel(asset) || "Kampania";
+      if (!hasSimilarBrandingTag(items, campLbl) && !hasSimilarBrandingTag(items, "Kampania")) {
+        pushItem({
+          kind: "campaign",
+          value: asset.campaign_id,
+          label: campLbl,
+          cls: "dam-viz-badge--mix",
+          tip: "Kampania: " + asset.campaign_id,
+          tier: "primary",
+        });
+      }
     }
 
     if (asset.is_archive || (asset.tags || []).indexOf("ARCHIWUM") !== -1) {
@@ -1299,6 +1338,8 @@
     buildBrandingBadgeItems: buildBrandingBadgeItems,
     brandingGradientTileClass: brandingGradientTileClass,
     brandingGradientTileClassForAssets: brandingGradientTileClassForAssets,
+    brandingTagStem: brandingTagStem,
+    brandingSearchSynonymsForLabel: brandingSearchSynonymsForLabel,
     bindClicks: bindClicks,
     bindCopyOnRightClick: bindCopyOnRightClick,
     copyTagText: copyTagText,

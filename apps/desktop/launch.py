@@ -578,6 +578,16 @@ def apply_native_window_icon(icon_path: str) -> None:
         pass
 
 
+def _log_tray(msg: str) -> None:
+    try:
+        log_dir = DESKTOP_DIR / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        line = time.strftime("%Y-%m-%d %H:%M:%S") + " " + msg + "\n"
+        (log_dir / "tray.log").open("a", encoding="utf-8").write(line)
+    except Exception:
+        pass
+
+
 def verify_machine_before_start() -> dict:
     """Zawsze przed UI: machine_id / windows_user. Sesja z innego PC = wyczyszczona."""
     try:
@@ -611,6 +621,16 @@ def main() -> None:
 
     if not acquire_single_instance():
         raise SystemExit(0)
+
+    db_sync_stop: threading.Event | None = None
+    try:
+        from dam_sync import clear_running_lock, start_periodic_sync, write_running_lock
+
+        write_running_lock()
+        db_sync_stop = threading.Event()
+        start_periodic_sync(db_sync_stop)
+    except Exception:
+        db_sync_stop = None
 
     # Przed bindowaniem: zwolnij 8765/8766 zajete przez stare serve_browser / http.server
     _kill_stale_dam_processes()
@@ -696,9 +716,11 @@ def main() -> None:
     try:
         from dam_tray import start_tray
 
-        start_tray(title=APP_TITLE, on_show=_show_window, on_quit=_shutdown_all)
-    except Exception:
-        pass
+        tray_stop = start_tray(title=APP_TITLE, on_show=_show_window, on_quit=_shutdown_all)
+        if tray_stop is None:
+            _log_tray("pystray niedostepny — brak ikony w zasobniku (pip install pystray Pillow)")
+    except Exception as exc:
+        _log_tray("tray error: " + str(exc))
 
     # Profil WebView2 trwaly (nie nowy folder tymczasowy przy KAZDYM starcie).
     # Domyslnie pywebview tworzy folder w %TEMP% i usuwa go po zamknieciu -
@@ -745,6 +767,14 @@ def main() -> None:
         raise SystemExit(1) from exc
     finally:
         stop_supervise.set()
+        if db_sync_stop is not None:
+            db_sync_stop.set()
+        try:
+            from dam_sync import clear_running_lock
+
+            clear_running_lock()
+        except Exception:
+            pass
         httpd.shutdown()
         if watch_proc and watch_proc.poll() is None:
             watch_proc.terminate()

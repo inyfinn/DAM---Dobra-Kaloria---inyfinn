@@ -263,7 +263,9 @@
                 (v.path
                   ? variantThumbInnerHtml(v, fileName)
                   : '<div class="dam-viz-modal__variant-placeholder dam-media-preview__variant-placeholder"><i class="uil uil-image" aria-hidden="true"></i></div>') +
-                '<span class="dam-viz-modal__variant-label">Podejrzyj</span></button>'
+                '<span class="dam-viz-modal__variant-label">' +
+                esc(v.label || fileName.replace(/.*\./, "").toUpperCase() || "Plik") +
+                "</span></button>"
               );
             })
             .join("")
@@ -444,6 +446,10 @@
 
   function closeModal(modal) {
     if (!modal) return;
+    if (window.__damMediaPreviewResizeSync) {
+      window.removeEventListener("resize", window.__damMediaPreviewResizeSync);
+      window.__damMediaPreviewResizeSync = null;
+    }
     modal.remove();
     document.body.classList.remove("dam-media-preview-open");
   }
@@ -745,6 +751,14 @@
       thumb.appendChild(hint2);
     }
 
+    function syncModalBodyActionsPadding() {
+      var bodyEl = modal && modal.querySelector(".dam-viz-modal__body");
+      var actionsEl = modal && modal.querySelector(".dam-viz-modal__actions");
+      if (!bodyEl || !actionsEl) return;
+      var h = Math.ceil(actionsEl.getBoundingClientRect().height || actionsEl.offsetHeight || 74);
+      bodyEl.style.setProperty("--dam-media-preview-actions-offset", h + "px");
+    }
+
     function renderMeta(a) {
       var title = document.getElementById("damMediaPreviewTitle");
       var titleMeta = document.getElementById("damMediaPreviewTitleMeta");
@@ -842,6 +856,7 @@
       if (copyBtn) copyBtn.setAttribute("data-path", a.path || "");
       if (shareBtn) shareBtn.setAttribute("data-path", a.path || "");
       renderStage(a);
+      requestAnimationFrame(syncModalBodyActionsPadding);
     }
 
     function showAt(newIdx) {
@@ -854,6 +869,9 @@
 
     renderMeta(asset);
     paintZoom();
+    requestAnimationFrame(syncModalBodyActionsPadding);
+    window.__damMediaPreviewResizeSync = syncModalBodyActionsPadding;
+    window.addEventListener("resize", window.__damMediaPreviewResizeSync);
 
     var zoomBar = thumbStage && thumbStage.querySelector(".dam-media-preview__zoom, .dam-viz-modal__zoom");
     initZoomDock(thumbStage, zoomBar);

@@ -28,6 +28,9 @@ $script = Join-Path $repo "apps\desktop\scripts\sync-database-backups-to-git.py"
 $vbsSilent = Join-Path $repo "apps\desktop\scripts\sync-database-backups-silent.vbs"
 $taskName = "DAM-ETA-Database-Git-Sync"
 
+# Usun stare zadanie (np. rejestracja z python.exe = widoczne okno CMD).
+Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
+
 # Uruchomienie przez VBS = brak migajacego okna CMD (WindowStyle Hidden + pythonw).
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbsSilent`"" -WorkingDirectory $repo
 # Co godzine, start za 5 minut od teraz, powtarzaj przez 10 lat (Windows nie lubi MaxValue)

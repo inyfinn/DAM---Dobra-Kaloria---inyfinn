@@ -2777,7 +2777,7 @@ body.dam-sidebar-collapsed .dam-sidebar-logo-collapsed {
 body.dam-sidebar-collapsed .geex-sidebar__wrapper {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
   min-height: 100%;
   height: 100%;
   position: relative;
@@ -2790,6 +2790,15 @@ body.dam-sidebar-collapsed .geex-sidebar__menu-wrapper {
   max-height: none;
 }
 
+body.dam-sidebar-collapsed .geex-sidebar__menu {
+  gap: 4px;
+}
+body.dam-sidebar-collapsed .geex-sidebar__menu__item:first-child,
+body.dam-sidebar-collapsed .geex-sidebar__menu__item:last-child {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link {
   justify-content: center;
   align-items: center;
@@ -2800,8 +2809,9 @@ body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link {
   white-space: nowrap;
   font-size: 0; /* ukryj ewentualny tekst poza <span>/<i> */
   line-height: 0;
-  min-height: 40px;
-  height: 40px;
+  min-height: 44px;
+  height: 44px;
+  color: #52545c;
 }
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__item {
   margin: 0;
@@ -2809,11 +2819,37 @@ body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__item {
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i {
   margin-right: 0 !important;
   margin-left: 0 !important;
-  font-size: 20px !important;
+  font-size: 22px !important;
   line-height: 1 !important;
-  width: 22px !important;
+  width: 24px !important;
   text-align: center;
   flex-shrink: 0;
+  color: #52545c !important;
+}
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link svg {
+  width: 24px !important;
+  height: 24px !important;
+  flex-shrink: 0;
+}
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link svg path {
+  fill: #52545c;
+}
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link:hover i,
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link.default-active i,
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link.active i,
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link[aria-current="page"] i {
+  color: var(--dam-primary, #ab54db) !important;
+}
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link:hover svg path,
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link.active svg path,
+body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link[aria-current="page"] svg path {
+  fill: var(--dam-primary, #ab54db);
+}
+html[data-theme="dark"] body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i {
+  color: #c4c8d2 !important;
+}
+html[data-theme="dark"] body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link svg path {
+  fill: #c4c8d2;
 }
 body.dam-sidebar-collapsed .geex-sidebar__header {
   flex-direction: row;
@@ -2835,13 +2871,15 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn {
   top: auto;
   right: auto;
   transform: none;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   margin: 0 auto;
   box-shadow: 0 2px 8px rgba(23, 22, 30, 0.1);
 }
 body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   transform: rotate(180deg);
+  font-size: 18px;
+  color: #52545c;
 }
 
 /* ---------- Global search (Projekty / Wizualizacje / Eksplorer) ---------- */

@@ -109,6 +109,32 @@
   text-align: left;
 }
 
+.dam-branding-recent__thumb-wrap {
+  width: 100%;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--dam-surface-muted, #f5f6fa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dam-branding-recent__thumb-wrap .dam-viz-thumb__img,
+.dam-branding-recent__thumb-wrap video,
+.dam-branding-recent__thumb-wrap .dam-branding-thumb__video-wrap {
+  width: 100%;
+  height: 64px;
+  object-fit: contain;
+}
+
+.dam-branding-recent__thumb-wrap .dam-viz-thumb__noviz {
+  width: 100%;
+  height: 64px;
+  min-height: 64px;
+  font-size: 10px;
+}
+
 .dam-branding-recent__item img {
   width: 100%;
   height: 64px;
@@ -450,14 +476,99 @@
 }
 
 .dam-branding-card .dam-viz-card__body {
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: 204px;
   padding: 12px 14px 14px;
-  gap: 8px;
-  justify-content: flex-start;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.dam-branding-card .dam-viz-card__badges {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.dam-branding-card .dam-viz-card__title-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.8em;
+  max-height: 4.4em;
+  padding: 0 6px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .dam-branding-card .dam-viz-card__title {
   font-size: calc(var(--dam-fs-base, 14px) * 1.1);
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+
+.dam-branding-card .dam-viz-card__meta {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.dam-branding-card .dam-viz-card__actions {
+  flex-shrink: 0;
+  margin-top: 0;
+  width: 100%;
+}
+
+.dam-branding-meta-tip {
+  position: fixed;
+  z-index: 10050;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+  pointer-events: none;
+}
+
+.dam-branding-meta-tip__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8b8d97;
+  margin-bottom: 6px;
+}
+
+.dam-branding-meta-tip__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.dam-branding-meta-tip__chips .dam-viz-badge {
+  font-size: 10px;
+  padding: 3px 8px;
 }
 
 .dam-media-preview__variant-placeholder {
@@ -1171,6 +1282,8 @@
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
+  position: relative;
+  z-index: 4;
 }
 
 .dam-assoc-edit-all:hover,
@@ -1554,8 +1667,34 @@ body.dam-media-preview-open {
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
-  padding-bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  --dam-media-preview-actions-offset: 74px;
+  padding-bottom: calc(var(--dam-media-preview-actions-offset) + 15px);
+  scroll-padding-bottom: calc(var(--dam-media-preview-actions-offset) + 15px);
+}
+
+#damMediaPreview .dam-media-preview__title-block {
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+#damMediaPreview .dam-viz-modal__body #damMediaPreviewBadges {
+  max-height: none;
+  overflow: visible;
+}
+
+#damMediaPreview .dam-viz-modal__body #damMediaPreviewTitle {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+#damMediaPreviewTitleMeta {
+  margin-top: 10px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 #damMediaPreview .dam-viz-modal__body > .dam-viz-card__badges,
@@ -1568,7 +1707,7 @@ body.dam-media-preview-open {
   flex: 1 1 auto;
   min-height: 120px;
   max-height: none;
-  overflow-y: auto;
+  overflow: visible;
   overscroll-behavior: contain;
   margin-bottom: 0;
   padding-bottom: 8px;
@@ -1580,9 +1719,11 @@ body.dam-media-preview-open {
   bottom: 0;
   z-index: 3;
   margin-top: auto;
-  margin-bottom: 15px;
+  margin-bottom: 0;
   padding-top: 10px;
   padding-bottom: 12px;
+  min-height: 59px;
+  box-sizing: border-box;
   background: linear-gradient(180deg, rgb(255 255 255 / 0.82) 0%, #fff 28%);
   border-top: 1px solid #ececf1;
 }

@@ -536,6 +536,15 @@ def force_reconnect(*, pull_dump: bool = False) -> dict[str, Any]:
 
 def pull_database_dump_now() -> dict[str, Any]:
     """Wymus pobranie dumpa z NAS do DATABASE/ (ten sam skrypt co sync godzinowy)."""
+    try:
+        from dam_sync import run_sync_blocking
+
+        result = run_sync_blocking(push=False, no_commit=True)
+        dump = latest_database_dump()
+        result["dump"] = str(dump) if dump else None
+        return result
+    except ImportError:
+        pass
     import subprocess
     import sys
     from pathlib import Path
@@ -550,8 +559,8 @@ def pull_database_dump_now() -> dict[str, Any]:
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
     try:
         proc = subprocess.run(
-            [py_exe, str(SYNC_SCRIPT), "--no-commit"],
-            cwd=str(DESKTOP_DIR),
+            [py_exe, str(SYNC_SCRIPT), "--no-commit", "--quiet"],
+            cwd=str(DESKTOP_DIR.parent.parent),
             capture_output=True,
             text=True,
             timeout=120,

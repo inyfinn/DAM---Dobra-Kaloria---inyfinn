@@ -592,13 +592,38 @@
       });
   }
 
+  function ensureAssocGrid(colEl, kind) {
+    if (!colEl) return null;
+    var grid = colEl.querySelector(".dam-media-preview__assoc-grid, .dam-media-preview__variant-grid");
+    if (grid) return grid;
+    var empty = colEl.querySelector(".dam-media-preview__assoc-empty");
+    grid = document.createElement("div");
+    grid.className =
+      kind === "variant" ? "dam-media-preview__variant-grid" : "dam-media-preview__assoc-grid";
+    if (kind === "variant") {
+      grid.setAttribute("role", "listbox");
+      grid.setAttribute("aria-label", "Warianty w folderze");
+    } else {
+      grid.setAttribute("role", "list");
+    }
+    if (empty) {
+      grid.appendChild(empty);
+    }
+    colEl.appendChild(grid);
+    return grid;
+  }
+
   function enterEditMode(colEl, kind, ctx) {
     if (!canEditAssoc()) {
       toast("Włącz tryb admina, aby edytować skojarzenia.");
       return;
     }
-    var grid = colEl.querySelector(".dam-media-preview__assoc-grid, .dam-media-preview__variant-grid");
-    if (!grid || grid.classList.contains("is-editing")) return;
+    var grid = ensureAssocGrid(colEl, kind);
+    if (!grid) {
+      toast("Brak sekcji do edycji.");
+      return;
+    }
+    if (grid.classList.contains("is-editing")) return;
     grid.classList.add("is-editing");
     colEl.classList.add("is-editing");
 
@@ -620,7 +645,15 @@
         : '<button type="button" class="dam-assoc-edit-toolbar__btn" data-browse><i class="uil uil-folder-open"></i> Wskaż</button>') +
       '<button type="button" class="dam-assoc-edit-toolbar__btn dam-assoc-edit-toolbar__btn--primary" data-save><i class="uil uil-check"></i> Zapisz</button>' +
       '<button type="button" class="dam-assoc-edit-toolbar__btn" data-cancel><i class="uil uil-times"></i> Anuluj</button>';
-    colEl.appendChild(toolbar);
+    var labelRow = colEl.querySelector(".dam-media-preview__assoc-label-row");
+    if (labelRow && labelRow.parentNode) {
+      labelRow.insertAdjacentElement("afterend", toolbar);
+    } else {
+      colEl.insertBefore(toolbar, grid);
+    }
+    requestAnimationFrame(function () {
+      toolbar.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
 
     function exitEdit() {
       grid.classList.remove("is-editing");
