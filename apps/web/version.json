@@ -1,5 +1,7 @@
 {
-  "version": "1.04",
+  "version": "1.5.0",
   "name": "DAM - Dobra Kaloria - Inyfinn",
-  "note": "Bump tylko tu + dam-version.js (ten sam string). Kolejna: 1.04"
+  "codename": "pre-bento",
+  "released_at": "2026-07-19",
+  "note": "Kamien milowy przed refaktorem BENTO. Bump tylko tu + dam-version.js (ten sam string)."
 }

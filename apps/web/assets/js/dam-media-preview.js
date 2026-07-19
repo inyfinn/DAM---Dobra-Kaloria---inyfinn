@@ -346,35 +346,43 @@
     return ext === "psd" || ext === "psb" || ext === "ai" || ext === "indd";
   }
 
-  function titleMetaHtml(asset, groupContext) {
-    var idChip = assetIdChipHtml(asset);
-    var editableFiles = editableFilesFor(asset, groupContext);
+  function titleMetaHtml(asset) {
+    return assetIdChipHtml(asset);
+  }
+
+  function sourceFileActionHtml(asset, groupContext) {
     var target = primaryEditableFile(asset, groupContext);
-    var path = target && target.path ? target.path : "";
-    var sameFile = path && asset.path && path === asset.path;
-    var label = target && target.name ? target.name : "Plik edytowalny";
-    var linkHtml =
-      path && !sameFile
-        ? '<div class="dam-media-preview__editable-row">' +
-          '<button type="button" class="dam-media-preview__editable-link" id="damMediaPreviewEditableLink" data-path="' +
-          esc(path) +
-          '" data-dam-tip="' +
-          esc(label) +
-          '" title="' +
-          esc(label) +
-          '">' +
-          '<i class="uil uil-layer-group" aria-hidden="true"></i>' +
-          "<span>" +
-          esc(label) +
-          "</span></button></div>"
-        : "";
-    if (!idChip && !linkHtml) return "";
+    if (!target || !target.path || (asset.path && target.path === asset.path)) return "";
+    var parts = splitNameExt(target.name || target.path);
+    var extLabel = (parts.ext || "plik").toUpperCase();
+    var label = target.name || target.path;
+    var tip = "Otwiera plik zrodlowy (" + extLabel + "): " + label;
     return (
-      '<div class="dam-media-preview__title-meta">' +
-      idChip +
-      "</div>" +
-      linkHtml
+      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damMediaPreviewSource" data-path="' +
+      esc(target.path) +
+      '" data-dam-tip="' +
+      esc(tip) +
+      '" aria-label="' +
+      esc(tip) +
+      '" title="' +
+      esc(tip) +
+      '">' +
+      '<i class="uil uil-layer-group" aria-hidden="true"></i><span>Źródło</span></button>'
     );
+  }
+
+  function firstLinkedProductId(asset, groupContext) {
+    var list =
+      (groupContext && groupContext.linked_products) ||
+      (asset && asset.linked_products) ||
+      [];
+    var hit = (list || []).find(function (p) {
+      return p && p.id;
+    });
+    if (hit) return hit.id;
+    var ids =
+      (asset && (asset.linked_product_ids || asset.folder_linked_product_ids)) || [];
+    return ids[0] || "";
   }
 
   function primaryEditableFile(asset, groupContext) {
@@ -446,10 +454,6 @@
 
   function closeModal(modal) {
     if (!modal) return;
-    if (window.__damMediaPreviewResizeSync) {
-      window.removeEventListener("resize", window.__damMediaPreviewResizeSync);
-      window.__damMediaPreviewResizeSync = null;
-    }
     modal.remove();
     document.body.classList.remove("dam-media-preview-open");
   }
@@ -524,20 +528,23 @@
       '<div class="dam-viz-modal__body">' +
       '<div class="dam-viz-card__badges" id="damMediaPreviewBadges"></div>' +
       '<div class="dam-media-preview__title-block">' +
+      '<div class="dam-media-preview__title-row">' +
       '<h4 class="dam-viz-modal__title" id="damMediaPreviewTitle"></h4>' +
       '<div id="damMediaPreviewTitleMeta"></div>' +
-      "</div>" +
-      '<p class="dam-viz-modal__carrier" id="damMediaPreviewPath"></p>' +
+      "</div></div>" +
       '<div id="damMediaPreviewAssoc"></div>' +
       '<div class="dam-viz-modal__actions">' +
       '<div class="dam-viz-modal__actions-main">' +
-      '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-win-btn" id="damMediaPreviewExplorer" data-dam-tip="Otwiera folder w Eksploratorze plikow Windows">' +
+      '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damMediaPreviewGoProduct" data-dam-tip="Otwiera produkt w Eksplorerze">' +
+      '<i class="uil uil-sitemap" aria-hidden="true"></i><span>Przejdź</span></button>' +
+      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-win-btn" id="damMediaPreviewExplorer" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plikow Windows">' +
       (window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>') +
-      "<span>Pokaz w Explorerze</span></button>" +
-      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damMediaPreviewCopy" data-dam-tip="Kopiuje lokalna sciezke pliku">' +
-      '<i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj sciezke</span></button>' +
+      "<span>Folder</span></button>" +
+      '<span id="damMediaPreviewSourceMount"></span>' +
+      '<button type="button" class="dam-viz-icon-btn" id="damMediaPreviewCopy" data-dam-tip="Kopiuje lokalna sciezke pliku" aria-label="Kopiuj sciezke" title="Kopiuj sciezke">' +
+      '<i class="uil uil-copy" aria-hidden="true"></i></button>' +
       '<button type="button" class="dam-viz-icon-btn' +
       (syEnabled ? "" : " is-disabled") +
       '" id="damMediaPreviewShare" aria-label="Udostepnij" title="' +
@@ -751,27 +758,15 @@
       thumb.appendChild(hint2);
     }
 
-    function syncModalBodyActionsPadding() {
-      var bodyEl = modal && modal.querySelector(".dam-viz-modal__body");
-      var actionsEl = modal && modal.querySelector(".dam-viz-modal__actions");
-      if (!bodyEl || !actionsEl) return;
-      var h = Math.ceil(actionsEl.getBoundingClientRect().height || actionsEl.offsetHeight || 74);
-      bodyEl.style.setProperty("--dam-media-preview-actions-offset", h + "px");
-    }
-
     function renderMeta(a) {
       var title = document.getElementById("damMediaPreviewTitle");
       var titleMeta = document.getElementById("damMediaPreviewTitleMeta");
-      var pathEl = document.getElementById("damMediaPreviewPath");
       var badges = document.getElementById("damMediaPreviewBadges");
       var assocHost = document.getElementById("damMediaPreviewAssoc");
+      var sourceMount = document.getElementById("damMediaPreviewSourceMount");
       if (title) title.innerHTML = titleHtml(a.name, a.id);
-      if (titleMeta) titleMeta.innerHTML = titleMetaHtml(a, groupContext);
-      if (pathEl) {
-        var fullPath = a.path || "";
-        pathEl.textContent = fullPath;
-        pathEl.title = fullPath;
-      }
+      if (titleMeta) titleMeta.innerHTML = titleMetaHtml(a);
+      if (sourceMount) sourceMount.innerHTML = sourceFileActionHtml(a, groupContext);
       if (assocHost) {
         var paintAssoc = function () {
           assocHost.innerHTML = associationsFooterHtml(a, groupContext, options);
@@ -832,7 +827,7 @@
           paintAssoc();
         }
       }
-      var editableLink = document.getElementById("damMediaPreviewEditableLink");
+      var editableLink = document.getElementById("damMediaPreviewSource");
       if (editableLink) {
         editableLink.addEventListener("click", function () {
           var p = editableLink.getAttribute("data-path") || "";
@@ -849,14 +844,24 @@
           window.DamBadges.bindClicks(badges, "branding");
         }
       }
+      var goProduct = document.getElementById("damMediaPreviewGoProduct");
       var explorer = document.getElementById("damMediaPreviewExplorer");
       var copyBtn = document.getElementById("damMediaPreviewCopy");
       var shareBtn = document.getElementById("damMediaPreviewShare");
+      var pid = firstLinkedProductId(a, groupContext);
+      if (goProduct) {
+        goProduct.setAttribute("data-pid", pid || "");
+        goProduct.disabled = !pid;
+        goProduct.classList.toggle("is-disabled", !pid);
+        goProduct.setAttribute(
+          "data-dam-tip",
+          pid ? "Otwiera produkt w Eksplorerze" : "Brak skojarzonego produktu"
+        );
+      }
       if (explorer) explorer.setAttribute("data-path", a.path || "");
       if (copyBtn) copyBtn.setAttribute("data-path", a.path || "");
       if (shareBtn) shareBtn.setAttribute("data-path", a.path || "");
       renderStage(a);
-      requestAnimationFrame(syncModalBodyActionsPadding);
     }
 
     function showAt(newIdx) {
@@ -869,9 +874,6 @@
 
     renderMeta(asset);
     paintZoom();
-    requestAnimationFrame(syncModalBodyActionsPadding);
-    window.__damMediaPreviewResizeSync = syncModalBodyActionsPadding;
-    window.addEventListener("resize", window.__damMediaPreviewResizeSync);
 
     var zoomBar = thumbStage && thumbStage.querySelector(".dam-media-preview__zoom, .dam-viz-modal__zoom");
     initZoomDock(thumbStage, zoomBar);
@@ -965,6 +967,19 @@
         showAt(idx + 1);
       }
     });
+
+    var goProductBtn = document.getElementById("damMediaPreviewGoProduct");
+    if (goProductBtn) {
+      goProductBtn.addEventListener("click", function () {
+        var pid = goProductBtn.getAttribute("data-pid") || "";
+        if (!pid) {
+          toast("Brak skojarzonego produktu");
+          return;
+        }
+        closeModal(modal);
+        location.href = "explorer.html?product=" + encodeURIComponent(pid);
+      });
+    }
 
     var explorerBtn = document.getElementById("damMediaPreviewExplorer");
     if (explorerBtn) {

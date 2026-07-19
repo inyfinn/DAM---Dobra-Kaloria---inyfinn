@@ -7,9 +7,9 @@
     "carrier_prefix_on_disk": "short"
   },
   "version": 2,
-  "updated_at": "2026-07-18",
+  "updated_at": "2026-07-19",
   "instructions": {
-    "count": 28,
+    "count": 29,
     "version": 4,
     "source_kv": "program-instructions",
     "critical_ids": [
@@ -26,6 +26,7 @@
       "carrier.do_not_guess",
       "ui.tag_casing_global",
       "branding.disk_read_only",
+      "branding.navigation_associations",
       "branding.video_is_video"
     ],
     "settings_anchor": "settings.html#damProgramInstructions"

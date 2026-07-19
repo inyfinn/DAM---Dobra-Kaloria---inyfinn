@@ -47,6 +47,9 @@ PACK = {
     "rekaw", "tuba", "shot", "sasz", "obwoluta",
 }
 
+# Tagi Autor w Eksploratorze — tylko zespol DK + agencja Highlite (nie imiona z wizytowek/Asany).
+AUTHOR_ALLOWLIST = ["Krzysztof", "Sylwia", "Szymon", "Highlite"]
+
 
 def norm(s: str) -> str:
     s = (s or "").strip().lower()
@@ -265,23 +268,7 @@ def main() -> int:
                     if fk and pid not in by_tag[fk]:
                         by_tag[fk].append(pid)
 
-    autor_tags = [t for t, _ in author_counter.most_common(24)]
-    # doloz imiona z listy userow / product-people
-    for name in list((pp.get("people") or {}).keys()) + [
-        "Krzysztof", "Anna", "Marek", "Ewa", "Karolina", "Maciej", "Szymon",
-        "Sylwia", "Agata", "Andzelika", "Beata", "Dagmara", "Justyna",
-        "Malgorzata", "Marta", "Ryszard",
-    ]:
-        if name not in autor_tags:
-            autor_tags.append(name)
-        if len(autor_tags) >= 24:
-            break
-    autor_tags = autor_tags[:24]
-    if len(autor_tags) < 12:
-        autor_tags = (autor_tags + [
-            "Krzysztof", "Anna", "Marek", "Ewa", "Karolina", "Maciej",
-            "Szymon", "Sylwia", "Agata", "Beata", "Dagmara", "Justyna",
-        ])[:12]
+    autor_tags = list(AUTHOR_ALLOWLIST)
 
     tag_groups = {
         "smak": smak,

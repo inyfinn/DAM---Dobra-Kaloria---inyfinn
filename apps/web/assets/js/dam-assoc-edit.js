@@ -248,7 +248,12 @@
       (opts.selectedIds || []).forEach(function (id) {
         selected[id] = true;
       });
-      var rect = anchorEl.getBoundingClientRect();
+      var pinnedIds = (opts.pinnedIds || opts.selectedIds || []).slice();
+      var pinnedSet = {};
+      pinnedIds.forEach(function (id) {
+        pinnedSet[id] = true;
+      });
+
       var overlay = document.createElement("div");
       overlay.id = "damAssocEditOverlay";
       overlay.className = "dam-assoc-edit-overlay";
@@ -259,9 +264,6 @@
       pop.className = "dam-tag-edit-popover dam-tag-edit-popover--wide dam-assoc-edit-popover";
       pop.setAttribute("role", "dialog");
       pop.setAttribute("aria-modal", "true");
-      pop.style.top = "";
-      pop.style.left = "";
-      void rect;
 
       var head = opts.kind === "variant" ? "Warianty materiału" : "Skojarzone produkty";
       var html =
@@ -270,11 +272,103 @@
         esc(head) +
         '</span><button type="button" class="dam-tag-edit-popover__close" data-close aria-label="Zamknij">' +
         '<i class="uil uil-times"></i></button></div>' +
+        '<div class="dam-assoc-edit-popover__pinned-wrap">' +
+        '<div class="dam-assoc-edit-popover__pinned-label">Aktualne</div>' +
+        '<div class="dam-assoc-edit-popover__pinned"></div>' +
+        "</div>" +
+        '<div class="dam-assoc-edit-popover__section-sep" aria-hidden="true"></div>' +
         '<div class="dam-tag-edit-popover__search-wrap">' +
         '<i class="uil uil-search" aria-hidden="true"></i>' +
         '<input type="text" id="damAssocEditSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj tytuł, indeks, wariant…" autocomplete="off" />' +
         "</div>" +
         '<div class="dam-tag-edit-popover__list dam-assoc-edit-popover__list">';
+
+      function lookupItem(id) {
+        if (opts.kind === "variant") {
+          var v = (opts.variantCandidates || []).find(function (x) {
+            return x && x.id === id;
+          });
+          if (v) {
+            return {
+              id: v.id,
+              label: v.name || v.label || v.id,
+              thumb: v.path && global.DamMediaPreview ? global.DamMediaPreview.previewUrl(v.path, v) : "",
+              sub: v.id || "",
+            };
+          }
+        } else {
+          var p = products.find(function (x) {
+            return x && x.id === id;
+          });
+          if (p) {
+            return {
+              id: p.id,
+              label: p.display_name || p.name || p.id,
+              thumb: productThumb(p),
+              sub: productIndexOf(p) || p.id,
+            };
+          }
+        }
+        return { id: id, label: id, thumb: PLACEHOLDER_SVG, sub: "" };
+      }
+
+      function optionButtonHtml(it, pinned) {
+        var on = !!selected[it.id];
+        return (
+          '<button type="button" class="dam-assoc-edit-popover__opt' +
+          (on ? " is-selected" : "") +
+          (pinned ? " is-pinned" : "") +
+          '" data-id="' +
+          esc(it.id) +
+          '">' +
+          '<span class="dam-assoc-edit-popover__thumb-wrap">' +
+          '<img class="dam-assoc-edit-popover__thumb" src="' +
+          esc(it.thumb || PLACEHOLDER_SVG) +
+          '" alt="" loading="lazy" onerror="this.src=\'' +
+          PLACEHOLDER_SVG.replace(/'/g, "%27") +
+          "'\">" +
+          "</span>" +
+          '<span class="dam-assoc-edit-popover__meta">' +
+          '<span class="dam-assoc-edit-popover__label">' +
+          esc(it.label) +
+          "</span>" +
+          (it.sub ? '<span class="dam-assoc-edit-popover__sub">' + esc(it.sub) + "</span>" : "") +
+          "</span>" +
+          '<span class="dam-assoc-edit-popover__check" aria-hidden="true">' +
+          (on ? '<i class="uil uil-check"></i>' : "") +
+          "</span></button>"
+        );
+      }
+
+      function bindOptionButtons(scope) {
+        if (!scope) return;
+        scope.querySelectorAll("[data-id]").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var id = btn.getAttribute("data-id");
+            if (selected[id]) delete selected[id];
+            else selected[id] = true;
+            renderPinned();
+            renderOptions(pop.querySelector("#damAssocEditSearch").value);
+          });
+        });
+      }
+
+      function renderPinned() {
+        var pinnedEl = pop.querySelector(".dam-assoc-edit-popover__pinned");
+        if (!pinnedEl) return;
+        if (!pinnedIds.length) {
+          pinnedEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Brak aktualnych skojarzen.</p>';
+          return;
+        }
+        pinnedEl.innerHTML = pinnedIds
+          .map(function (id) {
+            return optionButtonHtml(lookupItem(id), true);
+          })
+          .join("");
+        bindOptionButtons(pinnedEl);
+      }
 
       function renderOptions(filter) {
         var q = String(filter || "")
@@ -285,6 +379,7 @@
         var items = [];
         if (opts.kind === "variant") {
           (opts.variantCandidates || []).forEach(function (v) {
+            if (!v || !v.id || pinnedSet[v.id]) return;
             var label = (v.name || v.label || v.id || "").toLowerCase();
             if (q && label.indexOf(q) === -1 && String(v.id || "").indexOf(q) === -1) return;
             items.push({
@@ -296,7 +391,7 @@
           });
         } else {
           products.forEach(function (p) {
-            if (!p || !p.id) return;
+            if (!p || !p.id || pinnedSet[p.id]) return;
             var blob =
               (p.display_name || p.name || "") +
               " " +
@@ -319,44 +414,10 @@
           listEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Brak wyników dla tego wyszukiwania.</p>';
           return;
         }
-        listEl.innerHTML = items
-          .map(function (it) {
-            var on = !!selected[it.id];
-            return (
-              '<button type="button" class="dam-assoc-edit-popover__opt' +
-              (on ? " is-selected" : "") +
-              '" data-id="' +
-              esc(it.id) +
-              '">' +
-              '<span class="dam-assoc-edit-popover__thumb-wrap">' +
-              '<img class="dam-assoc-edit-popover__thumb" src="' +
-              esc(it.thumb || PLACEHOLDER_SVG) +
-              '" alt="" loading="lazy" onerror="this.src=\'' +
-              PLACEHOLDER_SVG.replace(/'/g, "%27") +
-              "'\">" +
-              "</span>" +
-              '<span class="dam-assoc-edit-popover__meta">' +
-              '<span class="dam-assoc-edit-popover__label">' +
-              esc(it.label) +
-              "</span>" +
-              (it.sub ? '<span class="dam-assoc-edit-popover__sub">' + esc(it.sub) + "</span>" : "") +
-              "</span>" +
-              '<span class="dam-assoc-edit-popover__check" aria-hidden="true">' +
-              (on ? '<i class="uil uil-check"></i>' : "") +
-              "</span></button>"
-            );
-          })
-          .join("");
-        listEl.querySelectorAll("[data-id]").forEach(function (btn) {
-          btn.addEventListener("click", function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var id = btn.getAttribute("data-id");
-            if (selected[id]) delete selected[id];
-            else selected[id] = true;
-            renderOptions(pop.querySelector("#damAssocEditSearch").value);
-          });
-        });
+        listEl.innerHTML = items.map(function (it) {
+          return optionButtonHtml(it, false);
+        }).join("");
+        bindOptionButtons(listEl);
       }
 
       html +=
@@ -386,6 +447,7 @@
           renderOptions(search.value);
         });
       }
+      renderPinned();
       renderOptions("");
 
       pop.querySelector("[data-close]") &&
@@ -613,6 +675,54 @@
     return grid;
   }
 
+  function openEditPicker(colEl, kind, ctx) {
+    if (!canEditAssoc()) {
+      toast("Włącz tryb admina, aby edytować skojarzenia.");
+      return;
+    }
+    var selectedIds =
+      kind === "product"
+        ? (ctx.groupContext.linked_products || [])
+            .map(function (p) {
+              return p && p.id;
+            })
+            .filter(Boolean)
+        : (ctx.groupContext.variants || [])
+            .map(function (v) {
+              return v && v.id;
+            })
+            .filter(Boolean);
+    openMediaPicker(colEl, {
+      kind: kind,
+      selectedIds: selectedIds,
+      pinnedIds: selectedIds.slice(),
+      variantCandidates: ctx.groupContext.variants || [],
+      asset: ctx.asset,
+      groupContext: ctx.groupContext,
+      onConfirm: function (ids) {
+        var pids =
+          kind === "product"
+            ? ids
+            : (ctx.groupContext.linked_products || [])
+                .map(function (p) {
+                  return p && p.id;
+                })
+                .filter(Boolean);
+        var vids =
+          kind === "variant"
+            ? ids
+            : (ctx.groupContext.variants || [])
+                .map(function (v) {
+                  return v && v.id;
+                })
+                .filter(Boolean);
+        saveAssociations(ctx, pids, vids).then(function () {
+          if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+        });
+      },
+    });
+  }
+
   function enterEditMode(colEl, kind, ctx) {
     if (!canEditAssoc()) {
       toast("Włącz tryb admina, aby edytować skojarzenia.");
@@ -728,17 +838,22 @@
         e.stopPropagation();
         var kind = btn.getAttribute("data-assoc-edit-all");
         var col = btn.closest(".dam-media-preview__assoc-col");
-        if (col) enterEditMode(col, kind, ctx);
+        if (col) openEditPicker(col, kind, ctx);
       });
     });
 
     assocEl.querySelectorAll(".dam-media-preview__assoc-col").forEach(function (col) {
       col.addEventListener("click", function (e) {
         if (!e.shiftKey || !canEditAssoc()) return;
-        var kind = col.classList.contains("dam-media-preview__assoc-col--products") ? "product" : "variant";
+        if (e.target.closest("[data-assoc-edit-all]")) return;
+        var kind =
+          col.classList.contains("dam-media-preview__assoc-col--products") ||
+          col.classList.contains("dam-media-preview__assoc-col--product")
+            ? "product"
+            : "variant";
         e.preventDefault();
         e.stopPropagation();
-        enterEditMode(col, kind, ctx);
+        openEditPicker(col, kind, ctx);
       });
     });
 
@@ -746,6 +861,15 @@
       btn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
+        if (e.shiftKey) {
+          if (!canEditAssoc()) {
+            toast("Włącz tryb admina, aby edytować skojarzenia.");
+            return;
+          }
+          var col = btn.closest(".dam-media-preview__assoc-col");
+          if (col) openEditPicker(col, "product", ctx);
+          return;
+        }
         var pid = btn.getAttribute("data-product-id") || "";
         ensureFileIndex().then(function (fi) {
           var p = (fi.products || []).find(function (x) {
@@ -760,8 +884,28 @@
       btn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
+        if (e.shiftKey) {
+          if (!canEditAssoc()) {
+            toast("Włącz tryb admina, aby edytować skojarzenia.");
+            return;
+          }
+          var col = btn.closest(".dam-media-preview__assoc-col");
+          if (col) openEditPicker(col, "product", ctx);
+          return;
+        }
         var pid = btn.getAttribute("data-product-id") || "";
         if (pid) location.href = "explorer.html?product=" + encodeURIComponent(pid);
+      });
+    });
+
+    assocEl.querySelectorAll(".dam-media-preview__assoc-item").forEach(function (item) {
+      item.addEventListener("click", function (e) {
+        if (!e.shiftKey || !canEditAssoc()) return;
+        if (e.target.closest("[data-assoc-edit-all]")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var col = item.closest(".dam-media-preview__assoc-col");
+        if (col) openEditPicker(col, "product", ctx);
       });
     });
   }

@@ -3726,3 +3726,29 @@ User: PNG bez skanu = domyślnie bez tła (zachować pixel-scan); spisać niewyk
 - `program-instructions.json` (`branding.png_default_transparent`, `branding.marketing_asset_id_format`)
 - `.cursor/rules/verify-ui-after-changes.mdc`
 
+
+---
+
+## 2026-07-19 — Media preview modal: przyciski + tagi + gradient + Shift+klik (10-pass)
+
+### Komenda/Akcja
+User: brak przyciskow / zle nazwy w `#damMediaPreview`; ext-tag TIF/JPG jak badge +10% i 8px od tytulu; wiecej odstepu tagi→tytul; mniej scrolla; gradient tile krotszy +30% transparency; Shift+klik na skojarzonych produktach; Intensive QA 10 passes.
+
+### Log/Status
+1. Audyt: modal mial tylko "Pokaz w Eksploratorze" (brak Przejdz); thumb assoc zjadal Shift+klik.
+2. `dam-media-preview.js`: CTA jak wizualizacje — Przejdz + Folder + opcjonalnie Zrodlo.
+3. `dam-assoc-edit.js`: Shift+klik na item/thumb/name → openEditPicker (product).
+4. `dam-branding.css`: title gap 20px; ext-tag anatomia badge +10%; mniejszy hero.
+5. `dam-hub-shared.css`: editable wash od dolu min(128px,32%), alpha *0.7.
+
+### Efekt/Fix
+- Footer: Przejdz | Folder | (Zrodlo) | Kopiuj | Udostepnij
+- CDP: gap tagi→tytul 20px; title↔ext 8px; extH 26.8 vs badgeH 24.4; bez scrolla (baton)
+- Shift+klik otwiera picker (admin mode)
+
+### Test/Ewaluacja
+Intensive QA 10 passes screenshot→Read (Pass1–10).
+
+### Zrodla
+- memory.md §38
+- `.cursor/rules/verify-ui-after-changes.mdc`

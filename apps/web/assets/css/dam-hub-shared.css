@@ -67,15 +67,16 @@
   z-index: 1;
 }
 
-/* Pliki zrodlowe (PSD, PSB, AI, TIFF warstwowy): mocniejszy wash + obrys 2px */
+/* Pliki zrodlowe: krotki wash od dolu (konczy sie kolo nazwy), start ~30% bardziej przezroczysty */
 .dam-gradient-tile--editable::before {
-  height: 100%;
+  top: auto;
+  bottom: 0;
+  height: min(128px, 32%);
   background: linear-gradient(
     0deg,
-    rgba(29, 78, 216, 0.12) 0%,
-    rgba(29, 78, 216, 0.07) 28%,
-    rgba(29, 78, 216, 0.03) 56%,
-    rgba(29, 78, 216, 0.01) 78%,
+    rgba(29, 78, 216, 0.084) 0%,
+    rgba(29, 78, 216, 0.042) 45%,
+    rgba(29, 78, 216, 0.014) 72%,
     rgba(29, 78, 216, 0) 100%
   );
 }
@@ -84,20 +85,22 @@
   padding: 2px;
   background: linear-gradient(
     0deg,
-    rgba(29, 78, 216, 0.34) 0%,
-    rgba(29, 78, 216, 0.22) 40%,
-    rgba(29, 78, 216, 0.1) 72%,
-    rgba(29, 78, 216, 0.03) 92%,
-    rgba(29, 78, 216, 0) 100%
+    rgba(29, 78, 216, 0.238) 0%,
+    rgba(29, 78, 216, 0.126) 40%,
+    rgba(29, 78, 216, 0.042) 70%,
+    rgba(29, 78, 216, 0) 92%
   );
 }
 
 /* Wektor / dokument źródłowy: AI, PDF */
 .dam-gradient-tile--vector::before {
+  top: auto;
+  bottom: 0;
+  height: min(110px, 28%);
   background: linear-gradient(
     0deg,
-    rgba(180, 83, 9, 0.04) 0%,
-    rgba(180, 83, 9, 0.015) 45%,
+    rgba(180, 83, 9, 0.028) 0%,
+    rgba(180, 83, 9, 0.01) 55%,
     rgba(180, 83, 9, 0) 100%
   );
 }
@@ -106,10 +109,10 @@
   padding: 1px;
   background: linear-gradient(
     0deg,
-    rgba(180, 83, 9, 0.22) 0%,
-    rgba(180, 83, 9, 0.16) 50%,
-    rgba(180, 83, 9, 0.06) 72%,
-    rgba(180, 83, 9, 0) 95%
+    rgba(180, 83, 9, 0.154) 0%,
+    rgba(180, 83, 9, 0.084) 48%,
+    rgba(180, 83, 9, 0.028) 72%,
+    rgba(180, 83, 9, 0) 92%
   );
 }
 

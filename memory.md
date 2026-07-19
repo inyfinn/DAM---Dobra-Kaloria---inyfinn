@@ -912,3 +912,10 @@ ole=admin.
 29. **Branding produktu (HARD):** `DAM - Dobra Kaloria - Inyfinn` (krotko `DAM`). Zakaz w UI/manifest/title/subtitle: `ETA`, `DAM ETA`, `ETA Innovations`. Eksplorer subtitle: `Pelna struktura produktow Dobra Kaloria i Good Calories`. (ETYKIETA = typ opakowania - OK.)
 29b. **Wersja programu:** start `1.00`, kolejne `1.01`... Zawsze w sidebar footer obok `inyfinn.art (c) ...` jako `v1.00`. Zrodla (ten sam string): `apps/web/version.json`, `apps/web/assets/js/dam-version.js`, `apps/desktop/runtime_config.py` (`APP_VERSION`).
 30. **Most:** po zmianach w `local_bridge.py` restart procesu bridge (launch nie hot-reloaduje).
+
+120. **Media preview branding = te same CTA co wizualizacje (2026-07-19):**
+ - `#damMediaPreview` footer: **Przejdź** (produkt w Eksplorerze) + **Folder** (Windows) + opcjonalnie **Źródło** + Kopiuj + Udostępnij.
+ - Zakaz etykiety „Pokaż w Eksploratorze” jako primary w tym modalu (myli z Przejdź).
+ - Ext-tag (TIF/JPG): anatomia `.dam-viz-badge` (pill 999px, fw 500) +10% skala; odstęp od tytułu **8px**; tagi→tytuł **≥20px**.
+ - Shift+klik na `.dam-media-preview__assoc-item` / thumb / name = edycja skojarzeń (wymaga admin mode), nie nawigacja.
+ - Gradient `.dam-gradient-tile--editable/--vector`: od dolu, kończy się koło nazwy, start ~30% bardziej przezroczysty.

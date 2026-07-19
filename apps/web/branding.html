@@ -10,9 +10,9 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
-  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad05">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=hub20260719sidebar02">
-  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=hub20260719modal03">
+  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad08">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=hub20260719modal05">
+  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=hub20260719modal06">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <script>
@@ -83,11 +83,20 @@
         </div>
         <div class="dam-branding-tabs-meta">
           <p id="damBrandingSectionDesc" class="dam-branding-tabs-meta__desc"></p>
-          <p id="damBrandingStatus" class="dam-branding-tabs-meta__status" aria-live="polite">Ładowanie indeksu…</p>
         </div>
       </div>
 
       <div class="dam-branding-tag-filters" id="damBrandingTagFilters" role="group" aria-label="Filtry tagami"></div>
+      <div class="dam-viz-grid-toolbar dam-branding-grid-toolbar">
+        <div id="damBrandingStatus" class="dam-toolbar-status" aria-live="polite">Ładowanie indeksu…</div>
+        <div class="dam-viz-grid-toolbar__end">
+          <label class="dam-viz-zoom-control" for="damBrandingCardZoom" data-dam-tip="Suwak: 50-100% pomniejsza grafikę w kafelku; powyzej 100% powieksza kafelek (max 250%)">
+            <span class="dam-viz-zoom-control__label"><i class="uil uil-search-plus" aria-hidden="true"></i> Skala</span>
+            <input type="range" id="damBrandingCardZoom" min="50" max="250" step="5" value="100" aria-label="Skala kafelkow branding" />
+            <span class="dam-viz-zoom-control__value" id="damBrandingCardZoomLabel">100%</span>
+          </label>
+        </div>
+      </div>
       <div class="dam-viz-secondary-filters dam-branding-filters dam-branding-filters--meta" role="group" aria-label="Opcje widoku">
         <label class="dam-switch dam-switch--compact" for="damBrandingGraphicsOnly" data-dam-tip="Ukrywa PDF, Excel i Word przy wyszukiwaniu. Dokumenty nadal po tagu Dokument.">
           <input type="checkbox" id="damBrandingGraphicsOnly" class="dam-switch__input" checked />
@@ -155,7 +164,7 @@
   <script src="./assets/js/dam-api.js?v=20260719golive1"></script>
   <script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-  <script src="./assets/js/dam-version.js?v=1.04"></script>
+  <script src="./assets/js/dam-version.js?v=1.5.0"></script>
   <script src="./assets/js/dam-shell.js?v=hub20260719e"></script>
   <script src="./assets/js/dam-paths.js?v=20260719ver102"></script>
   <script src="./assets/js/dam-tooltips.js?v=20260718admin3"></script>
@@ -165,11 +174,11 @@
   <script src="./assets/js/dam-asset-taxonomy.js?v=hub20260719trans01"></script>
   <script src="./assets/js/dam-badges.js?v=hub20260719cards02"></script>
   <script src="./assets/js/dam-search.js?v=hub20260719assoc03"></script>
-  <script src="./assets/js/dam-assoc-edit.js?v=hub20260719modal03"></script>
+  <script src="./assets/js/dam-assoc-edit.js?v=hub20260719modal05"></script>
   <script src="./assets/js/dam-tag-edit.js?v=hub20260719j10"></script>
   <script src="./assets/js/dam-marketing-id.js?v=hub20260719ui05"></script>
-  <script src="./assets/js/dam-media-preview.js?v=hub20260719modal03"></script>
+  <script src="./assets/js/dam-media-preview.js?v=hub20260719modal05"></script>
   <script src="./assets/js/dam-product-correlation.js?v=hub20260719corr01"></script>
-  <script src="./assets/js/dam-branding.js?v=hub20260719modal03"></script>
+  <script src="./assets/js/dam-branding.js?v=hub20260719brzoom01"></script>
 </body>
 </html>

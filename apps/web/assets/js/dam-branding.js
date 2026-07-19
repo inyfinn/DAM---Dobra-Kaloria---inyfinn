@@ -19,6 +19,11 @@
   var activeTagFilters = {};
   var GRID_LIMIT_BROWSE = 240;
   var GRID_LIMIT_TAB = 120;
+  var CARD_ZOOM_KEY = "dam_viz_card_zoom";
+  var CARD_ZOOM_MIN = 50;
+  var CARD_ZOOM_MAX = 250;
+  var CARD_IMG_BASE_SCALE = 1.2;
+  var CARD_BASE_MIN_PX = 220;
 
   var FACET_CHIPS = [
     { key: "media:image", label: "Obraz", group: "format_pliku" },
@@ -2436,7 +2441,7 @@
     });
     if (!pick) return "";
     return (
-      '<span class="dam-viz-card__title-pl"><span class="dam-viz-card__title-pl-paren">( </span>' +
+      '<br><span class="dam-viz-card__title-pl"><span class="dam-viz-card__title-pl-paren">( </span>' +
       '<span class="dam-viz-card__title-pl-text">' +
       esc(pick) +
       '</span><span class="dam-viz-card__title-pl-paren"> )</span></span>'
@@ -3424,10 +3429,55 @@
     }
   }
 
+  function brandingCardZoomRoots() {
+    return [
+      document.getElementById("damBrandingSectionGrid"),
+      document.getElementById("damBrandbookGrid"),
+    ].filter(Boolean);
+  }
+
+  function applyBrandingCardZoom(pct) {
+    var n = Math.round(Number(pct) || 100);
+    if (n < CARD_ZOOM_MIN) n = CARD_ZOOM_MIN;
+    if (n > CARD_ZOOM_MAX) n = CARD_ZOOM_MAX;
+    var imgScale = (n <= 100 ? n / 100 : 1) * CARD_IMG_BASE_SCALE;
+    var cardScale = n <= 100 ? 1 : n / 100;
+    var cardMin = Math.round(CARD_BASE_MIN_PX * cardScale) + "px";
+    brandingCardZoomRoots().forEach(function (root) {
+      root.style.setProperty("--dam-viz-img-scale", String(imgScale));
+      root.style.setProperty("--dam-viz-card-scale", String(cardScale));
+      root.style.setProperty("--dam-viz-card-min", cardMin);
+    });
+    var label = document.getElementById("damBrandingCardZoomLabel");
+    if (label) label.textContent = n + "%";
+    var input = document.getElementById("damBrandingCardZoom");
+    if (input && String(input.value) !== String(n)) input.value = String(n);
+    try {
+      localStorage.setItem(CARD_ZOOM_KEY, String(n));
+    } catch (e) {}
+    return n;
+  }
+
+  function bindBrandingCardZoomControl() {
+    var input = document.getElementById("damBrandingCardZoom");
+    if (!input || input._damZoomBound) return;
+    input._damZoomBound = true;
+    var saved = parseInt(localStorage.getItem(CARD_ZOOM_KEY) || "100", 10);
+    if (isNaN(saved)) saved = 100;
+    applyBrandingCardZoom(saved);
+    input.addEventListener("input", function () {
+      applyBrandingCardZoom(this.value);
+    });
+    input.addEventListener("change", function () {
+      applyBrandingCardZoom(this.value);
+    });
+  }
+
   async function boot() {
     try {
       bindTabs();
       bindFilters();
+      bindBrandingCardZoomControl();
       var searchPromise = loadSearchIndex();
       await Promise.all([loadIndex(), loadAssociations(), loadTokens()]);
       renderTagFilters();

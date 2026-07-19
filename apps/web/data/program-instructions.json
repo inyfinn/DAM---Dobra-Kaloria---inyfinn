@@ -322,7 +322,8 @@
       "must": [
         "Mapa kto↔produkt w product-people.json (+ KV product-people)",
         "enrich-search-tags.py wlewa autorow do authors / search_blob / by_tag / tag_groups.autor",
-        "Szukajka: sylwia / krzysztof / szymon znajduje przypisane produkty"
+        "tag_groups.autor = tylko Krzysztof, Sylwia, Szymon, Highlite (AUTHOR_ALLOWLIST w skrypcie)",
+        "Szukajka: sylwia / krzysztof / szymon / highlite znajduje przypisane produkty"
       ],
       "body_pl": "Osoba przy produkcie sluzy do WYSZUKIWANIA (statusy Sylwii, spis Szymona, dziennik KW), nie do glosnych badge TAG na kartach. Zrodlo: apps/web/data/product-people.json. Po aktualizacji mapy: python apps/web/scripts/enrich-search-tags.py (+ seed KV).",
       "category": "search",
@@ -336,7 +337,7 @@
         "product-people",
         "program-instructions"
       ],
-      "updated_at": "2026-07-18",
+      "updated_at": "2026-07-19",
       "related_code": [
         "apps/web/data/product-people.json",
         "apps/web/scripts/enrich-search-tags.py",
@@ -451,9 +452,9 @@
       "must": [
         "primary zawsze widoczne",
         "pakowanie = tier low, domyślnie w +N",
-        "Explorer/Viz/Projekty: toggle „Tagi pakowania (2F)” poza paskiem wyszukiwania"
+        "Explorer/Viz/Projekty: toggle „Info Pakowania” poza paskiem wyszukiwania"
       ],
-      "body_pl": "Toggle „Tagi pakowania (2F)” pokazuje tagi low/minimal (np. 2F·2×12). Bez toggle tylko primary.",
+      "body_pl": "Toggle „Info Pakowania” pokazuje tagi low/minimal (np. 2F·2×12). Bez toggle tylko primary.",
       "category": "packaging",
       "must_not": [
         "Pokazywać 2F·2×12 domyślnie w Explorer bez toggle"

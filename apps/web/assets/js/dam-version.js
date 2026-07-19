@@ -1,9 +1,9 @@
 /**
  * Wersja programu DAM (single source w UI).
  * Przy releasie: podbij string tutaj ORAZ w version.json (ten sam numer).
- * Aktualna: 1.03 → nastepna: 1.04
+ * Milestone pre-BENTO: 1.5.0 (2026-07-19)
  */
 (function (global) {
   "use strict";
-  global.DAM_APP_VERSION = "1.04";
+  global.DAM_APP_VERSION = "1.5.0";
 })(typeof window !== "undefined" ? window : globalThis);

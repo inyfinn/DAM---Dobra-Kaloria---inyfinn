@@ -5906,21 +5906,23 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-viz-modal__body #damMediaPreviewTitle {
-  margin-top: 4px;
+  margin-top: 0;
   margin-bottom: 4px;
   line-height: 1.35;
 }
 
 #damMediaPreviewTitleMeta .dam-media-preview__title-meta + .dam-media-preview__editable-row,
 #damMediaPreviewTitleMeta > .dam-media-preview__editable-row:first-child {
-  margin-top: 10px;
+  margin-top: 0;
 }
 
-#damMediaPreviewTitleMeta .dam-media-preview__asset-id {
-  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * 1.1);
+#damMediaPreviewTitleMeta .dam-media-preview__asset-id,
+#damMediaPreview .dam-media-preview__title-row .dam-media-preview__asset-id {
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * 1.05);
   font-weight: 500;
-  padding: 5px 11px;
+  padding: 4px 10px;
   border-radius: 999px;
+  margin: 0;
 }
 
 .dam-viz-modal__carrier--editable {
