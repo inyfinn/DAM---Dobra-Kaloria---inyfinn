@@ -77,6 +77,14 @@ SHOP_SLIDER_ROLE_MARKERS = (
     "web_banner",
 )
 
+# Segment folderu na sciezce -> tagi wygladu (zasada: folder = tag)
+FOLDER_SEGMENT_TAGS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("slidery", ("Slidery", "Na sklep")),
+    ("slidery na glowna", ("Slidery", "Na sklep")),
+    ("slidery kategorie", ("Slidery", "Na sklep")),
+    ("slidery kategorie glowne", ("Slidery", "Na sklep")),
+)
+
 
 def norm(s: str) -> str:
     s = unicodedata.normalize("NFD", s or "")
@@ -215,6 +223,18 @@ def slider_device_from_size(w: int, h: int) -> str | None:
     return None
 
 
+def extract_folder_segment_tags(path: str) -> list[str]:
+    """Tagi wprost z nazwy folderu (np. .../SLIDERY/... -> Slidery + Na sklep)."""
+    parts = [norm(p) for p in (path or "").replace("\\", "/").split("/") if p]
+    tags: list[str] = []
+    for part in parts:
+        for marker, labels in FOLDER_SEGMENT_TAGS:
+            if marker in part:
+                tags.extend(labels)
+                break
+    return tags
+
+
 def extract_placement_tags(asset: dict[str, Any]) -> list[str]:
     """Slidery sklepu WWW: Slidery, Na sklep, Desktop/Tablet/Mobile."""
     name = asset.get("name") or ""
@@ -222,19 +242,20 @@ def extract_placement_tags(asset: dict[str, Any]) -> list[str]:
     role = str(asset.get("asset_role") or "")
     dims_field = str(asset.get("dimensions_px") or "")
     blob = norm(f"{name} {path} {role} {dims_field}")
-    tags: list[str] = []
+    tags: list[str] = list(extract_folder_segment_tags(path))
 
     is_shop_context = any(marker in blob for marker in SHOP_SLIDER_PATH_MARKERS)
+    is_slider_folder = any(marker in blob for marker, _ in FOLDER_SEGMENT_TAGS)
     is_slider_name = "slider" in blob or "slidery" in blob
     is_slider_role = any(marker in blob for marker in SHOP_SLIDER_ROLE_MARKERS)
 
     wh = parse_dimensions(dims_field) or parse_dimensions(name) or parse_dimensions(path)
     device = slider_device_from_size(wh[0], wh[1]) if wh else None
 
-    if is_shop_context or is_slider_name or is_slider_role or device:
-        if is_shop_context or is_slider_role or (device and wh and wh[1] == 600):
+    if is_shop_context or is_slider_folder or is_slider_name or is_slider_role or device:
+        if is_shop_context or is_slider_folder or is_slider_role or (device and wh and wh[1] == 600):
             tags.append("Na sklep")
-        if is_slider_name or is_slider_role or device:
+        if is_slider_folder or is_slider_name or is_slider_role or device:
             tags.append("Slidery")
 
     if "desktop" in blob and not device:

@@ -1,0 +1,2 @@
+apps/web/data/branding-index.json filter=lfs diff=lfs merge=lfs -text
+apps/web/data/branding-search-index.json filter=lfs diff=lfs merge=lfs -text

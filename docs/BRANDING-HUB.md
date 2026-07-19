@@ -20,15 +20,79 @@ Dysk `X:\Marketing` (lub `D:\Marketing`) jest **tylko do odczytu** - DAM buduje 
 
 ---
 
+## Dwie lokalizacje Marketing (POLSKA + stara struktura)
+
+Indeks branding skanuje **obie** glowne lokalizacje i laczy je w jedna siatke skojarzen (bez przenosin na dysku).
+
+| Lokalizacja | Priorytet | Tagi specjalne |
+|-------------|-----------|----------------|
+| `X:/Marketing/- POLSKA/...` | **Wygrywa przy nakladce** | Slidery, Na sklep, Szkoła, Edytowalny itd. - **bez** Archiwum |
+| `X:/Marketing/-- ARCHIWUM --/...` | Tylko pliki **bez** odpowiednika w POLSKA | **Archiwum** + **Stara struktura** + tagi ze starego drzewa folderow |
+
+### Dedup POLSKA-first
+
+Build (`build-branding-index.py`) skanuje najpierw `- POLSKA` (oraz EKSPORT branding), potem `-- ARCHIWUM --`.
+Plik z archiwum jest **pomijany**, gdy w POLSKA istnieje ten sam material:
+
+- Klucz: **stem kampanii + wymiary z nazwy** (np. `back to school:992x600`)
+- Lapie warianty nazw: `BACK to School -992.png` vs `Back to school - 992.jpg`
+
+Regula w `program-instructions.json`: `branding.marketing_dual_roots`.
+
+### Stara struktura folderow (mapowanie tagow)
+
+Segmenty sciezki w `-- ARCHIWUM --` dostaja tagi skojarzeniowe (oprócz Archiwum / Stara struktura):
+
+| Folder (archiwum) | Tagi |
+|-------------------|------|
+| `01_Opakowania` | Opakowania |
+| `02_Materiały marketingowe` | Materiały marketingowe |
+| `03_Materiały graficzne` | Materiały graficzne |
+| `04_Dokumenty` | Dokumenty |
+| `05_Materiały graficzne e-commerce` | E-commerce, Na sklep |
+| `06_Materiały firmowe` | Materiały firmowe |
+| `07_Kampanie` | Kampanie |
+| `08_PROCESY` | Procesy |
+| `09 PRZEPISY` | Przepisy |
+| `10 STRONA WWW` | Strony WWW, Na sklep |
+| `99_Inne` | Inne |
+
+Implementacja: `brand_folder_context.py` → `LEGACY_FOLDER_TAGS`, `extract_legacy_archive_tags()`.
+
+### Kontekst folderu (warianty, produkty, tagi tematyczne)
+
+Po buildzie skrypt `brand_folder_context.enrich_folder_groups()` grupuje pliki **po katalogu nadrzednym** (`folder_dir`):
+
+| Sygnal | Efekt |
+|--------|--------|
+| 3 slidery w folderze (1920/992/576 × 600) | `folder_variants`: Desktop, Tablet, Mobile |
+| `.psd` / `.ai` obok rastra | tag **Edytowalny** + `format_technical: editable` |
+| Nazwa folderu (np. Back To School) | tag **Szkoła** (`THEME_VOCAB`) |
+| Hint folderu / OCR / nazwy produktow | `linked_product_ids` + `linked_products[]` z miniaturami z `file-index` (`viz_latest`) |
+| Wspolna grupa | `folder_group_id` - przy przełaczeniu wariantu **te same** skojarzenia na dole modala |
+
+Przyklad: `.../SLIDERY NA GŁÓWNĄ/Back To School/` → ORZECH CZEKOLADA + CHRUPIĄCY ORZECH (miniatury batonow), 3 warianty, Szkoła, Edytowalny.
+
+### Tagi sliderow sklepu WWW
+
+Folder segment `SLIDERY` (w sciezce) → tagi **Slidery** + **Na sklep** + urzadzenie z wymiarow (Desktop 1920×600, Tablet 992×600, Mobile 576×600).
+
+Regula: `program-instructions` → `branding.slider_shop_tags`. Kod: `brand_tag_utils.extract_folder_segment_tags()`.
+
+Filtr **Slidery** w UI przełącza zakladke **Strony WWW** (nie Kampanie).
+
+---
+
 ## UI
 
 ### branding.html
 
 - Pelny `dam-shell` (sidebar Geex, nawigacja spojna z reszta aplikacji)
-- Filtry: rozmiar (S/L/XL), tlo (transparent/white), kanal, archiwum
-- Zakladki: **Key visuale** (presety perspektyw WIZKI) i **Layout builder** (podglad ukladow)
-- Modal podgladu wideo / wektorow, linki do powiazanych produktow (SKU)
-- Domyslnie **bez archiwum** (`-- ARCHIWUM --`, `00 - ARCHIWUM`)
+- Nawigacja **skojarzeniowa** (tagi, wyszukiwanie, kolekcje) - nie drzewo folderow dysku
+- Zakladki: Kampanie, Social & wideo, **Strony WWW**, Packshoty, Brandbook
+- Filtry chipami: produkt, rok, kanal, Slidery, Na sklep, Desktop/Tablet/Mobile, Edytowalny, …
+- Modal podgladu (`dam-media-preview.js`): warianty materiału | separator | skojarzone produkty (klikalne miniatury)
+- Domyslnie **bez archiwum produktowego**; `-- ARCHIWUM --` Marketing indeksowane osobno (stara struktura, tagi Archiwum)
 
 ### Toggle „Odsłon wszystko” (tagi tier low)
 
@@ -76,15 +140,19 @@ Pakowanie zbiorcze i inne tagi niskiego priorytetu (tier `low`) sa domyslnie ukr
 Wszystkie z katalogu `apps/web/scripts/`, uruchamiane z root repo lub z `apps/web`:
 
 ```powershell
-# Indeks branding (read-only scan Marketing)
+# Indeks branding (read-only scan Marketing: - POLSKA + -- ARCHIWUM --, dedup POLSKA-first)
 python apps/web/scripts/build-branding-index.py
 python apps/web/scripts/build-branding-index.py --marketing "X:/Marketing"
 
 # Powiazanie assetow branding z produktami (SKU w nazwie/sciezce)
 python apps/web/scripts/link-branding-products.py
 
-# OCR / rozpoznawanie (stub - RapidOCR w przygotowaniu)
+# OCR / rozpoznawanie (batch - lepsze skojarzenia produktow na grafikach)
 python apps/web/scripts/enrich-branding-recognize.py
+python apps/web/scripts/enrich-branding-recognize.py --limit 300
+
+# Tagi appearance (Slidery, Na sklep, urzadzenia) - wywolywane z build-branding-index
+# brand_tag_utils.py, brand_folder_context.py
 
 # Pakowanie zbiorcze z folderow PROJEKT
 python apps/web/scripts/scan-bulk-packaging.py
@@ -99,7 +167,25 @@ python apps/web/scripts/import-wykrojniki-xlsx.py
 python apps/web/scripts/link-wykrojniki-products.py
 ```
 
-Po `build-branding-index.py` odswiez cache przegladarki (`?v=hub20260719` lub nowszy bust na assetach).
+Po `build-branding-index.py` odswiez cache przegladarki (`?v=hub20260719disc8` lub nowszy bust na assetach).
+
+**Git LFS:** `branding-index.json` i `branding-search-index.json` sa w **Git LFS** (indeks po pelnym skanie archiwum przekracza limit 100 MB GitHub). Po `git clone` potrzebny `git lfs pull`. Bez LFS: lokalny rebuild `python apps/web/scripts/build-branding-index.py`.
+
+### Pliki Python (branding)
+
+| Plik | Rola |
+|------|------|
+| `build-branding-index.py` | Skan POLSKA + archiwum, dedup, linki SKU, enrich tagow i folderow |
+| `brand_tag_utils.py` | Tagi folderow (SLIDERY), placement, merge tagow |
+| `brand_folder_context.py` | Grupy folderow: warianty, Edytowalny, Archiwum, produkty, Szkoła |
+| `link-branding-products.py` | Dopelnienie `linked_product_ids` po SKU |
+| `enrich-branding-recognize.py` | OCR → `ocr_text`, lepsze skojarzenia |
+
+### Testy jednostkowe
+
+```powershell
+python -m unittest apps.desktop.tests.test_build_branding_dedupe apps.desktop.tests.test_brand_folder_context apps.desktop.tests.test_brand_tag_utils -v
+```
 
 ---
 

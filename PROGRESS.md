@@ -1,6 +1,6 @@
 ﻿# PROGRESS.md - DAM - Dobra Kaloria - Inyfinn
 
-Ostatnia aktualizacja: **2026-07-18**
+Ostatnia aktualizacja: **2026-07-19**
 
 | Obszar | Status | Notatka |
 |--------|--------|---------|
@@ -36,6 +36,8 @@ Ostatnia aktualizacja: **2026-07-18**
 | OAuth stub Asana/MS Graph | **done** | oauth_integrations.py + env.example |
 | Strony prawne / security docs | **done** | privacy, terms, license, consents, docs-security |
 | Dump Postgres w DATABASE/ | **done** | sync godzinowy NAS + sync-database-backups-to-git.py |
+| Branding: POLSKA + archiwum, dedup, folder context | **done** | 49252 assetow; modal warianty + produkty; disc8 |
+| Branding: tagi Slidery / Na sklep / Szkoła / Edytowalny | **done** | brand_tag_utils + brand_folder_context + testy |
 
 ## Uruchomienie dla usera
 

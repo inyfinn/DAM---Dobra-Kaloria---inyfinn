@@ -3634,3 +3634,33 @@ User: TEST LIFECYCLE F/X/D — po restore z archiwum wszystko D zamiast BAT=D, D
 - lifecycle-status.json history `variant_restored_previous_letter:D` na DOY/ETY
 - systematic-debugging
 
+---
+
+## 2026-07-19 - Branding: POLSKA + archiwum, kontekst folderu, modal skojarzen (disc8)
+
+### Komenda/Akcja
+User: indeksuj `- POLSKA` i `-- ARCHIWUM --` (stara struktura Marketing); przy nakladce wygrywa POLSKA bez tagow Archiwum; w modalu warianty Desktop/Tablet/Mobile, skojarzone produkty z miniaturami, tagi Szkoła/Edytowalny; dokumentacja + commit + push.
+
+### Log/Status
+1. **`build-branding-index.py`**: skan dwufazowy (POLSKA, potem archiwum); dedup kluczem `stem+wymiary` (np. `back to school:992x600`); statystyki `legacy_skipped_overlap` w logu buildu.
+2. **`brand_folder_context.py`** (nowy): grupy po `folder_dir`; `folder_variants`, `linked_products` z thumb z `viz_latest`; `LEGACY_FOLDER_TAGS` dla 01–10, 99, wymiana; `THEME_VOCAB` (Szkoła); Edytowalny gdy `.psd`/`.ai` w folderze.
+3. **`brand_tag_utils.py`**: segment `SLIDERY` → Slidery + Na sklep; filtr Slidery → zakladka WWW.
+4. **UI**: `dam-media-preview.js` - warianty | separator | skojarzone produkty (wspolne `groupContext`); `dam-branding.css` layout assoc; cache bust `hub20260719disc8`.
+5. **`program-instructions.json`**: `branding.marketing_dual_roots`, `branding.slider_shop_tags`.
+6. **Testy**: `test_build_branding_dedupe`, `test_brand_folder_context`, `test_brand_tag_utils` - PASS.
+7. **Rebuild indeksu**: 49252 assetow (6787 pominietych nakladek archiwum); Back to school 992x600 tylko POLSKA (`br-003365`).
+
+### Efekt/Fix
+- POLSKA: 0 assetow z tagiem Archiwum w indeksie branding.
+- Legacy-only: tagi Archiwum + Stara struktura + mapowanie starych folderow.
+- Modal Back to school: 3 warianty, ORZECH CZEKOLADA + CHRUPIACY ORZECH, Szkoła, Edytowalny.
+
+### Test/Ewaluacja
+- Unit testy dedupe + folder context: PASS.
+- Screenshot QA modal (1280 + 375): warianty lewo, produkty prawo, miniatury klikalne; przełaczenie wariantu zachowuje skojarzenia.
+
+### Zrodla
+- docs/BRANDING-HUB.md (sekcja dwie lokalizacje)
+- program-instructions `branding.marketing_dual_roots`
+- apps/web/scripts/build-branding-index.py, brand_folder_context.py
+

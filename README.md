@@ -24,7 +24,7 @@ Repozytorium: [inyfinn/DAM---Dobra-Kaloria---inyfinn](https://github.com/inyfinn
 - Lokalny bridge (Eksplorator Windows, media, audit, override nosnikow / miniatur, propozycje tagow)
 - Konta lokalne (bcrypt) + sesja urzadzenia (`machine_id` / `device_id` / `session_id`)
 - UI na motywie **Geex** (Bootstrap 5) z tokenami DAM
-- **Branding DAM Hub:** modul marketingu (perspektywy WIZKI, kampanie, layout), karta katalogowa produktu, pakowanie zbiorcze (`2F·2×12`), rejestr wykrojnikow
+- **Branding DAM Hub:** modul marketingu (perspektywy WIZKI, kampanie, slidery WWW, archiwum starej struktury), karta katalogowa produktu, pakowanie zbiorcze (`2F·2×12`), rejestr wykrojnikow
 
 Szczegoly modulu branding: [`docs/BRANDING-HUB.md`](docs/BRANDING-HUB.md).
 

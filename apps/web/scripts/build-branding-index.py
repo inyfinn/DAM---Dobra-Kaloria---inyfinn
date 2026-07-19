@@ -23,6 +23,7 @@ FILE_INDEX_PATH = WEB / "data" / "file-index.json"
 CATALOG_PATH = WEB / "data" / "product-catalog.json"
 
 ARCHIVE_MARKERS = ("-- ARCHIWUM --", "00 - ARCHIWUM", "/ARCHIWUM/", "\\ARCHIWUM\\")
+LEGACY_ARCHIVE_ROOT = "-- ARCHIWUM --"
 
 WIZKI_RE = re.compile(
     r"-(ENFACE|FRONT|BACK|TYŁ|TYL)-?(XL|L|S(?:-SKLEP)?)\.(png|jpe?g)$",
@@ -127,15 +128,45 @@ def parse_campaign(path: Path, marketing: Path) -> str | None:
     return f"{year}-{norm(name)[:40]}"
 
 
+def is_legacy_root_archive(path: str) -> bool:
+    up = path.replace("\\", "/").upper()
+    return f"/{LEGACY_ARCHIVE_ROOT}/" in up or up.startswith(f"X:/MARKETING/{LEGACY_ARCHIVE_ROOT}/")
+
+
+def is_polska_marketing_root(path: str) -> bool:
+    up = path.replace("\\", "/").upper()
+    return "/- POLSKA/" in up or up.startswith("X:/MARKETING/- POLSKA/")
+
+
+def file_overlap_key(fp: Path) -> str:
+    """Semantic fingerprint: campaign stem + dimensions (handles BACK vs Back, jpg vs png)."""
+    from brand_folder_context import variant_stem
+    from brand_tag_utils import parse_dimensions
+
+    name = fp.name
+    stem = norm(variant_stem(name))
+    wh = parse_dimensions(name)
+    if stem and wh:
+        return f"{stem}:{wh[0]}x{wh[1]}"
+    try:
+        size = fp.stat().st_size
+    except OSError:
+        size = -1
+    return f"{norm(name)}:{size}"
+
+
 def build_tags(
     archived: bool,
     wiz: dict,
     channels: list[str],
     source: str,
+    path: str = "",
 ) -> list[str]:
     tags: list[str] = []
     if archived:
         tags.append("ARCHIWUM")
+    if is_legacy_root_archive(path):
+        tags.extend(["Archiwum", "Stara struktura"])
     if source == "wizki":
         tags.append("WIZKI")
     if wiz.get("perspective"):
@@ -163,7 +194,7 @@ def make_asset(
 ) -> dict | None:
     path = str(fp).replace("\\", "/")
     archived = is_archive_path(path)
-    if archived and not include_archive:
+    if archived and not include_archive and not is_legacy_root_archive(path):
         return None
     ext = fp.suffix.lower()
     allowed = WIZKI_EXT if source == "wizki" else SCAN_EXT
@@ -174,7 +205,7 @@ def make_asset(
     sku_m = SKU_RE.search(name) or SKU_RE.search(path)
     dims = DIM_RE.search(name)
     channels = parse_channels(path)
-    tags = build_tags(archived, wiz, channels, source)
+    tags = build_tags(archived, wiz, channels, source, path=path)
     camp = parse_campaign(fp, marketing) if source == "marketing" else None
     mt = media_type_for(ext)
     blob_parts = [name, path, brand, mt, source] + tags
@@ -207,10 +238,14 @@ def make_asset(
     return asset
 
 
-def scan_marketing_roots(marketing: Path, include_archive: bool = False) -> list[dict]:
+def scan_marketing_roots(
+    marketing: Path,
+    include_archive: bool = False,
+) -> tuple[list[dict], dict[str, int]]:
+    """Scan - POLSKA (priority) then -- ARCHIWUM --; legacy skipped when file overlaps POLSKA."""
     polska = marketing / "- POLSKA"
     eksport = marketing / "- EKSPORT"
-    roots = [
+    primary_roots: list[tuple[str, Path]] = [
         ("DK", polska / "- BRANDING i MARKA -"),
         ("DK", polska / "03 - MATERIAŁY GRAFICZNE"),
         ("DK", polska / "05 - SOCIAL MEDIA"),
@@ -219,26 +254,59 @@ def scan_marketing_roots(marketing: Path, include_archive: bool = False) -> list
         ("DK", polska / "08 - KAMAPANIE"),
     ]
     if (eksport / "- BRANDING i MARKA -").is_dir():
-        roots.append(("GC", eksport / "- BRANDING i MARKA -"))
+        primary_roots.append(("GC", eksport / "- BRANDING i MARKA -"))
+
+    legacy_root = marketing / LEGACY_ARCHIVE_ROOT
+
     assets: list[dict] = []
     aid = 0
-    seen: set[str] = set()
-    for brand, root in roots:
+    seen_paths: set[str] = set()
+    polska_overlap_keys: set[str] = set()
+    stats = {
+        "primary_scanned": 0,
+        "legacy_scanned": 0,
+        "legacy_skipped_overlap": 0,
+        "legacy_indexed": 0,
+    }
+
+    def ingest_file(fp: Path, brand: str, *, from_legacy: bool) -> None:
+        nonlocal aid
+        path_key = str(fp).replace("\\", "/").lower()
+        if path_key in seen_paths:
+            return
+        if from_legacy:
+            stats["legacy_scanned"] += 1
+            overlap_key = file_overlap_key(fp)
+            if overlap_key in polska_overlap_keys:
+                stats["legacy_skipped_overlap"] += 1
+                return
+        else:
+            stats["primary_scanned"] += 1
+
+        row = make_asset(aid + 1, fp, brand, marketing, source="marketing", include_archive=include_archive)
+        if not row:
+            return
+        aid += 1
+        seen_paths.add(path_key)
+        if not from_legacy and is_polska_marketing_root(row["path"]):
+            polska_overlap_keys.add(file_overlap_key(fp))
+        if from_legacy:
+            stats["legacy_indexed"] += 1
+        assets.append(row)
+
+    for brand, root in primary_roots:
         if not root.is_dir():
             continue
         for fp in root.rglob("*"):
-            if not fp.is_file():
-                continue
-            path_key = str(fp).replace("\\", "/").lower()
-            if path_key in seen:
-                continue
-            row = make_asset(aid + 1, fp, brand, marketing, source="marketing", include_archive=include_archive)
-            if not row:
-                continue
-            aid += 1
-            seen.add(path_key)
-            assets.append(row)
-    return assets
+            if fp.is_file():
+                ingest_file(fp, brand, from_legacy=False)
+
+    if legacy_root.is_dir():
+        for fp in legacy_root.rglob("*"):
+            if fp.is_file():
+                ingest_file(fp, "DK", from_legacy=True)
+
+    return assets, stats
 
 
 def scan_wizki_products(marketing: Path, include_archive: bool = False) -> list[dict]:
@@ -376,7 +444,14 @@ def main() -> int:
     args = ap.parse_args()
     t0 = time.time()
     marketing = resolve_marketing_base()
-    marketing_assets = scan_marketing_roots(marketing, include_archive=args.include_archive)
+    marketing_assets, scan_stats = scan_marketing_roots(marketing, include_archive=args.include_archive)
+    print(
+        "marketing scan:"
+        f" primary={scan_stats['primary_scanned']}"
+        f" legacy_scanned={scan_stats['legacy_scanned']}"
+        f" legacy_skipped_overlap={scan_stats['legacy_skipped_overlap']}"
+        f" legacy_indexed={scan_stats['legacy_indexed']}"
+    )
     wizki_assets = scan_wizki_products(marketing, include_archive=args.include_archive)
     assets = dedupe_by_path(marketing_assets, wizki_assets)
 
@@ -406,6 +481,13 @@ def main() -> int:
         enrich_all_assets(assets, file_index, rec)
     except Exception as exc:
         print(f"warn: appearance tag enrich skipped: {exc}")
+
+    try:
+        from brand_folder_context import enrich_folder_groups
+
+        enrich_folder_groups(assets, file_index)
+    except Exception as exc:
+        print(f"warn: folder context enrich skipped: {exc}")
 
     with_persp = sum(1 for a in assets if a.get("perspective"))
     with_link = sum(1 for a in assets if a.get("linked_product_ids"))

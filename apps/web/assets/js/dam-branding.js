@@ -4,7 +4,7 @@
   var index = null;
   var tokens = null;
   var campaigns = null;
-  var CB = "hub20260719disc4";
+  var CB = "hub20260719disc7";
   var selectedCampaignId = null;
   var selectedChannel = "";
   var discoveryWhen = "";
@@ -27,11 +27,11 @@
     { key: "format:transparent", label: "Tło przezroczyste", group: "cechy" },
     { key: "format:white", label: "Tło białe", group: "cechy" },
     { key: "format:editable", label: "Edytowalny", group: "cechy" },
-    { key: "appearance:slidery", label: "Slidery", group: "przeznaczenie" },
-    { key: "appearance:na sklep", label: "Na sklep", group: "przeznaczenie" },
-    { key: "appearance:desktop", label: "Desktop", group: "cechy" },
-    { key: "appearance:tablet", label: "Tablet", group: "cechy" },
-    { key: "appearance:mobile", label: "Mobile", group: "cechy" },
+    { key: "appearance:slidery", label: "Slidery", group: "przeznaczenie", tab: "www" },
+    { key: "appearance:na sklep", label: "Na sklep", group: "przeznaczenie", tab: "www" },
+    { key: "appearance:desktop", label: "Desktop", group: "cechy", tab: "www" },
+    { key: "appearance:tablet", label: "Tablet", group: "cechy", tab: "www" },
+    { key: "appearance:mobile", label: "Mobile", group: "cechy", tab: "www" },
     { key: "perspective:FRONT", label: "FRONT", group: "wizualizacja" },
     { key: "perspective:ENFACE", label: "ENFACE", group: "wizualizacja" },
     { key: "perspective:BACK", label: "BACK", group: "wizualizacja" },
@@ -292,7 +292,12 @@
       if (search) search.value = String(value || "").trim();
     }
     renderTagFilters();
-    renderActiveSection();
+    var facetTab = tabForFacetKey(key);
+    if (facetTab) {
+      activateTab(facetTab, { skipHash: true, keepDiscovery: true });
+    } else {
+      renderActiveSection();
+    }
   }
 
   var FILTER_BADGE_CLASS = {
@@ -682,9 +687,22 @@
   var SECTION_MARKERS = {
     campaigns: /08\s*-\s*KAMAPANIE/i,
     social: /05\s*-\s*SOCIAL\s*MEDIA/i,
-    www: /06\s*-\s*STRONY\s*WWW/i,
+    www: /06\s*-\s*STRONY\s*WWW|07\s*-\s*E-COMMERCE|\/SLIDERY\//i,
     brandbook: /BRANDING\s*I\s*MARKA|BRANDBOOK|BRAND\s*BOOK/i,
   };
+
+  var FACET_TAB_BY_KEY = (function () {
+    var map = {};
+    FACET_CHIPS.forEach(function (c) {
+      if (c.tab) map[c.key] = c.tab;
+    });
+    map["appearance:baner"] = "www";
+    return map;
+  })();
+
+  function tabForFacetKey(key) {
+    return FACET_TAB_BY_KEY[key] || "";
+  }
 
   var GENERIC_FOLDER_RE =
     /^(close|final|gif|gifs|export|surowe|raw|temp|old|nowe|nowy|assets?|jpg|png|psd|webp|mp4|mov|wideo|video|final_bez|bez\s*plansz)$/i;
@@ -1040,6 +1058,7 @@
   function applyQuickSearch(q) {
     setSearchQuery(q);
     discoveryWhen = "";
+    renderTagFilters();
     renderActiveSection();
   }
 
@@ -1080,6 +1099,7 @@
       var whenLbl = (WHEN_CHIPS.filter(function (w) { return w.id === discoveryWhen; })[0] || {}).label || discoveryWhen;
       chips.push({ kind: "when", label: "Kiedy: " + whenLbl, remove: function () {
         discoveryWhen = "";
+        renderTagFilters();
         renderActiveSection();
       }});
     }
@@ -1158,105 +1178,88 @@
         });
       }
     }
+  }
 
-    var quickHost = document.getElementById("damBrandingQuickAssoc");
-    if (quickHost) {
-      quickHost.innerHTML =
-        '<p class="dam-branding-discovery__label">Szybkie skojarzenia</p><div class="dam-branding-discovery__chips">' +
-        QUICK_ASSOCIATIONS.map(function (term) {
-          return (
-            '<button type="button" class="dam-branding-discovery-chip" data-q="' +
-            esc(term) +
-            '">' +
-            esc(term.charAt(0).toUpperCase() + term.slice(1)) +
-            "</button>"
-          );
-        }).join("") +
-        "</div>";
-      quickHost.querySelectorAll("[data-q]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          applyQuickSearch(btn.getAttribute("data-q") || "");
-        });
+  function assocChipLabel(term) {
+    return String(term || "")
+      .split(/\s+/)
+      .map(function (w) {
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      })
+      .join(" ");
+  }
+
+  function buildDiscoveryFilterGroups() {
+    return {
+      skojarzenia: QUICK_ASSOCIATIONS.map(function (term) {
+        return { key: "search:" + normTag(term), label: assocChipLabel(term) };
+      }),
+      kiedy: WHEN_CHIPS.map(function (w) {
+        return { key: "when:" + w.id, label: w.label };
+      }),
+      kolekcje: CURATED_COLLECTIONS.map(function (c) {
+        return { key: "collection:" + c.id, label: c.label };
+      }),
+      co: WHAT_TILES.map(function (tile) {
+        var tq = normTag(tile.search || tile.appearance || tile.label);
+        return { key: "co:" + tq, label: tile.label };
+      }),
+    };
+  }
+
+  function buildAssocActiveMap() {
+    var map = Object.assign({}, activeTagFilters);
+    if (discoveryWhen) map["when:" + discoveryWhen] = true;
+    var q = normTag(elVal("damBrandingSearch"));
+    if (q) {
+      QUICK_ASSOCIATIONS.forEach(function (term) {
+        if (normTag(term) === q) map["search:" + normTag(term)] = true;
+      });
+      WHAT_TILES.forEach(function (tile) {
+        var tq = normTag(tile.search || tile.appearance || tile.label);
+        if (tq === q) map["co:" + tq] = true;
       });
     }
+    return map;
+  }
 
-    var whenHost = document.getElementById("damBrandingWhen");
-    if (whenHost) {
-      whenHost.innerHTML =
-        '<p class="dam-branding-discovery__label">Kiedy</p><div class="dam-branding-discovery__chips">' +
-        WHEN_CHIPS.map(function (w) {
-          return (
-            '<button type="button" class="dam-branding-discovery-chip' +
-            (discoveryWhen === w.id ? " is-active" : "") +
-            '" data-when="' +
-            esc(w.id) +
-            '">' +
-            esc(w.label) +
-            "</button>"
-          );
-        }).join("") +
-        "</div>";
-      whenHost.querySelectorAll("[data-when]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          var id = btn.getAttribute("data-when") || "";
-          discoveryWhen = discoveryWhen === id ? "" : id;
-          renderActiveSection();
-        });
-      });
+  function handleAssocChipClick(key) {
+    if (key.indexOf("search:") === 0) {
+      var term = key.slice(7);
+      if (normTag(elVal("damBrandingSearch")) === term) applyQuickSearch("");
+      else applyQuickSearch(term);
+      return;
     }
-
-    var colHost = document.getElementById("damBrandingCollections");
-    if (colHost) {
-      colHost.innerHTML =
-        '<p class="dam-branding-discovery__label">Kolekcje</p><div class="dam-branding-discovery__chips">' +
-        CURATED_COLLECTIONS.map(function (c) {
-          return (
-            '<button type="button" class="dam-branding-discovery-chip" data-col="' +
-            esc(c.id) +
-            '">' +
-            esc(c.label) +
-            "</button>"
-          );
-        }).join("") +
-        "</div>";
-      colHost.querySelectorAll("[data-col]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          var id = btn.getAttribute("data-col");
-          var col = CURATED_COLLECTIONS.filter(function (c) {
-            return c.id === id;
-          })[0];
-          applyCollection(col);
-        });
-      });
+    if (key.indexOf("when:") === 0) {
+      var whenId = key.slice(5);
+      discoveryWhen = discoveryWhen === whenId ? "" : whenId;
+      renderTagFilters();
+      renderActiveSection();
+      return;
     }
-
-    var whatHost = document.getElementById("damBrandingWhat");
-    if (whatHost) {
-      whatHost.innerHTML =
-        '<p class="dam-branding-discovery__label">Co (produkt)</p><div class="dam-branding-discovery__tiles">' +
-        WHAT_TILES.map(function (tile) {
-          var sample = findThumbForTile(tile);
-          var thumb = sample
-            ? '<img class="dam-branding-discovery-tile__thumb" src="' +
-              esc(mediaUrl(sample.path, sample)) +
-              '" alt="" loading="lazy" />'
-            : '<div class="dam-branding-discovery-tile__thumb"></div>';
-          return (
-            '<button type="button" class="dam-branding-discovery-tile" data-q="' +
-            esc(tile.search || tile.appearance || tile.label) +
-            '">' +
-            thumb +
-            '<span class="dam-branding-discovery-tile__label">' +
-            esc(tile.label) +
-            "</span></button>"
-          );
-        }).join("") +
-        "</div>";
-      whatHost.querySelectorAll(".dam-branding-discovery-tile").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          applyQuickSearch(btn.getAttribute("data-q") || "");
-        });
-      });
+    if (key.indexOf("collection:") === 0) {
+      var colId = key.slice(11);
+      var col = CURATED_COLLECTIONS.filter(function (c) {
+        return c.id === colId;
+      })[0];
+      applyCollection(col);
+      return;
+    }
+    if (key.indexOf("co:") === 0) {
+      var coKey = key.slice(3);
+      var tile = WHAT_TILES.filter(function (t) {
+        return normTag(t.search || t.appearance || t.label) === coKey;
+      })[0];
+      if (tile && tile.appearance) {
+        activeTagFilters = {};
+        activeTagFilters[appearanceKey(tile.appearance)] = true;
+        setSearchQuery("");
+        discoveryWhen = "";
+        renderTagFilters();
+        renderActiveSection();
+      } else {
+        applyQuickSearch(coKey);
+      }
     }
   }
 
@@ -1457,21 +1460,24 @@
     productChipsFromIndex().forEach(function (label) {
       chips.push({ key: appearanceKey(label), label: label, group: "produkt" });
     });
-    var groups = {
-      format_pliku: [],
-      przeznaczenie: [],
-      cechy: [],
-      wizualizacja: [],
-      kanal: [],
-      marka: [],
-      produkt: [],
-    };
+    var groups = buildDiscoveryFilterGroups();
+    groups.format_pliku = [];
+    groups.przeznaczenie = [];
+    groups.cechy = [];
+    groups.wizualizacja = [];
+    groups.kanal = [];
+    groups.marka = [];
+    groups.produkt = [];
     chips.forEach(function (c) {
       var g = c.group || "produkt";
       if (!groups[g]) groups[g] = [];
       groups[g].push(c);
     });
     var GROUP_ORDER = [
+      "skojarzenia",
+      "kiedy",
+      "kolekcje",
+      "co",
       "format_pliku",
       "przeznaczenie",
       "cechy",
@@ -1480,6 +1486,7 @@
       "marka",
       "produkt",
     ];
+    var activeMap = buildAssocActiveMap();
     var buildRow = window.DamTagBar && DamTagBar.buildGroupRow;
     var html = '<div class="dam-tag-groups__inner">';
     GROUP_ORDER.forEach(function (g) {
@@ -1491,7 +1498,7 @@
         chips: groups[g].map(function (c) {
           return { key: c.key, label: c.label };
         }),
-        activeMap: activeTagFilters,
+        activeMap: activeMap,
         expandedGroups: tagFilterExpanded,
         rowLimit: TAG_FILTER_ROW_LIMIT,
         pillHtml: function (chip, active) {
@@ -1530,10 +1537,22 @@
       btn.addEventListener("click", function () {
         var key = btn.getAttribute("data-tag-key") || "";
         if (!key) return;
+        if (/^(search:|when:|collection:|co:)/.test(key)) {
+          handleAssocChipClick(key);
+          return;
+        }
+        var tabSwitch = "";
         if (activeTagFilters[key]) delete activeTagFilters[key];
-        else activeTagFilters[key] = true;
+        else {
+          activeTagFilters[key] = true;
+          tabSwitch = tabForFacetKey(key);
+        }
         renderTagFilters();
-        renderActiveSection();
+        if (tabSwitch) {
+          activateTab(tabSwitch, { skipHash: true, keepDiscovery: true });
+        } else {
+          renderActiveSection();
+        }
       });
     });
   }
@@ -2015,14 +2034,24 @@
   }
 
   function openModal(id, siblings) {
-    var list =
-      siblings && siblings.length
-        ? siblings
-        : currentGridAssets.length
-          ? currentGridAssets
-          : (index.assets || []).filter(function (x) {
-              return x.id === id;
-            });
+    var assetsById = {};
+    (index.assets || []).forEach(function (a) {
+      assetsById[a.id] = a;
+    });
+    var primary = assetsById[id];
+    if (!primary) return;
+
+    var list = [];
+    if (primary.folder_variants && primary.folder_variants.length > 1) {
+      primary.folder_variants.forEach(function (v) {
+        if (v.id && assetsById[v.id]) list.push(assetsById[v.id]);
+      });
+    }
+    if (!list.length && siblings && siblings.length) {
+      list = siblings.filter(Boolean);
+    }
+    if (!list.length) list = [primary];
+
     var idx = list.findIndex(function (x) {
       return x.id === id;
     });
@@ -2030,7 +2059,15 @@
     if (!a) return;
     trackRecentAsset(a);
     if (window.DamMediaPreview && typeof window.DamMediaPreview.openAsset === "function") {
-      window.DamMediaPreview.openAsset(a, { siblings: list, index: idx >= 0 ? idx : 0 });
+      window.DamMediaPreview.openAsset(a, {
+        siblings: list,
+        index: idx >= 0 ? idx : 0,
+        groupContext: {
+          variants: primary.folder_variants || [],
+          linked_products: primary.linked_products || [],
+          folder_group_id: primary.folder_group_id || "",
+        },
+      });
     }
   }
 
@@ -2260,7 +2297,10 @@
   function activateTab(tab, opts) {
     opts = opts || {};
     tab = normalizeTab(tab);
-    if (!opts.keepDiscovery) discoveryWhen = "";
+    if (!opts.keepDiscovery) {
+      discoveryWhen = "";
+      renderTagFilters();
+    }
     document.querySelectorAll(".dam-branding-tab").forEach(function (b) {
       var on = b.getAttribute("data-tab") === tab;
       b.classList.toggle("is-active", on);
@@ -2288,6 +2328,7 @@
       var el = document.getElementById(id);
       if (!el) return;
       var handler = function () {
+        renderTagFilters();
         renderActiveSection();
       };
       el.addEventListener("input", handler);

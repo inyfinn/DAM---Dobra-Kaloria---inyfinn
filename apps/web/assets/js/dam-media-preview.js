@@ -100,19 +100,94 @@
     return '<span class="dam-viz-badge dam-viz-badge--brand">' + esc(asset.brand || "DK") + "</span>";
   }
 
-  function linkedProductsHtml(asset) {
-    var linked = (asset.product_ids || asset.linked_product_ids || []).filter(Boolean);
-    if (!linked.length) return "";
+  function linkedProductsHtml(linkedProducts) {
+    var list = (linkedProducts || []).filter(Boolean);
+    if (!list.length) return "";
     return (
-      '<p class="dam-media-preview__linked"><strong>Produkty:</strong> ' +
-      linked
-        .map(function (pid) {
+      '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--products">' +
+      '<span class="dam-media-preview__assoc-label">Skojarzone produkty</span>' +
+      '<div class="dam-media-preview__assoc-grid" role="list">' +
+      list
+        .map(function (p) {
+          var thumb = p.thumb_url || PLACEHOLDER_SVG;
+          var label = p.display_name || p.id || "Produkt";
           return (
-            '<a href="project.html?id=' + encodeURIComponent(pid) + '">' + esc(pid) + "</a>"
+            '<a class="dam-media-preview__assoc-item" role="listitem" href="explorer.html?product=' +
+            encodeURIComponent(p.id) +
+            '" title="' +
+            esc(label) +
+            '">' +
+            '<img class="dam-media-preview__assoc-thumb" src="' +
+            esc(thumb) +
+            '" alt="' +
+            esc(label) +
+            '" loading="lazy" onerror="this.src=\'' +
+            PLACEHOLDER_SVG.replace(/'/g, "%27") +
+            "'\">" +
+            '<span class="dam-media-preview__assoc-name">' +
+            esc(label) +
+            "</span></a>"
           );
         })
-        .join(", ") +
-      "</p>"
+        .join("") +
+      "</div></div>"
+    );
+  }
+
+  function folderVariantsHtml(variants, activeId, onVariantClick) {
+    var list = (variants || []).filter(function (v) {
+      return v && v.id;
+    });
+    if (list.length <= 1) return "";
+    return (
+      '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--variants">' +
+      '<span class="dam-media-preview__assoc-label">Warianty materiału</span>' +
+      '<div class="dam-media-preview__variant-grid" role="listbox" aria-label="Warianty w folderze">' +
+      list
+        .map(function (v) {
+          var active = v.id === activeId ? " is-active" : "";
+          return (
+            '<button type="button" class="dam-viz-modal__variant dam-media-preview__variant' +
+            active +
+            '" role="option" aria-selected="' +
+            (active ? "true" : "false") +
+            '" data-variant-id="' +
+            esc(v.id) +
+            '">' +
+            (v.path
+              ? '<img class="dam-viz-modal__variant-thumb" src="' +
+                esc(previewUrl(v.path, v)) +
+                '" alt="' +
+                esc(v.label || v.name || "") +
+                '" loading="lazy" onerror="this.classList.add(\'dam-viz-thumb__img--placeholder\')">'
+              : '<div class="dam-viz-modal__variant-placeholder"><i class="uil uil-image"></i></div>') +
+            '<span class="dam-viz-modal__variant-label">' +
+            esc(v.label || "Plik") +
+            "</span></button>"
+          );
+        })
+        .join("") +
+      "</div></div>"
+    );
+  }
+
+  function associationsFooterHtml(asset, groupContext) {
+    var variants = (groupContext && groupContext.variants) || asset.folder_variants || [];
+    var linked = (groupContext && groupContext.linked_products) || asset.linked_products || [];
+    if (!linked.length && (asset.folder_linked_product_ids || asset.linked_product_ids)) {
+      linked = (asset.linked_product_ids || []).map(function (pid) {
+        return { id: pid, display_name: pid, thumb_url: "" };
+      });
+    }
+    var variantsHtml = folderVariantsHtml(variants, asset.id);
+    var productsHtml = linkedProductsHtml(linked);
+    if (!variantsHtml && !productsHtml) return "";
+    return (
+      '<div class="dam-media-preview__assoc">' +
+      variantsHtml +
+      (variantsHtml && productsHtml ? '<div class="dam-media-preview__assoc-sep" aria-hidden="true"></div>' : "") +
+      productsHtml +
+      "</div>"
     );
   }
 
@@ -179,9 +254,38 @@
     options = options || {};
     if (!asset) return;
 
-    var siblings = Array.isArray(options.siblings) ? options.siblings : [asset];
+    var siblings = Array.isArray(options.siblings) ? options.siblings.slice() : [asset];
     var idx = typeof options.index === "number" ? options.index : 0;
     if (idx < 0 || idx >= siblings.length) idx = 0;
+
+    var groupContext = options.groupContext || null;
+    if (!groupContext) {
+      groupContext = {
+        variants: asset.folder_variants || [],
+        linked_products: asset.linked_products || [],
+        folder_group_id: asset.folder_group_id || "",
+      };
+    }
+
+    var assetById = {};
+    siblings.forEach(function (s) {
+      if (s && s.id) assetById[s.id] = s;
+    });
+    (groupContext.variants || []).forEach(function (v) {
+      if (v && v.id && !assetById[v.id]) assetById[v.id] = v;
+    });
+    var mergedList = Object.keys(assetById).map(function (id) {
+      return assetById[id];
+    });
+    if (mergedList.length > 1) {
+      siblings = mergedList;
+      if (typeof options.index !== "number") {
+        idx = siblings.findIndex(function (x) {
+          return x.id === asset.id;
+        });
+        if (idx < 0) idx = 0;
+      }
+    }
 
     var existing = document.getElementById("damMediaPreview");
     if (existing) existing.remove();
@@ -216,7 +320,7 @@
       '<div class="dam-viz-card__badges" id="damMediaPreviewBadges"></div>' +
       '<h4 class="dam-viz-modal__title" id="damMediaPreviewTitle"></h4>' +
       '<p class="dam-viz-modal__carrier" id="damMediaPreviewPath"></p>' +
-      '<div id="damMediaPreviewLinked"></div>' +
+      '<div id="damMediaPreviewAssoc"></div>' +
       '<div class="dam-viz-modal__actions">' +
       '<div class="dam-viz-modal__actions-main">' +
       '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-win-btn" id="damMediaPreviewExplorer" data-dam-tip="Otwiera folder w Eksploratorze plikow Windows">' +
@@ -372,10 +476,21 @@
       var title = document.getElementById("damMediaPreviewTitle");
       var pathEl = document.getElementById("damMediaPreviewPath");
       var badges = document.getElementById("damMediaPreviewBadges");
-      var linkedHost = document.getElementById("damMediaPreviewLinked");
+      var assocHost = document.getElementById("damMediaPreviewAssoc");
       if (title) title.textContent = a.name || a.id || "Material";
       if (pathEl) pathEl.textContent = a.path || "";
-      if (linkedHost) linkedHost.innerHTML = linkedProductsHtml(a);
+      if (assocHost) {
+        assocHost.innerHTML = associationsFooterHtml(a, groupContext);
+        assocHost.querySelectorAll("[data-variant-id]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var vid = btn.getAttribute("data-variant-id") || "";
+            var targetIdx = siblings.findIndex(function (x) {
+              return x.id === vid;
+            });
+            if (targetIdx >= 0) showAt(targetIdx);
+          });
+        });
+      }
       if (badges) {
         badges.innerHTML = badgesHtml(a);
         if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {

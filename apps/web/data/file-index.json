@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19T05:54:38",
+  "generated_at": "2026-07-19T13:09:50",
   "roots": [
     {
       "brand": "DK",
@@ -11,10 +11,10 @@
     }
   ],
   "root": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-  "elapsed_sec": 4.52,
+  "elapsed_sec": 3.96,
   "category_count": 12,
   "product_count": 185,
-  "viz_count": 393,
+  "viz_count": 394,
   "categories": [
     {
       "name": "01 - BATONY",
@@ -16752,7 +16752,8 @@
             "1 - MATERIAŁY",
             "1 - MATERIAŁY/ELEMENTY",
             "2 - PROJEKT",
-            "3 - DRUK"
+            "3 - DRUK",
+            "4 - WIZKI"
           ],
           "files_by_role": {
             "source": [
@@ -16785,11 +16786,49 @@
               }
             ],
             "print": [],
-            "viz": [],
+            "viz": [
+              {
+                "name": "BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.jpg",
+                "rel": "01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.jpg",
+                "ext": "jpg",
+                "size": 153034,
+                "mtime": "2024-03-22T12:11:16",
+                "lang": ""
+              },
+              {
+                "name": "BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
+                "rel": "01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
+                "ext": "png",
+                "size": 333370,
+                "mtime": "2024-03-22T12:11:06",
+                "lang": ""
+              }
+            ],
             "elements": []
           },
-          "wizki": [],
-          "wizki_count": 0,
+          "wizki": [
+            {
+              "name": "BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.jpg",
+              "rel": "01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.jpg",
+              "ext": "jpg",
+              "size": 153034,
+              "mtime": "2024-03-22T12:11:16",
+              "lang": ""
+            },
+            {
+              "name": "BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
+              "rel": "01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
+              "ext": "png",
+              "size": 333370,
+              "mtime": "2024-03-22T12:11:06",
+              "lang": ""
+            }
+          ],
+          "wizki_count": 2,
           "langs": [
             "pl"
           ],
@@ -100022,6 +100061,44 @@
       "file": "BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 25.06.2024 - 6300348.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
       "rel": "01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 25.06.2024 - 6300348.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
+      "mtime": "2024-03-22T12:11:06",
+      "tags": [
+        "baton",
+        "czekolada",
+        "doy 6x",
+        "mini baton",
+        "orzech",
+        "daktylowy"
+      ]
+    },
+    {
+      "product_id": "orzech-czekolada-daktylowy",
+      "product_name": "ORZECH CZEKOLADA",
+      "category": "01 - BATONY",
+      "brand": "DK",
+      "subcategory_slug": "daktylowy",
+      "subcategory_label": "Daktylowy",
+      "linked_products": [],
+      "alias_langs": [],
+      "carrier": "BAT",
+      "carrier_label": "BATON",
+      "carrier_guessed": false,
+      "is_mix": false,
+      "index": "6300365.00",
+      "index_base": "6300365",
+      "revision_folder": "BAT - 35 g - 29.06.2023 - 6300365.00",
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00",
+      "langs": [
+        "pl"
+      ],
+      "langs_manual": false,
+      "lang": "pl",
+      "lang_label": "Polska",
+      "lang_unknown": false,
+      "thumb_url": "data/thumbs/orzech-czekolada-daktylowy__6300365_pl.jpg?v=1711105866",
+      "file": "BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
+      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
+      "rel": "01 - BATONY/ORZECH CZEKOLADA — [ daktylowy ]/BAT - 35 g - 29.06.2023 - 6300365.00/4 - WIZKI/BAT-ORZECH-CZEKOLADA-6300348-FRONT-S.png",
       "mtime": "2024-03-22T12:11:06",
       "tags": [
         "baton",

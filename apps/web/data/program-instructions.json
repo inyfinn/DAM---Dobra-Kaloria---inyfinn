@@ -561,12 +561,37 @@
       ]
     },
     {
+      "id": "branding.marketing_dual_roots",
+      "must": [
+        "Indeksuj obie lokalizacje: X:/Marketing/- POLSKA oraz X:/Marketing/-- ARCHIWUM --",
+        "Przy nakładce tego samego pliku (stem kampanii + wymiary z nazwy, np. back to school:992x600) wygrywa - POLSKA — wpis z archiwum nie trafia do indeksu",
+        "Tagi Archiwum i Stara struktura tylko dla plików wyłącznie ze starego archiwum (brak odpowiednika w - POLSKA)",
+        "Po zmianie reguł: python apps/web/scripts/build-branding-index.py"
+      ],
+      "body_pl": "Marketing ma dwie główne lokalizacje do skojarzeń. Większość materiałów się nakłada — deduplikacja POLSKA-first, bez przenosin na dysku. Wersja z - POLSKA nie dostaje tagów archiwum.",
+      "category": "branding",
+      "must_not": [
+        "Indeksować duplikat z -- ARCHIWUM -- gdy ten sam plik jest już w - POLSKA",
+        "Oznaczać tagiem Archiwum materiały z aktywnej struktury - POLSKA",
+        "Przenosić/rename plików na X:/Marketing przy deduplikacji"
+      ],
+      "priority": "critical",
+      "title_pl": "Branding: dwie lokalizacje Marketing (POLSKA > archiwum)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/scripts/build-branding-index.py",
+        "apps/web/scripts/brand_folder_context.py"
+      ]
+    },
+    {
       "id": "branding.slider_shop_tags",
       "must": [
         "Slidery sklepu dobrakaloria.pl: tagi Slidery + Na sklep + Desktop/Tablet/Mobile",
+        "Każdy plik w folderze SLIDERY (segment ścieżki) dostaje tag Slidery + Na sklep — bez względu na nazwę pliku",
         "Desktop = 1920×600, Tablet = 992×600, Mobile = 576×600 (±2 px)",
-        "Wykrywanie z nazwy pliku, ścieżki (06 - STRONY WWW, SLIDERY…) i wymiarów",
-        "Po zmianie reguł: python apps/web/scripts/enrich-branding-tags.py"
+        "Wykrywanie z nazwy pliku, ścieżki (06 - STRONY WWW, 07 - E-COMMERCE/SLIDERY…) i wymiarów",
+        "Filtr Slidery w UI przełącza zakładkę WWW (nie Kampanie)",
+        "Po zmianie reguł: python apps/web/scripts/build-branding-index.py"
       ],
       "body_pl": "Materiały sliderów na sklep WWW mają osobne tagi filtra: Slidery, Na sklep oraz urządzenie (Desktop/Tablet/Mobile) według breakpointów sklepu. Źródło reguł: brand_tag_utils.extract_placement_tags.",
       "category": "branding",
