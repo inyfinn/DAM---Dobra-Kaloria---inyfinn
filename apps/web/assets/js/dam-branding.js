@@ -4,7 +4,7 @@
   var index = null;
   var tokens = null;
   var campaigns = null;
-  var CB = "hub20260719disc3";
+  var CB = "hub20260719disc4";
   var selectedCampaignId = null;
   var selectedChannel = "";
   var discoveryWhen = "";
@@ -296,6 +296,10 @@
   }
 
   var FILTER_BADGE_CLASS = {
+    skojarzenia: "dam-viz-badge--cat",
+    kiedy: "dam-viz-badge--carrier",
+    kolekcje: "dam-viz-badge--subcat",
+    co: "dam-viz-badge--lang",
     format_pliku: "dam-viz-badge--carrier",
     przeznaczenie: "dam-viz-badge--cat",
     cechy: "dam-viz-badge--lang",
@@ -306,6 +310,10 @@
   };
 
   var FILTER_GROUP_LABELS = {
+    skojarzenia: "Skojarzenia",
+    kiedy: "Kiedy",
+    kolekcje: "Kolekcje",
+    co: "Co",
     format_pliku: "Format pliku",
     przeznaczenie: "Przeznaczenie",
     cechy: "Cechy pliku",
@@ -549,14 +557,65 @@
     "slider",
     "wideo",
     "rossmann",
+    "lidl",
+    "biedronka",
+    "key visual",
+    "kampania",
+    "promocja",
+    "justtag",
+    "listonic",
+    "google ads",
+    "meta",
+    "tiktok",
+    "reels",
+    "logo",
+    "banoffee",
+    "tiramisu",
+    "kiełbaski",
+    "falafel",
+    "nuggets",
+    "doypack",
+    "super cena",
+    "back to school",
+    "black friday",
+    "wielkanoc",
+    "święta",
+    "indeks glikemiczny",
+    "mini baton",
+    "boost",
+    "bez cukru",
+    "nerkowcowy",
+    "orzech",
+    "kaszanka",
+    "plansza",
+    "gif",
+    "animacja",
+    "packshot",
+    "baner",
+    "karmel",
+    "deserowe",
+    "mix",
+    "tuba",
+    "folia",
   ];
 
   var WHEN_CHIPS = [
     { id: "2026", label: "2026" },
     { id: "2025", label: "2025" },
+    { id: "2024", label: "2024" },
     { id: "grill", label: "Grill / lato" },
+    { id: "jesien", label: "Jesień" },
+    { id: "zima", label: "Zima" },
     { id: "swieta", label: "Święta" },
     { id: "wielkanoc", label: "Wielkanoc" },
+    { id: "walentynki", label: "Walentynki" },
+    { id: "dzienmatki", label: "Dzień matki" },
+    { id: "backtoschool", label: "Back to school" },
+    { id: "blackfriday", label: "Black Friday" },
+    { id: "q1", label: "Q1" },
+    { id: "q2", label: "Q2" },
+    { id: "q3", label: "Q3" },
+    { id: "q4", label: "Q4" },
   ];
 
   var WHAT_TILES = [
@@ -568,6 +627,22 @@
     { label: "Grill", search: "grill" },
     { label: "Niemięsa", search: "niemies" },
     { label: "Datesy", appearance: "Datesy" },
+    { label: "Banoffee", appearance: "Banoffee" },
+    { label: "Karmel", appearance: "Karmel" },
+    { label: "Mix", appearance: "Mix" },
+    { label: "Doypack", appearance: "Doypack" },
+    { label: "Boost", appearance: "Boost" },
+    { label: "Mini", appearance: "Mini" },
+    { label: "MCT", appearance: "MCT" },
+    { label: "Deserowe", appearance: "Deserowe" },
+    { label: "Sypkie", appearance: "Sypkie" },
+    { label: "Folia", appearance: "Folia" },
+    { label: "Kiełbaski", search: "kielbask" },
+    { label: "Falafel", search: "falafel" },
+    { label: "Nuggets", search: "nugget" },
+    { label: "Kaszanka", search: "kaszank" },
+    { label: "Nerkowcowy", search: "nerkowc" },
+    { label: "Orzech", search: "orzech" },
   ];
 
   var CURATED_COLLECTIONS = [
@@ -576,13 +651,31 @@
     { id: "socialfilm", label: "Filmy social", tab: "social", media: "video" },
     { id: "slidery", label: "Slidery sklepu", tab: "www", appearance: "Slidery" },
     { id: "packshoty", label: "Packshoty produktów", tab: "packshots" },
+    { id: "wielkanoc26", label: "Wielkanoc 2026", when: "wielkanoc", search: "wielkanoc", tab: "campaigns" },
+    { id: "swieta25", label: "Święta 2025", when: "swieta", search: "święta", tab: "campaigns" },
+    { id: "rossmann", label: "Rossmann", search: "rossmann", tab: "campaigns" },
+    { id: "lidl", label: "Lidl", search: "lidl", tab: "campaigns" },
+    { id: "burgerkamp", label: "Burger — kampania", search: "burger", tab: "campaigns" },
+    { id: "niemiesa", label: "Niemięsa", search: "niemięsa", tab: "campaigns" },
+    { id: "googleads", label: "Google Ads", search: "google ads", tab: "campaigns" },
+    { id: "metastories", label: "Meta / Stories", search: "meta", tab: "social" },
+    { id: "tiktok", label: "TikTok", search: "tiktok", tab: "social" },
+    { id: "reels", label: "Reels Instagram", search: "reels", tab: "social" },
+    { id: "keyvisuale", label: "Key visuale XL", tab: "packshots", appearance: "Proteina" },
+    { id: "logodk", label: "Logo DK", search: "logo dobra kaloria", tab: "brandbook" },
+    { id: "logogc", label: "Logo GC", search: "good calories", tab: "brandbook" },
+    { id: "brandbookkolory", label: "Brandbook — kolory", tab: "brandbook", search: "brandbook" },
+    { id: "promocja5", label: "Promocja 5 zł", search: "5 zł", tab: "www" },
+    { id: "nasklep", label: "Na sklep", tab: "www", appearance: "Na sklep" },
+    { id: "backtoschool", label: "Back to school", when: "backtoschool", search: "school", tab: "campaigns" },
+    { id: "blackfriday", label: "Black Friday", when: "blackfriday", search: "black friday", tab: "campaigns" },
   ];
 
   var SECTION_DESCS = {
-    campaigns: "Kampanie i materiały promocyjne — szukaj po temacie (grill, przekąski, JUSTTAG), nie po folderze DV360_GIFF.",
-    social: "Filmy i animacje na social — wpisz „parówka”, „baton”, „plansza końcowa” albo kliknij Wideo u góry.",
-    www: "Slidery i banery strony — np. „niemięsa”, „promocja 5 zł”, „slider”.",
-    packshots: "Wizualizacje opakowań — jedna karta = produkt (jak Wizualizacje). Kliknij miniaturę smaku albo wpisz nazwę.",
+    campaigns: "Banery i materiały kampanii.",
+    social: "Filmy i animacje na social.",
+    www: "Slidery i banery strony.",
+    packshots: "Zdjęcia opakowań produktów.",
     brandbook: "Logo, kolory i szablony marki.",
   };
 
@@ -860,6 +953,36 @@
     if (whenId === "wielkanoc") {
       return /wielkanoc|jajk|pasch/.test(blob);
     }
+    if (whenId === "jesien") {
+      return /jesien|jesień|autumn|back\s*to\s*school|szkol/.test(blob);
+    }
+    if (whenId === "zima") {
+      return /zim|zima|mróz|mroz|snieg|śnieg/.test(blob);
+    }
+    if (whenId === "walentynki") {
+      return /walentyn|valentine|14\s*02/.test(blob);
+    }
+    if (whenId === "dzienmatki") {
+      return /dzien\s*matk|mother\s*day|matki/.test(blob);
+    }
+    if (whenId === "backtoschool") {
+      return /back\s*to\s*school|szkol|wrzesn|wrześn/.test(blob);
+    }
+    if (whenId === "blackfriday") {
+      return /black\s*friday|blackfriday|bf\s*20/.test(blob);
+    }
+    if (whenId === "q1") {
+      return /\bq1\b|q1[\s_-]|01\.|02\.|03\./.test(blob);
+    }
+    if (whenId === "q2") {
+      return /\bq2\b|q2[\s_-]|04\.|05\.|06\./.test(blob);
+    }
+    if (whenId === "q3") {
+      return /\bq3\b|q3[\s_-]|07\.|08\.|09\./.test(blob);
+    }
+    if (whenId === "q4") {
+      return /\bq4\b|q4[\s_-]|10\.|11\.|12\./.test(blob);
+    }
     return true;
   }
 
@@ -949,6 +1072,7 @@
     if (q) {
       chips.push({ kind: "search", label: "Szukaj: „" + q + "”", remove: function () {
         setSearchQuery("");
+        renderTagFilters();
         renderActiveSection();
       }});
     }
