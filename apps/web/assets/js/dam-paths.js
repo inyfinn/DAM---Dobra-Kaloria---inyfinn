@@ -1,5 +1,5 @@
 /**
- * DAM ETA - sciezki lokalne, reveal w Eksploratorze, audit log.
+ * DAM - sciezki lokalne, reveal w Eksploratorze, audit log.
  *
  * Struktura katalogow ZAWSZE ta sama (-- ARCHIWUM --, - EKSPORT, - POLSKA).
  * Prefix Marketing = TYLKO to, co UZYTKOWNIK ustawi (po pierwszym uruchomieniu).
@@ -20,6 +20,21 @@
       return window.DamRuntime.bridgeUrl();
     }
     return "http://127.0.0.1:8766";
+  }
+
+  /** Naglowki JSON + Bearer (POST /reveal,/audit,/synology-share wymagaja sesji). */
+  function bridgeAuthHeaders() {
+    var headers = { "Content-Type": "application/json", Accept: "application/json" };
+    try {
+      if (window.DamApi && typeof DamApi.authHeaders === "function") {
+        var ah = DamApi.authHeaders();
+        if (ah && ah.Authorization) headers.Authorization = ah.Authorization;
+      } else {
+        var t = localStorage.getItem("dam_token") || "";
+        if (t) headers.Authorization = "Bearer " + t;
+      }
+    } catch (_e) { /* ignore */ }
+    return headers;
   }
 
   var BASE_KEY = "dam_base_path";
@@ -99,7 +114,7 @@
     // Backup preferencji tego konta Windows (nie nadpisuje innych userow)
     fetch(bridgeBase() + "/machine-config", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: bridgeAuthHeaders(),
       body: JSON.stringify({ base_path: win })
     }).catch(function () { /* opcjonalne */ });
     // Po ustawieniu ROOT - sprawdz czy fetch plikow dziala
@@ -158,9 +173,66 @@
     return /\.[A-Za-z0-9]{1,8}$/.test(name);
   }
 
-  function showToast(msg) {
+  function pathHasVizSlot(p) {
+    return /\/4\s*-\s*(wizki|visuals)(\/|$)/i.test(normSlashes(p));
+  }
+
+  /**
+   * Sciezka dla przycisku Folder Windows: zawsze slot wizualizacji (4 - WIZKI / 4 - VISUALS),
+   * nie root rewizji ani folder produktu.
+   */
+  function resolveWinFolderPath(input) {
+    var path = "";
+    var brand = "";
+    if (typeof input === "string") {
+      path = String(input || "").trim();
+    } else if (input && typeof input === "object") {
+      brand = String(input.brand || "").toUpperCase();
+      var filePath = String(input.path || "").trim();
+      var revPath = String(input.revision_path || input.revisionPath || "").trim();
+      if (filePath && (!revPath || filePath !== revPath)) {
+        path = filePath;
+      } else {
+        path = revPath || filePath;
+      }
+      if (path && !pathHasVizSlot(path)) {
+        var base = revPath || (looksLikeFile(path) ? parentOf(path) : path);
+        base = trimSlash(base);
+        if (base && !pathHasVizSlot(base)) {
+          var slot = brand === "GC" ? "4 - VISUALS" : "4 - WIZKI";
+          path = base + "/" + slot;
+        } else {
+          path = base;
+        }
+      }
+    }
+    if (!path) return "";
+    if (looksLikeFile(path)) path = parentOf(path);
+    return path;
+  }
+
+  function bridgeErrorMessage(err) {
+    var code = String(err || "").trim().toLowerCase();
+    if (code === "login_required") {
+      return "Zaloguj się w DAM (profil), potem spróbuj ponownie.";
+    }
+    if (code === "path_not_found") {
+      return "Folder nie istnieje na dysku Marketing.";
+    }
+    if (code === "path_outside_marketing") {
+      return "Ta ścieżka jest poza folderem Marketing.";
+    }
+    if (code === "bridge_offline" || code === "no_base_path") {
+      return "Uruchom aplikację DAM lub ustaw ścieżkę Marketing w ustawieniach.";
+    }
+    return "";
+  }
+
+  function showToast(msg, kind) {
+    var k = kind || "info";
+    if (k !== "success" && k !== "error" && k !== "info") k = "info";
     if (window.DamShell && typeof window.DamShell.toast === "function") {
-      window.DamShell.toast(msg);
+      window.DamShell.toast(msg, k);
       return;
     }
     var el = document.getElementById("damExplorerToast") || document.querySelector(".dam-explorer-toast");
@@ -171,9 +243,11 @@
       document.body.appendChild(el);
     }
     el.textContent = msg;
+    el.classList.remove("dam-explorer-toast--success", "dam-explorer-toast--error", "dam-explorer-toast--info");
+    el.classList.add("dam-explorer-toast--" + k);
     el.classList.add("is-visible");
     clearTimeout(el._t);
-    el._t = setTimeout(function () { el.classList.remove("is-visible"); }, 3200);
+    el._t = setTimeout(function () { el.classList.remove("is-visible"); }, k === "error" ? 5200 : 3200);
   }
 
   function pushLocalAudit(entry) {
@@ -202,7 +276,7 @@
     pushLocalAudit(entry);
     fetch(bridgeBase() + "/audit", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: bridgeAuthHeaders(),
       body: JSON.stringify(entry)
     }).catch(function () { /* bridge optional */ });
     return entry;
@@ -336,18 +410,75 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(local);
         }
-        showToast("Funkcja niedostepna - uruchom aplikacje DAM ETA (skrot na pulpicie).");
+        showToast("Funkcja niedostepna - uruchom aplikacje DAM (skrot na pulpicie).");
         return { ok: false, error: "bridge_offline", path: local, folder: hint };
       }
+      var headers = bridgeAuthHeaders();
+      // #region agent log
+      fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
+        body: JSON.stringify({
+          sessionId: "a78fa0",
+          hypothesisId: "A",
+          location: "dam-paths.js:revealInExplorer",
+          message: "reveal fetch about to fire",
+          data: {
+            hasToken: !!(localStorage.getItem("dam_token")),
+            sentAuth: !!headers.Authorization,
+            pathLen: (local || "").length,
+            looksFile: looksLikeFile(local),
+          },
+          timestamp: Date.now(),
+          runId: "post-fix",
+        }),
+      }).catch(function () {});
+      // #endregion
       return fetch(bridgeBase() + "/reveal", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: headers,
         body: JSON.stringify({ path: local })
-      }).then(function (r) { return r.json(); }).then(function (res) {
+      }).then(function (r) {
+        // #region agent log
+        fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
+          body: JSON.stringify({
+            sessionId: "a78fa0",
+            hypothesisId: "A",
+            location: "dam-paths.js:revealInExplorer:response",
+            message: "reveal HTTP status",
+            data: { status: r.status, sentAuth: !!headers.Authorization },
+            timestamp: Date.now(),
+            runId: "post-fix",
+          }),
+        }).catch(function () {});
+        // #endregion
+        return r.json();
+      }).then(function (res) {
+        // #region agent log
+        fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
+          body: JSON.stringify({
+            sessionId: "a78fa0",
+            hypothesisId: "B",
+            location: "dam-paths.js:revealInExplorer:body",
+            message: "reveal JSON body",
+            data: { ok: !!(res && res.ok), error: (res && res.error) || null },
+            timestamp: Date.now(),
+            runId: "post-fix",
+          }),
+        }).catch(function () {});
+        // #endregion
         if (res && res.ok) {
-          showToast(res.command === "select" ? "Zaznaczono plik w Eksploratorze" : "Otwarto folder w Eksploratorze");
+          showToast(
+            res.command === "select" ? "Zaznaczono plik w Eksploratorze" : "Otwarto folder w Eksploratorze",
+            "success"
+          );
         } else {
-          showToast("Nie znaleziono: " + local + (res && res.error ? " (" + res.error + ")" : ""));
+          var hint = bridgeErrorMessage(res && res.error);
+          showToast(hint || "Nie udało się otworzyć lokalizacji na dysku.", "error");
         }
         return res;
       });
@@ -377,18 +508,56 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(folder);
         }
-        showToast("Funkcja niedostepna - uruchom aplikacje DAM ETA (skrot na pulpicie).");
+        showToast("Funkcja niedostepna - uruchom aplikacje DAM (skrot na pulpicie).");
         return { ok: false, error: "bridge_offline", path: folder };
       }
+      var headers = bridgeAuthHeaders();
+      // #region agent log
+      fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
+        body: JSON.stringify({
+          sessionId: "a78fa0",
+          hypothesisId: "A",
+          location: "dam-paths.js:openFolderInExplorer",
+          message: "open folder reveal fetch",
+          data: {
+            hasToken: !!(localStorage.getItem("dam_token")),
+            sentAuth: !!headers.Authorization,
+            pathLen: (folder || "").length,
+          },
+          timestamp: Date.now(),
+          runId: "post-fix",
+        }),
+      }).catch(function () {});
+      // #endregion
       return fetch(bridgeBase() + "/reveal", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: headers,
         body: JSON.stringify({ path: folder })
-      }).then(function (r) { return r.json(); }).then(function (res) {
+      }).then(function (r) {
+        // #region agent log
+        fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
+          body: JSON.stringify({
+            sessionId: "a78fa0",
+            hypothesisId: "A",
+            location: "dam-paths.js:openFolderInExplorer:response",
+            message: "open folder HTTP status",
+            data: { status: r.status, sentAuth: !!headers.Authorization },
+            timestamp: Date.now(),
+            runId: "post-fix",
+          }),
+        }).catch(function () {});
+        // #endregion
+        return r.json();
+      }).then(function (res) {
         if (res && res.ok) {
-          showToast("Otwarto folder w Eksploratorze Windows");
+          showToast("Otwarto folder w Eksploratorze Windows", "success");
         } else {
-          showToast("Nie znaleziono folderu: " + folder + (res && res.error ? " (" + res.error + ")" : ""));
+          var hint = bridgeErrorMessage(res && res.error);
+          showToast(hint || "Nie udało się otworzyć folderu.", "error");
         }
         return res;
       });
@@ -418,13 +587,13 @@
 
     return checkBridge().then(function (ok) {
       if (!ok) {
-        showToast("Funkcja niedostepna - uruchom aplikacje DAM ETA (skrot na pulpicie).");
+        showToast("Funkcja niedostepna - uruchom aplikacje DAM (skrot na pulpicie).");
         return { ok: false, error: "bridge_offline", path: local };
       }
       showToast("Otwieram okno Synology Drive...");
       return fetch(bridgeBase() + "/synology-share", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: bridgeAuthHeaders(),
         body: JSON.stringify({ path: local })
       }).then(function (r) { return r.json(); }).then(function (res) {
         if (res && res.ok) {
@@ -493,18 +662,25 @@
     modal.className = "dam-basepath-overlay";
     modal.innerHTML =
       '<div class="dam-basepath-box" role="dialog" aria-modal="true" aria-labelledby="damBasePathTitle">' +
+        '<button type="button" class="dam-modal-x" id="damBasePathClose" aria-label="Zamknij"><i class="uil uil-times" aria-hidden="true"></i></button>' +
         '<h3 id="damBasePathTitle">Twoja sciezka Marketing</h3>' +
-        '<p class="dam-basepath-lead">Zalezy od Ciebie i konta, na ktorym jestes zalogowany. Podaj folder, w ktorym widzisz: ' +
+        '<p class="dam-basepath-lead">Wskaz folder, w ktorym widzisz: ' +
           '<strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>' +
         '<p class="dam-basepath-examples">Przyklady: <code>X:\\Marketing</code> | <code>D:\\Marketing</code> | <code>M:\\</code></p>' +
-        '<label class="dam-basepath-label" for="damBasePathInput">Sciezka bazowa (Twoje ustawienie)</label>' +
-        '<input type="text" id="damBasePathInput" class="dam-basepath-input" placeholder="np. X:\\Marketing" ' +
-          'value="' + esc(getBasePath() || "") + '" />' +
+        '<label class="dam-basepath-label" for="damBasePathInput">Sciezka bazowa</label>' +
+        '<div class="dam-basepath-field">' +
+          '<input type="text" id="damBasePathInput" class="dam-basepath-input" placeholder="np. X:\\Marketing" ' +
+            'value="' + esc(getBasePath() || "") + '" autocomplete="off" spellcheck="false" />' +
+          '<button type="button" class="dam-basepath-browse" id="damBasePathBrowse" title="Wskaz folder w Eksploratorze Windows" aria-label="Wskaz folder">' +
+            '<i class="uil uil-folder" aria-hidden="true"></i>' +
+            '<span>Wskaz folder</span>' +
+          "</button>" +
+        "</div>" +
         '<p id="damBasePathMsg" class="dam-basepath-msg" hidden></p>' +
-        '<div class="dam-basepath-actions dam-action-stack">' +
-          '<button type="button" class="geex-btn geex-btn--primary" id="damBasePathSave">Zapisz i kontynuuj</button>' +
-          '<button type="button" class="geex-btn geex-btn--primary-transparent dam-btn-icon" id="damBasePathSuggest"><i class="uil uil-search" aria-hidden="true"></i><span>Wykryj automatycznie</span></button>' +
-          '<button type="button" class="geex-btn" id="damBasePathSkip">Zrobie to pozniej</button>' +
+        '<div class="dam-basepath-actions">' +
+          '<button type="button" class="geex-btn geex-btn--primary dam-basepath-save" id="damBasePathSave">Zapisz i kontynuuj</button>' +
+          '<button type="button" class="geex-btn geex-btn--primary-transparent dam-btn-icon dam-basepath-detect" id="damBasePathSuggest"><i class="uil uil-search" aria-hidden="true"></i><span>Wykryj automatycznie</span></button>' +
+          '<button type="button" class="geex-btn dam-basepath-later" id="damBasePathSkip">Zrobie to pozniej</button>' +
         "</div>" +
       "</div>";
     document.body.appendChild(modal);
@@ -517,8 +693,40 @@
       msg.className = "dam-basepath-msg" + (ok ? " is-ok" : " is-err");
     }
 
+    function pickFolderNative() {
+      var api = window.pywebview && window.pywebview.api;
+      if (!api || typeof api.pick_folder !== "function") {
+        setMsg("Wskazywanie folderu dziala w aplikacji desktop (skrot DAM). Mozesz tez wpisac sciezke recznie.", false);
+        return Promise.resolve(null);
+      }
+      var start = (document.getElementById("damBasePathInput").value || getBasePath() || "").trim();
+      setMsg("Otwieram Eksplorator Windows...", true);
+      return Promise.resolve(api.pick_folder(start)).then(function (res) {
+        if (!res || res.cancelled) {
+          setMsg("", true);
+          return null;
+        }
+        if (!res.ok || !res.path) {
+          setMsg(res.error || "Nie wybrano folderu.", false);
+          return null;
+        }
+        document.getElementById("damBasePathInput").value = res.path;
+        setMsg("Wybrano: " + res.path, true);
+        return res.path;
+      }).catch(function () {
+        setMsg("Nie udalo sie otworzyc wyboru folderu - wpisz sciezke recznie.", false);
+        return null;
+      });
+    }
+
+    document.getElementById("damBasePathClose").addEventListener("click", function () {
+      modal.remove();
+    });
     document.getElementById("damBasePathSkip").addEventListener("click", function () {
       modal.remove();
+    });
+    document.getElementById("damBasePathBrowse").addEventListener("click", function () {
+      pickFolderNative();
     });
     document.getElementById("damBasePathSuggest").addEventListener("click", function () {
       setMsg("Szukam folderu Marketing na dyskach tego komputera...", true);
@@ -589,6 +797,7 @@
     relativeFromMarketing: relativeFromMarketing,
     toLocal: toLocal,
     parentOf: parentOf,
+    resolveWinFolderPath: resolveWinFolderPath,
     copyPath: copyPath,
     revealInExplorer: revealInExplorer,
     openFolderInExplorer: openFolderInExplorer,

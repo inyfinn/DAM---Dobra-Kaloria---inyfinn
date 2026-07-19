@@ -1,5 +1,5 @@
 /**
- * DAM ETA - FMCG landed-cost estimates (averages until real data).
+ * DAM - FMCG landed-cost estimates (averages until real data).
  * API: window.DamFmcg.computeMonthLanded(ctx) / formatPLN / getSwot
  */
 (function (global) {

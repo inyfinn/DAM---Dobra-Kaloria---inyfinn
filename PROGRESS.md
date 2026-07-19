@@ -1,10 +1,10 @@
-# PROGRESS.md - DAM ETA
+﻿# PROGRESS.md - DAM - Dobra Kaloria - Inyfinn
 
 Ostatnia aktualizacja: **2026-07-18**
 
 | Obszar | Status | Notatka |
 |--------|--------|---------|
-| Geex UI + desktop launch | done | skrot DAM ETA |
+| Geex UI + desktop launch | done | skrot DAM - Dobra Kaloria - Inyfinn |
 | Auth lokalny (bcrypt) | done | SQLite `users` |
 | **Sesja = machine_id + device_id + session_id** | **done** | ADR-008; weryfikacja przed startem |
 | SQLite lokalna (repo) | done | `apps/desktop/data/dam-local.sqlite` - ADR-007 amended |
@@ -31,7 +31,7 @@ Ostatnia aktualizacja: **2026-07-18**
 | X / Wstecz UX audyt (Faza 6) | **done** | dam-modal-x, goBackNav() zamyka overlay zamiast nawigowac |
 | Auth rehydrate (bound-session) | **done** | POST /auth/rehydrate; bez fake sesji z localStorage |
 | Sidebar active + bez underline | **done** | aria-current + Geex purple; cache navActive1 |
-| Dashboard „Dostosuj pulpit” UX | **done** | DnD, preview 350ms, dirty guard, fioletowe checkboxy |
+| Dashboard â€žDostosuj pulpitâ€ť UX | **done** | DnD, preview 350ms, dirty guard, fioletowe checkboxy |
 | Inbox copy + dam-inbox.js | **done** | ludzki podtytul; 72h reminder w copy |
 | OAuth stub Asana/MS Graph | **done** | oauth_integrations.py + env.example |
 | Strony prawne / security docs | **done** | privacy, terms, license, consents, docs-security |

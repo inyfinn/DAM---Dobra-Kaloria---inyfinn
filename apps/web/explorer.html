@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Eksplorator - DAM ETA</title>
+  <title>Eksplorator - DAM</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -28,8 +28,8 @@
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
-<link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718carrierFix2">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718userMenu1">
+<link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719statusPill1">
 </head>
 
 <body class="geex-dashboard file-manager">
@@ -500,9 +500,9 @@
 			</ul>
 		</nav>
         <div class="geex-sidebar__footer">
-			<span class="geex-sidebar__footer__title">DAM ETA</span>
+			<span class="geex-sidebar__footer__title">DAM</span>
 			<p class="geex-sidebar__footer__copyright">Panel assetów opakowań</p>
-			<p class="geex-sidebar__footer__author"><a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> &copy; 2026</p>
+			<p class="geex-sidebar__footer__author"><a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> &copy; 2026 <span class="dam-app-version" title="Wersja programu DAM">v1.00</span></p>
 		</div>
 	</div>
 </div>
@@ -604,7 +604,7 @@
 			<div class="geex-content__header">
 				<div class="geex-content__header__content">
 					<h2 class="geex-content__header__title" data-i18n="explorer.title">Eksplorator</h2>
-					<p class="geex-content__header__subtitle">Pełna struktura produktów DK i GC z indeksu dysku</p>
+					<p class="geex-content__header__subtitle">Pełna struktura produktów Dobra Kaloria i Good Calories</p>
 				</div>
 				
 <div class="geex-content__header__action">
@@ -865,26 +865,22 @@
 
                 <!-- DAM Explorer UI -->
                 <div class="dam-explorer-shell" style="margin-bottom:24px">
-                  <div class="dam-explorer-toolbar">
-                    <div class="dam-search-wrap">
-                      <div class="dam-search-input-wrap">
-                        <i class="uil uil-search" aria-hidden="true"></i>
-                        <input type="text" id="damFileSearch" class="form-control dam-search-input" placeholder="Szukaj indeksu lub skojarzenia (np. 6300, czekolada)" autocomplete="off" data-dam-tip="Wpisz indeks produktu lub s?owo kluczowe" />
+                  <div class="dam-global-search-block">
+                    <div class="dam-explorer-toolbar">
+                      <div class="dam-search-wrap dam-search-wrap--panel">
+                        <div class="dam-search-input-wrap">
+                          <i class="uil uil-search" aria-hidden="true"></i>
+                          <input type="text" id="damFileSearch" class="form-control dam-search-input" placeholder="Szukaj indeksu lub skojarzenia (np. 6300, czekolada, Krzysztof)" autocomplete="off" aria-label="Szukaj w eksplorerze" data-dam-tip="Wpisz indeks produktu lub slowo kluczowe" />
+                        </div>
+                        <div id="damSearchScope" class="dam-search-scope-mount" aria-label="Zakres wyszukiwania"></div>
+                        <div id="damSearchResults" class="dam-search-results" style="display:none"></div>
                       </div>
-                      <div id="damSearchResults" class="dam-search-results" style="display:none"></div>
                     </div>
-                    <div class="dam-explorer-toolbar__actions">
-                      <div class="dam-admin-slot">
-                        <button type="button" id="damStatusExport" class="geex-btn dam-admin-extra" hidden title="Eksport statusów wariantów (JSON)" data-dam-tip="Pobierz plik product-status.json z oznaczeniami Aktualne/Nieaktualne z tej przeglądarki. Zastąp nim plik P:\DAM\data\product-status.json, żeby statusy były wspólne dla zespołu.">Eksportuj status</button>
-                      </div>
-                      <span id="damExplorerMeta" style="font-size:12px;color:#8b8d97"></span>
-                      <button type="button" id="damIndexRefresh" class="geex-btn" style="padding:8px 12px;border-radius:8px" title="Przeładuj widok z bieżącego indeksu (bez skanu dysku)" data-dam-tip="Odśwież listę = przeładuj UI z już zbudowanego indeksu. Nie skanuje całego Marketing od zera.">Odśwież listę</button>
-                    </div>
+                    <div id="damSearchTags" class="dam-tag-groups"></div>
                   </div>
-                  <div id="damAdminBar" class="dam-admin-bar">
-                    <span>Status zapisywany lokalnie (localStorage <code>dam_product_status</code>). Eksportuj JSON i zastap plik na P:DAM/data/product-status.json.</span>
+                  <div id="damAdminBar" class="dam-admin-bar" role="status">
+                    <span id="damAdminBarText">Status F/X/D: most zapisuje na dysk Marketing + <code>lifecycle-status.json</code> / <code>product-status.json</code> (+ Postgres KV gdy baza online). localStorage w tej przegladarce to tylko kopia robocza.</span>
                   </div>
-                  <div id="damSearchTags" class="dam-tag-groups"></div>
                   <nav id="damBreadcrumb" style="font-size:13px;margin-bottom:12px;color:#8b8d97">Produkty</nav>
                   <p id="damExplorerStatus" style="font-size:12px;color:#8b8d97;margin:0 0 8px"></p>
                   <div class="row g-3">
@@ -898,7 +894,22 @@
                       </div>
                     </div>
                     <div class="col-lg-9">
-                      <div id="damExplorerMain" class="geex-card" style="border-radius:12px;background:var(--card-bg,#fff);box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;min-height:420px"></div>
+                      <div class="dam-explorer-results geex-card">
+                        <div class="dam-explorer-results__toolbar">
+                          <span id="damExplorerMeta" class="dam-explorer-results__meta"></span>
+                          <div class="dam-explorer-results__actions">
+                            <div class="dam-admin-slot">
+                              <button type="button" id="damStatusExport" class="geex-btn dam-admin-extra" hidden title="Pobierz kopię statusu (JSON)" data-dam-tip="Opcjonalna kopia zapasowa: pobiera zmergowany status z tej sesji. Wspólne statusy zapisuje most (dysk + apps/web/data/*.json + Postgres), nie ten przycisk.">Pobierz kopię statusu</button>
+                            </div>
+                            <button type="button" id="damIndexRefresh" class="geex-btn" title="Odśwież: stan folderów z dysku do programu (bez zmiany nazw na dysku)" data-dam-tip="Odśwież listę = dysk do programu. Aktualizuje statusy F/X/D w panelu według nazw folderów. Nie zmienia folderów na dysku. Przy rozjazdzie pokazuje powiadomienie (historia).">Odśwież listę</button>
+                            <button type="button" id="damLifecycleForce" class="geex-btn geex-btn__primary dam-admin-control" title="Stosuj zmiany: program na dysk (FORCE)" data-dam-tip="Stosuj zmiany = FORCE. Zapisuje statusy z programu na foldery Marketing (rename / archiwum). Odwrotnosc Odśwież. Tylko admin." aria-label="Stosuj zmiany">
+                              <i class="uil uil-upload" aria-hidden="true"></i>
+                              <span class="dam-force-btn__label">Stosuj zmiany</span>
+                            </button>
+                          </div>
+                        </div>
+                        <div id="damExplorerMain" class="dam-explorer-results__body"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2258,49 +2269,35 @@
 	<script src="./assets/js/main.js?v=20260718typ4"></script>
 	<!-- endinject-->
 	<!-- DAM scripts -->
-	<script src="./assets/js/dam-api.js?v=20260718zipviz1"></script>
+	<script src="./assets/js/dam-api.js?v=20260719golive1"></script>
 	<script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
 	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-	<script src="./assets/js/dam-shell.js?v=20260718userMenu1"></script>
-	<script src="./assets/js/dam-search.js?v=20260718tags1"></script>
+	<script src="./assets/js/dam-version.js?v=1.04"></script>
+	<script src="./assets/js/dam-shell.js?v=20260719ver104"></script>
+	<script src="./assets/js/dam-search.js?v=20260718panelNavSearch1"></script>
 	<script src="./assets/js/dam-tag-bar.js?v=20260718tagCase2"></script>
-	<script src="./assets/js/dam-labels.js?v=20260718namePl1"></script>
-	<script src="./assets/js/dam-badges.js?v=20260718namePl1"></script>
+	<script src="./assets/js/dam-labels.js?v=20260719ver104"></script>
+	<script src="./assets/js/dam-badges.js?v=20260718tagAjax3"></script>
 	<script src="./assets/js/dam-tag-edit.js?v=20260718tagCase1"></script>
-	<script src="./assets/js/dam-paths.js?v=20260718btn1"></script>
+	<script src="./assets/js/dam-paths.js?v=20260719ver104"></script>
 	<script src="./assets/js/dam-icons.js?v=20260718uxbatch1"></script>
 	<script src="./assets/js/dam-brand-filter.js?v=20260718showall1"></script>
 	<script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-explorer.js?v=20260718carrierInbox22"></script>
+	<script src="./assets/js/dam-explorer.js?v=20260719ver105"></script>
 	<script>
-	/* Stary cache HTML/JS trzymal SyntaxError - doladuj fix z unikalnym bust. */
+	/* Po zaladowaniu DOM: jednorazowy init jesli folder pusty (bez petli reload). */
 	(function () {
-	  function ensureExplorer() {
+	  function bootOnce() {
+	    if (!window.DamExplorer || typeof window.DamExplorer.init !== "function") return;
 	    var folder = document.getElementById("damFolderList");
 	    var empty = !folder || !folder.children || folder.children.length === 0;
-	    if (window.DamExplorer && !empty) return;
-	    if (window.DamExplorer && typeof window.DamExplorer.init === "function" && empty) {
-	      try { window.DamExplorer.init(); return; } catch (e) {}
-	    }
-	    if (window.__damExplorerRetry) {
-	      location.replace("explorer.html?nocache=" + Date.now());
-	      return;
-	    }
-	    window.__damExplorerRetry = 1;
-	    var s = document.createElement("script");
-	    s.src = "./assets/js/dam-explorer.js?v=20260718carrierInbox22" + Date.now();
-	    s.onload = function () {
-	      if (window.DamExplorer && typeof window.DamExplorer.init === "function") {
-	        try { window.DamExplorer.init(); } catch (e2) {}
-	      }
-	      setTimeout(ensureExplorer, 400);
-	    };
-	    document.head.appendChild(s);
+	    if (!empty) return;
+	    try { window.DamExplorer.init(); } catch (e) { console.error("DamExplorer.init", e); }
 	  }
 	  if (document.readyState === "loading") {
-	    document.addEventListener("DOMContentLoaded", function () { setTimeout(ensureExplorer, 80); });
+	    document.addEventListener("DOMContentLoaded", function () { setTimeout(bootOnce, 120); });
 	  } else {
-	    setTimeout(ensureExplorer, 80);
+	    setTimeout(bootOnce, 120);
 	  }
 	})();
 	</script>

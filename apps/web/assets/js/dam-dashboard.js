@@ -1,5 +1,5 @@
 /**
- * DAM ETA - Dashboard orchestrator (widget grid + side panel)
+ * DAM - Dashboard orchestrator (widget grid + side panel)
  */
 (function () {
   "use strict";

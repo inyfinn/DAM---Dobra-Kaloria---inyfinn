@@ -1,5 +1,5 @@
 /**
- * DAM ETA - i18n overlay system
+ * DAM - i18n overlay system
  * Loads language JSON from /i18n/{lang}.json
  * Applies data-i18n and data-i18n-placeholder attributes
  * Language stored in localStorage key: dam_lang (default: pl)

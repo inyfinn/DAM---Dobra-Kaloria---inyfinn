@@ -1,5 +1,5 @@
 /**
- * DAM ETA runtime - bridge URL z lokalnej aplikacji (bez recznych portow).
+ * DAM runtime - bridge URL z lokalnej aplikacji (bez recznych portow).
  */
 (function () {
   "use strict";

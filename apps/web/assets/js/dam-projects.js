@@ -371,12 +371,12 @@
     var name = p.title || "Projekt";
     var cat = cardCategoryLabel(p);
     var label = cat ? cat + " · " + name : name;
-    var href = "explorer.html?product=" + encodeURIComponent(p.id);
+    var href = "project.html?id=" + encodeURIComponent(p.id);
     return (
       '<h3 class="dam-project-card__title">' +
       '<a class="dam-project-card__title-link" href="' +
       href +
-      '" title="Otwórz w Eksplorerze" data-dam-tip="Eksplorer - hub plików produktu">' +
+      '" title="Szczegóły produktu" data-dam-tip="Karta produktu - katalog, checklista, materiały">' +
       String(label).replace(/</g, "&lt;") +
       "</a></h3>"
     );
@@ -445,7 +445,7 @@
     );
   }
 
-  function haystack(p) {
+  function productHaystack(p) {
     var missing = (p.missing_roles || [])
       .map(function (r) {
         return (ROLE_META[r] && ROLE_META[r].label) || r;
@@ -473,10 +473,34 @@
       meta.subcategory_slug || "",
       meta.subcategory_label || "",
       meta.category || "",
-      meta.search_blob || "",
     ]
       .join(" ")
       .toLowerCase();
+  }
+
+  function variantHaystack(p) {
+    var meta = state.metaById[p.id] || {};
+    var blob = String(meta.search_blob || "").toLowerCase();
+    var indexes = [];
+    if (Array.isArray(meta.indexes)) indexes = meta.indexes;
+    else if (Array.isArray(p.indexes)) indexes = p.indexes;
+    var revs = (meta.revisions || p.revisions || [])
+      .map(function (r) {
+        if (!r) return "";
+        return [r.index, r.name, r.folder, r.carrier].join(" ");
+      })
+      .join(" ");
+    return [blob, indexes.join(" "), revs].join(" ").toLowerCase();
+  }
+
+  function haystackForScope(p) {
+    var mode =
+      window.DamSearch && typeof window.DamSearch.getScopeMode === "function"
+        ? window.DamSearch.getScopeMode()
+        : "all";
+    if (mode === "products") return productHaystack(p);
+    if (mode === "variants") return variantHaystack(p);
+    return productHaystack(p) + " " + variantHaystack(p);
   }
 
   function filteredRows() {
@@ -484,11 +508,49 @@
     if (!q) return state.all.slice();
     var parts = q.split(/\s+/).filter(Boolean);
     return state.all.filter(function (p) {
-      var h = haystack(p);
+      var h = haystackForScope(p);
       return parts.every(function (part) {
         return h.indexOf(part) !== -1;
       });
     });
+  }
+
+  /**
+   * GSAP: po filtrze / odswiezeniu siatki - szybki reveal gora->dol (~0.2s).
+   * Motivated: feedback ze wyniki sie zmienily. prefers-reduced-motion = skip.
+   */
+  function revealProjectCards(grid) {
+    var cards = grid.querySelectorAll(".dam-project-card");
+    if (!cards.length) return;
+    var reduce =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var gsap = window.gsap;
+    if (!gsap || reduce) {
+      cards.forEach(function (card) {
+        card.style.opacity = "";
+        card.style.visibility = "";
+        card.style.clipPath = "";
+      });
+      return;
+    }
+    gsap.killTweensOf(cards);
+    gsap.fromTo(
+      cards,
+      {
+        autoAlpha: 0,
+        clipPath: "inset(0% 0% 100% 0%)",
+      },
+      {
+        autoAlpha: 1,
+        clipPath: "inset(0% 0% 0% 0%)",
+        duration: 0.2,
+        ease: "power1.out",
+        stagger: { each: 0.035, from: "start" },
+        overwrite: true,
+        clearProps: "clipPath",
+      }
+    );
   }
 
   function renderGrid(grid, statusEl) {
@@ -512,6 +574,7 @@
       } else if (window.DamIcons && typeof window.DamIcons.bindWinButtons === "function") {
         window.DamIcons.bindWinButtons(grid);
       }
+      revealProjectCards(grid);
     }
     if (statusEl) {
       var src =
@@ -642,6 +705,12 @@
           onSearch();
         }
       });
+      var scopeEl = document.getElementById("damProjectsSearchScope");
+      if (scopeEl && window.DamSearch && typeof window.DamSearch.bindScopeChips === "function") {
+        window.DamSearch.bindScopeChips(scopeEl, function () {
+          onSearch();
+        });
+      }
       /* Sync URL/stack even when query restored from session (no input event) */
       persistViewState(state.query);
     }

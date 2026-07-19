@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "updated_at": "2026-07-19T00:00:00+02:00",
+  "products": {
+    "babka-cytrynowa-nerkowcowy": {
+      "terms": ["nerkowiec", "nerkowcowy", "cytryna", "cytrynowa", "babka"],
+      "dishes": ["babka cytrynowa"],
+      "ingredients": ["nerkowiec", "cytryna"]
+    },
+    "dk-doy-datesy-karmel-100-g": {
+      "terms": ["dates", "datesy", "karmel", "karmelowy", "daktyle"],
+      "dishes": [],
+      "ingredients": ["karmel", "daktyle"]
+    },
+    "mix-6x-mini-batoniki-mixy": {
+      "terms": ["mini", "mix", "batoniki", "zestaw", "prezent"],
+      "dishes": [],
+      "ingredients": []
+    }
+  },
+  "reverse": {
+    "sliwka": ["ciasto-sliwkowe-kruszonka"],
+    "sliweczka": ["ciasto-sliwkowe-kruszonka"],
+    "sliwkowe": ["ciasto-sliwkowe-kruszonka"],
+    "kruszonka": ["ciasto-sliwkowe-kruszonka"],
+    "kruche ciasto": ["ciasto-sliwkowe-kruszonka"],
+    "jablko": ["jablko-cynamon"],
+    "jablecznik": ["jablko-cynamon"],
+    "szarlotka": ["jablko-cynamon"],
+    "cynamonka": ["jablko-cynamon"],
+    "nerkowiec": ["babka-cytrynowa-nerkowcowy"],
+    "cytrynowa": ["babka-cytrynowa-nerkowcowy"],
+    "2f": ["dk-doy-datesy-karmel-100-g"],
+    "2x12": ["dk-doy-datesy-karmel-100-g"],
+    "2×12": ["dk-doy-datesy-karmel-100-g"]
+  }
+}

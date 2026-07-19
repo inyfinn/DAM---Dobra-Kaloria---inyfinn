@@ -28,6 +28,8 @@ THUMBS_DIR = WEB / "data" / "thumbs"
 NAMING_DICT_PATH = WEB / "data" / "naming-dictionary.json"
 PRODUCT_ALIASES_PATH = WEB / "data" / "product-aliases.json"
 LANG_OVERRIDES_PATH = WEB / "data" / "lang-overrides.json"
+PRODUCT_CATALOG_PATH = WEB / "data" / "product-catalog.json"
+BULK_PACKAGING_PATH = WEB / "data" / "bulk-packaging.json"
 
 
 def _load_naming_dict() -> dict:
@@ -1718,6 +1720,54 @@ def scan_root(root: Path, brand: str, max_products: int, products_so_far: int) -
     return products, categories, count
 
 
+def merge_product_catalog_packaging(products: list[dict]) -> None:
+    """Attach bulk_packaging_ref and tag_groups.pakowanie from catalog + bulk registry."""
+    try:
+        catalog = json.loads(PRODUCT_CATALOG_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        catalog = {"products": {}}
+    try:
+        bulk = json.loads(BULK_PACKAGING_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        bulk = {"packs": {}}
+    cat_products = catalog.get("products") or {}
+    packs = bulk.get("packs") or {}
+    by_index: dict[str, str] = {}
+    for pid, entry in cat_products.items():
+        if not isinstance(entry, dict):
+            continue
+        idx = entry.get("index_primary")
+        if idx:
+            by_index[str(idx)] = pid
+        by_index[pid] = pid
+    for p in products:
+        pid = p.get("id") or ""
+        entry = cat_products.get(pid)
+        if not entry:
+            for idx in p.get("indexes") or []:
+                alt = cat_products.get(by_index.get(str(idx), ""))
+                if alt:
+                    entry = alt
+                    break
+        if not entry:
+            continue
+        ref = entry.get("bulk_packaging_ref")
+        if ref:
+            p["bulk_packaging_ref"] = ref
+            pack = packs.get(ref) or {}
+            label = pack.get("label")
+            if label:
+                tg = p.setdefault("tag_groups", {})
+                pak = list(tg.get("pakowanie") or [])
+                if label not in pak:
+                    pak.append(label)
+                tg["pakowanie"] = pak
+                tags = list(p.get("tags") or [])
+                if label not in tags:
+                    tags.append(label)
+                p["tags"] = tags
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default="", help="Single root override (disables multi-root)")
@@ -1753,6 +1803,7 @@ def main() -> None:
     discover_marketing_materials(products, MARKETING_ROOT)
     apply_product_aliases(products)
     apply_lang_overrides(products)
+    merge_product_catalog_packaging(products)
 
     search = build_search(products)
     viz = collect_viz_latest(products, THUMBS_DIR)
@@ -1802,6 +1853,35 @@ def main() -> None:
     if sample:
         p = sample[0]
         print("TARTA display_name:", p.get("display_name"), "related:", len(p.get("related_materials") or []))
+
+    # Po rebuildzie: dolacz authors / by_tag imion (Sylwia/Krzysztof/Szymon) z product-people + Asana.
+    # Bez tego "Skanuj dysk" / build wycina wyszukiwanie po osobach.
+    try:
+        import importlib.util
+
+        enrich_path = Path(__file__).resolve().parent / "enrich-search-tags.py"
+        spec = importlib.util.spec_from_file_location("enrich_search_tags", enrich_path)
+        if not spec or not spec.loader:
+            raise RuntimeError("brak enrich-search-tags.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        code = mod.main()
+        print(f"enrich-search-tags: exit={code}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARN: enrich-search-tags failed: {exc}")
+
+    try:
+        import importlib.util
+
+        enrich_assoc = Path(__file__).resolve().parent / "enrich-product-associations.py"
+        spec2 = importlib.util.spec_from_file_location("enrich_product_associations", enrich_assoc)
+        if spec2 and spec2.loader:
+            mod2 = importlib.util.module_from_spec(spec2)
+            spec2.loader.exec_module(mod2)
+            code2 = mod2.main()
+            print(f"enrich-product-associations: exit={code2}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARN: enrich-product-associations failed: {exc}")
 
 
 if __name__ == "__main__":

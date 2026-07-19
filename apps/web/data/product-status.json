@@ -1,6 +1,48 @@
 {
-  "products": {},
+  "products": {
+    "test-lifecycle-nerkowcowy": {
+      "note": "Lifecycle F",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F",
+      "letter": "F",
+      "status": "aktualne"
+    },
+    "test-lifecycle-nerkowcowy-f": {
+      "note": "Lifecycle F",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F",
+      "letter": "F",
+      "status": "aktualne"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]": {
+      "note": "Lifecycle clear",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]",
+      "letter": null,
+      "status": "clear"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - D": {
+      "note": "Lifecycle D",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - D",
+      "letter": "D",
+      "status": "demo"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F": {
+      "note": "Lifecycle F",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F",
+      "letter": "F",
+      "status": "aktualne"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ] - X": {
+      "note": "Lifecycle X",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ] - X",
+      "letter": "X",
+      "status": "nieaktualne"
+    }
+  },
   "revisions": {
+    "TEST-TEST": {
+      "note": "Lifecycle clear",
+      "letter": null,
+      "status": "clear"
+    },
     "6300684.01": {
       "note": "Lifecycle F",
       "letter": "F",
@@ -59,6 +101,11 @@
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
       "status": "nieaktualne"
     },
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ]/BAT - 35 g - 18.07.2026 - TEST-TEST": {
+      "note": "Lifecycle clear",
+      "letter": null,
+      "status": "clear"
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST": {
       "note": "Lifecycle clear",
       "letter": null,
@@ -69,10 +116,25 @@
       "letter": "F",
       "status": "aktualne"
     },
-    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F": {
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ]/BAT - 35 g - 18.07.2026 - TEST-TEST - D": {
       "note": "Lifecycle clear",
       "letter": null,
       "status": "clear"
+    },
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ]/BAT - 35 g - 18.07.2026 - TEST-TEST - F": {
+      "note": "Lifecycle D",
+      "letter": "D",
+      "status": "demo"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - D": {
+      "note": "Lifecycle D",
+      "letter": "D",
+      "status": "demo"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
     },
     "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/CZARNA PORZECZKA — [ owocowe ]/DOY - MAGNEZ - 65 g - 24.02.2026 - 6300726.02": {
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
@@ -82,29 +144,29 @@
       "note": "Aktualny nosnik MAGNEZ & ZELAZO",
       "status": "aktualne"
     },
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - D/BAT - 35 g - 18.07.2026 - TEST-TEST - D": {
+      "note": "Lifecycle clear",
+      "letter": null,
+      "status": "clear"
+    },
     "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/CZARNA PORZECZKA — [ owocowe ]/DOY - ŻELAZO - 65 g - 24.02.2026 - 6300726.01": {
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
       "status": "nieaktualne"
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - X": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
+    },
     "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/CZARNA PORZECZKA — [ owocowe ]/DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300753.00": {
       "note": "Aktualny nosnik MAGNEZ & ZELAZO",
       "status": "aktualne"
-    },
-    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - D": {
-      "status": "demo",
-      "note": "Lifecycle D",
-      "letter": "D"
-    },
-    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ]/BAT - 35 g - 18.07.2026 - TEST-TEST": {
-      "status": "demo",
-      "note": "Lifecycle D",
-      "letter": "D"
-    },
-    "TEST-TEST": {
-      "status": "demo",
-      "note": "Lifecycle D",
-      "letter": "D"
     }
   },
-  "updated_at": "2026-07-18T19:59:28.705932+00:00"
+  "updated_at": "2026-07-18T22:23:05.728361+00:00"
 }

@@ -1,4 +1,4 @@
-﻿{
+{
   "nav.dashboard": "Dashboard",
   "nav.explorer": "Datei-Explorer",
   "nav.projects": "Projekte",
@@ -6,11 +6,11 @@
   "nav.costs": "Kostenkalkulator",
   "nav.integrations": "Integrationen",
   "nav.logout": "Abmelden",
-  "nav.brand": "DAM ETA",
+  "nav.brand": "DAM",
   "nav.brand_sub": "Verpackungs-Asset-Management",
   "nav.lang": "Sprache",
   "dash.title": "Dashboard",
-  "dash.subtitle": "Willkommen im DAM ETA-Panel",
+  "dash.subtitle": "Willkommen im DAM-Panel",
   "dash.card1_title": "Produkte",
   "dash.card1_sub": "Aktive Verpackungsprojekte",
   "dash.card2_title": "Asana-Aufgaben",
@@ -33,7 +33,7 @@
   "dash.filter_all": "Alle",
   "dash.filter_week": "Diese Woche",
   "dash.filter_today": "Heute",
-  "auth.title": "Bei DAM ETA anmelden",
+  "auth.title": "Bei DAM anmelden",
   "auth.email": "E-Mail",
   "auth.password": "Passwort",
   "auth.btn_microsoft": "Mit Microsoft anmelden",
@@ -59,5 +59,5 @@
   "status.open": "Offen",
   "status.complete": "Vollstandig",
   "status.missing": "Unvollstandig",
-  "footer.copyright": "DAM ETA - Verpackungs-Asset-Management"
+  "footer.copyright": "DAM - Verpackungs-Asset-Management"
 }

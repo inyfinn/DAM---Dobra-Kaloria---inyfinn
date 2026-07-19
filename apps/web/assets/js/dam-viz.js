@@ -1,5 +1,5 @@
 /**
- * DAM ETA - Visualizations gallery v4
+ * DAM - Visualizations gallery v4
  * Grupy po product_id, badge Multijezyczny, modal podgladu, Synology share.
  * Wymaga: dam-brand-filter.js zaladowanego PRZED tym plikiem.
  */
@@ -2115,6 +2115,9 @@
       var b = String(brand || "").toUpperCase();
       if (b !== "DK" && b !== "GC") return;
       brandFilter = { DK: b === "DK", GC: b === "GC" };
+      if (window.DamBrandFilter && typeof window.DamBrandFilter.commitBrands === "function") {
+        window.DamBrandFilter.commitBrands(brandFilter);
+      }
       applyFilters();
     };
 
@@ -2279,17 +2282,24 @@
       })
       .catch(function () {});
 
-    // Brand filter - inicjuj trigger lub fallback
+    // Brand filter: te same chipy DK/GC co w Eksplorerze (DamBrandFilter.renderChips)
     brandFilter = window.DamBrandFilter ? window.DamBrandFilter.loadBrands() : { DK: true, GC: true };
 
-    var brandTrigger = document.getElementById("vizBrandFilterTrigger");
     if (window.DamBrandFilter) {
       window.DamBrandFilter.addListener(function (brands) {
         brandFilter = brands;
         applyFilters();
       });
-      if (brandTrigger) {
-        window.DamBrandFilter.init(brandTrigger);
+      var brandMount = document.getElementById("vizBrandMount");
+      if (brandMount && typeof window.DamBrandFilter.renderChips === "function") {
+        window.DamBrandFilter.renderChips(brandMount, function (brands) {
+          brandFilter = brands;
+          applyFilters();
+        });
+      } else {
+        /* Legacy fallback: stary trigger dropdown (jesli mount brak) */
+        var brandTrigger = document.getElementById("vizBrandFilterTrigger");
+        if (brandTrigger) window.DamBrandFilter.init(brandTrigger);
       }
     }
 
@@ -2298,8 +2308,10 @@
     var wantLang = params.get("lang");
     var wantBrand = params.get("brand");
     if (wantBrand && window.DamBrandFilter) {
-      // Single brand from URL param
       brandFilter = { DK: wantBrand === "DK", GC: wantBrand === "GC" };
+      if (typeof window.DamBrandFilter.commitBrands === "function") {
+        window.DamBrandFilter.commitBrands(brandFilter);
+      }
     }
 
     function boot(data) {
@@ -2397,6 +2409,12 @@
       search.addEventListener("input", onSearch);
       search.addEventListener("keyup", onSearch);
       search.addEventListener("search", onSearch);
+    }
+
+    /* Wizualizacje: UI zawsze Wszystko; Produkty/Warianty wygaszone (bez zmiany localStorage) */
+    var vizScopeEl = document.getElementById("vizSearchScope");
+    if (vizScopeEl && window.DamSearch && typeof window.DamSearch.bindScopeChips === "function") {
+      window.DamSearch.bindScopeChips(vizScopeEl, null, { locked: true });
     }
 
     if (window.DamTagBar) {

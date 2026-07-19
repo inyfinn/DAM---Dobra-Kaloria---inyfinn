@@ -1,5 +1,5 @@
 /**
- * DAM ETA - skróty klawiszowe + FAB pomocy (?)
+ * DAM - skróty klawiszowe + FAB pomocy (?)
  * F1 / FAB = Pomoc
  * F5 / Ctrl+R = odśwież
  * Esc = zamknij modal
@@ -84,7 +84,7 @@
 
     var keys =
       keyRow(kbd("F1") + " / " + kbd("?"), "Otwiera to okno pomocy (ikona ? w prawym dolnym rogu)") +
-      keyRow(kbd("F5"), "Odświeża aplikację. W oknie DAM ETA restartuje cały shell.") +
+      keyRow(kbd("F5"), "Odświeża aplikację. W oknie DAM restartuje cały shell.") +
       keyRow(kbd("Ctrl") + "+" + kbd("R"), "To samo co F5 - odśwież widok") +
       keyRow(kbd("Esc"), "Zamyka pomoc, lightbox, popupy i panele") +
       keyRow(kbd("Ctrl") + " / " + kbd("Alt") + " + scroll", "Przybliża / oddala obraz w studio wizualizacji") +
@@ -109,8 +109,8 @@
               "Podwójny klik (do 500 ms) na tagu działa jak Shift+klik."
             ) +
             keyRow(
-              kbd("Eksportuj status"),
-              "Pobiera product-status.json z tej przeglądarki (Aktualne/Nieaktualne). Podmień plik na serwerze, żeby zespół widział te same statusy."
+              kbd("Pobierz kopie statusu"),
+              "Opcjonalny backup JSON z tej sesji. Wspolne statusy F/X/D zapisuje most (dysk + apps/web/data + Postgres), nie ten przycisk."
             ) +
             keyRow(
               kbd("F") + " / " + kbd("X") + " / " + kbd("D"),
@@ -136,7 +136,7 @@
             ) +
             card(
               "uil-history",
-              "Odznacz + historia",
+              "Bez statusu + historia",
               "Usuwa literkę z nazwy. Przywraca z archiwum jeśli było X. Program zapisuje poprzednią nazwę i ścieżkę (change-log / lifecycle) - da się cofnąć."
             ) +
           "</div>" +
@@ -221,7 +221,7 @@
       "</section>" +
       '<section class="dam-help-modal__section dam-help-modal__section--note">' +
         "<h3>Jeśli widzisz Pliki offline</h3>" +
-        "<p>Uruchom skrót <strong>DAM ETA</strong> z pulpitu (UI + most). " +
+        "<p>Uruchom skrót <strong>DAM</strong> z pulpitu (UI + most). " +
         "W przeglądarce: <code>python apps/desktop/serve_browser.py</code> " +
         "albo osobno <code>python apps/desktop/local_bridge.py</code>.</p>" +
       "</section>" +
@@ -253,7 +253,7 @@
       '<div class="dam-help-modal__panel">' +
         '<header class="dam-help-modal__head">' +
           '<div class="dam-help-modal__head-text">' +
-            '<p class="dam-help-modal__eyebrow">DAM ETA</p>' +
+            '<p class="dam-help-modal__eyebrow">DAM</p>' +
             '<h2 id="damHelpModalTitle" class="dam-help-modal__title">Pomoc i skróty klawiszowe</h2>' +
             '<p class="dam-help-modal__lead">Szybki przewodnik - jak korzystać z panelu plików opakowań.</p>' +
           "</div>" +

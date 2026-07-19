@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>DAM ETA - Logowanie</title>
+  <title>DAM - Dobra Kaloria - Logowanie</title>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260718userMenu1">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719ver102">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <script>
@@ -27,6 +27,9 @@
       display: flex;
       gap: 8px;
       margin: 0 0 20px;
+    }
+    .dam-auth-mode[hidden] {
+      display: none !important;
     }
     .dam-auth-mode button {
       flex: 1;
@@ -50,11 +53,9 @@
       outline: 2px solid var(--primary-color, #AB54DB);
       outline-offset: 2px;
     }
-    /* NIE uzywaj --secondary-color (#B7DBF9) - to jasny blekit, nieczytelny na bieli */
     .geex-content__authentication__content {
       text-align: left;
     }
-    /* Logo wycentrowane NAD tytulem (nie z lewej) */
     .geex-content__authentication__content__logo {
       display: flex !important;
       justify-content: center;
@@ -131,6 +132,7 @@
       margin-top: 18px;
       font-size: 14px;
       text-align: center;
+      text-transform: none;
     }
   </style>
 </head>
@@ -140,19 +142,19 @@
       <div class="geex-content__authentication__content">
         <div class="geex-content__authentication__content__wrapper">
           <div class="geex-content__authentication__content__logo">
-            <a href="dashboard.html" aria-label="DAM ETA - Dobra Kaloria">
+            <a href="dashboard.html" aria-label="DAM - Dobra Kaloria - Inyfinn">
               <img class="logo-lite dam-logo-dk" src="assets/img/logo-dobra-kaloria.svg" alt="Dobra Kaloria">
               <img class="logo-dark dam-logo-dk" src="assets/img/logo-dobra-kaloria.svg" alt="Dobra Kaloria">
             </a>
           </div>
 
           <form id="damAuthForm" class="geex-content__authentication__form" autocomplete="on">
-            <h2 class="geex-content__authentication__title">Witaj w DAM ETA</h2>
+            <h2 class="geex-content__authentication__title">Witaj w DAM</h2>
             <p class="geex-content__authentication__subtitle">
-              Zaloguj sie na tym komputerze. Sesja zostaje zapamietana - bez ponownego wylogowania.
+              Zaloguj się kontem firmowym. Możesz wylogować się w menu użytkownika.
             </p>
 
-            <div class="dam-auth-mode" role="tablist" aria-label="Tryb konta">
+            <div class="dam-auth-mode" id="authModeTabs" role="tablist" aria-label="Tryb konta" hidden>
               <button type="button" class="is-active" id="tabLogin" data-tab="login">Zaloguj</button>
               <button type="button" id="tabRegister" data-tab="register">Utworz konto</button>
             </div>
@@ -172,19 +174,19 @@
 
             <div class="geex-content__authentication__form-group">
               <div class="geex-content__authentication__label-wrapper">
-                <label for="authPassword">Haslo</label>
+                <label for="authPassword">Hasło</label>
               </div>
               <input type="password" id="authPassword" name="password" required
-                     minlength="4" placeholder="Haslo" autocomplete="current-password">
+                     minlength="4" placeholder="Hasło" autocomplete="current-password">
               <i class="uil-eye toggle-password-type" id="togglePassword" role="button"
-                 tabindex="0" aria-label="Pokaz lub ukryj haslo"></i>
+                 tabindex="0" aria-label="Pokaż lub ukryj hasło"></i>
             </div>
 
             <div class="geex-content__authentication__form-group custom-checkbox" id="rememberWrap">
               <input type="checkbox" class="geex-content__authentication__checkbox-input"
                      id="rememberDevice" checked>
               <label class="geex-content__authentication__checkbox-label" for="rememberDevice">
-                Zapamietaj to urzadzenie
+                Zapamiętaj to urządzenie
               </label>
             </div>
 
@@ -194,7 +196,7 @@
             <p class="dam-auth-msg" id="authMsg" role="status" aria-live="polite"></p>
 
             <div class="geex-content__authentication__form-footer" id="authFooter">
-              Nie masz konta? <a href="#" id="switchToRegister">Utworz konto</a>
+              Nie masz konta? Poproś administratora o dostęp.
             </div>
           </form>
         </div>
@@ -207,12 +209,14 @@
 
   <script src="./assets/js/main.js"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718auth3"></script>
-  <script src="./assets/js/dam-api.js?v=20260718auth3"></script>
+  <script src="./assets/js/dam-api.js?v=20260719golive1"></script>
   <script>
     (function () {
       var mode = "login";
+      var registrationOpen = false;
       var tabLogin = document.getElementById("tabLogin");
       var tabRegister = document.getElementById("tabRegister");
+      var modeTabs = document.getElementById("authModeTabs");
       var nameWrap = document.getElementById("nameWrap");
       var submitBtn = document.getElementById("authSubmit");
       var msg = document.getElementById("authMsg");
@@ -221,6 +225,9 @@
       var toggle = document.getElementById("togglePassword");
 
       function setMode(m) {
+        if (m === "register" && !registrationOpen) {
+          m = "login";
+        }
         mode = m;
         tabLogin.classList.toggle("is-active", m === "login");
         tabRegister.classList.toggle("is-active", m === "register");
@@ -228,30 +235,51 @@
         tabRegister.setAttribute("aria-selected", m === "register" ? "true" : "false");
         nameWrap.hidden = m !== "register";
         pass.autocomplete = m === "register" ? "new-password" : "current-password";
-        /* Seed lokalny: haslo "test" (4). Rejestracja: jak auth_store (min 4). */
-        pass.minLength = 4;
-        pass.setAttribute("minlength", "4");
+        pass.minLength = m === "register" ? 8 : 4;
+        pass.setAttribute("minlength", m === "register" ? "8" : "4");
         submitBtn.textContent = m === "register" ? "Utworz konto" : "Zaloguj";
-        footer.innerHTML = m === "register"
-          ? 'Masz juz konto? <a href="#" id="switchToLogin">Zaloguj sie</a>'
-          : 'Nie masz konta? <a href="#" id="switchToRegister">Utworz konto</a>';
-        var link = footer.querySelector("a");
-        if (link) {
-          link.addEventListener("click", function (e) {
-            e.preventDefault();
-            setMode(m === "register" ? "login" : "register");
-          });
+        if (registrationOpen) {
+          footer.innerHTML = m === "register"
+            ? 'Masz juz konto? <a href="#" id="switchToLogin">Zaloguj sie</a>'
+            : 'Pierwsze uruchomienie: <a href="#" id="switchToRegister">Utworz konto admina</a>';
+          var link = footer.querySelector("a");
+          if (link) {
+            link.addEventListener("click", function (e) {
+              e.preventDefault();
+              setMode(m === "register" ? "login" : "register");
+            });
+          }
+        } else {
+          footer.textContent = "Nie masz konta? Poproś administratora o dostęp.";
         }
         msg.textContent = "";
         msg.className = "dam-auth-msg";
       }
 
+      function applyRegistrationPolicy(open) {
+        registrationOpen = !!open;
+        modeTabs.hidden = !registrationOpen;
+        setMode("login");
+      }
+
+      /* Domyslnie produkcja: rejestracja ukryta; bootstrap tylko gdy API mowi open. */
+      applyRegistrationPolicy(false);
+      try {
+        var base = (window.DamRuntime && typeof DamRuntime.bridgeUrl === "function")
+          ? DamRuntime.bridgeUrl()
+          : "http://127.0.0.1:8766";
+        fetch(String(base).replace(/\/$/, "") + "/auth/registration-open", { cache: "no-store" })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && data.ok && data.open === true) {
+              applyRegistrationPolicy(true);
+            }
+          })
+          .catch(function () { /* zostaw ukryte */ });
+      } catch (_e) { /* zostaw ukryte */ }
+
       tabLogin.addEventListener("click", function () { setMode("login"); });
       tabRegister.addEventListener("click", function () { setMode("register"); });
-      document.getElementById("switchToRegister").addEventListener("click", function (e) {
-        e.preventDefault();
-        setMode("register");
-      });
 
       function flipPassword() {
         var show = pass.type === "password";
@@ -273,7 +301,12 @@
         e.preventDefault();
         if (!window.DamApi) {
           msg.className = "dam-auth-msg is-err";
-          msg.textContent = "Brak polaczenia z aplikacja. Uruchom DAM ETA z pulpitu.";
+          msg.textContent = "Brak polaczenia z aplikacja. Uruchom DAM z pulpitu.";
+          return;
+        }
+        if (mode === "register" && !registrationOpen) {
+          msg.className = "dam-auth-msg is-err";
+          msg.textContent = "Rejestracja publiczna wyłączona. Poproś administratora.";
           return;
         }
         var email = (document.getElementById("authEmail").value || "").trim();

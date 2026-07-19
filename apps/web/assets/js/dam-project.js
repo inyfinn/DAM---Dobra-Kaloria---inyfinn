@@ -100,7 +100,7 @@
     );
   }
 
-  function renderHeaderBadges(p) {
+  function renderHeaderBadges(p, catalogExtra) {
     var host = document.getElementById("damProjectBadges");
     if (!host) return;
     if (!window.DamBadges || typeof window.DamBadges.render !== "function") {
@@ -115,6 +115,7 @@
         productName: p.title,
       }) || "";
     }
+    var packaging = (catalogExtra && catalogExtra.packLabel) || "";
     host.innerHTML = window.DamBadges.render({
       brand: p.brand || (p.market === "GC" ? "GC" : "DK"),
       category: p.category || "",
@@ -124,6 +125,8 @@
       carrierLabel: carrierLbl,
       langs: langs,
       index: p.product_index || "",
+      packagingTags: packaging ? [packaging] : [],
+      includeTagTiers: ["primary", "low"],
       compact: false,
       maxPerKind: 3,
       maxTotal: 12,
@@ -150,6 +153,136 @@
         openWin(this.getAttribute("data-path") || "");
       });
     });
+  }
+
+  function dash(val, hint) {
+    if (val == null || val === "") {
+      return '<p class="dam-catalog-card__value">—</p><p class="dam-catalog-card__hint">' + esc(hint || "Uzupełnij w katalogu") + "</p>";
+    }
+    return '<p class="dam-catalog-card__value">' + esc(String(val)) + "</p>";
+  }
+
+  function bridgeUrl() {
+    if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
+      return window.DamRuntime.bridgeUrl();
+    }
+    return "http://127.0.0.1:8766";
+  }
+
+  async function fetchJsonLocal(path) {
+    var r = await fetch(path + "?v=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error(path);
+    return r.json();
+  }
+
+  async function loadCatalogBundle(productId) {
+    var catalog = null;
+    var bulk = null;
+    var price = null;
+    try {
+      catalog = await fetchJsonLocal("data/product-catalog.json");
+    } catch (e) { /* optional */ }
+    try {
+      bulk = await fetchJsonLocal("data/bulk-packaging.json");
+    } catch (e2) { /* optional */ }
+    try {
+      var pr = await fetch(bridgeUrl() + "/product-price?product_id=" + encodeURIComponent(productId), {
+        cache: "no-store",
+      });
+      if (pr.ok) price = await pr.json();
+    } catch (e3) { /* bridge offline */ }
+    var entry = catalog && catalog.products ? catalog.products[productId] : null;
+    var packLabel = "";
+    if (entry && entry.bulk_packaging_ref && bulk && bulk.packs) {
+      var pack = bulk.packs[entry.bulk_packaging_ref];
+      if (pack && pack.label) packLabel = pack.label;
+    }
+    return { entry: entry, bulk: bulk, price: price, packLabel: packLabel };
+  }
+
+  function renderCatalog(p, bundle) {
+    var host = document.getElementById("damCatalogBody");
+    if (!host) return;
+    var entry = bundle.entry || {};
+    var dims = entry.dimensions_mm || {};
+    var weight = entry.weight_g || {};
+    var pal = entry.palletization || {};
+    var dimStr =
+      dims.w || dims.h || dims.d
+        ? [dims.w, dims.h, dims.d].filter(Boolean).join(" × ") + " mm"
+        : null;
+    var priceHtml = "—";
+    var priceHint = "Cena ze sklepu (odświeżanie 1×/dobę)";
+    if (bundle.price && bundle.price.ok && bundle.price.price_pln != null) {
+      priceHtml = String(bundle.price.price_pln).replace(".", ",") + " zł";
+      if (bundle.price.fetched_at) {
+        priceHint = "Sklep · " + String(bundle.price.fetched_at).slice(0, 10);
+      }
+    }
+    var shopLink = entry.shop_url
+      ? '<a class="dam-catalog-shop-link" href="' +
+        esc(entry.shop_url) +
+        '" target="_blank" rel="noopener noreferrer"><i class="uil uil-external-link-alt"></i> Zobacz w sklepie</a>'
+      : "";
+    host.innerHTML =
+      '<div class="dam-catalog-grid">' +
+      '<div class="dam-catalog-card dam-catalog-card--price"><p class="dam-catalog-card__label">Cena</p>' +
+      '<p class="dam-catalog-card__value">' +
+      esc(priceHtml) +
+      "</p><p class="dam-catalog-card__hint">" +
+      esc(priceHint) +
+      "</p>" +
+      shopLink +
+      "</div>" +
+      '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Wymiary</p>' +
+      dash(dimStr) +
+      "</div>" +
+      '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Waga netto</p>' +
+      dash(weight.net != null ? weight.net + " g" : null) +
+      "</div>" +
+      '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Szt. w kartonie</p>' +
+      dash(entry.units_per_bulk_case != null ? String(entry.units_per_bulk_case) : null) +
+      "</div>" +
+      '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Paletyzacja</p>' +
+      dash(
+        pal.units_per_pallet != null
+          ? pal.units_per_pallet + " szt./paleta"
+          : pal.units_per_layer
+            ? pal.units_per_layer + " × " + (pal.layers_per_pallet || "?") + " warstw"
+            : null
+      ) +
+      "</div>" +
+      (bundle.packLabel
+        ? '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Pakowanie zbiorcze</p><div class="dam-catalog-pack-badge"><span class="dam-viz-badge dam-badge-tag dam-badge-tag--pakowanie dam-badge-tag--tier-low">' +
+          esc(bundle.packLabel) +
+          "</span></div></div>"
+        : "") +
+      "</div>";
+  }
+
+  async function renderMarketingShort(productId) {
+    var host = document.getElementById("damMarketingShortBody");
+    if (!host) return;
+    try {
+      var idx = await fetchJsonLocal("data/branding-index.json");
+      var assets = (idx.assets || []).filter(function (a) {
+        return (a.linked_product_ids || []).indexOf(productId) !== -1;
+      });
+      if (!assets.length) {
+        host.innerHTML =
+          '<p class="dam-catalog-marketing__empty">Brak powiązanych assetów — zbuduj indeks Branding.</p>';
+        return;
+      }
+      host.innerHTML =
+        '<p class="dam-catalog-marketing__empty">' +
+        assets.length +
+        ' assetów marketingowych · <a href="branding.html?q=' +
+        encodeURIComponent(productId) +
+        '">Otwórz Branding</a></p>';
+    } catch (e) {
+      host.innerHTML =
+        '<p class="dam-catalog-marketing__empty">Brak powiązanych assetów — zbuduj indeks Branding.</p>';
+    }
   }
 
   function fillActions(p, variant, canWrite) {
@@ -234,7 +367,10 @@
           st === "complete" ? "kompletny" : st === "incomplete" ? "niekompletny" : "do sprawdzenia";
         subEl.textContent = "Status: " + stHuman;
       }
-      renderHeaderBadges(p);
+      var catalogBundle = await loadCatalogBundle(p.id);
+      renderCatalog(p, catalogBundle);
+      renderMarketingShort(p.id);
+      renderHeaderBadges(p, catalogBundle);
 
       var present = {};
       var paths = {};

@@ -55,10 +55,12 @@ from auth_store import (
     init_db as auth_init_db,
     list_users,
     login as auth_login,
+    logout as auth_logout,
     register_user,
     rehydrate_session as auth_rehydrate,
     resolve_session,
     seed_owner_from_env,
+    users_count,
 )
 
 try:
@@ -121,25 +123,126 @@ def is_probably_file(p: str) -> bool:
 def reveal_in_explorer(target: str) -> dict:
     target = normalize_path(target)
     if not os.path.exists(target):
+        # #region agent log
+        try:
+            with open(
+                Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
+                "a",
+                encoding="utf-8",
+            ) as _f:
+                _f.write(
+                    json.dumps(
+                        {
+                            "sessionId": "a78fa0",
+                            "hypothesisId": "B",
+                            "location": "local_bridge.py:reveal_in_explorer",
+                            "message": "path_not_found",
+                            "data": {"path_tail": target[-80:], "exists": False},
+                            "timestamp": int(time.time() * 1000),
+                            "runId": "pre-fix",
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+        # #endregion
         return {"ok": False, "error": "path_not_found", "path": target}
+    if not _is_under_marketing(Path(target)):
+        # #region agent log
+        try:
+            with open(
+                Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
+                "a",
+                encoding="utf-8",
+            ) as _f:
+                _f.write(
+                    json.dumps(
+                        {
+                            "sessionId": "a78fa0",
+                            "hypothesisId": "B",
+                            "location": "local_bridge.py:reveal_in_explorer",
+                            "message": "path_outside_marketing",
+                            "data": {
+                                "path_tail": target[-80:],
+                                "drive": target[:3],
+                                "is_documents": "Dokumenty" in target or "Documents" in target,
+                            },
+                            "timestamp": int(time.time() * 1000),
+                            "runId": "pre-fix",
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+        # #endregion
+        return {"ok": False, "error": "path_outside_marketing", "path": target}
 
-    # File: open parent and SELECT the file. Folder: open the folder.
-    if os.path.isfile(target) or is_probably_file(target):
-        cmd = f'explorer /select,"{target}"'
+    # Bez shell=True (unikaj injection przez cudzyslowy w sciezce).
+    # WAŻNE: ["/select," + path] ze spacjami = Windows otwiera Dokumenty.
+    # Poprawnie: osobny argument sciezki po "/select,".
+    # Foldery typu "6300084.00" maja kropke - NIE wolno traktowac ich jako plik.
+    _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+    if os.path.isfile(target):
+        args = ["explorer", "/select,", target]
+        mode = "select"
+    elif os.path.isdir(target):
+        args = ["explorer", target]
+        mode = "open"
+    elif is_probably_file(target):
+        args = ["explorer", "/select,", target]
+        mode = "select"
     else:
-        cmd = f'explorer "{target}"'
+        args = ["explorer", target]
+        mode = "open"
 
     try:
-        _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+        # #region agent log
+        try:
+            with open(
+                Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
+                "a",
+                encoding="utf-8",
+            ) as _f:
+                _f.write(
+                    json.dumps(
+                        {
+                            "sessionId": "a78fa0",
+                            "hypothesisId": "E",
+                            "location": "local_bridge.py:reveal_in_explorer",
+                            "message": "launching explorer",
+                            "data": {
+                                "mode": mode,
+                                "path_tail": target[-90:],
+                                "drive": target[:3],
+                                "is_dir": os.path.isdir(target),
+                                "is_file": os.path.isfile(target),
+                                "args_len": len(args),
+                                "select_split": mode == "select" and len(args) == 3,
+                                "creationflags": int(_no_win),
+                            },
+                            "timestamp": int(time.time() * 1000),
+                            "runId": "post-fix",
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+        # #endregion
         subprocess.Popen(
-            cmd,
-            shell=True,
+            args,
+            shell=False,
             creationflags=_no_win,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        return {"ok": True, "path": target, "command": "select" if os.path.isfile(target) else "open"}
+        return {"ok": True, "path": target, "command": mode}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc), "path": target}
 
@@ -149,6 +252,8 @@ def invoke_synology_share(target: str) -> dict:
     target = normalize_path(target)
     if not os.path.exists(target):
         return {"ok": False, "error": "path_not_found", "path": target}
+    if not _is_under_marketing(Path(target)):
+        return {"ok": False, "error": "path_outside_marketing", "path": target}
     if not os.path.isfile(target):
         return {"ok": False, "error": "not_a_file", "path": target}
     if not SYNOLOGY_SCRIPT.is_file():
@@ -433,6 +538,20 @@ def _run_index_rebuild() -> None:
                 "meta": {"rc": rc},
             }
         )
+        if rc == 0:
+            try:
+                import meta_store
+
+                meta_store.sync_from_file_index()
+            except Exception as meta_exc:  # noqa: BLE001
+                append_audit(
+                    {
+                        "action": "meta_sync",
+                        "user": "system",
+                        "detail": str(meta_exc),
+                        "meta": {},
+                    }
+                )
     except Exception as exc:  # noqa: BLE001
         with _index_lock:
             _index_state["last_ok"] = False
@@ -846,6 +965,18 @@ KNOWN_CARRIER_PREFIXES = (
 NAMING_DICTIONARY_FILE = WEB_ROOT / "data" / "naming-dictionary.json"
 APP_SETTINGS_FILE = WEB_ROOT / "data" / "app-settings.json"
 PROGRAM_INSTRUCTIONS_FILE = WEB_ROOT / "data" / "program-instructions.json"
+PRODUCT_CATALOG_FILE = WEB_ROOT / "data" / "product-catalog.json"
+PRODUCT_PRICES_CACHE_FILE = WEB_ROOT / "data" / "product-prices-cache.json"
+BULK_PACKAGING_FILE = WEB_ROOT / "data" / "bulk-packaging.json"
+SHOP_CATEGORIES_FILE = WEB_ROOT / "data" / "shop-categories.json"
+BRANDING_INDEX_FILE = WEB_ROOT / "data" / "branding-index.json"
+BRANDING_STATUS_FILE = WEB_ROOT / "data" / "branding-build-status.json"
+BRANDING_RECOGNIZE_STATUS_FILE = WEB_ROOT / "data" / "branding-recognize-status.json"
+WYKROJNIKI_REGISTRY_FILE = WEB_ROOT / "data" / "wykrojniki-registry.json"
+BUILD_BRANDING_INDEX = WEB_ROOT / "scripts" / "build-branding-index.py"
+FETCH_PRODUCT_PRICES = WEB_ROOT / "scripts" / "fetch-product-prices.py"
+IMPORT_WYKROJNIKI = WEB_ROOT / "scripts" / "import-wykrojniki-xlsx.py"
+ENRICH_BRANDING_RECOGNIZE = WEB_ROOT / "scripts" / "enrich-branding-recognize.py"
 
 _CARRIER_FOLDER_PREFIX_FALLBACK = {
     "BAT": "BAT",
@@ -2445,10 +2576,15 @@ def write_viz_flags(payload: dict) -> dict:
     return {"ok": True, "flags": current, "store": str(flags_file)}
 
 
+_MEDIA_MAX_BYTES = 40 * 1024 * 1024  # 40 MB - anty DoS przez odczyt ogromnych plikow
+
+
 def serve_media(path: str) -> tuple[int, bytes, str]:
     target = normalize_path(path)
     if not os.path.isfile(target):
         return 404, b"", "application/json"
+    if not _is_under_marketing(Path(target)):
+        return 403, b"", "application/json"
     ext = Path(target).suffix.lower()
     mime = {
         ".png": "image/png",
@@ -2459,7 +2595,14 @@ def serve_media(path: str) -> tuple[int, bytes, str]:
         ".tif": "image/tiff",
         ".tiff": "image/tiff",
         ".svg": "image/svg+xml",
-    }.get(ext, "application/octet-stream")
+    }.get(ext)
+    if not mime:
+        return 415, b"", "application/json"
+    try:
+        if os.path.getsize(target) > _MEDIA_MAX_BYTES:
+            return 413, b"", "application/json"
+    except OSError:
+        return 404, b"", "application/json"
     # TIFF often unsupported in browsers - still serve; client may fallback
     with open(target, "rb") as fh:
         return 200, fh.read(), mime
@@ -2470,6 +2613,8 @@ def media_meta(path: str) -> dict:
     target = normalize_path(path)
     if not os.path.isfile(target):
         return {"ok": False, "error": "not_found", "path": target}
+    if not _is_under_marketing(Path(target)):
+        return {"ok": False, "error": "path_outside_marketing", "path": target}
     size_bytes = os.path.getsize(target)
     out: dict = {
         "ok": True,
@@ -2514,10 +2659,18 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         print("[dam-bridge]", fmt % args)
 
+    def _origin_ok(self) -> bool:
+        """CORS: tylko UI origin (albo brak Origin = same-origin / narzedzia lokalne)."""
+        origin = (self.headers.get("Origin") or "").strip()
+        if not origin:
+            return True
+        return origin.rstrip("/") == CORS_ORIGIN.rstrip("/")
+
     def _cors(self):
         self.send_header("Access-Control-Allow-Origin", CORS_ORIGIN)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Vary", "Origin")
 
     def _json(self, code: int, payload: dict | list):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -2538,6 +2691,10 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_OPTIONS(self):  # noqa: N802
+        if not self._origin_ok():
+            self.send_response(403)
+            self.end_headers()
+            return
         self.send_response(204)
         self._cors()
         self.end_headers()
@@ -2593,14 +2750,24 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)
+        # OAuth callback moze przyjsc z Origin zewnetrznego IdP - nie blokuj.
+        if parsed.path != "/oauth/callback" and not self._origin_ok():
+            self._json(403, {"ok": False, "error": "origin_forbidden"})
+            return
         if parsed.path == "/health":
             self._json(200, {"ok": True, "service": "dam-local-bridge", "port": PORT})
             return
         if parsed.path == "/detect-marketing-bases":
+            # Lokalny most 127.0.0.1 - status dysku bez Bearer (UI pyta przed / bez sesji)
             self._json(200, detect_marketing_bases())
             return
         if parsed.path == "/machine-config":
             self._json(200, read_machine_config())
+            return
+        if parsed.path == "/auth/registration-open":
+            # Publiczny (localhost): czy UI moze pokazac "Utworz konto".
+            n = users_count()
+            self._json(200, {"ok": True, "open": n == 0, "users": n})
             return
         if parsed.path == "/auth/identity":
             try:
@@ -2628,6 +2795,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "users": list_users()})
             return
         if parsed.path == "/files/status":
+            # Status ROOT plikow - bez loginu (pill "Pliki online/offline")
             qs = parse_qs(parsed.query)
             root = (qs.get("root") or [""])[0].strip()
             if not root:
@@ -2656,6 +2824,8 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
         if parsed.path == "/audit":
+            if self._require_login() is None:
+                return
             qs = parse_qs(parsed.query)
             limit = int((qs.get("limit") or ["100"])[0])
             self._json(200, {"ok": True, "items": read_audit(max(1, min(limit, 500)))})
@@ -2663,7 +2833,16 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/index/status":
             self._json(200, index_status())
             return
+        if parsed.path == "/meta/status":
+            try:
+                import meta_store
+
+                self._json(200, meta_store.status())
+            except Exception as exc:
+                self._json(500, {"ok": False, "error": str(exc)})
+            return
         if parsed.path == "/folder-images":
+            # Odczyt lokalny Marketing (jail) - img/fetch bez Bearer
             qs = parse_qs(parsed.query)
             path = (qs.get("path") or [""])[0]
             if not path:
@@ -2672,6 +2851,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, list_folder_images(path))
             return
         if parsed.path == "/folder-browse":
+            # Odczyt lokalny Marketing (jail) - picker bez Bearer
             qs = parse_qs(parsed.query)
             path = (qs.get("path") or [""])[0]
             mode = (qs.get("mode") or ["assets"])[0]
@@ -2681,7 +2861,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, list_folder_browse(path, mode=mode))
             return
         if parsed.path in ("/db/status", "/pg/status"):
-            # /pg/status = alias historyczny do /db/status
+            # Pill "Baza online/offline" - bez Bearera (localhost)
             self._json(200, dam_db.status() if dam_db else {"ok": False, "error": "dam_db_missing"})
             return
         if parsed.path == "/db/prefer":
@@ -2691,6 +2871,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "prefer": dam_db.load_prefer()})
             return
         if parsed.path == "/media":
+            # Miniatury w <img src> nie moga wyslac Authorization - localhost + jail Marketing
             qs = parse_qs(parsed.query)
             path = (qs.get("path") or [""])[0]
             if not path:
@@ -2698,7 +2879,12 @@ class Handler(BaseHTTPRequestHandler):
                 return
             code, body, ctype = serve_media(path)
             if code != 200:
-                self._json(404, {"ok": False, "error": "not_found", "path": path})
+                err = {
+                    403: "path_outside_marketing",
+                    413: "file_too_large",
+                    415: "unsupported_media",
+                }.get(code, "not_found")
+                self._json(code if code in (403, 413, 415) else 404, {"ok": False, "error": err, "path": path})
                 return
             self._bytes(200, body, ctype)
             return
@@ -2711,10 +2897,14 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, media_meta(path))
             return
         if parsed.path == "/tag-proposals":
+            if self._require_login() is None:
+                return
             auto_apply_expired_proposals()
             self._json(200, load_tag_proposals())
             return
         if parsed.path == "/change-log":
+            if self._require_login() is None:
+                return
             qs = parse_qs(parsed.query)
             limit = int((qs.get("limit") or ["40"])[0])
             self._json(200, load_change_log(limit))
@@ -2747,20 +2937,59 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
         if parsed.path == "/lifecycle-status":
+            if self._require_login() is None:
+                return
             if lifecycle_status_mod is None:
                 self._json(500, {"ok": False, "error": "lifecycle_module_missing"})
                 return
             store = lifecycle_status_mod.load_lifecycle_store(LIFECYCLE_STORE_FILE)
             self._json(200, {"ok": True, **store})
             return
+        if parsed.path == "/lifecycle-reconcile":
+            # Odswiez (pull) lub boot (mtime) - dysk -> program; boot moze przeniesc X do archiwum
+            user = self._require_login()
+            if user is None:
+                return
+            if lifecycle_status_mod is None:
+                self._json(500, {"ok": False, "error": "lifecycle_module_missing"})
+                return
+            qs = parse_qs(parsed.query)
+            mode = ((qs.get("mode") or ["pull"])[0] or "pull").strip().lower()
+            pid_filter = ((qs.get("product_id") or [""])[0] or "").strip() or None
+            actor = (user.get("email") or user.get("name") or "reconcile") if isinstance(user, dict) else "reconcile"
+            if mode in ("boot", "startup", "mtime"):
+                result = lifecycle_status_mod.reconcile_lifecycle_on_boot(
+                    store_path=LIFECYCLE_STORE_FILE,
+                    file_index_path=INDEX_FILE,
+                    actor=str(actor),
+                    product_id_filter=pid_filter,
+                    enforce_moves=True,
+                    append_change_log=append_change_log,
+                )
+            else:
+                result = lifecycle_status_mod.pull_lifecycle_from_disk(
+                    store_path=LIFECYCLE_STORE_FILE,
+                    file_index_path=INDEX_FILE,
+                    actor=str(actor),
+                    product_id_filter=pid_filter,
+                )
+            # nie zwracaj calego store w body (duzy) - UI i tak przeladuje
+            body = {k: v for k, v in result.items() if k != "store"}
+            body["ok"] = bool(result.get("ok"))
+            self._json(200 if body.get("ok") else 400, body)
+            return
         if parsed.path == "/tag-proposals/timeline":
+            if self._require_login() is None:
+                return
             qs = parse_qs(parsed.query)
             pid = (qs.get("proposal_id") or [""])[0].strip()
             result = build_change_timeline_for_proposal(pid)
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/carrier-assignment":
-            # Discrepancy: dysk vs ostatnie zatwierdzenie (Fala D znak ?)
+            if self._require_login() is None:
+                return
+            # Discrepancy: dysk vs ostatnie zatwierdzenie
             qs = parse_qs(parsed.query)
             rev = (qs.get("path") or qs.get("revision_path") or [""])[0].strip()
             disk = (qs.get("disk_carrier") or [""])[0].strip().upper()
@@ -2782,19 +3011,39 @@ class Handler(BaseHTTPRequestHandler):
             })
             return
         if parsed.path == "/carrier-types":
+            if self._require_login() is None:
+                return
             self._json(200, _load_json(CARRIER_TYPES_FILE, {"custom_types": {}, "deleted_types": {}}))
             return
         if parsed.path == "/inbox-items":
+            if self._require_login() is None:
+                return
             self._json(200, _load_json(INBOX_ITEMS_FILE, {"items": []}))
             return
         if parsed.path == "/integrations/status":
+            if self._require_login() is None:
+                return
             if oauth_integrations is None:
                 self._json(500, {"ok": False, "error": "oauth_module_missing"})
                 return
             self._json(200, oauth_integrations.status())
             return
+        if parsed.path == "/notification-groups":
+            if self._require_login() is None:
+                return
+            groups = _load_json(NOTIFICATION_GROUPS_FILE, {})
+            # Nie zwracaj meta-kluczy typu _readme jako grupy
+            clean = {
+                k: v
+                for k, v in (groups or {}).items()
+                if isinstance(v, list) and not str(k).startswith("_")
+            }
+            self._json(200, {"ok": True, "groups": clean})
+            return
         if parsed.path == "/oauth/callback":
             # Redirect z Asana / Microsoft - wymiana code, potem HTML z komunikatem
+            import html as _html
+
             if oauth_integrations is None:
                 self._json(500, {"ok": False, "error": "oauth_module_missing"})
                 return
@@ -2802,30 +3051,106 @@ class Handler(BaseHTTPRequestHandler):
             code = (qs.get("code") or [""])[0]
             state = (qs.get("state") or [""])[0]
             err = (qs.get("error") or [""])[0]
+            ui_origin = (CORS_ORIGIN or "http://127.0.0.1:8765").rstrip("/")
+            settings_url = ui_origin + "/settings.html"
+            settings_hash = settings_url + "#damIntegrations"
             if err:
-                html = (
+                safe_err = _html.escape(str(err)[:500])
+                safe_settings = _html.escape(settings_url)
+                page = (
                     "<!doctype html><meta charset=utf-8><title>OAuth</title>"
-                    f"<h1>Logowanie przerwane</h1><p>{err}</p>"
-                    '<p><a href="http://127.0.0.1:8765/settings.html">Wróć do Ustawień</a></p>'
+                    f"<h1>Logowanie przerwane</h1><p>{safe_err}</p>"
+                    f'<p><a href="{safe_settings}">Wroc do Ustawien</a></p>'
                 )
-                self._bytes(400, html.encode("utf-8"), "text/html; charset=utf-8")
+                self._bytes(400, page.encode("utf-8"), "text/html; charset=utf-8")
                 return
             result = oauth_integrations.complete_callback(code, state)
             ok = result.get("ok")
-            html = (
+            safe_provider = _html.escape(str(result.get("provider") or "")[:120])
+            safe_msg = _html.escape(str(result.get("error") or "OK")[:500])
+            safe_hash = _html.escape(settings_hash)
+            page = (
                 "<!doctype html><meta charset=utf-8><title>OAuth</title>"
-                f"<h1>{'Połączono' if ok else 'Błąd OAuth'}</h1>"
-                f"<p>{result.get('provider') or ''} - {result.get('error') or 'OK'}</p>"
-                '<p><a href="http://127.0.0.1:8765/settings.html#damIntegrations">'
-                "Wróć do Ustawień / Integracje</a></p>"
-                "<script>setTimeout(function(){location.href='http://127.0.0.1:8765/settings.html#damIntegrations'},1500)</script>"
+                f"<h1>{'Polaczono' if ok else 'Blad OAuth'}</h1>"
+                f"<p>{safe_provider} - {safe_msg}</p>"
+                f'<p><a href="{safe_hash}">'
+                "Wroc do Ustawien / Integracje</a></p>"
+                f"<script>setTimeout(function(){{location.href={json.dumps(settings_hash)}}},1500)</script>"
             )
-            self._bytes(200 if ok else 400, html.encode("utf-8"), "text/html; charset=utf-8")
+            self._bytes(200 if ok else 400, page.encode("utf-8"), "text/html; charset=utf-8")
+            return
+        if parsed.path == "/product-catalog":
+            data = _load_json(PRODUCT_CATALOG_FILE, None)
+            if not isinstance(data, dict):
+                self._json(404, {"ok": False, "error": "product_catalog_missing"})
+                return
+            self._json(200, {"ok": True, **data})
+            return
+        if parsed.path == "/product-price":
+            qs = parse_qs(parsed.query)
+            product_id = (qs.get("product_id") or [""])[0].strip()
+            if not product_id:
+                self._json(400, {"ok": False, "error": "product_id_required"})
+                return
+            cache = _load_json(PRODUCT_PRICES_CACHE_FILE, {"products": {}})
+            hit = (cache.get("products") or {}).get(product_id)
+            if not hit and FETCH_PRODUCT_PRICES.is_file():
+                try:
+                    _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+                    subprocess.call(
+                        [sys.executable, str(FETCH_PRODUCT_PRICES), "--product-id", product_id],
+                        creationflags=_no_win,
+                    )
+                    cache = _load_json(PRODUCT_PRICES_CACHE_FILE, {"products": {}})
+                    hit = (cache.get("products") or {}).get(product_id)
+                except OSError:
+                    pass
+            if not hit:
+                self._json(404, {"ok": False, "error": "price_not_found", "product_id": product_id})
+                return
+            self._json(200, {"ok": True, "product_id": product_id, **hit})
+            return
+        if parsed.path == "/bulk-packaging":
+            data = _load_json(BULK_PACKAGING_FILE, None)
+            if not isinstance(data, dict):
+                self._json(404, {"ok": False, "error": "bulk_packaging_missing"})
+                return
+            self._json(200, {"ok": True, **data})
+            return
+        if parsed.path == "/shop-categories":
+            data = _load_json(SHOP_CATEGORIES_FILE, None)
+            if not isinstance(data, dict):
+                self._json(404, {"ok": False, "error": "shop_categories_missing"})
+                return
+            self._json(200, {"ok": True, **data})
+            return
+        if parsed.path == "/branding-index":
+            data = _load_json(BRANDING_INDEX_FILE, None)
+            if not isinstance(data, dict):
+                self._json(404, {"ok": False, "error": "branding_index_missing"})
+                return
+            self._json(200, {"ok": True, **data})
+            return
+        if parsed.path in ("/branding/status", "/branding/recognize/status"):
+            status_file = BRANDING_RECOGNIZE_STATUS_FILE if "recognize" in parsed.path else BRANDING_STATUS_FILE
+            data = _load_json(status_file, {"ok": False, "state": "unknown"})
+            self._json(200, data if isinstance(data, dict) else {"ok": False})
+            return
+        if parsed.path == "/wykrojniki-registry":
+            data = _load_json(WYKROJNIKI_REGISTRY_FILE, None)
+            if not isinstance(data, dict):
+                self._json(404, {"ok": False, "error": "wykrojniki_registry_missing"})
+                return
+            self._json(200, {"ok": True, **data})
             return
         self._json(404, {"ok": False, "error": "not_found"})
 
     def do_POST(self):  # noqa: N802
         length = int(self.headers.get("Content-Length") or 0)
+        # Limit body (anty DoS) - 2 MB wystarczy na JSON mostu
+        if length > 2 * 1024 * 1024:
+            self._json(413, {"ok": False, "error": "payload_too_large"})
+            return
         raw = self.rfile.read(length) if length else b"{}"
         try:
             data = json.loads(raw.decode("utf-8") or "{}")
@@ -2834,7 +3159,36 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         parsed = urlparse(self.path)
+        if parsed.path != "/oauth/callback" and not self._origin_ok():
+            self._json(403, {"ok": False, "error": "origin_forbidden"})
+            return
         if parsed.path == "/reveal":
+            # #region agent log
+            try:
+                _user = self._session_user() or {}
+                _dbg = {
+                    "sessionId": "a78fa0",
+                    "hypothesisId": "A",
+                    "location": "local_bridge.py:/reveal",
+                    "message": "reveal request",
+                    "data": {
+                        "has_bearer": bool(self._bearer()),
+                        "path_len": len((data.get("path") or "").strip()),
+                        "user_email": str(_user.get("email") or "")[:80],
+                    },
+                    "timestamp": int(time.time() * 1000),
+                    "runId": "post-fix",
+                }
+                with open(
+                    Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
+                    "a",
+                    encoding="utf-8",
+                ) as _f:
+                    _f.write(json.dumps(_dbg, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
+            # #endregion
+            # Lokalny most 127.0.0.1: otwarcie folderu w Marketing (jail) bez Bearer.
             path = (data.get("path") or "").strip()
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
@@ -2842,6 +3196,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, reveal_in_explorer(path))
             return
         if parsed.path == "/synology-share":
+            if self._require_login() is None:
+                return
             path = (data.get("path") or "").strip()
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
@@ -2856,17 +3212,51 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, validate_base(path))
             return
         if parsed.path == "/machine-config":
+            # Zapis sciezki Marketing tylko dla zalogowanego uzytkownika
+            if self._require_login() is None:
+                return
             path = (data.get("base_path") or data.get("path") or "").strip()
             if not path:
                 self._json(400, {"ok": False, "error": "base_path_required"})
                 return
             self._json(200, write_machine_config(path))
             return
+        if parsed.path == "/meta/sync":
+            if self._require_admin() is None:
+                return
+            try:
+                import meta_store
+
+                self._json(200, meta_store.sync_from_file_index())
+            except Exception as exc:
+                self._json(500, {"ok": False, "error": str(exc)})
+            return
+        if parsed.path == "/auth/logout":
+            res = auth_logout(self._bearer())
+            self._json(200 if res.get("ok") else 401, res)
+            return
         if parsed.path == "/auth/register":
-            # Domyslnie zawsze role=user. Role admin/power_user tylko gdy sesja admina.
-            requested_role = (data.get("role") or "user").strip().lower()
+            # Bootstrap: pierwsze konto w systemie (zawsze role=admin).
+            # Potem: tylko admin moze zakladac konta (wczesniej kazdy lokalny mogl).
             admin = self._session_user()
-            if not admin or (admin.get("role") or "") != "admin":
+            is_admin = bool(admin and (admin.get("role") or "") == "admin")
+            bootstrap = users_count() == 0
+            if not bootstrap and not is_admin:
+                self._json(
+                    403,
+                    {
+                        "ok": False,
+                        "error": "admin_required",
+                        "hint": "Nowe konta zaklada tylko administrator.",
+                    },
+                )
+                return
+            requested_role = (data.get("role") or "user").strip().lower()
+            if bootstrap:
+                requested_role = "admin"
+            elif not is_admin:
+                requested_role = "user"
+            if requested_role not in ("admin", "power_user", "user"):
                 requested_role = "user"
             self._json(
                 200,
@@ -2909,9 +3299,77 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, append_audit(payload))
             return
         if parsed.path == "/index/rebuild":
-            if self._require_admin() is None:
+            # Odswiez liste z dysku: kazda zalogowana sesja (nie tylko admin).
+            if self._require_login() is None:
                 return
             self._json(200, start_index_rebuild())
+            return
+        if parsed.path == "/branding/rebuild":
+            if self._require_login() is None:
+                return
+            if not BUILD_BRANDING_INDEX.is_file():
+                self._json(500, {"ok": False, "error": "build_branding_missing"})
+                return
+            try:
+                _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+                rc = subprocess.call(
+                    [sys.executable, str(BUILD_BRANDING_INDEX)],
+                    creationflags=_no_win,
+                )
+                self._json(200, {"ok": rc == 0, "rc": rc})
+            except OSError as exc:
+                self._json(500, {"ok": False, "error": str(exc)})
+            return
+        if parsed.path == "/branding/recognize":
+            if self._require_admin() is None:
+                return
+            if not ENRICH_BRANDING_RECOGNIZE.is_file():
+                self._json(500, {"ok": False, "error": "recognize_script_missing"})
+                return
+            try:
+                _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+                rc = subprocess.call(
+                    [sys.executable, str(ENRICH_BRANDING_RECOGNIZE)],
+                    creationflags=_no_win,
+                )
+                self._json(200, {"ok": rc == 0, "rc": rc})
+            except OSError as exc:
+                self._json(500, {"ok": False, "error": str(exc)})
+            return
+        if parsed.path == "/wykrojniki/reimport":
+            if self._require_admin() is None:
+                return
+            if not IMPORT_WYKROJNIKI.is_file():
+                self._json(500, {"ok": False, "error": "import_script_missing"})
+                return
+            try:
+                _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+                rc = subprocess.call(
+                    [sys.executable, str(IMPORT_WYKROJNIKI)],
+                    creationflags=_no_win,
+                )
+                self._json(200, {"ok": rc == 0, "rc": rc})
+            except OSError as exc:
+                self._json(500, {"ok": False, "error": str(exc)})
+            return
+        if parsed.path == "/product-catalog/update":
+            if self._require_admin() is None:
+                return
+            product_id = (data.get("product_id") or "").strip()
+            patch = data.get("patch") or data.get("entry") or {}
+            if not product_id or not isinstance(patch, dict):
+                self._json(400, {"ok": False, "error": "product_id_and_patch_required"})
+                return
+            catalog = _load_json(PRODUCT_CATALOG_FILE, {"version": 1, "products": {}})
+            products = catalog.setdefault("products", {})
+            base = products.get(product_id) if isinstance(products.get(product_id), dict) else {}
+            products[product_id] = {**base, **patch}
+            catalog["updated_at"] = utc_now()
+            PRODUCT_CATALOG_FILE.write_text(
+                json.dumps(catalog, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            self._json(200, {"ok": True, "product_id": product_id})
             return
         if parsed.path == "/carrier-override":
             if self._require_admin() is None:
@@ -2988,6 +3446,28 @@ class Handler(BaseHTTPRequestHandler):
                 except Exception:  # noqa: BLE001
                     pass
             self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/lifecycle-force":
+            # Stosuj zmiany: PROGRAM -> dysk (FORCE)
+            user = self._require_admin()
+            if user is None:
+                return
+            if lifecycle_status_mod is None:
+                self._json(500, {"ok": False, "error": "lifecycle_module_missing"})
+                return
+            payload = data if isinstance(data, dict) else {}
+            pid_filter = str(payload.get("product_id") or "").strip() or None
+            dry_run = bool(payload.get("dry_run"))
+            result = lifecycle_status_mod.force_apply_program_to_disk(
+                store_path=LIFECYCLE_STORE_FILE,
+                file_index_path=INDEX_FILE,
+                actor=(user.get("email") or user.get("name") or "force"),
+                product_id_filter=pid_filter,
+                dry_run=dry_run,
+                append_change_log=append_change_log,
+            )
+            body = {k: v for k, v in result.items() if k != "store"}
+            self._json(200 if body.get("ok") else 400, body)
             return
         if parsed.path == "/rename-revision-prefix":
             user = self._require_login()
@@ -3134,6 +3614,45 @@ class Handler(BaseHTTPRequestHandler):
                 return
             provider = (data.get("provider") or "").strip().lower()
             self._json(200, oauth_integrations.disconnect(provider))
+            return
+        if parsed.path == "/notification-groups":
+            if self._require_login() is None:
+                return
+            incoming = data.get("groups") if isinstance(data.get("groups"), dict) else data
+            if not isinstance(incoming, dict):
+                self._json(400, {"ok": False, "error": "invalid_groups"})
+                return
+            current = _load_json(NOTIFICATION_GROUPS_FILE, {})
+            if not isinstance(current, dict):
+                current = {}
+            # Zachowaj _readme i inne meta; aktualizuj tylko listy odbiorców
+            for key, val in incoming.items():
+                if str(key).startswith("_"):
+                    continue
+                if not isinstance(val, list):
+                    continue
+                cleaned = []
+                for item in val:
+                    if isinstance(item, dict):
+                        email = str(item.get("email") or "").strip()
+                        name = str(item.get("name") or "").strip()
+                        if email and "@" in email:
+                            cleaned.append({"name": name or email, "email": email})
+                    elif isinstance(item, str) and "@" in item:
+                        cleaned.append({"name": item, "email": item.strip()})
+                current[key] = cleaned
+            if "_readme" not in current:
+                current["_readme"] = (
+                    "Grupy odbiorcow powiadomien. Edytuj w Ustawieniach DAM "
+                    "lub w tym pliku - kod NIE trzeba zmieniac."
+                )
+            _save_json(NOTIFICATION_GROUPS_FILE, current)
+            clean = {
+                k: v
+                for k, v in current.items()
+                if isinstance(v, list) and not str(k).startswith("_")
+            }
+            self._json(200, {"ok": True, "groups": clean})
             return
         if parsed.path in ("/db/reconnect", "/db/refresh"):
             if self._require_admin() is None:

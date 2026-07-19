@@ -414,7 +414,7 @@ Sidebar
 
 .geex-sidebar__menu__link.default-active, .geex-sidebar__menu__link.active, .geex-sidebar__menu__link:hover {
   color: var(--primary-color) !important;
-  background: rgba(171, 84, 219, 0.15);
+  background: color-mix(in srgb, var(--primary-color, #ab54db) 15%, transparent);
 }
 
 .geex-sidebar__menu__link.default-active i, .geex-sidebar__menu__link.active i, .geex-sidebar__menu__link:hover i {

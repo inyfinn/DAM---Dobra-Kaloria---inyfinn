@@ -1,5 +1,5 @@
 /**
- * DAM ETA - wspolny pasek tagow skojarzen (Smak / Typ / Opakowanie / Autor).
+ * DAM - wspolny pasek tagow skojarzen (Smak / Typ / Opakowanie / Autor).
  * Wszystkie kategorie widoczne od razu. Gdy w kategorii > ROW_LIMIT tagow:
  * pierwsze N widoczne, "rozwin" dla TEJ kategorii rozwija wiersz w dol
  * i przesuwa reszte UI nizej (bez globalnego przycinania).
@@ -82,12 +82,31 @@
 
     var state = { groups: {}, expandedGroups: {} };
 
-    function applyQuery(tag) {
+    function applyQuery(tag, append) {
       if (!inputEl) return;
-      inputEl.value = tag;
+      var token = String(tag || "").trim();
+      if (!token) return;
+      if (append) {
+        var cur = String(inputEl.value || "").trim();
+        var parts = cur ? cur.split(/\s+/).filter(Boolean) : [];
+        var lower = parts.map(function (p) {
+          return p.toLowerCase();
+        });
+        token.split(/\s+/).forEach(function (part) {
+          if (!part) return;
+          if (lower.indexOf(part.toLowerCase()) === -1) {
+            parts.push(part);
+            lower.push(part.toLowerCase());
+          }
+        });
+        inputEl.value = parts.join(" ");
+      } else {
+        inputEl.value = token;
+      }
       inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+      inputEl.dispatchEvent(new Event("change", { bubbles: true }));
       inputEl.focus();
-      if (typeof opts.onTag === "function") opts.onTag(tag);
+      if (typeof opts.onTag === "function") opts.onTag(token);
     }
 
     function render() {
@@ -156,8 +175,8 @@
       tagsEl.className = "dam-tag-groups";
 
       tagsEl.querySelectorAll(".dam-tag-pill").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          applyQuery(this.getAttribute("data-tag") || "");
+        btn.addEventListener("click", function (e) {
+          applyQuery(this.getAttribute("data-tag") || "", !!(e.ctrlKey || e.metaKey));
         });
       });
 

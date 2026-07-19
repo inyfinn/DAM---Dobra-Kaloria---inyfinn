@@ -67,7 +67,10 @@
           '<span class="dam-status-line">online</span>' +
         "</span>" +
       "</span>" +
-      '<button type="button" class="dam-root-status__btn" id="damRootResetBtn" hidden>Wskaż ścieżkę</button>';
+      '<button type="button" class="dam-root-status__btn" id="damRootResetBtn" hidden title="Wskaz folder Marketing">' +
+        '<i class="uil uil-folder-open" aria-hidden="true"></i>' +
+        '<span>Wskaz folder</span>' +
+      "</button>";
     host.insertBefore(el, host.firstChild);
     var btn = el.querySelector("#damRootResetBtn");
     if (btn && !btn.getAttribute("data-bound")) {
@@ -121,7 +124,11 @@
     if (btn) {
       btn.hidden = !!online;
       btn.setAttribute("data-reason", reason || "");
-      btn.textContent = reason === "bridge" ? "Jak uruchomić" : "Wskaż ścieżkę";
+      if (reason === "bridge") {
+        btn.innerHTML = '<i class="uil uil-question-circle" aria-hidden="true"></i><span>Jak uruchomic</span>';
+      } else {
+        btn.innerHTML = '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Wskaz folder</span>';
+      }
     }
     setBodyOffline(!online);
     if (_lastOnline !== online) {
@@ -152,7 +159,7 @@
       .catch(function () {
         setState(
           false,
-          "Most plików (bridge) nie odpowiada na porcie 8766. Uruchom DAM ETA albo serve_browser.py.",
+          "Most plików (bridge) nie odpowiada na porcie 8766. Uruchom DAM albo serve_browser.py.",
           "bridge"
         );
         return { online: false, reason: "bridge" };

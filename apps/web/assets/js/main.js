@@ -306,7 +306,7 @@
 		$(this).siblings(".geex-content__chat__action__toggle__content").slideToggle();
   	});
 
-  	// Popup Toggle (Geex default). DAM ETA: dam-shell.js przejmuje header popupy (class .is-open),
+  	// Popup Toggle (Geex default). DAM: dam-shell.js przejmuje header popupy (class .is-open),
   	// bo slideToggle koliduje z panelem wiadomosci o stalej wysokosci.
   	$(".geex-content__header__quickaction__link").click(function(e) {
 		if (document.querySelector(".geex-content__header__action[data-dam-popups='1']")) {

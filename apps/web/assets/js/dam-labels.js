@@ -1,5 +1,5 @@
 /**
- * DAM ETA – etykiety ludzkie (z normalize-migrated.ps1 / migracji DK↔GC)
+ * DAM – etykiety ludzkie (z normalize-migrated.ps1 / migracji DK↔GC)
  */
 (function (global) {
   "use strict";
@@ -519,22 +519,44 @@
     return "z-tlem";
   }
 
+  function vizPerspHint(persp) {
+    var map = {
+      ENFACE: "Przod na plasko (front en face)",
+      "TYL-ENFACE": "Tyl na plasko (tyl en face)",
+      FRONT: "Przod w pochyleniu - widoczny prawy bok opakowania",
+      BACK: "Tyl w pochyleniu - widoczny lewy bok opakowania",
+      BOK: "Widok boczny opakowania",
+      INNE: "Inny widok / niestandardowy kat"
+    };
+    return map[persp] || persp;
+  }
+
   function vizSizeHint(size) {
     var map = {
-      XL: "XL - maksymalna rozdzielczosc (archiwum / print)",
-      L: "L - duza (produkcja, prezentacje)",
-      S: "S - mala (web, szybki podglad)",
-      "S-SKLEP": "S-SKLEP - pod sklep / marketplace"
+      XL: "XL - bez kompresji, pelna jakosc (druk / archiwum)",
+      L: "L - ten sam wymiar co XL (np. 3508x2480), kompresja pod internet",
+      S: "S - 1200x1200 px, skompresowana wersja web",
+      "S-SKLEP": "S-SKLEP - miniatura sklepu Dobra Kaloria (848x1200 px)"
     };
     return map[size] || (size ? size + " - wariant rozmiaru" : "Rozmiar nieoznaczony");
+  }
+
+  function vizSizeTag(size) {
+    var map = {
+      XL: "Druk",
+      L: "Internet",
+      S: "Internet",
+      "S-SKLEP": "Sklep"
+    };
+    return map[size] || "";
   }
 
   function vizFormatHint(ext) {
     var e = String(ext || "").toUpperCase();
     var map = {
-      JPG: "JPG - ze tlem (splaszczone, RGB)",
-      JPEG: "JPEG - ze tlem (splaszczone, RGB)",
-      PNG: "PNG - bez tla (przezroczystosc)",
+      JPG: "JPG - biale tlo, nizsza waga (internet / sklep)",
+      JPEG: "JPG - biale tlo, nizsza waga (internet / sklep)",
+      PNG: "PNG - bez tla (przezroczystosc, wieksza waga)",
       TIF: "TIF - archiwum / druk (wysoka jakosc)",
       TIFF: "TIFF - archiwum / druk (wysoka jakosc)",
       WEBP: "WEBP - web (lekki)"
@@ -784,7 +806,9 @@
     vizPerspective: vizPerspective,
     vizSize: vizSize,
     vizBackground: vizBackground,
+    vizPerspHint: vizPerspHint,
     vizSizeHint: vizSizeHint,
+    vizSizeTag: vizSizeTag,
     vizFormatHint: vizFormatHint,
     vizBgLabel: vizBgLabel,
     vizLangFromFile: vizLangFromFile,

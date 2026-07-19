@@ -163,12 +163,80 @@ def ensure_owner_account(password: str) -> dict:
             conn.close()
 
 
+def users_count() -> int:
+    """Liczba kont - do bootstrapu pierwszej rejestracji."""
+    init_db()
+    conn = _connect()
+    try:
+        if _use_pg():
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) AS c FROM users")
+            row = cur.fetchone()
+            return int((row or {}).get("c") or 0)
+        row = conn.execute("SELECT COUNT(*) AS c FROM users").fetchone()
+        return int(row["c"] if row else 0)
+    except Exception:
+        return 0
+    finally:
+        conn.close()
+
+
+def set_user_password(email: str, new_password: str) -> dict:
+    """Ustaw haslo konta (skrypty go-live / admin ops). Min. 8 znakow."""
+    init_db()
+    email_n = (email or "").strip().lower()
+    if not email_n or "@" not in email_n:
+        return {"ok": False, "error": "invalid_email"}
+    if not new_password or len(new_password) < 8:
+        return {"ok": False, "error": "password_too_short"}
+    with _LOCK:
+        conn = _connect()
+        try:
+            ph = _hash_password(new_password)
+            now = _utc()
+            if _use_pg():
+                cur = conn.cursor()
+                cur.execute(
+                    """
+                    UPDATE users
+                    SET password_hash = %s, updated_at = %s
+                    WHERE LOWER(email) = LOWER(%s)
+                    RETURNING id, email
+                    """,
+                    (ph, now, email_n),
+                )
+                row = cur.fetchone()
+                conn.commit()
+            else:
+                cur = conn.execute(
+                    """
+                    UPDATE users
+                    SET password_hash = ?, updated_at = ?
+                    WHERE email = ? COLLATE NOCASE
+                    """,
+                    (ph, now, email_n),
+                )
+                conn.commit()
+                if cur.rowcount <= 0:
+                    row = None
+                else:
+                    row = conn.execute(
+                        "SELECT id, email FROM users WHERE email = ? COLLATE NOCASE",
+                        (email_n,),
+                    ).fetchone()
+            if not row:
+                return {"ok": False, "error": "user_not_found"}
+            return {"ok": True, "email": row["email"], "id": row["id"]}
+        finally:
+            conn.close()
+
+
 def register_user(email: str, password: str, name: str = "", role: str = "user") -> dict:
     init_db()
     email_n = (email or "").strip().lower()
     if not email_n or "@" not in email_n:
         return {"ok": False, "error": "invalid_email"}
-    if not password or len(password) < 4:
+    if not password or len(password) < 8:
         return {"ok": False, "error": "password_too_short"}
     display = (name or email_n.split("@")[0]).strip()
     role_n = role if role in ("admin", "power_user", "user") else "user"
@@ -677,6 +745,45 @@ def resolve_session(
             }
         finally:
             conn.close()
+
+
+def logout(token: str) -> dict:
+    """Uniewaznij sesje (Bearer) + skasuj bound-session (bez rehydrate po wylogowaniu)."""
+    init_db()
+    token = (token or "").strip()
+    revoked = False
+    if token:
+        th = _hash_token(token)
+        with _LOCK:
+            conn = _connect()
+            try:
+                if _use_pg():
+                    cur = conn.cursor()
+                    cur.execute(
+                        "UPDATE device_sessions SET revoked = true, last_seen_at = %s WHERE token_hash = %s",
+                        (_utc(), th),
+                    )
+                    n = cur.rowcount or 0
+                    conn.commit()
+                else:
+                    cur = conn.execute(
+                        "UPDATE device_sessions SET revoked = 1, last_seen_at = ? WHERE token_hash = ?",
+                        (_utc(), th),
+                    )
+                    n = cur.rowcount or 0
+                    conn.commit()
+                revoked = int(n) > 0
+            finally:
+                conn.close()
+    try:
+        from machine_identity import clear_bound_session
+
+        clear_bound_session()
+    except Exception:
+        pass
+    if not token:
+        return {"ok": True, "revoked": False, "bound_cleared": True}
+    return {"ok": True, "revoked": revoked, "bound_cleared": True}
 
 
 def list_users() -> list[dict]:

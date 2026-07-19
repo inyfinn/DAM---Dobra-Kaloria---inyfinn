@@ -1,4 +1,4 @@
-# Instaluje skrot "DAM ETA" na pulpicie i w menu Start.
+# Instaluje skrot "DAM - Dobra Kaloria - Inyfinn" na pulpicie i w menu Start.
 # Uruchom raz po sklonowaniu repo lub po aktualizacji launchera.
 $ErrorActionPreference = "Stop"
 
@@ -8,6 +8,7 @@ $LaunchPy = Join-Path $DesktopDir "launch.py"
 $RunVbs = Join-Path $DesktopDir "run-dam.vbs"
 $IconPath = Join-Path $DesktopDir "dam_app.ico"
 $BuildIcon = Join-Path $RepoRoot "scripts\ops\build-desktop-icon.py"
+$AppName = "DAM - Dobra Kaloria - Inyfinn"
 
 if (-not (Test-Path $LaunchPy)) {
   throw "Brak $LaunchPy"
@@ -32,19 +33,32 @@ function New-DamShortcut($Path) {
   if (Test-Path $IconPath) {
     $sc.IconLocation = "$IconPath,0"
   }
-  $sc.Description = "DAM ETA - Dobra Kaloria (aplikacja lokalna)"
+  $sc.Description = "$AppName (aplikacja lokalna)"
   $sc.Save()
   Write-Host "Skrot: $Path"
 }
 
-New-DamShortcut (Join-Path $env:USERPROFILE "Desktop\DAM ETA.lnk")
+$DesktopLnk = Join-Path $env:USERPROFILE "Desktop\$AppName.lnk"
+New-DamShortcut $DesktopLnk
+
+# Usun stary skrot "DAM ETA" jesli zostal po poprzednich instalacjach
+$legacy = Join-Path $env:USERPROFILE "Desktop\DAM ETA.lnk"
+if (Test-Path $legacy) {
+  Remove-Item $legacy -Force
+  Write-Host "Usunieto stary skrot: $legacy"
+}
 
 $StartMenu = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
 if (-not (Test-Path $StartMenu)) {
   New-Item -ItemType Directory -Path $StartMenu -Force | Out-Null
 }
-New-DamShortcut (Join-Path $StartMenu "DAM ETA.lnk")
+New-DamShortcut (Join-Path $StartMenu "$AppName.lnk")
+$legacyStart = Join-Path $StartMenu "DAM ETA.lnk"
+if (Test-Path $legacyStart) {
+  Remove-Item $legacyStart -Force
+  Write-Host "Usunieto stary skrot Start: $legacyStart"
+}
 
 Write-Host ""
-Write-Host "Gotowe. Dwukliknij 'DAM ETA' na pulpicie - otworzy sie okno aplikacji (bez przegladarki)."
+Write-Host "Gotowe. Dwukliknij '$AppName' na pulpicie - otworzy sie okno aplikacji (bez przegladarki)."
 Write-Host "Wymagania: Python 3.10+, pywebview (pip install -r apps/desktop/requirements.txt)"

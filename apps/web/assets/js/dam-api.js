@@ -532,18 +532,47 @@
       if (!data || !data.ok) {
         var err = (data && data.error) || "register_failed";
         if (err === "email_taken") throw new Error("Konto z tym emailem juz istnieje.");
-        if (err === "password_too_short") throw new Error("Haslo min. 4 znaki.");
+        if (err === "password_too_short") throw new Error("Haslo min. 8 znakow.");
+        if (err === "admin_required") {
+          throw new Error("Nowe konta zaklada tylko administrator.");
+        }
         throw new Error("Nie udalo sie utworzyc konta.");
       }
       // Po rejestracji od razu zaloguj na tym urzadzeniu
       return this.login(email, password);
     },
     logout: async function () {
-      // Sesja = urzadzenie: NIGDY nie kasujemy tokenu ani device_id.
-      if (window.DamPaths && typeof window.DamPaths.showToast === "function") {
-        window.DamPaths.showToast("Sesja urzadzenia pozostaje aktywna (bez wylogowania).");
+      var t = token();
+      try {
+        await fetch(bridgeAuthUrl() + "/auth/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: t ? "Bearer " + t : "",
+          },
+          body: "{}",
+        });
+      } catch (e) {
+        /* most offline - i tak czyscimy lokalnie */
       }
-      return { ok: true, mode: "device_session_kept" };
+      // device_id / machine_id zostaja (tozsamosc maszyny); sesja i user wylatuja
+      [
+        "dam_token",
+        "dam_session_id",
+        "dam_role",
+        "dam_user",
+        "dam_user_name",
+      ].forEach(function (k) {
+        try {
+          localStorage.removeItem(k);
+        } catch (err) { /* ignore */ }
+      });
+      if (window.DamPaths && typeof window.DamPaths.showToast === "function") {
+        window.DamPaths.showToast("Wylogowano.");
+      }
+      window.location.href = "signin.html";
+      return { ok: true, mode: "logged_out" };
     },
     async rehydrate() {
       var ident = await fetchIdentity();

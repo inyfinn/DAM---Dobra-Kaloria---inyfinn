@@ -11,8 +11,9 @@ WEB_ROOT = DESKTOP_DIR.parent / "web"
 DEFAULT_UI_PORT = 8765
 DEFAULT_BRIDGE_PORT = 8766
 HOST = "127.0.0.1"
-APP_TITLE = "DAM ETA - Dobra Kaloria"
-MUTEX_NAME = "Global\\DAM_ETA_DOBRA_KALORIA_SINGLE_INSTANCE"
+APP_TITLE = "DAM - Dobra Kaloria - Inyfinn"
+APP_VERSION = "1.04"  # sync z apps/web/version.json + dam-version.js
+MUTEX_NAME = "Global\\DAM_DOBRA_KALORIA_INYFINN_SINGLE_INSTANCE"
 
 
 def pick_free_port(preferred: int) -> int:

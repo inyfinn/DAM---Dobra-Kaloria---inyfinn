@@ -1,5 +1,5 @@
 /**
- * DAM ETA - Invoices list controller
+ * DAM - Invoices list controller
  * Loads from data/invoices.json and fills the invoice table
  */
 (function () {

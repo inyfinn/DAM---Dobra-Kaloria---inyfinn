@@ -1,9 +1,12 @@
 """
-Seed kont Kubara w SQLite repo (ADR-007): apps/desktop/data/dam-local.sqlite.
-Haslo wspolne: test. Bez wysylki maili.
+Seed kont Kubara (ADR-007 / ADR-009).
+
+Haslo: TYLKO z env DAM_SEED_PASSWORD (min. 8 znakow).
+Bez DAM_SEED_PASSWORD skrypt odmawia - zakaz domyslnego "test" na produkcji.
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -11,7 +14,14 @@ DESKTOP = Path(__file__).resolve().parent
 if str(DESKTOP) not in sys.path:
     sys.path.insert(0, str(DESKTOP))
 
-from auth_store import _connect, _hash_password, _utc, init_db  # noqa: E402
+from auth_store import (  # noqa: E402
+    _connect,
+    _utc,
+    _use_pg,
+    init_db,
+    register_user,
+    set_user_password,
+)
 
 USERS = [
     ("agata.karon@kubara.pl", "Agata Karon", "user"),
@@ -34,43 +44,79 @@ USERS = [
     ("szymon.ryngwelski@kubara.pl", "Szymon Ryngwelski", "user"),
 ]
 
-PASSWORD = "test"
+MIN_PASSWORD_LEN = 8
+
+
+def _upsert_role_name(email: str, name: str, role: str) -> None:
+    """Aktualizuj name/role po seedzie (haslo osobno)."""
+    email_n = email.strip().lower()
+    now = _utc()
+    conn = _connect()
+    try:
+        if _use_pg():
+            cur = conn.cursor()
+            cur.execute(
+                """
+                UPDATE users
+                SET name = %s, role = %s, updated_at = %s
+                WHERE LOWER(email) = LOWER(%s)
+                """,
+                (name, role, now, email_n),
+            )
+            conn.commit()
+        else:
+            conn.execute(
+                """
+                UPDATE users
+                SET name = ?, role = ?, updated_at = ?
+                WHERE email = ? COLLATE NOCASE
+                """,
+                (name, role, now, email_n),
+            )
+            conn.commit()
+    finally:
+        conn.close()
 
 
 def main() -> int:
+    password = (os.environ.get("DAM_SEED_PASSWORD") or "").strip()
+    if len(password) < MIN_PASSWORD_LEN:
+        print(
+            f"FAIL: ustaw DAM_SEED_PASSWORD (min {MIN_PASSWORD_LEN} znakow). "
+            "Przyklad PowerShell:\n"
+            "  $env:DAM_SEED_PASSWORD='........'\n"
+            "  python apps/desktop/seed_kubara_users.py",
+            file=sys.stderr,
+        )
+        return 2
+    if password.lower() in ("test", "password", "12345678", "admin", "dam"):
+        print(
+            "FAIL: haslo zbyt slabe / zabronione. Uzyj silnego hasla handover.",
+            file=sys.stderr,
+        )
+        return 2
+
     init_db()
-    ph = _hash_password(PASSWORD)
-    now = _utc()
     created = 0
     updated = 0
-    with _connect() as conn:
-        for email, name, role in USERS:
-            email_n = email.strip().lower()
-            row = conn.execute(
-                "SELECT id FROM users WHERE email = ? COLLATE NOCASE", (email_n,)
-            ).fetchone()
-            if row:
-                conn.execute(
-                    """
-                    UPDATE users
-                    SET name = ?, role = ?, password_hash = ?, updated_at = ?
-                    WHERE id = ?
-                    """,
-                    (name, role, ph, now, row["id"]),
-                )
-                updated += 1
-            else:
-                conn.execute(
-                    """
-                    INSERT INTO users (email, name, role, password_hash, auth_provider, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, 'local', ?, ?)
-                    """,
-                    (email_n, name, role, ph, now, now),
-                )
-                created += 1
-        conn.commit()
-        total = conn.execute("SELECT COUNT(*) AS c FROM users").fetchone()["c"]
-    print(f"OK created={created} updated={updated} total_users={total} password=test")
+    for email, name, role in USERS:
+        res = set_user_password(email, password)
+        if res.get("ok"):
+            _upsert_role_name(email, name, role)
+            updated += 1
+            continue
+        if res.get("error") == "user_not_found":
+            reg = register_user(email, password, name, role)
+            if not reg.get("ok"):
+                print(f"FAIL create {email} {reg.get('error')}", file=sys.stderr)
+                return 1
+            _upsert_role_name(email, name, role)
+            created += 1
+            continue
+        print(f"FAIL {email} {res.get('error')}", file=sys.stderr)
+        return 1
+
+    print(f"OK created={created} updated={updated} (haslo nie wypisane)")
     return 0
 
 

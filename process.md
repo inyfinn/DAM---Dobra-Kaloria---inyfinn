@@ -1,4 +1,4 @@
-# process.md - log + proces DAM
+﻿# process.md - log + proces DAM
 
 ## 2026-07-16 - Bootstrap
 
@@ -2877,6 +2877,25 @@ Intensive QA 10 passes (screenshot+Read): 375 / 768 / 1280+ / collapsed sidebar.
 
 ---
 
+## 2026-07-18 - Explorer: prawda zapisu statusu (nie localStorage-only)
+
+### Komenda/Akcja
+User: niespojnosc - banner "Status zapisywany lokalnie..." vs "Baza online" / Synology.
+
+### Log/Status
+1. Stary copy opisywal workflow sprzed lifecycle (reczny eksport na P:DAM).
+2. Prawda: F/X/D = most `/lifecycle-status` ? dysk + lifecycle-status.json + mirror product-status.json + PG KV; localStorage = kopia.
+3. "Baza online" = Postgres Synology (KV), nie lokalny-only status.
+4. Update paska admina + tip przycisku + dam:db-status event.
+
+### Efekt/Fix
+Komunikaty zgodne z mostem/PG. Przycisk = "Pobierz kopie statusu" (backup).
+
+### Zrodla
+- explorer.html, dam-explorer.js, dam-db-status.js, dam-shortcuts.js
+
+---
+
 ## 2026-07-18 - Docs: README, agents, LANG_PROVENANCE + commit/push
 
 ### Komenda/Akcja
@@ -3002,4 +3021,532 @@ Szukajka `sylwia` filtruje wizki (Mielone, Prebiotyk, Kalendarz?); badge imienia
 
 ### Zrodla
 - product-people.json, enrich-search-tags.py, local_bridge.py, program-instructions.json
+
+
+---
+
+## 2026-07-18 - carrier meta right-align + inbox list-row (intensive QA 10)
+
+### Komenda/Akcja
+User: wyr?wnaj .dam-carrier-head__meta do prawej przy __end; przebuduj brzydkie li.dam-inbox-item; 10 rund ui-taste + ui-ux-pro-max.
+
+### Design Read
+Geex DAM product UI polish for admins; Linear-clean list-row; Geex purple tokens. Dials: V5 / M3 / D7.
+
+### Log/Status
+1. Carrier: meta jako osobna kolumna grid ody | meta | end (nie wewn?trz __end).
+2. Meta desktop: nowrap + kompaktowy chip indeksu (Edytuj zamiast Edytuj indeks).
+3. Inbox: anatomia __row / __row-end; actor (Zg?osi?/Odrzuci?) w __row-end obok daty.
+4. Cache: ?v=20260718carrierInbox22.
+
+### Efekt/Fix
+- Carrier: CDP orderOk + oneLine @1280/1600; gap meta?end = 10px.
+- Inbox mod: wysoko?? ~94px (by?o ~270+); actor w prawej wi?zce.
+
+### Test/Ewaluacja
+Intensive QA Pass 9-10 (screenshot+Read):
+- Pass 9: explorer Babka carriers - one-line meta flush do akcji/chevron.
+- Pass 10: inbox propozycje + historia + 375; brak regresji carrier overlap.
+
+### Zrodla
+- ui-taste / ui-ux-pro-max (intensive 10)
+- dam-brand.css, dam-explorer.js, dam-inbox.js
+
+---
+
+## 2026-07-18 - Menu profilu: hierarchia + stonowany legal
+
+### Komenda/Akcja
+User: przebuduj okienko profilu (ui-taste, 4 passy); Prywatnosc/Regulamin mniej widoczne.
+
+### Log/Status
+1. Markup `.dam-user-menu`: identity ? Profil/Ustawienia/Pomoc ? micro legal ? Wyloguj.
+2. CSS: legal 10px `#c2c3cb`; nav 14px `#464255`; accent `#AB54DB`.
+3. `ensureUserMenuMarkup` migruje stare popup Geex. Cache `?v=20260718userMenu3`.
+
+### Test/Ewaluacja
+- Pass 1?4 screenshot+Read. Final: user-menu-pass4-final.png.
+- CDP: legal 10px stonowany; nav ciemniejszy od legal.
+
+### Zrodla
+- dam-shell.js, dam-brand.css
+
+---
+
+## 2026-07-18 - Tagi na kartach Projektow: edit + AJAX + CTRL + GSAP
+
+### Komenda/Akcja
+User: edycja tagow z kart Projektow (globalnie), AJAX filtr przy kliku, CTRL+klik laczy tokeny, GSAP reveal 0.2s gora->dol; ui-taste 5 pass + gsap-core.
+
+### Log/Status
+1. Root cause: index.html nie ladowal dam-tag-edit.js; applyTagFilter wstawial surowy kod (01 - BATONY) zamiast etykiety; admin delay 520ms; brak CTRL append.
+2. dam-badges.js: searchTokenForBadge + normalizeSearchToken; Ctrl/Meta append; Shift/Alt/dblclick = DamTagEdit; natychmiastowy filtr.
+3. index.html: dam-tag-edit.js + vendor gsap.min.js; cache ?v=20260718tagAjax3.
+4. dam-projects.js: revealProjectCards (autoAlpha + clipPath inset, 0.2s, stagger, prefers-reduced-motion).
+5. dam-tag-bar.js: Ctrl+klik tez dolacza token.
+
+### Efekt/Fix
+- Klik Batony -> search=Batony, 70/181.
+- Ctrl Banoffee -> Batony banoffee, 2 karty.
+- Shift+klik -> popover Wybierz kategorie (7 opcji).
+- GSAP mid: opacity 0 + clip 100%; po ~0.35s opacity 1.
+
+### Test/Ewaluacja
+ui-taste 5 pass screenshot+Read:
+- Pass 1 375: struktura + query batony banoffee / 2/181 - clean
+- Pass 2 375: spacing kart - clean
+- Pass 3 375: mobile stack - clean
+- Pass 4 768: tablet karty - clean
+- Pass 5 1280: 2 karty side-by-side, search Batony banoffee - clean
+
+### Zrodla
+- gsap-core (autoAlpha, clipPath, matchMedia/reduced-motion)
+- ui-taste 5 passes
+- dam-badges.js, dam-projects.js, dam-tag-bar.js, index.html
+
+---
+
+## 2026-07-18 - Lifecycle path_not_found + toggle D + search scope
+
+### Komenda/Akcja
+User: ponowne D nie odznacza; X?F/D = Blad path_not_found; wyszukiwarka ma pokazywac strukture Produkt/Wariant + chipy Wszystko/Produkty/Warianty. Skills: systematic-debugging + ui-taste 5 passes.
+
+### Log/Status
+1. Reproduce: wariant w `? ARCHIWUM/.../TEST-TEST - X`, UI wysylalo stara sciezke `...- D` ? path_not_found.
+2. Fix engine: `resolve_existing_path` (store + history + letter variants + skan ARCHIWUM) w `lifecycle_status.py`.
+3. Fix UI: toggle is-on?clear; path z lifecycle-store; `patchPathsAfterLifecycle` przed rebuild; status z lifecycle-store.
+4. Search: chipy scope + hits Produkt/Wariant (nested); CSS is-soft przy Wszystko.
+5. Restart bridge (pythonw local_bridge.py). Cache explorer `?v=20260718lifeFix4`.
+
+### Efekt/Fix
+- Smoke FS: clear / D / clear / X / X?F (stale path) / clear = OK na TEST-TEST.
+- Browser: klik D ? folder `- D`; ponowne D ? clear bez path_not_found.
+- Search "test": PRODUKT TEST LIFECYCLE + nested WARIANT TEST-TEST.
+
+### Test/Ewaluacja
+ui-taste 5 pass screenshot+Read:
+- Pass 1 375: struktura chipow + nested hits - clean
+- Pass 2 375: spacing / is-soft chipy - clean
+- Pass 3 375: mobile search + product open - clean
+- Pass 4 768: tablet search dropdown - clean
+- Pass 5 1280: F/X/D + Odznacz + search structure - clean
+
+### Zrodla
+- systematic-debugging (reproduce ? isolate stale path ? store resolve)
+- ui-taste 5 passes (Geex preserve, dials match existing)
+- lifecycle_status.py, dam-explorer.js, dam-search.js, dam-brand.css, explorer.html
+
+
+---
+
+## 2026-07-18 - Wizualizacje: Cofnij wyzej + DK/GC jak w Eksplorerze
+
+### Komenda/Akcja
+User: przenies Cofnij/lifecycle hint wyzej (nad pasek Skala); uspojnic Marka DK/GC z chipami z Eksplorera.
+
+### Log/Status
+1. visualizations.html: vizBrandMount + DamBrandFilter.renderChips zamiast dropdown Marka: DK+GC.
+2. (nadpisane przez searchUnify3) damChangeLogBar wraca do grid-toolbar obok Skali.
+3. Grid toolbar: status + Cofnij/Ponow + Skala (prawo).
+4. CSS; cache pozniej searchUnify3.
+
+### Efekt/Fix
+Chipy DK/GC jak Eksplorer. Skala przy prawej krawedzi nad siatka.
+
+### Test/Ewaluacja
+Patrz wpis searchUnify3 (ponizej).
+
+### Zrodla
+- ui-taste (Geex redesign-preserve)
+- dam-brand-filter.js, visualizations.html, dam-viz.js, dam-brand.css
+
+---
+
+## 2026-07-18 - Przywr?cenie wyszukiwania Sylwia/Krzysztof/Szymon (peopleFix1)
+
+### Komenda/Akcja
+User: dalej nie da sie wyszukac po Sylwia/Krzysztof/Szymon ? mialo sie dac (ustalone wczesniej).
+
+### Log/Status
+1. Kontekst z chatu [product-people](a78fa004-2674-4f22-a383-c0f448f9635e): mapa kto?produkt, bez badge na kartach; enrich do authors/by_tag.
+2. Reproduce: file-index po rebuildzie mial `authors=0`, `by_tag.sylwia=0` (enrich zniknal).
+3. `python apps/web/scripts/enrich-search-tags.py` ? sylwia=23, krzysztof=51, szymon=2, authors=60.
+4. Hook: koniec `build-file-index.py` zawsze odpala enrich (zeby Skanuj dysk nie kasowal osob).
+5. memory #108 zaktualizowane.
+
+### Efekt/Fix
+Viz `q=sylwia`: Mielone, Prebiotyk, Odpornosc, Energia, Kalendarz, kremy?; pill Autor Sylwia widoczny.
+
+### Test/Ewaluacja
+Browser fill sylwia ? karty OK; CDP authorsInMem=60, by_tag.sylwia=23.
+
+### Zrodla
+- systematic-debugging
+- a78fa004 (ustalenie people1), product-people.json, enrich-search-tags.py, build-file-index.py
+
+---
+
+## 2026-07-18 - Label nosnika: kolor jak viz title, 16px (nie scinac)
+
+### Komenda/Akcja
+User: `.dam-carrier-toggle__label` - nie pomniejszac; zmienic KOLOR na jak `.dam-viz-card__title`.
+
+### Log/Status
+1. Przyczyna: wczesniejszy pass scial font do `var(--dam-fs-base, 14px)` zamiast tylko koloru.
+2. Fix: `font-size: 16px` (memory #91); `color: #464255` (jak viz title); usunieto zielony override `--aktualne`.
+3. Cache explorer `?v=20260718carrierLabel16`. memory #109 poprawione.
+
+### Efekt/Fix
+Live: KARTON 6x MINI = 16px / 600 / rgb(70,66,85).
+
+### Test/Ewaluacja
+Screenshot BABKA CYTRYNOWA + CDP computed styles - Pass.
+
+### Zrodla
+- systematic-debugging, ui-taste (Geex preserve)
+- dam-brand.css `.dam-carrier-toggle__label`
+
+---
+
+## 2026-07-18 - Globalny search + declutter toolbar Viz (searchUnify3)
+
+### Komenda/Akcja
+User: ujednolicic pasek wyszukiwania wszedzie (Projekty/Viz/Eksplorer); na Viz przeniesc Poka? wszystkie / Marka / Jezyki pod TAGI; Skale do prawej nad wizualizacjami; przyciski akcji na bialym tle wynikow.
+
+### Log/Status
+1. `visualizations.html`: toolbar = sam search; secondary pod tagami; Skala + Cofnij w `.dam-viz-grid-toolbar__end`.
+2. `index.html`: Od?wie?/Skanuj ? `.dam-projects-grid-toolbar` pod tagami.
+3. `explorer.html`: Od?wie?/Eksportuj ? `.dam-explorer-results__toolbar` (biale).
+4. `dam-brand.css` + `dam-app.css`: kanon `.dam-search-wrap` max-width:none, input 44px; style secondary/grid toolbars.
+5. Cache `?v=20260718searchUnify3`. memory.md #111.
+
+### Efekt/Fix
+@1440: searchW = 1071px na Viz / Projekty / Eksplorer (identyczny chrome). Viz: secondaryBelowTags; zoomFlush=0.
+
+### Test/Ewaluacja
+ui-taste 5 pass screenshot+Read:
+- Pass 1 375: struktura search?tagi?secondary?Skala - clean
+- Pass 2 375: spacing secondary + grid toolbar - clean
+- Pass 3 375: clear X + mobile stack - clean (h-scroll tylko geex-customizer/header - preexist)
+- Pass 4 768: brand chips OK, layout - clean
+- Pass 5 1280/1440: Viz + Projekty + Eksplorer search unify - clean
+
+### Zrodla
+- ui-taste, visual-qa-testing, verifying-in-browser
+- visualizations.html, index.html, explorer.html, dam-brand.css, dam-app.css
+
+---
+
+## 2026-07-18 - Search scope radio + biala tablica (Eksplorer/Projekty/Viz)
+
+### Komenda/Akcja
+User: chipy Wszystko/Produkty/Warianty pomylone (multi soft); odklik = Wszystko; biala tablica pod inputem; to samo wyszukiwanie wszedzie; Wizualizacje locked Wszystko + wygaszone Produkty/Warianty; Projekty produkty+warianty. Skill: ui-taste 5 passes.
+
+### Log/Status
+1. Bug logiki: przy Wszystko klik Produkty wylaczal produkty (zostawial warianty) - odwrotnie.
+2. Rewrite `dam-search.js`: `getScopeMode`/`setScopeMode` radio; odklik products/variants ? all; usunieto `is-soft`.
+3. CSS: `.dam-search-wrap--panel` + wyniki `position:static` w tablicy; disabled chips.
+4. Markup scope na index + visualizations; viz `bindScopeChips(..., {locked:true})` bez zapisu localStorage.
+5. Projekty: filtr `productHaystack` / `variantHaystack` wg mode.
+6. Cache `?v=20260718scopeRadio2`.
+
+### Efekt/Fix
+- CDP logic: all?products?odklik all?variants?all OK.
+- Viz: Wszystko on, Produkty/Warianty disabled.
+- Projekty/Eksplorer: chipy w bialej tablicy.
+
+### Test/Ewaluacja
+ui-taste 5 pass screenshot+Read:
+- Pass 1 375: hierarchy - panel+chips; defect: wyniki absolute wygladaly osobno ? fix static in-panel
+- Pass 2 375: spacing panel - clean (geometry scopeInside/resInside)
+- Pass 3 375: mobile + radio paint - clean
+- Pass 4 768: tablet panel - clean
+- Pass 5 1280: desktop + spot Viz locked + Projekty chips - clean
+
+### Zrodla
+- ui-taste (redesign preserve Geex, dials 5/3/5)
+- dam-search.js, dam-brand.css, dam-projects.js, dam-viz.js, explorer/index/visualizations.html
+
+---
+
+## 2026-07-18 - Viz toolbar NAD Poka? wszystkie / DK GC
+
+### Komenda/Akcja
+User: `dam-viz-grid-toolbar` (status/Cofnij/Ponow/lifecycle/Skala) ma byc WYZEJ - nad Poka? wszystkie + DK + GC.
+
+### Log/Status
+1. Przeniesiono `.dam-viz-grid-toolbar` w `visualizations.html` przed `.dam-viz-secondary-filters` (wewnatrz search-block).
+2. Marginesy CSS: toolbar 4/8, secondary 0/12.
+3. Cache `?v=20260718vizToolbarUp1`.
+
+### Efekt/Fix
+Kolejnosc: tagi ? toolbar (Cofnij/Skala) ? Poka? wszystkie/DK/GC ? siatka. CDP: toolbarTop 568 < secondaryTop 612.
+
+### Test/Ewaluacja
+Screenshot + Read: order OK.
+
+---
+
+## 2026-07-18 - Fix Wstecz panelu + AJAX search w Eksplorerze
+
+### Komenda/Akcja
+User: przycisk Wstecz (dam-panel-nav -1) nie wraca; wyszukiwarka powinna AJAX-em odswiezac panel .dam-explorer-panel.
+
+### Log/Status
+1. Root cause Wstecz: historia (navGo) miala pierwszenstwo i po breadcrumb/push wracala do produktu (pulapka).
+2. panelStepUp: krok w gore hierarchii (produkt -> wyniki/kategoria -> clear search -> welcome); zdejmowanie productId ze stosu.
+3. Breadcrumb: bez navPush przy cofaniu; trim product ze stosu.
+4. applySearchToPanel: live DamSearch -> state.searchHits -> renderSearchResultsPanel (nie zostawia listy kategorii).
+5. Cache `?v=20260718panelNavSearch2`.
+
+### Efekt/Fix
+- Produkt CASHEWS -> Wstecz -> Batony -> Wstecz -> welcome.
+- Query `cashews`: panel Wyszukiwanie, 8 produktow; Wstecz z produktu wraca do wynikow.
+- `TEST-TEST`: panel pokazuje Brak wynikow (produkt usuniety z X:/Marketing, brak w file-index).
+
+### Test/Ewaluacja
+CDP + screenshot+Read: product view, search panel Wyszukiwanie/cashews OK.
+
+### Zrodla
+- dam-explorer.js, explorer.html, dam-search.js
+
+---
+
+## 2026-07-18 - Repair TEST LIFECYCLE foldery + lifecycle bugs
+
+### Komenda/Akcja
+User: sprawdz stan produktu testowego po klikaniu; co z folderami; napraw bledy.
+
+### Log/Status
+1. Stan: produkt w `? ARCHIWUM` jako `? - X`, pusty wrapper bez `- X`, brak w root BATONY; store.revisions.TEST-TEST stale F na martwej sciezce.
+2. Przywr?cono produkt live (clear) + usunieto orphan wrapper.
+3. Fix `lifecycle_status.py`: cleanup pustych wrapperow, rename przez pusty dest, sync revisions po cascade produktu.
+4. Fix `dam-explorer.js`: lifecycle > localStorage; clear != Starsza; fallback JSON gdy bridge 404.
+5. Rebuild `file-index` + czyszczenie `product-status` / `lifecycle-status` dla TEST.
+6. QA: variant X?clear usuwa wrapper; UI: TEST-TEST, Aktualne, bez chip X.
+
+### Efekt/Fix
+Live: `X:\?\BATONY\TEST LIFECYCLE ? [ nerkowcowy ]\BAT - 35 g - 18.07.2026 - TEST-TEST`. ARCH bez leftoverow TEST. Cache `?v=20260718testRepair3`.
+
+### Test/Ewaluacja
+CDP: search TEST-TEST ? produkt bez X; wariant Aktualne + index TEST-TEST.
+
+### Zrodla
+- apps/desktop/lifecycle_status.py, apps/web/assets/js/dam-explorer.js, data/*.json
+
+---
+
+## 2026-07-18 - Settings rebuild + global accent (chrome only)
+
+### Komenda/Akcja
+User: przebuduj settings.html widgetowo (jak dashboard); edytowalny kolor glowny (akcent chrome: FAB, sidebar active, breadcrumb, ADMIN); TAGI bez zmian; edytowalne powiadomienia; wiecej integracji; 12 pass QA.
+
+### Log/Status
+1. Design Read: B2B DAM settings, Geex preserve, dials ~5/3/5. Intensive QA 12 pass.
+2. Nowe: `dam-accent.js/css`, `dam-settings.css/js`; rewrite `settings.html` (bento: profil, akcent, dysk, prefs, integracje+stuby, notify grafik, naming RO, instructions RO).
+3. Bridge: GET/POST `/notification-groups`.
+4. Soft-boot + `ensureAccentCss` w `dam-shell.js`.
+5. Fix: selektory accent bez `body.dam-app` (brak klasy na stronach) - FAB/sidebar/scope pills teraz biora `--dam-primary`.
+6. Cache `?v=20260718accent2` / `set4`.
+
+### Efekt/Fix
+- Akcent Ocean `#0B6E99`: FAB + Wszystko + ADMIN chrome; tagi smak/typ/opakowanie/autor bez zmian (CDP).
+- Settings: widget grid + jump pills + edycja profilu/notify; Reset Geex `#AB54DB`.
+
+### Test/Ewaluacja
+Pass 1-9 (wczesniej): struktura, header, mobile grid, accent, desktop.
+Pass 10: explorer Ocean - chrome blue, tagi izolowane.
+Pass 11: desktop 1280 + collapsed sidebar + Reset Geex.
+Pass 12: 768 stack, integrations+notify, 375 full-width content (main 375px).
+
+### Zrodla
+- ui-taste, ui-ux-pro-max, systematic-debugging
+- Flowbite-inspired settings sections (structure only, Geex tokens)
+- apps/web/settings.html, dam-accent.*, dam-settings.*, dam-shell.js
+
+
+---
+
+## 2026-07-18 - Settings UX polish + accent/theme overlay (intensive 10)
+
+### Komenda/Akcja
+User: kolory hover zostaja fioletowe; filtr sekcji zamiast scroll + X; unified buttons; bez Geex w copy; padding +8; light/dark jako nakladka; /ui-ux-pro-max 10 pass + /ui-taste + systematic-debugging.
+
+### Log/Status
+1. Root cause: hardcoded rgba(171,84,219) w style.css sidebar hover + dam-brand.css; nie szlo za --dam-primary.
+2. Fix: dam-brand bulk ? color-mix/var; style.css sidebar hover ? color-mix; rozbudowa dam-accent.css.
+3. Settings: filtr chipow + X (nie anchors); unified .dam-sw-btn 44px; padding kart 24/26 (+8); copy PL user-friendly; Przywr?? domy?lny.
+4. Theme overlay: dam-theme.js + dam-tokens mapuje Geex surface vars; soft-boot w dam-shell.
+5. Cache ?v=20260718set5b / accent3 / theme1.
+
+### Efekt/Fix
+- Akcent #008244: Zapisz, FAB, chipy, ADMIN, avatar, soft Sprawd? - zielone (CDP).
+- Filtr Wygl?d ukrywa pozostale karty (display:none); X ? Wszystko.
+- Dark: data-theme=dark, karty #201f28, body ciemne.
+
+### Test/Ewaluacja
+Pass1 desktop padding 24/26 + btn 44px. Pass2 filtr. Pass3 green accent. Pass4 dark. Pass5 all+green. Pass6 mobile chips scroll. Pass7-10: hover/filter/clear/sidebar.
+
+### Zrodla
+- ui-taste, ui-ux-pro-max, systematic-debugging
+- apps/web/settings.html, dam-settings.*, dam-accent.*, dam-theme.js, dam-tokens.css, dam-brand.css, style.css
+
+
+---
+
+## 2026-07-18 - Desktop title/icon/size + licencja KW + security bridge
+
+### Komenda/Akcja
+User: wieksze okno (bez scrolla poziomego); ikona Windows; nazwa `DAM - Dobra Kaloria - Inyfinn`; licencja na dane KW + wycena rynkowa; wyjasnienie Metadata/DB PARTIAL; audyt i latanie luk.
+
+### Log/Status
+1. `APP_TITLE` + mutex w `runtime_config.py`; VBS MsgBox; skrot pulpitu z nowa nazwa + `dam_app.ico`.
+2. `launch.py`: `preferred_window_size()` (~92% ekranu), min 1400x800; `webview.start(icon=...)` + WM_SETICON (pythonw nie bierze ikony z exe).
+3. Przebudowa ICO: zielony kafelek + ?DAM? (`scripts/build-dam-ico.py`).
+4. `LICENSE.md` + `license.html`: wlasciciel KW; PESEL maskowany 93*****179; bez dowodu; adresy + kontakt; kwoty bazowe 6900 / 490 / 890 PLN netto (indywidualnie). Aktualizacja: usunieto pelny PESEL i dane dowodu.
+5. Security `local_bridge.py`: media path jail + login; reveal bez shell; auth na audit/media/browse/config; register bootstrap|admin; CORS Origin; OAuth escape; limit body/media.
+
+### Efekt/Fix
+- Okno: tytul `DAM - Dobra Kaloria - Inyfinn`, rozmiar 1920x1200 na testowym ekranie, WM_GETICON != 0.
+- `/media` nie serwuje plikow poza Marketing; open register zablokowany gdy sa juz userzy.
+
+### Test/Ewaluacja
+- Relaunch run-dam.vbs: MainWindowTitle OK; GetWindowRect ~1920x1200; icon handles ustawione.
+- py_compile: launch, runtime_config, local_bridge, auth_store.
+
+### Metadata/DB (odpowiedz)
+PARTIAL = Postgres trzyma auth/sesje/audit_log/KV; relacje produkt?pliki?wersje?tagi w `file-index.json` + KV, nie w FK SQL. Logi audit sa. Brakuje pelnego schematu relacyjnego w sciezce Geex UI (Laravel ma bogatszy schemat, ale UI z niego nie zyje) - ryzyko spojnosci = dwa swiaty JSON/KV vs SQL, nie ?brak logow?.
+
+### Zrodla
+- pywebview `start(icon=)` WinForms (`_state['icon']`)
+- Wycena rynkowa DAM/MAM SMB (wide?ki cloud/on-prem) - baza 6900/490/890 PLN
+- LICENSE.md, apps/desktop/launch.py, local_bridge.py
+
+
+---
+
+## 2026-07-18 - Fix offline + logout + folder picker + meta FK (3 rundy)
+
+### Komenda/Akcja
+User: baza i dysk offline; brak wylogowania; brzydki modal sciezki bez pickera folderu; zbudowac Metadata/DB FK; ui-taste + debugger; 3 rundy.
+
+### Log/Status
+1. Root cause: 401 na `/db/status` i `/files/status` (fetch bez Bearer) + logout noop.
+2. Status/config/validate bez Bearera na localhost; media/browse/mutations z auth.
+3. `auth_store.logout` + `/auth/logout` + prawdziwy `DamApi.logout` ? signin.
+4. `pick_folder` (FOLDER_DIALOG) + przycisk Wskaz folder w modalu.
+5. `meta_store.py`: FK sync 181/457/5010/77/3; hook po index rebuild; GET `/meta/status`.
+
+### Efekt/Fix
+- Pliki online + Baza online (postgres @ inyfinn.synology.me).
+- Modal: solid green browse 44px; 3 pass screenshot.
+
+### Test/Ewaluacja
+Pass1 modal+online. Pass2 browse green. Pass3 CDP online + logout=fn.
+
+### Zrodla
+- debugger, ui-taste, meta_store.py, dam-paths.js, dam-api.js, launch.py
+
+
+---
+
+## 2026-07-18 - Lifecycle Bez statusu + cascade X (lifeBez1)
+
+### Komenda/Akcja
+User: Odznacz nie sciaga F; produkt Bez statusu a wariant D mimo czystej sciezki dysku; rename konflikty przy szybkich klikach; produkt X vs wariant X; przycisk = Bez statusu; Odswiez liste ma resync z dysku.
+
+### Log/Status
+1. Root cause UI: `is_latest` mapowane na Aktualne/F mimo braku literki na dysku.
+2. `lifecycle_status.py`: lock apply; `find_live_product_dir`; wariant X bez X na produkcie live; produkt X cascade; restore do live z aktualna literka produktu.
+3. `dam-explorer.js`: badge/btn Bez statusu; kolejka klikow; `syncLifecycleFromDiskIndex` przy Odswiez liste; dysk = prawda.
+4. Restart `local_bridge` (nowy modul) - sesje padly (401) az user zaloguje ponownie.
+5. Disk FINAL clean: `BATONY/TEST LIFECYCLE ? [ nerkowcowy ]/BAT - 35 g - 18.07.2026 - TEST-TEST`.
+
+### Efekt/Fix
+- UI: produkt + wariant **Bez statusu** (zielone is-on), badge Bez statusu (nie Aktualne/D).
+- Combo Python PASS: product F?clear; variant F?clear; variant X (produkt live bez X)?restore; product X (oba -X w ARCHIWUM)?restore clear.
+
+### Test/Ewaluacja
+- Screenshot `test-lifecycle-bez-statusu.png` + Read: oba scope Bez statusu.
+- CDP: buttons clear is-on; bridge POST bez sesji = 401 (oczekiwane po restarcie).
+- Cache: `?v=20260718lifeBez1`.
+
+### Zrodla
+- systematic-debugging, verifying-in-browser
+- apps/desktop/lifecycle_status.py, apps/web/assets/js/dam-explorer.js
+
+
+---
+
+## 2026-07-18 - Production Readiness / Go-Live (PRR)
+
+### Komenda/Akcja
+User: aplikacja jutro do klienta - przebadaj, znajdz luki, zalataj, zbuduj plan weryfikacji i wypuszczania produkcyjnego.
+
+### Log/Status
+1. Nazwa formalna: Production Readiness Review + Go-Live Checklist -> `GO_LIVE.md`.
+2. Smoke Gate B: `apps/desktop/scripts/smoke-production.ps1` (PASS + 1 WARN haslo seed).
+3. Branding: usunieto user-facing `DAM ETA` -> `DAM` / `DAM - Dobra Kaloria - Inyfinn`.
+4. Signin: rejestracja publiczna ukryta (bootstrap tylko gdy 0 userow); `GET /auth/registration-open`.
+5. Hasla: seed wymaga `DAM_SEED_PASSWORD`; skrypty `set-all-passwords.py` / `set-user-password.py`; register min 8 znakow.
+6. Restart `local_bridge` z nowym endpointem; pliki/db/meta online; media 401.
+
+### Efekt/Fix
+- Gate B smoke: FAIL=0 WARN=1 (haslo `test` nadal aktywne - BLOKADA Gate C).
+- UI signin: Witaj w DAM, brak zakladki Utworz konto, footer admin-only.
+
+### Test/Ewaluacja
+- smoke-production.ps1 exit 0
+- Screenshot signin `golive-signin-v3.png` + Read (vision): branding OK, rejestracja ukryta, PL ze znakami.
+
+### Zrodla
+- GO_LIVE.md, auth_store.set_user_password, local_bridge /auth/registration-open, signin.html
+
+
+---
+
+## 2026-07-18 - Follow-up PRR scan (P0/P1)
+
+### Komenda/Akcja
+Domkniecie luk z Prod readiness codebase scan po GO_LIVE.
+
+### Log/Status
+1. logout + clear_bound_session
+2. POST /machine-config -> require login (401 bez Bearer)
+3. install-desktop-shortcut.ps1 -> DAM - Dobra Kaloria - Inyfinn (+ usun DAM ETA.lnk)
+4. OAuth callback z CORS_ORIGIN / DAM_UI_ORIGIN
+5. dam-api cache-bust 20260719golive1; komunikat hasla min 8 + admin_required
+
+### Test/Ewaluacja
+POST machine-config 401; logout bound clear OK; smoke FAIL=0 WARN=1 (haslo test).
+
+### Zrodla
+- auth_store.py, local_bridge.py, dam-api.js, install-desktop-shortcut.ps1
+
+---
+
+## 2026-07-18 - Lifecycle reconcile mtime + Stosuj zmiany (lifeSync1)
+
+### Komenda/Akcja
+User: po zmianie program nie weryfikuje dysku; Odswiez = dysk->program; Stosuj zmiany = FORCE program->dysk; start = mtime (kto pozniej zmienil literke); X na dysku poza archiwum -> przenies przy boot.
+
+### Log/Status
+1. `applied_at` + `source` przy kazdym apply programu.
+2. `pull_lifecycle_from_disk` / `reconcile_lifecycle_on_boot` / `force_apply_program_to_disk` w lifecycle_status.py.
+3. Bridge: GET `/lifecycle-reconcile?mode=pull|boot`, POST `/lifecycle-force`.
+4. UI: tip Odswiez; przycisk `#damLifecycleForce` Stosuj zmiany; boot reconcile po load; toast przy drifts.
+5. QA TEST: pull F->clear drifts=2; boot program_wins przy nowszym applied_at; FORCE dry planned=1.
+
+### Efekt/Fix
+- Odswiez nie rusza folderow; panel = literka z dysku + powiadomienie.
+- Stosuj zmiany = FORCE na Marketing.
+- Boot: mtime decyduje kto wygrywa; enforce X->ARCHIWUM gdy dysk nowszy.
+
+### Test/Ewaluacja
+- Python pull/boot/force na test-lifecycle-nerkowcowy PASS.
+- Cache `?v=20260718lifeSync1`.
+
+### Zrodla
+- systematic-debugging
+- apps/desktop/lifecycle_status.py, local_bridge.py, dam-explorer.js, explorer.html
 

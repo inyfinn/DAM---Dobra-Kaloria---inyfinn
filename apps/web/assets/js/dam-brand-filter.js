@@ -1,5 +1,5 @@
 /**
- * DAM ETA - Brand Filter (shared)
+ * DAM - Brand Filter (shared)
  * Wspolny komponent dla explorer.html i visualizations.html.
  * Persist: localStorage.dam_brands { DK: true, GC: true }
  *
@@ -294,7 +294,7 @@
             (gcOn ? " is-active" : " is-off") +
             '" data-brand="GC" aria-pressed="' +
             gcOn +
-            '" title="Good Choice (eksport)">GC</button>' +
+            '" title="Good Calories (eksport)">GC</button>' +
         "</div>";
       el.querySelectorAll("[data-brand]").forEach(function (btn) {
         btn.addEventListener("click", function () {

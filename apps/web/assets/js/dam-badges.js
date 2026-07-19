@@ -1,5 +1,5 @@
 /**
- * DAM ETA - wspolny renderer tagow (explorer + wizualizacje).
+ * DAM - wspolny renderer tagow (explorer + wizualizacje).
  * Klikalne, kontekstowe: filtr w biezacym widoku.
  */
 (function (global) {
@@ -79,14 +79,26 @@
   function buildBadgeItems(opts) {
     opts = opts || {};
     var items = [];
+    /* Tip edit: Shift+klik gdy admin/power_user (DamTagEdit) */
+    var adminOn = isAdminEditMode();
+    var editHint = canEditTags();
     var brand = opts.brand || "";
     if (brand) {
+      var brandTip =
+        "Marka " +
+        tagText(brand, "brand") +
+        ". Klik: filtr. Ctrl+klik: dodaj do wyszukiwania.";
+      if (editHint) brandTip += " Shift+klik: edytuj.";
       items.push({
         kind: "brand",
         value: brand,
         label: tagText(brand, "brand"),
         cls: "dam-viz-badge--brand",
-        tip: "Marka " + tagText(brand, "brand"),
+        tip: brandTip,
+        data: {
+          "product-id": opts.productId || "",
+          "product-name": opts.productName || "",
+        },
       });
     }
     if (opts.category) {
@@ -95,22 +107,34 @@
           ? global.DamLabels.categoryTitle(opts.category)
           : opts.category;
       catTitle = tagText(catTitle, "category");
+      var catTip = "Kategoria: " + catTitle + ". Klik: filtr. Ctrl+klik: dodaj do wyszukiwania.";
+      if (editHint) catTip += " Shift+klik: edytuj.";
       items.push({
         kind: "category",
         value: opts.category,
         label: catTitle,
         cls: "dam-viz-badge--cat",
-        tip: "Kategoria: " + catTitle,
+        tip: catTip,
+        data: {
+          "product-id": opts.productId || "",
+          "product-name": opts.productName || "",
+        },
       });
     }
     if (opts.subcategory) {
       var subLbl = tagText(opts.subcategoryLabel || opts.subcategory, "subcategory");
+      var subTip = "Podkategoria: " + subLbl + ". Klik: filtr. Ctrl+klik: dodaj do wyszukiwania.";
+      if (editHint) subTip += " Shift+klik: edytuj.";
       items.push({
         kind: "subcategory",
         value: opts.subcategory,
         label: subLbl,
         cls: "dam-viz-badge--subcat",
-        tip: "Podkategoria: " + subLbl,
+        tip: subTip,
+        data: {
+          "product-id": opts.productId || "",
+          "product-name": opts.productName || "",
+        },
       });
     }
 
@@ -137,23 +161,17 @@
       (global.DamLabels && typeof global.DamLabels.carrierShort === "function"
         ? global.DamLabels.carrierShort(opts.carrier || carrierLbl, opts.revisionFolder || carrierLbl)
         : "") || "";
-    /* Tooltip admin-only content: baza (co to jest) widzi KAZDY; dopisek po
-       kropce z odstepem TYLKO gdy tryb admina jest wlaczony (2026-07-18,
-       wymog uzytkownika - nikt bez wlaczonego trybu admina nie moze widziec
-       podpowiedzi "Admin: ..."). */
-    var adminOn = isAdminEditMode();
+    /* Tooltip: baza dla kazdego; dopisek Admin tylko gdy tryb admina wlaczony. */
     if (carrierLbl) {
       var carrierTip =
         (opts.carrierGuessed ? "Nosnik (zgadniety). " : "Nosnik. ") +
         carrierLbl +
         (carrierDisk && carrierDisk !== carrierLbl ? " (na dysku: " + carrierDisk + "). " : ". ") +
-        "Klik: filtr wedlug " +
-        carrierLbl +
-        ".";
+        "Klik: filtr. Ctrl+klik: dodaj do wyszukiwania.";
       if (opts.carrierPrevious) {
         carrierTip += " Wczesniej zatwierdzono: " + opts.carrierPrevious + ".";
       }
-      if (adminOn) carrierTip += " Admin: Shift+klik lub podwojny klik - wybierz z listy.";
+      if (editHint) carrierTip += " Shift+klik: edytuj typ.";
       carrierLbl = tagText(carrierLbl, "carrier");
       items.push({
         kind: "carrier",
@@ -172,7 +190,7 @@
     } else if (opts.showCarrierPlaceholder) {
       /* Brak typu i brak zgadniecia - user moze wciaz proponowac (Faza 4, P5). */
       var noCarrierTip = "Brak typu. Klik: zaproponuj typ.";
-      if (adminOn) noCarrierTip += " Admin: Shift+klik - wybierz z listy.";
+      if (adminOn) noCarrierTip += " Shift+klik: wybierz z listy.";
       items.push({
         kind: "carrier",
         value: "",
@@ -315,7 +333,34 @@
         },
       });
     }
+
+    var packagingTags = opts.packagingTags;
+    if (!Array.isArray(packagingTags)) packagingTags = packagingTags ? [packagingTags] : [];
+    packagingTags.filter(Boolean).forEach(function (tag) {
+      items.push({
+        kind: "pakowanie",
+        value: String(tag),
+        label: String(tag),
+        cls: "dam-viz-badge--pakowanie dam-badge-tag--tier-low",
+        tier: "low",
+        tip: "Pakowanie zbiorcze: " + tag,
+      });
+    });
+
     return items;
+  }
+
+  function filterByTagTiers(items, tiers) {
+    if (!tiers || !tiers.length) return items;
+    var allowed = {};
+    tiers.forEach(function (t) {
+      allowed[t] = true;
+    });
+    return items.filter(function (it) {
+      var tier = it.tier || "primary";
+      if (it.kind === "pakowanie") tier = "low";
+      return !!allowed[tier];
+    });
   }
 
   function renderOverflow(items, maxPerKind) {
@@ -425,6 +470,7 @@
   function render(opts) {
     opts = opts || {};
     var items = buildBadgeItems(opts);
+    items = filterByTagTiers(items, opts.includeTagTiers);
     var max = opts.maxPerKind == null ? MAX_PER_KIND : opts.maxPerKind;
     if (opts.overflow !== false) items = renderOverflow(items, max);
     /* Karty (compact): maxTotal trzyma 2 rzedy - bez ucinania overflow:hidden.
@@ -456,51 +502,115 @@
     return items.map(badgeHtml).join("");
   }
 
-  function applyTagFilter(kind, value, context) {
-    context = context || detectContext();
+  /**
+   * Token do wyszukiwarki: widoczna etykieta (Batony), nie surowy kod (01 - BATONY).
+   * Usuwa same myslniki, zeby AND-split nie wymagal "-" w haystack.
+   */
+  function normalizeSearchToken(raw) {
+    return String(raw || "")
+      .replace(/[\u2013\u2014]/g, "-")
+      .split(/[\s/|]+/)
+      .map(function (p) {
+        return String(p || "")
+          .replace(/^-+|-+$/g, "")
+          .trim();
+      })
+      .filter(function (p) {
+        return p && p !== "-";
+      })
+      .join(" ");
+  }
+
+  function searchTokenForBadge(btn, kind, value) {
+    var label = String((btn && btn.textContent) || "").trim();
+    if (label && label.charAt(0) !== "+") {
+      return normalizeSearchToken(label);
+    }
     var v = String(value || "").trim();
-    if (!v && kind !== "index") return;
+    if (kind === "category") {
+      v = v.replace(/^\d+\s*[-.]\s*/i, "").trim();
+    }
+    return normalizeSearchToken(v);
+  }
+
+  function resolveSearchInput(context) {
+    if (context === "viz") {
+      return document.getElementById("vizSearch");
+    }
+    if (context === "explorer") {
+      return document.getElementById("damFileSearch");
+    }
+    if (context === "project") {
+      return (
+        document.getElementById("damProjectsSearch") ||
+        document.getElementById("damProjectSearch") ||
+        document.querySelector("[data-dam-project-search]")
+      );
+    }
+    return (
+      document.getElementById("damProjectsSearch") ||
+      document.getElementById("vizSearch") ||
+      document.getElementById("damFileSearch")
+    );
+  }
+
+  /**
+   * @param {string} kind
+   * @param {string} value
+   * @param {string} [context]
+   * @param {{ append?: boolean, token?: string, btn?: Element }} [opts]
+   */
+  function applyTagFilter(kind, value, context, opts) {
+    opts = opts || {};
+    context = context || detectContext();
+    var token =
+      opts.token != null
+        ? normalizeSearchToken(opts.token)
+        : searchTokenForBadge(opts.btn || null, kind, value);
+    if (!token && kind !== "index") return;
 
     if (context === "viz") {
-      var search = document.getElementById("vizSearch");
       var langSel = document.getElementById("vizLangFilter");
-      if (kind === "lang" && langSel) {
-        langSel.value = v;
+      if (kind === "lang" && langSel && !opts.append) {
+        langSel.value = String(value || token).trim();
         langSel.dispatchEvent(new Event("change", { bubbles: true }));
         return;
       }
-      if (kind === "brand") {
-        /* brand toggle handled by dam-viz brandFilter if present */
+      if (kind === "brand" && !opts.append) {
         if (typeof global.damVizApplyBrandTag === "function") {
-          global.damVizApplyBrandTag(v);
+          global.damVizApplyBrandTag(String(value || token).trim());
           return;
         }
       }
-      if (search) {
-        search.value = v;
-        search.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-      return;
     }
 
-    if (context === "explorer") {
-      var input = document.getElementById("damFileSearch");
-      if (input) {
-        input.value = v;
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-      return;
+    var input = resolveSearchInput(context);
+    if (!input) return;
+
+    if (opts.append) {
+      var cur = String(input.value || "").trim();
+      var parts = cur ? cur.split(/\s+/).filter(Boolean) : [];
+      var lower = parts.map(function (p) {
+        return p.toLowerCase();
+      });
+      token.split(/\s+/).forEach(function (part) {
+        if (!part) return;
+        if (lower.indexOf(part.toLowerCase()) === -1) {
+          parts.push(part);
+          lower.push(part.toLowerCase());
+        }
+      });
+      input.value = parts.join(" ");
+    } else {
+      input.value = token;
     }
 
-    if (context === "project") {
-      var pInput =
-        document.getElementById("damProjectsSearch") ||
-        document.getElementById("damProjectSearch") ||
-        document.querySelector("[data-dam-project-search]");
-      if (pInput) {
-        pInput.value = v;
-        pInput.dispatchEvent(new Event("input", { bubbles: true }));
-      }
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    try {
+      input.focus({ preventScroll: true });
+    } catch (errFocus) {
+      /* ignore */
     }
   }
 
@@ -539,6 +649,15 @@
       global.DamTagEdit.isPrivileged() &&
       typeof global.DamTagEdit.adminModeOn === "function" &&
       global.DamTagEdit.adminModeOn()
+    );
+  }
+
+  /** Edycja tagow: admin/power_user (Shift/Alt/dblclick). Tryb ADMIN nie jest wymagany do otwarcia pickera. */
+  function canEditTags() {
+    return (
+      !!global.DamTagEdit &&
+      typeof global.DamTagEdit.isPrivileged === "function" &&
+      global.DamTagEdit.isPrivileged()
     );
   }
 
@@ -688,19 +807,22 @@
       var adminEdit = isAdminEditMode();
       var ctx = context || detectContext();
       var now = Date.now();
-      var dblClick = lastClick.btn === btn && now - lastClick.t <= 500;
+      var dblClick = lastClick.btn === btn && now - lastClick.t <= 420;
+      var wantEdit = e.shiftKey || e.altKey || dblClick;
+      var wantAppend = e.ctrlKey || e.metaKey;
 
-      /* Admin + Shift lub podwojny klik: zawsze lista opcji (kazdy tag) */
-      if (adminEdit && editable && global.DamTagEdit && (e.shiftKey || dblClick)) {
+      /* Shift / Alt / podwojny klik: edycja tagu (Projekty / Viz / Explorer) */
+      if (wantEdit && editable && global.DamTagEdit && (canEditTags() || isPlaceholder)) {
         e.preventDefault();
         e.stopPropagation();
         lastClick = { t: 0, btn: null };
+        clearTimeout(btn._damFilterTimer);
         openTagEdit(btn);
         return;
       }
 
       /* Status bez Shift: nie blokuj rozwiniecia wiersza / karty */
-      if (kind === "status" && adminEdit) {
+      if (kind === "status" && adminEdit && !wantEdit) {
         lastClick = { t: now, btn: btn };
         return;
       }
@@ -713,23 +835,12 @@
         return;
       }
 
-      /* Admin: pojedynczy klik = filtr (po krotkim opoznieniu) */
-      if (adminEdit && editable && global.DamTagEdit) {
-        e.preventDefault();
-        e.stopPropagation();
-        lastClick = { t: now, btn: btn };
-        clearTimeout(btn._damFilterTimer);
-        btn._damFilterTimer = setTimeout(function () {
-          applyTagFilter(kind, value, ctx);
-        }, 520);
-        return;
-      }
-
-      /* Zwykly user na zgadnietym: pojedynczy klik = propozycja */
+      /* Zwykly user na zgadnietym: Shift/Alt = propozycja; zwykly klik = filtr */
       if (
         editable &&
         global.DamTagEdit &&
         !adminEdit &&
+        wantEdit &&
         btn.classList.contains("dam-viz-badge--guessed")
       ) {
         e.preventDefault();
@@ -741,7 +852,13 @@
       if (btn.tagName === "BUTTON" || btn.classList.contains("dam-badge-tag")) {
         e.preventDefault();
         e.stopPropagation();
-        applyTagFilter(kind, value, ctx);
+        lastClick = { t: now, btn: btn };
+        /* Natychmiastowy filtr (AJAX-like). Ctrl/Meta = dolacz token po spacji. */
+        applyTagFilter(kind, value, ctx, {
+          append: wantAppend,
+          btn: btn,
+          token: searchTokenForBadge(btn, kind, value),
+        });
       }
     });
   }
@@ -757,6 +874,26 @@
     }
   }
 
+  var TAG_TIER_REVEAL_KEY = "dam_reveal_low_tags";
+
+  function getIncludeTagTiers() {
+    try {
+      if (localStorage.getItem(TAG_TIER_REVEAL_KEY) === "1") {
+        return ["primary", "low", "minimal"];
+      }
+    } catch (eReveal) { /* ignore */ }
+    return ["primary"];
+  }
+
+  function setRevealLowTags(on) {
+    try {
+      localStorage.setItem(TAG_TIER_REVEAL_KEY, on ? "1" : "0");
+    } catch (eSet) { /* ignore */ }
+    if (typeof document !== "undefined") {
+      document.dispatchEvent(new CustomEvent("dam-tag-tiers-changed"));
+    }
+  }
+
   global.DamBadges = {
     render: render,
     buildBadgeItems: buildBadgeItems,
@@ -765,6 +902,8 @@
     copyTagText: copyTagText,
     applyTagFilter: applyTagFilter,
     detectContext: detectContext,
+    getIncludeTagTiers: getIncludeTagTiers,
+    setRevealLowTags: setRevealLowTags,
     MAX_PER_KIND: MAX_PER_KIND,
   };
 })(typeof window !== "undefined" ? window : globalThis);

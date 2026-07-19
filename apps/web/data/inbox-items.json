@@ -1,6 +1,22 @@
 {
   "items": [
     {
+      "id": "inbox_1784417307854",
+      "path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/CORNFLAKES PEANUTS HONEY — [ balls_crispy ]/FOLIA - 20.09.2024 - 6300478.00 - GB AR/4 - VISUALS/WARIANT-CORNFLAKES-PEANUTS-HONEY-6300478-FRONT-S.png",
+      "read": false,
+      "tags": [
+        "teams",
+        "wizualizacja",
+        "zgloszenie"
+      ],
+      "type": "viz_request",
+      "title": "Zgloszenie wizualizacji: CORNFLAKES PEANUTS HONEY",
+      "detail": "Prosze o wykonanie wizualizacji na CORNFLAKES PEANUTS HONEY (Francja) - indeks 6300478. Zglosil: krzysztof.wieczorek@kubara.pl.\nFolder: X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/02 - BALLS/CORNFLAKES PEANUTS HONEY — [ balls_crispy ]/FOLIA - 20.09.2024 - 6300478.00 - GB AR/4 - VISUALS/WARIANT-CORNFLAKES-PEANUTS-HONEY-6300478-FRONT-S.png\nMarka: GC\nKategoria: 02 - BALLS\nTyp: FOLIA",
+      "created_at": "2026-07-18T23:28:27.854595+00:00",
+      "product_id": "cornflakes-peanuts-honey-balls-crispy",
+      "requested_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    {
       "id": "inbox_1784393455108",
       "path": "X:/Marketing/- POLSKA/- DK/_TEST_PROP_DUMMY2",
       "read": true,

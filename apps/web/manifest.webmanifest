@@ -1,7 +1,7 @@
 {
-  "name": "DAM ETA - Dobra Kaloria",
-  "short_name": "DAM ETA",
-  "description": "Digital Asset Management - Dobra Kaloria / Good Calories",
+  "name": "DAM - Dobra Kaloria - Inyfinn",
+  "short_name": "DAM",
+  "description": "Digital Asset Management - Dobra Kaloria / Good Calories - Inyfinn",
   "start_url": "./visualizations.html",
   "display": "standalone",
   "orientation": "any",

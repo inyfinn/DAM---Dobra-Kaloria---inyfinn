@@ -1,5 +1,5 @@
 /**
- * DAM ETA - Kalkulator kosztów (czytelny wybor projektu + breakdown)
+ * DAM - Kalkulator kosztów (czytelny wybor projektu + breakdown)
  * Loads data/project-costs.json (built from Asana + cost-rates).
  */
 (function () {

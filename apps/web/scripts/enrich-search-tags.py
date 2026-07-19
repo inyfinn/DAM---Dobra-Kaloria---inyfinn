@@ -219,20 +219,23 @@ def main() -> int:
 
     for p in products:
         authors: list[str] = []
-        for base in p.get("index_bases") or []:
-            a = author_by_index.get(str(base).upper())
-            if a and a not in authors:
-                authors.append(a)
-        # kontekst statusow / Asany / dziennika (product-people.json)
-        for a in people_for_product(p, pp):
-            if a not in authors:
-                authors.append(a)
-        # fallback: szukaj w tags/osoba
+        # product-people.json = zrodlo prawdy (np. Datesy = tylko Sylwia).
+        # Asana CSV tylko gdy mapa nie ma wpisu - inaczej KW z Asany nadpisywalby Sylwie.
+        mapped = people_for_product(p, pp)
+        if mapped:
+            authors = list(mapped)
+        else:
+            for base in p.get("index_bases") or []:
+                a = author_by_index.get(str(base).upper())
+                if a and a not in authors:
+                    authors.append(a)
+            # fallback: szukaj w tags/osoba
+            tg = p.get("tag_groups") or {}
+            for a in tg.get("osoba") or []:
+                fn = first_name(a) or a
+                if fn and fn not in authors:
+                    authors.append(fn)
         tg = p.get("tag_groups") or {}
-        for a in tg.get("osoba") or []:
-            fn = first_name(a) or a
-            if fn and fn not in authors:
-                authors.append(fn)
         for a in authors:
             author_counter[a] += 1
         p["authors"] = authors
@@ -289,6 +292,35 @@ def main() -> int:
         "inne": [],
     }
 
+    # Przebuduj by_tag dla imion/aliasow od zera (stare Asana→KW nie zostaja przy Datesy→Sylwia).
+    person_keys: set[str] = set()
+    for name, meta in (pp.get("people") or {}).items():
+        person_keys.add(norm(name))
+        for al in meta.get("aliases") or []:
+            person_keys.add(norm(al))
+        full = (meta.get("full") or "").strip()
+        if full:
+            person_keys.add(norm(full))
+            person_keys.add(norm(first_name(full)))
+    for name in autor_tags:
+        person_keys.add(norm(name))
+    for key in list(by_tag.keys()):
+        if key in person_keys:
+            by_tag[key] = []
+    for p in products:
+        pid = p.get("id")
+        if not pid:
+            continue
+        for tok in author_search_tokens(p.get("authors") or [], pp):
+            key = norm(tok)
+            if key and pid not in by_tag[key]:
+                by_tag[key].append(pid)
+            fn = first_name(tok)
+            if fn:
+                fk = norm(fn)
+                if fk and pid not in by_tag[fk]:
+                    by_tag[fk].append(pid)
+
     # search-index entries
     entries = si.get("entries") or []
     by_id = {p.get("id"): p for p in products}
@@ -312,7 +344,7 @@ def main() -> int:
 
     si["tag_groups"] = tag_groups
     fi["tag_groups"] = tag_groups
-    si["by_tag"] = {k: sorted(set(v)) for k, v in sorted(by_tag.items())}
+    si["by_tag"] = {k: sorted(set(v)) for k, v in sorted(by_tag.items()) if v}
 
     FILE_INDEX.write_text(json.dumps(fi, ensure_ascii=False, indent=2), encoding="utf-8")
     SEARCH_INDEX.write_text(json.dumps(si, ensure_ascii=False, indent=2), encoding="utf-8")

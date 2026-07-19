@@ -1,0 +1,396 @@
+{
+  "version": 1,
+  "updated_at": "2026-07-19T00:29:35.448560+00:00",
+  "packs": {
+    "pak:2f-2x12": {
+      "label": "2F · 2×12",
+      "grid": "2x12",
+      "faces": 2,
+      "units_total": 24,
+      "type": "tacka",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/03 - OPAKOWANIA ZBIORCZE/Datesy/Archive 1/DK_karton_datesy_2face_2026_06_24_FQ.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": "Datesy; pakowane od frontu 2×12"
+    },
+    "pak:1f-6x1": {
+      "label": "1F · 6×1",
+      "grid": "6x1",
+      "faces": 1,
+      "units_total": 6,
+      "type": "karton",
+      "tag_tier": "low",
+      "source_pdf": null,
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": "MINI mix 6 szt."
+    },
+    "pak:3f-4x6": {
+      "label": "3F · 4×6",
+      "grid": "4x6",
+      "faces": 3,
+      "units_total": 24,
+      "type": "display",
+      "tag_tier": "low",
+      "source_pdf": null,
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": "DISPLAY Rossman — grid do uzupełnienia"
+    },
+    "pak:1f-1x1": {
+      "label": "1F · 1×1",
+      "grid": "1x1",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/03 - OPAKOWANIA ZBIORCZE/DISPLAY ROSSMAN — [ display ]/DISPLAY - 14 07 2026 - 6300787/2 - PROJEKT/DK-DISPLAY - ROSMAN 3 FACE - 6300787.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-280x210": {
+      "label": "1F · 280×210",
+      "grid": "280x210",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/03 - OPAKOWANIA ZBIORCZE/kremy/Moreso tacka 2026_R253631_wew 280x210x30 E v1-2.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:2f-1x1": {
+      "label": "2F · 1×1",
+      "grid": "1x1",
+      "faces": 2,
+      "units_total": null,
+      "type": "tacka",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/03 - OPAKOWANIA ZBIORCZE/Datesy/Archive 1/DK_karton_datesy_2face_2026_06_30/DK_karton_datesy_2face_2026_06_30_FQ.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-511x472": {
+      "label": "1F · 511×472",
+      "grid": "511x472",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0001_batony_pion_511x472.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-14xmini_914_403": {
+      "label": "1F · 14xmini_914_403",
+      "grid": "14xmini_914_403",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0002_14xmini_914_403.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-2x7xmini6x_892x405": {
+      "label": "1F · 2x7xmini6x_892x405",
+      "grid": "2x7xmini6x_892x405",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0003_2x7xmini6x_892x405.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-2x15xbaton_wiekszy_785x423mm": {
+      "label": "1F · 2x15xbaton_wiekszy_785x423mm",
+      "grid": "2x15xbaton_wiekszy_785x423mm",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0004_2x15xbaton_wiekszy_785x423mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-785x348": {
+      "label": "1F · 785×348",
+      "grid": "785x348",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0005_kulki_doypacki_saszetki_785x348mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-706x412": {
+      "label": "1F · 706×412",
+      "grid": "706x412",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0006_batony_na_plasko_706x412mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-7x6xmini_920x276mm": {
+      "label": "1F · 7x6xmini_920x276mm",
+      "grid": "7x6xmini_920x276mm",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0007_7x6xmini_920x276mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-14x6xmini_892x225mm": {
+      "label": "1F · 14x6xmini_892x225mm",
+      "grid": "14x6xmini_892x225mm",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0008_14x6xmini_892x225mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-6x11mini_1262x251": {
+      "label": "1F · 6x11mini_1262x251",
+      "grid": "6x11mini_1262x251",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0009_6x11mini_1262x251.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-608x343": {
+      "label": "1F · 608×343",
+      "grid": "608x343",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0010_roslinne_duza_tacka_608x343mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-570x828": {
+      "label": "1F · 570×828",
+      "grid": "570x828",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0011_roslinne_mala_tacka_570x828.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-570x299": {
+      "label": "1F · 570×299",
+      "grid": "570x299",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0012_roslinne_mala_tacka_570x299.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:2f-955x304": {
+      "label": "2F · 955×304",
+      "grid": "955x304",
+      "faces": 2,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0013_saszetka_2face_955x304.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-2xdoypack_kulki_1062x307mm": {
+      "label": "1F · 2xdoypack_kulki_1062x307mm",
+      "grid": "2xdoypack_kulki_1062x307mm",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0015_2xdoypack_kulki_1062x307mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-15xbaton_standard_714x383mm": {
+      "label": "1F · 15xbaton_standard_714x383mm",
+      "grid": "15xbaton_standard_714x383mm",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0016_15xbaton_standard_714x383mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-500x206": {
+      "label": "1F · 500×206",
+      "grid": "500x206",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0017_batony_pion_export_500x206.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-749x225": {
+      "label": "1F · 749×225",
+      "grid": "749x225",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0018_saszetka_doypack_kulki_export_749x225.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:2f-1067x461": {
+      "label": "2F · 1067×461",
+      "grid": "1067x461",
+      "faces": 2,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0020_boosty_2face_1067x461mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-1055x408": {
+      "label": "1F · 1055×408",
+      "grid": "1055x408",
+      "faces": 1,
+      "units_total": null,
+      "type": "wykrojnik",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0021_DisplayC_1055x408mm.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    },
+    "pak:1f-1208x481": {
+      "label": "1F · 1208×481",
+      "grid": "1208x481",
+      "faces": 1,
+      "units_total": null,
+      "type": "tacka",
+      "tag_tier": "low",
+      "source_pdf": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0022_karton_kalendarz_adwent6x_1208x481.pdf",
+      "flat_dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "notes": ""
+    }
+  }
+}

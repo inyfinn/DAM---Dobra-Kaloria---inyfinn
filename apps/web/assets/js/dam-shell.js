@@ -1,10 +1,51 @@
 /**
- * DAM ETA - Shell navigation + auth guard + messages popup
+ * DAM - Shell navigation + auth guard + messages popup
  * Rewrites Geex sidebar/header Demo menu to DAM items
  * Requires: dam-api.js, dam-i18n.js loaded before this script
  */
 (function () {
   "use strict";
+
+  /* Soft-boot akcentu gdy dam-accent.js nie jest na stronie (chrome tylko, nie tagi). */
+  (function softAccentBoot() {
+    if (window.DamAccent) return;
+    try {
+      var a = localStorage.getItem("dam_accent");
+      if (!a || !/^#[0-9A-Fa-f]{6}$/.test(a)) return;
+      var h = a.slice(1);
+      var r = parseInt(h.slice(0, 2), 16);
+      var g = parseInt(h.slice(2, 4), 16);
+      var b = parseInt(h.slice(4, 6), 16);
+      var root = document.documentElement;
+      root.style.setProperty("--dam-primary", a);
+      root.style.setProperty("--primary-color", a);
+      root.style.setProperty(
+        "--primary-color-transparent",
+        "rgba(" + r + ", " + g + ", " + b + ", 0.15)"
+      );
+      root.setAttribute("data-dam-accent", a.toUpperCase());
+    } catch (e) { /* ignore */ }
+  })();
+
+  /* Soft-boot motywu (data-theme) gdy dam-theme.js nie jest na stronie. */
+  (function softThemeBoot() {
+    if (window.DamTheme) return;
+    try {
+      var pref = localStorage.getItem("dam_theme_pref") || localStorage.getItem("theme") || "light";
+      var resolved = pref;
+      if (pref === "system") {
+        resolved =
+          window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+      }
+      if (resolved !== "dark" && resolved !== "light") resolved = "light";
+      document.documentElement.setAttribute("data-theme", resolved);
+      if (pref === "system" || pref === "dark" || pref === "light") {
+        document.documentElement.setAttribute("data-dam-theme-pref", pref);
+      }
+    } catch (e) { /* ignore */ }
+  })();
 
   // Tryb roboczy: zawsze zalogowany jako admin (bez Microsoft).
   // Wyłącz (false) gdy włączymy prawdziwe Entra ID.
@@ -17,6 +58,17 @@
   var LOGO_SRC = LOGO_SRC_LIGHT;
   var FAVICON_SRC = "assets/img/favicon-dk.svg";
   var MANIFEST_HREF = "manifest.webmanifest";
+
+  /** Global accent CSS (chrome only) - once per page. */
+  function ensureAccentCss() {
+    var head = document.head;
+    if (!head || head.querySelector('link[data-dam-accent-css]')) return;
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "./assets/css/dam-accent.css?v=20260718accent3";
+    link.setAttribute("data-dam-accent-css", "1");
+    head.appendChild(link);
+  }
 
   /** Favicon DK + meta PWA (telefon / Add to Home Screen). */
   function ensureAppIcons() {
@@ -55,7 +107,7 @@
     upsertMeta("theme-color", "#008244");
     upsertMeta("apple-mobile-web-app-capable", "yes");
     upsertMeta("apple-mobile-web-app-status-bar-style", "default");
-    upsertMeta("apple-mobile-web-app-title", "DAM ETA");
+    upsertMeta("apple-mobile-web-app-title", "DAM");
     upsertMeta("mobile-web-app-capable", "yes");
     if (!document.title || /geex/i.test(document.title)) {
       /* nie nadpisuj sensownych tytulow stron */
@@ -465,7 +517,7 @@
     });
     document.querySelectorAll(".geex-sidebar__logo, .geex-header__logo").forEach(function (a) {
       a.href = "dashboard.html";
-      a.setAttribute("title", "Dobra Kaloria - DAM ETA");
+      a.setAttribute("title", "Dobra Kaloria - DAM - Inyfinn");
     });
     // Usuń stare napisy Geex przy logo (jeśli sa w markupie)
     document.querySelectorAll(".geex-sidebar__logo, .geex-header__logo").forEach(function (wrap) {
@@ -528,10 +580,11 @@
     }
     var footer = document.querySelector(".geex-sidebar__footer");
     if (footer) {
-      var brand = window.DamI18n ? window.DamI18n.t("nav.brand") : "DAM ETA";
+      var brand = window.DamI18n ? window.DamI18n.t("nav.brand") : "DAM";
       var brandSub = window.DamI18n ? window.DamI18n.t("nav.brand_sub") : "Panel assetów opakowań";
       var madeBy = window.DamI18n ? window.DamI18n.t("footer.made_by") : "inyfinn.art";
       var year = new Date().getFullYear();
+      var ver = String(window.DAM_APP_VERSION || "1.00").replace(/^v/i, "");
       footer.innerHTML =
         '<span class="geex-sidebar__footer__title" data-i18n="nav.brand">' + brand + '</span>' +
         '<p class="geex-sidebar__footer__copyright" data-i18n="nav.brand_sub">' + brandSub + '</p>' +
@@ -539,6 +592,7 @@
           '<a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer" data-i18n="footer.made_by">' +
             madeBy +
           "</a> &copy; " + year +
+          ' <span class="dam-app-version" title="Wersja programu DAM">v' + ver + "</span>" +
         "</p>";
     }
   }
@@ -560,8 +614,8 @@
       logo = document.createElement("a");
       logo.href = "dashboard.html";
       logo.className = "geex-sidebar__logo";
-      logo.setAttribute("aria-label", "Dobra Kaloria - DAM ETA");
-      logo.setAttribute("title", "Dobra Kaloria - DAM ETA");
+      logo.setAttribute("aria-label", "Dobra Kaloria - DAM - Inyfinn");
+      logo.setAttribute("title", "Dobra Kaloria - DAM - Inyfinn");
       logo.innerHTML =
         '<img class="logo-lite dam-logo-dk" src="' + LOGO_SRC_LIGHT + '" alt="Dobra Kaloria" width="150" height="48" />' +
         '<img class="logo-dark dam-logo-dk" src="' + LOGO_SRC_DARK + '" alt="Dobra Kaloria" width="150" height="48" />';
@@ -573,8 +627,8 @@
       bottomLogo = document.createElement("a");
       bottomLogo.href = "dashboard.html";
       bottomLogo.className = "dam-sidebar-logo-collapsed";
-      bottomLogo.setAttribute("aria-label", "Dobra Kaloria - DAM ETA");
-      bottomLogo.setAttribute("title", "Dobra Kaloria - DAM ETA");
+      bottomLogo.setAttribute("aria-label", "Dobra Kaloria - DAM - Inyfinn");
+      bottomLogo.setAttribute("title", "Dobra Kaloria - DAM - Inyfinn");
       bottomLogo.innerHTML =
         '<img class="logo-lite dam-logo-dk" src="' + LOGO_SRC_LIGHT + '" alt="Dobra Kaloria" width="48" height="48" />' +
         '<img class="logo-dark dam-logo-dk" src="' + LOGO_SRC_DARK + '" alt="Dobra Kaloria" width="48" height="48" />';
@@ -1457,6 +1511,7 @@
   // Main init
   function init() {
     ensureAppIcons();
+    ensureAccentCss();
     enforceAuth();
     ensureSidebarLogo();
     applyDobraKaloriaLogo();
@@ -1484,7 +1539,7 @@
     // Status ROOT plików (czerwona kropka gdy offline)
     if (!window.DamRootStatus) {
       var rs = document.createElement("script");
-      rs.src = "assets/js/dam-root-status.js?v=20260718carrierFix1";
+      rs.src = "assets/js/dam-root-status.js?v=20260719statusPill1";
       document.head.appendChild(rs);
     } else if (typeof window.DamRootStatus.start === "function") {
       window.DamRootStatus.start();
@@ -1493,7 +1548,7 @@
     // Status bazy danych (obok Pliki online)
     if (!window.DamDbStatus) {
       var dbs = document.createElement("script");
-      dbs.src = "assets/js/dam-db-status.js?v=20260718adminHdr1";
+      dbs.src = "assets/js/dam-db-status.js?v=20260719statusPill1";
       document.head.appendChild(dbs);
     } else if (typeof window.DamDbStatus.start === "function") {
       window.DamDbStatus.start();
@@ -1502,7 +1557,7 @@
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=20260718lifeHelp1";
+      sc.src = "assets/js/dam-shortcuts.js?v=20260718statusTruth1";
       document.head.appendChild(sc);
     }
 

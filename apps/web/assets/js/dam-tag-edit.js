@@ -1,5 +1,5 @@
 /**
- * DAM ETA - Faza 4 (2026-07-18): edycja typu (nosnika) dla WSZYSTKICH rol.
+ * DAM - Faza 4 (2026-07-18): edycja typu (nosnika) dla WSZYSTKICH rol.
  * Wybor w liscie = podglad (pending). Zatwierdz (zielony check) / Anuluj (czerwony X).
  * Opcja BRAK TYPU. Admin: dblclick <=500ms lub Shift+klik otwiera picker.
  */

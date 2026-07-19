@@ -1,5 +1,5 @@
 /**
- * DAM ETA - desktop / browser notifications for new visualizations.
+ * DAM - desktop / browser notifications for new visualizations.
  * Polls file-index.json every 60s when enabled.
  */
 (function (global) {

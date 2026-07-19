@@ -1,0 +1,985 @@
+{
+  "version": 1,
+  "updated_at": "2026-07-19T00:29:56.026158+00:00",
+  "source_xlsx": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/opakowania_Kubara_baza_danych.xlsx",
+  "entries": {
+    "row-1": {
+      "kod": "row-1",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-2": {
+      "kod": "row-2",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-3": {
+      "kod": "row-3",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-4": {
+      "kod": "row-4",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-5": {
+      "kod": "row-5",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-6": {
+      "kod": "row-6",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-7": {
+      "kod": "row-7",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-8": {
+      "kod": "row-8",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-9": {
+      "kod": "row-9",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-10": {
+      "kod": "row-10",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-11": {
+      "kod": "row-11",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-12": {
+      "kod": "row-12",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-13": {
+      "kod": "row-13",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-14": {
+      "kod": "row-14",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-15": {
+      "kod": "row-15",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-16": {
+      "kod": "row-16",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-17": {
+      "kod": "row-17",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-18": {
+      "kod": "row-18",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-19": {
+      "kod": "row-19",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-20": {
+      "kod": "row-20",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-21": {
+      "kod": "row-21",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-22": {
+      "kod": "row-22",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-23": {
+      "kod": "row-23",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-24": {
+      "kod": "row-24",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-25": {
+      "kod": "row-25",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-26": {
+      "kod": "row-26",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-27": {
+      "kod": "row-27",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-28": {
+      "kod": "row-28",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-29": {
+      "kod": "row-29",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-30": {
+      "kod": "row-30",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-31": {
+      "kod": "row-31",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-32": {
+      "kod": "row-32",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-33": {
+      "kod": "row-33",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-34": {
+      "kod": "row-34",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-35": {
+      "kod": "row-35",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-36": {
+      "kod": "row-36",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-37": {
+      "kod": "row-37",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-38": {
+      "kod": "row-38",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-39": {
+      "kod": "row-39",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-40": {
+      "kod": "row-40",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-41": {
+      "kod": "row-41",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-42": {
+      "kod": "row-42",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-43": {
+      "kod": "row-43",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-44": {
+      "kod": "row-44",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-45": {
+      "kod": "row-45",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-46": {
+      "kod": "row-46",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-47": {
+      "kod": "row-47",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-48": {
+      "kod": "row-48",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-49": {
+      "kod": "row-49",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-50": {
+      "kod": "row-50",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-51": {
+      "kod": "row-51",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-52": {
+      "kod": "row-52",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-53": {
+      "kod": "row-53",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-54": {
+      "kod": "row-54",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-55": {
+      "kod": "row-55",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-56": {
+      "kod": "row-56",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-57": {
+      "kod": "row-57",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-58": {
+      "kod": "row-58",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-59": {
+      "kod": "row-59",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-60": {
+      "kod": "row-60",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-61": {
+      "kod": "row-61",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "row-62": {
+      "kod": "row-62",
+      "nazwa": "",
+      "drukarnia": "",
+      "podloze": "",
+      "stacje_kolorow": null,
+      "zapas": null,
+      "status": "",
+      "tag_tier": "low",
+      "linked_product_ids": [],
+      "source": "xlsx"
+    },
+    "fol_jedn_0001_siatka_doypacka_mini_160x414mm": {
+      "kod": "fol_jedn_0001_siatka_doypacka_mini_160x414mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/fol_jedn_0001_siatka_doypacka_mini_160x414mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0001_siatka_doypacka_mini_160x414mm_4opcje": {
+      "kod": "fol_jedn_0001_siatka_doypacka_mini_160x414mm_4opcje",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/folie/fol_jedn_0001_siatka_doypacka_mini_160x414mm_4opcje.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0001_siatka_doypacka_mini_160x414mm_4opcje_EN": {
+      "kod": "fol_jedn_0001_siatka_doypacka_mini_160x414mm_4opcje_EN",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/folie/fol_jedn_0001_siatka_doypacka_mini_160x414mm_4opcje_EN.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0002_nowa_karta_saszetka_160x222mm": {
+      "kod": "fol_jedn_0002_nowa_karta_saszetka_160x222mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/fol_jedn_0002_nowa_karta_saszetka_160x222mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0003_siatka_doypacka_kulki_125x414mm": {
+      "kod": "fol_jedn_0003_siatka_doypacka_kulki_125x414mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/fol_jedn_0003_siatka_doypacka_kulki_125x414mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0003_siatka_doypacka_kulki_125x414mm_update": {
+      "kod": "fol_jedn_0003_siatka_doypacka_kulki_125x414mm_update",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/folie/fol_jedn_0003_siatka_doypacka_kulki_125x414mm_update.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0004_mini_baton_136x85mm 1": {
+      "kod": "fol_jedn_0004_mini_baton_136x85mm 1",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/folie/fol_jedn_0004_mini_baton_136x85mm 1.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0004_mini_baton_136x85mm": {
+      "kod": "fol_jedn_0004_mini_baton_136x85mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/fol_jedn_0004_mini_baton_136x85mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0005_baton_wiekszy_136x136mm": {
+      "kod": "fol_jedn_0005_baton_wiekszy_136x136mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/fol_jedn_0005_baton_wiekszy_136x136mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0006_baton_standard_130x136mm": {
+      "kod": "fol_jedn_0006_baton_standard_130x136mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/fol_jedn_0006_baton_standard_130x136mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0006_baton_standard_35 g130x136mm": {
+      "kod": "fol_jedn_0006_baton_standard_35 g130x136mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/folie/fol_jedn_0006_baton_standard_35 g130x136mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0007_sniadaniowka_384x300mm": {
+      "kod": "fol_jedn_0007_sniadaniowka_384x300mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/fol_jedn_0007_sniadaniowka_384x300mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0008_doypack_premade_boosty_520x129mm": {
+      "kod": "fol_jedn_0008_doypack_premade_boosty_520x129mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/fol_jedn_0008_doypack_premade_boosty_520x129mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "fol_jedn_0009_baton_najwiekszy_136x142mm": {
+      "kod": "fol_jedn_0009_baton_najwiekszy_136x142mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/fol_jedn_0009_baton_najwiekszy_136x142mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0001_batony_pion_511x472": {
+      "kod": "kar_zbior_0001_batony_pion_511x472",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0001_batony_pion_511x472.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0002_14xmini_914_403": {
+      "kod": "kar_zbior_0002_14xmini_914_403",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0002_14xmini_914_403.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0003_2x7xmini6x_892x405": {
+      "kod": "kar_zbior_0003_2x7xmini6x_892x405",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0003_2x7xmini6x_892x405.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0004_2x15xbaton_wiekszy_785x423mm": {
+      "kod": "kar_zbior_0004_2x15xbaton_wiekszy_785x423mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0004_2x15xbaton_wiekszy_785x423mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0005_kulki_doypacki_saszetki_785x348mm": {
+      "kod": "kar_zbior_0005_kulki_doypacki_saszetki_785x348mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0005_kulki_doypacki_saszetki_785x348mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0006_batony_na_plasko_706x412mm": {
+      "kod": "kar_zbior_0006_batony_na_plasko_706x412mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0006_batony_na_plasko_706x412mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0007_7x6xmini_920x276mm": {
+      "kod": "kar_zbior_0007_7x6xmini_920x276mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0007_7x6xmini_920x276mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0008_14x6xmini_892x225mm": {
+      "kod": "kar_zbior_0008_14x6xmini_892x225mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0008_14x6xmini_892x225mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0009_6x11mini_1262x251": {
+      "kod": "kar_zbior_0009_6x11mini_1262x251",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0009_6x11mini_1262x251.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0010_roslinne_duza_tacka_608x343mm": {
+      "kod": "kar_zbior_0010_roslinne_duza_tacka_608x343mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0010_roslinne_duza_tacka_608x343mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0011_roslinne_mala_tacka_570x828": {
+      "kod": "kar_zbior_0011_roslinne_mala_tacka_570x828",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0011_roslinne_mala_tacka_570x828.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0012_roslinne_mala_tacka_570x299": {
+      "kod": "kar_zbior_0012_roslinne_mala_tacka_570x299",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0012_roslinne_mala_tacka_570x299.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0013_saszetka_2face_955x304": {
+      "kod": "kar_zbior_0013_saszetka_2face_955x304",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0013_saszetka_2face_955x304.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0015_2xdoypack_kulki_1062x307mm": {
+      "kod": "kar_zbior_0015_2xdoypack_kulki_1062x307mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0015_2xdoypack_kulki_1062x307mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0016_15xbaton_standard_714x383mm": {
+      "kod": "kar_zbior_0016_15xbaton_standard_714x383mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0016_15xbaton_standard_714x383mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0017_batony_pion_export_500x206": {
+      "kod": "kar_zbior_0017_batony_pion_export_500x206",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0017_batony_pion_export_500x206.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0018_saszetka_doypack_kulki_export_749x225": {
+      "kod": "kar_zbior_0018_saszetka_doypack_kulki_export_749x225",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0018_saszetka_doypack_kulki_export_749x225.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0020_boosty_2face_1067x461mm": {
+      "kod": "kar_zbior_0020_boosty_2face_1067x461mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0020_boosty_2face_1067x461mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0021_DisplayC_1055x408mm": {
+      "kod": "kar_zbior_0021_DisplayC_1055x408mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0021_DisplayC_1055x408mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0022_karton_kalendarz_adwent6x_1208x481": {
+      "kod": "kar_zbior_0022_karton_kalendarz_adwent6x_1208x481",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/kartony_zbiorcze/kar_zbior_0022_karton_kalendarz_adwent6x_1208x481.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0004_20xbaton_wiekszy_785x423mm": {
+      "kod": "kar_zbior_0004_20xbaton_wiekszy_785x423mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0004_20xbaton_wiekszy_785x423mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0007_14x6xmini_920x276mm": {
+      "kod": "kar_zbior_0007_14x6xmini_920x276mm",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0007_14x6xmini_920x276mm.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0011_roslinne_mala_tacka_570x299": {
+      "kod": "kar_zbior_0011_roslinne_mala_tacka_570x299",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0011_roslinne_mala_tacka_570x299.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0017_batony_pion_export_500x208": {
+      "kod": "kar_zbior_0017_batony_pion_export_500x208",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0017_batony_pion_export_500x208.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    },
+    "kar_zbior_0019_14x6xmini_kartonik_export_920x276": {
+      "kod": "kar_zbior_0019_14x6xmini_kartonik_export_920x276",
+      "pdf_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/_Archiwum/kar_zbior_0019_14x6xmini_kartonik_export_920x276.pdf",
+      "linked_product_ids": [],
+      "link_rule": "ARTYKUL:KOD+nazwa+.01"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 /**
- * DAM ETA - File Explorer v3 (nosniki ludzkie, MIXY, checklista, DK+GC)
+ * DAM - File Explorer v3 (nosniki ludzkie, MIXY, checklista, DK+GC)
  * Wymaga: dam-labels.js zaladowanego PRZED tym plikiem (window.DamLabels)
  */
 (function () {
@@ -44,7 +44,10 @@
     vizBgFilter:      "z-tlem",
     navStack:         [],
     navPos:           -1,
-    navSilent:        false
+    navSilent:        false,
+    searchQuery:      "",
+    searchHits:       null,
+    searchPanelTimer: null
   };
 
   function navSnapshot() {
@@ -92,21 +95,63 @@
   }
 
   function panelCanStepUp() {
-    return !!(state.product || state.canonCat);
+    return !!(state.product || state.canonCat || (state.searchQuery && state.searchHits));
   }
 
-  function panelStepUp() {
-    if (state.product) {
-      state.product = null;
-    } else if (state.canonCat) {
-      state.canonCat = null;
-    } else {
+  /** Obetnij koniec stosu nawigacji do biezacego snapshota (bez push - anty-pulapka Wstecz). */
+  function navReplaceTip() {
+    var snap = navSnapshot();
+    if (!snap.canonCat && !snap.productId) {
+      state.navStack = [];
+      state.navPos = -1;
       return;
     }
+    if (state.navPos >= 0) {
+      state.navStack[state.navPos] = snap;
+      state.navStack = state.navStack.slice(0, state.navPos + 1);
+    } else {
+      state.navStack = [snap];
+      state.navPos = 0;
+    }
+  }
+
+  /**
+   * Wstecz panelu = krok w gore hierarchii (nie slepa historia).
+   * Produkt → wyniki wyszukiwania / kategoria → clear search → welcome.
+   * Historia (navGo) tylko dla Do przodu.
+   */
+  function panelStepUp() {
     state.expandedCarriers = {};
     state.showOlderCarriers = {};
-    navPush();
-    renderAll();
+
+    if (state.product) {
+      state.product = null;
+      /* Zdejmij wpisy produktu z konca stosu, zeby Wstecz nie wrocil do produktu */
+      while (
+        state.navPos >= 0 &&
+        state.navStack[state.navPos] &&
+        state.navStack[state.navPos].productId
+      ) {
+        state.navStack = state.navStack.slice(0, state.navPos);
+        state.navPos -= 1;
+      }
+      navReplaceTip();
+      renderAll();
+      return;
+    }
+
+    if (state.searchQuery && state.searchHits) {
+      clearSearchPanel();
+      return;
+    }
+
+    if (state.canonCat) {
+      state.canonCat = null;
+      state.navStack = [];
+      state.navPos = -1;
+      renderAll();
+      return;
+    }
   }
 
   function panelHeadHtml(opts) {
@@ -150,11 +195,12 @@
         if (btn.disabled) return;
         var dir = parseInt(btn.getAttribute("data-panel-nav"), 10) || 0;
         if (dir < 0) {
-          if (state.navPos > 0) navGo(-1);
-          else panelStepUp();
+          /* Hierarchia ma pierwszenstwo - historia cofala do produktu (pulapka) */
+          if (panelCanStepUp()) panelStepUp();
+          else if (state.navPos > 0) navGo(-1);
           return;
         }
-        navGo(dir);
+        if (state.navPos >= 0 && state.navPos < state.navStack.length - 1) navGo(dir);
       });
     });
   }
@@ -277,18 +323,131 @@
     return rev ? (rev.path || rev.index || rev.folder || "") : "";
   }
 
+  function letterFromFolderName(pathOrName) {
+    var nm = String(pathOrName || "").split(/[/\\]/).pop() || "";
+    var m = nm.match(/\s-\s([FXD])$/i);
+    return m ? m[1].toUpperCase() : "";
+  }
+
+  function statusFromLetter(lit) {
+    if (lit === "F") return "aktualne";
+    if (lit === "X") return "nieaktualne";
+    if (lit === "D") return "demo";
+    return "clear";
+  }
+
   function getRevisionStatus(rev) {
-    var ov = overrideForRev(rev);
-    if (ov && ov.status) return ov.status;
-    var store = state.statusStore;
-    var keys = [revisionStatusKey(rev), rev.index, rev.path, rev.folder].filter(Boolean);
-    for (var i = 0; i < keys.length; i++) {
-      if (store && store.revisions && store.revisions[keys[i]]) {
-        return store.revisions[keys[i]].status;
+    if (!rev) return "starsza";
+    /* DYSK (nazwa folderu w indeksie) = prawda. Brak literki = clear / Bez statusu.
+       NIGDY: is_latest → aktualne (to mylilo F z "bez statusu"). */
+    var diskLit = letterFromFolderName(rev.path || rev.folder || "");
+    if (diskLit) return statusFromLetter(diskLit);
+
+    var keys = [rev.index, revisionStatusKey(rev), rev.path, rev.folder].filter(Boolean);
+    if (state.lifecycleStore && state.lifecycleStore.revisions) {
+      for (var li = 0; li < keys.length; li++) {
+        var lrow = state.lifecycleStore.revisions[keys[li]];
+        if (!lrow || !Object.prototype.hasOwnProperty.call(lrow, "status")) continue;
+        if (lrow.status === "clear" || !lrow.status) return "clear";
+        if (lrow.status === "aktualne" || lrow.status === "nieaktualne" || lrow.status === "demo") {
+          return lrow.status;
+        }
       }
     }
-    if (rev && rev.is_latest) return "aktualne";
+    var ov = overrideForRev(rev);
+    if (ov && ov.status && ov.status !== "clear" && ov.status !== "starsza") return ov.status;
+    var store = state.statusStore;
+    for (var i = 0; i < keys.length; i++) {
+      if (store && store.revisions && store.revisions[keys[i]]) {
+        var st = store.revisions[keys[i]].status;
+        if (st === "clear") return "clear";
+        if (st && st !== "starsza") return st;
+      }
+    }
+    /* Brak literki na dysku = Bez statusu (nie Starsza / nie F) */
+    if (rev && rev.is_latest) return "clear";
     return "starsza";
+  }
+
+  /** Aktualna sciezka dyskowa z lifecycle-store (po rename/archiwum), nie z przeterminowanego indeksu. */
+  function resolveLifecycleDiskPath(opts) {
+    opts = opts || {};
+    var idx = opts.index || "";
+    var path = opts.path || "";
+    var productId = opts.productId || "";
+    var store = state.lifecycleStore;
+    if (store && store.revisions) {
+      if (idx && store.revisions[idx] && store.revisions[idx].path) {
+        return store.revisions[idx].path;
+      }
+      var keys = Object.keys(store.revisions);
+      for (var i = 0; i < keys.length; i++) {
+        var row = store.revisions[keys[i]];
+        if (!row || !row.path) continue;
+        if (idx && (keys[i] === idx || String(row.path).toUpperCase().indexOf(String(idx).toUpperCase()) !== -1)) {
+          return row.path;
+        }
+        if (productId && row.product_id === productId && idx && String(keys[i]).indexOf(idx) !== -1) {
+          return row.path;
+        }
+      }
+    }
+    if (store && store.products && productId && opts.scope === "product") {
+      var prow = store.products[productId];
+      if (prow && prow.path) return prow.path;
+    }
+    return path;
+  }
+
+  function patchPathsAfterLifecycle(res, body) {
+    if (!res || !res.ok) return;
+    if (!state.lifecycleStore) state.lifecycleStore = { products: {}, revisions: {}, history: [] };
+    if (!state.lifecycleStore.revisions) state.lifecycleStore.revisions = {};
+    if (!state.lifecycleStore.products) state.lifecycleStore.products = {};
+    if (body.scope === "variant") {
+      var vpath = res.final_variant_path || res.resolved_path || body.path;
+      var idx = body.revision_index || "";
+      if (idx) {
+        state.lifecycleStore.revisions[idx] = Object.assign({}, state.lifecycleStore.revisions[idx] || {}, {
+          path: vpath,
+          previous_path: body.path,
+          status: res.status || "clear",
+          letter: res.letter || null,
+          product_id: body.product_id || ""
+        });
+      }
+      if (vpath) {
+        state.lifecycleStore.revisions[vpath] = state.lifecycleStore.revisions[idx] || {
+          path: vpath,
+          status: res.status || "clear",
+          letter: res.letter || null
+        };
+      }
+      var revs = (state.product && state.product.revisions) || [];
+      revs.forEach(function (r) {
+        if (!r) return;
+        if ((idx && r.index === idx) || (body.path && normPathKey(r.path || "") === normPathKey(body.path))) {
+          r.path = vpath;
+        }
+      });
+    } else {
+      var ppath = res.final_product_path || res.resolved_path || body.path;
+      if (body.product_id) {
+        state.lifecycleStore.products[body.product_id] = Object.assign(
+          {},
+          state.lifecycleStore.products[body.product_id] || {},
+          {
+            path: ppath,
+            previous_path: body.path,
+            status: res.status || "clear",
+            letter: res.letter || null
+          }
+        );
+      }
+      if (state.product && (state.product.id === body.product_id || normPathKey(state.product.path || "") === normPathKey(body.path))) {
+        state.product.path = ppath;
+      }
+    }
   }
 
   function findRevisionByRef(path, index) {
@@ -322,7 +481,7 @@
       /* Dodatkowo mirror w carrier-overrides (UI filtry) */
       var ov = overrideForRev(rev) || {};
       var entry = Object.assign({}, ov, {
-        status: status === "clear" ? "starsza" : status,
+        status: status === "clear" ? "clear" : status,
         carrier: ov.carrier || resolveCarrierCode(rev) || "",
         note: ov.note || ("Lifecycle: " + status)
       });
@@ -358,8 +517,13 @@
     if (!all.length) return null;
     var aktualne = getAktualneRevisions(all);
     if (!showAll) {
-      if (!aktualne.length) return null;
-      return { current: aktualne, older: [] };
+      /* F albo working (Bez statusu / latest) - nie chowaj czystego TEST-TEST */
+      var currentOff = aktualne.length ? aktualne : getCurrentRevisions(all);
+      currentOff = currentOff.filter(function (r) {
+        return getRevisionStatus(r) !== "nieaktualne";
+      });
+      if (!currentOff.length) return null;
+      return { current: currentOff, older: [] };
     }
     var current = aktualne.length ? aktualne : getCurrentRevisions(all);
     var older = getOlderRevisions(all, current);
@@ -370,7 +534,8 @@
   /* Toast / status                                                       */
   /* ------------------------------------------------------------------ */
 
-  function showToast(msg) {
+  function showToast(msg, kind) {
+    /* kind: success | error | info (domyslnie info - nie "straszny" szary log) */
     var el = document.getElementById("damExplorerToast");
     if (!el) {
       el = document.createElement("div");
@@ -378,10 +543,14 @@
       el.className = "dam-explorer-toast";
       document.body.appendChild(el);
     }
+    var k = kind || "info";
+    if (k !== "success" && k !== "error" && k !== "info") k = "info";
     el.textContent = msg;
+    el.classList.remove("dam-explorer-toast--success", "dam-explorer-toast--error", "dam-explorer-toast--info");
+    el.classList.add("dam-explorer-toast--" + k);
     el.classList.add("is-visible");
     clearTimeout(el._timer);
-    el._timer = setTimeout(function () { el.classList.remove("is-visible"); }, 3200);
+    el._timer = setTimeout(function () { el.classList.remove("is-visible"); }, k === "error" ? 5200 : 3200);
   }
 
   function setStatus(msg) {
@@ -719,6 +888,9 @@
     return scored[0].f;
   }
 
+  var VIZ_SIZE_CATALOG = ["XL", "L", "S-SKLEP", "S"];
+  var VIZ_PERSP_ORDER = ["ENFACE", "FRONT", "BACK", "TYL-ENFACE", "BOK", "INNE"];
+
   function enrichVizFile(f) {
     return {
       file: f,
@@ -736,7 +908,7 @@
     items.forEach(function (it) {
       (byBg[it.bg] || byBg["z-tlem"]).push(it);
     });
-    var PERSP_ORDER = ["ENFACE", "FRONT", "BACK", "TYL-ENFACE", "BOK", "INNE"];
+    var PERSP_ORDER = VIZ_PERSP_ORDER;
     function heroesFor(list) {
       var map = {};
       list.forEach(function (it) {
@@ -792,12 +964,14 @@
     var mod =
       st === "aktualne" ? "aktualne" :
       st === "nieaktualne" ? "nieaktualne" :
-      st === "demo" ? "demo" : "starsza";
+      st === "demo" ? "demo" :
+      st === "clear" ? "clear" : "starsza";
     var label =
       mod === "aktualne" ? "Aktualne" :
       mod === "nieaktualne" ? "Nieaktualne" :
-      mod === "demo" ? "Demo" : "Starsza";
-    var tip = "Status wariantu (F/X/D). Admin: Aktualne / Nieaktualne / Demo / Odznacz - zmienia nazwe folderu na dysku.";
+      mod === "demo" ? "Demo" :
+      mod === "clear" ? "Bez statusu" : "Starsza";
+    var tip = "Status wariantu (F/X/D). Admin: F / X / D / Bez statusu - zmienia nazwe folderu na dysku.";
     var path = (rev && rev.path) || "";
     var idx = (rev && rev.index) || "";
     return (
@@ -822,17 +996,25 @@
 
   function getProductStatus(product) {
     if (!product) return "clear";
-    var store = state.statusStore;
+    /* DYSK najpierw - nazwa folderu produktu */
+    var diskLit = letterFromFolderName(product.path || product.name || "");
+    if (diskLit) return statusFromLetter(diskLit);
+
     var keys = [product.id, product.path, product.name].filter(Boolean);
-    for (var i = 0; i < keys.length; i++) {
-      if (store && store.products && store.products[keys[i]] && store.products[keys[i]].status) {
-        return store.products[keys[i]].status;
-      }
-    }
     if (state.lifecycleStore && state.lifecycleStore.products) {
       for (var j = 0; j < keys.length; j++) {
         var row = state.lifecycleStore.products[keys[j]];
-        if (row && row.status) return row.status;
+        if (row && Object.prototype.hasOwnProperty.call(row, "status")) {
+          return row.status || "clear";
+        }
+      }
+    }
+    var store = state.statusStore;
+    for (var i = 0; i < keys.length; i++) {
+      if (store && store.products && store.products[keys[i]] && store.products[keys[i]].status) {
+        var pst = store.products[keys[i]].status;
+        if (pst === "clear") return "clear";
+        if (pst) return pst;
       }
     }
     return "clear";
@@ -845,6 +1027,23 @@
     return "";
   }
 
+  function productHasVariantF(productId, productObj) {
+    var prod = productObj || null;
+    if (!prod && productId && state.fileIndex) {
+      prod = (state.fileIndex.products || []).find(function (p) { return p.id === productId; }) || null;
+    }
+    if (!prod && state.product && state.product.id === productId) prod = state.product;
+    if (!prod) return false;
+    var revs = prod.revisions || [];
+    for (var i = 0; i < revs.length; i++) {
+      var lit = letterFromFolderName(revs[i].path || revs[i].folder || revs[i].name || "");
+      if (lit === "F") return true;
+      var st = getRevisionStatus(revs[i]);
+      if (st === "aktualne" || lifecycleLetterLabel(st) === "F") return true;
+    }
+    return false;
+  }
+
   function renderLifecycleControls(opts) {
     opts = opts || {};
     if (!state.adminMode) return "";
@@ -855,20 +1054,56 @@
     var productId = opts.productId || "";
     var index = opts.index || "";
     var ridx = opts.ridx || "";
+    var fBlocked = false;
+    var fBlockTip =
+      "Produkt może mieć F tylko wtedy, gdy przynajmniej jeden wariant też ma F. Najpierw nadaj F wybranemu wariantowi.";
+    if (scope === "product") {
+      fBlocked = !productHasVariantF(productId, opts.product || null) &&
+        lifecycleLetterLabel(current) !== "F";
+    }
     var items = [
-      { status: "aktualne", label: "F", title: "Aktualne (skonczony) - dopina - F", cls: "ok" },
-      { status: "nieaktualne", label: "X", title: "Nieaktualne (archiwum) - dopina - X", cls: "no" },
-      { status: "demo", label: "D", title: "Demo / szkic - dopina - D", cls: "demo" },
-      { status: "clear", label: "Odznacz", title: "Usun literke statusu z nazwy folderu", cls: "clear" }
+      {
+        status: "aktualne",
+        label: "F",
+        title: scope === "product"
+          ? (fBlocked ? fBlockTip : "Final (F) - produkt. Wymaga przynajmniej jednego wariantu z F. Ponowne kliknięcie przywraca poprzedni stan.")
+          : "Final (F) - wariant. Wpływa na to, czy produkt może mieć F. Ponowne kliknięcie przywraca poprzednią literę.",
+        cls: "ok",
+        disabled: fBlocked
+      },
+      {
+        status: "nieaktualne",
+        label: "X",
+        title: scope === "product"
+          ? "Archiwum (X) - produkt i warianty (oprócz Demo D) dostają X. Ponowne kliknięcie przywraca poprzedni stan."
+          : "Archiwum (X) - przenosi wariant do archiwum. Ponowne kliknięcie przywraca poprzednią literę.",
+        cls: "no"
+      },
+      {
+        status: "demo",
+        label: "D",
+        title: scope === "product"
+          ? "Demo (D) - warianty bez litery i z F dostają D; X zostaje w archiwum. Ponowne kliknięcie przywraca poprzedni stan."
+          : "Demo (D) - tylko ten wariant. Nie zmienia litery produktu. Ponowne kliknięcie przywraca poprzednią literę.",
+        cls: "demo"
+      },
+      {
+        status: "clear",
+        label: "Bez statusu",
+        title: "Usuń literę z nazwy (przywraca poprzednią literę, jeśli była zapisana).",
+        cls: "clear"
+      }
     ];
     var html = '<div class="dam-lifecycle" data-scope="' + esc(scope) + '" role="group" aria-label="Status lifecycle">';
     items.forEach(function (it) {
-      var on = current === it.status || (current === "clear" && it.status === "clear" && !lifecycleLetterLabel(current));
+      var on = current === it.status;
       if (it.status === "clear") on = !lifecycleLetterLabel(current) && (current === "clear" || current === "starsza" || !current);
+      var disabled = !!it.disabled;
       html +=
         '<button type="button" class="dam-lifecycle__btn dam-lifecycle__btn--' +
         it.cls +
         (on ? " is-on" : "") +
+        (disabled ? " is-disabled" : "") +
         ' dam-admin-control" data-lifecycle="1" data-scope="' +
         esc(scope) +
         '" data-status="' +
@@ -887,7 +1122,9 @@
         esc(it.title) +
         '" aria-pressed="' +
         (on ? "true" : "false") +
-        '" title="' +
+        '"' +
+        (disabled ? ' aria-disabled="true" disabled' : "") +
+        ' title="' +
         esc(it.title) +
         '">' +
         esc(it.label) +
@@ -926,26 +1163,62 @@
     });
   }
 
+  var _lifecycleQueue = Promise.resolve();
+
   function applyLifecycleStatus(opts) {
+    /* Kolejka - szybkie klikniecia F/X/D nie moga sie nakladac */
+    var run = function () {
+      return applyLifecycleStatusNow(opts || {});
+    };
+    _lifecycleQueue = _lifecycleQueue.then(run, run);
+    return _lifecycleQueue;
+  }
+
+  function applyLifecycleStatusNow(opts) {
     opts = opts || {};
     if (!isAdminRole() || !state.adminMode) {
-      showToast("Tryb admina wymagany");
+      showToast("Włącz tryb admina, aby zmieniać statusy F/X/D", "error");
       return Promise.resolve({ ok: false });
     }
+    // #region agent log
+    fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
+      body: JSON.stringify({
+        sessionId: "a78fa0",
+        hypothesisId: "G",
+        location: "dam-explorer.js:applyLifecycleStatusNow",
+        message: "lifecycle apply request",
+        data: {
+          scope: opts.scope || "variant",
+          status: opts.status || "clear",
+          hasProductId: !!(opts.productId || ""),
+        },
+        timestamp: Date.now(),
+        runId: "post-fix",
+      }),
+    }).catch(function () {});
+    // #endregion
+    var resolvedPath = resolveLifecycleDiskPath({
+      scope: opts.scope || "variant",
+      path: opts.path || "",
+      index: opts.index || "",
+      productId: opts.productId || ""
+    });
     var body = {
       scope: opts.scope || "variant",
       status: opts.status || "clear",
-      path: opts.path || "",
+      path: resolvedPath || opts.path || "",
       product_path: opts.productPath || "",
       product_id: opts.productId || "",
       revision_index: opts.index || "",
       dry_run: !!opts.dryRun
     };
-    if (!body.path) {
-      showToast("Brak sciezki do zmiany statusu");
+    if (!body.path && !body.revision_index) {
+      showToast("Brak ścieżki do zmiany statusu", "error");
       return Promise.resolve({ ok: false });
     }
-    showToast("Zmieniam status na dysku…");
+    showToast("Zapisuję status na dysku…", "info");
     return fetch(bridgeUrl() + "/lifecycle-status", {
       method: "POST",
       headers: authHeaders(),
@@ -958,14 +1231,26 @@
       })
       .then(function (res) {
         if (!res.data || !res.data.ok) {
-          showToast("Blad: " + ((res.data && res.data.error) || "lifecycle-status"));
+          var err = (res.data && res.data.error) || "lifecycle-status";
+          var hint = (res.data && res.data.hint) || "";
+          if (err === "product_f_requires_variant_f") {
+            showToast(
+              hint ||
+                "Produkt może mieć F tylko gdy przynajmniej jeden wariant też ma F.",
+              "error"
+            );
+          } else {
+            showToast((hint ? hint + " " : "") + "Błąd: " + err, "error");
+          }
           return res.data || { ok: false };
         }
-        var letter = res.data.letter || "odznaczono";
+        patchPathsAfterLifecycle(res.data, body);
+        var letter = res.data.letter;
         showToast(
-          "Zapisano status " +
-            (res.data.status || "") +
-            (letter && letter !== "odznaczono" ? " (- " + letter + ")" : "")
+          letter
+            ? "Pomyślnie zaktualizowano status (− " + letter + ")"
+            : "Pomyślnie zaktualizowano status",
+          "success"
         );
         if (window.DamPaths && typeof window.DamPaths.logAction === "function") {
           window.DamPaths.logAction("lifecycle_status", {
@@ -999,8 +1284,9 @@
         local.updated_at = new Date().toISOString();
         saveLocalStatus(local);
         state.statusStore = mergeStatusStore(state.statusStore);
+        var keepProductId = body.product_id || opts.productId || (state.product && state.product.id) || "";
         /* Po FS rename: przebuduj indeks z dysku, potem odswiez UI */
-        showToast("Przebudowuję indeks…");
+        showToast("Odświeżam listę plików…", "info");
         return fetch(bridgeUrl() + "/index/rebuild", {
           method: "POST",
           headers: authHeaders(),
@@ -1015,19 +1301,21 @@
             return waitForIndexRebuild(45000);
           })
           .then(function () {
-            return refreshIndex();
+            return refreshIndex({ silent: true, reopenProductId: keepProductId });
           })
           .then(function () {
+            showToast("Pomyślnie zaktualizowano", "success");
             return res.data;
           })
           .catch(function () {
-            return refreshIndex().then(function () {
+            return refreshIndex({ silent: true, reopenProductId: keepProductId }).then(function () {
+              showToast("Zapisano status (odświeżenie częściowe)", "info");
               return res.data;
             });
           });
       })
       .catch(function (err) {
-        showToast("Bridge offline: " + (err && err.message ? err.message : err));
+        showToast("Brak połączenia z mostem: " + (err && err.message ? err.message : err), "error");
         return { ok: false, error: "bridge_offline" };
       });
   }
@@ -1149,11 +1437,12 @@
   function thumbCandidates(f) {
     var name = f.name || "";
     var stem = name.replace(/\.[^.]+$/, "");
-    var list = [
+    var list = [];
+    if (f.path) list.push(mediaUrl(f.path));
+    list.push(
       "data/thumbs/" + encodeURIComponent(stem + ".jpg"),
       "data/thumbs/" + encodeURIComponent(name.replace(/\.(png|tif|tiff|webp)$/i, ".jpg"))
-    ];
-    if (f.path) list.push(mediaUrl(f.path));
+    );
     return list;
   }
 
@@ -1373,6 +1662,10 @@
         compact: true,
         overflow: false,
         maxPerKind: 8,
+        includeTagTiers:
+          window.DamBadges && typeof window.DamBadges.getIncludeTagTiers === "function"
+            ? window.DamBadges.getIncludeTagTiers()
+            : ["primary"],
       });
     } else {
       if (meta.brand) {
@@ -1533,7 +1826,7 @@
   function renderBreadcrumb() {
     var el = document.getElementById("damBreadcrumb");
     if (!el) return;
-    var parts = ['<a href="#" class="dam-breadcrumb__link" data-nav="root">DAM ETA</a>'];
+    var parts = ['<a href="#" class="dam-breadcrumb__link" data-nav="root">DAM</a>'];
     if (state.canonCat) {
       var title = "";
       if (DL) {
@@ -1554,11 +1847,25 @@
       a.addEventListener("click", function (e) {
         e.preventDefault();
         var nav = this.getAttribute("data-nav");
-        if (nav === "root") { state.canonCat = null; state.product = null; }
-        else if (nav === "cat") { state.product = null; }
+        if (nav === "root") {
+          state.canonCat = null;
+          state.product = null;
+          state.navStack = [];
+          state.navPos = -1;
+        } else if (nav === "cat") {
+          state.product = null;
+          while (
+            state.navPos >= 0 &&
+            state.navStack[state.navPos] &&
+            state.navStack[state.navPos].productId
+          ) {
+            state.navStack = state.navStack.slice(0, state.navPos);
+            state.navPos -= 1;
+          }
+          navReplaceTip();
+        }
         state.expandedCarriers = {};
         state.showOlderCarriers = {};
-        navPush();
         renderAll();
       });
     });
@@ -1603,12 +1910,241 @@
   /* Main panel                                                           */
   /* ------------------------------------------------------------------ */
 
+  function collectProductLangs(prod) {
+    var set = {};
+    (prod.revisions || []).forEach(function (r) {
+      ((r && r.langs) || []).forEach(function (l) {
+        if (l) set[String(l).toLowerCase()] = true;
+      });
+      var fbrL = (r && r.files_by_role) || {};
+      ["source", "print", "viz", "elements"].forEach(function (rk) {
+        (fbrL[rk] || []).forEach(function (f) {
+          if (f && f.lang) set[String(f.lang).toLowerCase()] = true;
+        });
+      });
+      ((r && r.wizki) || []).forEach(function (f) {
+        if (f && f.lang) set[String(f.lang).toLowerCase()] = true;
+      });
+    });
+    return Object.keys(set).sort();
+  }
+
+  function resolveProductFromIndex(p) {
+    if (!p || !p.id || !state.fileIndex || !state.fileIndex.products) return p;
+    var full = state.fileIndex.products.find(function (x) {
+      return x.id === p.id;
+    });
+    return full || p;
+  }
+
+  function productRowNavBlocked(target) {
+    if (!target || !target.closest) return false;
+    return !!target.closest(
+      "[data-stop-nav], .dam-lifecycle, .dam-lifecycle__btn, " +
+        ".dam-prod-row__actions, .dam-path-actions, .dam-file-copy, .dam-file-reveal"
+    );
+  }
+
+  function buildProductRowHtml(p) {
+    p = resolveProductFromIndex(p);
+    var name = productDisplayTitle(p);
+    var brand = getProductBrand(p);
+    var langs = collectProductLangs(p);
+    var revCount = p.revision_count || (p.revisions && p.revisions.length) || 0;
+    if (!revCount && p.indexes && p.indexes.length) revCount = p.indexes.length;
+    var hasVariants = revCount > 1;
+    var tagsHtml = "";
+    if (window.DamBadges && typeof window.DamBadges.render === "function") {
+      tagsHtml = window.DamBadges.render({
+        brand: brand || "",
+        category: "",
+        subcategory: p.subcategory_slug || "",
+        subcategoryLabel: p.subcategory_label || "",
+        langs: langs,
+        productName: name,
+        productId: p.id,
+        tags: p.tags,
+        multiIndex: false,
+        compact: true,
+        maxPerKind: 3,
+        maxTotal: 7,
+        showCarrierPlaceholder: false,
+        includeTagTiers:
+          window.DamBadges && typeof window.DamBadges.getIncludeTagTiers === "function"
+            ? window.DamBadges.getIncludeTagTiers()
+            : ["primary"],
+      });
+    } else {
+      if (brand) {
+        tagsHtml +=
+          '<span class="dam-viz-badge dam-viz-badge--brand' +
+          (brand === "GC" ? " dam-viz-badge--brand-gc" : "") +
+          '">' +
+          esc(brand) +
+          "</span>";
+      }
+      if (p.subcategory_label) {
+        tagsHtml +=
+          '<span class="dam-viz-badge dam-viz-badge--subcat">' +
+          esc(p.subcategory_label) +
+          "</span>";
+      }
+      langs.slice(0, 4).forEach(function (l) {
+        tagsHtml +=
+          '<span class="dam-viz-badge dam-viz-badge--lang">' +
+          esc(String(l).toUpperCase()) +
+          "</span>";
+      });
+    }
+    var variantsHtml = hasVariants
+      ? '<div class="dam-prod-row__variants" data-dam-tip="' +
+        esc(String(revCount)) +
+        ' warianty">' +
+        '<span class="dam-prod-row__count-num" aria-hidden="true">' +
+        esc(String(revCount)) +
+        "</span>" +
+        '<span class="dam-viz-badge dam-viz-badge--variants">Warianty</span>' +
+        "</div>"
+      : "";
+    var pStatus = getProductStatus(p);
+    var lifeHtml = state.adminMode
+      ? '<div class="dam-prod-row__lifecycle" data-stop-nav="1">' +
+        renderLifecycleControls({
+          scope: "product",
+          current: pStatus,
+          path: p.path || "",
+          productPath: p.path || "",
+          productId: p.id || ""
+        }) +
+        "</div>"
+      : "";
+    var letter = lifecycleLetterLabel(pStatus);
+    var letterChip = letter
+      ? '<span class="dam-lifecycle-chip dam-lifecycle-chip--' +
+        letter.toLowerCase() +
+        '" title="Status produktu">' +
+        esc(letter) +
+        "</span>"
+      : "";
+    var actionsHtml = p.path
+      ? '<div class="dam-prod-row__end" data-stop-nav="1">' +
+        '<div class="dam-prod-row__actions dam-carrier-toggle__actions" data-dam-tip="Kopiuj sciezke / otworz folder w Windows">' +
+        pathActions(p.path) +
+        "</div>" +
+        '<i class="uil uil-angle-down dam-prod-row__chevron" aria-hidden="true"></i>' +
+        "</div>"
+      : "";
+    var rowCls = "dam-prod-row";
+    if (hasVariants) rowCls += " dam-prod-row--variants";
+    if (p.path) rowCls += " dam-prod-row--actions";
+    return (
+      '<div class="' +
+      rowCls +
+      '" data-pid="' +
+      esc(p.id) +
+      '">' +
+      '<div class="dam-prod-row__main">' +
+      '<div class="dam-prod-row__title">' +
+      esc(name) +
+      letterChip +
+      "</div>" +
+      (tagsHtml ? '<div class="dam-prod-row__tags">' + tagsHtml + "</div>" : "") +
+      '<div class="dam-prod-row__sub">' +
+      renderIndexChips(p.indexes) +
+      "</div>" +
+      lifeHtml +
+      "</div>" +
+      variantsHtml +
+      actionsHtml +
+      "</div>"
+    );
+  }
+
+  function bindProductRowClicks(mount) {
+    mount.querySelectorAll(".dam-prod-row").forEach(function (row) {
+      row.addEventListener("click", function (e) {
+        if (productRowNavBlocked(e.target)) return;
+        var p = resolveProductFromIndex({
+          id: this.getAttribute("data-pid")
+        });
+        if (p && p.id) openProduct(p);
+      });
+    });
+  }
+
+  function renderSearchResultsPanel(mount) {
+    var res = state.searchHits || {};
+    var products = (res.products || []).slice();
+    var hits = res.hits || [];
+    var q = state.searchQuery || "";
+    /* Fallback: zbuduj liste produktow z hitow (gdy API odda same hits) */
+    if (!products.length && hits.length) {
+      var seen = {};
+      hits.forEach(function (h) {
+        if (!h || !h.product || !h.product.id || seen[h.product.id]) return;
+        seen[h.product.id] = 1;
+        products.push(h.product);
+      });
+    }
+    var html =
+      '<div class="dam-explorer-panel">' +
+      panelHeadHtml({
+        icon: "uil-search",
+        kicker: "Wyszukiwanie",
+        title: q,
+        meta:
+          products.length +
+          " " +
+          (products.length === 1
+            ? "trafiony produkt"
+            : products.length >= 2 && products.length <= 4
+              ? "trafione produkty"
+              : "trafionych produktow") +
+          (hits.length ? " · " + hits.length + " pozycji" : "")
+      });
+
+    if (!products.length && !(res.suggestions && res.suggestions.length)) {
+      html +=
+        '<div class="dam-explorer-empty">Brak wynikow dla: <strong>' +
+        esc(q) +
+        "</strong></div></div>";
+      mount.innerHTML = html;
+      bindPanelNav(mount);
+      return;
+    }
+
+    if (res.message) {
+      html += '<p class="dam-panel-head__meta" style="margin:0 0 10px">' + esc(res.message) + "</p>";
+    }
+
+    html += '<div class="dam-prod-list">';
+    products.forEach(function (p) {
+      if (!p) return;
+      html += buildProductRowHtml(p);
+    });
+    html += "</div></div>";
+    mount.innerHTML = html;
+    bindPanelNav(mount);
+    bindProductRowClicks(mount);
+    bindCopyButtons(mount);
+    bindLifecycleControls(mount);
+    if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
+      window.DamTooltips.refresh(mount);
+    }
+  }
+
   function renderMain() {
     var mount = document.getElementById("damExplorerMain");
     if (!mount) return;
 
     if (!state.fileIndex) {
       mount.innerHTML = '<div class="dam-explorer-empty">Ładowanie indeksu dysku...</div>';
+      return;
+    }
+
+    /* Live search results in panel (AJAX) - zanim welcome / kategoria */
+    if (!state.product && state.searchQuery && state.searchQuery.length >= 2 && state.searchHits) {
+      renderSearchResultsPanel(mount);
       return;
     }
 
@@ -1624,7 +2160,7 @@
           }).join("") + "</div></div>"
         : "";
       mount.innerHTML = '<div class="dam-explorer-panel dam-explorer-welcome">' +
-        '<h5 class="dam-explorer-panel__title">Eksplorator DAM ETA</h5>' +
+        '<h5 class="dam-explorer-panel__title">Eksplorator DAM</h5>' +
         '<p class="dam-explorer-panel__lead">Wybierz kategorie po lewej lub wyszukaj indeks / skojarzenie (np. <strong>6300</strong>, <strong>czekolada</strong>).</p>' +
         '<div class="dam-welcome-section"><div class="dam-welcome-section__title">Szybkie linki</div>' +
         '<div class="dam-welcome-links">' +
@@ -1664,109 +2200,10 @@
       }
       catTitle = catTitle || state.canonCat;
 
-      function collectProductLangs(prod) {
-        var set = {};
-        (prod.revisions || []).forEach(function (r) {
-          ((r && r.langs) || []).forEach(function (l) {
-            if (l) set[String(l).toLowerCase()] = true;
-          });
-          var fbrL = (r && r.files_by_role) || {};
-          ["source", "print", "viz", "elements"].forEach(function (rk) {
-            (fbrL[rk] || []).forEach(function (f) {
-              if (f && f.lang) set[String(f.lang).toLowerCase()] = true;
-            });
-          });
-          ((r && r.wizki) || []).forEach(function (f) {
-            if (f && f.lang) set[String(f.lang).toLowerCase()] = true;
-          });
-        });
-        return Object.keys(set).sort();
-      }
-
       function prodRowHtml(p) {
-        var name = productDisplayTitle(p);
-        var brand = getProductBrand(p);
-        var langs = collectProductLangs(p);
-        var revCount = p.revision_count || (p.revisions && p.revisions.length) || 0;
-        if (!revCount && p.indexes && p.indexes.length) revCount = p.indexes.length;
-        var hasVariants = revCount > 1;
-        var tagsHtml = "";
-        if (window.DamBadges && typeof window.DamBadges.render === "function") {
-          tagsHtml = window.DamBadges.render({
-            brand: brand || "",
-            category: "",
-            subcategory: p.subcategory_slug || "",
-            subcategoryLabel: p.subcategory_label || "",
-            langs: langs,
-            productName: name,
-            productId: p.id,
-            tags: p.tags,
-            /* multiIndex w tagach wylaczone - "N Warianty" jest po prawej w __variants */
-            multiIndex: false,
-            compact: true,
-            maxPerKind: 3,
-            maxTotal: 7,
-            showCarrierPlaceholder: false,
-          });
-        } else {
-          if (brand) {
-            tagsHtml +=
-              '<span class="dam-viz-badge dam-viz-badge--brand' +
-              (brand === "GC" ? " dam-viz-badge--brand-gc" : "") +
-              '">' + esc(brand) + "</span>";
-          }
-          if (p.subcategory_label) {
-            tagsHtml +=
-              '<span class="dam-viz-badge dam-viz-badge--subcat">' +
-              esc(p.subcategory_label) +
-              "</span>";
-          }
-          langs.slice(0, 4).forEach(function (l) {
-            tagsHtml +=
-              '<span class="dam-viz-badge dam-viz-badge--lang">' +
-              esc(String(l).toUpperCase()) +
-              "</span>";
-          });
-        }
-        /* Blok wariantow po PRAWEJ (nie po lewej) - 2026-07-18 */
-        var variantsHtml = hasVariants
-          ? '<div class="dam-prod-row__variants" data-dam-tip="' + esc(String(revCount)) + ' warianty">' +
-              '<span class="dam-prod-row__count-num" aria-hidden="true">' + esc(String(revCount)) + "</span>" +
-              '<span class="dam-viz-badge dam-viz-badge--variants">Warianty</span>' +
-            "</div>"
-          : "";
-        var pStatus = getProductStatus(p);
-        var lifeHtml = state.adminMode
-          ? '<div class="dam-prod-row__lifecycle" data-stop-nav="1">' +
-            renderLifecycleControls({
-              scope: "product",
-              current: pStatus,
-              path: p.path || "",
-              productPath: p.path || "",
-              productId: p.id || ""
-            }) +
-            "</div>"
-          : "";
-        var letter = lifecycleLetterLabel(pStatus);
-        var letterChip = letter
-          ? '<span class="dam-lifecycle-chip dam-lifecycle-chip--' + letter.toLowerCase() + '" title="Status produktu">' +
-            esc(letter) +
-            "</span>"
-          : "";
-        return '<div class="dam-prod-row' + (hasVariants ? " dam-prod-row--variants" : "") + '" data-pid="' + esc(p.id) + '">' +
-          '<div class="dam-prod-row__main">' +
-            '<div class="dam-prod-row__title">' + esc(name) + letterChip + "</div>" +
-            (tagsHtml ? '<div class="dam-prod-row__tags">' + tagsHtml + "</div>" : "") +
-            '<div class="dam-prod-row__sub">' +
-              renderIndexChips(p.indexes) +
-            "</div>" +
-            lifeHtml +
-          "</div>" +
-          variantsHtml +
-        "</div>";
+        return buildProductRowHtml(p);
       }
 
-      navPush();
       var html = '<div class="dam-explorer-panel">' +
         panelHeadHtml({
           icon: "uil-folder",
@@ -1800,16 +2237,12 @@
           renderMain();
         });
       });
-      mount.querySelectorAll(".dam-prod-row").forEach(function (row) {
-        row.addEventListener("click", function (e) {
-          if (e.target && e.target.closest && e.target.closest("[data-stop-nav], .dam-lifecycle, .dam-lifecycle__btn")) {
-            return;
-          }
-          var p = (state.fileIndex.products || []).find(function (x) { return x.id === this.getAttribute("data-pid"); }.bind(this));
-          if (p) openProduct(p);
-        });
-      });
+      bindProductRowClicks(mount);
+      bindCopyButtons(mount);
       bindLifecycleControls(mount);
+      if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
+        window.DamTooltips.refresh(mount);
+      }
       return;
     }
 
@@ -1831,7 +2264,6 @@
       if (pickCarrierDisplay(g.revisions, showAllOn)) visibleGroups++;
     });
 
-    navPush();
     var html2 = '<div class="dam-explorer-panel">' +
       panelHeadHtml({
         icon: "uil-box",
@@ -2080,9 +2512,16 @@
         if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
           window.DamPaths.revealInExplorer(p);
         } else {
+          var hdrs = { "Content-Type": "application/json" };
+          try {
+            if (window.DamApi && typeof DamApi.authHeaders === "function") {
+              var ah = DamApi.authHeaders();
+              if (ah && ah.Authorization) hdrs.Authorization = ah.Authorization;
+            }
+          } catch (_e) { /* ignore */ }
           fetch(bridgeUrl() + "/reveal", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: hdrs,
             body: JSON.stringify({ path: p })
           }).catch(function () {});
         }
@@ -2151,11 +2590,25 @@
 
     function perspList() {
       var seen = {};
-      var order = ["ENFACE", "FRONT", "BACK", "TYL-ENFACE", "BOK", "INNE"];
       items.forEach(function (it) {
         if (it.bg === studio.bg && (!studio.lang || it.lang === studio.lang)) seen[it.persp] = true;
       });
-      return order.filter(function (p) { return seen[p]; });
+      return VIZ_PERSP_ORDER.filter(function (p) { return seen[p]; });
+    }
+
+    function expectedFormatsForBg(bg) {
+      return bg === "bez-tla" ? ["PNG"] : ["JPG", "JPEG"];
+    }
+
+    function findItem(persp, bg, lang, size, ext) {
+      var e = String(ext || "").toUpperCase();
+      return items.find(function (it) {
+        return it.persp === persp &&
+          it.bg === bg &&
+          (!lang || it.lang === lang) &&
+          it.size === size &&
+          String(it.ext || "").toUpperCase() === e;
+      });
     }
 
     function langList() {
@@ -2188,10 +2641,10 @@
       if (!box || !f) return;
       box.innerHTML = '<span class="dam-lb-meta__loading">Ładowanie metadanych…</span>';
       var sizeKnown = f.size ? fmtSize(f.size) : "";
-      fetch(metaUrl(f.path)).then(function (r) { return r.json(); }).then(function (data) {
+      fetch(metaUrl(f.path), { headers: authHeaders() }).then(function (r) { return r.json(); }).then(function (data) {
         if (!data || !data.ok) {
           box.innerHTML = (sizeKnown ? '<div><strong>Rozmiar</strong> ' + esc(sizeKnown) + "</div>" : "") +
-            '<div class="dam-lb-meta__muted">Metadane niedostepne - uruchom aplikacje DAM ETA.</div>';
+            '<div class="dam-lb-meta__muted">Metadane niedostepne - uruchom aplikacje DAM.</div>';
           return;
         }
         var dims = (data.width && data.height) ? (data.width + " x " + data.height + " px") : "-";
@@ -2241,13 +2694,16 @@
       var bgBox = document.getElementById("damLbBg");
       if (bgBox) {
         var bgOpts = [
-          { id: "z-tlem", label: "Z tlem" },
-          { id: "bez-tla", label: "Bez tla" }
+          { id: "bez-tla", label: "Bez tla", sub: "PNG", icon: "uil-image-v" },
+          { id: "z-tlem", label: "Z tlem", sub: "JPG", icon: "uil-square-full" }
         ].filter(function (o) {
           return items.some(function (it) { return it.bg === o.id; });
         });
         bgBox.innerHTML = bgOpts.map(function (o) {
-          return '<button type="button" class="dam-lb-chip' + (o.id === studio.bg ? " is-active" : "") + '" data-lb-bg="' + esc(o.id) + '">' + esc(o.label) + "</button>";
+          return '<button type="button" class="dam-lb-chip dam-lb-chip--bg' + (o.id === studio.bg ? " is-active" : "") +
+            '" data-lb-bg="' + esc(o.id) + '" title="' + esc(o.id === "bez-tla" ? "PNG - przezroczyste tlo" : "JPG - biale tlo") + '">' +
+            '<span class="dam-lb-chip__label">' + esc(o.label) + "</span>" +
+            '<span class="dam-lb-chip__sub">' + esc(o.sub) + "</span></button>";
         }).join("");
       }
 
@@ -2255,7 +2711,11 @@
       var perspBox = document.getElementById("damLbPersp");
       if (perspBox) {
         perspBox.innerHTML = persps.map(function (p) {
-          return '<button type="button" class="dam-lb-chip' + (p === studio.persp ? " is-active" : "") + '" data-lb-persp="' + esc(p) + '">' + esc(p) + "</button>";
+          var hint = DL && DL.vizPerspHint ? DL.vizPerspHint(p) : p;
+          return '<button type="button" class="dam-lb-persp' + (p === studio.persp ? " is-active" : "") +
+            '" data-lb-persp="' + esc(p) + '" title="' + esc(hint) + '">' +
+            '<span class="dam-lb-persp__code">' + esc(p) + "</span>" +
+            '<span class="dam-lb-persp__hint">' + esc(hint) + "</span></button>";
         }).join("");
       }
 
@@ -2274,50 +2734,73 @@
       }
 
       var variants = filteredItems();
-      var SIZE_ORDER = ["XL", "L", "M", "S-SKLEP", "S", "XS", "WEB", ""];
-      /* Jedna kafelek na unikalny rozmiar+format (bez 10x S-SKLEP JPG) */
-      var uniqMap = {};
+      var presentKeys = {};
       variants.forEach(function (it) {
-        var key = (it.size || "?") + "|" + (it.ext || "");
-        if (!uniqMap[key]) uniqMap[key] = [];
-        uniqMap[key].push(it);
+        presentKeys[(it.size || "?") + "|" + (it.ext || "")] = it;
       });
-      variants = Object.keys(uniqMap).map(function (key) {
-        var group = uniqMap[key];
-        var heroFile = pickHeroFile(group.map(function (g) { return g.file; })) || group[0].file;
-        var chosen = group.find(function (g) { return g.file === heroFile; }) || group[0];
-        return { it: chosen, count: group.length, files: group.map(function (g) { return g.file; }) };
-      }).sort(function (a, b) {
-        var ia = SIZE_ORDER.indexOf(a.it.size || "");
-        var ib = SIZE_ORDER.indexOf(b.it.size || "");
-        if (ia < 0) ia = 99;
-        if (ib < 0) ib = 99;
-        if (ia !== ib) return ia - ib;
-        return String(a.it.ext || "").localeCompare(String(b.it.ext || ""));
+      var extsForBg = expectedFormatsForBg(studio.bg);
+      var sizeRows = [];
+      VIZ_SIZE_CATALOG.forEach(function (sz) {
+        extsForBg.forEach(function (extRaw) {
+          var ext = String(extRaw).toUpperCase();
+          var key = sz + "|" + ext;
+          if (presentKeys[key]) {
+            sizeRows.push({ kind: "file", item: presentKeys[key], size: sz, ext: ext });
+            return;
+          }
+          var altExt = ext === "JPG" ? "JPEG" : "";
+          if (altExt && presentKeys[sz + "|" + altExt]) {
+            sizeRows.push({ kind: "file", item: presentKeys[sz + "|" + altExt], size: sz, ext: altExt });
+            return;
+          }
+          sizeRows.push({ kind: "missing", size: sz, ext: ext });
+        });
+      });
+      variants.forEach(function (it) {
+        var k = (it.size || "?") + "|" + (it.ext || "");
+        if (!sizeRows.some(function (r) { return r.kind === "file" && r.item === it; })) {
+          sizeRows.push({ kind: "file", item: it, size: it.size, ext: it.ext });
+        }
       });
       var varBox = document.getElementById("damLbVariants");
       if (varBox) {
-        varBox.innerHTML = variants.length
+        varBox.innerHTML = sizeRows.length
           ? '<div class="dam-lb-size-grid" role="listbox" aria-label="Rozmiar i format">' +
-            variants.map(function (row) {
-              var it = row.it;
-              var active = row.files.some(function (ff) { return ff === studio.file; });
+            sizeRows.map(function (row) {
+              if (row.kind === "missing") {
+                var sizeH = DL ? DL.vizSizeHint(row.size) : row.size;
+                var fmtH = DL ? DL.vizFormatHint(row.ext) : row.ext;
+                var tag = DL && DL.vizSizeTag ? DL.vizSizeTag(row.size) : "";
+                return '<div class="dam-lb-size dam-lb-size--missing" role="option" aria-disabled="true" title="Brak pliku: ' +
+                  esc(row.size + " " + row.ext) + " - " + esc(sizeH) + '">' +
+                  '<span class="dam-lb-size__code">' + esc(row.size || "?") + "</span>" +
+                  (tag ? '<span class="dam-lb-size__tag">' + esc(tag) + "</span>" : "") +
+                  '<span class="dam-lb-size__ext">' + esc(row.ext || "") + "</span>" +
+                  '<span class="dam-lb-size__miss">Brak</span></div>';
+              }
+              var it = row.item;
+              var active = it.file === studio.file;
               var sizeH = DL ? DL.vizSizeHint(it.size) : (it.size || "Wariant");
               var fmtH = DL ? DL.vizFormatHint(it.ext) : it.ext;
-              var tip = (it.size ? sizeH : "Wariant") + " - " + fmtH +
-                (row.count > 1 ? " (" + row.count + " plików)" : "") +
-                " - " + (it.file.name || "");
+              var tag = DL && DL.vizSizeTag ? DL.vizSizeTag(it.size) : "";
+              var tip = sizeH + " - " + fmtH + " - " + (it.file.name || "");
               return '<button type="button" role="option" class="dam-lb-size' + (active ? " is-active" : "") +
                 '" data-lb-file="' + esc(it.file.path) + '" title="' + esc(tip) + '" aria-selected="' + active + '">' +
-                '<span class="dam-lb-size__code">' + esc(it.size || "?") +
-                  (row.count > 1 ? ' <span class="dam-lb-size__n">x' + row.count + "</span>" : "") +
-                "</span>" +
-                '<span class="dam-lb-size__ext">' + esc(it.ext || "") + "</span>" +
-              "</button>";
+                '<span class="dam-lb-size__code">' + esc(it.size || "?") + "</span>" +
+                (tag ? '<span class="dam-lb-size__tag dam-lb-size__tag--' + esc(String(it.size || "").toLowerCase().replace(/[^a-z0-9]+/g, "-")) + '">' + esc(tag) + "</span>" : "") +
+                '<span class="dam-lb-size__ext">' + esc(it.ext || "") + "</span></button>";
             }).join("") +
             "</div>"
           : '<p class="dam-lb-meta__muted">Brak wariantow dla tego widoku.</p>';
       }
+
+      var revealBtn = document.getElementById("damLbRevealFile");
+      if (revealBtn) {
+        revealBtn.disabled = !f || !f.path;
+        revealBtn.setAttribute("data-path", f && f.path ? f.path : "");
+      }
+      var copyBtn = document.getElementById("damLbCopyPath");
+      if (copyBtn) copyBtn.setAttribute("data-path", f && f.path ? f.path : "");
 
       var zoomLabel = document.getElementById("damLbZoomLabel");
       if (zoomLabel) zoomLabel.textContent = Math.round(studio.zoom * 100) + "%";
@@ -2328,11 +2811,6 @@
       if (prev) prev.disabled = pi <= 0;
       if (next) next.disabled = pi < 0 || pi >= persps.length - 1;
 
-      var actions = document.getElementById("damLightboxActions");
-      if (actions) {
-        actions.innerHTML = pathActions(f.path || "");
-        if (window.DamPaths) window.DamPaths.bindPathActions(actions);
-      }
       loadMeta(f);
     }
 
@@ -2340,50 +2818,58 @@
     if (existing) existing.remove();
 
     var html =
-      '<div class="dam-lightbox dam-lightbox--studio" id="damLightbox" role="dialog" aria-modal="true" aria-label="Studio podglądu wizualizacji">' +
-        '<button type="button" class="dam-lightbox__close" data-lb-close aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
-        '<div class="dam-lightbox__layout">' +
-          '<aside class="dam-lightbox__side" aria-label="Opcje pliku">' +
-            '<div class="dam-lb-filters">' +
-              '<div class="dam-lb-section">' +
-                '<div class="dam-lb-section__title">Tlo</div>' +
-                '<div class="dam-lb-chips" id="damLbBg"></div>' +
+      '<div class="dam-lightbox dam-lightbox--studio dam-lightbox--studio-v2" id="damLightbox" role="dialog" aria-modal="true" aria-label="Studio podgladu wizualizacji">' +
+        '<div class="dam-lightbox__box">' +
+          '<button type="button" class="dam-lightbox__close" data-lb-close aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
+          '<div class="dam-lightbox__layout">' +
+            '<aside class="dam-lightbox__side" aria-label="Szukaj wizualizacji">' +
+              '<p class="dam-lb-lead">Wybierz perspektywe, tlo i rozmiar. Brakujace pliki oznaczone na czerwono.</p>' +
+              '<div class="dam-lb-filters">' +
+                '<div class="dam-lb-section">' +
+                  '<div class="dam-lb-section__title">Tlo / format</div>' +
+                  '<div class="dam-lb-chips dam-lb-chips--bg" id="damLbBg"></div>' +
+                "</div>" +
+                '<div class="dam-lb-section">' +
+                  '<div class="dam-lb-section__title">Perspektywa</div>' +
+                  '<div class="dam-lb-persp-grid" id="damLbPersp"></div>' +
+                "</div>" +
+                '<div class="dam-lb-section" id="damLbLangWrap" hidden>' +
+                  '<div class="dam-lb-section__title">Jezyk</div>' +
+                  '<div class="dam-lb-chips" id="damLbLang"></div>' +
+                "</div>" +
               "</div>" +
-              '<div class="dam-lb-section">' +
-                '<div class="dam-lb-section__title">Widok</div>' +
-                '<div class="dam-lb-chips" id="damLbPersp"></div>' +
+              '<div class="dam-lb-section dam-lb-section--sizes">' +
+                '<div class="dam-lb-section__title">Rozmiar i jakosc</div>' +
+                '<div class="dam-lb-variants" id="damLbVariants"></div>' +
               "</div>" +
-              '<div class="dam-lb-section" id="damLbLangWrap" hidden>' +
-                '<div class="dam-lb-section__title">Język</div>' +
-                '<div class="dam-lb-chips" id="damLbLang"></div>' +
+              '<details class="dam-lb-details">' +
+                '<summary class="dam-lb-details__sum">Metadane techniczne</summary>' +
+                '<div class="dam-lb-meta" id="damLbMeta"></div>' +
+              "</details>" +
+            "</aside>" +
+            '<div class="dam-lightbox__main">' +
+              '<div class="dam-lightbox__thumb">' +
+                '<div class="dam-lightbox__toolbar dam-lightbox__toolbar--float" role="group" aria-label="Zoom i nawigacja">' +
+                  '<button type="button" class="dam-lb-tool" data-lb-prev aria-label="Poprzedni widok"><i class="uil uil-angle-left"></i></button>' +
+                  '<button type="button" class="dam-lb-tool" data-lb-zoom-out aria-label="Pomniejsz"><i class="uil uil-search-minus"></i></button>' +
+                  '<span class="dam-lb-zoom-label" id="damLbZoomLabel">100%</span>' +
+                  '<button type="button" class="dam-lb-tool" data-lb-zoom-in aria-label="Powieksz"><i class="uil uil-search-plus"></i></button>' +
+                  '<button type="button" class="dam-lb-tool" data-lb-zoom-reset aria-label="Reset 100%"><i class="uil uil-search"></i></button>' +
+                  '<button type="button" class="dam-lb-tool" data-lb-next aria-label="Nastepny widok"><i class="uil uil-angle-right"></i></button>' +
+                "</div>" +
+                '<div class="dam-lightbox__frame">' +
+                  '<img class="dam-lightbox__img" alt="">' +
+                "</div>" +
               "</div>" +
-            "</div>" +
-            '<div class="dam-lb-section dam-lb-section--sizes">' +
-              '<div class="dam-lb-section__title">Rozmiar / format</div>' +
-              '<div class="dam-lb-variants" id="damLbVariants"></div>' +
-            "</div>" +
-            '<details class="dam-lb-details">' +
-              '<summary class="dam-lb-details__sum">Metadane i plik</summary>' +
-              '<div class="dam-lb-meta" id="damLbMeta"></div>' +
-              '<div class="dam-lb-section" id="damLightboxActions"></div>' +
-            "</details>" +
-          "</aside>" +
-          '<div class="dam-lightbox__main">' +
-            '<div class="dam-lightbox__toolbar">' +
-              '<button type="button" class="dam-lb-tool" data-lb-prev aria-label="Poprzedni widok"><i class="uil uil-angle-left"></i></button>' +
-              '<button type="button" class="dam-lb-tool" data-lb-zoom-out aria-label="Pomniejsz"><i class="uil uil-search-minus"></i></button>' +
-              '<span class="dam-lb-zoom-label" id="damLbZoomLabel">100%</span>' +
-              '<button type="button" class="dam-lb-tool" data-lb-zoom-in aria-label="Powieksz"><i class="uil uil-search-plus"></i></button>' +
-              '<button type="button" class="dam-lb-tool" data-lb-zoom-reset aria-label="Reset 100%"><i class="uil uil-search"></i></button>' +
-              '<button type="button" class="dam-lb-tool" data-lb-next aria-label="Nastepny widok"><i class="uil uil-angle-right"></i></button>' +
-            "</div>" +
-            '<div class="dam-lightbox__stage">' +
-              '<div class="dam-lightbox__frame">' +
-                '<img class="dam-lightbox__img" alt="">' +
+              '<div class="dam-lightbox__footer-bar">' +
+                '<div class="dam-lightbox__title" title=""></div>' +
+                '<div class="dam-lightbox__cta">' +
+                  '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-lb-cta-reveal" id="damLbRevealFile" data-dam-tip="Otworz folder w Windows i zaznacz ten plik">' +
+                    '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Pokaz w Explorerze</span></button>' +
+                  '<button type="button" class="geex-btn geex-btn--sm dam-lb-cta-copy" id="damLbCopyPath" data-dam-tip="Kopiuj sciezke pliku">' +
+                    '<i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj sciezke</span></button>' +
+                "</div>" +
               "</div>" +
-            "</div>" +
-            '<div class="dam-lightbox__footer">' +
-              '<div class="dam-lightbox__title" title=""></div>' +
             "</div>" +
           "</div>" +
         "</div>" +
@@ -2430,8 +2916,30 @@
         paint();
       });
     }
+    var revealBtnEl = document.getElementById("damLbRevealFile");
+    if (revealBtnEl) {
+      revealBtnEl.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var p = this.getAttribute("data-path") || (studio.file && studio.file.path) || "";
+        if (p && window.DamPaths && window.DamPaths.revealInExplorer) {
+          window.DamPaths.revealInExplorer(p);
+        }
+      });
+    }
+    var copyBtnEl = document.getElementById("damLbCopyPath");
+    if (copyBtnEl) {
+      copyBtnEl.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var p = this.getAttribute("data-path") || (studio.file && studio.file.path) || "";
+        if (p && window.DamPaths && window.DamPaths.copyPath) {
+          window.DamPaths.copyPath(p);
+        }
+      });
+    }
     overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) close();
+      if (e.target === overlay || e.target.classList.contains("dam-lightbox__box")) close();
       var bgBtn = e.target.closest("[data-lb-bg]");
       if (bgBtn) {
         studio.bg = bgBtn.getAttribute("data-lb-bg") || "z-tlem";
@@ -2618,30 +3126,19 @@
           return;
         }
         var n = (res.data.renamed || []).length;
-        showToast("Zmieniono " + n + " nazw. Odśwież indeks dysku, jeśli listy się rozjeżdżają.");
-        // Aktualizacja w pamieci UI
-        if (state.product && state.product.revisions) {
-          state.product.revisions.forEach(function (rev) {
-            if (!rev) return;
-            if (String(rev.path || "").replace(/\\/g, "/").indexOf(folder.replace(/\\/g, "/")) === 0 ||
-                String(rev.path || "") === folder) {
-              if (rev.index === fromIndex) rev.index = toIndex;
-              if (rev.folder) rev.folder = String(rev.folder).split(fromIndex).join(toIndex);
-              if (rev.path) rev.path = String(rev.path).split(fromIndex).join(toIndex);
-            }
-          });
-        }
         if (window.DamPaths && window.DamPaths.logAction) {
           window.DamPaths.logAction("rename_index", {
             path: folder,
             detail: fromIndex + " -> " + toIndex + " (" + n + ")"
           });
         }
-        if (window.DamTagEdit && typeof window.DamTagEdit.refreshChangeLogBar === "function") {
-          window.DamTagEdit.refreshChangeLogBar();
-        }
-        resetIndexChipEdit(wrap, btn, input);
-        renderMain();
+        showToast("Pomyślnie zmieniono indeks (" + n + ")", "success");
+        return refreshIndex({ silent: true, reopenProductId: state.product && state.product.id }).then(function () {
+          if (window.DamTagEdit && typeof window.DamTagEdit.refreshChangeLogBar === "function") {
+            window.DamTagEdit.refreshChangeLogBar();
+          }
+          resetIndexChipEdit(wrap, btn, input);
+        });
       })
       .catch(function (err) {
         showToast("Bridge niedostępny: " + (err && err.message ? err.message : "fetch"));
@@ -2940,7 +3437,43 @@
     a.download = "product-status.json";
     a.click();
     URL.revokeObjectURL(a.href);
-    showToast("Pobrano product-status.json");
+    showToast("Pobrano kopie statusu (backup). Wspolny zapis idzie przez most, nie przez ten plik.");
+  }
+
+  /** Prawda o zapisie statusu - nie mylic z "Baza online" (Postgres) ani starym workflow P:DAM. */
+  function updateAdminStatusTruthBar() {
+    var el = document.getElementById("damAdminBarText") || document.querySelector("#damAdminBar span");
+    if (!el) return;
+    var dbOnline = false;
+    try {
+      if (window.DamDbStatus && typeof window.DamDbStatus.last === "function" && window.DamDbStatus.last()) {
+        dbOnline = !!window.DamDbStatus.isOnline();
+      } else {
+        var pillEl = document.getElementById("damDbStatus");
+        if (pillEl && pillEl.classList.contains("is-online")) dbOnline = true;
+        if (pillEl && pillEl.classList.contains("is-offline")) dbOnline = false;
+        var pill = document.querySelector(".dam-db-status__label");
+        var pt = (pill && pill.textContent) || "";
+        if (/online/i.test(pt) && !/offline/i.test(pt)) dbOnline = true;
+        if (/offline/i.test(pt)) dbOnline = false;
+      }
+    } catch (e) { /* ignore */ }
+
+    if (dbOnline) {
+      el.innerHTML =
+        "<strong>Prawda zapisu F/X/D:</strong> most <code>/lifecycle-status</code> → rename na dysku Marketing + " +
+        "<code>apps/web/data/lifecycle-status.json</code> + mirror <code>product-status.json</code> + " +
+        "<strong>Postgres KV</strong> (to wlasnie oznacza „Baza online”). " +
+        "<code>localStorage</code> = tylko kopia w tej przegladarce. " +
+        "Przycisk „Pobierz kopie” = opcjonalny backup, nie zrodlo prawdy dla zespolu.";
+    } else {
+      el.innerHTML =
+        "<strong>Prawda zapisu F/X/D:</strong> most → dysk Marketing + lokalne JSON " +
+        "(<code>lifecycle-status.json</code> / <code>product-status.json</code>). " +
+        "Gdy Baza offline: bez sync Postgres do innych PC. " +
+        "<code>localStorage</code> = kopia w tej przegladarce. " +
+        "Nie zastepuj recznie pliku na P: - sciezka to <code>apps/web/data/</code> w instalacji DAM.";
+    }
   }
 
   function isAdminRole() {
@@ -2961,10 +3494,20 @@
         e.stopPropagation();
         var scope = this.getAttribute("data-scope") || "variant";
         var status = this.getAttribute("data-status") || "clear";
+        /* Ponowne klikniecie aktywnego F/X/D = odznacz (toggle) */
+        if (status !== "clear" && this.classList.contains("is-on")) {
+          status = "clear";
+        }
         var path = this.getAttribute("data-path") || "";
         var productPath = this.getAttribute("data-product-path") || "";
         var productId = this.getAttribute("data-product-id") || "";
         var index = this.getAttribute("data-revision-index") || "";
+        path = resolveLifecycleDiskPath({
+          scope: scope,
+          path: path,
+          index: index,
+          productId: productId
+        }) || path;
         if (scope === "product") {
           var prod =
             (state.fileIndex &&
@@ -2972,8 +3515,15 @@
                 return x.id === productId || x.path === path;
               })) ||
             state.product;
-          if (prod) setProductLifecycleStatus(prod, status);
-          else {
+          if (prod) {
+            applyLifecycleStatus({
+              scope: "product",
+              status: status,
+              path: path || prod.path || "",
+              productPath: productPath || path || prod.path || "",
+              productId: productId || prod.id || ""
+            });
+          } else {
             applyLifecycleStatus({
               scope: "product",
               status: status,
@@ -2984,8 +3534,8 @@
           }
           return;
         }
-        /* variant: prefer path z przycisku; fallback przez ridx w karcie */
-        if (path) {
+        /* variant: prefer path z lifecycle-store / przycisku; fallback przez ridx */
+        if (path || index) {
           applyLifecycleStatus({
             scope: "variant",
             status: status,
@@ -3033,6 +3583,7 @@
       if (exportBtn) exportBtn.hidden = !state.adminMode;
       var bar = document.getElementById("damAdminBar");
       if (bar) bar.style.display = state.adminMode ? "flex" : "none";
+      updateAdminStatusTruthBar();
     }
     if (!window._damExplorerAdminBound) {
       window._damExplorerAdminBound = true;
@@ -3046,15 +3597,23 @@
           renderAll();
         }
       });
+      window.addEventListener("dam:db-status", function () {
+        updateAdminStatusTruthBar();
+      });
+      window.addEventListener("dam-runtime-ready", function () {
+        updateAdminStatusTruthBar();
+      });
+      setTimeout(updateAdminStatusTruthBar, 800);
+      setTimeout(updateAdminStatusTruthBar, 2500);
     }
     if (exportBtn && !exportBtn._damBound) {
       exportBtn._damBound = true;
       exportBtn.addEventListener("click", exportStatusJson);
       exportBtn.setAttribute(
         "data-dam-tip",
-        "Pobierz plik product-status.json z oznaczeniami Aktualne/Nieaktualne z tej przeglądarki. Zastąp nim plik na serwerze (P:\\DAM\\data\\product-status.json), żeby statusy były wspólne dla zespołu."
+        "Opcjonalna kopia zapasowa zmergowanego statusu z tej sesji. Wspolne F/X/D zapisuje most (dysk Marketing + apps/web/data/*.json + Postgres KV). Nie podmieniaj recznie pliku na P:."
       );
-      exportBtn.title = "Eksport statusów wariantów (JSON)";
+      exportBtn.title = "Pobierz kopie statusu (JSON backup)";
     }
     syncAdminUi();
   }
@@ -3160,19 +3719,74 @@
   /* Data loading                                                         */
   /* ------------------------------------------------------------------ */
 
+  function syncStatusMirrorFromLifecycle() {
+    /* Po zaladowaniu lifecycle - nadpisz lokalny mirror dla tych samych kluczy (anty-stale X/F). */
+    if (!state.lifecycleStore) return;
+    if (!state.statusStore) state.statusStore = { products: {}, revisions: {} };
+    if (!state.statusStore.products) state.statusStore.products = {};
+    if (!state.statusStore.revisions) state.statusStore.revisions = {};
+    var lp = state.lifecycleStore.products || {};
+    Object.keys(lp).forEach(function (k) {
+      var row = lp[k];
+      if (!row) return;
+      state.statusStore.products[k] = Object.assign({}, state.statusStore.products[k] || {}, {
+        status: row.status || "clear",
+        letter: row.letter || null,
+        path: row.path || (state.statusStore.products[k] && state.statusStore.products[k].path) || ""
+      });
+    });
+    var lr = state.lifecycleStore.revisions || {};
+    Object.keys(lr).forEach(function (k) {
+      var row = lr[k];
+      if (!row) return;
+      state.statusStore.revisions[k] = Object.assign({}, state.statusStore.revisions[k] || {}, {
+        status: row.status || "clear",
+        letter: row.letter || null,
+        path: row.path || (state.statusStore.revisions[k] && state.statusStore.revisions[k].path) || "",
+        product_id: row.product_id || ""
+      });
+    });
+    try {
+      saveLocalStatus(state.statusStore);
+    } catch (e) { /* ignore quota */ }
+  }
+
   function loadLifecycleStore() {
+    function applyLifecyclePayload(d) {
+      if (d && d.ok) {
+        state.lifecycleStore = d;
+      } else if (d && (d.products || d.revisions)) {
+        state.lifecycleStore = {
+          ok: true,
+          products: d.products || {},
+          revisions: d.revisions || {},
+          history: d.history || [],
+          updated_at: d.updated_at || ""
+        };
+      } else {
+        state.lifecycleStore = { products: {}, revisions: {}, history: [] };
+      }
+      syncStatusMirrorFromLifecycle();
+      return state.lifecycleStore;
+    }
     return fetch(bridgeUrl() + "/lifecycle-status", { headers: authHeaders() })
       .then(function (r) {
-        if (!r.ok) return null;
+        if (!r.ok) throw new Error("bridge_lifecycle_" + r.status);
         return r.json();
       })
-      .then(function (d) {
-        state.lifecycleStore = d && d.ok ? d : { products: {}, revisions: {}, history: [] };
-        return state.lifecycleStore;
-      })
+      .then(applyLifecyclePayload)
       .catch(function () {
-        state.lifecycleStore = { products: {}, revisions: {}, history: [] };
-        return state.lifecycleStore;
+        /* Smoke/static server: czytaj plik JSON bez mostu */
+        return fetch("data/lifecycle-status.json?v=" + Date.now())
+          .then(function (r) {
+            if (!r.ok) throw new Error("file_lifecycle_" + r.status);
+            return r.json();
+          })
+          .then(applyLifecyclePayload)
+          .catch(function () {
+            state.lifecycleStore = { products: {}, revisions: {}, history: [] };
+            return state.lifecycleStore;
+          });
       });
   }
 
@@ -3206,8 +3820,32 @@
     var results = document.getElementById("damSearchResults");
     if (window.DamSearch && input && !input._damBound) {
       input._damBound = true;
-      window.DamSearch.bindSearchBox(input, results, function (prod) { openProduct(prod); });
+      var scopeEl = document.getElementById("damSearchScope");
+      window.DamSearch.bindSearchBox(
+        input,
+        results,
+        function (prod) {
+          openProduct(prod);
+        },
+        scopeEl,
+        {
+          /* scope chip change → odswiez panel wynikow */
+        }
+      );
+      /* Po zmianie scope odswiez AJAX panel */
+      if (scopeEl && !scopeEl._damPanelScopeBound) {
+        scopeEl._damPanelScopeBound = true;
+        scopeEl.addEventListener("click", function () {
+          if ((input.value || "").trim().length >= 2) {
+            clearTimeout(state.searchPanelTimer);
+            state.searchPanelTimer = setTimeout(function () {
+              applySearchToPanel(input.value);
+            }, 80);
+          }
+        });
+      }
     }
+    if (input) bindSearchPanelSync(input);
   }
 
   function applyDeepLink() {
@@ -3224,22 +3862,309 @@
     }
   }
 
-  function refreshIndex() {
-    setStatus("Odświeżanie indeksu...");
-    var reloader = window.DamSearch && window.DamSearch.reload
-      ? window.DamSearch.reload()
-      : fetch("data/file-index.json?v=" + Date.now())
-          .then(function (r) { if (!r.ok) throw new Error("file-index.json"); return r.json(); })
-          .then(function (d) { return { fileIndex: d }; });
-    return reloader.then(function (bundle) {
+  /** Po odswiezeniu indeksu: zsynchronizuj store/UI z literkami na dysku (nazwy folderow). */
+  function syncLifecycleFromDiskIndex(opts) {
+    opts = opts || {};
+    /* skipProgramWins: po boot mtime program ma pierwszenstwo az do Odswiez/FORCE */
+    var skipProd = {};
+    var skipRev = {};
+    (opts.skipProgramWins || []).forEach(function (w) {
+      if (!w) return;
+      if (w.scope === "product" && w.product_id) skipProd[w.product_id] = true;
+      if (w.scope === "variant") {
+        if (w.revision_index) skipRev[w.revision_index] = true;
+        if (w.path) skipRev[w.path] = true;
+      }
+    });
+    if (!state.fileIndex) return { drifts: [] };
+    if (!state.lifecycleStore) state.lifecycleStore = { products: {}, revisions: {}, history: [] };
+    if (!state.lifecycleStore.products) state.lifecycleStore.products = {};
+    if (!state.lifecycleStore.revisions) state.lifecycleStore.revisions = {};
+    var local = loadLocalStatus();
+    if (!local.products) local.products = {};
+    if (!local.revisions) local.revisions = {};
+    var drifts = [];
+    (state.fileIndex.products || []).forEach(function (p) {
+      if (!p || !p.id) return;
+      var skipP = !!skipProd[p.id];
+      var lit = letterFromFolderName(p.path || p.name || "");
+      var st = statusFromLetter(lit);
+      var prevP = state.lifecycleStore.products[p.id] || {};
+      var prevLit = (prevP.letter || letterFromFolderName(prevP.path || "") || "").toString().toUpperCase();
+      if (!skipP) {
+        if ((prevLit || "") !== (lit || "") && (prevP.status || prevLit || lit)) {
+          drifts.push({
+            scope: "product",
+            product_id: p.id,
+            previous_letter: prevLit || null,
+            disk_letter: lit || null,
+            path: p.path || ""
+          });
+        }
+        state.lifecycleStore.products[p.id] = Object.assign({}, prevP, {
+          path: p.path || "",
+          letter: lit || null,
+          status: st,
+          synced_from_disk: true,
+          source: "disk"
+        });
+        local.products[p.id] = {
+          status: st,
+          letter: lit || null,
+          path: p.path || "",
+          note: "Synced from disk"
+        };
+      }
+      (p.revisions || []).forEach(function (r) {
+        if (!r) return;
+        var rlit = letterFromFolderName(r.path || r.folder || "");
+        var rst = statusFromLetter(rlit);
+        var key = r.index || r.path || r.folder;
+        if (!key) return;
+        if (skipP || skipRev[key] || skipRev[r.path || ""]) return;
+        var prevR = state.lifecycleStore.revisions[key] || {};
+        var prevRLit = (prevR.letter || letterFromFolderName(prevR.path || "") || "").toString().toUpperCase();
+        if ((prevRLit || "") !== (rlit || "") && (prevR.status || prevRLit || rlit)) {
+          drifts.push({
+            scope: "variant",
+            product_id: p.id,
+            revision_index: r.index || "",
+            previous_letter: prevRLit || null,
+            disk_letter: rlit || null,
+            path: r.path || ""
+          });
+        }
+        state.lifecycleStore.revisions[key] = Object.assign({}, prevR, {
+          path: r.path || "",
+          letter: rlit || null,
+          status: rst,
+          product_id: p.id,
+          synced_from_disk: true,
+          source: "disk"
+        });
+        local.revisions[key] = {
+          status: rst,
+          letter: rlit || null,
+          path: r.path || "",
+          product_id: p.id,
+          note: "Synced from disk"
+        };
+      });
+    });
+    local.updated_at = new Date().toISOString();
+    saveLocalStatus(local);
+    state.statusStore = mergeStatusStore(state.statusStore);
+    return { drifts: drifts };
+  }
+
+  function notifyLifecycleDrifts(drifts, sourceLabel) {
+    drifts = drifts || [];
+    var real = drifts.filter(function (d) {
+      var a = (d.previous_letter || "").toString().toUpperCase();
+      var b = (d.disk_letter || "").toString().toUpperCase();
+      return a !== b;
+    });
+    if (!real.length) {
+      try { console.info("[DAM lifecycle] sync OK, brak istotnych zmian liter", sourceLabel || ""); } catch (_e) {}
+      return;
+    }
+    showToast(
+      "Pomyślnie zsynchronizowano statusy z dysku (" + real.length + ")",
+      "success"
+    );
+    setStatus("Zsynchronizowano z dysku: " + real.length + " zmian");
+    try { console.info("[DAM lifecycle drifts]", real); } catch (_e2) {}
+  }
+
+  /** Most: pull dysk->program (bez FS rename). Fallback: lokalny sync z indeksu. */
+  function pullLifecycleFromBridge() {
+    return fetch(bridgeUrl() + "/lifecycle-reconcile?mode=pull", { headers: authHeaders() })
+      .then(function (r) {
+        if (!r.ok) throw new Error("reconcile_" + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        if (!data || !data.ok) throw new Error((data && data.error) || "reconcile_failed");
+        return data;
+      });
+  }
+
+  function bootLifecycleReconcile() {
+    if (state._lifecycleBootDone) return Promise.resolve(null);
+    state._lifecycleBootDone = true;
+    return fetch(bridgeUrl() + "/lifecycle-reconcile?mode=boot", { headers: authHeaders() })
+      .then(function (r) {
+        if (!r.ok) throw new Error("boot_" + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        if (!data || !data.ok) return data;
+        var nDisk = (data.disk_wins || []).length;
+        var nProg = (data.program_wins || []).length;
+        var nEnf = (data.enforced || []).length;
+        // #region agent log
+        fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
+          body: JSON.stringify({
+            sessionId: "a78fa0",
+            hypothesisId: "F",
+            location: "dam-explorer.js:bootLifecycleReconcile",
+            message: "boot reconcile result (not an error)",
+            data: { nDisk: nDisk, nProg: nProg, nEnf: nEnf, toastSuppressed: true },
+            timestamp: Date.now(),
+            runId: "post-fix",
+          }),
+        }).catch(function () {});
+        // #endregion
+        /* Boot sync to info w konsoli/statusie - NIE toast (wygladal jak blad). */
+        try {
+          console.info(
+            "[DAM lifecycle boot] dysk=" + nDisk + " program=" + nProg + " enforced_X=" + nEnf
+          );
+        } catch (_e) { /* ignore */ }
+        if (nEnf > 0) {
+          setStatus("Przy starcie przeniesiono foldery X: " + nEnf);
+        } else if (nDisk || nProg) {
+          setStatus("Statusy zsynchronizowane z dyskiem (" + nDisk + ")");
+        }
+        return data;
+      })
+      .catch(function () { return null; });
+  }
+
+  /** Stosuj zmiany: PROGRAM -> dysk (FORCE). */
+  function forceApplyLifecycleToDisk() {
+    if (!isAdminRole() || !state.adminMode) {
+      showToast("Włącz tryb admina, aby stosować zmiany na dysku.", "error");
+      return Promise.resolve({ ok: false });
+    }
+    var ok = true;
+    try {
+      ok = window.confirm(
+        "Stosuj zmiany (FORCE):\n" +
+          "Zapisze statusy z PROGRAMU na foldery Marketing (rename / archiwum).\n" +
+          "To odwrotnosc Odśwież (Odśwież tylko czyta dysk).\n\nKontynuować?"
+      );
+    } catch (e) { ok = true; }
+    if (!ok) return Promise.resolve({ ok: false, cancelled: true });
+    showToast("Stosuję zmiany na dysku…");
+    setStatus("FORCE lifecycle…");
+    return fetch(bridgeUrl() + "/lifecycle-force", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ dry_run: false })
+    })
+      .then(function (r) {
+        return r.json().then(function (data) {
+          return { http: r.status, data: data };
+        });
+      })
+      .then(function (res) {
+        if (!res.data || !res.data.ok) {
+          showToast("Nie udało się zastosować zmian: " + ((res.data && res.data.error) || res.http), "error");
+          return res.data || { ok: false };
+        }
+        var n = res.data.applied_ok || 0;
+        var fail = res.data.applied_fail || 0;
+        if (fail) {
+          showToast("Zapisano " + n + " zmian, błędów: " + fail, "error");
+        } else {
+          showToast("Pomyślnie zastosowano zmiany na dysku (" + n + ")", "success");
+        }
+        return refreshIndex({ silent: true }).then(function () { return res.data; });
+      })
+      .catch(function (err) {
+        showToast("Błąd zapisu na dysk: " + (err && err.message ? err.message : err), "error");
+        return { ok: false };
+      });
+  }
+
+  function refreshIndex(opts) {
+    opts = opts || {};
+    var silent = !!opts.silent;
+    var reopenId = opts.reopenProductId || "";
+    setStatus("Odświeżanie z dysku…");
+    if (!silent) showToast("Odświeżam listę z dysku…", "info");
+
+    function afterBundle(bundle) {
       return loadAllMeta().then(function () {
         bindExplorerData(bundle);
-        var gen = (state.fileIndex && state.fileIndex.generated_at) || "";
-        setStatus(gen ? "Zaktualizowano: " + gen : "Zaktualizowano");
-        return bundle;
+        return pullLifecycleFromBridge()
+          .then(function (pull) {
+            var drifts = (pull && pull.drifts) || [];
+            return loadLifecycleStore().then(function () {
+              var localSync = syncLifecycleFromDiskIndex();
+              if (!drifts.length && localSync && localSync.drifts) drifts = localSync.drifts;
+              if (!silent) notifyLifecycleDrifts(drifts, "odśwież");
+              if (reopenId && window.DamSearch && typeof window.DamSearch.productById === "function") {
+                var fresh = window.DamSearch.productById(reopenId);
+                if (fresh) state.product = fresh;
+              } else if (reopenId && state.fileIndex) {
+                var fp = (state.fileIndex.products || []).find(function (p) { return p.id === reopenId; });
+                if (fp) state.product = fp;
+              }
+              renderAll();
+              var gen = (state.fileIndex && state.fileIndex.generated_at) || "";
+              setStatus(gen ? "Zaktualizowano z dysku: " + gen : "Zaktualizowano z dysku");
+              if (!silent) showToast("Pomyślnie odświeżono listę", "success");
+              return bundle;
+            });
+          })
+          .catch(function () {
+            var localSync = syncLifecycleFromDiskIndex();
+            if (!silent) notifyLifecycleDrifts((localSync && localSync.drifts) || [], "odśwież lokalnie");
+            if (reopenId && state.fileIndex) {
+              var fp2 = (state.fileIndex.products || []).find(function (p) { return p.id === reopenId; });
+              if (fp2) state.product = fp2;
+            }
+            renderAll();
+            var gen2 = (state.fileIndex && state.fileIndex.generated_at) || "";
+            setStatus(gen2 ? "Zaktualizowano z dysku: " + gen2 : "Zaktualizowano z dysku");
+            if (!silent) showToast("Pomyślnie odświeżono listę", "success");
+            return bundle;
+          });
       });
+    }
+
+    /* Najpierw przebuduj indeks z Marketing (nowe foldery DOY itd.), potem wczytaj JSON */
+    var rebuild = fetch(bridgeUrl() + "/index/rebuild", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({})
+    })
+      .then(function (r) {
+        return r.json().catch(function () {
+          return { ok: false, error: "rebuild_" + r.status };
+        }).then(function (data) {
+          if (r.status === 401 || r.status === 403) {
+            return { ok: false, authError: true, error: (data && data.error) || "auth" };
+          }
+          if (!r.ok || (data && data.ok === false)) {
+            return { ok: false, error: (data && data.error) || "rebuild_failed" };
+          }
+          return waitForIndexRebuild(60000);
+        });
+      })
+      .catch(function (err) {
+        return { ok: false, error: err && err.message ? err.message : "rebuild_failed" };
+      });
+
+    return rebuild.then(function (rebuildResult) {
+      if (rebuildResult && rebuildResult.authError && !silent) {
+        showToast("Zaloguj się w DAM, aby odświeżyć listę z dysku.", "error");
+      } else if (rebuildResult && rebuildResult.error && !silent) {
+        showToast("Indeks dysku: " + rebuildResult.error + " — wczytuję ostatnią kopię.", "info");
+      }
+      var reloader = window.DamSearch && window.DamSearch.reload
+        ? window.DamSearch.reload()
+        : fetch("data/file-index.json?v=" + Date.now())
+            .then(function (r) { if (!r.ok) throw new Error("file-index.json"); return r.json(); })
+            .then(function (d) { return { fileIndex: d }; });
+      return reloader.then(afterBundle);
     }).catch(function (err) {
-      setStatus("Błąd odświeżania: " + err.message);
+      setStatus("Błąd odświeżania: " + (err && err.message ? err.message : err));
+      showToast("Nie udało się odświeżyć listy: " + (err && err.message ? err.message : err), "error");
       throw err;
     });
   }
@@ -3255,7 +4180,68 @@
     state.expandedCarriers = {};
     state.showOlderCarriers = {};
     trackRecentProduct(product);
+    navPush();
     renderAll();
+  }
+
+  function clearSearchPanel() {
+    state.searchQuery = "";
+    state.searchHits = null;
+    var inp = document.getElementById("damFileSearch");
+    if (inp) inp.value = "";
+    var res = document.getElementById("damSearchResults");
+    if (res) {
+      res.innerHTML = "";
+      res.style.display = "none";
+    }
+    state.expandedCarriers = {};
+    state.showOlderCarriers = {};
+    var snap = navSnapshot();
+    if (state.navPos >= 0) {
+      state.navStack[state.navPos] = snap;
+      state.navStack = state.navStack.slice(0, state.navPos + 1);
+    }
+    renderAll();
+  }
+
+  function applySearchToPanel(query) {
+    var q = String(query || "").trim();
+    state.searchQuery = q;
+    if (!q || q.length < 2) {
+      state.searchHits = null;
+      if (!state.product) renderAll();
+      return;
+    }
+    if (!window.DamSearch || typeof window.DamSearch.search !== "function") return;
+    window.DamSearch.search(q, { limit: 40 }).then(function (res) {
+      if (state.searchQuery !== q) return;
+      state.searchHits = res || { products: [], hits: [], query: q };
+      /* Szukanie w panelu ma pierwszenstwo - zamknij produkt, pokaz liste wynikow */
+      if (state.product) state.product = null;
+      renderMain();
+      renderBreadcrumb();
+    }).catch(function () {
+      if (state.searchQuery !== q) return;
+      state.searchHits = { products: [], hits: [], query: q, message: "Blad wyszukiwania" };
+      if (state.product) state.product = null;
+      renderMain();
+      renderBreadcrumb();
+    });
+  }
+
+  function bindSearchPanelSync(input) {
+    if (!input || input._damPanelSearchBound) return;
+    input._damPanelSearchBound = true;
+    input.addEventListener("input", function () {
+      clearTimeout(state.searchPanelTimer);
+      var q = input.value || "";
+      state.searchPanelTimer = setTimeout(function () {
+        applySearchToPanel(q);
+      }, 140);
+    });
+    if ((input.value || "").trim().length >= 2) {
+      applySearchToPanel(input.value);
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -3288,7 +4274,7 @@
     }
 
     var sub = document.querySelector(".geex-content__header__subtitle");
-    if (sub) sub.textContent = "Pełna struktura produktów ETA - DK i GC";
+    if (sub) sub.textContent = "Pełna struktura produktów Dobra Kaloria i Good Calories";
 
     // Filtr marki: chipy DK/GC tylko przy „Kategorie” (sidebar).
     // Synchronizacja: DamBrandFilter.commitBrands / syncAllUi.
@@ -3320,6 +4306,14 @@
       bindExplorerData(pair[0]);
       renderTagChips();
       applyDeepLink();
+      return bootLifecycleReconcile().then(function (boot) {
+        return loadLifecycleStore().then(function () {
+          syncLifecycleFromDiskIndex({
+            skipProgramWins: (boot && boot.program_wins) || []
+          });
+          renderAll();
+        });
+      });
     }).catch(function (err) {
       setStatus("Błąd indeksu: " + err.message);
       main.innerHTML =
@@ -3332,6 +4326,13 @@
     if (refreshBtn && !refreshBtn._damBound) {
       refreshBtn._damBound = true;
       refreshBtn.addEventListener("click", refreshIndex);
+    }
+    var forceBtn = document.getElementById("damLifecycleForce");
+    if (forceBtn && !forceBtn._damBound) {
+      forceBtn._damBound = true;
+      forceBtn.addEventListener("click", function () {
+        forceApplyLifecycleToDisk();
+      });
     }
   }
 
@@ -3362,6 +4363,8 @@
     setRevisionStatus: setRevisionStatus,
     setProductStatus: setProductLifecycleStatus,
     applyLifecycleStatus: applyLifecycleStatus,
+    forceApplyLifecycle: forceApplyLifecycleToDisk,
+    pullLifecycle: pullLifecycleFromBridge,
     init: init,
   };
 

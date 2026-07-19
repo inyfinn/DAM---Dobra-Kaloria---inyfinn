@@ -10,6 +10,8 @@
   var _timer = null;
   var _last = null;
   var _panelOpen = false;
+  var _syncToast = null;
+  var _syncTween = null;
 
   function bridgeBase() {
     if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
@@ -19,6 +21,194 @@
       return window.DamPaths.bridgeUrl();
     }
     return "http://127.0.0.1:8766";
+  }
+
+  function prefersReducedMotion() {
+    try {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function loadGsap() {
+    return new Promise(function (resolve) {
+      if (window.gsap) {
+        resolve(window.gsap);
+        return;
+      }
+      var existing = document.querySelector('script[data-dam-gsap="1"]');
+      if (existing) {
+        if (window.gsap) {
+          resolve(window.gsap);
+          return;
+        }
+        existing.addEventListener("load", function () {
+          resolve(window.gsap || null);
+        });
+        existing.addEventListener("error", function () {
+          resolve(null);
+        });
+        return;
+      }
+      var s = document.createElement("script");
+      s.src = "assets/vendor/js/gsap/gsap.min.js";
+      s.setAttribute("data-dam-gsap", "1");
+      s.onload = function () {
+        resolve(window.gsap || null);
+      };
+      s.onerror = function () {
+        resolve(null);
+      };
+      document.head.appendChild(s);
+    });
+  }
+
+  function ensureSyncToast() {
+    if (_syncToast) return _syncToast;
+    var el = document.createElement("div");
+    el.id = "damDbSyncToast";
+    el.className = "dam-db-sync-toast";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    el.innerHTML =
+      '<div class="dam-db-sync-toast__head">' +
+      '<span class="dam-db-sync-toast__title">Odświeżanie bazy</span>' +
+      '<span class="dam-db-sync-toast__badge">Synology</span>' +
+      "</div>" +
+      '<div class="dam-db-sync-toast__track"><span class="dam-db-sync-toast__bar"></span></div>' +
+      '<ul class="dam-db-sync-toast__steps"></ul>';
+    document.body.appendChild(el);
+    _syncToast = el;
+    return el;
+  }
+
+  function animateSyncToast(open) {
+    var el = ensureSyncToast();
+    var reduce = prefersReducedMotion();
+    if (_syncTween && _syncTween.kill) _syncTween.kill();
+    if (!window.gsap || reduce) {
+      if (open) {
+        el.classList.add("is-open");
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+        el.style.visibility = "visible";
+      } else {
+        el.classList.remove("is-open");
+        el.style.opacity = "";
+        el.style.transform = "";
+        el.style.visibility = "";
+      }
+      return Promise.resolve();
+    }
+    if (open) {
+      el.classList.add("is-open");
+      return new Promise(function (resolve) {
+        _syncTween = window.gsap.fromTo(
+          el,
+          { autoAlpha: 0, y: 14 },
+          { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out", onComplete: resolve }
+        );
+      });
+    }
+    return new Promise(function (resolve) {
+      _syncTween = window.gsap.to(el, {
+        autoAlpha: 0,
+        y: 10,
+        duration: 0.22,
+        ease: "power1.in",
+        onComplete: function () {
+          el.classList.remove("is-open");
+          resolve();
+        },
+      });
+    });
+  }
+
+  function setSyncProgress(ratio) {
+    var el = ensureSyncToast();
+    var bar = el.querySelector(".dam-db-sync-toast__bar");
+    if (!bar) return;
+    var pct = Math.max(0, Math.min(1, ratio || 0)) * 100;
+    if (window.gsap && !prefersReducedMotion()) {
+      window.gsap.to(bar, { width: pct + "%", duration: 0.35, ease: "power1.out" });
+    } else {
+      bar.style.width = pct + "%";
+    }
+  }
+
+  function renderSyncSteps(steps) {
+    var el = ensureSyncToast();
+    var list = el.querySelector(".dam-db-sync-toast__steps");
+    if (!list) return;
+    list.innerHTML = steps
+      .map(function (step) {
+        var cls = "dam-db-sync-toast__step";
+        if (step.status === "active") cls += " is-active";
+        if (step.status === "done") cls += " is-done";
+        if (step.status === "error") cls += " is-error";
+        return (
+          '<li class="' +
+          cls +
+          '" data-step="' +
+          esc(step.id) +
+          '"><span class="dam-db-sync-toast__mark" aria-hidden="true"></span><span>' +
+          esc(step.label) +
+          "</span></li>"
+        );
+      })
+      .join("");
+  }
+
+  function openSyncToast(pullDump) {
+    var steps = [
+      { id: "bridge", label: "Łączenie z mostem DAM (port 8766)…", status: "active" },
+      { id: "postgres", label: "Sprawdzam PostgreSQL na Synology…", status: "pending" },
+    ];
+    if (pullDump) {
+      steps.push({
+        id: "dump",
+        label: "Synchronizuję dump GitHub/DATABASE (jeśli włączony)…",
+        status: "pending",
+      });
+    }
+    steps.push({ id: "apply", label: "Aktualizuję status w panelu…", status: "pending" });
+    renderSyncSteps(steps);
+    setSyncProgress(0.08);
+    return loadGsap().then(function () {
+      return animateSyncToast(true);
+    });
+  }
+
+  function advanceSyncStep(stepId, status, nextId) {
+    var el = ensureSyncToast();
+    var items = el.querySelectorAll(".dam-db-sync-toast__step");
+    items.forEach(function (node) {
+      var id = node.getAttribute("data-step");
+      if (id === stepId) {
+        node.classList.remove("is-active", "is-done", "is-error");
+        node.classList.add(
+          status === "error" ? "is-error" : status === "done" ? "is-done" : "is-active"
+        );
+      } else if (nextId && id === nextId) {
+        node.classList.add("is-active");
+      }
+    });
+  }
+
+  function closeSyncToast(delayMs) {
+    var wait = typeof delayMs === "number" ? delayMs : 1200;
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        animateSyncToast(false).then(resolve);
+      }, wait);
+    });
+  }
+
+  function sleep(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
   }
 
   function esc(s) {
@@ -43,14 +233,13 @@
     el.setAttribute("aria-haspopup", "dialog");
     el.setAttribute("aria-expanded", "false");
     el.innerHTML =
-      '<i class="uil uil-database dam-db-status__icon" aria-hidden="true"></i>' +
       '<span class="dam-db-status__dot" aria-hidden="true"></span>' +
       '<span class="dam-db-status__label">' +
       '<span class="dam-status-line">Baza</span>' +
       '<span class="dam-status-line">…</span>' +
       "</span>" +
       '<button type="button" class="dam-db-status__refresh" id="damDbRefreshBtn" title="Odśwież połączenie z bazą teraz" data-dam-tip="Wymusza ponowne połączenie z Synology (bez czekania) i opcjonalnie pobiera dump GitHub/DATABASE." aria-label="Odśwież bazę">' +
-      '<i class="uil uil-refresh" aria-hidden="true"></i>' +
+      '<i class="uil uil-redo" aria-hidden="true"></i>' +
       "</button>" +
       '<div class="dam-db-status__panel" id="damDbStatusPanel" hidden role="dialog" aria-label="Źródła bazy danych"></div>';
 
@@ -269,9 +458,10 @@
       document.body.appendChild(el);
     }
     el.textContent = msg;
-    el.classList.add("is-visible");
-    setTimeout(function () {
-      el.classList.remove("is-visible");
+    el.classList.add("is-on");
+    clearTimeout(el._t);
+    el._t = setTimeout(function () {
+      el.classList.remove("is-on");
     }, 2800);
   }
 
@@ -304,6 +494,9 @@
   function applyStatus(res) {
     if (!res) {
       setPill(false, "Baza offline", "Most nie odpowiada");
+      try {
+        window.dispatchEvent(new CustomEvent("dam:db-status", { detail: { online: false } }));
+      } catch (e) { /* ignore */ }
       return;
     }
     var online = res.online !== false && res.ok !== false;
@@ -316,6 +509,9 @@
       (res.host ? " @ " + res.host : res.path ? " · " + res.path : "") +
       (res.offline_hint ? "\n" + res.offline_hint : "");
     setPill(online, label, detail);
+    try {
+      window.dispatchEvent(new CustomEvent("dam:db-status", { detail: { online: !!online, res: res } }));
+    } catch (e) { /* ignore */ }
   }
 
   function check() {
@@ -342,31 +538,67 @@
       btn.classList.add("is-busy");
       btn.disabled = true;
     }
-    return fetch(bridgeBase() + "/db/reconnect", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pull_dump: !!pullDump }),
-    })
+
+    var stepIds = ["bridge", "postgres"];
+    if (pullDump) stepIds.push("dump");
+    stepIds.push("apply");
+
+    return openSyncToast(!!pullDump)
+      .then(function () {
+        setSyncProgress(0.18);
+        return sleep(prefersReducedMotion() ? 0 : 180);
+      })
+      .then(function () {
+        advanceSyncStep("bridge", "done", "postgres");
+        setSyncProgress(0.38);
+        return sleep(prefersReducedMotion() ? 0 : 160);
+      })
+      .then(function () {
+        return fetch(bridgeBase() + "/db/reconnect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pull_dump: !!pullDump }),
+        });
+      })
       .then(function (r) {
+        advanceSyncStep("postgres", "done", pullDump ? "dump" : "apply");
+        setSyncProgress(pullDump ? 0.62 : 0.78);
         return r.json();
       })
       .then(function (res) {
+        if (pullDump) {
+          advanceSyncStep("dump", res.dump_sync && res.dump_sync.ok ? "done" : "error", "apply");
+          setSyncProgress(0.88);
+        }
         _last = res;
         applyStatus(res);
         if (_panelOpen) renderPanel(res);
-        var dumpOk = res.dump_sync && res.dump_sync.ok;
-        toast(
-          pullDump
-            ? dumpOk
-              ? "Baza odświeżona + dump pobrany"
-              : "Baza odświeżona (dump: " + ((res.dump_sync && res.dump_sync.error) || "pominięty") + ")"
-            : "Baza odświeżona"
-        );
-        return res;
+        advanceSyncStep("apply", "done");
+        setSyncProgress(1);
+        var title = ensureSyncToast().querySelector(".dam-db-sync-toast__title");
+        if (title) {
+          var dumpOk = res.dump_sync && res.dump_sync.ok;
+          if (res.online === false || res.ok === false) {
+            title.textContent = "Baza nadal offline";
+          } else if (pullDump && dumpOk) {
+            title.textContent = "Baza online, dump zsynchronizowany";
+          } else if (pullDump) {
+            title.textContent = "Baza online (dump pominięty)";
+          } else {
+            title.textContent = "Połączenie odświeżone";
+          }
+        }
+        return closeSyncToast(res.online === false || res.ok === false ? 2200 : 1600).then(function () {
+          return res;
+        });
       })
       .catch(function () {
-        toast("Odświeżenie nieudane - most offline?");
+        advanceSyncStep(stepIds[stepIds.length - 2] || "postgres", "error");
+        setSyncProgress(1);
+        var title = ensureSyncToast().querySelector(".dam-db-sync-toast__title");
+        if (title) title.textContent = "Odświeżenie nieudane";
         setPill(false, "Baza offline", "Most nie odpowiada");
+        return closeSyncToast(2400);
       })
       .finally(function () {
         if (btn) {
@@ -391,6 +623,14 @@
     check: check,
     reconnect: reconnect,
     start: start,
+    isOnline: function () {
+      if (!_last) return false;
+      if (_last.offline_mode) return false;
+      return _last.online !== false && _last.ok !== false;
+    },
+    last: function () {
+      return _last;
+    },
   };
 
   if (document.readyState === "loading") {

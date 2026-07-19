@@ -63,8 +63,12 @@
       btn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        var path = this.getAttribute("data-path") || "";
-        if (!path) return;
+        var raw = this.getAttribute("data-path") || "";
+        if (!raw) return;
+        var path =
+          window.DamPaths && typeof window.DamPaths.resolveWinFolderPath === "function"
+            ? window.DamPaths.resolveWinFolderPath(raw)
+            : raw;
         if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
           window.DamPaths.openFolderInExplorer(path);
           return;

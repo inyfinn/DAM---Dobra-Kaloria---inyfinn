@@ -8,8 +8,8 @@
   "nav.costs": "Kalkulator kosztów",
   "nav.integrations": "Integracje",
   "nav.logout": "Wyloguj",
-  "nav.brand": "DAM ETA",
-  "nav.brand_sub": "Panel assetów opakowań",
+  "nav.brand": "DAM",
+  "nav.brand_sub": "Dobra Kaloria - Inyfinn",
   "nav.lang": "Język",
   "nav.back": "Wstecz",
   "nav.home": "Panel",
@@ -17,7 +17,7 @@
   "nav.checklist": "Checklista",
 
   "dash.title": "Dashboard",
-  "dash.subtitle": "Witaj w panelu DAM ETA",
+  "dash.subtitle": "Witaj w panelu DAM - Dobra Kaloria",
   "dash.card1_title": "Produkty",
   "dash.card1_sub": "Aktywne projekty opakowań",
   "dash.card2_title": "Zadania Asana",
@@ -208,7 +208,7 @@
   "messages.no_tasks": "Brak otwartych zadań",
   "messages.view_all": "Wszystkie zadania",
 
-  "auth.title": "Zaloguj sie do DAM ETA",
+  "auth.title": "Zaloguj sie do DAM",
   "auth.subtitle": "Konto firmowe Microsoft lub lokalne",
   "auth.email": "Email",
   "auth.password": "Hasło",
@@ -260,6 +260,6 @@
   "roles_human.photo": "Fotografia produktówa",
   "roles_human.packaging_text": "Teksty na opakowańie",
 
-  "footer.copyright": "DAM ETA - Panel assetów opakowań",
+  "footer.copyright": "DAM - Dobra Kaloria - Inyfinn",
   "footer.made_by": "inyfinn.art"
 }

@@ -1,5 +1,5 @@
 /**
- * DAM ETA - Ajax search over search-index.json + file-index.json
+ * DAM - Ajax search over search-index.json + file-index.json
  * - Prefix index match from 4 digits (6300...)
  * - Normalize 6300275 <-> 6300275.00
  * - Fuzzy suggestions when miss
@@ -11,6 +11,11 @@
   var searchIndex = null;
   var fileIndex = null;
   var loading = null;
+  /**
+   * Scope radio: all | products | variants.
+   * Wszystko = produkty+warianty; odklik Produkty/Warianty wraca do Wszystko.
+   */
+  var searchScope = { products: true, variants: true };
 
   function norm(s) {
     return String(s || "")
@@ -139,14 +144,142 @@
     return out.slice(0, 8);
   }
 
+  function getScope() {
+    return {
+      products: !!searchScope.products,
+      variants: !!searchScope.variants
+    };
+  }
+
+  /** @returns {"all"|"products"|"variants"} */
+  function getScopeMode() {
+    var sc = getScope();
+    if (sc.products && !sc.variants) return "products";
+    if (!sc.products && sc.variants) return "variants";
+    return "all";
+  }
+
+  function setScope(next) {
+    next = next || {};
+    if (typeof next.products === "boolean") searchScope.products = next.products;
+    if (typeof next.variants === "boolean") searchScope.variants = next.variants;
+    if (!searchScope.products && !searchScope.variants) {
+      searchScope.products = true;
+      searchScope.variants = true;
+    }
+    try {
+      localStorage.setItem(
+        "dam_search_scope",
+        JSON.stringify({
+          products: searchScope.products,
+          variants: searchScope.variants,
+          mode: getScopeMode()
+        })
+      );
+    } catch (e) { /* ignore */ }
+    return getScope();
+  }
+
+  function setScopeMode(mode) {
+    if (mode === "products") return setScope({ products: true, variants: false });
+    if (mode === "variants") return setScope({ products: false, variants: true });
+    return setScope({ products: true, variants: true });
+  }
+
+  function loadScopeFromStorage() {
+    try {
+      var raw = localStorage.getItem("dam_search_scope");
+      if (!raw) return;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return;
+      if (parsed.mode === "products" || parsed.mode === "variants" || parsed.mode === "all") {
+        setScopeMode(parsed.mode);
+        return;
+      }
+      setScope(parsed);
+    } catch (e) { /* ignore */ }
+  }
+  loadScopeFromStorage();
+
+  function revisionMatchesQuery(rev, nq, dig) {
+    if (!rev) return false;
+    var blob = norm(
+      [rev.index, rev.name, rev.folder, rev.path, rev.carrier, (rev.tags || []).join(" ")].join(" ")
+    );
+    if (nq && blob.indexOf(nq) !== -1) return true;
+    if (dig && dig.length >= 3) {
+      var idxDig = digitsOnly(rev.index || "");
+      if (idxDig && (idxDig.indexOf(dig) === 0 || dig.indexOf(idxDig) === 0)) return true;
+    }
+    return false;
+  }
+
+  function buildStructuredHits(products, nq, dig, scope) {
+    var hits = [];
+    (products || []).forEach(function (p) {
+      if (!p) return;
+      var pname = norm(p.display_name || p.name || "");
+      var pblob = norm(
+        [p.display_name, p.name, p.category, (p.indexes || []).join(" "), (p.tags || []).join(" ")].join(" ")
+      );
+      var productMatch =
+        !nq ||
+        pname.indexOf(nq) !== -1 ||
+        pblob.indexOf(nq) !== -1 ||
+        (dig && dig.length >= 3 && (p.indexes || []).some(function (ix) {
+          var d = digitsOnly(ix);
+          return d.indexOf(dig) === 0 || dig.indexOf(d) === 0 || String(ix).toLowerCase().indexOf(nq) !== -1;
+        }));
+      var matchingRevs = (p.revisions || []).filter(function (r) {
+        return revisionMatchesQuery(r, nq, dig);
+      });
+      /* Gdy brak dopasowania wariantu, a produkt pasuje - pokaz wszystkie latest jako kontekst opcjonalnie nie */
+      if (scope.products && productMatch) {
+        hits.push({
+          kind: "product",
+          product: p,
+          revision: null,
+          label: p.display_name || p.name,
+          meta: (p.category || "") + (p.indexes && p.indexes.length ? " · " + p.indexes.slice(0, 3).join(", ") : ""),
+          childCount: matchingRevs.length
+        });
+      }
+      if (scope.variants) {
+        var revsToShow = matchingRevs;
+        if (!revsToShow.length && productMatch && scope.products) {
+          /* Produkt trafiony, warianty z "test" w srodku - juz w matchingRevs; jesli puste, nie duplikuj */
+          revsToShow = [];
+        }
+        if (!scope.products && !revsToShow.length && productMatch) {
+          /* Tylko warianty: pokaz latest gdy produkt pasuje */
+          revsToShow = latestRevisions(p);
+        }
+        revsToShow.forEach(function (r) {
+          hits.push({
+            kind: "variant",
+            product: p,
+            revision: r,
+            label: r.index || r.name || "Wariant",
+            meta: (p.display_name || p.name || "") + (r.carrier ? " · " + r.carrier : ""),
+            nested: productMatch && scope.products
+          });
+        });
+      }
+    });
+    return hits;
+  }
+
   function search(query, opts) {
     opts = opts || {};
     var q = String(query || "").trim();
+    var scope = opts.scope ? Object.assign({}, getScope(), opts.scope) : getScope();
     if (!q) {
       return Promise.resolve({
         query: q,
         mode: "empty",
         products: [],
+        hits: [],
+        scope: scope,
         suggestions: [],
         message: null,
         tags: (searchIndex && searchIndex.by_tag) ? Object.keys(searchIndex.by_tag).slice(0, 40) : []
@@ -215,10 +348,22 @@
       } else {
         // Tag or text
         mode = "tag_or_text";
+        var assocIds = [];
+        var rev = searchIndex.association_reverse || {};
+        nq.split(/\s+/).forEach(function (tok) {
+          if (!tok) return;
+          (rev[tok] || []).forEach(function (id) {
+            assocIds.push(id);
+          });
+        });
+        assocIds = unique(assocIds);
         var tagHits = (searchIndex.by_tag && searchIndex.by_tag[nq]) || [];
         if (tagHits.length) {
           mode = "tag";
-          productIds = tagHits.slice();
+          productIds = unique(tagHits.concat(assocIds));
+        } else if (assocIds.length) {
+          mode = "association";
+          productIds = assocIds.slice();
         } else {
           // partial tag
           Object.keys(searchIndex.by_tag || {}).forEach(function (tag) {
@@ -240,13 +385,28 @@
         }
       }
 
+      /* Dolacz produkty, ktorych wariant pasuje do query (nawet gdy blob produktu nie) */
+      if (nq && fileIndex && fileIndex.products) {
+        fileIndex.products.forEach(function (p) {
+          if (!p || productIds.indexOf(p.id) !== -1) return;
+          var anyRev = (p.revisions || []).some(function (r) {
+            return revisionMatchesQuery(r, nq, dig);
+          });
+          if (anyRev) productIds.push(p.id);
+        });
+        productIds = unique(productIds);
+      }
+
       var products = productIds.map(productById).filter(Boolean);
       if (opts.limit) products = products.slice(0, opts.limit);
+      var hits = buildStructuredHits(products, nq, dig, scope);
 
       return {
         query: q,
         mode: mode,
         products: products,
+        hits: hits,
+        scope: scope,
         suggestions: suggestions,
         message: message,
         tags: Object.keys(searchIndex.by_tag || {}).slice(0, 60)
@@ -285,9 +445,93 @@
     return product.revisions || [];
   }
 
-  function bindSearchBox(inputEl, resultsEl, onSelect) {
+  /**
+   * Radio + odklik:
+   * - domyslnie Wszystko
+   * - klik Produkty/Warianty = tylko ten zakres
+   * - ponowny klik aktywnego Produkty/Warianty = Wszystko
+   * - klik Wszystko zawsze = Wszystko
+   * opts.locked = true (Wizualizacje): zawsze Wszystko, Produkty/Warianty wygaszone
+   */
+  function bindScopeChips(mountEl, onChange, opts) {
+    if (!mountEl) return;
+    opts = opts || {};
+    var locked = !!opts.locked;
+    /* locked: tylko UI (Wizualizacje) - nie nadpisuj localStorage scope z Eksplorera */
+
+    function paint() {
+      var mode = locked ? "all" : getScopeMode();
+      var disAttr = locked ? ' disabled aria-disabled="true"' : "";
+      var disCls = locked ? " is-disabled" : "";
+      mountEl.innerHTML =
+        '<div class="dam-search-scope" role="group" aria-label="Zakres wyszukiwania">' +
+        '<button type="button" class="dam-search-scope__btn' +
+        (mode === "all" ? " is-on" : "") +
+        '" data-scope="all" aria-pressed="' +
+        (mode === "all") +
+        '">Wszystko</button>' +
+        '<button type="button" class="dam-search-scope__btn' +
+        (mode === "products" ? " is-on" : "") +
+        disCls +
+        '" data-scope="products" aria-pressed="' +
+        (mode === "products") +
+        '"' +
+        disAttr +
+        ">Produkty</button>" +
+        '<button type="button" class="dam-search-scope__btn' +
+        (mode === "variants" ? " is-on" : "") +
+        disCls +
+        '" data-scope="variants" aria-pressed="' +
+        (mode === "variants") +
+        '"' +
+        disAttr +
+        ">Warianty</button>" +
+        "</div>";
+      if (locked) mountEl.classList.add("dam-search-scope-mount--locked");
+      else mountEl.classList.remove("dam-search-scope-mount--locked");
+
+      mountEl.querySelectorAll("[data-scope]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (locked) return;
+          var kind = this.getAttribute("data-scope");
+          var cur = getScopeMode();
+          if (kind === "all") {
+            setScopeMode("all");
+          } else if (kind === "products") {
+            setScopeMode(cur === "products" ? "all" : "products");
+          } else if (kind === "variants") {
+            setScopeMode(cur === "variants" ? "all" : "variants");
+          }
+          paint();
+          if (onChange) onChange(getScope());
+        });
+      });
+    }
+    paint();
+  }
+
+  function bindSearchBox(inputEl, resultsEl, onSelect, scopeEl, opts) {
     if (!inputEl) return;
+    opts = opts || {};
     var timer = null;
+    function runSearch() {
+      var q = inputEl.value;
+      return search(q, { limit: 30 }).then(render).catch(function (err) {
+        resultsEl.innerHTML = '<div class="dam-search-msg">Blad indeksu: ' + escapeHtml(err.message) + "</div>";
+        resultsEl.style.display = "block";
+      });
+    }
+    if (scopeEl) {
+      bindScopeChips(
+        scopeEl,
+        function () {
+          if (inputEl.value.trim()) runSearch();
+        },
+        opts
+      );
+    }
     function render(res) {
       if (!resultsEl) return;
       if (!res.query) {
@@ -308,7 +552,41 @@
         });
         html += "</ul>";
       }
-      if (res.products && res.products.length) {
+      var hits = res.hits || [];
+      if (hits.length) {
+        html += '<ul class="dam-search-hits">';
+        hits.slice(0, 40).forEach(function (h) {
+          var p = h.product || {};
+          var r = h.revision;
+          var cls = "dam-search-hit dam-search-hit--" + (h.kind || "product");
+          if (h.nested) cls += " dam-search-hit--nested";
+          var badge = h.kind === "variant" ? "Wariant" : "Produkt";
+          var focusIdx = r && r.index ? r.index : "";
+          html +=
+            '<li class="' +
+            cls +
+            '"><a href="#" data-pid="' +
+            escapeHtml(p.id || "") +
+            '"' +
+            (focusIdx ? ' data-suggest="' + escapeHtml(focusIdx) + '"' : "") +
+            ' data-hit-kind="' +
+            escapeHtml(h.kind || "product") +
+            '">' +
+            '<span class="dam-search-hit__badge">' +
+            escapeHtml(badge) +
+            "</span>" +
+            '<span class="dam-search-name">' +
+            escapeHtml(h.label || "") +
+            "</span>" +
+            '<span class="dam-search-meta">' +
+            escapeHtml(h.meta || "") +
+            (h.kind === "product" && h.childCount
+              ? " · " + h.childCount + " dopas. wariant" + (h.childCount === 1 ? "" : "y")
+              : "") +
+            "</span></a></li>";
+        });
+        html += "</ul>";
+      } else if (res.products && res.products.length) {
         html += '<ul class="dam-search-hits">';
         res.products.slice(0, 20).forEach(function (p) {
           var label = p.display_name || p.name;
@@ -338,13 +616,9 @@
     }
 
     inputEl.addEventListener("input", function () {
-      var q = inputEl.value;
       clearTimeout(timer);
       timer = setTimeout(function () {
-        search(q, { limit: 30 }).then(render).catch(function (err) {
-          resultsEl.innerHTML = '<div class="dam-search-msg">Blad indeksu: ' + escapeHtml(err.message) + "</div>";
-          resultsEl.style.display = "block";
-        });
+        runSearch();
       }, 120);
     });
 
@@ -355,9 +629,12 @@
     });
 
     document.addEventListener("click", function (e) {
-      if (!resultsEl.contains(e.target) && e.target !== inputEl) {
-        resultsEl.style.display = "none";
-      }
+      if (!resultsEl || !resultsEl.contains) return;
+      var wrap = inputEl.closest ? inputEl.closest(".dam-search-wrap") : null;
+      if (resultsEl.contains(e.target)) return;
+      if (e.target === inputEl) return;
+      if (wrap && wrap.contains(e.target)) return;
+      resultsEl.style.display = "none";
     });
   }
 
@@ -374,6 +651,11 @@
     reload: reload,
     search: search,
     bindSearchBox: bindSearchBox,
+    bindScopeChips: bindScopeChips,
+    getScope: getScope,
+    setScope: setScope,
+    getScopeMode: getScopeMode,
+    setScopeMode: setScopeMode,
     productById: productById,
     latestRevisions: latestRevisions,
     suggestIndexes: suggestIndexes

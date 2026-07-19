@@ -1,7 +1,7 @@
 """
-DAM ETA - lokalna aplikacja desktop (pywebview + WebView2).
+DAM - Dobra Kaloria - Inyfinn - lokalna aplikacja desktop (pywebview + WebView2).
 
-Uruchomienie: dwuklik skrotu "DAM ETA" na pulpicie albo:
+Uruchomienie: dwuklik skrotu na pulpicie albo:
   pythonw apps/desktop/launch.py
 
 Nie wymaga recznego otwierania przegladarki ani wklejania adresow URL.
@@ -209,7 +209,7 @@ def acquire_single_instance() -> bool:
             pass
         win_message(
             APP_TITLE,
-            "DAM ETA wyglada na uruchomiony, ale okno nie jest widoczne.\n\n"
+            "DAM wyglada na uruchomiony, ale okno nie jest widoczne.\n\n"
             f"Usunieto zombie procesow: {killed}.\n"
             "Zamknij pythonw w Menedzerze zadan albo uruchom ponownie skrot.",
         )
@@ -311,7 +311,7 @@ def require_pywebview():
             "Brak biblioteki pywebview.\n\n"
             "Zainstaluj zaleznosci desktop:\n"
             "  pip install -r apps/desktop/requirements.txt\n\n"
-            "Potem uruchom ponownie skrot DAM ETA.",
+            "Potem uruchom ponownie skrot DAM.",
         )
         raise SystemExit(1)
 
@@ -361,13 +361,7 @@ class DamJsApi:
     def __init__(self) -> None:
         self._restart_scheduled = False
 
-    def pick_thumb(self, directory: str = "") -> dict:
-        """Natywny dialog wyboru pliku obrazu (miniatura) w folderze produktu."""
-        try:
-            import webview  # type: ignore
-        except Exception as exc:
-            return {"ok": False, "error": str(exc)}
-
+    def _start_dir(self, directory: str = "") -> str:
         start_dir = (directory or "").strip()
         if start_dir and not os.path.isdir(start_dir):
             parent = os.path.dirname(start_dir)
@@ -375,7 +369,16 @@ class DamJsApi:
                 start_dir = parent
             else:
                 start_dir = ""
+        return start_dir
 
+    def pick_thumb(self, directory: str = "") -> dict:
+        """Natywny dialog wyboru pliku obrazu (miniatura) w folderze produktu."""
+        try:
+            import webview  # type: ignore
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+
+        start_dir = self._start_dir(directory)
         windows = list(getattr(webview, "windows", []) or [])
         if not windows:
             return {"ok": False, "error": "no_window"}
@@ -406,6 +409,99 @@ class DamJsApi:
             "file": os.path.basename(path),
         }
 
+    def pick_folder(self, directory: str = "") -> dict:
+        """Natywny dialog Windows: wskaz folder (Marketing / sciezka bazowa)."""
+        try:
+            import webview  # type: ignore
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+
+        start_dir = self._start_dir(directory)
+        # #region agent log
+        try:
+            import json as _json
+            import time as _time
+            from pathlib import Path as _Path
+
+            _log = _Path(__file__).resolve().parents[2] / "debug-a78fa0.log"
+            with open(_log, "a", encoding="utf-8") as _f:
+                _f.write(
+                    _json.dumps(
+                        {
+                            "sessionId": "a78fa0",
+                            "hypothesisId": "D",
+                            "location": "launch.py:pick_folder",
+                            "message": "folder dialog start",
+                            "data": {
+                                "requested": (directory or "")[:120],
+                                "start_dir": (start_dir or "")[:120],
+                                "start_empty": not bool(start_dir),
+                            },
+                            "timestamp": int(_time.time() * 1000),
+                            "runId": "pre-fix",
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+        # #endregion
+        windows = list(getattr(webview, "windows", []) or [])
+        if not windows:
+            return {"ok": False, "error": "no_window"}
+        win = windows[0]
+        try:
+            result = win.create_file_dialog(
+                webview.FOLDER_DIALOG,
+                directory=start_dir or None,
+                allow_multiple=False,
+            )
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+
+        if not result:
+            return {"ok": False, "cancelled": True}
+        path = result[0] if isinstance(result, (list, tuple)) else result
+        path = str(path or "").strip()
+        if not path or not os.path.isdir(path):
+            return {"ok": False, "cancelled": True}
+        # #region agent log
+        try:
+            import json as _json
+            import time as _time
+            from pathlib import Path as _Path
+
+            _log = _Path(__file__).resolve().parents[2] / "debug-a78fa0.log"
+            with open(_log, "a", encoding="utf-8") as _f:
+                _f.write(
+                    _json.dumps(
+                        {
+                            "sessionId": "a78fa0",
+                            "hypothesisId": "D",
+                            "location": "launch.py:pick_folder:result",
+                            "message": "folder dialog result",
+                            "data": {
+                                "picked_tail": path[-90:],
+                                "is_documents": ("Dokumenty" in path) or ("Documents" in path),
+                                "is_marketing": "Marketing" in path,
+                            },
+                            "timestamp": int(_time.time() * 1000),
+                            "runId": "pre-fix",
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+        # #endregion
+        return {
+            "ok": True,
+            "path": path.replace("/", "\\"),
+            "folder": os.path.basename(path.rstrip("\\/")) or path,
+        }
+
     def restart_window(self) -> dict:
         if self._restart_scheduled:
             return {"ok": True, "status": "already_scheduled"}
@@ -430,6 +526,56 @@ class DamJsApi:
 
         threading.Thread(target=_close, daemon=True).start()
         return {"ok": True, "status": "restarting"}
+
+
+def preferred_window_size() -> tuple[int, int]:
+    """Szerokie okno startowe: UI miesci sie bez scrolla poziomego."""
+    width, height = 1680, 1000
+    if sys.platform == "win32":
+        try:
+            import ctypes
+
+            user32 = ctypes.windll.user32
+            sw = int(user32.GetSystemMetrics(0) or 0)  # SM_CXSCREEN
+            sh = int(user32.GetSystemMetrics(1) or 0)  # SM_CYSCREEN
+            if sw > 0 and sh > 0:
+                # ~92% szerokosci / ~88% wysokosci, z buforem na taskbar
+                width = max(1480, min(1920, int(sw * 0.92)))
+                height = max(900, min(1200, int(sh * 0.88)))
+        except Exception:
+            pass
+    return width, height
+
+
+def apply_native_window_icon(icon_path: str) -> None:
+    """Ustaw ikone tytulu/taskbara przez WM_SETICON (fallback gdy pythonw)."""
+    if sys.platform != "win32" or not icon_path or not os.path.isfile(icon_path):
+        return
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        IMAGE_ICON = 1
+        LR_LOADFROMFILE = 0x0010
+        LR_DEFAULTSIZE = 0x0040
+        WM_SETICON = 0x0080
+        ICON_SMALL = 0
+        ICON_BIG = 1
+
+        hicon = user32.LoadImageW(
+            None, icon_path, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE
+        )
+        if not hicon:
+            return
+
+        hwnd = _find_app_hwnd()
+        if not hwnd:
+            return
+        user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, hicon)
+        user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, hicon)
+    except Exception:
+        pass
 
 
 def verify_machine_before_start() -> dict:
@@ -497,13 +643,14 @@ def main() -> None:
     webview = require_pywebview()
     icon_path = str(ICON) if ICON.is_file() else None
     js_api = DamJsApi()
+    win_w, win_h = preferred_window_size()
 
     window = webview.create_window(
         APP_TITLE,
         start_url,
-        width=1360,
-        height=900,
-        min_size=(960, 640),
+        width=win_w,
+        height=win_h,
+        min_size=(1400, 800),
         text_select=True,
         js_api=js_api,
     )
@@ -513,24 +660,51 @@ def main() -> None:
         except Exception:
             pass
 
+    def _on_shown() -> None:
+        # WinForms bierze ikone z webview.start(icon=...); WM_SETICON to pas bezpieczeństwa.
+        if icon_path:
+            apply_native_window_icon(icon_path)
+
+    try:
+        window.events.shown += _on_shown
+    except Exception:
+        pass
+
     # Profil WebView2 trwaly (nie nowy folder tymczasowy przy KAZDYM starcie).
     # Domyslnie pywebview tworzy folder w %TEMP% i usuwa go po zamknieciu -
     # to oznacza "cold start" (zero cache) przy kazdym uruchomieniu aplikacji.
     webview_profile = DESKTOP_DIR / "data" / "webview2-profile"
     webview_profile.mkdir(parents=True, exist_ok=True)
 
+    start_kwargs = {
+        "gui": "edgechromium",
+        "debug": False,
+        "private_mode": False,
+        "storage_path": str(webview_profile),
+    }
+    if icon_path:
+        start_kwargs["icon"] = icon_path
+
     try:
-        webview.start(
-            gui="edgechromium",
-            debug=False,
-            private_mode=False,
-            storage_path=str(webview_profile),
-        )
+        webview.start(**start_kwargs)
     except TypeError:
+        # Starsze pywebview bez icon=/storage_path
         try:
-            webview.start(gui="edgechromium", debug=False)
+            webview.start(
+                gui="edgechromium",
+                debug=False,
+                icon=icon_path if icon_path else None,
+            )
         except TypeError:
-            webview.start(debug=False)
+            try:
+                webview.start(gui="edgechromium", debug=False)
+            except TypeError:
+                webview.start(debug=False)
+        if icon_path:
+            threading.Thread(
+                target=lambda: (time.sleep(0.6), apply_native_window_icon(icon_path)),
+                daemon=True,
+            ).start()
     except Exception as exc:
         win_message(
             APP_TITLE,

@@ -614,9 +614,9 @@
       ">" +
       winIcon +
       "</button>" +
-      '<a class="dam-viz-icon-btn" href="' +
+      '<a class="dam-viz-icon-btn dam-viz-icon-btn--viz" href="' +
       esc(vizHref) +
-      '" title="Wizualizacje" aria-label="Wizualizacje" data-dam-tip="Otwórz wizualizacje produktu">' +
+      '" title="Wizualizacje" aria-label="Wizualizacje" data-dam-tip="Otwórz wizualizacje produktu" data-dam-action="open-viz">' +
       '<i class="uil uil-image" aria-hidden="true"></i></a>' +
       "</div>"
     );
@@ -729,7 +729,10 @@
     var expanded = !!opts.expanded;
     var name = it.product_name || it.product_id || "Produkt bez nazwy";
     var pid = it.product_id || "";
-    var path = it.path || it.revision_path || "";
+    var path =
+      window.DamPaths && typeof window.DamPaths.resolveWinFolderPath === "function"
+        ? window.DamPaths.resolveWinFolderPath(it)
+        : it.path || it.revision_path || "";
     var title = String(it.title || "");
     var nameRedundant =
       title.indexOf(name) === 0 ||

@@ -5,7 +5,7 @@ launchPy = desktopDir & "\launch.py"
 logFile = desktopDir & "\launch-last-error.txt"
 
 If Not fso.FileExists(launchPy) Then
-  MsgBox "Nie znaleziono launch.py w " & desktopDir, vbCritical, "DAM ETA"
+  MsgBox "Nie znaleziono launch.py w " & desktopDir, vbCritical, "DAM - Dobra Kaloria - Inyfinn"
   WScript.Quit 1
 End If
 
@@ -46,7 +46,7 @@ If pythonw = "" Then
       WriteLog "Nie znaleziono pythonw/python. Zainstaluj Python 3 i dodaj do PATH."
       MsgBox "Nie znaleziono Python (pythonw)." & vbCrLf & vbCrLf & _
              "Zainstaluj Python 3 albo sprawdz PATH." & vbCrLf & _
-             "Log: " & logFile, vbCritical, "DAM ETA"
+             "Log: " & logFile, vbCritical, "DAM - Dobra Kaloria - Inyfinn"
       WScript.Quit 1
     End If
   End If
@@ -55,8 +55,8 @@ Else
   If Err.Number <> 0 Then
     WriteLog "Blad uruchomienia: " & Err.Description & " (" & Err.Number & ")" & vbCrLf & _
              "Cmd: " & pythonw & " " & launchPy
-    MsgBox "Nie udalo sie uruchomic DAM ETA." & vbCrLf & vbCrLf & _
-           Err.Description & vbCrLf & "Log: " & logFile, vbCritical, "DAM ETA"
+    MsgBox "Nie udalo sie uruchomic DAM - Dobra Kaloria - Inyfinn." & vbCrLf & vbCrLf & _
+           Err.Description & vbCrLf & "Log: " & logFile, vbCritical, "DAM - Dobra Kaloria - Inyfinn"
     WScript.Quit 1
   End If
 End If

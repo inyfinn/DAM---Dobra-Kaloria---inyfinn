@@ -908,76 +908,28 @@ h2.geex-content__header__title.dam-project-title--light,
   color: #d64542;
 }
 
-/* Projekty: toolbar wyszukiwania - jeden rzad, czytelny search, zwarte akcje */
+/* Projekty: toolbar = sam search (pelna szerokosc, jak Viz / Eksplorer) */
 .dam-explorer-toolbar.dam-projects-toolbar {
   margin-bottom: 0.35rem;
-  gap: 14px;
+  gap: 0;
   align-items: center;
   flex-wrap: nowrap;
 }
 
 .dam-explorer-toolbar.dam-projects-toolbar .dam-search-wrap {
   flex: 1 1 auto;
-  min-width: 240px;
-  max-width: none !important; /* nadpisuje global 520px - bez martwej dziury */
-}
-
-.dam-projects-toolbar .dam-search-input {
-  min-height: 44px;
-  font-size: 14px !important;
-  border-color: rgba(171, 84, 219, 0.32) !important;
-  background: #faf8fc !important;
-}
-
-.dam-projects-toolbar .dam-search-input:focus {
-  border-color: #ab54db !important;
-  background: #fff !important;
-}
-
-.dam-projects-toolbar .dam-search-input-wrap .uil-search {
-  color: #ab54db;
-  font-size: 20px;
-}
-
-.dam-projects-toolbar .dam-explorer-toolbar__actions {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 10px;
-  flex: 0 0 auto;
-  margin-left: auto;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
 }
 
 .dam-projects-status-line {
-  margin: 2px 0 6px;
-  padding: 0 2px;
+  margin: 0;
+  padding: 0;
   font-size: 12.5px;
   font-weight: 500;
   color: #6b6d78;
   line-height: 1.3;
-}
-
-.dam-projects-toolbar .geex-btn {
-  min-height: 44px;
-  padding: 0 14px;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-@media (max-width: 1100px) {
-  .dam-explorer-toolbar.dam-projects-toolbar {
-    flex-wrap: wrap;
-  }
-  .dam-projects-toolbar .dam-search-wrap {
-    flex: 1 1 100%;
-    max-width: none;
-  }
-  .dam-projects-toolbar .dam-explorer-toolbar__actions {
-    margin-left: 0;
-    width: 100%;
-    justify-content: flex-end;
-  }
 }
 
 .dam-checklist-row {

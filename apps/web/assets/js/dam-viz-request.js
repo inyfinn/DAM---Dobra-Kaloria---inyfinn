@@ -1,5 +1,5 @@
 /**
- * DAM ETA - "Zglos zapotrzebowanie" (Faza 5/6, 2026-07-18, P10).
+ * DAM - "Zglos zapotrzebowanie" (Faza 5/6, 2026-07-18, P10).
  * Modal z checkboxami kanalow (Email/Teams/Asana/W aplikacji) +
  * Wszystko/Wyczysc/Odwroc + Anuluj/Wyslij. Zapamietuje ostatni wybor.
  * Wpis w panelu (w aplikacji) tworzony ZAWSZE - patrz local_bridge /viz-request.
