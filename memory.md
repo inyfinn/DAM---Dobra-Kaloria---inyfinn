@@ -921,7 +921,8 @@ ole=admin.
  - Gradient `.dam-gradient-tile--editable/--vector`: od dolu, kończy się koło nazwy, start ~30% bardziej przezroczysty.
 
 123. **Bento v2.0.0 (2026-07-19) - HARD:**
- - Wersja: `2.0.0` codename `bento` (`version.json` + `dam-version.js` + `runtime_config.py`).
+ - Wersja bazowa: `2.0.0` codename `bento` (`version.json` + `dam-version.js` + `runtime_config.py`).
+ - Patch po każdej dostawie: `2.0.1` modal, `2.0.2` cache branding/bridge, `2.0.3` integracje OAuth.
  - Wspólny CSS: `apps/web/assets/css/dam-bento.css` (gap 16px, radius token, page chrome + explorer).
  - **Zamrożone wizualnie:** `.dam-viz-card`, `.dam-branding-card`, `.dam-project-card`, modale `#damMediaPreview` / viz modal - nie restylować; zachowanie 1:1.
  - **Hot zone Eksplorer:** `.dam-explorer-layout` (nie Bootstrap row); `.dam-carrier-toggle-row` = CSS Grid stref (title/chips/life/end); `.dam-prod-row` = te same strefy.

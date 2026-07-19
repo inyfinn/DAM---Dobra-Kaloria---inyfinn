@@ -3811,3 +3811,28 @@ User: (1) modal zoom 85–100% zamiast 85–125%, body modala wyrównane do doł
 - `local_bridge.py` `_JSON_FILE_CACHE`, `_save_json`
 - User brief: cache invalidation przed aktualizacją bazy
 
+---
+
+## 2026-07-19 — Integracje OAuth (hub) + wersja 2.0.3
+
+### Komenda/Akcja
+User: „Umożliw Integracje” — strona `integrations.html` miała statyczne stuby; OAuth działał tylko w `settings.html`. Commit + push; podbić wersję patch (+0.0.1 na każdą dostawę od 2.0.0).
+
+### Log/Status
+1. **`dam-integrations.js`:** wspólny moduł OAuth (Asana, Microsoft), karty infrastruktury (Entra/LDAP), Synology; `mount()` z auth headers.
+2. **`integrations.html`:** pełny shell DAM (jak branding), sekcje Logowanie + OAuth z **Zaloguj/Odłącz**, kolejka wykrojników bez zmian.
+3. **`dam-settings.js`:** delegacja do `DamIntegrations.mount()`.
+4. **`local_bridge.py`:** OAuth callback → `integrations.html#damIntegrationsOAuth`.
+5. Fix: `/integrations/status` wymaga sesji — fetch z `authHeaders()`; fallback gdy `login_required`.
+6. **Wersja:** `2.0.0` Bento → `2.0.1` modal zoom/layout (cadefaf) → `2.0.2` cache tagów + bridge invalidation (cadefaf) → **`2.0.3`** integracje.
+
+### Efekt/Fix
+- Integracje: live status z bridge, przyciski OAuth (disabled bez credentials w `dam-connection.env`).
+- Wersja spójna: `version.json`, `dam-version.js`, `runtime_config.py`, cache bust `?v=2.0.3` w HTML.
+
+### Test/Ewaluacja
+- Screenshot→Read `integrations.html`: sekcja OAuth (Asana, Microsoft), Zaloguj, brak etykiet „Stub”.
+
+### Źródła
+- `oauth_integrations.py`, `dam-settings.js` (poprzedni `loadIntegrations`)
+

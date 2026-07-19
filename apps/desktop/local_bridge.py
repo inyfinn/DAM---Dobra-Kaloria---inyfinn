@@ -3522,15 +3522,16 @@ class Handler(BaseHTTPRequestHandler):
             state = (qs.get("state") or [""])[0]
             err = (qs.get("error") or [""])[0]
             ui_origin = (CORS_ORIGIN or "http://127.0.0.1:8765").rstrip("/")
-            settings_url = ui_origin + "/settings.html"
-            settings_hash = settings_url + "#damIntegrations"
+            integrations_url = ui_origin + "/integrations.html"
+            integrations_hash = integrations_url + "#damIntegrationsOAuth"
+            settings_url = ui_origin + "/settings.html#damIntegrations"
             if err:
                 safe_err = _html.escape(str(err)[:500])
-                safe_settings = _html.escape(settings_url)
+                safe_integrations = _html.escape(integrations_hash)
                 page = (
                     "<!doctype html><meta charset=utf-8><title>OAuth</title>"
                     f"<h1>Logowanie przerwane</h1><p>{safe_err}</p>"
-                    f'<p><a href="{safe_settings}">Wroc do Ustawien</a></p>'
+                    f'<p><a href="{safe_integrations}">Wroc do Integracji</a></p>'
                 )
                 self._bytes(400, page.encode("utf-8"), "text/html; charset=utf-8")
                 return
@@ -3538,14 +3539,15 @@ class Handler(BaseHTTPRequestHandler):
             ok = result.get("ok")
             safe_provider = _html.escape(str(result.get("provider") or "")[:120])
             safe_msg = _html.escape(str(result.get("error") or "OK")[:500])
-            safe_hash = _html.escape(settings_hash)
+            safe_integrations = _html.escape(integrations_hash)
+            safe_settings = _html.escape(settings_url)
             page = (
                 "<!doctype html><meta charset=utf-8><title>OAuth</title>"
                 f"<h1>{'Polaczono' if ok else 'Blad OAuth'}</h1>"
                 f"<p>{safe_provider} - {safe_msg}</p>"
-                f'<p><a href="{safe_hash}">'
-                "Wroc do Ustawien / Integracje</a></p>"
-                f"<script>setTimeout(function(){{location.href={json.dumps(settings_hash)}}},1500)</script>"
+                f'<p><a href="{safe_integrations}">Wroc do Integracji</a>'
+                f' · <a href="{safe_settings}">Ustawienia</a></p>"
+                f"<script>setTimeout(function(){{location.href={json.dumps(integrations_hash)}}},1500)</script>"
             )
             self._bytes(200 if ok else 400, page.encode("utf-8"), "text/html; charset=utf-8")
             return

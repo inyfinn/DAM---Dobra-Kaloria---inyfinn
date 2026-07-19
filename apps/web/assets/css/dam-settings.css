@@ -723,6 +723,40 @@
 .dam-int-st--wait { color: var(--dam-text-muted, #8b8d97); }
 .dam-int-st--plan { color: #b45309; }
 
+.dam-int-section {
+  margin-bottom: 28px;
+}
+.dam-int-section__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dam-text, #464255);
+  margin: 0 0 14px;
+}
+.dam-integrations-page {
+  margin-bottom: 8px;
+}
+.dam-int-queue-wrap {
+  margin-top: 8px;
+}
+.dam-int-auth-warn {
+  font-size: 13px;
+  color: #b45309;
+  background: rgba(180, 83, 9, 0.08);
+  border: 1px solid rgba(180, 83, 9, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 0 0 16px;
+  line-height: 1.45;
+}
+.dam-int-auth-warn a {
+  font-weight: 600;
+}
+.dam-wykrojnik-queue__subhead {
+  font-size: 14px;
+  margin: 16px 0 8px;
+  font-weight: 600;
+}
+
 /* Notifications */
 .dam-notify-toolbar {
   display: flex;
