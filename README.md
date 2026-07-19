@@ -228,6 +228,7 @@ Szczegoly: [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md).
 - **Wykrojniki:** rejestr XLSX, koszty w `build-project-costs.py`, kolejka mapowan (API)
 - **Dashboard:** widget `branding_latest`; **Pomoc:** slownik branding w `help.html`
 - Dokumentacja: [`docs/BRANDING-HUB.md`](docs/BRANDING-HUB.md)
+- **QA:** `scripts/ops/smoke-branding-hub.ps1`, bridge `api_version` w `/health`
 
 ## Changelog (2026-07-18)
 

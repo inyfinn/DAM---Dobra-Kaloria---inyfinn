@@ -76,6 +76,9 @@ Thumbs.db
 .vscode/
 *.swp
 
+# Agent / debug logs (lokalne, nie commitowac)
+debug-*.log
+
 # Build / Python
 __pycache__/
 *.pyc

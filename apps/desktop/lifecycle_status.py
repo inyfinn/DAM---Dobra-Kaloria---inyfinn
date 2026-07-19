@@ -1689,6 +1689,14 @@ def force_apply_program_to_disk(
     planned: list[dict] = []
     results: list[dict] = []
 
+    index_paths: dict[tuple[str, str], str] = {}
+    index_product_paths: dict[str, str] = {}
+    for ent in _iter_index_entities(index, product_id_filter=product_id_filter):
+        if ent["scope"] == "product":
+            index_product_paths[ent["product_id"]] = ent["path"]
+        elif ent["scope"] == "variant" and ent.get("revision_index"):
+            index_paths[(ent["product_id"], ent["revision_index"])] = ent["path"]
+
     # Zbierz cele z store + uzupelnij sciezki z indeksu
     targets: list[dict] = []
     for pid, prow in (store.get("products") or {}).items():
@@ -1724,9 +1732,23 @@ def force_apply_program_to_disk(
         )
 
     # Jesli store pusty dla filtra - uzyj indeksu z literka ze store local? skip
-    # Uzupelnij path z indeksu gdy brak
+    # Uzupelnij path z indeksu gdy brak lub gdy indeks ma swiezsza sciezke dyskowa
     by_pid = {e["product_id"]: e for e in _iter_index_entities(index, product_id_filter=product_id_filter) if e["scope"] == "product"}
     for t in targets:
+        if t["scope"] == "product":
+            ip = index_product_paths.get(t["product_id"] or "")
+            if ip:
+                t["path"] = ip
+            elif not t["path"] and t["product_id"] in by_pid:
+                t["path"] = by_pid[t["product_id"]]["path"]
+        elif t["scope"] == "variant":
+            ip = index_paths.get((t["product_id"] or "", t.get("revision_index") or ""))
+            if ip:
+                t["path"] = ip
+                idx_lit = _norm_letter(status_letter_of(Path(ip).name))
+                if idx_lit and not t["letter"]:
+                    t["letter"] = idx_lit
+                    t["status"] = LETTER_STATUS.get(idx_lit, "clear")
         if not t["path"] and t["scope"] == "product" and t["product_id"] in by_pid:
             t["path"] = by_pid[t["product_id"]]["path"]
         disk_path = _resolve_entity_path(t["path"]) if t["path"] else None

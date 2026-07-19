@@ -592,6 +592,51 @@
       }
       return data || { ok: false, error: "rehydrate_failed" };
     },
+    /** Sesja bridge przed zapisem F/X/D, odswiezaniem indeksu itd. */
+    async ensureSession() {
+      var t = token();
+      if (!t || t === "demo-admin-dev-token" || t === "qa") {
+        var rh = await this.rehydrate();
+        if (rh && rh.ok && rh.token) return rh;
+        return { ok: false, error: "login_required" };
+      }
+      try {
+        var ident = await fetchIdentity();
+        var url =
+          bridgeAuthUrl() +
+          "/auth/me?device_id=" +
+          encodeURIComponent((ident && ident.device_id) || deviceId()) +
+          "&machine_id=" +
+          encodeURIComponent((ident && ident.machine_id) || machineId());
+        var r = await fetch(url, { headers: authHeaders() });
+        var data = await r.json();
+        if (data && data.ok && data.user) {
+          persistSession({
+            token: t,
+            device_id: data.device_id,
+            machine_id: data.machine_id,
+            session_id: data.session_id,
+            user: data.user,
+          });
+          return { ok: true, user: data.user, token: t };
+        }
+        if (
+          data &&
+          (data.error === "invalid_session" ||
+            data.error === "no_token" ||
+            data.error === "login_required")
+        ) {
+          var rh2 = await this.rehydrate();
+          if (rh2 && rh2.ok && rh2.token) return rh2;
+          return { ok: false, error: data.error || "login_required" };
+        }
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        /* Offline: zostaw lokalny token jesli jest */
+        return { ok: true, token: t, offline: true };
+      }
+      return { ok: true, token: t };
+    },
     async me() {
       try {
         var ident = await fetchIdentity();

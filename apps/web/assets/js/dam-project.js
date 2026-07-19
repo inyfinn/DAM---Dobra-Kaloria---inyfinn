@@ -186,11 +186,19 @@
       bulk = await fetchJsonLocal("data/bulk-packaging.json");
     } catch (e2) { /* optional */ }
     try {
+      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      var timer = ctrl
+        ? setTimeout(function () {
+            ctrl.abort();
+          }, 4000)
+        : null;
       var pr = await fetch(bridgeUrl() + "/product-price?product_id=" + encodeURIComponent(productId), {
         cache: "no-store",
+        signal: ctrl ? ctrl.signal : undefined,
       });
+      if (timer) clearTimeout(timer);
       if (pr.ok) price = await pr.json();
-    } catch (e3) { /* bridge offline */ }
+    } catch (e3) { /* bridge offline / timeout */ }
     var entry = catalog && catalog.products ? catalog.products[productId] : null;
     var packLabel = "";
     if (entry && entry.bulk_packaging_ref && bulk && bulk.packs) {

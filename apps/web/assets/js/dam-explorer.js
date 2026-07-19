@@ -994,6 +994,52 @@
     return h;
   }
 
+  function hasBridgeToken() {
+    var tok =
+      (window.DamApi && typeof window.DamApi.token === "function" && window.DamApi.token()) ||
+      localStorage.getItem("dam_token") ||
+      "";
+    return !!(tok && tok !== "demo-admin-dev-token" && tok !== "qa");
+  }
+
+  /** Sesja mostu (rehydrate) przed zapisem F/X/D i odswiezaniem z dysku. */
+  function ensureBridgeSession() {
+    if (window.DamApi && typeof window.DamApi.ensureSession === "function") {
+      return window.DamApi.ensureSession();
+    }
+    if (hasBridgeToken()) return Promise.resolve({ ok: true });
+    return Promise.resolve({ ok: false, error: "login_required" });
+  }
+
+  function showSessionRequiredToast(errCode) {
+    var code = String(errCode || "login_required");
+    var hint =
+      code === "admin_required"
+        ? "Tylko admin może zapisywać F/X/D na dysku."
+        : "Sesja wygasła — zaloguj się ponownie (profil w prawym górnym rogu), potem włącz ADMIN.";
+    showToast(hint, "error");
+  }
+
+  function bridgeFetchJson(url, opts) {
+    opts = opts || {};
+    var method = opts.method || "GET";
+    var body = opts.body;
+    return ensureBridgeSession().then(function (sess) {
+      if (!sess || !sess.ok) {
+        return { http: 401, data: { ok: false, error: (sess && sess.error) || "login_required" } };
+      }
+      return fetch(url, {
+        method: method,
+        headers: authHeaders(),
+        body: body
+      }).then(function (r) {
+        return r.json().then(function (data) {
+          return { http: r.status, data: data };
+        });
+      });
+    });
+  }
+
   function getProductStatus(product) {
     if (!product) return "clear";
     /* DYSK najpierw - nazwa folderu produktu */
@@ -1180,6 +1226,15 @@
       showToast("Włącz tryb admina, aby zmieniać statusy F/X/D", "error");
       return Promise.resolve({ ok: false });
     }
+    if (!hasBridgeToken()) {
+      return ensureBridgeSession().then(function (sess) {
+        if (!sess || !sess.ok) {
+          showSessionRequiredToast((sess && sess.error) || "login_required");
+          return { ok: false, error: "login_required" };
+        }
+        return applyLifecycleStatusNow(opts);
+      });
+    }
     // #region agent log
     fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
       method: "POST",
@@ -1219,20 +1274,18 @@
       return Promise.resolve({ ok: false });
     }
     showToast("Zapisuję status na dysku…", "info");
-    return fetch(bridgeUrl() + "/lifecycle-status", {
+    return bridgeFetchJson(bridgeUrl() + "/lifecycle-status", {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify(body)
     })
-      .then(function (r) {
-        return r.json().then(function (data) {
-          return { http: r.status, data: data };
-        });
-      })
       .then(function (res) {
         if (!res.data || !res.data.ok) {
           var err = (res.data && res.data.error) || "lifecycle-status";
           var hint = (res.data && res.data.hint) || "";
+          if (err === "login_required" || err === "admin_required" || res.http === 401 || res.http === 403) {
+            showSessionRequiredToast(err);
+            return res.data || { ok: false, error: err };
+          }
           if (err === "product_f_requires_variant_f") {
             showToast(
               hint ||
@@ -3771,11 +3824,23 @@
     }
     return fetch(bridgeUrl() + "/lifecycle-status", { headers: authHeaders() })
       .then(function (r) {
+        if (r.status === 401 || r.status === 403) throw new Error("bridge_lifecycle_auth");
         if (!r.ok) throw new Error("bridge_lifecycle_" + r.status);
         return r.json();
       })
       .then(applyLifecyclePayload)
       .catch(function () {
+        return ensureBridgeSession()
+          .then(function (sess) {
+            if (!sess || !sess.ok) throw new Error("bridge_lifecycle_auth");
+            return fetch(bridgeUrl() + "/lifecycle-status", { headers: authHeaders() });
+          })
+          .then(function (r) {
+            if (!r.ok) throw new Error("bridge_lifecycle_" + r.status);
+            return r.json();
+          })
+          .then(applyLifecyclePayload)
+          .catch(function () {
         /* Smoke/static server: czytaj plik JSON bez mostu */
         return fetch("data/lifecycle-status.json?v=" + Date.now())
           .then(function (r) {
@@ -3978,27 +4043,28 @@
 
   /** Most: pull dysk->program (bez FS rename). Fallback: lokalny sync z indeksu. */
   function pullLifecycleFromBridge() {
-    return fetch(bridgeUrl() + "/lifecycle-reconcile?mode=pull", { headers: authHeaders() })
-      .then(function (r) {
-        if (!r.ok) throw new Error("reconcile_" + r.status);
-        return r.json();
-      })
-      .then(function (data) {
-        if (!data || !data.ok) throw new Error((data && data.error) || "reconcile_failed");
-        return data;
+    return bridgeFetchJson(bridgeUrl() + "/lifecycle-reconcile?mode=pull")
+      .then(function (res) {
+        if (!res.data || !res.data.ok) {
+          if (res.http === 401 || res.http === 403 || (res.data && res.data.error === "login_required")) {
+            throw new Error("login_required");
+          }
+          throw new Error((res.data && res.data.error) || "reconcile_failed");
+        }
+        return res.data;
       });
   }
 
   function bootLifecycleReconcile() {
     if (state._lifecycleBootDone) return Promise.resolve(null);
     state._lifecycleBootDone = true;
-    return fetch(bridgeUrl() + "/lifecycle-reconcile?mode=boot", { headers: authHeaders() })
-      .then(function (r) {
-        if (!r.ok) throw new Error("boot_" + r.status);
-        return r.json();
-      })
-      .then(function (data) {
-        if (!data || !data.ok) return data;
+    return bridgeFetchJson(bridgeUrl() + "/lifecycle-reconcile?mode=boot")
+      .then(function (res) {
+        if (!res.data || !res.data.ok) {
+          if (res.http === 401 || res.http === 403) return null;
+          return null;
+        }
+        var data = res.data;
         var nDisk = (data.disk_wins || []).length;
         var nProg = (data.program_wins || []).length;
         var nEnf = (data.enforced || []).length;
@@ -4039,6 +4105,15 @@
       showToast("Włącz tryb admina, aby stosować zmiany na dysku.", "error");
       return Promise.resolve({ ok: false });
     }
+    if (!hasBridgeToken()) {
+      return ensureBridgeSession().then(function (sess) {
+        if (!sess || !sess.ok) {
+          showSessionRequiredToast((sess && sess.error) || "login_required");
+          return { ok: false, error: "login_required" };
+        }
+        return forceApplyLifecycleToDisk();
+      });
+    }
     var ok = true;
     try {
       ok = window.confirm(
@@ -4050,19 +4125,18 @@
     if (!ok) return Promise.resolve({ ok: false, cancelled: true });
     showToast("Stosuję zmiany na dysku…");
     setStatus("FORCE lifecycle…");
-    return fetch(bridgeUrl() + "/lifecycle-force", {
+    return bridgeFetchJson(bridgeUrl() + "/lifecycle-force", {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({ dry_run: false })
     })
-      .then(function (r) {
-        return r.json().then(function (data) {
-          return { http: r.status, data: data };
-        });
-      })
       .then(function (res) {
         if (!res.data || !res.data.ok) {
-          showToast("Nie udało się zastosować zmian: " + ((res.data && res.data.error) || res.http), "error");
+          var err = (res.data && res.data.error) || res.http;
+          if (err === "login_required" || err === "admin_required" || res.http === 401 || res.http === 403) {
+            showSessionRequiredToast(err);
+          } else {
+            showToast("Nie udało się zastosować zmian: " + err, "error");
+          }
           return res.data || { ok: false };
         }
         var n = res.data.applied_ok || 0;
@@ -4128,23 +4202,29 @@
     }
 
     /* Najpierw przebuduj indeks z Marketing (nowe foldery DOY itd.), potem wczytaj JSON */
-    var rebuild = fetch(bridgeUrl() + "/index/rebuild", {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({})
-    })
-      .then(function (r) {
-        return r.json().catch(function () {
-          return { ok: false, error: "rebuild_" + r.status };
-        }).then(function (data) {
-          if (r.status === 401 || r.status === 403) {
-            return { ok: false, authError: true, error: (data && data.error) || "auth" };
-          }
-          if (!r.ok || (data && data.ok === false)) {
-            return { ok: false, error: (data && data.error) || "rebuild_failed" };
-          }
-          return waitForIndexRebuild(60000);
-        });
+    var rebuild = ensureBridgeSession()
+      .then(function (sess) {
+        if (!sess || !sess.ok) {
+          return { ok: false, authError: true, error: (sess && sess.error) || "login_required" };
+        }
+        return fetch(bridgeUrl() + "/index/rebuild", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({})
+        })
+          .then(function (r) {
+            return r.json().catch(function () {
+              return { ok: false, error: "rebuild_" + r.status };
+            }).then(function (data) {
+              if (r.status === 401 || r.status === 403) {
+                return { ok: false, authError: true, error: (data && data.error) || "auth" };
+              }
+              if (!r.ok || (data && data.ok === false)) {
+                return { ok: false, error: (data && data.error) || "rebuild_failed" };
+              }
+              return waitForIndexRebuild(60000);
+            });
+          });
       })
       .catch(function (err) {
         return { ok: false, error: err && err.message ? err.message : "rebuild_failed" };
@@ -4152,7 +4232,7 @@
 
     return rebuild.then(function (rebuildResult) {
       if (rebuildResult && rebuildResult.authError && !silent) {
-        showToast("Zaloguj się w DAM, aby odświeżyć listę z dysku.", "error");
+        showSessionRequiredToast(rebuildResult.error || "login_required");
       } else if (rebuildResult && rebuildResult.error && !silent) {
         showToast("Indeks dysku: " + rebuildResult.error + " — wczytuję ostatnią kopię.", "info");
       }
@@ -4319,8 +4399,9 @@
       applyDeepLink();
       return bootLifecycleReconcile().then(function (boot) {
         return loadLifecycleStore().then(function () {
+          /* Gdy boot nieudany (brak sesji) - zawsze sync z indeksu, bez skip program_wins */
           syncLifecycleFromDiskIndex({
-            skipProgramWins: (boot && boot.program_wins) || []
+            skipProgramWins: boot && boot.ok ? (boot.program_wins || []) : []
           });
           renderAll();
         });

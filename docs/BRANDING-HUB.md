@@ -150,9 +150,17 @@ Przy konflikcie z `memory.md` wygrywa **program-instructions**.
 
 Regula: `.cursor/rules/verify-ui-after-changes.mdc`
 
----
+### Restart mostu po aktualizacji
 
-## Roadmap (otwarte)
+Po `git pull` z nowymi endpointami hub **zrestartuj** `local_bridge.py`. Stary proces na 8766 zwraca `404 not_found` dla `/branding-index` (UI nadal dziala ze statycznych JSON w `data/`).
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ops/smoke-branding-hub.ps1
+```
+
+`GET /health` zwraca `api_version` (>= 2) i liste `hub_routes`.
+
+---
 
 - RapidOCR w `requirements.txt` + realny run `enrich-branding-recognize.py`
 - Sekcja materialow marketingowych na `project.html` (linki do branding)

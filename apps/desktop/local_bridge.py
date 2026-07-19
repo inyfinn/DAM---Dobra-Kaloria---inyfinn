@@ -80,6 +80,8 @@ except ImportError:
 
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
+# Bump po nowych endpointach hub (smoke: GET /health -> api_version)
+BRIDGE_API_VERSION = 2
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
@@ -2755,7 +2757,22 @@ class Handler(BaseHTTPRequestHandler):
             self._json(403, {"ok": False, "error": "origin_forbidden"})
             return
         if parsed.path == "/health":
-            self._json(200, {"ok": True, "service": "dam-local-bridge", "port": PORT})
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "service": "dam-local-bridge",
+                    "port": PORT,
+                    "api_version": BRIDGE_API_VERSION,
+                    "hub_routes": [
+                        "/branding-index",
+                        "/product-catalog",
+                        "/bulk-packaging",
+                        "/branding/status",
+                        "/wykrojniki-registry",
+                    ],
+                },
+            )
             return
         if parsed.path == "/detect-marketing-bases":
             # Lokalny most 127.0.0.1 - status dysku bez Bearer (UI pyta przed / bez sesji)
