@@ -4,7 +4,7 @@
   var index = null;
   var tokens = null;
   var campaigns = null;
-  var CB = "hub20260719disc7";
+  var CB = "hub20260719disc13";
   var selectedCampaignId = null;
   var selectedChannel = "";
   var discoveryWhen = "";
@@ -27,8 +27,6 @@
     { key: "format:transparent", label: "Tło przezroczyste", group: "cechy" },
     { key: "format:white", label: "Tło białe", group: "cechy" },
     { key: "format:editable", label: "Edytowalny", group: "cechy" },
-    { key: "appearance:slidery", label: "Slidery", group: "przeznaczenie", tab: "www" },
-    { key: "appearance:na sklep", label: "Na sklep", group: "przeznaczenie", tab: "www" },
     { key: "appearance:desktop", label: "Desktop", group: "cechy", tab: "www" },
     { key: "appearance:tablet", label: "Tablet", group: "cechy", tab: "www" },
     { key: "appearance:mobile", label: "Mobile", group: "cechy", tab: "www" },
@@ -68,9 +66,112 @@
     "Folia",
     "Sypkie",
     "Baner",
-    "Slidery",
-    "Na sklep",
   ];
+
+  /** Jeden klucz facet:* na cały panel — ten sam tag może być w wielu rzędach, ten sam filtr. */
+  var CANONICAL_TAGS = [
+    { id: "slider", label: "Slider", groups: ["skojarzenia", "przeznaczenie"], tab: "www" },
+    { id: "na_sklep", label: "Na sklep", groups: ["przeznaczenie"], tab: "www" },
+    { id: "baner", label: "Baner", groups: ["skojarzenia", "przeznaczenie"], tab: "www" },
+    { id: "burger", label: "Burger", groups: ["skojarzenia", "co"] },
+    { id: "grill", label: "Grill", groups: ["skojarzenia", "co"] },
+    { id: "proteina", label: "Proteina", groups: ["skojarzenia", "co", "produkt"] },
+    { id: "baton", label: "Baton", groups: ["skojarzenia", "co", "produkt"] },
+    { id: "kulki", label: "Kulki", groups: ["skojarzenia", "co", "produkt"] },
+    { id: "parowka", label: "Parówka", groups: ["skojarzenia", "co"] },
+    { id: "niemiesa", label: "Niemięsa", groups: ["skojarzenia", "co"] },
+    { id: "deserowe", label: "Deserowe", groups: ["co", "produkt"] },
+    { id: "banoffee", label: "Banoffee", groups: ["skojarzenia", "co", "produkt"] },
+    { id: "karmel", label: "Karmel", groups: ["skojarzenia", "co", "produkt"] },
+    { id: "mix", label: "Mix", groups: ["skojarzenia", "co", "produkt"] },
+    { id: "doypack", label: "Doypack", groups: ["skojarzenia", "co", "produkt"] },
+    { id: "mini", label: "Mini", groups: ["co", "produkt"] },
+    { id: "mct", label: "MCT", groups: ["co", "produkt"] },
+    { id: "datesy", label: "Datesy", groups: ["co", "produkt"] },
+    { id: "boost", label: "Boost", groups: ["co", "produkt"] },
+    { id: "folia", label: "Folia", groups: ["co", "produkt"] },
+    { id: "sypkie", label: "Sypkie", groups: ["co", "produkt"] },
+    { id: "super_cena", label: "Super cena", groups: ["skojarzenia", "produkt"] },
+    { id: "lemon_cheesecake", label: "Lemon cheesecake", groups: ["produkt"] },
+    { id: "indeks_glikemiczny", label: "Indeks glikemiczny", groups: ["skojarzenia", "produkt"] },
+    { id: "bez_cukru", label: "Bez cukru", groups: ["skojarzenia", "produkt"] },
+  ];
+
+  var CANONICAL_BY_ID = {};
+  CANONICAL_TAGS.forEach(function (c) {
+    CANONICAL_BY_ID[c.id] = c;
+  });
+
+  function facetKey(id) {
+    return "facet:" + id;
+  }
+
+  function isCanonicalCovered(groupKey, labelOrTerm) {
+    var n = normTag(labelOrTerm);
+    if (!n) return false;
+    return CANONICAL_TAGS.some(function (c) {
+      if (c.groups.indexOf(groupKey) < 0) return false;
+      var lid = normTag(c.label);
+      var tid = normTag(String(c.id || "").replace(/_/g, " "));
+      return n === lid || n === tid || lid.indexOf(n) !== -1 || n.indexOf(lid) !== -1;
+    });
+  }
+
+  function canonicalChipsForGroup(groupKey) {
+    return CANONICAL_TAGS.filter(function (c) {
+      return c.groups.indexOf(groupKey) >= 0;
+    }).map(function (c) {
+      return { key: facetKey(c.id), label: c.label, group: groupKey, tab: c.tab || "" };
+    });
+  }
+
+  function dedupeChipsByKey(chips) {
+    var seen = {};
+    var out = [];
+    (chips || []).forEach(function (c) {
+      if (!c || !c.key || seen[c.key]) return;
+      seen[c.key] = true;
+      out.push(c);
+    });
+    return out;
+  }
+
+  function assetMatchesCanonicalFacet(a, facetId) {
+    var blob = assetBlobNorm(a);
+    if (facetId === "slider") {
+      if (/\bslider\b|\bslidery\b/.test(blob)) return true;
+      if (String(a.path || "").toLowerCase().indexOf("/slidery") !== -1) return true;
+      if (a.asset_role === "web_hero_slider") return true;
+      return (a.appearance_tags || []).some(function (t) {
+        var n = normTag(t);
+        return n === "slidery" || n === "slider";
+      });
+    }
+    if (facetId === "na_sklep") {
+      return (a.appearance_tags || []).some(function (t) {
+        return normTag(t) === "na sklep";
+      });
+    }
+    if (facetId === "baner") {
+      if (/\bbaner\b/.test(blob)) return true;
+      return (a.appearance_tags || []).some(function (t) {
+        return normTag(t) === "baner";
+      });
+    }
+    if (facetId === "parowka") return /parowk/.test(blob);
+    if (facetId === "niemiesa") return /niemies/.test(blob);
+    if (facetId === "indeks_glikemiczny") return /indeks\s*glik|niski\s*ig|\bniski\b.*\big\b/.test(blob);
+    if (facetId === "lemon_cheesecake") return /lemon\s*cheesecake|cheesecake\s*lemon/.test(blob);
+    if (facetId === "bez_cukru") return /bez\s*cukru/.test(blob);
+    if (facetId === "super_cena") return /super\s*cena/.test(blob);
+    var def = CANONICAL_BY_ID[facetId];
+    var term = def ? normTag(def.label) : normTag(String(facetId || "").replace(/_/g, " "));
+    if (blob.indexOf(term) !== -1) return true;
+    return (a.appearance_tags || []).some(function (t) {
+      var n = normTag(t);
+      return n === term || n.indexOf(term) !== -1 || term.indexOf(n) !== -1;
+    });
+  }
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -188,6 +289,9 @@
       return (a.appearance_tags || []).some(function (t) {
         return normTag(t) === normTag(val);
       });
+    }
+    if (kind === "facet") {
+      return assetMatchesCanonicalFacet(a, val);
     }
     if (kind === "tag") {
       return (a.tags || []).indexOf(val) !== -1;
@@ -654,7 +758,7 @@
     { id: "grill26", label: "Grill 2026", when: "2026", search: "grill", tab: "campaigns" },
     { id: "proteina", label: "Proteina — wszystko", search: "proteina" },
     { id: "socialfilm", label: "Filmy social", tab: "social", media: "video" },
-    { id: "slidery", label: "Slidery sklepu", tab: "www", appearance: "Slidery" },
+    { id: "slidery", label: "Slider sklepu", tab: "www", facet: "slider" },
     { id: "packshoty", label: "Packshoty produktów", tab: "packshots" },
     { id: "wielkanoc26", label: "Wielkanoc 2026", when: "wielkanoc", search: "wielkanoc", tab: "campaigns" },
     { id: "swieta25", label: "Święta 2025", when: "swieta", search: "święta", tab: "campaigns" },
@@ -671,7 +775,7 @@
     { id: "logogc", label: "Logo GC", search: "good calories", tab: "brandbook" },
     { id: "brandbookkolory", label: "Brandbook — kolory", tab: "brandbook", search: "brandbook" },
     { id: "promocja5", label: "Promocja 5 zł", search: "5 zł", tab: "www" },
-    { id: "nasklep", label: "Na sklep", tab: "www", appearance: "Na sklep" },
+    { id: "nasklep", label: "Na sklep", tab: "www", facet: "na_sklep" },
     { id: "backtoschool", label: "Back to school", when: "backtoschool", search: "school", tab: "campaigns" },
     { id: "blackfriday", label: "Black Friday", when: "blackfriday", search: "black friday", tab: "campaigns" },
   ];
@@ -695,6 +799,9 @@
     var map = {};
     FACET_CHIPS.forEach(function (c) {
       if (c.tab) map[c.key] = c.tab;
+    });
+    CANONICAL_TAGS.forEach(function (c) {
+      if (c.tab) map[facetKey(c.id)] = c.tab;
     });
     map["appearance:baner"] = "www";
     return map;
@@ -1067,7 +1174,10 @@
     setSearchQuery(col.search || "");
     discoveryWhen = col.when || "";
     if (col.tab) activateTab(col.tab, { skipHash: true, keepDiscovery: true });
-    if (col.appearance) {
+    if (col.facet) {
+      activeTagFilters = {};
+      activeTagFilters[facetKey(col.facet)] = true;
+    } else if (col.appearance) {
       activeTagFilters = {};
       activeTagFilters[appearanceKey(col.appearance)] = true;
     } else if (col.media) {
@@ -1191,7 +1301,9 @@
 
   function buildDiscoveryFilterGroups() {
     return {
-      skojarzenia: QUICK_ASSOCIATIONS.map(function (term) {
+      skojarzenia: QUICK_ASSOCIATIONS.filter(function (term) {
+        return !isCanonicalCovered("skojarzenia", term);
+      }).map(function (term) {
         return { key: "search:" + normTag(term), label: assocChipLabel(term) };
       }),
       kiedy: WHEN_CHIPS.map(function (w) {
@@ -1200,7 +1312,9 @@
       kolekcje: CURATED_COLLECTIONS.map(function (c) {
         return { key: "collection:" + c.id, label: c.label };
       }),
-      co: WHAT_TILES.map(function (tile) {
+      co: WHAT_TILES.filter(function (tile) {
+        return !isCanonicalCovered("co", tile.label);
+      }).map(function (tile) {
         var tq = normTag(tile.search || tile.appearance || tile.label);
         return { key: "co:" + tq, label: tile.label };
       }),
@@ -1218,6 +1332,12 @@
       WHAT_TILES.forEach(function (tile) {
         var tq = normTag(tile.search || tile.appearance || tile.label);
         if (tq === q) map["co:" + tq] = true;
+      });
+      CANONICAL_TAGS.forEach(function (c) {
+        if (c.groups.indexOf("skojarzenia") < 0) return;
+        if (normTag(c.label) === q || normTag(String(c.id).replace(/_/g, " ")) === q) {
+          map[facetKey(c.id)] = true;
+        }
       });
     }
     return map;
@@ -1422,10 +1542,15 @@
   }
 
   function productChipsFromIndex() {
-    var base = PRODUCT_TAG_CHIPS.slice();
+    var base = PRODUCT_TAG_CHIPS.filter(function (l) {
+      return !isCanonicalCovered("produkt", l);
+    });
     var seen = {};
     base.forEach(function (l) {
       seen[normTag(l)] = true;
+    });
+    CANONICAL_TAGS.forEach(function (c) {
+      if (c.groups.indexOf("produkt") >= 0) seen[normTag(c.label)] = true;
     });
     var byTag = (searchIndex && (searchIndex.by_appearance || searchIndex.by_tag)) || {};
     var ranked = Object.keys(byTag)
@@ -1435,6 +1560,7 @@
       .filter(function (row) {
         if (row.n < 6) return false;
         if (!isProductChipLabel(row.label)) return false;
+        if (isCanonicalCovered("produkt", row.label)) return false;
         var k = normTag(row.label);
         if (seen[k]) return false;
         return true;
@@ -1473,28 +1599,48 @@
       if (!groups[g]) groups[g] = [];
       groups[g].push(c);
     });
-    var GROUP_ORDER = [
+    [
+      "marka",
       "skojarzenia",
+      "przeznaczenie",
+      "format_pliku",
+      "kanal",
+      "produkt",
+      "cechy",
+      "wizualizacja",
       "kiedy",
       "kolekcje",
       "co",
-      "format_pliku",
+    ].forEach(function (g) {
+      if (!groups[g]) groups[g] = [];
+      groups[g] = dedupeChipsByKey(canonicalChipsForGroup(g).concat(groups[g]));
+    });
+    var GROUP_ORDER = [
+      "marka",
+      "skojarzenia",
       "przeznaczenie",
+      "format_pliku",
+      "kanal",
+      "produkt",
       "cechy",
       "wizualizacja",
-      "kanal",
-      "marka",
-      "produkt",
+      "kiedy",
+      "kolekcje",
+      "co",
     ];
     var activeMap = buildAssocActiveMap();
     var buildRow = window.DamTagBar && DamTagBar.buildGroupRow;
     var html = '<div class="dam-tag-groups__inner">';
     GROUP_ORDER.forEach(function (g) {
       if (!groups[g] || !groups[g].length || !buildRow) return;
+      var rowClass =
+        "dam-branding-tag-group--" +
+        g +
+        (g === "przeznaczenie" ? " dam-branding-tag-group--przeznaczenie-tiles" : "");
       html += buildRow({
         groupKey: g,
         label: FILTER_GROUP_LABELS[g] || g,
-        className: "dam-branding-tag-group--" + g,
+        className: rowClass,
         chips: groups[g].map(function (c) {
           return { key: c.key, label: c.label };
         }),
@@ -1546,6 +1692,7 @@
         else {
           activeTagFilters[key] = true;
           tabSwitch = tabForFacetKey(key);
+          if (key.indexOf("facet:") === 0) setSearchQuery("");
         }
         renderTagFilters();
         if (tabSwitch) {
@@ -1857,9 +2004,11 @@
     if (!primary) return "";
     var hint = folderHint(primary.path);
     var tileCls =
-      window.DamBadges && typeof window.DamBadges.brandingGradientTileClass === "function"
-        ? window.DamBadges.brandingGradientTileClass(primary)
-        : "";
+      window.DamBadges && typeof window.DamBadges.brandingGradientTileClassForAssets === "function"
+        ? window.DamBadges.brandingGradientTileClassForAssets(assets)
+        : window.DamBadges && typeof window.DamBadges.brandingGradientTileClass === "function"
+          ? window.DamBadges.brandingGradientTileClass(primary)
+          : "";
     var ids = assets
       .map(function (x) {
         return x.id;
@@ -2033,6 +2182,108 @@
     });
   }
 
+  function folderDirFromPath(path) {
+    var p = String(path || "").replace(/\\/g, "/");
+    var i = p.lastIndexOf("/");
+    return i >= 0 ? p.slice(0, i).toLowerCase() : p.toLowerCase();
+  }
+
+  function isRasterAssetName(name) {
+    return /\.(jpe?g|png|webp|gif|tiff?|bmp)$/i.test(String(name || ""));
+  }
+
+  function variantLabelFromAsset(a) {
+    if (a && a.dimensions_px) return a.dimensions_px;
+    var n = String((a && a.name) || "");
+    if (/desktop/i.test(n) || /1920\s*[x×]\s*600/i.test(n)) return "Desktop";
+    if (/tablet/i.test(n) || /992\s*[x×]\s*600/i.test(n)) return "Tablet";
+    if (/mobile/i.test(n) || /576\s*[x×]\s*600/i.test(n)) return "Mobile";
+    var paren = n.match(/\((\d+)\)/);
+    if (paren) {
+      var slot = +paren[1];
+      if (slot === 1) return "Desktop";
+      if (slot === 2) return "Tablet";
+      if (slot === 3) return "Mobile";
+    }
+    return "Plik";
+  }
+
+  function buildBrandingGroupContext(primary, assetsById) {
+    var variants = (primary && primary.folder_variants) || [];
+    var linked = (primary && primary.linked_products) || [];
+    var editable = (primary && primary.folder_editable_files) || [];
+    var groupId = (primary && primary.folder_group_id) || folderDirFromPath(primary && primary.path);
+
+    if ((!variants || variants.length <= 1) && groupId && assetsById) {
+      var mates = [];
+      Object.keys(assetsById).forEach(function (id) {
+        var x = assetsById[id];
+        if (!x || !isRasterAssetName(x.name)) return;
+        var xGroup = x.folder_group_id || folderDirFromPath(x.path);
+        if (xGroup === groupId) mates.push(x);
+      });
+      if (mates.length > 1) {
+        variants = mates.map(function (x) {
+          return {
+            id: x.id,
+            name: x.name,
+            path: x.path,
+            label: variantLabelFromAsset(x),
+            media_type: x.media_type || "",
+          };
+        });
+        var order = { Desktop: 0, Tablet: 1, Mobile: 2 };
+        variants.sort(function (a, b) {
+          return (order[a.label] != null ? order[a.label] : 9) - (order[b.label] != null ? order[b.label] : 9);
+        });
+      }
+    }
+
+    if ((!linked || !linked.length) && primary) {
+      if (primary.linked_products && primary.linked_products.length) {
+        linked = primary.linked_products;
+      } else if (primary.folder_linked_product_ids && primary.folder_linked_product_ids.length) {
+        linked = primary.folder_linked_product_ids.map(function (pid) {
+          return { id: pid, display_name: pid, thumb_url: "" };
+        });
+      }
+    }
+    if ((!linked || !linked.length) && groupId && assetsById) {
+      Object.keys(assetsById).some(function (fid) {
+        var x = assetsById[fid];
+        if (!x) return false;
+        if ((x.folder_group_id || folderDirFromPath(x.path)) !== groupId) return false;
+        if (x.linked_products && x.linked_products.length) {
+          linked = x.linked_products;
+          return true;
+        }
+        if (x.folder_linked_product_ids && x.folder_linked_product_ids.length) {
+          linked = x.folder_linked_product_ids.map(function (pid) {
+            return { id: pid, display_name: pid, thumb_url: "" };
+          });
+          return true;
+        }
+        return false;
+      });
+    }
+
+    if (!editable.length && primary && primary.folder_has_editable) {
+      Object.keys(assetsById || {}).forEach(function (id) {
+        var x = assetsById[id];
+        if (!x || !/\.(psd|psb|ai|eps|indd)$/i.test(x.name || "")) return;
+        if ((x.folder_group_id || folderDirFromPath(x.path)) !== groupId) return;
+        editable.push({ id: x.id, name: x.name, path: x.path });
+      });
+    }
+
+    return {
+      variants: variants || [],
+      linked_products: linked || [],
+      folder_group_id: groupId || "",
+      folder_editable_files: editable || [],
+    };
+  }
+
   function openModal(id, siblings) {
     var assetsById = {};
     (index.assets || []).forEach(function (a) {
@@ -2041,8 +2292,14 @@
     var primary = assetsById[id];
     if (!primary) return;
 
+    var groupContext = buildBrandingGroupContext(primary, assetsById);
     var list = [];
-    if (primary.folder_variants && primary.folder_variants.length > 1) {
+    if (groupContext.variants && groupContext.variants.length) {
+      groupContext.variants.forEach(function (v) {
+        if (v.id && assetsById[v.id]) list.push(assetsById[v.id]);
+      });
+    }
+    if (!list.length && primary.folder_variants && primary.folder_variants.length) {
       primary.folder_variants.forEach(function (v) {
         if (v.id && assetsById[v.id]) list.push(assetsById[v.id]);
       });
@@ -2062,11 +2319,8 @@
       window.DamMediaPreview.openAsset(a, {
         siblings: list,
         index: idx >= 0 ? idx : 0,
-        groupContext: {
-          variants: primary.folder_variants || [],
-          linked_products: primary.linked_products || [],
-          folder_group_id: primary.folder_group_id || "",
-        },
+        alwaysShowAssociations: true,
+        groupContext: groupContext,
       });
     }
   }

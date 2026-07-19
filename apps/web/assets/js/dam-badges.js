@@ -963,6 +963,16 @@
     return m ? m[1].toLowerCase() : "";
   }
 
+  function isSourceEditableFile(asset) {
+    var ext = brandingFileExt(asset);
+    return ext === "psd" || ext === "psb" || ext === "ai" || ext === "eps" || ext === "indd";
+  }
+
+  function shouldShowEditableBadge(asset) {
+    if (isSourceEditableFile(asset)) return true;
+    return !!(asset && asset.folder_has_editable);
+  }
+
   function campaignBadgeLabel(asset) {
     var raw = String(asset.campaign_id || asset.campaign_name || "");
     if (!raw) return "";
@@ -1016,17 +1026,33 @@
       });
     }
 
+    var hasEditableBadge = shouldShowEditableBadge(asset);
+
     (asset.format_technical || []).forEach(function (ft) {
       if (!ft) return;
+      if (ft === "editable") return;
       pushItem({
         kind: "format",
         value: ft,
         label: brandingFormatLabel(ft),
-        cls: ft === "editable" ? "dam-viz-badge--editable" : "dam-viz-badge--lang",
+        cls: "dam-viz-badge--lang",
         tip: "Cecha techniczna pliku",
         tier: "low",
       });
     });
+
+    if (hasEditableBadge) {
+      pushItem({
+        kind: "format",
+        value: "editable",
+        label: "Edytowalny",
+        cls: "dam-viz-badge--editable",
+        tip: isSourceEditableFile(asset)
+          ? "Plik zrodlowy Adobe (PSD/AI) z warstwami"
+          : "W folderze jest plik zrodlowy do edycji",
+        tier: "primary",
+      });
+    }
 
     if (asset.perspective) {
       pushItem({
@@ -1066,6 +1092,7 @@
 
     (asset.appearance_tags || []).forEach(function (t) {
       if (!t) return;
+      if (String(t).toLowerCase() === "edytowalny") return;
       pushItem({
         kind: "appearance",
         value: t,
@@ -1089,16 +1116,7 @@
     }
 
     var ext = brandingFileExt(asset);
-    if (ext === "psd" || ext === "psb") {
-      pushItem({
-        kind: "format",
-        value: ext,
-        label: "Edytowalny",
-        cls: "dam-viz-badge--editable",
-        tip: ext === "psb" ? "Plik źródłowy PSB z warstwami" : "Plik źródłowy PSD z warstwami",
-        tier: "primary",
-      });
-    } else if (ext === "tif" || ext === "tiff") {
+    if (ext === "tif" || ext === "tiff") {
       pushItem({
         kind: "format",
         value: "tiff",
@@ -1107,13 +1125,13 @@
         tip: "Raster zrodlowy wysokiej jakosci",
         tier: "primary",
       });
-    } else if (ext === "ai" || ext === "eps") {
+    } else if ((ext === "ai" || ext === "eps") && !hasEditableBadge) {
       pushItem({
         kind: "format",
         value: ext,
         label: ext.toUpperCase(),
         cls: "dam-viz-badge--editable",
-        tip: "Plik wektorowy źródłowy",
+        tip: "Plik wektorowy zrodlowy",
         tier: "low",
       });
     }
@@ -1175,11 +1193,26 @@
 
   function brandingGradientTileClass(asset) {
     var ext = brandingFileExt(asset);
-    if (ext === "psd" || ext === "psb") {
+    if (ext === "psd" || ext === "psb" || asset.folder_has_editable) {
       return "dam-gradient-tile dam-gradient-tile--editable";
     }
     if (ext === "ai" || ext === "pdf") {
       return "dam-gradient-tile dam-gradient-tile--vector";
+    }
+    return "";
+  }
+
+  function brandingGradientTileClassForAssets(assets) {
+    if (!assets || !assets.length) return "";
+    var i;
+    var cls = "";
+    for (i = 0; i < assets.length; i++) {
+      cls = brandingGradientTileClass(assets[i]);
+      if (cls.indexOf("--editable") >= 0) return cls;
+    }
+    for (i = 0; i < assets.length; i++) {
+      cls = brandingGradientTileClass(assets[i]);
+      if (cls) return cls;
     }
     return "";
   }
@@ -1231,6 +1264,7 @@
     buildBadgeItems: buildBadgeItems,
     buildBrandingBadgeItems: buildBrandingBadgeItems,
     brandingGradientTileClass: brandingGradientTileClass,
+    brandingGradientTileClassForAssets: brandingGradientTileClassForAssets,
     bindClicks: bindClicks,
     bindCopyOnRightClick: bindCopyOnRightClick,
     copyTagText: copyTagText,

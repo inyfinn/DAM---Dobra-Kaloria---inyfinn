@@ -102,76 +102,84 @@
 
   function linkedProductsHtml(linkedProducts) {
     var list = (linkedProducts || []).filter(Boolean);
-    if (!list.length) return "";
+    var body =
+      list.length > 0
+        ? list
+            .map(function (p) {
+              var thumb = p.thumb_url || PLACEHOLDER_SVG;
+              var label = p.display_name || p.id || "Produkt";
+              return (
+                '<a class="dam-media-preview__assoc-item" role="listitem" href="explorer.html?product=' +
+                encodeURIComponent(p.id) +
+                '" title="' +
+                esc(label) +
+                '">' +
+                '<img class="dam-media-preview__assoc-thumb" src="' +
+                esc(thumb) +
+                '" alt="' +
+                esc(label) +
+                '" loading="lazy" onerror="this.src=\'' +
+                PLACEHOLDER_SVG.replace(/'/g, "%27") +
+                "'\">" +
+                '<span class="dam-media-preview__assoc-name">' +
+                esc(label) +
+                "</span></a>"
+              );
+            })
+            .join("")
+        : '<p class="dam-media-preview__assoc-empty">Brak skojarzonych produktów</p>';
     return (
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--products">' +
       '<span class="dam-media-preview__assoc-label">Skojarzone produkty</span>' +
       '<div class="dam-media-preview__assoc-grid" role="list">' +
-      list
-        .map(function (p) {
-          var thumb = p.thumb_url || PLACEHOLDER_SVG;
-          var label = p.display_name || p.id || "Produkt";
-          return (
-            '<a class="dam-media-preview__assoc-item" role="listitem" href="explorer.html?product=' +
-            encodeURIComponent(p.id) +
-            '" title="' +
-            esc(label) +
-            '">' +
-            '<img class="dam-media-preview__assoc-thumb" src="' +
-            esc(thumb) +
-            '" alt="' +
-            esc(label) +
-            '" loading="lazy" onerror="this.src=\'' +
-            PLACEHOLDER_SVG.replace(/'/g, "%27") +
-            "'\">" +
-            '<span class="dam-media-preview__assoc-name">' +
-            esc(label) +
-            "</span></a>"
-          );
-        })
-        .join("") +
+      body +
       "</div></div>"
     );
   }
 
-  function folderVariantsHtml(variants, activeId, onVariantClick) {
+  function folderVariantsHtml(variants, activeId) {
     var list = (variants || []).filter(function (v) {
       return v && v.id;
     });
-    if (list.length <= 1) return "";
+    var body =
+      list.length > 0
+        ? list
+            .map(function (v) {
+              var active = v.id === activeId ? " is-active" : "";
+              return (
+                '<button type="button" class="dam-viz-modal__variant dam-media-preview__variant' +
+                active +
+                '" role="option" aria-selected="' +
+                (active ? "true" : "false") +
+                '" data-variant-id="' +
+                esc(v.id) +
+                '">' +
+                (v.path
+                  ? '<img class="dam-viz-modal__variant-thumb" src="' +
+                    esc(previewUrl(v.path, v)) +
+                    '" alt="' +
+                    esc(v.label || v.name || "") +
+                    '" loading="lazy" onerror="this.classList.add(\'dam-viz-thumb__img--placeholder\')">'
+                  : '<div class="dam-viz-modal__variant-placeholder"><i class="uil uil-image"></i></div>') +
+                '<span class="dam-viz-modal__variant-label">' +
+                esc(v.label || "Plik") +
+                "</span></button>"
+              );
+            })
+            .join("")
+        : '<p class="dam-media-preview__assoc-empty">Brak wariantów</p>';
     return (
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--variants">' +
       '<span class="dam-media-preview__assoc-label">Warianty materiału</span>' +
       '<div class="dam-media-preview__variant-grid" role="listbox" aria-label="Warianty w folderze">' +
-      list
-        .map(function (v) {
-          var active = v.id === activeId ? " is-active" : "";
-          return (
-            '<button type="button" class="dam-viz-modal__variant dam-media-preview__variant' +
-            active +
-            '" role="option" aria-selected="' +
-            (active ? "true" : "false") +
-            '" data-variant-id="' +
-            esc(v.id) +
-            '">' +
-            (v.path
-              ? '<img class="dam-viz-modal__variant-thumb" src="' +
-                esc(previewUrl(v.path, v)) +
-                '" alt="' +
-                esc(v.label || v.name || "") +
-                '" loading="lazy" onerror="this.classList.add(\'dam-viz-thumb__img--placeholder\')">'
-              : '<div class="dam-viz-modal__variant-placeholder"><i class="uil uil-image"></i></div>') +
-            '<span class="dam-viz-modal__variant-label">' +
-            esc(v.label || "Plik") +
-            "</span></button>"
-          );
-        })
-        .join("") +
+      body +
       "</div></div>"
     );
   }
 
-  function associationsFooterHtml(asset, groupContext) {
+  function associationsFooterHtml(asset, groupContext, options) {
+    options = options || {};
+    var alwaysShow = options.alwaysShowAssociations !== false;
     var variants = (groupContext && groupContext.variants) || asset.folder_variants || [];
     var linked = (groupContext && groupContext.linked_products) || asset.linked_products || [];
     if (!linked.length && (asset.folder_linked_product_ids || asset.linked_product_ids)) {
@@ -181,14 +189,78 @@
     }
     var variantsHtml = folderVariantsHtml(variants, asset.id);
     var productsHtml = linkedProductsHtml(linked);
-    if (!variantsHtml && !productsHtml) return "";
+    if (!alwaysShow && variants.length <= 1 && !linked.length) return "";
     return (
       '<div class="dam-media-preview__assoc">' +
       variantsHtml +
-      (variantsHtml && productsHtml ? '<div class="dam-media-preview__assoc-sep" aria-hidden="true"></div>' : "") +
+      '<div class="dam-media-preview__assoc-sep" aria-hidden="true"></div>' +
       productsHtml +
       "</div>"
     );
+  }
+
+  function editableFilesFor(asset, groupContext) {
+    var fromCtx = groupContext && groupContext.folder_editable_files;
+    if (fromCtx && fromCtx.length) return fromCtx;
+    if (asset.folder_editable_files && asset.folder_editable_files.length) return asset.folder_editable_files;
+    return [];
+  }
+
+  function isEditableSourceAsset(asset) {
+    var ext = fileExt(asset && (asset.name || asset.path));
+    return ext === "psd" || ext === "psb" || ext === "ai" || ext === "indd";
+  }
+
+  function titleMetaHtml(asset, groupContext) {
+    var editableFiles = editableFilesFor(asset, groupContext);
+    var hasEditable = asset.folder_has_editable || editableFiles.length > 0;
+    if (!hasEditable) return "";
+    var target = null;
+    editableFiles.some(function (f) {
+      if (f && f.path && !isEditableSourceAsset(asset)) {
+        target = f;
+        return true;
+      }
+      if (f && f.path && f.path !== asset.path) {
+        target = f;
+        return true;
+      }
+      return false;
+    });
+    if (!target && editableFiles[0]) target = editableFiles[0];
+    var label = target && target.name ? target.name : "Plik edytowalny";
+    var path = target && target.path ? target.path : "";
+    var sameFile = path && asset.path && path === asset.path;
+    return (
+      '<div class="dam-media-preview__title-meta">' +
+      '<span class="dam-viz-badge dam-viz-badge--format dam-media-preview__editable-badge">Edytowalny</span>' +
+      (path && !sameFile
+        ? '<button type="button" class="dam-media-preview__editable-link" id="damMediaPreviewEditableLink" data-path="' +
+          esc(path) +
+          '" title="' +
+          esc(label) +
+          '">' +
+          '<i class="uil uil-layer-group" aria-hidden="true"></i>' +
+          "<span>" +
+          esc(label) +
+          "</span></button>"
+        : "") +
+      "</div>"
+    );
+  }
+
+  function primaryEditableFile(asset, groupContext) {
+    var editableFiles = editableFilesFor(asset, groupContext);
+    if (!editableFiles.length) return null;
+    var target = null;
+    editableFiles.some(function (f) {
+      if (f && f.path && f.path !== asset.path) {
+        target = f;
+        return true;
+      }
+      return false;
+    });
+    return target || editableFiles[0];
   }
 
   function initZoomDock(thumbStage, zoomBar) {
@@ -264,6 +336,7 @@
         variants: asset.folder_variants || [],
         linked_products: asset.linked_products || [],
         folder_group_id: asset.folder_group_id || "",
+        folder_editable_files: asset.folder_editable_files || [],
       };
     }
 
@@ -318,7 +391,10 @@
       "</div>" +
       '<div class="dam-viz-modal__body">' +
       '<div class="dam-viz-card__badges" id="damMediaPreviewBadges"></div>' +
+      '<div class="dam-media-preview__title-block">' +
       '<h4 class="dam-viz-modal__title" id="damMediaPreviewTitle"></h4>' +
+      '<div id="damMediaPreviewTitleMeta"></div>' +
+      "</div>" +
       '<p class="dam-viz-modal__carrier" id="damMediaPreviewPath"></p>' +
       '<div id="damMediaPreviewAssoc"></div>' +
       '<div class="dam-viz-modal__actions">' +
@@ -328,6 +404,8 @@
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>') +
       "<span>Pokaz w Explorerze</span></button>" +
+      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-media-preview__editable-cta" id="damMediaPreviewEditable" hidden data-dam-tip="Otwiera plik zrodlowy (PSD/AI) w Eksploratorze">' +
+      '<i class="uil uil-layer-group" aria-hidden="true"></i><span>Plik edytowalny</span></button>' +
       '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damMediaPreviewCopy" data-dam-tip="Kopiuje lokalna sciezke pliku">' +
       '<i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj sciezke</span></button>' +
       '<button type="button" class="dam-viz-icon-btn' +
@@ -474,13 +552,15 @@
 
     function renderMeta(a) {
       var title = document.getElementById("damMediaPreviewTitle");
+      var titleMeta = document.getElementById("damMediaPreviewTitleMeta");
       var pathEl = document.getElementById("damMediaPreviewPath");
       var badges = document.getElementById("damMediaPreviewBadges");
       var assocHost = document.getElementById("damMediaPreviewAssoc");
       if (title) title.textContent = a.name || a.id || "Material";
+      if (titleMeta) titleMeta.innerHTML = titleMetaHtml(a, groupContext);
       if (pathEl) pathEl.textContent = a.path || "";
       if (assocHost) {
-        assocHost.innerHTML = associationsFooterHtml(a, groupContext);
+        assocHost.innerHTML = associationsFooterHtml(a, groupContext, options);
         assocHost.querySelectorAll("[data-variant-id]").forEach(function (btn) {
           btn.addEventListener("click", function () {
             var vid = btn.getAttribute("data-variant-id") || "";
@@ -489,6 +569,17 @@
             });
             if (targetIdx >= 0) showAt(targetIdx);
           });
+        });
+      }
+      var editableLink = document.getElementById("damMediaPreviewEditableLink");
+      if (editableLink) {
+        editableLink.addEventListener("click", function () {
+          var p = editableLink.getAttribute("data-path") || "";
+          if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
+            window.DamPaths.revealInExplorer(p);
+          } else if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+            window.DamPaths.openFolderInExplorer(p);
+          }
         });
       }
       if (badges) {
@@ -500,9 +591,23 @@
       var explorer = document.getElementById("damMediaPreviewExplorer");
       var copyBtn = document.getElementById("damMediaPreviewCopy");
       var shareBtn = document.getElementById("damMediaPreviewShare");
+      var editableBtn = document.getElementById("damMediaPreviewEditable");
+      var editableTarget = primaryEditableFile(a, groupContext);
       if (explorer) explorer.setAttribute("data-path", a.path || "");
       if (copyBtn) copyBtn.setAttribute("data-path", a.path || "");
       if (shareBtn) shareBtn.setAttribute("data-path", a.path || "");
+      if (editableBtn) {
+        if (editableTarget && editableTarget.path && editableTarget.path !== a.path) {
+          editableBtn.hidden = false;
+          editableBtn.setAttribute("data-path", editableTarget.path);
+          var shortName = editableTarget.name || "Plik edytowalny";
+          var span = editableBtn.querySelector("span");
+          if (span) span.textContent = shortName.length > 28 ? "Plik edytowalny" : shortName;
+        } else {
+          editableBtn.hidden = true;
+          editableBtn.removeAttribute("data-path");
+        }
+      }
       renderStage(a);
     }
 
@@ -614,6 +719,19 @@
         copyToClipboard(copyBtn.getAttribute("data-path") || "").then(function () {
           toast("Skopiowano sciezke do schowka");
         });
+      });
+    }
+
+    var editableBtn = document.getElementById("damMediaPreviewEditable");
+    if (editableBtn) {
+      editableBtn.addEventListener("click", function () {
+        var p = editableBtn.getAttribute("data-path") || "";
+        if (!p) return;
+        if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
+          window.DamPaths.revealInExplorer(p);
+        } else if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+          window.DamPaths.openFolderInExplorer(p);
+        }
       });
     }
 

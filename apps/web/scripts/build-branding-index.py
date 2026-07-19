@@ -247,7 +247,9 @@ def scan_marketing_roots(
     eksport = marketing / "- EKSPORT"
     primary_roots: list[tuple[str, Path]] = [
         ("DK", polska / "- BRANDING i MARKA -"),
+        ("DK", polska / "02 - FIRMOWE MATERIAŁY"),
         ("DK", polska / "03 - MATERIAŁY GRAFICZNE"),
+        ("DK", polska / "04 - PROCESY"),
         ("DK", polska / "05 - SOCIAL MEDIA"),
         ("DK", polska / "06 - STRONY WWW - INTERNET"),
         ("DK", polska / "07 - E-COMMERCE"),
