@@ -4005,6 +4005,32 @@ Tagi i belki animują się (transition 0.22s + reveal belek 0.4s); okno chowa si
 ### Zrodla
 - dam-tokens.css, dam-brand.css, dam-branding.css, dam-grid-reveal.js, dam-branding.js, dam-media-preview.js, launch.py, version.json, dam-version.js, runtime_config.py, program-instructions.json
 
+---
+
+## 2026-07-20 — Ruch globalny v2: reveal 0.45s, kolejnosc gora->dol, skeleton (2.0.7)
+
+### Komenda/Akcja
+Dopracowanie animacji: (1) reveal za szybki / poza kolejnoscia (elementy przed pierwszym); (2) wydluzyc do 0.45s + reakcja viewportu -50px; (3) skeleton loading (shimmer) tam gdzie cos sie laduje (costs/integrations/invoices); (4) faktury pojawiaja sie natychmiast -> maja animowac; (5) sidebar bez slide (tylko morph), tytul/podtytul fade-in, hover scale buttonow/ikon sidebar. Skille: /ui-ux-pro-max, /ui-taste, /gsap-core.
+
+### Log/Status
+1. Diagnoza: index.html (dam-projects) = wzorzec; faktury tabela poza reveal; brak skeletonu; sidebar slide niechciany.
+2. `dam-grid-reveal.js`: DURATION 0.45; observer rootMargin -50px; reveal() dzieli inView (jedna sekwencja gora->dol) vs below (IO); revealPageEntrance (tytul+podtytul+belki); usunieto sidebar slide z autoInit; dodano revealRows + skeleton; export.
+3. `dam-brand.css`: hover scale .geex-btn/ikony sidebar (token --dam-hover-scale, 0.2s, :active 0.97); CSS skeleton shimmer (dam-skel-shimmer) + dark + reduced-motion.
+4. Wpiecie: invoices (skeleton tbody + revealRows tr), costs (skeleton 3 panele + revealRows meta/result/fmcg), integrations (skeleton karty + revealRows .dam-int-card).
+5. `dam-grid-reveal.js` dodany do costs/integrations/invoices; cache-bust motion20260720a na 9 stronach; dam-version 2.0.7.
+6. Instrukcje: ui.motion_tokens zaktualizowane; memory §129; version.json note.
+
+### Efekt/Fix
+Wejscie 0.45s gora->dol bez wyskakiwania poza kolejnoscia; skeleton z przeblyskiem podczas ladowania, potem tresc wjezdza zanimowana; faktury/costs/integracje animowane; sidebar tylko morph; hover buttonow/ikon.
+
+### Test/Ewaluacja
+- node --check (grid-reveal, invoices, cost, integrations) OK; ReadLints czysto; JSON OK.
+- Browser :8765 (karta w tle => rAF zamrozony; force gsap.globalTimeline.progress(1)): costs meta+koszt 7588,10 PLN + 11 wierszy; invoices 10 wierszy (FV/2026/07/001...); integrations 7 kart; skeleton znika po renderze; hover transition transform obecny; footer v2.0.7.
+- Ograniczenie: ruch na zywo nieuchwytny w screenshotach przy karcie w tle; stan koncowy poprawny, silnik = wzorzec index.html.
+
+### Zrodla
+- dam-grid-reveal.js, dam-brand.css, dam-tokens.css, dam-cost.js, dam-invoices.js, dam-integrations.js, costs.html, integrations.html, invoices.html, index/explorer/inbox/visualizations/branding/dashboard.html, program-instructions.json, memory.md, version.json
+
 ## 2026-07-20 - Animacje reveal (fix regresji) + edytor skojarzen (search/folder/ikony)
 
 ### Komenda/Akcja
@@ -4064,3 +4090,26 @@ Agenci w tym repo dostaja jeden skill z doktryna + rytualem weryfikacji; slownik
 
 ### Zrodla
 ~/.cursor/skills/dam-dobrakaloria/SKILL.md, AGENTS.md, agents/shared/code-doctrine.md, .cursor/rules/code-doctrine.mdc.
+
+## 2026-07-20 - Motion global + skeleton + fix widget branding_latest (v2.0.7)
+
+### Komenda/Akcja
+User: zapisz, commit+push, napraw blad widgetu "Brak assetow w indeksie branding" na dashboardzie; przetestuj aplikacje (/ui-taste, /dam-dobrakaloria).
+
+### Log/Status
+1. Root cause: `dam-dashboard-widgets.js` filtrowal `media_type === "raster"` - indeks ma `image`/`vector`/`source` (7832 assetow, 0 po filtrze).
+2. Fix: `normalizeBrandingMediaType`, `isBrandingWidgetThumb`, `loadBrandingIndex()` (cache `__damBrandingIndex`), lepszy empty state z linkiem do Brandingu.
+3. Bump cache-bust: `dashboard.html` -> `dam-dashboard-widgets.js?v=brandfix20260720a`.
+4. Weryfikacja CDP dashboard: widget `branding_latest` -> 6 img, miniatury z bridge :8766, alt OK.
+5. Pozostale zmiany w working tree: global motion (dam-grid-reveal 0.45s, rootMargin -50px), skeleton costs/invoices/integrations, hover scale dam-brand.css.
+
+### Efekt/Fix
+Widget "Najnowsze materialy branding" pokazuje 6 najnowszych grup z miniaturami zamiast falszywego pustego stanu.
+
+### Test/Ewaluacja
+- `node --check dam-dashboard-widgets.js` OK
+- CDP: `[data-widget-id="branding_latest"]` imgCount=6, naturalWidth>0
+- Screenshot+Read: karta w scrollu dashboardu (CDP silniejszy niz klatka IDE)
+
+### Zrodla
+apps/web/assets/js/dam-dashboard-widgets.js, apps/web/dashboard.html, branding-index.json (7832 assets, media_types: image/vector/document/source/video).

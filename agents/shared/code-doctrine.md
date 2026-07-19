@@ -352,3 +352,7 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   (`<style id>`), nie edytuj cudzych `.css`.
 - 2026-07-20 | QA | screenshot pokazuje stara klatke | wspoldzielona karta IDE | wymus
   repaint + odczekaj klatke; potwierdzaj logike CDP; nie ufaj samej auto-caption.
+- 2026-07-20 | dashboard branding_latest | "Brak assetow w indeksie branding" przy
+  7832 assetach | filtr `media_type === "raster"` (legacy) vs indeks z `image`/`vector`/`source`
+  | uzywaj `normalizeMediaType` (raster->image) + `isBrandingWidgetThumb`; wspoldziel
+  `window.__damBrandingIndex` z brandingiem.

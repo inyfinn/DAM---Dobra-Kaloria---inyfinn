@@ -140,6 +140,9 @@
         );
       })
       .join("");
+    if (window.DamGridReveal && window.DamGridReveal.revealRows) {
+      window.DamGridReveal.revealRows(tbody, "tr");
+    }
   }
 
   function updateSummary(invoices) {
@@ -311,6 +314,10 @@
     });
 
     bindImport();
+    var skelBody = document.getElementById("invTableBody");
+    if (skelBody && window.DamGridReveal && window.DamGridReveal.skeleton) {
+      window.DamGridReveal.skeleton(skelBody, { count: 6, cols: 6 });
+    }
     loadInvoices().catch(function () {
       var tbody = document.getElementById("invTableBody");
       if (tbody) {

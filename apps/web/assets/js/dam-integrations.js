@@ -867,6 +867,9 @@
 
       box.innerHTML = authBanner + parts.join("");
       bindActions(box, reload);
+      if (window.DamGridReveal && window.DamGridReveal.revealRows) {
+        window.DamGridReveal.revealRows(box, ".dam-int-card");
+      }
 
       if (location.hash === "#damIntegrationsOAuth" || location.hash === "#damIntegrations") {
         var anchor = document.getElementById("damIntegrationsOAuth");
@@ -874,7 +877,11 @@
       }
     }
 
-    box.innerHTML = '<p class="dam-widget__meta">Wczytywanie statusu integracji…</p>';
+    if (window.DamGridReveal && window.DamGridReveal.skeleton) {
+      window.DamGridReveal.skeleton(box, { variant: "cards", count: 6 });
+    } else {
+      box.innerHTML = '<p class="dam-widget__meta">Wczytywanie statusu integracji…</p>';
+    }
 
     Promise.all([
       fetch(bridge() + "/integrations/status", { headers: authHeaders() })

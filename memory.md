@@ -961,7 +961,17 @@ ole=admin.
  - **Tray:** `launch.py` - `window.events.closing` chowa okno do zasobnika (`window.hide()`, return False) gdy `tray_active`; most/sync/index zyja dalej. Calkowite wyjscie = tray "Zatrzymaj DAM calkowicie" (`os._exit`). Stack bez zmian: pywebview + pystray. **Wymaga restartu aplikacji desktop** by wejscie zadzialalo.
  - **Cache Branding:** cache-bust `?v=CB` bez `Date.now()` (WebView2 cache'uje ~35 MB); indeks wspoldzielony `window.__damBrandingIndex` (branding.js + media-preview.js); jeden `renderTagFilters()` na boot (activateTab go robi); wideo w siatce `preload="none"`.
  - Cache-bust bumpniety na branding.html + dashboard.html (`motion20260720a` / `perf20260720a`); reszta stron = addytywna (brak nowego CSS = brak animacji, nie blad) -> pelny sweep to checklista **B6**.
- - Weryfikacja: browser :8765 screenshot+Read; CDP: --dam-anim=0.4s, --dam-anim-hover=0.22s, revealBars=3 belki, sharedIndex 7832, 115 kart, badge transition 0.22s.
+ - Weryfikacja: browser :8765 screenshot+Read; CDP: --dam-anim-hover=0.22s, revealBars, sharedIndex 7832, 115 kart, badge transition 0.22s.
+
+129. **Ruch globalny v2 - reveal 0.45s + skeleton (2026-07-20, w ramach 2.0.7) - HARD:**
+ - `dam-grid-reveal.js`: DURATION **0.45s** (bylo 0.4); IntersectionObserver `rootMargin: -50px` (element wchodzi ~50px w viewport zanim reveal - user: "za szybko, nie widze").
+ - **Kolejnosc gora->dol naprawiona:** reveal() dzieli wezly na `inView` (animowane od razu JEDNA posortowana sekwencja) vs `below` (IO przy scrollu). Koniec "wyskakiwania poza kolejnoscia zanim pojawi sie pierwszy".
+ - **Wejscie strony** `revealPageEntrance()`: tytul `.geex-content__header__title` + podtytul + belki, sort po Y. Sidebar **usuniety** z reveal (tylko morph collapse/expand); `#damHeaderAction` tez bez slide.
+ - **Hover globalny** (`dam-brand.css`): `.geex-btn`/ikony sidebaru scale ~1.05 (ikona 1.12) w 0.2s, `:active` 0.97. Token `--dam-hover-scale`.
+ - **Skeleton loading** (`DamGridReveal.skeleton` + CSS `.dam-skeleton*` shimmer `dam-skel-shimmer`): costs (#damCostMeta/Result/Fmcg), integrations (#damIntegrationsList karty), invoices (#invTableBody tr). Po fetch render podmienia + `revealRows`. reduced-motion => shimmer off, statyczny.
+ - **Tresc async animowana** `revealRows` (fade + y8, stagger 40ms): faktury (tabela nie byla animowana - "natychmiast"), panele costs, karty integracji.
+ - `dam-grid-reveal.js` dodany do costs/integrations/invoices (nie mialy go). Cache-bust `motion20260720a` bumpniety na 9 stronach: branding, dashboard, index, explorer, inbox, visualizations, costs, integrations, invoices. Reszta stron = checklista **B7** (sweep).
+ - **QA-pulapka:** karta automatyzacji w tle => `document.hidden=true` => rAF (GSAP) zamrozony => tween stoi (np. tytuł opacity 0.033). To NIE bug: wymus `gsap.globalTimeline.progress(1)` zeby zobaczyc stan koncowy; na widocznej karcie gra jak `index.html` (ten sam silnik, zatwierdzony wzorzec). Zweryfikowano: costs meta+koszt(7588,10 PLN), invoices 10 wierszy, integrations 7 kart.
 
 129. **WYKLADNIA KODU DAM = agents/shared/code-doctrine.md (2026-07-20) - HARD:**
  - Nadrzedny dokument "jak rozumiec kod DAM"; ZAWSZE czytany przed zmiana w apps/web/**. Wpiety na gorze AGENTS.md + lokalna regula .cursor/rules/code-doctrine.mdc (alwaysApply; .cursor jest gitignored - trwaly nosnik to AGENTS.md + agents/shared/).

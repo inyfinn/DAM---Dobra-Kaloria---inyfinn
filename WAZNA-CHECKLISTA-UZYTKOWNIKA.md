@@ -29,7 +29,7 @@ Legenda statusu: `[ ]` otwarte · `[~]` w toku · `[x]` zrobione
 | B4 | [ ] | **Tagi Autor** w Brandingu (Krzysztof / Sylwia itd.) | Wspomniane, nie zrobione |
 | B5 | [ ] | Dopiąć **QA dashboardu** — layouty 2×2 / 1×4 / 1×6 + sidebar expanded/collapsed | Reguła screenshot → Read |
 | B6 | [x] | Ujednolicić **wersję w note/memory** | 2026-07-20: `version.json` + `dam-version.js` + `runtime_config.py` + memory §128 = **2.0.7** |
-| B7 | [ ] | **Sweep cache-bust** `?v=` na pozostałych ~20 stronach dla `dam-brand.css` / `dam-tokens.css` / `dam-grid-reveal.js` | 2.0.7 bumpnięte tylko na branding.html + dashboard.html; reszta = animacje wejdą po bumpie (brak = graceful) |
+| B7 | [~] | **Sweep cache-bust** `?v=` na pozostałych stronach dla `dam-brand.css` / `dam-tokens.css` / `dam-grid-reveal.js` | Bumpnięte 9 stron (branding, dashboard, index, explorer, inbox, visualizations, costs, integrations, invoices). Reszta (activity, billing, consents, docs, help, license, privacy, profile, project, settings, terms, signin) = do zrobienia |
 
 ---
 

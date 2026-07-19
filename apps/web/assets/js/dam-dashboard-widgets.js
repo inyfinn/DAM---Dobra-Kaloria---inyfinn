@@ -209,6 +209,43 @@
     return last;
   }
 
+  function normalizeBrandingMediaType(mt) {
+    if (global.DamAssetTaxonomy && typeof DamAssetTaxonomy.normalizeMediaType === "function") {
+      return DamAssetTaxonomy.normalizeMediaType(mt);
+    }
+    var m = String(mt || "").toLowerCase();
+    return m === "raster" ? "image" : m;
+  }
+
+  function isBrandingWidgetThumb(a) {
+    if (!a) return false;
+    var mt = normalizeBrandingMediaType(a.media_type);
+    if (mt === "document" || mt === "video") return false;
+    var p = String(a.name || a.path || "");
+    if (/\.(png|jpe?g|webp|gif|svg)$/i.test(p)) return true;
+    return mt === "image" || mt === "vector";
+  }
+
+  function loadBrandingIndex() {
+    if (global.__damBrandingIndex && global.__damBrandingIndex.assets) {
+      return Promise.resolve(global.__damBrandingIndex);
+    }
+    return fetch(
+      "data/branding-index.json?v=" + (global.DAM_APP_VERSION || Date.now())
+    )
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        try {
+          global.__damBrandingIndex = data;
+        } catch (eShare) {
+          /* ignore */
+        }
+        return data;
+      });
+  }
+
   function groupBrandingAssets(assets, maxGroups) {
     var byDir = {};
     (assets || []).forEach(function (a) {
@@ -834,18 +871,13 @@
           var self = this;
           var layout = getTileLayout(self.id);
           var n = layoutCardCount(layout);
-          fetch("data/branding-index.json?v=" + (global.DAM_APP_VERSION || Date.now()))
-            .then(function (r) {
-              return r.json();
-            })
+          loadBrandingIndex()
             .then(function (data) {
               var bridge =
                 (global.DamPaths && typeof DamPaths.bridgeUrl === "function" && DamPaths.bridgeUrl()) ||
                 (global.DamRuntime && typeof DamRuntime.bridgeUrl === "function" && DamRuntime.bridgeUrl()) ||
                 "http://127.0.0.1:8766";
-              var assets = (data.assets || []).filter(function (a) {
-                return a.media_type === "raster" && /\.(png|jpe?g|webp)$/i.test(a.name || a.path || "");
-              });
+              var assets = (data.assets || []).filter(isBrandingWidgetThumb);
               assets.sort(function (a, b) {
                 return String(b.mtime || "").localeCompare(String(a.mtime || ""));
               });
@@ -853,7 +885,7 @@
               if (!groups.length) {
                 el.outerHTML = shell(
                   self,
-                  '<p class="dam-widget__meta">Brak assetow w indeksie branding.</p>',
+                  '<p class="dam-widget__meta">Brak miniatur graficznych do podgladu. <a href="branding.html">Otworz Branding</a></p>',
                   "dam-widget--branding-latest dam-widget--media-latest",
                   layoutToggleHtml(self.id, layout)
                 );

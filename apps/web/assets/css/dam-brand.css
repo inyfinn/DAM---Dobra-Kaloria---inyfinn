@@ -9291,4 +9291,142 @@ button.dam-viz-badge:hover,
   }
 }
 
+/* ===========================================================================
+   Hover buttonow + pozycji sidebaru: subtelne powiekszenie (~5%) i wcisniecie.
+   Tylko transform/opacity (bez layout shift). Jak na prawdziwej stronie www.
+   =========================================================================== */
+:root {
+  --dam-hover-scale: 1.05;
+}
+.geex-btn,
+.geex-sidebar__menu__link,
+.dam-icon-btn,
+.dam-menu-toggle {
+  transition:
+    transform var(--dam-anim-hover, 0.2s) var(--dam-anim-ease, ease),
+    background-color var(--dam-anim-hover, 0.2s) var(--dam-anim-ease, ease),
+    color var(--dam-anim-hover, 0.2s) var(--dam-anim-ease, ease),
+    box-shadow var(--dam-anim-hover, 0.2s) var(--dam-anim-ease, ease);
+  transform-origin: center;
+  will-change: transform;
+}
+.geex-btn:hover,
+.dam-icon-btn:hover,
+.dam-menu-toggle:hover {
+  transform: scale(var(--dam-hover-scale));
+}
+.geex-btn:active,
+.dam-icon-btn:active,
+.dam-menu-toggle:active {
+  transform: scale(0.97);
+}
+/* Sidebar: link nie skaluje calego wiersza (rozjechalby tlo aktywne) - skalujemy ikone. */
+.geex-sidebar__menu__link:hover .uil,
+.geex-sidebar__menu__link:hover i {
+  transform: scale(1.12);
+}
+.geex-sidebar__menu__link .uil,
+.geex-sidebar__menu__link i {
+  display: inline-block;
+  transition: transform var(--dam-anim-hover, 0.2s) var(--dam-anim-ease, ease);
+  transform-origin: center;
+}
+
+/* ===========================================================================
+   Skeleton loading (shimmer) - placeholder ksztaltu tresci podczas ladowania.
+   =========================================================================== */
+.dam-skeleton {
+  display: grid;
+  gap: 12px;
+}
+.dam-skeleton--grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.dam-skeleton__line,
+.dam-skeleton__row,
+.dam-skeleton__card {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  background: var(--dam-surface-muted, #f0f0f4);
+  border-radius: var(--dam-radius-sm, 8px);
+}
+.dam-skeleton__line {
+  height: 14px;
+}
+.dam-skeleton__row {
+  height: 44px;
+}
+.dam-skeleton__card {
+  height: 132px;
+  border-radius: var(--dam-radius-md, 12px);
+}
+.dam-skeleton-tr td {
+  padding: 12px 14px !important;
+}
+.dam-skeleton-tr .dam-skeleton__line {
+  height: 16px;
+}
+.dam-skeleton__line::after,
+.dam-skeleton__row::after,
+.dam-skeleton__card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  animation: dam-skel-shimmer 1.3s ease-in-out infinite;
+}
+html[data-theme="dark"] .dam-skeleton__line,
+html[data-theme="dark"] .dam-skeleton__row,
+html[data-theme="dark"] .dam-skeleton__card {
+  background: rgba(255, 255, 255, 0.06);
+}
+html[data-theme="dark"] .dam-skeleton__line::after,
+html[data-theme="dark"] .dam-skeleton__row::after,
+html[data-theme="dark"] .dam-skeleton__card::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.09),
+    transparent
+  );
+}
+@keyframes dam-skel-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .geex-btn,
+  .geex-sidebar__menu__link,
+  .dam-icon-btn,
+  .dam-menu-toggle,
+  .geex-sidebar__menu__link .uil,
+  .geex-sidebar__menu__link i {
+    transition: none;
+  }
+  .geex-btn:hover,
+  .dam-icon-btn:hover,
+  .dam-menu-toggle:hover,
+  .geex-btn:active,
+  .dam-icon-btn:active,
+  .dam-menu-toggle:active,
+  .geex-sidebar__menu__link:hover .uil,
+  .geex-sidebar__menu__link:hover i {
+    transform: none;
+  }
+  .dam-skeleton__line::after,
+  .dam-skeleton__row::after,
+  .dam-skeleton__card::after {
+    animation: none;
+    display: none;
+  }
+}
+
 

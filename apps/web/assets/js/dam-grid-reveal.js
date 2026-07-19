@@ -18,11 +18,14 @@
 (function (global) {
   "use strict";
 
-  // Tempo (medium): ~0.4s na element, 0.05s odstepu miedzy elementami.
-  var DURATION = 0.4;
+  // Tempo (medium): ~0.45s na element, 0.05s odstepu miedzy elementami.
+  var DURATION = 0.45;
   var STAGGER_EACH = 0.05;
   var EASE = "power2.out";
-  var VIEWPORT_THRESHOLD = 0.08;
+  var VIEWPORT_THRESHOLD = 0.01;
+  // Element musi wejsc ~50px w viewport zanim sie odsloni (nie tuz przy krawedzi,
+  // zeby animacja byla widoczna, a nie "juz sie stala" poza ekranem).
+  var VIEWPORT_MARGIN = 50;
 
   // "Belki": toolbary, paski filtrow, context bar, changelog. Animowane jako
   // bloki (nie per-element) przez revealBars(); jednorazowo (znacznik dataset).
@@ -153,7 +156,10 @@
         var cfg = (nodeCfg && nodeCfg.get(hits[0])) || {};
         animateClip(gsap, hits, cfg);
       },
-      { threshold: VIEWPORT_THRESHOLD }
+      {
+        threshold: VIEWPORT_THRESHOLD,
+        rootMargin: "0px 0px -" + VIEWPORT_MARGIN + "px 0px",
+      }
     );
     return gridObserver;
   }
@@ -187,7 +193,28 @@
         return;
       }
       gsap.set(nodes, { opacity: 0 });
+      // Elementy widoczne juz na starcie animujemy w JEDNEJ sekwencji gora->dol,
+      // zeby nie "wyskakiwaly poza kolejnoscia" zanim pokaze sie pierwszy. Reszta
+      // (ponizej ekranu) odslania sie przez IntersectionObserver przy scrollu.
+      var vh =
+        global.innerHeight || document.documentElement.clientHeight || 0;
+      var inView = [];
+      var below = [];
       nodes.forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.top < vh - VIEWPORT_MARGIN && r.bottom > 0) {
+          inView.push(el);
+        } else {
+          below.push(el);
+        }
+      });
+      if (inView.length) {
+        inView.sort(function (a, b) {
+          return a.getBoundingClientRect().top - b.getBoundingClientRect().top;
+        });
+        animateClip(gsap, inView, opts);
+      }
+      below.forEach(function (el) {
         if (nodeCfg) nodeCfg.set(el, opts);
         observer.observe(el);
       });
@@ -357,17 +384,121 @@
   // Auto-init
   // ---------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------
+  // Wejscie strony — tytul + podtytul + belki, kaskada gora->dol
+  // ---------------------------------------------------------------------------
+
+  // Sidebar oraz pasek akcji naglowka (#damHeaderAction: Pliki/Baza/PL/ADMIN)
+  // NIE animuja sie tym reveal. Sidebar ma tylko morph przy zwijaniu/rozwijaniu.
+
+  function revealPageEntrance() {
+    if (prefersReducedMotion()) return;
+    var seq = [];
+    var title = document.querySelector(".geex-content__header__title");
+    var sub = document.querySelector(".geex-content__header__subtitle");
+    if (title) seq.push(title);
+    if (sub) seq.push(sub);
+    Array.prototype.forEach.call(
+      document.querySelectorAll(BARS_SELECTOR),
+      function (el) {
+        if (el.getAttribute("data-dam-bar-revealed") !== "1" && isVisible(el)) {
+          el.setAttribute("data-dam-bar-revealed", "1");
+          seq.push(el);
+        }
+      }
+    );
+    if (!seq.length) return;
+    // Twarda kolejnosc gora->dol niezaleznie od kolejnosci w DOM.
+    seq.sort(function (a, b) {
+      return a.getBoundingClientRect().top - b.getBoundingClientRect().top;
+    });
+    revealSequence(document, seq, { mode: "slide", stagger: 0.06, y: -12 });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Wiersze / pozycje list (tabele faktur, kosztow) — fade + lekki zjazd
+  // ---------------------------------------------------------------------------
+
+  function revealRows(container, selector, opts) {
+    opts = opts || {};
+    var nodes = resolveNodes(container, selector);
+    if (!nodes.length) return;
+    if (prefersReducedMotion()) {
+      clearRevealStyles(nodes);
+      return;
+    }
+    loadGsap(function (gsap) {
+      if (!gsap) {
+        clearRevealStyles(nodes);
+        return;
+      }
+      gsap.killTweensOf(nodes);
+      gsap.fromTo(
+        nodes,
+        { autoAlpha: 0, y: 8 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: opts.duration != null ? opts.duration : 0.4,
+          ease: EASE,
+          stagger: {
+            each: opts.stagger != null ? opts.stagger : 0.04,
+            from: "start",
+          },
+          overwrite: true,
+          clearProps: "transform,visibility,opacity",
+        }
+      );
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Skeleton loading (shimmer) — placeholder ksztaltu tresci podczas ladowania
+  // ---------------------------------------------------------------------------
+
+  function skeleton(mount, opts) {
+    if (!mount) return;
+    opts = opts || {};
+    var count = opts.count || 5;
+    var variant = opts.variant || "lines";
+    var i;
+    if (mount.tagName === "TBODY") {
+      var cols = opts.cols || 6;
+      var rows = "";
+      for (i = 0; i < count; i++) {
+        rows +=
+          '<tr class="dam-skeleton-tr"><td colspan="' +
+          cols +
+          '"><span class="dam-skeleton__line"></span></td></tr>';
+      }
+      mount.innerHTML = rows;
+      return;
+    }
+    var cls = "dam-skeleton";
+    if (variant === "cards") cls += " dam-skeleton--grid";
+    var html = '<div class="' + cls + '" aria-hidden="true">';
+    for (i = 0; i < count; i++) {
+      if (variant === "cards") {
+        html += '<div class="dam-skeleton__card"></div>';
+      } else if (variant === "rows") {
+        html += '<div class="dam-skeleton__row"></div>';
+      } else {
+        html +=
+          '<div class="dam-skeleton__line" style="width:' +
+          (62 + ((i * 13) % 34)) +
+          '%"></div>';
+      }
+    }
+    html += "</div>";
+    mount.innerHTML = html;
+  }
+
   function autoInit() {
     initModalObserver();
-    revealSidebarWhenReady();
-    // Belki statyczne obecne w HTML od razu (toolbary). Belki renderowane
-    // przez JS odslania ich wlasny kod przez DamGridReveal.revealBars(...).
     if (global.requestAnimationFrame) {
-      global.requestAnimationFrame(function () {
-        revealBars(document);
-      });
+      global.requestAnimationFrame(revealPageEntrance);
     } else {
-      revealBars(document);
+      revealPageEntrance();
     }
   }
 
@@ -382,6 +513,9 @@
     revealSequence: revealSequence,
     revealModal: revealModal,
     revealBars: revealBars,
+    revealRows: revealRows,
+    revealPageEntrance: revealPageEntrance,
+    skeleton: skeleton,
     selectors: {
       projectCard: ".dam-project-card",
       vizCard: ".dam-viz-card",

@@ -505,6 +505,10 @@
     if (!project) return;
     renderMeta(project);
     renderResult(project);
+    if (window.DamGridReveal && window.DamGridReveal.revealRows) {
+      window.DamGridReveal.revealRows(document.getElementById("damCostMeta"), ":scope > *");
+      window.DamGridReveal.revealRows(document.getElementById("damCostResult"), ":scope > *");
+    }
     if (window.DamShell && typeof window.DamShell.setTrailLeaf === "function") {
       window.DamShell.setTrailLeaf(project.label);
     }
@@ -601,6 +605,9 @@
       (missing
         ? '<p class="dam-cost-card__note">Część pozycji bez kwoty — uzupełnij katalog lub import CSV w Integracjach.</p>'
         : "");
+    if (window.DamGridReveal && window.DamGridReveal.revealRows) {
+      window.DamGridReveal.revealRows(mount, ":scope > *");
+    }
   }
 
   function applyProjectCosts(data, source) {
@@ -736,6 +743,11 @@
     });
 
     bindSync();
+    if (window.DamGridReveal && window.DamGridReveal.skeleton) {
+      window.DamGridReveal.skeleton(document.getElementById("damCostMeta"), { count: 4 });
+      window.DamGridReveal.skeleton(document.getElementById("damCostResult"), { variant: "rows", count: 4 });
+      window.DamGridReveal.skeleton(document.getElementById("damCostFmcg"), { variant: "rows", count: 3 });
+    }
     loadProjectCosts().catch(function (err) {
       var meta = document.getElementById("damCostMeta");
       if (meta) {
