@@ -109,7 +109,54 @@
     return w.roles.indexOf(role) !== -1;
   }
 
-  function shell(w, bodyHtml, extraClass) {
+  var TILE_LAYOUTS = ["2x2", "1x4", "1x6"];
+
+  function layoutStorageKey(widgetId) {
+    return "dam_dash_tile_layout:" + userKey() + ":" + widgetId;
+  }
+
+  function getTileLayout(widgetId) {
+    try {
+      var v = localStorage.getItem(layoutStorageKey(widgetId)) || "1x4";
+      return TILE_LAYOUTS.indexOf(v) >= 0 ? v : "1x4";
+    } catch (e) {
+      return "1x4";
+    }
+  }
+
+  function setTileLayout(widgetId, layout) {
+    try {
+      localStorage.setItem(layoutStorageKey(widgetId), layout);
+    } catch (e) {}
+  }
+
+  function layoutCardCount(layout) {
+    if (layout === "1x6") return 6;
+    if (layout === "2x2") return 4;
+    return 4;
+  }
+
+  function layoutToggleHtml(widgetId, layout) {
+    var labels = { "2x2": "Układ 2x2", "1x4": "Układ 1x4", "1x6": "Układ 1x6" };
+    return (
+      '<div class="dam-widget__actions">' +
+      '<button type="button" class="dam-widget__layout-btn" data-widget-layout-toggle="' +
+      escapeHtml(widgetId) +
+      '" data-layout="' +
+      escapeHtml(layout) +
+      '" aria-label="' +
+      escapeHtml(labels[layout] || "Układ kafelków") +
+      '" title="' +
+      escapeHtml(labels[layout] || "Zmien układ") +
+      '" data-dam-tip="Przelacz uklad: 2x2 / 1x4 / 1x6">' +
+      '<i class="uil uil-apps" aria-hidden="true"></i>' +
+      '<span class="dam-widget__layout-label">' +
+      escapeHtml(layout) +
+      "</span></button></div>"
+    );
+  }
+
+  function shell(w, bodyHtml, extraClass, headActionsHtml) {
     var size = w.size || "sm";
     var cls =
       "dam-widget dam-widget--" +
@@ -130,12 +177,86 @@
       '">' +
       escapeHtml(w.title) +
       "</h3>" +
+      (headActionsHtml || "") +
       "</div>" +
       '<div class="dam-widget__body">' +
       bodyHtml +
       "</div>" +
       "</article>"
     );
+  }
+
+  function dirnamePath(p) {
+    var s = String(p || "").replace(/\\/g, "/");
+    var i = s.lastIndexOf("/");
+    return i > 0 ? s.slice(0, i) : s;
+  }
+
+  function folderLabel(path, asset) {
+    var parts = dirnamePath(path).split("/").filter(Boolean);
+    if (!parts.length) return "Material";
+    var skip = /^(miniatura|galeria|preview|thumbs?|exports?|\d+x)$/i;
+    while (parts.length > 1 && skip.test(parts[parts.length - 1])) {
+      parts.pop();
+    }
+    var last = parts[parts.length - 1];
+    var prev = parts.length > 1 ? parts[parts.length - 2] : "";
+    if (/^\d+x$/i.test(last) && prev) return prev + " / " + last;
+    if (/^\d{2}\s*-\s*/.test(last) && prev) return prev + " / " + last;
+    var nameHint = String((asset && (asset.name || asset.file_name)) || "");
+    var m = nameHint.match(/^(.+?)\s*-\s*\d+\.(png|jpg|jpeg|webp|svg)$/i);
+    if (m && m[1] && m[1].length >= 4) return m[1].trim();
+    return last;
+  }
+
+  function groupBrandingAssets(assets, maxGroups) {
+    var byDir = {};
+    (assets || []).forEach(function (a) {
+      var key = dirnamePath(a.path || a.folder_group_id || a.id).toLowerCase();
+      if (!byDir[key]) byDir[key] = [];
+      byDir[key].push(a);
+    });
+    var groups = Object.keys(byDir).map(function (k) {
+      var arr = byDir[k].slice().sort(function (a, b) {
+        return String(b.mtime || "").localeCompare(String(a.mtime || ""));
+      });
+      var newest = arr[0];
+      return {
+        key: k,
+        label: folderLabel(newest.path || "", newest),
+        count: arr.length,
+        newest: newest,
+        path: newest.path || "",
+        mtime: newest.mtime || "",
+      };
+    });
+    groups.sort(function (a, b) {
+      return String(b.mtime || "").localeCompare(String(a.mtime || ""));
+    });
+    return groups.slice(0, maxGroups || 4);
+  }
+
+  function mediaListClass(layout) {
+    return (
+      "dam-widget__list dam-widget__list--media dam-widget__list--grid-" +
+      (layout || "1x4")
+    );
+  }
+
+  function bindLayoutToggle(widgetId, onCycle) {
+    var btn = document.querySelector(
+      '[data-widget-layout-toggle="' + widgetId + '"]'
+    );
+    if (!btn || btn._damLayoutBound) return;
+    btn._damLayoutBound = true;
+    btn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      var cur = getTileLayout(widgetId);
+      var idx = TILE_LAYOUTS.indexOf(cur);
+      var next = TILE_LAYOUTS[(idx + 1) % TILE_LAYOUTS.length];
+      setTileLayout(widgetId, next);
+      if (typeof onCycle === "function") onCycle(next);
+    });
   }
 
   function statBody(value, meta) {
@@ -568,20 +689,31 @@
       },
       {
         id: "newest_viz_3",
-        title: t("dash.widget.newest_viz", "4 najnowsze wizualizacje"),
+        title: t("dash.widget.newest_viz", "Najnowsze wizualizacje"),
         size: "md",
         defaultOn: true,
         render: function (el, ctx) {
-          var list = pickNewestViz(ctx, 4);
+          var self = this;
+          var layout = getTileLayout(self.id);
+          var n = layoutCardCount(layout);
+          var list = pickNewestViz(ctx, n);
           if (!list.length) {
             el.outerHTML = shell(
-              this,
-              '<p class="dam-widget__meta">Brak wizualizacji powiazanych z projektem Asana</p>'
+              self,
+              '<p class="dam-widget__meta">Brak wizualizacji powiazanych z projektem Asana</p>',
+              "dam-widget--viz-latest dam-widget--media-latest",
+              layoutToggleHtml(self.id, layout)
             );
+            bindLayoutToggle(self.id, function () {
+              var host = document.querySelector('[data-widget-id="newest_viz_3"]');
+              if (host) self.render(host, ctx);
+            });
             return;
           }
           var html =
-            '<ul class="dam-widget__list dam-widget__list--viz">' +
+            '<ul class="' +
+            mediaListClass(layout) +
+            ' dam-widget__list--viz">' +
             list
               .map(function (v) {
                 var name = v.product_name || v.product_id || "Wizualizacja";
@@ -675,10 +807,19 @@
               })
               .join("") +
             "</ul>";
-          el.outerHTML = shell(this, html, "dam-widget--viz-latest");
+          el.outerHTML = shell(
+            self,
+            html,
+            "dam-widget--viz-latest dam-widget--media-latest",
+            layoutToggleHtml(self.id, layout)
+          );
+          bindLayoutToggle(self.id, function () {
+            var host = document.querySelector('[data-widget-id="newest_viz_3"]');
+            if (host) self.render(host, ctx);
+          });
           if (global.DamBadges && typeof DamBadges.bindClicks === "function") {
             var host = document.querySelector(
-              '[data-widget-id="newest_viz_3"] .dam-widget__list--viz'
+              '[data-widget-id="newest_viz_3"] .dam-widget__list--media'
             );
             if (host) DamBadges.bindClicks(host, "dashboard");
           }
@@ -691,52 +832,118 @@
         defaultOn: true,
         render: function (el) {
           var self = this;
-          fetch("data/branding-index.json?v=hub20260719")
+          var layout = getTileLayout(self.id);
+          var n = layoutCardCount(layout);
+          fetch("data/branding-index.json?v=" + (global.DAM_APP_VERSION || Date.now()))
             .then(function (r) {
               return r.json();
             })
             .then(function (data) {
               var bridge =
-                global.DamRuntime && typeof DamRuntime.bridgeUrl === "function"
-                  ? DamRuntime.bridgeUrl()
-                  : "http://127.0.0.1:8766";
+                (global.DamPaths && typeof DamPaths.bridgeUrl === "function" && DamPaths.bridgeUrl()) ||
+                (global.DamRuntime && typeof DamRuntime.bridgeUrl === "function" && DamRuntime.bridgeUrl()) ||
+                "http://127.0.0.1:8766";
               var assets = (data.assets || []).filter(function (a) {
-                return a.media_type === "raster" && /\.(png|jpe?g)$/i.test(a.name || "");
+                return a.media_type === "raster" && /\.(png|jpe?g|webp)$/i.test(a.name || a.path || "");
               });
               assets.sort(function (a, b) {
                 return String(b.mtime || "").localeCompare(String(a.mtime || ""));
               });
-              var list = assets.slice(0, 4);
-              if (!list.length) {
+              var groups = groupBrandingAssets(assets, n);
+              if (!groups.length) {
                 el.outerHTML = shell(
                   self,
-                  '<p class="dam-widget__meta">Brak assetów w indeksie branding.</p>'
+                  '<p class="dam-widget__meta">Brak assetow w indeksie branding.</p>',
+                  "dam-widget--branding-latest dam-widget--media-latest",
+                  layoutToggleHtml(self.id, layout)
                 );
+                bindLayoutToggle(self.id, function () {
+                  var host = document.querySelector('[data-widget-id="branding_latest"]');
+                  if (host) self.render(host);
+                });
                 return;
               }
+              var winIcon =
+                global.DamIcons && typeof DamIcons.winExplorerSvg === "function"
+                  ? DamIcons.winExplorerSvg()
+                  : '<i class="uil uil-folder" aria-hidden="true"></i>';
               var html =
-                '<ul class="dam-widget__list">' +
-                list
-                  .map(function (a) {
+                '<ul class="' +
+                mediaListClass(layout) +
+                '">' +
+                groups
+                  .map(function (g) {
+                    var a = g.newest;
+                    var q = encodeURIComponent(g.label || a.name || "");
+                    var brandingHref = "branding.html?q=" + q;
                     var thumb = bridge + "/media?path=" + encodeURIComponent(a.path || "");
+                    var countChip =
+                      g.count > 1
+                        ? '<span class="dam-widget__count-chip">x' +
+                          g.count +
+                          " warianty</span>"
+                        : "";
                     return (
-                      '<li><a class="dam-widget__row-link" href="branding.html?q=' +
-                      encodeURIComponent(a.name || "") +
-                      '"><img class="dam-widget__thumb dam-widget__thumb--sm" src="' +
+                      '<li class="dam-widget__viz-row">' +
+                      '<div class="dam-nav-circles dam-nav-circles--stack dam-nav-circles--tiles">' +
+                      '<a class="dam-viz-icon-btn dam-viz-icon-btn--explorer" href="' +
+                      brandingHref +
+                      '" title="Branding" aria-label="Branding" data-dam-tip="Otworz Branding">' +
+                      '<i class="uil uil-palette" aria-hidden="true"></i></a>' +
+                      '<button type="button" class="dam-viz-icon-btn dam-win-btn" data-path="' +
+                      escapeHtml(dirnamePath(a.path || "")) +
+                      '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plikow Windows"' +
+                      (!(a.path) ? " disabled" : "") +
+                      ">" +
+                      winIcon +
+                      "</button>" +
+                      '<a class="dam-viz-icon-btn dam-viz-icon-btn--viz" href="' +
+                      brandingHref +
+                      '" title="Podglad" aria-label="Podglad" data-dam-tip="Otworz material w Brandingu">' +
+                      '<i class="uil uil-eye" aria-hidden="true"></i></a>' +
+                      "</div>" +
+                      '<div class="dam-widget__viz-media">' +
+                      '<a class="dam-widget__thumb-link" href="' +
+                      brandingHref +
+                      '" title="Branding">' +
+                      '<img class="dam-widget__thumb" src="' +
                       escapeHtml(thumb) +
-                      '" alt="" loading="lazy" />' +
-                      escapeHtml(a.name || a.id) +
-                      "</a></li>"
+                      '" alt="' +
+                      escapeHtml(g.label) +
+                      '" loading="lazy" />' +
+                      "</a>" +
+                      '<div class="dam-widget__viz-body">' +
+                      '<a href="' +
+                      brandingHref +
+                      '">' +
+                      escapeHtml(g.label) +
+                      "</a>" +
+                      '<div class="dam-widget__viz-badges">' +
+                      (a.brand
+                        ? '<span class="dam-viz-badge">' + escapeHtml(a.brand) + "</span>"
+                        : "") +
+                      countChip +
+                      "</div></div></div></li>"
                     );
                   })
                   .join("") +
-                '</ul><p class="dam-widget__meta"><a href="branding.html">Otwórz Branding</a></p>';
-              el.outerHTML = shell(self, html);
+                '</ul><p class="dam-widget__meta"><a href="branding.html">Otworz Branding</a></p>';
+              el.outerHTML = shell(
+                self,
+                html,
+                "dam-widget--branding-latest dam-widget--media-latest",
+                layoutToggleHtml(self.id, layout)
+              );
+              bindLayoutToggle(self.id, function () {
+                var host = document.querySelector('[data-widget-id="branding_latest"]');
+                if (host) self.render(host);
+              });
             })
             .catch(function () {
               el.outerHTML = shell(
                 self,
-                '<p class="dam-widget__meta">Indeks branding niedostępny.</p>'
+                '<p class="dam-widget__meta">Indeks branding niedostepny.</p>',
+                "dam-widget--branding-latest dam-widget--media-latest"
               );
             });
         },

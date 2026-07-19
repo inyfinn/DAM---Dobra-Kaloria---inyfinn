@@ -641,10 +641,18 @@
       }),
     })
       .then(function (r) {
-        return r.json();
+        return r.json().then(function (res) {
+          if (!r.ok || !res || !res.ok) {
+            var code = (res && res.error) || ("http_" + r.status);
+            if (code === "not_found") {
+              throw new Error("bridge_endpoint_missing (zrestartuj local_bridge.py)");
+            }
+            throw new Error(code);
+          }
+          return res;
+        });
       })
       .then(function (res) {
-        if (!res || !res.ok) throw new Error((res && res.error) || "save_failed");
         toast("Zapisano skojarzenia");
         if (global.DamBranding && typeof global.DamBranding.clearComputeCache === "function") {
           global.DamBranding.clearComputeCache();

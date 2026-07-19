@@ -3158,26 +3158,29 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   flex-direction: column;
 }
 .dam-explorer-results__toolbar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 8px 12px;
   padding: 10px 12px;
   border-bottom: 1px solid #EFEFF2;
   background: #fff;
+  min-width: 0;
 }
 .dam-explorer-results__meta {
   font-size: 12px;
   color: #8b8d97;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 .dam-explorer-results__actions {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  margin-left: auto;
+  min-width: 0;
+  max-width: 100%;
 }
 .dam-explorer-results__actions .geex-btn {
   min-height: 36px;
@@ -5053,9 +5056,12 @@ button.dam-status-badge.dam-tag-editable:hover {
   align-items: center;
   gap: 8px 10px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 60px;
   padding: var(--dam-carrier-inset-y-sm, 12px) var(--dam-carrier-inset-x, 18px);
   box-sizing: border-box;
+  overflow: hidden;
   cursor: pointer;
   transition: background 0.12s ease;
 }
@@ -5157,6 +5163,45 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-carrier-head__meta-life .dam-lifecycle-history {
   flex: 1 1 100%;
   margin-top: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.dam-carrier-body__life {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #efeef2;
+  border-radius: 10px;
+  background: #fafafb;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dam-carrier-body__life .dam-lifecycle-history {
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .dam-explorer-results__toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .dam-explorer-results__actions {
+    flex-wrap: wrap;
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .dam-explorer-results__actions .geex-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .dam-carrier-toggle__actions {

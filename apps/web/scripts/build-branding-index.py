@@ -500,9 +500,10 @@ def main() -> int:
         print(f"warn: appearance tag enrich skipped: {exc}")
 
     try:
-        from brand_folder_context import enrich_folder_groups
+        from brand_folder_context import enrich_folder_groups, apply_branding_assoc_overrides
 
         enrich_folder_groups(assets, file_index)
+        apply_branding_assoc_overrides(assets, file_index)
     except Exception as exc:
         print(f"warn: folder context enrich skipped: {exc}")
 

@@ -3836,3 +3836,46 @@ User: „Umożliw Integracje” — strona `integrations.html` miała statyczne 
 ### Źródła
 - `oauth_integrations.py`, `dam-settings.js` (poprzedni `loadIntegrations`)
 
+
+---
+
+## 2026-07-19 — Integracje hub v2 (2.0.5)
+
+### Komenda/Akcja
+Plan Integracje hub v2: dashboard widgety, UI hub, bridge finance/integrations, wykrojnik bridge-only, costs/invoices live, katalog FMCG, bump 2.0.5.
+
+### Log/Status
+1. Faza 0: dam-dashboard-widgets.js + CSS — layout 2x2/1x4/1x6, grupowanie branding po folderze.
+2. Faza 1+3+4: dam-integrations-hub.css, rewrite dam-integrations.js, dam-wykrojnik-queue.js → GET/POST bridge.
+3. Faza 2: program-instructions (integrations.hub_bridge, finance.*); endpointy local_bridge + oauth_integrations.
+4. Faza 5+5b: dam-cost.js bridge fetch + sync + panel FMCG; fmcg-cost-catalog.json; dam-fmcg-cost.js catalog-first.
+5. Faza 6: dam-invoices.js bridge + CSV import; ukryty Geex Asana demo; lista z asana-tasks.json.
+6. Faza 7: wersja 2.0.5, ADR-005 notatka v2, memory.
+
+### Efekt/Fix
+Hub Integracje = konfiguracja na stronie; koszty/faktury nie tylko ze statycznego JSON; katalog FMCG gotowy pod import Excel/CSV.
+
+### Test/Ewaluacja
+- Screenshot QA: dashboard layouts, Integracje vs Kalkulator, costs/invoices source badge.
+- Restart bridge po zmianach local_bridge.py.
+
+### Zrodla
+- Plan integracje_hub_v2
+- program-instructions.json, local_bridge.py, fmcg-cost-catalog.json
+
+---
+
+## 2026-07-19 — Integracje hub v2: kontynuacja + commit (2.0.5)
+
+### Komenda/Akcja
+Kontynuacja planu po innym agencie: audit luk, hotfix UI, commit+push na origin/main.
+
+### Log/Status
+1. Audit: fazy 0–7 lokalnie gotowe, ale **niezacommitowane** (working tree dirty vs 5adcd1f).
+2. Fix: `dam-integrations.js` — Promise.all `.catch` + odporny fetch stawek (nie wisieć na „Wczytywanie…”).
+3. Fix: `dam-wykrojnik-queue.js` — filtr placeholderów `row-N` z uszkodzonego rejestru XLSX.
+4. Smoke: Integracje (karty Entra/Asana/MS/Synology/Finanse), Kalkulator (`Synchronizuj z Asany`, sekcja Łańcuch FMCG 5/45), bridge hub_routes 200.
+5. Commit + push `feat(integrations): hub v2 … (v2.0.5)`.
+
+### Efekt/Fix
+Plan Integracje hub v2 domknięty w git + GitHub; restore-point pre-bento nadal tag `milestone/pre-bento-v1.5.0`.

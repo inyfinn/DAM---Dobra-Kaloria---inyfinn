@@ -1,15 +1,108 @@
 /**
- * DAM - FMCG landed-cost estimates (averages until real data).
- * API: window.DamFmcg.computeMonthLanded(ctx) / formatPLN / getSwot
+ * DAM - FMCG landed-cost (katalog łańcucha + fallback na średnie).
+ * API: computeMonthLanded / computeFromCatalog / loadCatalog / formatPLN / getSwot
  */
 (function (global) {
   "use strict";
 
   var averagesCache = null;
+  var catalogCache = null;
+
+  var STAGE_LABELS = {
+    procurement: "Zamówienie i zakup",
+    prepress: "Przygotowanie",
+    production: "Produkcja",
+    warehouse: "Magazyn",
+    logistics: "Dostawa",
+  };
 
   function formatPLN(val) {
     var n = Number(val) || 0;
     return Math.round(n).toLocaleString("pl-PL") + " PLN";
+  }
+
+  function bridgeUrl() {
+    if (global.DamRuntime && typeof DamRuntime.bridgeUrl === "function") {
+      return DamRuntime.bridgeUrl();
+    }
+    return "http://127.0.0.1:8766";
+  }
+
+  function authHeaders() {
+    if (global.DamApi && typeof DamApi.authHeaders === "function") {
+      return DamApi.authHeaders();
+    }
+    return {
+      Authorization: "Bearer " + (localStorage.getItem("dam_token") || ""),
+      Accept: "application/json",
+    };
+  }
+
+  function computeFromCatalog(catalog) {
+    catalog = catalog || {};
+    var stages = catalog.stages || Object.keys(STAGE_LABELS);
+    var by_stage = {};
+    stages.forEach(function (s) {
+      by_stage[s] = 0;
+    });
+    var missing = 0;
+    var filled = 0;
+    (catalog.items || []).forEach(function (item) {
+      if (!item || typeof item !== "object") return;
+      var amt = item.amount;
+      if (amt === null || amt === undefined || amt === "") {
+        missing += 1;
+        return;
+      }
+      var val = Number(amt);
+      if (!isFinite(val)) {
+        missing += 1;
+        return;
+      }
+      filled += 1;
+      var stage = String(item.stage || "");
+      by_stage[stage] = (by_stage[stage] || 0) + val;
+    });
+    return {
+      ok: true,
+      currency: catalog.currency || "PLN",
+      by_stage: by_stage,
+      missing_count: missing,
+      filled_count: filled,
+      item_count: (catalog.items || []).length,
+      imported_at: catalog.imported_at || null,
+      estimate: filled === 0,
+    };
+  }
+
+  function loadCatalog() {
+    if (catalogCache) return Promise.resolve(catalogCache);
+    return fetch(bridgeUrl() + "/finance/fmcg-catalog", {
+      headers: authHeaders(),
+      cache: "no-store",
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("bridge");
+        return r.json();
+      })
+      .then(function (data) {
+        catalogCache = data;
+        return catalogCache;
+      })
+      .catch(function () {
+        return fetch("data/fmcg-cost-catalog.json?v=2.0.5", { cache: "no-store" })
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (data) {
+            catalogCache = data || { items: [], stages: [] };
+            return catalogCache;
+          })
+          .catch(function () {
+            catalogCache = { items: [], stages: [] };
+            return catalogCache;
+          });
+      });
   }
 
   function loadAverages() {
@@ -75,16 +168,62 @@
    * @param {object} ctx
    * @param {object} [ctx.projectCosts]
    * @param {object} [ctx.costRates]
-   * @param {object} [ctx.fmcg]
+   * @param {object} [ctx.fmcg] averages fallback
+   * @param {object} [ctx.catalog] fmcg-cost-catalog
    * @param {array}  [ctx.vizLatest]
    */
   function computeMonthLanded(ctx) {
     ctx = ctx || {};
-    var avg = ctx.fmcg || averagesCache || {};
-    var per = avg.per_open_variant || {};
+    var catalog = ctx.catalog || catalogCache;
     var counts = countOpenVariants(ctx);
     var units = counts.variantUnits;
     var labor = laborOpenSum(ctx.projectCosts);
+
+    if (catalog && catalog.items && catalog.items.length) {
+      var comp = computeFromCatalog(catalog);
+      var lines = Object.keys(comp.by_stage || {}).map(function (k) {
+        return {
+          key: k,
+          label: STAGE_LABELS[k] || k,
+          unit: comp.by_stage[k],
+          total: comp.by_stage[k],
+          note: "Katalog FMCG",
+        };
+      });
+      lines.unshift({
+        key: "labor_asana",
+        label: "Praca (Asana / cost-rates)",
+        unit: labor,
+        total: labor,
+        note: "Suma otwartych projektow",
+      });
+      var subtotal = lines.reduce(function (a, l) {
+        return a + (l.total || 0);
+      }, 0);
+      var missing = comp.missing_count || 0;
+      return {
+        estimate: missing > 0 || labor === 0,
+        currency: comp.currency || "PLN",
+        openProjects: counts.openProjects,
+        variantUnits: units,
+        lines: lines,
+        subtotal: subtotal,
+        risk_pct: 0,
+        risk: 0,
+        landed_month: subtotal,
+        labor_total: labor,
+        print_total: (comp.by_stage && comp.by_stage.production) || 0,
+        chip: missing
+          ? "Część pozycji bez kwoty — szacunek"
+          : "Katalog FMCG + Asana",
+        source_note: "fmcg-cost-catalog",
+        missing_count: missing,
+        filled_count: comp.filled_count,
+      };
+    }
+
+    var avg = ctx.fmcg || averagesCache || {};
+    var per = avg.per_open_variant || {};
     var hourly = designHourlyFromRates(ctx.costRates);
     var designHours = Number(avg.design_hours_per_open_variant) || 4;
     var designExtra = units * designHours * hourly;
@@ -101,7 +240,7 @@
       };
     }
 
-    var lines = [
+    var linesAvg = [
       {
         key: "labor_asana",
         label: "Praca (Asana / cost-rates)",
@@ -123,14 +262,14 @@
       line("print_flexo_offset")
     ];
 
-    var subtotal = lines.reduce(function (a, l) {
+    var subtotalAvg = linesAvg.reduce(function (a, l) {
       return a + (l.total || 0);
     }, 0);
     var riskPct = Number(avg.risk_uplift_pct) || 0;
-    var risk = subtotal * (riskPct / 100);
-    var landed = subtotal + risk;
+    var risk = subtotalAvg * (riskPct / 100);
+    var landed = subtotalAvg + risk;
 
-    var printLine = lines.find(function (l) {
+    var printLine = linesAvg.find(function (l) {
       return l.key === "print_flexo_offset";
     });
     var printTotal = (printLine && printLine.total) || 0;
@@ -141,8 +280,8 @@
       currency: avg.currency || "PLN",
       openProjects: counts.openProjects,
       variantUnits: units,
-      lines: lines,
-      subtotal: subtotal,
+      lines: linesAvg,
+      subtotal: subtotalAvg,
       risk_pct: riskPct,
       risk: risk,
       landed_month: landed,
@@ -176,9 +315,12 @@
 
   global.DamFmcg = {
     loadAverages: loadAverages,
+    loadCatalog: loadCatalog,
+    computeFromCatalog: computeFromCatalog,
     computeMonthLanded: computeMonthLanded,
     getSwot: getSwot,
     getSalesMock: getSalesMock,
-    formatPLN: formatPLN
+    formatPLN: formatPLN,
+    STAGE_LABELS: STAGE_LABELS,
   };
 })(typeof window !== "undefined" ? window : globalThis);

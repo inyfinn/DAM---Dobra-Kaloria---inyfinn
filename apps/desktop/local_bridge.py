@@ -985,6 +985,14 @@ BUILD_BRANDING_INDEX = WEB_ROOT / "scripts" / "build-branding-index.py"
 FETCH_PRODUCT_PRICES = WEB_ROOT / "scripts" / "fetch-product-prices.py"
 IMPORT_WYKROJNIKI = WEB_ROOT / "scripts" / "import-wykrojniki-xlsx.py"
 ENRICH_BRANDING_RECOGNIZE = WEB_ROOT / "scripts" / "enrich-branding-recognize.py"
+COST_RATES_FILE = WEB_ROOT / "data" / "cost-rates.json"
+FMCG_CATALOG_FILE = WEB_ROOT / "data" / "fmcg-cost-catalog.json"
+FMCG_IMPORT_MAP_FILE = WEB_ROOT / "data" / "fmcg-cost-import-map.json"
+PROJECT_COSTS_FILE = WEB_ROOT / "data" / "project-costs.json"
+INVOICES_FILE = WEB_ROOT / "data" / "invoices.json"
+ASANA_TASKS_FILE = WEB_ROOT / "data" / "asana-tasks.json"
+WYKROJNIK_QUEUE_FILE = WEB_ROOT / "data" / "wykrojnik-mapping-queue.json"
+BUILD_PROJECT_COSTS = WEB_ROOT / "scripts" / "build-project-costs.py"
 
 _CARRIER_FOLDER_PREFIX_FALLBACK = {
     "BAT": "BAT",
@@ -1157,6 +1165,314 @@ def _save_json(path: Path, data) -> None:
             conn.close()
     except Exception as exc:
         print(f"kv_store save warning ({store_key}):", exc)
+
+
+def _parse_csv_text(text: str) -> list[dict[str, str]]:
+    import csv
+    from io import StringIO
+
+    raw = (text or "").strip()
+    if not raw:
+        return []
+    if raw.startswith("\ufeff"):
+        raw = raw[1:]
+    reader = csv.DictReader(StringIO(raw))
+    rows: list[dict[str, str]] = []
+    for row in reader:
+        if not row:
+            continue
+        cleaned = {str(k or "").strip(): str(v or "").strip() for k, v in row.items() if k}
+        if any(cleaned.values()):
+            rows.append(cleaned)
+    return rows
+
+
+def _extract_post_csv(raw: bytes, content_type: str, data: dict | None = None) -> str:
+    ctype = (content_type or "").lower()
+    if isinstance(data, dict):
+        for key in ("csv", "text", "body"):
+            val = data.get(key)
+            if isinstance(val, str) and val.strip():
+                return val
+    if "text/csv" in ctype or "text/plain" in ctype:
+        return raw.decode("utf-8", errors="replace")
+    if "multipart/form-data" in ctype and raw:
+        import re
+
+        m = re.search(r"boundary=([^;\s]+)", content_type or "")
+        if not m:
+            return ""
+        boundary = m.group(1).strip().strip('"')
+        marker = ("--" + boundary).encode("ascii", errors="ignore")
+        for part in raw.split(marker):
+            if b"Content-Disposition" not in part:
+                continue
+            if b"filename=" not in part and b'name="' not in part:
+                continue
+            _, _, body = part.partition(b"\r\n\r\n")
+            if not body:
+                _, _, body = part.partition(b"\n\n")
+            body = body.rstrip(b"\r\n-")
+            if body:
+                return body.decode("utf-8", errors="replace")
+    return ""
+
+
+def _fmcg_default_catalog() -> dict:
+    return {
+        "version": 1,
+        "currency": "PLN",
+        "imported_at": None,
+        "stages": ["procurement", "prepress", "production", "warehouse", "logistics"],
+        "items": [],
+    }
+
+
+def _fmcg_compute(catalog: dict) -> dict:
+    stages = catalog.get("stages") or [
+        "procurement",
+        "prepress",
+        "production",
+        "warehouse",
+        "logistics",
+    ]
+    by_stage = {s: 0.0 for s in stages}
+    missing = 0
+    filled = 0
+    for item in catalog.get("items") or []:
+        if not isinstance(item, dict):
+            continue
+        stage = str(item.get("stage") or "").strip()
+        amt = item.get("amount")
+        if amt is None or amt == "":
+            missing += 1
+            continue
+        try:
+            val = float(amt)
+        except (TypeError, ValueError):
+            missing += 1
+            continue
+        filled += 1
+        if stage in by_stage:
+            by_stage[stage] += val
+        else:
+            by_stage[stage] = val
+    return {
+        "ok": True,
+        "currency": catalog.get("currency") or "PLN",
+        "by_stage": by_stage,
+        "missing_count": missing,
+        "filled_count": filled,
+        "item_count": len(catalog.get("items") or []),
+        "imported_at": catalog.get("imported_at"),
+    }
+
+
+def _apply_fmcg_csv_import(catalog: dict, rows: list[dict[str, str]]) -> tuple[int, list[str]]:
+    import_map = _load_json(FMCG_IMPORT_MAP_FILE, {"maps": []})
+    col_to_id: dict[str, str] = {}
+    for m in import_map.get("maps") or []:
+        if not isinstance(m, dict):
+            continue
+        col = str(m.get("column") or "").strip()
+        cid = str(m.get("catalog_id") or "").strip()
+        if col and cid and cid not in ("catalog_id", "amount", "_id_field", "_amount_field"):
+            col_to_id[col] = cid
+
+    items = catalog.setdefault("items", [])
+    by_id = {str(it.get("id")): it for it in items if isinstance(it, dict) and it.get("id")}
+    updated = 0
+    errors: list[str] = []
+
+    for row in rows:
+        cid = (row.get("catalog_id") or row.get("id") or "").strip()
+        amount_raw = row.get("amount")
+        if not cid:
+            for col, val in row.items():
+                mapped = col_to_id.get(col)
+                if mapped and val:
+                    cid = mapped
+                    amount_raw = val
+                    break
+        if not cid:
+            errors.append("missing_catalog_id")
+            continue
+        if amount_raw is None or amount_raw == "":
+            for col in ("amount", "kwota", "cena"):
+                if row.get(col):
+                    amount_raw = row.get(col)
+                    break
+        try:
+            amount = float(str(amount_raw).replace(",", ".").replace(" ", ""))
+        except (TypeError, ValueError):
+            errors.append(f"bad_amount:{cid}")
+            continue
+        item = by_id.get(cid)
+        if not item:
+            errors.append(f"unknown_id:{cid}")
+            continue
+        item["amount"] = amount
+        item["source"] = row.get("source") or "import"
+        if row.get("vendor"):
+            item["vendor"] = row.get("vendor")
+        if row.get("notes"):
+            item["notes"] = row.get("notes")
+        updated += 1
+
+    catalog["imported_at"] = utc_now()
+    return updated, errors
+
+
+def _import_invoices_csv(rows: list[dict[str, str]]) -> tuple[int, list[str]]:
+    required = (
+        "id",
+        "client",
+        "project",
+        "amount",
+        "currency",
+        "issue_date",
+        "due_date",
+        "status",
+        "type",
+    )
+    store = _load_json(INVOICES_FILE, {"invoices": []})
+    invoices = store.setdefault("invoices", [])
+    by_id = {str(inv.get("id")): inv for inv in invoices if isinstance(inv, dict)}
+    imported = 0
+    errors: list[str] = []
+
+    for row in rows:
+        missing = [k for k in required if not row.get(k)]
+        if missing:
+            errors.append("missing:" + ",".join(missing))
+            continue
+        inv_id = row["id"]
+        try:
+            amount = float(str(row["amount"]).replace(",", ".").replace(" ", ""))
+        except ValueError:
+            errors.append(f"bad_amount:{inv_id}")
+            continue
+        entry = {
+            "id": inv_id,
+            "client": row["client"],
+            "project": row["project"],
+            "amount": amount,
+            "currency": row.get("currency") or "PLN",
+            "issue_date": row["issue_date"],
+            "due_date": row["due_date"],
+            "status": row["status"],
+            "type": row["type"],
+        }
+        by_id[inv_id] = entry
+        imported += 1
+
+    store["invoices"] = list(by_id.values())
+    store["updated_at"] = utc_now()
+    _save_json(INVOICES_FILE, store)
+    return imported, errors
+
+
+def _run_build_project_costs() -> dict:
+    if not BUILD_PROJECT_COSTS.is_file():
+        return {"ok": False, "error": "build_script_missing"}
+    try:
+        _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+        rc = subprocess.call(
+            [sys.executable, str(BUILD_PROJECT_COSTS)],
+            creationflags=_no_win,
+        )
+        costs = _load_json(PROJECT_COSTS_FILE, {})
+        return {
+            "ok": rc == 0,
+            "rc": rc,
+            "project_count": costs.get("project_count"),
+            "sum_open_projects": costs.get("sum_open_projects"),
+        }
+    except OSError as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _sync_asana_tasks() -> dict:
+    token = oauth_integrations.get_access_token("asana") if oauth_integrations else None
+    source = "file"
+    tasks_payload = _load_json(
+        ASANA_TASKS_FILE,
+        {"source": "asana-export", "total": 0, "open": 0, "tasks": []},
+    )
+
+    if token:
+        try:
+            import urllib.request
+
+            req = urllib.request.Request(
+                "https://app.asana.com/api/1.0/users/me/tasks"
+                "?opt_fields=name,assignee.name,due_on,completed,memberships.project.name,parent.name",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/json",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                body = json.loads(resp.read().decode("utf-8"))
+            raw_tasks = body.get("data") or []
+            norm_tasks = []
+            open_n = 0
+            for t in raw_tasks:
+                if not isinstance(t, dict):
+                    continue
+                completed = bool(t.get("completed"))
+                if not completed:
+                    open_n += 1
+                memberships = t.get("memberships") or []
+                project = ""
+                if memberships and isinstance(memberships[0], dict):
+                    proj = memberships[0].get("project") or {}
+                    project = proj.get("name") or ""
+                parent = t.get("parent") or {}
+                norm_tasks.append(
+                    {
+                        "id": str(t.get("gid") or t.get("id") or ""),
+                        "name": t.get("name") or "",
+                        "section": "",
+                        "assignee": ((t.get("assignee") or {}).get("name") or ""),
+                        "due": t.get("due_on") or "",
+                        "project": project,
+                        "parent": parent.get("name") or "",
+                        "status": "done" if completed else "open",
+                        "product_index": None,
+                    }
+                )
+            tasks_payload = {
+                "source": "asana-api",
+                "total": len(norm_tasks),
+                "open": open_n,
+                "tasks": norm_tasks,
+            }
+            source = "oauth"
+        except Exception as exc:  # noqa: BLE001
+            source = "oauth_stub"
+            tasks_payload["meta"] = {
+                "sync_error": str(exc)[:300],
+                "synced_at": utc_now(),
+                "source": source,
+            }
+    else:
+        return {"ok": False, "error": "asana_not_connected"}
+
+    tasks_payload["meta"] = {
+        "synced_at": utc_now(),
+        "source": source,
+    }
+    tasks_payload["synced_at"] = utc_now()
+    _save_json(ASANA_TASKS_FILE, tasks_payload)
+    build = _run_build_project_costs()
+    return {
+        "ok": True,
+        "source": source,
+        "task_count": len(tasks_payload.get("tasks") or []),
+        "open_count": tasks_payload.get("open") or 0,
+        "build": build,
+    }
 
 
 def _patch_branding_metadata(asset_id: str, field: str, value) -> tuple[bool, str | None]:
@@ -3138,6 +3454,23 @@ class Handler(BaseHTTPRequestHandler):
             return None
         return user
 
+    def _require_power_user_or_admin(self) -> dict | None:
+        user = self._require_login()
+        if user is None:
+            return None
+        role = (user.get("role") or "").strip().lower()
+        if role not in ("admin", "power_user"):
+            self._json(
+                403,
+                {
+                    "ok": False,
+                    "error": "power_user_or_admin_required",
+                    "hint": "Sync Asana wymaga roli power_user lub admin.",
+                },
+            )
+            return None
+        return user
+
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)
         # OAuth callback moze przyjsc z Origin zewnetrznego IdP - nie blokuj.
@@ -3159,6 +3492,17 @@ class Handler(BaseHTTPRequestHandler):
                         "/bulk-packaging",
                         "/branding/status",
                         "/wykrojniki-registry",
+                        "/wykrojnik-mapping-queue",
+                        "/integrations/config",
+                        "/integrations/status",
+                        "/integrations/asana/sync",
+                        "/finance/cost-rates",
+                        "/finance/fmcg-catalog",
+                        "/finance/fmcg-import",
+                        "/finance/fmcg-compute",
+                        "/finance/project-costs",
+                        "/finance/invoices",
+                        "/finance/invoices/import",
                     ],
                 },
             )
@@ -3546,7 +3890,7 @@ class Handler(BaseHTTPRequestHandler):
                 f"<h1>{'Polaczono' if ok else 'Blad OAuth'}</h1>"
                 f"<p>{safe_provider} - {safe_msg}</p>"
                 f'<p><a href="{safe_integrations}">Wroc do Integracji</a>'
-                f' · <a href="{safe_settings}">Ustawienia</a></p>"
+                f' · <a href="{safe_settings}">Ustawienia</a></p>'
                 f"<script>setTimeout(function(){{location.href={json.dumps(integrations_hash)}}},1500)</script>"
             )
             self._bytes(200 if ok else 400, page.encode("utf-8"), "text/html; charset=utf-8")
@@ -3622,6 +3966,58 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, {"ok": True, **data})
             return
+        if parsed.path == "/wykrojnik-mapping-queue":
+            if self._require_login() is None:
+                return
+            queue = _load_json(WYKROJNIK_QUEUE_FILE, {"version": 1, "pending": [], "resolved": []})
+            self._json(200, {"ok": True, **queue})
+            return
+        if parsed.path == "/integrations/config":
+            if self._require_login() is None:
+                return
+            if oauth_integrations is None:
+                self._json(500, {"ok": False, "error": "oauth_module_missing"})
+                return
+            self._json(200, oauth_integrations.read_env_public())
+            return
+        if parsed.path == "/finance/cost-rates":
+            if self._require_login() is None:
+                return
+            data = _load_json(COST_RATES_FILE, {"version": 1, "currency": "PLN"})
+            self._json(200, {"ok": True, **data})
+            return
+        if parsed.path == "/finance/fmcg-catalog":
+            if self._require_login() is None:
+                return
+            data = _load_json(FMCG_CATALOG_FILE, _fmcg_default_catalog())
+            self._json(200, {"ok": True, **data})
+            return
+        if parsed.path == "/finance/fmcg-compute":
+            if self._require_login() is None:
+                return
+            catalog = _load_json(FMCG_CATALOG_FILE, _fmcg_default_catalog())
+            self._json(200, _fmcg_compute(catalog))
+            return
+        if parsed.path == "/finance/project-costs":
+            if self._require_login() is None:
+                return
+            data = _load_json(PROJECT_COSTS_FILE, {})
+            meta = {
+                "generated_at": data.get("generated_at"),
+                "source_csv": data.get("source_csv"),
+                "project_count": data.get("project_count"),
+                "sum_open_projects": data.get("sum_open_projects"),
+                "sum_all_projects": data.get("sum_all_projects"),
+                "currency": data.get("currency"),
+            }
+            self._json(200, {"ok": True, "meta": meta, **data})
+            return
+        if parsed.path == "/finance/invoices":
+            if self._require_login() is None:
+                return
+            data = _load_json(INVOICES_FILE, {"invoices": []})
+            self._json(200, {"ok": True, **data})
+            return
         self._json(404, {"ok": False, "error": "not_found"})
 
     def do_POST(self):  # noqa: N802
@@ -3631,13 +4027,54 @@ class Handler(BaseHTTPRequestHandler):
             self._json(413, {"ok": False, "error": "payload_too_large"})
             return
         raw = self.rfile.read(length) if length else b"{}"
+        parsed = urlparse(self.path)
+        content_type = self.headers.get("Content-Type") or ""
+
+        if parsed.path in ("/finance/fmcg-import", "/finance/invoices/import"):
+            if parsed.path != "/oauth/callback" and not self._origin_ok():
+                self._json(403, {"ok": False, "error": "origin_forbidden"})
+                return
+            if self._require_admin() is None:
+                return
+            data: dict = {}
+            if "application/json" in content_type.lower():
+                try:
+                    data = json.loads(raw.decode("utf-8") or "{}")
+                except json.JSONDecodeError:
+                    self._json(400, {"ok": False, "error": "invalid_json"})
+                    return
+            csv_text = _extract_post_csv(raw, content_type, data)
+            rows = _parse_csv_text(csv_text)
+            if not rows:
+                self._json(400, {"ok": False, "error": "csv_required"})
+                return
+            if parsed.path == "/finance/fmcg-import":
+                catalog = _load_json(FMCG_CATALOG_FILE, _fmcg_default_catalog())
+                updated, errors = _apply_fmcg_csv_import(catalog, rows)
+                _save_json(FMCG_CATALOG_FILE, catalog)
+                self._json(
+                    200,
+                    {
+                        "ok": True,
+                        "updated": updated,
+                        "errors": errors[:20],
+                        "compute": _fmcg_compute(catalog),
+                    },
+                )
+                return
+            imported, errors = _import_invoices_csv(rows)
+            self._json(
+                200,
+                {"ok": True, "imported": imported, "errors": errors[:20]},
+            )
+            return
+
         try:
             data = json.loads(raw.decode("utf-8") or "{}")
         except json.JSONDecodeError:
             self._json(400, {"ok": False, "error": "invalid_json"})
             return
 
-        parsed = urlparse(self.path)
         if parsed.path != "/oauth/callback" and not self._origin_ok():
             self._json(403, {"ok": False, "error": "origin_forbidden"})
             return
@@ -3919,8 +4356,7 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/wykrojnik-mapping-queue":
             if self._require_admin() is None:
                 return
-            queue_file = WEB_ROOT / "data" / "wykrojnik-mapping-queue.json"
-            queue = _load_json(queue_file, {"version": 1, "pending": [], "resolved": []})
+            queue = _load_json(WYKROJNIK_QUEUE_FILE, {"version": 1, "pending": [], "resolved": []})
             action = (data.get("action") or "add").strip().lower()
             if action == "add":
                 item = data.get("item") or {}
@@ -3938,8 +4374,25 @@ class Handler(BaseHTTPRequestHandler):
                         resolved.append(it)
                 queue["pending"] = pending
                 queue["resolved"] = resolved
+            elif action == "remove":
+                item_id = (data.get("id") or "").strip()
+                if not item_id:
+                    self._json(400, {"ok": False, "error": "id_required"})
+                    return
+                queue["pending"] = [
+                    x for x in queue.get("pending") or [] if str(x.get("id")) != item_id
+                ]
+                queue["resolved"] = [
+                    x for x in queue.get("resolved") or [] if str(x.get("id")) != item_id
+                ]
+            else:
+                self._json(400, {"ok": False, "error": "unknown_action"})
+                return
             queue["updated_at"] = utc_now()
-            queue_file.write_text(json.dumps(queue, ensure_ascii=False, indent=2), encoding="utf-8")
+            WYKROJNIK_QUEUE_FILE.write_text(
+                json.dumps(queue, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
             self._json(200, {"ok": True, "pending": len(queue.get("pending") or [])})
             return
         if parsed.path == "/carrier-override":
@@ -4185,6 +4638,106 @@ class Handler(BaseHTTPRequestHandler):
                 return
             provider = (data.get("provider") or "").strip().lower()
             self._json(200, oauth_integrations.disconnect(provider))
+            return
+        if parsed.path == "/integrations/config":
+            if self._require_admin() is None:
+                return
+            if oauth_integrations is None:
+                self._json(500, {"ok": False, "error": "oauth_module_missing"})
+                return
+            updates = data if isinstance(data, dict) else {}
+            payload = updates.get("config") if isinstance(updates.get("config"), dict) else updates
+            result = oauth_integrations.write_env_keys(payload)
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/integrations/asana/sync":
+            if self._require_power_user_or_admin() is None:
+                return
+            if oauth_integrations is None:
+                self._json(500, {"ok": False, "error": "oauth_module_missing"})
+                return
+            result = _sync_asana_tasks()
+            if not result.get("ok") and result.get("error") == "asana_not_connected":
+                self._json(400, result)
+                return
+            self._json(200 if result.get("ok") else 500, result)
+            return
+        if parsed.path == "/finance/cost-rates":
+            if self._require_admin() is None:
+                return
+            incoming = data.get("rates") if isinstance(data.get("rates"), dict) else data
+            if not isinstance(incoming, dict) or not incoming:
+                self._json(400, {"ok": False, "error": "rates_required"})
+                return
+            incoming["updated_at"] = utc_now()
+            _save_json(COST_RATES_FILE, incoming)
+            self._json(200, {"ok": True, "version": incoming.get("version")})
+            return
+        if parsed.path == "/finance/fmcg-catalog":
+            if self._require_admin() is None:
+                return
+            action = (data.get("action") or "replace").strip().lower()
+            if action == "patch":
+                catalog = _load_json(FMCG_CATALOG_FILE, _fmcg_default_catalog())
+                by_id = {
+                    str(it.get("id")): it
+                    for it in catalog.get("items") or []
+                    if isinstance(it, dict) and it.get("id")
+                }
+                patched = 0
+                for patch in data.get("items") or []:
+                    if not isinstance(patch, dict):
+                        continue
+                    pid = str(patch.get("id") or "").strip()
+                    if not pid or pid not in by_id:
+                        continue
+                    by_id[pid].update({k: v for k, v in patch.items() if k != "id"})
+                    patched += 1
+                catalog["items"] = list(by_id.values())
+                catalog["updated_at"] = utc_now()
+                _save_json(FMCG_CATALOG_FILE, catalog)
+                self._json(200, {"ok": True, "patched": patched})
+                return
+            incoming = data.get("catalog") if isinstance(data.get("catalog"), dict) else data
+            if not isinstance(incoming, dict) or not incoming.get("items"):
+                self._json(400, {"ok": False, "error": "catalog_required"})
+                return
+            incoming["updated_at"] = utc_now()
+            _save_json(FMCG_CATALOG_FILE, incoming)
+            self._json(200, {"ok": True, "item_count": len(incoming.get("items") or [])})
+            return
+        if parsed.path == "/finance/invoices":
+            if self._require_admin() is None:
+                return
+            action = (data.get("action") or "replace").strip().lower()
+            if action == "upsert":
+                inv = data.get("invoice")
+                if not isinstance(inv, dict) or not inv.get("id"):
+                    self._json(400, {"ok": False, "error": "invoice_id_required"})
+                    return
+                store = _load_json(INVOICES_FILE, {"invoices": []})
+                invoices = store.setdefault("invoices", [])
+                found = False
+                for i, row in enumerate(invoices):
+                    if str(row.get("id")) == str(inv.get("id")):
+                        invoices[i] = {**row, **inv}
+                        found = True
+                        break
+                if not found:
+                    invoices.append(inv)
+                store["updated_at"] = utc_now()
+                _save_json(INVOICES_FILE, store)
+                self._json(200, {"ok": True, "upserted": str(inv.get("id"))})
+                return
+            incoming = data.get("invoices")
+            if incoming is None and isinstance(data.get("invoice"), dict):
+                incoming = [data.get("invoice")]
+            if not isinstance(incoming, list):
+                self._json(400, {"ok": False, "error": "invoices_required"})
+                return
+            store = {"invoices": incoming, "updated_at": utc_now()}
+            _save_json(INVOICES_FILE, store)
+            self._json(200, {"ok": True, "count": len(incoming)})
             return
         if parsed.path == "/notification-groups":
             if self._require_login() is None:

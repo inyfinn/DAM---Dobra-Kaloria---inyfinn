@@ -2,6 +2,7 @@
 """Kontekst folderu branding: warianty, edytowalny, archiwum, produkty z tekstu."""
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -836,3 +837,66 @@ def enrich_folder_groups(assets: list[dict[str, Any]], file_index: dict) -> None
             blob = a.get("search_blob") or ""
             if extra:
                 a["search_blob"] = (blob + " " + extra).strip()
+
+
+def apply_branding_assoc_overrides(assets: list[dict[str, Any]], file_index: dict) -> None:
+    """Reczne skojarzenia z branding-associations-overrides.json (po enrich_folder_groups)."""
+    from pathlib import Path
+
+    ov_path = Path(__file__).resolve().parent.parent / "data" / "branding-associations-overrides.json"
+    if not ov_path.is_file():
+        return
+    try:
+        ov = json.loads(ov_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    if not isinstance(ov, dict):
+        return
+
+    assets_by_id = {a.get("id"): a for a in assets if a.get("id")}
+
+    def apply_patch(a: dict[str, Any], pids: list[str], vids: list[str] | None) -> None:
+        if pids:
+            a["linked_product_ids"] = list(pids)
+            a["folder_linked_product_ids"] = list(pids)
+            a["linked_products"] = build_linked_product_meta(pids, file_index)
+            if pids:
+                a["linked_product_id"] = pids[0]
+        if vids:
+            a["linked_variant_ids"] = list(vids)
+            variants: list[dict[str, str]] = []
+            for vid in vids:
+                va = assets_by_id.get(vid)
+                if not va:
+                    continue
+                variants.append(
+                    {
+                        "id": vid,
+                        "name": va.get("name") or vid,
+                        "path": va.get("path") or "",
+                        "label": va.get("name") or "Plik",
+                        "media_type": va.get("media_type") or "",
+                    }
+                )
+            if variants:
+                a["folder_variants"] = variants
+
+    for aid, patch in (ov.get("assets") or {}).items():
+        target = assets_by_id.get(aid)
+        if not target or not isinstance(patch, dict):
+            continue
+        pids = [str(x).strip() for x in (patch.get("linked_product_ids") or []) if str(x).strip()]
+        vids = [str(x).strip() for x in (patch.get("linked_variant_ids") or []) if str(x).strip()]
+        apply_patch(target, pids, vids)
+
+    for group_key, patch in (ov.get("folder_groups") or {}).items():
+        if not isinstance(patch, dict):
+            continue
+        group = str(group_key or "").strip().lower()
+        if not group:
+            continue
+        pids = [str(x).strip() for x in (patch.get("linked_product_ids") or []) if str(x).strip()]
+        vids = [str(x).strip() for x in (patch.get("linked_variant_ids") or []) if str(x).strip()]
+        for a in assets:
+            if str(a.get("folder_group_id") or "").strip().lower() == group:
+                apply_patch(a, pids, vids)

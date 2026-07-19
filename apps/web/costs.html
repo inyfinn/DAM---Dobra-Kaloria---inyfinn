@@ -865,8 +865,9 @@
 			<div class="geex-content__section-wrapper">
 				<!-- AUTO PROJECT COST TABS -->
 				<div class="dam-cost-toolbar">
-					<span class="geex-badge geex-badge--primary-transparent dam-cost-toolbar__badge" data-i18n="cost.auto_badge">Wyliczone automatycznie z Asany</span>
+					<span id="damCostSourceBadge" class="geex-badge geex-badge--primary-transparent dam-cost-toolbar__badge">Źródło: snapshot lokalny</span>
 					<span id="damCostGeneratedAt" class="dam-cost-toolbar__gen"></span>
+					<button type="button" id="damCostSyncBtn" class="geex-btn geex-btn--primary geex-btn--sm" disabled>Synchronizuj z Asany</button>
 				</div>
 				<div id="damCostTabs" class="dam-cost-tabs" aria-label="Wybor projektu"></div>
 				<div class="row g-3 g-md-4 dam-cost-panels">
@@ -878,6 +879,11 @@
 					<div class="col-12 col-lg-7">
 						<div id="damCostResult" class="geex-card dam-cost-panel">
 							<p class="dam-cost-empty" data-i18n="cost.loading">Ładowanie...</p>
+						</div>
+					</div>
+					<div class="col-12">
+						<div id="damCostFmcg" class="geex-card dam-cost-panel">
+							<p class="dam-cost-empty">Ładowanie łańcucha FMCG...</p>
 						</div>
 					</div>
 				</div>
@@ -894,12 +900,13 @@
 	<script src="./assets/js/main.js"></script>
   	<!-- endinject-->
 	<!-- DAM scripts -->
-	<script src="./assets/js/dam-api.js"></script>
+	<script src="./assets/js/dam-api.js?v=2.0.5"></script>
 	<script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
 	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-	<script src="./assets/js/dam-version.js?v=2.0.3"></script>
+	<script src="./assets/js/dam-version.js?v=2.0.5"></script>
 	<script src="./assets/js/dam-shell.js?v=20260719ver102"></script>
-	<script src="./assets/js/dam-cost.js?v=20260718cost2"></script>
+	<script src="./assets/js/dam-fmcg-cost.js?v=2.0.5"></script>
+	<script src="./assets/js/dam-cost.js?v=2.0.5"></script>
 </body>
 
 </html>

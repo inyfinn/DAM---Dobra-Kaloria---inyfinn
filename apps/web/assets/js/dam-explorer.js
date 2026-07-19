@@ -2193,7 +2193,9 @@
     var detailHtml = "";
     if (isExpanded) {
       var fbr = rev.files_by_role || {};
+      var lifeBlock = state.adminMode ? '<div class="dam-carrier-body__life">' + renderAdminRevButtons(rev, "curr") + "</div>" : "";
       detailHtml =
+        lifeBlock +
         renderChecklist(cl, rev, product) +
         renderFileSection("Projekt / zrodlo", fbr.source, "source") +
         renderFileSection("Pliki do druku",   printFilesFromRevision(rev),  "print") +
@@ -2202,7 +2204,7 @@
         extraCurrHtml +
         (state.showAllRevisions ? "" : olderHtml);
     }
-    var variantLifeHtml = state.adminMode ? renderAdminRevButtons(rev, "curr") : "";
+    var variantLifeHtml = "";
 
     var cardCls =
       "dam-carrier-card" +

@@ -12,6 +12,7 @@ SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 
 from brand_folder_context import (  # noqa: E402
+    apply_branding_assoc_overrides,
     apply_global_product_links,
     enrich_folder_groups,
     build_variant_to_product_map,
@@ -55,6 +56,7 @@ def main() -> int:
     print(f"Enriching {len(assets)} assets…")
     build_variant_to_product_map(file_index)  # warm cache
     enrich_folder_groups(assets, file_index)
+    apply_branding_assoc_overrides(assets, file_index)
     # apply_global already inside enrich; ensure orphans too
     for a in assets:
         apply_global_product_links(a, file_index)

@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad08">
   <link rel="stylesheet" href="./assets/css/dam-brand.css?v=hub20260719modal10">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
-  <link rel="stylesheet" href="./assets/css/dam-settings.css?v=hub20260719int01">
-  <link rel="stylesheet" href="./assets/css/dam-wykrojnik-queue.css?v=hub20260719f">
+  <link rel="stylesheet" href="./assets/css/dam-integrations-hub.css?v=2.0.5b">
+  <link rel="stylesheet" href="./assets/css/dam-wykrojnik-queue.css?v=2.0.5b">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <script>
@@ -57,10 +57,7 @@
       <div class="geex-content__header">
         <div class="geex-content__header__content">
           <h2 class="geex-content__header__title">Integracje</h2>
-          <p class="geex-content__header__subtitle">Asana, Microsoft Teams, Entra ID i Synology/LDAP. Sekrety tylko w .env na P.</p>
-        </div>
-        <div class="geex-content__header__action">
-          <a href="settings.html#damIntegrations" class="geex-btn geex-btn--primary-transparent">Ustawienia DAM</a>
+          <p class="geex-content__header__subtitle">Asana, Microsoft Teams, Entra ID i Synology/LDAP. Sekrety w dam-connection.env na P. <a href="settings.html#damIntegrations" class="dam-int-settings-link">Ustawienia DAM</a></p>
         </div>
       </div>
 
@@ -70,13 +67,12 @@
 
       <div class="dam-int-queue-wrap" id="damWykrojnikQueue">
         <article class="dam-integration-card dam-wykrojnik-queue">
-          <h3>Kolejka mapowań wykrojników</h3>
+          <h3>Kolejka mapowan wykrojnikow</h3>
           <p class="dam-wykrojnik-queue__intro">
-            Edycja lokalna (bez bridge API): szkic w przeglądarce, potem pobierz JSON i zastąp plik
-            <code>apps/web/data/wykrojnik-mapping-queue.json</code>. Następnie uruchom
-            <code>python apps/web/scripts/link-wykrojniki-products.py</code>.
+            Reczne powiazania kodu wykrojnika z produktem DAM. Zapis przez bridge (admin).
+            Po zatwierdzeniu uruchom <code>python apps/web/scripts/link-wykrojniki-products.py</code>.
           </p>
-          <p class="dam-wykrojnik-queue__status" id="damWykrojnikQueueStatus">Ładowanie…</p>
+          <p class="dam-wykrojnik-queue__status" id="damWykrojnikQueueStatus">Ladowanie…</p>
           <form class="dam-wykrojnik-queue__form" id="damWykrojnikQueueForm">
             <label>Kod wykrojnika
               <input type="text" id="damWykrojnikQueueKod" placeholder="np. 6300547" required>
@@ -91,13 +87,9 @@
               <button type="submit" class="geex-btn geex-btn--primary">Dodaj do kolejki</button>
             </label>
           </form>
-          <div class="dam-wykrojnik-queue__actions">
-            <button type="button" class="geex-btn geex-btn--primary-transparent" id="damWykrojnikQueueDownload">Pobierz JSON</button>
-            <button type="button" class="geex-btn geex-btn--sm" id="damWykrojnikQueueClearDraft">Wyczyść szkic</button>
-          </div>
-          <h4 class="dam-wykrojnik-queue__subhead">Oczekujące</h4>
+          <h4 class="dam-wykrojnik-queue__subhead">Oczekujace</h4>
           <div id="damWykrojnikQueuePending"></div>
-          <h4 class="dam-wykrojnik-queue__subhead">Podpowiedzi z rejestru (bez powiązania)</h4>
+          <h4 class="dam-wykrojnik-queue__subhead">Podpowiedzi z rejestru (bez powiazania)</h4>
           <div id="damWykrojnikQueueUnlinked"></div>
         </article>
       </div>
@@ -111,12 +103,13 @@
   <script src="./assets/js/dam-api.js?v=20260719golive1"></script>
   <script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-  <script src="./assets/js/dam-version.js?v=2.0.3"></script>
+  <script src="./assets/js/dam-version.js?v=2.0.5"></script>
   <script src="./assets/js/dam-shell.js?v=hub20260719sticky02"></script>
   <script src="./assets/js/dam-paths.js?v=20260719ver102"></script>
   <script src="./assets/js/dam-tooltips.js?v=20260718admin3"></script>
-  <script src="./assets/js/dam-integrations.js?v=hub20260719int02"></script>
-  <script src="./assets/js/dam-wykrojnik-queue.js?v=hub20260719f"></script>
+  <script src="./assets/js/dam-fmcg-catalog.js?v=2.0.5b"></script>
+  <script src="./assets/js/dam-integrations.js?v=2.0.5b"></script>
+  <script src="./assets/js/dam-wykrojnik-queue.js?v=2.0.5b"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       if (window.DamIntegrations) {
@@ -124,6 +117,7 @@
           includeAuthInfra: true,
           includeExtras: false,
           includeSynology: true,
+          includeFinance: true,
           prefsJump: "link",
         });
       }
@@ -133,6 +127,7 @@
             includeAuthInfra: true,
             includeExtras: false,
             includeSynology: true,
+            includeFinance: true,
             prefsJump: "link",
           });
         }

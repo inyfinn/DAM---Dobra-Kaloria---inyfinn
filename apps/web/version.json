@@ -1,7 +1,7 @@
 {
-  "version": "2.0.3",
+  "version": "2.0.5",
   "name": "DAM - Dobra Kaloria - Inyfinn",
-  "codename": "bento",
+  "codename": "hub",
   "released_at": "2026-07-19",
-  "note": "2.0.0 Bento grid shell. 2.0.1 modal zoom 85-100% + body layout. 2.0.2 branding facet cache + bridge JSON invalidation. 2.0.3 integracje OAuth (dam-integrations.js, integrations.html hub)."
+  "note": "2.0.5: Integracje hub v2 (bridge config/sync), kalkulator+faktury live, katalog FMCG, dashboard media layout 2x2/1x4/1x6. 2.0.4: skojarzenia branding. 2.0.3: OAuth hub."
 }

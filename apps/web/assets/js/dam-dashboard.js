@@ -125,6 +125,7 @@
       projectCosts: parts.projectCosts || null,
       costRates: parts.costRates || null,
       fmcg: parts.fmcg || null,
+      catalog: parts.catalog || null,
       vizFlags: parts.vizFlags || { demo: {}, hidden: {} },
       vizLatest: (parts.fileIndex && parts.fileIndex.viz_latest) || []
     };
@@ -196,6 +197,10 @@
       ? DamFmcg.loadAverages()
       : Promise.resolve(null);
 
+    var pCatalog = window.DamFmcg && typeof DamFmcg.loadCatalog === "function"
+      ? DamFmcg.loadCatalog()
+      : Promise.resolve(null);
+
     var pFlags = loadVizFlags();
 
     var pProjects = window.DamApi
@@ -208,7 +213,7 @@
           })
       : Promise.resolve([]);
 
-    Promise.all([pAsana, pIndex, pCosts, pRates, pFmcg, pFlags, pProjects]).then(
+    Promise.all([pAsana, pIndex, pCosts, pRates, pFmcg, pFlags, pProjects, pCatalog]).then(
       function (all) {
         var asana = all[0] || { tasks: [] };
         window._DAM_ASANA_TASKS = (asana.tasks || []).filter(function (t) {
@@ -223,7 +228,8 @@
           costRates: all[3],
           fmcg: all[4],
           vizFlags: all[5],
-          projects: all[6]
+          projects: all[6],
+          catalog: all[7]
         });
 
         render(ctxRef.current);

@@ -1,0 +1,6 @@
+catalog_id,label_pl,stage,unit,amount,currency,vendor,notes
+raw_material_per_1000,Surowiec opakowania / 1000 szt.,procurement,per_1000,,PLN,,
+production_labor,Robocizna produkcji / wariant,production,per_sku,,PLN,,
+warehouse_packing,Kompletacja magazynowa / wariant,warehouse,per_sku,,PLN,,
+proofing,Proof / akceptacja kolorow,prepress,per_order,,PLN,,
+print_flexo_offset,Druk fleksograficzny / offset mini,prepress,per_order,,PLN,,

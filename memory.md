@@ -928,3 +928,12 @@ ole=admin.
  - **Hot zone Eksplorer:** `.dam-explorer-layout` (nie Bootstrap row); `.dam-carrier-toggle-row` = CSS Grid stref (title/chips/life/end); `.dam-prod-row` = te same strefy.
  - Chrome hubów (toolbar/filtry/shell) może być bento; siatka kart assetów wewnątrz bez zmiany anatomii.
  - QA: ui-taste **runda** = focus jednej strefy do zielonego (wiele passów screenshot→Read); intensive = min. 10 rund na hot zone.
+
+124. **Integracje hub v2 / 2.0.5 (2026-07-19) - HARD:**
+ - Integracje: konfiguracja na integrations.html (nie tylko Settings); bez kart Stub/Opcjonalnie/W planie na glownej.
+ - Bridge: /integrations/config, /integrations/asana/sync, /wykrojnik-mapping-queue GET, /finance/* (rates, fmcg, project-costs, invoices).
+ - Wykrojnik: zapis tylko przez bridge (Zapisano w DAM), bez Pobierz JSON / localStorage draft.
+ - Kalkulator: badge zrodla + Synchronizuj z Asany (admin); sekcja Lancuch FMCG z katalogu.
+ - Faktury: GET bridge + Import CSV (admin); Zadania Asana z asana-tasks.json lub banner do Integracji.
+ - Katalog FMCG: fmcg-cost-catalog.json + import map/template; finance.fmcg_no_double_count w program-instructions.
+ - Wersja: 2.0.5 (version.json, dam-version.js, runtime_config.py).

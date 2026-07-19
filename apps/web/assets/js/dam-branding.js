@@ -270,10 +270,21 @@
   }
 
   function isGraphicMedia(a) {
-    return normalizeMediaType(a.media_type) === "image" ||
-      normalizeMediaType(a.media_type) === "vector" ||
-      normalizeMediaType(a.media_type) === "source" ||
-      normalizeMediaType(a.media_type) === "video";
+    var mt = normalizeMediaType(a.media_type);
+    return mt === "image" || mt === "vector" || mt === "source";
+  }
+
+  function passesGraphicsOnlyFilter(a) {
+    if (!graphicsOnlyActive()) return true;
+    if (activeTagFilters["media:document"] || activeTagFilters["media:video"]) return true;
+    var mt = normalizeMediaType(a.media_type);
+    if (mt === "document" || mt === "video") return false;
+    var ext = String((a && (a.name || a.path)) || "")
+      .split(".")
+      .pop()
+      .toLowerCase();
+    if (/^(mp4|mov|webm|avi|mkv|m4v)$/.test(ext)) return false;
+    return true;
   }
 
   function graphicsOnlyActive() {
@@ -2321,7 +2332,7 @@
       } else if (!assetMatchesActiveTags(a)) {
         return false;
       }
-      if (graphicsOnlyActive() && !activeTagFilters["media:document"] && a.media_type === "document") {
+      if (!passesGraphicsOnlyFilter(a)) {
         return false;
       }
       if (keyOnly && !a.perspective) return false;
@@ -2422,9 +2433,7 @@
       var a = assets[i];
       if (!includeArchive() && isArchived(a)) continue;
       if (!assetMatchesDateRange(a)) continue;
-      if (graphicsOnlyActive() && !activeTagFilters["media:document"] && a.media_type === "document") {
-        continue;
-      }
+      if (!passesGraphicsOnlyFilter(a)) continue;
       if (q && !assetMatchesSearchQuery(a, q)) continue;
       var inTab = !tab || assetInSectionTab(a, tab);
       var matches = new Array(ckLen);

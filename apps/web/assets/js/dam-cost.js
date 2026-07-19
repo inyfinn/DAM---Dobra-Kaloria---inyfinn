@@ -1,9 +1,31 @@
 /**
  * DAM - Kalkulator kosztów (czytelny wybor projektu + breakdown)
- * Loads data/project-costs.json (built from Asana + cost-rates).
+ * Preferuje GET /finance/project-costs (bridge), fallback: data/project-costs.json.
  */
 (function () {
   "use strict";
+
+  function bridgeUrl() {
+    if (window.DamRuntime && typeof DamRuntime.bridgeUrl === "function") {
+      return DamRuntime.bridgeUrl();
+    }
+    return "http://127.0.0.1:8766";
+  }
+
+  function authHeaders() {
+    if (window.DamApi && typeof DamApi.authHeaders === "function") {
+      return DamApi.authHeaders();
+    }
+    return {
+      Authorization: "Bearer " + (localStorage.getItem("dam_token") || ""),
+      Accept: "application/json",
+    };
+  }
+
+  function isAdmin() {
+    var role = (localStorage.getItem("dam_role") || "").toLowerCase();
+    return role === "admin" || role === "power_user";
+  }
 
   function easterSunday(year) {
     var a = year % 19;
@@ -104,6 +126,9 @@
     activeId: null,
     query: "",
     bucket: "product", // product | general | all
+    source: "local",
+    syncing: false,
+    fmcgCompute: null,
   };
 
   function isGeneralProject(p) {
@@ -488,6 +513,220 @@
     }
   }
 
+  function updateSourceBadge() {
+    var badge = document.getElementById("damCostSourceBadge");
+    var gen = document.getElementById("damCostGeneratedAt");
+    var syncBtn = document.getElementById("damCostSyncBtn");
+    var when = state.data && state.data.generated_at
+      ? String(state.data.generated_at).replace("T", " ").slice(0, 16)
+      : "";
+    if (badge) {
+      if (state.source === "asana" || state.source === "bridge") {
+        badge.textContent = when
+          ? "Źródło: Asana · sync " + when
+          : "Źródło: bridge (project-costs)";
+        badge.className = "geex-badge geex-badge--success-transparent dam-cost-toolbar__badge";
+      } else {
+        badge.textContent = when
+          ? "Snapshot lokalny · " + when
+          : "Snapshot lokalny (brak połączenia)";
+        badge.className = "geex-badge geex-badge--warning-transparent dam-cost-toolbar__badge";
+      }
+    }
+    if (gen && when) {
+      gen.textContent = t("cost.generated", "Wygenerowano") + ": " + when;
+    }
+    if (syncBtn) {
+      syncBtn.disabled = !isAdmin() || state.syncing;
+      syncBtn.textContent = state.syncing
+        ? "Synchronizacja..."
+        : "Synchronizuj z Asany";
+    }
+  }
+
+  function STAGE_LABELS() {
+    return {
+      procurement: "Zamówienie i zakup",
+      prepress: "Przygotowanie",
+      production: "Produkcja",
+      warehouse: "Magazyn",
+      logistics: "Dostawa",
+    };
+  }
+
+  function renderFmcgPanel() {
+    var mount = document.getElementById("damCostFmcg");
+    if (!mount) return;
+    var c = state.fmcgCompute;
+    if (!c) {
+      mount.innerHTML =
+        '<h5 class="dam-cost-card__title">Łańcuch FMCG</h5>' +
+        '<p class="dam-cost-empty">Brak danych katalogu. Skonfiguruj w Integracjach.</p>';
+      return;
+    }
+    var labels = STAGE_LABELS();
+    var by = c.by_stage || {};
+    var rows = Object.keys(by)
+      .map(function (k) {
+        return (
+          "<tr><td>" +
+          escapeHtml(labels[k] || k) +
+          '</td><td class="text-end fw-500">' +
+          formatPLN(by[k]) +
+          "</td></tr>"
+        );
+      })
+      .join("");
+    var filled = c.filled_count || 0;
+    var total = c.item_count || 0;
+    var missing = c.missing_count || 0;
+    var sum = Object.keys(by).reduce(function (a, k) {
+      return a + (Number(by[k]) || 0);
+    }, 0);
+    mount.innerHTML =
+      '<h5 class="dam-cost-card__title">Łańcuch FMCG</h5>' +
+      '<p class="dam-cost-card__sub">' +
+      filled +
+      " z " +
+      total +
+      " pozycji ma kwotę" +
+      (missing ? " · część bez kwoty (szacunek)" : "") +
+      "</p>" +
+      '<div class="dam-cost-table-wrap"><table class="table table-sm dam-cost-table"><tbody>' +
+      (rows || '<tr><td colspan="2" class="dam-cost-empty">-</td></tr>') +
+      '<tr class="dam-cost-sum"><td><strong>Suma etapów (katalog)</strong></td>' +
+      '<td class="text-end"><strong>' +
+      formatPLN(sum) +
+      "</strong></td></tr></tbody></table></div>" +
+      (missing
+        ? '<p class="dam-cost-card__note">Część pozycji bez kwoty — uzupełnij katalog lub import CSV w Integracjach.</p>'
+        : "");
+  }
+
+  function applyProjectCosts(data, source) {
+    state.data = data;
+    state.source = source || "local";
+    window._DAM_PROJECT_COSTS = data;
+    updateSourceBadge();
+    if (!data.projects || !data.projects.length) {
+      var meta = document.getElementById("damCostMeta");
+      if (meta) {
+        meta.innerHTML =
+          '<p class="dam-cost-empty">' +
+          escapeHtml(t("cost.empty", "Brak projektów do wyliczenia.")) +
+          "</p>";
+      }
+      return;
+    }
+    state.activeId = preferDefaultProject(data.projects);
+    state.bucket = "product";
+    renderPicker(data.projects);
+    renderActive();
+  }
+
+  function loadProjectCosts() {
+    return fetch(bridgeUrl() + "/finance/project-costs", {
+      headers: authHeaders(),
+      cache: "no-store",
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("bridge");
+        return r.json();
+      })
+      .then(function (payload) {
+        if (!payload || payload.ok === false) throw new Error("bridge");
+        var src =
+          payload.source ||
+          (payload.source_csv ? "bridge" : "bridge");
+        if (String(payload.source_csv || "").indexOf("asana") !== -1) src = "asana";
+        applyProjectCosts(payload, src);
+      })
+      .catch(function () {
+        return fetch("data/project-costs.json?v=" + Date.now(), { cache: "no-store" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("Brak project-costs.json");
+            return r.json();
+          })
+          .then(function (data) {
+            applyProjectCosts(data, "local");
+          });
+      });
+  }
+
+  function loadFmcgCompute() {
+    return fetch(bridgeUrl() + "/finance/fmcg-compute", {
+      headers: authHeaders(),
+      cache: "no-store",
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("bridge");
+        return r.json();
+      })
+      .then(function (data) {
+        state.fmcgCompute = data;
+        renderFmcgPanel();
+      })
+      .catch(function () {
+        return fetch("data/fmcg-cost-catalog.json?v=" + Date.now(), { cache: "no-store" })
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (catalog) {
+            if (!catalog || !window.DamFmcg || typeof DamFmcg.computeFromCatalog !== "function") {
+              state.fmcgCompute = null;
+              renderFmcgPanel();
+              return;
+            }
+            state.fmcgCompute = DamFmcg.computeFromCatalog(catalog);
+            renderFmcgPanel();
+          })
+          .catch(function () {
+            state.fmcgCompute = null;
+            renderFmcgPanel();
+          });
+      });
+  }
+
+  function bindSync() {
+    var syncBtn = document.getElementById("damCostSyncBtn");
+    if (!syncBtn) return;
+    updateSourceBadge();
+    syncBtn.addEventListener("click", function () {
+      if (!isAdmin() || state.syncing) return;
+      state.syncing = true;
+      updateSourceBadge();
+      fetch(bridgeUrl() + "/integrations/asana/sync", {
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
+        body: "{}",
+      })
+        .then(function (r) {
+          return r.json().then(function (j) {
+            return { ok: r.ok, j: j };
+          });
+        })
+        .then(function (res) {
+          state.syncing = false;
+          if (!res.ok || (res.j && res.j.ok === false)) {
+            updateSourceBadge();
+            var msg =
+              (res.j && (res.j.error || res.j.message)) ||
+              "Sync nie powiódł się. Sprawdź Asanę w Integracjach.";
+            alert(msg);
+            return;
+          }
+          return loadProjectCosts().then(function () {
+            updateSourceBadge();
+          });
+        })
+        .catch(function () {
+          state.syncing = false;
+          updateSourceBadge();
+          alert("Bridge offline lub brak OAuth Asany.");
+        });
+    });
+  }
+
   function initUI() {
     var tabs = document.getElementById("damCostTabs");
     if (!tabs) return;
@@ -496,41 +735,18 @@
       el.style.display = "none";
     });
 
-    fetch("data/project-costs.json?v=" + Date.now())
-      .then(function (r) {
-        if (!r.ok) throw new Error("Brak project-costs.json");
-        return r.json();
-      })
-      .then(function (data) {
-        state.data = data;
-        window._DAM_PROJECT_COSTS = data;
-        var gen = document.getElementById("damCostGeneratedAt");
-        if (gen && data.generated_at) {
-          gen.textContent =
-            t("cost.generated", "Wygenerowano") + ": " + data.generated_at.replace("T", " ");
-        }
-        if (!data.projects || !data.projects.length) {
-          document.getElementById("damCostMeta").innerHTML =
-            '<p class="dam-cost-empty">' +
-            escapeHtml(t("cost.empty", "Brak projektów do wyliczenia.")) +
-            "</p>";
-          return;
-        }
-        state.activeId = preferDefaultProject(data.projects);
-        state.bucket = "product";
-        renderPicker(data.projects);
-        renderActive();
-      })
-      .catch(function (err) {
-        var meta = document.getElementById("damCostMeta");
-        if (meta) {
-          meta.innerHTML =
-            '<p style="color:#FF5653">Nie udalo sie zaladowac kosztów: ' +
-            escapeHtml(err.message) +
-            "</p>" +
-            '<p class="dam-cost-card__note">Uruchom: python apps/web/scripts/build-project-costs.py</p>';
-        }
-      });
+    bindSync();
+    loadProjectCosts().catch(function (err) {
+      var meta = document.getElementById("damCostMeta");
+      if (meta) {
+        meta.innerHTML =
+          '<p style="color:#FF5653">Nie udalo sie zaladowac kosztów: ' +
+          escapeHtml(err.message || String(err)) +
+          "</p>" +
+          '<p class="dam-cost-card__note">Uruchom: python apps/web/scripts/build-project-costs.py</p>';
+      }
+    });
+    loadFmcgCompute();
   }
 
   window.DamCost = {

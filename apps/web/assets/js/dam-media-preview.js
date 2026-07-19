@@ -346,6 +346,59 @@
     return parts.base || name || fallbackId || "Material";
   }
 
+  function titleHtml(name, fallbackId) {
+    var parts = splitNameExt(name || fallbackId || "Material");
+    var base = parts.base || name || fallbackId || "Material";
+    var extTag = parts.ext
+      ? '<span class="dam-media-preview__ext-tag ' +
+        extTagClass(parts.ext) +
+        '">' +
+        esc(parts.ext.toUpperCase()) +
+        "</span>"
+      : "";
+    return '<span class="dam-media-preview__title-base">' + esc(base) + "</span>" + extTag;
+  }
+
+  function titleMetaHtml(asset, groupContext) {
+    var idChip = assetIdChipHtml(asset);
+    var target = primaryEditableFile(asset, groupContext);
+    var path = target && target.path ? target.path : "";
+    var sameFile = path && asset.path && path === asset.path;
+    var label = target && target.name ? target.name : "Plik edytowalny";
+    var linkHtml =
+      path && !sameFile
+        ? '<div class="dam-media-preview__editable-row">' +
+          '<button type="button" class="dam-media-preview__editable-link" id="damMediaPreviewEditableLink" data-path="' +
+          esc(path) +
+          '" data-dam-tip="' +
+          esc(label) +
+          '" title="' +
+          esc(label) +
+          '">' +
+          '<i class="uil uil-layer-group" aria-hidden="true"></i>' +
+          "<span>" +
+          esc(label) +
+          "</span></button></div>"
+        : "";
+    if (!idChip && !linkHtml) return "";
+    return (
+      '<div class="dam-media-preview__title-meta">' +
+      idChip +
+      "</div>" +
+      linkHtml
+    );
+  }
+
+  function seedLinkedProducts(asset, groupContext) {
+    var linked = (groupContext && groupContext.linked_products) || asset.linked_products || [];
+    if (linked && linked.length) return linked.slice();
+    var ids = (asset && (asset.folder_linked_product_ids || asset.linked_product_ids)) || [];
+    if (!ids.length) return [];
+    return ids.map(function (pid) {
+      return { id: pid, display_name: pid, thumb_url: "" };
+    });
+  }
+
   function metaLineText(asset) {
     var parts = splitNameExt((asset && (asset.name || asset.path)) || asset.id || "");
     var bits = [];
@@ -481,10 +534,12 @@
     if (!groupContext) {
       groupContext = {
         variants: asset.folder_variants || [],
-        linked_products: asset.linked_products || [],
+        linked_products: seedLinkedProducts(asset, null),
         folder_group_id: asset.folder_group_id || "",
         folder_editable_files: asset.folder_editable_files || [],
       };
+    } else if (!groupContext.linked_products || !groupContext.linked_products.length) {
+      groupContext.linked_products = seedLinkedProducts(asset, groupContext);
     }
 
     var assetById = {};
@@ -538,8 +593,11 @@
       "</div>" +
       '<div class="dam-viz-modal__body">' +
       '<div class="dam-viz-card__badges" id="damMediaPreviewBadges"></div>' +
+      '<div class="dam-media-preview__title-block">' +
+      '<div class="dam-media-preview__title-row">' +
       '<h4 class="dam-viz-modal__title" id="damMediaPreviewTitle"></h4>' +
-      '<p class="dam-viz-modal__carrier" id="damMediaPreviewMeta"></p>' +
+      '<div id="damMediaPreviewTitleMeta"></div>' +
+      "</div></div>" +
       '<div id="damMediaPreviewAssoc"></div>' +
       '<div class="dam-viz-modal__actions">' +
       '<div class="dam-viz-modal__actions-main">' +
@@ -784,11 +842,13 @@
 
     function renderMeta(a) {
       var title = document.getElementById("damMediaPreviewTitle");
+      var titleMeta = document.getElementById("damMediaPreviewTitleMeta");
       var meta = document.getElementById("damMediaPreviewMeta");
       var badges = document.getElementById("damMediaPreviewBadges");
       var assocHost = document.getElementById("damMediaPreviewAssoc");
       var sourceMount = document.getElementById("damMediaPreviewSourceMount");
-      if (title) title.textContent = titlePlain(a.name, a.id);
+      if (title) title.innerHTML = titleHtml(a.name, a.id);
+      if (titleMeta) titleMeta.innerHTML = titleMetaHtml(a, groupContext);
       if (meta) meta.textContent = metaLineText(a);
       if (sourceMount) sourceMount.innerHTML = sourceFileActionHtml(a, groupContext);
       if (assocHost) {
@@ -843,7 +903,7 @@
           if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
         };
         if (window.DamAssocEdit && typeof window.DamAssocEdit.enrichLinkedProducts === "function") {
-          window.DamAssocEdit.enrichLinkedProducts(groupContext.linked_products || []).then(function (linked) {
+          window.DamAssocEdit.enrichLinkedProducts(seedLinkedProducts(a, groupContext)).then(function (linked) {
             groupContext.linked_products = linked;
             a.linked_products = linked;
             paintAssoc();
@@ -852,10 +912,21 @@
           paintAssoc();
         }
       }
-      var editableLink = document.getElementById("damMediaPreviewSource");
+      var editableLink = document.getElementById("damMediaPreviewEditableLink");
       if (editableLink) {
         editableLink.addEventListener("click", function () {
           var p = editableLink.getAttribute("data-path") || "";
+          if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
+            window.DamPaths.revealInExplorer(p);
+          } else if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+            window.DamPaths.openFolderInExplorer(p);
+          }
+        });
+      }
+      var editableSource = document.getElementById("damMediaPreviewSource");
+      if (editableSource) {
+        editableSource.addEventListener("click", function () {
+          var p = editableSource.getAttribute("data-path") || "";
           if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
             window.DamPaths.revealInExplorer(p);
           } else if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {

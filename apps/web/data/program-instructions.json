@@ -1,7 +1,7 @@
 {
   "version": 5,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-19T19:15:00+02:00",
+  "updated_at": "2026-07-19T23:00:00+02:00",
   "instructions": [
     {
       "id": "data.lang_provenance_only",
@@ -609,23 +609,107 @@
       ]
     },
     {
-      "id": "wykrojnik.queue_local_admin",
+      "id": "integrations.hub_bridge",
       "must": [
-        "Admin kolejki w integrations.html: odczyt JSON + szkic localStorage + pobierz JSON",
-        "Zapis do repo: ręcznie zastąp apps/web/data/wykrojnik-mapping-queue.json"
+        "Kolejka wykrojnikow zapisana przez bridge GET/POST /wykrojnik-mapping-queue",
+        "Zapis kolejki tylko admin (POST); odczyt GET po zalogowaniu",
+        "localStorage nie jest zrodlem prawdy dla kolejki"
       ],
-      "body_pl": "Kolejka mapowań wykrojników bez POST na bridge — edycja lokalna w Cursor/repo.",
-      "category": "wykrojnik",
+      "body_pl": "Hub Integracje v2: kolejka mapowan wykrojnikow, konfig OAuth/LDAP, sync Asana i modul finansow FMCG przez local_bridge (8766). Admin zapisuje przez API; UI pokazuje Stub/Opcjonalnie jako glowny UX dla nieskonfigurowanych integracji.",
+      "category": "integrations",
       "must_not": [
-        "Wymagać bridge API do podstawowej edycji kolejki"
+        "Wymagac recznego pobierania JSON w normalnym workflow admina",
+        "Traktowac localStorage jako zrodlo prawdy kolejki wykrojnikow"
       ],
-      "priority": "medium",
-      "title_pl": "Kolejka wykrojników — admin lokalny",
+      "priority": "high",
+      "title_pl": "Integracje hub v2 - bridge API",
       "updated_at": "2026-07-19",
       "related_code": [
         "apps/web/integrations.html",
         "apps/web/assets/js/dam-wykrojnik-queue.js",
+        "apps/web/assets/js/dam-integrations.js",
+        "apps/desktop/local_bridge.py",
         "apps/web/data/wykrojnik-mapping-queue.json"
+      ]
+    },
+    {
+      "id": "finance.rates_admin",
+      "must": [
+        "Admin edytuje cost-rates.json przez bridge GET/POST /finance/cost-rates",
+        "Stawki osob i mapa godzin zadan tylko przez bridge (nie reczny edit pliku w normalnym flow)"
+      ],
+      "body_pl": "Stawki pracy (net, employer_mult, allocation) i mapa godzin zadan Asana w cost-rates.json. POST wymaga sesji admin.",
+      "category": "finance",
+      "must_not": [
+        "Nadpisywac cost-rates bez autoryzacji admin na bridge"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: stawki kosztow (admin)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/cost-rates.json",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "finance.invoices_import",
+      "must": [
+        "Import faktur CSV przez bridge POST /finance/invoices/import (admin)",
+        "GET/POST /finance/invoices dla listy i upsert"
+      ],
+      "body_pl": "Faktury w apps/web/data/invoices.json. Import CSV: kolumny id, client, project, amount, currency, issue_date, due_date, status, type.",
+      "category": "finance",
+      "must_not": [
+        "Importowac faktury bez walidacji admin na bridge"
+      ],
+      "priority": "medium",
+      "title_pl": "Finanse: import faktur CSV",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/invoices.json",
+        "apps/web/invoices.html",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "finance.fmcg_catalog",
+      "must": [
+        "Katalog lancucha kosztow FMCG w fmcg-cost-catalog.json",
+        "Import CSV/XLSX przez bridge POST /finance/fmcg-import (admin)",
+        "GET /finance/fmcg-compute sumuje kwoty po stage"
+      ],
+      "body_pl": "Pelny lancuch FMCG: procurement, prepress, production, warehouse, logistics. Szablon CSV w data/templates/fmcg-cost-import-template.csv. Mapowanie kolumn: fmcg-cost-import-map.json.",
+      "category": "finance",
+      "must_not": [
+        "Traktowac fmcg-cost-averages.json jako jedyne zrodlo kwot po wdrozeniu katalogu"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: katalog kosztow FMCG",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/fmcg-cost-catalog.json",
+        "apps/web/data/fmcg-cost-import-map.json",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "finance.fmcg_no_double_count",
+      "must": [
+        "Robocizna z Asana (project-costs / cost-rates) nie jest podwojnie liczona z pozycja katalogu gdy zadanie ma mapowanie asana_keywords",
+        "GET /finance/fmcg-compute raportuje missing count osobno od labor Asana"
+      ],
+      "body_pl": "Przy landed cost: jesli pozycja katalogu ma asana_keywords pasujace do zadania juz policzonego w project-costs, nie dodawaj drugi raz tej samej pracy.",
+      "category": "finance",
+      "must_not": [
+        "Sumowac tej samej robocizny z Asana i z katalogu FMCG bez deduplikacji"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: brak podwojnego liczenia labor",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/fmcg-cost-catalog.json",
+        "apps/web/data/project-costs.json",
+        "apps/web/assets/js/dam-fmcg-cost.js"
       ]
     },
     {

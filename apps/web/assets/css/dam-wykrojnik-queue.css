@@ -32,11 +32,11 @@
   border: 1px solid var(--dam-border, rgba(0, 0, 0, 0.12));
 }
 
-.dam-wykrojnik-queue__actions {
+.dam-wykrojnik-queue__row-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .dam-wykrojnik-queue__table {

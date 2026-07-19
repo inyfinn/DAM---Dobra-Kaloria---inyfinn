@@ -30,6 +30,28 @@ ENV_PATH = DESKTOP_DIR / "dam-connection.env"
 
 PROVIDERS = ("asana", "microsoft")  # microsoft = Teams + Outlook (Graph)
 
+# Klucze konfiguracji hub Integracje (GET /integrations/config)
+PUBLIC_ENV_KEYS = (
+    "DAM_OAUTH_REDIRECT",
+    "DAM_ASANA_CLIENT_ID",
+    "DAM_ASANA_CLIENT_SECRET",
+    "DAM_MS_CLIENT_ID",
+    "DAM_MS_CLIENT_SECRET",
+    "DAM_ENTRA_TENANT_ID",
+    "DAM_ENTRA_CLIENT_ID",
+    "DAM_ENTRA_CLIENT_SECRET",
+    "DAM_LDAP_HOST",
+    "DAM_LDAP_PORT",
+    "DAM_LDAP_BASE_DN",
+    "DAM_LDAP_BIND_DN",
+    "DAM_LDAP_BIND_PASSWORD",
+)
+
+SECRET_ENV_SUFFIXES = ("_SECRET", "_PASSWORD")
+SECRET_ENV_KEYS = frozenset(
+    k for k in PUBLIC_ENV_KEYS if k.endswith(SECRET_ENV_SUFFIXES) or k.endswith("_SECRET")
+)
+
 
 def _load_dotenv() -> None:
     if not ENV_PATH.is_file():
@@ -232,3 +254,106 @@ def get_access_token(provider: str) -> str | None:
         return decrypt_str(enc)
     except Exception:
         return None
+
+
+def _mask_secret(value: str) -> str:
+    val = (value or "").strip()
+    if not val:
+        return ""
+    if len(val) <= 4:
+        return "***"
+    return val[:4] + "***"
+
+
+def _read_env_file() -> dict[str, str]:
+    out: dict[str, str] = {}
+    if not ENV_PATH.is_file():
+        return out
+    try:
+        for raw in ENV_PATH.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, _, v = line.partition("=")
+            out[k.strip()] = v.strip().strip("'").strip('"')
+    except OSError:
+        pass
+    return out
+
+
+def read_env_public() -> dict[str, Any]:
+    """Zwraca konfiguracje integracji bez pelnych sekretow."""
+    _load_dotenv()
+    file_vals = _read_env_file()
+    out: dict[str, Any] = {}
+    for key in PUBLIC_ENV_KEYS:
+        val = file_vals.get(key) or os.environ.get(key, "").strip()
+        if key in SECRET_ENV_KEYS or key.endswith("_SECRET") or key.endswith("_PASSWORD"):
+            out[key] = {
+                "has_secret": bool(val),
+                "masked": _mask_secret(val) if val else "",
+            }
+        else:
+            out[key] = val
+    out["env_path"] = str(ENV_PATH)
+    out["env_exists"] = ENV_PATH.is_file()
+    return {"ok": True, "config": out}
+
+
+def write_env_keys(updates: dict[str, Any]) -> dict[str, Any]:
+    """Zapis dozwolonych kluczy do dam-connection.env (bez echo pelnych sekretow)."""
+    if not isinstance(updates, dict):
+        return {"ok": False, "error": "invalid_updates"}
+    allowed = set(PUBLIC_ENV_KEYS)
+    clean: dict[str, str] = {}
+    for key, val in updates.items():
+        k = str(key or "").strip()
+        if k not in allowed:
+            continue
+        if isinstance(val, dict):
+            if val.get("clear"):
+                clean[k] = ""
+            elif val.get("value"):
+                clean[k] = str(val.get("value") or "").strip()
+            continue
+        clean[k] = str(val or "").strip()
+
+    if not clean:
+        return {"ok": False, "error": "no_allowed_keys"}
+
+    updated_keys = list(clean.keys())
+    lines: list[str] = []
+    existing = _read_env_file()
+    merged = dict(existing)
+    merged.update(clean)
+
+    pending = dict(clean)
+    if ENV_PATH.is_file():
+        try:
+            for raw in ENV_PATH.read_text(encoding="utf-8").splitlines():
+                line = raw.rstrip("\n")
+                stripped = line.strip()
+                if stripped and not stripped.startswith("#") and "=" in stripped:
+                    k = stripped.split("=", 1)[0].strip()
+                    if k in pending:
+                        lines.append(f"{k}={pending[k]}")
+                        del pending[k]
+                        continue
+                lines.append(line)
+        except OSError:
+            lines = []
+
+    for k, v in pending.items():
+        lines.append(f"{k}={v}")
+
+    ENV_PATH.parent.mkdir(parents=True, exist_ok=True)
+    ENV_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    for k in updated_keys:
+        os.environ[k] = merged.get(k, "")
+
+    return {
+        "ok": True,
+        "updated": updated_keys,
+        "config": read_env_public()["config"],
+    }
