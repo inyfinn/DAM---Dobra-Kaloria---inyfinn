@@ -3903,6 +3903,11 @@ button.dam-status-badge.dam-tag-editable:hover {
   background: rgba(70, 66, 85, 0.08);
   color: #6B6680;
 }
+.dam-status-badge--archive {
+  background: rgba(143, 139, 159, 0.16);
+  color: #6b6578;
+  border: 1px dashed rgba(107, 101, 120, 0.4);
+}
 
 /* Lifecycle F / X / D (admin) */
 .dam-lifecycle {
@@ -3960,6 +3965,37 @@ button.dam-status-badge.dam-tag-editable:hover {
   min-width: auto;
   font-weight: 500;
 }
+
+/* Spinner na klikniętym F/X/D podczas zapisu na dysk */
+.dam-lifecycle__btn.is-pending {
+  pointer-events: none;
+  position: relative;
+  color: transparent !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, #e7e7e7);
+  background: #faf7fd;
+}
+.dam-lifecycle__btn.is-pending::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid #e0d0ef;
+  border-top-color: var(--dam-primary, #ab54db);
+  border-radius: 50%;
+  animation: dam-db-spin 0.7s linear infinite;
+}
+.dam-carrier-card.is-lifecycle-pending {
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  outline-offset: -1px;
+}
+.dam-carrier-card.is-lifecycle-pending .dam-lifecycle__btn:not(.is-pending) {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .dam-prod-row__lifecycle {
   margin-top: 8px;
 }
@@ -4007,7 +4043,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   margin-left: 2px;
   display: inline-flex;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 4px;
   flex-shrink: 0;
 }
@@ -4105,14 +4141,15 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 .dam-carrier-toggle__actions .dam-file-copy,
 .dam-carrier-toggle__actions .dam-file-reveal {
-  width: 45px;
-  height: 45px;
-  padding: 6px;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
   border-radius: 8px;
+  flex-shrink: 0;
 }
 .dam-carrier-toggle__actions .dam-file-copy i,
 .dam-carrier-toggle__actions .dam-file-reveal i {
-  font-size: 24px;
+  font-size: 18px;
   line-height: 1;
 }
 .dam-viz-mini__actions {
@@ -4808,7 +4845,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-carrier-card {
   border: 1px solid rgba(70, 66, 85, 0.12);
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   background: #f8f7fb;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
@@ -4834,16 +4871,15 @@ button.dam-status-badge.dam-tag-editable:hover {
   box-shadow: 0 0 0 2px rgba(40, 199, 111, 0.1);
 }
 
-/* Pasek nośnika: body | meta (prawo) | end (akcje + chevron) */
+/* Pasek nośnika: flex wrap — body | meta | akcje+chevron (bez ucinania ikon) */
 .dam-carrier-toggle-row {
-  display: grid;
-  grid-template-columns: minmax(140px, 1fr) auto auto;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  column-gap: 10px;
-  row-gap: 8px;
+  gap: 8px 10px;
   width: 100%;
   min-height: 56px;
-  padding: 10px 10px 10px 14px;
+  padding: 10px 12px 10px 14px;
   box-sizing: border-box;
   cursor: pointer;
   transition: background 0.12s ease;
@@ -4864,13 +4900,13 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-carrier-toggle-row__body {
+  flex: 1 1 140px;
   min-width: 0;
   max-width: 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
-  grid-column: 1;
 }
 
 .dam-carrier-toggle-row__end {
@@ -4878,13 +4914,10 @@ button.dam-status-badge.dam-tag-editable:hover {
   align-items: center;
   justify-content: flex-end;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 4px;
+  flex: 0 0 auto;
+  margin-left: auto;
   align-self: center;
-  grid-column: 3;
-  margin-left: 0;
-  width: auto;
-  max-width: none;
-  flex-shrink: 0;
 }
 
 /* Legacy aliases */
@@ -4896,13 +4929,11 @@ button.dam-status-badge.dam-tag-editable:hover {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 6px;
-  grid-column: 2;
-  justify-self: end;
-  width: max-content;
-  max-width: 100%;
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
 }
 
 .dam-carrier-head__meta > .dam-status-badge,
@@ -4939,27 +4970,23 @@ button.dam-status-badge.dam-tag-editable:hover {
 @media (max-width: 1199.98px) {
   .dam-carrier-head__meta {
     flex-wrap: wrap;
-    max-width: min(100%, 360px);
+    justify-content: flex-end;
   }
 }
 
 @media (max-width: 991.98px) {
   .dam-carrier-toggle-row {
-    grid-template-columns: minmax(0, 1fr) auto;
     min-height: 0;
   }
+  .dam-carrier-toggle-row__body {
+    flex: 1 1 100%;
+  }
   .dam-carrier-head__meta {
-    grid-column: 1 / -1;
-    justify-self: stretch;
-    max-width: 100%;
-    justify-content: flex-end;
-    flex-wrap: wrap;
+    flex: 1 1 auto;
+    justify-content: flex-start;
   }
   .dam-carrier-toggle-row__end {
-    grid-column: 2;
-    grid-row: 1;
-    justify-content: flex-end;
-    width: auto;
+    margin-left: auto;
   }
 }
 
@@ -5100,9 +5127,9 @@ button.dam-status-badge.dam-tag-editable:hover {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  font-size: 22px;
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
   color: var(--dam-primary, #AB54DB);
   text-align: center;
   line-height: 1;
@@ -5112,6 +5139,8 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-carrier-body {
   padding: 12px 14px 14px;
   border-top: 1px solid #f5f0fc;
+  overflow: hidden;
+  border-radius: 0 0 12px 12px;
 }
 
 /* Data = globalny pill jak indeks (nigdy kwadrat 4px / 13px mono-look) */

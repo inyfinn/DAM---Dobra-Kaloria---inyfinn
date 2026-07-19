@@ -1093,14 +1093,61 @@ def discover_marketing_materials(products: list[dict], marketing_root: Path) -> 
             })
 
 
-def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> dict | None:
-    product_name = product_dir.name
-    display_name, bracket_tags = parse_display_name(product_name)
-    revisions = []
+def is_category_archive_folder(name: str) -> bool:
+    """Folder kategorii — ARCHIWUM (nie rozszerzenie .zip)."""
+    return (name or "").strip().upper().endswith("ARCHIWUM")
+
+
+def strip_product_folder_status_suffix(name: str) -> str:
+    """Usun sufiks ' - F/X/D' z nazwy folderu produktu w archiwum."""
+    m = re.match(r"^(.+?)\s-\s[FXD]$", name or "", re.I)
+    return m.group(1).strip() if m else (name or "").strip()
+
+
+def finalize_revision_groups(revisions: list[dict], cat_name: str) -> None:
+    """Carrier guess + is_latest (wspolne dla live i archiwum)."""
+    cat_u = (cat_name or "").upper()
+    is_bars_cat = "BAR" in cat_u or "BATON" in cat_u
+    if is_bars_cat:
+        for r in revisions:
+            if r.get("carrier") in ("DOY", "DOY6X"):
+                r["carrier_guessed"] = True
+    known_carriers = [
+        r["carrier"] for r in revisions if r["carrier"] and r["carrier"] not in ("OTHER", "UNKNOWN", "WARIANT")
+    ]
+    if known_carriers:
+        majority_carrier = Counter(known_carriers).most_common(1)[0][0]
+        for r in revisions:
+            if not r["carrier"] or r["carrier"] in ("OTHER", "UNKNOWN", "WARIANT"):
+                r["carrier"] = majority_carrier
+                r["carrier_guessed"] = True
+    groups: dict[tuple, list] = defaultdict(list)
+    for r in revisions:
+        key = (r["carrier"], r["index_base"] or r["folder"])
+        groups[key].append(r)
+    for _key, items in groups.items():
+        def sort_key(r):
+            rev_i = int(r["index_rev"]) if r.get("index_rev") and str(r["index_rev"]).isdigit() else -1
+            date_s = r.get("date") or "0000-00-00"
+            return (rev_i, date_s, r.get("folder") or "")
+
+        items_sorted = sorted(items, key=sort_key)
+        for r in items:
+            if not r.get("in_archive"):
+                r["is_latest"] = False
+        live_items = [r for r in items_sorted if not r.get("in_archive")]
+        pick = live_items if live_items else items_sorted
+        if pick:
+            pick[-1]["is_latest"] = True
+
+
+def scan_revision_children(product_dir: Path, root: Path, brand: str, cat_name: str) -> list[dict]:
+    """Skan folderow-wariantow w katalogu produktu (live lub archiwum)."""
+    revisions: list[dict] = []
     try:
         children = list(product_dir.iterdir())
     except (PermissionError, OSError):
-        return None
+        return revisions
 
     for child in children:
         if not child.is_dir():
@@ -1110,7 +1157,6 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
         date_s = parse_date(child.name)
         slots, files_by_role, wizki_files = scan_revision_slots(child, root)
 
-        # ETY-SLO / foldery bez indeksu w nazwie: wyciagnij z plikow wizki/source
         pool: list[dict] = list(wizki_files or [])
         fbr = files_by_role or {}
         for role_key in ("source", "print", "viz", "elements"):
@@ -1122,8 +1168,6 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
             if inferred:
                 carrier = inferred
 
-        # Jezyki: surowe nazwy (folder+pliki) + baseline DK=PL. GC bez baseline.
-        # Dodatkowe (np. GB przy DK) TYLKO z tokenow w nazwach. Override: apply_lang_overrides.
         raw_langs = infer_langs_from_files(child.name, pool)
         file_langs, langs_source = apply_brand_lang_baseline(brand, raw_langs)
         revisions.append(
@@ -1146,44 +1190,77 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
             }
         )
 
-    # Kategoria BATONY/BARS + nosnik DOYPACK: czesto bledny prefiks folderu
-    # (kategoria OK, typ/nosnik nie). Oznacz jako zgadniety -> "?" w UI + korekta admina.
-    cat_u = (cat_name or "").upper()
-    is_bars_cat = "BAR" in cat_u or "BATON" in cat_u
-    if is_bars_cat:
-        for r in revisions:
-            if r.get("carrier") in ("DOY", "DOY6X"):
-                r["carrier_guessed"] = True
+    finalize_revision_groups(revisions, cat_name)
+    return revisions
 
-    # Zgadywanie nosnika z sasiednich rewizji TEGO SAMEGO produktu (2026-07-18).
-    # "Lepiej nic nie pisac, niz OTHER - ale jesli mozna zgadnac po sasiedzie, zgadnij"
-    # (user). Nigdy nie nadpisujemy prawdy - flaga carrier_guessed pokazuje "?" w UI,
-    # user (kazda rola) moze poprawic -> Faza 4 (kolejka moderacji + /rename-revision-prefix).
-    known_carriers = [
-        r["carrier"] for r in revisions if r["carrier"] and r["carrier"] not in ("OTHER", "UNKNOWN", "WARIANT")
-    ]
-    if known_carriers:
-        majority_carrier = Counter(known_carriers).most_common(1)[0][0]
-        for r in revisions:
-            if not r["carrier"] or r["carrier"] in ("OTHER", "UNKNOWN", "WARIANT"):
-                r["carrier"] = majority_carrier
-                r["carrier_guessed"] = True
 
-    groups: dict[tuple, list] = defaultdict(list)
-    for r in revisions:
-        key = (r["carrier"], r["index_base"] or r["folder"])
-        groups[key].append(r)
-    for _key, items in groups.items():
-        def sort_key(r):
-            rev_i = int(r["index_rev"]) if r.get("index_rev") and str(r["index_rev"]).isdigit() else -1
-            date_s = r.get("date") or "0000-00-00"
-            return (rev_i, date_s, r.get("folder") or "")
+def merge_category_archive(cat: Path, root: Path, brand: str, products: list[dict]) -> int:
+    """Dolacz warianty z — ARCHIWUM do istniejacych produktow (bez duplikatu produktu)."""
+    arch_dir = None
+    try:
+        for child in cat.iterdir():
+            if child.is_dir() and is_category_archive_folder(child.name):
+                arch_dir = child
+                break
+    except (PermissionError, OSError):
+        return 0
+    if not arch_dir:
+        return 0
 
-        items_sorted = sorted(items, key=sort_key)
-        for r in items:
+    cat_name = cat.name
+    live_by_name: dict[str, dict] = {}
+    live_by_id: dict[str, dict] = {}
+    for p in products:
+        if p.get("category") != cat_name or p.get("brand") != brand:
+            continue
+        live_by_name[p["name"]] = p
+        live_by_id[p["id"]] = p
+
+    merged = 0
+    try:
+        arch_prods = sorted([p for p in arch_dir.iterdir() if p.is_dir()], key=lambda p: p.name)
+    except (PermissionError, OSError):
+        return 0
+
+    for arch_prod in arch_prods:
+        key_name = strip_product_folder_status_suffix(arch_prod.name)
+        target = live_by_name.get(key_name)
+        if not target:
+            pid = norm(key_name).replace(" ", "-")[:80]
+            target = live_by_id.get(pid)
+        if not target:
+            print(f"  [archive] brak produktu live dla: {arch_prod.name}")
+            continue
+
+        arch_revs = scan_revision_children(arch_prod, root, brand, cat_name)
+        paths = {x.get("path") for x in target.get("revisions") or []}
+        folders = {x.get("folder") for x in target.get("revisions") or []}
+        for r in arch_revs:
+            r["in_archive"] = True
             r["is_latest"] = False
-        if items_sorted:
-            items_sorted[-1]["is_latest"] = True
+            r["archive_wrapper"] = str(arch_prod).replace("\\", "/")
+            if r.get("path") in paths or r.get("folder") in folders:
+                continue
+            target.setdefault("revisions", []).append(r)
+            paths.add(r.get("path"))
+            folders.add(r.get("folder"))
+            merged += 1
+
+        target["revision_count"] = len(target.get("revisions") or [])
+        target["indexes"] = sorted({r["index"] for r in target["revisions"] if r.get("index")})
+        target["index_bases"] = sorted({r["index_base"] for r in target["revisions"] if r.get("index_base")})
+
+    if merged:
+        print(f"  [{brand}] {cat_name} archiwum: +{merged} wariant(ow)")
+    return merged
+
+
+def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> dict | None:
+    product_name = product_dir.name
+    display_name, bracket_tags = parse_display_name(product_name)
+    revisions = scan_revision_children(product_dir, root, brand, cat_name)
+    if not revisions and not product_dir.exists():
+        return None
 
     tags = extract_tags(
         [cat_name, product_name, display_name] + [r["folder"] for r in revisions],
@@ -1704,9 +1781,9 @@ def scan_root(root: Path, brand: str, max_products: int, products_so_far: int) -
             print(f"  skip cat {cat_name}: {e}")
             continue
         for prod in sorted(prod_dirs, key=lambda p: p.name):
-            # Pomijaj folder archiwum kategorii (— ARCHIWUM) - warianty wrocą po restore
+            # Pomijaj folder archiwum kategorii (— ARCHIWUM) - warianty dolaczamy ponizej
             pname = prod.name or ""
-            if pname.strip().upper().endswith("ARCHIWUM"):
+            if is_category_archive_folder(pname):
                 continue
             item = scan_product(cat_name, prod, root, brand)
             if item:
@@ -1714,6 +1791,7 @@ def scan_root(root: Path, brand: str, max_products: int, products_so_far: int) -
                 count += 1
             if max_products and count >= max_products:
                 break
+        merge_category_archive(cat, root, brand, products)
         print(f"  [{brand}] {cat_name}: products so far {count}")
         if max_products and count >= max_products:
             break

@@ -320,7 +320,43 @@
   }
 
   function revisionStatusKey(rev) {
-    return rev ? (rev.path || rev.index || rev.folder || "") : "";
+    var pk = normPathKey(rev && rev.path);
+    if (pk) return pk;
+    return rev ? (rev.index || rev.folder || "") : "";
+  }
+
+  /** Wiersz lifecycle dla wariantu — po sciezce (index moze byc wspolny: DOY + ETY). */
+  function lifecycleRowForRev(rev) {
+    if (!rev) return null;
+    var store = state.lifecycleStore && state.lifecycleStore.revisions;
+    if (!store) return null;
+    var pk = normPathKey(rev.path || "");
+    if (pk && store[pk]) return store[pk];
+    if (pk) {
+      var keys = Object.keys(store);
+      for (var i = 0; i < keys.length; i++) {
+        var row = store[keys[i]];
+        if (row && normPathKey(row.path) === pk) return row;
+      }
+    }
+    return null;
+  }
+
+  /** Status z localStorage / statusStore — tylko gdy pasuje sciezka wariantu. */
+  function statusRowForRev(rev) {
+    if (!rev) return null;
+    var store = state.statusStore && state.statusStore.revisions;
+    if (!store) return null;
+    var pk = normPathKey(rev.path || "");
+    if (pk && store[pk]) return store[pk];
+    if (pk) {
+      var keys = Object.keys(store);
+      for (var j = 0; j < keys.length; j++) {
+        var row = store[keys[j]];
+        if (row && normPathKey(row.path) === pk) return row;
+      }
+    }
+    return null;
   }
 
   function letterFromFolderName(pathOrName) {
@@ -339,32 +375,27 @@
   function getRevisionStatus(rev) {
     if (!rev) return "starsza";
     /* DYSK (nazwa folderu w indeksie) = prawda. Brak literki = clear / Bez statusu.
-       NIGDY: is_latest → aktualne (to mylilo F z "bez statusu"). */
+       NIGDY: is_latest → aktualne (to mylilo F z "bez statusu").
+       NIGDY: lookup po samym index (TEST-TEST2 moze byc DOY live + ETY w archiwum). */
     var diskLit = letterFromFolderName(rev.path || rev.folder || "");
     if (diskLit) return statusFromLetter(diskLit);
+    if (rev.path || rev.folder) return "clear";
 
-    var keys = [rev.index, revisionStatusKey(rev), rev.path, rev.folder].filter(Boolean);
-    if (state.lifecycleStore && state.lifecycleStore.revisions) {
-      for (var li = 0; li < keys.length; li++) {
-        var lrow = state.lifecycleStore.revisions[keys[li]];
-        if (!lrow || !Object.prototype.hasOwnProperty.call(lrow, "status")) continue;
-        if (lrow.status === "clear" || !lrow.status) return "clear";
-        if (lrow.status === "aktualne" || lrow.status === "nieaktualne" || lrow.status === "demo") {
-          return lrow.status;
-        }
+    var lrow = lifecycleRowForRev(rev);
+    if (lrow && Object.prototype.hasOwnProperty.call(lrow, "status")) {
+      if (lrow.status === "clear" || !lrow.status) return "clear";
+      if (lrow.status === "aktualne" || lrow.status === "nieaktualne" || lrow.status === "demo") {
+        return lrow.status;
       }
     }
     var ov = overrideForRev(rev);
     if (ov && ov.status && ov.status !== "clear" && ov.status !== "starsza") return ov.status;
-    var store = state.statusStore;
-    for (var i = 0; i < keys.length; i++) {
-      if (store && store.revisions && store.revisions[keys[i]]) {
-        var st = store.revisions[keys[i]].status;
-        if (st === "clear") return "clear";
-        if (st && st !== "starsza") return st;
-      }
+    var srow = statusRowForRev(rev);
+    if (srow) {
+      var st = srow.status;
+      if (st === "clear") return "clear";
+      if (st && st !== "starsza") return st;
     }
-    /* Brak literki na dysku = Bez statusu (nie Starsza / nie F) */
     if (rev && rev.is_latest) return "clear";
     return "starsza";
   }
@@ -375,19 +406,19 @@
     var idx = opts.index || "";
     var path = opts.path || "";
     var productId = opts.productId || "";
+    if (path) return path;
     var store = state.lifecycleStore;
     if (store && store.revisions) {
-      if (idx && store.revisions[idx] && store.revisions[idx].path) {
-        return store.revisions[idx].path;
+      var pk = normPathKey(path);
+      if (pk && store.revisions[pk] && store.revisions[pk].path) {
+        return store.revisions[pk].path;
       }
       var keys = Object.keys(store.revisions);
       for (var i = 0; i < keys.length; i++) {
         var row = store.revisions[keys[i]];
         if (!row || !row.path) continue;
-        if (idx && (keys[i] === idx || String(row.path).toUpperCase().indexOf(String(idx).toUpperCase()) !== -1)) {
-          return row.path;
-        }
-        if (productId && row.product_id === productId && idx && String(keys[i]).indexOf(idx) !== -1) {
+        if (pk && normPathKey(row.path) === pk) return row.path;
+        if (productId && row.product_id === productId && idx && normPathKey(row.path).indexOf(idx) !== -1) {
           return row.path;
         }
       }
@@ -506,6 +537,14 @@
     return (revisions || []).filter(function (r) {
       return getRevisionStatus(r) === "aktualne";
     });
+  }
+
+  function revisionsForProductView(product, showAll) {
+    var revs = (product && product.revisions) || [];
+    if (!showAll) {
+      return revs.filter(function (r) { return !r.in_archive; });
+    }
+    return revs;
   }
 
   /**
@@ -1211,6 +1250,64 @@
 
   var _lifecycleQueue = Promise.resolve();
 
+  function _dbgLifeLog(location, message, data, hypothesisId) {
+    // #region agent log
+    fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "3ca09b" },
+      body: JSON.stringify({
+        sessionId: "3ca09b",
+        hypothesisId: hypothesisId || "D",
+        location: location,
+        message: message,
+        data: data || {},
+        timestamp: Date.now()
+      })
+    }).catch(function () {});
+    // #endregion
+  }
+
+  function lifecyclePendingTarget(btn) {
+    if (!btn || !btn.closest) return null;
+    return {
+      btn: btn,
+      group: btn.closest(".dam-lifecycle"),
+      card: btn.closest(".dam-carrier-card")
+    };
+  }
+
+  function setLifecyclePending(target) {
+    clearLifecyclePending();
+    if (!target || !target.btn) return;
+    state._lifecyclePending = target;
+    target.btn.classList.add("is-pending");
+    target.btn.setAttribute("aria-busy", "true");
+    if (target.group) {
+      target.group.querySelectorAll(".dam-lifecycle__btn").forEach(function (b) {
+        b.disabled = true;
+        if (b !== target.btn) b.classList.add("is-disabled");
+      });
+    }
+    if (target.card) target.card.classList.add("is-lifecycle-pending");
+  }
+
+  function clearLifecyclePending() {
+    var t = state._lifecyclePending;
+    if (!t) return;
+    if (t.btn && t.btn.classList) {
+      t.btn.classList.remove("is-pending");
+      t.btn.removeAttribute("aria-busy");
+    }
+    if (t.group) {
+      t.group.querySelectorAll(".dam-lifecycle__btn").forEach(function (b) {
+        b.disabled = false;
+        b.classList.remove("is-disabled");
+      });
+    }
+    if (t.card && t.card.classList) t.card.classList.remove("is-lifecycle-pending");
+    state._lifecyclePending = null;
+  }
+
   function applyLifecycleStatus(opts) {
     /* Kolejka - szybkie klikniecia F/X/D nie moga sie nakladac */
     var run = function () {
@@ -1222,6 +1319,7 @@
 
   function applyLifecycleStatusNow(opts) {
     opts = opts || {};
+    var t0 = Date.now();
     if (!isAdminRole() || !state.adminMode) {
       showToast("Włącz tryb admina, aby zmieniać statusy F/X/D", "error");
       return Promise.resolve({ ok: false });
@@ -1235,25 +1333,12 @@
         return applyLifecycleStatusNow(opts);
       });
     }
-    // #region agent log
-    fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
-      body: JSON.stringify({
-        sessionId: "a78fa0",
-        hypothesisId: "G",
-        location: "dam-explorer.js:applyLifecycleStatusNow",
-        message: "lifecycle apply request",
-        data: {
-          scope: opts.scope || "variant",
-          status: opts.status || "clear",
-          hasProductId: !!(opts.productId || ""),
-        },
-        timestamp: Date.now(),
-        runId: "post-fix",
-      }),
-    }).catch(function () {});
-    // #endregion
+    setLifecyclePending(lifecyclePendingTarget(opts.uiBtn));
+    _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "lifecycle start", {
+      scope: opts.scope || "variant",
+      status: opts.status || "clear",
+      hasUiBtn: !!opts.uiBtn
+    }, "D");
     var resolvedPath = resolveLifecycleDiskPath({
       scope: opts.scope || "variant",
       path: opts.path || "",
@@ -1271,6 +1356,7 @@
     };
     if (!body.path && !body.revision_index) {
       showToast("Brak ścieżki do zmiany statusu", "error");
+      clearLifecyclePending();
       return Promise.resolve({ ok: false });
     }
     showToast("Zapisuję status na dysku…", "info");
@@ -1279,6 +1365,8 @@
       body: JSON.stringify(body)
     })
       .then(function (res) {
+        var tBridge = Date.now() - t0;
+        _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "bridge POST done", { ms: tBridge, ok: !!(res.data && res.data.ok) }, "A");
         if (!res.data || !res.data.ok) {
           var err = (res.data && res.data.error) || "lifecycle-status";
           var hint = (res.data && res.data.hint) || "";
@@ -1319,11 +1407,14 @@
         if (!local.products) local.products = {};
         if (body.scope === "variant") {
           var st = res.data.status || body.status;
-          var key = res.data.final_variant_path || body.path;
-          local.revisions[key] = { status: st, note: "Lifecycle", letter: res.data.letter || null };
-          if (body.revision_index || opts.index) {
-            local.revisions[body.revision_index || opts.index] = local.revisions[key];
-          }
+          var key = normPathKey(res.data.final_variant_path || body.path);
+          if (!key) key = body.revision_index || opts.index || "";
+          local.revisions[key] = {
+            status: st,
+            note: "Lifecycle",
+            letter: res.data.letter || null,
+            path: res.data.final_variant_path || body.path || ""
+          };
         } else {
           var pst = res.data.status || body.status;
           if (body.product_id) {
@@ -1340,6 +1431,7 @@
         var keepProductId = body.product_id || opts.productId || (state.product && state.product.id) || "";
         /* Po FS rename: przebuduj indeks z dysku, potem odswiez UI */
         showToast("Odświeżam listę plików…", "info");
+        var tRebuildStart = Date.now();
         return fetch(bridgeUrl() + "/index/rebuild", {
           method: "POST",
           headers: authHeaders(),
@@ -1354,9 +1446,15 @@
             return waitForIndexRebuild(45000);
           })
           .then(function () {
-            return refreshIndex({ silent: true, reopenProductId: keepProductId });
+            _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "index rebuild done", { ms: Date.now() - tRebuildStart }, "B");
+            var tRefreshStart = Date.now();
+            return refreshIndex({ silent: true, reopenProductId: keepProductId }).then(function () {
+              _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "refreshIndex done", { ms: Date.now() - tRefreshStart }, "C");
+              return null;
+            });
           })
           .then(function () {
+            _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "lifecycle complete", { msTotal: Date.now() - t0 }, "E");
             showToast("Pomyślnie zaktualizowano", "success");
             return res.data;
           })
@@ -1370,6 +1468,9 @@
       .catch(function (err) {
         showToast("Brak połączenia z mostem: " + (err && err.message ? err.message : err), "error");
         return { ok: false, error: "bridge_offline" };
+      })
+      .finally(function () {
+        clearLifecyclePending();
       });
   }
 
@@ -1755,6 +1856,11 @@
     // Indeks: JEDEN raz w meta (readonly span albo admin Edytuj/Zastosuj). Nie w chipach.
     var indexOutside = renderIndexChip(rev, meta);
     var statusOutside = statusBadge(st, rev);
+    if (rev.in_archive) {
+      statusOutside =
+        '<span class="dam-status-badge dam-status-badge--archive" title="Folder w — ARCHIWUM kategorii">Archiwum</span> ' +
+        statusOutside;
+    }
 
     // Extra current revisions (admin marked multiple)
     var extraCurrHtml = "";
@@ -2300,7 +2406,8 @@
     }
 
     /* Product detail - carrier list */
-    var allRevisions = state.product.revisions || [];
+    var showAllOn = !!state.showAllRevisions;
+    var allRevisions = revisionsForProductView(state.product, showAllOn);
     var groups = groupRevisionsByCarrier(allRevisions);
     var pName = productDisplayTitle(state.product);
     var scale = state.vizScale || 140;
@@ -2310,8 +2417,6 @@
       DL.CATEGORY_CANON.forEach(function (c) { if (c.id === state.canonCat) catForProduct = c.title; });
     }
     catForProduct = catForProduct || state.canonCat || "Produkt";
-
-    var showAllOn = !!state.showAllRevisions;
     var visibleGroups = 0;
     groups.forEach(function (g) {
       if (pickCarrierDisplay(g.revisions, showAllOn)) visibleGroups++;
@@ -3490,7 +3595,7 @@
     a.download = "product-status.json";
     a.click();
     URL.revokeObjectURL(a.href);
-    showToast("Pobrano kopie statusu (backup). Wspolny zapis idzie przez most, nie przez ten plik.");
+    showToast("Pobrano backup statusów (JSON). To nie zapisuje na dysk Marketing — do tego jest „Stosuj zmiany”.", "info");
   }
 
   /** Prawda o zapisie statusu - nie mylic z "Baza online" (Postgres) ani starym workflow P:DAM. */
@@ -3545,6 +3650,8 @@
       btn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
+        if (this.classList.contains("is-pending") || this.disabled) return;
+        var uiBtn = this;
         var scope = this.getAttribute("data-scope") || "variant";
         var status = this.getAttribute("data-status") || "clear";
         /* Ponowne klikniecie aktywnego F/X/D = odznacz (toggle) */
@@ -3574,7 +3681,8 @@
               status: status,
               path: path || prod.path || "",
               productPath: productPath || path || prod.path || "",
-              productId: productId || prod.id || ""
+              productId: productId || prod.id || "",
+              uiBtn: uiBtn
             });
           } else {
             applyLifecycleStatus({
@@ -3582,7 +3690,8 @@
               status: status,
               path: path,
               productPath: productPath || path,
-              productId: productId
+              productId: productId,
+              uiBtn: uiBtn
             });
           }
           return;
@@ -3595,7 +3704,8 @@
             path: path,
             productPath: productPath || (state.product && state.product.path) || "",
             productId: productId || (state.product && state.product.id) || "",
-            index: index
+            index: index,
+            uiBtn: uiBtn
           });
           return;
         }
@@ -3822,6 +3932,18 @@
       syncStatusMirrorFromLifecycle();
       return state.lifecycleStore;
     }
+    function loadLifecycleFileFallback() {
+      return fetch("data/lifecycle-status.json?v=" + Date.now())
+        .then(function (r) {
+          if (!r.ok) throw new Error("file_lifecycle_" + r.status);
+          return r.json();
+        })
+        .then(applyLifecyclePayload)
+        .catch(function () {
+          state.lifecycleStore = { products: {}, revisions: {}, history: [] };
+          return state.lifecycleStore;
+        });
+    }
     return fetch(bridgeUrl() + "/lifecycle-status", { headers: authHeaders() })
       .then(function (r) {
         if (r.status === 401 || r.status === 403) throw new Error("bridge_lifecycle_auth");
@@ -3841,16 +3963,7 @@
           })
           .then(applyLifecyclePayload)
           .catch(function () {
-        /* Smoke/static server: czytaj plik JSON bez mostu */
-        return fetch("data/lifecycle-status.json?v=" + Date.now())
-          .then(function (r) {
-            if (!r.ok) throw new Error("file_lifecycle_" + r.status);
-            return r.json();
-          })
-          .then(applyLifecyclePayload)
-          .catch(function () {
-            state.lifecycleStore = { products: {}, revisions: {}, history: [] };
-            return state.lifecycleStore;
+            return loadLifecycleFileFallback();
           });
       });
   }
@@ -3871,12 +3984,28 @@
     ]);
   }
 
+  /** Po przeładowaniu file-index: odswiez otwarty produkt (nowe warianty, litery F/X/D). */
+  function refreshOpenProductFromIndex(productId) {
+    var pid = productId || (state.product && state.product.id) || "";
+    if (!pid) return null;
+    var fresh = null;
+    if (window.DamSearch && typeof window.DamSearch.productById === "function") {
+      fresh = window.DamSearch.productById(pid);
+    }
+    if (!fresh && state.fileIndex && state.fileIndex.products) {
+      fresh = state.fileIndex.products.find(function (p) { return p.id === pid; });
+    }
+    if (fresh) state.product = fresh;
+    return fresh;
+  }
+
   function bindExplorerData(bundle) {
     state.fileIndex = bundle.fileIndex || window._DAM_FILE_INDEX;
     if (!state.fileIndex && bundle.products) state.fileIndex = bundle;
     if (window.DamPaths && state.fileIndex && state.fileIndex.roots) {
       window.DamPaths.detectIndexBaseFromRoots(state.fileIndex.roots);
     }
+    refreshOpenProductFromIndex();
     setStatus("");
     renderAll();
     renderTagChips();
@@ -3984,10 +4113,14 @@
         if (!r) return;
         var rlit = letterFromFolderName(r.path || r.folder || "");
         var rst = statusFromLetter(rlit);
-        var key = r.index || r.path || r.folder;
+        var pathKey = normPathKey(r.path || "");
+        var key = pathKey || r.index || r.folder;
         if (!key) return;
-        if (skipP || skipRev[key] || skipRev[r.path || ""]) return;
-        var prevR = state.lifecycleStore.revisions[key] || {};
+        if (skipP || skipRev[key] || skipRev[r.path || ""] || (pathKey && skipRev[pathKey])) return;
+        var prevR = (pathKey && state.lifecycleStore.revisions[pathKey]) ||
+          state.lifecycleStore.revisions[key] ||
+          lifecycleRowForRev(r) ||
+          {};
         var prevRLit = (prevR.letter || letterFromFolderName(prevR.path || "") || "").toString().toUpperCase();
         if ((prevRLit || "") !== (rlit || "") && (prevR.status || prevRLit || rlit)) {
           drifts.push({
@@ -3999,14 +4132,17 @@
             path: r.path || ""
           });
         }
-        state.lifecycleStore.revisions[key] = Object.assign({}, prevR, {
+        var row = Object.assign({}, prevR, {
           path: r.path || "",
           letter: rlit || null,
           status: rst,
           product_id: p.id,
+          revision_index: r.index || "",
           synced_from_disk: true,
           source: "disk"
         });
+        state.lifecycleStore.revisions[key] = row;
+        if (pathKey && pathKey !== key) state.lifecycleStore.revisions[pathKey] = row;
         local.revisions[key] = {
           status: rst,
           letter: rlit || null,
@@ -4014,6 +4150,7 @@
           product_id: p.id,
           note: "Synced from disk"
         };
+        if (pathKey && pathKey !== key) local.revisions[pathKey] = local.revisions[key];
       });
     });
     local.updated_at = new Date().toISOString();
@@ -4157,7 +4294,7 @@
   function refreshIndex(opts) {
     opts = opts || {};
     var silent = !!opts.silent;
-    var reopenId = opts.reopenProductId || "";
+    var reopenId = opts.reopenProductId || (state.product && state.product.id) || "";
     setStatus("Odświeżanie z dysku…");
     if (!silent) showToast("Odświeżam listę z dysku…", "info");
 
@@ -4171,27 +4308,28 @@
               var localSync = syncLifecycleFromDiskIndex();
               if (!drifts.length && localSync && localSync.drifts) drifts = localSync.drifts;
               if (!silent) notifyLifecycleDrifts(drifts, "odśwież");
-              if (reopenId && window.DamSearch && typeof window.DamSearch.productById === "function") {
-                var fresh = window.DamSearch.productById(reopenId);
-                if (fresh) state.product = fresh;
-              } else if (reopenId && state.fileIndex) {
-                var fp = (state.fileIndex.products || []).find(function (p) { return p.id === reopenId; });
-                if (fp) state.product = fp;
-              }
+              refreshOpenProductFromIndex(reopenId);
               renderAll();
               var gen = (state.fileIndex && state.fileIndex.generated_at) || "";
               setStatus(gen ? "Zaktualizowano z dysku: " + gen : "Zaktualizowano z dysku");
-              if (!silent) showToast("Pomyślnie odświeżono listę", "success");
+              if (!silent) {
+                var archN = 0;
+                if (state.product && state.product.revisions) {
+                  archN = state.product.revisions.filter(function (r) { return r.in_archive; }).length;
+                }
+                if (archN > 0) {
+                  showToast("Odświeżono listę (+" + archN + " w archiwum — włącz Pokaż wszystko)", "success");
+                } else {
+                  showToast("Pomyślnie odświeżono listę", "success");
+                }
+              }
               return bundle;
             });
           })
           .catch(function () {
             var localSync = syncLifecycleFromDiskIndex();
             if (!silent) notifyLifecycleDrifts((localSync && localSync.drifts) || [], "odśwież lokalnie");
-            if (reopenId && state.fileIndex) {
-              var fp2 = (state.fileIndex.products || []).find(function (p) { return p.id === reopenId; });
-              if (fp2) state.product = fp2;
-            }
+            refreshOpenProductFromIndex(reopenId);
             renderAll();
             var gen2 = (state.fileIndex && state.fileIndex.generated_at) || "";
             setStatus(gen2 ? "Zaktualizowano z dysku: " + gen2 : "Zaktualizowano z dysku");

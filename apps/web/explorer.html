@@ -29,7 +29,7 @@
     </script>	
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
 <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719statusPill1">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719life1">
 </head>
 
 <body class="geex-dashboard file-manager">
@@ -871,7 +871,6 @@
                         <div class="dam-search-input-wrap">
                           <i class="uil uil-search" aria-hidden="true"></i>
                           <input type="text" id="damFileSearch" class="form-control dam-search-input" placeholder="Szukaj indeksu lub skojarzenia (np. 6300, czekolada, Krzysztof)" autocomplete="off" aria-label="Szukaj w eksplorerze" data-dam-tip="Wpisz indeks produktu lub slowo kluczowe" />
-                          <label class="dam-tag-reveal-toggle"><input type="checkbox" id="damRevealLowTags" /> Odsłoń wszystko</label>
                         </div>
                         <div id="damSearchScope" class="dam-search-scope-mount" aria-label="Zakres wyszukiwania"></div>
                         <div id="damSearchResults" class="dam-search-results" style="display:none"></div>
@@ -900,9 +899,9 @@
                           <span id="damExplorerMeta" class="dam-explorer-results__meta"></span>
                           <div class="dam-explorer-results__actions">
                             <div class="dam-admin-slot">
-                              <button type="button" id="damStatusExport" class="geex-btn dam-admin-extra" hidden title="Pobierz kopię statusu (JSON)" data-dam-tip="Opcjonalna kopia zapasowa: pobiera zmergowany status z tej sesji. Wspólne statusy zapisuje most (dysk + apps/web/data/*.json + Postgres), nie ten przycisk.">Pobierz kopię statusu</button>
+                              <button type="button" id="damStatusExport" class="geex-btn dam-admin-extra" hidden title="Pobierz plik JSON ze statusami z tej sesji (backup)" data-dam-tip="Tylko backup na dysk Twojego PC. Nie zmienia folderów Marketing ani bazy. Wspólny zapis F/X/D robi most (dysk + JSON + Postgres).">Backup statusów</button>
                             </div>
-                            <button type="button" id="damIndexRefresh" class="geex-btn" title="Odśwież: stan folderów z dysku do programu (bez zmiany nazw na dysku)" data-dam-tip="Odśwież listę = dysk do programu. Aktualizuje statusy F/X/D w panelu według nazw folderów. Nie zmienia folderów na dysku. Przy rozjazdzie pokazuje powiadomienie (historia).">Odśwież listę</button>
+                            <button type="button" id="damIndexRefresh" class="geex-btn geex-btn--primary" title="Przeskanuj Marketing i wczytaj listę do programu" data-dam-tip="Odśwież z dysku: skan folderów Marketing → indeks → panel. Aktualizuje warianty i litery F/X/D według nazw folderów. Nie zmienia dysku. Warianty z — ARCHIWUM widoczne przy „Pokaż wszystko”.">Odśwież z dysku</button>
                             <button type="button" id="damLifecycleForce" class="geex-btn geex-btn__primary dam-admin-control" title="Stosuj zmiany: program na dysk (FORCE)" data-dam-tip="Stosuj zmiany = FORCE. Zapisuje statusy z programu na foldery Marketing (rename / archiwum). Odwrotnosc Odśwież. Tylko admin." aria-label="Stosuj zmiany">
                               <i class="uil uil-upload" aria-hidden="true"></i>
                               <span class="dam-force-btn__label">Stosuj zmiany</span>
@@ -2284,7 +2283,7 @@
 	<script src="./assets/js/dam-icons.js?v=20260718uxbatch1"></script>
 	<script src="./assets/js/dam-brand-filter.js?v=20260718showall1"></script>
 	<script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-explorer.js?v=20260719life2"></script>
+	<script src="./assets/js/dam-explorer.js?v=20260719life1"></script>
 	<script>
 	/* Po zaladowaniu DOM: jednorazowy init jesli folder pusty (bez petli reload). */
 	(function () {

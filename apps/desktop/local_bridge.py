@@ -2581,7 +2581,39 @@ def write_viz_flags(payload: dict) -> dict:
 _MEDIA_MAX_BYTES = 40 * 1024 * 1024  # 40 MB - anty DoS przez odczyt ogromnych plikow
 
 
-def serve_media(path: str) -> tuple[int, bytes, str]:
+def _media_preview_jpeg(target: str) -> tuple[int, bytes, str] | None:
+    """Konwersja TIFF/PSD/BMP do JPEG pod podglad w przegladarce."""
+    ext = Path(target).suffix.lower()
+    if ext not in {".tif", ".tiff", ".psd", ".bmp"}:
+        return None
+    try:
+        import io
+
+        from PIL import Image  # type: ignore
+
+        with Image.open(target) as im:
+            if im.mode in ("CMYK", "P"):
+                im = im.convert("RGB")
+            elif im.mode in ("RGBA", "LA"):
+                bg = Image.new("RGB", im.size, (255, 255, 255))
+                if im.mode == "LA":
+                    im = im.convert("RGBA")
+                bg.paste(im, mask=im.split()[-1])
+                im = bg
+            elif im.mode != "RGB":
+                im = im.convert("RGB")
+            max_side = 2400
+            if max(im.size) > max_side:
+                im.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+            buf = io.BytesIO()
+            im.save(buf, format="JPEG", quality=88, optimize=True)
+            return 200, buf.getvalue(), "image/jpeg"
+    except Exception:
+        return None
+    return None
+
+
+def serve_media(path: str, preview: bool = False) -> tuple[int, bytes, str]:
     target = normalize_path(path)
     if not os.path.isfile(target):
         return 404, b"", "application/json"
@@ -2599,7 +2631,15 @@ def serve_media(path: str) -> tuple[int, bytes, str]:
         ".svg": "image/svg+xml",
     }.get(ext)
     if not mime:
+        if preview:
+            converted = _media_preview_jpeg(target)
+            if converted:
+                return converted
         return 415, b"", "application/json"
+    if preview and ext in {".tif", ".tiff", ".psd", ".bmp"}:
+        converted = _media_preview_jpeg(target)
+        if converted:
+            return converted
     try:
         if os.path.getsize(target) > _MEDIA_MAX_BYTES:
             return 413, b"", "application/json"
@@ -2891,10 +2931,11 @@ class Handler(BaseHTTPRequestHandler):
             # Miniatury w <img src> nie moga wyslac Authorization - localhost + jail Marketing
             qs = parse_qs(parsed.query)
             path = (qs.get("path") or [""])[0]
+            preview = (qs.get("preview") or ["0"])[0].strip().lower() in ("1", "true", "yes")
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
                 return
-            code, body, ctype = serve_media(path)
+            code, body, ctype = serve_media(path, preview=preview)
             if code != 200:
                 err = {
                     403: "path_outside_marketing",

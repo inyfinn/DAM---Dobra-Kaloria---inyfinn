@@ -122,7 +122,14 @@ def _cleanup_empty_archive_wrappers(ops: list[dict]) -> list[str]:
     seen: set[str] = set()
     for op in ops:
         kind = str(op.get("kind") or "")
-        if kind not in ("variant_restore", "variant_archive", "product_restore", "product_archive"):
+        if kind not in (
+            "variant_restore",
+            "variant_archive",
+            "product_restore",
+            "product_archive",
+            "archive_wrapper_merge",
+            "archive_wrapper_rename",
+        ):
             continue
         for key in ("from", "to"):
             raw = op.get(key) or ""
@@ -819,7 +826,9 @@ def _apply_lifecycle_status_unlocked(
             cascade_meta=result.get("cascade_meta") or [],
         )
     if scope == "variant":
-        key = revision_index or normalize_path(final_variant_path or path)
+        key = _variant_store_key(path_str=normalize_path(final_variant_path or path or ""))
+        if not key:
+            key = revision_index or ""
         prev_rev = (store.get("revisions") or {}).get(key) or {}
         old_v_letter = status_letter_of(Path(normalize_path(path)).name) if path else ""
         applied_letter = letter
@@ -956,6 +965,34 @@ def _rev_row_for_child(store: dict | None, product_id: str, child: Path) -> dict
     return {}
 
 
+def _resolve_archive_product_wrapper(
+    arch: Path,
+    prod_base_name: str,
+    *,
+    plan_rename,
+    plan_move,
+) -> Path:
+    """
+    Docelowy wrapper produktu w archiwum przy X wariantu: zawsze NAME - X.
+    Scala legacy wrapper bez suffiksu (stary bug) z docelowym - X.
+    """
+    target_name = with_status_suffix(prod_base_name, "X")
+    target = arch / target_name
+    legacy = arch / prod_base_name
+    if not legacy.is_dir() or legacy.name == target_name:
+        return target
+    if target.is_dir():
+        for child in list(legacy.iterdir()):
+            if not child.is_dir() or child.name.startswith("."):
+                continue
+            dest_child = target / child.name
+            if not dest_child.exists():
+                plan_move(child, dest_child, "archive_wrapper_merge")
+    else:
+        plan_rename(legacy, target, "archive_wrapper_rename")
+    return target
+
+
 def _sibling_variant_has_f(product_dir: Path | None, exclude: Path | None = None) -> bool:
     if not product_dir or not product_dir.is_dir():
         return False
@@ -1040,9 +1077,23 @@ def _plan_variant(
             or (archive_product.name if archive_product else "")
             or "UNKNOWN"
         )
-        wrap = arch / prod_base_name
+        wrap = _resolve_archive_product_wrapper(
+            arch,
+            prod_base_name,
+            plan_rename=plan_rename,
+            plan_move=plan_move,
+        )
         dest = wrap / working.name
-        if normalize_path(str(working.parent)) != normalize_path(str(wrap)):
+        if normalize_path(str(working.parent)) == normalize_path(str(wrap)):
+            pass
+        elif (
+            strip_status_suffix(working.parent.name).lower() == prod_base_name.lower()
+            and working.parent.parent.is_dir()
+            and is_archive_segment(working.parent.parent.name)
+        ):
+            # rename wrapera lub merge w _resolve - bez osobnego variant_archive
+            working = dest
+        else:
             plan_move(working, dest, "variant_archive")
             working = dest
         notes.append("variant_moved_to_archive_with_product_wrapper")
@@ -1357,6 +1408,13 @@ def _iter_index_entities(
     return out
 
 
+def _variant_store_key(disk_path: Path | None = None, *, path_str: str = "") -> str:
+    """Klucz wariantu w lifecycle store — sciezka dyskowa (index moze byc wspolny)."""
+    if disk_path is not None:
+        return normalize_path(str(disk_path))
+    return normalize_path(path_str or "")
+
+
 def _resolve_entity_path(path_str: str) -> Path | None:
     if not path_str:
         return None
@@ -1453,9 +1511,11 @@ def pull_lifecycle_from_disk(
                 }
                 updated += 1
         else:
-            key = ent["revision_index"] or normalize_path(str(disk_path))
+            key = _variant_store_key(disk_path)
             prev = dict(store.get("revisions", {}).get(key) or {})
-            # fallback: szukaj po path
+            # fallback: stary klucz po revision_index (migracja)
+            if not prev and ent["revision_index"]:
+                prev = dict(store.get("revisions", {}).get(ent["revision_index"]) or {})
             if not prev:
                 for rk, rv in (store.get("revisions") or {}).items():
                     if isinstance(rv, dict) and normalize_path(str(rv.get("path") or "")) == normalize_path(ent["path"]):
@@ -1550,8 +1610,10 @@ def reconcile_lifecycle_on_boot(
             key = ent["product_id"]
             prev = dict(store.get("products", {}).get(key) or {})
         else:
-            key = ent["revision_index"] or normalize_path(str(disk_path))
+            key = _variant_store_key(disk_path)
             prev = dict(store.get("revisions", {}).get(key) or {})
+            if not prev and ent.get("revision_index"):
+                prev = dict(store.get("revisions", {}).get(ent["revision_index"]) or {})
             if not prev:
                 for rk, rv in (store.get("revisions") or {}).items():
                     if isinstance(rv, dict) and normalize_path(str(rv.get("path") or "")) in (

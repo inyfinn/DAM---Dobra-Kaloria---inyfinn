@@ -422,9 +422,9 @@
       "must": [
         "primary zawsze widoczne",
         "pakowanie = tier low, domyślnie w +N",
-        "Explorer/Viz bez low bez toggle"
+        "Explorer/Viz/Projekty: toggle „Tagi pakowania (2F)” poza paskiem wyszukiwania"
       ],
-      "body_pl": "Toggle Odsłoń wszystko pokazuje tagi low/minimal.",
+      "body_pl": "Toggle „Tagi pakowania (2F)” pokazuje tagi low/minimal (np. 2F·2×12). Bez toggle tylko primary.",
       "category": "packaging",
       "must_not": [
         "Pokazywać 2F·2×12 domyślnie w Explorer bez toggle"
@@ -462,6 +462,67 @@
       "priority": "high",
       "title_pl": "Good Calories w UI",
       "updated_at": "2026-07-19"
+    },
+    {
+      "id": "branding.hub_viz_cards",
+      "must": [
+        "branding.html używa dam-viz-card + DamBadges.renderBranding",
+        "Tagi primary/low/minimal na kartach siatki"
+      ],
+      "body_pl": "Hub Branding ma wyglądać jak Wizualizacje/Eksplorer (Geex, dam-shell), nie osobny zielony marketing UI.",
+      "category": "branding",
+      "must_not": [
+        "Osobny layout bez dam-shell",
+        "object-fit: cover na wordmarku w wąskim slocie"
+      ],
+      "priority": "high",
+      "title_pl": "Branding hub = dam-viz-card + badge",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/branding.html",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-badges.js"
+      ]
+    },
+    {
+      "id": "branding.project_marketing",
+      "must": [
+        "project.html sekcja Materiały marketingowe: mini-siatka do 6 kart + link do Branding",
+        "Dopasowanie: linked_product_ids, product_ids, SKU, indeks w ścieżce (bez ARCHIWUM domyślnie)"
+      ],
+      "body_pl": "Karta produktu pokazuje podgląd assetów z branding-index.json (fetch lokalny), nie przez bridge API.",
+      "category": "branding",
+      "must_not": [
+        "Tylko licznik bez miniaturek i tagów",
+        "Pokazywać ARCHIWUM domyślnie"
+      ],
+      "priority": "high",
+      "title_pl": "Marketing na project.html",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/project.html",
+        "apps/web/assets/js/dam-project.js"
+      ]
+    },
+    {
+      "id": "wykrojnik.queue_local_admin",
+      "must": [
+        "Admin kolejki w integrations.html: odczyt JSON + szkic localStorage + pobierz JSON",
+        "Zapis do repo: ręcznie zastąp apps/web/data/wykrojnik-mapping-queue.json"
+      ],
+      "body_pl": "Kolejka mapowań wykrojników bez POST na bridge — edycja lokalna w Cursor/repo.",
+      "category": "wykrojnik",
+      "must_not": [
+        "Wymagać bridge API do podstawowej edycji kolejki"
+      ],
+      "priority": "medium",
+      "title_pl": "Kolejka wykrojników — admin lokalny",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/integrations.html",
+        "apps/web/assets/js/dam-wykrojnik-queue.js",
+        "apps/web/data/wykrojnik-mapping-queue.json"
+      ]
     }
   ],
   "description_pl": "Newralgiczne ustalenia użytkownika. Źródło prawdy dla kodu i agentów: Postgres dam_kv_store.program-instructions (+ lokalny cache ten plik). memory.md jest tylko notatką operacyjną - przy konflikcie wygrywa ten magazyn. Po każdej nowej krytycznej decyzji: dopisz instrukcję tutaj, zapisz przez bridge (seed KV), dopiero potem zmieniaj kod.",
