@@ -5,7 +5,11 @@
 (function () {
   "use strict";
 
+  /* Kanaly specyficzne (TIK/YT/REL) przed generycznym VID - kolejnosc = priorytet. */
   var TYPE_DEFS = [
+    { code: "TIK", num: 10, test: isTikTok },
+    { code: "YT", num: 11, test: isYouTube },
+    { code: "REL", num: 12, test: isReels },
     { code: "VID", num: 6, test: isVideo },
     { code: "SLI", num: 5, test: isSlider },
     { code: "GOG", num: 8, test: isGoogle },
@@ -39,6 +43,20 @@
 
   function always() {
     return true;
+  }
+
+  function isTikTok(asset) {
+    return /tiktok|tik[\s_-]?tok/.test(blob(asset));
+  }
+
+  function isYouTube(asset) {
+    var b = blob(asset);
+    return /youtube|you[\s_-]?tube|\byt\b/.test(b);
+  }
+
+  function isReels(asset) {
+    var b = blob(asset);
+    return /\breels?\b|\brolka\b|\brolki\b/.test(b);
   }
 
   function isVideo(asset) {

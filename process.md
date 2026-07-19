@@ -3676,13 +3676,13 @@ Poniżej lista funkcji / poprawek **zaplanowanych lub rozpoczętych**, których 
 | # | Temat | Status | Dlaczego nie done | Następny krok |
 |---|-------|--------|-------------------|---------------|
 | 1 | **Odtwarzanie wideo w modalu** (stream z `X:` / bridge `/media`) | FAIL UI-only | Bridge/Synology timeout lub brak dostępu do pliku w sesji agenta; layout wideo OK, stream nie zweryfikowany E2E | Restart bridge u usera; test `br-006305` z logiem `/media`; fallback komunikat „Plik offline” |
-| 2 | **Pełny pixel-scan transparent** dla wszystkich PNG (poza www) | Częściowo | Skan PIL wolny na NFS `X:`; patch tylko scope www (217 assetów) | Batch nocny `patch-branding-backgrounds.py --all` z limitem czasu; zapis do indeksu zamiast heurystyki |
-| 3 | **Heurystyka PNG default → indeks JSON** (nie tylko runtime UI) | Odłożone | User: „na razie UI”; indeks bez masowego rewrite | Po pixel-scan nadpisać `background` w `build-branding-index` |
-| 4 | **Filtr „Tło białe”** — precyzyjne liczniki | Do weryfikacji | W QA Kampanie: filtr white nie zawęża (120=wszystko) — brak white w tej zakładce lub logika zbyt szeroka | Test na Packshoty/wizki JPG; white tylko ze skanu |
-| 5 | **Wyszukiwanie tekstowe „przezroczyste”** | FAIL w QA pass 14 | CDP `input` event → 0 kart (możliwy konflikt filtrów / debounce) | Ręczny test + tokeny w `search_blob` przy rebuild |
-| 6 | **Sidebar collapsed — logo wordmark bez crop** | Nie domknięte | Test CDP przerwany; brak screenshota collapsed | Screenshot collapsed + Read; `object-fit: contain` jeśli crop |
-| 7 | **Marketing ID — typy TikTok / YouTube / Reels** | Brak | W scope tylko VID/SLI/BAN/META/GOG/SHOP/GIF/KV/IMG | Rozszerzyć `dam-marketing-id.js` + instrukcja |
-| 8 | **Pełna parytet kart branding ↔ viz** (wszystkie tryby grup) | Częściowo | Actions OK na głównej siatce; grupy folderowe nie na wszystkich zakładkach | Audyt `renderGroupCard` vs viz na WWW/Social |
+| 2 | **Pełny pixel-scan transparent** dla wszystkich PNG (poza www) | **DONE 2026-07-20** | Skan PIL wolny na NFS `X:`; patch tylko scope www (217 assetów) | Zrobione: `--all --limit-seconds`, cache `branding-background-scan.json` (2652 wynikow), fix wiszacego timeoutu NFS; indeks: 1591 transparent / 2347 white |
+| 3 | **Heurystyka PNG default → indeks JSON** (nie tylko runtime UI) | **DONE 2026-07-20** | User: „na razie UI”; indeks bez masowego rewrite | Zrobione: build/re-enrich czytaja cache skanu (carry-over `apply_background_scan_cache`), rebuild nie gubi wynikow |
+| 4 | **Filtr „Tło białe”** — precyzyjne liczniki | **DONE 2026-07-20** | W QA Kampanie: filtr white nie zawęża (120=wszystko) — brak white w tej zakładce lub logika zbyt szeroka | Zrobione: white tylko ze skanu; po skanie Kampanie 582→239, Packshoty 1767→760 |
+| 5 | **Wyszukiwanie tekstowe „przezroczyste”** | **DONE 2026-07-20** | CDP `input` event → 0 kart (możliwy konflikt filtrów / debounce) | Przyczyna: synonimy AND zamiast OR w `assetMatchesSearchQuery`; fix grupy tokenow OR, wynik 17 kart / 38 plikow |
+| 6 | **Sidebar collapsed — logo wordmark bez crop** | **DONE 2026-07-20 (bez zmian)** | Test CDP przerwany; brak screenshota collapsed | Screenshot 1280px expanded + collapsed + Read: wordmark caly, `object-fit: contain` juz jest w dam-brand.css |
+| 7 | **Marketing ID — typy TikTok / YouTube / Reels** | **DONE 2026-07-20** | W scope tylko VID/SLI/BAN/META/GOG/SHOP/GIF/KV/IMG | Zrobione: TIK=10 / YT=11 / REL=12 przed VID + wpis w `branding.marketing_asset_id_format` |
+| 8 | **Pełna parytet kart branding ↔ viz** (wszystkie tryby grup) | **DONE 2026-07-20 (weryfikacja)** | Actions OK na głównej siatce; grupy folderowe nie na wszystkich zakładkach | Audyt DOM: 100% kart grupowych z akcjami na Kampanie/Social/WWW/Packshoty + screenshoty WWW i Packshoty |
 | 9 | **Seed program-instructions do Postgres KV** | Nie w tej sesji | Zmiany tylko w pliku cache JSON | Restart bridge / seed KV dla nowych id |
 | 10 | **30-pass QA — wszystkie zakładki z kartami** | Częściowo | Social/WWW 0 kart w teście (dane/filtry) | User: odznaczyć „Tylko grafiki”, test z assetami www |
 
@@ -3898,3 +3898,154 @@ Po zakonczeniu rownoleglych agentow: jeden commit zbiorczy wszystkich zmian loka
 
 ### Efekt/Fix
 Jedna dostawa na origin/main po zamknieciu agentow; wersja UI 2.0.6.
+
+## 2026-07-20 - Modal podgladu mediow: meta line, ext tag, Zrodlo, sciezka przenosna, tiery jakosci (worker)
+
+- **Komenda/Akcja**: Naprawa regresji modala #damMediaPreview (branding) + 3 nowe zgloszenia (grupy GIF): brak Zrodlo, maly hero, scroll wariantow. Reguly globalne A (tiery kompresji XL/L/S/XS) i B (zrodla w gore drzewa).
+- **Log/Status**:
+  - Krok 1: usunieta linia meta "TIF - Indeks ..." (markup, renderMeta, metaLineText, CSS #damMediaPreviewMeta).
+  - Krok 2: odstep ext-tagu od tytulu = 10px (margin-inline-start na .dam-media-preview__ext-tag; column-gap 0).
+  - Krok 3: DamPaths.toPortablePath + copyPortablePath (schowek bez litery dysku, od Marketing\..., backslashe); podpiete w #damMediaPreviewCopy i #damVizModalCopyPath.
+  - Krok 4: etykiety wariantow: label z indeksu, fallback = baza nazwy pliku (mid-trim >18 znakow), koniec z "Plik Plik Plik".
+  - Krok 5 (Rule A): dam-media-preview.js laduje branding-index w runtime; findQualitySet grupuje te sama kreacje (creativeKey: baza nazwy bez markerow kompresji) w obrebie przodka 2 poziomy w gore; scoring segmentow (high/-1, low/+2, ultralow/+3, skompresowane/+2, ultra/+1, min/+2); pigulki JAKOSC XL/L/S/XS przelaczaja hero + data-path Folder/Kopiuj/Udostepnij.
+  - Krok 6 (Rule B): findEditableUpTree - gdy folder bez zrodel, szuka psd/psb/ai/indd/eps w indeksie 1-2 poziomy w gore (priorytet: podobna nazwa >=60% prefiksu, foldery PSD/AI/EDYTOWALNE/ZRODLA/SOURCE, potem dowolny); przycisk zrodla renderuje sie asynchronicznie.
+  - Krok 7: hero min-height min(340px,42dvh), img#damMediaPreviewHero object-fit contain (male GIFy skaluja sie w gore).
+  - Krok 8: warianty zwiniete do 4 kafelkow + "Pokaz wszystkie (N)" / "Zwin" (aria-expanded, chevron), bez wewnetrznych scrolli; dedupe kafelkow po creativeKey.
+- **Efekt/Fix**: br-005329: hero duzy, pigulki XL/L/S/XS (XS aktywne), PSD z DV360_GIFF/PSD, 4/9 kafelkow + toggle. br-005266: XL/L/S, PSB z JUSTTAG - OGOLNA.psb, 4/7 kafelkow. br-003365: bez regresji (gap 10px, PSD, 2 produkty, bez pigulek).
+- **Backup**: brak zmian destrukcyjnych (tylko JS/CSS/HTML wersjonowanie cache).
+- **Test/Ewaluacja**: cursor-ide-browser 1280x900, screenshot + Read (vision) x4; Runtime.evaluate: gap=10.0px, portable path OK (X:/, X:\\, UNC, bez Marketing), przelacznik XL podmienia hero na Kampania 2026 - HIGH, expand=9 kafelkow bez scrollbara.
+- **Zrodla**: apps/web/assets/js/dam-media-preview.js, dam-paths.js, dam-viz.js, dam-branding.js, dam-branding.css, branding.html (v=204mod3), visualizations.html.
+
+---
+
+## 2026-07-20 - Backlog NIE UDALO SIE - realizacja czesc 1 (worker, itemy 2-8 + 11)
+
+### Komenda/Akcja
+Realizacja backlogu "RZECZY DO WYKONANIA - NIE UDALO SIE" (2026-07-19), itemy 2-8 (pominiete: 1 wideo modal, 9 seed KV, 10 full QA - poza scope). Dodatkowo item 11: wygaszone tagi facetowe bez licznikow (Wideo/Dokument/Raster/Desktop/Tablet/Mobile/Na sklep). Zakaz edycji plikow drugiego agenta (dam-media-preview.js, dam-viz.js, dam-branding.css, dam-paths.js, script tagi branding/visualizations.html) - dotrzymany.
+
+### Log/Status
+1. **Item 2 - pixel-scan --all z budzetem** (`patch-branding-backgrounds.py`, `asset_role_utils.py`):
+   - Nowe flagi: `--all` (PNG/WebP/GIF/TIFF + JPG/BMP→white), `--limit-seconds`, `--limit-count`, `--no-cache`.
+   - Trwaly cache wynikow: `apps/web/data/branding-background-scan.json` (path→transparent|white|none), checkpoint co 500 plikow.
+   - Zapis indeksu i cache atomowy (`atomic_write_json`: tmp + os.replace).
+   - **Bugfix krytyczny**: `_run_with_timeout` na ThreadPoolExecutor blokowal sie na `shutdown(wait=True)` przy wiszacym odczycie NFS X: - timeout martwy, skan stawal (1. przebieg wisial 25 min na pliku ~2575; w systemie wisialy tez 4 stare procesy patch/enrich z 19.07 - ubite). Fix: watek daemon + Event.wait(timeout).
+   - Przebieg 2: 2652 plikow w ~99 s (cache OS), wynik 562 transparent + 1585 white + 505 none; indeks: transparent 1029→1591, white 762→2347 (w tym Kampanie 239).
+2. **Item 3 - trwalosc skanu przy rebuild**: `apply_background_scan_cache` w asset_role_utils; `build-branding-index.py` czyta cache w `make_asset` (w tym "none" = nie powtarzaj IO) + carry-over po overrides; `re-enrich-branding-index.py` tez robi carry-over. Test jednostkowy: carry na fake asset OK (case-insensitive path, search_blob dostaje "przezroczyste tlo").
+3. **Item 4 - filtr Tlo biale**: logika `isEffectiveWhite` (tylko skan/JPG, nie PNG-default) byla poprawna; problem lezal w danych (0 white poza wizkami przed skanem). Po skanie + `enrich-branding-tags.py`: Kampanie 582→239 plikow, Packshoty 1767→760. CDP + screenshot.
+4. **Item 5 - szukanie "przezroczyste"**: przyczyna 0 kart = synonimy dolaczane do tokenow jako AND (`tokens.every`), a blob runtime nie zawieral frazy "przezroczyste tlo". Fix: `searchTokenGroups` (kazdy token usera = grupa OR z synonimami; grupy AND) + `SEARCH_SYNONYM_MAP` (takze biale tlo) + uzupelniony blob transparent/white w `assetBlobNorm`. Wynik: 17 kart / 38 plikow w Kampaniach.
+5. **Item 6 - logo collapsed sidebar**: weryfikacja 1280px (emulacja CDP), expanded + collapsed, screenshot + Read: wordmark "dobra kaloria" caly (48x48, object-fit contain w dam-brand.css) - bez zmian kodu.
+6. **Item 7 - Marketing ID TIK/YT/REL**: `dam-marketing-id.js` - typy TIK=10 (tiktok), YT=11 (youtube/yt), REL=12 (reels/rolka) sprawdzane PRZED generycznym VID; test node: M-TIK1006305-01-25, M-YT1100123-03-24, M-REL1200124-03-24, VID/KV bez regresji. Instrukcja `branding.marketing_asset_id_format` rozszerzona (updated_at 2026-07-20), JSON valid; seed do Postgres KV przy najblizszym restarcie bridge (item 9 backlogu).
+7. **Item 8 - parytet kart grupowych**: audyt DOM na 4 zakladkach: Kampanie 66/66, Social 14/14, WWW 252/252, Packshoty 202/202 kart grupowych z `.dam-viz-card__actions` (Podglad/Folder/Udostepnij), style identyczne jak karty pojedyncze. Screenshoty WWW + Packshoty. Bez zmian kodu (naprawione wczesniejsza sesja 19.07).
+8. **Item 11 - wygaszone tagi facetowe**: przyczyna podwojna: (a) `passesGraphicsOnlyFilter` wykluczal video/document takze z LICZNIKOW facet, wiec Wideo/Dokument mialy 0 i disabled przy domyslnym "Tylko grafiki"; (b) Raster/Desktop/Tablet/Mobile/Na sklep mialy realnie 0 w indeksie (stary indeks sprzed `extract_placement_tags` i format_technical "raster"). Fix (a): `chipCountIgnoresGraphicsOnly` (media:/format:) w `computeFacetCountsPair` - liczniki bez wykluczenia; klik w Wideo/Dokument nadal nadpisuje przelacznik (istniejacy mechanizm w passesGraphicsOnlyFilter). Fix (b): po skanie re-run `enrich-branding-tags.py` (raster 4443, white 2347, Desktop 32 / Tablet 32 / Mobile 36 / Na sklep 1621). Tooltip przelacznika: "Ukrywa PDF, Excel, Word i wideo... po tagach Dokument / Wideo" (branding.html, poza script tagami).
+
+### Efekt/Fix
+- Filtry Cechy pliku/Format pliku dzialaja z realnymi licznikami: wszystkie tagi klikalne (screenshot koncowy - zero wygaszonych w Kampaniach).
+- Klik Wideo przy wlaczonym "Tylko grafiki" pokazuje 174 pliki wideo (CDP + screenshot).
+- Wyszukiwanie "przezroczyste" zwraca karty; filtr Tlo biale zaweza takze poza Packshotami.
+- Skan tla przezywa rebuild indeksu (cache) i nie wiesza sie na NFS.
+
+### Backup
+- Bez operacji destrukcyjnych; indeks nadpisywany atomowo, cache skanu = nowy plik. Dysk X: tylko odczyt (zgodnie z branding.disk_read_only).
+
+### Test/Ewaluacja
+- Python: unit test cache/carry-over (limit_count, include_opaque, apply) - PASS; JSON program-instructions valid.
+- Node: format ID dla 5 przypadkow - PASS.
+- Browser (cursor-ide-browser, cache disabled, viewport 1280): screenshot + Read x6 (Wideo aktywne, wyniki "przezroczyste", sidebar expanded/collapsed, white Packshoty, grupy WWW/Packshoty, facety po skanie).
+- Liczniki: Kampanie white 239, Packshoty white 760, search przezroczyste 38 plikow.
+
+### Zrodla
+- apps/web/scripts/asset_role_utils.py, patch-branding-backgrounds.py, build-branding-index.py, re-enrich-branding-index.py
+- apps/web/assets/js/dam-branding.js (CB hub20260720backlog1), dam-marketing-id.js
+- apps/web/data/program-instructions.json (branding.marketing_asset_id_format), branding-background-scan.json
+- apps/web/branding.html (tylko data-dam-tip przelacznika)
+- .cursor/rules/verify-ui-after-changes.mdc, program-instructions branding.png_default_transparent
+
+---
+
+## 2026-07-20 — Ważna checklista użytkownika
+
+### Komenda/Akcja
+Z priorytetów A/B/C (post-hub) zrobić checklistę; przy kolejnych prośbach zahaczających o listę — przypominać.
+
+### Log/Status
+1. Utworzono `WAZNA-CHECKLISTA-UZYTKOWNIKA.md` (A1–A4, B1–B6, C1–C3 + triggery).
+2. Reguła alwaysApply: `.cursor/rules/wazna-checklista-uzytkownika.mdc`.
+3. `memory.md` §127.
+
+### Efekt/Fix
+Jedno źródło prawdy priorytetów użytkownika; agenci przypominają ID przy powiązanych taskach.
+
+### Test/Ewaluacja
+Brak (dokumentacja + reguła Cursor).
+
+---
+
+## 2026-07-20 — Animacje + tryb w tle (tray) + cache Branding (2.0.7)
+
+### Komenda/Akcja
+Trzy zgłoszenia: (1) animacje nie działają dla tagów i belek, wydłużyć 0.3s->0.4s, animować wszystko; (2) aplikacja ma działać w tle / w zasobniku systemowym; (3) Branding długo się otwiera - znaleźć opóźnienia + cache.
+
+### Log/Status
+1. Diagnoza 3 subagentami (animacje CSS, desktop/tray, ścieżka ładowania Branding).
+2. Animacje: tokeny ruchu w `dam-tokens.css`; blok `transition` dla tagów/pill/badge + belek w `dam-brand.css` i `dam-branding.css`; `dam-grid-reveal.js` DURATION 0.35->0.4, sidebar 0.3->0.4, nowe `revealBars()` (belki jako bloki, znacznik `data-dam-bar-revealed`), export + autoInit; podpięcie w `dam-branding.js`.
+3. Tray: `launch.py` `window.events.closing` -> `window.hide()` (return False) gdy `tray_active`; całkowite wyjście przez menu tray. `dam_tray.py` bez zmian.
+4. Cache Branding: usunięto `Date.now()` z URL indeksów; `window.__damBrandingIndex` współdzielony (branding.js + media-preview.js); usunięto podwójny `renderTagFilters()` na boot; wideo w siatce `preload="none"`.
+5. Wersja 2.0.6->2.0.7 (`version.json`, `dam-version.js`, `runtime_config.py`); cache-bust bump na branding.html + dashboard.html.
+6. Instrukcje: `program-instructions.json` +3 (`desktop.background_tray`, `ui.motion_tokens`, `branding.load_cache`). memory §128.
+
+### Efekt/Fix
+Tagi i belki animują się (transition 0.22s + reveal belek 0.4s); okno chowa się do zasobnika bez ubijania mostu; Branding nie pobiera ~35 MB przy każdym wejściu i renderuje tagi raz.
+
+### Test/Ewaluacja
+- `py_compile launch.py` OK; `node --check` JS OK; JSON OK; ReadLints czysto.
+- Browser :8765 branding.html: screenshot + Read (logo całe, belki tagów wyrównane, bez regresji).
+- CDP: `--dam-anim`=0.4s, `--dam-anim-hover`=0.22s, `revealBars`=true (3 belki z markerem), `window.__damBrandingIndex` 7832 assetów, 115 kart, 74 tagi, badge `transition-duration` 0.22s.
+- UWAGA: tray wymaga **restartu aplikacji desktop** (launch.py nie hot-reloaduje).
+
+### Zrodla
+- dam-tokens.css, dam-brand.css, dam-branding.css, dam-grid-reveal.js, dam-branding.js, dam-media-preview.js, launch.py, version.json, dam-version.js, runtime_config.py, program-instructions.json
+
+## 2026-07-20 - Animacje reveal (fix regresji) + edytor skojarzen (search/folder/ikony)
+
+### Komenda/Akcja
+User: (1) przywrocic animacje reveal (za szybkie, brak viewport-gate, brak w modalach/sidebarze); (2) bugi edytora skojarzen: folder picker nieklikalny, "Dodaj z dysku" nic nie dodaje, wyszukiwarka nie znajduje po indeksie (6300539.01), odznaczanie nie dziala, brak ikon (folder/kopiuj link), indeksy jako TAG.
+
+### Log/Status
+1. dam-grid-reveal.js przepisany: tempo 0.35s / stagger 0.05s, power2.out; IntersectionObserver (element rusza w viewporcie); generyczny reveal modali (.dam-viz-modal-overlay -> thumb fade + body slide) i sidebara; #damHelpFab bez animacji.
+2. REGRESJA: clip-path w stanie spoczynku zerowal prostokat -> IntersectionObserver ratio 0 -> deadlock (karty niewidoczne). Fix: stan spoczynku = samo opacity:0, clip-path animowany dopiero w tweenie. Zweryfikowane CDP: above-fold opacity 1, below-fold 0 do scrolla.
+3. Cache-bump dam-grid-reveal.js: index/inbox/explorer/dashboard (branding/visualizations pozostaja stary cache - do zrobienia).
+4. dam-assoc-edit.js:
+   - Wyszukiwanie: productSearchBlob (search_blob + WSZYSTKIE indexes + index_bases + tagi) zamiast tylko indexes[0] uciete. 6300539/6300539.01/000108/nazwa -> znajduje.
+   - Folder picker: overlay.style.zIndex=12300 (nad nakladka skojarzen 12100) -> klikalny.
+   - "Dodaj z dysku": matchProductsByFolder (po sciezce: exact / pod folderem / rodzic) dodaje produkt do zaznaczenia i zapisuje.
+   - Odznaczanie: pozycje AKTUALNE pokazuja czerwony X (uil-times) gdy odznaczone -> jasne ze usuwane; zapis usuwa z linked.
+   - Ikony wierszy: folder (revealInExplorer) + kopiuj link (schowek) na kazdym wyniku i pozycji AKTUALNE.
+   - Indeks jako TAG: .dam-assoc-edit-popover__sub--tag (fioletowa pigulka, tabular-nums). CSS wstrzykiwany z JS (bez ruszania dam-branding.css/dam-brand.css agentow).
+   - Cache-bump dam-assoc-edit.js w branding.html (agenci skonczyli: turn_ended success).
+
+### Efekt/Fix
+Reveal dziala jak nalezy (viewport, plynniej). Edytor skojarzen: search po indeksie OK, folder picker klikalny, dodawanie z dysku dziala, odznaczanie czytelne, ikony + tag indeksu na kazdym wierszu.
+
+### Test/Ewaluacja
+cursor-ide-browser 1024x1140: reveal (screenshot Projekty po scrollu), popover skojarzen (screenshot: tag indeksu + ikony folder/link), CDP: search 6300539->TARTA MALINOWA, folder picker z-index 12300 topmost. Uwaga: screenshot tool bywa stale przy wspoldzielonej karcie - fixy potwierdzone tez DOM.
+
+### Zrodla
+apps/web/assets/js/dam-grid-reveal.js, dam-assoc-edit.js; index/inbox/explorer/dashboard.html, branding.html (cache-bump).
+
+## 2026-07-20 - Dokumentacja: WYKLADNIA KODU DAM (code-doctrine) + commit/push
+
+### Komenda/Akcja
+User: zbuduj z napraw dokumentacje + instrukcje "jak rozumiec kod" dla przyszlych agentow, nazwij tak, by ZAWSZE czytali jako wykladnie; commit + update logow + push.
+
+### Log/Status
+1. Utworzono agents/shared/code-doctrine.md (12 sekcji: architektura, modul DamX, cache-bust, wspolbieznosc, weryfikacja CDP/screenshot, model danych, 2 studia przypadku: reveal/clip-path-IO + edytor skojarzen, pulapki PowerShell/X:, debug, slowniczek modulow, dziennik lekcji).
+2. AGENTS.md: wpiety blok "CZYTAJ ZAWSZE NAJPIERW" -> code-doctrine.md (tracked, auto-read).
+3. .cursor/rules/code-doctrine.mdc (alwaysApply) - lokalne wymuszenie (uwaga: .cursor gitignored -> nie idzie na git; trwaly nosnik = AGENTS.md + agents/shared/).
+4. Weryfikacja spojnosci: dam-grid-reveal.js w working tree = MERGE mojej poprawki IO (opacity resting + clip w tweenie) z praca v2.0.7 (DURATION 0.4, revealBars, sidebar). Nic nie nadpisane.
+5. .gitignore: dodano tmp-qa-hub/ i backups/**/*.bundle (scratch/duze binaria - nie commitowac).
+
+### Efekt/Fix
+Przyszli agenci maja obowiazkowa wykladnie kodu z konkretnymi "dlaczego dziala/nie dziala". Commit + push na origin/main.
+
+### Zrodla
+agents/shared/code-doctrine.md, AGENTS.md, .cursor/rules/code-doctrine.mdc, memory.md, process.md, .gitignore.

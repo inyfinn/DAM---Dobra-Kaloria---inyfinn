@@ -1,6 +1,35 @@
 {
   "version": 1,
-  "updated_at": "",
-  "assets": {},
-  "folder_groups": {}
+  "updated_at": "2026-07-19T22:30:26.780643+00:00",
+  "assets": {
+    "br-005237": {
+      "linked_product_ids": [],
+      "linked_variant_ids": [
+        "br-005237",
+        "br-005238",
+        "br-005239",
+        "br-005240",
+        "br-005241",
+        "br-005242",
+        "br-005243"
+      ],
+      "folder_group_id": "x:/marketing/- polska/08 - kamapanie/2026/przekąski/justtag - outdoor/gif/skompresowane",
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    }
+  },
+  "folder_groups": {
+    "x:/marketing/- polska/08 - kamapanie/2026/przekąski/justtag - outdoor/gif/skompresowane": {
+      "linked_product_ids": [],
+      "linked_variant_ids": [
+        "br-005237",
+        "br-005238",
+        "br-005239",
+        "br-005240",
+        "br-005241",
+        "br-005242",
+        "br-005243"
+      ],
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    }
+  }
 }

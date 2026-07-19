@@ -802,6 +802,71 @@
         "apps/web/assets/js/dam-explorer.js",
         "apps/web/assets/js/dam-inbox.js"
       ]
+    },
+    {
+      "id": "desktop.background_tray",
+      "must": [
+        "Aplikacja desktop moze dzialac w tle w zasobniku systemowym (pystray + dam_tray.py)",
+        "Zamkniecie okna (X) chowa okno do zasobnika, a NIE ubija mostu/sync/indeksu (window.events.closing -> window.hide(), return False gdy tray aktywny)",
+        "Calkowite wyjscie tylko przez menu tray 'Zatrzymaj DAM calkowicie' (_shutdown_all -> os._exit)"
+      ],
+      "body_pl": "Cel: szybki powrot do aplikacji bez zimnego startu i bez zrywania sesji mostu. Gdy pystray niedostepny (tray_active=False), X zamyka normalnie. Menu tray: 'Pokaz okno DAM', 'Zatrzymaj DAM calkowicie'.",
+      "category": "desktop",
+      "must_not": [
+        "Konczyc procesu mostu 8766 przy zwyklym zamknieciu okna gdy tray aktywny",
+        "Dodawac Electron/Qt do trybu tray (zostajemy przy pywebview + pystray)"
+      ],
+      "priority": "high",
+      "title_pl": "Desktop: tryb w tle / zasobnik systemowy",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/desktop/launch.py",
+        "apps/desktop/dam_tray.py"
+      ]
+    },
+    {
+      "id": "ui.motion_tokens",
+      "must": [
+        "Wspolne tempo animacji z tokenow w dam-tokens.css: --dam-anim (0.4s wejscie), --dam-anim-hover (0.22s stany), --dam-anim-slow, --dam-anim-ease",
+        "Tagi/pille/badge i belki (toolbary, context bar, filtry tagow) maja transition (dotad byly bez animacji)",
+        "Wejscie belek animuje dam-grid-reveal.js -> revealBars() (jednorazowo, znacznik data-dam-bar-revealed); reveal kart = 0.4s"
+      ],
+      "body_pl": "Uzytkownik chce, by animowalo sie 'wszystko' - w tym tagi i belki - i by wejscia byly dluzsze (0.3s -> 0.4s). prefers-reduced-motion nadal wylacza ruch. Nowe transition sa addytywne (fallback w var()).",
+      "category": "ui",
+      "must_not": [
+        "Uzywac transition: all na duzych kontenerach (perf)",
+        "Animowac kazdego taga osobno w reveal (belki animujemy jako bloki)"
+      ],
+      "priority": "medium",
+      "title_pl": "UI: tokeny ruchu + animacje tagow/belek",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/css/dam-tokens.css",
+        "apps/web/assets/css/dam-brand.css",
+        "apps/web/assets/css/dam-branding.css",
+        "apps/web/assets/js/dam-grid-reveal.js"
+      ]
+    },
+    {
+      "id": "branding.load_cache",
+      "must": [
+        "Indeks branding cache'owany przez HTTP: cache-bust tylko ?v=CB, BEZ Date.now() (pozwala WebView2 cache'owac ~35 MB miedzy wejsciami)",
+        "Indeks wspoldzielony w sesji przez window.__damBrandingIndex (dam-branding.js i dam-media-preview.js nie pobieraja go dwa razy)",
+        "Po przebudowie indeksu invalidateBrandingIndexCache() czysci pamiec sesji i window.__damBrandingIndex"
+      ],
+      "body_pl": "Branding dlugo sie otwieral przez ~43 MB JSON pobierane za kazdym wejsciem + podwojny renderTagFilters na boot. Fix: cache-bust off, wspoldzielenie indeksu, jeden render tagow, wideo w siatce preload=none.",
+      "category": "branding",
+      "must_not": [
+        "Dodawac &_=Date.now() do URL branding-index / branding-search-index",
+        "Wolac renderTagFilters() dwa razy na boot (activateTab juz go robi)"
+      ],
+      "priority": "high",
+      "title_pl": "Branding: cache i szybkosc otwierania",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-media-preview.js"
+      ]
     }
   ],
   "description_pl": "Newralgiczne ustalenia użytkownika. Źródło prawdy dla kodu i agentów: Postgres dam_kv_store.program-instructions (+ lokalny cache ten plik). memory.md jest tylko notatką operacyjną - przy konflikcie wygrywa ten magazyn. Po każdej nowej krytycznej decyzji: dopisz instrukcję tutaj, zapisz przez bridge (seed KV), dopiero potem zmieniaj kod.",

@@ -243,6 +243,217 @@
     return base;
   }
 
+  /* ---------- Rule A/B: indeks branding w runtime (tiery jakosci + zrodla w gore drzewa) ---------- */
+
+  var EDITABLE_EXTS = { psd: 1, psb: 1, ai: 1, indd: 1, eps: 1 };
+  var SOURCE_DIR_RE = /^(psd|psb|ai|edytowalne|zrodla|zrodlo|source|sources|src)$/i;
+  var QUALITY_LABELS = ["XL", "L", "S", "XS", "XXS", "XXXS"];
+  var _indexAssetsPromise = null;
+
+  function loadIndexAssets() {
+    if (_indexAssetsPromise) return _indexAssetsPromise;
+    // Reuzyj indeksu zaladowanego przez dam-branding.js (ta sama sesja) zamiast
+    // pobierac ~35 MB drugi raz.
+    if (window.__damBrandingIndex && window.__damBrandingIndex.assets) {
+      _indexAssetsPromise = Promise.resolve(window.__damBrandingIndex.assets);
+      return _indexAssetsPromise;
+    }
+    _indexAssetsPromise = fetch(bridgeUrl() + "/branding-index")
+      .then(function (r) {
+        if (!r.ok) throw new Error("bridge_branding_index");
+        return r.json();
+      })
+      .catch(function () {
+        return fetch("data/branding-index.json").then(function (r) {
+          return r.ok ? r.json() : null;
+        });
+      })
+      .then(function (d) {
+        if (d && d.assets && !window.__damBrandingIndex) {
+          try {
+            window.__damBrandingIndex = d;
+          } catch (eShare) {
+            /* ignore */
+          }
+        }
+        return (d && d.assets) || [];
+      })
+      .catch(function () {
+        return [];
+      });
+    return _indexAssetsPromise;
+  }
+
+  function normSlashesLower(p) {
+    return String(p || "").replace(/\\/g, "/").toLowerCase();
+  }
+
+  function dirOfPath(p) {
+    var n = normSlashesLower(p);
+    var i = n.lastIndexOf("/");
+    return i > 0 ? n.slice(0, i) : "";
+  }
+
+  function parentDir(d) {
+    var i = String(d || "").lastIndexOf("/");
+    return i > 0 ? d.slice(0, i) : "";
+  }
+
+  function baseNameNoExt(nameOrPath) {
+    var n = String(nameOrPath || "").replace(/\\/g, "/");
+    var i = n.lastIndexOf("/");
+    var f = i >= 0 ? n.slice(i + 1) : n;
+    return splitNameExt(f).base;
+  }
+
+  /**
+   * Klucz kreacji: baza nazwy bez markerow kompresji (ultra/low/high/skompresowane...).
+   * NIE tnie koncowych numerow (_01 vs _03 = ROZNE kreacje) ani rozmiarow (992x600 = inny wariant).
+   */
+  function creativeKey(nameOrPath) {
+    var base = String(baseNameNoExt(nameOrPath)).toLowerCase();
+    base = base.replace(/[\s._\u2013\u2014-]+/g, "-");
+    base = base.replace(/\b(skompresowane|compressed|compress|ultralow|ultra|low|high|hq|full|master|oryginalne|oryginal|org|min)\b/g, "");
+    base = base.replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+    return base;
+  }
+
+  /** Wyzszy wynik = mocniejsza kompresja (nizszy tier). Brak markerow = 0 (najlepsza jakosc). */
+  function qualitySegmentScore(seg) {
+    var s = String(seg || "").toLowerCase();
+    var score = 0;
+    if (/ultra\s*low|ultralow/.test(s)) score += 3;
+    else if (/\blow\b/.test(s)) score += 2;
+    if (/skompresowane|compressed|\bcompress\b/.test(s)) score += 2;
+    if (/\bultra\b/.test(s) && !/ultra\s*low|ultralow/.test(s)) score += 1;
+    if (/\bmin\b/.test(s)) score += 2;
+    if (/\b(high|hq|full|master|org|oryginal(?:ne)?)\b/.test(s)) score -= 1;
+    return score;
+  }
+
+  function qualityScoreFor(path, rootDir) {
+    var dir = dirOfPath(path);
+    var rel = "";
+    if (dir !== rootDir && dir.indexOf(rootDir + "/") === 0) rel = dir.slice(rootDir.length + 1);
+    var score = 0;
+    if (rel) {
+      rel.split("/").forEach(function (seg) {
+        score += qualitySegmentScore(seg);
+      });
+    }
+    score += qualitySegmentScore(baseNameNoExt(path));
+    return score;
+  }
+
+  /**
+   * Rule A: ta sama kreacja w roznych poziomach kompresji (identyczny creativeKey + ext)
+   * w obrebie wspolnego przodka (2 poziomy w gore). Zwraca posortowana liste tierow
+   * z etykietami XL/L/S/XS albo null, gdy kreacja ma tylko jeden plik.
+   */
+  function findQualitySet(asset, allAssets) {
+    if (!asset || !asset.path) return null;
+    var key = creativeKey(asset.name || asset.path);
+    if (!key || key.length < 4) return null;
+    var ext = fileExt(asset.name || asset.path);
+    var dir = dirOfPath(asset.path);
+    if (!dir) return null;
+    var root = dir;
+    for (var up = 0; up < 2; up++) {
+      var p = parentDir(root);
+      if (!p || p.split("/").length < 3) break;
+      root = p;
+    }
+    var seen = {};
+    var matches = [];
+    (allAssets || []).forEach(function (x) {
+      if (!x || !x.path) return;
+      if (fileExt(x.name || x.path) !== ext) return;
+      var xdir = dirOfPath(x.path);
+      if (xdir !== root && xdir.indexOf(root + "/") !== 0) return;
+      if (creativeKey(x.name || x.path) !== key) return;
+      var pkey = normSlashesLower(x.path);
+      if (seen[pkey]) return;
+      seen[pkey] = 1;
+      matches.push({
+        id: x.id || "",
+        name: x.name || "",
+        path: x.path,
+        score: qualityScoreFor(x.path, root),
+      });
+    });
+    if (matches.length < 2) return null;
+    matches.sort(function (a, b) {
+      return a.score - b.score || String(a.path).localeCompare(String(b.path));
+    });
+    var out = [];
+    var lastScore = null;
+    matches.forEach(function (m) {
+      if (lastScore !== null && m.score === lastScore) return;
+      lastScore = m.score;
+      out.push(m);
+    });
+    if (out.length < 2) return null;
+    out.forEach(function (m, i) {
+      m.label = QUALITY_LABELS[Math.min(i, QUALITY_LABELS.length - 1)];
+    });
+    return out;
+  }
+
+  /** Wspolny prefix >= 60% krotszej nazwy (po normalizacji) = "podobna nazwa". */
+  function nameSimilar(aName, bName) {
+    var a = creativeKey(aName);
+    var b = creativeKey(bName);
+    if (!a || !b) return false;
+    if (a === b) return true;
+    var n = Math.min(a.length, b.length);
+    var i = 0;
+    while (i < n && a.charAt(i) === b.charAt(i)) i++;
+    return i >= Math.max(4, Math.ceil(n * 0.6));
+  }
+
+  /**
+   * Rule B: gdy folder nie ma plikow edytowalnych, szukaj w gore drzewa (1-2 poziomy)
+   * plikow psd/psb/ai/indd z indeksu: najpierw podobna nazwa, potem foldery
+   * PSD/AI/EDYTOWALNE/ZRODLA, na koncu dowolny edytowalny pod przodkiem.
+   */
+  function findEditableUpTree(asset, allAssets) {
+    if (!asset || !asset.path) return [];
+    var dir = dirOfPath(asset.path);
+    if (!dir) return [];
+    var baseName = asset.name || asset.path;
+    var anc = dir;
+    for (var up = 0; up < 2; up++) {
+      var p = parentDir(anc);
+      if (!p || p.split("/").length < 3) break;
+      anc = p;
+      var cands = [];
+      (allAssets || []).forEach(function (x) {
+        if (!x || !x.path) return;
+        if (!EDITABLE_EXTS[fileExt(x.name || x.path)]) return;
+        var xdir = dirOfPath(x.path);
+        if (xdir !== anc && xdir.indexOf(anc + "/") !== 0) return;
+        var rel = xdir === anc ? "" : xdir.slice(anc.length + 1);
+        var relSegs = rel ? rel.split("/") : [];
+        if (relSegs.length > 2) return;
+        var inSourceDir = relSegs.some(function (s) {
+          return SOURCE_DIR_RE.test(s);
+        });
+        // Podfoldery zasobow w PSD/ (Linki, fonts, Zdjecia) to skladniki, nie zrodla
+        if (inSourceDir && relSegs.length > 1 && !SOURCE_DIR_RE.test(relSegs[relSegs.length - 1])) return;
+        var similar = nameSimilar(baseName, x.name || x.path);
+        var rank = (similar ? 0 : 2) + (inSourceDir ? 0 : 1) + relSegs.length * 0.1;
+        cands.push({ id: x.id || "", name: x.name || "", path: x.path, rank: rank });
+      });
+      if (cands.length) {
+        cands.sort(function (a, b) {
+          return a.rank - b.rank;
+        });
+        return cands;
+      }
+    }
+    return [];
+  }
+
   function variantIsVideo(v) {
     if (!v) return false;
     if (v.media_type === "video") return true;
@@ -266,19 +477,51 @@
     );
   }
 
+  var VARIANTS_VISIBLE_COLLAPSED = 4;
+
+  /** Rule A (grid): jeden kafelek na kreacje - tiery kompresji tej samej nazwy sie scalaja. */
+  function dedupeVariantsByCreative(list, activeId) {
+    var byKey = {};
+    var order = [];
+    (list || []).forEach(function (v) {
+      var ck = creativeKey(v.name || v.path);
+      var k = (ck || normSlashesLower(v.name || v.path)) + "|" + fileExt(v.name || v.path);
+      if (!byKey[k]) {
+        byKey[k] = v;
+        order.push(k);
+        return;
+      }
+      if (v.id === activeId) byKey[k] = v;
+    });
+    return order.map(function (k) {
+      return byKey[k];
+    });
+  }
+
   function folderVariantsHtml(variants, activeId) {
     var list = (variants || []).filter(function (v) {
       return v && v.id;
     });
+    list = dedupeVariantsByCreative(list, activeId);
+    var activeIdx = list.findIndex(function (v) {
+      return v.id === activeId;
+    });
+    if (activeIdx >= VARIANTS_VISIBLE_COLLAPSED) {
+      var activeItem = list.splice(activeIdx, 1)[0];
+      list.unshift(activeItem);
+    }
+    var collapsible = list.length > VARIANTS_VISIBLE_COLLAPSED;
     var body =
       list.length > 0
         ? list
-            .map(function (v) {
+            .map(function (v, i) {
               var active = v.id === activeId ? " is-active" : "";
+              var extra = collapsible && i >= VARIANTS_VISIBLE_COLLAPSED ? " dam-media-preview__variant--extra" : "";
               var fileName = variantFileLabel(v);
               return (
                 '<button type="button" class="dam-viz-modal__variant dam-media-preview__variant' +
                 active +
+                extra +
                 '" role="option" aria-selected="' +
                 (active ? "true" : "false") +
                 '" data-variant-id="' +
@@ -296,12 +539,22 @@
             })
             .join("")
         : '<p class="dam-media-preview__assoc-empty">Brak wariantów</p>';
+    var toggle = collapsible
+      ? '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-media-preview__variants-toggle" data-variants-toggle aria-expanded="false">' +
+        '<i class="uil uil-angle-down" aria-hidden="true"></i><span>Pokaż wszystkie (' +
+        list.length +
+        ")</span></button>"
+      : "";
     return (
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--variants">' +
       assocLabelRow("Warianty materiału", "variant") +
-      '<div class="dam-media-preview__variant-grid" role="listbox" aria-label="Warianty w folderze">' +
+      '<div class="dam-media-preview__variant-grid' +
+      (collapsible ? " is-collapsed" : "") +
+      '" role="listbox" aria-label="Warianty w folderze">' +
       body +
-      "</div></div>"
+      "</div>" +
+      toggle +
+      "</div>"
     );
   }
 
@@ -431,8 +684,30 @@
    * Nie pomylac z tagiem rozszerzenia w tytule.
    */
   function sourceFileActionHtml(asset, groupContext) {
-    var files = sourceActionFiles(asset, groupContext);
-    if (!files.length) return "";
+    return sourceButtonsHtml(sourceActionFiles(asset, groupContext));
+  }
+
+  /** Jeden przycisk na rozszerzenie (PSD/PSB/AI) z dowolnej listy plikow zrodlowych. */
+  function dedupeSourceFilesByExt(files) {
+    var order = { psd: 0, psb: 1, ai: 2, indd: 3, eps: 4 };
+    var byExt = {};
+    (files || []).forEach(function (f) {
+      if (!f || !f.path) return;
+      var ext = splitNameExt(f.name || f.path).ext;
+      if (!(ext in order)) return;
+      if (!byExt[ext]) byExt[ext] = f;
+    });
+    return Object.keys(byExt)
+      .sort(function (a, b) {
+        return order[a] - order[b];
+      })
+      .map(function (ext) {
+        return byExt[ext];
+      });
+  }
+
+  function sourceButtonsHtml(files) {
+    if (!files || !files.length) return "";
     return files
       .map(function (f) {
         var parts = splitNameExt(f.name || f.path);
@@ -620,6 +895,7 @@
       '<h4 class="dam-viz-modal__title" id="damMediaPreviewTitle"></h4>' +
       '<div id="damMediaPreviewTitleMeta"></div>' +
       "</div></div>" +
+      '<div id="damMediaPreviewQuality" class="dam-media-preview__quality" role="group" aria-label="Jakość / kompresja" hidden></div>' +
       '<div id="damMediaPreviewAssoc"></div>' +
       '<div class="dam-viz-modal__actions">' +
       '<div class="dam-viz-modal__actions-main">' +
@@ -877,6 +1153,96 @@
       });
     }
 
+    var qualityReqSeq = 0;
+    var sourceReqSeq = 0;
+
+    function setActionPaths(path) {
+      ["damMediaPreviewExplorer", "damMediaPreviewCopy", "damMediaPreviewShare"].forEach(function (id) {
+        var btn = document.getElementById(id);
+        if (btn) btn.setAttribute("data-path", path || "");
+      });
+    }
+
+    /** Rule A (UI): segmentowane pigulki XL/L/S/XS - przelaczanie poziomu kompresji tej samej kreacji. */
+    function renderQualityPills(a) {
+      var host = document.getElementById("damMediaPreviewQuality");
+      if (!host) return;
+      host.hidden = true;
+      host.innerHTML = "";
+      var token = ++qualityReqSeq;
+      loadIndexAssets().then(function (all) {
+        if (token !== qualityReqSeq) return;
+        if (!document.getElementById("damMediaPreviewQuality")) return;
+        var set = findQualitySet(a, all);
+        if (!set || set.length < 2) return;
+        var currentPath = normSlashesLower(a.path);
+        var activeFound = set.some(function (t) {
+          return normSlashesLower(t.path) === currentPath;
+        });
+        host.innerHTML =
+          '<span class="dam-media-preview__quality-label">Jakość:</span>' +
+          set
+            .map(function (t, i) {
+              var isActive = activeFound
+                ? normSlashesLower(t.path) === currentPath
+                : i === 0;
+              return (
+                '<button type="button" class="dam-media-preview__quality-pill' +
+                (isActive ? " is-active" : "") +
+                '" data-quality-idx="' +
+                i +
+                '" aria-pressed="' +
+                (isActive ? "true" : "false") +
+                '" title="' +
+                esc(t.path) +
+                '" data-dam-tip="' +
+                esc(t.label + ": " + t.path) +
+                '">' +
+                esc(t.label) +
+                "</button>"
+              );
+            })
+            .join("");
+        host.hidden = false;
+        host.querySelectorAll("[data-quality-idx]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var t = set[parseInt(btn.getAttribute("data-quality-idx"), 10)];
+            if (!t) return;
+            host.querySelectorAll("[data-quality-idx]").forEach(function (b) {
+              var on = b === btn;
+              b.classList.toggle("is-active", on);
+              b.setAttribute("aria-pressed", on ? "true" : "false");
+            });
+            var overlay = Object.assign({}, a, { name: t.name || a.name, path: t.path });
+            renderStage(overlay);
+            setActionPaths(t.path);
+            if (zoomCtrl) zoomCtrl.resetView();
+          });
+        });
+        if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
+          window.DamTooltips.bind(host);
+        }
+        if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
+      });
+    }
+
+    /** Rule B (UI): brak zrodel w folderze -> szukaj w gore drzewa w indeksie. */
+    function renderSourceFallback(a, sourceMount) {
+      var token = ++sourceReqSeq;
+      loadIndexAssets().then(function (all) {
+        if (token !== sourceReqSeq) return;
+        if (!sourceMount || !document.body.contains(sourceMount) || sourceMount.firstChild) return;
+        var files = dedupeSourceFilesByExt(findEditableUpTree(a, all));
+        if (!files.length) return;
+        sourceMount.innerHTML = sourceButtonsHtml(files);
+        bindSourceButtons(sourceMount);
+        if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
+          window.DamTooltips.bind(sourceMount);
+        }
+        if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
+      });
+    }
+
     function renderMeta(a) {
       var title = document.getElementById("damMediaPreviewTitle");
       var titleMeta = document.getElementById("damMediaPreviewTitleMeta");
@@ -888,7 +1254,9 @@
       if (sourceMount) {
         sourceMount.innerHTML = sourceFileActionHtml(a, groupContext);
         bindSourceButtons(sourceMount);
+        if (!sourceMount.firstChild) renderSourceFallback(a, sourceMount);
       }
+      renderQualityPills(a);
       if (assocHost) {
         var paintAssoc = function () {
           assocHost.innerHTML = associationsFooterHtml(a, groupContext, options);
@@ -899,6 +1267,24 @@
                 return x.id === vid;
               });
               if (targetIdx >= 0) showAt(targetIdx);
+            });
+          });
+          assocHost.querySelectorAll("[data-variants-toggle]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var grid = assocHost.querySelector(".dam-media-preview__variant-grid");
+              if (!grid) return;
+              var expanded = btn.getAttribute("aria-expanded") === "true";
+              var next = !expanded;
+              grid.classList.toggle("is-collapsed", !next);
+              btn.setAttribute("aria-expanded", next ? "true" : "false");
+              var icon = btn.querySelector("i");
+              if (icon) icon.className = next ? "uil uil-angle-up" : "uil uil-angle-down";
+              var label = btn.querySelector("span");
+              if (label) {
+                var total = grid.querySelectorAll("[data-variant-id]").length;
+                label.textContent = next ? "Zwiń" : "Pokaż wszystkie (" + total + ")";
+              }
+              if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
             });
           });
           if (window.DamAssocEdit && typeof window.DamAssocEdit.bind === "function") {

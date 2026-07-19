@@ -107,6 +107,75 @@
     return idx;
   }
 
+  /**
+   * Pelny blob wyszukiwania produktu: nazwa + id + WSZYSTKIE indeksy (pelne i
+   * bazowe) + tagi + gotowy search_blob z indeksu. Dzieki temu dziala szukanie
+   * po dokladnym indeksie wariantu (np. 6300539.01), nie tylko po indexes[0].
+   */
+  function productSearchBlob(p) {
+    if (!p) return "";
+    var parts = [
+      p.search_blob || "",
+      p.display_name || "",
+      p.name || "",
+      p.id || "",
+      (p.indexes || []).join(" "),
+      (p.index_bases || []).join(" "),
+      (p.tags || []).join(" "),
+    ];
+    return parts.join(" ").toLowerCase();
+  }
+
+  function normPath(s) {
+    return String(s == null ? "" : s)
+      .replace(/\\/g, "/")
+      .replace(/\/+$/, "")
+      .toLowerCase();
+  }
+
+  /** Dopasuj produkty do wskazanego folderu na dysku (po sciezce). */
+  function matchProductsByFolder(products, folder) {
+    var f = normPath(folder);
+    if (!f) return [];
+    var exact = [];
+    var under = [];
+    var parent = [];
+    (products || []).forEach(function (p) {
+      var pp = normPath(p && p.path);
+      if (!pp) return;
+      if (pp === f) exact.push(p.id);
+      else if (pp.indexOf(f + "/") === 0) under.push(p.id);
+      else if (f.indexOf(pp + "/") === 0) parent.push(p.id);
+    });
+    if (exact.length) return exact;
+    if (under.length) return under;
+    return parent;
+  }
+
+  var ASSOC_CSS_ID = "damAssocEditInjectedCss";
+
+  /** Wstrzykuje style dla ikon w wierszach + indeksu-tagu (nie ruszamy plikow agentow). */
+  function ensureInjectedCss() {
+    if (document.getElementById(ASSOC_CSS_ID)) return;
+    var css =
+      ".dam-assoc-edit-popover__opt-row{display:flex;align-items:center;gap:4px;border-radius:8px;}" +
+      ".dam-assoc-edit-popover__opt-row .dam-assoc-edit-popover__opt{flex:1 1 auto;min-width:0;}" +
+      ".dam-assoc-edit-popover__row-actions{display:flex;align-items:center;gap:3px;flex-shrink:0;padding-right:4px;}" +
+      ".dam-assoc-edit-popover__row-btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;" +
+      "border:1px solid #e7e7ec;border-radius:7px;background:#fff;color:#6b6b76;cursor:pointer;font-size:14px;" +
+      "transition:background .12s ease,color .12s ease,border-color .12s ease;}" +
+      ".dam-assoc-edit-popover__row-btn:hover{background:#f8f4fd;color:var(--dam-primary,#ab54db);border-color:#e2d3f2;}" +
+      ".dam-assoc-edit-popover__sub--tag{display:inline-flex;align-items:center;align-self:flex-start;padding:1px 8px;" +
+      "border-radius:999px;background:#f2eef8;color:#7a4bab;font-weight:600;font-size:10.5px;letter-spacing:.02em;" +
+      "border:1px solid #e7dcf5;font-variant-numeric:tabular-nums;}" +
+      ".dam-assoc-edit-popover__opt.is-pinned:not(.is-selected) .dam-assoc-edit-popover__check{color:#e2506b;}" +
+      ".dam-assoc-edit-popover__opt.is-pinned .dam-assoc-edit-popover__check{width:22px;font-size:17px;}";
+    var style = document.createElement("style");
+    style.id = ASSOC_CSS_ID;
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
   function productThumb(p) {
     if (!p) return PLACEHOLDER_SVG;
     var slug = p.id || "";
@@ -242,6 +311,7 @@
   function openMediaPicker(anchorEl, opts) {
     opts = opts || {};
     closePicker();
+    ensureInjectedCss();
     ensureFileIndex().then(function (fi) {
       var products = (fi && fi.products) || [];
       var selected = {};
@@ -294,6 +364,7 @@
               label: v.name || v.label || v.id,
               thumb: v.path && global.DamMediaPreview ? global.DamMediaPreview.previewUrl(v.path, v) : "",
               sub: v.id || "",
+              path: v.path || "",
             };
           }
         } else {
@@ -306,15 +377,40 @@
               label: p.display_name || p.name || p.id,
               thumb: productThumb(p),
               sub: productIndexOf(p) || p.id,
+              path: p.path || "",
             };
           }
         }
-        return { id: id, label: id, thumb: PLACEHOLDER_SVG, sub: "" };
+        return { id: id, label: id, thumb: PLACEHOLDER_SVG, sub: "", path: "" };
+      }
+
+      function checkIconHtml(on, pinned) {
+        if (on) return '<i class="uil uil-check"></i>';
+        if (pinned) return '<i class="uil uil-times" title="Kliknij, aby usunac skojarzenie"></i>';
+        return "";
+      }
+
+      function rowActionsHtml(it) {
+        var actions = "";
+        if (it.path) {
+          actions +=
+            '<button type="button" class="dam-assoc-edit-popover__row-btn" data-row-folder data-path="' +
+            esc(it.path) +
+            '" title="Otworz folder" aria-label="Otworz folder"><i class="uil uil-folder"></i></button>';
+        }
+        if (opts.kind !== "variant") {
+          actions +=
+            '<button type="button" class="dam-assoc-edit-popover__row-btn" data-row-copy data-pid="' +
+            esc(it.id) +
+            '" title="Kopiuj link do produktu" aria-label="Kopiuj link"><i class="uil uil-link"></i></button>';
+        }
+        return actions ? '<span class="dam-assoc-edit-popover__row-actions">' + actions + "</span>" : "";
       }
 
       function optionButtonHtml(it, pinned) {
         var on = !!selected[it.id];
         return (
+          '<div class="dam-assoc-edit-popover__opt-row">' +
           '<button type="button" class="dam-assoc-edit-popover__opt' +
           (on ? " is-selected" : "") +
           (pinned ? " is-pinned" : "") +
@@ -332,17 +428,21 @@
           '<span class="dam-assoc-edit-popover__label">' +
           esc(it.label) +
           "</span>" +
-          (it.sub ? '<span class="dam-assoc-edit-popover__sub">' + esc(it.sub) + "</span>" : "") +
+          (it.sub
+            ? '<span class="dam-assoc-edit-popover__sub dam-assoc-edit-popover__sub--tag">' + esc(it.sub) + "</span>"
+            : "") +
           "</span>" +
           '<span class="dam-assoc-edit-popover__check" aria-hidden="true">' +
-          (on ? '<i class="uil uil-check"></i>' : "") +
-          "</span></button>"
+          checkIconHtml(on, pinned) +
+          "</span></button>" +
+          rowActionsHtml(it) +
+          "</div>"
         );
       }
 
       function bindOptionButtons(scope) {
         if (!scope) return;
-        scope.querySelectorAll("[data-id]").forEach(function (btn) {
+        scope.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
           btn.addEventListener("click", function (e) {
             e.preventDefault();
             e.stopPropagation();
@@ -351,6 +451,36 @@
             else selected[id] = true;
             renderPinned();
             renderOptions(pop.querySelector("#damAssocEditSearch").value);
+          });
+        });
+        scope.querySelectorAll("[data-row-folder]").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var p = btn.getAttribute("data-path") || "";
+            if (p && global.DamPaths && typeof global.DamPaths.revealInExplorer === "function") {
+              global.DamPaths.revealInExplorer(p);
+              toast("Otwieram folder w Eksploratorze");
+            } else if (p && global.DamPaths && typeof global.DamPaths.openFolderInExplorer === "function") {
+              global.DamPaths.openFolderInExplorer(p);
+            }
+          });
+        });
+        scope.querySelectorAll("[data-row-copy]").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var pid = btn.getAttribute("data-pid") || "";
+            var link =
+              location.origin +
+              location.pathname.replace(/[^/]+$/, "") +
+              "explorer.html?product=" +
+              encodeURIComponent(pid);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(link).then(function () {
+                toast("Skopiowano link do produktu");
+              });
+            }
           });
         });
       }
@@ -380,32 +510,26 @@
         if (opts.kind === "variant") {
           (opts.variantCandidates || []).forEach(function (v) {
             if (!v || !v.id || pinnedSet[v.id]) return;
-            var label = (v.name || v.label || v.id || "").toLowerCase();
-            if (q && label.indexOf(q) === -1 && String(v.id || "").indexOf(q) === -1) return;
+            var blob = ((v.name || v.label || "") + " " + (v.id || "") + " " + (v.index || "")).toLowerCase();
+            if (q && blob.indexOf(q) === -1) return;
             items.push({
               id: v.id,
               label: v.name || v.label || v.id,
               thumb: v.path && global.DamMediaPreview ? global.DamMediaPreview.previewUrl(v.path, v) : "",
               sub: v.id || "",
+              path: v.path || "",
             });
           });
         } else {
           products.forEach(function (p) {
             if (!p || !p.id || pinnedSet[p.id]) return;
-            var blob =
-              (p.display_name || p.name || "") +
-              " " +
-              (p.id || "") +
-              " " +
-              (productIndexOf(p) || "") +
-              " " +
-              ((p.tags || []).join(" ") || "");
-            if (q && blob.toLowerCase().indexOf(q) === -1) return;
+            if (q && productSearchBlob(p).indexOf(q) === -1) return;
             items.push({
               id: p.id,
               label: p.display_name || p.name || p.id,
               thumb: productThumb(p),
               sub: productIndexOf(p) || p.id,
+              path: p.path || "",
             });
           });
         }
@@ -495,25 +619,23 @@
     if (i > 0) dir = dir.slice(0, i);
     openFolderGrid(dir, function (picked) {
       if (!picked || !picked.folder) return;
-      fetch(bridgeUrl() + "/folder-images?path=" + encodeURIComponent(picked.folder))
-        .then(function (r) {
-          return r.json();
-        })
-        .then(function (data) {
-          var files = (data && data.files) || [];
-          if (files.length) {
-            toast("Znaleziono wizualizacje w folderze — dodaj produkt recznie z listy.");
-            return;
-          }
-          if (!confirm("Nie znaleziono wizualizacji w tym folderze. Czy chcesz wskazac miejsce wizualizacji?")) {
-            toast("Dodano bez miniatury (tymczasowo brak).");
-            return;
-          }
-          openFolderGrid(picked.folder, function (vis) {
-            if (!vis || !vis.path) return;
-            toast("Wskazano wizualizacje: " + (vis.name || vis.path));
-          }, false);
+      ensureFileIndex().then(function (fi) {
+        var products = (fi && fi.products) || [];
+        var ids = matchProductsByFolder(products, picked.folder);
+        if (!ids.length) {
+          toast("Nie znaleziono produktu dla tego folderu. Wybierz produkt z listy.");
+          return;
+        }
+        ids.forEach(function (id) {
+          selected[id] = true;
         });
+        toast(
+          ids.length === 1
+            ? "Dodano produkt z folderu"
+            : "Dodano produkty z folderu: " + ids.length
+        );
+        if (typeof onDone === "function") onDone(Object.keys(selected));
+      });
     }, false);
   }
 
@@ -523,6 +645,8 @@
     var overlay = document.createElement("div");
     overlay.id = "damAssocFolderPicker";
     overlay.className = "dam-thumb-picker-overlay";
+    // Musi byc NAD nakladka edycji skojarzen (z-index 12100), inaczej nie da sie kliknac.
+    overlay.style.zIndex = "12300";
     overlay.innerHTML =
       '<div class="dam-thumb-picker-box">' +
       '<div class="dam-thumb-picker__head"><strong>' +

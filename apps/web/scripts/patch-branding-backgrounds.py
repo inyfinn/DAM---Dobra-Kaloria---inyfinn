@@ -61,15 +61,18 @@ def main() -> int:
     idx = json.loads(INDEX.read_text(encoding="utf-8"))
     assets = idx.get("assets") or []
 
+    scan_cache = {} if args.no_cache else load_background_scan_cache()
+    cache_before = len(scan_cache)
+
     def progress(scanned: int, touched: int, skipped: int = 0) -> None:
         print(f"scan {scanned} touched={touched} skipped={skipped}", flush=True)
+        # checkpoint co ~500 plikow: przerwany/ubity skan nie traci wynikow
+        if scanned and scanned % 500 == 0:
+            save_background_scan_cache(scan_cache)
 
     scope = None if args.scope == "all" else args.scope
     touched_ids: set[str] = set()
     before_bg = {a["id"]: a.get("background") for a in assets if a.get("id")}
-
-    scan_cache = {} if args.no_cache else load_background_scan_cache()
-    cache_before = len(scan_cache)
 
     bg_touched = enrich_raster_backgrounds(
         assets,

@@ -948,3 +948,25 @@ ole=admin.
 126. **Sciezka przenosna Marketing\ (2026-07-19) - HARD:**
  - Kopiuj sciezke = `DamPaths.toPortablePath` / `copyPortablePath` (bez litery dysku, od segmentu Marketing\).
  - Kazdy user ma inna mape dysku - nie kopiowac X:\ ani D:\.
+
+127. **Wazna checklista uzytkownika (2026-07-20) - HARD:**
+ - Plik: `WAZNA-CHECKLISTA-UZYTKOWNIKA.md` (root repo) + regula `.cursor/rules/wazna-checklista-uzytkownika.mdc`.
+ - Sekcje: A operacyjne (Asana/MS/FMCG), B techniczne (wykrojniki, FMCG XLSX, video posters, Autor, QA dashboard, wersja memory), C pozniej (Entra/LDAP, ERP, BENTO kart).
+ - Gdy prosba uzytkownika zahacza o punkt listy: **przypomnij ID + status** (nie wklejaj calej listy). Po done: odhacz w pliku + `process.md`.
+
+128. **Animacje + tryb w tle + cache Branding = wersja 2.0.7 (2026-07-20) - HARD:**
+ - **Ruch:** tokeny w `dam-tokens.css`: `--dam-anim` 0.4s (wejscie), `--dam-anim-hover` 0.22s (stany), `--dam-anim-slow`, `--dam-anim-ease`. Reveal (GSAP `dam-grid-reveal.js`) DURATION 0.35->**0.4**, sidebar 0.3->0.4.
+ - Tagi/pille/badge + belki (toolbary, context bar, filtry tagow) dostaly `transition` (wczesniej ZERO). Blok w `dam-brand.css` (app-wide) + `dam-branding.css` (chipy brandingu). Fallback w `var(...,0.22s)`.
+ - Belki animowane jako **bloki** przez `DamGridReveal.revealBars()` (jednorazowo, znacznik `data-dam-bar-revealed`, brak migotania przy filtrach). NIE animowac kazdego taga osobno w reveal.
+ - **Tray:** `launch.py` - `window.events.closing` chowa okno do zasobnika (`window.hide()`, return False) gdy `tray_active`; most/sync/index zyja dalej. Calkowite wyjscie = tray "Zatrzymaj DAM calkowicie" (`os._exit`). Stack bez zmian: pywebview + pystray. **Wymaga restartu aplikacji desktop** by wejscie zadzialalo.
+ - **Cache Branding:** cache-bust `?v=CB` bez `Date.now()` (WebView2 cache'uje ~35 MB); indeks wspoldzielony `window.__damBrandingIndex` (branding.js + media-preview.js); jeden `renderTagFilters()` na boot (activateTab go robi); wideo w siatce `preload="none"`.
+ - Cache-bust bumpniety na branding.html + dashboard.html (`motion20260720a` / `perf20260720a`); reszta stron = addytywna (brak nowego CSS = brak animacji, nie blad) -> pelny sweep to checklista **B6**.
+ - Weryfikacja: browser :8765 screenshot+Read; CDP: --dam-anim=0.4s, --dam-anim-hover=0.22s, revealBars=3 belki, sharedIndex 7832, 115 kart, badge transition 0.22s.
+
+129. **WYKLADNIA KODU DAM = agents/shared/code-doctrine.md (2026-07-20) - HARD:**
+ - Nadrzedny dokument "jak rozumiec kod DAM"; ZAWSZE czytany przed zmiana w apps/web/**. Wpiety na gorze AGENTS.md + lokalna regula .cursor/rules/code-doctrine.mdc (alwaysApply; .cursor jest gitignored - trwaly nosnik to AGENTS.md + agents/shared/).
+ - Uczy: architektura runtime (web 8765 / most 8766, dane JSON, brak build-stepu), wzorzec window.DamX, i twarde lekcje: cache-busting (?v=), wspolbiezni agenci (wstrzykuj CSS z JS, nie ruszaj cudzych .css, sprawdzaj turn_ended), IntersectionObserver + clip-path deadlock (stan spoczynku = opacity:0, clip tylko w tweenie), search po pelnych indexes/search_blob (nie indexes[0]), z-index warstw (picker > nakladka), weryfikacja CDP vs stale-frame screenshot.
+ - Sekcja 12 to dziennik lekcji - kazdy agent DOPISUJE nowe odkrycia. Kolejnosc zrodel prawdy: program-instructions.json > code-doctrine.md > memory.md > kod.
+
+130. **Edytor skojarzen dam-assoc-edit.js - naprawy (2026-07-20):**
+ - Search: productSearchBlob (search_blob + pelne indexes + index_bases + tagi) - znajduje po 6300539.01/000108. Folder picker: z-index 12300 (nad nakladka 12100) - klikalny. "Dodaj z dysku": matchProductsByFolder po path (exact/under/parent) faktycznie dodaje. Odznaczanie: czerwony X na AKTUALNE. Ikony wierszy (folder/kopiuj link) + indeks jako TAG. Cale style wstrzykniete z JS (bez ruszania dam-branding.css agentow).

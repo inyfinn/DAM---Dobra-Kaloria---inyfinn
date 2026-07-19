@@ -713,14 +713,39 @@ def main() -> None:
             bridge_proc.terminate()
         os._exit(0)
 
+    tray_active = False
     try:
         from dam_tray import start_tray
 
         tray_stop = start_tray(title=APP_TITLE, on_show=_show_window, on_quit=_shutdown_all)
         if tray_stop is None:
             _log_tray("pystray niedostepny — brak ikony w zasobniku (pip install pystray Pillow)")
+        else:
+            tray_active = True
     except Exception as exc:
         _log_tray("tray error: " + str(exc))
+
+    def _on_closing(*_args, **_kwargs):
+        # Gdy tray dziala: zamkniecie okna (X) chowa je do zasobnika zamiast
+        # ubijac most/sync/index. Calkowite wyjscie = menu tray
+        # "Zatrzymaj DAM calkowicie" (-> _shutdown_all -> os._exit).
+        if not tray_active:
+            return True
+        try:
+            for win in list(getattr(webview, "windows", []) or []):
+                try:
+                    win.hide()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        _log_tray("okno schowane do zasobnika (most dziala w tle)")
+        return False
+
+    try:
+        window.events.closing += _on_closing
+    except Exception as exc:
+        _log_tray("closing hook error: " + str(exc))
 
     # Profil WebView2 trwaly (nie nowy folder tymczasowy przy KAZDYM starcie).
     # Domyslnie pywebview tworzy folder w %TEMP% i usuwa go po zamknieciu -

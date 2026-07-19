@@ -1,5 +1,12 @@
 # AGENTS.md - mapa 3 agentow (Composer 2.5)
 
+> **CZYTAJ ZAWSZE NAJPIERW:** [`agents/shared/code-doctrine.md`](agents/shared/code-doctrine.md)
+> to WYKLADNIA KODU DAM - jak czytac ten kod, dlaczego jedno dziala a inne nie,
+> pulapki (cache-busting, z-index warstw, IntersectionObserver + clip-path,
+> wspolbiezni agenci, weryfikacja CDP vs screenshot). Obowiazkowa lektura przed
+> KAZDA zmiana w `apps/web/**`. Po rozwiazaniu nowego, nieoczywistego problemu
+> DOPISZ lekcje w sekcji 12 tego dokumentu.
+
 Pelna dokumentacja: [`agents/README.md`](agents/README.md).  
 Przy starcie zadania w danej roli **wklej / przeczytaj** odpowiedni `AGENT.md`.
 

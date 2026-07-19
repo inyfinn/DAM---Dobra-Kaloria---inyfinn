@@ -9222,4 +9222,73 @@ button.dam-viz-badge:focus-visible,
   display: none; /* legacy slot unused — nav is outside */
 }
 
+/* ===========================================================================
+   Ruch: przejscia dla tagow/pill/badge i belek (dotad bez animacji).
+   Hover/stan = --dam-anim-hover; wejscie belek animuje dam-grid-reveal.js.
+   Dodatki addytywne - fallback gdy tokeny nie doszly.
+   =========================================================================== */
+.dam-viz-badge,
+button.dam-viz-badge,
+.dam-badge-tag,
+.dam-tag-pill,
+.dam-tag-more,
+.dam-tag-more-legacy,
+.dam-tag-chip,
+.dam-prod-tag,
+.dam-status-badge,
+.dam-date-chip,
+.dam-index-chip,
+.dam-inbox-tag,
+.dam-lb-chip,
+.dam-lb-size__tag,
+.dam-brand-chip-btn {
+  transition:
+    background-color var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease),
+    border-color var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease),
+    color var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease),
+    box-shadow var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease),
+    filter var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease),
+    transform var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease),
+    opacity var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease);
+}
+
+.dam-viz-badge:hover,
+button.dam-viz-badge:hover,
+.dam-badge-tag:hover,
+.dam-tag-pill:hover,
+.dam-tag-chip:hover,
+.dam-prod-tag:hover,
+.dam-status-badge:hover {
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-viz-badge,
+  button.dam-viz-badge,
+  .dam-badge-tag,
+  .dam-tag-pill,
+  .dam-tag-more,
+  .dam-tag-more-legacy,
+  .dam-tag-chip,
+  .dam-prod-tag,
+  .dam-status-badge,
+  .dam-date-chip,
+  .dam-index-chip,
+  .dam-inbox-tag,
+  .dam-lb-chip,
+  .dam-lb-size__tag,
+  .dam-brand-chip-btn {
+    transition: none;
+  }
+  .dam-viz-badge:hover,
+  button.dam-viz-badge:hover,
+  .dam-badge-tag:hover,
+  .dam-tag-pill:hover,
+  .dam-tag-chip:hover,
+  .dam-prod-tag:hover,
+  .dam-status-badge:hover {
+    transform: none;
+  }
+}
+
 

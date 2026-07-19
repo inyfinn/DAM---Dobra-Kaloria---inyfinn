@@ -2,11 +2,11 @@
 """Taksonomia branding: media_type (auto), asset_role (folder), format_technical (auto)."""
 from __future__ import annotations
 
-import concurrent.futures
 import json
 import os
 import re
 import tempfile
+import threading
 import time
 import unicodedata
 from pathlib import Path
@@ -67,12 +67,25 @@ _OPAQUE_RASTER_EXTS = {".jpg", ".jpeg", ".bmp"}
 
 
 def _run_with_timeout(fn, timeout: float = FILE_ACCESS_TIMEOUT, default=None):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-        fut = pool.submit(fn)
+    """Watek daemon zamiast ThreadPoolExecutor: context manager executora blokowal
+    sie na shutdown(wait=True) gdy odczyt z NFS X: wisial - timeout nie dzialal
+    i caly skan stawal w miejscu (wiszace procesy patch-branding-backgrounds)."""
+    result = [default]
+    done = threading.Event()
+
+    def _worker() -> None:
         try:
-            return fut.result(timeout=timeout)
-        except (concurrent.futures.TimeoutError, OSError, PermissionError, ValueError):
-            return default
+            result[0] = fn()
+        except (OSError, PermissionError, ValueError):
+            result[0] = default
+        finally:
+            done.set()
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+    if not done.wait(timeout):
+        return default
+    return result[0]
 
 
 def _read_file_prefix(path: Path, n: int = 65536) -> bytes | None:

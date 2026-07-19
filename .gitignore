@@ -79,6 +79,10 @@ Thumbs.db
 # Agent / debug logs (lokalne, nie commitowac)
 debug-*.log
 
+# Scratch QA + duze backupy bundli (lokalne, nie commitowac)
+tmp-qa-hub/
+backups/**/*.bundle
+
 # Build / Python
 __pycache__/
 *.pyc

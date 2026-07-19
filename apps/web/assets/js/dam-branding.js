@@ -4,7 +4,7 @@
   var index = null;
   var tokens = null;
   var campaigns = null;
-  var CB = "hub20260719cache01";
+  var CB = "hub20260720backlog1";
   var TAG_COUNTS_KEY = "dam_branding_show_tag_counts";
   var selectedCampaignId = null;
   var selectedChannel = "";
@@ -605,7 +605,7 @@
     if (searchIndex) return searchIndex;
     searchIndex = { by_tag: {} };
     try {
-      var r = await fetch(bridgeUrl() + "/branding-search-index?v=" + CB + "&_=" + Date.now());
+      var r = await fetch(bridgeUrl() + "/branding-search-index?v=" + CB);
       if (r.ok) searchIndex = await r.json();
     } catch (eIdx) {
       /* bridge offline lub stary most bez tej trasy */
@@ -2287,10 +2287,22 @@
 
   async function loadIndex() {
     if (index) return index;
+    // Wspoldziel indeks z innymi modulami (np. dam-media-preview.js), zeby nie
+    // pobierac ~35 MB drugi raz w tej samej sesji.
+    if (window.__damBrandingIndex && window.__damBrandingIndex.assets) {
+      index = window.__damBrandingIndex;
+      clearBrandingComputeCache();
+      return index;
+    }
     setBootStatus("Ładowanie indeksu branding…");
+    // Cache-bust tylko przez ?v=CB (zmienia sie przy deployu). BEZ Date.now(),
+    // ktore blokowalo cache HTTP/WebView2 i wymuszalo pobranie 35 MB za kazdym
+    // wejsciem. Po przebudowie indeksu mtime pliku rosnie -> serwer i tak
+    // zwroci swiezy plik (If-Modified-Since), a invalidateBrandingIndexCache()
+    // czysci pamiec sesji.
     var urls = [
-      "data/branding-index.json?v=" + CB + "&_=" + Date.now(),
-      bridgeUrl() + "/branding-index?v=" + CB + "&_=" + Date.now(),
+      "data/branding-index.json?v=" + CB,
+      bridgeUrl() + "/branding-index?v=" + CB,
     ];
     var lastErr = null;
     for (var u = 0; u < urls.length; u++) {
@@ -2299,6 +2311,11 @@
         if (!r.ok) continue;
         setBootStatus("Przetwarzanie indeksu…");
         index = await r.json();
+        try {
+          window.__damBrandingIndex = index;
+        } catch (eShare) {
+          /* ignore */
+        }
         clearBrandingComputeCache();
         return index;
       } catch (eLoad) {
@@ -2421,6 +2438,11 @@
     searchIndex = null;
     campaigns = null;
     campaignAssetMap = {};
+    try {
+      window.__damBrandingIndex = null;
+    } catch (eShare) {
+      /* ignore */
+    }
     clearBrandingComputeCache();
     try {
       window.dispatchEvent(new CustomEvent("dam-branding-index-stale"));
@@ -2698,7 +2720,7 @@
         '<div class="dam-branding-thumb__video-wrap" data-path="' +
         esc(path) +
         '">' +
-        '<video class="dam-viz-thumb__img dam-branding-thumb__video-el" muted playsinline preload="metadata" ' +
+        '<video class="dam-viz-thumb__img dam-branding-thumb__video-el" muted playsinline preload="none" ' +
         'data-path="' +
         esc(path) +
         '" poster="' +
@@ -3027,6 +3049,9 @@
     }
     if (slice.length && window.DamGridReveal) {
       window.DamGridReveal.reveal(grid, window.DamGridReveal.selectors.vizCard);
+    }
+    if (window.DamGridReveal && window.DamGridReveal.revealBars) {
+      window.DamGridReveal.revealBars(document);
     }
     return slice;
   }
@@ -3686,7 +3711,8 @@
       bindBrandingCardZoomControl();
       var searchPromise = loadSearchIndex();
       await Promise.all([loadIndex(), loadAssociations(), loadTokens()]);
-      renderTagFilters();
+      // renderTagFilters() celowo pominiete tutaj: activateTab() nizej robi
+      // pelny render juz z zaladowanym search-indexem (bylo liczone 2x na boot).
       var rebuild = document.getElementById("damBrandingRebuild");
       if (rebuild) {
         rebuild.addEventListener("click", async function () {
