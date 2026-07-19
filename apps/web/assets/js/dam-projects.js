@@ -159,6 +159,9 @@
     var marketing = ((product && product.related_materials) || []).some(function (m) {
       return m && m.file_count > 0;
     });
+    if (!marketing && window.DamProductCorrelation && product && product.id) {
+      marketing = DamProductCorrelation.hasBrandingMaterials(product.id);
+    }
 
     var karta =
       ((fbr.karty_wprowadzenia || []).length > 0) ||
@@ -607,6 +610,9 @@
       state.source = (res && res.source) || "";
       state.variantsHint = "";
       try {
+        if (window.DamProductCorrelation) {
+          await DamProductCorrelation.ensureBrandingCounts();
+        }
         var idx = await fetch("./data/file-index.json", { cache: "no-store" }).then(function (r) {
           return r.ok ? r.json() : null;
         });

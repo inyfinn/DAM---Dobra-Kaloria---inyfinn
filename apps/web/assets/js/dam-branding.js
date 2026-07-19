@@ -4,15 +4,18 @@
   var index = null;
   var tokens = null;
   var campaigns = null;
-  var CB = "hub20260719disc13";
+  var CB = "hub20260719source01";
+  var TAG_COUNTS_KEY = "dam_branding_show_tag_counts";
   var selectedCampaignId = null;
   var selectedChannel = "";
   var discoveryWhen = "";
+  var datePresetActive = "";
   var associations = null;
   var RECENT_KEY = "dam_branding_recent";
   var campaignAssetMap = {};
   var currentGridAssets = [];
   var searchIndex = null;
+  var productCorrelation = null;
   var activeTagFilters = {};
   var GRID_LIMIT_BROWSE = 240;
   var GRID_LIMIT_TAB = 120;
@@ -24,7 +27,7 @@
     { key: "media:source", label: "Źródło", group: "format_pliku" },
     { key: "media:document", label: "Dokument", group: "format_pliku" },
     { key: "format:raster", label: "Raster", group: "cechy" },
-    { key: "format:transparent", label: "Tło przezroczyste", group: "cechy" },
+    { key: "format:transparent", label: "Przezroczyste tło", group: "cechy" },
     { key: "format:white", label: "Tło białe", group: "cechy" },
     { key: "format:editable", label: "Edytowalny", group: "cechy" },
     { key: "appearance:desktop", label: "Desktop", group: "cechy", tab: "www" },
@@ -203,10 +206,13 @@
   }
 
   function hasActiveDiscoveryFilters() {
+    var bounds = dateRangeBounds();
     return !!(
       elVal("damBrandingSearch") ||
       discoveryWhen ||
-      Object.keys(activeTagFilters).length
+      Object.keys(activeTagFilters).length ||
+      bounds.from != null ||
+      bounds.to != null
     );
   }
 
@@ -214,6 +220,9 @@
     var search = document.getElementById("damBrandingSearch");
     if (search) search.value = "";
     discoveryWhen = "";
+    applyDatePreset("");
+    var sortEl = document.getElementById("damBrandingSort");
+    if (sortEl) sortEl.value = "priority";
     clearTagFilters();
     renderActiveSection();
   }
@@ -278,6 +287,20 @@
     }
     if (kind === "role") return a.asset_role === val;
     if (kind === "format") {
+      if (val === "transparent") {
+        if (window.DamAssetTaxonomy && DamAssetTaxonomy.isEffectiveTransparent) {
+          return DamAssetTaxonomy.isEffectiveTransparent(a);
+        }
+        return (
+          (a.format_technical || []).indexOf("transparent") !== -1 || a.background === "transparent"
+        );
+      }
+      if (val === "white") {
+        if (window.DamAssetTaxonomy && DamAssetTaxonomy.isEffectiveWhite) {
+          return DamAssetTaxonomy.isEffectiveWhite(a);
+        }
+        return (a.format_technical || []).indexOf("white") !== -1 || a.background === "white";
+      }
       return (a.format_technical || []).indexOf(val) !== -1;
     }
     if (kind === "perspective") return a.perspective === val;
@@ -309,13 +332,40 @@
   }
 
   function searchTokens(q) {
-    return String(q || "")
+    var raw = String(q || "")
       .toLowerCase()
       .split(/\s+/)
       .map(function (t) {
         return normTag(t);
       })
       .filter(Boolean);
+    if (!raw.length) return [];
+    var synonymMap = {
+      "bez tla": ["przezroczyste", "transparent", "przezroczyste tlo"],
+      "tlo usuniete": ["przezroczyste", "transparent", "przezroczyste tlo"],
+      "przezroczyste": ["transparent", "przezroczyste tlo"],
+      "przezroczyste tlo": ["transparent"],
+      "tlo przezroczyste": ["transparent", "przezroczyste tlo"],
+    };
+    var out = [];
+    var seen = {};
+    raw.forEach(function (t) {
+      if (!seen[t]) {
+        seen[t] = true;
+        out.push(t);
+      }
+      var syns = synonymMap[t];
+      if (syns) {
+        syns.forEach(function (s) {
+          var ns = normTag(s);
+          if (ns && !seen[ns]) {
+            seen[ns] = true;
+            out.push(ns);
+          }
+        });
+      }
+    });
+    return out;
   }
 
   function searchScore(a, tokens) {
@@ -353,21 +403,164 @@
       })
       .sort(function (x, y) {
         if (y.s !== x.s) return y.s - x.s;
-        return x.i - y.i;
+        return compareAssetsForDisplay(x.a, y.a, x.i, y.i);
       })
       .map(function (row) {
         return row.a;
       });
   }
 
+  function assetDisplayPriority(a) {
+    if (window.DamAssetTaxonomy && typeof DamAssetTaxonomy.displayPriority === "function") {
+      return DamAssetTaxonomy.displayPriority(a);
+    }
+    return 5;
+  }
+
+  function assetMtimeMs(a) {
+    if (!a) return 0;
+    if (typeof a.mtime_ms === "number" && a.mtime_ms > 0) return a.mtime_ms;
+    if (a.mtime) {
+      var t = Date.parse(a.mtime);
+      if (!isNaN(t)) return t;
+    }
+    var name = String(a.name || "");
+    var m = /^(\d{4})(\d{2})(\d{2})/.exec(name);
+    if (m) {
+      var d = Date.parse(m[1] + "-" + m[2] + "-" + m[3] + "T12:00:00Z");
+      if (!isNaN(d)) return d;
+    }
+    var y = extractYearFromAsset(a);
+    if (y) return Date.parse(String(y) + "-06-15T12:00:00Z") || 0;
+    return 0;
+  }
+
+  function currentSortMode() {
+    var el = document.getElementById("damBrandingSort");
+    return el && el.value ? el.value : "priority";
+  }
+
+  function compareAssetsForDisplay(a, b, ia, ib) {
+    var mode = currentSortMode();
+    var ma = assetMtimeMs(a);
+    var mb = assetMtimeMs(b);
+    if (mode === "newest") {
+      if (mb !== ma) return mb - ma;
+    } else if (mode === "oldest") {
+      if (ma !== mb) return ma - mb;
+    } else if (mode === "name") {
+      var na = String(a.name || "").localeCompare(String(b.name || ""), "pl");
+      if (na) return na;
+    } else {
+      var pa = assetDisplayPriority(a);
+      var pb = assetDisplayPriority(b);
+      if (pa !== pb) return pa - pb;
+      if (mb !== ma) return mb - ma;
+    }
+    var n2 = String(a.name || "").localeCompare(String(b.name || ""), "pl");
+    if (n2) return n2;
+    return (ia || 0) - (ib || 0);
+  }
+
+  function asAssetList(list) {
+    return Array.isArray(list) ? list : [];
+  }
+
+  function sortAssetsForDisplay(list, q) {
+    list = asAssetList(list);
+    var withQ = q ? sortByRelevance(list, q) : list.slice();
+    if (q) return withQ;
+    return withQ
+      .map(function (a, i) {
+        return { a: a, i: i };
+      })
+      .sort(function (x, y) {
+        return compareAssetsForDisplay(x.a, y.a, x.i, y.i);
+      })
+      .map(function (row) {
+        return row.a;
+      });
+  }
+
+  function dateRangeBounds() {
+    var fromEl = document.getElementById("damBrandingDateFrom");
+    var toEl = document.getElementById("damBrandingDateTo");
+    var from = fromEl && fromEl.value ? Date.parse(fromEl.value + "T00:00:00") : NaN;
+    var to = toEl && toEl.value ? Date.parse(toEl.value + "T23:59:59.999") : NaN;
+    return {
+      from: isNaN(from) ? null : from,
+      to: isNaN(to) ? null : to,
+    };
+  }
+
+  function assetMatchesDateRange(a) {
+    var bounds = dateRangeBounds();
+    if (bounds.from == null && bounds.to == null) return true;
+    var ms = assetMtimeMs(a);
+    if (!ms) return false;
+    if (bounds.from != null && ms < bounds.from) return false;
+    if (bounds.to != null && ms > bounds.to) return false;
+    return true;
+  }
+
+  function isoDate(d) {
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function applyDatePreset(preset) {
+    var fromEl = document.getElementById("damBrandingDateFrom");
+    var toEl = document.getElementById("damBrandingDateTo");
+    if (!fromEl || !toEl) return;
+    var now = new Date();
+    datePresetActive = preset || "";
+    if (preset === "week") {
+      var w = new Date(now.getTime() - 7 * 86400000);
+      fromEl.value = isoDate(w);
+      toEl.value = isoDate(now);
+    } else if (preset === "month") {
+      var m = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      fromEl.value = isoDate(m);
+      toEl.value = isoDate(now);
+    } else if (preset === "2026") {
+      fromEl.value = "2026-01-01";
+      toEl.value = "2026-12-31";
+    } else if (preset === "2025") {
+      fromEl.value = "2025-01-01";
+      toEl.value = "2025-12-31";
+    } else {
+      fromEl.value = "";
+      toEl.value = "";
+      datePresetActive = "";
+    }
+    syncDatePresetButtons();
+  }
+
+  function syncDatePresetButtons() {
+    var host = document.getElementById("damBrandingDatePresets");
+    if (!host) return;
+    host.querySelectorAll("button[data-preset]").forEach(function (btn) {
+      btn.classList.toggle("is-active", btn.getAttribute("data-preset") === datePresetActive);
+    });
+  }
+
+  function setBootStatus(msg) {
+    var el = document.getElementById("damBrandingStatus");
+    if (el) el.textContent = msg;
+  }
+
   async function loadSearchIndex() {
     if (searchIndex) return searchIndex;
+    searchIndex = { by_tag: {} };
     try {
-      var r = await fetch("data/branding-search-index.json?v=" + CB);
+      var r = await fetch(bridgeUrl() + "/branding-search-index?v=" + CB + "&_=" + Date.now());
       if (r.ok) searchIndex = await r.json();
     } catch (eIdx) {
-      searchIndex = { by_tag: {} };
+      /* bridge offline lub stary most bez tej trasy */
     }
+    if (!searchIndex) searchIndex = { by_tag: {} };
     return searchIndex;
   }
 
@@ -603,6 +796,7 @@
   }
 
   function groupKeyVisualAssets(list) {
+    list = asAssetList(list);
     var byKey = {};
     var order = [];
     list.forEach(function (a) {
@@ -756,7 +950,7 @@
 
   var CURATED_COLLECTIONS = [
     { id: "grill26", label: "Grill 2026", when: "2026", search: "grill", tab: "campaigns" },
-    { id: "proteina", label: "Proteina — wszystko", search: "proteina" },
+    { id: "proteina", label: "Proteina", search: "proteina" },
     { id: "socialfilm", label: "Filmy social", tab: "social", media: "video" },
     { id: "slidery", label: "Slider sklepu", tab: "www", facet: "slider" },
     { id: "packshoty", label: "Packshoty produktów", tab: "packshots" },
@@ -804,6 +998,10 @@
       if (c.tab) map[facetKey(c.id)] = c.tab;
     });
     map["appearance:baner"] = "www";
+    map["channel:www"] = "www";
+    map["channel:meta"] = "social";
+    map["channel:instagram"] = "social";
+    map["channel:google"] = "campaigns";
     return map;
   })();
 
@@ -836,6 +1034,39 @@
     if (SECTION_MARKERS.www.test(p)) return "www";
     if (SECTION_MARKERS.brandbook.test(p)) return "brandbook";
     return "other";
+  }
+
+  function assetInSectionTab(a, tab) {
+    if (!a || !tab) return false;
+    if (tab === "packshots") {
+      if (!a.perspective) return false;
+      return a.size === "XL" || a.size === "L" || a.size === "S" || a.size === "S_SKLEP";
+    }
+    if (tab === "brandbook") {
+      var up = String(a.path || "").toUpperCase();
+      return (
+        up.indexOf("BRANDING") !== -1 ||
+        up.indexOf("BRAND BOOK") !== -1 ||
+        up.indexOf("BRANDBOOK") !== -1
+      );
+    }
+    return assetSectionId(a) === tab;
+  }
+
+  function showTagCounts() {
+    try {
+      return localStorage.getItem(TAG_COUNTS_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setShowTagCounts(on) {
+    try {
+      localStorage.setItem(TAG_COUNTS_KEY, on ? "1" : "0");
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   function sectionRelativeParts(path, sectionId) {
@@ -973,6 +1204,7 @@
   }
 
   function groupMarketingAssets(list) {
+    list = asAssetList(list);
     var byKey = {};
     var order = [];
     list.forEach(function (a) {
@@ -1012,6 +1244,16 @@
   }
 
   function assetBlobNorm(a) {
+    var extra = "";
+    if (window.DamAssetTaxonomy && DamAssetTaxonomy.isEffectiveTransparent && DamAssetTaxonomy.isEffectiveTransparent(a)) {
+      extra = " przezroczyste transparent bez tla tlo usuniete";
+    } else if (
+      window.DamAssetTaxonomy &&
+      DamAssetTaxonomy.isEffectiveWhite &&
+      DamAssetTaxonomy.isEffectiveWhite(a)
+    ) {
+      extra = " biale tlo white";
+    }
     return normTag(
       (a.search_blob || "") +
         " " +
@@ -1019,7 +1261,8 @@
         " " +
         (a.appearance_tags || []).join(" ") +
         " " +
-        (a.campaign_id || "")
+        (a.campaign_id || "") +
+        extra
     );
   }
 
@@ -1041,6 +1284,18 @@
   }
 
   function assetMatchesSearchQuery(a, q) {
+    if (productCorrelation && window.DamProductCorrelation) {
+      if (productCorrelation.productId) {
+        return DamProductCorrelation.brandingAssetMatches(
+          a,
+          productCorrelation.productId,
+          productCorrelation.tokens
+        );
+      }
+      if (productCorrelation.tokens && productCorrelation.tokens.length) {
+        return DamProductCorrelation.brandingAssetMatches(a, "", productCorrelation.tokens);
+      }
+    }
     if (!q) return true;
     var tokens = searchTokens(q);
     if (!tokens.length) return true;
@@ -1049,11 +1304,20 @@
     if (assocPids.length && (a.linked_product_ids || []).some(function (pid) { return assocPids.indexOf(pid) !== -1; })) {
       return true;
     }
+    if (window.DamProductCorrelation && /^[\d.\s]+$/.test(String(q).replace(/\s/g, ""))) {
+      var idxIds = DamProductCorrelation.resolveProductIdsFromQuery(q);
+      if (idxIds.length && (a.linked_product_ids || []).some(function (pid) { return idxIds.indexOf(pid) !== -1; })) {
+        return true;
+      }
+      if (DamProductCorrelation.brandingAssetMatches(a, idxIds[0] || "", DamProductCorrelation.productIndexTokens(q))) {
+        return true;
+      }
+    }
     var byTag = (searchIndex && searchIndex.by_tag) || {};
     tokens.forEach(function (t) {
       var nt = normTag(t);
       Object.keys(byTag).forEach(function (tag) {
-        if (normTag(tag).indexOf(nt) !== -1 && byTag[tag].indexOf(a.id) !== -1) {
+        if (normTag(tag).indexOf(nt) !== -1 && (byTag[tag] || []).indexOf(a.id) !== -1) {
           blob += " " + normTag(tag);
         }
       });
@@ -1188,7 +1452,7 @@
     renderActiveSection();
   }
 
-  function renderContextBar() {
+  function renderContextBar(displayCount) {
     var bar = document.getElementById("damBrandingContextBar");
     var chipsHost = document.getElementById("damBrandingContextChips");
     if (!bar) return;
@@ -1236,6 +1500,22 @@
         );
       })
       .join("");
+
+    var countEl = bar.querySelector(".dam-branding-context__count");
+    if (typeof displayCount === "number") {
+      if (!countEl) {
+        countEl = document.createElement("span");
+        countEl.className = "dam-branding-context__count";
+        countEl.setAttribute("aria-live", "polite");
+        bar.appendChild(countEl);
+      }
+      countEl.textContent =
+        displayCount === 0
+          ? "Brak elementów do wyświetlenia"
+          : "Pokazano " + displayCount + (displayCount === 1 ? " element" : " elementów");
+    } else if (countEl) {
+      countEl.remove();
+    }
 
     chipsHost.querySelectorAll("[data-ctx-idx]").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -1384,23 +1664,19 @@
   }
 
   function assetsForSectionTab(tab) {
+    var corrActive = productCorrelation && productCorrelation.productId;
     var all = filteredAssets({
-      keyVisuale: tab === "packshots",
-      brandbookOnly: tab === "brandbook",
+      keyVisuale: tab === "packshots" && !corrActive,
+      brandbookOnly: tab === "brandbook" && !corrActive,
     });
-    if (tab === "packshots") {
-      all = all.filter(function (a) {
-        return a.perspective && (a.size === "XL" || a.size === "L" || a.size === "S" || a.size === "S_SKLEP");
-      });
-      return all;
-    }
-    if (tab === "brandbook") return all;
+    if (corrActive) return all;
     return all.filter(function (a) {
-      return assetSectionId(a) === tab;
+      return assetInSectionTab(a, tab);
     });
   }
 
   function filterByDiscovery(list) {
+    list = asAssetList(list);
     if (!discoveryWhen) return list;
     return list.filter(function (a) {
       return filterByWhen(a, discoveryWhen);
@@ -1413,7 +1689,8 @@
   }
 
   function renderActiveSection() {
-    var tab = currentSectionTab();
+    try {
+      var tab = currentSectionTab();
     var sectionPanel = document.getElementById("damBrandingPanelSection");
     var brandbookPanel = document.getElementById("damBrandingPanelBrandbook");
     if (sectionPanel) sectionPanel.hidden = tab === "brandbook";
@@ -1428,9 +1705,9 @@
     if (descEl) descEl.textContent = SECTION_DESCS[tab] || "";
 
     var sectionAll = assetsForSectionTab(tab);
-    renderContextBar();
     renderDiscoveryPanel(tab);
     var list = filterByDiscovery(sectionAll);
+    renderContextBar(list.length);
 
     var gridOpts = { groupMode: tab === "packshots" ? "keyvisuale" : "project" };
     var grid = document.getElementById("damBrandingSectionGrid");
@@ -1439,6 +1716,16 @@
       : "Brak materiałów — zmień filtr „Kiedy”, tag u góry albo wpisz słowo kluczowe.";
     var shown = renderAssetGrid(grid, list, GRID_LIMIT_TAB, emptyMsg, sectionAll.length, gridOpts);
     setStatusEl(document.getElementById("damBrandingStatus"), shown, list.length, GRID_LIMIT_TAB);
+    } catch (eRender) {
+      console.error("[DamBranding] renderActiveSection", eRender);
+      var errGrid = document.getElementById("damBrandingSectionGrid");
+      if (errGrid) {
+        errGrid.innerHTML =
+          '<div class="dam-branding-empty" role="alert"><h3 class="dam-branding-empty__title">Błąd wyświetlania</h3><p class="dam-branding-empty__desc">' +
+          esc(eRender.message || String(eRender)) +
+          "</p></div>";
+      }
+    }
   }
 
   function groupDisplayLabel(assets) {
@@ -1458,6 +1745,7 @@
 
   function groupBrandingAssets(list, opts) {
     opts = opts || {};
+    list = asAssetList(list);
     if (opts.groupMode === "keyvisuale") return groupKeyVisualAssets(list);
     if (opts.groupMode === "project") return groupMarketingAssets(list);
     var byKey = {};
@@ -1628,6 +1916,19 @@
       "kolekcje",
       "co",
     ];
+    var allChipKeys = [];
+    var seenChipKeys = {};
+    GROUP_ORDER.forEach(function (g) {
+      (groups[g] || []).forEach(function (c) {
+        if (!c.key || seenChipKeys[c.key]) return;
+        seenChipKeys[c.key] = true;
+        allChipKeys.push(c.key);
+      });
+    });
+    var sectionTab = currentSectionTab();
+    var facetCounts = computeFacetCounts(allChipKeys, sectionTab);
+    var globalFacetCounts = computeFacetCounts(allChipKeys, sectionTab, { global: true });
+    var showCounts = showTagCounts();
     var activeMap = buildAssocActiveMap();
     var buildRow = window.DamTagBar && DamTagBar.buildGroupRow;
     var html = '<div class="dam-tag-groups__inner">';
@@ -1642,23 +1943,40 @@
         label: FILTER_GROUP_LABELS[g] || g,
         className: rowClass,
         chips: groups[g].map(function (c) {
-          return { key: c.key, label: c.label };
+          var cnt = facetCounts[c.key] || 0;
+          var globalCnt = globalFacetCounts[c.key] || 0;
+          return {
+            key: c.key,
+            label: c.label,
+            count: cnt,
+            empty: globalCnt === 0,
+          };
         }),
         activeMap: activeMap,
         expandedGroups: tagFilterExpanded,
         rowLimit: TAG_FILTER_ROW_LIMIT,
         pillHtml: function (chip, active) {
           var badgeCls = FILTER_BADGE_CLASS[g] || "dam-viz-badge--subcat";
+          var cnt = typeof chip.count === "number" ? chip.count : facetCounts[chip.key] || 0;
+          var globalCnt = globalFacetCounts[chip.key] || 0;
+          var countHtml = showCounts
+            ? ' <span class="dam-tag-count" aria-hidden="true">(' + cnt + ")</span>"
+            : "";
           return (
             '<button type="button" class="dam-viz-badge dam-badge-tag ' +
             badgeCls +
             (active ? " is-active" : "") +
+            (globalCnt === 0 ? " is-empty-count" : "") +
+            (showCounts ? " has-tag-count" : "") +
             '" data-tag-key="' +
             esc(chip.key) +
             '" aria-pressed="' +
             (active ? "true" : "false") +
-            '">' +
+            '"' +
+            (globalCnt === 0 ? " disabled" : "") +
+            ">" +
             esc(chip.label) +
+            countHtml +
             "</button>"
           );
         },
@@ -1692,6 +2010,9 @@
         else {
           activeTagFilters[key] = true;
           tabSwitch = tabForFacetKey(key);
+          if (!tabSwitch && (computeFacetCounts([key], currentSectionTab())[key] || 0) === 0) {
+            tabSwitch = bestTabForTagKey(key);
+          }
           if (key.indexOf("facet:") === 0) setSearchQuery("");
         }
         renderTagFilters();
@@ -1726,7 +2047,17 @@
   window.__damBrandingVideoThumbFallback = function (vid) {
     if (!vid) return;
     var wrap = vid.closest(".dam-branding-thumb__video-wrap");
-    if (!wrap || wrap.dataset.fallbackDone === "1") return;
+    if (!wrap) return;
+    var tried = Number(wrap.dataset.streamTry || "0");
+    var path = wrap.getAttribute("data-path") || vid.getAttribute("data-path") || "";
+    if (tried < 1 && path) {
+      wrap.dataset.streamTry = "1";
+      vid.removeAttribute("poster");
+      vid.src = rawMediaUrl(path) + "&_retry=1";
+      vid.load();
+      return;
+    }
+    if (wrap.dataset.fallbackDone === "1") return;
     wrap.dataset.fallbackDone = "1";
     wrap.innerHTML =
       '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon">' +
@@ -1746,10 +2077,24 @@
 
   async function loadIndex() {
     if (index) return index;
-    var r = await fetch("data/branding-index.json?v=" + CB + "&_=" + Date.now());
-    if (!r.ok) throw new Error("branding-index.json");
-    index = await r.json();
-    return index;
+    setBootStatus("Ładowanie indeksu branding…");
+    var urls = [
+      "data/branding-index.json?v=" + CB + "&_=" + Date.now(),
+      bridgeUrl() + "/branding-index?v=" + CB + "&_=" + Date.now(),
+    ];
+    var lastErr = null;
+    for (var u = 0; u < urls.length; u++) {
+      try {
+        var r = await fetch(urls[u]);
+        if (!r.ok) continue;
+        setBootStatus("Przetwarzanie indeksu…");
+        index = await r.json();
+        return index;
+      } catch (eLoad) {
+        lastErr = eLoad;
+      }
+    }
+    throw lastErr || new Error("branding-index");
   }
 
   async function loadTokens() {
@@ -1797,10 +2142,21 @@
     extra = extra || {};
     var q = elVal("damBrandingSearch").toLowerCase();
     var keyOnly = !!extra.keyVisuale;
+    var skipTagKey = extra.skipTagKey || "";
 
     var list = (index.assets || []).filter(function (a) {
       if (!includeArchive() && isArchived(a)) return false;
-      if (!assetMatchesActiveTags(a)) return false;
+      if (!assetMatchesDateRange(a)) return false;
+      if (skipTagKey) {
+        var keys = Object.keys(activeTagFilters).filter(function (k) {
+          return k !== skipTagKey && activeTagFilters[k];
+        });
+        for (var i = 0; i < keys.length; i++) {
+          if (!assetMatchesTagKey(a, keys[i])) return false;
+        }
+      } else if (!assetMatchesActiveTags(a)) {
+        return false;
+      }
       if (graphicsOnlyActive() && !activeTagFilters["media:document"] && a.media_type === "document") {
         return false;
       }
@@ -1822,7 +2178,64 @@
       }
       return true;
     });
-    return sortByRelevance(list, q);
+    if (extra.forCounts) return list;
+    return sortAssetsForDisplay(list, q);
+  }
+
+  function computeFacetCounts(chipKeys, sectionTab, opts) {
+    opts = opts || {};
+    var counts = {};
+    var i;
+    for (i = 0; i < chipKeys.length; i++) counts[chipKeys[i]] = 0;
+    if (!index || !index.assets || !chipKeys.length) return counts;
+    var activeKeys = Object.keys(activeTagFilters).filter(function (k) {
+      return !!activeTagFilters[k];
+    });
+    var q = elVal("damBrandingSearch").toLowerCase();
+    var tab = opts.global ? "" : sectionTab || currentSectionTab();
+    var assets = index.assets;
+    for (i = 0; i < assets.length; i++) {
+      var a = assets[i];
+      if (!includeArchive() && isArchived(a)) continue;
+      if (!assetMatchesDateRange(a)) continue;
+      if (tab && !assetInSectionTab(a, tab)) continue;
+      if (graphicsOnlyActive() && !activeTagFilters["media:document"] && a.media_type === "document") {
+        continue;
+      }
+      if (q && !assetMatchesSearchQuery(a, q)) continue;
+      var match = {};
+      var k;
+      for (k = 0; k < chipKeys.length; k++) {
+        match[chipKeys[k]] = assetMatchesTagKey(a, chipKeys[k]);
+      }
+      for (k = 0; k < chipKeys.length; k++) {
+        var key = chipKeys[k];
+        var ok = true;
+        for (var j = 0; j < activeKeys.length; j++) {
+          if (activeKeys[j] === key) continue;
+          if (!assetMatchesTagKey(a, activeKeys[j])) {
+            ok = false;
+            break;
+          }
+        }
+        if (ok && match[key]) counts[key] += 1;
+      }
+    }
+    return counts;
+  }
+
+  function bestTabForTagKey(key) {
+    var tabs = ["packshots", "www", "campaigns", "social", "brandbook"];
+    var best = "";
+    var bestN = 0;
+    tabs.forEach(function (tab) {
+      var n = computeFacetCounts([key], tab)[key] || 0;
+      if (n > bestN) {
+        bestN = n;
+        best = tab;
+      }
+    });
+    return best;
   }
 
   function filteredAssets(opts) {
@@ -1847,11 +2260,74 @@
     });
     if (ch.indexOf(key) !== -1) return true;
     var p = String(a.path || "").toUpperCase();
-    if (key === "www" && (p.indexOf("STRONY WWW") !== -1 || p.indexOf("E-COMMERCE") !== -1)) return true;
-    if (key === "meta" && p.indexOf("SOCIAL") !== -1) return true;
-    if (key === "instagram" && p.indexOf("SOCIAL") !== -1) return true;
-    if (key === "google" && p.indexOf("GOOGLE") !== -1) return true;
+    if (key === "www" && SECTION_MARKERS.www.test(p)) return true;
+    if (key === "meta" && SECTION_MARKERS.social.test(p)) return true;
+    if (key === "instagram" && SECTION_MARKERS.social.test(p)) return true;
+    if (key === "google" && (p.indexOf("GOOGLE") !== -1 || SECTION_MARKERS.campaigns.test(p))) return true;
     return (a.search_blob || "").toLowerCase().indexOf(key) !== -1;
+  }
+
+  function marketingDisplayId(asset) {
+    if (window.DamMarketingId && typeof window.DamMarketingId.format === "function") {
+      return window.DamMarketingId.format(asset);
+    }
+    return asset && asset.id ? asset.id : "";
+  }
+
+  function brandingCardSubtitle(a, title) {
+    var tags = (a && a.appearance_tags) || [];
+    var t = String(title || "").trim();
+    tags.some(function (tag) {
+      var k = normTag(tag);
+      if (!k || k.length < 3) return false;
+      if (t && t.toLowerCase().indexOf(k) >= 0) return false;
+      return true;
+    });
+    var pick = tags.find(function (tag) {
+      var k = normTag(tag);
+      return k && k.length > 2 && (!t || t.toLowerCase().indexOf(k) < 0);
+    });
+    if (!pick) return "";
+    return (
+      '<span class="dam-viz-card__title-pl"><span class="dam-viz-card__title-pl-paren">( </span>' +
+      '<span class="dam-viz-card__title-pl-text">' +
+      esc(pick) +
+      '</span><span class="dam-viz-card__title-pl-paren"> )</span></span>'
+    );
+  }
+
+  function brandingCardTypeMeta(a) {
+    if (!a) return "";
+    if (a.media_type === "video") return "Wideo";
+    if (/slider/i.test(a.asset_role || "") || /slider/i.test(a.name || "")) return "Slider";
+    if (a.asset_role === "banner") return "Baner";
+    if (a.asset_role === "key_visual") return "Key visual";
+    if (/\.gif$/i.test(a.name || "")) return "GIF";
+    if (a.media_type === "vector") return "Wektor";
+    return "Obraz";
+  }
+
+  function brandingCardActionsHtml(a) {
+    var path = (a && a.path) || "";
+    return (
+      '<div class="dam-viz-card__actions">' +
+      '<button type="button" class="geex-btn geex-btn--primary dam-btn-icon dam-branding-preview-btn" data-id="' +
+      esc(a.id) +
+      '" title="Podgląd" data-dam-tip="Otwiera podgląd materiału">' +
+      '<i class="uil uil-eye" aria-hidden="true"></i><span>Podgląd</span></button>' +
+      '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-viz-win-explorer-btn dam-win-btn" data-path="' +
+      esc(path) +
+      '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows">' +
+      (window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
+        ? window.DamIcons.winExplorerSvg()
+        : '<i class="uil uil-folder" aria-hidden="true"></i>') +
+      "</button>" +
+      '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-branding-share-btn" data-path="' +
+      esc(path) +
+      '" aria-label="Udostępnij" title="Udostępnij" data-dam-tip="Udostępnij plik przez Synology Drive">' +
+      '<i class="uil uil-share-alt" aria-hidden="true"></i></button>' +
+      "</div>"
+    );
   }
 
   function badgesHtml(a, extraTags) {
@@ -1870,6 +2346,19 @@
       maxPerKind: 5,
       maxTotal: 14,
     });
+    if (a && a.id) {
+      var displayId = marketingDisplayId(a);
+      html +=
+        '<span class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip" data-tag-value="' +
+        esc(a.id) +
+        '" data-marketing-id="' +
+        esc(displayId) +
+        '" title="ID marketingowe: ' +
+        esc(displayId) +
+        '">' +
+        esc(displayId) +
+        "</span>";
+    }
     if (extraTags && extraTags.length) {
       extraTags.forEach(function (tag) {
         html +=
@@ -1903,12 +2392,20 @@
   function thumbHtml(a) {
     if (a.media_type === "video") {
       var path = a.path || "";
-      var poster = mediaUrl(path, a);
+      var poster =
+        bridgeUrl() +
+        "/media?path=" +
+        encodeURIComponent(localMediaPath(path)) +
+        "&preview=1";
       var stream = rawMediaUrl(path);
       return (
-        '<div class="dam-branding-thumb__video-wrap">' +
+        '<div class="dam-branding-thumb__video-wrap" data-path="' +
+        esc(path) +
+        '">' +
         '<video class="dam-viz-thumb__img dam-branding-thumb__video-el" muted playsinline preload="metadata" ' +
-        'poster="' +
+        'data-path="' +
+        esc(path) +
+        '" poster="' +
         esc(poster) +
         '" src="' +
         esc(stream) +
@@ -1966,6 +2463,8 @@
             })
             .join(",")
         : "";
+    var displayTitle = cardOpts.title || a.name;
+    var metaLine = cardOpts.meta != null ? cardOpts.meta : brandingCardTypeMeta(a);
     return (
       '<article class="dam-viz-card dam-branding-card dam-viz-card--clickable' +
       (tileCls ? " " + tileCls : "") +
@@ -1982,15 +2481,17 @@
       badgesHtml(a) +
       "</div>" +
       '<h5 class="dam-viz-card__title" title="' +
-      esc(title) +
+      esc(displayTitle) +
       '">' +
-      esc(title) +
+      esc(displayTitle) +
+      brandingCardSubtitle(a, displayTitle) +
       "</h5>" +
       '<p class="dam-viz-card__meta' +
-      (meta ? "" : " dam-viz-card__meta--empty") +
+      (metaLine ? "" : " dam-viz-card__meta--empty") +
       '">' +
-      esc(meta) +
+      esc(metaLine || hint || a.sku || "Materiał") +
       "</p>" +
+      brandingCardActionsHtml(a) +
       "</div></article>"
     );
   }
@@ -2004,11 +2505,9 @@
     if (!primary) return "";
     var hint = folderHint(primary.path);
     var tileCls =
-      window.DamBadges && typeof window.DamBadges.brandingGradientTileClassForAssets === "function"
-        ? window.DamBadges.brandingGradientTileClassForAssets(assets)
-        : window.DamBadges && typeof window.DamBadges.brandingGradientTileClass === "function"
-          ? window.DamBadges.brandingGradientTileClass(primary)
-          : "";
+      window.DamBadges && typeof window.DamBadges.brandingGradientTileClass === "function"
+        ? window.DamBadges.brandingGradientTileClass(primary)
+        : "";
     var ids = assets
       .map(function (x) {
         return x.id;
@@ -2026,6 +2525,8 @@
       : isKv
         ? "Kliknij, aby przejrzeć wizualizacje produktu"
         : "Kliknij, aby przejrzeć warianty logo";
+    var groupTitle = entry.label || primary.name;
+    var groupMeta = meta || brandingCardTypeMeta(primary);
     return (
       '<article class="dam-viz-card dam-branding-card dam-branding-card--group dam-viz-card--clickable' +
       (tileCls ? " " + tileCls : "") +
@@ -2044,36 +2545,41 @@
       badgesHtml(primary, [variantLabel]) +
       "</div>" +
       '<h5 class="dam-viz-card__title" title="' +
-      esc(entry.label || primary.name) +
+      esc(groupTitle) +
       '">' +
-      esc(entry.label || primary.name) +
+      esc(groupTitle) +
+      brandingCardSubtitle(primary, groupTitle) +
       "</h5>" +
       '<p class="dam-viz-card__meta' +
-      (meta ? "" : " dam-viz-card__meta--empty") +
+      (groupMeta ? "" : " dam-viz-card__meta--empty") +
       '">' +
-      esc(meta) +
+      esc(groupMeta) +
       "</p>" +
+      brandingCardActionsHtml(primary) +
       "</div></article>"
     );
   }
 
   function gridEntryHtml(entry, gridOpts) {
     gridOpts = gridOpts || {};
+    if (!entry) return "";
     if (entry.type === "group") return groupCardHtml(entry, gridOpts);
-    var a = entry.assets[0];
+    var assets = asAssetList(entry.assets);
+    if (!assets.length) return "";
+    var a = assets[0];
     if (gridOpts.groupMode === "keyvisuale") {
-      return cardHtml(a, entry.assets, {
+      return cardHtml(a, assets, {
         title: keyVisualGroupLabel([a]),
         meta: keyVisualGroupMeta([a]) || folderHint(a.path) || a.sku,
       });
     }
     if (gridOpts.groupMode === "project") {
-      return cardHtml(a, entry.assets, {
+      return cardHtml(a, assets, {
         title: marketingGroupLabel([a]),
-        meta: marketingGroupMeta([a]) || folderHint(a.path),
+        meta: marketingGroupMeta(assets) || folderHint(a.path),
       });
     }
-    return cardHtml(a, entry.assets);
+    return cardHtml(a, assets);
   }
 
   function activeFilterHint() {
@@ -2090,6 +2596,9 @@
     if (discoveryWhen) {
       var whenLbl = (WHEN_CHIPS.filter(function (w) { return w.id === discoveryWhen; })[0] || {}).label;
       if (whenLbl) parts.push("kiedy: " + whenLbl);
+    }
+    if (productCorrelation && productCorrelation.productId) {
+      parts.push("produkt: " + productCorrelation.productId);
     }
     return parts.length ? " · filtr: " + parts.join(", ") : "";
   }
@@ -2112,20 +2621,60 @@
       activeFilterHint();
   }
 
+  function activeFilterLabels() {
+    var parts = [];
+    var q = elVal("damBrandingSearch");
+    if (q) parts.push("Szukaj: " + q);
+    Object.keys(activeTagFilters).forEach(function (key) {
+      if (!activeTagFilters[key]) return;
+      var label = key.split(":").slice(1).join(":");
+      parts.push(label);
+    });
+    if (graphicsOnlyActive() && !activeTagFilters["media:document"]) parts.push("Tylko grafiki");
+    if (includeArchive()) parts.push("Archiwum");
+    if (discoveryWhen) {
+      var whenLbl = (WHEN_CHIPS.filter(function (w) { return w.id === discoveryWhen; })[0] || {}).label;
+      if (whenLbl) parts.push("Kiedy: " + whenLbl);
+    }
+    var bounds = dateRangeBounds();
+    if (bounds.from || bounds.to) parts.push("Zakres dat");
+    return parts;
+  }
+
   function emptyGridMessage(defaultMsg, totalBeforeLimit) {
-    if (totalBeforeLimit > 0) return esc(defaultMsg);
-    var hint = activeFilterHint();
-    if (!hint) return esc(defaultMsg);
+    if (totalBeforeLimit > 0) {
+      return (
+        '<div class="dam-branding-empty dam-branding-empty--limited" role="status">' +
+        '<p class="dam-branding-empty__desc">' +
+        esc(defaultMsg) +
+        "</p></div>"
+      );
+    }
+    var filters = activeFilterLabels();
+    var filterHtml = filters.length
+      ? '<ul class="dam-branding-empty__filters">' +
+        filters
+          .map(function (f) {
+            return "<li>" + esc(f) + "</li>";
+          })
+          .join("") +
+        "</ul>"
+      : "";
     return (
-      "Brak wyników przy aktywnym filtrze." +
-      esc(hint) +
-      ' <button type="button" class="dam-branding-clear-filters">Wyczyść filtry</button>'
+      '<div class="dam-branding-empty" role="status">' +
+      '<div class="dam-branding-empty__icon" aria-hidden="true"><i class="uil uil-image-slash"></i></div>' +
+      '<h3 class="dam-branding-empty__title">Brak wyników</h3>' +
+      '<p class="dam-branding-empty__desc">Żaden materiał nie pasuje do aktywnych filtrów w tej sekcji.</p>' +
+      filterHtml +
+      '<button type="button" class="geex-btn geex-btn--primary-transparent dam-branding-clear-filters">Wyczyść filtry</button>' +
+      "</div>"
     );
   }
 
   function renderAssetGrid(grid, list, limit, emptyMsg, totalCount, gridOpts) {
-    if (!grid) return;
+    if (!grid) return [];
     gridOpts = gridOpts || {};
+    list = asAssetList(list);
     var grouped = groupBrandingAssets(list, gridOpts);
     var slice = grouped.slice(0, limit);
     var total = totalCount != null ? totalCount : list.length;
@@ -2135,7 +2684,7 @@
             return gridEntryHtml(entry, gridOpts);
           })
           .join("")
-      : '<p class="dam-branding-muted">' + emptyGridMessage(emptyMsg || "Brak wyników dla wybranych filtrów.", total) + "</p>";
+      : '<div class="dam-branding-empty-wrap">' + emptyGridMessage(emptyMsg || "Brak wyników dla wybranych filtrów.", total) + "</div>";
     var clearBtn = grid.querySelector(".dam-branding-clear-filters");
     if (clearBtn) {
       clearBtn.addEventListener("click", clearAllBrandingFilters);
@@ -2165,6 +2714,7 @@
     grid.querySelectorAll(".dam-branding-card").forEach(function (btn) {
       btn.addEventListener("click", function (ev) {
         if (ev.target.closest(".dam-viz-badge")) return;
+        if (ev.target.closest(".dam-viz-card__actions")) return;
         var id = btn.getAttribute("data-id");
         var ids = (btn.getAttribute("data-group-ids") || "").split(",").filter(Boolean);
         var siblings = null;
@@ -2178,6 +2728,55 @@
           }).filter(Boolean);
         }
         openModal(id, siblings);
+      });
+    });
+
+    grid.querySelectorAll(".dam-branding-preview-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        var card = btn.closest(".dam-branding-card");
+        if (!card) return;
+        var id = card.getAttribute("data-id");
+        var ids = (card.getAttribute("data-group-ids") || "").split(",").filter(Boolean);
+        var siblings = null;
+        if (ids.length > 1 && index && index.assets) {
+          var map = {};
+          (index.assets || []).forEach(function (a) {
+            map[a.id] = a;
+          });
+          siblings = ids.map(function (gid) {
+            return map[gid];
+          }).filter(Boolean);
+        }
+        openModal(id, siblings);
+      });
+    });
+
+    grid.querySelectorAll(".dam-viz-win-explorer-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        var path = btn.getAttribute("data-path") || "";
+        if (!path) return;
+        if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+          window.DamPaths.openFolderInExplorer(path);
+          return;
+        }
+        if (window.DamPaths) window.DamPaths.revealInExplorer(path);
+      });
+    });
+
+    grid.querySelectorAll(".dam-branding-share-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        var path = btn.getAttribute("data-path") || "";
+        var syEnabled = localStorage.getItem("dam_synology_enabled") !== "false";
+        if (!syEnabled) {
+          if (window.DamToast) window.DamToast.show("Włącz Synology Drive w Ustawieniach");
+          return;
+        }
+        if (window.DamPaths && typeof window.DamPaths.shareViaSynology === "function") {
+          window.DamPaths.shareViaSynology(path);
+        }
       });
     });
   }
@@ -2553,13 +3152,13 @@
     tab = normalizeTab(tab);
     if (!opts.keepDiscovery) {
       discoveryWhen = "";
-      renderTagFilters();
     }
     document.querySelectorAll(".dam-branding-tab").forEach(function (b) {
       var on = b.getAttribute("data-tab") === tab;
       b.classList.toggle("is-active", on);
       b.setAttribute("aria-selected", on ? "true" : "false");
     });
+    renderTagFilters();
     if (!opts.skipHash) {
       var nextHash = "#" + hashForTab(tab);
       if (location.hash !== nextHash) {
@@ -2578,19 +3177,46 @@
   }
 
   function bindFilters() {
-    ["damBrandingSearch", "damBrandingGraphicsOnly"].forEach(function (id) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      var handler = function () {
-        renderTagFilters();
-        renderActiveSection();
-      };
-      el.addEventListener("input", handler);
-      el.addEventListener("change", handler);
-    });
+    ["damBrandingSearch", "damBrandingGraphicsOnly", "damBrandingDateFrom", "damBrandingDateTo", "damBrandingSort"].forEach(
+      function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var handler = function () {
+          if (id === "damBrandingDateFrom" || id === "damBrandingDateTo") {
+            datePresetActive = "";
+            syncDatePresetButtons();
+          }
+          renderTagFilters();
+          renderActiveSection();
+        };
+        el.addEventListener("input", handler);
+        el.addEventListener("change", handler);
+      }
+    );
     var arch = document.getElementById("damBrandingIncludeArchive");
     if (arch) {
       arch.addEventListener("change", function () {
+        renderTagFilters();
+        renderActiveSection();
+      });
+    }
+    var tagCounts = document.getElementById("damBrandingTagCounts");
+    if (tagCounts) {
+      tagCounts.checked = showTagCounts();
+      tagCounts.addEventListener("change", function () {
+        setShowTagCounts(tagCounts.checked);
+        renderTagFilters();
+      });
+    }
+    var presets = document.getElementById("damBrandingDatePresets");
+    if (presets) {
+      presets.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-preset]");
+        if (!btn || !presets.contains(btn)) return;
+        var p = btn.getAttribute("data-preset") || "";
+        if (datePresetActive === p) applyDatePreset("");
+        else applyDatePreset(p);
+        renderTagFilters();
         renderActiveSection();
       });
     }
@@ -2606,13 +3232,11 @@
 
   async function boot() {
     try {
-      await loadIndex();
-      await loadSearchIndex();
-      await loadAssociations();
-      await loadTokens();
-      renderTagFilters();
       bindTabs();
       bindFilters();
+      var searchPromise = loadSearchIndex();
+      await Promise.all([loadIndex(), loadAssociations(), loadTokens()]);
+      renderTagFilters();
       var rebuild = document.getElementById("damBrandingRebuild");
       if (rebuild) {
         rebuild.addEventListener("click", async function () {
@@ -2635,9 +3259,18 @@
       }
       var params = new URLSearchParams(location.search);
       var qs = params.get("q");
-      if (qs) {
+      var productParam = params.get("product");
+      await searchPromise;
+      if (window.DamProductCorrelation) {
+        await DamProductCorrelation.ensureSearchIndex();
+        productCorrelation = DamProductCorrelation.resolveFromUrl(productParam, qs);
+      }
+      if (qs || productParam) {
         var search = document.getElementById("damBrandingSearch");
-        if (search) search.value = qs;
+        if (search) {
+          search.value =
+            (productCorrelation && productCorrelation.displayQuery) || qs || productParam || "";
+        }
       }
       var camp = params.get("campaign");
       if (camp) selectedCampaignId = camp;

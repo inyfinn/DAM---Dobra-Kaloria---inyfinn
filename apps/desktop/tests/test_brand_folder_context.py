@@ -7,6 +7,7 @@ SCRIPTS = Path(__file__).resolve().parents[2] / "web" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from brand_folder_context import (  # noqa: E402
+    apply_global_product_links,
     enrich_folder_groups,
     extract_theme_tags,
     is_legacy_marketing_archive,
@@ -318,6 +319,29 @@ class BrandFolderContextTest(unittest.TestCase):
             "promo - 1080 x 1920.jpg",
         ]
         self.assertTrue(should_merge_folder_rasters(path, len(names), names))
+
+    def test_linked_product_id_derived_from_variant(self):
+        file_index = {
+            "products": [
+                {
+                    "id": "babka-cytrynowa-nerkowcowy",
+                    "display_name": "BABKA CYTRYNOWA",
+                    "indexes": ["6300684.01"],
+                    "revisions": [{"index": "6300684.01", "index_base": "6300684"}],
+                }
+            ],
+            "viz_latest": [],
+        }
+        asset = {
+            "sku": "6300684.01",
+            "name": "Babka cytrynowa slider.jpg",
+            "path": r"X:/Marketing/- POLSKA/06 - STRONY WWW/Babka Cytrynowa/Babka cytrynowa slider.jpg",
+            "linked_product_ids": [],
+        }
+        apply_global_product_links(asset, file_index)
+        self.assertEqual(asset.get("linked_variant_ids"), ["6300684.01"])
+        self.assertEqual(asset.get("linked_product_id"), "babka-cytrynowa-nerkowcowy")
+        self.assertIn("babka-cytrynowa-nerkowcowy", asset.get("linked_product_ids") or [])
 
 
 if __name__ == "__main__":

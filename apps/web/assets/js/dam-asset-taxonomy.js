@@ -15,7 +15,7 @@
 
   var FORMAT_TECH_LABELS = {
     raster: "Raster",
-    transparent: "Tło przezroczyste",
+    transparent: "Przezroczyste tło",
     white: "Tło białe",
     editable: "Edytowalny",
   };
@@ -69,6 +69,45 @@
     "icon",
   ];
 
+  /** Niższa liczba = wyżej w siatce (częściej używane materiały najpierw). */
+  var DISPLAY_PRIORITY = {
+    ecommerce_ad: 1,
+    web_banner: 1,
+    web_hero_slider: 1,
+    web_product_tile: 1,
+    web_bundle_tile: 1,
+    social_asset: 1,
+    key_visual: 2,
+    packshot: 2,
+    pos_material: 2,
+    outdoor_material: 2,
+    product_photo: 3,
+    social_video: 3,
+    brand_asset: 3,
+    artwork_source: 3,
+    print_ready: 3,
+    document_spec: 4,
+    packaging_die: 4,
+    bulk_packaging_spec: 4,
+    mockup_template: 4,
+    private_label_artwork: 4,
+    icon: 4,
+  };
+
+  function displayPriority(roleOrAsset) {
+    var code =
+      typeof roleOrAsset === "string"
+        ? roleOrAsset
+        : (roleOrAsset && roleOrAsset.asset_role) || "";
+    var mt =
+      typeof roleOrAsset === "object" && roleOrAsset
+        ? String(roleOrAsset.media_type || "").toLowerCase()
+        : "";
+    if (DISPLAY_PRIORITY[code] != null) return DISPLAY_PRIORITY[code];
+    if (mt === "video") return 3;
+    return 5;
+  }
+
   function normalizeMediaType(mt) {
     var m = String(mt || "").toLowerCase();
     if (m === "raster") return "image";
@@ -115,16 +154,46 @@
     return m === "image" || m === "vector" || m === "source" || m === "video";
   }
 
+  /** PNG/WebP bez skanu pikseli — tymczasowo traktuj jako przezroczyste (do dopracowania). */
+  var ALPHA_RASTER_EXT = /\.(png|webp)$/i;
+
+  function effectiveBackground(asset) {
+    if (!asset) return null;
+    var bg = asset.background;
+    if (bg === "white" || bg === "transparent") return bg;
+    var fts = asset.format_technical || [];
+    if (fts.indexOf("white") !== -1) return "white";
+    if (fts.indexOf("transparent") !== -1) return "transparent";
+    var name = String(asset.name || asset.path || "");
+    if (ALPHA_RASTER_EXT.test(name) && normalizeMediaType(asset.media_type) === "image") {
+      return "transparent";
+    }
+    return bg || null;
+  }
+
+  function isEffectiveTransparent(asset) {
+    return effectiveBackground(asset) === "transparent";
+  }
+
+  function isEffectiveWhite(asset) {
+    return effectiveBackground(asset) === "white";
+  }
+
   global.DamAssetTaxonomy = {
     MEDIA_TYPE_LABELS: MEDIA_TYPE_LABELS,
     FORMAT_TECH_LABELS: FORMAT_TECH_LABELS,
     ASSET_ROLE_LABELS: ASSET_ROLE_LABELS,
     ASSET_ROLE_ORDER: ASSET_ROLE_ORDER,
+    DISPLAY_PRIORITY: DISPLAY_PRIORITY,
     normalizeMediaType: normalizeMediaType,
     mediaTypeLabel: mediaTypeLabel,
     formatTechLabel: formatTechLabel,
     assetRoleLabel: assetRoleLabel,
     assetRoleOptions: assetRoleOptions,
+    displayPriority: displayPriority,
     isGraphicMediaType: isGraphicMediaType,
+    effectiveBackground: effectiveBackground,
+    isEffectiveTransparent: isEffectiveTransparent,
+    isEffectiveWhite: isEffectiveWhite,
   };
 })(typeof window !== "undefined" ? window : globalThis);

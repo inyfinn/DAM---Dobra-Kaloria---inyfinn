@@ -2402,8 +2402,8 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   display: inline-flex;
   align-items: center;
   font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
-  font-weight: 500;
-  padding: 5px 11px;
+  font-weight: 400;
+  padding: 2px 8px;
   border-radius: 999px;
   letter-spacing: 0.01em;
   line-height: 1.25;
@@ -4030,6 +4030,55 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-prod-row__lifecycle {
   margin-top: 8px;
 }
+.dam-lifecycle-history {
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(70, 66, 85, 0.04);
+  border: 1px solid rgba(70, 66, 85, 0.08);
+}
+
+.dam-lifecycle-history__title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b8d97;
+  margin-bottom: 4px;
+}
+
+.dam-lifecycle-history__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dam-lifecycle-history__list li {
+  font-size: 11px;
+  font-weight: 400;
+  color: #4a4860;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  line-height: 1.35;
+}
+
+.dam-lifecycle-history__when {
+  font-variant-numeric: tabular-nums;
+  color: #8b8d97;
+}
+
+.dam-lifecycle-history__letter {
+  font-weight: 600;
+  color: var(--dam-primary, #ab54db);
+}
+
+.dam-lifecycle-history__meta {
+  color: #6b6980;
+}
+
 .dam-lifecycle-chip {
   display: inline-flex;
   align-items: center;
@@ -5820,8 +5869,20 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-viz-modal__body #damMediaPreviewTitle {
   margin-top: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   line-height: 1.35;
+}
+
+#damMediaPreviewTitleMeta .dam-media-preview__title-meta + .dam-media-preview__editable-row,
+#damMediaPreviewTitleMeta > .dam-media-preview__editable-row:first-child {
+  margin-top: 10px;
+}
+
+#damMediaPreviewTitleMeta .dam-media-preview__asset-id {
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * 1.1);
+  font-weight: 500;
+  padding: 5px 11px;
+  border-radius: 999px;
 }
 
 .dam-viz-modal__carrier--editable {

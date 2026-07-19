@@ -43,17 +43,34 @@
     return m ? m[1].toLowerCase() : "";
   }
 
+  function isVideoAsset(asset) {
+    if (!asset) return false;
+    if (asset.media_type === "video") return true;
+    return !!VIDEO_EXTS[fileExt(asset.name || asset.path)];
+  }
+
   function needsServerPreview(asset) {
     var ext = fileExt(asset && (asset.name || asset.path));
     if (PREVIEW_EXTS[ext]) return true;
-    if (VIDEO_EXTS[ext]) return true;
-    if (asset && asset.media_type === "video") return true;
     if (asset && asset.media_type === "source") return true;
     return false;
   }
 
+  function streamUrl(path) {
+    if (!path) return "";
+    return bridgeUrl() + "/media?path=" + encodeURIComponent(toLocal(path));
+  }
+
+  function posterUrl(path) {
+    if (!path) return "";
+    return streamUrl(path) + "&preview=1";
+  }
+
   function previewUrl(path, asset) {
     if (!path) return "";
+    if (isVideoAsset(asset) || VIDEO_EXTS[fileExt(path)]) {
+      return streamUrl(path);
+    }
     var local = toLocal(path);
     var url = bridgeUrl() + "/media?path=" + encodeURIComponent(local);
     if ((asset && needsServerPreview(asset)) || PREVIEW_EXTS[fileExt(path)]) {
@@ -100,6 +117,56 @@
     return '<span class="dam-viz-badge dam-viz-badge--brand">' + esc(asset.brand || "DK") + "</span>";
   }
 
+  function marketingDisplayId(asset) {
+    if (window.DamMarketingId && typeof window.DamMarketingId.format === "function") {
+      return window.DamMarketingId.format(asset);
+    }
+    return asset && asset.id ? asset.id : "";
+  }
+
+  function assetIdChipHtml(asset) {
+    if (!asset || !asset.id) return "";
+    var displayId = marketingDisplayId(asset);
+    return (
+      '<span class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-media-preview__asset-id" data-tag-value="' +
+      esc(asset.id) +
+      '" data-marketing-id="' +
+      esc(displayId) +
+      '" data-dam-tip="ID marketingowe: ' +
+      esc(displayId) +
+      " (wewn.: " +
+      esc(asset.id) +
+      ')" title="ID marketingowe">' +
+      esc(displayId) +
+      "</span>"
+    );
+  }
+
+  function assocLabelRow(label, editKind) {
+    var editBtn =
+      '<button type="button" class="dam-assoc-edit-all" data-assoc-edit-all="' +
+      editKind +
+      '" hidden>Edytuj wszystko</button>';
+    return (
+      '<div class="dam-media-preview__assoc-label-row">' +
+      '<span class="dam-media-preview__assoc-label">' +
+      esc(label) +
+      "</span>" +
+      editBtn +
+      "</div>"
+    );
+  }
+
+  function variantFileLabel(v) {
+    if (v && v.name) return v.name;
+    if (v && v.path) {
+      var p = String(v.path).replace(/\\/g, "/");
+      var i = p.lastIndexOf("/");
+      return i >= 0 ? p.slice(i + 1) : p;
+    }
+    return v && (v.label || v.id) ? String(v.label || v.id) : "Plik";
+  }
+
   function linkedProductsHtml(linkedProducts) {
     var list = (linkedProducts || []).filter(Boolean);
     var body =
@@ -108,9 +175,13 @@
             .map(function (p) {
               var thumb = p.thumb_url || PLACEHOLDER_SVG;
               var label = p.display_name || p.id || "Produkt";
+              var idx = p.product_index || "";
               return (
-                '<a class="dam-media-preview__assoc-item" role="listitem" href="explorer.html?product=' +
-                encodeURIComponent(p.id) +
+                '<div class="dam-media-preview__assoc-item" role="listitem" data-product-id="' +
+                esc(p.id) +
+                '">' +
+                '<button type="button" class="dam-media-preview__assoc-thumb-btn" data-assoc-thumb-go data-product-id="' +
+                esc(p.id) +
                 '" title="' +
                 esc(label) +
                 '">' +
@@ -121,19 +192,51 @@
                 '" loading="lazy" onerror="this.src=\'' +
                 PLACEHOLDER_SVG.replace(/'/g, "%27") +
                 "'\">" +
-                '<span class="dam-media-preview__assoc-name">' +
+                "</button>" +
+                '<button type="button" class="dam-media-preview__assoc-name" data-assoc-name data-product-id="' +
+                esc(p.id) +
+                '" title="' +
                 esc(label) +
-                "</span></a>"
+                '">' +
+                esc(label) +
+                "</button>" +
+                (idx
+                  ? '<span class="dam-media-preview__assoc-index">' + esc(idx) + "</span>"
+                  : "") +
+                "</div>"
               );
             })
             .join("")
         : '<p class="dam-media-preview__assoc-empty">Brak skojarzonych produktów</p>';
     return (
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--products">' +
-      '<span class="dam-media-preview__assoc-label">Skojarzone produkty</span>' +
+      assocLabelRow("Skojarzone produkty", "product") +
       '<div class="dam-media-preview__assoc-grid" role="list">' +
       body +
       "</div></div>"
+    );
+  }
+
+  function variantIsVideo(v) {
+    if (!v) return false;
+    if (v.media_type === "video") return true;
+    return !!VIDEO_EXTS[fileExt(v.name || v.path)];
+  }
+
+  function variantThumbInnerHtml(v, fileName) {
+    if (variantIsVideo(v)) {
+      return (
+        '<div class="dam-viz-modal__variant-placeholder dam-media-preview__variant-placeholder dam-media-preview__variant-placeholder--video" title="' +
+        esc(fileName) +
+        '"><i class="uil uil-play-circle" aria-hidden="true"></i></div>'
+      );
+    }
+    return (
+      '<img class="dam-viz-modal__variant-thumb" src="' +
+      esc(previewUrl(v.path, v)) +
+      '" alt="' +
+      esc(fileName) +
+      '" loading="lazy" onerror="window.__damVariantThumbFallback&&__damVariantThumbFallback(this)">'
     );
   }
 
@@ -146,6 +249,7 @@
         ? list
             .map(function (v) {
               var active = v.id === activeId ? " is-active" : "";
+              var fileName = variantFileLabel(v);
               return (
                 '<button type="button" class="dam-viz-modal__variant dam-media-preview__variant' +
                 active +
@@ -153,24 +257,20 @@
                 (active ? "true" : "false") +
                 '" data-variant-id="' +
                 esc(v.id) +
+                '" title="' +
+                esc(fileName) +
                 '">' +
                 (v.path
-                  ? '<img class="dam-viz-modal__variant-thumb" src="' +
-                    esc(previewUrl(v.path, v)) +
-                    '" alt="' +
-                    esc(v.label || v.name || "") +
-                    '" loading="lazy" onerror="this.classList.add(\'dam-viz-thumb__img--placeholder\')">'
-                  : '<div class="dam-viz-modal__variant-placeholder"><i class="uil uil-image"></i></div>') +
-                '<span class="dam-viz-modal__variant-label">' +
-                esc(v.label || "Plik") +
-                "</span></button>"
+                  ? variantThumbInnerHtml(v, fileName)
+                  : '<div class="dam-viz-modal__variant-placeholder dam-media-preview__variant-placeholder"><i class="uil uil-image" aria-hidden="true"></i></div>') +
+                '<span class="dam-viz-modal__variant-label">Podejrzyj</span></button>'
               );
             })
             .join("")
         : '<p class="dam-media-preview__assoc-empty">Brak wariantów</p>';
     return (
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--variants">' +
-      '<span class="dam-media-preview__assoc-label">Warianty materiału</span>' +
+      assocLabelRow("Warianty materiału", "variant") +
       '<div class="dam-media-preview__variant-grid" role="listbox" aria-label="Warianty w folderze">' +
       body +
       "</div></div>"
@@ -206,46 +306,72 @@
     return [];
   }
 
+  function splitNameExt(name) {
+    var raw = String(name || "").trim();
+    if (!raw) return { base: "", ext: "" };
+    var dot = raw.lastIndexOf(".");
+    if (dot <= 0 || dot === raw.length - 1) return { base: raw, ext: "" };
+    var ext = raw.slice(dot + 1).toLowerCase();
+    if (!/^[a-z0-9]{1,8}$/.test(ext)) return { base: raw, ext: "" };
+    return { base: raw.slice(0, dot), ext: ext };
+  }
+
+  function extTagClass(ext) {
+    if (!ext) return "dam-media-preview__ext-tag--default";
+    if (ext === "png" || ext === "jpg" || ext === "jpeg" || ext === "webp") return "dam-media-preview__ext-tag--png";
+    if (ext === "tif" || ext === "tiff") return "dam-media-preview__ext-tag--tif";
+    if (ext === "psd" || ext === "psb" || ext === "ai") return "dam-media-preview__ext-tag--psd";
+    if (ext === "pdf") return "dam-media-preview__ext-tag--pdf";
+    if (ext === "mp4" || ext === "mov" || ext === "webm") return "dam-media-preview__ext-tag--mp4";
+    return "dam-media-preview__ext-tag--default";
+  }
+
+  function titleHtml(name, fallbackId) {
+    var parts = splitNameExt(name || fallbackId || "Material");
+    var base = parts.base || name || fallbackId || "Material";
+    var extTag = parts.ext
+      ? '<span class="dam-media-preview__ext-tag ' +
+        extTagClass(parts.ext) +
+        '">' +
+        esc(parts.ext.toUpperCase()) +
+        "</span>"
+      : "";
+    return '<span class="dam-media-preview__title-base">' + esc(base) + "</span>" + extTag;
+  }
+
   function isEditableSourceAsset(asset) {
     var ext = fileExt(asset && (asset.name || asset.path));
     return ext === "psd" || ext === "psb" || ext === "ai" || ext === "indd";
   }
 
   function titleMetaHtml(asset, groupContext) {
+    var idChip = assetIdChipHtml(asset);
     var editableFiles = editableFilesFor(asset, groupContext);
-    var hasEditable = asset.folder_has_editable || editableFiles.length > 0;
-    if (!hasEditable) return "";
-    var target = null;
-    editableFiles.some(function (f) {
-      if (f && f.path && !isEditableSourceAsset(asset)) {
-        target = f;
-        return true;
-      }
-      if (f && f.path && f.path !== asset.path) {
-        target = f;
-        return true;
-      }
-      return false;
-    });
-    if (!target && editableFiles[0]) target = editableFiles[0];
-    var label = target && target.name ? target.name : "Plik edytowalny";
+    var target = primaryEditableFile(asset, groupContext);
     var path = target && target.path ? target.path : "";
     var sameFile = path && asset.path && path === asset.path;
-    return (
-      '<div class="dam-media-preview__title-meta">' +
-      '<span class="dam-viz-badge dam-viz-badge--format dam-media-preview__editable-badge">Edytowalny</span>' +
-      (path && !sameFile
-        ? '<button type="button" class="dam-media-preview__editable-link" id="damMediaPreviewEditableLink" data-path="' +
+    var label = target && target.name ? target.name : "Plik edytowalny";
+    var linkHtml =
+      path && !sameFile
+        ? '<div class="dam-media-preview__editable-row">' +
+          '<button type="button" class="dam-media-preview__editable-link" id="damMediaPreviewEditableLink" data-path="' +
           esc(path) +
+          '" data-dam-tip="' +
+          esc(label) +
           '" title="' +
           esc(label) +
           '">' +
           '<i class="uil uil-layer-group" aria-hidden="true"></i>' +
           "<span>" +
           esc(label) +
-          "</span></button>"
-        : "") +
-      "</div>"
+          "</span></button></div>"
+        : "";
+    if (!idChip && !linkHtml) return "";
+    return (
+      '<div class="dam-media-preview__title-meta">' +
+      idChip +
+      "</div>" +
+      linkHtml
     );
   }
 
@@ -404,8 +530,6 @@
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>') +
       "<span>Pokaz w Explorerze</span></button>" +
-      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-media-preview__editable-cta" id="damMediaPreviewEditable" hidden data-dam-tip="Otwiera plik zrodlowy (PSD/AI) w Eksploratorze">' +
-      '<i class="uil uil-layer-group" aria-hidden="true"></i><span>Plik edytowalny</span></button>' +
       '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damMediaPreviewCopy" data-dam-tip="Kopiuje lokalna sciezke pliku">' +
       '<i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj sciezke</span></button>' +
       '<button type="button" class="dam-viz-icon-btn' +
@@ -472,6 +596,16 @@
       paintZoom();
     }
 
+    window.__damVariantThumbFallback = function (img) {
+      if (!img || !img.parentNode) return;
+      var alt = img.getAttribute("alt") || "Plik";
+      var ph = document.createElement("div");
+      ph.className = "dam-viz-modal__variant-placeholder dam-media-preview__variant-placeholder";
+      ph.title = alt;
+      ph.innerHTML = '<i class="uil uil-image" aria-hidden="true"></i>';
+      img.replaceWith(ph);
+    };
+
     window.__damMediaPreviewFallback = function (img) {
       if (!img || img.dataset.fallbackTried) {
         img.onerror = null;
@@ -488,6 +622,74 @@
       img.src = PLACEHOLDER_SVG;
     };
 
+  function detectVideoAspect(name) {
+    var n = String(name || "").toLowerCase();
+    if (/9\s*[x×]\s*16|9:16|\b9x16\b|vertical|pion/.test(n)) return "9 / 16";
+    if (/1\s*[x×]\s*1|1:1|\b1x1\b|square|kwadrat/.test(n)) return "1 / 1";
+    return "16 / 9";
+  }
+
+  function renderVideoHero(thumb, a) {
+    var stack = document.createElement("div");
+    stack.className = "dam-media-preview__media-stack";
+
+    var stage = document.createElement("div");
+    stage.className = "dam-media-preview__video-stage";
+    stage.style.setProperty("--dam-video-aspect", detectVideoAspect(a.name));
+
+    var vid = document.createElement("video");
+    vid.id = "damMediaPreviewHero";
+    vid.className = "dam-media-preview__video";
+    vid.controls = true;
+    vid.playsInline = true;
+    vid.preload = "metadata";
+    vid.poster = posterUrl(a.path);
+    vid.src = streamUrl(a.path);
+
+    var playBtn = document.createElement("button");
+    playBtn.type = "button";
+    playBtn.className = "dam-media-preview__play";
+    playBtn.setAttribute("aria-label", "Odtwórz wideo");
+    playBtn.innerHTML = '<i class="uil uil-play" aria-hidden="true"></i>';
+
+    var hintSlot = document.createElement("div");
+    hintSlot.className = "dam-media-preview__hint-slot";
+
+    stage.appendChild(vid);
+    stage.appendChild(playBtn);
+    stack.appendChild(stage);
+    stack.appendChild(hintSlot);
+    thumb.appendChild(stack);
+
+    playBtn.addEventListener("click", function () {
+      var p = vid.play();
+      if (p && typeof p.catch === "function") p.catch(function () {});
+      stage.classList.add("is-playing");
+    });
+    vid.addEventListener("play", function () {
+      stage.classList.add("is-playing");
+    });
+    vid.addEventListener("pause", function () {
+      if (vid.currentTime <= 0.05) stage.classList.remove("is-playing");
+    });
+    vid.addEventListener("ended", function () {
+      stage.classList.remove("is-playing");
+    });
+    vid.addEventListener("loadedmetadata", function () {
+      if (vid.videoWidth > 0 && vid.videoHeight > 0) {
+        stage.style.setProperty("--dam-video-aspect", vid.videoWidth + " / " + vid.videoHeight);
+      }
+      stage.classList.add("is-ready");
+    });
+    vid.onerror = function () {
+      stage.classList.add("is-error");
+      hintSlot.innerHTML =
+        '<p class="dam-media-preview__hint">Nie udało się odtworzyć wideo (sprawdź bridge /media i rozmiar pliku).</p>';
+    };
+
+    heroEl = vid;
+  }
+
     function renderStage(a) {
       var thumb = document.getElementById("damMediaPreviewThumb");
       if (!thumb) return;
@@ -495,22 +697,15 @@
       if (oldHero) oldHero.remove();
       var oldVideo = thumb.querySelector(".dam-media-preview__video");
       if (oldVideo) oldVideo.remove();
-      var oldHint = thumb.querySelector(".dam-media-preview__hint");
-      if (oldHint) oldHint.remove();
+      var oldStack = thumb.querySelector(".dam-media-preview__media-stack");
+      if (oldStack) oldStack.remove();
       var oldNothumb = thumb.querySelector(".dam-viz-modal__nothumb");
       if (oldNothumb) oldNothumb.remove();
       heroEl = null;
       resetView();
 
-      if (a.media_type === "video") {
-        var vid = document.createElement("video");
-        vid.id = "damMediaPreviewHero";
-        vid.className = "dam-media-preview__video";
-        vid.controls = true;
-        vid.playsInline = true;
-        vid.src = mediaUrl(a.path, a);
-        thumb.appendChild(vid);
-        heroEl = vid;
+      if (a.media_type === "video" || isVideoAsset(a)) {
+        renderVideoHero(thumb, a);
         return;
       }
 
@@ -556,20 +751,72 @@
       var pathEl = document.getElementById("damMediaPreviewPath");
       var badges = document.getElementById("damMediaPreviewBadges");
       var assocHost = document.getElementById("damMediaPreviewAssoc");
-      if (title) title.textContent = a.name || a.id || "Material";
+      if (title) title.innerHTML = titleHtml(a.name, a.id);
       if (titleMeta) titleMeta.innerHTML = titleMetaHtml(a, groupContext);
-      if (pathEl) pathEl.textContent = a.path || "";
+      if (pathEl) {
+        var fullPath = a.path || "";
+        pathEl.textContent = fullPath;
+        pathEl.title = fullPath;
+      }
       if (assocHost) {
-        assocHost.innerHTML = associationsFooterHtml(a, groupContext, options);
-        assocHost.querySelectorAll("[data-variant-id]").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            var vid = btn.getAttribute("data-variant-id") || "";
-            var targetIdx = siblings.findIndex(function (x) {
-              return x.id === vid;
+        var paintAssoc = function () {
+          assocHost.innerHTML = associationsFooterHtml(a, groupContext, options);
+          assocHost.querySelectorAll("[data-variant-id]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var vid = btn.getAttribute("data-variant-id") || "";
+              var targetIdx = siblings.findIndex(function (x) {
+                return x.id === vid;
+              });
+              if (targetIdx >= 0) showAt(targetIdx);
             });
-            if (targetIdx >= 0) showAt(targetIdx);
           });
-        });
+          if (window.DamAssocEdit && typeof window.DamAssocEdit.bind === "function") {
+            window.DamAssocEdit.bind(assocHost, {
+              asset: a,
+              groupContext: groupContext,
+              onRefresh: function () {
+                renderMeta(asset);
+              },
+              onSaved: function (productIds, variantIds) {
+                if (productIds && productIds.length) {
+                  a.linked_product_ids = productIds.slice();
+                  a.folder_linked_product_ids = productIds.slice();
+                }
+                if (variantIds && variantIds.length && groupContext.variants) {
+                  var byId = {};
+                  groupContext.variants.forEach(function (v) {
+                    if (v && v.id) byId[v.id] = v;
+                  });
+                  groupContext.variants = variantIds.map(function (id) {
+                    return byId[id] || { id: id, name: id };
+                  });
+                }
+                if (window.DamAssocEdit.enrichLinkedProducts) {
+                  window.DamAssocEdit.enrichLinkedProducts(
+                    (productIds || []).map(function (id) {
+                      return { id: id };
+                    })
+                  ).then(function (linked) {
+                    groupContext.linked_products = linked;
+                    a.linked_products = linked;
+                    renderMeta(asset);
+                  });
+                } else {
+                  renderMeta(asset);
+                }
+              },
+            });
+          }
+        };
+        if (window.DamAssocEdit && typeof window.DamAssocEdit.enrichLinkedProducts === "function") {
+          window.DamAssocEdit.enrichLinkedProducts(groupContext.linked_products || []).then(function (linked) {
+            groupContext.linked_products = linked;
+            a.linked_products = linked;
+            paintAssoc();
+          });
+        } else {
+          paintAssoc();
+        }
       }
       var editableLink = document.getElementById("damMediaPreviewEditableLink");
       if (editableLink) {
@@ -591,23 +838,9 @@
       var explorer = document.getElementById("damMediaPreviewExplorer");
       var copyBtn = document.getElementById("damMediaPreviewCopy");
       var shareBtn = document.getElementById("damMediaPreviewShare");
-      var editableBtn = document.getElementById("damMediaPreviewEditable");
-      var editableTarget = primaryEditableFile(a, groupContext);
       if (explorer) explorer.setAttribute("data-path", a.path || "");
       if (copyBtn) copyBtn.setAttribute("data-path", a.path || "");
       if (shareBtn) shareBtn.setAttribute("data-path", a.path || "");
-      if (editableBtn) {
-        if (editableTarget && editableTarget.path && editableTarget.path !== a.path) {
-          editableBtn.hidden = false;
-          editableBtn.setAttribute("data-path", editableTarget.path);
-          var shortName = editableTarget.name || "Plik edytowalny";
-          var span = editableBtn.querySelector("span");
-          if (span) span.textContent = shortName.length > 28 ? "Plik edytowalny" : shortName;
-        } else {
-          editableBtn.hidden = true;
-          editableBtn.removeAttribute("data-path");
-        }
-      }
       renderStage(a);
     }
 
@@ -692,6 +925,20 @@
         return;
       }
       if (e.key === "Escape") {
+        if (document.getElementById("damAssocActionMenu")) {
+          if (window.DamAssocEdit && typeof window.DamAssocEdit.closeActionMenu === "function") {
+            window.DamAssocEdit.closeActionMenu();
+          }
+          e.preventDefault();
+          return;
+        }
+        if (document.getElementById("damAssocEditOverlay") || document.getElementById("damAssocEditPopover")) {
+          if (window.DamAssocEdit && typeof window.DamAssocEdit.closePicker === "function") {
+            window.DamAssocEdit.closePicker();
+          }
+          e.preventDefault();
+          return;
+        }
         closeModal(modal);
         document.removeEventListener("keydown", onKey);
       } else if (e.key === "ArrowLeft" && siblings.length > 1) {
@@ -722,19 +969,6 @@
       });
     }
 
-    var editableBtn = document.getElementById("damMediaPreviewEditable");
-    if (editableBtn) {
-      editableBtn.addEventListener("click", function () {
-        var p = editableBtn.getAttribute("data-path") || "";
-        if (!p) return;
-        if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
-          window.DamPaths.revealInExplorer(p);
-        } else if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
-          window.DamPaths.openFolderInExplorer(p);
-        }
-      });
-    }
-
     var shareBtn = document.getElementById("damMediaPreviewShare");
     if (shareBtn) {
       shareBtn.addEventListener("click", function () {
@@ -756,7 +990,10 @@
     openAsset: openAsset,
     previewUrl: previewUrl,
     mediaUrl: mediaUrl,
+    streamUrl: streamUrl,
+    posterUrl: posterUrl,
     needsServerPreview: needsServerPreview,
     isRasterPreviewable: isRasterPreviewable,
+    isVideoAsset: isVideoAsset,
   };
 })();

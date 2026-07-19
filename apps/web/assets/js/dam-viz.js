@@ -16,8 +16,9 @@
   var SHOW_ALL_KEY = "dam_viz_show_all";
   var LATEST_KEY_LEGACY = "dam_viz_latest_only";
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
-  var CARD_ZOOM_MIN = 80;
-  var CARD_ZOOM_MAX = 170;
+  var CARD_ZOOM_MIN = 50;
+  var CARD_ZOOM_MAX = 250;
+  var CARD_IMG_BASE_SCALE = 1.2;
   var CARD_BASE_MIN_PX = 220;
 
   function badgeTierOpt() {
@@ -2034,13 +2035,14 @@
   }
 
   /* Suwak skali kafelkow:
-     80-100% = pomniejsza tylko wizualizacje w thumb (img-scale),
-     100-170% = wizualizacja wypelnia krawedzie L/P, potem rosnie kafelek. */
+     50-100% = pomniejsza wizualizacje w thumb (img-scale),
+     100-250% = wizualizacja wypelnia krawedzie L/P, potem rosnie kafelek.
+     Bazowo grafika ma 120% (CARD_IMG_BASE_SCALE). */
   function applyCardZoom(pct) {
     var n = Math.round(Number(pct) || 100);
     if (n < CARD_ZOOM_MIN) n = CARD_ZOOM_MIN;
     if (n > CARD_ZOOM_MAX) n = CARD_ZOOM_MAX;
-    var imgScale = n <= 100 ? n / 100 : 1;
+    var imgScale = (n <= 100 ? n / 100 : 1) * CARD_IMG_BASE_SCALE;
     var cardScale = n <= 100 ? 1 : n / 100;
     var root = document.getElementById("vizGrid") || document.documentElement;
     root.style.setProperty("--dam-viz-img-scale", String(imgScale));

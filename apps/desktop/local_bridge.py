@@ -39,6 +39,7 @@ Endpoints:
 """
 from __future__ import annotations
 
+import gzip
 import json
 import os
 import re
@@ -972,7 +973,9 @@ PRODUCT_PRICES_CACHE_FILE = WEB_ROOT / "data" / "product-prices-cache.json"
 BULK_PACKAGING_FILE = WEB_ROOT / "data" / "bulk-packaging.json"
 SHOP_CATEGORIES_FILE = WEB_ROOT / "data" / "shop-categories.json"
 BRANDING_INDEX_FILE = WEB_ROOT / "data" / "branding-index.json"
+BRANDING_SEARCH_INDEX_FILE = WEB_ROOT / "data" / "branding-search-index.json"
 BRANDING_OVERRIDES_FILE = WEB_ROOT / "data" / "branding-metadata-overrides.json"
+BRANDING_ASSOC_OVERRIDES_FILE = WEB_ROOT / "data" / "branding-associations-overrides.json"
 BRANDING_STATUS_FILE = WEB_ROOT / "data" / "branding-build-status.json"
 BRANDING_RECOGNIZE_STATUS_FILE = WEB_ROOT / "data" / "branding-recognize-status.json"
 WYKROJNIKI_REGISTRY_FILE = WEB_ROOT / "data" / "wykrojniki-registry.json"
@@ -1095,12 +1098,22 @@ def _pg_available() -> bool:
         return False
 
 
+_JSON_FILE_CACHE: dict[str, tuple[float, object]] = {}
+
+
 def _load_json(path: Path, default):
     """Czytaj lokalny cache. (Prawda jest w PG - watcher odswieza co 30 min.)"""
     if not path.exists():
         return default
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        mtime = path.stat().st_mtime
+        key = str(path.resolve())
+        cached = _JSON_FILE_CACHE.get(key)
+        if cached is not None and cached[0] == mtime:
+            return cached[1]
+        data = json.loads(path.read_text(encoding="utf-8"))
+        _JSON_FILE_CACHE[key] = (mtime, data)
+        return data
     except json.JSONDecodeError:
         return default
 
@@ -1110,6 +1123,7 @@ def _save_json(path: Path, data) -> None:
     z SELECT ... FOR UPDATE - chroni przed utrata rownoleglych decyzji moderacji."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    _JSON_FILE_CACHE.pop(str(path.resolve()), None)
     store_key = _path_to_store_key(path)
     if not store_key or not _pg_available():
         return
@@ -1168,6 +1182,165 @@ def _patch_branding_metadata(asset_id: str, field: str, value) -> tuple[bool, st
     _save_json(BRANDING_OVERRIDES_FILE, ov)
     _save_json(BRANDING_INDEX_FILE, idx)
     return True, None
+
+
+def _resolve_viz_thumb(product_id: str, file_index: dict) -> str:
+    """Miniatura produktu z file-index (jak brand_folder_context.resolve_viz_thumb)."""
+    products_by_id = {p.get("id"): p for p in (file_index.get("products") or []) if p.get("id")}
+    p = products_by_id.get(product_id) or {}
+    for rev in p.get("revisions") or []:
+        for key in ("viz_path", "thumb_path", "path"):
+            vp = rev.get(key) or ""
+            if vp and re.search(r"\.(jpe?g|png|webp|gif|tif{1,2})$", vp, re.I):
+                rel = vp.replace("\\", "/")
+                if rel.lower().startswith("x:/"):
+                    slug = product_id.replace("/", "-")
+                    base = Path(rel).stem
+                    return f"data/thumbs/{slug}__{base}_pl.jpg"
+    slug = product_id.replace("/", "-")
+    return f"data/thumbs/{slug}__000098_pl.jpg"
+
+
+def _build_linked_product_meta(product_ids: list, file_index: dict) -> list:
+    products_by_id = {p.get("id"): p for p in (file_index.get("products") or []) if p.get("id")}
+    out = []
+    seen_ids: set[str] = set()
+    seen_labels: set[str] = set()
+    for pid in product_ids or []:
+        if not pid or pid in seen_ids:
+            continue
+        p = products_by_id.get(pid) or {}
+        display = (p.get("display_name") or p.get("name") or pid).split("—")[0].strip()
+        label_key = re.sub(r"\s+", " ", display.lower())
+        if label_key in seen_labels:
+            continue
+        seen_ids.add(pid)
+        seen_labels.add(label_key)
+        idx_val = ""
+        indexes = p.get("indexes") or []
+        if indexes:
+            idx_val = str(indexes[0])
+        elif (p.get("revisions") or [{}])[0].get("index"):
+            idx_val = str((p.get("revisions") or [{}])[0].get("index") or "")
+        if idx_val and "." in idx_val:
+            idx_val = idx_val.split(".")[0]
+        out.append(
+            {
+                "id": pid,
+                "display_name": display,
+                "thumb_url": _resolve_viz_thumb(pid, file_index),
+                "product_index": idx_val,
+            }
+        )
+    return out
+
+
+def _patch_branding_associations(
+    asset_id: str,
+    folder_group_id: str,
+    linked_product_ids: list,
+    linked_variant_ids: list | None,
+    updated_by: str = "local_bridge",
+) -> tuple[bool, str | None]:
+    """Reczna edycja skojarzen produktow / wariantow w branding-index + overrides."""
+    aid = str(asset_id or "").strip()
+    group = str(folder_group_id or "").strip().lower()
+    if not aid:
+        return False, "asset_id_required"
+    idx = _load_json(BRANDING_INDEX_FILE, None)
+    if not isinstance(idx, dict):
+        return False, "branding_index_missing"
+    assets = idx.get("assets") or []
+    target = None
+    for a in assets:
+        if a.get("id") == aid:
+            target = a
+            break
+    if not target:
+        return False, "asset_not_found"
+    if not group:
+        group = str(target.get("folder_group_id") or "").strip().lower()
+    file_index = _load_json(INDEX_FILE, {"products": []})
+    pids = [str(x).strip() for x in (linked_product_ids or []) if str(x).strip()]
+    vids = [str(x).strip() for x in (linked_variant_ids or []) if str(x).strip()]
+
+    ov = _load_json(
+        BRANDING_ASSOC_OVERRIDES_FILE,
+        {"version": 1, "updated_at": "", "assets": {}, "folder_groups": {}},
+    )
+    if not isinstance(ov, dict):
+        ov = {"version": 1, "updated_at": "", "assets": {}, "folder_groups": {}}
+    ov.setdefault("assets", {})
+    ov.setdefault("folder_groups", {})
+    ov["assets"][aid] = {
+        "linked_product_ids": pids,
+        "linked_variant_ids": vids,
+        "folder_group_id": group,
+        "updated_by": updated_by,
+    }
+    if group:
+        ov["folder_groups"][group] = {
+            "linked_product_ids": pids,
+            "linked_variant_ids": vids,
+            "updated_by": updated_by,
+        }
+    ov["updated_at"] = utc_now()
+    _save_json(BRANDING_ASSOC_OVERRIDES_FILE, ov)
+
+    linked_meta = _build_linked_product_meta(pids, file_index)
+    assets_by_id = {a.get("id"): a for a in assets if a.get("id")}
+
+    def apply_to_asset(a: dict) -> None:
+        a["linked_product_ids"] = list(pids)
+        a["folder_linked_product_ids"] = list(pids)
+        a["linked_products"] = list(linked_meta)
+        if vids:
+            a["linked_variant_ids"] = list(vids)
+            variants = []
+            for vid in vids:
+                va = assets_by_id.get(vid)
+                if not va:
+                    continue
+                variants.append(
+                    {
+                        "id": vid,
+                        "name": va.get("name") or vid,
+                        "path": va.get("path") or "",
+                        "label": va.get("name") or "Plik",
+                        "media_type": va.get("media_type") or "",
+                    }
+                )
+            if variants:
+                a["folder_variants"] = variants
+
+    apply_to_asset(target)
+    if group:
+        for a in assets:
+            ag = str(a.get("folder_group_id") or "").strip().lower()
+            if ag == group:
+                apply_to_asset(a)
+
+    _save_json(BRANDING_INDEX_FILE, idx)
+    return True, None
+
+
+def _copy_media_file(src: str, dest_dir: str) -> tuple[bool, str | None, str | None]:
+    """Kopiuj plik wizualizacji do folderu produktu."""
+    import shutil
+
+    src_p = Path(str(src or "").replace("/", "\\"))
+    dest_root = Path(str(dest_dir or "").replace("/", "\\"))
+    if not src_p.is_file():
+        return False, "source_missing", None
+    if not dest_root.is_dir():
+        return False, "dest_dir_missing", None
+    try:
+        dest = dest_root / src_p.name
+        if dest.resolve() != src_p.resolve():
+            shutil.copy2(src_p, dest)
+        return True, None, str(dest)
+    except OSError as exc:
+        return False, str(exc), None
 
 
 def _pull_kv_cache_from_postgres() -> int:
@@ -2621,6 +2794,7 @@ def write_viz_flags(payload: dict) -> dict:
 
 
 _MEDIA_MAX_BYTES = 40 * 1024 * 1024  # 40 MB - anty DoS przez odczyt ogromnych plikow
+_MEDIA_VIDEO_MAX_BYTES = 512 * 1024 * 1024  # 512 MB - wideo streamowane z Range
 
 
 _PREVIEW_RASTER_EXT = {".tif", ".tiff", ".psd", ".psb", ".bmp"}
@@ -2722,6 +2896,7 @@ def _media_video_poster(target: str) -> tuple[int, bytes, str] | None:
 
 
 def serve_media(path: str, preview: bool = False) -> tuple[int, bytes, str]:
+    """Zwraca (code, body, content_type). Dla wideo preferuj serve_media_range."""
     target = normalize_path(path)
     if not os.path.isfile(target):
         return 404, b"", "application/json"
@@ -2758,13 +2933,46 @@ def serve_media(path: str, preview: bool = False) -> tuple[int, bytes, str]:
     if not mime:
         return 415, b"", "application/json"
     try:
-        if os.path.getsize(target) > _MEDIA_MAX_BYTES:
+        size = os.path.getsize(target)
+        limit = _MEDIA_VIDEO_MAX_BYTES if ext in _VIDEO_EXT else _MEDIA_MAX_BYTES
+        if size > limit:
             return 413, b"", "application/json"
     except OSError:
         return 404, b"", "application/json"
     # TIFF often unsupported in browsers - still serve; client may fallback
     with open(target, "rb") as fh:
         return 200, fh.read(), mime
+
+
+def _parse_bytes_range(header: str, size: int) -> tuple[int, int] | None:
+    """RFC 7233 bytes=start-end → (start, end_inclusive)."""
+    if not header or not header.startswith("bytes="):
+        return None
+    spec = header[6:].strip()
+    if "," in spec:
+        spec = spec.split(",", 1)[0].strip()
+    if "-" not in spec:
+        return None
+    start_s, end_s = spec.split("-", 1)
+    try:
+        if start_s == "":
+            # suffix: last N bytes
+            length = int(end_s)
+            if length <= 0:
+                return None
+            start = max(0, size - length)
+            end = size - 1
+        else:
+            start = int(start_s)
+            end = int(end_s) if end_s else size - 1
+    except ValueError:
+        return None
+    if start < 0 or start >= size:
+        return None
+    end = min(end, size - 1)
+    if end < start:
+        return None
+    return start, end
 
 
 def media_meta(path: str) -> dict:
@@ -2833,9 +3041,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def _json(self, code: int, payload: dict | list):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        encoding = None
+        accept = (self.headers.get("Accept-Encoding") or "").lower()
+        if len(body) > 8192 and "gzip" in accept:
+            body = gzip.compress(body, compresslevel=6)
+            encoding = "gzip"
         self.send_response(code)
         self._cors()
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        if encoding:
+            self.send_header("Content-Encoding", encoding)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -2923,6 +3138,7 @@ class Handler(BaseHTTPRequestHandler):
                     "api_version": BRIDGE_API_VERSION,
                     "hub_routes": [
                         "/branding-index",
+                        "/branding-search-index",
                         "/product-catalog",
                         "/bulk-packaging",
                         "/branding/status",
@@ -3051,6 +3267,68 @@ class Handler(BaseHTTPRequestHandler):
             preview = (qs.get("preview") or ["0"])[0].strip().lower() in ("1", "true", "yes")
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
+                return
+            target = normalize_path(path)
+            ext = Path(target).suffix.lower() if target else ""
+            range_hdr = self.headers.get("Range") or ""
+            # Wideo: Range + stream bez wczytywania calego pliku do RAM
+            if (
+                not preview
+                and ext in _VIDEO_EXT
+                and os.path.isfile(target)
+                and _is_under_marketing(Path(target))
+            ):
+                try:
+                    size = os.path.getsize(target)
+                except OSError:
+                    self._json(404, {"ok": False, "error": "not_found", "path": path})
+                    return
+                if size > _MEDIA_VIDEO_MAX_BYTES:
+                    self._json(413, {"ok": False, "error": "file_too_large", "path": path})
+                    return
+                mime = {
+                    ".mp4": "video/mp4",
+                    ".mov": "video/quicktime",
+                    ".webm": "video/webm",
+                    ".avi": "video/x-msvideo",
+                    ".mkv": "video/x-matroska",
+                    ".m4v": "video/mp4",
+                }.get(ext, "application/octet-stream")
+                rng = _parse_bytes_range(range_hdr, size) if range_hdr else None
+                if rng:
+                    start, end = rng
+                    length = end - start + 1
+                    self.send_response(206)
+                    self._cors()
+                    self.send_header("Content-Type", mime)
+                    self.send_header("Accept-Ranges", "bytes")
+                    self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+                    self.send_header("Content-Length", str(length))
+                    self.send_header("Cache-Control", "private, max-age=60")
+                    self.end_headers()
+                    with open(target, "rb") as fh:
+                        fh.seek(start)
+                        remaining = length
+                        while remaining > 0:
+                            chunk = fh.read(min(1024 * 256, remaining))
+                            if not chunk:
+                                break
+                            self.wfile.write(chunk)
+                            remaining -= len(chunk)
+                    return
+                self.send_response(200)
+                self._cors()
+                self.send_header("Content-Type", mime)
+                self.send_header("Accept-Ranges", "bytes")
+                self.send_header("Content-Length", str(size))
+                self.send_header("Cache-Control", "private, max-age=60")
+                self.end_headers()
+                with open(target, "rb") as fh:
+                    while True:
+                        chunk = fh.read(1024 * 256)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
                 return
             code, body, ctype = serve_media(path, preview=preview)
             if code != 200:
@@ -3307,6 +3585,13 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, {"ok": True, **data})
             return
+        if parsed.path == "/branding-search-index":
+            data = _load_json(BRANDING_SEARCH_INDEX_FILE, None)
+            if not isinstance(data, dict):
+                self._json(404, {"ok": False, "error": "branding_search_index_missing"})
+                return
+            self._json(200, {"ok": True, **data})
+            return
         if parsed.path in ("/branding/status", "/branding/recognize/status"):
             status_file = BRANDING_RECOGNIZE_STATUS_FILE if "recognize" in parsed.path else BRANDING_STATUS_FILE
             data = _load_json(status_file, {"ok": False, "state": "unknown"})
@@ -3529,6 +3814,48 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(400, {"ok": False, "error": err or "patch_failed"})
                 return
             self._json(200, {"ok": True, "asset_id": data.get("asset_id"), "field": data.get("field")})
+            return
+        if parsed.path == "/branding/asset-associations":
+            user = self._require_login()
+            if user is None:
+                return
+            role = str(user.get("role") or "user").lower()
+            if role not in ("admin", "power_user"):
+                self._json(403, {"ok": False, "error": "forbidden"})
+                return
+            ok, err = _patch_branding_associations(
+                data.get("asset_id"),
+                data.get("folder_group_id") or "",
+                data.get("linked_product_ids") or [],
+                data.get("linked_variant_ids"),
+                updated_by=str(user.get("email") or user.get("name") or "user"),
+            )
+            if not ok:
+                self._json(400, {"ok": False, "error": err or "patch_failed"})
+                return
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "asset_id": data.get("asset_id"),
+                    "linked_product_ids": data.get("linked_product_ids") or [],
+                    "linked_variant_ids": data.get("linked_variant_ids") or [],
+                },
+            )
+            return
+        if parsed.path == "/branding/copy-visual":
+            user = self._require_login()
+            if user is None:
+                return
+            role = str(user.get("role") or "user").lower()
+            if role not in ("admin", "power_user"):
+                self._json(403, {"ok": False, "error": "forbidden"})
+                return
+            ok, err, dest = _copy_media_file(data.get("src") or "", data.get("dest_dir") or "")
+            if not ok:
+                self._json(400, {"ok": False, "error": err or "copy_failed"})
+                return
+            self._json(200, {"ok": True, "dest": dest})
             return
         if parsed.path == "/wykrojniki/reimport":
             if self._require_admin() is None:

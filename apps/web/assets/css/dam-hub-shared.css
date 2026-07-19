@@ -67,33 +67,37 @@
   z-index: 1;
 }
 
-/* Pliki edytowalne: PSD, PSB — ten sam wash co dam-project-card--ok (35% border, 5% fill) */
+/* Pliki zrodlowe (PSD, PSB, AI, TIFF warstwowy): mocniejszy wash + obrys 2px */
 .dam-gradient-tile--editable::before {
+  height: 100%;
   background: linear-gradient(
-    180deg,
-    rgba(29, 78, 216, 0.05) 0%,
-    rgba(29, 78, 216, 0.018) 45%,
+    0deg,
+    rgba(29, 78, 216, 0.12) 0%,
+    rgba(29, 78, 216, 0.07) 28%,
+    rgba(29, 78, 216, 0.03) 56%,
+    rgba(29, 78, 216, 0.01) 78%,
     rgba(29, 78, 216, 0) 100%
   );
 }
 
 .dam-gradient-tile--editable::after {
-  padding: 1px;
+  padding: 2px;
   background: linear-gradient(
-    180deg,
-    rgba(29, 78, 216, 0.35) 0%,
-    rgba(29, 78, 216, 0.35) 50%,
-    rgba(29, 78, 216, 0.14) 72%,
-    rgba(29, 78, 216, 0) 95%
+    0deg,
+    rgba(29, 78, 216, 0.34) 0%,
+    rgba(29, 78, 216, 0.22) 40%,
+    rgba(29, 78, 216, 0.1) 72%,
+    rgba(29, 78, 216, 0.03) 92%,
+    rgba(29, 78, 216, 0) 100%
   );
 }
 
 /* Wektor / dokument źródłowy: AI, PDF */
 .dam-gradient-tile--vector::before {
   background: linear-gradient(
-    180deg,
-    rgba(180, 83, 9, 0.05) 0%,
-    rgba(180, 83, 9, 0.018) 45%,
+    0deg,
+    rgba(180, 83, 9, 0.04) 0%,
+    rgba(180, 83, 9, 0.015) 45%,
     rgba(180, 83, 9, 0) 100%
   );
 }
@@ -101,10 +105,10 @@
 .dam-gradient-tile--vector::after {
   padding: 1px;
   background: linear-gradient(
-    180deg,
-    rgba(180, 83, 9, 0.35) 0%,
-    rgba(180, 83, 9, 0.35) 50%,
-    rgba(180, 83, 9, 0.14) 72%,
+    0deg,
+    rgba(180, 83, 9, 0.22) 0%,
+    rgba(180, 83, 9, 0.16) 50%,
+    rgba(180, 83, 9, 0.06) 72%,
     rgba(180, 83, 9, 0) 95%
   );
 }

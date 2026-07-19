@@ -99,6 +99,9 @@
     var hasMarketing = ((product && product.related_materials) || []).some(function (m) {
       return m && m.file_count > 0;
     });
+    if (!hasMarketing && window.DamProductCorrelation && product && product.id) {
+      hasMarketing = DamProductCorrelation.hasBrandingMaterials(product.id);
+    }
 
     var hasKarta =
       ((fbr.karty_wprowadzenia || []).length > 0) ||

@@ -1,7 +1,7 @@
 {
-  "version": 4,
+  "version": 5,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-18T21:40:00+02:00",
+  "updated_at": "2026-07-19T19:15:00+02:00",
   "instructions": [
     {
       "id": "data.lang_provenance_only",
@@ -625,6 +625,97 @@
         "apps/web/integrations.html",
         "apps/web/assets/js/dam-wykrojnik-queue.js",
         "apps/web/data/wykrojnik-mapping-queue.json"
+      ]
+    },
+    {
+      "id": "branding.linked_product_derived",
+      "must": [
+        "Link do produktu (linked_product_id) nie jest osobnym polem do wypełnienia ręcznie — jest wyliczany automatycznie z linku do wariantu przez tabelę variant→product (file-index revisions.index → product.id)",
+        "Przy zapisie skojarzenia asset→wariant (SKU/indeks) system zawsze propaguje linked_product_id na poziom rodziny produktu",
+        "Branding, Projekty i Wizualizacje czytają to samo pole linked_product_id / linked_product_ids — zero osobnych kopii linków"
+      ],
+      "body_pl": "Gdy materiał marketingowy jest skojarzony z wariantem (np. 6300684.01 Babka Cytrynowa), musi być widoczny na całej rodzinie produktu BABKA CYTRYNOWA, nie tylko przy jednym numerze. linked_variant_ids trzyma indeksy; linked_product_id jest DERIVED. Jeśli zmienia się to ręcznie w dwóch miejscach, model jest zepsuty.",
+      "category": "data",
+      "must_not": [
+        "Wymagać ręcznego wypełniania linked_product_id niezależnie od wariantu",
+        "Trzymać osobne, rozjeżdżające się mapy skojarzeń w Branding vs Projekty vs Wizualizacje"
+      ],
+      "priority": "critical",
+      "title_pl": "Skojarzenia branding: produkt z wariantu (globalnie)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/scripts/brand_folder_context.py",
+        "apps/web/scripts/re-enrich-branding-index.py",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-media-preview.js"
+      ]
+    },
+    {
+      "id": "branding.marketing_asset_id_format",
+      "must": [
+        "Wyświetlany ID materiału marketingowego ma format M-{TYP}{nrTypu}{idBezPierwszejCyfry}-{MM}-{RR} np. M-VID606305-01-25",
+        "Wewnętrzny klucz br-XXXXXX pozostaje w data-tag-value, indeksie i API — nie zmieniać",
+        "Typy: VID=6 (wideo), SLI=5 (slider), BAN=3 (baner), SHOP=4 (sklep), META=7, GOG=8 (Google), GIF=9, KV=1 (key visual), IMG=2 (domyślnie)"
+      ],
+      "body_pl": "Prefiks M = marketing. Użytkownik rozpoznaje typ z trzyliterowego kodu i numeru typu. MM-RR z ścieżki kampanii (folder 01_NUGGETS w 2025) lub campaign_id / mtime.",
+      "category": "naming",
+      "must_not": [
+        "Pokazywać surowe br-XXXXXX jako jedyny identyfikator w UI kart i podglądu",
+        "Zmieniać klucza br-* w indeksie JSON bez migracji"
+      ],
+      "priority": "high",
+      "title_pl": "ID marketingowe materiałów (M-VID…)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/assets/js/dam-marketing-id.js",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-media-preview.js"
+      ]
+    },
+    {
+      "id": "branding.png_default_transparent",
+      "must": [
+        "PNG i WebP bez pola background i bez skanu pikseli traktować w UI jako przezroczyste tło (format:transparent)",
+        "Zachować wyniki pixel-scan z indeksu (background transparent/white) — nie nadpisywać",
+        "JPG/JPEG/WebP bez alpha i pliki z background:white lub format_technical:white — nie traktować jako przezroczyste"
+      ],
+      "body_pl": "Tymczasowa reguła do dopracowania w tygodniu 2026-07-21. Większość PNG w marketingu to wycinki bez tła; dopóki plik nie ma jawnego white ani wyniku skanu, filtr i badge 'Przezroczyste tło' działają jak dla transparent.",
+      "category": "branding",
+      "must_not": [
+        "Traktować JPG jako domyślnie przezroczyste",
+        "Usuwać z indeksu background ustawiony przez patch-branding-backgrounds / enrich_raster_backgrounds"
+      ],
+      "priority": "high",
+      "title_pl": "PNG/WebP bez skanu = domyślnie bez tła (UI)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/assets/js/dam-asset-taxonomy.js",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-badges.js",
+        "apps/web/scripts/asset_role_utils.py",
+        "apps/web/scripts/patch-branding-backgrounds.py"
+      ]
+    },
+    {
+      "id": "lifecycle.history_visible",
+      "must": [
+        "Każda operacja F/X/D/clear na produkcie lub wariancie trafia do lifecycle-status.history i change-log",
+        "Historia jest widoczna w Eksplorerze przy produkcie oraz w Inbox → Historia",
+        "Nawet status ostatecznie usunięty musi zostać w historii"
+      ],
+      "body_pl": "Historia lifecycle nie może być tylko w JSON bez UI. User musi zobaczyć pełny ślad operacji posegregowany po indeksie / product_id.",
+      "category": "ui",
+      "must_not": [
+        "Ukrywać operacji F/X/D po usunięciu statusu",
+        "Mylić Historii lifecycle ze zgłoszeniami tagów w Inbox"
+      ],
+      "priority": "high",
+      "title_pl": "Historia F/X/D zawsze widoczna",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/desktop/lifecycle_status.py",
+        "apps/web/assets/js/dam-explorer.js",
+        "apps/web/assets/js/dam-inbox.js"
       ]
     }
   ],

@@ -681,10 +681,34 @@
     );
   }
 
+  function resolveCopyText(btn) {
+    if (!btn) return "";
+    if (btn.closest && btn.closest(".dam-index-action")) return "";
+    var chip = btn.closest ? btn.closest(".dam-index-chip") : null;
+    if (chip) {
+      var inp = chip.querySelector(".dam-index-edit");
+      if (inp) {
+        var fromIdx =
+          inp.getAttribute("data-from-index") ||
+          inp.value ||
+          inp.getAttribute("value") ||
+          "";
+        fromIdx = String(fromIdx).trim();
+        if (fromIdx) return fromIdx;
+      }
+      var dataIdx = chip.getAttribute("data-from-index") || chip.getAttribute("data-tag-value");
+      if (dataIdx) return String(dataIdx).trim();
+    }
+    var explicit =
+      btn.getAttribute("data-tag-value") ||
+      btn.getAttribute("data-from-index") ||
+      "";
+    if (explicit) return String(explicit).trim();
+    return String(btn.textContent || "").trim();
+  }
+
   function copyTagText(btn) {
-    var text =
-      (btn && (btn.getAttribute("data-tag-value") || btn.textContent || "")) || "";
-    text = String(text).trim();
+    var text = resolveCopyText(btn);
     if (!text) return Promise.reject(new Error("pusty tag"));
     if (navigator.clipboard && navigator.clipboard.writeText) {
       return navigator.clipboard.writeText(text);
@@ -733,16 +757,18 @@
     if (!el || el._damBadgeCopyBound) return;
     el._damBadgeCopyBound = true;
     el.addEventListener("contextmenu", function (e) {
+      if (e.target.closest && e.target.closest(".dam-index-action")) return;
       var btn = e.target.closest(
-        ".dam-viz-badge, .dam-badge-tag, button.dam-viz-badge, span.dam-viz-badge"
+        ".dam-index-chip, .dam-viz-badge, .dam-badge-tag, button.dam-viz-badge, span.dam-viz-badge"
       );
       if (!btn || (el !== document && !el.contains(btn))) return;
+      var text = resolveCopyText(btn);
+      if (!text) return;
       e.preventDefault();
       e.stopPropagation();
-      var label = String(btn.textContent || "").trim();
       copyTagText(btn)
         .then(function () {
-          toastCopied("Skopiowano: " + label);
+          toastCopied("Skopiowano: " + text);
         })
         .catch(function () {
           toastCopied("Nie udalo sie skopiowac");
@@ -964,8 +990,14 @@
   }
 
   function isSourceEditableFile(asset) {
+    if (!asset) return false;
     var ext = brandingFileExt(asset);
-    return ext === "psd" || ext === "psb" || ext === "ai" || ext === "eps" || ext === "indd";
+    if (ext === "psd" || ext === "psb" || ext === "ai" || ext === "eps" || ext === "indd") return true;
+    if (ext === "tif" || ext === "tiff") {
+      if (asset.media_type === "source") return true;
+      return (asset.format_technical || []).indexOf("editable") !== -1;
+    }
+    return false;
   }
 
   function shouldShowEditableBadge(asset) {
@@ -1027,8 +1059,17 @@
     }
 
     var hasEditableBadge = shouldShowEditableBadge(asset);
+    var effTransparent =
+      window.DamAssetTaxonomy &&
+      DamAssetTaxonomy.isEffectiveTransparent &&
+      DamAssetTaxonomy.isEffectiveTransparent(asset);
+    var formatTech = (asset.format_technical || []).slice();
 
-    (asset.format_technical || []).forEach(function (ft) {
+    if (effTransparent && formatTech.indexOf("transparent") === -1) {
+      formatTech.push("transparent");
+    }
+
+    formatTech.forEach(function (ft) {
       if (!ft) return;
       if (ft === "editable") return;
       pushItem({
@@ -1036,7 +1077,10 @@
         value: ft,
         label: brandingFormatLabel(ft),
         cls: "dam-viz-badge--lang",
-        tip: "Cecha techniczna pliku",
+        tip:
+          ft === "transparent" && !(asset.format_technical || []).includes("transparent")
+            ? "PNG/WebP — domyślnie bez tła (do weryfikacji pikseli)"
+            : "Cecha techniczna pliku",
         tier: "low",
       });
     });
@@ -1192,11 +1236,11 @@
   }
 
   function brandingGradientTileClass(asset) {
-    var ext = brandingFileExt(asset);
-    if (ext === "psd" || ext === "psb" || asset.folder_has_editable) {
+    if (isSourceEditableFile(asset)) {
       return "dam-gradient-tile dam-gradient-tile--editable";
     }
-    if (ext === "ai" || ext === "pdf") {
+    var ext = brandingFileExt(asset);
+    if (ext === "pdf") {
       return "dam-gradient-tile dam-gradient-tile--vector";
     }
     return "";
@@ -1204,17 +1248,7 @@
 
   function brandingGradientTileClassForAssets(assets) {
     if (!assets || !assets.length) return "";
-    var i;
-    var cls = "";
-    for (i = 0; i < assets.length; i++) {
-      cls = brandingGradientTileClass(assets[i]);
-      if (cls.indexOf("--editable") >= 0) return cls;
-    }
-    for (i = 0; i < assets.length; i++) {
-      cls = brandingGradientTileClass(assets[i]);
-      if (cls) return cls;
-    }
-    return "";
+    return brandingGradientTileClass(assets[0]);
   }
 
   function renderBranding(asset, opts) {

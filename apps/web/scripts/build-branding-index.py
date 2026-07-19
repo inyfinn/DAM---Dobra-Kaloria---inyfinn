@@ -63,7 +63,7 @@ def is_wizki_path(path: str) -> bool:
     return bool(WIZKI_FOLDER_RE.search(path.replace("\\", "/")))
 
 
-from asset_role_utils import enrich_branding_taxonomy, media_type_for  # noqa: E402
+from asset_role_utils import detect_raster_background, enrich_branding_taxonomy, media_type_for  # noqa: E402
 def normalize_perspective_token(raw: str) -> str:
     token = (raw or "").upper().replace("TYŁ", "TYL")
     if token in ("TYL", "TYL-ENFACE", "TYL_ENFACE"):
@@ -208,11 +208,22 @@ def make_asset(
     tags = build_tags(archived, wiz, channels, source, path=path)
     camp = parse_campaign(fp, marketing) if source == "marketing" else None
     mt = media_type_for(ext)
+    bg = wiz.get("background")
+    if not bg and mt == "image":
+        bg = detect_raster_background(str(fp), name)
     blob_parts = [name, path, brand, mt, source] + tags
     if wiz.get("perspective"):
         blob_parts.append(wiz["perspective"])
     if wiz.get("size"):
         blob_parts.append(wiz["size"])
+    mtime_iso = None
+    mtime_ms = None
+    try:
+        st = fp.stat()
+        mtime_ms = int(st.st_mtime * 1000)
+        mtime_iso = datetime.fromtimestamp(st.st_mtime, tz=timezone.utc).isoformat()
+    except OSError:
+        pass
     asset = {
         "id": f"br-{aid:06d}",
         "path": path,
@@ -222,7 +233,7 @@ def make_asset(
         "source": source,
         "perspective": wiz.get("perspective"),
         "size": wiz.get("size"),
-        "background": wiz.get("background"),
+        "background": bg,
         "sku": sku_m.group(1) if sku_m else None,
         "campaign_id": camp,
         "channels": channels,
@@ -230,6 +241,10 @@ def make_asset(
         "tags": tags,
         "is_archive": archived,
         "linked_product_ids": [],
+        "linked_variant_ids": [],
+        "linked_product_id": None,
+        "mtime": mtime_iso,
+        "mtime_ms": mtime_ms,
         "appearance_tags": [],
         "ocr_text": "",
         "search_blob": norm(" ".join(blob_parts)),

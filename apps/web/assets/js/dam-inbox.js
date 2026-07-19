@@ -139,16 +139,21 @@
   function isZgloszenie(it) {
     var tags = it.tags || [];
     var type = String(it.type || "");
+    if (type === "lifecycle_history" || tags.indexOf("lifecycle") !== -1) return true;
     if (type.indexOf("tag_proposal") === 0 || type === "viz_request") return true;
     return (
       tags.indexOf("moderacja") !== -1 ||
       tags.indexOf("propozycja") !== -1 ||
       tags.indexOf("zgloszenie") !== -1 ||
-      tags.indexOf("wizualizacja") !== -1
+      tags.indexOf("wizualizacja") !== -1 ||
+      tags.indexOf("historia") !== -1
     );
   }
 
   function isHistoria(it) {
+    if (it && it.type === "lifecycle_history") return true;
+    var tags = it && it.tags ? it.tags : [];
+    if (tags.indexOf("lifecycle") !== -1) return true;
     var st = String(it.status || it.proposal_status || "");
     return (
       st === "approved" ||
@@ -159,6 +164,66 @@
       st === "undone" ||
       !!(it.decided_at || it.decided_by || it.undone_at)
     );
+  }
+
+  function lifecycleLetterLabel(letter, status) {
+    var lit = String(letter || "").toUpperCase();
+    if (lit === "F" || lit === "X" || lit === "D") return lit;
+    var s = String(status || "").toLowerCase();
+    if (s === "aktualne") return "F";
+    if (s === "nieaktualne") return "X";
+    if (s === "demo") return "D";
+    if (s === "clear" || !s) return "bez statusu";
+    return s;
+  }
+
+  function loadLifecycleHistoryAsInbox() {
+    return fetch("data/lifecycle-status.json?_=" + Date.now())
+      .then(function (r) {
+        return r.ok ? r.json() : { history: [] };
+      })
+      .then(function (d) {
+        var hist = (d && d.history) || [];
+        return hist
+          .slice()
+          .reverse()
+          .slice(0, 200)
+          .map(function (h) {
+            var letter = lifecycleLetterLabel(h.letter, h.status);
+            var scope = h.scope === "product" ? "produkt" : h.scope === "variant" ? "wariant" : h.scope || "status";
+            var idx = h.revision_index || "";
+            var pid = h.product_id || "";
+            var title =
+              "Lifecycle " +
+              letter +
+              " · " +
+              scope +
+              (idx ? " · " + idx : "") +
+              (pid ? " · " + pid : "");
+            return {
+              id: h.id || "lc_" + (h.ts || Math.random()),
+              type: "lifecycle_history",
+              title: title,
+              body:
+                (h.actor ? "Autor: " + h.actor + ". " : "") +
+                (h.path || h.product_path || "") +
+                (h.notes && h.notes.length ? " · " + h.notes.join(", ") : ""),
+              status: "approved",
+              decided_at: h.ts || "",
+              decided_by: h.actor || "",
+              created_at: h.ts || "",
+              product_id: pid,
+              path: h.path || h.product_path || "",
+              revision_index: idx,
+              tags: ["historia", "lifecycle", scope],
+              read: true,
+              source: "lifecycle",
+            };
+          });
+      })
+      .catch(function () {
+        return [];
+      });
   }
 
   function undoGraceActive(it) {
@@ -1439,11 +1504,13 @@
       loadAsanaAsInbox(),
       loadProductLookup(),
       refreshChangeLogMeta(),
+      loadLifecycleHistoryAsInbox(),
     ]).then(function (results) {
       results = results.slice(1);
       /* Propozycje z API mają pierwszeństwo nad duplikatami inbox_items */
       var props = results[0];
       var productMap = results[3] || {};
+      var lifecycleItems = results[5] || [];
       props.forEach(function (p) {
         enrichProposalFromProduct(p, productMap[p.product_id]);
         if (p.type === "tag_proposal") {
@@ -1458,7 +1525,7 @@
       var inboxOnly = results[1].filter(function (it) {
         return !(it.proposal_id && propIds[it.proposal_id]);
       });
-      allItems = dedupeMerge(props, inboxOnly).concat(results[2]);
+      allItems = dedupeMerge(props, inboxOnly).concat(results[2]).concat(lifecycleItems);
       allItems.sort(function (a, b) {
         var ap = isPendingMod(a) ? 2 : a.read === false ? 1 : 0;
         var bp = isPendingMod(b) ? 2 : b.read === false ? 1 : 0;

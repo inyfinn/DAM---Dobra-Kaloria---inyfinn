@@ -638,6 +638,89 @@ def build_linked_product_meta(product_ids: list[str], file_index: dict) -> list[
     return out
 
 
+_SKU_INDEX_RE = re.compile(r"(6300\d{3}(?:\.\d{2})?)")
+_variant_to_product_cache: dict[str, str] | None = None
+_variant_to_product_cache_id: int | None = None
+
+
+def build_variant_to_product_map(file_index: dict) -> dict[str, str]:
+    """Mapa indeks wariantu (6300684.01) → product_id. Jedno źródło prawdy z file-index."""
+    global _variant_to_product_cache, _variant_to_product_cache_id
+    cache_id = id(file_index)
+    if _variant_to_product_cache is not None and _variant_to_product_cache_id == cache_id:
+        return _variant_to_product_cache
+    out: dict[str, str] = {}
+    for p in file_index.get("products") or []:
+        pid = p.get("id") or ""
+        if not pid:
+            continue
+        for rev in p.get("revisions") or []:
+            idx = str(rev.get("index") or "").strip()
+            if idx:
+                out[idx] = pid
+            base = str(rev.get("index_base") or "").strip()
+            if base and base not in out:
+                out[base] = pid
+        for idx in p.get("indexes") or []:
+            key = str(idx).strip()
+            if key and key not in out:
+                out[key] = pid
+    _variant_to_product_cache = out
+    _variant_to_product_cache_id = cache_id
+    return out
+
+
+def extract_variant_ids_from_asset(asset: dict[str, Any]) -> list[str]:
+    blob = " ".join(
+        [
+            str(asset.get("sku") or ""),
+            str(asset.get("name") or ""),
+            str(asset.get("path") or ""),
+            str(asset.get("ocr_text") or ""),
+        ]
+    )
+    found: list[str] = []
+    seen: set[str] = set()
+    for m in _SKU_INDEX_RE.finditer(blob):
+        idx = m.group(1)
+        if idx not in seen:
+            seen.add(idx)
+            found.append(idx)
+    return found
+
+
+def apply_global_product_links(asset: dict[str, Any], file_index: dict) -> None:
+    """
+    linked_variant_ids = indeksy SKU na materiale.
+    linked_product_id = ZAWSZE wyliczane z wariantu (mapa variant→product).
+    Nie wypełniać linked_product_id ręcznie niezależnie od wariantu.
+    """
+    vmap = build_variant_to_product_map(file_index)
+    variants = extract_variant_ids_from_asset(asset)
+    # Zachowaj istniejące linked_product_ids jako kandydatów rodziny
+    product_ids = list(asset.get("linked_product_ids") or [])
+    for vid in variants:
+        pid = vmap.get(vid) or vmap.get(vid.split(".")[0] if "." in vid else "")
+        if pid and pid not in product_ids:
+            product_ids.append(pid)
+    # Jeśli mamy product_ids bez wariantu — zostaw; product_id = pierwszy
+    derived = ""
+    for vid in variants:
+        derived = vmap.get(vid) or ""
+        if derived:
+            break
+    if not derived and product_ids:
+        derived = product_ids[0]
+    if derived and derived not in product_ids:
+        product_ids.insert(0, derived)
+    asset["linked_variant_ids"] = variants
+    asset["linked_product_id"] = derived or None
+    if product_ids:
+        asset["linked_product_ids"] = product_ids[:8]
+        if not asset.get("linked_products"):
+            asset["linked_products"] = build_linked_product_meta(product_ids[:8], file_index)
+
+
 def enrich_folder_groups(assets: list[dict[str, Any]], file_index: dict) -> None:
     """Grupuje pliki w folderze: warianty, edytowalny, wspolne skojarzenia produktow."""
     by_dir: dict[str, list[dict[str, Any]]] = {}
@@ -721,6 +804,7 @@ def enrich_folder_groups(assets: list[dict[str, Any]], file_index: dict) -> None
             a["linked_product_ids"] = linked
             a["folder_linked_product_ids"] = group_product_ids
             a["linked_products"] = build_linked_product_meta(group_product_ids, file_index)
+            apply_global_product_links(a, file_index)
 
             stem_key = norm(variant_stem(a.get("name") or ""))
             siblings = stems.get(stem_key)

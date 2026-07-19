@@ -3664,3 +3664,65 @@ User: indeksuj `- POLSKA` i `-- ARCHIWUM --` (stara struktura Marketing); przy n
 - program-instructions `branding.marketing_dual_roots`
 - apps/web/scripts/build-branding-index.py, brand_folder_context.py
 
+---
+
+# ═══════════════════════════════════════════════════════════════════
+# RZECZY DO WYKONANIA — NIE UDAŁO SIĘ (chcemy, żeby były)
+# Data wpisu: 2026-07-19 | sesja: Branding UI + transparent PNG
+# ═══════════════════════════════════════════════════════════════════
+
+Poniżej lista funkcji / poprawek **zaplanowanych lub rozpoczętych**, których **nie udało się domknąć** w tej sesji. Priorytet dopracowania: **ten tydzień (od 2026-07-21)**.
+
+| # | Temat | Status | Dlaczego nie done | Następny krok |
+|---|-------|--------|-------------------|---------------|
+| 1 | **Odtwarzanie wideo w modalu** (stream z `X:` / bridge `/media`) | FAIL UI-only | Bridge/Synology timeout lub brak dostępu do pliku w sesji agenta; layout wideo OK, stream nie zweryfikowany E2E | Restart bridge u usera; test `br-006305` z logiem `/media`; fallback komunikat „Plik offline” |
+| 2 | **Pełny pixel-scan transparent** dla wszystkich PNG (poza www) | Częściowo | Skan PIL wolny na NFS `X:`; patch tylko scope www (217 assetów) | Batch nocny `patch-branding-backgrounds.py --all` z limitem czasu; zapis do indeksu zamiast heurystyki |
+| 3 | **Heurystyka PNG default → indeks JSON** (nie tylko runtime UI) | Odłożone | User: „na razie UI”; indeks bez masowego rewrite | Po pixel-scan nadpisać `background` w `build-branding-index` |
+| 4 | **Filtr „Tło białe”** — precyzyjne liczniki | Do weryfikacji | W QA Kampanie: filtr white nie zawęża (120=wszystko) — brak white w tej zakładce lub logika zbyt szeroka | Test na Packshoty/wizki JPG; white tylko ze skanu |
+| 5 | **Wyszukiwanie tekstowe „przezroczyste”** | FAIL w QA pass 14 | CDP `input` event → 0 kart (możliwy konflikt filtrów / debounce) | Ręczny test + tokeny w `search_blob` przy rebuild |
+| 6 | **Sidebar collapsed — logo wordmark bez crop** | Nie domknięte | Test CDP przerwany; brak screenshota collapsed | Screenshot collapsed + Read; `object-fit: contain` jeśli crop |
+| 7 | **Marketing ID — typy TikTok / YouTube / Reels** | Brak | W scope tylko VID/SLI/BAN/META/GOG/SHOP/GIF/KV/IMG | Rozszerzyć `dam-marketing-id.js` + instrukcja |
+| 8 | **Pełna parytet kart branding ↔ viz** (wszystkie tryby grup) | Częściowo | Actions OK na głównej siatce; grupy folderowe nie na wszystkich zakładkach | Audyt `renderGroupCard` vs viz na WWW/Social |
+| 9 | **Seed program-instructions do Postgres KV** | Nie w tej sesji | Zmiany tylko w pliku cache JSON | Restart bridge / seed KV dla nowych id |
+| 10 | **30-pass QA — wszystkie zakładki z kartami** | Częściowo | Social/WWW 0 kart w teście (dane/filtry) | User: odznaczyć „Tylko grafiki”, test z assetami www |
+
+---
+
+## 2026-07-19 — Branding UI overhaul + PNG default transparent + commit
+
+### Komenda/Akcja
+User: PNG bez skanu = domyślnie bez tła (zachować pixel-scan); spisać niewykonane; log zmian; QA 30-pass; commit + push + backup.
+
+### Log/Status — chronologia zmian (2026-07-19)
+
+| Czas (szac.) | Plik / obszar | Co wprowadzono |
+|--------------|---------------|----------------|
+| rano | `asset_role_utils.py`, `patch-branding-backgrounds.py` | Skan alpha PNG; patch 217 www → `background: transparent` |
+| rano | `dam-branding.js` | Filtry facet global vs tab; `assetMatchesTagKey` transparent |
+| południe | `dam-marketing-id.js` (nowy) | Format M-VID/KV/…; użyty w modalu i kartach |
+| południe | `dam-media-preview.js` | Hero wideo, path bar, variant placeholder, title meta |
+| południe | `dam-branding.css`, `dam-hub-shared.css` | Spacing modal, karty viz-style, gradient tile |
+| południe | `dam-viz.js`, `visualizations.html` | Zoom 50–250%, CARD_IMG_BASE_SCALE 1.2 |
+| południe | `program-instructions.json` | `branding.marketing_asset_id_format` |
+| wieczór | `dam-asset-taxonomy.js` | `effectiveBackground`, PNG/WebP default transparent |
+| wieczór | `dam-branding.js`, `dam-badges.js` | Filtr + badge + search blob dla effective background |
+| wieczór | `program-instructions.json` | `branding.png_default_transparent` |
+| wieczór | `branding.html` | Cache bust `hub20260719trans01` |
+
+### Efekt/Fix
+- Tag „Przezroczyste tło” klikalny; filtr zawęża (17/120 w Kampaniach).
+- PNG bez `background` w indeksie → UI traktuje jako transparent (np. br-006165).
+- Modal: M-KV106165-04-25, path monospace, margin meta 10px, actions 15px.
+
+### Test/Ewaluacja
+- QA 30-pass: tabela w `PROGRESS.md` (26 PASS, 4 INFO, odłożone FAIL w sekcji NIE UDAŁO SIĘ).
+- Screenshot + Read: modal KV, siatka Kampanie.
+
+### Backup
+- Tag przed commitem: `backup/2026-07-19-pre-branding-ui-overhaul`
+- Tag po commicie: `feature/2026-07-19-branding-ui-overhaul`
+
+### Zrodla
+- `program-instructions.json` (`branding.png_default_transparent`, `branding.marketing_asset_id_format`)
+- `.cursor/rules/verify-ui-after-changes.mdc`
+

@@ -38,6 +38,60 @@ Ostatnia aktualizacja: **2026-07-19**
 | Dump Postgres w DATABASE/ | **done** | sync godzinowy NAS + sync-database-backups-to-git.py |
 | Branding: POLSKA + archiwum, dedup, folder context | **done** | 49252 assetow; modal warianty + produkty; disc8 |
 | Branding: tagi Slidery / Na sklep / Szkoła / Edytowalny | **done** | brand_tag_utils + brand_folder_context + testy |
+| **Branding hub UI overhaul + marketing ID (2026-07-19)** | **done** | M-VID/KV…, modal wideo, karty viz-style, PNG domyślnie transparent (UI) |
+
+## Feature: Branding hub UI + marketing ID (2026-07-19)
+
+**Cache bust:** `hub20260719trans01` (JS taxonomy/badges/branding), `hub20260719ui05` (modal/marketing-id/CSS).
+
+### Co wdrożono
+- **ID marketingowe** (`dam-marketing-id.js`): format `M-{TYP}{nr}{id}-{MM}-{RR}`; w UI kart i modala; wewnętrzny `br-*` bez zmian.
+- **Modal podglądu** (`dam-media-preview.js`): hero wideo 16:9/9:16/1:1 + play; ścieżka monospace z scroll; warianty placeholder; `#damMediaPreviewTitleMeta` margin-top 10px; `.dam-viz-modal__actions` margin-bottom 15px.
+- **Karty branding** (`dam-branding.js` + CSS): układ jak viz (Podgląd / folder / share), tytuł +10%, padding body, gradient tile (`dam-hub-shared.css`).
+- **Zoom wiz** 50–250% (`dam-viz.js`, `visualizations.html`); miniatury viz scale 1.2.
+- **Przezroczyste tło:** skan pikseli (217 assetów www w indeksie) + **PNG/WebP bez skanu = domyślnie transparent** w UI (`dam-asset-taxonomy.effectiveBackground`, instrukcja `branding.png_default_transparent`).
+- **Filtry tagów:** liczniki globalne vs zakładka; chip „Przezroczyste tło” aktywny (nie disabled).
+- **Desktop:** silent DB sync (VBS/tray), assoc-edit, product-correlation, bridge preview PSB/PNG.
+
+### QA 30-pass (Branding, 2026-07-19 ~19:10)
+| # | Obszar | Wynik |
+|---|--------|-------|
+| 1 | Ładowanie indeksu, 120 kart Kampanie | PASS |
+| 2 | Skrypt `dam-branding.js?v=hub20260719trans01` | PASS |
+| 3 | `DamAssetTaxonomy.isEffectiveTransparent` | PASS |
+| 4 | Chip „Przezroczyste tło” nie disabled | PASS |
+| 5 | Filtr transparent → 17 kart (vs 120 bazowych) | PASS |
+| 6 | br-004000 scanned transparent | PASS |
+| 7 | br-006165 PNG bez bg → eff transparent | PASS |
+| 8 | Marketing ID br-006165 → M-KV106165-04-25 | PASS |
+| 9 | Marketing ID br-006305 → M-VID606305-01-25 | PASS |
+| 10 | Modal: meta margin-top 10px | PASS |
+| 11 | Modal: actions margin-bottom 15px | PASS |
+| 12 | Modal: ścieżka monospace + scroll | PASS |
+| 13 | Modal: marketing ID w meta | PASS |
+| 14 | Karty: `.dam-viz-card__actions` + „Podgląd” | PASS |
+| 15 | Karty: marketing ID M- w HTML | PASS |
+| 16 | Tytuł karty font-size 15.4px (~+10%) | PASS |
+| 17 | Zakładka Social (0 kart — brak assetów/filtr) | INFO |
+| 18 | Zakładka WWW (0 kart w teście) | INFO |
+| 19 | Zakładka Packshoty 120 kart | PASS |
+| 20 | Wyczyść filtry | PASS |
+| 21 | Wariant placeholder w modalu | PASS |
+| 22 | Assoc footer „Brak skojarzonych” | PASS |
+| 23 | program-instructions marketing_asset_id_format | PASS |
+| 24 | program-instructions png_default_transparent | PASS |
+| 25 | Badge „Przezroczyste tło” na karcie (modal tags) | PASS |
+| 26 | Filtr „Tło białe” (120 — brak white w Kampaniach) | INFO |
+| 27 | Sortowanie combobox obecny | PASS |
+| 28 | Tylko grafiki checkbox | PASS |
+| 29 | Screenshot modal KV (Read vision) | PASS |
+| 30 | Screenshot siatka Kampanie | PASS (modal overlay w części testów) |
+
+**Screenshoty QA:** `qa-pass-modal-kv6165.png`, `qa-pass30-kampanie-full.png` (temp Cursor screenshots).
+
+### Backup / rollback
+- Tag git przed commitem: `backup/2026-07-19-pre-branding-ui-overhaul` → stan `origin/main` sprzed tego commita.
+- Tag po commicie: `feature/2026-07-19-branding-ui-overhaul` → pełny zestaw zmian.
 
 ## Uruchomienie dla usera
 

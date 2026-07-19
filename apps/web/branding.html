@@ -10,9 +10,9 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
-  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad02">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719modal1">
-  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=hub20260719tags01">
+  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad05">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719tagsThin">
+  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=hub20260719ui05">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <script>
@@ -99,6 +99,32 @@
           <span class="dam-switch__track" aria-hidden="true"></span>
           <span class="dam-switch__label">Pokaż archiwum</span>
         </label>
+        <div class="dam-branding-date-range" aria-label="Zakres dat pliku">
+          <span class="dam-branding-date-range__label">Od</span>
+          <input type="date" id="damBrandingDateFrom" aria-label="Data od" />
+          <span class="dam-branding-date-range__label">Do</span>
+          <input type="date" id="damBrandingDateTo" aria-label="Data do" />
+          <div class="dam-branding-date-presets" id="damBrandingDatePresets" role="group" aria-label="Szybkie zakresy">
+            <button type="button" data-preset="week">Ostatni tydzień</button>
+            <button type="button" data-preset="month">Ostatni miesiąc</button>
+            <button type="button" data-preset="2026">2026</button>
+            <button type="button" data-preset="2025">2025</button>
+          </div>
+        </div>
+        <label class="dam-branding-sort" for="damBrandingSort">
+          <span class="dam-branding-date-range__label">Sortuj</span>
+          <select id="damBrandingSort" aria-label="Sortowanie wyników">
+            <option value="priority" selected>Priorytet użycia</option>
+            <option value="newest">Najnowsze</option>
+            <option value="oldest">Najstarsze</option>
+            <option value="name">Nazwa</option>
+          </select>
+        </label>
+        <label class="dam-switch dam-switch--compact" for="damBrandingTagCounts" data-dam-tip="Pokaż liczby dopasowań obok tagów (domyślnie wyłączone)">
+          <input type="checkbox" id="damBrandingTagCounts" class="dam-switch__input" />
+          <span class="dam-switch__track" aria-hidden="true"></span>
+          <span class="dam-switch__label">Liczby przy tagach</span>
+        </label>
         <button type="button" class="dam-branding-clear-btn" id="damBrandingClearTags">Wyczyść filtry</button>
       </div>
 
@@ -136,10 +162,14 @@
   <script src="./assets/js/dam-icons.js?v=20260718icons2"></script>
   <script src="./assets/vendor/js/gsap/gsap.min.js"></script>
   <script src="./assets/js/dam-tag-bar.js?v=hub20260719j12"></script>
-  <script src="./assets/js/dam-asset-taxonomy.js?v=hub20260719j10"></script>
-  <script src="./assets/js/dam-badges.js?v=hub20260719grad02"></script>
+  <script src="./assets/js/dam-asset-taxonomy.js?v=hub20260719trans01"></script>
+  <script src="./assets/js/dam-badges.js?v=hub20260719trans01"></script>
+  <script src="./assets/js/dam-search.js?v=hub20260719assoc03"></script>
+  <script src="./assets/js/dam-assoc-edit.js?v=hub20260719resp01"></script>
   <script src="./assets/js/dam-tag-edit.js?v=hub20260719j10"></script>
-  <script src="./assets/js/dam-media-preview.js?v=hub20260719disc13"></script>
-  <script src="./assets/js/dam-branding.js?v=hub20260719tags01"></script>
+  <script src="./assets/js/dam-marketing-id.js?v=hub20260719ui05"></script>
+  <script src="./assets/js/dam-media-preview.js?v=hub20260719ui05"></script>
+  <script src="./assets/js/dam-product-correlation.js?v=hub20260719corr01"></script>
+  <script src="./assets/js/dam-branding.js?v=hub20260719trans01"></script>
 </body>
 </html>

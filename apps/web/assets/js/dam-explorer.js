@@ -1437,6 +1437,62 @@
         "</button>";
     });
     html += "</div>";
+    html += renderLifecycleHistory(opts);
+    return html;
+  }
+
+  function lifecycleLetterFromStatus(status) {
+    var s = String(status || "").toLowerCase();
+    if (s === "aktualne" || s === "f") return "F";
+    if (s === "nieaktualne" || s === "x" || s === "archiwum") return "X";
+    if (s === "demo" || s === "d") return "D";
+    if (s === "clear" || s === "starsza" || !s) return "—";
+    return String(status || "").toUpperCase().slice(0, 3);
+  }
+
+  function renderLifecycleHistory(opts) {
+    opts = opts || {};
+    var hist = (state.lifecycleStore && state.lifecycleStore.history) || [];
+    if (!hist.length) return "";
+    var productId = String(opts.productId || "");
+    var index = String(opts.index || opts.ridx || "");
+    var path = String(opts.path || "").toLowerCase();
+    var productPath = String(opts.productPath || "").toLowerCase();
+    var rows = hist.filter(function (h) {
+      if (!h) return false;
+      if (productId && String(h.product_id || "") === productId) return true;
+      if (index && (String(h.revision_index || "") === index || String(h.index || "") === index)) return true;
+      var hp = String(h.path || h.variant_path || h.product_path || "").toLowerCase();
+      if (path && hp && (hp === path || hp.indexOf(path) !== -1 || path.indexOf(hp) !== -1)) return true;
+      if (productPath && hp && hp.indexOf(productPath) !== -1) return true;
+      return false;
+    });
+    if (!rows.length) return "";
+    rows = rows.slice().sort(function (a, b) {
+      return String(b.ts || "").localeCompare(String(a.ts || ""));
+    }).slice(0, 12);
+    var html =
+      '<div class="dam-lifecycle-history" role="log" aria-label="Historia statusów F/X/D">' +
+      '<div class="dam-lifecycle-history__title">Historia statusów</div><ul class="dam-lifecycle-history__list">';
+    rows.forEach(function (h) {
+      var letter = lifecycleLetterFromStatus(h.letter || h.status || h.to || h.after);
+      var when = String(h.ts || "").replace("T", " ").slice(0, 16);
+      var who = h.actor || h.user || h.by || "";
+      var scope = h.scope === "product" ? "produkt" : h.scope === "variant" ? "wariant" : h.scope || "status";
+      var idxShow = String(h.revision_index || index || "");
+      html +=
+        "<li><span class=\"dam-lifecycle-history__when\">" +
+        esc(when) +
+        '</span> <span class="dam-lifecycle-history__letter">' +
+        esc(letter) +
+        '</span> <span class="dam-lifecycle-history__meta">' +
+        esc(scope) +
+        (idxShow ? " · " + esc(idxShow) : "") +
+        (h.product_id ? " · " + esc(String(h.product_id)) : "") +
+        (who ? " · " + esc(who) : "") +
+        "</span></li>";
+    });
+    html += "</ul></div>";
     return html;
   }
 
@@ -4907,6 +4963,7 @@
       searchDrop.style.display = "none";
     }
 
+    state.product = product;
     state.canonCat = DL ? DL.categoryCanonId(product.category) : product.category;
     reconcileProductLifecycleFromDisk(product.id, product.path || "");
     state.expandedCarriers = {};

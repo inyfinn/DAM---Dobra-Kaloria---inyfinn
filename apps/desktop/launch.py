@@ -670,6 +670,36 @@ def main() -> None:
     except Exception:
         pass
 
+    def _show_window() -> None:
+        try:
+            for win in list(getattr(webview, "windows", []) or []):
+                try:
+                    win.show()
+                    win.restore()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    def _shutdown_all() -> None:
+        stop_supervise.set()
+        try:
+            httpd.shutdown()
+        except Exception:
+            pass
+        if watch_proc and watch_proc.poll() is None:
+            watch_proc.terminate()
+        if bridge_proc and bridge_proc.poll() is None:
+            bridge_proc.terminate()
+        os._exit(0)
+
+    try:
+        from dam_tray import start_tray
+
+        start_tray(title=APP_TITLE, on_show=_show_window, on_quit=_shutdown_all)
+    except Exception:
+        pass
+
     # Profil WebView2 trwaly (nie nowy folder tymczasowy przy KAZDYM starcie).
     # Domyslnie pywebview tworzy folder w %TEMP% i usuwa go po zamknieciu -
     # to oznacza "cold start" (zero cache) przy kazdym uruchomieniu aplikacji.

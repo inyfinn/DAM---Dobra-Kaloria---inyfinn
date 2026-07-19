@@ -180,8 +180,88 @@
   margin-left: 8px;
 }
 
+/* Rozwijane kafelki materiałów marketingowych */
+.dam-marketing-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.dam-marketing-tile {
+  flex: 1 1 calc(50% - 6px);
+  min-width: min(100%, 280px);
+  border: 1px solid var(--dam-border, rgba(0, 0, 0, 0.08));
+  border-radius: 14px;
+  background: var(--dam-surface-2, rgba(0, 0, 0, 0.02));
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition:
+    flex-basis 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease;
+}
+
+.dam-marketing-tile.is-expanded {
+  flex: 1 1 100%;
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.1);
+}
+
+.dam-marketing-tile__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dam-marketing-tile__title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--dam-text, #111);
+}
+
+.dam-marketing-tile__meta {
+  font-size: 12px;
+  color: var(--dam-muted, #6b7280);
+  margin: 2px 0 0;
+}
+
+.dam-marketing-tile__toggle {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.dam-marketing-tile__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 8px;
+}
+
+.dam-marketing-tile__grid--full {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.dam-marketing-tile.is-expanded .dam-marketing-tile__grid:not(.dam-marketing-tile__grid--full) {
+  display: none;
+}
+
 @media (max-width: 767px) {
+  .dam-marketing-tile {
+    flex: 1 1 100%;
+  }
+
   .dam-catalog-card--price .dam-catalog-card__value {
     font-size: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-marketing-tile {
+    transition: none;
   }
 }

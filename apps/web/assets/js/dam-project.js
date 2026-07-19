@@ -184,6 +184,7 @@
   }
 
   function productIndexTokens(p) {
+    if (window.DamProductCorrelation) return DamProductCorrelation.productIndexTokens(p);
     var out = [];
     function add(v) {
       v = String(v || "").trim();
@@ -194,41 +195,28 @@
     }
     add(p.product_index);
     (p.indexes || []).forEach(add);
-    var id = String(p.id || "");
-    if (id.length >= 8) {
-      var parts = id.split("-");
-      if (parts.length > 2) add(parts.slice(0, -1).join("-"));
-    }
-    var dn = String(p.display_name || p.title || p.name || "")
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}\s-]/gu, "")
-      .trim()
-      .replace(/\s+/g, "-");
-    if (dn.length >= 8) add(dn);
     return out;
   }
 
   function isArchivedBranding(a) {
+    if (window.DamProductCorrelation) return DamProductCorrelation.isArchivedBranding(a);
     if ((a.tags || []).indexOf("ARCHIWUM") !== -1 || a.is_archive) return true;
     return String(a.path || "").toUpperCase().indexOf("ARCHIWUM") !== -1;
   }
 
   function brandingAssetMatches(a, productId, tokens) {
+    if (window.DamProductCorrelation) {
+      return DamProductCorrelation.brandingAssetMatches(a, productId, tokens);
+    }
     var ids = (a.linked_product_ids || []).concat(a.product_ids || []);
     if (ids.indexOf(productId) !== -1) return true;
-    if (a.sku) {
-      for (var i = 0; i < tokens.length; i++) {
-        var t = tokens[i];
-        if (!t) continue;
-        if (a.sku === t || a.sku.indexOf(t) === 0 || t.indexOf(a.sku) === 0) return true;
-      }
-    }
-    var hay = ((a.path || "") + " " + (a.name || "") + " " + (a.search_blob || "")).toLowerCase();
-    for (var j = 0; j < tokens.length; j++) {
-      var tok = String(tokens[j] || "").toLowerCase();
-      if (tok.length >= 6 && hay.indexOf(tok) !== -1) return true;
-    }
     return false;
+  }
+
+  function brandingLinkForProduct(prod) {
+    if (window.DamProductCorrelation) return DamProductCorrelation.brandingUrlForProduct(prod);
+    var q = prod.product_index || prod.id || "";
+    return "branding.html?q=" + encodeURIComponent(q);
   }
 
   function marketingThumbHtml(a) {
@@ -432,6 +420,102 @@
       "</div>";
   }
 
+  function marketingTilePreviewHtml(assets, limit) {
+    limit = limit || 4;
+    return (
+      '<div class="dam-marketing-tile__grid">' +
+      assets
+        .slice(0, limit)
+        .map(marketingCardHtml)
+        .join("") +
+      "</div>"
+    );
+  }
+
+  function marketingTileHtml(tile, index) {
+    var count = tile.assets.length;
+    var preview = marketingTilePreviewHtml(tile.assets, tile.kind === "viz" ? 6 : 4);
+    return (
+      '<article class="dam-marketing-tile" data-tile-id="' +
+      esc(tile.id) +
+      '" data-tile-index="' +
+      index +
+      '" style="--tile-order:' +
+      index +
+      '">' +
+      '<header class="dam-marketing-tile__head">' +
+      '<div class="dam-marketing-tile__titles">' +
+      '<h5 class="dam-marketing-tile__title">' +
+      esc(tile.title) +
+      "</h5>" +
+      '<p class="dam-marketing-tile__meta">' +
+      count +
+      (count === 1 ? " asset" : " assetów") +
+      "</p></div>" +
+      '<button type="button" class="dam-marketing-tile__toggle geex-btn geex-btn--sm geex-btn--primary-transparent" data-action="expand" aria-expanded="false">' +
+      "Pokaż wszystko</button></header>" +
+      '<div class="dam-marketing-tile__body">' +
+      preview +
+      (count > 4
+        ? '<div class="dam-marketing-tile__full" hidden>' +
+          '<div class="dam-marketing-tile__grid dam-marketing-tile__grid--full">' +
+          tile.assets.map(marketingCardHtml).join("") +
+          "</div></div>"
+        : "") +
+      "</div></article>"
+    );
+  }
+
+  function bindMarketingTiles(host) {
+    if (!host) return;
+    var wrap = host.querySelector(".dam-marketing-tiles");
+    if (!wrap) return;
+    wrap.querySelectorAll(".dam-marketing-tile__toggle").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var tile = btn.closest(".dam-marketing-tile");
+        if (!tile) return;
+        var expanded = wrap.getAttribute("data-expanded");
+        var tileId = tile.getAttribute("data-tile-id");
+        if (expanded === tileId) {
+          wrap.removeAttribute("data-expanded");
+          tile.classList.remove("is-expanded");
+          btn.setAttribute("aria-expanded", "false");
+          btn.textContent = "Pokaż wszystko";
+          var full = tile.querySelector(".dam-marketing-tile__full");
+          if (full) full.hidden = true;
+          return;
+        }
+        wrap.querySelectorAll(".dam-marketing-tile").forEach(function (el) {
+          el.classList.remove("is-expanded");
+          var fullEl = el.querySelector(".dam-marketing-tile__full");
+          if (fullEl) fullEl.hidden = true;
+          var tg = el.querySelector(".dam-marketing-tile__toggle");
+          if (tg) {
+            tg.setAttribute("aria-expanded", "false");
+            tg.textContent = "Pokaż wszystko";
+          }
+        });
+        wrap.setAttribute("data-expanded", tileId);
+        tile.classList.add("is-expanded");
+        btn.setAttribute("aria-expanded", "true");
+        btn.textContent = "Zwiń";
+        var fullPanel = tile.querySelector(".dam-marketing-tile__full");
+        if (fullPanel) fullPanel.hidden = false;
+        var idx = parseInt(tile.getAttribute("data-tile-index") || "0", 10);
+        wrap.querySelectorAll(".dam-marketing-tile").forEach(function (el) {
+          var elIdx = parseInt(el.getAttribute("data-tile-index") || "0", 10);
+          if (el === tile) {
+            el.style.order = String(idx);
+          } else if (elIdx < idx) {
+            el.style.order = String(elIdx);
+          } else {
+            el.style.order = String(elIdx + 1);
+          }
+        });
+      });
+    });
+  }
+
   async function renderMarketingShort(p) {
     var host = document.getElementById("damMarketingShortBody");
     if (!host) return;
@@ -445,22 +529,28 @@
         if (isArchivedBranding(a)) return false;
         return brandingAssetMatches(a, productId, tokens);
       });
+      if (window.DamProductCorrelation) {
+        DamProductCorrelation.registerBrandingCountsFromAssets(idx.assets || []);
+      }
       if (!assets.length) {
         host.innerHTML =
           '<p class="dam-catalog-marketing__empty">Brak powiązanych assetów w indeksie Branding (SKU, ścieżka lub linked_product_ids).</p>';
         return;
       }
-      var q = tokens[0] || productId;
-      var preview = assets.slice(0, 6);
+      var tiles = window.DamProductCorrelation
+        ? DamProductCorrelation.groupMarketingTiles(assets)
+        : [{ id: "all", title: "Materiały", assets: assets, kind: "graphics" }];
+      var brandHref = brandingLinkForProduct(prod);
       host.innerHTML =
         '<p class="dam-catalog-marketing__summary">' +
         assets.length +
-        ' assetów · <a href="branding.html?q=' +
-        encodeURIComponent(q) +
+        ' assetów · <a href="' +
+        esc(brandHref) +
         '">Otwórz Branding</a></p>' +
-        '<div class="dam-catalog-marketing-grid">' +
-        preview.map(marketingCardHtml).join("") +
+        '<div class="dam-marketing-tiles" data-expanded="">' +
+        tiles.map(marketingTileHtml).join("") +
         "</div>";
+      bindMarketingTiles(host);
     } catch (e) {
       host.innerHTML =
         '<p class="dam-catalog-marketing__empty">Brak powiązanych assetów — zbuduj indeks Branding.</p>';

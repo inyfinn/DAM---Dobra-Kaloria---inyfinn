@@ -538,17 +538,25 @@ def pull_database_dump_now() -> dict[str, Any]:
     """Wymus pobranie dumpa z NAS do DATABASE/ (ten sam skrypt co sync godzinowy)."""
     import subprocess
     import sys
+    from pathlib import Path
 
     if not SYNC_SCRIPT.is_file():
         return {"ok": False, "error": "sync_script_missing", "path": str(SYNC_SCRIPT)}
+    py_exe = sys.executable
+    if sys.platform == "win32":
+        pyw = Path(py_exe).with_name("pythonw.exe")
+        if pyw.is_file():
+            py_exe = str(pyw)
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
     try:
         proc = subprocess.run(
-            [sys.executable, str(SYNC_SCRIPT), "--no-commit"],
+            [py_exe, str(SYNC_SCRIPT), "--no-commit"],
             cwd=str(DESKTOP_DIR),
             capture_output=True,
             text=True,
             timeout=120,
             check=False,
+            creationflags=flags,
         )
         dump = latest_database_dump()
         return {

@@ -52,7 +52,7 @@ python wyszukiwanie-brandingu/verify-branding-fixtures.py
 
 1. **Kolejność grup (ogół → szczegół):** Marka → Skojarzenia → Przeznaczenie → Format pliku → Kanał → Produkt → Cechy → Wizualizacja → Kiedy → Kolekcje → Co.
 2. **Tagi kanoniczne `facet:*`** w `dam-branding.js` (`CANONICAL_TAGS`) — jeden klucz globalnie; ten sam tag może być w wielu rzędach (np. Slider w Skojarzeniach i Przeznaczeniu), zawsze ten sam filtr.
-3. **Przeznaczenie** — pills 2× większe (klasa `dam-branding-tag-group--przeznaczenie-tiles`).
+3. **Przeznaczenie** — kompaktowe pills z pełnym zaokrągleniem (klasa `dam-branding-tag-group--przeznaczenie-tiles`, ~35% poprzedniego rozmiaru kafelków).
 4. Przy dodawaniu synonimu: dopisz do `CANONICAL_TAGS`, nie twórz osobno `search:` + `appearance:`.
 
 ## Zasady kojarzenia produktów

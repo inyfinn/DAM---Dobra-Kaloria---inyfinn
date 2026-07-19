@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19T13:09:50",
+  "generated_at": "2026-07-19T19:11:34",
   "roots": [
     {
       "brand": "DK",
@@ -11,10 +11,10 @@
     }
   ],
   "root": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-  "elapsed_sec": 3.96,
+  "elapsed_sec": 4.55,
   "category_count": 12,
-  "product_count": 185,
-  "viz_count": 394,
+  "product_count": 184,
+  "viz_count": 391,
   "categories": [
     {
       "name": "01 - BATONY",
@@ -22293,6 +22293,15 @@
                 "lang": ""
               },
               {
+                "name": "ROZA kompozycja 1.tif",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/PĄCZEK RÓŻANY — [ nerkowcowy ]/KAR6X - 28.11.2025 - 6300687.00/0 - ARCHIWUM/ROZA kompozycja 1.tif",
+                "rel": "01 - BATONY/PĄCZEK RÓŻANY — [ nerkowcowy ]/KAR6X - 28.11.2025 - 6300687.00/0 - ARCHIWUM/ROZA kompozycja 1.tif",
+                "ext": "tif",
+                "size": 258031848,
+                "mtime": "2025-11-21T12:25:30",
+                "lang": ""
+              },
+              {
                 "name": "freepik__watercolor-illustration-on-a-white-clear-backgroun__51902-1.png",
                 "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/PĄCZEK RÓŻANY — [ nerkowcowy ]/KAR6X - 28.11.2025 - 6300687.00/1 - MATERIAŁY/freepik__watercolor-illustration-on-a-white-clear-backgroun__51902-1.png",
                 "rel": "01 - BATONY/PĄCZEK RÓŻANY — [ nerkowcowy ]/KAR6X - 28.11.2025 - 6300687.00/1 - MATERIAŁY/freepik__watercolor-illustration-on-a-white-clear-backgroun__51902-1.png",
@@ -32634,7 +32643,7 @@
         "6300524",
         "6300699"
       ],
-      "revision_count": 4,
+      "revision_count": 5,
       "revisions": [
         {
           "folder": "09.02.2024 - 6300450.00",
@@ -32695,8 +32704,8 @@
             "print": [
               {
                 "name": "DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.zip",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.zip",
-                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.zip",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/0 - ARCHIWUM/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.zip",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/0 - ARCHIWUM/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.zip",
                 "ext": "zip",
                 "size": 150491113,
                 "mtime": "2024-02-09T15:08:17",
@@ -32708,6 +32717,15 @@
                 "name": "WARIANT-ORZESZKI-MIOD-6300450-FRONT-S.png",
                 "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-ORZESZKI-MIOD-6300450-FRONT-S.png",
                 "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-ORZESZKI-MIOD-6300450-FRONT-S.png",
+                "ext": "png",
+                "size": 550593,
+                "mtime": "2024-02-13T14:08:32",
+                "lang": ""
+              },
+              {
+                "name": "WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
                 "ext": "png",
                 "size": 550593,
                 "mtime": "2024-02-13T14:08:32",
@@ -32725,9 +32743,18 @@
               "size": 550593,
               "mtime": "2024-02-13T14:08:32",
               "lang": ""
+            },
+            {
+              "name": "WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
+              "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
+              "ext": "png",
+              "size": 550593,
+              "mtime": "2024-02-13T14:08:32",
+              "lang": ""
             }
           ],
-          "wizki_count": 1,
+          "wizki_count": 2,
           "langs": [
             "pl"
           ],
@@ -32820,6 +32847,24 @@
                 "size": 605924,
                 "mtime": "2026-02-24T15:08:04",
                 "lang": ""
+              },
+              {
+                "name": "WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+                "ext": "tif",
+                "size": 9454760,
+                "mtime": "2024-11-06T11:16:35",
+                "lang": ""
+              },
+              {
+                "name": "WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+                "ext": "png",
+                "size": 605924,
+                "mtime": "2026-02-24T15:08:04",
+                "lang": ""
               }
             ],
             "elements": []
@@ -32842,9 +32887,27 @@
               "size": 605924,
               "mtime": "2026-02-24T15:08:04",
               "lang": ""
+            },
+            {
+              "name": "WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+              "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+              "ext": "tif",
+              "size": 9454760,
+              "mtime": "2024-11-06T11:16:35",
+              "lang": ""
+            },
+            {
+              "name": "WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+              "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+              "ext": "png",
+              "size": 605924,
+              "mtime": "2026-02-24T15:08:04",
+              "lang": ""
             }
           ],
-          "wizki_count": 2,
+          "wizki_count": 4,
           "langs": [
             "pl"
           ],
@@ -32871,7 +32934,44 @@
             "4 - WIZKI"
           ],
           "files_by_role": {
-            "source": [],
+            "source": [
+              {
+                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_-FCB4A495.pdf",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_-FCB4A495.pdf",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_-FCB4A495.pdf",
+                "ext": "pdf",
+                "size": 1729098,
+                "mtime": "2025-07-30T12:24:27",
+                "lang": ""
+              },
+              {
+                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.ai",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.ai",
+                "ext": "ai",
+                "size": 26177738,
+                "mtime": "2025-07-30T13:06:44",
+                "lang": ""
+              },
+              {
+                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.pdf",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.pdf",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.pdf",
+                "ext": "pdf",
+                "size": 2830891,
+                "mtime": "2025-07-30T12:21:31",
+                "lang": ""
+              },
+              {
+                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_edit_F.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_edit_F.ai",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_edit_F.ai",
+                "ext": "ai",
+                "size": 25883249,
+                "mtime": "2025-07-30T12:23:08",
+                "lang": ""
+              }
+            ],
             "print": [],
             "viz": [
               {
@@ -32887,6 +32987,24 @@
                 "name": "WARIANT-ORZESZKI-MIOD-6300524-FRONT-S.png",
                 "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-ORZESZKI-MIOD-6300524-FRONT-S.png",
                 "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-ORZESZKI-MIOD-6300524-FRONT-S.png",
+                "ext": "png",
+                "size": 605924,
+                "mtime": "2026-02-24T15:08:04",
+                "lang": ""
+              },
+              {
+                "name": "WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+                "ext": "tif",
+                "size": 9454760,
+                "mtime": "2024-11-06T11:16:35",
+                "lang": ""
+              },
+              {
+                "name": "WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
                 "ext": "png",
                 "size": 605924,
                 "mtime": "2026-02-24T15:08:04",
@@ -32913,9 +33031,27 @@
               "size": 605924,
               "mtime": "2026-02-24T15:08:04",
               "lang": ""
+            },
+            {
+              "name": "WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+              "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
+              "ext": "tif",
+              "size": 9454760,
+              "mtime": "2024-11-06T11:16:35",
+              "lang": ""
+            },
+            {
+              "name": "WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+              "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
+              "ext": "png",
+              "size": 605924,
+              "mtime": "2026-02-24T15:08:04",
+              "lang": ""
             }
           ],
-          "wizki_count": 2,
+          "wizki_count": 4,
           "langs": [
             "pl"
           ],
@@ -32923,6 +33059,113 @@
           "langs_source": "brand_dk",
           "carrier_guessed": true,
           "is_latest": true
+        },
+        {
+          "folder": "31.10.2025 - 6300699.00",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00",
+          "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00",
+          "carrier": "DOY",
+          "index_base": "6300699",
+          "index_rev": "00",
+          "index": "6300699.00",
+          "date": "2025-10-31",
+          "slots": [
+            "0 - ARCHIWUM",
+            "1 - MATERIAŁY",
+            "1 - MATERIAŁY/ELEMENTY",
+            "2 - PROJEKT",
+            "3 - DRUK",
+            "4 - WIZKI"
+          ],
+          "files_by_role": {
+            "source": [],
+            "print": [],
+            "viz": [
+              {
+                "name": "WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
+                "ext": "png",
+                "size": 9045529,
+                "mtime": "2026-02-24T15:08:04",
+                "lang": ""
+              },
+              {
+                "name": "WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
+                "ext": "png",
+                "size": 2222850,
+                "mtime": "2026-02-24T15:08:04",
+                "lang": ""
+              },
+              {
+                "name": "WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
+                "ext": "png",
+                "size": 8584779,
+                "mtime": "2026-02-24T15:08:04",
+                "lang": ""
+              },
+              {
+                "name": "WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
+                "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
+                "ext": "png",
+                "size": 2150154,
+                "mtime": "2026-02-24T15:08:04",
+                "lang": ""
+              }
+            ],
+            "elements": []
+          },
+          "wizki": [
+            {
+              "name": "WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
+              "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
+              "ext": "png",
+              "size": 9045529,
+              "mtime": "2026-02-24T15:08:04",
+              "lang": ""
+            },
+            {
+              "name": "WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
+              "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
+              "ext": "png",
+              "size": 2222850,
+              "mtime": "2026-02-24T15:08:04",
+              "lang": ""
+            },
+            {
+              "name": "WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
+              "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
+              "ext": "png",
+              "size": 8584779,
+              "mtime": "2026-02-24T15:08:04",
+              "lang": ""
+            },
+            {
+              "name": "WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
+              "rel": "02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
+              "ext": "png",
+              "size": 2150154,
+              "mtime": "2026-02-24T15:08:04",
+              "lang": ""
+            }
+          ],
+          "wizki_count": 4,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "carrier_guessed": true,
+          "is_latest": false
         },
         {
           "folder": "DOY - 31.10.2025 - 6300699.00",
@@ -34935,527 +35178,6 @@
         "Krzysztof"
       ],
       "search_blob": "owies czekolada owies czekolada sniadanie czekolada doypack folia kulki owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300451.00 6300520.00 6300701.00 6300766.00"
-    },
-    {
-      "id": "owies-miod-sniadanie",
-      "name": "OWIES MIOD — [ sniadanie ]",
-      "display_name": "OWIES MIOD",
-      "category": "02 - KULKI",
-      "brand": "DK",
-      "subcategory_slug": "sniadanie",
-      "subcategory_label": "Śniadanie",
-      "root_key": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]",
-      "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]",
-      "tags": [
-        "kulki",
-        "miod",
-        "owies",
-        "sniadanie"
-      ],
-      "tag_groups": {
-        "smak": [
-          "miod"
-        ],
-        "typ": [
-          "kulki",
-          "owies"
-        ],
-        "opakowanie": [],
-        "autor": [
-          "Krzysztof"
-        ],
-        "osoba": [
-          "Krzysztof"
-        ],
-        "inne": []
-      },
-      "indexes": [
-        "6300450.00",
-        "6300524.00",
-        "6300699.00"
-      ],
-      "index_bases": [
-        "6300450",
-        "6300524",
-        "6300699"
-      ],
-      "revision_count": 4,
-      "revisions": [
-        {
-          "folder": "09.02.2024 - 6300450.00",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00",
-          "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00",
-          "carrier": "OTHER",
-          "index_base": "6300450",
-          "index_rev": "00",
-          "index": "6300450.00",
-          "date": "2024-02-09",
-          "slots": [
-            "0 - ARCHIWUM",
-            "1 - MATERIAŁY",
-            "1 - MATERIAŁY/ELEMENTY",
-            "2 - PROJEKT",
-            "3 - DRUK",
-            "4 - WIZKI"
-          ],
-          "files_by_role": {
-            "source": [
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09.ai",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09.ai",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09.ai",
-                "ext": "ai",
-                "size": 33795848,
-                "mtime": "2024-02-09T14:16:33",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09.pdf",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09.pdf",
-                "ext": "pdf",
-                "size": 228695,
-                "mtime": "2024-02-09T14:18:53",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.ai",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.ai",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.ai",
-                "ext": "ai",
-                "size": 34630025,
-                "mtime": "2024-02-09T14:42:03",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.pdf",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.pdf",
-                "ext": "pdf",
-                "size": 3469824,
-                "mtime": "2024-02-09T14:43:10",
-                "lang": ""
-              }
-            ],
-            "print": [
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.zip",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.zip",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/1 - MATERIAŁY/DK_kulki_sniad_miod_orzeszki_6300450_2024_02_09_FQ.zip",
-                "ext": "zip",
-                "size": 150491113,
-                "mtime": "2024-02-09T15:08:17",
-                "lang": ""
-              }
-            ],
-            "viz": [
-              {
-                "name": "WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
-                "ext": "png",
-                "size": 550593,
-                "mtime": "2024-02-13T14:08:32",
-                "lang": ""
-              }
-            ],
-            "elements": []
-          },
-          "wizki": [
-            {
-              "name": "WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
-              "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
-              "ext": "png",
-              "size": 550593,
-              "mtime": "2024-02-13T14:08:32",
-              "lang": ""
-            }
-          ],
-          "wizki_count": 1,
-          "langs": [
-            "pl"
-          ],
-          "langs_manual": false,
-          "langs_source": "brand_dk",
-          "is_latest": true
-        },
-        {
-          "folder": "26.06.2024 - 6300524.00",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00",
-          "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00",
-          "carrier": "OTHER",
-          "index_base": "6300524",
-          "index_rev": "00",
-          "index": "6300524.00",
-          "date": "2024-06-26",
-          "slots": [
-            "0 - ARCHIWUM",
-            "1 - MATERIAŁY",
-            "1 - MATERIAŁY/ELEMENTY",
-            "2 - PROJEKT",
-            "3 - DRUK",
-            "4 - WIZKI"
-          ],
-          "files_by_role": {
-            "source": [
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26.ai",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26.ai",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26.ai",
-                "ext": "ai",
-                "size": 25317248,
-                "mtime": "2024-06-28T14:08:07",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26.pdf",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26.pdf",
-                "ext": "pdf",
-                "size": 247781,
-                "mtime": "2024-06-28T11:20:11",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26_FQ.ai",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26_FQ.ai",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26_FQ.ai",
-                "ext": "ai",
-                "size": 25491480,
-                "mtime": "2024-06-28T14:08:29",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26_FQ.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26_FQ.pdf",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26_FQ.pdf",
-                "ext": "pdf",
-                "size": 2586328,
-                "mtime": "2024-06-28T14:08:43",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26_FQ_preview.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26_FQ_preview.pdf",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2024_06_26_FQ_preview.pdf",
-                "ext": "pdf",
-                "size": 310175,
-                "mtime": "2024-06-28T14:08:59",
-                "lang": ""
-              }
-            ],
-            "print": [],
-            "viz": [
-              {
-                "name": "WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-                "ext": "tif",
-                "size": 9454760,
-                "mtime": "2024-11-06T11:16:35",
-                "lang": ""
-              },
-              {
-                "name": "WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-                "ext": "png",
-                "size": 605924,
-                "mtime": "2026-02-24T15:08:04",
-                "lang": ""
-              }
-            ],
-            "elements": []
-          },
-          "wizki": [
-            {
-              "name": "WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-              "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-              "ext": "tif",
-              "size": 9454760,
-              "mtime": "2024-11-06T11:16:35",
-              "lang": ""
-            },
-            {
-              "name": "WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-              "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/26.06.2024 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-              "ext": "png",
-              "size": 605924,
-              "mtime": "2026-02-24T15:08:04",
-              "lang": ""
-            }
-          ],
-          "wizki_count": 2,
-          "langs": [
-            "pl"
-          ],
-          "langs_manual": false,
-          "langs_source": "brand_dk",
-          "is_latest": false
-        },
-        {
-          "folder": "30.07.2025 - 6300524.00",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00",
-          "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00",
-          "carrier": "OTHER",
-          "index_base": "6300524",
-          "index_rev": "00",
-          "index": "6300524.00",
-          "date": "2025-07-30",
-          "slots": [
-            "0 - ARCHIWUM",
-            "1 - MATERIAŁY",
-            "1 - MATERIAŁY/ELEMENTY",
-            "2 - PROJEKT",
-            "3 - DRUK",
-            "4 - WIZKI"
-          ],
-          "files_by_role": {
-            "source": [
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_-FCB4A495.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_-FCB4A495.pdf",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_-FCB4A495.pdf",
-                "ext": "pdf",
-                "size": 1729098,
-                "mtime": "2025-07-30T12:24:27",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.ai",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.ai",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.ai",
-                "ext": "ai",
-                "size": 26177738,
-                "mtime": "2025-07-30T13:06:44",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.pdf",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_FQ.pdf",
-                "ext": "pdf",
-                "size": 2830891,
-                "mtime": "2025-07-30T12:21:31",
-                "lang": ""
-              },
-              {
-                "name": "DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_edit_F.ai",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_edit_F.ai",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/2 - PROJEKT/DK_kulki_sniad_miod_orzeszki_6300524_2025_06_30_edit_F.ai",
-                "ext": "ai",
-                "size": 25883249,
-                "mtime": "2025-07-30T12:23:08",
-                "lang": ""
-              }
-            ],
-            "print": [],
-            "viz": [
-              {
-                "name": "WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-                "ext": "tif",
-                "size": 9454760,
-                "mtime": "2024-11-06T11:16:35",
-                "lang": ""
-              },
-              {
-                "name": "WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-                "ext": "png",
-                "size": 605924,
-                "mtime": "2026-02-24T15:08:04",
-                "lang": ""
-              }
-            ],
-            "elements": []
-          },
-          "wizki": [
-            {
-              "name": "WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-              "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-L.tif",
-              "ext": "tif",
-              "size": 9454760,
-              "mtime": "2024-11-06T11:16:35",
-              "lang": ""
-            },
-            {
-              "name": "WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-              "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-              "ext": "png",
-              "size": 605924,
-              "mtime": "2026-02-24T15:08:04",
-              "lang": ""
-            }
-          ],
-          "wizki_count": 2,
-          "langs": [
-            "pl"
-          ],
-          "langs_manual": false,
-          "langs_source": "brand_dk",
-          "is_latest": true
-        },
-        {
-          "folder": "31.10.2025 - 6300699.00",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00",
-          "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00",
-          "carrier": "OTHER",
-          "index_base": "6300699",
-          "index_rev": "00",
-          "index": "6300699.00",
-          "date": "2025-10-31",
-          "slots": [
-            "0 - ARCHIWUM",
-            "1 - MATERIAŁY",
-            "1 - MATERIAŁY/ELEMENTY",
-            "2 - PROJEKT",
-            "3 - DRUK",
-            "4 - WIZKI"
-          ],
-          "files_by_role": {
-            "source": [],
-            "print": [],
-            "viz": [
-              {
-                "name": "WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
-                "ext": "png",
-                "size": 9045529,
-                "mtime": "2026-02-24T15:08:04",
-                "lang": ""
-              },
-              {
-                "name": "WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
-                "ext": "png",
-                "size": 2222850,
-                "mtime": "2026-02-24T15:08:04",
-                "lang": ""
-              },
-              {
-                "name": "WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
-                "ext": "png",
-                "size": 8584779,
-                "mtime": "2026-02-24T15:08:04",
-                "lang": ""
-              },
-              {
-                "name": "WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
-                "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
-                "ext": "png",
-                "size": 2150154,
-                "mtime": "2026-02-24T15:08:04",
-                "lang": ""
-              }
-            ],
-            "elements": []
-          },
-          "wizki": [
-            {
-              "name": "WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
-              "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-L.png",
-              "ext": "png",
-              "size": 9045529,
-              "mtime": "2026-02-24T15:08:04",
-              "lang": ""
-            },
-            {
-              "name": "WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
-              "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
-              "ext": "png",
-              "size": 2222850,
-              "mtime": "2026-02-24T15:08:04",
-              "lang": ""
-            },
-            {
-              "name": "WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
-              "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-L.png",
-              "ext": "png",
-              "size": 8584779,
-              "mtime": "2026-02-24T15:08:04",
-              "lang": ""
-            },
-            {
-              "name": "WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
-              "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-TYŁ-S.png",
-              "ext": "png",
-              "size": 2150154,
-              "mtime": "2026-02-24T15:08:04",
-              "lang": ""
-            }
-          ],
-          "wizki_count": 4,
-          "langs": [
-            "pl"
-          ],
-          "langs_manual": false,
-          "langs_source": "brand_dk",
-          "is_latest": true
-        }
-      ],
-      "related_materials": [
-        {
-          "title": "5 - PREZENTACJE",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI MIOD — [ sniadanie ]/DOY - 31.10.2025 - 6300699.00/0 - ARCHIWUM/KONFLIKTY/duplicate_template_slot_same_scan/5 - PREZENTACJE",
-          "type": "presentation",
-          "note": "Wykryto skanem Marketing",
-          "file_count": 0
-        },
-        {
-          "title": "5 - PREZENTACJE",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 31.10.2025 - 6300699.00/0 - ARCHIWUM/KONFLIKTY/duplicate_template_slot_same_scan/5 - PREZENTACJE",
-          "type": "presentation",
-          "note": "Wykryto skanem Marketing",
-          "file_count": 0
-        },
-        {
-          "title": "5 - PREZENTACJE",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01/0 - ARCHIWUM/KONFLIKTY/duplicate_template_slot_same_scan/5 - PREZENTACJE",
-          "type": "presentation",
-          "note": "Wykryto skanem Marketing",
-          "file_count": 0
-        }
-      ],
-      "linked_products": [
-        {
-          "product_id": "cornflakes-peanuts-honey-balls-crispy",
-          "brand": "GC"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
-      "alias_canonical_id": "owies-miod-sniadanie",
-      "authors": [
-        "Krzysztof"
-      ],
-      "search_blob": "owies miod owies miod sniadanie kulki miod owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300450.00 6300524.00 6300699.00"
     },
     {
       "id": "tiramisu-czekolada-kakao-deserowe",
@@ -74548,24 +74270,6 @@
           "file_count": 0
         }
       ],
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
-      "alias_canonical_id": "owies-miod-sniadanie",
       "authors": [
         "Krzysztof"
       ],
@@ -87781,23 +87485,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": false,
@@ -87829,23 +87518,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": true,
@@ -87881,23 +87555,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": true,
@@ -87933,23 +87592,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": true,
@@ -87985,23 +87629,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": true,
@@ -88037,23 +87666,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": true,
@@ -96713,23 +96327,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": true,
@@ -96762,23 +96361,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": true,
@@ -97082,108 +96666,6 @@
         "doypack",
         "kulki",
         "miod",
-        "sniadanie"
-      ]
-    },
-    {
-      "product_id": "owies-miod-sniadanie",
-      "product_name": "OWIES MIOD",
-      "category": "02 - KULKI",
-      "brand": "DK",
-      "subcategory_slug": "sniadanie",
-      "subcategory_label": "Śniadanie",
-      "linked_products": [
-        {
-          "product_id": "cornflakes-peanuts-honey-balls-crispy",
-          "brand": "GC"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
-      "carrier": "OTHER",
-      "carrier_label": "",
-      "carrier_guessed": false,
-      "is_mix": false,
-      "index": "6300524.00",
-      "index_base": "6300524",
-      "revision_folder": "30.07.2025 - 6300524.00",
-      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00",
-      "langs": [
-        "pl"
-      ],
-      "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
-      "lang_unknown": false,
-      "thumb_url": "data/thumbs/owies-miod-sniadanie__6300524_pl.jpg?v=1771942084",
-      "file": "WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-      "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/30.07.2025 - 6300524.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300524-FRONT-S.png",
-      "mtime": "2026-02-24T15:08:04",
-      "tags": [
-        "kulki",
-        "miod",
-        "owies",
-        "sniadanie"
-      ]
-    },
-    {
-      "product_id": "owies-miod-sniadanie",
-      "product_name": "OWIES MIOD",
-      "category": "02 - KULKI",
-      "brand": "DK",
-      "subcategory_slug": "sniadanie",
-      "subcategory_label": "Śniadanie",
-      "linked_products": [
-        {
-          "product_id": "cornflakes-peanuts-honey-balls-crispy",
-          "brand": "GC"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
-      "carrier": "OTHER",
-      "carrier_label": "",
-      "carrier_guessed": false,
-      "is_mix": false,
-      "index": "6300699.00",
-      "index_base": "6300699",
-      "revision_folder": "31.10.2025 - 6300699.00",
-      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00",
-      "langs": [
-        "pl"
-      ],
-      "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
-      "lang_unknown": false,
-      "thumb_url": "data/thumbs/owies-miod-sniadanie__6300699_pl.jpg?v=1771942084",
-      "file": "WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
-      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
-      "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/31.10.2025 - 6300699.00/4 - WIZKI/WIZKA-OWIES-MIOD-6300699-FRONT-S.png",
-      "mtime": "2026-02-24T15:08:04",
-      "tags": [
-        "kulki",
-        "miod",
-        "owies",
         "sniadanie"
       ]
     },
@@ -98151,23 +97633,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": false,
@@ -98200,23 +97667,8 @@
       "brand": "GC",
       "subcategory_slug": "balls crispy",
       "subcategory_label": "Kulki Kruche",
-      "linked_products": [
-        {
-          "product_id": "owies-miod-sniadanie",
-          "brand": "DK"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
+      "linked_products": [],
+      "alias_langs": [],
       "carrier": "FOLIA",
       "carrier_label": "FOLIA",
       "carrier_guessed": false,
@@ -100526,57 +99978,6 @@
       ]
     },
     {
-      "product_id": "owies-miod-sniadanie",
-      "product_name": "OWIES MIOD",
-      "category": "02 - KULKI",
-      "brand": "DK",
-      "subcategory_slug": "sniadanie",
-      "subcategory_label": "Śniadanie",
-      "linked_products": [
-        {
-          "product_id": "cornflakes-peanuts-honey-balls-crispy",
-          "brand": "GC"
-        }
-      ],
-      "alias_langs": [
-        "de",
-        "ee",
-        "fr",
-        "gb",
-        "lt",
-        "lv",
-        "nl",
-        "pl",
-        "ro"
-      ],
-      "carrier": "OTHER",
-      "carrier_label": "",
-      "carrier_guessed": false,
-      "is_mix": false,
-      "index": "6300450.00",
-      "index_base": "6300450",
-      "revision_folder": "09.02.2024 - 6300450.00",
-      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00",
-      "langs": [
-        "pl"
-      ],
-      "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
-      "lang_unknown": false,
-      "thumb_url": "data/thumbs/owies-miod-sniadanie__6300450_pl.jpg?v=1707829712",
-      "file": "WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
-      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
-      "rel": "02 - KULKI/OWIES MIOD — [ sniadanie ]/09.02.2024 - 6300450.00/4 - WIZKI/WARIANT-OWIES-MIOD-6300450-FRONT-S.png",
-      "mtime": "2024-02-13T14:08:32",
-      "tags": [
-        "kulki",
-        "miod",
-        "owies",
-        "sniadanie"
-      ]
-    },
-    {
       "product_id": "crunchy-peanuts-date",
       "product_name": "CRUNCHY PEANUTS",
       "category": "01 - BARS",
@@ -102050,9 +101451,9 @@
       "orzech",
       "czekolada",
       "lemon",
-      "miod",
       "kokos",
       "karmel",
+      "miod",
       "cynamon",
       "banoffee",
       "kakao",
@@ -102076,16 +101477,16 @@
       "sypkie",
       "dates",
       "sniadaniowe",
-      "kulki",
       "mix",
+      "kulki",
       "burger",
       "mixy",
       "funkcjonalny",
       "krem",
-      "owies",
       "pasztet",
       "gyros",
       "napoj",
+      "owies",
       "nuggets",
       "boost",
       "mini batoniki",
