@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19T02:37:11",
+  "generated_at": "2026-07-19T05:54:38",
   "roots": [
     {
       "brand": "DK",
@@ -11,9 +11,9 @@
     }
   ],
   "root": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-  "elapsed_sec": 3.78,
+  "elapsed_sec": 4.52,
   "category_count": 12,
-  "product_count": 181,
+  "product_count": 185,
   "viz_count": 393,
   "categories": [
     {
@@ -25868,113 +25868,6 @@
       ],
       "authors": [],
       "search_blob": "tarta malinowa tarta malinowa nerkowcowy baton folia karton 6x malinowa mini baton nerkowcowy tarta 000108.00 000117.00 6300084.00 6300539.00 6300539.01 6300540.00 6300540.01"
-    },
-    {
-      "id": "test-lifecycle-nerkowcowy-f",
-      "name": "TEST LIFECYCLE — [ nerkowcowy ] - F",
-      "display_name": "TEST LIFECYCLE",
-      "category": "01 - BATONY",
-      "brand": "DK",
-      "subcategory_slug": "nerkowcowy",
-      "subcategory_label": "Nerkowcowy",
-      "root_key": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F",
-      "rel": "01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F",
-      "tags": [
-        "baton",
-        "doypack",
-        "nerkowcowy"
-      ],
-      "tag_groups": {
-        "smak": [
-          "nerkowcowy"
-        ],
-        "typ": [],
-        "opakowanie": [
-          "baton",
-          "doypack"
-        ],
-        "autor": [],
-        "osoba": [],
-        "inne": []
-      },
-      "indexes": [
-        "TEST-TEST",
-        "TEST-TEST2"
-      ],
-      "index_bases": [
-        "TEST-TEST",
-        "TEST-TEST2"
-      ],
-      "revision_count": 2,
-      "revisions": [
-        {
-          "folder": "BAT - 35 g - 18.07.2026 - TEST-TEST - F",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F/BAT - 35 g - 18.07.2026 - TEST-TEST - F",
-          "rel": "01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F/BAT - 35 g - 18.07.2026 - TEST-TEST - F",
-          "carrier": "BAT",
-          "index_base": "TEST-TEST",
-          "index_rev": null,
-          "index": "TEST-TEST",
-          "date": "2026-07-18",
-          "slots": [
-            "0 - SZKICE",
-            "1 - MATERIALY",
-            "2 - PROJEKT",
-            "3 - DRUK",
-            "4 - WIZUALIZACJE"
-          ],
-          "files_by_role": {
-            "source": [],
-            "print": [],
-            "viz": [],
-            "elements": []
-          },
-          "wizki": [],
-          "wizki_count": 0,
-          "langs": [
-            "pl"
-          ],
-          "langs_manual": false,
-          "langs_source": "brand_dk",
-          "is_latest": true
-        },
-        {
-          "folder": "DOY - 35 g - 18.07.2026 - TEST-TEST2 - D",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F/DOY - 35 g - 18.07.2026 - TEST-TEST2 - D",
-          "rel": "01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ] - F/DOY - 35 g - 18.07.2026 - TEST-TEST2 - D",
-          "carrier": "DOY",
-          "index_base": "TEST-TEST2",
-          "index_rev": null,
-          "index": "TEST-TEST2",
-          "date": "2026-07-18",
-          "slots": [
-            "0 - SZKICE",
-            "1 - MATERIALY",
-            "2 - PROJEKT",
-            "3 - DRUK",
-            "4 - WIZUALIZACJE"
-          ],
-          "files_by_role": {
-            "source": [],
-            "print": [],
-            "viz": [],
-            "elements": []
-          },
-          "wizki": [],
-          "wizki_count": 0,
-          "langs": [
-            "pl"
-          ],
-          "langs_manual": false,
-          "langs_source": "brand_dk",
-          "carrier_guessed": true,
-          "is_latest": true
-        }
-      ],
-      "related_materials": [],
-      "authors": [],
-      "search_blob": "test lifecycle test lifecycle nerkowcowy f baton doypack nerkowcowy test test test test2"
     },
     {
       "id": "banoffee-kakao-deserowe",
@@ -55898,6 +55791,497 @@
       "related_materials": [],
       "authors": [],
       "search_blob": "wedlina wedlina niemiesne niemiesne rekaw roslinne 000154.00"
+    },
+    {
+      "id": "01-kabanos-bbq-niemiesne",
+      "name": "01 KABANOS BBQ — [ niemięsne ]",
+      "display_name": "01 KABANOS BBQ",
+      "category": "03 - ROSLINNE",
+      "brand": "DK",
+      "subcategory_slug": "niemiesne",
+      "subcategory_label": "Niemięsne",
+      "root_key": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
+      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]",
+      "rel": "03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]",
+      "tags": [
+        "niemiesne",
+        "roslinne"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "niemiesne",
+          "roslinne"
+        ],
+        "opakowanie": [],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [],
+      "index_bases": [],
+      "revision_count": 1,
+      "revisions": [
+        {
+          "folder": "WARIANT - 06.05.2021 - 6300XXX.00",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00",
+          "rel": "03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00",
+          "carrier": "OTHER",
+          "index_base": null,
+          "index_rev": null,
+          "index": null,
+          "date": "2021-05-06",
+          "slots": [
+            "0 - ARCHIWUM",
+            "1 - MATERIAŁY",
+            "1 - MATERIAŁY/ELEMENTY",
+            "2 - PROJEKT",
+            "3 - DRUK"
+          ],
+          "files_by_role": {
+            "source": [
+              {
+                "name": "DK_kabanosy_bbq_2020_10_22.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_bbq_2020_10_22.ai",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_bbq_2020_10_22.ai",
+                "ext": "ai",
+                "size": 5776370,
+                "mtime": "2021-05-06T14:14:35",
+                "lang": ""
+              },
+              {
+                "name": "DK_kabanosy_bbq_2020_10_30.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_bbq_2020_10_30.ai",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_bbq_2020_10_30.ai",
+                "ext": "ai",
+                "size": 2632174,
+                "mtime": "2021-05-06T14:14:35",
+                "lang": ""
+              },
+              {
+                "name": "DK_kabanosy_bbq_2020_11_04.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_bbq_2020_11_04.ai",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/01 KABANOS BBQ — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_bbq_2020_11_04.ai",
+                "ext": "ai",
+                "size": 2633828,
+                "mtime": "2021-05-06T14:14:35",
+                "lang": ""
+              }
+            ],
+            "print": [],
+            "viz": [],
+            "elements": []
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true,
+          "in_archive": true
+        }
+      ],
+      "related_materials": [],
+      "in_archive": true,
+      "archive_only": true,
+      "authors": [],
+      "search_blob": "01 kabanos bbq 01 kabanos bbq niemiesne niemiesne roslinne"
+    },
+    {
+      "id": "02-kabanos-klas-niemiesne",
+      "name": "02 KABANOS KLAS — [ niemięsne ]",
+      "display_name": "02 KABANOS KLAS",
+      "category": "03 - ROSLINNE",
+      "brand": "DK",
+      "subcategory_slug": "niemiesne",
+      "subcategory_label": "Niemięsne",
+      "root_key": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
+      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]",
+      "rel": "03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]",
+      "tags": [
+        "niemiesne",
+        "roslinne"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "niemiesne",
+          "roslinne"
+        ],
+        "opakowanie": [],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [],
+      "index_bases": [],
+      "revision_count": 1,
+      "revisions": [
+        {
+          "folder": "WARIANT - 06.05.2021 - 6300XXX.00",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00",
+          "rel": "03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00",
+          "carrier": "OTHER",
+          "index_base": null,
+          "index_rev": null,
+          "index": null,
+          "date": "2021-05-06",
+          "slots": [
+            "0 - ARCHIWUM",
+            "1 - MATERIAŁY",
+            "1 - MATERIAŁY/ELEMENTY",
+            "2 - PROJEKT",
+            "3 - DRUK"
+          ],
+          "files_by_role": {
+            "source": [
+              {
+                "name": "DK_kabanosy_klasycz_2020_10_22.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_klasycz_2020_10_22.ai",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_klasycz_2020_10_22.ai",
+                "ext": "ai",
+                "size": 5614796,
+                "mtime": "2021-05-06T14:14:35",
+                "lang": ""
+              },
+              {
+                "name": "DK_kabanosy_klasycz_2020_10_22_opcja.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_klasycz_2020_10_22_opcja.ai",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_klasycz_2020_10_22_opcja.ai",
+                "ext": "ai",
+                "size": 21892823,
+                "mtime": "2021-05-06T14:14:35",
+                "lang": ""
+              },
+              {
+                "name": "DK_kabanosy_klasycz_2020_10_30.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_klasycz_2020_10_30.ai",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/2 - PROJEKT/DK_kabanosy_klasycz_2020_10_30.ai",
+                "ext": "ai",
+                "size": 5529417,
+                "mtime": "2021-05-06T14:14:35",
+                "lang": ""
+              },
+              {
+                "name": "IMG_3137.tif",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/1 - MATERIAŁY/IMG_3137.tif",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/1 - MATERIAŁY/IMG_3137.tif",
+                "ext": "tif",
+                "size": 11603660,
+                "mtime": "2021-05-06T14:14:35",
+                "lang": ""
+              },
+              {
+                "name": "zdjecie_do_podmianki.tif",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/1 - MATERIAŁY/zdjecie_do_podmianki.tif",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/02 KABANOS KLAS — [ niemięsne ]/WARIANT - 06.05.2021 - 6300XXX.00/1 - MATERIAŁY/zdjecie_do_podmianki.tif",
+                "ext": "tif",
+                "size": 4000724,
+                "mtime": "2021-05-06T14:14:35",
+                "lang": ""
+              }
+            ],
+            "print": [],
+            "viz": [],
+            "elements": []
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true,
+          "in_archive": true
+        }
+      ],
+      "related_materials": [],
+      "in_archive": true,
+      "archive_only": true,
+      "authors": [],
+      "search_blob": "02 kabanos klas 02 kabanos klas niemiesne niemiesne roslinne"
+    },
+    {
+      "id": "burger-klasyczny-xxl-niemiesne",
+      "name": "BURGER KLASYCZNY XXL — [ niemięsne ]",
+      "display_name": "BURGER KLASYCZNY XXL",
+      "category": "03 - ROSLINNE",
+      "brand": "DK",
+      "subcategory_slug": "niemiesne",
+      "subcategory_label": "Niemięsne",
+      "root_key": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
+      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]",
+      "rel": "03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]",
+      "tags": [
+        "bigpak",
+        "burger",
+        "folia",
+        "niemiesne",
+        "roslinne"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "niemiesne",
+          "roslinne",
+          "burger"
+        ],
+        "opakowanie": [
+          "bigpak",
+          "folia"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "000015.00"
+      ],
+      "index_bases": [
+        "000015"
+      ],
+      "revision_count": 1,
+      "revisions": [
+        {
+          "folder": "BIGPAK - 02.03.2021 - FOLP000015.00",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00",
+          "rel": "03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00",
+          "carrier": "BIGPAK",
+          "index_base": "000015",
+          "index_rev": "00",
+          "index": "000015.00",
+          "date": "2021-03-02",
+          "slots": [
+            "0 - ARCHIWUM",
+            "1 - MATERIAŁY",
+            "1 - MATERIAŁY/ELEMENTY",
+            "2 - PROJEKT",
+            "3 - DRUK"
+          ],
+          "files_by_role": {
+            "source": [
+              {
+                "name": "DK_Burger_BIGPAK_2021_03_02_FQ_FolP000015.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/2 - PROJEKT/DK_Burger_BIGPAK_2021_03_02_FQ_FolP000015.ai",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/2 - PROJEKT/DK_Burger_BIGPAK_2021_03_02_FQ_FolP000015.ai",
+                "ext": "ai",
+                "size": 28726479,
+                "mtime": "2026-02-28T00:27:06",
+                "lang": ""
+              },
+              {
+                "name": "DK_Burger_BIGPAK_2021_03_02_FQ_FolP000015.pdf",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/2 - PROJEKT/DK_Burger_BIGPAK_2021_03_02_FQ_FolP000015.pdf",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/2 - PROJEKT/DK_Burger_BIGPAK_2021_03_02_FQ_FolP000015.pdf",
+                "ext": "pdf",
+                "size": 17335478,
+                "mtime": "2026-02-28T00:27:06",
+                "lang": ""
+              },
+              {
+                "name": "DK_Burger_BIGPAK_2021_03_02_FQ_FolP000015_podglad.pdf",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/2 - PROJEKT/DK_Burger_BIGPAK_2021_03_02_FQ_FolP000015_podglad.pdf",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/2 - PROJEKT/DK_Burger_BIGPAK_2021_03_02_FQ_FolP000015_podglad.pdf",
+                "ext": "pdf",
+                "size": 4546628,
+                "mtime": "2026-02-28T00:27:05",
+                "lang": ""
+              },
+              {
+                "name": "DK_Burger_BIGPAK_2021_03_02_FolP000015.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/2 - PROJEKT/DK_Burger_BIGPAK_2021_03_02_FolP000015.ai",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/2 - PROJEKT/DK_Burger_BIGPAK_2021_03_02_FolP000015.ai",
+                "ext": "ai",
+                "size": 25824440,
+                "mtime": "2026-02-28T00:26:55",
+                "lang": ""
+              },
+              {
+                "name": "bg_update_flat2NEW2021_big_burger.psd",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/1 - MATERIAŁY/bg_update_flat2NEW2021_big_burger.psd",
+                "rel": "03 - ROSLINNE/- ARCHIWUM/BURGER KLASYCZNY XXL — [ niemięsne ]/BIGPAK - 02.03.2021 - FOLP000015.00/1 - MATERIAŁY/bg_update_flat2NEW2021_big_burger.psd",
+                "ext": "psd",
+                "size": 59411621,
+                "mtime": "2026-02-28T00:26:56",
+                "lang": "bg"
+              }
+            ],
+            "print": [],
+            "viz": [],
+            "elements": []
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl",
+            "bg"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk+raw",
+          "is_latest": true,
+          "in_archive": true
+        }
+      ],
+      "related_materials": [],
+      "in_archive": true,
+      "archive_only": true,
+      "authors": [],
+      "search_blob": "burger klasyczny xxl burger klasyczny xxl niemiesne bigpak burger folia niemiesne roslinne 000015.00"
+    },
+    {
+      "id": "klopsy-niemiesne",
+      "name": "KLOPSY — [ niemięsne ]",
+      "display_name": "KLOPSY",
+      "category": "03 - ROSLINNE",
+      "brand": "DK",
+      "subcategory_slug": "niemiesne",
+      "subcategory_label": "Niemięsne",
+      "root_key": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
+      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/KLOPSY — [ niemięsne ]",
+      "rel": "03 - ROSLINNE/- ARCHIWUM/KLOPSY — [ niemięsne ]",
+      "tags": [
+        "doypack",
+        "niemiesne",
+        "roslinne"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "niemiesne",
+          "roslinne"
+        ],
+        "opakowanie": [
+          "doypack"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "000141.00"
+      ],
+      "index_bases": [
+        "000141"
+      ],
+      "revision_count": 1,
+      "revisions": [
+        {
+          "folder": "(DOYPACK) 180 g - 26.09.2022 - KAR000141.00",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/KLOPSY — [ niemięsne ]/(DOYPACK) 180 g - 26.09.2022 - KAR000141.00",
+          "rel": "03 - ROSLINNE/- ARCHIWUM/KLOPSY — [ niemięsne ]/(DOYPACK) 180 g - 26.09.2022 - KAR000141.00",
+          "carrier": "DOY",
+          "index_base": "000141",
+          "index_rev": "00",
+          "index": "000141.00",
+          "date": "2022-09-26",
+          "slots": [
+            "0 - ARCHIWUM",
+            "1 - MATERIAŁY",
+            "1 - MATERIAŁY/ELEMENTY",
+            "2 - PROJEKT"
+          ],
+          "files_by_role": {
+            "source": [],
+            "print": [],
+            "viz": [],
+            "elements": []
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true,
+          "in_archive": true
+        }
+      ],
+      "related_materials": [],
+      "in_archive": true,
+      "archive_only": true,
+      "authors": [],
+      "search_blob": "klopsy klopsy niemiesne doypack niemiesne roslinne 000141.00"
+    },
+    {
+      "id": "pasztet-sliwka-niemiesne",
+      "name": "PASZTET ŚLIWKA — [ niemięsne ]",
+      "display_name": "PASZTET ŚLIWKA",
+      "category": "03 - ROSLINNE",
+      "brand": "DK",
+      "subcategory_slug": "niemiesne",
+      "subcategory_label": "Niemięsne",
+      "root_key": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
+      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/PASZTET ŚLIWKA — [ niemięsne ]",
+      "rel": "03 - ROSLINNE/- ARCHIWUM/PASZTET ŚLIWKA — [ niemięsne ]",
+      "tags": [
+        "niemiesne",
+        "pasztet",
+        "roslinne",
+        "sliwka"
+      ],
+      "tag_groups": {
+        "smak": [
+          "sliwka"
+        ],
+        "typ": [
+          "niemiesne",
+          "roslinne",
+          "pasztet"
+        ],
+        "opakowanie": [],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "000147.00"
+      ],
+      "index_bases": [
+        "000147"
+      ],
+      "revision_count": 1,
+      "revisions": [
+        {
+          "folder": "WARIANT - 04.11.2022 - KAR000147.00",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/03 - ROSLINNE/- ARCHIWUM/PASZTET ŚLIWKA — [ niemięsne ]/WARIANT - 04.11.2022 - KAR000147.00",
+          "rel": "03 - ROSLINNE/- ARCHIWUM/PASZTET ŚLIWKA — [ niemięsne ]/WARIANT - 04.11.2022 - KAR000147.00",
+          "carrier": "OTHER",
+          "index_base": "000147",
+          "index_rev": "00",
+          "index": "000147.00",
+          "date": "2022-11-04",
+          "slots": [
+            "0 - ARCHIWUM",
+            "1 - MATERIAŁY",
+            "1 - MATERIAŁY/ELEMENTY",
+            "2 - PROJEKT"
+          ],
+          "files_by_role": {
+            "source": [],
+            "print": [],
+            "viz": [],
+            "elements": []
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true,
+          "in_archive": true
+        }
+      ],
+      "related_materials": [],
+      "in_archive": true,
+      "archive_only": true,
+      "authors": [],
+      "search_blob": "pasztet sliwka pasztet sliwka niemiesne niemiesne pasztet roslinne sliwka 000147.00"
     },
     {
       "id": "balans-boosty",
@@ -101622,9 +102006,9 @@
       "funkcjonalny",
       "krem",
       "owies",
+      "pasztet",
       "gyros",
       "napoj",
-      "pasztet",
       "nuggets",
       "boost",
       "mini batoniki",

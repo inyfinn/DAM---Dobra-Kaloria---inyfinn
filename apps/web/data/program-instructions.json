@@ -359,6 +359,35 @@
       "updated_at": "2026-07-19"
     },
     {
+      "id": "branding.navigation_associations",
+      "must": [
+        "Nawigacja Branding = skojarzenia (search, tagi, osie Kiedy/Co/Gdzie), nie drzewo folderów dysku",
+        "source_path tylko w metadanych i akcji Otwórz w Eksploratorze",
+        "Panel startowy: ostatnio używane, szybkie skojarzenia, kolekcje kuratorowane, kafelki produktów",
+        "Wyszukiwanie korzysta z product-associations.json i branding-search-index.json (synonimy, by_tag, linked_product_ids)"
+      ],
+      "body_pl": "Użytkownik nie zna struktury 08-KAMPANIE/DV360_GIFF/LISTONIC. UI nie pokazuje hierarchii folderów Marketing jako głównej nawigacji. Szukanie po temacie (burger, grill, proteina) lub płaskie filtry Kiedy/Co/Kanał zastępują sidebar folderowy.",
+      "category": "branding",
+      "must_not": [
+        "Główna nawigacja przez drzewo folderów dysku (#damBrandingFolderNav)",
+        "Wyświetlanie nazw technicznych folderów (DV360_GIFF, LISTONIC, DO EDYCJI) jako etykiet nawigacji",
+        "Wymaganie znajomości ścieżki dyskowej do znalezienia materiału"
+      ],
+      "priority": "critical",
+      "title_pl": "Branding: nawigacja skojarzeniowa, nie hierarchia folderów",
+      "related_kv": [
+        "program-instructions",
+        "product-associations"
+      ],
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/branding.html",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/data/product-associations.json",
+        "apps/web/data/branding-search-index.json"
+      ]
+    },
+    {
       "id": "branding.perspectives",
       "must": [
         "ENFACE, TYL_ENFACE, FRONT, BACK zgodnie z brand-perspectives.json"
@@ -502,6 +531,55 @@
       "related_code": [
         "apps/web/project.html",
         "apps/web/assets/js/dam-project.js"
+      ]
+    },
+    {
+      "id": "branding.taxonomy_three_axes",
+      "must": [
+        "media_type wyliczany automatycznie z rozszerzenia (image/vector/video/source/document) — nigdy recznie",
+        "asset_role kontrolowany slownik z dam-asset-role-mapping.json — etykiety PL w UI",
+        "format_technical osobna os (raster, tlo, edytowalny)",
+        "perspective/size tylko dla packshot — osobna oś Wizualizacja",
+        "Shift+klik na tagu asset_role lub appearance otwiera picker (admin/power_user)",
+        "Etykiety tagow ZAWSZE po polsku w UI"
+      ],
+      "body_pl": "Taksonomia IPTC: format ≠ rola ≠ kontekst. Logo to asset_role=brand_asset + media_type z pliku, nie osobny typ pliku.",
+      "category": "branding",
+      "must_not": [
+        "Jedno pole typ mieszajace wektor/logo/wideo/dokument",
+        "Angielskie etykiety w chipach i badge (poza kodami wewnetrznymi)",
+        "Nowe asset_role ad-hoc bez ADR"
+      ],
+      "priority": "critical",
+      "title_pl": "Branding: 3 osie taksonomii + edycja Shift+klik",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/dam-asset-role-mapping.json",
+        "apps/web/scripts/asset_role_utils.py",
+        "apps/web/assets/js/dam-asset-taxonomy.js",
+        "apps/web/assets/js/dam-tag-edit.js"
+      ]
+    },
+    {
+      "id": "branding.slider_shop_tags",
+      "must": [
+        "Slidery sklepu dobrakaloria.pl: tagi Slidery + Na sklep + Desktop/Tablet/Mobile",
+        "Desktop = 1920×600, Tablet = 992×600, Mobile = 576×600 (±2 px)",
+        "Wykrywanie z nazwy pliku, ścieżki (06 - STRONY WWW, SLIDERY…) i wymiarów",
+        "Po zmianie reguł: python apps/web/scripts/enrich-branding-tags.py"
+      ],
+      "body_pl": "Materiały sliderów na sklep WWW mają osobne tagi filtra: Slidery, Na sklep oraz urządzenie (Desktop/Tablet/Mobile) według breakpointów sklepu. Źródło reguł: brand_tag_utils.extract_placement_tags.",
+      "category": "branding",
+      "must_not": [
+        "Mylić sliderów WWW (600 px wys.) z formatami Google Ads (1200×1200 itd.) bez kontekstu slider/sklep"
+      ],
+      "priority": "high",
+      "title_pl": "Branding: tagi sliderów sklepu WWW",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/scripts/brand_tag_utils.py",
+        "apps/web/scripts/enrich-branding-tags.py",
+        "apps/web/assets/js/dam-branding.js"
       ]
     },
     {

@@ -1881,13 +1881,63 @@
   /* Podkategorie (np. "Kulki Surowe" / balls raw) - osobny rzad pilli, bo
      "typ" w tag_groups to kategoria (kulki/batony), a nie ta subtelniejsza
      podkategoria z folderu produktu. Zrodlo: _DAM_FILE_INDEX.products. */
-  var SUBCAT_ROW_LIMIT = 7;
+  var SUBCAT_ROW_LIMIT = 8;
   var subcatExpanded = false;
   var subcatPillCache = [];
 
+  function mountSubcatRow(tagsEl) {
+    if (!tagsEl) return;
+    var inner = tagsEl.querySelector(".dam-tag-groups__inner");
+    if (!inner) return;
+    inner.querySelectorAll('[data-group="podkategoria"]').forEach(function (node) {
+      node.remove();
+    });
+    var list = subcatPillCache || [];
+    if (!list.length) return;
+    if (!window.DamTagBar || typeof DamTagBar.buildGroupRow !== "function") return;
+    var rowHtml = DamTagBar.buildGroupRow({
+      groupKey: "podkategoria",
+      label: "Podkategoria",
+      className: "dam-tag-group--podkategoria",
+      chips: list.map(function (it) {
+        return { key: it.slug, label: it.label };
+      }),
+      expandedGroups: { podkategoria: subcatExpanded },
+      rowLimit: SUBCAT_ROW_LIMIT,
+      pillHtml: function (chip) {
+        return (
+          '<button type="button" class="dam-tag-pill" data-subcat="' +
+          esc(chip.key) +
+          '" title="' +
+          esc(chip.label) +
+          '">' +
+          esc(chip.label) +
+          "</button>"
+        );
+      },
+    });
+    if (!rowHtml) return;
+    inner.insertAdjacentHTML("beforeend", rowHtml);
+    inner.querySelectorAll("[data-subcat]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var search = document.getElementById("vizSearch");
+        if (!search) return;
+        search.value = this.getAttribute("data-subcat") || "";
+        search.dispatchEvent(new Event("input", { bubbles: true }));
+        search.focus();
+      });
+    });
+    inner.querySelectorAll('[data-expand-group="podkategoria"]').forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        subcatExpanded = !subcatExpanded;
+        mountSubcatRow(tagsEl);
+      });
+    });
+  }
+
   function renderSubcatPills(products) {
-    var el = document.getElementById("vizSubcatTags");
-    if (!el) return;
     if (products) {
       var seen = {};
       var list = [];
@@ -1907,63 +1957,7 @@
       subcatPillCache = list;
       subcatExpanded = false;
     }
-    var list = subcatPillCache || [];
-    if (!list.length) {
-      el.innerHTML = "";
-      return;
-    }
-    var isLong = list.length > SUBCAT_ROW_LIMIT;
-    var visible = isLong && !subcatExpanded ? list.slice(0, SUBCAT_ROW_LIMIT) : list;
-    var hiddenCount = isLong && !subcatExpanded ? list.length - SUBCAT_ROW_LIMIT : 0;
-    var html =
-      '<div class="dam-tag-groups__inner"><div class="dam-tag-group-row dam-tag-group--podkategoria' +
-      (isLong ? " dam-tag-group-row--long" : "") +
-      (subcatExpanded ? " is-expanded" : "") +
-      '">' +
-      '<span class="dam-tag-group-label">Podkategoria:</span><span class="dam-tag-group-pills">' +
-      visible
-        .map(function (it) {
-          return (
-            '<button type="button" class="dam-tag-pill" data-subcat="' +
-            esc(it.slug) +
-            '" title="' +
-            esc(it.label) +
-            '">' +
-            esc(it.label) +
-            "</button>"
-          );
-        })
-        .join("");
-    if (isLong) {
-      if (!subcatExpanded) {
-        html +=
-          '<button type="button" class="dam-tag-more" data-expand-subcat="1" aria-expanded="false" title="Pokaz wszystkie podkategorie">+' +
-          hiddenCount +
-          "</button>";
-      } else {
-        html +=
-          '<button type="button" class="dam-tag-more" data-expand-subcat="1" aria-expanded="true" title="Zwin liste podkategorii">mniej</button>';
-      }
-    }
-    html += "</span></div></div>";
-    el.innerHTML = html;
-    el.querySelectorAll("[data-subcat]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var search = document.getElementById("vizSearch");
-        if (!search) return;
-        search.value = this.getAttribute("data-subcat") || "";
-        search.dispatchEvent(new Event("input", { bubbles: true }));
-        search.focus();
-      });
-    });
-    el.querySelectorAll("[data-expand-subcat]").forEach(function (btn) {
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        subcatExpanded = !subcatExpanded;
-        renderSubcatPills(null);
-      });
-    });
+    mountSubcatRow(document.getElementById("vizSearchTags"));
   }
 
   function productMeta(pid) {
@@ -2447,6 +2441,9 @@
         inputEl: "vizSearch",
         onTag: function () {
           applyFilters();
+        },
+        afterRender: function (tagsEl) {
+          mountSubcatRow(tagsEl);
         },
       });
     }

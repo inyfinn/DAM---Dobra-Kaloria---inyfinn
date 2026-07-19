@@ -61,6 +61,89 @@
   border-top: 1px dashed var(--dam-border, rgba(0, 0, 0, 0.1));
 }
 
+.dam-catalog-marketing__heading {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.dam-catalog-marketing__summary {
+  font-size: 13px;
+  color: var(--dam-muted, #6b7280);
+  margin: 0 0 10px;
+}
+
+.dam-catalog-marketing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.dam-catalog-marketing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--dam-border, rgba(0, 0, 0, 0.08));
+  background: var(--dam-surface-2, rgba(0, 0, 0, 0.02));
+  text-decoration: none;
+  color: inherit;
+  min-height: 140px;
+}
+
+.dam-catalog-marketing-card:hover {
+  border-color: var(--dam-primary, #6366f1);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);
+}
+
+.dam-catalog-marketing-card__thumb {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.dam-catalog-marketing-card__thumb .dam-viz-thumb__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.dam-catalog-marketing-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 22px;
+}
+
+.dam-catalog-marketing-card__title {
+  font-size: 11px;
+  line-height: 1.3;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dam-catalog-wykrojnik {
+  margin-top: 12px;
+}
+
+.dam-catalog-wykrojnik-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dam-catalog-wykrojnik-list__label {
+  font-size: 13px;
+}
+
 .dam-catalog-marketing__empty {
   font-size: 13px;
   color: var(--dam-muted, #6b7280);

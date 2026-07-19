@@ -255,7 +255,7 @@
     };
   }
 
-  /** Inline chips DK/GC (sidebar Kategorie) - zsynchronizowane z DamBrandFilter */
+  /** Inline chips DK/GC (pasek filtrów eksploratora) - zsynchronizowane z DamBrandFilter */
   function renderChips(container, onChange) {
     var el = typeof container === "string" ? document.querySelector(container) : container;
     if (!el) return null;

@@ -2,27 +2,31 @@
 <html lang="pl" dir="ltr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Branding - DAM</title>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719ver102">
-  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719">
-  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=hub20260719">
+  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719j13">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719modal1">
+  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=hub20260719disc4">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
+  <script>
+    if (localStorage.theme) document.documentElement.setAttribute("data-theme", localStorage.theme);
+  </script>
 </head>
 <body class="geex-dashboard dam-app">
   <div class="dam-sidebar-backdrop" id="damSidebarBackdrop"></div>
   <header class="geex-header">
     <div class="geex-header__wrapper">
       <div class="geex-header__logo-wrapper">
-        <a href="dashboard.html" class="geex-header__logo">
-          <img class="logo-lite" src="assets/img/logo-dark.svg" alt="DAM" />
-          <img class="logo-dark" src="assets/img/logo-lite.svg" alt="DAM" />
+        <a href="dashboard.html" class="geex-header__logo" title="Dobra Kaloria - DAM">
+          <img class="logo-lite dam-logo-dk" src="assets/img/logo-dk-green.svg" alt="Dobra Kaloria" />
+          <img class="logo-dark dam-logo-dk" src="assets/img/logo-dk-green.svg" alt="Dobra Kaloria" />
         </a>
         <button type="button" class="geex-btn geex-btn--primary dam-menu-toggle d-lg-none" id="damSidebarToggle" aria-label="Menu">
           <i class="uil uil-bars"></i>
@@ -30,108 +34,112 @@
       </div>
     </div>
   </header>
+
   <main class="geex-main-content">
     <div class="geex-sidebar" id="damSidebar">
       <a href="#" class="geex-sidebar__close" id="damSidebarClose" aria-label="Zamknij menu"><i class="uil uil-times"></i></a>
       <div class="geex-sidebar__wrapper">
+        <div class="geex-sidebar__header">
+          <a href="dashboard.html" class="geex-sidebar__logo" title="Dobra Kaloria - DAM">
+            <img class="logo-lite dam-logo-dk" src="assets/img/logo-dk-green.svg" alt="Dobra Kaloria" width="150" height="48" />
+            <img class="logo-dark dam-logo-dk" src="assets/img/logo-dk-green.svg" alt="Dobra Kaloria" width="150" height="48" />
+          </a>
+        </div>
         <nav class="geex-sidebar__menu-wrapper">
           <ul class="geex-sidebar__menu"></ul>
         </nav>
       </div>
     </div>
+
     <div class="geex-content">
       <div class="geex-content__header">
         <div class="geex-content__header__content">
           <h2 class="geex-content__header__title">Branding</h2>
-          <p class="geex-content__header__subtitle">Kampanie, materiały graficzne, brandbook</p>
+          <p class="geex-content__header__subtitle dam-page-sub">Tu trzymamy reklamy, filmy i grafiki marki — wpisz słowo albo kliknij kolorowy tag.</p>
         </div>
         <div class="geex-content__header__action">
-          <button type="button" class="geex-btn geex-btn--primary-transparent" id="damBrandingRebuild">Przebuduj indeks</button>
+          <button type="button" class="geex-btn geex-btn--primary-transparent" id="damBrandingRebuild" data-dam-tip="Przeskanuj foldery Marketing i odśwież branding-index.json">Przebuduj indeks</button>
         </div>
       </div>
-      <div class="dam-branding-tabs" role="tablist">
-        <button type="button" class="dam-branding-tab is-active" data-tab="browse">Przeglądaj</button>
-        <button type="button" class="dam-branding-tab" data-tab="keyvisuale">Key visuale</button>
-        <button type="button" class="dam-branding-tab" data-tab="campaigns">Kampanie</button>
-        <button type="button" class="dam-branding-tab" data-tab="channels">Kanały</button>
-        <button type="button" class="dam-branding-tab" data-tab="brandbook">Brandbook</button>
-        <button type="button" class="dam-branding-tab" data-tab="layout">Layout builder</button>
+
+      <div class="dam-global-search-block">
+        <div class="dam-explorer-toolbar dam-branding-toolbar">
+          <div class="dam-search-wrap dam-search-wrap--panel">
+            <div class="dam-search-input-wrap">
+              <i class="uil uil-search" aria-hidden="true"></i>
+              <input type="search" id="damBrandingSearch" class="form-control dam-search-input" placeholder="Np. burger, grill, proteina, slider niemięsa, film lato 2026…" autocomplete="off" aria-label="Szukaj w branding" data-dam-tip="Szuka po znaczeniu (tagi, skojarzenia produktów, nazwy kampanii) — nie po ścieżce folderu" />
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="dam-branding-toolbar">
-        <input type="search" id="damBrandingSearch" class="geex-content__form__input" placeholder="Szukaj assetów, SKU, kampanii…" />
-        <select id="damBrandingMedia" class="geex-content__form__input" aria-label="Typ medium">
-          <option value="">Wszystkie media</option>
-          <option value="raster">Raster</option>
-          <option value="vector">Wektor</option>
-          <option value="video">Wideo</option>
-        </select>
-        <select id="damBrandingPerspective" class="geex-content__form__input" aria-label="Perspektywa">
-          <option value="">Perspektywa</option>
-          <option value="ENFACE">ENFACE</option>
-          <option value="FRONT">FRONT</option>
-          <option value="BACK">BACK</option>
-          <option value="TYL_ENFACE">TYŁ-ENFACE</option>
-        </select>
-        <select id="damBrandingSize" class="geex-content__form__input" aria-label="Rozmiar">
-          <option value="">Rozmiar</option>
-          <option value="XL">XL</option>
-          <option value="L">L</option>
-          <option value="S">S</option>
-          <option value="S_SKLEP">S-SKLEP</option>
-        </select>
-        <select id="damBrandingBackground" class="geex-content__form__input" aria-label="Tło">
-          <option value="">Tło</option>
-          <option value="transparent">Przezroczyste (PNG)</option>
-          <option value="white">Białe (JPG)</option>
-        </select>
-        <select id="damBrandingChannel" class="geex-content__form__input" aria-label="Kanał">
-          <option value="">Kanał</option>
-          <option value="www">WWW</option>
-          <option value="meta">Meta</option>
-          <option value="instagram">Instagram</option>
-          <option value="google">Google</option>
-        </select>
-        <select id="damBrandingBrand" class="geex-content__form__input" aria-label="Marka">
-          <option value="">Marka</option>
-          <option value="DK">DK</option>
-          <option value="GC">GC</option>
-        </select>
-        <label class="dam-tag-reveal-toggle"><input type="checkbox" id="damBrandingIncludeArchive" /> Pokaż archiwum</label>
+
+      <div class="dam-branding-tabs-row">
+        <div class="dam-branding-tabs" role="tablist" aria-label="Sekcje branding">
+          <button type="button" class="dam-branding-tab is-active" data-tab="campaigns" role="tab" aria-selected="true">Kampanie</button>
+          <button type="button" class="dam-branding-tab" data-tab="social" role="tab" aria-selected="false">Social &amp; wideo</button>
+          <button type="button" class="dam-branding-tab" data-tab="www" role="tab" aria-selected="false">Strony WWW</button>
+          <button type="button" class="dam-branding-tab" data-tab="packshots" role="tab" aria-selected="false">Packshoty</button>
+          <button type="button" class="dam-branding-tab" data-tab="brandbook" role="tab" aria-selected="false">Brandbook</button>
+        </div>
+        <div class="dam-branding-tabs-meta">
+          <p id="damBrandingSectionDesc" class="dam-branding-tabs-meta__desc"></p>
+          <p id="damBrandingStatus" class="dam-branding-tabs-meta__status" aria-live="polite">Ładowanie indeksu…</p>
+        </div>
       </div>
-      <div id="damBrandingPanelBrowse" class="dam-branding-panel">
-        <div id="damBrandingGrid" class="dam-branding-grid"></div>
+
+      <div class="dam-branding-tag-filters" id="damBrandingTagFilters" role="group" aria-label="Filtry tagami"></div>
+      <div class="dam-viz-secondary-filters dam-branding-filters dam-branding-filters--meta" role="group" aria-label="Opcje widoku">
+        <label class="dam-switch dam-switch--compact" for="damBrandingGraphicsOnly" data-dam-tip="Ukrywa PDF, Excel i Word przy wyszukiwaniu. Dokumenty nadal po tagu Dokument.">
+          <input type="checkbox" id="damBrandingGraphicsOnly" class="dam-switch__input" checked />
+          <span class="dam-switch__track" aria-hidden="true"></span>
+          <span class="dam-switch__label">Tylko grafiki</span>
+        </label>
+        <label class="dam-switch" for="damBrandingIncludeArchive" data-dam-tip="Domyślnie ukryte foldery ARCHIWUM na dysku Marketing">
+          <input type="checkbox" id="damBrandingIncludeArchive" class="dam-switch__input" />
+          <span class="dam-switch__track" aria-hidden="true"></span>
+          <span class="dam-switch__label">Pokaż archiwum</span>
+        </label>
+        <button type="button" class="dam-branding-clear-btn" id="damBrandingClearTags">Wyczyść filtry</button>
       </div>
-      <div id="damBrandingPanelKeyvisuale" class="dam-branding-panel" hidden>
-        <p class="dam-hub-section-desc">Presety perspektyw opakowania (ENFACE, FRONT, BACK, TYŁ-ENFACE) z folderów WIZKI.</p>
-        <div id="damBrandingKeyGrid" class="dam-branding-grid"></div>
+
+      <div id="damBrandingContextBar" class="dam-branding-context" hidden>
+        <button type="button" class="dam-branding-context__back" id="damBrandingBackBtn">
+          <i class="uil uil-arrow-left" aria-hidden="true"></i> Wróć do przeglądania
+        </button>
+        <div class="dam-branding-context__chips" id="damBrandingContextChips" aria-label="Aktywne filtry"></div>
       </div>
-      <div id="damBrandingPanelCampaigns" class="dam-branding-panel" hidden>
-        <div id="damBrandingCampaignTree" class="dam-branding-campaign-tree"></div>
-      </div>
-      <div id="damBrandingPanelChannels" class="dam-branding-panel" hidden>
-        <p class="dam-hub-section-desc">Filtruj po kanale w polu Kanał (meta, instagram, www, google).</p>
+
+      <div id="damBrandingPanelSection" class="dam-branding-panel">
+        <div id="damBrandingDiscovery" class="dam-branding-discovery" hidden>
+          <section class="dam-branding-discovery__block" id="damBrandingRecent" hidden></section>
+        </div>
+        <div id="damBrandingSectionGrid" class="dam-viz-grid dam-branding-grid"></div>
       </div>
       <div id="damBrandingPanelBrandbook" class="dam-branding-panel" hidden>
         <div id="damBrandbookTokens" class="dam-brandbook-tokens"></div>
-      </div>
-      <div id="damBrandingPanelLayout" class="dam-branding-panel" hidden>
-        <p class="dam-hub-section-desc">Presety layoutu sklepu (848×1200, slidery kategorii). Eksport PNG w kolejnej iteracji.</p>
-        <div id="damBrandingLayoutPresets" class="dam-branding-layout-presets"></div>
+        <h4 class="dam-hub-section-title" style="margin:16px 0 8px">Assety brandbook</h4>
+        <div id="damBrandbookGrid" class="dam-viz-grid dam-branding-grid"></div>
       </div>
     </div>
   </main>
-  <div class="dam-branding-modal" id="damBrandingModal" hidden>
-    <div class="dam-branding-modal__backdrop" data-close="1"></div>
-    <div class="dam-branding-modal__card" role="dialog" aria-modal="true" aria-labelledby="damBrandingModalTitle">
-      <button type="button" class="dam-branding-modal__close" data-close="1" aria-label="Zamknij">×</button>
-      <div id="damBrandingModalMedia" class="dam-branding-modal__media"></div>
-      <div id="damBrandingModalMeta" class="dam-branding-modal__meta"></div>
-    </div>
-  </div>
+
   <script src="./assets/vendor/js/jquery/jquery-3.5.1.min.js"></script>
+  <script src="./assets/vendor/js/bootstrap/bootstrap.min.js"></script>
+  <script src="./assets/js/main.js"></script>
   <script src="./assets/js/dam-api.js?v=20260719golive1"></script>
+  <script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-  <script src="./assets/js/dam-shell.js?v=hub20260719"></script>
-  <script src="./assets/js/dam-branding.js?v=hub20260719"></script>
+  <script src="./assets/js/dam-version.js?v=1.04"></script>
+  <script src="./assets/js/dam-shell.js?v=hub20260719e"></script>
+  <script src="./assets/js/dam-paths.js?v=20260719ver102"></script>
+  <script src="./assets/js/dam-tooltips.js?v=20260718admin3"></script>
+  <script src="./assets/js/dam-icons.js?v=20260718icons2"></script>
+  <script src="./assets/vendor/js/gsap/gsap.min.js"></script>
+  <script src="./assets/js/dam-tag-bar.js?v=hub20260719j12"></script>
+  <script src="./assets/js/dam-asset-taxonomy.js?v=hub20260719j10"></script>
+  <script src="./assets/js/dam-badges.js?v=hub20260719j10"></script>
+  <script src="./assets/js/dam-tag-edit.js?v=hub20260719j10"></script>
+  <script src="./assets/js/dam-media-preview.js?v=hub20260719j10"></script>
+  <script src="./assets/js/dam-branding.js?v=hub20260719disc4"></script>
 </body>
 </html>

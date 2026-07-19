@@ -10,8 +10,9 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-	<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719ver102">
-	<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719ver102">
+  <link rel="stylesheet" href="./assets/css/dam-wykrojnik-queue.css?v=hub20260719f">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
 </head>
 <body class="geex-dashboard dam-app">
@@ -90,6 +91,40 @@
             <span class="dam-status dam-status--missing">Stub</span>
           </article>
         </div>
+
+        <div class="col-12" id="damWykrojnikQueue">
+          <article class="dam-integration-card">
+            <h3>Kolejka mapowań wykrojników</h3>
+            <p class="dam-wykrojnik-queue__intro">
+              Edycja lokalna (bez bridge API): szkic w przeglądarce, potem pobierz JSON i zastąp plik
+              <code>apps/web/data/wykrojnik-mapping-queue.json</code>. Następnie uruchom
+              <code>python apps/web/scripts/link-wykrojniki-products.py</code>.
+            </p>
+            <p class="dam-wykrojnik-queue__status" id="damWykrojnikQueueStatus">Ładowanie…</p>
+            <form class="dam-wykrojnik-queue__form" id="damWykrojnikQueueForm">
+              <label>Kod wykrojnika
+                <input type="text" id="damWykrojnikQueueKod" placeholder="np. 6300547" required>
+              </label>
+              <label>ID produktu DAM
+                <input type="text" id="damWykrojnikQueueProduct" placeholder="np. kielbaska-wegierska-niemiesne" required>
+              </label>
+              <label>Notatka
+                <input type="text" id="damWykrojnikQueueNote" placeholder="opcjonalnie">
+              </label>
+              <label style="align-self:end">
+                <button type="submit" class="geex-btn geex-btn--primary">Dodaj do kolejki</button>
+              </label>
+            </form>
+            <div class="dam-wykrojnik-queue__actions">
+              <button type="button" class="geex-btn geex-btn--primary-transparent" id="damWykrojnikQueueDownload">Pobierz JSON</button>
+              <button type="button" class="geex-btn geex-btn--sm" id="damWykrojnikQueueClearDraft">Wyczyść szkic</button>
+            </div>
+            <h4 style="font-size:14px;margin:0 0 8px">Oczekujące</h4>
+            <div id="damWykrojnikQueuePending"></div>
+            <h4 style="font-size:14px;margin:16px 0 8px">Podpowiedzi z rejestru (bez powiązania)</h4>
+            <div id="damWykrojnikQueueUnlinked"></div>
+          </article>
+        </div>
       </div>
     </div>
   </main>
@@ -102,6 +137,7 @@
   <script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
   <script src="./assets/js/dam-version.js?v=1.02"></script>
-	<script src="./assets/js/dam-shell.js?v=20260719ver102"></script>
+  <script src="./assets/js/dam-shell.js?v=20260719ver102"></script>
+  <script src="./assets/js/dam-wykrojnik-queue.js?v=hub20260719f"></script>
 </body>
 </html>

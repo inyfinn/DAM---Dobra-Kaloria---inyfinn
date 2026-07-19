@@ -9,7 +9,7 @@
   "version": 2,
   "updated_at": "2026-07-18",
   "instructions": {
-    "count": 25,
+    "count": 28,
     "version": 4,
     "source_kv": "program-instructions",
     "critical_ids": [

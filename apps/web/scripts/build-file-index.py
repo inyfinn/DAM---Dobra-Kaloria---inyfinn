@@ -1229,7 +1229,23 @@ def merge_category_archive(cat: Path, root: Path, brand: str, products: list[dic
             pid = norm(key_name).replace(" ", "-")[:80]
             target = live_by_id.get(pid)
         if not target:
-            print(f"  [archive] brak produktu live dla: {arch_prod.name}")
+            item = scan_product(cat_name, arch_prod, root, brand)
+            if not item:
+                print(f"  [archive] brak produktu live dla: {arch_prod.name}")
+                continue
+            item["in_archive"] = True
+            item["archive_only"] = True
+            for r in item.get("revisions") or []:
+                r["in_archive"] = True
+            if item.get("revisions"):
+                for r in item["revisions"]:
+                    r["is_latest"] = False
+                item["revisions"][-1]["is_latest"] = True
+            products.append(item)
+            live_by_name[item["name"]] = item
+            live_by_id[item["id"]] = item
+            merged += len(item.get("revisions") or [])
+            print(f"  [archive] produkt tylko archiwum: {arch_prod.name}")
             continue
 
         arch_revs = scan_revision_children(arch_prod, root, brand, cat_name)
@@ -1579,11 +1595,17 @@ def build_search(products: list[dict]) -> dict:
                 pref = digits[:length]
                 if pid not in by_prefix[pref]:
                     by_prefix[pref].append(pid)
+            base_lower = base.lower()
+            for length in range(3, len(base_lower) + 1):
+                pref = base_lower[:length]
+                if pid not in by_prefix[pref]:
+                    by_prefix[pref].append(pid)
             for length in range(4, len(base) + 1):
                 pref = base[:length]
                 if pid not in by_prefix[pref]:
                     by_prefix[pref].append(pid)
 
+        rev_indexes = [str(r.get("index") or "") for r in p.get("revisions") or [] if r.get("index")]
         entries.append(
             {
                 "id": pid,
@@ -1596,10 +1618,17 @@ def build_search(products: list[dict]) -> dict:
                 "index_bases": p["index_bases"],
                 "search_blob": norm(
                     " ".join(
-                        [p.get("display_name") or p["name"], p["name"], p["category"]]
+                        [
+                            p.get("display_name") or p["name"],
+                            p["name"],
+                            p["category"],
+                            p.get("path") or "",
+                        ]
                         + p["tags"]
                         + p["indexes"]
+                        + rev_indexes
                         + [r["folder"] for r in p.get("revisions") or []]
+                        + [r.get("path") or "" for r in p.get("revisions") or []]
                     )
                 ),
             }

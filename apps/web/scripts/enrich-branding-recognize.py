@@ -76,12 +76,17 @@ def main() -> int:
             frame.parent.mkdir(parents=True, exist_ok=True)
             if video_frame(path, frame):
                 text, conf = ocr_image(frame)
-        elif path.suffix.lower() in {".png", ".jpg", ".jpeg"}:
+        elif path.suffix.lower() in {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".psd", ".psb"}:
             text, conf = ocr_image(path)
+        appearance = []
+        if text:
+            from brand_tag_utils import extract_appearance_from_text
+
+            appearance = extract_appearance_from_text(text + " " + (a.get("name") or ""))
         store[aid] = {
             "ocr_text": text,
             "ocr_confidence": conf,
-            "appearance_tags": [],
+            "appearance_tags": appearance,
             "linked_product_ids": a.get("linked_product_ids") or [],
             "link_source": "ocr" if text else "none",
             "mtime": mt,

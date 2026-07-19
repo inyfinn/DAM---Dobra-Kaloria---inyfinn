@@ -9,7 +9,7 @@
 (function () {
   "use strict";
 
-  var ROW_LIMIT = 7;
+  var ROW_LIMIT = 8;
   var GROUP_ORDER = ["smak", "typ", "opakowanie", "autor", "osoba"];
   var GROUP_LABELS = {
     smak: "Smak",
@@ -67,6 +67,67 @@
       }
     }
     fetchTagGroups(cb);
+  }
+
+  function buildGroupRow(spec) {
+    spec = spec || {};
+    var gk = spec.groupKey || "group";
+    var chips = spec.chips || [];
+    if (!chips.length) return "";
+    var rowLimit = spec.rowLimit == null ? ROW_LIMIT : spec.rowLimit;
+    var expandedGroups = spec.expandedGroups || {};
+    var isLong = chips.length > rowLimit;
+    var isOpen = !!expandedGroups[gk];
+    var visible = isLong && !isOpen ? chips.slice(0, rowLimit) : chips;
+    var hiddenCount = isLong && !isOpen ? chips.length - rowLimit : 0;
+    var label = spec.label || gk;
+    var className = spec.className || "";
+    var html =
+      '<div class="dam-tag-group-row ' +
+      className +
+      (isLong ? " dam-tag-group-row--long" : "") +
+      (isOpen ? " is-expanded" : "") +
+      '" data-group="' +
+      esc(gk) +
+      '">' +
+      '<span class="dam-tag-group-label">' +
+      esc(label) +
+      ":</span>" +
+      '<span class="dam-tag-group-pills">';
+    visible.forEach(function (chip) {
+      var active = spec.activeMap && spec.activeMap[chip.key];
+      if (typeof spec.pillHtml === "function") {
+        html += spec.pillHtml(chip, !!active);
+      } else {
+        html +=
+          '<button type="button" class="dam-tag-pill" data-tag="' +
+          esc(chip.key) +
+          '" title="' +
+          esc(chip.label) +
+          '">' +
+          esc(chip.label) +
+          "</button>";
+      }
+    });
+    if (isLong) {
+      if (!isOpen) {
+        html +=
+          '<button type="button" class="dam-tag-more" data-expand-group="' +
+          esc(gk) +
+          '" aria-expanded="false" title="Pokaz wszystkie tagi w kategorii ' +
+          esc(label) +
+          '">+' +
+          hiddenCount +
+          "</button>";
+      } else {
+        html +=
+          '<button type="button" class="dam-tag-more" data-expand-group="' +
+          esc(gk) +
+          '" aria-expanded="true" title="Zwin liste tagow">mniej</button>';
+      }
+    }
+    html += "</span></div>";
+    return html;
   }
 
   function bind(opts) {
@@ -176,6 +237,10 @@
 
       tagsEl.querySelectorAll(".dam-tag-pill").forEach(function (btn) {
         btn.addEventListener("click", function (e) {
+          if (typeof opts.onPillClick === "function") {
+            var handled = opts.onPillClick(this, e);
+            if (handled) return;
+          }
           applyQuery(this.getAttribute("data-tag") || "", !!(e.ctrlKey || e.metaKey));
         });
       });
@@ -190,6 +255,10 @@
           render();
         });
       });
+
+      if (typeof opts.afterRender === "function") {
+        opts.afterRender(tagsEl, state);
+      }
     }
 
     loadTagGroups(function (groups) {
@@ -233,5 +302,5 @@
   setTimeout(autoMount, 120);
   setTimeout(autoMount, 700);
 
-  window.DamTagBar = { bind: bind, ROW_LIMIT: ROW_LIMIT, autoMount: autoMount };
+  window.DamTagBar = { bind: bind, ROW_LIMIT: ROW_LIMIT, buildGroupRow: buildGroupRow, autoMount: autoMount };
 })();

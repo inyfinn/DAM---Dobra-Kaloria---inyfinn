@@ -3550,3 +3550,87 @@ User: po zmianie program nie weryfikuje dysku; Odswiez = dysk->program; Stosuj z
 - systematic-debugging
 - apps/desktop/lifecycle_status.py, local_bridge.py, dam-explorer.js, explorer.html
 
+---
+
+## 2026-07-19 - Branding plan v4 (lokalnie, bez bridge API)
+
+### Komenda/Akcja
+User: kontynuuj przez Cursor/repo, nie przez bridge API. Domknięcie: marketing na project.html, admin kolejki wykrojników, Part G instrukcje, rapidocr w requirements.
+
+### Log/Status
+1. `dam-project.js`: mini-siatka marketingu (SKU/indeks/linked_product_ids), sekcja wykrojników z registry JSON.
+2. `integrations.html` + `dam-wykrojnik-queue.js`: kolejka lokalna (localStorage + pobierz JSON).
+3. `program-instructions.json`: +3 wpisy (branding.hub_viz_cards, branding.project_marketing, wykrojnik.queue_local_admin); packaging.tag_tiers → „Tagi pakowania (2F)”.
+4. `requirements.txt`: rapidocr-onnxruntime (OCR stub).
+5. Cache bust `hub20260719f` na project catalog CSS/JS.
+
+### Efekt/Fix
+- project.html pokazuje do 6 kart Branding z tagami DamBadges.
+- Admin mapuje wykrojniki bez POST na bridge.
+- Bridge PATCH catalog — pominięty (decyzja usera).
+
+### Test/Ewaluacja
+- Screenshot QA: project 375px, integrations, branding (w toku po restarcie cache).
+
+### Zrodla
+- docs/BRANDING-HUB.md, program-instructions Part G
+
+---
+
+## 2026-07-19 - Branding hub: tagi, preview PSB, bridge cleanup
+
+### Komenda/Akcja
+User: weryfikuj pliki dalej, kontynuuj usprawnienia platformy (branding tagi, miniatury, PSB/PSD, filtry chipami).
+
+### Log/Status
+1. Zabito 4 zombie `local_bridge.py` na :8766; uruchomiono jedna instancja z `psd-tools`.
+2. `build-branding-index.py`: `by_appearance` (tylko appearance_tags); usunięto tokeny `search_blob` z `by_tag` (koniec śmieci typu `x:/marketing`).
+3. `dam-branding.js` j6: dynamiczne chipy produktu z `by_appearance`; cache bust `hub20260719j6`.
+4. `local_bridge.py`: preview raster/wideo zwraca 422 `preview_failed` zamiast 415; PSB 652MB → JPEG 141KB OK.
+5. OCR batch `enrich-branding-recognize.py --limit 300` + `link-branding-products.py`; indeks 7832 assetów, 3710 z appearance_tags.
+
+### Efekt/Fix
+- HTTP `GET /media?path=...psb&preview=1` → 200 image/jpeg.
+- Wyszukiwanie `proteina` + „Tylko grafiki”: 240 grafik, miniatury 848–1200px.
+- Chipy PRODUKT czyste (Proteina, Karton 6x, Burger… bez fragmentów ścieżek).
+- Modal: podgląd + tagi DK/Proteina/Banoffee + zoom dock na dole.
+
+### Test/Ewaluacja
+- Screenshot Pass: branding tagi j6, modal banoffee 848×1200, bridge /health OK.
+- CDP: `DamMediaPreview.openAsset` img naturalWidth=848.
+
+### Zrodla
+- visual-qa-testing, systematic-debugging
+- apps/desktop/local_bridge.py, apps/web/scripts/build-branding-index.py, dam-branding.js
+
+---
+
+## 2026-07-19 - Lifecycle previous_letter + auto-reconcile (j17/j18)
+
+### Komenda/Akcja
+User: TEST LIFECYCLE F/X/D — po restore z archiwum wszystko D zamiast BAT=D, DOY/PROD=clear, ETY=F. Wymagany full commit + push.
+
+### Log/Status
+1. **Przyczyna „wszystko D” (3x):**
+   - DOY i ETY wspolny `revision_index` TEST-TEST2 → `_plan_variant` bral legacy klucz z `previous_letter: D` zamiast sciezki nośnika.
+   - `_sync_revisions_after_product` przy clear produktu ustawial `previous_letter: null` w cascade_meta i kasowal stan w store.
+   - Restore variant uzywal `prev in (F,X,D)` — X jako restore target.
+2. **Fix Python** (`lifecycle_status.py`):
+   - `_variant_identity` (DOY|TEST-TEST2 vs ETY|TEST-TEST2), `_rev_row_for_variant` (sciezka first).
+   - `_restore_letter_from_row`: nigdy X; BAT D zostaje przy product clear.
+   - cascade_meta: `previous_letter` tylko przy wejsciu w X; legacy klucz index usuwany po zapisie po sciezce.
+3. **Fix JS** (`dam-explorer.js` j17/j18): `reconcileProductLifecycleFromDisk`, `findFreshProductInIndex`, preserve `previous_letter`.
+4. **Test:** `apps/desktop/tests/test_lifecycle_previous_letter.py` — ALL OK.
+
+### Efekt/Fix
+- Oczekiwany stan po scenariuszu usera: PROD/DOY clear, BAT D, ETY F.
+- Cache: `hub20260719j18`. Bridge wymaga restartu po deploy Python.
+
+### Test/Ewaluacja
+- Unit test previous_letter: PASS.
+- X: Marketing niedostepny w sesji agenta (PRODUCT_NOT_FOUND) — retest UI po restarcie bridge u usera.
+
+### Zrodla
+- lifecycle-status.json history `variant_restored_previous_letter:D` na DOY/ETY
+- systematic-debugging
+

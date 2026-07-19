@@ -15,6 +15,8 @@
     lang: 1,
     status: 1,
     index: 1,
+    asset_role: 1,
+    appearance: 1,
   };
 
   function esc(s) {
@@ -60,6 +62,7 @@
     var page = path.split("/").pop() || "";
     if (page.indexOf("visualizations") === 0) return "viz";
     if (page.indexOf("explorer") === 0) return "explorer";
+    if (page.indexOf("branding") === 0) return "branding";
     /* Lista projektow = index.html; szczegoly = project.html */
     if (page.indexOf("project") === 0 || page === "index.html" || page === "index") {
       return "project";
@@ -421,6 +424,9 @@
         extraData += ' data-' + k + '="' + esc(it.data[k]) + '"';
       });
     }
+    if (it.brandingAssetId) {
+      extraData += ' data-branding-asset-id="' + esc(it.brandingAssetId) + '"';
+    }
     if (it.kind === "more" && it.moreItems && it.moreItems.length) {
       try {
         extraData +=
@@ -540,6 +546,9 @@
     if (context === "explorer") {
       return document.getElementById("damFileSearch");
     }
+    if (context === "branding") {
+      return document.getElementById("damBrandingSearch");
+    }
     if (context === "project") {
       return (
         document.getElementById("damProjectsSearch") ||
@@ -584,6 +593,11 @@
       }
     }
 
+    if (context === "branding" && global.DamBranding && typeof global.DamBranding.applyBadgeFilter === "function") {
+      global.DamBranding.applyBadgeFilter(kind, value, opts);
+      return;
+    }
+
     var input = resolveSearchInput(context);
     if (!input) return;
 
@@ -616,15 +630,21 @@
 
   function openTagEdit(btn) {
     if (!global.DamTagEdit) return;
+    var card = btn.closest("[data-id]");
+    var brandingId =
+      btn.getAttribute("data-branding-asset-id") ||
+      (card && card.getAttribute("data-id")) ||
+      "";
     if (typeof global.DamTagEdit.openTagPicker === "function") {
       global.DamTagEdit.openTagPicker(btn, {
         kind: btn.getAttribute("data-tag-kind") || "",
         value: btn.getAttribute("data-tag-value") || "",
         revisionPath: btn.getAttribute("data-revision-path") || "",
         revisionIndex: btn.getAttribute("data-revision-index") || "",
-        currentCode: btn.getAttribute("data-current-code") || "",
+        currentCode: btn.getAttribute("data-current-code") || btn.getAttribute("data-tag-value") || "",
         productId: btn.getAttribute("data-product-id") || "",
         productName: btn.getAttribute("data-product-name") || "",
+        brandingAssetId: brandingId,
       });
       return;
     }
@@ -876,6 +896,317 @@
 
   var TAG_TIER_REVEAL_KEY = "dam_reveal_low_tags";
 
+  var BRANDING_MEDIA_LABELS = {
+    image: "Obraz",
+    raster: "Obraz",
+    vector: "Wektor",
+    video: "Wideo",
+    document: "Dokument",
+    source: "Źródło",
+  };
+
+  function taxonomy() {
+    return global.DamAssetTaxonomy || null;
+  }
+
+  function brandingMediaLabel(mt) {
+    if (taxonomy() && typeof taxonomy().mediaTypeLabel === "function") {
+      return taxonomy().mediaTypeLabel(mt);
+    }
+    return BRANDING_MEDIA_LABELS[mt] || mt;
+  }
+
+  function brandingRoleLabel(code) {
+    if (taxonomy() && typeof taxonomy().assetRoleLabel === "function") {
+      return taxonomy().assetRoleLabel(code);
+    }
+    return code;
+  }
+
+  function brandingFormatLabel(code) {
+    if (taxonomy() && typeof taxonomy().formatTechLabel === "function") {
+      return taxonomy().formatTechLabel(code);
+    }
+    return code;
+  }
+
+  function folderLabelFromPath(path) {
+    var p = String(path || "").toUpperCase();
+    if (p.indexOf("08 - KAMAPANIE") !== -1) return "Kampanie";
+    if (p.indexOf("05 - SOCIAL") !== -1) return "Social media";
+    if (p.indexOf("06 - STRONY") !== -1) return "Strony WWW";
+    if (p.indexOf("07 - E-COMMERCE") !== -1) return "E-commerce";
+    if (p.indexOf("BRANDING I MARKA") !== -1) return "Brandbook";
+    if (p.indexOf("03 - MATERIA") !== -1) return "Materiały graficzne";
+    return "";
+  }
+
+  function inferBrandingChannels(asset) {
+    if (asset.channels && asset.channels.length) return asset.channels;
+    var p = String(asset.path || "").toUpperCase();
+    var ch = [];
+    if (p.indexOf("SOCIAL") !== -1) {
+      ch.push("meta", "instagram");
+    }
+    if (p.indexOf("STRONY WWW") !== -1 || p.indexOf("E-COMMERCE") !== -1) {
+      ch.push("www");
+    }
+    if (p.indexOf("GOOGLE") !== -1) {
+      ch.push("google");
+    }
+    return ch;
+  }
+
+  function brandingFileExt(asset) {
+    var n = String((asset && (asset.name || asset.path)) || "");
+    var m = /\.([a-z0-9]+)$/i.exec(n);
+    return m ? m[1].toLowerCase() : "";
+  }
+
+  function campaignBadgeLabel(asset) {
+    var raw = String(asset.campaign_id || asset.campaign_name || "");
+    if (!raw) return "";
+    var short = raw.split(/[\\/]/).pop();
+    if (short.length > 28) return short.slice(0, 26) + "…";
+    return short;
+  }
+
+  function buildBrandingBadgeItems(asset) {
+    asset = asset || {};
+    var assetId = asset.id || "";
+    var items = [];
+    var seen = {};
+    function pushItem(it) {
+      var key = (it.kind || "") + ":" + (it.value || it.label || "");
+      if (seen[key]) return;
+      seen[key] = true;
+      it.brandingAssetId = assetId;
+      items.push(it);
+    }
+
+    if (asset.brand) {
+      pushItem({
+        kind: "brand",
+        value: asset.brand,
+        label: asset.brand,
+        cls: "dam-viz-badge--brand",
+        tip: "Marka materiału",
+      });
+    }
+
+    if (asset.asset_role) {
+      pushItem({
+        kind: "asset_role",
+        value: asset.asset_role,
+        label: brandingRoleLabel(asset.asset_role),
+        cls: "dam-viz-badge--cat",
+        tip: "Przeznaczenie biznesowe (rola assetu). Shift+klik: edytuj.",
+        tier: "primary",
+      });
+    }
+
+    if (asset.media_type) {
+      pushItem({
+        kind: "media",
+        value: asset.media_type,
+        label: brandingMediaLabel(asset.media_type),
+        cls: "dam-viz-badge--carrier",
+        tip: "Format pliku (wyliczany automatycznie z rozszerzenia)",
+        tier: "primary",
+      });
+    }
+
+    (asset.format_technical || []).forEach(function (ft) {
+      if (!ft) return;
+      pushItem({
+        kind: "format",
+        value: ft,
+        label: brandingFormatLabel(ft),
+        cls: ft === "editable" ? "dam-viz-badge--editable" : "dam-viz-badge--lang",
+        tip: "Cecha techniczna pliku",
+        tier: "low",
+      });
+    });
+
+    if (asset.perspective) {
+      pushItem({
+        kind: "perspective",
+        value: asset.perspective,
+        label: String(asset.perspective).replace(/_/g, "-"),
+        cls: "dam-viz-badge--subcat",
+        tip: "Perspektywa wizualizacji (packshot)",
+        tier: "primary",
+      });
+    }
+    if (asset.size) {
+      pushItem({
+        kind: "size",
+        value: asset.size,
+        label: String(asset.size).replace(/_/g, "-"),
+        cls: "dam-viz-badge--subcat",
+        tip: "Rozmiar wizualizacji",
+        tier: "low",
+      });
+    }
+
+    var blob = String((asset.name || "") + " " + (asset.path || "") + " " + (asset.search_blob || "")).toLowerCase();
+    var hasLogoTag = (asset.appearance_tags || []).some(function (t) {
+      return String(t || "").toLowerCase() === "logo";
+    });
+    if (!hasLogoTag && /\blogo\b|logotyp|brandbook|favicon|znak firmowy/.test(blob)) {
+      pushItem({
+        kind: "appearance",
+        value: "Logo",
+        label: "Logo",
+        cls: "dam-viz-badge--meta",
+        tip: "Znak / logotyp marki",
+        tier: "primary",
+      });
+    }
+
+    (asset.appearance_tags || []).forEach(function (t) {
+      if (!t) return;
+      pushItem({
+        kind: "appearance",
+        value: t,
+        label: String(t),
+        cls: "dam-viz-badge--mix",
+        tip: "Skojarzenie produktu / OCR. Shift+klik: edytuj.",
+        tier: "primary",
+      });
+    });
+
+    var folderLbl = folderLabelFromPath(asset.path);
+    if (folderLbl) {
+      pushItem({
+        kind: "folder",
+        value: folderLbl,
+        label: folderLbl,
+        cls: "dam-viz-badge--cat",
+        tip: "Obszar na dysku Marketing",
+        tier: "minimal",
+      });
+    }
+
+    var ext = brandingFileExt(asset);
+    if (ext === "psd" || ext === "psb") {
+      pushItem({
+        kind: "format",
+        value: ext,
+        label: "Edytowalny",
+        cls: "dam-viz-badge--editable",
+        tip: ext === "psb" ? "Plik źródłowy PSB z warstwami" : "Plik źródłowy PSD z warstwami",
+        tier: "primary",
+      });
+    } else if (ext === "tif" || ext === "tiff") {
+      pushItem({
+        kind: "format",
+        value: "tiff",
+        label: "TIFF",
+        cls: "dam-viz-badge--source",
+        tip: "Raster zrodlowy wysokiej jakosci",
+        tier: "primary",
+      });
+    } else if (ext === "ai" || ext === "eps") {
+      pushItem({
+        kind: "format",
+        value: ext,
+        label: ext.toUpperCase(),
+        cls: "dam-viz-badge--editable",
+        tip: "Plik wektorowy źródłowy",
+        tier: "low",
+      });
+    }
+
+    inferBrandingChannels(asset).forEach(function (ch) {
+      pushItem({
+        kind: "channel",
+        value: ch,
+        label: String(ch).toUpperCase(),
+        cls: "dam-viz-badge--cat",
+        tip: "Kanał dystrybucji",
+      });
+    });
+
+    if (asset.sku) {
+      pushItem({
+        kind: "index",
+        value: asset.sku,
+        label: String(asset.sku),
+        cls: "dam-viz-badge--index",
+        tip: "SKU / indeks produktu",
+      });
+    }
+
+    if (asset.campaign_id) {
+      pushItem({
+        kind: "campaign",
+        value: asset.campaign_id,
+        label: campaignBadgeLabel(asset) || "Kampania",
+        cls: "dam-viz-badge--mix",
+        tip: "Kampania: " + asset.campaign_id,
+        tier: "primary",
+      });
+    }
+
+    if (asset.is_archive || (asset.tags || []).indexOf("ARCHIWUM") !== -1) {
+      pushItem({
+        kind: "flag",
+        value: "archive",
+        label: "ARCHIWUM",
+        cls: "dam-viz-badge--hidden",
+        tip: "Materiał archiwalny",
+      });
+    }
+
+    (asset.tags || []).forEach(function (t) {
+      if (!t || t === "ARCHIWUM") return;
+      pushItem({
+        kind: "tag",
+        value: t,
+        label: String(t),
+        cls: "dam-viz-badge--subcat",
+        tip: "Tag z indeksu branding",
+      });
+    });
+
+    return items;
+  }
+
+  function brandingGradientTileClass(asset) {
+    var ext = brandingFileExt(asset);
+    if (ext === "psd" || ext === "psb") {
+      return "dam-gradient-tile dam-gradient-tile--editable";
+    }
+    if (ext === "ai" || ext === "pdf") {
+      return "dam-gradient-tile dam-gradient-tile--vector";
+    }
+    return "";
+  }
+
+  function renderBranding(asset, opts) {
+    opts = opts || {};
+    var items = buildBrandingBadgeItems(asset);
+    items = filterByTagTiers(items, opts.includeTagTiers || ["primary", "low", "minimal"]);
+    var max = opts.maxPerKind == null ? 4 : opts.maxPerKind;
+    if (opts.overflow !== false) items = renderOverflow(items, max);
+    var maxTotal = opts.maxTotal || 10;
+    if (maxTotal && items.length > maxTotal) {
+      var head = items.slice(0, maxTotal - 1);
+      var restN = items.length - head.length;
+      head.push({
+        kind: "more",
+        value: String(restN),
+        label: "+" + restN,
+        cls: "dam-viz-badge--more",
+        tip: "Pozostałe tagi (" + restN + ")",
+        moreItems: items.slice(maxTotal - 1),
+      });
+      items = head;
+    }
+    return items.map(badgeHtml).join("");
+  }
+
   function getIncludeTagTiers() {
     try {
       if (localStorage.getItem(TAG_TIER_REVEAL_KEY) === "1") {
@@ -896,7 +1227,10 @@
 
   global.DamBadges = {
     render: render,
+    renderBranding: renderBranding,
     buildBadgeItems: buildBadgeItems,
+    buildBrandingBadgeItems: buildBrandingBadgeItems,
+    brandingGradientTileClass: brandingGradientTileClass,
     bindClicks: bindClicks,
     bindCopyOnRightClick: bindCopyOnRightClick,
     copyTagText: copyTagText,

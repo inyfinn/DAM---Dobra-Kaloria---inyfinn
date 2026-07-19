@@ -23,6 +23,7 @@
   var VIZ_VIEW_KEY = "dam_viz_view_mode";
   var VIZ_SCALE_KEY = "dam_viz_scale";
   var SHOW_ALL_KEY = "dam_explorer_show_all";
+  var LANG_FILTER_KEY = "dam_explorer_lang_filter";
 
   var state = {
     fileIndex:        null,
@@ -37,6 +38,7 @@
     expandedCarriers: {},
     showOlderCarriers:{},
     showAllRevisions: localStorage.getItem(SHOW_ALL_KEY) === "1",
+    langFilter:       localStorage.getItem(LANG_FILTER_KEY) || "",
     filter:           "",
     expandedTagGroups:{},
     vizViewMode:      localStorage.getItem(VIZ_VIEW_KEY) || "tiles",
@@ -376,8 +378,10 @@
     if (!rev) return "starsza";
     /* DYSK (nazwa folderu w indeksie) = prawda. Brak literki = clear / Bez statusu.
        NIGDY: is_latest → aktualne (to mylilo F z "bez statusu").
-       NIGDY: lookup po samym index (TEST-TEST2 moze byc DOY live + ETY w archiwum). */
-    var diskLit = letterFromFolderName(rev.path || rev.folder || "");
+       NIGDY: lookup po samym index (TEST-TEST2 moze byc DOY live + ETY w archiwum).
+       Gdy jest rev.path — tylko basename sciezki (folder w indeksie moze byc nieaktualny). */
+    var diskLit = letterFromFolderName(rev.path || "");
+    if (!diskLit && !rev.path && rev.folder) diskLit = letterFromFolderName(rev.folder);
     if (diskLit) return statusFromLetter(diskLit);
     if (rev.path || rev.folder) return "clear";
 
@@ -430,6 +434,11 @@
     return path;
   }
 
+  function normVariantBasename(pathOrName) {
+    var leaf = String(pathOrName || "").split(/[/\\]/).pop() || "";
+    return leaf.replace(/\s-\s[FXD]$/i, "").toLowerCase();
+  }
+
   function patchPathsAfterLifecycle(res, body) {
     if (!res || !res.ok) return;
     if (!state.lifecycleStore) state.lifecycleStore = { products: {}, revisions: {}, history: [] };
@@ -477,6 +486,44 @@
       }
       if (state.product && (state.product.id === body.product_id || normPathKey(state.product.path || "") === normPathKey(body.path))) {
         state.product.path = ppath;
+      }
+      var cascade = res.cascade_meta || res.cascaded_variants_meta || [];
+      if (cascade.length && state.product && state.product.revisions) {
+        cascade.forEach(function (m) {
+          if (!m || !m.to) return;
+          var toKey = normPathKey(m.to);
+          state.product.revisions.forEach(function (r) {
+            if (!r) return;
+            var pathMatch = normPathKey(r.path || "") === normPathKey(m.from || "");
+            var baseMatch = normVariantBasename(r.path || r.folder) === normVariantBasename(m.from || m.to);
+            if (pathMatch || baseMatch) {
+              r.path = m.to;
+              if (m.to) {
+                var base = String(m.to).split(/[/\\]/).pop();
+                if (base) r.folder = base;
+              }
+              r.in_archive = pathLooksLikeCategoryArchive(m.to);
+            }
+          });
+          var st = statusFromLetter(m.new_letter || "");
+          var row = {
+            path: m.to,
+            previous_path: m.from || "",
+            status: st,
+            letter: m.new_letter || null,
+            product_id: body.product_id || "",
+            synced_from_disk: true,
+            source: "cascade"
+          };
+          state.lifecycleStore.revisions[toKey] = Object.assign(
+            {},
+            state.lifecycleStore.revisions[toKey] || {},
+            row
+          );
+          if (m.from) {
+            delete state.lifecycleStore.revisions[normPathKey(m.from)];
+          }
+        });
       }
     }
   }
@@ -542,9 +589,148 @@
   function revisionsForProductView(product, showAll) {
     var revs = (product && product.revisions) || [];
     if (!showAll) {
-      return revs.filter(function (r) { return !r.in_archive; });
+      revs = revs.filter(function (r) { return !r.in_archive; });
+    }
+    if (state.langFilter) {
+      revs = revs.filter(function (r) { return revisionMatchesLang(r, state.langFilter); });
     }
     return revs;
+  }
+
+  function productHasLivePresence(p) {
+    if (!p) return false;
+    var revs = p.revisions || [];
+    if (revs.some(function (r) { return !r.in_archive; })) return true;
+    var path = String(p.path || "");
+    if (path && path.toUpperCase().indexOf("ARCHIWUM") === -1) return true;
+    return revs.length === 0;
+  }
+
+  function revisionMatchesLang(rev, lang) {
+    if (!lang || !rev) return true;
+    var code = String(lang).toLowerCase();
+    if ((rev.langs || []).some(function (l) { return String(l).toLowerCase() === code; })) return true;
+    return (rev.files || []).some(function (f) {
+      return f && String(f.lang || "").toLowerCase() === code;
+    });
+  }
+
+  function productMatchesLang(p, lang) {
+    if (!lang || !p) return true;
+    return (p.revisions || []).some(function (r) { return revisionMatchesLang(r, lang); });
+  }
+
+  function filterProductsForExplorerView(products) {
+    return (products || []).filter(function (p) {
+      if (!isBrandEnabled(p)) return false;
+      if (!state.showAllRevisions && !productHasLivePresence(p)) return false;
+      if (state.langFilter && !productMatchesLang(p, state.langFilter)) return false;
+      return true;
+    });
+  }
+
+  function filterSearchResponse(res) {
+    if (!res) return res;
+    if (state.showAllRevisions && !state.langFilter) {
+      return Object.assign({}, res, {
+        products: (res.products || []).filter(function (p) {
+          return p && p.id && productInFileIndex(p.id);
+        }),
+        hits: (res.hits || []).filter(function (h) {
+          return h && h.product && h.product.id && productInFileIndex(h.product.id);
+        })
+      });
+    }
+    var products = filterProductsForExplorerView(res.products || []).filter(function (p) {
+      return p && p.id && productInFileIndex(p.id);
+    });
+    var ids = {};
+    products.forEach(function (p) { if (p && p.id) ids[p.id] = true; });
+    var hits = (res.hits || []).filter(function (h) {
+      if (!h || !h.product || !ids[h.product.id]) return false;
+      if (state.langFilter && h.revision && !revisionMatchesLang(h.revision, state.langFilter)) return false;
+      if (!state.showAllRevisions && h.revision && h.revision.in_archive) return false;
+      return true;
+    });
+    if (!state.showAllRevisions) {
+      products = products.filter(function (p) {
+        if (productHasLivePresence(p)) return true;
+        return hits.some(function (h) { return h.product && h.product.id === p.id; });
+      });
+    }
+    return Object.assign({}, res, { products: products, hits: hits });
+  }
+
+  function populateExplorerLangFilter() {
+    var sel = document.getElementById("damExplorerLangFilter");
+    if (!sel || !state.fileIndex) return;
+    var codes = {};
+    (state.fileIndex.products || []).forEach(function (p) {
+      (p.revisions || []).forEach(function (r) {
+        (r.langs || []).forEach(function (l) {
+          if (l) codes[String(l).toLowerCase()] = true;
+        });
+        (r.files || []).forEach(function (f) {
+          if (f && f.lang) codes[String(f.lang).toLowerCase()] = true;
+        });
+      });
+    });
+    var sorted = Object.keys(codes).sort(function (a, b) {
+      var la = DL && DL.langLabel ? DL.langLabel(a) : a;
+      var lb = DL && DL.langLabel ? DL.langLabel(b) : b;
+      return String(la).localeCompare(String(lb), "pl");
+    });
+    var html = '<option value="">Wszystkie jezyki</option>';
+    sorted.forEach(function (code) {
+      var label = DL && DL.langLabel ? DL.langLabel(code) : code;
+      html += '<option value="' + esc(code) + '">' + esc(label) + "</option>";
+    });
+    var prev = state.langFilter || sel.value || "";
+    sel.innerHTML = html;
+    if (prev && codes[prev]) sel.value = prev;
+    else sel.value = "";
+  }
+
+  function syncExplorerShowAllUi() {
+    var showAllEl = document.getElementById("damExplorerShowAll");
+    if (!showAllEl) return;
+    showAllEl.checked = !!state.showAllRevisions;
+    var wrap = showAllEl.closest(".dam-switch");
+    if (wrap) wrap.classList.toggle("is-off", !state.showAllRevisions);
+  }
+
+  function renderExplorerGridStatus() {
+    var status = document.getElementById("damExplorerGridStatus");
+    if (!status || !state.fileIndex) return;
+    var all = (state.fileIndex.products || []).filter(isBrandEnabled);
+    var visible = filterProductsForExplorerView(all);
+    var revVisible = 0;
+    var revAll = 0;
+    visible.forEach(function (p) {
+      revVisible += revisionsForProductView(p, state.showAllRevisions).length;
+    });
+    all.forEach(function (p) {
+      revAll += (p.revisions || []).length;
+    });
+    status.textContent =
+      visible.length + " produktow (" + revVisible + " wariantow)" +
+      (visible.length !== all.length || revVisible !== revAll
+        ? " / z " + all.length + " wszystkich"
+        : "");
+  }
+
+  function setShowAllRevisions(on) {
+    state.showAllRevisions = !!on;
+    try {
+      localStorage.setItem(SHOW_ALL_KEY, state.showAllRevisions ? "1" : "0");
+    } catch (eSet) { /* ignore */ }
+    syncExplorerShowAllUi();
+    renderExplorerGridStatus();
+    if (state.searchQuery && state.searchQuery.length >= 2) {
+      applySearchToPanel(state.searchQuery);
+    } else {
+      renderMain();
+    }
   }
 
   /**
@@ -626,11 +812,13 @@
 
   function getProductsForCanonCat() {
     if (!state.canonCat || !state.fileIndex) return [];
-    return (state.fileIndex.products || []).filter(function (p) {
-      if (!isBrandEnabled(p)) return false;
-      var cid = DL ? DL.categoryCanonId(p.category) : p.category;
-      return cid === state.canonCat;
-    });
+    return filterProductsForExplorerView(
+      (state.fileIndex.products || []).filter(function (p) {
+        if (!isBrandEnabled(p)) return false;
+        var cid = DL ? DL.categoryCanonId(p.category) : p.category;
+        return cid === state.canonCat;
+      })
+    );
   }
 
   /* ------------------------------------------------------------------ */
@@ -979,23 +1167,56 @@
     }).join("");
   }
 
+  function diskPathShort(path) {
+    if (!path) return "";
+    if (window.DamPaths && typeof window.DamPaths.relativeFromMarketing === "function") {
+      return String(window.DamPaths.relativeFromMarketing(path) || "").replace(/\//g, "\\");
+    }
+    return String(path)
+      .replace(/^.*[\\/]Marketing[\\/]/i, "")
+      .replace(/\//g, "\\");
+  }
+
+  function isVariantFolderName(name) {
+    return /^(BAT|DOY|ETY|MINI|TUBA|BIGPAK|KARTON|FOLIA|KARTON\s*6x)\s*-/i.test(String(name || "").trim());
+  }
+
+  function productFolderFromAnyPath(path) {
+    var parts = String(path || "").split(/[/\\]/).filter(Boolean);
+    if (!parts.length) return "";
+    if (isVariantFolderName(parts[parts.length - 1]) && parts.length > 1) {
+      return parts[parts.length - 2];
+    }
+    return parts[parts.length - 1];
+  }
+
+  function enrichedProductTitle(product, rev) {
+    var p = product || {};
+    var name = DL
+      ? DL.cleanProductDisplayName(p.display_name || p.name || "")
+      : (p.display_name || p.name || "");
+    if (!name) {
+      name = productFolderFromAnyPath((rev && rev.path) || p.path || (rev && rev.archive_wrapper) || "");
+      if (DL) name = DL.cleanProductDisplayName(name) || name;
+    }
+    var cat = categoryTitleOf(p);
+    if (cat && name) return cat + " · " + name;
+    return name || cat || p.id || "Produkt";
+  }
+
   function categoryTitleOf(productOrCat) {
     var raw = typeof productOrCat === "string"
       ? productOrCat
       : (productOrCat && (productOrCat.category || productOrCat.canon_category)) || "";
-    if (!raw && state.canonCat) raw = state.canonCat;
+    /* Sidebar (np. Kulki) tylko w widoku listy kategorii - nie w wyszukiwaniu ani po otwarciu produktu */
+    if (!raw && state.canonCat && !state.searchQuery && !state.product) raw = state.canonCat;
     if (!raw) return "";
     if (DL && typeof DL.categoryTitle === "function") return DL.categoryTitle(raw) || "";
     return String(raw).replace(/^\s*\d+\s*[-–—]\s*/u, "").trim();
   }
 
-  function productDisplayTitle(product) {
-    var name = DL
-      ? DL.cleanProductDisplayName(product.display_name || product.name || "")
-      : (product.display_name || product.name || "");
-    var cat = categoryTitleOf(product);
-    if (cat && name) return cat + " · " + name;
-    return name || cat || "Produkt";
+  function productDisplayTitle(product, rev) {
+    return enrichedProductTitle(product, rev);
   }
 
   function statusBadge(status, rev) {
@@ -1448,7 +1669,11 @@
           .then(function () {
             _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "index rebuild done", { ms: Date.now() - tRebuildStart }, "B");
             var tRefreshStart = Date.now();
-            return refreshIndex({ silent: true, reopenProductId: keepProductId }).then(function () {
+            return refreshIndex({
+              silent: true,
+              reopenProductId: keepProductId,
+              lifecyclePathHint: res.data.final_product_path || res.data.final_variant_path || body.path || ""
+            }).then(function () {
               _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "refreshIndex done", { ms: Date.now() - tRefreshStart }, "C");
               return null;
             });
@@ -1459,7 +1684,11 @@
             return res.data;
           })
           .catch(function () {
-            return refreshIndex({ silent: true, reopenProductId: keepProductId }).then(function () {
+            return refreshIndex({
+              silent: true,
+              reopenProductId: keepProductId,
+              lifecyclePathHint: res.data.final_product_path || res.data.final_variant_path || body.path || ""
+            }).then(function () {
               showToast("Zapisano status (odświeżenie częściowe)", "info");
               return res.data;
             });
@@ -2089,11 +2318,15 @@
   }
 
   function resolveProductFromIndex(p) {
-    if (!p || !p.id || !state.fileIndex || !state.fileIndex.products) return p;
-    var full = state.fileIndex.products.find(function (x) {
-      return x.id === p.id;
-    });
-    return full || p;
+    if (!p || !p.id) return p;
+    var lists = [];
+    if (state.fileIndex && state.fileIndex.products) lists.push(state.fileIndex.products);
+    if (window._DAM_FILE_INDEX && window._DAM_FILE_INDEX.products) lists.push(window._DAM_FILE_INDEX.products);
+    for (var i = 0; i < lists.length; i++) {
+      var full = lists[i].find(function (x) { return x.id === p.id; });
+      if (full) return full;
+    }
+    return p;
   }
 
   function productRowNavBlocked(target) {
@@ -2104,10 +2337,78 @@
     );
   }
 
-  function buildProductRowHtml(p) {
+  function bestDisplayPath(product, revision) {
+    if (revision && revision.path) return revision.path;
+    if (product && product.path) return product.path;
+    if (revision && revision.archive_wrapper) return revision.archive_wrapper;
+    var revs = (product && product.revisions) || [];
+    for (var i = 0; i < revs.length; i++) {
+      if (revs[i] && revs[i].path) return revs[i].path;
+    }
+    return "";
+  }
+
+  function enrichSearchProduct(p) {
     p = resolveProductFromIndex(p);
-    var name = productDisplayTitle(p);
+    if (!p || !p.id) return p;
+    var pid = String(p.id);
+    if (!productInFileIndex(pid)) {
+      var resolved = resolveProductFromIndexStrict(pid);
+      if (resolved) {
+        p = Object.assign({}, resolved, p, { id: resolved.id });
+        pid = p.id;
+      }
+    }
+    var baseId = pid.replace(/-(f|x|d)$/i, "");
+    if (baseId !== pid) {
+      var base = resolveProductFromIndex({ id: baseId });
+      if (base && base.id && productInFileIndex(base.id)) {
+        p = Object.assign({}, base, p, {
+          id: base.id,
+          path: p.path || base.path || "",
+          name: p.name || base.name,
+          display_name: p.display_name || base.display_name
+        });
+        pid = base.id;
+      }
+    }
+    if (!p.path) {
+      var local = loadLocalStatus();
+      var maps = [
+        (state.lifecycleStore && state.lifecycleStore.products) || {},
+        (state.statusStore && state.statusStore.products) || {},
+        (local && local.products) || {}
+      ];
+      for (var i = 0; i < maps.length; i++) {
+        var row = maps[i][pid];
+        if (!row) continue;
+        var rowPath = row.product_path || row.path || "";
+        if (rowPath) {
+          p = Object.assign({}, p, { path: rowPath });
+          break;
+        }
+      }
+    }
+    if (!p.display_name && !p.name && p.path) {
+      var folder = productFolderFromAnyPath(p.path);
+      if (folder) {
+        p = Object.assign({}, p, {
+          name: folder,
+          display_name: DL && DL.cleanProductDisplayName
+            ? DL.cleanProductDisplayName(folder) || folder
+            : folder
+        });
+      }
+    }
+    return p;
+  }
+
+  function buildProductRowHtml(p) {
+    p = enrichSearchProduct(p);
+    var name = enrichedProductTitle(p);
     var brand = getProductBrand(p);
+    var productPath = p.path || bestDisplayPath(p, null);
+    var inArchive = pathLooksLikeCategoryArchive(productPath);
     var langs = collectProductLangs(p);
     var revCount = p.revision_count || (p.revisions && p.revisions.length) || 0;
     if (!revCount && p.indexes && p.indexes.length) revCount = p.indexes.length;
@@ -2171,8 +2472,8 @@
         renderLifecycleControls({
           scope: "product",
           current: pStatus,
-          path: p.path || "",
-          productPath: p.path || "",
+          path: productPath || "",
+          productPath: productPath || "",
           productId: p.id || ""
         }) +
         "</div>"
@@ -2185,17 +2486,21 @@
         esc(letter) +
         "</span>"
       : "";
-    var actionsHtml = p.path
+    var archBadge = inArchive
+      ? '<span class="dam-viz-badge dam-viz-badge--archive" title="Produkt w archiwum kategorii">Archiwum</span>'
+      : "";
+    var actionsHtml = productPath
       ? '<div class="dam-prod-row__end" data-stop-nav="1">' +
         '<div class="dam-prod-row__actions dam-carrier-toggle__actions" data-dam-tip="Kopiuj sciezke / otworz folder w Windows">' +
-        pathActions(p.path) +
+        pathActions(productPath) +
         "</div>" +
         '<i class="uil uil-angle-down dam-prod-row__chevron" aria-hidden="true"></i>' +
         "</div>"
       : "";
     var rowCls = "dam-prod-row";
+    if (inArchive) rowCls += " dam-prod-row--archive";
     if (hasVariants) rowCls += " dam-prod-row--variants";
-    if (p.path) rowCls += " dam-prod-row--actions";
+    if (productPath) rowCls += " dam-prod-row--actions";
     return (
       '<div class="' +
       rowCls +
@@ -2205,6 +2510,7 @@
       '<div class="dam-prod-row__main">' +
       '<div class="dam-prod-row__title">' +
       esc(name) +
+      archBadge +
       letterChip +
       "</div>" +
       (tagsHtml ? '<div class="dam-prod-row__tags">' + tagsHtml + "</div>" : "") +
@@ -2223,16 +2529,15 @@
     mount.querySelectorAll(".dam-prod-row").forEach(function (row) {
       row.addEventListener("click", function (e) {
         if (productRowNavBlocked(e.target)) return;
-        var p = resolveProductFromIndex({
-          id: this.getAttribute("data-pid")
-        });
-        if (p && p.id) openProduct(p);
+        var p = resolveProductFromIndexStrict(this.getAttribute("data-pid"));
+        if (!p) return;
+        openProduct(p);
       });
     });
   }
 
   function renderSearchResultsPanel(mount) {
-    var res = state.searchHits || {};
+    var res = filterSearchResponse(state.searchHits || {}) || {};
     var products = (res.products || []).slice();
     var hits = res.hits || [];
     var q = state.searchQuery || "";
@@ -2241,6 +2546,7 @@
       var seen = {};
       hits.forEach(function (h) {
         if (!h || !h.product || !h.product.id || seen[h.product.id]) return;
+        if (!productInFileIndex(h.product.id)) return;
         seen[h.product.id] = 1;
         products.push(h.product);
       });
@@ -2266,7 +2572,15 @@
       html +=
         '<div class="dam-explorer-empty">Brak wynikow dla: <strong>' +
         esc(q) +
-        "</strong></div></div>";
+        "</strong>";
+      if (!state.showAllRevisions) {
+        html +=
+          '<p class="dam-explorer-empty__hint">Wlacz <strong>Pokaż wszystkie</strong>, aby przeszukiwac tez warianty z archiwum kategorii (— ARCHIWUM).</p>';
+      } else {
+        html +=
+          '<p class="dam-explorer-empty__hint">Brak trafien w indeksie. Kliknij <strong>Odswiez z dysku</strong>, aby zindeksowac archiwum na dysku.</p>';
+      }
+      html += "</div></div>";
       mount.innerHTML = html;
       bindPanelNav(mount);
       return;
@@ -2277,9 +2591,13 @@
     }
 
     html += '<div class="dam-prod-list">';
+    var seenProd = {};
     products.forEach(function (p) {
-      if (!p) return;
-      html += buildProductRowHtml(p);
+      if (!p || !p.id) return;
+      var ep = enrichSearchProduct(p);
+      if (!ep || !ep.id || seenProd[ep.id]) return;
+      seenProd[ep.id] = true;
+      html += buildProductRowHtml(ep);
     });
     html += "</div></div>";
     mount.innerHTML = html;
@@ -2410,7 +2728,6 @@
     var allRevisions = revisionsForProductView(state.product, showAllOn);
     var groups = groupRevisionsByCarrier(allRevisions);
     var pName = productDisplayTitle(state.product);
-    var scale = state.vizScale || 140;
 
     var catForProduct = "";
     if (DL) {
@@ -2433,13 +2750,6 @@
       }) +
       '<div class="dam-product-toolbar">' +
         '<div class="dam-product-toolbar__main">' +
-          '<label class="dam-switch' + (showAllOn ? "" : " is-off") + '" for="damProdShowAll" ' +
-            'data-dam-tip="OFF: tylko aktualne warianty. ON: takze nieaktualne / starsze indeksy.">' +
-            '<input type="checkbox" id="damProdShowAll" class="dam-switch__input"' +
-              (showAllOn ? " checked" : "") + ' />' +
-            '<span class="dam-switch__track" aria-hidden="true"></span>' +
-            '<span class="dam-switch__label">Pokaż wszystko</span>' +
-          "</label>" +
           (state.adminMode
             ? '<div class="dam-product-toolbar__lifecycle">' +
               '<span class="dam-product-toolbar__life-label">Produkt</span>' +
@@ -2452,14 +2762,6 @@
               }) +
               "</div>"
             : "") +
-        "</div>" +
-        '<div class="dam-product-toolbar__slot2" id="damVizViewControls">' +
-          '<div class="dam-viz-viewbar" role="group" aria-label="Skala podglądu wizualizacji">' +
-            '<label class="dam-viz-scale" data-dam-tip="Skala podglądu hero">' +
-              '<span>Skala podglądu</span>' +
-              '<input type="range" id="damVizScale" min="120" max="280" step="10" value="' + scale + '">' +
-            "</label>" +
-          "</div>" +
         "</div>" +
       "</div>" +
       '<div class="dam-carrier-list">';
@@ -2496,26 +2798,50 @@
     }
   }
 
-  function onBrandFilterChange(brands) {
-    state.brands = brands;
-    renderSidebar();
-    renderMain();
-  }
-
-  function bindProductToolbar(mount) {
-    /* Filtr DK/GC tylko w sidebar Kategorie. Tu: switch Pokaż wszystko. */
-    var showAllEl = mount.querySelector("#damProdShowAll");
+  function bindGlobalExplorerFilters() {
+    syncExplorerShowAllUi();
+    var showAllEl = document.getElementById("damExplorerShowAll");
     if (showAllEl && !showAllEl._damBound) {
       showAllEl._damBound = true;
       showAllEl.addEventListener("change", function () {
-        state.showAllRevisions = !!this.checked;
-        localStorage.setItem(SHOW_ALL_KEY, state.showAllRevisions ? "1" : "0");
-        var wrap = this.closest(".dam-switch");
-        if (wrap) wrap.classList.toggle("is-off", !state.showAllRevisions);
-        renderMain();
+        setShowAllRevisions(!!this.checked);
       });
     }
+    var langSel = document.getElementById("damExplorerLangFilter");
+    if (langSel && !langSel._damBound) {
+      langSel._damBound = true;
+      if (state.langFilter) langSel.value = state.langFilter;
+      langSel.addEventListener("change", function () {
+        state.langFilter = this.value || "";
+        try {
+          localStorage.setItem(LANG_FILTER_KEY, state.langFilter);
+        } catch (eLang) { /* ignore */ }
+        renderExplorerGridStatus();
+        if (state.searchQuery && state.searchQuery.length >= 2) {
+          applySearchToPanel(state.searchQuery);
+        } else {
+          renderSidebar();
+          renderMain();
+        }
+      });
+    }
+    if (window.DamBrandFilter && typeof window.DamBrandFilter.renderChips === "function") {
+      var globalBrand = document.getElementById("damExplorerBrandMount");
+      if (globalBrand) window.DamBrandFilter.renderChips(globalBrand);
+    }
+  }
 
+  function onBrandFilterChange(brands) {
+    state.brands = brands;
+    renderExplorerGridStatus();
+    renderSidebar();
+    renderMain();
+    if (state.searchQuery && state.searchQuery.length >= 2) {
+      applySearchToPanel(state.searchQuery);
+    }
+  }
+
+  function bindProductToolbar(mount) {
     mount.querySelectorAll("[data-viz-mode]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         state.vizViewMode = this.getAttribute("data-viz-mode") || "tiles";
@@ -3836,6 +4162,8 @@
 
   function renderAll() {
     renderBreadcrumb();
+    renderExplorerGridStatus();
+    syncExplorerShowAllUi();
     renderSidebar();
     renderMain();
     var mainEl = document.getElementById("damExplorerMain");
@@ -3985,16 +4313,170 @@
   }
 
   /** Po przeładowaniu file-index: odswiez otwarty produkt (nowe warianty, litery F/X/D). */
-  function refreshOpenProductFromIndex(productId) {
+  function findFreshProductInIndex(preferredId, pathHint) {
+    var list = (state.fileIndex && state.fileIndex.products) || [];
+    if (!list.length) return null;
+
+    if (preferredId) {
+      var strict = resolveProductFromIndexStrict(preferredId);
+      if (strict) return strict;
+    }
+
+    if (pathHint) {
+      var want = normPathKey(pathHint);
+      for (var i = 0; i < list.length; i++) {
+        if (normPathKey(list[i].path || "") === want) return list[i];
+      }
+    }
+
+    if (preferredId) {
+      var sid = String(preferredId);
+      var base = sid.replace(/-(f|x|d)$/i, "");
+      for (var j = 0; j < list.length; j++) {
+        var pid = list[j].id || "";
+        if (pid === sid || pid === base) return list[j];
+        if (base && pid.replace(/-(f|x|d)$/i, "") === base) return list[j];
+      }
+    }
+
+    if (pathHint) {
+      var leaf = String(pathHint).split(/[/\\]/).filter(Boolean).pop() || "";
+      var leafBase = leaf.replace(/\s-\s[FXD]$/i, "");
+      if (leafBase) {
+        for (var k = 0; k < list.length; k++) {
+          var nm = list[k].name || list[k].display_name || "";
+          if (nm && nm.indexOf(leafBase) !== -1) return list[k];
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Po kazdej zmianie F/X/D: wyrzuc stare wpisy store, ustaw statusy wszystkich wariantow z dysku (indeks).
+   * Naprawia sytuacje gdy jeden wariant (np. ETY) zostaje ze starym X po cascade produktu.
+   */
+  function reconcileProductLifecycleFromDisk(preferredId, pathHint) {
+    var fresh = findFreshProductInIndex(preferredId, pathHint);
+    if (!fresh) return null;
+
+    if (!state.lifecycleStore) state.lifecycleStore = { products: {}, revisions: {}, history: [] };
+    if (!state.lifecycleStore.products) state.lifecycleStore.products = {};
+    if (!state.lifecycleStore.revisions) state.lifecycleStore.revisions = {};
+
+    var local = loadLocalStatus();
+    if (!local.revisions) local.revisions = {};
+    if (!local.products) local.products = {};
+
+    var validPaths = {};
+    (fresh.revisions || []).forEach(function (r) {
+      var pk = normPathKey(r.path || "");
+      if (pk) validPaths[pk] = true;
+    });
+
+    var freshBase = String(fresh.id || "").replace(/-(f|x|d)$/i, "");
+
+    function purgeStaleProductMap(map) {
+      if (!map || !fresh.id) return;
+      Object.keys(map).slice().forEach(function (k) {
+        if (k === fresh.id) return;
+        var row = map[k];
+        var kbase = String(k).replace(/-(f|x|d)$/i, "");
+        if (freshBase && kbase === freshBase) delete map[k];
+        else if (row && row.path && normPathKey(row.path) !== normPathKey(fresh.path || "")) {
+          var rowBase = String(k).replace(/-(f|x|d)$/i, "");
+          if (freshBase && rowBase === freshBase) delete map[k];
+        }
+      });
+    }
+
+    purgeStaleProductMap(local.products);
+    purgeStaleProductMap(state.lifecycleStore.products);
+
+    function purgeStaleRevisionMap(map) {
+      if (!map) return;
+      Object.keys(map).slice().forEach(function (k) {
+        var row = map[k];
+        if (!row) return;
+        if (row.product_id && row.product_id !== fresh.id) return;
+        var rp = normPathKey(row.path || k);
+        if (row.product_id === fresh.id && rp && !validPaths[rp]) {
+          delete map[k];
+          return;
+        }
+        if (!row.product_id && rp && rp.indexOf("archiwum") !== -1) {
+          var stillUsed = false;
+          Object.keys(validPaths).forEach(function (vp) {
+            if (vp && rp.indexOf(vp.split("/").pop()) !== -1) stillUsed = true;
+          });
+          if (!stillUsed) delete map[k];
+        }
+      });
+    }
+
+    purgeStaleRevisionMap(local.revisions);
+    purgeStaleRevisionMap(state.lifecycleStore.revisions);
+
+    var plit = letterFromFolderName(fresh.path || fresh.name || "");
+    var pst = statusFromLetter(plit);
+    local.products[fresh.id] = {
+      status: pst,
+      letter: plit || null,
+      path: fresh.path || "",
+      note: "Reconciled from disk"
+    };
+    state.lifecycleStore.products[fresh.id] = Object.assign({}, state.lifecycleStore.products[fresh.id] || {}, {
+      path: fresh.path || "",
+      letter: plit || null,
+      status: pst,
+      synced_from_disk: true,
+      source: "disk_reconcile"
+    });
+
+    (fresh.revisions || []).forEach(function (r) {
+      if (!r) return;
+      var rlit = letterFromFolderName(r.path || "");
+      if (!rlit && r.folder) rlit = letterFromFolderName(r.folder);
+      var rst = statusFromLetter(rlit);
+      var pk = normPathKey(r.path || "");
+      var key = pk || r.index || r.folder;
+      if (!key) return;
+      var prevRow = lifecycleRowForRev(r) || {};
+      var prevLetter = prevRow.previous_letter;
+      if (prevLetter === undefined && state.lifecycleStore.revisions[key]) {
+        prevLetter = state.lifecycleStore.revisions[key].previous_letter;
+      }
+      var row = {
+        status: rst,
+        letter: rlit || null,
+        path: r.path || "",
+        product_id: fresh.id,
+        revision_index: r.index || "",
+        note: "Reconciled from disk"
+      };
+      if (prevLetter !== undefined) {
+        row.previous_letter = prevLetter || null;
+      }
+      local.revisions[key] = row;
+      if (pk && pk !== key) local.revisions[pk] = row;
+      state.lifecycleStore.revisions[key] = Object.assign({}, row, {
+        synced_from_disk: true,
+        source: "disk_reconcile"
+      });
+      if (pk && pk !== key) state.lifecycleStore.revisions[pk] = state.lifecycleStore.revisions[key];
+    });
+
+    local.updated_at = new Date().toISOString();
+    saveLocalStatus(local);
+    syncStatusMirrorFromLifecycle();
+    state.product = fresh;
+    return fresh;
+  }
+
+  function refreshOpenProductFromIndex(productId, pathHint) {
     var pid = productId || (state.product && state.product.id) || "";
-    if (!pid) return null;
-    var fresh = null;
-    if (window.DamSearch && typeof window.DamSearch.productById === "function") {
-      fresh = window.DamSearch.productById(pid);
-    }
-    if (!fresh && state.fileIndex && state.fileIndex.products) {
-      fresh = state.fileIndex.products.find(function (p) { return p.id === pid; });
-    }
+    var fresh = findFreshProductInIndex(pid, pathHint || (state.product && state.product.path) || "");
     if (fresh) state.product = fresh;
     return fresh;
   }
@@ -4002,6 +4484,7 @@
   function bindExplorerData(bundle) {
     state.fileIndex = bundle.fileIndex || window._DAM_FILE_INDEX;
     if (!state.fileIndex && bundle.products) state.fileIndex = bundle;
+    window._DAM_FILE_INDEX = state.fileIndex;
     if (window.DamPaths && state.fileIndex && state.fileIndex.roots) {
       window.DamPaths.detectIndexBaseFromRoots(state.fileIndex.roots);
     }
@@ -4022,9 +4505,7 @@
           openProduct(prod);
         },
         scopeEl,
-        {
-          /* scope chip change → odswiez panel wynikow */
-        }
+        {}
       );
       /* Po zmianie scope odswiez AJAX panel */
       if (scopeEl && !scopeEl._damPanelScopeBound) {
@@ -4111,7 +4592,8 @@
       }
       (p.revisions || []).forEach(function (r) {
         if (!r) return;
-        var rlit = letterFromFolderName(r.path || r.folder || "");
+        var rlit = letterFromFolderName(r.path || "");
+        if (!rlit && !r.path && r.folder) rlit = letterFromFolderName(r.folder);
         var rst = statusFromLetter(rlit);
         var pathKey = normPathKey(r.path || "");
         var key = pathKey || r.index || r.folder;
@@ -4295,6 +4777,7 @@
     opts = opts || {};
     var silent = !!opts.silent;
     var reopenId = opts.reopenProductId || (state.product && state.product.id) || "";
+    var lifecyclePathHint = opts.lifecyclePathHint || "";
     setStatus("Odświeżanie z dysku…");
     if (!silent) showToast("Odświeżam listę z dysku…", "info");
 
@@ -4307,8 +4790,15 @@
             return loadLifecycleStore().then(function () {
               var localSync = syncLifecycleFromDiskIndex();
               if (!drifts.length && localSync && localSync.drifts) drifts = localSync.drifts;
+              if (reopenId || state.product) {
+                reconcileProductLifecycleFromDisk(
+                  reopenId || (state.product && state.product.id),
+                  lifecyclePathHint || (state.product && state.product.path) || ""
+                );
+              } else {
+                refreshOpenProductFromIndex(reopenId, lifecyclePathHint);
+              }
               if (!silent) notifyLifecycleDrifts(drifts, "odśwież");
-              refreshOpenProductFromIndex(reopenId);
               renderAll();
               var gen = (state.fileIndex && state.fileIndex.generated_at) || "";
               setStatus(gen ? "Zaktualizowano z dysku: " + gen : "Zaktualizowano z dysku");
@@ -4329,7 +4819,14 @@
           .catch(function () {
             var localSync = syncLifecycleFromDiskIndex();
             if (!silent) notifyLifecycleDrifts((localSync && localSync.drifts) || [], "odśwież lokalnie");
-            refreshOpenProductFromIndex(reopenId);
+            if (reopenId || state.product) {
+              reconcileProductLifecycleFromDisk(
+                reopenId || (state.product && state.product.id),
+                lifecyclePathHint || (state.product && state.product.path) || ""
+              );
+            } else {
+              refreshOpenProductFromIndex(reopenId, lifecyclePathHint);
+            }
             renderAll();
             var gen2 = (state.fileIndex && state.fileIndex.generated_at) || "";
             setStatus(gen2 ? "Zaktualizowano z dysku: " + gen2 : "Zaktualizowano z dysku");
@@ -4393,8 +4890,25 @@
 
   function openProduct(product) {
     if (!product) return;
+    var resolved =
+      typeof product === "string"
+        ? resolveProductFromIndexStrict(product)
+        : resolveProductFromIndexStrict(product.id) || resolveProductFromIndex(product);
+    if (!resolved || !resolved.id || !productInFileIndex(resolved.id)) return;
+    product = resolved;
+
+    state.searchQuery = "";
+    state.searchHits = null;
+    var inp = document.getElementById("damFileSearch");
+    if (inp) inp.value = "";
+    var searchDrop = document.getElementById("damSearchResults");
+    if (searchDrop) {
+      searchDrop.innerHTML = "";
+      searchDrop.style.display = "none";
+    }
+
     state.canonCat = DL ? DL.categoryCanonId(product.category) : product.category;
-    state.product  = product;
+    reconcileProductLifecycleFromDisk(product.id, product.path || "");
     state.expandedCarriers = {};
     state.showOlderCarriers = {};
     trackRecentProduct(product);
@@ -4422,6 +4936,181 @@
     renderAll();
   }
 
+  function normSearchText(s) {
+    return String(s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9.]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function pathLooksLikeCategoryArchive(path) {
+    var p = String(path || "").toUpperCase();
+    if (!p || p.indexOf("ARCHIWUM") === -1) return false;
+    return (
+      p.indexOf("— ARCHIWUM") !== -1 ||
+      p.indexOf("/ARCHIWUM/") !== -1 ||
+      p.indexOf("\\ARCHIWUM\\") !== -1 ||
+      p.indexOf("0 - ARCHIWUM") !== -1
+    );
+  }
+
+  function isStatusStorePathKey(id) {
+    var s = String(id || "").trim();
+    return /[:\\\/]/.test(s) || /^[A-Za-z]:/.test(s);
+  }
+
+  function productInFileIndex(id) {
+    if (!id || !state.fileIndex || !state.fileIndex.products) return false;
+    return state.fileIndex.products.some(function (p) { return p && p.id === id; });
+  }
+
+  function resolveProductFromIndexStrict(id) {
+    var sid = String(id || "").trim();
+    if (!sid) return null;
+    var p = resolveProductFromIndex({ id: sid });
+    if (p && p.id && productInFileIndex(p.id)) return p;
+    var suffixes = ["-f", "-x", "-d"];
+    for (var i = 0; i < suffixes.length; i++) {
+      p = resolveProductFromIndex({ id: sid + suffixes[i] });
+      if (p && p.id && productInFileIndex(p.id)) return p;
+    }
+    var baseId = sid.replace(/-(f|x|d)$/i, "");
+    if (baseId !== sid) {
+      p = resolveProductFromIndex({ id: baseId });
+      if (p && p.id && productInFileIndex(p.id)) return p;
+    }
+    return null;
+  }
+
+  function findProductByRevisionIndex(indexKey) {
+    if (!indexKey || !state.fileIndex || !state.fileIndex.products) return null;
+    var ik = String(indexKey).trim();
+    for (var i = 0; i < state.fileIndex.products.length; i++) {
+      var p = state.fileIndex.products[i];
+      if (!p) continue;
+      if ((p.indexes || []).indexOf(ik) !== -1) return p;
+      var revs = p.revisions || [];
+      for (var j = 0; j < revs.length; j++) {
+        var r = revs[j];
+        if (!r) continue;
+        if (r.index === ik) return p;
+        if (r.folder && String(r.folder).indexOf(ik) !== -1) return p;
+      }
+    }
+    return null;
+  }
+
+  function findProductByRevisionPath(path) {
+    if (!path || !state.fileIndex || !state.fileIndex.products) return null;
+    var target = normSearchText(String(path).replace(/\\/g, "/"));
+    if (!target) return null;
+    for (var i = 0; i < state.fileIndex.products.length; i++) {
+      var p = state.fileIndex.products[i];
+      var revs = p.revisions || [];
+      for (var j = 0; j < revs.length; j++) {
+        var rp = revs[j] && revs[j].path;
+        if (rp && normSearchText(String(rp).replace(/\\/g, "/")) === target) return p;
+      }
+    }
+    return null;
+  }
+
+  function supplementSearchFromLifecycle(q, res) {
+    if (!state.showAllRevisions || !q) return res || { products: [], hits: [] };
+    res = res || { products: [], hits: [], query: q };
+    var nq = normSearchText(q);
+    if (!nq) return res;
+    var seen = {};
+    (res.products || []).forEach(function (p) {
+      if (p && p.id && productInFileIndex(p.id)) seen[p.id] = true;
+    });
+    var added = [];
+    var hits = (res.hits || []).slice();
+    var hitKeys = {};
+    hits.forEach(function (h) {
+      if (!h || !h.product || !h.product.id) return;
+      hitKeys[h.product.id + "|" + (h.label || "") + "|" + (h.revision && h.revision.path || "")] = true;
+    });
+
+    function tryAddProduct(prod) {
+      if (!prod || !prod.id || !productInFileIndex(prod.id) || seen[prod.id]) return null;
+      seen[prod.id] = true;
+      added.push(prod);
+      return prod;
+    }
+
+    function resolveProdForLifecycleRow(idx, row) {
+      if (row && row.product_id) {
+        var byPid = resolveProductFromIndexStrict(row.product_id);
+        if (byPid) return byPid;
+      }
+      var byIdx = findProductByRevisionIndex(idx);
+      if (byIdx) return byIdx;
+      var path = (row && row.path) || (isStatusStorePathKey(idx) ? idx : "");
+      if (path) return findProductByRevisionPath(path);
+      return null;
+    }
+
+    var local = loadLocalStatus();
+    var statusStore = state.statusStore || {};
+    var revMaps = [
+      (local && local.revisions) || {},
+      (statusStore.revisions) || {},
+      (state.lifecycleStore && state.lifecycleStore.revisions) || {}
+    ];
+    revMaps.forEach(function (map) {
+      Object.keys(map).forEach(function (idx) {
+        var row = map[idx];
+        if (!row) return;
+        var blob = normSearchText([idx, row.path, row.note, row.product_id].join(" "));
+        if (blob.indexOf(nq) === -1) return;
+        var prod = resolveProdForLifecycleRow(idx, row);
+        if (!prod) return;
+        tryAddProduct(prod);
+        var revPath = row.path || (isStatusStorePathKey(idx) ? idx : "");
+        var hitKey = prod.id + "|" + idx + "|" + revPath;
+        if (hitKeys[hitKey]) return;
+        hitKeys[hitKey] = true;
+        hits.push({
+          kind: "variant",
+          product: prod,
+          revision: {
+            path: revPath,
+            index: /^[A-Z0-9][A-Z0-9.-]*$/i.test(idx) ? idx : "",
+            folder: (revPath || idx).split(/[/\\]/).pop() || idx,
+            in_archive: pathLooksLikeCategoryArchive(revPath || idx)
+          },
+          label: idx,
+          meta: revPath || row.note || ""
+        });
+      });
+    });
+
+    if (!added.length && hits.length === (res.hits || []).length) {
+      return Object.assign({}, res, {
+        products: (res.products || []).filter(function (p) { return p && productInFileIndex(p.id); }),
+        hits: hits.filter(function (h) { return h && h.product && productInFileIndex(h.product.id); })
+      });
+    }
+    var products = (res.products || []).filter(function (p) { return p && productInFileIndex(p.id); }).concat(added);
+    added.forEach(function (p) {
+      var hk = p.id + "|product|";
+      if (hitKeys[hk]) return;
+      hitKeys[hk] = true;
+      hits.push({
+        kind: "product",
+        product: p,
+        revision: null,
+        label: p.display_name || p.name,
+        meta: p.path || ""
+      });
+    });
+    return Object.assign({}, res, { products: products, hits: hits });
+  }
+
   function applySearchToPanel(query) {
     var q = String(query || "").trim();
     state.searchQuery = q;
@@ -4431,9 +5120,13 @@
       return;
     }
     if (!window.DamSearch || typeof window.DamSearch.search !== "function") return;
-    window.DamSearch.search(q, { limit: 40 }).then(function (res) {
+    window.DamSearch.search(q, {
+      limit: 40,
+      includeArchive: !!state.showAllRevisions,
+      fileIndex: state.fileIndex
+    }).then(function (res) {
       if (state.searchQuery !== q) return;
-      state.searchHits = res || { products: [], hits: [], query: q };
+      state.searchHits = filterSearchResponse(res || { products: [], hits: [], query: q });
       /* Szukanie w panelu ma pierwszenstwo - zamknij produkt, pokaz liste wynikow */
       if (state.product) state.product = null;
       renderMain();
@@ -4505,17 +5198,14 @@
     var sub = document.querySelector(".geex-content__header__subtitle");
     if (sub) sub.textContent = "Pełna struktura produktów Dobra Kaloria i Good Calories";
 
-    // Filtr marki: chipy DK/GC tylko przy „Kategorie” (sidebar).
+    // Filtr marki: chipy DK/GC tylko na pasku filtrów (damExplorerBrandMount).
     // Synchronizacja: DamBrandFilter.commitBrands / syncAllUi.
     try {
       if (window.DamBrandFilter) {
         window.DamBrandFilter.addListener(onBrandFilterChange);
-        var sideBrand = document.getElementById("damSidebarBrandMount");
-        if (sideBrand && typeof window.DamBrandFilter.renderChips === "function") {
-          window.DamBrandFilter.renderChips(sideBrand);
-        }
         state.brands = window.DamBrandFilter.loadBrands();
       }
+      bindGlobalExplorerFilters();
       bindAdminControls();
       if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
         window.DamBadges.bindClicks(main, "explorer");
@@ -4533,6 +5223,8 @@
 
     loader.then(function (pair) {
       bindExplorerData(pair[0]);
+      populateExplorerLangFilter();
+      bindGlobalExplorerFilters();
       renderTagChips();
       applyDeepLink();
       return bootLifecycleReconcile().then(function (boot) {

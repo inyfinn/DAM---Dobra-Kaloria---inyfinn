@@ -29,7 +29,7 @@
     </script>	
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
 <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719life1">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=20260719tilesFix1">
 </head>
 
 <body class="geex-dashboard file-manager">
@@ -881,14 +881,26 @@
                   <div id="damAdminBar" class="dam-admin-bar" role="status">
                     <span id="damAdminBarText">Status F/X/D: most zapisuje na dysk Marketing + <code>lifecycle-status.json</code> / <code>product-status.json</code> (+ Postgres KV gdy baza online). localStorage w tej przegladarce to tylko kopia robocza.</span>
                   </div>
-                  <nav id="damBreadcrumb" style="font-size:13px;margin-bottom:12px;color:#8b8d97">Produkty</nav>
-                  <p id="damExplorerStatus" style="font-size:12px;color:#8b8d97;margin:0 0 8px"></p>
+                  <p id="damExplorerStatus" class="dam-explorer-status-line" hidden aria-live="polite"></p>
+                  <div class="dam-viz-grid-toolbar dam-explorer-grid-toolbar">
+                    <div id="damExplorerGridStatus" class="dam-toolbar-status"></div>
+                  </div>
+                  <div class="dam-viz-secondary-filters dam-explorer-secondary-filters" role="group" aria-label="Filtry widoku">
+                    <label class="dam-switch is-off" for="damExplorerShowAll" data-dam-tip="Wlacz: pokazuje prototypy, dema oraz starsze i nieaktualne warianty (w tym archiwum). Wylacz: tylko aktualne na dysku live.">
+                      <input type="checkbox" id="damExplorerShowAll" class="dam-switch__input" />
+                      <span class="dam-switch__track" aria-hidden="true"></span>
+                      <span class="dam-switch__label">Pokaż wszystkie</span>
+                    </label>
+                    <div id="damExplorerBrandMount" class="dam-sidebar-brand-mount" data-dam-tip="Filtr marki DK / GC" aria-label="Filtr marki"></div>
+                    <select id="damExplorerLangFilter" class="form-select dam-control dam-control--select" aria-label="Filtr jezyka">
+                      <option value="">Wszystkie jezyki</option>
+                    </select>
+                  </div>
                   <div class="row g-3">
                     <div class="col-lg-3">
                       <div class="geex-card dam-cat-panel" style="padding:12px;border-radius:12px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.06);max-height:70vh;overflow:auto">
                         <div class="dam-cat-panel__head">
                           <div class="dam-cat-panel__title">Kategorie</div>
-                          <div id="damSidebarBrandMount" class="dam-sidebar-brand-mount" data-dam-tip="Filtr marki DK / GC" aria-label="Filtr marki"></div>
                         </div>
                         <div id="damFolderList"></div>
                       </div>
@@ -2274,8 +2286,8 @@
 	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
 	<script src="./assets/js/dam-version.js?v=1.04"></script>
 	<script src="./assets/js/dam-shell.js?v=20260719ver104"></script>
-	<script src="./assets/js/dam-search.js?v=20260718panelNavSearch1"></script>
-	<script src="./assets/js/dam-tag-bar.js?v=20260718tagCase2"></script>
+	<script src="./assets/js/dam-search.js?v=hub20260719j18"></script>
+	<script src="./assets/js/dam-tag-bar.js?v=hub20260719j12"></script>
 	<script src="./assets/js/dam-labels.js?v=20260719ver104"></script>
 	<script src="./assets/js/dam-badges.js?v=20260718tagAjax3"></script>
 	<script src="./assets/js/dam-tag-edit.js?v=20260718tagCase1"></script>
@@ -2283,7 +2295,7 @@
 	<script src="./assets/js/dam-icons.js?v=20260718uxbatch1"></script>
 	<script src="./assets/js/dam-brand-filter.js?v=20260718showall1"></script>
 	<script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-explorer.js?v=20260719life1"></script>
+	<script src="./assets/js/dam-explorer.js?v=hub20260719j18"></script>
 	<script>
 	/* Po zaladowaniu DOM: jednorazowy init jesli folder pusty (bez petli reload). */
 	(function () {

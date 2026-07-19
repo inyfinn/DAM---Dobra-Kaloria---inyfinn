@@ -20,6 +20,91 @@
   background: var(--dam-surface, #fff);
 }
 
+/* Kafelek gradientowy — ten sam wzorzec co dam-project-card--ok / --incomplete */
+.dam-gradient-tile {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.dam-gradient-tile::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 8.625rem;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dam-gradient-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  z-index: 2;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.dam-gradient-tile > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Pliki edytowalne: PSD, PSB */
+.dam-gradient-tile--editable::before {
+  background: linear-gradient(
+    180deg,
+    rgba(29, 78, 216, 0.16) 0%,
+    rgba(29, 78, 216, 0.08) 32%,
+    rgba(29, 78, 216, 0.03) 58%,
+    rgba(29, 78, 216, 0) 100%
+  );
+}
+
+.dam-gradient-tile--editable::after {
+  background: linear-gradient(
+    180deg,
+    rgba(29, 78, 216, 0.68) 0%,
+    rgba(29, 78, 216, 0.52) 42%,
+    rgba(29, 78, 216, 0.24) 70%,
+    rgba(29, 78, 216, 0) 96%
+  );
+}
+
+/* Wektor / dokument źródłowy: AI, PDF */
+.dam-gradient-tile--vector::before {
+  background: linear-gradient(
+    180deg,
+    rgba(180, 83, 9, 0.16) 0%,
+    rgba(180, 83, 9, 0.08) 32%,
+    rgba(180, 83, 9, 0.03) 58%,
+    rgba(180, 83, 9, 0) 100%
+  );
+}
+
+.dam-gradient-tile--vector::after {
+  background: linear-gradient(
+    180deg,
+    rgba(180, 83, 9, 0.68) 0%,
+    rgba(180, 83, 9, 0.52) 42%,
+    rgba(180, 83, 9, 0.24) 70%,
+    rgba(180, 83, 9, 0) 96%
+  );
+}
+
 .dam-catalog-pack-badge .dam-badge-tag--tier-low,
 .dam-viz-badge--pakowanie.dam-badge-tag--tier-low {
   background: var(--dam-hub-pack-bg);

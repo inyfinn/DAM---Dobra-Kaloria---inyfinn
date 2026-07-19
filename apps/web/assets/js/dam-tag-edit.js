@@ -280,6 +280,8 @@
     if (k === "category") return "Wybierz kategorie";
     if (k === "subcategory") return "Wybierz podkategorie";
     if (k === "index") return "Wybierz / wpisz indeks";
+    if (k === "asset_role") return "Wybierz przeznaczenie";
+    if (k === "appearance") return "Wybierz tag produktowy";
     if (k === "carrier") return isAdmin() && adminModeOn() ? "Wybierz typ" : "Zaproponuj typ";
     return "Wybierz wartosc tagu";
   }
@@ -443,12 +445,110 @@
     if (k === "index") {
       return collectIndexOptions(cur);
     }
+    if (k === "asset_role") {
+      if (global.DamAssetTaxonomy && typeof global.DamAssetTaxonomy.assetRoleOptions === "function") {
+        return global.DamAssetTaxonomy.assetRoleOptions(cur);
+      }
+      return [];
+    }
+    if (k === "appearance") {
+      var base = [
+        "Logo",
+        "Proteina",
+        "Baton",
+        "Karmel",
+        "Banoffee",
+        "Lemon cheesecake",
+        "Indeks glikemiczny",
+        "Deserowe",
+        "Super cena",
+        "Mini",
+        "MCT",
+        "Datesy",
+        "Kulki",
+        "Mix",
+        "Bez cukru",
+        "Doypack",
+        "Boost",
+        "Folia",
+        "Sypkie",
+        "Baner",
+        "Kampania",
+        "Social media",
+      ];
+      var map = {};
+      base.forEach(function (label) {
+        map[label.toLowerCase()] = { code: label, label: label, search: label.toLowerCase() };
+      });
+      if (cur) {
+        var ck = cur.toLowerCase();
+        if (!map[ck]) map[ck] = { code: cur, label: cur, search: ck };
+      }
+      return Object.keys(map)
+        .sort(function (a, b) {
+          return map[a].label.localeCompare(map[b].label, "pl");
+        })
+        .map(function (k2) {
+          return map[k2];
+        });
+    }
     if (cur) return [{ code: cur, label: cur, search: cur.toLowerCase() }];
     return [];
   }
 
+  function submitBrandingMetadataChange(ctx, field, newValue) {
+    var assetId = ctx.brandingAssetId || "";
+    if (!assetId) {
+      showToast("Brak ID assetu branding.");
+      return Promise.resolve({ ok: false });
+    }
+    if (!isPrivileged()) {
+      showToast("Edycja tagow wymaga roli admin lub power_user.");
+      return Promise.resolve({ ok: false });
+    }
+    var payload = {
+      asset_id: assetId,
+      field: field,
+      value: newValue,
+      user_email: userLabel(),
+      role: role(),
+    };
+    return fetch(bridgeUrl() + "/branding/asset-metadata", {
+      method: "POST",
+      headers: bridgeAuthHeaders(),
+      body: JSON.stringify(payload),
+    })
+      .then(function (r) {
+        return r.json().then(function (res) {
+          res._http = r.status;
+          return res;
+        });
+      })
+      .then(function (res) {
+        if (!res.ok) {
+          showToast("Blad: " + (res.error || "nie zapisano metadanych"));
+          return res;
+        }
+        showToast("Zapisano: " + field);
+        if (global.DamBranding && typeof global.DamBranding.patchAssetField === "function") {
+          global.DamBranding.patchAssetField(assetId, field, newValue);
+        }
+        if (typeof ctx.onApplied === "function") ctx.onApplied(res);
+        return res;
+      })
+      .catch(function () {
+        showToast("Bridge offline - nie zapisano metadanych.");
+      });
+  }
+
   function applyTagPickerChoice(kind, ctx, newCode) {
     var k = String(kind || "carrier");
+    if (k === "asset_role") {
+      return submitBrandingMetadataChange(ctx, "asset_role", newCode || "");
+    }
+    if (k === "appearance") {
+      return submitBrandingMetadataChange(ctx, "appearance_primary", newCode || "");
+    }
     if (k === "carrier") {
       return submitCarrierChange(ctx, newCode || NONE_CODE);
     }
@@ -490,6 +590,12 @@
     }
     if (!ctx.value && anchorEl) {
       ctx.value = anchorEl.getAttribute("data-tag-value") || ctx.value || "";
+    }
+    if (!ctx.brandingAssetId && anchorEl) {
+      ctx.brandingAssetId =
+        anchorEl.getAttribute("data-branding-asset-id") ||
+        (anchorEl.closest("[data-id]") && anchorEl.closest("[data-id]").getAttribute("data-id")) ||
+        "";
     }
 
     closePopover();

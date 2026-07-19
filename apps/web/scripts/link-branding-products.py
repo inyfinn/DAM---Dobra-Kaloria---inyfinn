@@ -41,13 +41,20 @@ def main() -> int:
         ocr = block.get("ocr_text") or ""
         asset["ocr_text"] = ocr
         tags = list(block.get("appearance_tags") or [])
+        for t in tags:
+            if t and t not in (asset.get("appearance_tags") or []):
+                asset.setdefault("appearance_tags", []).append(t)
         for m in SKU_RE.findall(ocr + " " + asset.get("name", "")):
             for pid in sku_map.get(m, []):
                 if pid not in (asset.get("linked_product_ids") or []):
                     asset.setdefault("linked_product_ids", []).append(pid)
-        asset["appearance_tags"] = tags
+        asset["appearance_tags"] = list(asset.get("appearance_tags") or tags)
         blob = asset.get("search_blob") or ""
-        asset["search_blob"] = (blob + " " + ocr.lower()).strip()
+        extra = " ".join(
+            (asset.get("appearance_tags") or [])
+            + ([ocr] if ocr else [])
+        ).lower()
+        asset["search_blob"] = (blob + " " + extra).strip()
     idx["linked_at"] = datetime.now(timezone.utc).isoformat()
     INDEX.write_text(json.dumps(idx, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"linked branding-index assets={len(by_id)}")

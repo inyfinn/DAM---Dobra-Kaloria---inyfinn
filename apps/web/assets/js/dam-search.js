@@ -201,10 +201,46 @@
   }
   loadScopeFromStorage();
 
-  function revisionMatchesQuery(rev, nq, dig) {
+  function pathInCategoryArchive(path) {
+    var p = String(path || "").toUpperCase();
+    if (!p || p.indexOf("ARCHIWUM") === -1) return false;
+    return (
+      p.indexOf("— ARCHIWUM") !== -1 ||
+      p.indexOf("/ARCHIWUM/") !== -1 ||
+      p.indexOf("\\ARCHIWUM\\") !== -1 ||
+      p.indexOf("0 - ARCHIWUM") !== -1
+    );
+  }
+
+  function revisionInArchive(rev) {
     if (!rev) return false;
+    if (rev.in_archive) return true;
+    return pathInCategoryArchive(rev.path || rev.folder || rev.archive_wrapper || "");
+  }
+
+  function productPathInArchive(p) {
+    if (!p) return false;
+    return pathInCategoryArchive(p.path || p.name || "");
+  }
+
+  function revisionMatchesQuery(rev, nq, dig, includeArchive) {
+    if (!rev) return false;
+    if (!includeArchive && revisionInArchive(rev)) return false;
     var blob = norm(
-      [rev.index, rev.name, rev.folder, rev.path, rev.carrier, (rev.tags || []).join(" ")].join(" ")
+      [
+        rev.index,
+        rev.name,
+        rev.folder,
+        rev.path,
+        rev.carrier,
+        rev.archive_wrapper,
+        (rev.tags || []).join(" "),
+        (rev.files || [])
+          .map(function (f) {
+            return f && f.name;
+          })
+          .join(" "),
+      ].join(" ")
     );
     if (nq && blob.indexOf(nq) !== -1) return true;
     if (dig && dig.length >= 3) {
@@ -214,13 +250,83 @@
     return false;
   }
 
-  function buildStructuredHits(products, nq, dig, scope) {
+  function revisionsForSearch(product, includeArchive) {
+    var revs = (product && product.revisions) || [];
+    if (!includeArchive) revs = revs.filter(function (r) { return !revisionInArchive(r); });
+    return revs;
+  }
+
+  function productHasLivePresence(p) {
+    if (!p) return false;
+    var revs = p.revisions || [];
+    if (revs.some(function (r) { return r && !revisionInArchive(r); })) return true;
+    if (!productPathInArchive(p)) return true;
+    return revs.length === 0;
+  }
+
+  function productMatchesTextQuery(p, nq, dig, includeArchive) {
+    if (!p) return false;
+    if (!includeArchive && productPathInArchive(p) && !productHasLivePresence(p)) {
+      /* Produkt tylko w archiwum kategorii */
+    }
+    var pblob = norm(
+      [
+        p.display_name,
+        p.name,
+        p.category,
+        p.path,
+        (p.indexes || []).join(" "),
+        (p.tags || []).join(" ")
+      ].join(" ")
+    );
+    var productDirect =
+      (nq && pblob.indexOf(nq) !== -1) ||
+      (dig &&
+        dig.length >= 3 &&
+        (p.indexes || []).some(function (ix) {
+          var d = digitsOnly(ix);
+          return d.indexOf(dig) === 0 || dig.indexOf(d) === 0 || String(ix).toLowerCase().indexOf(nq) !== -1;
+        }));
+    if (productDirect) {
+      if (includeArchive || productHasLivePresence(p) || !productPathInArchive(p)) return true;
+    }
+    return revisionsForSearch(p, includeArchive).some(function (r) {
+      return revisionMatchesQuery(r, nq, dig, includeArchive);
+    });
+  }
+
+  function getActiveFileIndex(opts) {
+    if (opts && opts.fileIndex && opts.fileIndex.products) return opts.fileIndex;
+    if (window._DAM_FILE_INDEX && window._DAM_FILE_INDEX.products) return window._DAM_FILE_INDEX;
+    return fileIndex;
+  }
+
+  function explorerShowAllEnabled() {
+    try {
+      return localStorage.getItem("dam_explorer_show_all") === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function appendFileIndexMatches(productIds, nq, dig, includeArchive, fi) {
+    if (!nq || !fi || !fi.products) return productIds;
+    fi.products.forEach(function (p) {
+      if (!p || !p.id || productIds.indexOf(p.id) !== -1) return;
+      if (!includeArchive && !productHasLivePresence(p)) return;
+      if (productMatchesTextQuery(p, nq, dig, includeArchive)) productIds.push(p.id);
+    });
+    return unique(productIds);
+  }
+
+  function buildStructuredHits(products, nq, dig, scope, includeArchive) {
+    includeArchive = !!includeArchive;
     var hits = [];
     (products || []).forEach(function (p) {
       if (!p) return;
       var pname = norm(p.display_name || p.name || "");
       var pblob = norm(
-        [p.display_name, p.name, p.category, (p.indexes || []).join(" "), (p.tags || []).join(" ")].join(" ")
+        [p.display_name, p.name, p.category, p.path, (p.indexes || []).join(" "), (p.tags || []).join(" ")].join(" ")
       );
       var productMatch =
         !nq ||
@@ -230,8 +336,8 @@
           var d = digitsOnly(ix);
           return d.indexOf(dig) === 0 || dig.indexOf(d) === 0 || String(ix).toLowerCase().indexOf(nq) !== -1;
         }));
-      var matchingRevs = (p.revisions || []).filter(function (r) {
-        return revisionMatchesQuery(r, nq, dig);
+      var matchingRevs = revisionsForSearch(p, includeArchive).filter(function (r) {
+        return revisionMatchesQuery(r, nq, dig, includeArchive);
       });
       /* Gdy brak dopasowania wariantu, a produkt pasuje - pokaz wszystkie latest jako kontekst opcjonalnie nie */
       if (scope.products && productMatch) {
@@ -266,11 +372,13 @@
         });
       }
     });
-    return hits;
+    return dedupeHits(hits);
   }
 
   function search(query, opts) {
     opts = opts || {};
+    var includeArchive =
+      typeof opts.includeArchive === "boolean" ? opts.includeArchive : explorerShowAllEnabled();
     var q = String(query || "").trim();
     var scope = opts.scope ? Object.assign({}, getScope(), opts.scope) : getScope();
     if (!q) {
@@ -280,6 +388,7 @@
         products: [],
         hits: [],
         scope: scope,
+        includeArchive: includeArchive,
         suggestions: [],
         message: null,
         tags: (searchIndex && searchIndex.by_tag) ? Object.keys(searchIndex.by_tag).slice(0, 40) : []
@@ -287,6 +396,7 @@
     }
 
     return loadIndexes().then(function () {
+      var fi = getActiveFileIndex(opts);
       var dig = digitsOnly(q);
       var nq = norm(q);
       var productIds = [];
@@ -378,7 +488,28 @@
               if ((e.search_blob || "").indexOf(nq) !== -1) productIds.push(e.id);
             });
             productIds = unique(productIds);
-            mode = "text";
+            // partial match on alphanumeric bases (np. TEST-TEST dla query "test")
+            Object.keys(searchIndex.by_base || {}).forEach(function (base) {
+              var nb = norm(base);
+              if (!nb || nb.indexOf(nq) === -1) return;
+              (searchIndex.by_base[base] || []).forEach(function (x) {
+                productIds.push(x.product_id);
+              });
+            });
+            productIds = unique(productIds);
+            // exact alfanumeryczny indeks (TEST-TEST2)
+            var exactAlpha = String(q || "")
+              .trim()
+              .toUpperCase();
+            if (/^TEST-[A-Z0-9-]+$/.test(exactAlpha) && searchIndex.by_base[exactAlpha]) {
+              (searchIndex.by_base[exactAlpha] || []).forEach(function (x) {
+                productIds.push(x.product_id);
+              });
+              productIds = unique(productIds);
+              mode = "index";
+            } else {
+              mode = "text";
+            }
           } else {
             mode = "tag";
           }
@@ -386,20 +517,27 @@
       }
 
       /* Dolacz produkty, ktorych wariant pasuje do query (nawet gdy blob produktu nie) */
-      if (nq && fileIndex && fileIndex.products) {
-        fileIndex.products.forEach(function (p) {
-          if (!p || productIds.indexOf(p.id) !== -1) return;
-          var anyRev = (p.revisions || []).some(function (r) {
-            return revisionMatchesQuery(r, nq, dig);
-          });
-          if (anyRev) productIds.push(p.id);
+      productIds = appendFileIndexMatches(productIds, nq, dig, includeArchive, fi);
+
+      if (!includeArchive) {
+        productIds = productIds.filter(function (pid) {
+          var p = productById(pid);
+          if (!p && fi && fi.products) {
+            p = fi.products.find(function (x) { return x.id === pid; }) || null;
+          }
+          return productHasLivePresence(p);
         });
-        productIds = unique(productIds);
       }
 
-      var products = productIds.map(productById).filter(Boolean);
+      var products = productIds.map(function (pid) {
+        if (fi && fi.products) {
+          var fromFi = fi.products.find(function (x) { return x.id === pid; });
+          if (fromFi) return fromFi;
+        }
+        return productById(pid);
+      }).filter(Boolean);
       if (opts.limit) products = products.slice(0, opts.limit);
-      var hits = buildStructuredHits(products, nq, dig, scope);
+      var hits = buildStructuredHits(products, nq, dig, scope, includeArchive);
 
       return {
         query: q,
@@ -407,6 +545,7 @@
         products: products,
         hits: hits,
         scope: scope,
+        includeArchive: includeArchive,
         suggestions: suggestions,
         message: message,
         tags: Object.keys(searchIndex.by_tag || {}).slice(0, 60)
@@ -436,6 +575,29 @@
       out.push(x);
     });
     return out;
+  }
+
+  function normPathKey(p) {
+    return String(p || "")
+      .replace(/\\/g, "/")
+      .replace(/\/+/g, "/")
+      .toLowerCase()
+      .trim();
+  }
+
+  function dedupeHits(hits) {
+    var seen = {};
+    return (hits || []).filter(function (h) {
+      if (!h || !h.product || !h.product.id) return false;
+      var revKey = "";
+      if (h.revision) {
+        revKey = normPathKey(h.revision.path || h.revision.folder || h.revision.index || "");
+      }
+      var key = (h.kind || "product") + "|" + h.product.id + "|" + revKey;
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
   }
 
   function latestRevisions(product) {
@@ -518,7 +680,16 @@
     var timer = null;
     function runSearch() {
       var q = inputEl.value;
-      return search(q, { limit: 30 }).then(render).catch(function (err) {
+      return search(q, {
+        limit: 30,
+        includeArchive: explorerShowAllEnabled(),
+        fileIndex: window._DAM_FILE_INDEX
+      }).then(function (res) {
+        if (opts.enrichResults && typeof opts.enrichResults === "function") {
+          res = opts.enrichResults(res, q) || res;
+        }
+        return render(res);
+      }).catch(function (err) {
         resultsEl.innerHTML = '<div class="dam-search-msg">Blad indeksu: ' + escapeHtml(err.message) + "</div>";
         resultsEl.style.display = "block";
       });
@@ -562,6 +733,25 @@
           if (h.nested) cls += " dam-search-hit--nested";
           var badge = h.kind === "variant" ? "Wariant" : "Produkt";
           var focusIdx = r && r.index ? r.index : "";
+          if (focusIdx && /[/\\]/.test(focusIdx) && r && r.path) {
+            focusIdx = String(r.path).split(/[/\\]/).filter(Boolean).pop() || focusIdx;
+          }
+          var hitName =
+            h.label ||
+            (p.display_name || p.name || "") ||
+            (r && r.path ? String(r.path).split(/[/\\]/).filter(Boolean).pop() : "") ||
+            p.id ||
+            "";
+          var hitMeta = h.meta || "";
+          if (!hitMeta && r && r.path) {
+            hitMeta = String(r.path)
+              .replace(/^.*[\\/]Marketing[\\/]/i, "")
+              .replace(/\//g, "\\");
+          } else if (!hitMeta && p.path) {
+            hitMeta = String(p.path)
+              .replace(/^.*[\\/]Marketing[\\/]/i, "")
+              .replace(/\//g, "\\");
+          }
           html +=
             '<li class="' +
             cls +
@@ -576,10 +766,10 @@
             escapeHtml(badge) +
             "</span>" +
             '<span class="dam-search-name">' +
-            escapeHtml(h.label || "") +
+            escapeHtml(hitName) +
             "</span>" +
             '<span class="dam-search-meta">' +
-            escapeHtml(h.meta || "") +
+            escapeHtml(hitMeta) +
             (h.kind === "product" && h.childCount
               ? " · " + h.childCount + " dopas. wariant" + (h.childCount === 1 ? "" : "y")
               : "") +
@@ -607,10 +797,10 @@
           e.preventDefault();
           var pid = this.getAttribute("data-pid");
           var sug = this.getAttribute("data-suggest");
-          if (sug) inputEl.value = sug;
+          inputEl.value = "";
+          resultsEl.style.display = "none";
           var prod = productById(pid);
           if (onSelect) onSelect(prod, sug || null);
-          resultsEl.style.display = "none";
         });
       });
     }

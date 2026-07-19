@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-19T02:37:11",
-  "product_count": 181,
+  "generated_at": "2026-07-19T05:54:38",
+  "product_count": 185,
   "by_prefix": {
     "0000": [
       "chrupiacy-orzech-daktylowy",
@@ -25,6 +25,7 @@
       "kotlety-mielone-niemiesne",
       "mielone-wolowe-xxl-niemiesne",
       "pasztet-zurawina-niemiesne",
+      "burger-klasyczny-xxl-niemiesne",
       "balans-boosty",
       "bio-amarantus-sniadaniowe",
       "energia-boosty",
@@ -148,6 +149,7 @@
     "00001": [
       "burger-buraczany-niemiesne",
       "burger-burak-niemiesne",
+      "burger-klasyczny-xxl-niemiesne",
       "balans-boosty",
       "jaglanka-jab-ko-cynamon-sniadaniowe"
     ],
@@ -159,6 +161,15 @@
     ],
     "00001000": [
       "balans-boosty"
+    ],
+    "000015": [
+      "burger-klasyczny-xxl-niemiesne"
+    ],
+    "0000150": [
+      "burger-klasyczny-xxl-niemiesne"
+    ],
+    "00001500": [
+      "burger-klasyczny-xxl-niemiesne"
     ],
     "000017": [
       "jaglanka-jab-ko-cynamon-sniadaniowe"
@@ -435,6 +446,8 @@
       "mielone-wolowe-niemiesne",
       "pasztet-pomidor-niemiesne",
       "wedlina-niemiesne",
+      "klopsy-niemiesne",
+      "pasztet-sliwka-niemiesne",
       "bio-amarantus-sniadaniowe",
       "bio-orkisz-sniadaniowe",
       "gryka-ekspandowana-sniadaniowe",
@@ -800,7 +813,9 @@
     ],
     "00014": [
       "dk-pasztet-sliwka-6300281-niemiesne",
-      "kielbaska-wegierska-niemiesne"
+      "kielbaska-wegierska-niemiesne",
+      "klopsy-niemiesne",
+      "pasztet-sliwka-niemiesne"
     ],
     "000140": [
       "kielbaska-wegierska-niemiesne"
@@ -811,14 +826,26 @@
     "00014000": [
       "kielbaska-wegierska-niemiesne"
     ],
+    "000141": [
+      "klopsy-niemiesne"
+    ],
+    "0001410": [
+      "klopsy-niemiesne"
+    ],
+    "00014100": [
+      "klopsy-niemiesne"
+    ],
     "000147": [
-      "dk-pasztet-sliwka-6300281-niemiesne"
+      "dk-pasztet-sliwka-6300281-niemiesne",
+      "pasztet-sliwka-niemiesne"
     ],
     "0001470": [
-      "dk-pasztet-sliwka-6300281-niemiesne"
+      "dk-pasztet-sliwka-6300281-niemiesne",
+      "pasztet-sliwka-niemiesne"
     ],
     "00014700": [
-      "dk-pasztet-sliwka-6300281-niemiesne"
+      "dk-pasztet-sliwka-6300281-niemiesne",
+      "pasztet-sliwka-niemiesne"
     ],
     "00015": [
       "gyros-groch-niemiesne",
@@ -4202,27 +4229,6 @@
     ],
     "63036900": [
       "oats-chocolate-balls-crispy"
-    ],
-    "TEST": [
-      "test-lifecycle-nerkowcowy-f"
-    ],
-    "TEST-": [
-      "test-lifecycle-nerkowcowy-f"
-    ],
-    "TEST-T": [
-      "test-lifecycle-nerkowcowy-f"
-    ],
-    "TEST-TE": [
-      "test-lifecycle-nerkowcowy-f"
-    ],
-    "TEST-TES": [
-      "test-lifecycle-nerkowcowy-f"
-    ],
-    "TEST-TEST": [
-      "test-lifecycle-nerkowcowy-f"
-    ],
-    "TEST-TEST2": [
-      "test-lifecycle-nerkowcowy-f"
     ]
   },
   "by_tag": {
@@ -4305,10 +4311,10 @@
       "solony-orzech-daktylowy",
       "starter-pack-funkcjonalny",
       "szarlotka-cynamon-nerkowcowy",
-      "tarta-malinowa-nerkowcowy",
-      "test-lifecycle-nerkowcowy-f"
+      "tarta-malinowa-nerkowcowy"
     ],
     "bigpak": [
+      "burger-klasyczny-xxl-niemiesne",
       "mielone-wolowe-xxl-niemiesne"
     ],
     "boost": [
@@ -4328,6 +4334,7 @@
       "burger-burak-niemiesne",
       "burger-chicken-plant-based",
       "burger-klasyczny-niemiesne",
+      "burger-klasyczny-xxl-niemiesne",
       "burger-kurczak-niemiesne",
       "burger-plant-based",
       "burger-wolowy-niemiesne",
@@ -4433,13 +4440,13 @@
       "gi-caramel-bars-protein",
       "gi-lemon-cheesecake-bars-protein",
       "klopsiki-klasyczne-niemiesne",
+      "klopsy-niemiesne",
       "malina-owocowe",
       "oats-chocolate-balls-crispy",
       "orzeszki-kukurydza-miod-sniadanie",
       "orzeszki-miod-sniadanie",
       "owies-czekolada-sniadanie",
       "proteina-boosty",
-      "test-lifecycle-nerkowcowy-f",
       "tiramisu-czekolada-kakao-deserowe"
     ],
     "etykieta": [
@@ -4461,6 +4468,7 @@
       "balans-boosty",
       "bio-amarantus-sniadaniowe",
       "bio-orkisz-sniadaniowe",
+      "burger-klasyczny-xxl-niemiesne",
       "chrupiacy-orzech-daktylowy",
       "cornflakes-peanuts-honey-balls-crispy",
       "czekolada-banan-orzechowe",
@@ -4864,14 +4872,16 @@
       "sernik-cytrynowy-nerkowcowy",
       "sernik-waniliowy-nerkowcowy",
       "szarlotka-cynamon-nerkowcowy",
-      "tarta-malinowa-nerkowcowy",
-      "test-lifecycle-nerkowcowy-f"
+      "tarta-malinowa-nerkowcowy"
     ],
     "niemiesne": [
+      "01-kabanos-bbq-niemiesne",
+      "02-kabanos-klas-niemiesne",
       "6300-000-17.11.2025-niemiesne",
       "burger-buraczany-niemiesne",
       "burger-burak-niemiesne",
       "burger-klasyczny-niemiesne",
+      "burger-klasyczny-xxl-niemiesne",
       "burger-kurczak-niemiesne",
       "burger-wolowy-niemiesne",
       "dk-pasztet-sliwka-6300281-niemiesne",
@@ -4892,6 +4902,7 @@
       "klopsiki-klasyczne-niemiesne",
       "klopsiki-kurczak-niemiesne",
       "klopsiki-roslinne-niemiesne",
+      "klopsy-niemiesne",
       "kofta-niemiesne",
       "kotleciki-rybne-niemiesne",
       "kotlety-mielone-niemiesne",
@@ -4903,6 +4914,7 @@
       "nuggets-xxl-niemiesne",
       "parowka-roslinna-niemiesne",
       "pasztet-pomidor-niemiesne",
+      "pasztet-sliwka-niemiesne",
       "pasztet-zurawina-niemiesne",
       "poledwiczka-17.11.2025-niemiesne",
       "roladka-wo-owa-niemiesne",
@@ -4953,6 +4965,7 @@
     "pasztet": [
       "dk-pasztet-sliwka-6300281-niemiesne",
       "pasztet-pomidor-niemiesne",
+      "pasztet-sliwka-niemiesne",
       "pasztet-zurawina-niemiesne"
     ],
     "porzeczka": [
@@ -5041,10 +5054,13 @@
       "wedlina-niemiesne"
     ],
     "roslinne": [
+      "01-kabanos-bbq-niemiesne",
+      "02-kabanos-klas-niemiesne",
       "6300-000-17.11.2025-niemiesne",
       "burger-buraczany-niemiesne",
       "burger-burak-niemiesne",
       "burger-klasyczny-niemiesne",
+      "burger-klasyczny-xxl-niemiesne",
       "burger-kurczak-niemiesne",
       "burger-wolowy-niemiesne",
       "dk-pasztet-sliwka-6300281-niemiesne",
@@ -5065,6 +5081,7 @@
       "klopsiki-klasyczne-niemiesne",
       "klopsiki-kurczak-niemiesne",
       "klopsiki-roslinne-niemiesne",
+      "klopsy-niemiesne",
       "kofta-niemiesne",
       "kotleciki-rybne-niemiesne",
       "kotlety-mielone-niemiesne",
@@ -5076,6 +5093,7 @@
       "nuggets-xxl-niemiesne",
       "parowka-roslinna-niemiesne",
       "pasztet-pomidor-niemiesne",
+      "pasztet-sliwka-niemiesne",
       "pasztet-zurawina-niemiesne",
       "poledwiczka-17.11.2025-niemiesne",
       "roladka-wo-owa-niemiesne",
@@ -5092,7 +5110,8 @@
       "shot-funkcjonalny"
     ],
     "sliwka": [
-      "dk-pasztet-sliwka-6300281-niemiesne"
+      "dk-pasztet-sliwka-6300281-niemiesne",
+      "pasztet-sliwka-niemiesne"
     ],
     "sniadanie": [
       "orzeszki-kukurydza-miod-sniadanie",
@@ -5440,6 +5459,13 @@
         "product_id": "balans-boosty",
         "index": "000010.00",
         "name": "BALANS"
+      }
+    ],
+    "000015": [
+      {
+        "product_id": "burger-klasyczny-xxl-niemiesne",
+        "index": "000015.00",
+        "name": "BURGER KLASYCZNY XXL"
       }
     ],
     "000017": [
@@ -5875,11 +5901,23 @@
         "name": "KIELBASKA WEGIERSKA"
       }
     ],
+    "000141": [
+      {
+        "product_id": "klopsy-niemiesne",
+        "index": "000141.00",
+        "name": "KLOPSY"
+      }
+    ],
     "000147": [
       {
         "product_id": "dk-pasztet-sliwka-6300281-niemiesne",
         "index": "000147.00",
         "name": "DK PASZTET ŚLIWKA 6300281"
+      },
+      {
+        "product_id": "pasztet-sliwka-niemiesne",
+        "index": "000147.00",
+        "name": "PASZTET ŚLIWKA"
       }
     ],
     "000151": [
@@ -7994,20 +8032,6 @@
         "index": "630369.00",
         "name": "OATS CHOCOLATE"
       }
-    ],
-    "TEST-TEST": [
-      {
-        "product_id": "test-lifecycle-nerkowcowy-f",
-        "index": "TEST-TEST",
-        "name": "TEST LIFECYCLE"
-      }
-    ],
-    "TEST-TEST2": [
-      {
-        "product_id": "test-lifecycle-nerkowcowy-f",
-        "index": "TEST-TEST2",
-        "name": "TEST LIFECYCLE"
-      }
     ]
   },
   "tag_groups": {
@@ -8050,9 +8074,9 @@
       "funkcjonalny",
       "krem",
       "owies",
+      "pasztet",
       "gyros",
       "napoj",
-      "pasztet",
       "nuggets",
       "boost",
       "mini batoniki",
@@ -10420,40 +10444,6 @@
       "authors": []
     },
     {
-      "id": "test-lifecycle-nerkowcowy-f",
-      "name": "TEST LIFECYCLE",
-      "display_name": "TEST LIFECYCLE",
-      "category": "01 - BATONY",
-      "tags": [
-        "baton",
-        "doypack",
-        "nerkowcowy"
-      ],
-      "tag_groups": {
-        "smak": [
-          "nerkowcowy"
-        ],
-        "typ": [],
-        "opakowanie": [
-          "baton",
-          "doypack"
-        ],
-        "autor": [],
-        "osoba": [],
-        "inne": []
-      },
-      "indexes": [
-        "TEST-TEST",
-        "TEST-TEST2"
-      ],
-      "index_bases": [
-        "TEST-TEST",
-        "TEST-TEST2"
-      ],
-      "search_blob": "test lifecycle baton doypack nerkowcowy test test test test2",
-      "authors": []
-    },
-    {
       "id": "banoffee-kakao-deserowe",
       "name": "BANOFFEE KAKAO",
       "display_name": "BANOFFEE KAKAO",
@@ -12452,6 +12442,158 @@
         "000154"
       ],
       "search_blob": "wedlina niemiesne rekaw roslinne 000154.00",
+      "authors": []
+    },
+    {
+      "id": "01-kabanos-bbq-niemiesne",
+      "name": "01 KABANOS BBQ",
+      "display_name": "01 KABANOS BBQ",
+      "category": "03 - ROSLINNE",
+      "tags": [
+        "niemiesne",
+        "roslinne"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "niemiesne",
+          "roslinne"
+        ],
+        "opakowanie": [],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [],
+      "index_bases": [],
+      "search_blob": "01 kabanos bbq niemiesne roslinne",
+      "authors": []
+    },
+    {
+      "id": "02-kabanos-klas-niemiesne",
+      "name": "02 KABANOS KLAS",
+      "display_name": "02 KABANOS KLAS",
+      "category": "03 - ROSLINNE",
+      "tags": [
+        "niemiesne",
+        "roslinne"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "niemiesne",
+          "roslinne"
+        ],
+        "opakowanie": [],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [],
+      "index_bases": [],
+      "search_blob": "02 kabanos klas niemiesne roslinne",
+      "authors": []
+    },
+    {
+      "id": "burger-klasyczny-xxl-niemiesne",
+      "name": "BURGER KLASYCZNY XXL",
+      "display_name": "BURGER KLASYCZNY XXL",
+      "category": "03 - ROSLINNE",
+      "tags": [
+        "bigpak",
+        "burger",
+        "folia",
+        "niemiesne",
+        "roslinne"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "niemiesne",
+          "roslinne",
+          "burger"
+        ],
+        "opakowanie": [
+          "bigpak",
+          "folia"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "000015.00"
+      ],
+      "index_bases": [
+        "000015"
+      ],
+      "search_blob": "burger klasyczny xxl bigpak burger folia niemiesne roslinne 000015.00",
+      "authors": []
+    },
+    {
+      "id": "klopsy-niemiesne",
+      "name": "KLOPSY",
+      "display_name": "KLOPSY",
+      "category": "03 - ROSLINNE",
+      "tags": [
+        "doypack",
+        "niemiesne",
+        "roslinne"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "niemiesne",
+          "roslinne"
+        ],
+        "opakowanie": [
+          "doypack"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "000141.00"
+      ],
+      "index_bases": [
+        "000141"
+      ],
+      "search_blob": "klopsy doypack niemiesne roslinne 000141.00",
+      "authors": []
+    },
+    {
+      "id": "pasztet-sliwka-niemiesne",
+      "name": "PASZTET ŚLIWKA",
+      "display_name": "PASZTET ŚLIWKA",
+      "category": "03 - ROSLINNE",
+      "tags": [
+        "niemiesne",
+        "pasztet",
+        "roslinne",
+        "sliwka"
+      ],
+      "tag_groups": {
+        "smak": [
+          "sliwka"
+        ],
+        "typ": [
+          "niemiesne",
+          "roslinne",
+          "pasztet"
+        ],
+        "opakowanie": [],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "000147.00"
+      ],
+      "index_bases": [
+        "000147"
+      ],
+      "search_blob": "pasztet sliwka niemiesne pasztet roslinne sliwka 000147.00",
       "authors": []
     },
     {

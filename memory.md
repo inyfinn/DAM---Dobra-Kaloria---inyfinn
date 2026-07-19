@@ -896,6 +896,13 @@ ole=admin.
  - Desktop: `pywebview.api.pick_folder()` ? FOLDER_DIALOG.
  - Modal: `.dam-basepath-browse` (ikona folderu + Wskaz folder).
 
+122. **Lifecycle previous_letter per nośnik (2026-07-19, j18) - HARD:**
+ - `previous_letter` = stan przed archiwum (F / D / clear). Odklik X przywraca ten stan, **nigdy X**.
+ - Lookup: sciezka + `_variant_identity` (np. DOY|TEST-TEST2 vs ETY|TEST-TEST2). NIGDY sam `revision_index` gdy wspolny indeks.
+ - Bug „wszystko D”: legacy klucz TEST-TEST2 w store z previous_letter:D kontaminowal DOY i ETY przy restore.
+ - Po F/X/D: UI `reconcileProductLifecycleFromDisk` (hub20260719j18). Bridge restart po `lifecycle_status.py`.
+ - Test: `python apps/desktop/tests/test_lifecycle_previous_letter.py`.
+
 ## 2026-07-18 - Go-Live produkcja (klient)
 
 25. **Nazwa procesu:** Production Readiness Review (PRR) + Go-Live. Dokument: `GO_LIVE.md`.

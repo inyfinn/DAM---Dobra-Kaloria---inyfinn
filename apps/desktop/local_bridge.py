@@ -972,6 +972,7 @@ PRODUCT_PRICES_CACHE_FILE = WEB_ROOT / "data" / "product-prices-cache.json"
 BULK_PACKAGING_FILE = WEB_ROOT / "data" / "bulk-packaging.json"
 SHOP_CATEGORIES_FILE = WEB_ROOT / "data" / "shop-categories.json"
 BRANDING_INDEX_FILE = WEB_ROOT / "data" / "branding-index.json"
+BRANDING_OVERRIDES_FILE = WEB_ROOT / "data" / "branding-metadata-overrides.json"
 BRANDING_STATUS_FILE = WEB_ROOT / "data" / "branding-build-status.json"
 BRANDING_RECOGNIZE_STATUS_FILE = WEB_ROOT / "data" / "branding-recognize-status.json"
 WYKROJNIKI_REGISTRY_FILE = WEB_ROOT / "data" / "wykrojniki-registry.json"
@@ -1126,6 +1127,47 @@ def _save_json(path: Path, data) -> None:
             conn.close()
     except Exception as exc:
         print(f"kv_store save warning ({store_key}):", exc)
+
+
+def _patch_branding_metadata(asset_id: str, field: str, value) -> tuple[bool, str | None]:
+    """Reczna edycja asset_role / appearance (branding) — overrides + indeks lokalny."""
+    aid = str(asset_id or "").strip()
+    fld = str(field or "").strip()
+    if not aid or fld not in ("asset_role", "appearance_primary"):
+        return False, "invalid_request"
+    idx = _load_json(BRANDING_INDEX_FILE, None)
+    if not isinstance(idx, dict):
+        return False, "branding_index_missing"
+    assets = idx.get("assets") or []
+    found = None
+    for a in assets:
+        if a.get("id") == aid:
+            found = a
+            break
+    if not found:
+        return False, "asset_not_found"
+    if fld == "asset_role":
+        found["asset_role"] = str(value or "").strip() or None
+    elif fld == "appearance_primary":
+        v = str(value or "").strip()
+        tags = list(found.get("appearance_tags") or [])
+        if v:
+            if tags:
+                tags[0] = v
+            else:
+                tags = [v]
+            found["appearance_tags"] = tags
+    ov = _load_json(BRANDING_OVERRIDES_FILE, {"version": 1, "assets": {}})
+    if not isinstance(ov, dict):
+        ov = {"version": 1, "assets": {}}
+    patch = ov.setdefault("assets", {}).setdefault(aid, {})
+    if fld == "appearance_primary":
+        patch["appearance_tags"] = found.get("appearance_tags") or []
+    else:
+        patch["asset_role"] = found.get("asset_role")
+    _save_json(BRANDING_OVERRIDES_FILE, ov)
+    _save_json(BRANDING_INDEX_FILE, idx)
+    return True, None
 
 
 def _pull_kv_cache_from_postgres() -> int:
@@ -2581,33 +2623,99 @@ def write_viz_flags(payload: dict) -> dict:
 _MEDIA_MAX_BYTES = 40 * 1024 * 1024  # 40 MB - anty DoS przez odczyt ogromnych plikow
 
 
+_PREVIEW_RASTER_EXT = {".tif", ".tiff", ".psd", ".psb", ".bmp"}
+_VIDEO_EXT = {".mp4", ".mov", ".webm", ".avi", ".mkv", ".m4v"}
+
+
+def _image_to_jpeg_bytes(im) -> bytes:
+    import io
+
+    from PIL import Image  # type: ignore
+
+    if im.mode in ("CMYK", "P"):
+        im = im.convert("RGB")
+    elif im.mode in ("RGBA", "LA"):
+        bg = Image.new("RGB", im.size, (255, 255, 255))
+        if im.mode == "LA":
+            im = im.convert("RGBA")
+        bg.paste(im, mask=im.split()[-1])
+        im = bg
+    elif im.mode != "RGB":
+        im = im.convert("RGB")
+    max_side = 2400
+    if max(im.size) > max_side:
+        im.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+    buf = io.BytesIO()
+    im.save(buf, format="JPEG", quality=88, optimize=True)
+    return buf.getvalue()
+
+
 def _media_preview_jpeg(target: str) -> tuple[int, bytes, str] | None:
-    """Konwersja TIFF/PSD/BMP do JPEG pod podglad w przegladarce."""
+    """Konwersja TIFF/PSD/PSB/BMP do JPEG pod podglad w przegladarce."""
     ext = Path(target).suffix.lower()
-    if ext not in {".tif", ".tiff", ".psd", ".bmp"}:
+    if ext not in _PREVIEW_RASTER_EXT:
         return None
     try:
-        import io
-
         from PIL import Image  # type: ignore
 
-        with Image.open(target) as im:
-            if im.mode in ("CMYK", "P"):
-                im = im.convert("RGB")
-            elif im.mode in ("RGBA", "LA"):
-                bg = Image.new("RGB", im.size, (255, 255, 255))
-                if im.mode == "LA":
-                    im = im.convert("RGBA")
-                bg.paste(im, mask=im.split()[-1])
-                im = bg
-            elif im.mode != "RGB":
-                im = im.convert("RGB")
-            max_side = 2400
-            if max(im.size) > max_side:
-                im.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
-            buf = io.BytesIO()
-            im.save(buf, format="JPEG", quality=88, optimize=True)
-            return 200, buf.getvalue(), "image/jpeg"
+        im = None
+        try:
+            with Image.open(target) as pil_im:
+                im = pil_im.copy()
+        except Exception:
+            if ext in {".psd", ".psb"}:
+                from psd_tools import PSDImage  # type: ignore
+
+                im = PSDImage.open(target).composite()
+            else:
+                raise
+        if im is None:
+            return None
+        return 200, _image_to_jpeg_bytes(im), "image/jpeg"
+    except Exception:
+        return None
+
+
+def _media_video_poster(target: str) -> tuple[int, bytes, str] | None:
+    """Klatka z wideo jako JPEG (miniatury w siatce branding)."""
+    ext = Path(target).suffix.lower()
+    if ext not in _VIDEO_EXT:
+        return None
+    try:
+        import subprocess
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+            out = tmp.name
+        try:
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-ss",
+                    "00:00:00.5",
+                    "-i",
+                    target,
+                    "-frames:v",
+                    "1",
+                    "-q:v",
+                    "3",
+                    out,
+                ],
+                check=True,
+                capture_output=True,
+                timeout=90,
+            )
+            with open(out, "rb") as fh:
+                data = fh.read()
+            if not data:
+                return None
+            return 200, data, "image/jpeg"
+        finally:
+            try:
+                os.unlink(out)
+            except OSError:
+                pass
     except Exception:
         return None
     return None
@@ -2629,17 +2737,26 @@ def serve_media(path: str, preview: bool = False) -> tuple[int, bytes, str]:
         ".tif": "image/tiff",
         ".tiff": "image/tiff",
         ".svg": "image/svg+xml",
+        ".mp4": "video/mp4",
+        ".mov": "video/quicktime",
+        ".webm": "video/webm",
+        ".avi": "video/x-msvideo",
+        ".mkv": "video/x-matroska",
+        ".m4v": "video/mp4",
     }.get(ext)
-    if not mime:
-        if preview:
+    if preview:
+        if ext in _PREVIEW_RASTER_EXT:
             converted = _media_preview_jpeg(target)
             if converted:
                 return converted
+            return 422, b"", "application/json"
+        if ext in _VIDEO_EXT:
+            poster = _media_video_poster(target)
+            if poster:
+                return poster
+            return 422, b"", "application/json"
+    if not mime:
         return 415, b"", "application/json"
-    if preview and ext in {".tif", ".tiff", ".psd", ".bmp"}:
-        converted = _media_preview_jpeg(target)
-        if converted:
-            return converted
     try:
         if os.path.getsize(target) > _MEDIA_MAX_BYTES:
             return 413, b"", "application/json"
@@ -2941,8 +3058,9 @@ class Handler(BaseHTTPRequestHandler):
                     403: "path_outside_marketing",
                     413: "file_too_large",
                     415: "unsupported_media",
+                    422: "preview_failed",
                 }.get(code, "not_found")
-                self._json(code if code in (403, 413, 415) else 404, {"ok": False, "error": err, "path": path})
+                self._json(code if code in (403, 413, 415, 422) else 404, {"ok": False, "error": err, "path": path})
                 return
             self._bytes(200, body, ctype)
             return
@@ -3393,6 +3511,24 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(200, {"ok": rc == 0, "rc": rc})
             except OSError as exc:
                 self._json(500, {"ok": False, "error": str(exc)})
+            return
+        if parsed.path == "/branding/asset-metadata":
+            user = self._require_login()
+            if user is None:
+                return
+            role = str(user.get("role") or "user").lower()
+            if role not in ("admin", "power_user"):
+                self._json(403, {"ok": False, "error": "forbidden"})
+                return
+            ok, err = _patch_branding_metadata(
+                data.get("asset_id"),
+                data.get("field"),
+                data.get("value"),
+            )
+            if not ok:
+                self._json(400, {"ok": False, "error": err or "patch_failed"})
+                return
+            self._json(200, {"ok": True, "asset_id": data.get("asset_id"), "field": data.get("field")})
             return
         if parsed.path == "/wykrojniki/reimport":
             if self._require_admin() is None:

@@ -4,3 +4,6 @@ bcrypt>=4.0
 psycopg2-binary>=2.9
 cryptography>=42.0
 openpyxl>=3.1
+# Opcjonalnie OCR: pip install rapidocr-onnxruntime (enrich-branding-recognize.py)
+rapidocr-onnxruntime>=1.3
+psd-tools>=1.9

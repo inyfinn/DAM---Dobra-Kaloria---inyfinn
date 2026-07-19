@@ -2990,6 +2990,24 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   align-items: center;
 }
 
+/* Eksplorator: toolbar + filtry globalne nad kategoriami (jak Wizualizacje, bez Tagi pakowania) */
+.dam-explorer-grid-toolbar {
+  margin: 0 0 8px;
+}
+.dam-explorer-secondary-filters {
+  margin-bottom: 14px;
+}
+.dam-explorer-empty__hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #8b8d97;
+}
+.dam-explorer-status-line {
+  font-size: 12px;
+  color: #8b8d97;
+  margin: 0 0 8px;
+}
+
 /* Projekty: status + akcje nad siatka (biale tlo wynikow) */
 .dam-projects-grid-toolbar {
   display: grid;
@@ -3413,7 +3431,10 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   color: #ccc;
 }
 .dam-explorer-panel {
-  padding: 18px 18px 22px;
+  --dam-surface-inset-x: 18px;
+  --dam-surface-inset-y: 14px;
+  --dam-surface-inset-y-sm: 12px;
+  padding: var(--dam-surface-inset-y) var(--dam-surface-inset-x) 22px;
 }
 .dam-explorer-welcome .dam-explorer-panel__lead {
   margin-bottom: 16px;
@@ -3588,6 +3609,15 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   background: #f8f7fb; /* ~10% szary, jasniej niz #f3f2f7 */
   border: 1px solid rgba(70, 66, 85, 0.08);
   transition: background 0.12s ease, border-color 0.12s ease;
+}
+.dam-prod-row--archive {
+  border-left: 3px solid #c4b5fd;
+}
+.dam-viz-badge--archive {
+  margin-left: 8px;
+  background: #f3e8ff;
+  color: #6b21a8;
+  border: 1px solid #e9d5ff;
 }
 .dam-prod-row--variants {
   /* main (1fr) | warianty (auto) | akcje (auto) */
@@ -3877,7 +3907,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-size: 11px;
   font-weight: 500;
   color: #8b8d97;
-  padding: 8px 4px 4px;
+  padding: 0 0 8px;
+  margin: 0;
 }
 .dam-status-badge--lg {
   padding: 2px 10px;
@@ -4836,6 +4867,9 @@ button.dam-status-badge.dam-tag-editable:hover {
 /* Explorer v3: carrier cards                                          */
 /* ================================================================== */
 .dam-carrier-list {
+  --dam-carrier-inset-x: var(--dam-surface-inset-x, 18px);
+  --dam-carrier-inset-y: var(--dam-surface-inset-y, 14px);
+  --dam-carrier-inset-y-sm: var(--dam-surface-inset-y-sm, 12px);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -4878,8 +4912,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   align-items: center;
   gap: 8px 10px;
   width: 100%;
-  min-height: 56px;
-  padding: 10px 12px 10px 14px;
+  min-height: 60px;
+  padding: var(--dam-carrier-inset-y-sm, 12px) var(--dam-carrier-inset-x, 18px);
   box-sizing: border-box;
   cursor: pointer;
   transition: background 0.12s ease;
@@ -5137,7 +5171,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-carrier-body {
-  padding: 12px 14px 14px;
+  padding: var(--dam-carrier-inset-y-sm, 12px) var(--dam-carrier-inset-x, 18px) var(--dam-carrier-inset-y, 14px);
   border-top: 1px solid #f5f0fc;
   overflow: hidden;
   border-radius: 0 0 12px 12px;
@@ -5375,9 +5409,15 @@ button.dam-status-badge.dam-tag-editable:hover {
 /* Explorer v3: older revisions                                        */
 /* ================================================================== */
 .dam-carrier-older {
-  margin-top: 10px;
-  padding-top: 8px;
+  margin-top: 0;
+  padding: var(--dam-carrier-inset-y-sm, 12px) var(--dam-carrier-inset-x, 18px) var(--dam-carrier-inset-y-sm, 12px);
   border-top: 1px solid #f0f0f0;
+}
+
+/* W body rodzic juz ma inset – bez podwojnego paddingu poziomego */
+.dam-carrier-body .dam-carrier-older {
+  padding-inline: 0;
+  padding-bottom: 0;
 }
 
 .dam-show-older-btn {
@@ -5387,7 +5427,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  padding: 2px 0;
+  padding: 2px 0 6px;
   text-decoration: underline dotted;
 }
 
@@ -5407,7 +5447,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 5px 8px;
+  padding: 8px 12px;
   background: #fafafa;
   border-radius: 6px;
   border: 1px solid #f0f0f0;
@@ -5421,7 +5461,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 5px 8px;
+  padding: 8px 12px;
   background: rgba(40, 199, 111, 0.06);
   border-radius: 6px;
   border: 1px solid rgba(40, 199, 111, 0.2);
@@ -5536,7 +5576,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-viz-modal__zoom {
   position: absolute;
   left: 50%;
-  bottom: 12px;
+  bottom: 6px;
   transform: translateX(-50%);
   z-index: 3;
   display: inline-flex;
@@ -5757,21 +5797,31 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 #damVizModalBadges.dam-viz-card__badges,
-.dam-viz-modal__body #damVizModalBadges {
+#damMediaPreviewBadges.dam-viz-card__badges,
+.dam-viz-modal__body #damVizModalBadges,
+.dam-viz-modal__body #damMediaPreviewBadges {
   justify-content: flex-start;
   align-content: flex-start;
   min-height: 0;
   max-height: none;
   overflow: visible;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 .dam-viz-modal__body #damVizModalBadges .dam-viz-badge,
-.dam-viz-modal__body #damVizModalBadges button.dam-viz-badge {
+.dam-viz-modal__body #damVizModalBadges button.dam-viz-badge,
+.dam-viz-modal__body #damMediaPreviewBadges .dam-viz-badge,
+.dam-viz-modal__body #damMediaPreviewBadges button.dam-viz-badge {
   font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
   font-weight: 500;
   padding: 5px 11px;
   border-radius: 999px;
+}
+
+.dam-viz-modal__body #damMediaPreviewTitle {
+  margin-top: 4px;
+  margin-bottom: 10px;
+  line-height: 1.35;
 }
 
 .dam-viz-modal__carrier--editable {

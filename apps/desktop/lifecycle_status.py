@@ -209,10 +209,13 @@ def _sync_revisions_after_product(
             disk_letter = status_letter_of(Path(new_path).name)
         if meta and meta.get("new_letter") is not None:
             disk_letter = str(meta.get("new_letter") or "")
-        if meta and "previous_letter" in meta:
-            # Zachowaj previous tylko gdy literka faktycznie sie zmienila
-            if (meta.get("old_letter") or "") != (meta.get("new_letter") or ""):
-                row["previous_letter"] = meta.get("previous_letter")
+        # previous_letter = stan PRZED archiwum; nie nadpisuj None przy restore produktu
+        if (
+            meta
+            and meta.get("previous_letter") is not None
+            and (meta.get("old_letter") or "") != (meta.get("new_letter") or "")
+        ):
+            row["previous_letter"] = meta.get("previous_letter")
         row["path"] = new_path
         row["previous_path"] = old_path or row.get("previous_path") or ""
         row["letter"] = disk_letter or None
@@ -829,7 +832,11 @@ def _apply_lifecycle_status_unlocked(
         key = _variant_store_key(path_str=normalize_path(final_variant_path or path or ""))
         if not key:
             key = revision_index or ""
-        prev_rev = (store.get("revisions") or {}).get(key) or {}
+        prev_rev = _rev_row_for_variant(
+            store, product_id, Path(normalize_path(path)) if path else Path("."), revision_index
+        )
+        if not prev_rev and key:
+            prev_rev = (store.get("revisions") or {}).get(key) or {}
         old_v_letter = status_letter_of(Path(normalize_path(path)).name) if path else ""
         applied_letter = letter
         if result.get("restored_letter") is not None and not letter:
@@ -846,10 +853,21 @@ def _apply_lifecycle_status_unlocked(
             "updated_by": actor,
         }
         if letter:
-            rev_row["previous_letter"] = old_v_letter or None
+            # X ponownie (juz X) — nie kasuj zapamiętanego stanu sprzed archiwum
+            if letter == "X" and old_v_letter == "X" and prev_rev.get("previous_letter") is not None:
+                rev_row["previous_letter"] = prev_rev.get("previous_letter")
+            else:
+                rev_row["previous_letter"] = old_v_letter or None
         else:
             rev_row["previous_letter"] = None
+        if revision_index:
+            rev_row["revision_index"] = revision_index
         store["revisions"][key] = rev_row
+        # Legacy klucz po samym indeksie (DOY+ETY wspolny TEST-TEST2) — nie uzywaj do lookup
+        if revision_index and revision_index != key and revision_index in store.get("revisions", {}):
+            leg = store["revisions"].get(revision_index)
+            if isinstance(leg, dict) and leg.get("product_id") == product_id:
+                del store["revisions"][revision_index]
         # Po zdjeciu F z wariantu: jesli zaden inny nie ma F -> zdejmij F z produktu
         if result.get("product_cleared") and product_id:
             store["products"][product_id] = {
@@ -946,12 +964,29 @@ def find_live_product_dir(
     return None
 
 
+def _carrier_prefix(folder_name: str) -> str:
+    m = re.match(r"^([A-Z]{2,8})\s*-", str(folder_name or "").strip(), re.I)
+    return m.group(1).upper() if m else ""
+
+
+def _variant_identity(folder_name: str) -> str:
+    """Nośnik + indeks (np. DOY|TEST-TEST2) — rozroznia wspolny revision_index."""
+    base = strip_status_suffix(str(folder_name or ""))
+    carrier = _carrier_prefix(base)
+    parts = [p.strip() for p in base.split(" - ") if p.strip()]
+    index_token = parts[-1] if parts else base
+    return f"{carrier}|{index_token}".lower()
+
+
 def _rev_row_for_child(store: dict | None, product_id: str, child: Path) -> dict:
     if not store or not product_id:
         return {}
     revs = store.get("revisions") or {}
     child_norm = normalize_path(str(child)).lower()
+    child_id = _variant_identity(child.name)
     base = strip_status_suffix(child.name).lower()
+    child_carrier = _carrier_prefix(child.name)
+    best: dict | None = None
     for _k, row in revs.items():
         if not isinstance(row, dict):
             continue
@@ -960,9 +995,48 @@ def _rev_row_for_child(store: dict | None, product_id: str, child: Path) -> dict
         rp = normalize_path(str(row.get("path") or "")).lower()
         if rp == child_norm:
             return row
-        if strip_status_suffix(Path(rp).name).lower() == base:
+        rp_name = Path(rp).name if rp else ""
+        if rp_name and _variant_identity(rp_name) == child_id:
             return row
+        if strip_status_suffix(rp_name).lower() == base:
+            if child_carrier and _carrier_prefix(rp_name) and _carrier_prefix(rp_name) != child_carrier:
+                continue
+            best = row
+    return best or {}
+
+
+def _rev_row_for_variant(
+    store: dict | None,
+    product_id: str,
+    variant: Path,
+    revision_index: str = "",
+) -> dict:
+    """Lookup wariantu: sciezka/nośnik (prawda), NIGDY wspolny revision_index jako pierwszy."""
+    row = _rev_row_for_child(store, product_id, variant)
+    if row:
+        return row
+    if revision_index and store:
+        leg = (store.get("revisions") or {}).get(revision_index) or {}
+        if leg and leg.get("product_id") == product_id:
+            leg_path = normalize_path(str(leg.get("path") or "")).lower()
+            var_norm = normalize_path(str(variant)).lower()
+            if leg_path == var_norm:
+                return leg
+            if leg_path and _variant_identity(Path(leg_path).name) == _variant_identity(variant.name):
+                return leg
     return {}
+
+
+def _restore_letter_from_row(row: dict, *, old_l: str, product_had_x: bool) -> str:
+    """Przy odklikaniu X: przywroc stan sprzed archiwum (nigdy X)."""
+    prev_l = str(row.get("previous_letter") or "").strip().upper()
+    if prev_l == "X":
+        prev_l = ""
+    if old_l == "D" and product_had_x:
+        return "D"
+    if prev_l in ("F", "D"):
+        return prev_l
+    return ""
 
 
 def _resolve_archive_product_wrapper(
@@ -1044,13 +1118,11 @@ def _plan_variant(
     # Odznaczenie: przywroc previous_letter ze store (nie zawsze "bez statusu")
     effective_letter = letter
     if not letter:
-        row = {}
-        if revision_index and store:
-            row = (store.get("revisions") or {}).get(revision_index) or {}
-        if not row:
-            row = _rev_row_for_child(store, product_id, variant)
+        row = _rev_row_for_variant(store, product_id, variant, revision_index)
         prev = str(row.get("previous_letter") or "").strip().upper()
-        if prev in ("F", "X", "D"):
+        if prev == "X":
+            prev = ""
+        if prev in ("F", "D"):
             effective_letter = prev
             restored_letter = prev
             notes.append(f"variant_restored_previous_letter:{prev}")
@@ -1220,7 +1292,7 @@ def _plan_product(
         old_l = status_letter_of(child.name)
         row = _rev_row_for_child(store, product_id, child)
         prev_l = str(row.get("previous_letter") or "").strip().upper()
-        if prev_l not in ("F", "X", "D", ""):
+        if prev_l == "X":
             prev_l = ""
 
         if letter == "D":
@@ -1233,14 +1305,10 @@ def _plan_product(
                 new_l = "D"
             else:
                 new_l = "X"  # "", F, X -> X
-        else:  # clear / restore
-            if old_l == "D" and current_letter == "X":
-                # Przy wyjsciu z X: Demo zostaje Demo
-                new_l = "D"
-            elif prev_l in ("F", "X", "D"):
-                new_l = prev_l
-            else:
-                new_l = ""
+        else:  # clear / restore produktu z archiwum
+            new_l = _restore_letter_from_row(
+                row, old_l=old_l, product_had_x=(current_letter == "X")
+            )
         child_targets.append((child, old_l, new_l))
 
     working = product
@@ -1252,15 +1320,16 @@ def _plan_product(
         src = child
         if src.name != new_name:
             plan_rename(src, src.parent / new_name, "variant_cascade")
-        cascade_meta.append(
-            {
-                "from": normalize_path(str(src)),
-                "to": normalize_path(str(src.parent / new_name)),
-                "old_letter": old_l or "",
-                "new_letter": new_l or "",
-                "previous_letter": (old_l or None) if letter else None,
-            }
-        )
+        meta_entry = {
+            "from": normalize_path(str(src)),
+            "to": normalize_path(str(src.parent / new_name)),
+            "old_letter": old_l or "",
+            "new_letter": new_l or "",
+        }
+        # Zapamietaj stan sprzed archiwum tylko gdy wchodzimy w X (nie przy restore)
+        if letter == "X" and old_l != "X":
+            meta_entry["previous_letter"] = old_l or None
+        cascade_meta.append(meta_entry)
 
     # Literka produktu
     if letter:

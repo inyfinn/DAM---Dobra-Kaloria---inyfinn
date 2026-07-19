@@ -175,6 +175,170 @@
     return r.json();
   }
 
+  function bridgeUrl() {
+    return window.DamRuntime && DamRuntime.bridgeUrl ? DamRuntime.bridgeUrl() : "http://127.0.0.1:8766";
+  }
+
+  function mediaUrl(path) {
+    return bridgeUrl() + "/media?path=" + encodeURIComponent(path || "");
+  }
+
+  function productIndexTokens(p) {
+    var out = [];
+    function add(v) {
+      v = String(v || "").trim();
+      if (!v) return;
+      if (out.indexOf(v) === -1) out.push(v);
+      var base = v.split(".")[0];
+      if (base && out.indexOf(base) === -1) out.push(base);
+    }
+    add(p.product_index);
+    (p.indexes || []).forEach(add);
+    var id = String(p.id || "");
+    if (id.length >= 8) {
+      var parts = id.split("-");
+      if (parts.length > 2) add(parts.slice(0, -1).join("-"));
+    }
+    var dn = String(p.display_name || p.title || p.name || "")
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s-]/gu, "")
+      .trim()
+      .replace(/\s+/g, "-");
+    if (dn.length >= 8) add(dn);
+    return out;
+  }
+
+  function isArchivedBranding(a) {
+    if ((a.tags || []).indexOf("ARCHIWUM") !== -1 || a.is_archive) return true;
+    return String(a.path || "").toUpperCase().indexOf("ARCHIWUM") !== -1;
+  }
+
+  function brandingAssetMatches(a, productId, tokens) {
+    var ids = (a.linked_product_ids || []).concat(a.product_ids || []);
+    if (ids.indexOf(productId) !== -1) return true;
+    if (a.sku) {
+      for (var i = 0; i < tokens.length; i++) {
+        var t = tokens[i];
+        if (!t) continue;
+        if (a.sku === t || a.sku.indexOf(t) === 0 || t.indexOf(a.sku) === 0) return true;
+      }
+    }
+    var hay = ((a.path || "") + " " + (a.name || "") + " " + (a.search_blob || "")).toLowerCase();
+    for (var j = 0; j < tokens.length; j++) {
+      var tok = String(tokens[j] || "").toLowerCase();
+      if (tok.length >= 6 && hay.indexOf(tok) !== -1) return true;
+    }
+    return false;
+  }
+
+  function marketingThumbHtml(a) {
+    if (a.media_type === "video") {
+      return (
+        '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon">' +
+        '<i class="uil uil-play-circle" aria-hidden="true"></i><span>Wideo</span></div>'
+      );
+    }
+    if (a.media_type === "vector") {
+      return (
+        '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon">' +
+        '<i class="uil uil-vector-square" aria-hidden="true"></i><span>Wektor</span></div>'
+      );
+    }
+    if (/\.(png|jpe?g|webp)$/i.test(a.name || "")) {
+      return (
+        '<img class="dam-viz-thumb__img" src="' +
+        esc(mediaUrl(a.path)) +
+        '" alt="" loading="lazy" onerror="this.classList.add(\'dam-viz-thumb__img--placeholder\')">'
+      );
+    }
+    return (
+      '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon">' +
+      '<i class="uil uil-file" aria-hidden="true"></i><span>' +
+      esc((a.media_type || "plik").toUpperCase()) +
+      "</span></div>"
+    );
+  }
+
+  function marketingBadgesHtml(a) {
+    if (!window.DamBadges || typeof window.DamBadges.renderBranding !== "function") {
+      return (
+        '<span class="dam-viz-badge dam-viz-badge--brand">' + esc(a.brand || "DK") + "</span>"
+      );
+    }
+    return window.DamBadges.renderBranding(a, {
+      includeTagTiers: ["primary", "low"],
+      maxPerKind: 3,
+      maxTotal: 6,
+    });
+  }
+
+  function marketingCardHtml(a) {
+    return (
+      '<a class="dam-catalog-marketing-card" href="branding.html?asset=' +
+      encodeURIComponent(a.id || "") +
+      '" title="' +
+      esc(a.name) +
+      '">' +
+      '<div class="dam-viz-thumb dam-catalog-marketing-card__thumb">' +
+      marketingThumbHtml(a) +
+      "</div>" +
+      '<div class="dam-catalog-marketing-card__badges">' +
+      marketingBadgesHtml(a) +
+      "</div>" +
+      '<p class="dam-catalog-marketing-card__title">' +
+      esc(a.name) +
+      "</p></a>"
+    );
+  }
+
+  async function renderWykrojnikiShort(productId) {
+    var host = document.getElementById("damWykrojnikShortBody");
+    if (!host) return;
+    try {
+      var reg = await fetchJsonLocal("data/wykrojniki-registry.json");
+      var entries = reg.entries || {};
+      var linked = Object.keys(entries)
+        .map(function (k) {
+          return entries[k];
+        })
+        .filter(function (e) {
+          return (e.linked_product_ids || []).indexOf(productId) !== -1;
+        });
+      if (!linked.length) {
+        host.innerHTML = '<p class="dam-catalog-marketing__empty">Brak powiązanych wykrojników w rejestrze.</p>';
+        return;
+      }
+      host.innerHTML =
+        '<ul class="dam-catalog-wykrojnik-list">' +
+        linked
+          .slice(0, 6)
+          .map(function (e) {
+            var label = e.nazwa || e.kod || "Wykrojnik";
+            var path = e.pdf_path || "";
+            return (
+              '<li><span class="dam-catalog-wykrojnik-list__label">' +
+              esc(label) +
+              "</span>" +
+              (path
+                ? ' <button type="button" class="geex-btn geex-btn--sm dam-win-btn" data-path="' +
+                  esc(path) +
+                  '">PDF</button>'
+                : "") +
+              "</li>"
+            );
+          })
+          .join("") +
+        "</ul>";
+      host.querySelectorAll(".dam-win-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          openWin(btn.getAttribute("data-path") || "");
+        });
+      });
+    } catch (eWyk) {
+      host.innerHTML = '<p class="dam-catalog-marketing__empty">Rejestr wykrojników niedostępny.</p>';
+    }
+  }
+
   async function loadCatalogBundle(productId) {
     var catalog = null;
     var bulk = null;
@@ -268,25 +432,35 @@
       "</div>";
   }
 
-  async function renderMarketingShort(productId) {
+  async function renderMarketingShort(p) {
     var host = document.getElementById("damMarketingShortBody");
     if (!host) return;
+    var productId = typeof p === "string" ? p : p && p.id;
+    if (!productId) return;
+    var prod = typeof p === "object" && p ? p : { id: productId };
     try {
       var idx = await fetchJsonLocal("data/branding-index.json");
+      var tokens = productIndexTokens(prod);
       var assets = (idx.assets || []).filter(function (a) {
-        return (a.linked_product_ids || []).indexOf(productId) !== -1;
+        if (isArchivedBranding(a)) return false;
+        return brandingAssetMatches(a, productId, tokens);
       });
       if (!assets.length) {
         host.innerHTML =
-          '<p class="dam-catalog-marketing__empty">Brak powiązanych assetów — zbuduj indeks Branding.</p>';
+          '<p class="dam-catalog-marketing__empty">Brak powiązanych assetów w indeksie Branding (SKU, ścieżka lub linked_product_ids).</p>';
         return;
       }
+      var q = tokens[0] || productId;
+      var preview = assets.slice(0, 6);
       host.innerHTML =
-        '<p class="dam-catalog-marketing__empty">' +
+        '<p class="dam-catalog-marketing__summary">' +
         assets.length +
-        ' assetów marketingowych · <a href="branding.html?q=' +
-        encodeURIComponent(productId) +
-        '">Otwórz Branding</a></p>';
+        ' assetów · <a href="branding.html?q=' +
+        encodeURIComponent(q) +
+        '">Otwórz Branding</a></p>' +
+        '<div class="dam-catalog-marketing-grid">' +
+        preview.map(marketingCardHtml).join("") +
+        "</div>";
     } catch (e) {
       host.innerHTML =
         '<p class="dam-catalog-marketing__empty">Brak powiązanych assetów — zbuduj indeks Branding.</p>';
@@ -377,7 +551,8 @@
       }
       var catalogBundle = await loadCatalogBundle(p.id);
       renderCatalog(p, catalogBundle);
-      renderMarketingShort(p.id);
+      renderMarketingShort(p);
+      renderWykrojnikiShort(p.id);
       renderHeaderBadges(p, catalogBundle);
 
       var present = {};
