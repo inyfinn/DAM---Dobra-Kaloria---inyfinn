@@ -519,6 +519,7 @@ def _run_index_rebuild() -> None:
     try:
         if not BUILD_INDEX.is_file():
             raise FileNotFoundError(str(BUILD_INDEX))
+        _drop_json_cache(INDEX_FILE)
         _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
         rc = subprocess.call(
             [sys.executable, str(BUILD_INDEX)],
@@ -542,6 +543,7 @@ def _run_index_rebuild() -> None:
             }
         )
         if rc == 0:
+            _drop_json_cache(INDEX_FILE)
             try:
                 import meta_store
 
@@ -1101,6 +1103,20 @@ def _pg_available() -> bool:
 _JSON_FILE_CACHE: dict[str, tuple[float, object]] = {}
 
 
+def _drop_json_cache(path: Path) -> None:
+    _JSON_FILE_CACHE.pop(str(path.resolve()), None)
+
+
+def _invalidate_branding_data_caches() -> None:
+    """Czysc pamiec JSON bridge PRZED zapisem / rebuild indeksu branding."""
+    for rel in (
+        "data/branding-index.json",
+        "data/branding-search-index.json",
+        "data/campaigns.json",
+    ):
+        _drop_json_cache(WEB_ROOT / rel)
+
+
 def _load_json(path: Path, default):
     """Czytaj lokalny cache. (Prawda jest w PG - watcher odswieza co 30 min.)"""
     if not path.exists():
@@ -1122,8 +1138,8 @@ def _save_json(path: Path, data) -> None:
     """Zapis lokalnego cache + (gdy PG skonfigurowany) upsert do dam_kv_store
     z SELECT ... FOR UPDATE - chroni przed utrata rownoleglych decyzji moderacji."""
     path.parent.mkdir(parents=True, exist_ok=True)
+    _drop_json_cache(path)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-    _JSON_FILE_CACHE.pop(str(path.resolve()), None)
     store_key = _path_to_store_key(path)
     if not store_key or not _pg_available():
         return
@@ -3772,11 +3788,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(500, {"ok": False, "error": "build_branding_missing"})
                 return
             try:
+                _invalidate_branding_data_caches()
                 _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
                 rc = subprocess.call(
                     [sys.executable, str(BUILD_BRANDING_INDEX)],
                     creationflags=_no_win,
                 )
+                if rc == 0:
+                    _invalidate_branding_data_caches()
                 self._json(200, {"ok": rc == 0, "rc": rc})
             except OSError as exc:
                 self._json(500, {"ok": False, "error": str(exc)})
@@ -3788,11 +3807,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(500, {"ok": False, "error": "recognize_script_missing"})
                 return
             try:
+                _invalidate_branding_data_caches()
                 _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
                 rc = subprocess.call(
                     [sys.executable, str(ENRICH_BRANDING_RECOGNIZE)],
                     creationflags=_no_win,
                 )
+                if rc == 0:
+                    _invalidate_branding_data_caches()
                 self._json(200, {"ok": rc == 0, "rc": rc})
             except OSError as exc:
                 self._json(500, {"ok": False, "error": str(exc)})

@@ -1262,6 +1262,9 @@
       );
     }
     // #endregion
+    if (window.DamGridReveal) {
+      window.DamGridReveal.reveal(mount, window.DamGridReveal.selectors.dashboardWidget);
+    }
   }
 
   /* ---------- customize modal ---------- */

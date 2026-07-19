@@ -1364,6 +1364,10 @@
       window.DamBadges.bindClicks(list);
     }
 
+    if (items.length && window.DamGridReveal) {
+      window.DamGridReveal.reveal(list, window.DamGridReveal.selectors.inboxItem);
+    }
+
     var params = new URLSearchParams(window.location.search);
     var focusId = params.get("focus") || params.get("proposal_id");
     if (focusId && !expanded[focusId]) {

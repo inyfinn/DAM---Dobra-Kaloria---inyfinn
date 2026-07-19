@@ -2174,10 +2174,14 @@
         olderRevs.forEach(function (r, ri) {
           var ost = getRevisionStatus(r);
           olderHtml += '<div class="dam-older-rev-row">' +
-            '<span class="dam-rev-row__folder">' + esc(r.folder) + "</span> " +
-            (r.index ? '<span class="dam-viz-badge dam-viz-badge--index">' + esc(r.index) + "</span> " : "") +
+            '<div class="dam-older-rev-row__main">' +
+            '<span class="dam-rev-row__folder">' + esc(r.folder) + "</span>" +
+            (r.index ? '<span class="dam-viz-badge dam-viz-badge--index">' + esc(r.index) + "</span>" : "") +
             statusBadge(ost, r) +
+            "</div>" +
+            '<div class="dam-older-rev-row__life">' +
             renderAdminRevButtons(r, "older_" + ri) +
+            "</div>" +
           "</div>";
         });
         olderHtml += "</div>";
@@ -2235,10 +2239,14 @@
             "</div>" +
           "</div>" +
           '<div class="dam-carrier-head__meta">' +
+            '<div class="dam-carrier-head__meta-chips">' +
             statusOutside +
             dateOutside +
             indexOutside +
-            variantLifeHtml +
+            "</div>" +
+            (variantLifeHtml
+              ? '<div class="dam-carrier-head__meta-life">' + variantLifeHtml + "</div>"
+              : "") +
           "</div>" +
           '<div class="dam-carrier-toggle-row__end">' +
             '<div class="dam-carrier-toggle__actions" data-dam-tip="Kopiuj ścieżkę / otwórz folder w Windows">' +
@@ -2581,6 +2589,12 @@
     );
   }
 
+  function revealExplorerModules(mount) {
+    if (window.DamGridReveal && mount) {
+      window.DamGridReveal.reveal(mount, window.DamGridReveal.selectors.explorerRow);
+    }
+  }
+
   function bindProductRowClicks(mount) {
     mount.querySelectorAll(".dam-prod-row").forEach(function (row) {
       row.addEventListener("click", function (e) {
@@ -2664,6 +2678,7 @@
     if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
       window.DamTooltips.refresh(mount);
     }
+    revealExplorerModules(mount);
   }
 
   function renderMain() {
@@ -2776,6 +2791,7 @@
       if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
         window.DamTooltips.refresh(mount);
       }
+      revealExplorerModules(mount);
       return;
     }
 
@@ -2852,6 +2868,7 @@
     if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
       window.DamTooltips.refresh(mount);
     }
+    revealExplorerModules(mount);
   }
 
   function bindGlobalExplorerFilters() {

@@ -529,6 +529,9 @@
           showToast("Blad: " + (res.error || "nie zapisano metadanych"));
           return res;
         }
+        if (global.DamBranding && typeof global.DamBranding.clearComputeCache === "function") {
+          global.DamBranding.clearComputeCache();
+        }
         showToast("Zapisano: " + field);
         if (global.DamBranding && typeof global.DamBranding.patchAssetField === "function") {
           global.DamBranding.patchAssetField(assetId, field, newValue);

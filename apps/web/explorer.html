@@ -29,7 +29,8 @@
     </script>	
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
 <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=hub20260719sidebar02">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=hub20260719sticky02">
+<link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200g">
 </head>
 
 <body class="geex-dashboard file-manager">
@@ -896,16 +897,16 @@
                       <option value="">Wszystkie jezyki</option>
                     </select>
                   </div>
-                  <div class="row g-3">
-                    <div class="col-lg-3">
-                      <div class="geex-card dam-cat-panel" style="padding:12px;border-radius:12px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.06);max-height:70vh;overflow:auto">
+                  <div class="dam-explorer-layout">
+                    <div class="dam-explorer-layout__cats">
+                      <div class="geex-card dam-cat-panel">
                         <div class="dam-cat-panel__head">
                           <div class="dam-cat-panel__title">Kategorie</div>
                         </div>
                         <div id="damFolderList"></div>
                       </div>
                     </div>
-                    <div class="col-lg-9">
+                    <div class="dam-explorer-layout__main">
                       <div class="dam-explorer-results geex-card">
                         <div class="dam-explorer-results__toolbar">
                           <span id="damExplorerMeta" class="dam-explorer-results__meta"></span>
@@ -2284,8 +2285,8 @@
 	<script src="./assets/js/dam-api.js?v=20260719life1"></script>
 	<script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
 	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-	<script src="./assets/js/dam-version.js?v=1.5.0"></script>
-	<script src="./assets/js/dam-shell.js?v=20260719ver104"></script>
+	<script src="./assets/js/dam-version.js?v=2.0.0"></script>
+	<script src="./assets/js/dam-shell.js?v=hub20260719sticky02"></script>
 	<script src="./assets/js/dam-search.js?v=hub20260719j18"></script>
 	<script src="./assets/js/dam-tag-bar.js?v=hub20260719j12"></script>
 	<script src="./assets/js/dam-labels.js?v=20260719ver104"></script>
@@ -2295,7 +2296,9 @@
 	<script src="./assets/js/dam-icons.js?v=20260718uxbatch1"></script>
 	<script src="./assets/js/dam-brand-filter.js?v=20260718showall1"></script>
 	<script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-	<script src="./assets/js/dam-explorer.js?v=hub20260719meta01"></script>
+	<script src="./assets/vendor/js/gsap/gsap.min.js"></script>
+	<script src="./assets/js/dam-grid-reveal.js?v=hub20260719reveal01"></script>
+	<script src="./assets/js/dam-explorer.js?v=hub20260719reveal01"></script>
 	<script>
 	/* Po zaladowaniu DOM: jednorazowy init jesli folder pusty (bez petli reload). */
 	(function () {

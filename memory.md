@@ -919,3 +919,11 @@ ole=admin.
  - Ext-tag (TIF/JPG): anatomia `.dam-viz-badge` (pill 999px, fw 500) +10% skala; odstęp od tytułu **8px**; tagi→tytuł **≥20px**.
  - Shift+klik na `.dam-media-preview__assoc-item` / thumb / name = edycja skojarzeń (wymaga admin mode), nie nawigacja.
  - Gradient `.dam-gradient-tile--editable/--vector`: od dolu, kończy się koło nazwy, start ~30% bardziej przezroczysty.
+
+123. **Bento v2.0.0 (2026-07-19) - HARD:**
+ - Wersja: `2.0.0` codename `bento` (`version.json` + `dam-version.js` + `runtime_config.py`).
+ - Wspólny CSS: `apps/web/assets/css/dam-bento.css` (gap 16px, radius token, page chrome + explorer).
+ - **Zamrożone wizualnie:** `.dam-viz-card`, `.dam-branding-card`, `.dam-project-card`, modale `#damMediaPreview` / viz modal - nie restylować; zachowanie 1:1.
+ - **Hot zone Eksplorer:** `.dam-explorer-layout` (nie Bootstrap row); `.dam-carrier-toggle-row` = CSS Grid stref (title/chips/life/end); `.dam-prod-row` = te same strefy.
+ - Chrome hubów (toolbar/filtry/shell) może być bento; siatka kart assetów wewnątrz bez zmiany anatomii.
+ - QA: ui-taste **runda** = focus jednej strefy do zielonego (wiele passów screenshot→Read); intensive = min. 10 rund na hot zone.

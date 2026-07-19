@@ -3752,3 +3752,62 @@ Intensive QA 10 passes screenshot→Read (Pass1–10).
 ### Zrodla
 - memory.md §38
 - `.cursor/rules/verify-ui-after-changes.mdc`
+
+---
+
+## 2026-07-19 — Bento v2.0.0 (shared grid + explorer hot zone)
+
+### Komenda/Akcja
+User: milestone v1.5.0 OK; v2.0.0 = spójny Bento CSS Grid na panel; zamrozić wizualnie karty/modale viz/branding/projekty; priorytet Eksplorer (carrier/prod-row sypie się na RWD); ui-taste + ui-ux-pro-max; dopisać definicję „rundy” do skillu ui-taste.
+
+### Log/Status
+1. `ui-taste` SKILL.md §0.E: Runda vs Pass (PL/Monday) + intensive 10+ focus rounds.
+2. Nowy `apps/web/assets/css/dam-bento.css` (tokeny gap/radius, shell explorer, carrier zones, prod-row grid, hub chrome).
+3. `explorer.html`: Bootstrap `.row.g-3` → `.dam-explorer-layout` (CSS Grid kategorie + panel).
+4. `dam-explorer.js`: wrappery `meta-chips` / `meta-life` + `older-rev-row__main/life`.
+5. Podpięcie `dam-bento.css` na dashboard/settings/viz/branding/projekty/inbox/help/explorer.
+6. Wersja `2.0.0` / codename `bento` (`version.json`, `dam-version.js`, `runtime_config.py`).
+
+### Efekt/Fix
+- Carrier: grid `title | chips | end` + wiersz `. | life | end` (admin) - chipy w jednej linii, lifecycle nie „wędruje”.
+- Explorer shell: stabilny 2-col → stack @992px.
+- Zamrożone: `.dam-viz-card`, branding cards, project cards, modale media/viz (bez restylu).
+
+### Test/Ewaluacja
+- Intensive QA: screenshot→Read carrier desktop (Pass1–3 align), layout CDP `display:grid`, mobile areas stack; dashboard parity OK.
+- Overflow 375 z geex header quickaction = pre-existing (nie z bento shell).
+
+### Zrodla
+- Plan Bento v2.0.0
+- MDN CSS Grid / bentogrids.com (referencja stylu)
+- `.cursor/rules/verify-ui-after-changes.mdc`
+
+---
+
+## 2026-07-19 — Modal zoom 85–100% + layout body na dole + cache tagów Branding
+
+### Komenda/Akcja
+User: (1) modal zoom 85–100% zamiast 85–125%, body modala wyrównane do dołu, thumb responsywny; parity viz. (2) Wolne ładowanie po kliknięciu tagów w Branding (~10 s) — cache z unieważnianiem przed aktualizacją bazy/indeksu. Commit + push.
+
+### Log/Status
+1. **Diagnoza wolnych tagów:** klik tagu = filtr po stronie klienta (7832 assety, brak API). Bottleneck: podwójne `computeFacetCounts()` (~7800×~100 kluczy×2), podwójny `renderTagFilters()` przy auto-zmianie tabu, pełny rerender siatki do 1000 miniaturek `/media`.
+2. **`dam-modal-shared.js`:** `modalStartZoomPct()` → mapowanie 85–100% (kafelek ≥100% → modal 100%). `fitChrome()` bez sztywnego `max-height` thumb — flex wypełnia przestrzeń nad body.
+3. **`dam-brand.css` / `dam-branding.css`:** `.dam-viz-modal-box { justify-content: flex-end }`, thumb `flex: 1 1 0`, body `flex: 0 0 auto`.
+4. **`dam-branding.js` (cache01):** `computeFacetCountsPair()` — jedna pętla po assetach, liczniki facet+global naraz; `facetCountCache` kluczowany sygnaturą filtrów + `built_at`; `clearBrandingComputeCache()` / `invalidateBrandingIndexCache()`; `scheduleBrandingRender()` (rAF); tag click bez podwójnego renderu tabu; API `DamBranding.clearComputeCache` / `invalidateIndexCache`.
+5. **`local_bridge.py`:** `_drop_json_cache()`, `_invalidate_branding_data_caches()` — **czyść cache PRZED** zapisem (`_save_json`), przed/po `/branding/rebuild`, `/branding/recognize`, przed/po `/index/rebuild` + `meta_store.sync`.
+6. **`dam-tag-edit.js` / `dam-assoc-edit.js`:** po zapisie metadanych/skojarzeń → `DamBranding.clearComputeCache()`.
+
+### Efekt/Fix
+- Modal: zoom 110% kafelka → 100% modalu (nie 141%). Body przy dole boxa, brak martwej strefy pod CTA (CDP gap=0).
+- Branding tagi: ~2× mniej pracy liczników na klik; cache liczników ważny do zmiany filtra/indeksu; bridge zawsze czyta świeży JSON po rebuild/patch (cache RAM invalidowany przed zapisem).
+
+### Test/Ewaluacja
+- Modal QA: screenshot→Read branding + viz @1280/768; zoom 100% @ suwak 110%; layout gap=0.
+- `modalStartZoomPct(110)===100`, `modalStartZoomPct(85)===85` (CDP).
+- Cache: po `clearBrandingComputeCache()` sygnatura facetCountCache reset.
+
+### Zrodla
+- Analiza `dam-branding.js` renderTagFilters / computeFacetCounts
+- `local_bridge.py` `_JSON_FILE_CACHE`, `_save_json`
+- User brief: cache invalidation przed aktualizacją bazy
+

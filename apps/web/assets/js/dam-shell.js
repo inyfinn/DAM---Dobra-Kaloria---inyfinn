@@ -1624,11 +1624,26 @@
     setTimeout(ensureAdminModeSwitch, 2000);
   }
 
+  function ensureStickyChromeScript() {
+    if (!document.querySelector(".dam-explorer-toolbar")) return;
+    if (document.querySelector('script[data-dam-sticky-chrome]')) return;
+    var s = document.createElement("script");
+    s.src = "./assets/js/dam-sticky-chrome.js?v=hub20260719sticky02";
+    s.setAttribute("data-dam-sticky-chrome", "1");
+    s.defer = true;
+    document.body.appendChild(s);
+  }
+
   // Run after DOM ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
     init();
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensureStickyChromeScript);
+  } else {
+    ensureStickyChromeScript();
   }
 
   // Public API

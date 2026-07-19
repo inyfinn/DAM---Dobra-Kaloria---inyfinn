@@ -1,7 +1,7 @@
 {
-  "version": "1.5.0",
+  "version": "2.0.0",
   "name": "DAM - Dobra Kaloria - Inyfinn",
-  "codename": "pre-bento",
+  "codename": "bento",
   "released_at": "2026-07-19",
-  "note": "Kamien milowy przed refaktorem BENTO. Bump tylko tu + dam-version.js (ten sam string)."
+  "note": "Bento v2: wspolny dam-bento.css, explorer shell/carrier/prod-row CSS Grid. Karty viz/branding/projekty i modale zamrozone wizualnie. Bump tu + dam-version.js (+ desktop runtime_config)."
 }

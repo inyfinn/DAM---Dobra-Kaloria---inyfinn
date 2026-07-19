@@ -16,10 +16,23 @@
   var SHOW_ALL_KEY = "dam_viz_show_all";
   var LATEST_KEY_LEGACY = "dam_viz_latest_only";
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
-  var CARD_ZOOM_MIN = 50;
-  var CARD_ZOOM_MAX = 250;
+  var CARD_ZOOM_MIN = 65;
+  var CARD_ZOOM_MAX = 350;
   var CARD_IMG_BASE_SCALE = 1.2;
   var CARD_BASE_MIN_PX = 220;
+
+  function readCardZoomPct() {
+    if (window.DamCardZoom && typeof window.DamCardZoom.readPct === "function") {
+      return window.DamCardZoom.readPct();
+    }
+    var n = parseInt(localStorage.getItem(CARD_ZOOM_KEY) || "100", 10);
+    if (isNaN(n)) n = 100;
+    return Math.min(CARD_ZOOM_MAX, Math.max(CARD_ZOOM_MIN, n));
+  }
+
+  function basePreviewZoom() {
+    return readCardZoomPct() / 100;
+  }
 
   function badgeTierOpt() {
     var B = window.DamBadges;
@@ -895,14 +908,6 @@
     };
 
     var activeIdx = 0;
-    var zoom = 1;
-    var panX = 0;
-    var panY = 0;
-    var dragging = false;
-    var dragStartX = 0;
-    var dragStartY = 0;
-    var panAtDragStartX = 0;
-    var panAtDragStartY = 0;
     /* Zawsze pokazuj chip wariantu (nawet przy 1 indeksie) - ten sam design */
     var chips = items
       .map(function (v, i) {
@@ -1036,7 +1041,7 @@
       '<div class="dam-viz-modal-box">' +
       '<button type="button" class="dam-viz-modal-close" id="damVizModalClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
       '<div class="dam-viz-modal__thumb">' +
-      '<div class="dam-viz-modal__zoom" role="group" aria-label="Przyblizenie" data-dam-tip="CTRL+scroll lub ALT+scroll: zoom. Przy przyblizeniu: przeciagnij, zeby przesunac.">' +
+      '<div class="dam-viz-modal__zoom" role="group" aria-label="Przyblizenie">' +
       '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomOut" aria-label="Pomniejsz" title="Pomniejsz" data-dam-tip="Pomniejsz (CTRL/ALT+scroll)"><i class="uil uil-search-minus"></i></button>' +
       '<span class="dam-viz-modal__zoom-label" id="damVizZoomLabel">100%</span>' +
       '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomIn" aria-label="Powieksz" title="Powieksz" data-dam-tip="Powieksz (CTRL/ALT+scroll)"><i class="uil uil-search-plus"></i></button>' +
@@ -1053,7 +1058,7 @@
         : '<div class="dam-viz-modal__nothumb"><i class="uil uil-image"></i></div>') +
       "</div>" +
       '<div class="dam-viz-modal__body">' +
-      '<div class="dam-viz-card__badges" id="damVizModalBadges" style="margin-bottom:8px">' +
+      '<div class="dam-viz-card__badges" id="damVizModalBadges">' +
       modalBadges +
       "</div>" +
       '<h4 class="dam-viz-modal__title">' +
@@ -1118,6 +1123,14 @@
     document.body.insertAdjacentHTML("beforeend", html);
     var modal = document.getElementById("damVizModal");
     var thumbStage = modal.querySelector(".dam-viz-modal__thumb");
+    var shared = window.DamModalShared;
+    var zoomCtrl = null;
+    var teardownChrome =
+      shared && typeof shared.bindChromeFit === "function" ? shared.bindChromeFit(modal) : function () {};
+    function removeModal() {
+      teardownChrome();
+      modal.remove();
+    }
 
     modal.querySelectorAll("[data-request-lang]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
@@ -1139,51 +1152,11 @@
       });
     });
 
-    function clampZoom(z) {
-      return Math.min(4, Math.max(0.4, +Number(z).toFixed(2)));
-    }
-
-    function resetView() {
-      zoom = 1;
-      panX = 0;
-      panY = 0;
-      dragging = false;
-      paintZoom();
-    }
-
-    function paintZoom() {
-      var hero = document.getElementById("damVizModalHero");
-      var label = document.getElementById("damVizZoomLabel");
-      if (hero) {
-        hero.style.transform = "translate(" + panX + "px, " + panY + "px) scale(" + zoom + ")";
-        hero.classList.toggle("is-zoomed", zoom > 1.01);
-      }
-      if (thumbStage) {
-        thumbStage.classList.toggle("is-zoomed", zoom > 1.01);
-        thumbStage.classList.toggle("is-panning", dragging);
-      }
-      if (label) label.textContent = Math.round(zoom * 100) + "%";
-    }
-
-    function setZoom(next) {
-      var prev = zoom;
-      zoom = clampZoom(next);
-      if (zoom <= 1.01) {
-        panX = 0;
-        panY = 0;
-      } else if (prev <= 1.01 && zoom > 1.01) {
-        /* start pan from center */
-        panX = 0;
-        panY = 0;
-      }
-      paintZoom();
-    }
-
     function selectVariant(idx) {
       activeIdx = idx;
       var v = items[idx];
       if (!v) return;
-      resetView();
+      if (zoomCtrl) zoomCtrl.resetView();
       var hero = document.getElementById("damVizModalHero");
       if (hero) {
         var preview = v.thumb_url || mediaPreviewUrl(v.path) || "";
@@ -1196,7 +1169,7 @@
           hero.src = preview;
         }
       }
-      paintZoom();
+      if (zoomCtrl) zoomCtrl.paintZoom();
       var meta = document.getElementById("damVizModalMeta");
       if (meta) {
         var idxShow = displayIndex(v);
@@ -1221,6 +1194,7 @@
       if (typeof refreshModalBadgesAndAdmin === "function") {
         refreshModalBadgesAndAdmin();
       }
+      if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
     }
 
     modal.querySelectorAll(".dam-viz-modal__variant").forEach(function (el) {
@@ -1247,84 +1221,20 @@
       });
     });
 
-    var zin = document.getElementById("damVizZoomIn");
-    var zout = document.getElementById("damVizZoomOut");
-    var zreset = document.getElementById("damVizZoomReset");
-    if (zin) {
-      zin.addEventListener("click", function (e) {
-        e.stopPropagation();
-        setZoom(zoom + 0.2);
-      });
-    }
-    if (zout) {
-      zout.addEventListener("click", function (e) {
-        e.stopPropagation();
-        setZoom(zoom - 0.2);
-      });
-    }
-    if (zreset) {
-      zreset.addEventListener("click", function (e) {
-        e.stopPropagation();
-        resetView();
-      });
-    }
-
-    /* CTRL+scroll albo ALT+scroll = zoom; przy zoom > 1 drag = pan */
-    if (thumbStage) {
-      thumbStage.addEventListener(
-        "wheel",
-        function (e) {
-          if (!(e.ctrlKey || e.altKey || e.metaKey)) return;
-          e.preventDefault();
-          e.stopPropagation();
-          var step = e.deltaY > 0 ? -0.15 : 0.15;
-          setZoom(zoom + step);
+    if (shared && typeof shared.bindZoom === "function") {
+      zoomCtrl = shared.bindZoom({
+        thumbStage: thumbStage,
+        labelEl: document.getElementById("damVizZoomLabel"),
+        zoomBar: thumbStage && thumbStage.querySelector(".dam-viz-modal__zoom"),
+        zoomInBtn: document.getElementById("damVizZoomIn"),
+        zoomOutBtn: document.getElementById("damVizZoomOut"),
+        zoomResetBtn: document.getElementById("damVizZoomReset"),
+        getHero: function () {
+          return document.getElementById("damVizModalHero");
         },
-        { passive: false }
-      );
-
-      thumbStage.addEventListener("pointerdown", function (e) {
-        if (zoom <= 1.01) return;
-        if (e.target.closest(".dam-viz-modal__zoom")) return;
-        if (e.button !== 0) return;
-        dragging = true;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        panAtDragStartX = panX;
-        panAtDragStartY = panY;
-        thumbStage.classList.add("is-panning");
-        try {
-          thumbStage.setPointerCapture(e.pointerId);
-        } catch (err) {
-          /* ignore */
-        }
-        e.preventDefault();
       });
-
-      thumbStage.addEventListener("pointermove", function (e) {
-        if (!dragging) return;
-        panX = panAtDragStartX + (e.clientX - dragStartX);
-        panY = panAtDragStartY + (e.clientY - dragStartY);
-        paintZoom();
-      });
-
-      function endPan(e) {
-        if (!dragging) return;
-        dragging = false;
-        thumbStage.classList.remove("is-panning");
-        if (e && e.pointerId != null) {
-          try {
-            thumbStage.releasePointerCapture(e.pointerId);
-          } catch (err) {
-            /* ignore */
-          }
-        }
-        paintZoom();
-      }
-      thumbStage.addEventListener("pointerup", endPan);
-      thumbStage.addEventListener("pointercancel", endPan);
     }
-    paintZoom();
+    if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
 
     function refreshCardThumb(pid, thumbUrl) {
       var card = document.querySelector(
@@ -1614,7 +1524,7 @@
       shareBtn.addEventListener("click", function () {
         if (!syEnabled) return;
         var path = this.getAttribute("data-path") || first.path || "";
-        modal.remove();
+        removeModal();
         if (window.DamPaths && typeof window.DamPaths.shareViaSynology === "function") {
           window.DamPaths.shareViaSynology(path);
         } else {
@@ -1625,18 +1535,18 @@
 
     document.getElementById("damVizModalClose").addEventListener("click", function () {
       closeVariantInfoPopover();
-      modal.remove();
+      removeModal();
     });
     modal.addEventListener("click", function (e) {
       if (e.target === modal) {
         closeVariantInfoPopover();
-        modal.remove();
+        removeModal();
       }
     });
     document.addEventListener("keydown", function onEsc(e) {
       if (e.key === "Escape") {
         closeVariantInfoPopover();
-        modal.remove();
+        removeModal();
         document.removeEventListener("keydown", onEsc);
       }
     });
@@ -1877,6 +1787,10 @@
         }
       });
     });
+
+    if (window.DamGridReveal) {
+      window.DamGridReveal.reveal(grid, window.DamGridReveal.selectors.vizCard);
+    }
   }
 
   /* Podkategorie (np. "Kulki Surowe" / balls raw) - osobny rzad pilli, bo
@@ -2035,8 +1949,8 @@
   }
 
   /* Suwak skali kafelkow:
-     50-100% = pomniejsza wizualizacje w thumb (img-scale),
-     100-250% = wizualizacja wypelnia krawedzie L/P, potem rosnie kafelek.
+     65-100% = pomniejsza wizualizacje w thumb (img-scale),
+     100-350% = wizualizacja wypelnia krawedzie L/P, potem rosnie kafelek.
      Bazowo grafika ma 120% (CARD_IMG_BASE_SCALE). */
   function applyCardZoom(pct) {
     var n = Math.round(Number(pct) || 100);

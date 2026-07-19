@@ -3012,6 +3012,18 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   background: #fff;
   border: 1px solid #E7E7E7;
   border-radius: 10px;
+  position: sticky;
+  top: var(--dam-sticky-filters-top, calc(var(--dam-sticky-top, 25px) + var(--dam-sticky-search-h, 68px) + var(--dam-sticky-search-gap, 10px)));
+  z-index: 51;
+  box-shadow: 0 4px 16px rgb(23 22 30 / 0.04);
+}
+.dam-viz-secondary-filters .dam-viz-zoom-control {
+  margin-left: auto;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #E7E7E7;
+  border-radius: 9px;
+  flex-shrink: 0;
 }
 .dam-viz-secondary-filters .dam-switch {
   margin: 0;
@@ -3059,6 +3071,10 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   background: #fff;
   border: 1px solid #E7E7E7;
   border-radius: 10px;
+  position: sticky;
+  top: var(--dam-sticky-filters-top, calc(var(--dam-sticky-top, 25px) + var(--dam-sticky-search-h, 68px) + var(--dam-sticky-search-gap, 10px)));
+  z-index: 51;
+  box-shadow: 0 4px 16px rgb(23 22 30 / 0.04);
 }
 .dam-projects-grid-toolbar .dam-projects-status-line,
 .dam-projects-grid-toolbar .dam-page-status {
@@ -3120,13 +3136,6 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 }
 .dam-viz-grid-toolbar .dam-changelog-bar__hint {
   max-width: min(220px, 36vw);
-}
-.dam-viz-grid-toolbar .dam-viz-zoom-control {
-  padding: 4px 10px;
-  background: #fff;
-  border: 1px solid #E7E7E7;
-  border-radius: 9px;
-  flex-shrink: 0;
 }
 @media (max-width: 700px) {
   .dam-viz-grid-toolbar {
@@ -3331,6 +3340,36 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   margin-bottom: 8px;
 }
 
+/* Sticky chrome: search + filtry widoku (Branding / Viz / Eksplorator / Projekty) */
+:root {
+  --dam-sticky-top: 25px;
+  --dam-sticky-search-gap: 10px;
+  --dam-sticky-search-h: 68px;
+  --dam-sticky-filters-top: calc(var(--dam-sticky-top) + var(--dam-sticky-search-h) + var(--dam-sticky-search-gap));
+  --dam-sticky-chrome-bg: var(--dam-bento-muted, #f4f3f8);
+}
+/* Bez wlasnego boxa: toolbar sticky w tym samym scroll-parent co siatka wynikow */
+.geex-content > .dam-global-search-block,
+.geex-content__section-wrapper > .dam-global-search-block,
+.dam-explorer-shell > .dam-global-search-block {
+  display: contents;
+}
+.geex-content > .dam-global-search-block > .dam-explorer-toolbar,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar,
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar {
+  position: sticky;
+  top: var(--dam-sticky-top);
+  z-index: 52;
+  margin-bottom: var(--dam-sticky-search-gap);
+  padding-bottom: 2px;
+  background: var(--dam-sticky-chrome-bg);
+}
+.geex-content > .dam-global-search-block > .dam-explorer-toolbar .dam-search-wrap--panel,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar .dam-search-wrap--panel,
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar .dam-search-wrap--panel {
+  margin-bottom: 0;
+}
+
 /* Akcje nawigacji: Eksplorer DAM / Folder Windows / Wizualizacje */
 .dam-nav-circles {
   display: inline-flex;
@@ -3472,6 +3511,8 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   --dam-surface-inset-x: 18px;
   --dam-surface-inset-y: 14px;
   --dam-surface-inset-y-sm: 12px;
+  container-type: inline-size;
+  container-name: dam-explorer-panel;
   padding: var(--dam-surface-inset-y) var(--dam-surface-inset-x) 22px;
 }
 .dam-explorer-welcome .dam-explorer-panel__lead {
@@ -3658,11 +3699,21 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   border: 1px solid #e9d5ff;
 }
 .dam-prod-row--variants {
-  /* main (1fr) | warianty (auto) | akcje (auto) */
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "main variants end";
 }
 .dam-prod-row--actions:not(.dam-prod-row--variants) {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "main end";
+}
+.dam-prod-row__main {
+  grid-area: main;
+}
+.dam-prod-row--variants .dam-prod-row__variants {
+  grid-area: variants;
+}
+.dam-prod-row--actions .dam-prod-row__end {
+  grid-area: end;
 }
 .dam-prod-row__end {
   display: inline-flex;
@@ -4957,6 +5008,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   --dam-carrier-inset-x: var(--dam-surface-inset-x, 18px);
   --dam-carrier-inset-y: var(--dam-surface-inset-y, 14px);
   --dam-carrier-inset-y-sm: var(--dam-surface-inset-y-sm, 12px);
+  container-type: inline-size;
+  container-name: dam-carrier-list;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -4992,10 +5045,11 @@ button.dam-status-badge.dam-tag-editable:hover {
   box-shadow: 0 0 0 2px rgba(40, 199, 111, 0.1);
 }
 
-/* Pasek nośnika: flex wrap — body | meta | akcje+chevron (bez ucinania ikon) */
+/* Pasek nosnika: CSS Grid stref body | meta | end (RWD przez @container) */
 .dam-carrier-toggle-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, max-content) auto;
+  grid-template-areas: "body meta end";
   align-items: center;
   gap: 8px 10px;
   width: 100%;
@@ -5021,7 +5075,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-carrier-toggle-row__body {
-  flex: 1 1 140px;
+  grid-area: body;
   min-width: 0;
   max-width: 100%;
   display: flex;
@@ -5031,28 +5085,29 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-carrier-toggle-row__end {
+  grid-area: end;
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: nowrap;
   gap: 4px;
-  flex: 0 0 auto;
-  margin-left: auto;
+  flex-shrink: 0;
+  justify-self: end;
   align-self: center;
 }
 
-/* Legacy aliases */
+/* Legacy alias (markup bez wrappera .dam-carrier-head) */
 .dam-carrier-head {
   display: contents;
 }
 
 .dam-carrier-head__meta {
-  display: inline-flex;
+  grid-area: meta;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: end;
   align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
   gap: 6px;
-  flex: 1 1 auto;
   min-width: 0;
   max-width: 100%;
 }
@@ -5061,6 +5116,47 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-carrier-head__meta > .dam-index-chip {
   flex-shrink: 0;
   margin: 0;
+}
+
+.dam-carrier-head__meta-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dam-carrier-head__meta-chips > .dam-status-badge,
+.dam-carrier-head__meta-chips > .dam-date-chip,
+.dam-carrier-head__meta-chips > .dam-index-chip {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.dam-carrier-head__meta-life {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dam-carrier-head__meta-life .dam-admin-rev-actions,
+.dam-carrier-head__meta-life .dam-lifecycle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.dam-carrier-head__meta-life .dam-lifecycle-history {
+  flex: 1 1 100%;
+  margin-top: 4px;
 }
 
 .dam-carrier-toggle__actions {
@@ -5088,26 +5184,112 @@ button.dam-status-badge.dam-tag-editable:hover {
   margin: 0;
 }
 
-@media (max-width: 1199.98px) {
+/* Waski panel (~1200 viewport + sidebar + kategorie): meta pod tytulem */
+@container dam-carrier-list (max-width: 680px) {
+  .dam-carrier-toggle-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "body end"
+      "meta meta";
+    align-items: start;
+    min-height: 0;
+  }
+
   .dam-carrier-head__meta {
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-items: start;
+    width: 100%;
+  }
+
+  .dam-carrier-head__meta-chips,
+  .dam-carrier-head__meta-life {
+    justify-content: flex-start;
   }
 }
 
-@media (max-width: 991.98px) {
+/* Mobile / bardzo waski panel: stos pionowy, ikony akcji w kolumnie */
+@container dam-carrier-list (max-width: 440px) {
   .dam-carrier-toggle-row {
-    min-height: 0;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "body"
+      "meta"
+      "end";
+    gap: 10px;
   }
-  .dam-carrier-toggle-row__body {
-    flex: 1 1 100%;
-  }
-  .dam-carrier-head__meta {
-    flex: 1 1 auto;
-    justify-content: flex-start;
-  }
+
   .dam-carrier-toggle-row__end {
-    margin-left: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .dam-carrier-toggle__actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .dam-carrier-head__meta-life .dam-lifecycle-history {
+    margin-top: 0;
+  }
+}
+
+/* Prod rows: ten sam model stref co carrier (container = szerokosc panelu) */
+@container dam-explorer-panel (max-width: 680px) {
+  .dam-prod-row--variants {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "main main"
+      "variants end";
+    align-items: start;
+  }
+
+  .dam-prod-row--actions:not(.dam-prod-row--variants) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "main end";
+  }
+
+  .dam-prod-row__variants,
+  .dam-prod-row__end {
+    align-self: center;
+  }
+}
+
+@container dam-explorer-panel (max-width: 440px) {
+  .dam-prod-row--variants {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "main"
+      "variants"
+      "end";
+  }
+
+  .dam-prod-row--actions:not(.dam-prod-row--variants) {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "main"
+      "end";
+  }
+
+  .dam-prod-row__variants {
+    justify-self: start;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .dam-prod-row__end {
+    flex-direction: column;
+    align-items: flex-end;
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .dam-prod-row__actions .dam-path-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
   }
 }
 
@@ -5532,14 +5714,53 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-older-rev-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
+  align-items: flex-start;
+  gap: 8px 10px;
   padding: 8px 12px;
   background: #fafafa;
   border-radius: 6px;
   border: 1px solid #f0f0f0;
   font-size: 11px;
   color: #8b8d97;
+}
+
+.dam-older-rev-row__main {
+  flex: 1 1 220px;
+  min-width: 140px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.dam-older-rev-row__main .dam-rev-row__folder {
+  flex: 1 1 auto;
+  min-width: 120px;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.dam-older-rev-row__life {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.dam-older-rev-row__life .dam-admin-rev-actions,
+.dam-older-rev-row__life .dam-lifecycle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.dam-older-rev-row__life .dam-lifecycle-history {
+  flex: 1 1 100%;
+  margin-top: 4px;
 }
 
 .dam-carrier-extra-rev {
@@ -5575,6 +5796,15 @@ button.dam-status-badge.dam-tag-editable:hover {
   opacity: 0.85;
 }
 
+/* Podglad (wiz + branding + media-preview): marginesy viewport, min. wysokosc zachowana */
+.dam-viz-modal-overlay,
+.dam-media-preview-overlay {
+  --dam-modal-vp-y: 8vw;
+  --dam-modal-vp-x: 15vw;
+  --dam-modal-box-min-h: 900px;
+  --dam-modal-thumb-min-h: 420px;
+}
+
 .dam-viz-modal-overlay {
   position: fixed;
   inset: 0;
@@ -5583,21 +5813,24 @@ button.dam-status-badge.dam-tag-editable:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: var(--dam-modal-vp-y) var(--dam-modal-vp-x);
+  box-sizing: border-box;
 }
 
 .dam-viz-modal-box {
   position: relative;
   background: #fff;
   border-radius: 16px;
-  /* ~50% wiekszy niz 680px (hero + body) */
-  max-width: min(1020px, 96vw);
   width: 100%;
-  max-height: 94vh;
-  overflow-y: auto;
+  max-width: 100%;
+  height: calc(100vh - 2 * var(--dam-modal-vp-y));
+  min-height: min(var(--dam-modal-box-min-h), calc(100vh - 2 * var(--dam-modal-vp-y)));
+  max-height: calc(100vh - 2 * var(--dam-modal-vp-y));
+  overflow: hidden;
   box-shadow: 0 16px 56px rgba(0, 0, 0, 0.22);
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
 }
 
 .dam-viz-modal-close {
@@ -5626,16 +5859,15 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-viz-modal__thumb {
   position: relative;
   width: 100%;
-  min-height: 420px;
-  max-height: min(520px, 52vh);
+  flex: 1 1 0;
+  min-height: 120px;
+  max-height: none;
   background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 16px 16px 0 0;
   overflow: hidden;
-  /* Lekki oddech od gory (50px), zeby X do zamkniecia nie lezal na obrazku;
-     resztki bokow/dolu +15px wobec wczesniejszych 12px (2026-07-18). */
   padding: 50px 27px 27px;
   box-sizing: border-box;
   touch-action: none;
@@ -5647,8 +5879,10 @@ button.dam-status-badge.dam-tag-editable:hover {
   cursor: grabbing;
 }
 .dam-viz-modal__thumb img {
-  width: 100%;
-  max-height: min(520px, 52vh);
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   transform-origin: center center;
   transition: transform 0.12s ease;
@@ -5700,6 +5934,19 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-weight: 600;
   color: #464255;
 }
+
+.dam-viz-modal__zoom-label[contenteditable="true"] {
+  cursor: text;
+  border-bottom: 1px dashed #c4c4cf;
+  padding: 0 3px;
+  border-radius: 2px;
+}
+
+.dam-viz-modal__zoom-label[contenteditable="true"]:focus {
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  outline-offset: 1px;
+  border-bottom-color: transparent;
+}
 .dam-viz-modal__nothumb {
   font-size: 48px;
   color: #ccc;
@@ -5707,21 +5954,29 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-viz-modal__body {
-  /* +15px wobec wczesniejszych 20/24/24 (2026-07-18, wiecej oddechu w treści) */
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+  overflow-y: visible;
+  margin-top: 0;
   padding: 35px 39px 39px;
+}
+
+.dam-viz-modal__body > .dam-viz-card__badges {
+  margin-bottom: 0;
 }
 
 .dam-viz-modal__title {
   font-size: 17px;
   font-weight: 700;
   color: #464255;
-  margin: 0 0 4px;
+  margin: 8px 0 0;
 }
 
 .dam-viz-modal__carrier {
   font-size: 12px;
   color: #8b8d97;
-  margin: 0 0 12px;
+  margin: 8px 0 12px;
 }
 
 .dam-viz-modal__variants {

@@ -646,6 +646,9 @@
       .then(function (res) {
         if (!res || !res.ok) throw new Error((res && res.error) || "save_failed");
         toast("Zapisano skojarzenia");
+        if (global.DamBranding && typeof global.DamBranding.clearComputeCache === "function") {
+          global.DamBranding.clearComputeCache();
+        }
         if (typeof ctx.onSaved === "function") ctx.onSaved(productIds, variantIds);
         return res;
       })

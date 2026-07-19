@@ -4,7 +4,7 @@
   var index = null;
   var tokens = null;
   var campaigns = null;
-  var CB = "hub20260719source01";
+  var CB = "hub20260719cache01";
   var TAG_COUNTS_KEY = "dam_branding_show_tag_counts";
   var selectedCampaignId = null;
   var selectedChannel = "";
@@ -17,13 +17,14 @@
   var searchIndex = null;
   var productCorrelation = null;
   var activeTagFilters = {};
-  var GRID_LIMIT_BROWSE = 240;
-  var GRID_LIMIT_TAB = 120;
+  var GRID_LIMIT_TAB = 1000;
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
-  var CARD_ZOOM_MIN = 50;
-  var CARD_ZOOM_MAX = 250;
+  var CARD_ZOOM_MIN = 65;
+  var CARD_ZOOM_MAX = 350;
   var CARD_IMG_BASE_SCALE = 1.2;
   var CARD_BASE_MIN_PX = 220;
+  var facetCountCache = null;
+  var brandingRenderRaf = 0;
 
   var FACET_CHIPS = [
     { key: "media:image", label: "Obraz", group: "format_pliku" },
@@ -1671,6 +1672,9 @@
             openModal(btn.getAttribute("data-id"));
           });
         });
+        if (window.DamGridReveal) {
+          window.DamGridReveal.reveal(recentHost, window.DamGridReveal.selectors.brandingRecent);
+        }
       }
     }
   }
@@ -1802,6 +1806,7 @@
     if (brandbookPanel) brandbookPanel.hidden = tab !== "brandbook";
 
     if (tab === "brandbook") {
+      updateGridCount([], [], GRID_LIMIT_TAB, {});
       renderBrandbook();
       return;
     }
@@ -1821,6 +1826,7 @@
       : "Brak materiałów — zmień filtr „Kiedy”, tag u góry albo wpisz słowo kluczowe.";
     var shown = renderAssetGrid(grid, list, GRID_LIMIT_TAB, emptyMsg, sectionAll.length, gridOpts);
     setStatusEl(document.getElementById("damBrandingStatus"), shown, list.length, GRID_LIMIT_TAB);
+    updateGridCount(shown, list, GRID_LIMIT_TAB, gridOpts);
     } catch (eRender) {
       console.error("[DamBranding] renderActiveSection", eRender);
       var errGrid = document.getElementById("damBrandingSectionGrid");
@@ -2031,8 +2037,9 @@
       });
     });
     var sectionTab = currentSectionTab();
-    var facetCounts = computeFacetCounts(allChipKeys, sectionTab);
-    var globalFacetCounts = computeFacetCounts(allChipKeys, sectionTab, { global: true });
+    var countPair = computeFacetCountsPair(allChipKeys, sectionTab);
+    var facetCounts = countPair.facet;
+    var globalFacetCounts = countPair.global;
     var showCounts = showTagCounts();
     var activeMap = buildAssocActiveMap();
     var buildRow = window.DamTagBar && DamTagBar.buildGroupRow;
@@ -2120,12 +2127,16 @@
           }
           if (key.indexOf("facet:") === 0) setSearchQuery("");
         }
-        renderTagFilters();
+        clearBrandingComputeCache();
         if (tabSwitch) {
-          activateTab(tabSwitch, { skipHash: true, keepDiscovery: true });
-        } else {
-          renderActiveSection();
+          var nextTab = normalizeTab(tabSwitch);
+          document.querySelectorAll(".dam-branding-tab").forEach(function (b) {
+            var on = b.getAttribute("data-tab") === nextTab;
+            b.classList.toggle("is-active", on);
+            b.setAttribute("aria-selected", on ? "true" : "false");
+          });
         }
+        scheduleBrandingRender({ tags: true, section: true });
       });
     });
   }
@@ -2241,6 +2252,7 @@
         if (!r.ok) continue;
         setBootStatus("Przetwarzanie indeksu…");
         index = await r.json();
+        clearBrandingComputeCache();
         return index;
       } catch (eLoad) {
         lastErr = eLoad;
@@ -2334,46 +2346,131 @@
     return sortAssetsForDisplay(list, q);
   }
 
-  function computeFacetCounts(chipKeys, sectionTab, opts) {
+  function facetFilterSignature(sectionTab) {
+    var activeKeys = Object.keys(activeTagFilters)
+      .filter(function (k) {
+        return !!activeTagFilters[k];
+      })
+      .sort();
+    return [
+      sectionTab || currentSectionTab() || "",
+      activeKeys.join("|"),
+      includeArchive() ? "1" : "0",
+      elVal("damBrandingDateFrom"),
+      elVal("damBrandingDateTo"),
+      elVal("damBrandingSearch").toLowerCase(),
+      graphicsOnlyActive() ? "1" : "0",
+      index && index.built_at ? index.built_at : "",
+      index && index.asset_count ? String(index.asset_count) : "0",
+    ].join("\u0001");
+  }
+
+  function clearBrandingComputeCache() {
+    facetCountCache = null;
+  }
+
+  function invalidateBrandingIndexCache() {
+    index = null;
+    searchIndex = null;
+    campaigns = null;
+    campaignAssetMap = {};
+    clearBrandingComputeCache();
+    try {
+      window.dispatchEvent(new CustomEvent("dam-branding-index-stale"));
+    } catch (eStale) {
+      /* ignore */
+    }
+  }
+
+  function scheduleBrandingRender(opts) {
     opts = opts || {};
-    var counts = {};
+    if (brandingRenderRaf) cancelAnimationFrame(brandingRenderRaf);
+    brandingRenderRaf = requestAnimationFrame(function () {
+      brandingRenderRaf = 0;
+      if (opts.tags !== false) renderTagFilters();
+      if (opts.section !== false) renderActiveSection();
+    });
+  }
+
+  function computeFacetCountsPair(chipKeys, sectionTab) {
+    var sig = facetFilterSignature(sectionTab);
+    if (
+      facetCountCache &&
+      facetCountCache.sig === sig &&
+      facetCountCache.keysLen === chipKeys.length
+    ) {
+      return { facet: facetCountCache.facet, global: facetCountCache.global };
+    }
+    var facet = {};
+    var global = {};
     var i;
-    for (i = 0; i < chipKeys.length; i++) counts[chipKeys[i]] = 0;
-    if (!index || !index.assets || !chipKeys.length) return counts;
+    for (i = 0; i < chipKeys.length; i++) {
+      facet[chipKeys[i]] = 0;
+      global[chipKeys[i]] = 0;
+    }
+    if (!index || !index.assets || !chipKeys.length) {
+      return { facet: facet, global: global };
+    }
     var activeKeys = Object.keys(activeTagFilters).filter(function (k) {
       return !!activeTagFilters[k];
     });
     var q = elVal("damBrandingSearch").toLowerCase();
-    var tab = opts.global ? "" : sectionTab || currentSectionTab();
+    var tab = sectionTab || currentSectionTab();
     var assets = index.assets;
+    var ckLen = chipKeys.length;
     for (i = 0; i < assets.length; i++) {
       var a = assets[i];
       if (!includeArchive() && isArchived(a)) continue;
       if (!assetMatchesDateRange(a)) continue;
-      if (tab && !assetInSectionTab(a, tab)) continue;
       if (graphicsOnlyActive() && !activeTagFilters["media:document"] && a.media_type === "document") {
         continue;
       }
       if (q && !assetMatchesSearchQuery(a, q)) continue;
-      var match = {};
-      var k;
-      for (k = 0; k < chipKeys.length; k++) {
-        match[chipKeys[k]] = assetMatchesTagKey(a, chipKeys[k]);
+      var inTab = !tab || assetInSectionTab(a, tab);
+      var matches = new Array(ckLen);
+      var ki;
+      for (ki = 0; ki < ckLen; ki++) {
+        matches[ki] = assetMatchesTagKey(a, chipKeys[ki]);
       }
-      for (k = 0; k < chipKeys.length; k++) {
-        var key = chipKeys[k];
-        var ok = true;
-        for (var j = 0; j < activeKeys.length; j++) {
-          if (activeKeys[j] === key) continue;
-          if (!assetMatchesTagKey(a, activeKeys[j])) {
-            ok = false;
+      if (inTab) {
+        for (ki = 0; ki < ckLen; ki++) {
+          if (!matches[ki]) continue;
+          var key = chipKeys[ki];
+          var ok = true;
+          var j;
+          for (j = 0; j < activeKeys.length; j++) {
+            if (activeKeys[j] === key) continue;
+            if (!assetMatchesTagKey(a, activeKeys[j])) {
+              ok = false;
+              break;
+            }
+          }
+          if (ok) facet[key] += 1;
+        }
+      }
+      for (ki = 0; ki < ckLen; ki++) {
+        if (!matches[ki]) continue;
+        var gkey = chipKeys[ki];
+        var gok = true;
+        var gj;
+        for (gj = 0; gj < activeKeys.length; gj++) {
+          if (activeKeys[gj] === gkey) continue;
+          if (!assetMatchesTagKey(a, activeKeys[gj])) {
+            gok = false;
             break;
           }
         }
-        if (ok && match[key]) counts[key] += 1;
+        if (gok) global[gkey] += 1;
       }
     }
-    return counts;
+    facetCountCache = { sig: sig, keysLen: chipKeys.length, facet: facet, global: global };
+    return { facet: facet, global: global };
+  }
+
+  function computeFacetCounts(chipKeys, sectionTab, opts) {
+    opts = opts || {};
+    var pair = computeFacetCountsPair(chipKeys, sectionTab);
+    return opts.global ? pair.global : pair.facet;
   }
 
   function bestTabForTagKey(key) {
@@ -2617,8 +2714,10 @@
         : "";
     var displayTitle = cardOpts.title || a.name;
     var metaLine = cardOpts.meta != null ? cardOpts.meta : brandingCardTypeMeta(a);
+    var isVideoCard = a.media_type === "video";
     return (
       '<article class="dam-viz-card dam-branding-card dam-viz-card--clickable' +
+      (isVideoCard ? " dam-branding-card--video" : "") +
       (tileCls ? " " + tileCls : "") +
       '" data-id="' +
       esc(a.id) +
@@ -2737,6 +2836,49 @@
     return parts.length ? " · filtr: " + parts.join(", ") : "";
   }
 
+  function fmtGridCount(n) {
+    return String(Math.max(0, n | 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  function countSliceAssets(slice) {
+    var n = 0;
+    (slice || []).forEach(function (entry) {
+      n += (entry.assets || []).length;
+    });
+    return n;
+  }
+
+  function updateGridCount(shownSlice, assetList, limit, gridOpts) {
+    var el = document.getElementById("damBrandingGridCount");
+    if (!el) return;
+    var panel = document.getElementById("damBrandingPanelSection");
+    if (!panel || panel.hidden || currentSectionTab() === "brandbook") {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    assetList = asAssetList(assetList);
+    var filesShown = countSliceAssets(shownSlice);
+    var cardsShown = (shownSlice || []).length;
+    var totalFiles = assetList.length;
+    var totalCards = groupBrandingAssets(assetList, gridOpts || {}).length;
+    if (!filesShown) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    var label;
+    if (cardsShown >= limit && totalCards > limit) {
+      label = fmtGridCount(filesShown) + " / " + fmtGridCount(totalFiles) + " plików";
+    } else if (filesShown < totalFiles) {
+      label = fmtGridCount(filesShown) + " / " + fmtGridCount(totalFiles) + " plików";
+    } else {
+      label = fmtGridCount(filesShown) + " plików";
+    }
+    el.textContent = label;
+    el.hidden = false;
+  }
+
   function setStatusEl(el, groupedSlice, assetTotal, limit) {
     if (!el) return;
     var built = index && index.built_at ? String(index.built_at).slice(0, 19).replace("T", " ") : "";
@@ -2745,13 +2887,16 @@
     if (index && index.perspective_count != null) meta += " · perspektywy " + index.perspective_count;
     var cardN = (groupedSlice || []).length;
     var assetN = assetTotal || 0;
+    var filesShown = countSliceAssets(groupedSlice);
     var countLine =
-      cardN !== assetN ? cardN + " kart · " + assetN + " assetów" : cardN + " z " + assetN + " assetów";
+      cardN !== assetN
+        ? fmtGridCount(cardN) + " kart · " + fmtGridCount(assetN) + " plików · widocznych " + fmtGridCount(filesShown)
+        : fmtGridCount(cardN) + " z " + fmtGridCount(assetN) + " plików";
     el.textContent =
       countLine +
       (built ? " · indeks " + built : "") +
       meta +
-      (cardN >= limit ? " · pokazano max " + limit + " kart" : "") +
+      (cardN >= limit ? " · limit " + fmtGridCount(limit) + " kart" : "") +
       activeFilterHint();
   }
 
@@ -2832,6 +2977,9 @@
     });
     if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
       window.DamBadges.bindClicks(grid, "branding");
+    }
+    if (slice.length && window.DamGridReveal) {
+      window.DamGridReveal.reveal(grid, window.DamGridReveal.selectors.vizCard);
     }
     return slice;
   }
@@ -3352,12 +3500,13 @@
     if (!opts.keepDiscovery) {
       discoveryWhen = "";
     }
+    clearBrandingComputeCache();
     document.querySelectorAll(".dam-branding-tab").forEach(function (b) {
       var on = b.getAttribute("data-tab") === tab;
       b.classList.toggle("is-active", on);
       b.setAttribute("aria-selected", on ? "true" : "false");
     });
-    renderTagFilters();
+    if (!opts.skipTagRender) renderTagFilters();
     if (!opts.skipHash) {
       var nextHash = "#" + hashForTab(tab);
       if (location.hash !== nextHash) {
@@ -3385,8 +3534,8 @@
             datePresetActive = "";
             syncDatePresetButtons();
           }
-          renderTagFilters();
-          renderActiveSection();
+          clearBrandingComputeCache();
+          scheduleBrandingRender({ tags: true, section: true });
         };
         el.addEventListener("input", handler);
         el.addEventListener("change", handler);
@@ -3487,9 +3636,7 @@
           rebuild.disabled = true;
           try {
             await fetch(bridgeUrl() + "/branding/rebuild", { method: "POST" });
-            index = null;
-            campaigns = null;
-            campaignAssetMap = {};
+            invalidateBrandingIndexCache();
             await loadIndex();
             await loadCampaigns();
             activateTab(
@@ -3543,6 +3690,7 @@
   function patchAssetField(assetId, field, value) {
     var a = findAssetById(assetId);
     if (!a) return;
+    clearBrandingComputeCache();
     if (field === "asset_role") {
       a.asset_role = value;
     } else if (field === "appearance_primary") {
@@ -3555,8 +3703,14 @@
     renderActiveSection();
   }
 
+  window.addEventListener("dam-branding-index-stale", function () {
+    clearBrandingComputeCache();
+  });
+
   window.DamBranding = {
     applyBadgeFilter: applyBadgeFilter,
+    clearComputeCache: clearBrandingComputeCache,
+    invalidateIndexCache: invalidateBrandingIndexCache,
     clearTagFilters: clearTagFilters,
     renderTagFilters: renderTagFilters,
     patchAssetField: patchAssetField,

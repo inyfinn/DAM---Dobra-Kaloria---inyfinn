@@ -523,42 +523,10 @@
     });
   }
 
-  /**
-   * GSAP: po filtrze / odswiezeniu siatki - szybki reveal gora->dol (~0.2s).
-   * Motivated: feedback ze wyniki sie zmienily. prefers-reduced-motion = skip.
-   */
   function revealProjectCards(grid) {
-    var cards = grid.querySelectorAll(".dam-project-card");
-    if (!cards.length) return;
-    var reduce =
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var gsap = window.gsap;
-    if (!gsap || reduce) {
-      cards.forEach(function (card) {
-        card.style.opacity = "";
-        card.style.visibility = "";
-        card.style.clipPath = "";
-      });
-      return;
+    if (window.DamGridReveal && typeof window.DamGridReveal.reveal === "function") {
+      window.DamGridReveal.reveal(grid, window.DamGridReveal.selectors.projectCard);
     }
-    gsap.killTweensOf(cards);
-    gsap.fromTo(
-      cards,
-      {
-        autoAlpha: 0,
-        clipPath: "inset(0% 0% 100% 0%)",
-      },
-      {
-        autoAlpha: 1,
-        clipPath: "inset(0% 0% 0% 0%)",
-        duration: 0.2,
-        ease: "power1.out",
-        stagger: { each: 0.035, from: "start" },
-        overwrite: true,
-        clearProps: "clipPath",
-      }
-    );
   }
 
   function renderGrid(grid, statusEl) {
