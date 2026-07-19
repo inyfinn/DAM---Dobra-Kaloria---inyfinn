@@ -937,3 +937,14 @@ ole=admin.
  - Faktury: GET bridge + Import CSV (admin); Zadania Asana z asana-tasks.json lub banner do Integracji.
  - Katalog FMCG: fmcg-cost-catalog.json + import map/template; finance.fmcg_no_double_count w program-instructions.
  - Wersja: 2.0.5 (version.json, dam-version.js, runtime_config.py).
+
+125. **Modal branding CTA zrodlowe (2026-07-19) - HARD:**
+ - #damMediaPreviewMeta (linia TIF · Indeks) = **usuniete** - nie przywracac.
+ - Ext-tag w tytule: odsunicie **10px** od nazwy (margin-inline-start: 10px).
+ - Obok **Przejdz** + **Folder**: osobne przyciski zrodlowe z etykieta rozszerzenia (**PSD** / **PSB** / **AI**), nie jeden „Zrodlo”.
+ - Mount: #damMediaPreviewSourceMount w .dam-viz-modal__actions-main.
+ - Wersja: **2.0.6** (po hub 2.0.5).
+
+126. **Sciezka przenosna Marketing\ (2026-07-19) - HARD:**
+ - Kopiuj sciezke = `DamPaths.toPortablePath` / `copyPortablePath` (bez litery dysku, od segmentu Marketing\).
+ - Kazdy user ma inna mape dysku - nie kopiowac X:\ ani D:\.

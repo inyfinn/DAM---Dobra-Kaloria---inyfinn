@@ -49,6 +49,11 @@
       "letter": "D",
       "status": "demo"
     },
+    "6300622.00": {
+      "note": "Lifecycle X",
+      "letter": "X",
+      "status": "nieaktualne"
+    },
     "6300684.01": {
       "note": "Lifecycle F",
       "letter": "F",
@@ -86,6 +91,11 @@
       "note": "MALINA - MAGNEZ & ZELAZO",
       "status": "aktualne"
     },
+    "6300785.00": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
+    },
     "TEST-TEST2": {
       "note": "Lifecycle clear",
       "letter": null,
@@ -93,6 +103,11 @@
     },
     "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - 65 g - 24.02.2026 - 6300727.00": {
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
+      "status": "nieaktualne"
+    },
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00": {
+      "note": "Lifecycle X",
+      "letter": "X",
       "status": "nieaktualne"
     },
     "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 07.05.2026 - 6300684.01": {
@@ -103,6 +118,11 @@
     "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - MAGNEZ - 65 g - 24.02.2026 - 6300727.02": {
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
       "status": "nieaktualne"
+    },
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
     },
     "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/CZARNA PORZECZKA — [ owocowe ]/DOY - 65 g - 24.02.2026 - 6300726.00": {
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
@@ -146,6 +166,11 @@
       "note": "Lifecycle clear",
       "letter": null,
       "status": "clear"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026 - 6300785.00 - F": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
     },
     "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ]/BAT - 35 g - 18.07.2026 - TEST-TEST - D": {
       "note": "Lifecycle clear",
@@ -224,6 +249,11 @@
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
       "status": "nieaktualne"
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\BABKA CYTRYNOWA — [ nerkowcowy ] - X\\13.02.2025 - 6300622.00 - X": {
+      "note": "Lifecycle X",
+      "letter": "X",
+      "status": "nieaktualne"
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST - F": {
       "note": "Lifecycle F",
       "letter": "F",
@@ -269,5 +299,5 @@
       "status": "nieaktualne"
     }
   },
-  "updated_at": "2026-07-19T03:50:49.040526+00:00"
+  "updated_at": "2026-07-19T20:50:13.091526+00:00"
 }

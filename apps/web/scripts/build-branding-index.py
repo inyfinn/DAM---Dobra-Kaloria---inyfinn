@@ -63,7 +63,17 @@ def is_wizki_path(path: str) -> bool:
     return bool(WIZKI_FOLDER_RE.search(path.replace("\\", "/")))
 
 
-from asset_role_utils import detect_raster_background, enrich_branding_taxonomy, media_type_for  # noqa: E402
+from asset_role_utils import (  # noqa: E402
+    apply_background_scan_cache,
+    detect_raster_background,
+    enrich_branding_taxonomy,
+    load_background_scan_cache,
+    media_type_for,
+)
+
+# Trwaly cache pixel-scanu (patch-branding-backgrounds.py): path -> transparent|white|none.
+# Rebuild nie gubi wynikow skanu i nie powtarza wolnego IO na NFS X:.
+_BG_SCAN_CACHE = load_background_scan_cache()
 def normalize_perspective_token(raw: str) -> str:
     token = (raw or "").upper().replace("TYŁ", "TYL")
     if token in ("TYL", "TYL-ENFACE", "TYL_ENFACE"):
@@ -210,7 +220,13 @@ def make_asset(
     mt = media_type_for(ext)
     bg = wiz.get("background")
     if not bg and mt == "image":
-        bg = detect_raster_background(str(fp), name)
+        cached = _BG_SCAN_CACHE.get(path.lower())
+        if cached in ("transparent", "white"):
+            bg = cached
+        elif cached == "none":
+            bg = None  # skan juz byl: brak przezroczystosci, nie powtarzaj IO
+        else:
+            bg = detect_raster_background(str(fp), name)
     blob_parts = [name, path, brand, mt, source] + tags
     if wiz.get("perspective"):
         blob_parts.append(wiz["perspective"])
@@ -506,6 +522,10 @@ def main() -> int:
         apply_branding_assoc_overrides(assets, file_index)
     except Exception as exc:
         print(f"warn: folder context enrich skipped: {exc}")
+
+    carried = apply_background_scan_cache(assets, _BG_SCAN_CACHE)
+    if carried:
+        print(f"background scan cache carry-over: {carried} assets")
 
     with_persp = sum(1 for a in assets if a.get("perspective"))
     with_link = sum(1 for a in assets if a.get("linked_product_ids"))

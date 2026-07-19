@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19T19:11:34",
+  "generated_at": "2026-07-19T23:30:12",
   "roots": [
     {
       "brand": "DK",
@@ -11,7 +11,7 @@
     }
   ],
   "root": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-  "elapsed_sec": 4.55,
+  "elapsed_sec": 4.26,
   "category_count": 12,
   "product_count": 184,
   "viz_count": 391,
@@ -3226,59 +3226,6 @@
       "revision_count": 4,
       "revisions": [
         {
-          "folder": "13.02.2025 - 6300622.00",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00",
-          "rel": "01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00",
-          "carrier": "KAR6X",
-          "index_base": "6300622",
-          "index_rev": "00",
-          "index": "6300622.00",
-          "date": "2025-02-13",
-          "slots": [
-            "0 - ARCHIWUM",
-            "1 - MATERIAŁY",
-            "1 - MATERIAŁY/ELEMENTY",
-            "2 - PROJEKT",
-            "3 - DRUK",
-            "4 - WIZKI"
-          ],
-          "files_by_role": {
-            "source": [],
-            "print": [],
-            "viz": [
-              {
-                "name": "WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
-                "rel": "01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
-                "ext": "png",
-                "size": 1326160,
-                "mtime": "2026-02-24T15:07:52",
-                "lang": ""
-              }
-            ],
-            "elements": []
-          },
-          "wizki": [
-            {
-              "name": "WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
-              "rel": "01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
-              "ext": "png",
-              "size": 1326160,
-              "mtime": "2026-02-24T15:07:52",
-              "lang": ""
-            }
-          ],
-          "wizki_count": 1,
-          "langs": [
-            "pl"
-          ],
-          "langs_manual": false,
-          "langs_source": "brand_dk",
-          "carrier_guessed": true,
-          "is_latest": true
-        },
-        {
           "folder": "KAR6X - 05.05.2026 - 6300684.00",
           "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 05.05.2026 - 6300684.00",
           "rel": "01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 05.05.2026 - 6300684.00",
@@ -3899,6 +3846,58 @@
             }
           ],
           "wizki_count": 14,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true
+        },
+        {
+          "folder": "KAR6X - 13.02.2025 - 6300622.00",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 13.02.2025 - 6300622.00",
+          "rel": "01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 13.02.2025 - 6300622.00",
+          "carrier": "KAR6X",
+          "index_base": "6300622",
+          "index_rev": "00",
+          "index": "6300622.00",
+          "date": "2025-02-13",
+          "slots": [
+            "0 - ARCHIWUM",
+            "1 - MATERIAŁY",
+            "1 - MATERIAŁY/ELEMENTY",
+            "2 - PROJEKT",
+            "3 - DRUK",
+            "4 - WIZKI"
+          ],
+          "files_by_role": {
+            "source": [],
+            "print": [],
+            "viz": [
+              {
+                "name": "WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
+                "rel": "01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
+                "ext": "png",
+                "size": 1326160,
+                "mtime": "2026-02-24T15:07:52",
+                "lang": ""
+              }
+            ],
+            "elements": []
+          },
+          "wizki": [
+            {
+              "name": "WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
+              "rel": "01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
+              "ext": "png",
+              "size": 1326160,
+              "mtime": "2026-02-24T15:07:52",
+              "lang": ""
+            }
+          ],
+          "wizki_count": 1,
           "langs": [
             "pl"
           ],
@@ -5712,9 +5711,9 @@
       "revision_count": 2,
       "revisions": [
         {
-          "folder": "KAR6X - 20.05.2026 - 6300785.00",
-          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00",
-          "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00",
+          "folder": "KAR6X - 20.05.2026 - 6300785.00 - F",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F",
+          "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F",
           "carrier": "KAR6X",
           "index_base": "6300785",
           "index_rev": "00",
@@ -5732,8 +5731,8 @@
             "source": [
               {
                 "name": "DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F-2.06.2026 szkic.ai",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/0 - ARCHIWUM/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F-2.06.2026 szkic.ai",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/0 - ARCHIWUM/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F-2.06.2026 szkic.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/0 - ARCHIWUM/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F-2.06.2026 szkic.ai",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/0 - ARCHIWUM/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F-2.06.2026 szkic.ai",
                 "ext": "ai",
                 "size": 10870355,
                 "mtime": "2026-06-02T11:14:48",
@@ -5741,8 +5740,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F.ai",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F.ai",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F.ai",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-F.ai",
                 "ext": "ai",
                 "size": 3168616,
                 "mtime": "2026-07-13T13:50:12",
@@ -5750,8 +5749,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-FQ.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-FQ.pdf",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-FQ.pdf",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-FQ.pdf",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-FQ.pdf",
                 "ext": "pdf",
                 "size": 8140418,
                 "mtime": "2026-07-13T13:49:55",
@@ -5759,8 +5758,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-PREV.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-PREV.pdf",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-PREV.pdf",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-PREV.pdf",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/2 - PROJEKT/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.00-PREV.pdf",
                 "ext": "pdf",
                 "size": 7424562,
                 "mtime": "2026-07-09T10:55:33",
@@ -5768,8 +5767,8 @@
               },
               {
                 "name": "magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.png",
                 "ext": "png",
                 "size": 1234403,
                 "mtime": "2026-05-26T13:04:23",
@@ -5777,8 +5776,8 @@
               },
               {
                 "name": "magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.tif",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.tif",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.tif",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.tif",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.tif",
                 "ext": "tif",
                 "size": 64353660,
                 "mtime": "2026-05-26T14:48:07",
@@ -5786,8 +5785,8 @@
               },
               {
                 "name": "Śliwki - baza.tif",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/Śliwki - baza.tif",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/Śliwki - baza.tif",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/Śliwki - baza.tif",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/Śliwki - baza.tif",
                 "ext": "tif",
                 "size": 262627944,
                 "mtime": "2026-05-22T15:03:17",
@@ -5797,8 +5796,8 @@
             "print": [
               {
                 "name": "CONGRAPH 13.07.2026 - ŚLIWKA.pdf",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/3 - DRUK/CONGRAPH 13.07.2026 - ŚLIWKA.pdf",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/3 - DRUK/CONGRAPH 13.07.2026 - ŚLIWKA.pdf",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/3 - DRUK/CONGRAPH 13.07.2026 - ŚLIWKA.pdf",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/3 - DRUK/CONGRAPH 13.07.2026 - ŚLIWKA.pdf",
                 "ext": "pdf",
                 "size": 4863402,
                 "mtime": "2026-07-13T15:26:51",
@@ -5806,8 +5805,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.zip",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/3 - DRUK/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.zip",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/3 - DRUK/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.zip",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/3 - DRUK/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.zip",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/3 - DRUK/DK-KAR6X-NERK - CIASTO ŚLIWKOWE - 6300785.zip",
                 "ext": "zip",
                 "size": 640978023,
                 "mtime": "2026-07-13T13:51:24",
@@ -5815,8 +5814,8 @@
               },
               {
                 "name": "PROOF śliwka i cynamonka 03.06.ai",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/3 - DRUK/PROOF śliwka i cynamonka 03.06.ai",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/3 - DRUK/PROOF śliwka i cynamonka 03.06.ai",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/3 - DRUK/PROOF śliwka i cynamonka 03.06.ai",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/3 - DRUK/PROOF śliwka i cynamonka 03.06.ai",
                 "ext": "ai",
                 "size": 13918823,
                 "mtime": "2026-06-08T15:02:46",
@@ -5826,8 +5825,8 @@
             "viz": [
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
                 "ext": "jpg",
                 "size": 494474,
                 "mtime": "2026-07-09T12:06:53",
@@ -5835,8 +5834,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
                 "ext": "png",
                 "size": 2573166,
                 "mtime": "2026-07-09T12:06:52",
@@ -5844,8 +5843,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
                 "ext": "jpg",
                 "size": 92169,
                 "mtime": "2026-07-09T12:07:07",
@@ -5853,8 +5852,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
                 "ext": "png",
                 "size": 205689,
                 "mtime": "2026-07-09T12:07:05",
@@ -5862,8 +5861,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
                 "ext": "jpg",
                 "size": 140435,
                 "mtime": "2026-07-09T12:07:07",
@@ -5871,8 +5870,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
                 "ext": "png",
                 "size": 684384,
                 "mtime": "2026-07-09T12:06:54",
@@ -5880,8 +5879,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
                 "ext": "jpg",
                 "size": 1224920,
                 "mtime": "2026-07-09T12:06:49",
@@ -5889,8 +5888,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
                 "ext": "png",
                 "size": 8758381,
                 "mtime": "2026-07-09T12:04:29",
@@ -5898,8 +5897,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
                 "ext": "jpg",
                 "size": 530792,
                 "mtime": "2026-07-09T12:06:33",
@@ -5907,8 +5906,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
                 "ext": "png",
                 "size": 2646657,
                 "mtime": "2026-07-09T12:06:32",
@@ -5916,8 +5915,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
                 "ext": "jpg",
                 "size": 92040,
                 "mtime": "2026-07-09T12:06:47",
@@ -5925,8 +5924,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
                 "ext": "png",
                 "size": 225742,
                 "mtime": "2026-07-09T12:06:47",
@@ -5934,8 +5933,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
                 "ext": "jpg",
                 "size": 148531,
                 "mtime": "2026-07-09T12:06:48",
@@ -5943,8 +5942,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
                 "ext": "png",
                 "size": 647981,
                 "mtime": "2026-07-09T12:06:35",
@@ -5952,8 +5951,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
                 "ext": "jpg",
                 "size": 1336749,
                 "mtime": "2026-07-09T12:06:28",
@@ -5961,8 +5960,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
                 "ext": "png",
                 "size": 9511682,
                 "mtime": "2026-07-09T12:03:38",
@@ -5970,8 +5969,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
                 "ext": "jpg",
                 "size": 598427,
                 "mtime": "2026-07-09T12:07:12",
@@ -5979,8 +5978,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
                 "ext": "png",
                 "size": 2646100,
                 "mtime": "2026-07-09T12:07:11",
@@ -5988,8 +5987,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
                 "ext": "jpg",
                 "size": 91856,
                 "mtime": "2026-07-09T12:07:22",
@@ -5997,8 +5996,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
                 "ext": "png",
                 "size": 242856,
                 "mtime": "2026-07-09T12:07:22",
@@ -6006,8 +6005,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
                 "ext": "jpg",
                 "size": 182652,
                 "mtime": "2026-07-09T12:07:22",
@@ -6015,8 +6014,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
                 "ext": "png",
                 "size": 719705,
                 "mtime": "2026-07-09T12:07:12",
@@ -6024,8 +6023,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
                 "ext": "jpg",
                 "size": 1434722,
                 "mtime": "2026-07-09T12:07:08",
@@ -6033,8 +6032,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
                 "ext": "png",
                 "size": 8548115,
                 "mtime": "2026-07-09T12:05:21",
@@ -6042,8 +6041,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
                 "ext": "jpg",
                 "size": 526870,
                 "mtime": "2026-07-09T12:06:16",
@@ -6051,8 +6050,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
                 "ext": "png",
                 "size": 2431571,
                 "mtime": "2026-07-09T12:06:15",
@@ -6060,8 +6059,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
                 "ext": "jpg",
                 "size": 92343,
                 "mtime": "2026-07-09T12:06:27",
@@ -6069,8 +6068,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
                 "ext": "png",
                 "size": 206457,
                 "mtime": "2026-07-09T12:06:25",
@@ -6078,8 +6077,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
                 "ext": "jpg",
                 "size": 166706,
                 "mtime": "2026-07-09T12:06:27",
@@ -6087,8 +6086,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
                 "ext": "png",
                 "size": 652076,
                 "mtime": "2026-07-09T12:06:17",
@@ -6096,8 +6095,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
                 "ext": "jpg",
                 "size": 1203625,
                 "mtime": "2026-07-09T12:06:12",
@@ -6105,8 +6104,8 @@
               },
               {
                 "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
                 "ext": "png",
                 "size": 7615533,
                 "mtime": "2026-07-09T12:02:43",
@@ -6116,8 +6115,8 @@
             "elements": [
               {
                 "name": "CIASTO-SLIWKOWE.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/CIASTO-SLIWKOWE.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/CIASTO-SLIWKOWE.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/CIASTO-SLIWKOWE.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/CIASTO-SLIWKOWE.png",
                 "ext": "png",
                 "size": 337526,
                 "mtime": "2026-07-09T19:19:44",
@@ -6125,8 +6124,8 @@
               },
               {
                 "name": "KWIAT śliwki-1.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-1.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-1.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-1.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-1.png",
                 "ext": "png",
                 "size": 425165,
                 "mtime": "2026-07-09T19:19:49",
@@ -6134,8 +6133,8 @@
               },
               {
                 "name": "KWIAT śliwki-2.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-2.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-2.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-2.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-2.png",
                 "ext": "png",
                 "size": 358457,
                 "mtime": "2026-07-09T19:20:01",
@@ -6143,8 +6142,8 @@
               },
               {
                 "name": "KWIAT śliwki-3.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-3.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-3.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-3.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-3.png",
                 "ext": "png",
                 "size": 278983,
                 "mtime": "2026-07-09T19:20:09",
@@ -6152,8 +6151,8 @@
               },
               {
                 "name": "KWIAT śliwki-4.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-4.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-4.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-4.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-4.png",
                 "ext": "png",
                 "size": 210022,
                 "mtime": "2026-07-09T19:20:20",
@@ -6161,8 +6160,8 @@
               },
               {
                 "name": "KWIAT śliwki-5.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-5.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-5.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-5.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-5.png",
                 "ext": "png",
                 "size": 258600,
                 "mtime": "2026-07-09T19:20:29",
@@ -6170,8 +6169,8 @@
               },
               {
                 "name": "KWIAT śliwki-6.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-6.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-6.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-6.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-6.png",
                 "ext": "png",
                 "size": 272868,
                 "mtime": "2026-07-09T19:20:36",
@@ -6179,8 +6178,8 @@
               },
               {
                 "name": "KWIAT śliwki-7.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-7.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-7.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-7.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-7.png",
                 "ext": "png",
                 "size": 333728,
                 "mtime": "2026-07-09T19:20:46",
@@ -6188,8 +6187,8 @@
               },
               {
                 "name": "KWIAT śliwki-8.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-8.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-8.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-8.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-8.png",
                 "ext": "png",
                 "size": 154460,
                 "mtime": "2026-07-09T19:20:55",
@@ -6197,8 +6196,8 @@
               },
               {
                 "name": "KWIAT śliwki-9.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-9.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-9.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-9.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/KWIAT śliwki-9.png",
                 "ext": "png",
                 "size": 376880,
                 "mtime": "2026-07-09T19:21:02",
@@ -6206,8 +6205,8 @@
               },
               {
                 "name": "Liście śliwka (1).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (1).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (1).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (1).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (1).png",
                 "ext": "png",
                 "size": 912905,
                 "mtime": "2026-07-09T19:28:53",
@@ -6215,8 +6214,8 @@
               },
               {
                 "name": "Liście śliwka (11).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (11).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (11).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (11).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (11).png",
                 "ext": "png",
                 "size": 110037,
                 "mtime": "2026-07-09T19:28:13",
@@ -6224,8 +6223,8 @@
               },
               {
                 "name": "Liście śliwka (12).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (12).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (12).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (12).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (12).png",
                 "ext": "png",
                 "size": 165978,
                 "mtime": "2026-07-09T19:28:16",
@@ -6233,8 +6232,8 @@
               },
               {
                 "name": "Liście śliwka (2).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (2).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (2).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (2).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (2).png",
                 "ext": "png",
                 "size": 129804,
                 "mtime": "2026-07-09T19:28:14",
@@ -6242,8 +6241,8 @@
               },
               {
                 "name": "Liście śliwka (6).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (6).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Liście śliwka (6).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (6).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Liście śliwka (6).png",
                 "ext": "png",
                 "size": 148248,
                 "mtime": "2026-07-09T19:28:12",
@@ -6251,8 +6250,8 @@
               },
               {
                 "name": "MINI BATON - ciasto śliwkowe.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/MINI BATON - ciasto śliwkowe.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/MINI BATON - ciasto śliwkowe.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/MINI BATON - ciasto śliwkowe.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/MINI BATON - ciasto śliwkowe.png",
                 "ext": "png",
                 "size": 413886,
                 "mtime": "2026-07-09T19:21:12",
@@ -6260,8 +6259,8 @@
               },
               {
                 "name": "Rodzynki (1).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (1).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (1).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (1).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (1).png",
                 "ext": "png",
                 "size": 326965,
                 "mtime": "2026-07-09T19:19:04",
@@ -6269,8 +6268,8 @@
               },
               {
                 "name": "Rodzynki (2).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (2).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (2).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (2).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (2).png",
                 "ext": "png",
                 "size": 303863,
                 "mtime": "2026-07-09T19:19:11",
@@ -6278,8 +6277,8 @@
               },
               {
                 "name": "Rodzynki (3).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (3).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (3).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (3).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (3).png",
                 "ext": "png",
                 "size": 250194,
                 "mtime": "2026-07-09T19:19:17",
@@ -6287,8 +6286,8 @@
               },
               {
                 "name": "Rodzynki (4).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (4).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (4).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (4).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (4).png",
                 "ext": "png",
                 "size": 309817,
                 "mtime": "2026-07-09T19:19:24",
@@ -6296,8 +6295,8 @@
               },
               {
                 "name": "Rodzynki (5).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (5).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (5).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (5).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (5).png",
                 "ext": "png",
                 "size": 323739,
                 "mtime": "2026-07-09T19:19:31",
@@ -6305,8 +6304,8 @@
               },
               {
                 "name": "Rodzynki (6).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (6).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Rodzynki (6).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (6).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Rodzynki (6).png",
                 "ext": "png",
                 "size": 306502,
                 "mtime": "2026-07-09T19:19:37",
@@ -6314,8 +6313,8 @@
               },
               {
                 "name": "Wszysktie kwiaty.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Wszysktie kwiaty.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/Wszysktie kwiaty.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Wszysktie kwiaty.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/Wszysktie kwiaty.png",
                 "ext": "png",
                 "size": 381058,
                 "mtime": "2026-07-09T19:26:02",
@@ -6323,8 +6322,8 @@
               },
               {
                 "name": "nerkowiec (1).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/nerkowiec (1).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/nerkowiec (1).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/nerkowiec (1).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/nerkowiec (1).png",
                 "ext": "png",
                 "size": 232292,
                 "mtime": "2026-07-09T19:18:55",
@@ -6332,8 +6331,8 @@
               },
               {
                 "name": "nerkowiec (2).png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/nerkowiec (2).png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/nerkowiec (2).png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/nerkowiec (2).png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/nerkowiec (2).png",
                 "ext": "png",
                 "size": 239630,
                 "mtime": "2026-07-09T19:18:44",
@@ -6341,8 +6340,8 @@
               },
               {
                 "name": "ŚLIWKA-1.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-1.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-1.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-1.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-1.png",
                 "ext": "png",
                 "size": 337518,
                 "mtime": "2026-07-09T19:21:30",
@@ -6350,8 +6349,8 @@
               },
               {
                 "name": "ŚLIWKA-10.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-10.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-10.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-10.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-10.png",
                 "ext": "png",
                 "size": 310535,
                 "mtime": "2026-07-09T19:22:54",
@@ -6359,8 +6358,8 @@
               },
               {
                 "name": "ŚLIWKA-11.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-11.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-11.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-11.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-11.png",
                 "ext": "png",
                 "size": 305405,
                 "mtime": "2026-07-09T19:23:05",
@@ -6368,8 +6367,8 @@
               },
               {
                 "name": "ŚLIWKA-12.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-12.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-12.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-12.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-12.png",
                 "ext": "png",
                 "size": 370708,
                 "mtime": "2026-07-09T19:23:14",
@@ -6377,8 +6376,8 @@
               },
               {
                 "name": "ŚLIWKA-13.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-13.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-13.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-13.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-13.png",
                 "ext": "png",
                 "size": 335845,
                 "mtime": "2026-07-09T19:23:26",
@@ -6386,8 +6385,8 @@
               },
               {
                 "name": "ŚLIWKA-14.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-14.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-14.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-14.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-14.png",
                 "ext": "png",
                 "size": 241594,
                 "mtime": "2026-07-09T19:23:36",
@@ -6395,8 +6394,8 @@
               },
               {
                 "name": "ŚLIWKA-15.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-15.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-15.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-15.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-15.png",
                 "ext": "png",
                 "size": 313032,
                 "mtime": "2026-07-09T19:23:44",
@@ -6404,8 +6403,8 @@
               },
               {
                 "name": "ŚLIWKA-16.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-16.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-16.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-16.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-16.png",
                 "ext": "png",
                 "size": 278131,
                 "mtime": "2026-07-09T19:23:54",
@@ -6413,8 +6412,8 @@
               },
               {
                 "name": "ŚLIWKA-17.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-17.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-17.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-17.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-17.png",
                 "ext": "png",
                 "size": 558805,
                 "mtime": "2026-07-09T19:24:03",
@@ -6422,8 +6421,8 @@
               },
               {
                 "name": "ŚLIWKA-18.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-18.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-18.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-18.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-18.png",
                 "ext": "png",
                 "size": 446750,
                 "mtime": "2026-07-09T19:24:16",
@@ -6431,8 +6430,8 @@
               },
               {
                 "name": "ŚLIWKA-19.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-19.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-19.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-19.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-19.png",
                 "ext": "png",
                 "size": 406501,
                 "mtime": "2026-07-09T19:24:25",
@@ -6440,8 +6439,8 @@
               },
               {
                 "name": "ŚLIWKA-2.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-2.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-2.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-2.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-2.png",
                 "ext": "png",
                 "size": 302707,
                 "mtime": "2026-07-09T19:21:42",
@@ -6449,8 +6448,8 @@
               },
               {
                 "name": "ŚLIWKA-20.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-20.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-20.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-20.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-20.png",
                 "ext": "png",
                 "size": 386345,
                 "mtime": "2026-07-09T19:24:40",
@@ -6458,8 +6457,8 @@
               },
               {
                 "name": "ŚLIWKA-21.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-21.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-21.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-21.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-21.png",
                 "ext": "png",
                 "size": 461734,
                 "mtime": "2026-07-09T19:24:50",
@@ -6467,8 +6466,8 @@
               },
               {
                 "name": "ŚLIWKA-22.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-22.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-22.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-22.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-22.png",
                 "ext": "png",
                 "size": 383173,
                 "mtime": "2026-07-09T19:25:01",
@@ -6476,8 +6475,8 @@
               },
               {
                 "name": "ŚLIWKA-23.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-23.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-23.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-23.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-23.png",
                 "ext": "png",
                 "size": 354521,
                 "mtime": "2026-07-09T19:25:12",
@@ -6485,8 +6484,8 @@
               },
               {
                 "name": "ŚLIWKA-24.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-24.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-24.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-24.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-24.png",
                 "ext": "png",
                 "size": 389984,
                 "mtime": "2026-07-09T19:25:22",
@@ -6494,8 +6493,8 @@
               },
               {
                 "name": "ŚLIWKA-25.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-25.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-25.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-25.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-25.png",
                 "ext": "png",
                 "size": 582613,
                 "mtime": "2026-07-09T19:25:34",
@@ -6503,8 +6502,8 @@
               },
               {
                 "name": "ŚLIWKA-26.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-26.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-26.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-26.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-26.png",
                 "ext": "png",
                 "size": 538879,
                 "mtime": "2026-07-09T19:25:49",
@@ -6512,8 +6511,8 @@
               },
               {
                 "name": "ŚLIWKA-3.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-3.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-3.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-3.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-3.png",
                 "ext": "png",
                 "size": 296086,
                 "mtime": "2026-07-09T19:21:49",
@@ -6521,8 +6520,8 @@
               },
               {
                 "name": "ŚLIWKA-4.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-4.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-4.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-4.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-4.png",
                 "ext": "png",
                 "size": 348772,
                 "mtime": "2026-07-09T19:21:57",
@@ -6530,8 +6529,8 @@
               },
               {
                 "name": "ŚLIWKA-5.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-5.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-5.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-5.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-5.png",
                 "ext": "png",
                 "size": 305003,
                 "mtime": "2026-07-09T19:22:07",
@@ -6539,8 +6538,8 @@
               },
               {
                 "name": "ŚLIWKA-6.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-6.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-6.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-6.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-6.png",
                 "ext": "png",
                 "size": 300053,
                 "mtime": "2026-07-09T19:22:16",
@@ -6548,8 +6547,8 @@
               },
               {
                 "name": "ŚLIWKA-7.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-7.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-7.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-7.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-7.png",
                 "ext": "png",
                 "size": 313320,
                 "mtime": "2026-07-09T19:22:24",
@@ -6557,8 +6556,8 @@
               },
               {
                 "name": "ŚLIWKA-8.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-8.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-8.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-8.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-8.png",
                 "ext": "png",
                 "size": 374595,
                 "mtime": "2026-07-09T19:22:34",
@@ -6566,8 +6565,8 @@
               },
               {
                 "name": "ŚLIWKA-9.png",
-                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-9.png",
-                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-9.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-9.png",
+                "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/1 - MATERIAŁY/ELEMENTY/ŚLIWKA-9.png",
                 "ext": "png",
                 "size": 452231,
                 "mtime": "2026-07-09T19:22:44",
@@ -6578,8 +6577,8 @@
           "wizki": [
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.jpg",
               "ext": "jpg",
               "size": 494474,
               "mtime": "2026-07-09T12:06:53",
@@ -6587,8 +6586,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-L.png",
               "ext": "png",
               "size": 2573166,
               "mtime": "2026-07-09T12:06:52",
@@ -6596,8 +6595,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.jpg",
               "ext": "jpg",
               "size": 92169,
               "mtime": "2026-07-09T12:07:07",
@@ -6605,8 +6604,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S-SKLEP.png",
               "ext": "png",
               "size": 205689,
               "mtime": "2026-07-09T12:07:05",
@@ -6614,8 +6613,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.jpg",
               "ext": "jpg",
               "size": 140435,
               "mtime": "2026-07-09T12:07:07",
@@ -6623,8 +6622,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
               "ext": "png",
               "size": 684384,
               "mtime": "2026-07-09T12:06:54",
@@ -6632,8 +6631,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.jpg",
               "ext": "jpg",
               "size": 1224920,
               "mtime": "2026-07-09T12:06:49",
@@ -6641,8 +6640,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-XL.png",
               "ext": "png",
               "size": 8758381,
               "mtime": "2026-07-09T12:04:29",
@@ -6650,8 +6649,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.jpg",
               "ext": "jpg",
               "size": 530792,
               "mtime": "2026-07-09T12:06:33",
@@ -6659,8 +6658,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-L.png",
               "ext": "png",
               "size": 2646657,
               "mtime": "2026-07-09T12:06:32",
@@ -6668,8 +6667,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.jpg",
               "ext": "jpg",
               "size": 92040,
               "mtime": "2026-07-09T12:06:47",
@@ -6677,8 +6676,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S-SKLEP.png",
               "ext": "png",
               "size": 225742,
               "mtime": "2026-07-09T12:06:47",
@@ -6686,8 +6685,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.jpg",
               "ext": "jpg",
               "size": 148531,
               "mtime": "2026-07-09T12:06:48",
@@ -6695,8 +6694,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
               "ext": "png",
               "size": 647981,
               "mtime": "2026-07-09T12:06:35",
@@ -6704,8 +6703,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.jpg",
               "ext": "jpg",
               "size": 1336749,
               "mtime": "2026-07-09T12:06:28",
@@ -6713,8 +6712,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-XL.png",
               "ext": "png",
               "size": 9511682,
               "mtime": "2026-07-09T12:03:38",
@@ -6722,8 +6721,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.jpg",
               "ext": "jpg",
               "size": 598427,
               "mtime": "2026-07-09T12:07:12",
@@ -6731,8 +6730,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-L.png",
               "ext": "png",
               "size": 2646100,
               "mtime": "2026-07-09T12:07:11",
@@ -6740,8 +6739,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.jpg",
               "ext": "jpg",
               "size": 91856,
               "mtime": "2026-07-09T12:07:22",
@@ -6749,8 +6748,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S-SKLEP.png",
               "ext": "png",
               "size": 242856,
               "mtime": "2026-07-09T12:07:22",
@@ -6758,8 +6757,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.jpg",
               "ext": "jpg",
               "size": 182652,
               "mtime": "2026-07-09T12:07:22",
@@ -6767,8 +6766,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-S.png",
               "ext": "png",
               "size": 719705,
               "mtime": "2026-07-09T12:07:12",
@@ -6776,8 +6775,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.jpg",
               "ext": "jpg",
               "size": 1434722,
               "mtime": "2026-07-09T12:07:08",
@@ -6785,8 +6784,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-ENFACE-XL.png",
               "ext": "png",
               "size": 8548115,
               "mtime": "2026-07-09T12:05:21",
@@ -6794,8 +6793,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.jpg",
               "ext": "jpg",
               "size": 526870,
               "mtime": "2026-07-09T12:06:16",
@@ -6803,8 +6802,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-L.png",
               "ext": "png",
               "size": 2431571,
               "mtime": "2026-07-09T12:06:15",
@@ -6812,8 +6811,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.jpg",
               "ext": "jpg",
               "size": 92343,
               "mtime": "2026-07-09T12:06:27",
@@ -6821,8 +6820,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S-SKLEP.png",
               "ext": "png",
               "size": 206457,
               "mtime": "2026-07-09T12:06:25",
@@ -6830,8 +6829,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.jpg",
               "ext": "jpg",
               "size": 166706,
               "mtime": "2026-07-09T12:06:27",
@@ -6839,8 +6838,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-S.png",
               "ext": "png",
               "size": 652076,
               "mtime": "2026-07-09T12:06:17",
@@ -6848,8 +6847,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.jpg",
               "ext": "jpg",
               "size": 1203625,
               "mtime": "2026-07-09T12:06:12",
@@ -6857,8 +6856,8 @@
             },
             {
               "name": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
-              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
-              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
+              "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
+              "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-TYŁ-XL.png",
               "ext": "png",
               "size": 7615533,
               "mtime": "2026-07-09T12:02:43",
@@ -91250,8 +91249,8 @@
       "is_mix": false,
       "index": "6300785.00",
       "index_base": "6300785",
-      "revision_folder": "KAR6X - 20.05.2026 - 6300785.00",
-      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00",
+      "revision_folder": "KAR6X - 20.05.2026 - 6300785.00 - F",
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F",
       "langs": [
         "pl",
         "uk"
@@ -91262,8 +91261,8 @@
       "lang_unknown": false,
       "thumb_url": "data/thumbs/ciasto-sliwkowe-nerkowcowy__6300785_pl.jpg?v=1783591595",
       "file": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
-      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
-      "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
+      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
+      "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
       "mtime": "2026-07-09T12:06:35",
       "tags": [
         "baton",
@@ -91287,8 +91286,8 @@
       "is_mix": false,
       "index": "6300785.00",
       "index_base": "6300785",
-      "revision_folder": "KAR6X - 20.05.2026 - 6300785.00",
-      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00",
+      "revision_folder": "KAR6X - 20.05.2026 - 6300785.00 - F",
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F",
       "langs": [
         "pl",
         "uk"
@@ -91299,8 +91298,8 @@
       "lang_unknown": false,
       "thumb_url": "data/thumbs/ciasto-sliwkowe-nerkowcowy__6300785_uk.jpg?v=1783591595",
       "file": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
-      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
-      "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
+      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
+      "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-FRONT-S.png",
       "mtime": "2026-07-09T12:06:35",
       "tags": [
         "baton",
@@ -96899,12 +96898,12 @@
       "alias_langs": [],
       "carrier": "KAR6X",
       "carrier_label": "KARTON 6x MINI",
-      "carrier_guessed": true,
+      "carrier_guessed": false,
       "is_mix": false,
       "index": "6300622.00",
       "index_base": "6300622",
-      "revision_folder": "13.02.2025 - 6300622.00",
-      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00",
+      "revision_folder": "KAR6X - 13.02.2025 - 6300622.00",
+      "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 13.02.2025 - 6300622.00",
       "langs": [
         "pl"
       ],
@@ -96914,8 +96913,8 @@
       "lang_unknown": false,
       "thumb_url": "data/thumbs/babka-cytrynowa-nerkowcowy__6300622_pl.jpg?v=1771942072",
       "file": "WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
-      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
-      "rel": "01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
+      "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
+      "rel": "01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 13.02.2025 - 6300622.00/4 - WIZKI/WIZKA-BABKA-CYTRYNOWA-6300622-FRONT-S.png",
       "mtime": "2026-02-24T15:07:52",
       "tags": [
         "baton",

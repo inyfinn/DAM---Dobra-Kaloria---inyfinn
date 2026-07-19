@@ -2572,6 +2572,63 @@
       },
       "revision_index": "",
       "lifecycle_history_id": "lc_1784433048276"
+    },
+    {
+      "id": "chg_1784494149359",
+      "ts": "2026-07-19T20:49:09.359918+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026 - 6300785.00 - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "ciasto-sliwkowe-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026 - 6300785.00 - F",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026 - 6300785.00"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026 - 6300785.00 - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026 - 6300785.00"
+      },
+      "revision_index": "6300785.00",
+      "lifecycle_history_id": "lc_1784494149345"
+    },
+    {
+      "id": "chg_1784494212448",
+      "ts": "2026-07-19T20:50:12.448545+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\BABKA CYTRYNOWA — [ nerkowcowy ] - X\\13.02.2025 - 6300622.00 - X",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [
+        "variant_moved_to_archive_with_product_wrapper"
+      ],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "X",
+      "status": "nieaktualne",
+      "product_id": "babka-cytrynowa-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\13.02.2025 - 6300622.00 - X",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\13.02.2025 - 6300622.00"
+        },
+        {
+          "kind": "variant_archive",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\BABKA CYTRYNOWA — [ nerkowcowy ] - X\\13.02.2025 - 6300622.00 - X",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\13.02.2025 - 6300622.00 - X"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\BABKA CYTRYNOWA — [ nerkowcowy ] - X\\13.02.2025 - 6300622.00 - X",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\13.02.2025 - 6300622.00"
+      },
+      "revision_index": "6300622.00",
+      "lifecycle_history_id": "lc_1784494212429"
     }
   ]
 }

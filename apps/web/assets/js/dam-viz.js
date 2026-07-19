@@ -1509,6 +1509,10 @@
     if (copyBtn) {
       copyBtn.addEventListener("click", function () {
         var path = this.getAttribute("data-path");
+        if (window.DamPaths && typeof window.DamPaths.copyPortablePath === "function") {
+          window.DamPaths.copyPortablePath(path);
+          return;
+        }
         if (window.DamPaths) {
           window.DamPaths.copyPath(path);
           return;

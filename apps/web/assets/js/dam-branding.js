@@ -287,6 +287,15 @@
     return true;
   }
 
+  /**
+   * Liczniki tagow media:/format: liczymy BEZ wykluczenia "Tylko grafiki" -
+   * klik w Wideo/Dokument jawnie nadpisuje przelacznik (passesGraphicsOnlyFilter),
+   * wiec tag nie moze byc wygaszony z licznikiem 0, gdy materialy istnieja.
+   */
+  function chipCountIgnoresGraphicsOnly(key) {
+    return String(key || "").indexOf("media:") === 0 || String(key || "").indexOf("format:") === 0;
+  }
+
   function graphicsOnlyActive() {
     var cb = document.getElementById("damBrandingGraphicsOnly");
     if (cb) return cb.checked;
@@ -348,22 +357,46 @@
     return true;
   }
 
-  function searchTokens(q) {
-    var raw = String(q || "")
+  var SEARCH_SYNONYM_MAP = {
+    "bez tla": ["przezroczyste", "transparent", "przezroczyste tlo"],
+    "tlo usuniete": ["przezroczyste", "transparent", "przezroczyste tlo"],
+    "przezroczyste": ["transparent", "przezroczyste tlo", "bez tla"],
+    "przezroczyste tlo": ["transparent", "przezroczyste"],
+    "tlo przezroczyste": ["transparent", "przezroczyste tlo", "przezroczyste"],
+    "biale": ["white", "tlo biale", "biale tlo"],
+    "biale tlo": ["white", "tlo biale"],
+    "tlo biale": ["white", "biale tlo"],
+  };
+
+  function rawSearchTokens(q) {
+    return String(q || "")
       .toLowerCase()
       .split(/\s+/)
       .map(function (t) {
         return normTag(t);
       })
       .filter(Boolean);
+  }
+
+  /**
+   * Grupy tokenow do dopasowania: kazdy token usera to grupa [token + synonimy].
+   * Materiał pasuje, gdy KAŻDA grupa ma w blobie CO NAJMNIEJ JEDNĄ alternatywę
+   * (synonimy to OR, nie AND — inaczej „przezroczyste” dawało 0 wyników).
+   */
+  function searchTokenGroups(q) {
+    return rawSearchTokens(q).map(function (t) {
+      var alts = [t];
+      (SEARCH_SYNONYM_MAP[t] || []).forEach(function (s) {
+        var ns = normTag(s);
+        if (ns && alts.indexOf(ns) === -1) alts.push(ns);
+      });
+      return alts;
+    });
+  }
+
+  function searchTokens(q) {
+    var raw = rawSearchTokens(q);
     if (!raw.length) return [];
-    var synonymMap = {
-      "bez tla": ["przezroczyste", "transparent", "przezroczyste tlo"],
-      "tlo usuniete": ["przezroczyste", "transparent", "przezroczyste tlo"],
-      "przezroczyste": ["transparent", "przezroczyste tlo"],
-      "przezroczyste tlo": ["transparent"],
-      "tlo przezroczyste": ["transparent", "przezroczyste tlo"],
-    };
     var out = [];
     var seen = {};
     raw.forEach(function (t) {
@@ -371,7 +404,7 @@
         seen[t] = true;
         out.push(t);
       }
-      var syns = synonymMap[t];
+      var syns = SEARCH_SYNONYM_MAP[t];
       if (syns) {
         syns.forEach(function (s) {
           var ns = normTag(s);
@@ -1317,13 +1350,13 @@
   function assetBlobNorm(a) {
     var extra = "";
     if (window.DamAssetTaxonomy && DamAssetTaxonomy.isEffectiveTransparent && DamAssetTaxonomy.isEffectiveTransparent(a)) {
-      extra = " przezroczyste transparent bez tla tlo usuniete";
+      extra = " przezroczyste tlo przezroczyste transparent bez tla tlo usuniete";
     } else if (
       window.DamAssetTaxonomy &&
       DamAssetTaxonomy.isEffectiveWhite &&
       DamAssetTaxonomy.isEffectiveWhite(a)
     ) {
-      extra = " biale tlo white";
+      extra = " biale tlo tlo biale white";
     }
     (a.appearance_tags || []).forEach(function (tag) {
       if (window.DamBadges && typeof window.DamBadges.brandingSearchSynonymsForLabel === "function") {
@@ -1414,8 +1447,9 @@
       }
     }
     if (!q) return true;
+    var tokenGroups = searchTokenGroups(q);
+    if (!tokenGroups.length) return true;
     var tokens = searchTokens(q);
-    if (!tokens.length) return true;
     var blob = assetBlobNorm(a);
     var assocPids = associationProductIdsForTokens(tokens);
     if (assocPids.length && (a.linked_product_ids || []).some(function (pid) { return assocPids.indexOf(pid) !== -1; })) {
@@ -1439,8 +1473,10 @@
         }
       });
     });
-    return tokens.every(function (t) {
-      return blob.indexOf(normTag(t)) !== -1;
+    return tokenGroups.every(function (group) {
+      return group.some(function (t) {
+        return blob.indexOf(t) !== -1;
+      });
     });
   }
 
@@ -2433,13 +2469,15 @@
       var a = assets[i];
       if (!includeArchive() && isArchived(a)) continue;
       if (!assetMatchesDateRange(a)) continue;
-      if (!passesGraphicsOnlyFilter(a)) continue;
+      var graphicsPass = passesGraphicsOnlyFilter(a);
       if (q && !assetMatchesSearchQuery(a, q)) continue;
       var inTab = !tab || assetInSectionTab(a, tab);
       var matches = new Array(ckLen);
       var ki;
       for (ki = 0; ki < ckLen; ki++) {
-        matches[ki] = assetMatchesTagKey(a, chipKeys[ki]);
+        matches[ki] =
+          (graphicsPass || chipCountIgnoresGraphicsOnly(chipKeys[ki])) &&
+          assetMatchesTagKey(a, chipKeys[ki]);
       }
       if (inTab) {
         for (ki = 0; ki < ckLen; ki++) {
@@ -3142,7 +3180,9 @@
       if (slot === 2) return "Tablet";
       if (slot === 3) return "Mobile";
     }
-    return "Plik";
+    // Brak rozmiaru - pokaz baze nazwy pliku zamiast generycznego "Plik"
+    var base = n.replace(/\.[A-Za-z0-9]{1,8}$/, "").trim();
+    return base || "Plik";
   }
 
   function buildBrandingGroupContext(primary, assetsById, optSiblings) {
@@ -3218,11 +3258,19 @@
       });
     }
 
-    if (!editable.length && primary && primary.folder_has_editable) {
-      Object.keys(assetsById || {}).forEach(function (id) {
+    // Zawsze uzupelnij PSD/PSB/AI z tej samej grupy folderu (nie tylko gdy lista pusta).
+    if (groupId && assetsById) {
+      var seenPath = {};
+      editable.forEach(function (f) {
+        if (f && f.path) seenPath[String(f.path).toLowerCase()] = true;
+      });
+      Object.keys(assetsById).forEach(function (id) {
         var x = assetsById[id];
         if (!x || !/\.(psd|psb|ai|eps|indd)$/i.test(x.name || "")) return;
         if ((x.folder_group_id || folderDirFromPath(x.path)) !== groupId) return;
+        var key = String(x.path || "").toLowerCase();
+        if (!key || seenPath[key]) return;
+        seenPath[key] = true;
         editable.push({ id: x.id, name: x.name, path: x.path });
       });
     }

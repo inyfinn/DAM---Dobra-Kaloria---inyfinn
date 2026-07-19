@@ -230,6 +230,19 @@
     );
   }
 
+  function variantDisplayLabel(v, fileName) {
+    var label = String((v && v.label) || "").trim();
+    if (label && label.toLowerCase() !== "plik") return label;
+    var base = splitNameExt(fileName).base || fileName || "";
+    base = String(base).trim();
+    if (!base) return "Plik";
+    // Dlugie nazwy: zostaw poczatek i koncowke (sufiks typu _01 rozrznia warianty)
+    if (base.length > 18) {
+      base = base.slice(0, 8) + "\u2026" + base.slice(-8);
+    }
+    return base;
+  }
+
   function variantIsVideo(v) {
     if (!v) return false;
     if (v.media_type === "video") return true;
@@ -277,7 +290,7 @@
                   ? variantThumbInnerHtml(v, fileName)
                   : '<div class="dam-viz-modal__variant-placeholder dam-media-preview__variant-placeholder"><i class="uil uil-image" aria-hidden="true"></i></div>') +
                 '<span class="dam-viz-modal__variant-label">' +
-                esc(v.label || fileName.replace(/.*\./, "").toUpperCase() || "Plik") +
+                esc(variantDisplayLabel(v, fileName)) +
                 "</span></button>"
               );
             })
@@ -315,10 +328,42 @@
   }
 
   function editableFilesFor(asset, groupContext) {
-    var fromCtx = groupContext && groupContext.folder_editable_files;
-    if (fromCtx && fromCtx.length) return fromCtx;
-    if (asset.folder_editable_files && asset.folder_editable_files.length) return asset.folder_editable_files;
-    return [];
+    var out = [];
+    var seen = {};
+    function push(f) {
+      if (!f || !f.path) return;
+      var key = String(f.path).toLowerCase();
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push(f);
+    }
+    (groupContext && groupContext.folder_editable_files
+      ? groupContext.folder_editable_files
+      : []
+    ).forEach(push);
+    (asset && asset.folder_editable_files ? asset.folder_editable_files : []).forEach(push);
+    return out;
+  }
+
+  /** Pliki zrodlowe (PSD/PSB/AI/…) inne niz aktualny podglad - do CTA obok Folder. */
+  function sourceActionFiles(asset, groupContext) {
+    var order = { psd: 0, psb: 1, ai: 2, indd: 3, eps: 4 };
+    var byExt = {};
+    editableFilesFor(asset, groupContext).forEach(function (f) {
+      if (!f || !f.path) return;
+      if (asset && asset.path && f.path === asset.path) return;
+      var ext = splitNameExt(f.name || f.path).ext;
+      if (!(ext in order)) return;
+      // jeden przycisk na rozszerzenie (PSD / PSB / AI) - pierwszy z listy indeksu
+      if (!byExt[ext]) byExt[ext] = f;
+    });
+    return Object.keys(byExt)
+      .sort(function (a, b) {
+        return order[a] - order[b];
+      })
+      .map(function (ext) {
+        return byExt[ext];
+      });
   }
 
   function splitNameExt(name) {
@@ -359,34 +404,10 @@
     return '<span class="dam-media-preview__title-base">' + esc(base) + "</span>" + extTag;
   }
 
-  function titleMetaHtml(asset, groupContext) {
+  function titleMetaHtml(asset) {
     var idChip = assetIdChipHtml(asset);
-    var target = primaryEditableFile(asset, groupContext);
-    var path = target && target.path ? target.path : "";
-    var sameFile = path && asset.path && path === asset.path;
-    var label = target && target.name ? target.name : "Plik edytowalny";
-    var linkHtml =
-      path && !sameFile
-        ? '<div class="dam-media-preview__editable-row">' +
-          '<button type="button" class="dam-media-preview__editable-link" id="damMediaPreviewEditableLink" data-path="' +
-          esc(path) +
-          '" data-dam-tip="' +
-          esc(label) +
-          '" title="' +
-          esc(label) +
-          '">' +
-          '<i class="uil uil-layer-group" aria-hidden="true"></i>' +
-          "<span>" +
-          esc(label) +
-          "</span></button></div>"
-        : "";
-    if (!idChip && !linkHtml) return "";
-    return (
-      '<div class="dam-media-preview__title-meta">' +
-      idChip +
-      "</div>" +
-      linkHtml
-    );
+    if (!idChip) return "";
+    return '<div class="dam-media-preview__title-meta">' + idChip + "</div>";
   }
 
   function seedLinkedProducts(asset, groupContext) {
@@ -399,40 +420,41 @@
     });
   }
 
-  function metaLineText(asset) {
-    var parts = splitNameExt((asset && (asset.name || asset.path)) || asset.id || "");
-    var bits = [];
-    if (parts.ext) bits.push(parts.ext.toUpperCase());
-    var displayId = marketingDisplayId(asset);
-    if (displayId) bits.push("Indeks " + displayId);
-    return bits.join(" · ");
-  }
-
   function isEditableSourceAsset(asset) {
     var ext = fileExt(asset && (asset.name || asset.path));
     return ext === "psd" || ext === "psb" || ext === "ai" || ext === "indd";
   }
 
 
+  /**
+   * CTA zrodlowe obok Przejdz / Folder - osobny przycisk na kazdy plik (etykieta = PSD/PSB/AI).
+   * Nie pomylac z tagiem rozszerzenia w tytule.
+   */
   function sourceFileActionHtml(asset, groupContext) {
-    var target = primaryEditableFile(asset, groupContext);
-    if (!target || !target.path || (asset.path && target.path === asset.path)) return "";
-    var parts = splitNameExt(target.name || target.path);
-    var extLabel = (parts.ext || "plik").toUpperCase();
-    var label = target.name || target.path;
-    var tip = "Otwiera plik zrodlowy (" + extLabel + "): " + label;
-    return (
-      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damMediaPreviewSource" data-path="' +
-      esc(target.path) +
-      '" data-dam-tip="' +
-      esc(tip) +
-      '" aria-label="' +
-      esc(tip) +
-      '" title="' +
-      esc(tip) +
-      '">' +
-      '<i class="uil uil-layer-group" aria-hidden="true"></i><span>Źródło</span></button>'
-    );
+    var files = sourceActionFiles(asset, groupContext);
+    if (!files.length) return "";
+    return files
+      .map(function (f) {
+        var parts = splitNameExt(f.name || f.path);
+        var extLabel = (parts.ext || "plik").toUpperCase();
+        var label = f.name || f.path;
+        var tip = "Otwiera plik zrodlowy (" + extLabel + "): " + label;
+        return (
+          '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-media-preview__source-btn" data-media-source-btn="1" data-path="' +
+          esc(f.path) +
+          '" data-dam-tip="' +
+          esc(tip) +
+          '" aria-label="' +
+          esc(tip) +
+          '" title="' +
+          esc(tip) +
+          '">' +
+          '<i class="uil uil-layer-group" aria-hidden="true"></i><span>' +
+          esc(extLabel) +
+          "</span></button>"
+        );
+      })
+      .join("");
   }
 
   function firstLinkedProductId(asset, groupContext) {
@@ -608,7 +630,7 @@
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>') +
       "<span>Folder</span></button>" +
-      '<span id="damMediaPreviewSourceMount"></span>' +
+      '<span id="damMediaPreviewSourceMount" class="dam-media-preview__source-mount" aria-label="Pliki zrodlowe"></span>' +
       '<button type="button" class="dam-viz-icon-btn" id="damMediaPreviewCopy" data-dam-tip="Kopiuje lokalna sciezke pliku" aria-label="Kopiuj sciezke" title="Kopiuj sciezke">' +
       '<i class="uil uil-copy" aria-hidden="true"></i></button>' +
       '<button type="button" class="dam-viz-icon-btn' +
@@ -840,17 +862,33 @@
       thumb.appendChild(hint2);
     }
 
+    function bindSourceButtons(root) {
+      if (!root) return;
+      root.querySelectorAll("[data-media-source-btn]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var p = btn.getAttribute("data-path") || "";
+          if (!p) return;
+          if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
+            window.DamPaths.revealInExplorer(p);
+          } else if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+            window.DamPaths.openFolderInExplorer(p);
+          }
+        });
+      });
+    }
+
     function renderMeta(a) {
       var title = document.getElementById("damMediaPreviewTitle");
       var titleMeta = document.getElementById("damMediaPreviewTitleMeta");
-      var meta = document.getElementById("damMediaPreviewMeta");
       var badges = document.getElementById("damMediaPreviewBadges");
       var assocHost = document.getElementById("damMediaPreviewAssoc");
       var sourceMount = document.getElementById("damMediaPreviewSourceMount");
       if (title) title.innerHTML = titleHtml(a.name, a.id);
-      if (titleMeta) titleMeta.innerHTML = titleMetaHtml(a, groupContext);
-      if (meta) meta.textContent = metaLineText(a);
-      if (sourceMount) sourceMount.innerHTML = sourceFileActionHtml(a, groupContext);
+      if (titleMeta) titleMeta.innerHTML = titleMetaHtml(a);
+      if (sourceMount) {
+        sourceMount.innerHTML = sourceFileActionHtml(a, groupContext);
+        bindSourceButtons(sourceMount);
+      }
       if (assocHost) {
         var paintAssoc = function () {
           assocHost.innerHTML = associationsFooterHtml(a, groupContext, options);
@@ -911,28 +949,6 @@
         } else {
           paintAssoc();
         }
-      }
-      var editableLink = document.getElementById("damMediaPreviewEditableLink");
-      if (editableLink) {
-        editableLink.addEventListener("click", function () {
-          var p = editableLink.getAttribute("data-path") || "";
-          if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
-            window.DamPaths.revealInExplorer(p);
-          } else if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
-            window.DamPaths.openFolderInExplorer(p);
-          }
-        });
-      }
-      var editableSource = document.getElementById("damMediaPreviewSource");
-      if (editableSource) {
-        editableSource.addEventListener("click", function () {
-          var p = editableSource.getAttribute("data-path") || "";
-          if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
-            window.DamPaths.revealInExplorer(p);
-          } else if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
-            window.DamPaths.openFolderInExplorer(p);
-          }
-        });
       }
       if (badges) {
         badges.innerHTML = badgesHtml(a);
@@ -1056,7 +1072,12 @@
     var copyBtn = document.getElementById("damMediaPreviewCopy");
     if (copyBtn) {
       copyBtn.addEventListener("click", function () {
-        copyToClipboard(copyBtn.getAttribute("data-path") || "").then(function () {
+        var rawPath = copyBtn.getAttribute("data-path") || "";
+        if (window.DamPaths && typeof window.DamPaths.copyPortablePath === "function") {
+          window.DamPaths.copyPortablePath(rawPath);
+          return;
+        }
+        copyToClipboard(rawPath).then(function () {
           toast("Skopiowano sciezke do schowka");
         });
       });

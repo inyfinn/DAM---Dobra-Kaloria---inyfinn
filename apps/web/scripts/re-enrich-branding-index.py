@@ -11,6 +11,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 
+from asset_role_utils import apply_background_scan_cache  # noqa: E402
 from brand_folder_context import (  # noqa: E402
     apply_branding_assoc_overrides,
     apply_global_product_links,
@@ -57,6 +58,9 @@ def main() -> int:
     build_variant_to_product_map(file_index)  # warm cache
     enrich_folder_groups(assets, file_index)
     apply_branding_assoc_overrides(assets, file_index)
+    carried = apply_background_scan_cache(assets)
+    if carried:
+        print(f"background scan cache carry-over: {carried}")
     # apply_global already inside enrich; ensure orphans too
     for a in assets:
         apply_global_product_links(a, file_index)

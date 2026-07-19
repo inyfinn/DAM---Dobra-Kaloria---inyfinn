@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import concurrent.futures
 import json
+import os
 import re
+import tempfile
+import time
 import unicodedata
 from pathlib import Path
 from typing import Any, Callable
 
 WEB = Path(__file__).resolve().parents[1]
 MAPPING_FILE = WEB / "data" / "dam-asset-role-mapping.json"
+BACKGROUND_SCAN_CACHE = WEB / "data" / "branding-background-scan.json"
 
 FILE_ACCESS_TIMEOUT = 5.0
 MAX_RASTER_PROBE_BYTES = 20 * 1024 * 1024
@@ -167,23 +171,99 @@ def detect_raster_background(path: str | None, name: str = "") -> str | None:
     return None
 
 
+def atomic_write_json(path: Path, payload: Any, *, indent: int | None = 2) -> None:
+    """Zapis JSON przez plik tymczasowy + os.replace (atomowo na tym samym wolumenie)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=path.stem + ".", suffix=".tmp", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=indent)
+        os.replace(tmp_name, str(path))
+    except BaseException:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
+
+
+def _scan_cache_key(path: str | None) -> str:
+    return str(path or "").replace("\\", "/").lower()
+
+
+def load_background_scan_cache() -> dict[str, str]:
+    """Trwaly cache wynikow pixel-scanu: path(lower) -> transparent|white|none."""
+    if not BACKGROUND_SCAN_CACHE.is_file():
+        return {}
+    try:
+        data = json.loads(BACKGROUND_SCAN_CACHE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    results = data.get("results") if isinstance(data, dict) else None
+    return dict(results) if isinstance(results, dict) else {}
+
+
+def save_background_scan_cache(results: dict[str, str]) -> None:
+    from datetime import datetime, timezone
+
+    atomic_write_json(
+        BACKGROUND_SCAN_CACHE,
+        {
+            "version": 1,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "result_count": len(results),
+            "results": results,
+        },
+    )
+
+
+def apply_background_scan_cache(assets: list[dict[str, Any]], cache: dict[str, str] | None = None) -> int:
+    """Carry-over wynikow skanu do assetow (rebuild indeksu nie gubi pixel-scanu)."""
+    if cache is None:
+        cache = load_background_scan_cache()
+    if not cache:
+        return 0
+    touched = 0
+    for asset in assets:
+        if asset.get("perspective"):
+            continue  # wizki: background z nazwy pliku, nie ze skanu
+        cached = cache.get(_scan_cache_key(asset.get("path")))
+        if cached in ("transparent", "white") and asset.get("background") != cached:
+            asset["background"] = cached
+            enrich_branding_taxonomy(asset)
+            touched += 1
+    return touched
+
+
 def enrich_raster_backgrounds(
     assets: list[dict[str, Any]],
     *,
     scope: str | None = None,
     on_progress: Callable[[int, int, int], None] | None = None,
+    limit_seconds: float | None = None,
+    limit_count: int | None = None,
+    scan_cache: dict[str, str] | None = None,
+    include_opaque: bool = False,
 ) -> int:
-    """Uzupelnia background dla rasterow bez wizki-nazwy (np. slidery PNG)."""
+    """Uzupelnia background dla rasterow bez wizki-nazwy (np. slidery PNG).
+
+    limit_seconds / limit_count: budzet skanu (NFS X: bywa wolny) - przerwanie jest
+    bezpieczne, wyniki czesciowe zostaja w assets + scan_cache.
+    scan_cache: path(lower) -> transparent|white|none; trafienia nie czytaja dysku.
+    include_opaque: skanuj tez JPG/JPEG/BMP (background=white z rozszerzenia, bez IO).
+    """
     touched = 0
     scanned = 0
     skipped = 0
+    deadline = time.monotonic() + limit_seconds if limit_seconds else None
+    scan_exts = _ALPHA_EXTS | _OPAQUE_RASTER_EXTS if include_opaque else _ALPHA_EXTS
     for asset in assets:
         if asset.get("background") or asset.get("perspective"):
             continue
         name = asset.get("name") or ""
         ext = Path(name).suffix.lower()
         mt = legacy_media_type(asset.get("media_type") or media_type_for(ext))
-        if mt != "image" or ext not in _ALPHA_EXTS:
+        if mt != "image" or ext not in scan_exts:
             continue
         if scope == "www":
             path_u = (asset.get("path") or "").upper()
@@ -193,8 +273,21 @@ def enrich_raster_backgrounds(
                 or "/SLIDERY/" in path_u
             ):
                 continue
+        cache_key = _scan_cache_key(asset.get("path"))
+        if scan_cache is not None and cache_key in scan_cache:
+            cached = scan_cache[cache_key]
+            if cached in ("transparent", "white"):
+                asset["background"] = cached
+                touched += 1
+            continue
+        if deadline is not None and time.monotonic() >= deadline:
+            break
+        if limit_count is not None and scanned >= limit_count:
+            break
         scanned += 1
         bg = detect_raster_background(asset.get("path") or "", name)
+        if scan_cache is not None:
+            scan_cache[cache_key] = bg or "none"
         if on_progress and scanned % 25 == 0:
             on_progress(scanned, touched, skipped)
         if bg:

@@ -372,6 +372,48 @@
     return ensureUserBase();
   }
 
+  /**
+   * Sciezka przenosna (do schowka): bez litery dysku, od "Marketing\..." z backslashami.
+   * Kazdy user montuje udzial pod inna litera, wiec kopiujemy bez root-a.
+   * Gdy sciezka nie zawiera segmentu "Marketing" - tylko zdejmij prefix dysku / UNC.
+   */
+  function toPortablePath(path) {
+    var src = normSlashes(path);
+    if (!src) return "";
+    var parts = src.split("/");
+    var idx = -1;
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].toLowerCase() === "marketing") {
+        idx = i;
+        break;
+      }
+    }
+    var rel;
+    if (idx >= 0) {
+      rel = parts.slice(idx).join("/");
+    } else {
+      rel = src.replace(/^[A-Za-z]:\/?/, "").replace(/^\/+/, "");
+    }
+    return toWin(rel);
+  }
+
+  /** Kopiuje sciezke przenosna (Marketing\...) do schowka + toast + audit. */
+  function copyPortablePath(indexPath) {
+    var portable = toPortablePath(indexPath);
+    var p;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      p = navigator.clipboard.writeText(portable);
+    } else {
+      p = Promise.reject();
+    }
+    return p.then(function () {
+      logAction("copy_path", { path: indexPath, local_path: portable, detail: "Skopiowano sciezke przenosna (bez litery dysku)" });
+      showToast("Skopiowano: " + portable);
+    }).catch(function () {
+      showToast("Skopiuj recznie: " + portable);
+    });
+  }
+
   function copyPath(indexPath) {
     var local = toLocal(indexPath);
     var p = Promise.resolve();
@@ -798,6 +840,8 @@
     toLocal: toLocal,
     parentOf: parentOf,
     resolveWinFolderPath: resolveWinFolderPath,
+    toPortablePath: toPortablePath,
+    copyPortablePath: copyPortablePath,
     copyPath: copyPath,
     revealInExplorer: revealInExplorer,
     openFolderInExplorer: openFolderInExplorer,

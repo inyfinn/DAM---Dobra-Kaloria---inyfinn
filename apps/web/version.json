@@ -1,7 +1,7 @@
 {
-  "version": "2.0.5",
+  "version": "2.0.6",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "hub",
   "released_at": "2026-07-19",
-  "note": "2.0.5: Integracje hub v2 (bridge config/sync), kalkulator+faktury live, katalog FMCG, dashboard media layout 2x2/1x4/1x6. 2.0.4: skojarzenia branding. 2.0.3: OAuth hub."
+  "note": "2.0.6: modal CTA plikow zrodlowych (PSD/PSB/AI), sciezka przenosna Marketing\\..., synonimy search branding, cache skanu tla, indeksy/lifecycle. 2.0.5: Integracje hub v2. 2.0.4: skojarzenia branding. 2.0.3: OAuth hub."
 }

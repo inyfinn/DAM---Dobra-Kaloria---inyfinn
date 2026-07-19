@@ -3879,3 +3879,22 @@ Kontynuacja planu po innym agencie: audit luk, hotfix UI, commit+push na origin/
 
 ### Efekt/Fix
 Plan Integracje hub v2 domknięty w git + GitHub; restore-point pre-bento nadal tag `milestone/pre-bento-v1.5.0`.
+
+---
+
+## 2026-07-20 — Post-hub batch (2.0.6): modal CTA + portable path + search + indeksy
+
+### Komenda/Akcja
+Po zakonczeniu rownoleglych agentow: jeden commit zbiorczy wszystkich zmian lokalnych + push (bez bundle/tmp-qa).
+
+### Log/Status
+1. Czekanie na stabilizacje working tree (hashy JS/CSS/HTML bez driftu ~45s).
+2. Modal: CTA PSD/PSB/AI (#damMediaPreviewSourceMount), usuniecie #damMediaPreviewMeta, ext-tag 10px.
+3. DamPaths: toPortablePath / copyPortablePath (Marketing\… bez litery dysku).
+4. Branding search: synonimy przezroczystosc/tlo biale.
+5. asset_role_utils: atomic_write_json + cache skanu tla branding-background-scan.json.
+6. Indeksy/lifecycle/change-log odswiezone (operacyjne F/X).
+7. Bump wersji 2.0.5 → **2.0.6**.
+
+### Efekt/Fix
+Jedna dostawa na origin/main po zamknieciu agentow; wersja UI 2.0.6.
