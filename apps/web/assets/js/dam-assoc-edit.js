@@ -1481,6 +1481,8 @@
     closePicker: closePicker,
     /** Otwiera picker skojarzen (produkty/warianty); uzywane tez w QA/CDP gdy synthetic click nie odpala handlerow. */
     openPicker: openMediaPicker,
+    /** Shift+edit na karcie materialu brandingowego (viz assoc / Elementy). */
+    openEditPicker: openEditPicker,
     save: saveAssociations,
   };
 })(window);

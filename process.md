@@ -1,5 +1,13 @@
 ﻿# process.md - log + proces DAM
 
+## 2026-07-20 23:40 - Follow-up Opus handoff: Shift+edit na kartach assoc viz
+
+**Komenda/Akcja:** Subagent Opus przerwany (0 edits) — domknięcie Shift+edit.
+
+**Log/Status:** `bindLinkedAssetClicks` → Shift otwiera `DamAssocEdit.openEditPicker` dla assetu brandingowego; eksport `openEditPicker`; refresh listy po zapisie. Cache `assocshift20260720a`. Klasyfikacja KULKA + „Surowe elementy” już w `10e4587`.
+
+**Test:** `node --check` OK; API `DamAssocEdit.openEditPicker` obecne.
+
 ## 2026-07-20 23:38 - Re-verify + commit/push (evening batch)
 
 **Komenda/Akcja:** User: ponów poprzednie zadania, podsumuj, commit + push.

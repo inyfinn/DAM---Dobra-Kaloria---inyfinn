@@ -1059,13 +1059,79 @@
     }
   }
 
+  /** Ostatni productContext z renderLinkedBrandingAssets — do odswiezenia po Shift+edit. */
+  var _lastLinkedProductContext = null;
+
+  function refreshLinkedBrandingAfterEdit() {
+    if (!_lastLinkedProductContext) return;
+    var mount =
+      document.getElementById("damVizModalAssoc") ||
+      document.getElementById("damMediaPreviewLinkedAssets");
+    var labelEl =
+      document.getElementById("damVizModalAssocLabel") ||
+      document.getElementById("damMediaPreviewLinkedAssetsLabel");
+    if (!mount || typeof renderLinkedBrandingAssets !== "function") return;
+    /* Wyczysc cache indeksu, zeby linked_products po zapisie byly swieze. */
+    _indexAssetsPromise = null;
+    renderLinkedBrandingAssets({
+      mount: mount,
+      labelEl: labelEl,
+      productContext: _lastLinkedProductContext,
+    });
+  }
+
   function bindLinkedAssetClicks(host, list, attrName) {
     if (!host || !list) return;
     host.querySelectorAll("[" + attrName + "]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
+      btn.addEventListener("click", function (e) {
         var i = parseInt(btn.getAttribute(attrName), 10) || 0;
         var target = list[i];
         if (!target) return;
+        /* Shift+klik = edycja skojarzen assetu brandingowego (PI / user 2026-07-20). */
+        if (e && e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          var AE = window.DamAssocEdit;
+          if (!AE || typeof AE.openEditPicker !== "function") return;
+          if (typeof AE.canEdit === "function" && !AE.canEdit()) {
+            if (window.DamToast && typeof window.DamToast.show === "function") {
+              window.DamToast.show("Włącz tryb admina, aby edytować skojarzenia.");
+            }
+            return;
+          }
+          var col =
+            btn.closest(".dam-media-preview__assoc-col") ||
+            host.closest(".dam-media-preview__assoc-col") ||
+            host;
+          AE.openEditPicker(col, "product", {
+            asset: target,
+            mode: "viz",
+            sourceType: "viz",
+            groupContext: {
+              folder_group_id: target.folder_group_id || "",
+              linked_products: target.linked_products || [],
+              variants: target.folder_variants || target.variants || [],
+            },
+            onRefresh: refreshLinkedBrandingAfterEdit,
+            onSaved: function (productIds) {
+              var ids = productIds || [];
+              target.linked_product_ids = ids.slice();
+              if (typeof AE.enrichLinkedProducts === "function") {
+                AE.enrichLinkedProducts(
+                  ids.map(function (id) {
+                    return { id: id };
+                  })
+                ).then(function (linked) {
+                  target.linked_products = linked || [];
+                  refreshLinkedBrandingAfterEdit();
+                });
+              } else {
+                refreshLinkedBrandingAfterEdit();
+              }
+            },
+          });
+          return;
+        }
         openAsset(target, { siblings: list.slice(), index: i });
       });
     });
@@ -1121,7 +1187,7 @@
 
   /**
    * DWA niezalezne przyciski "rozwiń" (user 2026-07-20): "Elementy" (gotowe,
-   * 1 - MATERIALY\ELEMENTY) i "Linki do elementow" (surowe, folder Links) -
+   * 1 - MATERIALY\ELEMENTY) i "Surowe elementy" (folder Links) -
    * osobno, zeby nie zajmowaly duzo miejsca i nie mieszaly sie w jedna sciane.
    */
   function renderElementyGroups(host, groups) {
@@ -1238,6 +1304,11 @@
       }
     }
     var ctx = (options && options.productContext) || {};
+    _lastLinkedProductContext = {
+      id: ctx.id || "",
+      name: ctx.name || "",
+      index: ctx.index || "",
+    };
     var pid = ctx.id || "";
     var idxBase = String(ctx.index || "").split(".")[0];
     if (!pid && !idxBase) {
