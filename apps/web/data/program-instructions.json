@@ -1,8 +1,43 @@
 {
-  "version": 5,
+  "version": 6,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-19T23:00:00+02:00",
+  "updated_at": "2026-07-20T19:20:00+02:00",
   "instructions": [
+    {
+      "id": "device-scoped-base-paths",
+      "must": [
+        "Sciezka bazowa Marketing (litera dysku / root) jest PER-URZADZENIE (device_id + hostname), nie globalnie per konto na wszystkie maszyny",
+        "Runtime resolve root path bierze wpis dla AKTUALNEGO device_id z mostu (/auth/identity), nigdy 'ostatnio ustawiony na innym PC'",
+        "Profil / Sesja urzadzenia / Ustawienia#damDisk: ta sama karta DamDevicePaths (dam-device-paths.js) - jedna logika CRUD, nie osobny formularz settingBasePath",
+        "User wskazuje folder przez picker (desktop pywebview lub bridge POST /pick-folder); Wykryj i Sprawdz zostaja; reczne klepanie sciezki jest opcja a nie wymog",
+        "Gdy wskazany podfolder (np. X:\\Marketing\\- POLSKA): znormalizuj do rootu Marketing (struktura ARCHIWUM / EKSPORT / POLSKA) przed zapisem",
+        "Nowe urzadzenie (pierwsze logowanie konta na nowej maszynie): user ustawia sciezke dla TEGO device_id; zapis do bazy (Postgres dam_kv_store klucz user-device-paths:{email} + lokalny cache)",
+        "localStorage.dam_base_path i machine-config.json to tylko cache lokalny biezacego PC; zrodlo prawdy = baza per user+device"
+      ],
+      "body_pl": "Dużo ludzi pracuje zdalnie: w domu X:/, w pracy D:/. Zalogowane konto NIE przenosi litery dysku między komputerami. Nazwa urządzenia (hostname / device_id z mostu) identyfikuje stację; w profilu i w Ustawieniach (Dysk) widać tę samą listę urządzeń ze ścieżkami. Folder wybiera się w Eksploratorze; jeśli wskażesz podfolder POLSKA/EKSPORT/ARCHIWUM, program zapisze root Marketing.",
+      "category": "paths",
+      "must_not": [
+        "Traktowac dam_base_path / machine-config jako jedyna prawde wspolna dla wszystkich PC konta",
+        "Nadpisywac sciezke urzadzenia A wartoscia z urzadzenia B przy logowaniu / sync",
+        "Uzywac auto-detect do nadpisania juz zapisanej sciezki danego urzadzenia",
+        "Trzymac druga, rozna logike edycji sciezki w settings.html poza DamDevicePaths"
+      ],
+      "priority": "critical",
+      "title_pl": "Sciezka Marketing tylko dla biezacego urzadzenia",
+      "related_kv": [
+        "user-device-paths",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-paths.js",
+        "apps/web/assets/js/dam-device-paths.js",
+        "apps/web/profile.html",
+        "apps/web/settings.html",
+        "apps/desktop/local_bridge.py",
+        "docs/ADR/ADR-008-device-session-binding.md"
+      ]
+    },
     {
       "id": "data.lang_provenance_only",
       "must": [
@@ -611,25 +646,51 @@
     {
       "id": "integrations.hub_bridge",
       "must": [
-        "Kolejka wykrojnikow zapisana przez bridge GET/POST /wykrojnik-mapping-queue",
-        "Zapis kolejki tylko admin (POST); odczyt GET po zalogowaniu",
-        "localStorage nie jest zrodlem prawdy dla kolejki"
+        "Panel Wykrojniki↔produkty na integrations.html (dam-wykrojnik-queue.js)",
+        "Zrodlo mapowania: XLSX Kubara via POST /wykrojniki/reimport → wykrojniki-registry.json",
+        "Powiazania: POST /wykrojniki/link-products oraz POST /wykrojniki/set-link (admin)",
+        "Kolejka GET/POST /wykrojnik-mapping-queue tylko dla pozycji do zatwierdzenia; localStorage nie jest zrodlem prawdy"
       ],
-      "body_pl": "Hub Integracje v2: kolejka mapowan wykrojnikow, konfig OAuth/LDAP, sync Asana i modul finansow FMCG przez local_bridge (8766). Admin zapisuje przez API; UI pokazuje Stub/Opcjonalnie jako glowny UX dla nieskonfigurowanych integracji.",
+      "body_pl": "Hub Integracje: panel mapowan wykrojnikow (nie „kolejka + python w terminalu”). Admin wczytuje XLSX Kubara i laczy z produktami przez bridge. Konfig OAuth/LDAP, sync Asana i FMCG bez zmian.",
       "category": "integrations",
       "must_not": [
-        "Wymagac recznego pobierania JSON w normalnym workflow admina",
-        "Traktowac localStorage jako zrodlo prawdy kolejki wykrojnikow"
+        "Wymagac od admina uruchamiania python w terminalu jako glownego UX",
+        "Traktowac localStorage jako zrodlo prawdy kolejki wykrojnikow",
+        "Pokazywac placeholder row-N bez kodu/nazwy jako realne wykrojniki"
       ],
       "priority": "high",
-      "title_pl": "Integracje hub v2 - bridge API",
-      "updated_at": "2026-07-19",
+      "title_pl": "Integracje: Wykrojniki ↔ produkty + bridge",
+      "updated_at": "2026-07-20",
       "related_code": [
         "apps/web/integrations.html",
         "apps/web/assets/js/dam-wykrojnik-queue.js",
-        "apps/web/assets/js/dam-integrations.js",
+        "apps/web/assets/css/dam-wykrojnik-queue.css",
+        "apps/web/scripts/import-wykrojniki-xlsx.py",
+        "apps/web/scripts/link-wykrojniki-products.py",
         "apps/desktop/local_bridge.py",
+        "apps/web/data/wykrojniki-registry.json",
         "apps/web/data/wykrojnik-mapping-queue.json"
+      ]
+    },
+    {
+      "id": "wykrojnik.registry_xlsx_kubara",
+      "must": [
+        "Import XLSX szuka wierszy naglowka z kolumna „oznaczenie Kubara” (wielosekcyjny arkusz)",
+        "Kod = oznaczenie Kubara; nazwa = asortyment; product_index = numer indeksu GC/DK gdy wypelniony",
+        "Reimport zachowuje istniejace linked_product_ids dla tych samych kodow"
+      ],
+      "body_pl": "Plik zrodlowy: X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/opakowania_Kubara_baza_danych.xlsx. Parser nie uzywa wiersza 0 jako jedynego naglowka - stamtad wczesniej powstaly smieci row-N.",
+      "category": "wykrojnik",
+      "must_not": [
+        "Generowac row-N gdy brak kolumny kod w pierwszym wierszu arkusza",
+        "Kasowac powiazania produktow przy samym reimportcie XLSX"
+      ],
+      "priority": "critical",
+      "title_pl": "Wykrojniki: parser XLSX Kubara",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/scripts/import-wykrojniki-xlsx.py",
+        "apps/web/data/wykrojniki-registry.json"
       ]
     },
     {
@@ -676,19 +737,78 @@
       "must": [
         "Katalog lancucha kosztow FMCG w fmcg-cost-catalog.json",
         "Import CSV/XLSX przez bridge POST /finance/fmcg-import (admin)",
-        "GET /finance/fmcg-compute sumuje kwoty po stage"
+        "GET /finance/fmcg-compute sumuje kwoty po stage",
+        "Reczna edycja mapowan i pozycji katalogu bez wymaganego pliku CSV (CTA Edytuj w Integracjach)"
       ],
-      "body_pl": "Pelny lancuch FMCG: procurement, prepress, production, warehouse, logistics. Szablon CSV w data/templates/fmcg-cost-import-template.csv. Mapowanie kolumn: fmcg-cost-import-map.json.",
+      "body_pl": "Pelny lancuch FMCG: procurement, prepress, production, warehouse, logistics. Szablon CSV w data/templates/fmcg-cost-import-template.csv. Mapowanie kolumn: fmcg-cost-import-map.json. Brak pliku nie blokuje edycji mapowan ani wpisywania kwot recznie.",
       "category": "finance",
       "must_not": [
-        "Traktowac fmcg-cost-averages.json jako jedyne zrodlo kwot po wdrozeniu katalogu"
+        "Traktowac fmcg-cost-averages.json jako jedyne zrodlo kwot po wdrozeniu katalogu",
+        "Blokowac UI komunikatem musisz najpierw wgrac CSV gdy katalog lub mapa sa puste"
       ],
       "priority": "high",
       "title_pl": "Finanse: katalog kosztow FMCG",
-      "updated_at": "2026-07-19",
+      "updated_at": "2026-07-20",
       "related_code": [
         "apps/web/data/fmcg-cost-catalog.json",
         "apps/web/data/fmcg-cost-import-map.json",
+        "apps/web/assets/js/dam-fmcg-catalog.js",
+        "apps/web/assets/js/dam-integrations.js",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "finance.fmcg_manual_edit",
+      "must": [
+        "W panelu Konfiguruj Katalog FMCG CTA Edytuj otwiera edytor mapowania pol i danych recznych",
+        "GET/POST /finance/fmcg-import-map zapisuje fmcg-cost-import-map.json (admin)",
+        "POST /finance/fmcg-catalog action=patch (opcjonalnie upsert) zapisuje kwoty/pozycje bez importu pliku",
+        "Pusty katalog lub brak pliku: pusta tabela + Dodaj wiersz nadal dostepne",
+        "Overlay #damFmcgEditOverlay: dialog ~80vw x 80vh, scroll w .dam-fmcg-edit__table-wrap (trap wheel; body lock), CTA akcji = .dam-int-cta, zamkniecie = .dam-modal-x (ikona X, nie fat CTA)",
+        "Usun wiersz: hold ~1s via DamDanger gdy ui.safe_delete ON"
+      ],
+      "body_pl": "FMCG: reczna edycja mapowan kolumn CSV→catalog_id oraz wierszy katalogu/kwot bez wgranego pliku. Import CSV pozostaje; Edytuj to rownolegla sciezka zapisu do tego samego store. Modal duzy, scroll w tabeli, bez scrolla tla; Zamknij = cichy X jak inne modale DAM.",
+      "category": "finance",
+      "must_not": [
+        "Tworzyc rownoleglego CRUD poza fmcg-cost-catalog.json / fmcg-cost-import-map.json",
+        "Wymagac uploadu CSV przed edycja mapowania lub kwot",
+        "Uzywac geex-btn--primary / osobnych stylow Usun/Zamknij konkurujacych z systemem CTA",
+        "Pozwalac wheel na tle strony gdy overlay otwarty"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: FMCG Edytuj mapowanie i dane reczne",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-fmcg-catalog.js",
+        "apps/web/assets/js/dam-integrations.js",
+        "apps/web/assets/js/dam-danger.js",
+        "apps/desktop/local_bridge.py",
+        "apps/web/data/fmcg-cost-import-map.json"
+      ]
+    },
+    {
+      "id": "ui.safe_delete",
+      "must": [
+        "Bezpieczne usuwanie (hold-to-delete) domyslnie ON",
+        "Preferencja w Postgres dam_kv_store klucz user-prefs:{email} pole prefs.safe_delete (bridge GET/POST /user-prefs)",
+        "localStorage tylko cache zsynchronizowany z DB",
+        "Krotki klik przy hold ON: toast 'Sprobuj przytrzymac, by usunac' + akcja 'Wylacz bezpieczne usuwanie' (przywrocenie w ustawieniach profilu)",
+        "Gdy safe_delete OFF: Usun dziala na zwykly klik",
+        "Reuse DamDanger - bez trzeciego systemu hold"
+      ],
+      "body_pl": "Globalna preferencja UX: destrukcyjne Usun wymaga przytrzymania (~1 s w FMCG / DamDanger). Wylaczenie w ustawieniach profilu (Preferencje / Bezpieczenstwo) zapisuje sie w bazie per konto.",
+      "category": "ui",
+      "must_not": [
+        "Traktowac localStorage jako jedyne zrodlo prawdy preferencji safe_delete",
+        "Forkowac osobnego hold-delete obok DamDanger"
+      ],
+      "priority": "high",
+      "title_pl": "UI: bezpieczne usuwanie (hold-to-delete)",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-danger.js",
+        "apps/web/assets/js/dam-user-prefs.js",
+        "apps/web/assets/js/dam-settings.js",
         "apps/desktop/local_bridge.py"
       ]
     },
@@ -865,6 +985,56 @@
       "updated_at": "2026-07-20",
       "related_code": [
         "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-media-preview.js"
+      ]
+    },
+    {
+      "id": "viz.assoc_no_visualization_loop",
+      "must": [
+        "W modalu wizualizacji (#damVizModal) i DamMediaPreview mode=viz-studio kolumna 'Skojarzone materialy' pokazuje wylacznie materialy brandingowe / produkty / elementy (slidery, banery, social, elementy Links/ELEMENTY itd.)",
+        "Asset typu visualization (packshot, source=wizki, sciezka 4 - WIZKI / 4 - VISUALS) NIGDY nie trafia do listy skojarzonych materialow innego assetu wizualizacji — zero petli wiz→wiz",
+        "Layout modala viz: CSS Grid 2 kolumny (desktop ≥768): lewa = hero + meta + warianty + akcje, prawa = skojarzenia; mobile (<768) stack: hero → meta → assoc",
+        "Filtr anty-petli po stronie UI (renderLinkedBrandingAssets); indekser nie powinien linkowac wizki jako material brandingowy przy innym packshocie (handoff do build-branding-index)"
+      ],
+      "body_pl": "HARD 2026-07-20: system zaczal listowac wizualizacje w 'Skojarzonych materialach' innych wizek (np. OATS/babka). Skojarzenia lustrzane = branding↔produkt, nie wiz↔wiz. Packshoty z WIZKI zostaja wariantami produktu, nie 'materialami'.",
+      "category": "ui",
+      "must_not": [
+        "Pokazywac asset_role=packshot / source=wizki / sciezki 4 - WIZKI|VISUALS w kolumnie Skojarzone materialy przy podglądzie wizualizacji",
+        "Traktowac inne packshoty produktu jako skojarzone materialy marketingowe"
+      ],
+      "priority": "critical",
+      "title_pl": "Wizualizacje: zakaz petli skojarzen wiz→wiz + layout assoc po prawej",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/assets/css/dam-viz-modal.css",
+        "apps/web/scripts/build-branding-index.py"
+      ]
+    },
+    {
+      "id": "branding.element_assoc_skladniki_owoce",
+      "must": [
+        "Indekser branding indeksuje pliki ELEMENTY produktu spod 01 - PRODUKTY: `2 - PROJEKT/Links` (surowe) oraz `1 - MATERIALY/ELEMENTY` (gotowe), source/asset_role=product_element",
+        "Skojarzenia wyszukiwawcze 'skladniki' / 'owoce' / 'owocki' trafiaja do search_blob (nie nowy tag kanoniczny / facet globalny)",
+        "Elementy owocowe (cytryna, malina, jagoda…) dostaja terminy owoce+owocki+skladniki; pozostale sloty ELEMENTY/Links - skladniki",
+        "linked_products dla product_element wyliczane z SKU w sciezce rewizji (+ associations); UI modalu viz grupuje je w ELEMENTY / LINKS",
+        "Incremental: preferuj enrich-branding-element-assoc.py zamiast pelnego wipe indeksu"
+      ],
+      "body_pl": "Handoff A3 / brief pkt 35: UI filtruje ELEMENTY po sciezce i search_blob, ale product-folder Links/ELEMENTY nie byly w branding-index. Fix indeksera = skojarzenia skladniki/owoce/owocki + merge product_element.",
+      "category": "branding",
+      "must_not": [
+        "Dodawac 'skladniki'/'owoce'/'owocki' jako kanoniczny facet w CANONICAL_TAGS (to skojarzenie search, nie tag UI)",
+        "Kasowac/resetowac caly branding-index przy samym enrich elementow",
+        "Linkowac product_element jako packshot / naruszac viz.assoc_no_visualization_loop"
+      ],
+      "priority": "high",
+      "title_pl": "Branding: skojarzenia ELEMENTY (skladniki/owoce/owocki)",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/scripts/brand_element_assoc.py",
+        "apps/web/scripts/enrich-branding-element-assoc.py",
+        "apps/web/scripts/build-branding-index.py",
         "apps/web/assets/js/dam-media-preview.js"
       ]
     }

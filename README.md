@@ -219,6 +219,14 @@ Szczegoly: [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md).
 
 ---
 
+## Changelog (2026-07-20)
+
+- **Usability chrome (Viz / Branding / Pomoc / Sidebar):** admin-only `#damChangeLogBar` w `.dam-search-scope` (prawo), hint Cofnij/Ponow, `#vizStatus` spacing, pill licznikow (+8/+12 pad); Branding suwak+input limitu kart z apply po OK; `#damHelpModal` restart samouczka pod X + padding panelu; sidebar morph anti-jank + footer meta
+- **Device paths:** Marketing root per `device_id` (KV + bridge), nie globalnie per konto
+- **Samouczek:** DobroKalorius, C4 dymek/anchor, 40 pochwal, `dam-tutorial.js` / `dam-tutorial.css`
+- **Integracje / FMCG / Danger / Shell FOUC / Assocs:** hub Bento, Edytuj FMCG, H-danger UX, skojarzenia + product_element; szczegoly w `process.md` i `agents/shared/usability-brief-2026-07-20.md`
+- **Doktryna:** `agents/shared/code-doctrine.md` (+ skill `dam-dobrakaloria`)
+
 ## Changelog (2026-07-19)
 
 - **Branding DAM Hub:** `branding.html` (filtry, kampanie, Key visuale, layout builder), `dam-branding.js`, `dam-hub-shared.css`

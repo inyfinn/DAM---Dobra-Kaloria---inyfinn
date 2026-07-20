@@ -1,6 +1,13 @@
 <!doctype html>
-<html lang="pl" dir="ltr">
+<html lang="pl" dir="ltr" class="dam-booting">
 <head>
+  <style id="dam-shell-boot-critical">
+html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
+  </style>
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=shellboot20260720a">
+  <script>
+  (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Regulamin - DAM</title>
@@ -9,10 +16,10 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718v7f">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718inbox2">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=hub20260719sidebar02">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=helprestart20260720b">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
 </head>
-<body class="geex-dashboard dam-app">
+<body class="geex-dashboard dam-app is-booting">
   <div class="dam-sidebar-backdrop" id="damSidebarBackdrop"></div>
   <header class="geex-header">
     <div class="geex-header__wrapper">
@@ -63,9 +70,9 @@
   <script src="./assets/js/main.js"></script>
   <script src="./assets/js/dam-app.js?v=20260718inbox2"></script>
   <script src="./assets/js/dam-api.js?v=20260719golive1"></script>
-  <script src="./assets/js/dam-i18n.js?v=20260718inbox2"></script>
+  <script src="./assets/js/dam-i18n.js?v=plshell20260720a"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718inbox2"></script>
   <script src="./assets/js/dam-version.js?v=2.0.6"></script>
-	<script src="./assets/js/dam-shell.js?v=20260719ver102"></script>
+	<script src="./assets/js/dam-shell.js?v=helprestart20260720a"></script>
 </body>
 </html>

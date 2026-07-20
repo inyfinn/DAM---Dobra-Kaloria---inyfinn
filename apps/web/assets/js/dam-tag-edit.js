@@ -834,24 +834,70 @@
     return String(code);
   }
 
+  function humanDiskStatusLabel(code) {
+    var c = String(code || "")
+      .trim()
+      .toLowerCase();
+    if (!c) return "";
+    if (c === "f" || c === "aktualne" || c === "current" || c === "active") return "aktualne";
+    if (c === "x" || c === "nieaktualne" || c === "outdated" || c === "obsolete") return "nieaktualne";
+    if (c === "d" || c === "demo" || c === "prototype" || c === "prototyp") return "demo / prototyp";
+    return String(code);
+  }
+
   function formatChangeLogEntry(entry) {
-    if (!entry) return "Brak historii zmian";
+    if (!entry) return "Brak zmian do cofnięcia";
     var ts = String(entry.ts || "").replace("T", " ").slice(0, 16);
     var cat = String(entry.category || entry.action || "");
-    var label = "";
-    if (entry.action === "rename_index" || cat === "index") {
-      label = "Indeks: " + (entry.index_from || "?") + " -> " + (entry.index_to || "?");
+    var action = String(entry.action || "");
+    var detail = "";
+    if (action === "rename_index" || cat === "index") {
+      detail = "indeks " + (entry.index_from || "?") + " -> " + (entry.index_to || "?");
     } else if (entry.carrier_from || entry.carrier_to) {
-      // UI: pelne nazwy; w JSON zostaje kod/skrot (API + dysk)
-      label =
-        "Typ: " +
+      detail =
+        "typ " +
         humanCarrierForLog(entry.carrier_from) +
         " -> " +
         humanCarrierForLog(entry.carrier_to);
+    } else if (cat === "lifecycle_status" || action.indexOf("lifecycle") === 0) {
+      var stFrom = humanDiskStatusLabel(entry.status_from || entry.from);
+      var stTo = humanDiskStatusLabel(entry.status_to || entry.to || entry.status);
+      if (stFrom && stTo) detail = "status " + stFrom + " -> " + stTo;
+      else if (stTo) detail = "status -> " + stTo;
+      else detail = "status na dysku";
+    } else if (action === "rename_folder" || cat === "rename") {
+      detail = "rename folderu / plików";
     } else {
-      label = cat || "Zmiana";
+      detail = cat || action || "zmiana na dysku";
     }
-    return label + (ts ? " · " + ts : "");
+    /* Jasny copy: ostatnia zmiana na dysku + Cofnij/Ponów (bez „Status cyklu życia…”) */
+    return "Ostatnia zmiana na dysku: " + detail + (ts ? " · " + ts : "");
+  }
+
+  function setChangeLogOfflineHint(hint, reason) {
+    if (!hint) return;
+    var msg =
+      reason === "login"
+        ? "Zaloguj się, aby zobaczyć historię zmian"
+        : "Most zmian niedostępny - Cofnij/Ponów lokalnie";
+    var tip =
+      reason === "login"
+        ? "Most 8766 działa, ale /change-log wymaga sesji. „Baza online” to Postgres - to osobny status."
+        : "Nie udało się połączyć z mostem (8766) albo endpoint historii zmian nie odpowiada. Cofnij/Ponów działają tylko przez most na dysku X:; nie mylić z „Baza online”.";
+    hint.textContent = msg;
+    hint.title = tip;
+    hint.setAttribute("data-dam-tip", tip);
+  }
+
+  function mountChangeLogBarInSearchScope() {
+    var bar = document.getElementById("damChangeLogBar");
+    if (!bar) return;
+    var scope =
+      document.querySelector("#vizSearchScope > .dam-search-scope") ||
+      document.querySelector("#vizSearchScope .dam-search-scope");
+    if (scope && bar.parentElement !== scope) {
+      scope.appendChild(bar);
+    }
   }
 
   function refreshChangeLogBar() {
@@ -860,18 +906,32 @@
     var undoBtn = document.getElementById("damChangeUndo");
     var redoBtn = document.getElementById("damChangeRedo");
     if (!bar) return;
-    if (!isAdmin()) {
+    mountChangeLogBarInSearchScope();
+    /* Widoczny tylko przy roli admin + przełączniku ADMIN ON (jak w headerze). */
+    if (!isAdmin() || !adminModeOn()) {
       bar.hidden = true;
       return;
     }
     bar.hidden = false;
-    fetch(bridgeBase() + "/change-log?limit=20")
+    fetch(bridgeBase() + "/change-log?limit=20", {
+      headers: bridgeAuthHeaders(),
+      credentials: "same-origin",
+    })
       .then(function (r) {
-        return r.json();
+        return r.json().then(function (data) {
+          return { httpOk: r.ok, status: r.status, data: data };
+        });
       })
-      .then(function (data) {
+      .then(function (pack) {
+        var data = pack && pack.data;
         if (!data || !data.ok) {
-          if (hint) hint.textContent = "Bridge offline";
+          var err = String((data && data.error) || "");
+          var isLogin =
+            err === "login_required" ||
+            err === "unauthorized" ||
+            pack.status === 401 ||
+            pack.status === 403;
+          setChangeLogOfflineHint(hint, isLogin ? "login" : "offline");
           if (undoBtn) undoBtn.disabled = true;
           if (redoBtn) redoBtn.disabled = true;
           return;
@@ -882,15 +942,24 @@
           if (last) {
             hint.textContent = formatChangeLogEntry(last);
             hint.title = hint.textContent;
+            hint.setAttribute(
+              "data-dam-tip",
+              "Ostatnia zatwierdzona zmiana na dysku (typ / indeks / rename). Cofnij i Ponów cofają lub przywracają ten wpis przez most."
+            );
           } else {
             hint.textContent = "Brak historii zmian";
+            hint.title = "Brak wpisów w change-log - nie ma czego cofać.";
+            hint.setAttribute(
+              "data-dam-tip",
+              "Historia zmian na dysku jest pusta. Po zatwierdzeniu rename typu/indeksu/plików pojawi się tu ostatni wpis."
+            );
           }
         }
         if (undoBtn) undoBtn.disabled = !data.can_undo;
         if (redoBtn) redoBtn.disabled = !data.can_redo;
       })
       .catch(function () {
-        if (hint) hint.textContent = "Bridge offline";
+        setChangeLogOfflineHint(hint, "offline");
         if (undoBtn) undoBtn.disabled = true;
         if (redoBtn) redoBtn.disabled = true;
       });
@@ -922,25 +991,30 @@
           return res;
         })
         .catch(function () {
-          showToast("Bridge offline");
+          showToast("Most zmian niedostępny - uruchom DAM / local_bridge (8766).");
         });
     }
     if (undoBtn) {
       undoBtn.addEventListener("click", function () {
-        if (!confirm("Cofnac ostatnia zmiane na dysku (typ, indeks lub pliki)?")) return;
-        postAction("/change-log/undo", "Cofnieto ostatnia zmiane.");
+        if (!confirm("Cofnąć ostatnią zmianę na dysku (typ, indeks lub pliki)?")) return;
+        postAction("/change-log/undo", "Cofnięto ostatnią zmianę.");
       });
     }
     if (redoBtn) {
       redoBtn.addEventListener("click", function () {
-        if (!confirm("Ponowic cofnieta zmiane na dysku?")) return;
-        postAction("/change-log/redo", "Ponowiono zmiane.");
+        if (!confirm("Ponowić cofniętą zmianę na dysku?")) return;
+        postAction("/change-log/redo", "Ponowiono zmianę.");
       });
     }
     refreshChangeLogBar();
     if (!global._damTagEditAdminBound) {
       global._damTagEditAdminBound = true;
       global.addEventListener("dam:admin-mode", refreshChangeLogBar);
+      global.addEventListener("storage", function (e) {
+        if (e && (e.key === ADMIN_MODE_KEY || e.key === "dam_viz_admin_mode")) {
+          refreshChangeLogBar();
+        }
+      });
     }
   }
 

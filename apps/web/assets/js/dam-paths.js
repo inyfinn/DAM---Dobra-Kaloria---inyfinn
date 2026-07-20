@@ -2,15 +2,14 @@
  * DAM - sciezki lokalne, reveal w Eksploratorze, audit log.
  *
  * Struktura katalogow ZAWSZE ta sama (-- ARCHIWUM --, - EKSPORT, - POLSKA).
- * Prefix Marketing = TYLKO to, co UZYTKOWNIK ustawi (po pierwszym uruchomieniu).
- * Brak stalej litery dysku w aplikacji. Wykrywanie to podpowiedz, nie nadpisanie.
+ * Prefix Marketing = TYLKO dla BIEZACEGO urzadzenia (device_id), nie globalnie
+ * dla konta na wszystkich PC (dom X: vs praca D:). Patrz program-instruction
+ * device-scoped-base-paths + ADR-008.
  *
- * localStorage (per profil / konto):
- *   dam_base_path      baza ustawiona przez usera (swieta)
- *   dam_index_base     prefix z file-index (tylko do remap; nie jest "zrodlem prawdy")
- *   dam_audit_log
- *
- * Desktop: machine-config.json trzyma preferencje per konto Windows (USERNAME).
+ * Zrodlo prawdy: Postgres / bridge GET /user-device-paths/current
+ * Cache lokalny:
+ *   localStorage dam_base_path::{device_id} (+ legacy dam_base_path)
+ *   machine-config.json (backup per Windows USERNAME na tym PC)
  */
 (function () {
   "use strict";
@@ -38,11 +37,30 @@
   }
 
   var BASE_KEY = "dam_base_path";
+  var BASE_KEY_PREFIX = "dam_base_path::";
   var INDEX_BASE_KEY = "dam_index_base";
   var AUDIT_KEY = "dam_audit_log";
   var REQUIRED = ["-- ARCHIWUM --", "- EKSPORT", "- POLSKA"];
   var bridgeOk = null;
   var _ensurePromise = null;
+
+  function currentDeviceId() {
+    try {
+      if (window.DamApi && typeof DamApi.deviceId === "function") {
+        return String(DamApi.deviceId() || "").trim();
+      }
+    } catch (_e) { /* ignore */ }
+    try {
+      return String(localStorage.getItem("dam_device_id") || "").trim();
+    } catch (_e2) {
+      return "";
+    }
+  }
+
+  function baseStorageKey(deviceId) {
+    var did = String(deviceId || currentDeviceId() || "").trim();
+    return did ? BASE_KEY_PREFIX + did : BASE_KEY;
+  }
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -62,6 +80,52 @@
 
   function toWin(p) {
     return normSlashes(p).replace(/\//g, "\\");
+  }
+
+  /**
+   * Normalizuj wskazanie do rootu Marketing.
+   * Przyklad: X:\Marketing\- POLSKA -> X:\Marketing
+   * Struktura znana: -- ARCHIWUM --, - EKSPORT, - POLSKA.
+   */
+  function normalizeMarketingRoot(raw) {
+    var win = String(raw || "").trim().replace(/\//g, "\\");
+    if (!win) return "";
+    if (/^[A-Za-z]:\\?$/.test(win)) {
+      return win.charAt(0).toUpperCase() + ":\\";
+    }
+    win = win.replace(/\\+$/, "");
+    var parts = win.split("\\").filter(function (seg) { return seg !== ""; });
+    if (!parts.length) return win;
+
+    function isMarketChild(name) {
+      var n = String(name || "").replace(/^\s+|\s+$/g, "").toLowerCase();
+      if (!n) return false;
+      if (n === "-- archiwum --" || n === "- archiwum -" || n === "archiwum") return true;
+      if (n === "- eksport" || n === "eksport") return true;
+      if (n === "- polska" || n === "polska") return true;
+      // warianty z wiodacym myslnikiem / spacja
+      if (/^-+\s*archiwum/.test(n)) return true;
+      if (/^-+\s*eksport/.test(n)) return true;
+      if (/^-+\s*polska/.test(n)) return true;
+      return false;
+    }
+
+    var mIdx = -1;
+    for (var i = 0; i < parts.length; i++) {
+      if (String(parts[i]).toLowerCase() === "marketing") {
+        mIdx = i;
+        break;
+      }
+    }
+    if (mIdx >= 0) {
+      return parts.slice(0, mIdx + 1).join("\\");
+    }
+
+    // Brak segmentu Marketing: jesli ostatni segment to POLSKA/EKSPORT/ARCHIWUM - wez rodzica
+    while (parts.length > 1 && isMarketChild(parts[parts.length - 1])) {
+      parts.pop();
+    }
+    return parts.join("\\");
   }
 
   function getIndexBase() {
@@ -99,28 +163,154 @@
   }
 
   function getBasePath() {
+    var did = currentDeviceId();
+    if (did) {
+      var scoped = localStorage.getItem(BASE_KEY_PREFIX + did);
+      if (scoped) return scoped;
+    }
     return localStorage.getItem(BASE_KEY) || "";
   }
 
-  function setBasePath(p) {
+  function setBasePathLocalCache(win, deviceId) {
+    var did = String(deviceId || currentDeviceId() || "").trim();
+    if (did) {
+      localStorage.setItem(BASE_KEY_PREFIX + did, win);
+    }
+    // Legacy key = cache TYLKO biezacego urzadzenia (kompatybilnosc starych readerow)
+    localStorage.setItem(BASE_KEY, win);
+  }
+
+  function persistBasePathToBridge(win, meta) {
+    var body = { base_path: win };
+    var did = (meta && meta.device_id) || currentDeviceId();
+    if (did) body.device_id = did;
+    if (meta && meta.hostname) body.hostname = meta.hostname;
+    if (meta && meta.label != null) body.label = meta.label;
+    // 1) machine-config (lokalny backup Windows USER) - most lustrzuje tez do UDP
+    var p1 = fetch(bridgeBase() + "/machine-config", {
+      method: "POST",
+      headers: bridgeAuthHeaders(),
+      body: JSON.stringify({ base_path: win })
+    }).catch(function () { return null; });
+    // 2) jawny zapis per-urzadzenie (gdy token jest)
+    var p2 = fetch(bridgeBase() + "/user-device-paths", {
+      method: "POST",
+      headers: bridgeAuthHeaders(),
+      body: JSON.stringify({
+        action: "upsert",
+        device_id: did || undefined,
+        hostname: (meta && meta.hostname) || undefined,
+        label: meta && meta.label != null ? meta.label : undefined,
+        base_path: win
+      })
+    }).catch(function () { return null; });
+    return Promise.all([p1, p2]);
+  }
+
+  function setBasePath(p, meta) {
     // Zachowaj root dysku: "M:\" / "M:" -> "M:\"; inaczej bez trailing slash
-    var win = String(p || "").trim().replace(/\//g, "\\");
+    var win = normalizeMarketingRoot(p);
+    if (!win) return;
     if (/^[A-Za-z]:\\?$/.test(win)) {
       win = win.charAt(0).toUpperCase() + ":\\";
     } else {
       win = win.replace(/\\+$/, "");
     }
-    localStorage.setItem(BASE_KEY, win);
-    // Backup preferencji tego konta Windows (nie nadpisuje innych userow)
-    fetch(bridgeBase() + "/machine-config", {
-      method: "POST",
-      headers: bridgeAuthHeaders(),
-      body: JSON.stringify({ base_path: win })
-    }).catch(function () { /* opcjonalne */ });
+    setBasePathLocalCache(win, meta && meta.device_id);
+    persistBasePathToBridge(win, meta || {});
     // Po ustawieniu ROOT - sprawdz czy fetch plikow dziala
     if (window.DamRootStatus && typeof window.DamRootStatus.check === "function") {
       setTimeout(function () { window.DamRootStatus.check(); }, 200);
     }
+  }
+
+  function fetchCurrentDevicePath() {
+    return fetch(bridgeBase() + "/user-device-paths/current", {
+      headers: bridgeAuthHeaders(),
+      cache: "no-store"
+    }).then(function (r) {
+      if (!r.ok) return null;
+      return r.json();
+    }).catch(function () { return null; });
+  }
+
+  function fetchUserDevicePaths() {
+    return fetch(bridgeBase() + "/user-device-paths", {
+      headers: bridgeAuthHeaders(),
+      cache: "no-store"
+    }).then(function (r) {
+      if (!r.ok) return null;
+      return r.json();
+    }).catch(function () { return null; });
+  }
+
+  function upsertUserDevicePath(entry) {
+    var rawPath = (entry && (entry.base_path || entry.path)) || "";
+    var body = {
+      action: "upsert",
+      device_id: (entry && entry.device_id) || currentDeviceId(),
+      hostname: (entry && entry.hostname) || "",
+      base_path: normalizeMarketingRoot(rawPath) || rawPath,
+      label: entry && entry.label != null ? entry.label : undefined
+    };
+    return fetch(bridgeBase() + "/user-device-paths", {
+      method: "POST",
+      headers: bridgeAuthHeaders(),
+      body: JSON.stringify(body)
+    }).then(function (r) { return r.json(); });
+  }
+
+  /**
+   * Natywny wybor folderu: pywebview (desktop) albo bridge POST /pick-folder (przegladarka + most).
+   * Zwraca Promise<{ ok, path?, cancelled?, error? }>.
+   */
+  function pickFolder(startDir) {
+    var start = String(startDir || getBasePath() || "").trim();
+    var api = window.pywebview && window.pywebview.api;
+    if (api && typeof api.pick_folder === "function") {
+      return Promise.resolve(api.pick_folder(start)).then(function (res) {
+        if (!res) return { ok: false, cancelled: true };
+        if (res.cancelled) return { ok: false, cancelled: true };
+        if (!res.ok || !res.path) {
+          return { ok: false, error: res.error || "Nie wybrano folderu." };
+        }
+        var norm = normalizeMarketingRoot(res.path);
+        return { ok: true, path: norm || res.path, picked: res.path, normalized: norm !== res.path };
+      }).catch(function (err) {
+        return { ok: false, error: (err && err.message) || "pick_folder_failed" };
+      });
+    }
+    return fetch(bridgeBase() + "/pick-folder", {
+      method: "POST",
+      headers: bridgeAuthHeaders(),
+      body: JSON.stringify({ start: start, path: start })
+    }).then(function (r) { return r.json(); }).then(function (res) {
+      if (!res) return { ok: false, error: "empty_response" };
+      if (res.cancelled) return { ok: false, cancelled: true };
+      if (!res.ok || !res.path) {
+        return { ok: false, error: res.error || "Nie wybrano folderu." };
+      }
+      var norm = normalizeMarketingRoot(res.path);
+      return {
+        ok: true,
+        path: norm || res.path,
+        picked: res.path,
+        normalized: !!(norm && toWin(norm).toLowerCase() !== toWin(res.path).toLowerCase())
+      };
+    }).catch(function () {
+      return {
+        ok: false,
+        error: "Wskazywanie folderu wymaga aplikacji desktop lub mostu lokalnego (8766)."
+      };
+    });
+  }
+
+  function deleteUserDevicePath(deviceId) {
+    return fetch(bridgeBase() + "/user-device-paths", {
+      method: "POST",
+      headers: bridgeAuthHeaders(),
+      body: JSON.stringify({ action: "delete", device_id: deviceId })
+    }).then(function (r) { return r.json(); });
   }
 
   function hasBasePath() {
@@ -314,42 +504,95 @@
   }
 
   /**
-   * Preferencja UZYTKOWNIKA jest swieta.
-   * - Jesli dam_base_path jest ustawione: NIGDY nie nadpisuj (ani X:, ani D:, ani detect).
-   * - Pierwszy start (pusto): przywroc tylko wlasny backup tego konta Windows (machine-config),
-   *   bez auto-wyboru "recommended". Podpowiedz zostaje w modalu / przycisku Wykryj.
+   * Preferencja PER URZADZENIE jest swieta.
+   * Kolejnosc prawdy:
+   *  1) baza (bridge /user-device-paths/current dla tego device_id)
+   *  2) cache localStorage dla tego device_id
+   *  3) machine-config (tylko ten PC / Windows USER) - nigdy sciezka z innego device
+   * Auto-detect NIGDY nie nadpisuje zapisu.
    */
   function ensureUserBase() {
     if (_ensurePromise) return _ensurePromise;
+    var identPromise = Promise.resolve(null);
+    try {
+      if (window.DamApi && typeof DamApi.fetchIdentity === "function") {
+        identPromise = DamApi.fetchIdentity().catch(function () { return null; });
+      }
+    } catch (_e) { /* ignore */ }
+
     _ensurePromise = Promise.all([
       detectMarketingBasesRemote().catch(function () { return null; }),
       readMachineConfigRemote().catch(function () { return null; }),
+      fetchCurrentDevicePath(),
+      identPromise,
       fetch("data/file-index.json?v=" + Date.now())
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; })
     ]).then(function (pack) {
       var detect = pack[0];
       var machine = pack[1];
-      var index = pack[2];
+      var devicePath = pack[2];
+      var ident = pack[3] || {};
+      var index = pack[4];
       if (index && index.roots) detectIndexBaseFromRoots(index.roots);
 
-      var current = getBasePath();
-      if (current) {
+      var did = String(
+        (devicePath && devicePath.device_id) ||
+        (ident && ident.device_id) ||
+        currentDeviceId() ||
+        ""
+      ).trim();
+      var hostname = String(
+        (devicePath && devicePath.hostname) ||
+        (ident && ident.hostname) ||
+        ""
+      ).trim();
+
+      // 1) Prawda z bazy dla TEGO device_id
+      var fromDb = devicePath && devicePath.base_path
+        ? String(devicePath.base_path).trim()
+        : "";
+      if (fromDb) {
+        setBasePathLocalCache(fromDb, did);
         return {
-          base: current,
-          source: "user",
+          base: fromDb,
+          source: devicePath.source || "user-device-paths",
+          device_id: did,
+          hostname: hostname,
           detect: detect,
           suggestion: (detect && detect.recommended) || ""
         };
       }
 
-      // Pierwszy start: przywroc tylko to, co TEN user wczesniej zapisal
+      // 2) Cache lokalny juz pod to urzadzenie
+      var current = getBasePath();
+      if (current) {
+        // Migacja: jesli jest lokalny cache a brak wpisu w bazie - wypchnij do UDP
+        if (did) {
+          persistBasePathToBridge(current, { device_id: did, hostname: hostname });
+        }
+        return {
+          base: current,
+          source: "local-cache",
+          device_id: did,
+          hostname: hostname,
+          detect: detect,
+          suggestion: (detect && detect.recommended) || ""
+        };
+      }
+
+      // 3) machine-config TYLKO tego PC (nie innego urzadzenia konta)
       var saved = machine && machine.base_path ? String(machine.base_path).trim() : "";
       if (saved) {
-        localStorage.setItem(BASE_KEY, saved);
+        setBasePathLocalCache(saved, did);
+        if (did) {
+          persistBasePathToBridge(saved, { device_id: did, hostname: hostname });
+        }
         return {
           base: saved,
-          source: "user-backup",
+          source: "machine-config-fallback",
+          device_id: did,
+          hostname: hostname,
           detect: detect,
           suggestion: (detect && detect.recommended) || ""
         };
@@ -358,6 +601,8 @@
       return {
         base: "",
         source: "unset",
+        device_id: did,
+        hostname: hostname,
         detect: detect,
         suggestion: (detect && detect.recommended) || ""
       };
@@ -705,10 +950,12 @@
     modal.innerHTML =
       '<div class="dam-basepath-box" role="dialog" aria-modal="true" aria-labelledby="damBasePathTitle">' +
         '<button type="button" class="dam-modal-x" id="damBasePathClose" aria-label="Zamknij"><i class="uil uil-times" aria-hidden="true"></i></button>' +
-        '<h3 id="damBasePathTitle">Twoja sciezka Marketing</h3>' +
-        '<p class="dam-basepath-lead">Wskaz folder, w ktorym widzisz: ' +
+        '<h3 id="damBasePathTitle">Sciezka Marketing na tym komputerze</h3>' +
+        '<p class="dam-basepath-lead">Ustawienie dotyczy tylko <strong>tego urzadzenia</strong> ' +
+          '(dom / praca moga miec inna litere dysku). Folder musi zawierac: ' +
           '<strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>' +
         '<p class="dam-basepath-examples">Przyklady: <code>X:\\Marketing</code> | <code>D:\\Marketing</code> | <code>M:\\</code></p>' +
+        '<p id="damBasePathDeviceHint" class="dam-basepath-examples" hidden></p>' +
         '<label class="dam-basepath-label" for="damBasePathInput">Sciezka bazowa</label>' +
         '<div class="dam-basepath-field">' +
           '<input type="text" id="damBasePathInput" class="dam-basepath-input" placeholder="np. X:\\Marketing" ' +
@@ -736,14 +983,9 @@
     }
 
     function pickFolderNative() {
-      var api = window.pywebview && window.pywebview.api;
-      if (!api || typeof api.pick_folder !== "function") {
-        setMsg("Wskazywanie folderu dziala w aplikacji desktop (skrot DAM). Mozesz tez wpisac sciezke recznie.", false);
-        return Promise.resolve(null);
-      }
       var start = (document.getElementById("damBasePathInput").value || getBasePath() || "").trim();
       setMsg("Otwieram Eksplorator Windows...", true);
-      return Promise.resolve(api.pick_folder(start)).then(function (res) {
+      return pickFolder(start).then(function (res) {
         if (!res || res.cancelled) {
           setMsg("", true);
           return null;
@@ -753,11 +995,12 @@
           return null;
         }
         document.getElementById("damBasePathInput").value = res.path;
-        setMsg("Wybrano: " + res.path, true);
+        if (res.normalized && res.picked) {
+          setMsg("Wybrano podfolder - zapisze root: " + res.path, true);
+        } else {
+          setMsg("Wybrano: " + res.path, true);
+        }
         return res.path;
-      }).catch(function () {
-        setMsg("Nie udalo sie otworzyc wyboru folderu - wpisz sciezke recznie.", false);
-        return null;
       });
     }
 
@@ -808,6 +1051,19 @@
       });
     });
 
+    // Podpis urzadzenia (hostname / device_id)
+    ensureUserBase().then(function (info) {
+      var hint = document.getElementById("damBasePathDeviceHint");
+      if (!hint) return;
+      var host = (info && info.hostname) || "";
+      var did = (info && info.device_id) || currentDeviceId();
+      if (host || did) {
+        hint.hidden = false;
+        hint.textContent = "Urzadzenie: " + (host || "ten komputer") +
+          (did ? " (" + did.slice(0, 22) + (did.length > 22 ? "…" : "") + ")" : "");
+      }
+    }).catch(function () { /* ignore */ });
+
     // Wypelnia pole podpowiedzia TYLKO gdy jest puste - nie zapisuje automatycznie
     detectMarketingBasesRemote().then(function (res) {
       var input = document.getElementById("damBasePathInput");
@@ -833,6 +1089,9 @@
     getBasePath: getBasePath,
     setBasePath: setBasePath,
     hasBasePath: hasBasePath,
+    normalizeMarketingRoot: normalizeMarketingRoot,
+    pickFolder: pickFolder,
+    currentDeviceId: currentDeviceId,
     getIndexBase: getIndexBase,
     setIndexBase: setIndexBase,
     detectIndexBaseFromRoots: detectIndexBaseFromRoots,
@@ -853,6 +1112,10 @@
     checkBridge: checkBridge,
     validateBaseRemote: validateBaseRemote,
     detectMarketingBasesRemote: detectMarketingBasesRemote,
+    fetchCurrentDevicePath: fetchCurrentDevicePath,
+    fetchUserDevicePaths: fetchUserDevicePaths,
+    upsertUserDevicePath: upsertUserDevicePath,
+    deleteUserDevicePath: deleteUserDevicePath,
     ensureUserBase: ensureUserBase,
     ensureMachineBase: ensureMachineBase,
     openSetupModal: openSetupModal,

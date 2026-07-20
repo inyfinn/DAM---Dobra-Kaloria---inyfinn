@@ -1,0 +1,171 @@
+/**
+ * DAM viz modal — 2-col bento: left hero+meta+variants, right associations.
+ * Scope: #damVizModal + #damMediaPreview.dam-media-preview--viz-studio
+ * PI: viz.assoc_no_visualization_loop (2026-07-20)
+ */
+
+/* ---------- Desktop / tablet: split layout ---------- */
+.dam-viz-modal-box--assoc-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.9fr);
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+  justify-content: stretch;
+  flex-direction: unset;
+  overflow: hidden;
+}
+
+.dam-viz-modal-box--assoc-split > .dam-viz-modal-close {
+  z-index: 5;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-right: 1px solid rgba(70, 66, 85, 0.08);
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__thumb {
+  flex: 1 1 0;
+  min-height: 160px;
+  border-radius: 16px 0 0 0;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__body {
+  flex: 0 0 auto;
+  max-height: min(42vh, 420px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 24px 22px;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 48px 18px 18px;
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 55%, #fff);
+  overflow: hidden;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-viz-modal__assoc,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-col--materials {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border-top: none;
+  height: 100%;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-label-row {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  align-content: start;
+  gap: 10px 8px;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__actions {
+  margin-top: 14px;
+}
+
+/* Hide legacy bottom assoc if any leftover inside body */
+.dam-viz-modal-box--assoc-split .dam-viz-modal__body > .dam-viz-modal__assoc {
+  display: none;
+}
+
+/* ---------- Mid: 768–1023 ---------- */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .dam-viz-modal-box--assoc-split {
+    grid-template-columns: minmax(0, 1.15fr) minmax(220px, 0.85fr);
+  }
+
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane {
+    padding: 44px 14px 14px;
+  }
+
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+}
+
+/* ---------- Mobile: stack hero → meta → assoc ---------- */
+@media (max-width: 767px) {
+  .dam-viz-modal-overlay:has(.dam-viz-modal-box--assoc-split),
+  .dam-media-preview-overlay:has(.dam-viz-modal-box--assoc-split) {
+    --dam-modal-vp-x: 3vw;
+    --dam-modal-vp-y: 2vh;
+  }
+
+  .dam-viz-modal-box--assoc-split {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    max-height: calc(100vh - 2 * var(--dam-modal-vp-y, 2vh));
+  }
+
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__main {
+    border-right: none;
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__thumb {
+    flex: 0 0 auto;
+    min-height: 180px;
+    max-height: 42vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__body {
+    max-height: none;
+    overflow: visible;
+    padding: 16px 16px 12px;
+  }
+
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane {
+    flex: 0 0 auto;
+    height: auto;
+    max-height: none;
+    padding: 14px 16px 20px;
+    border-top: 1px solid rgba(70, 66, 85, 0.08);
+    background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 40%, #fff);
+    overflow: visible;
+  }
+
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-grid {
+    max-height: 220px;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 374px) {
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-grid {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-viz-modal-box--assoc-split * {
+    scroll-behavior: auto;
+  }
+}

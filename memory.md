@@ -30,6 +30,7 @@ Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 10. **Em-dash ban:** zakaz `?` i `?` w UI, commit messages, copy agentow. Tylko `-`.
 11. **Nie kopiowac** kodu structure-mcp do DAM; tylko wiedza domenowa (sloty 0-4, indeksy).
 12. **Weryfikacja UI (2026-07-18):** po kazdej zmianie wizualnej - screenshot przegladarki + Read obrazu. Zakaz oddania "na oko"/sam CDP. Sidebar collapsed: logo w calosci czytelne (`object-fit: contain`, nie crop). Regula: `.cursor/rules/verify-ui-after-changes.mdc`.
+13. **Model agentow / Task tool (HARD, 2026-07-20):** TYLKO `cursor-grok-4.5-high-fast` (Grok 4.5 high). Zakaz Opus i Fable: `claude-opus-*`, `claude-fable-*`. Obowiazuje wszedzie (kolejni agenci, Task tool, subagenci). User: "Nie uzywaj juz nigdzie Opus, ani Fable. Tylko GROK. Wszedzie."
 
 ## Stack
 
@@ -114,13 +115,15 @@ Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 30. **Nowe pliki v4:** `assets/js/dam-brand-filter.js`, `assets/js/dam-tooltips.js`, `profile.html`, `settings.html`, `billing.html`, `activity.html`, `help.html`. Cache: `dam-viz.js?v=20260717ux10` (fix search: nie matchuj pustych digits przez `indexOf("")`).
 31. **Szukaj viz:** `applyFilters` NIE wolno `indexOf(q.replace(/\D/g,""))` gdy query bez cyfr - w JS `"".indexOf("")===0` i kazdy wiersz przechodzi.
 
-32. **Sciezka bazowa = ustawienie UZYTKOWNIKA (KRYTYCZNE, 2026-07-18):**
-    - Struktura ZAWSZE ta sama. **Zrodlem prawdy sciezki jest to, co user ustawi** po pierwszym uruchomieniu (konto / profil) - NIE stala litera dysku w kodzie.
-    - Persist: `localStorage.dam_base_path` (per profil WebView) + backup per `USERNAME` w `apps/desktop/machine-config.json`.
-    - Aplikacja **NIGDY** nie nadpisuje zapisanego `dam_base_path` auto-detectem.
+32. **Sciezka bazowa = PER URZADZENIE (KRYTYCZNE, 2026-07-18; update 2026-07-20):**
+    - Struktura ZAWSZE ta sama. Litera dysku / root Marketing jest dla **tego PC** (`device_id`), NIE globalnie dla konta na wszystkie maszyny (dom X: vs praca D:).
+    - Zrodlo prawdy: Postgres KV `user-device-paths:{email}` (+ bridge GET `/user-device-paths/current`). UI CRUD: **ta sama karta** `dam-device-paths.js` w `profile.html` i `settings.html#damDisk` (nie osobny settingBasePath).
+    - Folder: pywebview `pick_folder` albo bridge `POST /pick-folder`; normalizacja `DamPaths.normalizeMarketingRoot` (np. `X:\Marketing\- POLSKA` → `X:\Marketing`) przed zapisem.
+    - Cache: `localStorage.dam_base_path::{device_id}` (+ legacy `dam_base_path`) oraz `machine-config.json` per Windows USERNAME na tym PC.
+    - Aplikacja **NIGDY** nie nadpisuje zapisanego path auto-detectem; nigdy nie bierze sciezki z innego device_id tego samego konta.
     - Detect / Podpowiedz = tylko sugestia; zapis dopiero po Zapisz.
-    - Indeks moze miec dowolne `X:/`/`D:/Marketing/...` - `toLocal` zdejmuje `[A-Z]:/Marketing` i dokleja **baze usera**.
-    - Metadane = baza (file-index / API). **Pliki** = ROOT usera. Offline plikow: czerwona kropka + "Wskaz sciezke" (`dam-root-status.js`, bridge `/files/status`).
+    - Indeks moze miec dowolne `X:/`/`D:/Marketing/...` - `toLocal` zdejmuje `[A-Z]:/Marketing` i dokleja **baze biezacego urzadzenia**.
+    - Metadane = baza (file-index / API). **Pliki** = ROOT tego device. PI: `device-scoped-base-paths`. Handoff: `agents/shared/handoff-strefa-DEVICE.md`.
 
 41. **Konta lokalne + sesja urzadzenia (2026-07-18):**
     - SQLite `apps/desktop/data/dam-auth.sqlite` (nie w gicie). Hasla: **bcrypt** (nie plaintext).
@@ -980,3 +983,20 @@ ole=admin.
 
 130. **Edytor skojarzen dam-assoc-edit.js - naprawy (2026-07-20):**
  - Search: productSearchBlob (search_blob + pelne indexes + index_bases + tagi) - znajduje po 6300539.01/000108. Folder picker: z-index 12300 (nad nakladka 12100) - klikalny. "Dodaj z dysku": matchProductsByFolder po path (exact/under/parent) faktycznie dodaje. Odznaczanie: czerwony X na AKTUALNE. Ikony wierszy (folder/kopiuj link) + indeks jako TAG. Cale style wstrzykniete z JS (bez ruszania dam-branding.css agentow).
+
+## #131 (2026-07-20) - Usability repair: jeden modal + dashboard win/preview
+- Plan FAZA 0-5 wdrożony: ui-taste = product UI + bundled ui-ux-pro-max; regula ui-taste-always w repo.
+- Dashboard: delegacja `.dam-win-btn`; Podglad otwiera `DamMediaPreview` w miejscu; 2x2 gap dla media.
+- Branding: `?tab=` + `bestTabForSearchQuery` przy `?q=`.
+- Explorer: `openLightbox` -> DamMediaPreview (viz-studio); historia statusow = przycisk -> modal.
+- Cache-bust marker: `usab20260720a/b`.
+
+## #132 (2026-07-20) - HARD: tylko Grok (zakaz Opus/Fable)
+- Kolejni agenci / Task tool / subagenci: TYLKO model `cursor-grok-4.5-high-fast` (Grok 4.5 high).
+- Zakaz: Opus (`claude-opus-*`), Fable (`claude-fable-*`). Wszedzie. (Hard rules #13)
+
+## #133 (2026-07-20) - UI chrome: Viz changelog / Branding page size / Help restart
+- Viz `#damChangeLogBar`: tylko admin + ADMIN ON; mount w `.dam-search-scope` po prawej; to Cofnij/Ponow na dysku X: (most 8766), nie Baza online.
+- Branding limit kart: suwak + input = draft; apply/persist dopiero po OK (Enter na input tez apply).
+- `#damHelpModal`: Wlacz samouczek ponownie pod przyciskiem X (column + gap); wiekszy padding head/body (+10px).
+

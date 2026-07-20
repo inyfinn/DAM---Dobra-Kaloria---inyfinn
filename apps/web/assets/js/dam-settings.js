@@ -98,7 +98,86 @@
     } catch (e) { /* ignore */ }
   }
 
-  /* ---------- Section filter (chips, nie scroll) ---------- */
+  /* ---------- Section filter (chips, nie scroll) + keyword search ---------- */
+  var _settingsChipFilter = "all";
+  var _settingsSearchQ = "";
+
+  function normSearch(s) {
+    var t = String(s || "").toLowerCase();
+    try {
+      t = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    } catch (e) { /* ignore */ }
+    return t.replace(/\s+/g, " ").trim();
+  }
+
+  function applySettingsVisibility() {
+    var grid = document.getElementById("damSettingsGrid");
+    var hint = document.getElementById("damSettingsSearchHint");
+    if (!grid) return;
+    var q = normSearch(_settingsSearchQ);
+    var chip = _settingsChipFilter || "all";
+    var isChipAll = chip === "all";
+    var matchCount = 0;
+
+    grid.classList.toggle("is-filtered", !isChipAll || !!q);
+    grid.classList.toggle("is-searching", !!q);
+
+    grid.querySelectorAll(".dam-widget[data-section]").forEach(function (sec) {
+      var secId = sec.getAttribute("data-section");
+      var chipOk = isChipAll ? true : secId === chip;
+      if (secId === "system") chipOk = isChipAll && !q;
+
+      var rows = sec.querySelectorAll(".dam-sw-row[data-search]");
+      var anyRowMatch = false;
+      if (q && rows.length) {
+        rows.forEach(function (row) {
+          var blob =
+            normSearch(row.getAttribute("data-search") || "") +
+            " " +
+            normSearch(row.textContent || "");
+          var hit = blob.indexOf(q) !== -1;
+          row.classList.toggle("is-search-miss", !hit);
+          if (hit) anyRowMatch = true;
+        });
+      } else {
+        rows.forEach(function (row) {
+          row.classList.remove("is-search-miss");
+        });
+      }
+
+      var secBlob =
+        normSearch(sec.getAttribute("data-search") || "") +
+        " " +
+        normSearch((sec.querySelector(".dam-widget__title") || {}).textContent || "") +
+        " " +
+        normSearch((sec.querySelector(".dam-widget__meta") || {}).textContent || "");
+      var secHit = !q || secBlob.indexOf(q) !== -1 || anyRowMatch;
+      var show = chipOk && secHit;
+      if (q && rows.length && anyRowMatch) show = chipOk && true;
+
+      sec.classList.toggle("is-filtered-out", !show);
+      if (show) {
+        sec.removeAttribute("hidden");
+        matchCount += 1;
+      } else {
+        sec.setAttribute("hidden", "");
+      }
+    });
+
+    if (hint) {
+      if (q) {
+        hint.hidden = false;
+        hint.textContent =
+          matchCount > 0
+            ? "Znaleziono " + matchCount + " sekcji dla „" + _settingsSearchQ.trim() + "”."
+            : "Brak ustawień dla „" + _settingsSearchQ.trim() + "”.";
+      } else {
+        hint.hidden = true;
+        hint.textContent = "";
+      }
+    }
+  }
+
   function initSectionFilter() {
     var nav = document.getElementById("damSettingsFilter");
     var grid = document.getElementById("damSettingsGrid");
@@ -106,25 +185,17 @@
 
     function setFilter(filter) {
       var f = filter || "all";
-      var isAll = f === "all";
+      _settingsChipFilter = f;
       nav.querySelectorAll(".dam-settings-jump__chip").forEach(function (chip) {
         var on = chip.getAttribute("data-filter") === f;
         chip.classList.toggle("is-active", on);
         chip.setAttribute("aria-pressed", on ? "true" : "false");
       });
-      grid.classList.toggle("is-filtered", !isAll);
-      grid.querySelectorAll(".dam-widget[data-section]").forEach(function (sec) {
-        var secId = sec.getAttribute("data-section");
-        var show = isAll ? true : secId === f;
-        if (secId === "system") show = isAll;
-        sec.classList.toggle("is-filtered-out", !show);
-        if (show) sec.removeAttribute("hidden");
-        else sec.setAttribute("hidden", "");
-      });
       try {
-        if (isAll) sessionStorage.removeItem("dam_settings_filter");
+        if (f === "all") sessionStorage.removeItem("dam_settings_filter");
         else sessionStorage.setItem("dam_settings_filter", f);
       } catch (e) { /* ignore */ }
+      applySettingsVisibility();
     }
 
     nav.addEventListener("click", function (ev) {
@@ -139,6 +210,21 @@
       initial = sessionStorage.getItem("dam_settings_filter") || "all";
     } catch (e) { /* ignore */ }
     setFilter(initial);
+  }
+
+  function initSettingsSearch() {
+    var input = document.getElementById("damSettingsSearch");
+    if (!input) return;
+    var timer = null;
+    function run() {
+      _settingsSearchQ = input.value || "";
+      applySettingsVisibility();
+    }
+    input.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(run, 120);
+    });
+    input.addEventListener("search", run);
   }
 
   /* ---------- Theme (light/dark/system overlay) ---------- */
@@ -232,11 +318,30 @@
   }
 
   /* ---------- Prefs / path / save ---------- */
+  function syncSafeDeleteToggle() {
+    var el = document.getElementById("settingSafeDelete");
+    if (!el) return;
+    var on = true;
+    if (window.DamUserPrefs && typeof DamUserPrefs.isSafeDeleteEnabled === "function") {
+      on = DamUserPrefs.isSafeDeleteEnabled() !== false;
+    } else {
+      try {
+        var raw = localStorage.getItem("dam_user_prefs");
+        if (raw) {
+          var p = JSON.parse(raw);
+          if (p && "safe_delete" in p) on = !!p.safe_delete;
+        }
+      } catch (e) { /* ignore */ }
+    }
+    el.checked = on;
+  }
+
   function initPrefs() {
     var tooltipEl = document.getElementById("settingTooltips");
     var synologyEl = document.getElementById("settingSynology");
     var brandDkEl = document.getElementById("settingBrandDK");
     var brandGcEl = document.getElementById("settingBrandGC");
+    var safeDelEl = document.getElementById("settingSafeDelete");
     var basePathEl = document.getElementById("settingBasePath");
     var baseMsg = document.getElementById("settingBasePathMsg");
     var detectInfo = document.getElementById("settingBasePathDetectInfo");
@@ -255,6 +360,18 @@
     if (brandDkEl) brandDkEl.checked = brands.DK !== false;
     if (brandGcEl) brandGcEl.checked = brands.GC !== false;
     basePathEl.value = localStorage.getItem("dam_base_path") || "";
+    syncSafeDeleteToggle();
+    if (window.DamUserPrefs && typeof DamUserPrefs.load === "function") {
+      DamUserPrefs.load().then(syncSafeDeleteToggle);
+    }
+    window.addEventListener("dam:user-prefs", syncSafeDeleteToggle);
+    if (safeDelEl) {
+      safeDelEl.addEventListener("change", function () {
+        if (window.DamUserPrefs && typeof DamUserPrefs.setSafeDelete === "function") {
+          DamUserPrefs.setSafeDelete(!!safeDelEl.checked);
+        }
+      });
+    }
 
     if (window.DamPaths && typeof DamPaths.ensureUserBase === "function") {
       DamPaths.ensureUserBase().then(function (res) {
@@ -373,6 +490,10 @@
             GC: !brandGcEl || brandGcEl.checked,
           })
         );
+        var safeP =
+          window.DamUserPrefs && typeof DamUserPrefs.setSafeDelete === "function"
+            ? DamUserPrefs.setSafeDelete(safeDelEl ? !!safeDelEl.checked : true)
+            : Promise.resolve();
         var raw = (basePathEl.value || "").trim();
         if (raw && window.DamPaths) {
           DamPaths.setBasePath(raw);
@@ -384,7 +505,7 @@
           localStorage.setItem("dam_base_path", raw);
         }
         saveProfile();
-        saveNotifications().then(function () {
+        Promise.all([saveNotifications(), safeP]).then(function () {
           var msg = document.getElementById("settingsSaveMsg");
           if (msg) {
             msg.classList.add("is-on");
@@ -625,6 +746,7 @@
   function loadIntegrations() {
     if (!window.DamIntegrations) return;
     DamIntegrations.mount("damIntegrationsList", {
+      layout: "settings-bento",
       includeExtras: true,
       includeSynology: true,
       prefsJump: "filter",
@@ -768,6 +890,7 @@
 
   function boot() {
     initSectionFilter();
+    initSettingsSearch();
     initTheme();
     initProfile();
     initAccent();

@@ -13,6 +13,7 @@ Endpoints:
                          -> suffix - F/- X/- D, archiwum, historia previous_name/path
   POST /synology-share {"path": "..."} -> Synology Drive "Uzyskaj lacze" / Get link
   POST /validate-base {"path": "X:\\\\Marketing"} -> checks 3 root folders
+  POST /pick-folder {"start":"X:\\\\"} -> natywny dialog folderu (tkinter; UI :8765)
   GET  /detect-marketing-bases -> kandydaci na tym komputerze (X:/D:/M:)
   GET/POST /machine-config -> baza Marketing dla tej maszyny (plik JSON)
   POST /auth/register|login  lokalne konta (bcrypt) + sesja urzadzenia
@@ -82,13 +83,22 @@ except ImportError:
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
-BRIDGE_API_VERSION = 2
+BRIDGE_API_VERSION = 3
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
 INDEX_FILE = WEB_ROOT / "data" / "file-index.json"
+# Inyfinn Image / Photo Resizer (GUI launcher + opcjonalny CLI w BIN/dev)
+IMAGE_RESIZER_ROOT = Path(
+    os.environ.get(
+        "DAM_IMAGE_RESIZER_ROOT",
+        r"X:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\Inyfinn Image resizer",
+    )
+)
 BUILD_INDEX = WEB_ROOT / "scripts" / "build-file-index.py"
 MACHINE_CONFIG = DESKTOP_DIR / "machine-config.json"
+USER_DEVICE_PATHS_FILE = DESKTOP_DIR / "data" / "user-device-paths.json"
+USER_PREFS_FILE = DESKTOP_DIR / "data" / "user-prefs.json"
 SYNOLOGY_SCRIPT = DESKTOP_DIR / "synology_get_link.ps1"
 REQUIRED_ROOT_FOLDERS = ("-- ARCHIWUM --", "- EKSPORT", "- POLSKA")
 CORS_ORIGIN = os.environ.get("DAM_UI_ORIGIN", "http://127.0.0.1:8765")
@@ -121,6 +131,211 @@ def normalize_path(p: str) -> str:
 def is_probably_file(p: str) -> bool:
     name = Path(p).name
     return "." in name and not name.startswith(".")
+
+
+# --- Explorer: karta + fokus (2026-07-20) -----------------------------------
+# Root cause "okno otwiera sie w tle": most to pythonw (proces BEZ okna na
+# pierwszym planie), wiec explorer.exe odpalony przez subprocess nie dostaje
+# fokusu (Windows foreground lock - SetForegroundWindow dziala tylko dla
+# procesu na pierwszym planie). Obejscie: ALT-trick (keybd_event VK_MENU przed
+# SetForegroundWindow) + ShowWindow + BringWindowToTop.
+# Karta zamiast nowego okna: fokus istniejacego okna Eksploratora -> Ctrl+T ->
+# Navigate2(PIDL) na swiezej karcie. UWAGA (HARD): Navigate2 NIE przyjmuje
+# sciezek jako file:/// URI (%20 itd. -> dialog "Nie mozna odnalezc...").
+# Zawsze podawaj PIDL (SHParseDisplayName) albo surowa sciezke Windows.
+
+_VK_MENU, _VK_CONTROL, _VK_T, _KEYEVENTF_KEYUP = 0x12, 0x11, 0x54, 0x02
+
+
+def _explorer_hwnds() -> set:
+    """Top-level okna Eksploratora (klasa CabinetWClass), czysty ctypes."""
+    import ctypes
+
+    user32 = ctypes.windll.user32
+    out: set = set()
+    h = 0
+    while True:
+        h = user32.FindWindowExW(None, h, "CabinetWClass", None)
+        if not h:
+            break
+        out.add(h)
+    return out
+
+
+def _focus_hwnd(hwnd: int) -> bool:
+    """Wysun okno na wierzch. ALT-trick omija foreground lock."""
+    try:
+        import ctypes
+
+        user32 = ctypes.windll.user32
+        user32.ShowWindow(hwnd, 9 if user32.IsIconic(hwnd) else 5)  # SW_RESTORE / SW_SHOW
+        user32.keybd_event(_VK_MENU, 0, 0, 0)
+        user32.SetForegroundWindow(hwnd)
+        user32.keybd_event(_VK_MENU, 0, _KEYEVENTF_KEYUP, 0)
+        user32.BringWindowToTop(hwnd)
+        return user32.GetForegroundWindow() == hwnd
+    except Exception:
+        return False
+
+
+def _open_folder_tab_and_focus(target: str) -> bool:
+    """Otworz folder jako NOWA KARTE istniejacego okna Eksploratora i wysun je.
+
+    Zwraca True tylko gdy karta powstala i zostala nawigowana. False = wolaj
+    fallback (nowe okno). Wywolywac WYLACZNIE z watku daemon - X: (NFS) bywa
+    wolne, a COM/PIDL moga blokowac.
+    """
+    try:
+        import ctypes
+        import pythoncom
+        import win32com.client
+        from win32com.client import VARIANT
+        from win32com.shell import shell as w32shell
+    except Exception:
+        return False
+
+    user32 = ctypes.windll.user32
+    pythoncom.CoInitialize()
+    try:
+        try:
+            pidl = w32shell.SHParseDisplayName(target, 0)[0]
+            var_pidl = VARIANT(
+                pythoncom.VT_ARRAY | pythoncom.VT_UI1, w32shell.PIDLAsString(pidl)
+            )
+        except Exception:
+            return False
+        sh = win32com.client.Dispatch("Shell.Application")
+
+        def explorer_tabs():
+            out = []
+            for w in sh.Windows():
+                try:
+                    if "explorer.exe" in str(w.FullName or "").lower():
+                        out.append(w)
+                except Exception:
+                    pass
+            return out
+
+        items = explorer_tabs()
+        if not items:
+            return False
+        hwnd = int(items[0].HWND)
+        if not _focus_hwnd(hwnd):
+            time.sleep(0.2)
+            if not _focus_hwnd(hwnd):
+                return False
+        time.sleep(0.25)
+        if user32.GetForegroundWindow() != hwnd:
+            return False
+
+        def url_counts():
+            counts: dict = {}
+            for w in explorer_tabs():
+                try:
+                    if int(w.HWND) == hwnd:
+                        u = str(w.LocationURL or "")
+                        counts[u] = counts.get(u, 0) + 1
+                except Exception:
+                    pass
+            return counts
+
+        before = url_counts()
+        # Ctrl+T = nowa karta w oknie na pierwszym planie
+        user32.keybd_event(_VK_CONTROL, 0, 0, 0)
+        user32.keybd_event(_VK_T, 0, 0, 0)
+        user32.keybd_event(_VK_T, 0, _KEYEVENTF_KEYUP, 0)
+        user32.keybd_event(_VK_CONTROL, 0, _KEYEVENTF_KEYUP, 0)
+
+        new_tab = None
+        deadline = time.time() + 3.0
+        while time.time() < deadline and new_tab is None:
+            time.sleep(0.25)
+            after = url_counts()
+            surplus = [u for u in after if after.get(u, 0) > before.get(u, 0)]
+            if surplus:
+                for w in explorer_tabs():
+                    try:
+                        if int(w.HWND) == hwnd and str(w.LocationURL or "") in surplus:
+                            new_tab = w
+                            break
+                    except Exception:
+                        pass
+        if new_tab is None:
+            return False
+
+        ok = False
+        for _ in range(8):
+            try:
+                new_tab.Navigate2(var_pidl)  # PIDL, nie file:/// URI
+                ok = True
+                break
+            except Exception:
+                time.sleep(0.4)
+        if not ok:
+            return False
+        time.sleep(0.3)
+        _focus_hwnd(hwnd)  # re-assert - nawigacja potrafi oddac fokus
+        return True
+    finally:
+        try:
+            pythoncom.CoUninitialize()
+        except Exception:
+            pass
+
+
+def _focus_new_explorer_window(before: set) -> None:
+    """Po odpaleniu explorer.exe znajdz nowe okno (poll do 5 s) i wysun je."""
+    import ctypes
+
+    user32 = ctypes.windll.user32
+    hwnd = 0
+    deadline = time.time() + 5.0
+    while time.time() < deadline:
+        time.sleep(0.25)
+        fresh = _explorer_hwnds() - before
+        if fresh:
+            hwnd = sorted(fresh)[0]
+            break
+    if not hwnd:
+        # Brak nowego okna = Windows zrobil karte w istniejacym oknie
+        current = _explorer_hwnds()
+        if not current:
+            return
+        hwnd = sorted(current)[0]
+    _focus_hwnd(hwnd)
+    if user32.GetForegroundWindow() != hwnd:
+        time.sleep(0.3)
+        _focus_hwnd(hwnd)
+
+
+def _reveal_worker(target: str, mode: str, args: list) -> None:
+    """Watek daemon: preferuj karte+fokus, fallback = nowe okno + fokus."""
+    try:
+        if mode == "open" and _open_folder_tab_and_focus(target):
+            return
+    except Exception:
+        pass
+    before = _explorer_hwnds()
+    try:
+        _no_win = (
+            getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+            if sys.platform == "win32"
+            else 0
+        )
+        subprocess.Popen(
+            args,
+            shell=False,
+            creationflags=_no_win,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        return
+    try:
+        _focus_new_explorer_window(before)
+    except Exception:
+        pass
 
 
 def reveal_in_explorer(target: str) -> dict:
@@ -237,14 +452,11 @@ def reveal_in_explorer(target: str) -> dict:
         except Exception:
             pass
         # #endregion
-        subprocess.Popen(
-            args,
-            shell=False,
-            creationflags=_no_win,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        # Watek daemon: karta w istniejacym oknie + fokus (fallback: nowe
+        # okno + fokus). Nie blokuje odpowiedzi HTTP (X: NFS bywa wolny).
+        threading.Thread(
+            target=_reveal_worker, args=(target, mode, args), daemon=True
+        ).start()
         return {"ok": True, "path": target, "command": mode}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc), "path": target}
@@ -336,6 +548,78 @@ def validate_base(path: str) -> dict:
         "missing": missing,
         "required": list(REQUIRED_ROOT_FOLDERS),
     }
+
+
+_PICK_FOLDER_LOCK = threading.Lock()
+
+
+def pick_folder_dialog(start: str = "") -> dict:
+    """Natywny dialog Windows (tkinter) - wskazanie folderu Marketing z przegladarki + most.
+
+    Desktop pywebview ma wlasne api.pick_folder; ten endpoint jest dla :8765 + :8766.
+    """
+    start_dir = ""
+    raw = (start or "").strip()
+    if raw:
+        try:
+            p = Path(normalize_path(raw))
+            if p.is_dir():
+                start_dir = str(p)
+            elif p.parent.is_dir():
+                start_dir = str(p.parent)
+        except OSError:
+            start_dir = ""
+
+    if not _PICK_FOLDER_LOCK.acquire(blocking=False):
+        return {"ok": False, "error": "picker_busy"}
+
+    result: dict = {"ok": False, "cancelled": True}
+
+    def _run() -> None:
+        nonlocal result
+        try:
+            import tkinter as tk
+            from tkinter import filedialog
+
+            root = tk.Tk()
+            root.withdraw()
+            try:
+                root.attributes("-topmost", True)
+            except Exception:
+                pass
+            chosen = filedialog.askdirectory(
+                initialdir=start_dir or None,
+                title="Wybierz folder Marketing (root)",
+                mustexist=True,
+            )
+            try:
+                root.destroy()
+            except Exception:
+                pass
+            if not chosen:
+                result = {"ok": False, "cancelled": True}
+                return
+            path = str(Path(chosen))
+            if not Path(path).is_dir():
+                result = {"ok": False, "error": "not_a_directory", "cancelled": False}
+                return
+            result = {"ok": True, "path": path, "cancelled": False}
+        except Exception as exc:  # noqa: BLE001
+            result = {"ok": False, "error": str(exc), "cancelled": False}
+
+    try:
+        # Dialog musi byc w watku z message loop - join z timeoutem (user moze myslec)
+        t = threading.Thread(target=_run, daemon=True)
+        t.start()
+        t.join(timeout=300)
+        if t.is_alive():
+            return {"ok": False, "error": "picker_timeout"}
+        return result
+    finally:
+        try:
+            _PICK_FOLDER_LOCK.release()
+        except RuntimeError:
+            pass
 
 
 def detect_marketing_bases() -> dict:
@@ -435,6 +719,389 @@ def write_machine_config(base_path: str) -> dict:
         "updated_at": users[user]["updated_at"],
         "path": str(MACHINE_CONFIG),
         "db": dam_db.status() if dam_db else None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Sciezki Marketing PER URZADZENIE (konto DAM + device_id) - ADR-008 + PI
+# Zrodlo prawdy: Postgres dam_kv_store klucz user-device-paths:{email}
+# Cache lokalny: apps/desktop/data/user-device-paths.json
+# ---------------------------------------------------------------------------
+
+
+def _udp_store_key(email: str) -> str:
+    return "user-device-paths:" + (email or "").strip().lower()
+
+
+def _udp_load_local_all() -> dict:
+    if not USER_DEVICE_PATHS_FILE.is_file():
+        return {"users": {}}
+    try:
+        data = json.loads(USER_DEVICE_PATHS_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"users": {}}
+    if not isinstance(data, dict):
+        return {"users": {}}
+    users = data.get("users")
+    if not isinstance(users, dict):
+        return {"users": {}}
+    return {"users": users}
+
+
+def _udp_save_local_all(data: dict) -> None:
+    USER_DEVICE_PATHS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    USER_DEVICE_PATHS_FILE.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _udp_normalize_devices(raw) -> list[dict]:
+    if not isinstance(raw, list):
+        return []
+    out: list[dict] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        did = str(item.get("device_id") or "").strip()
+        if not did:
+            continue
+        out.append(
+            {
+                "device_id": did,
+                "hostname": str(item.get("hostname") or "").strip(),
+                "base_path": _normalize_base_path(str(item.get("base_path") or "").strip())
+                if str(item.get("base_path") or "").strip()
+                else "",
+                "label": str(item.get("label") or "").strip(),
+                "updated_at": str(item.get("updated_at") or "").strip(),
+            }
+        )
+    return out
+
+
+def _udp_read_user_payload(email: str) -> dict:
+    """Payload jednego usera: { email, devices: [...] } z PG (prefer) lub lokalnego pliku."""
+    key_email = (email or "").strip().lower()
+    empty = {"email": key_email, "devices": []}
+    if not key_email:
+        return empty
+
+    if _pg_available():
+        try:
+            import pg_db
+
+            payload = pg_db.kv_get(_udp_store_key(key_email), None)
+            if isinstance(payload, dict):
+                return {
+                    "email": key_email,
+                    "devices": _udp_normalize_devices(payload.get("devices")),
+                }
+        except Exception as exc:  # noqa: BLE001
+            print("user-device-paths pg read warning:", exc)
+
+    local = _udp_load_local_all()
+    entry = local["users"].get(key_email)
+    if isinstance(entry, dict):
+        return {
+            "email": key_email,
+            "devices": _udp_normalize_devices(entry.get("devices")),
+        }
+    return empty
+
+
+def _udp_write_user_payload(email: str, devices: list[dict]) -> dict:
+    key_email = (email or "").strip().lower()
+    payload = {
+        "email": key_email,
+        "devices": _udp_normalize_devices(devices),
+        "updated_at": utc_now(),
+    }
+    local = _udp_load_local_all()
+    local["users"][key_email] = {
+        "devices": payload["devices"],
+        "updated_at": payload["updated_at"],
+    }
+    _udp_save_local_all(local)
+
+    if _pg_available():
+        try:
+            import pg_db
+
+            pg_db.kv_set(
+                _udp_store_key(key_email),
+                payload,
+                updated_by="local_bridge",
+            )
+        except Exception as exc:  # noqa: BLE001
+            print("user-device-paths pg write warning:", exc)
+
+    return payload
+
+
+def _udp_current_identity() -> dict:
+    try:
+        from machine_identity import collect_identity
+
+        ident = collect_identity()
+        return ident if isinstance(ident, dict) else {}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def list_user_device_paths(email: str) -> dict:
+    ident = _udp_current_identity()
+    payload = _udp_read_user_payload(email)
+    current_id = str(ident.get("device_id") or "").strip()
+    current_entry = None
+    for d in payload["devices"]:
+        if d.get("device_id") == current_id:
+            current_entry = d
+            break
+    return {
+        "ok": True,
+        "email": payload["email"],
+        "devices": payload["devices"],
+        "current": {
+            "device_id": current_id,
+            "hostname": str(ident.get("hostname") or "").strip(),
+            "machine_id": str(ident.get("machine_id") or "").strip(),
+            "entry": current_entry,
+            "base_path": (current_entry or {}).get("base_path") or "",
+            "has_path": bool((current_entry or {}).get("base_path")),
+        },
+    }
+
+
+def upsert_user_device_path(
+    email: str,
+    device_id: str,
+    base_path: str,
+    hostname: str = "",
+    label: str | None = None,
+) -> dict:
+    did = str(device_id or "").strip()
+    if not did:
+        return {"ok": False, "error": "device_id_required"}
+    path = str(base_path or "").strip()
+    if not path:
+        return {"ok": False, "error": "base_path_required"}
+    stored = _normalize_base_path(path)
+    payload = _udp_read_user_payload(email)
+    devices = list(payload["devices"])
+    found = False
+    now = utc_now()
+    for i, d in enumerate(devices):
+        if d.get("device_id") == did:
+            next_label = str(d.get("label") or "").strip()
+            if label is not None:
+                next_label = str(label).strip()
+            devices[i] = {
+                "device_id": did,
+                "hostname": str(hostname or d.get("hostname") or "").strip(),
+                "base_path": stored,
+                "label": next_label,
+                "updated_at": now,
+            }
+            found = True
+            break
+    if not found:
+        devices.append(
+            {
+                "device_id": did,
+                "hostname": str(hostname or "").strip(),
+                "base_path": stored,
+                "label": str(label or "").strip(),
+                "updated_at": now,
+            }
+        )
+    written = _udp_write_user_payload(email, devices)
+    entry = next((d for d in written["devices"] if d.get("device_id") == did), None)
+    return {"ok": True, "entry": entry, "devices": written["devices"]}
+
+
+def delete_user_device_path(email: str, device_id: str) -> dict:
+    did = str(device_id or "").strip()
+    if not did:
+        return {"ok": False, "error": "device_id_required"}
+    payload = _udp_read_user_payload(email)
+    before = len(payload["devices"])
+    devices = [d for d in payload["devices"] if d.get("device_id") != did]
+    if len(devices) == before:
+        return {"ok": False, "error": "not_found", "devices": payload["devices"]}
+    written = _udp_write_user_payload(email, devices)
+    return {"ok": True, "deleted": did, "devices": written["devices"]}
+
+
+def resolve_base_path_for_current_device(email: str) -> dict:
+    """Sciezka dla biezacego PC: wpis user+device, fallback machine-config (lokalny cache)."""
+    listed = list_user_device_paths(email)
+    current = listed.get("current") or {}
+    base = str(current.get("base_path") or "").strip()
+    source = "user-device-paths" if base else ""
+    if not base:
+        mc = read_machine_config()
+        base = str(mc.get("base_path") or "").strip()
+        if base:
+            source = "machine-config-fallback"
+    return {
+        "ok": True,
+        "email": (email or "").strip().lower(),
+        "device_id": current.get("device_id") or "",
+        "hostname": current.get("hostname") or "",
+        "base_path": base,
+        "source": source or "unset",
+        "has_path": bool(base),
+        "devices": listed.get("devices") or [],
+        "current": current,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Preferencje UI per konto (safe_delete itd.) - PI ui.safe_delete
+# Zrodlo prawdy: Postgres dam_kv_store klucz user-prefs:{email}
+# Cache lokalny: apps/desktop/data/user-prefs.json
+# ---------------------------------------------------------------------------
+
+USER_PREFS_DEFAULTS = {
+    "safe_delete": True,
+    "branding_page_size": 100,
+}
+
+
+def _uprefs_store_key(email: str) -> str:
+    return "user-prefs:" + (email or "").strip().lower()
+
+
+def _uprefs_load_local_all() -> dict:
+    if not USER_PREFS_FILE.is_file():
+        return {"users": {}}
+    try:
+        data = json.loads(USER_PREFS_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"users": {}}
+    if not isinstance(data, dict):
+        return {"users": {}}
+    users = data.get("users")
+    if not isinstance(users, dict):
+        return {"users": {}}
+    return {"users": users}
+
+
+def _uprefs_save_local_all(data: dict) -> None:
+    USER_PREFS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    USER_PREFS_FILE.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _uprefs_clamp_page_size(value) -> int:
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        n = int(USER_PREFS_DEFAULTS["branding_page_size"])
+    if n < 24:
+        n = 24
+    if n > 500:
+        n = 500
+    return n
+
+
+def _uprefs_normalize(raw) -> dict:
+    prefs = dict(USER_PREFS_DEFAULTS)
+    if not isinstance(raw, dict):
+        return prefs
+    if "safe_delete" in raw:
+        prefs["safe_delete"] = bool(raw.get("safe_delete"))
+    if "branding_page_size" in raw:
+        prefs["branding_page_size"] = _uprefs_clamp_page_size(raw.get("branding_page_size"))
+    return prefs
+
+
+def read_user_prefs(email: str) -> dict:
+    key_email = (email or "").strip().lower()
+    empty = {
+        "ok": True,
+        "email": key_email,
+        "prefs": dict(USER_PREFS_DEFAULTS),
+        "source": "default",
+    }
+    if not key_email:
+        return empty
+
+    if _pg_available():
+        try:
+            import pg_db
+
+            payload = pg_db.kv_get(_uprefs_store_key(key_email), None)
+            if isinstance(payload, dict):
+                return {
+                    "ok": True,
+                    "email": key_email,
+                    "prefs": _uprefs_normalize(payload.get("prefs")),
+                    "updated_at": str(payload.get("updated_at") or ""),
+                    "source": "postgres",
+                }
+        except Exception as exc:  # noqa: BLE001
+            print("user-prefs pg read warning:", exc)
+
+    local = _uprefs_load_local_all()
+    entry = local["users"].get(key_email)
+    if isinstance(entry, dict):
+        return {
+            "ok": True,
+            "email": key_email,
+            "prefs": _uprefs_normalize(entry.get("prefs")),
+            "updated_at": str(entry.get("updated_at") or ""),
+            "source": "local",
+        }
+    return empty
+
+
+def write_user_prefs(email: str, prefs_patch: dict | None) -> dict:
+    key_email = (email or "").strip().lower()
+    if not key_email:
+        return {"ok": False, "error": "email_required"}
+    current = read_user_prefs(key_email)
+    merged = _uprefs_normalize(current.get("prefs"))
+    if isinstance(prefs_patch, dict):
+        if "safe_delete" in prefs_patch:
+            merged["safe_delete"] = bool(prefs_patch.get("safe_delete"))
+        if "branding_page_size" in prefs_patch:
+            merged["branding_page_size"] = _uprefs_clamp_page_size(
+                prefs_patch.get("branding_page_size")
+            )
+    payload = {
+        "email": key_email,
+        "prefs": merged,
+        "updated_at": utc_now(),
+    }
+    local = _uprefs_load_local_all()
+    local["users"][key_email] = {
+        "prefs": payload["prefs"],
+        "updated_at": payload["updated_at"],
+    }
+    _uprefs_save_local_all(local)
+
+    if _pg_available():
+        try:
+            import pg_db
+
+            pg_db.kv_set(
+                _uprefs_store_key(key_email),
+                payload,
+                updated_by="local_bridge",
+            )
+        except Exception as exc:  # noqa: BLE001
+            print("user-prefs pg write warning:", exc)
+
+    return {
+        "ok": True,
+        "email": key_email,
+        "prefs": merged,
+        "updated_at": payload["updated_at"],
+        "source": "postgres" if _pg_available() else "local",
     }
 
 
@@ -984,6 +1651,7 @@ WYKROJNIKI_REGISTRY_FILE = WEB_ROOT / "data" / "wykrojniki-registry.json"
 BUILD_BRANDING_INDEX = WEB_ROOT / "scripts" / "build-branding-index.py"
 FETCH_PRODUCT_PRICES = WEB_ROOT / "scripts" / "fetch-product-prices.py"
 IMPORT_WYKROJNIKI = WEB_ROOT / "scripts" / "import-wykrojniki-xlsx.py"
+LINK_WYKROJNIKI = WEB_ROOT / "scripts" / "link-wykrojniki-products.py"
 ENRICH_BRANDING_RECOGNIZE = WEB_ROOT / "scripts" / "enrich-branding-recognize.py"
 COST_RATES_FILE = WEB_ROOT / "data" / "cost-rates.json"
 FMCG_CATALOG_FILE = WEB_ROOT / "data" / "fmcg-cost-catalog.json"
@@ -3083,6 +3751,275 @@ def list_folder_images(path: str) -> dict:
     }
 
 
+def _child_dir_named(parent: Path, name_lower: str) -> Path | None:
+    """Znajdz podfolder po nazwie (case-insensitive)."""
+    if not parent.is_dir():
+        return None
+    want = (name_lower or "").strip().lower()
+    if not want:
+        return None
+    try:
+        for child in parent.iterdir():
+            if child.is_dir() and child.name.lower() == want:
+                return child
+    except OSError:
+        return None
+    return None
+
+
+def _child_dir_prefix(parent: Path, prefix_lower: str) -> Path | None:
+    """Znajdz podfolder zaczynajacy sie od prefixu (np. '1 - materia' / '2 - projekt')."""
+    if not parent.is_dir():
+        return None
+    pref = (prefix_lower or "").strip().lower()
+    if not pref:
+        return None
+    try:
+        for child in parent.iterdir():
+            if child.is_dir() and child.name.lower().startswith(pref):
+                return child
+    except OSError:
+        return None
+    return None
+
+
+def _count_files(folder: Path, max_n: int = 500) -> int:
+    n = 0
+    if not folder.is_dir():
+        return 0
+    try:
+        for root, _dirs, files in os.walk(folder):
+            n += len(files)
+            if n >= max_n:
+                return n
+    except OSError:
+        return n
+    return n
+
+
+def _find_links_under_projekt(projekt: Path) -> Path | None:
+    """Preferuj ...\\2 - PROJEKT\\Links; inaczej najbogatszy zagniezdzony Links."""
+    direct = _child_dir_named(projekt, "links")
+    if direct is not None:
+        return direct
+    best: Path | None = None
+    best_n = -1
+    try:
+        for child in projekt.iterdir():
+            if not child.is_dir():
+                continue
+            nested = _child_dir_named(child, "links")
+            if nested is None:
+                continue
+            n = _count_files(nested, max_n=50)
+            if n > best_n:
+                best = nested
+                best_n = n
+    except OSError:
+        return best
+    return best
+
+
+def _resolve_revision_path(product_id: str = "", index: str = "", revision_path: str = "") -> Path | None:
+    """Znajdz folder rewizji produktu po sciezce / id+indeksie z file-index."""
+    if revision_path:
+        p = Path(normalize_path(revision_path))
+        if p.is_dir() and _is_under_marketing(p):
+            return p
+    pid = (product_id or "").strip()
+    idx = (index or "").strip()
+    if not pid and not idx:
+        return None
+    if not INDEX_FILE.is_file():
+        return None
+    try:
+        data = json.loads(INDEX_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    products = data.get("products") if isinstance(data, dict) else None
+    if not isinstance(products, list):
+        return None
+    idx_base = idx.split(".")[0] if idx else ""
+    for prod in products:
+        if not isinstance(prod, dict):
+            continue
+        if pid and str(prod.get("id") or "") != pid:
+            continue
+        revs = prod.get("revisions") or []
+        if not isinstance(revs, list):
+            continue
+        # Najpierw dokladne dopasowanie indeksu, potem baza, potem latest
+        exact = None
+        base_hit = None
+        latest = None
+        for rev in revs:
+            if not isinstance(rev, dict):
+                continue
+            rpath = (rev.get("path") or "").strip()
+            if not rpath:
+                continue
+            ridx = str(rev.get("index") or "")
+            if idx and ridx == idx:
+                exact = rpath
+            if idx_base and (ridx.split(".")[0] == idx_base or str(rev.get("index_base") or "") == idx_base):
+                if base_hit is None or rev.get("is_latest"):
+                    base_hit = rpath
+            if rev.get("is_latest"):
+                latest = rpath
+        chosen = exact or base_hit or (latest if pid and not idx else None)
+        if chosen:
+            p = Path(normalize_path(chosen))
+            if p.is_dir() and _is_under_marketing(p):
+                return p
+        if pid:
+            break
+    return None
+
+
+def resolve_product_links_elementy(
+    product_id: str = "",
+    index: str = "",
+    revision_path: str = "",
+) -> dict:
+    """
+    STREFA A3 / pkt 37: lokalizacja folderow Links (surowe) i ELEMENTY (gotowe)
+    dla rewizji produktu. ELEMENTY puste + Links obecne => UI moze zaproponowac resizer.
+    """
+    rev = _resolve_revision_path(product_id, index, revision_path)
+    if rev is None:
+        return {
+            "ok": False,
+            "error": "revision_not_found",
+            "product_id": product_id or "",
+            "index": index or "",
+        }
+    materials = _child_dir_prefix(rev, "1 - materia")
+    projekt = _child_dir_prefix(rev, "2 - projekt")
+    elementy = _child_dir_named(materials, "elementy") if materials else None
+    links = _find_links_under_projekt(projekt) if projekt else None
+    el_count = _count_files(elementy) if elementy else 0
+    links_count = _count_files(links) if links else 0
+    return {
+        "ok": True,
+        "revision_path": str(rev).replace("\\", "/"),
+        "links_path": str(links).replace("\\", "/") if links else "",
+        "links_exists": bool(links and links.is_dir()),
+        "links_file_count": links_count,
+        "elementy_path": str(elementy).replace("\\", "/") if elementy else "",
+        "elementy_exists": bool(elementy and elementy.is_dir()),
+        "elementy_file_count": el_count,
+        "can_generate": bool(links and links.is_dir() and links_count > 0 and el_count == 0),
+        "product_id": product_id or "",
+        "index": index or "",
+    }
+
+
+def open_image_resizer(input_path: str = "", output_path: str = "", product_id: str = "", index: str = "") -> dict:
+    """
+    STREFA A3 / pkt 37: otworz Inyfinn Photo Resizer.
+    Jezeli dostepny CLI (venv / python -m) - uruchom convert PNG q=60.
+    W przeciwnym razie: GUI + Explorer na folder Links (PIDL/foreground ze Strefy D).
+    """
+    info = resolve_product_links_elementy(product_id, index, "")
+    inp = (input_path or "").strip() or (info.get("links_path") or "")
+    out = (output_path or "").strip() or (info.get("elementy_path") or "")
+    if not inp:
+        return {"ok": False, "error": "input_required", "info": info}
+    inp_p = Path(normalize_path(inp))
+    out_p = Path(normalize_path(out)) if out else None
+    if not _is_under_marketing(inp_p):
+        return {"ok": False, "error": "input_outside_marketing", "input": str(inp_p)}
+    if out_p is not None and out and not _is_under_marketing(out_p):
+        return {"ok": False, "error": "output_outside_marketing", "output": str(out_p)}
+    if out_p is not None and out:
+        try:
+            out_p.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            return {"ok": False, "error": f"output_mkdir_failed:{exc}", "output": str(out_p)}
+
+    root = IMAGE_RESIZER_ROOT
+    launcher = root / "InyfinnPhotoResizer.exe"
+    bin_exe = root / "BIN" / "InyfinnPhotoResizer.exe"
+    venv_py = root / "BIN" / "dev" / ".venv" / "Scripts" / "python.exe"
+    cli_module = "inyfinn_resizer.cli"
+
+    _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+    cli_args = [
+        "convert",
+        "--input",
+        str(inp_p),
+        "--output",
+        str(out_p) if out_p else str(inp_p),
+        "--format",
+        "png",
+        "--quality",
+        "60",
+        "--overwrite",
+    ]
+
+    # 1) CLI przez venv projektu resizera (gdy obecny)
+    if venv_py.is_file():
+        try:
+            proc = subprocess.Popen(
+                [str(venv_py), "-m", cli_module, *cli_args],
+                cwd=str(root / "BIN" / "dev"),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                creationflags=_no_win,
+            )
+            return {
+                "ok": True,
+                "mode": "cli_venv",
+                "pid": proc.pid,
+                "input": str(inp_p).replace("\\", "/"),
+                "output": str(out_p).replace("\\", "/") if out_p else "",
+                "warning": "Konwersja automatyczna moze dac elementy slabej jakosci.",
+                "info": info if info.get("ok") else {},
+            }
+        except OSError as exc:
+            cli_err = str(exc)
+    else:
+        cli_err = "venv_python_missing"
+
+    # 2) Fallback: GUI + otwarcie folderu Links w Explorerze
+    exe = launcher if launcher.is_file() else bin_exe
+    if not exe.is_file():
+        return {
+            "ok": False,
+            "error": "resizer_exe_missing",
+            "path": str(root),
+            "cli_error": cli_err,
+            "info": info if info.get("ok") else {},
+        }
+    try:
+        subprocess.Popen(
+            [str(exe)],
+            cwd=str(exe.parent),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError as exc:
+        return {"ok": False, "error": f"launch_failed:{exc}", "exe": str(exe)}
+
+    reveal = reveal_in_explorer(str(inp_p))
+    return {
+        "ok": True,
+        "mode": "gui_plus_explorer",
+        "exe": str(exe).replace("\\", "/"),
+        "input": str(inp_p).replace("\\", "/"),
+        "output": str(out_p).replace("\\", "/") if out_p else "",
+        "cli_error": cli_err,
+        "explorer": reveal,
+        "warning": (
+            "Brak jasnego CLI w launcherze EXE - otwarto GUI oraz folder Links. "
+            "Ustaw input=Links, output=ELEMENTY, PNG 60%."
+        ),
+        "info": info if info.get("ok") else {},
+    }
+
+
 def read_viz_flags() -> dict:
     flags_file = WEB_ROOT / "data" / "viz-flags.json"
     default = {"demo": {}, "hidden": {}, "manual": [], "updated_at": ""}
@@ -3499,6 +4436,7 @@ class Handler(BaseHTTPRequestHandler):
                         "/finance/cost-rates",
                         "/finance/fmcg-catalog",
                         "/finance/fmcg-import",
+                        "/finance/fmcg-import-map",
                         "/finance/fmcg-compute",
                         "/finance/project-costs",
                         "/finance/invoices",
@@ -3513,6 +4451,27 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/machine-config":
             self._json(200, read_machine_config())
+            return
+        if parsed.path == "/user-device-paths":
+            user = self._require_login()
+            if user is None:
+                return
+            email = str(user.get("email") or "").strip()
+            self._json(200, list_user_device_paths(email))
+            return
+        if parsed.path == "/user-device-paths/current":
+            user = self._require_login()
+            if user is None:
+                return
+            email = str(user.get("email") or "").strip()
+            self._json(200, resolve_base_path_for_current_device(email))
+            return
+        if parsed.path == "/user-prefs":
+            user = self._require_login()
+            if user is None:
+                return
+            email = str(user.get("email") or "").strip()
+            self._json(200, read_user_prefs(email))
             return
         if parsed.path == "/auth/registration-open":
             # Publiczny (localhost): czy UI moze pokazac "Utworz konto".
@@ -3947,6 +4906,18 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, {"ok": True, **data})
             return
+        if parsed.path == "/product-links-elementy":
+            # STREFA A3: Links (surowe) vs ELEMENTY (gotowe) dla rewizji produktu
+            qs = parse_qs(parsed.query or "")
+            self._json(
+                200,
+                resolve_product_links_elementy(
+                    (qs.get("product_id") or [""])[0],
+                    (qs.get("index") or [""])[0],
+                    (qs.get("revision_path") or [""])[0],
+                ),
+            )
+            return
         if parsed.path == "/branding-search-index":
             data = _load_json(BRANDING_SEARCH_INDEX_FILE, None)
             if not isinstance(data, dict):
@@ -3990,6 +4961,12 @@ class Handler(BaseHTTPRequestHandler):
             if self._require_login() is None:
                 return
             data = _load_json(FMCG_CATALOG_FILE, _fmcg_default_catalog())
+            self._json(200, {"ok": True, **data})
+            return
+        if parsed.path == "/finance/fmcg-import-map":
+            if self._require_login() is None:
+                return
+            data = _load_json(FMCG_IMPORT_MAP_FILE, {"version": 1, "maps": []})
             self._json(200, {"ok": True, **data})
             return
         if parsed.path == "/finance/fmcg-compute":
@@ -4111,6 +5088,18 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, reveal_in_explorer(path))
             return
+        if parsed.path == "/open-image-resizer":
+            # STREFA A3 / pkt 37: Inyfinn Image resizer (CLI albo GUI+Explorer)
+            self._json(
+                200,
+                open_image_resizer(
+                    (data.get("input") or "").strip(),
+                    (data.get("output") or "").strip(),
+                    (data.get("product_id") or "").strip(),
+                    (data.get("index") or "").strip(),
+                ),
+            )
+            return
         if parsed.path == "/synology-share":
             if self._require_login() is None:
                 return
@@ -4127,15 +5116,88 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, validate_base(path))
             return
+        if parsed.path == "/pick-folder":
+            # Lokalny most 127.0.0.1: dialog folderu (jak reveal) - bez Bearer.
+            start = (
+                data.get("start") or data.get("path") or data.get("directory") or ""
+            ).strip()
+            self._json(200, pick_folder_dialog(start))
+            return
         if parsed.path == "/machine-config":
             # Zapis sciezki Marketing tylko dla zalogowanego uzytkownika
-            if self._require_login() is None:
+            user = self._require_login()
+            if user is None:
                 return
             path = (data.get("base_path") or data.get("path") or "").strip()
             if not path:
                 self._json(400, {"ok": False, "error": "base_path_required"})
                 return
-            self._json(200, write_machine_config(path))
+            result = write_machine_config(path)
+            # Lustro do bazy per-urzadzenie (biezacy device_id)
+            try:
+                ident = _udp_current_identity()
+                email = str(user.get("email") or "").strip()
+                did = str(ident.get("device_id") or "").strip()
+                if email and did:
+                    upsert_user_device_path(
+                        email,
+                        did,
+                        path,
+                        hostname=str(ident.get("hostname") or ""),
+                    )
+            except Exception as exc:  # noqa: BLE001
+                print("user-device-paths mirror from machine-config:", exc)
+            self._json(200, result)
+            return
+        if parsed.path == "/user-device-paths":
+            user = self._require_login()
+            if user is None:
+                return
+            email = str(user.get("email") or "").strip()
+            action = str(data.get("action") or "upsert").strip().lower()
+            if action == "delete":
+                did = str(data.get("device_id") or "").strip()
+                res = delete_user_device_path(email, did)
+                self._json(200 if res.get("ok") else 404, res)
+                return
+            did = str(data.get("device_id") or "").strip()
+            if not did:
+                ident = _udp_current_identity()
+                did = str(ident.get("device_id") or "").strip()
+            hostname = str(data.get("hostname") or "").strip()
+            if not hostname:
+                ident = _udp_current_identity()
+                if did == str(ident.get("device_id") or "").strip():
+                    hostname = str(ident.get("hostname") or "").strip()
+            label = data.get("label") if "label" in data else None
+            path = (data.get("base_path") or data.get("path") or "").strip()
+            res = upsert_user_device_path(
+                email,
+                did,
+                path,
+                hostname=hostname,
+                label=label,
+            )
+            # Gdy zapis dotyczy biezacego urzadzenia - odswiez lokalny machine-config
+            if res.get("ok"):
+                try:
+                    ident = _udp_current_identity()
+                    if did == str(ident.get("device_id") or "").strip() and path:
+                        write_machine_config(path)
+                except Exception:  # noqa: BLE001
+                    pass
+            self._json(200 if res.get("ok") else 400, res)
+            return
+        if parsed.path == "/user-prefs":
+            user = self._require_login()
+            if user is None:
+                return
+            email = str(user.get("email") or "").strip()
+            patch = data.get("prefs") if isinstance(data.get("prefs"), dict) else data
+            if not isinstance(patch, dict):
+                patch = {}
+            res = write_user_prefs(email, patch)
+            self._json(200 if res.get("ok") else 400, res)
             return
         if parsed.path == "/meta/sync":
             if self._require_admin() is None:
@@ -4330,9 +5392,82 @@ class Handler(BaseHTTPRequestHandler):
                     [sys.executable, str(IMPORT_WYKROJNIKI)],
                     creationflags=_no_win,
                 )
-                self._json(200, {"ok": rc == 0, "rc": rc})
+                reg = _load_json(WYKROJNIKI_REGISTRY_FILE, {})
+                self._json(
+                    200,
+                    {
+                        "ok": rc == 0,
+                        "rc": rc,
+                        "entry_count": len((reg or {}).get("entries") or {}),
+                        "source_xlsx": (reg or {}).get("source_xlsx"),
+                    },
+                )
             except OSError as exc:
                 self._json(500, {"ok": False, "error": str(exc)})
+            return
+        if parsed.path == "/wykrojniki/link-products":
+            if self._require_admin() is None:
+                return
+            if not LINK_WYKROJNIKI.is_file():
+                self._json(500, {"ok": False, "error": "link_script_missing"})
+                return
+            try:
+                _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+                rc = subprocess.call(
+                    [sys.executable, str(LINK_WYKROJNIKI)],
+                    creationflags=_no_win,
+                )
+                reg = _load_json(WYKROJNIKI_REGISTRY_FILE, {})
+                self._json(
+                    200,
+                    {
+                        "ok": rc == 0,
+                        "rc": rc,
+                        "link_stats": (reg or {}).get("link_stats") or {},
+                        "entry_count": len((reg or {}).get("entries") or {}),
+                    },
+                )
+            except OSError as exc:
+                self._json(500, {"ok": False, "error": str(exc)})
+            return
+        if parsed.path == "/wykrojniki/set-link":
+            if self._require_admin() is None:
+                return
+            kod = str(data.get("kod") or data.get("wykrojnik_kod") or "").strip()
+            product_id = str(data.get("product_id") or "").strip()
+            action = str(data.get("action") or "set").strip().lower()
+            if not kod:
+                self._json(400, {"ok": False, "error": "kod_required"})
+                return
+            reg = _load_json(WYKROJNIKI_REGISTRY_FILE, {"version": 1, "entries": {}})
+            entries = reg.setdefault("entries", {})
+            block = entries.get(kod) if isinstance(entries.get(kod), dict) else None
+            if block is None:
+                block = {"kod": kod, "nazwa": "", "linked_product_ids": [], "source": "manual"}
+                entries[kod] = block
+            linked = list(block.get("linked_product_ids") or [])
+            if action == "clear":
+                block["linked_product_ids"] = []
+            elif action == "add" and product_id:
+                if product_id not in linked:
+                    linked.append(product_id)
+                block["linked_product_ids"] = linked
+                block["link_rule"] = "manual_ui"
+            elif action == "set":
+                if not product_id:
+                    self._json(400, {"ok": False, "error": "product_id_required"})
+                    return
+                block["linked_product_ids"] = [product_id]
+                block["link_rule"] = "manual_ui"
+            else:
+                self._json(400, {"ok": False, "error": "unknown_action"})
+                return
+            reg["updated_at"] = utc_now()
+            WYKROJNIKI_REGISTRY_FILE.write_text(
+                json.dumps(reg, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            self._json(200, {"ok": True, "kod": kod, "linked_product_ids": block.get("linked_product_ids") or []})
             return
         if parsed.path == "/product-catalog/update":
             if self._require_admin() is None:
@@ -4372,6 +5507,31 @@ class Handler(BaseHTTPRequestHandler):
                     if str(it.get("id")) == item_id:
                         it["resolved_at"] = utc_now()
                         resolved.append(it)
+                        # Apply to registry immediately (no terminal step)
+                        kod = str(it.get("wykrojnik_kod") or it.get("kod") or "").strip()
+                        pid = str(it.get("product_id") or "").strip()
+                        if kod and pid:
+                            reg = _load_json(WYKROJNIKI_REGISTRY_FILE, {"version": 1, "entries": {}})
+                            entries = reg.setdefault("entries", {})
+                            block = entries.get(kod) if isinstance(entries.get(kod), dict) else None
+                            if block is None:
+                                block = {
+                                    "kod": kod,
+                                    "nazwa": "",
+                                    "linked_product_ids": [],
+                                    "source": "queue",
+                                }
+                                entries[kod] = block
+                            linked = list(block.get("linked_product_ids") or [])
+                            if pid not in linked:
+                                linked.append(pid)
+                            block["linked_product_ids"] = linked
+                            block["link_rule"] = "manual_queue"
+                            reg["updated_at"] = utc_now()
+                            WYKROJNIKI_REGISTRY_FILE.write_text(
+                                json.dumps(reg, ensure_ascii=False, indent=2),
+                                encoding="utf-8",
+                            )
                 queue["pending"] = pending
                 queue["resolved"] = resolved
             elif action == "remove":
@@ -4673,34 +5833,90 @@ class Handler(BaseHTTPRequestHandler):
             _save_json(COST_RATES_FILE, incoming)
             self._json(200, {"ok": True, "version": incoming.get("version")})
             return
+        if parsed.path == "/finance/fmcg-import-map":
+            if self._require_admin() is None:
+                return
+            maps = data.get("maps")
+            if not isinstance(maps, list):
+                self._json(400, {"ok": False, "error": "maps_required"})
+                return
+            cleaned: list[dict] = []
+            for m in maps:
+                if not isinstance(m, dict):
+                    continue
+                col = str(m.get("column") or "").strip()
+                cid = str(m.get("catalog_id") or "").strip()
+                if not col and not cid:
+                    continue
+                cleaned.append({"column": col, "catalog_id": cid})
+            payload = {
+                "version": int(data.get("version") or 1),
+                "maps": cleaned,
+                "updated_at": utc_now(),
+            }
+            _save_json(FMCG_IMPORT_MAP_FILE, payload)
+            self._json(200, {"ok": True, "map_count": len(cleaned)})
+            return
         if parsed.path == "/finance/fmcg-catalog":
             if self._require_admin() is None:
                 return
             action = (data.get("action") or "replace").strip().lower()
-            if action == "patch":
+            if action in ("patch", "upsert"):
                 catalog = _load_json(FMCG_CATALOG_FILE, _fmcg_default_catalog())
                 by_id = {
                     str(it.get("id")): it
                     for it in catalog.get("items") or []
                     if isinstance(it, dict) and it.get("id")
                 }
+                allow_upsert = action == "upsert" or bool(data.get("upsert"))
                 patched = 0
+                created = 0
                 for patch in data.get("items") or []:
                     if not isinstance(patch, dict):
                         continue
                     pid = str(patch.get("id") or "").strip()
-                    if not pid or pid not in by_id:
+                    if not pid:
                         continue
-                    by_id[pid].update({k: v for k, v in patch.items() if k != "id"})
-                    patched += 1
+                    if pid in by_id:
+                        by_id[pid].update({k: v for k, v in patch.items() if k != "id"})
+                        patched += 1
+                    elif allow_upsert:
+                        stage = str(patch.get("stage") or "procurement").strip() or "procurement"
+                        new_item = {
+                            "id": pid,
+                            "stage": stage,
+                            "label_pl": str(patch.get("label_pl") or pid),
+                            "unit": str(patch.get("unit") or "per_order"),
+                            "amount": patch.get("amount"),
+                            "currency": str(patch.get("currency") or catalog.get("currency") or "PLN"),
+                            "source": str(patch.get("source") or "manual"),
+                            "vendor": str(patch.get("vendor") or ""),
+                            "asana_keywords": patch.get("asana_keywords")
+                            if isinstance(patch.get("asana_keywords"), list)
+                            else [],
+                            "notes": str(patch.get("notes") or ""),
+                        }
+                        by_id[pid] = new_item
+                        created += 1
                 catalog["items"] = list(by_id.values())
                 catalog["updated_at"] = utc_now()
                 _save_json(FMCG_CATALOG_FILE, catalog)
-                self._json(200, {"ok": True, "patched": patched})
+                self._json(
+                    200,
+                    {
+                        "ok": True,
+                        "patched": patched,
+                        "created": created,
+                        "compute": _fmcg_compute(catalog),
+                    },
+                )
                 return
             incoming = data.get("catalog") if isinstance(data.get("catalog"), dict) else data
-            if not isinstance(incoming, dict) or not incoming.get("items"):
+            if not isinstance(incoming, dict) or "items" not in incoming:
                 self._json(400, {"ok": False, "error": "catalog_required"})
+                return
+            if not isinstance(incoming.get("items"), list):
+                self._json(400, {"ok": False, "error": "catalog_items_required"})
                 return
             incoming["updated_at"] = utc_now()
             _save_json(FMCG_CATALOG_FILE, incoming)

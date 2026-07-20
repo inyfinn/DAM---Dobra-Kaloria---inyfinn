@@ -680,7 +680,7 @@
       var lb = DL && DL.langLabel ? DL.langLabel(b) : b;
       return String(la).localeCompare(String(lb), "pl");
     });
-    var html = '<option value="">Wszystkie jezyki</option>';
+    var html = '<option value="">Wszystkie języki</option>';
     sorted.forEach(function (code) {
       var label = DL && DL.langLabel ? DL.langLabel(code) : code;
       html += '<option value="' + esc(code) + '">' + esc(label) + "</option>";
@@ -1450,10 +1450,10 @@
     return String(status || "").toUpperCase().slice(0, 3);
   }
 
-  function renderLifecycleHistory(opts) {
+  function filterLifecycleHistoryRows(opts) {
     opts = opts || {};
     var hist = (state.lifecycleStore && state.lifecycleStore.history) || [];
-    if (!hist.length) return "";
+    if (!hist.length) return [];
     var productId = String(opts.productId || "");
     var index = String(opts.index || opts.ridx || "");
     var path = String(opts.path || "").toLowerCase();
@@ -1467,33 +1467,272 @@
       if (productPath && hp && hp.indexOf(productPath) !== -1) return true;
       return false;
     });
-    if (!rows.length) return "";
-    rows = rows.slice().sort(function (a, b) {
+    return rows.slice().sort(function (a, b) {
       return String(b.ts || "").localeCompare(String(a.ts || ""));
-    }).slice(0, 12);
-    var html =
-      '<div class="dam-lifecycle-history" role="log" aria-label="Historia statusów F/X/D">' +
-      '<div class="dam-lifecycle-history__title">Historia statusów</div><ul class="dam-lifecycle-history__list">';
-    rows.forEach(function (h) {
-      var letter = lifecycleLetterFromStatus(h.letter || h.status || h.to || h.after);
-      var when = String(h.ts || "").replace("T", " ").slice(0, 16);
-      var who = h.actor || h.user || h.by || "";
-      var scope = h.scope === "product" ? "produkt" : h.scope === "variant" ? "wariant" : h.scope || "status";
-      var idxShow = String(h.revision_index || index || "");
-      html +=
-        "<li><span class=\"dam-lifecycle-history__when\">" +
-        esc(when) +
-        '</span> <span class="dam-lifecycle-history__letter">' +
-        esc(letter) +
-        '</span> <span class="dam-lifecycle-history__meta">' +
-        esc(scope) +
-        (idxShow ? " · " + esc(idxShow) : "") +
-        (h.product_id ? " · " + esc(String(h.product_id)) : "") +
-        (who ? " · " + esc(who) : "") +
-        "</span></li>";
     });
-    html += "</ul></div>";
-    return html;
+  }
+
+  /** Skrocenie autora: e-mail -> czytelna nazwa ("jan.kowalski@x.pl" -> "Jan Kowalski"). */
+  function lifecycleAuthorShort(who) {
+    var raw = String(who || "").trim();
+    if (!raw) return { label: "", full: "" };
+    var at = raw.indexOf("@");
+    if (at < 1) return { label: raw, full: raw };
+    var name = raw
+      .slice(0, at)
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map(function (part) {
+        return part.charAt(0).toUpperCase() + part.slice(1);
+      })
+      .join(" ");
+    return { label: name || raw, full: raw };
+  }
+
+  function lifecycleChipClass(letter) {
+    if (letter === "F") return "dam-lifecycle-chip dam-lifecycle-chip--f";
+    if (letter === "X") return "dam-lifecycle-chip dam-lifecycle-chip--x";
+    if (letter === "D") return "dam-lifecycle-chip dam-lifecycle-chip--d";
+    return "dam-lifecycle-chip";
+  }
+
+  /* Pkt 1 brief 2026-07-20: modal historii = pionowa os czasu z chipami F/X/D,
+     filtrem per status, licznikiem, akcjami (kopiuj indeks / przejdz do produktu). */
+  function openLifecycleHistoryModal(opts) {
+    opts = opts || {};
+    var existing = document.getElementById("damLifecycleHistoryModal");
+    if (existing) existing.remove();
+    var allRows = filterLifecycleHistoryRows(opts);
+    var activeFilters = {};
+
+    function rowLetter(h) {
+      return lifecycleLetterFromStatus(h.letter || h.status || h.to || h.after);
+    }
+
+    function visibleRows() {
+      var keys = Object.keys(activeFilters);
+      if (!keys.length) return allRows;
+      return allRows.filter(function (h) {
+        return activeFilters[rowLetter(h)];
+      });
+    }
+
+    function entryHtml(h) {
+      var letter = rowLetter(h);
+      var when = String(h.ts || "").replace("T", " ").slice(0, 16);
+      var who = lifecycleAuthorShort(h.actor || h.user || h.by || "");
+      var scope =
+        h.scope === "product" ? "Produkt" : h.scope === "variant" ? "Wariant" : h.scope || "Status";
+      var idxShow = String(h.revision_index || h.index || opts.index || opts.ridx || "");
+      var pid = String(h.product_id || opts.productId || "");
+      return (
+        '<li class="dam-life-hist__item">' +
+        '<span class="dam-life-hist__rail">' +
+        '<span class="dam-life-hist__dot ' +
+        lifecycleChipClass(letter) +
+        '" title="Status ' +
+        esc(letter) +
+        '">' +
+        esc(letter) +
+        "</span>" +
+        '<span class="dam-life-hist__line" aria-hidden="true"></span>' +
+        "</span>" +
+        '<span class="dam-life-hist__body">' +
+        '<span class="dam-life-hist__row1">' +
+        '<span class="dam-life-hist__when">' +
+        esc(when || "brak daty") +
+        "</span>" +
+        '<span class="dam-life-hist__scope">' +
+        esc(scope) +
+        "</span>" +
+        '<span class="dam-life-hist__actions">' +
+        (idxShow
+          ? '<button type="button" class="dam-life-hist__act" data-life-copy="' +
+            esc(idxShow) +
+            '" title="Kopiuj indeks" aria-label="Kopiuj indeks" data-dam-tip="Kopiuj indeks ' +
+            esc(idxShow) +
+            '"><i class="uil uil-copy"></i></button>'
+          : "") +
+        (pid
+          ? '<button type="button" class="dam-life-hist__act" data-life-go="' +
+            esc(pid) +
+            '" title="Przejdź do produktu" aria-label="Przejdź do produktu" data-dam-tip="Otwiera produkt w Eksplorerze"><i class="uil uil-sitemap"></i></button>'
+          : "") +
+        "</span>" +
+        "</span>" +
+        '<span class="dam-life-hist__row2">' +
+        (idxShow
+          ? '<span class="dam-viz-badge dam-viz-badge--index" title="Indeks">' + esc(idxShow) + "</span>"
+          : "") +
+        (pid
+          ? '<span class="dam-viz-badge" title="Produkt">' + esc(pid) + "</span>"
+          : "") +
+        (who.label
+          ? '<span class="dam-life-hist__author" title="' +
+            esc(who.full) +
+            '" data-dam-tip="' +
+            esc(who.full) +
+            '"><i class="uil uil-user" aria-hidden="true"></i> ' +
+            esc(who.label) +
+            "</span>"
+          : "") +
+        "</span>" +
+        "</span></li>"
+      );
+    }
+
+    function listHtml() {
+      var rows = visibleRows();
+      if (!rows.length) {
+        return (
+          '<div class="dam-life-hist__empty">' +
+          '<i class="uil uil-history" aria-hidden="true"></i>' +
+          "<p>" +
+          (allRows.length
+            ? "Brak wpisów dla wybranego filtra statusu."
+            : "Brak wpisów historii dla tego zakresu.<br>Zmiany F / X / D pojawią się tutaj automatycznie.") +
+          "</p></div>"
+        );
+      }
+      return (
+        '<ul class="dam-life-hist__timeline" aria-label="Oś czasu statusów">' +
+        rows.map(entryHtml).join("") +
+        "</ul>"
+      );
+    }
+
+    var filterChips = ["F", "X", "D"]
+      .map(function (l) {
+        return (
+          '<button type="button" class="dam-life-hist__filter ' +
+          lifecycleChipClass(l) +
+          '" data-life-filter="' +
+          l +
+          '" aria-pressed="false" title="Pokaż tylko wpisy ' +
+          l +
+          '" data-dam-tip="Filtruj wpisy: status ' +
+          l +
+          '">' +
+          l +
+          "</button>"
+        );
+      })
+      .join("");
+
+    var html =
+      '<div class="dam-basepath-overlay" id="damLifecycleHistoryModal" role="dialog" aria-modal="true" aria-label="Historia statusów">' +
+      '<div class="dam-basepath-box dam-lifecycle-history-modal">' +
+      '<button type="button" class="dam-viz-modal-close" data-life-hist-close aria-label="Zamknij" style="position:absolute;top:12px;right:12px;z-index:2"><i class="uil uil-times"></i></button>' +
+      '<div class="dam-life-hist__head">' +
+      "<h3>Historia statusów</h3>" +
+      '<span class="dam-life-hist__count" id="damLifeHistCount" title="Liczba wpisów">' +
+      allRows.length +
+      "</span>" +
+      "</div>" +
+      '<p class="dam-lifecycle-history__lead">Pełna historia zmian F / X / D dla wybranego zakresu.</p>' +
+      '<div class="dam-life-hist__filters" role="group" aria-label="Filtr statusów">' +
+      '<span class="dam-life-hist__filter-label">Filtr:</span>' +
+      filterChips +
+      "</div>" +
+      '<div id="damLifeHistList">' +
+      listHtml() +
+      "</div>" +
+      '<div class="dam-lifecycle-history-modal__actions">' +
+      '<button type="button" class="geex-btn geex-btn--sm" data-life-hist-close>Zamknij</button>' +
+      '<a class="geex-btn geex-btn--sm geex-btn--primary" href="inbox.html" data-dam-tip="Zgłoś problem w Wiadomościach">Zgłoś</a>' +
+      "</div></div></div>";
+    document.body.insertAdjacentHTML("beforeend", html);
+    var modal = document.getElementById("damLifecycleHistoryModal");
+
+    function bindListActions() {
+      modal.querySelectorAll("[data-life-copy]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var txt = btn.getAttribute("data-life-copy") || "";
+          if (!txt) return;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).then(function () {
+              if (typeof window.damShowToast === "function") window.damShowToast("Skopiowano: " + txt);
+            });
+          }
+        });
+      });
+      modal.querySelectorAll("[data-life-go]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var pid = btn.getAttribute("data-life-go") || "";
+          if (!pid) return;
+          location.href = "explorer.html?product=" + encodeURIComponent(pid);
+        });
+      });
+    }
+
+    function repaintList() {
+      var host = document.getElementById("damLifeHistList");
+      if (!host) return;
+      host.innerHTML = listHtml();
+      var cnt = document.getElementById("damLifeHistCount");
+      if (cnt) cnt.textContent = String(visibleRows().length);
+      bindListActions();
+    }
+
+    modal.querySelectorAll("[data-life-filter]").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        var l = chip.getAttribute("data-life-filter") || "";
+        if (activeFilters[l]) delete activeFilters[l];
+        else activeFilters[l] = true;
+        chip.classList.toggle("is-on", !!activeFilters[l]);
+        chip.setAttribute("aria-pressed", activeFilters[l] ? "true" : "false");
+        repaintList();
+      });
+    });
+    bindListActions();
+
+    function close() {
+      if (modal) modal.remove();
+      document.removeEventListener("keydown", onEsc);
+    }
+    function onEsc(e) {
+      if (e.key === "Escape") close();
+    }
+    modal.addEventListener("click", function (e) {
+      if (e.target === modal || (e.target.closest && e.target.closest("[data-life-hist-close]"))) {
+        close();
+      }
+    });
+    document.addEventListener("keydown", onEsc);
+    if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
+      window.DamTooltips.bind(modal);
+    }
+  }
+
+  function renderLifecycleHistory(opts) {
+    opts = opts || {};
+    var rows = filterLifecycleHistoryRows(opts);
+    var count = rows.length;
+    if (!count && !state.adminMode) return "";
+    var payload = esc(
+      JSON.stringify({
+        productId: opts.productId || "",
+        index: opts.index || opts.ridx || "",
+        path: opts.path || "",
+        productPath: opts.productPath || "",
+      })
+    );
+    return (
+      '<div class="dam-lifecycle-history dam-lifecycle-history--btn">' +
+      '<button type="button" class="geex-btn geex-btn--sm dam-lifecycle-history__open" data-lifecycle-history-open="1" data-life-hist="' +
+      payload +
+      '" aria-label="Historia statusów (' +
+      count +
+      ')">' +
+      '<i class="uil uil-history" aria-hidden="true"></i>' +
+      "<span>Historia statusów</span>" +
+      (count
+        ? '<span class="dam-lifecycle-history__badge" aria-hidden="true">' + count + "</span>"
+        : "") +
+      "</button></div>"
+    );
   }
 
   function waitForIndexRebuild(timeoutMs) {
@@ -1851,7 +2090,9 @@
         (cl.elementsLinked
           ? '<button type="button" class="dam-check-action dam-check-action--danger" data-elements-unlink="' +
             esc(cl.revisionPath || "") + '" data-elements-index="' + esc(cl.revisionIndex || "") +
-            '" title="Usuń powiazanie" data-dam-tip="Usuń reczne powiazanie">' +
+            '" data-dam-hold-delete data-dam-label="Usun powiazanie"' +
+            ' data-dam-hint="Przytrzymaj, aby usunac powiazanie"' +
+            ' title="Przytrzymaj, aby usunac powiazanie" data-dam-tip="Przytrzymaj, aby usunac reczne powiazanie">' +
             '<i class="uil uil-link-broken" aria-hidden="true"></i></button>'
           : "") +
       "</span>";
@@ -3125,11 +3366,60 @@
     var allFiles = state._lightboxFiles || [];
     if (!allFiles.length) return;
     var model = state._vizStudio || buildVizStudioModel(allFiles);
+    state._vizStudio = model;
     var items = (model.items || []).length ? model.items : allFiles.map(enrichVizFile);
 
     var startFile = allFiles[Math.max(0, Math.min(allFiles.length - 1, startIdx || 0))];
     var startItem = items.find(function (it) { return it.file === startFile; }) || items[0];
     if (!startItem) return;
+
+    /* FAZA 3: jeden globalny modal (DamMediaPreview) zamiast #damLightbox */
+    if (window.DamMediaPreview && typeof window.DamMediaPreview.openAsset === "function") {
+      var productIndexFallback =
+        (state.product && state.product.index_bases && state.product.index_bases[0]) || "";
+      var parseIdx =
+        window.DamMarketingId && typeof window.DamMarketingId.parseIndexFromPath === "function"
+          ? window.DamMarketingId.parseIndexFromPath
+          : function () { return ""; };
+      var siblings = items.map(function (it, i) {
+        var f = it.file || {};
+        return {
+          id: "viz-" + i + "-" + String(f.path || f.name || i).slice(-48),
+          name: f.name || "",
+          path: f.path || "",
+          perspective: it.persp || "",
+          persp: it.persp || "",
+          size: it.size || "",
+          bg: it.bg || "",
+          lang: it.lang || "",
+          media_type: "image",
+          product_index: parseIdx(f.path) || productIndexFallback,
+          mtime: f.mtime || f.modified || "",
+        };
+      });
+      var idx = siblings.findIndex(function (s) {
+        return s.path && startItem.file && s.path === startItem.file.path;
+      });
+      if (idx < 0) idx = 0;
+      var existingLb = document.getElementById("damLightbox");
+      if (existingLb) existingLb.remove();
+      window.DamMediaPreview.openAsset(siblings[idx], {
+        siblings: siblings,
+        index: idx,
+        mode: "viz-studio",
+        vizStudio: { items: items, model: model },
+        groupContext: { variants: siblings, linked_products: [] },
+        /* pkt 6: kontekst produktu -> lustrzane "Skojarzone materialy" */
+        productContext: state.product
+          ? {
+              id: state.product.id || "",
+              name: state.product.display_name || state.product.name || "",
+              index: productIndexFallback,
+            }
+          : null,
+      });
+      return;
+    }
 
     var studio = {
       persp: startItem.persp,
@@ -3827,6 +4117,12 @@
 
   function unlinkElementsLink(revPath, index) {
     var key = normPathKey(revPath);
+    /* Pkt 32 (STREFA H): zapamietaj poprzednie powiazanie na potrzeby "Cofnij". */
+    var prevLink =
+      (state.elementsLinks.links &&
+        (state.elementsLinks.links[key] || (index && state.elementsLinks.links[index]))) ||
+      null;
+    var prevTarget = prevLink ? prevLink.folder || prevLink.path || "" : "";
     return fetch(bridgeUrl() + "/elements-link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -3839,8 +4135,20 @@
           if (index) delete state.elementsLinks.links[index];
         }
         persistElementsLinksLocal();
-        showToast("Usuńieto powiazanie Elementy");
         renderMain();
+        /* Pkt 32: soft-delete z oknem cofniecia zamiast twardej destrukcji. */
+        if (prevTarget && window.DamDanger && typeof window.DamDanger.toastUndo === "function") {
+          window.DamDanger.toastUndo({
+            message: "Usunieto powiazanie Elementy",
+            actionLabel: "Cofnij",
+            duration: 8000,
+            onUndo: function () {
+              saveElementsLink(revPath, index, prevTarget);
+            }
+          });
+        } else {
+          showToast("Usunieto powiazanie Elementy");
+        }
       });
   }
 
@@ -4045,6 +4353,22 @@
 
   function bindLifecycleControls(mount) {
     if (!mount) return;
+    mount.querySelectorAll("[data-lifecycle-history-open]").forEach(function (btn) {
+      if (btn._damLifeHistBound) return;
+      btn._damLifeHistBound = true;
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var raw = this.getAttribute("data-life-hist") || "{}";
+        var opts = {};
+        try {
+          opts = JSON.parse(raw);
+        } catch (err) {
+          opts = {};
+        }
+        openLifecycleHistoryModal(opts);
+      });
+    });
     mount.querySelectorAll("[data-lifecycle='1']").forEach(function (btn) {
       if (btn._damLifeBound) return;
       btn._damLifeBound = true;
@@ -4201,7 +4525,7 @@
     if (!tagsEl || !window._DAM_SEARCH_INDEX) return;
     var groups = window._DAM_SEARCH_INDEX.tag_groups || {};
     var html = "";
-    ["smak", "typ", "opakowańie", "autor", "osoba"].forEach(function (gk) {
+    ["smak", "typ", "opakowanie", "autor", "osoba"].forEach(function (gk) {
       var tags = groups[gk] || [];
       if (!tags.length) return;
       html +=

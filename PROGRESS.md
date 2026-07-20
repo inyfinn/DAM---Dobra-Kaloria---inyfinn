@@ -101,3 +101,8 @@ Ostatnia aktualizacja: **2026-07-19**
 4. ROOT plikow: Ustawienia -> folder Marketing.
 
 Postgres zyje na Synology (Docker). User nie instaluje Dockera na PC.
+
+## 2026-07-20 - Usability UI pack (commit)
+
+Pakiet rownoleglych agentow (Viz toolbar admin changelog, Branding page-size OK, Help restart, sidebar morph, device paths, tutorial C4, integracje/FMCG/danger) zweryfikowany w kodzie; docs + push na `main`. Szczegoly: `process.md`, `agents/shared/usability-brief-2026-07-20.md`.
+

@@ -620,11 +620,16 @@
     opts = opts || {};
     var locked = !!opts.locked;
     /* locked: tylko UI (Wizualizacje) - nie nadpisuj localStorage scope z Eksplorera */
+    /* opts.trailingEl: element (np. #damChangeLogBar) doklejany na prawo w .dam-search-scope */
 
     function paint() {
       var mode = locked ? "all" : getScopeMode();
       var disAttr = locked ? ' disabled aria-disabled="true"' : "";
       var disCls = locked ? " is-disabled" : "";
+      var trailingEl = opts.trailingEl || null;
+      if (trailingEl && trailingEl.parentNode) {
+        trailingEl.parentNode.removeChild(trailingEl);
+      }
       mountEl.innerHTML =
         '<div class="dam-search-scope" role="group" aria-label="Zakres wyszukiwania">' +
         '<button type="button" class="dam-search-scope__btn' +
@@ -652,6 +657,12 @@
       if (locked) mountEl.classList.add("dam-search-scope-mount--locked");
       else mountEl.classList.remove("dam-search-scope-mount--locked");
 
+      var scopeRow = mountEl.querySelector(".dam-search-scope");
+      if (scopeRow && trailingEl) {
+        trailingEl.classList.add("dam-search-scope__trailing");
+        scopeRow.appendChild(trailingEl);
+      }
+
       mountEl.querySelectorAll("[data-scope]").forEach(function (btn) {
         btn.addEventListener("click", function (e) {
           e.preventDefault();
@@ -670,6 +681,11 @@
           if (onChange) onChange(getScope());
         });
       });
+      if (typeof opts.afterPaint === "function") {
+        try {
+          opts.afterPaint(mountEl, scopeRow);
+        } catch (ePaint) { /* ignore */ }
+      }
     }
     paint();
   }

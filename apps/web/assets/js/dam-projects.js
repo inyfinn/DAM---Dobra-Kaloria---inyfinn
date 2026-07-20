@@ -74,12 +74,24 @@
 
   function statusMeta(status) {
     if (status === "complete") {
-      return { cls: "dam-project-card--ok", badge: "dam-status--ok", label: "Kompletny" };
+      return {
+        cls: "dam-project-card--ok",
+        badge: "dam-int-chip dam-int-st dam-int-st--ok",
+        label: "Kompletny",
+      };
     }
     if (status === "incomplete") {
-      return { cls: "dam-project-card--incomplete", badge: "dam-status--missing", label: "Niekompletny" };
+      return {
+        cls: "dam-project-card--incomplete",
+        badge: "dam-int-chip dam-int-st dam-int-st--danger",
+        label: "Niekompletny",
+      };
     }
-    return { cls: "dam-project-card--warn", badge: "dam-status--warn", label: "Do weryfikacji" };
+    return {
+      cls: "dam-project-card--warn",
+      badge: "dam-int-chip dam-int-st dam-int-st--warn",
+      label: "Do weryfikacji",
+    };
   }
 
   function roleMeta(role) {
@@ -227,11 +239,11 @@
       if (ok) {
         actions =
           '<span class="dam-check-row__actions" hidden>' +
-          '<a class="geex-btn geex-btn--sm dam-btn-icon dam-check-go" href="explorer.html?product=' +
+          '<a class="dam-int-cta dam-btn-icon dam-check-go" href="explorer.html?product=' +
           encodeURIComponent(p.id) +
           '" title="Przejdź do Eksplorera" data-dam-tip="Otwórz slot w Eksplorerze">' +
           '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdź</span></a>' +
-          '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-btn-icon-only dam-win-btn dam-check-win" data-path="' +
+          '<button type="button" class="dam-int-cta dam-int-cta--icon dam-btn-icon dam-btn-icon-only dam-win-btn dam-check-win" data-path="' +
           pathEsc +
           '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwórz folder w Eksploratorze plików Windows">' +
           winIcon +
@@ -323,7 +335,7 @@
     var chips = []
       .concat(tg.smak || [])
       .concat(tg.typ || [])
-      .concat(tg.opakowańie || [])
+      .concat(tg.opakowanie || [])
       .slice(0, 6);
     if (!chips.length && (meta.tags || []).length) chips = meta.tags.slice(0, 6);
     if (!chips.length) return "";
@@ -407,7 +419,7 @@
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>';
     var asanaBtn = asanaUrl
-      ? '<a class="geex-btn dam-btn-icon dam-btn-icon-only dam-project-asana-btn" href="' +
+      ? '<a class="dam-int-cta dam-int-cta--icon dam-btn-icon dam-btn-icon-only dam-project-asana-btn" href="' +
         asanaUrl +
         '" target="_blank" rel="noopener noreferrer" aria-label="Asana" title="Otwórz w Asanie" data-dam-tip="Projekt w Asanie">' +
         asanaIcon +
@@ -423,7 +435,7 @@
       pathEsc +
       '">' +
       '<div class="dam-project-card__top">' +
-      '<span class="dam-status ' +
+      '<span class="' +
       meta.badge +
       '">' +
       meta.label +
@@ -434,15 +446,15 @@
       badgesHtml +
       listHtml +
       '<div class="dam-project-card__actions">' +
-      '<a class="geex-btn geex-btn--primary dam-btn-icon dam-project-check-btn" href="project.html?id=' +
+      '<a class="dam-int-cta dam-btn-icon dam-project-check-btn" href="project.html?id=' +
       encodeURIComponent(p.id) +
       '" title="Sprawdź projekt" data-dam-tip="Checklista i szczegóły projektu">' +
       '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Sprawdź projekt</span></a>' +
-      '<a class="geex-btn dam-btn-icon dam-project-go-btn" href="explorer.html?product=' +
+      '<a class="dam-int-cta dam-btn-icon dam-project-go-btn" href="explorer.html?product=' +
       encodeURIComponent(p.id) +
       '" title="Przejdź" data-dam-tip="Otwórz produkt w Eksplorerze">' +
       '<i class="uil uil-sitemap" aria-hidden="true"></i><span>Przejdź</span></a>' +
-      '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-project-win-btn dam-win-btn" data-path="' +
+      '<button type="button" class="dam-int-cta dam-int-cta--icon dam-btn-icon dam-btn-icon-only dam-project-win-btn dam-win-btn" data-path="' +
       pathEsc +
       '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows">' +
       winIcon +
@@ -463,7 +475,7 @@
     var tags = (meta.tags || []).join(" ");
     var authors = (meta.authors || []).join(" ");
     var tg = meta.tag_groups || {};
-    var groupTags = ["smak", "typ", "opakowańie", "autor", "osoba"]
+    var groupTags = ["smak", "typ", "opakowanie", "autor", "osoba"]
       .map(function (k) {
         return (tg[k] || []).join(" ");
       })

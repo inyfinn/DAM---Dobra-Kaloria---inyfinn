@@ -1,6 +1,13 @@
 <!doctype html>
-<html lang="pl" dir="ltr">
+<html lang="pl" dir="ltr" class="dam-booting">
 <head>
+  <style id="dam-shell-boot-critical">
+html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
+  </style>
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=shellboot20260720a">
+  <script>
+  (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -10,17 +17,19 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=20260718theme1">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=hub20260719sidebar02">
-  <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=20260718dashVizScale8">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=helprestart20260720b">
+  <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=usab20260720b">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
   <link rel="stylesheet" href="./assets/css/dam-accent.css?v=20260718accent3">
-  <link rel="stylesheet" href="./assets/css/dam-settings.css?v=20260718set5b">
+  <link rel="stylesheet" href="./assets/css/dam-settings.css?v=safedel20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-integrations.css?v=intfix20260720c">
+  <link rel="stylesheet" href="./assets/css/dam-integrations-settings.css?v=intfix20260720c">
   <script src="./assets/js/dam-theme.js?v=20260718theme1"></script>
   <script src="./assets/js/dam-accent.js?v=20260718accent3"></script>
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
 </head>
-<body class="geex-dashboard dam-app">
+<body class="geex-dashboard dam-app is-booting">
   <div class="dam-sidebar-backdrop" id="damSidebarBackdrop"></div>
   <header class="geex-header">
     <div class="geex-header__wrapper">
@@ -67,6 +76,14 @@
         </div>
       </div>
 
+      <div class="dam-settings-search" role="search">
+        <label class="visually-hidden" for="damSettingsSearch">Szukaj w ustawieniach</label>
+        <i class="uil uil-search dam-settings-search__icon" aria-hidden="true"></i>
+        <input type="search" id="damSettingsSearch" class="dam-settings-search__input"
+          placeholder="Szukaj: usuwanie, motyw, ścieżka…" autocomplete="off" spellcheck="false">
+        <p class="dam-settings-search__hint" id="damSettingsSearchHint" hidden></p>
+      </div>
+
       <nav class="dam-settings-jump" aria-label="Filtr sekcji ustawień" id="damSettingsFilter">
         <button type="button" class="dam-settings-jump__chip is-active" data-filter="all" aria-pressed="true">Wszystko</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="profile" aria-pressed="false"><i class="uil uil-user" aria-hidden="true"></i> Profil</button>
@@ -81,7 +98,8 @@
       </nav>
 
       <div class="dam-settings-grid" id="damSettingsGrid">
-        <section class="dam-widget dam-sw--profile" id="damProfile" data-section="profile">
+        <section class="dam-widget dam-sw--profile" id="damProfile" data-section="profile"
+          data-search="profil profile imię imie nazwa stanowisko telefon email e-mail rola konto">
           <div class="dam-widget__head">
             <h2 class="dam-widget__title"><i class="uil uil-user-circle" aria-hidden="true"></i> Profil</h2>
             <p class="dam-widget__meta">Jak wyświetlamy Cię w panelu. Imię, stanowisko i telefon możesz zmienić. E-mail i rola pochodzą z konta (bez edycji).</p>
@@ -115,7 +133,8 @@
           </div>
         </section>
 
-        <section class="dam-widget dam-sw--appearance" id="damAppearance" data-section="appearance">
+        <section class="dam-widget dam-sw--appearance" id="damAppearance" data-section="appearance"
+          data-search="wygląd wyglad motyw theme jasny ciemny dark light kolor akcent accent fiolet purple">
           <div class="dam-widget__head">
             <h2 class="dam-widget__title"><i class="uil uil-palette" aria-hidden="true"></i> Wygląd panelu</h2>
             <p class="dam-widget__meta">Kolor akcentu (menu, przyciski, podświetlenia) oraz jasny / ciemny motyw. Kolory tagów produktów (smak, typ, opakowanie) zostają bez zmian.</p>
@@ -157,36 +176,29 @@
           </div>
         </section>
 
-        <section class="dam-widget dam-sw--disk" id="damDisk" data-section="disk">
+        <section class="dam-widget dam-sw--disk" id="damDisk" data-section="disk"
+          data-search="dysk disk ścieżka sciezka path marketing folder urządzenie urzadzenie device archiwum polska eksport">
           <div class="dam-widget__head">
-            <h2 class="dam-widget__title"><i class="uil uil-folder" aria-hidden="true"></i> Dysk Marketing</h2>
-            <p class="dam-widget__meta">Ścieżka do folderu z plikami na Twojej stacji. Folder musi zawierać: <strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>
+            <h2 class="dam-widget__title"><i class="uil uil-folder" aria-hidden="true"></i> Urządzenia i ścieżki Marketing</h2>
+            <p class="dam-widget__meta">Ta sama karta co w profilu: ścieżka <strong>tylko dla tego urządzenia</strong>. Wskaż folder przyciskiem Folder (nie musisz klepać ścieżki). Root musi zawierać: <strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>
           </div>
           <div class="dam-widget__body">
-            <div class="dam-sw-field">
-              <label for="settingBasePath">Ścieżka do folderu Marketing</label>
-              <div class="dam-sw-path">
-                <input type="text" id="settingBasePath" class="form-control" placeholder="np. X:\Marketing" data-dam-tip="Zależy od konta Windows i mapowania dysku">
-                <button type="button" class="dam-sw-btn dam-sw-btn--ghost" id="settingBasePathDetect" data-dam-tip="Szuka folderu na dyskach. Nic nie zapisuje samo.">
-                  <i class="uil uil-search" aria-hidden="true"></i><span>Wykryj</span>
-                </button>
-                <button type="button" class="dam-sw-btn dam-sw-btn--soft" id="settingBasePathTest" data-dam-tip="Sprawdza, czy są wymagane foldery">
-                  <i class="uil uil-check-circle" aria-hidden="true"></i><span>Sprawdź</span>
-                </button>
-              </div>
-            </div>
-            <p id="settingBasePathMsg" class="dam-sw-msg"></p>
-            <p id="settingBasePathDetectInfo" class="dam-sw-msg dam-sw-msg--muted"></p>
+            <div id="damDevicePathsRoot"></div>
+            <!-- Legacy hook dla dam-settings.js (sync z DamDevicePaths; ukryte) -->
+            <input type="hidden" id="settingBasePath" value="" autocomplete="off" />
+            <p id="settingBasePathMsg" class="dam-sw-msg" hidden></p>
+            <p id="settingBasePathDetectInfo" class="dam-sw-msg dam-sw-msg--muted" hidden></p>
           </div>
         </section>
 
-        <section class="dam-widget dam-sw--prefs" id="damPrefs" data-section="prefs">
+        <section class="dam-widget dam-sw--prefs" id="damPrefs" data-section="prefs"
+          data-search="preferencje prefs podpowiedzi tooltips marka brand synology bezpieczeństwo bezpieczenstwo usuwanie">
           <div class="dam-widget__head">
             <h2 class="dam-widget__title"><i class="uil uil-sliders-v" aria-hidden="true"></i> Preferencje</h2>
-            <p class="dam-widget__meta">Drobne wygodne przełączniki: podpowiedzi, które marki widzisz na starcie, oraz udostępnianie Synology.</p>
+            <p class="dam-widget__meta">Drobne wygodne przełączniki: podpowiedzi, marki na starcie, Synology oraz bezpieczne usuwanie.</p>
           </div>
           <div class="dam-widget__body">
-            <div class="dam-sw-row">
+            <div class="dam-sw-row" data-search="podpowiedzi tooltips tooltip opis hover wskazówki wskazowki">
               <div>
                 <p class="dam-sw-row__name">Pokazuj podpowiedzi</p>
                 <p class="dam-sw-row__desc">Krótkie opisy po najechaniu na przyciski</p>
@@ -197,7 +209,7 @@
                 <span class="dam-toggle-thumb"></span>
               </label>
             </div>
-            <div class="dam-sw-row">
+            <div class="dam-sw-row" data-search="dobra kaloria dk polska marka brand produkty">
               <div>
                 <p class="dam-sw-row__name">Dobra Kaloria (Polska)</p>
                 <p class="dam-sw-row__desc">Na starcie pokazuj produkty DK</p>
@@ -208,7 +220,7 @@
                 <span class="dam-toggle-thumb"></span>
               </label>
             </div>
-            <div class="dam-sw-row">
+            <div class="dam-sw-row" data-search="good calories gc eksport marka brand produkty">
               <div>
                 <p class="dam-sw-row__name">Good Calories (Eksport)</p>
                 <p class="dam-sw-row__desc">Na starcie pokazuj produkty GC</p>
@@ -219,7 +231,7 @@
                 <span class="dam-toggle-thumb"></span>
               </label>
             </div>
-            <div class="dam-sw-row">
+            <div class="dam-sw-row" data-search="synology drive udostępnij udostepnij share galeria">
               <div>
                 <p class="dam-sw-row__name">Synology Drive</p>
                 <p class="dam-sw-row__desc">Przycisk Udostępnij w galerii wizualizacji</p>
@@ -230,10 +242,23 @@
                 <span class="dam-toggle-thumb"></span>
               </label>
             </div>
+            <div class="dam-sw-row dam-sw-row--security" id="settingSafeDeleteRow"
+              data-search="usuwanie usuń usun bezpieczne bezpiecznie bezpieczeństwo bezpieczenstwo hold delete hold-to-delete przytrzymaj destrukcja kasowanie">
+              <div>
+                <p class="dam-sw-row__name">Bezpieczne usuwanie</p>
+                <p class="dam-sw-row__desc">Przyciski Usuń wymagają przytrzymania (~1 s). Wyłączenie = zwykły klik. Zapis w profilu (baza).</p>
+              </div>
+              <label class="dam-toggle" for="settingSafeDelete">
+                <input type="checkbox" id="settingSafeDelete" checked>
+                <span class="dam-toggle-track"></span>
+                <span class="dam-toggle-thumb"></span>
+              </label>
+            </div>
           </div>
         </section>
 
-        <section class="dam-widget dam-sw--integrations" id="damIntegrations" data-section="integrations">
+        <section class="dam-widget dam-sw--integrations" id="damIntegrations" data-section="integrations"
+          data-search="integracje asana teams microsoft entra ldap synology oauth połączenia polaczenia">
           <div class="dam-widget__head">
             <h2 class="dam-widget__title"><i class="uil uil-link" aria-hidden="true"></i> Integracje</h2>
             <p class="dam-widget__meta">Połącz Asanę i Microsoft (Teams, Outlook), gdy będziesz gotowy. Tokeny zostają na tym komputerze.</p>
@@ -248,7 +273,8 @@
           </div>
         </section>
 
-        <section class="dam-widget dam-sw--notify" id="damNotificationGroups" data-section="notify">
+        <section class="dam-widget dam-sw--notify" id="damNotificationGroups" data-section="notify"
+          data-search="powiadomienia notify email e-mail grafik odbiorcy lista">
           <div class="dam-widget__head">
             <h2 class="dam-widget__title"><i class="uil uil-users-alt" aria-hidden="true"></i> Powiadomienia do grafików</h2>
             <p class="dam-widget__meta">Lista osób, które dostaną e-mail przy zgłoszeniu zapotrzebowania. Po zmianie kliknij Zapisz ustawienia.</p>
@@ -269,7 +295,8 @@
           </div>
         </section>
 
-        <section class="dam-widget dam-sw--naming" id="damNamingPolicy" data-section="naming">
+        <section class="dam-widget dam-sw--naming" id="damNamingPolicy" data-section="naming"
+          data-search="nazewnictwo naming nośniki nosniki doypack baton folia short label">
           <div class="dam-widget__head">
             <div class="dam-widget__head-row">
               <h2 class="dam-widget__title"><i class="uil uil-tag-alt" aria-hidden="true"></i> Nazewnictwo nośników</h2>
@@ -297,7 +324,8 @@
           </div>
         </section>
 
-        <section class="dam-widget dam-sw--instructions" id="damProgramInstructions" data-section="instructions">
+        <section class="dam-widget dam-sw--instructions" id="damProgramInstructions" data-section="instructions"
+          data-search="instrukcje program instructions reguły reguly pi policy">
           <div class="dam-widget__head">
             <div class="dam-widget__head-row">
               <h2 class="dam-widget__title"><i class="uil uil-book-open" aria-hidden="true"></i> Instrukcje programu</h2>
@@ -315,10 +343,40 @@
           <div class="dam-sw-system">
             <div>
               <h2 class="dam-widget__title"><i class="uil uil-info-circle" aria-hidden="true"></i> System</h2>
-              <p class="dam-widget__meta">DAM · <a href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> © 2026</p>
+              <p class="dam-widget__meta">DAM · <a href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> · 2026</p>
               <p id="settingRestartMsg" class="dam-sw-msg"></p>
             </div>
             <button type="button" class="dam-sw-btn dam-sw-btn--primary" id="settingRestartApp" data-dam-tip="Zamyka i otwiera ponownie okno aplikacji">Zrestartuj okno</button>
+          </div>
+        </section>
+
+        <!-- STREFA H: danger zone GitHub-style - geograficzny friction, pelna szerokosc. -->
+        <section class="dam-widget dam-sw--danger dam-danger-zone" id="damDangerZone" data-section="system" aria-labelledby="damDangerZoneTitle">
+          <header class="dam-dz__head">
+            <span class="dam-dz__icon" aria-hidden="true"><i class="uil uil-exclamation-triangle"></i></span>
+            <div class="dam-dz__intro">
+              <h2 class="dam-dz__title" id="damDangerZoneTitle">Strefa ryzyka</h2>
+              <p class="dam-dz__lead">Operacje lokalne w tej przeglądarce. Wymagają <strong>przytrzymania</strong> (~0,3&nbsp;s) - zwykłe kliknięcie nic nie usunie. Po akcji masz kilka sekund na <strong>Cofnij</strong>. Nie rusza plików na dysku.</p>
+            </div>
+          </header>
+          <div class="dam-dz__ops">
+            <article class="dam-dz__card">
+              <div class="dam-dz__card-copy">
+                <h3 class="dam-dz__card-title">Wyczyść lokalne ustawienia</h3>
+                <p class="dam-dz__card-desc">Zresetuje motyw, kolor akcentu, podpowiedzi i inne preferencje zapisane w tej przeglądarce. <strong>Nie wylogowuje</strong>. <strong>Nie usuwa plików</strong> z dysku ani z repozytorium.</p>
+                <p class="dam-dz__cooldown">Po wyczyszczeniu możesz cofnąć przez ok. 8&nbsp;s (toast Cofnij).</p>
+              </div>
+              <!-- Offset: akcja na dole karty po LEWEJ - nigdy w slocie Confirm / obok Restart (prawa, fiolet) -->
+              <div class="dam-dz__card-foot">
+                <button type="button" class="dam-dz__btn" id="damClearLocalPrefs"
+                  data-dam-label="Wyczysc lokalne ustawienia"
+                  data-dam-hint="Przytrzymaj, aby wyczyscic lokalne ustawienia"
+                  data-dam-hold-ms="300">
+                  <i class="uil uil-trash-alt" aria-hidden="true"></i>
+                  <span>Wyczyść lokalne ustawienia</span>
+                </button>
+              </div>
+            </article>
           </div>
         </section>
       </div>
@@ -330,16 +388,235 @@
   <script src="./assets/js/main.js"></script>
   <script src="./assets/js/dam-app.js?v=20260717ux6"></script>
   <script src="./assets/js/dam-api.js?v=20260719golive1"></script>
-  <script src="./assets/js/dam-i18n.js?v=20260718shell2"></script>
+  <script src="./assets/js/dam-i18n.js?v=plshell20260720a"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
   <script src="./assets/js/dam-version.js?v=2.0.6"></script>
-	<script src="./assets/js/dam-shell.js?v=20260719ver102"></script>
-  <script src="./assets/js/dam-tooltips.js?v=20260717ux12"></script>
-  <script src="./assets/js/dam-paths.js?v=204mod1"></script>
+	<script src="./assets/js/dam-shell.js?v=helprestart20260720a"></script>
+  <script src="./assets/js/dam-loader.js?v=1"></script>
+  <script src="./assets/js/dam-tooltips.js?v=usermenufix20260720a"></script>
+  <script src="./assets/js/dam-paths.js?v=devicepath20260720c"></script>
   <script src="./assets/js/dam-labels.js?v=20260718namePl1"></script>
-  <script src="./assets/js/dam-badges.js?v=20260718namePl1"></script>
-  <script src="./assets/js/dam-tag-edit.js?v=20260718tagCase1"></script>
-  <script src="./assets/js/dam-integrations.js?v=hub20260719int02"></script>
-  <script src="./assets/js/dam-settings.js?v=hub20260719int02"></script>
+  <script src="./assets/js/dam-badges.js?v=usab20260720c"></script>
+  <script src="./assets/js/dam-tag-edit.js?v=viztb20260720b"></script>
+  <script src="./assets/js/dam-user-prefs.js?v=viztb20260720a"></script>
+  <script src="./assets/js/dam-danger.js?v=safedel20260720a"></script>
+  <script src="./assets/js/dam-fmcg-catalog.js?v=safedel20260720a"></script>
+  <script src="./assets/js/dam-integrations.js?v=intfix20260720c"></script>
+  <script src="./assets/js/dam-settings.js?v=safedel20260720a"></script>
+  <script src="./assets/js/dam-device-paths.js?v=devicepath20260720c"></script>
+  <style id="damDangerZoneCss">
+    /* Pełna szerokość w siatce 12-col (bez .dam-sw--danger w dam-settings.css) */
+    .dam-settings-grid > .dam-sw--danger,
+    .dam-settings-grid > .dam-danger-zone,
+    #damDangerZone {
+      grid-column: 1 / -1;
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+    .dam-danger-zone.dam-widget {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 0;
+      margin-top: 8px;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--dam-danger, #ff5b5b) 32%, #e8e6ef);
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--dam-danger, #ff5b5b) 3.5%, #fff) 0%, #fff 56px);
+      box-shadow: none;
+    }
+    .dam-dz__head {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 20px 22px 16px;
+      width: 100%;
+      box-sizing: border-box;
+      border-bottom: 1px solid color-mix(in srgb, var(--dam-danger, #ff5b5b) 12%, #eceaf2);
+    }
+    .dam-dz__icon {
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 12%, transparent);
+      color: var(--dam-danger, #ff5b5b);
+      font-size: 20px;
+      line-height: 1;
+    }
+    .dam-dz__intro { flex: 1 1 auto; min-width: 0; }
+    .dam-dz__title {
+      margin: 0 0 6px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--dam-danger, #d63b38);
+      line-height: 1.25;
+      text-align: left;
+    }
+    .dam-dz__lead {
+      margin: 0;
+      max-width: 52rem;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #6f6b7c;
+      text-align: left;
+    }
+    .dam-dz__lead strong { color: #464255; font-weight: 650; }
+    .dam-dz__ops {
+      padding: 4px 22px 20px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .dam-dz__card {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 0 0;
+      border-radius: 0;
+      border: none;
+      border-top: 1px solid color-mix(in srgb, var(--dam-danger, #ff5b5b) 14%, #eceaf2);
+      background: transparent;
+      box-sizing: border-box;
+    }
+    .dam-dz__card-copy { min-width: 0; max-width: 40rem; }
+    .dam-dz__card-title {
+      margin: 0 0 6px;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #2f2b3a;
+      line-height: 1.3;
+    }
+    .dam-dz__card-desc {
+      margin: 0 0 8px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #6f6b7c;
+    }
+    .dam-dz__card-desc strong { color: #464255; }
+    .dam-dz__cooldown {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #8f8b9f;
+    }
+    /* Offset: stopka akcji na LEWO / dole - nie prawa jak Zrestartuj okno */
+    .dam-dz__card-foot {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding-top: 2px;
+      margin-top: 0;
+      border-top: none;
+    }
+    .dam-dz__btn {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid color-mix(in srgb, var(--dam-danger, #ff5b5b) 55%, transparent);
+      background: transparent;
+      color: var(--dam-danger, #d63b38);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background .14s ease, border-color .14s ease, color .14s ease;
+    }
+    .dam-dz__btn i { font-size: 16px; }
+    .dam-dz__btn:hover {
+      background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 10%, transparent);
+      border-color: var(--dam-danger, #ff5b5b);
+    }
+    .dam-dz__btn:focus-visible {
+      outline: 2px solid var(--dam-danger, #ff5b5b);
+      outline-offset: 2px;
+    }
+    .dam-dz__btn.dam-danger-holding {
+      background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 14%, transparent);
+    }
+    /* Trash odbiorców (lista powiadomień) - cichy do hold; czerwień = destrukcja, nie dekor */
+    .dam-notify-row__remove {
+      background: transparent !important;
+      border: 1px solid #d9d6e2 !important;
+      color: #8f8b9f !important;
+      border-radius: 8px;
+    }
+    .dam-notify-row__remove:hover,
+    .dam-notify-row__remove.dam-danger-holding {
+      border-color: color-mix(in srgb, var(--dam-danger, #ff5b5b) 55%, transparent) !important;
+      color: var(--dam-danger, #d63b38) !important;
+      background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 8%, transparent) !important;
+    }
+    @media (max-width: 640px) {
+      .dam-dz__btn { white-space: normal; text-align: left; max-width: 100%; }
+      .dam-dz__head, .dam-dz__ops { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+  <script>
+    (function () {
+      if (!window.DamDanger) return;
+      var PRESERVE = ["dam_token", "dam_role", "dam_user", "dam_email", "dam_display_name", "dam_uid"];
+      function snapshot() {
+        var s = {};
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (PRESERVE.indexOf(k) === -1) s[k] = localStorage.getItem(k);
+        }
+        return s;
+      }
+      var btn = document.getElementById("damClearLocalPrefs");
+      if (btn) {
+        window.DamDanger.bind(btn, {
+          label: "Wyczysc lokalne ustawienia",
+          hint: "Przytrzymaj, aby wyczyscic lokalne ustawienia",
+          holdMs: 300,
+          onConfirm: function () {
+            var snap = snapshot();
+            Object.keys(snap).forEach(function (k) { localStorage.removeItem(k); });
+            window.DamDanger.toastUndo({
+              message: "Wyczyszczono lokalne ustawienia tej przeglądarki (nie pliki na dysku)",
+              actionLabel: "Cofnij",
+              duration: 8000,
+              onUndo: function () {
+                Object.keys(snap).forEach(function (k) { localStorage.setItem(k, snap[k]); });
+                location.reload();
+              },
+              onCommit: function () { location.reload(); }
+            });
+          }
+        });
+      }
+      /* Hold na trash odbiorców - bez edycji dam-settings.js (delegacja data-dam-hold-delete) */
+      function armNotifyTrash(root) {
+        (root || document).querySelectorAll(".dam-notify-row__remove").forEach(function (el) {
+          if (el.getAttribute("data-dam-hold-delete") != null) return;
+          el.setAttribute("data-dam-hold-delete", "");
+          el.setAttribute("data-dam-label", "Usun odbiorce");
+          el.setAttribute("data-dam-hint", "Przytrzymaj, aby usunac odbiorce");
+          el.setAttribute("data-dam-hold-ms", "300");
+          el.setAttribute("aria-label", "Usun odbiorce");
+          el.setAttribute("title", "Przytrzymaj, aby usunac odbiorce");
+        });
+      }
+      armNotifyTrash();
+      var list = document.getElementById("damNotificationGroupsList");
+      if (list && typeof MutationObserver !== "undefined") {
+        new MutationObserver(function () { armNotifyTrash(list); }).observe(list, { childList: true, subtree: true });
+      }
+    })();
+  </script>
 </body>
 </html>

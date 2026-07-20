@@ -179,6 +179,8 @@ def build_tags(
         tags.extend(["Archiwum", "Stara struktura"])
     if source == "wizki":
         tags.append("WIZKI")
+    if source == "product_element":
+        tags.append("Elementy")
     if wiz.get("perspective"):
         tags.append(wiz["perspective"])
     if wiz.get("size"):
@@ -225,6 +227,10 @@ def make_asset(
             bg = cached
         elif cached == "none":
             bg = None  # skan juz byl: brak przezroczystosci, nie powtarzaj IO
+        elif is_legacy_root_archive(path) or source == "product_element":
+            # Legacy ARCHIWUM + product Links/ELEMENTY: pomin pixel-scan tła
+            # (PIL na X: NFS wisi na TIFF 50–120 MB). Tło: patch-backgrounds.
+            bg = None
         else:
             bg = detect_raster_background(str(fp), name)
     blob_parts = [name, path, brand, mt, source] + tags
@@ -330,14 +336,25 @@ def scan_marketing_roots(
     for brand, root in primary_roots:
         if not root.is_dir():
             continue
+        print(f"scan primary: {root}", flush=True)
         for fp in root.rglob("*"):
             if fp.is_file():
                 ingest_file(fp, brand, from_legacy=False)
+                if stats["primary_scanned"] and stats["primary_scanned"] % 500 == 0:
+                    print(f"  primary_scanned={stats['primary_scanned']} indexed={aid}", flush=True)
 
     if legacy_root.is_dir():
+        print(f"scan legacy: {legacy_root}", flush=True)
         for fp in legacy_root.rglob("*"):
             if fp.is_file():
                 ingest_file(fp, "DK", from_legacy=True)
+                if stats["legacy_scanned"] and stats["legacy_scanned"] % 500 == 0:
+                    print(
+                        f"  legacy_scanned={stats['legacy_scanned']}"
+                        f" indexed={stats['legacy_indexed']}"
+                        f" skip_overlap={stats['legacy_skipped_overlap']}",
+                        flush=True,
+                    )
 
     return assets, stats
 
@@ -373,20 +390,70 @@ def scan_wizki_products(marketing: Path, include_archive: bool = False) -> list[
     return assets
 
 
-def dedupe_by_path(marketing_assets: list[dict], wizki_assets: list[dict]) -> list[dict]:
-    """Marketing scan wins; WIZKI only if path not already indexed."""
-    seen = {a["path"].lower() for a in marketing_assets}
-    out = list(marketing_assets)
-    next_id = len(out) + 1
-    for a in wizki_assets:
-        key = a["path"].lower()
-        if key in seen:
+def scan_product_element_assets(marketing: Path, include_archive: bool = False) -> list[dict]:
+    """Links + MATERIALY/ELEMENTY (+ skladniki) spod 01 - PRODUKTY / PRODUCTS.
+
+    Handoff A3 / pkt 35: product-folder elementy nie byly w branding-index
+    (tylko packshoty WIZKI). Indeksujemy je jako source=product_element.
+    """
+    from brand_element_assoc import is_product_element_path
+
+    scan_roots_dirs = [
+        marketing / "- POLSKA" / "01 - PRODUKTY",
+        marketing / "- EKSPORT" / "01 - PRODUCTS",
+    ]
+    assets: list[dict] = []
+    aid = 0
+    seen: set[str] = set()
+    for products_root in scan_roots_dirs:
+        if not products_root.is_dir():
             continue
-        a = dict(a)
-        a["id"] = f"br-{next_id:06d}"
-        next_id += 1
-        out.append(a)
-        seen.add(key)
+        for fp in products_root.rglob("*"):
+            if not fp.is_file():
+                continue
+            path = str(fp).replace("\\", "/")
+            if not is_product_element_path(path):
+                continue
+            path_key = path.lower()
+            if path_key in seen:
+                continue
+            brand = "GC" if "/- EKSPORT/" in path.upper() or "/01 - PRODUCTS/" in path.upper() else "DK"
+            row = make_asset(
+                aid + 1,
+                fp,
+                brand,
+                marketing,
+                source="product_element",
+                include_archive=include_archive,
+            )
+            if not row:
+                continue
+            row["asset_role"] = "product_element"
+            if "Elementy" not in (row.get("tags") or []):
+                row.setdefault("tags", []).append("Elementy")
+            aid += 1
+            seen.add(path_key)
+            assets.append(row)
+    return assets
+
+
+def dedupe_by_path(*groups: list[dict]) -> list[dict]:
+    """Pierwsza grupa wygrywa; kolejne tylko gdy path jeszcze nie zindeksowany."""
+    if not groups:
+        return []
+    out = list(groups[0])
+    seen = {a["path"].lower() for a in out if a.get("path")}
+    next_id = len(out) + 1
+    for group in groups[1:]:
+        for a in group:
+            key = (a.get("path") or "").lower()
+            if not key or key in seen:
+                continue
+            a = dict(a)
+            a["id"] = f"br-{next_id:06d}"
+            next_id += 1
+            out.append(a)
+            seen.add(key)
     return out
 
 
@@ -486,7 +553,10 @@ def main() -> int:
         f" legacy_indexed={scan_stats['legacy_indexed']}"
     )
     wizki_assets = scan_wizki_products(marketing, include_archive=args.include_archive)
-    assets = dedupe_by_path(marketing_assets, wizki_assets)
+    print(f"wizki scan: {len(wizki_assets)}", flush=True)
+    element_assets = scan_product_element_assets(marketing, include_archive=args.include_archive)
+    print(f"product element scan (Links/ELEMENTY): {len(element_assets)}", flush=True)
+    assets = dedupe_by_path(marketing_assets, wizki_assets, element_assets)
 
     file_index = json.loads(FILE_INDEX_PATH.read_text(encoding="utf-8")) if FILE_INDEX_PATH.is_file() else {}
     catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8")) if CATALOG_PATH.is_file() else {}
@@ -522,6 +592,21 @@ def main() -> int:
         apply_branding_assoc_overrides(assets, file_index)
     except Exception as exc:
         print(f"warn: folder context enrich skipped: {exc}")
+
+    try:
+        from brand_element_assoc import enrich_element_associations
+
+        el_stats = enrich_element_associations(assets)
+        print(
+            "element assoc:"
+            f" tagged={el_stats['tagged']}"
+            f" product_paths={el_stats['product_element_paths']}"
+            f" owoce={el_stats['with_owoce']}"
+            f" skladniki={el_stats['with_skladniki']}",
+            flush=True,
+        )
+    except Exception as exc:
+        print(f"warn: element assoc enrich skipped: {exc}")
 
     carried = apply_background_scan_cache(assets, _BG_SCAN_CACHE)
     if carried:

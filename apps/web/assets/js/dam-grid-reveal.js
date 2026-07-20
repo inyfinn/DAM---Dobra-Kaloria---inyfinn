@@ -312,23 +312,72 @@
     var box = overlay.querySelector(".dam-viz-modal-box") || overlay;
     var thumb = box.querySelector(".dam-viz-modal__thumb");
     var body = box.querySelector(".dam-viz-modal__body");
+    var MODAL_FADE = 0.3;
 
-    if (thumb) {
-      revealSequence(thumb, thumb, { mode: "fade", duration: 0.35 });
+    function runContentReveal() {
+      // Skeleton na hero do czasu zaladowania obrazka
+      if (thumb && !thumb.querySelector(".dam-skeleton__hero")) {
+        var sk = document.createElement("div");
+        sk.className = "dam-skeleton__hero";
+        sk.setAttribute("aria-hidden", "true");
+        thumb.insertBefore(sk, thumb.firstChild);
+        var heroImg = thumb.querySelector("img, video");
+        function clearSk() {
+          if (sk && sk.parentNode) sk.parentNode.removeChild(sk);
+        }
+        if (heroImg) {
+          if (heroImg.complete || heroImg.readyState >= 2) {
+            clearSk();
+          } else {
+            heroImg.addEventListener("load", clearSk, { once: true });
+            heroImg.addEventListener("error", clearSk, { once: true });
+            setTimeout(clearSk, 2500);
+          }
+        } else {
+          setTimeout(clearSk, 400);
+        }
+      }
+
+      if (thumb) {
+        revealSequence(thumb, thumb, { mode: "fade", duration: MODAL_FADE });
+      }
+      if (body && body.children.length) {
+        var kids = Array.prototype.slice.call(body.children);
+        revealSequence(body, kids, {
+          mode: "fade",
+          stagger: STAGGER_EACH,
+          delay: thumb ? 0.05 : 0,
+          duration: MODAL_FADE,
+        });
+      } else if (!body) {
+        var boxKids = Array.prototype.slice.call(box.children).filter(function (el) {
+          return !el.classList || !el.classList.contains("dam-viz-modal-close");
+        });
+        revealSequence(box, boxKids, {
+          mode: "fade",
+          stagger: STAGGER_EACH,
+          duration: MODAL_FADE,
+        });
+      }
     }
-    if (body && body.children.length) {
-      var kids = Array.prototype.slice.call(body.children);
-      revealSequence(body, kids, {
-        mode: "slide",
-        stagger: STAGGER_EACH,
-        delay: thumb ? 0.06 : 0,
-      });
-    } else if (!body) {
-      var boxKids = Array.prototype.slice.call(box.children).filter(function (el) {
-        return !el.classList || !el.classList.contains("dam-viz-modal-close");
-      });
-      revealSequence(box, boxKids, { mode: "slide", stagger: STAGGER_EACH });
-    }
+
+    // Fade tla overlaya 0 -> 1 (0.3s)
+    loadGsap(function (gsap) {
+      if (gsap) {
+        gsap.fromTo(
+          overlay,
+          { opacity: 0 },
+          { opacity: 1, duration: MODAL_FADE, ease: EASE, overwrite: true }
+        );
+      } else {
+        overlay.style.opacity = "0";
+        overlay.style.transition = "opacity " + MODAL_FADE + "s ease";
+        requestAnimationFrame(function () {
+          overlay.style.opacity = "1";
+        });
+      }
+      runContentReveal();
+    });
   }
 
   function initModalObserver() {
@@ -461,7 +510,22 @@
     opts = opts || {};
     var count = opts.count || 5;
     var variant = opts.variant || "lines";
+    var layout = opts.layout || "";
     var i;
+    var isVizGrid =
+      layout === "viz-grid" ||
+      (mount.classList &&
+        (mount.classList.contains("dam-viz-grid") ||
+          mount.classList.contains("dam-branding-grid")));
+    if (variant === "cards" && isVizGrid) {
+      var cards = "";
+      for (i = 0; i < count; i++) {
+        cards +=
+          '<div class="dam-skeleton__card dam-skeleton__card--viz" aria-hidden="true"></div>';
+      }
+      mount.innerHTML = cards;
+      return;
+    }
     if (mount.tagName === "TBODY") {
       var cols = opts.cols || 6;
       var rows = "";

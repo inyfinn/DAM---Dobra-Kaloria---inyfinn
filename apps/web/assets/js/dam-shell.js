@@ -291,6 +291,8 @@
      ZAMYKA GO i nie nawiguje do innej strony. Wyjatek zgodny z prosba usera. */
   function closeTopmostOverlayIfAny() {
     var overlaySelectors = [
+      "#damMediaPreview",
+      "#damLifecycleHistoryModal",
       "#damLightbox",
       "#damVizModal",
       "#damVizRequestModal",
@@ -303,6 +305,9 @@
     for (var i = 0; i < overlaySelectors.length; i++) {
       var el = document.querySelector(overlaySelectors[i]);
       if (el) {
+        if (el.id === "damMediaPreview") {
+          document.body.classList.remove("dam-media-preview-open");
+        }
         el.remove();
         return true;
       }
@@ -549,6 +554,7 @@
 
   function buildSidebarNav() {
     var active = sidebarActiveKey();
+    var logoutLabel = navItemLabel({ i18n: "nav.logout" });
     return NAV_ITEMS.map(function (item) {
       var label = navItemLabel(item);
       var on = item.key === active;
@@ -560,11 +566,239 @@
         '<span class="dam-nav-label" data-i18n="' + item.i18n + '">' + label + '</span>' +
         '</a></li>';
     }).join("") +
-    '<li class="geex-sidebar__menu__item" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px">' +
-    '<a href="#" class="geex-sidebar__menu__link dam-logout-btn" id="damShellLogout" title="Sesja urządzenia" aria-label="Sesja urządzenia">' +
-    '<i class="uil uil-sign-out-alt" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
-    '<span class="dam-nav-label" data-i18n="nav.logout">' + navItemLabel({ i18n: "nav.logout" }) + '</span>' +
+    /* (1) Sesja urzadzenia - sciezki per device; NIE logout */
+    '<li class="geex-sidebar__menu__item dam-nav-device-session" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px">' +
+    '<a href="profile.html#damDevicePathsRoot" class="geex-sidebar__menu__link dam-device-session-btn" id="damShellDeviceSession"' +
+    ' title="Sesja urządzenia - ścieżki Marketing" aria-label="Sesja urządzenia"' +
+    ' data-dam-tip="Sesja urządzenia: ścieżki Marketing na tym PC">' +
+    '<i class="uil uil-desktop" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
+    '<span class="dam-nav-label">Sesja urządzenia</span>' +
+    '</a></li>' +
+    /* (2) Wyloguj - prawdziwy logout, +50px friction od Sesji */
+    '<li class="geex-sidebar__menu__item dam-nav-logout">' +
+    '<a href="#" class="geex-sidebar__menu__link dam-logout-btn" id="damShellLogout"' +
+    ' title="Wyloguj" aria-label="Wyloguj"' +
+    ' data-dam-tip="Wyloguj z konta DAM">' +
+    '<i class="uil uil-signout" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
+    '<span class="dam-nav-label" data-i18n="nav.logout">' + logoutLabel + '</span>' +
     '</a></li>';
+  }
+
+  /** Sidebar: Sesja urzadzenia -> profil z CRUD sciezek per device (nie logout). */
+  function goDeviceSessionPaths(e) {
+    if (e) e.preventDefault();
+    var target = "profile.html#damDevicePathsRoot";
+    var onProfile = /profile\.html$/i.test(location.pathname.replace(/\\/g, "/").split("/").pop() || "");
+    if (onProfile) {
+      if (location.hash !== "#damDevicePathsRoot") {
+        location.hash = "damDevicePathsRoot";
+      }
+      var el = document.getElementById("damDevicePathsRoot");
+      if (el && typeof el.scrollIntoView === "function") {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      if (window.DamDevicePaths && typeof DamDevicePaths.focusSection === "function") {
+        DamDevicePaths.focusSection();
+      }
+      return;
+    }
+    window.location.href = target;
+  }
+
+  /** Prawdziwe wylogowanie (DamApi.logout -> clear session + signin). */
+  function performLogout(e) {
+    if (e) e.preventDefault();
+    if (window.DamApi && typeof window.DamApi.logout === "function") {
+      try {
+        var p = window.DamApi.logout();
+        if (p && typeof p.catch === "function") {
+          p.catch(function () {
+            window.location.href = "signin.html";
+          });
+        }
+        return;
+      } catch (err) { /* fallback nizej */ }
+    }
+    [
+      "dam_token",
+      "dam_session_id",
+      "dam_role",
+      "dam_user",
+      "dam_user_name",
+    ].forEach(function (k) {
+      try { localStorage.removeItem(k); } catch (err2) { /* ignore */ }
+    });
+    window.location.href = "signin.html";
+  }
+
+  /**
+   * Warstwy shell: menu profilu / popupy headera ZAWSZE nad sticky search (z-index 52)
+   * + spacing Wyloguj (+50px obu stany) + tor ikon bez recenter + footer identity.
+   * Inject - bez walki o cudzy dam-brand.css.
+   */
+  function ensureShellLayerCss() {
+    var s = document.getElementById("damShellLayerCss");
+    var created = false;
+    if (!s) {
+      s = document.createElement("style");
+      s.id = "damShellLayerCss";
+      created = true;
+    }
+    s.textContent =
+      "/* Header popups ZAWSZE nad sticky search/filters */" +
+      ".geex-content__header{position:relative;z-index:200;isolation:isolate;}" +
+      ".geex-content__header__action{position:relative;z-index:12500;}" +
+      ".geex-content__header__action .geex-content__header__popup," +
+      ".geex-content__header__action .geex-content__header__popup.is-open," +
+      ".geex-content__header__popup--author," +
+      ".geex-content__header__popup--author.dam-user-menu," +
+      ".geex-content__header__popup--author.dam-user-menu.is-open{" +
+      "z-index:12550!important;}" +
+      "/* Gdy dowolny popup headera otwarty - sticky search schodzi nizej */" +
+      "body.dam-header-popup-open .dam-explorer-toolbar," +
+      "body.dam-header-popup-open .dam-global-search-block .dam-explorer-toolbar," +
+      "body.dam-header-popup-open .dam-filter-chips," +
+      "body.dam-header-popup-open .dam-explorer-grid-toolbar{" +
+      "z-index:20!important;}" +
+      "/* Wyloguj: +50px friction od Sesji - TEN SAM gap expanded i collapsed */" +
+      ".geex-sidebar__menu__item.dam-nav-logout{margin-top:50px!important;}" +
+      "/* Menu wypelnia wysokosc (expanded+collapsed): Sesja margin-top:auto → Wyloguj nisko nad footer/logo */" +
+      ".geex-sidebar__menu-wrapper{" +
+      "display:flex!important;flex-direction:column!important;" +
+      "flex:1 1 auto!important;min-height:0!important;}" +
+      ".geex-sidebar__menu{" +
+      "display:flex!important;flex-direction:column!important;" +
+      "flex:1 1 auto!important;min-height:100%!important;height:100%!important;}" +
+      ".geex-sidebar__wrapper{gap:16px!important;}" +
+      ".geex-sidebar__footer{flex-shrink:0;margin-top:4px;}" +
+      "/* Logo dolne: NIE margin-top:auto (to robilo dziure nad logo / Wyloguj mid-rail) */" +
+      "body.dam-sidebar-collapsed .dam-sidebar-logo-collapsed{" +
+      "margin-top:10px!important;flex-shrink:0;}" +
+      "/* Tor ikon collapsed = flex-start + te same CSS vars co morph (ZERO justify:center snap) */" +
+      "body.dam-sidebar-collapsed .geex-sidebar{" +
+      "padding-left:var(--dam-sb-pad-x,10px)!important;" +
+      "padding-right:var(--dam-sb-pad-x,10px)!important;}" +
+      "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link{" +
+      "justify-content:flex-start!important;" +
+      "align-items:center!important;" +
+      "gap:0!important;" +
+      "padding-left:var(--dam-link-pad-x,14px)!important;" +
+      "padding-right:var(--dam-link-pad-x,14px)!important;" +
+      "font-size:inherit!important;" +
+      "line-height:normal!important;" +
+      "min-height:44px!important;" +
+      "height:auto!important;}" +
+      "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i," +
+      "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link .uil{" +
+      "font-size:20px!important;" +
+      "width:22px!important;" +
+      "margin:0!important;" +
+      "flex-shrink:0!important;" +
+      "text-align:center;}" +
+      "/* Compact identity under logo (footer pelny w expanded; tu tylko DAM + v) */" +
+      ".dam-sidebar-collapsed-meta{display:none;flex-direction:column;align-items:center;" +
+      "gap:2px;padding:0 2px 6px;text-align:center;flex-shrink:0;" +
+      "color:var(--dam-text-muted,#8a8696);font-size:10px;line-height:1.25;font-weight:600;}" +
+      "body.dam-sidebar-collapsed .dam-sidebar-collapsed-meta{display:flex!important;}" +
+      ".dam-sidebar-collapsed-meta__brand{letter-spacing:0.04em;}" +
+      ".dam-sidebar-collapsed-meta__ver{opacity:0.9;}" +
+      "/* Morph: kill Geex transition:all; width + icon track via CSS vars */" +
+      "body.dam-sidebar-morphing .geex-sidebar," +
+      "body.dam-sidebar-morphing .geex-main-content," +
+      "body.dam-sidebar-morphing .geex-sidebar *{" +
+      "transition:none!important;}" +
+      "body.dam-sidebar-morphing .geex-sidebar{" +
+      "overflow-x:hidden!important;" +
+      "will-change:width;" +
+      "padding-left:var(--dam-sb-pad-x,29px)!important;" +
+      "padding-right:var(--dam-sb-pad-x,29px)!important;}" +
+      "body.dam-sidebar-morphing .geex-main-content{" +
+      "will-change:padding-inline-start;}" +
+      "body.dam-sidebar-morphing .geex-sidebar__menu__link{" +
+      "position:relative!important;" +
+      "overflow:hidden!important;" +
+      "white-space:nowrap!important;" +
+      "justify-content:flex-start!important;" +
+      "align-items:center!important;" +
+      "gap:0!important;" +
+      "padding-left:var(--dam-link-pad-x,25px)!important;" +
+      "padding-right:var(--dam-link-pad-x,25px)!important;}" +
+      "/* Labels out of flow = icons keep track (no reflow / recenter) */" +
+      "body.dam-sidebar-morphing .geex-sidebar__menu__link .dam-nav-label," +
+      "body.dam-sidebar-morphing .geex-sidebar__menu__link span{" +
+      "position:absolute!important;" +
+      "left:calc(var(--dam-link-pad-x,25px) + 30px)!important;" +
+      "top:50%!important;" +
+      "transform:translateY(-50%)!important;" +
+      "margin:0!important;" +
+      "display:inline-block!important;" +
+      "pointer-events:none;" +
+      "white-space:nowrap!important;}" +
+      "body.dam-sidebar-morphing .geex-sidebar__menu__link i," +
+      "body.dam-sidebar-morphing .geex-sidebar__menu__link .uil," +
+      "body.dam-sidebar-morphing .geex-sidebar__menu__link svg{" +
+      "flex-shrink:0!important;" +
+      "margin:0!important;" +
+      "width:22px!important;" +
+      "font-size:20px!important;" +
+      "position:relative!important;" +
+      "z-index:1;" +
+      "will-change:filter;}" +
+      "body.dam-sidebar-morphing .geex-sidebar__menu__link:hover i," +
+      "body.dam-sidebar-morphing .geex-sidebar__menu__link:hover .uil{" +
+      "transform:none!important;}" +
+      "/* Default avatar: circle crop, bez artefaktow */" +
+      ".geex-content__header__quickaction .user-img," +
+      ".dam-user-menu__avatar img," +
+      ".geex-content__header__popup--author img{" +
+      "object-fit:cover;border-radius:50%;background:#EDE9F5;}" +
+      "/* Identity block: +20px odstep od Profil/Ustawienia/Pomoc */" +
+      ".dam-user-menu.is-open .geex-content__header__popup__header.dam-user-menu__identity," +
+      ".geex-content__header__popup--author.dam-user-menu .dam-user-menu__identity{" +
+      "margin-bottom:20px!important;}" +
+      "/* User menu rows: Geex .popup__link ma align-items:flex-start !important -" +
+      "   bez przebicia highlight kapsula jest nizej niz ikona/tekst." +
+      "   Kapsula = row padding (rowne gora/dol), nie stretch min-height + flex-start. */" +
+      ".geex-content__header__popup--author.dam-user-menu a.dam-user-menu__link," +
+      ".geex-content__header__popup--author.dam-user-menu .dam-user-menu__link.geex-content__header__popup__link{" +
+      "display:flex!important;" +
+      "align-items:center!important;" +
+      "-webkit-box-align:center!important;" +
+      "-ms-flex-align:center!important;" +
+      "align-content:center!important;" +
+      "gap:10px!important;" +
+      "min-height:0!important;" +
+      "height:auto!important;" +
+      "padding:11px 12px!important;" +
+      "line-height:1.2!important;" +
+      "box-sizing:border-box!important;}" +
+      ".geex-content__header__popup--author.dam-user-menu .dam-user-menu__link i{" +
+      "display:inline-flex!important;" +
+      "align-items:center!important;" +
+      "justify-content:center!important;" +
+      "align-self:center!important;" +
+      "line-height:1!important;" +
+      "font-size:18px!important;" +
+      "width:18px!important;" +
+      "height:18px!important;" +
+      "flex:0 0 18px!important;" +
+      "margin:0!important;" +
+      "padding:0!important;" +
+      "position:static!important;" +
+      "top:auto!important;" +
+      "transform:none!important;" +
+      "vertical-align:middle!important;}" +
+      ".geex-content__header__popup--author.dam-user-menu .dam-user-menu__link i:before{" +
+      "line-height:1!important;" +
+      "display:block!important;" +
+      "margin:0!important;}" +
+      ".geex-content__header__popup--author.dam-user-menu .dam-user-menu__link span{" +
+      "line-height:1.2!important;" +
+      "display:inline-block!important;" +
+      "align-self:center!important;" +
+      "padding:0!important;" +
+      "margin:0!important;}";
+    if (created) document.head.appendChild(s);
   }
 
   // Build header menu nav HTML (top bar)
@@ -581,19 +815,29 @@
     }).join("");
   }
 
-  // Build brand in sidebar header
+  // Build brand in sidebar header + footer identity (DAM / Dobra Kaloria - Inyfinn / v…)
   function updateSidebarBrand() {
     var logo = document.querySelector(".geex-sidebar__logo");
     if (logo) {
       logo.href = "dashboard.html";
     }
+    var brand = "DAM";
+    var brandSub = "Dobra Kaloria - Inyfinn";
+    var madeBy = "inyfinn.art";
+    if (window.DamI18n && typeof window.DamI18n.t === "function") {
+      try {
+        var tb = window.DamI18n.t("nav.brand");
+        var ts = window.DamI18n.t("nav.brand_sub");
+        var tm = window.DamI18n.t("footer.made_by");
+        if (tb && tb !== "nav.brand") brand = tb;
+        if (ts && ts !== "nav.brand_sub") brandSub = ts;
+        if (tm && tm !== "footer.made_by") madeBy = tm;
+      } catch (eI18n) { /* keep defaults */ }
+    }
+    var year = new Date().getFullYear();
+    var ver = String(window.DAM_APP_VERSION || "2.0.7").replace(/^v/i, "");
     var footer = document.querySelector(".geex-sidebar__footer");
     if (footer) {
-      var brand = window.DamI18n ? window.DamI18n.t("nav.brand") : "DAM";
-      var brandSub = window.DamI18n ? window.DamI18n.t("nav.brand_sub") : "Panel assetów opakowań";
-      var madeBy = window.DamI18n ? window.DamI18n.t("footer.made_by") : "inyfinn.art";
-      var year = new Date().getFullYear();
-      var ver = String(window.DAM_APP_VERSION || "1.00").replace(/^v/i, "");
       footer.innerHTML =
         '<span class="geex-sidebar__footer__title" data-i18n="nav.brand">' + brand + '</span>' +
         '<p class="geex-sidebar__footer__copyright" data-i18n="nav.brand_sub">' + brandSub + '</p>' +
@@ -603,6 +847,15 @@
           "</a> &copy; " + year +
           ' <span class="dam-app-version" title="Wersja programu DAM">v' + ver + "</span>" +
         "</p>";
+      /* Morph GSAP moze zostawic autoAlpha:0 - twardy reset widocznosci expanded. */
+      footer.style.removeProperty("opacity");
+      footer.style.removeProperty("visibility");
+    }
+    var meta = document.querySelector(".dam-sidebar-collapsed-meta");
+    if (meta) {
+      meta.innerHTML =
+        '<span class="dam-sidebar-collapsed-meta__brand">' + brand + "</span>" +
+        '<span class="dam-sidebar-collapsed-meta__ver" title="Wersja programu DAM">v' + ver + "</span>";
     }
   }
 
@@ -647,6 +900,19 @@
         e.preventDefault();
         setSidebarCollapsed(false);
       });
+    }
+
+    /* Compact author/version under logo (collapsed); pelny footer w expanded. */
+    var collapsedMeta = wrapper.querySelector(".dam-sidebar-collapsed-meta");
+    if (!collapsedMeta) {
+      collapsedMeta = document.createElement("div");
+      collapsedMeta.className = "dam-sidebar-collapsed-meta";
+      collapsedMeta.setAttribute("aria-label", "DAM - Dobra Kaloria - Inyfinn");
+      if (bottomLogo.nextSibling) {
+        wrapper.insertBefore(collapsedMeta, bottomLogo.nextSibling);
+      } else {
+        wrapper.appendChild(collapsedMeta);
+      }
     }
 
     applyDobraKaloriaLogo();
@@ -853,14 +1119,16 @@
           '<h3 class="geex-content__header__popup__header__title dam-user-menu__name">Użytkownik</h3>' +
           '<span class="geex-content__header__popup__header__subtitle dam-user-menu__role"></span>' +
         "</div></div>" +
-      '<nav class="dam-user-menu__nav" aria-label="Konto">' +
+      /* Bez aria-label na nav/legal: dam-tooltips.js tipuje kazdy [aria-label] */
+      /* i pokazywal stray tip "Konto" / "Dokumenty" nad Wyloguj. */
+      '<nav class="dam-user-menu__nav">' +
         '<ul class="geex-content__header__popup__items dam-user-menu__items">' +
           '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="profile.html" role="menuitem"><i class="uil uil-user"></i><span>Profil</span></a></li>' +
           '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="settings.html" role="menuitem"><i class="uil uil-cog"></i><span>Ustawienia</span></a></li>' +
           '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="help.html" role="menuitem"><i class="uil uil-question-circle"></i><span>Pomoc</span></a></li>' +
         "</ul>" +
       "</nav>" +
-      '<div class="dam-user-menu__legal" aria-label="Dokumenty">' +
+      '<div class="dam-user-menu__legal">' +
         '<a class="dam-user-menu__legal-link" href="privacy.html">Prywatność</a>' +
         '<span class="dam-user-menu__legal-sep" aria-hidden="true">·</span>' +
         '<a class="dam-user-menu__legal-link" href="terms.html">Regulamin</a>' +
@@ -877,6 +1145,11 @@
     var popup = document.querySelector(".geex-content__header__popup--author");
     if (!popup) return;
     if (popup.classList.contains("dam-user-menu") && popup.querySelector(".dam-user-menu__legal")) {
+      /* Strip legacy aria-label that dam-tooltips turned into stray "Konto" tip */
+      var nav = popup.querySelector(".dam-user-menu__nav");
+      if (nav) nav.removeAttribute("aria-label");
+      var legal = popup.querySelector(".dam-user-menu__legal");
+      if (legal) legal.removeAttribute("aria-label");
       return;
     }
     popup.classList.add("dam-user-menu");
@@ -928,6 +1201,11 @@
     if (root.getAttribute("data-dam-popups") === "1") return;
     root.setAttribute("data-dam-popups", "1");
 
+    function syncHeaderPopupOpenClass() {
+      var anyOpen = !!root.querySelector(".geex-content__header__popup.is-open");
+      document.body.classList.toggle("dam-header-popup-open", anyOpen);
+    }
+
     root.addEventListener("click", function (e) {
       var link = e.target.closest(".geex-content__header__quickaction__link");
       if (!link || !root.contains(link)) return;
@@ -948,6 +1226,7 @@
           ? (popup.style.height || "")
           : "";
       }
+      syncHeaderPopupOpenClass();
     }, true);
 
     document.addEventListener("click", function (e) {
@@ -955,6 +1234,7 @@
       root.querySelectorAll(".geex-content__header__popup.is-open").forEach(function (p) {
         p.classList.remove("is-open");
       });
+      syncHeaderPopupOpenClass();
     });
 
     document.addEventListener("keydown", function (e) {
@@ -962,6 +1242,7 @@
       root.querySelectorAll(".geex-content__header__popup.is-open").forEach(function (p) {
         p.classList.remove("is-open");
       });
+      syncHeaderPopupOpenClass();
     });
   }
 
@@ -1341,7 +1622,11 @@
     var langTitle = document.querySelector(".dam-lang-popup .geex-content__header__popup__title");
     if (langTitle) langTitle.textContent = tt("header.lang_title", "Język");
     var langTrigger = document.querySelector(".dam-lang-trigger");
-    if (langTrigger) langTrigger.setAttribute("title", tt("header.lang_title", "Język"));
+    if (langTrigger) {
+      var langLbl = tt("header.lang_title", "Język");
+      langTrigger.setAttribute("title", langLbl);
+      langTrigger.setAttribute("aria-label", langLbl);
+    }
   }
 
   /* Uniwersalne awatary plciowe (nie zdjecia osob) - ui-taste placeholders */
@@ -1389,6 +1674,8 @@
     try { userData = JSON.parse(userDataRaw || "{}"); } catch (e) { userData = {}; }
     var email = userData.email || localStorage.getItem("dam_user_email") || "";
     var src = avatarForEmail(email);
+    /* cache-bust SVG (czysta sylwetka bez czapeczki) */
+    if (src.indexOf("?") === -1) src = src + "?v=avatarflat20260720a";
     document.querySelectorAll(
       ".geex-content__header__popup--author img, .geex-content__header__quickaction__item .user-img"
     ).forEach(function (img) {
@@ -1409,16 +1696,38 @@
     if (popupSub) popupSub.textContent = userTitle + " - " + (userData.company || "KUBARA");
     applyUserAvatar();
     polishUserMenu();
-    document.querySelectorAll(".geex-content__header__popup--author .geex-content__header__popup__footer__link, #damShellLogout, .dam-logout-btn").forEach(function (link) {
-      link.textContent = "Sesja urządzenia";
-      link.setAttribute("title", "Sesja = ID urządzenia - bez wylogowania");
-      link.addEventListener("click", function (e) {
-        e.preventDefault();
-        if (window.DamApi && typeof DamApi.logout === "function") DamApi.logout();
-        else if (window.DamPaths && DamPaths.showToast) {
-          DamPaths.showToast("Sesja urządzenia pozostaje aktywna.");
-        }
-      });
+    bindLogoutAndDeviceLinks();
+  }
+
+  function bindLogoutAndDeviceLinks() {
+    document.querySelectorAll("#damShellDeviceSession, .dam-device-session-btn").forEach(function (link) {
+      if (link._damDeviceBound) return;
+      link._damDeviceBound = true;
+      link.setAttribute("href", "profile.html#damDevicePathsRoot");
+      link.setAttribute("title", "Sesja urządzenia - ścieżki Marketing");
+      link.setAttribute("aria-label", "Sesja urządzenia");
+      link.setAttribute("data-dam-tip", "Sesja urządzenia: ścieżki Marketing na tym PC");
+      link.addEventListener("click", goDeviceSessionPaths);
+    });
+    document.querySelectorAll(
+      "#damShellLogout, .dam-logout-btn, .dam-user-menu__logout, " +
+      ".geex-content__header__popup--author .geex-content__header__popup__footer__link"
+    ).forEach(function (link) {
+      if (link.id === "damShellDeviceSession" || link.classList.contains("dam-device-session-btn")) return;
+      if (link._damLogoutBound) return;
+      link._damLogoutBound = true;
+      var span = link.querySelector(".dam-nav-label, span");
+      if (span) span.textContent = "Wyloguj";
+      link.setAttribute("href", "#");
+      link.setAttribute("title", "Wyloguj");
+      link.setAttribute("aria-label", "Wyloguj");
+      link.setAttribute("data-dam-tip", "Wyloguj z konta DAM");
+      var icon = link.querySelector("i");
+      if (icon) {
+        icon.className = "uil uil-signout";
+        icon.setAttribute("aria-hidden", "true");
+      }
+      link.addEventListener("click", performLogout);
     });
   }
 
@@ -1437,20 +1746,377 @@
   }
 
   var SIDEBAR_COLLAPSE_KEY = "dam_sidebar_collapsed";
+  var SIDEBAR_MORPH_DUR = 0.5;
+  var SIDEBAR_MORPH_EASE = "power3.inOut";
+  var SIDEBAR_COLLAPSED_W = 72;
+  var SIDEBAR_W_VAR = "--dam-sidebar-w";
+  var SIDEBAR_PAD_X_VAR = "--dam-sb-pad-x";
+  var LINK_PAD_X_VAR = "--dam-link-pad-x";
+  /** Expanded Geex padding (style.css .geex-sidebar / .geex-sidebar__menu__link). */
+  var SIDEBAR_PAD_X_EXP = 29;
+  var SIDEBAR_PAD_X_COL = 10;
+  var LINK_PAD_X_EXP = 25;
+  var _sidebarMorphTl = null;
+  var _sidebarMorphing = false;
+  /** Docelowy stan podczas morph (klasa body bywa zdjeta w trakcie tweenu). */
+  var _sidebarMorphWant = null;
 
-  function setSidebarCollapsed(collapsed) {
+  function syncCollapseBtn(collapsed) {
+    var btn = document.getElementById("damSidebarCollapse");
+    if (!btn) return;
+    btn.setAttribute("aria-pressed", collapsed ? "true" : "false");
+    btn.setAttribute("title", collapsed ? "Rozwiń menu" : "Zwiń menu");
+    btn.setAttribute("aria-label", collapsed ? "Rozwiń menu" : "Zwiń menu");
+  }
+
+  function prefersReducedMotion() {
+    return !!(
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
+  function isSidebarCollapsedNow() {
+    if (_sidebarMorphing && _sidebarMorphWant !== null) return !!_sidebarMorphWant;
+    return document.body.classList.contains("dam-sidebar-collapsed");
+  }
+
+  function loadGsapShell(cb) {
+    if (window.gsap) {
+      cb(window.gsap);
+      return;
+    }
+    var existing = document.querySelector('script[data-dam-gsap="1"]');
+    if (existing) {
+      var done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        cb(window.gsap || null);
+      }
+      existing.addEventListener("load", finish);
+      if (window.gsap) finish();
+      return;
+    }
+    var s = document.createElement("script");
+    s.src = "./assets/vendor/js/gsap/gsap.min.js";
+    s.setAttribute("data-dam-gsap", "1");
+    s.onload = function () { cb(window.gsap || null); };
+    s.onerror = function () { cb(null); };
+    document.head.appendChild(s);
+  }
+
+  function measureExpandedSidebarW() {
+    var root = document.documentElement;
+    var saved = root.style.getPropertyValue(SIDEBAR_W_VAR);
+    /* Tymczasowo przywroc CSS clamp, zeby zmierzyc docelowa szerokosc expanded. */
+    root.style.removeProperty(SIDEBAR_W_VAR);
+    var raw = getComputedStyle(root).getPropertyValue(SIDEBAR_W_VAR).trim();
+    var w = 0;
+    if (raw) {
+      var probe = document.createElement("div");
+      probe.style.cssText = "position:absolute;visibility:hidden;width:" + raw + ";pointer-events:none";
+      document.body.appendChild(probe);
+      w = probe.offsetWidth;
+      document.body.removeChild(probe);
+    }
+    if (saved) root.style.setProperty(SIDEBAR_W_VAR, saved);
+    if (w > 0) return w;
+    var sidebar = document.querySelector(".geex-sidebar");
+    if (sidebar && !document.body.classList.contains("dam-sidebar-collapsed")) {
+      var rectW = sidebar.getBoundingClientRect().width;
+      if (rectW > SIDEBAR_COLLAPSED_W + 40) return Math.round(rectW);
+    }
+    return 300;
+  }
+
+  function applyCollapsedIconTrackVars() {
+    var root = document.documentElement;
+    var linkPad = collapsedLinkPadForIcon(22);
+    root.style.setProperty(SIDEBAR_PAD_X_VAR, SIDEBAR_PAD_X_COL + "px");
+    root.style.setProperty(LINK_PAD_X_VAR, Math.round(linkPad * 100) / 100 + "px");
+  }
+
+  function applySidebarCollapsedClass(collapsed) {
     localStorage.setItem(SIDEBAR_COLLAPSE_KEY, collapsed ? "1" : "0");
     document.body.classList.toggle("dam-sidebar-collapsed", !!collapsed);
-    var btn = document.getElementById("damSidebarCollapse");
-    if (btn) {
-      btn.setAttribute("aria-pressed", collapsed ? "true" : "false");
-      btn.setAttribute("title", collapsed ? "Rozwiń menu" : "Zwiń menu");
-      btn.setAttribute("aria-label", collapsed ? "Rozwiń menu" : "Zwiń menu");
+    document.documentElement.style.removeProperty(SIDEBAR_W_VAR);
+    if (collapsed) {
+      /* Zachowaj tor ikon = koniec morph (bez snap do justify:center). */
+      applyCollapsedIconTrackVars();
+    } else {
+      clearSidebarMorphVars();
+      var footer = document.querySelector(".geex-sidebar__footer");
+      if (footer) {
+        footer.style.removeProperty("opacity");
+        footer.style.removeProperty("visibility");
+      }
     }
+    syncCollapseBtn(collapsed);
+    _sidebarMorphWant = null;
+  }
+
+  function collapsedLinkPadForIcon(iconW) {
+    var inner = SIDEBAR_COLLAPSED_W - SIDEBAR_PAD_X_COL * 2;
+    var w = iconW > 0 ? iconW : 22;
+    return Math.max(0, (inner - w) / 2);
+  }
+
+  function clearSidebarMorphVars() {
+    var root = document.documentElement;
+    root.style.removeProperty(SIDEBAR_W_VAR);
+    root.style.removeProperty(SIDEBAR_PAD_X_VAR);
+    root.style.removeProperty(LINK_PAD_X_VAR);
+  }
+
+  function clearSidebarMorphInline(gsap, nodes, keepPadVars) {
+    if (gsap && nodes && nodes.length) {
+      gsap.set(nodes, {
+        clearProps: "x,autoAlpha,opacity,visibility,filter,color,transform",
+      });
+      /* clearProps bywa niewystarczajace na filter - twarde czyszczenie */
+      for (var i = 0; i < nodes.length; i++) {
+        var el = nodes[i];
+        if (!el || !el.style) continue;
+        el.style.removeProperty("filter");
+        el.style.removeProperty("color");
+      }
+    }
+    if (!keepPadVars) clearSidebarMorphVars();
+  }
+
+  /**
+   * Morph collapse ~0.5s (gsap-core):
+   * - JEDNA os layoutu: --dam-sidebar-w (sidebar width + main pad)
+   * - Tor ikon: --dam-sb-pad-x + --dam-link-pad-x (flex-start; pad zostaje po collapse)
+   * - Labels: absolute (bez reflow ikon) + autoAlpha
+   * - Dim: filter brightness tylko nieaktywne, ten sam 0.5s
+   * - prefers-reduced-motion / brak GSAP => natychmiast
+   * - Boot: animate=false (applySidebarCollapse) - bez flashu
+   */
+  function setSidebarCollapsed(collapsed, animate) {
+    var want = !!collapsed;
+    var now = isSidebarCollapsedNow();
+    var doAnimate = animate !== false;
+    var sidebarPre = document.querySelector(".geex-sidebar");
+
+    if (_sidebarMorphTl) {
+      try { _sidebarMorphTl.kill(); } catch (e) { /* ignore */ }
+      _sidebarMorphTl = null;
+    }
+    _sidebarMorphing = false;
+    document.body.classList.remove("dam-sidebar-morphing");
+    clearSidebarMorphVars();
+    if (sidebarPre && window.gsap) {
+      try {
+        window.gsap.killTweensOf(
+          sidebarPre.querySelectorAll(
+            ".geex-sidebar__menu__link i, .geex-sidebar__menu__link .uil, .geex-sidebar__menu__link svg, .geex-sidebar__menu__link .dam-nav-label, .geex-sidebar__menu__link span, .geex-sidebar__footer, .dam-sidebar-logo-collapsed, .geex-sidebar__header .geex-sidebar__logo"
+          )
+        );
+      } catch (eKill) { /* ignore */ }
+    }
+
+    if (!doAnimate || prefersReducedMotion() || now === want) {
+      applySidebarCollapsedClass(want);
+      return;
+    }
+
+    var sidebar = sidebarPre;
+    if (!sidebar) {
+      applySidebarCollapsedClass(want);
+      return;
+    }
+
+    loadGsapShell(function (gsap) {
+      if (!gsap || prefersReducedMotion()) {
+        applySidebarCollapsedClass(want);
+        return;
+      }
+
+      var root = document.documentElement;
+      var labels = Array.prototype.slice.call(
+        sidebar.querySelectorAll(".geex-sidebar__menu__link .dam-nav-label, .geex-sidebar__menu__link span")
+      );
+      var icons = Array.prototype.slice.call(
+        sidebar.querySelectorAll(
+          ".geex-sidebar__menu__link i, .geex-sidebar__menu__link .uil, .geex-sidebar__menu__link svg"
+        )
+      );
+      /* Unikalne wezly (i.uil bywa w obu selektorach). */
+      icons = icons.filter(function (el, idx, arr) {
+        return el && arr.indexOf(el) === idx;
+      });
+      var footer = sidebar.querySelector(".geex-sidebar__footer");
+      var bottomLogo = sidebar.querySelector(".dam-sidebar-logo-collapsed");
+      var headerLogo = sidebar.querySelector(".geex-sidebar__header .geex-sidebar__logo");
+      var expandedW = measureExpandedSidebarW();
+      var collapsedW = SIDEBAR_COLLAPSED_W;
+      var dur = SIDEBAR_MORPH_DUR;
+      var ease = SIDEBAR_MORPH_EASE;
+      /* Staly slot ikony 22px = ten sam w morph i collapsed (bez font-size snap). */
+      var iconW = 22;
+      var linkPadCol = collapsedLinkPadForIcon(iconW);
+      var fadeTargets = labels.slice().concat(icons);
+      if (footer) fadeTargets.push(footer);
+      if (bottomLogo) fadeTargets.push(bottomLogo);
+      if (headerLogo) fadeTargets.push(headerLogo);
+      var collapsedMeta = sidebar.querySelector(".dam-sidebar-collapsed-meta");
+      if (collapsedMeta) fadeTargets.push(collapsedMeta);
+
+      /* Dim tylko nieaktywne ikony (aktywna zostaje primary / bez snap do #52545c). */
+      var iconsDim = icons.filter(function (el) {
+        var link = el.closest(".geex-sidebar__menu__link");
+        if (!link) return true;
+        if (link.classList.contains("active") || link.classList.contains("default-active")) return false;
+        if (link.getAttribute("aria-current") === "page") return false;
+        var item = link.closest(".geex-sidebar__menu__item");
+        if (item && item.classList.contains("active")) return false;
+        return true;
+      });
+
+      gsap.killTweensOf(fadeTargets);
+
+      function setSidebarWPx(px) {
+        root.style.setProperty(SIDEBAR_W_VAR, Math.round(px) + "px");
+      }
+      function setPadVars(sbPad, linkPad) {
+        root.style.setProperty(SIDEBAR_PAD_X_VAR, Math.round(sbPad * 100) / 100 + "px");
+        root.style.setProperty(LINK_PAD_X_VAR, Math.round(linkPad * 100) / 100 + "px");
+      }
+
+      /* Ustaw tor ikon PRZED zdjeciem klasy collapsed - zero jump przy starcie expand. */
+      var startW = want ? expandedW : collapsedW;
+      var startSbPad = want ? SIDEBAR_PAD_X_EXP : SIDEBAR_PAD_X_COL;
+      var startLinkPad = want ? LINK_PAD_X_EXP : linkPadCol;
+      setSidebarWPx(startW);
+      setPadVars(startSbPad, startLinkPad);
+
+      document.body.classList.add("dam-sidebar-morphing");
+      _sidebarMorphing = true;
+      _sidebarMorphWant = want;
+      localStorage.setItem(SIDEBAR_COLLAPSE_KEY, want ? "1" : "0");
+      syncCollapseBtn(want);
+      document.body.classList.remove("dam-sidebar-collapsed");
+
+      function finishMorph() {
+        applySidebarCollapsedClass(want);
+        document.body.classList.remove("dam-sidebar-morphing");
+        _sidebarMorphing = false;
+        /* Collapsed: NIE czysc pad vars (tor ikon = koniec tweenu). */
+        clearSidebarMorphInline(gsap, fadeTargets, !!want);
+        if (want) applyCollapsedIconTrackVars();
+        if (!want && footer) {
+          footer.style.removeProperty("opacity");
+          footer.style.removeProperty("visibility");
+        }
+        _sidebarMorphTl = null;
+      }
+
+      var layoutProxy = {
+        w: startW,
+        sbPad: startSbPad,
+        linkPad: startLinkPad,
+      };
+
+      function applyLayoutProxy() {
+        setSidebarWPx(layoutProxy.w);
+        setPadVars(layoutProxy.sbPad, layoutProxy.linkPad);
+      }
+
+      _sidebarMorphTl = gsap.timeline({
+        defaults: { ease: ease, overwrite: "auto" },
+        onComplete: finishMorph,
+      });
+
+      /* Width + pad track = jedna oś; flex-start + pad vars (bez justify:center). */
+      _sidebarMorphTl.to(
+        layoutProxy,
+        {
+          w: want ? collapsedW : expandedW,
+          sbPad: want ? SIDEBAR_PAD_X_COL : SIDEBAR_PAD_X_EXP,
+          linkPad: want ? linkPadCol : LINK_PAD_X_EXP,
+          duration: dur,
+          onUpdate: applyLayoutProxy,
+        },
+        0
+      );
+
+      if (iconsDim.length) {
+        if (want) {
+          gsap.set(iconsDim, { filter: "brightness(1)" });
+          _sidebarMorphTl.to(
+            iconsDim,
+            { filter: "brightness(0.72)", duration: dur },
+            0
+          );
+        } else {
+          gsap.set(iconsDim, { filter: "brightness(0.72)" });
+          _sidebarMorphTl.to(
+            iconsDim,
+            { filter: "brightness(1)", duration: dur },
+            0
+          );
+        }
+      }
+
+      if (want) {
+        gsap.set(labels, { autoAlpha: 1, x: 0 });
+        if (footer) gsap.set(footer, { autoAlpha: 1 });
+        if (headerLogo) gsap.set(headerLogo, { autoAlpha: 1 });
+        if (bottomLogo) gsap.set(bottomLogo, { display: "flex", autoAlpha: 0 });
+        if (collapsedMeta) gsap.set(collapsedMeta, { autoAlpha: 0 });
+
+        _sidebarMorphTl.to(labels, { autoAlpha: 0, x: -8, duration: dur * 0.4 }, 0);
+        if (footer) {
+          _sidebarMorphTl.to(footer, { autoAlpha: 0, duration: dur * 0.3 }, 0);
+        }
+        if (headerLogo) {
+          _sidebarMorphTl.to(headerLogo, { autoAlpha: 0, duration: dur * 0.28 }, 0);
+        }
+        if (bottomLogo) {
+          _sidebarMorphTl.to(bottomLogo, { autoAlpha: 1, duration: dur * 0.35 }, dur * 0.4);
+        }
+        if (collapsedMeta) {
+          _sidebarMorphTl.to(collapsedMeta, { autoAlpha: 1, duration: dur * 0.3 }, dur * 0.45);
+        }
+      } else {
+        gsap.set(labels, { autoAlpha: 0, x: -8 });
+        if (footer) gsap.set(footer, { autoAlpha: 0 });
+        if (headerLogo) gsap.set(headerLogo, { autoAlpha: 0 });
+        if (bottomLogo) gsap.set(bottomLogo, { display: "flex", autoAlpha: 1 });
+        if (collapsedMeta) gsap.set(collapsedMeta, { autoAlpha: 1 });
+
+        _sidebarMorphTl.to(labels, { autoAlpha: 1, x: 0, duration: dur * 0.4 }, dur * 0.22);
+        if (footer) {
+          _sidebarMorphTl.to(footer, { autoAlpha: 1, duration: dur * 0.35 }, dur * 0.28);
+        }
+        if (headerLogo) {
+          _sidebarMorphTl.to(headerLogo, { autoAlpha: 1, duration: dur * 0.32 }, dur * 0.25);
+        }
+        if (bottomLogo) {
+          _sidebarMorphTl.to(
+            bottomLogo,
+            {
+              autoAlpha: 0,
+              duration: dur * 0.25,
+              onComplete: function () {
+                if (bottomLogo) bottomLogo.style.display = "none";
+              },
+            },
+            0
+          );
+        }
+        if (collapsedMeta) {
+          _sidebarMorphTl.to(collapsedMeta, { autoAlpha: 0, duration: dur * 0.22 }, 0);
+        }
+      }
+    });
   }
 
   function applySidebarCollapse() {
-    setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1");
+    /* Boot / restore: BEZ morph (finishBoot / flash fix) */
+    setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1", false);
   }
 
   function injectSidebarCollapse() {
@@ -1468,7 +2134,8 @@
       btn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        setSidebarCollapsed(!document.body.classList.contains("dam-sidebar-collapsed"));
+        /* Interrupt-safe: kill poprzedni TL i lec w przeciwna strone */
+        setSidebarCollapsed(!isSidebarCollapsedNow(), true);
       });
     }
 
@@ -1477,9 +2144,9 @@
     if (logo && !logo.getAttribute("data-dam-expand-bound")) {
       logo.setAttribute("data-dam-expand-bound", "1");
       logo.addEventListener("click", function (e) {
-        if (!document.body.classList.contains("dam-sidebar-collapsed")) return;
+        if (!isSidebarCollapsedNow()) return;
         e.preventDefault();
-        setSidebarCollapsed(false);
+        setSidebarCollapsed(false, true);
       });
     }
 
@@ -1517,8 +2184,41 @@
     });
   }
 
+  /**
+   * Zdejmij html.dam-booting / body.is-booting po przepisaniu chrome.
+   * Double rAF = pierwsza klatka po rewrite zanim fade-in (bez flashu Geex Demo).
+   */
+  var bootFinished = false;
+  function finishBoot(force) {
+    function reveal() {
+      var root = document.documentElement;
+      var body = document.body;
+      root.classList.remove("dam-booting");
+      root.classList.add("dam-booted");
+      if (body) body.classList.remove("is-booting");
+      bootFinished = true;
+    }
+    // Juz odsloniete i nie wymuszamy - nic nie rob
+    if (bootFinished && !force && !document.documentElement.classList.contains("dam-booting")) {
+      return;
+    }
+    if (bootFinished || force) {
+      reveal();
+      return;
+    }
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(reveal);
+      });
+    } else {
+      setTimeout(reveal, 0);
+    }
+  }
+
   // Main init
   function init() {
+    bootFinished = false;
+    ensureShellLayerCss();
     ensureAppIcons();
     ensureAccentCss();
     enforceAuth();
@@ -1532,15 +2232,7 @@
     if (sidebarMenu) {
       sidebarMenu.innerHTML = buildSidebarNav();
       injectSidebarCollapse();
-      var logoutBtn = document.getElementById("damShellLogout");
-      if (logoutBtn) {
-        var span = logoutBtn.querySelector("span");
-        if (span) span.textContent = "Sesja urządzenia";
-        logoutBtn.addEventListener("click", function (e) {
-          e.preventDefault();
-          if (window.DamApi && typeof DamApi.logout === "function") DamApi.logout();
-        });
-      }
+      bindLogoutAndDeviceLinks();
     }
     // Po wstrzyknieciu collapse - logo musi nadal byc (re-ensure)
     ensureSidebarLogo();
@@ -1566,7 +2258,7 @@
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=20260718statusTruth1";
+      sc.src = "assets/js/dam-shortcuts.js?v=helprestart20260720a";
       document.head.appendChild(sc);
     }
 
@@ -1589,6 +2281,9 @@
     if (window.DamI18n && typeof window.DamI18n.apply === "function") {
       window.DamI18n.apply();
     }
+
+    // Chrome przepisany - odslon UI (przed async Asana / refreshChrome)
+    finishBoot();
 
     loadAsanaTasks(function () {
       buildMessagesPopup();
@@ -1649,6 +2344,7 @@
   // Public API
   window.DamShell = {
     reload: init,
+    finishBoot: finishBoot,
     loadAsanaTasks: loadAsanaTasks,
     polishChrome: polishGeexChrome,
     injectNavTrail: injectNavTrail,

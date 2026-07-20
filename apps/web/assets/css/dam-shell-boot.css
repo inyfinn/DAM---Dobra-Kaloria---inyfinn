@@ -1,0 +1,31 @@
+/**
+ * DAM shell boot - anti-FOUC / anti flash Geex placeholder
+ * Body ukryty (html.dam-booting) az DamShell przepisze chrome.
+ * Fade-in po usunieciu dam-booting (+ dam-booted).
+ */
+html.dam-booting {
+  background: #f3f5f4;
+}
+
+html.dam-booting[data-theme="dark"] {
+  background: #101412;
+}
+
+/* Krytyczne: nie pokazuj surowego Geex Demo/Server Management przed shell init */
+html.dam-booting body,
+body.is-booting {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+html.dam-booted body {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.22s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.dam-booted body {
+    transition: none;
+  }
+}

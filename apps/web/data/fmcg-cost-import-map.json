@@ -1,17 +1,54 @@
 {
   "version": 1,
   "maps": [
-    { "column": "catalog_id", "catalog_id": "catalog_id" },
-    { "column": "amount", "catalog_id": "amount" },
-    { "column": "Surowiec opakowania", "catalog_id": "raw_material_per_1000" },
-    { "column": "Robocizna produkcji", "catalog_id": "production_labor" },
-    { "column": "Kompletacja magazynowa", "catalog_id": "warehouse_packing" },
-    { "column": "Proof", "catalog_id": "proofing" },
-    { "column": "Druk flexo", "catalog_id": "print_flexo_offset" },
-    { "column": "raw_material_per_1000", "catalog_id": "raw_material_per_1000" },
-    { "column": "production_labor", "catalog_id": "production_labor" },
-    { "column": "warehouse_packing", "catalog_id": "warehouse_packing" },
-    { "column": "proofing", "catalog_id": "proofing" },
-    { "column": "print_flexo_offset", "catalog_id": "print_flexo_offset" }
-  ]
+    {
+      "column": "catalog_id",
+      "catalog_id": "catalog_id"
+    },
+    {
+      "column": "amount",
+      "catalog_id": "amount"
+    },
+    {
+      "column": "Surowiec opakowania",
+      "catalog_id": "raw_material_per_1000"
+    },
+    {
+      "column": "Robocizna produkcji",
+      "catalog_id": "production_labor"
+    },
+    {
+      "column": "Kompletacja magazynowa",
+      "catalog_id": "warehouse_packing"
+    },
+    {
+      "column": "Proof",
+      "catalog_id": "proofing"
+    },
+    {
+      "column": "Druk flexo",
+      "catalog_id": "print_flexo_offset"
+    },
+    {
+      "column": "raw_material_per_1000",
+      "catalog_id": "raw_material_per_1000"
+    },
+    {
+      "column": "production_labor",
+      "catalog_id": "production_labor"
+    },
+    {
+      "column": "warehouse_packing",
+      "catalog_id": "warehouse_packing"
+    },
+    {
+      "column": "proofing",
+      "catalog_id": "proofing"
+    },
+    {
+      "column": "print_flexo_offset",
+      "catalog_id": "print_flexo_offset"
+    }
+  ],
+  "updated_at": "2026-07-20T17:02:26.365654+00:00"
 }

@@ -164,7 +164,9 @@
   padding: 18px 20px 20px;
 }
 
-.dam-widget__list--media {
+/* .dam-widget__list (nizej w pliku) ma display:flex o tej samej specyficznosci;
+   podwojna klasa wygrywa kaskade i utrzymuje grid (fix: 2x2 renderowal 1 kolumne) */
+.dam-widget__list.dam-widget__list--media {
   gap: 14px;
   flex: 1 1 auto;
   display: grid;
@@ -177,11 +179,50 @@
 /* User layout (localStorage) overrides container auto-responsive */
 .dam-widget__list--media.dam-widget__list--grid-2x2 {
   grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+  grid-auto-rows: minmax(110px, auto);
 }
 
 .dam-widget__list--media.dam-widget__list--grid-1x4,
 .dam-widget__list--media.dam-widget__list--grid-1x6 {
   grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.dam-widget__thumb-link {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dam-widget__thumb-link:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 18px rgba(40, 20, 70, 0.14);
+}
+
+.dam-widget__thumb-link:active {
+  transform: scale(0.98);
+}
+
+.dam-widget__thumb-link .dam-widget__thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: linear-gradient(110deg, #ece8f4 25%, #f7f5fb 40%, #ece8f4 55%);
+  background-size: 200% 100%;
+}
+
+.dam-widget__thumb.is-loading,
+.dam-widget__thumb:not([src]),
+.dam-widget__thumb[src=""] {
+  animation: dam-dash-thumb-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes dam-dash-thumb-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }
 
 @media (max-width: 1100px) {
@@ -189,6 +230,13 @@
   .dam-widget--md.dam-widget--media-latest {
     grid-column: span 6;
     grid-row: span 6;
+  }
+
+  /* Keep labeled 2x2 as 2 columns on tablet; only stack below 720px */
+  .dam-widget__list--media.dam-widget__list--grid-2x2,
+  .dam-widget__list--viz.dam-widget__list--grid-2x2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
   }
 }
 
@@ -554,7 +602,10 @@
     grid-column: span 6;
     grid-row: span 6;
   }
+}
 
+@media (max-width: 720px) {
+  .dam-widget__list--media.dam-widget__list--grid-2x2,
   .dam-widget__list--viz.dam-widget__list--grid-2x2 {
     grid-template-columns: 1fr;
   }

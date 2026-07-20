@@ -186,9 +186,13 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   color: var(--primary-color, #AB54DB);
 }
 
+.geex-content__header__action {
+  position: relative;
+  z-index: 12500; /* nad sticky search (52) / filters (51) */
+}
 .geex-content__header__action .geex-content__header__popup {
   display: none !important;
-  z-index: 40;
+  z-index: 12550; /* menu profilu / msg / notif ZAWSZE nad search */
   box-shadow: 0 12px 32px rgba(23, 22, 30, 0.14);
   border-radius: 14px;
   overflow: hidden;
@@ -3001,14 +3005,18 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dam-primary, #ab54db) 15%, transparent) !important;
 }
 
-/* Wizualizacje: filtry POD toolbarem (Pokaż wszystkie / DK GC / Języki) */
+/* Secondary filters (Wizualizacje / Eksplorer / Branding meta): rytm jak Branding meta */
 .dam-viz-secondary-filters {
+  --dam-viz-meta-fs: 12px;
+  --dam-viz-meta-h: 34px;
+  --dam-viz-meta-radius: 8px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
+  gap: 10px 12px;
   margin: 0 0 12px;
-  padding: 8px 12px;
+  /* Stare: 8px 12px; +12px = 20px 24px (jak Branding meta) */
+  padding: 20px 24px;
   background: #fff;
   border: 1px solid #E7E7E7;
   border-radius: 10px;
@@ -3016,28 +3024,59 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   top: var(--dam-sticky-filters-top, calc(var(--dam-sticky-top, 25px) + var(--dam-sticky-search-h, 68px) + var(--dam-sticky-search-gap, 10px)));
   z-index: 51;
   box-shadow: 0 4px 16px rgb(23 22 30 / 0.04);
+  font-family: inherit;
+  font-size: var(--dam-viz-meta-fs);
+  font-weight: 500;
+  color: #464255;
 }
 .dam-viz-secondary-filters .dam-viz-zoom-control {
   margin-left: auto;
   padding: 4px 10px;
   background: #fff;
   border: 1px solid #E7E7E7;
-  border-radius: 9px;
+  border-radius: var(--dam-viz-meta-radius);
   flex-shrink: 0;
+  height: var(--dam-viz-meta-h);
+  min-height: var(--dam-viz-meta-h);
+  box-sizing: border-box;
+}
+.dam-viz-secondary-filters .dam-viz-zoom-control__label,
+.dam-viz-secondary-filters .dam-viz-zoom-control__value,
+.dam-viz-secondary-filters .dam-switch__label {
+  font-size: var(--dam-viz-meta-fs);
+  font-weight: 600;
+  line-height: 1.2;
 }
 .dam-viz-secondary-filters .dam-switch {
   margin: 0;
 }
+.dam-viz-secondary-filters .dam-switch.dam-switch--compact {
+  height: var(--dam-viz-meta-h);
+  min-height: var(--dam-viz-meta-h);
+}
 .dam-viz-secondary-filters .dam-control,
 .dam-viz-secondary-filters .dam-filter-trigger,
 .dam-viz-secondary-filters .form-select {
-  height: 36px;
-  min-height: 36px;
+  height: var(--dam-viz-meta-h);
+  min-height: var(--dam-viz-meta-h);
   max-width: 100%;
+  font-size: var(--dam-viz-meta-fs);
+  border-radius: var(--dam-viz-meta-radius);
 }
 .dam-viz-secondary-filters .dam-sidebar-brand-mount {
   display: inline-flex;
   align-items: center;
+}
+.dam-viz-secondary-filters .dam-brand-chips {
+  gap: 6px;
+}
+.dam-viz-secondary-filters .dam-brand-chip-btn {
+  height: var(--dam-viz-meta-h);
+  min-height: var(--dam-viz-meta-h);
+  min-width: 44px;
+  padding: 0 12px;
+  font-size: var(--dam-viz-meta-fs);
+  font-weight: 600;
 }
 
 /* Eksplorator: toolbar + filtry globalne nad kategoriami (jak Wizualizacje, bez Tagi pakowania) */
@@ -3106,14 +3145,14 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   }
 }
 
-/* Wizualizacje: pasek NAD Pokaż wszystkie / DK GC - status | Cofnij | Skala */
+/* Wizualizacje: pasek statusu POD filtrami - status | Cofnij/Ponów */
 .dam-viz-grid-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 14px;
   row-gap: 8px;
-  margin: 4px 0 8px;
+  margin: 0 0 12px;
   min-height: 36px;
 }
 .dam-viz-grid-toolbar .dam-toolbar-status {
@@ -3135,7 +3174,10 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   max-width: min(420px, 100%);
 }
 .dam-viz-grid-toolbar .dam-changelog-bar__hint {
-  max-width: min(220px, 36vw);
+  max-width: min(340px, 42vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 @media (max-width: 700px) {
   .dam-viz-grid-toolbar {
@@ -4125,10 +4167,69 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-lifecycle-history {
   margin-top: 8px;
   width: 100%;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+}
+
+.dam-lifecycle-history--btn {
+  display: flex;
+  align-items: center;
+}
+
+.dam-lifecycle-history__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+}
+
+.dam-lifecycle-history__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--dam-primary, #ab54db);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dam-lifecycle-history-modal {
+  position: relative;
+  max-width: 560px;
+  width: min(560px, 92vw);
+  padding-top: 8px;
+}
+
+.dam-lifecycle-history-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.dam-lifecycle-history__list--modal {
+  max-height: min(50vh, 420px);
+  overflow: auto;
+  margin-top: 10px;
   padding: 8px 10px;
   border-radius: 8px;
   background: rgba(70, 66, 85, 0.04);
   border: 1px solid rgba(70, 66, 85, 0.08);
+}
+
+.dam-lifecycle-history__lead,
+.dam-lifecycle-history__empty {
+  font-size: 13px;
+  color: #6b6980;
+  margin: 4px 0 0;
 }
 
 .dam-lifecycle-history__title {
@@ -4764,6 +4865,29 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-switch.is-off .dam-switch__label,
 .dam-switch:has(.dam-switch__input:not(:checked)) .dam-switch__label {
   color: #5a5a68;
+}
+
+/* Compact switch (Branding meta / Wizualizacje secondary filters) */
+.dam-switch.dam-switch--compact {
+  height: 34px;
+  min-height: 34px;
+  padding: 0 10px 0 8px;
+  border-radius: 8px;
+  gap: 7px;
+}
+.dam-switch.dam-switch--compact .dam-switch__track {
+  width: 30px;
+  height: 18px;
+}
+.dam-switch.dam-switch--compact .dam-switch__track::after {
+  width: 14px;
+  height: 14px;
+}
+.dam-switch.dam-switch--compact .dam-switch__input:checked + .dam-switch__track::after {
+  transform: translateX(12px);
+}
+.dam-switch.dam-switch--compact .dam-switch__label {
+  font-size: 12px;
 }
 
 .dam-filter-trigger::after {
@@ -5860,6 +5984,29 @@ button.dam-status-badge.dam-tag-editable:hover {
   justify-content: center;
   padding: var(--dam-modal-vp-y) var(--dam-modal-vp-x);
   box-sizing: border-box;
+  opacity: 1;
+}
+
+.dam-skeleton__hero {
+  position: absolute;
+  inset: 12px;
+  border-radius: 12px;
+  background: linear-gradient(110deg, #e8e4f0 25%, #f5f3fa 40%, #e8e4f0 55%);
+  background-size: 200% 100%;
+  animation: dam-modal-skel 1.1s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes dam-modal-skel {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-skeleton__hero {
+    animation: none;
+  }
 }
 
 .dam-viz-modal-box {
@@ -7066,10 +7213,10 @@ body.dam-bridge-offline .dam-offline-bar {
     border-radius: 16px 16px 0 0;
   }
   .dam-help-modal__head {
-    padding: 16px 16px 10px;
+    padding: 26px 26px 20px;
   }
   .dam-help-modal__body {
-    padding: 12px 16px 20px;
+    padding: 22px 26px 30px;
   }
   .dam-help-modal__title {
     font-size: 18px;
@@ -7095,8 +7242,21 @@ body.dam-bridge-offline .dam-offline-bar {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 22px 24px 12px;
+  padding: 32px 34px 22px;
   border-bottom: 1px solid #f0f0f3;
+}
+.dam-help-modal__head-text {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding-right: 8px;
+}
+.dam-help-modal__head-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+  margin-left: 4px;
 }
 .dam-help-modal__eyebrow {
   margin: 0 0 4px;
@@ -7137,8 +7297,42 @@ body.dam-bridge-offline .dam-offline-bar {
   background: #ececf1;
   color: #E11D48;
 }
+.dam-help-modal__restart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: min(15.5rem, 42vw);
+  margin: 0;
+  padding: 8px 11px;
+  border: 1px solid rgba(171, 84, 219, 0.28);
+  border-radius: 10px;
+  background: rgba(171, 84, 219, 0.06);
+  color: var(--primary-color, #AB54DB);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.dam-help-modal__restart i {
+  font-size: 14px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.dam-help-modal__restart:hover {
+  background: rgba(171, 84, 219, 0.12);
+  border-color: rgba(171, 84, 219, 0.45);
+  color: #8f3dc0;
+}
+.dam-help-modal__restart:focus-visible {
+  outline: 2px solid var(--primary-color, #AB54DB);
+  outline-offset: 2px;
+}
 .dam-help-modal__body {
-  padding: 16px 24px 24px;
+  padding: 26px 34px 34px;
 }
 .dam-help-modal__section {
   margin-bottom: 20px;
@@ -9051,7 +9245,7 @@ button.dam-viz-badge:focus-visible,
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 12px 12px 0;
+  margin: 12px 12px 20px; /* +20px bottom vs Profil/Ustawienia */
   padding: 12px 12px;
   border-radius: 12px;
   background:
@@ -9361,6 +9555,12 @@ button.dam-viz-badge:hover,
   height: 132px;
   border-radius: var(--dam-radius-md, 12px);
 }
+.dam-viz-grid > .dam-skeleton__card--viz,
+.dam-branding-grid > .dam-skeleton__card--viz {
+  height: calc(320px * var(--dam-viz-card-scale, 1));
+  min-height: 240px;
+  border: 1px solid var(--dam-border-subtle, #e7e7e7);
+}
 .dam-skeleton-tr td {
   padding: 12px 14px !important;
 }
@@ -9427,6 +9627,554 @@ html[data-theme="dark"] .dam-skeleton__card::after {
     animation: none;
     display: none;
   }
+}
+
+/* ==================================================================== */
+/* STREFA A usability 2026-07-20                                         */
+/* ==================================================================== */
+
+/* --- Pkt 2+3: chipy studia = globalny styl tagow (dam-viz-badge).
+   Selektor z #id wygrywa z .dam-media-preview__studio-chip w dam-branding.css
+   (tego pliku nie ruszamy - strefa innego agenta). --- */
+#damMediaPreviewStudio .dam-media-preview__studio-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+#damMediaPreviewStudio .dam-media-preview__studio-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b8d97;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  min-width: 86px;
+}
+#damMediaPreviewStudio .dam-media-preview__studio-chip {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(70, 66, 85, 0.08);
+  color: #464255;
+  font-family: inherit;
+  font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+#damMediaPreviewStudio .dam-media-preview__studio-chip small {
+  display: inline;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  opacity: 0.75;
+  line-height: inherit;
+  white-space: nowrap;
+}
+#damMediaPreviewStudio .dam-media-preview__studio-chip:hover {
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  color: var(--dam-primary, #ab54db);
+}
+#damMediaPreviewStudio .dam-media-preview__studio-chip.is-active {
+  background: var(--dam-primary, #ab54db);
+  color: #fff;
+}
+#damMediaPreviewStudio .dam-media-preview__studio-chip.is-active small {
+  color: #fff;
+  opacity: 0.85;
+}
+
+/* --- Pkt 4+5: chip ID marketingowego - klikalny (kopiuj) --- */
+.dam-media-preview__asset-id {
+  cursor: copy;
+}
+
+/* --- Pkt 6: kolumna "Skojarzone materialy" w modalu viz-studio --- */
+.dam-media-preview__assoc-col--materials .dam-media-preview__assoc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+.dam-media-preview__assoc-item--asset .dam-media-preview__assoc-thumb--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  background: rgba(70, 66, 85, 0.06);
+  color: #8b8d97;
+  font-size: 22px;
+}
+#damMediaPreviewLinkedAssets.is-collapsed-assets .dam-media-preview__assoc-item--extra {
+  display: none;
+}
+#damMediaPreviewLinkedAssets .dam-media-preview__assoc-index {
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+}
+
+/* --- Pkt 1: modal historii statusow - pionowa os czasu --- */
+.dam-lifecycle-history-modal {
+  max-width: 640px;
+  width: min(640px, 94vw);
+}
+.dam-life-hist__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 2px 24px 0 0;
+}
+.dam-life-hist__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  color: var(--dam-primary, #ab54db);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.dam-life-hist__filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+.dam-life-hist__filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b8d97;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.dam-life-hist__filter {
+  border: none;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: opacity 0.14s ease, transform 0.14s ease;
+}
+.dam-life-hist__filter:hover {
+  opacity: 0.8;
+}
+.dam-life-hist__filter.is-on {
+  opacity: 1;
+  transform: scale(1.06);
+}
+.dam-life-hist__timeline {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 2px 4px 2px 0;
+  max-height: min(52vh, 460px);
+  overflow: auto;
+  position: relative;
+}
+.dam-life-hist__item {
+  display: flex;
+  gap: 12px;
+  position: relative;
+  padding: 0 0 16px 2px;
+}
+.dam-life-hist__item:last-child {
+  padding-bottom: 4px;
+}
+.dam-life-hist__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+}
+.dam-life-hist__dot {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.dam-life-hist__line {
+  flex: 1 1 auto;
+  width: 2px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: rgba(70, 66, 85, 0.12);
+}
+.dam-life-hist__item:last-child .dam-life-hist__line {
+  display: none;
+}
+.dam-life-hist__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid rgba(70, 66, 85, 0.09);
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-shadow: 0 1px 4px rgba(70, 66, 85, 0.05);
+}
+.dam-life-hist__row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dam-life-hist__when {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #464255;
+  font-variant-numeric: tabular-nums;
+}
+.dam-life-hist__scope {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #8b8d97;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dam-life-hist__row2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+.dam-life-hist__author {
+  font-size: 11px;
+  color: #6b6980;
+}
+.dam-life-hist__actions {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.dam-life-hist__act {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ececf1;
+  border-radius: 7px;
+  background: #fff;
+  color: #6b6b76;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.dam-life-hist__act:hover {
+  background: #f8f4fd;
+  color: var(--dam-primary, #ab54db);
+  border-color: #e2d3f2;
+}
+.dam-life-hist__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 30px 12px;
+  margin-top: 12px;
+  border: 1px dashed rgba(70, 66, 85, 0.16);
+  border-radius: 12px;
+  color: #8b8d97;
+  text-align: center;
+}
+.dam-life-hist__empty i {
+  font-size: 26px;
+  color: color-mix(in srgb, var(--dam-primary, #ab54db) 55%, #8b8d97);
+}
+.dam-life-hist__empty p {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* --- Pkt 8: #damThumbPicker jako mini-eksplorator --- */
+.dam-thumb-picker-overlay {
+  z-index: 12300;
+}
+.dam-thumb-picker-box {
+  width: min(860px, 94vw);
+  max-width: min(860px, 94vw);
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  background: #fff;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(40, 34, 60, 0.24);
+}
+/* Stary prosty picker (assoc-edit / elements) uzywa .dam-thumb-picker__nav
+   bezposrednio w boxie - daj mu oddech przy padding:0 na boxie */
+.dam-thumb-picker-box > .dam-thumb-picker__head {
+  padding: 14px 16px 10px;
+  margin-bottom: 0;
+}
+.dam-thumb-picker-box > .dam-thumb-picker__nav {
+  padding: 10px 16px 0;
+  margin-bottom: 8px;
+}
+.dam-thumb-picker-box > .dam-thumb-picker__grid {
+  padding: 12px 16px 16px;
+  overflow: auto;
+}
+.dam-thumb-picker__grid[data-view="thumbs"] .dam-thumb-picker__item--folder,
+.dam-thumb-picker__grid[data-view="tiles"] .dam-thumb-picker__item--folder {
+  flex-direction: column;
+  background: #fff;
+  border-color: #ececf1;
+}
+.dam-thumb-picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #f0eef5;
+}
+.dam-thumb-picker__head strong {
+  font-size: 15px;
+  color: #464255;
+}
+.dam-thumb-picker__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f0eef5;
+  flex-wrap: wrap;
+}
+.dam-thumb-picker__nav-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ececf1;
+  border-radius: 8px;
+  background: #fff;
+  color: #6b6b76;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.dam-thumb-picker__nav-btn:hover:not(:disabled) {
+  background: #f8f4fd;
+  color: var(--dam-primary, #ab54db);
+  border-color: #e2d3f2;
+}
+.dam-thumb-picker__nav-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.dam-thumb-picker__crumbs {
+  flex: 1 1 240px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border: 1px solid #f0eef5;
+  border-radius: 8px;
+  background: #fbfafc;
+  scrollbar-width: thin;
+}
+.dam-thumb-picker__crumb {
+  border: none;
+  background: transparent;
+  padding: 3px 6px;
+  border-radius: 6px;
+  color: #6b6980;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dam-thumb-picker__crumb:hover {
+  background: #f3ecfb;
+  color: var(--dam-primary, #ab54db);
+}
+.dam-thumb-picker__crumb.is-current {
+  color: #464255;
+  font-weight: 600;
+  cursor: default;
+}
+.dam-thumb-picker__crumb-sep {
+  color: #c3c1cc;
+  font-size: 11px;
+}
+.dam-thumb-picker__views {
+  display: inline-flex;
+  gap: 2px;
+  border: 1px solid #ececf1;
+  border-radius: 8px;
+  padding: 2px;
+  background: #fbfafc;
+}
+.dam-thumb-picker__view-btn {
+  width: 28px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #8b8d97;
+  cursor: pointer;
+  font-size: 14px;
+}
+.dam-thumb-picker__view-btn:hover {
+  color: var(--dam-primary, #ab54db);
+}
+.dam-thumb-picker__view-btn.is-active {
+  background: var(--dam-primary, #ab54db);
+  color: #fff;
+}
+/* Nowe widoki pickera (thumbs / list / tiles) - scoped przez [data-view],
+   zeby NIE zmieniac starych, prostych pickerow (assoc-edit, elementy). */
+.dam-thumb-picker__grid[data-view] {
+  padding: 14px 16px 16px;
+  overflow: auto;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  align-content: start;
+}
+.dam-thumb-picker__grid[data-view="tiles"] {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+.dam-thumb-picker__grid[data-view="list"] {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.dam-thumb-picker__grid[data-view] .dam-thumb-picker__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 8px;
+  border: 1px solid #ececf1;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
+  min-width: 0;
+}
+.dam-thumb-picker__grid[data-view] .dam-thumb-picker__item:hover {
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, #ececf1);
+  box-shadow: 0 6px 18px rgba(171, 84, 219, 0.12);
+  transform: translateY(-1px);
+}
+.dam-thumb-picker__grid[data-view="list"] .dam-thumb-picker__item {
+  flex-direction: row;
+  text-align: left;
+  padding: 6px 10px;
+  gap: 10px;
+}
+.dam-thumb-picker__grid[data-view] .dam-thumb-picker__item img {
+  width: 100%;
+  height: 92px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fbfafc;
+}
+.dam-thumb-picker__grid[data-view="tiles"] .dam-thumb-picker__item img {
+  height: 150px;
+}
+.dam-thumb-picker__grid[data-view="list"] .dam-thumb-picker__item img {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+}
+.dam-thumb-picker__grid[data-view] .dam-thumb-picker__item--folder i {
+  font-size: 30px;
+  color: color-mix(in srgb, var(--dam-primary, #ab54db) 70%, #8b8d97);
+}
+.dam-thumb-picker__grid[data-view="list"] .dam-thumb-picker__item--folder i {
+  font-size: 20px;
+}
+.dam-thumb-picker__grid[data-view] .dam-thumb-picker__name {
+  font-size: 11.5px;
+  color: #464255;
+  line-height: 1.3;
+  word-break: break-word;
+  min-width: 0;
+}
+.dam-thumb-picker__item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+.dam-thumb-picker__grid[data-view="list"] .dam-thumb-picker__item-tags {
+  justify-content: flex-start;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+.dam-thumb-picker__grid[data-view="list"] .dam-thumb-picker__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.dam-thumb-picker__status {
+  grid-column: 1 / -1;
+  color: #8b8d97;
+  font-size: 13px;
+  padding: 18px 4px;
+  text-align: center;
+}
+
+/* ============================================================
+   Pkt 7 brief 2026-07-20: modal wizualizacji jak modal brandingu
+   ============================================================ */
+.dam-viz-modal__idrow {
+  margin: 2px 0 6px;
+}
+.dam-viz-modal__asset-id {
+  cursor: copy;
+}
+.dam-viz-modal__assoc {
+  margin: 10px 0 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(70, 66, 85, 0.08);
+}
+.dam-viz-modal__assoc .dam-media-preview__assoc-grid {
+  max-height: 168px;
+  overflow-y: auto;
+}
+
+/* Toggle "Pokaz wszystkie" w siatce skojarzonych materialow = pelny wiersz */
+.dam-media-preview__assoc-col--materials .dam-media-preview__variants-toggle {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-top: 4px;
+}
+
+/* Pkt 9: tagi + zoom miniatur w popoverze skojarzen */
+.dam-assoc-edit-popover__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+.dam-assoc-edit-popover__tags .dam-viz-badge {
+  font-size: var(--dam-tag-fs-pill, 10.5px);
+  padding: 2px 8px;
+}
+.dam-assoc-edit-popover__thumb-wrap {
+  cursor: zoom-in;
 }
 
 

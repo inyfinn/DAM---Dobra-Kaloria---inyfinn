@@ -17,7 +17,13 @@
   var searchIndex = null;
   var productCorrelation = null;
   var activeTagFilters = {};
-  var GRID_LIMIT_TAB = 1000;
+  /* Limit kart w siatce — sterowany z meta (suwak + OK); prefs.branding_page_size */
+  var PAGE_SIZE_MIN = 24;
+  var PAGE_SIZE_MAX = 500;
+  var PAGE_SIZE_DEFAULT = 100;
+  var PAGE_SIZE_SESSION_KEY = "dam_branding_page_size";
+  var GRID_LIMIT_TAB = PAGE_SIZE_DEFAULT;
+  var pageSizeDraft = PAGE_SIZE_DEFAULT;
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
   var CARD_ZOOM_MIN = 65;
   var CARD_ZOOM_MAX = 350;
@@ -25,6 +31,9 @@
   var CARD_BASE_MIN_PX = 220;
   var facetCountCache = null;
   var brandingRenderRaf = 0;
+  var CAT_HINT_DISMISS_KEY = "damBrandingCatHintDismissed";
+  var catHintObserver = null;
+  var catHintBound = false;
 
   var FACET_CHIPS = [
     { key: "media:image", label: "Obraz", group: "format_pliku" },
@@ -599,6 +608,8 @@
   function setBootStatus(msg) {
     var el = document.getElementById("damBrandingStatus");
     if (el) el.textContent = msg;
+    /* Indeks wolny: utrzymuj skeleton w siatce (nie zostawiaj pustego paska statusu). */
+    if (!index && msg) showInitialBootSkeletons();
   }
 
   async function loadSearchIndex() {
@@ -1025,6 +1036,7 @@
   ];
 
   var SECTION_DESCS = {
+    all: "Wszystkie materiały branding, bez zawężenia kategorii.",
     campaigns: "Banery i materiały kampanii.",
     social: "Filmy i animacje na social.",
     www: "Slidery i banery strony.",
@@ -1088,6 +1100,7 @@
 
   function assetInSectionTab(a, tab) {
     if (!a || !tab) return false;
+    if (tab === "all") return true;
     if (tab === "packshots") {
       if (!a.perspective) return false;
       return a.size === "XL" || a.size === "L" || a.size === "S" || a.size === "S_SKLEP";
@@ -1404,7 +1417,7 @@
     );
   }
 
-  function brandingCardTitleHtml(displayTitle, subtitleHtml) {
+  function brandingCardTitleHtml(displayTitle, subtitleHtml, idChipHtml) {
     return (
       '<div class="dam-viz-card__title-wrap">' +
       '<h5 class="dam-viz-card__title" title="' +
@@ -1412,7 +1425,27 @@
       '">' +
       esc(displayTitle) +
       (subtitleHtml || "") +
-      "</h5></div>"
+      "</h5>" +
+      (idChipHtml || "") +
+      "</div>"
+    );
+  }
+
+  /** Kopiowalny chip ID marketingowego przy tytule karty (klik = kopiuj). */
+  function brandingCardIdChipHtml(a) {
+    if (!a || !a.id) return "";
+    var displayId = marketingDisplayId(a);
+    if (!displayId) return "";
+    return (
+      '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-branding-card__id-chip" data-copy-id="' +
+      esc(displayId) +
+      '" data-tag-value="' +
+      esc(displayId) +
+      '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj ID ' +
+      esc(displayId) +
+      '"><i class="uil uil-copy" aria-hidden="true"></i>' +
+      esc(displayId) +
+      "</button>"
     );
   }
 
@@ -1678,52 +1711,10 @@
     });
   }
 
-  function renderDiscoveryPanel(tab) {
-    var host = document.getElementById("damBrandingDiscovery");
-    if (!host) return;
-    var hasFilters = hasActiveDiscoveryFilters();
-    if (hasFilters || tab === "brandbook") {
-      host.hidden = true;
-      return;
-    }
-    host.hidden = false;
-
-    var recentHost = document.getElementById("damBrandingRecent");
-    var recent = readRecentAssets();
-    if (recentHost) {
-      if (!recent.length) {
-        recentHost.hidden = true;
-      } else {
-        recentHost.hidden = false;
-        recentHost.innerHTML =
-          '<p class="dam-branding-discovery__label">Ostatnio otwierane</p><div class="dam-branding-recent">' +
-          recent
-            .slice(0, 8)
-            .map(function (a) {
-              var label = marketingGroupLabel([a]);
-              if (label.length > 28) label = label.slice(0, 26) + "…";
-              return (
-                '<button type="button" class="dam-branding-recent__item" data-id="' +
-                esc(a.id) +
-                '">' +
-                recentThumbHtml(a) +
-                "<span>" +
-                esc(label) +
-                "</span></button>"
-              );
-            })
-            .join("") +
-          "</div>";
-        recentHost.querySelectorAll(".dam-branding-recent__item").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            openModal(btn.getAttribute("data-id"));
-          });
-        });
-        if (window.DamGridReveal) {
-          window.DamGridReveal.reveal(recentHost, window.DamGridReveal.selectors.brandingRecent);
-        }
-      }
-    }
+  /* Discovery / "Ostatnio otwierane" panel removed from DOM (empty padded
+     host when localStorage recent was empty = ~30px spacer). Keep no-op. */
+  function renderDiscoveryPanel() {
+    return;
   }
 
   function assocChipLabel(term) {
@@ -1826,6 +1817,7 @@
       brandbookOnly: tab === "brandbook" && !corrActive,
     });
     if (corrActive) return all;
+    if (tab === "all") return all;
     return all.filter(function (a) {
       return assetInSectionTab(a, tab);
     });
@@ -1841,7 +1833,93 @@
 
   function currentSectionTab() {
     var btn = document.querySelector(".dam-branding-tab.is-active");
-    return (btn && btn.getAttribute("data-tab")) || "campaigns";
+    return (btn && btn.getAttribute("data-tab")) || "all";
+  }
+
+  function isCatHintDismissed() {
+    try {
+      return sessionStorage.getItem(CAT_HINT_DISMISS_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setCatHintDismissed() {
+    try {
+      sessionStorage.setItem(CAT_HINT_DISMISS_KEY, "1");
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function hideCategoryHint() {
+    var el = document.getElementById("damBrandingCategoryHint");
+    if (el) el.hidden = true;
+  }
+
+  function showCategoryHint() {
+    var el = document.getElementById("damBrandingCategoryHint");
+    if (!el || isCatHintDismissed()) return;
+    var tab = currentSectionTab();
+    if (!tab || tab === "all" || tab === "brandbook") {
+      hideCategoryHint();
+      return;
+    }
+    el.hidden = false;
+    el.classList.add("is-enter");
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        el.classList.remove("is-enter");
+      });
+    });
+  }
+
+  function bindCategoryHintUi() {
+    if (catHintBound) return;
+    catHintBound = true;
+    var closeBtn = document.getElementById("damBrandingCategoryHintClose");
+    var ctaBtn = document.getElementById("damBrandingCategoryHintAll");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
+        setCatHintDismissed();
+        hideCategoryHint();
+      });
+    }
+    if (ctaBtn) {
+      ctaBtn.addEventListener("click", function () {
+        setCatHintDismissed();
+        hideCategoryHint();
+        activateTab("all");
+      });
+    }
+  }
+
+  function ensureListEndObserver() {
+    var sentinel = document.getElementById("damBrandingListEnd");
+    if (!sentinel || typeof IntersectionObserver === "undefined") return;
+    if (catHintObserver) {
+      catHintObserver.disconnect();
+      catHintObserver = null;
+    }
+    catHintObserver = new IntersectionObserver(
+      function (entries) {
+        var hit = entries.some(function (en) {
+          return en.isIntersecting && en.intersectionRatio > 0;
+        });
+        if (!hit) return;
+        showCategoryHint();
+      },
+      { root: null, rootMargin: "0px 0px 40px 0px", threshold: 0 }
+    );
+    catHintObserver.observe(sentinel);
+  }
+
+  function syncCategoryHintForTab(tab) {
+    if (!tab || tab === "all" || tab === "brandbook") {
+      hideCategoryHint();
+      return;
+    }
+    ensureListEndObserver();
   }
 
   function renderActiveSection() {
@@ -1854,6 +1932,7 @@
 
     if (tab === "brandbook") {
       updateGridCount([], [], GRID_LIMIT_TAB, {});
+      hideCategoryHint();
       renderBrandbook();
       return;
     }
@@ -1873,7 +1952,8 @@
       : "Brak materiałów — zmień filtr „Kiedy”, tag u góry albo wpisz słowo kluczowe.";
     var shown = renderAssetGrid(grid, list, GRID_LIMIT_TAB, emptyMsg, sectionAll.length, gridOpts);
     setStatusEl(document.getElementById("damBrandingStatus"), shown, list.length, GRID_LIMIT_TAB);
-    updateGridCount(shown, list, GRID_LIMIT_TAB, gridOpts);
+    updateGridCount(shown, list, GRID_LIMIT_TAB, gridOpts, lastGroupedTotal);
+    syncCategoryHintForTab(tab);
     } catch (eRender) {
       console.error("[DamBranding] renderActiveSection", eRender);
       var errGrid = document.getElementById("damBrandingSectionGrid");
@@ -2087,6 +2167,7 @@
     var countPair = computeFacetCountsPair(allChipKeys, sectionTab);
     var facetCounts = countPair.facet;
     var globalFacetCounts = countPair.global;
+    var facetElCounts = countPair.facetEls || {};
     var showCounts = showTagCounts();
     var activeMap = buildAssocActiveMap();
     var buildRow = window.DamTagBar && DamTagBar.buildGroupRow;
@@ -2118,8 +2199,14 @@
           var badgeCls = FILTER_BADGE_CLASS[g] || "dam-viz-badge--subcat";
           var cnt = typeof chip.count === "number" ? chip.count : facetCounts[chip.key] || 0;
           var globalCnt = globalFacetCounts[chip.key] || 0;
+          /* Najpierw elementy (karty/grupy), potem pliki */
+          var elsCnt = facetElCounts[chip.key] || 0;
           var countHtml = showCounts
-            ? ' <span class="dam-tag-count" aria-hidden="true">(' + cnt + ")</span>"
+            ? ' <span class="dam-tag-count" aria-hidden="true">(' +
+              elsCnt +
+              " el. • " +
+              cnt +
+              " pl.)</span>"
             : "";
           return (
             '<button type="button" class="dam-viz-badge dam-badge-tag ' +
@@ -2157,20 +2244,37 @@
     });
 
     host.querySelectorAll(".dam-viz-badge[data-tag-key]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
+      btn.addEventListener("click", function (ev) {
         var key = btn.getAttribute("data-tag-key") || "";
         if (!key) return;
         if (/^(search:|when:|collection:|co:)/.test(key)) {
           handleAssocChipClick(key);
           return;
         }
+        var multi = !!(ev && (ev.ctrlKey || ev.metaKey));
+        var wasActive = !!activeTagFilters[key];
         var tabSwitch = "";
-        if (activeTagFilters[key]) delete activeTagFilters[key];
-        else {
-          activeTagFilters[key] = true;
-          tabSwitch = tabForFacetKey(key);
-          if (!tabSwitch && (computeFacetCounts([key], currentSectionTab())[key] || 0) === 0) {
-            tabSwitch = bestTabForTagKey(key);
+        if (multi) {
+          /* CTRL/Cmd+klik: dodaj/odejmij z wyboru multi */
+          if (wasActive) delete activeTagFilters[key];
+          else activeTagFilters[key] = true;
+        } else {
+          /* Zwykly klik: ZASTAP caly wybor tym tagiem; drugi klik = wyczysc */
+          var others = Object.keys(activeTagFilters).filter(function (k) {
+            return k !== key && activeTagFilters[k];
+          });
+          Object.keys(activeTagFilters).forEach(function (k) {
+            delete activeTagFilters[k];
+          });
+          if (!(wasActive && !others.length)) activeTagFilters[key] = true;
+        }
+        if (activeTagFilters[key] && !wasActive) {
+          /* Na "Pokaz wszystko" nie zawężaj sekcji - inaczej ARCHIWUM/META znika */
+          if (currentSectionTab() !== "all") {
+            tabSwitch = tabForFacetKey(key);
+            if (!tabSwitch && (computeFacetCounts([key], currentSectionTab())[key] || 0) === 0) {
+              tabSwitch = bestTabForTagKey(key);
+            }
           }
           if (key.indexOf("facet:") === 0) setSearchQuery("");
         }
@@ -2183,7 +2287,8 @@
             b.setAttribute("aria-selected", on ? "true" : "false");
           });
         }
-        scheduleBrandingRender({ tags: true, section: true });
+        if (window.DamLoader) window.DamLoader.start("Filtruję…");
+        scheduleBrandingRender({ tags: true, section: true, loader: true });
       });
     });
   }
@@ -2451,13 +2556,57 @@
     }
   }
 
+  var lastSectionRenderMs = 0;
+  var brandingLoaderPending = false;
+  var lastGroupedTotal = 0;
+
+  function finishBrandingLoader() {
+    if (!brandingLoaderPending) return;
+    brandingLoaderPending = false;
+    if (window.DamLoader) window.DamLoader.done();
+  }
+
+  /**
+   * Fazowany render: skeleton (klatka 1) -> siatka (klatka 2) -> tagi/facety
+   * (klatka 3). Facet-counts to petla assets x chipy - najciezsza czesc; siatka
+   * ma sie pojawic PRZED nia, zeby UI nie zamarzal na kilka sekund.
+   */
   function scheduleBrandingRender(opts) {
     opts = opts || {};
+    if (opts.loader) brandingLoaderPending = true;
     if (brandingRenderRaf) cancelAnimationFrame(brandingRenderRaf);
+    var showSkel =
+      brandingLoaderPending &&
+      opts.section !== false &&
+      (lastSectionRenderMs > 150 ||
+        (!lastSectionRenderMs && index && index.assets && index.assets.length > 800));
     brandingRenderRaf = requestAnimationFrame(function () {
       brandingRenderRaf = 0;
-      if (opts.tags !== false) renderTagFilters();
-      if (opts.section !== false) renderActiveSection();
+      var runPhases = function () {
+        var t0 = window.performance ? performance.now() : Date.now();
+        if (opts.section !== false) renderActiveSection();
+        lastSectionRenderMs = (window.performance ? performance.now() : Date.now()) - t0;
+        if (opts.tags !== false) {
+          requestAnimationFrame(function () {
+            renderTagFilters();
+            finishBrandingLoader();
+          });
+        } else {
+          finishBrandingLoader();
+        }
+      };
+      if (showSkel && window.DamGridReveal && typeof window.DamGridReveal.skeleton === "function") {
+        var grid = document.getElementById("damBrandingSectionGrid");
+        if (grid) {
+          window.DamGridReveal.skeleton(grid, { variant: "cards", count: 8, layout: "viz-grid" });
+        }
+        /* daj przegladarce klatke na wymalowanie skeletonow przed ciezkim renderem */
+        requestAnimationFrame(function () {
+          setTimeout(runPhases, 0);
+        });
+      } else {
+        runPhases();
+      }
     });
   }
 
@@ -2468,17 +2617,24 @@
       facetCountCache.sig === sig &&
       facetCountCache.keysLen === chipKeys.length
     ) {
-      return { facet: facetCountCache.facet, global: facetCountCache.global };
+      return {
+        facet: facetCountCache.facet,
+        global: facetCountCache.global,
+        facetEls: facetCountCache.facetEls,
+      };
     }
     var facet = {};
     var global = {};
+    var facetEls = {};
+    var facetElSets = {};
     var i;
     for (i = 0; i < chipKeys.length; i++) {
       facet[chipKeys[i]] = 0;
       global[chipKeys[i]] = 0;
+      facetEls[chipKeys[i]] = 0;
     }
     if (!index || !index.assets || !chipKeys.length) {
-      return { facet: facet, global: global };
+      return { facet: facet, global: global, facetEls: facetEls };
     }
     var activeKeys = Object.keys(activeTagFilters).filter(function (k) {
       return !!activeTagFilters[k];
@@ -2493,7 +2649,7 @@
       if (!assetMatchesDateRange(a)) continue;
       var graphicsPass = passesGraphicsOnlyFilter(a);
       if (q && !assetMatchesSearchQuery(a, q)) continue;
-      var inTab = !tab || assetInSectionTab(a, tab);
+      var inTab = !tab || tab === "all" || assetInSectionTab(a, tab);
       var matches = new Array(ckLen);
       var ki;
       for (ki = 0; ki < ckLen; ki++) {
@@ -2502,6 +2658,7 @@
           assetMatchesTagKey(a, chipKeys[ki]);
       }
       if (inTab) {
+        var groupKey = "";
         for (ki = 0; ki < ckLen; ki++) {
           if (!matches[ki]) continue;
           var key = chipKeys[ki];
@@ -2514,7 +2671,18 @@
               break;
             }
           }
-          if (ok) facet[key] += 1;
+          if (ok) {
+            facet[key] += 1;
+            /* Elementy = odrebne grupy folderowe (karty) - liczone raz na asset */
+            if (!groupKey) {
+              groupKey = a.folder_group_id || marketingGroupKey(a);
+            }
+            var set = facetElSets[key] || (facetElSets[key] = {});
+            if (!set[groupKey]) {
+              set[groupKey] = 1;
+              facetEls[key] += 1;
+            }
+          }
         }
       }
       for (ki = 0; ki < ckLen; ki++) {
@@ -2532,8 +2700,14 @@
         if (gok) global[gkey] += 1;
       }
     }
-    facetCountCache = { sig: sig, keysLen: chipKeys.length, facet: facet, global: global };
-    return { facet: facet, global: global };
+    facetCountCache = {
+      sig: sig,
+      keysLen: chipKeys.length,
+      facet: facet,
+      global: global,
+      facetEls: facetEls,
+    };
+    return { facet: facet, global: global, facetEls: facetEls };
   }
 
   function computeFacetCounts(chipKeys, sectionTab, opts) {
@@ -2548,6 +2722,30 @@
     var bestN = 0;
     tabs.forEach(function (tab) {
       var n = computeFacetCounts([key], tab)[key] || 0;
+      if (n > bestN) {
+        bestN = n;
+        best = tab;
+      }
+    });
+    return best;
+  }
+
+  /** Pick tab with most search hits for ?q= (avoids false "Brak wynikow" on default campaigns). */
+  function bestTabForSearchQuery(q) {
+    var tabs = ["packshots", "www", "campaigns", "social", "brandbook"];
+    var best = "campaigns";
+    var bestN = 0;
+    var qLower = String(q || "").toLowerCase().trim();
+    if (!qLower || !index || !index.assets) return best;
+    tabs.forEach(function (tab) {
+      var n = 0;
+      var i;
+      for (i = 0; i < index.assets.length; i++) {
+        var a = index.assets[i];
+        if (!includeArchive() && isArchived(a)) continue;
+        if (!assetInSectionTab(a, tab)) continue;
+        if (assetMatchesSearchQuery(a, qLower)) n++;
+      }
       if (n > bestN) {
         bestN = n;
         best = tab;
@@ -2664,19 +2862,8 @@
       maxPerKind: 5,
       maxTotal: 14,
     });
-    if (a && a.id) {
-      var displayId = marketingDisplayId(a);
-      html +=
-        '<span class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip" data-tag-value="' +
-        esc(a.id) +
-        '" data-marketing-id="' +
-        esc(displayId) +
-        '" title="ID marketingowe: ' +
-        esc(displayId) +
-        '">' +
-        esc(displayId) +
-        "</span>";
-    }
+    /* ID marketingowe nie jest juz w badge'ach - siedzi jako kopiowalny chip
+       przy tytule karty (brandingCardIdChipHtml). */
     if (extraTags && extraTags.length) {
       extraTags.forEach(function (tag) {
         html +=
@@ -2800,7 +2987,7 @@
       '<div class="dam-viz-card__badges">' +
       badgesHtml(a) +
       "</div>" +
-      brandingCardTitleHtml(displayTitle, brandingCardSubtitle(a, displayTitle)) +
+      brandingCardTitleHtml(displayTitle, brandingCardSubtitle(a, displayTitle), brandingCardIdChipHtml(a)) +
       brandingCardMetaHtml(metaLine || hint || a.sku || "Materiał", metaAssetIdsForCard(a, siblings)) +
       brandingCardActionsHtml(a) +
       "</div></article>"
@@ -2855,7 +3042,7 @@
       '<div class="dam-viz-card__badges">' +
       badgesHtml(primary, [variantLabel]) +
       "</div>" +
-      brandingCardTitleHtml(groupTitle, brandingCardSubtitle(primary, groupTitle)) +
+      brandingCardTitleHtml(groupTitle, brandingCardSubtitle(primary, groupTitle), brandingCardIdChipHtml(primary)) +
       brandingCardMetaHtml(groupMeta, metaAssetIdsForCard(primary, assets)) +
       brandingCardActionsHtml(primary) +
       "</div></article>"
@@ -2909,6 +3096,24 @@
     return String(Math.max(0, n | 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   }
 
+  /** Polska odmiana: 1 element, 2-4 elementy, 5+ elementów (z wyjątkiem nastek). */
+  function plWord(n, one, few, many) {
+    n = Math.abs(n | 0);
+    if (n === 1) return one;
+    var d = n % 10;
+    var h = n % 100;
+    if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return few;
+    return many;
+  }
+
+  function fmtElements(n) {
+    return fmtGridCount(n) + " " + plWord(n, "element", "elementy", "elementów");
+  }
+
+  function fmtFiles(n) {
+    return fmtGridCount(n) + " " + plWord(n, "plik", "pliki", "plików");
+  }
+
   function countSliceAssets(slice) {
     var n = 0;
     (slice || []).forEach(function (entry) {
@@ -2917,7 +3122,7 @@
     return n;
   }
 
-  function updateGridCount(shownSlice, assetList, limit, gridOpts) {
+  function updateGridCount(shownSlice, assetList, limit, gridOpts, totalCardsPre) {
     var el = document.getElementById("damBrandingGridCount");
     if (!el) return;
     var panel = document.getElementById("damBrandingPanelSection");
@@ -2930,21 +3135,26 @@
     var filesShown = countSliceAssets(shownSlice);
     var cardsShown = (shownSlice || []).length;
     var totalFiles = assetList.length;
-    var totalCards = groupBrandingAssets(assetList, gridOpts || {}).length;
+    /* Grupowanie policzone raz w renderActiveSection - nie licz drugi raz */
+    var totalCards =
+      typeof totalCardsPre === "number"
+        ? totalCardsPre
+        : groupBrandingAssets(assetList, gridOpts || {}).length;
     if (!filesShown) {
       el.hidden = true;
       el.textContent = "";
       return;
     }
-    var label;
-    if (cardsShown >= limit && totalCards > limit) {
-      label = fmtGridCount(filesShown) + " / " + fmtGridCount(totalFiles) + " plików";
-    } else if (filesShown < totalFiles) {
-      label = fmtGridCount(filesShown) + " / " + fmtGridCount(totalFiles) + " plików";
-    } else {
-      label = fmtGridCount(filesShown) + " plików";
-    }
-    el.textContent = label;
+    /* Format usera: najpierw ELEMENTY (karty/grupy), potem pliki */
+    var elsPart =
+      cardsShown < totalCards
+        ? fmtGridCount(cardsShown) + " / " + fmtElements(totalCards)
+        : fmtElements(cardsShown);
+    var filesPart =
+      filesShown < totalFiles
+        ? fmtGridCount(filesShown) + " / " + fmtFiles(totalFiles)
+        : fmtFiles(filesShown);
+    el.textContent = elsPart + " • " + filesPart;
     el.hidden = false;
   }
 
@@ -2957,10 +3167,13 @@
     var cardN = (groupedSlice || []).length;
     var assetN = assetTotal || 0;
     var filesShown = countSliceAssets(groupedSlice);
+    /* Format usera: najpierw ELEMENTY (karty), potem pliki */
     var countLine =
-      cardN !== assetN
-        ? fmtGridCount(cardN) + " kart · " + fmtGridCount(assetN) + " plików · widocznych " + fmtGridCount(filesShown)
-        : fmtGridCount(cardN) + " z " + fmtGridCount(assetN) + " plików";
+      fmtElements(cardN) +
+      " • " +
+      (filesShown !== assetN
+        ? fmtGridCount(filesShown) + " / " + fmtFiles(assetN)
+        : fmtFiles(assetN));
     el.textContent =
       countLine +
       (built ? " · indeks " + built : "") +
@@ -3024,6 +3237,7 @@
     gridOpts = gridOpts || {};
     list = asAssetList(list);
     var grouped = groupBrandingAssets(list, gridOpts);
+    lastGroupedTotal = grouped.length;
     var slice = grouped.slice(0, limit);
     var total = totalCount != null ? totalCount : list.length;
     grid.innerHTML = slice.length
@@ -3159,6 +3373,47 @@
           return;
         }
         if (window.DamPaths) window.DamPaths.revealInExplorer(path);
+      });
+    });
+
+    grid.querySelectorAll(".dam-branding-card__id-chip").forEach(function (chip) {
+      chip.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var text = chip.getAttribute("data-copy-id") || chip.textContent.trim();
+        if (!text) return;
+        var toast = function (msg) {
+          if (typeof window.damShowToast === "function") {
+            window.damShowToast(msg);
+            return;
+          }
+          /* ten sam mechanizm co toastCopied w dam-badges.js */
+          var t = document.getElementById("damGlobalToast");
+          if (!t) {
+            t = document.createElement("div");
+            t.id = "damGlobalToast";
+            t.className = "dam-global-toast";
+            t.setAttribute("role", "status");
+            document.body.appendChild(t);
+          }
+          t.textContent = msg;
+          t.classList.add("is-on");
+          clearTimeout(t._t);
+          t._t = setTimeout(function () {
+            t.classList.remove("is-on");
+          }, 1600);
+        };
+        var onOk = function () {
+          toast("Skopiowano: " + text);
+        };
+        var onFail = function () {
+          toast("Nie udało się skopiować");
+        };
+        if (window.DamBadges && typeof window.DamBadges.copyTagText === "function") {
+          window.DamBadges.copyTagText(chip).then(onOk).catch(onFail);
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(onOk).catch(onFail);
+        }
       });
     });
 
@@ -3540,6 +3795,10 @@
       .replace(/^#/, "")
       .toLowerCase();
     var map = {
+      all: "all",
+      wszystko: "all",
+      "pokaz-wszystko": "all",
+      "pokaz_wszystko": "all",
       campaigns: "campaigns",
       kampanie: "campaigns",
       social: "social",
@@ -3552,14 +3811,15 @@
       keyvisuale: "packshots",
       "key-visuale": "packshots",
       brandbook: "brandbook",
-      browse: "campaigns",
-      przegladaj: "campaigns",
+      browse: "all",
+      przegladaj: "all",
     };
     return map[h] || null;
   }
 
   function hashForTab(tab) {
     var map = {
+      all: "wszystko",
       campaigns: "kampanie",
       social: "social",
       www: "www",
@@ -3570,10 +3830,11 @@
   }
 
   function normalizeTab(tab) {
-    if (tab === "browse" || tab === "layout") return "campaigns";
+    if (tab === "browse" || tab === "layout") return "all";
     if (tab === "keyvisuale") return "packshots";
     if (tab === "channels") return "social";
-    return tab || "campaigns";
+    if (tab === "wszystko" || tab === "pokaz-wszystko") return "all";
+    return tab || "all";
   }
 
   function activateTab(tab, opts) {
@@ -3595,13 +3856,14 @@
         history.replaceState(null, "", nextHash);
       }
     }
+    if (tab === "all" || tab === "brandbook") hideCategoryHint();
     renderActiveSection();
   }
 
   function bindTabs() {
     document.querySelectorAll(".dam-branding-tab").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        activateTab(btn.getAttribute("data-tab") || "campaigns");
+        activateTab(btn.getAttribute("data-tab") || "all");
       });
     });
   }
@@ -3704,13 +3966,283 @@
     });
   }
 
+  function clampPageSize(n) {
+    n = Math.round(Number(n) || PAGE_SIZE_DEFAULT);
+    if (isNaN(n)) n = PAGE_SIZE_DEFAULT;
+    if (n < PAGE_SIZE_MIN) n = PAGE_SIZE_MIN;
+    if (n > PAGE_SIZE_MAX) n = PAGE_SIZE_MAX;
+    return n;
+  }
+
+  function readStoredPageSize() {
+    try {
+      if (window.DamUserPrefs && typeof window.DamUserPrefs.getSync === "function") {
+        var prefs = window.DamUserPrefs.getSync();
+        if (prefs && prefs.branding_page_size != null) {
+          return clampPageSize(prefs.branding_page_size);
+        }
+      }
+    } catch (ePrefs) { /* ignore */ }
+    try {
+      var raw = sessionStorage.getItem(PAGE_SIZE_SESSION_KEY);
+      if (raw != null && raw !== "") return clampPageSize(raw);
+    } catch (eSess) { /* ignore */ }
+    try {
+      var ls = localStorage.getItem(PAGE_SIZE_SESSION_KEY);
+      if (ls != null && ls !== "") return clampPageSize(ls);
+    } catch (eLs) { /* ignore */ }
+    return PAGE_SIZE_DEFAULT;
+  }
+
+  function persistPageSize(n) {
+    n = clampPageSize(n);
+    try {
+      sessionStorage.setItem(PAGE_SIZE_SESSION_KEY, String(n));
+      localStorage.setItem(PAGE_SIZE_SESSION_KEY, String(n));
+    } catch (eStore) { /* ignore */ }
+    if (window.DamUserPrefs && typeof window.DamUserPrefs.set === "function") {
+      window.DamUserPrefs.set({ branding_page_size: n }).catch(function () {});
+    }
+    return n;
+  }
+
+  /** Draft only — nie przeładowuje siatki (OK stosuje). */
+  function syncPageSizeControls(n, opts) {
+    opts = opts || {};
+    pageSizeDraft = clampPageSize(n);
+    var range = document.getElementById("damBrandingPageSizeRange");
+    var num = document.getElementById("damBrandingPageSizeInput");
+    if (range && String(range.value) !== String(pageSizeDraft)) range.value = String(pageSizeDraft);
+    if (num && String(num.value) !== String(pageSizeDraft)) num.value = String(pageSizeDraft);
+    var host = document.getElementById("damBrandingPageSize");
+    if (host) {
+      var dirty = pageSizeDraft !== GRID_LIMIT_TAB;
+      host.classList.toggle("is-dirty", dirty);
+      if (opts.markApplied) host.classList.remove("is-dirty");
+    }
+    return pageSizeDraft;
+  }
+
+  function applyPageSize(n) {
+    GRID_LIMIT_TAB = persistPageSize(n != null ? n : pageSizeDraft);
+    syncPageSizeControls(GRID_LIMIT_TAB, { markApplied: true });
+    if (typeof renderActiveSection === "function") {
+      renderActiveSection();
+    }
+    return GRID_LIMIT_TAB;
+  }
+
+  function bindBrandingPageSizeControl() {
+    var range = document.getElementById("damBrandingPageSizeRange");
+    var num = document.getElementById("damBrandingPageSizeInput");
+    var okBtn = document.getElementById("damBrandingPageSizeOk");
+    var host = document.getElementById("damBrandingPageSize");
+    if (!host || host._damPageSizeBound) return;
+    host._damPageSizeBound = true;
+
+    GRID_LIMIT_TAB = readStoredPageSize();
+    pageSizeDraft = GRID_LIMIT_TAB;
+    syncPageSizeControls(GRID_LIMIT_TAB, { markApplied: true });
+
+    function onDraft(val) {
+      syncPageSizeControls(val);
+    }
+
+    if (range) {
+      range.addEventListener("input", function () {
+        onDraft(this.value);
+      });
+      /* change bez apply — tylko OK stosuje (bez janku przy drag) */
+    }
+    if (num) {
+      num.addEventListener("input", function () {
+        onDraft(this.value);
+      });
+      num.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          applyPageSize(num.value);
+        }
+      });
+    }
+    if (okBtn) {
+      okBtn.addEventListener("click", function () {
+        applyPageSize(pageSizeDraft);
+      });
+    }
+
+    host.addEventListener(
+      "wheel",
+      function (e) {
+        if (!host.contains(e.target)) return;
+        e.preventDefault();
+        var step = e.deltaY > 0 ? -4 : 4;
+        onDraft(pageSizeDraft + step);
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("dam:user-prefs", function (ev) {
+      var p = ev && ev.detail && ev.detail.prefs;
+      if (!p || p.branding_page_size == null) return;
+      var next = clampPageSize(p.branding_page_size);
+      if (next === GRID_LIMIT_TAB && next === pageSizeDraft) return;
+      /* Preferencja z KV: stosuj od razu (nie draft) gdy różna od aktywnej */
+      if (next !== GRID_LIMIT_TAB) {
+        GRID_LIMIT_TAB = next;
+        syncPageSizeControls(next, { markApplied: true });
+        if (typeof renderActiveSection === "function") renderActiveSection();
+      } else {
+        syncPageSizeControls(next, { markApplied: true });
+      }
+    });
+
+    if (window.DamUserPrefs && typeof window.DamUserPrefs.load === "function") {
+      window.DamUserPrefs.load().then(function (prefs) {
+        if (!prefs || prefs.branding_page_size == null) return;
+        var next = clampPageSize(prefs.branding_page_size);
+        if (next === GRID_LIMIT_TAB) {
+          syncPageSizeControls(next, { markApplied: true });
+          return;
+        }
+        GRID_LIMIT_TAB = next;
+        syncPageSizeControls(next, { markApplied: true });
+        if (typeof renderActiveSection === "function") renderActiveSection();
+      });
+    }
+  }
+
+  function showInitialBootSkeletons() {
+    if (!window.DamGridReveal || typeof window.DamGridReveal.skeleton !== "function") return;
+    var skelOpts = { variant: "cards", count: 10, layout: "viz-grid" };
+    var sectionGrid = document.getElementById("damBrandingSectionGrid");
+    var brandbookGrid = document.getElementById("damBrandbookGrid");
+    if (sectionGrid && !sectionGrid.querySelector(".dam-viz-card")) {
+      sectionGrid.setAttribute("aria-busy", "true");
+      if (!sectionGrid.querySelector(".dam-skeleton__card")) {
+        window.DamGridReveal.skeleton(sectionGrid, skelOpts);
+      }
+    }
+    if (brandbookGrid && !brandbookGrid.querySelector(".dam-viz-card")) {
+      brandbookGrid.setAttribute("aria-busy", "true");
+      if (!brandbookGrid.querySelector(".dam-skeleton__card")) {
+        window.DamGridReveal.skeleton(brandbookGrid, {
+          variant: "cards",
+          count: 8,
+          layout: "viz-grid",
+        });
+      }
+    }
+  }
+
+  function clearBootSkeletonBusy() {
+    var sectionGrid = document.getElementById("damBrandingSectionGrid");
+    var brandbookGrid = document.getElementById("damBrandbookGrid");
+    if (sectionGrid) sectionGrid.removeAttribute("aria-busy");
+    if (brandbookGrid) {
+      brandbookGrid.removeAttribute("aria-busy");
+      /* Boot skeleton na ukrytym brandbook nie moze zostac po zaladowaniu indeksu. */
+      if (
+        brandbookGrid.querySelector(".dam-skeleton__card") &&
+        !brandbookGrid.querySelector(".dam-viz-card")
+      ) {
+        brandbookGrid.innerHTML = "";
+      }
+    }
+  }
+
+  /**
+   * Wejscie belki meta-filtrow: gora -> dol (opacity + y). Bez clip-path w spoczynku
+   * (doktryna IO). prefers-reduced-motion => natychmiast.
+   * Start dopiero gdy shell nie trzyma body na opacity:0 (inaczej animacja mija niewidocznie).
+   */
+  function canRevealMetaFilters() {
+    var root = document.documentElement;
+    if (root.classList.contains("dam-booting")) return false;
+    var body = document.body;
+    if (!body) return false;
+    try {
+      var op = parseFloat(window.getComputedStyle(body).opacity);
+      if (!isNaN(op) && op < 0.85) return false;
+    } catch (eOp) {
+      /* ignore */
+    }
+    return true;
+  }
+
+  function revealMetaFilters() {
+    var host = document.querySelector(".dam-branding-filters--meta");
+    if (!host || host.getAttribute("data-dam-meta-revealed") === "1") return;
+    if (!canRevealMetaFilters()) return false;
+    host.setAttribute("data-dam-meta-revealed", "1");
+    var kids = Array.prototype.filter.call(host.children, function (el) {
+      return el && el.nodeType === 1;
+    });
+    if (!kids.length) return true;
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return true;
+    }
+    if (window.DamGridReveal && typeof window.DamGridReveal.revealSequence === "function") {
+      window.DamGridReveal.revealSequence(host, kids, {
+        mode: "slide",
+        stagger: 0.055,
+        duration: 0.48,
+        y: -12,
+      });
+    }
+    return true;
+  }
+
+  function scheduleMetaFiltersReveal() {
+    var tries = 0;
+    var tick = function () {
+      if (revealMetaFilters()) return;
+      tries += 1;
+      if (tries > 80) return;
+      setTimeout(tick, 60);
+    };
+    if (document.documentElement.classList.contains("dam-booted")) {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(tick);
+      });
+      return;
+    }
+    var obs = null;
+    if (typeof MutationObserver === "function") {
+      obs = new MutationObserver(function () {
+        if (document.documentElement.classList.contains("dam-booted")) {
+          if (obs) obs.disconnect();
+          requestAnimationFrame(function () {
+            requestAnimationFrame(tick);
+          });
+        }
+      });
+      obs.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+    }
+    setTimeout(function () {
+      if (obs) obs.disconnect();
+      tick();
+    }, 4800);
+  }
+
   async function boot() {
     try {
+      showInitialBootSkeletons();
       bindTabs();
       bindFilters();
+      bindCategoryHintUi();
       bindBrandingCardZoomControl();
+      bindBrandingPageSizeControl();
+      scheduleMetaFiltersReveal();
       var searchPromise = loadSearchIndex();
       await Promise.all([loadIndex(), loadAssociations(), loadTokens()]);
+      clearBootSkeletonBusy();
       // renderTagFilters() celowo pominiete tutaj: activateTab() nizej robi
       // pelny render juz z zaladowanym search-indexem (bylo liczone 2x na boot).
       var rebuild = document.getElementById("damBrandingRebuild");
@@ -3723,7 +4255,7 @@
             await loadIndex();
             await loadCampaigns();
             activateTab(
-              document.querySelector(".dam-branding-tab.is-active")?.getAttribute("data-tab") || "campaigns",
+              document.querySelector(".dam-branding-tab.is-active")?.getAttribute("data-tab") || "all",
               { skipHash: true, keepDiscovery: true }
             );
           } finally {
@@ -3734,6 +4266,7 @@
       var params = new URLSearchParams(location.search);
       var qs = params.get("q");
       var productParam = params.get("product");
+      var tabParam = params.get("tab");
       await searchPromise;
       if (window.DamProductCorrelation) {
         await DamProductCorrelation.ensureSearchIndex();
@@ -3750,18 +4283,31 @@
       if (camp) selectedCampaignId = camp;
       var assetId = params.get("asset");
       var hashTab = tabFromHash();
+      var allowedTabs = {
+        all: 1,
+        packshots: 1,
+        www: 1,
+        campaigns: 1,
+        social: 1,
+        brandbook: 1,
+      };
       if (camp) {
         activateTab("campaigns", { skipHash: !!hashTab });
+      } else if (tabParam && allowedTabs[normalizeTab(tabParam)]) {
+        activateTab(normalizeTab(tabParam), { skipHash: true });
       } else if (hashTab) {
         activateTab(hashTab, { skipHash: true });
+      } else if (qs) {
+        activateTab(bestTabForSearchQuery(qs), { skipHash: true });
       } else {
-        activateTab("campaigns", { skipHash: true });
+        activateTab("all", { skipHash: true });
       }
       if (assetId) openModal(assetId);
       window.addEventListener("hashchange", function () {
         var t = tabFromHash();
         if (t) activateTab(t, { skipHash: true });
       });
+      scheduleMetaFiltersReveal();
     } catch (e) {
       var grid = document.getElementById("damBrandingGrid");
       if (grid) grid.innerHTML = '<p class="dam-branding-muted">Błąd: ' + esc(e.message) + "</p>";

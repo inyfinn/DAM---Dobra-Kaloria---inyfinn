@@ -257,9 +257,11 @@
             '<h2 id="damHelpModalTitle" class="dam-help-modal__title">Pomoc i skróty klawiszowe</h2>' +
             '<p class="dam-help-modal__lead">Szybki przewodnik - jak korzystać z panelu plików opakowań.</p>' +
           "</div>" +
-          '<button type="button" class="dam-help-modal__close" data-dam-help-close="1" aria-label="Zamknij">' +
-            '<i class="uil uil-times" aria-hidden="true"></i>' +
-          "</button>" +
+          '<div class="dam-help-modal__head-actions">' +
+            '<button type="button" class="dam-help-modal__close" data-dam-help-close="1" aria-label="Zamknij">' +
+              '<i class="uil uil-times" aria-hidden="true"></i>' +
+            "</button>" +
+          "</div>" +
         "</header>" +
         '<div class="dam-help-modal__body"></div>' +
       "</div>";

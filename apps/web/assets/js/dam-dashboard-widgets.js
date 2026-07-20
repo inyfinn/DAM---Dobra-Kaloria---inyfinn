@@ -280,6 +280,60 @@
     );
   }
 
+  /** Map path -> branding tab so ?q= lands on a tab that has results. */
+  function brandingTabFromPath(path) {
+    var p = String(path || "").toUpperCase();
+    if (/08\s*-\s*KAMAPANIE/i.test(p)) return "campaigns";
+    if (/05\s*-\s*SOCIAL/i.test(p)) return "social";
+    if (/06\s*-\s*STRONY|07\s*-\s*E-COMMERCE|\/SLIDERY\//i.test(p)) return "www";
+    if (/BRANDING|BRANDBOOK|BRAND\s*BOOK/i.test(p)) return "brandbook";
+    if (/WIZKI|01\s*-\s*PRODUKTY/i.test(p)) return "packshots";
+    return "";
+  }
+
+  function brandingHrefForAsset(a, label) {
+    var q = encodeURIComponent(label || (a && a.name) || "");
+    var tab = brandingTabFromPath((a && a.path) || "");
+    var href = "branding.html?q=" + q;
+    if (tab) href += "&tab=" + encodeURIComponent(tab);
+    if (a && a.id) href += "&asset=" + encodeURIComponent(a.id);
+    return href;
+  }
+
+  function ensureDashWinDelegation(mount) {
+    if (!mount || mount._damWinDelegated) return;
+    mount._damWinDelegated = true;
+    mount.addEventListener(
+      "click",
+      function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest(".dam-win-btn") : null;
+        if (!btn || !mount.contains(btn) || btn.disabled) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var raw = btn.getAttribute("data-path") || "";
+        if (!raw) return;
+        var path =
+          global.DamPaths && typeof DamPaths.resolveWinFolderPath === "function"
+            ? DamPaths.resolveWinFolderPath(raw)
+            : raw;
+        if (global.DamPaths && typeof DamPaths.openFolderInExplorer === "function") {
+          DamPaths.openFolderInExplorer(path);
+        }
+      },
+      true
+    );
+  }
+
+  function rebindWidgetChrome(host) {
+    if (!host) return;
+    if (global.DamIcons && typeof DamIcons.bindWinButtons === "function") {
+      DamIcons.bindWinButtons(host);
+    }
+    if (global.DamBadges && typeof DamBadges.bindClicks === "function") {
+      DamBadges.bindClicks(host, "dashboard");
+    }
+  }
+
   function bindLayoutToggle(widgetId, onCycle) {
     var btn = document.querySelector(
       '[data-widget-layout-toggle="' + widgetId + '"]'
@@ -850,16 +904,12 @@
             "dam-widget--viz-latest dam-widget--media-latest",
             layoutToggleHtml(self.id, layout)
           );
+          var hostViz = document.querySelector('[data-widget-id="newest_viz_3"]');
+          rebindWidgetChrome(hostViz);
           bindLayoutToggle(self.id, function () {
             var host = document.querySelector('[data-widget-id="newest_viz_3"]');
             if (host) self.render(host, ctx);
           });
-          if (global.DamBadges && typeof DamBadges.bindClicks === "function") {
-            var host = document.querySelector(
-              '[data-widget-id="newest_viz_3"] .dam-widget__list--media'
-            );
-            if (host) DamBadges.bindClicks(host, "dashboard");
-          }
         }
       },
       {
@@ -906,8 +956,7 @@
                 groups
                   .map(function (g) {
                     var a = g.newest;
-                    var q = encodeURIComponent(g.label || a.name || "");
-                    var brandingHref = "branding.html?q=" + q;
+                    var brandingHref = brandingHrefForAsset(a, g.label || a.name || "");
                     var thumb = bridge + "/media?path=" + encodeURIComponent(a.path || "");
                     var countChip =
                       g.count > 1
@@ -915,8 +964,19 @@
                           g.count +
                           " warianty</span>"
                         : "";
+                    var assetJson = escapeHtml(
+                      JSON.stringify({
+                        id: a.id || "",
+                        name: a.name || g.label || "",
+                        path: a.path || "",
+                        media_type: a.media_type || "image",
+                        brand: a.brand || "",
+                      })
+                    );
                     return (
-                      '<li class="dam-widget__viz-row">' +
+                      '<li class="dam-widget__viz-row" data-dash-asset="' +
+                      assetJson +
+                      '">' +
                       '<div class="dam-nav-circles dam-nav-circles--stack dam-nav-circles--tiles">' +
                       '<a class="dam-viz-icon-btn dam-viz-icon-btn--explorer" href="' +
                       brandingHref +
@@ -929,15 +989,13 @@
                       ">" +
                       winIcon +
                       "</button>" +
-                      '<a class="dam-viz-icon-btn dam-viz-icon-btn--viz" href="' +
-                      brandingHref +
-                      '" title="Podglad" aria-label="Podglad" data-dam-tip="Otworz material w Brandingu">' +
-                      '<i class="uil uil-eye" aria-hidden="true"></i></a>' +
+                      '<button type="button" class="dam-viz-icon-btn dam-viz-icon-btn--viz" data-dash-preview="1" title="Podglad" aria-label="Podglad" data-dam-tip="Podglad materialu w miejscu">' +
+                      '<i class="uil uil-eye" aria-hidden="true"></i></button>' +
                       "</div>" +
                       '<div class="dam-widget__viz-media">' +
                       '<a class="dam-widget__thumb-link" href="' +
                       brandingHref +
-                      '" title="Branding">' +
+                      '" data-dash-preview="1" title="Podglad">' +
                       '<img class="dam-widget__thumb" src="' +
                       escapeHtml(thumb) +
                       '" alt="' +
@@ -966,6 +1024,8 @@
                 "dam-widget--branding-latest dam-widget--media-latest",
                 layoutToggleHtml(self.id, layout)
               );
+              var hostBr = document.querySelector('[data-widget-id="branding_latest"]');
+              rebindWidgetChrome(hostBr);
               bindLayoutToggle(self.id, function () {
                 var host = document.querySelector('[data-widget-id="branding_latest"]');
                 if (host) self.render(host);
@@ -1453,54 +1513,56 @@
         );
       }
     });
+    ensureDashWinDelegation(mount);
     if (global.DamIcons && typeof DamIcons.bindWinButtons === "function") {
       DamIcons.bindWinButtons(mount);
     }
     if (global.DamBadges && typeof DamBadges.bindClicks === "function") {
       DamBadges.bindClicks(mount);
     }
-    // #region agent log
-    if (mount && !mount._damVizNavBound) {
-      mount._damVizNavBound = true;
+    if (mount && !mount._damDashPreviewBound) {
+      mount._damDashPreviewBound = true;
       mount.addEventListener(
         "click",
         function (e) {
-          var t = e.target && e.target.closest ? e.target.closest(".dam-viz-icon-btn, .dam-win-btn") : null;
-          if (!t || !mount.contains(t)) return;
-          var action = t.getAttribute("data-dam-action") || "";
-          var isWin = t.classList.contains("dam-win-btn");
-          var isViz = action === "open-viz" || t.classList.contains("dam-viz-icon-btn--viz");
-          var href = t.getAttribute("href") || "";
-          fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
-            body: JSON.stringify({
-              sessionId: "a78fa0",
-              hypothesisId: "VIZ_ICON",
-              location: "dam-dashboard-widgets.js:navClick",
-              message: "dashboard viz-row icon click",
-              data: {
-                isWin: !!isWin,
-                isViz: !!isViz,
-                action: action,
-                hrefTail: href.slice(-80),
-                aria: t.getAttribute("aria-label") || "",
-                pathLen: (t.getAttribute("data-path") || "").length,
-              },
-              timestamp: Date.now(),
-              runId: "post-fix",
-            }),
-          }).catch(function () {});
-          if (isViz && href) {
+          var previewEl =
+            e.target && e.target.closest
+              ? e.target.closest("[data-dash-preview], .dam-viz-icon-btn--viz")
+              : null;
+          if (!previewEl || !mount.contains(previewEl)) return;
+          if (previewEl.classList.contains("dam-win-btn")) return;
+          var row = previewEl.closest("[data-dash-asset]");
+          var raw = row && row.getAttribute("data-dash-asset");
+          if (
+            raw &&
+            global.DamMediaPreview &&
+            typeof DamMediaPreview.openAsset === "function"
+          ) {
+            try {
+              var asset = JSON.parse(raw);
+              if (asset && asset.path) {
+                e.preventDefault();
+                e.stopPropagation();
+                DamMediaPreview.openAsset(asset, { siblings: [asset], index: 0 });
+                return;
+              }
+            } catch (err) {
+              /* fall through to href */
+            }
+          }
+          var href = previewEl.getAttribute("href") || "";
+          if (href && previewEl.tagName === "A") {
+            /* native navigation */
+            return;
+          }
+          if (href) {
             e.preventDefault();
-            e.stopPropagation();
             window.location.href = href;
           }
         },
         true
       );
     }
-    // #endregion
     if (window.DamGridReveal) {
       window.DamGridReveal.reveal(mount, window.DamGridReveal.selectors.dashboardWidget);
     }

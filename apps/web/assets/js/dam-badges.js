@@ -684,6 +684,10 @@
   function resolveCopyText(btn) {
     if (!btn) return "";
     if (btn.closest && btn.closest(".dam-index-action")) return "";
+    /* Chip ID marketingowego: kopiuj ZAWSZE widoczne id (M-.../V-...),
+       nigdy wewnetrzne br-xxxxx (brief 2026-07-20 pkt 5). */
+    var marketingId = btn.getAttribute("data-marketing-id");
+    if (marketingId) return String(marketingId).trim();
     var chip = btn.closest ? btn.closest(".dam-index-chip") : null;
     if (chip) {
       var inp = chip.querySelector(".dam-index-edit");

@@ -14,7 +14,7 @@ Legenda statusu: `[ ]` otwarte · `[~]` w toku · `[x]` zrobione
 |----|--------|---------|-------------|
 | A1 | [ ] | **Asana** — Client ID/Secret → Zaloguj → Synchronizuj | Integracje (`integrations.html`) |
 | A2 | [ ] | **Microsoft** (Teams/Outlook) — to samo, jeśli potrzebne | Integracje |
-| A3 | [ ] | **FMCG** — wypełnić CSV/Excel wg szablonu i zaimportować (albo ręcznie w katalogu) | `fmcg-cost-import-template.csv`, katalog FMCG / Kalkulator |
+| A3 | [~] | **FMCG** — wypełnić CSV/Excel wg szablonu i zaimportować (albo ręcznie w katalogu) | UI **Edytuj** (mapowanie + dane ręczne) gotowe w Integracjach; brak pełnego wypełnienia kwot przez Ciebie - A3 nie jest `[x]` |
 | A4 | [x] | **Restart bridge** po zmianach `local_bridge.py` | Zasada w `memory.md` — stosuj przy każdej edycji bridge |
 
 ---
@@ -23,7 +23,7 @@ Legenda statusu: `[ ]` otwarte · `[~]` w toku · `[x]` zrobione
 
 | ID | Status | Zadanie | Notatka |
 |----|--------|---------|---------|
-| B1 | [ ] | Naprawić **wykrojniki-registry** — parser XLSX nie generuje `row-1` bez `kod`/`nazwa` | UI filtruje śmieci; źródło danych nadal uszkodzone |
+| B1 | [x] | Naprawić **wykrojniki-registry** — parser XLSX nie generuje `row-1` bez `kod`/`nazwa` | 2026-07-20: parser Kubara (oznaczenie/asortyment); rejestr 52 wpisy; panel Wykrojniki↔produkty |
 | B2 | [ ] | Import **FMCG XLSX** (`openpyxl`), jeśli plik nie jest CSV | CSV first już jest |
 | B3 | [~] | **Miniatury wideo** — twardy fallback gdy poster ffmpeg pada | Branding / bridge. Częściowo: wideo w siatce `preload="none"` (mniej połączeń); twardy fallback posteru wciąż do zrobienia |
 | B4 | [ ] | **Tagi Autor** w Brandingu (Krzysztof / Sylwia itd.) | Wspomniane, nie zrobione |

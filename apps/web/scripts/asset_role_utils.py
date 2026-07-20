@@ -76,7 +76,10 @@ def _run_with_timeout(fn, timeout: float = FILE_ACCESS_TIMEOUT, default=None):
     def _worker() -> None:
         try:
             result[0] = fn()
-        except (OSError, PermissionError, ValueError):
+        except Exception:
+            # OSError/PermissionError/ValueError + PIL DecompressionBombError
+            # (ogromne TIFF na X: NFS). Bez tego watek sypie Traceback i zostawia
+            # wiszace odczyty NFS; main i tak dostaje default po timeout/done.
             result[0] = default
         finally:
             done.set()
@@ -349,8 +352,14 @@ def format_technical_for(asset: dict[str, Any]) -> list[str]:
         out.append("white")
     if ext in {".psd", ".psb"}:
         out.append("editable")
-    elif ext in {".tif", ".tiff"} and _tiff_has_layers(asset.get("path") or ""):
-        out.append("editable")
+    elif ext in {".tif", ".tiff"}:
+        path_u = (asset.get("path") or "").replace("\\", "/").upper()
+        # Legacy ARCHIWUM / wolny NFS: nie otwieraj TIFF przez PIL (warstwy) -
+        # gromadzi watki i wisi na plikach 100M+ px. Zakladamy editable.
+        if "-- ARCHIWUM --" in path_u or "/ARCHIWUM/" in path_u:
+            out.append("editable")
+        elif _tiff_has_layers(asset.get("path") or ""):
+            out.append("editable")
     return out
 
 

@@ -101,11 +101,11 @@
 
     var currentInfo = SUPPORTED_LANGS.find(function (l) { return l.code === currentLang; }) || SUPPORTED_LANGS[0];
 
-    li.innerHTML = '<a href="#" class="geex-content__header__quickaction__link dam-lang-trigger" title="Jezyk" aria-label="Jezyk">' +
+    li.innerHTML = '<a href="#" class="geex-content__header__quickaction__link dam-lang-trigger" title="Język" aria-label="Język">' +
       '<span class="dam-lang-code">' + currentInfo.label + '</span>' +
       '</a>' +
       '<div class="geex-content__header__popup dam-lang-popup" style="min-width:180px;right:0;left:auto">' +
-      '<h3 class="geex-content__header__popup__title" style="font-size:13px;padding:12px 16px 8px" data-i18n="header.lang_title">Jezyk</h3>' +
+      '<h3 class="geex-content__header__popup__title" style="font-size:13px;padding:12px 16px 8px" data-i18n="header.lang_title">Język</h3>' +
       '<div class="geex-content__header__popup__content">' +
       '<ul class="geex-content__header__popup__items">' +
       SUPPORTED_LANGS.map(function (l) {

@@ -5,14 +5,14 @@
   "use strict";
 
   var STATUS_LABELS = {
-    paid: "Oplacona",
+    paid: "Opłacona",
     pending: "Oczekuje",
     overdue: "Po terminie",
   };
   var STATUS_CLASSES = {
-    paid: "geex-badge--success-transparent",
-    pending: "geex-badge--warning-transparent",
-    overdue: "geex-badge--danger-transparent",
+    paid: "dam-int-chip dam-int-st dam-int-st--ok",
+    pending: "dam-int-chip dam-int-st dam-int-st--wait",
+    overdue: "dam-int-chip dam-int-st dam-int-st--danger",
   };
 
   var allInvoices = [];
@@ -80,10 +80,8 @@
         ? "Źródło: bridge · " + allInvoices.length + " faktur"
         : "Snapshot lokalny · " + allInvoices.length + " faktur";
     el.className =
-      "geex-badge " +
-      (source === "bridge"
-        ? "geex-badge--success-transparent"
-        : "geex-badge--warning-transparent");
+      "dam-int-chip dam-int-st " +
+      (source === "bridge" ? "dam-int-st--ok" : "dam-int-st--wait");
   }
 
   function renderTable(invoices) {
@@ -131,7 +129,7 @@
           '">' +
           formatDate(inv.due_date) +
           "</td>" +
-          '<td><span class="geex-badge ' +
+          '<td><span class="' +
           statusClass +
           '">' +
           escapeHtml(statusLabel) +
@@ -332,9 +330,10 @@
       if (!btn) return;
       currentFilter = btn.getAttribute("data-filter") || "all";
       document.querySelectorAll(".inv-filter-btn").forEach(function (b) {
-        b.classList.toggle("active", b === btn);
-        b.style.background = b === btn ? "#AB54DB" : "";
-        b.style.color = b === btn ? "#fff" : "";
+        var on = b === btn;
+        b.classList.toggle("active", on);
+        b.classList.toggle("is-active", on);
+        b.removeAttribute("style");
       });
       renderTable(allInvoices);
     });

@@ -15,9 +15,9 @@
       "stage": "procurement",
       "label_pl": "Folia PE/PP",
       "unit": "per_1000",
-      "amount": null,
+      "amount": 12.34,
       "currency": "PLN",
-      "source": "placeholder",
+      "source": "manual",
       "vendor": "",
       "asana_keywords": [],
       "notes": "Folia laminowana"
@@ -497,7 +497,7 @@
       "unit": "per_1000",
       "amount": 420,
       "currency": "PLN",
-      "source": "estimate",
+      "source": "manual",
       "vendor": "",
       "asana_keywords": [],
       "notes": "Srednia folia/kartonik short-run PL"
@@ -509,7 +509,7 @@
       "unit": "per_sku",
       "amount": 180,
       "currency": "PLN",
-      "source": "estimate",
+      "source": "manual",
       "vendor": "",
       "asana_keywords": [],
       "notes": "Przezbrojenie + kontrola jakosci"
@@ -521,7 +521,7 @@
       "unit": "per_sku",
       "amount": 95,
       "currency": "PLN",
-      "source": "estimate",
+      "source": "manual",
       "vendor": "",
       "asana_keywords": [],
       "notes": "Pakowanie i etykietowanie wewnetrzne"
@@ -533,7 +533,7 @@
       "unit": "per_order",
       "amount": 320,
       "currency": "PLN",
-      "source": "estimate",
+      "source": "manual",
       "vendor": "",
       "asana_keywords": [],
       "notes": "Proof cyfrowy lub kontrakcja"
@@ -545,10 +545,11 @@
       "unit": "per_order",
       "amount": 1100,
       "currency": "PLN",
-      "source": "estimate",
+      "source": "manual",
       "vendor": "",
       "asana_keywords": [],
       "notes": "Sredni koszt setup + krotki naklad"
     }
-  ]
+  ],
+  "updated_at": "2026-07-20T17:02:27.031080+00:00"
 }

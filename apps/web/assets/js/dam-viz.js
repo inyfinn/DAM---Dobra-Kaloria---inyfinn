@@ -369,7 +369,7 @@
     var sorted = Object.keys(codes).sort(function (a, b) {
       return codes[a].localeCompare(codes[b], "pl");
     });
-    var html = '<option value="">Wszystkie jezyki</option>';
+    var html = '<option value="">Wszystkie języki</option>';
     sorted.forEach(function (code) {
       html += '<option value="' + esc(code) + '">' + esc(codes[code]) + "</option>";
     });
@@ -444,8 +444,28 @@
   var variantInfoPopoverEl = null;
   var variantInfoPinned = false;
   var docClickAwayBound = false;
+  var variantInfoHideTimer = null;
+  var VARIANT_INFO_HIDE_MS = 1200;
+
+  function cancelVariantInfoHide() {
+    if (variantInfoHideTimer) {
+      clearTimeout(variantInfoHideTimer);
+      variantInfoHideTimer = null;
+    }
+  }
+
+  /* Pkt 10 brief 2026-07-20: popover znika 1.2 s po zjechaniu kursora
+     (z triggera LUB z popovera); najechanie na popover anuluje timer. */
+  function scheduleVariantInfoHide() {
+    cancelVariantInfoHide();
+    variantInfoHideTimer = setTimeout(function () {
+      variantInfoHideTimer = null;
+      if (!variantInfoPinned) closeVariantInfoPopover();
+    }, VARIANT_INFO_HIDE_MS);
+  }
 
   function closeVariantInfoPopover() {
+    cancelVariantInfoHide();
     if (variantInfoPopoverEl) {
       variantInfoPopoverEl.remove();
       variantInfoPopoverEl = null;
@@ -522,8 +542,9 @@
         );
       });
     }
+    pop.addEventListener("mouseenter", cancelVariantInfoHide);
     pop.addEventListener("mouseleave", function () {
-      if (!variantInfoPinned) closeVariantInfoPopover();
+      if (!variantInfoPinned) scheduleVariantInfoHide();
     });
     if (!docClickAwayBound) {
       docClickAwayBound = true;
@@ -753,26 +774,90 @@
     openFolderPicker(folderDirFromPath(v.path || ""), onPicked);
   }
 
+  var THUMB_PICKER_VIEW_KEY = "dam_thumb_picker_view";
+
+  function thumbPickerIndexOf(nameOrPath) {
+    if (window.DamMarketingId && typeof window.DamMarketingId.parseIndexFromPath === "function") {
+      return window.DamMarketingId.parseIndexFromPath(nameOrPath);
+    }
+    var m = /(\d{6,7})(?:\.\d{2})?/.exec(String(nameOrPath || ""));
+    return m ? m[1] : "";
+  }
+
+  function thumbPickerDateOf(f) {
+    var raw = (f && (f.mtime || f.modified || f.date)) || "";
+    if (!raw) return "";
+    var d = new Date(raw);
+    if (isNaN(d.getTime())) return String(raw).slice(0, 10);
+    return (
+      String(d.getDate()).padStart(2, "0") +
+      "." +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      "." +
+      d.getFullYear()
+    );
+  }
+
+  function thumbPickerTagsHtml(f) {
+    var tags = "";
+    var idx = thumbPickerIndexOf(f.path || f.name);
+    if (idx) {
+      tags += '<span class="dam-viz-badge dam-viz-badge--index" title="Indeks produktu">' + esc(idx) + "</span>";
+    }
+    var ext = /\.([a-z0-9]{1,6})$/i.exec(String(f.name || ""));
+    if (ext) {
+      tags += '<span class="dam-viz-badge" title="Format pliku">' + esc(ext[1].toUpperCase()) + "</span>";
+    }
+    var date = thumbPickerDateOf(f);
+    if (date) {
+      tags += '<span class="dam-viz-badge" title="Data modyfikacji">' + esc(date) + "</span>";
+    }
+    return tags ? '<span class="dam-thumb-picker__item-tags">' + tags + "</span>" : "";
+  }
+
+  /* Pkt 8 brief 2026-07-20: #damThumbPicker jako mini-eksplorator - breadcrumb,
+     wstecz/dalej/w gore/odswiez, widoki miniatury/lista/kafelki, tagi produktu. */
   function openThumbGridPicker(dir, onPicked) {
     var existing = document.getElementById("damThumbPicker");
     if (existing) existing.remove();
+    var view = localStorage.getItem(THUMB_PICKER_VIEW_KEY) || "thumbs";
+    if (["thumbs", "list", "tiles"].indexOf(view) < 0) view = "thumbs";
+    var history = [];
+    var histPos = -1;
+    var currentPath = "";
+    var currentParent = "";
+
     var overlay = document.createElement("div");
     overlay.id = "damThumbPicker";
     overlay.className = "dam-thumb-picker-overlay";
+    overlay.style.zIndex = "12300"; /* nad nakladkami edycji ~12100 */
     overlay.innerHTML =
-      '<div class="dam-thumb-picker-box">' +
+      '<div class="dam-thumb-picker-box" role="dialog" aria-modal="true" aria-label="Wybierz plik">' +
       '<div class="dam-thumb-picker__head"><strong>Wybierz plik</strong>' +
-      '<button type="button" class="dam-admin-control" id="damThumbPickerClose" aria-label="Zamknij">×</button></div>' +
-      '<div class="dam-thumb-picker__nav">' +
-      '<button type="button" class="dam-admin-control" id="damThumbPickerUp" data-dam-tip="Folder wyzej">' +
-      '<i class="uil uil-arrow-up" aria-hidden="true"></i></button>' +
-      '<input type="text" id="damThumbPickerPathInput" class="dam-thumb-picker__path-input" placeholder="Wklej lub wpisz sciezke folderu (np. jezyka DE)" />' +
-      '<button type="button" class="dam-admin-control" id="damThumbPickerGo">Idz</button>' +
+      '<button type="button" class="dam-viz-modal-close" id="damThumbPickerClose" aria-label="Zamknij"><i class="uil uil-times"></i></button></div>' +
+      '<div class="dam-thumb-picker__toolbar">' +
+      '<button type="button" class="dam-thumb-picker__nav-btn" id="damThumbPickerBack" data-dam-tip="Wstecz" aria-label="Wstecz" disabled><i class="uil uil-angle-left"></i></button>' +
+      '<button type="button" class="dam-thumb-picker__nav-btn" id="damThumbPickerFwd" data-dam-tip="Dalej" aria-label="Dalej" disabled><i class="uil uil-angle-right"></i></button>' +
+      '<button type="button" class="dam-thumb-picker__nav-btn" id="damThumbPickerUp" data-dam-tip="Folder wyżej" aria-label="Folder wyżej" disabled><i class="uil uil-arrow-up"></i></button>' +
+      '<button type="button" class="dam-thumb-picker__nav-btn" id="damThumbPickerRefresh" data-dam-tip="Odśwież" aria-label="Odśwież"><i class="uil uil-refresh"></i></button>' +
+      '<div class="dam-thumb-picker__crumbs" id="damThumbPickerCrumbs" aria-label="Ścieżka"></div>' +
+      '<div class="dam-thumb-picker__views" role="group" aria-label="Widok">' +
+      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="thumbs" data-dam-tip="Miniatury" aria-label="Miniatury"><i class="uil uil-apps"></i></button>' +
+      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="list" data-dam-tip="Lista" aria-label="Lista"><i class="uil uil-list-ul"></i></button>' +
+      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="tiles" data-dam-tip="Kafelki" aria-label="Kafelki"><i class="uil uil-table"></i></button>' +
       "</div>" +
-      '<div class="dam-thumb-picker__grid" id="damThumbPickerGrid">Ladowanie…</div></div>';
+      "</div>" +
+      '<div class="dam-thumb-picker__grid" id="damThumbPickerGrid" data-view="' +
+      esc(view) +
+      '"><p class="dam-thumb-picker__status">Ładowanie…</p></div></div>';
     document.body.appendChild(overlay);
-    var pathInput = document.getElementById("damThumbPickerPathInput");
+
+    var backBtn = document.getElementById("damThumbPickerBack");
+    var fwdBtn = document.getElementById("damThumbPickerFwd");
     var upBtn = document.getElementById("damThumbPickerUp");
+    var refreshBtn = document.getElementById("damThumbPickerRefresh");
+    var crumbsEl = document.getElementById("damThumbPickerCrumbs");
+
     document.getElementById("damThumbPickerClose").onclick = function () {
       overlay.remove();
     };
@@ -780,10 +865,82 @@
       if (e.target === overlay) overlay.remove();
     });
 
+    function syncNavButtons() {
+      if (backBtn) backBtn.disabled = histPos <= 0;
+      if (fwdBtn) fwdBtn.disabled = histPos >= history.length - 1;
+      if (upBtn) upBtn.disabled = !currentParent;
+    }
+
+    function paintCrumbs(path) {
+      if (!crumbsEl) return;
+      var norm = String(path || "").replace(/\\/g, "/");
+      var parts = norm.split("/").filter(Boolean);
+      var html = "";
+      var acc = "";
+      parts.forEach(function (seg, i) {
+        acc += (i === 0 ? "" : "/") + seg;
+        var isLast = i === parts.length - 1;
+        if (i > 0) html += '<span class="dam-thumb-picker__crumb-sep" aria-hidden="true">/</span>';
+        html +=
+          '<button type="button" class="dam-thumb-picker__crumb' +
+          (isLast ? " is-current" : "") +
+          '" data-crumb-path="' +
+          esc(acc + (i === 0 && /^[a-z]:$/i.test(seg) ? "/" : "")) +
+          '"' +
+          (isLast ? " disabled" : "") +
+          ' title="' +
+          esc(acc) +
+          '">' +
+          esc(seg) +
+          "</button>";
+      });
+      crumbsEl.innerHTML = html || '<span class="dam-thumb-picker__crumb is-current">-</span>';
+      crumbsEl.querySelectorAll("[data-crumb-path]:not([disabled])").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          navigateTo(btn.getAttribute("data-crumb-path"));
+        });
+      });
+      crumbsEl.scrollLeft = crumbsEl.scrollWidth;
+    }
+
+    function folderItemHtml(f) {
+      return (
+        '<button type="button" class="dam-thumb-picker__item dam-thumb-picker__item--folder dam-admin-control" data-open-folder="' +
+        esc(f.path) +
+        '" title="' +
+        esc(f.path) +
+        '"><i class="uil uil-folder" aria-hidden="true"></i>' +
+        '<span class="dam-thumb-picker__meta"><span class="dam-thumb-picker__name">' +
+        esc(f.name) +
+        "</span></span>" +
+        "</button>"
+      );
+    }
+
+    function fileItemHtml(f) {
+      var prev = mediaPreviewUrl(f.path);
+      return (
+        '<button type="button" class="dam-thumb-picker__item dam-admin-control" data-path="' +
+        esc(f.path) +
+        '" data-file="' +
+        esc(f.name) +
+        '" title="' +
+        esc(f.path) +
+        '">' +
+        (prev
+          ? '<img src="' + esc(prev) + '" alt="" loading="lazy">'
+          : '<i class="uil uil-image" aria-hidden="true"></i>') +
+        '<span class="dam-thumb-picker__meta"><span class="dam-thumb-picker__name">' +
+        esc(f.name) +
+        "</span></span>" +
+        thumbPickerTagsHtml(f) +
+        "</button>"
+      );
+    }
+
     function loadDir(target) {
       var grid = document.getElementById("damThumbPickerGrid");
-      if (grid) grid.innerHTML = "Ladowanie…";
-      if (pathInput) pathInput.value = target || "";
+      if (grid) grid.innerHTML = '<p class="dam-thumb-picker__status">Ładowanie…</p>';
       fetch(bridgeBase() + "/folder-images?path=" + encodeURIComponent(target))
         .then(function (r) {
           return r.json();
@@ -792,57 +949,27 @@
           grid = document.getElementById("damThumbPickerGrid");
           if (!grid) return;
           if (!data || !data.ok) {
-            grid.innerHTML = "<p>Nie udalo sie otworzyc: " + esc((data && data.error) || "?") + "</p>";
+            grid.innerHTML =
+              '<p class="dam-thumb-picker__status">Nie udało się otworzyć: ' +
+              esc((data && data.error) || "?") +
+              "</p>";
             return;
           }
-          if (pathInput) pathInput.value = data.path || target || "";
-          if (upBtn) upBtn.disabled = !data.parent;
-          upBtn.onclick = data.parent
-            ? function () {
-                loadDir(data.parent);
-              }
-            : null;
+          currentPath = data.path || target || "";
+          currentParent = data.parent || "";
+          paintCrumbs(currentPath);
+          syncNavButtons();
           var folders = data.folders || [];
           var files = data.files || [];
           if (!folders.length && !files.length) {
-            grid.innerHTML = "<p>Folder jest pusty (brak podfolderow i obrazow).</p>";
+            grid.innerHTML =
+              '<p class="dam-thumb-picker__status">Folder jest pusty (brak podfolderów i obrazów).</p>';
             return;
           }
-          var html = "";
-          html += folders
-            .map(function (f) {
-              return (
-                '<button type="button" class="dam-thumb-picker__item dam-thumb-picker__item--folder dam-admin-control" data-open-folder="' +
-                esc(f.path) +
-                '"><i class="uil uil-folder" aria-hidden="true"></i>' +
-                '<span class="dam-thumb-picker__name">' +
-                esc(f.name) +
-                "</span></button>"
-              );
-            })
-            .join("");
-          html += files
-            .map(function (f) {
-              var prev = mediaPreviewUrl(f.path);
-              return (
-                '<button type="button" class="dam-thumb-picker__item dam-admin-control" data-path="' +
-                esc(f.path) +
-                '" data-file="' +
-                esc(f.name) +
-                '">' +
-                (prev
-                  ? '<img src="' + esc(prev) + '" alt="">'
-                  : '<span>' + esc(f.name) + "</span>") +
-                '<span class="dam-thumb-picker__name">' +
-                esc(f.name) +
-                "</span></button>"
-              );
-            })
-            .join("");
-          grid.innerHTML = html;
+          grid.innerHTML = folders.map(folderItemHtml).join("") + files.map(fileItemHtml).join("");
           grid.querySelectorAll("[data-open-folder]").forEach(function (btn) {
             btn.addEventListener("click", function () {
-              loadDir(btn.getAttribute("data-open-folder"));
+              navigateTo(btn.getAttribute("data-open-folder"));
             });
           });
           grid.querySelectorAll("[data-path]").forEach(function (btn) {
@@ -858,19 +985,65 @@
         })
         .catch(function () {
           grid = document.getElementById("damThumbPickerGrid");
-          if (grid) grid.innerHTML = "<p>Nie udalo sie wczytac listy (most lokalny?).</p>";
+          if (grid) {
+            grid.innerHTML =
+              '<p class="dam-thumb-picker__status">Nie udało się wczytać listy (most lokalny offline?).</p>';
+          }
         });
     }
 
-    document.getElementById("damThumbPickerGo").addEventListener("click", function () {
-      if (pathInput && pathInput.value.trim()) loadDir(pathInput.value.trim());
-    });
-    if (pathInput) {
-      pathInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && pathInput.value.trim()) loadDir(pathInput.value.trim());
+    function navigateTo(target) {
+      if (!target) return;
+      history = history.slice(0, histPos + 1);
+      history.push(target);
+      histPos = history.length - 1;
+      syncNavButtons();
+      loadDir(target);
+    }
+
+    if (backBtn) {
+      backBtn.addEventListener("click", function () {
+        if (histPos <= 0) return;
+        histPos -= 1;
+        syncNavButtons();
+        loadDir(history[histPos]);
       });
     }
-    loadDir(dir);
+    if (fwdBtn) {
+      fwdBtn.addEventListener("click", function () {
+        if (histPos >= history.length - 1) return;
+        histPos += 1;
+        syncNavButtons();
+        loadDir(history[histPos]);
+      });
+    }
+    if (upBtn) {
+      upBtn.addEventListener("click", function () {
+        if (currentParent) navigateTo(currentParent);
+      });
+    }
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", function () {
+        if (currentPath) loadDir(currentPath);
+      });
+    }
+    overlay.querySelectorAll("[data-picker-view]").forEach(function (btn) {
+      var v = btn.getAttribute("data-picker-view");
+      btn.classList.toggle("is-active", v === view);
+      btn.addEventListener("click", function () {
+        view = v;
+        localStorage.setItem(THUMB_PICKER_VIEW_KEY, view);
+        overlay.querySelectorAll("[data-picker-view]").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn);
+        });
+        var grid = document.getElementById("damThumbPickerGrid");
+        if (grid) grid.setAttribute("data-view", view);
+      });
+    });
+    if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
+      window.DamTooltips.bind(overlay);
+    }
+    navigateTo(dir);
   }
 
   function applyOverrideToItem(v) {
@@ -930,10 +1103,8 @@
               esc(thumb) +
               '" alt="' +
               esc(label) +
-              '" onerror="this.src=\'' +
-              PLACEHOLDER_SVG.replace(/'/g, "%27") +
-              '\'">'
-            : '<div class="dam-viz-modal__variant-placeholder"><i class="uil uil-image"></i></div>') +
+              '" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
+            : '<div class="dam-viz-modal__variant-placeholder dam-media-preview__variant-placeholder--noviz" title="Brak wizualizacji"><i class="uil uil-image-slash" aria-hidden="true"></i><span>Brak wizualizacji</span></div>') +
           '<span class="dam-viz-modal__variant-label">' +
           esc(label) +
           "</span></button>"
@@ -994,13 +1165,13 @@
     if (missingLangs.length) {
       missingLangHtml =
         '<div class="dam-viz-modal__missing-langs">' +
-        '<span class="dam-viz-modal__missing-langs-label">Brak wizualizacji:</span>' +
+        '<span class="dam-viz-modal__missing-langs-label dam-viz-modal__missing-langs-label--muted">Brak wizualizacji:</span>' +
         missingLangs
           .map(function (lg) {
             var short = (window.DamLabels && typeof window.DamLabels.langShort === "function" && DamLabels.langShort(lg)) || String(lg).toUpperCase();
             var full = labelForLang(lg);
             return (
-              '<span class="dam-viz-badge dam-viz-badge--lang-missing" title="' +
+              '<span class="dam-viz-badge dam-viz-badge--lang-missing dam-viz-badge--lang-muted" title="' +
               esc(full) +
               '">' +
               esc(short) +
@@ -1019,6 +1190,17 @@
         "</div>";
     }
 
+    /* Pkt 7 brief 2026-07-20: "Dodaj miniature" TYLKO gdy produkt ma brakujaca
+       wizualizacje (missing langs / wariant bez podgladu) albo istnieje juz
+       reczne sparowanie (zeby dalo sie je cofnac). */
+    var manualPairedN = countManualForProduct(first.product_id || "");
+    var lacksViz =
+      missingLangs.length > 0 ||
+      items.some(function (v) {
+        return !v.thumb_url && !v.path;
+      });
+    var showAddManual = manualPairedN > 0 || lacksViz;
+
     var adminActions = "";
     if (admin) {
       /* Miniatura (ustaw podglad jako miniature) wywalona - nie miala sensu
@@ -1031,58 +1213,37 @@
         '<i class="uil uil-star" aria-hidden="true"></i><span>Demo</span></button>' +
         '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalHide" data-dam-tip="Ukryj kafelek dla zwyklego uzytkownika">' +
         '<i class="uil uil-eye-slash" aria-hidden="true"></i><span>Ukryj</span></button>' +
-        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalAddManual" data-dam-tip="Brak wizualizacji? Wskaz folder z wizualizacjami innego jezyka/wariantu i sparuj z tym produktem">' +
-        '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj miniature</span></button>' +
+        (showAddManual
+          ? '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalAddManual" data-dam-tip="Brak wizualizacji? Wskaz folder z wizualizacjami innego jezyka/wariantu i sparuj z tym produktem">' +
+            '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj miniature</span></button>'
+          : "") +
         "</div>";
     }
 
-    var html =
-      '<div class="dam-viz-modal-overlay" id="damVizModal" role="dialog" aria-modal="true" aria-label="Podglad wizualizacji">' +
-      '<div class="dam-viz-modal-box">' +
-      '<button type="button" class="dam-viz-modal-close" id="damVizModalClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
-      '<div class="dam-viz-modal__thumb">' +
-      '<div class="dam-viz-modal__zoom" role="group" aria-label="Przyblizenie">' +
-      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomOut" aria-label="Pomniejsz" title="Pomniejsz" data-dam-tip="Pomniejsz (CTRL/ALT+scroll)"><i class="uil uil-search-minus"></i></button>' +
-      '<span class="dam-viz-modal__zoom-label" id="damVizZoomLabel">100%</span>' +
-      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomIn" aria-label="Powieksz" title="Powieksz" data-dam-tip="Powieksz (CTRL/ALT+scroll)"><i class="uil uil-search-plus"></i></button>' +
-      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomReset" aria-label="Reset" title="100%" data-dam-tip="Reset zoom i pozycji"><i class="uil uil-search"></i></button>' +
+    /* Pkt 4/7: ID marketingowe wizualizacji w formacie V-<INDEKS>-<PERSP>-<SKALA>-<MM-RR> */
+    function vizModalMarketingId(v) {
+      if (!window.DamMarketingId || typeof window.DamMarketingId.formatViz !== "function") return "";
+      return window.DamMarketingId.formatViz({
+        index:
+          displayIndex(v) ||
+          v.index_base ||
+          (window.DamMarketingId.parseIndexFromPath ? window.DamMarketingId.parseIndexFromPath(v.path) : ""),
+        persp: v.perspective || v.persp || "",
+        size: v.size || "",
+        date: v.mtime || "",
+      });
+    }
+    var vizMarketingId = vizModalMarketingId(first);
+
+    var assocColHtml =
+      '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--materials dam-viz-modal__assoc">' +
+      '<div class="dam-media-preview__assoc-label-row">' +
+      '<span class="dam-media-preview__assoc-label" id="damVizModalAssocLabel">Skojarzone materiały</span>' +
       "</div>" +
-      (first.thumb_url
-        ? '<img id="damVizModalHero" src="' +
-          esc(first.thumb_url) +
-          '" alt="' +
-          esc(productName) +
-          '" onerror="this.src=\'' +
-          PLACEHOLDER_SVG.replace(/'/g, "%27") +
-          '\'">'
-        : '<div class="dam-viz-modal__nothumb"><i class="uil uil-image"></i></div>') +
-      "</div>" +
-      '<div class="dam-viz-modal__body">' +
-      '<div class="dam-viz-card__badges" id="damVizModalBadges">' +
-      modalBadges +
-      "</div>" +
-      '<h4 class="dam-viz-modal__title">' +
-      esc(productName) +
-      (window.DamLabels && typeof window.DamLabels.productNamePlMarkup === "function"
-        ? window.DamLabels.productNamePlMarkup(productName, first.brand || brand, esc)
-        : "") +
-      "</h4>" +
-      '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable' +
-      '" id="damVizModalMeta" data-dam-tip="' +
-      esc(
-        "Nosnik / indeks biezacego wariantu. Podwojny klik lub Shift+klik: zaproponuj zmiane typu." +
-          (admin ? " Admin: zmiana zostanie zapisana natychmiast." : "")
-      ) +
-      '">' +
-      esc(
-        (carrierHuman(first.carrier || "", first) || "BRAK TYPU") +
-          (displayIndex(first) ? " · Indeks " + displayIndex(first) : "")
-      ) +
-      "</p>" +
-      '<div class="dam-viz-modal__variants" role="listbox" aria-label="Warianty">' +
-      chips +
-      "</div>" +
-      missingLangHtml +
+      '<div class="dam-media-preview__assoc-grid" id="damVizModalAssoc" role="list">' +
+      '<p class="dam-media-preview__assoc-empty">Ładowanie…</p>' +
+      "</div></div>";
+    var actionsHtml =
       '<div class="dam-viz-modal__actions">' +
       '<div class="dam-viz-modal__actions-main">' +
       '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damVizModalGoProduct" data-pid="' +
@@ -1118,11 +1279,135 @@
           adminActions +
           "</div>"
         : "") +
-      "</div></div></div></div>";
+      "</div>";
+    var bodyMetaHtml =
+      '<div class="dam-viz-card__badges" id="damVizModalBadges">' +
+      modalBadges +
+      "</div>" +
+      '<h4 class="dam-viz-modal__title">' +
+      esc(productName) +
+      (window.DamLabels && typeof window.DamLabels.productNamePlMarkup === "function"
+        ? window.DamLabels.productNamePlMarkup(productName, first.brand || brand, esc)
+        : "") +
+      "</h4>" +
+      (vizMarketingId
+        ? '<div class="dam-viz-modal__idrow"><span class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-viz-modal__asset-id" id="damVizModalAssetId" data-marketing-id="' +
+          esc(vizMarketingId) +
+          '" data-tag-value="' +
+          esc(vizMarketingId) +
+          '" role="button" tabindex="0" data-dam-tip="ID marketingowe: ' +
+          esc(vizMarketingId) +
+          ' (klik = kopiuj)" title="ID marketingowe: ' +
+          esc(vizMarketingId) +
+          '">' +
+          esc(vizMarketingId) +
+          "</span></div>"
+        : "") +
+      '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable' +
+      '" id="damVizModalMeta" data-dam-tip="' +
+      esc(
+        "Nosnik / indeks biezacego wariantu. Podwojny klik lub Shift+klik: zaproponuj zmiane typu." +
+          (admin ? " Admin: zmiana zostanie zapisana natychmiast." : "")
+      ) +
+      '">' +
+      esc(
+        (carrierHuman(first.carrier || "", first) || "BRAK TYPU") +
+          (displayIndex(first) ? " · Indeks " + displayIndex(first) : "")
+      ) +
+      "</p>" +
+      '<div class="dam-viz-modal__variants" role="listbox" aria-label="Warianty">' +
+      chips +
+      "</div>" +
+      missingLangHtml +
+      actionsHtml;
+    var thumbHtml =
+      '<div class="dam-viz-modal__thumb">' +
+      '<div class="dam-viz-modal__zoom" role="group" aria-label="Przyblizenie">' +
+      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomOut" aria-label="Pomniejsz" title="Pomniejsz" data-dam-tip="Pomniejsz (CTRL/ALT+scroll)"><i class="uil uil-search-minus"></i></button>' +
+      '<span class="dam-viz-modal__zoom-label" id="damVizZoomLabel">100%</span>' +
+      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomIn" aria-label="Powieksz" title="Powieksz" data-dam-tip="Powieksz (CTRL/ALT+scroll)"><i class="uil uil-search-plus"></i></button>' +
+      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomReset" aria-label="Reset" title="100%" data-dam-tip="Reset zoom i pozycji"><i class="uil uil-search"></i></button>' +
+      "</div>" +
+      (first.thumb_url
+        ? '<img id="damVizModalHero" src="' +
+          esc(first.thumb_url) +
+          '" alt="' +
+          esc(productName) +
+          '" onerror="this.src=\'' +
+          PLACEHOLDER_SVG.replace(/'/g, "%27") +
+          '\'">'
+        : '<div class="dam-viz-modal__nothumb"><i class="uil uil-image"></i></div>') +
+      "</div>";
+    /* PI viz.assoc_no_visualization_loop: 2-col — lewa hero+meta, prawa skojarzenia */
+    var html =
+      '<div class="dam-viz-modal-overlay" id="damVizModal" role="dialog" aria-modal="true" aria-label="Podglad wizualizacji">' +
+      '<div class="dam-viz-modal-box dam-viz-modal-box--assoc-split">' +
+      '<button type="button" class="dam-viz-modal-close" id="damVizModalClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
+      '<div class="dam-viz-modal__main">' +
+      thumbHtml +
+      '<div class="dam-viz-modal__body">' +
+      bodyMetaHtml +
+      "</div></div>" +
+      '<aside class="dam-viz-modal__assoc-pane" aria-label="Skojarzone materiały">' +
+      assocColHtml +
+      "</aside>" +
+      "</div></div>";
 
+    if (!document.getElementById("dam-viz-modal-css")) {
+      var vizCss = document.createElement("link");
+      vizCss.id = "dam-viz-modal-css";
+      vizCss.rel = "stylesheet";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=vizassoc20260720c";
+      document.head.appendChild(vizCss);
+    }
     document.body.insertAdjacentHTML("beforeend", html);
     var modal = document.getElementById("damVizModal");
     var thumbStage = modal.querySelector(".dam-viz-modal__thumb");
+
+    /* Pkt 5/7: chip ID marketingowego kopiuje widoczne V-... (klik i prawy klik) */
+    var idChipEl = document.getElementById("damVizModalAssetId");
+    if (idChipEl) {
+      var copyVizId = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var val = idChipEl.getAttribute("data-marketing-id") || idChipEl.textContent || "";
+        if (!val) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(val).then(
+            function () {
+              showToast("Skopiowano: " + val);
+            },
+            function () {
+              showToast("Nie udalo sie skopiowac");
+            }
+          );
+        }
+      };
+      idChipEl.addEventListener("click", copyVizId);
+      idChipEl.addEventListener("contextmenu", copyVizId);
+      idChipEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") copyVizId(e);
+      });
+    }
+
+    /* Pkt 6/7: zaladuj skojarzone materialy brandingowe (async) */
+    if (window.DamMediaPreview && typeof window.DamMediaPreview.renderLinkedAssetsInto === "function") {
+      window.DamMediaPreview.renderLinkedAssetsInto(
+        document.getElementById("damVizModalAssoc"),
+        document.getElementById("damVizModalAssocLabel"),
+        {
+          id: first.product_id || "",
+          name: productName,
+          index: displayIndex(first) || first.index_base || "",
+        }
+      );
+    } else {
+      var assocMount = document.getElementById("damVizModalAssoc");
+      if (assocMount) {
+        assocMount.innerHTML =
+          '<p class="dam-media-preview__assoc-empty">Brak modułu podglądu materiałów</p>';
+      }
+    }
     var shared = window.DamModalShared;
     var zoomCtrl = null;
     var teardownChrome =
@@ -1184,6 +1469,17 @@
           (idxShow ? " · Indeks " + idxShow : "") +
           langBit;
       }
+      var idChipUpd = document.getElementById("damVizModalAssetId");
+      if (idChipUpd) {
+        var freshId = vizModalMarketingId(v);
+        if (freshId) {
+          idChipUpd.textContent = freshId;
+          idChipUpd.setAttribute("data-marketing-id", freshId);
+          idChipUpd.setAttribute("data-tag-value", freshId);
+          idChipUpd.setAttribute("data-dam-tip", "ID marketingowe: " + freshId + " (klik = kopiuj)");
+          idChipUpd.setAttribute("title", "ID marketingowe: " + freshId);
+        }
+      }
       ["damVizModalWinExplorer", "damVizModalCopyPath", "damVizModalShare"].forEach(function (id) {
         var btn = document.getElementById(id);
         if (btn) btn.setAttribute("data-path", v.path || "");
@@ -1201,6 +1497,7 @@
       var hoverTimer = null;
       el.addEventListener("mouseenter", function () {
         clearTimeout(hoverTimer);
+        cancelVariantInfoHide();
         hoverTimer = setTimeout(function () {
           if (variantInfoPinned) return;
           var idx = parseInt(el.getAttribute("data-vidx"), 10) || 0;
@@ -1209,7 +1506,7 @@
       });
       el.addEventListener("mouseleave", function () {
         clearTimeout(hoverTimer);
-        if (!variantInfoPinned) closeVariantInfoPopover();
+        if (!variantInfoPinned) scheduleVariantInfoHide();
       });
       el.addEventListener("click", function () {
         clearTimeout(hoverTimer);
@@ -1699,6 +1996,79 @@
     );
   }
 
+  function fmtCountSpaced(n) {
+    return String(Math.max(0, n | 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  function plCountWord(n, one, few, many) {
+    n = Math.abs(n | 0);
+    if (n === 1) return one;
+    var d = n % 10;
+    var h = n % 100;
+    if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return few;
+    return many;
+  }
+
+  /**
+   * Sticky count pill (jak Branding): elementy = karty produktów, pliki = warianty z wizką.
+   * shown / total gdy filtr ucina; inaczej sama liczba + odmiana.
+   */
+  function updateVizGridCount(groups, filteredRows) {
+    var el = document.getElementById("vizGridCount");
+    if (!el) return;
+    var cardsShown = (groups || []).length;
+    var filesShown = (filteredRows || []).filter(function (v) {
+      return v && v.has_viz !== false && (v.thumb_url || v.path);
+    }).length;
+    if (!filesShown && !cardsShown) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    var allGroups = groupByProduct(all);
+    var totalCards = allGroups.length;
+    var totalFiles = all.filter(function (v) {
+      return v && v.has_viz !== false && (v.thumb_url || v.path);
+    }).length;
+    var elsPart =
+      cardsShown < totalCards
+        ? fmtCountSpaced(cardsShown) +
+          " / " +
+          fmtCountSpaced(totalCards) +
+          " " +
+          plCountWord(totalCards, "element", "elementy", "elementów")
+        : fmtCountSpaced(cardsShown) +
+          " " +
+          plCountWord(cardsShown, "element", "elementy", "elementów");
+    var filesPart =
+      filesShown < totalFiles
+        ? fmtCountSpaced(filesShown) +
+          " / " +
+          fmtCountSpaced(totalFiles) +
+          " " +
+          plCountWord(totalFiles, "plik", "pliki", "plików")
+        : fmtCountSpaced(filesShown) +
+          " " +
+          plCountWord(filesShown, "plik", "pliki", "plików");
+    el.textContent = elsPart + " • " + filesPart;
+    el.hidden = false;
+  }
+
+  function mountChangeLogInScope() {
+    var bar = document.getElementById("damChangeLogBar");
+    var scope =
+      document.querySelector("#vizSearchScope > .dam-search-scope") ||
+      document.querySelector("#vizSearchScope .dam-search-scope");
+    if (bar && scope && bar.parentElement !== scope) {
+      scope.appendChild(bar);
+    }
+    if (window.DamTagEdit && typeof window.DamTagEdit.refreshChangeLogBar === "function") {
+      window.DamTagEdit.refreshChangeLogBar();
+    } else if (bar) {
+      bar.hidden = !(isAdminRole() && isAdminMode());
+    }
+  }
+
   function render() {
     var grid = document.getElementById("vizGrid");
     var status = document.getElementById("vizStatus");
@@ -1711,6 +2081,7 @@
         groups.length + " produktow (" + filtered.length + " wariantow)" +
         (all.length !== filtered.length ? " / z " + all.length + " wszystkich" : "");
     }
+    updateVizGridCount(groups, filtered);
 
     if (!groups.length) {
       grid.innerHTML = '<p style="color:#888;padding:12px">Brak wynikow dla filtra.</p>';
@@ -1995,6 +2366,10 @@
     var grid = document.getElementById("vizGrid");
     if (!grid) return;
 
+    if (window.DamGridReveal && typeof window.DamGridReveal.skeleton === "function") {
+      window.DamGridReveal.skeleton(grid, { variant: "cards", count: 10, layout: "viz-grid" });
+    }
+
     // Synology enabled?
     synologyEnabled = (localStorage.getItem("dam_synology_enabled") !== "false");
 
@@ -2007,10 +2382,14 @@
     } else if (!window._damVizAdminBound) {
       window._damVizAdminBound = true;
       window.addEventListener("dam:admin-mode", function () {
+        mountChangeLogInScope();
         applyFilters();
       });
       window.addEventListener("storage", function (e) {
-        if (e.key === ADMIN_KEY) applyFilters();
+        if (e.key === ADMIN_KEY) {
+          mountChangeLogInScope();
+          applyFilters();
+        }
       });
     }
 
@@ -2170,6 +2549,9 @@
       showToast(!currently ? "Ukryto kafelek" : "Pokazano kafelek");
       refreshOpenModalAfterFlag();
     };
+
+    /* Pkt 8: dostep dla innych modulow (dam-explorer "Dodaj miniature") + QA */
+    window.damVizOpenThumbPicker = openThumbGridPicker;
 
     window.damVizToggleDemo = function (opts) {
       opts = opts || {};
@@ -2351,8 +2733,17 @@
 
     /* Wizualizacje: UI zawsze Wszystko; Produkty/Warianty wygaszone (bez zmiany localStorage) */
     var vizScopeEl = document.getElementById("vizSearchScope");
+    var changeLogBarEl = document.getElementById("damChangeLogBar");
     if (vizScopeEl && window.DamSearch && typeof window.DamSearch.bindScopeChips === "function") {
-      window.DamSearch.bindScopeChips(vizScopeEl, null, { locked: true });
+      window.DamSearch.bindScopeChips(vizScopeEl, null, {
+        locked: true,
+        trailingEl: changeLogBarEl || null,
+        afterPaint: function () {
+          mountChangeLogInScope();
+        },
+      });
+    } else {
+      mountChangeLogInScope();
     }
 
     if (window.DamTagBar) {

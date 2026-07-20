@@ -1,0 +1,212 @@
+/**
+ * DAM Visualizations — page chrome (secondary filters + status toolbar).
+ * Shared base: .dam-viz-secondary-filters in dam-brand.css.
+ * Branding markup owned by concurrent agent — do not fight branding.html.
+ *
+ * Design Read: Viz tool chrome — admin disk-undo tucked by search scope;
+ * calm muted count pill; status pulled tight under meta filters.
+ */
+
+/* ---- Search scope row: changelog far right (ADMIN ON) ---- */
+.dam-search-wrap--panel {
+  position: relative;
+}
+
+#vizSearchScope.dam-search-scope-mount {
+  width: 100%;
+}
+
+#vizSearchScope .dam-search-scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  width: 100%;
+}
+
+/* Far-right mount for #damChangeLogBar (DamSearch trailingEl) */
+#vizSearchScope .dam-search-scope__trailing,
+#vizSearchScope .dam-changelog-bar.dam-search-scope__trailing {
+  margin-left: auto;
+}
+
+#vizSearchScope .dam-changelog-bar,
+.dam-search-wrap--panel > .dam-changelog-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0 auto;
+  min-height: 32px;
+  flex-shrink: 0;
+  max-width: min(520px, 100%);
+}
+
+#vizSearchScope .dam-changelog-bar[hidden],
+.dam-search-wrap--panel > .dam-changelog-bar[hidden] {
+  display: none !important;
+}
+
+.dam-changelog-bar__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b6778;
+  line-height: 1;
+  white-space: nowrap;
+  padding: 0 2px 0 4px;
+  border-left: 1px solid #e0d6f2;
+  margin-left: 4px;
+  padding-left: 10px;
+}
+
+/* Unify Cofnij/Ponów with .dam-int-cta (integrations CSS may be absent on viz) */
+.dam-changelog-bar .dam-int-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 12px;
+  margin: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  border-radius: 8px;
+  border: 1px solid #e7e7e7;
+  background: #fff;
+  color: #464255;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.dam-changelog-bar .dam-int-cta:hover:not(:disabled) {
+  border-color: var(--dam-primary, #ab54db);
+  background: #fbf7fe;
+  color: var(--dam-primary, #ab54db);
+}
+
+.dam-changelog-bar .dam-int-cta:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.dam-changelog-bar .dam-int-cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dam-changelog-bar__hint {
+  font-size: 11px;
+  color: #8b8d97;
+  line-height: 1.25;
+  max-width: min(220px, 28vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Status bliżej filtrów (mały gap); napisy nad statusem = filtry mb +15px */
+.dam-global-search-block > .dam-viz-secondary-filters {
+  margin-bottom: 15px;
+}
+
+.dam-global-search-block > .dam-viz-secondary-filters + .dam-viz-grid-toolbar {
+  margin-top: 0;
+  margin-bottom: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dam-viz-grid-toolbar .dam-toolbar-status,
+#vizStatus.dam-toolbar-status {
+  font-size: 12px;
+  color: #8b8d97;
+  line-height: 1.35;
+  margin: 0 0 8px;
+  min-width: 0;
+}
+
+.dam-viz-secondary-filters #vizLangFilter {
+  min-width: 9.5rem;
+  max-width: 14rem;
+}
+
+/* Align zoom row with compact switches (34px band). */
+.dam-viz-secondary-filters .dam-viz-zoom-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dam-viz-secondary-filters .dam-viz-zoom-control input[type="range"] {
+  width: 120px;
+  margin: 0;
+}
+
+/* Count pill — Geex/DAM light tokens (nie 1:1 ciemny branding); pad +8/+12 vs branding 7/14 */
+.dam-viz-panel {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.dam-viz-grid-count {
+  position: sticky;
+  bottom: 14px;
+  z-index: 8;
+  align-self: flex-end;
+  width: fit-content;
+  max-width: calc(100% - 20px);
+  margin: -44px 84px 10px auto;
+  /* jak Branding: baza 7/14 +8/+12 → 15/26 */
+  padding: 15px 26px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #008244) 22%, #e7e7e7);
+  background: color-mix(in srgb, #ffffff 92%, var(--dam-primary, #008244) 8%);
+  box-shadow: 0 8px 22px rgb(23 22 30 / 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: #464255;
+  text-align: right;
+  white-space: nowrap;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+html[data-theme="dark"] .dam-viz-grid-count {
+  border-color: color-mix(in srgb, var(--dam-primary, #008244) 35%, #3a3844);
+  background: color-mix(in srgb, #23202e 88%, var(--dam-primary, #008244) 12%);
+  color: #f3f1f7;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.35);
+}
+
+.dam-viz-grid-count[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  .dam-changelog-bar__hint {
+    max-width: 40vw;
+  }
+  #vizSearchScope .dam-search-scope {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #vizSearchScope .dam-changelog-bar {
+    margin-left: 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}

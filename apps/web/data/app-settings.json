@@ -9,10 +9,11 @@
   "version": 2,
   "updated_at": "2026-07-18",
   "instructions": {
-    "count": 43,
-    "version": 5,
+    "count": 49,
+    "version": 6,
     "source_kv": "program-instructions",
     "critical_ids": [
+      "device-scoped-base-paths",
       "data.lang_provenance_only",
       "meta.source_of_truth",
       "naming.carrier_ui_vs_disk",
@@ -30,7 +31,9 @@
       "branding.video_is_video",
       "branding.taxonomy_three_axes",
       "branding.marketing_dual_roots",
-      "branding.linked_product_derived"
+      "wykrojnik.registry_xlsx_kubara",
+      "branding.linked_product_derived",
+      "viz.assoc_no_visualization_loop"
     ],
     "settings_anchor": "settings.html#damProgramInstructions"
   }

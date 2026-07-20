@@ -5,39 +5,99 @@
 (function () {
   "use strict";
 
+  /** "hub" | "bento" (integrations.html 4-col) | "settings-bento" (settings.html 3-col) */
+  var layoutMode = "hub";
+
+  function isTileLayout() {
+    return layoutMode === "bento" || layoutMode === "settings-bento";
+  }
+
+  function resolveLayout(opts, box) {
+    opts = opts || {};
+    if (opts.layout === "bento" || opts.layout === "settings-bento" || opts.layout === "hub") {
+      return opts.layout;
+    }
+    if (box && box.closest && box.closest("#damIntegrations")) {
+      return "settings-bento";
+    }
+    return "hub";
+  }
+
+  /** Fallback gdy link CSS nie zdąży / konflikt H2 — wstrzyknięcie siatki 3-col */
+  function ensureSettingsBentoCss() {
+    if (layoutMode !== "settings-bento") return;
+    if (document.getElementById("dam-int-settings-bento")) return;
+    if (document.querySelector('link[href*="dam-integrations-settings.css"]')) return;
+    var s = document.createElement("style");
+    s.id = "dam-int-settings-bento";
+    s.textContent =
+      "#damIntegrations .dam-int-bento-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}" +
+      "@media(max-width:960px){#damIntegrations .dam-int-bento-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}" +
+      "@media(max-width:560px){#damIntegrations .dam-int-bento-grid{grid-template-columns:1fr}}" +
+      "#damIntegrations .dam-int-chip{display:inline-flex!important;width:auto!important;max-width:max-content!important;" +
+      "font-size:12.5px;padding:4px 11px;border-radius:999px;flex:0 0 auto!important}";
+    document.head.appendChild(s);
+  }
+
+  /**
+   * Fix: bento `.dam-int-config__panel` was position:absolute with left/right:16px
+   * inside `.dam-int-tile__config` (inline-flex + position:relative ≈ summary width ~88px),
+   * which crushed the open panel to ~56px. Expand in-flow to full tile foot width.
+   * Injected (not dam-integrations.css) to avoid merge fights with concurrent CSS agents.
+   */
+  function ensureConfigPanelFixCss() {
+    if (!isTileLayout()) return;
+    if (document.getElementById("damIntConfigPanelFix")) return;
+    var s = document.createElement("style");
+    s.id = "damIntConfigPanelFix";
+    s.textContent =
+      ".dam-integrations-page--bento .dam-int-tile__foot .dam-int-tile__config," +
+      ".dam-integrations-page--bento .dam-int-tile__config{" +
+      "position:static!important;display:block;flex:1 1 100%;width:100%;max-width:100%;min-width:0;" +
+      "}" +
+      ".dam-integrations-page--bento .dam-int-config{" +
+      "display:block;width:100%;max-width:100%;min-width:0;" +
+      "}" +
+      ".dam-integrations-page--bento .dam-int-config__panel{" +
+      "position:static!important;left:auto!important;right:auto!important;z-index:auto;" +
+      "width:100%;min-width:0;max-width:100%;box-sizing:border-box;margin-top:8px;" +
+      "}";
+    document.head.appendChild(s);
+  }
+
   var EXTRA_INTEGRATIONS = [
     {
       id: "slack",
       label: "Slack",
-      desc: "Kanaly zespolu marketingu - powiadomienia o zapotrzebowaniach.",
+      desc: "Kanały zespołu marketingu - powiadomienia o zapotrzebowaniach.",
       icon: "uil-slack",
       iconClass: "dam-int-card__icon--slack",
     },
     {
       id: "gdrive",
       label: "Google Drive",
-      desc: "Udostepnianie folderow eksportu i briefow.",
+      desc: "Udostępnianie folderów eksportu i briefów.",
       icon: "uil-google-drive-alt",
       iconClass: "dam-int-card__icon--gdrive",
     },
     {
       id: "dropbox",
       label: "Dropbox",
-      desc: "Alternatywny sync dla partnerow zewnetrznych.",
+      desc: "Alternatywny sync dla partnerów zewnętrznych.",
       icon: "uil-dropbox",
       iconClass: "dam-int-card__icon--dropbox",
     },
     {
       id: "notion",
       label: "Notion",
-      desc: "Briefy i checklisty projektow w bazie Notion.",
+      desc: "Briefy i checklisty projektów w bazie Notion.",
       icon: "uil-book-alt",
       iconClass: "dam-int-card__icon--notion",
     },
     {
       id: "smtp",
       label: "E-mail SMTP",
-      desc: "Wysylka powiadomien z grup (grafik) przez firmowy SMTP.",
+      desc: "Wysyłka powiadomień z grup (grafik) przez firmowy SMTP.",
       icon: "uil-envelope-send",
       iconClass: "dam-int-card__icon--smtp",
     },
@@ -50,6 +110,9 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
+
+  /** Foot CTA = profil `.dam-welcome-link` (neutral outline), nie lavender geex */
+  var CTA_CLS = "dam-int-cta";
 
   function bridge() {
     if (window.DamPaths && typeof DamPaths.bridgeUrl === "function") {
@@ -75,7 +138,24 @@
     return bridge() + "/oauth/callback";
   }
 
-  function statusBadge(st, label) {
+  function statusBadge(st, label, chipMods) {
+    if (isTileLayout()) {
+      var mod = chipMods ? " " + chipMods : "";
+      var tip =
+        label && String(label).length > 12
+          ? ' title="' + esc(label) + '"'
+          : "";
+      return (
+        '<span class="dam-int-chip dam-int-st dam-int-st--' +
+        esc(st) +
+        mod +
+        '"' +
+        tip +
+        ">" +
+        esc(label) +
+        "</span>"
+      );
+    }
     var cls = "geex-badge geex-badge--warning-transparent";
     if (st === "ok") cls = "geex-badge geex-badge--success-transparent";
     else if (st === "ready") cls = "geex-badge geex-badge--primary-transparent";
@@ -84,17 +164,28 @@
     return '<span class="' + cls + ' dam-int-st dam-int-st--' + esc(st) + '">' + esc(label) + "</span>";
   }
 
+  function chipLabelForStatus(st, fullLabel) {
+    if (st === "ok") {
+      if (fullLabel && /^\d+\s/.test(String(fullLabel))) return String(fullLabel).slice(0, 14);
+      return "Połączono";
+    }
+    if (st === "ready") return "Gotowe";
+    if (st === "err") return "Błąd";
+    return "Brak";
+  }
+
   function oauthStatusLabel(p, err) {
-    if (err) return "Blad";
+    if (err) return "Błąd";
     if (p.connected) {
+      if (isTileLayout()) return "Połączono";
       var extra = p.email ? " · " + p.email : "";
       if (p.connected_at) {
         extra += " · od " + String(p.connected_at).replace("T", " ").slice(0, 16);
       }
-      return "Polaczono" + extra;
+      return "Połączono" + extra;
     }
-    if (p.configured) return "Gotowe do logowania";
-    return "Nie skonfigurowane";
+    if (p.configured) return isTileLayout() ? "Gotowe" : "Gotowe do logowania";
+    return isTileLayout() ? "Brak" : "Nie skonfigurowane";
   }
 
   function oauthStatusKey(p, err) {
@@ -105,6 +196,67 @@
   }
 
   function cardHtml(opts) {
+    var st = opts.status || "wait";
+    var stLabel = opts.statusLabel || "Nie skonfigurowane";
+    var chipMods = "";
+    if (isTileLayout()) {
+      if (opts.planned) {
+        stLabel = "Wdrożenie planowane";
+        chipMods = "dam-int-chip--planned";
+      } else {
+        stLabel = chipLabelForStatus(st, opts.statusLabel || opts.chipLabel);
+      }
+    }
+    var body = opts.bodyHtml ? '<div class="dam-int-card__body">' + opts.bodyHtml + "</div>" : "";
+    var config = opts.configHtml || "";
+    var actions = opts.actionsHtml || "";
+    /* Tile: Konfiguruj + CTA w jednym foot (Geex outline), nie belka pod opisem */
+    var footInner = "";
+    if (isTileLayout()) {
+      if (config) footInner += '<div class="dam-int-tile__config">' + config + "</div>";
+      if (actions) footInner += actions;
+    } else if (actions) {
+      footInner = actions;
+    }
+    var foot = footInner
+      ? '<footer class="dam-int-card__foot' +
+        (isTileLayout() ? " dam-int-tile__foot" : "") +
+        '">' +
+        footInner +
+        "</footer>"
+      : "";
+
+    if (isTileLayout()) {
+      var tileMods = " dam-int-tile";
+      if (opts.feature && layoutMode === "bento") tileMods += " dam-int-tile--feature";
+      if (st === "ok") tileMods += " dam-int-tile--live";
+      if (opts.planned) tileMods += " dam-int-tile--planned";
+      return (
+        '<article class="dam-int-card' +
+        tileMods +
+        '" data-int="' +
+        esc(opts.id) +
+        '">' +
+        '<div class="dam-int-tile__top">' +
+        '<div class="dam-int-card__icon ' +
+        esc(opts.iconClass || "") +
+        '"><i class="uil ' +
+        esc(opts.icon || "uil-link") +
+        '" aria-hidden="true"></i></div>' +
+        statusBadge(st, stLabel, chipMods) +
+        "</div>" +
+        '<p class="dam-int-card__name">' +
+        esc(opts.label) +
+        "</p>" +
+        '<p class="dam-int-card__desc">' +
+        esc(opts.desc || "") +
+        "</p>" +
+        body +
+        foot +
+        "</article>"
+      );
+    }
+
     var head =
       '<header class="dam-int-card__head">' +
       '<div class="dam-int-card__top">' +
@@ -118,14 +270,8 @@
       '</p><p class="dam-int-card__desc">' +
       esc(opts.desc || "") +
       "</p></div></div>" +
-      statusBadge(opts.status || "wait", opts.statusLabel || "Nie skonfigurowane") +
+      statusBadge(st, stLabel) +
       "</header>";
-
-    var body = opts.bodyHtml ? '<div class="dam-int-card__body">' + opts.bodyHtml + "</div>" : "";
-    var config = opts.configHtml || "";
-    var foot = opts.actionsHtml
-      ? '<footer class="dam-int-card__foot">' + opts.actionsHtml + "</footer>"
-      : "";
 
     return (
       '<article class="dam-int-card" data-int="' +
@@ -139,11 +285,37 @@
     );
   }
 
+  /** Race: wiszący fetch nie może trzymać skeletonu w nieskończoność */
+  function withTimeout(promise, ms, fallback) {
+    var settled = false;
+    return new Promise(function (resolve) {
+      var t = window.setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        resolve(fallback);
+      }, ms || 8000);
+      Promise.resolve(promise)
+        .then(function (v) {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(t);
+          resolve(v);
+        })
+        .catch(function () {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(t);
+          resolve(fallback);
+        });
+    });
+  }
+
   function configAccordion(title, innerHtml) {
+    var summaryText = isTileLayout() ? "Konfiguruj" : title || "Konfiguracja";
     return (
       '<details class="dam-int-config">' +
       "<summary>" +
-      esc(title || "Konfiguracja") +
+      esc(summaryText) +
       '</summary><div class="dam-int-config__panel">' +
       innerHtml +
       "</div></details>"
@@ -210,7 +382,7 @@
     return cardHtml({
       id: "entra",
       label: "Microsoft Entra ID",
-      desc: "Logowanie domenowe. Tenant i client id w dam-connection.env lub ponizej.",
+      desc: "Logowanie domenowe. Tenant i client id w dam-connection.env lub poniżej.",
       icon: "uil-microsoft",
       iconClass: "dam-int-card__icon--ms",
       status: saved.tenant_id && saved.client_id ? "ready" : "wait",
@@ -244,7 +416,7 @@
     return cardHtml({
       id: "ldap",
       label: "Synology / LDAP",
-      desc: "Katalog uzytkownikow (DSM Directory Server, LDAPS lub OIDC). Opcjonalne uzupelnienie Entra.",
+      desc: "Katalog użytkowników (DSM Directory Server, LDAPS lub OIDC). Opcjonalne uzupełnienie Entra.",
       icon: "uil-server-network",
       iconClass: "dam-int-card__icon--synology",
       status: configured ? "ready" : "wait",
@@ -273,7 +445,9 @@
           { placeholder: "common lub GUID" }
         );
     var syncBtn = isAsana
-      ? '<button type="button" class="geex-btn geex-btn--primary-transparent" data-asana-sync>Synchronizuj teraz</button>'
+      ? '<button type="button" class="' +
+        CTA_CLS +
+        '" data-asana-sync>Synchronizuj teraz</button>'
       : "";
     return (
       configAccordion(
@@ -291,7 +465,7 @@
           ) +
           tenantField +
           '<div class="dam-int-form__actions">' +
-          '<button type="submit" class="geex-btn geex-btn--primary">Zapisz konfiguracje</button>' +
+          '<button type="submit" class="geex-btn geex-btn--primary">Zapisz konfigurację</button>' +
           syncBtn +
           "</div>" +
           '<p class="dam-int-msg" data-config-msg="' +
@@ -309,20 +483,26 @@
     var desc =
       p.hint ||
       (k === "asana"
-        ? "Taski graficzne, kalkulator kosztow i inbox zgloszen."
-        : "Teams, Outlook i Graph API - powiadomienia o brakach assetow.");
+        ? "Taski graficzne, kalkulator kosztów i inbox zgłoszeń."
+        : "Teams, Outlook i Graph API - powiadomienia o brakach assetów.");
     var actions = "";
     if (p.connected) {
       actions +=
-        '<button type="button" class="geex-btn geex-btn--primary-transparent" data-oauth-disconnect="' +
+        '<button type="button" class="' +
+        CTA_CLS +
+        '" data-oauth-disconnect="' +
         esc(k) +
-        '">Odlacz</button>';
+        '">Odłącz</button>';
     } else {
       actions +=
-        '<button type="button" class="geex-btn geex-btn--primary" data-oauth-connect="' +
+        '<button type="button" class="' +
+        CTA_CLS +
+        '" data-oauth-connect="' +
         esc(k) +
         '"' +
-        (p.configured ? "" : " disabled") +
+        (p.configured
+          ? ""
+          : ' disabled title="Najpierw zapisz Client ID i Secret w Konfiguruj"') +
         ">Zaloguj</button>";
     }
     return cardHtml({
@@ -333,6 +513,7 @@
       iconClass: ic.cls,
       status: st,
       statusLabel: stLabel,
+      feature: layoutMode === "bento" && st === "ok",
       configHtml: oauthConfigForm(k, saved, p),
       actionsHtml: actions,
     });
@@ -353,21 +534,23 @@
           "</textarea></label>" +
           '<div class="dam-int-form__actions">' +
           '<button type="submit" class="geex-btn geex-btn--primary">Zapisz stawki</button>' +
-          '<a class="geex-btn geex-btn--primary-transparent" href="costs.html">Pelny kalkulator</a>' +
+          '<a class="' +
+          CTA_CLS +
+          '" href="costs.html">Pełny kalkulator</a>' +
           "</div>" +
           '<p class="dam-int-msg" data-config-msg="cost-rates"></p>' +
           "</form>"
       );
     return cardHtml({
       id: "cost-rates",
-      label: "Stawki kosztow",
-      desc: "Osoby, mapa godzin i katalog bezposrednich kosztow projektu.",
+      label: "Stawki kosztów",
+      desc: "Osoby, mapa godzin i katalog bezpośrednich kosztów projektu.",
       icon: "uil-money-bill",
       iconClass: "dam-int-card__icon--finance",
       status: peopleCount ? "ok" : "wait",
-      statusLabel: peopleCount ? peopleCount + " osob w bazie" : "Nie skonfigurowane",
+      statusLabel: peopleCount ? peopleCount + " osób w bazie" : "Nie skonfigurowane",
       bodyHtml:
-        '<p class="dam-int-card__meta">Labor, godziny zadan i koszty bezposrednie z cost-rates.</p>',
+        '<p class="dam-int-card__meta">Labor, godziny zadań i koszty bezpośrednie z cost-rates.</p>',
       configHtml: cfg,
     });
   }
@@ -380,18 +563,29 @@
       filled != null && total != null
         ? filled + " z " + total + " pozycji ma kwotę"
         : summary.estimate
-          ? "Srednie branzowe (estimate)"
+          ? "Średnie branżowe (estimate)"
           : "Katalog łańcucha wartości";
     var cfg =
       configAccordion(
         "Katalog i import FMCG",
         '<form class="dam-int-form" data-finance-form="fmcg-import">' +
-          '<p class="dam-int-fmcg-summary">Łańcuch: zamówienie → przygotowanie → produkcja → magazyn → dostawa. Import CSV wypełnia kwoty.</p>' +
-          '<a class="geex-btn geex-btn--primary-transparent" style="width:fit-content" href="data/templates/fmcg-cost-import-template.csv" download>Pobierz szablon CSV</a>' +
-          '<label class="geex-btn geex-btn--primary" style="width:fit-content;cursor:pointer">' +
+          '<p class="dam-int-fmcg-summary">Łańcuch: zamówienie → przygotowanie → produkcja → magazyn → dostawa. Import CSV lub ręczna edycja mapowań i kwot.</p>' +
+          '<div class="dam-int-fmcg-actions">' +
+          '<button type="button" class="' +
+          CTA_CLS +
+          '" id="dam-int-fmcg-edit" data-fmcg-edit>' +
+          "Edytuj" +
+          "</button>" +
+          '<a class="' +
+          CTA_CLS +
+          '" href="data/templates/fmcg-cost-import-template.csv" download>Pobierz szablon CSV</a>' +
+          '<label class="' +
+          CTA_CLS +
+          '" style="cursor:pointer">' +
           "Importuj CSV/XLSX" +
-          '<input type="file" class="dam-int-file-input" id="dam-int-fmcg-file" accept=".csv,text/csv,.xlsx">' +
+          '<input type="file" class="dam-int-file-input" id="dam-int-fmcg-file" accept=".csv,text/csv,.xlsx" hidden>' +
           "</label>" +
+          "</div>" +
           '<p class="dam-int-msg" data-config-msg="fmcg-import"></p>' +
           "</form>"
       );
@@ -418,17 +612,86 @@
 
   function section(title, cardsHtml, sectionId) {
     if (!cardsHtml) return "";
-    if (!title) return '<div class="dam-int-hub-grid">' + cardsHtml + "</div>";
+    var gridCls = "dam-int-hub-grid";
+    if (layoutMode === "bento") gridCls = "dam-int-bento-grid";
+    else if (layoutMode === "settings-bento") gridCls = "dam-int-bento-grid dam-int-bento-grid--3";
+    if (!title) return '<div class="' + gridCls + '">' + cardsHtml + "</div>";
     return (
       '<section class="dam-int-section"' +
       (sectionId ? ' id="' + esc(sectionId) + '"' : "") +
       ">" +
       '<h3 class="dam-int-section__title">' +
       esc(title) +
-      '</h3><div class="dam-int-hub-grid">' +
+      '</h3><div class="' +
+      gridCls +
+      '">' +
       cardsHtml +
       "</div></section>"
     );
+  }
+
+  /**
+   * Skeleton mirroring live bento geometry (not DamGridReveal auto-fill).
+   * Hub 4-col: span-2 hero + 2 singles (row1), 4 singles (row2); Planowane 4+1.
+   */
+  function skelCard(feature) {
+    return (
+      '<div class="dam-skeleton__card dam-int-tile' +
+      (feature ? " dam-int-tile--feature" : "") +
+      '" aria-hidden="true"></div>'
+    );
+  }
+
+  function paintIntegrationsSkeleton(box, opts) {
+    opts = opts || {};
+    if (layoutMode === "bento") {
+      var primary = "";
+      var nPrimary = 0;
+      if (opts.includeSynology !== false) {
+        primary += skelCard(true);
+        nPrimary += 1;
+      }
+      var singles =
+        (opts.includeAuthInfra ? 2 : 0) +
+        2 + /* Asana + Microsoft placeholders */
+        (opts.includeFinance ? 2 : 0);
+      var i;
+      for (i = 0; i < singles; i++) primary += skelCard(false);
+      nPrimary += singles;
+      if (!nPrimary) {
+        for (i = 0; i < 6; i++) primary += skelCard(i === 0);
+      }
+      var html = section("Integracje", primary, "damIntegrationsOAuth");
+      if (opts.includeExtras === true) {
+        var planned = "";
+        for (i = 0; i < EXTRA_INTEGRATIONS.length; i++) planned += skelCard(false);
+        html += section("Planowane", planned);
+      }
+      box.innerHTML =
+        '<div class="dam-skeleton dam-skeleton--int-bento" aria-busy="true" aria-hidden="true">' +
+        html +
+        "</div>";
+      return;
+    }
+    if (layoutMode === "settings-bento") {
+      var cards = "";
+      var n = opts.includeFinance ? 5 : 3;
+      for (i = 0; i < n; i++) {
+        cards +=
+          '<div class="dam-skeleton__card dam-int-tile" aria-hidden="true"></div>';
+      }
+      box.innerHTML =
+        '<div class="dam-skeleton dam-skeleton--int-bento" aria-busy="true" aria-hidden="true">' +
+        '<div class="dam-int-bento-grid dam-int-bento-grid--3">' +
+        cards +
+        "</div></div>";
+      return;
+    }
+    if (window.DamGridReveal && window.DamGridReveal.skeleton) {
+      window.DamGridReveal.skeleton(box, { variant: "cards", count: 6 });
+    } else {
+      box.innerHTML = '<p class="dam-widget__meta">Wczytywanie statusu integracji…</p>';
+    }
   }
 
   function setMsg(key, text, ok) {
@@ -496,12 +759,12 @@
         saveConfig(provider, payload)
           .then(function (res) {
             if (res.httpOk && res.data && res.data.ok !== false) {
-              setMsg(provider, "Zapisano konfiguracje.", true);
+              setMsg(provider, "Zapisano konfigurację.", true);
               reload();
             } else {
               setMsg(
                 provider,
-                (res.data && (res.data.hint || res.data.error)) || "Blad zapisu.",
+                (res.data && (res.data.hint || res.data.error)) || "Błąd zapisu.",
                 false
               );
             }
@@ -529,7 +792,7 @@
               setMsg("asana", "Synchronizacja zakonczona.", true);
               reload();
             } else {
-              setMsg("asana", res.error || res.hint || "Blad synchronizacji.", false);
+              setMsg("asana", res.error || res.hint || "Błąd synchronizacji.", false);
             }
           })
           .catch(function () {
@@ -568,7 +831,7 @@
             } else {
               setMsg(
                 "cost-rates",
-                (res.data && (res.data.error || res.data.hint)) || "Blad zapisu.",
+                (res.data && (res.data.error || res.data.hint)) || "Błąd zapisu.",
                 false
               );
             }
@@ -578,6 +841,27 @@
           });
       });
     });
+
+    var fmcgEditBtn = box.querySelector("[data-fmcg-edit]");
+    if (fmcgEditBtn) {
+      fmcgEditBtn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        if (window.DamFmcgCatalog && typeof DamFmcgCatalog.openEditor === "function") {
+          DamFmcgCatalog.openEditor({
+            onSaved: function () {
+              setMsg("fmcg-import", "Zapisano mapowanie i katalog.", true);
+              if (typeof reload === "function") reload();
+            },
+          });
+        } else {
+          setMsg(
+            "fmcg-import",
+            "Moduł edytora FMCG nie załadowany (dam-fmcg-catalog.js).",
+            false
+          );
+        }
+      });
+    }
 
     var fmcgInput = box.querySelector("#dam-int-fmcg-file");
     if (fmcgInput) {
@@ -607,7 +891,7 @@
             } else {
               setMsg(
                 "fmcg-import",
-                (res.data && (res.data.error || res.data.hint)) || "Blad importu.",
+                (res.data && (res.data.error || res.data.hint)) || "Błąd importu.",
                 false
               );
             }
@@ -621,6 +905,16 @@
   }
 
   function bindActions(box, reload) {
+    box.querySelectorAll(".dam-int-soon").forEach(function (btn) {
+      if (!btn.getAttribute("title")) {
+        btn.setAttribute("title", "Wdrożenie planowane - niedostępne");
+      }
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      });
+    });
+
     box.querySelectorAll("[data-filter-jump]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var f = btn.getAttribute("data-filter-jump");
@@ -646,7 +940,7 @@
             if (res.ok && res.authorize_url) {
               window.open(res.authorize_url, "_blank", "noopener");
             } else {
-              alert(res.hint || res.error || "Nie udalo sie rozpoczac OAuth");
+              alert(res.hint || res.error || "Nie udało się rozpocząć OAuth");
             }
           })
           .catch(function () {
@@ -659,7 +953,7 @@
     box.querySelectorAll("[data-oauth-disconnect]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var provider = btn.getAttribute("data-oauth-disconnect");
-        if (!confirm("Odlaczyc " + provider + "?")) return;
+        if (!confirm("Odłączyć " + provider + "?")) return;
         fetch(bridge() + "/integrations/disconnect", {
           method: "POST",
           headers: authHeaders(),
@@ -759,6 +1053,13 @@
     var box = document.getElementById(containerId);
     if (!box) return;
 
+    layoutMode = resolveLayout(opts, box);
+    ensureSettingsBentoCss();
+    ensureConfigPanelFixCss();
+    box.classList.add("dam-integrations-page");
+    box.classList.toggle("dam-integrations-page--bento", isTileLayout());
+    box.classList.toggle("dam-integrations-page--settings", layoutMode === "settings-bento");
+
     var includeExtras = opts.includeExtras === true;
     var includeAuthInfra = !!opts.includeAuthInfra;
     var includeSynology = opts.includeSynology !== false;
@@ -766,6 +1067,21 @@
 
     function reload() {
       mount(containerId, opts);
+    }
+
+    function showLoadError(msg) {
+      box.innerHTML =
+        '<p class="dam-int-auth-warn" role="alert"><i class="uil uil-exclamation-triangle" aria-hidden="true"></i> ' +
+        esc(msg || "Nie udało się wczytać integracji.") +
+        ' <button type="button" class="' +
+        CTA_CLS +
+        '" data-int-retry>Spróbuj ponownie</button></p>';
+      var retry = box.querySelector("[data-int-retry]");
+      if (retry) {
+        retry.addEventListener("click", function () {
+          reload();
+        });
+      }
     }
 
     function renderAll(statusData, savedCfg, rates, fmcg) {
@@ -776,93 +1092,137 @@
       var authBanner = statusData.authWarning
         ? '<p class="dam-int-auth-warn"><i class="uil uil-exclamation-triangle" aria-hidden="true"></i> ' +
           esc(statusData.authWarning) +
-          ' <a href="signin.html">Zaloguj sie</a></p>'
+          ' <a href="signin.html">Zaloguj się</a></p>'
         : "";
 
       var parts = [];
+      var oauthCardsHtml =
+        keys
+          .map(function (k) {
+            return oauthCard(k, providers[k], savedCfg[k] || {}, providers[k]._error);
+          })
+          .join("") ||
+        cardHtml({
+          id: "oauth-empty",
+          label: "Brak danych OAuth",
+          desc: "Odśwież stronę lub uruchom most lokalny (port 8766).",
+          icon: "uil-sync",
+          status: "wait",
+          statusLabel: "Nie skonfigurowane",
+        });
 
-      if (includeAuthInfra) {
-        parts.push(
-          section(
-            "Logowanie i katalog",
+      var synOn = localStorage.getItem("dam_synology_enabled") !== "false";
+      var synActions =
+        opts.prefsJump === "filter"
+          ? '<button type="button" class="' +
+            CTA_CLS +
+            '" data-filter-jump="prefs">Preferencje</button>'
+          : '<a class="' +
+            CTA_CLS +
+            '" href="settings.html#damPrefs">Preferencje</a>';
+      var synCardHtml = includeSynology
+        ? cardHtml({
+            id: "synology",
+            label: "Synology Drive",
+            desc: "Przycisk Udostępnij w galerii wizualizacji (klient lokalny).",
+            icon: "uil-cloud-share",
+            iconClass: "dam-int-card__icon--synology",
+            status: synOn ? "ok" : "wait",
+            statusLabel: synOn ? "Połączono" : "Nie skonfigurowane",
+            feature: layoutMode === "bento" && synOn,
+            actionsHtml: synActions,
+          })
+        : "";
+
+      if (isTileLayout()) {
+        /* Jedna gęsta siatka aktywnych + osobny grid Planowane */
+        var primaryHtml = "";
+        if (includeSynology) primaryHtml += synCardHtml;
+        if (includeAuthInfra) {
+          primaryHtml +=
             entraCard(savedCfg.entra || savedCfg.entra_id || {}) +
-              ldapCard(savedCfg.ldap || savedCfg.synology_ldap || {})
-          )
-        );
-      }
-
-      var oauthCards = keys.map(function (k) {
-        return oauthCard(k, providers[k], savedCfg[k] || {}, providers[k]._error);
-      });
-
-      parts.push(
-        section(
-          includeAuthInfra ? "OAuth (Asana, Microsoft)" : "",
-          oauthCards.join("") ||
-            cardHtml({
-              id: "oauth-empty",
-              label: "Brak danych OAuth",
-              desc: "Odswiez strone lub uruchom most lokalny (port 8766).",
-              icon: "uil-sync",
-              status: "wait",
-              statusLabel: "Nie skonfigurowane",
-            }),
-          "damIntegrationsOAuth"
-        )
-      );
-
-      if (includeSynology) {
-        var synOn = localStorage.getItem("dam_synology_enabled") !== "false";
-        var synActions =
-          opts.prefsJump === "filter"
-            ? '<button type="button" class="geex-btn geex-btn--primary-transparent" data-filter-jump="prefs">Preferencje</button>'
-            : '<a class="geex-btn geex-btn--primary-transparent" href="settings.html#damPrefs">Preferencje</a>';
+            ldapCard(savedCfg.ldap || savedCfg.synology_ldap || {});
+        }
+        primaryHtml += oauthCardsHtml;
+        if (includeFinance) primaryHtml += costRatesCard(rates) + fmcgCard(fmcg);
         parts.push(
           section(
-            "Synology Drive",
-            cardHtml({
-              id: "synology",
-              label: "Synology Drive",
-              desc: "Przycisk Udostepnij w galerii wizualizacji (klient lokalny).",
-              icon: "uil-cloud-share",
-              iconClass: "dam-int-card__icon--synology",
-              status: synOn ? "ok" : "wait",
-              statusLabel: synOn ? "Polaczono" : "Nie skonfigurowane",
-              actionsHtml: synActions,
-            })
+            layoutMode === "settings-bento" ? "" : "Integracje",
+            primaryHtml,
+            "damIntegrationsOAuth"
           )
         );
-      }
+        if (includeExtras) {
+          parts.push(
+            section(
+              "Planowane",
+              EXTRA_INTEGRATIONS.map(function (x) {
+                return cardHtml({
+                  id: x.id,
+                  label: x.label,
+                  desc: x.desc,
+                  icon: x.icon,
+                  iconClass: x.iconClass,
+                  status: "wait",
+                  statusLabel: "Nie skonfigurowane",
+                  planned: true,
+                  actionsHtml:
+                    '<button type="button" class="dam-int-soon" aria-disabled="true" tabindex="-1" title="Wdrożenie planowane - niedostępne">Wkrótce</button>',
+                });
+              }).join("")
+            )
+          );
+        }
+      } else {
+        if (includeAuthInfra) {
+          parts.push(
+            section(
+              "Logowanie i katalog",
+              entraCard(savedCfg.entra || savedCfg.entra_id || {}) +
+                ldapCard(savedCfg.ldap || savedCfg.synology_ldap || {})
+            )
+          );
+        }
 
-      if (includeFinance) {
         parts.push(
           section(
-            "Finanse",
-            costRatesCard(rates) + fmcgCard(fmcg),
-            "damIntegrationsFinance"
+            includeAuthInfra ? "OAuth (Asana, Microsoft)" : "",
+            oauthCardsHtml,
+            "damIntegrationsOAuth"
           )
         );
-      }
 
-      if (includeExtras) {
-        parts.push(
-          section(
-            "Planowane integracje",
-            EXTRA_INTEGRATIONS.map(function (x) {
-              return cardHtml({
-                id: x.id,
-                label: x.label,
-                desc: x.desc,
-                icon: x.icon,
-                iconClass: x.iconClass,
-                status: "wait",
-                statusLabel: "Nie skonfigurowane",
-                actionsHtml:
-                  '<button type="button" class="geex-btn geex-btn--primary-transparent" disabled>Wkrotce</button>',
-              });
-            }).join("")
-          )
-        );
+        if (includeSynology) {
+          parts.push(section("Synology Drive", synCardHtml));
+        }
+
+        if (includeFinance) {
+          parts.push(
+            section("Finanse", costRatesCard(rates) + fmcgCard(fmcg), "damIntegrationsFinance")
+          );
+        }
+
+        if (includeExtras) {
+          parts.push(
+            section(
+              "Planowane",
+              EXTRA_INTEGRATIONS.map(function (x) {
+                return cardHtml({
+                  id: x.id,
+                  label: x.label,
+                  desc: x.desc,
+                  icon: x.icon,
+                  iconClass: x.iconClass,
+                  status: "wait",
+                  statusLabel: "Nie skonfigurowane",
+                  planned: true,
+                  actionsHtml:
+                    '<button type="button" class="dam-int-soon" aria-disabled="true" tabindex="-1" title="Wdrożenie planowane - niedostępne">Wkrótce</button>',
+                });
+              }).join("")
+            )
+          );
+        }
       }
 
       box.innerHTML = authBanner + parts.join("");
@@ -870,6 +1230,19 @@
       if (window.DamGridReveal && window.DamGridReveal.revealRows) {
         window.DamGridReveal.revealRows(box, ".dam-int-card");
       }
+      /* Safety: GSAP reveal bywa mid-tween / stuck (opacity 0.3–0.9) — kill + force. */
+      window.setTimeout(function () {
+        box.querySelectorAll(".dam-int-card").forEach(function (el) {
+          if (window.gsap && typeof window.gsap.killTweensOf === "function") {
+            try {
+              window.gsap.killTweensOf(el);
+            } catch (eKill) { /* ignore */ }
+          }
+          el.style.opacity = "1";
+          el.style.visibility = "visible";
+          el.style.transform = "none";
+        });
+      }, isTileLayout() ? 500 : 1000);
 
       if (location.hash === "#damIntegrationsOAuth" || location.hash === "#damIntegrations") {
         var anchor = document.getElementById("damIntegrationsOAuth");
@@ -877,35 +1250,91 @@
       }
     }
 
-    if (window.DamGridReveal && window.DamGridReveal.skeleton) {
-      window.DamGridReveal.skeleton(box, { variant: "cards", count: 6 });
-    } else {
+    function safeRender(statusData, savedCfg, rates, fmcg) {
+      try {
+        renderAll(statusData, savedCfg, rates, fmcg);
+      } catch (errRender) {
+        showLoadError(
+          (errRender && errRender.message) ||
+            "Błąd renderowania kart integracji. Spróbuj ponownie."
+        );
+      }
+    }
+
+    try {
+      paintIntegrationsSkeleton(box, {
+        includeExtras: includeExtras,
+        includeAuthInfra: includeAuthInfra,
+        includeSynology: includeSynology,
+        includeFinance: includeFinance,
+      });
+    } catch (eSk) {
       box.innerHTML = '<p class="dam-widget__meta">Wczytywanie statusu integracji…</p>';
     }
 
-    Promise.all([
-      fetch(bridge() + "/integrations/status", { headers: authHeaders() })
-        .then(function (r) {
-          return r.json().then(function (data) {
-            return { httpOk: r.ok, data: data };
-          });
-        })
-        .catch(function () {
-          return { httpOk: false, data: null };
-        }),
-      fetchSavedConfig(),
-      includeFinance
-        ? fetchCostRates().catch(function () {
-            return {};
-          })
-        : Promise.resolve(null),
-      includeFinance
-        ? fetchFmcgSummary().catch(function () {
-            return {};
-          })
-        : Promise.resolve(null),
-    ])
+    var loadGen = (box.getAttribute("data-int-load-gen") || "0") | 0;
+    loadGen += 1;
+    box.setAttribute("data-int-load-gen", String(loadGen));
+
+    /** Hard failsafe: skeleton nigdy nie zostaje na stałe (nawet przy zawieszonym event-loop Promise) */
+    var failSafe = window.setTimeout(function () {
+      if ((box.getAttribute("data-int-load-gen") || "0") !== String(loadGen)) return;
+      if (box.querySelector(".dam-skeleton") || !box.querySelector(".dam-int-card, .dam-int-auth-warn")) {
+        showLoadError(
+          "Timeout ładowania integracji. Most :8766 może nie odpowiadać lub skrypt zawisł."
+        );
+      }
+    }, 14000);
+
+    function clearFailSafe() {
+      window.clearTimeout(failSafe);
+    }
+
+    withTimeout(
+      Promise.all([
+        withTimeout(
+          fetch(bridge() + "/integrations/status", { headers: authHeaders() })
+            .then(function (r) {
+              return r.json().then(function (data) {
+                return { httpOk: r.ok, data: data };
+              });
+            })
+            .catch(function () {
+              return { httpOk: false, data: null };
+            }),
+          8000,
+          { httpOk: false, data: { error: "timeout", hint: "Timeout mostu (status)." } }
+        ),
+        withTimeout(fetchSavedConfig(), 8000, {}),
+        includeFinance
+          ? withTimeout(
+              fetchCostRates().catch(function () {
+                return {};
+              }),
+              8000,
+              {}
+            )
+          : Promise.resolve(null),
+        includeFinance
+          ? withTimeout(
+              fetchFmcgSummary().catch(function () {
+                return {};
+              }),
+              8000,
+              {}
+            )
+          : Promise.resolve(null),
+      ]),
+      12000,
+      null
+    )
       .then(function (all) {
+        if ((box.getAttribute("data-int-load-gen") || "0") !== String(loadGen)) return;
+        clearFailSafe();
+        if (!all) {
+          showLoadError("Timeout ładowania integracji. Most :8766 może nie odpowiadać.");
+          return;
+        }
         var res = all[0] || { httpOk: false, data: null };
         var savedCfg = all[1] || {};
         var rates = all[2];
@@ -916,9 +1345,9 @@
           var hint =
             data.hint ||
             (data.error === "login_required"
-              ? "Zaloguj sie ponownie, aby zarzadzac integracjami OAuth."
-              : "Nie udalo sie odczytac statusu integracji.");
-          renderAll(
+              ? "Zaloguj się ponownie, aby zarządzać integracjami OAuth."
+              : "Nie udało się odczytać statusu integracji.");
+          safeRender(
             {
               providers: {
                 asana: {
@@ -942,10 +1371,12 @@
           );
           return;
         }
-        renderAll(data, savedCfg, rates, fmcg);
+        safeRender(data, savedCfg, rates, fmcg);
       })
       .catch(function () {
-        renderAll(
+        if ((box.getAttribute("data-int-load-gen") || "0") !== String(loadGen)) return;
+        clearFailSafe();
+        safeRender(
           {
             providers: {
               asana: { configured: false, connected: false, label: "Asana" },
@@ -955,7 +1386,7 @@
                 label: "Microsoft (Teams + Outlook)",
               },
             },
-            authWarning: "Bridge offline lub blad ladowania. Odswiez strone.",
+            authWarning: "Bridge offline lub błąd ładowania. Odśwież stronę.",
           },
           {},
           {},

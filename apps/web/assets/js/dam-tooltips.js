@@ -12,6 +12,14 @@
   var tipEl = null;
   var showTimer = null;
 
+  /* Tooltips tagow facetow (filtry wyszukiwania): 1.5 s hoveru, fade-in,
+     opis tagu + instrukcja CTRL+klik z opcja "Nie przypominaj wiecej". */
+  var FACET_DELAY_MS = 1500;
+  var FACET_HINT_KEY = "damTagCtrlHintDismissed";
+  var facetTipEl = null;
+  var facetTimer = null;
+  var facetHideTimer = null;
+
   function isEnabled() {
     return localStorage.getItem(STORAGE_KEY) !== "off";
   }
@@ -79,8 +87,147 @@
     }
   }
 
+  /* ---------- Facet tag tooltips (tylko tagi filtrow wyszukiwania) ---------- */
+
+  function isFacetTag(el) {
+    if (!el || el.nodeType !== 1 || !el.classList) return false;
+    if (!el.classList.contains("dam-badge-tag")) return false;
+    if (!el.hasAttribute("data-tag-key")) return false;
+    return !!(el.closest && el.closest(".dam-branding-tag-filters"));
+  }
+
+  function facetHintDismissed() {
+    return localStorage.getItem(FACET_HINT_KEY) === "1";
+  }
+
+  function facetTagDesc(el) {
+    var label = "";
+    var node = el.firstChild;
+    while (node) {
+      if (node.nodeType === 3) label += node.textContent;
+      node = node.nextSibling;
+    }
+    label = label.trim() || (el.textContent || "").replace(/\(.*\)$/, "").trim();
+    var row = el.closest(".dam-tag-group-row");
+    var groupLabel = "";
+    if (row) {
+      var lbl = row.querySelector(".dam-tag-group-label");
+      if (lbl) groupLabel = (lbl.textContent || "").trim().replace(/:$/, "");
+    }
+    var desc = "Tag „" + label + "”";
+    if (groupLabel) desc += " z grupy „" + groupLabel + "”";
+    desc += ". Zawęża wyniki do materiałów oznaczonych tym tagiem.";
+    return desc;
+  }
+
+  function ensureFacetTip() {
+    if (facetTipEl) return facetTipEl;
+    if (!document.getElementById("damFacetTipCss")) {
+      var st = document.createElement("style");
+      st.id = "damFacetTipCss";
+      st.textContent =
+        "#damFacetTip{position:fixed;z-index:20060;max-width:280px;background:#23202e;color:#fff;" +
+        "border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.5;" +
+        "box-shadow:0 10px 30px rgb(23 22 30 / .3);opacity:0;transition:opacity .25s ease;" +
+        "pointer-events:none;}" +
+        "#damFacetTip.is-on{opacity:1;pointer-events:auto;}" +
+        "#damFacetTip .dam-facet-tip__hint{margin-top:8px;padding-top:8px;" +
+        "border-top:1px solid rgb(255 255 255 / .16);color:rgb(255 255 255 / .85);}" +
+        "#damFacetTip .dam-facet-tip__dismiss{display:inline-block;margin-top:6px;padding:0;" +
+        "border:0;background:none;color:#c8a2e8;font-size:11.5px;font-weight:600;cursor:pointer;" +
+        "text-decoration:underline;}" +
+        "#damFacetTip .dam-facet-tip__dismiss:hover{color:#e0c7f5;}";
+      document.head.appendChild(st);
+    }
+    facetTipEl = document.createElement("div");
+    facetTipEl.id = "damFacetTip";
+    facetTipEl.setAttribute("role", "tooltip");
+    document.body.appendChild(facetTipEl);
+    facetTipEl.addEventListener("mouseenter", function () {
+      clearTimeout(facetHideTimer);
+    });
+    facetTipEl.addEventListener("mouseleave", function () {
+      hideFacetTip();
+    });
+    facetTipEl.addEventListener("click", function (e) {
+      var btn = e.target.closest(".dam-facet-tip__dismiss");
+      if (!btn) return;
+      localStorage.setItem(FACET_HINT_KEY, "1");
+      var hint = facetTipEl.querySelector(".dam-facet-tip__hint");
+      if (hint) hint.remove();
+    });
+    return facetTipEl;
+  }
+
+  function showFacetTip(el) {
+    var tip = ensureFacetTip();
+    var html = '<div class="dam-facet-tip__desc"></div>';
+    tip.innerHTML = html;
+    tip.querySelector(".dam-facet-tip__desc").textContent = facetTagDesc(el);
+    if (!facetHintDismissed()) {
+      var hint = document.createElement("div");
+      hint.className = "dam-facet-tip__hint";
+      hint.innerHTML =
+        "Klik: tylko ten tag. CTRL+klik: dodaj do wyboru.<br>" +
+        '<button type="button" class="dam-facet-tip__dismiss">Nie przypominaj więcej</button>';
+      tip.appendChild(hint);
+    }
+    tip.classList.remove("is-on");
+    tip.style.visibility = "hidden";
+    tip.style.display = "block";
+    var rect = el.getBoundingClientRect();
+    var tipW = Math.min(tip.offsetWidth || 260, window.innerWidth - 24);
+    var tipH = tip.offsetHeight || 60;
+    var left = rect.left + rect.width / 2 - tipW / 2;
+    if (left > window.innerWidth - tipW - 12) left = window.innerWidth - tipW - 12;
+    if (left < 12) left = 12;
+    var top = rect.bottom + 8;
+    if (top + tipH + 12 > window.innerHeight) top = rect.top - tipH - 8;
+    if (top < 8) top = 8;
+    tip.style.left = Math.round(left) + "px";
+    tip.style.top = Math.round(top) + "px";
+    tip.style.visibility = "visible";
+    /* wymus reflow, zeby transition opacity odpalil fade-in */
+    void tip.offsetWidth;
+    tip.classList.add("is-on");
+  }
+
+  function hideFacetTip() {
+    clearTimeout(facetTimer);
+    clearTimeout(facetHideTimer);
+    if (facetTipEl) {
+      facetTipEl.classList.remove("is-on");
+      facetTipEl.style.display = "none";
+    }
+  }
+
+  function bindFacetTag(el) {
+    if (el._damFacetTipBound) return;
+    el._damFacetTipBound = true;
+    el.addEventListener("mouseenter", function () {
+      if (!isEnabled()) return;
+      clearTimeout(facetTimer);
+      clearTimeout(facetHideTimer);
+      facetTimer = setTimeout(function () {
+        showFacetTip(el);
+      }, FACET_DELAY_MS);
+    });
+    el.addEventListener("mouseleave", function () {
+      clearTimeout(facetTimer);
+      /* zwloka, zeby dalo sie najechac na tooltip (przycisk dismiss) */
+      facetHideTimer = setTimeout(hideFacetTip, 250);
+    });
+    el.addEventListener("click", hideFacetTip);
+  }
+
+  /* ---------- Standardowe tooltipy ---------- */
+
   function bindElement(el) {
     if (!el || el._damTipBound) return;
+    if (isFacetTag(el)) {
+      bindFacetTag(el);
+      return;
+    }
     var text = tipText(el);
     if (!text) return;
     el._damTipBound = true;
@@ -118,9 +265,21 @@
   function shouldAutoTip(el) {
     if (!el || el.nodeType !== 1) return false;
     if (el.disabled || el.getAttribute("aria-hidden") === "true") return false;
-    /* Nie tipuj kontenerow (modal/dialog) - tylko interaktywne elementy */
+    /* Nie tipuj kontenerow (modal/dialog/nav/menu) - tylko interaktywne elementy.
+       Inaczej aria-label na <nav> pokazuje stray tip np. "Konto" w menu profilu. */
     var role = el.getAttribute("role") || "";
-    if (role === "dialog" || role === "listbox" || role === "group" || el.getAttribute("aria-modal") === "true") {
+    if (
+      role === "dialog" ||
+      role === "listbox" ||
+      role === "group" ||
+      role === "menu" ||
+      role === "navigation" ||
+      el.getAttribute("aria-modal") === "true"
+    ) {
+      return el.hasAttribute("data-dam-tip");
+    }
+    var tagSkip = el.tagName;
+    if (tagSkip === "NAV" || tagSkip === "ASIDE" || tagSkip === "MAIN" || tagSkip === "SECTION") {
       return el.hasAttribute("data-dam-tip");
     }
     if (el.id === "damVizModal" || (el.classList && el.classList.contains("dam-viz-modal-overlay"))) {

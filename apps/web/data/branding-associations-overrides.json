@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T22:30:26.780643+00:00",
+  "updated_at": "2026-07-20T15:30:59.013877+00:00",
   "assets": {
     "br-005237": {
       "linked_product_ids": [],
@@ -15,6 +15,17 @@
       ],
       "folder_group_id": "x:/marketing/- polska/08 - kamapanie/2026/przekąski/justtag - outdoor/gif/skompresowane",
       "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "br-003347": {
+      "linked_product_ids": [
+        "czarna-porzeczka-owocowe",
+        "malina-owocowe"
+      ],
+      "linked_variant_ids": [
+        "br-003347"
+      ],
+      "folder_group_id": "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/02 - slidery  kategorie główne",
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
     }
   },
   "folder_groups": {
@@ -28,6 +39,16 @@
         "br-005241",
         "br-005242",
         "br-005243"
+      ],
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/02 - slidery  kategorie główne": {
+      "linked_product_ids": [
+        "czarna-porzeczka-owocowe",
+        "malina-owocowe"
+      ],
+      "linked_variant_ids": [
+        "br-003347"
       ],
       "updated_by": "krzysztof.wieczorek@kubara.pl"
     }

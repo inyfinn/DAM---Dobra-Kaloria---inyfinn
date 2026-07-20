@@ -162,8 +162,40 @@
     return "M-" + type.code + core + "-" + when.month + "-" + when.year;
   }
 
+  /**
+   * ID marketingowe wizualizacji: V-<INDEKS>-<PERSPEKTYWA>-<SKALA>-<MM-RR>
+   * np. V-6300684-ENFACE-L-07-26. Segment skali pomijany, gdy brak danych.
+   */
+  function formatVizId(opts) {
+    opts = opts || {};
+    var idx = String(opts.index || "").trim().replace(/\.\d+$/, "");
+    if (!idx) idx = "0000000";
+    var persp = String(opts.persp || opts.perspective || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9_]/g, "");
+    if (!persp) persp = "ENFACE";
+    var size = String(opts.size || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+    var d = opts.date ? new Date(opts.date) : new Date();
+    if (isNaN(d.getTime())) d = new Date();
+    var mm = String(d.getMonth() + 1).padStart(2, "0");
+    var yy = String(d.getFullYear()).slice(-2);
+    return "V-" + idx + "-" + persp + (size ? "-" + size : "") + "-" + mm + "-" + yy;
+  }
+
+  /** Wyciaga indeks produktu (6-7 cyfr, opcjonalnie .NN) ze sciezki/nazwy pliku. */
+  function parseIndexFromPath(path) {
+    var p = String(path || "").replace(/\\/g, "/");
+    var m;
+    var re = /(\d{6,7})(?:\.\d{2})?/g;
+    var last = "";
+    while ((m = re.exec(p))) last = m[1];
+    return last;
+  }
+
   window.DamMarketingId = {
     format: formatMarketingAssetId,
+    formatViz: formatVizId,
+    parseIndexFromPath: parseIndexFromPath,
     resolveType: resolveType,
     parseBrDigits: parseBrDigits,
   };

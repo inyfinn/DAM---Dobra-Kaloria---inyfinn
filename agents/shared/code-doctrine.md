@@ -340,6 +340,36 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
 
+- 2026-07-20 | sidebar morph | jank przy collapse/expand mimo GSAP 0.5s |
+  tween `width+minWidth+maxWidth` + `paddingInlineStart` + `marginRight` ikon
+  + stagger etykiet walczyl z Geex `transition: all 0.3s` i robil layout thrash
+  co klatke | jedna os: proxy liczbowy -> `--dam-sidebar-w` (dam-app.css steers
+  sidebar + main); etykiety tylko `autoAlpha`/`x` bez stagger; podczas morph
+  `transition:none!important` + `will-change` na width/pad; kill TL przy toggle;
+  `prefers-reduced-motion` => duration 0 / natychmiast.
+- 2026-07-20 | wykrojniki XLSX | rejestr pelen `row-N` bez nazw | Kubara
+  `opakowania_Kubara_baza_danych.xlsx` ma wiele sekcji z powtarzanym naglowkiem
+  (kolumna „oznaczenie Kubara”, nie `kod` w wierszu 0) | parser szuka wierszy
+  naglowka po markerze; nie zakladaj pierwszego wiersza arkusza; UI nie pokazuje
+  `python …` jako glownego UX - bridge `POST /wykrojniki/reimport|link-products`.
+- 2026-07-20 | bridge restart | nowe POST routes = `not_found` mimo edycji pliku |
+  listener to `pythonw.exe` (watchdog), nie `python.exe` zabity przez agenta |
+  przy restarcie mostu zabijaj procesy z `CommandLine` zawierajacym `local_bridge`.
+- 2026-07-20 | integrations skeleton | rowne ~5 kart zamiast Bento | `DamGridReveal.skeleton`
+  (`auto-fill minmax(220px)`) nie zna `dam-int-bento-grid` / `dam-int-tile--feature` |
+  hub: wlasny skeleton na realnych klasach siatki (span-2 + sekcje Integracje/Planowane);
+  nie uzywaj generic cards skeleton dla layoutow z `grid-column: span`.
+- 2026-07-20 | usermenu | highlight Profil nizej niz ikona/tekst | Geex
+  `.geex-content__header__popup__link { align-items: flex-start !important }`
+  przebija dam-brand bez !important + min-height | w `#damShellLayerCss` wymus
+  `align-items:center !important` + rowne `padding` (nie sam min-height).
+- 2026-07-20 | tooltips | stray tip "Konto" w menu profilu | `dam-tooltips.js`
+  tipuje kazdy `[aria-label]`, takze `<nav aria-label="Konto">` | nie dawaj
+  aria-label na kontenery (nav/legal); `shouldAutoTip` skip NAV / role=menu.
+- 2026-07-20 | paths / device | litera dysku „globalna” dla konta | remote work
+  (dom X: vs praca D:) | sciezka Marketing = per `device_id` (KV
+  `user-device-paths:{email}` + `/user-device-paths/current`); LS/machine-config
+  tylko cache biezacego PC; PI `device-scoped-base-paths`.
 - 2026-07-20 | reveal | karty niewidoczne mimo animacji | `clip-path` w stanie spoczynku
   zeruje prostokat -> IntersectionObserver ratio 0 -> deadlock | stan spoczynku = tylko
   `opacity:0`; `clip-path` wylacznie w tweenie.
@@ -356,3 +386,265 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   7832 assetach | filtr `media_type === "raster"` (legacy) vs indeks z `image`/`vector`/`source`
   | uzywaj `normalizeMediaType` (raster->image) + `isBrandingWidgetThumb`; wspoldziel
   `window.__damBrandingIndex` z brandingiem.
+- 2026-07-20 | skeleton / branding+viz | pusta siatka podczas ladowania indeksu
+  | skeleton tylko w costs/invoices; boot brandingu czekal na `await loadIndex()` zanim
+  cos w `#damBrandingSectionGrid` | `showInitialBootSkeletons()` synchronicznie na starcie
+  `boot()` / `init()`; `skeleton(..., layout:'viz-grid')` wstawia karty bezposrednio do
+  `.dam-viz-grid`; po renderze innerHTML + `reveal(vizCard)`.
+- 2026-07-20 | dashboard win-btn | Folder Windows nie otwiera po async branding_latest
+  | `bindWinButtons(mount)` przed `outerHTML` w `.then()` | delegacja klik na `#damDashGrid`
+  + re-bind na hoscie po async/toggle.
+- 2026-07-20 | branding ?q | Brak wynikow z kafelka dashboardu | domyslna zakladka
+  `campaigns` bez hitow | `bestTabForSearchQuery(q)` + `?tab=` ze sciezki assetu.
+- 2026-07-20 | modal unify | dwa systemy podgladu (#damLightbox vs DamMediaPreview)
+  | explorer nie ladowal media-preview | adapter `openLightbox` -> `openAsset(mode:
+  viz-studio)`; shell close `#damMediaPreview` pierwszy.
+- 2026-07-20 | bridge /reveal | okno Eksploratora otwiera sie W TLE | most = `pythonw`
+  bez okna pierwszoplanowego, wiec explorer.exe z subprocess nie dostaje fokusu
+  (foreground lock) | fokus wymus ALT-trickiem: `keybd_event(VK_MENU)` +
+  `SetForegroundWindow` + `ShowWindow` + `BringWindowToTop`; rob to w watku daemon,
+  nie blokuj odpowiedzi HTTP.
+- 2026-07-20 | bridge /reveal karta | Navigate2 pokazywal dialog "Nie mozna odnalezc
+  file:///...%20..." | sciezka podana Navigate2 jako string bywa rozwiazywana jako
+  URL-encoded file URI (spacje/myslniki lamia parsing) | ZAWSZE PIDL:
+  `SHParseDisplayName(path)` -> `PIDLAsString` -> `VARIANT(VT_ARRAY|VT_UI1)`.
+  Nowa karta Win11 (build 26200): rejestr `OpenFolderInNewTab=1` NIE dziala,
+  `Navigate2(path, 2048)` nawiguje biezaca karte; dziala fokus okna -> Ctrl+T
+  (keybd_event) -> Navigate2(PIDL) na swiezej (pustej `LocationURL`) karcie;
+  swieza karta przez chwile rzuca E_ABORT - retry ~8x co 0.4 s.
+- 2026-07-20 | dashboard 2x2 | widget z etykieta 2x2 renderowal 1 kolumne | ogolna
+  `.dam-widget__list` (display:flex) stala NIZEJ w dam-dashboard.css niz
+  `.dam-widget__list--media` (grid) o tej samej specyficznosci - kaskada wygrywala
+  flexem | przy rownej specyficznosci wygrywa pozniejsza regula; podbij selektor
+  podwojna klasa (`.dam-widget__list.dam-widget__list--media`), nie `!important`.
+- 2026-07-20 | branding perf | klik tagu mrozil UI do ~10 s | `renderTagFilters`
+  (facet counts = petla assets x ~100 kluczy) w TEJ SAMEJ klatce co render siatki
+  | fazuj: skeleton (klatka 1, tylko gdy poprzedni render >150 ms) -> siatka
+  (klatka 2) -> tagi/facety (klatka 3, rAF); loader `DamLoader.start/done` na klamrze;
+  skeleton musi dostac klatke na PAINT przed ciezkim synchronicznym renderem
+  (rAF + setTimeout 0), inaczej nigdy go nie widac.
+- 2026-07-20 | badge w title-wrap | chip ID uciety wielokropkiem mimo miejsca w karcie
+  | `.dam-viz-card__title-wrap` ma `flex-wrap:nowrap` (dam-brand.css) i chip byl
+  sciskany | scope'owany override `:has(.dam-branding-card__id-chip){flex-wrap:wrap}`
+  w moim CSS - chip lamie sie do wlasnej linii; nie ruszaj cudzego dam-brand.css.
+- 2026-07-20 | clipboard | `navigator.clipboard.writeText` z klikow symulowanych CDP
+  odrzuca promise (brak user activation / fokusu dokumentu) | testujac kopiowanie w tle
+  weryfikuj mechanizm (handler + toast), nie sam wynik clipboardu; realny klik ma
+  aktywacje.
+- 2026-07-20 | QA / samouczek | klik "Zakoncz samouczek" w tle NAWIGUJE karte na inna
+  strone (fazy samouczka) | przed testami brandingu ustaw flagi dismissu samouczka
+  w localStorage albo pracuj na swiezej karcie i sprawdzaj `location.href` przed
+  kazdym pomiarem CDP.
+- 2026-07-20 | samouczek/CSS custom property | `url('assets/img/...')` w custom property
+  ustawianej JS-em w inline style rozwiazywal sie wzgledem pliku CSS (assets/css/), nie
+  dokumentu -> 404 | buduj ABSOLUTNY URL przez `new URL(path, location.href).href` zanim
+  wstawisz do `--var: url('...')`; nie wracaj do relatywnych sciezek w custom property.
+- 2026-07-20 | samouczek/maskotka | bob (GSAP y) ruszal cala maskotke razem z bialym
+  medalionem, choc kolko ma stac | pseudo-element (`::after`) NIE da sie animowac GSAP-em,
+  wiec bob musial ruszac kontener | rozdziel warstwy: medalion = `::before` na kontenerze
+  BEZ transformacji (static), obraz = osobny realny element `.dam-tut__mascot-img` ktory
+  jako jedyny dostaje tween y; custom property (`--dam-tut-pose`) na kontenerze dziedziczy
+  sie do dziecka. Zasada ogolna: animujesz tylko warstwe, ktora ma sie ruszac, nie rodzica
+  z elementami statycznymi.
+- 2026-07-20 | samouczek/wznowienie miedzy stronami | test faz przez `localStorage
+  damTutorialPhase` + nawigacja bywal "lepki": strona X wznawiala poprzednia faze
+  (np. Kalkulator pokazywal Branding) | gdy poprzednia karta ma AKTYWNY samouczek,
+  jego stan/`PHASE_KEY` moze kolidowac przy nawigacji (klucz nie zawsze nadpisany na
+  czas) | przed ustawieniem nowej fazy wywolaj `window.DamTutorial.stop()` (robi
+  `lsDel(PHASE_KEY)`), potem `setItem` docelowej fazy, potem nawiguj/reload. Produkcyjny
+  resume (goToPhasePage: savePhase -> location.href -> boot) dziala poprawnie - to byla
+  pulapka testowa, nie bug.
+- 2026-07-20 | samouczek/wspolbieznosc HTML | rownolegli agenci bumpuja `?v=` w tych
+  samych 9 HTML | rob bump WYLACZNIE regexem po wlasnym wzorcu (`dam-tutorial.css?v=` /
+  `dam-tutorial.js?v=`), nigdy globalnie po `?v=`, zeby nie ruszyc wersji cudzych plikow.
+- 2026-07-20 | samouczek/API | `window.DamTutorial.next()`/`.prev()` nie sa publiczne
+  | w testach klikaj `.dam-tut__btn--next`/`--prev` (lub mini-nav `--mini-next`/
+  `--mini-prev`), albo steruj przez publiczne `start({phase,step})`/`stop()`.
+- 2026-07-20 | Strefa A / skojarzenia lustrzane | user oczekuje sliderow Postanowienia/DPD
+  przy produkcie 6300684 (babka), a UI ich nie pokazuje | w `branding-index`
+  te assety maja `linked_products` tylko `mix-6x-mini-batoniki-mixy` (brak slug
+  babki / indeksu w thumb_url) | matching lustrzany jest OK; brak = blad danych
+  indeksera (P15), nie UI. Nie "doklejaj" assetow po nazwie w modalu.
+- 2026-07-20 | Strefa A / assocRank | pos_material wyglada jak "slider" w oczach usera
+  | w danych to czesto warstwy PSD (Layer 118, LISC4) | `assocRank` daje
+  web_hero_slider/web_bundle_tile = 0, pos_material = 1; nie promuj pos_material
+  do czola listy tylko bo sciezka zawiera "slider".
+- 2026-07-20 | Strefa A / viz "Dodaj miniature" | trudno trafic kafelek z lacksViz
+  wsrod pierwszych kart | `showAddManual = manualPairedN > 0 || missingLangs.length
+  || items bez thumb/path`; missingLangs = alias_langs/langs minus langs obecne
+  w wariantach | do QA szukaj produktu z `alias_langs` szerszym niz obecne wizki
+  (np. coconut-orange-date: DE+GB, brak RO/LT/LV/EE).
+- 2026-07-20 | QA / CDP click | `HTMLElement.click()` / `dispatchEvent(MouseEvent)`
+  w Runtime.evaluate bywa calkowicie martwe w karcie automatyzacji (nawet na
+  swiezym buttonie w body), mimo ze MCP `browser_click` raportuje sukces |
+  do otwierania pickerow eksportuj API (`DamAssocEdit.openPicker`) albo uzywaj
+  MCP click po dismissie `#damTutorialOverlay` (`.dam-tut__btn--end`); nie
+  uznawaj "brak popovera po .click()" za regresje UI bez sprawdzenia API.
+- 2026-07-20 | Strefa A / thumb picker | tag daty pliku rzadko widoczny |
+  most `/folder-images` nie zwraca `mtime` | renderuj date tylko gdy pole
+  istnieje; nie udawaj daty z indeksu produktu.
+- 2026-07-20 | PowerShell / bump ?v= | inline `$zmienne` w narzedziu Shell sa
+  zjadane przez interpolacje hosta | masowe bumpy: tymczasowy `.ps1` +
+  `powershell -File`, potem skasuj; unikaj `&&` (uzywaj `;`).
+- 2026-07-20 | explorer / otwieranie produktu | klik w tekst "KARTON 6x MINI"
+  ustawia filtr opakowania zamiast otworzyc wariant | wiersz =
+  `.dam-carrier-toggle-row`; produkt z CDP: `DamExplorer.openProduct(slug)`.
+- 2026-07-20 | shell / flash Geex Demo przy nawigacji menu | wiele stron HTML
+  (dashboard, explorer, costs, invoices…) zawiera **statyczny markup szablonu Geex**
+  (`Demo`, `Server Management`, `Banking`, `Crypto`) w `.geex-header__menu` /
+  `.geex-sidebar__menu`; `dam-shell.js` przepisuje menu dopiero na
+  `DOMContentLoaded` | miedzy first paint a init shella user widzi stary layout
+  (FOUC + flash placeholdera) | fix: `html.dam-booting` + inline critical CSS
+  (`#dam-shell-boot-critical`) ukrywa `body` (`opacity:0`) od pierwszej klatki;
+  `DamShell.finishBoot()` (double rAF po rewrite chrome) zdejmuje klase i
+  fade-in (`dam-shell-boot.css`, `prefers-reduced-motion`); fallback 4.5s w
+  `<head>` gdy shell nie wstanie | NIE polegac na samym zewnetrznym CSS boot -
+  musi byc INLINE w `<head>` przed body; `?v=` strony NIE bumpuje shella.
+- 2026-07-20 | Strefa A3 / Links vs materialy | w "Skojarzone materialy" wpadaja
+  surowe pliki z folderu `Links` (flor2, batonik_liscie…) | klasyfikuj po sciezce:
+  `\\Links\\` / `\\2 - PROJEKT\\Links` = SUROWE; `\\1 - MATERIAŁY\\ELEMENTY` =
+  gotowe elementy | wyrzuc z glownej listy i pokaz w zwijalnej grupie ELEMENTY
+  (domyslnie collapsed). Indekser nie indeksuje Links produktu 01-PRODUKTY -
+  tylko POS/branding Links; product Links/ELEMENTY resolvuj z dysku przez most
+  (`/product-links-elementy`). Gleboki fix skojarzen "skladniki/owoce" w
+  indekserze = agent B (`build-branding-index.py`).
+- 2026-07-20 | Strefa A3 / "Brak wizualizacji" czerwone | label
+  `.dam-viz-modal__missing-langs-label` i chip `.dam-viz-badge--lang-missing`
+  uzywaja `var(--danger-color)` w `dam-brand.css` | czerwien = tylko destrukcja;
+  przy wspolbieznosci (nie ruszac dam-brand.css) wstrzyknij override
+  `<style id="dam-a3-styles">` z tokenem muted (`#8f8b9f` / surface-muted).
+- 2026-07-20 | Strefa A3 / broken img w skojarzeniach | `onerror="this.src='data:…'"`
+  w atrybucie HTML bywa kruche (escape / petla) i zostawia native broken-icon |
+  uzyj `window.__damAssocThumbFallback` = `replaceWith` ikony
+  `.dam-media-preview__assoc-thumb--fallback` (uil-image-slash). Dowod: CDP
+  `naturalWidth` + `querySelectorAll(...fallback)` > opis vision przy stale-frame.
+- 2026-07-20 | Strefa A3 / Inyfinn Image resizer | launcher
+  `InyfinnPhotoResizer.exe` (~10 KB) to GUI starter, NIE przyjmuje CLI;
+  prawdziwy CLI: `inyfinn_resizer.cli` (`convert -i -o -f png -q 60`) przez
+  `BIN/dev/.venv/Scripts/python.exe -m …` gdy venv istnieje | inaczej GUI +
+  `reveal_in_explorer(Links)` (PIDL/foreground ze Strefy D). Endpointy:
+  `GET /product-links-elementy`, `POST /open-image-resizer`; po dodaniu
+  **wymagany restart mostu** (`BRIDGE_API_VERSION` w `/health`).
+- 2026-07-20 | STREFA H / danger zone settings | karta „Strefa ryzyka”
+  sciskala sie do ~1/12 szerokosci | klasa `.dam-sw--danger` nie miala
+  `grid-column` w `dam-settings.css` (siatka 12-col) | zawsze jawnie
+  `grid-column: 1 / -1` w inline CSS nowej sekcji settings; nie polegaj
+  na domyslnym spanie.
+- 2026-07-20 | STREFA H / hold-to-delete | dialog „Czy jestes pewien?” +
+  czerwone dekoracyjne X | commitment: `DamDanger.bind` / `data-dam-hold-delete`
+  (~300 ms, ring SVG), etykieta czasownika, offset od Confirm/Restart,
+  czerwień tylko na destrukcji, soft-delete `toastUndo` 5–10 s; CSS inject
+  z JS (`#damDangerInjectedCss`) gdy nie wolno ruszac cudzego dam-brand.css.
+- 2026-07-20 | Integracje / Bento + GSAP revealRows | `DamGridReveal.revealRows`
+  (`autoAlpha` + stagger) w IDE browser potrafi **zamarznac w polowie**
+  (opacity 0.1–0.5, reszta `visibility:hidden`) mimo ze DOM/rects sa OK |
+  po `revealRows` dodaj safety `setTimeout` wymuszajacy `opacity:1` /
+  `visibility:visible` na `.dam-int-card` gdy computed opacity < 1 |
+  layout bento: osobny `dam-integrations.css` + `opts.layout:"bento"`
+  (nie ruszac anatomii `.dam-viz-card` / `.dam-branding-card` = C3).
+- 2026-07-20 | Integracje / settings vs hub | ten sam `DamIntegrations.mount`
+  serwuje dwa chrome: hub `layout:"bento"` = 4-col, settings
+  `layout:"settings-bento"` (lub auto `#damIntegrations`) = 3-col |
+  CSS settings osobno (`dam-integrations-settings.css`); przy konflikcie
+  H2 na `settings.html` wstrzykuj `<style id="dam-int-settings-bento">`
+  z JS; status = chip (`.dam-int-chip`), nigdy geex-badge na 100% szerokosci
+  karty; `dam-settings.css` `.dam-int-card` bez grida = belki full-width
+  dopoki nie zaladujesz bento CSS + tile markup.
+- 2026-07-20 | STREFA VIZ-ASSOC / petla wiz→wiz | `renderLinkedBrandingAssets`
+  bierze WSZYSTKIE assety z `linked_products` z branding-index — w tym
+  ~2000 `asset_role=packshot` / `source=wizki` | przy podgladzie wizualizacji
+  lista "Skojarzone materialy" zamieniala sie w galerie innych wizek |
+  filtr UI: `isVisualizationAsset` (packshot / wizki / sciezka `4 - WIZKI|VISUALS`)
+  + `isNoiseBrandKitAsset` (IKONY/logo) + `isRelevantMaterialForProduct`
+  (role WWW/social/POS albo tokeny nazwy/indeksu w sciezce) | layout:
+  `.dam-viz-modal-box--assoc-split` w `dam-viz-modal.css` (grid 2-col desktop,
+  stack hero→meta→assoc <768). Indekser: nie linkuj packshotow jako
+  "material brandingowy" przy innym packshocie (PI `viz.assoc_no_visualization_loop`).
+- 2026-07-20 | STREFA B follow-up / ELEMENTY skojarzenia | product-folder
+  `2 - PROJEKT/Links` + `1 - MATERIALY/ELEMENTY` NIE byly w branding-index
+  (scan 01-PRODUKTY tylko WIZKI packshoty) | UI A3 filtruje ELEMENTY po
+  sciezce + `search_blob` (skladniki/owoce/owocki), ale brak danych |
+  fix: `scan_product_element_assets` + `brand_element_assoc.py` (term in
+  search_blob, NIE facet CANONICAL_TAGS) + incremental
+  `enrich-branding-element-assoc.py`; linkowanie product_element TYLKO po
+  SKU ze sciezki (nie `match_products_by_associations` na nazwie pliku —
+  inaczej kazda "cytryna*.tif" leci na babke). PI:
+  `branding.element_assoc_skladniki_owoce`. Pixel-scan tla WYLACZONY dla
+  `source=product_element` (TIFF 50–120 MB na NFS).
+- 2026-07-20 | STREFA INT-LOAD / skeleton integracji | `#damIntegrationsList`
+  zostaje na `dam-skeleton--grid` albo CTA wygladaja na "tylko odswiez" |
+  (1) inline mount tylko na `DOMContentLoaded` gdy readyState juz `complete`
+  = mount nigdy; (2) skeleton bez hard failsafe gdy Promise/most wisi;
+  (3) remount na focus zamyka `<details>` i flashuje skeleton |
+  boot: `if (readyState==="loading") addEventListener else mount()`;
+  po skeletonie failsafe ~14s → `showLoadError`; nie remountuj gdy
+  `details[open]` / focus w formularzu; foot CTA = `.dam-int-cta`
+  (tokeny jak `.dam-welcome-link`), nie `geex-btn--primary-transparent`.
+- 2026-07-20 | STREFA B / rebuild indeksu na X: NFS | `build-branding-index`
+  + PIL na TIFF 100M–500M px gromadzi watki daemon (`_run_with_timeout`
+  5 s) i wisi dziesiatki minut przy CPU≈0 | (1) w workerze lap `Exception`
+  (DecompressionBombError nie jest OSError), (2) legacy `-- ARCHIWUM --`
+  pomijaj pixel-scan tla i `_tiff_has_layers` (editable z zalozenia),
+  (3) log progress co N plikow + flush; przy 80+ watkach zabij i restart
+  z fixem - nie odpalaj drugiego skanu rownolegle.
+- 2026-07-20 | STREFA B / POLSKA-first overlap | folder ARCHIWUM
+  `05 - SLIDERY - sklep` moze miec 0 sciezek w indeksie mimo plikow na dysku
+  gdy `file_overlap_key(stem+wymiary)` trafia w `- POLSKA/.../SLIDERY` |
+  to zamierzony dedup; UI Slider rosnie z kopii POLSKA. META (unikalne)
+  wchodzi jako nowe assety `is_archive` + tag `Stara struktura`.
+- 2026-07-20 | STREFA B / zakladka wszystko vs tag→tab | klik `channel:meta`
+  ustawia tab `social` (FACET_TAB_BY_KEY) i chowa assety sekcji `other`/
+  e-commerce ARCHIWUM | po filtrze tagiem wroc na `data-tab="all"` albo
+  nie przelaczaj sekcji gdy user jest na "Pokaz wszystko"; popup dna listy
+  = IntersectionObserver na `#damBrandingListEnd`, nie `window.onscroll`.
+- 2026-07-20 | Integracje / Konfiguruj panel ~56px | open `.dam-int-config__panel`
+  wygladal jak pionowy pasek tekstu | panel `position:absolute; left/right:16px`
+  kotwiczyl sie w `.dam-int-tile__config` (`inline-flex` + `position:relative`
+  ≈ szerokosc summary ~88px) → 88−32 ≈ 56px | nie dawaj absolute left/right
+  wzgledem shrink-wrap wrappera przycisku; panel in-flow na `width:100%`
+  foota (`flex:1 1 100%` + `position:static`) albo kotwica do samego tile;
+  fix wstrzykniety `#damIntConfigPanelFix` z `dam-integrations.js` (wspolbiezni
+  agenci na CSS). Auto-caption screenshotu bywa biasowana starym bugiem —
+  mierz `getBoundingClientRect` + ewentualnie szerokosc przycisku w PNG.
+- 2026-07-20 | Overlay scroll-trap + close X | `#damFmcgEditOverlay` wheel
+  przewijal tlo zamiast tabeli; Zamknij jako fat `.dam-int-cta` konkuruje z Zapisz |
+  (1) dialog `width:min(80vw,…); height:min(80vh,…); display:flex; overflow:hidden`,
+  scrollport = `.dam-fmcg-edit__table-wrap` + `overscroll-behavior:contain`,
+  (2) `body`/`html` class lock + `wheel`/`touchmove` capture: prevent poza wrapem,
+  na wrapie prevent tylko na krawedzi, (3) close = `.dam-modal-x` (ikona), CTA akcji
+  zostaja `.dam-int-cta`; hold-delete = DamDanger + prefs KV `user-prefs:{email}`.
+  Dowod: wrap.scrollTop sie zmienia, window.scrollY = 0.
+- 2026-07-20 | Integracje hub / focus remount | przyciski „tylko odświeżają”,
+  Konfiguruj sie zamyka, skeleton flash | `window.addEventListener("focus",
+  DamIntegrations.refresh)` robił pełny remount (skeleton + wipe `<details>`) |
+  NIE remountuj na focus; najwyżej `visibilitychange` z guardem
+  `details[open]` / form focus + debounce; Promise.all z `withTimeout` +
+  failsafe clear skeleton; po `revealRows` rób `gsap.killTweensOf` + force
+  opacity (mid-tween wygląda jak pusty hub / „zostal skeleton”).
+- 2026-07-20 | Sidebar morph / icon recenter jank | width `--dam-sidebar-w` płynny,
+  ale na `onComplete` klasa `dam-sidebar-collapsed` snapuje `padding` 29→10,
+  link `padding` 25→0 + `justify-content:center` (~30px skok ikon) |
+  podczas morph trzymaj tor ikon w CSS vars (`--dam-sb-pad-x`, `--dam-link-pad-x`)
+  + `justify-content:flex-start`; labels `position:absolute` (bez reflow);
+  dim = `filter:brightness` (nie color snap na active); klasę collapsed dopiero
+  w `onComplete` gdy pad ≈ center rail. Cache: `dam-shell.js?v=sidebarmorphsmooth20260720c`.
+  Uwaga QA: `document.hidden` w IDE browser pauzuje rAF/GSAP - do mid-tween
+  użyj `gsap.updateRoot(t0+dt)` od bieżącego `globalTimeline.time()`, nie od 0.
+- 2026-07-20 | Sidebar morph / pad vars + logout + footer | po morph `clearPadVars`
+  + `justify-content:center` z `dam-brand.css` = drugi snap mimo płynnego tweenu;
+  Wyloguj mid-rail = `margin-top:8px` collapsed + logo `margin-top:auto` zjada
+  przestrzeń; footer „zniknął” = poniżej fold (menu bez `height:100%`) + fallback
+  brand_sub | (1) po collapse ZOSTAW `--dam-sb-pad-x`/`--dam-link-pad-x` i
+  override collapsed na `flex-start` (inject `#damShellLayerCss`), stały slot
+  ikony 20/22px, (2) logout `+50px` w obu stanach; menu `min-height:100%`;
+  logo collapsed `margin-top:10px` nie `auto`, (3) footer expanded
+  `DAM / Dobra Kaloria - Inyfinn / v…`; collapsed `.dam-sidebar-collapsed-meta`.
+  Cache: `dam-shell.js?v=sidebarmorph20260720e`.
+- 2026-07-20 | Change-log vs „Baza online” | hint `#damChangeLogHint` = „Bridge
+  offline” mimo zielonego „Baza online” | `/change-log` wymaga sesji
+  (`_require_login`); fetch BEZ `Authorization` dostaje `ok:false,
+  login_required`, a UI traktował każdy `!ok` jak offline. „Baza online” =
+  Postgres/status pill, nie most change-log. Fix: `bridgeAuthHeaders()` na GET
+  + rozróżnij `login_required` vs sieć; copy PL: „Most zmian niedostępny -
+  Cofnij/Ponów lokalnie”. Cofnij/Ponów = undo/redo rename typu/indeksu/plików
+  na dysku X: przez most 8766 (tylko admin).
