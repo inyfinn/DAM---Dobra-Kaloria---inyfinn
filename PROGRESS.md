@@ -1,6 +1,6 @@
 ﻿# PROGRESS.md - DAM - Dobra Kaloria - Inyfinn
 
-Ostatnia aktualizacja: **2026-07-19**
+Ostatnia aktualizacja: **2026-07-20**
 
 | Obszar | Status | Notatka |
 |--------|--------|---------|
@@ -114,4 +114,19 @@ Pakiet rownoleglych agentow (Viz toolbar admin changelog, Branding page-size OK,
 - A1/A2 OAuth nadal otwarte (credentials user)
 - Lekcja doktryny: kolizja nazw WORKER A/B/C
 - Checklista: A3/B3/B4/B5/B7/C2/C3 [x]
+
+## 2026-07-20 - Sesja wieczorna: motion, sidebar, lifecycle, docs + push
+
+**Commity:** `e28a4bd` (backlog + create stub), `025aad3` (B5 QA), docs `release-2026-07-20-evening.md`
+
+| Obszar | Status | Cache / pliki |
+|--------|--------|---------------|
+| Skeleton + reveal global | done | `skel20260720a`, costs/integrations/invoices/branding/viz |
+| Sidebar logo/meta collapsed | done | `sidebaridentity20260720b` |
+| Explorer Historia statusów | done | `lifehist20260720a`, PI `lifecycle.history_restore` |
+| Dashboard B5 layouts | done | `b5qa20260720f` |
+| Explorer create modal (podst.) | done | `expb20260720b`, `explorer_create.py` |
+| Create modal redesign 10-pass | **open** | agent aborted — live preview, warianty, undo |
+
+Pełna mapa: [`agents/shared/release-2026-07-20-evening.md`](agents/shared/release-2026-07-20-evening.md)
 

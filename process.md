@@ -6000,3 +6000,29 @@ Brak
 
 ### Zrodla
 apps/web/assets/js/dam-dashboard-widgets.js; apps/web/assets/css/dam-dashboard.css; apps/web/dashboard.html; WAZNA-CHECKLISTA-UZYTKOWNIKA.md B5
+
+## 2026-07-20 - Domkniecie sesji: dokumentacja + commit + push (user)
+
+### Komenda/Akcja
+User: po zakonczeniu WSZYSTKICH agentow — spisz dokumentacje, commit, push.
+
+### Log/Status
+1. Weryfikacja git: kod sesji juz na `origin/main` (`e28a4bd`, `025aad3`); brak unstaged kodu aplikacji.
+2. Subagent create modal redesign (`202d725c`) — **aborted** (2 linie transcript); OPEN na nastepna fale.
+3. Subagenci badawczy (costs/integrations, branding load, anim audit, desktop tray, viz vs branding) — DONE raporty.
+4. Nowy doc: `agents/shared/release-2026-07-20-evening.md` (mapa DONE/OPEN, cache-bust, checklista).
+5. Aktualizacja: `README.md` changelog, `PROGRESS.md`, `handoff-usability-synthesis-2026-07-20.md`.
+6. Commit docs + push origin/main.
+
+### Efekt/Fix
+Jedno miejsce prawdy dla wieczoru 2026-07-20; jasno oznaczone OPEN (create modal 10-pass).
+
+### Backup
+Brak.
+
+### Test/Ewaluacja
+- git status: tylko docs + untracked runtime (lock/logs/tmp — nie commitowane)
+- Pass/Fail: **Pass** (dokumentacja); create modal redesign = **Fail/open**
+
+### Zrodla
+release-2026-07-20-evening.md; agent-transcripts subagents; git log

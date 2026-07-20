@@ -221,7 +221,12 @@ Szczegoly: [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md).
 
 ## Changelog (2026-07-20)
 
+- **Motion + skeleton:** reveal 0.45s, skeleton shimmer (costs/integrations/invoices/branding/viz), hover scale; cache `skel20260720a`
+- **Sidebar collapsed:** logo + meta bez skoku translate (absolute slot); cache `sidebaridentity20260720b`
+- **Explorer Historia statusów:** modal lifecycle F/X/D, Przywróć/Cofnij; cache `lifehist20260720a`
+- **Dashboard B5:** layout 2×2/1×4/1×6 bez overflow @375; cache `b5qa20260720f`
 - **Explorer create:** Plus kategorii + Dodaj produkt → modal dry-run/potwierdzenie → `POST /explorer/create-category|create-product` (szablon z `Szablony folderów`, DEMO `- D`); cache `expb20260720b`
+- **OPEN (następna fala):** redesign modalu create (live preview, warianty, undo 2 min) — szczegóły [`agents/shared/release-2026-07-20-evening.md`](agents/shared/release-2026-07-20-evening.md)
 - **FMCG A3:** katalog z kwotami (seed_estimate) + import-map v2; UI Edytuj w Integracjach
 - **ERP faktur C2 (stub):** `GET /finance/invoices/erp-status`, `POST .../export`, stan `invoice-erp-sync.json`, UI Faktury
 - **BENTO C3:** freeze anatomii kart (`agents/shared/bento-card-freeze.md`) — nie redesign

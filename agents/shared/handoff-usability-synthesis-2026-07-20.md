@@ -18,14 +18,18 @@
 | VIZ-ASSOC / A-PREVIEW | assoc prawa, anti-loop, preview lewa | `usab20260720a36f` + viz-assoc |
 | Integracje | skeleton, Bento, Konfiguruj, PLANOWANE, FMCG Edytuj | `skelbent` / `intcfgfix` / `planowane30a` / `fmcgedit20260720b` |
 
-## Otwarte / partial (NIE zielone)
+## Otwarte / partial (NIE zielone) — aktualizacja wieczór 2026-07-20
 
-1. **Checklista A3 `[~]`** — UI FMCG Edytuj gotowe; brak pelnego wypelnienia kwot/importu przez usera.
-2. **Checklista C3 `[ ]`** — redesign anatomii kart BENTO (zamrozona anatomia kart).
-3. **P15 SLIDERY-sklep** — dedup POLSKA-first → 0 sciezek ARCHIWUM; decyzja policy jesli user chce osobne kopie.
-4. **POS `\Links\` quality** — nadal w grupie ELEMENTY UI; sweep indeksera marketing Links.
+1. **Explorer create modal redesign** — agent `202d725c` aborted; OPEN (live preview, Tworzenie:, warianty, undo). Podst. modal `expb20260720b` = DONE.
+2. **Checklista A3 `[x]` technicznie** — seed kwot; nadpisanie realnymi kwotami CSV = opcjonalnie user.
+3. **Checklista C3 `[x]`** — freeze anatomii BENTO (nie redesign).
+4. **P15 SLIDERY-sklep** — dedup POLSKA-first → 0 sciezek ARCHIWUM; decyzja policy.
 5. **P6 Postanowienia/DPD → babka** — brak `linked_products` w danych (nie bug UI).
-6. Checklista: A1/A2 Asana/MS, B1 wykrojniki, B2 XLSX, B3 poster video, B4 Autor, B5 QA dashboard, B7 sweep `?v=`.
+6. **POS `\Links\` quality** — sweep indeksera marketing Links.
+7. Checklista otwarte: **A1/A2** OAuth, **B2** FMCG XLSX, **C1** Entra/LDAP.
+8. Domkniete tej sesji: **B1/B3/B4/B5/B7**, motion/skeleton, sidebar identity, lifecycle history.
+
+Release notes: [`release-2026-07-20-evening.md`](release-2026-07-20-evening.md)
 
 ## Hard-refresh (Ctrl+F5) po stronach
 
