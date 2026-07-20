@@ -1,5 +1,5 @@
 /**
- * DAM - Faktury: bridge GET /finance/invoices + import CSV + lista Asana.
+ * DAM - Faktury: bridge GET /finance/invoices + import/export ERP + lista Asana.
  */
 (function () {
   "use strict";
@@ -18,6 +18,7 @@
   var allInvoices = [];
   var currentFilter = "all";
   var source = "local";
+  var erpSync = null;
 
   function bridgeUrl() {
     if (window.DamRuntime && typeof DamRuntime.bridgeUrl === "function") {
@@ -41,6 +42,30 @@
     return role === "admin" || role === "power_user";
   }
 
+  function ensureCtaStyles() {
+    if (document.getElementById("damInvErpStyles")) return;
+    var style = document.createElement("style");
+    style.id = "damInvErpStyles";
+    style.textContent =
+      ".dam-inv-toolbar .dam-int-cta{" +
+      "display:inline-flex;align-items:center;justify-content:center;gap:6px;" +
+      "min-height:34px;padding:8px 12px;margin:0;font-family:inherit;font-size:12px;" +
+      "font-weight:500;line-height:1.2;border-radius:8px;border:1px solid #e7e7e7;" +
+      "background:#fff;color:#464255;text-decoration:none;cursor:pointer;" +
+      "box-shadow:none;-webkit-appearance:none;appearance:none;" +
+      "transition:background .15s ease,border-color .15s ease,color .15s ease}" +
+      ".dam-inv-toolbar .dam-int-cta:hover{border-color:var(--dam-primary,#ab54db);" +
+      "background:#fbf7fe;color:var(--dam-primary,#ab54db)}" +
+      ".dam-inv-toolbar .dam-int-cta:focus-visible{outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 55%,transparent);outline-offset:2px}" +
+      ".dam-inv-toolbar .dam-int-cta:disabled{opacity:.5;cursor:not-allowed}" +
+      ".dam-int-chip.dam-int-st{display:inline-flex;align-items:center;padding:4px 10px;" +
+      "border-radius:999px;font-size:11px;font-weight:600}" +
+      ".dam-int-st--ok{background:#e8f9f4;color:#00A389}" +
+      ".dam-int-st--wait{background:#fff8ec;color:#b87a00}" +
+      ".dam-int-st--danger{background:#feecec;color:#ff5653}";
+    document.head.appendChild(style);
+  }
+
   function formatDate(str) {
     if (!str) return "-";
     try {
@@ -49,6 +74,22 @@
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
+      });
+    } catch (e) {
+      return str;
+    }
+  }
+
+  function formatDateTime(str) {
+    if (!str) return "—";
+    try {
+      var d = new Date(str);
+      return d.toLocaleString("pl-PL", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch (e) {
       return str;
@@ -82,6 +123,73 @@
     el.className =
       "dam-int-chip dam-int-st " +
       (source === "bridge" ? "dam-int-st--ok" : "dam-int-st--wait");
+  }
+
+  function renderErpSync(sync) {
+    erpSync = sync || null;
+    var badge = document.getElementById("invErpStatusBadge");
+    var meta = document.getElementById("invErpSyncMeta");
+    var status = (sync && sync.status) || "idle";
+    var direction = (sync && sync.direction) || "bidirectional";
+    var statusLabel =
+      status === "ok"
+        ? "OK"
+        : status === "error"
+          ? "Błąd"
+          : status === "idle"
+            ? "Bezczynny"
+            : status;
+    if (badge) {
+      badge.textContent = "ERP: " + statusLabel + " · " + (direction === "bidirectional" ? "↔" : direction);
+      badge.className =
+        "dam-int-chip dam-int-st " +
+        (status === "ok"
+          ? "dam-int-st--ok"
+          : status === "error"
+            ? "dam-int-st--danger"
+            : "dam-int-st--wait");
+      badge.title =
+        "Provider: " +
+        ((sync && sync.erp_provider) || "stub") +
+        " · import: ERP→DAM · export: DAM→ERP";
+    }
+    if (meta) {
+      meta.textContent =
+        "Kierunek: dwukierunkowy (ERP ↔ DAM). Ostatni import: " +
+        formatDateTime(sync && sync.last_import) +
+        " · Ostatni eksport: " +
+        formatDateTime(sync && sync.last_export) +
+        (sync && sync.last_error ? " · Błąd: " + sync.last_error : "");
+    }
+  }
+
+  function loadErpStatus() {
+    return fetch(bridgeUrl() + "/finance/invoices/erp-status", {
+      headers: authHeaders(),
+      cache: "no-store",
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("bridge");
+        return r.json();
+      })
+      .then(function (data) {
+        renderErpSync(data);
+      })
+      .catch(function () {
+        return fetch("data/invoice-erp-sync.json?v=" + Date.now(), {
+          cache: "no-store",
+        })
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (data) {
+            if (data) renderErpSync(data);
+            else renderErpSync({ status: "idle", direction: "bidirectional" });
+          })
+          .catch(function () {
+            renderErpSync({ status: "idle", direction: "bidirectional" });
+          });
+      });
   }
 
   function renderTable(invoices) {
@@ -266,52 +374,105 @@
       });
   }
 
-  function bindImport() {
+  function bindErpActions() {
+    var adminWrap = document.getElementById("invErpAdminWrap");
+    var legacyWrap = document.getElementById("invImportWrap");
     var input = document.getElementById("invCsvImport");
-    var btnWrap = document.getElementById("invImportWrap");
-    if (btnWrap) btnWrap.hidden = !isAdmin();
-    if (!input) return;
-    input.addEventListener("change", function () {
-      var file = input.files && input.files[0];
-      if (!file) return;
-      var fd = new FormData();
-      fd.append("file", file);
-      fetch(bridgeUrl() + "/finance/invoices/import", {
-        method: "POST",
-        headers: authHeaders(),
-        body: fd,
-      })
-        .then(function (r) {
-          return r.json().then(function (j) {
-            return { ok: r.ok, j: j };
+    var exportBtn = document.getElementById("invErpExportBtn");
+    var admin = isAdmin();
+    if (adminWrap) {
+      adminWrap.hidden = !admin;
+      adminWrap.style.display = admin ? "inline-flex" : "none";
+    }
+    if (legacyWrap) {
+      legacyWrap.hidden = true;
+      legacyWrap.style.display = "none";
+    }
+    if (input) {
+      input.addEventListener("change", function () {
+        var file = input.files && input.files[0];
+        if (!file) return;
+        var fd = new FormData();
+        fd.append("file", file);
+        fetch(bridgeUrl() + "/finance/invoices/import", {
+          method: "POST",
+          headers: authHeaders(),
+          body: fd,
+        })
+          .then(function (r) {
+            return r.json().then(function (j) {
+              return { ok: r.ok, j: j };
+            });
+          })
+          .then(function (res) {
+            input.value = "";
+            if (!res.ok || (res.j && res.j.ok === false)) {
+              alert(
+                (res.j && (res.j.error || res.j.message)) ||
+                  "Import nie powiódł się."
+              );
+              return;
+            }
+            var n = (res.j && res.j.imported) || 0;
+            alert("Zaimportowano z ERP (CSV): " + n);
+            return Promise.all([loadInvoices(), loadErpStatus()]);
+          })
+          .catch(function () {
+            input.value = "";
+            alert("Bridge offline.");
           });
+      });
+    }
+    if (exportBtn) {
+      exportBtn.addEventListener("click", function () {
+        if (!admin) return;
+        exportBtn.disabled = true;
+        fetch(bridgeUrl() + "/finance/invoices/export", {
+          method: "POST",
+          headers: Object.assign(
+            { "Content-Type": "application/json" },
+            authHeaders()
+          ),
+          body: JSON.stringify({}),
         })
-        .then(function (res) {
-          input.value = "";
-          if (!res.ok || (res.j && res.j.ok === false)) {
+          .then(function (r) {
+            return r.json().then(function (j) {
+              return { ok: r.ok, j: j };
+            });
+          })
+          .then(function (res) {
+            exportBtn.disabled = false;
+            if (!res.ok || (res.j && res.j.ok === false)) {
+              alert(
+                (res.j && (res.j.error || res.j.message)) ||
+                  "Eksport do ERP nie powiódł się."
+              );
+              return loadErpStatus();
+            }
+            var n = (res.j && res.j.exported) || 0;
             alert(
-              (res.j && (res.j.error || res.j.message)) ||
-                "Import nie powiódł się."
+              "Wyeksportowano do ERP (stub): " +
+                n +
+                " faktur. Stan zapisany w invoice-erp-sync.json."
             );
-            return;
-          }
-          var n = (res.j && res.j.imported) || 0;
-          alert("Zaimportowano: " + n);
-          return loadInvoices();
-        })
-        .catch(function () {
-          input.value = "";
-          alert("Bridge offline.");
-        });
-    });
+            if (res.j && res.j.sync) renderErpSync(res.j.sync);
+            return loadErpStatus();
+          })
+          .catch(function () {
+            exportBtn.disabled = false;
+            alert("Bridge offline.");
+          });
+      });
+    }
   }
 
   function init() {
+    ensureCtaStyles();
     document.querySelectorAll(".geex-content__summary, .geex-content__invoice").forEach(function (el) {
       el.style.display = "none";
     });
 
-    bindImport();
+    bindErpActions();
     var skelBody = document.getElementById("invTableBody");
     if (skelBody && window.DamGridReveal && window.DamGridReveal.skeleton) {
       window.DamGridReveal.skeleton(skelBody, { count: 6, cols: 6 });
@@ -323,6 +484,7 @@
           '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">Brak danych</td></tr>';
       }
     });
+    loadErpStatus();
     loadAsanaTasks();
 
     document.addEventListener("click", function (e) {
@@ -338,6 +500,15 @@
       renderTable(allInvoices);
     });
   }
+
+  window.DamInvoices = {
+    reload: function () {
+      return Promise.all([loadInvoices(), loadErpStatus()]);
+    },
+    getErpSync: function () {
+      return erpSync;
+    },
+  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);

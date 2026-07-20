@@ -566,8 +566,8 @@
         '<span class="dam-nav-label" data-i18n="' + item.i18n + '">' + label + '</span>' +
         '</a></li>';
     }).join("") +
-    /* (1) Sesja urzadzenia - sciezki per device; NIE logout */
-    '<li class="geex-sidebar__menu__item dam-nav-device-session" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px">' +
+    /* (1) Sesja urzadzenia - naturalnie po nav (BEZ margin-top:auto = bez pchania w dol) */
+    '<li class="geex-sidebar__menu__item dam-nav-device-session">' +
     '<a href="profile.html#damDevicePathsRoot" class="geex-sidebar__menu__link dam-device-session-btn" id="damShellDeviceSession"' +
     ' title="Sesja urządzenia - ścieżki Marketing" aria-label="Sesja urządzenia"' +
     ' data-dam-tip="Sesja urządzenia: ścieżki Marketing na tym PC">' +
@@ -633,7 +633,7 @@
 
   /**
    * Warstwy shell: menu profilu / popupy headera ZAWSZE nad sticky search (z-index 52)
-   * + spacing Wyloguj (+50px obu stany) + tor ikon bez recenter + footer identity.
+   * + Y-stable rail (bez 80vh shrink) + Wyloguj +50px + tor ikon bez recenter.
    * Inject - bez walki o cudzy dam-brand.css.
    */
   function ensureShellLayerCss() {
@@ -660,24 +660,108 @@
       "body.dam-header-popup-open .dam-filter-chips," +
       "body.dam-header-popup-open .dam-explorer-grid-toolbar{" +
       "z-index:20!important;}" +
+      "/* Sesja: naturalny slot po Integracjach (bez margin-top:auto); separator bez paddingu PCHAJacego slot */" +
+      ".geex-sidebar__menu__item.dam-nav-device-session{" +
+      "margin-top:8px!important;padding-top:0!important;" +
+      "border-top:1px solid rgba(255,255,255,0.1);}" +
       "/* Wyloguj: +50px friction od Sesji - TEN SAM gap expanded i collapsed */" +
       ".geex-sidebar__menu__item.dam-nav-logout{margin-top:50px!important;}" +
-      "/* Menu wypelnia wysokosc (expanded+collapsed): Sesja margin-top:auto → Wyloguj nisko nad footer/logo */" +
+      "/* Flex column; footer/logo na dole przez margin-top:auto NA FOOTER, nie na Sesji */" +
       ".geex-sidebar__menu-wrapper{" +
       "display:flex!important;flex-direction:column!important;" +
       "flex:1 1 auto!important;min-height:0!important;}" +
       ".geex-sidebar__menu{" +
       "display:flex!important;flex-direction:column!important;" +
-      "flex:1 1 auto!important;min-height:100%!important;height:100%!important;}" +
+      "flex:0 0 auto!important;min-height:0!important;height:auto!important;" +
+      "gap:0!important;}" +
+      "body.dam-sidebar-collapsed .geex-sidebar__menu{gap:0!important;}" +
+      "/* Geex first-child margin-top:15px - collapsed dam-brand zeruje → Y jump -15px */" +
+      ".geex-sidebar__menu__item:first-child," +
+      "body.dam-sidebar-collapsed .geex-sidebar__menu__item:first-child," +
+      "body.dam-sidebar-morphing .geex-sidebar__menu__item:first-child{" +
+      "margin-top:15px!important;margin-bottom:0!important;}" +
       ".geex-sidebar__wrapper{gap:16px!important;}" +
-      ".geex-sidebar__footer{flex-shrink:0;margin-top:4px;}" +
-      "/* Logo dolne: NIE margin-top:auto (to robilo dziure nad logo / Wyloguj mid-rail) */" +
-      "body.dam-sidebar-collapsed .dam-sidebar-logo-collapsed{" +
-      "margin-top:10px!important;flex-shrink:0;}" +
-      "/* Tor ikon collapsed = flex-start + te same CSS vars co morph (ZERO justify:center snap) */" +
+      ".geex-sidebar__footer{flex-shrink:0;margin-top:auto!important;}" +
+      "/* Y-STABLE SLOTS: stale 56px (Geex pad 16+16+line) - bez wrap 80px na Kalkulator/Sesja */" +
+      ".geex-sidebar .geex-sidebar__menu__link{" +
+      "box-sizing:border-box!important;" +
+      "min-height:56px!important;height:56px!important;" +
+      "white-space:nowrap!important;" +
+      "align-items:center!important;}" +
+      "/* Ikony: ten sam box 20×20 / line-height 1 w expanded+collapsed (bez 24→20 snap) */" +
+      ".geex-sidebar .geex-sidebar__menu__link i," +
+      ".geex-sidebar .geex-sidebar__menu__link .uil," +
+      "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i," +
+      "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link .uil," +
+      "body.dam-sidebar-morphing .geex-sidebar .geex-sidebar__menu__link i," +
+      "body.dam-sidebar-morphing .geex-sidebar .geex-sidebar__menu__link .uil{" +
+      "font-size:20px!important;line-height:1!important;" +
+      "width:22px!important;height:20px!important;" +
+      "display:inline-flex!important;align-items:center!important;" +
+      "justify-content:center!important;flex-shrink:0!important;" +
+      "margin:0!important;text-align:center;}" +
+      "/* Y-STABLE RAIL: kill dam-brand 80vh height shrink + 12px pad (to bylo Y jump) */" +
+      "body.dam-sidebar-collapsed .geex-sidebar," +
+      "body.dam-sidebar-morphing .geex-sidebar{" +
+      "top:22px!important;" +
+      "height:calc(100vh - 44px)!important;" +
+      "min-height:calc(100vh - 44px)!important;" +
+      "max-height:calc(100vh - 44px)!important;}" +
       "body.dam-sidebar-collapsed .geex-sidebar{" +
+      "padding-top:38px!important;" +
+      "padding-bottom:38px!important;" +
       "padding-left:var(--dam-sb-pad-x,10px)!important;" +
       "padding-right:var(--dam-sb-pad-x,10px)!important;}" +
+      "/* Header: staly slot 56px (zmierzony expanded) - logo out of flow, bez skracania rzedu */" +
+      ".geex-sidebar__header," +
+      "body.dam-sidebar-collapsed .geex-sidebar__header," +
+      "body.dam-sidebar-morphing .geex-sidebar__header{" +
+      "height:56px!important;min-height:56px!important;max-height:56px!important;" +
+      "margin:0!important;box-sizing:border-box!important;" +
+      "align-items:center!important;}" +
+      "body.dam-sidebar-collapsed .geex-sidebar__header," +
+      "body.dam-sidebar-morphing .geex-sidebar__header{" +
+      "padding:0!important;justify-content:center!important;position:relative!important;}" +
+      "/* Morph: logo OUT OF FLOW - inaczej po zdjeciu collapsed logo wraca do flex i pcha btn */" +
+      "body.dam-sidebar-morphing .geex-sidebar__header .geex-sidebar__logo," +
+      "body.dam-sidebar-morphing .geex-sidebar__logo{" +
+      "position:absolute!important;left:0;top:0;z-index:0;" +
+      "pointer-events:none!important;margin:0!important;}" +
+      "body.dam-sidebar-collapsed .geex-sidebar__header .geex-sidebar__logo," +
+      "body.dam-sidebar-collapsed .geex-sidebar__logo{" +
+      "position:absolute!important;left:0;top:0;" +
+      "visibility:hidden!important;opacity:0!important;" +
+      "pointer-events:none!important;width:1px!important;height:1px!important;" +
+      "overflow:hidden!important;margin:0!important;padding:0!important;}" +
+      "/* Collapse btn: WYŚRODKOWANY w railu (= ta sama oś X co ikony; bylo flex-start → CX 49 vs ikony 59) */" +
+      "body.dam-sidebar-collapsed .dam-sidebar-collapse-btn," +
+      "body.dam-sidebar-morphing .dam-sidebar-collapse-btn{" +
+      "position:relative!important;z-index:1;" +
+      "margin:0 auto!important;" +
+      "width:40px!important;height:40px!important;" +
+      "flex-shrink:0!important;}" +
+      "/* Logo dolne: TYLKO collapsed/morph - expanded NIGDY (GSAP display:flex leftover) */" +
+      "body:not(.dam-sidebar-collapsed):not(.dam-sidebar-morphing) .dam-sidebar-logo-collapsed{" +
+      "display:none!important;opacity:0!important;visibility:hidden!important;" +
+      "pointer-events:none!important;width:0!important;height:0!important;" +
+      "overflow:hidden!important;margin:0!important;padding:0!important;}" +
+      "body:not(.dam-sidebar-collapsed):not(.dam-sidebar-morphing) .dam-sidebar-collapsed-meta{" +
+      "display:none!important;opacity:0!important;visibility:hidden!important;" +
+      "pointer-events:none!important;width:0!important;height:0!important;" +
+      "overflow:hidden!important;margin:0!important;padding:0!important;}" +
+      "body.dam-sidebar-collapsed .dam-sidebar-logo-collapsed," +
+      "body.dam-sidebar-morphing .dam-sidebar-logo-collapsed{" +
+      "display:flex!important;visibility:visible!important;" +
+      "margin-top:auto!important;flex-shrink:0;" +
+      "width:48px!important;max-width:48px!important;height:auto!important;" +
+      "align-self:center!important;overflow:visible!important;}" +
+      "body.dam-sidebar-collapsed .dam-sidebar-collapsed-meta," +
+      "body.dam-sidebar-morphing .dam-sidebar-collapsed-meta{" +
+      "align-self:center!important;width:100%;}" +
+      "body.dam-sidebar-collapsed .geex-sidebar__wrapper," +
+      "body.dam-sidebar-morphing .geex-sidebar__wrapper{" +
+      "gap:16px!important;}" +
+      "/* Tor ikon collapsed = flex-start + te same CSS vars co morph (ZERO justify:center snap) */" +
       "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link{" +
       "justify-content:flex-start!important;" +
       "align-items:center!important;" +
@@ -686,8 +770,8 @@
       "padding-right:var(--dam-link-pad-x,14px)!important;" +
       "font-size:inherit!important;" +
       "line-height:normal!important;" +
-      "min-height:44px!important;" +
-      "height:auto!important;}" +
+      "min-height:56px!important;" +
+      "height:56px!important;}" +
       "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i," +
       "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link .uil{" +
       "font-size:20px!important;" +
@@ -702,7 +786,36 @@
       "body.dam-sidebar-collapsed .dam-sidebar-collapsed-meta{display:flex!important;}" +
       ".dam-sidebar-collapsed-meta__brand{letter-spacing:0.04em;}" +
       ".dam-sidebar-collapsed-meta__ver{opacity:0.9;}" +
-      "/* Morph: kill Geex transition:all; width + icon track via CSS vars */" +
+      "/* Morph collapse: footer out of flow od razu (inaczej margin-top:auto skacze z logo) */" +
+      "body.dam-sidebar-morph-to-collapsed .geex-sidebar__footer{display:none!important;}" +
+      "body.dam-sidebar-morph-to-collapsed .dam-sidebar-logo-collapsed," +
+      "body.dam-sidebar-morph-to-collapsed .dam-sidebar-collapsed-meta," +
+      "body.dam-sidebar-morph-to-expanded .dam-sidebar-logo-collapsed," +
+      "body.dam-sidebar-morph-to-expanded .dam-sidebar-collapsed-meta{display:flex!important;}" +
+      "body.dam-sidebar-morphing .geex-sidebar__wrapper{position:relative!important;}" +
+      "body.dam-sidebar-morphing .dam-sidebar-logo-collapsed," +
+      "body.dam-sidebar-morphing .dam-sidebar-collapsed-meta{" +
+      "margin-top:0!important;transform:none!important;will-change:opacity;}" +
+      "body.dam-sidebar-morphing .dam-sidebar-logo-collapsed{" +
+      "position:absolute!important;left:0!important;right:0!important;" +
+      "bottom:38px!important;width:48px!important;margin-left:auto!important;" +
+      "margin-right:auto!important;justify-content:center!important;}" +
+      "body.dam-sidebar-morphing .dam-sidebar-collapsed-meta{" +
+      "position:absolute!important;left:0!important;right:0!important;" +
+      "bottom:10px!important;width:100%!important;box-sizing:border-box!important;}" +
+      "/* Steady collapsed = ten sam slot co morph (bez skoku absolute->flex) */" +
+      "body.dam-sidebar-collapsed .dam-sidebar-logo-collapsed," +
+      "body.dam-sidebar-collapsed .dam-sidebar-collapsed-meta{" +
+      "margin-top:0!important;transform:none!important;}" +
+      "body.dam-sidebar-collapsed .dam-sidebar-logo-collapsed{" +
+      "position:absolute!important;left:0!important;right:0!important;" +
+      "bottom:38px!important;width:48px!important;margin-left:auto!important;" +
+      "margin-right:auto!important;justify-content:center!important;}" +
+      "body.dam-sidebar-collapsed .dam-sidebar-collapsed-meta{" +
+      "position:absolute!important;left:0!important;right:0!important;" +
+      "bottom:10px!important;width:100%!important;box-sizing:border-box!important;}" +
+      "body.dam-sidebar-collapsed .geex-sidebar__menu-wrapper{padding-bottom:108px!important;}" +
+      "/* Morph: kill Geex transition:all; width + icon track via CSS vars; pad-Y locked */" +
       "body.dam-sidebar-morphing .geex-sidebar," +
       "body.dam-sidebar-morphing .geex-main-content," +
       "body.dam-sidebar-morphing .geex-sidebar *{" +
@@ -710,6 +823,8 @@
       "body.dam-sidebar-morphing .geex-sidebar{" +
       "overflow-x:hidden!important;" +
       "will-change:width;" +
+      "padding-top:38px!important;" +
+      "padding-bottom:38px!important;" +
       "padding-left:var(--dam-sb-pad-x,29px)!important;" +
       "padding-right:var(--dam-sb-pad-x,29px)!important;}" +
       "body.dam-sidebar-morphing .geex-main-content{" +
@@ -721,6 +836,9 @@
       "justify-content:flex-start!important;" +
       "align-items:center!important;" +
       "gap:0!important;" +
+      "min-height:56px!important;" +
+      "height:56px!important;" +
+      "box-sizing:border-box!important;" +
       "padding-left:var(--dam-link-pad-x,25px)!important;" +
       "padding-right:var(--dam-link-pad-x,25px)!important;}" +
       "/* Labels out of flow = icons keep track (no reflow / recenter) */" +
@@ -872,7 +990,23 @@
       meta.innerHTML =
         '<span class="dam-sidebar-collapsed-meta__brand">' + brand + "</span>" +
         '<span class="dam-sidebar-collapsed-meta__ver" title="Wersja programu DAM">v' + ver + "</span>";
+      resetSidebarIdentityEl(meta);
     }
+    resetSidebarIdentityEl(document.querySelector(".dam-sidebar-logo-collapsed"));
+  }
+
+  function resetSidebarIdentityEl(el) {
+    if (!el) return;
+    if (window.gsap) {
+      try {
+        window.gsap.killTweensOf(el);
+        window.gsap.set(el, { clearProps: "opacity,visibility,autoAlpha,x,y,transform" });
+      } catch (eReset) { /* ignore */ }
+    }
+    el.style.removeProperty("transform");
+    el.style.removeProperty("translate");
+    el.style.removeProperty("opacity");
+    el.style.removeProperty("visibility");
   }
 
   /**
@@ -1762,7 +1896,8 @@
   }
 
   var SIDEBAR_COLLAPSE_KEY = "dam_sidebar_collapsed";
-  var SIDEBAR_MORPH_DUR = 0.5;
+  /** Dim + width morph duration (user: 0.7s). */
+  var SIDEBAR_MORPH_DUR = 0.7;
   var SIDEBAR_MORPH_EASE = "power3.inOut";
   var SIDEBAR_COLLAPSED_W = 72;
   var SIDEBAR_W_VAR = "--dam-sidebar-w";
@@ -1857,15 +1992,34 @@
     localStorage.setItem(SIDEBAR_COLLAPSE_KEY, collapsed ? "1" : "0");
     document.body.classList.toggle("dam-sidebar-collapsed", !!collapsed);
     document.documentElement.style.removeProperty(SIDEBAR_W_VAR);
+    var bottomLogo = document.querySelector(".dam-sidebar-logo-collapsed");
+    var collapsedMeta = document.querySelector(".dam-sidebar-collapsed-meta");
     if (collapsed) {
       /* Zachowaj tor ikon = koniec morph (bez snap do justify:center). */
       applyCollapsedIconTrackVars();
+      if (bottomLogo) {
+        bottomLogo.style.display = "flex";
+        resetSidebarIdentityEl(bottomLogo);
+      }
+      if (collapsedMeta) {
+        collapsedMeta.style.display = "flex";
+        resetSidebarIdentityEl(collapsedMeta);
+      }
     } else {
       clearSidebarMorphVars();
       var footer = document.querySelector(".geex-sidebar__footer");
       if (footer) {
         footer.style.removeProperty("opacity");
         footer.style.removeProperty("visibility");
+      }
+      /* HARD: logo collapsed NIE smie zostac display:flex po expand (GSAP leftover). */
+      if (bottomLogo) {
+        bottomLogo.style.display = "none";
+        resetSidebarIdentityEl(bottomLogo);
+      }
+      if (collapsedMeta) {
+        collapsedMeta.style.display = "none";
+        resetSidebarIdentityEl(collapsedMeta);
       }
     }
     syncCollapseBtn(collapsed);
@@ -1902,11 +2056,12 @@
   }
 
   /**
-   * Morph collapse ~0.5s (gsap-core):
+   * Morph collapse ~0.7s (gsap-core):
    * - JEDNA os layoutu: --dam-sidebar-w (sidebar width + main pad)
    * - Tor ikon: --dam-sb-pad-x + --dam-link-pad-x (flex-start; pad zostaje po collapse)
-   * - Labels: absolute (bez reflow ikon) + autoAlpha
-   * - Dim: filter brightness tylko nieaktywne, ten sam 0.5s
+   * - Y-stable: wysokosc raila = calc(100vh-44px) w morph+collapsed (nie 80vh)
+   * - Labels: absolute (bez reflow ikon) + autoAlpha / x
+   * - Dim: filter brightness tylko nieaktywne, duration = SIDEBAR_MORPH_DUR
    * - prefers-reduced-motion / brak GSAP => natychmiast
    * - Boot: animate=false (applySidebarCollapse) - bez flashu
    */
@@ -2008,16 +2163,44 @@
       setSidebarWPx(startW);
       setPadVars(startSbPad, startLinkPad);
 
+      /* FLIP collapse-btn: zmierz PRZED zmiana layoutu (logo out-of-flow + center). */
+      var collapseBtn = document.getElementById("damSidebarCollapse");
+      var btnFirst = collapseBtn ? collapseBtn.getBoundingClientRect() : null;
+
       document.body.classList.add("dam-sidebar-morphing");
+      document.body.classList.remove("dam-sidebar-morph-to-collapsed", "dam-sidebar-morph-to-expanded");
+      document.body.classList.add(want ? "dam-sidebar-morph-to-collapsed" : "dam-sidebar-morph-to-expanded");
       _sidebarMorphing = true;
       _sidebarMorphWant = want;
       localStorage.setItem(SIDEBAR_COLLAPSE_KEY, want ? "1" : "0");
       syncCollapseBtn(want);
       document.body.classList.remove("dam-sidebar-collapsed");
+      void sidebar.offsetWidth;
+
+      /* FLIP: zachowaj wizualna pozycje btn, tween x→0 (razem z kurczeniem raila = płynny tor). */
+      if (collapseBtn && btnFirst) {
+        var btnLast = collapseBtn.getBoundingClientRect();
+        var btnDx = btnFirst.left - btnLast.left;
+        gsap.killTweensOf(collapseBtn);
+        if (Math.abs(btnDx) > 0.5) {
+          gsap.fromTo(
+            collapseBtn,
+            { x: btnDx },
+            { x: 0, duration: dur, ease: ease, overwrite: "auto" }
+          );
+        } else {
+          gsap.set(collapseBtn, { x: 0 });
+        }
+      }
 
       function finishMorph() {
+        var btnPre = collapseBtn ? collapseBtn.getBoundingClientRect() : null;
         applySidebarCollapsedClass(want);
-        document.body.classList.remove("dam-sidebar-morphing");
+        document.body.classList.remove(
+          "dam-sidebar-morphing",
+          "dam-sidebar-morph-to-collapsed",
+          "dam-sidebar-morph-to-expanded"
+        );
         _sidebarMorphing = false;
         /* Collapsed: NIE czysc pad vars (tor ikon = koniec tweenu). */
         clearSidebarMorphInline(gsap, fadeTargets, !!want);
@@ -2025,6 +2208,30 @@
         if (!want && footer) {
           footer.style.removeProperty("opacity");
           footer.style.removeProperty("visibility");
+        }
+        /* Expand koniec: logo wraca do flex → btn skacze w prawo; FLIP dogrywka. */
+        if (!want && collapseBtn && btnPre) {
+          void sidebar.offsetWidth;
+          var btnPost = collapseBtn.getBoundingClientRect();
+          var endDx = btnPre.left - btnPost.left;
+          gsap.killTweensOf(collapseBtn);
+          if (Math.abs(endDx) > 0.5) {
+            gsap.fromTo(
+              collapseBtn,
+              { x: endDx },
+              {
+                x: 0,
+                duration: 0.28,
+                ease: "power2.out",
+                overwrite: "auto",
+                clearProps: "x",
+              }
+            );
+          } else {
+            gsap.set(collapseBtn, { clearProps: "x" });
+          }
+        } else if (collapseBtn) {
+          gsap.set(collapseBtn, { clearProps: "x" });
         }
         _sidebarMorphTl = null;
       }
@@ -2078,10 +2285,17 @@
 
       if (want) {
         gsap.set(labels, { autoAlpha: 1, x: 0 });
-        if (footer) gsap.set(footer, { autoAlpha: 1 });
+        if (footer) {
+          footer.style.display = "none";
+          gsap.set(footer, { autoAlpha: 0 });
+        }
         if (headerLogo) gsap.set(headerLogo, { autoAlpha: 1 });
-        if (bottomLogo) gsap.set(bottomLogo, { display: "flex", autoAlpha: 0 });
-        if (collapsedMeta) gsap.set(collapsedMeta, { autoAlpha: 0 });
+        if (bottomLogo) {
+          gsap.set(bottomLogo, { display: "flex", autoAlpha: 0, x: 0, y: 0, transform: "none" });
+        }
+        if (collapsedMeta) {
+          gsap.set(collapsedMeta, { display: "flex", autoAlpha: 0, x: 0, y: 0, transform: "none" });
+        }
 
         _sidebarMorphTl.to(labels, { autoAlpha: 0, x: -8, duration: dur * 0.4 }, 0);
         if (footer) {
@@ -2091,17 +2305,32 @@
           _sidebarMorphTl.to(headerLogo, { autoAlpha: 0, duration: dur * 0.28 }, 0);
         }
         if (bottomLogo) {
-          _sidebarMorphTl.to(bottomLogo, { autoAlpha: 1, duration: dur * 0.35 }, dur * 0.4);
+          _sidebarMorphTl.to(
+            bottomLogo,
+            { autoAlpha: 1, x: 0, y: 0, duration: dur * 0.35 },
+            dur * 0.4
+          );
         }
         if (collapsedMeta) {
-          _sidebarMorphTl.to(collapsedMeta, { autoAlpha: 1, duration: dur * 0.3 }, dur * 0.45);
+          _sidebarMorphTl.to(
+            collapsedMeta,
+            { autoAlpha: 1, x: 0, y: 0, duration: dur * 0.3 },
+            dur * 0.45
+          );
         }
       } else {
         gsap.set(labels, { autoAlpha: 0, x: -8 });
-        if (footer) gsap.set(footer, { autoAlpha: 0 });
+        if (footer) {
+          footer.style.removeProperty("display");
+          gsap.set(footer, { autoAlpha: 0 });
+        }
         if (headerLogo) gsap.set(headerLogo, { autoAlpha: 0 });
-        if (bottomLogo) gsap.set(bottomLogo, { display: "flex", autoAlpha: 1 });
-        if (collapsedMeta) gsap.set(collapsedMeta, { autoAlpha: 1 });
+        if (bottomLogo) {
+          gsap.set(bottomLogo, { display: "flex", autoAlpha: 1, x: 0, y: 0, transform: "none" });
+        }
+        if (collapsedMeta) {
+          gsap.set(collapsedMeta, { display: "flex", autoAlpha: 1, x: 0, y: 0, transform: "none" });
+        }
 
         _sidebarMorphTl.to(labels, { autoAlpha: 1, x: 0, duration: dur * 0.4 }, dur * 0.22);
         if (footer) {
@@ -2117,14 +2346,36 @@
               autoAlpha: 0,
               duration: dur * 0.25,
               onComplete: function () {
-                if (bottomLogo) bottomLogo.style.display = "none";
+                if (bottomLogo) {
+                  bottomLogo.style.display = "none";
+                  if (window.gsap) {
+                    try { window.gsap.set(bottomLogo, { clearProps: "opacity,visibility" }); } catch (eB) { /* ignore */ }
+                  }
+                }
               },
             },
             0
           );
         }
         if (collapsedMeta) {
-          _sidebarMorphTl.to(collapsedMeta, { autoAlpha: 0, duration: dur * 0.22 }, 0);
+          _sidebarMorphTl.to(
+            collapsedMeta,
+            {
+              autoAlpha: 0,
+              duration: dur * 0.22,
+              onComplete: function () {
+                if (collapsedMeta) {
+                  collapsedMeta.style.display = "none";
+                  if (window.gsap) {
+                    try {
+                      window.gsap.set(collapsedMeta, { clearProps: "opacity,visibility" });
+                    } catch (eM) { /* ignore */ }
+                  }
+                }
+              },
+            },
+            0
+          );
         }
       }
     });

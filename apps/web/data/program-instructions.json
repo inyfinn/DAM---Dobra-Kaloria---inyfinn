@@ -1,7 +1,7 @@
 {
-  "version": 6,
+  "version": 8,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-20T19:20:00+02:00",
+  "updated_at": "2026-07-20T21:20:00+02:00",
   "instructions": [
     {
       "id": "device-scoped-base-paths",
@@ -733,6 +733,37 @@
       ]
     },
     {
+      "id": "invoice.erp_bidirectional",
+      "must": [
+        "Dwukierunkowy kontrakt ERP faktur: import (ERP→DAM) + export/push (DAM→ERP)",
+        "GET /finance/invoices/erp-status dokumentuje direction=bidirectional oraz last_import/last_export/status",
+        "POST /finance/invoices/export (alias /push) zapisuje stub payload i stan w invoice-erp-sync.json (admin)",
+        "UI Faktury: stan sync + przyciski Import / Eksport ERP (admin), etykiety PL, klasa .dam-int-cta",
+        "Istniejacy POST /finance/invoices/import aktualizuje last_import w sync state"
+      ],
+      "body_pl": "C2: kontrakt dwukierunkowy (stub, nie live ERP). Stan: apps/web/data/invoice-erp-sync.json. Export stage: invoice-erp-export-last.json. Provider=stub do podpiecia prawdziwego ERP.",
+      "category": "finance",
+      "must_not": [
+        "Udawac live polaczenie z ERP bez provider stub/kontraktu",
+        "Eksportowac faktury bez roli admin",
+        "Usuwac import CSV - pozostaje kanalem erp_to_dam"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: dwukierunkowy ERP faktur (kontrakt)",
+      "related_kv": [
+        "program-instructions",
+        "invoice-erp-sync"
+      ],
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/data/invoice-erp-sync.json",
+        "apps/web/invoices.html",
+        "apps/web/assets/js/dam-invoices.js",
+        "apps/desktop/invoice_erp.py",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
       "id": "finance.fmcg_catalog",
       "must": [
         "Katalog lancucha kosztow FMCG w fmcg-cost-catalog.json",
@@ -924,6 +955,29 @@
       ]
     },
     {
+      "id": "lifecycle.history_restore",
+      "must": [
+        "Modal Historia statusów: u góry wiersz Aktualny stan (także bez statusu)",
+        "Każdy wpis historii ma hashtag (#lc_…) obok daty",
+        "Przywróć stan z wpisu historii → nowy wpis u góry z restored_from",
+        "Cofnij zmianę tylko na najnowszym wpisie po przywróceniu (1 poziom undo)",
+        "Przywracanie/cofanie przez ten sam most /lifecycle-status + oczekiwanie na rebuild indeksu"
+      ],
+      "body_pl": "Historia to nie tylko podgląd: admin może przywrócić F/X/D lub bez statusu z dowolnego wpisu. Przywrócenie dostaje własny hashtag i adnotację „Przywrócono z #…”. Undo cofa ostatnie przywrócenie do stanu sprzed niego.",
+      "category": "lifecycle",
+      "must_not": [
+        "Przywracać bez trybu admin i Bearer",
+        "Pokazywać Cofnij na starszych wpisach niż najnowszy po restore"
+      ],
+      "priority": "high",
+      "title_pl": "Historia lifecycle: hashtag, przywróć, cofnij",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-explorer.js",
+        "apps/desktop/lifecycle_status.py"
+      ]
+    },
+    {
       "id": "desktop.background_tray",
       "must": [
         "Aplikacja desktop moze dzialac w tle w zasobniku systemowym (pystray + dam_tray.py)",
@@ -1036,6 +1090,61 @@
         "apps/web/scripts/enrich-branding-element-assoc.py",
         "apps/web/scripts/build-branding-index.py",
         "apps/web/assets/js/dam-media-preview.js"
+      ]
+    },
+    {
+      "id": "explorer.product_from_template",
+      "must": [
+        "Nowa kategoria / produkt na dysku tylko z szablonow: {Marketing}/- POLSKA/01 - PRODUKTY/Szablony folderow/00 - KATEGORIA (DK) lub 00 - CATEGORY (GC)",
+        "API mostu: POST /explorer/create-category oraz POST /explorer/create-product (sesja admin)",
+        "dry_run:true zwraca planned_path / planned_tree BEZ zapisu; realny zapis tylko gdy dry_run:false AND confirm:true",
+        "Kategorie DK pod - POLSKA/01 - PRODUKTY/- DK jako NN - NAZWA; GC pod - EKSPORT/01 - PRODUCTS/- GC",
+        "Nazwa folderu produktu jak na dysku: NAZWA — [ podkategoria ] (separator jak w szablonie / istniejacych produktach)",
+        "create-category: copytree szablonu kategorii, usun zagniezdzony placeholder produktu (kategoria startuje pusta)",
+        "create-product: copytree szablonu produktu; warianty z variants[] (template_folder + date + index); po sukcesie index_rebuild_suggested / POST /index/rebuild",
+        "NIGDY nie kasowac istniejacych drzew usera - tylko operacje na swiezo skopiowanym drzewie z szablonu"
+      ],
+      "body_pl": "Tworzenie kategorii i produktow w Eksploratorze idzie przez most: kopia szablonow z dysku Marketing, nigdy recezne sklejanie pustych folderow. Dry-run pokazuje plan sciezek; zapis wymaga confirm. Po utworzeniu przebuduj indeks plikow.",
+      "category": "explorer",
+      "must_not": [
+        "Zapisywac na dysk przy samym dry_run albo bez confirm:true",
+        "Usuwac / nadpisywac istniejace kategorie lub produkty usera",
+        "Omijac szablony i tworzyc gole foldery bez struktury wariantow z Szablony folderow"
+      ],
+      "priority": "critical",
+      "title_pl": "Explorer: kategoria/produkt ze szablonu dysku",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/desktop/explorer_create.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-explorer.js"
+      ]
+    },
+    {
+      "id": "explorer.demo_index_rules",
+      "must": [
+        "Suffix demo na dysku: ' - D' (jak lifecycle.status_fxd litera D)",
+        "Doklej ' - D' gdy demo:true w create-product LUB gdy index brakuje / jest placeholder 6300XXX(.00)",
+        "Regula dotyczy nazwy folderu produktu i/lub wariantu tworzonego ze szablonu",
+        "Po nadaniu prawdziwego indeksu (rename-index) admin moze zdjac - D przez lifecycle clear/status"
+      ],
+      "body_pl": "Produkty i warianty bez realnego indeksu (6300XXX albo pusty) traktuj jak DEMO: dopisz ' - D' do nazwy folderu przy tworzeniu ze szablonu. To spójne z lifecycle D = demo/prototyp.",
+      "category": "explorer",
+      "must_not": [
+        "Tworzyc folder z 6300XXX bez oznaczenia demo gdy API nie wymusza inaczej",
+        "Myllic - D (demo) z - F (aktualne) ani - X (nieaktualne)"
+      ],
+      "priority": "critical",
+      "title_pl": "Explorer: reguly indeksu DEMO / 6300XXX",
+      "related_kv": [
+        "lifecycle-status",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/desktop/explorer_create.py",
+        "apps/desktop/lifecycle_status.py",
+        "apps/desktop/local_bridge.py"
       ]
     }
   ],

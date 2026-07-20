@@ -30,7 +30,7 @@ Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 10. **Em-dash ban:** zakaz `?` i `?` w UI, commit messages, copy agentow. Tylko `-`.
 11. **Nie kopiowac** kodu structure-mcp do DAM; tylko wiedza domenowa (sloty 0-4, indeksy).
 12. **Weryfikacja UI (2026-07-18):** po kazdej zmianie wizualnej - screenshot przegladarki + Read obrazu. Zakaz oddania "na oko"/sam CDP. Sidebar collapsed: logo w calosci czytelne (`object-fit: contain`, nie crop). Regula: `.cursor/rules/verify-ui-after-changes.mdc`.
-13. **Model agentow / Task tool (HARD, 2026-07-20):** TYLKO `cursor-grok-4.5-high-fast` (Grok 4.5 high). Zakaz Opus i Fable: `claude-opus-*`, `claude-fable-*`. Obowiazuje wszedzie (kolejni agenci, Task tool, subagenci). User: "Nie uzywaj juz nigdzie Opus, ani Fable. Tylko GROK. Wszedzie."
+13. **Model agentow (HARD, 2026-07-20 → supersede 2026-07-20 wieczorem):** Wygrywa **global rule** `~/.cursor/rules/model-grok-composer-only.mdc`. Parent/plan = model z UI usera (Fable/Opus/Sonnet/Sol/Grok…) — **nie** przełączaj na siłę na GROK. Task/subagenci default `cursor-grok-4.5-high-fast` lub `composer-2.5-fast`, chyba że user nadpisze w tej samej wiadomości. Stara nota „tylko GROK wszędzie / zakaz Opus-Fable na parentcie” = **NIEAKTUALNA**.
 
 ## Stack
 
@@ -991,12 +991,32 @@ ole=admin.
 - Explorer: `openLightbox` -> DamMediaPreview (viz-studio); historia statusow = przycisk -> modal.
 - Cache-bust marker: `usab20260720a/b`.
 
-## #132 (2026-07-20) - HARD: tylko Grok (zakaz Opus/Fable)
-- Kolejni agenci / Task tool / subagenci: TYLKO model `cursor-grok-4.5-high-fast` (Grok 4.5 high).
-- Zakaz: Opus (`claude-opus-*`), Fable (`claude-fable-*`). Wszedzie. (Hard rules #13)
+## #132 (2026-07-20) - Model policy (SUPERSEDED wieczorem)
+- **Było:** tylko Grok wszędzie, zakaz Opus/Fable.
+- **Jest (global):** parent = wybór UI usera; subagenci default Grok/Composer. Patrz `~/.cursor/rules/model-grok-composer-only.mdc` + hard #13.
 
 ## #133 (2026-07-20) - UI chrome: Viz changelog / Branding page size / Help restart
 - Viz `#damChangeLogBar`: tylko admin + ADMIN ON; mount w `.dam-search-scope` po prawej; to Cofnij/Ponow na dysku X: (most 8766), nie Baza online.
 - Branding limit kart: suwak + input = draft; apply/persist dopiero po OK (Enter na input tez apply).
 - `#damHelpModal`: Wlacz samouczek ponownie pod przyciskiem X (column + gap); wiekszy padding head/body (+10px).
 
+## #134 (2026-07-20) - VIZ-TOOLBAR pad pill = baza + delta
+- Pill Wizualizacje: padding = branding baza (7/14) **+8 top/bottom +12 L/R** → **15/26**, nie absolutne 8/12.
+- Styl pill: Geex/DAM light tokens (nie 1:1 ciemny branding); inject #damVizCountPillInk.
+- Branding page-size: session/local po OK wygrywa z race /user-prefs.
+- Changelog bar: admin role + ADMIN ON; trailing w .dam-search-scope.
+
+## #135 (2026-07-20) - C3 freeze + backlog B3/B4/B7
+- C3 = **freeze anatomii** (nie redesign): `agents/shared/bento-card-freeze.md`; komentarze FROZEN przy `.dam-viz-card` / `.dam-branding-card`.
+- B3: poster wideo — bridge SVG placeholder gdy ffmpeg pada; JS data-URI + probe.
+- B4: filtry Autor (`author:Krzysztof|Sylwia|Szymon|Highlite`) w Brandingu.
+- B7: cache token `bust20260720a` na pozostałych stronach HTML (tokens/brand/grid-reveal).
+- A1/A2 nadal `[ ]` — brak Client ID/Secret w `dam-connection.env`.
+
+## #136 (2026-07-20) - Zaległości: Explorer create + FMCG + ERP stub
+- **Root cause zgubionego feature:** kolizja nazw WORKER A/B/C (prompty Explorera vs viz/CTA) — lekcja w code-doctrine §12.
+- Explorer: Plus kategorii + Dodaj produkt → modal dry-run → confirm → `POST /explorer/create-*` (`explorer_create.py`); cache `expb20260720b`.
+- A3: katalog FMCG bez null `amount` (seed_estimate) + import-map v2.
+- C2: dwukierunkowy stub ERP faktur (`invoice_erp.py`, erp-status/export, UI Faktury).
+- B5: QA layoutów dashboardu + inject `#damDashLayoutB5Css` (`b5qa20260720c`).
+- Real write Marketing tylko po Podgląd + Potwierdź; nigdy nie kasować drzew usera.

@@ -35,7 +35,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=motion20260720a">
 <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=helprestart20260720a">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=helprestart20260720c">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=sidebaridentity20260720a">
 </head>
 
 <body class="geex-dashboard demo-invoice is-booting">
@@ -874,14 +874,18 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 				<!-- INVOICES MAIN CONTENT -->
 				<div class="geex-card" style="padding:24px;border-radius:12px;background:var(--card-bg,#fff);box-shadow:0 2px 12px rgba(0,0,0,0.06);margin-bottom:24px">
 					<div class="dam-inv-toolbar" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
-						<span id="invSourceBadge" class="dam-int-chip dam-int-st dam-int-st--wait">Zrodlo: -</span>
-						<span id="invImportWrap" hidden>
+						<span id="invSourceBadge" class="dam-int-chip dam-int-st dam-int-st--wait">Źródło: -</span>
+						<span id="invErpStatusBadge" class="dam-int-chip dam-int-st dam-int-st--wait" title="Stan synchronizacji ERP">ERP: —</span>
+						<span id="invErpAdminWrap" hidden style="display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center">
 							<label class="dam-int-cta" style="cursor:pointer;margin:0">
-								Importuj CSV
+								Import z ERP (CSV)
 								<input type="file" id="invCsvImport" accept=".csv,text/csv" style="display:none">
 							</label>
+							<button type="button" class="dam-int-cta" id="invErpExportBtn">Eksport do ERP</button>
 						</span>
+						<span id="invImportWrap" hidden style="display:none" aria-hidden="true"></span>
 					</div>
+					<p id="invErpSyncMeta" class="dam-inv-erp-meta" style="font-size:12px;color:#666;margin:0 0 16px">Kierunek: dwukierunkowy (ERP ↔ DAM). Ostatni import / eksport: —</p>
 					<!-- Summary cards -->
 					<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
 						<div style="flex:1;min-width:140px;background:#f4ecfd;border-radius:10px;padding:16px;text-align:center">
@@ -1762,12 +1766,12 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<script src="./assets/js/dam-i18n.js?v=plshell20260720a"></script>
 	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
 	<script src="./assets/js/dam-version.js?v=2.0.7"></script>
-	<script src="./assets/js/dam-shell.js?v=supviz20260720b"></script>
+	<script src="./assets/js/dam-shell.js?v=sidebaridentity20260720b"></script>
 	<script src="./assets/vendor/js/gsap/gsap.min.js"></script>
 	<script src="./assets/js/dam-loader.js?v=1"></script>
 	<script src="./assets/js/dam-grid-reveal.js?v=motion20260720a"></script>
 	<script src="./assets/js/dam-ui-cta.js?v=ctaunify20260720b"></script>
-	<script src="./assets/js/dam-invoices.js?v=ctaunify20260720b"></script>
+	<script src="./assets/js/dam-invoices.js?v=erpc220260720a"></script>
 	<script src="./assets/js/dam-tutorial.js?v=helprestart20260720a"></script>
 </body>
 

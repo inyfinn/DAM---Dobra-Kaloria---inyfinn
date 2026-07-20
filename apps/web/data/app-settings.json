@@ -9,8 +9,8 @@
   "version": 2,
   "updated_at": "2026-07-18",
   "instructions": {
-    "count": 49,
-    "version": 6,
+    "count": 53,
+    "version": 8,
     "source_kv": "program-instructions",
     "critical_ids": [
       "device-scoped-base-paths",
@@ -33,7 +33,9 @@
       "branding.marketing_dual_roots",
       "wykrojnik.registry_xlsx_kubara",
       "branding.linked_product_derived",
-      "viz.assoc_no_visualization_loop"
+      "viz.assoc_no_visualization_loop",
+      "explorer.product_from_template",
+      "explorer.demo_index_rules"
     ],
     "settings_anchor": "settings.html#damProgramInstructions"
   }

@@ -1,5 +1,24 @@
 ﻿# process.md - log + proces DAM
 
+## 2026-07-20 - Model policy global: parent = UI usera
+
+### Komenda/Akcja
+Edycja global rule `~/.cursor/rules/model-grok-composer-only.mdc` + supersede memory #13/#132.
+
+### Log/Status
+1. Parent/plan/wdrożenie = model z listy UI (Fable/Opus/Sonnet/Sol/Grok…) — zakaz auto-przełączania na GROK
+2. Task/subagenci default `cursor-grok-4.5-high-fast` lub `composer-2.5-fast`, chyba że user nadpisze w tej samej wiadomości
+3. Hierarchia rang wpisana w rule; memory DAM wskazuje na global rule
+
+### Efekt/Fix
+Nie wymuszamy już „tylko GROK wszędzie” na parentcie gdy user wybrał Opus/Fable.
+
+### Zrodla
+- User brief 2026-07-20 21:02
+- `C:\Users\xpret\.cursor\rules\model-grok-composer-only.mdc`
+
+---
+
 ## 2026-07-16 - Bootstrap
 
 ### Komenda/Akcja
@@ -5640,3 +5659,312 @@ Brak.
 
 ### Zrodla
 visualizations.html; dam-viz.css; dam-tag-edit.js; dam-viz.js (read); branding.html; dam-branding.js/css; dam-shell.js; dam-dobrakaloria; ui-taste; code-doctrine
+
+## 2026-07-20 - VIZ-TOOLBAR worker finish (viztb20260720f)
+
+### Komenda/Akcja
+USER WORKER: dokończ VIZ-TOOLBAR — changelog w search scope (admin), pill licznika Geex light, branding page-size OK-only. Bez commit / bez sidebar.
+
+### Log/Status
+1. Design Read: toolbar Geex/DAM (Wizualizacje + Branding meta) dla adminów opakowań; jasny panel; Cofnij/Ponów na prawo w scope.
+2. Changelog: `DamSearch.bindScopeChips({ trailingEl })` + mount w `#vizSearchScope .dam-search-scope` (margin-left:auto); widoczny tylko `role=admin` + `dam_admin_mode=1`; hint copy `Ostatnia zmiana na dysku: …` (bez „cykl życia”).
+3. Spacing: filters mb 4px (status bliżej); `#vizStatus` mb 15px.
+4. Pill `#vizGridCount`: format jak Branding; pad **15/26** (= branding 7/14 **+8/+12**); light DAM tokens (nie ciemny 1:1); inject `#damVizCountPillInk` chroni przed regresją CSS.
+5. Branding Karty: suwak+input+wheel = draft; OK stosuje; fix race session/local vs `/user-prefs` (OK nie wraca do 100).
+6. Cache końcowy: `viztb20260720f` (dam-viz.css/js); branding.js `viztb20260720e`; tag-edit/search wg HTML.
+
+### Efekt/Fix
+Brief A/B/C (toolbar) Pass względem CDP. Concurrent `supviz` nadpisywał pad 8/12 ciemny — poprawione na light 15/26 + inject.
+
+### Backup
+Brak.
+
+### Test/Ewaluacja
+- node --check dam-viz.js / dam-search.js / dam-tag-edit.js / dam-branding.js OK
+- CDP viz: barInScope, admin-only, hint bez cyklu życia, filtersMb=4, statusMb=15, countPad=15px 26px, color #464255, light bg
+- CDP branding: draft nie re-renderuje; OK 40→36 kart; status limit 36
+- Screenshot+Read: viztb-pass1..5, viztb-final-*, viztb-pass5b-branding-meta (Temp/cursor/screenshots)
+
+### Zrodla
+visualizations.html; dam-viz.css/js; dam-search.js; dam-tag-edit.js; branding.html; dam-branding.js/css; dam-user-prefs.js; dam-dobrakaloria; ui-taste; code-doctrine
+
+## 2026-07-20 - Viz toolbar changelog + count pill + Branding page-size
+
+### Komenda/Akcja
+WORKER: Visualizations toolbar (changelog far-right search-scope, ADMIN gate, status spacing, count pill) + Branding page-size slider/OK + prefs.
+
+### Log/Status
+1. #damChangeLogBar przeniesiony do #vizSearchScope > .dam-search-scope (DamSearch `trailingEl` + mount w dam-tag-edit/dam-viz). Label `Dysk`, CTA `.dam-int-cta`, tip dysk vs Postgres.
+2. Gate: rola admin + `localStorage dam_admin_mode===1` (header ADMIN ON; bez legacy `dam_viz_admin_mode`).
+3. #vizStatus pod secondary filters; gap ~6px; `margin-bottom: 15px` na status.
+4. Sticky count pill `#vizGridCount`: elementy=karty produktow, pliki=warianty z wizka; pad 15/26 (7/14+8/+12); muted ink; inject `#damVizCountPillInk`.
+5. Branding `.dam-branding-page-size`: range+number+OK, wheel draft, apply tylko na OK; prefs `branding_page_size` (24-500) via DamUserPrefs + bridge normalize; session fallback.
+6. GSAP page-entrance: nested changelog dostawal opacity:0 — `data-dam-bar-revealed` + clear inline + CSS !important na belkach.
+7. Cache `?v=viztb20260720h` (viz/tag-edit/branding/user-prefs). Nie ruszano `dam-shell.js`.
+
+### Efekt/Fix
+Admin undo przy scope; non-admin ukryty; count pill na Viz; Branding page-size bez janku przy drag.
+
+### Backup
+Brak.
+
+### Test/Ewaluacja
+- CDP Viz: barInScope=true; atBar=dam-changelog-bar__label; ADMIN off→hidden / on→visible; statusMb=15px; gap=6; countPad=15px 26px; ink bg; undoCls=dam-int-cta.
+- CDP Branding: draft 48 cards unchanged until OK; OK→48 cards; session `dam_branding_page_size=48`; count pad 15/26.
+- Screenshot+Read: viz-final-pass-toolbar.png (DYSK/Cofnij/Ponow + status + pill); branding page-size control in meta.
+- Pass/Fail: Pass (CDP primary; screenshot confirms changelog on scope row).
+
+### Zrodla
+visualizations.html; dam-viz.js/css; dam-tag-edit.js; branding.html; dam-branding.js/css; dam-user-prefs.js; local_bridge.py; dam-search.js (trailingEl — concurrent); dam-dobrakaloria; ui-taste
+
+## 2026-07-20 - Sidebar Y-stable morph (collapse/expand)
+
+### Komenda/Akcja
+Napraw animacje collapse/expand sidebara: ikony trzymaja Y (tylko X), bez skracania wysokosci raila, Sesja naturalnie (bez margin-top:auto), dim 0.7s GSAP.
+
+### Log/Status
+1. Root cause CDP: collapsed height:min(80vh) (1183→982), pad 38→12, first-child margin 15→0, wrap linkow 80px + absolute labels, Sesja margin-top:auto.
+2. Fix w dam-shell.js inject #damShellLayerCss: rail calc(100vh-44px), pad-Y 38, sloty 56px nowrap, first-child 15px obu stany, ikony 20/lh:1, Sesja bez auto, footer/logo margin-top:auto, SIDEBAR_MORPH_DUR=0.7.
+3. Cache dam-shell.js?v=sidebarystable20260720c (20 HTML). Doctrine §12 lekcja.
+4. Bez commit.
+
+### Efekt/Fix
+Morph Y-stable: mid+end ΔY≈0 dla apps/sitemap/plug/desktop; ΔX≈-29; heightDelta=0; sesjaY=0.
+
+### Backup
+Brak.
+
+### Test/Ewaluacja
+- node --check dam-shell.js OK
+- CDP morph (gsap.updateRoot mid 0.35): all icon Y delta 0; end Y delta 0; h 1183→1183; sesjaTop 661 obu
+- Screenshot+Read 5 passow: pass1 expanded, pass2 collapsed, pass3 mid 142px, pass4 collapsed final, pass5 expanded final
+- Pass/Fail: Pass
+
+### Zrodla
+dam-shell.js; dam-brand.css (override via inject); code-doctrine; gsap-core; dam-dobrakaloria; ui-taste
+
+## 2026-07-20 - EXP-A Explorer entry points + toolbar CTA unify
+
+### Komenda/Akcja
+WORKER EXP-A: Plus w panelu Kategorie, Dodaj produkt w panel-head kategorii, unify toolbar Backup/Odsviez/Stosuj do anatomii .dam-int-cta, stub DamExplorerAddProduct.
+
+### Log/Status
+1. explorer.html: Plus #damExplorerAddCategory; toolbar klasy dam-int-cta; script dam-explorer-add-product.js po dam-explorer.js.
+2. dam-explorer.js: inject #damExplorerCtaUnify; panelHeadHtml showAddProduct + categoryContext; bind hooks stub-safe.
+3. Nowy stub apps/web/assets/js/dam-explorer-add-product.js (open -> toast/consolewarn).
+4. Cache token expa20260720b.
+5. Bez local_bridge / bez pelnego modala (EXP-B).
+
+### Efekt/Fix
+Entry points + CTA unify na explorerze; stub gotowy na podmiane przez EXP-B.
+
+### Backup
+Brak.
+
+### Test/Ewaluacja
+- node --check dam-explorer.js + dam-explorer-add-product.js OK
+- CDP: addCat/addProd/refresh/force/backup h=34; pad 8px 12px (icon 0); border #e7e7e7; stub open mode category/product + categoryContext
+- Screenshot+Read 3 pass: Batony, Kulki, Roslinne
+- Pass/Fail: Pass
+
+### Zrodla
+explorer.html; dam-explorer.js; dam-explorer-add-product.js; code-doctrine; dam-dobrakaloria; ui-taste
+
+## 2026-07-20 - EXP-C: bridge create-category / create-product
+
+### Komenda/Akcja
+WORKER EXP-C: endpointy mostu do tworzenia kategorii/produktu ze szablonow dysku.
+
+### Log/Status
+1. READ: code-doctrine, program-instructions, szablony na X: (`Szablony folderow/00 - KATEGORIA` + nested product; GC `00 - CATEGORY`).
+2. NOWY modul `apps/desktop/explorer_create.py` (copytree + dry_run + confirm gate + demo `- D` / 6300XXX).
+3. Wpięcie w `local_bridge.py`: POST `/explorer/create-category`, `/explorer/create-product` (admin); `BRIDGE_API_VERSION=4`.
+4. Seed PI: `explorer.product_from_template`, `explorer.demo_index_rules` (version 7).
+5. Restart pythonw local_bridge (health api_version=4).
+
+### Efekt/Fix
+- dry_run jednostkowy: kategoria `08 - TEST EXP C`; produkt z BAT + 6300XXX => `- D`.
+- curl/urllib bez sesji: 401 `login_required` (route zyje; 404 na `/explorer/no-such`).
+- Zapis tylko `dry_run:false` + `confirm:true`; po sukcesie `index_rebuild_suggested`.
+
+### Backup
+Brak (bez zapisu na dysk w testach).
+
+### Test/Ewaluacja
+- `python -c` import explorer_create dry_run OK (templates found on X:)
+- confirm gate -> `confirm_required`
+- HTTP POST bez Bearer -> 401; health -> api_version 4
+- Pass/Fail: **Pass** (auth 401 + unit dry_run; real write nie odpalany)
+
+### Zrodla
+explorer_create.py; local_bridge.py; program-instructions.json; X:/Marketing/- POLSKA/01 - PRODUKTY/Szablony folderow/
+
+## 2026-07-20 - Sidebar collapsed logo/meta bez skoku translate
+
+### Komenda/Akcja
+User: logo `.dam-sidebar-logo-collapsed` + meta `.dam-sidebar-collapsed-meta` przeskakuja przy pojawianiu sie (collapse morph).
+
+### Log/Status
+1. CDP sampling: meta zostawala `display:flex` po expand (GSAP leftover) → flex Y=1133, potem absolute Y=1123 = widoczny skok 10px.
+2. Steady collapsed uzywal flex+margin-top:auto, morph absolute bottom slot → skok na koncu morph.
+3. Fix: ten sam absolute slot (logo bottom 38px, meta 10px) w morph + collapsed (`dam-shell.js` CSS inject + `dam-brand.css`); meta `display:none` po expand jak logo; CSS `:not(.collapsed):not(.morphing)` dla meta.
+4. Cache: `dam-shell.js?v=sidebaridentity20260720b`, `dam-brand.css?v=sidebaridentity20260720a`.
+
+### Efekt/Fix
+Morph: transform none, logo/meta top stale 1062/1123 przez caly tween; expanded meta display none; collapsed logo czytelne (screenshot pass2).
+
+### Test/Ewaluacja
+- CDP collapse morph: skok tylko frame0 hidden→slot (opacity 0); po morph dY=0
+- Screenshot+Read: sidebar-collapsed-pass2.png - logo DK + DAM v2.0.7 na dole rail
+- Pass/Fail: Pass
+
+### Zrodla
+dam-shell.js; dam-brand.css; verify-ui-after-changes.mdc
+
+
+### Komenda/Akcja
+User: „juz DUZO lepiej, ale nadal sie rozjezdzza” - dokonczenie Y/X osi, footer logo leftover, collapse-btn center.
+
+### Log/Status
+1. Vision+CDP: ikony Y juz OK (dY=0), leftSpread=0; rozjazd = (A) collapse-btn CX 49 vs ikony 59, (B) GSAP zostawial .dam-sidebar-logo-collapsed{display:flex} w expanded (logo 220px na dole).
+2. Fix: header justify center + btn 40px; logo out-of-flow w morph; FLIP btn GSAP; CSS ody:not(.collapsed):not(.morphing) .dam-sidebar-logo-collapsed{display:none!important}; applySidebarCollapsedClass hard-reset display.
+3. Cache dam-shell.js?v=sidebarystable20260720g (po nadpisaniu przez concurrent sidebaridentity20260720a).
+4. Screenshoty: sb-fix-pass2-expanded-clean.png, sb-fix-pass3-collapsed-final.png (+ pass1 audit).
+
+### Efekt/Fix
+Collapsed: rail/btn/logo CX≈58, ikony CX≈59 (delta -1px); left=48 wszystkie; dY=0; logo expanded display:none.
+
+### Backup
+Brak.
+
+### Test/Ewaluacja
+- CDP 3 ikony (apps/sitemap/signout): exp top 166/222/785 left 77 → col top same left 48; leftSpread 0
+- axis btnCx=58 railCx=58 iconCx=59
+- Pass/Fail: Pass
+
+### Zrodla
+dam-shell.js #damShellLayerCss; gsap-core FLIP; ui-taste screenshot gate
+
+### Komenda/Akcja
+FAZA 1 EXP-B: modal dodawania produktu/kategorii (domkniecie planu zaleglosci)
+
+### Log/Status
+1. Pelny modal w dam-explorer-add-product.js (category/product, dry-run Podglad, Potwierdz i utworz).
+2. DamExplorer.state wyeksponowany; cache ?v=expb20260720b; postJson timeout 20s.
+3. explorer_create already_exists zwraca available_variants.
+4. QA: Plus Kategorie otwiera modal; dry-run planned_path OK; real create TEST AGENT CAT na X:.
+
+### Efekt/Fix
+Utworzono: X:\Marketing\- POLSKA\01 - PRODUKTY\- DK\08 - TEST AGENT CAT (z szablonu 00 - KATEGORIA). Potwierdzenie dopiero po dry_run.
+
+### Backup
+Brak (copytree z szablonu, nie kasowano drzew usera).
+
+### Test/Ewaluacja
+- node --check dam-explorer-add-product.js OK
+- CDP POST dry_run + confirm 200 ok
+- Screenshot+Read: modal z podgladem sciezki (page-2026-07-20T19-16-04-773Z.png)
+- Pass/Fail: Pass
+
+### Zrodla
+dam-explorer-add-product.js; explorer_create.py; explorer.html; plan dam_wdrozenie_zaleglosci
+
+### Komenda/Akcja
+FAZA 2 A3: FMCG pelne dane + mapowanie kwot
+
+### Log/Status
+1. fmcg-cost-catalog.json: 39 null amount -> seed_estimate (midpoints PL); 6 kept; nulls=0.
+2. fmcg-cost-import-map.json v2: +90 mapowan id/label.
+3. Szablon CSV uzupelniony kwotami z katalogu.
+4. Checklista A3 [x] (seed; nadpisanie realnymi kwotami przez CSV/Edytuj).
+
+### Efekt/Fix
+Lancuch FMCG gotowy do compute bez pustych kwot.
+
+### Test/Ewaluacja
+- file_items=45 nulls=0
+- Pass/Fail: Pass (techniczne; biznesowe kwoty ERP opcjonalne nadpisanie)
+
+### Zrodla
+fmcg-cost-catalog.json; fmcg-cost-import-map.json; fmcg-cost-averages.json
+
+## 2026-07-20 - WORKER C3 freeze + backlog B3/B4/B7 + A1/A2 verify
+
+### Komenda/Akcja
+C3 BENTO freeze anatomii; backlog-rest B3 poster, B4 Autor, B7 cache-bust; A1/A2 verify only.
+
+### Log/Status
+1. C3: gents/shared/bento-card-freeze.md + FROZEN comments (dam-brand.css, dam-branding.css, dam-viz.css) + doctrine §12; checklista C3 [x] freeze anatomii (nie redesign).
+2. B3: bridge _media_video_poster_placeholder (SVG 200 zamiast 422); JS VIDEO_POSTER_FALLBACK + probe w dam-branding.js / dam-media-preview.js.
+3. B4: FACET uthor:* grupa Autor (Krzysztof/Sylwia/Szymon/Highlite) — appearance_tags + author field + path.
+4. B7: HTML listed → ?v=bust20260720a dla dam-tokens/dam-brand/dam-grid-reveal (gdzie wystepuja); BOM z PS usuniety.
+5. A1/A2: verify — dam-connection.env bez DAM_ASANA_*/DAM_MS_* → status [ ] (wymaga user Client ID/Secret).
+
+### Efekt/Fix
+Freeze bez redesignu kart; poster fallback twardy; Autor w filtrach; cache sweep reszty stron.
+
+### Backup
+Brak.
+
+### Test/Ewaluacja
+- node --check dam-branding.js / dam-media-preview.js OK; bridge AST OK
+- CDP branding: Autor row widoczny; filtr Krzysztof → ~4867 plikow; video posters = data-svg fallback
+- Screenshot+Read: page-2026-07-20T19-21-17-859Z.png (Autor + Wideo)
+- B7: brak stale tokenow na listed pages
+- Pass: C3, B3, B4, B7 | Fail/open: A1, A2 (credentials)
+
+### Zrodla
+bento-card-freeze.md; code-doctrine.md §12; dam-branding.js; dam-media-preview.js; local_bridge.py; WAZNA-CHECKLISTA; memory #135
+
+### Komenda/Akcja
+C2 — dwukierunkowy ERP faktur (kontrakt stub + UI)
+
+### Log/Status
+1. READ: program-instructions finance.invoices_import; local_bridge /finance/invoices*; invoices.html + dam-invoices.js; checklist C2 [ ].
+2. NOWY helper apps/desktop/invoice_erp.py (status/export/mark_import, stage invoice-erp-export-last.json).
+3. Bridge: GET /finance/invoices/erp-status; POST /finance/invoices/export (+ alias /push); import aktualizuje last_import; BRIDGE_API_VERSION=5; health hub_routes.
+4. Persist: apps/web/data/invoice-erp-sync.json.
+5. UI Faktury: badge ERP, meta kierunku, Import z ERP (CSV) + Eksport do ERP (.dam-int-cta, admin).
+6. Seed: invoice.erp_bidirectional w program-instructions.json v8; lustro app-settings; C2 [x].
+7. RESTART bridge wymagany (watchdog desktop respawnuje pythonw) — po kill+respawn api_version=5.
+
+### Efekt/Fix
+Kontrakt bidirectional stub (nie live ERP). Import CSV zachowany; export stage + sync state; UI pokazuje stan.
+
+### Backup
+Brak (tylko data JSON sync/export stage).
+
+### Test/Ewaluacja
+- python ast + invoice_erp unit: PASS (direction bidirectional, dry/export/import)
+- node --check dam-invoices.js: PASS
+- GET /health api_version=5 + hub_routes export/erp-status: PASS (po restarcie mostu)
+- GET /finance/invoices/erp-status (Bearer admin): PASS direction=bidirectional
+- POST /finance/invoices/export: PASS exported=10 staged=true
+- Screenshot+Read invoices.html: ERP OK ↔, Import/Eksport, meta last import/export — PASS
+- Pass/Fail: **Pass** (live ERP provider nadal stub)
+
+### Zrodla
+apps/desktop/invoice_erp.py; local_bridge.py; invoice-erp-sync.json; dam-invoices.js; invoices.html; program-instructions.json; WAZNA-CHECKLISTA C2
+
+
+### Komenda/Akcja
+FAZA 2+3: domkniecie zaleglosci planu (A3/B5/C2/C3/rest) + docs
+
+### Log/Status
+1. A3: FMCG catalog 45 pozycji z kwotami (seed_estimate), import-map v2, CSV template.
+2. B5: QA layoutow 2x2/1x4/1x6 @1280 + inject #damDashLayoutB5Css; cache b5qa20260720c.
+3. C2: invoice_erp.py + GET erp-status + POST export; UI Faktury; PI invoice.erp_bidirectional.
+4. C3: bento-card-freeze.md + FROZEN comments; checklista freeze (nie redesign).
+5. B3/B4/B7: poster fallback, Autor tags, cache-bust bust20260720a; A1/A2 nadal [ ] (OAuth user).
+6. Doktryna: lekcja kolizji nazw WORKER A/B/C.
+
+### Efekt/Fix
+Checklista A3/B3/B4/B5/B7/C2/C3 [x]; Explorer create end-to-end (dry-run+confirm).
+
+### Test/Ewaluacja
+- Explorer create category TEST AGENT CAT na X: OK
+- Dashboard layout cycle CDP overflow=[] @1280
+- Pass/Fail: Pass fali (A1/A2 blocked na credentials)
+
+### Zrodla
+plan dam_wdrozenie_zaleglosci; explorer_create.py; dam-explorer-add-product.js; invoice_erp.py

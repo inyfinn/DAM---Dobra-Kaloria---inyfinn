@@ -680,6 +680,8 @@
   margin-bottom: 12px;
 }
 
+/* FROZEN ANATOMY (C3 / memory §123) — .dam-branding-card layout locked.
+   Spec: agents/shared/bento-card-freeze.md — nie redesign; chrome hubów OK. */
 .dam-branding-card .dam-viz-thumb {
   padding-top: calc(8px * var(--dam-viz-card-scale, 1));
 }

@@ -251,3 +251,10 @@ Zapis doslownych wymagan usera z 2026-07-20 (po pierwszej iteracji planu
 - Wpisy do process.md; nowe lekcje do code-doctrine.md sekcja 12.
 - Referencje obrazkowe usera: assets czatu (screenshoty modali, kafelkow,
   thumb pickera, maskotka 3x3).
+
+43. **Explorer create (zalegle):** Plus Kategorie + Dodaj produkt → modal
+    Podglad sciezki → Potwierdz → POST /explorer/create-* (copytree Szablony).
+    Nazwy agentow EXP-A/B/C (nie generyczne A/B/C). **DONE 2026-07-20.**
+44. **ERP faktur C2 stub:** erp-status + export staged; UI Faktury. **DONE (stub).**
+45. **BENTO C3:** freeze anatomii (spec), nie redesign. **DONE.**
+

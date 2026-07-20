@@ -640,6 +640,17 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   logo collapsed `margin-top:10px` nie `auto`, (3) footer expanded
   `DAM / Dobra Kaloria - Inyfinn / v…`; collapsed `.dam-sidebar-collapsed-meta`.
   Cache: `dam-shell.js?v=sidebarmorph20260720e`.
+- 2026-07-20 | Sidebar Y-stable morph | collapse skakal Y (sitemap 227→166),
+  wysokosc 1183→982 | root cause: (1) `dam-brand.css` collapsed
+  `height:min(80vh,…)` + `padding:12px` vs expanded `calc(100vh-44px)`/`38px`,
+  (2) first-child `margin-top:15px` zerowane w collapsed, (3) wrap etykiet
+  (Kalkulator/Sesja 80px) + label `position:absolute` w morph kurczy sloty,
+  (4) Sesja `margin-top:auto` pcha w dol | fix w inject `#damShellLayerCss`:
+  rail `height/max-height:calc(100vh-44px)`, pad-Y 38, sloty linkow `56px`
+  + nowrap, first-child margin 15px w obu stanach, ikony box 20px/lh:1,
+  Sesja bez auto (footer/logo `margin-top:auto`), morph dur 0.7s dim.
+  Y-stable morph = nie kurcz wysokosci raila / nie reflow menu. Cache:
+  `dam-shell.js?v=sidebarystable20260720c`.
 - 2026-07-20 | Change-log vs „Baza online” | hint `#damChangeLogHint` = „Bridge
   offline” mimo zielonego „Baza online” | `/change-log` wymaga sesji
   (`_require_login`); fetch BEZ `Authorization` dostaje `ok:false,
@@ -648,3 +659,13 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   + rozróżnij `login_required` vs sieć; copy PL: „Most zmian niedostępny -
   Cofnij/Ponów lokalnie”. Cofnij/Ponów = undo/redo rename typu/indeksu/plików
   na dysku X: przez most 8766 (tylko admin).
+- 2026-07-20 | BENTO C3 | pokusa redesignu kart przy chrome hubów | anatomia
+  `.dam-viz-card` / `.dam-branding-card` zamrożona (memory §123) | freeze spec
+  `agents/shared/bento-card-freeze.md` + komentarze FROZEN w CSS; chrome OK,
+  kart bez ADR nie restylować.
+- 2026-07-20 | Kolizja nazw WORKER A/B/C | przygotowano prompty Explorera
+  (dodaj produkt/kategorię), potem odpalono inne A/B/C (viz/CTA/PL) — feature
+  nie dostał żadnego agenta i utknął jako „czeka na launch” | nazwy stref
+  **unikalne per fala** (`EXP-A`/`EXP-B`/`EXP-C`, nie generyczne A/B/C);
+  jawne „odpal/działaj” przed spawn; po launch sprawdź ownership WRITE.
+  Efekt naprawy: most `explorer_create.py` + modal `dam-explorer-add-product.js`.

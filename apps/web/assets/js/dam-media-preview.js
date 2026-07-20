@@ -13,6 +13,18 @@
         "</svg>"
     );
 
+  /** B3: lokalny poster gdy ffmpeg/bridge nie odda klatki. */
+  var VIDEO_POSTER_FALLBACK =
+    "data:image/svg+xml," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">' +
+        '<rect width="640" height="360" fill="#ececf2"/>' +
+        '<circle cx="320" cy="168" r="42" fill="#c5c6cd"/>' +
+        '<path d="M308 148 L308 188 L348 168 Z" fill="#fff"/>' +
+        '<text x="320" y="248" text-anchor="middle" fill="#696877" ' +
+        'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
+    );
+
   var PREVIEW_EXTS = { tif: 1, tiff: 1, psd: 1, psb: 1, bmp: 1 };
   var VIDEO_EXTS = { mp4: 1, mov: 1, webm: 1, avi: 1, mkv: 1, m4v: 1 };
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
@@ -1629,8 +1641,27 @@
     vid.controls = false;
     vid.playsInline = true;
     vid.preload = "metadata";
-    vid.poster = posterUrl(a.path);
+    vid.poster = VIDEO_POSTER_FALLBACK;
     vid.src = streamUrl(a.path);
+    (function bindPoster(v, bridgePoster) {
+      if (!bridgePoster) return;
+      var probe = new Image();
+      probe.onload = function () {
+        try {
+          v.poster = bridgePoster;
+        } catch (e) {
+          /* ignore */
+        }
+      };
+      probe.onerror = function () {
+        try {
+          v.poster = VIDEO_POSTER_FALLBACK;
+        } catch (e2) {
+          /* ignore */
+        }
+      };
+      probe.src = bridgePoster;
+    })(vid, posterUrl(a.path));
 
     var playBtn = document.createElement("button");
     playBtn.type = "button";

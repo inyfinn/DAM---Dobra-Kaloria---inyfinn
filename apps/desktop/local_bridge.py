@@ -11,6 +11,13 @@ Endpoints:
   POST /rename-index {"folder","from_index","to_index","dry_run?"} -> rename index in folder tree
   POST /lifecycle-status {"scope":"product|variant","status":"aktualne|nieaktualne|demo|clear","path",...}
                          -> suffix - F/- X/- D, archiwum, historia previous_name/path
+  POST /explorer/create-category  admin; JSON {brand:DK|GC, name, dry_run, confirm}
+                         -> copytree Szablony/00 - KATEGORIA|CATEGORY -> {NN} - NAME
+                         dry_run=true: planned_path bez zapisu; zapis tylko dry_run=false AND confirm=true
+  POST /explorer/create-product   admin; JSON {brand, category_path, name, subcategory,
+                         variants[{enabled,template_folder,date,index}], demo, dry_run, confirm}
+                         -> copytree szablon produktu; demo/6300XXX => suffix " - D"
+                         po sukcesie: index_rebuild_suggested (client: POST /index/rebuild)
   POST /synology-share {"path": "..."} -> Synology Drive "Uzyskaj lacze" / Get link
   POST /validate-base {"path": "X:\\\\Marketing"} -> checks 3 root folders
   POST /pick-folder {"start":"X:\\\\"} -> natywny dialog folderu (tkinter; UI :8765)
@@ -80,10 +87,20 @@ try:
 except ImportError:
     lifecycle_status_mod = None  # type: ignore
 
+try:
+    import explorer_create as explorer_create_mod
+except ImportError:
+    explorer_create_mod = None  # type: ignore
+
+try:
+    import invoice_erp as invoice_erp_mod
+except ImportError:
+    invoice_erp_mod = None  # type: ignore
+
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
-BRIDGE_API_VERSION = 3
+BRIDGE_API_VERSION = 5
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
@@ -1658,6 +1675,7 @@ FMCG_CATALOG_FILE = WEB_ROOT / "data" / "fmcg-cost-catalog.json"
 FMCG_IMPORT_MAP_FILE = WEB_ROOT / "data" / "fmcg-cost-import-map.json"
 PROJECT_COSTS_FILE = WEB_ROOT / "data" / "project-costs.json"
 INVOICES_FILE = WEB_ROOT / "data" / "invoices.json"
+INVOICE_ERP_SYNC_FILE = WEB_ROOT / "data" / "invoice-erp-sync.json"
 ASANA_TASKS_FILE = WEB_ROOT / "data" / "asana-tasks.json"
 WYKROJNIK_QUEUE_FILE = WEB_ROOT / "data" / "wykrojnik-mapping-queue.json"
 BUILD_PROJECT_COSTS = WEB_ROOT / "scripts" / "build-project-costs.py"
@@ -2037,6 +2055,17 @@ def _import_invoices_csv(rows: list[dict[str, str]]) -> tuple[int, list[str]]:
     store["invoices"] = list(by_id.values())
     store["updated_at"] = utc_now()
     _save_json(INVOICES_FILE, store)
+    if invoice_erp_mod is not None:
+        try:
+            invoice_erp_mod.mark_import(
+                WEB_ROOT,
+                imported=imported,
+                load_json=_load_json,
+                save_json=_save_json,
+                error=("errors:" + str(len(errors))) if errors and imported == 0 else None,
+            )
+        except Exception:
+            pass
     return imported, errors
 
 
@@ -4119,6 +4148,22 @@ def _media_preview_jpeg(target: str) -> tuple[int, bytes, str] | None:
         return None
 
 
+_VIDEO_POSTER_PLACEHOLDER_SVG = (
+    b'<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img">'
+    b'<rect width="640" height="360" fill="#ececf2"/>'
+    b'<circle cx="320" cy="168" r="42" fill="#c5c6cd"/>'
+    b'<path d="M308 148 L308 188 L348 168 Z" fill="#fff"/>'
+    b'<text x="320" y="248" text-anchor="middle" fill="#696877" '
+    b'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text>'
+    b"</svg>"
+)
+
+
+def _media_video_poster_placeholder() -> tuple[int, bytes, str]:
+    """Twardy fallback gdy ffmpeg nie wyciagnie klatki (B3)."""
+    return 200, _VIDEO_POSTER_PLACEHOLDER_SVG, "image/svg+xml"
+
+
 def _media_video_poster(target: str) -> tuple[int, bytes, str] | None:
     """Klatka z wideo jako JPEG (miniatury w siatce branding)."""
     ext = Path(target).suffix.lower()
@@ -4198,7 +4243,8 @@ def serve_media(path: str, preview: bool = False) -> tuple[int, bytes, str]:
             poster = _media_video_poster(target)
             if poster:
                 return poster
-            return 422, b"", "application/json"
+            # B3: twardy fallback zamiast 422 — JS tez ma data-URI placeholder
+            return _media_video_poster_placeholder()
     if not mime:
         return 415, b"", "application/json"
     try:
@@ -4441,6 +4487,8 @@ class Handler(BaseHTTPRequestHandler):
                         "/finance/project-costs",
                         "/finance/invoices",
                         "/finance/invoices/import",
+                        "/finance/invoices/export",
+                        "/finance/invoices/erp-status",
                     ],
                 },
             )
@@ -4994,6 +5042,14 @@ class Handler(BaseHTTPRequestHandler):
                 return
             data = _load_json(INVOICES_FILE, {"invoices": []})
             self._json(200, {"ok": True, **data})
+            return
+        if parsed.path == "/finance/invoices/erp-status":
+            if self._require_login() is None:
+                return
+            if invoice_erp_mod is None:
+                self._json(503, {"ok": False, "error": "invoice_erp_unavailable"})
+                return
+            self._json(200, invoice_erp_mod.status_payload(WEB_ROOT, _load_json))
             return
         self._json(404, {"ok": False, "error": "not_found"})
 
@@ -5653,6 +5709,112 @@ class Handler(BaseHTTPRequestHandler):
             body = {k: v for k, v in result.items() if k != "store"}
             self._json(200 if body.get("ok") else 400, body)
             return
+        if parsed.path == "/explorer/create-category":
+            # Admin: kopia szablonu 00 - KATEGORIA|CATEGORY -> {NN} - NAME
+            user = self._require_admin()
+            if user is None:
+                return
+            if explorer_create_mod is None:
+                self._json(500, {"ok": False, "error": "explorer_create_module_missing"})
+                return
+            payload = data if isinstance(data, dict) else {}
+            email = str(user.get("email") or "").strip()
+            resolved = resolve_base_path_for_current_device(email)
+            base = str(resolved.get("base_path") or "").strip()
+            if not base:
+                self._json(
+                    400,
+                    {
+                        "ok": False,
+                        "error": "marketing_base_unset",
+                        "message": "Ustaw sciezke Marketing (user-device-paths / machine-config).",
+                    },
+                )
+                return
+            dry_run = bool(payload.get("dry_run", True))
+            confirm = bool(payload.get("confirm"))
+            result = explorer_create_mod.create_category(
+                marketing_base=base,
+                brand=str(payload.get("brand") or ""),
+                name=str(payload.get("name") or ""),
+                dry_run=dry_run,
+                confirm=confirm,
+            )
+            if result.get("ok") and not result.get("dry_run"):
+                try:
+                    append_audit(
+                        {
+                            "action": "explorer_create_category",
+                            "user": email or user.get("name") or "",
+                            "path": result.get("created_path") or result.get("planned_path") or "",
+                            "detail": {
+                                "brand": payload.get("brand"),
+                                "name": payload.get("name"),
+                            },
+                        }
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/explorer/create-product":
+            # Admin: kopia szablonu produktu do category_path (+ warianty / demo - D)
+            user = self._require_admin()
+            if user is None:
+                return
+            if explorer_create_mod is None:
+                self._json(500, {"ok": False, "error": "explorer_create_module_missing"})
+                return
+            payload = data if isinstance(data, dict) else {}
+            email = str(user.get("email") or "").strip()
+            resolved = resolve_base_path_for_current_device(email)
+            base = str(resolved.get("base_path") or "").strip()
+            if not base:
+                self._json(
+                    400,
+                    {
+                        "ok": False,
+                        "error": "marketing_base_unset",
+                        "message": "Ustaw sciezke Marketing (user-device-paths / machine-config).",
+                    },
+                )
+                return
+            dry_run = bool(payload.get("dry_run", True))
+            confirm = bool(payload.get("confirm"))
+            variants = payload.get("variants")
+            if variants is not None and not isinstance(variants, list):
+                self._json(400, {"ok": False, "error": "variants_must_be_array"})
+                return
+            result = explorer_create_mod.create_product(
+                marketing_base=base,
+                brand=str(payload.get("brand") or ""),
+                category_path=str(payload.get("category_path") or ""),
+                name=str(payload.get("name") or ""),
+                subcategory=str(payload.get("subcategory") or ""),
+                variants=variants if isinstance(variants, list) else None,
+                demo=bool(payload.get("demo")),
+                dry_run=dry_run,
+                confirm=confirm,
+            )
+            if result.get("ok") and not result.get("dry_run"):
+                try:
+                    append_audit(
+                        {
+                            "action": "explorer_create_product",
+                            "user": email or user.get("name") or "",
+                            "path": result.get("created_path") or result.get("planned_path") or "",
+                            "detail": {
+                                "brand": payload.get("brand"),
+                                "name": payload.get("name"),
+                                "subcategory": payload.get("subcategory"),
+                                "demo": bool(payload.get("demo")),
+                            },
+                        }
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
+            self._json(200 if result.get("ok") else 400, result)
+            return
         if parsed.path == "/rename-revision-prefix":
             user = self._require_login()
             if user is None:
@@ -5921,6 +6083,31 @@ class Handler(BaseHTTPRequestHandler):
             incoming["updated_at"] = utc_now()
             _save_json(FMCG_CATALOG_FILE, incoming)
             self._json(200, {"ok": True, "item_count": len(incoming.get("items") or [])})
+            return
+        if parsed.path in ("/finance/invoices/export", "/finance/invoices/push"):
+            if self._require_admin() is None:
+                return
+            if invoice_erp_mod is None:
+                self._json(503, {"ok": False, "error": "invoice_erp_unavailable"})
+                return
+            store = _load_json(INVOICES_FILE, {"invoices": []})
+            invoices = store.get("invoices") if isinstance(store, dict) else []
+            if not isinstance(invoices, list):
+                invoices = []
+            # Optional subset by ids
+            ids = data.get("ids")
+            if isinstance(ids, list) and ids:
+                id_set = {str(x) for x in ids}
+                invoices = [inv for inv in invoices if isinstance(inv, dict) and str(inv.get("id")) in id_set]
+            dry_run = bool(data.get("dry_run"))
+            result = invoice_erp_mod.export_invoices(
+                WEB_ROOT,
+                invoices,
+                load_json=_load_json,
+                save_json=_save_json,
+                dry_run=dry_run,
+            )
+            self._json(200, result)
             return
         if parsed.path == "/finance/invoices":
             if self._require_admin() is None:

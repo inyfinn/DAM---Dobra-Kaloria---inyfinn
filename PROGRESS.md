@@ -106,3 +106,12 @@ Postgres zyje na Synology (Docker). User nie instaluje Dockera na PC.
 
 Pakiet rownoleglych agentow (Viz toolbar admin changelog, Branding page-size OK, Help restart, sidebar morph, device paths, tutorial C4, integracje/FMCG/danger) zweryfikowany w kodzie; docs + push na `main`. Szczegoly: `process.md`, `agents/shared/usability-brief-2026-07-20.md`.
 
+
+## 2026-07-20 - Zaleglosci Explorer create + backlog A3/B5/C2/C3/rest
+
+- Explorer: create category/product (most + modal dry-run/confirm); cache expb20260720b
+- A3 FMCG seed kwot + map v2; C2 ERP stub; C3 bento freeze; B5 dashboard QA; B3/B4/B7
+- A1/A2 OAuth nadal otwarte (credentials user)
+- Lekcja doktryny: kolizja nazw WORKER A/B/C
+- Checklista: A3/B3/B4/B5/B7/C2/C3 [x]
+

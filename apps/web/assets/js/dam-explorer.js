@@ -156,6 +156,60 @@
     }
   }
 
+  var EXPLORER_CTA_STYLE_ID = "damExplorerCtaUnify";
+
+  function ensureExplorerCtaUnifyCss() {
+    if (typeof document === "undefined") return;
+    var css =
+      "/* EXP-A: explorer toolbar + add CTAs = .dam-int-cta anatomy */" +
+      ".dam-explorer-results__actions .dam-int-cta," +
+      ".dam-explorer-results__actions #damStatusExport," +
+      ".dam-explorer-results__actions #damIndexRefresh," +
+      ".dam-explorer-results__actions #damLifecycleForce," +
+      "#damExplorerAddCategory.dam-int-cta," +
+      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta{" +
+      "display:inline-flex!important;align-items:center;justify-content:center;gap:6px;" +
+      "min-height:34px!important;height:34px!important;padding:8px 12px!important;margin:0;" +
+      "box-sizing:border-box;" +
+      "font-family:inherit;font-size:12px!important;font-weight:500!important;line-height:1.2;" +
+      "border-radius:8px!important;border:1px solid #e7e7e7!important;" +
+      "background:#fff!important;color:#464255!important;" +
+      "text-decoration:none;cursor:pointer;box-shadow:none!important;" +
+      "-webkit-appearance:none;appearance:none;white-space:nowrap;" +
+      "transition:background .15s ease,border-color .15s ease,color .15s ease}" +
+      ".dam-explorer-results__actions .dam-int-cta:hover," +
+      ".dam-explorer-results__actions #damStatusExport:hover," +
+      ".dam-explorer-results__actions #damIndexRefresh:hover," +
+      ".dam-explorer-results__actions #damLifecycleForce:hover," +
+      "#damExplorerAddCategory.dam-int-cta:hover," +
+      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta:hover{" +
+      "border-color:var(--dam-primary,#ab54db)!important;background:#fbf7fe!important;" +
+      "color:var(--dam-primary,#ab54db)!important}" +
+      ".dam-explorer-results__actions .dam-int-cta:focus-visible," +
+      "#damExplorerAddCategory.dam-int-cta:focus-visible," +
+      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta:focus-visible{" +
+      "outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 55%,transparent);" +
+      "outline-offset:2px}" +
+      "#damExplorerAddCategory.dam-int-cta--icon{" +
+      "min-width:34px!important;width:34px!important;padding:0!important;flex:0 0 34px}" +
+      "#damExplorerAddCategory.dam-int-cta--icon i," +
+      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta i{" +
+      "font-size:16px;line-height:1}" +
+      "#damLifecycleForce.dam-int-cta{gap:6px}" +
+      "#damLifecycleForce.dam-int-cta .dam-force-btn__label{font-size:12px!important;font-weight:500!important}" +
+      "#damLifecycleForce.dam-int-cta i{font-size:16px;line-height:1}" +
+      ".dam-panel-head__top{" +
+      "display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}" +
+      ".dam-panel-head__actions{display:inline-flex;align-items:center;gap:8px;margin-left:auto}";
+    var style = document.getElementById(EXPLORER_CTA_STYLE_ID);
+    if (!style) {
+      style = document.createElement("style");
+      style.id = EXPLORER_CTA_STYLE_ID;
+      document.head.appendChild(style);
+    }
+    style.textContent = css;
+  }
+
   function panelHeadHtml(opts) {
     opts = opts || {};
     var canBack = state.navPos > 0 || panelCanStepUp();
@@ -164,17 +218,36 @@
     var kicker = opts.kicker || "Kategoria";
     var title = opts.title || "";
     var meta = opts.meta || "";
+    var addProductHtml = "";
+    if (opts.showAddProduct) {
+      var catId = (opts.categoryContext && opts.categoryContext.id) || state.canonCat || "";
+      var catTitle =
+        (opts.categoryContext && opts.categoryContext.title) || title || "";
+      addProductHtml =
+        '<div class="dam-panel-head__actions">' +
+          '<button type="button" class="dam-int-cta dam-explorer-add-product-btn" data-dam-add-product="1"' +
+            ' data-canon-cat="' + esc(catId) + '"' +
+            ' data-cat-title="' + esc(catTitle) + '"' +
+            ' aria-label="Dodaj produkt" title="Dodaj produkt" data-dam-tip="Dodaj produkt do tej kategorii">' +
+            '<i class="uil uil-plus" aria-hidden="true"></i>' +
+            "<span>Dodaj produkt</span>" +
+          "</button>" +
+        "</div>";
+    }
     return (
       '<div class="dam-panel-head">' +
-        '<div class="dam-panel-head__nav" role="group" aria-label="Nawigacja panelu">' +
-          '<button type="button" class="dam-panel-nav-btn" data-panel-nav="-1"' +
-            (canBack ? "" : " disabled") +
-            ' aria-label="Wstecz" data-dam-tip="Wstecz">' +
-            '<i class="uil uil-arrow-left" aria-hidden="true"></i></button>' +
-          '<button type="button" class="dam-panel-nav-btn" data-panel-nav="1"' +
-            (canFwd ? "" : " disabled") +
-            ' aria-label="Do przodu" data-dam-tip="Do przodu">' +
-            '<i class="uil uil-arrow-right" aria-hidden="true"></i></button>' +
+        '<div class="dam-panel-head__top">' +
+          '<div class="dam-panel-head__nav" role="group" aria-label="Nawigacja panelu">' +
+            '<button type="button" class="dam-panel-nav-btn" data-panel-nav="-1"' +
+              (canBack ? "" : " disabled") +
+              ' aria-label="Wstecz" data-dam-tip="Wstecz">' +
+              '<i class="uil uil-arrow-left" aria-hidden="true"></i></button>' +
+            '<button type="button" class="dam-panel-nav-btn" data-panel-nav="1"' +
+              (canFwd ? "" : " disabled") +
+              ' aria-label="Do przodu" data-dam-tip="Do przodu">' +
+              '<i class="uil uil-arrow-right" aria-hidden="true"></i></button>' +
+          "</div>" +
+          addProductHtml +
         "</div>" +
         '<div class="dam-panel-head__place">' +
           '<span class="dam-panel-head__icon" aria-hidden="true">' +
@@ -187,6 +260,44 @@
         "</div>" +
       "</div>"
     );
+  }
+
+  function openExplorerAddProduct(opts) {
+    var api = window.DamExplorerAddProduct;
+    if (api && typeof api.open === "function") {
+      api.open(opts || {});
+      return;
+    }
+    console.warn("[DamExplorer] DamExplorerAddProduct not loaded yet", opts || {});
+  }
+
+  function bindAddProductCtas(root) {
+    (root || document).querySelectorAll("[data-dam-add-product]").forEach(function (btn) {
+      if (btn._damAddBound) return;
+      btn._damAddBound = true;
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openExplorerAddProduct({
+          mode: "product",
+          categoryContext: {
+            id: btn.getAttribute("data-canon-cat") || state.canonCat || "",
+            title: btn.getAttribute("data-cat-title") || ""
+          }
+        });
+      });
+    });
+  }
+
+  function bindCategoryAddButton() {
+    var btn = document.getElementById("damExplorerAddCategory");
+    if (!btn || btn._damAddCatBound) return;
+    btn._damAddCatBound = true;
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openExplorerAddProduct({ mode: "category" });
+    });
   }
 
   function bindPanelNav(root) {
@@ -205,6 +316,7 @@
         if (state.navPos >= 0 && state.navPos < state.navStack.length - 1) navGo(dir);
       });
     });
+    bindAddProductCtas(root);
   }
 
   /* ------------------------------------------------------------------ */
@@ -1493,47 +1605,258 @@
     if (letter === "F") return "dam-lifecycle-chip dam-lifecycle-chip--f";
     if (letter === "X") return "dam-lifecycle-chip dam-lifecycle-chip--x";
     if (letter === "D") return "dam-lifecycle-chip dam-lifecycle-chip--d";
+    if (letter === "—" || letter === "-" || letter === "∅") {
+      return "dam-lifecycle-chip dam-lifecycle-chip--clear";
+    }
     return "dam-lifecycle-chip";
+  }
+
+  function lifecycleHistHashtag(h) {
+    var id = String((h && h.id) || "").trim();
+    if (!id || id === "current") return "";
+    return id.charAt(0) === "#" ? id : "#" + id;
+  }
+
+  function historyEntryApplyStatus(h) {
+    if (!h) return "clear";
+    if (h._isCurrent) {
+      var st = String(h.status || "clear");
+      if (st === "aktualne" || st === "nieaktualne" || st === "demo" || st === "clear") return st;
+      return "clear";
+    }
+    var lit = lifecycleLetterFromStatus(h.letter || h.status || h.to || h.after);
+    if (lit === "F") return "aktualne";
+    if (lit === "X") return "nieaktualne";
+    if (lit === "D") return "demo";
+    return "clear";
+  }
+
+  function findRevisionForHistOpts(opts) {
+    opts = opts || {};
+    var idx = String(opts.index || opts.ridx || "");
+    var revs = (state.product && state.product.revisions) || [];
+    var i;
+    if (idx) {
+      for (i = 0; i < revs.length; i++) {
+        if (revs[i] && revs[i].index === idx) return revs[i];
+      }
+    }
+    if (opts.path) {
+      var pk = normPathKey(opts.path);
+      for (i = 0; i < revs.length; i++) {
+        if (revs[i] && normPathKey(revs[i].path || "") === pk) return revs[i];
+      }
+    }
+    return null;
+  }
+
+  function captureLifecycleContext(opts) {
+    opts = opts || {};
+    var scope = opts.scope || "variant";
+    if (scope === "product") {
+      var prod = state.product;
+      if ((!prod || prod.id !== opts.productId) && opts.productId && state.fileIndex) {
+        prod =
+          (state.fileIndex.products || []).find(function (p) {
+            return p && p.id === opts.productId;
+          }) || prod;
+      }
+      var pst = getProductStatus(prod);
+      return {
+        scope: "product",
+        status: pst || "clear",
+        letter: lifecycleLetterLabel(pst) || null,
+        path: (prod && prod.path) || opts.path || "",
+        productPath: opts.productPath || (prod && prod.path) || "",
+        productId: opts.productId || (prod && prod.id) || "",
+        index: ""
+      };
+    }
+    var rev = findRevisionForHistOpts(opts);
+    var rst = getRevisionStatus(rev);
+    var lrow = rev ? lifecycleRowForRev(rev) : null;
+    return {
+      scope: "variant",
+      status: rst || "clear",
+      letter: lifecycleLetterLabel(rst) || null,
+      path: (rev && rev.path) || opts.path || (lrow && lrow.path) || "",
+      productPath: opts.productPath || (state.product && state.product.path) || "",
+      productId: opts.productId || (state.product && state.product.id) || "",
+      index: (rev && rev.index) || opts.index || opts.ridx || ""
+    };
+  }
+
+  function buildCurrentLifecycleRow(opts) {
+    var ctx = captureLifecycleContext(opts);
+    var lrow = null;
+    if (state.lifecycleStore && state.lifecycleStore.revisions) {
+      var keys = [ctx.index, normPathKey(ctx.path), ctx.path].filter(Boolean);
+      for (var i = 0; i < keys.length; i++) {
+        if (state.lifecycleStore.revisions[keys[i]]) {
+          lrow = state.lifecycleStore.revisions[keys[i]];
+          break;
+        }
+      }
+    }
+    if (!lrow && ctx.scope === "product" && state.lifecycleStore && state.lifecycleStore.products) {
+      lrow = state.lifecycleStore.products[ctx.productId] || null;
+    }
+    return {
+      _isCurrent: true,
+      id: "current",
+      ts: (lrow && (lrow.updated_at || lrow.applied_at)) || new Date().toISOString(),
+      letter: ctx.letter,
+      status: ctx.status,
+      scope: ctx.scope,
+      product_id: ctx.productId,
+      revision_index: ctx.index,
+      path: ctx.path,
+      product_path: ctx.productPath,
+      actor: (lrow && lrow.updated_by) || ""
+    };
+  }
+
+  function buildLifecycleModalRows(opts) {
+    var hist = applyLifeHistPatches(filterLifecycleHistoryRows(opts));
+    return [buildCurrentLifecycleRow(opts)].concat(hist);
+  }
+
+  var LIFE_HIST_PATCH_KEY = "dam_life_hist_patches";
+
+  function readLifeHistPatches() {
+    try {
+      return JSON.parse(sessionStorage.getItem(LIFE_HIST_PATCH_KEY) || "{}") || {};
+    } catch (ePatch) {
+      return {};
+    }
+  }
+
+  function writeLifeHistPatch(id, patch) {
+    if (!id || id === "current") return;
+    var all = readLifeHistPatches();
+    all[id] = Object.assign({}, all[id] || {}, patch || {});
+    try {
+      sessionStorage.setItem(LIFE_HIST_PATCH_KEY, JSON.stringify(all));
+    } catch (eStore) { /* ignore */ }
+  }
+
+  function applyLifeHistPatches(rows) {
+    var all = readLifeHistPatches();
+    return (rows || []).map(function (h) {
+      if (!h || !h.id || !all[h.id]) return h;
+      return Object.assign({}, h, all[h.id]);
+    });
+  }
+
+  function tagLatestHistoryRestore(fromId, undoSnapshot) {
+    var hist = state.lifecycleStore && state.lifecycleStore.history;
+    if (!hist || !hist.length) return null;
+    var row = hist[hist.length - 1];
+    row.restored_from = fromId;
+    row.action = "lifecycle_restore";
+    if (undoSnapshot) row.undo_snapshot = undoSnapshot;
+    writeLifeHistPatch(row.id, {
+      restored_from: fromId,
+      action: "lifecycle_restore",
+      undo_snapshot: undoSnapshot || null
+    });
+    return row.id;
   }
 
   /* Pkt 1 brief 2026-07-20: modal historii = pionowa os czasu z chipami F/X/D,
      filtrem per status, licznikiem, akcjami (kopiuj indeks / przejdz do produktu). */
   function openLifecycleHistoryModal(opts) {
     opts = opts || {};
+    if (!opts.scope) opts.scope = opts.index || opts.ridx ? "variant" : "product";
     var existing = document.getElementById("damLifecycleHistoryModal");
     if (existing) existing.remove();
-    var allRows = filterLifecycleHistoryRows(opts);
+    var allRows = buildLifecycleModalRows(opts);
     var activeFilters = {};
+    var histBusy = false;
 
     function rowLetter(h) {
-      return lifecycleLetterFromStatus(h.letter || h.status || h.to || h.after);
+      if (h && h._isCurrent) {
+        var cur = lifecycleLetterFromStatus(h.letter || h.status);
+        return cur === "—" ? "∅" : cur;
+      }
+      var lit = lifecycleLetterFromStatus(h.letter || h.status || h.to || h.after);
+      return lit === "—" ? "∅" : lit;
     }
 
     function visibleRows() {
       var keys = Object.keys(activeFilters);
       if (!keys.length) return allRows;
       return allRows.filter(function (h) {
+        if (h._isCurrent) return true;
         return activeFilters[rowLetter(h)];
       });
     }
 
+    function entryNoteHtml(h) {
+      if (h._isCurrent) {
+        return '<span class="dam-life-hist__note dam-life-hist__note--current">Aktualny stan na dysku</span>';
+      }
+      var tag = lifecycleHistHashtag(h);
+      var parts = [];
+      if (tag) {
+        parts.push('<span class="dam-life-hist__tag" title="Identyfikator wpisu">' + esc(tag) + "</span>");
+      }
+      if (h.restored_from) {
+        var fromTag = String(h.restored_from).charAt(0) === "#" ? h.restored_from : "#" + h.restored_from;
+        parts.push(
+          '<span class="dam-life-hist__note">Przywrócono z <strong>' +
+            esc(fromTag) +
+            "</strong></span>"
+        );
+      } else if (!h.letter && (h.status === "clear" || !h.status)) {
+        parts.push('<span class="dam-life-hist__note">Bez statusu (odznaczono F/X/D)</span>');
+      }
+      return parts.join("");
+    }
+
+    function getNewestHistId() {
+      for (var nh = 0; nh < allRows.length; nh++) {
+        if (!allRows[nh]._isCurrent && allRows[nh].id) return allRows[nh].id;
+      }
+      return "";
+    }
+
     function entryHtml(h) {
       var letter = rowLetter(h);
+      var dotLetter = letter === "∅" ? "—" : letter;
       var when = String(h.ts || "").replace("T", " ").slice(0, 16);
       var who = lifecycleAuthorShort(h.actor || h.user || h.by || "");
       var scope =
-        h.scope === "product" ? "Produkt" : h.scope === "variant" ? "Wariant" : h.scope || "Status";
+        h._isCurrent
+          ? "Teraz"
+          : h.scope === "product"
+            ? "Produkt"
+            : h.scope === "variant"
+              ? "Wariant"
+              : h.scope || "Status";
       var idxShow = String(h.revision_index || h.index || opts.index || opts.ridx || "");
       var pid = String(h.product_id || opts.productId || "");
+      var noteHtml = entryNoteHtml(h);
+      var isNewestHist = !h._isCurrent && h.id && h.id === getNewestHistId();
+      var canUndo =
+        isNewestHist &&
+        (h.restored_from ||
+          h.action === "lifecycle_restore" ||
+          (state._lifeHistUndo && state._lifeHistUndo.entryId === h.id));
+      var adminOk = state.adminMode && isAdminRole();
+      var restoreDisabled = histBusy || h._isCurrent || !adminOk;
+      var undoDisabled = histBusy || !canUndo || !adminOk;
       return (
-        '<li class="dam-life-hist__item">' +
+        '<li class="dam-life-hist__item' +
+        (h._isCurrent ? " dam-life-hist__item--current" : "") +
+        '">' +
         '<span class="dam-life-hist__rail">' +
         '<span class="dam-life-hist__dot ' +
-        lifecycleChipClass(letter) +
-        '" title="Status ' +
-        esc(letter) +
+        lifecycleChipClass(dotLetter) +
+        '" title="' +
+        (h._isCurrent ? "Aktualny stan" : "Status " + esc(dotLetter)) +
         '">' +
-        esc(letter) +
+        esc(dotLetter) +
         "</span>" +
         '<span class="dam-life-hist__line" aria-hidden="true"></span>' +
         "</span>" +
@@ -1545,6 +1868,7 @@
         '<span class="dam-life-hist__scope">' +
         esc(scope) +
         "</span>" +
+        (noteHtml ? '<span class="dam-life-hist__meta-inline">' + noteHtml + "</span>" : "") +
         '<span class="dam-life-hist__actions">' +
         (idxShow
           ? '<button type="button" class="dam-life-hist__act" data-life-copy="' +
@@ -1557,6 +1881,20 @@
           ? '<button type="button" class="dam-life-hist__act" data-life-go="' +
             esc(pid) +
             '" title="Przejdź do produktu" aria-label="Przejdź do produktu" data-dam-tip="Otwiera produkt w Eksplorerze"><i class="uil uil-sitemap"></i></button>'
+          : "") +
+        (!h._isCurrent
+          ? '<button type="button" class="dam-life-hist__act dam-life-hist__act--restore" data-life-restore="' +
+            esc(h.id || "") +
+            '"' +
+            (restoreDisabled ? " disabled" : "") +
+            ' title="Przywróć ten stan" aria-label="Przywróć stan" data-dam-tip="Przywraca status F/X/D lub bez statusu z tego wpisu"><i class="uil uil-redo" aria-hidden="true"></i></button>'
+          : "") +
+        (canUndo
+          ? '<button type="button" class="dam-life-hist__act dam-life-hist__act--undo" data-life-undo="' +
+            esc(h.id || "") +
+            '"' +
+            (undoDisabled ? " disabled" : "") +
+            ' title="Cofnij zmianę" aria-label="Cofnij zmianę" data-dam-tip="Przywraca poprzedni stan sprzed ostatniego przywrócenia"><i class="uil uil-undo" aria-hidden="true"></i></button>'
           : "") +
         "</span>" +
         "</span>" +
@@ -1596,24 +1934,33 @@
       }
       return (
         '<ul class="dam-life-hist__timeline" aria-label="Oś czasu statusów">' +
-        rows.map(entryHtml).join("") +
+        rows
+          .map(function (h) {
+            return entryHtml(h);
+          })
+          .join("") +
         "</ul>"
       );
     }
 
-    var filterChips = ["F", "X", "D"]
+    var filterChips = ["F", "X", "D", "∅"]
       .map(function (l) {
+        var label = l === "∅" ? "—" : l;
+        var tip =
+          l === "∅"
+            ? "Filtruj wpisy: bez statusu (odznaczono)"
+            : "Filtruj wpisy: status " + l;
         return (
           '<button type="button" class="dam-life-hist__filter ' +
-          lifecycleChipClass(l) +
+          lifecycleChipClass(l === "∅" ? "—" : l) +
           '" data-life-filter="' +
           l +
-          '" aria-pressed="false" title="Pokaż tylko wpisy ' +
-          l +
-          '" data-dam-tip="Filtruj wpisy: status ' +
-          l +
+          '" aria-pressed="false" title="' +
+          esc(tip) +
+          '" data-dam-tip="' +
+          esc(tip) +
           '">' +
-          l +
+          esc(label) +
           "</button>"
         );
       })
@@ -1626,10 +1973,10 @@
       '<div class="dam-life-hist__head">' +
       "<h3>Historia statusów</h3>" +
       '<span class="dam-life-hist__count" id="damLifeHistCount" title="Liczba wpisów">' +
-      allRows.length +
+      Math.max(0, allRows.length - 1) +
       "</span>" +
       "</div>" +
-      '<p class="dam-lifecycle-history__lead">Pełna historia zmian F / X / D dla wybranego zakresu.</p>' +
+      '<p class="dam-lifecycle-history__lead">Pełna historia zmian F / X / D / bez statusu. U góry aktualny stan; każdy wpis ma hashtag (#lc_…).</p>' +
       '<div class="dam-life-hist__filters" role="group" aria-label="Filtr statusów">' +
       '<span class="dam-life-hist__filter-label">Filtr:</span>' +
       filterChips +
@@ -1643,6 +1990,103 @@
       "</div></div></div>";
     document.body.insertAdjacentHTML("beforeend", html);
     var modal = document.getElementById("damLifecycleHistoryModal");
+
+    function setHistBusy(busy, activeBtn) {
+      histBusy = !!busy;
+      if (!modal) return;
+      modal.classList.toggle("is-life-hist-busy", histBusy);
+      modal.querySelectorAll("[data-life-restore],[data-life-undo]").forEach(function (b) {
+        b.disabled = histBusy;
+        b.classList.toggle("is-pending", histBusy && b === activeBtn);
+        b.setAttribute("aria-busy", histBusy && b === activeBtn ? "true" : "false");
+      });
+    }
+
+    function refreshRows() {
+      allRows = buildLifecycleModalRows(opts);
+    }
+
+    function findHistRowById(id) {
+      if (!id) return null;
+      for (var i = 0; i < allRows.length; i++) {
+        if (allRows[i].id === id) return allRows[i];
+      }
+      var hist = filterLifecycleHistoryRows(opts);
+      for (var j = 0; j < hist.length; j++) {
+        if (hist[j].id === id) return hist[j];
+      }
+      return null;
+    }
+
+    function applyFromHistoryRow(sourceRow, activeBtn, mode) {
+      if (histBusy) return;
+      if (!state.adminMode || !isAdminRole()) {
+        showToast("Włącz tryb admina, aby przywracać statusy", "error");
+        return;
+      }
+      var before = captureLifecycleContext(opts);
+      var targetStatus;
+      var restoredFromId = "";
+      if (mode === "undo") {
+        var snap =
+          (sourceRow && sourceRow.undo_snapshot) ||
+          (state._lifeHistUndo && state._lifeHistUndo.snapshot) ||
+          null;
+        if (!snap) {
+          showToast("Brak danych do cofnięcia", "error");
+          return;
+        }
+        targetStatus = snap.status || "clear";
+        restoredFromId = "";
+      } else {
+        targetStatus = historyEntryApplyStatus(sourceRow);
+        restoredFromId = sourceRow.id || "";
+      }
+      var scope = sourceRow.scope || opts.scope || "variant";
+      var path =
+        resolveLifecycleDiskPath({
+          scope: scope,
+          path: sourceRow.path || opts.path || "",
+          index: sourceRow.revision_index || opts.index || opts.ridx || "",
+          productId: sourceRow.product_id || opts.productId || ""
+        }) ||
+        sourceRow.path ||
+        opts.path ||
+        "";
+      setHistBusy(true, activeBtn);
+      applyLifecycleStatus({
+        scope: scope,
+        status: targetStatus,
+        path: path,
+        productPath: sourceRow.product_path || opts.productPath || "",
+        productId: sourceRow.product_id || opts.productId || "",
+        index: sourceRow.revision_index || opts.index || opts.ridx || ""
+      })
+        .then(function (res) {
+          if (!res || res.ok === false) return null;
+          return loadLifecycleStore().then(function () {
+            if (mode === "restore" && restoredFromId) {
+              var newId = tagLatestHistoryRestore(restoredFromId, before);
+              state._lifeHistUndo = {
+                entryId: newId || (res.history_id || ""),
+                snapshot: before,
+                restoredFrom: restoredFromId
+              };
+            } else if (mode === "undo") {
+              state._lifeHistUndo = null;
+            }
+            refreshRows();
+            repaintList();
+            showToast(
+              mode === "undo" ? "Cofnięto ostatnie przywrócenie" : "Przywrócono stan z historii",
+              "success"
+            );
+          });
+        })
+        .finally(function () {
+          setHistBusy(false, null);
+        });
+    }
 
     function bindListActions() {
       modal.querySelectorAll("[data-life-copy]").forEach(function (btn) {
@@ -1665,6 +2109,32 @@
           location.href = "explorer.html?product=" + encodeURIComponent(pid);
         });
       });
+      modal.querySelectorAll("[data-life-restore]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (btn.disabled || histBusy) return;
+          var id = btn.getAttribute("data-life-restore") || "";
+          var row = findHistRowById(id);
+          if (!row) {
+            showToast("Nie znaleziono wpisu historii", "error");
+            return;
+          }
+          applyFromHistoryRow(row, btn, "restore");
+        });
+      });
+      modal.querySelectorAll("[data-life-undo]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (btn.disabled || histBusy) return;
+          var id = btn.getAttribute("data-life-undo") || "";
+          var row = findHistRowById(id);
+          if (!row) {
+            showToast("Nie znaleziono wpisu do cofnięcia", "error");
+            return;
+          }
+          applyFromHistoryRow(row, btn, "undo");
+        });
+      });
     }
 
     function repaintList() {
@@ -1672,8 +2142,11 @@
       if (!host) return;
       host.innerHTML = listHtml();
       var cnt = document.getElementById("damLifeHistCount");
-      if (cnt) cnt.textContent = String(visibleRows().length);
+      if (cnt) cnt.textContent = String(Math.max(0, visibleRows().length - 1));
       bindListActions();
+      if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
+        window.DamTooltips.bind(host);
+      }
     }
 
     modal.querySelectorAll("[data-life-filter]").forEach(function (chip) {
@@ -1717,6 +2190,7 @@
         index: opts.index || opts.ridx || "",
         path: opts.path || "",
         productPath: opts.productPath || "",
+        scope: opts.scope || "variant",
       })
     );
     return (
@@ -3002,7 +3476,9 @@
           title: catTitle,
           meta: products.length + " " +
             (products.length === 1 ? "produkt" : (products.length >= 2 && products.length <= 4 ? "produkty" : "produktów")) +
-            " w tej kategorii"
+            " w tej kategorii",
+          showAddProduct: true,
+          categoryContext: { id: state.canonCat, title: catTitle }
         });
 
       if (mixProds.length > 0) {
@@ -5563,6 +6039,9 @@
     var main = document.getElementById("damExplorerMain");
     if (!main) return;
 
+    ensureExplorerCtaUnifyCss();
+    bindCategoryAddButton();
+
     var revealLow = document.getElementById("damRevealLowTags");
     if (revealLow && window.DamBadges && typeof window.DamBadges.setRevealLowTags === "function") {
       try {
@@ -5678,6 +6157,7 @@
   };
 
   window.DamExplorer = {
+    state: state,
     openProduct: openProduct,
     reload:      refreshIndex,
     exportStatus: exportStatusJson,

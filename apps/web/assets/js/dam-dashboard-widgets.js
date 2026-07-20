@@ -136,6 +136,76 @@
     return 4;
   }
 
+  /** i18n "4 najnowsze..." -> "N najnowsze..." for active tile layout. */
+  function vizTitleForCount(n) {
+    var tpl = t("dash.widget.newest_viz", "4 najnowsze wizualizacje");
+    var count = Math.max(1, Number(n) || 4);
+    if (/^\d+/.test(tpl)) return tpl.replace(/^\d+/, String(count));
+    return count + " " + tpl;
+  }
+
+  /** B5: dashboard-only layout safety (header wrap + tile overflow). Prefer inject over shared CSS. */
+  function ensureDashLayoutCss() {
+    if (document.getElementById("damDashLayoutB5Css")) return;
+    var s = document.createElement("style");
+    s.id = "damDashLayoutB5Css";
+    s.textContent =
+      "/* B5 QA: header must not force page horizontal scroll */" +
+      "body.geex-dashboard .geex-content__header{" +
+      "flex-wrap:wrap;min-width:0;max-width:100%;align-items:flex-start;gap:10px 16px;}" +
+      "body.geex-dashboard .geex-content__header__content," +
+      "body.geex-dashboard .geex-content__header__title{" +
+      "min-width:0;max-width:100%;}" +
+      "body.geex-dashboard .geex-content__header__action{" +
+      "flex:1 1 auto;min-width:0;max-width:100%;display:flex;flex-wrap:wrap;" +
+      "justify-content:flex-end;align-items:center;gap:8px;}" +
+      "body.geex-dashboard .geex-content__header__action__wrap," +
+      "body.geex-dashboard .geex-content__header__quickaction{" +
+      "min-width:0;max-width:100%;display:flex;flex-wrap:wrap;" +
+      "justify-content:flex-end;align-items:center;gap:4px;}" +
+      "body.geex-dashboard .geex-content__header__customizer{" +
+      "flex-wrap:wrap;min-width:0;}" +
+      "body.geex-dashboard .geex-main-content," +
+      "body.geex-dashboard .geex-content," +
+      "body.geex-dashboard .geex-content__wrapper," +
+      "body.geex-dashboard .geex-content__section-wrapper{" +
+      "min-width:0;max-width:100%;overflow-x:clip;}" +
+      "/* Off-canvas Geex customizer must not widen document scroll */" +
+      "body.geex-dashboard .geex-customizer{" +
+      "position:fixed!important;}" +
+      "/* Tile layouts: allow 1x6 to grow; keep rows from blowing out */" +
+      "body.geex-dashboard .dam-widget," +
+      "body.geex-dashboard .dam-dash-grid," +
+      "body.geex-dashboard .dam-dash-layout{" +
+      "min-width:0;max-width:100%;}" +
+      "body.geex-dashboard .dam-widget--media-latest.dam-widget--md," +
+      "body.geex-dashboard .dam-widget--md.dam-widget--viz-latest{" +
+      "grid-row:span auto;align-self:start;min-width:0;}" +
+      "body.geex-dashboard .dam-widget__list--media.dam-widget__list--grid-1x6," +
+      "body.geex-dashboard .dam-widget__list--viz.dam-widget__list--grid-1x6{" +
+      "grid-auto-rows:minmax(96px,auto);}" +
+      "body.geex-dashboard .dam-widget__list--media.dam-widget__list--grid-2x2," +
+      "body.geex-dashboard .dam-widget__list--viz.dam-widget__list--grid-2x2{" +
+      "grid-template-columns:repeat(2,minmax(0,1fr))!important;}" +
+      "body.geex-dashboard .dam-widget__list li.dam-widget__viz-row{" +
+      "min-width:0;max-width:100%;}" +
+      "body.geex-dashboard .dam-widget__viz-body," +
+      "body.geex-dashboard .dam-widget__viz-body > a{" +
+      "min-width:0;overflow-wrap:anywhere;}" +
+      "@media (max-width:768px){" +
+      "body.geex-dashboard .dam-dash-layout{grid-template-columns:1fr!important;}" +
+      "body.geex-dashboard .dam-widget__list--media.dam-widget__list--grid-2x2," +
+      "body.geex-dashboard .dam-widget__list--viz.dam-widget__list--grid-2x2{" +
+      "grid-template-columns:1fr!important;}" +
+      "}" +
+      "@media (max-width:420px){" +
+      "body.geex-dashboard .geex-content__header__action .geex-btn__text," +
+      "body.geex-dashboard .geex-content__header__action .dam-status-pill__label{" +
+      "display:none;}" +
+      "}";
+    document.head.appendChild(s);
+  }
+
   function layoutToggleHtml(widgetId, layout) {
     var labels = { "2x2": "Układ 2x2", "1x4": "Układ 1x4", "1x6": "Układ 1x6" };
     return (
@@ -785,8 +855,11 @@
         defaultOn: true,
         render: function (el, ctx) {
           var self = this;
+          ensureDashLayoutCss();
           var layout = getTileLayout(self.id);
           var n = layoutCardCount(layout);
+          var prevTitle = self.title;
+          self.title = vizTitleForCount(n);
           var list = pickNewestViz(ctx, n);
           if (!list.length) {
             el.outerHTML = shell(
@@ -795,6 +868,7 @@
               "dam-widget--viz-latest dam-widget--media-latest",
               layoutToggleHtml(self.id, layout)
             );
+            self.title = prevTitle;
             bindLayoutToggle(self.id, function () {
               var host = document.querySelector('[data-widget-id="newest_viz_3"]');
               if (host) self.render(host, ctx);
@@ -904,6 +978,7 @@
             "dam-widget--viz-latest dam-widget--media-latest",
             layoutToggleHtml(self.id, layout)
           );
+          self.title = prevTitle;
           var hostViz = document.querySelector('[data-widget-id="newest_viz_3"]');
           rebindWidgetChrome(hostViz);
           bindLayoutToggle(self.id, function () {
@@ -919,6 +994,7 @@
         defaultOn: true,
         render: function (el) {
           var self = this;
+          ensureDashLayoutCss();
           var layout = getTileLayout(self.id);
           var n = layoutCardCount(layout);
           loadBrandingIndex()
@@ -1994,6 +2070,12 @@
 
     modal.addEventListener("click", onClick);
     document.addEventListener("keydown", onKey);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensureDashLayoutCss);
+  } else {
+    ensureDashLayoutCss();
   }
 
   global.DamDashWidgets = {

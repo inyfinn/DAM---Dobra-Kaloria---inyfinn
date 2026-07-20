@@ -4,7 +4,18 @@
   var index = null;
   var tokens = null;
   var campaigns = null;
-  var CB = "hub20260720backlog1";
+  var CB = "bust20260720a";
+  /** B3: lokalny poster gdy bridge/ffmpeg nie odda klatki (data-URI SVG). */
+  var VIDEO_POSTER_FALLBACK =
+    "data:image/svg+xml," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">' +
+        '<rect width="640" height="360" fill="#ececf2"/>' +
+        '<circle cx="320" cy="168" r="42" fill="#c5c6cd"/>' +
+        '<path d="M308 148 L308 188 L348 168 Z" fill="#fff"/>' +
+        '<text x="320" y="248" text-anchor="middle" fill="#696877" ' +
+        'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
+    );
   var TAG_COUNTS_KEY = "dam_branding_show_tag_counts";
   var selectedCampaignId = null;
   var selectedChannel = "";
@@ -62,6 +73,11 @@
     { key: "channel:google", label: "Google", group: "kanal" },
     { key: "brand:DK", label: "DK", group: "marka" },
     { key: "brand:GC", label: "GC", group: "marka" },
+    /* B4: Autor — appearance_tags / author field / path (Highlite) */
+    { key: "author:Krzysztof", label: "Krzysztof", group: "autor" },
+    { key: "author:Sylwia", label: "Sylwia", group: "autor" },
+    { key: "author:Szymon", label: "Szymon", group: "autor" },
+    { key: "author:Highlite", label: "Highlite", group: "autor" },
   ];
 
   var PRODUCT_TAG_CHIPS = [
@@ -348,6 +364,9 @@
         return normTag(t) === normTag(val);
       });
     }
+    if (kind === "author") {
+      return assetMatchesAuthor(a, val);
+    }
     if (kind === "facet") {
       return assetMatchesCanonicalFacet(a, val);
     }
@@ -355,6 +374,36 @@
       return (a.tags || []).indexOf(val) !== -1;
     }
     return true;
+  }
+
+  /** B4: author field (gdy indeks ma) + appearance_tags + path/name (Highlite/krz). */
+  function assetMatchesAuthor(a, val) {
+    if (!a || !val) return false;
+    var want = normTag(val);
+    if (!want) return false;
+    if (a.author && normTag(a.author) === want) return true;
+    if (
+      Array.isArray(a.authors) &&
+      a.authors.some(function (t) {
+        return normTag(t) === want;
+      })
+    ) {
+      return true;
+    }
+    if (
+      (a.appearance_tags || []).some(function (t) {
+        return normTag(t) === want;
+      })
+    ) {
+      return true;
+    }
+    var blob = String(
+      (a.path || "") + " " + (a.name || "") + " " + (a.search_blob || "")
+    ).toLowerCase();
+    if (blob.indexOf(String(val).toLowerCase()) !== -1) return true;
+    if (want === "krzysztof" && /\bkrz\b|krzysztof/.test(blob)) return true;
+    if (want === "highlite" && /highlite|highlight/.test(blob)) return true;
+    return false;
   }
 
   function assetMatchesActiveTags(a) {
@@ -669,6 +718,7 @@
     wizualizacja: "dam-viz-badge--subcat",
     kanal: "dam-viz-badge--lang",
     marka: "dam-viz-badge--brand",
+    autor: "dam-viz-badge--lang",
     produkt: "dam-viz-badge--subcat",
   };
 
@@ -683,6 +733,7 @@
     wizualizacja: "Wizualizacja",
     kanal: "Kanał",
     marka: "Marka",
+    autor: "Autor",
     produkt: "Produkt",
   };
 
@@ -2119,6 +2170,7 @@
     groups.wizualizacja = [];
     groups.kanal = [];
     groups.marka = [];
+    groups.autor = [];
     groups.produkt = [];
     chips.forEach(function (c) {
       var g = c.group || "produkt";
@@ -2127,6 +2179,7 @@
     });
     [
       "marka",
+      "autor",
       "skojarzenia",
       "przeznaczenie",
       "format_pliku",
@@ -2143,6 +2196,7 @@
     });
     var GROUP_ORDER = [
       "marka",
+      "autor",
       "skojarzenia",
       "przeznaczenie",
       "format_pliku",
@@ -2312,6 +2366,40 @@
     img.classList.add("dam-viz-thumb__img--placeholder");
   };
 
+  function bindVideoPosterFallback(vid, bridgePoster) {
+    if (!vid) return;
+    var wanted = bridgePoster || "";
+    vid.poster = VIDEO_POSTER_FALLBACK;
+    if (!wanted) return;
+    var probe = new Image();
+    probe.onload = function () {
+      try {
+        vid.poster = wanted;
+      } catch (e) {
+        /* ignore */
+      }
+    };
+    probe.onerror = function () {
+      try {
+        vid.poster = VIDEO_POSTER_FALLBACK;
+      } catch (e2) {
+        /* ignore */
+      }
+    };
+    probe.src = wanted;
+  }
+
+  function hydrateVideoPosters(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll(".dam-branding-thumb__video-wrap").forEach(function (wrap) {
+      var vid = wrap.querySelector("video.dam-branding-thumb__video-el");
+      var poster = wrap.getAttribute("data-poster") || "";
+      if (vid) bindVideoPosterFallback(vid, poster);
+    });
+  }
+
+  window.__damBrandingBindVideoPoster = bindVideoPosterFallback;
+
   window.__damBrandingVideoThumbFallback = function (vid) {
     if (!vid) return;
     var wrap = vid.closest(".dam-branding-thumb__video-wrap");
@@ -2320,7 +2408,7 @@
     var path = wrap.getAttribute("data-path") || vid.getAttribute("data-path") || "";
     if (tried < 1 && path) {
       wrap.dataset.streamTry = "1";
-      vid.removeAttribute("poster");
+      vid.poster = VIDEO_POSTER_FALLBACK;
       vid.src = rawMediaUrl(path) + "&_retry=1";
       vid.load();
       return;
@@ -2903,15 +2991,18 @@
         encodeURIComponent(localMediaPath(path)) +
         "&preview=1";
       var stream = rawMediaUrl(path);
+      /* B3: start with local SVG poster; probe bridge/ffmpeg async */
       return (
         '<div class="dam-branding-thumb__video-wrap" data-path="' +
         esc(path) +
+        '" data-poster="' +
+        esc(poster) +
         '">' +
         '<video class="dam-viz-thumb__img dam-branding-thumb__video-el" muted playsinline preload="none" ' +
         'data-path="' +
         esc(path) +
         '" poster="' +
-        esc(poster) +
+        esc(VIDEO_POSTER_FALLBACK) +
         '" src="' +
         esc(stream) +
         '" onloadeddata="this.parentElement&&this.parentElement.classList.add(\'is-loaded\')" onerror="window.__damBrandingVideoThumbFallback&&__damBrandingVideoThumbFallback(this)"></video>' +
@@ -3252,6 +3343,7 @@
       clearBtn.addEventListener("click", clearAllBrandingFilters);
     }
     bindCards(grid);
+    hydrateVideoPosters(grid);
     currentGridAssets = [];
     slice.forEach(function (entry) {
       (entry.assets || []).forEach(function (a) {

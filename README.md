@@ -221,6 +221,10 @@ Szczegoly: [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md).
 
 ## Changelog (2026-07-20)
 
+- **Explorer create:** Plus kategorii + Dodaj produkt → modal dry-run/potwierdzenie → `POST /explorer/create-category|create-product` (szablon z `Szablony folderów`, DEMO `- D`); cache `expb20260720b`
+- **FMCG A3:** katalog z kwotami (seed_estimate) + import-map v2; UI Edytuj w Integracjach
+- **ERP faktur C2 (stub):** `GET /finance/invoices/erp-status`, `POST .../export`, stan `invoice-erp-sync.json`, UI Faktury
+- **BENTO C3:** freeze anatomii kart (`agents/shared/bento-card-freeze.md`) — nie redesign
 - **Usability chrome (Viz / Branding / Pomoc / Sidebar):** admin-only `#damChangeLogBar` w `.dam-search-scope` (prawo), hint Cofnij/Ponow, `#vizStatus` spacing, pill licznikow (+8/+12 pad); Branding suwak+input limitu kart z apply po OK; `#damHelpModal` restart samouczka pod X + padding panelu; sidebar morph anti-jank + footer meta
 - **Device paths:** Marketing root per `device_id` (KV + bridge), nie globalnie per konto
 - **Samouczek:** DobroKalorius, C4 dymek/anchor, 40 pochwal, `dam-tutorial.js` / `dam-tutorial.css`
