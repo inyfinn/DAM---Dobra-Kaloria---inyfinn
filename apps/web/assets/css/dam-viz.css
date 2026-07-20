@@ -39,6 +39,17 @@
   min-height: 32px;
   flex-shrink: 0;
   max-width: min(520px, 100%);
+  /* Nested in toolbar: avoid stuck page-entrance GSAP opacity:0 on child */
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+/* Status row must stay readable even if GSAP entrance is interrupted */
+.dam-global-search-block > .dam-viz-grid-toolbar {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
 }
 
 #vizSearchScope .dam-changelog-bar[hidden],
@@ -114,9 +125,9 @@
   white-space: nowrap;
 }
 
-/* Status bliżej filtrów (mały gap); napisy nad statusem = filtry mb +15px */
+/* Status bliżej filtrów; napisy #vizStatus (nad siatką) mb +15px */
 .dam-global-search-block > .dam-viz-secondary-filters {
-  margin-bottom: 15px;
+  margin-bottom: 4px;
 }
 
 .dam-global-search-block > .dam-viz-secondary-filters + .dam-viz-grid-toolbar {
@@ -125,12 +136,12 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-.dam-viz-grid-toolbar .dam-toolbar-status,
-#vizStatus.dam-toolbar-status {
+.dam-global-search-block .dam-viz-grid-toolbar .dam-toolbar-status,
+.dam-global-search-block #vizStatus.dam-toolbar-status {
   font-size: 12px;
   color: #8b8d97;
   line-height: 1.35;
-  margin: 0 0 8px;
+  margin: 0 0 15px;
   min-width: 0;
 }
 
@@ -151,7 +162,7 @@
   margin: 0;
 }
 
-/* Count pill — Geex/DAM light tokens (nie 1:1 ciemny branding); pad +8/+12 vs branding 7/14 */
+/* Count pill — muted ink (brief); pad 8/12 spójnie z Branding. JS also injects #damVizCountPillInk. */
 .dam-viz-panel {
   display: flex;
   flex-direction: column;
@@ -166,30 +177,22 @@
   width: fit-content;
   max-width: calc(100% - 20px);
   margin: -44px 84px 10px auto;
-  /* jak Branding: baza 7/14 +8/+12 → 15/26 */
-  padding: 15px 26px;
+  padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #008244) 22%, #e7e7e7);
-  background: color-mix(in srgb, #ffffff 92%, var(--dam-primary, #008244) 8%);
-  box-shadow: 0 8px 22px rgb(23 22 30 / 0.12);
+  border: 1px solid color-mix(in srgb, var(--dam-ink, #17161e) 28%, transparent);
+  background: color-mix(in srgb, var(--dam-ink, #23202e) 88%, transparent);
+  box-shadow: 0 8px 22px rgb(23 22 30 / 0.22);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   font-size: 12.5px;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.01em;
-  color: #464255;
+  color: #fff;
   text-align: right;
   white-space: nowrap;
   pointer-events: none;
   box-sizing: border-box;
-}
-
-html[data-theme="dark"] .dam-viz-grid-count {
-  border-color: color-mix(in srgb, var(--dam-primary, #008244) 35%, #3a3844);
-  background: color-mix(in srgb, #23202e 88%, var(--dam-primary, #008244) 12%);
-  color: #f3f1f7;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 0.35);
 }
 
 .dam-viz-grid-count[hidden] {

@@ -19,7 +19,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
   <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=helprestart20260720a">
   <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad08">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=helprestart20260720b">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=helprestart20260720c">
   <link rel="stylesheet" href="./assets/css/dam-branding.css?v=supviz20260720a">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
@@ -57,6 +57,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         <nav class="geex-sidebar__menu-wrapper">
           <ul class="geex-sidebar__menu"></ul>
         </nav>
+        <div class="geex-sidebar__footer">
+          <span class="geex-sidebar__footer__title">DAM</span>
+          <p class="geex-sidebar__footer__copyright">Dobra Kaloria - Inyfinn</p>
+          <p class="geex-sidebar__footer__author"><a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> &copy; 2026 <span class="dam-app-version" title="Wersja programu DAM">v2.0.7</span></p>
+        </div>
       </div>
     </div>
 
@@ -134,7 +139,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
               <option value="name">Nazwa</option>
             </select>
           </label>
-          <label class="dam-switch dam-switch--compact" for="damBrandingTagCounts" data-dam-tip="Pokaż liczby dopasowań obok tagów (domyślnie wyłączone)">
+          <label class="dam-switch dam-switch--compact" for="damBrandingTagCounts" data-dam-tip="Poka? liczby dopasowań obok tagów (domyślnie wyłączone)">
             <input type="checkbox" id="damBrandingTagCounts" class="dam-switch__input" />
             <span class="dam-switch__track" aria-hidden="true"></span>
             <span class="dam-switch__label">Liczby przy tagach</span>
@@ -144,7 +149,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
             <input type="range" id="damBrandingCardZoom" min="65" max="350" step="5" value="100" aria-label="Skala kafelków branding" />
             <span class="dam-viz-zoom-control__value" id="damBrandingCardZoomLabel">100%</span>
           </label>
-          <div class="dam-branding-page-size" id="damBrandingPageSize" role="group" aria-label="Liczba kart na stronie" data-dam-tip="Ile kart (elementów) pokazać w siatce. Suwak i pole nie odświeżają siatki na żywo - zatwierdź przyciskiem OK. Kółko myszy na kontrolce zmienia wartość.">
+          <div class="dam-branding-page-size" id="damBrandingPageSize" role="group" aria-label="Liczba kart na stronie" data-dam-tip="Ile kart (elementów) pokazać w siatce. Suwak i pole nie odświeżają siatki na żywo - zatwierdź przyciskiem OK. Kó?ko myszy na kontrolce zmienia wartość.">
             <span class="dam-branding-page-size__label"><i class="uil uil-layer-group" aria-hidden="true"></i> Karty</span>
             <input type="range" id="damBrandingPageSizeRange" min="24" max="500" step="4" value="100" aria-label="Liczba kart (suwak)" />
             <input type="number" id="damBrandingPageSizeInput" class="dam-branding-page-size__num" min="24" max="500" step="1" value="100" aria-label="Liczba kart (liczba)" />
@@ -158,7 +163,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 
       <div id="damBrandingContextBar" class="dam-branding-context" hidden>
         <button type="button" class="dam-branding-context__back" id="damBrandingBackBtn">
-          <i class="uil uil-arrow-left" aria-hidden="true"></i> Wróć do przeglądania
+          <i class="uil uil-arrow-left" aria-hidden="true"></i> Wró? do przeglądania
         </button>
         <div class="dam-branding-context__chips" id="damBrandingContextChips" aria-label="Aktywne filtry"></div>
       </div>
@@ -190,7 +195,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-i18n.js?v=plshell20260720a"></script>
   <script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
   <script src="./assets/js/dam-version.js?v=2.0.7"></script>
-  <script src="./assets/js/dam-shell.js?v=helprestart20260720a"></script>
+  <script src="./assets/js/dam-shell.js?v=supviz20260720b"></script>
   <script src="./assets/js/dam-paths.js?v=devicepath20260720c"></script>
   <script src="./assets/js/dam-tooltips.js?v=usermenufix20260720a"></script>
   <script src="./assets/js/dam-assoc-action-tips.js?v=1"></script>
@@ -199,8 +204,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-tag-bar.js?v=hub20260719j12"></script>
   <script src="./assets/js/dam-asset-taxonomy.js?v=hub20260719trans01"></script>
   <script src="./assets/js/dam-badges.js?v=usab20260720c"></script>
-  <script src="./assets/js/dam-search.js?v=viztb20260720b"></script>
-  <script src="./assets/js/dam-user-prefs.js?v=supviz20260720a"></script>
+  <script src="./assets/js/dam-search.js?v=viztb20260720d"></script>
+  <script src="./assets/js/dam-user-prefs.js?v=viztb20260720d"></script>
   <script src="./assets/js/dam-danger.js?v=safedel20260720a"></script>
   <script src="./assets/js/dam-assoc-edit.js?v=usab20260720a36f"></script>
   <script src="./assets/js/dam-tag-edit.js?v=supviz20260720a"></script>

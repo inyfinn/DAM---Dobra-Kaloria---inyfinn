@@ -5584,3 +5584,31 @@ Brak (tag nie tworzony w tej turze).
 ### Zrodla
 dam-viz.css/js; dam-branding.js + branding.html; dam-tutorial.js; dam-brand.css (help); dam-shell.js; dam-dobrakaloria; code-doctrine
 
+
+## 2026-07-20 - Help modal: restart samouczka + padding +10
+
+### Komenda/Akcja
+USER: `#damHelpModal` header - pod X kontrola „Włącz samouczek ponownie”; padding wewnetrzny +10px; realny restart DamTutorial; cache-bust; 5 passow screenshot; process.md; bez commit.
+
+### Log/Status
+1. READ code-doctrine + dam-shortcuts / dam-tutorial / dam-brand help CSS.
+2. `DamTutorial.restart()` - stop/clear PHASE + session dismiss, `start({phase:0,step:0})`.
+3. `injectHelpRestartControl` w headerze (kolumna `.dam-help-modal__head-actions` pod X); stopka „Uruchom samouczek” tez woła restart.
+4. `dam-shortcuts.js` - head-actions wrapper w HTML modala.
+5. CSS: head 32/34/22, body 26/34/34 (+10); restart Geex; gap actions 12px; tut-help-entry +10.
+6. Cache: `helprestart20260720a` (tutorial js/css, shell, shortcuts); brand `helprestart20260720c`.
+
+### Efekt/Fix
+Restart zamyka pomoc i odpala samouczek od 0:0 (CDP: helpHidden + tutActive + phase 0:0). Header: X nad restartem, bez nachodzenia na tytul (gapTitle ~28px).
+
+### Backup
+Brak.
+
+### Test/Ewaluacja
+- node --check dam-tutorial.js OK
+- CDP padding head/body + gapClose 12
+- Pass1 structure; Pass2 spacing+nowrap; Pass3 clean header; Pass4 ~768; Pass5 final 1440 - screenshot+Read
+- Restart klik x2: Pass
+
+### Zrodla
+dam-tutorial.js; dam-shortcuts.js; dam-brand.css; dam-tutorial.css; dam-shell.js; HTML ?v=; ui-taste; dam-dobrakaloria

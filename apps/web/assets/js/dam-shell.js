@@ -816,6 +816,22 @@
   }
 
   // Build brand in sidebar header + footer identity (DAM / Dobra Kaloria - Inyfinn / v…)
+  function ensureSidebarFooterEl() {
+    var wrapper = document.querySelector(".geex-sidebar .geex-sidebar__wrapper");
+    if (!wrapper) return null;
+    var footer = wrapper.querySelector(".geex-sidebar__footer");
+    if (footer) return footer;
+    footer = document.createElement("div");
+    footer.className = "geex-sidebar__footer";
+    /* Expanded: footer nad collapsed-logo / collapsed-meta (te sa tylko w rail). */
+    var insertBefore =
+      wrapper.querySelector(".dam-sidebar-logo-collapsed") ||
+      wrapper.querySelector(".dam-sidebar-collapsed-meta");
+    if (insertBefore) wrapper.insertBefore(footer, insertBefore);
+    else wrapper.appendChild(footer);
+    return footer;
+  }
+
   function updateSidebarBrand() {
     var logo = document.querySelector(".geex-sidebar__logo");
     if (logo) {
@@ -836,7 +852,7 @@
     }
     var year = new Date().getFullYear();
     var ver = String(window.DAM_APP_VERSION || "2.0.7").replace(/^v/i, "");
-    var footer = document.querySelector(".geex-sidebar__footer");
+    var footer = ensureSidebarFooterEl();
     if (footer) {
       footer.innerHTML =
         '<span class="geex-sidebar__footer__title" data-i18n="nav.brand">' + brand + '</span>' +

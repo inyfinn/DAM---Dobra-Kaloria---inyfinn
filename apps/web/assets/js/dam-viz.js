@@ -2054,6 +2054,16 @@
     el.hidden = false;
   }
 
+  /** Changelog siedzi wewnątrz toolbaru — osobny page-entrance GSAP zostawiał opacity:0. */
+  function clearChromeRevealInline(el) {
+    if (!el) return;
+    el.setAttribute("data-dam-bar-revealed", "1");
+    el.style.opacity = "";
+    el.style.visibility = "";
+    el.style.transform = "";
+    el.style.clipPath = "";
+  }
+
   function mountChangeLogInScope() {
     var bar = document.getElementById("damChangeLogBar");
     var scope =
@@ -2062,11 +2072,34 @@
     if (bar && scope && bar.parentElement !== scope) {
       scope.appendChild(bar);
     }
+    clearChromeRevealInline(bar);
     if (window.DamTagEdit && typeof window.DamTagEdit.refreshChangeLogBar === "function") {
       window.DamTagEdit.refreshChangeLogBar();
     } else if (bar) {
       bar.hidden = !(isAdminRole() && isAdminMode());
     }
+  }
+
+  function ensureVizChromeVisible() {
+    clearChromeRevealInline(document.getElementById("damChangeLogBar"));
+    clearChromeRevealInline(document.querySelector(".dam-explorer-toolbar.dam-viz-toolbar"));
+    clearChromeRevealInline(document.querySelector(".dam-global-search-block > .dam-viz-grid-toolbar"));
+    clearChromeRevealInline(document.getElementById("vizSearchTags"));
+  }
+
+  /** Injected so concurrent edits to dam-viz.css cannot silently revert ink pill. */
+  function injectVizCountPillInkStyle() {
+    var id = "damVizCountPillInk";
+    if (document.getElementById(id)) return;
+    var style = document.createElement("style");
+    style.id = id;
+    style.textContent =
+      ".dam-viz-grid-count{padding:8px 12px!important;" +
+      "border:1px solid color-mix(in srgb,var(--dam-ink,#17161e) 28%,transparent)!important;" +
+      "background:color-mix(in srgb,var(--dam-ink,#23202e) 88%,transparent)!important;" +
+      "color:#fff!important;" +
+      "box-shadow:0 8px 22px rgb(23 22 30 / 0.22)!important;}";
+    document.head.appendChild(style);
   }
 
   function render() {
@@ -2745,6 +2778,12 @@
     } else {
       mountChangeLogInScope();
     }
+    injectVizCountPillInkStyle();
+    ensureVizChromeVisible();
+    /* Page-entrance GSAP (DamGridReveal) potrafi zostawić belki na opacity:0 —
+       zwłaszcza gdy #damChangeLogBar jest zagnieżdżony w .dam-viz-toolbar. */
+    setTimeout(ensureVizChromeVisible, 700);
+    setTimeout(ensureVizChromeVisible, 1600);
 
     if (window.DamTagBar) {
       window.DamTagBar.bind({

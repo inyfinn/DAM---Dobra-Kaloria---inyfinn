@@ -898,6 +898,11 @@
     if (scope && bar.parentElement !== scope) {
       scope.appendChild(bar);
     }
+    /* Nested under toolbar: skip / undo stuck DamGridReveal page-entrance */
+    bar.setAttribute("data-dam-bar-revealed", "1");
+    bar.style.opacity = "";
+    bar.style.visibility = "";
+    bar.style.transform = "";
   }
 
   function refreshChangeLogBar() {
