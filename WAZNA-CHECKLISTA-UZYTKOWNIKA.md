@@ -28,7 +28,7 @@ Legenda statusu: `[ ]` otwarte · `[~]` w toku · `[x]` zrobione
 | B2 | [ ] | Import **FMCG XLSX** (`openpyxl`), jeśli plik nie jest CSV | CSV first już jest |
 | B3 | [x] | **Miniatury wideo** — twardy fallback gdy poster ffmpeg pada | 2026-07-20: bridge SVG placeholder zamiast 422; JS data-URI + probe `?preview=1` (`dam-branding.js` / `dam-media-preview.js`) |
 | B4 | [x] | **Tagi Autor** w Brandingu (Krzysztof / Sylwia itd.) | 2026-07-20: grupa filtrów Autor (`author:*`) — `appearance_tags` + pole `author`/`authors` + path (Highlite) |
-| B5 | [x] | Dopiąć **QA dashboardu** — layouty 2×2 / 1×4 / 1×6 + sidebar expanded/collapsed | 2026-07-20: cykl 2x2/1x4/1x6 bez overflow na 1280; inject `#damDashLayoutB5Css` (header wrap, customizer fixed, stack ≤768); screenshot+Read 1280/768/375 |
+| B5 | [x] | Dopiąć **QA dashboardu** — layouty 2×2 / 1×4 / 1×6 + sidebar expanded/collapsed | 2026-07-20: Pass 375/768/1280; fix span-6→implicit cols @≤575; header overflow wrap; title N dla 1x6; icon rail column @phone; `?v=b5qa20260720f`; sidebar 72px+logo 48 (class force; morph shell poza allowlist) |
 | B6 | [x] | Ujednolicić **wersję w note/memory** | 2026-07-20: `version.json` + `dam-version.js` + `runtime_config.py` + memory §128 = **2.0.7** |
 | B7 | [x] | **Sweep cache-bust** `?v=` na pozostałych stronach dla `dam-brand.css` / `dam-tokens.css` / `dam-grid-reveal.js` | 2026-07-20: activity/billing/consents/docs-security/help/license/privacy/profile/project/settings/terms/signin(+geex) → `?v=bust20260720a` (gdzie asset występuje) |
 

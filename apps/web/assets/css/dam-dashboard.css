@@ -1466,16 +1466,30 @@
   }
 
   .dam-dash-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Include branding/media - their span-6 at 1100px invents 6 implicit tracks here */
   .dam-widget--sm,
   .dam-widget--md,
   .dam-widget--md.dam-widget--viz-latest,
+  .dam-widget--md.dam-widget--branding-latest,
+  .dam-widget--md.dam-widget--media-latest,
   .dam-widget--strip,
   .dam-widget--lg {
-    grid-column: span 1;
-    grid-row: span auto;
+    grid-column: 1 / -1;
+    grid-row: auto;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .dam-widget--viz-latest .dam-nav-circles--stack,
+  .dam-widget--branding-latest .dam-nav-circles--stack,
+  .dam-widget--media-latest .dam-nav-circles--stack {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-self: flex-start;
   }
 
   .dam-widget__links a {

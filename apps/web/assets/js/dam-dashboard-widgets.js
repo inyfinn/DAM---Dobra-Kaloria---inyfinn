@@ -192,11 +192,35 @@
       "body.geex-dashboard .dam-widget__viz-body," +
       "body.geex-dashboard .dam-widget__viz-body > a{" +
       "min-width:0;overflow-wrap:anywhere;}" +
-      "@media (max-width:768px){" +
-      "body.geex-dashboard .dam-dash-layout{grid-template-columns:1fr!important;}" +
+      "@media (max-width:1100px){" +
+      "body.geex-dashboard .dam-dash-layout{grid-template-columns:minmax(0,1fr)!important;}" +
+      "}" +
+      "/* Keep user 2x2 as 2 cols on tablet; stack only on narrow phones */" +
+      "@media (max-width:720px){" +
       "body.geex-dashboard .dam-widget__list--media.dam-widget__list--grid-2x2," +
       "body.geex-dashboard .dam-widget__list--viz.dam-widget__list--grid-2x2{" +
-      "grid-template-columns:1fr!important;}" +
+      "grid-template-columns:minmax(0,1fr)!important;}" +
+      "}" +
+      "/* HARD: branding/media span-6 on 1-col grid invents 6 implicit tracks (widgets ~40px) */" +
+      "@media (max-width:575px){" +
+      "body.geex-dashboard .dam-dash-grid{grid-template-columns:minmax(0,1fr)!important;}" +
+      "body.geex-dashboard .dam-widget--sm," +
+      "body.geex-dashboard .dam-widget--md," +
+      "body.geex-dashboard .dam-widget--strip," +
+      "body.geex-dashboard .dam-widget--lg," +
+      "body.geex-dashboard .dam-widget--md.dam-widget--viz-latest," +
+      "body.geex-dashboard .dam-widget--md.dam-widget--branding-latest," +
+      "body.geex-dashboard .dam-widget--md.dam-widget--media-latest{" +
+      "grid-column:1/-1!important;grid-row:auto!important;max-width:100%;min-width:0;}" +
+      "/* Keep icon rail vertical - horizontal 3x28px starves title (~60px) */" +
+      "body.geex-dashboard .dam-widget--viz-latest .dam-nav-circles--stack," +
+      "body.geex-dashboard .dam-widget--branding-latest .dam-nav-circles--stack," +
+      "body.geex-dashboard .dam-widget--media-latest .dam-nav-circles--stack{" +
+      "flex-direction:column!important;flex-wrap:nowrap;gap:4px;align-self:flex-start;}" +
+      "body.geex-dashboard .dam-widget__list li.dam-widget__viz-row{align-items:flex-start;}" +
+      "body.geex-dashboard .dam-widget__thumb-link{width:64px;height:64px;}" +
+      "body.geex-dashboard .dam-widget__viz-body > a{" +
+      "font-size:13px;-webkit-line-clamp:2;line-clamp:2;}" +
       "}" +
       "@media (max-width:420px){" +
       "body.geex-dashboard .geex-content__header__action .geex-btn__text," +

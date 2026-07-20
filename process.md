@@ -5968,3 +5968,35 @@ Checklista A3/B3/B4/B5/B7/C2/C3 [x]; Explorer create end-to-end (dry-run+confirm
 
 ### Zrodla
 plan dam_wdrozenie_zaleglosci; explorer_create.py; dam-explorer-add-product.js; invoice_erp.py
+
+### Komenda/Akcja
+B5 QA dashboard layouts 2x2 / 1x4 / 1x6 + sidebar expanded/collapsed @ 375/768/1280
+
+### Log/Status
+1. READ code-doctrine + dam-dashboard-widgets/css + checklista B5.
+2. CDP: header quickaction overflowX ~112@1280 / ~168@768 (nie tile grid).
+3. CDP@375: branding/media `grid-column:span 6` na siatce 1fr tworzylo 6 implicit tracks → widgety ~40px (FAIL).
+4. FIX: inject `#damDashLayoutB5Css` + patch `dam-dashboard.css` @575 (`1/-1` + icon rail column).
+5. FIX: `vizTitleForCount` (1x6 → "6 najnowsze…"); cache-bust `b5qa20260720f`.
+6. Sidebar morph click w dam-shell bywa desync (storage=1, class brak) - poza WRITE allowlist; class force = 72px + logo 48x48 Pass.
+
+### Efekt/Fix
+- pageOverflowX=0 @1280/768/375 dla 2x2/1x4/1x6
+- 2x2 = 2 cols (@1280/768), 1 col (@≤720)
+- 1x4/1x6 = 1 col, kids 4/6
+- collapsed sidebar 72px, logo 48x48 (forced class)
+- WAZNA-CHECKLISTA B5 [x] (note zaktualizowana)
+
+### Backup
+Brak
+
+### Test/Ewaluacja
+- node --check dam-dashboard-widgets.js: PASS
+- CDP matrix 1280: overflowX=0 all layouts; collapsed logo 48: PASS
+- CDP 768: overflowX=0; 2x2 colCount=2: PASS
+- CDP 375: widgets 265px; bodyW title ~93; stackDir=column: PASS
+- Screenshot+Read: b5-1280-2x2-expanded, b5-1280-2x2-collapsed-forced, b5-768-*, b5-375-1x6-fixed: PASS
+- Pass/Fail: **Pass** (shell morph toggle desync = noted, not blocking class-applied state)
+
+### Zrodla
+apps/web/assets/js/dam-dashboard-widgets.js; apps/web/assets/css/dam-dashboard.css; apps/web/dashboard.html; WAZNA-CHECKLISTA-UZYTKOWNIKA.md B5
