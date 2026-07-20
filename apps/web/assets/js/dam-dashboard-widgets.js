@@ -1769,6 +1769,238 @@
       });
   }
 
+  /**
+   * Abstract wireframe for customize-modal PODGLĄD.
+   * Mirrors each widget's real content silhouette (not pixel-perfect).
+   */
+  function previewMockHtml(widgetId) {
+    var id = String(widgetId || "");
+    function row(leftW, rightW) {
+      return (
+        '<div class="dam-dash-preview-card__row">' +
+        '<span class="dam-dash-preview-card__bar" style="width:' +
+        (leftW || "62%") +
+        '"></span>' +
+        '<span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--right" style="width:' +
+        (rightW || "22%") +
+        '"></span>' +
+        "</div>"
+      );
+    }
+    function listRows(n, lefts, rights) {
+      var out = "";
+      var i;
+      for (i = 0; i < n; i++) {
+        out += row(
+          (lefts && lefts[i]) || (70 - i * 6) + "%",
+          (rights && rights[i]) || "20%"
+        );
+      }
+      return out;
+    }
+    function barTrack(pct) {
+      return (
+        '<div class="dam-dash-preview-card__bar-row">' +
+        '<span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--label" style="width:18%"></span>' +
+        '<span class="dam-dash-preview-card__track"><i style="width:' +
+        (pct || "60%") +
+        '"></i></span>' +
+        '<span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--right" style="width:12%"></span>' +
+        "</div>"
+      );
+    }
+
+    switch (id) {
+      /* Big metric + muted label (stat tiles) */
+      case "products_count":
+      case "asana_open":
+      case "checklists_ok":
+      case "checklists_gap":
+      case "projects_this_month":
+      case "tasks_overdue":
+      case "viz_flags":
+      case "missing_thumbs":
+      case "demo_vs_prod":
+      case "efficiency_mock":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--stat" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<span class="dam-dash-preview-card__metric"></span>' +
+          '<span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short" style="width:42%"></span>' +
+          "</div>"
+        );
+
+      /* Cost month: value + date line + chip */
+      case "cost_month":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--stat" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<span class="dam-dash-preview-card__metric dam-dash-preview-card__metric--wide"></span>' +
+          '<span class="dam-dash-preview-card__bar" style="width:68%"></span>' +
+          '<span class="dam-dash-preview-card__chip"></span>' +
+          "</div>"
+        );
+
+      /* Sales / index: value + meta (+ chip) */
+      case "sales_mock":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--stat" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<span class="dam-dash-preview-card__metric dam-dash-preview-card__metric--wide"></span>' +
+          '<span class="dam-dash-preview-card__bar" style="width:55%"></span>' +
+          '<span class="dam-dash-preview-card__chip"></span>' +
+          "</div>"
+        );
+      case "index_health":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--stat" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<span class="dam-dash-preview-card__metric" style="width:48%"></span>' +
+          '<span class="dam-dash-preview-card__bar" style="width:78%"></span>' +
+          "</div>"
+        );
+
+      /* Task list: name left, due date right (Następne zadania) */
+      case "tasks_next":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--list" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          listRows(5, ["78%", "64%", "70%", "52%", "60%"], ["24%", "24%", "20%", "24%", "18%"]) +
+          "</div>"
+        );
+
+      /* Label | count lists */
+      case "tasks_by_section":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--list" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          listRows(4, ["40%", "44%", "48%", "36%"], ["14%", "14%", "14%", "14%"]) +
+          "</div>"
+        );
+      case "carriers_top":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--list" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          listRows(5, ["58%", "50%", "46%", "42%", "38%"], ["16%", "14%", "14%", "12%", "12%"]) +
+          "</div>"
+        );
+      case "langs_mix":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--list" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<span class="dam-dash-preview-card__metric" style="width:70%;height:18px;margin-bottom:4px"></span>' +
+          listRows(4, ["22%", "22%", "22%", "22%"], ["14%", "14%", "12%", "12%"]) +
+          "</div>"
+        );
+      case "cost_fmcg_breakdown":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--list" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<span class="dam-dash-preview-card__chip" style="margin-bottom:4px"></span>' +
+          listRows(4, ["55%", "48%", "50%", "62%"], ["22%", "20%", "20%", "24%"]) +
+          '<span class="dam-dash-preview-card__metric dam-dash-preview-card__metric--wide" style="margin-top:6px;height:18px"></span>' +
+          "</div>"
+        );
+
+      /* Media: 2x2 tile grid - each cell thumb|title+badges (default dash layout) */
+      case "newest_viz_3":
+      case "branding_latest":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--media-grid" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<div class="dam-dash-preview-card__tile"><span class="dam-dash-preview-card__thumb"></span><span class="dam-dash-preview-card__tile-body"><span class="dam-dash-preview-card__bar" style="width:90%"></span><span class="dam-dash-preview-card__pills"><i class="dam-dash-preview-card__chip dam-dash-preview-card__chip--sm"></i><i class="dam-dash-preview-card__chip dam-dash-preview-card__chip--sm dam-dash-preview-card__chip--mute"></i></span></span></div>' +
+          '<div class="dam-dash-preview-card__tile"><span class="dam-dash-preview-card__thumb"></span><span class="dam-dash-preview-card__tile-body"><span class="dam-dash-preview-card__bar" style="width:80%"></span><span class="dam-dash-preview-card__pills"><i class="dam-dash-preview-card__chip dam-dash-preview-card__chip--sm"></i></span></span></div>' +
+          '<div class="dam-dash-preview-card__tile"><span class="dam-dash-preview-card__thumb"></span><span class="dam-dash-preview-card__tile-body"><span class="dam-dash-preview-card__bar" style="width:85%"></span><span class="dam-dash-preview-card__pills"><i class="dam-dash-preview-card__chip dam-dash-preview-card__chip--sm dam-dash-preview-card__chip--mute"></i></span></span></div>' +
+          '<div class="dam-dash-preview-card__tile"><span class="dam-dash-preview-card__thumb"></span><span class="dam-dash-preview-card__tile-body"><span class="dam-dash-preview-card__bar" style="width:75%"></span><span class="dam-dash-preview-card__pills"><i class="dam-dash-preview-card__chip dam-dash-preview-card__chip--sm"></i><i class="dam-dash-preview-card__chip dam-dash-preview-card__chip--sm dam-dash-preview-card__chip--mute"></i></span></span></div>' +
+          (id === "branding_latest"
+            ? '<span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short dam-dash-preview-card__media-foot" style="width:40%"></span>'
+            : "") +
+          "</div>"
+        );
+
+      /* Notify strip: toggle + status */
+      case "notify_new_viz":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--notify" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<span class="dam-dash-preview-card__toggle"></span>' +
+          '<span class="dam-dash-preview-card__bar" style="width:72%"></span>' +
+          '<span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short" style="width:40%"></span>' +
+          "</div>"
+        );
+
+      /* SWOT 2×2 */
+      case "cost_swot_risk":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--swot" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<div class="dam-dash-preview-card__swot-cell"><span class="dam-dash-preview-card__bar" style="width:40%"></span><span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short"></span><span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short" style="width:55%"></span></div>' +
+          '<div class="dam-dash-preview-card__swot-cell"><span class="dam-dash-preview-card__bar" style="width:50%"></span><span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short"></span><span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short" style="width:45%"></span></div>' +
+          '<div class="dam-dash-preview-card__swot-cell"><span class="dam-dash-preview-card__bar" style="width:36%"></span><span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short"></span><span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short" style="width:60%"></span></div>' +
+          '<div class="dam-dash-preview-card__swot-cell"><span class="dam-dash-preview-card__bar" style="width:44%"></span><span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short"></span><span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short" style="width:50%"></span></div>' +
+          "</div>"
+        );
+
+      /* Horizontal load bars */
+      case "assignees_load":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--bars" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          barTrack("88%") +
+          barTrack("70%") +
+          barTrack("55%") +
+          barTrack("40%") +
+          barTrack("28%") +
+          "</div>"
+        );
+      case "labor_vs_print":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--bars" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          barTrack("62%") +
+          barTrack("38%") +
+          '<span class="dam-dash-preview-card__chip" style="margin-top:6px"></span>' +
+          "</div>"
+        );
+
+      /* Quick links 2×2 */
+      case "quick_links":
+        return (
+          '<div class="dam-dash-preview-card__mock dam-dash-preview-card__mock--links" data-mock="' +
+          escapeHtml(id) +
+          '">' +
+          '<span class="dam-dash-preview-card__link"></span>' +
+          '<span class="dam-dash-preview-card__link"></span>' +
+          '<span class="dam-dash-preview-card__link"></span>' +
+          '<span class="dam-dash-preview-card__link"></span>' +
+          "</div>"
+        );
+
+      default:
+        return (
+          '<div class="dam-dash-preview-card__mock" data-mock="generic">' +
+          '<span class="dam-dash-preview-card__bar"></span>' +
+          '<span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short"></span>' +
+          '<span class="dam-dash-preview-card__chip"></span>' +
+          "</div>"
+        );
+    }
+  }
+
   function previewHtmlForWidget(w) {
     if (!w) return "";
     var hint = w.defaultOn
@@ -1785,11 +2017,8 @@
       '<p class="dam-dash-preview-card__hint">' +
       hint +
       "</p>" +
-      '<div class="dam-dash-preview-card__mock" aria-hidden="true">' +
-      '<span class="dam-dash-preview-card__bar"></span>' +
-      '<span class="dam-dash-preview-card__bar dam-dash-preview-card__bar--short"></span>' +
-      '<span class="dam-dash-preview-card__chip"></span>' +
-      "</div></div>"
+      previewMockHtml(w.id) +
+      "</div>"
     );
   }
 

@@ -3,6 +3,10 @@
  * Loads language JSON from /i18n/{lang}.json
  * Applies data-i18n and data-i18n-placeholder attributes
  * Language stored in localStorage key: dam_lang (default: pl)
+ *
+ * Boot contract: body stays hidden (html.dam-booting) until first overlay
+ * apply finishes. DamShell.finishBoot waits on DamI18n.whenReady so users
+ * never see mojibake / half-applied chrome flashing into fixed UTF-8.
  */
 (function () {
   "use strict";
@@ -24,6 +28,9 @@
 
   var currentLang = localStorage.getItem("dam_lang") || "pl";
   var translations = {};
+  var ready = false;
+  var readyWaiters = [];
+  var loadGeneration = 0;
 
   function getLang() { return currentLang; }
 
@@ -31,19 +38,57 @@
     return translations[key] || key;
   }
 
+  /**
+   * Typografia PL: sieroty / wdowy.
+   * NBSP po 1-literowych (a, i, o, u, w, z) + sklejenie dwoch ostatnich slow.
+   */
+  function nbspPl(s) {
+    if (s == null || s === "") return s;
+    var out = String(s);
+    out = out.replace(/(^|[\s\u00A0])([iaouwzIAOUWZ])[ \t]+(?=\S)/g, function (_m, before, letter) {
+      return before + letter + "\u00A0";
+    });
+    out = out.replace(/(\S+)[ \t]+(\S+)([.!?…]*)$/, function (_m, a, b, punct) {
+      return a + "\u00A0" + b + (punct || "");
+    });
+    return out;
+  }
+
+  function markReady() {
+    if (ready) return;
+    ready = true;
+    var q = readyWaiters.splice(0, readyWaiters.length);
+    for (var i = 0; i < q.length; i++) {
+      try { q[i](); } catch (e) { /* ignore waiter errors */ }
+    }
+  }
+
+  function whenReady(cb) {
+    if (typeof cb !== "function") return;
+    if (ready) {
+      try { cb(); } catch (e) { /* ignore */ }
+      return;
+    }
+    readyWaiters.push(cb);
+  }
+
+  function isReady() {
+    return ready;
+  }
+
   function applyTranslations() {
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
       var key = el.getAttribute("data-i18n");
       var val = t(key);
       if (val !== key) {
-        el.textContent = val;
+        el.textContent = nbspPl(val);
       }
     });
     document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
       var key = el.getAttribute("data-i18n-placeholder");
       var val = t(key);
       if (val !== key) {
-        el.setAttribute("placeholder", val);
+        el.setAttribute("placeholder", nbspPl(val));
       }
     });
     document.querySelectorAll("[data-i18n-html]").forEach(function (el) {
@@ -57,12 +102,36 @@
       var key = el.getAttribute("data-i18n-title");
       var val = t(key);
       if (val !== key) {
-        el.setAttribute("title", val);
+        el.setAttribute("title", nbspPl(val));
+      }
+    });
+    /* Tip overlay (DamTooltips data-dam-tip) — fix mojibake via i18n keys. */
+    document.querySelectorAll("[data-i18n-tip]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-tip");
+      var val = t(key);
+      if (val !== key) {
+        el.setAttribute("data-dam-tip", nbspPl(val));
       }
     });
   }
 
+  function afterOverlayApplied(callback) {
+    applyTranslations();
+    if (window.DamShell && typeof window.DamShell.polishChrome === "function") {
+      window.DamShell.polishChrome();
+    }
+    if (window.DamShell && typeof window.DamShell.polishPageSubs === "function") {
+      window.DamShell.polishPageSubs();
+    }
+    if (window.DamShell && typeof window.DamShell.injectNavTrail === "function") {
+      window.DamShell.injectNavTrail();
+    }
+    markReady();
+    if (callback) callback();
+  }
+
   function loadLang(lang, callback) {
+    var gen = ++loadGeneration;
     var url = "i18n/" + lang + ".json?v=" + Date.now();
     fetch(url)
       .then(function (r) {
@@ -70,24 +139,21 @@
         return r.json();
       })
       .then(function (data) {
+        if (gen !== loadGeneration) return;
         translations = data;
         currentLang = lang;
         localStorage.setItem("dam_lang", lang);
         document.documentElement.setAttribute("lang", lang);
-        applyTranslations();
-        if (window.DamShell && typeof window.DamShell.polishChrome === "function") {
-          window.DamShell.polishChrome();
-        }
-        if (window.DamShell && typeof window.DamShell.injectNavTrail === "function") {
-          window.DamShell.injectNavTrail();
-        }
-        if (callback) callback();
+        afterOverlayApplied(callback);
       })
       .catch(function (e) {
         console.warn("DAM i18n: failed to load", lang, e);
         if (lang !== "pl") {
           loadLang("pl", callback);
+          return;
         }
+        /* PL failed too - still release boot so UI is not stuck hidden */
+        afterOverlayApplied(callback);
       });
   }
 
@@ -154,6 +220,9 @@
     getLang: getLang,
     load: loadLang,
     apply: applyTranslations,
+    nbspPl: nbspPl,
+    whenReady: whenReady,
+    isReady: isReady,
     supportedLangs: SUPPORTED_LANGS
   };
 

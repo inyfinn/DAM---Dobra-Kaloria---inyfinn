@@ -21,17 +21,18 @@
   function pickLatestRevision(product) {
     var revs = (product && product.revisions) || [];
     if (!revs.length) return null;
-    var latest = null;
+    /* Wiele is_latest (np. dwa TUBA z 6300XXX) - wybierz najnowsza date. */
+    var candidates = [];
     for (var i = 0; i < revs.length; i++) {
-      if (revs[i].is_latest) {
-        latest = revs[i];
-        break;
-      }
+      if (revs[i] && revs[i].is_latest) candidates.push(revs[i]);
     }
-    if (latest) return latest;
-    return revs.slice().sort(function (a, b) {
-      return String(b.index || "").localeCompare(String(a.index || ""));
-    })[0];
+    if (!candidates.length) candidates = revs.slice();
+    candidates.sort(function (a, b) {
+      var dd = String((b && b.date) || "").localeCompare(String((a && a.date) || ""));
+      if (dd) return dd;
+      return String((b && b.folder) || "").localeCompare(String((a && a.folder) || ""));
+    });
+    return candidates[0];
   }
 
   function fileExtName(name) {
@@ -309,8 +310,11 @@
   }
 
   var _identityCache = null;
+  /** Rola z ostatniego /auth/me (anti-spoof localStorage.dam_role). */
+  var _sessionRole = "";
 
   function clearLocalAuth() {
+    _sessionRole = "";
     [
       "dam_token",
       "dam_device_id",
@@ -319,6 +323,8 @@
       "dam_role",
       "dam_user_name",
       "dam_user",
+      "dam_admin_mode",
+      "dam_viz_admin_mode",
     ].forEach(function (k) {
       try {
         localStorage.removeItem(k);
@@ -391,17 +397,25 @@
     if (data.machine_id) localStorage.setItem("dam_machine_id", data.machine_id);
     if (data.session_id) localStorage.setItem("dam_session_id", data.session_id);
     if (data.user) {
-      localStorage.setItem("dam_role", data.user.role || "user");
+      var role = String(data.user.role || "user").toLowerCase() || "user";
+      _sessionRole = role;
+      localStorage.setItem("dam_role", role);
       localStorage.setItem("dam_user_name", data.user.name || "");
       localStorage.setItem("dam_user", JSON.stringify({
         email: data.user.email || "",
-        role: data.user.role || "user",
+        role: role,
         name: data.user.name || "",
         auth_provider: data.user.auth_provider || "local",
         title: "GRAFIK",
         department: "MARKETING",
         company: "KUBARA"
       }));
+      if (role !== "admin") {
+        try {
+          localStorage.setItem("dam_admin_mode", "0");
+          localStorage.setItem("dam_viz_admin_mode", "0");
+        } catch (e) { /* ignore */ }
+      }
     }
   }
 
@@ -453,6 +467,8 @@
     token: token,
     authHeaders: authHeaders,
     role: function () {
+      /* Preferuj role z sesji mostu (anti-spoof localStorage). */
+      if (_sessionRole) return _sessionRole;
       return localStorage.getItem("dam_role") || "";
     },
     requireAuth: function () {

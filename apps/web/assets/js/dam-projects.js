@@ -115,10 +115,18 @@
   function pickLatestRevision(product) {
     var revs = (product && product.revisions) || [];
     if (!revs.length) return null;
+    /* Wiele is_latest (np. dwa TUBA z 6300XXX) - wybierz najnowsza date. */
+    var candidates = [];
     for (var i = 0; i < revs.length; i++) {
-      if (revs[i] && revs[i].is_latest) return revs[i];
+      if (revs[i] && revs[i].is_latest) candidates.push(revs[i]);
     }
-    return revs[0];
+    if (!candidates.length) candidates = revs.slice();
+    candidates.sort(function (a, b) {
+      var dd = String((b && b.date) || "").localeCompare(String((a && a.date) || ""));
+      if (dd) return dd;
+      return String((b && b.folder) || "").localeCompare(String((a && a.folder) || ""));
+    });
+    return candidates[0];
   }
 
   /* Mini-checklista jak Eksplorator - z najnowszej rewizji produktu. */
@@ -610,6 +618,8 @@
                 authors: p.authors || [],
                 tag_groups: p.tag_groups || {},
                 search_blob: p.search_blob || "",
+                revisions: p.revisions || [],
+                indexes: indexes,
                 brand: p.brand || "DK",
                 category: p.category || "",
                 subcategory_slug: p.subcategory_slug || "",

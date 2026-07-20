@@ -510,9 +510,25 @@
       window.location.href = "signin.html";
       return;
     }
-    /* Weryfikacja sesji na bridgu (+ auto-rehydrate gdy token niewazny). */
+    /* Weryfikacja sesji na bridgu (+ anti-spoof roli / chrome admin). */
     if (window.DamApi && typeof window.DamApi.me === "function") {
-      window.DamApi.me().catch(function () {});
+      window.DamApi.me()
+        .then(function () {
+          if (!isAdminRole()) {
+            try {
+              localStorage.setItem(ADMIN_MODE_KEY, "0");
+            } catch (e) { /* ignore */ }
+          }
+          ensureAdminModeSwitch();
+          try {
+            window.dispatchEvent(
+              new CustomEvent("dam:admin-mode", {
+                detail: { on: isAdminModeOn() },
+              })
+            );
+          } catch (e2) { /* ignore */ }
+        })
+        .catch(function () {});
     }
   }
 
@@ -2452,18 +2468,64 @@
   }
 
   /**
+   * Typografia PL na podtytulach stron (sieroty / wdowy).
+   * Shared z DamI18n.nbspPl gdy dostepne.
+   */
+  function nbspPlLocal(s) {
+    if (window.DamI18n && typeof window.DamI18n.nbspPl === "function") {
+      return window.DamI18n.nbspPl(s);
+    }
+    if (s == null || s === "") return s;
+    var out = String(s);
+    out = out.replace(/(^|[\s\u00A0])([iaouwzIAOUWZ])[ \t]+(?=\S)/g, function (_m, before, letter) {
+      return before + letter + "\u00A0";
+    });
+    out = out.replace(/(\S+)[ \t]+(\S+)([.!?…]*)$/, function (_m, a, b, punct) {
+      return a + "\u00A0" + b + (punct || "");
+    });
+    return out;
+  }
+
+  function polishPageSubs() {
+    document.querySelectorAll(
+      ".dam-page-sub, .geex-content__header > .geex-content__header__content .geex-content__header__subtitle"
+    ).forEach(function (el) {
+      if (el.closest && el.closest(".geex-content__header__popup")) return;
+      var raw = el.textContent || "";
+      if (!raw.trim()) return;
+      var fixed = nbspPlLocal(raw);
+      if (fixed !== raw) el.textContent = fixed;
+    });
+  }
+
+  /**
    * Zdejmij html.dam-booting / body.is-booting po przepisaniu chrome.
    * Double rAF = pierwsza klatka po rewrite zanim fade-in (bez flashu Geex Demo).
+   * HARD: nie odslaniaj zanim DamI18n overlay jest ready (anti mojibake flash).
    */
   var bootFinished = false;
+  var bootRevealScheduled = false;
   function finishBoot(force) {
     function reveal() {
       var root = document.documentElement;
       var body = document.body;
       root.classList.remove("dam-booting");
       root.classList.add("dam-booted");
-      if (body) body.classList.remove("is-booting");
+      if (body) {
+        body.classList.remove("is-booting");
+        /* Domknij ewentualny stuck CSSTransition opacity (body zostawal na 0). */
+        try {
+          if (typeof body.getAnimations === "function") {
+            body.getAnimations().forEach(function (a) {
+              try { a.finish(); } catch (eFin) { /* ignore */ }
+            });
+          }
+        } catch (eAnim) { /* ignore */ }
+        body.style.setProperty("opacity", "1", "important");
+        body.style.setProperty("pointer-events", "auto");
+      }
       bootFinished = true;
+      bootRevealScheduled = false;
     }
     // Juz odsloniete i nie wymuszamy - nic nie rob
     if (bootFinished && !force && !document.documentElement.classList.contains("dam-booting")) {
@@ -2473,6 +2535,8 @@
       reveal();
       return;
     }
+    if (bootRevealScheduled) return;
+    bootRevealScheduled = true;
     if (typeof requestAnimationFrame === "function") {
       requestAnimationFrame(function () {
         requestAnimationFrame(reveal);
@@ -2482,9 +2546,54 @@
     }
   }
 
+  /**
+   * Final chrome pass + reveal: dopiero gdy i18n overlay gotowy
+   * (albo failsafe timeout). Kolejnosc: apply -> polish -> page-subs -> finishBoot.
+   * HARD: finishBoot ZAWSZE w finally - wyjatek w polish nie moze zostawic
+   * html.dam-booting (body opacity:0 = pusty ekran).
+   */
+  function revealAfterOverlayReady() {
+    try {
+      if (window.DamI18n && typeof window.DamI18n.apply === "function") {
+        window.DamI18n.apply();
+      }
+      polishGeexChrome();
+      polishPageSubs();
+      injectNavTrail();
+    } catch (eBoot) {
+      console.warn("DAM shell: boot chrome pass failed", eBoot);
+    } finally {
+      finishBoot(true);
+      if (window.DamGridReveal && typeof window.DamGridReveal.clearHeaderRevealInline === "function") {
+        /* odblokuj title/sub gdy entrance odpalił się za wcześnie pod dam-booting */
+        window.DamGridReveal.clearHeaderRevealInline();
+      }
+      if (window.DamGridReveal && typeof window.DamGridReveal.revealPageEntrance === "function") {
+        try { window.DamGridReveal.revealPageEntrance(); } catch (eEnt) { /* ignore */ }
+      }
+    }
+  }
+
+  function scheduleBootReveal() {
+    var released = false;
+    function release() {
+      if (released) return;
+      released = true;
+      revealAfterOverlayReady();
+    }
+    if (window.DamI18n && typeof window.DamI18n.whenReady === "function") {
+      window.DamI18n.whenReady(release);
+      /* failsafe: nigdy nie trzymac body opacity:0 w nieskonczonosc */
+      setTimeout(release, 1800);
+    } else {
+      release();
+    }
+  }
+
   // Main init
   function init() {
     bootFinished = false;
+    bootRevealScheduled = false;
     ensureShellLayerCss();
     ensureAppIcons();
     ensureAccentCss();
@@ -2545,17 +2654,14 @@
     polishGeexChrome();
     applyDobraKaloriaLogo();
     injectNavTrail();
-    if (window.DamI18n && typeof window.DamI18n.apply === "function") {
-      window.DamI18n.apply();
-    }
-
-    // Chrome przepisany - odslon UI (przed async Asana / refreshChrome)
-    finishBoot();
+    /* NIE finishBoot tutaj - czekaj na DamI18n.whenReady (overlay UTF-8 gotowy) */
+    scheduleBootReveal();
 
     loadAsanaTasks(function () {
       buildMessagesPopup();
       buildNotificationsPopup();
       polishGeexChrome();
+      polishPageSubs();
       ensureAdminModeSwitch();
       if (window.DamI18n && typeof window.DamI18n.apply === "function") {
         window.DamI18n.apply();
@@ -2563,6 +2669,7 @@
     });
 
     // Re-apply after i18n / Geex main.js (odpinamy slideToggle jeśli wrocil)
+    // Po boot reveal - odswiez chrome, ale NIE flashuj wczesniej
     function refreshChrome() {
       ensureHeaderChrome();
       bindDamHeaderPopups();
@@ -2574,6 +2681,7 @@
         } catch (e) { /* ignore */ }
       }
       polishGeexChrome();
+      polishPageSubs();
       injectNavTrail();
       if (window.DamI18n && typeof window.DamI18n.apply === "function") {
         window.DamI18n.apply();
@@ -2614,6 +2722,7 @@
     finishBoot: finishBoot,
     loadAsanaTasks: loadAsanaTasks,
     polishChrome: polishGeexChrome,
+    polishPageSubs: polishPageSubs,
     injectNavTrail: injectNavTrail,
     setTrailLeaf: setTrailLeaf,
     goBack: goBackNav,

@@ -10,7 +10,7 @@
   "updated_at": "2026-07-18",
   "instructions": {
     "count": 54,
-    "version": 9,
+    "version": 10,
     "source_kv": "program-instructions",
     "critical_ids": [
       "device-scoped-base-paths",

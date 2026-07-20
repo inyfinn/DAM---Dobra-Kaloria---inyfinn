@@ -839,14 +839,15 @@
       .trim()
       .toLowerCase();
     if (!c) return "";
-    if (c === "f" || c === "aktualne" || c === "current" || c === "active") return "aktualne";
-    if (c === "x" || c === "nieaktualne" || c === "outdated" || c === "obsolete") return "nieaktualne";
-    if (c === "d" || c === "demo" || c === "prototype" || c === "prototyp") return "demo / prototyp";
+    if (c === "f" || c === "aktualne" || c === "current" || c === "active") return "Aktualne";
+    if (c === "x" || c === "nieaktualne" || c === "outdated" || c === "obsolete") return "Nieaktualne";
+    if (c === "d" || c === "demo" || c === "prototype" || c === "prototyp") return "Demo / prototyp";
+    if (c === "clear" || c === "none" || c === "bez" || c === "bez statusu") return "Bez statusu";
     return String(code);
   }
 
   /* Etykieta pochodzi z basename sciezki na dysku (np. "Boost - Doypack - F") -
-     usuwamy koncowa litere statusu, zeby nie duplikowac jej z detalem "status -> X". */
+     usuwamy koncowa litere statusu, zeby nie duplikowac jej z detalem statusu. */
   function pathBasenameForLog(p) {
     var s = String(p || "").replace(/[\\/]+$/, "");
     if (!s) return "";
@@ -854,35 +855,197 @@
     return base.replace(/\s*-\s*[FXD]$/i, "").trim();
   }
 
-  function changeLogRowDetail(entry) {
-    if (!entry) return "zmiana na dysku";
+  /** Nazwa produktu z product_name albo folderu „NAZWA — [ wariant ]” w sciezce. */
+  function productLabelForLog(entry) {
+    if (!entry) return "";
+    var named = String(entry.product_name || "").trim();
+    if (named) return named;
+    var p = String(entry.path || "").replace(/[\\/]+$/, "");
+    if (!p) return "";
+    var parts = p.split(/[\\/]/);
+    var i;
+    for (i = parts.length - 1; i >= 0; i--) {
+      var part = String(parts[i] || "");
+      if (!/[—–]\s*\[/.test(part) && !/\s-\s\[/.test(part)) continue;
+      return part
+        .replace(/\s*-\s*[FXD]\s*$/i, "")
+        .replace(/\s*[—–-]\s*\[[^\]]*\]\s*$/, "")
+        .trim();
+    }
+    return "";
+  }
+
+  function formatChangeLogTs(ts) {
+    var raw = String(ts || "").trim();
+    if (!raw) return "";
+    var m = raw.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+    if (m) return m[3] + "." + m[2] + "." + m[1] + " " + m[4] + ":" + m[5];
+    return raw.replace("T", " ").slice(0, 16);
+  }
+
+  function statusLetterFromCode(code) {
+    var c = String(code || "")
+      .trim()
+      .toLowerCase();
+    if (!c) return "";
+    if (c === "f" || c === "aktualne" || c === "current" || c === "active") return "F";
+    if (c === "x" || c === "nieaktualne" || c === "outdated" || c === "obsolete") return "X";
+    if (c === "d" || c === "demo" || c === "prototype" || c === "prototyp") return "D";
+    if (c === "clear" || c === "none" || c === "bez" || c === "bez statusu") return "—";
+    if (/^[fxd]$/i.test(String(code).trim())) return String(code).trim().toUpperCase();
+    return "";
+  }
+
+  function changelogChipClass(letter) {
+    if (letter === "F") return "dam-lifecycle-chip dam-lifecycle-chip--f";
+    if (letter === "X") return "dam-lifecycle-chip dam-lifecycle-chip--x";
+    if (letter === "D") return "dam-lifecycle-chip dam-lifecycle-chip--d";
+    if (letter === "—" || letter === "-" || letter === "∅") {
+      return "dam-lifecycle-chip dam-lifecycle-chip--clear";
+    }
+    return "dam-lifecycle-chip dam-lifecycle-chip--clear";
+  }
+
+  function changelogAuthorShort(actor) {
+    var full = String(actor || "").trim();
+    if (!full) return { label: "", full: "" };
+    var at = full.indexOf("@");
+    var label = at > 0 ? full.slice(0, at) : full;
+    if (label.length > 24) label = label.slice(0, 22) + "…";
+    return { label: label, full: full };
+  }
+
+  /** Struktura wpisu jak w modalu Historia statusów (dam-life-hist) - do popovera. */
+  function changeLogEntryParts(entry) {
+    var empty = {
+      letter: "—",
+      scope: "Zmiana",
+      title: "zmiana na dysku",
+      product: "",
+      index: "",
+      when: "",
+      actor: "",
+      actorFull: "",
+    };
+    if (!entry) return empty;
     var cat = String(entry.category || entry.action || "");
     var action = String(entry.action || "");
+    var when = formatChangeLogTs(entry.ts);
+    var who = changelogAuthorShort(entry.actor);
+    var prod = productLabelForLog(entry);
+    var idx = String(entry.revision_index || entry.index || "").trim();
+    var parts = {
+      letter: "—",
+      scope: "Zmiana",
+      title: "",
+      product: prod,
+      index: idx,
+      when: when,
+      actor: who.label,
+      actorFull: who.full,
+    };
+
     if (action === "rename_index" || cat === "index") {
-      return "indeks " + (entry.index_from || "?") + " -> " + (entry.index_to || "?");
+      parts.letter = "I";
+      parts.scope = "Indeks";
+      parts.title = "Indeks " + (entry.index_from || "?") + " -> " + (entry.index_to || "?");
+      if (!parts.index) parts.index = String(entry.index_to || entry.index_from || "").trim();
+      return parts;
     }
     if (entry.carrier_from || entry.carrier_to) {
-      return "typ " + humanCarrierForLog(entry.carrier_from) + " -> " + humanCarrierForLog(entry.carrier_to);
+      parts.letter = "T";
+      parts.scope = "Typ";
+      parts.title =
+        "Typ " + humanCarrierForLog(entry.carrier_from) + " -> " + humanCarrierForLog(entry.carrier_to);
+      return parts;
     }
     if (cat === "lifecycle_status" || action.indexOf("lifecycle") === 0) {
-      /* "nieaktualne" tu = ktos ustawil status PRODUKTU/WARIANTU na dysku na X (archiwum),
-         to NIE znaczy ze ten log jest przestarzaly - to jest tresc zmiany, ktora zaszla. */
+      /* "Nieaktualne" = status PRODUKTU/WARIANTU na dysku (litera X / archiwum).
+         To NIE znaczy, ze ten log jest przestarzaly - to jest tresc zatwierdzonej zmiany. */
       var stFrom = humanDiskStatusLabel(entry.status_from || entry.from);
       var stTo = humanDiskStatusLabel(entry.status_to || entry.to || entry.status);
-      var what = pathBasenameForLog(entry.path);
-      var statusTxt = stFrom && stTo ? "status: " + stFrom + " -> " + stTo : stTo ? "status -> " + stTo : "status na dysku";
-      return what ? statusTxt + " · " + what : statusTxt;
+      var scope = String(entry.scope || "").toLowerCase();
+      var whoLabel =
+        scope === "product" ? "Status produktu" : scope === "variant" ? "Status wariantu" : "Status";
+      parts.scope = scope === "product" ? "Produkt" : scope === "variant" ? "Wariant" : "Status";
+      parts.letter =
+        statusLetterFromCode(entry.status_to || entry.to || entry.status) ||
+        statusLetterFromCode(entry.status_from || entry.from) ||
+        "—";
+      if (stFrom && stTo && stFrom !== stTo) {
+        parts.title = whoLabel + ": " + stFrom + " -> " + stTo;
+      } else if (stTo) {
+        parts.title = whoLabel + ": " + stTo;
+      } else {
+        parts.title = whoLabel + " na dysku";
+      }
+      if (!parts.index) {
+        var base = pathBasenameForLog(entry.path);
+        if (base && base !== prod) parts.index = base;
+      }
+      return parts;
     }
     if (action === "rename_folder" || cat === "rename") {
-      return "rename folderu / plików" + (pathBasenameForLog(entry.path) ? " · " + pathBasenameForLog(entry.path) : "");
+      parts.letter = "R";
+      parts.scope = "Rename";
+      parts.title = "Rename folderu / plików";
+      if (!parts.product) {
+        var bn = pathBasenameForLog(entry.path);
+        if (bn) parts.product = bn;
+      }
+      return parts;
     }
-    return cat || action || "zmiana na dysku";
+    parts.title = cat || action || "zmiana na dysku";
+    return parts;
+  }
+
+  function changeLogRowDetail(entry) {
+    if (!entry) return "zmiana na dysku";
+    var p = changeLogEntryParts(entry);
+    var bits = [p.title || "zmiana na dysku"];
+    if (p.product) bits.push(p.product);
+    if (p.index && p.index !== p.product) bits.push(p.index);
+    return bits.join(" · ");
   }
 
   function formatChangeLogEntry(entry) {
     if (!entry) return "Brak historii zmian";
-    var ts = String(entry.ts || "").replace("T", " ").slice(0, 16);
-    return "Ostatnia zmiana na dysku: " + changeLogRowDetail(entry) + (ts ? " · " + ts : "");
+    /* Bez prefiksu „Ostatnia zmiana…” - etykieta DYSK + tip to tlumacza;
+       wazna tresc (Status wariantu: Nieaktualne · produkt) musi byc na poczatku
+       bo hint ma ellipsis (max ~340px). */
+    var ts = formatChangeLogTs(entry.ts);
+    return changeLogRowDetail(entry) + (ts ? " · " + ts : "");
+  }
+
+  var CHANGELOG_HINT_TIP =
+    "Ostatnia zatwierdzona zmiana na dysku X: (status produktu/wariantu F/X/D, typ, indeks lub rename). " +
+    "„Nieaktualne” = litera X (archiwum wariantu/produktu), nie oznacza że ten pasek jest przestarzały. " +
+    "To podgląd logu mostu 8766 - nie mylić z „Baza online” (Postgres).";
+
+  var CHANGELOG_LABEL_TIP =
+    "Log zatwierdzonych zmian na dysku X: (status produktu/wariantu, typ, indeks, rename). Wymaga ADMIN ON. Nie mylić z Postgres „Baza online”.";
+
+  var CHANGELOG_BTN_TIP =
+    "Pełna lista ostatnich zatwierdzonych zmian na dysku X: (status, typ, indeks, rename). To podgląd - każda zmiana jest już na trwałe zapisana w logu, nie trzeba jej cofać z tego miejsca.";
+
+  function rebindChangeLogTips() {
+    var bar = document.getElementById("damChangeLogBar");
+    if (!bar) return;
+    var label = bar.querySelector(".dam-changelog-bar__label");
+    var btn = document.getElementById("damChangeHistoryBtn");
+    if (label) {
+      label.removeAttribute("title");
+      label.setAttribute("data-dam-tip", CHANGELOG_LABEL_TIP);
+      label._damTipBound = false;
+    }
+    if (btn) {
+      btn.removeAttribute("title");
+      btn.setAttribute("data-dam-tip", CHANGELOG_BTN_TIP);
+      btn._damTipBound = false;
+    }
+    if (global.DamTooltips && typeof global.DamTooltips.bind === "function") {
+      global.DamTooltips.bind(bar);
+    }
   }
 
   function setChangeLogOfflineHint(hint, reason) {
@@ -894,10 +1057,23 @@
     var tip =
       reason === "login"
         ? "Most 8766 działa, ale /change-log wymaga sesji. „Baza online” to Postgres - to osobny status."
-        : "Nie udało się połączyć z mostem (8766) albo endpoint historii zmian nie odpowiada. Historia dziala tylko przez most na dysku X:; nie mylić z „Baza online”.";
+        : "Nie udało się połączyć z mostem (8766) albo endpoint historii zmian nie odpowiada. Historia działa tylko przez most na dysku X:; nie mylić z „Baza online”.";
     hint.textContent = msg;
-    hint.title = tip;
+    hint.removeAttribute("title");
     hint.setAttribute("data-dam-tip", tip);
+  }
+
+  function setChangeLogTipSuppress(on) {
+    var bar = document.getElementById("damChangeLogBar");
+    if (!bar) return;
+    if (on) {
+      bar.setAttribute("data-dam-tip-suppress", "1");
+      if (global.DamTooltips && typeof global.DamTooltips.hide === "function") {
+        global.DamTooltips.hide();
+      }
+    } else {
+      bar.removeAttribute("data-dam-tip-suppress");
+    }
   }
 
   function mountChangeLogBarInSearchScope() {
@@ -916,93 +1092,913 @@
     bar.style.transform = "";
   }
 
+  /* === Shared Historia (product chrome) — modes: global | recent | product === */
   var lastChangeLogEntries = [];
+  var lastLifecycleHistory = [];
+  var lastMergedLifeRows = [];
   var changeHistoryPopoverEl = null;
+  var changeHistoryAnchorBtn = null;
+  var lifeHistOverlayEl = null;
+  var lifeHistBusy = false;
+  var lifeHistUndo = null;
+  var LIFE_HIST_RECENT_LIMIT = 40;
+  var LIFE_HIST_GLOBAL_LIMIT = 250;
 
-  function refreshChangeLogBar() {
+  function changeHistoryTriggerBtns() {
+    return [
+      document.getElementById("damChangeHistoryBtn"),
+      document.getElementById("damSettingsChangeHistoryBtn"),
+    ].filter(Boolean);
+  }
+
+  function setChangeHistoryExpanded(on) {
+    changeHistoryTriggerBtns().forEach(function (btn) {
+      btn.setAttribute("aria-expanded", on ? "true" : "false");
+    });
+  }
+
+  function lifeHistAuthorShort(who) {
+    var raw = String(who || "").trim();
+    if (!raw) return { label: "", full: "" };
+    var at = raw.indexOf("@");
+    if (at < 1) return { label: raw.length > 24 ? raw.slice(0, 22) + "…" : raw, full: raw };
+    var name = raw
+      .slice(0, at)
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map(function (part) {
+        return part.charAt(0).toUpperCase() + part.slice(1);
+      })
+      .join(" ");
+    var label = name || raw;
+    if (label.length > 24) label = label.slice(0, 22) + "…";
+    return { label: label, full: raw };
+  }
+
+  function lifeHistHashtag(id) {
+    var s = String(id || "").trim();
+    if (!s || s === "current") return "";
+    return s.charAt(0) === "#" ? s : "#" + s;
+  }
+
+  function lifeHistFilterLetter(letter) {
+    var l = String(letter || "—");
+    if (l === "-" || l === "∅" || l === "clear" || !l) return "∅";
+    if (l === "F" || l === "X" || l === "D") return l;
+    return "∅";
+  }
+
+  function lifeHistStatusCode(letterOrStatus) {
+    var lit = statusLetterFromCode(letterOrStatus);
+    if (!lit) {
+      var raw = String(letterOrStatus || "").trim().toLowerCase();
+      if (raw === "aktualne") return "aktualne";
+      if (raw === "nieaktualne") return "nieaktualne";
+      if (raw === "demo") return "demo";
+      return "clear";
+    }
+    if (lit === "F") return "aktualne";
+    if (lit === "X") return "nieaktualne";
+    if (lit === "D") return "demo";
+    return "clear";
+  }
+
+  function normalizeLifecycleHistRow(h) {
+    if (!h || !h.id) return null;
+    var action = String(h.action || "");
+    if (action.indexOf("reconcile") !== -1 && !h.letter && !h.status && !h.scope) return null;
+    var letter =
+      statusLetterFromCode(h.letter || h.status || h.to || h.after) ||
+      (h.letter == null && (h.status === "clear" || !h.status) ? "—" : "");
+    if (!letter && action !== "lifecycle_status" && action !== "lifecycle_restore") return null;
+    if (!letter) letter = "—";
+    var scope = String(h.scope || "").toLowerCase();
+    var scopeLabel =
+      scope === "product" ? "Produkt" : scope === "variant" ? "Wariant" : "Status";
+    var st = humanDiskStatusLabel(h.status || h.letter || letter);
+    var title =
+      scopeLabel +
+      ": " +
+      (st || (letter === "—" ? "Bez statusu" : letter));
+    var pid = String(h.product_id || "");
+    var pname = productLabelForLog(h) || pid;
+    var idx = String(h.revision_index || h.index || "").trim();
+    var tagId = h.id;
+    return {
+      id: String(h.id),
+      ts: h.ts || "",
+      letter: letter,
+      status: h.status || lifeHistStatusCode(letter),
+      scope: scope || "variant",
+      scopeLabel: scopeLabel,
+      title: title,
+      product_id: pid,
+      product_name: pname,
+      revision_index: idx,
+      path: h.path || h.variant_path || "",
+      product_path: h.product_path || "",
+      actor: h.actor || h.user || h.by || "",
+      hashtag: lifeHistHashtag(tagId),
+      kind: "lifecycle",
+      can_restore: !!(h.path || h.product_path || idx || pid),
+      restored_from: h.restored_from || "",
+      action: action,
+      undo_snapshot: h.undo_snapshot || null,
+      _isCurrent: !!h._isCurrent,
+      _raw: h,
+    };
+  }
+
+  function normalizeChangeLogHistRow(entry) {
+    if (!entry) return null;
+    var p = changeLogEntryParts(entry);
+    var cat = String(entry.category || entry.action || "");
+    var action = String(entry.action || "");
+    var isLife =
+      cat === "lifecycle_status" || action.indexOf("lifecycle") === 0;
+    var lcId = String(entry.lifecycle_history_id || "").trim();
+    var id = lcId || String(entry.id || "");
+    if (!id) return null;
+    var letter = isLife
+      ? statusLetterFromCode(entry.letter || entry.status_to || entry.to || entry.status) ||
+        statusLetterFromCode(entry.status_from || entry.from) ||
+        "—"
+      : p.letter === "I" || p.letter === "T" || p.letter === "R"
+        ? "—"
+        : p.letter || "—";
+    var scope = String(entry.scope || "").toLowerCase();
+    var scopeLabel = p.scope || (isLife ? "Status" : "Zmiana");
+    return {
+      id: id,
+      chg_id: String(entry.id || ""),
+      ts: entry.ts || "",
+      letter: letter,
+      status: entry.status || entry.status_to || lifeHistStatusCode(letter),
+      scope: scope || (isLife ? "variant" : "disk"),
+      scopeLabel: scopeLabel,
+      title: p.title || "zmiana na dysku",
+      product_id: String(entry.product_id || ""),
+      product_name: p.product || productLabelForLog(entry) || "",
+      revision_index: p.index || String(entry.revision_index || entry.index || "").trim(),
+      path: entry.path || (entry.folder_rename && entry.folder_rename.new_path) || "",
+      product_path: entry.product_path || "",
+      actor: entry.actor || "",
+      hashtag: lifeHistHashtag(lcId || entry.id),
+      kind: isLife ? "lifecycle" : "disk",
+      can_restore: !!(isLife && (entry.path || entry.product_id || entry.revision_index)),
+      restored_from: "",
+      action: action,
+      undo_snapshot: null,
+      _isCurrent: false,
+      _raw: entry,
+    };
+  }
+
+  function mergeLifeHistRows(chgEntries, lifeHist, mode) {
+    var byId = {};
+    var out = [];
+    (lifeHist || []).forEach(function (h) {
+      var row = normalizeLifecycleHistRow(h);
+      if (!row) return;
+      byId[row.id] = row;
+    });
+    (chgEntries || []).forEach(function (e) {
+      var row = normalizeChangeLogHistRow(e);
+      if (!row) return;
+      if (byId[row.id]) {
+        /* Prefer lifecycle store row; enrich name from change-log */
+        if (!byId[row.id].product_name && row.product_name) {
+          byId[row.id].product_name = row.product_name;
+        }
+        return;
+      }
+      byId[row.id] = row;
+    });
+    Object.keys(byId).forEach(function (k) {
+      out.push(byId[k]);
+    });
+    out.sort(function (a, b) {
+      return String(b.ts || "").localeCompare(String(a.ts || ""));
+    });
+    var limit = mode === "recent" ? LIFE_HIST_RECENT_LIMIT : LIFE_HIST_GLOBAL_LIMIT;
+    if (out.length > limit) out = out.slice(0, limit);
+    return out;
+  }
+
+  function lifeHistFilterChipsHtml() {
+    return ["F", "X", "D", "∅"]
+      .map(function (l) {
+        var label = l === "∅" ? "—" : l;
+        var tip =
+          l === "∅"
+            ? "Filtruj wpisy: bez statusu (odznaczono) oraz inne zmiany dysku"
+            : "Filtruj wpisy: status " + l;
+        var chipL = l === "∅" ? "—" : l;
+        return (
+          '<button type="button" class="dam-life-hist__filter ' +
+          changelogChipClass(chipL) +
+          '" data-life-filter="' +
+          l +
+          '" aria-pressed="false" title="' +
+          esc(tip) +
+          '" data-dam-tip="' +
+          esc(tip) +
+          '">' +
+          esc(label) +
+          "</button>"
+        );
+      })
+      .join("");
+  }
+
+  function lifeHistEntryHtml(h, opts) {
+    opts = opts || {};
+    var letter = lifeHistFilterLetter(h.letter);
+    var dotLetter = letter === "∅" ? "—" : letter;
+    var when = formatChangeLogTs(h.ts) || String(h.ts || "").replace("T", " ").slice(0, 16);
+    var who = lifeHistAuthorShort(h.actor);
+    var scope = h._isCurrent ? "Teraz" : h.scopeLabel || "Status";
+    var idxShow = String(h.revision_index || "");
+    var pid = String(h.product_id || "");
+    var pname = String(h.product_name || pid || "");
+    var tag = h.hashtag || "";
+    var noteParts = [];
+    if (h._isCurrent) {
+      noteParts.push(
+        '<span class="dam-life-hist__note dam-life-hist__note--current">Aktualny stan na dysku</span>'
+      );
+    } else if (tag) {
+      noteParts.push(
+        '<span class="dam-life-hist__tag" title="Identyfikator wpisu">' + esc(tag) + "</span>"
+      );
+    }
+    if (h.restored_from) {
+      var fromTag =
+        String(h.restored_from).charAt(0) === "#"
+          ? h.restored_from
+          : "#" + h.restored_from;
+      noteParts.push(
+        '<span class="dam-life-hist__note">Przywrócono z <strong>' +
+          esc(fromTag) +
+          "</strong></span>"
+      );
+    } else if (!h._isCurrent && h.kind === "lifecycle" && (h.letter === "—" || h.status === "clear")) {
+      noteParts.push(
+        '<span class="dam-life-hist__note">Bez statusu (odznaczono F/X/D)</span>'
+      );
+    }
+    var noteHtml = noteParts.join("");
+    var newestId = opts.newestId || "";
+    var canUndo =
+      !h._isCurrent &&
+      h.id &&
+      h.id === newestId &&
+      (h.restored_from ||
+        h.action === "lifecycle_restore" ||
+        (lifeHistUndo && lifeHistUndo.entryId === h.id));
+    var adminOk = isAdmin() && adminModeOn();
+    var restoreDisabled = lifeHistBusy || h._isCurrent || !h.can_restore || !adminOk;
+    var undoDisabled = lifeHistBusy || !canUndo || !adminOk;
+    var copyTarget = tag || idxShow;
+    return (
+      '<li class="dam-life-hist__item' +
+      (h._isCurrent ? " dam-life-hist__item--current" : "") +
+      '" data-life-row-id="' +
+      esc(h.id) +
+      '">' +
+      '<span class="dam-life-hist__rail">' +
+      '<span class="dam-life-hist__dot ' +
+      changelogChipClass(dotLetter) +
+      '" title="' +
+      (h._isCurrent ? "Aktualny stan" : "Status " + esc(dotLetter)) +
+      '">' +
+      esc(dotLetter) +
+      "</span>" +
+      '<span class="dam-life-hist__line" aria-hidden="true"></span>' +
+      "</span>" +
+      '<span class="dam-life-hist__body">' +
+      '<span class="dam-life-hist__row1">' +
+      '<span class="dam-life-hist__when">' +
+      esc(when || "brak daty") +
+      "</span>" +
+      '<span class="dam-life-hist__scope">' +
+      esc(scope) +
+      "</span>" +
+      (noteHtml ? '<span class="dam-life-hist__meta-inline">' + noteHtml + "</span>" : "") +
+      '<span class="dam-life-hist__actions">' +
+      (copyTarget
+        ? '<button type="button" class="dam-life-hist__act" data-life-copy="' +
+          esc(copyTarget) +
+          '" title="Kopiuj" aria-label="Kopiuj" data-dam-tip="Kopiuj ' +
+          esc(copyTarget) +
+          '"><i class="uil uil-copy"></i></button>'
+        : "") +
+      (pid
+        ? '<button type="button" class="dam-life-hist__act" data-life-go="' +
+          esc(pid) +
+          '" title="Przejdź do produktu" aria-label="Przejdź do produktu" data-dam-tip="Otwiera produkt w Eksplorerze"><i class="uil uil-sitemap"></i></button>'
+        : "") +
+      (!h._isCurrent && h.can_restore
+        ? '<button type="button" class="dam-life-hist__act dam-life-hist__act--restore" data-life-restore="' +
+          esc(h.id) +
+          '" data-life-letter="' +
+          esc(dotLetter) +
+          '"' +
+          (restoreDisabled ? " disabled" : "") +
+          ' title="Przywróć ten stan" aria-label="Przywróć stan" data-dam-tip="Przywraca status tej pozycji"><i class="uil uil-redo" aria-hidden="true"></i></button>'
+        : "") +
+      (canUndo
+        ? '<button type="button" class="dam-life-hist__act dam-life-hist__act--undo" data-life-undo="' +
+          esc(h.id) +
+          '"' +
+          (undoDisabled ? " disabled" : "") +
+          ' title="Cofnij zmianę" aria-label="Cofnij zmianę" data-dam-tip="Przywraca poprzedni stan sprzed ostatniego przywrócenia"><i class="uil uil-undo" aria-hidden="true"></i></button>'
+        : "") +
+      "</span></span>" +
+      '<span class="dam-life-hist__detail">' +
+      esc(h.title || "zmiana na dysku") +
+      "</span>" +
+      '<span class="dam-life-hist__row2">' +
+      (pname
+        ? '<span class="dam-viz-badge" title="Produkt">' + esc(pname) + "</span>"
+        : "") +
+      (idxShow && idxShow !== pname
+        ? '<span class="dam-viz-badge dam-viz-badge--index" title="Indeks">' +
+          esc(idxShow) +
+          "</span>"
+        : "") +
+      (who.label
+        ? '<span class="dam-life-hist__author" title="' +
+          esc(who.full) +
+          '" data-dam-tip="' +
+          esc(who.full) +
+          '"><i class="uil uil-user" aria-hidden="true"></i> ' +
+          esc(who.label) +
+          "</span>"
+        : "") +
+      "</span></span></li>"
+    );
+  }
+
+  function lifeHistListHtml(rows, opts) {
+    opts = opts || {};
+    if (!rows.length) {
+      return (
+        '<div class="dam-life-hist__empty">' +
+        '<i class="uil uil-history" aria-hidden="true"></i>' +
+        "<p>" +
+        (opts.emptyFiltered
+          ? "Brak wpisów dla wybranego filtra / wyszukiwania."
+          : "Brak wpisów historii.<br>Zmiany F / X / D i rename pojawią się tutaj automatycznie.") +
+        "</p></div>"
+      );
+    }
+    var newestId = "";
+    for (var i = 0; i < rows.length; i++) {
+      if (!rows[i]._isCurrent && rows[i].id) {
+        newestId = rows[i].id;
+        break;
+      }
+    }
+    return (
+      '<ul class="dam-life-hist__timeline" aria-label="Oś czasu zmian">' +
+      rows
+        .map(function (h) {
+          return lifeHistEntryHtml(h, { newestId: newestId });
+        })
+        .join("") +
+      "</ul>"
+    );
+  }
+
+  function lifeHistChromeHtml(cfg) {
+    cfg = cfg || {};
+    var mode = cfg.mode || "global";
+    var title =
+      cfg.title ||
+      (mode === "recent" ? "Historia zmian na dysku" : "Historia zmian na dysku");
+    var lead =
+      cfg.lead ||
+      "Pełna historia F / X / D / bez statusu oraz zmian na dysku (wszystkie produkty). Filtry, hashtagi (#lc_…), kopiuj / drzewo / przywróć.";
+    var closeBtn = cfg.showClose
+      ? '<button type="button" class="dam-changelog-history__close" aria-label="Zamknij" data-life-hist-close data-dam-no-tip="1">&times;</button>'
+      : "";
+    var foot =
+      cfg.footerHtml ||
+      (mode === "recent"
+        ? '<p class="dam-changelog-history__footnote">Podgląd ostatnich wpisów. Pełna lista: <a href="settings.html#historiaZmian">Ustawienia → Historia zmian na dysku</a>.</p>'
+        : '<p class="dam-changelog-history__footnote">Źródło: most 8766 (lifecycle-status + change-log). Przywracanie wymaga ADMIN ON.</p>');
+    var actions =
+      cfg.actionsHtml ||
+      (cfg.showClose
+        ? '<div class="dam-lifecycle-history-modal__actions">' +
+          '<button type="button" class="geex-btn geex-btn--sm" data-life-hist-close>Zamknij</button>' +
+          '<a class="geex-btn geex-btn--sm geex-btn--primary" href="inbox.html" data-dam-tip="Zgłoś problem w Wiadomościach">Zgłoś</a>' +
+          "</div>"
+        : "");
+    return (
+      '<div class="dam-life-hist dam-life-hist--' +
+      esc(mode) +
+      '" data-life-hist-mode="' +
+      esc(mode) +
+      '">' +
+      '<div class="dam-life-hist__head">' +
+      "<" +
+      (cfg.headingTag || "h3") +
+      ' class="dam-life-hist__title">' +
+      esc(title) +
+      "</" +
+      (cfg.headingTag || "h3") +
+      ">" +
+      '<span class="dam-life-hist__count" data-life-hist-count title="Liczba wpisów">0</span>' +
+      closeBtn +
+      "</div>" +
+      '<p class="dam-lifecycle-history__lead">' +
+      lead +
+      "</p>" +
+      '<div class="dam-life-hist__filters" role="group" aria-label="Filtr statusów">' +
+      '<span class="dam-life-hist__filter-label">Filtr:</span>' +
+      lifeHistFilterChipsHtml() +
+      "</div>" +
+      '<div class="dam-life-hist__search">' +
+      '<label class="visually-hidden" for="' +
+      esc(cfg.searchId || "damLifeHistSearch") +
+      '">Szukaj w historii</label>' +
+      '<input type="search" class="dam-life-hist__search-input" id="' +
+      esc(cfg.searchId || "damLifeHistSearch") +
+      '" placeholder="Szukaj: nazwa, indeks, produkt, #lc_…" autocomplete="off" />' +
+      "</div>" +
+      '<div class="dam-life-hist__list-host" data-life-hist-list></div>' +
+      foot +
+      actions +
+      "</div>"
+    );
+  }
+
+  function findLifeRowById(id) {
+    if (!id) return null;
+    for (var i = 0; i < lastMergedLifeRows.length; i++) {
+      if (lastMergedLifeRows[i].id === id) return lastMergedLifeRows[i];
+    }
+    return null;
+  }
+
+  function applyLifecycleFromHistRow(row, mode) {
+    if (!row) return Promise.resolve({ ok: false });
+    if (!isAdmin() || !adminModeOn()) {
+      showToast("Włącz tryb admina, aby przywracać statusy");
+      return Promise.resolve({ ok: false });
+    }
+    var targetStatus =
+      mode === "undo" && lifeHistUndo && lifeHistUndo.snapshot
+        ? lifeHistUndo.snapshot.status || "clear"
+        : lifeHistStatusCode(row.letter || row.status);
+    var path = row.path || "";
+    var body = {
+      scope: row.scope === "product" ? "product" : "variant",
+      status: targetStatus,
+      path: path,
+      product_path: row.product_path || "",
+      product_id: row.product_id || "",
+      revision_index: row.revision_index || "",
+      dry_run: false,
+    };
+    if (!body.path && !body.revision_index && !body.product_id) {
+      showToast("Brak ścieżki do przywrócenia statusu");
+      return Promise.resolve({ ok: false });
+    }
+    lifeHistBusy = true;
+    showToast(mode === "undo" ? "Cofam przywrócenie…" : "Przywracam stan z historii…");
+    return fetch(bridgeBase() + "/lifecycle-status", {
+      method: "POST",
+      headers: bridgeAuthHeaders(),
+      credentials: "same-origin",
+      body: JSON.stringify(body),
+    })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        if (!data || !data.ok) {
+          showToast((data && data.hint) || (data && data.error) || "Błąd przywracania");
+          return data || { ok: false };
+        }
+        if (mode === "restore") {
+          lifeHistUndo = {
+            entryId: data.history_id || "",
+            snapshot: {
+              status: row.status || lifeHistStatusCode(row.letter),
+              scope: body.scope,
+              path: body.path,
+              product_id: body.product_id,
+              revision_index: body.revision_index,
+            },
+            restoredFrom: row.id,
+          };
+        } else {
+          lifeHistUndo = null;
+        }
+        showToast(mode === "undo" ? "Cofnięto ostatnie przywrócenie" : "Przywrócono stan z historii");
+        return fetchLifeHistBundle().then(function () {
+          return data;
+        });
+      })
+      .finally(function () {
+        lifeHistBusy = false;
+        refreshAllLifeHistViews();
+      });
+  }
+
+  function bindLifeHistRoot(root, opts) {
+    opts = opts || {};
+    if (!root) return;
+    var mode = opts.mode || root.getAttribute("data-life-hist-mode") || "global";
+    var state = root._damLifeHistState || { filters: {}, q: "" };
+    root._damLifeHistState = state;
+
+    function allRows() {
+      var rows = lastMergedLifeRows.slice();
+      if (mode === "recent" && rows.length > LIFE_HIST_RECENT_LIMIT) {
+        rows = rows.slice(0, LIFE_HIST_RECENT_LIMIT);
+      }
+      return rows;
+    }
+
+    function visibleRows() {
+      var rows = allRows();
+      var keys = Object.keys(state.filters);
+      var q = String(state.q || "")
+        .trim()
+        .toLowerCase();
+      if (keys.length) {
+        rows = rows.filter(function (h) {
+          if (h._isCurrent) return true;
+          return !!state.filters[lifeHistFilterLetter(h.letter)];
+        });
+      }
+      if (q) {
+        rows = rows.filter(function (h) {
+          var blob = [
+            h.product_name,
+            h.product_id,
+            h.revision_index,
+            h.hashtag,
+            h.title,
+            h.actor,
+            h.path,
+          ]
+            .join(" ")
+            .toLowerCase();
+          return blob.indexOf(q) !== -1;
+        });
+      }
+      return rows;
+    }
+
+    function repaint() {
+      var host = root.querySelector("[data-life-hist-list]");
+      var cnt = root.querySelector("[data-life-hist-count]");
+      var vis = visibleRows();
+      if (cnt) cnt.textContent = String(vis.length);
+      if (host) {
+        host.innerHTML = lifeHistListHtml(vis, {
+          emptyFiltered: !!(Object.keys(state.filters).length || state.q) && allRows().length,
+        });
+      }
+      root.classList.toggle("is-life-hist-busy", lifeHistBusy);
+      bindRowActions();
+      if (global.DamTooltips && typeof global.DamTooltips.bind === "function") {
+        global.DamTooltips.bind(root);
+      }
+    }
+
+    function bindRowActions() {
+      root.querySelectorAll("[data-life-copy]").forEach(function (btn) {
+        btn.onclick = function (e) {
+          e.stopPropagation();
+          var txt = btn.getAttribute("data-life-copy") || "";
+          if (!txt) return;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).then(function () {
+              showToast("Skopiowano: " + txt);
+            });
+          }
+        };
+      });
+      root.querySelectorAll("[data-life-go]").forEach(function (btn) {
+        btn.onclick = function (e) {
+          e.stopPropagation();
+          var pid = btn.getAttribute("data-life-go") || "";
+          if (!pid) return;
+          location.href = "explorer.html?product=" + encodeURIComponent(pid);
+        };
+      });
+      root.querySelectorAll("[data-life-restore]").forEach(function (btn) {
+        btn.onclick = function (e) {
+          e.stopPropagation();
+          if (btn.disabled || lifeHistBusy) return;
+          var row = findLifeRowById(btn.getAttribute("data-life-restore") || "");
+          if (!row) {
+            showToast("Nie znaleziono wpisu historii");
+            return;
+          }
+          applyLifecycleFromHistRow(row, "restore");
+        };
+      });
+      root.querySelectorAll("[data-life-undo]").forEach(function (btn) {
+        btn.onclick = function (e) {
+          e.stopPropagation();
+          if (btn.disabled || lifeHistBusy) return;
+          var row = findLifeRowById(btn.getAttribute("data-life-undo") || "");
+          if (!row && lifeHistUndo) {
+            row = {
+              id: lifeHistUndo.entryId,
+              status: lifeHistUndo.snapshot && lifeHistUndo.snapshot.status,
+              letter: "",
+              scope: lifeHistUndo.snapshot && lifeHistUndo.snapshot.scope,
+              path: lifeHistUndo.snapshot && lifeHistUndo.snapshot.path,
+              product_id: lifeHistUndo.snapshot && lifeHistUndo.snapshot.product_id,
+              revision_index: lifeHistUndo.snapshot && lifeHistUndo.snapshot.revision_index,
+              can_restore: true,
+            };
+          }
+          applyLifecycleFromHistRow(row, "undo");
+        };
+      });
+    }
+
+    if (!root._damLifeHistBound) {
+      root._damLifeHistBound = true;
+      root.querySelectorAll("[data-life-filter]").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          var l = chip.getAttribute("data-life-filter") || "";
+          if (state.filters[l]) delete state.filters[l];
+          else state.filters[l] = true;
+          chip.classList.toggle("is-on", !!state.filters[l]);
+          chip.setAttribute("aria-pressed", state.filters[l] ? "true" : "false");
+          repaint();
+        });
+      });
+      var search = root.querySelector(".dam-life-hist__search-input");
+      if (search) {
+        search.addEventListener("input", function () {
+          state.q = search.value || "";
+          repaint();
+        });
+      }
+      root.querySelectorAll("[data-life-hist-close]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          if (typeof opts.onClose === "function") opts.onClose();
+        });
+      });
+    }
+
+    root._damLifeHistRepaint = repaint;
+    repaint();
+  }
+
+  function refreshAllLifeHistViews() {
+    var settingsRoot = document.getElementById("damSettingsLifeHistRoot");
+    if (settingsRoot && settingsRoot._damLifeHistRepaint) settingsRoot._damLifeHistRepaint();
+    if (changeHistoryPopoverEl) {
+      var popRoot = changeHistoryPopoverEl.querySelector(".dam-life-hist");
+      if (popRoot && popRoot._damLifeHistRepaint) popRoot._damLifeHistRepaint();
+    }
+    if (lifeHistOverlayEl) {
+      var ovRoot = lifeHistOverlayEl.querySelector(".dam-life-hist");
+      if (ovRoot && ovRoot._damLifeHistRepaint) ovRoot._damLifeHistRepaint();
+    }
+  }
+
+  function mountSettingsLifeHistPanel(state) {
+    var host = document.getElementById("damSettingsChangeHistoryPanel");
+    var hint = document.getElementById("damSettingsChangeHistoryHint");
+    var openBtn = document.getElementById("damSettingsChangeHistoryBtn");
+    var refreshBtn = document.getElementById("damSettingsChangeHistoryRefresh");
+    if (!host && !hint) return;
+
+    if (state === "role" || state === "login" || state === "offline") {
+      if (hint) {
+        hint.textContent =
+          state === "role"
+            ? "Wymaga roli administratora."
+            : state === "login"
+              ? "Zaloguj się, aby zobaczyć historię zmian."
+              : "Most zmian niedostępny - historia lokalnie niedostępna.";
+      }
+      if (host) {
+        host.innerHTML =
+          '<div class="dam-life-hist__empty"><i class="uil uil-history" aria-hidden="true"></i><p>' +
+          (state === "role"
+            ? "Historia zmian na dysku jest dostępna dla konta admin."
+            : state === "login"
+              ? "Wymagane logowanie do mostu 8766."
+              : "Brak połączenia z mostem 8766.") +
+          "</p></div>";
+      }
+      if (openBtn) openBtn.disabled = true;
+      if (refreshBtn) refreshBtn.disabled = state === "role";
+      return;
+    }
+
+    if (refreshBtn) refreshBtn.disabled = false;
+    var last = lastMergedLifeRows.length ? lastMergedLifeRows[0] : null;
+    if (hint) {
+      hint.textContent = last
+        ? (last.title || "zmiana") +
+          (last.product_name ? " · " + last.product_name : "") +
+          (last.ts ? " · " + formatChangeLogTs(last.ts) : "")
+        : "Brak historii zmian";
+    }
+    if (openBtn) openBtn.disabled = !lastMergedLifeRows.length;
+    if (!host) return;
+
+    host.className = "dam-changelog-history dam-changelog-history--panel dam-life-hist-host";
+    var root = document.getElementById("damSettingsLifeHistRoot");
+    if (!root) {
+      host.innerHTML = lifeHistChromeHtml({
+        mode: "global",
+        title: "Historia zmian na dysku",
+        headingTag: "span",
+        searchId: "damSettingsLifeHistSearch",
+        showClose: false,
+        lead:
+          "Wszystkie produkty i warianty: F / X / D / bez statusu, hashtagi (#lc_…), kopiuj / drzewo / przywróć (ADMIN ON).",
+        footerHtml:
+          '<p class="dam-changelog-history__footnote">Źródło: most 8766 /lifecycle-status + /change-log. Nie mylić z „Baza online” (Postgres).</p>',
+      });
+      root = host.querySelector(".dam-life-hist");
+      if (root) {
+        root.id = "damSettingsLifeHistRoot";
+        bindLifeHistRoot(root, { mode: "global" });
+      }
+    } else if (root._damLifeHistRepaint) {
+      root._damLifeHistRepaint();
+    } else {
+      bindLifeHistRoot(root, { mode: "global" });
+    }
+  }
+
+  function applyLifeHistFetchResult(pack) {
     var bar = document.getElementById("damChangeLogBar");
     var hint = document.getElementById("damChangeLogHint");
     var historyBtn = document.getElementById("damChangeHistoryBtn");
-    if (!bar) return;
-    mountChangeLogBarInSearchScope();
-    /* Widoczny tylko przy roli admin + przełączniku ADMIN ON (localStorage dam_admin_mode).
-       Nie używamy legacy dam_viz_admin_mode — to nie jest ten sam toggle w headerze. */
-    var headerAdminOn = localStorage.getItem(ADMIN_MODE_KEY) === "1";
-    if (!isAdmin() || !headerAdminOn) {
-      bar.hidden = true;
-      closeChangeHistoryPopover();
+    var chg = pack && pack.changeLog;
+    var life = pack && pack.lifecycle;
+
+    if (!chg || !chg.ok) {
+      var err = String((chg && chg.error) || "");
+      var isLogin =
+        err === "login_required" ||
+        err === "unauthorized" ||
+        (pack && (pack.chgStatus === 401 || pack.chgStatus === 403));
+      setChangeLogOfflineHint(hint, isLogin ? "login" : "offline");
+      lastChangeLogEntries = [];
+      lastLifecycleHistory = [];
+      lastMergedLifeRows = [];
+      if (historyBtn) historyBtn.disabled = true;
+      mountSettingsLifeHistPanel(isLogin ? "login" : "offline");
+      refreshAllLifeHistViews();
       return;
     }
-    bar.hidden = false;
-    fetch(bridgeBase() + "/change-log?limit=20", {
-      headers: bridgeAuthHeaders(),
-      credentials: "same-origin",
-    })
-      .then(function (r) {
+
+    lastChangeLogEntries = chg.entries || [];
+    lastLifecycleHistory = (life && life.ok && life.history) || [];
+    lastMergedLifeRows = mergeLifeHistRows(
+      lastChangeLogEntries,
+      lastLifecycleHistory,
+      "global"
+    );
+    if (historyBtn) historyBtn.disabled = !lastMergedLifeRows.length;
+
+    var lastChg = lastChangeLogEntries.length
+      ? lastChangeLogEntries[lastChangeLogEntries.length - 1]
+      : null;
+    if (hint) {
+      if (lastChg) {
+        hint.textContent = formatChangeLogEntry(lastChg);
+        hint.removeAttribute("title");
+        hint.setAttribute("data-dam-tip", CHANGELOG_HINT_TIP);
+      } else if (lastMergedLifeRows.length) {
+        var lr = lastMergedLifeRows[0];
+        hint.textContent =
+          (lr.title || "zmiana") +
+          (lr.product_name ? " · " + lr.product_name : "") +
+          (lr.ts ? " · " + formatChangeLogTs(lr.ts) : "");
+        hint.setAttribute("data-dam-tip", CHANGELOG_HINT_TIP);
+      } else {
+        hint.textContent = "Brak historii zmian";
+        hint.setAttribute(
+          "data-dam-tip",
+          "Historia zmian na dysku X: jest pusta. Po zatwierdzeniu rename typu/indeksu/plików albo zmianie statusu produktu/wariantu pojawi się tu ostatni wpis."
+        );
+      }
+      hint._damTipBound = false;
+    }
+    if (bar) rebindChangeLogTips();
+    mountSettingsLifeHistPanel("ok");
+    refreshAllLifeHistViews();
+  }
+
+  function fetchLifeHistBundle() {
+    var headers = bridgeAuthHeaders();
+    return Promise.all([
+      fetch(bridgeBase() + "/change-log?limit=" + LIFE_HIST_GLOBAL_LIMIT, {
+        headers: headers,
+        credentials: "same-origin",
+      }).then(function (r) {
         return r.json().then(function (data) {
-          return { httpOk: r.ok, status: r.status, data: data };
+          return { status: r.status, data: data };
+        });
+      }),
+      fetch(bridgeBase() + "/lifecycle-status", {
+        headers: headers,
+        credentials: "same-origin",
+      }).then(function (r) {
+        return r.json().then(function (data) {
+          return { status: r.status, data: data };
+        });
+      }),
+    ])
+      .then(function (pair) {
+        var chgPack = pair[0];
+        var lifePack = pair[1];
+        applyLifeHistFetchResult({
+          changeLog: chgPack.data,
+          lifecycle: lifePack.data,
+          chgStatus: chgPack.status,
+          lifeStatus: lifePack.status,
         });
       })
-      .then(function (pack) {
-        var data = pack && pack.data;
-        if (!data || !data.ok) {
-          var err = String((data && data.error) || "");
-          var isLogin =
-            err === "login_required" ||
-            err === "unauthorized" ||
-            pack.status === 401 ||
-            pack.status === 403;
-          setChangeLogOfflineHint(hint, isLogin ? "login" : "offline");
-          lastChangeLogEntries = [];
-          if (historyBtn) historyBtn.disabled = true;
-          return;
-        }
-        var entries = data.entries || [];
-        lastChangeLogEntries = entries;
-        if (historyBtn) historyBtn.disabled = !entries.length;
-        var last = entries.length ? entries[entries.length - 1] : null;
-        if (hint) {
-          if (last) {
-            hint.textContent = formatChangeLogEntry(last);
-            hint.title = hint.textContent;
-            hint.setAttribute(
-              "data-dam-tip",
-              /* Kazdy wpis to zmiana ktora JUZ ZASZLA i jest zapisana na trwale - "Historia
-                 zmian" to tylko podglad ostatnich wpisow, nie trzeba nic cofac z tego miejsca. */
-              "Ostatnia zatwierdzona zmiana na dysku (status / typ / indeks / rename). Kliknij \"Historia zmian\", aby zobaczyć pełną listę - to podgląd, każda zmiana jest już zapisana."
-            );
-          } else {
-            hint.textContent = "Brak historii zmian";
-            hint.title = "Brak wpisów w change-log.";
-            hint.setAttribute(
-              "data-dam-tip",
-              "Historia zmian na dysku jest pusta. Po zatwierdzeniu rename typu/indeksu/plików albo zmianie statusu pojawi się tu ostatni wpis."
-            );
-          }
-        }
-        if (changeHistoryPopoverEl) renderChangeHistoryPopover();
-      })
       .catch(function () {
+        var hint = document.getElementById("damChangeLogHint");
+        var historyBtn = document.getElementById("damChangeHistoryBtn");
         setChangeLogOfflineHint(hint, "offline");
         lastChangeLogEntries = [];
+        lastLifecycleHistory = [];
+        lastMergedLifeRows = [];
         if (historyBtn) historyBtn.disabled = true;
+        mountSettingsLifeHistPanel("offline");
       });
+  }
+
+  function refreshChangeLogBar() {
+    var bar = document.getElementById("damChangeLogBar");
+    var settingsPanel = document.getElementById("historiaZmian");
+    if (!bar && !settingsPanel) return;
+
+    if (bar) {
+      mountChangeLogBarInSearchScope();
+      var headerAdminOn = localStorage.getItem(ADMIN_MODE_KEY) === "1";
+      if (!isAdmin() || !headerAdminOn) {
+        bar.hidden = true;
+        closeChangeHistoryPopover();
+      } else {
+        bar.hidden = false;
+      }
+    }
+
+    if (!isAdmin()) {
+      lastChangeLogEntries = [];
+      lastLifecycleHistory = [];
+      lastMergedLifeRows = [];
+      if (settingsPanel) {
+        settingsPanel.setAttribute("hidden", "");
+        settingsPanel.setAttribute("aria-hidden", "true");
+      }
+      mountSettingsLifeHistPanel("role");
+      return;
+    }
+
+    if (settingsPanel) {
+      settingsPanel.removeAttribute("hidden");
+      settingsPanel.removeAttribute("aria-hidden");
+    }
+    fetchLifeHistBundle();
   }
 
   function closeChangeHistoryPopover() {
     if (!changeHistoryPopoverEl) return;
     changeHistoryPopoverEl.remove();
     changeHistoryPopoverEl = null;
-    var btn = document.getElementById("damChangeHistoryBtn");
-    if (btn) btn.setAttribute("aria-expanded", "false");
+    changeHistoryAnchorBtn = null;
+    setChangeLogTipSuppress(false);
+    setChangeHistoryExpanded(false);
     document.removeEventListener("mousedown", onChangeHistoryOutsideClick, true);
     document.removeEventListener("keydown", onChangeHistoryEscape, true);
   }
 
+  function onLifeHistOverlayEsc(e) {
+    if (e.key === "Escape") closeLifeHistOverlay();
+  }
+
   function onChangeHistoryOutsideClick(e) {
     if (!changeHistoryPopoverEl) return;
-    var btn = document.getElementById("damChangeHistoryBtn");
-    if (changeHistoryPopoverEl.contains(e.target) || (btn && btn.contains(e.target))) return;
+    if (changeHistoryPopoverEl.contains(e.target)) return;
+    var triggers = changeHistoryTriggerBtns();
+    for (var i = 0; i < triggers.length; i++) {
+      if (triggers[i].contains(e.target)) return;
+    }
     closeChangeHistoryPopover();
   }
 
@@ -1010,71 +2006,124 @@
     if (e.key === "Escape") closeChangeHistoryPopover();
   }
 
-  function renderChangeHistoryPopover() {
-    if (!changeHistoryPopoverEl) return;
-    var list = changeHistoryPopoverEl.querySelector(".dam-changelog-history__list");
-    if (!list) return;
-    var rows = (lastChangeLogEntries || []).slice().reverse();
-    if (!rows.length) {
-      list.innerHTML = '<li class="dam-changelog-history__empty">Brak wpisów w historii.</li>';
-      return;
-    }
-    list.innerHTML = rows
-      .map(function (entry) {
-        var ts = String(entry.ts || "").replace("T", " ").slice(0, 16);
-        var actor = String(entry.actor || "").trim();
-        var detail = changeLogRowDetail(entry);
-        return (
-          '<li class="dam-changelog-history__row">' +
-          '<span class="dam-changelog-history__detail">' + detail + "</span>" +
-          '<span class="dam-changelog-history__meta">' +
-          ts +
-          (actor ? " · " + actor : "") +
-          "</span>" +
-          "</li>"
-        );
-      })
-      .join("");
+  /**
+   * Global Historia — TEN SAM DOM co produkt:
+   * #damLifecycleHistoryModal > .dam-basepath-box.dam-lifecycle-history-modal
+   * + --global (70vw × 90vh) + search (indeks / nazwa / tagi).
+   */
+  function openLifeHistOverlay(mode) {
+    closeChangeHistoryPopover();
+    closeLifeHistOverlay();
+    var existing = document.getElementById("damLifecycleHistoryModal");
+    if (existing) existing.remove();
+    mode = mode || "global";
+
+    var overlay = document.createElement("div");
+    overlay.className = "dam-basepath-overlay";
+    overlay.id = "damLifecycleHistoryModal";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "Historia zmian na dysku");
+    overlay.setAttribute("data-life-hist-scope", "global");
+    overlay.innerHTML =
+      '<div class="dam-basepath-box dam-lifecycle-history-modal dam-lifecycle-history-modal--global">' +
+      '<button type="button" class="dam-viz-modal-close" data-life-hist-close aria-label="Zamknij" style="position:absolute;top:12px;right:12px;z-index:2"><i class="uil uil-times"></i></button>' +
+      '<div class="dam-life-hist dam-life-hist--global" data-life-hist-mode="global">' +
+      '<div class="dam-life-hist__head">' +
+      "<h3>Historia zmian na dysku</h3>" +
+      '<span class="dam-life-hist__count" id="damLifeHistCount" data-life-hist-count title="Liczba wpisów">0</span>' +
+      "</div>" +
+      '<p class="dam-lifecycle-history__lead">Wszystkie produkty: F / X / D / bez statusu + zmiany dysku. U góry najnowsze; każdy wpis lifecycle ma hashtag (#lc_…).</p>' +
+      '<div class="dam-life-hist__filters" role="group" aria-label="Filtr statusów">' +
+      '<span class="dam-life-hist__filter-label">Filtr:</span>' +
+      lifeHistFilterChipsHtml() +
+      "</div>" +
+      '<div class="dam-life-hist__search">' +
+      '<label class="visually-hidden" for="damLifeHistSearchGlobal">Szukaj w historii</label>' +
+      '<input type="search" class="dam-life-hist__search-input" id="damLifeHistSearchGlobal" placeholder="Szukaj: indeks, nazwa, tagi (#lc_…)" autocomplete="off" />' +
+      "</div>" +
+      '<div id="damLifeHistList" class="dam-life-hist__scroll" data-life-hist-list></div>' +
+      '<div class="dam-lifecycle-history-modal__actions">' +
+      '<button type="button" class="geex-btn geex-btn--sm" data-life-hist-close>Zamknij</button>' +
+      '<a class="geex-btn geex-btn--sm geex-btn--primary" href="inbox.html" data-dam-tip="Zgłoś problem w Wiadomościach">Zgłoś</a>' +
+      "</div></div></div>";
+    document.body.appendChild(overlay);
+    lifeHistOverlayEl = overlay;
+    var root = overlay.querySelector(".dam-life-hist");
+    bindLifeHistRoot(root, { mode: "global", onClose: closeLifeHistOverlay });
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay || (e.target.closest && e.target.closest("[data-life-hist-close]"))) {
+        closeLifeHistOverlay();
+      }
+    });
+    document.addEventListener("keydown", onLifeHistOverlayEsc, true);
+    setChangeHistoryExpanded(true);
+    setChangeLogTipSuppress(true);
   }
 
+  /** Settings + Viz: zawsze duży modal produktowy (global data) — bez chudego popovera. */
   function openChangeHistoryPopover(anchorBtn) {
-    if (changeHistoryPopoverEl) {
-      closeChangeHistoryPopover();
+    var open = document.getElementById("damLifecycleHistoryModal");
+    if (open && open.getAttribute("data-life-hist-scope") === "global") {
+      closeLifeHistOverlay();
       return;
     }
-    var pop = document.createElement("div");
-    pop.className = "dam-changelog-history";
-    pop.setAttribute("role", "dialog");
-    pop.setAttribute("aria-label", "Historia zmian na dysku");
-    pop.innerHTML =
-      '<div class="dam-changelog-history__head">' +
-      '<span class="dam-changelog-history__title">Historia zmian na dysku</span>' +
-      '<button type="button" class="dam-changelog-history__close" aria-label="Zamknij">&times;</button>' +
-      "</div>" +
-      '<ul class="dam-changelog-history__list"></ul>' +
-      '<p class="dam-changelog-history__footnote">Podgląd ostatnich zatwierdzonych zmian - każda jest już na trwałe zapisana, nie trzeba jej tu cofać.</p>';
-    document.body.appendChild(pop);
-    changeHistoryPopoverEl = pop;
-    renderChangeHistoryPopover();
-    var rect = anchorBtn.getBoundingClientRect();
-    var left = Math.min(rect.left, window.innerWidth - 340);
-    pop.style.position = "fixed";
-    pop.style.top = rect.bottom + 6 + "px";
-    pop.style.left = Math.max(8, left) + "px";
-    pop.querySelector(".dam-changelog-history__close").addEventListener("click", closeChangeHistoryPopover);
-    anchorBtn.setAttribute("aria-expanded", "true");
+    openLifeHistOverlay("global");
+  }
+
+  function closeLifeHistOverlay() {
+    var modal = lifeHistOverlayEl || document.getElementById("damLifecycleHistoryModal");
+    if (modal && modal.getAttribute("data-life-hist-scope") === "global") {
+      modal.remove();
+    } else if (lifeHistOverlayEl) {
+      lifeHistOverlayEl.remove();
+    }
+    lifeHistOverlayEl = null;
+    setChangeLogTipSuppress(false);
+    setChangeHistoryExpanded(false);
+    document.removeEventListener("keydown", onLifeHistOverlayEsc, true);
+  }
+
+  function scrollToSettingsChangeHistory() {
+    var sec = document.getElementById("historiaZmian");
+    if (!sec) return;
+    try {
+      sessionStorage.setItem("dam_settings_filter", "disk");
+    } catch (e) { /* ignore */ }
+    var diskChip = document.querySelector('#damSettingsFilter [data-filter="disk"]');
+    if (diskChip) diskChip.click();
     setTimeout(function () {
-      document.addEventListener("mousedown", onChangeHistoryOutsideClick, true);
-      document.addEventListener("keydown", onChangeHistoryEscape, true);
-    }, 0);
+      sec.scrollIntoView({ behavior: "smooth", block: "start" });
+      sec.classList.add("is-hash-focus");
+      setTimeout(function () {
+        sec.classList.remove("is-hash-focus");
+      }, 1600);
+    }, 80);
   }
 
   function bindChangeLogBar() {
     var historyBtn = document.getElementById("damChangeHistoryBtn");
-    if (!historyBtn) return;
-    historyBtn.addEventListener("click", function () {
-      openChangeHistoryPopover(historyBtn);
-    });
+    if (historyBtn && !historyBtn._damChgBound) {
+      historyBtn._damChgBound = true;
+      historyBtn.addEventListener("click", function () {
+        openChangeHistoryPopover(historyBtn);
+      });
+    }
+    var settingsBtn = document.getElementById("damSettingsChangeHistoryBtn");
+    if (settingsBtn && !settingsBtn._damChgBound) {
+      settingsBtn._damChgBound = true;
+      settingsBtn.addEventListener("click", function () {
+        openChangeHistoryPopover(settingsBtn);
+      });
+    }
+    var refreshBtn = document.getElementById("damSettingsChangeHistoryRefresh");
+    if (refreshBtn && !refreshBtn._damChgBound) {
+      refreshBtn._damChgBound = true;
+      refreshBtn.addEventListener("click", function () {
+        refreshChangeLogBar();
+      });
+    }
+    rebindChangeLogTips();
     refreshChangeLogBar();
     if (!global._damTagEditAdminBound) {
       global._damTagEditAdminBound = true;
@@ -1084,6 +2133,14 @@
           refreshChangeLogBar();
         }
       });
+    }
+    if (
+      document.getElementById("historiaZmian") &&
+      (location.hash === "#historiaZmian" ||
+        location.hash === "#damHistoriaZmian" ||
+        location.hash === "#damDiskHistory")
+    ) {
+      scrollToSettingsChangeHistory();
     }
   }
 
@@ -1101,6 +2158,10 @@
     adminModeOn: adminModeOn,
     confirmBrandTagChange: confirmBrandTagChange,
     refreshChangeLogBar: refreshChangeLogBar,
+    openChangeHistory: openChangeHistoryPopover,
+    openGlobalLifeHist: function () {
+      openLifeHistOverlay("global");
+    },
     NONE_CODE: NONE_CODE,
   };
 })(typeof window !== "undefined" ? window : globalThis);

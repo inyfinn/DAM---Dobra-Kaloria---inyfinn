@@ -590,6 +590,12 @@ Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
  - Viz-request: kazdy zalogowany -> inbox. Drive/Git sync pliku SQLite = zakazany (ADR-009).
  - Bridge: `_require_login` / `_require_admin` w `local_bridge.py`.
 
+86b. **Privilege hardening (2026-07-21 audit):**
+ - Takze **admin-only** na bridzie: `POST /index/rebuild`, `POST /branding/rebuild`, `POST /notification-groups`, `GET /change-log`, `GET /lifecycle-reconcile?mode=boot` (enforce moves). `mode=pull` zostaje dla zalogowanych.
+ - UI: karta `#historiaZmian` ukryta dla non-admin; Branding `#damBrandingRebuild` ukryty; Explorer Odswiez bez rebuild dla non-admin.
+ - Anti-spoof UI: `DamApi.role()` preferuje role z `/auth/me` (`_sessionRole`); non-admin kasuje `dam_admin_mode`. Body.role / localStorage nadal NIE daja privilege na mutate.
+ - Branding metadata/assoc: API = admin|power_user (zgodnie z PI tagow); user = 403.
+
 87. **Inbox + OAuth + legal (2026-07-18):**
  - Wiadomosci: filtr **Zgloszenia DAM**; klik wiersza = expand detalu (Asana: parent/due/section). Pusty `#damHeaderAction` MUSI byc wypelniany quickaction (konto zawsze widoczne).
  - OAuth Asana + Microsoft (Teams/Outlook Graph): `oauth_integrations.py`, tokeny Fernet w `data/oauth-tokens.json`, klucz `.dam-secret.key`. Connect w Ustawieniach po Client ID w `dam-connection.env`.
@@ -1030,13 +1036,26 @@ ole=admin.
 - Cache-bust: token `brpolish20260720a` na `dam-brand.css` (wszystkie HTML) + `dam-branding.css`/`dam-branding.js` (branding/dashboard/visualizations/explorer) + nowe `dam-date-picker.js/css` (tylko branding.html — jedyna strona z `input[type="date"]`, grep-verified).
 
 ## #138 (2026-07-20) - Wizualizacje: `#damChangeLogBar` = "Historia zmian" (bez Cofnij/Ponów)
-- **"nieaktualne" w hincie changelog = treść zmiany, nie wiek danych**: `#damChangeLogHint` opisuje ostatni wpis z `/change-log` (most). Gdy kategoria = `lifecycle_status`, "status -> nieaktualne" znaczy że ktoś ustawił status PRODUKTU/WARIANTU na dysku na **X = Nieaktualne** (system F/X/D, `program-instructions.json` → `lifecycle.status_fxd`) - to NIE jest ostrzeżenie że sam bar jest przestarzały. `changeLogRowDetail()` w `dam-tag-edit.js` teraz dokleja basename `entry.path`, żeby było widać KTÓRY produkt/wariant (np. "status: Aktualne -> Nieaktualne · Boost - Doypack").
-- **Cofnij/Ponów usunięte z tego bara** (`#damChangeUndo`/`#damChangeRedo` → jeden przycisk `#damChangeHistoryBtn` "Historia zmian" + popover `.dam-changelog-history`, z-index 12300, read-only lista `GET /change-log?limit=20`, najnowsze na górze). Powód usera: per-elementowa historia już się zawsze zapisuje (lifecycle history w Explorerze/Inbox, ADR `lifecycle.history_visible`), więc undo z tego globalnego, most-level bara był zbędny i mylący. **Backend `/change-log/undo|redo` NIE usunięty** (może być używany gdzie indziej / do przywrócenia w przyszłości) - to zmiana wyłącznie w UI tego jednego widgetu (`bindChangeLogBar`/`refreshChangeLogBar` w `dam-tag-edit.js`, markup w `visualizations.html`). Ten bar to jedyne miejsce w repo z `damChangeUndo`/`damChangeRedo` (grep-verified) - nie ma innych stron do synchronizacji.
-- Cache-bust: token `chghist20260720a` na `dam-brand.css` (wszystkie HTML) + `dam-tag-edit.js` (visualizations/explorer/index/settings/branding - 5 stron które go ładują).
+- **"Nieaktualne" w hincie changelog = status produktu/wariantu (X), nie wiek danych**: `#damChangeLogHint` opisuje ostatni wpis z `/change-log` (most). Copy (2026-07-20 fix): `Status wariantu: Nieaktualne · BABKA CYTRYNOWA · 6300622.00 · 19.07.2026 20:50` (bez mylącego `status ->`). Tip wyjaśnia: litera X / archiwum, nie „log przestarzały”; nie mylić z „Baza online”. Dane OK (ostatni wpis = realny lifecycle Babka).
+- **Tipy bara**: brak `title` + `data-dam-tip` naraz; tipy PL ustawiane z JS (`rebindChangeLogTips`); przy otwartym `.dam-changelog-history` bar ma `data-dam-tip-suppress` + `DamTooltips.hide` (zero czarnego tipu nad białym popoverem). `DamTooltips.hide` wyeksportowane.
+- **Cofnij/Ponów usunięte z tego bara** (historyczny kontekst #138) → `#damChangeHistoryBtn` + popover read-only.
+- Cache-bust: `chgcopy20260720d` na `dam-tag-edit.js` + `dam-tooltips.js`.
 - **Lekcja weryfikacji (CDP)**: `browser_take_screenshot` fotografuje kartę widoczną w OS-oknie, NIE kartę wskazaną przez `viewId` z `browser_navigate`/`browser_cdp`. Gdy w tle wisi >1 karta (stare sesje), trzeba je zamknąć (`browser_tabs action:"close"`) przed screenshotem, inaczej dostajesz zdjęcie złej strony mimo poprawnego targetu w CDP. Dopisane do `code-doctrine.md` §12.
+- **Lekcja encoding**: nie bumpować `?v=` w HTML przez PowerShell `Get-Content`/`WriteAllText` na plikach z PL diakrytykami w atrybutach - korumpuje UTF-8 do U+FFFD. Tip strings trzymać w `.js` (UTF-8) albo bumpować Pythontem `Path.write_text(..., encoding='utf-8')`.
 
 ## #139 (2026-07-20 wieczór) - Audit domknięcie: count pill + assoc + hold 3s
 - **Floating count pill (Viz + Branding)**: `.dam-viz-grid-count` / `.dam-branding-grid-count` = **zawsze biała powierzchnia** (`background: #fff` + soft double shadow), tekst `#464255` — NIGDY ciemny toast/charcoal z białym tekstem (user 2026-07-20 22:58+). Token CSS: `gridcountlight20260720b`.
 - **Skojarzone materiały (viz modal + media preview)**: HARD `viz.assoc_no_visualization_loop` — tylko materiały marketingowe Brandingu (slider/baner/social/POS) + Elementy/Surowe; **nigdy** inne wizualizacje/warianty/packshoty (`isVisualizationAsset` + `looksLikePackshotOrPrintAsset`, także `GC_*_RGB` / `wiz_GC_*` z Marketing). Zero AI/PSD/PDF/source. Ładowanie = skeleton + `DamLoader`, bez gołego „Ładowanie…”.
 - **Safe delete w modalu podglądu**: `MEDIA_PREVIEW_HOLD_MS = 3000` w `dam-danger.js` (`resolveHoldMs` dla `#damMediaPreview`, `#damVizModal`, `.dam-media-preview`); `dam-assoc-edit.js` nadal explicit `holdMs: 3000`. Settings danger zone zostaje `data-dam-hold-ms="300"`.
 - Cache-bust: `gridcountlight20260720b` (viz/branding CSS), `safedel20260720b` (`dam-danger.js`), `assocfix20260720c` (media-preview/viz JS + dam-brand.css skeleton).
+
+
+## #140 (2026-07-20) - Encoding HARD: apps/web HTML/JS tylko UTF-8
+
+- **HARD:** kazdy zapis w `apps/web/**` (HTML/JS/CSS/chrome strings) = **UTF-8 bez BOM**. Nigdy cp1250/cp1252/ANSI.
+- **Root cause mojibake (site-wide 2026-07-20):** UTF-8 PL zostal odczytany jako Windows-1250 i zapisany znowu jako UTF-8 (podwojne kodowanie). Objawy klasyczne: sekwencje UTF-8-as-cp1250. Naprawa: loose `encode(cp1250)` (+ C1 U+0081 dla L-stroke) -> `decode(utf-8)`. Skrypt: `tools/_fix_mojibake_utf8.py`.
+- **Zakaz:** PowerShell `Get-Content`/`Set-Content`/`Out-File` bez jawnego UTF-8 na plikach z PL; bump `?v=` tylko Pythonem (`Path.write_bytes(text.encode("utf-8"))`).
+- **Weryfikacja:** `open(path,"rb")` + bajty UTF-8 (`C4 85` a-ogonek, `C5 9B` s-acute, `C5 BC` z-dot). Konsola Windows przy `print` moze klamac.
+- **Nie ruszaj:** `file-index.json` / `branding-index.json` / binarne indeksy przy fixach encoding UI.
+- Meta charset juz byl `UTF-8` - problem byl w bajtach plikow, nie w `<meta>`.
+- CDP Pass 2026-07-20: settings devices title + branding clear/tab z poprawnym PL.

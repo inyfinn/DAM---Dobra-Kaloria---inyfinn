@@ -45799,6 +45799,33 @@
         }
       ],
       "details_enforced": []
+    },
+    {
+      "id": "lc_1784577971703",
+      "ts": "2026-07-20T20:06:11.703027+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_reconcile_boot",
+      "enforced": 0,
+      "disk_wins": 0,
+      "details_disk": [],
+      "program_wins": 1,
+      "details_program": [
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00",
+          "scope": "variant",
+          "winner": "program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-14T06:38:38+00:00",
+          "in_archive": false,
+          "product_id": "babka-cytrynowa-nerkowcowy",
+          "disk_letter": null,
+          "needs_force": true,
+          "revision_index": "6300622.00",
+          "previous_letter": null,
+          "needs_archive_move": false
+        }
+      ],
+      "details_enforced": []
     }
   ],
   "products": {
@@ -52982,5 +53009,5 @@
       "synced_from_disk": true
     }
   },
-  "updated_at": "2026-07-20T19:06:28.572418+00:00"
+  "updated_at": "2026-07-20T20:06:11.703336+00:00"
 }

@@ -96,7 +96,7 @@
   "common.delete": "Delete",
   "common.all_rights": "All rights reserved",
   "explorer.title": "Explorer",
-  "explorer.subtitle": "Packaging project files",
+  "explorer.subtitle": "Full product structure for Dobra Kaloria and Good Calories",
   "explorer.folder_root": "Projects",
   "explorer.folder_graphics": "Graphics",
   "explorer.folder_print": "Print files",
@@ -254,5 +254,8 @@
   "footer.made_by": "inyfinn.art",
   "viz.title": "Visualizations",
   "viz.subtitle": "Product visualization gallery. Latest versions by default.",
-  "viz.badge": "Latest only"
+  "viz.badge": "Latest only",
+  "messages.subtitle": "Tasks and requests. Filter by source. Reminder after 72 h with no decision. Nothing saves itself.",
+  "branding.subtitle": "Brand ads, films and graphics. Search or click a tag.",
+  "projects.subtitle": "Packaging projects and file completeness."
 }

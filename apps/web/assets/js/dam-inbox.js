@@ -75,7 +75,10 @@
   function actorFootHtml(it) {
     var who = "";
     var label = "";
-    if (it.decided_by) {
+    if (it.type === "lifecycle_history" && (it.decided_by || it.actor)) {
+      who = shortActor(it.decided_by || it.actor);
+      label = "Zmienił";
+    } else if (it.decided_by) {
       who = shortActor(it.decided_by);
       var st = String(it.status || "");
       if (st === "rejected") label = "Odrzucił";
@@ -88,7 +91,7 @@
     if (!who) return "";
     return (
       '<span class="dam-inbox-item__actor" title="' +
-      esc((it.decided_by || it.submitted_by || it.requested_by || "") + "") +
+      esc((it.decided_by || it.actor || it.submitted_by || it.requested_by || "") + "") +
       '">' +
       esc(label) +
       ": <strong>" +
@@ -166,15 +169,196 @@
     );
   }
 
-  function lifecycleLetterLabel(letter, status) {
-    var lit = String(letter || "").toUpperCase();
+  var DECISION_STATUS_PL = {
+    approved: "zatwierdzono",
+    rejected: "odrzucono",
+    approve_failed: "błąd zapisu",
+    awaiting_admin: "do admina",
+    auto_applied: "auto (legacy)",
+    undone: "wycofano",
+    pending: "oczekuje",
+  };
+
+  function decisionStatusPl(st) {
+    var s = String(st || "").toLowerCase();
+    if (!s || s === "lifecycle" || s === "recorded") return "";
+    return DECISION_STATUS_PL[s] || s;
+  }
+
+  function lifecycleLetterCode(letter, status) {
+    var lit = String(letter == null ? "" : letter).toUpperCase();
     if (lit === "F" || lit === "X" || lit === "D") return lit;
     var s = String(status || "").toLowerCase();
     if (s === "aktualne") return "F";
     if (s === "nieaktualne") return "X";
     if (s === "demo") return "D";
+    if (s === "clear" || !s) return "";
+    return "";
+  }
+
+  function lifecycleHumanStatus(letter, status) {
+    var code = lifecycleLetterCode(letter, status);
+    if (code === "F") return "Aktualne";
+    if (code === "X") return "Nieaktualne";
+    if (code === "D") return "Demo";
+    var s = String(status || "").toLowerCase();
+    if (s === "aktualne") return "Aktualne";
+    if (s === "nieaktualne") return "Nieaktualne";
+    if (s === "demo") return "Demo";
     if (s === "clear" || !s) return "bez statusu";
     return s;
+  }
+
+  function lifecycleScopePl(scope, nestKind) {
+    var sc = String(scope || "").toLowerCase();
+    var kind = String(nestKind || "").toLowerCase();
+    if (sc === "product" || kind.indexOf("product") === 0) return "produkt";
+    if (sc === "variant" || kind.indexOf("variant") === 0) return "wariant";
+    return "";
+  }
+
+  function lifecycleNotePl(note) {
+    var map = {
+      variant_moved_to_archive_with_product_wrapper: "wariant przeniesiony do archiwum",
+      product_restored_from_archive: "produkt przywrócony z archiwum",
+      product_moved_to_archive: "produkt przeniesiony do archiwum",
+      variant_restored_from_archive: "wariant przywrócony z archiwum",
+    };
+    var k = String(note || "");
+    return map[k] || k.replace(/_/g, " ");
+  }
+
+  function pickLifecycleNested(h) {
+    if (!h || typeof h !== "object") return {};
+    if (h.details_program && h.details_program[0]) return h.details_program[0];
+    if (h.details_disk && h.details_disk[0]) return h.details_disk[0];
+    if (h.drifts && h.drifts[0]) return h.drifts[0];
+    if (h.ops && h.ops[0]) return h.ops[0];
+    return {};
+  }
+
+  function humanizeProductId(pid) {
+    return String(pid || "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function lifecycleChangeSentence(action, scopePl, letter, status, nest) {
+    var human = lifecycleHumanStatus(letter, status);
+    var ofScope = scopePl === "produkt" ? "produktu" : scopePl === "wariant" ? "wariantu" : "";
+    var act = String(action || "");
+    if (act === "lifecycle_status") {
+      if (human === "bez statusu" || String(status || "").toLowerCase() === "clear") {
+        return ofScope ? "wyczyszczono status " + ofScope : "wyczyszczono status";
+      }
+      return (ofScope ? "status " + ofScope + " → " : "status → ") + human;
+    }
+    if (act === "lifecycle_pull_from_disk") {
+      return "pobrano status z dysku" + (human && human !== "bez statusu" ? " (" + human + ")" : "");
+    }
+    if (act === "lifecycle_reconcile_boot") {
+      if (nest && nest.winner === "program") {
+        return "uzgodnienie startowe: program vs dysk (wygrywa program)";
+      }
+      if (nest && nest.winner === "disk") {
+        return "uzgodnienie startowe: program vs dysk (wygrywa dysk)";
+      }
+      return "uzgodnienie startowe: program vs dysk";
+    }
+    if (act === "lifecycle_reconcile" || act.indexOf("reconcile") !== -1) {
+      return "uzgodnienie lifecycle";
+    }
+    return ofScope ? "zmiana statusu " + ofScope + " → " + human : "zmiana statusu → " + human;
+  }
+
+  function buildLifecycleTitle(it) {
+    var name =
+      it.product_name ||
+      humanizeProductId(it.product_id) ||
+      (it.path ? String(it.path).split(/[/\\]/).filter(Boolean).slice(-2, -1)[0] : "") ||
+      "Lifecycle";
+    var bits = [name];
+    var idx = it.product_index || it.revision_index || "";
+    if (idx) bits.push(idx);
+    if (it.scope_pl) bits.push(it.scope_pl);
+    var tags = it.product_tags || [];
+    if (tags.length) {
+      bits.push(
+        tags
+          .slice(0, 3)
+          .map(function (t) {
+            return String(t);
+          })
+          .join(", ")
+      );
+    }
+    if (it.change_summary_pl) bits.push(it.change_summary_pl);
+    return bits.filter(Boolean).join(" · ");
+  }
+
+  function mapLifecycleHistoryEntry(h) {
+    var nest = pickLifecycleNested(h);
+    var letter =
+      h.letter != null && String(h.letter) !== ""
+        ? h.letter
+        : nest.disk_letter != null
+          ? nest.disk_letter
+          : nest.letter != null
+            ? nest.letter
+            : nest.previous_letter;
+    var status =
+      h.status ||
+      nest.disk_status ||
+      nest.status ||
+      (letter == null || letter === "" ? "clear" : "") ||
+      "";
+    var scopeRaw = h.scope || nest.scope || nest.kind || "";
+    var scopePl = lifecycleScopePl(h.scope || nest.scope, nest.kind);
+    var idx = h.revision_index || nest.revision_index || "";
+    var pid = h.product_id || nest.product_id || h.product_id_filter || "";
+    var path = h.path || h.product_path || nest.path || nest.new_path || nest.to || "";
+    var action = h.action || "lifecycle_status";
+    var changePl = lifecycleChangeSentence(action, scopePl, letter, status, nest);
+    var noteBits = (h.notes || []).map(lifecycleNotePl).filter(Boolean);
+    var bodyBits = [changePl];
+    if (noteBits.length) bodyBits.push(noteBits.join("; "));
+    if (path) bodyBits.push(path);
+    var statusPl = lifecycleHumanStatus(letter, status);
+    var actLower = String(action || "").toLowerCase();
+    if (actLower.indexOf("reconcile") !== -1) {
+      statusPl = "uzgodnienie";
+    } else if (actLower.indexOf("pull_from_disk") !== -1 && !lifecycleLetterCode(letter, status)) {
+      statusPl = "z dysku";
+    }
+    var item = {
+      id: h.id || "lc_" + (h.ts || Math.random()),
+      type: "lifecycle_history",
+      title: "",
+      body: bodyBits.join(" · "),
+      detail: changePl,
+      status: "recorded",
+      lifecycle_letter: lifecycleLetterCode(letter, status),
+      lifecycle_status: String(status || "").toLowerCase() || "clear",
+      lifecycle_status_pl: statusPl,
+      lifecycle_action: action,
+      change_summary_pl: changePl,
+      scope_pl: scopePl,
+      decided_at: h.ts || "",
+      decided_by: h.actor || "",
+      created_at: h.ts || "",
+      product_id: pid,
+      product_index: idx,
+      revision_index: idx,
+      path: path,
+      revision_path: path,
+      product_tags: [],
+      tags: ["historia", "lifecycle"].concat(scopePl ? [scopePl] : []),
+      read: true,
+      source: "lifecycle",
+    };
+    item.title = buildLifecycleTitle(item);
+    return item;
   }
 
   function loadLifecycleHistoryAsInbox() {
@@ -184,46 +368,21 @@
       })
       .then(function (d) {
         var hist = (d && d.history) || [];
-        return hist
-          .slice()
-          .reverse()
-          .slice(0, 200)
-          .map(function (h) {
-            var letter = lifecycleLetterLabel(h.letter, h.status);
-            var scope = h.scope === "product" ? "produkt" : h.scope === "variant" ? "wariant" : h.scope || "status";
-            var idx = h.revision_index || "";
-            var pid = h.product_id || "";
-            var title =
-              "Lifecycle " +
-              letter +
-              " · " +
-              scope +
-              (idx ? " · " + idx : "") +
-              (pid ? " · " + pid : "");
-            return {
-              id: h.id || "lc_" + (h.ts || Math.random()),
-              type: "lifecycle_history",
-              title: title,
-              body:
-                (h.actor ? "Autor: " + h.actor + ". " : "") +
-                (h.path || h.product_path || "") +
-                (h.notes && h.notes.length ? " · " + h.notes.join(", ") : ""),
-              status: "approved",
-              decided_at: h.ts || "",
-              decided_by: h.actor || "",
-              created_at: h.ts || "",
-              product_id: pid,
-              path: h.path || h.product_path || "",
-              revision_index: idx,
-              tags: ["historia", "lifecycle", scope],
-              read: true,
-              source: "lifecycle",
-            };
-          });
+        return hist.slice().reverse().slice(0, 200).map(mapLifecycleHistoryEntry);
       })
       .catch(function () {
         return [];
       });
+  }
+
+  function ensureInboxHistDisabledStyle() {
+    if (document.getElementById("dam-inbox-hist-disabled-style")) return;
+    var st = document.createElement("style");
+    st.id = "dam-inbox-hist-disabled-style";
+    st.textContent =
+      ".dam-inbox-hist-item__btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}" +
+      ".dam-inbox-hist-item__btn:disabled:hover{border-color:#ececf2;background:#fff;color:inherit;}";
+    document.head.appendChild(st);
   }
 
   function undoGraceActive(it) {
@@ -789,10 +948,11 @@
   }
 
   function productContextHtml(it, opts) {
-    if (it.type !== "tag_proposal") return "";
+    if (it.type !== "tag_proposal" && it.type !== "lifecycle_history") return "";
     opts = opts || {};
     var expanded = !!opts.expanded;
-    var name = it.product_name || it.product_id || "Produkt bez nazwy";
+    if (!expanded) return "";
+    var name = it.product_name || humanizeProductId(it.product_id) || "Produkt bez nazwy";
     var pid = it.product_id || "";
     var path =
       window.DamPaths && typeof window.DamPaths.resolveWinFolderPath === "function"
@@ -803,15 +963,16 @@
       title.indexOf(name) === 0 ||
       title === name ||
       title.indexOf(name + " ·") === 0;
-    var indexHtml = it.product_index
+    var indexVal = it.product_index || it.revision_index || "";
+    var indexHtml = indexVal
       ? '<button type="button" class="dam-viz-badge dam-badge-tag dam-viz-badge--index" data-tag-kind="index" data-tag-value="' +
-        esc(it.product_index) +
+        esc(indexVal) +
         '" data-dam-tip="Indeks produktu" title="Indeks produktu">' +
-        esc(it.product_index) +
+        esc(indexVal) +
         "</button>"
       : "";
     var nameHtml =
-      !expanded && nameRedundant
+      nameRedundant
         ? ""
         : pid
           ? '<a class="dam-inbox-item__product-name" href="explorer.html?product=' +
@@ -820,14 +981,24 @@
             esc(name) +
             "</a>"
           : '<span class="dam-inbox-item__product-name">' + esc(name) + "</span>";
-    var changeChip = changeChipHtml(it);
+    var changeChip = it.type === "tag_proposal" ? changeChipHtml(it) : "";
+    var tagBits = "";
+    if (it.type === "lifecycle_history" && it.product_tags && it.product_tags.length) {
+      tagBits = it.product_tags
+        .slice(0, 6)
+        .map(function (t) {
+          return (
+            '<span class="dam-viz-badge dam-viz-badge--meta" title="Tag produktu">' +
+            esc(t) +
+            "</span>"
+          );
+        })
+        .join("");
+    }
     var metaBits =
       (indexHtml ? '<div class="dam-inbox-item__product-index">' + indexHtml + "</div>" : "") +
-      (expanded ? proposalBadgesHtml(it) : "");
-    if (!expanded) {
-      /* Collapsed: change + nav + date żyją w .dam-inbox-item__row-end */
-      return "";
-    }
+      (it.type === "tag_proposal" && expanded ? proposalBadgesHtml(it) : "") +
+      (tagBits ? '<div class="dam-inbox-item__product-tags">' + tagBits + "</div>" : "");
     return (
       '<div class="dam-inbox-item__product is-expanded">' +
       '<div class="dam-inbox-item__product-body">' +
@@ -845,8 +1016,40 @@
     );
   }
 
+  function lifecycleHistoryActionsHtml(it) {
+    ensureInboxHistDisabledStyle();
+    var canUndo = !!changeLogMeta.can_undo;
+    var canRedo = !!changeLogMeta.can_redo;
+    var note =
+      "Cofnij / Ponów = ten sam stos change-log co na pasku Historii (globalny undo/redo dysku).";
+    return (
+      '<div class="dam-inbox-hist-item" data-lifecycle-id="' +
+      esc(it.id) +
+      '" onclick="event.stopPropagation()">' +
+      '<div class="dam-inbox-hist-item__bar" title="' +
+      esc(note) +
+      '">' +
+      '<div class="dam-inbox-hist-item__actions">' +
+      '<button type="button" class="dam-inbox-hist-item__btn dam-inbox-hist-item__btn--undo" data-hist="undo-last" data-lifecycle-id="' +
+      esc(it.id) +
+      '"' +
+      (canUndo ? "" : " disabled") +
+      ' title="Cofnij ostatnią zmianę na dysku (change-log)">' +
+      '<i class="uil uil-corner-up-left" aria-hidden="true"></i><span>Cofnij</span></button>' +
+      '<button type="button" class="dam-inbox-hist-item__btn" data-hist="redo-last" data-lifecycle-id="' +
+      esc(it.id) +
+      '"' +
+      (canRedo ? "" : " disabled") +
+      ' title="Ponów ostatnio wycofaną zmianę na dysku">' +
+      '<i class="uil uil-corner-up-right" aria-hidden="true"></i><span>Ponów</span></button>' +
+      "</div></div></div>"
+    );
+  }
+
   function historyActionsHtml(it) {
-    if (!isAdmin() || it.type !== "tag_proposal" || !isHistoria(it)) return "";
+    if (!isAdmin() || !isHistoria(it)) return "";
+    if (it.type === "lifecycle_history") return lifecycleHistoryActionsHtml(it);
+    if (it.type !== "tag_proposal") return "";
     var st = String(it.status || "");
     var canUndoDisk = st === "approved" || st === "approve_failed";
     var inGrace = undoGraceActive(it);
@@ -970,6 +1173,40 @@
 
   function buildDetailHtml(it) {
     var lines = [];
+    if (it.type === "lifecycle_history") {
+      if (it.change_summary_pl) {
+        lines.push("<strong>Zmiana:</strong> " + esc(it.change_summary_pl));
+      }
+      if (it.lifecycle_status_pl) {
+        lines.push(
+          "<strong>Status:</strong> " +
+            esc(it.lifecycle_status_pl) +
+            (it.lifecycle_letter ? " (" + esc(it.lifecycle_letter) + ")" : "")
+        );
+      }
+      if (it.scope_pl) lines.push("<strong>Zakres:</strong> " + esc(it.scope_pl));
+      if (it.product_name) lines.push("<strong>Produkt:</strong> " + esc(it.product_name));
+      if (it.product_id) lines.push("<strong>ID produktu:</strong> " + esc(it.product_id));
+      var lcIdx = it.product_index || it.revision_index || "";
+      if (lcIdx) lines.push("<strong>Indeks:</strong> " + esc(lcIdx));
+      if (it.product_tags && it.product_tags.length) {
+        lines.push("<strong>Tagi:</strong> " + esc(it.product_tags.slice(0, 8).join(", ")));
+      }
+      if (it.path || it.revision_path) {
+        lines.push("<strong>Ścieżka:</strong> " + esc(it.path || it.revision_path));
+      }
+      if (it.decided_by) {
+        lines.push(
+          "<strong>Autor:</strong> " +
+            esc(it.decided_by) +
+            (it.decided_at ? " · " + esc(fmtDate(it.decided_at)) : "")
+        );
+      }
+      if (it.id) lines.push("<strong>Hashtag:</strong> #" + esc(it.id));
+      return lines.length
+        ? '<div class="dam-inbox-item__detail-body">' + lines.join("<br>") + "</div>"
+        : '<p class="dam-widget__meta">Brak dodatkowego opisu.</p>';
+    }
     if (it.type === "tag_proposal") {
       if (it.product_name) lines.push("<strong>Produkt:</strong> " + esc(it.product_name));
       if (it.product_id) lines.push("<strong>ID produktu:</strong> " + esc(it.product_id));
@@ -1001,9 +1238,10 @@
       lines.push("<strong>Zmiana typu:</strong> " + esc(typeChangeLabel(it)));
     }
     if (it.decided_by) {
+      var decPl = decisionStatusPl(it.status);
       lines.push(
         "<strong>Decyzja:</strong> " +
-          esc(it.status || "") +
+          esc(decPl || it.status || "") +
           " · " +
           esc(it.decided_by) +
           (it.decided_at ? " · " + esc(fmtDate(it.decided_at)) : "") +
@@ -1093,12 +1331,53 @@
     });
   }
 
+  function runGlobalUndoLast() {
+    return postChangeLog("/change-log/undo").then(function (res) {
+      if (!res || !res.ok) {
+        showToast("Błąd: " + ((res && (res.error || res.hint)) || "brak wpisu do cofnięcia"));
+        return res;
+      }
+      var undone = res.undone || {};
+      var pid = undone.proposal_id || "";
+      showToast("Cofnięto ostatnią zmianę na dysku.");
+      if (pid) {
+        return reopenProposal(pid).finally(function () {
+          load();
+        });
+      }
+      load();
+      return res;
+    });
+  }
+
+  function runGlobalRedoLast() {
+    return postChangeLog("/change-log/redo").then(function (res) {
+      if (!res || !res.ok) {
+        showToast("Błąd: " + ((res && (res.error || res.hint)) || "brak wpisu do ponowienia"));
+        return res;
+      }
+      showToast("Ponowiono ostatnią zmianę na dysku.");
+      load();
+      return res;
+    });
+  }
+
   function bindHistoryActions(list) {
     list.querySelectorAll("[data-hist]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
         var pid = btn.getAttribute("data-proposal-id") || "";
         var act = btn.getAttribute("data-hist") || "";
+        if (act === "undo-last") {
+          if (btn.disabled) return;
+          runGlobalUndoLast();
+          return;
+        }
+        if (act === "redo-last") {
+          if (btn.disabled) return;
+          runGlobalRedoLast();
+          return;
+        }
         if (!pid) return;
         if (act === "timeline") {
           fetch(
@@ -1210,6 +1489,8 @@
             typeChangeLabel(it) +
             (it.submitted_by ? " · " + it.submitted_by : "") +
             (it.product_index ? " · " + it.product_index : "");
+        } else if (it.type === "lifecycle_history") {
+          preview = it.change_summary_pl || it.body || "";
         }
         var openBtn = href
           ? '<a class="dam-inbox-item__open" href="' +
@@ -1218,24 +1499,23 @@
           : "";
         var statusChip = "";
         if (it.type === "tag_proposal" && it.status && it.status !== "pending") {
-          var statusPl = {
-            approved: "zatwierdzono",
-            rejected: "odrzucono",
-            approve_failed: "błąd zapisu",
-            awaiting_admin: "do admina",
-            auto_applied: "auto (legacy)",
-            undone: "wycofano",
-          };
-          var stLabel = statusPl[it.status] || it.status;
+          var stLabel = decisionStatusPl(it.status) || it.status;
           statusChip =
             '<span class="dam-inbox-item__status dam-inbox-item__status--' +
             esc(it.status) +
             '">' +
             esc(stLabel) +
             "</span>";
+        } else if (it.type === "lifecycle_history" && it.lifecycle_status_pl) {
+          statusChip =
+            '<span class="dam-inbox-item__status dam-inbox-item__status--lifecycle" title="' +
+            esc(it.change_summary_pl || it.lifecycle_status_pl) +
+            '">' +
+            esc(it.lifecycle_status_pl) +
+            "</span>";
         }
         var showPreview =
-          preview && !isOpen && it.type !== "tag_proposal";
+          preview && !isOpen && it.type !== "tag_proposal" && it.type !== "lifecycle_history";
         return (
           '<li class="dam-inbox-item' +
           (unread ? " is-unread" : "") +
@@ -1522,6 +1802,12 @@
           p.title = pname + " · " + typeChangeLabel(p);
         }
       });
+      lifecycleItems.forEach(function (it) {
+        if (it.product_id && productMap[it.product_id]) {
+          enrichProposalFromProduct(it, productMap[it.product_id]);
+        }
+        it.title = buildLifecycleTitle(it);
+      });
       var propIds = {};
       props.forEach(function (p) {
         propIds[p.id] = true;
@@ -1595,35 +1881,13 @@
     var undoLast = document.getElementById("inboxUndoLast");
     if (undoLast) {
       undoLast.addEventListener("click", function () {
-        postChangeLog("/change-log/undo").then(function (res) {
-          if (!res || !res.ok) {
-            showToast("Błąd: " + ((res && (res.error || res.hint)) || "brak wpisu do cofnięcia"));
-            return;
-          }
-          var undone = res.undone || {};
-          var pid = undone.proposal_id || "";
-          showToast("Cofnięto ostatnią zmianę na dysku.");
-          if (pid) {
-            reopenProposal(pid).finally(function () {
-              load();
-            });
-          } else {
-            load();
-          }
-        });
+        runGlobalUndoLast();
       });
     }
     var redoLast = document.getElementById("inboxRedoLast");
     if (redoLast) {
       redoLast.addEventListener("click", function () {
-        postChangeLog("/change-log/redo").then(function (res) {
-          if (!res || !res.ok) {
-            showToast("Błąd: " + ((res && (res.error || res.hint)) || "brak wpisu do ponowienia"));
-            return;
-          }
-          showToast("Ponowiono ostatnią zmianę na dysku.");
-          load();
-        });
+        runGlobalRedoLast();
       });
     }
     var search = document.getElementById("inboxSearch");

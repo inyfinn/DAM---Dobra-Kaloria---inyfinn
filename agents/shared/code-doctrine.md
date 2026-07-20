@@ -340,6 +340,13 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
 
+- 2026-07-21 | viz assoc Shift minus | minus nie pojawial sie mimo bindMaterialsPane |
+  `data-linked-asset-idx` siedzi na `.dam-media-preview__assoc-thumb-btn`, nie na
+  `.assoc-item` | selektor minus = `.assoc-item--asset` + idx z child `[data-linked-asset-idx]`;
+  nie duplikowac drugiej Shift UX w dam-viz — tylko `DamAssocEdit.bindMaterialsPane`.
+- 2026-07-21 | viz variants spam | dziesiatki `PL · index` w `#damVizModal` |
+  `expandModalWizkiVariants` spłaszcza każdy plik WIZKI do chipa | UI = branding
+  studio (`Tło`/`Perspektywa`/`Jakość` via DamLabels), nie flat `variantChipLabel`.
 - 2026-07-20 | sidebar morph | jank przy collapse/expand mimo GSAP 0.5s |
   tween `width+minWidth+maxWidth` + `paddingInlineStart` + `marginRight` ikon
   + stagger etykiet walczyl z Geex `transition: all 0.3s` i robil layout thrash
@@ -707,3 +714,80 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   sesji), `browser_tabs action:"select"` na docelowy `index` nie wystarcza -
   zamknij (`action:"close"`) pozostale karty, dopiero potem screenshot; inaczej
   dostajesz zdjecie niewlasciwej strony mimo poprawnego CDP targetu.
+- 2026-07-20 | `pick_thumb_file` + AUTO | demote po substring `"AUTO" in name`
+  trafial w produktowe `AUTOM-GRILL` (burger 6300755) - wszystkie packshoty
+  spadaly do tier 9, potem TYŁ wygral po mtime mimo obecnego FRONT-S |
+  demote po TOKENACH (`re.split` na `-_/.`), nie substring; normalizuj `Ł→L`
+  zanim szukasz `TYL`/`BACK`; traktuj `ENFACE` jak FRONT w tierach S/L/XL.
+  Regeneracja jednego thumb: bridge `/media` + PIL lokalnie gdy NFS `X:`
+  rzuca WinError 388 / Errno 22 na `Image.open` / `shutil.copy2`.
+
+- 2026-07-20 | mojibake site-wide (HTML chrome) | PL wygladal jak UrzA...dzenia /
+  L>cieL1/4ki mimo <meta charset=UTF-8> | pliki byly UTF-8 odczytane jako
+  Windows-1250 i zapisane ponownie jako UTF-8 (podwojne kodowanie); meta OK |
+  naprawa: loose encode(cp1250) (+ C1 U+0081 dla L-stroke) -> decode(utf-8);
+  skrypt 	ools/_fix_mojibake_utf8.py; NIE ruszac file-index/branding-index;
+  zapis apps/web TYLKO UTF-8 bez BOM (Python Path.write_bytes); weryfikuj bajtowo
+  (C4 85/C5 9B/C5 BC), nie print w konsoli cp1250 (memory #140).
+
+- 2026-07-21 | Viz Opakowanie facety / TUBA "znika" | produkt byl w file-index +
+  viz_latest (carrier TUBA, tag tuba), a UI pokazywal DOYPACK/BATON… bez TUBA |
+  `dam-tag-bar` ROW_LIMIT=8 + `OPAKOWANIE_CANON` trzymal `tuba` na pozycji 12
+  (za `+8`). Projekty mogly Pass, Viz wygladal jak brak taxonomii. Trzymaj rzadkie
+  ale realne nosniki (TUBA) w top-8 kanonu; `packagingTagsFrom` czyta
+  `tag_groups.opakowanie` (nie mylic z `pakowanie` = zbiorcze z katalogu).
+- 2026-07-21 | `#damVizModalAssoc` warianty | 137 plikow (NUGGETS) = osobne kafelki
+  per MOBILE/DESKTOP/TABLET i WxH | grupuj po `folder_group_id` (scope jak branding
+  `marketingGroupKey`) + `familyCreativeKey` (creativeKey + strip device +
+  `\d+-x-\d+` / `\d+x\d+` - po normalizacji separatorow wymiary sa z myslnikiem) |
+  badge N na kafelku; label `N grup · M plikow`; klik = primary (prefer DESKTOP /
+  najwiekszy) + siblings = czlonkowie grupy. Nie ruszac `creativeKey` (Rule A
+  jakosci - bez strip WxH). Style badge wstrzykniete w `injectA3Styles` (nie
+  dam-brand.css - sibling CSS).
+- 2026-07-21 | viz modal hero "miekkie" | `#damVizModalHero` bral `thumb_url`
+  (`data/thumbs/*`, THUMB_MAX_EDGE=480 JPEG q85) zamiast oryginalu z dysku |
+  user zoom ~155% = upscale 288px; na dysku SZKIC 2688x4479. Fix: `heroMediaUrl`
+  = most `/media?path=` (raw jpg/png, bez rekompresji); thumbs tylko na kartach
+  siatki. Nie mylic z cache - to byl zly src, nie stary plik.
+- 2026-07-21 | Pokaż wszystkie + karta produktu | search `tuba` ON = BRAK WIZUALIZACJI
+  / Zgłoś mimo ze wariant PREZENT ma 3 wizki | `expandVizFromProducts(showAll)`
+  dolacza rewizje `has_viz:false`; `groupByProduct` trzyma kolejnosc indeksu;
+  `renderGroup` bral `items[0]` (tu: starsza TUBA MINI bez WIZKI, tez `is_latest`) |
+  hero karty = `pickCardHero` (prefer latest+thumb sposrod wariantow Z wizka);
+  `noViz` tylko gdy ZADEN item grupy nie ma wizki; `orderGroupItemsForCard`
+  przed render/modal.
+
+- 2026-07-21 | TUBA MINI PREZENT viz strip + Surowe | disk mial 3x SZKIC w WIZKI,
+  modal pokazywal 1 chip (1 wiersz/lang z `firstWizkiPath`/`viz_latest`) |
+  w `#damVizModal` expanduj KAZDY plik z `rev.wizki` (`expandModalWizkiVariants`)
+  nawet bez FRONT/ENFACE / Bez indeksu. Surowe: NIE matchuj dowolnego `\links\` —
+  tylko `01 - PRODUKTY/.../2 - PROJEKT/links` (+ scope `revision_path`); inaczej
+  ARCHIWUM paczka_Sial / 12x_XMAS/LINKS (sernik/szarlotka) wylewa sie jako Surowe.
+
+- 2026-07-21 | Privilege: UI hide != API gate | Audyt: `POST /index/rebuild`,
+  `/branding/rebuild`, `POST /notification-groups`, `GET /change-log`,
+  `GET /lifecycle-reconcile?mode=boot` byly LOGIN-only mimo PI
+  `auth.roles_and_privilege` (mutate = admin Bearer). Regula: kazdy mutate
+  dysku/indeksu/settings org-wide = `_require_admin`; UI hide bez server check
+  = FAIL. Explorer Odswiez dla non-admin = reload JSON + pull (bez rebuild).
+  Anti-spoof UI: `DamApi._sessionRole` z `/auth/me` wygrywa z `localStorage.dam_role`.
+
+- 2026-07-21 | Boot overlay vs i18n vs GSAP page-sub | Objaw: mojibake flash /
+  pusty ekran / niewidoczny `.dam-page-sub` mimo poprawnego UTF-8 w DOM |
+  (1) `finishBoot` przed `DamI18n` fetch = reveal HTML, potem apply overlay;
+  (2) `revealPageEntrance` GSAP `autoAlpha` na subtitle pod `html.dam-booting`
+  zostawia `visibility:hidden`; (3) CSS `transition: opacity` na body potrafi
+  stucknac CSSTransition w `playState:running` (computed opacity 0 mimo
+  `dam-booted`). Kontrakt: `DamI18n.whenReady` -> chrome/nbsp -> `finishBoot`
+  (opacity 1 !important, finish animations) -> entrance BEZ subtitle;
+  page-sub `opacity/visibility !important` + Jost 300.
+
+- 2026-07-21 | U+FFFD w HTML chrome (nie mojibake reversible) | Branding filtry
+  pokazywaly Wyczy◆ filtry / tydzie◆ mimo poprawnych tagow PL na tej samej
+  stronie | PowerShell/Get-Content albo zly zapis zniszczyl bajty UTF-8 i
+  wstawil literalne U+FFFD (EF BF BD) - tego NIE odwraca `_fix_mojibake_utf8.py`
+  (brak oryginalnych bajtow) | naprawa: przepisac stringi z kontekstu Pythonem
+  `Path.write_bytes(text.encode("utf-8"))`; skrypt `tools/_fix_fffd_chrome_pl.py`;
+  obrona: `data-i18n` na krytycznym chrome + DamI18n before reveal; weryfikacja =
+  `open(rb)` + CDP `codePointAt` + Range.getBoundingClientRect szerokosc glifu
+  (vision bywa biasowane promptem i klamie ze znaki zniknely mimo U+015B w DOM).

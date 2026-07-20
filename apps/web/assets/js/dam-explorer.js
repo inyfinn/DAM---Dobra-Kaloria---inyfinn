@@ -1885,9 +1885,11 @@
         (!h._isCurrent
           ? '<button type="button" class="dam-life-hist__act dam-life-hist__act--restore" data-life-restore="' +
             esc(h.id || "") +
+            '" data-life-letter="' +
+            esc(dotLetter) +
             '"' +
             (restoreDisabled ? " disabled" : "") +
-            ' title="Przywróć ten stan" aria-label="Przywróć stan" data-dam-tip="Przywraca status F/X/D lub bez statusu z tego wpisu"><i class="uil uil-redo" aria-hidden="true"></i></button>'
+            ' title="Przywróć ten stan" aria-label="Przywróć stan" data-dam-tip="Przywraca status tej pozycji"><i class="uil uil-redo" aria-hidden="true"></i></button>'
           : "") +
         (canUndo
           ? '<button type="button" class="dam-life-hist__act dam-life-hist__act--undo" data-life-undo="' +
@@ -1967,8 +1969,8 @@
       .join("");
 
     var html =
-      '<div class="dam-basepath-overlay" id="damLifecycleHistoryModal" role="dialog" aria-modal="true" aria-label="Historia statusów">' +
-      '<div class="dam-basepath-box dam-lifecycle-history-modal">' +
+      '<div class="dam-basepath-overlay" id="damLifecycleHistoryModal" role="dialog" aria-modal="true" aria-label="Historia statusów" data-life-hist-scope="product">' +
+      '<div class="dam-basepath-box dam-lifecycle-history-modal dam-lifecycle-history-modal--product">' +
       '<button type="button" class="dam-viz-modal-close" data-life-hist-close aria-label="Zamknij" style="position:absolute;top:12px;right:12px;z-index:2"><i class="uil uil-times"></i></button>' +
       '<div class="dam-life-hist__head">' +
       "<h3>Historia statusów</h3>" +
@@ -1981,7 +1983,7 @@
       '<span class="dam-life-hist__filter-label">Filtr:</span>' +
       filterChips +
       "</div>" +
-      '<div id="damLifeHistList">' +
+      '<div id="damLifeHistList" class="dam-life-hist__scroll">' +
       listHtml() +
       "</div>" +
       '<div class="dam-lifecycle-history-modal__actions">' +
@@ -5552,6 +5554,12 @@
   function bootLifecycleReconcile() {
     if (state._lifecycleBootDone) return Promise.resolve(null);
     state._lifecycleBootDone = true;
+    /* Boot z enforce_moves (przenosiny X) = tylko admin na mostcie. */
+    if (!isAdminRole()) {
+      return pullLifecycleFromBridge().catch(function () {
+        return null;
+      });
+    }
     return bridgeFetchJson(bridgeUrl() + "/lifecycle-reconcile?mode=boot")
       .then(function (res) {
         if (!res.data || !res.data.ok) {
@@ -5711,11 +5719,14 @@
       });
     }
 
-    /* Najpierw przebuduj indeks z Marketing (nowe foldery DOY itd.), potem wczytaj JSON */
+    /* Przebudowa indeksu z dysku = tylko admin (PI). User: przeladuj JSON + pull statusow. */
     var rebuild = ensureBridgeSession()
       .then(function (sess) {
         if (!sess || !sess.ok) {
           return { ok: false, authError: true, error: (sess && sess.error) || "login_required" };
+        }
+        if (!isAdminRole()) {
+          return { ok: true, skippedRebuild: true };
         }
         return fetch(bridgeUrl() + "/index/rebuild", {
           method: "POST",
@@ -6092,6 +6103,9 @@
     } catch (e) { /* ignore */ }
 
     setStatus("Ładowanie indeksu...");
+    if (window.DamLoader && typeof window.DamLoader.start === "function") {
+      window.DamLoader.start("Skojarzenia…");
+    }
 
     var loader = Promise.all([
       window.DamSearch
@@ -6121,6 +6135,10 @@
         '<div class="dam-explorer-empty"><p style="color:#FF5653">Nie zaladowano file-index.json</p>' +
         "<p>Uruchom: <code>python apps/web/scripts/build-file-index.py</code></p></div>";
       renderTagChips();
+    }).finally(function () {
+      if (window.DamLoader && typeof window.DamLoader.done === "function") {
+        window.DamLoader.done();
+      }
     });
 
     var refreshBtn = document.getElementById("damIndexRefresh");

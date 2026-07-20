@@ -199,8 +199,9 @@ PACKAGING_HINTS = [
 ]
 # Kanoniczna lista zawsze widoczna w pasku tagow Opakowanie
 OPAKOWANIE_CANON = [
-    "doypack", "baton", "mini baton", "karton 6x", "karton", "bigpak",
-    "folia", "etykieta", "etykieta butelka", "etykieta sloik", "rekaw", "tuba",
+    # TUBA w top-8 faceta Opakowanie (ROW_LIMIT=8) - inaczej chowa sie pod +N
+    "doypack", "baton", "mini baton", "tuba", "karton 6x", "karton", "bigpak",
+    "folia", "etykieta", "etykieta butelka", "etykieta sloik", "rekaw",
     "shot", "doy 6x", "sasz", "obwoluta",
 ]
 
@@ -868,6 +869,9 @@ def _is_elements_dirname(name: str) -> bool:
         or "ingredients" in n
         or n == "element"
         or n.startswith("element ")
+        # Surowe elementy: 2 - PROJEKT/links (Adobe Links / cropy zrodlowe)
+        or n == "links"
+        or n == "linki"
     )
 
 
@@ -1500,18 +1504,25 @@ def pick_thumb_file(files: list[dict], preferred_index: str | None = None) -> di
                 imgs = matched
 
     def tier(name: str) -> int:
-        n = name.upper()
-        # demote technical / non-packaging shots
-        if any(x in n for x in ("AUTO", "PROBE", "DIELINE", "DIE-LINE", "TEMPLATE", "WYKROJNIK", "PDF.PNG", "_PDF")):
+        n = name.upper().replace("Ł", "L").replace("ł", "L")
+        # demote technical / non-packaging shots — token match, NOT substring.
+        # BUGFIX 2026-07-20: "AUTO" in "AUTOM-GRILL" false-positive demoted ALL
+        # packshots of burger-klasyczny 6300755 to tier 9, then TYL-S won by mtime.
+        tokens = set(re.split(r"[-_\s.]+", n))
+        if tokens & {"AUTO", "PROBE", "DIELINE", "TEMPLATE", "WYKROJNIK"}:
             return 9
-        is_front = "FRONT" in n
+        if "DIE-LINE" in n or "PDF.PNG" in n or "_PDF" in n:
+            return 9
+        is_enface = "ENFACE" in n and "TYL" not in n
+        is_front = "FRONT" in n or is_enface
         is_sklep = "SKLEP" in n
         is_xl = bool(re.search(r"[-_]XL\b", n) or "XL." in n)
-        is_l = bool(re.search(r"FRONT[-_]?L\b", n) or re.search(r"[-_]L\.", n))
-        # Czysty FRONT-S (bez SKLEP / XL) - preferowany do miniatur
+        is_l = bool(re.search(r"(?:FRONT|ENFACE)[-_]?L\b", n) or re.search(r"[-_]L\.", n))
+        # Czysty FRONT-S / ENFACE-S (bez SKLEP / XL) - preferowany do miniatur
         is_front_s = is_front and not is_sklep and not is_xl and (
             "FRONT-S" in n
-            or bool(re.search(r"FRONT[-_]?S\b", n))
+            or "ENFACE-S" in n
+            or bool(re.search(r"(?:FRONT|ENFACE)[-_]?S\b", n))
             or bool(re.search(r"[-_]S\.", n))
         )
         if is_front_s:

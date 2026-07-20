@@ -440,13 +440,31 @@
   // Sidebar oraz pasek akcji naglowka (#damHeaderAction: Pliki/Baza/PL/ADMIN)
   // NIE animuja sie tym reveal. Sidebar ma tylko morph przy zwijaniu/rozwijaniu.
 
+  var pageEntranceDone = false;
+
+  function clearHeaderRevealInline() {
+    var nodes = document.querySelectorAll(
+      ".geex-content__header__title, .geex-content__header__subtitle, .dam-page-sub"
+    );
+    Array.prototype.forEach.call(nodes, function (el) {
+      if (!el || !el.style) return;
+      el.style.removeProperty("opacity");
+      el.style.removeProperty("visibility");
+      el.style.removeProperty("transform");
+    });
+  }
+
   function revealPageEntrance() {
+    if (pageEntranceDone) return;
+    pageEntranceDone = true;
+    /* Podtytul (.dam-page-sub): NIE animuj GSAP autoAlpha - tween potrafi
+       zostawic visibility:hidden / opacity:0 (walka z boot overlay).
+       Tekst PL pokazuje sie razem z dam-booted (UTF-8 gotowy). */
+    clearHeaderRevealInline();
     if (prefersReducedMotion()) return;
     var seq = [];
     var title = document.querySelector(".geex-content__header__title");
-    var sub = document.querySelector(".geex-content__header__subtitle");
     if (title) seq.push(title);
-    if (sub) seq.push(sub);
     Array.prototype.forEach.call(
       document.querySelectorAll(BARS_SELECTOR),
       function (el) {
@@ -462,6 +480,50 @@
       return a.getBoundingClientRect().top - b.getBoundingClientRect().top;
     });
     revealSequence(document, seq, { mode: "slide", stagger: 0.06, y: -12 });
+  }
+
+  /**
+   * Boot contract: nie startuj entrance (title/sub opacity:0) dopoki
+   * html.dam-booting / i18n overlay nie sa gotowe - inaczej GSAP zostawia
+   * visibility:hidden na podtytule gdy tween odpala sie pod body opacity:0.
+   */
+  function schedulePageEntranceAfterBoot() {
+    var started = false;
+    function go() {
+      if (started) return;
+      started = true;
+      if (global.requestAnimationFrame) {
+        global.requestAnimationFrame(function () {
+          global.requestAnimationFrame(revealPageEntrance);
+        });
+      } else {
+        revealPageEntrance();
+      }
+    }
+    function waitBooted() {
+      if (document.documentElement.classList.contains("dam-booted")) {
+        go();
+        return;
+      }
+      var n = 0;
+      var t = setInterval(function () {
+        n += 1;
+        if (document.documentElement.classList.contains("dam-booted") || n > 60) {
+          clearInterval(t);
+          go();
+        }
+      }, 50);
+    }
+    if (global.DamI18n && typeof global.DamI18n.whenReady === "function") {
+      global.DamI18n.whenReady(waitBooted);
+    } else {
+      waitBooted();
+    }
+    /* failsafe - nie zostawiaj title/sub ukrytych */
+    setTimeout(function () {
+      go();
+      clearHeaderRevealInline();
+    }, 2200);
   }
 
   // ---------------------------------------------------------------------------
@@ -559,11 +621,7 @@
 
   function autoInit() {
     initModalObserver();
-    if (global.requestAnimationFrame) {
-      global.requestAnimationFrame(revealPageEntrance);
-    } else {
-      revealPageEntrance();
-    }
+    schedulePageEntranceAfterBoot();
   }
 
   if (document.readyState === "loading") {
@@ -579,6 +637,7 @@
     revealBars: revealBars,
     revealRows: revealRows,
     revealPageEntrance: revealPageEntrance,
+    clearHeaderRevealInline: clearHeaderRevealInline,
     skeleton: skeleton,
     selectors: {
       projectCard: ".dam-project-card",

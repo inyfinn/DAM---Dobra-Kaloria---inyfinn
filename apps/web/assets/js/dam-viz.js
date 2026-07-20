@@ -44,9 +44,15 @@
 
   function packagingTagsFrom(v) {
     if (!v) return [];
-    if (v.tag_groups && v.tag_groups.pakowanie && v.tag_groups.pakowanie.length) {
-      return v.tag_groups.pakowanie;
-    }
+    var tg = v.tag_groups || {};
+    /* Opakowanie jednostkowe (tuba/baton/…) = tag_groups.opakowanie.
+       pakowanie = zbiorcze z katalogu (2F/6x) - tylko fallback. */
+    if (tg.opakowanie && tg.opakowanie.length) return tg.opakowanie.slice();
+    if (tg.pakowanie && tg.pakowanie.length) return tg.pakowanie.slice();
+    var meta = v.product_id ? productMeta(v.product_id) : null;
+    var mtg = (meta && meta.tag_groups) || {};
+    if (mtg.opakowanie && mtg.opakowanie.length) return mtg.opakowanie.slice();
+    if (mtg.pakowanie && mtg.pakowanie.length) return mtg.pakowanie.slice();
     return [];
   }
 
@@ -169,7 +175,60 @@
       }
       map[pid].items.push(v);
     });
-    return order.map(function (pid) { return map[pid]; });
+    return order.map(function (pid) {
+      var g = map[pid];
+      /* Show-all dolacza rewizje bez wizki - nie pozwol im byc hero karty produktu. */
+      g.items = orderGroupItemsForCard(g.items);
+      return g;
+    });
+  }
+
+  /** Czy wiersz ma realna wizualizacje (thumb/path), nie sam folder. */
+  function itemHasViz(v) {
+    if (!v) return false;
+    if (v.has_viz === false) return false;
+    return !!(v.thumb_url || v.path);
+  }
+
+  /**
+   * Hero karty w widoku Wszystko: preferuj rewizje Z wizka.
+   * Kolejnosc: is_latest+thumb > thumb > has_viz > pierwszy (tylko gdy caly produkt bez wizki).
+   */
+  function pickCardHero(items) {
+    if (!items || !items.length) return null;
+    var withViz = items.filter(itemHasViz);
+    if (!withViz.length) return items[0];
+    var latest = withViz.filter(function (v) {
+      return !!v.is_latest;
+    });
+    var pool = latest.length ? latest : withViz;
+    var i;
+    for (i = 0; i < pool.length; i++) {
+      if (pool[i].thumb_url) return pool[i];
+    }
+    return pool[0];
+  }
+
+  /** Ustaw hero na items[0], reszte: najpierw z wizka, potem bez. */
+  function orderGroupItemsForCard(items) {
+    if (!items || items.length < 2) return items || [];
+    var hero = pickCardHero(items);
+    if (!hero) return items.slice();
+    var rest = items.filter(function (v) {
+      return v !== hero;
+    });
+    rest.sort(function (a, b) {
+      var av = itemHasViz(a) ? 1 : 0;
+      var bv = itemHasViz(b) ? 1 : 0;
+      if (av !== bv) return bv - av;
+      var al = a.is_latest ? 1 : 0;
+      var bl = b.is_latest ? 1 : 0;
+      if (al !== bl) return bl - al;
+      var at = a.thumb_url ? 1 : 0;
+      var bt = b.thumb_url ? 1 : 0;
+      return bt - at;
+    });
+    return [hero].concat(rest);
   }
 
   /* ------------------------------------------------------------------ */
@@ -245,16 +304,65 @@
     return "data/thumbs/" + p + "__" + base + "_" + lg + ".jpg";
   }
 
+  /**
+   * Sciezka pliku wizki zgodna z miniatura (jak pick_thumb_file w build-file-index):
+   * FRONT-S > S-SKLEP > FRONT-L/XL > inne. NIE bierz pierwszego alfabetycznie
+   * (to czesto FRONT-L.jpg) - Folder Windows musi wskazywac ten sam rozmiar co hero.
+   */
   function firstWizkiPath(rev) {
     var wizki = rev && rev.wizki ? rev.wizki : [];
+    var imgs = [];
     for (var i = 0; i < wizki.length; i++) {
       var f = wizki[i];
       var ext = String((f && f.ext) || "").toLowerCase();
-      if (["jpg", "jpeg", "png", "webp", "gif"].indexOf(ext) !== -1) {
-        return f.path || f.rel || "";
-      }
+      if (["jpg", "jpeg", "png", "webp", "gif"].indexOf(ext) !== -1) imgs.push(f);
     }
-    return (wizki[0] && (wizki[0].path || wizki[0].rel)) || (rev && rev.path) || "";
+    if (!imgs.length) {
+      return (wizki[0] && (wizki[0].path || wizki[0].rel)) || (rev && rev.path) || "";
+    }
+    function tier(name) {
+      var n = String(name || "")
+        .toUpperCase()
+        .replace(/\u0141/g, "L")
+        .replace(/\u0142/g, "L");
+      var isEnface = n.indexOf("ENFACE") !== -1 && n.indexOf("TYL") === -1;
+      var isFront = n.indexOf("FRONT") !== -1 || isEnface;
+      var isSklep = n.indexOf("SKLEP") !== -1;
+      var isXl = /[-_]XL\b/.test(n) || n.indexOf("XL.") !== -1;
+      var isL = /(?:FRONT|ENFACE)[-_]?L\b/.test(n) || /[-_]L\./.test(n);
+      var isFrontS =
+        isFront &&
+        !isSklep &&
+        !isXl &&
+        (n.indexOf("FRONT-S") !== -1 ||
+          n.indexOf("ENFACE-S") !== -1 ||
+          /(?:FRONT|ENFACE)[-_]?S\b/.test(n) ||
+          /[-_]S\./.test(n));
+      if (isFrontS) return 0;
+      if (isFront && isSklep && !isXl) return 2;
+      if (isFront && (isXl || isL)) return 3;
+      if (isFront) return 4;
+      if (n.indexOf("PREV") !== -1 || n.indexOf("WIZKA") !== -1 || n.indexOf("WIZ_") !== -1) return 5;
+      if (n.indexOf("TYL") !== -1 || n.indexOf("BACK") !== -1) return 7;
+      return 6;
+    }
+    var best = 99;
+    imgs.forEach(function (f) {
+      var t = tier(f.name);
+      if (t < best) best = t;
+    });
+    var pool = imgs.filter(function (f) {
+      return tier(f.name) === best;
+    });
+    pool.sort(function (a, b) {
+      var ae = String(a.ext || "").toLowerCase();
+      var be = String(b.ext || "").toLowerCase();
+      var at = ae === "png" || ae === "webp" ? 1 : 0;
+      var bt = be === "png" || be === "webp" ? 1 : 0;
+      return bt - at;
+    });
+    var pick = pool[0] || imgs[0];
+    return pick.path || pick.rel || "";
   }
 
   function normalizeVizRow(v) {
@@ -404,7 +512,12 @@
     var seen = {};
     var out = [];
     (items || []).forEach(function (v) {
-      var key = [v.index_base || v.index || "", v.lang || "", v.thumb_url || v.path || ""].join("|");
+      var key = [
+        v.index_base || v.index || "",
+        v.lang || "",
+        v.path || v.thumb_url || "",
+        v.file || v.name || "",
+      ].join("|");
       if (seen[key]) return;
       seen[key] = true;
       out.push(v);
@@ -412,18 +525,374 @@
     return out;
   }
 
+  function shortVizFileLabel(name, idx) {
+    var n = String(name || "");
+    var m = n.match(/\((\d+)\)\s*\.[a-z0-9]+$/i);
+    if (m) return "(" + m[1] + ")";
+    var base = n.replace(/\.[a-z0-9]+$/i, "");
+    if (base.length > 18) base = base.slice(0, 16) + "\u2026";
+    return base || String((idx || 0) + 1);
+  }
+
+  /** Wizki z file-index dla danej rewizji (jpg/png/webp/gif). */
+  function findRevisionWizki(productId, revisionPath, revisionFolder) {
+    if (!indexData || !Array.isArray(indexData.products)) return [];
+    var prod = null;
+    for (var i = 0; i < indexData.products.length; i++) {
+      if (indexData.products[i] && indexData.products[i].id === productId) {
+        prod = indexData.products[i];
+        break;
+      }
+    }
+    if (!prod) return [];
+    var revs = prod.revisions || [];
+    function norm(p) {
+      return String(p || "")
+        .replace(/\\/g, "/")
+        .toLowerCase();
+    }
+    var want = norm(revisionPath);
+    var rev = null;
+    for (var j = 0; j < revs.length; j++) {
+      var r = revs[j];
+      if (!r) continue;
+      if (want && norm(r.path) === want) {
+        rev = r;
+        break;
+      }
+      if (revisionFolder && r.folder === revisionFolder) {
+        rev = r;
+        break;
+      }
+    }
+    if (!rev) return [];
+    var imgs = [];
+    (rev.wizki || []).forEach(function (f) {
+      var ext = String((f && f.ext) || "").toLowerCase();
+      if (["jpg", "jpeg", "png", "webp", "gif"].indexOf(ext) !== -1) imgs.push(f);
+    });
+    return imgs;
+  }
+
+  /**
+   * HARD: pasek wariantow pokazuje KAZDY plik z 4 - WIZKI (takze testowe nazwy
+   * bez FRONT/ENFACE / Bez indeksu) - nie tylko 1 firstWizkiPath na jezyk.
+   */
+  /** Meta studia (jak branding media-preview): bg / persp / size z DamLabels. */
+  function enrichVizStudioMeta(v) {
+    if (!v) return v;
+    var name = v.file || v.name || "";
+    var DL = window.DamLabels;
+    if (!v.bg && DL && typeof DL.vizBackground === "function") v.bg = DL.vizBackground(name);
+    if (!v.bg) {
+      var ext0 = String(name.split(".").pop() || "").toLowerCase();
+      v.bg = ext0 === "png" || ext0 === "webp" ? "bez-tla" : "z-tlem";
+    }
+    if (!v.persp) {
+      v.persp =
+        v.perspective ||
+        (DL && typeof DL.vizPerspective === "function" ? DL.vizPerspective(name) : "") ||
+        "";
+    }
+    if (!v.size && DL && typeof DL.vizSize === "function") v.size = DL.vizSize(name) || "";
+    return v;
+  }
+
+  function expandModalWizkiVariants(items) {
+    var out = [];
+    (items || []).forEach(function (base) {
+      if (!base) return;
+      var wizki = findRevisionWizki(base.product_id, base.revision_path, base.revision_folder);
+      if (!wizki.length) {
+        out.push(enrichVizStudioMeta(base));
+        return;
+      }
+      wizki.forEach(function (f, fi) {
+        var copy = Object.assign({}, base);
+        copy.path = f.path || f.rel || base.path;
+        copy.file = f.name || "";
+        copy.name = f.name || "";
+        copy.viz_file_label = shortVizFileLabel(f.name, fi);
+        /* Kazdy plik = wlasny podglad (bridge /media), zeby strip nie pokazywal 1x tego samego thumb. */
+        copy.thumb_url = mediaPreviewUrl(copy.path) || base.thumb_url || "";
+        out.push(enrichVizStudioMeta(copy));
+      });
+    });
+    return out;
+  }
+
+  /**
+   * HARD interrupt: zamiast plaskiej listy PL·index — ten sam wzorzec co branding
+   * #damMediaPreviewStudio / Quality (Tło · Perspektywa · Język · XL/L/S).
+   */
+  function bindVizModalStudioControls(modal, items, getActiveIdx, selectFn) {
+    var host = modal && modal.querySelector("#damVizModalStudio");
+    var qHost = modal && modal.querySelector("#damVizModalQuality");
+    if (!host || !items || !items.length) return { sync: function () {} };
+    items.forEach(enrichVizStudioMeta);
+    var PERSP_ORDER = ["ENFACE", "FRONT", "BACK", "TYL-ENFACE", "BOK", "SIDE", "TOP", "3_4", "INNE", "OTHER"];
+    var SIZE_ORDER = ["XL", "L", "S", "S-SKLEP"];
+    var chipCls = "dam-viz-badge dam-media-preview__studio-chip";
+
+    function cur() {
+      return items[getActiveIdx()] || items[0];
+    }
+
+    function uniqueKeys(pred) {
+      var seen = {};
+      var out = [];
+      items.forEach(function (it) {
+        if (!pred(it)) return;
+        var k = pred(it);
+        if (!k || seen[k]) return;
+        seen[k] = true;
+        out.push(k);
+      });
+      return out;
+    }
+
+    function orderedPersps(list) {
+      return PERSP_ORDER.filter(function (p) {
+        return list.indexOf(p) >= 0;
+      }).concat(
+        list.filter(function (p) {
+          return PERSP_ORDER.indexOf(p) < 0;
+        })
+      );
+    }
+
+    function orderedSizes(list) {
+      return SIZE_ORDER.filter(function (s) {
+        return list.indexOf(s) >= 0;
+      }).concat(
+        list.filter(function (s) {
+          return SIZE_ORDER.indexOf(s) < 0;
+        })
+      );
+    }
+
+    function pickBest(state) {
+      var best = -1;
+      var bestScore = -1;
+      items.forEach(function (it, i) {
+        if (state.bg && it.bg && it.bg !== state.bg) return;
+        if (state.persp && it.persp && it.persp !== state.persp) return;
+        if (state.lang && it.lang && it.lang !== state.lang) return;
+        if (state.size && it.size && it.size !== state.size) return;
+        var sc = 0;
+        if (state.bg && it.bg === state.bg) sc += 8;
+        if (state.persp && it.persp === state.persp) sc += 4;
+        if (state.lang && it.lang === state.lang) sc += 2;
+        if (state.size && it.size === state.size) sc += 1;
+        if (sc > bestScore) {
+          bestScore = sc;
+          best = i;
+        }
+      });
+      if (best < 0) {
+        items.forEach(function (it, i) {
+          if (state.bg && it.bg && it.bg !== state.bg) return;
+          if (state.persp && it.persp && it.persp !== state.persp) return;
+          if (best < 0) best = i;
+        });
+      }
+      return best >= 0 ? best : getActiveIdx();
+    }
+
+    function paint() {
+      var c = cur();
+      var state = {
+        bg: c.bg || "z-tlem",
+        persp: c.persp || "",
+        lang: c.lang || "",
+        size: c.size || "",
+      };
+      var bgs = uniqueKeys(function (it) {
+        return it.bg;
+      });
+      var langs = uniqueKeys(function (it) {
+        return it.lang;
+      });
+      var persps = orderedPersps(
+        uniqueKeys(function (it) {
+          if (state.bg && it.bg && it.bg !== state.bg) return "";
+          if (state.lang && it.lang && it.lang !== state.lang) return "";
+          return it.persp;
+        })
+      );
+      var sizes = orderedSizes(
+        uniqueKeys(function (it) {
+          if (state.bg && it.bg && it.bg !== state.bg) return "";
+          if (state.persp && it.persp && it.persp !== state.persp) return "";
+          if (state.lang && it.lang && it.lang !== state.lang) return "";
+          return it.size;
+        })
+      );
+
+      var html = "";
+      if (bgs.length > 1) {
+        html +=
+          '<div class="dam-media-preview__studio-row" role="group" aria-label="Tło">' +
+          '<span class="dam-media-preview__studio-label">Tło:</span>';
+        bgs.forEach(function (bg) {
+          var label = bg === "bez-tla" ? "Bez tła" : "Z tłem";
+          var sub = bg === "bez-tla" ? "PNG" : "JPG";
+          html +=
+            '<button type="button" class="' +
+            chipCls +
+            (bg === state.bg ? " is-active" : "") +
+            '" data-studio-bg="' +
+            esc(bg) +
+            '"><span>' +
+            esc(label) +
+            '</span><small>&bull;&nbsp;' +
+            esc(sub) +
+            "</small></button>";
+        });
+        html += "</div>";
+      }
+      if (persps.length > 1) {
+        html +=
+          '<div class="dam-media-preview__studio-row" role="group" aria-label="Perspektywa">' +
+          '<span class="dam-media-preview__studio-label">Perspektywa:</span>';
+        persps.forEach(function (p) {
+          html +=
+            '<button type="button" class="' +
+            chipCls +
+            (p === state.persp ? " is-active" : "") +
+            '" data-studio-persp="' +
+            esc(p) +
+            '">' +
+            esc(p) +
+            "</button>";
+        });
+        html += "</div>";
+      }
+      if (langs.length > 1) {
+        html +=
+          '<div class="dam-media-preview__studio-row" role="group" aria-label="Język">' +
+          '<span class="dam-media-preview__studio-label">Język:</span>';
+        langs.forEach(function (l) {
+          var short =
+            (window.DamLabels && typeof window.DamLabels.langShort === "function"
+              ? window.DamLabels.langShort(l)
+              : String(l || "").toUpperCase()) || String(l || "").toUpperCase();
+          html +=
+            '<button type="button" class="' +
+            chipCls +
+            (l === state.lang ? " is-active" : "") +
+            '" data-studio-lang="' +
+            esc(l) +
+            '">' +
+            esc(short) +
+            "</button>";
+        });
+        html += "</div>";
+      }
+      host.innerHTML = html;
+      host.hidden = !html;
+
+      if (qHost) {
+        if (sizes.length > 1) {
+          qHost.innerHTML =
+            '<span class="dam-media-preview__quality-label">Jakość:</span>' +
+            sizes
+              .map(function (sz) {
+                return (
+                  '<button type="button" class="dam-media-preview__quality-pill' +
+                  (sz === state.size ? " is-active" : "") +
+                  '" data-studio-size="' +
+                  esc(sz) +
+                  '" aria-pressed="' +
+                  (sz === state.size ? "true" : "false") +
+                  '">' +
+                  esc(sz) +
+                  "</button>"
+                );
+              })
+              .join("");
+          qHost.hidden = false;
+        } else {
+          qHost.innerHTML = "";
+          qHost.hidden = true;
+        }
+      }
+
+      function go(nextState) {
+        var idx = pickBest(nextState);
+        selectFn(idx);
+        paint();
+      }
+
+      host.querySelectorAll("[data-studio-bg]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          go({
+            bg: btn.getAttribute("data-studio-bg") || state.bg,
+            persp: state.persp,
+            lang: state.lang,
+            size: state.size,
+          });
+        });
+      });
+      host.querySelectorAll("[data-studio-persp]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          go({
+            bg: state.bg,
+            persp: btn.getAttribute("data-studio-persp") || state.persp,
+            lang: state.lang,
+            size: state.size,
+          });
+        });
+      });
+      host.querySelectorAll("[data-studio-lang]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          go({
+            bg: state.bg,
+            persp: state.persp,
+            lang: btn.getAttribute("data-studio-lang") || state.lang,
+            size: state.size,
+          });
+        });
+      });
+      if (qHost) {
+        qHost.querySelectorAll("[data-studio-size]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            go({
+              bg: state.bg,
+              persp: state.persp,
+              lang: state.lang,
+              size: btn.getAttribute("data-studio-size") || state.size,
+            });
+          });
+        });
+      }
+    }
+
+    paint();
+    return { sync: paint };
+  }
+
+  function buildModalItems(group) {
+    return expandModalWizkiVariants(uniqueModalVariants(withAliasItems((group && group.items) || []))).map(
+      applyOverrideToItem
+    );
+  }
+
   /**
    * Podpis chipa wariantu w modalu: ZAWSZE skrot jezyka + indeks (nie pelna
    * nazwa jak "Wielka Brytania" - 2026-07-18). Pelna nazwa + sciezka -> tooltip,
-   * patrz variantChipTip().
+   * patrz variantChipTip(). Przy wielu plikach WIZKI: jezyk + (1)/(2) z nazwy.
    */
   function variantChipLabel(v, ctx) {
     var short = (window.DamLabels && typeof window.DamLabels.langShort === "function"
       ? window.DamLabels.langShort(v.lang)
       : String(v.lang || "").toUpperCase()) || "";
     var idx = displayIndex(v);
+    var fileBit = v.viz_file_label || "";
     if (short && idx) return short + " · " + idx;
-    return short || idx || "Aktualna";
+    if (short && fileBit) return short + " · " + fileBit;
+    if (fileBit && idx) return fileBit + " · " + idx;
+    return short || idx || fileBit || "Aktualna";
   }
 
   /** Pelny tekst (aria-label / fallback) chipa wariantu: jezyk + sciezka. */
@@ -437,9 +906,9 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Popover wariantu: KRAJ (naglowek) + Sciezka + Kopiuj sciezke.        */
-  /* Dziala na hover (auto-hide) i na klik (przypiety - dla osob, ktore  */
-  /* nie najedzja myszka, tylko klikaja - 2026-07-18 wymog uzytkownika). */
+  /* Popover wariantu: KRAJ + Sciezka + Kopiuj.                          */
+  /* 2026-07-20: ZERO auto tipow (hover / DamTooltips). Tip TYLKO gdy    */
+  /* user kliknie JUZ aktywna miniature drugi raz (re-click = tip).      */
   /* ------------------------------------------------------------------ */
   var variantInfoPopoverEl = null;
   var variantInfoPinned = false;
@@ -571,6 +1040,20 @@
       (window.DamPaths && typeof window.DamPaths.bridgeUrl === "function" && window.DamPaths.bridgeUrl()) ||
       "http://127.0.0.1:8766";
     return bridge + "/media?path=" + encodeURIComponent(local);
+  }
+
+  /**
+   * Modal hero = pelna rozdzielczosc z dysku przez most /media (bez rekompresji).
+   * data/thumbs/*.jpg (max 480px, JPEG q85) tylko na kartach siatki - NIE w modalu.
+   * thumb_url uzywamy gdy juz jest /media?... (override) albo gdy brak path.
+   */
+  function heroMediaUrl(v) {
+    if (!v) return "";
+    var full = mediaPreviewUrl(v.path);
+    if (full) return full;
+    var t = v.thumb_url ? String(v.thumb_url) : "";
+    if (t && t.indexOf("/media?") >= 0) return t;
+    return t;
   }
 
   var THUMB_OVERRIDES_KEY = "dam_thumb_overrides";
@@ -1061,9 +1544,12 @@
     var existing = document.getElementById("damVizModal");
     if (existing) existing.remove();
 
-    var items = uniqueModalVariants(withAliasItems(group.items)).map(applyOverrideToItem);
-    var first = items[0];
+    /* buildModalItems: expand KAZDY plik z 4 - WIZKI (SZKIC (1)/(2)/(3) itd.). */
+    var items = orderGroupItemsForCard(buildModalItems(group));
+    var first = pickCardHero(items) || items[0];
     if (!first) return;
+    /* Aktywny chip = hero z wizka (nie pierwsza rewizja bez pliku). */
+    var activeIdx = Math.max(0, items.indexOf(first));
     var productName = first.product_name || first.product_id || "Produkt";
     var brand = first.brand || "DK";
     var syEnabled = localStorage.getItem("dam_synology_enabled") !== "false";
@@ -1080,37 +1566,11 @@
       multiIndex: Object.keys(indexes).length > 1,
     };
 
-    var activeIdx = 0;
-    /* Zawsze pokazuj chip wariantu (nawet przy 1 indeksie) - ten sam design */
-    var chips = items
-      .map(function (v, i) {
-        var label = variantChipLabel(v, ctx);
-        var thumb = v.thumb_url || "";
-        return (
-          '<button type="button" class="dam-viz-modal__variant' +
-          (i === 0 ? " is-active" : "") +
-          '" data-vidx="' +
-          i +
-          '" data-path="' +
-          esc(v.path || "") +
-          '" data-thumb="' +
-          esc(thumb) +
-          '" aria-label="' +
-          esc(variantChipTip(v)) +
-          '">' +
-          (thumb
-            ? '<img class="dam-viz-modal__variant-thumb" src="' +
-              esc(thumb) +
-              '" alt="' +
-              esc(label) +
-              '" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
-            : '<div class="dam-viz-modal__variant-placeholder dam-media-preview__variant-placeholder--noviz" title="Brak wizualizacji"><i class="uil uil-image-slash" aria-hidden="true"></i><span>Brak wizualizacji</span></div>') +
-          '<span class="dam-viz-modal__variant-label">' +
-          esc(label) +
-          "</span></button>"
-        );
-      })
-      .join("");
+    /* HARD interrupt: branding studio grouping (Tło / Perspektywa / XL·L·S)
+       zamiast plaskiej listy identycznych PL·index. */
+    var chips =
+      '<div id="damVizModalStudio" class="dam-media-preview__studio dam-viz-modal__studio" aria-label="Warianty studia"></div>' +
+      '<div id="damVizModalQuality" class="dam-media-preview__quality dam-viz-modal__quality" hidden></div>';
 
     var modalBadges =
       window.DamBadges && typeof window.DamBadges.render === "function"
@@ -1203,12 +1663,13 @@
 
     var adminActions = "";
     if (admin) {
-      /* Miniatura (ustaw podglad jako miniature) wywalona - nie miala sensu
-         obok Dodaj. Zostaje jedna spojna grupa: Demo / Ukryj / Dodaj miniature
-         (Dodaj miniature = parowanie brakujacej wizualizacji z folderem innego
-         jezyka/wariantu, patrz damVizModalAddManual). */
+      /* Miniatura = zmiana podgladu karty/hero (Explorer-style picker, thumb-overrides).
+         Dodaj miniature = parowanie brakujacej wizualizacji z folderem innego
+         jezyka/wariantu (damVizModalAddManual) - osobna akcja, nie zamiennik. */
       adminActions =
         '<div class="dam-viz-modal__actions-admin-group">' +
+        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalSetThumb" data-dam-tip="Wybierz plik miniatury z folderu produktu (styl Eksploratora)">' +
+        '<i class="uil uil-image" aria-hidden="true"></i><span>Miniatura</span></button>' +
         '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalDemo" data-dam-tip="Oznacz jako Demo (zolta obwodka)">' +
         '<i class="uil uil-star" aria-hidden="true"></i><span>Demo</span></button>' +
         '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-admin-control" id="damVizModalHide" data-dam-tip="Ukryj kafelek dla zwyklego uzytkownika">' +
@@ -1250,11 +1711,16 @@
       '<i class="uil uil-sitemap" aria-hidden="true"></i><span>Przejdź</span></button>' +
       '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-win-btn" id="damVizModalWinExplorer" data-path="' +
       esc(first.path || "") +
-      '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plików Windows">' +
+      '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera Eksplorator Windows z zaznaczonym plikiem">' +
       (window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>') +
       "<span>Folder</span></button>" +
+      /* --- FILE OPEN CTA (left of copy) --- */
+      '<button type="button" class="dam-viz-icon-btn" id="damVizModalOpenFile" data-path="' +
+      esc(first.path || "") +
+      '" aria-label="Otworz plik" title="Otworz plik" data-dam-tip="Otwiera plik w domyslnej aplikacji Windows i kopiuje sciezke">' +
+      '<i class="uil uil-external-link-alt" aria-hidden="true"></i></button>' +
       '<button type="button" class="dam-viz-icon-btn" id="damVizModalCopyPath" data-path="' +
       esc(first.path || "") +
       '" aria-label="Kopiuj sciezke" title="Kopiuj sciezke" data-dam-tip="Kopiuje lokalna sciezke pliku">' +
@@ -1301,6 +1767,27 @@
           esc(vizMarketingId) +
           "</span></div>"
         : "") +
+      /* Filename + carrier/meta: jedna grupa (8px); od ID chipa 18px. */
+      '<div class="dam-viz-modal__filemeta" id="damVizModalFileMeta">' +
+      (function () {
+        var fname = "";
+        if (window.DamPaths && typeof window.DamPaths.basename === "function") {
+          fname = window.DamPaths.basename(first.path || "") || "";
+        } else {
+          var n = String(first.path || "").replace(/\\/g, "/");
+          var i = n.lastIndexOf("/");
+          fname = i >= 0 ? n.slice(i + 1) : n;
+        }
+        if (!fname && first.name) fname = String(first.name);
+        if (!fname) return "";
+        return (
+          '<p class="dam-viz-modal__filename" id="damVizModalFilename" title="' +
+          esc(fname) +
+          '">' +
+          esc(fname) +
+          "</p>"
+        );
+      })() +
       '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable' +
       '" id="damVizModalMeta" data-dam-tip="' +
       esc(
@@ -1313,11 +1800,13 @@
           (displayIndex(first) ? " · Indeks " + displayIndex(first) : "")
       ) +
       "</p>" +
-      '<div class="dam-viz-modal__variants" role="listbox" aria-label="Warianty">' +
+      "</div>" +
+      '<div class="dam-viz-modal__variants dam-viz-modal__variants--studio" role="group" aria-label="Warianty">' +
       chips +
       "</div>" +
       missingLangHtml +
       actionsHtml;
+    var initialHeroSrc = heroMediaUrl(first);
     var thumbHtml =
       '<div class="dam-viz-modal__thumb">' +
       '<div class="dam-viz-modal__zoom" role="group" aria-label="Przyblizenie">' +
@@ -1326,9 +1815,9 @@
       '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomIn" aria-label="Powieksz" title="Powieksz" data-dam-tip="Powieksz (CTRL/ALT+scroll)"><i class="uil uil-search-plus"></i></button>' +
       '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomReset" aria-label="Reset" title="100%" data-dam-tip="Reset zoom i pozycji"><i class="uil uil-search"></i></button>' +
       "</div>" +
-      (first.thumb_url
+      (initialHeroSrc
         ? '<img id="damVizModalHero" src="' +
-          esc(first.thumb_url) +
+          esc(initialHeroSrc) +
           '" alt="' +
           esc(productName) +
           '" onerror="this.src=\'' +
@@ -1355,7 +1844,7 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=modal90vw20260720a";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=assoccopy20260721a";
       document.head.appendChild(vizCss);
     }
     document.body.insertAdjacentHTML("beforeend", html);
@@ -1397,6 +1886,7 @@
           id: first.product_id || "",
           name: productName,
           index: displayIndex(first) || first.index_base || "",
+          revision_path: first.revision_path || "",
         }
       );
     } else {
@@ -1435,6 +1925,8 @@
       });
     });
 
+    var studioCtrl = null;
+
     function selectVariant(idx) {
       activeIdx = idx;
       var v = items[idx];
@@ -1442,11 +1934,12 @@
       if (zoomCtrl) zoomCtrl.resetView();
       var hero = document.getElementById("damVizModalHero");
       if (hero) {
-        var preview = v.thumb_url || mediaPreviewUrl(v.path) || "";
+        var preview = heroMediaUrl(v) || "";
         if (preview) {
           hero.onerror = function () {
             var fallback = mediaPreviewUrl(v.path);
             if (fallback && hero.src.indexOf("/media?") < 0) hero.src = fallback;
+            else if (v.thumb_url && hero.src.indexOf("data/thumbs/") < 0) hero.src = v.thumb_url;
             else hero.src = PLACEHOLDER_SVG;
           };
           hero.src = preview;
@@ -1467,6 +1960,29 @@
           (idxShow ? " · Indeks " + idxShow : "") +
           langBit;
       }
+      /* Update muted filename line on variant switch */
+      var fnameEl = document.getElementById("damVizModalFilename");
+      var fname = "";
+      if (window.DamPaths && typeof window.DamPaths.basename === "function") {
+        fname = window.DamPaths.basename(v.path || "") || "";
+      } else {
+        var nPath = String(v.path || "").replace(/\\/g, "/");
+        var slash = nPath.lastIndexOf("/");
+        fname = slash >= 0 ? nPath.slice(slash + 1) : nPath;
+      }
+      if (!fname && v.name) fname = String(v.name);
+      if (fnameEl) {
+        fnameEl.textContent = fname || "";
+        fnameEl.hidden = !fname;
+        if (fname) fnameEl.setAttribute("title", fname);
+      } else if (fname && meta && meta.parentNode) {
+        var created = document.createElement("p");
+        created.className = "dam-viz-modal__filename";
+        created.id = "damVizModalFilename";
+        created.textContent = fname;
+        created.setAttribute("title", fname);
+        meta.parentNode.insertBefore(created, meta);
+      }
       var idChipUpd = document.getElementById("damVizModalAssetId");
       if (idChipUpd) {
         var freshId = vizModalMarketingId(v);
@@ -1478,43 +1994,27 @@
           idChipUpd.setAttribute("title", "ID marketingowe: " + freshId);
         }
       }
-      ["damVizModalWinExplorer", "damVizModalCopyPath", "damVizModalShare"].forEach(function (id) {
+      ["damVizModalWinExplorer", "damVizModalOpenFile", "damVizModalCopyPath", "damVizModalShare"].forEach(function (id) {
         var btn = document.getElementById(id);
         if (btn) btn.setAttribute("data-path", v.path || "");
       });
-      modal.querySelectorAll(".dam-viz-modal__variant").forEach(function (el) {
-        el.classList.toggle("is-active", String(el.getAttribute("data-vidx")) === String(idx));
-      });
+      if (studioCtrl && typeof studioCtrl.sync === "function") {
+        studioCtrl.sync();
+      }
       if (typeof refreshModalBadgesAndAdmin === "function") {
         refreshModalBadgesAndAdmin();
       }
       if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
     }
 
-    modal.querySelectorAll(".dam-viz-modal__variant").forEach(function (el) {
-      var hoverTimer = null;
-      el.addEventListener("mouseenter", function () {
-        clearTimeout(hoverTimer);
-        cancelVariantInfoHide();
-        hoverTimer = setTimeout(function () {
-          if (variantInfoPinned) return;
-          var idx = parseInt(el.getAttribute("data-vidx"), 10) || 0;
-          openVariantInfoPopover(el, items[idx], false);
-        }, 280);
-      });
-      el.addEventListener("mouseleave", function () {
-        clearTimeout(hoverTimer);
-        if (!variantInfoPinned) scheduleVariantInfoHide();
-      });
-      el.addEventListener("click", function () {
-        clearTimeout(hoverTimer);
-        var idx = parseInt(this.getAttribute("data-vidx"), 10) || 0;
-        selectVariant(idx);
-        /* Klik = tez pokazuje popover (przypiety), nie tylko hover -
-           dla osob, ktore wola kliknac niz najechac (2026-07-18). */
-        openVariantInfoPopover(this, items[idx], true);
-      });
-    });
+    studioCtrl = bindVizModalStudioControls(
+      modal,
+      items,
+      function () {
+        return activeIdx;
+      },
+      selectVariant
+    );
 
     if (shared && typeof shared.bindZoom === "function") {
       zoomCtrl = shared.bindZoom({
@@ -1596,10 +2096,20 @@
     function syncAdminControls(v) {
       if (!admin || !v) return;
       var pid = v.product_id || "";
+      var thumbOn = hasThumbOverride(pid);
       var demoOn = isDemo(v);
       var hideOn = isHidden(v);
       var manualN = countManualForProduct(pid);
 
+      setBtnLabel(
+        document.getElementById("damVizModalSetThumb"),
+        thumbOn ? "uil uil-redo" : "uil uil-image",
+        thumbOn ? "Reset" : "Miniatura",
+        thumbOn
+          ? "Cofnij wybor miniatury (przywroc domyslna)"
+          : "Wybierz plik miniatury z folderu produktu (styl Eksploratora)",
+        thumbOn
+      );
       setBtnLabel(
         document.getElementById("damVizModalDemo"),
         "uil uil-star",
@@ -1627,6 +2137,46 @@
           : "Brak wizualizacji? Wskaz folder z wizualizacjami innego jezyka/wariantu i sparuj z tym produktem",
         manualN > 0
       );
+    }
+
+    var setThumbBtn = document.getElementById("damVizModalSetThumb");
+    if (setThumbBtn) {
+      setThumbBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var v = items[activeIdx] || first;
+        if (!v || !v.product_id) {
+          showToast("Brak produktu");
+          return;
+        }
+        if (hasThumbOverride(v.product_id)) {
+          clearThumbOverride(v.product_id);
+          items = buildModalItems(group);
+          first = items[0] || first;
+          var hero = document.getElementById("damVizModalHero");
+          var fresh = items[activeIdx] || first;
+          if (hero) hero.src = heroMediaUrl(fresh) || PLACEHOLDER_SVG;
+          refreshCardThumb(group.pid, (items[0] && items[0].thumb_url) || "");
+          showToast("Przywrocono domyslna miniature");
+          refreshModalBadgesAndAdmin();
+          applyFilters();
+          return;
+        }
+        openThumbPicker(v, function (picked) {
+          var thumbUrl = mediaPreviewUrl(picked.path) || "";
+          saveThumbOverride(v.product_id, {
+            path: picked.path || "",
+            file: picked.file || "",
+            thumb_url: thumbUrl,
+            updated_at: new Date().toISOString(),
+          });
+          refreshCardThumb(group.pid, thumbUrl);
+          var heroEl = document.getElementById("damVizModalHero");
+          if (heroEl && thumbUrl) heroEl.src = thumbUrl;
+          showToast("Ustawiono miniature dla " + (v.product_name || v.product_id));
+          refreshModalBadgesAndAdmin();
+          applyFilters();
+        });
+      });
     }
 
     var demoBtn = document.getElementById("damVizModalDemo");
@@ -1787,16 +2337,41 @@
     var winExpBtn = document.getElementById("damVizModalWinExplorer");
     if (winExpBtn) {
       winExpBtn.addEventListener("click", function () {
-        var path = this.getAttribute("data-path") || "";
+        /* Zrodlo prawdy = aktywny wariant (S gdy hero = S), nie stare data-path */
+        var v = items[activeIdx] || first;
+        var path = (v && v.path) || this.getAttribute("data-path") || "";
+        if (path) this.setAttribute("data-path", path);
         if (!path) {
           showToast("Brak sciezki produktu");
           return;
         }
-        if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
-          window.DamPaths.openFolderInExplorer(path);
+        /* Folder = reveal + select pliku (NIE openFolderInExplorer, ktore bierze tylko katalog) */
+        if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
+          window.DamPaths.revealInExplorer(path);
           return;
         }
-        if (window.DamPaths) window.DamPaths.revealInExplorer(path);
+        if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+          window.DamPaths.openFolderInExplorer(path);
+        }
+      });
+    }
+
+    /* --- OPEN FILE (left of copy): default app + clipboard --- */
+    var openFileBtn = document.getElementById("damVizModalOpenFile");
+    if (openFileBtn) {
+      openFileBtn.addEventListener("click", function () {
+        var path = this.getAttribute("data-path") || "";
+        if (!path) {
+          showToast("Brak sciezki pliku");
+          return;
+        }
+        if (window.DamPaths && typeof window.DamPaths.openFileAndCopyPath === "function") {
+          window.DamPaths.openFileAndCopyPath(path);
+          return;
+        }
+        if (window.DamPaths && typeof window.DamPaths.copyPortablePath === "function") {
+          window.DamPaths.copyPortablePath(path);
+        }
       });
     }
 
@@ -1942,8 +2517,9 @@
         : '<span class="dam-viz-badge dam-viz-badge--brand">' + esc(brand) + "</span>";
 
     /* Faza 5/P2: "Pokaz wszystko" - folder istnieje, brak realnej wizki -> wyraznie
-       wyszarzony placeholder (nie pelnoprawny kafelek). Nigdy w widoku domyslnym. */
-    var noViz = first.has_viz === false;
+       wyszarzony placeholder. Tylko gdy ZADEN wariant grupy nie ma wizki
+       (nie regresuj karty produktu przez starsza rewizje bez WIZKI). */
+    var noViz = !items.some(itemHasViz);
 
     return (
       '<article class="dam-viz-card dam-viz-card--clickable' +
@@ -2281,7 +2857,8 @@
   function normalizeSearchText(s) {
     return String(s || "")
       .toLowerCase()
-      .replace(/[_\-]+/g, " ")
+      /* ASCII hyphen + em/en dash z nazw folderow X: (U+2014/U+2013) */
+      .replace(/[_\-\u2013\u2014]+/g, " ")
       .replace(/\s+/g, " ")
       .trim();
   }
@@ -2345,6 +2922,10 @@
      100-350% = wizualizacja wypelnia krawedzie L/P, potem rosnie kafelek.
      Bazowo grafika ma 120% (CARD_IMG_BASE_SCALE). */
   function applyCardZoom(pct) {
+    /* HARD: copy branding density — DamCardZoom applies vars to vizGrid + assoc pane. */
+    if (window.DamCardZoom && typeof window.DamCardZoom.apply === "function") {
+      return window.DamCardZoom.apply(pct);
+    }
     var n = Math.round(Number(pct) || 100);
     if (n < CARD_ZOOM_MIN) n = CARD_ZOOM_MIN;
     if (n > CARD_ZOOM_MAX) n = CARD_ZOOM_MAX;
@@ -2680,12 +3261,24 @@
     var lastIndexMtime = 0;
 
     function loadIndex() {
-      if (window.DamSearch && typeof window.DamSearch.reload === "function") {
-        return window.DamSearch.reload().then(function () { return window._DAM_FILE_INDEX; });
+      if (window.DamLoader && typeof window.DamLoader.start === "function") {
+        window.DamLoader.start("Skojarzenia…");
       }
-      return fetch("data/file-index.json?_=" + Date.now()).then(function (r) {
-        if (!r.ok) throw new Error("file-index.json");
-        return r.json();
+      var p;
+      if (window.DamSearch && typeof window.DamSearch.reload === "function") {
+        p = window.DamSearch.reload().then(function () {
+          return window._DAM_FILE_INDEX;
+        });
+      } else {
+        p = fetch("data/file-index.json?_=" + Date.now()).then(function (r) {
+          if (!r.ok) throw new Error("file-index.json");
+          return r.json();
+        });
+      }
+      return p.finally(function () {
+        if (window.DamLoader && typeof window.DamLoader.done === "function") {
+          window.DamLoader.done();
+        }
       });
     }
 

@@ -1,17 +1,4 @@
 {
-  "grafik": [
-    {
-      "name": "Krzysztof Wieczorek",
-      "email": "krzysztof.wieczorek@kubara.pl"
-    },
-    {
-      "name": "Szymon Ryngwelski",
-      "email": "szymon.ryngwelski@kubara.pl"
-    },
-    {
-      "name": "Sylwia Zarychta",
-      "email": "sylwia.zarychta@kubara.pl"
-    }
-  ],
+  "grafik": [],
   "_readme": "Grupy odbiorcow powiadomien. Edytuj ta liste, aby dodac/usunac osobe - kod NIE trzeba zmieniac (2026-07-18)."
 }

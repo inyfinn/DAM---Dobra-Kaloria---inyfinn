@@ -90,6 +90,17 @@
   gap: 10px 8px;
 }
 
+/* Skeleton state: full-width 5-col tile cards, no scrollport. */
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-media-preview__assoc-col--materials > .dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-viz-modal__assoc > .dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: start;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 /* Panele Elementy / Surowe elementy: wlasny scroll, wheel musi dzialac */
 .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__elementy-panel {
   flex: 0 1 auto;
@@ -110,7 +121,8 @@
 }
 
 .dam-viz-modal-box--assoc-split .dam-viz-modal__actions {
-  margin-top: 14px;
+  /* Body flex gap owns stack rhythm; keep only card-style +4px nudge. */
+  margin-top: var(--dam-viz-card-actions-extra-gap, 4px);
 }
 
 /* Hide legacy bottom assoc if any leftover inside body */
@@ -187,6 +199,13 @@
   .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-viz-modal__assoc > .dam-media-preview__assoc-grid {
     max-height: 220px;
     overflow-y: auto;
+  }
+
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-media-preview__assoc-col--materials > .dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading,
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-viz-modal__assoc > .dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading {
+    max-height: none;
+    overflow: hidden;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 

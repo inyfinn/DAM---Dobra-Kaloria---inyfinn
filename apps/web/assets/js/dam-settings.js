@@ -28,6 +28,44 @@
     );
   }
 
+  function isAdminRole() {
+    var role =
+      (window.DamApi && typeof DamApi.role === "function" && DamApi.role()) ||
+      localStorage.getItem("dam_role") ||
+      "";
+    return String(role).toLowerCase() === "admin";
+  }
+
+  /** Karty / akcje tylko dla admina (Historia, grupy powiadomien). */
+  function gateAdminSettingsUi() {
+    var hist = document.getElementById("historiaZmian");
+    var notify = document.getElementById("damNotificationGroups");
+    if (!isAdminRole()) {
+      if (hist) {
+        hist.setAttribute("hidden", "");
+        hist.setAttribute("aria-hidden", "true");
+      }
+      if (notify) {
+        notify.querySelectorAll("button, input, select, textarea").forEach(function (el) {
+          el.disabled = true;
+        });
+        var meta = notify.querySelector(".dam-widget__meta");
+        if (!notify.querySelector("[data-admin-gate-hint]")) {
+          var hint = document.createElement("p");
+          hint.className = "dam-widget__meta";
+          hint.setAttribute("data-admin-gate-hint", "1");
+          hint.textContent = "Edycja list odbiorców wymaga roli administratora.";
+          var body = notify.querySelector(".dam-widget__body");
+          if (body) body.appendChild(hint);
+          else notify.appendChild(hint);
+        }
+      }
+    } else if (hist) {
+      hist.removeAttribute("hidden");
+      hist.removeAttribute("aria-hidden");
+    }
+  }
+
   function initials(name) {
     var parts = String(name || "")
       .trim()
@@ -98,9 +136,192 @@
     } catch (e) { /* ignore */ }
   }
 
-  /* ---------- Section filter (chips, nie scroll) + keyword search ---------- */
+  /* ---------- Section filter (chips) + command-palette search (UI only) ---------- */
   var _settingsChipFilter = "all";
   var _settingsSearchQ = "";
+
+  /**
+   * Rejestr skrótów UI (NIE produkty / wizki / branding assets).
+   * Szukanie „historia” musi trafić tu + w kartę #historiaZmian.
+   */
+  var UI_JUMP_REGISTRY = [
+    {
+      id: "settings-disk-history",
+      label: "Historia zmian na dysku",
+      where: "Ustawienia → Dysk",
+      keywords: "historia zmian dysk changelog change-log status wariantu nieaktualne rename log zatwierdzonych history",
+      href: "#historiaZmian",
+      icon: "uil-history",
+    },
+    {
+      id: "settings-disk-paths",
+      label: "Urządzenia i ścieżki Marketing",
+      where: "Ustawienia → Dysk",
+      keywords: "dysk sciezka ścieżka folder urzadzenie urządzenie archiwum polska eksport marketing path device sesja",
+      href: "#damDisk",
+      icon: "uil-folder",
+    },
+    {
+      id: "settings-profile",
+      label: "Profil",
+      where: "Ustawienia → Profil",
+      keywords: "profil imie imię nazwa stanowisko telefon email konto rola",
+      href: "#damProfile",
+      icon: "uil-user",
+    },
+    {
+      id: "settings-appearance",
+      label: "Wygląd panelu",
+      where: "Ustawienia → Wygląd",
+      keywords: "wyglad wygląd motyw theme jasny ciemny kolor akcent",
+      href: "#damAppearance",
+      icon: "uil-palette",
+    },
+    {
+      id: "settings-prefs",
+      label: "Preferencje",
+      where: "Ustawienia → Preferencje",
+      keywords: "preferencje podpowiedzi tooltips marka synology usuwanie bezpieczenstwo",
+      href: "#damPrefs",
+      icon: "uil-sliders-v",
+    },
+    {
+      id: "settings-integrations",
+      label: "Integracje (karta w ustawieniach)",
+      where: "Ustawienia → Integracje",
+      keywords: "integracje asana teams entra oauth synology",
+      href: "#damIntegrations",
+      icon: "uil-link",
+    },
+    {
+      id: "settings-notify",
+      label: "Powiadomienia",
+      where: "Ustawienia → Powiadomienia",
+      keywords: "powiadomienia notify email odbiorcy",
+      href: "#damNotificationGroups",
+      icon: "uil-users-alt",
+    },
+    {
+      id: "settings-naming",
+      label: "Nazewnictwo",
+      where: "Ustawienia → Nazewnictwo",
+      keywords: "nazewnictwo naming doypack folia nosnik typ",
+      href: "#damNamingPolicy",
+      icon: "uil-tag-alt",
+    },
+    {
+      id: "settings-instructions",
+      label: "Instrukcje programu",
+      where: "Ustawienia → Instrukcje",
+      keywords: "instrukcje programu program-instructions reguly zasady",
+      href: "#damProgramInstructions",
+      icon: "uil-book-open",
+    },
+    {
+      id: "settings-danger",
+      label: "Strefa ryzyka",
+      where: "Ustawienia → System",
+      keywords: "strefa ryzyka danger clear local prefs usuwanie",
+      href: "#damDangerZone",
+      icon: "uil-exclamation-triangle",
+    },
+    {
+      id: "nav-inbox-historia",
+      label: "Historia (Wiadomości)",
+      where: "Wiadomości → Zgłoszenia → Historia",
+      keywords: "historia inbox wiadomosci wiadomości moderacja decyzje zgloszenia zgłoszenia undo redo",
+      href: "inbox.html?tag=historia",
+      icon: "uil-envelope",
+    },
+    {
+      id: "nav-inbox",
+      label: "Wiadomości",
+      where: "Menu → Wiadomości",
+      keywords: "wiadomosci wiadomości inbox skrzynka zgloszenia asana teams",
+      href: "inbox.html",
+      icon: "uil-envelope",
+    },
+    {
+      id: "nav-viz-history",
+      label: "Historia zmian na dysku (Wizualizacje)",
+      where: "Wizualizacje → pasek Dysk (ADMIN ON)",
+      keywords: "historia zmian wizualizacje dysk admin changelog viz",
+      href: "visualizations.html#damChangeLogBar",
+      icon: "uil-image",
+    },
+    {
+      id: "nav-viz",
+      label: "Wizualizacje",
+      where: "Menu → Wizualizacje",
+      keywords: "wizualizacje viz miniatury produkty",
+      href: "visualizations.html",
+      icon: "uil-image",
+    },
+    {
+      id: "nav-explorer",
+      label: "Eksplorer",
+      where: "Menu → Eksplorer",
+      keywords: "eksplorer explorer folder dysk pliki",
+      href: "explorer.html",
+      icon: "uil-folder-open",
+    },
+    {
+      id: "nav-branding",
+      label: "Branding",
+      where: "Menu → Branding",
+      keywords: "branding materialy materiały marketing",
+      href: "branding.html",
+      icon: "uil-palette",
+    },
+    {
+      id: "nav-integrations",
+      label: "Integracje",
+      where: "Menu → Integracje",
+      keywords: "integracje asana teams microsoft entra fmcg",
+      href: "integrations.html",
+      icon: "uil-plug",
+    },
+    {
+      id: "nav-costs",
+      label: "Kalkulator kosztów",
+      where: "Menu → Kalkulator",
+      keywords: "kalkulator kosztow kosztów costs fmcg",
+      href: "costs.html",
+      icon: "uil-calculator-alt",
+    },
+    {
+      id: "nav-invoices",
+      label: "Faktury",
+      where: "Menu → Faktury",
+      keywords: "faktury invoices erp",
+      href: "invoices.html",
+      icon: "uil-invoice",
+    },
+    {
+      id: "nav-profile-session",
+      label: "Sesja urządzenia",
+      where: "Profil → ścieżki",
+      keywords: "sesja urzadzenia urządzenia device path sciezka",
+      href: "profile.html#damDevicePathsRoot",
+      icon: "uil-desktop",
+    },
+    {
+      id: "nav-help",
+      label: "Pomoc / Docs",
+      where: "Menu → Pomoc",
+      keywords: "pomoc help docs dokumentacja samouczek",
+      href: "help.html",
+      icon: "uil-question-circle",
+    },
+    {
+      id: "nav-activity",
+      label: "Aktywność",
+      where: "Menu użytkownika → Aktywność",
+      keywords: "aktywnosc aktywność activity log",
+      href: "activity.html",
+      icon: "uil-chart-line",
+    },
+  ];
 
   function normSearch(s) {
     var t = String(s || "").toLowerCase();
@@ -108,6 +329,128 @@
       t = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     } catch (e) { /* ignore */ }
     return t.replace(/\s+/g, " ").trim();
+  }
+
+  function matchJumpQuery(item, q) {
+    if (!q) return false;
+    var blob = normSearch(
+      [item.label, item.where, item.keywords, item.id, item.href].join(" ")
+    );
+    return blob.indexOf(q) !== -1;
+  }
+
+  function filterJumpRegistry(q) {
+    if (!q) return [];
+    return UI_JUMP_REGISTRY.filter(function (item) {
+      return matchJumpQuery(item, q);
+    }).slice(0, 12);
+  }
+
+  function escHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function navigateJump(href) {
+    var h = String(href || "").trim();
+    if (!h) return;
+    if (h.charAt(0) === "#") {
+      jumpToSettingsHash(h.slice(1));
+      return;
+    }
+    if (/^settings\.html#/i.test(h)) {
+      jumpToSettingsHash(h.split("#")[1] || "");
+      return;
+    }
+    window.location.href = h;
+  }
+
+  function jumpToSettingsHash(rawId) {
+    var id = String(rawId || "")
+      .replace(/^#/, "")
+      .trim();
+    if (!id) return;
+    if (id === "damDiskHistory") id = "historiaZmian";
+    var sec = document.getElementById(id);
+    if (!sec) {
+      window.location.hash = id;
+      return;
+    }
+    var sectionKey = sec.getAttribute("data-section") || "all";
+    try {
+      if (sectionKey && sectionKey !== "system") {
+        sessionStorage.setItem("dam_settings_filter", sectionKey);
+      }
+    } catch (e) { /* ignore */ }
+    _settingsChipFilter = sectionKey === "system" ? "all" : sectionKey;
+    var nav = document.getElementById("damSettingsFilter");
+    if (nav) {
+      nav.querySelectorAll(".dam-settings-jump__chip").forEach(function (chip) {
+        var on = chip.getAttribute("data-filter") === _settingsChipFilter;
+        chip.classList.toggle("is-active", on);
+        chip.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    }
+    _settingsSearchQ = "";
+    var input = document.getElementById("damSettingsSearch");
+    if (input) input.value = "";
+    applySettingsVisibility();
+    try {
+      history.replaceState(null, "", "#" + id);
+    } catch (e2) {
+      window.location.hash = id;
+    }
+    setTimeout(function () {
+      sec.scrollIntoView({ behavior: "smooth", block: "start" });
+      sec.classList.add("is-hash-focus");
+      setTimeout(function () {
+        sec.classList.remove("is-hash-focus");
+      }, 1600);
+      if (id === "historiaZmian" && window.DamTagEdit && typeof window.DamTagEdit.refreshChangeLogBar === "function") {
+        window.DamTagEdit.refreshChangeLogBar();
+      }
+    }, 60);
+  }
+
+  function renderJumpResults(hits) {
+    var list = document.getElementById("damSettingsJumpResults");
+    if (!list) return 0;
+    if (!hits.length) {
+      list.hidden = true;
+      list.innerHTML = "";
+      return 0;
+    }
+    list.hidden = false;
+    list.innerHTML = hits
+      .map(function (item, idx) {
+        return (
+          '<li class="dam-settings-jump-results__item" role="option">' +
+          '<button type="button" class="dam-settings-jump-results__btn" data-jump-href="' +
+          escHtml(item.href) +
+          '" data-jump-id="' +
+          escHtml(item.id) +
+          '"' +
+          (idx === 0 ? ' data-jump-first="1"' : "") +
+          ">" +
+          '<i class="uil ' +
+          escHtml(item.icon || "uil-arrow-right") +
+          '" aria-hidden="true"></i>' +
+          '<span class="dam-settings-jump-results__text">' +
+          '<span class="dam-settings-jump-results__label">' +
+          escHtml(item.label) +
+          "</span>" +
+          '<span class="dam-settings-jump-results__where">' +
+          escHtml(item.where) +
+          "</span>" +
+          "</span>" +
+          "</button></li>"
+        );
+      })
+      .join("");
+    return hits.length;
   }
 
   function applySettingsVisibility() {
@@ -118,14 +461,17 @@
     var chip = _settingsChipFilter || "all";
     var isChipAll = chip === "all";
     var matchCount = 0;
+    var jumpHits = filterJumpRegistry(q);
+    var jumpCount = renderJumpResults(jumpHits);
 
     grid.classList.toggle("is-filtered", !isChipAll || !!q);
     grid.classList.toggle("is-searching", !!q);
 
     grid.querySelectorAll(".dam-widget[data-section]").forEach(function (sec) {
       var secId = sec.getAttribute("data-section");
-      var chipOk = isChipAll ? true : secId === chip;
-      if (secId === "system") chipOk = isChipAll && !q;
+      /* HARD: przy wyszukiwaniu chip NIE ukrywa trafień (np. Profil + „historia”). */
+      var chipOk = q ? true : isChipAll ? true : secId === chip;
+      if (!q && secId === "system") chipOk = isChipAll;
 
       var rows = sec.querySelectorAll(".dam-sw-row[data-search]");
       var anyRowMatch = false;
@@ -148,12 +494,13 @@
       var secBlob =
         normSearch(sec.getAttribute("data-search") || "") +
         " " +
+        normSearch(sec.id || "") +
+        " " +
         normSearch((sec.querySelector(".dam-widget__title") || {}).textContent || "") +
         " " +
         normSearch((sec.querySelector(".dam-widget__meta") || {}).textContent || "");
       var secHit = !q || secBlob.indexOf(q) !== -1 || anyRowMatch;
       var show = chipOk && secHit;
-      if (q && rows.length && anyRowMatch) show = chipOk && true;
 
       sec.classList.toggle("is-filtered-out", !show);
       if (show) {
@@ -167,10 +514,19 @@
     if (hint) {
       if (q) {
         hint.hidden = false;
-        hint.textContent =
-          matchCount > 0
-            ? "Znaleziono " + matchCount + " sekcji dla „" + _settingsSearchQ.trim() + "”."
-            : "Brak ustawień dla „" + _settingsSearchQ.trim() + "”.";
+        var total = matchCount + jumpCount;
+        if (total > 0) {
+          hint.textContent =
+            "Znaleziono " +
+            matchCount +
+            " kart" +
+            (jumpCount ? " + " + jumpCount + " skrótów" : "") +
+            " dla „" +
+            _settingsSearchQ.trim() +
+            "”.";
+        } else {
+          hint.textContent = "Brak ustawień ani skrótów dla „" + _settingsSearchQ.trim() + "”.";
+        }
       } else {
         hint.hidden = true;
         hint.textContent = "";
@@ -214,6 +570,7 @@
 
   function initSettingsSearch() {
     var input = document.getElementById("damSettingsSearch");
+    var results = document.getElementById("damSettingsJumpResults");
     if (!input) return;
     var timer = null;
     function run() {
@@ -222,9 +579,32 @@
     }
     input.addEventListener("input", function () {
       clearTimeout(timer);
-      timer = setTimeout(run, 120);
+      timer = setTimeout(run, 80);
     });
     input.addEventListener("search", run);
+    if (results) {
+      results.addEventListener("click", function (ev) {
+        var btn = ev.target.closest("[data-jump-href]");
+        if (!btn || !results.contains(btn)) return;
+        ev.preventDefault();
+        navigateJump(btn.getAttribute("data-jump-href") || "");
+      });
+    }
+    input.addEventListener("keydown", function (ev) {
+      if (ev.key !== "Enter") return;
+      var first = document.querySelector("#damSettingsJumpResults [data-jump-first]");
+      if (first) {
+        ev.preventDefault();
+        navigateJump(first.getAttribute("data-jump-href") || "");
+      }
+    });
+
+    var hash = String(location.hash || "").replace(/^#/, "");
+    if (hash === "historiaZmian" || hash === "damDiskHistory" || hash === "damHistoriaZmian") {
+      setTimeout(function () {
+        jumpToSettingsHash(hash);
+      }, 120);
+    }
   }
 
   /* ---------- Theme (light/dark/system overlay) ---------- */
@@ -863,6 +1243,9 @@
   }
 
   function saveNotifications() {
+    if (!isAdminRole()) {
+      return Promise.resolve({ ok: false, error: "admin_required" });
+    }
     var payload = {
       grafik: (notifyState.grafik || []).filter(function (p) {
         return p && p.email && String(p.email).indexOf("@") > 0;
@@ -895,10 +1278,18 @@
     initProfile();
     initAccent();
     initPrefs();
+    gateAdminSettingsUi();
     loadInstructions();
     loadNaming();
     loadIntegrations();
     loadNotifications();
+    if (window.DamApi && typeof DamApi.me === "function") {
+      DamApi.me()
+        .then(function () {
+          gateAdminSettingsUi();
+        })
+        .catch(function () {});
+    }
   }
 
   if (document.readyState === "loading") {

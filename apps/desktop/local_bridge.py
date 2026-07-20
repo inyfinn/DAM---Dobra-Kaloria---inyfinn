@@ -8,6 +8,7 @@ CORS: allows http://127.0.0.1:8765
 Endpoints:
   GET  /health
   POST /reveal   {"path": "M:\\\\...\\\\file.png"}  -> explorer /select
+  POST /open     {"path": "M:\\\\...\\\\file.png"}  -> os.startfile (domyslna aplikacja Windows)
   POST /rename-index {"folder","from_index","to_index","dry_run?"} -> rename index in folder tree
   POST /lifecycle-status {"scope":"product|variant","status":"aktualne|nieaktualne|demo|clear","path",...}
                          -> suffix - F/- X/- D, archiwum, historia previous_name/path
@@ -331,6 +332,33 @@ def _focus_new_explorer_window(before: set) -> None:
         _focus_hwnd(hwnd)
 
 
+def _select_file_in_explorer(filepath: str) -> bool:
+    """Zaznacz DOKLADNY plik przez SHOpenFolderAndSelectItems.
+
+    `explorer /select,` bywa zawodne gdy folder WIZKI jest juz otwarty (Windows
+    zostawia poprzednie zaznaczenie - np. FRONT-L zamiast FRONT-S, ktore
+    faktycznie wyslal most). API shellowe wymusza selekcje wskazanego PIDL.
+    """
+    try:
+        import pythoncom
+        from win32com.shell import shell as w32shell
+    except Exception:
+        return False
+    pythoncom.CoInitialize()
+    try:
+        pidl = w32shell.SHParseDisplayName(filepath, 0)[0]
+        # apidl musi byc lista/tablica IDL (None -> TypeError w pywin32)
+        w32shell.SHOpenFolderAndSelectItems(pidl, [], 0)
+        return True
+    except Exception:
+        return False
+    finally:
+        try:
+            pythoncom.CoUninitialize()
+        except Exception:
+            pass
+
+
 def _reveal_worker(target: str, mode: str, args: list) -> None:
     """Watek daemon: preferuj karte+fokus, fallback = nowe okno + fokus."""
     try:
@@ -338,6 +366,51 @@ def _reveal_worker(target: str, mode: str, args: list) -> None:
             return
     except Exception:
         pass
+    # Select: najpierw SHOpenFolderAndSelectItems (dokladny plik), potem /select
+    if mode == "select":
+        try:
+            if _select_file_in_explorer(target):
+                # #region agent log
+                try:
+                    with open(
+                        Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
+                        "a",
+                        encoding="utf-8",
+                    ) as _f:
+                        _f.write(
+                            json.dumps(
+                                {
+                                    "sessionId": "a78fa0",
+                                    "hypothesisId": "SELECT",
+                                    "location": "local_bridge.py:_reveal_worker",
+                                    "message": "SHOpenFolderAndSelectItems ok",
+                                    "data": {
+                                        "basename": os.path.basename(target),
+                                        "path_tail": target[-90:],
+                                        "has_front_s": bool(
+                                            re.search(r"FRONT[-_ ]?S\b", os.path.basename(target), re.I)
+                                        ),
+                                        "has_front_l": bool(
+                                            re.search(r"FRONT[-_ ]?L\b", os.path.basename(target), re.I)
+                                        ),
+                                    },
+                                    "timestamp": int(time.time() * 1000),
+                                    "runId": "select-s-fix",
+                                },
+                                ensure_ascii=False,
+                            )
+                            + "\n"
+                        )
+                except Exception:
+                    pass
+                # #endregion
+                try:
+                    _focus_new_explorer_window(set())
+                except Exception:
+                    pass
+                return
+        except Exception:
+            pass
     before = _explorer_hwnds()
     try:
         _no_win = (
@@ -481,6 +554,22 @@ def reveal_in_explorer(target: str) -> dict:
             target=_reveal_worker, args=(target, mode, args), daemon=True
         ).start()
         return {"ok": True, "path": target, "command": mode}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc), "path": target}
+
+
+def open_in_default_app(target: str) -> dict:
+    """Otworz plik domyslna aplikacja Windows (os.startfile). Tylko pliki w Marketing."""
+    target = normalize_path(target)
+    if not os.path.exists(target):
+        return {"ok": False, "error": "path_not_found", "path": target}
+    if not _is_under_marketing(Path(target)):
+        return {"ok": False, "error": "path_outside_marketing", "path": target}
+    if not os.path.isfile(target) and not is_probably_file(target):
+        return {"ok": False, "error": "not_a_file", "path": target}
+    try:
+        os.startfile(target)  # type: ignore[attr-defined]
+        return {"ok": True, "path": target, "command": "startfile"}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc), "path": target}
 
@@ -4269,14 +4358,48 @@ def _media_video_poster_placeholder() -> tuple[int, bytes, str]:
     return 200, _VIDEO_POSTER_PLACEHOLDER_SVG, "image/svg+xml"
 
 
+def _media_video_duration_sec(target: str) -> float | None:
+    """Czas trwania wideo (ffprobe); None gdy niedostepne."""
+    try:
+        import subprocess
+
+        proc = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                target,
+            ],
+            check=True,
+            capture_output=True,
+            timeout=30,
+            text=True,
+        )
+        val = float((proc.stdout or "").strip() or "0")
+        return val if val > 0 else None
+    except Exception:
+        return None
+
+
 def _media_video_poster(target: str) -> tuple[int, bytes, str] | None:
-    """Klatka z wideo jako JPEG (miniatury w siatce branding)."""
+    """Klatka z wideo jako JPEG (~25% czasu trwania; fallback 0.5s)."""
     ext = Path(target).suffix.lower()
     if ext not in _VIDEO_EXT:
         return None
     try:
         import subprocess
         import tempfile
+
+        dur = _media_video_duration_sec(target)
+        if dur and dur > 1.0:
+            seek_sec = max(0.25, dur * 0.25)
+        else:
+            seek_sec = 0.5
+        seek_arg = f"{seek_sec:.3f}"
 
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
             out = tmp.name
@@ -4286,7 +4409,7 @@ def _media_video_poster(target: str) -> tuple[int, bytes, str] | None:
                     "ffmpeg",
                     "-y",
                     "-ss",
-                    "00:00:00.5",
+                    seek_arg,
                     "-i",
                     target,
                     "-frames:v",
@@ -4829,7 +4952,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, load_tag_proposals())
             return
         if parsed.path == "/change-log":
-            if self._require_login() is None:
+            # Log operacji na dysku - tylko admin (UI Historia / pasek Dysk).
+            if self._require_admin() is None:
                 return
             qs = parse_qs(parsed.query)
             limit = int((qs.get("limit") or ["40"])[0])
@@ -4872,15 +4996,18 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, **store})
             return
         if parsed.path == "/lifecycle-reconcile":
-            # Odswiez (pull) lub boot (mtime) - dysk -> program; boot moze przeniesc X do archiwum
-            user = self._require_login()
+            # pull = sync JSON z dysku (login); boot/mtime moze przenosic X -> tylko admin
+            qs = parse_qs(parsed.query)
+            mode = ((qs.get("mode") or ["pull"])[0] or "pull").strip().lower()
+            if mode in ("boot", "startup", "mtime"):
+                user = self._require_admin()
+            else:
+                user = self._require_login()
             if user is None:
                 return
             if lifecycle_status_mod is None:
                 self._json(500, {"ok": False, "error": "lifecycle_module_missing"})
                 return
-            qs = parse_qs(parsed.query)
-            mode = ((qs.get("mode") or ["pull"])[0] or "pull").strip().lower()
             pid_filter = ((qs.get("product_id") or [""])[0] or "").strip() or None
             actor = (user.get("email") or user.get("name") or "reconcile") if isinstance(user, dict) else "reconcile"
             if mode in ("boot", "startup", "mtime"):
@@ -5268,6 +5395,14 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, reveal_in_explorer(path))
             return
+        if parsed.path == "/open":
+            # Otworz plik w domyslnej aplikacji Windows (os.startfile).
+            path = (data.get("path") or "").strip()
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required"})
+                return
+            self._json(200, open_in_default_app(path))
+            return
         if parsed.path == "/open-image-resizer":
             # STREFA A3 / pkt 37: Inyfinn Image resizer (CLI albo GUI+Explorer)
             self._json(
@@ -5457,13 +5592,13 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, append_audit(payload))
             return
         if parsed.path == "/index/rebuild":
-            # Odswiez liste z dysku: kazda zalogowana sesja (nie tylko admin).
-            if self._require_login() is None:
+            # Przebudowa indeksu z dysku = mutate (PI auth.roles_and_privilege) - tylko admin.
+            if self._require_admin() is None:
                 return
             self._json(200, start_index_rebuild())
             return
         if parsed.path == "/branding/rebuild":
-            if self._require_login() is None:
+            if self._require_admin() is None:
                 return
             if not BUILD_BRANDING_INDEX.is_file():
                 self._json(500, {"ok": False, "error": "build_branding_missing"})
@@ -6313,7 +6448,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "count": len(incoming)})
             return
         if parsed.path == "/notification-groups":
-            if self._require_login() is None:
+            # Listy odbiorcow org-wide - tylko admin (nie user/power_user).
+            if self._require_admin() is None:
                 return
             incoming = data.get("groups") if isinstance(data.get("groups"), dict) else data
             if not isinstance(incoming, dict):

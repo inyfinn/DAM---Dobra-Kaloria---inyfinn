@@ -363,6 +363,14 @@
     return /\.[A-Za-z0-9]{1,8}$/.test(name);
   }
 
+  /** Basename pliku (lub ostatni segment folderu) ze sciezki index/local. */
+  function basename(path) {
+    var n = normSlashes(path);
+    if (!n) return "";
+    var i = n.lastIndexOf("/");
+    return i >= 0 ? n.slice(i + 1) : n;
+  }
+
   function pathHasVizSlot(p) {
     return /\/4\s*-\s*(wizki|visuals)(\/|$)/i.test(normSlashes(p));
   }
@@ -676,6 +684,103 @@
   }
 
   /**
+   * Otworz plik domyslna aplikacja Windows (bridge POST /open -> os.startfile).
+   */
+  function openInDefaultApp(indexPath) {
+    if (!hasBasePath()) {
+      openSetupModal();
+      showToast("Najpierw ustaw sciezke bazowa");
+      return Promise.resolve({ ok: false, error: "no_base_path" });
+    }
+    var local = toLocal(indexPath);
+    if (!looksLikeFile(local)) {
+      showToast("Wybierz plik do otwarcia", "error");
+      return Promise.resolve({ ok: false, error: "not_a_file" });
+    }
+    logAction("open_file", { path: indexPath, local_path: local, detail: "Otworz plik w domyslnej aplikacji" });
+    return checkBridge().then(function (ok) {
+      if (!ok) {
+        showToast("Funkcja niedostepna - uruchom aplikacje DAM (skrot na pulpicie).", "error");
+        return { ok: false, error: "bridge_offline", path: local };
+      }
+      return fetch(bridgeBase() + "/open", {
+        method: "POST",
+        headers: bridgeAuthHeaders(),
+        body: JSON.stringify({ path: local })
+      }).then(function (r) { return r.json(); }).then(function (res) {
+        if (res && res.ok) {
+          showToast("Otwarto plik w domyslnej aplikacji", "success");
+        } else {
+          var hint = bridgeErrorMessage(res && res.error);
+          showToast(hint || "Nie udalo sie otworzyc pliku.", "error");
+        }
+        return res;
+      }).catch(function () {
+        showToast("Blad polaczenia z mostem (open).", "error");
+        return { ok: false, error: "fetch_failed", path: local };
+      });
+    });
+  }
+
+  /**
+   * Otworz plik + skopiuj sciezke przenosna (Marketing\\...) do schowka.
+   * Uzywane przez przycisk "Otworz plik" w modalach (lewo od Kopiuj sciezke).
+   */
+  function openFileAndCopyPath(indexPath) {
+    if (!indexPath) {
+      showToast("Brak sciezki pliku", "error");
+      return Promise.resolve({ ok: false, error: "path_required" });
+    }
+    if (!hasBasePath()) {
+      openSetupModal();
+      showToast("Najpierw ustaw sciezke bazowa");
+      return Promise.resolve({ ok: false, error: "no_base_path" });
+    }
+    var local = toLocal(indexPath);
+    if (!looksLikeFile(local)) {
+      showToast("Wybierz plik do otwarcia", "error");
+      return Promise.resolve({ ok: false, error: "not_a_file" });
+    }
+    var portable = toPortablePath(indexPath) || local;
+    var clipP =
+      navigator.clipboard && navigator.clipboard.writeText
+        ? navigator.clipboard.writeText(portable)
+        : Promise.resolve();
+    logAction("open_file_copy", {
+      path: indexPath,
+      local_path: local,
+      detail: "Otworz plik + kopiuj sciezke przenosna"
+    });
+    return clipP.catch(function () { /* ignore clipboard fail */ }).then(function () {
+      return checkBridge().then(function (ok) {
+        if (!ok) {
+          showToast("Skopiowano sciezke. Uruchom aplikacje DAM, aby otworzyc plik.");
+          return { ok: false, error: "bridge_offline", copied: true, path: local };
+        }
+        return fetch(bridgeBase() + "/open", {
+          method: "POST",
+          headers: bridgeAuthHeaders(),
+          body: JSON.stringify({ path: local })
+        }).then(function (r) { return r.json(); }).then(function (res) {
+          if (res && res.ok) {
+            showToast("Otwarto plik i skopiowano sciezke", "success");
+          } else {
+            var hint = bridgeErrorMessage(res && res.error);
+            showToast(
+              hint || ("Skopiowano sciezke. Nie udalo sie otworzyc pliku."),
+              res && res.error === "path_not_found" ? "error" : "error"
+            );
+          }
+          return Object.assign({}, res || {}, { copied: true });
+        }).catch(function () {
+          showToast("Skopiowano sciezke. Blad mostu przy otwieraniu pliku.", "error");
+          return { ok: false, error: "fetch_failed", copied: true, path: local };
+        });
+      });
+    });
+  }
+
+  /**
    * Pokaz w Eksploratorze: otwiera folder i ZAZNACZA plik (nie otwiera pliku).
    * Dla folderu: otwiera ten folder.
    */
@@ -715,9 +820,12 @@
             sentAuth: !!headers.Authorization,
             pathLen: (local || "").length,
             looksFile: looksLikeFile(local),
+            basename: basename(local),
+            hasFrontS: /FRONT[-_ ]?S\b/i.test(basename(local) || ""),
+            hasFrontL: /FRONT[-_ ]?L\b/i.test(basename(local) || ""),
           },
           timestamp: Date.now(),
-          runId: "post-fix",
+          runId: "select-s-fix",
         }),
       }).catch(function () {});
       // #endregion
@@ -737,7 +845,7 @@
             message: "reveal HTTP status",
             data: { status: r.status, sentAuth: !!headers.Authorization },
             timestamp: Date.now(),
-            runId: "post-fix",
+            runId: "select-s-fix",
           }),
         }).catch(function () {});
         // #endregion
@@ -752,9 +860,14 @@
             hypothesisId: "B",
             location: "dam-paths.js:revealInExplorer:body",
             message: "reveal JSON body",
-            data: { ok: !!(res && res.ok), error: (res && res.error) || null },
+            data: {
+              ok: !!(res && res.ok),
+              error: (res && res.error) || null,
+              command: (res && res.command) || null,
+              pathTail: res && res.path ? String(res.path).slice(-90) : null,
+            },
             timestamp: Date.now(),
-            runId: "post-fix",
+            runId: "select-s-fix",
           }),
         }).catch(function () {});
         // #endregion
@@ -1098,10 +1211,13 @@
     relativeFromMarketing: relativeFromMarketing,
     toLocal: toLocal,
     parentOf: parentOf,
+    basename: basename,
     resolveWinFolderPath: resolveWinFolderPath,
     toPortablePath: toPortablePath,
     copyPortablePath: copyPortablePath,
     copyPath: copyPath,
+    openInDefaultApp: openInDefaultApp,
+    openFileAndCopyPath: openFileAndCopyPath,
     revealInExplorer: revealInExplorer,
     openFolderInExplorer: openFolderInExplorer,
     shareViaSynology: shareViaSynology,

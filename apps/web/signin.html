@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>DAM - Dobra Kaloria - Logowanie</title>
-  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=bust20260720a">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=modal90vw20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=pagesub20260721b">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=chgread20260721a">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <script>
@@ -151,7 +151,7 @@
           <form id="damAuthForm" class="geex-content__authentication__form" autocomplete="on">
             <h2 class="geex-content__authentication__title">Witaj w DAM</h2>
             <p class="geex-content__authentication__subtitle">
-              Zaloguj siÄ™ kontem firmowym. MoĹĽesz wylogowaÄ‡ siÄ™ w menu uĹĽytkownika.
+              Zaloguj się kontem firmowym. Możesz wylogować się w menu użytkownika.
             </p>
 
             <div class="dam-auth-mode" id="authModeTabs" role="tablist" aria-label="Tryb konta" hidden>
@@ -174,19 +174,19 @@
 
             <div class="geex-content__authentication__form-group">
               <div class="geex-content__authentication__label-wrapper">
-                <label for="authPassword">HasĹ‚o</label>
+                <label for="authPassword">Hasło</label>
               </div>
               <input type="password" id="authPassword" name="password" required
-                     minlength="4" placeholder="HasĹ‚o" autocomplete="current-password">
+                     minlength="4" placeholder="Hasło" autocomplete="current-password">
               <i class="uil-eye toggle-password-type" id="togglePassword" role="button"
-                 tabindex="0" aria-label="PokaĹĽ lub ukryj hasĹ‚o"></i>
+                 tabindex="0" aria-label="Pokaż lub ukryj hasło"></i>
             </div>
 
             <div class="geex-content__authentication__form-group custom-checkbox" id="rememberWrap">
               <input type="checkbox" class="geex-content__authentication__checkbox-input"
                      id="rememberDevice" checked>
               <label class="geex-content__authentication__checkbox-label" for="rememberDevice">
-                ZapamiÄ™taj to urzÄ…dzenie
+                Zapamiętaj to urządzenie
               </label>
             </div>
 
@@ -196,7 +196,7 @@
             <p class="dam-auth-msg" id="authMsg" role="status" aria-live="polite"></p>
 
             <div class="geex-content__authentication__form-footer" id="authFooter">
-              Nie masz konta? PoproĹ› administratora o dostÄ™p.
+              Nie masz konta? Poproś administratora o dostęp.
             </div>
           </form>
         </div>
@@ -208,8 +208,8 @@
   </main>
 
   <script src="./assets/js/main.js"></script>
-  <script src="./assets/js/dam-runtime.js?v=20260718auth3"></script>
-  <script src="./assets/js/dam-api.js?v=20260719golive1"></script>
+  <script src="./assets/js/dam-runtime.js?v=20260719auth3"></script>
+  <script src="./assets/js/dam-api.js?v=privgate20260721a"></script>
   <script>
     (function () {
       var mode = "login";
@@ -250,7 +250,7 @@
             });
           }
         } else {
-          footer.textContent = "Nie masz konta? PoproĹ› administratora o dostÄ™p.";
+          footer.textContent = "Nie masz konta? Poproś administratora o dostęp.";
         }
         msg.textContent = "";
         msg.className = "dam-auth-msg";
@@ -306,7 +306,7 @@
         }
         if (mode === "register" && !registrationOpen) {
           msg.className = "dam-auth-msg is-err";
-          msg.textContent = "Rejestracja publiczna wyĹ‚Ä…czona. PoproĹ› administratora.";
+          msg.textContent = "Rejestracja publiczna wyłączona. Poproś administratora.";
           return;
         }
         var email = (document.getElementById("authEmail").value || "").trim();

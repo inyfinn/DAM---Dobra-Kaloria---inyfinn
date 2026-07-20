@@ -47,9 +47,42 @@
     return tipEl;
   }
 
+  function lifecycleTipChipClass(letter) {
+    var l = String(letter || "—").trim();
+    if (l === "F") return "dam-lifecycle-chip dam-lifecycle-chip--f";
+    if (l === "X") return "dam-lifecycle-chip dam-lifecycle-chip--x";
+    if (l === "D") return "dam-lifecycle-chip dam-lifecycle-chip--d";
+    return "dam-lifecycle-chip dam-lifecycle-chip--clear";
+  }
+
+  function escapeTipText(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
   function showTip(el, text) {
     var tip = getOrCreateTip();
-    tip.textContent = text;
+    var lifeLetter = el && el.getAttribute ? el.getAttribute("data-life-letter") : "";
+    var isRestore =
+      el &&
+      (el.hasAttribute("data-life-restore") ||
+        (el.classList && el.classList.contains("dam-life-hist__act--restore")));
+    if (isRestore) {
+      var lit = String(lifeLetter || "—").trim() || "—";
+      if (lit === "∅") lit = "—";
+      tip.innerHTML =
+        '<span class="dam-life-hist__restore-tip">Przywraca status tej pozycji ' +
+        '<span class="' +
+        lifecycleTipChipClass(lit) +
+        '" aria-hidden="true">' +
+        escapeTipText(lit) +
+        "</span></span>";
+    } else {
+      tip.textContent = text;
+    }
     tip.style.visibility = "hidden";
     tip.style.display = "block";
     tip.setAttribute("aria-hidden", "false");
@@ -243,10 +276,12 @@
 
     el.addEventListener("mouseenter", function () {
       if (!isEnabled()) return;
+      if (el.closest && el.closest("[data-dam-tip-suppress]")) return;
       var t = tipText(el);
       if (!t) return;
       clearTimeout(showTimer);
       showTimer = setTimeout(function () {
+        if (el.closest && el.closest("[data-dam-tip-suppress]")) return;
         showTip(el, t);
       }, DELAY_MS);
     });
@@ -254,6 +289,7 @@
     el.addEventListener("mouseleave", hideTip);
     el.addEventListener("focus", function () {
       if (!isEnabled()) return;
+      if (el.closest && el.closest("[data-dam-tip-suppress]")) return;
       var t = tipText(el);
       if (!t) return;
       showTip(el, t);
@@ -265,6 +301,11 @@
   function shouldAutoTip(el) {
     if (!el || el.nodeType !== 1) return false;
     if (el.disabled || el.getAttribute("aria-hidden") === "true") return false;
+    /* Opt-out: warianty viz (wlasny popover na re-click) i jawny data-dam-no-tip. */
+    if (el.hasAttribute("data-dam-no-tip")) return false;
+    if (el.closest && el.closest("[data-dam-tip-suppress], [data-dam-no-tip]")) return false;
+    if (el.classList && el.classList.contains("dam-viz-modal__variant")) return false;
+    if (el.closest && el.closest(".dam-viz-modal__variant")) return false;
     /* Nie tipuj kontenerow (modal/dialog/nav/menu) - tylko interaktywne elementy.
        Inaczej aria-label na <nav> pokazuje stray tip np. "Konto" w menu profilu. */
     var role = el.getAttribute("role") || "";
@@ -333,6 +374,7 @@
     enable: function () { localStorage.setItem(STORAGE_KEY, "on"); },
     disable: function () { localStorage.setItem(STORAGE_KEY, "off"); },
     isEnabled: isEnabled,
+    hide: hideTip,
     bind: bindAll
   };
 })();

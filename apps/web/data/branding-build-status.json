@@ -1,9 +1,9 @@
 {
   "ok": true,
-  "built_at": "2026-07-20T16:47:56.993666+00:00",
-  "asset_count": 49715,
-  "wizki_count": 2011,
+  "built_at": "2026-07-20T22:32:32.872090+00:00",
+  "asset_count": 51615,
+  "wizki_count": 2014,
   "perspective_count": 1811,
-  "linked_product_count": 39237,
-  "elapsed_sec": 100.75
+  "linked_product_count": 41136,
+  "elapsed_sec": 239.17
 }

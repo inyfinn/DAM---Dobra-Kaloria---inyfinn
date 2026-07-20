@@ -5,7 +5,7 @@
   <style id="dam-shell-boot-critical">
 html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
   </style>
-  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=shellboot20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=shellboot20260721a">
   <script>
   (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
   </script>
@@ -14,7 +14,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>Faktury - DAM</title>
 
-	<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 	<!-- inject:css-->
 	<link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
@@ -33,9 +33,9 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=motion20260720a">
-<link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
+<link rel="stylesheet" href="./assets/css/dam-app.css?v=pagesub20260721b">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=helprestart20260720a">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=modal90vw20260720a">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=chgread20260721a">
 </head>
 
 <body class="geex-dashboard demo-invoice is-booting">
@@ -267,7 +267,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 			<div class="geex-header__action__item">
 				<button class="geex-btn geex-btn__customizer">
 					<i class="uil uil-pen"></i> 
-					<span>Dostosuj wygl?d</span>
+					<span>Dostosuj wygląd</span>
 				</button>
 			</div> 
 		</div>
@@ -507,7 +507,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 		</nav>
         <div class="geex-sidebar__footer">
 			<span class="geex-sidebar__footer__title">DAM</span>
-			<p class="geex-sidebar__footer__copyright">Panel asset?w opakowa?</p>
+			<p class="geex-sidebar__footer__copyright">Panel assetów opakowań</p>
 			<p class="geex-sidebar__footer__author"><a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> &copy; 2026 <span class="dam-app-version" title="Wersja programu DAM">v1.00</span></p>
 		</div>
 	</div>
@@ -518,7 +518,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 
 <div class="geex-customizer">
 	<div class="geex-customizer__header">
-		<h4 class="geex-customizer__title">Dostosuj wygl?d</h4>
+		<h4 class="geex-customizer__title">Dostosuj wygląd</h4>
 		<button class="geex-btn geex-btn__customizer-close">
 			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 				<path d="M18 7.05L16.95 6L12 10.95L7.05 6L6 7.05L10.95 12L6 16.95L7.05 18L12 13.05L16.95 18L18 16.95L13.05 12L18 7.05Z" fill="#BCBFDB"/>
@@ -620,7 +620,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         </button>
         <button class="geex-btn geex-btn__customizer"> 
             <i class="uil uil-pen"></i> 
-            <span>Dostosuj wygl?d</span>  
+            <span>Dostosuj wygląd</span>  
         </button>
     </div> 
     <div class="geex-content__header__action__wrap">
@@ -846,7 +846,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
                             <li class="geex-content__header__popup__item">
                                 <a class="geex-content__header__popup__link" href="#">
                                     <i class="uil uil-users-alt"></i>
-                                    Aktywno??
+                                    Aktywność
                                 </a>
                             </li>
                             <li class="geex-content__header__popup__item">
@@ -874,8 +874,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 				<!-- INVOICES MAIN CONTENT -->
 				<div class="geex-card" style="padding:24px;border-radius:12px;background:var(--card-bg,#fff);box-shadow:0 2px 12px rgba(0,0,0,0.06);margin-bottom:24px">
 					<div class="dam-inv-toolbar" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
-						<span id="invSourceBadge" class="dam-int-chip dam-int-st dam-int-st--wait">ĹąrĂłdĹ‚o: -</span>
-						<span id="invErpStatusBadge" class="dam-int-chip dam-int-st dam-int-st--wait" title="Stan synchronizacji ERP">ERP: â€”</span>
+						<span id="invSourceBadge" class="dam-int-chip dam-int-st dam-int-st--wait">Źródło: -</span>
+						<span id="invErpStatusBadge" class="dam-int-chip dam-int-st dam-int-st--wait" title="Stan synchronizacji ERP">ERP: —</span>
 						<span id="invErpAdminWrap" hidden style="display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center">
 							<label class="dam-int-cta" style="cursor:pointer;margin:0">
 								Import z ERP (CSV)
@@ -885,7 +885,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 						</span>
 						<span id="invImportWrap" hidden style="display:none" aria-hidden="true"></span>
 					</div>
-					<p id="invErpSyncMeta" class="dam-inv-erp-meta" style="font-size:12px;color:#666;margin:0 0 16px">Kierunek: dwukierunkowy (ERP â†” DAM). Ostatni import / eksport: â€”</p>
+					<p id="invErpSyncMeta" class="dam-inv-erp-meta" style="font-size:12px;color:#666;margin:0 0 16px">Kierunek: dwukierunkowy (ERP ↔ DAM). Ostatni import / eksport: —</p>
 					<!-- Summary cards -->
 					<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
 						<div style="flex:1;min-width:140px;background:#f4ecfd;border-radius:10px;padding:16px;text-align:center">
@@ -894,11 +894,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 						</div>
 						<div style="flex:1;min-width:140px;background:#e8f9f4;border-radius:10px;padding:16px;text-align:center">
 							<div style="font-size:24px;font-weight:700;color:#00A389" id="invPaid">-</div>
-							<div style="font-size:12px;color:#888" data-i18n="invoices.filter_paid">OpĹ‚acone</div>
+							<div style="font-size:12px;color:#888" data-i18n="invoices.filter_paid">Opłacone</div>
 						</div>
 						<div style="flex:1;min-width:140px;background:#fff8ec;border-radius:10px;padding:16px;text-align:center">
 							<div style="font-size:24px;font-weight:700;color:#FDB23A" id="invPending">-</div>
-							<div style="font-size:12px;color:#888" data-i18n="invoices.filter_pending">OczekujÄ…ce</div>
+							<div style="font-size:12px;color:#888" data-i18n="invoices.filter_pending">Oczekujące</div>
 						</div>
 						<div style="flex:1;min-width:140px;background:#feecec;border-radius:10px;padding:16px;text-align:center">
 							<div style="font-size:24px;font-weight:700;color:#ff5653" id="invOverdue">-</div>
@@ -913,8 +913,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 					<!-- Filter bar -->
 					<div class="dam-inv-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
 						<button type="button" class="dam-int-filter inv-filter-btn active is-active" data-filter="all" data-i18n="invoices.filter_all">Wszystkie</button>
-						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="paid" data-i18n="invoices.filter_paid">OpĹ‚acone</button>
-						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="pending" data-i18n="invoices.filter_pending">OczekujÄ…ce</button>
+						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="paid" data-i18n="invoices.filter_paid">Opłacone</button>
+						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="pending" data-i18n="invoices.filter_pending">Oczekujące</button>
 						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="overdue" data-i18n="invoices.filter_overdue">Po terminie</button>
 					</div>
 
@@ -927,12 +927,12 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 									<th data-i18n="invoices.col_project">Projekt</th>
 									<th data-i18n="invoices.col_amount">Kwota</th>
 									<th data-i18n="invoices.col_date">Data wystawienia</th>
-									<th data-i18n="invoices.col_due">Termin pĹ‚atnoĹ›ci</th>
+									<th data-i18n="invoices.col_due">Termin płatności</th>
 									<th data-i18n="invoices.col_status">Status</th>
 								</tr>
 							</thead>
 							<tbody id="invTableBody">
-								<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">?adowanie faktur...</td></tr>
+								<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">Ładowanie faktur...</td></tr>
 							</tbody>
 						</table>
 					</div>
@@ -997,9 +997,9 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 							</div>
 						</div>
 						<div class="geex-content__summary__balance">
-							<img src="assets/img/balance-bg.svg?v=20260718cost1" class="geex-content__summary__balance__img" alt="" />
+							<img src="assets/img/balance-bg.svg?v=20260719cost1" class="geex-content__summary__balance__img" alt="" />
 							<div class="geex-content__summary__balance__content">
-							<span class="geex-content__summary__balance__subtitle" data-i18n="dash.balance_label">Szacowany koszt miesi?ca</span>
+							<span class="geex-content__summary__balance__subtitle" data-i18n="dash.balance_label">Szacowany koszt miesiąca</span>
 							<h2 class="geex-content__summary__balance__title" id="damBalanceTitle">-- PLN</h2>
 							<span class="geex-content__summary__balance__time" id="damBalanceTime"></span>
 							<span class="geex-content__summary__balance__chip" data-i18n="dash.balance_chip">Obliczony automatycznie</span>
@@ -1022,12 +1022,12 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 						<div class="geex-content__todo__header">
 							<div class="geex-content__todo__header__title">
 								<h4 data-i18n="dash.tasks_title">Zadania Asana</h4>
-								<p data-i18n="dash.tasks_sub">Bie??ce zadania graficzne</p>
+								<p data-i18n="dash.tasks_sub">Bieżące zadania graficzne</p>
 							</div>
 						<ul class="nav nav-tabs geex-todo-tab geex-content__todo__header__filter" id="geex-invoice-tab" role="tablist">
 								<li class="geex-content__todo__header__filter__sortby">
 									<select>
-										<option value="week" data-i18n="dash.filter_week">Ten tydzie?</option>
+										<option value="week" data-i18n="dash.filter_week">Ten tydzień</option>
 										<option value="today" data-i18n="dash.filter_today">Dzis</option>
 										<option value="all" data-i18n="dash.filter_all">Wszystkie</option>
 									</select>
@@ -1121,7 +1121,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1181,7 +1181,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1241,7 +1241,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1301,7 +1301,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1361,7 +1361,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1425,7 +1425,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1485,7 +1485,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1545,7 +1545,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1605,7 +1605,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1665,7 +1665,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 													</button>
 													<ul class="geex-content__todo__list__single__action__content geex-content__toggle__content ">
 														<li><a href="#">Edytuj</a></li>
-														<li><a href="#">Usu?</a></li>
+														<li><a href="#">Usuń</a></li>
 													</ul>
 												</div>
 											</div>
@@ -1762,14 +1762,14 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<script src="./assets/js/main.js"></script>
   	<!-- endinject-->
 	<!-- DAM scripts -->
-	<script src="./assets/js/dam-api.js?v=2.0.5"></script>
-	<script src="./assets/js/dam-i18n.js?v=plshell20260720a"></script>
-	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
-	<script src="./assets/js/dam-version.js?v=2.0.7"></script>
-	<script src="./assets/js/dam-shell.js?v=sidebaridentity20260720b"></script>
+	<script src="./assets/js/dam-api.js?v=privgate20260721a"></script>
+	<script src="./assets/js/dam-i18n.js?v=i18nboot20260721c"></script>
+	<script src="./assets/js/dam-runtime.js?v=20260719app1"></script>
+	<script src="./assets/js/dam-version.js?v=3.0.7"></script>
+	<script src="./assets/js/dam-shell.js?v=i18nboot20260721d"></script>
 	<script src="./assets/vendor/js/gsap/gsap.min.js"></script>
 	<script src="./assets/js/dam-loader.js?v=loaderfab20260720g"></script>
-	<script src="./assets/js/dam-grid-reveal.js?v=motion20260720a"></script>
+	<script src="./assets/js/dam-grid-reveal.js?v=i18nboot20260721e"></script>
 	<script src="./assets/js/dam-ui-cta.js?v=ctaunify20260720b"></script>
 	<script src="./assets/js/dam-invoices.js?v=erpc220260720a"></script>
 	<script src="./assets/js/dam-tutorial.js?v=helprestart20260720a"></script>

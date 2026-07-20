@@ -157,26 +157,26 @@
   /** Wstrzykuje style: Bento grid + pkt 36 podglad LEWA | lista PRAWA (nie ruszamy plikow agentow). */
   function ensureInjectedCss() {
     var css =
-      /* Shell / bento grid popover */
+      /* Shell / bento grid popover — HARD: 70vw × 90vh (wszędzie: branding + viz) */
       ".dam-assoc-edit-overlay{overflow:hidden;}" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover.dam-assoc-edit-popover," +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover--wide.dam-assoc-edit-popover{" +
       "display:grid!important;grid-template-columns:minmax(0,1fr);" +
       "grid-template-rows:auto auto auto minmax(0,1fr) auto;" +
       "grid-template-areas:'head' 'pinned' 'search' 'body' 'actions';" +
-      "width:min(720px,calc(100vw - 24px))!important;" +
-      "max-width:min(720px,calc(100vw - 24px))!important;" +
-      "max-height:min(88dvh,640px)!important;height:auto!important;" +
+      "width:70vw!important;min-width:min(70vw,calc(100vw - 16px))!important;" +
+      "max-width:min(70vw,calc(100vw - 16px))!important;" +
+      "height:90vh!important;min-height:90vh!important;max-height:90vh!important;" +
       "overflow-x:hidden!important;overflow-y:hidden!important;}" +
       ".dam-assoc-edit-popover > .dam-tag-edit-popover__head{grid-area:head;}" +
       ".dam-assoc-edit-popover > .dam-assoc-edit-popover__pinned-wrap{grid-area:pinned;min-width:0;}" +
       ".dam-assoc-edit-popover > .dam-assoc-edit-popover__section-sep{display:none;}" +
       ".dam-assoc-edit-popover > .dam-tag-edit-popover__search-wrap{grid-area:search;margin:0!important;" +
       "padding:10px 14px;border-bottom:1px solid #ececf2;}" +
-      ".dam-assoc-edit-popover > .dam-assoc-edit-popover__body{grid-area:body;min-height:0;min-width:0;}" +
+      ".dam-assoc-edit-popover > .dam-assoc-edit-popover__body{grid-area:body;min-height:0;min-width:0;overflow:hidden;}" +
       ".dam-assoc-edit-popover > .dam-tag-edit-popover__actions{grid-area:actions;}" +
-      /* Body: preview LEFT | list RIGHT */
-      ".dam-assoc-edit-popover__body{display:grid;grid-template-columns:200px minmax(0,1fr);gap:12px;" +
+      /* Body: preview LEFT | list RIGHT (scroll w liscie) */
+      ".dam-assoc-edit-popover__body{display:grid;grid-template-columns:minmax(180px,22%) minmax(0,1fr);gap:12px;" +
       "padding:12px 14px;min-height:0;overflow:hidden;}" +
       ".dam-assoc-edit-popover__preview{min-width:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;" +
       "gap:6px;align-content:start;}" +
@@ -214,9 +214,13 @@
       ".dam-assoc-edit-popover__meta{min-width:0;overflow:hidden;}" +
       ".dam-assoc-edit-popover__label{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
       "font-size:13px;font-weight:600;color:#464255;}" +
-      ".dam-assoc-edit-popover__tags{display:flex;flex-wrap:wrap;gap:3px;max-height:22px;overflow:hidden;}" +
-      ".dam-assoc-edit-popover__tags .dam-viz-badge{font-size:10px;padding:1px 6px;max-width:100%;" +
-      "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
+      /* Tagi jak na kartach viz (DK / BATONY / Mixy / PL) — nie tiny cut-off */
+      ".dam-assoc-edit-popover__tags{display:flex;flex-wrap:wrap;gap:4px;max-height:none;overflow:visible;margin-top:4px;}" +
+      ".dam-assoc-edit-popover__tags .dam-viz-badge{" +
+      "font-size:calc(var(--dam-tag-fs-pill,10.5px) + 1px)!important;font-weight:500;" +
+      "padding:5px 11px!important;border-radius:999px;letter-spacing:.01em;line-height:1.25;" +
+      "white-space:nowrap;max-width:100%;cursor:default;}" +
+      ".dam-assoc-edit-popover__tags .dam-viz-badge--index{cursor:copy;user-select:text;}" +
       ".dam-assoc-edit-popover__row-actions{display:flex;align-items:center;gap:3px;flex-shrink:0;padding-right:4px;}" +
       ".dam-assoc-edit-popover__row-btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;" +
       "border:1px solid #e7e7ec;border-radius:7px;background:#fff;color:#6b6b76;cursor:pointer;font-size:14px;" +
@@ -226,7 +230,26 @@
       ".dam-assoc-edit-popover__opt.is-pinned .dam-assoc-edit-popover__check{width:22px;font-size:17px;}" +
       ".dam-assoc-edit-popover__opt.is-preview-active{background:#f8f4fd!important;" +
       "box-shadow:inset 0 0 0 1px #e2d3f2;}" +
-      ".dam-assoc-edit-popover__pinned{max-height:min(22dvh,140px);overflow-x:hidden;overflow-y:auto;}" +
+      ".dam-assoc-edit-popover__pinned{max-height:min(22dvh,160px);overflow-x:hidden;overflow-y:auto;}" +
+      /* Shift+hover quick assoc UX (grid produktu / materialow) */
+      ".dam-media-preview__assoc-grid.is-shift-hover," +
+      ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-item{position:relative;}" +
+      ".dam-media-preview__assoc-item{position:relative;}" +
+      ".dam-media-preview__assoc-item .dam-assoc-quick-minus{" +
+      "position:absolute;top:4px;right:4px;z-index:3;width:28px;height:28px;border-radius:999px;" +
+      "border:1px solid #e7b4bc;background:#fff;color:#e2506b;display:none;align-items:center;justify-content:center;" +
+      "cursor:pointer;box-shadow:0 4px 12px rgba(28,24,44,.12);padding:0;}" +
+      ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-item:hover .dam-assoc-quick-minus," +
+      ".dam-media-preview__assoc-item.is-shift-target .dam-assoc-quick-minus{display:inline-flex;}" +
+      ".dam-media-preview__assoc-plus-tile{" +
+      "display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;" +
+      "min-height:96px;border:1.5px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 45%,#d7d7e0);" +
+      "border-radius:12px;background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff);color:#7a3aa8;" +
+      "cursor:pointer;font-size:12px;font-weight:600;padding:10px;}" +
+      ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-plus-tile{display:flex;}" +
+      ".dam-media-preview__assoc-plus-tile i{font-size:22px;}" +
+      ".dam-media-preview__assoc-plus-tile:hover{background:color-mix(in srgb,var(--dam-primary,#ab54db) 12%,#fff);" +
+      "border-color:var(--dam-primary,#ab54db);}" +
       /* Footer DAM */
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__actions{" +
       "display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;" +
@@ -256,22 +279,19 @@
       /* Breakpoints */
       "@media (max-width:767.98px){" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover.dam-assoc-edit-popover{" +
-      "width:min(100vw - 16px,560px)!important;max-width:min(100vw - 16px,560px)!important;}" +
+      "width:min(96vw,calc(100vw - 12px))!important;max-width:min(96vw,calc(100vw - 12px))!important;" +
+      "height:90vh!important;min-height:90vh!important;max-height:90vh!important;}" +
       ".dam-assoc-edit-popover__body{grid-template-columns:1fr;grid-template-rows:auto minmax(120px,1fr);}" +
       ".dam-assoc-edit-popover__preview-frame{min-height:140px;max-height:160px;aspect-ratio:auto;}" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__actions{justify-content:stretch;}" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__confirm," +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__cancel{flex:1 1 auto;}" +
       "}" +
-      "@media (min-width:768px) and (max-width:1279.98px){" +
+      "@media (min-width:768px){" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover.dam-assoc-edit-popover{" +
-      "width:min(680px,calc(100vw - 24px))!important;}" +
-      ".dam-assoc-edit-popover__body{grid-template-columns:180px minmax(0,1fr);}" +
-      "}" +
-      "@media (min-width:1280px){" +
-      ".dam-assoc-edit-overlay .dam-tag-edit-popover.dam-assoc-edit-popover{" +
-      "width:min(760px,calc(100vw - 48px))!important;max-width:760px!important;}" +
-      ".dam-assoc-edit-popover__body{grid-template-columns:220px minmax(0,1fr);gap:14px;}" +
+      "width:70vw!important;max-width:min(70vw,calc(100vw - 24px))!important;" +
+      "height:90vh!important;min-height:90vh!important;max-height:90vh!important;}" +
+      ".dam-assoc-edit-popover__body{grid-template-columns:minmax(180px,24%) minmax(0,1fr);}" +
       "}";
     var style = document.getElementById(ASSOC_CSS_ID);
     if (!style) {
@@ -352,11 +372,35 @@
 
   function productThumb(p) {
     if (!p) return PLACEHOLDER_SVG;
-    var slug = p.id || "";
-    var rev = (p.revisions && p.revisions[0]) || {};
-    var base = (rev.path || rev.viz_path || "").split(/[/\\]/).pop() || "000098";
-    base = base.replace(/\.[^.]+$/, "");
-    return "data/thumbs/" + slug + "__" + base + "_pl.jpg?v=" + (Date.now() % 999999);
+    var existing = p.thumb_url != null ? String(p.thumb_url).trim() : "";
+    if (existing && existing.indexOf("data:image/svg+xml") !== 0) {
+      if (/^(data:|blob:|https?:|\/|data\/)/i.test(existing) || existing.indexOf("thumbs/") >= 0) {
+        return existing;
+      }
+    }
+    var slug = String(p.id || "")
+      .replace(/[^a-zA-Z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 96)
+      .toLowerCase();
+    if (!slug) return PLACEHOLDER_SVG;
+    var idx = productIndexOf(p);
+    if (!idx) {
+      var rev = (p.revisions && p.revisions[0]) || {};
+      if (rev.index) idx = String(rev.index).split(".")[0];
+    }
+    if (!idx) {
+      /* Fallback: wizka z file-index.viz_latest (jak karty siatki). */
+      var fi = global._DAM_FILE_INDEX;
+      var latest = (fi && fi.viz_latest) || [];
+      for (var i = 0; i < latest.length; i++) {
+        var row = latest[i];
+        if (row && row.product_id === p.id && row.thumb_url) return String(row.thumb_url);
+      }
+      return PLACEHOLDER_SVG;
+    }
+    var base = String(idx).replace(/[^0-9A-Za-z]+/g, "") || idx;
+    return "data/thumbs/" + slug + "__" + base + "_pl.jpg";
   }
 
   function enrichLinkedProducts(list) {
@@ -373,6 +417,13 @@
           thumb_url: lp.thumb_url || productThumb(p),
           product_index: lp.product_index || productIndexOf(p),
           path: p.path || lp.path || "",
+          search_blob: p.search_blob || lp.search_blob || "",
+          category: p.category || lp.category || "",
+          subcategory_label: p.subcategory_label || p.subcategory || "",
+          tags: p.tags || lp.tags || [],
+          indexes: p.indexes || [],
+          index_bases: p.index_bases || [],
+          brand: p.brand || "",
         };
       });
     });
@@ -442,6 +493,12 @@
     var cap = panel.querySelector(".dam-assoc-edit-popover__preview-caption");
     var meta = panel.querySelector(".dam-assoc-edit-popover__preview-meta");
     var src = (data && data.thumb) || "";
+    if (src && src.indexOf("http://127.0.0.1") === 0) {
+      /* normalize absolute → relative for same-origin thumbs */
+      try {
+        src = src.replace(/^https?:\/\/127\.0\.0\.1:\d+\//, "");
+      } catch (e) {}
+    }
     var label = (data && data.label) || "Najedź wynik, aby podejrzeć";
     var sub = (data && data.sub) || "";
     var emptyThumb = isPlaceholderThumb(src);
@@ -457,6 +514,10 @@
           img.removeAttribute("src");
           panel.classList.add("is-empty");
           if (empty) empty.style.display = "";
+        };
+        img.onload = function () {
+          img.classList.remove("is-placeholder");
+          panel.classList.remove("is-empty");
         };
         img.src = src;
       }
@@ -476,15 +537,19 @@
     if (data && data.btn) data.btn.classList.add("is-preview-active");
   }
 
-  function bindSearchPreview(pop, scope) {
+      function bindSearchPreview(pop, scope) {
     if (!pop || !scope) return;
     scope.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
       function activate() {
         var thumb = btn.querySelector(".dam-assoc-edit-popover__thumb");
         var labelEl = btn.querySelector(".dam-assoc-edit-popover__label");
         var idxBadge = btn.querySelector(".dam-viz-badge--index");
+        var src = "";
+        if (thumb) {
+          src = thumb.getAttribute("src") || thumb.currentSrc || thumb.src || "";
+        }
         setSearchPreview(pop, {
-          thumb: thumb ? thumb.currentSrc || thumb.src : "",
+          thumb: src,
           label: labelEl ? labelEl.textContent : btn.getAttribute("data-id") || "",
           sub: idxBadge ? idxBadge.textContent : "",
           btn: btn,
@@ -680,12 +745,17 @@
             return x && x.id === id;
           });
           if (p) {
+            var revL = (p.revisions && p.revisions[0]) || {};
             return {
               id: p.id,
               label: p.display_name || p.name || p.id,
               thumb: productThumb(p),
-              sub: productIndexOf(p) || p.id,
+              sub: productIndexOf(p) || "",
               path: p.path || "",
+              brand: p.brand || "",
+              category: p.category || "",
+              subcategory: p.subcategory_label || "",
+              langs: revL.langs || [],
             };
           }
         }
@@ -715,28 +785,38 @@
         return actions ? '<span class="dam-assoc-edit-popover__row-actions">' + actions + "</span>" : "";
       }
 
-      /* Pkt 9: wiersz tagow - marka, kategoria, podkategoria, jezyk, indeks */
+      /* Pkt 9: wiersz tagow - marka, kategoria, podkategoria, jezyk, indeks (jak karty viz) */
       function optionTagsHtml(it) {
         var tags = [];
-        function tag(v, cls, tip) {
+        function tag(v, cls, tip, copyVal) {
           if (!v) return;
+          var copyAttrs = "";
+          if (copyVal) {
+            copyAttrs =
+              ' data-marketing-id="' +
+              esc(copyVal) +
+              '" data-tag-value="' +
+              esc(copyVal) +
+              '" role="button" tabindex="0"';
+          }
           tags.push(
             '<span class="dam-viz-badge' +
               (cls ? " " + cls : "") +
               '"' +
               (tip ? ' title="' + esc(tip) + '"' : "") +
+              copyAttrs +
               ">" +
               esc(v) +
               "</span>"
           );
         }
         tag(it.brand, "dam-viz-badge--brand", "Marka");
-        tag(stripCategoryPrefix(it.category), "", "Kategoria");
-        tag(it.subcategory, "", "Podkategoria");
+        tag(stripCategoryPrefix(it.category), "dam-viz-badge--cat", "Kategoria");
+        tag(it.subcategory, "dam-viz-badge--subcat", "Podkategoria");
         (it.langs || []).forEach(function (lg) {
-          tag(String(lg).toUpperCase(), "", "Język");
+          tag(String(lg).toUpperCase(), "dam-viz-badge--lang", "Język");
         });
-        tag(it.sub, "dam-viz-badge--index", "Indeks");
+        tag(it.sub, "dam-viz-badge--index", "Indeks (klik / prawy = kopiuj)", it.sub);
         if (!tags.length) return "";
         return '<span class="dam-assoc-edit-popover__tags">' + tags.join("") + "</span>";
       }
@@ -835,11 +915,26 @@
         });
       }
 
+      function activatePreviewFromBtn(btn) {
+        if (!btn) return;
+        var thumb = btn.querySelector(".dam-assoc-edit-popover__thumb");
+        var labelEl = btn.querySelector(".dam-assoc-edit-popover__label");
+        var idxBadge = btn.querySelector(".dam-viz-badge--index");
+        var src = thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "";
+        setSearchPreview(pop, {
+          thumb: src,
+          label: labelEl ? labelEl.textContent : btn.getAttribute("data-id") || "",
+          sub: idxBadge ? idxBadge.textContent : "",
+          btn: btn,
+        });
+      }
+
       function renderPinned() {
         var pinnedEl = pop.querySelector(".dam-assoc-edit-popover__pinned");
         if (!pinnedEl) return;
         if (!pinnedIds.length) {
           pinnedEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Brak aktualnych skojarzen.</p>';
+          setSearchPreview(pop, null);
           return;
         }
         pinnedEl.innerHTML = pinnedIds
@@ -848,6 +943,8 @@
           })
           .join("");
         bindOptionButtons(pinnedEl);
+        /* Podglad: pierwsza przypieta miniatura (nie "Brak miniatury" przy otwarciu). */
+        activatePreviewFromBtn(pinnedEl.querySelector(".dam-assoc-edit-popover__opt[data-id]"));
       }
 
       function renderOptions(filter) {
@@ -910,24 +1007,26 @@
         items = items.slice(0, 120);
         if (!items.length) {
           listEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Brak wyników dla tego wyszukiwania.</p>';
-          setSearchPreview(pop, null);
+          var pinnedKeep = pop.querySelector(
+            ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
+          );
+          if (pinnedKeep) activatePreviewFromBtn(pinnedKeep);
+          else setSearchPreview(pop, null);
           return;
         }
         listEl.innerHTML = items.map(function (it) {
           return optionButtonHtml(it, false);
         }).join("");
         bindOptionButtons(listEl);
-        var firstBtn = listEl.querySelector(".dam-assoc-edit-popover__opt[data-id]");
-        if (firstBtn) {
-          var thumb = firstBtn.querySelector(".dam-assoc-edit-popover__thumb");
-          var labelEl = firstBtn.querySelector(".dam-assoc-edit-popover__label");
-          var idxBadge = firstBtn.querySelector(".dam-viz-badge--index");
-          setSearchPreview(pop, {
-            thumb: thumb ? thumb.currentSrc || thumb.src : items[0].thumb,
-            label: labelEl ? labelEl.textContent : items[0].label,
-            sub: idxBadge ? idxBadge.textContent : items[0].sub || "",
-            btn: firstBtn,
-          });
+        /* Preferuj podglad z AKTUALNYCH (pinned), nie z pierwszego wyniku wyszukiwania. */
+        var pinnedBtn = pop.querySelector(
+          ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
+        );
+        if (pinnedBtn) {
+          activatePreviewFromBtn(pinnedBtn);
+        } else {
+          var firstBtn = listEl.querySelector(".dam-assoc-edit-popover__opt[data-id]");
+          if (firstBtn) activatePreviewFromBtn(firstBtn);
         }
       }
 
@@ -960,6 +1059,9 @@
       }
       renderPinned();
       renderOptions("");
+      activatePreviewFromBtn(
+        pop.querySelector(".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]")
+      );
 
       pop.querySelector("[data-close]") &&
         pop.querySelector("[data-close]").addEventListener("click", closePicker);
@@ -1199,23 +1301,52 @@
     return grid;
   }
 
+  /**
+   * Pelne ID skojarzen do edycji.
+   * Preferuj groupContext (juz przefiltrowany w UI brandingu) — NIE doklejaj
+   * z powrotem folder_linked_product_ids (spray SLIDERY KATEGORIE).
+   */
+  function collectLinkedIdsFromCtx(ctx, kind) {
+    var ids = [];
+    var seen = {};
+    function add(id) {
+      id = String(id || "").trim();
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      ids.push(id);
+    }
+    var gc = (ctx && ctx.groupContext) || {};
+    var asset = (ctx && ctx.asset) || {};
+    if (kind === "variant") {
+      (gc.variants || asset.folder_variants || asset.variants || []).forEach(function (v) {
+        if (v && v.id) add(v.id);
+      });
+      return ids;
+    }
+    var gcHas =
+      (gc.linked_products && gc.linked_products.length) ||
+      (gc.linked_product_ids && gc.linked_product_ids.length);
+    if (gcHas) {
+      (gc.linked_products || []).forEach(function (p) {
+        if (p && p.id) add(p.id);
+      });
+      (gc.linked_product_ids || []).forEach(add);
+      return ids;
+    }
+    (asset.linked_products || []).forEach(function (p) {
+      if (p && p.id) add(p.id);
+    });
+    (asset.linked_product_ids || []).forEach(add);
+    (asset.folder_linked_product_ids || []).forEach(add);
+    return ids;
+  }
+
   function openEditPicker(colEl, kind, ctx) {
     if (!canEditAssoc()) {
       toast("Włącz tryb admina, aby edytować skojarzenia.");
       return;
     }
-    var selectedIds =
-      kind === "product"
-        ? (ctx.groupContext.linked_products || [])
-            .map(function (p) {
-              return p && p.id;
-            })
-            .filter(Boolean)
-        : (ctx.groupContext.variants || [])
-            .map(function (v) {
-              return v && v.id;
-            })
-            .filter(Boolean);
+    var selectedIds = collectLinkedIdsFromCtx(ctx, kind);
     var excludeIds = [];
     var excludeIndexes = [];
     var gc = ctx.groupContext || {};
@@ -1229,6 +1360,20 @@
     var filterType = kind === "product" ? "product" : "all";
     if (ctx.sourceType === "viz" || ctx.mode === "viz" || (ctx.asset && /viz|wizual/i.test(String(ctx.asset.type || ctx.asset.kind || "")))) {
       filterType = "product";
+    }
+    /* Upewnij sie, ze groupContext ma pelna liste do zapisu/undo (nie tylko uciety linked_products). */
+    if (kind === "product") {
+      gc.linked_product_ids = selectedIds.slice();
+      var byId = {};
+      (gc.linked_products || []).forEach(function (p) {
+        if (p && p.id) byId[p.id] = p;
+      });
+      (ctx.asset && ctx.asset.linked_products ? ctx.asset.linked_products : []).forEach(function (p) {
+        if (p && p.id && !byId[p.id]) byId[p.id] = p;
+      });
+      gc.linked_products = selectedIds.map(function (id) {
+        return byId[id] || { id: id };
+      });
     }
     openMediaPicker(colEl, {
       kind: kind,
@@ -1386,8 +1531,271 @@
     }
   }
 
+  function quickRemoveProductAssoc(ctx, productId) {
+    if (!canEditAssoc() || !productId) return Promise.resolve();
+    var prevPids = collectLinkedIdsFromCtx(ctx, "product");
+    var nextPids = prevPids.filter(function (id) {
+      return id !== productId;
+    });
+    if (nextPids.length === prevPids.length) return Promise.resolve();
+    var prevVids = (ctx.groupContext.variants || [])
+      .map(function (v) {
+        return v && v.id;
+      })
+      .filter(Boolean);
+    return saveAssociations(ctx, nextPids, prevVids, { silentToast: true }).then(function () {
+      if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+      if (global.DamDanger && typeof global.DamDanger.toastUndo === "function") {
+        global.DamDanger.toastUndo({
+          message: "Usunieto 1 skojarzenie",
+          actionLabel: "Cofnij",
+          duration: 8000,
+          onUndo: function () {
+            saveAssociations(ctx, prevPids, prevVids, { silentToast: true }).then(function () {
+              if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+            });
+          },
+        });
+      } else {
+        toast("Usunieto skojarzenie");
+      }
+    });
+  }
+
+  /**
+   * Shift+hover UX — JEDNA sciezka dla branding (#damMediaPreviewAssoc) i viz
+   * (#damVizModalAssoc / .dam-viz-modal__assoc-pane). Te same klasy CSS.
+   * - item z data-product-id → minus usuwa produkt
+   * - item z data-linked-asset-idx (material) → minus odcina biezacy produkt od assetu
+   * - plus na koncu → Edytuj wszystko (openEditPicker)
+   */
+  function ensureShiftHoverAssocUx(assocEl, ctx) {
+    if (!assocEl || !ctx || !canEditAssoc()) return;
+    ensureInjectedCss();
+    assocEl.querySelectorAll(".dam-media-preview__assoc-grid").forEach(function (grid) {
+      /* Re-bind minus na nowo wstawionych itemach po async load. */
+      function ensurePlusTile() {
+        var plus = grid.querySelector(".dam-media-preview__assoc-plus-tile");
+        if (plus) return plus;
+        plus = document.createElement("button");
+        plus.type = "button";
+        plus.className = "dam-media-preview__assoc-plus-tile";
+        plus.setAttribute("aria-label", "Edytuj wszystko — dodaj skojarzenie");
+        plus.innerHTML = '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span>';
+        plus.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
+          var editBtn = col.querySelector("[data-assoc-edit-all]");
+          if (editBtn) {
+            editBtn.click();
+            return;
+          }
+          openEditPicker(col, "product", ctx);
+        });
+        grid.appendChild(plus);
+        return plus;
+      }
+
+      function wireMinus(item, onClick) {
+        if (item.querySelector(".dam-assoc-quick-minus")) return;
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "dam-assoc-quick-minus";
+        btn.setAttribute("aria-label", "Usuń skojarzenie");
+        btn.title = "Usuń skojarzenie";
+        btn.innerHTML = '<i class="uil uil-minus" aria-hidden="true"></i>';
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick();
+        });
+        item.appendChild(btn);
+      }
+
+      grid.querySelectorAll(".dam-media-preview__assoc-item[data-product-id]").forEach(function (item) {
+        wireMinus(item, function () {
+          quickRemoveProductAssoc(ctx, item.getAttribute("data-product-id") || "");
+        });
+      });
+
+      /* Materialy: data-linked-asset-idx siedzi na .assoc-thumb-btn, nie na item. */
+      grid.querySelectorAll(".dam-media-preview__assoc-item--asset").forEach(function (item) {
+        wireMinus(item, function () {
+          var idxBtn = item.querySelector("[data-linked-asset-idx]");
+          var idx = parseInt(idxBtn && idxBtn.getAttribute("data-linked-asset-idx"), 10) || 0;
+          var materials = (ctx.materialsList || ctx.shownPrimaries || []).slice();
+          var asset = materials[idx] || ctx.asset;
+          var pid =
+            (ctx.productContext && ctx.productContext.id) ||
+            (ctx.groupContext && ctx.groupContext.product_id) ||
+            "";
+          if (!asset || !pid) {
+            var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
+            openEditPicker(col, "product", Object.assign({}, ctx, { asset: asset || ctx.asset }));
+            return;
+          }
+          quickUnlinkProductFromMaterial(ctx, asset, pid);
+        });
+      });
+
+      function setShift(on) {
+        grid.classList.toggle("is-shift-hover", !!on);
+        if (on) ensurePlusTile();
+      }
+
+      if (!grid._damShiftUxBound) {
+        grid._damShiftUxBound = true;
+        grid.addEventListener("mousemove", function (e) {
+          setShift(!!e.shiftKey);
+        });
+        grid.addEventListener("mouseenter", function (e) {
+          setShift(!!e.shiftKey);
+        });
+        grid.addEventListener("mouseleave", function () {
+          setShift(false);
+        });
+      }
+    });
+
+    if (!assocEl._damShiftKeyBound) {
+      assocEl._damShiftKeyBound = true;
+      function onKey(e) {
+        if (e.key !== "Shift") return;
+        assocEl.querySelectorAll(".dam-media-preview__assoc-grid").forEach(function (grid) {
+          if (!grid.matches(":hover")) return;
+          grid.classList.toggle("is-shift-hover", e.type === "keydown");
+          if (e.type === "keydown") {
+            var ev = new MouseEvent("mousemove", { shiftKey: true, bubbles: true });
+            grid.dispatchEvent(ev);
+          }
+        });
+      }
+      document.addEventListener("keydown", onKey, true);
+      document.addEventListener("keyup", onKey, true);
+    }
+  }
+
+  /** Odetnij produkt od materialu brandingowego (viz Shift+minus). */
+  function quickUnlinkProductFromMaterial(ctx, asset, productId) {
+    if (!canEditAssoc() || !asset || !asset.id || !productId) return Promise.resolve();
+    var prev = [];
+    var seen = {};
+    function add(id) {
+      id = String(id || "").trim();
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      prev.push(id);
+    }
+    (asset.linked_products || []).forEach(function (p) {
+      if (p && p.id) add(p.id);
+    });
+    (asset.linked_product_ids || []).forEach(add);
+    (asset.folder_linked_product_ids || []).forEach(add);
+    var next = prev.filter(function (id) {
+      return id !== productId;
+    });
+    if (next.length === prev.length) return Promise.resolve();
+    var matCtx = {
+      asset: asset,
+      groupContext: {
+        folder_group_id: asset.folder_group_id || "",
+        linked_products: next.map(function (id) {
+          return { id: id };
+        }),
+        linked_product_ids: next.slice(),
+        variants: [],
+      },
+      onSaved: function () {
+        if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+      },
+      onRefresh: ctx.onRefresh,
+    };
+    return saveAssociations(matCtx, next, [], { silentToast: true }).then(function () {
+      if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+      if (global.DamDanger && typeof global.DamDanger.toastUndo === "function") {
+        global.DamDanger.toastUndo({
+          message: "Usunieto 1 skojarzenie",
+          actionLabel: "Cofnij",
+          duration: 8000,
+          onUndo: function () {
+            saveAssociations(matCtx, prev, [], { silentToast: true }).then(function () {
+              if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+            });
+          },
+        });
+      } else {
+        toast("Usunieto skojarzenie");
+      }
+    });
+  }
+
+  /**
+   * Publiczny bind Shift UX na panele materialow (viz + branding linked).
+   * Wywolywac PO wstawieniu kart do DOM (async load).
+   */
+  function bindMaterialsPane(assocEl, ctx) {
+    if (!assocEl || !ctx) return;
+    ensureInjectedCss();
+    /* Dopnij Edytuj wszystko gdy brak. */
+    var labelRow = assocEl.querySelector(".dam-media-preview__assoc-label-row");
+    if (labelRow && !labelRow.querySelector("[data-assoc-edit-all]") && canEditAssoc()) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "dam-assoc-edit-all";
+      btn.setAttribute("data-assoc-edit-all", "product");
+      btn.textContent = "Edytuj wszystko";
+      labelRow.appendChild(btn);
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var materials = ctx.materialsList || [];
+        var asset = materials[0] || ctx.asset;
+        if (!asset) {
+          toast("Brak materiału do edycji skojarzeń.");
+          return;
+        }
+        var col = btn.closest(".dam-media-preview__assoc-col") || assocEl;
+        var ids = [];
+        var seen = {};
+        function add(id) {
+          id = String(id || "").trim();
+          if (!id || seen[id]) return;
+          seen[id] = true;
+          ids.push(id);
+        }
+        (asset.linked_products || []).forEach(function (p) {
+          if (p && p.id) add(p.id);
+        });
+        (asset.linked_product_ids || []).forEach(add);
+        openEditPicker(col, "product", {
+          asset: asset,
+          mode: "viz",
+          sourceType: "viz",
+          groupContext: {
+            folder_group_id: asset.folder_group_id || "",
+            linked_products: ids.map(function (id) {
+              return { id: id };
+            }),
+            linked_product_ids: ids.slice(),
+            variants: [],
+          },
+          onRefresh: ctx.onRefresh,
+          onSaved: function (productIds) {
+            asset.linked_product_ids = (productIds || []).slice();
+            asset.folder_linked_product_ids = (productIds || []).slice();
+            if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+          },
+        });
+      });
+    }
+    ensureShiftHoverAssocUx(assocEl, ctx);
+  }
+
   function bindAssocSection(assocEl, ctx) {
     if (!assocEl || !ctx) return;
+    ensureInjectedCss();
+    ensureShiftHoverAssocUx(assocEl, ctx);
 
     assocEl.querySelectorAll("[data-assoc-edit-all]").forEach(function (btn) {
       if (!canEditAssoc()) {
@@ -1408,6 +1816,8 @@
       col.addEventListener("click", function (e) {
         if (!e.shiftKey || !canEditAssoc()) return;
         if (e.target.closest("[data-assoc-edit-all]")) return;
+        if (e.target.closest(".dam-assoc-quick-minus")) return;
+        if (e.target.closest(".dam-media-preview__assoc-plus-tile")) return;
         var kind =
           col.classList.contains("dam-media-preview__assoc-col--products") ||
           col.classList.contains("dam-media-preview__assoc-col--product")
@@ -1464,6 +1874,7 @@
       item.addEventListener("click", function (e) {
         if (!e.shiftKey || !canEditAssoc()) return;
         if (e.target.closest("[data-assoc-edit-all]")) return;
+        if (e.target.closest(".dam-assoc-quick-minus")) return;
         e.preventDefault();
         e.stopPropagation();
         var col = item.closest(".dam-media-preview__assoc-col");
@@ -1475,6 +1886,9 @@
   global.DamAssocEdit = {
     canEdit: canEditAssoc,
     bind: bindAssocSection,
+    /** Shift+/−/plus na panelu materialow (#damVizModalAssoc + branding linked). */
+    bindMaterialsPane: bindMaterialsPane,
+    ensureShiftHoverAssocUx: ensureShiftHoverAssocUx,
     enrichLinkedProducts: enrichLinkedProducts,
     openActionMenu: openActionMenu,
     closeActionMenu: closeActionMenu,

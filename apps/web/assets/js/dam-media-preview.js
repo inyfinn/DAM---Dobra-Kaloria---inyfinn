@@ -30,6 +30,9 @@
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
   var CARD_ZOOM_MIN = 65;
   var CARD_ZOOM_MAX = 350;
+  var CARD_ZOOM_STEP = 5;
+  var CARD_IMG_BASE_SCALE = 1.2;
+  var CARD_BASE_MIN_PX = 220;
   /* Tag/blob skladniki/owoce — NIE "kulki" (kategoria produktu / packshot DK_Kulki_*). */
   var ELEMENT_ASSOC_RE = /(^|[^a-z0-9])(skladniki|składniki|owoce|owocki)([^a-z0-9]|$)/i;
   /**
@@ -106,25 +109,107 @@
       "min-height:48px;background:var(--dam-surface-muted,#f1f3f6);",
       "color:var(--dam-text-muted,#94a3b8);border-radius:6px;}",
       ".dam-media-preview__assoc-thumb--fallback i{font-size:20px;}",
+      /* Collapse extras: viz modal uzywa #damVizModalAssoc, nie tylko media-preview id. */
+      "#damMediaPreviewLinkedAssets.is-collapsed-assets .dam-media-preview__assoc-item--extra,",
+      "#damVizModalAssoc.is-collapsed-assets .dam-media-preview__assoc-item--extra,",
+      ".dam-media-preview__assoc-grid.is-collapsed-assets .dam-media-preview__assoc-item--extra{",
+      "display:none!important;}",
+      /* Assoc creative groups: variant count badge on thumb (namespaced; additive). */
+      ".dam-media-preview__assoc-item--group{position:relative;}",
+      ".dam-media-preview__assoc-item--group .dam-media-preview__assoc-thumb-btn{position:relative;}",
+      ".dam-media-preview__assoc-variant-badge{",
+      "position:absolute;top:4px;right:4px;z-index:2;min-width:1.5em;height:1.5em;padding:0 5px;",
+      "display:inline-flex;align-items:center;justify-content:center;",
+      "border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.02em;",
+      "font-variant-numeric:tabular-nums;line-height:1;",
+      "background:var(--dam-primary,#ab54db);color:#fff;",
+      "border:1px solid color-mix(in srgb,#fff 35%,var(--dam-primary,#ab54db));",
+      "box-shadow:0 1px 2px rgba(40,36,56,.18);pointer-events:none;}",
+      ".dam-media-preview__assoc-item--group .dam-media-preview__assoc-name{",
+      "padding-right:2px;}",
     ].join("");
     document.head.appendChild(st);
   }
   if (document.head) injectA3Styles();
   else document.addEventListener("DOMContentLoaded", injectA3Styles);
 
+  /** Tile skeleton + per-row opacity fade (own id — always refresh, no stale A3 early-return). */
+  function injectAssocSkeletonStyles() {
+    var id = "dam-assoc-skel-styles";
+    var st = document.getElementById(id);
+    if (!st) {
+      st = document.createElement("style");
+      st.id = id;
+      (document.head || document.documentElement).appendChild(st);
+    }
+    st.textContent = [
+      ".dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading{",
+      "display:grid!important;",
+      "grid-template-columns:repeat(5,minmax(0,1fr))!important;",
+      "gap:10px 8px!important;",
+      "align-content:start!important;",
+      "align-items:start!important;",
+      "justify-items:stretch!important;",
+      "width:100%;min-width:0;min-height:0;padding:0;",
+      "overflow:hidden!important;overscroll-behavior:none;",
+      "-webkit-mask-image:none!important;mask-image:none!important;}",
+      ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton{",
+      "display:flex;flex-direction:column;align-items:center;gap:4px;",
+      "width:100%;max-width:110px;justify-self:start;",
+      "box-sizing:border-box;margin:0;padding:4px;",
+      "background:transparent!important;border:none!important;",
+      "border-radius:0!important;aspect-ratio:auto!important;height:auto!important;",
+      "opacity:var(--dam-skel-op,1);pointer-events:none;}",
+      ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton__thumb{",
+      "display:block;width:100%;aspect-ratio:1/1;border-radius:6px;",
+      "background:#e2e4ec;border:1px solid #d0d2dc;box-sizing:border-box;}",
+      ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton__line{",
+      "display:block;height:7px;width:82%;border-radius:4px;background:#eceef4;}",
+      ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton__line--short{",
+      "width:52%;height:6px;background:#f0f1f6;}",
+      ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton.is-skel-last{",
+      "-webkit-mask-image:linear-gradient(to bottom,#000 0%,transparent 50%);",
+      "mask-image:linear-gradient(to bottom,#000 0%,transparent 50%);",
+      "-webkit-mask-size:100% 100%;mask-size:100% 100%;}",
+      ".dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-media-preview__assoc-col--materials > .dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading,",
+      ".dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-viz-modal__assoc > .dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading{",
+      "grid-template-columns:repeat(5,minmax(0,1fr))!important;",
+      "align-items:start!important;overflow:hidden!important;",
+      "-webkit-mask-image:none!important;mask-image:none!important;}",
+    ].join("");
+  }
+  if (document.head) injectAssocSkeletonStyles();
+  else document.addEventListener("DOMContentLoaded", injectAssocSkeletonStyles);
+
   function pathNormSlashes(p) {
     return String(p || "").replace(/\//g, "\\");
   }
 
-  /** SUROWE ELEMENTY: folder Links (cropy zrodlowe) — NIE caly ARCHIWUM\Projekty
-   *  (tam sa tez gotowe opakowania marketingowe). */
+  /** SUROWE ELEMENTY: tylko `2 - PROJEKT/links` pod `01 - PRODUKTY` (PI branding.element_assoc).
+   *  NIE: ARCHIWUM/.../links, paczka_Sial/.../projekt/links, ani dowolny folder LINKS. */
   function isLinksRawPath(path) {
     var n = pathNormSlashes(path).toLowerCase();
     if (!n) return false;
+    if (n.indexOf("\\-- archiwum") >= 0 || n.indexOf("\\archiwum\\") >= 0) return false;
+    var underProducts =
+      n.indexOf("\\01 - produkty\\") >= 0 || n.indexOf("\\01 - products\\") >= 0;
+    if (!underProducts) return false;
     if (n.indexOf("\\2 - projekt\\links\\") >= 0) return true;
-    if (n.indexOf("\\links\\") >= 0) return true;
-    if (/\\links$/i.test(n)) return true;
+    if (/\\2 - projekt\\links$/i.test(n)) return true;
     return false;
+  }
+
+  /** Element z Links musi lezec w biezacej rewizji (gdy UI poda revision_path). */
+  function pathUnderRevision(assetPath, revisionPath) {
+    var a = String(assetPath || "")
+      .replace(/\\/g, "/")
+      .toLowerCase();
+    var r = String(revisionPath || "")
+      .replace(/\\/g, "/")
+      .toLowerCase()
+      .replace(/\/+$/, "");
+    if (!a || !r) return true;
+    return a === r || a.indexOf(r + "/") === 0;
   }
 
   /** GOTOWE ELEMENTY: ...\\1 - MATERIALY\\ELEMENTY\\... */
@@ -257,6 +342,28 @@
     return !!ASSOC_MARKETING_RASTER_EXTS[ext];
   }
 
+  /** Telefon / dump IMG_* / influencer selfie - NIGDY jako material marketingowy w assoc. */
+  function isLikelyPhoneDumpAsset(x) {
+    if (!x) return false;
+    var name = String(x.name || "");
+    var base = name.replace(/\.[a-z0-9]+$/i, "");
+    if (/^IMG_\d{3,}/i.test(base) || /\bIMG_\d{3,}/i.test(name)) return true;
+    if (/^DSC[_\-]?\d{3,}/i.test(base) || /^WA\d{4,}/i.test(base)) return true;
+    /* M-META* w nazwie bez sciezki kampanii - zwykle dump Meta Ads, nie slider. */
+    if (/\bM-META\d+/i.test(name) && !isCampaignMarketingPath(x.path)) return true;
+    var path = normSlashesLower(x.path);
+    /* WSPOLPRACE / influencerzy: zdjecia z telefonu spryskane na wiele produktow PROTEINA*. */
+    if (
+      path &&
+      (/\/02\s*-\s*wsp[oó]lprace\b/.test(path) ||
+        /\/(influencerzy|partnerzy|wspolprace|współprace)\b/.test(path)) &&
+      (/^img[_\-\s]?\d+/i.test(base) || /\.(jpe?g|heic)$/i.test(name))
+    ) {
+      return true;
+    }
+    return false;
+  }
+
   /** Material marketingowy do kolumny Skojarzone materialy (Branding policy). */
   function passesMarketingAssocMaterial(x, ctx) {
     if (!x) return false;
@@ -265,6 +372,8 @@
     if (isSourceLikeAsset(x)) return false;
     if (classifyAssocAsset(x) !== "material") return false;
     if (!hasUsableMarketingPreview(x)) return false;
+    /* HARD: phone dump / IMG_* nigdy - nawet z rola social_asset (false positive V-6300711). */
+    if (isLikelyPhoneDumpAsset(x)) return false;
     return isRelevantMaterialForProduct(x, ctx);
   }
 
@@ -334,37 +443,225 @@
   function isCampaignMarketingPath(path) {
     var p = normSlashesLower(path);
     if (!p) return false;
-    if (/\/(www|social|pos|kampanie|campaigns|banery|banners|slider|ecommerce|e-commerce)\b/.test(p)) {
+    /* PL: SLIDERY / BANERY (folder) - \\bslider nie lapie "slidery". */
+    if (
+      /\/(www|social|pos|kampanie|campaigns|banery|banners|slidery?|ecommerce|e-commerce)\b/.test(p)
+    ) {
       return true;
     }
     if (/\/(web_hero|web_bundle|key.?visual|kv)\b/.test(p)) return true;
     return false;
   }
 
+  /** Nazwa kreacji marketingowej (SLIDER / M-SLI / baner) - nawet bez roli w indeksie. */
+  function looksLikeMarketingCreativeName(x) {
+    var name = String((x && x.name) || "");
+    if (!name) return false;
+    if (/\b(slider|baner|banner|key\s*visual|\breel\b|\bstory\b)/i.test(name)) return true;
+    if (/\bM-(SLI|BAN|SHOP|META|VID|GOG|GIF|KV)\d*/i.test(name)) return true;
+    return false;
+  }
+
+  function productSignalHits(x, ctx) {
+    var blob = String(x.name || "") + " " + String(x.path || "") + " " + String(x.search_blob || "");
+    blob = blob.toLowerCase();
+    var idxBase = String((ctx && ctx.index) || "").split(".")[0];
+    if (idxBase && idxBase.length >= 4 && blob.indexOf(idxBase.toLowerCase()) >= 0) return 99;
+    var name = String((ctx && ctx.name) || "").toLowerCase();
+    if (!name) return 0;
+    var tokens = name.split(/[^a-z0-9ąćęłńóśźż]+/i).filter(function (t) {
+      return t && t.length > 3;
+    });
+    /* "PROTEINA" / "KARMEL" - unikaj hitow na samym rodzajniku linii (za szeroko). */
+    var specific = tokens.filter(function (t) {
+      return !/^(proteina|protein|baton|batony|nowa|nowy|krem)$/i.test(t);
+    });
+    var use = specific.length ? specific : tokens;
+    var hits = 0;
+    use.forEach(function (t) {
+      if (blob.indexOf(t) >= 0) hits += 1;
+    });
+    return hits;
+  }
+
+  /**
+   * Material marketingowy przy wizce produktu.
+   * HARD: phone dump juz odciety w passesMarketingAssocMaterial.
+   * Spray (linkedN>=4) bez sygnalu produktu = out (IMG/WSPOLPRACE false+).
+   * Wazne: NIE wymagaj hits>=2 przy jawnych skojarzeniach 1–3 produktow —
+   * to wyzerowalo Nuggets (6300586) mimo realnych sliderow/meta.
+   */
   function isRelevantMaterialForProduct(x, ctx) {
     if (!x) return false;
     if (isVisualizationAsset(x)) return false;
     var role = String(x.asset_role || "").toLowerCase();
-    if (VIZ_ASSOC_KEEP_ROLES[role]) return true;
-    /* Bez roli marketingowej: tylko sciezki kampanii/WWW/social — nie packshoty z indeksem. */
-    if (!isCampaignMarketingPath(x.path)) return false;
-    var blob = String(x.name || "") + " " + String(x.path || "") + " " + String(x.search_blob || "");
-    blob = blob.toLowerCase();
+    var hasKeepRole = !!VIZ_ASSOC_KEEP_ROLES[role];
+    var campaignPath =
+      isCampaignMarketingPath(x.path) || looksLikeMarketingCreativeName(x);
+    if (!hasKeepRole && !campaignPath) return false;
+    var hits = productSignalHits(x, ctx);
+    var linkedN = (x.linked_products && x.linked_products.length) || 0;
     var idxBase = String((ctx && ctx.index) || "").split(".")[0];
-    if (idxBase && idxBase.length >= 4 && blob.indexOf(idxBase.toLowerCase()) >= 0) return true;
-    var name = String((ctx && ctx.name) || "").toLowerCase();
-    if (name) {
-      var tokens = name.split(/[^a-z0-9ąćęłńóśźż]+/i).filter(function (t) {
-        return t && t.length > 3;
-      });
-      var hits = 0;
-      tokens.forEach(function (t) {
-        if (blob.indexOf(t) >= 0) hits += 1;
-      });
-      if (tokens.length && hits >= Math.min(2, tokens.length)) return true;
-      if (tokens.length === 1 && hits === 1) return true;
+    var hasIndexCtx = !!(idxBase && idxBase.length >= 4);
+
+    if (hasKeepRole) {
+      if (hits >= 99) return true;
+      if (hits >= 2) return true;
+      /* Spray bez indeksu/tokenow - odrzuc (phone dump / influencer). */
+      if (linkedN >= 4) return false;
+      /* Jawne skojarzenie z 1–3 produktami (w tym biezacym) - zaufaj linked_products. */
+      if (linkedN > 0 && linkedN <= 3) return true;
+      if (hits >= 1) return true;
+      return false;
     }
+
+    /* Sciezka/nazwa kampanii bez roli KEEP. */
+    if (hits >= 99 || hits >= 2) return true;
+    if (linkedN === 1) return true;
+    if (linkedN > 0 && linkedN <= 3 && hits >= 1) return true;
+    if (!hasIndexCtx && hits >= 1) return true;
     return false;
+  }
+
+  var ASSOC_PRODUCT_GENERIC_TOKENS = {
+    proteina: 1,
+    protein: 1,
+    baton: 1,
+    batony: 1,
+    nowa: 1,
+    nowy: 1,
+    krem: 1,
+    mix: 1,
+    zestaw: 1,
+    slider: 1,
+    desktop: 1,
+    mobile: 1,
+    tablet: 1,
+    gotowe: 1,
+    suchy: 1,
+    kategorie: 1,
+    glowne: 1,
+    strona: 1,
+    dobra: 1,
+    kaloria: 1,
+  };
+
+  function assetFileBaseName(asset) {
+    var n = String((asset && (asset.name || asset.path)) || "")
+      .replace(/\\/g, "/")
+      .split("/")
+      .pop() || "";
+    return n.replace(/\.[a-z0-9]+$/i, "").toLowerCase();
+  }
+
+  function polishStemToken(t) {
+    var s = String(t || "").toLowerCase();
+    if (s.length < 5) return s;
+    return s.replace(/(owych|owymi|owymi|owie|ami|ach|owi|owe|owy|owa|ego|emu|ymi|ym|ich|ych|ej|ą|ę|e|y|a)$/i, "");
+  }
+
+  /**
+   * Filtr produktow przy materialie brandingowym (odwrotnosc viz→materials).
+   * Folder SLIDERY KATEGORIE czesto ma spray folder_linked_product_ids (Banoffee/
+   * Proteina przy "batony daktylowe") - zostaw tylko produkty ze sygnalem w nazwie
+   * assetu / podkategorii (np. daktylow*).
+   */
+  function productRelevanceToBrandingAsset(product, asset) {
+    if (!product || !asset) return 0;
+    var assetBlob = (
+      String(asset.name || "") +
+      " " +
+      String(asset.path || "") +
+      " " +
+      String(asset.search_blob || "")
+    ).toLowerCase();
+    var score = 0;
+    var idxs = [].concat(product.indexes || [], product.index_bases || []);
+    if (product.product_index) idxs.push(product.product_index);
+    for (var i = 0; i < idxs.length; i++) {
+      var base = String(idxs[i] || "").split(".")[0];
+      if (base && base.length >= 4 && assetBlob.indexOf(base.toLowerCase()) >= 0) score += 99;
+    }
+    var pname = String(product.display_name || product.name || "").toLowerCase();
+    var pTokens = pname.split(/[^a-z0-9ąćęłńóśźż]+/i).filter(function (t) {
+      return t && t.length > 3 && !ASSOC_PRODUCT_GENERIC_TOKENS[t];
+    });
+    pTokens.forEach(function (t) {
+      if (assetBlob.indexOf(t) >= 0) score += 2;
+    });
+    var aBase = assetFileBaseName(asset);
+    var aTokens = aBase.split(/[^a-z0-9ąćęłńóśźż]+/i).filter(function (t) {
+      return t && t.length > 3 && !ASSOC_PRODUCT_GENERIC_TOKENS[t];
+    });
+    var pBlob = (
+      String(product.search_blob || "") +
+      " " +
+      pname +
+      " " +
+      String(product.category || "") +
+      " " +
+      String(product.subcategory_label || product.subcategory || "") +
+      " " +
+      (product.tags || []).join(" ")
+    ).toLowerCase();
+    aTokens.forEach(function (t) {
+      if (pBlob.indexOf(t) >= 0) score += 3;
+      var stem = polishStemToken(t);
+      if (stem && stem.length >= 5 && pBlob.indexOf(stem) >= 0) score += 2;
+    });
+    return score;
+  }
+
+  function resolveProductRecordForAssoc(p) {
+    if (!p || !p.id) return p;
+    var fi = window._DAM_FILE_INDEX;
+    var hit = null;
+    if (fi && fi.products) {
+      for (var i = 0; i < fi.products.length; i++) {
+        if (fi.products[i] && fi.products[i].id === p.id) {
+          hit = fi.products[i];
+          break;
+        }
+      }
+    }
+    if (!hit) return p;
+    /* enrichLinkedProducts ucina category/search_blob — dolacz do scoringu. */
+    return {
+      id: p.id,
+      display_name: p.display_name || hit.display_name || hit.name || p.id,
+      name: hit.name || p.name || "",
+      thumb_url: p.thumb_url || hit.thumb_url || "",
+      product_index: p.product_index || "",
+      path: p.path || hit.path || "",
+      search_blob: hit.search_blob || "",
+      category: hit.category || "",
+      subcategory_label: hit.subcategory_label || hit.subcategory || "",
+      tags: hit.tags || [],
+      indexes: hit.indexes || [],
+      index_bases: hit.index_bases || [],
+    };
+  }
+
+  function filterLinkedProductsForBrandingAsset(asset, linkedProducts) {
+    var list = (linkedProducts || []).filter(Boolean);
+    if (!asset || list.length <= 3) return list;
+    var scored = list.map(function (raw) {
+      var p = resolveProductRecordForAssoc(raw);
+      return { p: raw, s: productRelevanceToBrandingAsset(p, asset) };
+    });
+    var max = 0;
+    scored.forEach(function (x) {
+      if (x.s > max) max = x.s;
+    });
+    if (max <= 0) return list;
+    var kept = scored
+      .filter(function (x) {
+        return x.s >= 2;
+      })
+      .map(function (x) {
+        return x.p;
+      });
+    return kept.length ? kept : list;
   }
 
   /** Normalizuj thumb produktu - unikaj broken img (wzgledne / puste / zle). */
@@ -388,6 +685,129 @@
     img.replaceWith(ph);
   };
 
+  /** Wideo: gdy poster mostu padnie, lokalny SVG "Wideo" (nie uil-image-slash). */
+  window.__damAssocVideoThumbFallback = function (img) {
+    if (!img || !img.parentNode) return;
+    if (img.dataset.fallbackDone === "1") return;
+    img.dataset.fallbackDone = "1";
+    img.onerror = null;
+    img.src = VIDEO_POSTER_FALLBACK;
+    img.classList.add("dam-media-preview__assoc-thumb--video-fallback");
+    /* Most bez ffmpeg: sprobuj klatke w przegladarce (~25%). */
+    tryCaptureAssocVideoFrame(img);
+  };
+
+  /**
+   * Klatka ~25% czasu trwania z streamu mostu (gdy ffmpeg nie ma na PATH).
+   * Wymaga CORS mostu 8766 - canvas.toDataURL.
+   */
+  function captureVideoPosterFrame(streamSrc, pct) {
+    return new Promise(function (resolve) {
+      if (!streamSrc) {
+        resolve(null);
+        return;
+      }
+      var video = document.createElement("video");
+      var done = false;
+      var timer = setTimeout(function () {
+        finish(null);
+      }, 20000);
+      function finish(url) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try {
+          video.removeAttribute("src");
+          video.load();
+        } catch (e1) {}
+        resolve(url || null);
+      }
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.crossOrigin = "anonymous";
+      video.addEventListener("error", function () {
+        finish(null);
+      });
+      video.addEventListener("loadedmetadata", function () {
+        var dur = video.duration;
+        var t = 0.5;
+        if (dur && isFinite(dur) && dur > 0.2) {
+          t = Math.max(0.05, Math.min(dur * (pct || 0.25), dur - 0.05));
+        }
+        try {
+          video.currentTime = t;
+        } catch (e2) {
+          finish(null);
+        }
+      });
+      video.addEventListener("seeked", function () {
+        try {
+          var w = video.videoWidth || 0;
+          var h = video.videoHeight || 0;
+          if (!w || !h) {
+            finish(null);
+            return;
+          }
+          var canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext("2d");
+          if (!ctx) {
+            finish(null);
+            return;
+          }
+          ctx.drawImage(video, 0, 0, w, h);
+          finish(canvas.toDataURL("image/jpeg", 0.82));
+        } catch (e3) {
+          finish(null);
+        }
+      });
+      video.src = streamSrc;
+    });
+  }
+
+  function tryCaptureAssocVideoFrame(img) {
+    if (!img || img.dataset.captureTried === "1") return;
+    img.dataset.captureTried = "1";
+    var src = img.getAttribute("src") || img.currentSrc || "";
+    var m = /[?&]path=([^&]+)/.exec(src);
+    if (!m) return;
+    var path = decodeURIComponent(m[1]);
+    var stream = streamUrl(path);
+    captureVideoPosterFrame(stream, 0.25).then(function (dataUrl) {
+      if (!dataUrl || !img.isConnected) return;
+      img.onerror = null;
+      img.src = dataUrl;
+      img.classList.add("dam-media-preview__assoc-thumb--captured");
+      img.classList.remove("dam-media-preview__assoc-thumb--video-fallback");
+    });
+  }
+
+  /** Po renderze: jesli poster mostu to SVG-placeholder, zlap klatke w kliencie. */
+  function hydrateVideoAssocThumbs(host) {
+    if (!host) return;
+    host.querySelectorAll(".dam-media-preview__assoc-item--video img").forEach(function (img) {
+      function maybeCapture() {
+        if (img.dataset.captureTried === "1") return;
+        /* Placeholder SVG mostu = 640x360; prawdziwy JPEG z ffmpeg zwykle inny rozmiar.
+           Gdy preview padl / SVG / brak naturalWidth - capture. */
+        var nw = img.naturalWidth || 0;
+        var nh = img.naturalHeight || 0;
+        var src = img.currentSrc || img.src || "";
+        var looksPlaceholder =
+          !nw ||
+          src.indexOf("data:image/svg") === 0 ||
+          (nw === 640 && nh === 360) ||
+          img.classList.contains("dam-media-preview__assoc-thumb--video-fallback");
+        if (looksPlaceholder) tryCaptureAssocVideoFrame(img);
+        else img.dataset.captureTried = "1";
+      }
+      if (img.complete) maybeCapture();
+      else img.addEventListener("load", maybeCapture, { once: true });
+    });
+  }
+
   function readCardZoomPct() {
     var n = parseInt(localStorage.getItem(CARD_ZOOM_KEY) || "100", 10);
     if (isNaN(n)) n = 100;
@@ -396,6 +816,119 @@
 
   function basePreviewZoom() {
     return readCardZoomPct() / 100;
+  }
+
+  /**
+   * Shared density zoom (branding grid + viz assoc pane).
+   * Same math as dam-branding applyBrandingCardZoom — one system, many roots.
+   */
+  function cardZoomRoots() {
+    return [
+      document.getElementById("damBrandingSectionGrid"),
+      document.getElementById("damBrandbookGrid"),
+      document.getElementById("vizGrid"),
+      document.querySelector("#damVizModal .dam-viz-modal__assoc-pane"),
+      document.getElementById("damVizModalAssoc"),
+      document.getElementById("damMediaPreviewLinkedAssets"),
+      document.getElementById("damMediaPreviewAssoc"),
+      document.querySelector("#damMediaPreview .dam-media-preview__assoc"),
+    ].filter(Boolean);
+  }
+
+  function syncCardZoomControls(n) {
+    var labelIds = ["damBrandingCardZoomLabel", "vizCardZoomLabel"];
+    var inputIds = ["damBrandingCardZoom", "vizCardZoom"];
+    labelIds.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = n + "%";
+    });
+    inputIds.forEach(function (id) {
+      var input = document.getElementById(id);
+      if (input && String(input.value) !== String(n)) input.value = String(n);
+    });
+  }
+
+  function applyCardZoomPct(pct) {
+    var n = Math.round(Number(pct) || 100);
+    if (n < CARD_ZOOM_MIN) n = CARD_ZOOM_MIN;
+    if (n > CARD_ZOOM_MAX) n = CARD_ZOOM_MAX;
+    var imgScale = (n <= 100 ? n / 100 : 1) * CARD_IMG_BASE_SCALE;
+    var cardScale = n <= 100 ? 1 : n / 100;
+    var cardMin = Math.round(CARD_BASE_MIN_PX * cardScale) + "px";
+    cardZoomRoots().forEach(function (root) {
+      root.style.setProperty("--dam-viz-img-scale", String(imgScale));
+      root.style.setProperty("--dam-viz-card-scale", String(cardScale));
+      root.style.setProperty("--dam-viz-card-min", cardMin);
+    });
+    syncCardZoomControls(n);
+    try {
+      localStorage.setItem(CARD_ZOOM_KEY, String(n));
+    } catch (eZoom) {}
+    return n;
+  }
+
+  function injectAssocDensityZoomCss() {
+    if (document.getElementById("damAssocDensityZoomCss")) return;
+    var st = document.createElement("style");
+    st.id = "damAssocDensityZoomCss";
+    st.textContent =
+      "#damVizModalAssoc," +
+      "#damMediaPreviewLinkedAssets," +
+      ".dam-viz-modal__assoc-pane .dam-media-preview__assoc-grid," +
+      "#damMediaPreviewAssoc .dam-media-preview__assoc-grid{" +
+      "grid-template-columns:repeat(auto-fill,minmax(calc(86px * var(--dam-viz-card-scale, 1)),1fr));" +
+      "}" +
+      "#damVizModalAssoc .dam-media-preview__assoc-thumb," +
+      "#damMediaPreviewLinkedAssets .dam-media-preview__assoc-thumb," +
+      "#damMediaPreviewAssoc .dam-media-preview__assoc-thumb{" +
+      "width:calc(70px * var(--dam-viz-card-scale, 1));" +
+      "height:calc(70px * var(--dam-viz-card-scale, 1));" +
+      "transform:scale(calc(var(--dam-viz-img-scale, 1.2) / 1.2));" +
+      "transform-origin:center center;" +
+      "}" +
+      "#damVizModalAssoc .dam-media-preview__assoc-item," +
+      "#damMediaPreviewLinkedAssets .dam-media-preview__assoc-item," +
+      "#damMediaPreviewAssoc .dam-media-preview__assoc-item{" +
+      "max-width:calc(110px * var(--dam-viz-card-scale, 1));" +
+      "}";
+    document.head.appendChild(st);
+  }
+
+  function bindShiftCardZoomKeys() {
+    if (document.documentElement._damShiftCardZoomBound) return;
+    document.documentElement._damShiftCardZoomBound = true;
+    injectAssocDensityZoomCss();
+    applyCardZoomPct(readCardZoomPct());
+    document.addEventListener(
+      "keydown",
+      function (e) {
+        if (!e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
+        var t = e.target;
+        if (
+          t &&
+          (t.tagName === "INPUT" ||
+            t.tagName === "TEXTAREA" ||
+            t.tagName === "SELECT" ||
+            t.isContentEditable)
+        ) {
+          return;
+        }
+        var code = e.code || "";
+        var key = e.key || "";
+        var isPlus = key === "+" || key === "=" || code === "NumpadAdd" || code === "Equal";
+        var isMinus = key === "-" || key === "_" || code === "NumpadSubtract" || code === "Minus";
+        if (!isPlus && !isMinus) return;
+        e.preventDefault();
+        applyCardZoomPct(readCardZoomPct() + (isPlus ? CARD_ZOOM_STEP : -CARD_ZOOM_STEP));
+      },
+      true
+    );
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bindShiftCardZoomKeys);
+  } else {
+    bindShiftCardZoomKeys();
   }
 
   function esc(s) {
@@ -625,7 +1158,15 @@
                 esc(label) +
                 "</button>" +
                 (idx
-                  ? '<span class="dam-media-preview__assoc-index">' + esc(idx) + "</span>"
+                  ? '<span class="dam-media-preview__assoc-index dam-branding-id-chip" role="button" tabindex="0" data-marketing-id="' +
+                    esc(idx) +
+                    '" data-tag-value="' +
+                    esc(idx) +
+                    '" title="ID: ' +
+                    esc(idx) +
+                    ' (klik / prawy = kopiuj)">' +
+                    esc(idx) +
+                    "</span>"
                   : "") +
                 "</div>"
               );
@@ -720,6 +1261,7 @@
   /**
    * Klucz kreacji: baza nazwy bez markerow kompresji (ultra/low/high/skompresowane...).
    * NIE tnie koncowych numerow (_01 vs _03 = ROZNE kreacje) ani rozmiarow (992x600 = inny wariant).
+   * (Uzywane przez Rule A / jakosc - zostaw bez device/WxH.)
    */
   function creativeKey(nameOrPath) {
     var base = String(baseNameNoExt(nameOrPath)).toLowerCase();
@@ -727,6 +1269,118 @@
     base = base.replace(/\b(skompresowane|compressed|compress|ultralow|ultra|low|high|hq|full|master|oryginalne|oryginal|org|min)\b/g, "");
     base = base.replace(/-+/g, "-").replace(/^-+|-+$/g, "");
     return base;
+  }
+
+  /**
+   * Rodzina kreacji do grupowania skojarzonych materialow (#damVizModalAssoc):
+   * creativeKey + strip MOBILE/DESKTOP/TABLET + WxH (takze po normalizacji do 576-x-600).
+   * Scope folderu = folder_group_id (jak branding marketingGroupKey / group cards).
+   */
+  function familyCreativeKey(nameOrPath) {
+    var base = creativeKey(nameOrPath);
+    if (!base) return "";
+    base = base.replace(/\b(mobile|desktop|tablet|phone|iphone|ipad)\b/g, "");
+    base = base.replace(/\b\d{2,5}-x-\d{2,5}\b/g, "");
+    base = base.replace(/\b\d{2,5}x\d{2,5}\b/g, "");
+    base = base.replace(/\b(rgb|cmyk|px)\b/g, "");
+    base = base.replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+    return base;
+  }
+
+  function assocMaterialGroupScope(a) {
+    if (!a) return "";
+    var fgi = String(a.folder_group_id || "")
+      .replace(/\\/g, "/")
+      .toLowerCase()
+      .trim();
+    if (fgi) return fgi;
+    return dirOfPath(a.path || "");
+  }
+
+  /** Klucz grupy = scope brandingu (folder_group_id/dir) + family stem (device/WxH/quality). */
+  function assocMaterialGroupKey(a) {
+    var scope = assocMaterialGroupScope(a) || "orphan";
+    var fam =
+      familyCreativeKey((a && (a.name || a.path)) || "") ||
+      normSlashesLower((a && (a.path || a.id || a.name)) || "unknown");
+    return scope + "|" + fam;
+  }
+
+  function parseDimsArea(nameOrPath) {
+    var s = String(baseNameNoExt(nameOrPath) || "");
+    var m = s.match(/(\d{2,5})\s*[xX×]\s*(\d{2,5})/);
+    if (!m) m = s.match(/(\d{2,5})-x-(\d{2,5})/i);
+    if (!m) return 0;
+    return (parseInt(m[1], 10) || 0) * (parseInt(m[2], 10) || 0);
+  }
+
+  /** Preferuj DESKTOP / FRONT / najwiekszy raster - jak pickPrimaryMarketing w brandingu. */
+  function pickPrimaryAssocMaterial(assets) {
+    return (assets || [])
+      .slice()
+      .sort(function (a, b) {
+        var score = function (x) {
+          var s = 0;
+          var n = String((x && x.name) || "");
+          if (/\.(png|jpe?g|webp|gif)$/i.test(n)) s += 40;
+          else if (/\.(tif|tiff)$/i.test(n)) s += 24;
+          else if (/\.(psd|psb)$/i.test(n)) s += 4;
+          if (/desktop/i.test(n)) s += 16;
+          else if (/tablet/i.test(n)) s += 8;
+          else if (/mobile/i.test(n)) s += 4;
+          if (String((x && x.perspective) || "").toUpperCase() === "FRONT") s += 12;
+          s += Math.min(20, Math.floor(parseDimsArea(n) / 200000));
+          if (x && x.media_type === "video") s += 6;
+          return s;
+        };
+        return score(b) - score(a);
+      })[0];
+  }
+
+  function assocGroupDisplayLabel(primary) {
+    if (!primary) return "Materiał";
+    var base = String(baseNameNoExt(primary.name || primary.path || "") || primary.name || "Materiał");
+    base = base
+      .replace(/\b(MOBILE|DESKTOP|TABLET|PHONE|IPHONE|IPAD)\b/gi, " ")
+      .replace(/\b\d{2,5}\s*[xX×]\s*\d{2,5}\b/g, " ")
+      .replace(/\b\d{2,5}-x-\d{2,5}\b/gi, " ")
+      .replace(/\b(RGB|CMYK|px)\b/gi, " ")
+      .replace(/\s*[-–—_|]+\s*/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return base || primary.name || primary.id || "Materiał";
+  }
+
+  /**
+   * Grupuj materialy skojarzone: 1 kafelek = 1 kreacja (device/WxH/ext/quality warianty).
+   * Zgodne ze scope folder_group_id z brandingu; stem jak familyCreativeKey.
+   */
+  function groupAssocMaterials(list) {
+    var byKey = {};
+    var order = [];
+    (list || []).forEach(function (a) {
+      if (!a) return;
+      var key = assocMaterialGroupKey(a);
+      if (!byKey[key]) {
+        byKey[key] = [];
+        order.push(key);
+      }
+      byKey[key].push(a);
+    });
+    return order.map(function (key) {
+      var bucket = byKey[key] || [];
+      var sorted = bucket.slice().sort(function (a, b) {
+        return String(a.name || "").localeCompare(String(b.name || ""), "pl");
+      });
+      var primary = pickPrimaryAssocMaterial(sorted) || sorted[0];
+      return {
+        type: sorted.length > 1 ? "group" : "single",
+        key: key,
+        assets: sorted,
+        primary: primary,
+        label: assocGroupDisplayLabel(primary),
+      };
+    });
   }
 
   /** Wyzszy wynik = mocniejsza kompresja (nizszy tier). Brak markerow = 0 (najlepsza jakosc). */
@@ -909,9 +1563,18 @@
     });
   }
 
+  /** PSD/PSB/AI/… = zrodla — tylko #damMediaPreviewSourceMount, nigdy wariant-grid. */
+  function isSourceVariantFile(v) {
+    if (!v) return true;
+    var ext = fileExt(v.name || v.path);
+    if (EDITABLE_EXTS[ext]) return true;
+    var mt = String(v.media_type || "").toLowerCase();
+    return mt === "source" || mt === "vector" || mt === "document";
+  }
+
   function folderVariantsHtml(variants, activeId) {
     var list = (variants || []).filter(function (v) {
-      return v && v.id;
+      return v && v.id && !isSourceVariantFile(v);
     });
     list = dedupeVariantsByCreative(list, activeId);
     var activeIdx = list.findIndex(function (v) {
@@ -987,66 +1650,192 @@
     );
   }
 
-  function linkedBrandingCardHtml(x, i, extra, idxAttr) {
-    var label = splitNameExt(x.name || "").base || x.name || x.id || "Materiał";
+  function linkedBrandingCardHtml(x, i, extra, idxAttr, groupMeta) {
+    groupMeta = groupMeta || null;
+    var variantCount = groupMeta && groupMeta.count > 1 ? groupMeta.count : 0;
+    var label =
+      (groupMeta && groupMeta.label) ||
+      splitNameExt(x.name || "").base ||
+      x.name ||
+      x.id ||
+      "Materiał";
     var mkId = marketingDisplayId(x);
-    var thumb = isRasterPreviewable(x) ? previewUrl(x.path, x) : "";
+    /* Wideo: poster z mostu (&preview=1, klatka ~25% w ffmpeg). Raster: zwykle previewUrl. */
+    var isVid = isVideoAsset(x);
+    var thumb = "";
+    if (isVid && x.path) {
+      thumb = posterUrl(x.path);
+    } else if (isRasterPreviewable(x)) {
+      thumb = previewUrl(x.path, x);
+    }
+    var onErr = isVid
+      ? "window.__damAssocVideoThumbFallback&&__damAssocVideoThumbFallback(this)"
+      : "window.__damAssocThumbFallback&&__damAssocThumbFallback(this)";
     var attr = idxAttr || "data-linked-asset-idx";
+    var title =
+      variantCount > 1
+        ? label + " · " + variantCount + (variantCount === 1 ? " wariant" : " warianty")
+        : label;
+    var badge =
+      variantCount > 1
+        ? '<span class="dam-media-preview__assoc-variant-badge" aria-label="' +
+          esc(String(variantCount) + " warianty") +
+          '">' +
+          esc(String(variantCount)) +
+          "</span>"
+        : "";
     return (
       '<div class="dam-media-preview__assoc-item dam-media-preview__assoc-item--asset' +
+      (variantCount > 1 ? " dam-media-preview__assoc-item--group" : "") +
       (extra ? " dam-media-preview__assoc-item--extra" : "") +
-      '" role="listitem">' +
+      (isVid ? " dam-media-preview__assoc-item--video" : "") +
+      '" role="listitem"' +
+      (variantCount > 1 ? ' data-assoc-group-count="' + variantCount + '"' : "") +
+      ">" +
       '<button type="button" class="dam-media-preview__assoc-thumb-btn" ' +
       attr +
       '="' +
       i +
       '" title="' +
-      esc(label) +
+      esc(title) +
       '">' +
       (thumb
         ? '<img class="dam-media-preview__assoc-thumb" src="' +
           esc(thumb) +
           '" alt="' +
           esc(label) +
-          '" loading="lazy" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
+          '" loading="lazy" onerror="' +
+          onErr +
+          '">'
         : '<span class="dam-media-preview__assoc-thumb dam-media-preview__assoc-thumb--fallback" aria-hidden="true"><i class="uil uil-image-slash"></i></span>') +
+      badge +
       "</button>" +
       '<button type="button" class="dam-media-preview__assoc-name" ' +
       attr +
       '="' +
       i +
       '" title="' +
-      esc(label) +
+      esc(title) +
       '">' +
       esc(label) +
       "</button>" +
       (mkId
-        ? '<span class="dam-media-preview__assoc-index" title="ID marketingowe">' + esc(mkId) + "</span>"
+        ? '<span class="dam-media-preview__assoc-index dam-branding-id-chip" role="button" tabindex="0" data-marketing-id="' +
+          esc(mkId) +
+          '" data-tag-value="' +
+          esc(mkId) +
+          '" title="ID marketingowe: ' +
+          esc(mkId) +
+          ' (klik / prawy = kopiuj)" data-dam-tip="ID marketingowe: ' +
+          esc(mkId) +
+          ' (klik = kopiuj)">' +
+          esc(mkId) +
+          "</span>"
         : "") +
       "</div>"
     );
   }
 
   var LINKED_ASSETS_VISIBLE = 6;
-  var ASSOC_SKELETON_COUNT = 6;
+  var ASSOC_SKELETON_COLS = 5;
+  var ASSOC_SKELETON_MIN_ROWS = 5;
+  /** Tile card ≈ square thumb + 2 label lines + gaps (~ real assoc item). */
+  var ASSOC_SKELETON_CELL_PITCH = 128;
 
-  function assocPaneSkeletonHtml(count) {
-    var n = count || ASSOC_SKELETON_COUNT;
+  /**
+   * Opacity for row r (0-based): row0=1, row1≈0.8, taper down.
+   * Last row keeps ~0.28 so `.is-skel-last` mask can dissolve to 0 at mid-tile
+   * (whole-row opacity:0 made last tiles invisible — no visible fade).
+   */
+  function assocSkeletonRowOpacity(row, rows) {
+    var n = Math.max(2, rows);
+    if (row <= 0) return 1;
+    var lastTop = n - 1;
+    if (row >= lastTop) return 0.28;
+    var t = (row - 1) / Math.max(1, lastTop - 1);
+    if (t < 0) t = 0;
+    if (t > 1) t = 1;
+    return Math.round((0.8 - t * (0.8 - 0.28)) * 1000) / 1000;
+  }
+
+  function assocPaneSkeletonCellsHtml(rows) {
+    var rCount = Math.max(1, rows || ASSOC_SKELETON_MIN_ROWS);
     var cells = "";
-    for (var i = 0; i < n; i++) {
-      cells += '<div class="dam-assoc-skeleton" aria-hidden="true"></div>';
+    var r;
+    var c;
+    for (r = 0; r < rCount; r++) {
+      var op = assocSkeletonRowOpacity(r, rCount);
+      var lastCls = r === rCount - 1 ? " is-skel-last" : "";
+      for (c = 0; c < ASSOC_SKELETON_COLS; c++) {
+        cells +=
+          '<div class="dam-assoc-skeleton' +
+          lastCls +
+          '" aria-hidden="true" style="--dam-skel-op:' +
+          op +
+          '" data-skel-row="' +
+          r +
+          '">' +
+          '<span class="dam-assoc-skeleton__thumb"></span>' +
+          '<span class="dam-assoc-skeleton__line"></span>' +
+          '<span class="dam-assoc-skeleton__line dam-assoc-skeleton__line--short"></span>' +
+          "</div>";
+      }
     }
+    return cells;
+  }
+
+  /** Legacy wrapper (cells-only preferred — mount IS the grid). */
+  function assocPaneSkeletonHtml(count) {
+    var rows = Math.max(
+      ASSOC_SKELETON_MIN_ROWS,
+      Math.ceil((count || ASSOC_SKELETON_COLS * ASSOC_SKELETON_MIN_ROWS) / ASSOC_SKELETON_COLS)
+    );
     return (
       '<div class="dam-media-preview__assoc-grid dam-media-preview__assoc-grid--loading" role="list" aria-busy="true" aria-label="Ładowanie skojarzonych materiałów">' +
-      cells +
+      assocPaneSkeletonCellsHtml(rows) +
       "</div>"
     );
   }
 
+  function measureAssocPaneHeight(mount) {
+    if (!mount) return 560;
+    var h = mount.clientHeight || 0;
+    if (h >= 120) return h;
+    var el = mount.parentElement;
+    var hops = 0;
+    while (el && hops < 5) {
+      if (el.clientHeight >= 160) return Math.max(160, el.clientHeight - 52);
+      el = el.parentElement;
+      hops += 1;
+    }
+    return 560;
+  }
+
+  function clearAssocPaneLoadingState(mount) {
+    if (!mount) return;
+    mount.classList.remove("dam-media-preview__assoc-grid--loading");
+    mount.removeAttribute("aria-busy");
+    if (mount.getAttribute("aria-label") === "Ładowanie skojarzonych materiałów") {
+      mount.removeAttribute("aria-label");
+    }
+    mount.style.removeProperty("--dam-assoc-skel-rows");
+  }
+
   function showAssocPaneLoading(mount, labelEl) {
     if (!mount) return;
+    injectAssocSkeletonStyles();
     mount.classList.remove("is-collapsed-assets");
-    mount.innerHTML = assocPaneSkeletonHtml();
+    mount.classList.add("dam-media-preview__assoc-grid--loading");
+    mount.setAttribute("aria-busy", "true");
+    mount.setAttribute("aria-label", "Ładowanie skojarzonych materiałów");
+    var h = measureAssocPaneHeight(mount);
+    var rows = Math.max(
+      ASSOC_SKELETON_MIN_ROWS,
+      Math.ceil(h / ASSOC_SKELETON_CELL_PITCH)
+    );
+    mount.style.setProperty("--dam-assoc-skel-rows", String(rows));
+    /* Tile cards into mount — never nest a second .assoc-grid. */
+    mount.innerHTML = assocPaneSkeletonCellsHtml(rows);
     if (labelEl) labelEl.textContent = "Skojarzone materiały";
     if (window.DamLoader && typeof window.DamLoader.start === "function") {
       window.DamLoader.start("Skojarzenia…");
@@ -1080,13 +1869,42 @@
     });
   }
 
-  function bindLinkedAssetClicks(host, list, attrName) {
+  /** Pelna lista ID produktow skojarzonych z assetem (linked_products + *_ids). */
+  function collectAssetLinkedProductIds(asset) {
+    var ids = [];
+    var seen = {};
+    function add(id) {
+      id = String(id || "").trim();
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      ids.push(id);
+    }
+    if (!asset) return ids;
+    (asset.linked_products || []).forEach(function (p) {
+      if (p && p.id) add(p.id);
+    });
+    (asset.linked_product_ids || []).forEach(add);
+    (asset.folder_linked_product_ids || []).forEach(add);
+    return ids;
+  }
+
+  /**
+   * list = plaskie assety LUB wpisy grupy { primary, assets }.
+   * groupEntries: gdy podane, klik otwiera representative + siblings = czlonkowie grupy
+   * (parity z branding data-group-ids / openModal siblings).
+   */
+  function bindLinkedAssetClicks(host, list, attrName, groupEntries) {
     if (!host || !list) return;
     host.querySelectorAll("[" + attrName + "]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
         var i = parseInt(btn.getAttribute(attrName), 10) || 0;
-        var target = list[i];
+        var entry = groupEntries && groupEntries[i] ? groupEntries[i] : null;
+        var target = entry && entry.primary ? entry.primary : list[i];
         if (!target) return;
+        var members =
+          entry && entry.assets && entry.assets.length
+            ? entry.assets.slice()
+            : list.slice();
         /* Shift+klik = edycja skojarzen assetu brandingowego (PI / user 2026-07-20). */
         if (e && e.shiftKey) {
           e.preventDefault();
@@ -1103,36 +1921,93 @@
             btn.closest(".dam-media-preview__assoc-col") ||
             host.closest(".dam-media-preview__assoc-col") ||
             host;
-          AE.openEditPicker(col, "product", {
-            asset: target,
-            mode: "viz",
-            sourceType: "viz",
-            groupContext: {
-              folder_group_id: target.folder_group_id || "",
-              linked_products: target.linked_products || [],
-              variants: target.folder_variants || target.variants || [],
-            },
-            onRefresh: refreshLinkedBrandingAfterEdit,
-            onSaved: function (productIds) {
-              var ids = productIds || [];
-              target.linked_product_ids = ids.slice();
-              if (typeof AE.enrichLinkedProducts === "function") {
-                AE.enrichLinkedProducts(
-                  ids.map(function (id) {
+          var fullIds = collectAssetLinkedProductIds(target);
+          function openWithLinked(linked) {
+            AE.openEditPicker(col, "product", {
+              asset: target,
+              mode: "viz",
+              sourceType: "viz",
+              groupContext: {
+                folder_group_id: target.folder_group_id || "",
+                linked_products: linked || [],
+                linked_product_ids: fullIds.slice(),
+                variants:
+                  members.length > 1
+                    ? members.map(function (m) {
+                        return {
+                          id: m.id,
+                          name: m.name,
+                          path: m.path,
+                          media_type: m.media_type || "",
+                        };
+                      })
+                    : target.folder_variants || target.variants || [],
+              },
+              onRefresh: refreshLinkedBrandingAfterEdit,
+              onSaved: function (productIds) {
+                var ids = productIds || [];
+                target.linked_product_ids = ids.slice();
+                target.folder_linked_product_ids = ids.slice();
+                if (typeof AE.enrichLinkedProducts === "function") {
+                  AE.enrichLinkedProducts(
+                    ids.map(function (id) {
+                      return { id: id };
+                    })
+                  ).then(function (nextLinked) {
+                    target.linked_products = nextLinked || [];
+                    refreshLinkedBrandingAfterEdit();
+                  });
+                } else {
+                  refreshLinkedBrandingAfterEdit();
+                }
+              },
+            });
+          }
+          if (typeof AE.enrichLinkedProducts === "function" && fullIds.length) {
+            AE.enrichLinkedProducts(
+              fullIds.map(function (id) {
+                return { id: id };
+              })
+            ).then(function (linked) {
+              target.linked_products = linked || target.linked_products || [];
+              openWithLinked(target.linked_products);
+            });
+          } else {
+            openWithLinked(
+              (target.linked_products || []).length
+                ? target.linked_products
+                : fullIds.map(function (id) {
                     return { id: id };
                   })
-                ).then(function (linked) {
-                  target.linked_products = linked || [];
-                  refreshLinkedBrandingAfterEdit();
-                });
-              } else {
-                refreshLinkedBrandingAfterEdit();
-              }
-            },
-          });
+            );
+          }
           return;
         }
-        openAsset(target, { siblings: list.slice(), index: i });
+        var primaryIdx = members.findIndex(function (m) {
+          return m && target && m.id === target.id;
+        });
+        if (primaryIdx < 0) primaryIdx = 0;
+        openAsset(target, {
+          siblings: members,
+          index: primaryIdx,
+          groupContext: {
+            folder_group_id: target.folder_group_id || "",
+            linked_products: target.linked_products || [],
+            variants:
+              members.length > 1
+                ? members.map(function (m) {
+                    return {
+                      id: m.id,
+                      name: m.name,
+                      path: m.path,
+                      label: assocGroupDisplayLabel(m),
+                      media_type: m.media_type || "",
+                    };
+                  })
+                : target.folder_variants || [],
+            folder_editable_files: target.folder_editable_files || [],
+          },
+        });
       });
     });
   }
@@ -1308,10 +2183,13 @@
       id: ctx.id || "",
       name: ctx.name || "",
       index: ctx.index || "",
+      revision_path: ctx.revision_path || ctx.revisionPath || "",
     };
     var pid = ctx.id || "";
     var idxBase = String(ctx.index || "").split(".")[0];
+    var revPath = ctx.revision_path || ctx.revisionPath || "";
     if (!pid && !idxBase) {
+      clearAssocPaneLoadingState(mount);
       mount.innerHTML = '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów</p>';
       if (elementyHost) {
         elementyHost.hidden = true;
@@ -1341,7 +2219,12 @@
         if (!linkedOk) return false;
         /* Branding-grade filter: marketing raster/wideo + elementy; zero AI/PSD/PDF/source */
         if (classifyAssocAsset(x) === "material") return passesMarketingAssocMaterial(x, ctx);
-        return passesMarketingAssocElement(x);
+        if (!passesMarketingAssocElement(x)) return false;
+        /* Surowe Links: tylko biezaca rewizja produktu (nie ARCHIWUM / inne mixy). */
+        if (classifyAssocAsset(x) === "element-link" && revPath && !pathUnderRevision(x.path, revPath)) {
+          return false;
+        }
+        return true;
       });
       /* Task 35: Links / ELEMENTY poza glowna lista "Skojarzone materialy" (2 kubelki) */
       var materials = [];
@@ -1372,27 +2255,93 @@
       sortHits(materials);
       sortHits(elementsReady);
       sortHits(elementsLinks);
-      if (labelEl) labelEl.textContent = "Skojarzone materiały (" + materials.length + ")";
+      /* Grupuj warianty kreacji (device/WxH/quality/ext) - 1 kafelek + badge N. */
+      var grouped = groupAssocMaterials(materials);
+      var fileCount = materials.length;
+      var groupCount = grouped.length;
+      if (labelEl) {
+        labelEl.textContent =
+          groupCount > 0 && groupCount !== fileCount
+            ? "Skojarzone materiały (" + groupCount + " grup · " + fileCount + " plików)"
+            : "Skojarzone materiały (" + fileCount + ")";
+      }
+      clearAssocPaneLoadingState(mount);
       if (!materials.length) {
         mount.innerHTML = '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów</p>';
+        /* Nawet przy 0 materialach: Edytuj wszystko + Shift plus (jak branding). */
+        var AE0 = window.DamAssocEdit;
+        if (AE0 && typeof AE0.bindMaterialsPane === "function") {
+          var pane0 =
+            mount.closest(".dam-media-preview__assoc-col") ||
+            mount.closest(".dam-viz-modal__assoc-pane") ||
+            mount;
+          AE0.bindMaterialsPane(pane0, {
+            asset: null,
+            materialsList: [],
+            shownPrimaries: [],
+            productContext: ctx,
+            groupContext: {
+              product_id: pid,
+              linked_product_ids: pid ? [pid] : [],
+            },
+            onRefresh: refreshLinkedBrandingAfterEdit,
+          });
+        }
       } else {
-        var shown = materials.slice(0, 24);
-        var collapsible = shown.length > LINKED_ASSETS_VISIBLE;
+        var shownGroups = grouped.slice(0, 24);
+        var shownPrimaries = shownGroups.map(function (g) {
+          return g.primary;
+        });
+        var collapsible = shownGroups.length > LINKED_ASSETS_VISIBLE;
         mount.innerHTML =
-          shown
-            .map(function (x, i) {
-              return linkedBrandingCardHtml(x, i, collapsible && i >= LINKED_ASSETS_VISIBLE);
+          shownGroups
+            .map(function (g, i) {
+              return linkedBrandingCardHtml(
+                g.primary,
+                i,
+                collapsible && i >= LINKED_ASSETS_VISIBLE,
+                "data-linked-asset-idx",
+                {
+                  count: (g.assets && g.assets.length) || 1,
+                  label: g.label || assocGroupDisplayLabel(g.primary),
+                }
+              );
             })
             .join("") +
           (collapsible
             ? '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-media-preview__variants-toggle" data-linked-assets-toggle aria-expanded="false">' +
               '<i class="uil uil-angle-down" aria-hidden="true"></i><span>Pokaż wszystkie (' +
-              shown.length +
+              shownGroups.length +
               ")</span></button>"
             : "");
         if (collapsible) mount.classList.add("is-collapsed-assets");
         else mount.classList.remove("is-collapsed-assets");
-        bindLinkedAssetClicks(mount, shown, "data-linked-asset-idx");
+        bindLinkedAssetClicks(mount, shownPrimaries, "data-linked-asset-idx", shownGroups);
+        bindIdChipCopy(mount);
+        hydrateVideoAssocThumbs(mount);
+        /* Re-apply density vars onto freshly mounted assoc pane roots. */
+        if (window.DamCardZoom && typeof window.DamCardZoom.apply === "function") {
+          window.DamCardZoom.apply(window.DamCardZoom.readPct());
+        }
+        /* HARD: ta sama Shift+/−/plus sciezka co branding (#damMediaPreviewAssoc). */
+        var AE = window.DamAssocEdit;
+        if (AE && typeof AE.bindMaterialsPane === "function") {
+          var paneHost =
+            mount.closest(".dam-media-preview__assoc-col") ||
+            mount.closest(".dam-viz-modal__assoc-pane") ||
+            mount;
+          AE.bindMaterialsPane(paneHost, {
+            asset: shownPrimaries[0] || null,
+            materialsList: shownPrimaries.slice(),
+            shownPrimaries: shownPrimaries.slice(),
+            productContext: ctx,
+            groupContext: {
+              product_id: pid,
+              linked_product_ids: pid ? [pid] : [],
+            },
+            onRefresh: refreshLinkedBrandingAfterEdit,
+          });
+        }
         var toggle = mount.querySelector("[data-linked-assets-toggle]");
         if (toggle) {
           toggle.addEventListener("click", function () {
@@ -1403,8 +2352,8 @@
             var icon = toggle.querySelector("i");
             if (icon) icon.className = next ? "uil uil-angle-up" : "uil uil-angle-down";
             var lbl = toggle.querySelector("span");
-            if (lbl) lbl.textContent = next ? "Zwiń" : "Pokaż wszystkie (" + shown.length + ")";
-            var m = document.getElementById("damMediaPreview");
+            if (lbl) lbl.textContent = next ? "Zwiń" : "Pokaż wszystkie (" + shownGroups.length + ")";
+            var m = document.getElementById("damMediaPreview") || document.getElementById("damVizModal");
             var shared = window.DamModalShared;
             if (m && shared && shared.scheduleFitChrome) shared.scheduleFitChrome(m);
           });
@@ -1421,6 +2370,7 @@
     })
       .catch(function () {
         if (!document.body.contains(mount)) return;
+        clearAssocPaneLoadingState(mount);
         mount.innerHTML =
           '<p class="dam-media-preview__assoc-empty">Nie udało się wczytać skojarzeń</p>';
       })
@@ -1435,9 +2385,13 @@
     var variants = (groupContext && groupContext.variants) || asset.folder_variants || [];
     var linked = (groupContext && groupContext.linked_products) || asset.linked_products || [];
     if (!linked.length && (asset.folder_linked_product_ids || asset.linked_product_ids)) {
-      linked = (asset.linked_product_ids || []).map(function (pid) {
+      linked = (asset.linked_product_ids || asset.folder_linked_product_ids || []).map(function (pid) {
         return { id: pid, display_name: pid, thumb_url: "" };
       });
+    }
+    /* Branding asset → produkty: wytnij spray folderowy bez sygnalu nazwy. */
+    if (options.mode !== "viz-studio" || !options.productContext) {
+      linked = filterLinkedProductsForBrandingAsset(asset, linked);
     }
     var variantsHtml = folderVariantsHtml(variants, asset.id);
     var isVizStudio = options.mode === "viz-studio";
@@ -1472,21 +2426,61 @@
       : []
     ).forEach(push);
     (asset && asset.folder_editable_files ? asset.folder_editable_files : []).forEach(push);
+    /* Siblings / variants z PSD w grupie marketingowej — tez do SourceMount (nie do gridu). */
+    function pushIfSource(f) {
+      if (!f || !f.path) return;
+      if (EDITABLE_EXTS[fileExt(f.name || f.path)]) push(f);
+    }
+    (groupContext && groupContext.variants ? groupContext.variants : []).forEach(pushIfSource);
+    if (asset && isSourceVariantFile(asset)) push(asset);
     return out;
   }
 
-  /** Pliki zrodlowe (PSD/PSB/AI/…) inne niz aktualny podglad - do CTA obok Folder. */
+  function sourceFileMtimeMs(f) {
+    if (!f) return 0;
+    if (typeof f.mtime_ms === "number" && isFinite(f.mtime_ms)) return f.mtime_ms;
+    var raw = f.mtime || f.modified || f.modified_at || f.updated_at || 0;
+    if (typeof raw === "number" && isFinite(raw)) return raw < 1e12 ? raw * 1000 : raw;
+    var t = Date.parse(String(raw || ""));
+    return isNaN(t) ? 0 : t;
+  }
+
+  /** Preferuj najnowszy mtime przy wielu plikach tego samego rozszerzenia. */
+  function pickNewestSourceFile(a, b) {
+    var da = sourceFileMtimeMs(a);
+    var db = sourceFileMtimeMs(b);
+    if (db !== da) return db > da ? b : a;
+    return String((b && b.path) || "").localeCompare(String((a && a.path) || "")) >= 0 ? b : a;
+  }
+
+  /** Pliki zrodlowe (PSD/PSB/AI/…) - CTA w #damMediaPreviewSourceMount (nie w variant-grid). */
   function sourceActionFiles(asset, groupContext) {
     var order = { psd: 0, psb: 1, ai: 2, indd: 3, eps: 4 };
     var byExt = {};
     editableFilesFor(asset, groupContext).forEach(function (f) {
       if (!f || !f.path) return;
+      /* Gdy podglad = raster, zrodla PSD i tak w mount; gdy podglad = PSD, pokaz inne zrodla. */
       if (asset && asset.path && f.path === asset.path) return;
       var ext = splitNameExt(f.name || f.path).ext;
       if (!(ext in order)) return;
-      // jeden przycisk na rozszerzenie (PSD / PSB / AI) - pierwszy z listy indeksu
+      /* Jeden przycisk na rozszerzenie — najnowszy mtime (user: multiple PSD → most recent). */
       if (!byExt[ext]) byExt[ext] = f;
+      else byExt[ext] = pickNewestSourceFile(byExt[ext], f);
     });
+    /* Jesli otwarty asset to PSD, a folder ma inne PSD — najnowszy z grupy (wlacznie z biezacym). */
+    if (asset && asset.path && EDITABLE_EXTS[fileExt(asset.name || asset.path)]) {
+      var selfExt = splitNameExt(asset.name || asset.path).ext;
+      if (selfExt in order) {
+        var pool = editableFilesFor(asset, groupContext).filter(function (f) {
+          return f && f.path && splitNameExt(f.name || f.path).ext === selfExt;
+        });
+        if (!pool.length) pool = [asset];
+        var newest = pool.reduce(function (acc, f) {
+          return pickNewestSourceFile(acc, f);
+        }, pool[0]);
+        byExt[selfExt] = newest;
+      }
+    }
     return Object.keys(byExt)
       .sort(function (a, b) {
         return order[a] - order[b];
@@ -1540,14 +2534,22 @@
     return '<div class="dam-media-preview__title-meta">' + idChip + "</div>";
   }
 
-  /** Klik / Enter na chipie ID = kopiuj WIDOCZNE id marketingowe (nigdy br-xxxxx). */
+  var MARKETING_ID_CHIP_SEL =
+    ".dam-media-preview__asset-id, .dam-media-preview__assoc-index, .dam-branding-id-chip, .dam-viz-modal__asset-id, .dam-viz-badge--index[data-marketing-id], .dam-viz-badge--index[data-tag-value], #damAssocEditPopover .dam-viz-badge--index";
+
+  /** Klik / prawy / Enter na chipie ID = kopiuj WIDOCZNE id marketingowe (nigdy br-xxxxx). */
   function bindIdChipCopy(host) {
     if (!host) return;
-    host.querySelectorAll(".dam-media-preview__asset-id").forEach(function (chip) {
+    host.querySelectorAll(MARKETING_ID_CHIP_SEL).forEach(function (chip) {
+      if (chip._damIdCopyBound) return;
+      chip._damIdCopyBound = true;
       function doCopy(e) {
         e.preventDefault();
         e.stopPropagation();
-        var mid = chip.getAttribute("data-marketing-id") || chip.textContent.trim();
+        var mid =
+          chip.getAttribute("data-marketing-id") ||
+          chip.getAttribute("data-tag-value") ||
+          chip.textContent.trim();
         if (!mid) return;
         copyToClipboard(mid).then(
           function () {
@@ -1565,6 +2567,39 @@
       });
     });
   }
+
+  /** Delegacja contextmenu - assoc-index / chipy doklejane async (viz assoc). */
+  function ensureGlobalMarketingIdCopy() {
+    if (document.documentElement._damMarketingIdCopyDelegated) return;
+    document.documentElement._damMarketingIdCopyDelegated = true;
+    document.addEventListener(
+      "contextmenu",
+      function (e) {
+        var chip = e.target && e.target.closest ? e.target.closest(MARKETING_ID_CHIP_SEL) : null;
+        if (!chip) return;
+        if (chip.classList.contains("dam-tag-editable") && !chip.getAttribute("data-marketing-id")) {
+          return;
+        }
+        var mid =
+          chip.getAttribute("data-marketing-id") ||
+          chip.getAttribute("data-tag-value") ||
+          String(chip.textContent || "").trim();
+        if (!mid) return;
+        e.preventDefault();
+        e.stopPropagation();
+        copyToClipboard(mid).then(
+          function () {
+            toast("Skopiowano: " + mid);
+          },
+          function () {
+            toast("Nie udalo sie skopiowac");
+          }
+        );
+      },
+      true
+    );
+  }
+  ensureGlobalMarketingIdCopy();
 
   function seedLinkedProducts(asset, groupContext) {
     var linked = (groupContext && groupContext.linked_products) || asset.linked_products || [];
@@ -1590,7 +2625,7 @@
     return sourceButtonsHtml(sourceActionFiles(asset, groupContext));
   }
 
-  /** Jeden przycisk na rozszerzenie (PSD/PSB/AI) z dowolnej listy plikow zrodlowych. */
+  /** Jeden przycisk na rozszerzenie (PSD/PSB/AI) — najnowszy mtime przy duplikatach. */
   function dedupeSourceFilesByExt(files) {
     var order = { psd: 0, psb: 1, ai: 2, indd: 3, eps: 4 };
     var byExt = {};
@@ -1599,6 +2634,7 @@
       var ext = splitNameExt(f.name || f.path).ext;
       if (!(ext in order)) return;
       if (!byExt[ext]) byExt[ext] = f;
+      else byExt[ext] = pickNewestSourceFile(byExt[ext], f);
     });
     return Object.keys(byExt)
       .sort(function (a, b) {
@@ -1784,12 +2820,15 @@
       '<div class="dam-viz-modal__actions-main">' +
       '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-btn-icon dam-viz-modal__cta" id="damMediaPreviewGoProduct" data-dam-tip="Otwiera produkt w Eksplorerze">' +
       '<i class="uil uil-sitemap" aria-hidden="true"></i><span>Przejdź</span></button>' +
-      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-win-btn" id="damMediaPreviewExplorer" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera folder w Eksploratorze plikow Windows">' +
+      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-win-btn" id="damMediaPreviewExplorer" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwiera Eksplorator Windows z zaznaczonym plikiem">' +
       (window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>') +
       "<span>Folder</span></button>" +
       '<span id="damMediaPreviewSourceMount" class="dam-media-preview__source-mount" aria-label="Pliki zrodlowe"></span>' +
+      /* --- FILE OPEN CTA (left of copy) --- */
+      '<button type="button" class="dam-viz-icon-btn" id="damMediaPreviewOpenFile" data-dam-tip="Otwiera plik w domyslnej aplikacji Windows i kopiuje sciezke" aria-label="Otworz plik" title="Otworz plik">' +
+      '<i class="uil uil-external-link-alt" aria-hidden="true"></i></button>' +
       '<button type="button" class="dam-viz-icon-btn" id="damMediaPreviewCopy" data-dam-tip="Kopiuje lokalna sciezke pliku" aria-label="Kopiuj sciezke" title="Kopiuj sciezke">' +
       '<i class="uil uil-copy" aria-hidden="true"></i></button>' +
       '<button type="button" class="dam-viz-icon-btn' +
@@ -1805,10 +2844,13 @@
     var bodyInnerHtml =
       '<div class="dam-viz-card__badges" id="damMediaPreviewBadges"></div>' +
       '<div class="dam-media-preview__title-block">' +
-      '<div class="dam-media-preview__title-row">' +
       '<h4 class="dam-viz-modal__title" id="damMediaPreviewTitle"></h4>' +
-      '<div id="damMediaPreviewTitleMeta"></div>' +
-      "</div></div>" +
+      /* ID chip pod tytulem (12px) - jak #damVizModalAssetId, nie w title-row po prawej. */
+      '<div id="damMediaPreviewTitleMeta" class="dam-media-preview__title-meta-slot"></div>' +
+      '<div class="dam-media-preview__filemeta">' +
+      '<p class="dam-viz-modal__filename" id="damMediaPreviewFilename" hidden></p>' +
+      "</div>" +
+      "</div>" +
       '<div id="damMediaPreviewQuality" class="dam-media-preview__quality" role="group" aria-label="Jakość / kompresja" hidden></div>' +
       '<div id="damMediaPreviewStudio" class="dam-media-preview__studio" hidden></div>' +
       '<div id="damMediaPreviewAssoc"></div>' +
@@ -2104,10 +3146,30 @@
     var sourceReqSeq = 0;
 
     function setActionPaths(path) {
-      ["damMediaPreviewExplorer", "damMediaPreviewCopy", "damMediaPreviewShare"].forEach(function (id) {
+      ["damMediaPreviewExplorer", "damMediaPreviewOpenFile", "damMediaPreviewCopy", "damMediaPreviewShare"].forEach(function (id) {
         var btn = document.getElementById(id);
         if (btn) btn.setAttribute("data-path", path || "");
       });
+    }
+
+    function fileBasenameFromPath(path, fallbackName) {
+      if (window.DamPaths && typeof window.DamPaths.basename === "function") {
+        var b = window.DamPaths.basename(path || "");
+        if (b) return b;
+      }
+      var n = String(path || "").replace(/\\/g, "/");
+      var i = n.lastIndexOf("/");
+      var fromPath = i >= 0 ? n.slice(i + 1) : n;
+      return fromPath || String(fallbackName || "").trim();
+    }
+
+    function setFilenameLine(path, fallbackName) {
+      var el = document.getElementById("damMediaPreviewFilename");
+      if (!el) return;
+      var name = fileBasenameFromPath(path, fallbackName);
+      el.textContent = name || "";
+      el.hidden = !name;
+      if (name) el.setAttribute("title", name);
     }
 
     var VIZ_PERSP_ORDER = ["ENFACE", "FRONT", "BACK", "SIDE", "TOP", "3_4", "OTHER"];
@@ -2398,8 +3460,10 @@
       var assocHost = document.getElementById("damMediaPreviewAssoc");
       var sourceMount = document.getElementById("damMediaPreviewSourceMount");
       if (title) title.innerHTML = titleHtml(a.name, a.id);
+      setFilenameLine(a.path || "", a.name || "");
       if (titleMeta) {
         titleMeta.innerHTML = titleMetaHtml(a, options);
+        titleMeta.hidden = !String(titleMeta.innerHTML || "").trim();
         bindIdChipCopy(titleMeta);
       }
       if (sourceMount) {
@@ -2412,6 +3476,7 @@
       if (assocHost) {
         var paintAssoc = function () {
           assocHost.innerHTML = associationsFooterHtml(a, groupContext, options);
+          bindIdChipCopy(assocHost);
           renderLinkedBrandingAssets(options);
           assocHost.querySelectorAll("[data-variant-id]").forEach(function (btn) {
             btn.addEventListener("click", function () {
@@ -2481,8 +3546,12 @@
         };
         if (window.DamAssocEdit && typeof window.DamAssocEdit.enrichLinkedProducts === "function") {
           window.DamAssocEdit.enrichLinkedProducts(seedLinkedProducts(a, groupContext)).then(function (linked) {
-            groupContext.linked_products = linked;
-            a.linked_products = linked;
+            var cleaned =
+              options.mode === "viz-studio" && options.productContext
+                ? linked
+                : filterLinkedProductsForBrandingAsset(a, linked);
+            groupContext.linked_products = cleaned;
+            a.linked_products = cleaned;
             paintAssoc();
           });
         } else {
@@ -2497,6 +3566,7 @@
       }
       var goProduct = document.getElementById("damMediaPreviewGoProduct");
       var explorer = document.getElementById("damMediaPreviewExplorer");
+      var openFileBtn = document.getElementById("damMediaPreviewOpenFile");
       var copyBtn = document.getElementById("damMediaPreviewCopy");
       var shareBtn = document.getElementById("damMediaPreviewShare");
       var pid = firstLinkedProductId(a, groupContext);
@@ -2510,6 +3580,7 @@
         );
       }
       if (explorer) explorer.setAttribute("data-path", a.path || "");
+      if (openFileBtn) openFileBtn.setAttribute("data-path", a.path || "");
       if (copyBtn) copyBtn.setAttribute("data-path", a.path || "");
       if (shareBtn) shareBtn.setAttribute("data-path", a.path || "");
       renderStage(a);
@@ -2599,11 +3670,33 @@
     var explorerBtn = document.getElementById("damMediaPreviewExplorer");
     if (explorerBtn) {
       explorerBtn.addEventListener("click", function () {
-        var p = explorerBtn.getAttribute("data-path") || "";
+        /* Zrodlo prawdy = aktualny asset (S gdy widzimy S), nie stale data-path */
+        var p = (asset && asset.path) || explorerBtn.getAttribute("data-path") || "";
+        if (p) explorerBtn.setAttribute("data-path", p);
+        /* Folder = reveal + select pliku (explorer /select, via bridge POST /reveal) */
         if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
           window.DamPaths.revealInExplorer(p);
         } else if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
           window.DamPaths.openFolderInExplorer(p);
+        }
+      });
+    }
+
+    /* --- OPEN FILE (left of copy): default app + clipboard --- */
+    var openFileBtn = document.getElementById("damMediaPreviewOpenFile");
+    if (openFileBtn) {
+      openFileBtn.addEventListener("click", function () {
+        var p = openFileBtn.getAttribute("data-path") || "";
+        if (!p) {
+          toast("Brak sciezki pliku");
+          return;
+        }
+        if (window.DamPaths && typeof window.DamPaths.openFileAndCopyPath === "function") {
+          window.DamPaths.openFileAndCopyPath(p);
+          return;
+        }
+        if (window.DamPaths && typeof window.DamPaths.copyPortablePath === "function") {
+          window.DamPaths.copyPortablePath(p);
         }
       });
     }
@@ -2643,7 +3736,11 @@
     KEY: CARD_ZOOM_KEY,
     MIN: CARD_ZOOM_MIN,
     MAX: CARD_ZOOM_MAX,
+    STEP: CARD_ZOOM_STEP,
     readPct: readCardZoomPct,
+    apply: applyCardZoomPct,
+    bindShiftKeys: bindShiftCardZoomKeys,
+    roots: cardZoomRoots,
     baseFactor: basePreviewZoom,
     modalStartPct: function () {
       return window.DamModalShared
@@ -2660,7 +3757,7 @@
     var link = document.createElement("link");
     link.id = "dam-viz-modal-css";
     link.rel = "stylesheet";
-    link.href = "assets/css/dam-viz-modal.css?v=vizassoc20260720c";
+    link.href = "assets/css/dam-viz-modal.css?v=assoccopy20260721a";
     document.head.appendChild(link);
   }
 
@@ -2673,6 +3770,11 @@
     assocPaneSkeletonHtml: assocPaneSkeletonHtml,
     showAssocPaneLoading: showAssocPaneLoading,
     passesMarketingAssocMaterial: passesMarketingAssocMaterial,
+    filterLinkedProductsForBrandingAsset: filterLinkedProductsForBrandingAsset,
+    isRelevantMaterialForProduct: isRelevantMaterialForProduct,
+    groupAssocMaterials: groupAssocMaterials,
+    familyCreativeKey: familyCreativeKey,
+    assocMaterialGroupKey: assocMaterialGroupKey,
     isSourceLikeAsset: isSourceLikeAsset,
     isVisualizationAsset: isVisualizationAsset,
     previewUrl: previewUrl,

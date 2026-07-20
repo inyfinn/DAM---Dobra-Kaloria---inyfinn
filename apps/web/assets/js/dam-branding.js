@@ -2341,7 +2341,7 @@
             b.setAttribute("aria-selected", on ? "true" : "false");
           });
         }
-        if (window.DamLoader) window.DamLoader.start("Filtruję…");
+        if (window.DamLoader) window.DamLoader.start("Skojarzenia…");
         scheduleBrandingRender({ tags: true, section: true, loader: true });
       });
     });
@@ -3643,7 +3643,13 @@
         var key = String(x.path || "").toLowerCase();
         if (!key || seenPath[key]) return;
         seenPath[key] = true;
-        editable.push({ id: x.id, name: x.name, path: x.path });
+        editable.push({
+          id: x.id,
+          name: x.name,
+          path: x.path,
+          mtime: x.mtime || null,
+          mtime_ms: typeof x.mtime_ms === "number" ? x.mtime_ms : null,
+        });
       });
     }
 
@@ -4031,6 +4037,10 @@
   }
 
   function applyBrandingCardZoom(pct) {
+    /* HARD: one density system — DamCardZoom (media-preview) owns CSS vars + Shift+/-. */
+    if (window.DamCardZoom && typeof window.DamCardZoom.apply === "function") {
+      return window.DamCardZoom.apply(pct);
+    }
     var n = Math.round(Number(pct) || 100);
     if (n < CARD_ZOOM_MIN) n = CARD_ZOOM_MIN;
     if (n > CARD_ZOOM_MAX) n = CARD_ZOOM_MAX;
@@ -4359,21 +4369,39 @@
       // pelny render juz z zaladowanym search-indexem (bylo liczone 2x na boot).
       var rebuild = document.getElementById("damBrandingRebuild");
       if (rebuild) {
-        rebuild.addEventListener("click", async function () {
-          rebuild.disabled = true;
-          try {
-            await fetch(bridgeUrl() + "/branding/rebuild", { method: "POST" });
-            invalidateBrandingIndexCache();
-            await loadIndex();
-            await loadCampaigns();
-            activateTab(
-              document.querySelector(".dam-branding-tab.is-active")?.getAttribute("data-tab") || "all",
-              { skipHash: true, keepDiscovery: true }
-            );
-          } finally {
-            rebuild.disabled = false;
-          }
-        });
+        var role =
+          (window.DamApi && typeof window.DamApi.role === "function" && window.DamApi.role()) ||
+          localStorage.getItem("dam_role") ||
+          "";
+        if (String(role).toLowerCase() !== "admin") {
+          rebuild.hidden = true;
+          rebuild.setAttribute("aria-hidden", "true");
+        } else {
+          rebuild.addEventListener("click", async function () {
+            rebuild.disabled = true;
+            try {
+              var headers =
+                (window.DamApi && DamApi.authHeaders && DamApi.authHeaders()) || {
+                  "Content-Type": "application/json",
+                  Authorization: "Bearer " + (localStorage.getItem("dam_token") || ""),
+                };
+              await fetch(bridgeUrl() + "/branding/rebuild", {
+                method: "POST",
+                headers: headers,
+                body: "{}",
+              });
+              invalidateBrandingIndexCache();
+              await loadIndex();
+              await loadCampaigns();
+              activateTab(
+                document.querySelector(".dam-branding-tab.is-active")?.getAttribute("data-tab") || "all",
+                { skipHash: true, keepDiscovery: true }
+              );
+            } finally {
+              rebuild.disabled = false;
+            }
+          });
+        }
       }
       var params = new URLSearchParams(location.search);
       var qs = params.get("q");

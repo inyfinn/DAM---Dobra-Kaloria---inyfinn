@@ -186,9 +186,10 @@ def main() -> int:
     opak = pick_group_tags(tag_counter, PACK, len(PACK), max(24, len(PACK)))
     # wymus kanoniczna kolejnosc
     opak_ordered = [t for t in [
-        "doypack", "baton", "mini baton", "karton 6x", "karton", "bigpak",
+        # TUBA w top-8 (dam-tag-bar ROW_LIMIT) - widoczny bez "+N"
+        "doypack", "baton", "mini baton", "tuba", "karton 6x", "karton", "bigpak",
         "folia", "etykieta", "etykieta butelka", "etykieta sloik", "rekaw",
-        "tuba", "shot", "doy 6x", "sasz", "obwoluta",
+        "shot", "doy 6x", "sasz", "obwoluta",
     ] if t in set(opak) or t in PACK]
     for t in opak:
         if t not in opak_ordered:
@@ -247,12 +248,33 @@ def main() -> int:
         tg["osoba"] = sorted(authors)
         p["tag_groups"] = tg
         tokens = author_search_tokens(authors, pp)
+        rev_folders = []
+        rev_paths = []
+        placeholder_indexes = []
+        for r in p.get("revisions") or []:
+            if not isinstance(r, dict):
+                continue
+            folder = str(r.get("folder") or "").strip()
+            if folder:
+                rev_folders.append(folder)
+                # Placeholder 6300XXX z nazwy folderu - musi byc wyszukiwalny
+                for m in re.finditer(r"\b(\d{3,}X{2,}(?:\.\d{2})?)\b", folder, flags=re.I):
+                    placeholder_indexes.append(m.group(1))
+            path = str(r.get("path") or "").strip()
+            if path:
+                rev_paths.append(path)
+            idx = str(r.get("index") or "").strip()
+            if idx:
+                placeholder_indexes.append(idx)
         blob_parts = [
             p.get("display_name") or "",
             p.get("name") or "",
             " ".join(p.get("tags") or []),
             " ".join(tokens),
             " ".join(p.get("indexes") or []),
+            " ".join(rev_folders),
+            " ".join(rev_paths),
+            " ".join(placeholder_indexes),
         ]
         p["search_blob"] = norm(" ".join(blob_parts))
         pid = p.get("id")
@@ -318,9 +340,11 @@ def main() -> int:
         e["authors"] = p.get("authors") or []
         e["tag_groups"] = p.get("tag_groups") or e.get("tag_groups") or {}
         tokens = author_search_tokens(e["authors"], pp)
+        # Preferuj pelny blob produktu (foldery wariantow / 6300XXX), nie ucinaj do tags.
         e["search_blob"] = norm(
             " ".join(
                 [
+                    p.get("search_blob") or "",
                     e.get("display_name") or e.get("name") or "",
                     " ".join(e.get("tags") or []),
                     " ".join(tokens),

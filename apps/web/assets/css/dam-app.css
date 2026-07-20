@@ -713,13 +713,25 @@ a.geex-btn__primary {
 
 .dam-action-desc,
 .dam-page-sub,
-.dam-page-status {
+.dam-page-status,
+.geex-content__header__subtitle.dam-page-sub,
+.geex-content__header > .geex-content__header__content > .geex-content__header__subtitle {
   color: var(--dark-color, #17161E) !important;
   font-size: 0.875rem;
   line-height: 1.5;
-  font-weight: 500;
-  opacity: 0.82;
+  font-weight: 300;
+  /* !important: GSAP autoAlpha nie moze zostawic podtytulu ukrytego po boot */
+  opacity: 0.82 !important;
+  visibility: visible !important;
+  text-wrap: pretty;
   /* NIGDY --secondary-color (#B7DBF9) ani Bootstrap text-muted blekit */
+}
+
+@supports (text-wrap: balance) {
+  .dam-page-sub,
+  .geex-content__header__subtitle.dam-page-sub {
+    text-wrap: balance;
+  }
 }
 
 .dam-page-status {
