@@ -18,16 +18,19 @@
 
 #vizSearchScope .dam-search-scope {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px 8px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 /* Far-right mount for #damChangeLogBar (DamSearch trailingEl) */
 #vizSearchScope .dam-search-scope__trailing,
-#vizSearchScope .dam-changelog-bar.dam-search-scope__trailing {
-  margin-left: auto;
+#vizSearchScope .dam-changelog-bar.dam-search-scope__trailing,
+#vizSearchScope .dam-changelog-bar {
+  margin-left: auto !important;
+  flex-shrink: 0;
 }
 
 #vizSearchScope .dam-changelog-bar,
