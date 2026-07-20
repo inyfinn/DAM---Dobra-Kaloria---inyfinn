@@ -791,7 +791,8 @@
           if (isRemove && global.DamDanger && typeof global.DamDanger.bind === "function") {
             global.DamDanger.bind(btn, {
               label: "Usun skojarzenie",
-              hint: "Przytrzymaj, aby usunac skojarzenie",
+              hint: "Przytrzymaj 3 sekundy, aby usunac skojarzenie",
+              holdMs: 3000,
               onConfirm: toggle,
             });
           } else {

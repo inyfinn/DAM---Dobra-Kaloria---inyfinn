@@ -38,7 +38,8 @@
   "use strict";
 
   var CSS_ID = "damDangerInjectedCss";
-  var DEFAULT_HOLD_MS = 300; // brief / reel UX: commitment ~300 ms
+  var DEFAULT_HOLD_MS = 300; // settings / quick local ops (override via data-dam-hold-ms)
+  var MEDIA_PREVIEW_HOLD_MS = 3000; // media preview + viz modal: 3 s (user 2026-07-20)
   var TAP_HINT_MS = 140; // ponizej tego = czysty "klik" -> pokaz podpowiedz
   var KEY_ARM_MS = 4000; // okno na drugie Enter/Spacja w trybie klawiatury
 
@@ -48,6 +49,22 @@
     } catch (e) {
       return false;
     }
+  }
+
+  function resolveHoldMs(el, optsHoldMs) {
+    if (optsHoldMs && optsHoldMs > 0) return optsHoldMs;
+    if (el && el.getAttribute) {
+      var attr = parseInt(el.getAttribute("data-dam-hold-ms"), 10);
+      if (attr > 0) return attr;
+    }
+    if (
+      el &&
+      el.closest &&
+      el.closest("#damMediaPreview, #damVizModal, .dam-media-preview, .dam-viz-modal-box")
+    ) {
+      return MEDIA_PREVIEW_HOLD_MS;
+    }
+    return DEFAULT_HOLD_MS;
   }
 
   function isSafeDeleteEnabled() {
@@ -214,7 +231,7 @@
     opts = opts || {};
     var state = {
       opts: opts,
-      holdMs: opts.holdMs || (el.getAttribute && parseInt(el.getAttribute("data-dam-hold-ms"), 10)) || DEFAULT_HOLD_MS,
+      holdMs: resolveHoldMs(el, opts.holdMs),
       label: opts.label || (el.getAttribute && el.getAttribute("data-dam-label")) || "Usun",
       hint: opts.hint || (el.getAttribute && el.getAttribute("data-dam-hint")) || null,
       raf: 0,
@@ -511,7 +528,7 @@
     if (!el || el.__damDanger) return;
     arm(el, {
       hint: el.getAttribute("data-dam-hint") || "Spróbuj przytrzymać, by usunąć",
-      holdMs: parseInt(el.getAttribute("data-dam-hold-ms"), 10) || undefined,
+      holdMs: resolveHoldMs(el, undefined),
       label: el.getAttribute("data-dam-label") || "Usuń",
     });
   }

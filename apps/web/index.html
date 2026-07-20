@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=motion20260720a">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
   <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=chghist20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=assocfix20260720b">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
@@ -58,8 +58,8 @@
     <div class="geex-content">
       <div class="geex-content__header">
         <div class="geex-content__header__content">
-          <h2 class="geex-content__header__title">Projekty opakowań</h2>
-          <p class="geex-content__header__subtitle dam-page-sub">Lista projektów opakowań i ich kompletności plików.</p>
+          <h2 class="geex-content__header__title">Projekty opakowaĹ„</h2>
+          <p class="geex-content__header__subtitle dam-page-sub">Lista projektĂłw opakowaĹ„ i ich kompletnoĹ›ci plikĂłw.</p>
         </div>
       </div>
 
@@ -75,8 +75,8 @@
                 class="form-control dam-search-input"
                 placeholder="Szukaj indeksu lub skojarzenia (np. 6300, czekolada, Krzysztof)"
                 autocomplete="off"
-                aria-label="Szukaj projektów"
-                data-dam-tip="Szuka w liscie projektów na tej stronie"
+                aria-label="Szukaj projektĂłw"
+                data-dam-tip="Szuka w liscie projektĂłw na tej stronie"
               />
             </div>
             <div id="damProjectsSearchScope" class="dam-search-scope-mount" aria-label="Zakres wyszukiwania"></div>
@@ -87,11 +87,11 @@
 
       <!-- Akcje nad wynikami (biale tlo) - search zostaje pelnej szerokosci -->
       <div class="dam-projects-grid-toolbar">
-        <p id="damProjectsStatus" class="dam-page-status dam-projects-status-line" aria-live="polite">Łączenie...</p>
+        <p id="damProjectsStatus" class="dam-page-status dam-projects-status-line" aria-live="polite">ĹÄ…czenie...</p>
         <div class="dam-projects-grid-toolbar__actions">
-          <label class="dam-tag-reveal-toggle" data-dam-tip="Pokazuje info o pakowaniu zbiorczym na kartach produktów (np. 2F, 2×12). Nie dotyczy strony Branding."><input type="checkbox" id="damRevealLowTags" /> Info Pakowania</label>
-          <button type="button" class="dam-int-cta" id="damProjectsRefresh" title="Przeładuj listę z bieżącego indeksu (szybkie, bez skanu dysku)" data-dam-tip="Odśwież listę = przeładuj karty z już wczytanego indeksu w pamięci/bridge. Nie skanuje folderów Marketing.">Odśwież listę</button>
-          <button type="button" class="dam-int-cta" id="damIngestBtn" title="Przeskanuj foldery Marketing i przebuduj indeks (admin)" data-dam-tip="Skanuj dysk = pełny ingest Marketing: czyta foldery, aktualizuje indeks produktów. Trwa dłużej niż Odśwież listę.">Skanuj dysk</button>
+          <label class="dam-tag-reveal-toggle" data-dam-tip="Pokazuje info o pakowaniu zbiorczym na kartach produktĂłw (np. 2F, 2Ă—12). Nie dotyczy strony Branding."><input type="checkbox" id="damRevealLowTags" /> Info Pakowania</label>
+          <button type="button" class="dam-int-cta" id="damProjectsRefresh" title="PrzeĹ‚aduj listÄ™ z bieĹĽÄ…cego indeksu (szybkie, bez skanu dysku)" data-dam-tip="OdĹ›wieĹĽ listÄ™ = przeĹ‚aduj karty z juĹĽ wczytanego indeksu w pamiÄ™ci/bridge. Nie skanuje folderĂłw Marketing.">OdĹ›wieĹĽ listÄ™</button>
+          <button type="button" class="dam-int-cta" id="damIngestBtn" title="Przeskanuj foldery Marketing i przebuduj indeks (admin)" data-dam-tip="Skanuj dysk = peĹ‚ny ingest Marketing: czyta foldery, aktualizuje indeks produktĂłw. Trwa dĹ‚uĹĽej niĹĽ OdĹ›wieĹĽ listÄ™.">Skanuj dysk</button>
         </div>
       </div>
 

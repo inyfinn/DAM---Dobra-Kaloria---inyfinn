@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=bust20260720a">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=chghist20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=assocfix20260720b">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <script>
@@ -151,7 +151,7 @@
           <form id="damAuthForm" class="geex-content__authentication__form" autocomplete="on">
             <h2 class="geex-content__authentication__title">Witaj w DAM</h2>
             <p class="geex-content__authentication__subtitle">
-              Zaloguj się kontem firmowym. Możesz wylogować się w menu użytkownika.
+              Zaloguj siÄ™ kontem firmowym. MoĹĽesz wylogowaÄ‡ siÄ™ w menu uĹĽytkownika.
             </p>
 
             <div class="dam-auth-mode" id="authModeTabs" role="tablist" aria-label="Tryb konta" hidden>
@@ -174,19 +174,19 @@
 
             <div class="geex-content__authentication__form-group">
               <div class="geex-content__authentication__label-wrapper">
-                <label for="authPassword">Hasło</label>
+                <label for="authPassword">HasĹ‚o</label>
               </div>
               <input type="password" id="authPassword" name="password" required
-                     minlength="4" placeholder="Hasło" autocomplete="current-password">
+                     minlength="4" placeholder="HasĹ‚o" autocomplete="current-password">
               <i class="uil-eye toggle-password-type" id="togglePassword" role="button"
-                 tabindex="0" aria-label="Pokaż lub ukryj hasło"></i>
+                 tabindex="0" aria-label="PokaĹĽ lub ukryj hasĹ‚o"></i>
             </div>
 
             <div class="geex-content__authentication__form-group custom-checkbox" id="rememberWrap">
               <input type="checkbox" class="geex-content__authentication__checkbox-input"
                      id="rememberDevice" checked>
               <label class="geex-content__authentication__checkbox-label" for="rememberDevice">
-                Zapamiętaj to urządzenie
+                ZapamiÄ™taj to urzÄ…dzenie
               </label>
             </div>
 
@@ -196,7 +196,7 @@
             <p class="dam-auth-msg" id="authMsg" role="status" aria-live="polite"></p>
 
             <div class="geex-content__authentication__form-footer" id="authFooter">
-              Nie masz konta? Poproś administratora o dostęp.
+              Nie masz konta? PoproĹ› administratora o dostÄ™p.
             </div>
           </form>
         </div>
@@ -250,7 +250,7 @@
             });
           }
         } else {
-          footer.textContent = "Nie masz konta? Poproś administratora o dostęp.";
+          footer.textContent = "Nie masz konta? PoproĹ› administratora o dostÄ™p.";
         }
         msg.textContent = "";
         msg.className = "dam-auth-msg";
@@ -306,7 +306,7 @@
         }
         if (mode === "register" && !registrationOpen) {
           msg.className = "dam-auth-msg is-err";
-          msg.textContent = "Rejestracja publiczna wyłączona. Poproś administratora.";
+          msg.textContent = "Rejestracja publiczna wyĹ‚Ä…czona. PoproĹ› administratora.";
           return;
         }
         var email = (document.getElementById("authEmail").value || "").trim();

@@ -168,7 +168,7 @@
   margin: 0;
 }
 
-/* Count pill — muted ink (brief: Geex dark/ink, nie lawendowy blob).
+/* Count pill — light Geex surface (jak dam-viz-badge--index / tagi).
    Pad = stary branding 7/14 +8/+12 → 15/26; branding też 15/26. */
 .dam-viz-panel {
   display: flex;
@@ -185,18 +185,22 @@
   width: fit-content;
   max-width: calc(100% - 20px);
   margin: -44px 84px 10px auto;
-  padding: 15px 26px !important;
+  padding: 15px 26px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--dam-ink, #17161e) 28%, transparent) !important;
-  background: color-mix(in srgb, var(--dam-ink, #23202e) 88%, transparent) !important;
-  box-shadow: 0 8px 22px rgb(23 22 30 / 0.22);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 10%, var(--dam-border, #ececf2));
+  /* HARD: always light elevated pill — never dark toast (user 2026-07-20) */
+  background: #fff;
+  background: color-mix(in srgb, #fff 96%, transparent);
+  box-shadow:
+    0 2px 8px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.04),
+    0 8px 24px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.08);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.2;
   letter-spacing: 0.01em;
-  color: #fff !important;
+  color: var(--dam-text, #464255);
   text-align: right;
   white-space: nowrap;
   pointer-events: none;

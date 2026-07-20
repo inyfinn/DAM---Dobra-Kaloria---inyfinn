@@ -9730,6 +9730,50 @@ html[data-theme="dark"] .dam-skeleton__card::after {
     transform: translateX(100%);
   }
 }
+
+/* Skojarzone materialy — skeleton w kolumnie modala (viz + media preview) */
+.dam-media-preview__assoc-grid--loading {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+  justify-items: center;
+  padding: 4px 0 8px;
+}
+.dam-assoc-skeleton {
+  position: relative;
+  overflow: hidden;
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  background: var(--dam-surface-muted, #f0f0f4);
+  border: 1px solid #ececf1;
+}
+.dam-assoc-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  animation: dam-skel-shimmer 1.35s ease-in-out infinite;
+}
+html[data-theme="dark"] .dam-assoc-skeleton {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+html[data-theme="dark"] .dam-assoc-skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.09),
+    transparent
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   .geex-btn,
   .geex-sidebar__menu__link,
@@ -9847,6 +9891,43 @@ html[data-theme="dark"] .dam-skeleton__card::after {
 #damMediaPreviewLinkedAssets .dam-media-preview__assoc-index {
   font-variant-numeric: tabular-nums;
   font-size: 10px;
+}
+
+/* --- "Elementy" / "Linki do elementow" - 2 osobne przyciski rozwiń (user
+   2026-07-20), zeby nie zajmowaly duzo miejsca przy "Skojarzone materialy".
+   Dziala i w #damMediaPreview (host w markupie), i w #damVizModal (host
+   dolepiony automatycznie w JS zaraz po gridzie materialow). */
+#damMediaPreviewElementyHost,
+[data-elementy-host-auto] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(70, 66, 85, 0.08);
+}
+.dam-media-preview__elementy-toggle {
+  justify-content: flex-start;
+  align-self: flex-start;
+  color: #6b6778;
+}
+.dam-media-preview__elementy-toggle[aria-expanded="true"] {
+  color: var(--dam-primary, #ab54db);
+}
+.dam-media-preview__elementy-panel {
+  margin-top: 2px;
+  padding: 10px;
+  border: 1px solid rgba(70, 66, 85, 0.12);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 60%, #fff);
+  max-height: 220px;
+  overflow-y: auto;
+}
+.dam-media-preview__elementy-panel .dam-media-preview__assoc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
 }
 
 /* --- Pkt 1: modal historii statusow - pionowa os czasu --- */
@@ -10343,6 +10424,70 @@ html[data-theme="dark"] .dam-skeleton__card::after {
   grid-column: 1 / -1;
   justify-self: start;
   margin-top: 4px;
+}
+
+/* Menu akcji (Przejdz/Eksplorator/Wizualizacja/Kopiuj) po kliku nazwy skojarzonego
+   produktu (dam-assoc-edit.js openActionMenu) - globalne, bo skrypt teraz ladowany
+   tez na visualizations/explorer/dashboard (przeniesione z dam-branding.css). */
+.dam-assoc-action-menu {
+  position: absolute;
+  z-index: 12050;
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dam-assoc-action-menu.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.dam-assoc-action-menu.is-entering,
+.dam-assoc-action-menu.is-leaving {
+  opacity: 0;
+  transform: translateY(4px) scale(0.98);
+}
+
+.dam-assoc-action-menu__inner {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #ececf1;
+  border-radius: 999px;
+  box-shadow: 0 8px 28px rgb(70 66 85 / 14%);
+}
+
+.dam-assoc-action-menu__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #f8f8fa;
+  color: #464255;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease, transform 0.14s ease;
+}
+
+.dam-assoc-action-menu__item span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.dam-assoc-action-menu__item:hover,
+.dam-assoc-action-menu__item:focus-visible {
+  background: #fbf7fe;
+  color: var(--dam-primary, #ab54db);
+  transform: translateY(-1px);
 }
 
 /* Pkt 9: tagi + zoom miniatur w popoverze skojarzen */

@@ -1240,9 +1240,7 @@
       '<div class="dam-media-preview__assoc-label-row">' +
       '<span class="dam-media-preview__assoc-label" id="damVizModalAssocLabel">Skojarzone materiały</span>' +
       "</div>" +
-      '<div class="dam-media-preview__assoc-grid" id="damVizModalAssoc" role="list">' +
-      '<p class="dam-media-preview__assoc-empty">Ładowanie…</p>' +
-      "</div></div>";
+      '<div class="dam-media-preview__assoc-grid" id="damVizModalAssoc" role="list"></div></div>';
     var actionsHtml =
       '<div class="dam-viz-modal__actions">' +
       '<div class="dam-viz-modal__actions-main">' +
@@ -2088,27 +2086,6 @@
     clearChromeRevealInline(document.getElementById("vizSearchTags"));
   }
 
-  /**
-   * Injected ink pill (brief: muted dark/ink). Pad 15/26 = stary branding 7/14 +8/+12.
-   * Id unique — chroni przed regresją light-pill ze współbieżnych edycji CSS.
-   */
-  function injectVizCountPillInkStyle() {
-    var id = "damVizCountPillInk";
-    var style = document.getElementById(id);
-    if (!style) {
-      style = document.createElement("style");
-      style.id = id;
-      document.head.appendChild(style);
-    }
-    style.textContent =
-      "#vizGridCount.dam-viz-grid-count,.dam-viz-grid-count{" +
-      "padding:15px 26px!important;" +
-      "border:1px solid color-mix(in srgb,var(--dam-ink,#17161e) 28%,transparent)!important;" +
-      "background:color-mix(in srgb,var(--dam-ink,#23202e) 88%,transparent)!important;" +
-      "color:#fff!important;" +
-      "box-shadow:0 8px 22px rgb(23 22 30 / 0.22)!important;}";
-  }
-
   function render() {
     var grid = document.getElementById("vizGrid");
     var status = document.getElementById("vizStatus");
@@ -2785,7 +2762,6 @@
     } else {
       mountChangeLogInScope();
     }
-    injectVizCountPillInkStyle();
     ensureVizChromeVisible();
     /* Page-entrance GSAP (DamGridReveal) potrafi zostawić belki na opacity:0 —
        zwłaszcza gdy #damChangeLogBar jest zagnieżdżony w .dam-viz-toolbar. */

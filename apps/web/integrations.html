@@ -19,7 +19,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
   <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=helprestart20260720a">
   <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad08">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=chghist20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=assocfix20260720b">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
   <link rel="stylesheet" href="./assets/css/dam-integrations-hub.css?v=2.0.5b">
   <link rel="stylesheet" href="./assets/css/dam-integrations.css?v=intfix20260720c">
@@ -71,11 +71,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       </div>
 
       <div id="damIntegrationsList" class="dam-integrations-page">
-        <p class="dam-widget__meta">Wczytywanie statusu integracji…</p>
+        <p class="dam-widget__meta">Wczytywanie statusu integracjiâ€¦</p>
       </div>
 
       <div class="dam-int-queue-wrap" id="damWykrojnikQueue" aria-live="polite">
-        <p class="dam-widget__meta">Ładowanie panelu wykrojników…</p>
+        <p class="dam-widget__meta">Ĺadowanie panelu wykrojnikĂłwâ€¦</p>
       </div>
     </div>
   </main>
@@ -92,8 +92,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-paths.js?v=devicepath20260720c"></script>
   <script src="./assets/js/dam-tooltips.js?v=usab20260720b"></script>
   <script src="./assets/js/dam-user-prefs.js?v=viztb20260720d"></script>
-  <script src="./assets/js/dam-danger.js?v=safedel20260720a"></script>
-  <script src="./assets/js/dam-fmcg-catalog.js?v=safedel20260720a"></script>
+  <script src="./assets/js/dam-danger.js?v=safedel20260720b"></script>
+  <script src="./assets/js/dam-fmcg-catalog.js?v=safedel20260720b"></script>
   <script src="./assets/vendor/js/gsap/gsap.min.js"></script>
   <script src="./assets/js/dam-loader.js?v=1"></script>
   <script src="./assets/js/dam-grid-reveal.js?v=motion20260720a"></script>
@@ -113,7 +113,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         if (!window.DamIntegrations) return;
         DamIntegrations.mount("damIntegrationsList", intOpts);
       }
-      /* Race: DOMContentLoaded może już minąć gdy inline script się rejestruje */
+      /* Race: DOMContentLoaded moĹĽe juĹĽ minÄ…Ä‡ gdy inline script siÄ™ rejestruje */
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", bootIntegrations);
       } else {
@@ -121,8 +121,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       }
       /*
        * NIE remountuj na window "focus" - zamyka <details> Konfiguruj,
-       * flashuje skeleton i wygląda jak "przycisk tylko odświeża".
-       * Po powrocie z OAuth (inna karta) odśwież tylko gdy brak otwartego panelu.
+       * flashuje skeleton i wyglÄ…da jak "przycisk tylko odĹ›wieĹĽa".
+       * Po powrocie z OAuth (inna karta) odĹ›wieĹĽ tylko gdy brak otwartego panelu.
        */
       var lastVisRefresh = 0;
       document.addEventListener("visibilitychange", function () {

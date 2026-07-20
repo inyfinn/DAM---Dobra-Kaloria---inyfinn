@@ -35,7 +35,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=motion20260720a">
 <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=helprestart20260720a">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=chghist20260720a">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=assocfix20260720b">
 </head>
 
 <body class="geex-dashboard demo-invoice is-booting">
@@ -874,8 +874,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 				<!-- INVOICES MAIN CONTENT -->
 				<div class="geex-card" style="padding:24px;border-radius:12px;background:var(--card-bg,#fff);box-shadow:0 2px 12px rgba(0,0,0,0.06);margin-bottom:24px">
 					<div class="dam-inv-toolbar" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
-						<span id="invSourceBadge" class="dam-int-chip dam-int-st dam-int-st--wait">Źródło: -</span>
-						<span id="invErpStatusBadge" class="dam-int-chip dam-int-st dam-int-st--wait" title="Stan synchronizacji ERP">ERP: —</span>
+						<span id="invSourceBadge" class="dam-int-chip dam-int-st dam-int-st--wait">ĹąrĂłdĹ‚o: -</span>
+						<span id="invErpStatusBadge" class="dam-int-chip dam-int-st dam-int-st--wait" title="Stan synchronizacji ERP">ERP: â€”</span>
 						<span id="invErpAdminWrap" hidden style="display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center">
 							<label class="dam-int-cta" style="cursor:pointer;margin:0">
 								Import z ERP (CSV)
@@ -885,7 +885,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 						</span>
 						<span id="invImportWrap" hidden style="display:none" aria-hidden="true"></span>
 					</div>
-					<p id="invErpSyncMeta" class="dam-inv-erp-meta" style="font-size:12px;color:#666;margin:0 0 16px">Kierunek: dwukierunkowy (ERP ↔ DAM). Ostatni import / eksport: —</p>
+					<p id="invErpSyncMeta" class="dam-inv-erp-meta" style="font-size:12px;color:#666;margin:0 0 16px">Kierunek: dwukierunkowy (ERP â†” DAM). Ostatni import / eksport: â€”</p>
 					<!-- Summary cards -->
 					<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
 						<div style="flex:1;min-width:140px;background:#f4ecfd;border-radius:10px;padding:16px;text-align:center">
@@ -894,11 +894,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 						</div>
 						<div style="flex:1;min-width:140px;background:#e8f9f4;border-radius:10px;padding:16px;text-align:center">
 							<div style="font-size:24px;font-weight:700;color:#00A389" id="invPaid">-</div>
-							<div style="font-size:12px;color:#888" data-i18n="invoices.filter_paid">Opłacone</div>
+							<div style="font-size:12px;color:#888" data-i18n="invoices.filter_paid">OpĹ‚acone</div>
 						</div>
 						<div style="flex:1;min-width:140px;background:#fff8ec;border-radius:10px;padding:16px;text-align:center">
 							<div style="font-size:24px;font-weight:700;color:#FDB23A" id="invPending">-</div>
-							<div style="font-size:12px;color:#888" data-i18n="invoices.filter_pending">Oczekujące</div>
+							<div style="font-size:12px;color:#888" data-i18n="invoices.filter_pending">OczekujÄ…ce</div>
 						</div>
 						<div style="flex:1;min-width:140px;background:#feecec;border-radius:10px;padding:16px;text-align:center">
 							<div style="font-size:24px;font-weight:700;color:#ff5653" id="invOverdue">-</div>
@@ -913,8 +913,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 					<!-- Filter bar -->
 					<div class="dam-inv-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
 						<button type="button" class="dam-int-filter inv-filter-btn active is-active" data-filter="all" data-i18n="invoices.filter_all">Wszystkie</button>
-						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="paid" data-i18n="invoices.filter_paid">Opłacone</button>
-						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="pending" data-i18n="invoices.filter_pending">Oczekujące</button>
+						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="paid" data-i18n="invoices.filter_paid">OpĹ‚acone</button>
+						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="pending" data-i18n="invoices.filter_pending">OczekujÄ…ce</button>
 						<button type="button" class="dam-int-filter inv-filter-btn" data-filter="overdue" data-i18n="invoices.filter_overdue">Po terminie</button>
 					</div>
 
@@ -927,7 +927,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 									<th data-i18n="invoices.col_project">Projekt</th>
 									<th data-i18n="invoices.col_amount">Kwota</th>
 									<th data-i18n="invoices.col_date">Data wystawienia</th>
-									<th data-i18n="invoices.col_due">Termin płatności</th>
+									<th data-i18n="invoices.col_due">Termin pĹ‚atnoĹ›ci</th>
 									<th data-i18n="invoices.col_status">Status</th>
 								</tr>
 							</thead>

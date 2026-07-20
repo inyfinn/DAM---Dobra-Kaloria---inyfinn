@@ -10,13 +10,13 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DAM - Aktywność</title>
+  <title>DAM - AktywnoĹ›Ä‡</title>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=bust20260720a">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718shell2">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=chghist20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=assocfix20260720b">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
 </head>
@@ -44,12 +44,12 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
     <div class="geex-content">
       <div class="geex-content__header">
         <div class="geex-content__header__content">
-          <h2 class="geex-content__header__title">Aktywność</h2>
-          <p class="geex-content__header__subtitle">Log działan: kopiowanie sciezek, otwarcia w Eksploratorze, zmiany ustawien</p>
+          <h2 class="geex-content__header__title">AktywnoĹ›Ä‡</h2>
+          <p class="geex-content__header__subtitle">Log dziaĹ‚an: kopiowanie sciezek, otwarcia w Eksploratorze, zmiany ustawien</p>
         </div>
       </div>
       <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button type="button" class="geex-btn geex-btn--primary" id="auditRefresh">Odśwież</button>
+        <button type="button" class="geex-btn geex-btn--primary" id="auditRefresh">OdĹ›wieĹĽ</button>
         <span id="auditStatus" style="font-size:12px;color:#8b8d97"></span>
       </div>
       <ul class="dam-audit-list" id="auditList"></ul>
@@ -72,9 +72,9 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       }
       function actionLabel(a) {
         var map = {
-          copy_path: "Kopiuj ścieżkę",
+          copy_path: "Kopiuj Ĺ›cieĹĽkÄ™",
           reveal_explorer: "Pokaz w Eksploratorze",
-          set_base_path: "Ścieżka bazowa",
+          set_base_path: "ĹšcieĹĽka bazowa",
           share_synology: "Udostepnij Synology"
         };
         return map[a] || a;
@@ -83,11 +83,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         var list = document.getElementById("auditList");
         var status = document.getElementById("auditStatus");
         if (!items.length) {
-          list.innerHTML = '<li class="dam-audit-item"><div class="dam-audit-item__top">Brak wpisów</div><div class="dam-audit-item__meta">Akcje (kopiuj / pokaz / ustawienia) pojawia sie tutaj na biezaco.</div></li>';
-          status.textContent = "0 wpisów";
+          list.innerHTML = '<li class="dam-audit-item"><div class="dam-audit-item__top">Brak wpisĂłw</div><div class="dam-audit-item__meta">Akcje (kopiuj / pokaz / ustawienia) pojawia sie tutaj na biezaco.</div></li>';
+          status.textContent = "0 wpisĂłw";
           return;
         }
-        status.textContent = items.length + " wpisów";
+        status.textContent = items.length + " wpisĂłw";
         list.innerHTML = items.map(function (it) {
           return '<li class="dam-audit-item">' +
             '<div class="dam-audit-item__top"><span>' + esc(actionLabel(it.action)) + '</span><span>' + esc(it.user || "") + '</span></div>' +

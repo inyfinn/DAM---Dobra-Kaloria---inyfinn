@@ -6314,3 +6314,62 @@ Create modal 10-pass = Pass; blocker add-variant-type bez fizycznego szablonu ud
 
 ### Zrodla
 process.md wpis EXP-C; subagent 202d725c-bf6b-49e5-b85e-47dc49bc7a39
+
+---
+
+## Grid count pill light restyle (2026-07-20)
+
+### Komenda/Akcja
+Restyle floating count badge (`elementów • plików`) z czarnego pill na light Geex surface — globalnie Branding + Viz.
+
+### Log/Status
+1. Zlokalizowano: `.dam-viz-grid-count` (#vizGridCount), `.dam-branding-grid-count` (#damBrandingGridCount); JS `injectVizCountPillInkStyle()` w dam-viz.js wymuszał dark `!important`.
+2. CSS: light surface (#fff 96%), border primary 10% + `--dam-border`, text `--dam-text` (#464255), fw 500 — dam-viz.css + dam-branding.css.
+3. Usunięto `injectVizCountPillInkStyle` z dam-viz.js.
+4. Cache bust: `gridcountlight20260720b` (dam-viz.css, dam-branding.css, dam-viz.js) w visualizations.html + branding.html.
+
+### Efekt/Fix
+Before: `background color-mix(ink 88%)`, `color #fff`, fw 700, dark shadow. After: white pill, muted #464255, soft border/shadow jak tagi.
+
+### Test/Ewaluacja
+- node --check dam-viz.js: PASS
+- CDP Branding: bg `color(srgb 1 1 1 / 0.96)`, color `rgb(70,66,85)`, inkStyle=false, text `100 / 1 220 elementów • 574 / 9 611 plików`
+- CDP Viz: bg/color identyczne, css `dam-viz.css?v=gridcountlight20260720b`
+- Screenshot: `gridcount-branding-pass20260720.png` (Temp) + CDP capture
+- Pass/Fail: **Pass**
+
+### Zrodla
+dam-viz.js updateVizGridCount; dam-branding.js updateGridCount; ui-taste Design Read (light chip, nie toast)
+
+## 2026-07-20 23:05 - Audit wieczorny (transcript 86977982) + domknięcie MISSED
+
+### Komenda/Akcja
+WORKER audit ~6h transcript + implementacja zaległości + commit/push (user explicit).
+
+### Audit inventory (transcript 2026-07-20 wieczór)
+
+| Item | Status | Evidence | Action |
+|------|--------|----------|--------|
+| Floating count pill (elementów/plików) | **DONE** | `dam-viz.css` + `dam-branding.css` `#fff` + shadow; CDP `bg: color(srgb 1 1 1 / 0.96)`; token `gridcountlight20260720b` | Hardened white surface (was PARTIAL/black in UI) |
+| Viz assoc = Branding filter (no AI/PSD/PDF) | **DONE** | `dam-media-preview.js` `isSourceLikeAsset`, `passesMarketingAssocMaterial`, `ASSOC_FORBIDDEN_EXTS` | Filter already in working tree; verified logic |
+| Assoc loading skeleton (no bare Ładowanie) | **DONE** | `showAssocPaneLoading` + `.dam-assoc-skeleton` in `dam-brand.css`; `#damVizModalAssoc` empty mount | No naked text in viz modal assoc |
+| Branding card spacing 10px/15px | **DONE** | `dam-branding.css` `--dam-branding-card-section-gap: 10px`, actions 15px | Prior session; verified CSS |
+| Safe delete hold 3s (media preview) | **DONE** | `dam-danger.js` `MEDIA_PREVIEW_HOLD_MS=3000`, `resolveHoldMs()`; `dam-assoc-edit.js` `holdMs:3000` | Implemented this run |
+| Historia zmian (no Cofnij/Ponów at bar) | **DONE** | `dam-tag-edit.js` `#damChangeHistoryBtn` popover; no undo/redo buttons in `visualizations.html` | Verified present |
+| Karty/Skala purple, calendar, search padding | **DONE** | memory #137, `brpolish20260720a` session | No regression (CDP accent prior) |
+
+### Log/Status
+1. Transcript + subagents (c136457d count, ecb668e3 assoc) — inventory vs disk.
+2. CSS count pill: explicit `#fff` + layered shadow (viz + branding).
+3. `dam-danger.js`: `resolveHoldMs()` → 3000 ms inside preview modals.
+4. Cache-bust: `gridcountlight20260720b`, `safedel20260720b`.
+5. Weryfikacja: CDP count chip Branding + Viz; screenshot `verify-branding-count-chip-20260720.png`.
+
+### Test/Ewaluacja
+- `node --check` dam-danger.js, dam-viz.js, dam-media-preview.js: **Pass**
+- CDP `#damBrandingGridCount`: text `100 / 1 220 elementów • 574 / 9 611 plików`, bg white, color `#464255`: **Pass**
+- CDP `#vizGridCount`: bg white, muted text: **Pass**
+- Screenshot+Read branding grid/cards: light pills, spacing OK: **Pass**
+
+### Zrodla
+Transcript `86977982-52ab-4698-9da0-5b68ac3ea8cd`; `agents/shared/usability-brief-2026-07-20.md`; screenshot `verify-branding-count-chip-20260720.png`

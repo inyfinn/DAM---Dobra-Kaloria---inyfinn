@@ -137,10 +137,92 @@
     return ELEMENT_ASSOC_RE.test(blob + " " + tags + " " + appearance + " " + String(x.name || ""));
   }
 
+  /**
+   * 3 kubelki: "material" (skojarzony material marketingowy), "element-link"
+   * (surowy crop z folderu Links), "element-ready" (gotowy z 1 - MATERIALY\ELEMENTY
+   * albo trafienie tagowe skladniki/owoce). User 2026-07-20: te dwa typy elementow
+   * mają być pokazane jako DWA osobne przyciski "rozwiń", nie jedna wspolna lista.
+   */
   function classifyAssocAsset(x) {
     if (!x) return "material";
-    if (isElementPath(x.path) || assetMatchesElementAssoc(x)) return "element";
+    if (isLinksRawPath(x.path)) return "element-link";
+    if (isMaterialyElementyPath(x.path) || assetMatchesElementAssoc(x)) return "element-ready";
     return "material";
+  }
+
+  /**
+   * HARD (user 2026-07-20): pliki zrodlowe (wektor/AI/EPS, PDF, PSD i inne "source")
+   * NIGDY nie moga trafic do "Skojarzone materialy" ani do elementow w tym podglądzie -
+   * to widok dla materialow marketingowych, nie miejsce na zrodla graficzne.
+   */
+  var ASSOC_EXCLUDE_MEDIA_TYPES = { vector: 1, document: 1, source: 1 };
+  /** Rozszerzenia zrodlowe / edytowalne — NIGDY w Skojarzone materialy (jak Branding grid). */
+  var ASSOC_FORBIDDEN_EXTS = {
+    ai: 1,
+    psd: 1,
+    psb: 1,
+    pdf: 1,
+    eps: 1,
+    indd: 1,
+    idml: 1,
+    svg: 1,
+    doc: 1,
+    docx: 1,
+    xls: 1,
+    xlsx: 1,
+    ppt: 1,
+    pptx: 1,
+  };
+  var ASSOC_MARKETING_RASTER_EXTS = { jpg: 1, jpeg: 1, png: 1, webp: 1, gif: 1, bmp: 1, tif: 1, tiff: 1 };
+
+  /**
+   * HARD GLOBAL (user 2026-07-20): wektor/PDF/PSD/AI/source + heurystyki sciezki.
+   * Branding grid nie pokazuje tych plikow jako skojarzone materialy — ten sam zakaz.
+   */
+  function isSourceLikeAsset(x) {
+    if (!x) return true;
+    var mt = String(x.media_type || "").toLowerCase();
+    if (ASSOC_EXCLUDE_MEDIA_TYPES[mt]) return true;
+    var ext = fileExt(x.name || x.path);
+    if (ASSOC_FORBIDDEN_EXTS[ext]) return true;
+    if (EDITABLE_EXTS && EDITABLE_EXTS[ext]) return true;
+    var path = normSlashesLower(x.path);
+    if (path) {
+      var segs = path.split("/");
+      for (var si = 0; si < segs.length; si++) {
+        if (SOURCE_DIR_RE && SOURCE_DIR_RE.test(segs[si])) return true;
+      }
+      if (/\/(zrodla|zrodlo|zrodlowe|sources|src|edytowalne)\//.test(path)) return true;
+    }
+    return false;
+  }
+
+  /** Miniatura sensowna dla listy skojarzen (JPG/PNG/web + wideo) — bez PSD/AI/PDF. */
+  function hasUsableMarketingPreview(x) {
+    if (!x || isSourceLikeAsset(x)) return false;
+    if (isVideoAsset(x)) return true;
+    var ext = fileExt(x.name || x.path);
+    return !!ASSOC_MARKETING_RASTER_EXTS[ext];
+  }
+
+  /** Material marketingowy do kolumny Skojarzone materialy (Branding policy). */
+  function passesMarketingAssocMaterial(x, ctx) {
+    if (!x) return false;
+    if (isVisualizationAsset(x)) return false;
+    if (isNoiseBrandKitAsset(x)) return false;
+    if (isSourceLikeAsset(x)) return false;
+    if (classifyAssocAsset(x) !== "material") return false;
+    if (!hasUsableMarketingPreview(x)) return false;
+    return isRelevantMaterialForProduct(x, ctx);
+  }
+
+  /** Elementy / Links — osobne kubelki, tez bez zrodel. */
+  function passesMarketingAssocElement(x) {
+    if (!x) return false;
+    if (isVisualizationAsset(x)) return false;
+    if (isSourceLikeAsset(x)) return false;
+    if (classifyAssocAsset(x) === "material") return false;
+    return hasUsableMarketingPreview(x);
   }
 
   /**
@@ -827,9 +909,7 @@
       '<div class="dam-media-preview__assoc-label-row">' +
       '<span class="dam-media-preview__assoc-label" id="damMediaPreviewLinkedAssetsLabel">Skojarzone materiały</span>' +
       "</div>" +
-      '<div class="dam-media-preview__assoc-grid" id="damMediaPreviewLinkedAssets" role="list">' +
-      '<p class="dam-media-preview__assoc-empty">Ładowanie…</p>' +
-      "</div>" +
+      '<div class="dam-media-preview__assoc-grid" id="damMediaPreviewLinkedAssets" role="list"></div>' +
       '<div class="dam-media-preview__elementy" id="damMediaPreviewElementyHost" hidden></div>' +
       '<div class="dam-media-preview__resizer-wrap" id="damMediaPreviewResizerHost" hidden></div>' +
       "</div>"
@@ -877,6 +957,36 @@
   }
 
   var LINKED_ASSETS_VISIBLE = 6;
+  var ASSOC_SKELETON_COUNT = 6;
+
+  function assocPaneSkeletonHtml(count) {
+    var n = count || ASSOC_SKELETON_COUNT;
+    var cells = "";
+    for (var i = 0; i < n; i++) {
+      cells += '<div class="dam-assoc-skeleton" aria-hidden="true"></div>';
+    }
+    return (
+      '<div class="dam-media-preview__assoc-grid dam-media-preview__assoc-grid--loading" role="list" aria-busy="true" aria-label="Ładowanie skojarzonych materiałów">' +
+      cells +
+      "</div>"
+    );
+  }
+
+  function showAssocPaneLoading(mount, labelEl) {
+    if (!mount) return;
+    mount.classList.remove("is-collapsed-assets");
+    mount.innerHTML = assocPaneSkeletonHtml();
+    if (labelEl) labelEl.textContent = "Skojarzone materiały";
+    if (window.DamLoader && typeof window.DamLoader.start === "function") {
+      window.DamLoader.start("Skojarzenia…");
+    }
+  }
+
+  function finishAssocPaneLoading() {
+    if (window.DamLoader && typeof window.DamLoader.done === "function") {
+      window.DamLoader.done();
+    }
+  }
 
   function bindLinkedAssetClicks(host, list, attrName) {
     if (!host || !list) return;
@@ -890,31 +1000,38 @@
     });
   }
 
-  function renderElementyGroup(host, elements) {
-    if (!host) return;
-    if (!elements || !elements.length) {
-      host.hidden = true;
-      host.innerHTML = "";
-      return;
-    }
-    host.hidden = false;
-    host.innerHTML =
-      '<button type="button" class="dam-media-preview__elementy-toggle" data-elementy-toggle aria-expanded="false">' +
+  /**
+   * Jeden blok "rozwiń" (przycisk + panel) dla jednej grupy elementow.
+   * idxAttr rozroznia grupy w DOM, zeby bindLinkedAssetClicks nie pomylil klikow
+   * miedzy "Elementy" i "Linki do elementow" gdy obie sa otwarte naraz.
+   */
+  function elementyToggleBlockHtml(label, elements, idxAttr) {
+    return (
+      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-media-preview__elementy-toggle" data-elementy-toggle="' +
+      idxAttr +
+      '" aria-expanded="false">' +
       '<i class="uil uil-angle-down" aria-hidden="true"></i>' +
-      "<span>ELEMENTY (" +
+      "<span>" +
+      esc(label) +
+      " (" +
       elements.length +
       ")</span></button>" +
-      '<div class="dam-media-preview__elementy-panel" data-elementy-panel hidden>' +
-      '<p class="dam-media-preview__elementy-hint">Surowe elementy z Links oraz gotowe z 1 - MATERIAŁY\\ELEMENTY. Skojarzenia: składniki / owoce / owocki.</p>' +
+      '<div class="dam-media-preview__elementy-panel" data-elementy-panel="' +
+      idxAttr +
+      '" hidden>' +
       '<div class="dam-media-preview__assoc-grid" role="list">' +
       elements
         .map(function (x, i) {
-          return linkedBrandingCardHtml(x, i, false, "data-element-asset-idx");
+          return linkedBrandingCardHtml(x, i, false, idxAttr);
         })
         .join("") +
-      "</div></div>";
-    var toggle = host.querySelector("[data-elementy-toggle]");
-    var panel = host.querySelector("[data-elementy-panel]");
+      "</div></div>"
+    );
+  }
+
+  function bindElementyToggle(host, idxAttr, elements) {
+    var toggle = host.querySelector('[data-elementy-toggle="' + idxAttr + '"]');
+    var panel = host.querySelector('[data-elementy-panel="' + idxAttr + '"]');
     if (toggle && panel) {
       toggle.addEventListener("click", function () {
         var open = toggle.getAttribute("aria-expanded") === "true";
@@ -923,12 +1040,36 @@
         panel.hidden = !next;
         var icon = toggle.querySelector("i");
         if (icon) icon.className = next ? "uil uil-angle-up" : "uil uil-angle-down";
-        var m = document.getElementById("damMediaPreview");
+        var m = document.getElementById("damMediaPreview") || document.getElementById("damVizModal");
         var shared = window.DamModalShared;
         if (m && shared && shared.scheduleFitChrome) shared.scheduleFitChrome(m);
       });
     }
-    bindLinkedAssetClicks(host, elements, "data-element-asset-idx");
+    bindLinkedAssetClicks(host, elements, idxAttr);
+  }
+
+  /**
+   * DWA niezalezne przyciski "rozwiń" (user 2026-07-20): "Elementy" (gotowe,
+   * 1 - MATERIALY\ELEMENTY) i "Linki do elementow" (surowe, folder Links) -
+   * osobno, zeby nie zajmowaly duzo miejsca i nie mieszaly sie w jedna sciane.
+   */
+  function renderElementyGroups(host, groups) {
+    if (!host) return;
+    var ready = (groups && groups.ready) || [];
+    var links = (groups && groups.links) || [];
+    if (!ready.length && !links.length) {
+      host.hidden = true;
+      host.innerHTML = "";
+      return;
+    }
+    host.hidden = false;
+    host.innerHTML =
+      (ready.length ? elementyToggleBlockHtml("Elementy", ready, "data-element-asset-idx") : "") +
+      (links.length
+        ? elementyToggleBlockHtml("Linki do elementów", links, "data-element-link-idx")
+        : "");
+    if (ready.length) bindElementyToggle(host, "data-element-asset-idx", ready);
+    if (links.length) bindElementyToggle(host, "data-element-link-idx", links);
   }
 
   function renderResizerCta(host, productContext) {
@@ -1013,6 +1154,18 @@
     var resizerHost =
       (options && options.resizerHost) || document.getElementById("damMediaPreviewResizerHost");
     if (!mount) return;
+    /* Kontekst bez wlasnego #damMediaPreviewElementyHost (np. #damVizModal) -
+       dolep wlasny kontener zaraz po gridzie materialow, zeby "Elementy" /
+       "Linki do elementow" mialy gdzie sie zmiescic jako 2 przyciski rozwiń. */
+    if (!elementyHost && mount.parentElement) {
+      elementyHost = mount.parentElement.querySelector("[data-elementy-host-auto]");
+      if (!elementyHost) {
+        elementyHost = document.createElement("div");
+        elementyHost.setAttribute("data-elementy-host-auto", "1");
+        elementyHost.hidden = true;
+        mount.insertAdjacentElement("afterend", elementyHost);
+      }
+    }
     var ctx = (options && options.productContext) || {};
     var pid = ctx.id || "";
     var idxBase = String(ctx.index || "").split(".")[0];
@@ -1028,13 +1181,12 @@
       }
       return;
     }
-    loadIndexAssets().then(function (all) {
+    showAssocPaneLoading(mount, labelEl);
+    loadIndexAssets()
+      .then(function (all) {
       if (!document.body.contains(mount)) return;
       var hits = (all || []).filter(function (x) {
         if (!x) return false;
-        /* HARD: zero petli wiz→wiz w kolumnie skojarzonych materialow */
-        if (isVisualizationAsset(x)) return false;
-        if (isNoiseBrandKitAsset(x)) return false;
         var lps = x.linked_products;
         if (!lps || !lps.length) return false;
         var linkedOk = lps.some(function (lp) {
@@ -1045,15 +1197,18 @@
           return false;
         });
         if (!linkedOk) return false;
-        /* Elementy (Links/ELEMENTY) zawsze; materialy tylko relewantne do produktu */
-        if (classifyAssocAsset(x) === "element") return true;
-        return isRelevantMaterialForProduct(x, ctx);
+        /* Branding-grade filter: marketing raster/wideo + elementy; zero AI/PSD/PDF/source */
+        if (classifyAssocAsset(x) === "material") return passesMarketingAssocMaterial(x, ctx);
+        return passesMarketingAssocElement(x);
       });
-      /* Task 35: Links / ELEMENTY poza glowna lista "Skojarzone materialy" */
+      /* Task 35: Links / ELEMENTY poza glowna lista "Skojarzone materialy" (2 kubelki) */
       var materials = [];
-      var elements = [];
+      var elementsReady = [];
+      var elementsLinks = [];
       hits.forEach(function (x) {
-        if (classifyAssocAsset(x) === "element") elements.push(x);
+        var kind = classifyAssocAsset(x);
+        if (kind === "element-link") elementsLinks.push(x);
+        else if (kind === "element-ready") elementsReady.push(x);
         else materials.push(x);
       });
       /* Materialy marketingowe (slidery, banery) przed generycznymi brand assetami. */
@@ -1073,7 +1228,8 @@
         });
       }
       sortHits(materials);
-      sortHits(elements);
+      sortHits(elementsReady);
+      sortHits(elementsLinks);
       if (labelEl) labelEl.textContent = "Skojarzone materiały (" + materials.length + ")";
       if (!materials.length) {
         mount.innerHTML = '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów</p>';
@@ -1112,12 +1268,23 @@
           });
         }
       }
-      renderElementyGroup(elementyHost, elements.slice(0, 40));
+      renderElementyGroups(elementyHost, {
+        ready: elementsReady.slice(0, 40),
+        links: elementsLinks.slice(0, 40),
+      });
       renderResizerCta(resizerHost, ctx);
-      var m = document.getElementById("damMediaPreview");
+      var m = document.getElementById("damMediaPreview") || document.getElementById("damVizModal");
       var shared = window.DamModalShared;
       if (m && shared && shared.scheduleFitChrome) shared.scheduleFitChrome(m);
-    });
+    })
+      .catch(function () {
+        if (!document.body.contains(mount)) return;
+        mount.innerHTML =
+          '<p class="dam-media-preview__assoc-empty">Nie udało się wczytać skojarzeń</p>';
+      })
+      .then(function () {
+        finishAssocPaneLoading();
+      });
   }
 
   function associationsFooterHtml(asset, groupContext, options) {
@@ -2361,6 +2528,10 @@
     renderLinkedAssetsInto: function (mount, labelEl, productContext) {
       renderLinkedBrandingAssets({ mount: mount, labelEl: labelEl, productContext: productContext });
     },
+    assocPaneSkeletonHtml: assocPaneSkeletonHtml,
+    showAssocPaneLoading: showAssocPaneLoading,
+    passesMarketingAssocMaterial: passesMarketingAssocMaterial,
+    isSourceLikeAsset: isSourceLikeAsset,
     isVisualizationAsset: isVisualizationAsset,
     previewUrl: previewUrl,
     mediaUrl: mediaUrl,

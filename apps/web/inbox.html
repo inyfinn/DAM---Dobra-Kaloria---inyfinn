@@ -10,14 +10,14 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wiadomości - DAM</title>
+  <title>WiadomoĹ›ci - DAM</title>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=motion20260720a">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718histUndo1">
   <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=helprestart20260720a">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=chghist20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=assocfix20260720b">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
@@ -46,22 +46,22 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
     <div class="geex-content">
       <div class="geex-content__header">
         <div class="geex-content__header__content">
-          <h2 class="geex-content__header__title">Wiadomości</h2>
-          <p class="geex-content__header__subtitle dam-page-sub">Tu zbierasz zadania i zgłoszenia. Filtruj po źródle po lewej. Jeśli przez 72 godziny nikt nie podejmie decyzji, dostaniesz przypomnienie w Inbox. Nic nie zapisuje się samo na dysku.</p>
+          <h2 class="geex-content__header__title">WiadomoĹ›ci</h2>
+          <p class="geex-content__header__subtitle dam-page-sub">Tu zbierasz zadania i zgĹ‚oszenia. Filtruj po ĹşrĂłdle po lewej. JeĹ›li przez 72 godziny nikt nie podejmie decyzji, dostaniesz przypomnienie w Inbox. Nic nie zapisuje siÄ™ samo na dysku.</p>
         </div>
         <div class="geex-content__header__action" id="damHeaderAction"></div>
       </div>
 
       <div class="dam-inbox-layout">
-        <aside class="dam-inbox-side" aria-label="Filtry wiadomości">
+        <aside class="dam-inbox-side" aria-label="Filtry wiadomoĹ›ci">
           <div class="dam-inbox-side__block">
-            <h3 class="dam-inbox-side__title">Źródła</h3>
+            <h3 class="dam-inbox-side__title">ĹąrĂłdĹ‚a</h3>
             <button type="button" class="dam-inbox-tag is-active" data-tag="all">
               <span class="dam-inbox-tag__main"><i class="uil uil-apps" aria-hidden="true"></i><span class="dam-inbox-tag__label">Wszystkie</span></span>
               <span class="dam-inbox-count" data-count-for="all">0</span>
             </button>
             <button type="button" class="dam-inbox-tag" data-tag="zgloszenie">
-              <span class="dam-inbox-tag__main"><i class="uil uil-file-edit-alt" aria-hidden="true"></i><span class="dam-inbox-tag__label">Zgłoszenia DAM</span></span>
+              <span class="dam-inbox-tag__main"><i class="uil uil-file-edit-alt" aria-hidden="true"></i><span class="dam-inbox-tag__label">ZgĹ‚oszenia DAM</span></span>
               <span class="dam-inbox-count" data-count-for="zgloszenie">0</span>
             </button>
             <button type="button" class="dam-inbox-tag" data-tag="asana">
@@ -92,10 +92,10 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         </aside>
 
         <section class="dam-inbox-main">
-          <div class="dam-inbox-zgloszenie-tabs" id="inboxZgloszenieTabs" hidden role="tablist" aria-label="Rodzaj zgłoszenia">
-            <button type="button" class="dam-inbox-subtab is-active" role="tab" aria-selected="true" data-zgloszenie-sub="typy" title="Propozycje typów" aria-label="Propozycje typów">
+          <div class="dam-inbox-zgloszenie-tabs" id="inboxZgloszenieTabs" hidden role="tablist" aria-label="Rodzaj zgĹ‚oszenia">
+            <button type="button" class="dam-inbox-subtab is-active" role="tab" aria-selected="true" data-zgloszenie-sub="typy" title="Propozycje typĂłw" aria-label="Propozycje typĂłw">
               <i class="uil uil-tag-alt" aria-hidden="true"></i>
-              <span class="dam-inbox-subtab__label">Propozycje typów</span>
+              <span class="dam-inbox-subtab__label">Propozycje typĂłw</span>
               <span class="dam-inbox-count" data-count-for="zgloszenie_typy">0</span>
             </button>
             <button type="button" class="dam-inbox-subtab" role="tab" aria-selected="false" data-zgloszenie-sub="wizualizacja" title="Wizualizacje" aria-label="Wizualizacje">
@@ -111,38 +111,38 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           </div>
           <div class="dam-inbox-hist-bar" id="inboxHistBar" hidden>
             <p class="dam-inbox-hist-bar__hint">
-              <strong>Cofnij ostatnią</strong> = cofa rename na dysku (gdy jest w change-log).
-              <strong>Ponów</strong> = ostatnio wycofane.
-              Przy wpisie: <strong>Cofnij zmianę na dysku</strong> (nie mylić z „Wróć do kolejki”).
-              Po cofnięciu masz 30&nbsp;s na <strong>Anuluj cofnięcie</strong>.
+              <strong>Cofnij ostatniÄ…</strong> = cofa rename na dysku (gdy jest w change-log).
+              <strong>PonĂłw</strong> = ostatnio wycofane.
+              Przy wpisie: <strong>Cofnij zmianÄ™ na dysku</strong> (nie myliÄ‡ z â€žWrĂłÄ‡ do kolejkiâ€ť).
+              Po cofniÄ™ciu masz 30&nbsp;s na <strong>Anuluj cofniÄ™cie</strong>.
             </p>
             <div class="dam-inbox-hist-bar__actions">
-              <button type="button" class="geex-btn geex-btn--sm dam-inbox-hist-btn" id="inboxUndoLast" title="Cofnij ostatnią zmianę na dysku z change-log">
-                <i class="uil uil-corner-up-left" aria-hidden="true"></i> Cofnij ostatnią
+              <button type="button" class="geex-btn geex-btn--sm dam-inbox-hist-btn" id="inboxUndoLast" title="Cofnij ostatniÄ… zmianÄ™ na dysku z change-log">
+                <i class="uil uil-corner-up-left" aria-hidden="true"></i> Cofnij ostatniÄ…
               </button>
-              <button type="button" class="geex-btn geex-btn--sm dam-inbox-hist-btn" id="inboxRedoLast" title="Ponów ostatnio wycofaną zmianę na dysku">
-                <i class="uil uil-corner-up-right" aria-hidden="true"></i> Ponów
+              <button type="button" class="geex-btn geex-btn--sm dam-inbox-hist-btn" id="inboxRedoLast" title="PonĂłw ostatnio wycofanÄ… zmianÄ™ na dysku">
+                <i class="uil uil-corner-up-right" aria-hidden="true"></i> PonĂłw
               </button>
             </div>
           </div>
           <div class="dam-inbox-toolbar">
             <div class="dam-search-input-wrap dam-inbox-search">
               <i class="uil uil-search" aria-hidden="true"></i>
-              <input type="search" id="inboxSearch" class="form-control dam-search-input" placeholder="Szukaj w wiadomościach…" aria-label="Szukaj w wiadomościach" autocomplete="off" />
+              <input type="search" id="inboxSearch" class="form-control dam-search-input" placeholder="Szukaj w wiadomoĹ›ciachâ€¦" aria-label="Szukaj w wiadomoĹ›ciach" autocomplete="off" />
             </div>
             <label class="dam-inbox-unread-toggle">
               <input type="checkbox" id="inboxUnreadOnly" />
               Tylko nieprzeczytane
             </label>
             <span style="flex:1"></span>
-            <button type="button" class="geex-btn geex-btn--sm" id="inboxRefresh" title="Przeładuj listę">
-              <i class="uil uil-refresh" aria-hidden="true"></i> Odśwież
+            <button type="button" class="geex-btn geex-btn--sm" id="inboxRefresh" title="PrzeĹ‚aduj listÄ™">
+              <i class="uil uil-refresh" aria-hidden="true"></i> OdĹ›wieĹĽ
             </button>
           </div>
 
           <div class="dam-inbox-stats" id="inboxStats" aria-live="polite"></div>
           <ul class="dam-inbox-list" id="inboxList">
-            <li class="dam-inbox-item"><div class="dam-widget__meta">Wczytywanie…</div></li>
+            <li class="dam-inbox-item"><div class="dam-widget__meta">Wczytywanieâ€¦</div></li>
           </ul>
         </section>
       </div>
