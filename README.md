@@ -226,7 +226,10 @@ Szczegoly: [`docs/LANG_PROVENANCE.md`](docs/LANG_PROVENANCE.md).
 - **Explorer Historia statusów:** modal lifecycle F/X/D, Przywróć/Cofnij; cache `lifehist20260720a`
 - **Dashboard B5:** layout 2×2/1×4/1×6 bez overflow @375; cache `b5qa20260720f`
 - **Explorer create:** Plus kategorii + Dodaj produkt → modal dry-run/potwierdzenie → `POST /explorer/create-category|create-product` (szablon z `Szablony folderów`, DEMO `- D`); cache `expb20260720b`
-- **OPEN (następna fala):** redesign modalu create (live preview, warianty, undo 2 min) — szczegóły [`agents/shared/release-2026-07-20-evening.md`](agents/shared/release-2026-07-20-evening.md)
+- **OPEN (następna fala):** szablon fizyczny folderu po `add-variant-type` — szczegóły [`agents/shared/release-2026-07-20-evening.md`](agents/shared/release-2026-07-20-evening.md)
+- **Explorer create modal (EXP-C):** live preview, undo 2 min, warianty, global variant API; cache `expc20260720d`
+- **Viz changelog:** Historia zmian zamiast Cofnij/Ponów; cache `chghist20260720a`
+- **Branding polish:** date picker Geex, Karty=Skala styling, UTF-8 fix; cache `brpolish20260720a`
 - **FMCG A3:** katalog z kwotami (seed_estimate) + import-map v2; UI Edytuj w Integracjach
 - **ERP faktur C2 (stub):** `GET /finance/invoices/erp-status`, `POST .../export`, stan `invoice-erp-sync.json`, UI Faktury
 - **BENTO C3:** freeze anatomii kart (`agents/shared/bento-card-freeze.md`) — nie redesign

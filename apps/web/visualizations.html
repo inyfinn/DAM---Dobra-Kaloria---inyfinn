@@ -42,8 +42,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=motion20260720a">
 <link rel="stylesheet" href="./assets/css/dam-app.css?v=20260718searchUnify3">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=helprestart20260720a">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=sidebaridentity20260720a">
-<link rel="stylesheet" href="./assets/css/dam-branding.css?v=viztb20260720h">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=chghist20260720a">
+<link rel="stylesheet" href="./assets/css/dam-branding.css?v=brpolish20260720a">
 <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
 <link rel="stylesheet" href="./assets/css/dam-viz.css?v=viztb20260720i">
 </head>
@@ -892,12 +892,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 							</div>
 							<div id="vizSearchScope" class="dam-search-scope-mount" aria-label="Zakres wyszukiwania"></div>
 							<!-- Mount target: JS appends into #vizSearchScope > .dam-search-scope (far right). ADMIN ON only. -->
-							<div class="dam-changelog-bar" id="damChangeLogBar" hidden data-dam-bar-revealed="1" role="group" aria-label="Cofnij / Ponów na dysku X:" data-dam-tip="ADMIN: Cofnij/Ponów ostatnią zatwierdzoną zmianę typu, indeksu lub rename folderu/plików na dysku X: (most 8766 + sesja). To nie jest „Baza online” (Postgres).">
-								<span class="dam-changelog-bar__label" data-dam-tip="Historia zatwierdzonych zmian na dysku X: (typ / indeks / rename). Wymaga ADMIN ON. Nie mylić z Postgres „Baza”.">Dysk</span>
-								<button type="button" class="dam-int-cta" id="damChangeUndo" title="Cofnij ostatnią zmianę na dysku" data-dam-tip="Cofnij ostatnią zatwierdzoną zmianę typu, indeksu lub rename na dysku X: (most + sesja admina).">Cofnij</button>
-								<button type="button" class="dam-int-cta" id="damChangeRedo" title="Ponów cofniętą zmianę na dysku" data-dam-tip="Ponów ostatnio cofniętą zmianę na dysku X: (most + sesja admina).">Ponów</button>
-								<span class="dam-changelog-bar__hint" id="damChangeLogHint" aria-live="polite"></span>
-							</div>
+						<div class="dam-changelog-bar" id="damChangeLogBar" hidden data-dam-bar-revealed="1" role="group" aria-label="Historia zmian na dysku X:" data-dam-tip="ADMIN: log ostatnich zatwierdzonych zmian (status, typ, indeks, rename folderu/plików) na dysku X: (most 8766 + sesja). To nie jest „Baza online” (Postgres) - każda zmiana jest już zapisana, to tylko podgląd.">
+							<span class="dam-changelog-bar__label" data-dam-tip="Log zatwierdzonych zmian na dysku X: (status / typ / indeks / rename). Wymaga ADMIN ON. Nie mylić z Postgres „Baza”.">Dysk</span>
+							<span class="dam-changelog-bar__hint" id="damChangeLogHint" aria-live="polite"></span>
+							<button type="button" class="dam-int-cta" id="damChangeHistoryBtn" title="Historia zmian na dysku" aria-haspopup="true" aria-expanded="false" data-dam-tip="Pełna lista ostatnich zatwierdzonych zmian na dysku (status, typ, indeks, rename). To podgląd - każda zmiana jest już na trwałe zapisana w logu, nie trzeba jej cofać z tego miejsca.">Historia zmian</button>
+						</div>
 						</div>
 					</div>
 					<div id="vizSearchTags" class="dam-tag-groups" aria-label="Skojarzenia i podkategorie"></div>
@@ -953,7 +952,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<script src="./assets/js/dam-tag-bar.js?v=hub20260719j12"></script>
 	<script src="./assets/js/dam-labels.js?v=20260718langRaw1"></script>
 	<script src="./assets/js/dam-badges.js?v=usab20260720c"></script>
-	<script src="./assets/js/dam-tag-edit.js?v=viztb20260720h"></script>
+	<script src="./assets/js/dam-tag-edit.js?v=chghist20260720a"></script>
 	<script src="./assets/js/dam-viz-request.js?v=20260718v7f"></script>
 	<script src="./assets/js/dam-paths.js?v=devicepath20260720c"></script>
 	<script src="./assets/js/dam-icons.js?v=20260718icons2"></script>

@@ -3960,12 +3960,13 @@
     });
   }
 
+  var brandingSearchDebounceTimer = 0;
   function bindFilters() {
     ["damBrandingSearch", "damBrandingGraphicsOnly", "damBrandingDateFrom", "damBrandingDateTo", "damBrandingSort"].forEach(
       function (id) {
         var el = document.getElementById(id);
         if (!el) return;
-        var handler = function () {
+        var runFilter = function () {
           if (id === "damBrandingDateFrom" || id === "damBrandingDateTo") {
             datePresetActive = "";
             syncDatePresetButtons();
@@ -3973,6 +3974,14 @@
           clearBrandingComputeCache();
           scheduleBrandingRender({ tags: true, section: true });
         };
+        /* Perf: search to jedyne pole z akcja "per-keystroke" - facet-scan (O(assets x chipow))
+           bez debounce potrafil odczuwalnie zawiesic UI przy szybkim pisaniu. */
+        var handler = id === "damBrandingSearch"
+          ? function () {
+              if (brandingSearchDebounceTimer) clearTimeout(brandingSearchDebounceTimer);
+              brandingSearchDebounceTimer = setTimeout(runFilter, 220);
+            }
+          : runFilter;
         el.addEventListener("input", handler);
         el.addEventListener("change", handler);
       }

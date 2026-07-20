@@ -669,3 +669,41 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   **unikalne per fala** (`EXP-A`/`EXP-B`/`EXP-C`, nie generyczne A/B/C);
   jawne „odpal/działaj” przed spawn; po launch sprawdź ownership WRITE.
   Efekt naprawy: most `explorer_create.py` + modal `dam-explorer-add-product.js`.
+- 2026-07-20 | branding.html PL diakrytyki | user wkleił DOM dump z `element?w`,
+  `Wr??` itd. | to NIE był artefakt schowka/renderu - plik na dysku mial REALNIE
+  zapisane literalne `?` (0x3F) i U+FFFD (bajty nie-UTF8) w miejscach polskich
+  znakow, prawdopodobnie z wczesniejszego zapisu w zlej stronie kodowej | zawsze
+  weryfikuj bajtowo przed poprawka: PowerShell
+  `[System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($path))`
+  (Shell tool z `-Command` gubi `$zmienne` w inline stringu - pisz `.ps1` przez
+  Write i wolaj `-File`). Przy rozlanej korupcji (calego pliku, nie 1 linii)
+  szybciej i bezpieczniej przepisac caly maly plik (Write) niz walczyc z fuzzy
+  StrReplace na uszkodzonych bajtach - StrReplace nie znajdzie starego stringu
+  gdy oczekiwany znak to inny bajt (`?` ASCII vs U+FFFD) niz w pliku.
+- 2026-07-20 | zolte suwaki (Karty vs Skala) | `input[type=range]` bez wlasnego
+  `accent-color` dziedziczy motyw UA systemu (zolto-zloty na Windows/Chrome),
+  nawet gdy caly reszta UI jest fioletowa | dodaj JEDNA globalna regule
+  `input[type="range"] { accent-color: var(--dam-primary) }` w `dam-brand.css`
+  (bez klasy-selektora) jako siatka bezpieczenstwa nad lokalnymi regulami -
+  nowy suwak nigdy nie "wypadnie" zolty nawet jesli ktos zapomni lokalnej reguly.
+  Nowe kontrolki tego typu: dodaj im istniejaca klase chrome (np.
+  `.dam-viz-zoom-control`) zamiast duplikowac box/border/height we wlasnym
+  selektorze - jedno miejsce prawdy dla wizualu.
+- 2026-07-20 | `#damChangeLogHint` (Wizualizacje) | user nie rozumial "status ->
+  nieaktualne" - mylil to z "ten log jest przestarzaly", a to byla TRESC zmiany
+  (ktos ustawil status PRODUKTU na X=nieaktualne) | rozroznij UI "ten wpis mowi o
+  zmianie ktora zaszla" od "te dane sa stare"; dopisuj kontekst (basename sciezki
+  z `entry.path`) do wpisu statusu, nie tylko surowe `status_from -> status_to`.
+  Zarazem: Cofnij/Ponow na tym poziomie (most-level undo ostatniego wpisu
+  change-log) zastapiony jednym przyciskiem "Historia zmian" (popover z pelna
+  lista `GET /change-log?limit=20`, read-only) - user: zmiany juz sa logowane
+  per-element (lifecycle history, ADR lifecycle.history_visible), wiec undo z
+  globalnego bara jest zbedny i mylacy. Backend `/change-log/undo|redo` NIE
+  usuniety (moze byc potrzebny gdzie indziej) - zmiana tylko w UI `dam-tag-edit.js`
+  (`bindChangeLogBar`/`refreshChangeLogBar`) + `visualizations.html`.
+- 2026-07-20 | weryfikacja CDP wielu kart | `browser_take_screenshot` robi zdjecie
+  OS-widocznego okna/karty, NIE karty wskazanej przez `viewId` z ostatniego
+  `browser_navigate`/`browser_cdp` | gdy w tle jest >1 karta (np. z poprzednich
+  sesji), `browser_tabs action:"select"` na docelowy `index` nie wystarcza -
+  zamknij (`action:"close"`) pozostale karty, dopiero potem screenshot; inaczej
+  dostajesz zdjecie niewlasciwej strony mimo poprawnego CDP targetu.

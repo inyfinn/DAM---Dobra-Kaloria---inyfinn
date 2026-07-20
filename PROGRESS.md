@@ -126,7 +126,7 @@ Pakiet rownoleglych agentow (Viz toolbar admin changelog, Branding page-size OK,
 | Explorer Historia statusów | done | `lifehist20260720a`, PI `lifecycle.history_restore` |
 | Dashboard B5 layouts | done | `b5qa20260720f` |
 | Explorer create modal (podst.) | done | `expb20260720b`, `explorer_create.py` |
-| Create modal redesign 10-pass | **open** | agent aborted — live preview, warianty, undo |
+| Explorer create modal redesign | **done** | `expc20260720d`, undo-create, add-variant-type |
 
 Pełna mapa: [`agents/shared/release-2026-07-20-evening.md`](agents/shared/release-2026-07-20-evening.md)
 

@@ -1052,37 +1052,18 @@
   font-weight: var(--dam-branding-meta-fw);
 }
 
+/* Karty = ta sama anatomia/chrome co .dam-viz-zoom-control (Skala) - box/border/height
+   dziedziczone z .dam-branding-filters--meta .dam-viz-zoom-control; tu tylko doprecyzowanie
+   layoutu wewnetrznego (range + number + OK) w jednym rzedzie. */
 .dam-branding-filters--meta .dam-branding-page-size {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 16px;
-  height: var(--dam-branding-meta-h, 34px);
-  min-height: var(--dam-branding-meta-h, 34px);
-  padding: 0 10px;
-  box-sizing: border-box;
-  background: #fff;
-  border: 1px solid #e7e7e7;
-  border-radius: 8px;
-  font-size: var(--dam-branding-meta-fs, 12px);
-  font-weight: 600;
-  color: #464255;
-}
-
-.dam-branding-page-size__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-  font-size: 12px;
-  font-weight: 600;
-  color: #464255;
+  gap: 6px;
 }
 
 .dam-branding-page-size input[type="range"] {
   width: 88px;
   margin: 0;
   vertical-align: middle;
+  accent-color: var(--dam-primary, #ab54db);
 }
 
 .dam-branding-page-size__num {
@@ -1103,6 +1084,12 @@
 .dam-branding-page-size__num::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+.dam-branding-page-size__num:focus {
+  outline: none;
+  border-color: var(--dam-primary, #ab54db);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 18%, transparent);
 }
 
 .dam-branding-page-size__ok,

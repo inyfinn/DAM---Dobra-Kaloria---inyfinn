@@ -1,7 +1,7 @@
 # Release notes: sesja 2026-07-20 (wieczór)
 
 **Repo:** `inyfinn/DAM---Dobra-Kaloria---inyfinn` · **Wersja hub:** 2.0.7  
-**Commity na `main`:** `e28a4bd`, `025aad3` (już na `origin/main`)
+**Commity na `main`:** `e28a4bd`, `025aad3`, `d7733a6` (+ kolejny po domknięciu EXP-C)
 
 Pełny log operacyjny: [`process.md`](../../process.md). Brief usera: [`usability-brief-2026-07-20.md`](usability-brief-2026-07-20.md).
 
@@ -27,11 +27,21 @@ Pełny log operacyjny: [`process.md`](../../process.md). Brief usera: [`usabilit
 - CSS modal 60vw / max 90vh; PI `lifecycle.history_restore` w `program-instructions.json`
 - Cache explorer: `dam-explorer.js?v=lifehist20260720a`, `dam-brand.css?v=lifehist20260720a`
 
-### Explorer create (FAZA backlog — podstawowy modal)
-- `dam-explorer-add-product.js` + `explorer_create.py`: kategoria/produkt, dry-run „Podgląd”, potwierdzenie
-- Bridge: `POST /explorer/create-category|create-product`; szablony z `Szablony folderów`
-- Cache: `expb20260720b`
-- QA: utworzenie `TEST AGENT CAT` na X: — PASS
+### Explorer create modal — pełny redesign (EXP-C) ✅
+- `dam-explorer-add-product.js` rewrite: live `Tworzenie: {path}`, edytowalny `#damExpSeq`, drzewo folderów, warianty odznaczone + fioletowe checkboxy, status bez pustej ramki, „Nowy wariant globalny”, panel potwierdzenia (Przejdź / Cofnij / Zatwierdź, 2 min)
+- Bridge: `GET /explorer/next-category-seq`, `POST /explorer/undo-create`, `POST /explorer/add-variant-type`
+- PI `explorer.create_modal_ux` (v9); cache `expc20260720d`
+- QA: 5× screenshot+Read; real create→Cofnij na X: (kategoria + produkt) — PASS
+- **Blocker znany:** global variant rejestruje kod w naming-dictionary/carrier-types, ale **nie tworzy** fizycznego folderu w `Szablony folderów/` — admin musi dodać ręcznie
+
+### Wizualizacje — Historia zmian (zamiast Cofnij/Ponów)
+- `#damChangeHistoryBtn` + popover read-only; `dam-tag-edit.js` + `dam-brand.css`
+- Cache: `chghist20260720a`
+
+### Branding polish (Karty/Skala, kalendarz, diakrytyki)
+- Global `accent-color` na range; `#damBrandingPageSize` = `.dam-viz-zoom-control`
+- `dam-date-picker.js` + CSS (Geex pill calendar); fix UTF-8 w `branding.html`
+- Cache: `brpolish20260720a`
 
 ### Backlog checklisty (A3 / B3–B7 / C2 / C3)
 | ID | Zakres |
@@ -62,24 +72,9 @@ Pełny log operacyjny: [`process.md`](../../process.md). Brief usera: [`usabilit
 
 ---
 
-## OPEN — agent przerwany (nie w commicie wieczoru)
+## ~~OPEN~~ — domknięte (agent `202d725c`)
 
-**Explorer Create Modal redesign (10-pass ui-taste)** — subagent `202d725c` **aborted** po starcie.
-
-Wymagania usera nadal do domknięcia w `dam-explorer-add-product.js` / `dam-explorer.js`:
-
-1. Podgląd tylko `Tworzenie: X:\…` (bez Plan/Drzewo)
-2. Live preview przy wpisywaniu (nie tylko przycisk Podgląd)
-3. Edytowalny licznik kategorii (`09 - KREMY`)
-4. `#damExpErr` ukryty gdy pusty
-5. Drzewo folderów z ikonami pod błędem
-6. Checkboxy Geex (bez pomarańczowych natywnych)
-7. Warianty domyślnie odznaczone; tag lewo, podgląd prawo
-8. Nowy wariant globalny (PL/EN/nazwa → program-instructions)
-9. Post-create: Przejdź / Zatwierdź / Cofnij (~2 min)
-10. Bump cache w `explorer.html`
-
-Obecny copy w modalu: *„Wypełnij pola i kliknij Podgląd”* — sygnał, że redesign nie domknięty.
+Redesign modalu create — **DONE** (patrz sekcja EXP-C powyżej). Jedyny follow-up produktowy: szablon fizyczny folderu po `add-variant-type`.
 
 ---
 
@@ -91,7 +86,7 @@ Obecny copy w modalu: *„Wypełnij pola i kliknij Podgląd”* — sygnał, że
 | `dam-shell.js` | `sidebaridentity20260720b` | globalnie |
 | `dam-brand.css` | `sidebaridentity20260720a` / `lifehist20260720a` | explorer = lifehist |
 | `dam-explorer.js` | `lifehist20260720a` | explorer.html |
-| `dam-explorer-add-product.js` | `expb20260720b` | explorer.html |
+| `dam-explorer-add-product.js` | `expc20260720d` | explorer.html |
 | `dam-dashboard-widgets.js` | `b5qa20260720f` | dashboard.html |
 
 ---

@@ -1,5 +1,174 @@
 ﻿# process.md - log + proces DAM
 
+## 2026-07-20 - Explorer: redesign modala "Dodaj kategorię/produkt" (EXP-C, 10-pass ui-taste)
+
+### Komenda/Akcja
+User poprosił o pełny redesign modala tworzenia kategorii/produktu w Eksplorerze
+(`#damExplorerCreateModal`): zargonowy podgląd ścieżki, statyczny (tylko po
+kliknięciu "Podgląd"), sztywny numer kategorii, myteriozna pusta czerwona ramka
+błędu, wszystkie warianty domyślnie zaznaczone + natywne oranżowe checkboxy,
+brak hierarchii folderów, brak globalnego tworzenia wariantów, brak potwierdzenia
+z cofnięciem po utworzeniu.
+
+### Log/Status
+1. Przeczytano `agents/shared/code-doctrine.md` + `apps/web/data/program-instructions.json`
+   (`explorer.product_from_template`, `explorer.demo_index_rules`,
+   `naming.carrier_ui_vs_disk`) przed zmianą kodu - zgodnie z doktryną.
+2. **Backend** `apps/desktop/explorer_create.py`:
+   - `create_category(..., seq=None)` - edytowalny licznik kategorii (nadpisuje
+     auto-numer), zawsze zwraca `suggested_seq`.
+   - `next_category_seq_for_brand()` - podpowiedź numeru bez zapisu.
+   - `undo_create()` - cofnięcie świeżo utworzonego katalogu (okno ~150s,
+     guard: wewnątrz `marketing_base`, katalog musi istnieć, `st_ctime` musi być
+     niedawny - nigdy nie usuwa starszych/prawdziwych folderów).
+3. **Bridge** `apps/desktop/local_bridge.py`:
+   - `GET /explorer/next-category-seq?brand=` (admin).
+   - `POST /explorer/undo-create` {path} (admin, audit log `explorer_undo_create`).
+   - `POST /explorer/add-variant-type` {code, code_en, label_pl} (admin) →
+     `add_global_variant_type()`: zapis do `naming-dictionary.json` (`carriers[]`
+     + `carrier_detect_order`) i `carrier-types.json` (`custom_types`) przez
+     `_save_json` (lokalny cache + KV push do Postgres `dam_kv_store` gdy
+     skonfigurowany) + `reload_naming_policy_from_disk()`.
+   - `create-category` POST handler przekazuje `seq` z body.
+4. **Frontend** `apps/web/assets/js/dam-explorer-add-product.js` (pełny rewrite,
+   CSS wstrzyknięty z JS - nie dotknięto `dam-brand.css`, zgodnie z sekcją 4
+   doktryny o współbieżnych agentach):
+   - Podgląd `#damExpPreview` = jedna czysta linia `Tworzenie: {pełna_ścieżka}`
+     (zero "Plan:", "skopiuj szablon", "Drzewo:"), aktualizowana na `input`/`change`
+     z klienckiego mirrora logiki `explorer_create.py` (`categoryFolderName`,
+     `productFolderPreview`, `variantFolderPreviewClient` - identyczne tokeny
+     placeholder/demo co backend); po dry-run nadpisywana autorytatywnym
+     `planned_path` z mostu.
+   - Edytowalny numer kategorii `#damExpSeq` (podpowiedź z
+     `/explorer/next-category-seq`, można nadpisać przed zapisem).
+   - `#damExpErr` → `.dam-exp-create__status`: `:empty{display:none}` (brak
+     pustej ramki), kolor zależny od `is-error`/`is-info`/`is-ok`.
+   - Hierarchia `#damExpTree`: ikony `uil-folder`/`uil-folder-open` + wcięcia;
+     kategoria = 1 węzeł; produkt = folder produktu + tylko ZAZNACZONE warianty
+     (gdy brak zaznaczonych: komunikat, że kopiowany będzie cały szablon -
+     zgodnie z faktycznym zachowaniem backendu `create_product` gdy `variants=[]`).
+   - Wiersz wariantu: checkbox ODZNACZONY domyślnie, TAG = `DamLabels.carrierLabel`
+     (pełna etykieta, np. BATON/DOYPACK/BIGPAK) po lewej, podgląd finalnej nazwy
+     folderu po prawej (live z pól data/indeks). Etykieta sekcji zmieniona na
+     "Warianty" + podpowiedź "Wybierz warianty do skopiowania - domyślnie
+     wszystkie odznaczone."
+   - Wszystkie `input[type=checkbox]` w modalu: `accent-color:var(--dam-primary,#AB54DB)`
+     (zero natywnego oranżu). Fonty ujednolicone (panel 13px, etykiety 11.5px
+     uppercase, podgląd/warianty monospace 11-12.5px) - zamiast `font:inherit`.
+   - "Nowy wariant globalny" (3 pola: kod PL, kod EN, pełna nazwa) na dole
+     sekcji wariantów → `POST /explorer/add-variant-type`.
+   - Panel potwierdzenia po realnym utworzeniu (`.dam-exp-confirm`): ikona
+     checkmark, "Utworzono: {nazwa}", ścieżka, odliczanie `setInterval` 120s →
+     auto-Zatwierdź, przyciski **Przejdź do folderu** (`DamPaths.revealInExplorer`),
+     **Cofnij** (`POST /explorer/undo-create` → toast → close), **Zatwierdź**
+     (`triggerRebuild` → `reloadExplorer` → toast → close). Zamknięcie modala
+     (X/Escape/backdrop) w trakcie okna potwierdzenia = auto-finalize (nie
+     zostawia "wisiącego" nieprzeindeksowanego folderu).
+5. Cache-bust: `dam-explorer-add-product.js?v=expc20260720d` w `explorer.html`
+   (jedyny plik HTML, który go ładuje).
+
+### Efekt/Fix
+Modal "Dodaj kategorię/produkt" ma czysty, żywy podgląd ścieżki, edytowalny
+numer kategorii, czytelny status błędu/info/ok, hierarchię folderów, warianty
+domyślnie odznaczone z pełną etykietą + podglądem nazwy, fioletowe checkboxy
+Geex, globalne tworzenie wariantów (naming-dictionary + carrier-types, z KV
+push do Postgres) i potwierdzenie po utworzeniu z 2-minutowym cofnięciem.
+
+### Backup
+Brak destrukcyjnej zmiany istniejących danych - `next_category_seq`/`create_category`/
+`create_product` zachowują dotychczasową logikę zapisu (dry_run/confirm gate),
+`undo_create` usuwa WYŁĄCZNIE świeżo utworzony katalog (guard ścieżka+wiek).
+
+### Test/Ewaluacja
+- `python -m py_compile explorer_create.py local_bridge.py`: PASS.
+- `node --check dam-explorer-add-product.js`: PASS. ReadLints: brak błędów.
+- Bridge restart (`Stop-Process` na `pythonw.exe local_bridge.py`, watchdog
+  auto-restart w ~5-9s) x2, `/health` 200 po każdym, nowe endpointy zwracają
+  401 (nie 404) bez sesji = zarejestrowane.
+- **Screenshot+Read QA (5+ przelotów, realny admin w IDE browser):**
+  1. Kategoria "Kremy": live update na `input` (bez klikania Podgląd) - tekst
+     `Tworzenie: X:\Marketing\...\08 - KREMY`; zmiana `#damExpSeq` na 42 → live
+     `...\42 - KREMY`; drzewo `42 - KREMY`; status pusty→hidden, po dry-run
+     zielony "Podgląd gotowy...". Screenshot czytelny, fiolet/Geex, brak
+     oversized fontów.
+  2. Produkt (BATONY): 10 wierszy wariantów wszystkie ODZNACZONE domyślnie,
+     `accentColor` checkboxa = `rgb(171,84,219)` (fiolet, nie oranż), tagi pełne
+     (BATON/BIGPAK/DOYPACK/ETYKIETA/...), podgląd per-wiersz z " - D" (brak
+     indeksu = demo, zgodnie z `explorer.demo_index_rules`); zaznaczenie
+     wariantu + data → drzewo i podgląd aktualizują się live. "Nowy wariant
+     globalny" widoczny na dole.
+  3. **Realne utworzenie kategorii "ZZZ QA UNDO TEST" → panel potwierdzenia
+     (checkmark, ścieżka, odliczanie 2:00→1:43 tykające) → Cofnij → toast
+     "Cofnięto - folder usunięty." → `Test-Path` na dysku = `False`.**
+  4. **Realne utworzenie produktu "ZZZ QA PRODUCT UNDO" (z 1 wariantem BAT) w
+     BATONY → panel potwierdzenia → Cofnij → toast → `Test-Path` = `False`.**
+  5. Test błędu: puste `#damExpName` + Podgląd → `#damExpErr` = "Podaj nazwę."
+     czerwony pill (`rgb(180,35,24)` on `rgb(253,241,240)`), nie pusta ramka.
+  6. Responsywność 700×800: pola w jednej kolumnie, wiersze wariantów
+     czytelne, brak przycięcia/nakładania.
+  7. Global wariant "PUSZ/CAN/PUSZKA" przez `/explorer/add-variant-type` →
+     zapis do `naming-dictionary.json` (`carriers.PUSZ`) + `carrier-types.json`
+     (`custom_types.PUSZ`) potwierdzony odczytem plików → **po weryfikacji
+     usunięty (był tylko testem QA)**, w tym z Postgres KV (`pg_db.kv_set`
+     bezpośrednio, `is_configured()==True` w tym środowisku) - zero trwałych
+     danych testowych.
+- Pass/Fail: **Pass** (wszystkie 10 wymagań z briefu zweryfikowane; "Zatwierdź"
+  zweryfikowany przez code review + strukturalną symetrię z Cofnij, NIE przez
+  pełny live rebuild - unikniecie długiego, potencjalnie blokującego
+  `/index/rebuild` na współdzielonym środowisku deweloperskim w trakcie sesji).
+
+### Źródła
+- `agents/shared/code-doctrine.md` (wzorzec modułu, cache-busting, CSS injection
+  przy współbieżnych agentach, weryfikacja CDP+screenshot).
+- `apps/web/data/program-instructions.json`: `explorer.product_from_template`,
+  `explorer.demo_index_rules`, `naming.carrier_ui_vs_disk`, nowa instrukcja
+  `explorer.create_modal_ux` (v9, dopisana przed zmianą kodu biznesowego).
+
+## 2026-07-20 - Wizualizacje: "Historia zmian" zamiast Cofnij/Ponów w #damChangeLogBar
+
+### Komenda/Akcja
+User nie rozumiał hinta `#damChangeLogHint` ("status -> nieaktualne") i poprosił o
+zamianę przycisków Cofnij/Ponów na podgląd historii zmian, bo per-elementowa
+historia i tak już się zawsze zapisuje.
+
+### Log/Status
+1. **Wyjaśnienie usera**: "nieaktualne" = ktoś zmienił status PRODUKTU/WARIANTU na
+   dysku na X (archiwum) w systemie F/X/D (`program-instructions.json` →
+   `lifecycle.status_fxd`) - to treść zmiany, nie informacja że sam log jest
+   przestarzały. Hint po prawej stronie ekranu opisuje właśnie tę ostatnią zmianę.
+2. `apps/web/visualizations.html`: usunięto `#damChangeUndo`/`#damChangeRedo`,
+   dodano jeden przycisk `#damChangeHistoryBtn` ("Historia zmian") w
+   `#damChangeLogBar`; hint przeniesiony przed przycisk.
+3. `dam-tag-edit.js`: `changeLogRowDetail()` dopisuje basename ścieżki
+   (`entry.path`) do wpisów statusu (np. "status: Aktualne -> Nieaktualne ·
+   Boost - Doypack"), żeby było wiadomo CO się zmieniło, nie tylko JAK.
+   Nowy popover `.dam-changelog-history` (z-index 12300, jak inne pickery):
+   pełna lista `GET /change-log?limit=20` (najnowsze na górze), read-only,
+   zamykany X / Esc / klik poza. Usunięto `postAction`/undo/redo handlery -
+   backend `/change-log/undo|redo` NIE usunięty (może być używany gdzie indziej),
+   zmiana tylko w UI tego bara.
+4. CSS: nowe klasy `.dam-changelog-history*` w `dam-brand.css` (lista, wiersz,
+   stopka, przycisk zamknięcia) w stylu design system (fiolet, pill-tint tła).
+5. Cache-bust: nowy token `chghist20260720a` dla `dam-brand.css` (wszystkie HTML)
+   i `dam-tag-edit.js` (5 stron które go ładują).
+
+### Efekt/Fix
+Bar w Wizualizacjach (ADMIN ON) pokazuje ostatnią zmianę + przycisk "Historia
+zmian" otwierający pełną, czytelną listę ostatnich wpisów z dysku. Zero undo/redo
+z tego poziomu.
+
+### Test/Ewaluacja
+- `node --check dam-tag-edit.js`: PASS. ReadLints: brak błędów.
+- CDP (mock `/change-log` fetch, 3 wpisy: lifecycle/index/carrier): hint = ostatni
+  wpis; przycisk włączony; klik → popover z 3 wierszami w kolejności od najnowszego,
+  wiersz statusu z basenamem ścieżki ("status -> nieaktualne · Boost - Doypack");
+  toggle open/close działa; przycisk X zamyka.
+- Screenshot+Read: popover widoczny, czytelny, w stylu design system (fiolet,
+  zaokrąglone rogi, spacing). Lekcja: `browser_take_screenshot` robi zdjęcie
+  OS-widocznej karty, nie karty z CDP `viewId` - trzeba zamknąć zbędne karty w tle
+  (dopisane do `code-doctrine.md` §12).
+- Pass/Fail: **Pass**.
+
 ## 2026-07-20 - Model policy global: parent = UI usera
 
 ### Komenda/Akcja
@@ -6026,3 +6195,122 @@ Brak.
 
 ### Zrodla
 release-2026-07-20-evening.md; agent-transcripts subagents; git log
+
+## 2026-07-20 - Domkniecie EXP-C (subagent create modal) + commit/push
+
+### Komenda/Akcja
+Subagent [Explorer create modal redesign](202d725c-bf6b-49e5-b85e-47dc49bc7a39) DONE — follow-up: docs + commit + push (user).
+
+### Log/Status
+1. Zweryfikowano diff: `dam-explorer-add-product.js`, `explorer_create.py`, `local_bridge.py`, PI v9, cache `expc20260720d`.
+2. Rownolegle w working tree: Viz Historia zmian (`chghist20260720a`), Branding polish (`brpolish20260720a`, date-picker).
+3. Zaktualizowano release notes, PROGRESS, README, handoff synthesis.
+4. Commit bez runtime JSON (file-index/search-index/lifecycle-status — lokalny rebuild/QA).
+
+### Efekt/Fix
+Create modal 10-pass = Pass; blocker add-variant-type bez fizycznego szablonu udokumentowany.
+
+### Test/Ewaluacja
+- node --check + py_compile: PASS (wczesniej przez subagenta)
+- Pass/Fail: **Pass**
+
+### Zrodla
+process.md wpis EXP-C (linie 3–125); subagent transcript 202d725c
+
+## 2026-07-20 - Branding: Karty/Skala, kalendarz, padding, perf (plan branding_ui_polish_c4a6251f)
+
+### Komenda/Akcja
+User: usunac zolte "Karty" (musi wygladac jak fioletowa "Skala"), globalny fioletowy
+accent-color na suwakach, wlasny kalendarz w stylu tagow zamiast natywnego popupu,
+wyrownac padding `.dam-search-wrap--panel` = `.dam-viz-secondary-filters`, zweryfikowac
+spowolnienie Brandingu. Plan wdrozony w calosci (5/5 kroków).
+
+### Log/Status
+1. **Root cause zolty "Karty"**: `input[type="range"]` bez `accent-color` -> domyslny
+   kolor UA (Windows/Chrome = zolto-zloty). Skala mial `accent-color` lokalnie, Karty nie.
+2. **KROK1**: `#damBrandingPageSize` dostal klase `.dam-viz-zoom-control` (ta sama co
+   Skala) - box/border/height dziedziczone ze wspolnego selektora, zero duplikacji CSS.
+   Dodano globalna regule `input[type="range"] { accent-color: var(--dam-primary) }` w
+   `dam-brand.css` (defense-in-depth, poza istniejacymi lokalnymi regulami - wszystkie
+   juz byly fioletowe, grep potwierdzil 0 zoltych akcentow w calym repo).
+3. **Odkryto i naprawiono szersza korupcje kodowania** w `branding.html`: literalne
+   znaki `?`/`�` (U+FFFD) w PL diakrytykach (nie tylko tipy Kart/Skali - caly plik,
+   ~20 miejsc: "Wyczyść filtry", "Ostatni tydzień/miesiąc", "Priorytet użycia",
+   "Wróć do przeglądania" itd.). Zweryfikowano bajtowo (PowerShell UTF8.GetString) -
+   to byla realna korupcja zapisana w plikuj, nie tylko render. Cały plik przepisany
+   z poprawnymi znakami.
+4. **KROK2 - custom date picker**: nowy `dam-date-picker.js` (IIFE, `window.DamDatePicker`)
+   - auto-enhance kazdego `input[type="date"]` (readOnly + wrapper `.dam-date-field` +
+     ikona-trigger), popover `.dam-date-popover` w `<body>` (z-index 12300, jak inne
+     pickery), siatka dni w stylu `.dam-viz-badge`/pill, `is-today` = obrys primary,
+     `is-selected` = fill primary, stopka Wyczysc/Dzis. Oryginalny input zostaje
+     jedynym zrodlem prawdy (ISO w `.value`, `input`+`change` dispatch) - zero zmian
+     w logice filtrow `dam-branding.js`. `.ui-datepicker` (jQuery UI, legacy, nieuzywany
+     w zadnym HTML) juz mial `var(--primary-color)` - bez zmian.
+5. **KROK3**: `.dam-search-wrap--panel` padding `10px 12px 12px` -> `20px 24px` (=
+   `.dam-viz-secondary-filters`). CDP: oba `getComputedStyle().padding` = `"20px 24px"`
+   na Brandingu i Explorerze.
+6. **KROK4 - perf**: `bindFilters()` w `dam-branding.js` - debounce 220ms tylko na
+   `#damBrandingSearch` (input+change), reszta filtrow bez zmian (rzadkie akcje).
+   **Zmierzony root cause spowolnienia**: `branding-index.json` = **284.9 MB**,
+   `branding-search-index.json` = **43.7 MB** (`apps/web/data/`). To potwierdza
+   hipoteze usera "dzialalo szybciej wczesniej" - indeks urosl do prawie 285 MB i
+   kazdy load/parse tego kosztuje. Debounce lagodzi per-keystroke jank, ale
+   **glebszy fix (lazy/slim index, paginacja API) to osobny follow-up** - nie
+   blokuje tej fali UI polish (decyzja z planu).
+7. Cache-bust: nowy token `brpolish20260720a` dla `dam-brand.css` + `dam-branding.css`
+   we WSZYSTKICH HTML ktore je laduja (branding/dashboard/visualizations/explorer +
+   12 stron statycznych z samym dam-brand.css); `dam-branding.js`, `dam-date-picker.js`
+   (nowy) + `dam-date-picker.css` (nowy) tylko w `branding.html` (jedyna strona z
+   `input[type="date"]` - grep potwierdzil).
+
+### Efekt/Fix
+- Karty = wizualnie identyczne ze Skala (fiolet #AB54DB), zero zoltego nigdzie w repo.
+- Wlasny kalendarz Od/Do w stylu tagow, dziala end-to-end (test CDP: klik dnia ->
+  input.value = ISO, filtr przelicza sie, popover sie zamyka).
+- Padding search = secondary filters (rowny rytm) na Brandingu i Explorerze.
+- Naprawiona korupcja kodowania w `branding.html` (caly plik, nie tylko dotkniety blok).
+- Zmierzony i zadokumentowany root cause spowolnienia (285 MB indeks) + debounce search.
+
+### Backup
+Brak (edycje tekstowe/CSS/JS, bez migracji danych).
+
+### Test/Ewaluacja
+- `node --check` na `dam-branding.js`, `dam-date-picker.js`: PASS.
+- ReadLints na zmienionych plikach: brak bledow.
+- CDP: `accentColor` Karty i Skala = `rgb(171, 84, 219)` (identyczne); `padding` search
+  vs meta filters = `20px 24px` (Branding + Explorer).
+- CDP: wybor dnia w popoverze -> `input.value` = ISO, status grid przeliczony
+  ("100 elementów" -> "53 elementy" po ustawieniu daty), popover zamkniety.
+- Karty drag+OK: number=60 -> `is-dirty` na OK -> klik -> status "limit 60 kart"
+  (apply-on-OK zachowany, bez live re-render przy drag).
+- Screenshot+Read (3 przeloty): Branding desktop (Karty/Skala/kalendarz czyste),
+  Explorer desktop (padding rowny), Wizualizacje (brak regresji), Branding @1024px
+  (meta row w jednej linii, dziala), reset stanu do domyslnych (limit 100).
+- Pass/Fail: **Pass**.
+
+### Zrodla
+apps/web/branding.html; apps/web/assets/css/dam-brand.css; apps/web/assets/css/dam-branding.css;
+apps/web/assets/css/dam-date-picker.css (nowy); apps/web/assets/js/dam-branding.js;
+apps/web/assets/js/dam-date-picker.js (nowy); plan branding_ui_polish_c4a6251f.plan.md
+
+## 2026-07-20 - Domkniecie EXP-C (subagent create modal) + commit/push
+
+### Komenda/Akcja
+Subagent Explorer create modal redesign DONE — follow-up: docs + commit + push (user).
+
+### Log/Status
+1. Zweryfikowano diff: dam-explorer-add-product.js, explorer_create.py, local_bridge.py, PI v9, cache excp20260720d.
+2. Rownolegle w working tree: Viz Historia zmian (chghist20260720a), Branding polish (brpolish20260720a).
+3. Zaktualizowano release notes, PROGRESS, README, handoff synthesis.
+4. Commit bez runtime JSON (file-index/search-index/lifecycle-status — lokalny rebuild/QA).
+
+### Efekt/Fix
+Create modal 10-pass = Pass; blocker add-variant-type bez fizycznego szablonu udokumentowany.
+
+### Test/Ewaluacja
+- node --check + py_compile: PASS (wczesniej przez subagenta)
+- Pass/Fail: **Pass**
+
+### Zrodla
+process.md wpis EXP-C; subagent 202d725c-bf6b-49e5-b85e-47dc49bc7a39

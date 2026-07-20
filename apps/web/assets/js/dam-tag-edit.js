@@ -845,33 +845,44 @@
     return String(code);
   }
 
-  function formatChangeLogEntry(entry) {
-    if (!entry) return "Brak zmian do cofnięcia";
-    var ts = String(entry.ts || "").replace("T", " ").slice(0, 16);
+  /* Etykieta pochodzi z basename sciezki na dysku (np. "Boost - Doypack - F") -
+     usuwamy koncowa litere statusu, zeby nie duplikowac jej z detalem "status -> X". */
+  function pathBasenameForLog(p) {
+    var s = String(p || "").replace(/[\\/]+$/, "");
+    if (!s) return "";
+    var base = s.split(/[\\/]/).pop() || "";
+    return base.replace(/\s*-\s*[FXD]$/i, "").trim();
+  }
+
+  function changeLogRowDetail(entry) {
+    if (!entry) return "zmiana na dysku";
     var cat = String(entry.category || entry.action || "");
     var action = String(entry.action || "");
-    var detail = "";
     if (action === "rename_index" || cat === "index") {
-      detail = "indeks " + (entry.index_from || "?") + " -> " + (entry.index_to || "?");
-    } else if (entry.carrier_from || entry.carrier_to) {
-      detail =
-        "typ " +
-        humanCarrierForLog(entry.carrier_from) +
-        " -> " +
-        humanCarrierForLog(entry.carrier_to);
-    } else if (cat === "lifecycle_status" || action.indexOf("lifecycle") === 0) {
+      return "indeks " + (entry.index_from || "?") + " -> " + (entry.index_to || "?");
+    }
+    if (entry.carrier_from || entry.carrier_to) {
+      return "typ " + humanCarrierForLog(entry.carrier_from) + " -> " + humanCarrierForLog(entry.carrier_to);
+    }
+    if (cat === "lifecycle_status" || action.indexOf("lifecycle") === 0) {
+      /* "nieaktualne" tu = ktos ustawil status PRODUKTU/WARIANTU na dysku na X (archiwum),
+         to NIE znaczy ze ten log jest przestarzaly - to jest tresc zmiany, ktora zaszla. */
       var stFrom = humanDiskStatusLabel(entry.status_from || entry.from);
       var stTo = humanDiskStatusLabel(entry.status_to || entry.to || entry.status);
-      if (stFrom && stTo) detail = "status " + stFrom + " -> " + stTo;
-      else if (stTo) detail = "status -> " + stTo;
-      else detail = "status na dysku";
-    } else if (action === "rename_folder" || cat === "rename") {
-      detail = "rename folderu / plików";
-    } else {
-      detail = cat || action || "zmiana na dysku";
+      var what = pathBasenameForLog(entry.path);
+      var statusTxt = stFrom && stTo ? "status: " + stFrom + " -> " + stTo : stTo ? "status -> " + stTo : "status na dysku";
+      return what ? statusTxt + " · " + what : statusTxt;
     }
-    /* Jasny copy: ostatnia zmiana na dysku + Cofnij/Ponów (bez „Status cyklu życia…”) */
-    return "Ostatnia zmiana na dysku: " + detail + (ts ? " · " + ts : "");
+    if (action === "rename_folder" || cat === "rename") {
+      return "rename folderu / plików" + (pathBasenameForLog(entry.path) ? " · " + pathBasenameForLog(entry.path) : "");
+    }
+    return cat || action || "zmiana na dysku";
+  }
+
+  function formatChangeLogEntry(entry) {
+    if (!entry) return "Brak historii zmian";
+    var ts = String(entry.ts || "").replace("T", " ").slice(0, 16);
+    return "Ostatnia zmiana na dysku: " + changeLogRowDetail(entry) + (ts ? " · " + ts : "");
   }
 
   function setChangeLogOfflineHint(hint, reason) {
@@ -879,11 +890,11 @@
     var msg =
       reason === "login"
         ? "Zaloguj się, aby zobaczyć historię zmian"
-        : "Most zmian niedostępny - Cofnij/Ponów lokalnie";
+        : "Most zmian niedostępny - historia lokalnie niedostępna";
     var tip =
       reason === "login"
         ? "Most 8766 działa, ale /change-log wymaga sesji. „Baza online” to Postgres - to osobny status."
-        : "Nie udało się połączyć z mostem (8766) albo endpoint historii zmian nie odpowiada. Cofnij/Ponów działają tylko przez most na dysku X:; nie mylić z „Baza online”.";
+        : "Nie udało się połączyć z mostem (8766) albo endpoint historii zmian nie odpowiada. Historia dziala tylko przez most na dysku X:; nie mylić z „Baza online”.";
     hint.textContent = msg;
     hint.title = tip;
     hint.setAttribute("data-dam-tip", tip);
@@ -905,11 +916,13 @@
     bar.style.transform = "";
   }
 
+  var lastChangeLogEntries = [];
+  var changeHistoryPopoverEl = null;
+
   function refreshChangeLogBar() {
     var bar = document.getElementById("damChangeLogBar");
     var hint = document.getElementById("damChangeLogHint");
-    var undoBtn = document.getElementById("damChangeUndo");
-    var redoBtn = document.getElementById("damChangeRedo");
+    var historyBtn = document.getElementById("damChangeHistoryBtn");
     if (!bar) return;
     mountChangeLogBarInSearchScope();
     /* Widoczny tylko przy roli admin + przełączniku ADMIN ON (localStorage dam_admin_mode).
@@ -917,6 +930,7 @@
     var headerAdminOn = localStorage.getItem(ADMIN_MODE_KEY) === "1";
     if (!isAdmin() || !headerAdminOn) {
       bar.hidden = true;
+      closeChangeHistoryPopover();
       return;
     }
     bar.hidden = false;
@@ -939,11 +953,13 @@
             pack.status === 401 ||
             pack.status === 403;
           setChangeLogOfflineHint(hint, isLogin ? "login" : "offline");
-          if (undoBtn) undoBtn.disabled = true;
-          if (redoBtn) redoBtn.disabled = true;
+          lastChangeLogEntries = [];
+          if (historyBtn) historyBtn.disabled = true;
           return;
         }
         var entries = data.entries || [];
+        lastChangeLogEntries = entries;
+        if (historyBtn) historyBtn.disabled = !entries.length;
         var last = entries.length ? entries[entries.length - 1] : null;
         if (hint) {
           if (last) {
@@ -951,68 +967,114 @@
             hint.title = hint.textContent;
             hint.setAttribute(
               "data-dam-tip",
-              "Ostatnia zatwierdzona zmiana na dysku (typ / indeks / rename). Cofnij i Ponów cofają lub przywracają ten wpis przez most."
+              /* Kazdy wpis to zmiana ktora JUZ ZASZLA i jest zapisana na trwale - "Historia
+                 zmian" to tylko podglad ostatnich wpisow, nie trzeba nic cofac z tego miejsca. */
+              "Ostatnia zatwierdzona zmiana na dysku (status / typ / indeks / rename). Kliknij \"Historia zmian\", aby zobaczyć pełną listę - to podgląd, każda zmiana jest już zapisana."
             );
           } else {
             hint.textContent = "Brak historii zmian";
-            hint.title = "Brak wpisów w change-log - nie ma czego cofać.";
+            hint.title = "Brak wpisów w change-log.";
             hint.setAttribute(
               "data-dam-tip",
-              "Historia zmian na dysku jest pusta. Po zatwierdzeniu rename typu/indeksu/plików pojawi się tu ostatni wpis."
+              "Historia zmian na dysku jest pusta. Po zatwierdzeniu rename typu/indeksu/plików albo zmianie statusu pojawi się tu ostatni wpis."
             );
           }
         }
-        if (undoBtn) undoBtn.disabled = !data.can_undo;
-        if (redoBtn) redoBtn.disabled = !data.can_redo;
+        if (changeHistoryPopoverEl) renderChangeHistoryPopover();
       })
       .catch(function () {
         setChangeLogOfflineHint(hint, "offline");
-        if (undoBtn) undoBtn.disabled = true;
-        if (redoBtn) redoBtn.disabled = true;
+        lastChangeLogEntries = [];
+        if (historyBtn) historyBtn.disabled = true;
       });
   }
 
-  function bindChangeLogBar() {
-    var undoBtn = document.getElementById("damChangeUndo");
-    var redoBtn = document.getElementById("damChangeRedo");
-    if (!undoBtn && !redoBtn) return;
-    function postAction(path, okMsg) {
-      return fetch(bridgeBase() + path, {
-        method: "POST",
-        headers: bridgeAuthHeaders(),
-        body: JSON.stringify({ actor: userLabel() }),
+  function closeChangeHistoryPopover() {
+    if (!changeHistoryPopoverEl) return;
+    changeHistoryPopoverEl.remove();
+    changeHistoryPopoverEl = null;
+    var btn = document.getElementById("damChangeHistoryBtn");
+    if (btn) btn.setAttribute("aria-expanded", "false");
+    document.removeEventListener("mousedown", onChangeHistoryOutsideClick, true);
+    document.removeEventListener("keydown", onChangeHistoryEscape, true);
+  }
+
+  function onChangeHistoryOutsideClick(e) {
+    if (!changeHistoryPopoverEl) return;
+    var btn = document.getElementById("damChangeHistoryBtn");
+    if (changeHistoryPopoverEl.contains(e.target) || (btn && btn.contains(e.target))) return;
+    closeChangeHistoryPopover();
+  }
+
+  function onChangeHistoryEscape(e) {
+    if (e.key === "Escape") closeChangeHistoryPopover();
+  }
+
+  function renderChangeHistoryPopover() {
+    if (!changeHistoryPopoverEl) return;
+    var list = changeHistoryPopoverEl.querySelector(".dam-changelog-history__list");
+    if (!list) return;
+    var rows = (lastChangeLogEntries || []).slice().reverse();
+    if (!rows.length) {
+      list.innerHTML = '<li class="dam-changelog-history__empty">Brak wpisów w historii.</li>';
+      return;
+    }
+    list.innerHTML = rows
+      .map(function (entry) {
+        var ts = String(entry.ts || "").replace("T", " ").slice(0, 16);
+        var actor = String(entry.actor || "").trim();
+        var detail = changeLogRowDetail(entry);
+        return (
+          '<li class="dam-changelog-history__row">' +
+          '<span class="dam-changelog-history__detail">' + detail + "</span>" +
+          '<span class="dam-changelog-history__meta">' +
+          ts +
+          (actor ? " · " + actor : "") +
+          "</span>" +
+          "</li>"
+        );
       })
-        .then(function (r) {
-          return r.json();
-        })
-        .then(function (res) {
-          if (!res.ok) {
-            showToast("Blad: " + (res.error || "operacja nieudana"));
-            return res;
-          }
-          showToast(okMsg);
-          refreshChangeLogBar();
-          setTimeout(function () {
-            if (global.location) global.location.reload();
-          }, 500);
-          return res;
-        })
-        .catch(function () {
-          showToast("Most zmian niedostępny - uruchom DAM / local_bridge (8766).");
-        });
+      .join("");
+  }
+
+  function openChangeHistoryPopover(anchorBtn) {
+    if (changeHistoryPopoverEl) {
+      closeChangeHistoryPopover();
+      return;
     }
-    if (undoBtn) {
-      undoBtn.addEventListener("click", function () {
-        if (!confirm("Cofnąć ostatnią zmianę na dysku (typ, indeks lub pliki)?")) return;
-        postAction("/change-log/undo", "Cofnięto ostatnią zmianę.");
-      });
-    }
-    if (redoBtn) {
-      redoBtn.addEventListener("click", function () {
-        if (!confirm("Ponowić cofniętą zmianę na dysku?")) return;
-        postAction("/change-log/redo", "Ponowiono zmianę.");
-      });
-    }
+    var pop = document.createElement("div");
+    pop.className = "dam-changelog-history";
+    pop.setAttribute("role", "dialog");
+    pop.setAttribute("aria-label", "Historia zmian na dysku");
+    pop.innerHTML =
+      '<div class="dam-changelog-history__head">' +
+      '<span class="dam-changelog-history__title">Historia zmian na dysku</span>' +
+      '<button type="button" class="dam-changelog-history__close" aria-label="Zamknij">&times;</button>' +
+      "</div>" +
+      '<ul class="dam-changelog-history__list"></ul>' +
+      '<p class="dam-changelog-history__footnote">Podgląd ostatnich zatwierdzonych zmian - każda jest już na trwałe zapisana, nie trzeba jej tu cofać.</p>';
+    document.body.appendChild(pop);
+    changeHistoryPopoverEl = pop;
+    renderChangeHistoryPopover();
+    var rect = anchorBtn.getBoundingClientRect();
+    var left = Math.min(rect.left, window.innerWidth - 340);
+    pop.style.position = "fixed";
+    pop.style.top = rect.bottom + 6 + "px";
+    pop.style.left = Math.max(8, left) + "px";
+    pop.querySelector(".dam-changelog-history__close").addEventListener("click", closeChangeHistoryPopover);
+    anchorBtn.setAttribute("aria-expanded", "true");
+    setTimeout(function () {
+      document.addEventListener("mousedown", onChangeHistoryOutsideClick, true);
+      document.addEventListener("keydown", onChangeHistoryEscape, true);
+    }, 0);
+  }
+
+  function bindChangeLogBar() {
+    var historyBtn = document.getElementById("damChangeHistoryBtn");
+    if (!historyBtn) return;
+    historyBtn.addEventListener("click", function () {
+      openChangeHistoryPopover(historyBtn);
+    });
     refreshChangeLogBar();
     if (!global._damTagEditAdminBound) {
       global._damTagEditAdminBound = true;

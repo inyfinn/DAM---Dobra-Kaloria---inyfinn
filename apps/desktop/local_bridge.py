@@ -11,13 +11,19 @@ Endpoints:
   POST /rename-index {"folder","from_index","to_index","dry_run?"} -> rename index in folder tree
   POST /lifecycle-status {"scope":"product|variant","status":"aktualne|nieaktualne|demo|clear","path",...}
                          -> suffix - F/- X/- D, archiwum, historia previous_name/path
-  POST /explorer/create-category  admin; JSON {brand:DK|GC, name, dry_run, confirm}
+  POST /explorer/create-category  admin; JSON {brand:DK|GC, name, seq?, dry_run, confirm}
                          -> copytree Szablony/00 - KATEGORIA|CATEGORY -> {NN} - NAME
                          dry_run=true: planned_path bez zapisu; zapis tylko dry_run=false AND confirm=true
+                         seq (opcjonalny) nadpisuje auto-numer (edytowalny licznik w UI)
   POST /explorer/create-product   admin; JSON {brand, category_path, name, subcategory,
                          variants[{enabled,template_folder,date,index}], demo, dry_run, confirm}
                          -> copytree szablon produktu; demo/6300XXX => suffix " - D"
                          po sukcesie: index_rebuild_suggested (client: POST /index/rebuild)
+  GET  /explorer/next-category-seq?brand=DK|GC  admin; podpowiedz numeru kolejnej kategorii
+  POST /explorer/undo-create  admin; JSON {path} -> cofniecie swiezo utworzonej kategorii/produktu
+                         (okno ~2 min, tylko wewnatrz Marketing, tylko niedawno utworzony folder)
+  POST /explorer/add-variant-type  admin; JSON {code, code_en, label_pl} -> nowy wariant/nosnik
+                         globalny (naming-dictionary.carriers + carrier-types.json, KV push)
   POST /synology-share {"path": "..."} -> Synology Drive "Uzyskaj lacze" / Get link
   POST /validate-base {"path": "X:\\\\Marketing"} -> checks 3 root folders
   POST /pick-folder {"start":"X:\\\\"} -> natywny dialog folderu (tkinter; UI :8765)
@@ -3611,6 +3617,105 @@ def manage_carrier_type(payload: dict) -> dict:
     return {"ok": False, "error": "unknown_action"}
 
 
+_VARIANT_CODE_RE = re.compile(r"^[A-Z0-9][A-Z0-9\-]{0,15}$")
+
+
+def add_global_variant_type(payload: dict, *, actor: str = "") -> dict:
+    """Nowy wariant/nosnik GLOBALNY, respektowany przez cala aplikacje (EXP-C /
+    Eksplorer - "Dodaj produkt", sekcja "Nowy wariant globalny").
+
+    3 parametry usera: kod PL (skrot na dysku, np. PUSZ), kod EN (alias, np. CAN),
+    pelna nazwa PL do UI (np. PUSZKA). Zapis do dwoch miejsc zgodnie z
+    naming.carrier_ui_vs_disk (program-instructions.json):
+      - naming-dictionary.json -> carriers[{code}] = {short, aliases, label_pl}
+        (ZRODLO PRAWDY prefiksu na dysku + etykiety UI; _save_json robi KV push)
+      - carrier-types.json -> custom_types[{code}] (widoczne w istniejacym
+        GET/POST /carrier-types uzywanym przez Ustawienia)
+    UWAGA (ograniczenie, nie blokada): to rejestruje nazwe/etykiete globalnie,
+    ale NIE tworzy nowego fizycznego podfolderu w szablonie produktu na X: -
+    fizyczny folder wariantu w Szablony folderow musi dodac admin recznie, potem
+    wariant pojawi sie na liscie available_variants (skan folderu szablonu).
+    """
+    code = str(payload.get("code") or "").strip().upper()
+    code_en = str(payload.get("code_en") or "").strip().upper()
+    label_pl = str(payload.get("label_pl") or "").strip()
+
+    if not code:
+        return {"ok": False, "error": "code_required", "message": "Podaj kod PL (skrot na dysku)."}
+    if not _VARIANT_CODE_RE.match(code):
+        return {
+            "ok": False,
+            "error": "code_invalid",
+            "message": "Kod PL: 1-16 znakow, wielkie litery/cyfry/myslnik, bez spacji.",
+        }
+    if code_en and not _VARIANT_CODE_RE.match(code_en):
+        return {
+            "ok": False,
+            "error": "code_en_invalid",
+            "message": "Kod EN: 1-16 znakow, wielkie litery/cyfry/myslnik, bez spacji.",
+        }
+    if not label_pl:
+        return {"ok": False, "error": "label_pl_required", "message": "Podaj pelna nazwe (etykieta UI)."}
+
+    naming = _load_json(NAMING_DICTIONARY_FILE, {})
+    if not isinstance(naming, dict):
+        naming = {}
+    carriers = naming.setdefault("carriers", {})
+    if code in carriers:
+        return {
+            "ok": False,
+            "error": "already_exists",
+            "message": f"Wariant {code} juz istnieje w slowniku nazewnictwa.",
+        }
+
+    aliases = [code]
+    if code_en and code_en != code:
+        aliases.append(code_en)
+    if label_pl.upper() not in aliases:
+        aliases.append(label_pl.upper())
+
+    carriers[code] = {
+        "short": code,
+        "aliases": aliases,
+        "label_pl": label_pl,
+        "code_en": code_en or "",
+        "added_at": utc_now(),
+        "added_by": actor or "",
+        "custom": True,
+    }
+    order = naming.setdefault("carrier_detect_order", [])
+    if code not in order:
+        order.append(code)
+    naming["version"] = int(naming.get("version") or 1) + 1
+    _save_json(NAMING_DICTIONARY_FILE, naming)
+    reload_naming_policy_from_disk()
+
+    ctypes = _load_json(CARRIER_TYPES_FILE, {"custom_types": {}, "deleted_types": {}})
+    ctypes.setdefault("custom_types", {})
+    ctypes.setdefault("deleted_types", {})
+    ctypes["custom_types"][code] = {
+        "label_pl": label_pl,
+        "code_en": code_en or "",
+        "added_at": utc_now(),
+        "added_by": actor or "",
+    }
+    ctypes["deleted_types"].pop(code, None)
+    _save_json(CARRIER_TYPES_FILE, ctypes)
+
+    append_audit({
+        "action": "explorer_add_variant_type",
+        "detail": f"{code} ({code_en or '-'}): {label_pl}",
+        "user": actor or "",
+    })
+    return {
+        "ok": True,
+        "code": code,
+        "code_en": code_en,
+        "label_pl": label_pl,
+        "message": f"Dodano wariant globalny: {label_pl} ({code}).",
+    }
+
+
 NOTIFICATION_GROUPS_FILE = WEB_ROOT / "data" / "notification-groups.json"
 INBOX_ITEMS_FILE = WEB_ROOT / "data" / "inbox-items.json"
 
@@ -4836,6 +4941,25 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, _load_json(CARRIER_TYPES_FILE, {"custom_types": {}, "deleted_types": {}}))
             return
+        if parsed.path == "/explorer/next-category-seq":
+            # Read-only: podpowiedz numeru kolejnej kategorii (edytowalny licznik w UI)
+            user = self._require_admin()
+            if user is None:
+                return
+            if explorer_create_mod is None:
+                self._json(500, {"ok": False, "error": "explorer_create_module_missing"})
+                return
+            qs = parse_qs(parsed.query or "")
+            brand_val = (qs.get("brand") or ["DK"])[0]
+            email = str(user.get("email") or "").strip()
+            resolved = resolve_base_path_for_current_device(email)
+            base = str(resolved.get("base_path") or "").strip()
+            if not base:
+                self._json(400, {"ok": False, "error": "marketing_base_unset"})
+                return
+            result = explorer_create_mod.next_category_seq_for_brand(base, brand_val)
+            self._json(200 if result.get("ok") else 400, result)
+            return
         if parsed.path == "/inbox-items":
             if self._require_login() is None:
                 return
@@ -5733,10 +5857,12 @@ class Handler(BaseHTTPRequestHandler):
                 return
             dry_run = bool(payload.get("dry_run", True))
             confirm = bool(payload.get("confirm"))
+            seq_raw = payload.get("seq")
             result = explorer_create_mod.create_category(
                 marketing_base=base,
                 brand=str(payload.get("brand") or ""),
                 name=str(payload.get("name") or ""),
+                seq=seq_raw if seq_raw not in (None, "") else None,
                 dry_run=dry_run,
                 confirm=confirm,
             )
@@ -5813,6 +5939,50 @@ class Handler(BaseHTTPRequestHandler):
                     )
                 except Exception:  # noqa: BLE001
                     pass
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/explorer/undo-create":
+            # Admin: cofniecie swiezo utworzonej kategorii/produktu (~2 min okno)
+            user = self._require_admin()
+            if user is None:
+                return
+            if explorer_create_mod is None:
+                self._json(500, {"ok": False, "error": "explorer_create_module_missing"})
+                return
+            payload = data if isinstance(data, dict) else {}
+            email = str(user.get("email") or "").strip()
+            resolved = resolve_base_path_for_current_device(email)
+            base = str(resolved.get("base_path") or "").strip()
+            if not base:
+                self._json(400, {"ok": False, "error": "marketing_base_unset"})
+                return
+            result = explorer_create_mod.undo_create(
+                marketing_base=base,
+                path=str(payload.get("path") or ""),
+            )
+            if result.get("ok"):
+                try:
+                    append_audit(
+                        {
+                            "action": "explorer_undo_create",
+                            "user": email or user.get("name") or "",
+                            "path": result.get("deleted_path") or "",
+                        }
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/explorer/add-variant-type":
+            # Admin: nowy wariant/nosnik globalny - naming-dictionary.carriers + carrier-types.json
+            user = self._require_admin()
+            if user is None:
+                return
+            payload = data if isinstance(data, dict) else {}
+            result = add_global_variant_type(
+                payload,
+                actor=str(user.get("email") or user.get("name") or ""),
+            )
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/rename-revision-prefix":

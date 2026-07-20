@@ -20,7 +20,7 @@
 
 ## Otwarte / partial (NIE zielone) — aktualizacja wieczór 2026-07-20
 
-1. **Explorer create modal redesign** — agent `202d725c` aborted; OPEN (live preview, Tworzenie:, warianty, undo). Podst. modal `expb20260720b` = DONE.
+1. **Explorer create modal redesign** — DONE (`expc20260720d`); follow-up: fizyczny szablon folderu po `add-variant-type`.
 2. **Checklista A3 `[x]` technicznie** — seed kwot; nadpisanie realnymi kwotami CSV = opcjonalnie user.
 3. **Checklista C3 `[x]`** — freeze anatomii BENTO (nie redesign).
 4. **P15 SLIDERY-sklep** — dedup POLSKA-first → 0 sciezek ARCHIWUM; decyzja policy.

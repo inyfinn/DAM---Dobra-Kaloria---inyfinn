@@ -1,8 +1,48 @@
 {
-  "version": 8,
+  "version": 9,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-20T21:20:00+02:00",
+  "updated_at": "2026-07-20T21:29:00+02:00",
   "instructions": [
+    {
+      "id": "explorer.create_modal_ux",
+      "must": [
+        "Podglad sciezki (#damExpPreview) tylko jedna czysta linia: 'Tworzenie: {pelna_sciezka}' - bez zargonu 'Plan:', 'skopiuj szablon', 'Drzewo:'",
+        "Podglad aktualizuje sie na biezaco (input/change na nazwie, podkategorii, folderze kategorii, marce, liczniku) - klik 'Podglad' tylko odpytuje most o walidacje/warianty, nie jest jedynym trigerem tekstu",
+        "Numer kategorii (NN w '{NN} - NAZWA') jest edytowalny w UI (pole liczbowe), domyslnie podpowiedz z /explorer/next-category-seq, mozliwe nadpisanie przed zapisem",
+        "#damExpErr/status pusty = brak elementu w DOM lub display:none (bez pustej czerwonej ramki); pokazuje sie tylko z realna trescia (blad albo krotki status)",
+        "Warianty (#damExpVariants): checkbox domyslnie ODZNACZONY dla kazdego wariantu (user wybiera co kopiowac)",
+        "Wiersz wariantu: TAG = pelna etykieta z naming-dictionary (label_pl, np. BATON/DOYPACK) po lewej, podglad koncowej nazwy folderu po prawej (aktualizowany na biezaco z pol data/indeks)",
+        "Hierarchia tworzonych folderow (ikony + wciecia) widoczna pod statusem: kategoria = 1 wezel; produkt = folder produktu + tylko ZAZNACZONE warianty jako dzieci",
+        "Wszystkie checkboxy w #damExplorerCreateModal maja accent-color purpurowy (var(--dam-primary, #AB54DB)) - zakaz natywnego oranzowego checkboxa",
+        "Nowy wariant globalny (3 pola: kod PL/skrot dysku, kod EN/alias, pelna nazwa) zapisuje sie do naming-dictionary.json (carriers[]) + carrier-types.json przez POST /explorer/add-variant-type (admin) - respektowane programowo (etykiety, prefiks na dysku)",
+        "Po sukcesie tworzenia: panel potwierdzenia (nie tylko toast) z przyciskami Przejdz do folderu / Zatwierdz / Cofnij + odliczanie ~2 min; Cofnij wywoluje POST /explorer/undo-create (usuwa TYLKO swiezo utworzony, potwierdzony wiekiem katalog)"
+      ],
+      "body_pl": "Handoff z audytu UX (2026-07-20, usability-brief): modal 'Dodaj kategorie/produkt' mial zargonowy podglad, statyczny (tylko po kliknieciu Podglad), sztywny numer kategorii, mysteriozna pusta czerwona ramka bledu, domyslnie zaznaczone wszystkie warianty i natywne oranzowe checkboxy. Naprawa: apps/web/assets/js/dam-explorer-add-product.js (+ apps/desktop/explorer_create.py: seq, undo_create; local_bridge.py: /explorer/next-category-seq, /explorer/undo-create, /explorer/add-variant-type).",
+      "category": "explorer",
+      "must_not": [
+        "Wyswietlac tekstu 'Plan: skopiuj szablon...' / 'Drzewo:' w #damExpPreview",
+        "Zaznaczac warianty domyslnie (checked) w #damExpVariants",
+        "Pokazywac pustej czerwonej ramki #damExpErr gdy brak komunikatu",
+        "Uzywac natywnego accent-color checkboxa (oranzowy) w modalu tworzenia",
+        "Usuwac na Cofnij starszy niz ~2-3 min katalog (guard st_ctime w undo_create)",
+        "Tworzyc fizycznego podfolderu wariantu w szablonie produktu na X: z samego dodania globalnego wariantu - to tylko etykieta/prefiks, fizyczny folder szablonu wymaga recznej pracy admina na dysku"
+      ],
+      "priority": "high",
+      "title_pl": "Explorer: modal tworzenia kategorii/produktu (UX + undo + wariant globalny)",
+      "related_kv": [
+        "naming-dictionary",
+        "carrier-types",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-explorer-add-product.js",
+        "apps/desktop/explorer_create.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/data/naming-dictionary.json",
+        "apps/web/data/carrier-types.json"
+      ]
+    },
     {
       "id": "device-scoped-base-paths",
       "must": [

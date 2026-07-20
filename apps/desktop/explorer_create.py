@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import time
 from pathlib import Path
 from typing import Any
 
@@ -210,19 +211,35 @@ def _gate_write(dry_run: bool, confirm: bool) -> dict | None:
     return None
 
 
+def next_category_seq_for_brand(marketing_base: str | Path, brand: str) -> dict[str, Any]:
+    """Read-only helper: suggested next free category number (GET /explorer/next-category-seq)."""
+    try:
+        b = _norm_brand(brand)
+    except ValueError as exc:
+        return {"ok": False, "error": str(exc)}
+    base = Path(str(marketing_base)).resolve()
+    if not base.is_dir():
+        return {"ok": False, "error": "marketing_base_not_found", "message": f"Brak bazy Marketing: {base}"}
+    brand_root = brand_products_root(base, b)
+    return {"ok": True, "brand": b, "suggested_seq": next_category_seq(brand_root)}
+
+
 def create_category(
     *,
     marketing_base: str | Path,
     brand: str,
     name: str,
+    seq: int | None = None,
     dry_run: bool = True,
     confirm: bool = False,
 ) -> dict[str, Any]:
     """
     POST /explorer/create-category
 
-    Body: { brand, name, dry_run, confirm }
-    Returns: { ok, dry_run, planned_path, created_path?, message, ... }
+    Body: { brand, name, seq?, dry_run, confirm }
+    `seq` (opcjonalny) nadpisuje auto-numer kategorii (edytowalny licznik w UI) -
+    zawsze zwracamy `suggested_seq`, zeby UI mogl podpowiedziec domyslna wartosc.
+    Returns: { ok, dry_run, planned_path, created_path?, message, suggested_seq, ... }
     """
     gate = _gate_write(bool(dry_run), bool(confirm))
     if gate:
@@ -262,8 +279,14 @@ def create_category(
         }
 
     brand_root = brand_products_root(base, b)
-    seq = next_category_seq(brand_root)
-    folder_name = format_category_folder(seq, safe)
+    suggested_seq = next_category_seq(brand_root)
+    try:
+        seq_val = int(seq) if seq is not None and str(seq).strip() != "" else suggested_seq
+    except (TypeError, ValueError):
+        seq_val = suggested_seq
+    if seq_val < 1:
+        seq_val = suggested_seq
+    folder_name = format_category_folder(seq_val, safe)
     planned = brand_root / folder_name
 
     if planned.exists():
@@ -271,6 +294,7 @@ def create_category(
             "ok": False,
             "error": "already_exists",
             "planned_path": str(planned),
+            "suggested_seq": suggested_seq,
             "message": f"Folder juz istnieje: {planned.name}",
         }
 
@@ -279,6 +303,8 @@ def create_category(
         "dry_run": bool(dry_run),
         "brand": b,
         "name": safe,
+        "seq": seq_val,
+        "suggested_seq": suggested_seq,
         "template_path": str(tmpl),
         "planned_path": str(planned),
         "planned_tree": [str(planned)],
@@ -523,6 +549,67 @@ def create_product(
             "message": str(exc),
             "planned_path": str(planned_product),
         }
+
+
+UNDO_WINDOW_SECONDS = 150  # ~2 min zapasu (UI liczy 120s, most akceptuje troche wiecej)
+
+
+def undo_create(
+    *,
+    marketing_base: str | Path,
+    path: str,
+    max_age_seconds: int = UNDO_WINDOW_SECONDS,
+) -> dict[str, Any]:
+    """
+    POST /explorer/undo-create
+
+    Cofniecie swiezo utworzonej kategorii/produktu (2-minutowe okno). Usuwa
+    WYLACZNIE `path` zwrocony jako created_path przez create_category/create_product -
+    nigdy drzewa usera. Bezpieczniki:
+      - path musi byc W OBREBIE marketing_base,
+      - path musi istniec i byc katalogiem,
+      - katalog musi byc utworzony niedawno (st_ctime < max_age_seconds temu) -
+        to blokuje przypadkowe usuniecie starszego, prawdziwego folderu.
+    """
+    base = Path(str(marketing_base)).resolve()
+    if not base.is_dir():
+        return {"ok": False, "error": "marketing_base_not_found", "message": f"Brak bazy Marketing: {base}"}
+
+    raw = (path or "").strip()
+    if not raw:
+        return {"ok": False, "error": "path_required"}
+
+    try:
+        target = Path(raw).resolve()
+    except OSError:
+        return {"ok": False, "error": "invalid_path"}
+
+    if not target.is_dir():
+        return {"ok": False, "error": "not_found", "message": f"Folder nie istnieje (juz cofniete?): {target}"}
+
+    try:
+        target.relative_to(base)
+    except ValueError:
+        return {"ok": False, "error": "outside_marketing_base", "message": "Sciezka poza baza Marketing - odmowa."}
+
+    try:
+        age = time.time() - target.stat().st_ctime
+    except OSError as exc:
+        return {"ok": False, "error": "stat_failed", "message": str(exc)}
+
+    if age > max_age_seconds:
+        return {
+            "ok": False,
+            "error": "undo_window_expired",
+            "message": f"Okno cofniecia ({max_age_seconds}s) minelo - folder utworzony {int(age)}s temu.",
+        }
+
+    try:
+        shutil.rmtree(str(target))
+    except OSError as exc:
+        return {"ok": False, "error": "delete_failed", "message": str(exc)}
+
+    return {"ok": True, "deleted_path": str(target)}
 
 
 def _rename_placeholder_files(
