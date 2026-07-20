@@ -119,7 +119,7 @@
   font-size: 11px;
   color: #8b8d97;
   line-height: 1.25;
-  max-width: min(220px, 28vw);
+  max-width: min(340px, 36vw);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -162,13 +162,15 @@
   margin: 0;
 }
 
-/* Count pill — muted ink (brief); pad 8/12 spójnie z Branding. JS also injects #damVizCountPillInk. */
+/* Count pill — muted ink (brief: Geex dark/ink, nie lawendowy blob).
+   Pad = stary branding 7/14 +8/+12 → 15/26; branding też 15/26. */
 .dam-viz-panel {
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
+#vizGridCount.dam-viz-grid-count,
 .dam-viz-grid-count {
   position: sticky;
   bottom: 14px;
@@ -177,10 +179,10 @@
   width: fit-content;
   max-width: calc(100% - 20px);
   margin: -44px 84px 10px auto;
-  padding: 8px 12px;
+  padding: 15px 26px !important;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--dam-ink, #17161e) 28%, transparent);
-  background: color-mix(in srgb, var(--dam-ink, #23202e) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-ink, #17161e) 28%, transparent) !important;
+  background: color-mix(in srgb, var(--dam-ink, #23202e) 88%, transparent) !important;
   box-shadow: 0 8px 22px rgb(23 22 30 / 0.22);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -188,7 +190,7 @@
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.01em;
-  color: #fff;
+  color: #fff !important;
   text-align: right;
   white-space: nowrap;
   pointer-events: none;

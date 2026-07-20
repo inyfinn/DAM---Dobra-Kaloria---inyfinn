@@ -5612,3 +5612,31 @@ Brak.
 
 ### Zrodla
 dam-tutorial.js; dam-shortcuts.js; dam-brand.css; dam-tutorial.css; dam-shell.js; HTML ?v=; ui-taste; dam-dobrakaloria
+
+## 2026-07-20 - Supervisor: dokonczenie A/B/C (viz toolbar, branding meta, sidebar)
+
+### Komenda/Akcja
+USER WORKER nadzorca: stan briefow 2026-07-20 + MUST DONE A viz toolbar / B branding page-size / C sidebar. Bez commit. Nie ruszac #damHelpModal.
+
+### Log/Status
+1. Audyt: A czesciowo (mount far-right + admin gate + pill); hint mial zla historie „Status cyklu życia”; B page-size juz w JS ale branding.html PL/encoding uszkodzony; C footer brak na stronach bez markup (branding).
+2. A: `formatChangeLogEntry` -> „Ostatnia zmiana na dysku: …”; trailing CSS `margin-left:auto`; hint max-width 340px; status mb 15px / filters mb 4px (bliżej); pill 8/12 (jak Branding + inject).
+3. B: naprawa UTF-8/PL w branding.html; suwak+input+OK+wheel juz w `dam-branding.js` (apply dopiero po OK - CDP: draft nie zmienia kart, OK 100->40).
+4. C: `ensureSidebarFooterEl` w `dam-shell.js` + footer markup w branding.html; Wyloguj nisko; autor/wersja expanded + collapsed meta.
+5. Cache: dam-viz.css `supviz20260720d`, dam-tag-edit `supviz20260720c`, dam-shell `supviz20260720b`, dam-branding `supviz20260720a`.
+6. Nie ruszano #damHelpModal.
+
+### Efekt/Fix
+A/B/C domkniete wzgledem MUST DONE. Concurrent agents nadpisywali dam-viz.css / cache tokeny w trakcie - final: CDP barRight=0, hint bez cyklu życia, page-size OK-only, footer widoczny.
+
+### Backup
+Brak.
+
+### Test/Ewaluacja
+- node --check dam-tag-edit.js / dam-shell.js / dam-branding.js / dam-viz.js OK
+- CDP viz: barInScope, barRight=0, admin-only hide, hint „Ostatnia zmiana na dysku…”, filtersMb=4px, statusMb=15px, countPad=8px 12px
+- CDP branding: sameAfterDraft, OK apply 40 kart, wheel sync, PL Pokaż
+- Screenshot+Read: supviz-pass1..pass5 (+ pass5b) w Temp/cursor/screenshots/
+
+### Zrodla
+visualizations.html; dam-viz.css; dam-tag-edit.js; dam-viz.js (read); branding.html; dam-branding.js/css; dam-shell.js; dam-dobrakaloria; ui-taste; code-doctrine

@@ -912,8 +912,10 @@
     var redoBtn = document.getElementById("damChangeRedo");
     if (!bar) return;
     mountChangeLogBarInSearchScope();
-    /* Widoczny tylko przy roli admin + przełączniku ADMIN ON (jak w headerze). */
-    if (!isAdmin() || !adminModeOn()) {
+    /* Widoczny tylko przy roli admin + przełączniku ADMIN ON (localStorage dam_admin_mode).
+       Nie używamy legacy dam_viz_admin_mode — to nie jest ten sam toggle w headerze. */
+    var headerAdminOn = localStorage.getItem(ADMIN_MODE_KEY) === "1";
+    if (!isAdmin() || !headerAdminOn) {
       bar.hidden = true;
       return;
     }

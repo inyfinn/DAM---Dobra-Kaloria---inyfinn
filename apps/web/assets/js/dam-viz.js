@@ -2076,7 +2076,8 @@
     if (window.DamTagEdit && typeof window.DamTagEdit.refreshChangeLogBar === "function") {
       window.DamTagEdit.refreshChangeLogBar();
     } else if (bar) {
-      bar.hidden = !(isAdminRole() && isAdminMode());
+      /* Ten sam gate co DamTagEdit: rola admin + dam_admin_mode (header ADMIN ON). */
+      bar.hidden = !(isAdminRole() && localStorage.getItem(ADMIN_KEY) === "1");
     }
   }
 
@@ -2087,19 +2088,25 @@
     clearChromeRevealInline(document.getElementById("vizSearchTags"));
   }
 
-  /** Injected so concurrent edits to dam-viz.css cannot silently revert ink pill. */
+  /**
+   * Injected ink pill (brief: muted dark/ink). Pad 15/26 = stary branding 7/14 +8/+12.
+   * Id unique — chroni przed regresją light-pill ze współbieżnych edycji CSS.
+   */
   function injectVizCountPillInkStyle() {
     var id = "damVizCountPillInk";
-    if (document.getElementById(id)) return;
-    var style = document.createElement("style");
-    style.id = id;
+    var style = document.getElementById(id);
+    if (!style) {
+      style = document.createElement("style");
+      style.id = id;
+      document.head.appendChild(style);
+    }
     style.textContent =
-      ".dam-viz-grid-count{padding:8px 12px!important;" +
+      "#vizGridCount.dam-viz-grid-count,.dam-viz-grid-count{" +
+      "padding:15px 26px!important;" +
       "border:1px solid color-mix(in srgb,var(--dam-ink,#17161e) 28%,transparent)!important;" +
       "background:color-mix(in srgb,var(--dam-ink,#23202e) 88%,transparent)!important;" +
       "color:#fff!important;" +
       "box-shadow:0 8px 22px rgb(23 22 30 / 0.22)!important;}";
-    document.head.appendChild(style);
   }
 
   function render() {

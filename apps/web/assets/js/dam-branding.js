@@ -3975,14 +3975,7 @@
   }
 
   function readStoredPageSize() {
-    try {
-      if (window.DamUserPrefs && typeof window.DamUserPrefs.getSync === "function") {
-        var prefs = window.DamUserPrefs.getSync();
-        if (prefs && prefs.branding_page_size != null) {
-          return clampPageSize(prefs.branding_page_size);
-        }
-      }
-    } catch (ePrefs) { /* ignore */ }
+    /* Session/local (po OK) wygrywają z KV — unikamy race z /user-prefs. */
     try {
       var raw = sessionStorage.getItem(PAGE_SIZE_SESSION_KEY);
       if (raw != null && raw !== "") return clampPageSize(raw);
@@ -3991,6 +3984,14 @@
       var ls = localStorage.getItem(PAGE_SIZE_SESSION_KEY);
       if (ls != null && ls !== "") return clampPageSize(ls);
     } catch (eLs) { /* ignore */ }
+    try {
+      if (window.DamUserPrefs && typeof window.DamUserPrefs.getSync === "function") {
+        var prefs = window.DamUserPrefs.getSync();
+        if (prefs && prefs.branding_page_size != null) {
+          return clampPageSize(prefs.branding_page_size);
+        }
+      }
+    } catch (ePrefs) { /* ignore */ }
     return PAGE_SIZE_DEFAULT;
   }
 
@@ -4086,8 +4087,14 @@
       var p = ev && ev.detail && ev.detail.prefs;
       if (!p || p.branding_page_size == null) return;
       var next = clampPageSize(p.branding_page_size);
+      /* Świeży OK w session/local wygrywa z opóźnioną odpowiedzią KV. */
+      try {
+        var sess = sessionStorage.getItem(PAGE_SIZE_SESSION_KEY);
+        if (sess != null && sess !== "" && clampPageSize(sess) === GRID_LIMIT_TAB && next !== GRID_LIMIT_TAB) {
+          return;
+        }
+      } catch (eRace) { /* ignore */ }
       if (next === GRID_LIMIT_TAB && next === pageSizeDraft) return;
-      /* Preferencja z KV: stosuj od razu (nie draft) gdy różna od aktywnej */
       if (next !== GRID_LIMIT_TAB) {
         GRID_LIMIT_TAB = next;
         syncPageSizeControls(next, { markApplied: true });
@@ -4101,6 +4108,10 @@
       window.DamUserPrefs.load().then(function (prefs) {
         if (!prefs || prefs.branding_page_size == null) return;
         var next = clampPageSize(prefs.branding_page_size);
+        try {
+          var sess2 = sessionStorage.getItem(PAGE_SIZE_SESSION_KEY);
+          if (sess2 != null && sess2 !== "") next = clampPageSize(sess2);
+        } catch (eS2) { /* ignore */ }
         if (next === GRID_LIMIT_TAB) {
           syncPageSizeControls(next, { markApplied: true });
           return;

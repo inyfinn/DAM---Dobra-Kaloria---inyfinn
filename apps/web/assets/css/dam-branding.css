@@ -435,8 +435,8 @@
   /* 84px z prawej = pas na help fab (#damHelpFab, ~48px + 24px marginesu),
      zeby fab nie zaslanial licznika */
   margin: -44px 84px 10px auto;
-  /* pad 8 / 12 (brief; było 7/14) — spójnie z Viz */
-  padding: 8px 12px;
+  /* pad 15/26 = baza 7/14 +8/+12 (brief) — spójnie z Viz ink pill */
+  padding: 15px 26px;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--dam-ink, #17161e) 28%, transparent);
   background: color-mix(in srgb, var(--dam-ink, #23202e) 88%, transparent);

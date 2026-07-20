@@ -20,7 +20,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=helprestart20260720a">
   <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad08">
   <link rel="stylesheet" href="./assets/css/dam-brand.css?v=helprestart20260720c">
-  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=supviz20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=viztb20260720h">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
@@ -69,11 +69,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       <div class="geex-content__header">
         <div class="geex-content__header__content">
           <h2 class="geex-content__header__title">Branding</h2>
-          <p class="geex-content__header__subtitle dam-page-sub">Tu trzymamy reklamy, filmy i grafiki marki - wpisz słowo albo kliknij kolorowy tag.</p>
+          <p class="geex-content__header__subtitle dam-page-sub">Tu trzymamy reklamy, filmy i grafiki marki - wpisz s?owo albo kliknij kolorowy tag.</p>
           <p id="damBrandingSectionDesc" class="dam-branding-section-desc" aria-live="polite"></p>
         </div>
         <div class="geex-content__header__action">
-          <button type="button" class="geex-btn geex-btn--primary-transparent" id="damBrandingRebuild" data-dam-tip="Przeskanuj foldery Marketing i odśwież branding-index.json">Przebuduj indeks</button>
+          <button type="button" class="geex-btn geex-btn--primary-transparent" id="damBrandingRebuild" data-dam-tip="Przeskanuj foldery Marketing i od?wie? branding-index.json">Przebuduj indeks</button>
         </div>
       </div>
 
@@ -82,7 +82,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           <div class="dam-search-wrap dam-search-wrap--panel">
             <div class="dam-search-input-wrap">
               <i class="uil uil-search" aria-hidden="true"></i>
-              <input type="search" id="damBrandingSearch" class="form-control dam-search-input" placeholder="Np. burger, grill, proteina, slider niemięsa, film lato 2026…" autocomplete="off" aria-label="Szukaj w branding" data-dam-tip="Szuka po znaczeniu (tagi, skojarzenia produktów, nazwy kampanii) - nie po ścieżce folderu" />
+              <input type="search" id="damBrandingSearch" class="form-control dam-search-input" placeholder="Np. burger, grill, proteina, slider niemi?sa, film lato 2026?" autocomplete="off" aria-label="Szukaj w branding" data-dam-tip="Szuka po znaczeniu (tagi, skojarzenia produkt�w, nazwy kampanii) - nie po ?cie?ce folderu" />
             </div>
           </div>
         </div>
@@ -91,12 +91,12 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       <div class="dam-branding-tabs-row">
         <div class="dam-branding-tabs-cluster">
           <div class="dam-branding-tabs" role="tablist" aria-label="Sekcje branding">
-            <button type="button" class="dam-branding-tab dam-branding-tab--all is-active" data-tab="all" role="tab" aria-selected="true">Pokaż wszystko</button>
+            <button type="button" class="dam-branding-tab dam-branding-tab--all is-active" data-tab="all" role="tab" aria-selected="true">Poka? wszystko</button>
             <div class="dam-branding-scope-toggles" role="group" aria-label="Zakres zbioru">
-              <label class="dam-switch" for="damBrandingIncludeArchive" data-dam-tip="Domyślnie ukryte foldery ARCHIWUM na dysku Marketing">
+              <label class="dam-switch" for="damBrandingIncludeArchive" data-dam-tip="Domy?lnie ukryte foldery ARCHIWUM na dysku Marketing">
                 <input type="checkbox" id="damBrandingIncludeArchive" class="dam-switch__input" />
                 <span class="dam-switch__track" aria-hidden="true"></span>
-                <span class="dam-switch__label">Pokaż archiwum</span>
+                <span class="dam-switch__label">Poka? archiwum</span>
               </label>
             </div>
             <span class="dam-branding-tabs__sep" aria-hidden="true"></span>
@@ -111,8 +111,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 
       <div class="dam-branding-tag-filters" id="damBrandingTagFilters" role="group" aria-label="Filtry tagami"></div>
       <div class="dam-viz-secondary-filters dam-branding-filters dam-branding-filters--meta" role="group" aria-label="Opcje widoku">
-        <button type="button" class="dam-branding-clear-btn" id="damBrandingClearTags">Wyczyść filtry</button>
-        <label class="dam-switch dam-switch--compact" for="damBrandingGraphicsOnly" data-dam-tip="Ukrywa PDF, Excel, Word i wideo przy wyszukiwaniu. Nadal dostępne po tagach Dokument / Wideo.">
+        <button type="button" class="dam-branding-clear-btn" id="damBrandingClearTags">Wyczy?? filtry</button>
+        <label class="dam-switch dam-switch--compact" for="damBrandingGraphicsOnly" data-dam-tip="Ukrywa PDF, Excel, Word i wideo przy wyszukiwaniu. Nadal dost?pne po tagach Dokument / Wideo.">
           <input type="checkbox" id="damBrandingGraphicsOnly" class="dam-switch__input" checked />
           <span class="dam-switch__track" aria-hidden="true"></span>
           <span class="dam-switch__label">Tylko grafiki</span>
@@ -123,8 +123,8 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           <span class="dam-branding-date-range__label">Do</span>
           <input type="date" id="damBrandingDateTo" aria-label="Data do" />
           <div class="dam-branding-date-presets" id="damBrandingDatePresets" role="group" aria-label="Szybkie zakresy">
-            <button type="button" data-preset="week">Ostatni tydzień</button>
-            <button type="button" data-preset="month">Ostatni miesiąc</button>
+            <button type="button" data-preset="week">Ostatni tydzie?</button>
+            <button type="button" data-preset="month">Ostatni miesi?c</button>
             <button type="button" data-preset="2026">2026</button>
             <button type="button" data-preset="2025">2025</button>
           </div>
@@ -132,38 +132,38 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         <div class="dam-branding-filters__view-tools" role="group" aria-label="Sortowanie i skala">
           <label class="dam-branding-sort" for="damBrandingSort">
             <span class="dam-branding-date-range__label">Sortuj</span>
-            <select id="damBrandingSort" aria-label="Sortowanie wyników">
-              <option value="priority" selected>Priorytet użycia</option>
+            <select id="damBrandingSort" aria-label="Sortowanie wynik�w">
+              <option value="priority" selected>Priorytet u?ycia</option>
               <option value="newest">Najnowsze</option>
               <option value="oldest">Najstarsze</option>
               <option value="name">Nazwa</option>
             </select>
           </label>
-          <label class="dam-switch dam-switch--compact" for="damBrandingTagCounts" data-dam-tip="Poka? liczby dopasowań obok tagów (domyślnie wyłączone)">
+          <label class="dam-switch dam-switch--compact" for="damBrandingTagCounts" data-dam-tip="Poka? liczby dopasowa? obok tag�w (domy?lnie wy??czone)">
             <input type="checkbox" id="damBrandingTagCounts" class="dam-switch__input" />
             <span class="dam-switch__track" aria-hidden="true"></span>
             <span class="dam-switch__label">Liczby przy tagach</span>
           </label>
-          <label class="dam-viz-zoom-control" for="damBrandingCardZoom" data-dam-tip="Suwak: 65-100% pomniejsza grafikę w kafelku; powyżej 100% powiększa kafelek (max 350%). Podgląd startuje z tej samej skali.">
+          <label class="dam-viz-zoom-control" for="damBrandingCardZoom" data-dam-tip="Suwak: 65-100% pomniejsza grafik? w kafelku; powy?ej 100% powi?ksza kafelek (max 350%). Podgl?d startuje z tej samej skali.">
             <span class="dam-viz-zoom-control__label"><i class="uil uil-search-plus" aria-hidden="true"></i> Skala</span>
-            <input type="range" id="damBrandingCardZoom" min="65" max="350" step="5" value="100" aria-label="Skala kafelków branding" />
+            <input type="range" id="damBrandingCardZoom" min="65" max="350" step="5" value="100" aria-label="Skala kafelk�w branding" />
             <span class="dam-viz-zoom-control__value" id="damBrandingCardZoomLabel">100%</span>
           </label>
-          <div class="dam-branding-page-size" id="damBrandingPageSize" role="group" aria-label="Liczba kart na stronie" data-dam-tip="Ile kart (elementów) pokazać w siatce. Suwak i pole nie odświeżają siatki na żywo - zatwierdź przyciskiem OK. Kó?ko myszy na kontrolce zmienia wartość.">
+          <div class="dam-branding-page-size" id="damBrandingPageSize" role="group" aria-label="Liczba kart na stronie" data-dam-tip="Ile kart (element�w) pokaza? w siatce. Suwak i pole nie od?wie?aj? siatki na ?ywo - zatwierd? przyciskiem OK. K�?ko myszy na kontrolce zmienia warto??.">
             <span class="dam-branding-page-size__label"><i class="uil uil-layer-group" aria-hidden="true"></i> Karty</span>
             <input type="range" id="damBrandingPageSizeRange" min="24" max="500" step="4" value="100" aria-label="Liczba kart (suwak)" />
             <input type="number" id="damBrandingPageSizeInput" class="dam-branding-page-size__num" min="24" max="500" step="1" value="100" aria-label="Liczba kart (liczba)" />
-            <button type="button" class="dam-int-cta dam-branding-page-size__ok" id="damBrandingPageSizeOk" data-dam-tip="Zastosuj limit kart i zapisz preferencję">OK</button>
+            <button type="button" class="dam-int-cta dam-branding-page-size__ok" id="damBrandingPageSizeOk" data-dam-tip="Zastosuj limit kart i zapisz preferencj?">OK</button>
           </div>
         </div>
       </div>
       <div class="dam-viz-grid-toolbar dam-branding-grid-toolbar dam-branding-status-row">
-        <div id="damBrandingStatus" class="dam-toolbar-status" aria-live="polite">Ładowanie indeksu…</div>
+        <div id="damBrandingStatus" class="dam-toolbar-status" aria-live="polite">?adowanie indeksu?</div>
       </div>
 
       <div id="damBrandingContextBar" class="dam-branding-context" hidden>
         <button type="button" class="dam-branding-context__back" id="damBrandingBackBtn">
-          <i class="uil uil-arrow-left" aria-hidden="true"></i> Wró? do przeglądania
+          <i class="uil uil-arrow-left" aria-hidden="true"></i> Wr�? do przegl?dania
         </button>
         <div class="dam-branding-context__chips" id="damBrandingContextChips" aria-label="Aktywne filtry"></div>
       </div>
@@ -174,11 +174,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         <div id="damBrandingGridCount" class="dam-branding-grid-count" aria-live="polite" hidden></div>
       </div>
       <div id="damBrandingCategoryHint" class="dam-branding-cat-hint" hidden role="status" aria-live="polite">
-        <button type="button" class="dam-branding-cat-hint__close" id="damBrandingCategoryHintClose" aria-label="Zamknij podpowiedź">
+        <button type="button" class="dam-branding-cat-hint__close" id="damBrandingCategoryHintClose" aria-label="Zamknij podpowied?">
           <i class="uil uil-times" aria-hidden="true"></i>
         </button>
-        <p class="dam-branding-cat-hint__text">Nie widzisz swojego pliku? Sprawdź, czy masz zaznaczoną dobrą kategorię. Ewentualnie naciśnij Pokaż wszystko.</p>
-        <button type="button" class="dam-branding-cat-hint__cta" id="damBrandingCategoryHintAll">Pokaż wszystko</button>
+        <p class="dam-branding-cat-hint__text">Nie widzisz swojego pliku? Sprawd?, czy masz zaznaczon? dobr? kategori?. Ewentualnie naci?nij Poka? wszystko.</p>
+        <button type="button" class="dam-branding-cat-hint__cta" id="damBrandingCategoryHintAll">Poka? wszystko</button>
       </div>
       <div id="damBrandingPanelBrandbook" class="dam-branding-panel" hidden>
         <div id="damBrandbookTokens" class="dam-brandbook-tokens"></div>
@@ -205,17 +205,17 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-asset-taxonomy.js?v=hub20260719trans01"></script>
   <script src="./assets/js/dam-badges.js?v=usab20260720c"></script>
   <script src="./assets/js/dam-search.js?v=viztb20260720d"></script>
-  <script src="./assets/js/dam-user-prefs.js?v=viztb20260720d"></script>
+  <script src="./assets/js/dam-user-prefs.js?v=viztb20260720h"></script>
   <script src="./assets/js/dam-danger.js?v=safedel20260720a"></script>
   <script src="./assets/js/dam-assoc-edit.js?v=usab20260720a36f"></script>
-  <script src="./assets/js/dam-tag-edit.js?v=supviz20260720a"></script>
+  <script src="./assets/js/dam-tag-edit.js?v=viztb20260720h"></script>
   <script src="./assets/js/dam-marketing-id.js?v=usab20260720c"></script>
   <script src="./assets/js/dam-modal-shared.js?v=usab20260720a"></script>
   <script src="./assets/js/dam-media-preview.js?v=vizassoc20260720c"></script>
   <script src="./assets/js/dam-product-correlation.js?v=hub20260719corr01"></script>
   <script src="./assets/js/dam-loader.js?v=1"></script>
   <script src="./assets/js/dam-grid-reveal.js?v=usab20260720a"></script>
-  <script src="./assets/js/dam-branding.js?v=supviz20260720a"></script>
+  <script src="./assets/js/dam-branding.js?v=viztb20260720h"></script>
   <script src="./assets/js/dam-tutorial.js?v=helprestart20260720a"></script>
 </body>
 </html>
