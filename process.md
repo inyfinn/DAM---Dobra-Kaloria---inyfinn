@@ -1,5 +1,80 @@
 ﻿# process.md - log + proces DAM
 
+## 2026-07-20 23:38 - Re-verify + commit/push (evening batch)
+
+**Komenda/Akcja:** User: ponów poprzednie zadania, podsumuj, commit + push.
+
+**Test/Ewaluacja (CDP, visualizations.html):**
+1. DamLoader dock → Pass `dx=0 gap=10 w=40`
+2. Assoc no-viz → Pass `packBlocked`, `sliderOk`, live `Skojarzone materiały (0)`, `noPackInDom`
+3. Modal tokens → Pass `--dam-modal-box-w/h: 90vw/90vh`, vp `5vh`
+4. `node --check` loader/media-preview/viz OK
+
+**Commit:** kod UI + PI v10 + process/memory; bez runtime `file-index` / `search-index` / `lifecycle-status`.
+
+## 2026-07-20 23:35 - Skojarzenia viz: ZERO packshotów / wariantów wizki
+
+**Komenda/Akcja:** User HARD: w Skojarzonych materiałach przy wizualizacji NIE wolno pokazywać innych wizualizacji/wariantów produktu — tylko materiały brandingowe + Elementy/Surowe.
+
+**Log/Status:**
+1. PI `viz.assoc_no_visualization_loop` v10 — doprecyzowanie must/must_not (nigdy produkty/wizki w assoc).
+2. Root cause: packshoty z Marketing/Archiwum/WP (`source=marketing`, bez `asset_role=packshot`, nazwy `GC_balls_*_RGB`, `wiz_GC_*`) omijały `isVisualizationAsset`.
+3. Fix `dam-media-preview.js`: rozszerzony `looksLikePackshotOrPrintAsset` + `isVisualizationAsset` obejmuje packshot-like; `isRelevantMaterialForProduct` wymaga roli marketingowej LUB ścieżki kampanii (nie samego indeksu w packshocie).
+4. Cache `assocnoviz20260720a`.
+
+**Test/Ewaluacja:** CDP API — `GC_balls_*_RGB` / `wiz_GC_*` / ENFACE → `isViz=true, passMat=false`; `web_hero_slider` → `passMat=true`; live `date-orange-balls-raw` → `Skojarzone materiały (0)`, `packLikeInMaterials=[]`. Python: 154 pack-like wykluczonych, 0 GC_balls w materials.
+
+**Źródła:** user screenshot DATE ORANGE assoc (21 packshotów); PI critical.
+
+## 2026-07-20 23:30 - DamLoader idealnie NAD #damHelpFab
+
+**Komenda/Akcja:** Ikonka ładowania za daleko w prawo — ma być idealnie nad `button#damHelpFab`.
+
+**Log/Status:**
+1. Root cause pozycji: `content-box` + `width`=wysokość bez paddingu/borderu → `dockAnchor` liczył za wąski loader → left za duży (~10–12px w prawo).
+2. Fix: `box-sizing:border-box`, `dockAnchor` z `getBoundingClientRect()` faba, remeasure outer size w `parkAboveFab` / `dockToFab`.
+3. Dock CSS (nie GSAP x/y); rAF+`performance.now` bo main-thread Viz głodzi `setTimeout` (×10).
+4. Cache `loaderfab20260720g`; styl `damLoaderCss20260720d`.
+
+**Test/Ewaluacja:** CDP Pass — `dx=0`, `gap=10`, `fabCx=loaderCx=1611`, `w=40`. Screenshot po docku.
+
+**Źródła:** user DOM Path `#damHelpFab` + screenshot.
+
+## 2026-07-20 23:19 - Modale podglądu 90vw × 90vh + padding body +12
+
+**Komenda/Akcja:** Powiększyć `#damVizModal` / media-preview do 90% viewportu; body +12px padding.
+
+**Log/Status:** `dam-brand.css` — `--dam-modal-box-w/h: 90vw/90vh`, vp 5vw/5vh; body `47/51/51` (+12). `dam-viz-modal.css` — assoc-split body `32/36/34`, assoc-pane +12. Cache `modal90vw20260720a`.
+
+**Test/Ewaluacja:** CDP Pass — ratioH=0.9, ratioW≈0.89, bodyPad `32px 36px 34px`.
+
+## 2026-07-20 23:11 - Elementy scroll + segregacja + „Surowe elementy”
+
+**Komenda/Akcja:** User: scroll nie działa w rozwiniętych Elementach; KULKA* w złym gridzie; „Linki do elementów” → „Surowe elementy”.
+
+**Log/Status:**
+1. Root cause scroll: reguła `.assoc-pane .dam-media-preview__assoc-grid { overflow-y:auto; overscroll-behavior:contain }` łapała też siatkę WEWNĄTRZ `.dam-media-preview__elementy-panel` → wheel nie chainował do panelu (scrollbar widoczny, scroll martwy).
+2. Fix CSS: `dam-viz-modal.css` + `dam-brand.css` — overflow tylko na `#damVizModalAssoc` (direct child); panel Elementy/Surowe ma własny `overflow-y:auto` + `touch-action:pan-y`; wewnętrzny grid `overflow:visible`.
+3. Segregacja: `classifyAssocAsset` — packshot/wiz/CMYK (`looksLikePackshotOrPrintAsset`) zawsze material; KULKA2 / `KULKI - …` / freepik → element-ready; Links → Surowe; NIE używać samego blobu „skladniki” (packshoty miały false positive).
+4. Etykieta toggle: „Surowe elementy”.
+5. Cache `elemscroll20260720g`.
+
+**Test/Ewaluacja:** CDP Pass — materials 43 (packaging), kulkaInMat=[], packInEl=[], Surowe scrollMoved=true (scrollHeight>clientHeight); screenshot `elemscroll-assoc-pass-20260720.png`. `node --check` OK.
+
+**Źródła:** user dump + screenshot Elementy (40) nested scrollbar.
+
+## 2026-07-20 22:58 - Viz assoc filter (Branding policy) + skeleton + hold 3s
+
+**Komenda/Akcja:** WORKER assocfix20260720c — twardy filtr skojarzeń jak Branding, skeleton zamiast „Ładowanie…”, hold delete 3s.
+
+**Log/Status:** (1) `dam-media-preview.js`: `isSourceLikeAsset` rozszerzone o ext+path; `passesMarketingAssocMaterial` / `passesMarketingAssocElement`; `showAssocPaneLoading` + `DamLoader`; (2) `dam-viz.js` pusty mount assoc; (3) `dam-assoc-edit.js` `holdMs:3000`; (4) `dam-brand.css` `.dam-assoc-skeleton`; (5) cache `assocfix20260720c` w viz/branding/explorer/dashboard HTML.
+
+**Efekt/Fix:** Root cause: Viz ładował reverse `linked_products` z filtrem tylko `media_type` — PSD/AI/PDF przechodziły jako raster/brak typu → 143 junk. Teraz jedna ścieżka `renderLinkedBrandingAssets` z polityką marketing raster/wideo + wykluczeniem source ext/path.
+
+**Test/Ewaluacja:** `node --check` OK; CDP potwierdził API (`assocPaneSkeletonHtml`, `isSourceLikeAsset`); modal assoc screenshot zablokowany przez współdzieloną kartę przeglądarki (kontekst niszczony / modal znika).
+
+**Źródła:** user interrupt 22:58; `program-instructions.json` viz.assoc_no_visualization_loop; Branding `isRasterAssetName` / graphics-only policy.
+
 ## 2026-07-20 - Explorer: redesign modala "Dodaj kategorię/produkt" (EXP-C, 10-pass ui-taste)
 
 ### Komenda/Akcja
@@ -6373,3 +6448,25 @@ WORKER audit ~6h transcript + implementacja zaległości + commit/push (user exp
 
 ### Zrodla
 Transcript `86977982-52ab-4698-9da0-5b68ac3ea8cd`; `agents/shared/usability-brief-2026-07-20.md`; screenshot `verify-branding-count-chip-20260720.png`
+
+---
+
+## 2026-07-20 — Branding card body spacing (3 bands)
+
+### Komenda/Akcja
+WORKER: odstępy pionowe `.dam-branding-card` — badges | title+chip+meta | actions.
+
+### Log/Status
+1. `dam-branding.css`: body `gap:0` + tokeny `--dam-branding-card-section-gap:10px`, `--dam-branding-card-actions-gap:15px`; `badges margin-bottom:10px`; `meta margin-top:4px`; `actions margin-top:15px`; title-wrap `flex:0 0 auto` + column (bez flex-grow rozpychającego sekcje).
+2. Cache-bust `dam-branding.css?v=brcardpad20260720a` — branding.html, dashboard.html, explorer.html, visualizations.html.
+3. Weryfikacja CDP `br-004000` + 2 kolejne karty: gaps 10 / 4 / 15 px. Screenshot `apps/web/_qa/branding-card-spacing-br004000.png`, pass3 `branding-card-spacing-pass3.png`.
+
+### Efekt/Fix
+Trzy czytelne pasma w body karty brandingu; Viz assoc filtry nietknięte.
+
+### Test/Ewaluacja
+- CDP gaps (3 karty): badges→title 10px, title→meta 4px, meta→actions 15px — **Pass**
+- ID chip `M-SLI504000-07-26` pełny tekst (br-004000) — **Pass**
+
+### Zrodla
+`dam-branding.css`; `brcardpad20260720a`

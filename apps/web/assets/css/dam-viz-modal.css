@@ -40,7 +40,8 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 20px 24px 22px;
+  /* +12px vs 20/24/22 — wiecej powietrza w wiekszym modalu 90vw/90vh */
+  padding: 32px 36px 34px;
 }
 
 .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane {
@@ -49,7 +50,8 @@
   min-width: 0;
   min-height: 0;
   height: 100%;
-  padding: 48px 18px 18px;
+  /* +12px vs 48/18/18 — ten sam rytm paddingu co body */
+  padding: 60px 30px 30px;
   box-sizing: border-box;
   background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 55%, #fff);
   overflow: hidden;
@@ -72,7 +74,11 @@
   margin-bottom: 10px;
 }
 
-.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-grid {
+/* Tylko glowny grid materialow (#damVizModalAssoc) — NIE zagniezdżone
+   siatki w .dam-media-preview__elementy-panel (tam overscroll:contain
+   blokowal wheel i uniemozliwial scroll panelu Elementy/Surowe). */
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-media-preview__assoc-col--materials > .dam-media-preview__assoc-grid,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-viz-modal__assoc > .dam-media-preview__assoc-grid {
   flex: 1 1 auto;
   min-height: 0;
   max-height: none;
@@ -82,6 +88,25 @@
   grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
   align-content: start;
   gap: 10px 8px;
+}
+
+/* Panele Elementy / Surowe elementy: wlasny scroll, wheel musi dzialac */
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__elementy-panel {
+  flex: 0 1 auto;
+  max-height: min(240px, 32vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__elementy-panel .dam-media-preview__assoc-grid {
+  flex: none;
+  max-height: none;
+  overflow: visible;
+  overscroll-behavior: auto;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
 }
 
 .dam-viz-modal-box--assoc-split .dam-viz-modal__actions {
@@ -103,7 +128,8 @@
     padding: 44px 14px 14px;
   }
 
-  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-grid {
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-media-preview__assoc-col--materials > .dam-media-preview__assoc-grid,
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-viz-modal__assoc > .dam-media-preview__assoc-grid {
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   }
 }
@@ -112,15 +138,20 @@
 @media (max-width: 767px) {
   .dam-viz-modal-overlay:has(.dam-viz-modal-box--assoc-split),
   .dam-media-preview-overlay:has(.dam-viz-modal-box--assoc-split) {
-    --dam-modal-vp-x: 3vw;
-    --dam-modal-vp-y: 2vh;
+    --dam-modal-vp-x: 5vw;
+    --dam-modal-vp-y: 5vh;
+    --dam-modal-box-w: 90vw;
+    --dam-modal-box-h: 90vh;
   }
 
   .dam-viz-modal-box--assoc-split {
     display: flex;
     flex-direction: column;
     overflow: auto;
-    max-height: calc(100vh - 2 * var(--dam-modal-vp-y, 2vh));
+    width: var(--dam-modal-box-w, 90vw);
+    max-width: var(--dam-modal-box-w, 90vw);
+    height: var(--dam-modal-box-h, 90vh);
+    max-height: var(--dam-modal-box-h, 90vh);
   }
 
   .dam-viz-modal-box--assoc-split .dam-viz-modal__main {
@@ -139,27 +170,29 @@
   .dam-viz-modal-box--assoc-split .dam-viz-modal__body {
     max-height: none;
     overflow: visible;
-    padding: 16px 16px 12px;
+    padding: 28px 28px 24px;
   }
 
   .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane {
     flex: 0 0 auto;
     height: auto;
     max-height: none;
-    padding: 14px 16px 20px;
+    padding: 26px 28px 32px;
     border-top: 1px solid rgba(70, 66, 85, 0.08);
     background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 40%, #fff);
     overflow: visible;
   }
 
-  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-grid {
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-media-preview__assoc-col--materials > .dam-media-preview__assoc-grid,
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-viz-modal__assoc > .dam-media-preview__assoc-grid {
     max-height: 220px;
     overflow-y: auto;
   }
 }
 
 @media (max-width: 374px) {
-  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-grid {
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-media-preview__assoc-col--materials > .dam-media-preview__assoc-grid,
+  .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-viz-modal__assoc > .dam-media-preview__assoc-grid {
     grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
   }
 }

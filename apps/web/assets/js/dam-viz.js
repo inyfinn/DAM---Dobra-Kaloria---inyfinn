@@ -1355,7 +1355,7 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=vizassoc20260720c";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=modal90vw20260720a";
       document.head.appendChild(vizCss);
     }
     document.body.insertAdjacentHTML("beforeend", html);

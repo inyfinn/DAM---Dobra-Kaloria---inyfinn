@@ -6093,11 +6093,13 @@ button.dam-status-badge.dam-tag-editable:hover {
   opacity: 0.85;
 }
 
-/* Podglad (wiz + branding + media-preview): marginesy viewport, min. wysokosc zachowana */
+/* Podglad (wiz + branding + media-preview): 90vw × 90vh (user 2026-07-20) */
 .dam-viz-modal-overlay,
 .dam-media-preview-overlay {
-  --dam-modal-vp-y: 8vw;
-  --dam-modal-vp-x: 15vw;
+  --dam-modal-vp-y: 5vh;
+  --dam-modal-vp-x: 5vw;
+  --dam-modal-box-w: 90vw;
+  --dam-modal-box-h: 90vh;
   --dam-modal-box-min-h: 900px;
   --dam-modal-thumb-min-h: 420px;
 }
@@ -6141,11 +6143,11 @@ button.dam-status-badge.dam-tag-editable:hover {
   position: relative;
   background: #fff;
   border-radius: 16px;
-  width: 100%;
-  max-width: 100%;
-  height: calc(100vh - 2 * var(--dam-modal-vp-y));
-  min-height: min(var(--dam-modal-box-min-h), calc(100vh - 2 * var(--dam-modal-vp-y)));
-  max-height: calc(100vh - 2 * var(--dam-modal-vp-y));
+  width: var(--dam-modal-box-w, 90vw);
+  max-width: var(--dam-modal-box-w, 90vw);
+  height: var(--dam-modal-box-h, 90vh);
+  min-height: min(var(--dam-modal-box-min-h), var(--dam-modal-box-h, 90vh));
+  max-height: var(--dam-modal-box-h, 90vh);
   overflow: hidden;
   box-shadow: 0 16px 56px rgba(0, 0, 0, 0.22);
   display: flex;
@@ -6279,7 +6281,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   overflow: visible;
   overflow-y: visible;
   margin-top: 0;
-  padding: 35px 39px 39px;
+  /* +12px vs poprzednie 35/39/39 (user 2026-07-20, wiekszy modal 90vw/90vh) */
+  padding: 47px 51px 51px;
 }
 
 .dam-viz-modal__body > .dam-viz-card__badges {
@@ -9921,13 +9924,23 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   border: 1px solid rgba(70, 66, 85, 0.12);
   border-radius: 10px;
   background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 60%, #fff);
-  max-height: 220px;
+  max-height: min(240px, 32vh);
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 .dam-media-preview__elementy-panel .dam-media-preview__assoc-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
   gap: 8px;
+  /* Nie dziedzicz overflow/overscroll z reguly glowniej siatki assoc —
+     inaczej wheel nie trafia do scrollowalnego panelu (bug 2026-07-20). */
+  flex: none;
+  max-height: none;
+  overflow: visible;
+  overscroll-behavior: auto;
 }
 
 /* --- Pkt 1: modal historii statusow - pionowa os czasu --- */

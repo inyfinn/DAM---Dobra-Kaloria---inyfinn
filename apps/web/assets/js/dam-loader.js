@@ -14,20 +14,96 @@
 (function (global) {
   "use strict";
 
-  var STYLE_ID = "damLoaderCss";
+  var STYLE_ID = "damLoaderCss20260720d";
   var HOLD_CENTER_MS = 1000;
   var Z_INDEX = 13000;
-  /* Help fab siedzi ~24px od prawej/dolu i ma ~48px - loader parkuje wyzej. */
-  var CORNER_RIGHT = 24;
-  var CORNER_BOTTOM = 92;
+  /* Odstęp między dolną krawędzią loadera a górą #damHelpFab. */
+  var FAB_GAP = 10;
+  /* Fallback gdy fab jeszcze nie w DOM (right/bottom jak .dam-help-fab). */
+  var FAB_FALLBACK = { right: 20, bottom: 20, size: 44 };
 
   var el = null;
   var innerEl = null;
   var labelEl = null;
   var activeCount = 0;
   var dockTimer = null;
+  var dockBackupTimer = null;
+  var parkTimer = null;
+  var dockGen = 0;
   var docked = false;
   var hiding = false;
+
+  function clearDockTimers() {
+    if (dockTimer) {
+      clearTimeout(dockTimer);
+      dockTimer = null;
+    }
+    if (dockBackupTimer) {
+      try {
+        cancelAnimationFrame(dockBackupTimer);
+      } catch (_caf) {
+        try {
+          clearTimeout(dockBackupTimer);
+        } catch (_ct) {}
+      }
+      dockBackupTimer = null;
+    }
+    if (parkTimer) {
+      clearTimeout(parkTimer);
+      parkTimer = null;
+    }
+  }
+
+  function scheduleDock() {
+    clearDockTimers();
+    var myGen = ++dockGen;
+    var t0 = performance.now();
+    var run = function () {
+      if (myGen !== dockGen) return;
+      if (activeCount > 0 && el && document.body.contains(el) && !docked) {
+        dockToFab();
+      }
+    };
+    /* rAF + performance.now: po blokadzie main-thread (siatka Viz) dock
+       odpala się w pierwszej wolnej klatce, gdy minął HOLD wall-clock.
+       Sam setTimeout przy ciężkim renderze potrafi spóźnić się ×10. */
+    var tick = function (now) {
+      if (myGen !== dockGen) return;
+      if (docked || activeCount <= 0) return;
+      if (now - t0 >= HOLD_CENTER_MS) {
+        run();
+        return;
+      }
+      dockBackupTimer = requestAnimationFrame(tick);
+    };
+    dockBackupTimer = requestAnimationFrame(tick);
+    dockTimer = setTimeout(function () {
+      dockTimer = null;
+      run();
+    }, HOLD_CENTER_MS);
+  }
+
+  /**
+   * Idealnie NAD #damHelpFab: środek X loadera = środek X faba,
+   * dół loadera = góra faba - FAB_GAP. (user 2026-07-20: nie za daleko w prawo)
+   */
+  function dockAnchor(loaderW, loaderH) {
+    var fab = document.getElementById("damHelpFab");
+    var w = loaderW || 38;
+    var h = loaderH || 38;
+    if (fab) {
+      var fr = fab.getBoundingClientRect();
+      return {
+        left: Math.round(fr.left + fr.width / 2 - w / 2),
+        top: Math.round(fr.top - FAB_GAP - h),
+      };
+    }
+    var fb = FAB_FALLBACK;
+    return {
+      left: Math.round(global.innerWidth - fb.right - fb.size / 2 - w / 2),
+      top: Math.round(global.innerHeight - fb.bottom - fb.size - FAB_GAP - h),
+    };
+  }
 
   function prefersReducedMotion() {
     return (
@@ -68,12 +144,14 @@
 
   function ensureCss() {
     if (document.getElementById(STYLE_ID)) return;
+    var stale = document.getElementById("damLoaderCss");
+    if (stale && stale.parentNode) stale.parentNode.removeChild(stale);
     var s = document.createElement("style");
     s.id = STYLE_ID;
     s.textContent =
       "#damLoader{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);" +
-      "z-index:" + Z_INDEX + ";pointer-events:none;display:flex;align-items:center;gap:10px;" +
-      "background:#fff;border:1px solid rgb(171 84 219 / .28);border-radius:999px;" +
+      "z-index:" + Z_INDEX + ";pointer-events:none;display:flex;align-items:center;justify-content:center;gap:10px;" +
+      "box-sizing:border-box;background:#fff;border:1px solid rgb(171 84 219 / .28);border-radius:999px;" +
       "padding:10px 16px;box-shadow:0 14px 38px rgb(23 22 30 / .18);opacity:0;" +
       "will-change:left,top,opacity;}" +
       "#damLoader .dam-loader__spin{width:18px;height:18px;flex:0 0 18px;border-radius:50%;" +
@@ -97,6 +175,7 @@
 
   function ensureEl() {
     if (el && document.body.contains(el)) return el;
+    docked = false;
     ensureCss();
     el = document.createElement("div");
     el.id = "damLoader";
@@ -114,47 +193,85 @@
     return el;
   }
 
-  function setCornerNow() {
-    /* Bez animacji: od razu maly spinner w rogu (reduced motion / fallback). */
+  function parkAboveFab() {
+    if (!el) return;
     docked = true;
-    if (innerEl) innerEl.style.display = "none";
-    el.style.left = "auto";
-    el.style.top = "auto";
-    el.style.right = CORNER_RIGHT + "px";
-    el.style.bottom = CORNER_BOTTOM + "px";
+    if (innerEl) {
+      innerEl.style.display = "none";
+      innerEl.style.width = "";
+      innerEl.style.opacity = "";
+      innerEl.style.gap = "";
+    }
+    el.style.right = "auto";
+    el.style.bottom = "auto";
     el.style.transform = "none";
+    el.style.transition = "none";
+    /* Kolko: outer size (border-box) = wysokosc pilla; potem remeasure → idealny środek nad FAB */
+    var size = Math.round(el.getBoundingClientRect().height) || 38;
+    el.style.boxSizing = "border-box";
+    el.style.width = size + "px";
+    el.style.paddingLeft = "10px";
+    el.style.paddingRight = "10px";
+    void el.offsetWidth;
+    var outer = el.getBoundingClientRect();
+    var a = dockAnchor(outer.width || size, outer.height || size);
+    el.style.left = a.left + "px";
+    el.style.top = a.top + "px";
     el.style.opacity = "1";
   }
 
+  function setCornerNow() {
+    parkAboveFab();
+  }
+
+  /**
+   * Dock przez CSS transition (nie GSAP) — na wizualizacjach ticker GSAP
+   * bywa zamrozony przez grid-reveal i tweeny zostaja na progress:0.
+   */
+  function dockToFab() {
+    if (!activeCount || !el || docked) return;
+    docked = true;
+    var rect = el.getBoundingClientRect();
+    el.style.transition = "none";
+    el.style.transform = "none";
+    el.style.boxSizing = "border-box";
+    el.style.left = rect.left + "px";
+    el.style.top = rect.top + "px";
+    el.style.opacity = "1";
+    if (innerEl) {
+      innerEl.style.transition = "opacity .22s ease, width .22s ease";
+      innerEl.style.opacity = "0";
+      innerEl.style.width = "0px";
+      innerEl.style.overflow = "hidden";
+    }
+    /* Outer diameter = wysokość pilla (border-box); left/top od realnego outer size */
+    var targetSize = Math.round(rect.height) || 38;
+    el.style.width = targetSize + "px";
+    el.style.paddingLeft = "10px";
+    el.style.paddingRight = "10px";
+    void el.offsetWidth;
+    var outerW = el.getBoundingClientRect().width || targetSize;
+    var a = dockAnchor(outerW, targetSize);
+    /* Cofnij width do pełnego pilla na start tweenu, potem animuj do kółka */
+    el.style.width = rect.width + "px";
+    void el.offsetWidth;
+    el.style.transition =
+      "left .55s cubic-bezier(0.45, 0.05, 0.55, 0.95), top .55s cubic-bezier(0.45, 0.05, 0.55, 0.95), width .55s cubic-bezier(0.45, 0.05, 0.55, 0.95), opacity .2s ease";
+    el.style.left = a.left + "px";
+    el.style.top = a.top + "px";
+    el.style.width = targetSize + "px";
+    var parkGen = dockGen;
+    if (parkTimer) clearTimeout(parkTimer);
+    parkTimer = global.setTimeout(function () {
+      parkTimer = null;
+      if (parkGen !== dockGen || !el || !activeCount) return;
+      parkAboveFab();
+    }, 600);
+  }
+
   function dockWithGsap() {
-    loadGsap(function (gsap) {
-      /* Sesja mogla sie skonczyc zanim GSAP wstal */
-      if (!gsap || !activeCount || !el || docked) {
-        if (!gsap && activeCount && el && !docked) setCornerNow();
-        return;
-      }
-      docked = true;
-      var rect = el.getBoundingClientRect();
-      var targetW = rect.height; /* pill -> kolko (spinner + padding) */
-      var targetLeft = global.innerWidth - CORNER_RIGHT - targetW;
-      var targetTop = global.innerHeight - CORNER_BOTTOM - rect.height;
-      var tl = gsap.timeline({ defaults: { ease: "power2.inOut" } });
-      tl.to(innerEl, { width: 0, opacity: 0, gap: 0, duration: 0.3 });
-      tl.to(
-        el,
-        {
-          left: targetLeft,
-          top: targetTop,
-          xPercent: 0,
-          yPercent: 0,
-          duration: 0.6,
-          onComplete: function () {
-            if (innerEl) innerEl.style.display = "none";
-          },
-        },
-        "<0.08"
-      );
-    });
+    /* Alias — historyczna nazwa; GSAP nie jest wymagany do docka. */
+    dockToFab();
   }
 
   function start(label) {
@@ -163,11 +280,11 @@
     ensureEl();
     if (labelEl) labelEl.textContent = label || "Ładowanie…";
     if (global.gsap) global.gsap.killTweensOf([el, innerEl]);
-    if (dockTimer) clearTimeout(dockTimer);
 
     if (activeCount > 1 && docked) {
       /* juz zaparkowany w rogu - zostaje */
       el.style.opacity = "1";
+      el.style.visibility = "visible";
       return;
     }
 
@@ -180,9 +297,14 @@
     }
     el.style.right = "auto";
     el.style.bottom = "auto";
+    el.style.width = "";
+    el.style.paddingLeft = "";
+    el.style.paddingRight = "";
+    el.style.visibility = "visible";
 
     if (prefersReducedMotion()) {
-      setCornerNow();
+      clearDockTimers();
+      parkAboveFab();
       return;
     }
 
@@ -198,10 +320,7 @@
     });
     /* GSAP prefetch w tle, dock po HOLD_CENTER_MS */
     loadGsap(function () {});
-    dockTimer = setTimeout(function () {
-      dockTimer = null;
-      if (activeCount > 0 && el) dockWithGsap();
-    }, HOLD_CENTER_MS);
+    scheduleDock();
   }
 
   function done() {
@@ -209,10 +328,8 @@
     activeCount -= 1;
     if (activeCount > 0 || !el) return;
     hiding = true;
-    if (dockTimer) {
-      clearTimeout(dockTimer);
-      dockTimer = null;
-    }
+    clearDockTimers();
+    dockGen += 1;
     var finish = function () {
       if (!el) return;
       el.style.opacity = "0";
@@ -235,11 +352,16 @@
 
   function reset() {
     activeCount = 0;
-    if (dockTimer) {
-      clearTimeout(dockTimer);
-      dockTimer = null;
+    hiding = false;
+    clearDockTimers();
+    dockGen += 1;
+    if (el) {
+      if (global.gsap) global.gsap.killTweensOf([el, innerEl]);
+      el.style.opacity = "0";
+      el.style.width = "";
+      el.style.paddingLeft = "";
+      el.style.paddingRight = "";
     }
-    if (el) el.style.opacity = "0";
     docked = false;
   }
 

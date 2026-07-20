@@ -30,7 +30,15 @@
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
   var CARD_ZOOM_MIN = 65;
   var CARD_ZOOM_MAX = 350;
+  /* Tag/blob skladniki/owoce — NIE "kulki" (kategoria produktu / packshot DK_Kulki_*). */
   var ELEMENT_ASSOC_RE = /(^|[^a-z0-9])(skladniki|składniki|owoce|owocki)([^a-z0-9]|$)/i;
+  /**
+   * Izolowany element po NAZWIE PLIKU:
+   * - KULKA2 / KULKA17 (sam token + cyfry)
+   * - "KULKI - kukurydziane (16)" (KULKI + spacja + myslnik)
+   * NIE: DK_Kulki_platki_... / GC_*_kulki_* packshoty (underscore po Kulki).
+   */
+  var ELEMENT_NAME_RE = /(^|[^a-z0-9_.-])kulka\d+([^a-z0-9]|$)|^kulki\s*[-–—]\s+/i;
 
   /** STREFA A3: style wstrzykniete (nie ruszamy dam-brand.css / dam-branding.css). */
   function injectA3Styles() {
@@ -74,7 +82,8 @@
       ".dam-media-preview__elementy-toggle:hover{background:#eeeef3;color:var(--dam-text,#464255);}",
       ".dam-media-preview__elementy-toggle:focus-visible{outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px;}",
       ".dam-media-preview__elementy-panel[hidden]{display:none!important;}",
-      ".dam-media-preview__elementy-panel{margin-top:8px;}",
+      ".dam-media-preview__elementy-panel{margin-top:8px;max-height:min(240px,32vh);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;}",
+      ".dam-media-preview__elementy-panel .dam-media-preview__assoc-grid{flex:none;max-height:none;overflow:visible;overscroll-behavior:auto;}",
       ".dam-media-preview__elementy-hint{",
       "margin:0 0 8px;font-size:11px;line-height:1.35;color:var(--dam-text-muted,#8f8b9f);}",
       /* Task 37: resizer CTA + ostrzezenie */
@@ -107,7 +116,8 @@
     return String(p || "").replace(/\//g, "\\");
   }
 
-  /** SUROWE ELEMENTY: folder Links (np. ...\\2 - PROJEKT\\Links\\flor2.png). */
+  /** SUROWE ELEMENTY: folder Links (cropy zrodlowe) — NIE caly ARCHIWUM\Projekty
+   *  (tam sa tez gotowe opakowania marketingowe). */
   function isLinksRawPath(path) {
     var n = pathNormSlashes(path).toLowerCase();
     if (!n) return false;
@@ -129,24 +139,66 @@
     return isLinksRawPath(path) || isMaterialyElementyPath(path);
   }
 
+  /** Nazwa wyglada jak izolowany element (KULKA2, freepik splash), nie packshot. */
+  function looksLikeIsolatedElementName(name) {
+    var n = String(name || "");
+    if (!n) return false;
+    if (ELEMENT_NAME_RE.test(n)) return true;
+    if (/^freepik__/i.test(n)) return true;
+    if (/^kulka\d*/i.test(n.replace(/\.[a-z0-9]+$/i, ""))) return true;
+    return false;
+  }
+
   function assetMatchesElementAssoc(x) {
     if (!x) return false;
+    var name = String(x.name || "");
+    if (looksLikeIsolatedElementName(name)) return true;
+    /* Tag/blob "skladniki|owoce" — tylko gdy to NIE wyglada na packshot/kampanie */
+    var role = String(x.asset_role || "").toLowerCase();
+    if (role === "packshot" || role === "web_hero_slider" || role === "web_bundle_tile") return false;
     var blob = String(x.search_blob || "");
     var tags = Array.isArray(x.tags) ? x.tags.join(" ") : "";
     var appearance = Array.isArray(x.appearance_tags) ? x.appearance_tags.join(" ") : "";
-    return ELEMENT_ASSOC_RE.test(blob + " " + tags + " " + appearance + " " + String(x.name || ""));
+    return ELEMENT_ASSOC_RE.test(blob + " " + tags + " " + appearance + " " + name);
+  }
+
+  /** Packshot / wizka drukowa — NIGDY do kubelkow Elementy ani do Skojarzonych materialow. */
+  function looksLikePackshotOrPrintAsset(x) {
+    if (!x) return false;
+    var role = String(x.asset_role || "").toLowerCase();
+    if (role === "packshot") return true;
+    var name = String(x.name || "");
+    var path = normSlashesLower(x.path);
+    if (/_wiz_|_enface_|druk_cmyk|print_cmyk|hi-res_|low-res_/i.test(name)) return true;
+    if (/\/(druk_cmyk|druk_rgb|print|wizki|visuals|enface)\//i.test(path)) return true;
+    /* Prefiks wiz_ / packshoty GC/DK z kodem RGB|CMYK (takze z Marketing/Archiwum/WP). */
+    if (/^wiz[_-]/i.test(name)) return true;
+    if (/^dk_kulki_/i.test(name)) return true;
+    if (/^gc_.*_(cmyk|rgb)([-_.]|$)/i.test(name)) return true;
+    if (/^gc_(balls|kulki|bar|minibar|delight)/i.test(name) && /_\d{6,}/.test(name)) return true;
+    if (/\bv-\d{5,}[-_].*enface/i.test(name)) return true;
+    /* WP size-suffixed packshot thumbs: name-500x708.png */
+    if (/^gc_|^dk_|^wiz_/i.test(name) && /-\d{2,4}x\d{2,4}\.(png|jpe?g|webp)$/i.test(name)) {
+      return true;
+    }
+    return false;
   }
 
   /**
-   * 3 kubelki: "material" (skojarzony material marketingowy), "element-link"
-   * (surowy crop z folderu Links), "element-ready" (gotowy z 1 - MATERIALY\ELEMENTY
-   * albo trafienie tagowe skladniki/owoce). User 2026-07-20: te dwa typy elementow
-   * mają być pokazane jako DWA osobne przyciski "rozwiń", nie jedna wspolna lista.
+   * 3 kubelki: "material" (branding marketingowy), "element-link" (Surowe elementy
+   * z Links), "element-ready" (MATERIALY ELEMENTY albo nazwy KULKA / freepik).
+   * HARD: elementy NIGDY w glownym gridzie SKOJARZONE MATERIALY.
+   * HARD: NIE uzywaj samego search_blob "skladniki" — packshoty maja to w blobie.
    */
   function classifyAssocAsset(x) {
     if (!x) return "material";
+    /* Packshot/wizka — nie element; do material trafi i i tak odpadnie w isVisualizationAsset. */
     if (isLinksRawPath(x.path)) return "element-link";
-    if (isMaterialyElementyPath(x.path) || assetMatchesElementAssoc(x)) return "element-ready";
+    if (isMaterialyElementyPath(x.path)) return "element-ready";
+    /* KULKA2 / KULKI - … / freepik — izolowane elementy (NIE packshot produktowy). */
+    if (!looksLikePackshotOrPrintAsset(x) && looksLikeIsolatedElementName(x.name)) {
+      return "element-ready";
+    }
     return "material";
   }
 
@@ -226,11 +278,13 @@
   }
 
   /**
-   * PI viz.assoc_no_visualization_loop: packshot / WIZKI / VISUALS nie moga
-   * trafic do "Skojarzone materialy" przy podgladzie innej wizualizacji.
+   * PI viz.assoc_no_visualization_loop: packshot / WIZKI / VISUALS / packshot-like
+   * z Marketing NIGDY nie moga trafic do "Skojarzone materialy" przy wizualizacji.
+   * (User 2026-07-20: zero innych wariantow tej samej wizki w skojarzeniach.)
    */
   function isVisualizationAsset(x) {
     if (!x) return false;
+    if (looksLikePackshotOrPrintAsset(x)) return true;
     var role = String(x.asset_role || "").toLowerCase();
     if (role === "packshot") return true;
     var src = String(x.source || "").toLowerCase();
@@ -242,6 +296,10 @@
     if (/\/4\s*-\s*wizki\b/.test(path) || /\/4\s*-\s*visuals\b/.test(path)) return true;
     if (/\/wizki\//.test(path) || /\/visuals\//.test(path)) return true;
     if (/\bwizka[-_]/.test(path) || /\bwizki\b/.test(path)) return true;
+    /* Packshoty wrzucone do Marketing/Archiwum/WP bez roli packshot. */
+    if (/wp-content\/uploads/.test(path) && /\/(gc_|dk_|wiz_)/i.test("/" + String(x.name || ""))) {
+      return true;
+    }
     return false;
   }
 
@@ -271,12 +329,25 @@
 
   /**
    * Material marketingowy musi byc powiazany z produktem (rola WWW/social/POS
-   * albo nazwa/indeks w sciezce). Odciecie kafelkow WWW obcych produktow.
+   * albo nazwa/indeks w sciezce kampanii). Sam indeks w packshocie NIE wystarcza.
    */
+  function isCampaignMarketingPath(path) {
+    var p = normSlashesLower(path);
+    if (!p) return false;
+    if (/\/(www|social|pos|kampanie|campaigns|banery|banners|slider|ecommerce|e-commerce)\b/.test(p)) {
+      return true;
+    }
+    if (/\/(web_hero|web_bundle|key.?visual|kv)\b/.test(p)) return true;
+    return false;
+  }
+
   function isRelevantMaterialForProduct(x, ctx) {
     if (!x) return false;
+    if (isVisualizationAsset(x)) return false;
     var role = String(x.asset_role || "").toLowerCase();
     if (VIZ_ASSOC_KEEP_ROLES[role]) return true;
+    /* Bez roli marketingowej: tylko sciezki kampanii/WWW/social — nie packshoty z indeksem. */
+    if (!isCampaignMarketingPath(x.path)) return false;
     var blob = String(x.name || "") + " " + String(x.path || "") + " " + String(x.search_blob || "");
     blob = blob.toLowerCase();
     var idxBase = String((ctx && ctx.index) || "").split(".")[0];
@@ -1066,7 +1137,7 @@
     host.innerHTML =
       (ready.length ? elementyToggleBlockHtml("Elementy", ready, "data-element-asset-idx") : "") +
       (links.length
-        ? elementyToggleBlockHtml("Linki do elementów", links, "data-element-link-idx")
+        ? elementyToggleBlockHtml("Surowe elementy", links, "data-element-link-idx")
         : "");
     if (ready.length) bindElementyToggle(host, "data-element-asset-idx", ready);
     if (links.length) bindElementyToggle(host, "data-element-link-idx", links);

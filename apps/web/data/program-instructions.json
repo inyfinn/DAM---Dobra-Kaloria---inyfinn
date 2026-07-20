@@ -1,7 +1,7 @@
 {
-  "version": 9,
+  "version": 10,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-20T21:29:00+02:00",
+  "updated_at": "2026-07-20T23:35:00+02:00",
   "instructions": [
     {
       "id": "explorer.create_modal_ux",
@@ -1085,16 +1085,18 @@
     {
       "id": "viz.assoc_no_visualization_loop",
       "must": [
-        "W modalu wizualizacji (#damVizModal) i DamMediaPreview mode=viz-studio kolumna 'Skojarzone materialy' pokazuje wylacznie materialy brandingowe / produkty / elementy (slidery, banery, social, elementy Links/ELEMENTY itd.)",
-        "Asset typu visualization (packshot, source=wizki, sciezka 4 - WIZKI / 4 - VISUALS) NIGDY nie trafia do listy skojarzonych materialow innego assetu wizualizacji — zero petli wiz→wiz",
+        "W modalu wizualizacji (#damVizModal) i DamMediaPreview mode=viz-studio kolumna 'Skojarzone materialy' pokazuje WYLACZNIE materialy marketingowe z Brandingu (slidery, banery, social, POS, key visual, kampanie WWW) oraz osobno Elementy / Surowe elementy",
+        "NIGDY: inne wizualizacje produktu, warianty jezykowe tej samej wizki, packshoty (takze z Marketing/Archiwum/wp-content bez asset_role=packshot), karty produktu ani 'produkty' jako kafelki skojarzen",
+        "Asset typu visualization (packshot, source=wizki, sciezka 4 - WIZKI / 4 - VISUALS, nazwy GC_/DK_/wiz_* packshot, _RGB/_CMYK/_ENFACE) NIGDY nie trafia do Skojarzonych materialow — zero petli wiz→wiz",
         "Layout modala viz: CSS Grid 2 kolumny (desktop ≥768): lewa = hero + meta + warianty + akcje, prawa = skojarzenia; mobile (<768) stack: hero → meta → assoc",
-        "Filtr anty-petli po stronie UI (renderLinkedBrandingAssets); indekser nie powinien linkowac wizki jako material brandingowy przy innym packshocie (handoff do build-branding-index)"
+        "Filtr anty-petli po stronie UI (isVisualizationAsset + looksLikePackshotOrPrintAsset w renderLinkedBrandingAssets); indekser nie powinien linkowac wizki jako material brandingowy przy innym packshocie"
       ],
-      "body_pl": "HARD 2026-07-20: system zaczal listowac wizualizacje w 'Skojarzonych materialach' innych wizek (np. OATS/babka). Skojarzenia lustrzane = branding↔produkt, nie wiz↔wiz. Packshoty z WIZKI zostaja wariantami produktu, nie 'materialami'.",
+      "body_pl": "HARD 2026-07-20 (doprecyzowanie wieczorem): w skojarzeniach do wizualizacji NIE wolno pokazywac tych samych / innych wariantow wizualizacji produktu. Tylko materialy brandingowe + Elementy/Surowe. Packshoty z WIZKI i z Marketing (np. GC_balls_*_RGB, wiz_GC_*) zostaja wariantami produktu, nie 'materialami'.",
       "category": "ui",
       "must_not": [
-        "Pokazywac asset_role=packshot / source=wizki / sciezki 4 - WIZKI|VISUALS w kolumnie Skojarzone materialy przy podglądzie wizualizacji",
-        "Traktowac inne packshoty produktu jako skojarzone materialy marketingowe"
+        "Pokazywac asset_role=packshot / source=wizki / sciezki 4 - WIZKI|VISUALS / packshot-like PNG z Marketing w kolumnie Skojarzone materialy przy podgladzie wizualizacji",
+        "Traktowac inne packshoty / warianty jezykowe produktu jako skojarzone materialy marketingowe",
+        "Listowac produkty lub karty produktu w Skojarzonych materialach modala wizualizacji"
       ],
       "priority": "critical",
       "title_pl": "Wizualizacje: zakaz petli skojarzen wiz→wiz + layout assoc po prawej",
