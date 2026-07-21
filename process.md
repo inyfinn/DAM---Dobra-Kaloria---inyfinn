@@ -7808,3 +7808,21 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 - Screenshot: CDP fromSurface (IDE browser_take_screenshot stale-frame on shared tab) + Read; Explorer a11y tree Pokaż wszystkie
 
 **Źródła:** dam-viz-modal.css, dam-viz.js, dam-media-preview.js, dam-modal-shared.js, dam-brand.css; explorer/visualizations/branding HTML; process.md
+
+## 2026-07-21 - vizLoadOnce: #vizGrid reveal 2x
+
+**Komenda/Akcja:** Debugger - loading/reveal animation plays twice on visualizations `#vizGrid`.
+
+**Log/Status:**
+1. CDP probe (Page.addScriptToEvaluateOnNewDocument wrap DamLoader/DamGridReveal): skeleton=1, DamLoader.start/done=1, DamGridReveal.reveal=2.
+2. Call 1 (t~661): boot -> applyFilters -> render -> reveal (111 cards).
+3. Call 2 (t~1323): dam-shell DamApi.me() -> dispatch dam:admin-mode -> dam-viz listener applyFilters -> reveal again (same 111 cards).
+4. Fix: lastAdminVisibilityKey latch; dam:admin-mode/storage skip when !indexData or key unchanged; mountChangeLogInScope still runs. DamLoader HOLD 1.5s untouched.
+
+**Efekt/Fix:** Cache token vizLoadOnce20260721a on visualizations.html dam-viz.js. Post-fix CDP: reveal=1.
+
+**Test/Ewaluacja:**
+- node --check dam-viz.js OK
+- CDP hard refresh: loaderStart=1 loaderDone=1 skeleton=1 reveal=1 (was 2)
+
+**Zrodla:** dam-viz.js, dam-shell.js (~522 dam:admin-mode), dam-grid-reveal.js, code-doctrine.md §12

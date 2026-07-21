@@ -384,6 +384,10 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
 - 2026-07-20 | reveal | karty niewidoczne mimo animacji | `clip-path` w stanie spoczynku
   zeruje prostokat -> IntersectionObserver ratio 0 -> deadlock | stan spoczynku = tylko
   `opacity:0`; `clip-path` wylacznie w tweenie.
+- 2026-07-21 | viz `#vizGrid` reveal 2× | `DamApi.me()` w `dam-shell.js` po boot
+  dispatchuje `dam:admin-mode` → listener w `dam-viz.js` robił `applyFilters()`+`reveal()`
+  drugi raz przy tym samym admin/showAll | latch `lastAdminVisibilityKey` + skip gdy
+  `!indexData` lub klucz bez zmian; changelog `mountChangeLogInScope()` zostaje.
 - 2026-07-20 | skojarzenia/search | brak wynikow dla `6300539.01` | blob z `indexes[0]`
   ucietego | uzywaj `search_blob` + pelnych `indexes`/`index_bases`.
 - 2026-07-20 | overlay | folder picker nieklikalny | nizszy z-index (10050) niz nakladka

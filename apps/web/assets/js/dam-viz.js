@@ -3402,6 +3402,14 @@
       .trim();
   }
 
+  /* Boot echo: DamApi.me() w dam-shell.js ponownie dispatchuje dam:admin-mode
+     po pierwszym paint - bez latcha render()+DamGridReveal.reveal() gra 2×. */
+  var lastAdminVisibilityKey = null;
+
+  function adminVisibilityKey() {
+    return (isAdminMode() ? "1" : "0") + "|" + (showAll ? "1" : "0");
+  }
+
   function applyFilters() {
     var lang = (document.getElementById("vizLangFilter") || {}).value || "";
     var q = ((document.getElementById("vizSearch") || {}).value || "").trim().toLowerCase();
@@ -3454,6 +3462,7 @@
       });
     });
     render();
+    lastAdminVisibilityKey = adminVisibilityKey();
   }
 
   /* Suwak skali kafelkow:
@@ -3520,11 +3529,16 @@
       window._damVizAdminBound = true;
       window.addEventListener("dam:admin-mode", function () {
         mountChangeLogInScope();
+        /* Skip boot echo from DamApi.me (same admin/showAll) — avoids 2× reveal. */
+        if (!indexData) return;
+        if (adminVisibilityKey() === lastAdminVisibilityKey) return;
         applyFilters();
       });
       window.addEventListener("storage", function (e) {
         if (e.key === ADMIN_KEY) {
           mountChangeLogInScope();
+          if (!indexData) return;
+          if (adminVisibilityKey() === lastAdminVisibilityKey) return;
           applyFilters();
         }
       });
