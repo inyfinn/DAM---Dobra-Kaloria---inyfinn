@@ -529,15 +529,11 @@
 .dam-project-card__actions .dam-project-check-btn,
 .dam-project-card__actions a.dam-int-cta.dam-project-check-btn {
   flex: 1.35 1 auto;
-  font-size: 10px;
-  padding-left: 8px;
-  padding-right: 8px;
 }
 
 .dam-project-card__actions .dam-project-go-btn,
 .dam-project-card__actions a.dam-int-cta.dam-project-go-btn {
   flex: 0.9 1 auto;
-  font-size: 10px;
 }
 
 .dam-icon-svg {

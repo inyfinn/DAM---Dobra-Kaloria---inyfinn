@@ -54,10 +54,11 @@ a.dam-int-cta {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: var(--dam-control-h-sm, 36px);
-  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
+  min-height: var(--dam-control-h-sm, 34px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 12px);
   border-radius: var(--dam-radius-btn-compact, 8px);
-  font: inherit;
+  font-family: inherit;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.2;
 }
@@ -231,8 +232,9 @@ a.dam-int-cta {
   width: auto;
   height: auto;
   min-width: 0;
-  min-height: var(--dam-control-h-sm, 36px);
-  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
+  min-height: var(--dam-control-h-sm, 34px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 12px);
+  font-size: 12px;
   border-radius: var(--dam-radius-btn-compact, 8px);
   border: 1px solid var(--dam-btn-outline-border);
   background-color: var(--dam-surface, #fff);

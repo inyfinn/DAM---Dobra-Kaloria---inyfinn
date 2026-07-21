@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=geexTaste20260721a">
-  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=geexPadFix20260721a">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=geexPadFix20260721a">
+  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=ctaUnify20260721b">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=ctaUnify20260721b">
   <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719">
   <link rel="stylesheet" href="./assets/css/dam-brand.css?v=geexPadFix20260721a">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
@@ -89,7 +89,11 @@
       <div class="dam-projects-grid-toolbar">
         <p id="damProjectsStatus" class="dam-page-status dam-projects-status-line" aria-live="polite">Łączenie...</p>
         <div class="dam-projects-grid-toolbar__actions">
-          <label class="dam-tag-reveal-toggle" data-dam-tip="Pokazuje info o pakowaniu zbiorczym na kartach produktów (np. 2F, 2×12). Nie dotyczy strony Branding."><input type="checkbox" id="damRevealLowTags" /> Info Pakowania</label>
+          <label class="dam-switch dam-switch--compact" for="damRevealLowTags" data-dam-tip="Pokazuje info o pakowaniu zbiorczym na kartach produktów (np. 2F, 2×12). Nie dotyczy strony Branding.">
+            <input type="checkbox" id="damRevealLowTags" class="dam-switch__input" />
+            <span class="dam-switch__track" aria-hidden="true"></span>
+            <span class="dam-switch__label">Info Pakowania</span>
+          </label>
           <button type="button" class="dam-int-cta" id="damProjectsRefresh" title="Przeładuj listę z bieżącego indeksu (szybkie, bez skanu dysku)" data-dam-tip="Odśwież listę = przeładuj karty z już wczytanego indeksu w pamięci/bridge. Nie skanuje folderów Marketing.">Odśwież listę</button>
           <button type="button" class="dam-int-cta" id="damIngestBtn" title="Przeskanuj foldery Marketing i przebuduj indeks (admin)" data-dam-tip="Skanuj dysk = pełny ingest Marketing: czyta foldery, aktualizuje indeks produktów. Trwa dłużej niż Odśwież listę.">Skanuj dysk</button>
         </div>
@@ -118,7 +122,7 @@
   <script src="./assets/js/dam-product-correlation.js?v=hub20260719corr01"></script>
   <script src="./assets/js/dam-tag-bar.js?v=20260719tagAjax3"></script>
   <script src="./assets/js/dam-grid-reveal.js?v=i18nboot20260721e"></script>
-  <script src="./assets/js/dam-ui-cta.js?v=geexPadFix20260721a"></script>
+  <script src="./assets/js/dam-ui-cta.js?v=ctaUnify20260721b"></script>
   <script src="./assets/js/dam-projects.js?v=projidx20260720a"></script>
 </body>
 </html>

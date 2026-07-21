@@ -8391,3 +8391,19 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Test/Ewaluacja:** CDP modal go ~98×36 fs12 br8 spanClipped=false; project go fs10 h30; marketing pad 14px titleFs12 w~172; screenshot+Read `_qa/qa-viz-modal-actions-crop2.png`, `qa-marketing-cards-pass3.png`.
 
 **Zrodla:** dam-primitives.css, dam-viz-modal.css, dam-brand.css, dam-app.css, dam-project-catalog.css, dam-ui-cta.js, HTML ?v=
+
+## 2026-07-21 - unify projects CTA font + Info Pakowania switch
+
+**Komenda/Akcja:** Ujednolicenie compact CTA (karta + toolbar) do jednego tokenu 12px/34px; Info Pakowania na Projektach = dam-switch--compact jak na Wizualizacjach.
+
+**Log/Status:**
+1. BEFORE CDP: card check/go fs=10px h=30; toolbar refresh/ingest fs=16px h~37 (primitives `font:inherit` biło inject); label.dam-tag-reveal-toggle (checkbox).
+2. Fix: dam-ui-cta.js (button/a + !important 12px; card = toolbar 12/34/8x12); dam-primitives.css (font-size:12px zamiast inherit; labeled dam-btn-icon 34/12); dam-app.css (usunieto fs:10 na check/go); index.html markup switch jak viz.
+3. Cache-bust `?v=ctaUnify20260721b` na HTML ladujacych zmienione CSS/JS.
+
+**Efekt/Fix:** Jedna skala dam-int-cta na kartach i toolbarze; Info Pakowania = track+label switch.
+
+**Test/Ewaluacja:** CDP AFTER: check/go/refresh/ingest fs=12px h=34 pad=8px 12px (delta 0); switch labelFs=12 trackH=18; oldToggle=false. Screenshot+Read toolbar/card/viewport. Pass.
+
+**Zrodla:** dam-ui-cta.js, dam-primitives.css, dam-app.css, index.html, visualizations.html (wzor switch), process.md
+
