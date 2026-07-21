@@ -7,7 +7,10 @@
 2. Brief: `agents/shared/geex-realign-plan-2026-07-21.md`.
 3. **HARD FREEZE** plików kluczowych realign (tokens, primitives, dam-brand.css, page CSS, theme JS, HTML enqueue) — tylko Lead/B/C wg planu.
 4. PNG baseline: gitignore; README + manifest; handoff-faza3/4 stubs.
-5. Commit backup + branch `design/geex-realign` + tag `geex-phase0` (po domknięciu zrzutów lokalnych).
+5. Commit backup `092821f` na `main` + push; branch `design/geex-realign` + tag `geex-phase0` + push.
+6. Baseline lokalnie: **28/36 PNG** (font timeout na części zrzutów) — PARTIAL w manifeście; uzupełnić w nowej sesji.
+
+**Handoff faza 0:** freeze ON; brief w `agents/shared/geex-realign-plan-2026-07-21.md`. Następna sesja = **Faza 1 audyt** (nowy czat; maks 18 Grep/Read).
 
 **Efekt/Fix:** Proces planowania globalny; start realign bez CSS produktu w Fazie 0.
 
@@ -8140,3 +8143,34 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Test/Ewaluacja:** node --check; CDP advance sync (0:0→0:1 skip, 0:1→0:2+toast); CONGRATS_MS=2275; BURST_CHANCE=0.12; reduced-motion bez burst DOM; explore companion OK; screenshot+Read ×5 @1280.
 
 **Zrodla:** dam-tutorial.js, dobrokalorius-copy.json, program-instructions.json, _qa/_bump_tutorial_praise_toast.py
+
+## 2026-07-21 - tutorial targets + explore spot + Projekty restore
+
+**Komenda/Akcja:** Fix Dobrokaloriuś: spotlight Pokaż wszystkie / Info Pakowania; explore bez dziury; nav Projekty nie konczy samouczka.
+
+**Log/Status:**
+1. Root causes: (a) krok celowal .dam-viz-toolbar (= search); (b) brak kroku Info Pakowania; (c) isTargetInteractable odrzucal switch pod .dam-tut ctrl -> fallback sideLink; (d) explore mial soft dim/hole na starym spocie; (e) index.html nie ladowal dam-tutorial.js + SW HTML 1h stale cache.
+2. Fix: cele label[for=vizShowAll] / label[for=damRevealLowTags] + krok CTRL+scroll; explore CSS display:none na spot; nav zachowuje phase + damTutorialExplore; index.html + shortcuts ensureTutorialResume; SW network-first HTML (dam-page-1h-v2).
+3. program-instructions ui.tutorial_dobrokalorius_hard HARD 2026-07-21e; cache ?v=tutorialTargets20260721a.
+
+**Efekt/Fix:** Spotlight na switchach; explore bez hole; branding -> Projekty = companion+active, finished=null, phase intact.
+
+**Test/Ewaluacja:** node --check; CDP Pokaż wszystkie spot≈label y~367 overlap; Info Pakowania overlap; explore spotDisplay=none; Projekty active+explore+companion; screenshot+Read.
+
+**Zrodla:** dam-tutorial.js, dam-shortcuts.js, dam-shell.js, sw.js, index.html + HTML ?v=, program-instructions.json, _qa/_bump_tutorial_targets.py
+
+## 2026-07-21 - tutorial Projekty: broken completion + FOUC
+
+**Komenda/Akcja:** Na index.html (Projekty) samouczek nie dal sie dokoncic; dodatkowo flash niestylowanego chrome.
+
+**Log/Status:**
+1. CDP przed fixem: dam-tutorial.css brak na index.html; .dam-tut / .dam-tut__ctrl = position:static; ctrlRect.top ~45745 (pod siatka projektow) - Dalej/Zakoncz poza viewportem.
+2. Companion (explore inject CSS) byl fixed - user widzial tylko "Wroc do samouczka", bez paska.
+3. Fix: critical shell CSS w ensureTutCss() (fixed root/bubble/ctrl + btn); link CSS na index.html; FOUC gate is-ready + inline hide; reveal via setTimeout(0/64) bo samo double-rAF w tle nie odpala i zostawialo opacity:0.
+4. Cache ?v=tutorialProjectsFix20260721b (HTML x9 + shortcuts + token).
+
+**Efekt/Fix:** Pasek fixed bottom, klikalny; skip Branding->Projekty; Dalej 4:0->4:1->5:0; Zakończ -> damTutorialFinished=1.
+
+**Test/Ewaluacja:** node --check; CDP hitDalej=.dam-tut__btn--next, ctrlT~684, is-ready, rootOp=1; finish path; screenshot+Read tutorial-projekty-faza5-bar.png.
+
+**Zrodla:** dam-tutorial.js, index.html (+CSS link), _qa/_bump_tutorial_projects_fix.py, code-doctrine §12
