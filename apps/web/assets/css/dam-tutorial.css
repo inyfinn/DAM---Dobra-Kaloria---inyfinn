@@ -165,7 +165,7 @@
 .dam-tut__mini-nav .dam-tut__btn {
   flex: 1 1 0;
   justify-content: center;
-  min-height: 34px;
+  min-height: var(--dam-control-h, 44px);
 }
 
 /* Panel sterujacy: ZAWSZE dol-srodek */
@@ -188,14 +188,17 @@
   justify-content: center;
 }
 
+/* Alias → Geex CTA anatomy (F3): pad/radius/height tokens; keep tut color roles */
 .dam-tut__btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 14px;
-  min-height: 36px;
-  border: 1px solid var(--dam-border, #ececf2);
-  border-radius: 999px;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: var(--dam-space-btn-y, 15px) var(--dam-space-btn-x, 25px);
+  min-height: var(--dam-control-h, 44px);
+  border: 1px solid var(--dam-btn-outline-border, var(--dam-border, #ececf2));
+  border-radius: var(--dam-radius-btn, 18px);
   background: var(--dam-surface, #fff);
   color: var(--dam-text, #464255);
   font: inherit;
@@ -209,8 +212,13 @@
 }
 
 .dam-tut__btn:hover:not(:disabled) {
-  background: var(--dam-surface-muted, #f5f6fa);
-  border-color: var(--dam-text-muted, #8f8b9f);
+  background: color-mix(
+    in srgb,
+    var(--dam-primary, #ab54db) 10%,
+    var(--dam-surface, #fff)
+  );
+  border-color: var(--dam-btn-outline-border, var(--dam-border, #ececf2));
+  color: var(--dam-primary, #ab54db);
 }
 
 .dam-tut__btn:disabled {
@@ -309,8 +317,8 @@
 }
 
 .dam-tut-invite__actions .dam-tut__btn {
-  padding: 6px 11px;
-  min-height: 32px;
+  padding: 10px 16px;
+  min-height: var(--dam-control-h, 44px);
   font-size: var(--dam-fs-sm, 12px);
 }
 
@@ -327,7 +335,8 @@
     padding: 16px 18px;
   }
   .dam-tut__btn {
-    padding: 7px 10px;
+    padding: 10px 14px;
+    min-height: var(--dam-control-h, 44px);
     font-size: var(--dam-fs-sm, 12px);
   }
   .dam-tut__phase-label {

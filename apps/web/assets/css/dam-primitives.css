@@ -5,27 +5,212 @@
  */
 
 /* === BUTTONS === */
-/* Canonical: .geex-btn (+ --primary / --sm / --transparent / danger / success).
-   Alias (F3): .dam-win-btn, .dam-btn-primary Ôćĺ Geex anatomy via tokens below. */
+/* Canonical: .geex-btn (+ --primary / --secondary / --danger / --ghost / --sm).
+   Alias (F3): .dam-win-btn, .dam-btn-primary share anatomy; HTML classes kept.
+   Tokens: --dam-radius-btn 18, --dam-space-btn-* 15×25, --dam-control-h 44.
+   Anti white-flash: hover uses color-mix / tinted primary — never force #fff fill
+   that fights colored text (Geex default hover white-on-primary is OK for filled). */
 .geex-btn {
   --_dam-btn-pad-y: var(--dam-space-btn-y, 15px);
   --_dam-btn-pad-x: var(--dam-space-btn-x, 25px);
   --_dam-btn-radius: var(--dam-radius-btn, 18px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: var(--dam-control-h, 44px);
+  padding: var(--_dam-btn-pad-y) var(--_dam-btn-pad-x);
   border-radius: var(--_dam-btn-radius);
-  /* padding wiring: Agent 3 ÔÇö style.css ma 15├Ś25; tu tylko token hook */
+  border: none;
+  font: inherit;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background-color var(--dam-anim-hover, 0.22s) ease,
+    color var(--dam-anim-hover, 0.22s) ease,
+    border-color var(--dam-anim-hover, 0.22s) ease,
+    box-shadow var(--dam-anim-hover, 0.22s) ease;
 }
 
 .geex-btn--sm {
-  /* compact: audit padding 12├Ś22 / fs 13 ÔÇö Agent 3 */
+  padding: 12px 22px;
+  font-size: 13px;
+  min-height: var(--dam-control-h, 44px);
 }
 
+/* Primary — filled */
+.geex-btn--primary,
+.dam-btn-primary {
+  color: var(--white-color, #fff);
+  background-color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  border: none !important;
+}
+
+.geex-btn--primary:hover,
+.geex-btn--primary:focus-visible,
+.geex-btn--primary.active,
+.dam-btn-primary:hover,
+.dam-btn-primary:focus-visible {
+  color: var(--white-color, #fff) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, var(--primary-color, #ab54db)) 86%,
+    #000
+  ) !important;
+}
+
+/* Secondary / win-btn — outline, no white-flash hover */
+.geex-btn--secondary,
+.geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger),
+.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger) {
+  color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  background-color: var(--dam-surface, #fff) !important;
+  border: 1px solid var(--dam-btn-outline-border) !important;
+  box-shadow: none !important;
+}
+
+.geex-btn--secondary:hover,
+.geex-btn--secondary:focus-visible,
+.geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
+.geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus-visible,
+.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
+.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus-visible {
+  color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, var(--primary-color, #ab54db)) 10%,
+    var(--dam-surface, #fff)
+  ) !important;
+  border-color: var(--dam-btn-outline-border) !important;
+}
+
+/* Danger */
+.geex-btn--danger {
+  color: var(--white-color, #fff);
+  background-color: var(--dam-danger, var(--danger-color, #ff5b5b)) !important;
+}
+
+.geex-btn--danger:hover,
+.geex-btn--danger:focus-visible,
+.geex-btn--danger.active {
+  color: var(--white-color, #fff) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--dam-danger, var(--danger-color, #ff5b5b)) 86%,
+    #000
+  ) !important;
+}
+
+/* Ghost / transparent — no opaque white flash */
+.geex-btn--ghost,
+.geex-btn--transparent {
+  color: var(--dam-text, var(--dark-color, #464255)) !important;
+  background-color: transparent !important;
+  border: 2px solid var(--dam-border, var(--dark-color, #464255)) !important;
+}
+
+.geex-btn--ghost:hover,
+.geex-btn--ghost:focus-visible,
+.geex-btn--transparent:hover,
+.geex-btn--transparent:focus-visible,
+.geex-btn--transparent.active {
+  color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, var(--primary-color, #ab54db)) 10%,
+    transparent
+  ) !important;
+  border-color: var(--dam-btn-outline-border) !important;
+}
+
+/* Alias: share Geex pad/radius/height without deleting HTML classes */
+.dam-win-btn,
+.dam-btn-primary {
+  box-sizing: border-box;
+  min-height: var(--dam-control-h, 44px);
+  border-radius: var(--dam-radius-btn, 18px);
+}
+
+.dam-btn-primary:not(.geex-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: var(--dam-space-btn-y, 15px) var(--dam-space-btn-x, 25px);
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+}
+
+/* Icon / square controls — 44×44 touch */
 .dam-icon-btn,
-.dam-menu-toggle {
-  /* square icon control; min touch via --dam-control-h ÔÇö Agent 3 */
+.dam-menu-toggle,
+.dam-viz-icon-btn,
+.dam-btn-icon,
+.dam-btn-icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   min-height: var(--dam-control-h, 44px);
   min-width: var(--dam-control-h, 44px);
-  border-radius: var(--dam-radius-sm, 8px);
+  width: var(--dam-control-h, 44px);
+  height: var(--dam-control-h, 44px);
+  padding: 0;
+  border-radius: var(--dam-radius-sm, var(--dam-control-radius, 8px));
+  border: 1px solid var(--dam-btn-outline-border);
+  background-color: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
+  cursor: pointer;
+  transition:
+    background-color var(--dam-anim-hover, 0.22s) ease,
+    color var(--dam-anim-hover, 0.22s) ease,
+    border-color var(--dam-anim-hover, 0.22s) ease;
+}
+
+.dam-icon-btn:hover,
+.dam-icon-btn:focus-visible,
+.dam-menu-toggle:hover,
+.dam-menu-toggle:focus-visible,
+.dam-viz-icon-btn:hover:not(:disabled):not(.is-disabled),
+.dam-viz-icon-btn:focus-visible,
+.dam-btn-icon:hover,
+.dam-btn-icon-only:hover {
+  color: var(--dam-primary, #ab54db);
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, #ab54db) 10%,
+    var(--dam-surface, #fff)
+  );
   border-color: var(--dam-btn-outline-border);
+}
+
+html[data-theme="dark"] .geex-btn--secondary,
+html[data-theme="dark"] .geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger),
+html[data-theme="dark"] .dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger),
+html[data-theme="dark"] .dam-icon-btn,
+html[data-theme="dark"] .dam-menu-toggle,
+html[data-theme="dark"] .dam-viz-icon-btn,
+html[data-theme="dark"] .dam-btn-icon,
+html[data-theme="dark"] .dam-btn-icon-only {
+  background-color: var(--dam-surface, #201f28) !important;
+}
+
+html[data-theme="dark"] .geex-btn--secondary:hover,
+html[data-theme="dark"] .geex-btn--secondary:focus-visible,
+html[data-theme="dark"] .geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
+html[data-theme="dark"] .dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
+html[data-theme="dark"] .dam-icon-btn:hover,
+html[data-theme="dark"] .dam-viz-icon-btn:hover:not(:disabled):not(.is-disabled) {
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, #ab54db) 16%,
+    var(--dam-surface, #201f28)
+  ) !important;
+  color: var(--dam-primary, #ab54db) !important;
 }
 /* === /BUTTONS === */
 
