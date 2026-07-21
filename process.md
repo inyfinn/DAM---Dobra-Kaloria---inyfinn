@@ -1,4 +1,46 @@
-﻿## 2026-07-21 19:00 - Geex realign Faza 2 DONE (tokens + primitives skeleton)
+﻿
+## 2026-07-21 19:30 - Geex realign Faza 5a DONE (surfaces NO reveal)
+
+**Komenda/Akcja:** Lead — PANELS fill after join 3+4. Zakaz reveal/clip/opacity rest.
+
+**Log/Status:**
+1. `dam-primitives.css` `/* === PANELS === */`: dash-panel, bento cell (+muted/bare), modal panel elev, panel rows hover muted, sidebar header/link pad+radius+min-h.
+2. Docs surfaces.md sync; manifest F3/F4/5a; `?v=geexF5a20260721a`.
+3. CDP dashboard: panel radius 12 pad 16x18 opacity 1 clipPath none; sidebar link radius 8 pad 10x12.
+4. Zero edits `dam-grid-reveal.js`; no opacity/clip on reveal-observed cards.
+
+**Handoff faza 5a:** tag `geex-phase5a`. Next = Faza 5b (1 change = 1 §7 quote + CDP).
+
+**Zrodla:** audit §3, surfaces.md, code-doctrine §7 (read-only guard).
+
+---
+
+## 2026-07-21 19:25 - Handoff join 3+4 (Lead)
+
+**Komenda/Akcja:** Gate OPEN — `geex-phase3` @ `7c9d346` + `geex-phase4` @ `3ee60bf` (phase4 ancestor of HEAD). Scalenie przed Faza 5a.
+
+**Log/Status:**
+1. Pulled `design/geex-realign` — already up to date; both tags in HEAD ancestry.
+2. Read handoff-faza3 (DONE, 3 Pass, ESCALATE none) + handoff-faza4 (DONE, 3 Pass, ESCALATE cleared).
+3. Merged regress notes 3+4 → `geex-realign-regress-manifest.md`.
+4. Collective `?v=` bump: `dam-primitives.css?v=geexJoin20260721a` (22 HTML) — unifies F3/F4 enqueue race.
+5. Smoke `:8765` → HTTP 200 dashboard + root.
+
+**Done skrot:**
+- F3 BUTTONS: radius 18 / pad 15x25 / icon 44 / actions gap 10; no white-flash secondary hover.
+- F4 BADGES: MASTER radius 14 + scale token; scale kills branding/brand; dark AA.
+
+**Ryzyka (carry):**
+- `dam-brand.css` po primitives moze nadal nadpisac pill radius (F7 thin).
+- Host Emulation width stuck ~765 (F4 residual).
+- Live auth dashboard CDP deferred w F3 — smoke join = HTTP only.
+
+**Next:** Faza 5a surfaces (NO reveal) → tag `geex-phase5a`.
+
+**Zrodla:** geex-realign-handoff-faza3.md, geex-realign-handoff-faza4.md, notes-faza3/4, plan v6.1.
+
+---
+## 2026-07-21 19:00 - Geex realign Faza 2 DONE (tokens + primitives skeleton)
 
 **Komenda/Akcja:** Agent 2 / Lead — Faza 2 ONLY po gate `geex-phase1` + audit md.
 
@@ -8230,3 +8272,5 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Test/Ewaluacja:** node --check; CDP hitDalej=.dam-tut__btn--next, ctrlT~684, is-ready, rootOp=1; finish path; screenshot+Read tutorial-projekty-faza5-bar.png.
 
 **Zrodla:** dam-tutorial.js, index.html (+CSS link), _qa/_bump_tutorial_projects_fix.py, code-doctrine §12
+
+

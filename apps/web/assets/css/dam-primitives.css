@@ -363,17 +363,44 @@ html[data-theme="dark"] .dam-viz-badge--variants {
 /* === /BADGES === */
 
 /* === PANELS === */
-/* Surface candidates (audit ┬ž3): .dam-bento__cell, .dam-dash-panel, modal/popover.
-   F5a fills elevation; F2 only token hooks. */
-.dam-dash-panel,
+/* F5a: radius / padding / gap / shadow / bg tokens only.
+   FORBIDDEN here: clip-path, visibility, display, opacity rest on reveal-observed cards. */
+.dam-dash-panel {
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #ececf2);
+  border-radius: var(--dam-radius-md, 12px);
+  box-shadow: none;
+  padding: 16px 18px;
+}
+
 .dam-bento__cell {
   background: var(--dam-surface, #fff);
-  border-color: var(--dam-border, #ececf2);
+  border: 1px solid var(--dam-border, #ececf2);
   border-radius: var(--dam-radius-md, 12px);
-  box-shadow: none; /* elev: var(--dam-shadow) w F5 */
+  box-shadow: none;
+  padding: 16px 18px;
+  gap: 10px;
 }
 
 .dam-bento__cell--muted {
+  background: var(--dam-surface-muted, #f5f6fa);
+}
+
+.dam-bento__cell--bare {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.dam-dash-panel__item,
+.dam-dash-panel__row {
+  border-radius: var(--dam-radius-sm, 8px);
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.dam-dash-panel__item:hover,
+.dam-dash-panel__row:hover {
   background: var(--dam-surface-muted, #f5f6fa);
 }
 
@@ -381,5 +408,25 @@ html[data-theme="dark"] .dam-viz-badge--variants {
   background: var(--dam-surface, #fff);
   border-radius: var(--dam-radius-lg, 24px);
   box-shadow: var(--dam-shadow);
+  padding: 20px 22px;
+  gap: 12px;
+}
+
+/* Sidebar chrome surfaces (spacing/radius/bg only; no reveal props) */
+.geex-sidebar {
+  background: var(--dam-surface, #fff);
+}
+
+.geex-sidebar__header {
+  border-radius: 0;
+  padding: 12px 14px;
+  gap: 10px;
+}
+
+.geex-sidebar__menu__link {
+  border-radius: var(--dam-radius-sm, 8px);
+  padding: 10px 12px;
+  gap: 10px;
+  min-height: var(--dam-control-h, 44px);
 }
 /* === /PANELS === */

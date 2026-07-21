@@ -25,3 +25,10 @@
 
 - F5 removes leftover hex fills + unifies elevation.
 - F5b: IntersectionObserver + `clip-path` doctrine — no collapsing clip on rest state.
+
+## F5a implemented (``dam-primitives.css`` PANELS)
+
+- Panels/bento: surface + border + ``--dam-radius-md`` + pad 16×18; muted/bare variants.
+- Modal sheet: surface + ``--dam-radius-lg`` + ``--dam-shadow`` + pad/gap.
+- Rows: radius-sm + muted hover bg.
+- Sidebar header/links: pad/gap/radius/min-height control — **no** opacity/clip-path/display on cards.
