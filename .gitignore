@@ -108,3 +108,5 @@ apps/api/storage/framework/sessions/*
 apps/api/storage/framework/views/*
 apps/api/bootstrap/cache/*
 !apps/api/storage/logs/.gitkeep
+
+THEME/**/*.zip
