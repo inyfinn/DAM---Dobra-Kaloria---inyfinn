@@ -1,4 +1,21 @@
 ﻿
+## 2026-07-21 19:35 - Geex realign Faza 5b DONE (popover surfaces + §7)
+
+**Komenda/Akcja:** Lead — 1 change = popover surface tokens; §7 quote + CDP IO.
+
+**§7:** rest state = tylko opacity; clip-path tylko w tweenie. Change nie rusza reveal-observed cards.
+
+**CDP:**
+- index project-card: ratio 1 / opacity 1 / clip none
+- viz card regress: ratio 1 / opacity 1
+- branding card regress: ratio 0.53 intersecting / opacity 1 / clip none
+
+**Self-review §7:** PASS — PANELS F5b bez opacity/clip/visibility/display; `dam-grid-reveal.js` untouched.
+
+**Handoff:** tag `geex-phase5b`. Next Faza 6 dark/white-flash.
+
+---
+
 ## 2026-07-21 19:30 - Geex realign Faza 5a DONE (surfaces NO reveal)
 
 **Komenda/Akcja:** Lead — PANELS fill after join 3+4. Zakaz reveal/clip/opacity rest.
@@ -8272,5 +8289,6 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Test/Ewaluacja:** node --check; CDP hitDalej=.dam-tut__btn--next, ctrlT~684, is-ready, rootOp=1; finish path; screenshot+Read tutorial-projekty-faza5-bar.png.
 
 **Zrodla:** dam-tutorial.js, index.html (+CSS link), _qa/_bump_tutorial_projects_fix.py, code-doctrine §12
+
 
 

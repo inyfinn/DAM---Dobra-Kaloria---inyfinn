@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>F3 buttons fixture</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/dam-tokens.css?v=geexF3btn20260721c" />
+  <link rel="stylesheet" href="../assets/css/dam-primitives.css?v=geexF5a20260721a" />
+  <link rel="stylesheet" href="../assets/css/dam-tutorial.css?v=geexF3tut20260721a" />
+  <style>
+    body { margin: 24px; font-family: inherit; background: #f5f6fa; color: #464255; }
+    h1 { font-size: 18px; margin: 0 0 16px; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
+    .label { width: 100%; font-size: 12px; font-weight: 600; opacity: 0.7; }
+    .dam-viz-modal__actions {
+      display: flex; flex-wrap: nowrap; align-items: center; gap: 10px;
+      padding: 12px; background: #fff; border: 1px solid #ececf2; border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Geex F3 buttons fixture</h1>
+  <div class="row">
+    <div class="label">CTA</div>
+    <button type="button" class="geex-btn geex-btn--primary" id="btnPrimary">Primary</button>
+    <button type="button" class="geex-btn geex-btn--secondary" id="btnSecondary">Secondary</button>
+    <button type="button" class="geex-btn geex-btn--danger" id="btnDanger">Danger</button>
+    <button type="button" class="geex-btn geex-btn--ghost" id="btnGhost">Ghost</button>
+    <button type="button" class="geex-btn dam-win-btn" id="btnWin">Win alias</button>
+    <button type="button" class="dam-btn-primary" id="btnDamPrimary">dam-btn-primary</button>
+  </div>
+  <div class="row">
+    <div class="label">Icon 44</div>
+    <button type="button" class="dam-icon-btn" id="btnIcon" aria-label="icon">★</button>
+    <button type="button" class="dam-viz-icon-btn" id="btnVizIcon" aria-label="viz">◉</button>
+  </div>
+  <div class="row">
+    <div class="label">Tutorial alias</div>
+    <button type="button" class="dam-tut__btn" id="btnTut">Dalej</button>
+    <button type="button" class="dam-tut__btn dam-tut__btn--primary" id="btnTutPrimary">Start</button>
+  </div>
+  <div class="row dam-viz-modal__actions" id="actionsRow">
+    <div class="dam-viz-modal__actions-main">
+      <button type="button" class="geex-btn geex-btn--primary">Zapisz</button>
+      <button type="button" class="geex-btn dam-win-btn">Folder</button>
+    </div>
+    <button type="button" class="dam-viz-icon-btn" aria-label="more">⋯</button>
+  </div>
+</body>
+</html>

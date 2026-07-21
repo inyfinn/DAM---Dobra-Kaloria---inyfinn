@@ -429,4 +429,15 @@ html[data-theme="dark"] .dam-viz-badge--variants {
   gap: 10px;
   min-height: var(--dam-control-h, 44px);
 }
+
+/* F5b change-1: popover surfaces only (no opacity/clip-path — doctrine §7 IO rest=opacity tween-only) */
+.geex-content__header__popup,
+.geex-content__header__popup.show,
+.dam-tag-edit-popover {
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #ececf2);
+  border-radius: var(--dam-radius-md, 12px);
+  box-shadow: var(--dam-shadow);
+  padding: 12px 14px;
+}
 /* === /PANELS === */

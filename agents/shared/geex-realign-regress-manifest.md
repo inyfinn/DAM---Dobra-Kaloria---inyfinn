@@ -10,7 +10,7 @@ PNG lokalnie: `apps/web/_qa/geex-realign-baseline/phase{N}/` (gitignore).
 | 3 | `geex-phase3` @ `7c9d346` | phase0 / phase2 | PASS 3 cykle | Buttons: radius 18, pad 15×25, icon 44×44, actions gap 10; secondary hover no pure white. PNG: `geex-f3-buttons-390/1440.png` (notes-faza3). Risk: `dam-brand.css` after primitives may override pills. |
 | 4 | `geex-phase4` @ `3ee60bf` | phase0 / phase2 | PASS 3 cykle | Badges MASTER radius 14 + `--dam-badge-scale`; scale kills branding/brand. PNG under `phase4/`. Residual: host Emulation ~765; brand.css `999px` later — F7 thin. |
 | 5a | `geex-phase5a` (pending tag) | phase0 | PASS structure | PANELS fill: panel/bento/modal/sidebar radius+pad+gap+bg/shadow tokens only; no reveal props. `?v=geexJoin20260721a`. |
-| 5b | | phase5a | | |
+| 5b | `geex-phase5b` | phase5a | PASS | Popover surfaces only; IO ratio>0 + opacity 1 after reveal (index/viz/branding). |
 | 6 | | phase0 | | |
 | 7 | | phase0 | | |
 | 8 | | phase0 | | |
