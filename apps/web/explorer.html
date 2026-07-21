@@ -2,6 +2,7 @@
 <html lang="en" dir="ltr" class="dam-booting">
 
 <head>
+  <script>(function(){try{var r=document.documentElement,p=localStorage.getItem('dam_theme_pref')||localStorage.getItem('theme')||'light',t=p;if(p==='system'){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t!=='dark'&&t!=='light')t='light';r.setAttribute('data-theme',t);r.style.colorScheme=t;if(p==='system'||p==='dark'||p==='light')r.setAttribute('data-dam-theme-pref',p);}catch(e){}})();</script>
   <style id="dam-shell-boot-critical">
 html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
   </style>
@@ -30,11 +31,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	
     <script>
 		// Render localStorage JS:
-		if (localStorage.theme) document.documentElement.setAttribute("data-theme", localStorage.theme);
+		(function(){try{var r=document.documentElement,p=localStorage.getItem('dam_theme_pref')||localStorage.getItem('theme')||'light',t=p;if(p==='system'){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t!=='dark'&&t!=='light')t='light';r.setAttribute('data-theme',t);r.style.colorScheme=t;if(p==='system'||p==='dark'||p==='light')r.setAttribute('data-dam-theme-pref',p);}catch(e){}})();
 		if (localStorage.layout) document.documentElement.setAttribute("data-nav", localStorage.navbar);
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
-<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=geexF220260721a">
+<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=geexF620260721a">
 <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=geexF5b20260721a">
 <link rel="stylesheet" href="./assets/css/dam-app.css?v=pagesub20260721b">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=geexF3tut20260721a">
@@ -2299,7 +2300,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<script src="./assets/js/dam-i18n.js?v=studiofix20260721e"></script>
 	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
 	<script src="./assets/js/dam-version.js?v=3.1.0"></script>
-	<script src="./assets/js/dam-shell.js?v=ship20260721v310"></script>
+	<script src="./assets/js/dam-shell.js?v=geexF620260721a"></script>
 	<script src="./assets/js/dam-search.js?v=viztb20260720d"></script>
 	<script src="./assets/js/dam-tag-bar.js?v=hub20260719j12"></script>
 	<script src="./assets/js/dam-labels.js?v=langAdj20260721b"></script>

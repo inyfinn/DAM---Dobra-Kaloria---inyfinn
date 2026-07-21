@@ -4,6 +4,10 @@
  * Geex realign F2 (2026-07-21): draft ≤20 z audit; nowe tylko z konsumentem w primitives/docs.
  */
 :root {
+  color-scheme: light;
+  /* Early paint anti white-flash (before body CSS) */
+  background-color: var(--dam-surface-muted, #f5f6fa);
+
   /* Marka */
   --dam-brand-green: #008244;
   --dam-primary: #AB54DB;
@@ -94,6 +98,9 @@
 }
 
 html[data-theme="dark"] {
+  color-scheme: dark;
+  background-color: var(--dam-surface-muted, #17161e);
+
   --dam-surface: #201f28;
   --dam-surface-muted: #17161e;
   --dam-border: #2c2b36;

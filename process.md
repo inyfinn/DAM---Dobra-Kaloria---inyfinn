@@ -1,4 +1,19 @@
 ﻿
+## 2026-07-21 19:45 - Geex realign Faza 6 DONE (dark bridge / white-flash top3)
+
+**Komenda/Akcja:** Lead — DamTheme path + top3 anti white-flash.
+
+**Top3 fix:**
+1. Early head bridge (pref+system+colorScheme) before CSS on hot pages.
+2. `dam-tokens.css`: `color-scheme` + html background light/dark.
+3. `DamTheme.apply` + shell softThemeBoot set `style.colorScheme`.
+
+**CDP dark:** htmlLum 25 / bodyLum 15 / sideLum 34 — `darkOk=true`.
+
+**Handoff:** tag `geex-phase6`. Next Faza 7 thin brand duplicates.
+
+---
+
 ## 2026-07-21 19:35 - Geex realign Faza 5b DONE (popover surfaces + §7)
 
 **Komenda/Akcja:** Lead — 1 change = popover surface tokens; §7 quote + CDP IO.
@@ -8289,6 +8304,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Test/Ewaluacja:** node --check; CDP hitDalej=.dam-tut__btn--next, ctrlT~684, is-ready, rootOp=1; finish path; screenshot+Read tutorial-projekty-faza5-bar.png.
 
 **Zrodla:** dam-tutorial.js, index.html (+CSS link), _qa/_bump_tutorial_projects_fix.py, code-doctrine §12
+
 
 
 
