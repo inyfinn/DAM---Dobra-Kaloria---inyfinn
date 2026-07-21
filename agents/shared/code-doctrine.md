@@ -340,6 +340,20 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
 
+- 2026-07-21 | preview onerror ≠ Synology | tooltip "Synology Drive / brak sync"
+  na kazdym padnietym `<img>` | onerror mylony z cloud-only | onerror = "Podglad
+  niedostepny"; stan `online_only` TYLKO z `GET /file-availability` +
+  `DamPreviewTruth`. Legalne Synology Share zostaje.
+- 2026-07-21 | Redis optional + circuit breaker | connection refused / Docker down
+  nie moze spowalniac UI probe'ami na kazdy request | po 3 bledach OPEN = pelny
+  bypass; background probe ~12s; HALF-OPEN jedna proba; fallback matrix:
+  avail=RAM/recompute, thumb meta=disk PAMIEC SoT, dry-run=RAM, warm=no-op/sync.
+  Docker Desktop opcjonalny.
+- 2026-07-21 | ELEMENTY preview 404 | panel Elementy: same "podglad niedostepny"
+  mimo plikow na X: | branding-index trzyma stara nazwe rewizji (bez `PL EN`),
+  dysk ma folder po rename jezykow; `/media` 404 => fallback | most musi fuzzy
+  resolve sibling revision po indeksie 7-cyfrowym (`_resolve_missing_media_path`);
+  fallback w thumb NIE duplikuje nazwy/ID (sa pod kafelkiem).
 - 2026-07-21 | branding thumb overflow | `--dam-viz-img-scale: 1.2` mimo
   `CARD_IMG_BASE_SCALE=1` w dam-branding.js; img rect 272px vs thumb 255px |
   `applyBrandingCardZoom` early-return do `DamCardZoom.apply` (media-preview),
@@ -364,6 +378,12 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
 - 2026-07-21 | inject CSS string concat | style toast nie mial border mimo reguly w
   zrodle | `s.textContent = a + /* komentarz JS */ + b` daje `a + (+b)` = `a + NaN`
   i psuje CSS | nie wstawiaj JS-comment miedzy operandami `+` w lancuchu CSS.
+- 2026-07-21 | FORCE confirm modal cramped | `#damExplorerConfirmModal` zostawal
+  520px / bez limitu wysokosci mimo reguly 70vw×90vh | ten sam bug `+ /* */ +`
+  w `ensureExplorerCtaUnifyCss` produkował selektor `nan#damExplorerConfirmModal…`
+  | komentarz JS NIGDY między `+` w CSS stringu; override
+  `.dam-basepath-box.dam-explorer-confirm-modal` z `!important` na width/height;
+  panel = flex column, scroll w `__body`.
 - 2026-07-21 | branding `#damMediaPreview` dead white above actions | hero ~273px,
   actions sticky przy dnie z ogromna bielia nad CTAs | non-split body mial
   `flex: 1 1 auto` (dam-viz-modal.css) i kradl wysokosc thumbowi; sticky actions
@@ -986,3 +1006,16 @@ evealSequence fade uzywa opacity nie utoAlpha; po
 - **Zasada:** dla tytułów kart używaj
   `html[data-theme="dark"] .dam-viz-card .dam-viz-card__title` (albo równoważny
   bump specificity). Powierzchnie filtrów/kart: `#fff` → `var(--dam-surface)`.
+
+### 2026-07-21 - ELEMENTY PNG czarne matte != CSS
+
+- **Objaw:** miniatury w `.dam-media-preview__elementy-panel` maja czarne tlo mimo "przezroczystego PNG".
+- **Przyczyna:** eksporty AI/resizer zapisuja palette PNG **bez alpha** z wypalonym czarnym matte (rogi 0,0,0,255). CSS jasny nie pomaga — czarnosc jest w pikselach.
+- **Zasada:** most `/media` dla path ELEMENTY (lub `?matte=1`) robi dematte Pillow (RGB<=20 -> alpha=0), zwraca PNG z alpha; UI daje checkerboard. Nie nadpisuj plikow na X:. Pliki z prawdziwym tRNS (np. Liscie) pomijaj dematte.
+
+### 2026-07-21 - Assoc/Elementy split + checker tylko w modalu
+
+- **Objaw:** puste `#damVizModalAssoc` zajmowalo ~cale assoc-pane; Elementy w `max-height:min(240px,32vh)`.
+- **Zasada:** wrap grid+host w `.dam-assoc-pane-split` + suwak 44px; default 60/40 gdy sa materialy, 20/80 gdy empty; persist `localStorage["dam-assoc-elementy-split:"+product_id]`. W splocie `elementy-panel` ma `max-height:none`.
+- **Checkerboard:** tylko `.dam-media-preview__assoc-thumb` / Elementy — NIE `.dam-viz-thumb__img` na kartach `#vizGrid` (tam plain `#fff`).
+

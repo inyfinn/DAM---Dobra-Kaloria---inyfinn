@@ -1,8 +1,170 @@
 {
-  "version": 14,
+  "version": 15,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-21T18:30:00+02:00",
+  "updated_at": "2026-07-21T23:10:00+02:00",
   "instructions": [
+    {
+      "id": "preview.file_state.local",
+      "must": [
+        "Stan local = bajty pliku dostepne lokalnie; UI pokazuje podglad bez ostrzezenia Synology",
+        "sync_pending (recall w toku) traktuj jak local w UI (treat_as_local=true)"
+      ],
+      "body_pl": "HARD 2026-07-21: stany dostepnosci pliku z mostu GET /file-availability.",
+      "category": "preview",
+      "must_not": [
+        "Pokazywac 'Synology Drive / brak sync' gdy plik jest local lub sync_pending"
+      ],
+      "priority": "critical",
+      "title_pl": "Preview: stan local / sync_pending",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/desktop/dam_file_availability.py",
+        "apps/web/assets/js/dam-preview-truth.js"
+      ]
+    },
+    {
+      "id": "preview.file_state.online_only",
+      "must": [
+        "Etykieta PL: 'Element z dysku dostepny tylko online - Synology' (bez em-dash)",
+        "Nie mylic z legalnym Synology Share / Uzyskaj lacze"
+      ],
+      "body_pl": "HARD: online_only = cloud-only / recall timeout. To nie jest blad onerror obrazka.",
+      "category": "preview",
+      "must_not": [
+        "Uzywac tekstu 'Synology Drive / brak sync' jako uniwersalnego fallbacku onerror"
+      ],
+      "priority": "critical",
+      "title_pl": "Preview: online_only label",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/desktop/dam_file_availability.py",
+        "apps/web/assets/js/dam-preview-truth.js"
+      ]
+    },
+    {
+      "id": "preview.file_state.missing_root",
+      "must": [
+        "Gdy Marketing root unset: CTA do settings.html#damDisk",
+        "Stan root_unset / missing z jasna etykieta PL"
+      ],
+      "body_pl": "Brak sciezki Marketing na urzadzeniu nie jest awaria Synology.",
+      "category": "preview",
+      "must_not": [
+        "Obwinianie Synology gdy user nie ustawil sciezki dysku"
+      ],
+      "priority": "high",
+      "title_pl": "Preview: root unset CTA",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-preview-truth.js",
+        "apps/web/assets/js/dam-device-paths.js"
+      ]
+    },
+    {
+      "id": "preview.cache.disk",
+      "must": [
+        "Miniatury dyskowe tylko w {repo}/PAMIEC-PODRECZNA na D: (DAM_CACHE_ROOT override)",
+        "Nigdy nie zapisywac cache na X:/Marketing ani M:/",
+        "AVIF preferowane (~q35), JPEG fallback"
+      ],
+      "body_pl": "Disk SoT dla thumb-cache; Redis tylko przyspiesza metadata.",
+      "category": "preview",
+      "must_not": [
+        "Kasowac assetow Marketing przy budowie miniatur",
+        "Commitowac binariow .avif/.jpg z PAMIEC-PODRECZNA"
+      ],
+      "priority": "critical",
+      "title_pl": "Preview cache: PAMIEC-PODRECZNA na D:",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/desktop/dam_thumb_cache.py",
+        "PAMIEC-PODRECZNA/README.md"
+      ]
+    },
+    {
+      "id": "preview.cache.redis",
+      "must": [
+        "Redis opcjonalny (Docker nie wymagany do UI); DAM_REDIS_URL default redis://127.0.0.1:6379/0",
+        "Circuit breaker: po 3 bledach OPEN = pelny bypass Redis (zero connect per HTTP request)",
+        "Background probe co ~12s; HALF-OPEN jedna proba; sukces = CLOSED bez restartu mostu",
+        "Fallback matrix: avail=RAM/recompute; thumb meta=disk SoT; dry-run FORCE=RAM; warm=no-op/sync"
+      ],
+      "body_pl": "HARD 2026-07-21: production circuit breaker + explicite fallback per rola. Redis down/OPEN nie crashuje UI.",
+      "category": "preview",
+      "must_not": [
+        "Probowa connect Redis na kazdym requescie gdy circuit OPEN",
+        "Udawac ze RAM fallback przezywa restart mostu dla rol wymagajacych trwalosci (thumbs = dysk)"
+      ],
+      "priority": "critical",
+      "title_pl": "Redis: circuit breaker + fallback matrix",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/desktop/dam_redis.py",
+        "apps/desktop/docker-compose.redis.yml",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "paths.topology.device_scoped",
+      "must": [
+        "Resolve Marketing: user-device-paths current + MARKETING_CANDIDATES + machine-config",
+        "Uzywac dam_path_resolve / resolve_base_path_for_current_device - bez hardcodu jednego dysku"
+      ],
+      "body_pl": "Sciezki per urzadzenie; thumb key = marketing_relative + mtime + profile.",
+      "category": "paths",
+      "must_not": [
+        "Zakladac ze zawsze X:\\Marketing na kazdym PC"
+      ],
+      "priority": "critical",
+      "title_pl": "Paths: topologia device-scoped",
+      "related_kv": [
+        "program-instructions",
+        "user-device-paths"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/desktop/dam_path_resolve.py",
+        "apps/web/assets/js/dam-device-paths.js"
+      ]
+    },
+    {
+      "id": "preview.onerror_not_synology",
+      "must": [
+        "onerror miniatury = 'Podglad niedostepny' / brak podgladu - bez 'Synology Drive / brak sync'",
+        "Prawdziwy online_only tylko z GET /file-availability (DamPreviewTruth)"
+      ],
+      "body_pl": "HARD: fałszywy tooltip Synology na onerror usuniety. Legalne Synology Share zostaje.",
+      "category": "preview",
+      "must_not": [
+        "Wstawiac 'Synology Drive / brak sync' w title/aria onerror obrazka"
+      ],
+      "priority": "critical",
+      "title_pl": "Preview: onerror != Synology lie",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-preview-truth.js"
+      ]
+    },
     {
       "id": "ui.branding_grid_graphics_sort_overflow",
       "must": [

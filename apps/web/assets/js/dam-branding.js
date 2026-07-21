@@ -220,6 +220,17 @@
   }
 
   function mediaUrl(path, asset) {
+    var ext = ((path || "").split(".").pop() || "").toLowerCase();
+    var mt = (asset && asset.media_type) || "";
+    if (
+      mt !== "video" &&
+      path &&
+      window.DamPreviewTruth &&
+      typeof DamPreviewTruth.thumbCacheUrl === "function" &&
+      /^(png|jpe?g|webp|gif|tif|tiff|bmp)$/i.test(ext)
+    ) {
+      return DamPreviewTruth.thumbCacheUrl(path, "card");
+    }
     if (window.DamMediaPreview && typeof window.DamMediaPreview.previewUrl === "function") {
       return window.DamMediaPreview.previewUrl(path, asset);
     }
@@ -2444,7 +2455,9 @@
       wrap.className = "dam-viz-thumb__noviz dam-branding-thumb__icon dam-branding-thumb__icon--nosync";
       wrap.setAttribute("role", "img");
       wrap.setAttribute("aria-label", "Podglad niedostepny: " + label);
-      wrap.title = "Podglad niedostepny (Synology Drive / brak sync)";
+      wrap.title =
+        (window.DamPreviewTruth && DamPreviewTruth.onErrorTitle()) ||
+        "Podglad niedostepny";
       wrap.innerHTML =
         '<i class="uil uil-cloud-slash" aria-hidden="true"></i>' +
         "<span>Podglad niedostepny</span>" +
@@ -4167,6 +4180,9 @@
     try {
       localStorage.setItem(CARD_ZOOM_KEY, String(n));
     } catch (e) {}
+    if (window.DamUserPrefs && typeof DamUserPrefs.setCardZoom === "function") {
+      DamUserPrefs.setCardZoom(n, true).catch(function () {});
+    }
     return n;
   }
 
@@ -4174,9 +4190,17 @@
     var input = document.getElementById("damBrandingCardZoom");
     if (!input || input._damZoomBound) return;
     input._damZoomBound = true;
-    var saved = parseInt(localStorage.getItem(CARD_ZOOM_KEY) || "100", 10);
+    var saved =
+      window.DamUserPrefs && typeof DamUserPrefs.getCardZoom === "function"
+        ? DamUserPrefs.getCardZoom()
+        : parseInt(localStorage.getItem(CARD_ZOOM_KEY) || "100", 10);
     if (isNaN(saved)) saved = 100;
     applyBrandingCardZoom(saved);
+    if (window.DamUserPrefs && typeof DamUserPrefs.load === "function") {
+      DamUserPrefs.load().then(function (prefs) {
+        if (prefs && prefs.card_zoom != null) applyBrandingCardZoom(prefs.card_zoom);
+      });
+    }
     input.addEventListener("input", function () {
       applyBrandingCardZoom(this.value);
     });

@@ -58,6 +58,21 @@ data/postgres/*.log
 apps/web/data/thumbs/
 apps/web/data/audit-log.jsonl
 
+# PAMIEC-PODRECZNA — disk thumb cache on D: (binaries never in git; keep README)
+PAMIEC-PODRECZNA/**
+!PAMIEC-PODRECZNA/README.md
+!PAMIEC-PODRECZNA/.gitkeep
+*.avif
+
+# PAMIEC-PODRECZNA - disk AVIF/JPEG thumbs (D: only; NEVER under X:/ or M:/)
+PAMIEC-PODRECZNA/thumbs/
+PAMIEC-PODRECZNA/**/*.avif
+PAMIEC-PODRECZNA/**/*.jpg
+PAMIEC-PODRECZNA/**/*.jpeg
+PAMIEC-PODRECZNA/**/*.webp
+!PAMIEC-PODRECZNA/README.md
+!PAMIEC-PODRECZNA/.gitkeep
+
 # Geex logo backups / local only
 *.geex-backup.svg
 

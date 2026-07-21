@@ -107,10 +107,30 @@ try:
 except ImportError:
     invoice_erp_mod = None  # type: ignore
 
+try:
+    import dam_redis
+except ImportError:
+    dam_redis = None  # type: ignore
+
+try:
+    import dam_path_resolve as dam_path_resolve_mod
+except ImportError:
+    dam_path_resolve_mod = None  # type: ignore
+
+try:
+    import dam_file_availability as dam_file_availability_mod
+except ImportError:
+    dam_file_availability_mod = None  # type: ignore
+
+try:
+    import dam_thumb_cache as dam_thumb_cache_mod
+except ImportError:
+    dam_thumb_cache_mod = None  # type: ignore
+
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
-BRIDGE_API_VERSION = 5
+BRIDGE_API_VERSION = 6
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
@@ -1081,6 +1101,14 @@ def resolve_base_path_for_current_device(email: str) -> dict:
 USER_PREFS_DEFAULTS = {
     "safe_delete": True,
     "branding_page_size": 100,
+    "card_zoom": 100,
+    "assoc_split": {},
+    "explorer_show_all": False,
+    "explorer_lang_filter": "",
+    "explorer_viz_view": "tiles",
+    "explorer_viz_scale": 140,
+    "reveal_low_tags": False,
+    "sidebar_collapsed": False,
 }
 
 
@@ -1123,14 +1151,70 @@ def _uprefs_clamp_page_size(value) -> int:
     return n
 
 
+def _uprefs_clamp_card_zoom(value) -> int:
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        n = int(USER_PREFS_DEFAULTS["card_zoom"])
+    if n < 70:
+        n = 70
+    if n > 160:
+        n = 160
+    return n
+
+
+def _uprefs_clamp_viz_scale(value) -> int:
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        n = int(USER_PREFS_DEFAULTS["explorer_viz_scale"])
+    if n < 80:
+        n = 80
+    if n > 220:
+        n = 220
+    return n
+
+
+def _uprefs_normalize_assoc_split(raw) -> dict:
+    out: dict = {}
+    if not isinstance(raw, dict):
+        return out
+    for key, val in raw.items():
+        try:
+            n = float(val)
+        except (TypeError, ValueError):
+            continue
+        if 0.2 <= n <= 0.8:
+            out[str(key)] = round(n, 3)
+    return out
+
+
 def _uprefs_normalize(raw) -> dict:
     prefs = dict(USER_PREFS_DEFAULTS)
+    prefs["assoc_split"] = {}
     if not isinstance(raw, dict):
         return prefs
     if "safe_delete" in raw:
         prefs["safe_delete"] = bool(raw.get("safe_delete"))
     if "branding_page_size" in raw:
         prefs["branding_page_size"] = _uprefs_clamp_page_size(raw.get("branding_page_size"))
+    if "card_zoom" in raw:
+        prefs["card_zoom"] = _uprefs_clamp_card_zoom(raw.get("card_zoom"))
+    if "assoc_split" in raw:
+        prefs["assoc_split"] = _uprefs_normalize_assoc_split(raw.get("assoc_split"))
+    if "explorer_show_all" in raw:
+        prefs["explorer_show_all"] = bool(raw.get("explorer_show_all"))
+    if "explorer_lang_filter" in raw:
+        prefs["explorer_lang_filter"] = str(raw.get("explorer_lang_filter") or "")
+    if "explorer_viz_view" in raw:
+        vv = str(raw.get("explorer_viz_view") or "tiles")
+        prefs["explorer_viz_view"] = "list" if vv == "list" else "tiles"
+    if "explorer_viz_scale" in raw:
+        prefs["explorer_viz_scale"] = _uprefs_clamp_viz_scale(raw.get("explorer_viz_scale"))
+    if "reveal_low_tags" in raw:
+        prefs["reveal_low_tags"] = bool(raw.get("reveal_low_tags"))
+    if "sidebar_collapsed" in raw:
+        prefs["sidebar_collapsed"] = bool(raw.get("sidebar_collapsed"))
     return prefs
 
 
@@ -1181,12 +1265,14 @@ def write_user_prefs(email: str, prefs_patch: dict | None) -> dict:
     current = read_user_prefs(key_email)
     merged = _uprefs_normalize(current.get("prefs"))
     if isinstance(prefs_patch, dict):
-        if "safe_delete" in prefs_patch:
-            merged["safe_delete"] = bool(prefs_patch.get("safe_delete"))
-        if "branding_page_size" in prefs_patch:
-            merged["branding_page_size"] = _uprefs_clamp_page_size(
-                prefs_patch.get("branding_page_size")
+        # Full normalize of patch fields (incl. card_zoom / assoc_split / explorer_*)
+        patch_norm = _uprefs_normalize({**merged, **prefs_patch})
+        if "assoc_split" in prefs_patch and isinstance(prefs_patch.get("assoc_split"), dict):
+            # Merge assoc_split maps (per-product ratios) instead of replace-all wipe
+            patch_norm["assoc_split"] = _uprefs_normalize_assoc_split(
+                {**(merged.get("assoc_split") or {}), **(prefs_patch.get("assoc_split") or {})}
             )
+        merged = patch_norm
     payload = {
         "email": key_email,
         "prefs": merged,
@@ -1363,6 +1449,13 @@ _INDEX_RE = re.compile(r"^(FOL\d+|\d{5,9})(\.\d{2})?$", re.IGNORECASE)
 
 
 def _is_under_marketing(path: Path) -> bool:
+    if dam_path_resolve_mod is not None:
+        return dam_path_resolve_mod.is_under_marketing(
+            path,
+            resolve_base_path=resolve_base_path_for_current_device,
+            marketing_candidates=MARKETING_CANDIDATES,
+            machine_config_path=MACHINE_CONFIG,
+        )
     try:
         resolved = path.resolve()
     except OSError:
@@ -5068,7 +5161,16 @@ _MEDIA_VIDEO_MAX_BYTES = 512 * 1024 * 1024  # 512 MB - wideo streamowane z Range
 
 
 _PREVIEW_RASTER_EXT = {".tif", ".tiff", ".psd", ".psb", ".bmp"}
+_PREVIEW_ALPHA_EXT = {".png", ".webp"}
 _VIDEO_EXT = {".mp4", ".mov", ".webm", ".avi", ".mkv", ".m4v"}
+_MATTE_PNG_CACHE: dict[str, tuple[float, int, bytes]] = {}
+_MATTE_PNG_CACHE_MAX = 64
+
+
+def _path_is_elementy_folder(path: str) -> bool:
+    """True gdy plik lezy w folderze ELEMENTY (case-insensitive)."""
+    n = (path or "").replace("/", "\\").lower()
+    return "\\elementy\\" in n or n.rstrip("\\").endswith("\\elementy")
 
 
 def _image_to_jpeg_bytes(im) -> bytes:
@@ -5094,6 +5196,64 @@ def _image_to_jpeg_bytes(im) -> bytes:
     return buf.getvalue()
 
 
+def _rgba_sample_has_transparency(rgba, *, alpha_threshold: int = 128, min_ratio: float = 0.01) -> bool:
+    """Szybki sampling: czy obraz ma juz prawdziwa przezroczystosc."""
+    w, h = rgba.size
+    step = max(1, min(w, h) // 80)
+    total = 0
+    transparent = 0
+    px = rgba.load()
+    for y in range(0, h, step):
+        for x in range(0, w, step):
+            total += 1
+            if px[x, y][3] < alpha_threshold:
+                transparent += 1
+    return bool(total and (transparent / total) >= min_ratio)
+
+
+def _dematte_black_to_alpha(im, *, thr: int = 20):
+    """ELEMENTY/AI export: czarne matte (opaque RGB ~0) -> alpha=0.
+
+    Nie rusza plikow z prawdziwym alpha (np. Liście z tRNS).
+    Nie zapisuje na dysk - tylko podglad w pamieci.
+    """
+    rgba = im.convert("RGBA") if im.mode != "RGBA" else im.copy()
+    if _rgba_sample_has_transparency(rgba):
+        return rgba
+    w, h = rgba.size
+    if w < 2 or h < 2:
+        return rgba
+    px = rgba.load()
+    corners = (px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1])
+    if not all(max(c[0], c[1], c[2]) <= thr and c[3] > 200 for c in corners):
+        return rgba
+    out = rgba.copy()
+    opx = out.load()
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = opx[x, y]
+            if a > 0 and r <= thr and g <= thr and b <= thr:
+                opx[x, y] = (r, g, b, 0)
+    return out
+
+
+def _image_to_png_preview_bytes(im, *, dematte: bool = True) -> bytes:
+    """PNG/WebP preview: zachowaj alpha; opcjonalnie zdejmij czarne matte; downscale."""
+    import io
+
+    from PIL import Image  # type: ignore
+
+    rgba = _dematte_black_to_alpha(im) if dematte else (
+        im.convert("RGBA") if im.mode != "RGBA" else im.copy()
+    )
+    max_side = 1600
+    if max(rgba.size) > max_side:
+        rgba.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+    buf = io.BytesIO()
+    rgba.save(buf, format="PNG", optimize=True)
+    return buf.getvalue()
+
+
 def _media_preview_jpeg(target: str) -> tuple[int, bytes, str] | None:
     """Konwersja TIFF/PSD/PSB/BMP do JPEG pod podglad w przegladarce."""
     ext = Path(target).suffix.lower()
@@ -5116,6 +5276,35 @@ def _media_preview_jpeg(target: str) -> tuple[int, bytes, str] | None:
         if im is None:
             return None
         return 200, _image_to_jpeg_bytes(im), "image/jpeg"
+    except Exception:
+        return None
+
+
+def _media_preview_png(target: str, *, dematte: bool = True) -> tuple[int, bytes, str] | None:
+    """PNG/WebP preview z alpha (dematte czarnego matte z eksportow ELEMENTY)."""
+    ext = Path(target).suffix.lower()
+    if ext not in _PREVIEW_ALPHA_EXT:
+        return None
+    try:
+        mtime = os.path.getmtime(target)
+        size = os.path.getsize(target)
+        cache_key = f"{target}|{int(mtime)}|{size}|dematte={int(dematte)}"
+        hit = _MATTE_PNG_CACHE.get(cache_key)
+        if hit and hit[0] == mtime and hit[1] == size:
+            return 200, hit[2], "image/png"
+        from PIL import Image  # type: ignore
+
+        with Image.open(target) as pil_im:
+            im = pil_im.copy()
+        body = _image_to_png_preview_bytes(im, dematte=dematte)
+        if len(_MATTE_PNG_CACHE) >= _MATTE_PNG_CACHE_MAX:
+            # FIFO-ish: drop arbitrary oldest key
+            try:
+                _MATTE_PNG_CACHE.pop(next(iter(_MATTE_PNG_CACHE)))
+            except StopIteration:
+                pass
+        _MATTE_PNG_CACHE[cache_key] = (mtime, size, body)
+        return 200, body, "image/png"
     except Exception:
         return None
 
@@ -5215,9 +5404,169 @@ def _media_video_poster(target: str) -> tuple[int, bytes, str] | None:
     return None
 
 
-def serve_media(path: str, preview: bool = False) -> tuple[int, bytes, str]:
-    """Zwraca (code, body, content_type). Dla wideo preferuj serve_media_range."""
+_MEDIA_PATH_INDEX_RE = re.compile(r"(?<!\d)(\d{7})(?:\.\d{2})?(?!\d)")
+_MEDIA_REV_HINT_RE = re.compile(
+    r"(KAR|MINI|MIX|FOL|\d{2}[.\s/-]\d{2}[.\s/-]\d{2,4})",
+    re.IGNORECASE,
+)
+
+
+def _resolve_missing_media_path(raw: str) -> str | None:
+    """Gdy sciezka z indeksu jest nieaktualna (np. rewizja dostala 'PL EN'), znajdz plik na dysku.
+
+    Typowy drift: index ma `KAR6X - 20.05.2026 - 6300785.00 - F`, dysk ma
+    `KAR6X - 20.05.2026  - PL EN - 6300785.00 - F`. Szukamy siblinga rewizji
+    z tym samym indeksem i tym samym ogonem (ELEMENTY/Links/...).
+    """
+    if not raw:
+        return None
+    target = Path(normalize_path(raw))
+    try:
+        if target.is_file():
+            return str(target)
+    except OSError:
+        pass
+
+    parts = list(target.parts)
+    if len(parts) < 3:
+        return None
+
+    rev_i = None
+    index = None
+    for i, part in enumerate(parts):
+        m = _MEDIA_PATH_INDEX_RE.search(part)
+        if not m:
+            continue
+        if _MEDIA_REV_HINT_RE.search(part) or (i + 1 < len(parts) and parts[i + 1][:1].isdigit()):
+            rev_i = i
+            index = m.group(1)
+            # prefer deepest revision-like segment
+    if rev_i is None:
+        # fallback: last segment containing 7-digit index that is not the filename
+        for i in range(len(parts) - 2, 0, -1):
+            m = _MEDIA_PATH_INDEX_RE.search(parts[i])
+            if m:
+                rev_i = i
+                index = m.group(1)
+                break
+    if rev_i is None or rev_i < 1:
+        return None
+
+    product_dir = Path(*parts[:rev_i])
+    try:
+        if not product_dir.is_dir():
+            # climb to first existing ancestor (max 4 levels)
+            cur = product_dir
+            found = None
+            for _ in range(4):
+                if cur.parent == cur:
+                    break
+                cur = cur.parent
+                try:
+                    if cur.is_dir():
+                        found = cur
+                        break
+                except OSError:
+                    break
+            if found is None:
+                return None
+            product_dir = found
+    except OSError:
+        return None
+
+    tail_parts = parts[rev_i + 1 :]
+    if not tail_parts:
+        return None
+    filename = parts[-1]
+    old_rev = parts[rev_i]
+    carrier = (old_rev.split(" - ")[0] or "").strip().lower()
+
+    try:
+        siblings = [p for p in product_dir.iterdir() if p.is_dir()]
+    except OSError:
+        return None
+
+    ranked: list[tuple[int, Path]] = []
+    for sib in siblings:
+        score = 0
+        name_l = sib.name.lower()
+        if index and index in sib.name:
+            score += 10
+        if carrier and carrier in name_l:
+            score += 3
+        if score:
+            ranked.append((score, sib))
+    ranked.sort(key=lambda x: (-x[0], len(x[1].name)))
+
+    slot_fallbacks = (
+        Path("1 - MATERIAŁY") / "ELEMENTY" / filename,
+        Path("1 - MATERIALY") / "ELEMENTY" / filename,
+        Path("2 - PROJEKT") / "Links" / filename,
+        Path("2 - PROJEKT") / "links" / filename,
+    )
+
+    for score, sib in ranked:
+        if index and score < 10:
+            continue
+        if tail_parts:
+            cand = sib.joinpath(*tail_parts)
+            try:
+                if cand.is_file() and _is_under_marketing(cand):
+                    return str(cand)
+            except OSError:
+                pass
+        for sub in slot_fallbacks:
+            cand2 = sib / sub
+            try:
+                if cand2.is_file() and _is_under_marketing(cand2):
+                    return str(cand2)
+            except OSError:
+                pass
+
+    # Last resort: shallow name match under index-matching revisions only
+    for score, sib in ranked:
+        if index and score < 10:
+            continue
+        try:
+            for hit in sib.rglob(filename):
+                try:
+                    if hit.is_file() and _is_under_marketing(hit):
+                        return str(hit)
+                except OSError:
+                    continue
+        except OSError:
+            continue
+    return None
+
+
+def _coerce_media_target(path: str, email: str = "") -> str:
+    """Exact path, device-scoped rebase, or fuzzy resolve when index drifted."""
+    if dam_path_resolve_mod is not None:
+        return dam_path_resolve_mod.resolve_physical_path(
+            path,
+            email,
+            normalize_path=normalize_path,
+            resolve_base_path=resolve_base_path_for_current_device,
+            marketing_candidates=MARKETING_CANDIDATES,
+            machine_config_path=MACHINE_CONFIG,
+            fuzzy_resolve=_resolve_missing_media_path,
+        )
     target = normalize_path(path)
+    try:
+        if os.path.isfile(target):
+            return target
+    except OSError:
+        pass
+    resolved = _resolve_missing_media_path(target)
+    return resolved or target
+
+
+def serve_media(path: str, preview: bool = False, matte: bool = False) -> tuple[int, bytes, str]:
+    """Zwraca (code, body, content_type). Dla wideo preferuj serve_media_range.
+
+    matte/preview dla PNG w folderze ELEMENTY: dematte czarnego tla -> alpha PNG.
+    """
+    target = _coerce_media_target(path)
     if not os.path.isfile(target):
         return 404, b"", "application/json"
     if not _is_under_marketing(Path(target)):
@@ -5239,13 +5588,23 @@ def serve_media(path: str, preview: bool = False) -> tuple[int, bytes, str]:
         ".mkv": "video/x-matroska",
         ".m4v": "video/mp4",
     }.get(ext)
-    if preview:
-        if ext in _PREVIEW_RASTER_EXT:
+    # ELEMENTY PNG: auto-dematte (nawet bez preview=1) — pliki maja czarne matte bez alpha.
+    want_matte = bool(matte) or (
+        ext == ".png" and _path_is_elementy_folder(target)
+    )
+    if preview or want_matte:
+        if preview and ext in _PREVIEW_RASTER_EXT:
             converted = _media_preview_jpeg(target)
             if converted:
                 return converted
             return 422, b"", "application/json"
-        if ext in _VIDEO_EXT:
+        if ext in _PREVIEW_ALPHA_EXT and (preview or want_matte):
+            converted = _media_preview_png(target, dematte=want_matte or preview)
+            if converted:
+                return converted
+            if preview:
+                return 422, b"", "application/json"
+        if preview and ext in _VIDEO_EXT:
             poster = _media_video_poster(target)
             if poster:
                 return poster
@@ -5298,7 +5657,7 @@ def _parse_bytes_range(header: str, size: int) -> tuple[int, int] | None:
 
 def media_meta(path: str) -> dict:
     """Read width/height/mode/colorspace/size for a local image (PIL)."""
-    target = normalize_path(path)
+    target = _coerce_media_target(path)
     if not os.path.isfile(target):
         return {"ok": False, "error": "not_found", "path": target}
     if not _is_under_marketing(Path(target)):
@@ -5467,6 +5826,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(403, {"ok": False, "error": "origin_forbidden"})
             return
         if parsed.path == "/health":
+            redis_info = dam_redis.status() if dam_redis else {"redis": "down", "circuit": "open", "reason": "module_missing"}
             self._json(
                 200,
                 {
@@ -5474,6 +5834,10 @@ class Handler(BaseHTTPRequestHandler):
                     "service": "dam-local-bridge",
                     "port": PORT,
                     "api_version": BRIDGE_API_VERSION,
+                    "redis": redis_info.get("redis") or "down",
+                    "redis_circuit": redis_info.get("circuit") or "open",
+                    "redis_detail": redis_info,
+                    "redis_fallback_matrix": dam_redis.fallback_matrix() if dam_redis else [],
                     "hub_routes": [
                         "/branding-index",
                         "/branding-search-index",
@@ -5495,9 +5859,114 @@ class Handler(BaseHTTPRequestHandler):
                         "/finance/invoices/import",
                         "/finance/invoices/export",
                         "/finance/invoices/erp-status",
+                        "/file-availability",
+                        "/thumb-cache",
+                        "/thumb-cache/warm",
                     ],
                 },
             )
+            return
+        if parsed.path == "/file-availability":
+            # Localhost jail - Bearer optional (img/onerror paths); UDP email when present
+            qs = parse_qs(parsed.query)
+            path = (qs.get("path") or [""])[0]
+            paths_raw = (qs.get("paths") or [""])[0]
+            user = self._session_user()
+            email = str((user or {}).get("email") or "").strip()
+            has_root = None
+            if email:
+                try:
+                    has_root = bool(resolve_base_path_for_current_device(email).get("has_path"))
+                except Exception:
+                    has_root = None
+            elif not resolve_base_path_for_current_device("").get("has_path"):
+                # machine-config may still set base
+                try:
+                    mc = read_machine_config()
+                    has_root = bool((mc.get("base_path") or "").strip()) if isinstance(mc, dict) else None
+                except Exception:
+                    has_root = None
+            if dam_file_availability_mod is None:
+                self._json(500, {"ok": False, "error": "module_missing"})
+                return
+
+            def _resolve(p: str, em: str = "") -> str:
+                return _coerce_media_target(p, em or email)
+
+            if paths_raw:
+                plist = [p.strip() for p in paths_raw.split("|") if p.strip()]
+                self._json(
+                    200,
+                    dam_file_availability_mod.classify_batch(
+                        plist,
+                        email=email,
+                        resolve_physical=_resolve,
+                        has_marketing_root=has_root,
+                    ),
+                )
+                return
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required"})
+                return
+            self._json(
+                200,
+                dam_file_availability_mod.classify_path(
+                    path,
+                    email=email,
+                    resolve_physical=_resolve,
+                    has_marketing_root=has_root,
+                ),
+            )
+            return
+        if parsed.path == "/thumb-cache":
+            qs = parse_qs(parsed.query)
+            path = (qs.get("path") or [""])[0]
+            profile = (qs.get("profile") or ["grid"])[0]
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required"})
+                return
+            if dam_thumb_cache_mod is None:
+                self._json(500, {"ok": False, "error": "module_missing"})
+                return
+            target = _coerce_media_target(path)
+            if not os.path.isfile(target) or not _is_under_marketing(Path(target)):
+                self._json(403 if os.path.isfile(target) else 404, {"ok": False, "error": "path_outside_marketing" if os.path.isfile(target) else "not_found", "path": path})
+                return
+
+            def _resolve(p: str, em: str = "") -> str:
+                return _coerce_media_target(p, em)
+
+            def _rel(p: str, em: str = "") -> str:
+                if dam_path_resolve_mod is None:
+                    return Path(p).name
+                return dam_path_resolve_mod.marketing_relative_key(
+                    p,
+                    email=em,
+                    resolve_base_path=resolve_base_path_for_current_device,
+                    marketing_candidates=MARKETING_CANDIDATES,
+                    machine_config_path=MACHINE_CONFIG,
+                )
+
+            t0 = time.time()
+            code, body, ctype, meta = dam_thumb_cache_mod.get_or_build_thumb(
+                path,
+                profile=profile,
+                resolve_physical=_resolve,
+                marketing_relative=_rel,
+            )
+            meta["ms"] = int((time.time() - t0) * 1000)
+            if code != 200:
+                self._json(code if code in (403, 404, 422) else 404, {"ok": False, "error": meta.get("error") or "thumb_failed", "path": path, **meta})
+                return
+            self.send_response(200)
+            self._cors()
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "private, max-age=86400")
+            self.send_header("X-DAM-Cache-Hit", "1" if meta.get("cache_hit") else "0")
+            self.send_header("X-DAM-Thumb-Ms", str(meta.get("ms") or 0))
+            self.end_headers()
+            self.wfile.write(body)
             return
         if parsed.path == "/detect-marketing-bases":
             # Lokalny most 127.0.0.1 - status dysku bez Bearer (UI pyta przed / bez sesji)
@@ -5638,15 +6107,17 @@ class Handler(BaseHTTPRequestHandler):
             qs = parse_qs(parsed.query)
             path = (qs.get("path") or [""])[0]
             preview = (qs.get("preview") or ["0"])[0].strip().lower() in ("1", "true", "yes")
+            matte = (qs.get("matte") or ["0"])[0].strip().lower() in ("1", "true", "yes")
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
                 return
-            target = normalize_path(path)
+            target = _coerce_media_target(path)
             ext = Path(target).suffix.lower() if target else ""
             range_hdr = self.headers.get("Range") or ""
             # Wideo: Range + stream bez wczytywania calego pliku do RAM
             if (
                 not preview
+                and not matte
                 and ext in _VIDEO_EXT
                 and os.path.isfile(target)
                 and _is_under_marketing(Path(target))
@@ -5703,7 +6174,7 @@ class Handler(BaseHTTPRequestHandler):
                             break
                         self.wfile.write(chunk)
                 return
-            code, body, ctype = serve_media(path, preview=preview)
+            code, body, ctype = serve_media(path, preview=preview, matte=matte)
             if code != 200:
                 err = {
                     403: "path_outside_marketing",
@@ -6091,6 +6562,56 @@ class Handler(BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b"{}"
         parsed = urlparse(self.path)
         content_type = self.headers.get("Content-Type") or ""
+
+        if parsed.path == "/thumb-cache/warm":
+            if not self._origin_ok():
+                self._json(403, {"ok": False, "error": "origin_forbidden"})
+                return
+            if dam_thumb_cache_mod is None:
+                self._json(500, {"ok": False, "error": "module_missing"})
+                return
+            try:
+                data = json.loads(raw.decode("utf-8") or "{}")
+            except json.JSONDecodeError:
+                self._json(400, {"ok": False, "error": "invalid_json"})
+                return
+            paths = data.get("paths") if isinstance(data.get("paths"), list) else []
+            if not paths and data.get("path"):
+                paths = [str(data.get("path"))]
+            paths = [str(p).strip() for p in paths if str(p).strip()]
+            profile = str(data.get("profile") or "grid").strip() or "grid"
+            async_warm = bool(data.get("async"))
+            user = self._session_user()
+            email = str((user or {}).get("email") or "").strip()
+
+            def _resolve(p: str, em: str = "") -> str:
+                return _coerce_media_target(p, em or email)
+
+            def _rel(p: str, em: str = "") -> str:
+                if dam_path_resolve_mod is None:
+                    return Path(p).name
+                return dam_path_resolve_mod.marketing_relative_key(
+                    p,
+                    email=em or email,
+                    resolve_base_path=resolve_base_path_for_current_device,
+                    marketing_candidates=MARKETING_CANDIDATES,
+                    machine_config_path=MACHINE_CONFIG,
+                )
+
+            if async_warm:
+                self._json(200, dam_thumb_cache_mod.enqueue_warm(paths, profile=profile, email=email))
+                return
+            self._json(
+                200,
+                dam_thumb_cache_mod.warm_paths(
+                    paths,
+                    email=email,
+                    profile=profile,
+                    resolve_physical=_resolve,
+                    marketing_relative=_rel,
+                ),
+            )
+            return
 
         if parsed.path in ("/finance/fmcg-import", "/finance/invoices/import"):
             if parsed.path != "/oauth/callback" and not self._origin_ok():
@@ -7371,6 +7892,11 @@ def main() -> None:
         if dam_db is not None:
             print("db:", dam_db.init_db())
         auth_init_db()
+        if dam_redis:
+            try:
+                dam_redis.bootstrap()
+            except Exception as exc:  # noqa: BLE001
+                print("dam_redis.bootstrap warning:", exc)
         seed_owner_from_env()
     except Exception as exc:
         print("auth/db seed:", exc)

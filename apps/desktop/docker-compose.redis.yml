@@ -1,0 +1,21 @@
+# DAM local Redis - metadata TTL, avail cache, thumb index, warm queues.
+# Usage:
+#   docker compose -f apps/desktop/docker-compose.redis.yml up -d
+# Env for bridge:
+#   DAM_REDIS_URL=redis://127.0.0.1:6379/0
+#
+# When Docker/daemon is unavailable, dam_redis.py degrades to process memory.
+
+services:
+  dam-redis:
+    image: redis:7-alpine
+    container_name: dam-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - dam-redis-data:/data
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    restart: unless-stopped
+
+volumes:
+  dam-redis-data:

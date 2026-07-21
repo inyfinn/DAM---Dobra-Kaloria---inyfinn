@@ -8457,3 +8457,199 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Zrodla:** dam-project-catalog.css, dam-brand.css, dam-branding.css, dam-viz-modal.css, dam-dashboard.css, code-doctrine §12, retry_fails.py, process.md
 
+## 2026-07-21 - Elementy panel: stale revision path + duplicate fallback labels
+
+**Komenda/Akcja:** Fix podgladow ELEMENTY w viz/media modal (i wspolnym linkedBrandingCardHtml) - "podglad niedostepny" mimo plikow na X: + overlap/duplikaty etykiet.
+
+**Log/Status:**
+1. RCA preview: branding-index ma stare nazwy rewizji bez tokenu jezykow (`KAR6X - 20.05.2026 - 6300785.00 - F`), dysk ma `KAR6X - 20.05.2026  - PL EN - 6300785.00 - F`. `GET /media?path=` => 404 => onerror fallback. 51/51 ELEMENTY dla ciasto-sliwkowe = missing.
+2. RCA layout: `__damAssocThumbFallback` + static fallback HTML wstawialy nazwe + hint + ID *wewnatrz* 70x70 thumb, a te same dane byly juz pod kafelkiem (assoc-name + ID chip) => wizualny "podwojny" tekst i overlap wierszy.
+3. Fix bridge: `_resolve_missing_media_path` + `_coerce_media_target` w `serve_media` / `/media` / `media_meta` - fuzzy match sibling revision po indeksie 7-cyfrowym + ten sam ogon ELEMENTY/Links.
+4. Fix UI: fallback tylko ikona + "brak podgladu"; CSS elementy-panel gap 14/10; cache-bust `?v=elementyPreviewFix20260721b`.
+5. Restart local_bridge (pythonw) po zmianie.
+
+**Efekt/Fix:** Stale path z indeksu serwuje realny PNG z dysku. Panel Elementy: 1 etykieta + 1 ID pill, miniatury widoczne.
+
+**Test/Ewaluacja:**
+- Bridge: stale index path CIASTO-SLIWKOWE.png => HTTP 200 image/png len 337526.
+- CDP modal CIASTO SLIWKOWE: imgs=40 loaded=40 fallbacks=0 overlap=false rowGap=14 gap=14px 10px; ID `M-IMG251288-07-26`.
+- Screenshot+Read pass1/pass2: real thumbs (ciasto + kwiaty), brak "podglad niedostepny".
+- `node --check` dam-media-preview.js OK; bridge ast.parse OK.
+
+**Zrodla:** local_bridge.py, dam-media-preview.js, explorer/branding/dashboard/visualizations.html (?v=), process.md
+
+
+## 2026-07-21 - ELEMENTY PNG: czarne matte -> alpha (dematte)
+
+**Komenda/Akcja:** Usunac czarne tlo z miniatur PNG w panelu Elementy (viz/media) - transparentne piksele / matte.
+
+**Log/Status:**
+1. RCA: pliki w folderze ELEMENTY to mode P palette BEZ tRNS; rogi RGBA(0,0,0,255) - czarne matte wypalone w pliku (nie CSS). Liscie* maja prawdziwe alpha.
+2. Bridge: `_dematte_black_to_alpha` (thr=20) + auto gdy path zawiera ELEMENTY albo `?matte=1` / `preview=1`; cache in-memory 64; nie zapisuje na dysk.
+3. JS: `previewUrl` dokleja `&matte=1` dla PNG/WebP w folderze ELEMENTY; `&preview=1` dla alpha rasters.
+4. CSS: checkerboard na `.dam-media-preview__assoc-thumb` + override panelu Elementy (light + dark, bez #000).
+5. Cache-bust `?v=pngDematte20260721b`; restart local_bridge.
+
+**Efekt/Fix:** Miniatury Elementy pokazuja checkerboard zamiast czarnego boxa; pliki zrodlowe nietkniete.
+
+**Test/Ewaluacja:**
+- Bridge CIASTO-SLIWKOWE.png `?matte=1`: corner alpha=0, center opaque — PASS.
+- CDP: src zawiera `matte=1` + `preview=1`; getComputedStyle thumb `background-color: rgb(245, 246, 250)` + linear-gradient checker — PASS.
+- Screenshot+Read Elementy (40): CIASTO + KWIAT 1..7 na checkerboard, brak solid black — PASS.
+- `node --check` dam-media-preview.js OK; bridge ast.parse OK.
+
+**Zrodla:** local_bridge.py, dam-media-preview.js, dam-branding.css, dam-brand.css, HTML ?v=, process.md, code-doctrine sekcja 12
+## 2026-07-21 - Incydent FORCE (#damLifecycleForce) + undo + confirm modals
+
+**Komenda/Akcja:** User przypadkowo kliknal Stosuj zmiany; toast "Zapisano 6 zmian, bledow: 18". Zrozumiec, cofnac, dodac potwierdzenia z preview.
+
+**Log/Status:**
+1. Zrodlo: `lifecycle-status.json` history `lc_1784663980167` ts `2026-07-21T19:59:40` actor krzysztof.wieczorek@kubara.pl; count 24 = 6 ok + 18 fail.
+2. FORCE = `POST /lifecycle-force` -> `force_apply_program_to_disk` (PROGRAM -> dysk rename/archiwum).
+3. 18 bledow: wszystkie `path_not_found` (glownie test-lifecycle-* + produkt owies-miod-sniadanie).
+4. 6 "ok":
+   - 4x owies-miod-sniadanie clear: **noop na dysku** (path_renames puste, final=stara sciezka).
+   - ciasto-sliwkowe: rename produktu `CIASTO SLIWKOWE — [ nerkowcowy ]` -> `... - F` (bledny scope: wariant zapisal na folder produktu).
+   - babka-cytrynowa: rename + move do `— ARCHIWUM\BABKA ... - X\BABKA ... - X` (zagniezdzenie w wrapperze archiwum).
+5. Undo: `local_bridge.undo_last_change` x2 (babka, ciasto) + 4 noop owies z change-log; usunieto pusty wrapper ARCHIWUM Babka; wyczyszczono zanieczyszczone klucze revisions w lifecycle-status.
+6. UI: `showExplorerConfirmModal` w dam-explorer.js — FORCE dry_run preview, Odswiez confirm, Export backup confirm. Cache-bust `?v=forceConfirm20260721b`.
+
+**Efekt/Fix:**
+- Dysk: Babka i Ciasto przywrocone bez liter F/X w BATONY; Babka nie w ARCHIWUM.
+- FORCE nie odpala sie bez listy dry-run + czerwonego Stosuj.
+
+**Backup:** change-log undo przeniosl wpisy do `redo[]` (mozna ponowic przez /change-log/redo — NIE robic).
+
+**Test/Ewaluacja:**
+- Disk verify: BABKA active bez -X, CIASTO bez -F, BABKA_ARCH_COUNT=0 — PASS.
+- Screenshot+Read FORCE modal: tytul "Stosuj zmiany na dysk", lista 24, Anuluj / Stosuj (24) — PASS (Anuluj, bez apply).
+- Screenshot Odswiez + Export confirm — PASS.
+- `node --check` dam-explorer.js OK.
+
+**Zrodla:** lifecycle-status.json, change-log.json, lifecycle_status.py, local_bridge.py, dam-explorer.js, explorer.html, process.md
+
+## 2026-07-21 - Assoc/Elementy split + viz white thumbs + branding toolbar
+
+**Komenda/Akcja:** A) resizable split assoc vs elementy; B) white bg na viz card thumbs; C) jedna belka search+tabs branding.
+
+**Log/Status:**
+1. RCA A: assoc grid lex:1 + elementy max-height:min(240px,32vh) - puste skojarzenia zajmowaly cala kolumne, Elementy w waskim pasku.
+2. Fix A: .dam-assoc-pane-split + suwak 44px; ratio 60/40 (oba content), 20/80 (puste assoc); localStorage dam-assoc-elementy-split:{product_id}; osobny scroll top/bottom; CSS w dam-viz-modal.css + inject z JS.
+3. RCA B: checkerboard na globalnym .dam-viz-thumb__img (po dematte ELEMENTY) trafial tez w #vizGrid karty.
+4. Fix B: .dam-viz-thumb__img = #fff / ackground-image:none (dark: surface); checker zostaje na assoc/elementy thumbs.
+5. RCA C: osobne ramki .dam-global-search-block + .dam-branding-tabs-row (~146+72px).
+6. Fix C: tabs + archive switch wewnatrz .dam-search-wrap--branding-chrome; usunieto outer frame / scope-toggles wrapper; panel ~133px.
+7. Cache-bust ?v=assocSplit20260721c.
+
+**Efekt/Fix:** Empty assoc oddaje ~80% Elementom; drag+persist per product; packshoty na bieli; jedna belka branding.
+
+**Test/Ewaluacja:**
+- CIASTO empty: top 20% / bot 76%, splitter 44px, Elementy panel max-height none, H~731 — PASS.
+- Persist: ciasto  .35, babka  .45 osobno; reopen restores — PASS.
+- BABKA both content: topPct 60 / botPct 36 (60/40 default) — PASS.
+- Offscreen media-preview path (renderLinkedAssetsInto): burger/babka splitTop 0.6 — PASS.
+- Viz thumbs CDP: bg rgb(255,255,255), background-image none — PASS.
+- Branding toolbar: tabsInsidePanel, no tabs-row, archDirectChild, panelH 133 — PASS.
+- 
+ode --check dam-media-preview.js OK.
+
+**Zrodla:** dam-media-preview.js, dam-viz-modal.css, dam-brand.css, dam-branding.css, branding.html, dam-tutorial.js, HTML ?v=, process.md
+
+## 2026-07-21 - FORCE kafelki + user-prefs KV
+
+**Komenda/Akcja:** A) Redesign modala FORCE dry-run na kafelki; B) migracja preferencji UI z localStorage do Postgres KV `user-prefs:{email}`.
+
+**Log/Status:**
+1. RCA A: `formatForcePreviewList` = monospace wall (produkt · id + pełne `X:\` + "program chce: clear") — nieczytelne.
+2. Fix A: siatka `.dam-force-tile` (nazwa produktu, badge F/X/D/∅, folder before→after z liter, ikona rename/archive/clear, chevron pełnej ścieżki, chipy Wszystkie/Rename/Archiwum/Clear). CSS inject w `ensureExplorerCtaUnifyCss`. Info-tile dla Odśwież / Export.
+3. RCA B: `DamUserPrefs` trzymał tylko `safe_delete` + `branding_page_size`; zoom/split/filtry explorer żyły w localStorage → "program zapomina" między PC / po czyszczeniu.
+4. Fix B: rozszerzony bridge `_uprefs_normalize` + JS `dam-user-prefs.js` (card_zoom, assoc_split, explorer_*, reveal_low_tags, sidebar_collapsed); migrate once z LS; debounced POST; mirror cache LS.
+5. Restart `local_bridge.py` (nowe pola w normalize). Cache-bust `?v=prefsKv20260721a` / `forceTiles20260721d`.
+
+**Efekt/Fix:** FORCE = czytelne kafelki; preferencje UI → Postgres KV (source=postgres).
+
+**Tabela kluczy (LS → KV `user-prefs:{email}.prefs.*`):**
+| Setting | było LS | teraz KV field |
+|---|---|---|
+| Card zoom | `dam_viz_card_zoom` | `card_zoom` |
+| Assoc/Elementy split | `dam-assoc-elementy-split:{pid}` | `assoc_split.{pid}` |
+| Branding page size | (już KV) + LS cache | `branding_page_size` |
+| Explorer show all | `dam_explorer_show_all` | `explorer_show_all` |
+| Explorer lang filter | `dam_explorer_lang_filter` | `explorer_lang_filter` |
+| Explorer viz view | `dam_viz_view_mode` | `explorer_viz_view` |
+| Explorer viz scale | `dam_viz_scale` | `explorer_viz_scale` |
+| Reveal low tags | `dam_reveal_low_tags` | `reveal_low_tags` |
+| Sidebar collapsed | `dam_sidebar_collapsed` | `sidebar_collapsed` |
+| Safe delete | (już KV) | `safe_delete` |
+
+**Nadal local-only (celowo):** `dam_token`/role/user (sesja auth); `sessionStorage` nav/tutorial cheer; theme (`dam_theme_pref` — device); carrier overrides / elements links / status JSON mirror (dane domenowe, nie UI prefs).
+
+**Test/Ewaluacja:**
+- FORCE: 24 tiles, chipy, `— → F/D/X/∅`, folder `…` → `… - F`, filtr Archiwum=2, pełna ścieżka expand — PASS (screenshot pass 1–5, Anuluj bez apply).
+- Prefs POST: `card_zoom:118`, `explorer_show_all:true`, `source:postgres`, pełny zestaw kluczy — PASS.
+- `node --check`: dam-explorer, dam-user-prefs, dam-media-preview, dam-shell, dam-badges, dam-viz, dam-branding — OK.
+- `ast.parse` local_bridge.py — OK.
+
+**Zrodla:** dam-explorer.js, dam-user-prefs.js, local_bridge.py, dam-media-preview.js, dam-shell.js, dam-badges.js, dam-viz.js, dam-branding.js, HTML ?v=, process.md
+
+
+## 2026-07-21 - FORCE confirm modal redesign (Teraz / Po zmianie)
+
+**Komenda/Akcja:** Intensive QA 10 passes - redesign `#damExplorerConfirmModal` dry-run FORCE preview.
+
+**Design Read:** Admin confirmation modal for destructive disk FORCE; trust-first language, generous whitespace; `dam-int-cta` / `geex-btn` scale - NOT oversized red pills.
+
+### Spacing doctrine (ZAPAMIETAJ)
+- Modal body padding: `24px 28px`
+- Change rows gap: `>= 20px`
+- Inside each Teraz/Po block: `padding: 16px 18px`
+- Section gaps header / filters / list / footer: `16-24px`
+- NEVER pack text tight - human scan, not machine density
+- Content panel: `width: min(70vw, 1200px)`, `height: min(90vh, 900px)`; scroll in `__body` only
+
+**Log/Status:**
+1. RCA cramped modal: `ensureExplorerCtaUnifyCss` had `str + /* comment */ + nextStr` -> unary `+` -> `NaN` selector `nan#damExplorerConfirmModal…` so size rules never applied (stuck at base `.dam-basepath-box` 520px).
+2. Fix: remove dangling `+` after bare comment; panel class `dam-explorer-confirm-modal` flex column; body scroll; before/after 2-col blocks Teraz / Po zmianie (stack `<=768`); accent inset on Po; compact footer CTAs 34px matching toolbar; PL chips; no mid-arrow.
+3. Cache-bust: `explorer.html?v=forceModalRedesign20260721i`.
+
+**Efekt/Fix:** Readable FORCE dry-run with clear Teraz/Po, large panel, toolbar-scale buttons.
+
+**Test/Ewaluacja (CDP @1280):**
+- box `896×810` (=70vw×90vh), bodyPad `24px 28px`, rowGap `20px`, btnH `34` (= `#damLifecycleForce`), cols `1fr 1fr`, no `.dam-force-diff__arrow`
+- 10-pass screenshot+Read: size/hierarchy, before-after, filters (Archiwum/Clear), 768 stack, dark, final lock
+
+**Zrodla:** dam-explorer.js, explorer.html, process.md, agents/shared/code-doctrine.md §12
+
+## 2026-07-21 - Preview cache Redis + circuit breaker + Synology truth (K0-K8)
+
+**Komenda/Akcja:** Plan preview_cache_redis_ec0a7794 v5 - Redis opcjonalny z circuit breaker, PAMIEC-PODRECZNA, path resolve, preview truth UI, QA, commit+push.
+
+**Log/Status:**
+1. K0: Grep 4x Synology lie (media-preview x3, branding x1). Health :8766 OK. Docker CLI jest, daemon DOWN - Redis nie startuje (oczekiwane).
+2. K1: program-instructions v15 - preview.file_state.*, preview.cache.*, preview.cache.redis (circuit+matrix), paths.topology.*, preview.onerror_not_synology. app-settings mirror.
+3. K1r HARD: dam_redis.py CLOSED/OPEN/HALF-OPEN, N=3, cooldown 12s, background probe; connection refused -> OPEN; fallback matrix 4 role; docker-compose.redis.yml; requirements redis; health redis/circuit/matrix. Docker up FAIL (daemon) - degrade OK.
+4. K1b: dam_path_resolve.py + wire _coerce_media_target / _is_under_marketing.
+5. K2: dam_file_availability.py + GET /file-availability; markery probe_wait/probe_done/recall_pending w agents/shared/handoff-preview-cache.md.
+6. K3: dam_thumb_cache.py + PAMIEC-PODRECZNA + GET/POST thumb-cache; AVIF; gitignore binariow.
+7. K4: dam-preview-truth.js; usunieto Synology Drive / brak sync z onerror; thumbs -> /thumb-cache; ?v=previewRedis20260721a.
+8. K5: warm async API; timing cache hit.
+9. K6: doctrine §12; README Redis/circuit; PAMIEC README.
+10. K7 QA (ui-taste):
+    - Pass1 no false Synology title: PASS (lieCount=0, onErrorTitle=Podglad niedostepny)
+    - Pass2 ELEMENTY/branding thumbs /thumb-cache: PASS (12/12 cache URLs, naturalWidth>0, screenshot Branding)
+    - Pass3 online_only label: PASS (DamPreviewTruth.LABEL_ONLINE_ONLY poprawny)
+    - Pass4 CYNAMONKA: PARTIAL - produkt w indeksie+folder na X:; brak rasterow w folderze (avail missing dla dir); lokalny preview potwierdzony na innych assetach (state=local, AVIF)
+    - Pass5 timing+redis health: PASS (1st thumb ~144ms AVIF; 2nd X-DAM-Cache-Hit=1 Ms=1; health redis=open circuit=open)
+11. K8: commit+push (ponizej).
+
+**Efekt/Fix:** UI bez falszywego Synology onerror; Redis optional z circuit; thumbs na D: PAMIEC; path resolve per device.
+
+**Test/Ewaluacja:**
+- curl /health api_version=6 redis=open
+- /file-availability state=local na logo Kubara
+- /thumb-cache hit <500ms (1ms)
+- node --check JS OK; ast.parse bridge OK
+- Grep UI: zero Synology Drive / brak sync w dam-*.js (tylko komentarz PI / skill)
+
+**Zrodla:** plan v5, dam_redis.py, dam_path_resolve.py, dam_file_availability.py, dam_thumb_cache.py, local_bridge.py, dam-preview-truth.js, dam-media-preview.js, dam-branding.js, program-instructions.json, README, code-doctrine.md, process.md
+

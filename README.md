@@ -103,6 +103,34 @@ Endpointy mostu:
 
 ---
 
+## Redis (opcjonalny) + pamiec podreczna miniatur
+
+**Docker Desktop NIE jest wymagany** do dzialania UI. Redis przyspiesza metadata
+(TTL), ale most dziala bez niego (circuit breaker OPEN → fallback).
+
+| | |
+|--|--|
+| URL | `DAM_REDIS_URL=redis://127.0.0.1:6379/0` (default) |
+| Compose | `docker compose -f apps/desktop/docker-compose.redis.yml up -d` (gdy Docker dziala) |
+| Client | `apps/desktop/dam_redis.py` — circuit CLOSED/OPEN/HALF-OPEN + background probe |
+| Health | `GET :8766/health` → `redis` + `redis_circuit` + `redis_fallback_matrix` |
+| Thumbs | `{repo}/PAMIEC-PODRECZNA/` na D: (AVIF/JPEG); **nigdy** cache na `X:\` / `M:\` |
+| Paths | device-scoped: `user-device-paths` + `MARKETING_CANDIDATES` (`dam_path_resolve.py`) |
+
+**Dlaczego Redis, nie Memcached:** struktury (hash/TTL/kolejki warm), trwalosc
+AOF opcjonalnie, latwiejsza migracja w gore. Memcached = tylko plaski string-cache.
+
+**Circuit breaker (HARD):** po 3 kolejnych bledach OPEN = zero connect per HTTP
+request; daemon probe co ~12s; HALF-OPEN jedna proba; sukces → CLOSED bez
+restartu mostu. Connection refused przy starcie = od razu OPEN.
+
+**Fallback matrix:** file-availability → RAM/recompute; thumb key→path → dysk
+PAMIEC (SoT); dry-run FORCE → RAM; warm queue → no-op/sync on demand.
+
+Endpointy: `GET /file-availability`, `GET /thumb-cache`, `POST /thumb-cache/warm`.
+
+---
+
 ## Baza danych
 
 ### Postgres (wspolna, multi-PC) - ADR-009
