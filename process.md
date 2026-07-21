@@ -1,4 +1,21 @@
 ﻿
+## 2026-07-21 - docs: geex realign changelog + rollback
+
+**Komenda/Akcja:** Dokumentacja audyt/rollback Geex realign + follow-up (PAKIET, pad-fix, ctaUnify); commit+push tylko docs.
+
+**Pliki:**
+- [`agents/shared/geex-realign-CHANGELOG-2026-07-21.md`](agents/shared/geex-realign-CHANGELOG-2026-07-21.md)
+- [`agents/shared/geex-realign-ROLLBACK-2026-07-21.md`](agents/shared/geex-realign-ROLLBACK-2026-07-21.md)
+- Plan: `geex-realign-plan-2026-07-21.md` → status CLOSED + pointer
+
+**Inventory tip (pre-doc):** `df870e2` — ctaUnify 12px/34px + Info Pakowania switch. DONE: `a4ba7c4`, pad-fix `74eb7eb`/`a400726`, PAKIET `435ea6b`, tip `df870e2`. ESCALATE: none. PARTIAL: marketing↔viz, branding air, dark polish, baseline PNG 28/36, stash@{0}.
+
+**Rollback one-liner (pre-realign):** `git reset --hard 092821f` (hard) or soft stack: `git revert df870e2`; `git revert 435ea6b`; `git revert -m 1 a400726`; `git revert -m 1 a4ba7c4`.
+
+**Main tip SHA after this commit:** (see `git rev-parse origin/main` post-push).
+
+---
+
 ## 2026-07-21 - Geex realign DONE
 
 **Status:** CLOSED on `origin/main`.

@@ -1,38 +1,42 @@
 ---
 name: Geex design system realign
-overview: "Geex realign v6.1: pass budgets, PNG outside git, parent=human, fresh session/phase, B/C handoff to separate files (no parallel process.md append), Lead merge at join before 5a."
+overview: "CLOSED 2026-07-21. Geex realign v6.1 shipped on main (merge a4ba7c4 + pad-fix/PAKIET/ctaUnify). Changelog+rollback: geex-realign-CHANGELOG-2026-07-21.md / geex-realign-ROLLBACK-2026-07-21.md."
 todos:
   - id: backup-freeze-baseline
     content: "Faza 0 (nowa sesja): backup+freeze+gitignore PNG+baseline lokalnie+manifest w repo; tag phase0"
-    status: pending
+    status: completed
   - id: inventory-before-tokens
     content: "Faza 1 (nowa sesja): maks 18 Grep/Read; audit md; tag phase1"
-    status: pending
+    status: completed
   - id: tokens-docs-primitives
     content: "Faza 2 (nowa sesja): tokens+Composer RO; briefy B/C; tag phase2"
-    status: pending
+    status: completed
   - id: buttons-global
     content: "Faza 3 (sesja B): 3-5 cykli; handoff TYLKO geex-realign-handoff-faza3.md; tag phase3"
-    status: pending
+    status: completed
   - id: badges-global
     content: "Faza 4 (sesja C): 3-5 cykli; handoff TYLKO geex-realign-handoff-faza4.md; tag phase4"
-    status: pending
+    status: completed
   - id: surfaces-5a
     content: "Join gate: Lead scala handoff 3+4 do process.md; potem Faza 5a"
-    status: pending
+    status: completed
   - id: surfaces-5b
     content: "Faza 5b (nowa sesja): 1 zmiana=1 CDP+§7; Composer RO; tag phase5b"
-    status: pending
+    status: completed
   - id: dark-e2e
     content: "Faza 6 (nowa sesja): dark 3 cykle; tag phase6"
-    status: pending
+    status: completed
   - id: css-thin-qa-merge
     content: "Faza 7-8 (osobne sesje): thin; final QA; merge"
-    status: pending
+    status: completed
 isProject: false
 ---
 
 # Geex Design System Realignment — v6.1
+
+**STATUS: CLOSED** (2026-07-21) on `origin/main` tip inventory `df870e2`.  
+**Changelog:** [`geex-realign-CHANGELOG-2026-07-21.md`](geex-realign-CHANGELOG-2026-07-21.md)  
+**Rollback:** [`geex-realign-ROLLBACK-2026-07-21.md`](geex-realign-ROLLBACK-2026-07-21.md)
 
 **Brief lustro:** [`agents/shared/geex-realign-plan-2026-07-21.md`](agents/shared/geex-realign-plan-2026-07-21.md)  
 **Hierarchia modeli:** [`agents/shared/model-hierarchy-2026-07-21.md`](agents/shared/model-hierarchy-2026-07-21.md)  
