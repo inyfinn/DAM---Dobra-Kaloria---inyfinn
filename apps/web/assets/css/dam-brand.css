@@ -10035,7 +10035,7 @@ button.dam-viz-badge:hover,
     rgba(255, 255, 255, 0.55),
     transparent
   );
-  animation: dam-skel-shimmer 1.3s ease-in-out infinite;
+  animation: dam-skel-shimmer 1.5s ease-in-out infinite;
 }
 html[data-theme="dark"] .dam-skeleton__line,
 html[data-theme="dark"] .dam-skeleton__row,
@@ -10062,14 +10062,15 @@ html[data-theme="dark"] .dam-skeleton__card::after {
 .dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px 8px;
+  gap: 12px 10px;
   align-content: start;
   align-items: start;
   justify-items: stretch;
   width: 100%;
   min-width: 0;
   min-height: 0;
-  padding: 0;
+  padding: 14px 12px 16px;
+  box-sizing: border-box;
   overflow: hidden !important;
   overscroll-behavior: none;
   /* Per-tile opacity — never mask whole grid (looks like 5 vertical bars). */
@@ -10142,7 +10143,7 @@ html[data-theme="dark"] .dam-skeleton__card::after {
     rgba(255, 255, 255, 0.45),
     transparent
   );
-  animation: dam-skel-shimmer 1.35s ease-in-out infinite;
+  animation: dam-skel-shimmer 1.5s ease-in-out infinite;
 }
 html[data-theme="dark"] .dam-assoc-skeleton {
   background: rgba(255, 255, 255, 0.06);

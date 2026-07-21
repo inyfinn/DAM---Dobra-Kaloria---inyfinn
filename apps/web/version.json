@@ -1,7 +1,7 @@
 {
-  "version": "3.1.1",
+  "version": "3.1.2",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "gapship",
   "released_at": "2026-07-21",
-  "note": "3.1.1: Shift-minus on studio all-file tiles (XL/L/S/S-SKLEP) + Elementy/Surowe grids; bubble 21px gradient chip; hold 2s session soft-hide (not disk delete). Cache minusGlobal20260721b. Builds on 3.1.0 noSrcGrid + modal parity."
+  "note": "3.1.2: viz modal Folder outline hover, OpenFile sibling gallery, body scroll both modals, zoom-dock parity, Pokaż UTF-8, DamLoader 1.5s + padding. Cache vizCtaNav20260721b."
 }

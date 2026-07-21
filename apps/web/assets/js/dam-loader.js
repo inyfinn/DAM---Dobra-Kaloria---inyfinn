@@ -5,18 +5,18 @@
  *   DamLoader.start([label])  - pokazuje pasek na srodku ekranu
  *   DamLoader.done()          - konczy (fade out)
  *
- * Zachowanie: pasek indeterminate w bialym pill-boxie na srodku (3 s),
- * etykieta zawsze "ładowanie". Jesli ladowanie nadal trwa po 3 s,
- * CSS transition przenosi pasek do prawego dolnego rogu jako maly
- * spinner NAD help fabem (#damHelpFab). Jesli done() przed 3 s -
- * znika ze srodka (bez docka). pointer-events: none, z-index 13000.
+ * Zachowanie: pasek indeterminate w bialym pill-boxie na srodku (1.5 s),
+ * etykieta zawsze "ładowanie". Jesli ladowanie nadal trwa po 1.5 s,
+ * CSS transition (translate left/top) przenosi pasek do prawego dolnego
+ * rogu jako maly spinner NAD help fabem (#damHelpFab). Jesli done() przed
+ * 1.5 s - znika ze srodka (bez docka). pointer-events: none, z-index 13000.
  * prefers-reduced-motion: bez animacji przenoszenia (od razu rog).
  */
 (function (global) {
   "use strict";
 
-  var STYLE_ID = "damLoaderCss20260721a";
-  var HOLD_CENTER_MS = 3000;
+  var STYLE_ID = "damLoaderCssVizCtaNav20260721b";
+  var HOLD_CENTER_MS = 1500;
   var LOADER_LABEL = "ładowanie";
   var Z_INDEX = 13000;
   /* Odstęp między dolną krawędzią loadera a górą #damHelpFab. */
@@ -152,26 +152,27 @@
     s.id = STYLE_ID;
     s.textContent =
       "#damLoader{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);" +
-      "z-index:" + Z_INDEX + ";pointer-events:none;display:flex;align-items:center;justify-content:center;gap:10px;" +
+      "z-index:" + Z_INDEX + ";pointer-events:none;display:flex;align-items:center;justify-content:center;gap:12px;" +
       "box-sizing:border-box;background:#fff;border:1px solid rgb(171 84 219 / .28);border-radius:999px;" +
-      "padding:10px 16px;box-shadow:0 14px 38px rgb(23 22 30 / .18);opacity:0;" +
+      /* Inner padding larger so label+bar breathe (vizCtaNav20260721b) */
+      "padding:16px 24px;box-shadow:0 14px 38px rgb(23 22 30 / .18);opacity:0;" +
       "will-change:left,top,opacity;}" +
       "#damLoader .dam-loader__spin{width:18px;height:18px;flex:0 0 18px;border-radius:50%;" +
       "border:2.5px solid rgb(171 84 219 / .22);border-top-color:#ab54db;" +
       "animation:damLoaderSpin .8s linear infinite;box-sizing:border-box;}" +
-      "#damLoader .dam-loader__inner{display:flex;align-items:center;gap:10px;overflow:hidden;white-space:nowrap;}" +
+      "#damLoader .dam-loader__inner{display:flex;align-items:center;gap:12px;padding:2px 0;overflow:hidden;white-space:nowrap;}" +
       "#damLoader .dam-loader__label{font-size:12.5px;font-weight:600;color:#464255;" +
       "font-family:inherit;letter-spacing:.01em;}" +
       "#damLoader .dam-loader__bar{position:relative;width:160px;height:5px;border-radius:999px;" +
       "background:rgb(171 84 219 / .16);overflow:hidden;flex:0 0 auto;}" +
       "#damLoader .dam-loader__bar::after{content:\"\";position:absolute;top:0;bottom:0;left:-40%;width:40%;" +
       "border-radius:999px;background:linear-gradient(90deg,#c07ae6,#ab54db);" +
-      "animation:damLoaderSlide 1.1s cubic-bezier(.45,.05,.55,.95) infinite;}" +
+      "animation:damLoaderSlide 1.5s cubic-bezier(.45,.05,.55,.95) infinite;}" +
       "@keyframes damLoaderSlide{0%{left:-40%}100%{left:105%}}" +
       "@keyframes damLoaderSpin{to{transform:rotate(360deg)}}" +
       "@media (prefers-reduced-motion: reduce){" +
-      "#damLoader .dam-loader__bar::after{animation-duration:2.2s;}" +
-      "#damLoader .dam-loader__spin{animation-duration:1.6s;}}";
+      "#damLoader .dam-loader__bar::after{animation:none!important;}" +
+      "#damLoader .dam-loader__spin{animation:none!important;border-top-color:rgb(171 84 219 / .45);}}";
     document.head.appendChild(s);
   }
 
@@ -257,8 +258,9 @@
     /* Cofnij width do pełnego pilla na start tweenu, potem animuj do kółka */
     el.style.width = rect.width + "px";
     void el.offsetWidth;
+    /* Translate dock duration = 1.5s (vizCtaNav20260721b) */
     el.style.transition =
-      "left .55s cubic-bezier(0.45, 0.05, 0.55, 0.95), top .55s cubic-bezier(0.45, 0.05, 0.55, 0.95), width .55s cubic-bezier(0.45, 0.05, 0.55, 0.95), opacity .2s ease";
+      "left 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95), top 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95), width 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95), opacity .2s ease";
     el.style.left = a.left + "px";
     el.style.top = a.top + "px";
     el.style.width = targetSize + "px";
@@ -268,7 +270,7 @@
       parkTimer = null;
       if (parkGen !== dockGen || !el || !activeCount) return;
       parkAboveFab();
-    }, 600);
+    }, 1550);
   }
 
   function dockWithGsap() {

@@ -667,7 +667,8 @@
 
   function buildProductVariantStripHtml(items, activeIdx, ctx) {
     var reps = productVariantRepresentatives(items);
-    if (reps.length < 2) return "";
+    /* HARD 2026-07-21: pokazuj strip nawet przy 1 wariancie (user). */
+    if (!reps.length) return "";
     var active = items[activeIdx] || items[0];
     var activeKey = productVariantKey(active);
     /* Parity branding WARIANTY MATERIAŁU: label + thumbnail grid (indeks/jezyk). */
@@ -717,28 +718,179 @@
     );
   }
 
+  function plWariantow(n) {
+    if (n === 1) return "wariant";
+    var mod10 = n % 10;
+    var mod100 = n % 100;
+    if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return "warianty";
+    return "wariantow";
+  }
+
+  var VARIANT_SELECT_CSS_ID = "damVizVariantSelectCss";
+  /** Injected (not dam-brand.css - avoid clashing with concurrent agents on shared CSS). */
+  function ensureVariantSelectCss() {
+    if (document.getElementById(VARIANT_SELECT_CSS_ID)) return;
+    var style = document.createElement("style");
+    style.id = VARIANT_SELECT_CSS_ID;
+    style.textContent =
+      ".dam-viz-modal__variant{position:relative;}" +
+      ".dam-viz-modal__variant.is-multi-selected{" +
+      "border-color:#16a34a!important;background:#f0fdf4!important;" +
+      "box-shadow:0 0 0 2px color-mix(in srgb,#16a34a 25%,transparent)!important;}" +
+      ".dam-viz-modal__variant.is-multi-selected::after{" +
+      'content:"\\2713";position:absolute;top:-6px;left:-6px;width:16px;height:16px;' +
+      "border-radius:999px;background:#16a34a;color:#fff;font-size:10px;font-weight:700;" +
+      "line-height:16px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.25);}" +
+      ".dam-viz-modal__variant-selection-bar{" +
+      "display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:8px;padding:6px 10px;" +
+      "border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;" +
+      "font-size:12px;color:#166534;transition:opacity .12s ease;}" +
+      ".dam-viz-modal__variant-selection-bar[hidden]{display:none;}" +
+      ".dam-viz-modal__variant-selection-bar strong{font-weight:700;}" +
+      ".dam-viz-modal__variant-selection-bar .geex-btn{margin-left:auto;}" +
+      ".dam-viz-modal__variant-selection-bar .geex-btn + .geex-btn{margin-left:0;}";
+    document.head.appendChild(style);
+  }
+
+  /** SHIFT (range) / CTRL·CMD (toggle) multi-select on the product variant strip.
+   * Klik = wybierz jeden (jak dotychczas). Shift+klik = zakres od ostatniej kotwicy.
+   * Ctrl/Cmd+klik = dodaj/usun pojedynczy element. "Edycja" wielu = pasek akcji
+   * (kopiuj indeksy / otworz w Eksploratorze) - w DAM nie ma masowej edycji
+   * wariantow produktu (tylko materialow), wiec SHIFT tutaj = multi-select + akcje,
+   * nie assoc-edit popover. */
   function bindProductVariantStrip(modal, items, getActiveIdx, selectFn) {
     var strip = modal && modal.querySelector(".dam-viz-modal__variant-strip");
     if (!strip) return { sync: function () {} };
+    ensureVariantSelectCss();
+    var host = strip.parentNode;
+    var bar = host && host.querySelector(".dam-viz-modal__variant-selection-bar");
+    if (host && !bar) {
+      bar = document.createElement("div");
+      bar.className = "dam-viz-modal__variant-selection-bar";
+      bar.hidden = true;
+      host.insertBefore(bar, strip.nextSibling);
+    }
+    var selected = {};
+    var anchorKey = null;
+
+    function orderedButtons() {
+      return Array.prototype.slice.call(strip.querySelectorAll("[data-vidx]"));
+    }
+    function selectedButtons() {
+      return orderedButtons().filter(function (b) {
+        return !!selected[b.getAttribute("data-vidx")];
+      });
+    }
     function paintActive() {
       var active = items[getActiveIdx()] || items[0];
       var activeKey = productVariantKey(active);
-      strip.querySelectorAll("[data-vidx]").forEach(function (btn) {
+      orderedButtons().forEach(function (btn) {
         var on = (btn.getAttribute("data-variant-key") || "") === activeKey;
         btn.classList.toggle("is-active", on);
         btn.setAttribute("aria-selected", on ? "true" : "false");
       });
     }
-    strip.querySelectorAll("[data-vidx]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
+    function paintSelection() {
+      var picked = selectedButtons();
+      var multi = picked.length > 1;
+      orderedButtons().forEach(function (btn) {
+        btn.classList.toggle("is-multi-selected", multi && !!selected[btn.getAttribute("data-vidx")]);
+      });
+      if (!bar) return;
+      if (!multi) {
+        bar.hidden = true;
+        bar.innerHTML = "";
+        return;
+      }
+      bar.hidden = false;
+      var keys = picked.map(function (b) {
+        return b.getAttribute("data-variant-key") || "";
+      });
+      bar.innerHTML =
+        "<strong>Wybrano: " + picked.length + " " + plWariantow(picked.length) + "</strong>" +
+        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon" data-viz-sel-copy>' +
+        '<i class="uil uil-copy" aria-hidden="true"></i> Kopiuj indeksy</button>' +
+        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon" data-viz-sel-explorer>' +
+        '<i class="uil uil-sitemap" aria-hidden="true"></i> Otworz w Eksploratorze</button>' +
+        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon" data-viz-sel-clear>' +
+        '<i class="uil uil-times" aria-hidden="true"></i> Wyczysc</button>';
+      var copyBtn = bar.querySelector("[data-viz-sel-copy]");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", function () {
+          var text = keys.join(", ");
+          var p = copyToClipboard(text);
+          if (p && typeof p.then === "function") {
+            p.then(
+              function () { showToast("Skopiowano indeksy: " + text); },
+              function () { showToast("Nie udalo sie skopiowac"); }
+            );
+          } else {
+            showToast("Skopiowano indeksy: " + text);
+          }
+        });
+      }
+      var explorerBtn = bar.querySelector("[data-viz-sel-explorer]");
+      if (explorerBtn) {
+        explorerBtn.addEventListener("click", function () {
+          var pid = (items[0] && items[0].product_id) || "";
+          if (!pid) return;
+          window.open("explorer.html?product=" + encodeURIComponent(pid), "_blank");
+        });
+      }
+      var clearBtn = bar.querySelector("[data-viz-sel-clear]");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", function () {
+          selected = {};
+          anchorKey = null;
+          paintSelection();
+        });
+      }
+    }
+    orderedButtons().forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
         var i = parseInt(btn.getAttribute("data-vidx"), 10);
         if (isNaN(i)) return;
+        var key = btn.getAttribute("data-vidx");
+        var btns = orderedButtons();
+        var clickedPos = btns.indexOf(btn);
+        if (e.shiftKey) {
+          var anchorPos = clickedPos;
+          if (anchorKey != null) {
+            btns.some(function (b, idx) {
+              if (b.getAttribute("data-vidx") === anchorKey) {
+                anchorPos = idx;
+                return true;
+              }
+              return false;
+            });
+          }
+          var from = Math.min(anchorPos, clickedPos);
+          var to = Math.max(anchorPos, clickedPos);
+          selected = {};
+          for (var p = from; p <= to; p++) selected[btns[p].getAttribute("data-vidx")] = true;
+          if (anchorKey == null) anchorKey = key;
+        } else if (e.ctrlKey || e.metaKey) {
+          if (selected[key]) delete selected[key];
+          else selected[key] = true;
+          anchorKey = key;
+        } else {
+          selected = {};
+          selected[key] = true;
+          anchorKey = key;
+        }
         selectFn(i);
         paintActive();
+        paintSelection();
       });
     });
     paintActive();
-    return { sync: paintActive };
+    paintSelection();
+    return {
+      sync: function () {
+        paintActive();
+        paintSelection();
+      },
+    };
   }
 
   /**
@@ -916,7 +1068,9 @@
 
       var allPanel = "";
       if (showAllFiles && items.length > 1) {
-        /* Group by Perspektywa + Tło only — quality is a horizontal variant, not a group key. */
+        /* Group by Perspektywa + Tło only — quality is a horizontal variant, not a group key.
+           bgSections20260721a: sections by Tło (Bez tła / Z tłem) come first, groups inside
+           carry only the Perspektywa label — no interleaving, no repeated "· Z TŁEM" per tile. */
         var groups = {};
         var gOrder = [];
         items.forEach(function (it, i) {
@@ -935,87 +1089,100 @@
           var bi = PERSP_ORDER.indexOf(bp);
           if (ai < 0) ai = 999;
           if (bi < 0) bi = 999;
-          if (ai !== bi) return ai - bi;
-          var ab = a.split("|")[1];
-          var bb = b.split("|")[1];
-          if (ab === bb) return 0;
-          if (ab === "z-tlem") return -1;
-          if (bb === "z-tlem") return 1;
-          return String(ab).localeCompare(String(bb));
+          return ai - bi;
+        });
+        var activeIdx = getActiveIdx();
+        function renderGroup(gk) {
+          var bits = gk.split("|");
+          var perspLab = bits[0] && bits[0] !== "?" ? bits[0] : "INNE";
+          var bgKey = bits[1] === "bez-tla" ? "bez-tla" : "z-tlem";
+          /* allrows20260721a: one tile per quality (JPG+PNG / twin paths share XL/L/S). */
+          var bySize = {};
+          var sizeOrderKeys = [];
+          groups[gk].forEach(function (row) {
+            var sk = row.it.size || "Plik";
+            if (!bySize[sk]) {
+              bySize[sk] = row;
+              sizeOrderKeys.push(sk);
+              return;
+            }
+            var prev = bySize[sk];
+            if (row.i === activeIdx) {
+              bySize[sk] = row;
+              return;
+            }
+            if (prev.i === activeIdx) return;
+            var pScore =
+              (prev.it.thumb_url || prev.it.path ? 2 : 0) +
+              (String(prev.it.path || "").toLowerCase().indexOf(".png") >= 0 ? 1 : 0);
+            var nScore =
+              (row.it.thumb_url || row.it.path ? 2 : 0) +
+              (String(row.it.path || "").toLowerCase().indexOf(".png") >= 0 ? 1 : 0);
+            if (nScore > pScore || (nScore === pScore && row.i < prev.i)) bySize[sk] = row;
+          });
+          sizeOrderKeys.sort(function (sa, sb) {
+            var ia = SIZE_ORDER.indexOf(sa);
+            var ib = SIZE_ORDER.indexOf(sb);
+            if (ia < 0) ia = 999;
+            if (ib < 0) ib = 999;
+            return ia - ib;
+          });
+          var cards = sizeOrderKeys
+            .map(function (sk) {
+              var row = bySize[sk];
+              var it = row.it;
+              var on = row.i === activeIdx;
+              var thumb = it.thumb_url || (it.path ? mediaPreviewUrl(it.path) : "") || "";
+              var lab = it.size || "Plik";
+              return (
+                '<button type="button" class="dam-media-preview__all-file' +
+                (on ? " is-active" : "") +
+                '" data-all-vidx="' +
+                row.i +
+                '">' +
+                (thumb
+                  ? '<img src="' +
+                    esc(thumb) +
+                    '" alt="" loading="lazy" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
+                  : '<span class="dam-media-preview__all-file-ph"></span>') +
+                '<span class="dam-media-preview__all-file-label">' +
+                esc(lab) +
+                "</span></button>"
+              );
+            })
+            .join("");
+          return (
+            '<div class="dam-media-preview__all-group" data-bg="' +
+            bgKey +
+            '"><div class="dam-media-preview__all-group-label">' +
+            esc(perspLab) +
+            '</div><div class="dam-media-preview__all-group-grid">' +
+            cards +
+            "</div></div>"
+          );
+        }
+        function renderSection(order, label, key) {
+          if (!order.length) return "";
+          return (
+            '<section class="dam-media-preview__all-section dam-media-preview__all-section--' +
+            key +
+            '"><h5 class="dam-media-preview__all-section-label">' +
+            esc(label) +
+            '</h5><div class="dam-media-preview__all-section-grid">' +
+            order.map(renderGroup).join("") +
+            "</div></section>"
+          );
+        }
+        var bezOrder = gOrder.filter(function (gk) {
+          return gk.split("|")[1] === "bez-tla";
+        });
+        var zTlemOrder = gOrder.filter(function (gk) {
+          return gk.split("|")[1] !== "bez-tla";
         });
         allPanel =
           '<div class="dam-media-preview__all-files is-enter">' +
-          gOrder
-            .map(function (gk) {
-              var bits = gk.split("|");
-              var perspLab = bits[0] && bits[0] !== "?" ? bits[0] : "INNE";
-              var bgLab = bits[1] === "bez-tla" ? "Bez tła" : "Z tłem";
-              var title = perspLab + " · " + bgLab;
-              /* allrows20260721a: one tile per quality (JPG+PNG / twin paths share XL/L/S). */
-              var activeIdx = getActiveIdx();
-              var bySize = {};
-              var sizeOrderKeys = [];
-              groups[gk].forEach(function (row) {
-                var sk = row.it.size || "Plik";
-                if (!bySize[sk]) {
-                  bySize[sk] = row;
-                  sizeOrderKeys.push(sk);
-                  return;
-                }
-                var prev = bySize[sk];
-                if (row.i === activeIdx) {
-                  bySize[sk] = row;
-                  return;
-                }
-                if (prev.i === activeIdx) return;
-                var pScore =
-                  (prev.it.thumb_url || prev.it.path ? 2 : 0) +
-                  (String(prev.it.path || "").toLowerCase().indexOf(".png") >= 0 ? 1 : 0);
-                var nScore =
-                  (row.it.thumb_url || row.it.path ? 2 : 0) +
-                  (String(row.it.path || "").toLowerCase().indexOf(".png") >= 0 ? 1 : 0);
-                if (nScore > pScore || (nScore === pScore && row.i < prev.i)) bySize[sk] = row;
-              });
-              sizeOrderKeys.sort(function (sa, sb) {
-                var ia = SIZE_ORDER.indexOf(sa);
-                var ib = SIZE_ORDER.indexOf(sb);
-                if (ia < 0) ia = 999;
-                if (ib < 0) ib = 999;
-                return ia - ib;
-              });
-              var cards = sizeOrderKeys
-                .map(function (sk) {
-                  var row = bySize[sk];
-                  var it = row.it;
-                  var on = row.i === activeIdx;
-                  var thumb = it.thumb_url || (it.path ? mediaPreviewUrl(it.path) : "") || "";
-                  var lab = it.size || "Plik";
-                  return (
-                    '<button type="button" class="dam-media-preview__all-file' +
-                    (on ? " is-active" : "") +
-                    '" data-all-vidx="' +
-                    row.i +
-                    '">' +
-                    (thumb
-                      ? '<img src="' +
-                        esc(thumb) +
-                        '" alt="" loading="lazy" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
-                      : '<span class="dam-media-preview__all-file-ph"></span>') +
-                    '<span class="dam-media-preview__all-file-label">' +
-                    esc(lab) +
-                    "</span></button>"
-                  );
-                })
-                .join("");
-              return (
-                '<div class="dam-media-preview__all-group"><div class="dam-media-preview__all-group-label">' +
-                esc(title) +
-                '</div><div class="dam-media-preview__all-group-grid">' +
-                cards +
-                "</div></div>"
-              );
-            })
-            .join("") +
+          renderSection(bezOrder, "Bez tła", "bez-tla") +
+          renderSection(zTlemOrder, "Z tłem", "z-tlem") +
           "</div>";
       }
 
@@ -1031,14 +1198,26 @@
           : "";
 
       host.className =
-        "dam-media-preview__studio dam-viz-modal__studio dam-media-preview__studio--tri";
+        "dam-media-preview__studio dam-viz-modal__studio dam-media-preview__studio--tri dam-media-preview__studio--rail";
       host.innerHTML =
         '<div class="dam-media-preview__studio-frames">' +
         frames +
         "</div>" +
-        showAllBtn +
-        allPanel;
+        showAllBtn;
       host.hidden = !frames && !showAllBtn;
+      /* all-files full-width under body grid (not cramped in 30% rail) */
+      var allHost = modal.querySelector("#damVizModalAllFiles");
+      if (allHost) {
+        allHost.innerHTML = allPanel || "";
+        allHost.hidden = !allPanel;
+      }
+      /* Clear stuck reveal styles on rails (GSAP autoAlpha residue). */
+      [".dam-viz-modal__studio-rail", ".dam-viz-modal__meta-rail"].forEach(function (sel) {
+        var rail = modal.querySelector(sel);
+        if (!rail || !rail.style) return;
+        rail.style.removeProperty("opacity");
+        rail.style.removeProperty("visibility");
+      });
 
       function go(nextState) {
         var idx = pickBest(nextState);
@@ -1080,7 +1259,8 @@
           paint();
         });
       }
-      host.querySelectorAll("[data-all-vidx]").forEach(function (btn) {
+      var allBindRoot = allHost && !allHost.hidden ? allHost : host;
+      allBindRoot.querySelectorAll("[data-all-vidx]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           var i = parseInt(btn.getAttribute("data-all-vidx"), 10);
           if (!isNaN(i)) selectFn(i);
@@ -1089,7 +1269,7 @@
       });
       /* brandComposer20260721a: Shift-minus on XL/L/S/S-SKLEP all-file tiles. */
       if (window.DamAssocEdit && typeof window.DamAssocEdit.wireStudioAllFiles === "function") {
-        window.DamAssocEdit.wireStudioAllFiles(host);
+        window.DamAssocEdit.wireStudioAllFiles(allBindRoot);
       }
     }
 
@@ -1791,12 +1971,13 @@
       multiIndex: Object.keys(indexes).length > 1,
     };
 
-    /* grouptint20260721a: WARIANTY PRODUKTU (INDEX) ABOVE studio Tło/Perspektywa/Jakość.
-       Jakosc XL/L/S != indeks produktu. Jezyk na chipie wariantu. */
-    var chips =
-      buildProductVariantStripHtml(items, activeIdx, ctx) +
-      '<div id="damVizModalStudio" class="dam-media-preview__studio dam-viz-modal__studio dam-media-preview__studio--tri" aria-label="Parametry wizualizacji"></div>' +
-      '<div id="damVizModalQuality" class="dam-media-preview__quality dam-viz-modal__quality" hidden></div>';
+    /* bodyGrid20260721: WARIANTY full-width; studio frames in right rail (~30%). */
+    var variantStripHtml = buildProductVariantStripHtml(items, activeIdx, ctx);
+    var studioRailHtml =
+      '<div class="dam-viz-modal__studio-rail">' +
+      '<div id="damVizModalStudio" class="dam-media-preview__studio dam-viz-modal__studio dam-media-preview__studio--tri dam-media-preview__studio--rail" aria-label="Parametry wizualizacji"></div>' +
+      '<div id="damVizModalQuality" class="dam-media-preview__quality dam-viz-modal__quality" hidden></div>' +
+      "</div>";
 
     var modalBadges =
       window.DamBadges && typeof window.DamBadges.render === "function"
@@ -1942,20 +2123,20 @@
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>') +
       "<span>Folder</span></button>" +
-      /* --- FILE OPEN CTA (left of copy) --- */
+      /* --- FILE OPEN CTA (left of copy): in-app gallery when siblings exist --- */
       '<button type="button" class="dam-viz-icon-btn" id="damVizModalOpenFile" data-path="' +
       esc(first.path || "") +
-      '" aria-label="Otworz plik" title="Otworz plik" data-dam-tip="Otwiera plik w domyslnej aplikacji Windows i kopiuje sciezke">' +
+      '" aria-label="Otwórz plik" title="Otwórz plik" data-dam-tip="Otwiera podgląd w aplikacji (←/→ między plikami) albo domyślną aplikację Windows">' +
       '<i class="uil uil-external-link-alt" aria-hidden="true"></i></button>' +
       '<button type="button" class="dam-viz-icon-btn" id="damVizModalCopyPath" data-path="' +
       esc(first.path || "") +
-      '" aria-label="Kopiuj sciezke" title="Kopiuj sciezke" data-dam-tip="Kopiuje lokalna sciezke pliku">' +
+      '" aria-label="Kopiuj ścieżkę" title="Kopiuj ścieżkę" data-dam-tip="Kopiuje lokalną ścieżkę pliku">' +
       '<i class="uil uil-copy" aria-hidden="true"></i></button>' +
       '<button type="button" class="dam-viz-icon-btn' +
       (syEnabled ? "" : " is-disabled") +
       '" id="damVizModalShare" data-path="' +
       esc(first.path || "") +
-      '" aria-label="Udostepnij" title="' +
+      '" aria-label="Udostępnij" title="' +
       esc(shareBtnTitle) +
       '" data-dam-tip="' +
       esc(shareBtnTitle) +
@@ -1971,9 +2152,12 @@
         : "") +
       "</div>";
     var bodyMetaHtml =
+      '<div class="dam-viz-modal__meta-rail">' +
+      '<div class="dam-viz-modal__meta-block dam-viz-modal__meta-block--badges">' +
       '<div class="dam-viz-card__badges" id="damVizModalBadges">' +
       modalBadges +
-      "</div>" +
+      "</div></div>" +
+      '<div class="dam-viz-modal__meta-block dam-viz-modal__meta-block--title">' +
       '<h4 class="dam-viz-modal__title">' +
       esc(productName) +
       (window.DamLabels && typeof window.DamLabels.productNamePlMarkup === "function"
@@ -1993,7 +2177,8 @@
           esc(vizMarketingId) +
           "</span></div>"
         : "") +
-      /* Filename + carrier/meta: rytm ~5px; ID chip → filename = 10px (global). */
+      "</div>" +
+      '<div class="dam-viz-modal__meta-block dam-viz-modal__meta-block--filemeta">' +
       '<div class="dam-viz-modal__filemeta" id="damVizModalFileMeta">' +
       (function () {
         var fname = "";
@@ -2005,40 +2190,57 @@
           fname = i >= 0 ? n.slice(i + 1) : n;
         }
         if (!fname && first.name) fname = String(first.name);
-        if (!fname) return "";
+        var typeLine =
+          (carrierHuman(first.carrier || "", first) || "BRAK TYPU") +
+          (displayIndex(first) ? " · Indeks " + displayIndex(first) : "");
+        var tipCarrier =
+          "Nosnik / indeks biezacego wariantu. Podwojny klik lub Shift+klik: zaproponuj zmiane typu." +
+          (admin ? " Admin: zmiana zostanie zapisana natychmiast." : "");
         return (
-          '<p class="dam-viz-modal__filename" id="damVizModalFilename" title="' +
-          esc(fname) +
+          '<div class="dam-viz-modal__meta-line">' +
+          '<span class="dam-viz-modal__meta-k">Nazwa pliku</span>' +
+          (fname
+            ? '<p class="dam-viz-modal__filename" id="damVizModalFilename" title="' +
+              esc(fname) +
+              '">' +
+              esc(fname) +
+              "</p>"
+            : '<p class="dam-viz-modal__filename" id="damVizModalFilename" hidden></p>') +
+          "</div>" +
+          '<div class="dam-viz-modal__meta-line">' +
+          '<span class="dam-viz-modal__meta-k">Typ pliku</span>' +
+          '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable" id="damVizModalMeta" data-dam-tip="' +
+          esc(tipCarrier) +
           '">' +
-          esc(fname) +
-          "</p>"
+          esc(typeLine) +
+          "</p></div>"
         );
       })() +
-      '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable' +
-      '" id="damVizModalMeta" data-dam-tip="' +
-      esc(
-        "Nosnik / indeks biezacego wariantu. Podwojny klik lub Shift+klik: zaproponuj zmiane typu." +
-          (admin ? " Admin: zmiana zostanie zapisana natychmiast." : "")
-      ) +
-      '">' +
-      esc(
-        (carrierHuman(first.carrier || "", first) || "BRAK TYPU") +
-          (displayIndex(first) ? " · Indeks " + displayIndex(first) : "")
-      ) +
-      "</p>" +
-      "</div>" +
+      "</div></div></div>" +
+      studioRailHtml +
       '<div class="dam-viz-modal__variants dam-viz-modal__variants--studio" role="group" aria-label="Warianty">' +
-      chips +
+      variantStripHtml +
       "</div>" +
+      '<div id="damVizModalAllFiles" class="dam-viz-modal__all-files-host" hidden></div>' +
       missingLangHtml;
     var initialHeroSrc = heroMediaUrl(first);
+    var vizNavPrev =
+      items.length > 1
+        ? '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizModalPrev" aria-label="Poprzedni" title="Poprzedni" data-dam-tip="Poprzedni plik (←)"><i class="uil uil-angle-left"></i></button>'
+        : "";
+    var vizNavNext =
+      items.length > 1
+        ? '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizModalNext" aria-label="Następny" title="Następny" data-dam-tip="Następny plik (→)"><i class="uil uil-angle-right"></i></button>'
+        : "";
     var thumbHtml =
       '<div class="dam-viz-modal__thumb">' +
-      '<div class="dam-viz-modal__zoom" role="group" aria-label="Przyblizenie">' +
+      '<div class="dam-viz-modal__zoom" role="group" aria-label="Przybliżenie">' +
+      vizNavPrev +
       '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomOut" aria-label="Pomniejsz" title="Pomniejsz" data-dam-tip="Pomniejsz (CTRL/ALT+scroll)"><i class="uil uil-search-minus"></i></button>' +
       '<span class="dam-viz-modal__zoom-label" id="damVizZoomLabel">100%</span>' +
-      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomIn" aria-label="Powieksz" title="Powieksz" data-dam-tip="Powieksz (CTRL/ALT+scroll)"><i class="uil uil-search-plus"></i></button>' +
+      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomIn" aria-label="Powiększ" title="Powiększ" data-dam-tip="Powiększ (CTRL/ALT+scroll)"><i class="uil uil-search-plus"></i></button>' +
       '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomReset" aria-label="Reset" title="100%" data-dam-tip="Reset zoom i pozycji"><i class="uil uil-search"></i></button>' +
+      vizNavNext +
       "</div>" +
       (initialHeroSrc
         ? '<img id="damVizModalHero" src="' +
@@ -2073,8 +2275,13 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=ship20260721v310";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=vizCtaNav20260721b";
       document.head.appendChild(vizCss);
+    } else {
+      var existingVizCss = document.getElementById("dam-viz-modal-css");
+      if (existingVizCss && existingVizCss.tagName === "LINK") {
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=vizCtaNav20260721b";
+      }
     }
     document.body.insertAdjacentHTML("beforeend", html);
     var modal = document.getElementById("damVizModal");
@@ -2257,11 +2464,12 @@
       selectVariant
     );
 
+    var vizZoomBar = thumbStage && thumbStage.querySelector(".dam-viz-modal__zoom");
     if (shared && typeof shared.bindZoom === "function") {
       zoomCtrl = shared.bindZoom({
         thumbStage: thumbStage,
         labelEl: document.getElementById("damVizZoomLabel"),
-        zoomBar: thumbStage && thumbStage.querySelector(".dam-viz-modal__zoom"),
+        zoomBar: vizZoomBar,
         zoomInBtn: document.getElementById("damVizZoomIn"),
         zoomOutBtn: document.getElementById("damVizZoomOut"),
         zoomResetBtn: document.getElementById("damVizZoomReset"),
@@ -2269,6 +2477,10 @@
           return document.getElementById("damVizModalHero");
         },
       });
+    }
+    /* Parity with Explorer #damMediaPreview: zoom pill docks / hides off the thumb. */
+    if (shared && typeof shared.initZoomDock === "function") {
+      shared.initZoomDock(thumbStage, vizZoomBar);
     }
     if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
 
@@ -2597,13 +2809,72 @@
       });
     }
 
-    /* --- OPEN FILE (left of copy): default app + clipboard --- */
+    /* --- OPEN FILE: in-app gallery with siblings (←/→); OS open only when alone --- */
     var openFileBtn = document.getElementById("damVizModalOpenFile");
     if (openFileBtn) {
       openFileBtn.addEventListener("click", function () {
-        var path = this.getAttribute("data-path") || "";
+        var v = items[activeIdx] || first;
+        var path = (v && v.path) || this.getAttribute("data-path") || "";
+        if (path) this.setAttribute("data-path", path);
         if (!path) {
-          showToast("Brak sciezki pliku");
+          showToast("Brak ścieżki pliku");
+          return;
+        }
+        var siblings = items
+          .filter(function (it) {
+            return it && it.path;
+          })
+          .map(function (it, i) {
+            return {
+              id: it.id || "viz-modal-" + i + "-" + String(it.path || "").slice(-48),
+              name: it.name || it.file || "",
+              path: it.path || "",
+              perspective: it.perspective || it.persp || "",
+              persp: it.persp || it.perspective || "",
+              size: it.size || "",
+              bg: it.bg || "",
+              lang: it.lang || "",
+              media_type: it.media_type || "image",
+              product_index: it.index_base || it.index || "",
+              product_id: it.product_id || "",
+              product_name: it.product_name || "",
+              brand: it.brand || "",
+              thumb_url: it.thumb_url || "",
+              mtime: it.mtime || "",
+              carrier: it.carrier || "",
+            };
+          });
+        var idx = siblings.findIndex(function (s) {
+          return s.path === path;
+        });
+        if (idx < 0) idx = 0;
+        if (
+          siblings.length > 1 &&
+          window.DamMediaPreview &&
+          typeof window.DamMediaPreview.openAsset === "function"
+        ) {
+          window.DamMediaPreview.openAsset(siblings[idx], {
+            siblings: siblings,
+            index: idx,
+            groupContext: {
+              variants: siblings.slice(),
+              linked_products: first.product_id
+                ? [
+                    {
+                      id: first.product_id,
+                      name: first.product_name || productName || "",
+                    },
+                  ]
+                : [],
+            },
+            productContext: first.product_id
+              ? {
+                  id: first.product_id,
+                  name: first.product_name || productName || "",
+                  index: first.index_base || first.index || "",
+                }
+              : null,
+          });
           return;
         }
         if (window.DamPaths && typeof window.DamPaths.openFileAndCopyPath === "function") {
@@ -2613,6 +2884,21 @@
         if (window.DamPaths && typeof window.DamPaths.copyPortablePath === "function") {
           window.DamPaths.copyPortablePath(path);
         }
+      });
+    }
+
+    var vizPrevBtn = document.getElementById("damVizModalPrev");
+    var vizNextBtn = document.getElementById("damVizModalNext");
+    if (vizPrevBtn) {
+      vizPrevBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (activeIdx > 0) selectVariant(activeIdx - 1);
+      });
+    }
+    if (vizNextBtn) {
+      vizNextBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (activeIdx < items.length - 1) selectVariant(activeIdx + 1);
       });
     }
 
@@ -2659,10 +2945,22 @@
       }
     });
     document.addEventListener("keydown", function onEsc(e) {
+      if (!document.getElementById("damVizModal")) {
+        document.removeEventListener("keydown", onEsc);
+        return;
+      }
+      /* When DamMediaPreview is stacked on top, let it own arrows / Escape. */
+      if (document.getElementById("damMediaPreview")) return;
       if (e.key === "Escape") {
         closeVariantInfoPopover();
         removeModal();
         document.removeEventListener("keydown", onEsc);
+      } else if (e.key === "ArrowLeft" && items.length > 1) {
+        e.preventDefault();
+        if (activeIdx > 0) selectVariant(activeIdx - 1);
+      } else if (e.key === "ArrowRight" && items.length > 1) {
+        e.preventDefault();
+        if (activeIdx < items.length - 1) selectVariant(activeIdx + 1);
       }
     });
   }

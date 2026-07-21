@@ -1882,7 +1882,7 @@ Naprawa DOM kart #vizGrid - ogromne tagi, skakanie tytu??w/przycisk?w, brak ?wia
 Tytu?y i CTA w wierszu na tej samej linii (CDP: titleTops/actTops r?wne). Mniej tag?w = pusta przestrze? w strefie badge, nie skok w g?r?.
 
 ### Test/Ewaluacja
-- isualizations.html: badgeH ~20px vs pill 20px; BRAK TYPU na DATE ORANGE; align row1 OK.
+- isualizations.html: badgeH ~20px vs pill 20px; BRAK TYPU na DATE ORANGE; align row1 OK.
 
 ### Zrodla
 - Feedback UI (tagi vs .dam-tag-pill); ui-taste redesign-preserve Geex.
@@ -6756,7 +6756,7 @@ WORKER: napraw zepsute polskie znaki w branding.html (Wyczysc/Pokaz/tydzien/mies
 1. Root cause: pps/web/branding.html mial podwojne mojibake, potem plik zostal tez zapisany jako **cp1250** (bajty 9C E6 zamiast UTF-8 C5 9B C4 87 dla sc). dam-branding.js byl czysty UTF-8.
 2. Meta charset UTF-8 byl OK; problem = literalne stringi w HTML.
 3. Przepisano chrome PL przez Python write_bytes(utf-8) + unicode escapes (bez PowerShell Set-Content).
-4. Sibling: tipy changelog w isualizations.html (Pokaż wszystkie + tipy Historii).
+4. Sibling: tipy changelog w isualizations.html (Pokaż wszystkie + tipy Historii).
 5. Cache-bust: renc20260720d na dam-branding.js/css w branding.html.
 
 ### Efekt/Fix
@@ -6770,7 +6770,7 @@ Chrome Branding renderuje: Wyczyść, Pokaż, tydzień, miesiąc, użycia, niemi
 ode --check dam-branding.js: Pass
 
 ### Zrodla
-randing.html, isualizations.html; token renc20260720d
+randing.html, isualizations.html; token renc20260720d
 
 ---
 
@@ -7762,3 +7762,49 @@ eturn !isSourceVariantFile(v) (PSD/PSB/AI/PDF never in variant-grid; SourceMount
 **Test/Ewaluacja:** CDP elItems with elMinus=2 after open Elementy; all-file still via wireStudioAllFiles (Kulki earlier: 16, 21px, Shift gate).
 
 **Źródła:** dam-assoc-edit.js; dam-media-preview.js
+
+## bodyGrid20260721 - Modal body CSS Grid (meta | studio) 2026-07-21
+
+**Komenda/Akcja:** Przebudowa panelu body w #damVizModal i #damMediaPreview: grid meta~70% | studio~30%, etykiety Nazwa/Typ pliku, zawsze 1 wariant, densyfikacja all-groups, parity explorer/viz.
+
+**Log/Status:**
+1. Markup: .dam-viz-modal__meta-rail (badges / title+id / filemeta) + .dam-viz-modal__studio-rail + variants full-width + #damVizModalAllFiles host.
+2. Studio frames pionowo, bez szarego tray; all-files poza waskim railem (grid auto-fill).
+3. uildProductVariantStripHtml / productIndexVariantsHtml: pokazuj przy 1 wariancie.
+4. Explorer title: productContext.name zamiast duplikatu basename; Typ pliku line.
+5. Edytuj wszystko: indMaterialsPane dziala z samym productContext (bez materialow).
+6. Bug reveal: 
+evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidden / opacity:0 - fix: fade calego body + opacity-only + clear rails po paint.
+
+**Efekt/Fix:** Layout CDP: meta|studio sameRow, frames column, labels Nazwa/Typ, all-files 4-col dense; Edytuj wszystko widoczne w pane skojarzen.
+
+**Test/Ewaluacja:**
+- node --check dam-viz / media-preview / assoc-edit / grid-reveal OK
+- CDP babka: cols ~552|243, framesDir=column, bg transparent, labels OK, all-files groups=6 cols=4
+- Screenshot+Read: meta+studio side-by-side, WARIANTY below, dense all-groups
+- ?v= bodyGrid20260721b/c
+
+**Zrodla:** dam-viz.js, dam-media-preview.js, dam-assoc-edit.js, dam-grid-reveal.js, dam-viz-modal.css; visualizations/explorer/branding/dashboard.html
+
+
+
+## 2026-07-21 - vizCtaNav: Folder hover + OpenFile gallery + body scroll + UTF-8 + zoom dock + loader 1.5s
+
+**Komenda/Akcja:** WORKER (expand) - #damVizModal / #damMediaPreview action-bar + body scroll + hide parity + UTF-8 + loading translate 1.5s.
+
+**Log/Status:**
+1. Folder hover vanish: Geex .geex-btn:hover white text + actions bar ackground:#fff !important = invisible. Fix: 1px purple outline secondary CTA (idle+hover+focus) in dam-viz-modal.css.
+2. OpenFile isolated: shelled to Windows only. Fix: DamMediaPreview.openAsset(siblings) when items>1; viz modal also got Prev/Next + ArrowLeft/Right.
+3. Body scroll: brand.css/branding.css overflow:visible beat assoc-split overflow-y:auto (max-height 520 + parent overflow:hidden = trap). Fix: ID-scoped overflow-y:auto !important + flex min-height:0.
+4. Hide parity: Explorer zoom dock (initZoomDock) not wired on Viz. Moved to DamModalShared; both shells call it.
+5. UTF-8: explorer.html U+FFFD on Pokaż/język/Odśwież; branding.html Poka?. Rewrote via Python UTF-8 (not PowerShell Set-Content). Modal strings Otwórz/Przybliżenie fixed in JS.
+6. Loader: dam-skel-shimmer 1.5s + assoc padding 14px; DamLoader HOLD 1.5s + dock translate 1.5s + padding 16/24; prefers-reduced-motion.
+
+**Efekt/Fix:** Cache token vizCtaNav20260721b. CDP: Folder opacity1 border 1px; body overflowY auto scrollTop works; OpenFile sibNav true path change; zoom is-docked; Pokaż charCode 380; shimmer 1.5s.
+
+**Test/Ewaluacja:**
+- node --check dam-viz / media-preview / modal-shared OK
+- CDP matrix A-E + prior CTA Pass
+- Screenshot: CDP fromSurface (IDE browser_take_screenshot stale-frame on shared tab) + Read; Explorer a11y tree Pokaż wszystkie
+
+**Źródła:** dam-viz-modal.css, dam-viz.js, dam-media-preview.js, dam-modal-shared.js, dam-brand.css; explorer/visualizations/branding HTML; process.md

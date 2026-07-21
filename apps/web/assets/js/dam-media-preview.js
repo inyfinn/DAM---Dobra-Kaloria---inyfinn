@@ -211,23 +211,30 @@
       ".dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading{",
       "display:grid!important;",
       "grid-template-columns:repeat(5,minmax(0,1fr))!important;",
-      "gap:10px 8px!important;",
+      "gap:12px 10px!important;",
       "align-content:start!important;",
       "align-items:start!important;",
       "justify-items:stretch!important;",
-      "width:100%;min-width:0;min-height:0;padding:0;",
+      "width:100%;min-width:0;min-height:0;",
+      /* Inner padding so loading tiles breathe (vizCtaNav20260721b) */
+      "padding:14px 12px 16px!important;box-sizing:border-box;",
       "overflow:hidden!important;overscroll-behavior:none;",
       "-webkit-mask-image:none!important;mask-image:none!important;}",
       ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton{",
-      "display:flex;flex-direction:column;align-items:center;gap:4px;",
+      "display:flex;flex-direction:column;align-items:center;gap:6px;",
       "width:100%;max-width:110px;justify-self:start;",
-      "box-sizing:border-box;margin:0;padding:4px;",
+      "box-sizing:border-box;margin:0;padding:8px 6px;",
       "background:transparent!important;border:none!important;",
       "border-radius:0!important;aspect-ratio:auto!important;height:auto!important;",
       "opacity:var(--dam-skel-op,1);pointer-events:none;}",
       ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton__thumb{",
       "display:block;width:100%;aspect-ratio:1/1;border-radius:6px;",
-      "background:#e2e4ec;border:1px solid #d0d2dc;box-sizing:border-box;}",
+      "background:#e2e4ec;border:1px solid #d0d2dc;box-sizing:border-box;",
+      "position:relative;overflow:hidden;}",
+      ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton__thumb::after{",
+      "content:\"\";position:absolute;inset:0;transform:translateX(-100%);",
+      "background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);",
+      "animation:dam-skel-shimmer 1.5s ease-in-out infinite;}",
       ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton__line{",
       "display:block;height:7px;width:82%;border-radius:4px;background:#eceef4;}",
       ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton__line--short{",
@@ -240,7 +247,12 @@
       ".dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane > .dam-viz-modal__assoc > .dam-media-preview__assoc-grid.dam-media-preview__assoc-grid--loading{",
       "grid-template-columns:repeat(5,minmax(0,1fr))!important;",
       "align-items:start!important;overflow:hidden!important;",
+      "padding:14px 12px 16px!important;",
       "-webkit-mask-image:none!important;mask-image:none!important;}",
+      "@keyframes dam-skel-shimmer{100%{transform:translateX(100%);}}",
+      "@media (prefers-reduced-motion:reduce){",
+      ".dam-media-preview__assoc-grid--loading .dam-assoc-skeleton__thumb::after{",
+      "animation:none!important;display:none!important;}}",
     ].join("");
   }
   if (document.head) injectAssocSkeletonStyles();
@@ -2594,7 +2606,8 @@
         order.push(key);
       }
     });
-    if (order.length < 2) return "";
+    /* HARD 2026-07-21: pokazuj 1 wariant produktu (nie ukrywaj stripu). */
+    if (!order.length) return "";
     var reps = order.map(function (k) {
       return byKey[k];
     });
@@ -2963,56 +2976,10 @@
   }
 
   function initZoomDock(thumbStage, zoomBar) {
-    if (!thumbStage || !zoomBar) return;
-    zoomBar.classList.add("is-docked");
-    var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var dockedY = 30;
-
-    function animateTo(y, duration) {
-      if (reduceMotion) {
-        zoomBar.style.transform = "translateX(-50%) translateY(" + y + "px)";
-        return;
-      }
-      if (window.gsap) {
-        window.gsap.to(zoomBar, {
-          y: y,
-          duration: duration || 0.3,
-          ease: "power2.out",
-          overwrite: true,
-        });
-        return;
-      }
-      zoomBar.style.transform = "translateX(-50%) translateY(" + y + "px)";
+    var shared = window.DamModalShared;
+    if (shared && typeof shared.initZoomDock === "function") {
+      shared.initZoomDock(thumbStage, zoomBar);
     }
-
-    function showDock() {
-      zoomBar.classList.remove("is-docked");
-      animateTo(0, 0.3);
-    }
-
-    function hideDock() {
-      zoomBar.classList.add("is-docked");
-      animateTo(dockedY, 0.3);
-    }
-
-    if (window.gsap) {
-      window.gsap.set(zoomBar, { xPercent: -50, y: dockedY });
-    } else {
-      zoomBar.style.transform = "translateX(-50%) translateY(" + dockedY + "px)";
-    }
-
-    thumbStage.addEventListener("mousemove", function (e) {
-      var rect = thumbStage.getBoundingClientRect();
-      var nearBottom = e.clientY >= rect.bottom - 52;
-      if (nearBottom) showDock();
-      else if (!zoomBar.matches(":hover")) hideDock();
-    });
-    thumbStage.addEventListener("mouseleave", hideDock);
-    zoomBar.addEventListener("mouseenter", showDock);
-    zoomBar.addEventListener("focusin", showDock);
-    zoomBar.addEventListener("mouseleave", function () {
-      hideDock();
-    });
   }
 
   function closeModal(modal) {
@@ -3024,7 +2991,8 @@
   function openAsset(asset, options) {
     options = options || {};
     if (!asset) return;
-    if (options.mode === "viz-studio") ensureVizModalCss();
+    /* Always load viz-modal CSS: Folder outline hover fix lives there (vizCtaNav20260721a). */
+    ensureVizModalCss();
 
     var siblings = Array.isArray(options.siblings) ? options.siblings.slice() : [asset];
     var idx = typeof options.index === "number" ? options.index : 0;
@@ -3090,13 +3058,13 @@
       "<span>Folder</span></button>" +
       '<span id="damMediaPreviewSourceMount" class="dam-media-preview__source-mount" aria-label="Pliki zrodlowe"></span>' +
       /* --- FILE OPEN CTA (left of copy) --- */
-      '<button type="button" class="dam-viz-icon-btn" id="damMediaPreviewOpenFile" data-dam-tip="Otwiera plik w domyslnej aplikacji Windows i kopiuje sciezke" aria-label="Otworz plik" title="Otworz plik">' +
+      '<button type="button" class="dam-viz-icon-btn" id="damMediaPreviewOpenFile" data-dam-tip="Otwiera plik w domyślnej aplikacji Windows i kopiuje ścieżkę" aria-label="Otwórz plik" title="Otwórz plik">' +
       '<i class="uil uil-external-link-alt" aria-hidden="true"></i></button>' +
-      '<button type="button" class="dam-viz-icon-btn" id="damMediaPreviewCopy" data-dam-tip="Kopiuje lokalna sciezke pliku" aria-label="Kopiuj sciezke" title="Kopiuj sciezke">' +
+      '<button type="button" class="dam-viz-icon-btn" id="damMediaPreviewCopy" data-dam-tip="Kopiuje lokalną ścieżkę pliku" aria-label="Kopiuj ścieżkę" title="Kopiuj ścieżkę">' +
       '<i class="uil uil-copy" aria-hidden="true"></i></button>' +
       '<button type="button" class="dam-viz-icon-btn' +
       (syEnabled ? "" : " is-disabled") +
-      '" id="damMediaPreviewShare" aria-label="Udostepnij" title="' +
+      '" id="damMediaPreviewShare" aria-label="Udostępnij" title="' +
       esc(shareTitle) +
       '" data-dam-tip="' +
       esc(shareTitle) +
@@ -3105,26 +3073,38 @@
       '><i class="uil uil-share-alt" aria-hidden="true"></i></button>' +
       "</div></div>";
     var bodyInnerHtml =
-      '<div class="dam-viz-card__badges" id="damMediaPreviewBadges"></div>' +
+      '<div class="dam-viz-modal__meta-rail">' +
+      '<div class="dam-viz-modal__meta-block dam-viz-modal__meta-block--badges">' +
+      '<div class="dam-viz-card__badges" id="damMediaPreviewBadges"></div></div>' +
+      '<div class="dam-viz-modal__meta-block dam-viz-modal__meta-block--title">' +
       '<div class="dam-media-preview__title-block">' +
       '<h4 class="dam-viz-modal__title" id="damMediaPreviewTitle"></h4>' +
-      /* ID chip pod tytulem (12px) - jak #damVizModalAssetId, nie w title-row po prawej. */
       '<div id="damMediaPreviewTitleMeta" class="dam-media-preview__title-meta-slot"></div>' +
-      '<div class="dam-media-preview__filemeta">' +
+      "</div></div>" +
+      '<div class="dam-viz-modal__meta-block dam-viz-modal__meta-block--filemeta">' +
+      '<div class="dam-media-preview__filemeta dam-viz-modal__filemeta">' +
+      '<div class="dam-viz-modal__meta-line">' +
+      '<span class="dam-viz-modal__meta-k">Nazwa pliku</span>' +
       '<p class="dam-viz-modal__filename" id="damMediaPreviewFilename" hidden></p>' +
       "</div>" +
-      "</div>" +
+      '<div class="dam-viz-modal__meta-line">' +
+      '<span class="dam-viz-modal__meta-k">Typ pliku</span>' +
+      '<p class="dam-viz-modal__carrier" id="damMediaPreviewTypeLine" hidden></p>' +
+      "</div></div></div></div>" +
+      '<div class="dam-viz-modal__studio-rail">' +
+      '<div id="damMediaPreviewStudio" class="dam-media-preview__studio dam-media-preview__studio--rail" hidden></div>' +
       '<div id="damMediaPreviewQuality" class="dam-media-preview__quality" role="group" aria-label="Jakość / kompresja" hidden></div>' +
-      /* grouptint20260721a: WARIANTY (INDEX) above studio frames */
-      '<div id="damMediaPreviewAssoc"></div>' +
-      '<div id="damMediaPreviewStudio" class="dam-media-preview__studio" hidden></div>';
+      "</div>" +
+      /* WARIANTY full-width under meta|studio grid */
+      '<div id="damMediaPreviewAssoc" class="dam-viz-modal__variants"></div>' +
+      '<div id="damMediaPreviewAllFiles" class="dam-viz-modal__all-files-host" hidden></div>';
     var thumbHtml =
       '<div class="dam-viz-modal__thumb" id="damMediaPreviewThumb">' +
-      '<div class="dam-viz-modal__zoom dam-media-preview__zoom" role="group" aria-label="Przyblizenie" data-dam-tip="CTRL+scroll lub ALT+scroll: zoom. Przy przyblizeniu: przeciagnij, zeby przesunac.">' +
+      '<div class="dam-viz-modal__zoom dam-media-preview__zoom" role="group" aria-label="Przybliżenie" data-dam-tip="CTRL+scroll lub ALT+scroll: zoom. Przy przybliżeniu: przeciągnij, żeby przesunąć.">' +
       navPrev +
       '<button type="button" class="dam-viz-modal__zoom-btn" id="damMediaPreviewZoomOut" aria-label="Pomniejsz"><i class="uil uil-search-minus"></i></button>' +
       '<span class="dam-viz-modal__zoom-label" id="damMediaPreviewZoomLabel">100%</span>' +
-      '<button type="button" class="dam-viz-modal__zoom-btn" id="damMediaPreviewZoomIn" aria-label="Powieksz"><i class="uil uil-search-plus"></i></button>' +
+      '<button type="button" class="dam-viz-modal__zoom-btn" id="damMediaPreviewZoomIn" aria-label="Powiększ"><i class="uil uil-search-plus"></i></button>' +
       '<button type="button" class="dam-viz-modal__zoom-btn" id="damMediaPreviewZoomReset" aria-label="Reset"><i class="uil uil-search"></i></button>' +
       navNext +
       "</div>" +
@@ -3442,6 +3422,29 @@
       if (name) el.setAttribute("title", name);
     }
 
+    function setTypeLine(a) {
+      var el = document.getElementById("damMediaPreviewTypeLine");
+      if (!el) return;
+      var parts = splitNameExt(a && (a.name || fileBasenameFromPath(a.path || "", "")));
+      var ext = parts.ext ? parts.ext.toUpperCase() : "";
+      var carrier =
+        (a && (a.carrier_label || a.carrier)) ||
+        (options.productContext && options.productContext.carrier) ||
+        "";
+      var idx =
+        (a && (a.product_index || a.index_base || a.index)) ||
+        (options.productContext && options.productContext.index) ||
+        "";
+      idx = String(idx || "").split(".")[0];
+      var bits = [];
+      if (ext) bits.push(ext);
+      if (carrier) bits.push(String(carrier));
+      if (idx) bits.push("Indeks " + idx);
+      var text = bits.join(" · ");
+      el.textContent = text;
+      el.hidden = !text;
+    }
+
     var VIZ_PERSP_ORDER = [
       "ENFACE",
       "FRONT",
@@ -3657,7 +3660,9 @@
         if (!showAllFiles || items.length < 2) return "";
         /* mergeVar20260721a: material siblings live in .variant-grid only — never duplicate all-files. */
         if (materialMode) return "";
-        /* Product viz: group by Perspektywa + Tło — quality thumbs in a horizontal grid. */
+        /* Product viz: group by Perspektywa + Tło — quality thumbs in a horizontal grid.
+           bgSections20260721a: sections by Tło (Bez tła / Z tłem) come first, groups inside
+           carry only the Perspektywa label — no interleaving, no repeated "· Z TŁEM" per tile. */
         var groups = {};
         var gOrder = [];
         items.forEach(function (it) {
@@ -3675,100 +3680,112 @@
           var bi = VIZ_PERSP_ORDER.indexOf(bp);
           if (ai < 0) ai = 999;
           if (bi < 0) bi = 999;
-          if (ai !== bi) return ai - bi;
-          var ab = a.split("|")[1];
-          var bb = b.split("|")[1];
-          if (ab === bb) return 0;
-          if (ab === "z-tlem") return -1;
-          if (bb === "z-tlem") return 1;
-          return String(ab).localeCompare(String(bb));
+          return ai - bi;
         });
-        var parts = gOrder
-          .map(function (gk) {
-            var bits = gk.split("|");
-            var perspLab = bits[0] && bits[0] !== "?" ? bits[0] : "INNE";
-            var bgLab = bits[1] === "bez-tla" ? "Bez tła" : "Z tłem";
-            var title = perspLab + " · " + bgLab;
-            /* allrows20260721a: one tile per quality label inside Perspektywa·Tło group. */
-            var bySize = {};
-            var sizeOrderKeys = [];
-            groups[gk].forEach(function (it) {
-              var sk = it.size || "Plik";
-              if (!bySize[sk]) {
-                bySize[sk] = it;
-                sizeOrderKeys.push(sk);
-                return;
-              }
-              var prev = bySize[sk];
-              var prevOn = itemPath(prev) === curPath;
-              var nextOn = itemPath(it) === curPath;
-              if (nextOn && !prevOn) {
-                bySize[sk] = it;
-                return;
-              }
-              if (prevOn) return;
-              var pPath = (prev.file && prev.file.path) || prev.path || "";
-              var nPath = (it.file && it.file.path) || it.path || "";
-              var pScore =
-                (prev.thumb_url || pPath ? 2 : 0) +
-                (String(pPath).toLowerCase().indexOf(".png") >= 0 ? 1 : 0);
-              var nScore =
-                (it.thumb_url || nPath ? 2 : 0) +
-                (String(nPath).toLowerCase().indexOf(".png") >= 0 ? 1 : 0);
-              if (nScore > pScore) bySize[sk] = it;
-            });
-            sizeOrderKeys.sort(function (sa, sb) {
-              var ia = VIZ_SIZE_ORDER.indexOf(sa);
-              var ib = VIZ_SIZE_ORDER.indexOf(sb);
-              if (ia < 0) ia = 999;
-              if (ib < 0) ib = 999;
-              return ia - ib;
-            });
-            var cards = sizeOrderKeys
-              .map(function (sk) {
-                var it = bySize[sk];
-                var p = (it.file && it.file.path) || it.path || "";
-                var on = itemPath(it) === curPath;
-                var thumb =
-                  it.thumb_url ||
-                  (p ? previewUrl(p, it.file || it) : "") ||
-                  "";
-                var sidx =
-                  typeof it.siblingIndex === "number" ? it.siblingIndex : -1;
-                var lab = it.size || "Plik";
-                return (
-                  '<button type="button" class="dam-media-preview__all-file' +
-                  (on ? " is-active" : "") +
-                  '" data-all-sib="' +
-                  sidx +
-                  '" data-all-path="' +
-                  esc(p) +
-                  '">' +
-                  (thumb
-                    ? '<img src="' +
-                      esc(thumb) +
-                      '" alt="" loading="lazy" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
-                    : '<span class="dam-media-preview__all-file-ph"></span>') +
-                  '<span class="dam-media-preview__all-file-label">' +
-                  esc(lab) +
-                  "</span></button>"
-                );
-              })
-              .join("");
-            return (
-              '<div class="dam-media-preview__all-group">' +
-              '<div class="dam-media-preview__all-group-label">' +
-              esc(title) +
-              "</div>" +
-              '<div class="dam-media-preview__all-group-grid">' +
-              cards +
-              "</div></div>"
-            );
-          })
-          .join("");
+        function renderGroup(gk) {
+          var bits = gk.split("|");
+          var perspLab = bits[0] && bits[0] !== "?" ? bits[0] : "INNE";
+          var bgKey = bits[1] === "bez-tla" ? "bez-tla" : "z-tlem";
+          /* allrows20260721a: one tile per quality label inside Perspektywa group. */
+          var bySize = {};
+          var sizeOrderKeys = [];
+          groups[gk].forEach(function (it) {
+            var sk = it.size || "Plik";
+            if (!bySize[sk]) {
+              bySize[sk] = it;
+              sizeOrderKeys.push(sk);
+              return;
+            }
+            var prev = bySize[sk];
+            var prevOn = itemPath(prev) === curPath;
+            var nextOn = itemPath(it) === curPath;
+            if (nextOn && !prevOn) {
+              bySize[sk] = it;
+              return;
+            }
+            if (prevOn) return;
+            var pPath = (prev.file && prev.file.path) || prev.path || "";
+            var nPath = (it.file && it.file.path) || it.path || "";
+            var pScore =
+              (prev.thumb_url || pPath ? 2 : 0) +
+              (String(pPath).toLowerCase().indexOf(".png") >= 0 ? 1 : 0);
+            var nScore =
+              (it.thumb_url || nPath ? 2 : 0) +
+              (String(nPath).toLowerCase().indexOf(".png") >= 0 ? 1 : 0);
+            if (nScore > pScore) bySize[sk] = it;
+          });
+          sizeOrderKeys.sort(function (sa, sb) {
+            var ia = VIZ_SIZE_ORDER.indexOf(sa);
+            var ib = VIZ_SIZE_ORDER.indexOf(sb);
+            if (ia < 0) ia = 999;
+            if (ib < 0) ib = 999;
+            return ia - ib;
+          });
+          var cards = sizeOrderKeys
+            .map(function (sk) {
+              var it = bySize[sk];
+              var p = (it.file && it.file.path) || it.path || "";
+              var on = itemPath(it) === curPath;
+              var thumb =
+                it.thumb_url ||
+                (p ? previewUrl(p, it.file || it) : "") ||
+                "";
+              var sidx =
+                typeof it.siblingIndex === "number" ? it.siblingIndex : -1;
+              var lab = it.size || "Plik";
+              return (
+                '<button type="button" class="dam-media-preview__all-file' +
+                (on ? " is-active" : "") +
+                '" data-all-sib="' +
+                sidx +
+                '" data-all-path="' +
+                esc(p) +
+                '">' +
+                (thumb
+                  ? '<img src="' +
+                    esc(thumb) +
+                    '" alt="" loading="lazy" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
+                  : '<span class="dam-media-preview__all-file-ph"></span>') +
+                '<span class="dam-media-preview__all-file-label">' +
+                esc(lab) +
+                "</span></button>"
+              );
+            })
+            .join("");
+          return (
+            '<div class="dam-media-preview__all-group" data-bg="' +
+            bgKey +
+            '">' +
+            '<div class="dam-media-preview__all-group-label">' +
+            esc(perspLab) +
+            "</div>" +
+            '<div class="dam-media-preview__all-group-grid">' +
+            cards +
+            "</div></div>"
+          );
+        }
+        function renderSection(order, label, key) {
+          if (!order.length) return "";
+          return (
+            '<section class="dam-media-preview__all-section dam-media-preview__all-section--' +
+            key +
+            '"><h5 class="dam-media-preview__all-section-label">' +
+            esc(label) +
+            '</h5><div class="dam-media-preview__all-section-grid">' +
+            order.map(renderGroup).join("") +
+            "</div></section>"
+          );
+        }
+        var bezOrder = gOrder.filter(function (gk) {
+          return gk.split("|")[1] === "bez-tla";
+        });
+        var zTlemOrder = gOrder.filter(function (gk) {
+          return gk.split("|")[1] !== "bez-tla";
+        });
         return (
           '<div class="dam-media-preview__all-files is-enter" id="damMediaPreviewAllFiles">' +
-          parts +
+          renderSection(bezOrder, "Bez tła", "bez-tla") +
+          renderSection(zTlemOrder, "Z tłem", "z-tlem") +
           "</div>"
         );
       }
@@ -3885,7 +3902,7 @@
           ".dam-media-preview__assoc-col--variants"
         );
         host.className =
-          "dam-media-preview__studio" +
+          "dam-media-preview__studio dam-media-preview__studio--rail" +
           (materialMode
             ? " dam-media-preview__studio--material"
             : " dam-media-preview__studio--tri") +
@@ -3894,9 +3911,14 @@
           (frames
             ? '<div class="dam-media-preview__studio-frames">' + frames + "</div>"
             : "") +
-          showAllBtn +
-          allFilesPanelHtml();
+          showAllBtn;
         host.hidden = false;
+        var allPanel = allFilesPanelHtml();
+        var allHost = modal.querySelector("#damMediaPreviewAllFiles");
+        if (allHost) {
+          allHost.innerHTML = allPanel || "";
+          allHost.hidden = !allPanel;
+        }
 
         host.querySelectorAll("[data-studio-bg]").forEach(function (btn) {
           btn.addEventListener("click", function () {
@@ -3936,7 +3958,8 @@
             if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
           });
         }
-        host.querySelectorAll("[data-all-sib]").forEach(function (btn) {
+        var allBindRoot = allHost && !allHost.hidden ? allHost : host;
+        allBindRoot.querySelectorAll("[data-all-sib]").forEach(function (btn) {
           btn.addEventListener("click", function () {
             var si = parseInt(btn.getAttribute("data-all-sib"), 10);
             if (!isNaN(si) && si >= 0) showAt(si);
@@ -3945,7 +3968,7 @@
         });
         /* brandComposer20260721a: Shift-minus on studio all-file quality tiles. */
         if (window.DamAssocEdit && typeof window.DamAssocEdit.wireStudioAllFiles === "function") {
-          window.DamAssocEdit.wireStudioAllFiles(host);
+          window.DamAssocEdit.wireStudioAllFiles(allBindRoot);
         }
         if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
       }
@@ -4039,8 +4062,23 @@
       var badges = document.getElementById("damMediaPreviewBadges");
       var assocHost = document.getElementById("damMediaPreviewAssoc");
       var sourceMount = document.getElementById("damMediaPreviewSourceMount");
-      if (title) title.innerHTML = titleHtml(a.name, a.id);
+      /* Parity viz modal: skrócona nazwa produktu, nie duplikat basename w H1. */
+      if (title) {
+        var productTitle =
+          options.mode === "viz-studio" &&
+          options.productContext &&
+          (options.productContext.name || options.productContext.display_name);
+        if (productTitle) {
+          title.textContent = String(productTitle);
+        } else if (options.mode === "viz-studio") {
+          title.innerHTML = titleHtml(a.name, a.id);
+        } else {
+          /* Branding: title = basename bez .ext (ext jako chip), filename poniżej. */
+          title.innerHTML = titleHtml(a.name, a.id);
+        }
+      }
       setFilenameLine(a.path || "", a.name || "");
+      setTypeLine(a);
       if (titleMeta) {
         titleMeta.innerHTML = titleMetaHtml(a, options);
         titleMeta.hidden = !String(titleMeta.innerHTML || "").trim();
@@ -4354,11 +4392,18 @@
   };
 
   function ensureVizModalCss() {
-    if (document.getElementById("dam-viz-modal-css")) return;
+    var href = "assets/css/dam-viz-modal.css?v=vizCtaNav20260721b";
+    var existing = document.getElementById("dam-viz-modal-css");
+    if (existing) {
+      if (existing.tagName === "LINK" && existing.getAttribute("href") !== href) {
+        existing.href = href;
+      }
+      return;
+    }
     var link = document.createElement("link");
     link.id = "dam-viz-modal-css";
     link.rel = "stylesheet";
-    link.href = "assets/css/dam-viz-modal.css?v=ship20260721v310";
+    link.href = href;
     document.head.appendChild(link);
   }
 

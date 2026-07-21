@@ -348,7 +348,7 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   `data-linked-asset-idx` siedzi na `.dam-media-preview__assoc-thumb-btn`, nie na
   `.assoc-item` | selektor minus = `.assoc-item--asset` + idx z child `[data-linked-asset-idx]`;
   nie duplikowac drugiej Shift UX w dam-viz ? tylko `DamAssocEdit.bindMaterialsPane`.
-- 2026-07-21 | viz variants spam | dziesiatki `PL · index` w `#damVizModal` |
+- 2026-07-21 | viz variants spam | dziesiatki `PL ï¿½ index` w `#damVizModal` |
   `expandModalWizkiVariants` sp?aszcza ka?dy plik WIZKI do chipa | UI = branding
   studio (`T?o`/`Perspektywa`/`Jako??` via DamLabels), nie flat `variantChipLabel`.
 - 2026-07-20 | sidebar morph | jank przy collapse/expand mimo GSAP 0.5s |
@@ -630,7 +630,7 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   DamIntegrations.refresh)` robi? pe?ny remount (skeleton + wipe `<details>`) |
   NIE remountuj na focus; najwy?ej `visibilitychange` z guardem
   `details[open]` / form focus + debounce; Promise.all z `withTimeout` +
-  failsafe clear skeleton; po `revealRows` rób `gsap.killTweensOf` + force
+  failsafe clear skeleton; po `revealRows` rï¿½b `gsap.killTweensOf` + force
   opacity (mid-tween wygl?da jak pusty hub / ?zostal skeleton?).
 - 2026-07-20 | Sidebar morph / icon recenter jank | width `--dam-sidebar-w` p?ynny,
   ale na `onComplete` klasa `dam-sidebar-collapsed` snapuje `padding` 29?10,
@@ -667,11 +667,11 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   (`_require_login`); fetch BEZ `Authorization` dostaje `ok:false,
   login_required`, a UI traktowa? ka?dy `!ok` jak offline. ?Baza online? =
   Postgres/status pill, nie most change-log. Fix: `bridgeAuthHeaders()` na GET
-  + rozró?nij `login_required` vs sie?; copy PL: ?Most zmian niedost?pny -
-  Cofnij/Ponów lokalnie?. Cofnij/Ponów = undo/redo rename typu/indeksu/plików
+  + rozrï¿½?nij `login_required` vs sie?; copy PL: ?Most zmian niedost?pny -
+  Cofnij/Ponï¿½w lokalnie?. Cofnij/Ponï¿½w = undo/redo rename typu/indeksu/plikï¿½w
   na dysku X: przez most 8766 (tylko admin).
-- 2026-07-20 | BENTO C3 | pokusa redesignu kart przy chrome hubów | anatomia
-  `.dam-viz-card` / `.dam-branding-card` zamro?ona (memory §123) | freeze spec
+- 2026-07-20 | BENTO C3 | pokusa redesignu kart przy chrome hubï¿½w | anatomia
+  `.dam-viz-card` / `.dam-branding-card` zamro?ona (memory ï¿½123) | freeze spec
   `agents/shared/bento-card-freeze.md` + komentarze FROZEN w CSS; chrome OK,
   kart bez ADR nie restylowa?.
 - 2026-07-20 | Kolizja nazw WORKER A/B/C | przygotowano prompty Explorera
@@ -744,7 +744,7 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   per MOBILE/DESKTOP/TABLET i WxH | grupuj po `folder_group_id` (scope jak branding
   `marketingGroupKey`) + `familyCreativeKey` (creativeKey + strip device +
   `\d+-x-\d+` / `\d+x\d+` - po normalizacji separatorow wymiary sa z myslnikiem) |
-  badge N na kafelku; label `N grup · M plikow`; klik = primary (prefer DESKTOP /
+  badge N na kafelku; label `N grup ï¿½ M plikow`; klik = primary (prefer DESKTOP /
   najwiekszy) + siblings = czlonkowie grupy. Nie ruszac `creativeKey` (Rule A
   jakosci - bez strip WxH). Style badge wstrzykniete w `injectA3Styles` (nie
   dam-brand.css - sibling CSS).
@@ -811,3 +811,75 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   + `Path.write_bytes(text.encode("utf-8"))`; przy race siblingow: hold+re-read;
   krytyczny chrome dostaje `data-i18n` (show_all / show_archive / back_browse);
   weryfikacja = CDP `codePointAt` (U+017C/U+0142/U+0105), nie vision caption.
+
+- 2026-07-21 | Modal body child reveal + CSS Grid rails | Objaw: po bodyGrid
+  (meta-rail | studio-rail) studio niewidoczne mimo poprawnego layoutu w CDP
+  (opacity:0 / visibility:hidden inline) | 
+evealModal robil 
+evealSequence
+  na **dzieciach** .dam-viz-modal__body z GSAP utoAlpha; kill/overwrite
+  albo niepeÅ‚ny stagger zostawial rail w stanie spoczynku z visibility:hidden
+  (doktryna: rest = tylko opacity) | fix: fade **calego** body jako jednego
+  wezla; w 
+evealSequence fade uzywa opacity nie utoAlpha; po
+  paint() studio czysc style.opacity/visibility na railach; weryfikacja =
+  getComputedStyle.visibility + getBoundingClientRect same-row meta|studio.
+- 2026-07-21 | all-files regroup (Bez tla / Z tlem) + dead space na prawo |
+  Objaw: #damVizModalAllFiles mial pusty pas po prawej gdy widac 1-2 grupy,
+  kafelki ~56px, grupy Z TLEM/BEZ TLA przeplatane na jednym poziomie |
+  przyczyna nr 1: SAMEGO DNIA dwaj agenci dopisali kolidujace fixy do tego
+  samego elementu - allrows20260721a (flex column, kafelki 72px) w
+  dam-branding.css, potem bodyGrid20260721a w dam-viz-modal.css z
+  !important grid-template-columns: repeat(auto-fill, minmax(168px,1fr)) +
+  kafelki 56px, ktory nadpisal ten pierwszy fix i przywrocil dokladnie ten
+  sam bug co lekcja "viz all-files doubles+columns" wyzej ostrzegala przed
+  (auto-fill rezerwuje tory kolumn dla calej siatki, samotny element dostaje
+  1 kolumne, reszta pustki) | przyczyna nr 2 (subtelna, po naprawie #1):
+  nawet grid-template-columns: repeat(auto-fit, minmax(...)) NIE wystarcza
+  gdy liczba elementow nie jest wielokrotnoscia liczby kolumn - grid ustala
+  tory kolumn dla CALEJ siatki (wszystkich wierszy), wiec 4 elementy w
+  3 kolumnach = wiersz 2 ma 1 element w kolumnie 1, kolumny 2-3 zostaja
+  martwa przestrzenia. Flexbox (display:flex; flex-wrap:wrap + dziecko
+  flex:1 1 <basis>) NIE ma tego problemu - grow rozklada sie PER WIERSZ,
+  wiec ostatni "sierocy" element zawsze rozciaga sie na cala szerokosc |
+  zasada: fluid rzad kart o zmiennej liczbie elementow (1..N, nieznana z
+  gory) = flexbox z flex:1 1 <min>px, NIE CSS Grid auto-fit/auto-fill -
+  grid dobry tylko gdy liczba elementow jest stala/przewidywalna wzgledem
+  liczby kolumn. Struktura: sekcje .dam-media-preview__all-section (Bez
+  tla / Z tlem, kolejnosc = brak przeplotu) -> .all-section-grid (flex,
+  grupy) -> .all-group[data-bg] (etykieta = TYLKO typ/perspektywa, bez
+  "* Z TLEM") -> .all-group-grid (flex, kafelki jakosci). Wizualne
+  rozroznienie GLOBALNE (viz modal + explorer #damMediaPreview - wspolny
+  markup z dam-media-preview.js): data-bg="z-tlem" = fill
+  var(--dam-surface-muted,#f5f6fa); data-bg="bez-tla" = transparent +
+  border 1px #f5f6fa (subtelne z premedytacji - user podal ten sam token
+  dla obu, kontrast wychodzi gdy obie sekcje sa widoczne razem, nie per
+  kafelek). Weryfikacja CDP: getBoundingClientRect().width grupy w
+  ostatnim wierszu === width kontenera (dowod braku martwej przestrzeni),
+  nie tylko "wyglada ok". Pulapka QA: modal otwarty przez dispatchEvent
+  syntetyczny w karcie z document.hidden (Multitask/automation) czasem
+  zamraza GSAP fade w polowie (opacity 0.0-0.5) - screenshot zwraca STARA
+  klatke mimo display:flex w CDP; dowod liczbowy (rect/bg/border/kolejnosc
+  sekcji) > screenshot w tym przypadku, ale zanotuj to jako znane ograniczenie
+  QA, nie jako "nie dziala".
+
+### 2026-07-21 - viz modal actions: white-on-white hover + body overflow trap + zoom dock parity
+- **Objaw A:** `#damVizModalWinExplorer` (Folder) "znika" na hover.
+- **Przyczyna:** Geex `.geex-btn:hover { color:white; background:primary }` +
+  `#â€¦__actions .geex-btn:not(.geex-btn--primary) { background:#fff !important }`
+  = bialy tekst/ikona (currentColor SVG) na bialym tle. Nie opacity:0.
+- **Fix:** secondary CTA = outline 1px primary, color primary !important na idle/hover/focus;
+  nie walcz z primary `PrzejdÅº`.
+- **Objaw B:** `.dam-viz-modal__body` nie scrolluje mimo max-height 520.
+- **Przyczyna:** `dam-brand.css` / `dam-branding.css` ustawiaja
+  `overflow:visible` (czesto z `#damMediaPreview` - wyzsza specificity niz
+  `.dam-viz-modal-box--assoc-split .__body`). Parent `__main { overflow:hidden }`
+  ucina content bez scrollporta.
+- **Fix:** `#damVizModal|#damMediaPreview â€¦ __body { overflow-y:auto !important;
+  flex:0 1 auto; min-height:0 }` w dam-viz-modal.css.
+- **Objaw C:** zoom pill chowa sie w Explorerze, nie w Viz.
+- **Przyczyna:** `initZoomDock` tylko w dam-media-preview.js.
+- **Fix:** wspolny `DamModalShared.initZoomDock` - obie skorupy.
+- **UTF-8:** nigdy PowerShell Set-Content na apps/web; U+FFFD w HTML = rewrite
+  Pythonem `write_bytes(utf-8)`. CDP `charCodeAt` (Å¼=380) > OCR screenshotu
+  (vision bywa myli Å¼ z â—†).

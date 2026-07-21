@@ -11,7 +11,68 @@
   var MODAL_ZOOM_MAX = 400;
 
   var ZOOM_SHORTCUT_TIP =
-    "Scroll na grafice: +/-5%. Shift+scroll: +/-10%. Ctrl+scroll: +/-1%. Kliknij wartosc i wpisz procent (np. 125). Lupa: +/-10%.";
+    "Scroll na grafice: +/-5%. Shift+scroll: +/-10%. Ctrl+scroll: +/-1%. Kliknij wartość i wpisz procent (np. 125). Lupa: +/-10%.";
+
+  /**
+   * Zoom pill auto-hide (Explorer canon): docks down when pointer leaves the
+   * lower thumb band; shows on hover near bottom / focus. Shared by
+   * #damMediaPreview and #damVizModal (parity — do not special-case Viz).
+   */
+  function initZoomDock(thumbStage, zoomBar) {
+    if (!thumbStage || !zoomBar) return;
+    if (zoomBar.dataset.damZoomDockBound === "1") return;
+    zoomBar.dataset.damZoomDockBound = "1";
+    zoomBar.classList.add("is-docked", "dam-media-preview__zoom");
+    var reduceMotion =
+      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var dockedY = 30;
+
+    function animateTo(y, duration) {
+      if (reduceMotion) {
+        zoomBar.style.transform = "translateX(-50%) translateY(" + y + "px)";
+        return;
+      }
+      if (window.gsap) {
+        window.gsap.to(zoomBar, {
+          y: y,
+          duration: duration || 0.3,
+          ease: "power2.out",
+          overwrite: true,
+        });
+        return;
+      }
+      zoomBar.style.transform = "translateX(-50%) translateY(" + y + "px)";
+    }
+
+    function showDock() {
+      zoomBar.classList.remove("is-docked");
+      animateTo(0, 0.3);
+    }
+
+    function hideDock() {
+      zoomBar.classList.add("is-docked");
+      animateTo(dockedY, 0.3);
+    }
+
+    if (window.gsap) {
+      window.gsap.set(zoomBar, { xPercent: -50, y: dockedY });
+    } else {
+      zoomBar.style.transform = "translateX(-50%) translateY(" + dockedY + "px)";
+    }
+
+    thumbStage.addEventListener("mousemove", function (e) {
+      var rect = thumbStage.getBoundingClientRect();
+      var nearBottom = e.clientY >= rect.bottom - 52;
+      if (nearBottom) showDock();
+      else if (!zoomBar.matches(":hover")) hideDock();
+    });
+    thumbStage.addEventListener("mouseleave", hideDock);
+    zoomBar.addEventListener("mouseenter", showDock);
+    zoomBar.addEventListener("focusin", showDock);
+    zoomBar.addEventListener("mouseleave", function () {
+      hideDock();
+    });
+  }
 
   function readCardZoomPct() {
     var n = parseInt(localStorage.getItem(CARD_ZOOM_KEY) || "100", 10);
@@ -361,5 +422,6 @@
     scheduleFitChrome: scheduleFitChrome,
     bindChromeFit: bindChromeFit,
     bindZoom: bindZoom,
+    initZoomDock: initZoomDock,
   };
 })();
