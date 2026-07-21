@@ -219,8 +219,31 @@
 #damMediaPreview .dam-viz-modal__actions .geex-btn,
 #damVizModal .dam-viz-modal__actions .dam-viz-modal__cta,
 #damMediaPreview .dam-viz-modal__actions .dam-viz-modal__cta {
-  padding: 12px;
   box-sizing: border-box;
+}
+
+/*
+  Labeled modal CTAs (Przejdź / Folder): compact Geex/sm rectangles — NOT circles.
+  Icon-only (.dam-viz-icon-btn) stays square below.
+*/
+#damVizModal .dam-viz-modal__actions .dam-viz-modal__cta,
+#damMediaPreview .dam-viz-modal__actions .dam-viz-modal__cta,
+#damVizModal .dam-viz-modal__actions-main .geex-btn.dam-viz-modal__cta,
+#damMediaPreview .dam-viz-modal__actions-main .geex-btn.dam-viz-modal__cta {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: var(--dam-control-h-sm, 36px) !important;
+  max-width: none;
+  padding: var(--dam-space-btn-sm-y, 8px) calc(var(--dam-space-btn-sm-x, 14px) + 2px) !important;
+  border-radius: var(--dam-radius-btn-compact, 8px) !important;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: visible;
+  flex: 0 0 auto;
 }
 
 /* Secondary Folder CTA: 1px purple outline. Override Geex .geex-btn:hover
@@ -261,6 +284,10 @@
 #damVizModal .dam-viz-modal__actions .dam-admin-control,
 #damMediaPreview .dam-viz-modal__actions .dam-admin-control {
   background: #fff !important;
+  /* Same compact rect as labeled CTAs — not Geex pill 50px */
+  width: auto !important;
+  height: auto !important;
+  border-radius: var(--dam-radius-btn-compact, 8px) !important;
 }
 
 #damVizModal .dam-viz-modal__actions .dam-viz-icon-btn,
@@ -288,8 +315,10 @@
 
 #damVizModal .dam-viz-modal__actions .dam-admin-control,
 #damMediaPreview .dam-viz-modal__actions .dam-admin-control {
-  padding: 12px !important;
-  min-height: 44px !important;
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px) !important;
+  min-height: var(--dam-control-h-sm, 36px) !important;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 /* Product INDEX variants strip ABOVE studio (grouptint20260721a) */

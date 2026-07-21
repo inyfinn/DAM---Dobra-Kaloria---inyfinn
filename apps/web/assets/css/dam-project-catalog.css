@@ -75,26 +75,29 @@
 
 .dam-catalog-marketing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 12px;
 }
 
+/* Middle ground of .dam-viz-card body air + dashboard viz-row media cards */
 .dam-catalog-marketing-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid var(--dam-border, rgba(0, 0, 0, 0.08));
-  background: var(--dam-surface-2, rgba(0, 0, 0, 0.02));
+  gap: 12px;
+  padding: 14px 14px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--dam-border, #e7e7e7);
+  background: var(--dam-surface, #fff);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   text-decoration: none;
   color: inherit;
-  min-height: 140px;
+  min-height: 168px;
+  box-sizing: border-box;
 }
 
 .dam-catalog-marketing-card:hover {
-  border-color: var(--dam-primary, #6366f1);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #e7e7e7));
+  box-shadow: 0 4px 14px rgba(70, 66, 85, 0.1);
 }
 
 .dam-catalog-marketing-card__thumb {
@@ -102,6 +105,7 @@
   border-radius: 8px;
   overflow: hidden;
   background: #fff;
+  flex: 0 0 auto;
 }
 
 .dam-catalog-marketing-card__thumb .dam-viz-thumb__img {
@@ -113,13 +117,27 @@
 .dam-catalog-marketing-card__badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  min-height: 22px;
+  gap: 6px 7px;
+  min-height: 28px;
+  align-content: flex-start;
 }
 
-.dam-catalog-marketing-card__title {
-  font-size: 11px;
-  line-height: 1.3;
+.dam-catalog-marketing-card__badges .dam-viz-badge,
+.dam-catalog-marketing-card__badges .dam-badge-tag {
+  font-size: calc(var(--dam-tag-fs-pill, 10.5px) * var(--dam-badge-scale, 1.05));
+  font-weight: 500;
+  line-height: 1.2;
+  padding: 4px 9px;
+  border-radius: var(--_dam-badge-radius, 14px);
+  max-width: 100%;
+}
+
+.dam-catalog-marketing-card p.dam-catalog-marketing-card__title,
+.dam-catalog-marketing-card .dam-catalog-marketing-card__title {
+  font-size: 12px !important;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--dam-text, #464255);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -237,13 +255,13 @@
 
 .dam-marketing-tile__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 12px;
 }
 
 .dam-marketing-tile__grid--full {
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 12px;
 }
 
 .dam-marketing-tile.is-expanded .dam-marketing-tile__grid:not(.dam-marketing-tile__grid--full) {

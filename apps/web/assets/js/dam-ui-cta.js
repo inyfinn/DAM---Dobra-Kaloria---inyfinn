@@ -87,10 +87,20 @@
       ".dam-projects-grid-toolbar__actions label.dam-int-cta{" +
       "width:fit-content;min-height:34px;white-space:nowrap}" +
       ".dam-project-card__actions .dam-int-cta{" +
-      "min-width:0;flex:1 1 auto;min-height:34px!important;height:34px;" +
-      "padding-top:0;padding-bottom:0;box-sizing:border-box}" +
-      ".dam-project-card__actions .dam-int-cta--icon{" +
-      "flex:0 0 34px;width:34px;min-width:34px;padding:0}" +
+      "min-width:0;flex:1 1 auto;width:auto;height:auto;" +
+      "min-height:30px!important;max-height:none;" +
+      "padding:5px 10px;box-sizing:border-box;" +
+      "font-size:10px!important;font-weight:500;line-height:1.2;" +
+      "border-radius:8px;white-space:nowrap;overflow:visible}" +
+      ".dam-project-card__actions .dam-int-cta:not(.dam-int-cta--icon){" +
+      "width:auto!important}" +
+      ".dam-project-card__actions .dam-int-cta--icon," +
+      ".dam-project-card__actions .dam-btn-icon-only{" +
+      "flex:0 0 30px;width:30px;min-width:30px;min-height:30px!important;" +
+      "padding:0;font-size:inherit}" +
+      ".dam-project-card__actions .dam-int-cta > i," +
+      ".dam-project-card__actions .dam-int-cta > .dam-icon-svg{" +
+      "font-size:12px;width:12px;height:12px;flex:0 0 12px}" +
       ".dam-project-card__top .dam-int-chip{align-self:center}"
     );
   }

@@ -6739,11 +6739,12 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-viz-modal__actions .dam-viz-modal__cta {
   flex: 0 0 auto;
   min-width: 0;
-  min-height: 44px;
-  padding: 12px;
+  min-height: var(--dam-control-h-sm, 36px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
   font-size: 12px;
   white-space: nowrap;
-  border-radius: var(--btn-radius, 50px);
+  /* Compact rect — never pill/circle that clips labels when w≈h */
+  border-radius: var(--dam-radius-btn-compact, 8px);
   box-sizing: border-box;
 }
 .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary),
@@ -6753,7 +6754,9 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-viz-modal__cta {
-  min-width: 118px;
+  width: auto;
+  height: auto;
+  min-width: 0;
   justify-content: center;
 }
 
