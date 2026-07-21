@@ -1,0 +1,140 @@
+/**
+ * DAM ETA - design tokens (powierzchnie + typografia + akcent).
+ * Light/dark = nakladka CSS na html[data-theme]. Akcent = --dam-primary.
+ * Geex realign F2 (2026-07-21): draft ≤20 z audit; nowe tylko z konsumentem w primitives/docs.
+ */
+:root {
+  color-scheme: light;
+  /* Early paint anti white-flash (before body CSS) */
+  background-color: var(--dam-surface-muted, #f5f6fa);
+
+  /* Marka */
+  --dam-brand-green: #008244;
+  --dam-primary: #AB54DB;
+  --primary-color: var(--dam-primary, #AB54DB);
+  --dam-dark: #17161E;
+
+  /* Statusy */
+  --dam-ok: #00b074;
+  --dam-warn: #ffbb54;
+  --dam-danger: #ff5b5b;
+
+  /* Info: ciemniejszy blekit (kontrast AA) */
+  --info-color: #5B8DEF;
+
+  /* Powierzchnie (light) */
+  --dam-surface: #ffffff;
+  --dam-surface-muted: #f5f6fa;
+  --dam-border: #ececf2;
+
+  /* Mapowanie na Geex vars (nakladka, nie przepisujemy komponentow) */
+  --white-color: var(--dam-surface);
+  --section-color: var(--dam-surface-muted);
+  --sectionTwo-color: var(--dam-surface-muted);
+  --sectionThree-color: var(--dam-surface);
+  --gray-color: var(--dam-border);
+  --body-color: var(--dam-text);
+  --desc-color: var(--dam-text);
+  --sec-color: var(--dam-text-muted);
+  --dark-color: var(--dam-dark);
+  --success-color: var(--dam-ok);
+  --warning-color: var(--dam-warn);
+  --danger-color: var(--dam-danger);
+  --primary-color-transparent: color-mix(in srgb, var(--dam-primary) 15%, transparent);
+  --success-color-transparent: color-mix(in srgb, var(--dam-ok) 15%, transparent);
+  --warning-color-transparent: color-mix(in srgb, var(--dam-warn) 15%, transparent);
+  --danger-color-transparent: color-mix(in srgb, var(--dam-danger) 15%, transparent);
+  --info-color-transparent: color-mix(in srgb, var(--info-color) 15%, transparent);
+  --dark-color-transparent: color-mix(in srgb, var(--dam-dark) 15%, transparent);
+
+  /* Typografia */
+  --dam-font: "Jost", sans-serif;
+  --dam-text: #464255;
+  --dam-text-muted: #8f8b9f;
+  --dam-muted: var(--dam-text-muted);
+
+  /* Skala tekstu */
+  --dam-fs-xs: 11px;
+  --dam-fs-sm: 12px;
+  --dam-fs-md: 13px;
+  --dam-fs-base: 14px;
+  --dam-fs-lg: 16px;
+  --dam-fs-xl: 22px;
+
+  /* Tagi/badge */
+  --dam-tag-fs-pill: 10.5px;
+  --dam-tag-fs-badge: 14px;
+  /* Globalna skala wizualna chipow .dam-viz-badge / .dam-badge-tag (2026-07-21) */
+  --dam-badge-scale: 1.05;
+
+  /* Kontrole toolbar — F2 target touch 44 (Parent); audit CSS-declared bylo 38 */
+  --dam-control-h: 44px;
+  --dam-control-fs: 12px;
+  --dam-control-radius: 8px;
+
+  /* Outline / ghost CTAs (icon-btn, win-btn outline, modal geex secondary) — 50% alpha */
+  --dam-btn-outline-border: color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent);
+
+  /* Ksztalty — Geex DNA: card24 / btn18 / control sm8 / panel md12 */
+  --dam-radius-lg: 24px;
+  --dam-radius-md: 12px;
+  --dam-radius-sm: 8px;
+  --dam-radius-btn: 18px;
+
+  /* CTA spacing (Geex .geex-btn padding 15×25 — audit §5) */
+  --dam-space-btn-y: 15px;
+  --dam-space-btn-x: 25px;
+  /* Compact aliases (int-cta / scope / sm) — keep loved look, shared rhythm */
+  --dam-space-btn-sm-y: 8px;
+  --dam-space-btn-sm-x: 14px;
+  --dam-control-h-sm: 36px;
+  --dam-radius-btn-compact: 8px;
+
+  /* Cien */
+  --dam-shadow-rgb: 23 22 30;
+  --dam-shadow-alpha: 0.08;
+  --dam-shadow: 0 10px 30px rgb(var(--dam-shadow-rgb) / var(--dam-shadow-alpha));
+
+  /* Ruch / animacje (wspolne tempo). Reveal wejsciowy = --dam-anim (0.4s). */
+  --dam-anim-hover: 0.22s;   /* hover / stan kontrolek, tagow, pill */
+  --dam-anim: 0.4s;          /* wejscie elementow (belki, karty) */
+  --dam-anim-slow: 0.55s;    /* wieksze przejscia / panele */
+  --dam-anim-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  background-color: var(--dam-surface-muted, #17161e);
+
+  --dam-surface: #201f28;
+  --dam-surface-muted: #17161e;
+  --dam-border: #2c2b36;
+  --dam-text: #e6e4ee;
+  --dam-text-muted: #9b97ab;
+  --dam-muted: var(--dam-text-muted);
+  --dam-shadow-alpha: 0.35;
+  --dam-dark: #0e0d12;
+
+  /* Geex overlay w dark — pelne mapowanie status/surface (F2) */
+  --white-color: var(--dam-surface);
+  --section-color: var(--dam-surface-muted);
+  --sectionTwo-color: var(--dam-surface-muted);
+  --sectionThree-color: var(--dam-surface);
+  --gray-color: var(--dam-border);
+  --body-color: var(--dam-text);
+  --desc-color: var(--dam-text);
+  --sec-color: var(--dam-text-muted);
+  --light-color: var(--dam-surface-muted);
+  --dark-color: var(--dam-dark);
+  --primary-color: var(--dam-primary);
+  --success-color: var(--dam-ok);
+  --warning-color: var(--dam-warn);
+  --danger-color: var(--dam-danger);
+  --info-color: #5B8DEF;
+  --primary-color-transparent: color-mix(in srgb, var(--dam-primary) 22%, transparent);
+  --success-color-transparent: color-mix(in srgb, var(--dam-ok) 22%, transparent);
+  --warning-color-transparent: color-mix(in srgb, var(--dam-warn) 22%, transparent);
+  --danger-color-transparent: color-mix(in srgb, var(--dam-danger) 22%, transparent);
+  --info-color-transparent: color-mix(in srgb, var(--info-color) 22%, transparent);
+  --dark-color-transparent: color-mix(in srgb, var(--dam-dark) 35%, transparent);
+}

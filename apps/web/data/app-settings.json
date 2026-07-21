@@ -9,14 +9,15 @@
   "version": 2,
   "updated_at": "2026-07-18",
   "instructions": {
-    "count": 60,
-    "version": 12,
+    "count": 64,
+    "version": 14,
     "source_kv": "program-instructions",
     "critical_ids": [
       "ui.viz_modal_parity_explorer",
       "device-scoped-base-paths",
       "data.lang_provenance_only",
       "data.lang_uk_not_ukraine",
+      "ui.lang_labels_are_languages",
       "naming.folder_lang_tokens",
       "admin.tag_instant_apply_ajax",
       "meta.source_of_truth",
@@ -40,7 +41,8 @@
       "branding.linked_product_derived",
       "viz.assoc_no_visualization_loop",
       "explorer.product_from_template",
-      "explorer.demo_index_rules"
+      "explorer.demo_index_rules",
+      "ui.tutorial_dobrokalorius_hard"
     ],
     "settings_anchor": "settings.html#damProgramInstructions"
   }

@@ -41,6 +41,7 @@
       }
       if (resolved !== "dark" && resolved !== "light") resolved = "light";
       document.documentElement.setAttribute("data-theme", resolved);
+      try { document.documentElement.style.colorScheme = resolved; } catch (e2) { /* ignore */ }
       if (pref === "system" || pref === "dark" || pref === "light") {
         document.documentElement.setAttribute("data-dam-theme-pref", pref);
       }
@@ -2701,7 +2702,7 @@
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=tourFix20260721a";
+      sc.src = "assets/js/dam-shortcuts.js?v=tutorialTargets20260721a";
       document.head.appendChild(sc);
     }
 

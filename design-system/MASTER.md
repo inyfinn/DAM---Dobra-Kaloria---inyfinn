@@ -2,65 +2,85 @@
 
 ## Baza: Geex Bootstrap HTML Template (themewant.com)
 
-## Tokeny kolorow
+**Zrodlo miar F2:** `agents/shared/geex-realign-audit-2026-07-21.md` (CSS-declared; live CDP deferred gdy `:8765` down).
+
+## Tokeny kolorow (CSS: `dam-tokens.css`)
 
 | Token | Wartosc | Zastosowanie |
 |-------|---------|--------------|
-| Primary | #AB54DB | Akcenty, CTA, aktywne elementy |
-| Dark bg | #17161E | Dark mode tlo |
-| Success | #00A389 | Kompletne, oplacone |
-| Danger | #FF5653 | Bledy, brakujace, po terminie |
-| Warning | #FDB23A | Oczekujace, ostrzezenia |
-| Info | #3F9CF8 | Informacje |
-| Text primary | #464255 | Glowny tekst light mode |
-| Text muted | #B9BBBD | Placeholdery, meta |
-| Border | #E7E7E7 | Linie podzialow |
-| Card bg | #FFFFFF | Tla kart (light) |
+| `--dam-primary` / Primary | #AB54DB | Akcenty, CTA, aktywne elementy |
+| `--dam-dark` / Dark | #17161E | Dark ink / dark surface-muted seed |
+| `--dam-ok` | #00b074 | Success (Geex map: `--success-color`) |
+| `--dam-danger` | #ff5b5b | Bledy, destructive |
+| `--dam-warn` | #ffbb54 | Ostrzezenia |
+| `--info-color` | #5B8DEF | Info (AA) |
+| `--dam-text` | #464255 | Glowny tekst light |
+| `--dam-text-muted` | #8f8b9f | Meta / secondary |
+| `--dam-border` | #ececf2 | Hairline |
+| `--dam-surface` | #FFFFFF | Karty / panele |
+| `--dam-surface-muted` | #f5f6fa | Page / muted tile |
+| `--dam-brand-green` | #008244 | Logo / DK green |
+
+Nowe hex w CSS/HTML = **zakaz** (program-instructions `ui.geex_dna_tokens`). Uzywaj `var(--dam-*)`.
 
 ## Typografia
-- Font: Jost (Google Fonts)
+- Font: Jost (Google Fonts) — `--dam-font`
 - Weights: 400, 500, 600, 700
-- Base size: 14px
-- H1: 24px / 700
-- H2: 20px / 600
-- H3: 16px / 600
-- Body: 14px / 400
-- Small/meta: 12px / 400
+- Base: `--dam-fs-base` 14px
+- Control fs: `--dam-control-fs` 12px
+- Badge pill: `--dam-tag-fs-pill` 10.5px; badge: `--dam-tag-fs-badge` 14px
 
-## Promienie (border-radius)
-- Card: 12px
-- Button: 6-8px
-- Badge: 4px
-- Input: 8px
+## Promienie (Geex DNA — F2)
 
-## Ikonografia
-- Biblioteka: Unicons (uil-*) via iconscout CDN
-- Rozmiar standardowy: 20-24px w nawigacji, 32px w kartach
+| Rola | Token | px |
+|------|-------|---:|
+| Card / modal sheet | `--dam-radius-lg` | 24 |
+| CTA button | `--dam-radius-btn` | 18 |
+| Badge / chip target | (MASTER target) | 14 |
+| Panel / dash | `--dam-radius-md` | 12 |
+| Control / icon-btn | `--dam-radius-sm` / `--dam-control-radius` | 8 |
+
+## Spacing / controls
+
+| Token | Wartosc | Zastosowanie |
+|-------|---------|--------------|
+| `--dam-space-btn-y` | 15px | Geex `.geex-btn` pad-y (audit) |
+| `--dam-space-btn-x` | 25px | Geex `.geex-btn` pad-x |
+| `--dam-control-h` | 44px | Toolbar / icon touch target (F2 Parent) |
+| `--dam-badge-scale` | 1.05 | Global chip scale |
 
 ## Cienie
-- Card: 0 2px 12px rgba(0,0,0,0.06)
-- Popup: 0 8px 24px rgba(0,0,0,0.12)
+- Elev: `--dam-shadow` (`0 10px 30px` + RGB alpha token)
 
 ## Grid / Layout
 - Sidebar: 250px (fixed), zamykana na mobile
 - Header: 60px (fixed top)
 - Content: fluid, padding 24px
-- Geex class: .geex-dashboard, .geex-sidebar, .geex-content
+- Geex class: `.geex-dashboard`, `.geex-sidebar`, `.geex-content`
+
+## Primitives CSS
+
+Plik: `apps/web/assets/css/dam-primitives.css` (po `style.css` + `dam-tokens.css`, przed `dam-brand.css`).
+
+Sekcje: `BUTTONS` / `BADGES` / `PANELS` — anatomia F3/F4/F5; F2 = skeleton + token hooks.
+
+Komponenty (kontrakt):
+- [`components/buttons.md`](components/buttons.md)
+- [`components/badges.md`](components/badges.md)
+- [`components/surfaces.md`](components/surfaces.md)
+- [`components/icon-btn.md`](components/icon-btn.md)
 
 ## Klasy Geex kluczowe
-- `.geex-btn--primary` -> kolor #AB54DB
-- `.geex-badge--success-transparent` -> zielony badge
-- `.geex-badge--danger-transparent` -> czerwony badge
-- `.geex-badge--warning-transparent` -> zolty badge
-- `.geex-card` -> biala karta z shadow
+- `.geex-btn` / `--primary` / `--sm` / `--transparent` / danger / success
+- `.dam-viz-badge` / `.dam-badge-tag` / `.dam-status-badge`
+- `.dam-dash-panel` / `.dam-bento__cell` → surface tokens
 - `.primay-bg` -> background primary (note: literowka w Geex)
-- `.success-bg` / `.danger-bg` / `.warning-bg` -> colored card backgrounds
 
 ## Chrome / Header (GLOBALNE - nie per-strona)
-- Header actions (szukaj, wiadomosci, powiadomienia, profil): jeden markup / jedna logika w `dam-shell.js` (`ensureHeaderChrome` + `bindDamHeaderPopups`)
-- Popupy: class `.is-open` w `dam-brand.css` - NIE jQuery `slideToggle` (koliduje z wysokoscia panelu wiadomosci)
-- Style: tokeny z `dam-tokens.css` / Geex; zakaz inline one-off kolorow w shellu
-- Zmiana ikony / typografii / przycisku w chrome = zmiana w shellu lub dam-brand - automatycznie wszedzie
+- Header actions: `dam-shell.js` (`ensureHeaderChrome` + `bindDamHeaderPopups`)
+- Popupy: class `.is-open` w `dam-brand.css` - NIE jQuery `slideToggle`
+- Style: tokeny z `dam-tokens.css` / primitives; zakaz inline one-off hex
+- Zmiana ikony / typografii / przycisku w chrome = shell lub allowlist — nie mass-edit `dam-brand.css` w F2–F4
 
 ## Ludzkie etykiety rol assetow (OBOWIAZUJACE)
 - artwork -> Projekt graficzny
@@ -72,7 +92,7 @@
 
 ## Zasady copywritingu UI
 - Jezyk domyslny: Polski
-- BRAK em-dash (- lub -) w UI - tylko dywiz (-)
+- BRAK em-dash w UI - tylko dywiz (-)
 - Wszystkie stringi przez data-i18n lub dam-i18n.t()
 - Brak technicznych terminow na widoku uzytkownika
 - Etykiety przycisku akcji: max 3 slowa, jasne, czasownikowe

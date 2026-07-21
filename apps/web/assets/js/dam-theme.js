@@ -37,6 +37,9 @@
     root.setAttribute("data-theme", resolved);
     root.setAttribute("data-dam-theme-pref", p);
     try {
+      root.style.colorScheme = resolved;
+    } catch (e2) { /* ignore */ }
+    try {
       localStorage.setItem(PREF_KEY, p);
       localStorage.setItem(THEME_KEY, resolved);
     } catch (e) { /* ignore */ }

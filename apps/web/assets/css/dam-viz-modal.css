@@ -70,6 +70,47 @@
   touch-action: pan-y;
 }
 
+/* F3 layout-only: actions cluster — flex/gap (anatomy colors live in primitives / brand) */
+#damVizModal .dam-viz-modal__actions,
+#damMediaPreview .dam-viz-modal__actions,
+.dam-viz-modal__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+#damVizModal .dam-viz-modal__actions-main,
+#damMediaPreview .dam-viz-modal__actions-main,
+.dam-viz-modal__actions-main {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+#damVizModal .dam-viz-modal__actions-admin,
+#damMediaPreview .dam-viz-modal__actions-admin,
+.dam-viz-modal__actions-admin {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+#damVizModal .dam-viz-modal__actions-admin-group,
+#damMediaPreview .dam-viz-modal__actions-admin-group,
+.dam-viz-modal__actions-admin-group {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Pinned action bar: NEVER under expanded .dam-media-preview__all-files / studio */
 .dam-viz-modal-box--assoc-split .dam-viz-modal__main > .dam-viz-modal__actions {
   flex: 0 0 auto;

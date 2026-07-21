@@ -1,4 +1,187 @@
-﻿## 2026-07-21 17:50 - Geex realign Faza 0 START + /planner skill
+﻿
+## 2026-07-21 20:35 - Geex taste unify (KEEP product look) + fixture font
+
+**Komenda/Akcja:** Lead — Parent taste HARD: unify pad/gap only; fix fixture Times; merge main.
+
+**Unified:**
+- Tokens: `--dam-space-btn-sm-*`, `--dam-control-h-sm`, `--dam-radius-btn-compact`
+- Aliases share compact pad: `.dam-int-cta`, `.dam-search-scope__btn`, `.geex-btn--sm`; full CTA stays 15x25/44/18
+- Tag groups: gap pills 6x8, rows 10x12, pill pad 6x12
+- Card body air: pad 22/20/16, gap 16
+- Fixture: Jost + bootstrap+style+tokens+primitives+brand (prod chain)
+
+**CDP fixture:** font `Jost, sans-serif`; primary pad 15x25 radius 18; int-cta 8x14/36; scope pill 999 — **Pass** (no Times).
+
+**CDP projects:** tagGap 6x8; int-cta pad 8x14; scope 8x14/36.
+
+**Dark:** F6 bridge retained (early script + color-scheme + html bg).
+
+**Tags already:** geex-phase0..8 + design-geex-realign @ 339fec9. This commit = taste polish after F8.
+
+**Merge:** `design/geex-realign` → `main` after this commit.
+
+---
+
+## 2026-07-21 20:10 - Geex realign Faza 8 DONE (final QA PASS → merge)
+
+**Komenda/Akcja:** Lead — final QA priorytet 390 + doctrine §12 + merge main.
+
+**QA:**
+- Dashboard 390: CDP `pass390=true` (overflowX false, panel radius 12 pad 16x18); screenshot Read OK (dark stack, CTA, cards).
+- Index: reveal IO ratio 1 / opacity 1 / clip none; screenshot filters+cards OK.
+- Branding: badgeRadius 14px; no horizontal overflow vs layout width.
+- Note: Cursor host Emulation sometimes snaps ~765 (F4 residual) — forced 390 metrics on dashboard Pass.
+
+**Verdict:** QA **PASS** — merge `design/geex-realign` → `main`.
+
+**Tags:** `geex-phase8`, `design-geex-realign`.
+
+**ESCALATE:** none.
+
+---
+
+## 2026-07-21 19:55 - Geex realign Faza 7 DONE (thin brand btn/badge)
+
+**Komenda/Akcja:** Lead — thin `dam-brand.css` badge anatomy duplicates + card actions btn pad override.
+
+**Done:** removed base `.dam-viz-badge` anatomy (999px); card badges keep density pad + token radius; `.geex-btn` actions keep font-size only.
+
+**CDP branding:** badgeRadius 14px (not 999), btn minH 44 — Pass.
+
+**Handoff:** tag `geex-phase7`. Next Faza 8 final QA 390.
+
+---
+
+## 2026-07-21 19:45 - Geex realign Faza 6 DONE (dark bridge / white-flash top3)
+
+**Komenda/Akcja:** Lead — DamTheme path + top3 anti white-flash.
+
+**Top3 fix:**
+1. Early head bridge (pref+system+colorScheme) before CSS on hot pages.
+2. `dam-tokens.css`: `color-scheme` + html background light/dark.
+3. `DamTheme.apply` + shell softThemeBoot set `style.colorScheme`.
+
+**CDP dark:** htmlLum 25 / bodyLum 15 / sideLum 34 — `darkOk=true`.
+
+**Handoff:** tag `geex-phase6`. Next Faza 7 thin brand duplicates.
+
+---
+
+## 2026-07-21 19:35 - Geex realign Faza 5b DONE (popover surfaces + §7)
+
+**Komenda/Akcja:** Lead — 1 change = popover surface tokens; §7 quote + CDP IO.
+
+**§7:** rest state = tylko opacity; clip-path tylko w tweenie. Change nie rusza reveal-observed cards.
+
+**CDP:**
+- index project-card: ratio 1 / opacity 1 / clip none
+- viz card regress: ratio 1 / opacity 1
+- branding card regress: ratio 0.53 intersecting / opacity 1 / clip none
+
+**Self-review §7:** PASS — PANELS F5b bez opacity/clip/visibility/display; `dam-grid-reveal.js` untouched.
+
+**Handoff:** tag `geex-phase5b`. Next Faza 6 dark/white-flash.
+
+---
+
+## 2026-07-21 19:30 - Geex realign Faza 5a DONE (surfaces NO reveal)
+
+**Komenda/Akcja:** Lead — PANELS fill after join 3+4. Zakaz reveal/clip/opacity rest.
+
+**Log/Status:**
+1. `dam-primitives.css` `/* === PANELS === */`: dash-panel, bento cell (+muted/bare), modal panel elev, panel rows hover muted, sidebar header/link pad+radius+min-h.
+2. Docs surfaces.md sync; manifest F3/F4/5a; `?v=geexF5a20260721a`.
+3. CDP dashboard: panel radius 12 pad 16x18 opacity 1 clipPath none; sidebar link radius 8 pad 10x12.
+4. Zero edits `dam-grid-reveal.js`; no opacity/clip on reveal-observed cards.
+
+**Handoff faza 5a:** tag `geex-phase5a`. Next = Faza 5b (1 change = 1 §7 quote + CDP).
+
+**Zrodla:** audit §3, surfaces.md, code-doctrine §7 (read-only guard).
+
+---
+
+## 2026-07-21 19:25 - Handoff join 3+4 (Lead)
+
+**Komenda/Akcja:** Gate OPEN — `geex-phase3` @ `7c9d346` + `geex-phase4` @ `3ee60bf` (phase4 ancestor of HEAD). Scalenie przed Faza 5a.
+
+**Log/Status:**
+1. Pulled `design/geex-realign` — already up to date; both tags in HEAD ancestry.
+2. Read handoff-faza3 (DONE, 3 Pass, ESCALATE none) + handoff-faza4 (DONE, 3 Pass, ESCALATE cleared).
+3. Merged regress notes 3+4 → `geex-realign-regress-manifest.md`.
+4. Collective `?v=` bump: `dam-primitives.css?v=geexJoin20260721a` (22 HTML) — unifies F3/F4 enqueue race.
+5. Smoke `:8765` → HTTP 200 dashboard + root.
+
+**Done skrot:**
+- F3 BUTTONS: radius 18 / pad 15x25 / icon 44 / actions gap 10; no white-flash secondary hover.
+- F4 BADGES: MASTER radius 14 + scale token; scale kills branding/brand; dark AA.
+
+**Ryzyka (carry):**
+- `dam-brand.css` po primitives moze nadal nadpisac pill radius (F7 thin).
+- Host Emulation width stuck ~765 (F4 residual).
+- Live auth dashboard CDP deferred w F3 — smoke join = HTTP only.
+
+**Next:** Faza 5a surfaces (NO reveal) → tag `geex-phase5a`.
+
+**Zrodla:** geex-realign-handoff-faza3.md, geex-realign-handoff-faza4.md, notes-faza3/4, plan v6.1.
+
+---
+## 2026-07-21 19:00 - Geex realign Faza 2 DONE (tokens + primitives skeleton)
+
+**Komenda/Akcja:** Agent 2 / Lead — Faza 2 ONLY po gate `geex-phase1` + audit md.
+
+**Log/Status:**
+1. Gate OPEN (`17e2dc3`, tag `geex-phase1`). Audyt czytany 1:1.
+2. `dam-tokens.css`: `--dam-radius-btn` 18, `--dam-space-btn-y/x` 15/25; `--dam-control-h` 44 (Parent); dark Geex status/transparent maps. **Uwaga:** plik był gitignore (`**/*token*`) — dodano wyjątek `!apps/web/assets/css/dam-tokens.css` + force-track.
+3. `dam-primitives.css` NEW — BUTTONS / BADGES / PANELS skeleton.
+4. Docs: `design-system/MASTER.md` + `components/{buttons,badges,surfaces,icon-btn}.md`.
+5. Briefy B/C: `geex-realign-agent-B-buttons-2026-07-21.md`, `geex-realign-agent-C-badges-2026-07-21.md`.
+6. `ui.geex_dna_tokens` + update `ui.geex_only`; lustro `app-settings.json`.
+7. Enqueue 21 HTML: primitives po tokens, przed brand; `?v=geexF220260721a`.
+8. Live CDP §5 **SKIPPED** (`:8765` HTTP 000) — miary z audit; notatka OK Parent.
+9. Self-review (Composer RO not spawned): **PASS** — nowe tokeny mają consumer w primitives/docs.
+10. Manifest regresji: F2 PASS structure / smoke DEFERRED.
+
+**Handoff faza 2:** tag `geex-phase2`. Dalej równolegle: Agent B F3 (brief B → handoff-faza3) + Agent C F4 (brief C → handoff-faza4). Join Lead przed 5a.
+
+**Efekt/Fix:** Geex DNA via tokens+primitives; B/C WRITE sets gotowe.
+
+**Test/Ewaluacja:** token→consumer PASS; HTML order PASS; UTF-8 OK; live screenshot deferred.
+
+**Źródła:** geex-realign-audit-2026-07-21.md, geex-realign-plan-2026-07-21.md.
+
+---
+
+## 2026-07-21 18:55 - Geex realign Faza 1 DONE (unblock F2)
+
+**Komenda/Akcja:** Agent 1 / Lead — domknięcie Fazy 1 po Parent CRITICAL UNBLOCK (skip PNG/locks).
+
+**Log/Status:**
+1. Branch `design/geex-realign`; PNG baseline skipped PARTIAL (fonts/locks).
+2. Audyt napisany: `agents/shared/geex-realign-audit-2026-07-21.md` (btn/badge/panels/hex50/measures/edges/draft≤20).
+3. Live CDP deferred (`:8765` ERR_EMPTY_RESPONSE) — measures = CSS-declared; F2 re-CDP §5.
+4. Manifest updated; commit `geex-realign: faza 1 audit`; tag `geex-phase1`; push.
+5. Tool budget Grep/Read: ~8/18. Zero Faza 2 CSS.
+
+**Handoff faza 1 → Faza 2:**
+- Wejście: audit md + plan + manifest + tag `geex-phase1`.
+- F2: tokens + docs + primitives skeleton; Composer RO; **nie** ruszaj `dam-brand.css` stylami realign poza briefem.
+- Przed freeze tokenów: podnieś `:8765` i CDP 8 kontrolek z audytu §5; opcjonalnie smoke dashboard+modal light 1440/1024/390.
+- Nowa sesja czatu (1 faza = 1 sesja).
+
+**Efekt/Fix:** Bramka F2 otwarta (tag + audit w repo).
+
+**Źródła:** geex-realign-audit-2026-07-21.md, geex-realign-plan-2026-07-21.md.
+
+---
+
+## 2026-07-21 18:50 - Geex realign Faza 2 GATE BLOCKED (RESOLVED by F1 above)
+
+ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `geex-phase1` + audit landed.
+
+---
+
+
+## 2026-07-21 17:50 - Geex realign Faza 0 START + /planner skill
 
 **Komenda/Akcja:** (1) Global skill `/planner` MAD + reguła alwaysApply. (2) Start Geex realign v6.1 Faza 0.
 
@@ -7,7 +190,10 @@
 2. Brief: `agents/shared/geex-realign-plan-2026-07-21.md`.
 3. **HARD FREEZE** plików kluczowych realign (tokens, primitives, dam-brand.css, page CSS, theme JS, HTML enqueue) — tylko Lead/B/C wg planu.
 4. PNG baseline: gitignore; README + manifest; handoff-faza3/4 stubs.
-5. Commit backup + branch `design/geex-realign` + tag `geex-phase0` (po domknięciu zrzutów lokalnych).
+5. Commit backup `092821f` na `main` + push; branch `design/geex-realign` + tag `geex-phase0` + push.
+6. Baseline lokalnie: **28/36 PNG** (font timeout na części zrzutów) — PARTIAL w manifeście; uzupełnić w nowej sesji.
+
+**Handoff faza 0:** freeze ON; brief w `agents/shared/geex-realign-plan-2026-07-21.md`. Następna sesja = **Faza 1 audyt** (nowy czat; maks 18 Grep/Read).
 
 **Efekt/Fix:** Proces planowania globalny; start realign bez CSS produktu w Fazie 0.
 
@@ -8140,3 +8326,41 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Test/Ewaluacja:** node --check; CDP advance sync (0:0→0:1 skip, 0:1→0:2+toast); CONGRATS_MS=2275; BURST_CHANCE=0.12; reduced-motion bez burst DOM; explore companion OK; screenshot+Read ×5 @1280.
 
 **Zrodla:** dam-tutorial.js, dobrokalorius-copy.json, program-instructions.json, _qa/_bump_tutorial_praise_toast.py
+
+## 2026-07-21 - tutorial targets + explore spot + Projekty restore
+
+**Komenda/Akcja:** Fix Dobrokaloriuś: spotlight Pokaż wszystkie / Info Pakowania; explore bez dziury; nav Projekty nie konczy samouczka.
+
+**Log/Status:**
+1. Root causes: (a) krok celowal .dam-viz-toolbar (= search); (b) brak kroku Info Pakowania; (c) isTargetInteractable odrzucal switch pod .dam-tut ctrl -> fallback sideLink; (d) explore mial soft dim/hole na starym spocie; (e) index.html nie ladowal dam-tutorial.js + SW HTML 1h stale cache.
+2. Fix: cele label[for=vizShowAll] / label[for=damRevealLowTags] + krok CTRL+scroll; explore CSS display:none na spot; nav zachowuje phase + damTutorialExplore; index.html + shortcuts ensureTutorialResume; SW network-first HTML (dam-page-1h-v2).
+3. program-instructions ui.tutorial_dobrokalorius_hard HARD 2026-07-21e; cache ?v=tutorialTargets20260721a.
+
+**Efekt/Fix:** Spotlight na switchach; explore bez hole; branding -> Projekty = companion+active, finished=null, phase intact.
+
+**Test/Ewaluacja:** node --check; CDP Pokaż wszystkie spot≈label y~367 overlap; Info Pakowania overlap; explore spotDisplay=none; Projekty active+explore+companion; screenshot+Read.
+
+**Zrodla:** dam-tutorial.js, dam-shortcuts.js, dam-shell.js, sw.js, index.html + HTML ?v=, program-instructions.json, _qa/_bump_tutorial_targets.py
+
+## 2026-07-21 - tutorial Projekty: broken completion + FOUC
+
+**Komenda/Akcja:** Na index.html (Projekty) samouczek nie dal sie dokoncic; dodatkowo flash niestylowanego chrome.
+
+**Log/Status:**
+1. CDP przed fixem: dam-tutorial.css brak na index.html; .dam-tut / .dam-tut__ctrl = position:static; ctrlRect.top ~45745 (pod siatka projektow) - Dalej/Zakoncz poza viewportem.
+2. Companion (explore inject CSS) byl fixed - user widzial tylko "Wroc do samouczka", bez paska.
+3. Fix: critical shell CSS w ensureTutCss() (fixed root/bubble/ctrl + btn); link CSS na index.html; FOUC gate is-ready + inline hide; reveal via setTimeout(0/64) bo samo double-rAF w tle nie odpala i zostawialo opacity:0.
+4. Cache ?v=tutorialProjectsFix20260721b (HTML x9 + shortcuts + token).
+
+**Efekt/Fix:** Pasek fixed bottom, klikalny; skip Branding->Projekty; Dalej 4:0->4:1->5:0; Zakończ -> damTutorialFinished=1.
+
+**Test/Ewaluacja:** node --check; CDP hitDalej=.dam-tut__btn--next, ctrlT~684, is-ready, rootOp=1; finish path; screenshot+Read tutorial-projekty-faza5-bar.png.
+
+**Zrodla:** dam-tutorial.js, index.html (+CSS link), _qa/_bump_tutorial_projects_fix.py, code-doctrine §12
+
+
+
+
+
+
+

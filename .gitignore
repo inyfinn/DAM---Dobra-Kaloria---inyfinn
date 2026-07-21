@@ -4,6 +4,8 @@
 !.env.example
 **/hosts.yml
 **/*token*
+# Design tokens CSS (nie secret) — wymagane w repo (Geex realign F2+)
+!apps/web/assets/css/dam-tokens.css
 **/*secret*
 *.pem
 *.p12
@@ -108,3 +110,5 @@ apps/api/storage/framework/sessions/*
 apps/api/storage/framework/views/*
 apps/api/bootstrap/cache/*
 !apps/api/storage/logs/.gitkeep
+
+THEME/**/*.zip

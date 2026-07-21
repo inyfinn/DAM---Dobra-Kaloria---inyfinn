@@ -1,33 +1,33 @@
 {
   "version": 14,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-21T16:00:00+02:00",
+  "updated_at": "2026-07-21T18:30:00+02:00",
   "instructions": [
     {
       "id": "ui.branding_grid_graphics_sort_overflow",
-      "priority": "high",
-      "category": "ui",
-      "title_pl": "Branding: Tylko grafiki, sort folderowy, skala thumb=1",
-      "updated_at": "2026-07-21",
       "must": [
         "Tylko grafiki (#damBrandingGraphicsOnly): ukrywa dokumenty, wideo ORAZ pliki zrodlowe PSD/PSB/AI/INDD/EPS (media_type=source, artwork_source); JPG z tagiem Edytowalny zostaje",
         "Tip przelacznika informuje ze zrodla tez sa ukryte; nadal dostepne po tagach Dokument / Wideo / Zrodlo",
         "Sort Priorytet uzycia: folderClusterRank (www→social→campaigns→…) potem folderDepthRank (plycej wyzej), potem rok desc, rola, mtime — bez wymyslonego open-count",
         "DamCardZoom CARD_IMG_BASE_SCALE=1 (nie 1.2); thumbs clipowane w .dam-viz-thumb (overflow/clip-path/contain:paint)"
       ],
+      "body_pl": "HARD 2026-07-21: DamCardZoom w media-preview byl zrodlem prawdy dla --dam-viz-img-scale i trzymal 1.2 mimo fixu w dam-branding.js. Fix wlasciciela skali + weryfikacja CDP bleed.",
+      "category": "ui",
       "must_not": [
         "Ustawiac CARD_IMG_BASE_SCALE>1 w DamCardZoom / dam-branding gdy karta ma overflow:visible na article",
         "Ukrywac JPG tylko dlatego ze ma badge Edytowalny",
         "Mieszac META/kampanie 2021 na poczatku siatki przy sort=priority gdy istnieja assety WWW/E-COMMERCE"
       ],
-      "body_pl": "HARD 2026-07-21: DamCardZoom w media-preview byl zrodlem prawdy dla --dam-viz-img-scale i trzymal 1.2 mimo fixu w dam-branding.js. Fix wlasciciela skali + weryfikacja CDP bleed.",
+      "priority": "high",
+      "title_pl": "Branding: Tylko grafiki, sort folderowy, skala thumb=1",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
       "related_code": [
         "apps/web/assets/js/dam-media-preview.js",
         "apps/web/assets/js/dam-branding.js",
         "apps/web/assets/css/dam-branding.css"
-      ],
-      "related_kv": [
-        "program-instructions"
       ]
     },
     {
@@ -1417,16 +1417,13 @@
     },
     {
       "id": "ui.tutorial_dobrokalorius_hard",
-      "priority": "critical",
-      "category": "ui",
-      "title_pl": "Samouczek + DobroKalorius: advance-first toast praise, explore-to-test, media poses",
-      "updated_at": "2026-07-21",
-      "body_pl": "HARD 2026-07-21d (toast): po poprawnym celu ZAWSZE advance natychmiast (nextStep / nawigacja); potem opcjonalny nieblokujacy toast praise ~25% (Math.random < 0.25), CONGRATS_MS=2275 (−35% vs 3500); krotkie teksty; rzadki micro-burst ~12% sposrod praise (~3% hitow); toast NIE ustawia is-congrats / praiseLock / nie wymaga Dalej; 75% bez toastu; off-path = exploreMode (companion BR, tryExplore >=40, joy/approve, throttle copy, soft dim, UI klikalne, bez advance); media/nosniki = pose explain-assets/image/video (NIGDY ksiazka pose-5); companion padding Geex; gender z mapy; cheer throttle; tip inset; Wlacz samouczek ponownie globalnie; cache ?v=tutorialPraiseToast20260721b.",
       "must": [
         "Po poprawnym kliku w cel kroku (lub sukcesie Przejdz tam): ZAWSZE advance natychmiast (nextStep lub nawigacja); dopiero POTEM opcjonalny nieblokujacy toast praise ~25%; toast NIE opoznia zmiany kroku; NIE wymaga Dalej; NIE ustawia is-congrats / praiseLock na tipie",
         "Toast praise: CONGRATS_MS=2275 (3500*0.65); krotkie linie (~polowa dlugosci); prefers-reduced-motion = opacity only (bez burst anim); 75% hitow bez toastu",
         "Rzadki micro-burst (petardy): max 3 warianty CSS; tylko subset praise (BURST_CHANCE~0.12 sposrod toastow); NIE przy kazdym praise ani kazdym kliku",
-        "Klik poza celem = enter exploreMode: companion BR z tryExplore (>=40, joy/approve), slide-in, soft dim, pointer-events overlay nie blokuje UI; faza/krok NIE advance; Wroc do samouczka przywraca tip",
+        "Klik poza celem = enter exploreMode: companion BR z tryExplore (>=40, joy/approve), slide-in; .dam-tut__spot display:none (bez inset hole / box-shadow dim); pointer-events overlay nie blokuje UI; faza/krok NIE advance; Wroc do samouczka przywraca tip",
+        "Kroki Wizualizacje: primary target label[for=vizShowAll] / #vizShowAll (tytul Pokaż wszystkie) oraz osobny krok label[for=damRevealLowTags] / #damRevealLowTags (Info Pakowania); fallback dopiero secondary-filters / sideLink; NIE celowac w .dam-viz-toolbar (to search)",
+        "Nawigacja sidebara / zmiana strony podczas aktywnego samouczka NIGDY nie wywoluje finish/stop ani damTutorialFinished; restore na docelowej stronie z damTutorialPhase (i explore z damTutorialExplore); index.html (Projekty) MUSI ladowac dam-tutorial.js",
         "Kolejne off-path w exploreMode NIE zmieniaja copy co klik (throttle max raz / 12s albo raz przy wejsciu); NIE spamowac sad/wander",
         "Teksty tryExplore/wander/sad w JSON ze slotami {name}/{nameVocative}/{nameDim}/{trySelf}; gender tylko z jawnej mapy (unknown = neutral, nigdy zgadywanie)",
         "Kroki media/nosniki/pliki/wizualizacje brandingowe: pozy media-assets|media-image|media-video (explain-assets/image/video); NIGDY pose-5 / ksiazka Pyszne roslinne",
@@ -1437,12 +1434,16 @@
         "Przycisk Wlacz samouczek ponownie obecny w pomocy na KAZDEJ stronie shell (dam-shortcuts + DamTutorial)",
         "Stan samouczka w localStorage/sessionStorage przezywa nawigacje; cache assetow stron ~1h (SW lub Cache-Control), network-first dla URL z ?v="
       ],
+      "body_pl": "HARD 2026-07-21e (targets): Wizualizacje - spotlight na label[for=vizShowAll] (Pokaż wszystkie) i label[for=damRevealLowTags] (Info Pakowania), NIE na .dam-viz-toolbar/search; CTRL+scroll osobny krok; exploreMode ukrywa .dam-tut__spot (bez dziury/dim), companion zostaje, UI klikalne; nawigacja (np. Projekty/index.html) NIGDY nie ustawia finished ani nie kasuje phase - restore z damTutorialPhase + opcjonalnie damTutorialExplore; index.html laduje dam-tutorial.js; KEEP advance-first toast praise ~25% / burst ~12%; cache ?v=tutorialTargets20260721a.",
+      "category": "ui",
       "must_not": [
         "Traktowac dowolnego kliku poza UI samouczka jako gratulacje / auto-Dalej",
         "Opozniać advance / nextStep czekajac na praise lub Dalej",
         "Blokowac tip karty klasa is-congrats / praiseLock przez toast pochwaly",
         "Pokazywac carnival confetti / purple neon glow przy kazdym praise",
         "Konczyc samouczek przez off-path click lub przypadkowa nawigacje (tylko Zakoncz / Esc / koniec faz)",
+        "Zostawiac spotlight hole / dim w exploreMode (stary target z dziura w scrim)",
+        "Celowac krok Pokaż wszystkie w .dam-viz-toolbar / pasek wyszukiwania zamiast switcha #vizShowAll",
         "Blokowac pointer-events UI w exploreMode (preventDefault na kazdym kliku / dim lock)",
         "Spamowac nowy sad/wander text przy kazdym off-path kliku",
         "Uzywac pozy ksiazki / Pyszne roslinne (pose-5 / present) w krokach samouczka",
@@ -1451,15 +1452,48 @@
         "Zgadywac plci z koncowki imienia gdy brak w mapie",
         "Cacheowac na slepo pliki JS/CSS z tokenem ?v= (dev cache-bust musi dzialac)"
       ],
+      "priority": "critical",
+      "title_pl": "Samouczek + DobroKalorius: cele switchy, explore bez spot, nav nie konczy",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
       "related_code": [
         "apps/web/assets/js/dam-tutorial.js",
         "apps/web/assets/css/dam-tutorial.css",
         "apps/web/assets/js/dam-shortcuts.js",
         "apps/web/data/dobrokalorius-copy.json",
         "apps/web/sw.js"
+      ]
+    },
+    {
+      "id": "explorer.pack_print_pakiet",
+      "must": [
+        "Przycisk PAKIET w .dam-carrier-toggle-row__end (obok akcji sciezki) na karcie nosnika",
+        "PAKIET zipuje foldery 2 - PROJEKT/PROJEKTY oraz 4 - WIZKI/WIZUALIZACJE (case-insensitive aliasy) biezacego wariantu",
+        "Nazwa ZIP = stem glownego pliku .ai z 2 - PROJEKT (nie SZKICE); wyjscie w 3 - DRUK",
+        "W pakiecie NIGDY nie wlaczaj plikow *SZKICE* / *szkice*",
+        "Pokaż wszystkie OFF: lista Projekt / zrodlo tylko z 2 - PROJEKT bez SZKICE; ON: szersza (archiwum/szkice)",
+        "Kompresja: 7-Zip -tzip -mx=9 -mmt=on, potem Chocolatey 7zip, potem Compress-Archive / zipfile",
+        "UI: DamLoader podczas pakowania; toast bledu gdy brak folderow; po sukcesie odswiez sekcje Pliki do druku"
       ],
+      "body_pl": "HARD 2026-07-21: Eksplorator - PAKIET przy nosniku. Most POST /explorer/pack-print. Filtr Pokaż wszystkie steruje widocznoscia zrodel (OFF = realne projekty).",
+      "category": "explorer",
+      "must_not": [
+        "Traktowac plikow SZKICE jako prawdziwego projektu zrodlowego",
+        "Uzywac nazwy ZIP ze SZKICE lub z archiwum zamiast stem .ai z 2 - PROJEKT",
+        "Outputowac .7z gdy user wymaga .zip (format deliverable = zip)"
+      ],
+      "priority": "high",
+      "title_pl": "PAKIET: ZIP 2-PROJEKT + 4-WIZKI do 3-DRUK",
       "related_kv": [
         "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-explorer.js",
+        "apps/desktop/local_bridge.py",
+        "apps/web/explorer.html"
       ]
     }
   ],

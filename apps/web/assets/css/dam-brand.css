@@ -2096,10 +2096,11 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   font-size: 12px;
   font-weight: 600;
   line-height: 1;
-  padding: 7px 12px;
+  /* pad/min-h from primitives tokens; keep pill look */
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
   border-radius: 999px;
   cursor: pointer;
-  min-height: 32px;
+  min-height: var(--dam-control-h-sm, 36px);
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
 }
 .dam-search-scope__btn:hover:not(:disabled):not(.is-disabled) {
@@ -2295,12 +2296,13 @@ input[type="range"] {
 }
 
 .dam-viz-card__body {
-  /* Shared card rhythm tokens (viz = source of truth; branding inherits). */
-  --dam-viz-card-body-pad-top: 20px;
-  --dam-viz-card-body-pad-bottom: 18px;
-  --dam-viz-card-body-pad-x: 14px;
-  --dam-viz-card-body-gap: 14px;
-  --dam-viz-card-actions-extra-gap: 4px;
+  /* Shared card rhythm tokens (viz = source of truth; branding inherits).
+     Taste 2026-07-21: +air (pad/gap) without anatomy redesign. */
+  --dam-viz-card-body-pad-top: 22px;
+  --dam-viz-card-body-pad-bottom: 20px;
+  --dam-viz-card-body-pad-x: 16px;
+  --dam-viz-card-body-gap: 16px;
+  --dam-viz-card-actions-extra-gap: 6px;
   flex: 1 1 auto;
   padding: var(--dam-viz-card-body-pad-top) var(--dam-viz-card-body-pad-x) var(--dam-viz-card-body-pad-bottom);
   text-align: center;
@@ -2403,32 +2405,15 @@ input[type="range"] {
   overflow: hidden;
 }
 
-/* Karty: jak .dam-tag-pill (weight 500), font +1px, padding +2px na strone */
+/* F7 thin: badge anatomy = dam-primitives BADGES. Card density = pad only; radius via token. */
 .dam-viz-card .dam-viz-badge,
 .dam-viz-card button.dam-viz-badge {
-  font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
-  font-weight: 500;
-  padding: 5px 11px;
-  border-radius: 999px;
-  letter-spacing: 0.01em;
-  line-height: 1.25;
-  white-space: nowrap;
+  padding: calc(5px * var(--dam-badge-scale, 1.05)) calc(11px * var(--dam-badge-scale, 1.05));
+  border-radius: var(--_dam-badge-radius, 14px);
   max-width: 100%;
 }
 
-.dam-viz-badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
-  font-weight: 400;
-  padding: 2px 8px;
-  border-radius: 999px;
-  letter-spacing: 0.01em;
-  line-height: 1.25;
-  white-space: nowrap;
-  border: none;
-  font-family: inherit;
-}
+/* Color modifiers below; base anatomy removed (was duplicating primitives + 999px). */
 
 /* Semantyka kolorow tagow (2026-07-18):
    marka=fiolet, kategoria/typ=zielony, smak/subcat=fiolet, opakowanie/nosnik=pomarancz,
@@ -2521,8 +2506,8 @@ input[type="range"] {
   flex-shrink: 0;
 }
 
+/* F7 thin: keep Geex btn anatomy from primitives; only denser type in card actions */
 .dam-viz-card__actions .geex-btn {
-  padding: 4px 10px;
   font-size: var(--dam-fs-sm, 12px);
 }
 
@@ -3295,7 +3280,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-tag-groups__inner {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   max-height: none !important;
   overflow: visible !important;
 }
@@ -3303,7 +3288,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-start;
-  gap: 8px 10px;
+  gap: 10px 12px;
   font-size: 11px;
 }
 .dam-tag-group-label {
@@ -3319,7 +3304,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   min-width: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 6px;
+  gap: 6px 8px;
   align-items: center;
 }
 .dam-tag-group-row.is-expanded .dam-tag-group-pills {
@@ -3329,7 +3314,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-tag-pill {
   border: none;
   border-radius: 999px;
-  padding: 5px 11px;
+  padding: 6px 12px;
   font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
   font-weight: 500;
   cursor: pointer;
@@ -4504,7 +4489,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 36px;
+  min-height: var(--dam-control-h, 44px);
 }
 
 .dam-lifecycle-history__badge {
@@ -6822,10 +6807,10 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 #damMediaPreviewTitleMeta .dam-media-preview__asset-id,
 #damMediaPreview .dam-media-preview__title-row .dam-media-preview__asset-id {
-  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * 1.05);
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--dam-badge-scale, 1.05));
   font-weight: 500;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--_dam-badge-radius, 14px);
   margin: 0;
 }
 
