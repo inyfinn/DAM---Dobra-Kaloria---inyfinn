@@ -811,6 +811,47 @@
     if (wrap) wrap.classList.toggle("is-off", !state.showAllRevisions);
   }
 
+  /** Nazwa pliku / folderu ze szkicami (nie jest "prawdziwym" projektem). */
+  function isSzkiceName(name) {
+    return /szkice/i.test(String(name || ""));
+  }
+
+  /** Slot 2 - PROJEKT / PROJEKTY / PROJECT (case-insensitive). */
+  function isProjektSlot(slot, pathOrRel) {
+    var s = String(slot || "").toLowerCase();
+    if (/^2\s*-\s*(projekty|projekt|projects|project)\b/.test(s)) return true;
+    var p = String(pathOrRel || "").replace(/\\/g, "/").toLowerCase();
+    return /\/2\s*-\s*(projekty|projekt|projects|project)(\/|$)/.test(p);
+  }
+
+  /**
+   * Lista zrodel w karcie nosnika:
+   * OFF (Pokaż wszystkie): tylko 2 - PROJEKT bez SZKICE.
+   * ON: pelna lista (archiwum / szkice) jak w indeksie.
+   */
+  function filterSourceFilesForView(files) {
+    var list = files || [];
+    if (state.showAllRevisions) return list.slice();
+    return list.filter(function (f) {
+      if (!f || !f.name) return false;
+      if (isSzkiceName(f.name)) return false;
+      return isProjektSlot(f.slot, f.path || f.rel || "");
+    });
+  }
+
+  function ensurePakietStyles() {
+    if (document.getElementById("dam-pakiet-style")) return;
+    var s = document.createElement("style");
+    s.id = "dam-pakiet-style";
+    s.textContent =
+      ".dam-carrier-toggle-row__end .dam-pakiet-btn{" +
+      "flex-shrink:0;letter-spacing:.02em;font-weight:600;text-transform:uppercase;" +
+      "min-height:28px;padding:0 10px;line-height:1;" +
+      "}" +
+      ".dam-carrier-toggle-row__end .dam-pakiet-btn:disabled{opacity:.55;cursor:wait;}";
+    document.head.appendChild(s);
+  }
+
   function renderExplorerGridStatus() {
     var status = document.getElementById("damExplorerGridStatus");
     if (!status || !state.fileIndex) return;
@@ -2474,6 +2515,120 @@
       });
   }
 
+  function applyPakietFileToProduct(data) {
+    var product = state.product;
+    if (!product || !data) return false;
+    var revKey = normPathKey(data.revision_path || "");
+    var file = data.file || null;
+    if (!file && data.zip_path) {
+      file = {
+        name: data.zip_name || "",
+        path: String(data.zip_path || "").replace(/\\/g, "/"),
+        ext: "zip",
+        size: data.zip_size || 0,
+        mtime: data.mtime || "",
+        lang: "",
+        slot: "3 - DRUK",
+        role: "print"
+      };
+    }
+    if (!file || !file.name) return false;
+    var patched = false;
+    (product.revisions || []).forEach(function (rev) {
+      if (!rev) return;
+      if (revKey && normPathKey(rev.path || "") !== revKey) return;
+      if (!revKey && data.index && String(rev.index || "") !== String(data.index || "")) return;
+      var fbr = rev.files_by_role || (rev.files_by_role = {});
+      var print = (fbr.print || []).slice();
+      print = print.filter(function (f) {
+        return !f || String(f.name || "") !== String(file.name);
+      });
+      print.unshift(file);
+      fbr.print = print;
+      patched = true;
+    });
+    return patched;
+  }
+
+  function packPrintPackage(btn) {
+    if (!btn || btn.disabled) return;
+    var revPath = btn.getAttribute("data-pakiet-path") || "";
+    var index = btn.getAttribute("data-pakiet-index") || "";
+    var productId =
+      btn.getAttribute("data-pakiet-product") ||
+      (state.product && state.product.id) ||
+      "";
+    if (!revPath && !productId) {
+      showToast("Brak sciezki wariantu do pakietu.", "error");
+      return;
+    }
+    btn.disabled = true;
+    if (window.DamLoader && typeof window.DamLoader.start === "function") {
+      window.DamLoader.start("Pakuję PAKIET…");
+    } else {
+      showToast("Pakuję PAKIET…", "info");
+    }
+    bridgeFetchJson(bridgeUrl() + "/explorer/pack-print", {
+      method: "POST",
+      body: JSON.stringify({
+        revision_path: revPath,
+        path: revPath,
+        product_id: productId,
+        index: index,
+        dry_run: false
+      })
+    })
+      .then(function (res) {
+        var data = (res && res.data) || {};
+        if (!res || res.http >= 400 || !data.ok) {
+          var err = (data && data.error) || "pack_failed";
+          var msg =
+            (data && data.message) ||
+            (err === "folders_missing"
+              ? "Brak folderow: " + ((data.missing || []).join(", ") || "2 - PROJEKT / 4 - WIZKI")
+              : err === "ai_project_missing"
+                ? "Brak pliku .ai projektu w 2 - PROJEKT."
+                : err === "login_required"
+                  ? "Zaloguj sie, aby utworzyc PAKIET."
+                  : "Nie udalo sie utworzyc pakietu (" + err + ").");
+          showToast(msg, "error");
+          return;
+        }
+        applyPakietFileToProduct(data);
+        var keepCode = null;
+        try {
+          var card = btn.closest(".dam-carrier-card");
+          if (card && card.id) keepCode = card.id.replace(/^dam-carrier-/, "");
+        } catch (_eKeep) { /* ignore */ }
+        if (keepCode) state.expandedCarriers[keepCode] = true;
+        renderMain();
+        showToast(
+          "PAKIET gotowy: " + (data.zip_name || "ZIP") + " w 3 - DRUK",
+          "success"
+        );
+        setTimeout(function () {
+          var printSec = document.querySelector(
+            '.dam-file-layer[data-check-section="print"]'
+          );
+          if (printSec && printSec.scrollIntoView) {
+            printSec.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        }, 80);
+      })
+      .catch(function (err) {
+        showToast(
+          "Brak polaczenia z mostem: " + (err && err.message ? err.message : err),
+          "error"
+        );
+      })
+      .finally(function () {
+        btn.disabled = false;
+        if (window.DamLoader && typeof window.DamLoader.done === "function") {
+          window.DamLoader.done();
+        }
+      });
+  }
+
   function pathActions(path) {
     if (window.DamPaths && typeof window.DamPaths.pathActionsHtml === "function") {
       return window.DamPaths.pathActionsHtml(path);
@@ -2914,7 +3069,11 @@
       detailHtml =
         lifeBlock +
         renderChecklist(cl, rev, product) +
-        renderFileSection("Projekt / zrodlo", fbr.source, "source") +
+        renderFileSection(
+          "Projekt / zrodlo",
+          filterSourceFilesForView(fbr.source),
+          "source"
+        ) +
         renderFileSection("Pliki do druku",   printFilesFromRevision(rev),  "print") +
         renderVizGroups(allViz) +
         renderMarketingSection(product.related_materials) +
@@ -2927,6 +3086,18 @@
       "dam-carrier-card" +
       (isExpanded ? " is-expanded" : "") +
       (st === "aktualne" ? " dam-carrier-card--aktualne" : "");
+
+    ensurePakietStyles();
+    var pakietBtn =
+      '<button type="button" class="geex-btn geex-btn--sm dam-pakiet-btn" ' +
+      'data-pakiet-path="' +
+      esc(rev.path || "") +
+      '" data-pakiet-index="' +
+      esc(rev.index || "") +
+      '" data-pakiet-product="' +
+      esc((product && product.id) || "") +
+      '" data-dam-tip="Spakuj 2 - PROJEKT i 4 - WIZKI do ZIP w 3 - DRUK (bez SZKICE; nazwa jak plik .ai)">' +
+      "PAKIET</button>";
 
     return (
       '<div class="' + cardCls + '" id="' + cardId + '">' +
@@ -2968,6 +3139,7 @@
               : "") +
           "</div>" +
           '<div class="dam-carrier-toggle-row__end">' +
+            pakietBtn +
             '<div class="dam-carrier-toggle__actions" data-dam-tip="Kopiuj ścieżkę / otwórz folder w Windows">' +
               pathActions(rev.path || "") +
             "</div>" +
@@ -3779,6 +3951,14 @@
     });
 
     bindLifecycleControls(mount);
+
+    mount.querySelectorAll("[data-pakiet-path]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        packPrintPackage(this);
+      });
+    });
 
     // Elementy: otwórz / wskaz / odlacz
     mount.querySelectorAll("[data-elements-open]").forEach(function (btn) {
