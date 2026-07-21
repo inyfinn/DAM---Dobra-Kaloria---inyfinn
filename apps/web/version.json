@@ -1,7 +1,7 @@
 {
-  "version": "3.1.5",
+  "version": "3.1.6",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "gapship",
   "released_at": "2026-07-21",
-  "note": "3.1.5: EN not GB; langs PROJEKT+WIZKI; Multi search; KAR6X FRONT-L; admin AJAX tags; cache langEnTag20260721c"
+  "note": "3.1.6: tag popover equal CSS grid CTAs; thumb picker COMBO (folders list / files tiles); KAR6X cards use FRONT-L not stale ENFACE thumbs. Cache tagPopGrid20260721b / thumbCombo20260721b."
 }

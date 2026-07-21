@@ -280,15 +280,76 @@
   function tagPickerHead(kind) {
     var k = String(kind || "carrier");
     if (k === "status") return "Wybierz status";
-    if (k === "brand") return "Wybierz marke";
-    if (k === "lang") return "Wybierz jezyk";
-    if (k === "category") return "Wybierz kategorie";
-    if (k === "subcategory") return "Wybierz podkategorie";
+    if (k === "brand") return "Wybierz markę";
+    if (k === "lang") return "Wybierz język";
+    if (k === "category") return "Wybierz kategorię";
+    if (k === "subcategory") return "Wybierz podkategorię";
     if (k === "index") return "Wybierz / wpisz indeks";
     if (k === "asset_role") return "Wybierz przeznaczenie";
     if (k === "appearance") return "Wybierz tag produktowy";
     if (k === "carrier") return isAdmin() && adminModeOn() ? "Wybierz typ" : "Zaproponuj typ";
-    return "Wybierz wartosc tagu";
+    return "Wybierz wartość tagu";
+  }
+
+  /** Contextual label for admin "add tag" CTA (not "Dodaj typ"). */
+  function addTagButtonLabel(kind) {
+    var k = String(kind || "");
+    if (k === "lang") return "Dodaj język";
+    if (k === "carrier") return "Dodaj nośnik";
+    if (k === "brand") return "Dodaj markę";
+    if (k === "status") return "Dodaj status";
+    if (k === "category") return "Dodaj kategorię";
+    if (k === "subcategory") return "Dodaj podkategorię";
+    if (k === "index") return "Dodaj indeks";
+    if (k === "asset_role") return "Dodaj przeznaczenie";
+    if (k === "appearance") return "Dodaj tag";
+    return "Dodaj tag";
+  }
+
+  function ensureTagPopoverBtnStyles() {
+    var old = document.getElementById("damTagEditDodajStyles");
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var st = document.getElementById("damTagEditPopBtnStyles");
+    if (!st) {
+      st = document.createElement("style");
+      st.id = "damTagEditPopBtnStyles";
+      document.head.appendChild(st);
+    }
+    st.setAttribute("data-token", "tagPopGrid20260721b");
+    /* Equal CSS grid: 2 columns, full-width cells; + left of label; actions bottom */
+    st.textContent =
+      "#damTagEditPopover.dam-tag-edit-popover{min-width:320px;width:min(340px,calc(100vw - 24px));}" +
+      "#damTagEditPopover .dam-tag-edit-popover__foot{" +
+      "display:grid!important;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;" +
+      "padding:10px 12px;border-top:1px solid #ececf2;flex:0 0 auto;box-sizing:border-box;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__foot > button{" +
+      "display:inline-flex!important;flex-direction:row!important;align-items:center;justify-content:center;" +
+      "gap:5px;width:100%!important;min-width:0;min-height:44px;height:auto;padding:8px 8px;" +
+      "border-radius:10px;font-size:11.5px;font-weight:600;cursor:pointer;box-sizing:border-box;" +
+      "line-height:1.2;white-space:normal;text-align:center;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__foot > button i{font-size:14px;line-height:1;flex:0 0 auto;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__foot > button span{" +
+      "min-width:0;text-align:left;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__addtag," +
+      "#damTagEditPopover .dam-tag-edit-popover__addtype{" +
+      "color:#7a3aa8;background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff);" +
+      "border:1px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 50%,#d7d7e0)!important;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__addtag:hover," +
+      "#damTagEditPopover .dam-tag-edit-popover__addtype:hover{" +
+      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 12%,#fff);" +
+      "border-color:var(--dam-primary,#ab54db)!important;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__changecat{" +
+      "border:1px solid #e2e2ea!important;background:#fff;color:#3d3a48;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__changecat:hover{" +
+      "border-color:var(--dam-primary,#ab54db)!important;color:#7a3aa8;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__foot > button:focus-visible{" +
+      "outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__actions{" +
+      "display:grid!important;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;" +
+      "padding:10px 12px;border-top:1px solid #ececf2;background:#fafafc;flex:0 0 auto;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__confirm," +
+      "#damTagEditPopover .dam-tag-edit-popover__cancel{" +
+      "width:100%!important;min-width:0;min-height:40px;justify-content:center;}";
   }
 
   /** PL / EN gdy slug angielski rozni sie od etykiety PL. */
@@ -835,47 +896,38 @@
         "</button>";
     });
     html += '<p class="dam-tag-edit-popover__empty" data-empty hidden>Brak opcji dla tego wyszukiwania.</p></div>';
+
+    /* Admin toolbar: equal 2-col grid [Dodaj … | Zmień kategorię], then confirm row */
+    if (isAdmin()) {
+      var addTagLbl = addTagButtonLabel(kind);
+      var addBtnHtml =
+        kind === "carrier"
+          ? '<button type="button" class="dam-tag-edit-popover__addtype" data-add-type data-dam-tip="Dodaj nowy typ nośnika do słownika i Szablonów folderów (admin)">' +
+            '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj typ</span></button>'
+          : '<button type="button" class="dam-tag-edit-popover__addtag" data-add-tag data-dam-tip="' +
+            esc(addTagLbl) +
+            ' z wybranej kategorii">' +
+            '<i class="uil uil-plus" aria-hidden="true"></i><span>' +
+            esc(addTagLbl) +
+            "</span></button>";
+      html +=
+        '<div class="dam-tag-edit-popover__foot">' +
+        addBtnHtml +
+        '<button type="button" class="dam-tag-edit-popover__changecat" data-change-cat data-dam-tip="Zmień kategorię tagu">' +
+        '<i class="uil uil-exchange" aria-hidden="true"></i><span>Zmień kategorię</span></button></div>';
+    }
+
     html +=
       '<div class="dam-tag-edit-popover__actions">' +
       '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm data-dam-tip="' +
-      (canDirect ? "Zatwierdz wybor" : "Zglos propozycje") +
+      (canDirect ? "Zatwierdź wybór" : "Zgłoś propozycję") +
       '"><i class="uil uil-check" aria-hidden="true"></i><span>' +
-      (canDirect ? "Zatwierdz" : "Zglos") +
+      (canDirect ? "Zatwierdź" : "Zgłoś") +
       "</span></button>" +
       '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel data-dam-tip="Anuluj bez zapisu">' +
       '<i class="uil uil-times" aria-hidden="true"></i><span>Anuluj</span></button></div>';
 
-    if (isAdmin()) {
-      html +=
-        '<div class="dam-tag-edit-popover__foot">' +
-        (kind === "carrier"
-          ? '<button type="button" class="dam-tag-edit-popover__addtype" data-add-type data-dam-tip="Dodaj nowy typ do slownika i Szablonow folderow (admin)">' +
-            '<i class="uil uil-plus"></i> Dodaj typ</button>'
-          : "") +
-        '<button type="button" class="dam-tag-edit-popover__addtag dam-tag-edit-popover__addtag--tile" data-add-tag data-dam-tip="Dodaj tag z kategorii">' +
-        '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span></button>' +
-        '<button type="button" class="dam-tag-edit-popover__changecat" data-change-cat data-dam-tip="Zmień kategorię tagu">' +
-        "Zmień kategorię</button></div>";
-    }
-
-    /* Inject dashed-tile styles once (assoc empty-state parity) */
-    if (!document.getElementById("damTagEditDodajStyles")) {
-      var st = document.createElement("style");
-      st.id = "damTagEditDodajStyles";
-      st.textContent =
-        ".dam-tag-edit-popover__foot{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;padding:10px 12px;border-top:1px solid #ececf2;}" +
-        ".dam-tag-edit-popover__addtag--tile{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;" +
-        "min-width:88px;min-height:56px;padding:8px 12px;border-radius:12px;font-size:12px;font-weight:600;color:#7a3aa8;" +
-        "background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff);" +
-        "border:1.5px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 45%,#d7d7e0);cursor:pointer;}" +
-        ".dam-tag-edit-popover__addtag--tile:hover{background:color-mix(in srgb,var(--dam-primary,#ab54db) 12%,#fff);" +
-        "border-color:var(--dam-primary,#ab54db);}" +
-        ".dam-tag-edit-popover__addtag--tile i{font-size:18px;}" +
-        ".dam-tag-edit-popover__addtype,.dam-tag-edit-popover__changecat{min-height:40px;padding:0 12px;border-radius:10px;" +
-        "border:1px solid #e2e2ea;background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:#3d3a48;}" +
-        ".dam-tag-edit-popover__addtype:hover,.dam-tag-edit-popover__changecat:hover{border-color:var(--dam-primary,#ab54db);color:#7a3aa8;}";
-      document.head.appendChild(st);
-    }
+    ensureTagPopoverBtnStyles();
 
     pop.innerHTML = html;
     document.body.appendChild(pop);
@@ -1009,9 +1061,9 @@
         /* Same category first: keep current kind, focus search to pick/add */
         if (searchInput) {
           searchInput.focus();
-          searchInput.placeholder = "Dodaj tag w kategorii: " + kind;
+          searchInput.placeholder = addTagButtonLabel(kind) + " (kategoria: " + kind + ")";
         }
-        showToast("Zaznacz tag z listy i zatwierdz (kategoria: " + kind + ").");
+        showToast("Zaznacz tag z listy i zatwierdź (kategoria: " + kind + ").");
       });
     }
 

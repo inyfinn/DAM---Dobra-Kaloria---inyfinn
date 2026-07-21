@@ -7905,3 +7905,65 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Reindex:** full python apps/web/scripts/build-file-index.py recommended when X: Marketing available (regenerate thumbs *_en.jpg, refresh wizki slots). Surgical patch already applied for langs/paths/search.
 
+
+## 2026-07-21 - tagPopBtn: compact CTAs + Confirm at bottom
+
+**Komenda/Akcja:** Fix #damTagEditPopover - contextual Dodaj labels, + left inline, Zatwierdz/Anuluj at bottom.
+
+**Log/Status:**
+1. dam-tag-edit.js: addTagButtonLabel(kind); reorder DOM foot before actions; ensureTagPopoverBtnStyles (token tagPopBtn20260721b); remove dashed tile stack.
+2. Polish: Zatwierdz, Zglos, head titles (jezyk/marke/...), Dodaj nosnik/jezyk.
+3. Cache-bust ?v=tagPopBtn20260721b in index/branding/explorer/visualizations/settings.html.
+
+**Efekt/Fix:** Toolbar-height (40px) row CTAs; Confirm/Cancel last; no giant dashed tile.
+
+**Backup:** brak (no commit).
+
+**Test/Ewaluacja:**
+- node --check dam-tag-edit.js OK
+- CDP: childOrder head>search>list>foot>actions; plusLeft; labels Dodaj nosnik/jezyk; UTF-8 diacritics U+15B/U+17A/U+144/U+119
+- Screenshot+Read Pass1-5: tag-pop-pass1..5
+
+**Zrodla:** dam-tag-edit.js, *.html cache-bust
+
+## 2026-07-21 - KAR6X card thumb: FRONT-L not stale ENFACE jpeg
+
+**Komenda/Akcja:** Karty KAR6X pokazywaly ENFACE mimo path=FRONT-L w indeksie.
+
+**Log/Status:**
+1. Root cause: surgical path patch zostawil `file`/`rel`/`thumb_url` na ENFACE-S; `renderGroup` bral `thumb_url`.
+2. dam-viz.js: `syncKar6xFrontThumb` + `cardThumbSrc`; enrich sync file + /media gdy FRONT.
+3. Regen 36 KAR6X thumbs z FRONT-L; sync file/rel w file-index.json.
+4. Cache `kar6xFront20260721a`.
+
+**Efekt/Fix:** CDP CYNAMONKA/ŚLIWKOWE → `…FRONT-L.png` (media); screenshot 3/4 FRONT nie plaski ENFACE.
+
+**Test/Ewaluacja:** node --check OK; CDP file FRONT-L; screenshot+Read karta 6300783.
+
+**Zrodla:** dam-viz.js, visualizations.html, file-index.json, data/thumbs/*
+
+## 2026-07-21 - tag popover: equal CSS grid CTAs
+
+**Komenda/Akcja:** #damTagEditPopover foot/actions - rowny grid 2 kolumny.
+
+**Log/Status:**
+1. Usunieto podwojne Dodaj typ + Dodaj nosnik (carrier = tylko Dodaj typ).
+2. foot + actions: `display:grid; grid-template-columns:1fr 1fr`; buttony width 100%.
+3. Token `tagPopGrid20260721b`.
+
+**Test/Ewaluacja:** CDP sameW/sameY/alignX; labels full "Zmień kategorię"; Zatwierdź|Anuluj na dole.
+
+**Zrodla:** dam-tag-edit.js, HTML cache-bust
+
+## 2026-07-21 - thumb picker COMBO + crumbs tab
+
+**Komenda/Akcja:** #damThumbPicker - tryb combo (domyslny), foldery lista / pliki kafelki; crumbs tab w ramce.
+
+**Log/Status:**
+1. Widoki: combo | lista | miniatury (tiles=legacy thumbs). Default `combo` w localStorage.
+2. CSS: folder `grid-column:1/-1` paseczek z ikona; pliki tiles; crumbs row-gap 1px, pad 6/12/8, max-height none.
+3. Cache `thumbCombo20260721b`.
+
+**Test/Ewaluacja:** CDP folders=2 full names; strip fullWidth; tab overflowBot/Top=false; screenshot.
+
+**Zrodla:** dam-viz.js, visualizations.html

@@ -419,7 +419,16 @@
         v.revision_folder = rev.folder || v.revision_folder;
         if (rev.wizki && rev.wizki.length) {
           var picked = firstWizkiPath(rev);
-          if (picked) v.path = picked;
+          if (picked) {
+            v.path = picked;
+            var pickedBase = String(picked).replace(/\\/g, "/").split("/").pop() || "";
+            if (pickedBase) {
+              v.file = pickedBase;
+              v.rel = pickedBase;
+            }
+            /* Stary data/thumbs/*.jpg moze byc z ENFACE - karta musi trafic w FRONT. */
+            v.thumb_url = mediaPreviewUrl(picked) || v.thumb_url;
+          }
         }
         if (Array.isArray(rev.langs) && rev.langs.length) {
           v.langs = rev.langs
@@ -435,7 +444,51 @@
       }
     }
     if (v.lang === "gb" || v.lang === "uk") v.lang = "en";
+    /* KAR6X: path juz FRONT-L w indeksie, ale thumb_url/file zostaly na ENFACE po patchu. */
+    syncKar6xFrontThumb(v);
     return normalizeVizRow(v);
+  }
+
+  function isKar6xCarrier(v) {
+    var c = String((v && (v.carrier || v.carrier_code)) || "")
+      .toUpperCase()
+      .replace(/\s+/g, "");
+    return c.indexOf("KAR6X") !== -1 || c.indexOf("KARTON6X") !== -1;
+  }
+
+  function syncKar6xFrontThumb(v) {
+    if (!v || !isKar6xCarrier(v)) return v;
+    var path = String(v.path || "");
+    if (!path) return v;
+    var pathU = path.toUpperCase();
+    if (pathU.indexOf("FRONT") === -1 || pathU.indexOf("ENFACE") !== -1) return v;
+    var file = String(v.file || "");
+    var rel = String(v.rel || "");
+    var thumb = String(v.thumb_url || "");
+    var stale =
+      /ENFACE/i.test(file) ||
+      /ENFACE/i.test(rel) ||
+      /ENFACE/i.test(thumb) ||
+      (file && path.replace(/\\/g, "/").split("/").pop().toLowerCase() !== file.toLowerCase());
+    if (!stale) return v;
+    var base = path.replace(/\\/g, "/").split("/").pop() || "";
+    if (base) {
+      v.file = base;
+      if (rel && /ENFACE/i.test(rel)) v.rel = base;
+    }
+    v.thumb_url = mediaPreviewUrl(path) || v.thumb_url;
+    return v;
+  }
+
+  function cardThumbSrc(v) {
+    if (!v) return "";
+    syncKar6xFrontThumb(v);
+    if (v.thumb_url && String(v.thumb_url).indexOf("/media?") >= 0) return v.thumb_url;
+    if (isKar6xCarrier(v) && v.path && /FRONT/i.test(v.path) && !/ENFACE/i.test(v.path)) {
+      var live = mediaPreviewUrl(v.path);
+      if (live) return live;
+    }
+    return v.thumb_url || mediaPreviewUrl(v.path) || "";
   }
 
   function expandVizFromProducts(data, onlyLatest) {
@@ -1768,105 +1821,151 @@
     return tags ? '<span class="dam-thumb-picker__item-tags">' + tags + "</span>" : "";
   }
 
-  /* thumbPick20260721a: square filled tiles (like .dam-media-preview__all-group),
-     not 1px purple stroke pills. Injected to avoid concurrent edits on dam-brand.css. */
+  /* thumbPick combo: folders = list strips, files = tiles; crumbs tab inside frame. */
   function ensureThumbPickerTilesCss() {
-    if (document.getElementById("dam-thumb-picker-tiles")) return;
-    var style = document.createElement("style");
-    style.id = "dam-thumb-picker-tiles";
+    var TOKEN = "thumbCombo20260721b";
+    var style = document.getElementById("dam-thumb-picker-tiles");
+    if (!style) {
+      style = document.createElement("style");
+      style.id = "dam-thumb-picker-tiles";
+      document.head.appendChild(style);
+    }
+    if (style.getAttribute("data-token") === TOKEN && style.textContent) return;
+    style.setAttribute("data-token", TOKEN);
     style.textContent =
+      /* Crumbs: row-gap -3px vs old 4px; current tab fully inside muted frame */
       "#damThumbPicker .dam-thumb-picker__crumbs{" +
-      "flex:1 1 240px;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:4px 2px;" +
-      "overflow-x:hidden;overflow-y:hidden;white-space:normal!important;" +
-      "padding:12px 16px;min-height:44px;max-height:76px;box-sizing:border-box;" +
-      "border:none;border-radius:12px;" +
+      "flex:1 1 240px;min-width:0;display:flex;align-items:center;flex-wrap:wrap;" +
+      "gap:1px 2px;row-gap:1px;column-gap:2px;" +
+      "overflow:hidden;white-space:normal!important;" +
+      "padding:6px 12px 8px;min-height:36px;max-height:none;box-sizing:border-box;" +
+      "border:none;border-radius:12px;line-height:1.2;" +
       "background:var(--dam-surface-muted,#f5f6fa);scrollbar-width:none;}" +
       "#damThumbPicker .dam-thumb-picker__crumbs::-webkit-scrollbar{display:none;height:0;}" +
       "#damThumbPicker .dam-thumb-picker__crumb{" +
-      "border:none;background:transparent;padding:6px 10px;border-radius:8px;" +
-      "color:#6b6980;font-size:12px;cursor:pointer;white-space:nowrap;min-height:32px;}" +
+      "border:none;background:transparent;padding:2px 8px;border-radius:7px;" +
+      "color:#6b6980;font-size:12px;cursor:pointer;white-space:nowrap;" +
+      "min-height:24px;height:auto;line-height:1.2;box-sizing:border-box;" +
+      "max-width:100%;margin:0;}" +
       "#damThumbPicker .dam-thumb-picker__crumb:hover{" +
       "background:#fff;color:var(--dam-primary,#ab54db);}" +
       "#damThumbPicker .dam-thumb-picker__crumb.is-current{" +
-      "background:#fff;color:#464255;font-weight:600;cursor:default;}" +
-      "#damThumbPicker .dam-thumb-picker__crumb-sep{color:#c3c1cc;font-size:11px;padding:0 2px;}" +
+      "background:#fff;color:#464255;font-weight:600;cursor:default;" +
+      "box-shadow:none;}" +
+      "#damThumbPicker .dam-thumb-picker__crumb-sep{" +
+      "color:#c3c1cc;font-size:11px;padding:0 1px;line-height:1.2;align-self:center;}" +
       "#damThumbPicker .dam-thumb-picker__nav-btn{" +
       "width:36px;height:36px;min-width:36px;min-height:36px;}" +
+      /* Shared tile grid (thumbs = all tiles; tiles alias kept) */
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs]," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles]{" +
-      "background:var(--dam-surface-muted,#f5f6fa);" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles]," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo]{" +
+      "display:grid;background:var(--dam-surface-muted,#f5f6fa);" +
       "gap:12px;padding:16px;" +
-      "grid-template-columns:repeat(auto-fill,minmax(128px,1fr));}" +
-      /* Beat .dam-admin-control pill (50px + purple 1.5px stroke !important) */
+      "grid-template-columns:repeat(auto-fill,minmax(128px,1fr));align-content:start;}" +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item," +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder)," +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item.dam-admin-control," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.dam-admin-control{" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.dam-admin-control," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder).dam-admin-control{" +
       "display:flex;flex-direction:column;align-items:stretch;gap:8px;" +
       "padding:10px!important;min-width:0;min-height:44px!important;" +
       "border:1px solid transparent!important;border-radius:14px!important;background:#fff!important;" +
       "box-shadow:none!important;text-align:left;overflow:hidden;box-sizing:border-box;" +
-      "font-size:12px!important;color:#464255!important;" +
-      "transition:background .14s ease,box-shadow .14s ease,transform .14s ease;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item--folder," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item--folder{" +
-      "flex-direction:column;background:#fff!important;border-color:transparent!important;}" +
-      /* Hover/focus: outline + fill tint (box-shadow/transform are stripped in this shell) */
+      "font-size:12px!important;color:#464255!important;}" +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item:hover," +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item:hover," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:hover," +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item.is-hover," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.is-hover{" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.is-hover," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item.is-hover{" +
       "border-color:transparent!important;" +
       "background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff)!important;" +
       "outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 28%,transparent);" +
       "outline-offset:1px;}" +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item.is-focus," +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.is-focus," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item.is-focus," +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item.is-focus{" +
       "border-color:transparent!important;" +
-      "outline:3px solid rgba(171,84,219,.55)!important;" +
-      "outline-offset:2px;}" +
+      "outline:3px solid rgba(171,84,219,.55)!important;outline-offset:2px;}" +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item img," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item img{" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item img," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder) img{" +
       "display:block;width:100%;max-width:100%;height:auto!important;aspect-ratio:1;" +
       "object-fit:contain;border-radius:10px;background:#fff;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item-tags{" +
-      "display:none;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item-tags," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item-tags{display:none;}" +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item--folder > i," +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item--folder > i," +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item > i.uil-image," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item > i.uil-image{" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item > i.uil-image," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder) > i.uil-image{" +
       "display:flex;align-items:center;justify-content:center;" +
       "width:100%;aspect-ratio:1;border-radius:10px;" +
       "background:var(--dam-surface-muted,#f5f6fa);font-size:36px;" +
       "color:color-mix(in srgb,var(--dam-primary,#ab54db) 55%,#8b8d97);}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__meta," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__meta{" +
-      "min-width:0;}" +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__name," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__name{" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__name," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder) .dam-thumb-picker__name{" +
       "font-size:11.5px;font-weight:600;color:#464255;line-height:1.35;" +
       "overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;" +
       "word-break:break-word;}" +
+      /* LIST: all rows as strips */
       "#damThumbPicker .dam-thumb-picker__grid[data-view=list]{" +
+      "display:flex;flex-direction:column;gap:8px;" +
       "background:var(--dam-surface-muted,#f5f6fa);padding:12px 16px 16px;}" +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item," +
       "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item.dam-admin-control{" +
-      "background:#fff!important;border:1px solid transparent!important;border-radius:12px!important;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item:hover," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item.dam-admin-control:hover{" +
-      "border-color:transparent!important;box-shadow:0 4px 14px rgba(40,34,60,.08);}";
-    document.head.appendChild(style);
+      "display:flex!important;flex-direction:row!important;align-items:center;gap:12px;" +
+      "width:100%;padding:10px 14px!important;min-height:44px!important;" +
+      "background:#fff!important;border:1px solid transparent!important;border-radius:12px!important;" +
+      "box-shadow:none!important;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item img{" +
+      "width:40px;height:40px;aspect-ratio:1;object-fit:contain;border-radius:8px;flex:0 0 auto;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item > i," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item--folder > i{" +
+      "display:flex;align-items:center;justify-content:center;" +
+      "width:36px;height:36px;flex:0 0 auto;aspect-ratio:auto;border-radius:8px;" +
+      "background:var(--dam-surface-muted,#f5f6fa);font-size:20px;" +
+      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 55%,#8b8d97);}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__meta{flex:1 1 auto;min-width:0;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__name{" +
+      "display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
+      "font-size:13px;font-weight:600;-webkit-line-clamp:unset;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item:hover{" +
+      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff)!important;}" +
+      /* COMBO: folders = full-width strips; files = tiles (default) */
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder.dam-admin-control{" +
+      "grid-column:1/-1;display:flex!important;flex-direction:row!important;align-items:center;" +
+      "gap:12px;width:100%;padding:10px 14px!important;min-height:44px!important;" +
+      "background:#fff!important;border:1px solid transparent!important;border-radius:12px!important;" +
+      "overflow:hidden;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder > i{" +
+      "display:flex;align-items:center;justify-content:center;" +
+      "width:36px;height:36px;flex:0 0 auto;aspect-ratio:auto!important;border-radius:8px;" +
+      "background:var(--dam-surface-muted,#f5f6fa);font-size:20px;" +
+      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 55%,#8b8d97);}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder .dam-thumb-picker__meta{" +
+      "flex:1 1 auto;min-width:0;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder .dam-thumb-picker__name{" +
+      "display:block!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
+      "font-size:13px;font-weight:600;line-height:1.3;" +
+      "-webkit-line-clamp:unset!important;-webkit-box-orient:unset!important;}";
   }
 
-  /* Pkt 8 brief 2026-07-20: #damThumbPicker jako mini-eksplorator - breadcrumb,
-     wstecz/dalej/w gore/odswiez, widoki miniatury/lista/kafelki, tagi produktu. */
+  /* Pkt 8: #damThumbPicker mini-eksplorator. Widoki: combo (domyslny) /
+     lista / miniatury. Combo = foldery lista + pliki kafelki. */
   function openThumbGridPicker(dir, onPicked) {
     ensureThumbPickerTilesCss();
     var existing = document.getElementById("damThumbPicker");
     if (existing) existing.remove();
-    var view = localStorage.getItem(THUMB_PICKER_VIEW_KEY) || "thumbs";
-    if (["thumbs", "list", "tiles"].indexOf(view) < 0) view = "thumbs";
+    var view = localStorage.getItem(THUMB_PICKER_VIEW_KEY) || "combo";
+    /* tiles == thumbs (legacy); migrate stale prefs to combo */
+    if (view === "tiles") view = "thumbs";
+    if (["combo", "list", "thumbs"].indexOf(view) < 0) view = "combo";
     var history = [];
     var histPos = -1;
     var currentPath = "";
@@ -1887,15 +1986,18 @@
       '<button type="button" class="dam-thumb-picker__nav-btn" id="damThumbPickerRefresh" data-dam-tip="Odśwież" aria-label="Odśwież"><i class="uil uil-refresh"></i></button>' +
       '<div class="dam-thumb-picker__crumbs" id="damThumbPickerCrumbs" aria-label="Ścieżka"></div>' +
       '<div class="dam-thumb-picker__views" role="group" aria-label="Widok">' +
-      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="thumbs" data-dam-tip="Miniatury" aria-label="Miniatury"><i class="uil uil-apps"></i></button>' +
+      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="combo" data-dam-tip="Combo: foldery lista, pliki kafelki" aria-label="Combo"><i class="uil uil-apps"></i></button>' +
       '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="list" data-dam-tip="Lista" aria-label="Lista"><i class="uil uil-list-ul"></i></button>' +
-      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="tiles" data-dam-tip="Kafelki" aria-label="Kafelki"><i class="uil uil-table"></i></button>' +
+      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="thumbs" data-dam-tip="Miniatury" aria-label="Miniatury"><i class="uil uil-table"></i></button>' +
       "</div>" +
       "</div>" +
       '<div class="dam-thumb-picker__grid" id="damThumbPickerGrid" data-view="' +
       esc(view) +
       '"><p class="dam-thumb-picker__status">Ładowanie…</p></div></div>';
     document.body.appendChild(overlay);
+    try {
+      localStorage.setItem(THUMB_PICKER_VIEW_KEY, view);
+    } catch (eLs) {}
 
     var backBtn = document.getElementById("damThumbPickerBack");
     var fwdBtn = document.getElementById("damThumbPickerFwd");
@@ -3156,7 +3258,7 @@
   function renderGroup(group) {
     var items = group.items.map(applyOverrideToItem);
     var first = items[0];
-    var thumb = first.thumb_url || "";
+    var thumb = cardThumbSrc(first);
     var brand = first.brand || "DK";
     var uniq = uniqueModalVariants(items);
     var langs = {};
