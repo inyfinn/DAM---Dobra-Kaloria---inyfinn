@@ -964,3 +964,14 @@ evealSequence fade uzywa opacity nie utoAlpha; po
   `style.colorScheme`. Nie polegaj na samym `localStorage.theme` bez pref/system.
 - **F7:** cienkie duplikaty anatomii btn/badge w `dam-brand.css` (999px) —
   anatomia w primitives, brand zostawia kolory + lokalna gestosc pad.
+
+### 2026-07-21 - `.dam-btn-icon` ≠ square (labeled CTAs)
+
+- **Objaw:** modal `#damVizModalGoProduct` / `#damVizModalWinExplorer` (~43×43)
+  ucinały "Przejdź"/"Folder" jak kółka.
+- **Przyczyna:** geex primitives wymuszały `width/height:44` na **całym**
+  `.dam-btn-icon` (klasa historycznie = icon+label) + modal
+  `border-radius: var(--btn-radius, 50px)` przy w≈h.
+- **Zasada HARD:** square tylko `.dam-btn-icon-only` / `.dam-viz-icon-btn` /
+  `.dam-icon-btn`. Labeled `.dam-btn-icon` = `width:auto` + compact pad/radius.
+  Nie mieszaj text CTA z forced equal w/h.
