@@ -340,6 +340,36 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
 
+- 2026-07-21 | branding thumb overflow | `--dam-viz-img-scale: 1.2` mimo
+  `CARD_IMG_BASE_SCALE=1` w dam-branding.js; img rect 272px vs thumb 255px |
+  `applyBrandingCardZoom` early-return do `DamCardZoom.apply` (media-preview),
+  ktory mial wlasne `CARD_IMG_BASE_SCALE=1.2` | zmieniac skale w DamCardZoom
+  (wlasciciel) + dam-viz fallback; po zoom CDP `getBoundingClientRect` +
+  `elementFromPoint` (clip CSS moze ukryc paint przy bleed rect).
+- 2026-07-21 | samouczek gratulacje / off-path | gratulacje dopiero po "zlym"
+  kliku; klik poza celem konczyl/przesuwal faze albo nawigowal precz |
+  `onDocClick` chwalil KAZDY klik poza UI samouczka (a poprawny link
+  nawigowal zanim user zobaczyl dymek) | gratulacje TYLKO przy `clickHitsTarget`
+  + `preventDefault` na celach-linkach (~3.5s); off-path NIE konczy fazy.
+- 2026-07-21 | samouczek explore-to-test | off-path z `preventDefault` na KAZDYM
+  kliku + recreate companion (sad/wander) = UI zablokowane i spam tekstow |
+  `exploreMode`: po 1. off-path companion BR + soft dim (`pointer-events:none`),
+  kolejne kliki BEZ preventDefault; copy `tryExplore` throttle 12s; media kroki
+  = `explain-assets/image/video` (NIGDY pose-5/present); gender tylko z mapy.
+- 2026-07-21 | samouczek praise toast | praise w tipie (`is-congrats` + praiseLock)
+  opoznial nextStep i blokowal "poczucie postepu" mimo auto-Dalej |
+  `showCongrats` czekal CONGRATS_MS przed advance | advance-first (`nextStep`
+  natychmiast), potem opcjonalny nieblokujacy `.dam-tut-praise-toast` (~25%,
+  2275ms); rare burst osobno; NIGDY is-congrats na tipie.
+- 2026-07-21 | inject CSS string concat | style toast nie mial border mimo reguly w
+  zrodle | `s.textContent = a + /* komentarz JS */ + b` daje `a + (+b)` = `a + NaN`
+  i psuje CSS | nie wstawiaj JS-comment miedzy operandami `+` w lancuchu CSS.
+- 2026-07-21 | branding `#damMediaPreview` dead white above actions | hero ~273px,
+  actions sticky przy dnie z ogromna bielia nad CTAs | non-split body mial
+  `flex: 1 1 auto` (dam-viz-modal.css) i kradl wysokosc thumbowi; sticky actions
+  pinowaly sie do dna wysokiego body | body = `flex: 0 1 auto` (content-sized +
+  scroll); thumb `flex: 1 1 0` bierze wolne VH; grid-area `actions`; nie dawaj
+  grow na body gdy actions sa sticky w srodku.
 - 2026-07-21 | viz all-files doubles+columns | `XL XL L L` + grupy ~187px side-by-side |
   brak dedupe po `size` w grupie Perspektywa|T?o (WIZKI multi-file) + `all-files`
   `auto-fill minmax(168px)` uklada grupy w kolumny | jedna karta na quality (prefer

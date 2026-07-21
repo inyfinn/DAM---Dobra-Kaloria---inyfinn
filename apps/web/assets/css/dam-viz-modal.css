@@ -56,9 +56,11 @@
   padding: 28px 40px 16px;
 }
 
-/* Non-split branding preview: body is the scrollport (actions sticky inside). */
+/* Non-split branding preview: body sizes to content (scroll when needed);
+   thumb/hero absorbs free height. flex:1 here was stealing space from hero
+   and left a dead white gap above sticky actions (brandModalPad20260721a). */
 #damMediaPreview:not(.dam-media-preview--viz-studio) .dam-viz-modal__body {
-  flex: 1 1 auto !important;
+  flex: 0 1 auto !important;
   min-height: 0 !important;
   max-height: none;
   overflow-x: hidden !important;
@@ -76,7 +78,8 @@
   width: 100%;
   box-sizing: border-box;
   margin-top: 0;
-  padding: 12px 40px 20px;
+  /* +6px horizontal vs prior 40px (brandModalPad20260721a) */
+  padding: 12px 46px 20px;
   background: #fff;
   border-top: 1px solid rgba(70, 66, 85, 0.08);
   box-shadow: 0 -6px 14px rgba(70, 66, 85, 0.05);
@@ -185,7 +188,7 @@
 #damMediaPreview .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary) {
   background: #fff !important;
   color: var(--dam-primary, #ab54db) !important;
-  border: 1px solid var(--dam-primary, #ab54db) !important;
+  border: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
   box-shadow: none !important;
   outline: none;
   opacity: 1 !important;
@@ -197,8 +200,8 @@
 #damMediaPreview .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary):focus-visible {
   background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, #fff) !important;
   color: var(--dam-primary, #ab54db) !important;
-  border: 1px solid var(--dam-primary, #ab54db) !important;
-  outline: 1px solid var(--dam-primary, #ab54db) !important;
+  border: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
+  outline: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
   outline-offset: 0 !important;
   opacity: 1 !important;
   visibility: visible !important;
@@ -237,7 +240,7 @@
 #damMediaPreview .dam-viz-modal__actions .dam-viz-icon-btn:focus-visible {
   background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, #fff) !important;
   color: var(--dam-primary, #ab54db) !important;
-  border-color: var(--dam-primary, #ab54db) !important;
+  border-color: var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
@@ -620,11 +623,34 @@
     "meta studio"
     "variants variants"
     "allfiles allfiles"
-    "extra extra";
+    "extra extra"
+    "actions actions";
   column-gap: 16px;
   row-gap: 10px;
   align-items: start;
   --dam-viz-modal-filemeta-gap: 0px;
+}
+
+/* Sticky actions row in non-split body: pin to grid bottom, no orphan auto-row gap */
+#damMediaPreview .dam-viz-modal__body > .dam-viz-modal__actions,
+#damVizModal .dam-viz-modal__body > .dam-viz-modal__actions {
+  grid-area: actions;
+  align-self: end;
+}
+/* Branding non-split: CTA cluster bottom-left (not full-width centered strip) */
+#damMediaPreview .dam-viz-modal__body > .dam-viz-modal__actions {
+  justify-self: start;
+  width: max-content;
+  max-width: 100%;
+  justify-content: flex-start !important;
+}
+
+/* Tighten rhythm above pinned actions (branding non-split) */
+#damMediaPreview:not(.dam-media-preview--viz-studio) .dam-viz-modal__body {
+  row-gap: 8px;
+}
+#damMediaPreview:not(.dam-media-preview--viz-studio) .dam-viz-modal__body > .dam-viz-modal__actions {
+  margin-top: 0;
 }
 
 #damVizModal .dam-viz-modal__meta-rail,

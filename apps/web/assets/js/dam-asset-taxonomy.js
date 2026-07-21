@@ -151,7 +151,8 @@
 
   function isGraphicMediaType(mt) {
     var m = normalizeMediaType(mt);
-    return m === "image" || m === "vector" || m === "source" || m === "video";
+    /* source != gotowa grafika (osobny tag Zrodlo); video osobno */
+    return m === "image" || m === "vector";
   }
 
   /** PNG/WebP bez skanu pikseli — tymczasowo traktuj jako przezroczyste (do dopracowania). */

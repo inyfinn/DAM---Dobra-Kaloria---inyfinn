@@ -6761,8 +6761,10 @@ button.dam-status-badge.dam-tag-editable:hover {
   border-radius: var(--btn-radius, 50px);
   box-sizing: border-box;
 }
-.dam-viz-modal__actions .geex-btn:not(.geex-btn--primary) {
+.dam-viz-modal__actions .geex-btn:not(.geex-btn--primary),
+.dam-viz-modal__actions .geex-btn.dam-win-btn:not(.geex-btn--primary) {
   background: #fff;
+  border-color: var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent));
 }
 
 .dam-viz-modal__cta {
@@ -6841,7 +6843,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1.5px solid var(--dam-primary, #AB54DB);
+  /* Global outline family: 50% transparent border (token --dam-btn-outline-border) */
+  border: 1.5px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent));
   background: transparent;
   color: var(--dam-primary, #AB54DB);
   display: inline-flex;

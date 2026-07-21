@@ -1,4 +1,40 @@
-﻿## 2026-07-21 03:05 - brandComposer: merge WARIANTY / UTF-8 / Shift edit on material tiles
+﻿## 2026-07-21 17:50 - Geex realign Faza 0 START + /planner skill
+
+**Komenda/Akcja:** (1) Global skill `/planner` MAD + reguła alwaysApply. (2) Start Geex realign v6.1 Faza 0.
+
+**Log/Status:**
+1. Skill: `~/.cursor/skills/planner/SKILL.md` + reference/examples/cheat-sheet; rule `planner-mad-always.mdc`.
+2. Brief: `agents/shared/geex-realign-plan-2026-07-21.md`.
+3. **HARD FREEZE** plików kluczowych realign (tokens, primitives, dam-brand.css, page CSS, theme JS, HTML enqueue) — tylko Lead/B/C wg planu.
+4. PNG baseline: gitignore; README + manifest; handoff-faza3/4 stubs.
+5. Commit backup + branch `design/geex-realign` + tag `geex-phase0` (po domknięciu zrzutów lokalnych).
+
+**Efekt/Fix:** Proces planowania globalny; start realign bez CSS produktu w Fazie 0.
+
+**Źródła:** geex-realign-plan-2026-07-21.md, planner SKILL, model-hierarchy.
+
+---
+
+## 2026-07-21 15:55 - Branding grid: overflow / Tylko grafiki / folder sort verify
+
+**Komenda/Akcja:** WORKER close gaps: overflow clip, Tylko grafiki hides sources, Priorytet użycia = folder cluster.
+
+**Log/Status:**
+1. CDP: `--dam-viz-img-scale` nadal 1.2 mimo `dam-branding.js` CARD_IMG_BASE_SCALE=1.
+2. Root cause: `DamCardZoom` w `dam-media-preview.js` trzymal CARD_IMG_BASE_SCALE=1.2 i nadpisywal branding roots.
+3. Fix: media-preview + dam-viz CARD_IMG_BASE_SCALE=1; assoc CSS fallback 1; bump `?v=brandOverflowSort20260721c`.
+4. Graphics-only + tip + sort juz byly OK (www cluster first).
+
+**Efekt/Fix:** imgScale=1; maxBleed 0/190 imgs; psdImgs=0; first 15 sec=www rank=10.
+
+**Test/Ewaluacja:**
+- CDP: anyBleed=false, paintOutside=0, zrodlo=0, Edytowalny leaves=65 (JPG OK).
+- Screenshot+Read przelot 2+3: thumbs w obrysie, stacki clipowane, Tylko grafiki ON / Priorytet użycia.
+- node --check media-preview + viz — Pass.
+
+**Źródła:** dam-media-preview.js, dam-viz.js, dam-branding.js/css (prior), branding.html cache-bust.
+
+## 2026-07-21 03:05 - brandComposer: merge WARIANTY / UTF-8 / Shift edit on material tiles
 
 **Komenda/Akcja:** WORKER brandComposer20260721a — audit abandoned functional branding/explorer/global (~4h); ui-taste 12×/zone.
 
@@ -7967,3 +8003,140 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Test/Ewaluacja:** CDP folders=2 full names; strip fullWidth; tab overflowBot/Top=false; screenshot.
 
 **Zrodla:** dam-viz.js, visualizations.html
+
+## 2026-07-21 - branding media preview: hero grow + outline 50%
+
+**Komenda/Akcja:** `#damMediaPreview` - wiecej wysokosci hero, actions flush bottom, outline CTA border 50%.
+
+**Log/Status:**
+1. Root cause: non-split body `flex:1 1 auto` + sticky actions → martwa biel nad actions, hero ~273px.
+2. Body → `flex:0 1 auto`; thumb min-height `min(420px,48dvh)`; box `justify-content:flex-start`; grid-area `actions`.
+3. Actions pad L/R +6px (0→6 / 40→46). Token `--dam-btn-outline-border` 50% alpha na icon-btn + geex outline.
+4. Cache `brandModalPad20260721a`.
+
+**Efekt/Fix:** Hero bierze wolne VH; actions przy dnie; outline polprzezroczysty site-wide.
+
+**Test/Ewaluacja:** CDP hero h / actions pad / border alpha; screenshot×3–5 branding modal.
+
+**Zrodla:** dam-viz-modal.css, dam-branding.css, dam-brand.css, dam-tokens.css, dam-media-preview.js, HTML ?v=
+
+## 2026-07-21 - branding media preview: hero grow + outline 50%
+
+**Komenda/Akcja:** `#damMediaPreview` - wiecej wysokosci hero, actions flush bottom, outline CTA border 50%.
+
+**Log/Status:**
+1. Root cause: non-split body `flex:1 1 auto` + sticky actions → martwa biel nad actions, hero ~273px.
+2. Body → `flex:0 1 auto`; thumb min-height `min(420px,48dvh)`; box `justify-content:flex-start`; grid-area `actions`.
+3. Actions pad L/R +6px (0→6 / 40→46). Token `--dam-btn-outline-border` 50% alpha na icon-btn + geex outline.
+4. Cache `brandModalPad20260721a`.
+
+**Efekt/Fix:** Hero bierze wolne VH; actions przy dnie; outline polprzezroczysty site-wide.
+
+**Test/Ewaluacja:** CDP hero h / actions pad / border alpha; screenshot×3–5 branding modal.
+
+**Zrodla:** dam-viz-modal.css, dam-branding.css, dam-brand.css, dam-tokens.css, dam-media-preview.js, HTML ?v=
+
+**Test/Ewaluacja (CDP branding PROTEINA):** hero h 273→567 (49% box); actions pad L/R 6px; border `color(... / 0.5)`; gap assoc→actions ~48px; actionsToBoxBottom 12; PSD only in SourceMount; Pass×5 screenshots.
+
+## 2026-07-21 - Samouczek / DobroKalorius overhaul
+
+**Komenda/Akcja:** Congrats-on-target, off-path companion, 40+40 copy, nowe pozy, help global, SW 1h.
+
+**Log/Status:**
+1. Root cause A: onDocClick chwalil dowolny klik; poprawny link nawigowal zanim dymek sie pokazal.
+2. Root cause B: ten sam handler = auto-Dalej / nawigacja = "koniec" samouczka z perspektywy usera.
+3. program-instructions `ui.tutorial_dobrokalorius_hard` (v13); copy JSON; cut-mascot-sheets.py.
+4. dam-tutorial.js: showCongrats 3500ms, companion, nameForms, cheer throttle, SW register.
+5. dam-shortcuts.js: restart button w head; lazy-load tutorial.
+6. Cache `tourFix20260721b`; serve_browser Cache-Control 1h / no-cache `?v=`.
+
+**Efekt/Fix:** Brawo Krzys natychmiast; off-path = companion + faza 0:0; help restart na settings.
+
+**Test/Ewaluacja:** node --check; CDP congrats+companion+help; screenshot+Read tip/companion; RGBA poses.
+
+**Zrodla:** dam-tutorial.js, dam-shortcuts.js, dobrokalorius-copy.json, sw.js, maskotka/pose-*.png
+
+## 2026-07-21 - Typ pliku: Folder + etykiety jezykow (nie kraje)
+
+**Komenda/Akcja:** #damVizModalMeta klik = revealInExplorer; globalnie Polski/Niemiecki/Angielski zamiast Polska/Niemcy/Wielka Brytania.
+
+**Log/Status:**
+1. Root cause klik: tip mowil o Shift/double-click zmianie typu nosnika - user oczekiwal Folder.
+2. Root cause etykiet: naming-dictionary + LANG_LABELS + file-index lang_labels/viz_* trzymaly nazwy krajow; EN=Wielka Brytania.
+3. Fix: dictionary + dam-labels + build-file-index; normalizeVizRow nadpisuje lang_label; meta click -> DamPaths.revealInExplorer; Shift+klik = carrier picker.
+4. Patch 395 wierszy viz_latest/viz_all; cache langAdj20260721b.
+5. Instrukcja ui.lang_labels_are_languages w program-instructions.json.
+
+**Efekt/Fix:** Meta: … · Angielski; filtr jezykow: Polski/Niemiecki/…; klik meta = ten sam reveal co Folder.
+
+**Test/Ewaluacja:** CDP text+reveal path; a11y name Angielski; screenshot pass2; node --check.
+
+**Zrodla:** naming-dictionary.json, dam-labels.js, dam-viz.js, build-file-index.py, file-index.json, program-instructions.json, HTML ?v=
+
+
+## 2026-07-21 - branding actions left + loader 1s/0.5s
+
+**Komenda/Akcja:** #damMediaPreview .dam-viz-modal__actions lewy dolny rog; DamLoader hold 1s, dock translate 0.5s.
+
+**Log/Status:**
+1. Actions: justify-self:start + width:max-content (nie full-width strip); split layout zostaje width 100%.
+2. Loader: HOLD_CENTER_MS 1500→1000, DOCK_MS 500; STYLE_ID bump.
+3. Cache ctionsLeftLoader20260721a. HTML restore z git po uszkodzonym PS -replace, potem bezpieczny bump Python.
+
+**Test/Ewaluacja:** CDP actionsW~501 vs boxW~1587, isLeftSide; dockAt~1024ms, transition left 0.5s; screenshot.
+
+**Zrodla:** dam-branding.css, dam-viz-modal.css, dam-loader.js, dam-media-preview.js, HTML ?v=
+
+
+
+## 2026-07-21 - Dobrokalorius explore-to-test + media poses + padding
+
+**Komenda/Akcja:** Fix companion UX: padding paneli, media poses (Nośniki), exploreMode (UI klikalne, throttle copy), tryExplore×40 + gender, animacje.
+
+**Log/Status:**
+1. Root cause padding: inject CSS companion padding:14/12 - zbyt ciasne vs Geex dropdown.
+2. Root cause pose: krok Nośniki uzywal present→pose-5 (ksiazka); media teaching = explain-assets/image/video.
+3. Root cause explore: onDocClick off-path zawsze preventDefault+stopPropagation + recreate companion z sad/wander co klik.
+4. Fix: exploreMode, soft dim 0.07, tryExplore joy/approve, throttle 12s, media-assets aliases, usunieto present/pose-5 z mapy i krokow, gender map + {trySelf}.
+5. Cache 	utorialExplore20260721c (HTML×8 + dam-shortcuts + copy fetch).
+6. program-instructions ui.tutorial_dobrokalorius_hard rozszerzone (must/must_not explore + media + no sad spam).
+
+**Efekt/Fix:** Companion padding 28/26/22/26; Nośniki→pose-explain-assets; off-path nie blokuje UI; faza stabilna; tryExplore=40.
+
+**Test/Ewaluacja:** node --check; CDP padding/pointer-events/phase/pose URL; screenshot+Read ×3 (explore joy, padding, Nośniki media); gender Ewa/Krzysztof/unknown.
+
+**Zrodla:** dam-tutorial.js, dobrokalorius-copy.json, program-instructions.json, HTML ?v=, dam-shortcuts.js
+
+
+## 2026-07-21 - tutorial praise ~25% only
+
+**Komenda/Akcja:** UX: poprawny cel default advance; praise tip tylko ~25%% hitow; po praise auto-advance.
+
+**Log/Status:**
+1. Root cause: onDocClick zawsze showCongrats (100%% praise + wait).
+2. Fix: PRAISE_CHANCE=0.25 w showCongrats; skip -> thenFn/nextStep od razu; praise -> ~3.5s potem auto-advance.
+3. program-instructions ui.tutorial_dobrokalorius_hard must zaktualizowany; DamTutorial.praiseStats().
+4. Cache ?v=tutorialPraise25_20260721a (HTML x8, Python bump).
+
+**Efekt/Fix:** 75%% hitow bez bubble gratulacji; 25%% short praise bez stuck na Dalej.
+
+**Test/Ewaluacja:** node --check; CDP force-skip (stats.skipped+1, no is-congrats, step advance); force-praise (Brawo + autoAdvanced); monteCarlo20 majority skip; exploreMode OK.
+
+**Zrodla:** dam-tutorial.js, program-instructions.json, apps/web/_qa/_bump_tutorial_praise25.py, HTML ?v=
+
+
+## 2026-07-21 - tutorial praise toast advance-first
+
+**Komenda/Akcja:** Rework Dobrokalorius correct-hit: advance first, optional short toast praise + rare micro-burst.
+
+**Log/Status:**
+1. Root cause: showCongrats blokowal tip (is-congrats + praiseLock) i opoznial nextStep o CONGRATS_MS=3500.
+2. Fix: onDocClick/goToPhasePage = advance natychmiast; maybeShowPraiseToast / queue na nawigacje; CONGRATS_MS=2275 (−35%); PRAISE krotkie (median 33→14); BURST_CHANCE=0.12; 3 warianty CSS burst; reduced-motion bez burst.
+3. program-instructions ui.tutorial_dobrokalorius_hard (toast HARD); copy congrats_title=Brawo!; memory #145; doctrine §12.
+4. Cache ?v=tutorialPraiseToast20260721b (HTML x8 + dam-shortcuts, Python bump; b = CSS concat fix).
+
+**Efekt/Fix:** Krok zmienia sie w tym samym ticku; pochwala to nieblokujacy toast; Dalej nie jest wymagane.
+
+**Test/Ewaluacja:** node --check; CDP advance sync (0:0→0:1 skip, 0:1→0:2+toast); CONGRATS_MS=2275; BURST_CHANCE=0.12; reduced-motion bez burst DOM; explore companion OK; screenshot+Read ×5 @1280.
+
+**Zrodla:** dam-tutorial.js, dobrokalorius-copy.json, program-instructions.json, _qa/_bump_tutorial_praise_toast.py

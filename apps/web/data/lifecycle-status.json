@@ -45826,6 +45826,88 @@
         }
       ],
       "details_enforced": []
+    },
+    {
+      "id": "lc_1784628171056",
+      "ts": "2026-07-21T10:02:51.056838+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_reconcile_boot",
+      "enforced": 0,
+      "disk_wins": 0,
+      "details_disk": [],
+      "program_wins": 1,
+      "details_program": [
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00",
+          "scope": "variant",
+          "winner": "program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-14T06:38:38+00:00",
+          "in_archive": false,
+          "product_id": "babka-cytrynowa-nerkowcowy",
+          "disk_letter": null,
+          "needs_force": true,
+          "revision_index": "6300622.00",
+          "previous_letter": null,
+          "needs_archive_move": false
+        }
+      ],
+      "details_enforced": []
+    },
+    {
+      "id": "lc_1784649066960",
+      "ts": "2026-07-21T15:51:06.960117+00:00",
+      "action": "lifecycle_reconcile_boot",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "disk_wins": 0,
+      "program_wins": 3,
+      "enforced": 0,
+      "details_disk": [],
+      "details_program": [
+        {
+          "scope": "variant",
+          "product_id": "babka-cytrynowa-nerkowcowy",
+          "revision_index": "6300622.00",
+          "previous_letter": null,
+          "disk_letter": null,
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00",
+          "in_archive": false,
+          "disk_mtime": "2026-05-14T06:38:38+00:00",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "needs_archive_move": false,
+          "winner": "program",
+          "needs_force": true
+        },
+        {
+          "scope": "variant",
+          "product_id": "ciasto-sliwkowe-nerkowcowy",
+          "revision_index": "6300785.00",
+          "previous_letter": null,
+          "disk_letter": "F",
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300785.00 - F",
+          "in_archive": false,
+          "disk_mtime": "2026-05-21T12:07:10+00:00",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "needs_archive_move": false,
+          "winner": "program",
+          "needs_force": true
+        },
+        {
+          "scope": "variant",
+          "product_id": "cynamonka-nerkowcowy",
+          "revision_index": "6300783.00",
+          "previous_letter": null,
+          "disk_letter": null,
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
+          "in_archive": false,
+          "disk_mtime": "2026-05-20T13:02:31+00:00",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "needs_archive_move": false,
+          "winner": "program",
+          "needs_force": true
+        }
+      ],
+      "details_enforced": []
     }
   ],
   "products": {
@@ -53009,5 +53091,5 @@
       "synced_from_disk": true
     }
   },
-  "updated_at": "2026-07-20T20:06:11.703336+00:00"
+  "updated_at": "2026-07-21T15:51:06.960362+00:00"
 }

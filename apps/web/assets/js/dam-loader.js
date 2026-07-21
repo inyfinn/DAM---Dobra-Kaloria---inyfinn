@@ -5,18 +5,19 @@
  *   DamLoader.start([label])  - pokazuje pasek na srodku ekranu
  *   DamLoader.done()          - konczy (fade out)
  *
- * Zachowanie: pasek indeterminate w bialym pill-boxie na srodku (1.5 s),
- * etykieta zawsze "ładowanie". Jesli ladowanie nadal trwa po 1.5 s,
- * CSS transition (translate left/top) przenosi pasek do prawego dolnego
+ * Zachowanie: pasek indeterminate w bialym pill-boxie na srodku (1.0 s),
+ * etykieta zawsze "ładowanie". Jesli ladowanie nadal trwa po 1.0 s,
+ * CSS transition (translate left/top, 0.5 s) przenosi pasek do prawego dolnego
  * rogu jako maly spinner NAD help fabem (#damHelpFab). Jesli done() przed
- * 1.5 s - znika ze srodka (bez docka). pointer-events: none, z-index 13000.
+ * 1.0 s - znika ze srodka (bez docka). pointer-events: none, z-index 13000.
  * prefers-reduced-motion: bez animacji przenoszenia (od razu rog).
  */
 (function (global) {
   "use strict";
 
-  var STYLE_ID = "damLoaderCssVizCtaNav20260721b";
-  var HOLD_CENTER_MS = 1500;
+  var STYLE_ID = "damLoaderCssHold1sDock05s20260721a";
+  var HOLD_CENTER_MS = 1000;
+  var DOCK_MS = 500;
   var LOADER_LABEL = "ładowanie";
   var Z_INDEX = 13000;
   /* Odstęp między dolną krawędzią loadera a górą #damHelpFab. */
@@ -258,9 +259,15 @@
     /* Cofnij width do pełnego pilla na start tweenu, potem animuj do kółka */
     el.style.width = rect.width + "px";
     void el.offsetWidth;
-    /* Translate dock duration = 1.5s (vizCtaNav20260721b) */
+    /* Translate dock duration = 0.5s (hold1sDock05s20260721a) */
     el.style.transition =
-      "left 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95), top 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95), width 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95), opacity .2s ease";
+      "left " +
+      DOCK_MS / 1000 +
+      "s cubic-bezier(0.45, 0.05, 0.55, 0.95), top " +
+      DOCK_MS / 1000 +
+      "s cubic-bezier(0.45, 0.05, 0.55, 0.95), width " +
+      DOCK_MS / 1000 +
+      "s cubic-bezier(0.45, 0.05, 0.55, 0.95), opacity .2s ease";
     el.style.left = a.left + "px";
     el.style.top = a.top + "px";
     el.style.width = targetSize + "px";
@@ -270,7 +277,7 @@
       parkTimer = null;
       if (parkGen !== dockGen || !el || !activeCount) return;
       parkAboveFab();
-    }, 1550);
+    }, DOCK_MS + 50);
   }
 
   function dockWithGsap() {

@@ -2701,7 +2701,7 @@
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=helprestart20260720a";
+      sc.src = "assets/js/dam-shortcuts.js?v=tourFix20260721a";
       document.head.appendChild(sc);
     }
 

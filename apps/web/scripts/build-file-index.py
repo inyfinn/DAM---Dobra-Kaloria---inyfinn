@@ -70,38 +70,43 @@ KNOWN_LANG_CODES = frozenset(_LANGS_FROM_DICT.keys()) | frozenset({
 LANG_ALIASES = dict(NAMING.get("lang_aliases") or {"gb": "en", "uk": "en", "ukr": "ua"})
 # Always force English market aliases onto en (dictionary may lag).
 LANG_ALIASES.update({"gb": "en", "uk": "en", "ukr": "ua"})
+# HARD 2026-07-21: etykiety = nazwy JEZYKOW (Polski, Niemiecki), nie krajow.
 LANG_LABELS = {
-    "pl": "Polska",
-    "de": "Niemcy",
+    "pl": "Polski",
+    "de": "Niemiecki",
     "en": "Angielski",
-    "ua": "Ukraina",
-    "cz": "Czechy",
-    "sk": "Slowacja",
-    "hu": "Wegry",
-    "ro": "Rumunia",
-    "lt": "Litwa",
-    "lv": "Lotwa",
-    "ee": "Estonia",
-    "fr": "Francja",
-    "it": "Wlochy",
-    "es": "Hiszpania",
-    "nl": "Holandia",
-    "ru": "Rosja",
-    "hr": "Chorwacja",
-    "si": "Slowenia",
-    "bg": "Bulgaria",
-    "at": "Austria",
-    "be": "Belgia",
-    "dk": "Dania",
-    "se": "Szwecja",
-    "no": "Norwegia",
-    "fi": "Finlandia",
-    "pt": "Portugalia",
-    "gr": "Grecja",
-    "ie": "Irlandia",
-    "ch": "Szwajcaria",
+    "ua": "Ukrainski",
+    "cz": "Czeski",
+    "sk": "Slowacki",
+    "hu": "Wegierski",
+    "ro": "Rumunski",
+    "lt": "Litewski",
+    "lv": "Lotewski",
+    "ee": "Estonski",
+    "fr": "Francuski",
+    "it": "Wloski",
+    "es": "Hiszpanski",
+    "nl": "Holenderski",
+    "ru": "Rosyjski",
+    "hr": "Chorwacki",
+    "si": "Slowenski",
+    "bg": "Bulgarski",
+    "at": "Austriacki",
+    "be": "Belgijski",
+    "dk": "Dunski",
+    "se": "Szwedzki",
+    "no": "Norweski",
+    "fi": "Finski",
+    "pt": "Portugalski",
+    "gr": "Grecki",
+    "ie": "Irlandzki",
+    "ch": "Szwajcarski",
 }
 LANG_LABELS.update(_LANGS_FROM_DICT)
+# Canonical EN even if dict still carries legacy gb-only key.
+if "en" not in LANG_LABELS and LANG_LABELS.get("gb"):
+    LANG_LABELS["en"] = LANG_LABELS["gb"]
+LANG_LABELS["gb"] = LANG_LABELS.get("en", "Angielski")
 MULTI_LANG_SYNONYMS = list(
     ((NAMING.get("ui") or {}).get("multi_lang_synonyms"))
     or [

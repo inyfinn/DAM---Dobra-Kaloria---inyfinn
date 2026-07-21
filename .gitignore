@@ -83,6 +83,15 @@ debug-*.log
 tmp-qa-hub/
 backups/**/*.bundle
 
+# Geex realign visual regression PNG (poza repo — patrz agents/shared/geex-realign-plan)
+apps/web/_qa/geex-realign-baseline/**/*.png
+apps/web/_qa/geex-realign-baseline/**/*.json
+apps/desktop/data/*.lock
+apps/desktop/logs/
+.ralph/logs/
+tmp/
+tmp_*.txt
+
 # Build / Python
 __pycache__/
 *.pyc

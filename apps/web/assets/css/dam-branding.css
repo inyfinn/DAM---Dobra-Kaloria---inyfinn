@@ -727,8 +727,14 @@
 
 .dam-branding-card .dam-viz-thumb__img {
   object-fit: contain;
-  transform: scale(var(--dam-viz-img-scale, 1.2));
+  /* Bazowo 1; zoom suwakiem nadal ustawia --dam-viz-img-scale (clip w .dam-viz-thumb) */
+  transform: scale(var(--dam-viz-img-scale, 1));
   transform-origin: center center;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .dam-branding-card .dam-viz-card__title-pl {
@@ -758,8 +764,13 @@
   overflow: visible;
 }
 .dam-branding-card .dam-viz-thumb {
-  overflow: hidden;
+  overflow: hidden !important;
   border-radius: 12px 12px 0 0;
+  position: relative;
+  isolation: isolate;
+  /* clip-path + contain: paint — transform:scale nie wychodzi poza zaokraglenie karty */
+  clip-path: inset(0 round 12px 12px 0 0);
+  contain: paint;
 }
 
 /* Body bands use flex gap (same as viz): badges | title-wrap | meta | actions. */
@@ -1370,7 +1381,8 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 }
 
 .dam-branding-thumb-stack__layer--back {
-  transform: translate(8px, 8px) scale(0.94);
+  /* Mniejszy offset — caly stack miesci sie w clipowanym .dam-viz-thumb */
+  transform: translate(5px, 5px) scale(0.92);
   opacity: 0.55;
   filter: saturate(0.85);
   z-index: 0;
@@ -1381,7 +1393,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 }
 
 .dam-branding-card--group .dam-viz-thumb {
-  overflow: visible;
+  overflow: hidden !important;
 }
 
 /* legacy — filtry używają .dam-tag-groups (dam-brand.css) */
@@ -2298,6 +2310,8 @@ body.dam-media-preview-open {
 /* Modal branding / media-preview: hero rosnie z viewportem (jak wiz modal) */
 #damMediaPreview .dam-viz-modal-box {
   overflow: hidden;
+  /* Pack from top so free height goes into thumb flex-grow, not above hero */
+  justify-content: flex-start;
 }
 
 #damMediaPreview .dam-viz-modal__thumb {
@@ -2321,10 +2335,11 @@ body.dam-media-preview-open {
 #damMediaPreview .dam-viz-modal__body {
   display: flex;
   flex-direction: column;
-  flex: 0 0 auto;
+  /* Content-sized; do not grow into dead white above sticky actions */
+  flex: 0 1 auto;
   min-height: 0;
   overflow: visible;
-  padding-bottom: 39px;
+  padding-bottom: 12px;
 }
 
 #damMediaPreview .dam-viz-modal__body #damMediaPreviewTitle {
@@ -2346,15 +2361,15 @@ body.dam-media-preview-open {
   -webkit-box-orient: vertical;
 }
 
-/* Hero: male/gifowe pliki skalujemy w gore (object-fit contain), stala wysokosc sceny */
+/* Hero: male/gifowe pliki skalujemy w gore (object-fit contain); floor taller so preview owns vertical space */
 #damMediaPreview .dam-viz-modal__thumb {
-  min-height: min(340px, 42dvh);
+  min-height: min(420px, 48dvh);
 }
 
 #damMediaPreview .dam-viz-modal__thumb img#damMediaPreviewHero {
   width: 100%;
   height: 100%;
-  min-height: 220px;
+  min-height: 280px;
   max-height: 100%;
   object-fit: contain;
 }
@@ -2738,25 +2753,50 @@ body.dam-media-preview-open {
   flex-shrink: 0;
   position: relative;
   z-index: 40;
-  margin-top: 14px;
+  margin-top: 0;
   margin-bottom: 0;
-  padding: 12px 0 0;
+  /* HARD 2026-07-21: klaster CTA = lewy dolny rog, nie wyśrodkowany full-width footer */
+  padding: 10px 6px 8px;
   min-height: 0;
   box-sizing: border-box;
   background: #fff;
   border-top: 1px solid rgba(70, 66, 85, 0.08);
+  justify-content: flex-start !important;
+  width: max-content;
+  max-width: 100%;
 }
 #damMediaPreview.dam-media-preview--viz-studio .dam-viz-modal__main > .dam-viz-modal__actions {
   margin-top: 0;
-  padding: 12px 40px 20px;
+  /* +6px horizontal vs prior 40px */
+  padding: 12px 46px 20px;
   border-top: 1px solid rgba(70, 66, 85, 0.08);
   box-shadow: 0 -6px 14px rgba(70, 66, 85, 0.05);
+  /* split: pasek nadal pelna szerokosc kolumny main (parity viz) */
+  width: 100%;
+  max-width: none;
 }
 #damMediaPreview .dam-viz-modal__body > .dam-viz-modal__actions {
   position: sticky;
   bottom: 0;
   z-index: 40;
   background: #fff;
+  padding-left: 6px;
+  padding-right: 6px;
+  margin-top: 0 !important;
+  /* grid-area actions: parkuj w lewym dolnym rogu, nie stretch na srodek */
+  justify-self: start;
+  align-self: end;
+  width: max-content;
+  max-width: 100%;
+  justify-content: flex-start !important;
+}
+#damMediaPreview .dam-viz-modal__actions-main {
+  display: inline-flex !important;
+  justify-content: flex-start !important;
+  margin: 0 !important;
+  margin-right: auto !important;
+  width: auto !important;
+  max-width: 100%;
 }
 
 #damMediaPreview #damMediaPreviewSourceMount .geex-btn {

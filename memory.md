@@ -30,7 +30,16 @@ Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 10. **Em-dash ban:** zakaz `?` i `?` w UI, commit messages, copy agentow. Tylko `-`.
 11. **Nie kopiowac** kodu structure-mcp do DAM; tylko wiedza domenowa (sloty 0-4, indeksy).
 12. **Weryfikacja UI (2026-07-18):** po kazdej zmianie wizualnej - screenshot przegladarki + Read obrazu. Zakaz oddania "na oko"/sam CDP. Sidebar collapsed: logo w calosci czytelne (`object-fit: contain`, nie crop). Regula: `.cursor/rules/verify-ui-after-changes.mdc`.
-13. **Model agentow (HARD, 2026-07-20 → supersede 2026-07-20 wieczorem):** Wygrywa **global rule** `~/.cursor/rules/model-grok-composer-only.mdc`. Parent/plan = model z UI usera (Fable/Opus/Sonnet/Sol/Grok…) — **nie** przełączaj na siłę na GROK. Task/subagenci default `cursor-grok-4.5-high-fast` lub `composer-2.5-fast`, chyba że user nadpisze w tej samej wiadomości. Stara nota „tylko GROK wszędzie / zakaz Opus-Fable na parentcie” = **NIEAKTUALNA**.
+12b. **Plany (HARD, 2026-07-21):** każdy plan techniczny przez globalny skill `/planner`
+    (`~/.cursor/skills/planner/SKILL.md`) — rada Grok Planner + Composer Critic, 10–20 rund
+    lub konwergencja; tie/niewiedza = AskQuestion do usera. Reguła: `~/.cursor/rules/planner-mad-always.mdc`.
+    Wyjątek: user napisze wprost `bez /planner` / `skip debate`.
+13. **Model agentow (HARD, 2026-07-21 supersede):** Wygrywa **global rule** `~/.cursor/rules/model-grok-composer-only.mdc`.
+    - **Hierarchia:** Fable 5 (najwyższa: UX/arch/plan/smak) → Sonnet 5 (review) / GPT-5.6 Sol (long-horizon multi-file) / Opus 4.8 (instruction-following) → Grok 4.5 (WORKER: briefy, fixy, masowy kod) → Composer 2.5 (szybkie/tanie; preferuj jako **read-only second eyes**, nie Lead dużych planów).
+    - Parent/plan = model z UI usera — **nie** przełączaj na siłę na GROK.
+    - Task/subagenci default `cursor-grok-4.5-high-fast` (alt. `composer-2.5-fast`), chyba że user nadpisze w tej samej wiadomości.
+    - Brak flagowca na Fazach architektonicznych → kompensacja **procesowa** (mniejsze checkpointy, cytat reguł przed commitem, Composer read-only review), nie modelowa.
+    - Stara nota „tylko GROK wszędzie / zakaz Opus-Fable na parentcie” = **NIEAKTUALNA**.
 
 ## Stack
 
@@ -997,9 +1006,9 @@ ole=admin.
 - Explorer: `openLightbox` -> DamMediaPreview (viz-studio); historia statusow = przycisk -> modal.
 - Cache-bust marker: `usab20260720a/b`.
 
-## #132 (2026-07-20) - Model policy (SUPERSEDED wieczorem)
-- **Było:** tylko Grok wszędzie, zakaz Opus/Fable.
-- **Jest (global):** parent = wybór UI usera; subagenci default Grok/Composer. Patrz `~/.cursor/rules/model-grok-composer-only.mdc` + hard #13.
+## #132 (2026-07-20) - Model policy → SUPERSEDE 2026-07-21
+- **Było:** tylko Grok wszędzie, zakaz Opus/Fable; potem parent=UI + subagenci Grok/Composer.
+- **Jest (2026-07-21):** pełna hierarchia Fable 5 > Sonnet/Sol/Opus > Grok 4.5 > Composer 2.5; routing UX/plan→Fable, long multi-file→Sol, WORKER→Grok, Composer preferuj read-only second eyes; brak flagowca → kompensacja procesowa. Global: `~/.cursor/rules/model-grok-composer-only.mdc` + hard #13 + `agents/shared/model-hierarchy-2026-07-21.md`.
 
 ## #133 (2026-07-20) - UI chrome: Viz changelog / Branding page size / Help restart
 - Viz `#damChangeLogBar`: tylko admin + ADMIN ON; mount w `.dam-search-scope` po prawej; to Cofnij/Ponow na dysku X: (most 8766), nie Baza online.
@@ -1115,3 +1124,17 @@ eturn !isSourceVariantFile(v). Zrodla tylko SourceMount w belce akcji.
 - **KAR6X:** thumb/path prefer FRONT-L over ENFACE.
 - **Multi search:** synonyms in naming-dictionary.ui.multi_lang_synonyms + search_blob + viz filter.
 - Cache token family: langEnTag20260721*.
+
+## #145 (2026-07-21) - Samouczek + DobroKalorius HARD
+
+- Poprawny cel: **advance-first**, potem opcjonalny nieblokujacy toast praise (~25%); `CONGRATS_MS=2275` (−35% vs 3500); krotkie teksty; rare burst `BURST_CHANCE=0.12` sposrod toastow. NIE `is-congrats` / praiseLock na tipie.
+- Off-path = **exploreMode**: companion BR + `tryExplore` (>=40, joy/approve), soft dim, UI klikalne (bez preventDefault na kolejnych klikach), faza bez advance, throttle copy 12s; `Wróć do samouczka` przywraca tip.
+- Media/nosniki: pozy `media-assets`/`media-image`/`media-video` (= explain-assets/image/video). NIGDY pose-5 / ksiazka Pyszne roslinne (`present` usuniete z mapy i krokow).
+- Gender: jawna mapa F/M; unknown = neutral `{trySelf}` = sobie (nigdy zgadywanie z koncowki).
+- Copy: `dobrokalorius-copy.json` (tryExplore + wander + sad), sloty `{name}/{nameVocative}/{nameDim}/{trySelf}`.
+- Companion padding >=16-20px (cel ~22-28px) + anim `is-enter` / pose-swap.
+- Help restart w `dam-shortcuts.js` + `DamTutorial`.
+- Token: `tutorialPraiseToast20260721b` (linia explore: `tutorialExplore20260721c`). Instrukcja: `ui.tutorial_dobrokalorius_hard`.
+
+- 2026-07-21: Etykiety jezykow = Polski/Niemiecki/Angielski (nie kraje). #damVizModalMeta klik = Folder/reveal. Zrodlo: naming-dictionary + DamLabels. Instrukcja ui.lang_labels_are_languages.
+

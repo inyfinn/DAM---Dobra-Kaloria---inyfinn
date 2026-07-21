@@ -38,7 +38,8 @@
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
   var CARD_ZOOM_MIN = 65;
   var CARD_ZOOM_MAX = 350;
-  var CARD_IMG_BASE_SCALE = 1.2;
+  /* 1.0 (nie 1.2): skala >1 + overflow:visible karty wychodzila poza obrys (HARD 2026-07-21) */
+  var CARD_IMG_BASE_SCALE = 1;
   var CARD_BASE_MIN_PX = 220;
   var facetCountCache = null;
   var brandingRenderRaf = 0;
@@ -296,19 +297,44 @@
 
   function isGraphicMedia(a) {
     var mt = normalizeMediaType(a.media_type);
-    return mt === "image" || mt === "vector" || mt === "source";
+    /* "Grafika" w UI = gotowy obraz/wektor. Zrodla (PSD/AI) = osobny tag Zrodlo. */
+    return mt === "image" || mt === "vector";
+  }
+
+  /** Pliki zrodlowe (PSD/PSB/AI/INDD…) — nie gotowy JPG/PNG. Tag Edytowalny na JPG zostaje. */
+  function isSourceEditableAsset(a) {
+    if (!a) return false;
+    var mt = normalizeMediaType(a.media_type);
+    if (mt === "source") return true;
+    if (String(a.asset_role || "") === "artwork_source") return true;
+    var ext = String((a.name || a.path) || "")
+      .split(".")
+      .pop()
+      .toLowerCase();
+    /* Ext wygrywa nawet gdy indeks blednie dal media_type=image */
+    return /^(psd|psb|ai|indd|indt|eps)$/.test(ext);
   }
 
   function passesGraphicsOnlyFilter(a) {
     if (!graphicsOnlyActive()) return true;
-    if (activeTagFilters["media:document"] || activeTagFilters["media:video"]) return true;
+    /* Jawny tag Dokument / Wideo / Zrodlo nadpisuje przelacznik */
+    if (
+      activeTagFilters["media:document"] ||
+      activeTagFilters["media:video"] ||
+      activeTagFilters["media:source"] ||
+      activeTagFilters["format:editable"]
+    ) {
+      return true;
+    }
     var mt = normalizeMediaType(a.media_type);
     if (mt === "document" || mt === "video") return false;
+    if (isSourceEditableAsset(a)) return false;
     var ext = String((a && (a.name || a.path)) || "")
       .split(".")
       .pop()
       .toLowerCase();
     if (/^(mp4|mov|webm|avi|mkv|m4v)$/.test(ext)) return false;
+    if (/^(psd|psb|ai|indd|indt|eps)$/.test(ext)) return false;
     return true;
   }
 
@@ -525,6 +551,48 @@
     return 5;
   }
 
+  /**
+   * Priorytet użycia = segregacja katalogowa (HARD 2026-07-21):
+   * 1) klaster sekcji (WWW / Social / Kampanie / …) — WWW (strona DK) najpierw
+   * 2) płytsze foldery wyżej (głębiej w drzewie = niżej w siatce)
+   * 3) nowszy rok w ścieżce wyżej (kampania 2026 przed 2021 w tym samym klastrze)
+   * 4) rola assetu (DamAssetTaxonomy.displayPriority)
+   */
+  function folderClusterRank(a) {
+    var p = String((a && a.path) || "")
+      .replace(/\\/g, "/")
+      .toUpperCase();
+    if (/\/--?\s*ARCHIWUM|\/ARCHIWUM\//.test(p)) return 90;
+    var sec = typeof assetSectionId === "function" ? assetSectionId(a) : "other";
+    if (sec === "www") return 10;
+    if (sec === "social") return 20;
+    if (sec === "campaigns") return 30;
+    if (sec === "brandbook") return 40;
+    if (sec === "packshots") return 45;
+    return 50;
+  }
+
+  function folderDepthRank(a) {
+    var sec = typeof assetSectionId === "function" ? assetSectionId(a) : "";
+    var parts =
+      sec && typeof sectionRelativeParts === "function"
+        ? sectionRelativeParts(a && a.path, sec)
+        : [];
+    if (parts && parts.length) return parts.length;
+    var p = String((a && a.path) || "").replace(/\\/g, "/");
+    var up = p.toUpperCase();
+    var idx = up.indexOf("/MARKETING/");
+    if (idx < 0) idx = up.indexOf("MARKETING/");
+    var tail = (idx >= 0 ? p.slice(idx) : p).split("/").filter(Boolean);
+    return Math.min(Math.max(tail.length - 1, 0), 14);
+  }
+
+  function folderYearRank(a) {
+    var y = extractYearFromAsset(a);
+    var n = parseInt(y, 10);
+    return isNaN(n) ? 0 : n;
+  }
+
   function assetMtimeMs(a) {
     if (!a) return 0;
     if (typeof a.mtime_ms === "number" && a.mtime_ms > 0) return a.mtime_ms;
@@ -560,6 +628,16 @@
       var na = String(a.name || "").localeCompare(String(b.name || ""), "pl");
       if (na) return na;
     } else {
+      /* priority = folder cluster → depth → year → role → mtime */
+      var ca = folderClusterRank(a);
+      var cb = folderClusterRank(b);
+      if (ca !== cb) return ca - cb;
+      var da = folderDepthRank(a);
+      var db = folderDepthRank(b);
+      if (da !== db) return da - db;
+      var ya = folderYearRank(a);
+      var yb = folderYearRank(b);
+      if (ya !== yb) return yb - ya;
       var pa = assetDisplayPriority(a);
       var pb = assetDisplayPriority(b);
       if (pa !== pb) return pa - pb;
@@ -1096,7 +1174,8 @@
   };
 
   var SECTION_MARKERS = {
-    campaigns: /08\s*-\s*KAMAPANIE/i,
+    /* KAMAPANIE = stary typo w markerze; KAMPANIE = kanoniczna nazwa folderu */
+    campaigns: /08\s*-\s*KA(?:MAPANIE|MPANIE)/i,
     social: /05\s*-\s*SOCIAL\s*MEDIA/i,
     www: /06\s*-\s*STRONY\s*WWW|07\s*-\s*E-COMMERCE|\/SLIDERY\//i,
     brandbook: /BRANDING\s*I\s*MARKA|BRANDBOOK|BRAND\s*BOOK/i,

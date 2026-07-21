@@ -31,7 +31,9 @@
   var CARD_ZOOM_MIN = 65;
   var CARD_ZOOM_MAX = 350;
   var CARD_ZOOM_STEP = 5;
-  var CARD_IMG_BASE_SCALE = 1.2;
+  /* 1.0 (nie 1.2): DamCardZoom ustawia --dam-viz-img-scale na branding/viz;
+     skala >1 + overflow:visible karty wychodzila poza obrys thumbs (HARD 2026-07-21). */
+  var CARD_IMG_BASE_SCALE = 1;
   var CARD_BASE_MIN_PX = 220;
   /* Tag/blob skladniki/owoce — NIE "kulki" (kategoria produktu / packshot DK_Kulki_*). */
   var ELEMENT_ASSOC_RE = /(^|[^a-z0-9])(skladniki|składniki|owoce|owocki)([^a-z0-9]|$)/i;
@@ -990,7 +992,7 @@
       "#damMediaPreviewAssoc .dam-media-preview__assoc-thumb{" +
       "width:calc(70px * var(--dam-viz-card-scale, 1));" +
       "height:calc(70px * var(--dam-viz-card-scale, 1));" +
-      "transform:scale(calc(var(--dam-viz-img-scale, 1.2) / 1.2));" +
+      "transform:scale(calc(var(--dam-viz-img-scale, 1) / 1));" +
       "transform-origin:center center;" +
       "}" +
       "#damVizModalAssoc .dam-media-preview__assoc-item," +
@@ -4392,7 +4394,7 @@
   };
 
   function ensureVizModalCss() {
-    var href = "assets/css/dam-viz-modal.css?v=vizCtaNav20260721b";
+    var href = "assets/css/dam-viz-modal.css?v=actionsLeftLoader20260721a";
     var existing = document.getElementById("dam-viz-modal-css");
     if (existing) {
       if (existing.tagName === "LINK" && existing.getAttribute("href") !== href) {

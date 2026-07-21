@@ -1,15 +1,14 @@
 /**
  * DAM - interaktywny samouczek panelu (nakladka + maskotka DobroKaloriuś).
- * Eksport: window.DamTutorial = { start, stop, restart, isActive, showInvite }
+ * Eksport: window.DamTutorial = { start, stop, restart, isActive, showInvite,
+ *   showSad, showCheer, resumeFromCompanion }
  *
- * - Pierwsze wejscie: nieinwazyjny dymek zaproszenia (localStorage damTutorialSeen).
- * - 9 faz = 9 pozycji menu sidebara; kazda faza 2-4 kroki.
- * - Spotlight: element .dam-tut__spot z gigantycznym box-shadow (dziura w scrimie),
- *   pointer-events: none - nic nie blokuje klikania w strone.
- * - Klik poza sterowaniem samouczka = pochwala maskotki + przejscie dalej.
- * - GSAP ladowany jak w dam-grid-reveal.js (loadGsap); prefers-reduced-motion
- *   wylacza animacje.
- * - Kontynuacja miedzy stronami: localStorage damTutorialPhase ("faza:krok").
+ * HARD (program-instructions ui.tutorial_dobrokalorius_hard):
+ * - Poprawny cel: ZAWSZE advance natychmiast; potem opcjonalny toast praise (~25%).
+ * - Praise NIE blokuje tipu / Dalej; toast ~2.275s (3500 * 0.65); rare burst ~12% praise.
+ * - Off-path = exploreMode: companion BR + tryExplore (nie sad spam), UI klikalne.
+ * - Media/nosniki: pozy explain-assets/image/video (NIGDY ksiazka pose-5).
+ * - Stan: localStorage damTutorialPhase; finished: damTutorialFinished.
  * - Z-index warstwy: 14000+ (nad modalami 9999-12400 i loaderem 13000).
  */
 (function (global) {
@@ -18,38 +17,390 @@
   var SEEN_KEY = "damTutorialSeen";
   var PHASE_KEY = "damTutorialPhase";
   var SESSION_DISMISS_KEY = "damTutorialNotNow";
+  var FINISHED_KEY = "damTutorialFinished";
+  var CHEER_AT_KEY = "damTutorialCheerAt";
+  var CHEER_BUDGET_KEY = "damTutorialCheerBudget";
+  var PENDING_PRAISE_KEY = "damTutorialPendingPraise";
+  /** Toast visible time: 3500ms * 0.65 = 2275ms (−35%). */
+  var CONGRATS_MS = 2275;
+  /** Probability of showing praise toast on a correct target hit (after advance). */
+  var PRAISE_CHANCE = 0.25;
+  /** Among praise toasts, chance of micro-burst ("petardy"). Overall ~3% of correct hits. */
+  var BURST_CHANCE = 0.12;
+  var CHEER_COOLDOWN_MS = 8 * 60 * 1000;
+  var CHEER_SESSION_MAX = 4;
+  var EXPLORE_COPY_THROTTLE_MS = 12000;
+  var COPY_URL = "data/dobrokalorius-copy.json";
+  var COPY_CACHE_TOKEN = "tutorialPraiseToast20260721b";
 
   // ---------------------------------------------------------------------------
-  // Pozy maskotki: 9 przezroczystych PNG (wyciete ze sprite'a skryptem
-  // apps/web/scripts/cut-mascot-sprite.py). Obraz jest warstwa ::after nad
-  // bialym medalionem ::before - patrz dam-tutorial.css.
+  // Pozy: 1-9 klasyczne + arkusze sad/joy/approve + media teaching (sheet 7/8/9).
+  // Wartosc = numer (pose-N.png) albo nazwa pliku (pose-<name>.png).
+  // UWAGA: pose-5 (ksiazka "Pyszne roslinne") NIE jest w mapie ani w krokach.
   // ---------------------------------------------------------------------------
   var POSE_FILES = {
     standard: 1,
     explain: 2,
     happy: 3,
     joy: 4,
-    present: 5,
     think: 6,
     wave: 7,
     approve: 8,
-    zen: 9
+    zen: 9,
+    guide: "megaphone",
+    megaphone: "megaphone",
+    neutral: "neutral",
+    sad: "sad-1",
+    sad1: "sad-1",
+    sad2: "sad-2",
+    sad3: "sad-3",
+    "sad-1": "sad-1",
+    "sad-2": "sad-2",
+    "sad-3": "sad-3",
+    "sad-report": "sad-report",
+    "joy-1": "joy-1",
+    "joy-2": "joy-2",
+    "joy-3": "joy-3",
+    "joy-4": "joy-4",
+    "joy-5": "joy-5",
+    "joy-6": "joy-6",
+    "approve-8": "approve-8",
+    "think-q": "think-q",
+    "think-dots": "think-dots",
+    "explain-assets": "explain-assets",
+    "explain-image": "explain-image",
+    "explain-video": "explain-video",
+    "media-assets": "explain-assets",
+    "media-image": "explain-image",
+    "media-video": "explain-video"
   };
+
+  var copyCache = null;
+  var copyLoading = false;
+
+  function poseFileToken(name) {
+    var mapped = POSE_FILES[name];
+    if (mapped == null) mapped = POSE_FILES.standard;
+    return mapped;
+  }
 
   function applyPose(el, name) {
     if (!el) return;
-    var n = POSE_FILES[name] || POSE_FILES.standard;
-    // Pelny URL: url() w custom property potrafi rozwiazac sie wzgledem pliku
-    // CSS (assets/css/), nie dokumentu -> 404. Absolutny adres to ucina.
+    var token = poseFileToken(name);
+    var file = "pose-" + token + ".png";
     var abs;
     try {
-      abs = new URL("assets/img/maskotka/pose-" + n + ".png", global.location.href).href;
+      abs = new URL("assets/img/maskotka/" + file, global.location.href).href;
     } catch (e) {
-      abs = "assets/img/maskotka/pose-" + n + ".png";
+      abs = "assets/img/maskotka/" + file;
+    }
+    var img = el.querySelector
+      ? el.querySelector(".dam-tut__mascot-img, .dam-tut-companion__mascot-img, .dam-tut-invite__mascot-img")
+      : null;
+    if (img && !prefersReducedMotion()) {
+      img.classList.remove("is-pose-swap");
+      void img.offsetWidth;
+      img.classList.add("is-pose-swap");
     }
     el.style.setProperty("--dam-tut-pose", "url('" + abs + "')");
-    el.setAttribute("data-dam-pose", name);
+    el.setAttribute("data-dam-pose", name || "standard");
   }
+
+  // ---------------------------------------------------------------------------
+  // Imie z sesji (email local-part) + odmiana PL
+  // ---------------------------------------------------------------------------
+  var VOCATIVE_MAP = {
+    szymon: "Szymonie",
+    ewa: "Ewo",
+    anna: "Anno",
+    maria: "Mario",
+    magda: "Magdo",
+    magdalena: "Magdaleno",
+    katarzyna: "Katarzyno",
+    kasia: "Kasiu",
+    krzysztof: "Krzysztofie",
+    piotr: "Piotrze",
+    michal: "Michale",
+    "michał": "Michale",
+    tomasz: "Tomaszu",
+    pawel: "Pawle",
+    "paweł": "Pawle",
+    adam: "Adamie",
+    jakub: "Jakubie",
+    bartosz: "Bartoszu",
+    marcin: "Marcinie",
+    agata: "Agato",
+    joanna: "Joanno",
+    monika: "Moniko",
+    natalia: "Natalio"
+  };
+
+  var DIM_MAP = {
+    szymon: "Szymuś",
+    ewa: "Ewka",
+    anna: "Ania",
+    maria: "Marysia",
+    krzysztof: "Krzyś",
+    piotr: "Piotrek",
+    michal: "Michałek",
+    "michał": "Michałek",
+    katarzyna: "Kasia",
+    magdalena: "Magda",
+    tomasz: "Tomek",
+    pawel: "Pawełek",
+    "paweł": "Pawełek",
+    adam: "Adaś",
+    jakub: "Kuba",
+    bartosz: "Bartek",
+    marcin: "Marcin"
+  };
+
+  // Tylko jawna mapa - NIGDY heurystyka "a = kobieta" (unknown = neutral).
+  var FEMALE_NAMES = {
+    ewa: 1,
+    anna: 1,
+    maria: 1,
+    magda: 1,
+    magdalena: 1,
+    katarzyna: 1,
+    kasia: 1,
+    agata: 1,
+    joanna: 1,
+    monika: 1,
+    natalia: 1,
+    aleksandra: 1,
+    ola: 1,
+    paulina: 1,
+    karolina: 1,
+    justyna: 1,
+    marta: 1,
+    aleksandra: 1
+  };
+  var MALE_NAMES = {
+    szymon: 1,
+    krzysztof: 1,
+    krzyś: 1,
+    piotr: 1,
+    michal: 1,
+    "michał": 1,
+    tomasz: 1,
+    pawel: 1,
+    "paweł": 1,
+    adam: 1,
+    jakub: 1,
+    bartosz: 1,
+    marcin: 1,
+    mateusz: 1,
+    lukasz: 1,
+    "łukasz": 1,
+    andrzej: 1,
+    robert: 1,
+    dawid: 1
+  };
+
+  function capitalizeName(s) {
+    s = String(s || "").trim();
+    if (!s) return "";
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  }
+
+  function firstNameFromSession() {
+    var email = "";
+    var full = "";
+    try {
+      var u = JSON.parse(localStorage.getItem("dam_user") || "null");
+      if (u) {
+        email = u.email || "";
+        full = u.name || u.displayName || "";
+      }
+    } catch (e) { /* ignore */ }
+    if (!email) email = localStorage.getItem("dam_user_email") || "";
+    if (!full) full = localStorage.getItem("dam_user_name") || "";
+    var fromEmail = "";
+    if (email && email.indexOf("@") !== -1) {
+      var local = email.split("@")[0] || "";
+      fromEmail = local.split(/[._-]/)[0] || local;
+    }
+    if (fromEmail) return capitalizeName(fromEmail);
+    if (full) return capitalizeName(String(full).split(/\s+/)[0]);
+    return "Ty";
+  }
+
+  function genderFromName(name) {
+    var key = String(name || "").toLowerCase();
+    if (!key || key === "ty") return "n";
+    if (FEMALE_NAMES[key]) return "f";
+    if (MALE_NAMES[key]) return "m";
+    return "n";
+  }
+
+  function trySelfForGender(gender) {
+    if (gender === "f") return "sama";
+    if (gender === "m") return "sam";
+    return "sobie";
+  }
+
+  function nameForms() {
+    var name = firstNameFromSession();
+    var key = name.toLowerCase();
+    var gender = genderFromName(name);
+    var voc = VOCATIVE_MAP[key];
+    if (!voc) {
+      if (gender === "f" && /[aA]$/.test(name)) voc = name.slice(0, -1) + "o";
+      else if (gender === "m" && /[bcdfghjklmnpqrstvwxyz]$/i.test(name)) voc = name + "ie";
+      else voc = name;
+    }
+    var dim = DIM_MAP[key] || name;
+    if (key === "szymon") dim = Math.random() < 0.5 ? "Szymi" : "Szymuś";
+    return {
+      name: name,
+      nameVocative: voc,
+      nameDim: dim,
+      gender: gender,
+      trySelf: trySelfForGender(gender)
+    };
+  }
+
+  function fillSlots(tpl) {
+    var forms = nameForms();
+    return String(tpl || "")
+      .replace(/\{nameVocative\}/g, forms.nameVocative)
+      .replace(/\{nameDim\}/g, forms.nameDim)
+      .replace(/\{trySelf\}/g, forms.trySelf)
+      .replace(/\{name\}/g, forms.name);
+  }
+
+  function ensureCopy(cb) {
+    if (copyCache) {
+      if (cb) cb(copyCache);
+      return;
+    }
+    if (copyLoading) {
+      global.setTimeout(function () { ensureCopy(cb); }, 80);
+      return;
+    }
+    copyLoading = true;
+    fetch(COPY_URL + "?v=" + COPY_CACHE_TOKEN, { cache: "no-cache" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        copyCache = j;
+        copyLoading = false;
+        if (cb) cb(copyCache);
+      })
+      .catch(function () {
+        copyCache = {
+          tryExplore: [
+            { text: "Super, fajnie że próbujesz! Poklikaj {trySelf}, ja poczekam.", pose: "joy-4" },
+            { text: "Tak właśnie, {name}! Spróbuj {trySelf} - samouczek nie ucieknie.", pose: "approve-8" }
+          ],
+          wander: [
+            { text: "Widzę, że działasz na własną rękę, Zuch! Jak coś, to wiesz gdzie jestem.", pose: "sad-1" },
+            { text: "Wiem, że trochę przynudzam, ale fajnie, że podoba Ci się ta opcja!", pose: "sad-2" }
+          ],
+          sad: [
+            { text: "Może nie wszystko jeszcze działa, ale się staram.", pose: "sad-1" },
+            { text: "Może z innym produktem pójdzie lepiej?", pose: "sad-2" }
+          ],
+          cheer_poses: ["joy-4", "joy-5", "joy-6", "approve-8"],
+          congrats_title: "Brawo!"
+        };
+        copyLoading = false;
+        if (cb) cb(copyCache);
+      });
+  }
+
+  function pickCopy(list) {
+    if (!list || !list.length) return { text: "...", pose: "sad-1" };
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function ensureTutCss() {
+    var existing = document.getElementById("damTutInjectCss");
+    if (existing) {
+      if (existing.getAttribute("data-v") === COPY_CACHE_TOKEN) return;
+      if (existing.parentNode) existing.parentNode.removeChild(existing);
+    }
+    var s = document.createElement("style");
+    s.id = "damTutInjectCss";
+    s.setAttribute("data-v", COPY_CACHE_TOKEN);
+    s.textContent =
+      ".dam-tut__bubble{max-width:calc(100vw - 32px)!important;}" +
+      "@keyframes damTutFadeIn{from{opacity:0}to{opacity:1}}" +
+      ".dam-tut__bubble.is-fade-in{animation:damTutFadeIn .45s ease-out both;}" +
+      "@media (prefers-reduced-motion:reduce){.dam-tut__bubble.is-fade-in{animation:none;opacity:1!important;}}" +
+      ".dam-tut.is-companion .dam-tut__bubble{display:none!important;}" +
+      ".dam-tut.is-explore .dam-tut__spot{box-shadow:0 0 0 200vmax rgba(15,14,22,.07)!important;" +
+      "outline:2px dashed rgba(0,130,68,.35)!important;outline-offset:2px;pointer-events:none!important;}" +
+      ".dam-tut.is-explore{pointer-events:none!important;}" +
+      "@keyframes damTutCompanionIn{from{opacity:0;transform:translate(28px,18px)}to{opacity:1;transform:translate(0,0)}}" +
+      "@keyframes damTutPoseSwap{0%{opacity:.35}100%{opacity:1}}" +
+      ".dam-tut-companion{position:fixed;right:20px;bottom:100px;z-index:14050;width:min(360px,calc(100vw - 40px));" +
+      "display:flex;gap:18px;align-items:flex-start;padding:28px 26px 22px;background:#fff;color:#464255;" +
+      "border:1px solid #ececf2;border-radius:16px;box-shadow:0 14px 36px rgba(23,22,30,.22);pointer-events:auto;" +
+      "font-family:var(--dam-font,'Jost',sans-serif);overflow:visible;}" +
+      ".dam-tut-companion.is-enter{animation:damTutCompanionIn .4s ease-out both;}" +
+      ".dam-tut-companion__mascot{position:relative;flex:0 0 78px;width:78px;height:92px;margin-top:6px;}" +
+      ".dam-tut-companion__mascot::before{content:'';position:absolute;left:3px;bottom:2px;width:72px;height:72px;" +
+      "border-radius:50%;background:#fff;border:1px solid #ececf2;box-shadow:0 6px 16px rgba(0,130,68,.28);}" +
+      ".dam-tut-companion__mascot-img,.dam-tut__mascot-img,.dam-tut-invite__mascot-img{" +
+      "background-image:var(--dam-tut-pose);background-repeat:no-repeat;background-size:contain;background-position:center bottom;}" +
+      ".dam-tut-companion__mascot-img{position:absolute;left:0;bottom:6px;width:100%;height:100%;}" +
+      ".dam-tut-companion__mascot-img.is-pose-swap,.dam-tut__mascot-img.is-pose-swap{" +
+      "animation:damTutPoseSwap .28s ease-out both;}" +
+      ".dam-tut-companion__body{flex:1;min-width:0;padding-right:28px;padding-top:6px;}" +
+      ".dam-tut-companion__text{margin:0;font-size:13.5px;line-height:1.45;}" +
+      ".dam-tut-companion__resume{margin-top:14px;border:0;background:var(--dam-brand-green,#008244);color:#fff;" +
+      "border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;}" +
+      ".dam-tut-companion__x{position:absolute;top:16px;right:16px;width:28px;height:28px;border:0;border-radius:8px;" +
+      "background:transparent;color:#7a7489;cursor:pointer;font-size:18px;line-height:1;}" +
+      ".dam-tut-companion__x:hover{background:#f3f1f7;color:#464255;}" +
+      ".dam-tut-cheer{position:fixed;right:16px;bottom:20px;z-index:13950;pointer-events:none;" +
+      "width:96px;height:110px;opacity:0;}" +
+      ".dam-tut-cheer.is-on{opacity:1;transition:opacity .35s ease;}" +
+      ".dam-tut-praise-toast{position:fixed;right:20px;bottom:112px;z-index:14120;" +
+      "width:min(280px,calc(100vw - 40px));padding:16px 18px;background:#fff;color:#464255;" +
+      "border:1px solid #ececf2;border-left:3px solid var(--dam-brand-green,#008244);border-radius:12px;" +
+      "box-shadow:0 12px 28px rgba(23,22,30,.14);font-family:var(--dam-font,'Jost',sans-serif);" +
+      "pointer-events:none;opacity:0;transform:translateY(12px);overflow:visible;}" +
+      ".dam-tut-praise-toast.is-on{opacity:1;transform:translateY(0);" +
+      "transition:opacity .28s ease,transform .28s cubic-bezier(.22,.9,.3,1);}" +
+      ".dam-tut-praise-toast.is-out{opacity:0;transform:translateY(6px);" +
+      "transition:opacity .22s ease,transform .22s ease;}" +
+      ".dam-tut-praise-toast__title{margin:0 0 4px;font-size:14px;font-weight:700;color:#008244;line-height:1.25;}" +
+      ".dam-tut-praise-toast__text{margin:0;font-size:13px;line-height:1.4;color:#464255;}" +
+      ".dam-tut-praise-burst{position:absolute;inset:0;pointer-events:none;overflow:visible;}" +
+      ".dam-tut-praise-burst span{position:absolute;left:50%;top:40%;width:6px;height:6px;border-radius:50%;" +
+      "background:var(--dam-brand-green,#008244);opacity:.85;}" +
+      ".dam-tut-praise-burst[data-v=\"1\"] span:nth-child(1){animation:damTutBurst1 .7s ease-out both;}" +
+      ".dam-tut-praise-burst[data-v=\"1\"] span:nth-child(2){animation:damTutBurst1 .7s .04s ease-out both;--bx:18px;--by:-22px;}" +
+      ".dam-tut-praise-burst[data-v=\"1\"] span:nth-child(3){animation:damTutBurst1 .7s .08s ease-out both;--bx:-16px;--by:-18px;}" +
+      ".dam-tut-praise-burst[data-v=\"1\"] span:nth-child(4){animation:damTutBurst1 .7s .05s ease-out both;--bx:22px;--by:8px;background:#5bb88a;}" +
+      ".dam-tut-praise-burst[data-v=\"1\"] span:nth-child(5){animation:damTutBurst1 .7s .09s ease-out both;--bx:-20px;--by:10px;background:#5bb88a;}" +
+      ".dam-tut-praise-burst[data-v=\"2\"] span{width:5px;height:5px;border-radius:1px;}" +
+      ".dam-tut-praise-burst[data-v=\"2\"] span:nth-child(1){animation:damTutBurst2 .65s ease-out both;--bx:0;--by:-26px;}" +
+      ".dam-tut-praise-burst[data-v=\"2\"] span:nth-child(2){animation:damTutBurst2 .65s .05s ease-out both;--bx:20px;--by:-10px;}" +
+      ".dam-tut-praise-burst[data-v=\"2\"] span:nth-child(3){animation:damTutBurst2 .65s .08s ease-out both;--bx:-18px;--by:-8px;background:#7bc9a0;}" +
+      ".dam-tut-praise-burst[data-v=\"2\"] span:nth-child(4){animation:damTutBurst2 .65s .03s ease-out both;--bx:14px;--by:14px;}" +
+      ".dam-tut-praise-burst[data-v=\"2\"] span:nth-child(5){animation:damTutBurst2 .65s .07s ease-out both;--bx:-12px;--by:16px;background:#7bc9a0;}" +
+      ".dam-tut-praise-burst[data-v=\"3\"] span{width:4px;height:8px;border-radius:2px;}" +
+      ".dam-tut-praise-burst[data-v=\"3\"] span:nth-child(1){animation:damTutBurst3 .75s ease-out both;--bx:-8px;--by:-24px;}" +
+      ".dam-tut-praise-burst[data-v=\"3\"] span:nth-child(2){animation:damTutBurst3 .75s .06s ease-out both;--bx:16px;--by:-20px;background:#5bb88a;}" +
+      ".dam-tut-praise-burst[data-v=\"3\"] span:nth-child(3){animation:damTutBurst3 .75s .1s ease-out both;--bx:-22px;--by:2px;}" +
+      ".dam-tut-praise-burst[data-v=\"3\"] span:nth-child(4){animation:damTutBurst3 .75s .04s ease-out both;--bx:24px;--by:4px;background:#5bb88a;}" +
+      ".dam-tut-praise-burst[data-v=\"3\"] span:nth-child(5){animation:damTutBurst3 .75s .09s ease-out both;--bx:2px;--by:18px;}" +
+      "@keyframes damTutBurst1{0%{opacity:.9;transform:translate(-50%,-50%) scale(.6)}100%{opacity:0;transform:translate(calc(-50% + var(--bx,0)),calc(-50% + var(--by,-20px))) scale(.2)}}" +
+      "@keyframes damTutBurst2{0%{opacity:.85;transform:translate(-50%,-50%) rotate(0)}100%{opacity:0;transform:translate(calc(-50% + var(--bx,0)),calc(-50% + var(--by,-20px))) rotate(40deg)}}" +
+      "@keyframes damTutBurst3{0%{opacity:.9;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(calc(-50% + var(--bx,0)),calc(-50% + var(--by,-20px))) scale(.35)}}" +
+      "@media (prefers-reduced-motion:reduce){" +
+      ".dam-tut-cheer.is-on{transition:none;}" +
+      ".dam-tut-companion.is-enter{animation:none;opacity:1;transform:none;}" +
+      ".dam-tut-companion__mascot-img.is-pose-swap,.dam-tut__mascot-img.is-pose-swap{animation:none;opacity:1;}" +
+      ".dam-tut-praise-toast.is-on,.dam-tut-praise-toast.is-out{transition:opacity .12s ease;transform:none;}" +
+      ".dam-tut-praise-burst span{animation:none!important;opacity:0;}" +
+      "}";
+    document.head.appendChild(s);
+  }
+
 
   /**
    * Typografia PL: sieroty / wdowy.
@@ -95,7 +446,7 @@
           target: [".dam-widget--stat", "#damDashGrid", ".geex-content__section-wrapper"]
         },
         {
-          pose: "present",
+          pose: "happy",
           title: "Od czego zacząć",
           text: "U góry masz wyszukiwarkę i powiadomienia. Wpisz indeks albo nazwę produktu, a panel zaprowadzi Cię prosto na miejsce.",
           target: [".geex-content__header__quickaction", ".geex-content__header", "header"]
@@ -114,7 +465,7 @@
           target: ["#damExplorerMain", sideLink("explorer.html")]
         },
         {
-          pose: "present",
+          pose: "media-assets",
           title: "Nośniki i pliki",
           text: "Każdy produkt ma nośniki (folia, karton i inne) z plikami oraz checklistą kompletności. Kliknięcie w wiersz rozwija szczegóły.",
           target: ["#damExplorerMain", ".dam-prod-row", sideLink("explorer.html")]
@@ -134,13 +485,13 @@
       href: "visualizations.html",
       steps: [
         {
-          pose: "explain",
+          pose: "media-image",
           title: "Wizualizacje",
           text: "Galeria wizualizacji produktów. Domyślnie widzisz tylko aktualne wersje, więc nic starego nie miesza się do pracy.",
           target: [".dam-viz-grid", sideLink("visualizations.html")]
         },
         {
-          pose: "present",
+          pose: "media-image",
           title: "Pokaż wszystko",
           text: "Przełącznik Pokaż wszystko odsłania też prototypy i starsze wersje. W podglądzie obrazka CTRL i scroll przybliżają widok.",
           target: [".dam-viz-toolbar", sideLink("visualizations.html")],
@@ -154,16 +505,16 @@
       href: "branding.html",
       steps: [
         {
-          pose: "explain",
+          pose: "media-assets",
           title: "Branding",
           text: "Materiały brandingowe: logotypy, banery, kampanie, social media. Wszystko z tagami i podglądem.",
           target: ["#damBrandingSectionGrid", ".dam-branding-grid", sideLink("branding.html")]
         },
         {
-          pose: "present",
+          pose: "happy",
           title: "Tagi i filtry",
           text: "Tagi oraz filtry zawężają listę do tego, czego szukasz. Kliknięcie w kafelek otwiera podgląd ze szczegółami i skojarzonymi produktami.",
-          target: [".dam-branding-tabs-row", "#damBrandingTagFilters", sideLink("branding.html")],
+          target: [sideLink("branding.html"), ".dam-branding-tabs-row", "#damBrandingTagFilters"],
           go: true
         }
       ]
@@ -200,7 +551,7 @@
           target: [".dam-inbox-layout", ".geex-content__section-wrapper", sideLink("inbox.html")]
         },
         {
-          pose: "present",
+          pose: "happy",
           title: "Ile spraw czeka",
           text: "Badge przy pozycji menu pokazuje liczbę otwartych spraw. Zero oznacza spokój, możesz parzyć herbatę.",
           target: [sideLink("inbox.html")],
@@ -270,48 +621,48 @@
     }
   ];
 
-  // 40 wariantow pochwal (DobroKaloriuś) - bez powtorzen az do wyczerpania puli
+  // 40 krotkich pochwal (DobroKaloriuś) - ~polowa dlugosci; bez powtorzen az do wyczerpania
   var PRAISES = [
-    { pose: "approve", text: "Ooo, łapiesz to w mig! Lecimy dalej." },
-    { pose: "happy", text: "Świetnie Ci idzie! Następny krok." },
-    { pose: "joy", text: "No proszę, naturalny talent! Idziemy dalej." },
-    { pose: "approve", text: "Widzę, że ogarniasz temat. Super!" },
-    { pose: "happy", text: "Pięknie! Jeszcze chwila i będziesz w domu." },
-    { pose: "zen", text: "Spokojnie i pewnie. Dokładnie tak." },
-    { pose: "joy", text: "Masz to! Panel zaczyna być Twój." },
-    { pose: "approve", text: "Brawo za refleks! Jedziemy." },
-    { pose: "happy", text: "Jak po maśle. Kolejny przystanek." },
-    { pose: "present", text: "Czuję, że to lubisz. Lecimy!" },
-    { pose: "approve", text: "Trafione w dziesiątkę. Dalej!" },
-    { pose: "joy", text: "Reakcja godna listka! Następny krok." },
-    { pose: "happy", text: "Ładnie! Już prawie znasz drogę." },
-    { pose: "zen", text: "Bez stresu, z wyczuciem. Super robota." },
-    { pose: "approve", text: "Widzę rękę wprawnego użytkownika." },
-    { pose: "present", text: "Kliknięte z klasą. Idziemy dalej." },
-    { pose: "joy", text: "To było szybkie! Trzymam tempo." },
-    { pose: "happy", text: "Dobrze Ci idzie, naprawdę. Dalej!" },
-    { pose: "approve", text: "Panel lubi takich jak Ty. Lecimy." },
-    { pose: "zen", text: "Czysto i konkretnie. Brawo!" },
-    { pose: "joy", text: "Jak świeży kiełek: szybko rośniesz w temacie!" },
-    { pose: "happy", text: "Zero zgadywania, pełne ogarnięcie." },
-    { pose: "approve", text: "Widzę, że czytasz UI jak książkę." },
-    { pose: "present", text: "Świetny wybór! Pokazuję następne." },
-    { pose: "joy", text: "Masz wyczucie. To lubię." },
-    { pose: "happy", text: "Klik jak z nut. Jedziemy dalej." },
-    { pose: "approve", text: "Dokładnie tam, gdzie trzeba. Super!" },
-    { pose: "zen", text: "Spokojny strzał, celny efekt." },
-    { pose: "joy", text: "Roślinka jest dumna. Lecimy!" },
-    { pose: "happy", text: "Coraz pewniej! Następny krok." },
-    { pose: "approve", text: "To był dobry ruch. Idziemy." },
-    { pose: "present", text: "Łapiesz kontekst w mig. Brawo!" },
-    { pose: "joy", text: "Energia dobra, kierunek jeszcze lepszy." },
-    { pose: "happy", text: "Już prawie ekspert. Dalej!" },
-    { pose: "approve", text: "Widzę progres. Podoba mi się." },
-    { pose: "zen", text: "Bez pośpiechu, z efektem. Super." },
-    { pose: "joy", text: "Tak trzymaj! Jeszcze kilka kroków." },
-    { pose: "happy", text: "Kliknięcie z sensem. Lecimy." },
-    { pose: "approve", text: "Panel kiwa z uznaniem. Dalej!" },
-    { pose: "present", text: "Dobra robota! Pokazuję kolejny kawałek." }
+    { pose: "approve", text: "Brawo, {name}!" },
+    { pose: "happy", text: "Masz to!" },
+    { pose: "joy", text: "Pięknie." },
+    { pose: "approve", text: "Celne!" },
+    { pose: "happy", text: "Super, {nameDim}!" },
+    { pose: "zen", text: "Dokładnie tak." },
+    { pose: "joy", text: "Łapiesz to!" },
+    { pose: "approve", text: "Brawo za refleks!" },
+    { pose: "happy", text: "Jak po maśle." },
+    { pose: "happy", text: "Lecimy!" },
+    { pose: "approve", text: "W dziesiątkę." },
+    { pose: "joy", text: "Listkowy refleks!" },
+    { pose: "happy", text: "Ładnie." },
+    { pose: "zen", text: "Spokojnie i pewnie." },
+    { pose: "approve", text: "Ogarniasz." },
+    { pose: "happy", text: "Z klasą." },
+    { pose: "joy", text: "Szybko!" },
+    { pose: "happy", text: "Dobrze Ci idzie." },
+    { pose: "approve", text: "Panel lubi to." },
+    { pose: "zen", text: "Czysto. Brawo!" },
+    { pose: "joy", text: "Rośniesz w temacie!" },
+    { pose: "happy", text: "Zero zgadywania." },
+    { pose: "approve", text: "Czytasz UI." },
+    { pose: "happy", text: "Świetny wybór!" },
+    { pose: "joy", text: "Masz wyczucie." },
+    { pose: "happy", text: "Klik jak z nut." },
+    { pose: "approve", text: "Tam gdzie trzeba." },
+    { pose: "zen", text: "Celny strzał." },
+    { pose: "joy", text: "Roślinka dumna!" },
+    { pose: "happy", text: "Coraz pewniej." },
+    { pose: "approve", text: "Dobry ruch." },
+    { pose: "happy", text: "Brawo, {nameVocative}!" },
+    { pose: "joy", text: "Dobry kierunek." },
+    { pose: "happy", text: "Prawie ekspert." },
+    { pose: "approve", text: "Widzę progres." },
+    { pose: "zen", text: "Z efektem." },
+    { pose: "joy", text: "Tak trzymaj!" },
+    { pose: "happy", text: "Z sensem." },
+    { pose: "approve", text: "Z uznaniem." },
+    { pose: "happy", text: "Dobra robota!" }
   ];
 
   var praiseOrder = null;
@@ -345,9 +696,16 @@
     phase: 0,
     step: 0,
     praiseLock: false,
+    companionMode: false,
+    exploreMode: false,
+    exploreCopyAt: 0,
+    companionEl: null,
+    praiseToastEl: null,
     bobTween: null,
     els: null,
-    raf: 0
+    raf: 0,
+    congratsTimer: 0,
+    praiseStats: { shown: 0, skipped: 0, bursts: 0 }
   };
 
   function prefersReducedMotion() {
@@ -424,6 +782,7 @@
   // ---------------------------------------------------------------------------
   function buildOverlay() {
     if (state.els) return state.els;
+    ensureTutCss();
     var root = document.createElement("div");
     root.id = "damTutorialOverlay";
     root.className = "dam-tut";
@@ -506,17 +865,68 @@
   // Spotlight + dymek
   // ---------------------------------------------------------------------------
   function resolveTarget(step) {
-    var sels = step.target || [];
+    var sels = (step && step.target) || [];
+    var phase = PHASES[state.phase];
+    var onOwnPage = phase && currentPageKey() === phase.key;
+    // Off-page: preferuj link sidebara fazy (nie losowy widget / aktywna pozycja menu).
+    if (!onOwnPage && phase && phase.href) {
+      var navSel = sideLink(phase.href);
+      try {
+        var navEl = document.querySelector(navSel);
+        if (navEl && navEl.getBoundingClientRect) {
+          var nr = navEl.getBoundingClientRect();
+          if (nr.width > 4 && nr.height > 4) return navEl;
+        }
+      } catch (e0) { /* ignore */ }
+    }
+    // Na wlasnej stronie: unikaj celu schowanego pod otwartym overlayem.
     for (var i = 0; i < sels.length; i++) {
       try {
         var el = document.querySelector(sels[i]);
         if (el && el.getBoundingClientRect) {
           var r = el.getBoundingClientRect();
-          if (r.width > 4 && r.height > 4) return el;
+          if (r.width > 4 && r.height > 4 && isTargetInteractable(el)) return el;
         }
       } catch (e) { /* zly selektor - pomin */ }
     }
     return null;
+  }
+
+  function isTargetInteractable(el) {
+    if (!el) return false;
+    var style = global.getComputedStyle ? global.getComputedStyle(el) : null;
+    if (style && (style.visibility === "hidden" || style.display === "none")) return false;
+    // Jesli nad celem lezy modal pomocy / media - nie celuj w to pod spodem.
+    try {
+      var r = el.getBoundingClientRect();
+      var cx = r.left + Math.min(24, r.width / 2);
+      var cy = r.top + Math.min(24, r.height / 2);
+      var topEl = document.elementFromPoint(cx, cy);
+      if (!topEl) return true;
+      if (el === topEl || el.contains(topEl) || topEl.contains(el)) return true;
+      if (topEl.closest && (
+        topEl.closest("#damHelpModal") ||
+        topEl.closest("#damVizModal") ||
+        topEl.closest("#damMediaPreview") ||
+        topEl.closest(".dam-tut")
+      )) {
+        return false;
+      }
+    } catch (e) { /* ignore */ }
+    return true;
+  }
+
+  function clickHitsTarget(e, targetEl) {
+    if (!targetEl || !e || !e.target) return false;
+    var t = e.target;
+    if (targetEl === t || targetEl.contains(t)) return true;
+    try {
+      if (t.closest) {
+        var a = t.closest("a,button,[role='button'],.geex-sidebar__menu__link");
+        if (a && (targetEl === a || targetEl.contains(a) || a.contains(targetEl))) return true;
+      }
+    } catch (err) { /* ignore */ }
+    return false;
   }
 
   function spotRectFor(el) {
@@ -583,7 +993,7 @@
     var bw = bubble.offsetWidth || 360;
     var bh = bubble.offsetHeight || 160;
     var EDGE_GAP = 40;
-    var margin = 12;
+    var margin = 16; // HARD: tip card nigdy nie dotyka krawedzi viewport
     var ctrlZone = 110; // panel sterujacy na dole
     var maxLeft = vw - bw - margin;
     var maxTop = vh - bh - ctrlZone;
@@ -830,34 +1240,413 @@
   function goToPhasePage() {
     var phase = PHASES[state.phase];
     if (!phase) return;
-    // zapisz kontynuacje i przejdz - po zaladowaniu strony samouczek wznowi sie
+    // Advance-first: navigate immediately; optional praise queued for next page.
+    maybeQueuePraiseToast();
     savePhase();
     global.location.href = phase.href;
   }
 
   // ---------------------------------------------------------------------------
-  // Pochwala po kliknieciu usera (nic nie blokujemy)
+  // Praise toast AFTER advance (non-blocking) + companion off-path
   // ---------------------------------------------------------------------------
+  function destroyPraiseToast() {
+    if (state.congratsTimer) {
+      global.clearTimeout(state.congratsTimer);
+      state.congratsTimer = 0;
+    }
+    if (state.praiseToastEl && state.praiseToastEl.parentNode) {
+      state.praiseToastEl.parentNode.removeChild(state.praiseToastEl);
+    }
+    state.praiseToastEl = null;
+  }
+
+  function showPraiseToast(opts) {
+    opts = opts || {};
+    ensureTutCss();
+    destroyPraiseToast();
+    ensureCopy(function (copy) {
+      var praise = opts.praise || nextPraise();
+      var withBurst = opts.forceBurst === true
+        ? true
+        : (opts.forceBurst === false ? false : Math.random() < BURST_CHANCE);
+      if (withBurst) state.praiseStats.bursts += 1;
+      var titleTpl = (copy && copy.congrats_title) || "Brawo!";
+      var toast = document.createElement("div");
+      toast.className = "dam-tut-praise-toast";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
+      toast.setAttribute("data-dam-praise-toast", "1");
+      if (withBurst) toast.setAttribute("data-dam-praise-burst", "1");
+      var burstHtml = "";
+      if (withBurst && !prefersReducedMotion()) {
+        var v = String(1 + Math.floor(Math.random() * 3));
+        if (opts.burstVariant) v = String(opts.burstVariant);
+        burstHtml =
+          '<div class="dam-tut-praise-burst" data-v="' + v + '" aria-hidden="true">' +
+          "<span></span><span></span><span></span><span></span><span></span></div>";
+      }
+      toast.innerHTML =
+        burstHtml +
+        '<p class="dam-tut-praise-toast__title"></p>' +
+        '<p class="dam-tut-praise-toast__text"></p>';
+      toast.querySelector(".dam-tut-praise-toast__title").textContent = nbspPl(fillSlots(titleTpl));
+      toast.querySelector(".dam-tut-praise-toast__text").textContent = nbspPl(fillSlots(praise.text));
+      document.body.appendChild(toast);
+      state.praiseToastEl = toast;
+      // Enter on next frame so CSS transition runs
+      global.requestAnimationFrame(function () {
+        if (state.praiseToastEl === toast) toast.classList.add("is-on");
+      });
+      var hideMs = typeof opts.ms === "number" ? opts.ms : CONGRATS_MS;
+      state.congratsTimer = global.setTimeout(function () {
+        state.congratsTimer = 0;
+        if (!toast.parentNode) return;
+        toast.classList.remove("is-on");
+        toast.classList.add("is-out");
+        global.setTimeout(function () {
+          if (state.praiseToastEl === toast) destroyPraiseToast();
+          else if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, prefersReducedMotion() ? 80 : 240);
+      }, hideMs);
+    });
+  }
+
+  function rollPraisePayload() {
+    if (Math.random() >= PRAISE_CHANCE) {
+      state.praiseStats.skipped += 1;
+      return null;
+    }
+    state.praiseStats.shown += 1;
+    return {
+      praise: nextPraise(),
+      forceBurst: Math.random() < BURST_CHANCE
+    };
+  }
+
+  function maybeShowPraiseToast() {
+    var payload = rollPraisePayload();
+    if (!payload) return;
+    showPraiseToast(payload);
+  }
+
+  function maybeQueuePraiseToast() {
+    var payload = rollPraisePayload();
+    if (!payload) return;
+    try {
+      sessionStorage.setItem(
+        PENDING_PRAISE_KEY,
+        JSON.stringify({
+          text: payload.praise.text,
+          pose: payload.praise.pose,
+          forceBurst: payload.forceBurst
+        })
+      );
+    } catch (e) { /* ignore */ }
+  }
+
+  function flushPendingPraiseToast() {
+    var raw = null;
+    try {
+      raw = sessionStorage.getItem(PENDING_PRAISE_KEY);
+      sessionStorage.removeItem(PENDING_PRAISE_KEY);
+    } catch (e) { /* ignore */ }
+    if (!raw) return;
+    try {
+      var data = JSON.parse(raw);
+      showPraiseToast({
+        praise: { text: data.text || "Brawo!", pose: data.pose || "happy" },
+        forceBurst: !!data.forceBurst
+      });
+    } catch (e2) { /* ignore */ }
+  }
+
+  /** Legacy alias: never blocks advance; callers should advance first. */
+  function showCongrats(thenFn) {
+    if (thenFn) thenFn();
+    else if (state.active && !state.companionMode) nextStep();
+    maybeShowPraiseToast();
+  }
+
+  function destroyCompanion() {
+    if (state.companionEl && state.companionEl.parentNode) {
+      state.companionEl.parentNode.removeChild(state.companionEl);
+    }
+    state.companionEl = null;
+    if (state.els && state.els.root) {
+      state.els.root.classList.remove("is-companion", "is-explore");
+    }
+    state.companionMode = false;
+    state.exploreMode = false;
+    state.exploreCopyAt = 0;
+  }
+
+  function resumeFromCompanion() {
+    destroyCompanion();
+    if (!state.active) return;
+    renderStep(false);
+  }
+
+  function applyExploreCopy(box, item) {
+    if (!box || !item) return;
+    var mascot = box.querySelector(".dam-tut-companion__mascot");
+    applyPose(mascot, item.pose || "joy-4");
+    var textEl = box.querySelector(".dam-tut-companion__text");
+    if (textEl) textEl.textContent = nbspPl(fillSlots(item.text));
+  }
+
+  function buildExploreCompanion(item) {
+    var box = document.createElement("div");
+    box.className = "dam-tut-companion is-enter";
+    box.setAttribute("role", "status");
+    box.setAttribute("aria-live", "polite");
+    box.setAttribute("data-dam-explore", "1");
+    box.innerHTML =
+      '<button type="button" class="dam-tut-companion__x" aria-label="Zamknij towarzysza">&times;</button>' +
+      '<div class="dam-tut-companion__mascot" aria-hidden="true"><span class="dam-tut-companion__mascot-img"></span></div>' +
+      '<div class="dam-tut-companion__body">' +
+        '<p class="dam-tut-companion__text"></p>' +
+        '<button type="button" class="dam-tut-companion__resume">Wróć do samouczka</button>' +
+      "</div>";
+    document.body.appendChild(box);
+    state.companionEl = box;
+    applyExploreCopy(box, item);
+    box.querySelector(".dam-tut-companion__x").addEventListener("click", function (ev) {
+      ev.preventDefault();
+      destroyCompanion();
+      if (state.active) renderStep(false);
+    });
+    box.querySelector(".dam-tut-companion__resume").addEventListener("click", function (ev) {
+      ev.preventDefault();
+      resumeFromCompanion();
+    });
+    return box;
+  }
+
+  /** Off-path explore-to-test: slide companion, soft dim, UI stays clickable, no step advance. */
+  function enterExploreMode() {
+    if (!state.active || state.praiseLock) return;
+    ensureTutCss();
+    ensureCopy(function (copy) {
+      var now = Date.now();
+      var list = (copy && (copy.tryExplore || copy.wander)) || [];
+      var item = pickCopy(list);
+
+      if (state.exploreMode && state.companionEl) {
+        if (now - state.exploreCopyAt >= EXPLORE_COPY_THROTTLE_MS) {
+          state.exploreCopyAt = now;
+          applyExploreCopy(state.companionEl, item);
+        }
+        return;
+      }
+
+      destroyCompanion();
+      state.exploreMode = true;
+      state.companionMode = true;
+      state.exploreCopyAt = now;
+      if (state.els && state.els.root) {
+        state.els.root.classList.add("is-companion", "is-explore");
+      }
+      buildExploreCompanion(item);
+    });
+  }
+
+  function enterCompanionMode() {
+    enterExploreMode();
+  }
+
   function onDocClick(e) {
     if (!state.active || state.praiseLock) return;
     var t = e.target;
     if (!t || !t.closest) return;
-    if (t.closest(".dam-tut__bubble") || t.closest(".dam-tut__ctrl") || t.closest("#damTutorialInvite")) return;
-    // user kliknal cos na stronie - pochwala + przejscie dalej
-    state.praiseLock = true;
-    var praise = nextPraise();
-    var els = state.els;
-    if (els) {
-      applyPose(els.mascot, praise.pose);
-      els.title.textContent = nbspPl("Brawo!");
-      els.text.textContent = nbspPl(praise.text);
-      els.go.hidden = true;
-      animateBubbleIn();
+    if (
+      t.closest(".dam-tut__bubble") ||
+      t.closest(".dam-tut__ctrl") ||
+      t.closest("#damTutorialInvite") ||
+      t.closest(".dam-tut-companion") ||
+      t.closest(".dam-tut-cheer")
+    ) {
+      return;
     }
-    global.setTimeout(function () {
-      state.praiseLock = false;
-      if (state.active) nextStep();
-    }, 1600);
+    if (t === document.documentElement || t === document.body) return;
+    if (t.closest && t.closest(".dam-tut__spot")) return;
+
+    var step = currentStep();
+    if (!step) return;
+    var targetEl = resolveTarget(step);
+    if (clickHitsTarget(e, targetEl)) {
+      try {
+        e.preventDefault();
+        e.stopPropagation();
+      } catch (err) { /* ignore */ }
+      if (state.companionMode || state.exploreMode) destroyCompanion();
+      // Advance-first: step/phase change BEFORE any praise toast.
+      if (!state.active) return;
+      var phase = PHASES[state.phase];
+      var href = targetEl && targetEl.getAttribute && targetEl.getAttribute("href");
+      if (href && phase && href.indexOf(phase.href) !== -1 && currentPageKey() !== phase.key) {
+        if (state.step < phase.steps.length - 1) {
+          state.step += 1;
+        } else if (state.phase < PHASES.length - 1) {
+          state.phase += 1;
+          state.step = 0;
+        }
+        savePhase();
+        maybeQueuePraiseToast();
+        global.location.href = phase.href;
+        return;
+      }
+      nextStep();
+      maybeShowPraiseToast();
+      return;
+    }
+
+    if (state.exploreMode) {
+      enterExploreMode();
+      return;
+    }
+
+    try {
+      var link = t.closest("a[href]");
+      if (link) {
+        var href = link.getAttribute("href") || "";
+        if (href && href.charAt(0) !== "#" && href.indexOf("javascript:") !== 0) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    } catch (err2) { /* ignore */ }
+    enterExploreMode();
+  }
+
+
+  function showSad(reason) {
+    ensureTutCss();
+    ensureCopy(function (copy) {
+      var item = pickCopy(copy.sad || []);
+      destroyCompanion();
+      var box = document.createElement("div");
+      box.className = "dam-tut-companion";
+      box.setAttribute("data-dam-sad-reason", reason || "generic");
+      box.innerHTML =
+        '<button type="button" class="dam-tut-companion__x" aria-label="Zamknij">&times;</button>' +
+        '<div class="dam-tut-companion__mascot" aria-hidden="true"><span class="dam-tut-companion__mascot-img"></span></div>' +
+        '<div class="dam-tut-companion__body"><p class="dam-tut-companion__text"></p></div>';
+      document.body.appendChild(box);
+      state.companionEl = box;
+      applyPose(box.querySelector(".dam-tut-companion__mascot"), item.pose || "sad-1");
+      var textEl = box.querySelector(".dam-tut-companion__text");
+      if (textEl) textEl.textContent = nbspPl(fillSlots(item.text));
+      box.querySelector(".dam-tut-companion__x").addEventListener("click", function (ev) {
+        ev.preventDefault();
+        if (box.parentNode) box.parentNode.removeChild(box);
+        if (state.companionEl === box) state.companionEl = null;
+      });
+      global.setTimeout(function () {
+        if (box.parentNode) box.parentNode.removeChild(box);
+        if (state.companionEl === box) state.companionEl = null;
+      }, 6000);
+    });
+  }
+
+  function canCheer() {
+    if (lsGet(FINISHED_KEY) !== "1") return false;
+    if (state.active) return false;
+    try {
+      var budget = parseInt(sessionStorage.getItem(CHEER_BUDGET_KEY) || "0", 10) || 0;
+      if (budget >= CHEER_SESSION_MAX) return false;
+      var last = parseInt(sessionStorage.getItem(CHEER_AT_KEY) || "0", 10) || 0;
+      if (Date.now() - last < CHEER_COOLDOWN_MS) return false;
+    } catch (e) {
+      return false;
+    }
+    return Math.random() < 0.35;
+  }
+
+  function showCheer(force) {
+    if (!force && !canCheer()) return;
+    ensureTutCss();
+    ensureCopy(function (copy) {
+      var poses = (copy && copy.cheer_poses) || ["joy-4", "joy-5", "joy-6", "approve-8"];
+      var pose = poses[Math.floor(Math.random() * poses.length)];
+      var el = document.getElementById("damTutCheer");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "damTutCheer";
+        el.className = "dam-tut-cheer";
+        el.innerHTML = '<div class="dam-tut-companion__mascot" aria-hidden="true"><span class="dam-tut-companion__mascot-img"></span></div>';
+        document.body.appendChild(el);
+      }
+      applyPose(el.querySelector(".dam-tut-companion__mascot"), pose);
+      el.classList.add("is-on");
+      try {
+        sessionStorage.setItem(CHEER_AT_KEY, String(Date.now()));
+        var budget = parseInt(sessionStorage.getItem(CHEER_BUDGET_KEY) || "0", 10) || 0;
+        sessionStorage.setItem(CHEER_BUDGET_KEY, String(budget + 1));
+      } catch (e) { /* ignore */ }
+      global.setTimeout(function () {
+        el.classList.remove("is-on");
+      }, 2800);
+    });
+  }
+
+  function bindCheerHooks() {
+    if (bindCheerHooks._done) return;
+    bindCheerHooks._done = true;
+    document.addEventListener(
+      "click",
+      function (e) {
+        if (!canCheer()) return;
+        var t = e.target;
+        if (!t || !t.closest) return;
+        if (
+          t.closest("[data-dam-share]") ||
+          t.closest(".dam-share") ||
+          t.closest("[data-action='share']") ||
+          t.closest(".dam-tag-chip") ||
+          t.closest(".dam-prod-row") ||
+          t.closest(".dam-branding-card")
+        ) {
+          global.setTimeout(function () { showCheer(false); }, 400);
+        }
+      },
+      true
+    );
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      var t = e.target;
+      if (!t || !t.matches) return;
+      if (t.matches("input[type='search'], #damFileSearch, .dam-search input")) {
+        global.setTimeout(function () {
+          maybeEmptySearchSad();
+          if (canCheer()) showCheer(false);
+        }, 500);
+      }
+    });
+  }
+
+  function maybeEmptySearchSad() {
+    var empty = document.querySelector(
+      ".dam-tag-edit-popover__empty:not([hidden]), .dam-assoc-edit-popover__empty, [data-empty]:not([hidden]), .dam-explorer-empty, .dam-empty"
+    );
+    if (!empty) return;
+    var style = global.getComputedStyle ? global.getComputedStyle(empty) : null;
+    if (style && style.display === "none") return;
+    showSad("empty-search");
+  }
+
+  function watchEmptyResults() {
+    if (watchEmptyResults._obs) return;
+    try {
+      watchEmptyResults._obs = new MutationObserver(function () {
+        maybeEmptySearchSad();
+      });
+      watchEmptyResults._obs.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["hidden", "class", "style"]
+      });
+    } catch (e) { /* ignore */ }
   }
 
   function onKeyDown(e) {
@@ -873,6 +1662,11 @@
     } else if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
+      if (state.companionMode || state.exploreMode) {
+        destroyCompanion();
+        if (state.active) renderStep(false);
+        return;
+      }
       stop();
     }
   }
@@ -884,9 +1678,15 @@
     opts = opts || {};
     if (state.active) return;
     removeInvite();
+    ensureTutCss();
+    ensureCopy();
     lsSet(SEEN_KEY, "1");
+    lsDel(FINISHED_KEY);
     state.active = true;
     state.praiseLock = false;
+    state.companionMode = false;
+    state.exploreMode = false;
+    state.exploreCopyAt = 0;
     shufflePraiseOrder();
     state.phase = typeof opts.phase === "number" ? opts.phase : 0;
     state.step = typeof opts.step === "number" ? opts.step : 0;
@@ -907,6 +1707,7 @@
       if (!prefersReducedMotion() && global.gsap && state.els) {
         global.gsap.fromTo(state.els.root, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" });
       }
+      flushPendingPraiseToast();
     });
   }
 
@@ -919,19 +1720,27 @@
       global.cancelAnimationFrame(state.raf);
       state.raf = 0;
     }
+    destroyPraiseToast();
+    destroyCompanion();
     state.active = false;
+    state.praiseLock = false;
     destroyOverlay();
   }
 
   function stop() {
     lsDel(PHASE_KEY);
+    // Zamkniecie = uznajemy samouczek za zakonczony (cheer moze sie pojawiac)
+    lsSet(FINISHED_KEY, "1");
+    lsSet(SEEN_KEY, "1");
     teardown();
   }
 
   function finish() {
     lsDel(PHASE_KEY);
     lsSet(SEEN_KEY, "1");
+    lsSet(FINISHED_KEY, "1");
     teardown();
+    global.setTimeout(function () { showCheer(true); }, 600);
   }
 
   /** Restart od fazy 0 / kroku 0 (pomoc, FAB, „Włącz samouczek ponownie”). */
@@ -1079,7 +1888,12 @@
   // ---------------------------------------------------------------------------
   function boot() {
     if (global.location.pathname.indexOf("signin") !== -1) return;
+    ensureTutCss();
+    ensureCopy();
     injectHelpEntry();
+    bindCheerHooks();
+    watchEmptyResults();
+    registerServiceWorker();
 
     // wznowienie po nawigacji ("Przejdz tam" lub klik w link podczas samouczka)
     var saved = lsGet(PHASE_KEY);
@@ -1104,12 +1918,42 @@
     }, 2000);
   }
 
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+    try {
+      navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(function () { /* ignore */ });
+    } catch (e) { /* ignore */ }
+  }
+
   global.DamTutorial = {
     start: start,
     stop: stop,
     restart: restart,
     isActive: function () { return state.active; },
-    showInvite: showInvite
+    showInvite: showInvite,
+    showSad: showSad,
+    showCheer: showCheer,
+    resumeFromCompanion: resumeFromCompanion,
+    nameForms: nameForms,
+    praiseStats: function () {
+      return {
+        shown: state.praiseStats.shown,
+        skipped: state.praiseStats.skipped,
+        bursts: state.praiseStats.bursts,
+        chance: PRAISE_CHANCE,
+        burstChance: BURST_CHANCE,
+        congratsMs: CONGRATS_MS
+      };
+    },
+    /** QA: force non-blocking praise toast (after advance). opts: {burst, burstVariant, ms} */
+    debugShowPraise: function (opts) {
+      opts = opts || {};
+      showPraiseToast({
+        forceBurst: !!opts.burst,
+        burstVariant: opts.burstVariant || 1,
+        ms: opts.ms
+      });
+    }
   };
 
   if (document.readyState === "loading") {

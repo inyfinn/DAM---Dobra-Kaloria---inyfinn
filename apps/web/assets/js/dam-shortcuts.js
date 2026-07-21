@@ -258,6 +258,10 @@
             '<p class="dam-help-modal__lead">Szybki przewodnik - jak korzystać z panelu plików opakowań.</p>' +
           "</div>" +
           '<div class="dam-help-modal__head-actions">' +
+            '<button type="button" class="dam-help-modal__restart" data-dam-tut-restart="1" aria-label="Włącz samouczek ponownie">' +
+              '<i class="uil uil-refresh" aria-hidden="true"></i>' +
+              "<span>Włącz samouczek ponownie</span>" +
+            "</button>" +
             '<button type="button" class="dam-help-modal__close" data-dam-help-close="1" aria-label="Zamknij">' +
               '<i class="uil uil-times" aria-hidden="true"></i>' +
             "</button>" +
@@ -271,6 +275,24 @@
       var t = e.target;
       if (t && t.getAttribute && t.getAttribute("data-dam-help-close") === "1") {
         closeHelp();
+      }
+      var restart = t && t.closest ? t.closest("[data-dam-tut-restart]") : null;
+      if (restart) {
+        e.preventDefault();
+        closeHelp();
+        if (window.DamTutorial && typeof window.DamTutorial.restart === "function") {
+          window.DamTutorial.restart();
+        } else {
+          // Lazy-load samouczka gdy strona nie dolaczyla skryptu w HTML
+          var s = document.createElement("script");
+          s.src = "assets/js/dam-tutorial.js?v=tutorialPraiseToast20260721b";
+          s.onload = function () {
+            if (window.DamTutorial && typeof window.DamTutorial.restart === "function") {
+              window.DamTutorial.restart();
+            }
+          };
+          document.head.appendChild(s);
+        }
       }
     });
     return wrap;

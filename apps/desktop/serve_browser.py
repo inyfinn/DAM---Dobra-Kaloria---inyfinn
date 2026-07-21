@@ -49,10 +49,30 @@ def main() -> None:
     bridge = start_bridge()
     time.sleep(0.4)
 
-    handler = lambda *a, **k: http.server.SimpleHTTPRequestHandler(  # noqa: E731
-        *a, directory=str(WEB_ROOT), **k
-    )
-    httpd = ReusableTCPServer((HOST, UI_PORT), handler)
+    class DamUIRequestHandler(http.server.SimpleHTTPRequestHandler):
+        """Static UI with ~1h Cache-Control; short/no-cache for versioned ?v= assets."""
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=str(WEB_ROOT), **kwargs)
+
+        def end_headers(self):
+            path = self.path.split("?", 1)[0]
+            qs = self.path.split("?", 1)[1] if "?" in self.path else ""
+            if "v=" in qs and (
+                path.endswith(".js")
+                or path.endswith(".css")
+                or path.endswith(".json")
+            ):
+                self.send_header("Cache-Control", "no-cache, max-age=0, must-revalidate")
+            elif path.endswith(".html") or path.endswith("/"):
+                self.send_header("Cache-Control", "private, max-age=3600")
+            elif path.startswith("/assets/") or path.startswith("assets/"):
+                self.send_header("Cache-Control", "private, max-age=3600")
+            else:
+                self.send_header("Cache-Control", "private, max-age=3600")
+            super().end_headers()
+
+    httpd = ReusableTCPServer((HOST, UI_PORT), DamUIRequestHandler)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     thread.start()
 

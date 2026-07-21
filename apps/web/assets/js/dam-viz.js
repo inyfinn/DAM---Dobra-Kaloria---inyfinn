@@ -18,7 +18,7 @@
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
   var CARD_ZOOM_MIN = 65;
   var CARD_ZOOM_MAX = 350;
-  var CARD_IMG_BASE_SCALE = 1.2;
+  var CARD_IMG_BASE_SCALE = 1;
   var CARD_BASE_MIN_PX = 220;
 
   function readCardZoomPct() {
@@ -394,6 +394,12 @@
     } else if (v.index_base && !isRealIndex(v.index_base)) {
       v.index_base = "";
     }
+    if (v.lang === "gb" || v.lang === "uk") v.lang = "en";
+    /* HARD: zawsze odmiana jezyka (Polski/Angielski), nie kraj ze starego indeksu */
+    if (v.lang && v.lang !== "?" && v.lang !== "unknown") {
+      var fresh = labelForLang(v.lang);
+      if (fresh) v.lang_label = fresh;
+    }
     return v;
   }
 
@@ -564,7 +570,8 @@
             lang_label:
               lang === "?"
                 ? "?"
-                : labels[lang] ||
+                : labelForLang(lang) ||
+                  labels[lang] ||
                   (lang === "en" ? "Angielski" : String(lang).toUpperCase()),
             lang_unknown: langUnknown || lang === "?",
             langs_manual: !!r.langs_manual,
@@ -1420,7 +1427,7 @@
 
   /** Pelny tekst (aria-label / fallback) chipa wariantu: jezyk + sciezka. */
   function variantChipTip(v) {
-    var langFull = v.lang_label || labelForLang(v.lang) || "";
+    var langFull = labelForLang(v.lang) || v.lang_label || "";
     var parts = [];
     if (langFull) parts.push(langFull);
     if (v.revision_folder) parts.push(v.revision_folder);
@@ -1470,7 +1477,7 @@
       (window.DamLabels && typeof window.DamLabels.langShort === "function"
         ? window.DamLabels.langShort(v.lang)
         : String(v.lang || "").toUpperCase()) || "?";
-    var full = v.lang_label || labelForLang(v.lang) || "";
+    var full = labelForLang(v.lang) || v.lang_label || "";
     var path = v.path || v.revision_path || "";
     var html =
       '<div class="dam-variant-info__head">' +
@@ -2267,7 +2274,7 @@
             carrierPrevious: first.carrier_previous || "",
             langs: (first.langs && first.langs.length) ? first.langs : (first.lang && first.lang !== "?" ? [first.lang] : []),
             lang: first.lang,
-            langLabel: first.lang_label || labelForLang(first.lang),
+            langLabel: labelForLang(first.lang) || first.lang_label,
             langUnknown: !!(first.lang_unknown || first.lang === "?" || first.lang === "unknown"),
             index: displayIndex(first),
             showNoIndex: !displayIndex(first),
@@ -2465,12 +2472,21 @@
           fname = i >= 0 ? n.slice(i + 1) : n;
         }
         if (!fname && first.name) fname = String(first.name);
+        var langBit0 = "";
+        if (first.lang_unknown || first.lang === "?" || first.lang === "unknown") {
+          langBit0 = " · ?";
+        } else if (first.lang) {
+          langBit0 = " · " + (labelForLang(first.lang) || first.lang_label || "");
+        }
         var typeLine =
           (carrierHuman(first.carrier || "", first) || "BRAK TYPU") +
-          (displayIndex(first) ? " · Indeks " + displayIndex(first) : "");
+          (displayIndex(first) ? " · Indeks " + displayIndex(first) : "") +
+          langBit0;
         var tipCarrier =
-          "Nosnik / indeks biezacego wariantu. Podwojny klik lub Shift+klik: zaproponuj zmiane typu." +
-          (admin ? " Admin: zmiana zostanie zapisana natychmiast." : "");
+          "Otwiera Eksplorator Windows z zaznaczonym plikiem (jak przycisk Folder)." +
+          (admin
+            ? " Shift+klik: zaproponuj zmiane typu nosnika (zapis natychmiastowy)."
+            : " Shift+klik: zaproponuj zmiane typu nosnika.");
         return (
           '<div class="dam-viz-modal__meta-line">' +
           '<span class="dam-viz-modal__meta-k">Nazwa pliku</span>' +
@@ -2484,7 +2500,7 @@
           "</div>" +
           '<div class="dam-viz-modal__meta-line">' +
           '<span class="dam-viz-modal__meta-k">Typ pliku</span>' +
-          '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable" id="damVizModalMeta" data-dam-tip="' +
+          '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable" id="damVizModalMeta" role="button" tabindex="0" data-dam-tip="' +
           esc(tipCarrier) +
           '">' +
           esc(typeLine) +
@@ -2550,12 +2566,12 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=thumbPick20260721a";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=brandModalPad20260721a";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=thumbPick20260721a";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=brandModalPad20260721a";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
@@ -2665,7 +2681,7 @@
         if (v.lang_unknown || v.lang === "?" || v.lang === "unknown") {
           langBit = " · ?";
         } else if (v.lang) {
-          langBit = " · " + (v.lang_label || labelForLang(v.lang));
+          langBit = " · " + (labelForLang(v.lang) || v.lang_label || "");
         }
         meta.textContent =
           (carrierHuman(v.carrier || "", v) || "Nosnik") +
@@ -2793,7 +2809,7 @@
           carrierPrevious: v.carrier_previous || "",
           langs: (v.langs && v.langs.length) ? v.langs : (v.lang && v.lang !== "?" ? [v.lang] : []),
           lang: v.lang,
-          langLabel: v.lang_label || labelForLang(v.lang),
+          langLabel: labelForLang(v.lang) || v.lang_label,
           langUnknown: !!(v.lang_unknown || v.lang === "?" || v.lang === "unknown"),
           index: displayIndex(v),
           showNoIndex: !displayIndex(v),
@@ -3035,22 +3051,45 @@
     }
 
     var metaEl = document.getElementById("damVizModalMeta");
-    if (metaEl && window.DamTagEdit) {
-      var metaLast = 0;
+    if (metaEl) {
+      function revealActiveFileInExplorer() {
+        var v = items[activeIdx] || first;
+        var path = (v && v.path) || "";
+        if (!path) {
+          showToast("Brak sciezki pliku");
+          return;
+        }
+        var winBtn = document.getElementById("damVizModalWinExplorer");
+        if (winBtn) winBtn.setAttribute("data-path", path);
+        if (window.DamPaths && typeof window.DamPaths.revealInExplorer === "function") {
+          window.DamPaths.revealInExplorer(path);
+          return;
+        }
+        if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+          window.DamPaths.openFolderInExplorer(path);
+        }
+      }
       metaEl.addEventListener("click", function (e) {
-        var now = Date.now();
-        var open =
-          e.shiftKey || (metaLast && now - metaLast <= 500);
-        metaLast = now;
-        if (!open) return;
         e.preventDefault();
         e.stopPropagation();
-        window.DamTagEdit.openCarrierPicker(metaEl, {
-          revisionPath: first.revision_path || "",
-          currentCode: first.carrier || "",
-          productId: first.product_id || "",
-          productName: productName || "",
-        });
+        /* Shift+klik = zmiana typu nosnika (jak wczesniej); zwykly klik = Folder. */
+        if (e.shiftKey && window.DamTagEdit && typeof window.DamTagEdit.openCarrierPicker === "function") {
+          var v = items[activeIdx] || first;
+          window.DamTagEdit.openCarrierPicker(metaEl, {
+            revisionPath: (v && v.revision_path) || first.revision_path || "",
+            currentCode: (v && v.carrier) || first.carrier || "",
+            productId: (v && v.product_id) || first.product_id || "",
+            productName: productName || "",
+          });
+          return;
+        }
+        revealActiveFileInExplorer();
+      });
+      metaEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          revealActiveFileInExplorer();
+        }
       });
     }
 
@@ -3303,7 +3342,7 @@
                 ? first.langs
                 : (first.lang && first.lang !== "?" ? [first.lang] : []),
             lang: first.lang,
-            langLabel: first.lang_label || labelForLang(first.lang),
+            langLabel: labelForLang(first.lang) || first.lang_label,
             langUnknown: !!(first.lang_unknown || first.lang === "?" || first.lang === "unknown"),
             index: indexLbl,
             showNoIndex: !indexLbl,
@@ -3540,7 +3579,7 @@
           productId: v.product_id,
           productName: v.product_name,
           lang: v.lang,
-          langFull: v.lang_label || labelForLang(v.lang),
+          langFull: labelForLang(v.lang) || v.lang_label,
           brand: v.brand,
           category: v.category,
           carrierLabel: carrierHuman(v.carrier || "", v),
@@ -3764,7 +3803,7 @@
   /* Suwak skali kafelkow:
      65-100% = pomniejsza wizualizacje w thumb (img-scale),
      100-350% = wizualizacja wypelnia krawedzie L/P, potem rosnie kafelek.
-     Bazowo grafika ma 120% (CARD_IMG_BASE_SCALE). */
+     Bazowo grafika ma 100% (CARD_IMG_BASE_SCALE=1; HARD overflow 2026-07-21). */
   function applyCardZoom(pct) {
     /* HARD: copy branding density — DamCardZoom applies vars to vizGrid + assoc pane. */
     if (window.DamCardZoom && typeof window.DamCardZoom.apply === "function") {
@@ -3925,7 +3964,7 @@
             carrierPrevious: v.carrier_previous || "",
             langs: (v.langs && v.langs.length) ? v.langs : (v.lang && v.lang !== "?" ? [v.lang] : []),
             lang: v.lang,
-            langLabel: v.lang_label || labelForLang(v.lang),
+            langLabel: labelForLang(v.lang) || v.lang_label,
             langUnknown: !!(v.lang_unknown || v.lang === "?" || v.lang === "unknown"),
             index: displayIndex(v),
             showNoIndex: !displayIndex(v),
