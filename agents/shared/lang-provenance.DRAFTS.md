@@ -28,7 +28,7 @@ Slabe: bez pola `lang_source` trudniej debugowac w UI.
 Jezyk X wolno pokazac IFF istnieje **dowod tekstowy** w surowych nazwach:
 
 - token granicami nie-liter: `_CZ_`, `-SK-`, ` CZ `, `CZ_SK`, `GB_AR`
-- aliasy tylko ze slownika (`en`->`gb`, `ua`->`uk`)
+- aliasy tylko ze slownika (`en`/`uk`->`gb`, `ukr`->`ua`; UK != Ukraina/UA)
 - false-positive guard: `SKLEP` != `SK`, `FRONT` != `FR` (jesli FR nie jest osobnym tokenem)
 
 Brak dowodu = brak jezyka (nie zgaduj z opakowania na screenshocie).

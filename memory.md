@@ -1050,6 +1050,32 @@ ole=admin.
 - Cache-bust: `gridcountlight20260720b` (viz/branding CSS), `safedel20260720b` (`dam-danger.js`), `assocfix20260720c` (media-preview/viz JS + dam-brand.css skeleton).
 
 
+## #141 (2026-07-21) - HARD CANON: modal podglądu Wizualizacje = layout; Eksplorator parity; wariant = produkt
+
+- **Kanon layoutu:** `#damVizModal .dam-viz-modal__body` (Wizualizacje) = wzorzec prezentacji. `#damMediaPreview .dam-viz-modal__body` (Eksplorator / Branding preview) ma wyglądać **tak samo** (te same bloki, studio frames, spacing).
+- **WARIANT produktu** = inny **INDEKS** (chip/pasek indeks×język). **NIGDY** nie mylić z perspektywą wizualizacji (FRONT/BACK/ENFACE).
+- **Warianty wizualizacji** = wyłącznie 3 ramki studio: **TŁO** | **PERSPEKTYWA** | **JAKOŚĆ** (`.dam-media-preview__studio-frame` w `#damVizModalStudio` / odpowiednik w media preview).
+- **Eksplorator (`#damMediaPreview`):** NIE pokazywać „WARIANTY MATERIAŁU” jako paska różnych perspektyw tego samego produktu. Perspektywy tylko w ramce PERSPEKTYWA. Pasek wariantów tylko gdy realnie różne indeksy produktu.
+- **Wizualizacje (`#damVizModal`):** pasek wariantów produktu (indeksy) + 3 ramki studio.
+- **Pokaż wszystkie:** przycisk w modalu pokazuje WSZYSTKIE pliki wizualizacji (z tłem / bez tła, wszystkie perspektywy i jakości), pogrupowane poniżej, animacja fade-in + transition (`prefers-reduced-motion` = bez ruchu).
+- Instrukcja programu: `ui.viz_modal_parity_explorer` w `program-instructions.json`. Nadpisuje wcześniejsze „freeze modal 1:1” gdy koliduje z tą regułą.
+
+## #142 (2026-07-21) - HARD UI: viz badges→title gap + Shift-minus + ID chip
+
+- **Title vs badges (HARD):** `#damVizModal` / `#damMediaPreview` — gap badges→title ≥10px (prefer 12–16). **NIGDY** `margin-top: calc(N - meta-gap)` ujemny na `.dam-viz-modal__title`. Defense: inject `#dam-uihard-fixes-20260721` (`injectUiHardFixes` w `dam-media-preview.js`). CDP: `title.top ≥ badges.bottom + 10`.
+- **Branding ID chip:** `button.dam-branding-card__id-chip` — pełny indeks (`width/min-width:max-content`, bez ellipsis). Assoc pills mogą ellipsis + tip.
+- **Minus assoc:** `.dam-assoc-quick-minus` widoczny **tylko przy Shift** (keydown latch `shiftKeyDown`); tip „Shift + hold 2s”. Zakaz „always visible” override (studioqa).
+- **+N badge:** `.dam-media-preview__assoc-variant-badge { top: -1px }` (−5px vs dawne 4px).
+- Cache token: `uiHard20260721h`.
+
+## #141 (2026-07-21) - HARD: UK/GB/EN != Ukraina (UA)
+
+- **Blad:** slownik mapowal `uk`→Ukraina i alias `ua`→`uk`, wiec angielskie warianty (chip `UK`, meta Ukraina) byly zle (np. 6300785 CIASTO SLIWKOWE - EN na opakowaniu).
+- **Regula:** `UK`/`GB`/`EN` = English / Wielka Brytania (alias `en`+`uk`→`gb`). Ukraina = tylko `UA` (`ukr`→`ua`). NIGDY `UK`→Ukraina.
+- **Kod:** `naming-dictionary.json`, `DamLabels.normalizeLangCode`, `build-file-index.py`, patch `file-index.json`. Instrukcja: `data.lang_uk_not_ukraine`.
+- **Uwaga:** `dam-i18n.js` locale `uk` (ISO 639-1 ukrainski UI) to inna przestrzen nazw niz kody rynku produktu.
+- Cache: `?v=20260721ukGb1` (dam-labels / dam-badges / dam-viz).
+
 ## #140 (2026-07-20) - Encoding HARD: apps/web HTML/JS tylko UTF-8
 
 - **HARD:** kazdy zapis w `apps/web/**` (HTML/JS/CSS/chrome strings) = **UTF-8 bez BOM**. Nigdy cp1250/cp1252/ANSI.
@@ -1059,3 +1085,21 @@ ole=admin.
 - **Nie ruszaj:** `file-index.json` / `branding-index.json` / binarne indeksy przy fixach encoding UI.
 - Meta charset juz byl `UTF-8` - problem byl w bajtach plikow, nie w `<meta>`.
 - CDP Pass 2026-07-20: settings devices title + branding clear/tab z poprawnym PL.
+
+## #141 (2026-07-21) - ASCII `?` / mixed ANSI w chrome PL (HARD)
+
+- **Objaw:** `Poka? wszystkie`, tip `W??cz`/`Wy??cz` (viz/explorer), branding `Poka? archiwum` / `Wr??`.
+- **Przyczyna:** nieodwracalna utrata bajtow PL (zapis ANSI/PowerShell) albo mieszanka UTF-8 + lone latin-1 (`0xF3` = o-acute).
+- **Fix:** `tools/_fix_qmark_chrome_pl.py` + `_fix_mojibake_utf8.py`; zapis TYLKO `Path.write_bytes(...utf-8)`; nigdy PS `Set-Content`.
+- **Obrona:** `data-i18n` na krytycznych labelach (`branding.show_all` / `show_archive` / `back_browse`); przy wspolbieznych agentach re-read + hold przed oddaniem.
+- **Proof:** CDP `codePointAt` (ż=U+017C, ł=U+0142, ą=U+0105); rg `Poka\?|W\?\?cz|Wy\?\?cz` = 0.
+
+## #143 (2026-07-21) - Branding WARIANTY + noSrcGrid + release v3.1.0
+
+- **Branding #damMediaPreview materialMode:** WARIANTY MATERIALU = **jeden** pasek .dam-media-preview__variant-grid (siblingi RASTER/VIDEO: JPG/PNG…). **Zakaz** drugiego bloku all-files z tym samym naglowkiem.
+- **noSrcGrid HARD (nadpisuje mergeVar PSD tiles):** PSD/PSB/AI/PDF **NIGDY** w variant-grid. Filtr: 
+eturn !isSourceVariantFile(v). Zrodla tylko SourceMount w belce akcji.
+- Studio materialMode: ukryty/pusty (brak fake TLO). Product viz all-files rows+dedupe bez zmian.
+- Shift-minus: Shift-gate, rozmiar ≈80% (21px). UTF-8 chrome: Pokaż/Włącz (0x Poka?/W??cz).
+- **Wersja:** v3.1.0. Cache: ship20260721v310. Audyt: agents/shared/gap-audit-2026-07-21.md.
+

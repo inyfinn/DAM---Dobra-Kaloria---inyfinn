@@ -1,7 +1,7 @@
 {
-  "version": "2.0.7",
+  "version": "3.1.0",
   "name": "DAM - Dobra Kaloria - Inyfinn",
-  "codename": "hub",
-  "released_at": "2026-07-20",
-  "note": "2.0.7: animacje globalne 'jak na prawdziwej stronie' (reveal 0.45s gora->dol, rootMargin -50px, wejscie tytul/podtytul/belki, hover scale buttonow/ikon sidebar, transition tagow/belek), skeleton loading (shimmer) na costs/integrations/invoices + reveal tresci async, sidebar bez slide (tylko morph), tryb w tle / zasobnik systemowy (zamkniecie okna chowa do tray), przyspieszenie Brandingu (cache-bust off na indeksach, wspoldzielenie indeksu z modalem, brak podwojnego renderTagFilters, wideo preload none). 2.0.6: modal CTA plikow zrodlowych (PSD/PSB/AI), sciezka przenosna Marketing\\..., synonimy search branding, cache skanu tla, indeksy/lifecycle. 2.0.5: Integracje hub v2. 2.0.4: skojarzenia branding. 2.0.3: OAuth hub."
+  "codename": "gapship",
+  "released_at": "2026-07-21",
+  "note": "3.1.0: gap ship 2026-07-21 — viz modal parity (INDEX above studio, show-all dedupe/rows, grouptint #f5f6fa, actions bar z40, studio chips nowrap), branding WARIANTY raster-only (no PSD/PSB/AI/PDF in variant-grid; sources in SourceMount), Shift-minus −20% global, paintAssoc unblocked from enrich hang, UTF-8 PL chrome (Pokaż/Włącz), UK→GB lang canon, adminGate session. Cache ship20260721v310."
 }

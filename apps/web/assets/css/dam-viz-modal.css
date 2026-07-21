@@ -26,6 +26,10 @@
   min-height: 0;
   overflow: hidden;
   border-right: 1px solid rgba(70, 66, 85, 0.08);
+  /* Stacking context: actions (z 40) above studio / all-files scroll content */
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
 }
 
 .dam-viz-modal-box--assoc-split .dam-viz-modal__thumb {
@@ -35,13 +39,279 @@
 }
 
 .dam-viz-modal-box--assoc-split .dam-viz-modal__body {
-  flex: 0 0 auto;
-  max-height: min(42vh, 420px);
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: min(48vh, 520px);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  /* +12px vs 20/24/22 — wiecej powietrza w wiekszym modalu 90vw/90vh */
-  padding: 32px 36px 34px;
+  /* Horizontal inset so badges/studio/variants pull away from edges.
+     Bottom pad reduced: actions bar lives as sibling under __main. */
+  padding: 28px 40px 16px;
+}
+
+/* Pinned action bar: NEVER under expanded .dam-media-preview__all-files / studio */
+.dam-viz-modal-box--assoc-split .dam-viz-modal__main > .dam-viz-modal__actions {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 40;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0;
+  padding: 12px 40px 20px;
+  background: #fff;
+  border-top: 1px solid rgba(70, 66, 85, 0.08);
+  box-shadow: 0 -6px 14px rgba(70, 66, 85, 0.05);
+}
+
+/* Sticky fallback when actions remain inside scrollable body (non-split) */
+#damVizModal .dam-viz-modal__body > .dam-viz-modal__actions,
+#damMediaPreview .dam-viz-modal__body > .dam-viz-modal__actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 40;
+  background: #fff;
+  padding-top: 12px;
+  padding-bottom: 8px;
+  margin-top: var(--dam-viz-card-actions-extra-gap, 4px);
+  box-shadow: 0 -6px 14px rgba(70, 66, 85, 0.05);
+}
+
+/* Expanded all-files / studio stay below the action surface */
+#damVizModal .dam-media-preview__all-files,
+#damMediaPreview .dam-media-preview__all-files,
+#damVizModal .dam-viz-modal__studio,
+#damMediaPreview .dam-media-preview__studio {
+  position: relative;
+  z-index: 1;
+}
+
+/* allrows20260721a: reinforce row stack inside viz modal (override any multi-col grid). */
+#damVizModal .dam-media-preview__all-files,
+#damMediaPreview .dam-media-preview__all-files {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: none !important;
+  gap: 14px;
+  width: 100%;
+}
+
+#damVizModal .dam-media-preview__all-group,
+#damMediaPreview .dam-media-preview__all-group {
+  width: 100%;
+  max-width: 100%;
+}
+
+#damVizModal .dam-media-preview__all-group-grid,
+#damMediaPreview .dam-media-preview__all-group-grid {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Button surface + hit area in this bar */
+#damVizModal .dam-viz-modal__actions .geex-btn,
+#damMediaPreview .dam-viz-modal__actions .geex-btn,
+#damVizModal .dam-viz-modal__actions .dam-viz-modal__cta,
+#damMediaPreview .dam-viz-modal__actions .dam-viz-modal__cta {
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+#damVizModal .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary),
+#damMediaPreview .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary),
+#damVizModal .dam-viz-modal__actions .dam-admin-control,
+#damMediaPreview .dam-viz-modal__actions .dam-admin-control {
+  background: #fff !important;
+}
+
+#damVizModal .dam-viz-modal__actions .dam-viz-icon-btn,
+#damMediaPreview .dam-viz-modal__actions .dam-viz-icon-btn {
+  background: #fff !important;
+  width: auto;
+  height: auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+#damVizModal .dam-viz-modal__actions .dam-admin-control,
+#damMediaPreview .dam-viz-modal__actions .dam-admin-control {
+  padding: 12px !important;
+  min-height: 44px !important;
+}
+
+/* Product INDEX variants strip ABOVE studio (grouptint20260721a) */
+.dam-viz-modal-box--assoc-split .dam-viz-modal__product-variants,
+#damVizModal .dam-viz-modal__product-variants,
+#damMediaPreview .dam-media-preview__assoc--variants-only {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-top: none;
+  border-radius: 12px;
+  background: var(--dam-surface-muted, #f5f6fa);
+  box-sizing: border-box;
+  /* Override 2-col assoc grid (variants|sep|products) — INDEX strip is full width */
+  display: flex !important;
+  flex-direction: column;
+  grid-template-columns: none !important;
+  width: 100%;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__product-variants .dam-media-preview__assoc-col--variants,
+#damVizModal .dam-viz-modal__product-variants .dam-media-preview__assoc-col--variants,
+#damMediaPreview .dam-media-preview__assoc--variants-only .dam-media-preview__assoc-col--variants {
+  grid-column: auto;
+  width: 100%;
+  max-width: none;
+  flex: 1 1 auto;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__product-variants .dam-media-preview__assoc-label-row,
+#damVizModal .dam-viz-modal__product-variants .dam-media-preview__assoc-label-row,
+#damMediaPreview .dam-media-preview__assoc--variants-only .dam-media-preview__assoc-label-row {
+  margin-bottom: 8px;
+}
+
+/* Dense wrap: pack chips to container edge, then wrap (not rigid 4-col) */
+#damVizModal .dam-viz-modal__product-variants .dam-media-preview__variant-grid,
+#damVizModal .dam-viz-modal__variant-strip.dam-media-preview__variant-grid,
+#damMediaPreview .dam-media-preview__assoc--variants-only .dam-media-preview__variant-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-start;
+  align-content: flex-start;
+}
+
+#damVizModal .dam-viz-modal__product-variants .dam-viz-modal__variant,
+#damVizModal .dam-viz-modal__variant-strip .dam-viz-modal__variant,
+#damMediaPreview .dam-media-preview__assoc--variants-only .dam-viz-modal__variant {
+  flex: 1 1 70px;
+  min-width: 70px;
+  max-width: 104px;
+  width: auto;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+  #damVizModal .dam-viz-modal__variant-strip.dam-media-preview__variant-grid,
+  #damVizModal .dam-viz-modal__product-variants .dam-media-preview__variant-grid {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__variants--studio,
+#damVizModal .dam-viz-modal__variants--studio {
+  gap: 12px;
+}
+
+/* Studio group gap (TŁO | PERSPEKTYWA | JAKOŚĆ) — wider than in-group chips */
+#damVizModal .dam-media-preview__studio--tri,
+.dam-viz-modal-box--assoc-split .dam-media-preview__studio--tri {
+  gap: 12px;
+}
+
+/* studioRow20260721a: one-line chips inside each TŁO|PERSPEKTYWA|JAKOŚĆ frame */
+#damVizModal .dam-media-preview__studio-frame-chips,
+.dam-viz-modal-box--assoc-split .dam-media-preview__studio-frame-chips {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  width: 100%;
+}
+
+/* grouptint20260721a + studioRow20260721a: shrink so 4 persp chips fit (TYL-ENFACE) */
+#damVizModalStudio .dam-media-preview__studio-chip,
+#damMediaPreviewStudio .dam-media-preview__studio-chip {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 26px;
+  padding: 2px 3px;
+  font-size: 9.5px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+#damVizModalStudio .dam-media-preview__quality-pill,
+#damMediaPreviewStudio .dam-media-preview__quality-pill {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 26px;
+  padding: 2px 4px;
+  font-size: 9.5px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+/* Perspektywa: let long labels (TYL-ENFACE) claim a bit more than short ones */
+#damVizModalStudio .dam-media-preview__studio-frame[aria-label="Perspektywa"] .dam-media-preview__studio-chip,
+#damMediaPreviewStudio .dam-media-preview__studio-frame[aria-label="Perspektywa"] .dam-media-preview__studio-chip {
+  flex: 1 1 auto;
+}
+
+/* Quiet outline active chips in viz modal (override any solid fill) — 1px HARD */
+#damVizModal .dam-media-preview__studio-chip.is-active,
+#damVizModal .dam-media-preview__quality-pill.is-active,
+#damMediaPreview .dam-media-preview__studio-chip.is-active,
+#damMediaPreview .dam-media-preview__quality-pill.is-active {
+  background: #fff !important;
+  border: 1px solid var(--dam-primary, #ab54db) !important;
+  color: color-mix(in srgb, var(--dam-primary, #ab54db) 72%, #3d2f4a) !important;
+  box-shadow: none !important;
+}
+
+/* Prevent badges/title collapse when body is a constrained flex column */
+#damVizModal .dam-viz-modal__body > .dam-viz-card__badges,
+#damVizModal #damVizModalBadges,
+#damMediaPreview .dam-viz-modal__body > .dam-viz-card__badges,
+#damMediaPreview #damMediaPreviewBadges {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  flex-shrink: 0;
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  position: relative;
+  z-index: 0;
+}
+
+/* HARD 2026-07-21: badges→title ≥12px. NEVER negative margin (overlap root cause).
+   Body flex gap 14px owns the air; title margin-top stays 0; padding-top adds glyph air. */
+#damVizModal .dam-viz-modal__body,
+#damMediaPreview .dam-viz-modal__body {
+  --dam-viz-modal-badges-title-gap: 12px;
+  /* 16px body gap (>12 HARD) — clearer visual air under badge pills */
+  gap: 16px;
+}
+#damVizModal .dam-viz-modal__body > .dam-viz-modal__title,
+#damVizModal .dam-viz-modal__body > .dam-viz-card__badges + .dam-viz-modal__title,
+#damVizModal .dam-viz-modal__body > #damVizModalBadges + .dam-viz-modal__title,
+#damMediaPreview .dam-viz-modal__body > .dam-viz-card__badges + .dam-media-preview__title-block,
+#damMediaPreview .dam-viz-modal__body > .dam-media-preview__title-block {
+  margin-top: 0 !important;
+}
+#damVizModal .dam-viz-modal__body > .dam-viz-card__badges + .dam-viz-modal__title,
+#damVizModal .dam-viz-modal__body > #damVizModalBadges + .dam-viz-modal__title,
+#damMediaPreview .dam-viz-modal__body > .dam-viz-card__badges + .dam-media-preview__title-block {
+  padding-top: 4px !important;
+}
+#damMediaPreview .dam-media-preview__title-block > .dam-viz-modal__title {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
 }
 
 .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane {

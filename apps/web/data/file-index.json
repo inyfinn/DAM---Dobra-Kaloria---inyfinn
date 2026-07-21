@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-21T00:36:35",
+  "generated_at": "2026-07-21T02:53:22",
   "roots": [
     {
       "brand": "DK",
@@ -11,7 +11,7 @@
     }
   ],
   "root": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-  "elapsed_sec": 283.16,
+  "elapsed_sec": 5.16,
   "category_count": 12,
   "product_count": 184,
   "viz_count": 402,
@@ -7873,7 +7873,7 @@
           "wizki_count": 8,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -9247,7 +9247,7 @@
                 "ext": "png",
                 "size": 1234403,
                 "mtime": "2026-05-26T13:04:23",
-                "lang": "uk"
+                "lang": "gb"
               },
               {
                 "name": "magnific_stworz-batona-strice-w-uk_tfRa1HRmZJ.tif",
@@ -9256,7 +9256,7 @@
                 "ext": "tif",
                 "size": 64353660,
                 "mtime": "2026-05-26T14:48:07",
-                "lang": "uk"
+                "lang": "gb"
               },
               {
                 "name": "Śliwki - baza.tif",
@@ -10720,7 +10720,7 @@
           "wizki_count": 32,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -13855,7 +13855,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -14242,7 +14242,7 @@
           "wizki_count": 0,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -38490,7 +38490,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -38851,7 +38851,7 @@
           "wizki_count": 0,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -39437,7 +39437,7 @@
           "wizki_count": 9,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -39585,7 +39585,7 @@
           "wizki_count": 0,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -41846,7 +41846,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -44257,7 +44257,7 @@
           "wizki_count": 18,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -46957,7 +46957,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "uk"
+            "gb"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -116257,13 +116257,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "gb",
+      "lang_label": "Wielka Brytania",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/ciasto-sliwkowe-nerkowcowy__6300785_pl.jpg?v=1783591614",
+      "thumb_url": "data/thumbs/ciasto-sliwkowe-nerkowcowy__6300785_gb.jpg?v=1783591614",
       "file": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
       "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
@@ -116294,13 +116294,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "uk",
-      "lang_label": "Ukraina",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/ciasto-sliwkowe-nerkowcowy__6300785_uk.jpg?v=1783591614",
+      "thumb_url": "data/thumbs/ciasto-sliwkowe-nerkowcowy__6300785_pl.jpg?v=1783591614",
       "file": "DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
       "rel": "01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00 - F/4 - WIZKI/DK-KAR6X-NERK-CIASTO-ŚLIWKOWE-6300785.00-ENFACE-S.png",
@@ -116331,13 +116331,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "gb",
+      "lang_label": "Wielka Brytania",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/daktyl-limonka-raw__6300760_pl.jpg?v=1783060716",
+      "thumb_url": "data/thumbs/daktyl-limonka-raw__6300760_gb.jpg?v=1783060716",
       "file": "DK-DOY-KULKI-LIMONKA-PL-UA-6300760-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760/4 - WIZKI/DK-DOY-KULKI-LIMONKA-PL-UA-6300760-FRONT-S.png",
       "rel": "02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760/4 - WIZKI/DK-DOY-KULKI-LIMONKA-PL-UA-6300760-FRONT-S.png",
@@ -116367,13 +116367,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "uk",
-      "lang_label": "Ukraina",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/daktyl-limonka-raw__6300760_uk.jpg?v=1783060716",
+      "thumb_url": "data/thumbs/daktyl-limonka-raw__6300760_pl.jpg?v=1783060716",
       "file": "DK-DOY-KULKI-LIMONKA-PL-UA-6300760-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760/4 - WIZKI/DK-DOY-KULKI-LIMONKA-PL-UA-6300760-FRONT-S.png",
       "rel": "02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760/4 - WIZKI/DK-DOY-KULKI-LIMONKA-PL-UA-6300760-FRONT-S.png",
@@ -119497,13 +119497,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "gb",
+      "lang_label": "Wielka Brytania",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/owies-czekolada-sniadanie__6300766_pl.jpg?v=1782909156",
+      "thumb_url": "data/thumbs/owies-czekolada-sniadanie__6300766_gb.jpg?v=1782909156",
       "file": "DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766/4 - WIZKI/DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
       "rel": "02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766/4 - WIZKI/DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
@@ -119536,13 +119536,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "uk",
-      "lang_label": "Ukraina",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/owies-czekolada-sniadanie__6300766_uk.jpg?v=1782909156",
+      "thumb_url": "data/thumbs/owies-czekolada-sniadanie__6300766_pl.jpg?v=1782909156",
       "file": "DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766/4 - WIZKI/DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
       "rel": "02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766/4 - WIZKI/DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
@@ -119613,13 +119613,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "gb",
+      "lang_label": "Wielka Brytania",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/orzeszki-kukurydza-miod-sniadanie__6300767_pl.jpg?v=1782909136",
+      "thumb_url": "data/thumbs/orzeszki-kukurydza-miod-sniadanie__6300767_gb.jpg?v=1782909136",
       "file": "PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767/4 - WIZKI/PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
       "rel": "02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767/4 - WIZKI/PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
@@ -119651,13 +119651,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "uk",
-      "lang_label": "Ukraina",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/orzeszki-kukurydza-miod-sniadanie__6300767_uk.jpg?v=1782909136",
+      "thumb_url": "data/thumbs/orzeszki-kukurydza-miod-sniadanie__6300767_pl.jpg?v=1782909136",
       "file": "PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767/4 - WIZKI/PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
       "rel": "02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767/4 - WIZKI/PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
@@ -119802,13 +119802,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "gb",
+      "lang_label": "Wielka Brytania",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/orzeszki-kukurydza-miod-sniadanie__6300699_pl.jpg?v=1782909062",
+      "thumb_url": "data/thumbs/orzeszki-kukurydza-miod-sniadanie__6300699_gb.jpg?v=1782909062",
       "file": "ORZESZKI-MIOD-6300699-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01/4 - WIZKI/ORZESZKI-MIOD-6300699-FRONT-S.png",
       "rel": "02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01/4 - WIZKI/ORZESZKI-MIOD-6300699-FRONT-S.png",
@@ -119840,13 +119840,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "uk",
-      "lang_label": "Ukraina",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/orzeszki-kukurydza-miod-sniadanie__6300699_uk.jpg?v=1782909062",
+      "thumb_url": "data/thumbs/orzeszki-kukurydza-miod-sniadanie__6300699_pl.jpg?v=1782909062",
       "file": "ORZESZKI-MIOD-6300699-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01/4 - WIZKI/ORZESZKI-MIOD-6300699-FRONT-S.png",
       "rel": "02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01/4 - WIZKI/ORZESZKI-MIOD-6300699-FRONT-S.png",
@@ -119914,13 +119914,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "gb",
+      "lang_label": "Wielka Brytania",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/daktyl-wisnia-raw__6300758_pl.jpg?v=1782908466",
+      "thumb_url": "data/thumbs/daktyl-wisnia-raw__6300758_gb.jpg?v=1782908466",
       "file": "PROJEKT-DAKTYL-WIŚNIA-6300449-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758/4 - WIZKI/PROJEKT-DAKTYL-WIŚNIA-6300449-FRONT-S.png",
       "rel": "02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758/4 - WIZKI/PROJEKT-DAKTYL-WIŚNIA-6300449-FRONT-S.png",
@@ -119950,13 +119950,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "uk",
-      "lang_label": "Ukraina",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/daktyl-wisnia-raw__6300758_uk.jpg?v=1782908466",
+      "thumb_url": "data/thumbs/daktyl-wisnia-raw__6300758_pl.jpg?v=1782908466",
       "file": "PROJEKT-DAKTYL-WIŚNIA-6300449-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758/4 - WIZKI/PROJEKT-DAKTYL-WIŚNIA-6300449-FRONT-S.png",
       "rel": "02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758/4 - WIZKI/PROJEKT-DAKTYL-WIŚNIA-6300449-FRONT-S.png",
@@ -120319,13 +120319,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "gb",
+      "lang_label": "Wielka Brytania",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/jab-ko-cynamon-daktylowy__6300763_pl.jpg?v=1782906423",
+      "thumb_url": "data/thumbs/jab-ko-cynamon-daktylowy__6300763_gb.jpg?v=1782906423",
       "file": "DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763/4 - WIZKI/DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
       "rel": "01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763/4 - WIZKI/DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
@@ -120358,13 +120358,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "uk",
-      "lang_label": "Ukraina",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/jab-ko-cynamon-daktylowy__6300763_uk.jpg?v=1782906423",
+      "thumb_url": "data/thumbs/jab-ko-cynamon-daktylowy__6300763_pl.jpg?v=1782906423",
       "file": "DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763/4 - WIZKI/DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
       "rel": "01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763/4 - WIZKI/DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
@@ -120469,13 +120469,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "gb",
+      "lang_label": "Wielka Brytania",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/chrupiacy-orzech-daktylowy__6300761_pl.jpg?v=1782906247",
+      "thumb_url": "data/thumbs/chrupiacy-orzech-daktylowy__6300761_gb.jpg?v=1782906247",
       "file": "BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761/4 - WIZKI/BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",
       "rel": "01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761/4 - WIZKI/BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",
@@ -120508,13 +120508,13 @@
       "revision_path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761",
       "langs": [
         "pl",
-        "uk"
+        "gb"
       ],
       "langs_manual": false,
-      "lang": "uk",
-      "lang_label": "Ukraina",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
-      "thumb_url": "data/thumbs/chrupiacy-orzech-daktylowy__6300761_uk.jpg?v=1782906247",
+      "thumb_url": "data/thumbs/chrupiacy-orzech-daktylowy__6300761_pl.jpg?v=1782906247",
       "file": "BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",
       "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761/4 - WIZKI/BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",
       "rel": "01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761/4 - WIZKI/BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",
@@ -126617,7 +126617,7 @@
     "pl": "Polska",
     "de": "Niemcy",
     "gb": "Wielka Brytania",
-    "uk": "Ukraina",
+    "ua": "Ukraina",
     "cz": "Czechy",
     "sk": "Słowacja",
     "hu": "Węgry",
@@ -126642,7 +126642,8 @@
     "pt": "Portugalia",
     "gr": "Grecja",
     "ie": "Irlandia",
-    "ch": "Szwajcaria"
+    "ch": "Szwajcaria",
+    "uk": "Ukraina"
   },
   "tag_groups": {
     "smak": [

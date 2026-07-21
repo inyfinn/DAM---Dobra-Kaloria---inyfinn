@@ -71,10 +71,13 @@
       ".dam-int-filter:hover{" +
       "border-color:color-mix(in srgb,var(--dam-primary,#ab54db) 35%,var(--dam-border,#ececf2));" +
       "color:var(--dam-text,#464255)}" +
+      /* Outline selected (not solid purple fill) - Faktury / shared chips */ +
       ".dam-int-filter.active," +
       ".dam-int-filter.is-active{" +
-      "background:var(--dam-primary,#ab54db);" +
-      "border-color:var(--dam-primary,#ab54db);color:#fff}" +
+      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 8%,#fff);" +
+      "border-color:var(--dam-primary,#ab54db);" +
+      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 82%,#464255);" +
+      "font-weight:600}" +
       ".dam-int-filter:focus-visible{" +
       "outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px}" +
       /* Page mounts */ +

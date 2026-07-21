@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pl" dir="ltr" class="dam-booting">
 <head>
   <style id="dam-shell-boot-critical">
@@ -15,9 +15,9 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=bust20260720a">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=badgescale20260721a">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=pagesub20260721b">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=assocfix20260721h">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=ship20260721v310">
   <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=usab20260720b">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
   <link rel="stylesheet" href="./assets/css/dam-accent.css?v=20260719accent3">
@@ -59,7 +59,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       <div class="geex-content__header">
         <div class="geex-content__header__content">
           <h2 class="geex-content__header__title">Ustawienia</h2>
-          <p class="geex-content__header__subtitle">TwĂłj profil, wyglÄ…d panelu i dysk Marketing</p>
+          <p class="geex-content__header__subtitle">Twój profil, wygląd panelu i dysk Marketing</p>
         </div>
         <div class="geex-content__header__action">
           <!-- quickaction wstrzykuje dam-shell.js -->
@@ -68,49 +68,49 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 
       <div class="dam-settings-hero">
         <div>
-          <p class="dam-settings-hero__sub">Tu ustawiasz to, co widzisz w panelu: imiÄ™, kolory, jasny/ciemny motyw i Ĺ›cieĹĽkÄ™ do plikĂłw. Wybierz kategoriÄ™ poniĹĽej, ĹĽeby zobaczyÄ‡ tylko potrzebne karty. Na koĹ„cu kliknij Zapisz.</p>
+          <p class="dam-settings-hero__sub">Tu ustawiasz to, co widzisz w panelu: imię, kolory, jasny/ciemny motyw i ścieżkę do plików. Wybierz kategorię poniżej, żeby zobaczyć tylko potrzebne karty. Na końcu kliknij Zapisz.</p>
         </div>
         <div class="dam-settings-hero__actions">
-          <button type="button" class="dam-sw-btn dam-sw-btn--primary" id="settingsSave" data-dam-tip="Zapisuje profil, wyglÄ…d, preferencje i powiadomienia">Zapisz ustawienia</button>
+          <button type="button" class="dam-sw-btn dam-sw-btn--primary" id="settingsSave" data-dam-tip="Zapisuje profil, wygląd, preferencje i powiadomienia">Zapisz ustawienia</button>
           <span class="dam-settings-save-msg" id="settingsSaveMsg">Zapisano</span>
         </div>
       </div>
 
       <div class="dam-settings-search" role="search">
-        <label class="visually-hidden" for="damSettingsSearch">Szukaj w ustawieniach i skrĂłtach panelu</label>
+        <label class="visually-hidden" for="damSettingsSearch">Szukaj w ustawieniach i skrótach panelu</label>
         <i class="uil uil-search dam-settings-search__icon" aria-hidden="true"></i>
         <input type="search" id="damSettingsSearch" class="dam-settings-search__input"
-          placeholder="Szukaj: historia, motyw, Ĺ›cieĹĽka, wiadomoĹ›ciâ€¦" autocomplete="off" spellcheck="false">
+          placeholder="Szukaj: historia, motyw, ścieżka, wiadomości…" autocomplete="off" spellcheck="false">
         <p class="dam-settings-search__hint" id="damSettingsSearchHint" hidden></p>
-        <ul class="dam-settings-jump-results" id="damSettingsJumpResults" hidden role="listbox" aria-label="SkrĂłty do paneli"></ul>
+        <ul class="dam-settings-jump-results" id="damSettingsJumpResults" hidden role="listbox" aria-label="Skróty do paneli"></ul>
       </div>
 
-      <nav class="dam-settings-jump" aria-label="Filtr sekcji ustawieĹ„" id="damSettingsFilter">
+      <nav class="dam-settings-jump" aria-label="Filtr sekcji ustawień" id="damSettingsFilter">
         <button type="button" class="dam-settings-jump__chip is-active" data-filter="all" aria-pressed="true">Wszystko</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="profile" aria-pressed="false"><i class="uil uil-user" aria-hidden="true"></i> Profil</button>
-        <button type="button" class="dam-settings-jump__chip" data-filter="appearance" aria-pressed="false"><i class="uil uil-palette" aria-hidden="true"></i> WyglÄ…d</button>
+        <button type="button" class="dam-settings-jump__chip" data-filter="appearance" aria-pressed="false"><i class="uil uil-palette" aria-hidden="true"></i> Wygląd</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="disk" aria-pressed="false"><i class="uil uil-folder" aria-hidden="true"></i> Dysk</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="prefs" aria-pressed="false"><i class="uil uil-sliders-v" aria-hidden="true"></i> Preferencje</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="integrations" aria-pressed="false"><i class="uil uil-link" aria-hidden="true"></i> Integracje</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="notify" aria-pressed="false"><i class="uil uil-users-alt" aria-hidden="true"></i> Powiadomienia</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="naming" aria-pressed="false"><i class="uil uil-tag-alt" aria-hidden="true"></i> Nazewnictwo</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="instructions" aria-pressed="false"><i class="uil uil-book-open" aria-hidden="true"></i> Instrukcje</button>
-        <button type="button" class="dam-settings-jump__clear" data-filter="all" id="damSettingsFilterClear" aria-label="WyczyĹ›Ä‡ filtr, pokaĹĽ wszystkie karty" title="PokaĹĽ wszystkie"><i class="uil uil-times" aria-hidden="true"></i></button>
+        <button type="button" class="dam-settings-jump__clear" data-filter="all" id="damSettingsFilterClear" aria-label="Wyczyść filtr, pokaż wszystkie karty" title="Pokaż wszystkie"><i class="uil uil-times" aria-hidden="true"></i></button>
       </nav>
 
       <div class="dam-settings-grid" id="damSettingsGrid">
         <section class="dam-widget dam-sw--profile" id="damProfile" data-section="profile"
-          data-search="profil profile imiÄ™ imie nazwa stanowisko telefon email e-mail rola konto">
+          data-search="profil profile imię imie nazwa stanowisko telefon email e-mail rola konto">
           <div class="dam-widget__head">
             <h2 class="dam-widget__title"><i class="uil uil-user-circle" aria-hidden="true"></i> Profil</h2>
-            <p class="dam-widget__meta">Jak wyĹ›wietlamy CiÄ™ w panelu. ImiÄ™, stanowisko i telefon moĹĽesz zmieniÄ‡. E-mail i rola pochodzÄ… z konta (bez edycji).</p>
+            <p class="dam-widget__meta">Jak wyświetlamy Cię w panelu. Imię, stanowisko i telefon możesz zmienić. E-mail i rola pochodzą z konta (bez edycji).</p>
           </div>
           <div class="dam-widget__body">
             <div class="dam-sw-profile">
               <div class="dam-sw-profile__avatar" id="settingProfileAvatar" aria-hidden="true">?</div>
               <div class="dam-sw-profile__fields">
                 <div class="dam-sw-field dam-sw-field--full">
-                  <label for="settingProfileName">WyĹ›wietlana nazwa</label>
+                  <label for="settingProfileName">Wyświetlana nazwa</label>
                   <input type="text" id="settingProfileName" autocomplete="name">
                 </div>
                 <div class="dam-sw-field">
@@ -135,10 +135,10 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         </section>
 
         <section class="dam-widget dam-sw--appearance" id="damAppearance" data-section="appearance"
-          data-search="wyglÄ…d wyglad motyw theme jasny ciemny dark light kolor akcent accent fiolet purple">
+          data-search="wygląd wyglad motyw theme jasny ciemny dark light kolor akcent accent fiolet purple">
           <div class="dam-widget__head">
-            <h2 class="dam-widget__title"><i class="uil uil-palette" aria-hidden="true"></i> WyglÄ…d panelu</h2>
-            <p class="dam-widget__meta">Kolor akcentu (menu, przyciski, podĹ›wietlenia) oraz jasny / ciemny motyw. Kolory tagĂłw produktĂłw (smak, typ, opakowanie) zostajÄ… bez zmian.</p>
+            <h2 class="dam-widget__title"><i class="uil uil-palette" aria-hidden="true"></i> Wygląd panelu</h2>
+            <p class="dam-widget__meta">Kolor akcentu (menu, przyciski, podświetlenia) oraz jasny / ciemny motyw. Kolory tagów produktów (smak, typ, opakowanie) zostają bez zmian.</p>
           </div>
           <div class="dam-widget__body">
             <div class="dam-sw-block">
@@ -159,29 +159,29 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
               <p class="dam-sw-block__label">Kolor akcentu</p>
               <div class="dam-accent-presets" id="damAccentPresets" role="listbox" aria-label="Gotowe kolory"></div>
               <div class="dam-accent-custom">
-                <label for="settingAccentColor" class="visually-hidden">WĹ‚asny kolor</label>
+                <label for="settingAccentColor" class="visually-hidden">Własny kolor</label>
                 <input type="color" id="settingAccentColor" value="#AB54DB" data-dam-tip="Wybierz dowolny kolor akcentu">
                 <div class="dam-sw-field dam-sw-field--inline">
                   <label for="settingAccentHex">Kod koloru</label>
                   <input type="text" id="settingAccentHex" value="#AB54DB" maxlength="7" spellcheck="false">
                 </div>
-                <button type="button" class="dam-sw-btn dam-sw-btn--ghost" id="settingAccentReset" data-dam-tip="Przywraca domyĹ›lny fiolet panelu">PrzywrĂłÄ‡ domyĹ›lny</button>
+                <button type="button" class="dam-sw-btn dam-sw-btn--ghost" id="settingAccentReset" data-dam-tip="Przywraca domyślny fiolet panelu">Przywróć domyślny</button>
               </div>
               <div class="dam-accent-preview" aria-hidden="true">
                 <button type="button" class="dam-sw-btn dam-sw-btn--primary" tabindex="-1">Przycisk</button>
                 <span class="dam-accent-preview__link">Link aktywny</span>
                 <span class="dam-accent-preview__dot"></span>
               </div>
-              <p class="dam-accent-note">Zmiana dziaĹ‚a od razu na caĹ‚ym panelu. Zapisz ustawienia, ĹĽeby pĂłĹşniej wrĂłciÄ‡ do tego samego wyboru.</p>
+              <p class="dam-accent-note">Zmiana działa od razu na całym panelu. Zapisz ustawienia, żeby później wrócić do tego samego wyboru.</p>
             </div>
           </div>
         </section>
 
         <section class="dam-widget dam-sw--disk" id="damDisk" data-section="disk"
-          data-search="dysk disk Ĺ›cieĹĽka sciezka path marketing folder urzÄ…dzenie urzadzenie device archiwum polska eksport">
+          data-search="dysk disk ścieżka sciezka path marketing folder urządzenie urzadzenie device archiwum polska eksport">
           <div class="dam-widget__head">
-            <h2 class="dam-widget__title"><i class="uil uil-folder" aria-hidden="true"></i> UrzÄ…dzenia i Ĺ›cieĹĽki Marketing</h2>
-            <p class="dam-widget__meta">Ta sama karta co w profilu: Ĺ›cieĹĽka <strong>tylko dla tego urzÄ…dzenia</strong>. WskaĹĽ folder przyciskiem Folder (nie musisz klepaÄ‡ Ĺ›cieĹĽki). Root musi zawieraÄ‡: <strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>
+            <h2 class="dam-widget__title"><i class="uil uil-folder" aria-hidden="true"></i> Urządzenia i ścieżki Marketing</h2>
+            <p class="dam-widget__meta">Ta sama karta co w profilu: ścieżka <strong>tylko dla tego urządzenia</strong>. Wskaż folder przyciskiem Folder (nie musisz klepać ścieżki). Root musi zawierać: <strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>
           </div>
           <div class="dam-widget__body">
             <div id="damDevicePathsRoot"></div>
@@ -192,18 +192,18 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           </div>
         </section>
 
-        <!-- Preferencje tuĹĽ po Dysk: para Bento 7+5 (bez dziury obok UrzÄ…dzeĹ„) -->
+        <!-- Preferencje tuż po Dysk: para Bento 7+5 (bez dziury obok Urządzeń) -->
         <section class="dam-widget dam-sw--prefs" id="damPrefs" data-section="prefs"
-          data-search="preferencje prefs podpowiedzi tooltips marka brand synology bezpieczeĹ„stwo bezpieczenstwo usuwanie">
+          data-search="preferencje prefs podpowiedzi tooltips marka brand synology bezpieczeństwo bezpieczenstwo usuwanie">
           <div class="dam-widget__head">
             <h2 class="dam-widget__title"><i class="uil uil-sliders-v" aria-hidden="true"></i> Preferencje</h2>
-            <p class="dam-widget__meta">Drobne wygodne przeĹ‚Ä…czniki: podpowiedzi, marki na starcie, Synology oraz bezpieczne usuwanie.</p>
+            <p class="dam-widget__meta">Drobne wygodne przełączniki: podpowiedzi, marki na starcie, Synology oraz bezpieczne usuwanie.</p>
           </div>
           <div class="dam-widget__body">
-            <div class="dam-sw-row" data-search="podpowiedzi tooltips tooltip opis hover wskazĂłwki wskazowki">
+            <div class="dam-sw-row" data-search="podpowiedzi tooltips tooltip opis hover wskazówki wskazowki">
               <div>
                 <p class="dam-sw-row__name">Pokazuj podpowiedzi</p>
-                <p class="dam-sw-row__desc">KrĂłtkie opisy po najechaniu na przyciski</p>
+                <p class="dam-sw-row__desc">Krótkie opisy po najechaniu na przyciski</p>
               </div>
               <label class="dam-toggle" for="settingTooltips">
                 <input type="checkbox" id="settingTooltips" checked>
@@ -233,10 +233,10 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
                 <span class="dam-toggle-thumb"></span>
               </label>
             </div>
-            <div class="dam-sw-row" data-search="synology drive udostÄ™pnij udostepnij share galeria">
+            <div class="dam-sw-row" data-search="synology drive udostępnij udostepnij share galeria">
               <div>
                 <p class="dam-sw-row__name">Synology Drive</p>
-                <p class="dam-sw-row__desc">Przycisk UdostÄ™pnij w galerii wizualizacji</p>
+                <p class="dam-sw-row__desc">Przycisk Udostępnij w galerii wizualizacji</p>
               </div>
               <label class="dam-toggle" for="settingSynology">
                 <input type="checkbox" id="settingSynology" checked>
@@ -245,10 +245,10 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
               </label>
             </div>
             <div class="dam-sw-row dam-sw-row--security" id="settingSafeDeleteRow"
-              data-search="usuwanie usuĹ„ usun bezpieczne bezpiecznie bezpieczeĹ„stwo bezpieczenstwo hold delete hold-to-delete przytrzymaj destrukcja kasowanie">
+              data-search="usuwanie usuń usun bezpieczne bezpiecznie bezpieczeństwo bezpieczenstwo hold delete hold-to-delete przytrzymaj destrukcja kasowanie">
               <div>
                 <p class="dam-sw-row__name">Bezpieczne usuwanie</p>
-                <p class="dam-sw-row__desc">Przyciski UsuĹ„ wymagajÄ… przytrzymania (~1 s). WyĹ‚Ä…czenie = zwykĹ‚y klik. Zapis w profilu (baza).</p>
+                <p class="dam-sw-row__desc">Przyciski Usuń wymagają przytrzymania (~1 s). Wyłączenie = zwykły klik. Zapis w profilu (baza).</p>
               </div>
               <label class="dam-toggle" for="settingSafeDelete">
                 <input type="checkbox" id="settingSafeDelete" checked>
@@ -269,43 +269,43 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
               <span class="dam-settings-badge-ro" id="damSettingsChangeHistoryBadge">Admin</span>
             </div>
             <p class="dam-widget__meta">
-              Globalna historia jak <strong>Historia statusĂłw</strong> w Eksplorerze: oĹ› czasu, filtry F/X/D/â’, hashtagi #lc_,
-              kopiuj / drzewo / przywrĂłÄ‡ - dla <strong>wszystkich</strong> produktĂłw. To samo (skrĂłt) na pasku Wizualizacji (ADMIN ON).
+              Globalna historia jak <strong>Historia statusów</strong> w Eksplorerze: oś czasu, filtry F/X/D/−, hashtagi #lc_,
+              kopiuj / drzewo / przywróć - dla <strong>wszystkich</strong> produktów. To samo (skrót) na pasku Wizualizacji (ADMIN ON).
             </p>
           </div>
           <div class="dam-widget__body">
             <div class="dam-sw-row" data-search="historia zmian dysk odswiez podglad panel globalny">
               <div>
                 <p class="dam-sw-row__name">Ostatnia zmiana</p>
-                <p class="dam-sw-row__desc" id="damSettingsChangeHistoryHint">Wczytywanieâ€¦</p>
+                <p class="dam-sw-row__desc" id="damSettingsChangeHistoryHint">Wczytywanie…</p>
               </div>
               <div class="dam-changelog-settings__actions">
-                <button type="button" class="geex-btn geex-btn--sm" id="damSettingsChangeHistoryRefresh" data-dam-tip="OdĹ›wieĹĽ listÄ™ z mostu 8766">
-                  <i class="uil uil-refresh" aria-hidden="true"></i> OdĹ›wieĹĽ
+                <button type="button" class="geex-btn geex-btn--sm" id="damSettingsChangeHistoryRefresh" data-dam-tip="Odśwież listę z mostu 8766">
+                  <i class="uil uil-refresh" aria-hidden="true"></i> Odśwież
                 </button>
                 <button type="button" class="geex-btn geex-btn--sm geex-btn--primary" id="damSettingsChangeHistoryBtn"
                   aria-haspopup="dialog" aria-expanded="false"
-                  data-dam-tip="OtwĂłrz peĹ‚ny panel Historii zmian (jak Historia statusĂłw)">
-                  <i class="uil uil-external-link-alt" aria-hidden="true"></i> OtwĂłrz panel
+                  data-dam-tip="Otwórz pełny panel Historii zmian (jak Historia statusów)">
+                  <i class="uil uil-external-link-alt" aria-hidden="true"></i> Otwórz panel
                 </button>
               </div>
             </div>
             <div class="dam-changelog-history dam-changelog-history--panel dam-life-hist-host" id="damSettingsChangeHistoryPanel" data-dam-no-tip="1">
-              <div class="dam-life-hist__empty"><p>Wczytywanie historiiâ€¦</p></div>
+              <div class="dam-life-hist__empty"><p>Wczytywanie historii…</p></div>
             </div>
           </div>
         </section>
 
         <section class="dam-widget dam-sw--integrations" id="damIntegrations" data-section="integrations"
-          data-search="integracje asana teams microsoft entra ldap synology oauth poĹ‚Ä…czenia polaczenia">
+          data-search="integracje asana teams microsoft entra ldap synology oauth połączenia polaczenia">
           <div class="dam-widget__head">
             <h2 class="dam-widget__title"><i class="uil uil-link" aria-hidden="true"></i> Integracje</h2>
-            <p class="dam-widget__meta">PoĹ‚Ä…cz AsanÄ™ i Microsoft (Teams, Outlook), gdy bÄ™dziesz gotowy. Tokeny zostajÄ… na tym komputerze.</p>
+            <p class="dam-widget__meta">Połącz Asanę i Microsoft (Teams, Outlook), gdy będziesz gotowy. Tokeny zostają na tym komputerze.</p>
           </div>
           <div class="dam-widget__body">
-            <div id="damIntegrationsList"><p class="dam-widget__meta">Wczytywanie statusuâ€¦</p></div>
+            <div id="damIntegrationsList"><p class="dam-widget__meta">Wczytywanie statusu…</p></div>
             <p class="dam-settings-legal-row">
-              <a href="privacy.html">PrywatnoĹ›Ä‡</a>
+              <a href="privacy.html">Prywatność</a>
               <a href="terms.html">Regulamin</a>
               <a href="consents.html">Zgody</a>
             </p>
@@ -315,13 +315,13 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         <section class="dam-widget dam-sw--notify" id="damNotificationGroups" data-section="notify"
           data-search="powiadomienia notify email e-mail grafik odbiorcy lista">
           <div class="dam-widget__head">
-            <h2 class="dam-widget__title"><i class="uil uil-users-alt" aria-hidden="true"></i> Powiadomienia do grafikĂłw</h2>
-            <p class="dam-widget__meta">Lista osĂłb, ktĂłre dostanÄ… e-mail przy zgĹ‚oszeniu zapotrzebowania. Po zmianie kliknij Zapisz ustawienia.</p>
+            <h2 class="dam-widget__title"><i class="uil uil-users-alt" aria-hidden="true"></i> Powiadomienia do grafików</h2>
+            <p class="dam-widget__meta">Lista osób, które dostaną e-mail przy zgłoszeniu zapotrzebowania. Po zmianie kliknij Zapisz ustawienia.</p>
           </div>
           <div class="dam-widget__body">
             <div class="dam-notify-toolbar">
               <div class="dam-sw-field">
-                <label for="damNotifyName">ImiÄ™ i nazwisko</label>
+                <label for="damNotifyName">Imię i nazwisko</label>
                 <input type="text" id="damNotifyName" placeholder="np. Anna Kowalska">
               </div>
               <div class="dam-sw-field">
@@ -330,31 +330,31 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
               </div>
               <button type="button" class="dam-sw-btn dam-sw-btn--primary" id="damNotifyAdd"><i class="uil uil-plus" aria-hidden="true"></i> Dodaj</button>
             </div>
-            <div id="damNotificationGroupsList" class="dam-notify-list"><p class="dam-widget__meta">Wczytywanieâ€¦</p></div>
+            <div id="damNotificationGroupsList" class="dam-notify-list"><p class="dam-widget__meta">Wczytywanie…</p></div>
           </div>
         </section>
 
         <section class="dam-widget dam-sw--naming" id="damNamingPolicy" data-section="naming"
-          data-search="nazewnictwo naming noĹ›niki nosniki doypack baton folia short label">
+          data-search="nazewnictwo naming nośniki nosniki doypack baton folia short label">
           <div class="dam-widget__head">
             <div class="dam-widget__head-row">
-              <h2 class="dam-widget__title"><i class="uil uil-tag-alt" aria-hidden="true"></i> Nazewnictwo noĹ›nikĂłw</h2>
+              <h2 class="dam-widget__title"><i class="uil uil-tag-alt" aria-hidden="true"></i> Nazewnictwo nośników</h2>
               <span class="dam-settings-badge-ro">Tylko odczyt</span>
             </div>
-            <p class="dam-widget__meta">Jak program nazywa noĹ›niki na ekranie i jak skracamy je na dysku Windows. Tego nie zmieniasz tutaj - obowiÄ…zuje dla wszystkich.</p>
+            <p class="dam-widget__meta">Jak program nazywa nośniki na ekranie i jak skracamy je na dysku Windows. Tego nie zmieniasz tutaj - obowiązuje dla wszystkich.</p>
           </div>
           <div class="dam-widget__body">
             <div class="dam-sw-row">
               <div>
                 <p class="dam-sw-row__name">W programie (ekran)</p>
-                <p class="dam-sw-row__desc" id="damNamingUiRule">PeĹ‚ne nazwy: DOYPACK, FOLIA, BATONâ€¦</p>
+                <p class="dam-sw-row__desc" id="damNamingUiRule">Pełne nazwy: DOYPACK, FOLIA, BATON…</p>
               </div>
               <span class="dam-naming-pill dam-naming-pill--ui" id="damNamingUiBadge">label_pl</span>
             </div>
             <div class="dam-sw-row">
               <div>
                 <p class="dam-sw-row__name">Na dysku Windows</p>
-                <p class="dam-sw-row__desc" id="damNamingDiskRule">SkrĂłty folderĂłw: DOY, FOL, BATâ€¦</p>
+                <p class="dam-sw-row__desc" id="damNamingDiskRule">Skróty folderów: DOY, FOL, BAT…</p>
               </div>
               <span class="dam-naming-pill dam-naming-pill--disk" id="damNamingDiskBadge">short</span>
             </div>
@@ -364,13 +364,13 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         </section>
 
         <section class="dam-widget dam-sw--instructions" id="damProgramInstructions" data-section="instructions"
-          data-search="instrukcje program instructions reguĹ‚y reguly pi policy">
+          data-search="instrukcje program instructions reguły reguly pi policy">
           <div class="dam-widget__head">
             <div class="dam-widget__head-row">
               <h2 class="dam-widget__title"><i class="uil uil-book-open" aria-hidden="true"></i> Instrukcje programu</h2>
               <span class="dam-settings-badge-ro">Tylko odczyt</span>
             </div>
-            <p class="dam-widget__meta">StaĹ‚e zasady DAM (statusy, nazewnictwo, zakazy). MoĹĽesz je przeczytaÄ‡, ale nie edytujesz ich z tego okna.</p>
+            <p class="dam-widget__meta">Stałe zasady DAM (statusy, nazewnictwo, zakazy). Możesz je przeczytać, ale nie edytujesz ich z tego okna.</p>
             <p id="damInstrMeta" class="dam-widget__meta"></p>
           </div>
           <div class="dam-widget__body">
@@ -382,7 +382,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           <div class="dam-sw-system">
             <div>
               <h2 class="dam-widget__title"><i class="uil uil-info-circle" aria-hidden="true"></i> System</h2>
-              <p class="dam-widget__meta">DAM Â· <a href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> Â· 2026</p>
+              <p class="dam-widget__meta">DAM · <a href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> · 2026</p>
               <p id="settingRestartMsg" class="dam-sw-msg"></p>
             </div>
             <button type="button" class="dam-sw-btn dam-sw-btn--primary" id="settingRestartApp" data-dam-tip="Zamyka i otwiera ponownie okno aplikacji">Zrestartuj okno</button>
@@ -395,24 +395,24 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
             <span class="dam-dz__icon" aria-hidden="true"><i class="uil uil-exclamation-triangle"></i></span>
             <div class="dam-dz__intro">
               <h2 class="dam-dz__title" id="damDangerZoneTitle">Strefa ryzyka</h2>
-              <p class="dam-dz__lead">Operacje lokalne w tej przeglÄ…darce. WymagajÄ… <strong>przytrzymania</strong> (~0,3&nbsp;s) - zwykĹ‚e klikniÄ™cie nic nie usunie. Po akcji masz kilka sekund na <strong>Cofnij</strong>. Nie rusza plikĂłw na dysku.</p>
+              <p class="dam-dz__lead">Operacje lokalne w tej przeglądarce. Wymagają <strong>przytrzymania</strong> (~0,3&nbsp;s) - zwykłe kliknięcie nic nie usunie. Po akcji masz kilka sekund na <strong>Cofnij</strong>. Nie rusza plików na dysku.</p>
             </div>
           </header>
           <div class="dam-dz__ops">
             <article class="dam-dz__card">
               <div class="dam-dz__card-copy">
-                <h3 class="dam-dz__card-title">WyczyĹ›Ä‡ lokalne ustawienia</h3>
-                <p class="dam-dz__card-desc">Zresetuje motyw, kolor akcentu, podpowiedzi i inne preferencje zapisane w tej przeglÄ…darce. <strong>Nie wylogowuje</strong>. <strong>Nie usuwa plikĂłw</strong> z dysku ani z repozytorium.</p>
-                <p class="dam-dz__cooldown">Po wyczyszczeniu moĹĽesz cofnÄ…Ä‡ przez ok. 8&nbsp;s (toast Cofnij).</p>
+                <h3 class="dam-dz__card-title">Wyczyść lokalne ustawienia</h3>
+                <p class="dam-dz__card-desc">Zresetuje motyw, kolor akcentu, podpowiedzi i inne preferencje zapisane w tej przeglądarce. <strong>Nie wylogowuje</strong>. <strong>Nie usuwa plików</strong> z dysku ani z repozytorium.</p>
+                <p class="dam-dz__cooldown">Po wyczyszczeniu możesz cofnąć przez ok. 8&nbsp;s (toast Cofnij).</p>
               </div>
               <!-- Offset: akcja na dole karty po LEWEJ - nigdy w slocie Confirm / obok Restart (prawa, fiolet) -->
               <div class="dam-dz__card-foot">
                 <button type="button" class="dam-dz__btn" id="damClearLocalPrefs"
-                  data-dam-label="Wyczysc lokalne ustawienia"
+                  data-dam-label="Wyczyść lokalne ustawienia"
                   data-dam-hint="Przytrzymaj, aby wyczyscic lokalne ustawienia"
                   data-dam-hold-ms="300">
                   <i class="uil uil-trash-alt" aria-hidden="true"></i>
-                  <span>WyczyĹ›Ä‡ lokalne ustawienia</span>
+                  <span>Wyczyść lokalne ustawienia</span>
                 </button>
               </div>
             </article>
@@ -429,13 +429,13 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-api.js?v=privgate20260721a"></script>
   <script src="./assets/js/dam-i18n.js?v=assocfix20260721h"></script>
   <script src="./assets/js/dam-runtime.js?v=20260719app1"></script>
-  <script src="./assets/js/dam-version.js?v=2.0.6"></script>
-	<script src="./assets/js/dam-shell.js?v=i18nboot20260721d"></script>
-  <script src="./assets/js/dam-loader.js?v=loaderfab20260720g"></script>
+  <script src="./assets/js/dam-version.js?v=3.1.0"></script>
+	<script src="./assets/js/dam-shell.js?v=ship20260721v310"></script>
+  <script src="./assets/js/dam-loader.js?v=loaderhold3s20260721a"></script>
   <script src="./assets/js/dam-tooltips.js?v=lifehistmodal20260721b"></script>
   <script src="./assets/js/dam-paths.js?v=selects20260720a"></script>
-  <script src="./assets/js/dam-labels.js?v=20260719namePl1"></script>
-  <script src="./assets/js/dam-badges.js?v=usab20260720c"></script>
+  <script src="./assets/js/dam-labels.js?v=ship20260721v310"></script>
+  <script src="./assets/js/dam-badges.js?v=ship20260721v310"></script>
   <script src="./assets/js/dam-tag-edit.js?v=privgate20260721a"></script>
   <script src="./assets/js/dam-user-prefs.js?v=viztb20260720d"></script>
   <script src="./assets/js/dam-danger.js?v=safedel20260720b"></script>
@@ -444,7 +444,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-settings.js?v=privgate20260721a"></script>
   <script src="./assets/js/dam-device-paths.js?v=devicepath20260720c"></script>
   <style id="damDangerZoneCss">
-    /* PeĹ‚na szerokoĹ›Ä‡ w siatce 12-col (bez .dam-sw--danger w dam-settings.css) */
+    /* Pełna szerokość w siatce 12-col (bez .dam-sw--danger w dam-settings.css) */
     .dam-settings-grid > .dam-sw--danger,
     .dam-settings-grid > .dam-danger-zone,
     #damDangerZone {
@@ -586,7 +586,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
     .dam-dz__btn.dam-danger-holding {
       background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 14%, transparent);
     }
-    /* Trash odbiorcĂłw (lista powiadomieĹ„) - cichy do hold; czerwieĹ„ = destrukcja, nie dekor */
+    /* Trash odbiorców (lista powiadomień) - cichy do hold; czerwień = destrukcja, nie dekor */
     .dam-notify-row__remove {
       background: transparent !important;
       border: 1px solid #d9d6e2 !important;
@@ -619,14 +619,14 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       var btn = document.getElementById("damClearLocalPrefs");
       if (btn) {
         window.DamDanger.bind(btn, {
-          label: "Wyczysc lokalne ustawienia",
+          label: "Wyczyść lokalne ustawienia",
           hint: "Przytrzymaj, aby wyczyscic lokalne ustawienia",
           holdMs: 300,
           onConfirm: function () {
             var snap = snapshot();
             Object.keys(snap).forEach(function (k) { localStorage.removeItem(k); });
             window.DamDanger.toastUndo({
-              message: "Wyczyszczono lokalne ustawienia tej przeglÄ…darki (nie pliki na dysku)",
+              message: "Wyczyszczono lokalne ustawienia tej przeglądarki (nie pliki na dysku)",
               actionLabel: "Cofnij",
               duration: 8000,
               onUndo: function () {
@@ -638,7 +638,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           }
         });
       }
-      /* Hold na trash odbiorcĂłw - bez edycji dam-settings.js (delegacja data-dam-hold-delete) */
+      /* Hold na trash odbiorców - bez edycji dam-settings.js (delegacja data-dam-hold-delete) */
       function armNotifyTrash(root) {
         (root || document).querySelectorAll(".dam-notify-row__remove").forEach(function (el) {
           if (el.getAttribute("data-dam-hold-delete") != null) return;

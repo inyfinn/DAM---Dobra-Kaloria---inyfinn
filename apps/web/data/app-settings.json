@@ -9,12 +9,14 @@
   "version": 2,
   "updated_at": "2026-07-18",
   "instructions": {
-    "count": 54,
-    "version": 10,
+    "count": 56,
+    "version": 11,
     "source_kv": "program-instructions",
     "critical_ids": [
+      "ui.viz_modal_parity_explorer",
       "device-scoped-base-paths",
       "data.lang_provenance_only",
+      "data.lang_uk_not_ukraine",
       "meta.source_of_truth",
       "naming.carrier_ui_vs_disk",
       "ops.change_log_is_truth",

@@ -45,7 +45,7 @@ Musza wynikac z nazwy folderu/pliku albo z recznego oznaczenia.
 
 1. Zbierz tekst: nazwa folderu + nazwy plikow w rewizji.
 2. Wyciagnij tokeny (`_CZ_`, `CZ_SK`, `_GB_`, ...).
-3. Aliasy ze slownika (`en`->`gb`, `ua`->`uk`).
+3. Aliasy ze slownika (`en`/`uk`->`gb` English/UK; `ukr`->`ua`). HARD: `UK` != Ukraina (`UA`).
 4. Jesli brand=DK: zapewnij `pl` na liscie (baseline).
 5. Jesli brand=GC: **nie** doklejaj `gb`.
 6. Zastosuj override reczne (wygrywa zawsze).

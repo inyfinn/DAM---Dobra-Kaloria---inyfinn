@@ -1,8 +1,41 @@
 {
-  "version": 10,
+  "version": 11,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-20T23:35:00+02:00",
+  "updated_at": "2026-07-21T02:05:00+02:00",
   "instructions": [
+    {
+      "id": "ui.viz_modal_parity_explorer",
+      "must": [
+        "Layout kanoniczny modalu podgladu = #damVizModal .dam-viz-modal__body (Wizualizacje); #damMediaPreview .dam-viz-modal__body (Eksplorator) prezentuje sie tak samo (studio frames, spacing, hierarchia)",
+        "WARIANT produktu = inny INDEKS (pasek chipow indeks/jezyk); nigdy perspektywa FRONT/BACK/ENFACE jako 'wariant produktu'",
+        "Warianty wizualizacji = tylko 3 ramki studio: TLO | PERSPEKTYWA | JAKOSC (.dam-media-preview__studio-frame)",
+        "W Eksploratorze (#damMediaPreview): nie renderowac WARIANTY MATERIALU jako paska perspektyw tego samego produktu; perspektywy tylko w ramce PERSPEKTYWA; pasek wariantow tylko przy realnie roznych indeksach produktu",
+        "W Wizualizacjach (#damVizModal): pasek wariantow produktu (indeksy) + 3 ramki studio TLO/PERSPEKTYWA/JAKOSC",
+        "Przycisk 'Pokaz wszystkie' w modalu: pokazuje wszystkie pliki wizualizacji (z tlem/bez tla, wszystkie perspektywy i jakosci), pogrupowane ponizej, z fade-in / transition (szanuj prefers-reduced-motion)",
+        "W Brandingu WARIANTY MATERIALU (.variant-grid): tylko siblingi RASTER/VIDEO (JPG/PNG/…); PSD/PSB/AI/PDF/INDD/EPS tylko jako CTA w belce akcji (SourceMount / Przejdz Folder PSD) — wszedzie"
+      ],
+      "body_pl": "User 2026-07-21 HARD: modal Wizualizacje jest wzorcem; Eksplorator ma ten sam layout. Semantyka: wariant = produkt (indeks), nie perspektywa. Osie pliku wizualizacji = Tlo / Perspektywa / Jakosc. Pokaz wszystkie = ekspand pelnej siatki plikow z animacja. Zrodla PSD/PSB/AI/PDF nigdy jako kafelki WARIANTY — tylko podlinkowane w belce akcji.",
+      "category": "ui",
+      "must_not": [
+        "Traktowac paska perspektyw (FRONT/BACK/ENFACE) jako wariantow produktu w #damMediaPreview",
+        "Pokazywac w Eksploratorze 'WARIANTY MATERIALU' zlozonego z roznych perspektyw tego samego indeksu",
+        "Pokazywac PSD/PSB/AI/PDF/INDD/EPS jako kafelki w .dam-media-preview__variant-grid",
+        "Usuwac paska wariantow produktu (rozne indeksy) z #damVizModal",
+        "Mylnie nazywac JAKOSC (XL/L/S) wariantem produktu"
+      ],
+      "priority": "critical",
+      "title_pl": "Modal: Wizualizacje = kanon; Eksplorator parity; wariant = indeks",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/web/assets/css/dam-branding.css",
+        "apps/web/assets/css/dam-brand.css"
+      ]
+    },
     {
       "id": "explorer.create_modal_ux",
       "must": [
@@ -91,7 +124,8 @@
       "must_not": [
         "Domyslac jezyka z marki, rynku, screenshota opakowania",
         "Traktowac 'indeks X = jezyk Y' jako regula biznesowa zamiast dowodu z nazwy",
-        "Nadpisywac reczne override przy rebuildzie indeksu"
+        "Nadpisywac reczne override przy rebuildzie indeksu",
+        "Mapowac UK na Ukraina / Ukrainian (UK = United Kingdom / English)"
       ],
       "priority": "critical",
       "title_pl": "Jezyk tylko z dowodu (folder/plik/override) - zero zgadywania",
@@ -99,13 +133,45 @@
         "lang-overrides",
         "program-instructions"
       ],
-      "updated_at": "2026-07-18",
+      "updated_at": "2026-07-21",
       "related_code": [
         "agents/shared/lang-provenance.md",
         "apps/web/scripts/build-file-index.py",
         "apps/web/data/lang-overrides.json",
+        "apps/web/data/naming-dictionary.json",
         "apps/web/assets/js/dam-viz.js",
         "apps/web/assets/js/dam-labels.js"
+      ]
+    },
+    {
+      "id": "data.lang_uk_not_ukraine",
+      "must": [
+        "UK / GB / EN = English / Wielka Brytania (alias en+uk -> gb)",
+        "Ukraina tylko kod UA (opcjonalnie ukr -> ua)",
+        "Chip short: GB (lub EN po aliasie); nigdy UK jako Ukraina",
+        "DamLabels.normalizeLangCode / naming-dictionary.lang_aliases jako zrodlo mapowania"
+      ],
+      "body_pl": "HARD 2026-07-21: na opakowaniach EN/GB to angielski, nie ukrainski. ISO: Ukraina=UA, United Kingdom czesto GB/UK. Stary blad slownika (uk=Ukraina, alias ua->uk) etykietowal angielskie warianty jako Ukraina (np. 6300785 CIASTO SLIWKOWE). Poprawka globalna w naming-dictionary, DamLabels, build-file-index i file-index.",
+      "category": "data",
+      "must_not": [
+        "Etykietowac kod UK jako Ukraina",
+        "Aliasiowac UA do UK",
+        "Myliti locale UI i18n (ISO 639-1 uk=ukrainski w dam-i18n) z kodami rynku produktu"
+      ],
+      "priority": "critical",
+      "title_pl": "UK/GB/EN = English; Ukraina = tylko UA",
+      "related_kv": [
+        "naming-dictionary",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/data/naming-dictionary.json",
+        "apps/web/assets/js/dam-labels.js",
+        "apps/web/assets/js/dam-badges.js",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/scripts/build-file-index.py",
+        "agents/shared/lang-provenance.md"
       ]
     },
     {

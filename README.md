@@ -4,6 +4,9 @@ Wewnetrzny **Digital Asset Management** dla opakowan i materialow marketingowych
 
 Repozytorium: [inyfinn/DAM---Dobra-Kaloria---inyfinn](https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn)
 
+**Aktualna wersja:** 3.1.0 (2026-07-21). Gap audit: [gents/shared/gap-audit-2026-07-21.md](agents/shared/gap-audit-2026-07-21.md).
+
+
 > Cel produktowy: jedna instalacja (udzial / serwer plikow), skrot na pulpicie, **uruchom i dziala** - bez Dockera i bez recznej konfiguracji portow.  
 > Sesja jest zawsze zwiazana z **ID maszyny + kontem Windows** (ADR-008), zeby nikt nie dziedziczyl cudzego logowania.
 

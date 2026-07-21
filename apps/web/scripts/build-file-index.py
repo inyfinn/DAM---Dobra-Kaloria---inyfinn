@@ -61,17 +61,18 @@ ROOTS = [
 ]
 
 _LANGS_FROM_DICT = NAMING.get("languages") or {}
+# HARD: UK/GB/EN = English / Wielka Brytania. Ukraina = UA (ISO). NIGDY UK→Ukraina.
 KNOWN_LANG_CODES = frozenset(_LANGS_FROM_DICT.keys()) | frozenset({
-    "pl", "de", "gb", "uk", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
+    "pl", "de", "gb", "ua", "uk", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
     "fr", "it", "es", "nl", "ru", "hr", "si", "bg", "at", "be", "dk",
     "se", "no", "fi", "pt", "gr", "ie", "ch",
 })
-LANG_ALIASES = dict(NAMING.get("lang_aliases") or {"en": "gb", "ua": "uk"})
+LANG_ALIASES = dict(NAMING.get("lang_aliases") or {"en": "gb", "uk": "gb", "ukr": "ua"})
 LANG_LABELS = {
     "pl": "Polska",
     "de": "Niemcy",
     "gb": "Wielka Brytania",
-    "uk": "Ukraina",
+    "ua": "Ukraina",
     "cz": "Czechy",
     "sk": "Slowacja",
     "hu": "Wegry",
@@ -1358,10 +1359,10 @@ def parse_langs_from_text(text: str) -> list[str]:
     for code in _LANG_CODES_ORDER:
         if re.search(rf"(^|[^a-z]){re.escape(code)}([^a-z]|$)", n):
             mapped = LANG_ALIASES.get(code, code)
-            if mapped == "en":
+            if mapped == "en" or mapped == "uk":
                 mapped = "gb"
-            if mapped == "ua":
-                mapped = "uk"
+            if mapped == "ukr":
+                mapped = "ua"
             if mapped in KNOWN_LANG_CODES and mapped not in seen:
                 seen.add(mapped)
                 found.append(mapped)
@@ -1398,10 +1399,10 @@ def apply_brand_lang_baseline(brand: str, raw_langs: list[str] | None) -> tuple[
         c = (code or "").lower().strip()
         if not c or c in ("?", "unknown", "xx"):
             continue
-        if c == "en":
+        if c == "en" or c == "uk":
             c = "gb"
-        if c == "ua":
-            c = "uk"
+        if c == "ukr":
+            c = "ua"
         if c not in seen and c in KNOWN_LANG_CODES:
             seen.add(c)
             raw.append(c)
@@ -1469,10 +1470,10 @@ def apply_lang_overrides(products: list[dict]) -> None:
             seen: set[str] = set()
             for raw in manual:
                 code = LANG_ALIASES.get(str(raw).strip().lower(), str(raw).strip().lower())
-                if code == "en":
+                if code == "en" or code == "uk":
                     code = "gb"
-                if code == "ua":
-                    code = "uk"
+                if code == "ukr":
+                    code = "ua"
                 if code in KNOWN_LANG_CODES and code not in seen:
                     seen.add(code)
                     cleaned.append(code)

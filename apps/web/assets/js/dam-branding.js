@@ -2349,9 +2349,38 @@
 
   window.__damBrandingThumbFallback = function (img) {
     if (!img) return;
-    if (img.dataset.fallbackTried === "1") {
-      img.classList.add("dam-viz-thumb__img--placeholder");
+    function replaceWithReadablePlaceholder() {
       img.onerror = null;
+      var card = img.closest(".dam-branding-card, .dam-viz-card");
+      var chip = card && card.querySelector(".dam-branding-card__id-chip, .dam-branding-id-chip");
+      var titleEl = card && card.querySelector(".dam-viz-card__title");
+      var idText =
+        (chip && (chip.getAttribute("data-copy-id") || chip.getAttribute("data-tag-value") || chip.textContent || "").trim()) ||
+        "";
+      var nameText = (titleEl && (titleEl.textContent || "").trim()) || "";
+      var path = img.getAttribute("data-path") || "";
+      var base = path ? path.split(/[/\\]/).pop() : "";
+      var label = idText || nameText || base || "plik";
+      var wrap = document.createElement("div");
+      wrap.className = "dam-viz-thumb__noviz dam-branding-thumb__icon dam-branding-thumb__icon--nosync";
+      wrap.setAttribute("role", "img");
+      wrap.setAttribute("aria-label", "Podglad niedostepny: " + label);
+      wrap.title = "Podglad niedostepny (Synology Drive / brak sync)";
+      wrap.innerHTML =
+        '<i class="uil uil-cloud-slash" aria-hidden="true"></i>' +
+        "<span>Podglad niedostepny</span>" +
+        (label
+          ? '<span class="dam-branding-thumb__nosync-id">' +
+            String(label)
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;") +
+            "</span>"
+          : "");
+      if (img.parentNode) img.replaceWith(wrap);
+    }
+    if (img.dataset.fallbackTried === "1") {
+      replaceWithReadablePlaceholder();
       return;
     }
     img.dataset.fallbackTried = "1";
@@ -2363,7 +2392,7 @@
       img.src = mediaUrl(path, { path: path, name: name, media_type: mt });
       return;
     }
-    img.classList.add("dam-viz-thumb__img--placeholder");
+    replaceWithReadablePlaceholder();
   };
 
   function bindVideoPosterFallback(vid, bridgePoster) {
@@ -2565,7 +2594,7 @@
     var keyOnly = !!extra.keyVisuale;
     var skipTagKey = extra.skipTagKey || "";
 
-    var list = (index.assets || []).filter(function (a) {
+    var list = ((index && index.assets) || []).filter(function (a) {
       if (!includeArchive() && isArchived(a)) return false;
       if (!assetMatchesDateRange(a)) return false;
       if (skipTagKey) {
@@ -3391,7 +3420,7 @@
         if (!ids.length) return;
         var chips = ids
           .map(function (id) {
-            var asset = (index.assets || []).find(function (a) {
+            var asset = ((index && index.assets) || []).find(function (a) {
               return a.id === id;
             });
             var label = asset ? marketingDisplayId(asset) : id;
@@ -3663,7 +3692,7 @@
 
   function openModal(id, siblings) {
     var assetsById = {};
-    (index.assets || []).forEach(function (a) {
+    ((index && index.assets) || []).forEach(function (a) {
       assetsById[a.id] = a;
     });
     var primary = assetsById[id];
@@ -3715,7 +3744,7 @@
     var list = (campaigns && campaigns.campaigns) || [];
     if (!list.length) {
       var map = {};
-      (index.assets || []).forEach(function (a) {
+      ((index && index.assets) || []).forEach(function (a) {
         if (!a.campaign_id) return;
         map[a.campaign_id] = (map[a.campaign_id] || 0) + 1;
       });

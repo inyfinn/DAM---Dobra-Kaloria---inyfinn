@@ -1,6 +1,6 @@
 ﻿# PROGRESS.md - DAM - Dobra Kaloria - Inyfinn
 
-Ostatnia aktualizacja: **2026-07-20**
+Ostatnia aktualizacja: **2026-07-21** (v3.1.0 gap ship)
 
 | Obszar | Status | Notatka |
 |--------|--------|---------|
@@ -130,3 +130,13 @@ Pakiet rownoleglych agentow (Viz toolbar admin changelog, Branding page-size OK,
 
 Pełna mapa: [`agents/shared/release-2026-07-20-evening.md`](agents/shared/release-2026-07-20-evening.md)
 
+## 2026-07-21 — v3.1.0 gap ship
+
+| Obszar | Status | Notatka |
+|--------|--------|---------|
+| Viz modal parity (INDEX, show-all, tint, actions) | **done** | Worker A Pass 12/12 |
+| Branding WARIANTY raster-only + noSrcGrid | **done** | PSD only SourceMount |
+| Shift-minus −20% global + Shift-gate | **done** | 21px bubble |
+| UTF-8 PL chrome (Pokaż/Włącz) | **done** | Worker B |
+| UK→GB naming-dictionary | **done** | uk≠Ukraina |
+| Audyt | **done** | gents/shared/gap-audit-2026-07-21.md |

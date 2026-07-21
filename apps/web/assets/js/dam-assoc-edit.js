@@ -80,15 +80,12 @@
   }
 
   function ensureFileIndex() {
-    if (global.DamSearch && typeof global.DamSearch.load === "function") {
-      return global.DamSearch.load().then(function (bundle) {
-        return bundle.fileIndex || global._DAM_FILE_INDEX || null;
-      });
-    }
     if (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products) {
       return Promise.resolve(global._DAM_FILE_INDEX);
     }
-    return fetch("data/file-index.json?v=" + Date.now())
+    /* Prefer direct fetch over DamSearch.load — large indexes must not hang
+       enrichLinkedProducts / assoc paint (gapship20260721a). */
+    var fetchP = fetch("data/file-index.json?v=" + Date.now())
       .then(function (r) {
         return r.json();
       })
@@ -96,6 +93,26 @@
         global._DAM_FILE_INDEX = d;
         return d;
       });
+    if (global.DamSearch && typeof global.DamSearch.load === "function") {
+      var searchP = global.DamSearch.load()
+        .then(function (bundle) {
+          return (bundle && bundle.fileIndex) || global._DAM_FILE_INDEX || null;
+        })
+        .catch(function () {
+          return null;
+        });
+      return Promise.race([
+        fetchP,
+        searchP.then(function (fi) {
+          return fi || fetchP;
+        }),
+      ]).catch(function () {
+        return global._DAM_FILE_INDEX || { products: [] };
+      });
+    }
+    return fetchP.catch(function () {
+      return global._DAM_FILE_INDEX || { products: [] };
+    });
   }
 
   function productIndexOf(p) {
@@ -153,6 +170,8 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
+  /** Keyboard Shift latch — mouseleave/mousemove must not clear while key is down. */
+  var shiftKeyDown = false;
 
   /** Wstrzykuje style: Bento grid + pkt 36 podglad LEWA | lista PRAWA (nie ruszamy plikow agentow). */
   function ensureInjectedCss() {
@@ -217,8 +236,8 @@
       /* Tagi jak na kartach viz (DK / BATONY / Mixy / PL) — nie tiny cut-off */
       ".dam-assoc-edit-popover__tags{display:flex;flex-wrap:wrap;gap:4px;max-height:none;overflow:visible;margin-top:4px;}" +
       ".dam-assoc-edit-popover__tags .dam-viz-badge{" +
-      "font-size:calc(var(--dam-tag-fs-pill,10.5px) + 1px)!important;font-weight:500;" +
-      "padding:5px 11px!important;border-radius:999px;letter-spacing:.01em;line-height:1.25;" +
+      "font-size:calc((var(--dam-tag-fs-pill,10.5px) + 1px) * var(--dam-badge-scale,1.05))!important;font-weight:500;" +
+      "padding:calc(5px * var(--dam-badge-scale,1.05)) calc(11px * var(--dam-badge-scale,1.05))!important;border-radius:999px;letter-spacing:.01em;line-height:1.25;" +
       "white-space:nowrap;max-width:100%;cursor:default;}" +
       ".dam-assoc-edit-popover__tags .dam-viz-badge--index{cursor:copy;user-select:text;}" +
       ".dam-assoc-edit-popover__row-actions{display:flex;align-items:center;gap:3px;flex-shrink:0;padding-right:4px;}" +
@@ -231,16 +250,46 @@
       ".dam-assoc-edit-popover__opt.is-preview-active{background:#f8f4fd!important;" +
       "box-shadow:inset 0 0 0 1px #e2d3f2;}" +
       ".dam-assoc-edit-popover__pinned{max-height:min(22dvh,160px);overflow-x:hidden;overflow-y:auto;}" +
-      /* Shift+hover quick assoc UX (grid produktu / materialow) */
+      /* Shift-gated bubble minus (brandComposer20260721a / minusGlobal): ×0.8 (26→21) Geex chip;
+         assoc-item + all-file quality tiles (studio show-all). NOT flat fat disc. */
       ".dam-media-preview__assoc-grid.is-shift-hover," +
-      ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-item{position:relative;}" +
-      ".dam-media-preview__assoc-item{position:relative;}" +
-      ".dam-media-preview__assoc-item .dam-assoc-quick-minus{" +
-      "position:absolute;top:4px;right:4px;z-index:3;width:28px;height:28px;border-radius:999px;" +
-      "border:1px solid #e7b4bc;background:#fff;color:#e2506b;display:none;align-items:center;justify-content:center;" +
-      "cursor:pointer;box-shadow:0 4px 12px rgba(28,24,44,.12);padding:0;}" +
-      ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-item:hover .dam-assoc-quick-minus," +
-      ".dam-media-preview__assoc-item.is-shift-target .dam-assoc-quick-minus{display:inline-flex;}" +
+      ".dam-media-preview__variant-grid.is-shift-hover," +
+      ".dam-media-preview__all-files.is-shift-hover," +
+      ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-item," +
+      ".dam-media-preview__variant-grid.is-shift-hover .dam-media-preview__assoc-item{position:relative;}" +
+      ".dam-media-preview__assoc-item," +
+      ".dam-media-preview__all-file{position:relative;}" +
+      ".dam-media-preview__assoc-item .dam-assoc-quick-minus," +
+      ".dam-media-preview__all-file .dam-assoc-quick-minus{" +
+      "position:absolute;top:3px;right:3px;z-index:4;width:21px;height:21px;border-radius:999px;" +
+      "border:1px solid rgba(255,255,255,.96);" +
+      "background:linear-gradient(180deg,color-mix(in srgb,#ef4444 88%,#fff) 0%,#dc2626 100%);" +
+      "color:#fff;display:inline-flex;align-items:center;justify-content:center;" +
+      "cursor:pointer;padding:0;box-sizing:border-box;" +
+      "box-shadow:0 1px 2px rgba(40,36,56,.10),0 2px 6px rgba(220,38,38,.16);" +
+      "opacity:0!important;visibility:hidden!important;pointer-events:none!important;" +
+      "transition:opacity .12s ease,visibility .12s ease,background .12s ease,transform .12s ease,box-shadow .12s ease;}" +
+      ".dam-media-preview__assoc-grid.is-shift-hover .dam-assoc-quick-minus," +
+      ".dam-media-preview__variant-grid.is-shift-hover .dam-assoc-quick-minus," +
+      ".dam-media-preview__all-files.is-shift-hover .dam-assoc-quick-minus," +
+      ".dam-assoc-quick-minus.is-shift-visible{" +
+      "opacity:1!important;visibility:visible!important;pointer-events:auto!important;}" +
+      ".dam-media-preview__assoc-grid.is-shift-hover .dam-assoc-quick-minus:hover," +
+      ".dam-media-preview__variant-grid.is-shift-hover .dam-assoc-quick-minus:hover," +
+      ".dam-media-preview__all-files.is-shift-hover .dam-assoc-quick-minus:hover," +
+      ".dam-assoc-quick-minus.is-shift-visible:hover," +
+      ".dam-assoc-quick-minus.is-hover-force{" +
+      "opacity:1!important;visibility:visible!important;pointer-events:auto!important;" +
+      "background:linear-gradient(180deg,#ef4444 0%,#dc2626 100%);transform:scale(1.05);" +
+      "box-shadow:0 1px 2px rgba(40,36,56,.12),0 3px 8px rgba(220,38,38,.22);}" +
+      ".dam-assoc-quick-minus.is-holding{" +
+      "background:linear-gradient(180deg,#dc2626 0%,#b91c1c 100%);transform:scale(.98);" +
+      "box-shadow:inset 0 0 0 1px rgba(255,255,255,.85),0 2px 6px rgba(220,38,38,.2);}" +
+      ".dam-assoc-quick-minus i{" +
+      "font-size:0!important;line-height:0;pointer-events:none;display:block;" +
+      "width:9px;height:2.5px;background:#fff;border-radius:2px;" +
+      "box-shadow:0 0 0 0.5px rgba(255,255,255,.35);}" +
+      ".dam-assoc-quick-minus i::before{content:none!important;display:none!important;}" +
       ".dam-media-preview__assoc-plus-tile{" +
       "display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;" +
       "min-height:96px;border:1.5px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 45%,#d7d7e0);" +
@@ -1562,118 +1611,393 @@
     });
   }
 
+  /** Shift+minus na kafelku WARIANTY MATERIAŁU — usuwa wariant z grupy. */
+  function quickRemoveVariantAssoc(ctx, variantId) {
+    if (!canEditAssoc() || !variantId) return Promise.resolve();
+    var prevVids = collectLinkedIdsFromCtx(ctx, "variant");
+    var nextVids = prevVids.filter(function (id) {
+      return id !== variantId;
+    });
+    if (nextVids.length === prevVids.length) return Promise.resolve();
+    var prevPids = collectLinkedIdsFromCtx(ctx, "product");
+    return saveAssociations(ctx, prevPids, nextVids, { silentToast: true }).then(function () {
+      if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+      if (global.DamDanger && typeof global.DamDanger.toastUndo === "function") {
+        global.DamDanger.toastUndo({
+          message: "Usunieto 1 wariant",
+          actionLabel: "Cofnij",
+          duration: 8000,
+          onUndo: function () {
+            saveAssociations(ctx, prevPids, prevVids, { silentToast: true }).then(function () {
+              if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+            });
+          },
+        });
+      } else {
+        toast("Usunieto wariant");
+      }
+    });
+  }
+
+  var ALLFILE_SOFT_HIDE_KEY = "dam_allfile_soft_hide_v1";
+
+  function readAllFileSoftHide() {
+    try {
+      var raw = sessionStorage.getItem(ALLFILE_SOFT_HIDE_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeAllFileSoftHide(arr) {
+    try {
+      sessionStorage.setItem(ALLFILE_SOFT_HIDE_KEY, JSON.stringify(arr || []));
+    } catch (e) {
+      /* ignore quota */
+    }
+  }
+
+  function allFileTileKey(tile) {
+    if (!tile) return "";
+    var path = String(tile.getAttribute("data-all-path") || "").trim().toLowerCase().replace(/\\/g, "/");
+    if (path) return "path:" + path;
+    var vidx = tile.getAttribute("data-all-vidx");
+    if (vidx != null && String(vidx) !== "") return "vidx:" + String(vidx);
+    var sib = tile.getAttribute("data-all-sib");
+    if (sib != null && String(sib) !== "" && String(sib) !== "-1") return "sib:" + String(sib);
+    var lab = tile.querySelector(".dam-media-preview__all-file-label");
+    var labT = lab ? String(lab.textContent || "").trim() : "";
+    return labT ? "lab:" + labT : "";
+  }
+
   /**
-   * Shift+hover UX — JEDNA sciezka dla branding (#damMediaPreviewAssoc) i viz
-   * (#damVizModalAssoc / .dam-viz-modal__assoc-pane). Te same klasy CSS.
+   * Soft-hide all-file quality tile from "Pokaż wszystkie" picker only.
+   * NEVER deletes disk files. Session-scoped; undo restores tile.
+   */
+  function softHideAllFileTile(tile) {
+    var key = allFileTileKey(tile);
+    if (!key || !tile) return;
+    var list = readAllFileSoftHide();
+    if (list.indexOf(key) < 0) {
+      list.push(key);
+      writeAllFileSoftHide(list);
+    }
+    tile.style.display = "none";
+    tile.setAttribute("data-soft-hidden", "1");
+    var labelEl = tile.querySelector(".dam-media-preview__all-file-label");
+    var label = labelEl ? String(labelEl.textContent || "").trim() : "plik";
+    if (global.DamDanger && typeof global.DamDanger.toastUndo === "function") {
+      global.DamDanger.toastUndo({
+        message: "Ukryto " + label + " z listy (nie usunięto z dysku)",
+        actionLabel: "Cofnij",
+        duration: 8000,
+        onUndo: function () {
+          var next = readAllFileSoftHide().filter(function (k) {
+            return k !== key;
+          });
+          writeAllFileSoftHide(next);
+          tile.style.display = "";
+          tile.removeAttribute("data-soft-hidden");
+        },
+      });
+    } else {
+      toast("Ukryto " + label + " z listy (nie usunięto z dysku)");
+    }
+  }
+
+  function applyAllFileSoftHide(host) {
+    if (!host) return;
+    var hide = readAllFileSoftHide();
+    if (!hide.length) return;
+    host.querySelectorAll(".dam-media-preview__all-file").forEach(function (tile) {
+      var key = allFileTileKey(tile);
+      if (key && hide.indexOf(key) >= 0) {
+        tile.style.display = "none";
+        tile.setAttribute("data-soft-hidden", "1");
+      }
+    });
+  }
+
+  /**
+   * Shared hold-to-remove minus control.
+   * Parent may be BUTTON (.all-file) → use span[role=button] (no nested <button>).
+   */
+  function wireQuickMinusControl(item, shiftHost, onClick, tip) {
+    if (!item || item.querySelector(".dam-assoc-quick-minus")) return null;
+    var nestSafe = String(item.tagName || "").toUpperCase() === "BUTTON";
+    var btn = document.createElement(nestSafe ? "span" : "button");
+    if (!nestSafe) btn.type = "button";
+    btn.className = "dam-assoc-quick-minus";
+    btn.setAttribute("role", "button");
+    btn.tabIndex = 0;
+    var tipText = tip || "Shift + przytrzymaj 2 s, aby usunąć";
+    btn.setAttribute("aria-label", tipText);
+    btn.title = tipText;
+    btn.setAttribute("data-dam-tip", tipText);
+    btn.innerHTML = '<i class="uil uil-minus" aria-hidden="true"></i>';
+    var holdTimer = null;
+    var HOLD_MS = 2000;
+    function clearHold() {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+      btn.classList.remove("is-holding");
+    }
+    function shiftArmed() {
+      return !!(
+        shiftKeyDown ||
+        (shiftHost && shiftHost.classList.contains("is-shift-hover"))
+      );
+    }
+    function startHold(e) {
+      if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
+      if (!e.shiftKey && !shiftArmed()) {
+        clearHold();
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      clearHold();
+      btn.classList.add("is-holding");
+      holdTimer = setTimeout(function () {
+        holdTimer = null;
+        btn.classList.remove("is-holding");
+        onClick();
+      }, HOLD_MS);
+    }
+    btn.addEventListener("pointerdown", startHold);
+    btn.addEventListener("pointerup", clearHold);
+    btn.addEventListener("pointerleave", clearHold);
+    btn.addEventListener("pointercancel", clearHold);
+    btn.addEventListener("keydown", startHold);
+    btn.addEventListener("keyup", clearHold);
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    item.appendChild(btn);
+    return btn;
+  }
+
+  function bindShiftHoverHost(host, opts) {
+    if (!host || host._damShiftUxBound) return;
+    host._damShiftUxBound = true;
+    opts = opts || {};
+    function setShift(on) {
+      var active = !!(on || shiftKeyDown);
+      host.classList.toggle("is-shift-hover", active);
+      host.querySelectorAll(".dam-assoc-quick-minus").forEach(function (btn) {
+        btn.classList.toggle("is-shift-visible", active);
+      });
+      if (active && typeof opts.onShiftOn === "function") opts.onShiftOn();
+    }
+    host.addEventListener("mousemove", function (e) {
+      setShift(!!e.shiftKey || shiftKeyDown);
+    });
+    host.addEventListener("mouseenter", function (e) {
+      setShift(!!e.shiftKey || shiftKeyDown);
+    });
+    host.addEventListener("mouseleave", function () {
+      if (!shiftKeyDown) setShift(false);
+    });
+  }
+
+  function resolveModalScope(el) {
+    return (
+      (el &&
+        el.closest &&
+        el.closest("#damVizModal, #damMediaPreview, .dam-viz-modal-overlay, .dam-media-preview-overlay")) ||
+      document.getElementById("damVizModal") ||
+      document.getElementById("damMediaPreview") ||
+      el
+    );
+  }
+
+  /**
+   * Wire Shift-minus onto studio "Pokaż wszystkie" quality tiles (.all-file).
+   * Action = soft-hide from picker (session), never disk delete.
+   */
+  function wireStudioAllFiles(host) {
+    if (!host || !canEditAssoc()) return;
+    ensureInjectedCss();
+    if (typeof window.__damInjectUiHardFixes === "function") {
+      window.__damInjectUiHardFixes();
+    }
+    applyAllFileSoftHide(host);
+    var panels = host.matches && host.matches(".dam-media-preview__all-files")
+      ? [host]
+      : Array.prototype.slice.call(host.querySelectorAll(".dam-media-preview__all-files"));
+    if (!panels.length && host.querySelectorAll(".dam-media-preview__all-file").length) {
+      panels = [host];
+    }
+    panels.forEach(function (panel) {
+      panel.querySelectorAll(".dam-media-preview__all-file").forEach(function (tile) {
+        if (tile.getAttribute("data-soft-hidden") === "1") return;
+        wireQuickMinusControl(
+          tile,
+          panel,
+          function () {
+            softHideAllFileTile(tile);
+          },
+          "Shift + przytrzymaj 2 s, aby ukryć z listy (nie usuwa z dysku)"
+        );
+      });
+      bindShiftHoverHost(panel);
+      if (shiftKeyDown) {
+        panel.classList.add("is-shift-hover");
+        panel.querySelectorAll(".dam-assoc-quick-minus").forEach(function (btn) {
+          btn.classList.add("is-shift-visible");
+        });
+      }
+    });
+    ensureGlobalShiftKeyLatch(resolveModalScope(host));
+  }
+
+  function applyShiftToScope(scope, down) {
+    if (!scope) return;
+    scope
+      .querySelectorAll(
+        ".dam-media-preview__assoc-grid, .dam-media-preview__variant-grid, .dam-media-preview__all-files"
+      )
+      .forEach(function (grid) {
+        grid.classList.toggle("is-shift-hover", !!down);
+        grid.querySelectorAll(".dam-assoc-quick-minus").forEach(function (btn) {
+          btn.classList.toggle("is-shift-visible", !!down);
+        });
+        if (down && grid.classList.contains("dam-media-preview__assoc-grid")) {
+          var plus = grid.querySelector(".dam-media-preview__assoc-plus-tile");
+          if (!plus) {
+            grid.dispatchEvent(new MouseEvent("mousemove", { shiftKey: true, bubbles: true }));
+          }
+        }
+      });
+  }
+
+  function ensureGlobalShiftKeyLatch(scopeEl) {
+    if (!scopeEl || scopeEl._damShiftKeyBound) return;
+    scopeEl._damShiftKeyBound = true;
+    function scopeOpen() {
+      if (!scopeEl.isConnected) return false;
+      var style = window.getComputedStyle(scopeEl);
+      if (style.display === "none" || style.visibility === "hidden") return false;
+      if (scopeEl.hasAttribute("hidden")) return false;
+      if (scopeEl.getAttribute("aria-hidden") === "true") return false;
+      return true;
+    }
+    function onKey(e) {
+      if (e.key !== "Shift") return;
+      shiftKeyDown = e.type === "keydown";
+      if (!scopeOpen()) return;
+      applyShiftToScope(scopeEl, shiftKeyDown);
+    }
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("keyup", onKey, true);
+    window.addEventListener(
+      "blur",
+      function () {
+        shiftKeyDown = false;
+        applyShiftToScope(scopeEl, false);
+      },
+      true
+    );
+  }
+
+  /**
+   * Shift+hover UX — JEDNA sciezka globalna:
+   * branding (#damMediaPreviewAssoc) + viz (#damVizModalAssoc) + studio all-files
+   * + WARIANTY / explorer media-preview assoc tiles.
    * - item z data-product-id → minus usuwa produkt
    * - item z data-linked-asset-idx (material) → minus odcina biezacy produkt od assetu
+   * - item--variant / data-variant-id → minus usuwa wariant materiałuu
+   * - .all-file → soft-hide z pickera (nie kasuje dysku)
    * - plus na koncu → Edytuj wszystko (openEditPicker)
    */
   function ensureShiftHoverAssocUx(assocEl, ctx) {
     if (!assocEl || !ctx || !canEditAssoc()) return;
     ensureInjectedCss();
-    assocEl.querySelectorAll(".dam-media-preview__assoc-grid").forEach(function (grid) {
-      /* Re-bind minus na nowo wstawionych itemach po async load. */
-      function ensurePlusTile() {
-        var plus = grid.querySelector(".dam-media-preview__assoc-plus-tile");
-        if (plus) return plus;
-        plus = document.createElement("button");
-        plus.type = "button";
-        plus.className = "dam-media-preview__assoc-plus-tile";
-        plus.setAttribute("aria-label", "Edytuj wszystko — dodaj skojarzenie");
-        plus.innerHTML = '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span>';
-        plus.addEventListener("click", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
-          var editBtn = col.querySelector("[data-assoc-edit-all]");
-          if (editBtn) {
-            editBtn.click();
-            return;
-          }
-          openEditPicker(col, "product", ctx);
-        });
-        grid.appendChild(plus);
-        return plus;
-      }
-
-      function wireMinus(item, onClick) {
-        if (item.querySelector(".dam-assoc-quick-minus")) return;
-        var btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "dam-assoc-quick-minus";
-        btn.setAttribute("aria-label", "Usuń skojarzenie");
-        btn.title = "Usuń skojarzenie";
-        btn.innerHTML = '<i class="uil uil-minus" aria-hidden="true"></i>';
-        btn.addEventListener("click", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          onClick();
-        });
-        item.appendChild(btn);
-      }
-
-      grid.querySelectorAll(".dam-media-preview__assoc-item[data-product-id]").forEach(function (item) {
-        wireMinus(item, function () {
-          quickRemoveProductAssoc(ctx, item.getAttribute("data-product-id") || "");
-        });
-      });
-
-      /* Materialy: data-linked-asset-idx siedzi na .assoc-thumb-btn, nie na item. */
-      grid.querySelectorAll(".dam-media-preview__assoc-item--asset").forEach(function (item) {
-        wireMinus(item, function () {
-          var idxBtn = item.querySelector("[data-linked-asset-idx]");
-          var idx = parseInt(idxBtn && idxBtn.getAttribute("data-linked-asset-idx"), 10) || 0;
-          var materials = (ctx.materialsList || ctx.shownPrimaries || []).slice();
-          var asset = materials[idx] || ctx.asset;
-          var pid =
-            (ctx.productContext && ctx.productContext.id) ||
-            (ctx.groupContext && ctx.groupContext.product_id) ||
-            "";
-          if (!asset || !pid) {
-            var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
-            openEditPicker(col, "product", Object.assign({}, ctx, { asset: asset || ctx.asset }));
-            return;
-          }
-          quickUnlinkProductFromMaterial(ctx, asset, pid);
-        });
-      });
-
-      function setShift(on) {
-        grid.classList.toggle("is-shift-hover", !!on);
-        if (on) ensurePlusTile();
-      }
-
-      if (!grid._damShiftUxBound) {
-        grid._damShiftUxBound = true;
-        grid.addEventListener("mousemove", function (e) {
-          setShift(!!e.shiftKey);
-        });
-        grid.addEventListener("mouseenter", function (e) {
-          setShift(!!e.shiftKey);
-        });
-        grid.addEventListener("mouseleave", function () {
-          setShift(false);
-        });
-      }
-    });
-
-    if (!assocEl._damShiftKeyBound) {
-      assocEl._damShiftKeyBound = true;
-      function onKey(e) {
-        if (e.key !== "Shift") return;
-        assocEl.querySelectorAll(".dam-media-preview__assoc-grid").forEach(function (grid) {
-          if (!grid.matches(":hover")) return;
-          grid.classList.toggle("is-shift-hover", e.type === "keydown");
-          if (e.type === "keydown") {
-            var ev = new MouseEvent("mousemove", { shiftKey: true, bubbles: true });
-            grid.dispatchEvent(ev);
-          }
-        });
-      }
-      document.addEventListener("keydown", onKey, true);
-      document.addEventListener("keyup", onKey, true);
+    if (typeof window.__damInjectUiHardFixes === "function") {
+      window.__damInjectUiHardFixes();
     }
+    var scope = resolveModalScope(assocEl) || assocEl;
+
+    assocEl
+      .querySelectorAll(".dam-media-preview__assoc-grid, .dam-media-preview__variant-grid")
+      .forEach(function (grid) {
+        var isVariantGrid = grid.classList.contains("dam-media-preview__variant-grid");
+        function ensurePlusTile() {
+          /* brandComposer20260721a: material WARIANTY grid gets plus → Edytuj wszystko (variant). */
+          if (
+            isVariantGrid &&
+            !grid.classList.contains("dam-media-preview__variant-grid--material")
+          ) {
+            return null;
+          }
+          var plus = grid.querySelector(".dam-media-preview__assoc-plus-tile");
+          if (plus) return plus;
+          plus = document.createElement("button");
+          plus.type = "button";
+          plus.className = "dam-media-preview__assoc-plus-tile";
+          plus.setAttribute("aria-label", "Edytuj wszystko — dodaj skojarzenie");
+          plus.innerHTML = '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span>';
+          plus.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
+            var editBtn = col.querySelector("[data-assoc-edit-all]");
+            if (editBtn) {
+              editBtn.click();
+              return;
+            }
+            openEditPicker(col, isVariantGrid ? "variant" : "product", ctx);
+          });
+          grid.appendChild(plus);
+          return plus;
+        }
+
+        grid.querySelectorAll(".dam-media-preview__assoc-item[data-product-id]").forEach(function (item) {
+          wireQuickMinusControl(item, grid, function () {
+            quickRemoveProductAssoc(ctx, item.getAttribute("data-product-id") || "");
+          });
+        });
+
+        grid.querySelectorAll(".dam-media-preview__assoc-item--asset").forEach(function (item) {
+          wireQuickMinusControl(item, grid, function () {
+            var idxBtn = item.querySelector("[data-linked-asset-idx]");
+            var idx = parseInt(idxBtn && idxBtn.getAttribute("data-linked-asset-idx"), 10) || 0;
+            var materials = (ctx.materialsList || ctx.shownPrimaries || []).slice();
+            var asset = materials[idx] || ctx.asset;
+            var pid =
+              (ctx.productContext && ctx.productContext.id) ||
+              (ctx.groupContext && ctx.groupContext.product_id) ||
+              "";
+            if (!asset || !pid) {
+              var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
+              openEditPicker(col, "product", Object.assign({}, ctx, { asset: asset || ctx.asset }));
+              return;
+            }
+            quickUnlinkProductFromMaterial(ctx, asset, pid);
+          });
+        });
+
+        grid.querySelectorAll(".dam-media-preview__assoc-item--variant[data-variant-id]").forEach(function (item) {
+          wireQuickMinusControl(item, grid, function () {
+            quickRemoveVariantAssoc(ctx, item.getAttribute("data-variant-id") || "");
+          });
+        });
+
+        bindShiftHoverHost(grid, {
+          onShiftOn: function () {
+            ensurePlusTile();
+          },
+        });
+      });
+
+    /* Studio all-files live under modal (sibling of assoc pane) — wire globally. */
+    wireStudioAllFiles(scope);
+    ensureGlobalShiftKeyLatch(scope);
   }
 
   /** Odetnij produkt od materialu brandingowego (viz Shift+minus). */
@@ -1878,7 +2202,12 @@
         e.preventDefault();
         e.stopPropagation();
         var col = item.closest(".dam-media-preview__assoc-col");
-        if (col) openEditPicker(col, "product", ctx);
+        if (col) {
+          var kind = item.classList.contains("dam-media-preview__assoc-item--variant")
+            ? "variant"
+            : "product";
+          openEditPicker(col, kind, ctx);
+        }
       });
     });
   }
@@ -1889,6 +2218,8 @@
     /** Shift+/−/plus na panelu materialow (#damVizModalAssoc + branding linked). */
     bindMaterialsPane: bindMaterialsPane,
     ensureShiftHoverAssocUx: ensureShiftHoverAssocUx,
+    /** Shift-minus on studio .all-file tiles (soft-hide picker; no disk delete). */
+    wireStudioAllFiles: wireStudioAllFiles,
     enrichLinkedProducts: enrichLinkedProducts,
     openActionMenu: openActionMenu,
     closeActionMenu: closeActionMenu,

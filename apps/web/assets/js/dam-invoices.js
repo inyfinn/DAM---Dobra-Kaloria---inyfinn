@@ -43,27 +43,10 @@
   }
 
   function ensureCtaStyles() {
-    if (document.getElementById("damInvErpStyles")) return;
-    var style = document.createElement("style");
-    style.id = "damInvErpStyles";
-    style.textContent =
-      ".dam-inv-toolbar .dam-int-cta{" +
-      "display:inline-flex;align-items:center;justify-content:center;gap:6px;" +
-      "min-height:34px;padding:8px 12px;margin:0;font-family:inherit;font-size:12px;" +
-      "font-weight:500;line-height:1.2;border-radius:8px;border:1px solid #e7e7e7;" +
-      "background:#fff;color:#464255;text-decoration:none;cursor:pointer;" +
-      "box-shadow:none;-webkit-appearance:none;appearance:none;" +
-      "transition:background .15s ease,border-color .15s ease,color .15s ease}" +
-      ".dam-inv-toolbar .dam-int-cta:hover{border-color:var(--dam-primary,#ab54db);" +
-      "background:#fbf7fe;color:var(--dam-primary,#ab54db)}" +
-      ".dam-inv-toolbar .dam-int-cta:focus-visible{outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 55%,transparent);outline-offset:2px}" +
-      ".dam-inv-toolbar .dam-int-cta:disabled{opacity:.5;cursor:not-allowed}" +
-      ".dam-int-chip.dam-int-st{display:inline-flex;align-items:center;padding:4px 10px;" +
-      "border-radius:999px;font-size:11px;font-weight:600}" +
-      ".dam-int-st--ok{background:#e8f9f4;color:#00A389}" +
-      ".dam-int-st--wait{background:#fff8ec;color:#b87a00}" +
-      ".dam-int-st--danger{background:#feecec;color:#ff5653}";
-    document.head.appendChild(style);
+    /* Visual anatomy lives in assets/css/dam-invoices.css + dam-ui-cta.js */
+    if (window.DamUiCta && typeof DamUiCta.ensureStyles === "function") {
+      DamUiCta.ensureStyles();
+    }
   }
 
   function formatDate(str) {
@@ -81,7 +64,7 @@
   }
 
   function formatDateTime(str) {
-    if (!str) return "—";
+    if (!str) return "-";
     try {
       var d = new Date(str);
       return d.toLocaleString("pl-PL", {
@@ -382,11 +365,12 @@
     var admin = isAdmin();
     if (adminWrap) {
       adminWrap.hidden = !admin;
-      adminWrap.style.display = admin ? "inline-flex" : "none";
+      adminWrap.classList.toggle("is-visible", !!admin);
+      adminWrap.style.removeProperty("display");
     }
     if (legacyWrap) {
       legacyWrap.hidden = true;
-      legacyWrap.style.display = "none";
+      legacyWrap.style.removeProperty("display");
     }
     if (input) {
       input.addEventListener("change", function () {

@@ -58,11 +58,12 @@
 
   /* Pelne polskie znaki (2026-07-18) - "nauczylem sie" byla zasada bez diakrytykow,
      user wymaga poprawnych znakow WSZĘDZIE w projekcie. */
+  /* HARD: UK/GB/EN = English / Wielka Brytania. Ukraina = UA (ISO), NIE UK. */
   var LANG_LABELS = {
     pl: "Polska",
     de: "Niemcy",
     gb: "Wielka Brytania",
-    uk: "Ukraina",
+    ua: "Ukraina",
     cz: "Czechy",
     sk: "Słowacja",
     hu: "Węgry",
@@ -441,19 +442,25 @@
     return base;
   }
 
+  /** Canonical market code: EN/UK -> gb (English/UK). UKR -> ua. UA stays ua. */
+  function normalizeLangCode(code) {
+    var c = String(code || "").toLowerCase().trim();
+    if (!c) return "";
+    if (c === "en" || c === "uk") return "gb";
+    if (c === "ukr") return "ua";
+    return c;
+  }
+
   function langLabel(code) {
-    var c = String(code || "").toLowerCase();
-    if (c === "en") c = "gb";
-    if (c === "ua") c = "uk";
-    return LANG_LABELS[c] || (c ? c.toUpperCase() : "");
+    var c = normalizeLangCode(code);
+    if (!c || c === "?" || c === "unknown" || c === "xx") return c === "?" ? "?" : "";
+    return LANG_LABELS[c] || c.toUpperCase();
   }
 
   function langShort(code) {
-    var c = String(code || "").toLowerCase();
+    var c = normalizeLangCode(code);
     if (!c || c === "?" || c === "unknown" || c === "xx") return "?";
-    if (c === "en") c = "gb";
-    if (c === "ua") c = "uk";
-    return c ? c.toUpperCase() : "?";
+    return c.toUpperCase();
   }
 
   /** PL vs eksport z kanonicznej sciezki indeksu */
@@ -576,27 +583,23 @@
     var m;
     var found = [];
     while ((m = re.exec(u)) !== null) {
-      var c = m[1].toLowerCase();
-      if (c === "en") c = "gb";
-      if (c === "ua") c = "uk";
-      if (found.indexOf(c) === -1) found.push(c);
+      var c = normalizeLangCode(m[1]);
+      if (c && found.indexOf(c) === -1) found.push(c);
     }
     return found.length ? found[0] : "";
   }
 
   function vizLangsFromFile(f) {
     if (f && Array.isArray(f.langs) && f.langs.length) {
-      return f.langs.map(function (x) { return String(x).toLowerCase(); });
+      return f.langs.map(function (x) { return normalizeLangCode(x); }).filter(Boolean);
     }
     var u = String((f && (f.name || f.path)) || "").toUpperCase();
     var re = /(?:^|[-_ ])(PL|EN|GB|DE|CZ|SK|HU|HR|RO|BG|LT|LV|EE|UA|UK|RU|FR|IT|ES|NL|DK|SE|NO|FI|AR)(?:[-_. ]|$)/g;
     var m;
     var found = [];
     while ((m = re.exec(u)) !== null) {
-      var c = m[1].toLowerCase();
-      if (c === "en") c = "gb";
-      if (c === "ua") c = "uk";
-      if (found.indexOf(c) === -1) found.push(c);
+      var c = normalizeLangCode(m[1]);
+      if (c && found.indexOf(c) === -1) found.push(c);
     }
     return found;
   }
@@ -798,6 +801,7 @@
     carrierShort: carrierShort,
     carrierLabelLong: carrierLabelLong,
     carrierLabel: carrierLabel,
+    normalizeLangCode: normalizeLangCode,
     langLabel: langLabel,
     langShort: langShort,
     detectMarketFromPath: detectMarketFromPath,

@@ -515,9 +515,7 @@
       window.DamApi.me()
         .then(function () {
           if (!isAdminRole()) {
-            try {
-              localStorage.setItem(ADMIN_MODE_KEY, "0");
-            } catch (e) { /* ignore */ }
+            clearAdminChrome();
           }
           ensureAdminModeSwitch();
           try {
@@ -528,7 +526,18 @@
             );
           } catch (e2) { /* ignore */ }
         })
-        .catch(function () {});
+        .catch(function () {
+          /* Sesja nieważna / bridge down bez tokena: schowaj ADMIN natychmiast. */
+          clearAdminChrome();
+          ensureAdminModeSwitch();
+          try {
+            window.dispatchEvent(
+              new CustomEvent("dam:admin-mode", { detail: { on: false } })
+            );
+          } catch (e3) { /* ignore */ }
+        });
+    } else {
+      ensureAdminModeSwitch();
     }
   }
 
@@ -985,7 +994,7 @@
       } catch (eI18n) { /* keep defaults */ }
     }
     var year = new Date().getFullYear();
-    var ver = String(window.DAM_APP_VERSION || "2.0.7").replace(/^v/i, "");
+    var ver = String(window.DAM_APP_VERSION || "3.1.0").replace(/^v/i, "");
     var footer = ensureSidebarFooterEl();
     if (footer) {
       footer.innerHTML =
@@ -1140,7 +1149,27 @@
 
   var ADMIN_MODE_KEY = "dam_admin_mode";
 
+  /** Prawdziwa sesja (Bearer) - nie demo/qa i nie sam spoof dam_role. */
+  function hasValidSession() {
+    if (DAM_DEV_ALWAYS_ADMIN) return true;
+    var t = "";
+    try {
+      t =
+        (window.DamApi && typeof window.DamApi.token === "function" && window.DamApi.token()) ||
+        localStorage.getItem("dam_token") ||
+        "";
+    } catch (e) {
+      t = localStorage.getItem("dam_token") || "";
+    }
+    t = String(t || "").trim();
+    if (!t) return false;
+    if (t === "demo-admin-dev-token" || t === "qa") return false;
+    return true;
+  }
+
   function isAdminRole() {
+    /* HARD: niezalogowany NIE jest adminem - nawet przy dam_role=admin w localStorage. */
+    if (!hasValidSession()) return false;
     var role =
       (window.DamApi && typeof window.DamApi.role === "function" && window.DamApi.role()) ||
       localStorage.getItem("dam_role") ||
@@ -1152,9 +1181,26 @@
     return isAdminRole() && localStorage.getItem(ADMIN_MODE_KEY) === "1";
   }
 
+  function clearAdminChrome() {
+    try {
+      localStorage.setItem(ADMIN_MODE_KEY, "0");
+      localStorage.setItem("dam_viz_admin_mode", "0");
+    } catch (e) { /* ignore */ }
+    if (!hasValidSession()) {
+      try {
+        localStorage.removeItem("dam_role");
+      } catch (e2) { /* ignore */ }
+    }
+  }
+
   function setAdminMode(on) {
     var next = !!on && isAdminRole();
     localStorage.setItem(ADMIN_MODE_KEY, next ? "1" : "0");
+    if (!next) {
+      try {
+        localStorage.setItem("dam_viz_admin_mode", "0");
+      } catch (e0) { /* ignore */ }
+    }
     syncAdminModeSwitchUi();
     try {
       window.dispatchEvent(
@@ -1253,13 +1299,24 @@
     var input = document.getElementById("damAdminModeSwitch");
     var label = item && item.querySelector(".dam-admin-header-switch");
     if (!item || !input) return;
-    var admin = isAdminRole();
+    var isSignin = window.location.pathname.indexOf("signin") !== -1;
+    /* Tylko zalogowany admin widzi przełącznik - program-instructions admin.header_switch_only */
+    var admin = !isSignin && hasValidSession() && isAdminRole();
     item.hidden = !admin;
+    item.setAttribute("aria-hidden", admin ? "false" : "true");
     if (!admin) {
       input.checked = false;
+      input.disabled = true;
       if (label) label.classList.add("is-off");
+      clearAdminChrome();
+      try {
+        window.dispatchEvent(
+          new CustomEvent("dam:admin-mode", { detail: { on: false } })
+        );
+      } catch (e) { /* ignore */ }
       return;
     }
+    input.disabled = false;
     var on = localStorage.getItem(ADMIN_MODE_KEY) === "1";
     input.checked = on;
     if (label) label.classList.toggle("is-off", !on);
@@ -1270,10 +1327,20 @@
     if (!input || input._damAdminBound) return;
     input._damAdminBound = true;
     input.addEventListener("change", function () {
+      if (!isAdminRole()) {
+        input.checked = false;
+        setAdminMode(false);
+        return;
+      }
       setAdminMode(!!input.checked);
     });
     input.addEventListener("click", function (e) {
       e.stopPropagation();
+      if (!isAdminRole()) {
+        e.preventDefault();
+        input.checked = false;
+        setAdminMode(false);
+      }
     });
   }
 

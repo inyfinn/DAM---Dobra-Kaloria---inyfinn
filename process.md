@@ -1,4 +1,77 @@
-﻿## 2026-07-21 01:48 - INTERRUPT: branding→viz share (Shift/studio/loader/PL)
+﻿## 2026-07-21 03:05 - brandComposer: merge WARIANTY / UTF-8 / Shift edit on material tiles
+
+**Komenda/Akcja:** WORKER brandComposer20260721a — audit abandoned functional branding/explorer/global (~4h); ui-taste 12×/zone.
+
+**Log/Status:**
+1. G0-UTF8: `_fix_qmark_chrome_pl.py` repaired 14 strings in visualizations.html; branding.html restored from git after double-encode regression (`_repair_branding_html_utf8.py`). Bytes: zero `Poka?`/`W??cz`/FFFD on viz/explorer/branding/dashboard.
+2. G1-MERGE: confirmed code — single `.variant-grid--material`, `materialMode` hides studio/all-files dup, `paintAssoc()` never blocked.
+3. G1b-EDIT: `ensureShiftHoverAssocUx` — plus tile on `--material` variant grid → Edytuj wszystko (variant); Shift+click `--variant` items → `openEditPicker(..., "variant")` (was product).
+4. Token unified `?v=brandComposer20260721a` (HTML + JS inject hrefs).
+5. Gap doc: `agents/shared/gap-audit-brand-composer-2026-07-21.md`.
+
+**Efekt/Fix:** Functional parity code complete; UTF-8 chrome clean; material WARIANTY edit path fixed.
+
+**Test/Ewaluacja:**
+- `node --check` dam-assoc-edit.js / dam-media-preview.js — Pass.
+- Bytes audit 4 HTML — Pass G0.
+- Marker script: mergeVar, materialMode, 21px minus, paintAssoc — Pass.
+- Browser: signin UTF-8 `Pokaż` Pass; full modal QA **blocked** (auth Failed to fetch / invalid_credentials).
+
+**Źródła:** gap-audit-brand-composer-2026-07-21.md, dam-assoc-edit.js, dam-media-preview.js, tools/_bump_brandComposer20260721a.py.
+
+## 2026-07-21 02:25 - HARD UI: viz title gap / chip / Shift-minus / +N / fallback
+
+**Komenda/Akcja:** WORKER - 5 HARD defectow: title vs badges, branding ID chip, Shift-gated minus, +N up 5px, thumb fallback.
+
+**Log/Status:**
+1. Root cause title overlap: `margin-top: calc(10px/12px - 14px)` negative (-4/-2) + concurrent `dam-viz-modal.css` !important. Fix: margin-top 0, body gap 16px, title padding-top 6px; inject `#dam-uihard-fixes-20260721`.
+2. Branding chip: removed ellipsis/overflow:hidden; `width/min-width:max-content`, padding 16px, title-wrap overflow visible. Full `M-SHOP405510-06-26` on grid card.
+3. Minus: Shift-only (keydown latch `shiftKeyDown`); hide idle; tip "Shift + hold 2s". Removed studioqa always-visible from a3 styles. mouseleave no longer clears while Shift held.
+4. +N badge: `top: -1px` (was 4px, -5px).
+5. Thumb fallback: readable "podglad niedostepny" + label/ID; branding `__damBrandingThumbFallback` → nosync placeholder.
+6. Cache-bust `?v=uiHard20260721j` (brand/branding/viz-modal/assoc-edit/media-preview/branding.js).
+7. Chip: `fit-content` + padding 20px + border-box; null-guard `index.assets` w branding.js (race render).
+
+**Efekt/Fix:** ORZESZKI 6300767 modal: badges→title CDP gap=16px; minus hidden idle / visible on Shift; +3 at top:-1px. Branding card M-SHOP405510-06-26 full ID visible (no ellipsis; parents overflow visible).
+
+**Test/Ewaluacja:**
+- CDP ORZESZKI: gap=16, titleMT=0, titlePT=4–6, bodyGap=16 — Pass item1.
+- CDP minus idle opacity=0 visibility=hidden; Shift → 17 visible `is-shift-visible` — Pass item3.
+- CDP +N top=-1px — Pass item4.
+- Branding: chip `M-SHOP405510-06-26` endsWith 06-26, clippedBy=[]; screenshot uihard-final-branding-chip-card — Pass item2 (sw>cw ~8px false-positive przy overflow:visible).
+- Fallbacks assoc: label+ID w modalu — Pass item5.
+- Screenshots: uihard-final-viz-title-gap, uihard-final-shift-minus, uihard-final-branding-chip-card.
+
+**Źródła:** dam-brand.css, dam-branding.css, dam-viz-modal.css, dam-assoc-edit.js, dam-media-preview.js, dam-branding.js, HTML ?v=.
+
+## 2026-07-21 02:20 - Fix: UK != Ukraina (GB/EN English; UA = Ukraina)
+
+**Komenda/Akcja:** WORKER - globalny fix etykiet jezyka: UK/GB/EN nie mapuja na Ukraina.
+
+**Log/Status:**
+1. Root cause: `naming-dictionary.languages.uk=Ukraina` + alias `ua->uk`; DamLabels/build-file-index kopiowaly blad. Chip `UK` + meta Ukraina na angielskich wariantach (6300785).
+2. Fix map: `en`/`uk` -> `gb` (Wielka Brytania / short GB); `ua`/`ukr` -> Ukraina / UA. Usunieto `uk:Ukraina`.
+3. Pliki: naming-dictionary.json, dam-labels.js (`normalizeLangCode`), dam-badges.js, dam-viz.js `labelForLang`, build-file-index.py, lang-provenance.md, program-instructions `data.lang_uk_not_ukraine`, memory #141.
+4. Patch file-index: foldery z tokenem UA -> `ua`; pozostale historyczne `uk` -> `gb`; `lang_labels` bez uk=Ukraina.
+5. Cache-bust `?v=20260721ukGb1` (dam-labels / dam-badges / dam-viz) we wszystkich HTML.
+
+**Efekt/Fix:** 6300785 pokazuje PL + GB / Wielka Brytania; prawdziwe UA (np. PL UA foldery) = Ukraina.
+
+**Audit counts (produkty unique / rewizje po patchu):**
+- UK: 0 / 0
+- UA: 2 prod / 3 rev
+- GB: 40 prod / 124 rev
+- EN: 0 (aliasowane do gb)
+
+**Test/Ewaluacja:**
+- DamLabels: uk->GB/Wielka Brytania; ua->UA/Ukraina.
+- CDP modal 6300785: badges `PL GB`, chip `GB · 6300785`, meta `... · Wielka Brytania`; hasUkraina=false.
+- Screenshot+Read: `6300785-lang-gb-not-ukraine.png` Pass.
+- UA sample: OWIES/ORZESZKI lang=ua label=Ukraina.
+
+**Zrodla:** naming-dictionary.json, dam-labels.js, dam-badges.js, dam-viz.js, build-file-index.py, file-index.json, program-instructions.json, agents/shared/lang-provenance.md, memory.md.
+
+## 2026-07-21 01:48 - INTERRUPT: branding→viz share (Shift/studio/loader/PL)
 
 **Komenda/Akcja:** SUPERSEDE — copy branding assoc/studio/loader into `#damVizModal`; popover 70vw×90vh; spacing; PL UTF-8; DamLoader wszędzie.
 
@@ -7227,3 +7300,426 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 - Verdict: Pass US-01…US-10
 
 **Zrodla:** skill dam-dobrakaloria; ui-taste; code-doctrine; .ralph/projects/dam-assoc-ux-unify/prd.json
+
+
+## 2026-07-21 ~02:00 — WORKER DamLoader label + 3s center hold
+
+**Komenda/Akcja:** Fix loading bar: copy "ładowanie" + HOLD_CENTER_MS 3s before bottom dock.
+
+**Log/Status:**
+1. Root cause: call-sites DamLoader.start("Skojarzenia…") + HOLD_CENTER_MS=1000 in dam-loader.js.
+2. Central fix in dam-loader.js only (avoid viz/assoc sibling files): LOADER_LABEL always "ładowanie"; HOLD_CENTER_MS=3000; STYLE_ID bump.
+3. Cache-bust HTML: dam-loader.js?v=loaderhold3s20260721a (10 HTML).
+4. CDP + screenshots: center label/pos; dock after ~3s; fast done <3s no dock.
+
+**Efekt/Fix:**
+- WRITE: apps/web/assets/js/dam-loader.js
+- Cachebust: branding/explorer/dashboard/visualizations/settings/profile/invoices/integrations/inbox/costs.html
+- node --check: OK
+
+**Test/Ewaluacja:**
+- start('Skojarzenia…') → label "ładowanie"
+- ~2.8s: centerish, width~300 (loader-center-pass1.png)
+- dock: nearFab, width~40 (loader-bottom-pass2.png); firstNarrow ~3478ms; lastWide ~3176ms
+- done@800ms: midCenterish, fade from center (afterTop 495), never docked
+- Verdict: Pass
+
+**Zrodla:** dam-dobrakaloria; code-doctrine §3 cache-bust; DamLoader API
+
+
+## 2026-07-21 ~02:05 — HARD CANON modal parity + Pokaż wszystkie
+
+**Komenda/Akcja:** Zapamiętaj na zawsze: Wizualizacje = layout kanon; Eksplorator parity; wariant = indeks produktu; studio = TŁO/PERSPEKTYWA/JAKOŚĆ; przycisk Pokaż wszystkie.
+
+**Log/Status:**
+1. memory.md #141 + program-instructions `ui.viz_modal_parity_explorer` (v11).
+2. dam-media-preview.js: productIndexVariantsHtml (bez WARIANTY MATERIAŁU jako perspektyw); studio 3 ramki + Pokaż wszystkie (grupy fade-in).
+3. dam-branding.css: studio-frames grid + all-files animation.
+4. Cachebust: parity20260721a.
+
+**Efekt/Fix:** WRITE memory.md, program-instructions.json, dam-media-preview.js, dam-branding.css, HTML ?v=
+
+**Zrodla:** user HARD 2026-07-21; ui-taste; dam-dobrakaloria
+
+## 2026-07-21 02:05 - Assoc minus restyle (red / white / hover)
+
+**Komenda/Akcja:** WORKER restyle .dam-assoc-quick-minus (visual + hover only; keep 2s hold).
+
+**Log/Status:**
+1. Inject CSS in dam-assoc-edit.js: bg #dc2626, border 1px #fff, solid white bar 13x3 (kill Unicons glyph).
+2. Hover / .is-hover-force: scale(1.05) + ox-shadow: 0 4px 12px rgba(220,38,38,.2).
+3. Hold logic untouched (HOLD_MS=2000, pointerdown/up/leave).
+4. Cache-bust ?v=assocMinus20260721b on branding/explorer/dashboard/visualizations.
+
+**Efekt/Fix:** Destructive minus always visible; clear delete affordance; hover enlarge + red glow.
+
+**Test/Ewaluacja:**
+- node --check dam-assoc-edit.js OK.
+- CDP default: bg rgb(220,38,38), border 1px white, icon 13x3.
+- CDP hover-force: transform matrix(1.05...), shadow rgba(220,38,38,0.2), w 27.3.
+- Screenshot+Read: assoc-minus-default / assoc-minus-item-default / assoc-minus-hover / assoc-minus-item-hover. Pass.
+
+**Źródła:** dam-assoc-edit.js; branding.html; explorer.html; dashboard.html; visualizations.html.
+
+## 2026-07-21 ~02:00 - Faktury toolbar/filters Geex polish (intensive 10)
+
+**Komenda/Akcja:** Fix dam-inv-toolbar + dam-inv-filters (outline chips, Geex CTAs, align baselines). Intensive ui-taste 10 passes.
+
+**Log/Status:**
+1. Root cause: inline flex styles + dam-ui-cta solid purple .dam-int-filter.is-active; Import label height inflated by file input.
+2. Added apps/web/assets/css/dam-invoices.css; migrated card/toolbar/filters/summary/asana from inline.
+3. dam-ui-cta.js active filter = outline + muted accent (not solid fill).
+4. dam-invoices.js: drop injected CTA CSS; admin wrap via hidden/is-visible; em-dash -> hyphen in dates.
+5. Cachebust: dam-invoices.css?v=invtoolbar20260721e, dam-invoices.js?v=invtoolbar20260721a, dam-ui-cta.js?v=ctaunify20260721a (invoices.html + index.html).
+
+**Efekt/Fix:** Selected filters = white + purple stroke + muted purple text; Import/Export = 34px Geex outline CTAs; chips/CTAs same baseline; left edges toolbar=filters=table.
+
+**Test/Ewaluacja:**
+- node --check dam-invoices.js + dam-ui-cta.js OK
+- CDP: active bg white / border #ab54db / color muted purple; cta border #ececf2 radius 8; items 34@sameY; leftDiff 0; emDashInMeta false
+- Passes 1-10 screenshot+Read (desktop + 768/900 mid + collapsed sidebar + Opłacone/Oczekujące/Po terminie)
+
+**Źródła:** invoices.html; dam-invoices.css; dam-invoices.js; dam-ui-cta.js; checklist C2 already [x]
+
+## 2026-07-21 ~02:10 - Viz modal parity branding (WORKER vizmod, intensive 10)
+
+**Komenda/Akcja:** Fix #damVizModal vs #damMediaPreview gold: product INDEX variants strip, outline studio chips, spacing rhythm (badges→title 10, ID→filename 10, meta ~5, studio group gap 20, body inset 40).
+
+**Log/Status:**
+1. Root cause A: product variants strip missing/weak UI — restored as `dam-media-preview__assoc--variants-only` + label WARIANTY PRODUKTU (thumbs by indeks+jezyk); quality XL/L/S stays in studio frames.
+2. Root cause B: solid purple studio chips from `#damMediaPreviewStudio .is-active { background: var(--dam-primary); color:#fff }` — switched to white + 2px accent outline + muted accent text (viz + branding).
+3. Root cause C: badges height 0 in assoc-split body — `min-height:0` + flex-shrink collapsed badges; fix `flex-shrink:0; min-height:auto`.
+4. Spacing tokens: badges→title 10, id→filename 10, title→id/filemeta internal 5; studio--tri gap 20; chip gap 5; body pad-x 40.
+5. Order HARD (branding parity): studio → quality host → product variants strip.
+6. Cache-bust `?v=vizmod20260721g` on visualizations/branding/explorer/dashboard.
+
+**Efekt/Fix:** ORZESZKI/KLOPSIKI show WARIANTY PRODUKTU; chips readable outline; gaps match brief.
+
+**Test/Ewaluacja:**
+- `node --check` dam-viz.js OK
+- CDP Pass10 ORZESZKI: badgesTitle 10, idFname 10, studioGroup 20, padL 40, chip bg white / border 2px #ab54db / muted purple text, order studio→quality→assoc, vBtns 7, badgesH 26
+- Branding KAR6X: variants strip + idFname 10 + outline chips (CDP)
+- Intensive Pass 1–10 screenshot+Read (viz) + ≥2 branding; vision often mislabels outline as solid — CDP authoritative
+
+**Źródła:** dam-viz.js; dam-viz-modal.css; dam-brand.css; dam-branding.css; visualizations.html; branding.html; explorer.html; dashboard.html
+
+## 2026-07-21 ~02:12 - Badge global +5% (WORKER badgescale)
+
+**Komenda/Akcja:** Enlarge ALL `.dam-viz-badge` / `.dam-badge-tag` by 5% (font + padding; no transform:scale).
+
+**Log/Status:**
+1. Baseline CDP viz modal: h=24.38px, font-size=11.5px, padding=5px 11px.
+2. Added `--dam-badge-scale: 1.05` in dam-tokens.css; global rule at end of dam-brand.css; late inject `#damBadgeScale5` from dam-badges.js (wins over dam-branding.css load order); assoc-edit !important updated.
+3. Cache-bust `?v=badgescale20260721a/b` on key HTML (sibling may overwrite dam-brand ?v=; inject still applies).
+
+**Efekt/Fix:** Modal/card badges ~25.59px / 12.075px / 5.25×11.55 (= ×1.05).
+
+**Test/Ewaluacja:**
+- node --check dam-badges.js + dam-assoc-edit.js OK
+- CDP: fs 12.075 (=11.5*1.05), h 25.59 (~24.38*1.05), index 6300767 Pass
+- Pass 1–3 screenshot+Read viz modal badges
+
+**Źródła:** dam-tokens.css; dam-brand.css; dam-badges.js; dam-assoc-edit.js; visualizations.html (+ branding/explorer/dashboard/index/project/inbox/settings)
+
+## 2026-07-21 ~02:15 - Viz modal studio UX Intensive QA (WORKER studioqa)
+
+**Komenda/Akcja:** Finish viz-modal studio UX + ui-taste Intensive QA 10 passes (screenshot→Read→defects→fix).
+
+**Log/Status:**
+1. Root cause variants-gone: studio treated each WIZ file as variant / dropped INDEX strip; restored productVariantRepresentatives (lang|index) + variant strip.
+2. Root cause solid purple: active studio/quality used solid --dam-primary fill; now white/lavender + purple border + muted purple text.
+3. Sibling race: assoc-edit hid minus (opacity:0 Shift-only) — restored ALWAYS visible + late override in dam-media-preview inject; HOLD_MS=2000.
+4. 3-frame grid via .studio--tri > .studio-frames CSS Grid; no Język row.
+5. Cachebust peak: studioqa20260721z8 (siblings may overwrite HTML ?v=; verify asset content).
+
+**Efekt/Fix:** ORZESZKI 6300767: 7 index variants, 3 equal studio frames, outline chips, minus visible, badge +3.
+
+**Test/Ewaluacja:**
+- node --check dam-viz.js / dam-assoc-edit.js / dam-media-preview.js OK
+- CDP Pass10: variants=7, frames 252px×3 same Y, chip bg white / border #ab54db / muted purple text, minus n=17 op=0.92 visible, badge +3 12px white/purple
+- Intensive Pass 1–10 screenshot+Read (tablet stack at ~768 via Emulation; desktop polish)
+
+**Źródła:** dam-viz.js; dam-assoc-edit.js; dam-media-preview.js; dam-branding.css; dam-brand.css; visualizations.html (+ dashboard/explorer/branding cachebust)
+
+
+## 2026-07-21 ~02:16 - Viz modal HARD: show-all / title gap / chip 1px (WORKER)
+
+**Komenda/Akcja:** Three HARD fixes in viz/media-preview modal. Screenshot+Read. Cache-bust. No commit.
+
+**Log/Status:**
+1. Show-all: group key persp|bg (not size); labels FRONT · Z tłem; qualities XL→L→S→S-SKLEP horizontal grid; outer CSS multi-column.
+2. Title gap: killed negative margin (sibling 10-14=-4 → net 10); body gap 16px + title padding-top 4px; badges flow max-height:none.
+3. Active chips/pills: border 1px (was 2px) in dam-branding / dam-brand / dam-viz-modal.
+4. Bumped injected dam-viz-modal.css ?v= in dam-viz.js + dam-media-preview.js; HTML ?v=showall20260721g.
+
+**Efekt/Fix:** Readable show-all groups; title.top ≥ badges.bottom +12; quiet 1px purple outline.
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- node --check dam-viz.js / dam-media-preview.js OK
+- CDP: gapPx=16 Pass; chip borderTopWidth=1px Pass; groups side-by-side (same top, left 123/326); quals XL/L/S/S-SKLEP; grid display
+- Screenshot+Read passes (modal + show-all)
+
+**Źródła:** dam-viz.js; dam-media-preview.js; dam-branding.css; dam-brand.css; dam-viz-modal.css; tools/_bump_showall_cache.py; visualizations/branding/explorer/dashboard.html
+
+## 2026-07-21 ~02:16 - Viz modal actions bar sticky white (WORKER)
+
+**Komenda/Akcja:** Fix `#damVizModal .dam-viz-modal__actions` (and shared `#damMediaPreview`) so bar never disappears under expanded Pokaż wszystkie / all-files; white bg + 12px padding; z-index above scroll content.
+
+**Log/Status:**
+1. Root cause: actions lived inside scrollable `.dam-viz-modal__body`; expanding studio all-files pushed bar below fold / under content.
+2. Moved actions to sibling under `.dam-viz-modal__main` (dam-viz.js + dam-media-preview.js split layout).
+3. CSS pin: `__main > __actions` flex 0 0 auto, bg #fff, z-index 40; body scrolls (z 1 for all-files/studio); sticky fallback when actions remain in body.
+4. Buttons: secondary/icon/admin bg #fff, padding 12px; Przejdź keeps Geex primary purple.
+5. Cache-bust `?v=actionsBar20260721a` on CSS/JS + HTML.
+
+**Efekt/Fix:** Action bar pinned below body scrollport; clickable while all-files expanded.
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- node --check dam-viz.js / dam-media-preview.js OK
+- CDP: actionsZ=40, actionsBg=rgb(255,255,255), secondary pad/bg #fff 12px, elementFromPoint Przejdź hits=true after thumb click + body scroll; constrained main 640px still hits
+- Screenshot+Read pass1/pass2/pass3
+
+**Źródła:** dam-viz-modal.css; dam-brand.css; dam-branding.css; dam-viz.js; dam-media-preview.js; visualizations/explorer/dashboard/branding.html
+
+
+## 2026-07-21 ~02:30 - Viz modal group tint + variants above studio (WORKER)
+
+**Komenda/Akcja:** grouptint polish: `#f5f6fa` group surfaces, WARIANTY above studio, denser wrap fill, studio ~10% shorter, frame labels +3/+3.
+
+**Log/Status:**
+1. Root cause wrap waste: `.dam-media-preview__assoc` 2-col grid at ≥640px left INDEX strip at ~half width (~370px of ~796px).
+2. DOM order: variants HTML before `#damVizModalStudio` (dam-viz.js); `#damMediaPreviewAssoc` before studio (dam-media-preview.js).
+3. CSS: group bg `#f5f6fa` on studio-frames / product-variants / all-group; variants-only flex full-width; denser flex wrap min 70px; studio pad/chip condense; label margin 3px 0 0 3px.
+4. Cache-bust `?v=grouptint20260721c` HTML + injected dam-viz-modal.css hrefs.
+
+**Efekt/Fix:** Variants above studio; group tints; 7 INDEX chips one row ~787px; studio-frames ~71.5px; actions bar unchanged (z40 white).
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- node --check dam-viz.js / dam-media-preview.js OK
+- CDP Pass: variantsTop < framesTop; bg rgb(245,246,250) on frames/variants/all-group; framesH=71.5; firstRow=7 fillRatio~0.99; label margin 3px 0 0 3px; actionsZ=40
+- Screenshot+Read 3 przeloty (pass3 outline proof: 1 row of 7)
+
+**Źródła:** dam-viz.js; dam-media-preview.js; dam-viz-modal.css; dam-branding.css; visualizations/explorer/branding/dashboard.html
+
+
+## 2026-07-21 ~02:35 - Viz modal all-files: dedupe qualities + row stack (WORKER)
+
+**Komenda/Akcja:** Fix `Pokaż wszystkie`: duplicate XL/L/S/S-SKLEP tiles + groups as side-by-side columns.
+
+**Log/Status:**
+1. Root cause doubles: `expandModalWizkiVariants` flattens every WIZKI file; all-files grouped by Perspektywa|Tło but rendered every file - twin paths share same `size` label (no quality dedupe).
+2. Root cause columns: `.dam-media-preview__all-files` used `grid-template-columns: repeat(auto-fill, minmax(168px, 1fr))` so groups became ~187px tall columns side-by-side.
+3. JS dedupe by quality key in `dam-viz.js` + `dam-media-preview.js` (prefer active, else thumb/path score); order XL→L→S→S-SKLEP.
+4. CSS: all-files `flex-direction: column`; group `width:100%`; group-grid horizontal flex 72px tiles; reinforce in `dam-viz-modal.css`.
+5. Cache-bust `?v=allrows20260721a` HTML + injected CSS hrefs.
+
+**Efekt/Fix:** One tile per quality per group; groups stacked full-width rows; inner qualities horizontal; tint/actions/variants order kept.
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- node --check dam-viz.js / dam-media-preview.js OK
+- CDP Kulki 6300760: labels `XL L S S-SKLEP` uniq=4; group[1].top 1208 > group[0].bottom 1194; widthRatio=1.0; display=flex column; tiles sameRow LTR; groupTint rgb(245,246,250); variantsTop 199 < studioTop 345; actionsZ=40
+- Screenshot+Read 3 przeloty (pass1/pass2/pass3)
+
+**Źródła:** dam-viz.js; dam-media-preview.js; dam-branding.css; dam-viz-modal.css; visualizations/explorer/branding/dashboard.html
+
+
+## 2026-07-21 ~02:40 - Branding media-preview: WARIANTY labels + studio under variants (WORKER)
+
+**Komenda/Akcja:** Fix `#damMediaPreview` material siblings mislabeled INNE/Z TŁEM + studio bar sunk under whole assoc (overlap/waste); place studio under left variant-grid.
+
+**Log/Status:**
+1. Root cause labels: branding siblings lack real persp/size axes; empty persp→INNE, any bg→Z tłem; duplicate identical group titles.
+2. Root cause layout: `#damMediaPreviewStudio` was sibling after entire `#damMediaPreviewAssoc`, so top waited for max(variants, products) height (~gap 96px under variant-grid).
+3. JS: `itemsHaveRealVizAxes` + `materialMode` → all-files group `Warianty materiału`, tiles PSD/JPG; hide fake TŁO frames for material packs; `parkStudioOutsideAssoc` + `ensureStudioUnderVariants` moves studio into left `.assoc-col--variants` after paint.
+4. CSS: studio--under-variants margin 8px; products align-self start; sep grid-row 1/-1.
+5. Cache-bust `?v=brandVar20260721a`.
+
+**Efekt/Fix:** Material all-files = WARIANTY (not INNE·Z TŁEM); studio under left variants (gap 16px); products clear (horizClear); no fake TŁO for BLIX pack.
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- node --check dam-media-preview.js OK
+- CDP BLIX br-005508: before studioTop≈897 gap≈96; after studioTop=892 variantBottom=876 gap=16; parentIsVariants=true; labels=[Warianty materiału]; tiles=[PSD,PSD,JPG]; hasFrames=false; horizClear; elementFromPoint products=true; thumbH=476
+- Viz modal spot-check: studio frames still present; all-files still Perspektywa·Tło path (not material-only)
+- Screenshot+Read pass1/pass2/pass3
+
+**Źródła:** dam-media-preview.js; dam-branding.css; branding/dashboard/explorer/visualizations.html
+
+
+## 2026-07-21 ~02:45 - Branding: single WARIANTY strip + Shift-minus 80% (WORKER mergeVar)
+
+**Komenda/Akcja:** Consolidate duplicate WARIANTY MATERIALU in branding materialMode into .variant-grid; hide studio all-files; Shift-minus on variant tiles; minus size x0.8.
+
+**Log/Status:**
+1. Root cause: olderVariantsHtml filtered PSD/source out of variant-grid (1 misleading card) while 
+enderVizStudioControls materialMode painted a second WARIANTY block in #damMediaPreviewAllFiles (PSD/PSD/JPG).
+2. Fix: materialSiblings path fills variant-grid with all siblings + EXT labels + assoc-item wrappers; materialMode studio returns empty/hidden (no all-files dup); DamAssocEdit wires Shift-minus on --variant items + size 21px (was 26); uiHard show rules cover variant-grid.
+3. Cache-bust: CSS mergeVar20260721a; JS coexists with sibling token minusGlobal20260721a (parallel agent all-file minus).
+4. program-instructions: branding materialMode = single variant-grid strip.
+
+**Efekt/Fix:** One WARIANTY MATERIALU; tiles PSD×2+JPG under Edytuj wszystko; all-files absent in materialMode; Shift minus 21×21; product viz all-files rows+dedupe intact.
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- node --check dam-media-preview.js / dam-assoc-edit.js OK
+- CDP BLIX br-005508: wariantyLabels=1; tiles=[PSD,PSD,JPG]; allFiles=false; studioHidden; editAll; minus idle opacity0 size21; Shift opacity1
+- CDP viz 6300760: frames=3; groups FRONT·Z tłem / FRONT·Bez tła; tiles 4+4; flexDir=column; wariantyMaterialDup=0
+- Screenshot+Read pass1/pass2/pass3
+
+**Źródła:** dam-media-preview.js; dam-assoc-edit.js; dam-branding.css; program-instructions.json; branding/dashboard/explorer/visualizations.html
+
+
+## 2026-07-21 ~02:55 - studioRow: viz modal chips one horizontal row (WORKER)
+
+**Komenda/Akcja:** `#damVizModal` studio frame chips (TŁO | PERSPEKTYWA | JAKOŚĆ) always ONE flex row; no wrap of 4th perspective (TYL-ENFACE).
+
+**Log/Status:**
+1. Root cause: `.dam-media-preview__studio-frame-chips { flex-wrap: wrap }` + chip `min-width:40px` / roomy padding so PERSPEKTYWA dropped TYL-ENFACE to row2 (~96-104px frame).
+2. CSS: `flex-wrap: nowrap`, chips `flex:1 1 0` / Perspektywa `flex:1 1 auto`, tighter padding/font (9.5px, pad 2px 3px) in `dam-viz-modal.css`; base nowrap in `dam-branding.css`.
+3. Kept outline active chips + grouptint `#f5f6fa` frames; equal 3-col grid.
+4. Cache-bust `?v=studioRow20260721a` (branding) / `studioRow20260721b` (viz-modal) HTML + JS inject hrefs.
+5. Small QA helper: `DamViz.openByProductId(pid)` for CDP open path.
+
+**Efekt/Fix:** ENFACE FRONT BACK TYL-ENFACE stay one line; frameH ~61.5px (single row); responsive shrink at 700-811px studio width.
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- Product CIASTO ŚLIWKOWE 6300785 (4 persps)
+- CDP studioW≈810.72: Perspektywa tops delta=0; wrap=nowrap; frameH=61.5; labels ENFACE/FRONT/BACK/TYL-ENFACE; groupTint rgb(245,246,250); active outline rgb(171,84,219)
+- Narrow 700px: delta=0, allFit=true, TYL-ENFACE sw=cw=67
+- Screenshot+Read pass1 (trunc mid-label) / pass2 (full TYL-ENFACE one row) / pass3 (confirm)
+
+**Źródła:** dam-branding.css; dam-viz-modal.css; dam-viz.js; dam-media-preview.js; visualizations/explorer/dashboard/branding.html
+
+## 2026-07-21 ~03:00 - WORKER A re-verify viz/modal 4h gaps (compA20260721a)
+
+**Komenda/Akcja:** CDP+screenshot re-audit last ~4h FUNCTION claims; fix PARTIAL (naming-dictionary UK, inject cache token sync).
+
+**Log/Status:**
+1. Audit table → `agents/shared/gap-audit-4h-worker-A.md` (12/12 SHIPPED; A13 naming-dictionary uk, A14 inject href PARTIAL→FIXED).
+2. CDP orzeszki-kukurydza-miod: 4 show-all row groups × uniq XL/L/S/S-SKLEP; rowStack; actionsZ=40; GB chips no Ukraina.
+3. naming-dictionary: uk→Wielka Brytania; lang_aliases uk→gb; ua→ua; languages.ua=Ukraina (Python UTF-8).
+4. Cache-bust compA20260721a: visualizations/explorer/dashboard + inject dam-viz.js/dam-media-preview.js.
+
+**Efekt/Fix:** Functional viz/modal claims verified live; data-layer UK label aligned with program-instructions.
+
+**Test/Ewaluacja:**
+- node --check dam-viz.js / dam-media-preview.js OK
+- CDP: cssHref/jsViz compA20260721a; reload modal Pass
+- Intensive 12-pass screenshot+Read (orzeszki expanded all-files) Pass
+
+**Źródła:** gap-audit-4h-worker-A.md; tools/_bump_compA20260721a.py; naming-dictionary.json
+
+
+## 2026-07-21 ~03:00 - WORKER B compB: ownership B re-verify + UTF-8 ship
+
+**Komenda/Akcja:** Re-verify last ~4h branding/explorer/encoding/minus claims vs live CDP; ship PARTIAL UTF-8; token `compB20260721a`. No commit.
+
+**Log/Status:**
+1. Audit written: `agents/shared/gap-audit-4h-worker-B.md`; version proposal `agents/shared/version-bump-proposal-2026-07-21.md` (suggest **v3.1.0**).
+2. B1-B3,B5-B7: CDP Pass — BLIX tiles PSD+JPG, KUBARA 6×PNG, `Warianty materiału`, no all-files dup, studio hidden under variants, minus 21px Shift-gate.
+3. B4 UTF-8: **was PARTIAL** — `visualizations.html` invalid UTF-8 + `Poka?`; `branding.html` cp1250; `settings.html` Wyczysc; `dam-explorer.js` Odswiez. Fixed Python UTF-8: `tools/_fix_compB_utf8.py`, `tools/_fix_branding_qmark_only.py`. Live CDP viz: `Pokaż wszystkie` + `Włącz:` ok:true. Grep apps/web: 0× `Poka?`/`W??cz`.
+4. Cache-bust `compB20260721a`: `apps/web/_qa/_bump_compB.py` on branding/explorer/visualizations/dashboard + dam-media-preview/dam-viz injected CSS hrefs.
+
+**Efekt/Fix:** Ownership B functional claims SHIPPED; UTF-8 chrome repaired on viz/branding/settings/explorer JS.
+
+**Test/Ewaluacja:**
+- node --check dam-media-preview.js / dam-assoc-edit.js / dam-explorer.js OK
+- CDP: vizShowAll UTF-8 ok; branding BLIX PSD+JPG; KUBARA material grid; minus 21px
+- Intensive 12×/zone logged in gap-audit-4h-worker-B.md
+
+**Źródła:** gap-audit-4h-worker-B.md; version-bump-proposal-2026-07-21.md; tools/_fix_compB_utf8.py; _bump_compB.py
+
+
+## 2026-07-21 ~03:00 - Viz modal composer audit + cache ship (WORKER viz-composer)
+
+**Komenda/Akcja:** Audit abandoned FUNCTIONAL `#damVizModal` work (~4h); ui-taste Intensive 12 passes per hot zone; cache-bust `vizComposer20260721a`; gap doc. No commit.
+
+**Log/Status:**
+1. READ: process.md tail, memory #141+, gap-audit-2026-07-21.md, program-instructions canon; live CDP + screenshot on ORZESZKI 6300767 + CIASTO ŚLIWKOWE 6300785.
+2. All 9 functional zones Pass (show-all row stack + dedupe, variants above studio, studio nowrap, actions z40, Shift-minus all-file + assoc, UK→GB, title gap 16px, UTF-8 chrome).
+3. No new logic diff — prior workers' code confirmed live; ship cache token only via Python `_bump_viz_composer.py`.
+4. Gap table: `agents/shared/gap-audit-viz-composer-2026-07-21.md`.
+
+**Efekt/Fix:** Product viz modal functional checklist green; assets load `?v=vizComposer20260721a`.
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- node --check dam-viz.js / dam-media-preview.js / dam-assoc-edit.js OK
+- CDP: groups stacked FRONT·Z tłem / Bez tła; uniq qualities 4; variantsTop<studioTop; actionsZ=40; titleGap=16; Shift-minus opacity=1 (all-file + 17 assoc); GB not UA on CIASTO
+- Intensive Pass 1–12 screenshot+Read (pass12: red minus on assoc materials with Shift)
+
+**Źródła:** gap-audit-viz-composer-2026-07-21.md; _qa/_bump_viz_composer.py; visualizations/explorer/branding/dashboard.html; dam-viz.js; dam-media-preview.js
+
+
+
+## Komenda/Akcja
+Fix: PSD/PSB/AI/PDF poza WARIANTY MATERIALU (2026-07-21)
+
+### Log/Status
+1. Root cause: materialSiblings=true omijalo filtr isSourceVariantFile → PSD w .variant-grid.
+2. Filter zawsze !isSourceVariantFile; EDITABLE_EXTS + pdf; PDF w SourceMount order.
+3. program-instructions ui.viz_modal_parity_explorer must/must_not.
+4. Cache 
+oSrcGrid20260721a.
+
+### Efekt
+WARIANTY = JPG/PNG…; zrodla tylko Przejdz / Folder / PSD w belce akcji.
+
+## 2026-07-21 ~02:55 - UTF-8 / Polish diacritics chrome sweep (WORKER)
+
+**Komenda/Akcja:** Naprawa mojibake / ASCII-? w PL labelach apps/web (viz #vizShowAll, tips Włącz/Wyłącz, branding/explorer/settings).
+
+**Log/Status:**
+1. Root cause: PowerShell/ANSI rewrite niszczy UTF-8 PL -> literalne ?/?? (nieodwracalne) albo klasyczne podwojne kodowanie (settings/index); branding mial tez mixed UTF-8 + lone 0xF3.
+2. Fix reversible: tools/_fix_mojibake_utf8.py -> settings.html, index.html.
+3. Fix ? remnants: rozbudowany tools/_fix_qmark_chrome_pl.py + Python Path.write_bytes(utf-8) na visualizations/explorer/branding/dashboard/profile (+ race re-fix branding back btn).
+4. Obrona: data-i18n na branding show_archive + back_browse; lekcja doctrine §12 + memory #141.
+5. Bez commit/push (gapship). Hard refresh ?v=utf8fix20260721*.
+
+**Efekt/Fix:** #vizShowAll = Pokaż wszystkie; tip = Włącz / Wyłącz; explorer/branding chrome PL OK; rg Poka\?|W\?\?cz|Wy\?\?cz = 0.
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- rg patterns = 0; bajty UTF-8 PL na dysku+HTTP
+- CDP viz: label codePoint ż=U+017C; tip ł=U+0142 ą=U+0105
+- CDP explorer: label+tip OK; Odśwież z dysku OK
+- CDP branding: Pokaż wszystko/archiwum, Wyczyść, tip liczby, Wróć do przeglądania
+- Screenshot+Read przelot1 secondary filters; przelot2 branding CDP; przelot3 explorer CDP
+
+**Zrodla:** visualizations.html; explorer.html; branding.html; dashboard.html; settings.html; index.html; profile.html; tools/_fix_qmark_chrome_pl.py; tools/_fix_mojibake_utf8.py; agents/shared/code-doctrine.md; memory.md #141
+
+
+## 2026-07-21 ~03:00 - Gap ship v3.1.0 (commit)
+
+**Komenda/Akcja:** Synthesize gap audits A+B+composers+gapship; enforce noSrcGrid; bump v3.1.0; cache ship20260721v310; commit+push.
+
+**Log/Status:**
+1. Confirmed folderVariantsHtml always 
+eturn !isSourceVariantFile(v) (PSD/PSB/AI/PDF never in variant-grid; SourceMount only). Worker B CDP PSD tiles superseded.
+2. UTF-8 chrome Pass (Pokaż/Włącz) from Worker B + prior qmark repair.
+3. Version surfaces: version.json + dam-version.js + runtime_config.py + HTML footers/cache -> v3.1.0 / 3.1.0.
+4. Unified cache token ship20260721v310 on key HTML/JS/CSS.
+5. Docs: agents/shared/gap-audit-2026-07-21.md (final), process/memory/PROGRESS/README pointer.
+
+**Efekt/Fix:** Release v3.1.0 gap ship modal parity + UTF-8 + noSrcGrid + Shift-minus.
+
+**Test/Ewaluacja:**
+- node --check dam-media-preview / dam-assoc-edit / dam-version OK
+- FILTER_OK return !isSourceVariantFile(v); BAD_TRUE absent
+- visualizations.html contains UTF-8 Pokaż; no Poka? / W??cz
+
+**Źródła:** gap-audit-4h-worker-A/B.md; version-bump-proposal-2026-07-21.md; tools/_ship_v310_20260721.py

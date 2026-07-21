@@ -52,6 +52,7 @@ Wynik: UI `?`, zrodlo `unknown`.
 - Nie budujemy listy "indeks X zawsze = jezyk Y" jako reguly biznesowej (to sa tylko przyklady audytu).
 - Nie bierzemy jezyka ze screenshota opakowania (OCR nie jest zrodlem v1).
 - `SKLEP` w nazwie pliku nie znaczy jezyka SK.
+- `UK` / `GB` / `EN` = English / Wielka Brytania. Ukraina = tylko `UA` (ISO). NIGDY `UK`→Ukraina.
 
 ## Kod
 

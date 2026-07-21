@@ -2,20 +2,22 @@
  * DAM - Globalny wskaznik ladowania (window.DamLoader).
  *
  * API:
- *   DamLoader.start("Wyszukuję…")  - pokazuje pasek na srodku ekranu
- *   DamLoader.done()               - konczy (fade out)
+ *   DamLoader.start([label])  - pokazuje pasek na srodku ekranu
+ *   DamLoader.done()          - konczy (fade out)
  *
- * Zachowanie: pasek indeterminate w bialym pill-boxie na srodku (1 s),
- * potem GSAP (power2.inOut) plynnie przenosi go do prawego dolnego rogu
- * jako maly spinner NAD help fabem (#damHelpFab). pointer-events: none,
- * z-index 13000 - niczego nie blokuje i nic go nie zaslania.
+ * Zachowanie: pasek indeterminate w bialym pill-boxie na srodku (3 s),
+ * etykieta zawsze "ładowanie". Jesli ladowanie nadal trwa po 3 s,
+ * CSS transition przenosi pasek do prawego dolnego rogu jako maly
+ * spinner NAD help fabem (#damHelpFab). Jesli done() przed 3 s -
+ * znika ze srodka (bez docka). pointer-events: none, z-index 13000.
  * prefers-reduced-motion: bez animacji przenoszenia (od razu rog).
  */
 (function (global) {
   "use strict";
 
-  var STYLE_ID = "damLoaderCss20260720d";
-  var HOLD_CENTER_MS = 1000;
+  var STYLE_ID = "damLoaderCss20260721a";
+  var HOLD_CENTER_MS = 3000;
+  var LOADER_LABEL = "ładowanie";
   var Z_INDEX = 13000;
   /* Odstęp między dolną krawędzią loadera a górą #damHelpFab. */
   var FAB_GAP = 10;
@@ -278,7 +280,9 @@
     activeCount += 1;
     hiding = false;
     ensureEl();
-    if (labelEl) labelEl.textContent = label || "Ładowanie…";
+    /* Etykieta zawsze "ładowanie" (HARD 2026-07-21) - ignoruj stare
+       napisy call-site typu "Skojarzenia…". Param label zachowany w API. */
+    if (labelEl) labelEl.textContent = LOADER_LABEL;
     if (global.gsap) global.gsap.killTweensOf([el, innerEl]);
 
     if (activeCount > 1 && docked) {

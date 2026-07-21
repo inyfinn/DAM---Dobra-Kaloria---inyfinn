@@ -3367,7 +3367,7 @@
           '<p class="dam-explorer-empty__hint">Wlacz <strong>Pokaż wszystkie</strong>, aby przeszukiwac tez warianty z archiwum kategorii (— ARCHIWUM).</p>';
       } else {
         html +=
-          '<p class="dam-explorer-empty__hint">Brak trafien w indeksie. Kliknij <strong>Odswiez z dysku</strong>, aby zindeksowac archiwum na dysku.</p>';
+          '<p class="dam-explorer-empty__hint">Brak trafien w indeksie. Kliknij <strong>Odśwież z dysku</strong>, aby zindeksować archiwum na dysku.</p>';
       }
       html += "</div></div>";
       mount.innerHTML = html;

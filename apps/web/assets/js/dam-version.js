@@ -1,10 +1,9 @@
 /**
  * Wersja programu DAM (single source w UI).
  * Przy releasie: podbij string tutaj ORAZ w version.json (ten sam numer).
- * 2.0.7 — animacje (tokeny + tagi/belki), tryb w tle (tray), cache branding (2026-07-20)
- * 2.0.6 — modal CTA zrodlowe + portable path + search synonyms (2026-07-19)
+ * 3.1.0 — gap ship modal parity + UTF-8 + noSrcGrid + Shift-minus (2026-07-21)
  */
 (function (global) {
   "use strict";
-  global.DAM_APP_VERSION = "2.0.7";
+  global.DAM_APP_VERSION = "3.1.0";
 })(typeof window !== "undefined" ? window : globalThis);
