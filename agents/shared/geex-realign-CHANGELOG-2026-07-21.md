@@ -4,11 +4,11 @@
 
 | Item | Value |
 |------|--------|
-| `origin/main` tip | `df870e2` — ctaUnify 12px/34px + Info Pakowania switch |
-| DONE on tip | geex merge `a4ba7c4`, pad-fix `74eb7eb`/`a400726`, PAKIET `435ea6b`, ctaUnify `df870e2` |
+| `origin/main` tip | `689e112` — inventory close (card air, dark tokens, baseline 36/36) |
+| DONE on tip | geex merge `a4ba7c4`, pad-fix `74eb7eb`/`a400726`, PAKIET `435ea6b`, ctaUnify `df870e2`, inventory close `689e112` |
 | Tags | `geex-phase0`..`4`, `5a`, `5b`, `6`, `7`, `8` + `design-geex-realign` @ `88d6a7e` (**NO** bare `geex-phase5`) |
 | ESCALATE | none |
-| PARTIAL/OPEN | marketing↔viz cards; branding air; broader dark polish; baseline PNG process said **28/36** (local may have more files); `stash@{0}` WIP |
+| PARTIAL/OPEN | `stash@{0}` WIP (marketing↔viz, branding air, dark polish, baseline PNG **36/36** local — closed on `689e112`) |
 
 **Rollback recipes:** [`geex-realign-ROLLBACK-2026-07-21.md`](geex-realign-ROLLBACK-2026-07-21.md)  
 **Plan status:** CLOSED — [`geex-realign-plan-2026-07-21.md`](geex-realign-plan-2026-07-21.md)
@@ -36,7 +36,8 @@
 | Pad-fix merge | `a400726` | `a400726e1351b7622195d70bb0c237e2e63d2678` | Merge branch CTA pad fix |
 | Doctrine note | `0bb7fad` | `0bb7fadf0db3c0b75251c98955d7d38bb7195c1e` | Lesson: labeled `dam-btn-icon` vs icon-only squares |
 | PAKIET | `435ea6b` | `435ea6b6a6bb0cbca393326024a7597168f6900c` | Explorer PAKIET zip → 3-DRUK + show-all filter |
-| CTA unify (tip) | `df870e2` | `df870e2406c6472ca4c49bcfbdb010e8a57bba70` | Projects `dam-int-cta` 12px/34px + Info Pakowania = dam-switch |
+| CTA unify | `df870e2` | `df870e2406c6472ca4c49bcfbdb010e8a57bba70` | Projects `dam-int-cta` 12px/34px + Info Pakowania = dam-switch |
+| Inventory close (tip) | `689e112` | `689e1123dc83afcca1ce8e6989bb0bae610a803a` | marketing catalog cards air/readable; branding/viz card breathing room; dark polish tokens + h5 title fix; baseline PNG 36/36 local; cache-bust `invClose20260721b` |
 
 Sibling on branch (same message as PAKIET, not tip): `a4e9d35` — use `435ea6b` for main-line revert.
 
@@ -65,15 +66,32 @@ Sibling on branch (same message as PAKIET, not tip): `a4e9d35` — use `435ea6b`
 | Pad-fix | `dam-primitives.css`, `dam-project-catalog.css`, `dam-viz-modal.css`, `dam-ui-cta.js`, `dam-app.css`, `dam-brand.css` |
 | PAKIET | `apps/desktop/local_bridge.py`, `apps/web/assets/js/dam-explorer.js` |
 | CTA unify | `dam-primitives.css`, `dam-ui-cta.js`, `dam-app.css`, `index.html` (+ cache-bust HTML) |
+| Inventory close | `dam-project-catalog.css`, `dam-branding.css`, `dam-brand.css`, `dam-viz-modal.css`, `dam-dashboard.css`, HTML cache-bust `invClose20260721b` |
+
+---
+
+## Inventory close — `689e112` (2026-07-21)
+
+**Commit:** `689e1123dc83afcca1ce8e6989bb0bae610a803a` — `fix(ui): inventory close - card air, dark tokens, baseline 36/36`
+
+**Closed on this commit:**
+
+1. **Marketing catalog cards air/readable** — `dam-project-catalog.css`: spacing, title/body contrast, card grid parity with viz cards.
+2. **Branding / viz card breathing room** — `dam-branding.css`, `dam-viz-modal.css`: card body pad/gap, grid air, modal card rhythm.
+3. **Dark polish tokens + h5 title fix** — `dam-brand.css`, `dam-dashboard.css`: dark-mode token pass; h5 card titles readable in dark.
+4. **Baseline PNG 36/36 local** — full local capture set (gitignored); regress manifest updated.
+5. **Cache-bust `invClose20260721b`** — HTML `?v=` bumps across affected pages (explorer, branding, visualizations, dashboard, etc.).
+
+**Rollback:** `git revert 689e112 --no-edit` — see [`geex-realign-ROLLBACK-2026-07-21.md`](geex-realign-ROLLBACK-2026-07-21.md).
 
 ---
 
 ## PARTIAL / OPEN (honest)
 
-- **Baseline PNG:** process recorded **28/36** (font timeout on some captures). Local folder may have more files; PNGs are gitignored — do not treat missing PNG as code failure.
-- **marketing ↔ viz cards** — spacing/parity still open for polish.
-- **branding air** — card body / grid air still open.
-- **broader dark polish** — F6 fixed top3 white-flash; wider dark polish remains open.
+- **Baseline PNG:** **36/36** local on `689e112` (was 28/36 pre-close). PNGs are gitignored — do not treat missing PNG as code failure.
+- ~~**marketing ↔ viz cards**~~ — closed `689e112`.
+- ~~**branding air**~~ — closed `689e112`.
+- ~~**broader dark polish**~~ — token pass closed `689e112`; F6 still owns anti white-flash bridge.
 - **`stash@{0}`:** `WIP before main merge (pad-fix)` on `design/geex-realign` — do not auto-apply; audit before `stash pop`.
 - **ESCALATE geex-realign:** none (as of this doc).
 

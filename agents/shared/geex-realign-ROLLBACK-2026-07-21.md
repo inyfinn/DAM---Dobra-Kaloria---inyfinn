@@ -1,6 +1,6 @@
 # Geex realign + follow-up — ROLLBACK 2026-07-21
 
-**Inventory tip:** `origin/main` = `df870e2` (ctaUnify 12px/34px + Info Pakowania switch).  
+**Inventory tip:** `origin/main` = `689e112` (inventory close — card air, dark tokens, baseline 36/36).  
 **ESCALATE:** none.  
 **Changelog:** [`geex-realign-CHANGELOG-2026-07-21.md`](geex-realign-CHANGELOG-2026-07-21.md)
 
@@ -11,7 +11,10 @@
 Prefer **soft** `git revert` on a clean tree. Hard reset only with explicit human OK.
 
 ```text
-# Soft: undo only CTA unify (tip)
+# Soft: undo only inventory close (tip)
+git revert 689e112 --no-edit
+
+# Soft: undo only CTA unify
 git revert df870e2 --no-edit
 
 # Soft: undo only PAKIET (explorer zip / bridge)
@@ -44,17 +47,19 @@ Run on `main` after `git fetch`; resolve conflicts if later commits touched same
 
 | Goal | Command | Notes |
 |------|---------|--------|
+| Drop inventory close only | `git revert 689e112` | Card air, dark tokens, h5 fix, cache-bust `invClose20260721b` |
 | Drop ctaUnify only | `git revert df870e2` | Restores prior int-cta / Info Pakowania markup path |
 | Drop PAKIET only | `git revert 435ea6b` | Touches `local_bridge.py` + `dam-explorer.js` — restart bridge after |
 | Drop pad-fix merge | `git revert -m 1 a400726` | Merge commit — **must** `-m 1` (mainline) |
 | Drop pad-fix commit (if needed after undoing merge carefully) | `git revert 74eb7eb` | Usually covered by reverting `a400726` |
 | Drop Geex merge (F0–F8 + taste) | `git revert -m 1 a4ba7c4` | Large; expect conflicts with pad-fix / ctaUnify / PAKIET if those stay |
-| Order if peeling all follow-ups then merge | 1) `df870e2` 2) `435ea6b` 3) `-m 1 a400726` 4) `-m 1 a4ba7c4` | Leaves tip ≈ `092821f` content-wise |
+| Order if peeling all follow-ups then merge | 1) `689e112` 2) `df870e2` 3) `435ea6b` 4) `-m 1 a400726` 5) `-m 1 a4ba7c4` | Leaves tip ≈ `092821f` content-wise |
 
 Verified SHAs (exist on repo):
 
 | Short | Full | Subject |
 |-------|------|---------|
+| `689e112` | `689e1123dc83afcca1ce8e6989bb0bae610a803a` | fix(ui): inventory close - card air, dark tokens, baseline 36/36 |
 | `df870e2` | `df870e2406c6472ca4c49bcfbdb010e8a57bba70` | fix(ui): unify projects dam-int-cta… |
 | `435ea6b` | `435ea6b6a6bb0cbca393326024a7597168f6900c` | feat: explorer PAKIET… |
 | `a400726` | `a400726e1351b7622195d70bb0c237e2e63d2678` | Merge … (CTA pad fix) |
@@ -109,6 +114,13 @@ git diff 092821f..df870e2 --stat
 ---
 
 ## Per-feature rollback
+
+### Only inventory close (`689e112`)
+
+```text
+git revert 689e112 --no-edit
+# files: dam-project-catalog.css, dam-branding.css, dam-brand.css, dam-viz-modal.css, dam-dashboard.css + HTML ?v= invClose20260721b
+```
 
 ### Only CTA unify (`df870e2`)
 
@@ -170,6 +182,6 @@ Unrelated WIP on working tree (inbox JSON, `_qa` scripts, maskotka poses, etc.) 
 
 ## PARTIAL / OPEN (do not “fix” by rollback alone)
 
-- Baseline PNG **28/36** (process); local may have more.
-- marketing↔viz cards, branding air, broader dark polish still open.
+- Baseline PNG **36/36** local on `689e112` (was 28/36).
+- ~~marketing↔viz cards, branding air, broader dark polish~~ — closed `689e112`.
 - Reverting Geex does **not** auto-clear `stash@{0}`.

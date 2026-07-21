@@ -1,4 +1,9 @@
-﻿
+﻿## 2026-07-21 - docs: inventory-close changelog `689e112`
+
+**Tip:** `689e112` — inventory close (marketing catalog air, branding/viz breathing room, dark polish + h5 fix, baseline PNG 36/36 local, cache-bust `invClose20260721b`). Docs updated: [`geex-realign-CHANGELOG-2026-07-21.md`](agents/shared/geex-realign-CHANGELOG-2026-07-21.md), [`geex-realign-ROLLBACK-2026-07-21.md`](agents/shared/geex-realign-ROLLBACK-2026-07-21.md). Rollback one-liner: `git revert 689e112 --no-edit`.
+
+---
+
 ## 2026-07-21 - docs: geex realign changelog + rollback
 
 **Komenda/Akcja:** Dokumentacja audyt/rollback Geex realign + follow-up (PAKIET, pad-fix, ctaUnify); commit+push tylko docs.
