@@ -918,6 +918,25 @@ evealSequence fade uzywa opacity nie utoAlpha; po
   Pythonem `write_bytes(utf-8)`. CDP `charCodeAt` (ż=380) > OCR screenshotu
   (vision bywa myli ż z ◆).
 
+### 2026-07-21 - tutorial na Projekty (index.html): brak CSS = dead controls
+
+- **Objaw:** po wejsciu na `index.html` podczas aktywnego samouczka nie da sie
+  kliknac Dalej/Zakoncz; czasem flash "Branding" + pasek w dolnym lewym rogu.
+- **Przyczyna A (HARD):** `index.html` nie ladowal `dam-tutorial.css`. Overlay
+  montowany z klasami `.dam-tut` / `__ctrl` / `__bubble` bez `position:fixed`
+  wpada w document flow. Przy wysokiej siatce projektow (`body` ~45k px)
+  pasek sterowania ladowal na `top≈45745` - poza viewportem. Companion
+  (style w inject CSS) byl widoczny, wiec wygladalo jak "explore bez paska".
+- **Przyczyna B:** FOUC gate `opacity:0` + reveal tylko przez double
+  `requestAnimationFrame` - w tle/automation rAF bywa wstrzymany i chrome
+  zostaje niewidoczny na zawsze.
+- **Fix:** (1) critical shell CSS w `ensureTutCss()` (fixed root/bubble/ctrl
+  niezaleznie od linka); (2) `<link dam-tutorial.css>` na index.html;
+  (3) reveal: `setTimeout(0/64)` + rAF, nigdy samym rAF; klasa `.is-ready`.
+- **Weryfikacja:** CDP `getComputedStyle(ctrl).position==='fixed'`,
+  `elementFromPoint` na Dalej = `.dam-tut__btn--next`, finish ->
+  `damTutorialFinished=1`.
+
 ### 2026-07-21 - Lang EN + PROJEKT/WIZKI + viz_latest thumbs
 
 - **EN canon:** `gb`/`uk`/`en` -> store+chip `en`/`EN` (nie GB). Ukraina = `ua`.
@@ -930,3 +949,18 @@ evealSequence fade uzywa opacity nie utoAlpha; po
   UI bez reload - `DamViz.refreshAfterTagChange` + patch badge DOM.
 - **W dam-viz.js:** nigdy `global.` (IIFE bez arg) - tylko `window.` (crash
   applyFilters przy Multijęzyczny).
+
+### 2026-07-21 - Geex realign F5a/F5b/F6 (surfaces + §7 + dark bridge)
+
+- **F5a:** powierzchnie (panel/bento/modal/sidebar) = tylko radius/pad/gap/shadow/bg
+  tokeny w `dam-primitives.css` PANELS. Zero `opacity`/`clip-path`/`display` na
+  kartach IO (`DamGridReveal`).
+- **F5b HARD:** 1 zmiana CSS = 1 cytat doctrine §7 + CDP
+  (`intersectionRatio > 0` + `opacity` po reveal). Popovery = surface/shadow;
+  nie ruszac `dam-grid-reveal.js`. Przy IO fail: rollback do `geex-phase5a`.
+- **F6 white-flash:** early `<script>` DamTheme (pref+system+`colorScheme`)
+  **przed** CSS w `<head>`; `dam-tokens` ustawia `color-scheme` + `html`
+  background light/dark; `DamTheme.apply` / shell soft-boot ustawiaja
+  `style.colorScheme`. Nie polegaj na samym `localStorage.theme` bez pref/system.
+- **F7:** cienkie duplikaty anatomii btn/badge w `dam-brand.css` (999px) —
+  anatomia w primitives, brand zostawia kolory + lokalna gestosc pad.

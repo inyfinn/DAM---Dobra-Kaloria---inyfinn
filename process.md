@@ -1,4 +1,22 @@
 ﻿
+## 2026-07-21 20:10 - Geex realign Faza 8 DONE (final QA PASS → merge)
+
+**Komenda/Akcja:** Lead — final QA priorytet 390 + doctrine §12 + merge main.
+
+**QA:**
+- Dashboard 390: CDP `pass390=true` (overflowX false, panel radius 12 pad 16x18); screenshot Read OK (dark stack, CTA, cards).
+- Index: reveal IO ratio 1 / opacity 1 / clip none; screenshot filters+cards OK.
+- Branding: badgeRadius 14px; no horizontal overflow vs layout width.
+- Note: Cursor host Emulation sometimes snaps ~765 (F4 residual) — forced 390 metrics on dashboard Pass.
+
+**Verdict:** QA **PASS** — merge `design/geex-realign` → `main`.
+
+**Tags:** `geex-phase8`, `design-geex-realign`.
+
+**ESCALATE:** none.
+
+---
+
 ## 2026-07-21 19:55 - Geex realign Faza 7 DONE (thin brand btn/badge)
 
 **Komenda/Akcja:** Lead — thin `dam-brand.css` badge anatomy duplicates + card actions btn pad override.
@@ -8316,6 +8334,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Test/Ewaluacja:** node --check; CDP hitDalej=.dam-tut__btn--next, ctrlT~684, is-ready, rootOp=1; finish path; screenshot+Read tutorial-projekty-faza5-bar.png.
 
 **Zrodla:** dam-tutorial.js, index.html (+CSS link), _qa/_bump_tutorial_projects_fix.py, code-doctrine §12
+
 
 
 

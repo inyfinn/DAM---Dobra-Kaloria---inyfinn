@@ -1,4 +1,4 @@
-# Geex realign — manifest regresji wizualnej
+﻿# Geex realign — manifest regresji wizualnej
 
 PNG lokalnie: `apps/web/_qa/geex-realign-baseline/phase{N}/` (gitignore).
 
@@ -9,11 +9,11 @@ PNG lokalnie: `apps/web/_qa/geex-realign-baseline/phase{N}/` (gitignore).
 | 2 | `geex-phase2` | phase0 | PASS structure / smoke DEFERRED | Tokens+primitives+docs+briefs. Live CDP §5 **skipped** (`:8765` HTTP 000). Miary z audit CSS-declared. Hot pages enqueue OK (21 HTML). PNG local compare skipped (no server). |
 | 3 | `geex-phase3` @ `7c9d346` | phase0 / phase2 | PASS 3 cykle | Buttons: radius 18, pad 15×25, icon 44×44, actions gap 10; secondary hover no pure white. PNG: `geex-f3-buttons-390/1440.png` (notes-faza3). Risk: `dam-brand.css` after primitives may override pills. |
 | 4 | `geex-phase4` @ `3ee60bf` | phase0 / phase2 | PASS 3 cykle | Badges MASTER radius 14 + `--dam-badge-scale`; scale kills branding/brand. PNG under `phase4/`. Residual: host Emulation ~765; brand.css `999px` later — F7 thin. |
-| 5a | `geex-phase5a` (pending tag) | phase0 | PASS structure | PANELS fill: panel/bento/modal/sidebar radius+pad+gap+bg/shadow tokens only; no reveal props. `?v=geexJoin20260721a`. |
-| 5b | `geex-phase5b` | phase5a | PASS | Popover surfaces only; IO ratio>0 + opacity 1 after reveal (index/viz/branding). |
-| 6 | | phase0 | | |
-| 7 | | phase0 | | |
-| 8 | | phase0 | | |
+| 5a | `geex-phase5a` @ `9b5cea5` | phase0 | PASS | PANELS surfaces; no reveal props. |
+| 5b | `geex-phase5b` @ `3d457df` | phase5a | PASS | Popover surfaces; IO+opacity Pass. |
+| 6 | `geex-phase6` @ `5c33525` | phase0 | PASS | Dark bridge + color-scheme; darkOk. |
+| 7 | `geex-phase7` @ `c6023e3` | phase0 | PASS | Thin brand badge/btn duplicates; radius 14. |
+| 8 | `geex-phase8` | phase0 | PASS | Final QA 390 dashboard Pass; merge main. |
 
 ## Świadome delty
 
@@ -30,3 +30,4 @@ PNG lokalnie: `apps/web/_qa/geex-realign-baseline/phase{N}/` (gitignore).
 ### Faza 4 (join from notes-faza4)
 - Chip corners 999→14 MASTER; branding local `*1.1` removed on badge path.
 - Dark muted index AA lift.
+
