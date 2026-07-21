@@ -1663,11 +1663,15 @@
     if (!tile) return "";
     var path = String(tile.getAttribute("data-all-path") || "").trim().toLowerCase().replace(/\\/g, "/");
     if (path) return "path:" + path;
+    var assetId = String(tile.getAttribute("data-asset-id") || "").trim();
+    if (assetId) return "asset:" + assetId;
     var vidx = tile.getAttribute("data-all-vidx");
     if (vidx != null && String(vidx) !== "") return "vidx:" + String(vidx);
     var sib = tile.getAttribute("data-all-sib");
     if (sib != null && String(sib) !== "" && String(sib) !== "-1") return "sib:" + String(sib);
-    var lab = tile.querySelector(".dam-media-preview__all-file-label");
+    var lab =
+      tile.querySelector(".dam-media-preview__all-file-label") ||
+      tile.querySelector(".dam-media-preview__assoc-name");
     var labT = lab ? String(lab.textContent || "").trim() : "";
     return labT ? "lab:" + labT : "";
   }
@@ -1923,10 +1927,27 @@
     }
     var scope = resolveModalScope(assocEl) || assocEl;
 
-    assocEl
-      .querySelectorAll(".dam-media-preview__assoc-grid, .dam-media-preview__variant-grid")
-      .forEach(function (grid) {
+    /* Collect grids from assoc pane AND modal (Elementy / Surowe mount late).
+       Use array identity — object-keying HTMLElements collapses to one slot. */
+    var gridList = [];
+    function collectGrids(root) {
+      if (!root || !root.querySelectorAll) return;
+      root
+        .querySelectorAll(".dam-media-preview__assoc-grid, .dam-media-preview__variant-grid")
+        .forEach(function (grid) {
+          if (gridList.indexOf(grid) >= 0) return;
+          gridList.push(grid);
+        });
+    }
+    collectGrids(assocEl);
+    collectGrids(scope);
+
+    gridList.forEach(function (grid) {
         var isVariantGrid = grid.classList.contains("dam-media-preview__variant-grid");
+        var inElementy = !!(
+          grid.closest &&
+          grid.closest(".dam-media-preview__elementy-panel, .dam-media-preview__elementy")
+        );
         function ensurePlusTile() {
           /* brandComposer20260721a: material WARIANTY grid gets plus → Edytuj wszystko (variant). */
           if (
@@ -1935,6 +1956,7 @@
           ) {
             return null;
           }
+          if (inElementy) return null;
           var plus = grid.querySelector(".dam-media-preview__assoc-plus-tile");
           if (plus) return plus;
           plus = document.createElement("button");
@@ -1965,17 +1987,39 @@
 
         grid.querySelectorAll(".dam-media-preview__assoc-item--asset").forEach(function (item) {
           wireQuickMinusControl(item, grid, function () {
-            var idxBtn = item.querySelector("[data-linked-asset-idx]");
-            var idx = parseInt(idxBtn && idxBtn.getAttribute("data-linked-asset-idx"), 10) || 0;
-            var materials = (ctx.materialsList || ctx.shownPrimaries || []).slice();
-            var asset = materials[idx] || ctx.asset;
+            var idxBtn = item.querySelector(
+              "[data-linked-asset-idx], [data-element-asset-idx], [data-element-link-idx]"
+            );
+            var idx = 0;
+            if (idxBtn) {
+              idx =
+                parseInt(
+                  idxBtn.getAttribute("data-linked-asset-idx") ||
+                    idxBtn.getAttribute("data-element-asset-idx") ||
+                    idxBtn.getAttribute("data-element-link-idx"),
+                  10
+                ) || 0;
+            }
+            var materials = (
+              grid._damAssocList ||
+              ctx.materialsList ||
+              ctx.shownPrimaries ||
+              []
+            ).slice();
+            var assetId = item.getAttribute("data-asset-id") || "";
+            var asset =
+              materials[idx] ||
+              materials.find(function (a) {
+                return a && String(a.id) === String(assetId);
+              }) ||
+              ctx.asset;
             var pid =
               (ctx.productContext && ctx.productContext.id) ||
               (ctx.groupContext && ctx.groupContext.product_id) ||
+              (window.__damLastAssocProductCtx && window.__damLastAssocProductCtx.id) ||
               "";
             if (!asset || !pid) {
-              var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
-              openEditPicker(col, "product", Object.assign({}, ctx, { asset: asset || ctx.asset }));
+              softHideAllFileTile(item);
               return;
             }
             quickUnlinkProductFromMaterial(ctx, asset, pid);

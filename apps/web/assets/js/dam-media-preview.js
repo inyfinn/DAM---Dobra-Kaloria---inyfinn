@@ -1842,6 +1842,7 @@
       (extra ? " dam-media-preview__assoc-item--extra" : "") +
       (isVid ? " dam-media-preview__assoc-item--video" : "") +
       '" role="listitem"' +
+      (x && x.id ? ' data-asset-id="' + esc(x.id) + '"' : "") +
       (variantCount > 1 ? ' data-assoc-group-count="' + variantCount + '"' : "") +
       ">" +
       '<button type="button" class="dam-media-preview__assoc-thumb-btn" ' +
@@ -2207,6 +2208,8 @@
   function bindElementyToggle(host, idxAttr, elements) {
     var toggle = host.querySelector('[data-elementy-toggle="' + idxAttr + '"]');
     var panel = host.querySelector('[data-elementy-panel="' + idxAttr + '"]');
+    var grid = panel && panel.querySelector(".dam-media-preview__assoc-grid");
+    if (grid) grid._damAssocList = (elements || []).slice();
     if (toggle && panel) {
       toggle.addEventListener("click", function () {
         var open = toggle.getAttribute("aria-expanded") === "true";
@@ -2218,6 +2221,22 @@
         var m = document.getElementById("damMediaPreview") || document.getElementById("damVizModal");
         var shared = window.DamModalShared;
         if (m && shared && shared.scheduleFitChrome) shared.scheduleFitChrome(m);
+        /* minusGlobal20260721a: re-wire Shift-minus when Elementy panel opens. */
+        if (next && window.DamAssocEdit && typeof window.DamAssocEdit.ensureShiftHoverAssocUx === "function") {
+          var pane =
+            host.closest(".dam-media-preview__assoc-col, .dam-viz-modal__assoc-pane") || host;
+          window.DamAssocEdit.ensureShiftHoverAssocUx(pane, {
+            asset: (elements && elements[0]) || null,
+            materialsList: (elements || []).slice(),
+            shownPrimaries: (elements || []).slice(),
+            productContext: (window.__damLastAssocProductCtx) || {},
+            groupContext: {
+              product_id:
+                (window.__damLastAssocProductCtx && window.__damLastAssocProductCtx.id) || "",
+            },
+            onRefresh: function () {},
+          });
+        }
       });
     }
     bindLinkedAssetClicks(host, elements, idxAttr);
@@ -2493,6 +2512,7 @@
             mount.closest(".dam-media-preview__assoc-col") ||
             mount.closest(".dam-viz-modal__assoc-pane") ||
             mount;
+          window.__damLastAssocProductCtx = ctx || null;
           AE.bindMaterialsPane(paneHost, {
             asset: shownPrimaries[0] || null,
             materialsList: shownPrimaries.slice(),

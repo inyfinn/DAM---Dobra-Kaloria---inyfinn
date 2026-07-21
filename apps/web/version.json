@@ -1,7 +1,7 @@
 {
-  "version": "3.1.0",
+  "version": "3.1.1",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "gapship",
   "released_at": "2026-07-21",
-  "note": "3.1.0: gap ship 2026-07-21 — viz modal parity (INDEX above studio, show-all dedupe/rows, grouptint #f5f6fa, actions bar z40, studio chips nowrap), branding WARIANTY raster-only (no PSD/PSB/AI/PDF in variant-grid; sources in SourceMount), Shift-minus −20% global, paintAssoc unblocked from enrich hang, UTF-8 PL chrome (Pokaż/Włącz), UK→GB lang canon, adminGate session. Cache ship20260721v310."
+  "note": "3.1.1: Shift-minus on studio all-file tiles (XL/L/S/S-SKLEP) + Elementy/Surowe grids; bubble 21px gradient chip; hold 2s session soft-hide (not disk delete). Cache minusGlobal20260721b. Builds on 3.1.0 noSrcGrid + modal parity."
 }

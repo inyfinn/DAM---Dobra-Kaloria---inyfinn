@@ -7723,3 +7723,42 @@ eturn !isSourceVariantFile(v) (PSD/PSB/AI/PDF never in variant-grid; SourceMount
 - visualizations.html contains UTF-8 Pokaż; no Poka? / W??cz
 
 **Źródła:** gap-audit-4h-worker-A/B.md; version-bump-proposal-2026-07-21.md; tools/_ship_v310_20260721.py
+
+
+## 2026-07-21 ~02:55 - Global Shift-minus bubble on all-file tiles (WORKER)
+
+**Komenda/Akcja:** Restyle assoc minus to Geex bubble 80% + HARD: Shift-minus must work globally including studio `.dam-media-preview__all-file` (XL/L/S/S-SKLEP).
+
+**Log/Status:**
+1. Root cause all-file: `ensureShiftHoverAssocUx` only wired `.assoc-item` / variant tiles inside assoc-grid; studio show-all tiles never got `.dam-assoc-quick-minus`. CSS show rules also ignored `.all-files`.
+2. Nested-button risk: `.all-file` is `<button>` → minus uses `span[role=button]` when parent is BUTTON.
+3. Shared helpers in `dam-assoc-edit.js`: `wireQuickMinusControl`, `wireStudioAllFiles`, `ensureGlobalShiftKeyLatch`, soft-hide session action (no disk delete).
+4. Hooks after studio paint in `dam-viz.js` + `dam-media-preview.js`; uiHard Shift selectors extended.
+5. Bubble CSS: 21px (26x0.8), gradient red, 1px white border, soft shadow; Shift-gated.
+6. Cache-bust `minusGlobal20260721a` (assoc-edit / media-preview / viz) via UTF-8 Python.
+
+**Efekt/Fix:** 16 all-file minuses on Kulki 6300760; Shift on → visible bubble; Shift off → hidden; hold 2s soft-hides from picker (undo toast).
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- node --check dam-assoc-edit.js / dam-viz.js / dam-media-preview.js OK
+- CDP S-SKLEP: after w=h=21 (~0.808 of 26); shiftOn o=1 v=visible pe=auto gradient+shadow+1px white border; shiftOff o=0 v=hidden pe=none; wired=16
+- a11y: 16x aria tip soft-hide (not disk delete)
+- Screenshot: pass1 Shift-on minuses on FRONT tiles; pass2 idle hidden; pass3 CDP+a11y (modal opacity tween made some frames stale — CDP/elementFromPoint authoritative)
+
+**Źródła:** dam-assoc-edit.js; dam-viz.js; dam-media-preview.js; visualizations/branding/explorer/dashboard.html `?v=minusGlobal20260721a`
+
+
+## 2026-07-21 ~03:05 - Elementy Shift-minus + grid dedupe fix
+
+**Komenda/Akcja:** Wire Elementy/Surowe assoc grids; fix grid collect using object keys (collapsed to 1 grid).
+
+**Log/Status:**
+1. seenGrid[htmlElement] string-key bug → only first grid wired; Elementy had 0 minus.
+2. Fix: gridList.indexOf(grid); scan modal scope; data-asset-id on cards; grid._damAssocList; re-wire on Elementy toggle open.
+3. Token minusGlobal20260721b.
+
+**Test/Ewaluacja:** CDP elItems with elMinus=2 after open Elementy; all-file still via wireStudioAllFiles (Kulki earlier: 16, 21px, Shift gate).
+
+**Źródła:** dam-assoc-edit.js; dam-media-preview.js
