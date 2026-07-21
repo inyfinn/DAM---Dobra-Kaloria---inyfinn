@@ -1,4 +1,16 @@
 ﻿
+## 2026-07-21 - Geex realign DONE
+
+**Status:** CLOSED on `origin/main`.
+
+**Merge:** `a4ba7c4` — Merge branch `design/geex-realign` (Geex realign F0-F8 + taste unify).
+
+**Tag:** `design-geex-realign` (plus `geex-phase0`..`geex-phase8`).
+
+**ESCALATE:** none.
+
+---
+
 ## 2026-07-21 20:35 - Geex taste unify (KEEP product look) + fixture font
 
 **Komenda/Akcja:** Lead — Parent taste HARD: unify pad/gap only; fix fixture Times; merge main.
