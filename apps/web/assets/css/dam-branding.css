@@ -928,7 +928,7 @@
   padding: 2px 8px;
   line-height: 1.25;
   min-height: 0;
-  border-radius: 999px;
+  border-radius: var(--_dam-badge-radius, 14px); /* F4 MASTER — was 999px */
   letter-spacing: 0.01em;
 }
 
@@ -1713,24 +1713,9 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   margin-top: 0; /* offset na #damMediaPreviewTitle (10px) — nie podwajaj */
 }
 
-/* Ext tag = anatomia .dam-viz-badge / .dam-badge-tag, +10% skala, gap 10px od tytulu */
+/* Ext tag = small variant MASTER badge (primitives BADGES section); gap 10px od tytulu */
 .dam-media-preview__ext-tag {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-inline-start: 10px; /* celowe odsunicie od nazwy pliku */
-  padding: calc(5px * 1.1) calc(11px * 1.1);
-  border-radius: 999px;
-  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * 1.1);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.25;
-  text-transform: uppercase;
-  border: none;
-  font-family: inherit;
-  white-space: nowrap;
-  vertical-align: middle;
+  margin-inline-start: 10px; /* celowe odsunicie od nazwy pliku — anatomy w dam-primitives.css */
 }
 
 .dam-media-preview__ext-tag--png,
@@ -1782,7 +1767,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 }
 
 .dam-media-preview__asset-id {
-  font-size: calc(1em * 1.1);
+  font-size: calc(1em * var(--dam-badge-scale, 1.05));
   align-self: flex-start;
   margin-top: 0;
 }

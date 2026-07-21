@@ -6822,10 +6822,10 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 #damMediaPreviewTitleMeta .dam-media-preview__asset-id,
 #damMediaPreview .dam-media-preview__title-row .dam-media-preview__asset-id {
-  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * 1.05);
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--dam-badge-scale, 1.05));
   font-weight: 500;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--_dam-badge-radius, 14px);
   margin: 0;
 }
 

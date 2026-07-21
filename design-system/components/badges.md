@@ -10,30 +10,34 @@
 |--------|------|
 | `.dam-viz-badge` (+ `--lang`, `--cat`, `--brand`, `--more`, …) | Product/meta chips — **primary** system |
 | `.dam-badge-tag` (+ `--pakowanie`, `--tier-low`) | Branding tags |
+| `.dam-viz-badge.dam-badge-tag` | **MASTER** anatomy (radius 14, shared scale) |
 | `.dam-status-badge` (+ status, `--lg`) | Lifecycle status |
+| `.dam-media-preview__ext-tag` | Small variant (same radius/scale path) |
 | `.dam-tag-pill` / `.dam-tag-chip` / `.dam-tag-group*` | Tag editor chrome |
 | `.dam-badge--msg` / `--notif` | Shell counters |
 | `.geex-content__header__badge` | Geex header |
 
-## Scale tokens
+## Scale / shape tokens
 
-| Token | Value |
-|-------|-------|
-| `--dam-badge-scale` | `1.05` |
-| `--dam-tag-fs-pill` | `10.5px` |
-| `--dam-tag-fs-badge` | `14px` |
+| Token / local | Value | Role |
+|---------------|-------|------|
+| `--dam-badge-scale` | `1.05` | Global chip scale |
+| `--dam-tag-fs-pill` | `10.5px` | Pill base fs |
+| `--dam-tag-fs-badge` | `14px` | Status badge fs |
+| `--_dam-badge-radius` | `14px` | MASTER radius (primitives) |
 
-**MASTER radius target:** 14px (chip).
+Modifiers (`--brand`, `--cat`, …) = **color only**.
 
-## Local overrides to kill (F4)
+## Local overrides killed (F4)
 
-| Location | Hardcode |
-|----------|----------|
-| `dam-branding.css:1723–1725` | `* 1.1` padding/font |
-| `dam-branding.css:1785` | `1em * 1.1` |
-| `dam-brand.css:6825` | `* 1.05` literal → `var(--dam-badge-scale)` |
+| Location | Was | Now |
+|----------|-----|-----|
+| `dam-branding.css` ext-tag pad/fs | `* 1.1` | anatomy in primitives + `--dam-badge-scale` |
+| `dam-branding.css` asset-id | `1em * 1.1` | `1em * var(--dam-badge-scale)` |
+| `dam-brand.css:6825` | `* 1.05` literal | `var(--dam-badge-scale)` + radius 14 |
 
 ## Done (F4)
 
-- One global scale path; no page-local `*1.1`.
-- Do not edit `dam-brand.css` massively — allowlist only if brief permits.
+- One global scale path; no page-local `*1.1` on badge selectors.
+- MASTER radius 14px via `--_dam-badge-radius`.
+- Dark AA for muted index/more/ext-default (+ semantic text lift).

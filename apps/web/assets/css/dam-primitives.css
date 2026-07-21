@@ -1,27 +1,27 @@
-/**
- * DAM Geex primitives — anatomia CTA / badge / panel (skeleton Faza 2).
+﻿/**
+ * DAM Geex primitives ÔÇö anatomia CTA / badge / panel (skeleton Faza 2).
  * Konsument tokenow z dam-tokens.css. Anatomie wypelniaja Agenci 3/4 (F3/F4).
- * Zrodlo miar: agents/shared/geex-realign-audit-2026-07-21.md §5.
+ * Zrodlo miar: agents/shared/geex-realign-audit-2026-07-21.md ┬ž5.
  */
 
 /* === BUTTONS === */
 /* Canonical: .geex-btn (+ --primary / --sm / --transparent / danger / success).
-   Alias (F3): .dam-win-btn, .dam-btn-primary → Geex anatomy via tokens below. */
+   Alias (F3): .dam-win-btn, .dam-btn-primary Ôćĺ Geex anatomy via tokens below. */
 .geex-btn {
   --_dam-btn-pad-y: var(--dam-space-btn-y, 15px);
   --_dam-btn-pad-x: var(--dam-space-btn-x, 25px);
   --_dam-btn-radius: var(--dam-radius-btn, 18px);
   border-radius: var(--_dam-btn-radius);
-  /* padding wiring: Agent 3 — style.css ma 15×25; tu tylko token hook */
+  /* padding wiring: Agent 3 ÔÇö style.css ma 15├Ś25; tu tylko token hook */
 }
 
 .geex-btn--sm {
-  /* compact: audit padding 12×22 / fs 13 — Agent 3 */
+  /* compact: audit padding 12├Ś22 / fs 13 ÔÇö Agent 3 */
 }
 
 .dam-icon-btn,
 .dam-menu-toggle {
-  /* square icon control; min touch via --dam-control-h — Agent 3 */
+  /* square icon control; min touch via --dam-control-h ÔÇö Agent 3 */
   min-height: var(--dam-control-h, 44px);
   min-width: var(--dam-control-h, 44px);
   border-radius: var(--dam-radius-sm, 8px);
@@ -32,18 +32,153 @@
 /* === BADGES === */
 /* Canonical families: .dam-viz-badge, .dam-badge-tag, .dam-status-badge.
    Scale: --dam-badge-scale (1.05). Pill fs: --dam-tag-fs-pill. Badge fs: --dam-tag-fs-badge.
-   Target radius (MASTER): 14px — Agent 4 wires; kill local *1.1 in dam-branding.css. */
+   MASTER anatomy: .dam-viz-badge.dam-badge-tag — radius 14; modifiers = color only.
+   Specificity (element+class / compound) beats later single-class 999px in dam-brand.css. */
 .dam-viz-badge,
 .dam-badge-tag,
-.dam-status-badge {
+.dam-status-badge,
+span.dam-viz-badge,
+button.dam-viz-badge,
+button.dam-badge-tag,
+button.dam-status-badge {
   --_dam-badge-scale: var(--dam-badge-scale, 1.05);
+  --_dam-badge-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: none;
+  border-radius: var(--_dam-badge-radius);
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  white-space: nowrap;
+  vertical-align: middle;
+  max-width: 100%;
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale));
+  padding: calc(2px * var(--_dam-badge-scale)) calc(8px * var(--_dam-badge-scale));
+}
+
+/* MASTER compound — branding tag chips (both classes) */
+.dam-viz-badge.dam-badge-tag,
+button.dam-viz-badge.dam-badge-tag {
+  --_dam-badge-radius: 14px;
+  border-radius: var(--_dam-badge-radius);
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale));
+  padding: calc(2px * var(--_dam-badge-scale)) calc(8px * var(--_dam-badge-scale));
+}
+
+/*
+  Radius win vs later dam-brand / dam-branding 999px:
+  higher specificity (html body + compound) so early primitives still win cascade.
+*/
+html body .dam-viz-badge,
+html body .dam-badge-tag,
+html body .dam-status-badge,
+html body span.dam-viz-badge,
+html body button.dam-viz-badge,
+html body button.dam-badge-tag,
+html body .dam-viz-badge.dam-badge-tag,
+html body button.dam-viz-badge.dam-badge-tag,
+html body .dam-branding-tag-filters .dam-tag-group-pills .dam-viz-badge,
+html body .dam-branding-tag-filters .dam-tag-group-pills .dam-viz-badge.is-active,
+html body .dam-branding-tag-filters .dam-branding-tag-group--przeznaczenie-tiles .dam-tag-group-pills .dam-viz-badge,
+html body .dam-viz-card .dam-viz-badge,
+html body .dam-viz-card button.dam-viz-badge,
+html body .dam-project-card__badges .dam-viz-badge,
+html body .dam-inbox-item__tags .dam-viz-badge,
+html body .dam-widget__viz-badges .dam-viz-badge,
+html body .dam-media-preview__ext-tag {
+  --_dam-badge-radius: 14px;
+  border-radius: var(--_dam-badge-radius);
+}
+
+/* Card / modal badge denser padding (scale path only — no local *1.1) */
+.dam-viz-card .dam-viz-badge,
+.dam-viz-card button.dam-viz-badge,
+.dam-viz-modal__body #damVizModalBadges .dam-viz-badge,
+.dam-viz-modal__body #damVizModalBadges button.dam-viz-badge,
+.dam-viz-modal__body #damMediaPreviewBadges .dam-viz-badge,
+.dam-viz-modal__body #damMediaPreviewBadges button.dam-viz-badge {
+  border-radius: var(--_dam-badge-radius, 14px);
+  padding: calc(5px * var(--_dam-badge-scale, 1.05)) calc(11px * var(--_dam-badge-scale, 1.05));
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale, 1.05));
+}
+
+/* ext-tag = small variant of MASTER badge (not +10% local bypass) */
+.dam-media-preview__ext-tag {
+  --_dam-badge-scale: var(--dam-badge-scale, 1.05);
+  --_dam-badge-radius: 14px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: none;
+  border-radius: var(--_dam-badge-radius);
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: calc(4px * var(--_dam-badge-scale)) calc(9px * var(--_dam-badge-scale));
   font-size: calc(var(--dam-tag-fs-pill, 10.5px) * var(--_dam-badge-scale));
-  /* border-radius 14px + padding anatomy: Agent 4 */
+}
+
+/* Status uses badge fs token; --lg is size mod only */
+.dam-status-badge {
+  font-size: calc(var(--dam-tag-fs-badge, 14px) * 0.85 * var(--_dam-badge-scale, 1.05));
+  padding: calc(3px * var(--_dam-badge-scale, 1.05)) calc(9px * var(--_dam-badge-scale, 1.05));
+}
+.dam-status-badge--lg {
+  font-size: calc(var(--dam-tag-fs-badge, 14px) * var(--_dam-badge-scale, 1.05));
+}
+
+/* Dark AA — muted chips (color only; anatomy unchanged) */
+html[data-theme="dark"] .dam-viz-badge--index,
+html[data-theme="dark"] .dam-badge-tag.dam-viz-badge--index {
+  background: rgba(230, 228, 238, 0.12);
+  color: #d4d1de;
+}
+html[data-theme="dark"] .dam-viz-badge--index-miss {
+  background: rgba(230, 228, 238, 0.1);
+  color: #b8b4c4;
+}
+html[data-theme="dark"] .dam-viz-badge--more {
+  background: rgba(230, 228, 238, 0.1);
+  color: #c9c5d4;
+}
+html[data-theme="dark"] .dam-media-preview__ext-tag--default {
+  background: rgba(230, 228, 238, 0.12);
+  color: #d4d1de;
+}
+html[data-theme="dark"] .dam-viz-badge--brand,
+html[data-theme="dark"] .dam-viz-badge--meta {
+  color: #c894e8;
+}
+html[data-theme="dark"] .dam-viz-badge--cat {
+  color: #5ee0a0;
+}
+html[data-theme="dark"] .dam-viz-badge--lang {
+  color: #5ed4c4;
+}
+html[data-theme="dark"] .dam-viz-badge--subcat {
+  color: #c4a0e0;
+}
+html[data-theme="dark"] .dam-viz-badge--carrier,
+html[data-theme="dark"] .dam-viz-badge--multilang {
+  color: #f0b878;
+}
+html[data-theme="dark"] .dam-viz-badge--variants {
+  color: #5ecfc4;
 }
 /* === /BADGES === */
 
 /* === PANELS === */
-/* Surface candidates (audit §3): .dam-bento__cell, .dam-dash-panel, modal/popover.
+/* Surface candidates (audit ┬ž3): .dam-bento__cell, .dam-dash-panel, modal/popover.
    F5a fills elevation; F2 only token hooks. */
 .dam-dash-panel,
 .dam-bento__cell {
