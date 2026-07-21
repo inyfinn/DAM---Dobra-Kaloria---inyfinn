@@ -25,6 +25,9 @@ Endpoints:
                          (okno ~2 min, tylko wewnatrz Marketing, tylko niedawno utworzony folder)
   POST /explorer/add-variant-type  admin; JSON {code, code_en, label_pl} -> nowy wariant/nosnik
                          globalny (naming-dictionary.carriers + carrier-types.json, KV push)
+  POST /explorer/pack-print  login; JSON {revision_path|path, dry_run?}
+                         -> ZIP (2 - PROJEKT + 4 - WIZKI, bez SZKICE) do 3 - DRUK;
+                         nazwa = stem glownego .ai; 7-Zip -tzip -mx=9 -> choco -> OS zip
   POST /synology-share {"path": "..."} -> Synology Drive "Uzyskaj lacze" / Get link
   POST /validate-base {"path": "X:\\\\Marketing"} -> checks 3 root folders
   POST /pick-folder {"start":"X:\\\\"} -> natywny dialog folderu (tkinter; UI :8765)
@@ -4336,6 +4339,451 @@ def _child_dir_prefix(parent: Path, prefix_lower: str) -> Path | None:
     return None
 
 
+_SZKICE_NAME_RE = re.compile(r"szkice", re.IGNORECASE)
+_PROJEKT_SLOT_PREFIXES = (
+    "2 - projekty",
+    "2 - projekt",
+    "2 - project",
+    "2 - projects",
+)
+_WIZKI_SLOT_PREFIXES = (
+    "4 - wizualizacje",
+    "4 - wizki",
+    "4 - visuals",
+    "4 - wizual",
+    "4 - viz",
+)
+_DRUK_SLOT_PREFIXES = (
+    "3 - druk",
+    "3 - print",
+    "3 - drukarnia",
+)
+
+
+def _is_szkice_name(name: str) -> bool:
+    return bool(_SZKICE_NAME_RE.search(name or ""))
+
+
+def _find_slot_dir(revision: Path, prefixes: tuple[str, ...]) -> Path | None:
+    """Case-insensitive slot match (PROJEKT/PROJEKTY, WIZKI/WIZUALIZACJE, DRUK)."""
+    for pref in prefixes:
+        found = _child_dir_prefix(revision, pref)
+        if found is not None:
+            return found
+    return None
+
+
+def _find_7z_exe() -> str | None:
+    import shutil
+
+    candidates = [
+        r"C:\Program Files\7-Zip\7z.exe",
+        r"C:\Program Files (x86)\7-Zip\7z.exe",
+        shutil.which("7z"),
+        shutil.which("7za"),
+        shutil.which("7z.exe"),
+    ]
+    for c in candidates:
+        if not c:
+            continue
+        p = Path(c)
+        if p.is_file():
+            return str(p)
+    return None
+
+
+def _try_choco_install_7zip() -> str | None:
+    """Non-interactive Chocolatey install of 7zip; return 7z.exe path or None."""
+    import shutil
+
+    choco = shutil.which("choco")
+    if not choco:
+        return None
+    try:
+        _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+        subprocess.run(
+            [choco, "install", "7zip", "-y", "--no-progress"],
+            check=False,
+            timeout=300,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=_no_win,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return _find_7z_exe()
+
+
+def _find_main_ai_stem(projekt: Path) -> str | None:
+    """Stem glownego .ai w 2 - PROJEKT (bez SZKICE); preferuj *-F / najnowszy."""
+    if not projekt.is_dir():
+        return None
+    ais: list[Path] = []
+    try:
+        for child in projekt.iterdir():
+            if not child.is_file():
+                continue
+            if child.suffix.lower() != ".ai":
+                continue
+            if _is_szkice_name(child.name):
+                continue
+            ais.append(child)
+    except OSError:
+        return None
+    if not ais:
+        return None
+
+    def _rank(p: Path) -> tuple:
+        stem = p.stem
+        has_f = 0 if re.search(r"(?:^|[\s_-])F(?:$|[\s_-])|\.00-F|-F$", stem, re.I) else 1
+        try:
+            mtime = -p.stat().st_mtime
+        except OSError:
+            mtime = 0.0
+        return (has_f, mtime, stem.lower())
+
+    ais.sort(key=_rank)
+    return ais[0].stem
+
+
+def _collect_pack_entries(
+    projekt: Path, wizki: Path
+) -> list[tuple[Path, str]]:
+    """Lista (abs_path, arcname) - sloty jako top-level w ZIP; bez plikow *szkice*."""
+    entries: list[tuple[Path, str]] = []
+    for folder in (projekt, wizki):
+        if not folder.is_dir():
+            continue
+        root_name = folder.name
+        try:
+            for root, _dirs, files in os.walk(folder):
+                root_p = Path(root)
+                for fname in files:
+                    if _is_szkice_name(fname):
+                        continue
+                    abs_p = root_p / fname
+                    try:
+                        rel = abs_p.relative_to(folder)
+                    except ValueError:
+                        continue
+                    arc = str(Path(root_name) / rel).replace("\\", "/")
+                    entries.append((abs_p, arc))
+        except OSError:
+            continue
+    return entries
+
+
+def _zip_with_7z(out_zip: Path, revision: Path, projekt: Path, wizki: Path, seven: str) -> dict:
+    """7-Zip: format zip, Ultra (-mx=9), multi-thread; wyklucz *szkice*."""
+    args = [
+        seven,
+        "a",
+        "-tzip",
+        "-mx=9",
+        "-mmt=on",
+        "-y",
+        str(out_zip),
+        projekt.name,
+        wizki.name,
+        "-xr!*szkice*",
+        "-xr!*SZKICE*",
+        "-xr!*Szkice*",
+    ]
+    _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+    try:
+        proc = subprocess.run(
+            args,
+            cwd=str(revision),
+            check=False,
+            timeout=900,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=_no_win,
+        )
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "zip_timeout", "engine": "7z"}
+    except OSError as exc:
+        return {"ok": False, "error": "zip_os_error", "detail": str(exc), "engine": "7z"}
+    if proc.returncode != 0 or not out_zip.is_file():
+        return {
+            "ok": False,
+            "error": "7z_failed",
+            "engine": "7z",
+            "detail": (proc.stderr or proc.stdout or "")[:500],
+            "returncode": proc.returncode,
+        }
+    return {"ok": True, "engine": "7z"}
+
+
+def _zip_with_python(out_zip: Path, entries: list[tuple[Path, str]]) -> dict:
+    """stdlib zipfile DEFLATE max; fallback gdy brak 7-Zip / Compress-Archive."""
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(
+            out_zip,
+            mode="w",
+            compression=zipfile.ZIP_DEFLATED,
+            compresslevel=9,
+        ) as zf:
+            for abs_p, arc in entries:
+                try:
+                    zf.write(abs_p, arcname=arc)
+                except OSError:
+                    continue
+    except OSError as exc:
+        return {"ok": False, "error": "zip_os_error", "detail": str(exc), "engine": "zipfile"}
+    if not out_zip.is_file():
+        return {"ok": False, "error": "zip_missing", "engine": "zipfile"}
+    return {"ok": True, "engine": "zipfile"}
+
+
+def _zip_with_powershell(out_zip: Path, stage_dir: Path) -> dict:
+    """Windows Compress-Archive fallback (stage juz bez SZKICE)."""
+    if sys.platform != "win32":
+        return {"ok": False, "error": "not_windows", "engine": "compress_archive"}
+    ps = (
+        "Compress-Archive -Path (Join-Path -LiteralPath $env:DAM_STAGE '*') "
+        "-DestinationPath $env:DAM_OUT -CompressionLevel Optimal -Force"
+    )
+    env = os.environ.copy()
+    env["DAM_STAGE"] = str(stage_dir)
+    env["DAM_OUT"] = str(out_zip)
+    _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+    try:
+        proc = subprocess.run(
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                ps,
+            ],
+            check=False,
+            timeout=900,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+            creationflags=_no_win,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"ok": False, "error": "compress_archive_failed", "detail": str(exc), "engine": "compress_archive"}
+    if proc.returncode != 0 or not out_zip.is_file():
+        return {
+            "ok": False,
+            "error": "compress_archive_failed",
+            "engine": "compress_archive",
+            "detail": (proc.stderr or proc.stdout or "")[:500],
+        }
+    return {"ok": True, "engine": "compress_archive"}
+
+
+def create_print_package(
+    revision_path: str = "",
+    product_id: str = "",
+    index: str = "",
+    dry_run: bool = False,
+) -> dict:
+    """
+    Spakuj 2 - PROJEKT(+y) + 4 - WIZKI/WIZUALIZACJE do ZIP w 3 - DRUK.
+    Nazwa ZIP = stem glownego .ai (bez SZKICE). Preferuj 7-Zip Ultra zip.
+    """
+    import shutil
+    import tempfile
+
+    rev: Path | None = None
+    if revision_path:
+        cand = Path(normalize_path(revision_path))
+        if cand.is_dir() and _is_under_marketing(cand):
+            rev = cand
+    if rev is None:
+        rev = _resolve_revision_path(product_id=product_id, index=index, revision_path=revision_path)
+    if rev is None or not rev.is_dir():
+        return {
+            "ok": False,
+            "error": "revision_not_found",
+            "message": "Nie znaleziono folderu wariantu produktu.",
+        }
+    if not _is_under_marketing(rev):
+        return {"ok": False, "error": "path_outside_marketing"}
+
+    projekt = _find_slot_dir(rev, _PROJEKT_SLOT_PREFIXES)
+    wizki = _find_slot_dir(rev, _WIZKI_SLOT_PREFIXES)
+    druk = _find_slot_dir(rev, _DRUK_SLOT_PREFIXES)
+    missing: list[str] = []
+    if projekt is None:
+        missing.append("2 - PROJEKT")
+    if wizki is None:
+        missing.append("4 - WIZKI")
+    if missing:
+        return {
+            "ok": False,
+            "error": "folders_missing",
+            "missing": missing,
+            "message": "Brak folderow: " + ", ".join(missing),
+            "revision_path": str(rev),
+        }
+
+    assert projekt is not None and wizki is not None
+    stem = _find_main_ai_stem(projekt)
+    if not stem:
+        return {
+            "ok": False,
+            "error": "ai_project_missing",
+            "message": "Brak pliku .ai projektu w 2 - PROJEKT (bez SZKICE).",
+            "revision_path": str(rev),
+            "projekt_path": str(projekt),
+        }
+
+    if druk is None:
+        druk = rev / "3 - DRUK"
+    zip_name = stem + ".zip"
+    out_zip = druk / zip_name
+    entries = _collect_pack_entries(projekt, wizki)
+    if not entries:
+        return {
+            "ok": False,
+            "error": "nothing_to_pack",
+            "message": "Brak plikow do spakowania (po wykluczeniu SZKICE).",
+        }
+
+    result_base = {
+        "ok": True,
+        "revision_path": str(rev),
+        "projekt_path": str(projekt),
+        "wizki_path": str(wizki),
+        "druk_path": str(druk),
+        "zip_name": zip_name,
+        "zip_path": str(out_zip),
+        "ai_stem": stem,
+        "file_count": len(entries),
+        "dry_run": bool(dry_run),
+    }
+    if dry_run:
+        return result_base
+
+    try:
+        druk.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return {
+            "ok": False,
+            "error": "druk_mkdir_failed",
+            "detail": str(exc),
+            "message": "Nie mozna utworzyc folderu 3 - DRUK.",
+        }
+
+    if out_zip.is_file():
+        try:
+            out_zip.unlink()
+        except OSError as exc:
+            return {
+                "ok": False,
+                "error": "zip_locked",
+                "detail": str(exc),
+                "message": "Nie mozna nadpisac istniejacego ZIP (plik zajety?).",
+            }
+
+    seven = _find_7z_exe()
+    if not seven:
+        seven = _try_choco_install_7zip()
+
+    zip_res: dict
+    if seven:
+        zip_res = _zip_with_7z(out_zip, rev, projekt, wizki, seven)
+        if not zip_res.get("ok"):
+            # 7z mogl stworzyc uszkodzony plik
+            try:
+                if out_zip.is_file():
+                    out_zip.unlink()
+            except OSError:
+                pass
+            zip_res = _zip_with_python(out_zip, entries)
+    else:
+        zip_res = {"ok": False, "error": "7z_missing"}
+
+    if not zip_res.get("ok") and sys.platform == "win32":
+        try:
+            if out_zip.is_file():
+                out_zip.unlink()
+        except OSError:
+            pass
+        stage: Path | None = None
+        try:
+            stage = Path(tempfile.mkdtemp(prefix="dam-pakiet-"))
+            for abs_p, arc in entries:
+                dest = stage / Path(arc)
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(abs_p, dest)
+            zip_res = _zip_with_powershell(out_zip, stage)
+        except OSError as exc:
+            zip_res = {
+                "ok": False,
+                "error": "stage_failed",
+                "detail": str(exc),
+                "engine": "compress_archive",
+            }
+        finally:
+            if stage is not None:
+                try:
+                    shutil.rmtree(stage, ignore_errors=True)
+                except OSError:
+                    pass
+
+    if not zip_res.get("ok"):
+        try:
+            if out_zip.is_file():
+                out_zip.unlink()
+        except OSError:
+            pass
+        zip_res = _zip_with_python(out_zip, entries)
+
+    if not zip_res.get("ok"):
+        return {
+            "ok": False,
+            "error": zip_res.get("error") or "zip_failed",
+            "detail": zip_res.get("detail") or "",
+            "engine": zip_res.get("engine") or "",
+            "message": "Kompresja ZIP nie powiodla sie.",
+            "revision_path": str(rev),
+        }
+
+    try:
+        st = out_zip.stat()
+        size = int(st.st_size)
+        mtime = datetime.fromtimestamp(st.st_mtime, tz=timezone.utc).isoformat()
+    except OSError:
+        size = 0
+        mtime = utc_now()
+
+    result_base.update(
+        {
+            "ok": True,
+            "dry_run": False,
+            "engine": zip_res.get("engine") or "",
+            "zip_size": size,
+            "mtime": mtime,
+            "file": {
+                "name": zip_name,
+                "path": str(out_zip).replace("\\", "/"),
+                "ext": "zip",
+                "size": size,
+                "mtime": mtime,
+                "lang": "",
+                "slot": druk.name if druk else "3 - DRUK",
+                "role": "print",
+            },
+        }
+    )
+    return result_base
+
+
 def _count_files(folder: Path, max_n: int = 500) -> int:
     n = 0
     if not folder.is_dir():
@@ -6448,6 +6896,43 @@ class Handler(BaseHTTPRequestHandler):
                 payload,
                 actor=str(user.get("email") or user.get("name") or ""),
             )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/explorer/pack-print":
+            # PAKIET: ZIP 2-PROJEKT + 4-WIZKI -> 3-DRUK (bez SZKICE); nazwa = stem .ai
+            user = self._require_login()
+            if user is None:
+                return
+            payload = data if isinstance(data, dict) else {}
+            rev_path = (
+                payload.get("revision_path")
+                or payload.get("path")
+                or payload.get("folder")
+                or ""
+            )
+            result = create_print_package(
+                revision_path=str(rev_path or "").strip(),
+                product_id=str(payload.get("product_id") or "").strip(),
+                index=str(payload.get("index") or payload.get("revision_index") or "").strip(),
+                dry_run=bool(payload.get("dry_run")),
+            )
+            if result.get("ok") and not result.get("dry_run"):
+                try:
+                    append_audit(
+                        {
+                            "action": "explorer_pack_print",
+                            "user": user.get("email") or user.get("name") or "",
+                            "path": result.get("zip_path") or "",
+                            "detail": {
+                                "zip_name": result.get("zip_name"),
+                                "engine": result.get("engine"),
+                                "file_count": result.get("file_count"),
+                                "revision_path": result.get("revision_path"),
+                            },
+                        }
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/rename-revision-prefix":
