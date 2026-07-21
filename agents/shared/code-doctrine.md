@@ -975,3 +975,14 @@ evealSequence fade uzywa opacity nie utoAlpha; po
 - **Zasada HARD:** square tylko `.dam-btn-icon-only` / `.dam-viz-icon-btn` /
   `.dam-icon-btn`. Labeled `.dam-btn-icon` = `width:auto` + compact pad/radius.
   Nie mieszaj text CTA z forced equal w/h.
+
+### 2026-07-21 - Geex dark h5 vs `--dam-text` (inventory close)
+
+- **Objaw:** dark mode — tytuły `.dam-viz-card__title` prawie niewidoczne
+  (rgb ~44,43,54) mimo `color: var(--dam-text)` (= `#e6e4ee`).
+- **Przyczyna:** Geex `html[data-theme="dark"] h5 { color: var(--gray-color) }`.
+  W `dam-tokens` `--gray-color` mapuje na `--dam-border` (#2c2b36), nie tekst.
+  Specyficzność Geex (attr+element) biła `.dam-viz-card__title`.
+- **Zasada:** dla tytułów kart używaj
+  `html[data-theme="dark"] .dam-viz-card .dam-viz-card__title` (albo równoważny
+  bump specificity). Powierzchnie filtrów/kart: `#fff` → `var(--dam-surface)`.

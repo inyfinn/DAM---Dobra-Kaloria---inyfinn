@@ -75,23 +75,24 @@
 
 .dam-catalog-marketing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-  gap: 12px;
+  /* Air closer to .dam-viz-card + dashboard viz-row tiles */
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 14px;
 }
 
 /* Middle ground of .dam-viz-card body air + dashboard viz-row media cards */
 .dam-catalog-marketing-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px 14px 14px;
-  border-radius: 12px;
+  gap: 14px;
+  padding: 16px 16px 16px;
+  border-radius: var(--dam-radius-md, 12px);
   border: 1px solid var(--dam-border, #e7e7e7);
   background: var(--dam-surface, #fff);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   text-decoration: none;
   color: inherit;
-  min-height: 168px;
+  min-height: 180px;
   box-sizing: border-box;
 }
 
@@ -102,9 +103,10 @@
 
 .dam-catalog-marketing-card__thumb {
   aspect-ratio: 1;
-  border-radius: 8px;
+  border-radius: var(--dam-radius-sm, 8px);
   overflow: hidden;
-  background: #fff;
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #e7e7e7);
   flex: 0 0 auto;
 }
 
@@ -117,9 +119,11 @@
 .dam-catalog-marketing-card__badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 7px;
-  min-height: 28px;
+  gap: 6px 8px;
+  min-height: 30px;
   align-content: flex-start;
+  /* Tag band above title — hierarchy like viz-card badges */
+  order: 0;
 }
 
 .dam-catalog-marketing-card__badges .dam-viz-badge,
@@ -127,16 +131,18 @@
   font-size: calc(var(--dam-tag-fs-pill, 10.5px) * var(--dam-badge-scale, 1.05));
   font-weight: 500;
   line-height: 1.2;
-  padding: 4px 9px;
+  padding: 5px 10px;
   border-radius: var(--_dam-badge-radius, 14px);
   max-width: 100%;
 }
 
 .dam-catalog-marketing-card p.dam-catalog-marketing-card__title,
 .dam-catalog-marketing-card .dam-catalog-marketing-card__title {
-  font-size: 12px !important;
+  /* Between pill tags (~11) and viz title (14) — readable hierarchy */
+  font-size: 13px !important;
   font-weight: 600;
   line-height: 1.35;
+  letter-spacing: -0.01em;
   color: var(--dam-text, #464255);
   margin: 0;
   display: -webkit-box;

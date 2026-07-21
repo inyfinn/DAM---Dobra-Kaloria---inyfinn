@@ -2284,9 +2284,9 @@ input[type="range"] {
 /* FROZEN ANATOMY (C3 / memory §123) — do not restyle card chrome.
    Spec: agents/shared/bento-card-freeze.md — chrome hubów OK; anatomia karty NIE. */
 .dam-viz-card {
-  border: 1px solid #E7E7E7;
-  border-radius: 12px;
-  background: #fff;
+  border: 1px solid var(--dam-border, #E7E7E7);
+  border-radius: var(--dam-radius-md, 12px);
+  background: var(--dam-surface, #fff);
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
   display: flex;
@@ -2297,12 +2297,13 @@ input[type="range"] {
 
 .dam-viz-card__body {
   /* Shared card rhythm tokens (viz = source of truth; branding inherits).
-     Taste 2026-07-21: +air (pad/gap) without anatomy redesign. */
-  --dam-viz-card-body-pad-top: 22px;
-  --dam-viz-card-body-pad-bottom: 20px;
-  --dam-viz-card-body-pad-x: 16px;
-  --dam-viz-card-body-gap: 16px;
-  --dam-viz-card-actions-extra-gap: 6px;
+     Taste 2026-07-21: +air (pad/gap) without anatomy redesign.
+     Inventory close: slight +breath after unify (still frozen structure). */
+  --dam-viz-card-body-pad-top: 24px;
+  --dam-viz-card-body-pad-bottom: 22px;
+  --dam-viz-card-body-pad-x: 18px;
+  --dam-viz-card-body-gap: 18px;
+  --dam-viz-card-actions-extra-gap: 8px;
   flex: 1 1 auto;
   padding: var(--dam-viz-card-body-pad-top) var(--dam-viz-card-body-pad-x) var(--dam-viz-card-body-pad-bottom);
   text-align: center;
@@ -2311,15 +2312,17 @@ input[type="range"] {
   align-items: center;
   justify-content: flex-end;
   gap: var(--dam-viz-card-body-gap);
-  min-height: 204px;
+  min-height: 212px;
   box-sizing: border-box;
 }
 
-.dam-viz-card__title {
+.dam-viz-card__title,
+html[data-theme="dark"] .dam-viz-card .dam-viz-card__title {
+  /* Beat Geex dark h5 { color: var(--gray-color) } (= --dam-border) */
   font-size: var(--dam-fs-base, 14px);
   font-weight: 600;
   margin: 0;
-  color: #464255;
+  color: var(--dam-text, #464255);
   text-align: center;
   width: 100%;
   line-height: 1.3;
@@ -2337,20 +2340,20 @@ input[type="range"] {
 }
 
 .dam-viz-card__title-pl-paren {
-  /* duzo slabsze niz meta (#8b8d97) - prawie tylko kontur nawiasu */
-  color: #c5c6cd;
+  /* duzo slabsze niz meta - prawie tylko kontur nawiasu */
+  color: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 55%, var(--dam-surface, #fff));
   font-weight: 400;
   opacity: 0.72;
 }
 
 .dam-viz-card__title-pl-text {
-  /* #464255 (tytul) ↔ #8b8d97 (meta) w polowie */
-  color: #696877;
+  /* tytul ↔ meta w polowie */
+  color: color-mix(in srgb, var(--dam-text, #464255) 55%, var(--dam-text-muted, #8b8d97));
 }
 
 .dam-viz-card__meta {
   font-size: var(--dam-fs-xs, 11px);
-  color: #8b8d97;
+  color: var(--dam-text-muted, #8b8d97);
   margin: 0;
   text-align: center;
   width: 100%;
@@ -2359,14 +2362,14 @@ input[type="range"] {
 }
 
 .dam-viz-card__meta--empty {
-  color: #b0b2bb;
+  color: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 70%, var(--dam-surface, #fff));
   font-style: italic;
 }
 
 .dam-viz-thumb {
   flex: 0 0 auto;
   height: calc(160px * var(--dam-viz-card-scale, 1));
-  background: #ffffff;
+  background: var(--dam-surface, #ffffff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2380,7 +2383,7 @@ input[type="range"] {
   height: 100%;
   object-fit: contain;
   display: block;
-  background: #ffffff;
+  background: var(--dam-surface, #ffffff);
   transform: scale(var(--dam-viz-img-scale, 1));
   transform-origin: center center;
 }
@@ -3039,8 +3042,8 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   margin: 0 0 12px;
   /* Stare: 8px 12px; +12px = 20px 24px (jak Branding meta) */
   padding: 20px 24px;
-  background: #fff;
-  border: 1px solid #E7E7E7;
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #E7E7E7);
   border-radius: 10px;
   position: sticky;
   top: var(--dam-sticky-filters-top, calc(var(--dam-sticky-top, 25px) + var(--dam-sticky-search-h, 68px) + var(--dam-sticky-search-gap, 10px)));
@@ -3049,13 +3052,13 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   font-family: inherit;
   font-size: var(--dam-viz-meta-fs);
   font-weight: 500;
-  color: #464255;
+  color: var(--dam-text, #464255);
 }
 .dam-viz-secondary-filters .dam-viz-zoom-control {
   margin-left: auto;
   padding: 4px 10px;
-  background: #fff;
-  border: 1px solid #E7E7E7;
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #E7E7E7);
   border-radius: var(--dam-viz-meta-radius);
   flex-shrink: 0;
   height: var(--dam-viz-meta-h);

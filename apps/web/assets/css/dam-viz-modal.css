@@ -121,8 +121,8 @@
   margin-top: 0;
   /* +6px horizontal vs prior 40px (brandModalPad20260721a) */
   padding: 12px 46px 20px;
-  background: #fff;
-  border-top: 1px solid rgba(70, 66, 85, 0.08);
+  background: var(--dam-surface, #fff);
+  border-top: 1px solid color-mix(in srgb, var(--dam-text, #464255) 8%, transparent);
   box-shadow: 0 -6px 14px rgba(70, 66, 85, 0.05);
 }
 
@@ -132,7 +132,7 @@
   position: sticky;
   bottom: 0;
   z-index: 40;
-  background: #fff;
+  background: var(--dam-surface, #fff);
   padding-top: 12px;
   padding-bottom: 8px;
   margin-top: var(--dam-viz-card-actions-extra-gap, 4px);
@@ -210,7 +210,7 @@
 #damMediaPreview .dam-media-preview__all-file img,
 #damVizModal .dam-media-preview__all-file-ph,
 #damMediaPreview .dam-media-preview__all-file-ph {
-  background: #fff !important;
+  background: var(--dam-surface, #fff) !important;
   background-image: none !important;
 }
 
@@ -250,7 +250,7 @@
    (white text + primary fill) which + white !important bg = invisible label/icon. */
 #damVizModal .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary),
 #damMediaPreview .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary) {
-  background: #fff !important;
+  background: var(--dam-surface, #fff) !important;
   color: var(--dam-primary, #ab54db) !important;
   border: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
   box-shadow: none !important;
@@ -262,7 +262,7 @@
 #damVizModal .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary):focus-visible,
 #damMediaPreview .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary):hover,
 #damMediaPreview .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary):focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, #fff) !important;
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, var(--dam-surface, #fff)) !important;
   color: var(--dam-primary, #ab54db) !important;
   border: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
   outline: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
@@ -283,7 +283,7 @@
 
 #damVizModal .dam-viz-modal__actions .dam-admin-control,
 #damMediaPreview .dam-viz-modal__actions .dam-admin-control {
-  background: #fff !important;
+  background: var(--dam-surface, #fff) !important;
   /* Same compact rect as labeled CTAs — not Geex pill 50px */
   width: auto !important;
   height: auto !important;
@@ -292,7 +292,7 @@
 
 #damVizModal .dam-viz-modal__actions .dam-viz-icon-btn,
 #damMediaPreview .dam-viz-modal__actions .dam-viz-icon-btn {
-  background: #fff !important;
+  background: var(--dam-surface, #fff) !important;
   width: auto;
   height: auto;
   min-width: 44px;
@@ -306,7 +306,7 @@
 #damVizModal .dam-viz-modal__actions .dam-viz-icon-btn:focus-visible,
 #damMediaPreview .dam-viz-modal__actions .dam-viz-icon-btn:hover,
 #damMediaPreview .dam-viz-modal__actions .dam-viz-icon-btn:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, #fff) !important;
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, var(--dam-surface, #fff)) !important;
   color: var(--dam-primary, #ab54db) !important;
   border-color: var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
   opacity: 1 !important;
@@ -446,9 +446,9 @@
 #damVizModal .dam-media-preview__quality-pill.is-active,
 #damMediaPreview .dam-media-preview__studio-chip.is-active,
 #damMediaPreview .dam-media-preview__quality-pill.is-active {
-  background: #fff !important;
+  background: var(--dam-surface, #fff) !important;
   border: 1px solid var(--dam-primary, #ab54db) !important;
-  color: color-mix(in srgb, var(--dam-primary, #ab54db) 72%, #3d2f4a) !important;
+  color: color-mix(in srgb, var(--dam-primary, #ab54db) 72%, var(--dam-text, #3d2f4a)) !important;
   box-shadow: none !important;
 }
 
@@ -503,7 +503,7 @@
   /* +12px vs 48/18/18 — ten sam rytm paddingu co body */
   padding: 60px 30px 30px;
   box-sizing: border-box;
-  background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 55%, #fff);
+  background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 55%, var(--dam-surface, #fff));
   overflow: hidden;
 }
 
@@ -650,7 +650,7 @@
     max-height: none;
     padding: 26px 28px 32px;
     border-top: 1px solid rgba(70, 66, 85, 0.08);
-    background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 40%, #fff);
+    background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 40%, var(--dam-surface, #fff));
     overflow: visible;
   }
 

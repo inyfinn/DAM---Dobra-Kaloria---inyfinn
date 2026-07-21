@@ -65,7 +65,7 @@
   padding: 8px 6px;
   border: 1px solid var(--dam-border, #ececf2);
   border-radius: 10px;
-  background: #fff;
+  background: var(--dam-surface, #fff);
   cursor: pointer;
   text-align: center;
 }
@@ -102,7 +102,7 @@
   border: 1px solid var(--dam-border, #ececf2);
   border-radius: 10px;
   padding: 6px;
-  background: #fff;
+  background: var(--dam-surface, #fff);
   cursor: pointer;
   text-align: left;
 }
@@ -743,15 +743,14 @@
 
 .dam-branding-card .dam-viz-card__body {
   /* Inherit viz rhythm tokens from .dam-viz-card__body (dam-brand.css).
-     Prior 10px/15px + pad 12/14 + gap:0 fought viz gap:14 + pad 20/18.
-     min-height ~276: branding title+id-chip is taller than viz title+meta;
-     extra ~18px leftover above badges (justify-end) matches viz thumb→badges ~38. */
-  --dam-branding-card-section-gap: var(--dam-viz-card-body-gap, 14px);
-  --dam-branding-card-actions-gap: var(--dam-viz-card-actions-extra-gap, 4px);
+     Inventory close: match bumped viz air (24/22/18/18 + actions 8).
+     min-height ~288: title+id-chip taller than viz title+meta. */
+  --dam-branding-card-section-gap: var(--dam-viz-card-body-gap, 18px);
+  --dam-branding-card-actions-gap: var(--dam-viz-card-actions-extra-gap, 8px);
   flex: 1 1 auto;
-  min-height: 276px;
-  padding: var(--dam-viz-card-body-pad-top, 20px) var(--dam-viz-card-body-pad-x, 14px) var(--dam-viz-card-body-pad-bottom, 18px);
-  gap: var(--dam-viz-card-body-gap, 14px);
+  min-height: 288px;
+  padding: var(--dam-viz-card-body-pad-top, 24px) var(--dam-viz-card-body-pad-x, 18px) var(--dam-viz-card-body-pad-bottom, 22px);
+  gap: var(--dam-viz-card-body-gap, 18px);
   justify-content: flex-end;
   align-items: center;
   text-align: center;
@@ -839,8 +838,8 @@
   max-width: min(320px, calc(100vw - 16px));
   padding: 10px 12px;
   border-radius: 10px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #e5e7eb);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
   pointer-events: none;
 }
@@ -903,8 +902,8 @@
   margin: 0 0 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: #fff;
-  border: 1px solid rgba(70, 66, 85, 0.08);
+  background: var(--dam-surface, #fff);
+  border: 1px solid color-mix(in srgb, var(--dam-text, #464255) 8%, transparent);
 }
 
 .dam-branding-tag-filters .dam-tag-group-label {
@@ -1053,7 +1052,7 @@
   font-family: inherit;
   font-size: var(--dam-branding-meta-fs);
   font-weight: var(--dam-branding-meta-fw);
-  color: #464255;
+  color: var(--dam-text, #464255);
 }
 
 .dam-branding-filters--meta .dam-branding-date-range__label,
@@ -1177,9 +1176,9 @@
   font-weight: 600;
   line-height: 1.2;
   border-radius: 6px;
-  border: 1px solid #e7e7e7;
-  background: #fff;
-  color: #464255;
+  border: 1px solid var(--dam-border, #e7e7e7);
+  background: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
   cursor: pointer;
   box-shadow: none;
   -webkit-appearance: none;
@@ -1193,13 +1192,13 @@
 .dam-branding-page-size__ok:hover,
 .dam-branding-page-size .dam-int-cta:hover {
   border-color: var(--dam-primary, #ab54db);
-  background: #fbf7fe;
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, var(--dam-surface, #fff));
   color: var(--dam-primary, #ab54db);
 }
 
 .dam-branding-page-size.is-dirty .dam-branding-page-size__ok {
   border-color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, var(--dam-surface, #fff));
   color: var(--dam-primary, #ab54db);
 }
 
@@ -1218,14 +1217,14 @@
 }
 
 .dam-branding-date-range input[type="date"] {
-  border: 1px solid rgba(70, 66, 85, 0.16);
+  border: 1px solid color-mix(in srgb, var(--dam-text, #464255) 16%, transparent);
   border-radius: var(--dam-branding-meta-radius, 8px);
   padding: 4px 8px;
   font-size: 12px;
   font-weight: 500;
   font-family: inherit;
-  background: #fff;
-  color: #3a3a45;
+  background: var(--dam-surface, #fff);
+  color: var(--dam-text, #3a3a45);
   height: var(--dam-branding-meta-h, 34px);
   min-height: var(--dam-branding-meta-h, 34px);
   max-width: 11.5rem;
@@ -1239,10 +1238,10 @@
 }
 
 .dam-branding-date-presets button {
-  border: 1px solid rgba(70, 66, 85, 0.14);
+  border: 1px solid color-mix(in srgb, var(--dam-text, #464255) 14%, transparent);
   border-radius: 999px;
-  background: #fff;
-  color: #5c5a6b;
+  background: var(--dam-surface, #fff);
+  color: var(--dam-text-muted, #5c5a6b);
   font-size: 12px;
   font-weight: 500;
   padding: 0 10px;
@@ -1256,7 +1255,7 @@
 .dam-branding-date-presets button.is-active {
   border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, transparent);
   color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, var(--dam-surface, #fff));
 }
 
 .dam-branding-sort {
@@ -1267,13 +1266,14 @@
 }
 
 .dam-branding-sort select {
-  border: 1px solid rgba(70, 66, 85, 0.16);
+  border: 1px solid color-mix(in srgb, var(--dam-text, #464255) 16%, transparent);
   border-radius: var(--dam-branding-meta-radius, 8px);
   padding: 4px 8px;
   font-size: 12px;
   font-weight: 500;
   font-family: inherit;
-  background: #fff;
+  background: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
   height: var(--dam-branding-meta-h, 34px);
   min-height: var(--dam-branding-meta-h, 34px);
   box-sizing: border-box;

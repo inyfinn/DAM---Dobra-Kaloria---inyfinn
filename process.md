@@ -8424,3 +8424,31 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Zrodla:** dam-ui-cta.js, dam-primitives.css, dam-app.css, index.html, visualizations.html (wzor switch), process.md
 
+## 2026-07-21 - inventory close: marketing/branding air + dark tokens + baseline 36/36
+
+**Komenda/Akcja:** Zamkniecie OPEN po tip df870e2 (geex+PAKIET+ctaUnify): air kart marketing/branding, dark polish tokenami, baseline PNG.
+
+**Log/Status:**
+1. Pull main (df870e2 → later c0064b4 docs); :8765 up.
+2. Marketing `.dam-catalog-marketing-card`: pad 16 / gap 14 / grid minmax 156 / title 13px / badge pad 5×10; thumb/border → `--dam-surface`/`--dam-border`.
+3. Branding/viz cards: body tokens 24/22/18/18 + actions-extra 8; branding min-height 288; surfaces `#fff` → tokens.
+4. Dark: Geex `h5 { color: var(--gray-color) }` (= `--dam-border`) biło tytuły — fix specificity `html[data-theme=dark] .dam-viz-card .dam-viz-card__title`; filtry/tag-groups/modal actions → `--dam-surface`.
+5. Cache-bust `?v=invClose20260721b` (HTML).
+6. Baseline: `retry_fails.py` 8/8 ok → lokalny `_meta.json` **36/36 ok** (json gitignored).
+
+**Efekt/Fix:** Karty z wiekszym air; dark bez white-flash na kartach/filtrach/modal bar; tytuly czytelne; baseline complete lokalnie.
+
+**Test/Ewaluacja:**
+- Marketing CDP: pad 16 gap 14 titleFs 13; screenshot+Read pass1/2.
+- Branding CDP: pad 24×18×22 gap 18; dark titleLum 229 filterLum 32 cardLum 32.
+- Viz CTA: fs 12 h 36 pad 8×12 br 8 (labeled compact preserved).
+- Dashboard dark: bodyLum 14 thumbLum 32.
+
+**Pass/Fail:**
+1. Marketing catalog cards — **Pass**
+2. Branding/viz breathing room — **Pass**
+3. Dark mode polish (key surfaces) — **Pass** (Geex chrome Wstecz/search tabs may still flash — out of card scope)
+4. Baseline PNG 36/36 — **Pass** (local; meta gitignored)
+
+**Zrodla:** dam-project-catalog.css, dam-brand.css, dam-branding.css, dam-viz-modal.css, dam-dashboard.css, code-doctrine §12, retry_fails.py, process.md
+

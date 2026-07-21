@@ -4,7 +4,7 @@ PNG lokalnie: `apps/web/_qa/geex-realign-baseline/phase{N}/` (gitignore).
 
 | Faza | Tag | Baseline vs | Wynik | Notatki |
 |------|-----|-------------|-------|---------|
-| 0 | `geex-phase0` | — | PARTIAL | Font-timeout Playwright; Parent unblock: nie blokować F1/F2. Skrypt: `_qa/geex-realign-baseline/capture_phase0.py` (+ `_capture_one.py` CDP fallback). |
+| 0 | `geex-phase0` | — | PASS 36/36 | 2026-07-21 inventory close: `retry_fails.py` dopiął 8 failów (font-timeout); lokalny `_meta.json` 36×ok (json gitignored). Skrypt: `capture_phase0.py` / `retry_fails.py`. |
 | 1 | `geex-phase1` | phase0 smoke deferred | PASS audit / smoke DEFERRED | Audyt: `geex-realign-audit-2026-07-21.md`. Live CDP + dashboard×modal 3vp deferred (`:8765` down). F2 entry: re-CDP §5. |
 | 2 | `geex-phase2` | phase0 | PASS structure / smoke DEFERRED | Tokens+primitives+docs+briefs. Live CDP §5 **skipped** (`:8765` HTTP 000). Miary z audit CSS-declared. Hot pages enqueue OK (21 HTML). PNG local compare skipped (no server). |
 | 3 | `geex-phase3` @ `7c9d346` | phase0 / phase2 | PASS 3 cykle | Buttons: radius 18, pad 15×25, icon 44×44, actions gap 10; secondary hover no pure white. PNG: `geex-f3-buttons-390/1440.png` (notes-faza3). Risk: `dam-brand.css` after primitives may override pills. |
