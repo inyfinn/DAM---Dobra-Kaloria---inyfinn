@@ -1,4 +1,30 @@
-﻿## 2026-07-21 18:55 - Geex realign Faza 1 DONE (unblock F2)
+﻿## 2026-07-21 19:00 - Geex realign Faza 2 DONE (tokens + primitives skeleton)
+
+**Komenda/Akcja:** Agent 2 / Lead — Faza 2 ONLY po gate `geex-phase1` + audit md.
+
+**Log/Status:**
+1. Gate OPEN (`17e2dc3`, tag `geex-phase1`). Audyt czytany 1:1.
+2. `dam-tokens.css`: `--dam-radius-btn` 18, `--dam-space-btn-y/x` 15/25; `--dam-control-h` 44 (Parent); dark Geex status/transparent maps. **Uwaga:** plik był gitignore (`**/*token*`) — dodano wyjątek `!apps/web/assets/css/dam-tokens.css` + force-track.
+3. `dam-primitives.css` NEW — BUTTONS / BADGES / PANELS skeleton.
+4. Docs: `design-system/MASTER.md` + `components/{buttons,badges,surfaces,icon-btn}.md`.
+5. Briefy B/C: `geex-realign-agent-B-buttons-2026-07-21.md`, `geex-realign-agent-C-badges-2026-07-21.md`.
+6. `ui.geex_dna_tokens` + update `ui.geex_only`; lustro `app-settings.json`.
+7. Enqueue 21 HTML: primitives po tokens, przed brand; `?v=geexF220260721a`.
+8. Live CDP §5 **SKIPPED** (`:8765` HTTP 000) — miary z audit; notatka OK Parent.
+9. Self-review (Composer RO not spawned): **PASS** — nowe tokeny mają consumer w primitives/docs.
+10. Manifest regresji: F2 PASS structure / smoke DEFERRED.
+
+**Handoff faza 2:** tag `geex-phase2`. Dalej równolegle: Agent B F3 (brief B → handoff-faza3) + Agent C F4 (brief C → handoff-faza4). Join Lead przed 5a.
+
+**Efekt/Fix:** Geex DNA via tokens+primitives; B/C WRITE sets gotowe.
+
+**Test/Ewaluacja:** token→consumer PASS; HTML order PASS; UTF-8 OK; live screenshot deferred.
+
+**Źródła:** geex-realign-audit-2026-07-21.md, geex-realign-plan-2026-07-21.md.
+
+---
+
+## 2026-07-21 18:55 - Geex realign Faza 1 DONE (unblock F2)
 
 **Komenda/Akcja:** Agent 1 / Lead — domknięcie Fazy 1 po Parent CRITICAL UNBLOCK (skip PNG/locks).
 

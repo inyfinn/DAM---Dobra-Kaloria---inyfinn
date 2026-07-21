@@ -1,0 +1,65 @@
+/**
+ * DAM Geex primitives — anatomia CTA / badge / panel (skeleton Faza 2).
+ * Konsument tokenow z dam-tokens.css. Anatomie wypelniaja Agenci 3/4 (F3/F4).
+ * Zrodlo miar: agents/shared/geex-realign-audit-2026-07-21.md §5.
+ */
+
+/* === BUTTONS === */
+/* Canonical: .geex-btn (+ --primary / --sm / --transparent / danger / success).
+   Alias (F3): .dam-win-btn, .dam-btn-primary → Geex anatomy via tokens below. */
+.geex-btn {
+  --_dam-btn-pad-y: var(--dam-space-btn-y, 15px);
+  --_dam-btn-pad-x: var(--dam-space-btn-x, 25px);
+  --_dam-btn-radius: var(--dam-radius-btn, 18px);
+  border-radius: var(--_dam-btn-radius);
+  /* padding wiring: Agent 3 — style.css ma 15×25; tu tylko token hook */
+}
+
+.geex-btn--sm {
+  /* compact: audit padding 12×22 / fs 13 — Agent 3 */
+}
+
+.dam-icon-btn,
+.dam-menu-toggle {
+  /* square icon control; min touch via --dam-control-h — Agent 3 */
+  min-height: var(--dam-control-h, 44px);
+  min-width: var(--dam-control-h, 44px);
+  border-radius: var(--dam-radius-sm, 8px);
+  border-color: var(--dam-btn-outline-border);
+}
+/* === /BUTTONS === */
+
+/* === BADGES === */
+/* Canonical families: .dam-viz-badge, .dam-badge-tag, .dam-status-badge.
+   Scale: --dam-badge-scale (1.05). Pill fs: --dam-tag-fs-pill. Badge fs: --dam-tag-fs-badge.
+   Target radius (MASTER): 14px — Agent 4 wires; kill local *1.1 in dam-branding.css. */
+.dam-viz-badge,
+.dam-badge-tag,
+.dam-status-badge {
+  --_dam-badge-scale: var(--dam-badge-scale, 1.05);
+  font-size: calc(var(--dam-tag-fs-pill, 10.5px) * var(--_dam-badge-scale));
+  /* border-radius 14px + padding anatomy: Agent 4 */
+}
+/* === /BADGES === */
+
+/* === PANELS === */
+/* Surface candidates (audit §3): .dam-bento__cell, .dam-dash-panel, modal/popover.
+   F5a fills elevation; F2 only token hooks. */
+.dam-dash-panel,
+.dam-bento__cell {
+  background: var(--dam-surface, #fff);
+  border-color: var(--dam-border, #ececf2);
+  border-radius: var(--dam-radius-md, 12px);
+  box-shadow: none; /* elev: var(--dam-shadow) w F5 */
+}
+
+.dam-bento__cell--muted {
+  background: var(--dam-surface-muted, #f5f6fa);
+}
+
+.dam-dash-modal__panel {
+  background: var(--dam-surface, #fff);
+  border-radius: var(--dam-radius-lg, 24px);
+  box-shadow: var(--dam-shadow);
+}
+/* === /PANELS === */
