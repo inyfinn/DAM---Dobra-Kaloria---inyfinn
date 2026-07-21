@@ -35,9 +35,53 @@
 }
 
 .geex-btn--sm {
-  padding: 12px 22px;
+  --_dam-btn-pad-y: var(--dam-space-btn-sm-y, 8px);
+  --_dam-btn-pad-x: calc(var(--dam-space-btn-sm-x, 14px) + 8px);
+  padding: var(--_dam-btn-pad-y) var(--_dam-btn-pad-x);
   font-size: 13px;
   min-height: var(--dam-control-h, 44px);
+}
+
+/*
+  Compact CTA aliases — KEEP product look (outline/neutral), unify pad/radius/min-h only.
+  Do not restyle colors to Geex primary fill.
+*/
+.dam-int-cta,
+button.dam-int-cta,
+a.dam-int-cta {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--dam-control-h-sm, 36px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
+  border-radius: var(--dam-radius-btn-compact, 8px);
+  font: inherit;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.dam-search-scope__btn {
+  box-sizing: border-box;
+  min-height: var(--dam-control-h-sm, 36px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.geex-btn.dam-lifecycle-history__open,
+.dam-lifecycle-history__open.geex-btn--sm {
+  min-height: var(--dam-control-h, 44px);
+  gap: 8px;
+}
+
+.geex-btn.dam-branding-preview-btn:not(.dam-btn-icon):not(.dam-btn-icon-only) {
+  min-height: var(--dam-control-h, 44px);
+  padding: var(--dam-space-btn-y, 15px) var(--dam-space-btn-x, 25px);
+  border-radius: var(--dam-radius-btn, 18px);
+  font: inherit;
 }
 
 /* Primary — filled */

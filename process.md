@@ -1,4 +1,27 @@
 ﻿
+## 2026-07-21 20:35 - Geex taste unify (KEEP product look) + fixture font
+
+**Komenda/Akcja:** Lead — Parent taste HARD: unify pad/gap only; fix fixture Times; merge main.
+
+**Unified:**
+- Tokens: `--dam-space-btn-sm-*`, `--dam-control-h-sm`, `--dam-radius-btn-compact`
+- Aliases share compact pad: `.dam-int-cta`, `.dam-search-scope__btn`, `.geex-btn--sm`; full CTA stays 15x25/44/18
+- Tag groups: gap pills 6x8, rows 10x12, pill pad 6x12
+- Card body air: pad 22/20/16, gap 16
+- Fixture: Jost + bootstrap+style+tokens+primitives+brand (prod chain)
+
+**CDP fixture:** font `Jost, sans-serif`; primary pad 15x25 radius 18; int-cta 8x14/36; scope pill 999 — **Pass** (no Times).
+
+**CDP projects:** tagGap 6x8; int-cta pad 8x14; scope 8x14/36.
+
+**Dark:** F6 bridge retained (early script + color-scheme + html bg).
+
+**Tags already:** geex-phase0..8 + design-geex-realign @ 339fec9. This commit = taste polish after F8.
+
+**Merge:** `design/geex-realign` → `main` after this commit.
+
+---
+
 ## 2026-07-21 20:10 - Geex realign Faza 8 DONE (final QA PASS → merge)
 
 **Komenda/Akcja:** Lead — final QA priorytet 390 + doctrine §12 + merge main.
@@ -8334,6 +8357,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Test/Ewaluacja:** node --check; CDP hitDalej=.dam-tut__btn--next, ctrlT~684, is-ready, rootOp=1; finish path; screenshot+Read tutorial-projekty-faza5-bar.png.
 
 **Zrodla:** dam-tutorial.js, index.html (+CSS link), _qa/_bump_tutorial_projects_fix.py, code-doctrine §12
+
 
 
 

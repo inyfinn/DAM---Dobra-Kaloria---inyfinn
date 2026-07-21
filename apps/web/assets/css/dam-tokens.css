@@ -84,6 +84,11 @@
   /* CTA spacing (Geex .geex-btn padding 15×25 — audit §5) */
   --dam-space-btn-y: 15px;
   --dam-space-btn-x: 25px;
+  /* Compact aliases (int-cta / scope / sm) — keep loved look, shared rhythm */
+  --dam-space-btn-sm-y: 8px;
+  --dam-space-btn-sm-x: 14px;
+  --dam-control-h-sm: 36px;
+  --dam-radius-btn-compact: 8px;
 
   /* Cien */
   --dam-shadow-rgb: 23 22 30;
