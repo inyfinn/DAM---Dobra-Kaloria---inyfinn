@@ -1,4 +1,34 @@
-﻿## 2026-07-21 17:50 - Geex realign Faza 0 START + /planner skill
+﻿## 2026-07-21 18:55 - Geex realign Faza 1 DONE (unblock F2)
+
+**Komenda/Akcja:** Agent 1 / Lead — domknięcie Fazy 1 po Parent CRITICAL UNBLOCK (skip PNG/locks).
+
+**Log/Status:**
+1. Branch `design/geex-realign`; PNG baseline skipped PARTIAL (fonts/locks).
+2. Audyt napisany: `agents/shared/geex-realign-audit-2026-07-21.md` (btn/badge/panels/hex50/measures/edges/draft≤20).
+3. Live CDP deferred (`:8765` ERR_EMPTY_RESPONSE) — measures = CSS-declared; F2 re-CDP §5.
+4. Manifest updated; commit `geex-realign: faza 1 audit`; tag `geex-phase1`; push.
+5. Tool budget Grep/Read: ~8/18. Zero Faza 2 CSS.
+
+**Handoff faza 1 → Faza 2:**
+- Wejście: audit md + plan + manifest + tag `geex-phase1`.
+- F2: tokens + docs + primitives skeleton; Composer RO; **nie** ruszaj `dam-brand.css` stylami realign poza briefem.
+- Przed freeze tokenów: podnieś `:8765` i CDP 8 kontrolek z audytu §5; opcjonalnie smoke dashboard+modal light 1440/1024/390.
+- Nowa sesja czatu (1 faza = 1 sesja).
+
+**Efekt/Fix:** Bramka F2 otwarta (tag + audit w repo).
+
+**Źródła:** geex-realign-audit-2026-07-21.md, geex-realign-plan-2026-07-21.md.
+
+---
+
+## 2026-07-21 18:50 - Geex realign Faza 2 GATE BLOCKED (RESOLVED by F1 above)
+
+ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `geex-phase1` + audit landed.
+
+---
+
+
+## 2026-07-21 17:50 - Geex realign Faza 0 START + /planner skill
 
 **Komenda/Akcja:** (1) Global skill `/planner` MAD + reguła alwaysApply. (2) Start Geex realign v6.1 Faza 0.
 
