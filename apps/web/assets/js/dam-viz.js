@@ -80,7 +80,7 @@
       if (via) return via;
     }
     var c = String(code).toLowerCase();
-    if (c === "en" || c === "uk") c = "gb";
+    if (c === "en" || c === "uk" || c === "gb") c = "en";
     if (c === "ukr") c = "ua";
     return langLabels[c] || langLabels[code] || String(c).toUpperCase();
   }
@@ -327,16 +327,21 @@
     if (!imgs.length) {
       return (wizki[0] && (wizki[0].path || wizki[0].rel)) || (rev && rev.path) || "";
     }
+    var carrierU = String((rev && (rev.carrier || rev.carrier_code)) || "")
+      .toUpperCase()
+      .replace(/\s+/g, "");
+    var preferFrontL = carrierU.indexOf("KAR6X") !== -1 || carrierU.indexOf("KARTON6X") !== -1;
     function tier(name) {
       var n = String(name || "")
         .toUpperCase()
         .replace(/\u0141/g, "L")
         .replace(/\u0142/g, "L");
       var isEnface = n.indexOf("ENFACE") !== -1 && n.indexOf("TYL") === -1;
-      var isFront = n.indexOf("FRONT") !== -1 || isEnface;
+      var isFrontToken = n.indexOf("FRONT") !== -1;
+      var isFront = isFrontToken || isEnface;
       var isSklep = n.indexOf("SKLEP") !== -1;
       var isXl = /[-_]XL\b/.test(n) || n.indexOf("XL.") !== -1;
-      var isL = /(?:FRONT|ENFACE)[-_]?L\b/.test(n) || /[-_]L\./.test(n);
+      var isFrontL = /FRONT[-_]?L\b/.test(n) || (isFrontToken && /[-_]L\./.test(n) && !isXl);
       var isFrontS =
         isFront &&
         !isSklep &&
@@ -345,9 +350,12 @@
           n.indexOf("ENFACE-S") !== -1 ||
           /(?:FRONT|ENFACE)[-_]?S\b/.test(n) ||
           /[-_]S\./.test(n));
-      if (isFrontS) return 0;
+      /* HARD: KAR6X prefers FRONT-L over ENFACE */
+      if (preferFrontL && isFrontL && !isEnface) return 0;
+      if (preferFrontL && isEnface) return 4;
+      if (isFrontS) return preferFrontL ? 1 : 0;
       if (isFront && isSklep && !isXl) return 2;
-      if (isFront && (isXl || isL)) return 3;
+      if (isFront && (isXl || isFrontL)) return 3;
       if (isFront) return 4;
       if (n.indexOf("PREV") !== -1 || n.indexOf("WIZKA") !== -1 || n.indexOf("WIZ_") !== -1) return 5;
       if (n.indexOf("TYL") !== -1 || n.indexOf("BACK") !== -1) return 7;
@@ -389,15 +397,56 @@
     return v;
   }
 
+  function enrichVizRowFromProducts(data, row) {
+    /* Re-pick wizki path with carrier-aware rule (KAR6X -> FRONT-L). */
+    var v = Object.assign({}, row);
+    var pid = v.product_id;
+    var ib = resolveIndexBase(v);
+    var prod = (data.products || []).find(function (p) {
+      return p.id === pid;
+    });
+    if (prod) {
+      var rev =
+        (prod.revisions || []).find(function (r) {
+          return String(r.index_base || "") === String(ib || "") || String(r.index || "") === String(v.index || "");
+        }) ||
+        (prod.revisions || []).find(function (r) {
+          return r.is_latest;
+        });
+      if (rev) {
+        if (!v.carrier) v.carrier = rev.carrier;
+        v.revision_path = rev.path || v.revision_path;
+        v.revision_folder = rev.folder || v.revision_folder;
+        if (rev.wizki && rev.wizki.length) {
+          var picked = firstWizkiPath(rev);
+          if (picked) v.path = picked;
+        }
+        if (Array.isArray(rev.langs) && rev.langs.length) {
+          v.langs = rev.langs
+            .map(function (lg) {
+              return window.DamLabels && DamLabels.normalizeLangCode
+                ? DamLabels.normalizeLangCode(lg)
+                : String(lg || "").toLowerCase() === "gb" || String(lg || "").toLowerCase() === "uk"
+                  ? "en"
+                  : String(lg || "").toLowerCase();
+            })
+            .filter(Boolean);
+        }
+      }
+    }
+    if (v.lang === "gb" || v.lang === "uk") v.lang = "en";
+    return normalizeVizRow(v);
+  }
+
   function expandVizFromProducts(data, onlyLatest) {
     if (onlyLatest) {
       return (data.viz_latest || []).map(function (v) {
-        return normalizeVizRow(Object.assign({}, v));
+        return enrichVizRowFromProducts(data, v);
       });
     }
     if (data.viz_all && data.viz_all.length) {
       return data.viz_all.map(function (v) {
-        return normalizeVizRow(Object.assign({}, v));
+        return enrichVizRowFromProducts(data, v);
       });
     }
 
@@ -414,8 +463,20 @@
            TEZ rewizje bez wizki - plik/folder istnieje, ale brak wizualizacji.
            Domyslnie (onlyLatest=true) - jak dawniej, calkowicie pominiete. */
         if (!hasViz && onlyLatest) return;
-        /* Langs z indeksu. DK ma PL z buildera (baseline). Zakaz GC=gb bez dowodu. */
+        /* Langs z indeksu. DK ma PL z buildera (baseline). Zakaz GC=en bez dowodu. */
         var langs = (r.langs && r.langs.length) ? r.langs.slice() : [];
+        langs = langs
+          .map(function (lg) {
+            if (window.DamLabels && typeof window.DamLabels.normalizeLangCode === "function") {
+              return window.DamLabels.normalizeLangCode(lg);
+            }
+            var c = String(lg || "").toLowerCase();
+            if (c === "gb" || c === "uk") return "en";
+            return c;
+          })
+          .filter(Boolean);
+        /* dedupe */
+        langs = langs.filter(function (lg, i) { return langs.indexOf(lg) === i; });
         if (!langs.length && String(brand || "").toUpperCase() === "DK") {
           langs = ["pl"];
         }
@@ -447,7 +508,11 @@
             revision_path: r.path,
             langs: langUnknown ? [] : langs,
             lang: lang,
-            lang_label: lang === "?" ? "?" : (labels[lang] || String(lang).toUpperCase()),
+            lang_label:
+              lang === "?"
+                ? "?"
+                : labels[lang] ||
+                  (lang === "en" ? "Angielski" : String(lang).toUpperCase()),
             lang_unknown: langUnknown || lang === "?",
             langs_manual: !!r.langs_manual,
             path: hasViz ? (firstWizkiPath(r) || r.path || "") : (r.path || ""),
@@ -2792,7 +2857,7 @@
           if (!langCode) {
             langCode = (
               window.prompt(
-                "Nie rozpoznano kodu jezyka z folderu.\nWpisz kod jezyka tej wizualizacji (np. de, fr, gb):",
+                "Nie rozpoznano kodu jezyka z folderu.\nWpisz kod jezyka tej wizualizacji (np. de, fr, en):",
                 ""
               ) || ""
             )
@@ -3538,6 +3603,24 @@
       if (!parts.length) return true;
       var meta = productMeta(v.product_id) || {};
       var tg = meta.tag_groups || {};
+      var langsArr = Array.isArray(v.langs)
+        ? v.langs
+        : v.lang
+          ? [v.lang]
+          : [];
+      var multiBits = "";
+      if (langsArr.length > 1 || v.multiLang) {
+        var syn =
+          (window.DamLabels &&
+            window.DamLabels.UI_STRINGS &&
+            window.DamLabels.UI_STRINGS.multi_lang_synonyms) ||
+          [];
+        multiBits =
+          " Multijęzyczny Multijezyczny Multi " +
+          (Array.isArray(syn) ? syn.join(" ") : "") +
+          " " +
+          langsArr.join(" ");
+      }
       var blob = normalizeSearchText(
         [
           v.product_name || "",
@@ -3546,6 +3629,9 @@
           v.carrier || "",
           v.file || "",
           v.lang_label || "",
+          v.lang || "",
+          langsArr.join(" "),
+          multiBits,
           v.brand || "",
           v.subcategory_slug || "",
           v.subcategory_label || "",
@@ -4053,6 +4139,37 @@
       applyFilters: applyFilters,
       getAll: function () { return all; },
       getFiltered: function () { return filtered; },
+      /* HARD: AJAX refresh after admin tag/lang apply - no full page reload */
+      refreshAfterTagChange: function (res) {
+        try {
+          if (res && res.langs && res.new_path) {
+            all.forEach(function (v) {
+              if (
+                v.path === res.old_path ||
+                v.revision_path === res.old_path ||
+                (res.new_path && v.path === res.new_path)
+              ) {
+                v.langs = res.langs.slice();
+                v.lang = res.langs[0] || v.lang;
+                if (res.new_path) {
+                  v.path = res.new_path;
+                  v.revision_path = res.new_path;
+                }
+              }
+            });
+          }
+          if (res && res.new_path && res.old_path && res.new_carrier_code) {
+            all.forEach(function (v) {
+              if (v.path === res.old_path || v.revision_path === res.old_path) {
+                v.carrier = res.new_carrier_code || v.carrier;
+                v.path = res.new_path;
+              }
+            });
+          }
+        } catch (ignore) {}
+        applyFilters();
+        return true;
+      },
       /* studioRow20260721a: expose for CDP/QA open without relying on thumb click path */
       openByProductId: function (pid) {
         var groups = groupByProduct(filtered);

@@ -234,11 +234,16 @@
             });
           } catch (ignore) {}
           if (typeof ctx.onApplied === "function") ctx.onApplied(res);
-          else if (global.location) setTimeout(function () { global.location.reload(); }, 600);
-        } else {
+          else if (global.DamViz && typeof global.DamViz.refreshAfterTagChange === "function") {
+            global.DamViz.refreshAfterTagChange(res);
+          }
+          /* HARD: admin AJAX - no full page reload */
+        } else if (!isAdmin()) {
           showToast(
             "Zgloszenie JSON wyslane do kolejki. Admin zatwierdza w Ustawieniach / Inbox. Bez auto-zapisu."
           );
+        } else {
+          showToast("Zapis wymaga sesji admin (Bearer). Sprawdz logowanie.");
         }
         return res;
       })
@@ -413,12 +418,25 @@
       ];
     }
     if (k === "lang") {
-      return ["pl", "en", "de", "fr", "es", "it", "cs", "sk", "uk", "gb", "lt", "lv", "ee"].map(function (lg) {
+      /* HARD: EN not GB; UA not UK; one English option */
+      return ["pl", "en", "de", "fr", "es", "it", "cs", "sk", "ua", "lt", "lv", "ee"].map(function (lg) {
+        var code =
+          global.DamLabels && typeof global.DamLabels.normalizeLangCode === "function"
+            ? global.DamLabels.normalizeLangCode(lg)
+            : lg;
         var short =
           global.DamLabels && typeof global.DamLabels.langShort === "function"
-            ? global.DamLabels.langShort(lg)
-            : lg.toUpperCase();
-        return { code: lg, label: short || lg.toUpperCase(), search: lg + " " + short };
+            ? global.DamLabels.langShort(code)
+            : String(code || lg).toUpperCase();
+        var labelFull =
+          global.DamLabels && typeof global.DamLabels.langLabel === "function"
+            ? global.DamLabels.langLabel(code)
+            : short;
+        return {
+          code: code || lg,
+          label: short || String(lg).toUpperCase(),
+          search: (code + " " + short + " " + labelFull).toLowerCase(),
+        };
       });
     }
     if (k === "category") {
@@ -544,6 +562,114 @@
       });
   }
 
+  function patchLangBadgesInDom(ctx, langs, paths) {
+    var codes = (langs || []).map(function (x) {
+      return global.DamLabels && typeof global.DamLabels.normalizeLangCode === "function"
+        ? global.DamLabels.normalizeLangCode(x)
+        : String(x || "").toLowerCase();
+    }).filter(Boolean);
+    var label = codes
+      .map(function (c) {
+        return global.DamLabels && typeof global.DamLabels.langShort === "function"
+          ? global.DamLabels.langShort(c)
+          : String(c).toUpperCase();
+      })
+      .join(" ");
+    var pathSet = {};
+    (paths || []).forEach(function (p) {
+      if (p) pathSet[String(p)] = true;
+    });
+    try {
+      document.querySelectorAll('.dam-tag-editable[data-tag-kind="lang"]').forEach(function (el) {
+        var rp = el.getAttribute("data-revision-path") || "";
+        if (pathSet[rp] || rp === (ctx.revisionPath || "")) {
+          el.setAttribute("data-tag-value", label);
+          el.setAttribute("data-current-code", codes.join(","));
+          el.textContent = label || "?";
+        }
+      });
+    } catch (ignore) {}
+  }
+
+  function submitLangChange(ctx, newCodeOrList) {
+    autoEnableAdminModeIfPrivileged();
+    var langs = Array.isArray(newCodeOrList)
+      ? newCodeOrList
+      : String(newCodeOrList || "")
+          .split(/[,\s]+/)
+          .filter(Boolean);
+    langs = langs.map(function (x) {
+      return global.DamLabels && typeof global.DamLabels.normalizeLangCode === "function"
+        ? global.DamLabels.normalizeLangCode(x)
+        : String(x || "").toLowerCase();
+    }).filter(Boolean);
+    /* Preserve existing langs when adding one (multi) unless replace flag */
+    if (!ctx.replaceLangs && ctx.currentLangs && ctx.currentLangs.length) {
+      var merged = ctx.currentLangs.slice();
+      langs.forEach(function (c) {
+        if (merged.indexOf(c) === -1) merged.push(c);
+      });
+      langs = merged;
+    }
+    if (langs.indexOf("pl") === -1 && String(ctx.brand || "").toUpperCase() === "DK") {
+      langs = ["pl"].concat(langs.filter(function (c) { return c !== "pl"; }));
+    }
+    var payload = {
+      revision_path: ctx.revisionPath || "",
+      index: ctx.revisionIndex || ctx.index || "",
+      product_id: ctx.productId || "",
+      product_name: ctx.productName || "",
+      langs: langs,
+      current_langs: (ctx.currentLangs || []).join(","),
+      user_email: userLabel(),
+    };
+    return fetch(bridgeUrl() + "/revision-langs", {
+      method: "POST",
+      headers: bridgeAuthHeaders(),
+      body: JSON.stringify(payload),
+    })
+      .then(function (r) {
+        return r.json().then(function (res) {
+          res._http = r.status;
+          return res;
+        });
+      })
+      .then(function (res) {
+        if (!res.ok) {
+          showToast("Blad: " + (res.error || "nie zapisano jezykow"));
+          return res;
+        }
+        if (res.immediate || res.applied) {
+          showToast("Jezyki: " + (res.langs || langs).join(", ").toUpperCase());
+          patchLangBadgesInDom(ctx, res.langs || langs, [
+            ctx.revisionPath,
+            res.old_path,
+            res.new_path,
+          ]);
+          if (res.new_path && ctx.revisionPath && res.new_path !== ctx.revisionPath) {
+            try {
+              document.querySelectorAll("[data-revision-path]").forEach(function (el) {
+                if (el.getAttribute("data-revision-path") === ctx.revisionPath) {
+                  el.setAttribute("data-revision-path", res.new_path);
+                }
+              });
+            } catch (ignore2) {}
+            ctx.revisionPath = res.new_path;
+          }
+          if (typeof ctx.onApplied === "function") ctx.onApplied(res);
+          else if (global.DamViz && typeof global.DamViz.refreshAfterTagChange === "function") {
+            global.DamViz.refreshAfterTagChange(res);
+          }
+        } else {
+          showToast("Zgloszenie jezykow wyslane do kolejki (Wiadomosci).");
+        }
+        return res;
+      })
+      .catch(function () {
+        showToast("Bridge offline - nie zapisano jezykow.");
+      });
+  }
+
   function applyTagPickerChoice(kind, ctx, newCode) {
     var k = String(kind || "carrier");
     if (k === "asset_role") {
@@ -554,6 +680,9 @@
     }
     if (k === "carrier") {
       return submitCarrierChange(ctx, newCode || NONE_CODE);
+    }
+    if (k === "lang") {
+      return submitLangChange(ctx, newCode || "");
     }
     if (k === "status") {
       if (typeof global.damSetRevisionStatus === "function") {
@@ -569,9 +698,27 @@
       if (!confirmBrandTagChange(ctx.revisionPath || "", newCode)) {
         return Promise.resolve({ ok: false });
       }
-      showToast("Marka ustawiona na " + newCode + " (wymaga zatwierdzenia w bazie / inbox).");
-      if (global.location) setTimeout(function () { global.location.reload(); }, 500);
+      if (isAdmin()) {
+        showToast("Marka: " + newCode + " (zapis lokalny UI - wymagany sync slownika).");
+        try {
+          document.querySelectorAll('.dam-tag-editable[data-tag-kind="brand"]').forEach(function (el) {
+            var rp = el.getAttribute("data-revision-path") || "";
+            if (!ctx.revisionPath || rp === ctx.revisionPath) {
+              el.setAttribute("data-tag-value", newCode);
+              el.textContent = newCode;
+            }
+          });
+        } catch (ignore) {}
+        if (typeof ctx.onApplied === "function") ctx.onApplied({ ok: true, brand: newCode });
+        return Promise.resolve({ ok: true, immediate: true });
+      }
+      showToast("Zgloszenie marki trafia do moderacji (Wiadomosci).");
       return Promise.resolve({ ok: true });
+    }
+    if (isAdmin()) {
+      showToast("Wybrano " + newCode + " dla tagu " + k + ".");
+      if (typeof ctx.onApplied === "function") ctx.onApplied({ ok: true, code: newCode, kind: k });
+      return Promise.resolve({ ok: true, immediate: true });
     }
     showToast("Wybrano " + newCode + " dla tagu " + k + ". Zgloszenie trafia do moderacji (Wiadomosci).");
     return Promise.resolve({ ok: true });
@@ -580,16 +727,31 @@
   function openTagPicker(anchorEl, ctx) {
     ctx = ctx || {};
     var kind = ctx.kind || (anchorEl && anchorEl.getAttribute("data-tag-kind")) || "carrier";
-    if (kind === "carrier") {
+    if (kind === "carrier" || kind === "lang") {
       ctx = Object.assign(
         {
           revisionPath: anchorEl.getAttribute("data-revision-path") || "",
           currentCode: anchorEl.getAttribute("data-current-code") || ctx.value || "",
           productId: anchorEl.getAttribute("data-product-id") || "",
           productName: anchorEl.getAttribute("data-product-name") || "",
+          revisionIndex: anchorEl.getAttribute("data-revision-index") || ctx.revisionIndex || "",
+          brand: anchorEl.getAttribute("data-brand") || ctx.brand || "",
         },
         ctx
       );
+      if (kind === "lang") {
+        var curRaw = String(ctx.currentCode || ctx.value || "");
+        ctx.currentLangs = curRaw
+          .split(/[,\s+/]+/)
+          .map(function (x) {
+            return global.DamLabels && typeof global.DamLabels.normalizeLangCode === "function"
+              ? global.DamLabels.normalizeLangCode(x)
+              : String(x || "").toLowerCase();
+          })
+          .filter(Boolean);
+        /* Picking a lang adds it (multi) unless user confirms replace */
+        ctx.replaceLangs = false;
+      }
     }
     if (!ctx.value && anchorEl) {
       ctx.value = anchorEl.getAttribute("data-tag-value") || ctx.value || "";
@@ -683,11 +845,36 @@
       '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel data-dam-tip="Anuluj bez zapisu">' +
       '<i class="uil uil-times" aria-hidden="true"></i><span>Anuluj</span></button></div>';
 
-    if (kind === "carrier" && isAdmin()) {
+    if (isAdmin()) {
       html +=
         '<div class="dam-tag-edit-popover__foot">' +
-        '<button type="button" class="dam-tag-edit-popover__addtype" data-add-type data-dam-tip="Dodaj nowy typ do slownika (tylko admin)">' +
-        '<i class="uil uil-plus"></i> Dodaj typ</button></div>';
+        (kind === "carrier"
+          ? '<button type="button" class="dam-tag-edit-popover__addtype" data-add-type data-dam-tip="Dodaj nowy typ do slownika i Szablonow folderow (admin)">' +
+            '<i class="uil uil-plus"></i> Dodaj typ</button>'
+          : "") +
+        '<button type="button" class="dam-tag-edit-popover__addtag dam-tag-edit-popover__addtag--tile" data-add-tag data-dam-tip="Dodaj tag z kategorii">' +
+        '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span></button>' +
+        '<button type="button" class="dam-tag-edit-popover__changecat" data-change-cat data-dam-tip="Zmień kategorię tagu">' +
+        "Zmień kategorię</button></div>";
+    }
+
+    /* Inject dashed-tile styles once (assoc empty-state parity) */
+    if (!document.getElementById("damTagEditDodajStyles")) {
+      var st = document.createElement("style");
+      st.id = "damTagEditDodajStyles";
+      st.textContent =
+        ".dam-tag-edit-popover__foot{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;padding:10px 12px;border-top:1px solid #ececf2;}" +
+        ".dam-tag-edit-popover__addtag--tile{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;" +
+        "min-width:88px;min-height:56px;padding:8px 12px;border-radius:12px;font-size:12px;font-weight:600;color:#7a3aa8;" +
+        "background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff);" +
+        "border:1.5px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 45%,#d7d7e0);cursor:pointer;}" +
+        ".dam-tag-edit-popover__addtag--tile:hover{background:color-mix(in srgb,var(--dam-primary,#ab54db) 12%,#fff);" +
+        "border-color:var(--dam-primary,#ab54db);}" +
+        ".dam-tag-edit-popover__addtag--tile i{font-size:18px;}" +
+        ".dam-tag-edit-popover__addtype,.dam-tag-edit-popover__changecat{min-height:40px;padding:0 12px;border-radius:10px;" +
+        "border:1px solid #e2e2ea;background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:#3d3a48;}" +
+        ".dam-tag-edit-popover__addtype:hover,.dam-tag-edit-popover__changecat:hover{border-color:var(--dam-primary,#ab54db);color:#7a3aa8;}";
+      document.head.appendChild(st);
     }
 
     pop.innerHTML = html;
@@ -764,23 +951,102 @@
 
     var addBtn = pop.querySelector("[data-add-type]");
     if (addBtn) {
-      addBtn.addEventListener("click", function () {
-        var code = window.prompt("Kod nowego typu (np. SASZETKA-XL):");
+      addBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isAdmin()) {
+          showToast("Dodaj typ: tylko admin.");
+          return;
+        }
+        var code = window.prompt("Kod PL / skrot na dysku (np. SASZ):");
         if (!code) return;
-        var label = window.prompt("Nazwa PL nowego typu:", code) || code;
-        fetch(bridgeUrl() + "/carrier-types", {
+        var codeEn = window.prompt("Kod EN / alias (opcjonalnie):", "") || "";
+        var label = window.prompt("Pelna nazwa PL (etykieta UI):", code) || code;
+        fetch(bridgeUrl() + "/explorer/add-variant-type", {
           method: "POST",
           headers: bridgeAuthHeaders(),
-          body: JSON.stringify({ action: "add", code: code.trim().toUpperCase(), label_pl: label, actor: userLabel() }),
+          body: JSON.stringify({
+            code: code.trim().toUpperCase(),
+            code_en: String(codeEn || "").trim().toUpperCase(),
+            label_pl: label,
+          }),
         })
           .then(function (r) {
             return r.json();
           })
-          .then(function () {
+          .then(function (res) {
+            if (!res || !res.ok) {
+              showToast("Blad: " + ((res && (res.message || res.error)) || "nie dodano typu"));
+              return;
+            }
             refreshCarrierTypesCache();
             closePopover();
-            showToast("Typ dodany: " + label);
+            var nT = (res.templates_created && res.templates_created.length) || 0;
+            showToast(
+              "Typ dodany: " +
+                label +
+                (nT ? " (+" + nT + " szablonow)" : "") +
+                (res.templates_errors && res.templates_errors.length
+                  ? " [szablony: " + res.templates_errors[0] + "]"
+                  : "")
+            );
+            /* Reopen picker with fresh types */
+            setTimeout(function () {
+              openTagPicker(anchorEl, Object.assign({}, ctx, { kind: "carrier" }));
+            }, 200);
+          })
+          .catch(function () {
+            showToast("Bridge offline - nie dodano typu.");
           });
+      });
+    }
+
+    var addTagBtn = pop.querySelector("[data-add-tag]");
+    if (addTagBtn) {
+      addTagBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        /* Same category first: keep current kind, focus search to pick/add */
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.placeholder = "Dodaj tag w kategorii: " + kind;
+        }
+        showToast("Zaznacz tag z listy i zatwierdz (kategoria: " + kind + ").");
+      });
+    }
+
+    var changeCatBtn = pop.querySelector("[data-change-cat]");
+    if (changeCatBtn) {
+      changeCatBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var cats = ["lang", "carrier", "brand", "status", "category", "subcategory", "index"];
+        var labels = {
+          lang: "Jezyk",
+          carrier: "Typ / nosnik",
+          brand: "Marka",
+          status: "Status",
+          category: "Kategoria",
+          subcategory: "Podkategoria",
+          index: "Indeks",
+        };
+        var msg =
+          "Zmien kategorie tagu:\n" +
+          cats
+            .map(function (c, i) {
+              return i + 1 + ". " + (labels[c] || c);
+            })
+            .join("\n") +
+          "\n\nPodaj numer:";
+        var pick = window.prompt(msg, String(cats.indexOf(kind) + 1));
+        if (!pick) return;
+        var idx = parseInt(pick, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= cats.length) {
+          showToast("Nieprawidlowy numer kategorii.");
+          return;
+        }
+        closePopover();
+        openTagPicker(anchorEl, Object.assign({}, ctx, { kind: cats[idx] }));
       });
     }
 

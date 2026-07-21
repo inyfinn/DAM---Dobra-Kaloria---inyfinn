@@ -1103,3 +1103,15 @@ eturn !isSourceVariantFile(v). Zrodla tylko SourceMount w belce akcji.
 - Shift-minus: Shift-gate, rozmiar ≈80% (21px). UTF-8 chrome: Pokaż/Włącz (0x Poka?/W??cz).
 - **Wersja:** v3.1.0. Cache: ship20260721v310. Audyt: agents/shared/gap-audit-2026-07-21.md.
 
+
+
+## #144 (2026-07-21) - Lang EN canon + PROJEKT/WIZKI + Admin AJAX (HARD)
+
+- **EN not GB:** store+chip en/EN; aliases gb/uk/en -> en; UA only for Ukraine (ukr->ua). UK != UA.
+- **Provenance:** langs only from folder tokens + files in PROJEKT/PROJECT and 4-WIZKI/VISUALS. MATERIALY/Magnific …-uk_… IGNORE.
+- **Folder multi-lang:**  - PL EN -  between name/date and index when 2+ langs; single PL (DK) = no lone - PL -.
+- **Admin:** role=admin session = instant apply (carrier/lang); no moderation toast; AJAX UI update (DamViz.refreshAfterTagChange); no full reload.
+- **API:** POST /revision-langs {revision_path, langs[]}; Dodaj typ -> /explorer/add-variant-type (+ Szablony when disk OK).
+- **KAR6X:** thumb/path prefer FRONT-L over ENFACE.
+- **Multi search:** synonyms in naming-dictionary.ui.multi_lang_synonyms + search_blob + viz filter.
+- Cache token family: langEnTag20260721*.

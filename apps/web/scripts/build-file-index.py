@@ -61,17 +61,19 @@ ROOTS = [
 ]
 
 _LANGS_FROM_DICT = NAMING.get("languages") or {}
-# HARD: UK/GB/EN = English / Wielka Brytania. Ukraina = UA (ISO). NIGDY UK→Ukraina.
+# HARD 2026-07-21: UK/GB/EN = English = kanonicznie "en" (chip EN). Ukraina = UA. NIGDY UK→Ukraina.
 KNOWN_LANG_CODES = frozenset(_LANGS_FROM_DICT.keys()) | frozenset({
-    "pl", "de", "gb", "ua", "uk", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
+    "pl", "de", "en", "ua", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
     "fr", "it", "es", "nl", "ru", "hr", "si", "bg", "at", "be", "dk",
     "se", "no", "fi", "pt", "gr", "ie", "ch",
 })
-LANG_ALIASES = dict(NAMING.get("lang_aliases") or {"en": "gb", "uk": "gb", "ukr": "ua"})
+LANG_ALIASES = dict(NAMING.get("lang_aliases") or {"gb": "en", "uk": "en", "ukr": "ua"})
+# Always force English market aliases onto en (dictionary may lag).
+LANG_ALIASES.update({"gb": "en", "uk": "en", "ukr": "ua"})
 LANG_LABELS = {
     "pl": "Polska",
     "de": "Niemcy",
-    "gb": "Wielka Brytania",
+    "en": "Angielski",
     "ua": "Ukraina",
     "cz": "Czechy",
     "sk": "Slowacja",
@@ -100,6 +102,20 @@ LANG_LABELS = {
     "ch": "Szwajcaria",
 }
 LANG_LABELS.update(_LANGS_FROM_DICT)
+MULTI_LANG_SYNONYMS = list(
+    ((NAMING.get("ui") or {}).get("multi_lang_synonyms"))
+    or [
+        "multijezyczny",
+        "multijęzyczny",
+        "multi",
+        "wielojezykowy",
+        "wielojęzykowy",
+        "wiele jezykow",
+        "wiele języków",
+        "multilang",
+        "multi-lang",
+    ]
+)
 
 IMAGE_VIZ_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".tif", ".tiff"}
 THUMB_MAX_EDGE = 480
@@ -715,6 +731,53 @@ def classify_slot_role(name: str) -> str | None:
     return None
 
 
+def is_lang_evidence_slot(slot_name: str) -> bool:
+    """HARD: jezyk tylko z PROJEKT/PROJECT lub 4-WIZKI/VISUALS - nie z MATERIALY/Magnific."""
+    n = norm(slot_name or "")
+    if not n:
+        return False
+    # Explicit reject materials / magnific coincidence paths
+    if "material" in n or "magnific" in n:
+        return False
+    if "projekt" in n or "project" in n:
+        return True
+    if any(k in n for k in ("wizki", "wizka", "wizualiz", "visuals")):
+        return True
+    # Numbered slots: 2 often = PROJEKT, 4 = WIZKI (when name lacks keyword after norm fail)
+    first = n.split()[0] if n.split() else ""
+    if first == "4":
+        return True
+    if first in ("1", "2") and ("projekt" in n or "project" in n or "ai" in n):
+        return True
+    return False
+
+
+def is_lang_evidence_file(f: dict) -> bool:
+    """True if file path/rel/slot looks like PROJEKT or WIZKI (not MATERIALY)."""
+    if not isinstance(f, dict):
+        return False
+    blob = " ".join(
+        [
+            str(f.get("path") or ""),
+            str(f.get("rel") or ""),
+            str(f.get("slot") or ""),
+            str(f.get("role") or ""),
+        ]
+    )
+    n = norm(blob)
+    if "material" in n or "magnific" in n:
+        return False
+    if "projekt" in n or "project" in n:
+        return True
+    if any(k in n for k in ("wizki", "wizka", "wizualiz", "visuals", "/4 -", "\\4 -")):
+        return True
+    # Role from indexer: viz = WIZKI; source alone is ambiguous (MATERIALY also source)
+    role = str(f.get("role") or "").lower()
+    if role == "viz":
+        return True
+    return False
+
+
 def is_wizki_dir(name: str) -> bool:
     return classify_slot_role(name) == "viz"
 
@@ -832,13 +895,16 @@ def file_entry(f: Path, root: Path) -> dict:
     }
 
 
-def scan_slot_files(slot_dir: Path, root: Path) -> list[dict]:
+def scan_slot_files(slot_dir: Path, root: Path, *, slot_name: str = "") -> list[dict]:
     files: list[dict] = []
     try:
         for f in slot_dir.iterdir():
             if f.is_file() and f.suffix.lower() in SCAN_EXT:
                 try:
-                    files.append(file_entry(f, root))
+                    ent = file_entry(f, root)
+                    if slot_name:
+                        ent["slot"] = slot_name
+                    files.append(ent)
                 except (PermissionError, OSError):
                     pass
     except (PermissionError, OSError):
@@ -942,11 +1008,13 @@ def scan_revision_slots(child: Path, root: Path) -> tuple[list[str], dict[str, l
                 except (PermissionError, OSError):
                     pass
                 continue
-            scanned = scan_slot_files(sub, root)
+            scanned = scan_slot_files(sub, root, slot_name=sn)
             for f in scanned:
                 role = resolve_file_role(slot_role, f.get("name") or "")
                 if not role:
                     continue
+                f["role"] = role
+                f["slot"] = sn
                 files_by_role.setdefault(role, []).append(f)
                 if role == "viz" and is_viz_image_name(f.get("name") or ""):
                     wizki_files.append(f)
@@ -1173,7 +1241,9 @@ def scan_revision_children(product_dir: Path, root: Path, brand: str, cat_name: 
             if inferred:
                 carrier = inferred
 
-        raw_langs = infer_langs_from_files(child.name, pool)
+        # HARD: lang evidence = folder name + PROJEKT/WIZKI only (not MATERIALY)
+        lang_pool = [f for f in pool if is_lang_evidence_file(f)]
+        raw_langs = infer_langs_from_files(child.name, lang_pool)
         file_langs, langs_source = apply_brand_lang_baseline(brand, raw_langs)
         revisions.append(
             {
@@ -1317,16 +1387,28 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
     }
 
 
+def canonicalize_lang_code(code: str) -> str:
+    """Map gb/uk/en -> en; ukr -> ua. Empty for junk."""
+    c = (code or "").lower().strip()
+    if not c or c in ("?", "unknown", "xx"):
+        return ""
+    c = LANG_ALIASES.get(c, c)
+    if c in ("gb", "uk", "en"):
+        return "en"
+    if c == "ukr":
+        return "ua"
+    return c
+
+
 def parse_folder_langs(folder_name: str) -> list[str]:
-    """Kody jezykow z WSZYSTKICH segmentow ' - ' oraz z prefiksu nosnika (SLEEVE CZ SK)."""
+    """Kody jezykow z segmentow ' - ' (w tym ' - PL EN - ') oraz prefiksu nosnika."""
     langs: list[str] = []
     seen: set[str] = set()
 
     def add_token(tok: str) -> None:
-        code = tok.strip().lower()
+        code = canonicalize_lang_code(tok.strip().lower())
         if len(code) != 2:
             return
-        code = LANG_ALIASES.get(code, code)
         if code in KNOWN_LANG_CODES and code not in seen:
             seen.add(code)
             langs.append(code)
@@ -1338,7 +1420,17 @@ def parse_folder_langs(folder_name: str) -> list[str]:
         # pomin segmenty wygladajace jak data / indeks
         if DATE_DOT_RE.search(part) or re.fullmatch(r"\d{5,9}(?:\.\d{2})?", part):
             continue
-        for tok in re.split(r"[\s,;/]+", part):
+        # Segment wylacznie z kodami jezykow: "PL EN", "CZ SK", "GB"
+        toks = [t for t in re.split(r"[\s,;/]+", part) if t.strip()]
+        if toks and all(
+            canonicalize_lang_code(t) in KNOWN_LANG_CODES
+            and len(canonicalize_lang_code(t)) == 2
+            for t in toks
+        ):
+            for tok in toks:
+                add_token(tok)
+            continue
+        for tok in toks:
             add_token(tok)
     return langs
 
@@ -1358,11 +1450,7 @@ def parse_langs_from_text(text: str) -> list[str]:
     seen: set[str] = set()
     for code in _LANG_CODES_ORDER:
         if re.search(rf"(^|[^a-z]){re.escape(code)}([^a-z]|$)", n):
-            mapped = LANG_ALIASES.get(code, code)
-            if mapped == "en" or mapped == "uk":
-                mapped = "gb"
-            if mapped == "ukr":
-                mapped = "ua"
+            mapped = canonicalize_lang_code(code)
             if mapped in KNOWN_LANG_CODES and mapped not in seen:
                 seen.add(mapped)
                 found.append(mapped)
@@ -1370,39 +1458,50 @@ def parse_langs_from_text(text: str) -> list[str]:
 
 
 def infer_langs_from_files(folder_name: str, files: list[dict] | None) -> list[str]:
-    """Surowe dane: jezyki z nazwy folderu + nazw plikow (source/print/viz/wizki)."""
+    """Surowe dane: jezyki z nazwy folderu + plikow PROJEKT/WIZKI (caller filtruje)."""
     seen: set[str] = set()
     out: list[str] = []
     for code in parse_folder_langs(folder_name) + parse_langs_from_text(folder_name):
-        if code not in seen:
-            seen.add(code)
-            out.append(code)
+        c = canonicalize_lang_code(code)
+        if c and c not in seen:
+            seen.add(c)
+            out.append(c)
     for f in files or []:
+        if isinstance(f, dict) and not is_lang_evidence_file(f):
+            # Caller should pre-filter; keep guard for direct calls
+            path_n = norm(str(f.get("path") or "") + " " + str(f.get("slot") or ""))
+            if "material" in path_n or "magnific" in path_n:
+                continue
+            if not (
+                "projekt" in path_n
+                or "project" in path_n
+                or "wizki" in path_n
+                or "visuals" in path_n
+                or str(f.get("role") or "") == "viz"
+            ):
+                continue
         name = (f.get("name") if isinstance(f, dict) else "") or ""
         for code in parse_langs_from_text(name):
-            if code not in seen:
-                seen.add(code)
-                out.append(code)
+            c = canonicalize_lang_code(code)
+            if c and c not in seen:
+                seen.add(c)
+                out.append(c)
     return out
 
 
 def apply_brand_lang_baseline(brand: str, raw_langs: list[str] | None) -> tuple[list[str], str]:
     """DK zawsze ma PL (pewnik marki). Dodatkowe kody TYLKO z raw (folder/plik).
 
-    GC: bez baseline (GC!=gb). Extra jezyki tylko z nazw albo override.
+    GC: bez baseline (GC!=en). Extra jezyki tylko z nazw albo override.
     Zwraca (langs, langs_source).
     """
     brand_u = (brand or "DK").upper()
     raw: list[str] = []
     seen: set[str] = set()
     for code in raw_langs or []:
-        c = (code or "").lower().strip()
-        if not c or c in ("?", "unknown", "xx"):
+        c = canonicalize_lang_code(code)
+        if not c:
             continue
-        if c == "en" or c == "uk":
-            c = "gb"
-        if c == "ukr":
-            c = "ua"
         if c not in seen and c in KNOWN_LANG_CODES:
             seen.add(c)
             raw.append(c)
@@ -1469,11 +1568,7 @@ def apply_lang_overrides(products: list[dict]) -> None:
             cleaned = []
             seen: set[str] = set()
             for raw in manual:
-                code = LANG_ALIASES.get(str(raw).strip().lower(), str(raw).strip().lower())
-                if code == "en" or code == "uk":
-                    code = "gb"
-                if code == "ukr":
-                    code = "ua"
+                code = canonicalize_lang_code(str(raw))
                 if code in KNOWN_LANG_CODES and code not in seen:
                     seen.add(code)
                     cleaned.append(code)
@@ -1488,9 +1583,15 @@ def is_viz_image(f: dict) -> bool:
     return ext in {"jpg", "jpeg", "png", "webp", "gif", "tif", "tiff"}
 
 
-def pick_thumb_file(files: list[dict], preferred_index: str | None = None) -> dict | None:
+def pick_thumb_file(
+    files: list[dict],
+    preferred_index: str | None = None,
+    *,
+    carrier: str | None = None,
+) -> dict | None:
     """Priority: FRONT-S (lekki podglad), potem S-SKLEP, FRONT-L/XL, inne FRONT, PREV.
 
+    HARD KAR6X / KARTON 6x MINI: preferuj FRONT-L (nie ENFACE) gdy dostepne.
     NIGDY nie preferuj SKLEP2-XL / *-XL nad zwyklym FRONT-S.png - galeria ma byc szybka.
     """
     imgs = [f for f in files if is_viz_image(f)]
@@ -1504,6 +1605,9 @@ def pick_thumb_file(files: list[dict], preferred_index: str | None = None) -> di
             if matched:
                 imgs = matched
 
+    carrier_u = (carrier or "").upper().replace(" ", "")
+    prefer_front_l = carrier_u in ("KAR6X", "KARTON6XMINI", "KAR6XMINI") or "KAR6X" in carrier_u
+
     def tier(name: str) -> int:
         n = name.upper().replace("Ł", "L").replace("ł", "L")
         # demote technical / non-packaging shots — token match, NOT substring.
@@ -1515,10 +1619,14 @@ def pick_thumb_file(files: list[dict], preferred_index: str | None = None) -> di
         if "DIE-LINE" in n or "PDF.PNG" in n or "_PDF" in n:
             return 9
         is_enface = "ENFACE" in n and "TYL" not in n
-        is_front = "FRONT" in n or is_enface
+        is_front_token = "FRONT" in n
+        is_front = is_front_token or is_enface
         is_sklep = "SKLEP" in n
         is_xl = bool(re.search(r"[-_]XL\b", n) or "XL." in n)
-        is_l = bool(re.search(r"(?:FRONT|ENFACE)[-_]?L\b", n) or re.search(r"[-_]L\.", n))
+        is_front_l = bool(
+            re.search(r"FRONT[-_]?L\b", n)
+            or (is_front_token and re.search(r"[-_]L\.", n) and not is_xl)
+        )
         # Czysty FRONT-S / ENFACE-S (bez SKLEP / XL) - preferowany do miniatur
         is_front_s = is_front and not is_sklep and not is_xl and (
             "FRONT-S" in n
@@ -1526,11 +1634,16 @@ def pick_thumb_file(files: list[dict], preferred_index: str | None = None) -> di
             or bool(re.search(r"(?:FRONT|ENFACE)[-_]?S\b", n))
             or bool(re.search(r"[-_]S\.", n))
         )
-        if is_front_s:
+        # KAR6X: FRONT-L wygrywa nad ENFACE i nad FRONT-S
+        if prefer_front_l and is_front_l and not is_enface:
             return 0
+        if prefer_front_l and is_enface:
+            return 4  # demote ENFACE for KAR6X
+        if is_front_s:
+            return 0 if not prefer_front_l else 1
         if is_front and is_sklep and not is_xl:
             return 2
-        if is_front and (is_xl or is_l):
+        if is_front and (is_xl or is_front_l):
             return 3
         if is_front:
             return 4
@@ -1552,9 +1665,16 @@ def pick_thumb_file(files: list[dict], preferred_index: str | None = None) -> di
         # oryginalny plik produktu nie ma szarego tla/artefaktow, wiec miniatura
         # galerii tez nie powinna (2026-07-18, zgloszenie usera). Patrz DamLabels.vizBackground.
         transparent_bonus = 1 if ext in ("png", "webp") else 0
+        front_l_bonus = 1 if prefer_front_l and re.search(r"FRONT[-_]?L\b", name) else 0
         # png/jpg ok; nie premiuj jpg kosztem poprawnego FRONT-S.png
         mtime = f.get("mtime") or ""
-        return (dk_bonus, transparent_bonus, mtime, 1 if ext in ("png", "jpg", "jpeg", "webp") else 0)
+        return (
+            front_l_bonus,
+            dk_bonus,
+            transparent_bonus,
+            mtime,
+            1 if ext in ("png", "jpg", "jpeg", "webp") else 0,
+        )
 
     return max(pool, key=rank)
 
@@ -1618,6 +1738,15 @@ def build_search(products: list[dict]) -> dict:
                     by_prefix[pref].append(pid)
 
         rev_indexes = [str(r.get("index") or "") for r in p.get("revisions") or [] if r.get("index")]
+        multi_bits: list[str] = []
+        for r in p.get("revisions") or []:
+            langs_r = [canonicalize_lang_code(x) for x in (r.get("langs") or []) if x]
+            langs_r = [x for x in langs_r if x]
+            if len(langs_r) >= 2:
+                multi_bits.extend(MULTI_LANG_SYNONYMS)
+                multi_bits.append(((NAMING.get("ui") or {}).get("multi_lang_label")) or "Multijęzyczny")
+                multi_bits.extend(langs_r)
+                break
         entries.append(
             {
                 "id": pid,
@@ -1641,6 +1770,7 @@ def build_search(products: list[dict]) -> dict:
                         + rev_indexes
                         + [r["folder"] for r in p.get("revisions") or []]
                         + [r.get("path") or "" for r in p.get("revisions") or []]
+                        + multi_bits
                     )
                 ),
             }
@@ -1738,9 +1868,12 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
                         index_base = ib or ""
                 if not index_base:
                     index_base = "pending"
-                thumb_src = pick_thumb_file(thumb_pool, index_base)
+                carrier_for_thumb = r.get("carrier") or ""
+                thumb_src = pick_thumb_file(thumb_pool, index_base, carrier=carrier_for_thumb)
                 if not thumb_src:
-                    thumb_src = pick_thumb_file(files_for_lang, index_base)
+                    thumb_src = pick_thumb_file(
+                        files_for_lang, index_base, carrier=carrier_for_thumb
+                    )
                 if not thumb_src:
                     continue
                 thumb_name = safe_thumb_stem(pid, index_base, lang)

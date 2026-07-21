@@ -7874,3 +7874,34 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 - Screenshot+Read Pass 1-5 (CDP Page.captureScreenshot; document.hidden stale browser_take_screenshot)
 
 **Zrodla:** dam-viz.js (ensureThumbPickerTilesCss), dam-branding.css, dam-viz-modal.css, visualizations/explorer/branding/dashboard.html
+
+
+## 2026-07-21 - langEnTag: EN canon, PROJEKT+WIZKI, Admin AJAX, KAR6X FRONT-L
+
+**Komenda/Akcja:** HARD user decisions A-I (GB->EN, lang provenance, folder  - PL EN - , Multijęzyczny search, KAR6X thumb, Dodaj typ/tag, Admin instant AJAX).
+
+**Log/Status:**
+1. program-instructions v12: data.lang_provenance_only, data.lang_uk_not_ukraine (EN), naming.folder_lang_tokens, admin.tag_instant_apply_ajax, viz.kar6x_thumb_front_l, ui.tag_edit_dodaj_typ_tag, naming.multi_means_multilang synonyms.
+2. naming-dictionary: en=Angielski, aliases gb/uk->en, ua=Ukraina, multi_lang_synonyms; GC default_lang en.
+3. lang-provenance.md rewritten to EN + PROJEKT/WIZKI-only + folder tokens.
+4. build-file-index.py: is_lang_evidence_*, canonicalize->en, pick_thumb KAR6X FRONT-L, search_blob multi synonyms.
+5. local_bridge: /revision-langs, rename folder langs, admin instant without admin_mode, add-variant-type creates Szablony folders when Marketing reachable.
+6. dam-labels/tag-edit/viz: EN chips, submitLangChange AJAX, Dodaj typ/tag/Zmien kategorie dashed tile, enrichVizRow FRONT-L.
+7. Surgical file-index + search-index remap gb->en; 21 KAR6X viz_latest paths -> FRONT-L; Multi search blobs +49.
+8. Cache: langEnTag20260721a (labels/tag-edit), langEnTag20260721c (viz).
+
+**Efekt/Fix:** 6300783/6300785 langs=[pl,en]; Multijęzyczny search 30 hits; filter EN not GB; KAR6X path FRONT-L.png; Dodaj UI visible.
+
+**Backup:** brak (no commit).
+
+**Test/Ewaluacja:**
+- python ast parse indexer+bridge OK; node --check labels/tag-edit/viz OK
+- CDP: DamLabels.normalizeLangCode gb/uk->en short EN; lang filter has Angielski/en no GB
+- CDP: Multijęzyczny filteredCount=30 incl CYNAMONKA/CIASTO ŚLIWKOWE pl,en
+- CDP: Cynamonka path ends FRONT-L.png; modal badges PL+EN+Multijęzyczny
+- Screenshot+Read: #damTagEditPopover Dodaj typ + dashed Dodaj + Zmien kategorie
+
+**Zrodla:** program-instructions.json, naming-dictionary.json, lang-provenance.md, build-file-index.py, local_bridge.py, dam-labels.js, dam-tag-edit.js, dam-viz.js, file-index.json, search-index.json
+
+**Reindex:** full python apps/web/scripts/build-file-index.py recommended when X: Marketing available (regenerate thumbs *_en.jpg, refresh wizki slots). Surgical patch already applied for langs/paths/search.
+

@@ -58,11 +58,12 @@
 
   /* Pelne polskie znaki (2026-07-18) - "nauczylem sie" byla zasada bez diakrytykow,
      user wymaga poprawnych znakow WSZĘDZIE w projekcie. */
-  /* HARD: UK/GB/EN = English / Wielka Brytania. Ukraina = UA (ISO), NIE UK. */
+  /* HARD 2026-07-21: UK/GB/EN = English = EN. Ukraina = UA (ISO), NIE UK. */
   var LANG_LABELS = {
     pl: "Polska",
     de: "Niemcy",
-    gb: "Wielka Brytania",
+    en: "Angielski",
+    gb: "Angielski",
     ua: "Ukraina",
     cz: "Czechy",
     sk: "Słowacja",
@@ -94,6 +95,19 @@
   var UI_STRINGS = {
     multi_index_label: "Warianty",
     multi_lang_label: "Multijęzyczny",
+    multi_lang_short: "Multi",
+    multi_lang_synonyms: [
+      "multijęzyczny",
+      "multijezyczny",
+      "multi",
+      "wielojęzykowy",
+      "wielojezykowy",
+      "wiele języków",
+      "wiele jezykow",
+      "multilang",
+      "multi-lang",
+      "multi language",
+    ],
     no_index_label: "Bez indeksu",
     demo_label: "Demo",
     mix_prefix: "MIX - ",
@@ -442,11 +456,11 @@
     return base;
   }
 
-  /** Canonical market code: EN/UK -> gb (English/UK). UKR -> ua. UA stays ua. */
+  /** Canonical market code: EN/GB/UK -> en (English). UKR -> ua. UA stays ua. */
   function normalizeLangCode(code) {
     var c = String(code || "").toLowerCase().trim();
     if (!c) return "";
-    if (c === "en" || c === "uk") return "gb";
+    if (c === "en" || c === "uk" || c === "gb") return "en";
     if (c === "ukr") return "ua";
     return c;
   }
@@ -732,6 +746,8 @@
       Object.keys(dict.languages).forEach(function (code) {
         LANG_LABELS[code] = dict.languages[code];
       });
+      /* Ensure EN label exists even if dict still has legacy gb key elsewhere */
+      if (!LANG_LABELS.en && LANG_LABELS.gb) LANG_LABELS.en = LANG_LABELS.gb;
     }
     if (dict.ui) {
       Object.keys(dict.ui).forEach(function (k) {

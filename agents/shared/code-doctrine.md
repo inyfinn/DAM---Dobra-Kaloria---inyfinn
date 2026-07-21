@@ -887,3 +887,16 @@ evealSequence fade uzywa opacity nie utoAlpha; po
 - **UTF-8:** nigdy PowerShell Set-Content na apps/web; U+FFFD w HTML = rewrite
   Pythonem `write_bytes(utf-8)`. CDP `charCodeAt` (ż=380) > OCR screenshotu
   (vision bywa myli ż z ◆).
+
+### 2026-07-21 - Lang EN + PROJEKT/WIZKI + viz_latest thumbs
+
+- **EN canon:** `gb`/`uk`/`en` -> store+chip `en`/`EN` (nie GB). Ukraina = `ua`.
+- **Provenance HARD:** `infer_langs_from_files` tylko folder + pliki PROJEKT/WIZKI;
+  MATERIALY/Magnific `…-uk_…` to coincidence - filtruj `is_lang_evidence_file`.
+- **viz_latest klamie ścieżką:** `onlyLatest` bierze precompute z JSON; KAR6X
+  FRONT-L wymaga `enrichVizRowFromProducts` + `firstWizkiPath(carrier)` albo
+  patch `viz_latest[].path` po zmianie reguły thumb.
+- **Admin apply:** bridge privilege = sesja `role=admin` (nie ufaj body.admin_mode);
+  UI bez reload - `DamViz.refreshAfterTagChange` + patch badge DOM.
+- **W dam-viz.js:** nigdy `global.` (IIFE bez arg) - tylko `window.` (crash
+  applyFilters przy Multijęzyczny).

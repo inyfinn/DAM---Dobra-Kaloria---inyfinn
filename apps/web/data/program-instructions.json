@@ -1,7 +1,7 @@
 {
-  "version": 11,
+  "version": 12,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-21T02:05:00+02:00",
+  "updated_at": "2026-07-21T14:30:00+02:00",
   "instructions": [
     {
       "id": "ui.viz_modal_parity_explorer",
@@ -19,9 +19,9 @@
       "must_not": [
         "Traktowac paska perspektyw (FRONT/BACK/ENFACE) jako wariantow produktu w #damMediaPreview",
         "Pokazywac w Eksploratorze 'WARIANTY MATERIALU' zlozonego z roznych perspektyw tego samego indeksu",
-        "Pokazywac PSD/PSB/AI/PDF/INDD/EPS jako kafelki w .dam-media-preview__variant-grid",
         "Usuwac paska wariantow produktu (rozne indeksy) z #damVizModal",
-        "Mylnie nazywac JAKOSC (XL/L/S) wariantem produktu"
+        "Mylnie nazywac JAKOSC (XL/L/S) wariantem produktu",
+        "Pokazywac PSD/PSB/AI/PDF/INDD/EPS jako kafelki w .dam-media-preview__variant-grid"
       ],
       "priority": "critical",
       "title_pl": "Modal: Wizualizacje = kanon; Eksplorator parity; wariant = indeks",
@@ -114,21 +114,22 @@
     {
       "id": "data.lang_provenance_only",
       "must": [
-        "Kod jezyka tylko z: (1) lang-overrides.json, (2) token w nazwie folderu rewizji, (3) token w nazwie pliku w rewizji",
-        "Brak sygnalu = puste langs / UI '?'",
-        "Zapisywac lang_source: override|folder|file|unknown",
+        "Kod jezyka tylko z: (1) lang-overrides.json, (2) token w nazwie folderu rewizji (np. ' - PL EN - '), (3) token w nazwie pliku TYLKO ze slotow PROJEKT/PROJECT oraz 4-WIZKI/VISUALS",
+        "Brak sygnalu = puste langs / UI '?' (DK: baseline PL bez tokenu)",
+        "Zapisywac langs_source: override|folder|file|brand_dk|brand_dk+raw|unknown",
         "Stosowac agents/shared/lang-provenance.md przy kazdej zmianie wykrywania jezykow"
       ],
-      "body_pl": "Twarda zasada to POCHODZENIE sygnalu jezyka dla wszystkich kodow (pl/de/gb/cz/sk/...), nie hardcode konkretnego indeksu. Agent musi umiec wskazac fragment nazwy folderu lub pliku (albo override), z ktorego wynika kod. Domysl z marki (GC=gb, DK=pl) albo ze sciezki EKSPORT/POLSKA jest zakazany. Rebuild nie nadpisuje lang-overrides.json. Przyklad metody (nie regula produktu): 6300572 ma CZ+SK bo w PROJECT jest ...CZ_SK...ai.",
+      "body_pl": "HARD 2026-07-21: czy cos jest EN/PL/innym jezykiem - weryfikuj TYLKO z folderu rewizji oraz plikow w PROJEKT i/lub 4-WIZKI. Magnific / MATERIALY '...-uk_...' to zbieg okolicznosci - IGNORUJ. Domysl z marki GC=EN albo ze sciezki EKSPORT/POLSKA zakazany (DK=PL to swiadomy pewnik marki). Rebuild nie nadpisuje lang-overrides.json.",
       "category": "data",
       "must_not": [
-        "Domyslac jezyka z marki, rynku, screenshota opakowania",
+        "Domyslac jezyka z marki GC, rynku, screenshota opakowania",
+        "Brac tokenow jezyka z MATERIALY / Magnific / 1-MATERIALY (coincidence uk/en w nazwie)",
         "Traktowac 'indeks X = jezyk Y' jako regula biznesowa zamiast dowodu z nazwy",
         "Nadpisywac reczne override przy rebuildzie indeksu",
-        "Mapowac UK na Ukraina / Ukrainian (UK = United Kingdom / English)"
+        "Mapowac UK na Ukraina (UK/GB = English = EN; Ukraina = UA)"
       ],
       "priority": "critical",
-      "title_pl": "Jezyk tylko z dowodu (folder/plik/override) - zero zgadywania",
+      "title_pl": "Jezyk tylko z PROJEKT+WIZKI / folder / override",
       "related_kv": [
         "lang-overrides",
         "program-instructions"
@@ -146,20 +147,21 @@
     {
       "id": "data.lang_uk_not_ukraine",
       "must": [
-        "UK / GB / EN = English / Wielka Brytania (alias en+uk -> gb)",
-        "Ukraina tylko kod UA (opcjonalnie ukr -> ua)",
-        "Chip short: GB (lub EN po aliasie); nigdy UK jako Ukraina",
-        "DamLabels.normalizeLangCode / naming-dictionary.lang_aliases jako zrodlo mapowania"
+        "UK / GB / EN = English; kanoniczny kod przechowywany i wyswietlany jako EN (nie GB)",
+        "Alias gb+uk+en -> en w normalizeLangCode / lang_aliases",
+        "Ukraina tylko kod UA (opcjonalnie ukr -> ua); nigdy UK jako Ukraina",
+        "Chip short / picker / filtr: EN; DamLabels.normalizeLangCode + naming-dictionary.lang_aliases"
       ],
-      "body_pl": "HARD 2026-07-21: na opakowaniach EN/GB to angielski, nie ukrainski. ISO: Ukraina=UA, United Kingdom czesto GB/UK. Stary blad slownika (uk=Ukraina, alias ua->uk) etykietowal angielskie warianty jako Ukraina (np. 6300785 CIASTO SLIWKOWE). Poprawka globalna w naming-dictionary, DamLabels, build-file-index i file-index.",
+      "body_pl": "HARD 2026-07-21 (aktualizacja): tag UI GB znika - wszedzie EN. Pliki z GB lub EN w nazwie = tag EN. UK != UA. Stary blad (uk=Ukraina) etykietowal angielskie warianty jako Ukraina.",
       "category": "data",
       "must_not": [
+        "Pokazywac chip GB zamiast EN w pickerze / filtrach / badge",
         "Etykietowac kod UK jako Ukraina",
         "Aliasiowac UA do UK",
         "Myliti locale UI i18n (ISO 639-1 uk=ukrainski w dam-i18n) z kodami rynku produktu"
       ],
       "priority": "critical",
-      "title_pl": "UK/GB/EN = English; Ukraina = tylko UA",
+      "title_pl": "UK/GB/EN = EN (English); Ukraina = tylko UA",
       "related_kv": [
         "naming-dictionary",
         "program-instructions"
@@ -172,6 +174,101 @@
         "apps/web/assets/js/dam-viz.js",
         "apps/web/scripts/build-file-index.py",
         "agents/shared/lang-provenance.md"
+      ]
+    },
+    {
+      "id": "naming.folder_lang_tokens",
+      "must": [
+        "Przy 2+ jezykach wstawiac w nazwie folderu rewizji segment ' - LANG LANG - ' miedzy nazwa/data a indeksem (np. ' - PL EN - 6300783.00')",
+        "Przy jednym jezyku (DK domyslnie PL): NIE dodawac samotnego ' - PL - '",
+        "Parser indeksu czyta segment jezykow; reczne dodanie tagu jezyka przez admina rename'uje folder + pliki z tym wzorcem",
+        "Nie robic slepego find-replace '- 6300' - poprawnie wstawiac tokeny miedzy nazwa a indeksem"
+      ],
+      "body_pl": "HARD 2026-07-21: user wstawia ' - PL EN - ' przed indeksem (Find/Replace na Marketing). Indexer i rename musza rozumiec ten wzorzec. DK single-lang = bez '- PL -' w nazwie.",
+      "category": "naming",
+      "must_not": [
+        "Dodawac '- PL -' gdy produkt ma tylko PL (DK baseline)",
+        "Wklejac tokeny jezykow w srodek indeksu albo zamiast daty"
+      ],
+      "priority": "critical",
+      "title_pl": "Folder rewizji: ' - PL EN - ' tylko przy multi-lang",
+      "related_kv": [
+        "lang-overrides",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/scripts/build-file-index.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-tag-edit.js"
+      ]
+    },
+    {
+      "id": "admin.tag_instant_apply_ajax",
+      "must": [
+        "Sesja role=admin: zmiana tagu/jezyka/nosnika stosuje sie NATYCHMIAST (dysk + slownik + UI), bez kolejki moderacji",
+        "UI aktualizuje badge/filtry/karty AJAX - bez pelnego reload strony",
+        "Toast 'Zgloszenie trafia do moderacji' NIE wolno pokazywac adminowi przy udanym apply",
+        "Non-admin / power_user bez privilege: moze zostac kolejka propozycji (tag-proposals + inbox)"
+      ],
+      "body_pl": "HARD 2026-07-21: Admin z wazna sesja = instant apply. Bez refresh. Bez komunikatu moderacji.",
+      "category": "admin",
+      "must_not": [
+        "Wymagac full page reload po zatwierdzeniu tagu przez admina",
+        "Pokazywac toast moderacji gdy role=admin i zapis sie udal",
+        "Ufanie body.role / body.admin_mode zamiast sesji Bearer (anti-spoof zostaje)"
+      ],
+      "priority": "critical",
+      "title_pl": "Admin: natychmiastowy apply tagow (AJAX, bez moderacji)",
+      "related_kv": [
+        "tag-proposals",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-tag-edit.js",
+        "apps/web/assets/js/dam-viz.js"
+      ]
+    },
+    {
+      "id": "viz.kar6x_thumb_front_l",
+      "must": [
+        "Dla nosnika KAR6X / KARTON 6x MINI: preferuj miniatury FRONT-L (nie ENFACE) gdy dostepne",
+        "pick_thumb_file i firstWizkiPath carrier-aware dla tej reguly"
+      ],
+      "body_pl": "HARD 2026-07-21: karton 6x mini - thumb = FRONT L.",
+      "category": "ui",
+      "must_not": [
+        "Preferowac ENFACE nad FRONT-L dla KAR6X gdy FRONT-L istnieje"
+      ],
+      "priority": "high",
+      "title_pl": "KAR6X: miniatura FRONT-L",
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/scripts/build-file-index.py",
+        "apps/web/assets/js/dam-viz.js"
+      ]
+    },
+    {
+      "id": "ui.tag_edit_dodaj_typ_tag",
+      "must": [
+        "Przycisk + Dodaj typ w #damTagEditPopover dziala jak Explorer: POST /explorer/add-variant-type + foldery w Szablony folderow (PL+EN) + wpis w naming-dictionary/carrier-types",
+        "Przycisk + Dodaj (tag): wyglad jak assoc empty-state dashed tile; kategoria z ktorej otwarto edycje pierwsza; Zmień kategorię przełącza kind; confirm = AJAX, admin instant",
+        "Cache-bust ?v= po zmianach JS/CSS"
+      ],
+      "body_pl": "HARD 2026-07-21: UX edycji tagow w modalu - Dodaj typ + Dodaj tag z kategoriami.",
+      "category": "ui",
+      "must_not": [
+        "Zostawiac martwy data-add-type bez handlera / z endpointem ktory nie rejestruje globalnie"
+      ],
+      "priority": "high",
+      "title_pl": "Tag edit: Dodaj typ + Dodaj tag (kategorie)",
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-tag-edit.js",
+        "apps/desktop/local_bridge.py",
+        "apps/desktop/explorer_create.py"
       ]
     },
     {
@@ -220,19 +317,28 @@
     {
       "id": "naming.multi_means_multilang",
       "must": [
-        "Używać ui.multi_lang_label z naming-dictionary (domyślnie Multijęzyczny)"
+        "Używać ui.multi_lang_label z naming-dictionary (domyślnie Multijęzyczny)",
+        "Tag Multi / Multijęzyczny mapuje na association multi-lang; search_blob i szukanie UI zawieraja synonimy: multijezyczny, multijęzyczny, multi, wielojezykowy, wiele jezykow, wiele języków, multilang",
+        "Wyszukiwanie 'Multijęzyczny' znajduje produkty z langs.length>=2"
       ],
-      "body_pl": "Tag Multi na kartach oznacza wariant wielojęzyczny (multi_lang_label), nie 'multi-pack' ani inny typ nośnika.",
+      "body_pl": "HARD 2026-07-21: Tag Multi = wariant wielojęzyczny. Szukanie 'Multijęzyczny' nie moze dawac 0 wynikow gdy produkt ma PL+EN.",
       "category": "naming",
       "must_not": [
-        "Mylenie Multi z typem opakowania / nośnikiem"
+        "Mylenie Multi z typem opakowania / nośnikiem",
+        "Pomijac synonimow Multijęzyczny w search_blob / filtrze wizualizacji"
       ],
-      "priority": "high",
-      "title_pl": "Multi = Multijęzyczny",
+      "priority": "critical",
+      "title_pl": "Multi = Multijęzyczny (+ synonimy w search)",
       "related_kv": [
         "naming-dictionary"
       ],
-      "updated_at": "2026-07-18"
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/scripts/build-file-index.py",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/assets/js/dam-badges.js",
+        "apps/web/data/naming-dictionary.json"
+      ]
     },
     {
       "id": "ops.change_log_is_truth",

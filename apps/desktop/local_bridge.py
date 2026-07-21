@@ -1645,7 +1645,275 @@ ASSIGNMENT_LOG_FILE = WEB_ROOT / "data" / "carrier-assignment-log.json"
 CHANGE_LOG_FILE = WEB_ROOT / "data" / "change-log.json"
 LIFECYCLE_STORE_FILE = WEB_ROOT / "data" / "lifecycle-status.json"
 PRODUCT_STATUS_FILE = WEB_ROOT / "data" / "product-status.json"
+LANG_OVERRIDES_FILE = WEB_ROOT / "data" / "lang-overrides.json"
 PROPOSAL_TTL_HOURS = 72
+
+_LANG_ALIAS_CANON = {"gb": "en", "uk": "en", "ukr": "ua"}
+_KNOWN_LANG_FOR_FOLDER = frozenset({
+    "pl", "de", "en", "ua", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
+    "fr", "it", "es", "nl", "ru", "hr", "si", "bg", "at", "be", "dk",
+    "se", "no", "fi", "pt", "gr", "ie", "ch", "ar",
+})
+
+
+def canonicalize_lang_code(code: str) -> str:
+    c = (code or "").strip().lower()
+    if not c or c in ("?", "unknown", "xx"):
+        return ""
+    c = _LANG_ALIAS_CANON.get(c, c)
+    if c in ("gb", "uk"):
+        return "en"
+    return c
+
+
+def _is_lang_only_segment(part: str) -> bool:
+    toks = [t for t in re.split(r"[\s,;/]+", (part or "").strip()) if t]
+    if not toks:
+        return False
+    for t in toks:
+        c = canonicalize_lang_code(t)
+        if not c or c not in _KNOWN_LANG_FOR_FOLDER or len(c) != 2:
+            return False
+    return True
+
+
+def build_revision_folder_name_with_langs(folder_name: str, langs: list[str]) -> str:
+    """Wstaw ' - PL EN - ' miedzy nazwa/data a indeksem gdy 2+ jezyki.
+    Single-lang (np. samo PL): bez samotnego ' - PL - '.
+    """
+    name = (folder_name or "").strip()
+    if not name:
+        return name
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for raw in langs or []:
+        c = canonicalize_lang_code(raw)
+        if c and c in _KNOWN_LANG_FOR_FOLDER and c not in seen:
+            seen.add(c)
+            cleaned.append(c)
+    # Prefer PL first when present
+    if "pl" in cleaned:
+        cleaned = ["pl"] + [c for c in cleaned if c != "pl"]
+
+    parts = [p.strip() for p in name.split(" - ") if p.strip()]
+    if not parts:
+        return name
+
+    date_re = re.compile(r"^\d{2}[./-]\d{2}[./-]\d{2,4}$")
+    index_re = re.compile(r"^\d{5,9}(?:\.\d{2})?$")
+
+    kept: list[str] = []
+    index_part = None
+    for part in parts:
+        if _is_lang_only_segment(part):
+            continue
+        if index_re.match(part) and index_part is None:
+            index_part = part
+            continue
+        kept.append(part)
+
+    # Rebuild: kept parts + optional lang segment + index
+    out_parts = list(kept)
+    if len(cleaned) >= 2:
+        out_parts.append(" ".join(c.upper() for c in cleaned))
+    if index_part:
+        out_parts.append(index_part)
+    elif kept and date_re.match(kept[-1]) is None:
+        # no index found - leave as-is structure without inventing index
+        pass
+    return " - ".join(out_parts)
+
+
+def rename_revision_langs_on_disk(revision_path: str, langs: list[str]) -> dict:
+    """Rename folder rewizji wg wzorca multi-lang tokenow."""
+    p = Path(normalize_path(revision_path))
+    if not p.is_dir():
+        return {"ok": False, "error": "revision_not_found", "path": str(p)}
+    new_name = build_revision_folder_name_with_langs(p.name, langs)
+    if new_name == p.name:
+        return {
+            "ok": True,
+            "noop": True,
+            "old_path": str(p),
+            "new_path": str(p),
+            "old_name": p.name,
+            "new_name": p.name,
+            "langs": [canonicalize_lang_code(x) for x in (langs or []) if canonicalize_lang_code(x)],
+        }
+    dest = p.parent / new_name
+    if dest.exists() and dest != p:
+        return {"ok": False, "error": "target_exists", "target": str(dest)}
+    try:
+        p.rename(dest)
+    except OSError as exc:
+        return {"ok": False, "error": str(exc)}
+    return {
+        "ok": True,
+        "noop": False,
+        "old_path": str(p),
+        "new_path": str(dest),
+        "old_name": p.name,
+        "new_name": new_name,
+        "langs": [canonicalize_lang_code(x) for x in (langs or []) if canonicalize_lang_code(x)],
+    }
+
+
+def save_lang_override(
+    *,
+    revision_path: str = "",
+    index: str = "",
+    langs: list[str],
+    actor: str = "",
+) -> dict:
+    data = _load_json(
+        LANG_OVERRIDES_FILE,
+        {
+            "note": "Reczne jezyki wariantu.",
+            "policy": {"manual_wins": True},
+            "overrides": {},
+            "updated_at": "",
+        },
+    )
+    overrides = data.setdefault("overrides", {})
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for raw in langs or []:
+        c = canonicalize_lang_code(raw)
+        if c and c not in seen:
+            seen.add(c)
+            cleaned.append(c)
+    if not cleaned:
+        return {"ok": False, "error": "langs_required"}
+    entry = {
+        "langs": cleaned,
+        "updated_at": utc_now(),
+        "updated_by": actor or "",
+    }
+    keys = []
+    if index:
+        keys.append(str(index).strip())
+    if revision_path:
+        rp = str(revision_path).replace("\\", "/")
+        keys.append(rp)
+        keys.append(rp.replace("/", "\\"))
+    if not keys:
+        return {"ok": False, "error": "revision_path_or_index_required"}
+    for k in keys:
+        if k:
+            overrides[k] = dict(entry)
+    data["updated_at"] = utc_now()
+    _save_json(LANG_OVERRIDES_FILE, data)
+    return {"ok": True, "langs": cleaned, "keys": keys}
+
+
+def apply_revision_langs(
+    payload: dict,
+    *,
+    session_role: str = "user",
+    session_email: str = "",
+) -> dict:
+    """Admin: natychmiastowy zapis langs + rename folderu. Non-admin: proposal."""
+    role = (session_role or "user").strip().lower()
+    revision_path = (payload.get("revision_path") or "").strip()
+    index = (payload.get("index") or payload.get("revision_index") or "").strip()
+    raw_langs = payload.get("langs")
+    if not isinstance(raw_langs, list):
+        one = (payload.get("new_lang_code") or payload.get("lang") or "").strip()
+        raw_langs = [one] if one else []
+    cleaned = []
+    seen: set[str] = set()
+    for raw in raw_langs:
+        c = canonicalize_lang_code(str(raw))
+        if c and c not in seen:
+            seen.add(c)
+            cleaned.append(c)
+    if not revision_path and not index:
+        return {"ok": False, "error": "revision_path_or_index_required"}
+    if not cleaned:
+        return {"ok": False, "error": "langs_required"}
+
+    actor = session_email or (payload.get("user_email") or "")
+    if role == "admin":
+        rename_res = {"ok": True, "noop": True, "new_path": revision_path, "old_path": revision_path}
+        if revision_path:
+            rename_res = rename_revision_langs_on_disk(revision_path, cleaned)
+            if not rename_res.get("ok"):
+                return rename_res
+        new_path = rename_res.get("new_path") or revision_path
+        ov = save_lang_override(
+            revision_path=new_path or revision_path,
+            index=index,
+            langs=cleaned,
+            actor=actor,
+        )
+        if not ov.get("ok"):
+            return ov
+        append_audit({
+            "action": "revision_langs_applied",
+            "path": new_path,
+            "detail": ",".join(cleaned),
+            "user": actor,
+        })
+        append_change_log({
+            "action": "set_langs",
+            "category": "lang",
+            "actor": actor,
+            "langs": cleaned,
+            "folder_rename": {
+                "old_path": rename_res.get("old_path"),
+                "new_path": rename_res.get("new_path"),
+                "old_name": rename_res.get("old_name"),
+                "new_name": rename_res.get("new_name"),
+            },
+            "product_id": payload.get("product_id") or "",
+            "product_name": payload.get("product_name") or "",
+        })
+        return {
+            "ok": True,
+            "applied": True,
+            "immediate": True,
+            "langs": cleaned,
+            **{k: rename_res.get(k) for k in (
+                "old_path", "new_path", "old_name", "new_name", "noop"
+            )},
+        }
+
+    # Non-admin: queue as tag proposal (field=lang)
+    data = load_tag_proposals()
+    proposals = data.setdefault("proposals", [])
+    now = datetime.now(timezone.utc)
+    expires = now.timestamp() + PROPOSAL_TTL_HOURS * 3600
+    proposal_id = f"prop_lang_{int(now.timestamp() * 1000)}"
+    entry = {
+        "id": proposal_id,
+        "field": "lang",
+        "revision_path": revision_path,
+        "product_id": payload.get("product_id") or "",
+        "product_name": payload.get("product_name") or "",
+        "current_value": (payload.get("current_langs") or payload.get("current_value") or ""),
+        "proposed_value": ",".join(cleaned),
+        "proposed_langs": cleaned,
+        "status": "pending",
+        "submitted_by": actor or "anonim",
+        "submitted_at": now.isoformat(timespec="seconds"),
+        "expires_at": datetime.fromtimestamp(expires, tz=timezone.utc).isoformat(timespec="seconds"),
+        "decided_by": None,
+        "decided_at": None,
+    }
+    proposals.append(entry)
+    save_tag_proposals(data)
+    append_inbox_item({
+        "type": "tag_proposal",
+        "title": f"Propozycja jezykow: {entry.get('current_value') or '?'} -> {','.join(cleaned)}",
+        "detail": f"{entry.get('product_name') or revision_path}\nZglosil: {actor}\nproposal_id: {proposal_id}",
+        "tags": ["moderacja", "tag", "lang", "propozycja"],
+        "requested_by": actor,
+        "product_id": entry.get("product_id") or "",
+        "path": revision_path,
+        "proposal_id": proposal_id,
+        "read": False,
+    })
+    return {"ok": True, "applied": False, "immediate": False, "proposal": entry}
 
 
 def mirror_lifecycle_to_product_status(result: dict, payload: dict) -> None:
@@ -3052,9 +3320,9 @@ def create_or_apply_tag_proposal(
     """Propose -> admin apply (ADR-009 / memory §86).
 
     Kazdy zalogowany pisze TYLKO do kolejki JSON (tag-proposals + inbox).
-    Natychmiastowy zapis na dysk / kanoniczna baza: wylacznie sesja role=admin
-    z wlaczonym trybem admina. Body.role / body.admin_mode SA IGNOROWANE
-    (anti-spoof) - privilege bierze sie z sesji Bearer.
+    Natychmiastowy zapis na dysk / kanoniczna baza: sesja role=admin
+    (HARD 2026-07-21: bez wymogu admin_mode UI). Body.role / body.admin_mode
+    SA IGNOROWANE (anti-spoof) - privilege bierze sie z sesji Bearer.
     """
     revision_path = (payload.get("revision_path") or "").strip()
     new_code = (payload.get("new_carrier_code") or "").strip().upper()
@@ -3071,7 +3339,9 @@ def create_or_apply_tag_proposal(
         return {"ok": False, "error": "revision_path_and_new_carrier_code_required"}
     # NONE = jawne "BRAK TYPU" (dozwolone)
 
-    can_apply_immediately = role == "admin" and bool(admin_mode)
+    # HARD: admin session = instant apply (admin_mode optional UX only)
+    can_apply_immediately = role == "admin"
+    _ = admin_mode  # kept for API compat / callers
     if can_apply_immediately:
         rename_files = bool(payload.get("rename_files", True))
         result = rename_revision_prefix_on_disk(
@@ -3791,9 +4061,67 @@ def add_global_variant_type(payload: dict, *, actor: str = "") -> dict:
     ctypes["deleted_types"].pop(code, None)
     _save_json(CARRIER_TYPES_FILE, ctypes)
 
+    # HARD 2026-07-21: utworz foldery wariantu w Szablony folderow (PL + EN/GC)
+    templates_created: list[str] = []
+    templates_errors: list[str] = []
+    try:
+        import shutil
+        from explorer_create import (  # type: ignore
+            resolve_product_template,
+        )
+        marketing_base = None
+        try:
+            cfg = _load_json(WEB_ROOT / "data" / "machine-config.json", {})
+            marketing_base = (cfg.get("marketing_base") or cfg.get("base_path") or "").strip()
+        except Exception:  # noqa: BLE001
+            marketing_base = ""
+        if not marketing_base:
+            # Common local mount
+            for cand in (r"X:\Marketing", r"P:\Marketing"):
+                if Path(cand).is_dir():
+                    marketing_base = cand
+                    break
+        if marketing_base and Path(marketing_base).is_dir():
+            base = Path(marketing_base)
+            for brand in ("DK", "GC"):
+                prod_tmpl = resolve_product_template(base, brand)
+                if prod_tmpl is None or not prod_tmpl.is_dir():
+                    templates_errors.append(f"no_product_template:{brand}")
+                    continue
+                # Example variant folder name pattern from siblings
+                siblings = [c for c in prod_tmpl.iterdir() if c.is_dir()]
+                sample = siblings[0].name if siblings else f"{code} - DD.MM.RRRR - 0000000.00"
+                # Replace leading carrier token with new code short
+                head = sample.split(" - ")[0].strip()
+                rest = sample[len(head):] if head else sample
+                if rest.startswith(" - "):
+                    new_folder = code + rest
+                else:
+                    new_folder = f"{code} - DD.MM.RRRR - 0000000.00"
+                dest = prod_tmpl / new_folder
+                if dest.exists():
+                    templates_created.append(str(dest) + " (exists)")
+                    continue
+                # Copy tree from sample sibling if available, else minimal slots
+                try:
+                    if siblings:
+                        shutil.copytree(siblings[0], dest)
+                        # rename is already dest; content is copy of sample - OK for template
+                    else:
+                        dest.mkdir(parents=True, exist_ok=True)
+                        for slot in ("1 - PROJEKT", "3 - DRUK", "4 - WIZKI"):
+                            (dest / slot).mkdir(exist_ok=True)
+                    templates_created.append(str(dest))
+                except OSError as exc:
+                    templates_errors.append(f"{brand}:{exc}")
+        else:
+            templates_errors.append("marketing_base_unavailable")
+    except Exception as exc:  # noqa: BLE001
+        templates_errors.append(str(exc))
+
     append_audit({
         "action": "explorer_add_variant_type",
-        "detail": f"{code} ({code_en or '-'}): {label_pl}",
+        "detail": f"{code} ({code_en or '-'}): {label_pl}; templates={len(templates_created)}",
         "user": actor or "",
     })
     return {
@@ -3801,6 +4129,8 @@ def add_global_variant_type(payload: dict, *, actor: str = "") -> dict:
         "code": code,
         "code_en": code_en,
         "label_pl": label_pl,
+        "templates_created": templates_created,
+        "templates_errors": templates_errors,
         "message": f"Dodano wariant globalny: {label_pl} ({code}).",
     }
 
@@ -6131,6 +6461,17 @@ class Handler(BaseHTTPRequestHandler):
                 session_role=(user.get("role") or "user"),
                 session_email=(user.get("email") or user.get("name") or ""),
                 admin_mode=admin_mode,
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/revision-langs":
+            user = self._require_login()
+            if user is None:
+                return
+            result = apply_revision_langs(
+                data if isinstance(data, dict) else {},
+                session_role=(user.get("role") or "user"),
+                session_email=(user.get("email") or user.get("name") or ""),
             )
             self._json(200 if result.get("ok") else 400, result)
             return
