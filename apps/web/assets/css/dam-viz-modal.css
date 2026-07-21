@@ -161,6 +161,15 @@
   padding: 8px;
 }
 
+/* thumbPick20260721a: kill gray bleed under all-file thumbs (checker/muted slot) */
+#damVizModal .dam-media-preview__all-file img,
+#damMediaPreview .dam-media-preview__all-file img,
+#damVizModal .dam-media-preview__all-file-ph,
+#damMediaPreview .dam-media-preview__all-file-ph {
+  background: #fff !important;
+  background-image: none !important;
+}
+
 /* Button surface + hit area in this bar */
 #damVizModal .dam-viz-modal__actions .geex-btn,
 #damMediaPreview .dam-viz-modal__actions .geex-btn,

@@ -7809,6 +7809,31 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Źródła:** dam-viz-modal.css, dam-viz.js, dam-media-preview.js, dam-modal-shared.js, dam-brand.css; explorer/visualizations/branding HTML; process.md
 
+## all-files regroup bg sections 2026-07-21
+
+**Komenda/Akcja:** Fix `#damVizModalAllFiles` / `.dam-media-preview__all-files` layout: pusta przestrzen po prawej (auto-fill 168px), kafelki ~56px, grupy Z TLEM / BEZ TLA przeplatane. User: pelna szerokosc, wieksze kafelki (~72-88px), regroup po tle (sekcja Bez tla, potem Z tlem), etykieta grupy = tylko typ/perspektywa, wizualne rozroznienie tla globalnie (fill vs border).
+
+**Log/Status:**
+1. Weryfikacja stanu na wejsciu (ten agent kontynuowal po podsumowaniu poprzedniej sesji): kod JS/CSS z regroupem byl juz na miejscu, ALE miedzy sesjami inny, wspolbiezny agent dopisal do tych samych plikow fix `vizCtaNav20260721b` (body scroll + CTA nav) i zbumpowal `?v=` PONAD moj tag `allbgsections20260721a` w `dam-viz-modal.css` + JS-injected link + `dam-viz.js`/`dam-media-preview.js` (HTML nadal mial `dam-branding.css?v=allbgsections20260721a`, ale CSS/JS juz `?v=vizCtaNav20260721b`). Sprawdzone grep-em: regroup markup (`renderSection`/`renderGroup`/`bezOrder`/`zTlemOrder`/`data-bg`) i CSS (`.all-section-grid` flex, `data-bg="bez-tla"` border-only) SA nienadpisane w obu miejscach -> brak konfliktu, nie trzeba bylo ponownie bumpowac wersji (nowszy tag agenta B juz serwuje moj kod).
+2. Root cause #1 (z poprzedniej sesji, opisana szerzej w doktrynie): `bodyGrid20260721a/b` w `dam-viz-modal.css` (`!important grid-template-columns: repeat(auto-fill, minmax(168px,1fr))` + kafelki `flex:0 0 56px`) nadpisal wczesniejszy dobry fix `allrows20260721a` z `dam-branding.css`.
+3. Root cause #2 (subtelna): nawet `auto-fit` w CSS Grid nie usuwa martwej przestrzeni gdy liczba grup nie jest wielokrotnoscia liczby kolumn. Fix: flexbox (`display:flex; flex-wrap:wrap` + `flex:1 1 <basis>`) na poziomie sekcji (`.all-section-grid`).
+4. JS: `dam-viz.js` i `dam-media-preview.js` grupuja pliki po `persp|bg`, dzielą na `bezOrder` / `zTlemOrder`, renderuja dwie `<section class="...--bez-tla|z-tlem">` z etykieta sekcji (Bez tla / Z tlem); etykieta grupy = tylko perspektywa; `data-bg` na `.all-group` dla CSS.
+5. CSS: `dam-branding.css` (base) + `dam-viz-modal.css` (scoped `#damVizModal`/`#damMediaPreview`, wygrywa nad starym `!important`): `.all-group-grid > .all-file` `flex:1 1 80px; min-width:80px; max-width:104px` (thumb ~86px, w zakresie 72-88px); `data-bg="z-tlem"` fill `#f5f6fa`, `data-bg="bez-tla"` transparent + border 1px `#f5f6fa`.
+
+**Efekt/Fix:** Sekcje w kolejnosci Bez tla -> Z tlem (bez przeplotu); grupy rozciagaja sie na cala szerokosc rzedu (brak martwej przestrzeni nawet dla "sierocej" 4. grupy w wierszu 2); kafelki 104x123px (thumb 86x86px).
+
+**Backup:** brak (tylko edycja kodu, brak operacji na dysku X:).
+
+**Test/Ewaluacja:**
+- `node --check dam-viz.js` / `dam-media-preview.js` - OK.
+- Grep-owa weryfikacja: kod regroup (JS) i CSS flex/data-bg nienadpisane przez wspolbieznego agenta `vizCtaNav20260721b`; brak konfliktu wersji do naprawy.
+- CDP produkt `mix-tuba-30-szt-xmas-mixy` (1 grupa, INNE, z-tlem): `filesWidth===groupWidth===795.71875px` (pelna szerokosc, brak dead space); `background-color: rgb(245,246,250)`, `border: 1px solid rgba(0,0,0,0)`; kafelek `104x123px`, thumb `86x86px`.
+- CDP produkt `cynamonka-nerkowcowy` (4+4 grupy, viz modal): sekcje w kolejnosci `--bez-tla` -> `--z-tlem` (potwierdzone `querySelectorAll` + `className`); etykiety grup w obu sekcjach identyczne (ENFACE/FRONT/BACK/TYL-ENFACE), TYLKO typ, bez "* Z TLEM"/"* BEZ TLA"; wiersz 1 = 3 grupy x 259px (= 796px szerokosci grid), wiersz 2 = 1 "sierocia" grupa TYL-ENFACE = 796px (100% szerokosci, zero martwej przestrzeni) - to samo w obu sekcjach.
+- Kolory (getComputedStyle, ten sam produkt): `bez-tla` -> `background-color: rgba(0,0,0,0)` + `border-color: rgb(245,246,250)`; `z-tlem` -> `background-color: rgb(245,246,250)` + `border-color: rgba(0,0,0,0)` - dokladnie odwrotne, zgodnie z wymaganiem #5.
+- Screenshot+Read (CDP `Page.captureScreenshot`, bo `browser_take_screenshot` timeout'owal 4x z powodu `document.hidden===true` w tej karcie automatyzacji - znane ograniczenie z doktryny sekcja 12, fallback zadzialal): pass 1 = sekcja "BEZ TLA" widoczna, karty ENFACE/FRONT/BACK w rzedzie 1 z cienka biala/szara ramka bez wypelnienia, TYL-ENFACE pod nimi na cala szerokosc; pass 2 (scroll do sekcji 2) = "Z TLEM" z wyraznie widocznym szarym wypelnieniem (`#f5f6fa`) na tych samych czterech kartach - kontrast miedzy sekcjami wizualnie oczywisty. Kolejnosc, etykiety, brak martwej przestrzeni i rozroznienie tla potwierdzone jednoczesnie liczbowo (CDP) i wizualnie (2x screenshot+Read).
+
+**Zrodla:** dam-viz.js (`bindVizModalStudioControls`, `renderSection`/`renderGroup`), dam-media-preview.js (`allFilesPanelHtml`), dam-branding.css, dam-viz-modal.css; dashboard/branding/explorer/visualizations.html; code-doctrine.md sekcja 12 (lekcja: flex vs grid dla fluid rzedow o nieznanej liczbie elementow + kolizja dwoch agentow tego samego dnia na tym samym elemencie).
+
 ## 2026-07-21 - vizLoadOnce: #vizGrid reveal 2x
 
 **Komenda/Akcja:** Debugger - loading/reveal animation plays twice on visualizations `#vizGrid`.
@@ -7826,3 +7851,26 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 - CDP hard refresh: loaderStart=1 loaderDone=1 skeleton=1 reveal=1 (was 2)
 
 **Zrodla:** dam-viz.js, dam-shell.js (~522 dam:admin-mode), dam-grid-reveal.js, code-doctrine.md §12
+
+
+## 2026-07-21 - thumbPick: square tiles + all-file white media slot
+
+**Komenda/Akcja:** Restyle `#damThumbPicker` thumbs to filled square tiles (match `.dam-media-preview__all-group` / `__all-file`); crumbs padding; kill gray bleed under all-file imgs. ui-taste 5 passes.
+
+**Log/Status:**
+1. Root cause A: `.dam-admin-control` on picker items forced `border-radius:50px !important` + purple 1.5px stroke + crushed padding - pill look.
+2. Root cause B: img overflowed tile (`overflow:visible`, img taller than card) - scalloped overlap.
+3. Root cause C: `.dam-media-preview__all-file img` media slot used `background:#f5f6fa` under `object-fit:contain` - gray bleed.
+4. Fix: inject `<style id="dam-thumb-picker-tiles">` from `dam-viz.js`; remove `dam-admin-control` from picker item HTML; square media `aspect-ratio:1`, white card on `#f5f6fa` grid, radius 14px, transparent border; crumbs pad 12px 16px + wrap (no scrollbar); all-file img bg `#fff`; hover/focus via outline + fill tint (box-shadow stripped in this shell).
+5. Cache token: `thumbPick20260721g` on dam-viz.js; branding/viz-modal CSS `thumbPick20260721a`.
+
+**Efekt/Fix:** Picker thumbs = square filled cards; crumbs readable; all-file slot white.
+
+**Backup:** brak.
+
+**Test/Ewaluacja:**
+- node --check dam-viz.js OK
+- CDP ciasto-sliwkowe-nerkowcowy: radius 14px, border transparent, gridBg #f5f6fa, imgInside true, crumbs pad 12/16, allImgBg white
+- Screenshot+Read Pass 1-5 (CDP Page.captureScreenshot; document.hidden stale browser_take_screenshot)
+
+**Zrodla:** dam-viz.js (ensureThumbPickerTilesCss), dam-branding.css, dam-viz-modal.css, visualizations/explorer/branding/dashboard.html

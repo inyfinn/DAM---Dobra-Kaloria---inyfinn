@@ -2438,11 +2438,14 @@ body.dam-media-preview-open {
   align-self: flex-start;
 }
 
-/* allrows20260721a: groups stack as full-width ROWS (not side-by-side columns). */
+/* bgSections20260721a: sections (Bez tła / Z tłem) stack as full-width ROWS; groups
+   inside each section use a fluid, auto-fit grid so 1-2 groups still fill the row
+   width instead of leaving dead space on the right (auto-fit collapses empty tracks,
+   auto-fill does not — see code-doctrine §12, 2026-07-21). */
 .dam-media-preview__all-files {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
 }
 
@@ -2467,6 +2470,42 @@ body.dam-media-preview-open {
   }
 }
 
+.dam-media-preview__all-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.dam-media-preview__all-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dam-text-muted, #64748b);
+  margin: 0;
+  padding-left: 2px;
+}
+
+/* Fluid row of Perspektywa groups. Flexbox (not grid) on purpose: grid reserves
+   column tracks for the WHOLE section, so a lone leftover item in the last row
+   still sits in column 1 with dead space beside it. Flexbox redistributes grow
+   space per-row, so 1 group = full width, 2 groups = half each, and a trailing
+   4th-of-3 group in its own row also stretches full width — never dead space. */
+.dam-media-preview__all-section-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.dam-media-preview__all-section-grid > .dam-media-preview__all-group {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
 .dam-media-preview__all-group-label {
   font-size: 11px;
   font-weight: 600;
@@ -2476,16 +2515,24 @@ body.dam-media-preview-open {
   margin-bottom: 6px;
 }
 
+/* data-bg="z-tlem" (default): muted fill, no border.
+   data-bg="bez-tla": no fill, thin 1px border only — global visual distinction.
+   Width comes from the flex-basis above (not 100%), so groups share the row. */
 .dam-media-preview__all-group {
   min-width: 0;
-  width: 100%;
   padding: 10px;
   border-radius: 12px;
   background: var(--dam-surface-muted, #f5f6fa);
+  border: 1px solid transparent;
   box-sizing: border-box;
 }
 
-/* Horizontal quality strip XL → L → S → S-SKLEP inside each group row. */
+.dam-media-preview__all-group[data-bg="bez-tla"] {
+  background: transparent;
+  border: 1px solid var(--dam-surface-muted, #f5f6fa);
+}
+
+/* Horizontal quality strip XL → L → S → S-SKLEP; tiles grow to fill the group width. */
 .dam-media-preview__all-group-grid {
   display: flex;
   flex-direction: row;
@@ -2495,16 +2542,17 @@ body.dam-media-preview-open {
 }
 
 .dam-media-preview__all-group-grid > .dam-media-preview__all-file {
-  flex: 0 0 72px;
-  width: 72px;
-  max-width: 88px;
+  flex: 1 1 80px;
+  width: auto;
+  min-width: 80px;
+  max-width: 104px;
 }
 
 .dam-media-preview__all-file {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 6px;
+  padding: 8px;
   border: 1px solid #e7e7ec;
   border-radius: 10px;
   background: #fff;
@@ -2519,7 +2567,9 @@ body.dam-media-preview-open {
   aspect-ratio: 1;
   object-fit: contain;
   border-radius: 6px;
-  background: #f5f6fa;
+  /* thumbPick20260721a: solid white media slot - no gray bleed under transparent PNGs */
+  background: #fff;
+  background-image: none;
 }
 
 .dam-media-preview__all-file-label {

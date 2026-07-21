@@ -1,7 +1,7 @@
 {
-  "version": "3.1.3",
+  "version": "3.1.4",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "gapship",
   "released_at": "2026-07-21",
-  "note": "3.1.3: single vizGrid reveal - skip redundant applyFilters on dam:admin-mode boot echo; cache vizLoadOnce20260721a"
+  "note": "3.1.4: thumb picker square filled tiles + crumbs pad + all-file white media slot; cache thumbPick20260721g"
 }

@@ -1703,9 +1703,101 @@
     return tags ? '<span class="dam-thumb-picker__item-tags">' + tags + "</span>" : "";
   }
 
+  /* thumbPick20260721a: square filled tiles (like .dam-media-preview__all-group),
+     not 1px purple stroke pills. Injected to avoid concurrent edits on dam-brand.css. */
+  function ensureThumbPickerTilesCss() {
+    if (document.getElementById("dam-thumb-picker-tiles")) return;
+    var style = document.createElement("style");
+    style.id = "dam-thumb-picker-tiles";
+    style.textContent =
+      "#damThumbPicker .dam-thumb-picker__crumbs{" +
+      "flex:1 1 240px;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:4px 2px;" +
+      "overflow-x:hidden;overflow-y:hidden;white-space:normal!important;" +
+      "padding:12px 16px;min-height:44px;max-height:76px;box-sizing:border-box;" +
+      "border:none;border-radius:12px;" +
+      "background:var(--dam-surface-muted,#f5f6fa);scrollbar-width:none;}" +
+      "#damThumbPicker .dam-thumb-picker__crumbs::-webkit-scrollbar{display:none;height:0;}" +
+      "#damThumbPicker .dam-thumb-picker__crumb{" +
+      "border:none;background:transparent;padding:6px 10px;border-radius:8px;" +
+      "color:#6b6980;font-size:12px;cursor:pointer;white-space:nowrap;min-height:32px;}" +
+      "#damThumbPicker .dam-thumb-picker__crumb:hover{" +
+      "background:#fff;color:var(--dam-primary,#ab54db);}" +
+      "#damThumbPicker .dam-thumb-picker__crumb.is-current{" +
+      "background:#fff;color:#464255;font-weight:600;cursor:default;}" +
+      "#damThumbPicker .dam-thumb-picker__crumb-sep{color:#c3c1cc;font-size:11px;padding:0 2px;}" +
+      "#damThumbPicker .dam-thumb-picker__nav-btn{" +
+      "width:36px;height:36px;min-width:36px;min-height:36px;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs]," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles]{" +
+      "background:var(--dam-surface-muted,#f5f6fa);" +
+      "gap:12px;padding:16px;" +
+      "grid-template-columns:repeat(auto-fill,minmax(128px,1fr));}" +
+      /* Beat .dam-admin-control pill (50px + purple 1.5px stroke !important) */
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item.dam-admin-control," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.dam-admin-control{" +
+      "display:flex;flex-direction:column;align-items:stretch;gap:8px;" +
+      "padding:10px!important;min-width:0;min-height:44px!important;" +
+      "border:1px solid transparent!important;border-radius:14px!important;background:#fff!important;" +
+      "box-shadow:none!important;text-align:left;overflow:hidden;box-sizing:border-box;" +
+      "font-size:12px!important;color:#464255!important;" +
+      "transition:background .14s ease,box-shadow .14s ease,transform .14s ease;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item--folder," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item--folder{" +
+      "flex-direction:column;background:#fff!important;border-color:transparent!important;}" +
+      /* Hover/focus: outline + fill tint (box-shadow/transform are stripped in this shell) */
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item:hover," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item:hover," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item.is-hover," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.is-hover{" +
+      "border-color:transparent!important;" +
+      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff)!important;" +
+      "outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 28%,transparent);" +
+      "outline-offset:1px;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item.is-focus," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.is-focus," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item.is-focus{" +
+      "border-color:transparent!important;" +
+      "outline:3px solid rgba(171,84,219,.55)!important;" +
+      "outline-offset:2px;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item img," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item img{" +
+      "display:block;width:100%;max-width:100%;height:auto!important;aspect-ratio:1;" +
+      "object-fit:contain;border-radius:10px;background:#fff;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item-tags{" +
+      "display:none;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item--folder > i," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item--folder > i," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item > i.uil-image," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item > i.uil-image{" +
+      "display:flex;align-items:center;justify-content:center;" +
+      "width:100%;aspect-ratio:1;border-radius:10px;" +
+      "background:var(--dam-surface-muted,#f5f6fa);font-size:36px;" +
+      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 55%,#8b8d97);}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__meta," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__meta{" +
+      "min-width:0;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__name," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__name{" +
+      "font-size:11.5px;font-weight:600;color:#464255;line-height:1.35;" +
+      "overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;" +
+      "word-break:break-word;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list]{" +
+      "background:var(--dam-surface-muted,#f5f6fa);padding:12px 16px 16px;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item.dam-admin-control{" +
+      "background:#fff!important;border:1px solid transparent!important;border-radius:12px!important;}" +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item:hover," +
+      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item.dam-admin-control:hover{" +
+      "border-color:transparent!important;box-shadow:0 4px 14px rgba(40,34,60,.08);}";
+    document.head.appendChild(style);
+  }
+
   /* Pkt 8 brief 2026-07-20: #damThumbPicker jako mini-eksplorator - breadcrumb,
      wstecz/dalej/w gore/odswiez, widoki miniatury/lista/kafelki, tagi produktu. */
   function openThumbGridPicker(dir, onPicked) {
+    ensureThumbPickerTilesCss();
     var existing = document.getElementById("damThumbPicker");
     if (existing) existing.remove();
     var view = localStorage.getItem(THUMB_PICKER_VIEW_KEY) || "thumbs";
@@ -1792,8 +1884,10 @@
     }
 
     function folderItemHtml(f) {
+      /* No dam-admin-control here: that class forces Geex pill radius 50px + purple
+         stroke (!important) and crushes padding - tiles must stay square cards. */
       return (
-        '<button type="button" class="dam-thumb-picker__item dam-thumb-picker__item--folder dam-admin-control" data-open-folder="' +
+        '<button type="button" class="dam-thumb-picker__item dam-thumb-picker__item--folder" data-open-folder="' +
         esc(f.path) +
         '" title="' +
         esc(f.path) +
@@ -1808,7 +1902,7 @@
     function fileItemHtml(f) {
       var prev = mediaPreviewUrl(f.path);
       return (
-        '<button type="button" class="dam-thumb-picker__item dam-admin-control" data-path="' +
+        '<button type="button" class="dam-thumb-picker__item" data-path="' +
         esc(f.path) +
         '" data-file="' +
         esc(f.name) +
@@ -1855,6 +1949,20 @@
             return;
           }
           grid.innerHTML = folders.map(folderItemHtml).join("") + files.map(fileItemHtml).join("");
+          grid.querySelectorAll(".dam-thumb-picker__item").forEach(function (btn) {
+            btn.addEventListener("focus", function () {
+              btn.classList.add("is-focus");
+            });
+            btn.addEventListener("blur", function () {
+              btn.classList.remove("is-focus");
+            });
+            btn.addEventListener("mouseenter", function () {
+              btn.classList.add("is-hover");
+            });
+            btn.addEventListener("mouseleave", function () {
+              btn.classList.remove("is-hover");
+            });
+          });
           grid.querySelectorAll("[data-open-folder]").forEach(function (btn) {
             btn.addEventListener("click", function () {
               navigateTo(btn.getAttribute("data-open-folder"));
@@ -2275,12 +2383,12 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=vizCtaNav20260721b";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=thumbPick20260721a";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=vizCtaNav20260721b";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=thumbPick20260721a";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
