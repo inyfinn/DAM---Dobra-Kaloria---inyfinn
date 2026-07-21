@@ -8376,3 +8376,18 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 
 
+
+## 2026-07-21 - geex pad fix: modal CTA circles + project font + marketing air
+
+**Komenda/Akcja:** Przywrócenie prostokątnych CTA w modalu (Przejdź/Folder), mniejszy font na kartach projektu, air na marketing tiles - bez redesignu.
+
+**Log/Status:**
+1. Root cause kółek: geex-realign w `dam-primitives.css` wymuszał `width/height:44px` na `.dam-btn-icon` (także z etykietą) + `border-radius: var(--btn-radius,50px)` w modal actions → ~43×43 z uciętym tekstem.
+2. Fix: square tylko dla icon-only; `.dam-btn-icon:not(.dam-btn-icon-only)` = auto width + compact pad; modal CTA override 8px radius; project card `font-size:10px`; marketing card pad/gap + tile grid minmax 148px.
+3. Cache-bust `?v=geexPadFix20260721a` (catalog `…21c`, viz-modal `…21b`).
+
+**Efekt/Fix:** Modal Przejdź/Folder prostokąty czytelne; OpenFile zostaje icon-only; project Przejdź 10px; marketing tiles z air jak viz-card.
+
+**Test/Ewaluacja:** CDP modal go ~98×36 fs12 br8 spanClipped=false; project go fs10 h30; marketing pad 14px titleFs12 w~172; screenshot+Read `_qa/qa-viz-modal-actions-crop2.png`, `qa-marketing-cards-pass3.png`.
+
+**Zrodla:** dam-primitives.css, dam-viz-modal.css, dam-brand.css, dam-app.css, dam-project-catalog.css, dam-ui-cta.js, HTML ?v=

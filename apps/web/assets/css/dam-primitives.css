@@ -189,11 +189,14 @@ a.dam-int-cta {
   font-weight: 500;
 }
 
-/* Icon / square controls — 44×44 touch */
+/*
+  Icon-only / square controls — 44×44 touch.
+  HARD: never force equal w/h on labeled CTAs (.dam-btn-icon alone, .dam-viz-modal__cta).
+  Square only for true icon buttons.
+*/
 .dam-icon-btn,
 .dam-menu-toggle,
 .dam-viz-icon-btn,
-.dam-btn-icon,
 .dam-btn-icon-only {
   display: inline-flex;
   align-items: center;
@@ -215,13 +218,42 @@ a.dam-int-cta {
     border-color var(--dam-anim-hover, 0.22s) ease;
 }
 
+/*
+  Icon+label CTAs (.dam-btn-icon without -only): compact rectangle, auto width.
+  Used by modal Przejdź/Folder, project card Przejdź, viz card labeled actions.
+*/
+.dam-btn-icon:not(.dam-btn-icon-only) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: var(--dam-control-h-sm, 36px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
+  border-radius: var(--dam-radius-btn-compact, 8px);
+  border: 1px solid var(--dam-btn-outline-border);
+  background-color: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: visible;
+  transition:
+    background-color var(--dam-anim-hover, 0.22s) ease,
+    color var(--dam-anim-hover, 0.22s) ease,
+    border-color var(--dam-anim-hover, 0.22s) ease;
+}
+
 .dam-icon-btn:hover,
 .dam-icon-btn:focus-visible,
 .dam-menu-toggle:hover,
 .dam-menu-toggle:focus-visible,
 .dam-viz-icon-btn:hover:not(:disabled):not(.is-disabled),
 .dam-viz-icon-btn:focus-visible,
-.dam-btn-icon:hover,
+.dam-btn-icon:not(.dam-btn-icon-only):hover,
+.dam-btn-icon:not(.dam-btn-icon-only):focus-visible,
 .dam-btn-icon-only:hover {
   color: var(--dam-primary, #ab54db);
   background-color: color-mix(
@@ -238,7 +270,7 @@ html[data-theme="dark"] .dam-win-btn:not(.geex-btn--primary):not(.geex-btn--dang
 html[data-theme="dark"] .dam-icon-btn,
 html[data-theme="dark"] .dam-menu-toggle,
 html[data-theme="dark"] .dam-viz-icon-btn,
-html[data-theme="dark"] .dam-btn-icon,
+html[data-theme="dark"] .dam-btn-icon:not(.dam-btn-icon-only),
 html[data-theme="dark"] .dam-btn-icon-only {
   background-color: var(--dam-surface, #201f28) !important;
 }
