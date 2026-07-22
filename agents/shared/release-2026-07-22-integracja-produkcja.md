@@ -22,6 +22,16 @@ Plan: `integracja_produkcja_faktury_c9e97532`
 
 \* Outlook COM na maszynie agenta zwraca `Operacja przerwana` / server failed — fallback ZIP (CSV+HTML+PDF) + mailto działa (HTTP 200, `fallback=zip_and_mailto`, 3 załączniki w ZIP w tym PDF). Pełny draft Outlook wymaga uruchomionego Outlooka w sesji użytkownika desktop DAM.
 
+## QA live (2026-07-22 ~17:40)
+
+| Check | Wynik |
+|-------|-------|
+| Tip `19e8c54` na `origin/main` | Pass |
+| Bridge api_version 7; sleeve/catalog 401 (auth) | Pass |
+| Sleeve panel 29 / critical 8 / `6300578` | Pass (`qa-integracja-sleeve-stock-pass.png`) |
+| Mail 4 sekcje gap 24px; Kubara; `509012414` | Pass (`qa-invoices-mail-panel-pass.png`) |
+| Asana 3× wizualizacja → 3× 800 PLN | Pass (CDP draft) |
+
 ## Endpointy (bridge :8766)
 
 - `GET /sleeve-stock`
