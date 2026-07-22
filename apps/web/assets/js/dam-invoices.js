@@ -19,6 +19,11 @@
   var currentFilter = "all";
   var source = "local";
   var erpSync = null;
+  var asanaTasks = [];
+  var costCatalog = null;
+  var draftLines = [];
+  var DEFAULT_MAIL_TO = ["faktury@kubara.pl", "alina.andzel@kubara.pl"];
+  var DEFAULT_ACCOUNTING_NO = "509012414";
 
   function bridgeUrl() {
     if (window.DamRuntime && typeof DamRuntime.bridgeUrl === "function") {
@@ -291,7 +296,102 @@
       });
   }
 
+  function ensureInvStyles() {
+    if (document.getElementById("damInvAsanaMailCss")) return;
+    var st = document.createElement("style");
+    st.id = "damInvAsanaMailCss";
+    st.textContent =
+      ".dam-inv-asana__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto}" +
+      ".dam-inv-asana-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:start;padding:10px 12px;border:1px solid #ececf2;border-radius:10px;background:#fafafc}" +
+      ".dam-inv-asana-item__title{font-weight:600;font-size:13px}" +
+      ".dam-inv-asana-item__meta,.dam-inv-asana-item__due,.dam-inv-asana-item__est{font-size:12px;color:#5c5c6a}" +
+      ".dam-inv-asana__draft{margin-top:14px;padding:12px;border:1px solid #e2dced;border-radius:12px;background:#faf8ff}" +
+      ".dam-inv-asana__draft table{width:100%;border-collapse:collapse;font-size:12.5px}" +
+      ".dam-inv-asana__draft th,.dam-inv-asana__draft td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left}" +
+      ".dam-inv-mail{margin-top:24px!important;display:block!important}" +
+      ".dam-inv-mail__content{display:flex;flex-direction:column;gap:24px;padding:8px 4px 16px}" +
+      ".dam-inv-mail__section{padding:16px 18px;border:1px solid #e8e8ee;border-radius:14px;background:#fff}" +
+      ".dam-inv-mail__section h5{margin:0 0 10px;font-size:13px;font-weight:650;text-transform:uppercase;letter-spacing:.04em;color:#5c5c6a}" +
+      ".dam-inv-mail__chips{display:flex;flex-wrap:wrap;gap:8px}" +
+      ".dam-inv-mail__chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#f0eef6;border:1px solid #e2dced;font-size:13px}" +
+      ".dam-inv-mail__list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto}" +
+      ".dam-inv-mail__row{display:flex;gap:10px;align-items:flex-start;font-size:13px}" +
+      ".dam-inv-mail__actions{display:flex;flex-wrap:wrap;gap:10px}";
+    document.head.appendChild(st);
+  }
+
+  function loadCostCatalog() {
+    return fetch(bridgeUrl() + "/production-cost-catalog", {
+      headers: authHeaders(),
+      cache: "no-store",
+    })
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .catch(function () {
+        return null;
+      })
+      .then(function (data) {
+        if (data && data.lines) {
+          costCatalog = data;
+          return data;
+        }
+        return fetch("data/production-cost-catalog.json?v=" + Date.now(), {
+          cache: "no-store",
+        })
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (local) {
+            costCatalog = local || { lines: [] };
+            return costCatalog;
+          });
+      });
+  }
+
+  function matchTaskToCostLine(taskName) {
+    var name = String(taskName || "").toLowerCase();
+    var lines = (costCatalog && costCatalog.lines) || [];
+    var fallback = null;
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var pat = line.task_pattern || "";
+      if (pat === ".*" || line.id === "fallback") {
+        fallback = line;
+        continue;
+      }
+      try {
+        if (new RegExp(pat, "i").test(name)) return line;
+      } catch (e) {
+        if (name.indexOf(String(pat).toLowerCase()) !== -1) return line;
+      }
+    }
+    return fallback;
+  }
+
+  function estimateForTask(t) {
+    var name = t.name || t.title || "";
+    var line = matchTaskToCostLine(name);
+    var qty = line && line.default_qty != null ? Number(line.default_qty) : 1;
+    var price = line ? Number(line.unit_price) || 0 : 0;
+    return {
+      task: t,
+      catalog_id: line && line.id,
+      label: (line && line.label_pl) || "Inna pozycja",
+      category: (line && line.category) || "other",
+      unit: (line && line.unit) || "per_task",
+      qty: qty,
+      unit_price: price,
+      amount: qty * price,
+      description:
+        name +
+        (t.parent || t.project ? " · " + (t.parent || t.project) : ""),
+    };
+  }
+
   function renderAsanaTasks(tasks) {
+    ensureInvStyles();
+    asanaTasks = tasks || [];
     var mount = document.getElementById("damAsanaTasksList");
     var banner = document.getElementById("damAsanaTasksBanner");
     if (!mount) return;
@@ -300,60 +400,433 @@
       if (banner) {
         banner.hidden = false;
         banner.innerHTML =
-          'Brak zadań Asana. Połącz i zsynchronizuj w <a href="integrations.html">Integracjach</a>.';
+          'Brak zadań Asana. Połącz i zsynchronizuj w <a href="integrations.html">Integracja i produkcja</a>.';
       }
       return;
     }
     if (banner) banner.hidden = true;
     mount.innerHTML = tasks
-      .slice(0, 40)
-      .map(function (t) {
+      .slice(0, 60)
+      .map(function (t, idx) {
         var name = t.name || t.title || t.gid || "Zadanie";
-        var project = t.project || t.projects || t.section || "";
-        var due = t.due_on || t.due_date || "";
+        var project = t.parent || t.project || t.section || "";
+        var due = t.due_on || t.due_date || t.due || "";
+        var est = estimateForTask(t);
+        var tid = t.id || t.gid || "t" + idx;
         return (
           '<li class="dam-inv-asana-item">' +
+          '<label><input type="checkbox" class="dam-asana-task-cb" data-task-id="' +
+          escapeHtml(String(tid)) +
+          '" data-task-idx="' +
+          idx +
+          '" /></label>' +
+          "<div>" +
           '<span class="dam-inv-asana-item__title">' +
           escapeHtml(name) +
           "</span>" +
           (project
-            ? '<span class="dam-inv-asana-item__meta">' + escapeHtml(String(project)) + "</span>"
+            ? '<div class="dam-inv-asana-item__meta">' +
+              escapeHtml(String(project)) +
+              "</div>"
             : "") +
           (due
-            ? '<span class="dam-inv-asana-item__due">' + escapeHtml(formatDate(due)) + "</span>"
+            ? '<div class="dam-inv-asana-item__due">' +
+              escapeHtml(formatDate(due)) +
+              "</div>"
             : "") +
+          "</div>" +
+          '<div class="dam-inv-asana-item__est">' +
+          escapeHtml(est.label) +
+          "<br><strong>" +
+          escapeHtml(formatPLN(est.amount)) +
+          "</strong></div>" +
           "</li>"
         );
       })
       .join("");
   }
 
-  function loadAsanaTasks() {
-    return fetch("data/asana-tasks.json?v=" + Date.now(), { cache: "no-store" })
+  function renderDraftLines() {
+    var box = document.getElementById("damAsanaDraftLines");
+    var sumEl = document.getElementById("damAsanaCostSum");
+    var total = draftLines.reduce(function (a, L) {
+      return a + (Number(L.amount) || 0);
+    }, 0);
+    if (sumEl) sumEl.textContent = "Suma: " + formatPLN(total);
+    if (!box) return;
+    if (!draftLines.length) {
+      box.hidden = true;
+      box.innerHTML = "";
+      return;
+    }
+    box.hidden = false;
+    box.innerHTML =
+      "<h5 style=\"margin:0 0 8px;font-size:13px\">Szkic pozycji faktury</h5>" +
+      "<table><thead><tr><th>Opis</th><th>Kat.</th><th>Ilość</th><th>Cena</th><th>Suma</th></tr></thead><tbody>" +
+      draftLines
+        .map(function (L) {
+          return (
+            "<tr><td>" +
+            escapeHtml(L.description) +
+            "</td><td>" +
+            escapeHtml(L.category) +
+            '</td><td class="dam-sleeve-stock__num">' +
+            escapeHtml(String(L.qty)) +
+            "</td><td>" +
+            escapeHtml(formatPLN(L.unit_price)) +
+            "</td><td><strong>" +
+            escapeHtml(formatPLN(L.amount)) +
+            "</strong></td></tr>"
+          );
+        })
+        .join("") +
+      "</tbody></table>";
+  }
+
+  function selectedAsanaTasks() {
+    var out = [];
+    document.querySelectorAll(".dam-asana-task-cb:checked").forEach(function (cb) {
+      var idx = parseInt(cb.getAttribute("data-task-idx"), 10);
+      if (!isNaN(idx) && asanaTasks[idx]) out.push(asanaTasks[idx]);
+    });
+    return out;
+  }
+
+  function generateDraftFromSelection() {
+    draftLines = selectedAsanaTasks().map(estimateForTask);
+    if (!draftLines.length) {
+      alert("Zaznacz co najmniej jedno zadanie Asana.");
+      return;
+    }
+    renderDraftLines();
+  }
+
+  function addDraftToInvoice() {
+    if (!draftLines.length) {
+      alert("Najpierw wygeneruj pozycje faktury.");
+      return;
+    }
+    var total = draftLines.reduce(function (a, L) {
+      return a + (Number(L.amount) || 0);
+    }, 0);
+    var today = new Date();
+    var iso = today.toISOString().slice(0, 10);
+    var due = new Date(today.getTime() + 14 * 86400000).toISOString().slice(0, 10);
+    var id =
+      "FV/" +
+      today.getFullYear() +
+      "/" +
+      String(today.getMonth() + 1).padStart(2, "0") +
+      "/AS-" +
+      String(Date.now()).slice(-6);
+    var inv = {
+      id: id,
+      client: "Kubara / produkcja (szacunek)",
+      project: draftLines
+        .slice(0, 3)
+        .map(function (L) {
+          return L.description;
+        })
+        .join("; "),
+      amount: Math.round(total * 100) / 100,
+      currency: "PLN",
+      issue_date: iso,
+      due_date: due,
+      status: "pending",
+      type: "Asana kosztorys",
+      lines: draftLines.map(function (L) {
+        return {
+          description: L.description,
+          category: L.category,
+          qty: L.qty,
+          unit_price: L.unit_price,
+          amount: L.amount,
+          catalog_id: L.catalog_id,
+        };
+      }),
+      accounting_no: DEFAULT_ACCOUNTING_NO,
+    };
+    var headers = Object.assign(
+      { "Content-Type": "application/json" },
+      authHeaders()
+    );
+    fetch(bridgeUrl() + "/finance/invoices", {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ action: "upsert", invoice: inv }),
+    })
       .then(function (r) {
-        return r.ok ? r.json() : null;
+        return r.json().then(function (j) {
+          return { ok: r.ok, j: j };
+        });
       })
-      .then(function (data) {
-        var tasks = [];
-        if (!data) {
-          renderAsanaTasks([]);
-          return;
-        }
-        if (Array.isArray(data.tasks)) tasks = data.tasks;
-        else if (Array.isArray(data)) tasks = data;
-        else if (data.projects && Array.isArray(data.projects)) {
-          data.projects.forEach(function (p) {
-            (p.tasks || []).forEach(function (t) {
-              tasks.push(
-                Object.assign({}, t, { project: p.name || p.label || p.id })
-              );
-            });
+      .then(function (res) {
+        if (!res.ok || (res.j && res.j.ok === false)) {
+          // local fallback append
+          allInvoices.unshift(inv);
+          applyInvoices(allInvoices, source);
+          alert(
+            "Dodano lokalnie (bridge niedostępny): " +
+              id +
+              " · " +
+              formatPLN(total)
+          );
+        } else {
+          alert("Dodano fakturę " + id + " · " + formatPLN(total));
+          return loadInvoices().then(function () {
+            renderMailPanel();
           });
         }
-        renderAsanaTasks(tasks);
+        renderMailPanel();
       })
       .catch(function () {
-        renderAsanaTasks([]);
+        allInvoices.unshift(inv);
+        applyInvoices(allInvoices, source);
+        alert("Dodano lokalnie: " + id);
+        renderMailPanel();
+      });
+  }
+
+  function loadAsanaTasks() {
+    return loadCostCatalog().then(function () {
+      return fetch("data/asana-tasks.json?v=" + Date.now(), { cache: "no-store" })
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .then(function (data) {
+          var tasks = [];
+          if (!data) {
+            renderAsanaTasks([]);
+            return;
+          }
+          if (Array.isArray(data.tasks)) tasks = data.tasks;
+          else if (Array.isArray(data)) tasks = data;
+          else if (data.projects && Array.isArray(data.projects)) {
+            data.projects.forEach(function (p) {
+              (p.tasks || []).forEach(function (t) {
+                tasks.push(
+                  Object.assign({}, t, { project: p.name || p.label || p.id })
+                );
+              });
+            });
+          }
+          tasks = tasks.filter(function (t) {
+            return (t.status || "open") !== "completed";
+          });
+          renderAsanaTasks(tasks);
+        })
+        .catch(function () {
+          renderAsanaTasks([]);
+        });
+    });
+  }
+
+  function renderMailPanel() {
+    ensureInvStyles();
+    var mount = document.getElementById("damInvMailContent");
+    var panel = document.getElementById("damInvMailPanel");
+    if (panel) panel.style.display = "block";
+    if (!mount) return;
+    var invs = allInvoices.slice(0, 40);
+    mount.innerHTML =
+      '<article class="dam-inv-mail__section" id="damMailSecRecipients">' +
+      "<h5>Odbiorcy</h5>" +
+      '<div class="dam-inv-mail__chips">' +
+      DEFAULT_MAIL_TO.map(function (email) {
+        return (
+          '<label class="dam-inv-mail__chip"><input type="checkbox" class="dam-mail-to" value="' +
+          escapeHtml(email) +
+          '" checked /> ' +
+          escapeHtml(email) +
+          "</label>"
+        );
+      }).join("") +
+      "</div>" +
+      '<input type="email" class="form-control form-control-sm mt-2" id="damMailExtraTo" placeholder="Dodatkowy e-mail (opcjonalnie)" />' +
+      "</article>" +
+      '<div class="dam-inv-mail__section" id="damMailSecAccounting">' +
+      "<h5>Numer księgowości</h5>" +
+      '<input type="text" class="form-control" id="damMailAccountingNo" value="' +
+      escapeHtml(DEFAULT_ACCOUNTING_NO) +
+      '" />' +
+      "</div>" +
+      '<div class="dam-inv-mail__section" id="damMailSecInvoices">' +
+      "<h5>Faktury do wysyłki</h5>" +
+      '<div class="dam-inv-mail__list">' +
+      (invs.length
+        ? invs
+            .map(function (inv) {
+              return (
+                '<label class="dam-inv-mail__row"><input type="checkbox" class="dam-mail-inv" value="' +
+                escapeHtml(inv.id) +
+                '" /> <span><strong>' +
+                escapeHtml(inv.id) +
+                "</strong> · " +
+                escapeHtml(inv.project || inv.client || "") +
+                " · " +
+                escapeHtml(formatPLN(inv.amount)) +
+                "</span></label>"
+              );
+            })
+            .join("")
+        : "<p>Brak faktur na liście.</p>") +
+      "</div>" +
+      '<textarea class="form-control mt-2" id="damMailNote" rows="3" placeholder="Uwagi do treści maila (opcjonalnie)"></textarea>' +
+      "</div>" +
+      '<div class="dam-inv-mail__section dam-inv-mail__actions" id="damMailSecActions">' +
+      '<button type="button" class="geex-btn geex-btn--primary" id="damMailOutlookBtn">Przygotuj mail w Outlooku</button>' +
+      '<button type="button" class="geex-btn geex-btn--primary-transparent" id="damMailCopyBtn">Kopiuj treść</button>' +
+      '<span class="dam-widget__meta" id="damMailStatus"></span>' +
+      "</div>";
+
+    var outBtn = document.getElementById("damMailOutlookBtn");
+    var copyBtn = document.getElementById("damMailCopyBtn");
+    if (outBtn) outBtn.addEventListener("click", sendOutlookDraft);
+    if (copyBtn) copyBtn.addEventListener("click", copyMailBody);
+  }
+
+  function selectedMailRecipients() {
+    var to = [];
+    document.querySelectorAll(".dam-mail-to:checked").forEach(function (cb) {
+      to.push(cb.value);
+    });
+    var extra = document.getElementById("damMailExtraTo");
+    if (extra && extra.value.trim()) to.push(extra.value.trim());
+    return to;
+  }
+
+  function selectedMailInvoiceIds() {
+    var ids = [];
+    document.querySelectorAll(".dam-mail-inv:checked").forEach(function (cb) {
+      ids.push(cb.value);
+    });
+    return ids;
+  }
+
+  function buildMailBodyText() {
+    var acc =
+      (document.getElementById("damMailAccountingNo") || {}).value ||
+      DEFAULT_ACCOUNTING_NO;
+    var note = (document.getElementById("damMailNote") || {}).value || "";
+    var ids = selectedMailInvoiceIds();
+    var lines = [
+      "Dzień dobry,",
+      "",
+      "W załączeniu faktury DAM do księgowości.",
+      "Numer księgowości: " + acc,
+      "",
+      "Faktury:",
+    ];
+    ids.forEach(function (id) {
+      var inv = allInvoices.find(function (x) {
+        return x.id === id;
+      });
+      lines.push(
+        "- " +
+          id +
+          (inv ? " · " + formatPLN(inv.amount) + " · " + (inv.project || "") : "")
+      );
+    });
+    if (note) {
+      lines.push("");
+      lines.push(note);
+    }
+    lines.push("");
+    lines.push("Pozdrawiamy,");
+    lines.push("DAM Dobra Kaloria");
+    return lines.join("\n");
+  }
+
+  function copyMailBody() {
+    var body = buildMailBodyText();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(body).then(function () {
+        var st = document.getElementById("damMailStatus");
+        if (st) st.textContent = "Skopiowano treść maila.";
+      });
+    } else {
+      alert(body);
+    }
+  }
+
+  function sendOutlookDraft() {
+    var to = selectedMailRecipients();
+    var ids = selectedMailInvoiceIds();
+    var st = document.getElementById("damMailStatus");
+    if (!to.length) {
+      alert("Wybierz co najmniej jednego odbiorcę.");
+      return;
+    }
+    if (!ids.length) {
+      alert("Zaznacz faktury do wysyłki.");
+      return;
+    }
+    if (st) st.textContent = "Przygotowywanie draftu Outlook…";
+    var payload = {
+      invoice_ids: ids,
+      to: to,
+      accounting_no:
+        (document.getElementById("damMailAccountingNo") || {}).value ||
+        DEFAULT_ACCOUNTING_NO,
+      body_note: (document.getElementById("damMailNote") || {}).value || "",
+      body: buildMailBodyText(),
+    };
+    fetch(bridgeUrl() + "/finance/invoices/outlook-draft", {
+      method: "POST",
+      headers: Object.assign(
+        { "Content-Type": "application/json" },
+        authHeaders()
+      ),
+      body: JSON.stringify(payload),
+    })
+      .then(function (r) {
+        return r.json().then(function (j) {
+          return { ok: r.ok, status: r.status, j: j };
+        });
+      })
+      .then(function (res) {
+        if (res.ok && res.j && res.j.ok) {
+          if (st)
+            st.textContent =
+              "Draft Outlook otwarty (" +
+              (res.j.attachments || 0) +
+              " załączników).";
+          return;
+        }
+        // fallback mailto + zip url
+        if (res.j && res.j.zip_url) {
+          window.open(res.j.zip_url, "_blank");
+        }
+        var mailto =
+          "mailto:" +
+          encodeURIComponent(to.join(";")) +
+          "?subject=" +
+          encodeURIComponent("Faktury DAM · ksiegowosc " + payload.accounting_no) +
+          "&body=" +
+          encodeURIComponent(
+            buildMailBodyText() +
+              "\n\n[Załączniki: pobierz ZIP z DAM desktop / bridge — mailto nie dołącza plików]"
+          );
+        window.location.href = mailto;
+        if (st)
+          st.textContent =
+            (res.j && res.j.error
+              ? res.j.error + " · "
+              : "") +
+            "Fallback: mailto + ewentualny ZIP. Uruchom desktop DAM dla załączników Outlook.";
+      })
+      .catch(function () {
+        var mailto =
+          "mailto:" +
+          encodeURIComponent(to.join(";")) +
+          "?subject=" +
+          encodeURIComponent("Faktury DAM") +
+          "&body=" +
+          encodeURIComponent(buildMailBodyText());
+        window.location.href = mailto;
+        if (st)
+          st.textContent =
+            "Bridge offline — otwarto mailto bez załączników. Uruchom desktop DAM.";
       });
   }
 
@@ -452,22 +925,43 @@
 
   function init() {
     ensureCtaStyles();
-    document.querySelectorAll(".geex-content__summary, .geex-content__invoice").forEach(function (el) {
+    ensureInvStyles();
+    document.querySelectorAll(".geex-content__summary").forEach(function (el) {
       el.style.display = "none";
     });
+    /* Keep .geex-content__invoice visible for mail panel; hide only demo leftovers */
+    document.querySelectorAll(".geex-content__invoice > .geex-content__invoice__wrapper").forEach(function (el) {
+      if (!el.querySelector("#damInvMailPanel")) el.style.display = "none";
+    });
+    var mailPanel = document.getElementById("damInvMailPanel");
+    if (mailPanel) {
+      var invoiceRoot = mailPanel.closest(".geex-content__invoice");
+      if (invoiceRoot) invoiceRoot.style.display = "block";
+      mailPanel.style.display = "block";
+    }
 
     bindErpActions();
+    var genBtn = document.getElementById("damAsanaGenLines");
+    var addBtn = document.getElementById("damAsanaAddInvoice");
+    if (genBtn) genBtn.addEventListener("click", generateDraftFromSelection);
+    if (addBtn) addBtn.addEventListener("click", addDraftToInvoice);
+
     var skelBody = document.getElementById("invTableBody");
     if (skelBody && window.DamGridReveal && window.DamGridReveal.skeleton) {
       window.DamGridReveal.skeleton(skelBody, { count: 6, cols: 6 });
     }
-    loadInvoices().catch(function () {
-      var tbody = document.getElementById("invTableBody");
-      if (tbody) {
-        tbody.innerHTML =
-          '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">Brak danych</td></tr>';
-      }
-    });
+    loadInvoices()
+      .then(function () {
+        renderMailPanel();
+      })
+      .catch(function () {
+        var tbody = document.getElementById("invTableBody");
+        if (tbody) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">Brak danych</td></tr>';
+        }
+        renderMailPanel();
+      });
     loadErpStatus();
     loadAsanaTasks();
 

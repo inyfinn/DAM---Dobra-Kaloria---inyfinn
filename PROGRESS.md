@@ -140,3 +140,16 @@ Pełna mapa: [`agents/shared/release-2026-07-20-evening.md`](agents/shared/relea
 | UTF-8 PL chrome (Pokaż/Włącz) | **done** | Worker B |
 | UK→GB naming-dictionary | **done** | uk≠Ukraina |
 | Audyt | **done** | gents/shared/gap-audit-2026-07-21.md |
+
+## 2026-07-22 - Integracja i produkcja + Faktury (mail Outlook)
+
+| Obszar | Status | Notatka |
+|--------|--------|---------|
+| Menu Integracja i produkcja | **done** | i18n/shell |
+| Stany rekawkow (sleeve-stock) | **done** | parser XLSX + panel + tagi |
+| Kosztorys Asana → FV | **done** | production-cost-catalog |
+| Panel wysylki 4 sekcje | **done** | Kubara + 509012414 |
+| Outlook draft + PDF/ZIP | **done*** | COM wymaga Outlooka usera; fallback ZIP Pass |
+| Release notes | **done** | agents/shared/release-2026-07-22-integracja-produkcja.md |
+
+\* COM abort w sesji agenta - nie blokuje Fazy B (guardrail planu).

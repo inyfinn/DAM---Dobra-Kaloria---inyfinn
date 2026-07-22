@@ -1,8 +1,121 @@
 {
-  "version": 15,
+  "version": 21,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-21T23:10:00+02:00",
+  "updated_at": "2026-07-22T15:40:00+02:00",
   "instructions": [
+    {
+      "id": "ui.folder_picker_combo_only",
+      "must": [
+        "Jedyny folder/file picker w panelu DAM to DamFolderPicker.open / #damThumbPicker (widok combo domyslnie)",
+        "Call sites (assoc Dodaj z dysku, explorer elementy, mapuj wariant, viz SetThumb) wołaja DamFolderPicker - branding nie zalezy od dam-viz.js",
+        "COMBO chrome: przycisk 'Otwórz Eksplorator Windows' w toolbarze przy .dam-thumb-picker__views; box 70vw x 90vh; grid padding baseline+10px"
+      ],
+      "body_pl": "HARD 2026-07-22: stary #damAssocFolderPicker / openFolderGrid oraz #damElementsPicker usuniete. Extract: apps/web/assets/js/dam-folder-picker.js.",
+      "category": "ui",
+      "must_not": [
+        "Pokazywac #damAssocFolderPicker albo openFolderGrid",
+        "Tworzyc stary #damElementsPicker overlay",
+        "Uzywac primary paste-path jako jedynej drogi mapowania wariantu (footer = COMBO)"
+      ],
+      "priority": "high",
+      "title_pl": "Folder picker: tylko COMBO DamFolderPicker",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/web/assets/js/dam-folder-picker.js",
+        "apps/web/assets/js/dam-assoc-edit.js",
+        "apps/web/assets/js/dam-explorer.js",
+        "apps/web/assets/js/dam-viz.js"
+      ]
+    },
+    {
+      "id": "dashboard.quick_links_custom",
+      "must": [
+        "Widget quick_links = kompaktowe przyciski (chip ~40-48px), nie wysokie kafelki",
+        "Kazdy user moze dodawac/usuwac skroty przez Plus + wyszukiwalny picker z puli istniejacych stron DAM",
+        "Picker bez tworzenia nowych URL / bez trybu admina",
+        "Persist per user: localStorage dam_quick_links_v1:{email}; domyslnie Wizualizacje, Koszty, Eksplorer, Faktury",
+        "Pula = DamShell.getNavItems() (katalog nawigacji)"
+      ],
+      "body_pl": "HARD 2026-07-22: Szybkie skroty na dashboardzie sa personalizowane przez usera (nie tylko admina). Tylko istniejace strony z menu.",
+      "category": "dashboard",
+      "must_not": [
+        "Wymagac trybu admina do Plus / personalizacji skrotow",
+        "Pozwalac tworzyc dowolne custom URL w pickerze",
+        "Redesignowac anatomie kart BENTO (C3 freeze) - tylko body widgetu quick_links"
+      ],
+      "priority": "high",
+      "title_pl": "Dashboard: personalizowane Szybkie skroty (quick_links)",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/web/assets/js/dam-dashboard-widgets.js",
+        "apps/web/assets/css/dam-dashboard.css",
+        "apps/web/assets/js/dam-shell.js",
+        "apps/web/assets/js/dam-bento-resize.js"
+      ]
+    },
+    {
+      "id": "nav.tasks_page",
+      "must": [
+        "Sidebar: pozycja Zadania (tasks.html) bezposrednio pod Wiadomosci",
+        "Strona tasks.html = pelny kokpit Asana Home (IA) w Geex light+dark",
+        "Loading = skeleton per-element (#e8e8ee), NIGDY tekst Wczytywanie zadan Asana",
+        "Sidebar i header nigdy nie sa skeletonem",
+        "Lokalne oznaczenie ukonczone NIE usuwa wiersza z biezacej zakladki (Nadchodzace/Zalegle): styl is-done, mozna odznaczyc; znika dopiero po zmianie zakladki",
+        "Stan ukonczen lokalnych: localStorage dam_asana_local_done_v1 (nie mutuje Asana API dopoki A1 OAuth)"
+      ],
+      "body_pl": "HARD 2026-07-22: nawigacja Zadania + tasks.html. Interakcje: taby, checkbox lokalny (sticky w widoku), expand subtaskow, kafelki projektow, stub create/AI.",
+      "category": "dashboard",
+      "must_not": [
+        "Mutowac asana.com z poziomu DAM",
+        "Uzywac samotnego p.dam-widget__meta jako loadera Zadan",
+        "Natychmiast filtrowac ukonczone zadanie z Nadchodzacych/Zaleglych po kliknieciu checkboxa"
+      ],
+      "priority": "critical",
+      "title_pl": "Nav + strona Zadania (Asana Home)",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/web/tasks.html",
+        "apps/web/assets/js/dam-tasks.js",
+        "apps/web/assets/css/dam-tasks.css",
+        "apps/web/assets/js/dam-shell.js"
+      ]
+    },
+    {
+      "id": "dashboard.asana_home_widget",
+      "must": [
+        "Widget id asana_home jest domyslnym szerokim bento (~span 9) na dashboardzie",
+        "Pokazuje Moje zadania z zakladkami Nadchodzace / Zalegle / Ukonczone, pill projektu i relative due",
+        "Preferuj live Asana API (bridge /integrations/asana/sync); fallback: data/asana-tasks.json export",
+        "Gdy brak OAuth: uczciwy stan zrodla (eksport/cache), bez fake template Teams/Asana"
+      ],
+      "body_pl": "HARD 2026-07-22: kokpit Asana Home w DAM jako widget asana_home (Geex light). IA z Asana Home, styl Geex nie purple AI slop.",
+      "category": "dashboard",
+      "must_not": [
+        "Pokazywac same powtarzalne nazwy subtaskow bez kontekstu projektu/rodzica gdy dane sa w eksporcie",
+        "Uzywac fake wiadomosci Teams gdy brak sync"
+      ],
+      "priority": "high",
+      "title_pl": "Dashboard: widget Asana Home (asana_home)",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/web/assets/js/dam-dashboard-widgets.js",
+        "apps/web/assets/js/dam-dashboard.js",
+        "apps/web/assets/css/dam-dashboard.css",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
     {
       "id": "preview.file_state.local",
       "must": [
@@ -237,17 +350,17 @@
         "Hierarchia tworzonych folderow (ikony + wciecia) widoczna pod statusem: kategoria = 1 wezel; produkt = folder produktu + tylko ZAZNACZONE warianty jako dzieci",
         "Wszystkie checkboxy w #damExplorerCreateModal maja accent-color purpurowy (var(--dam-primary, #AB54DB)) - zakaz natywnego oranzowego checkboxa",
         "Nowy wariant globalny (3 pola: kod PL/skrot dysku, kod EN/alias, pelna nazwa) zapisuje sie do naming-dictionary.json (carriers[]) + carrier-types.json przez POST /explorer/add-variant-type (admin) - respektowane programowo (etykiety, prefiks na dysku)",
+        "Dodaj typ (tag-edit i Explorer): POST /explorer/add-variant-type robi dict + copytree folderow w Szablony folderow (PL+EN/KRE+CRE) - zgodnie z ui.tag_edit_dodaj_typ_tag",
         "Po sukcesie tworzenia: panel potwierdzenia (nie tylko toast) z przyciskami Przejdz do folderu / Zatwierdz / Cofnij + odliczanie ~2 min; Cofnij wywoluje POST /explorer/undo-create (usuwa TYLKO swiezo utworzony, potwierdzony wiekiem katalog)"
       ],
-      "body_pl": "Handoff z audytu UX (2026-07-20, usability-brief): modal 'Dodaj kategorie/produkt' mial zargonowy podglad, statyczny (tylko po kliknieciu Podglad), sztywny numer kategorii, mysteriozna pusta czerwona ramka bledu, domyslnie zaznaczone wszystkie warianty i natywne oranzowe checkboxy. Naprawa: apps/web/assets/js/dam-explorer-add-product.js (+ apps/desktop/explorer_create.py: seq, undo_create; local_bridge.py: /explorer/next-category-seq, /explorer/undo-create, /explorer/add-variant-type).",
+      "body_pl": "Handoff z audytu UX (2026-07-20, usability-brief): modal 'Dodaj kategorie/produkt' mial zargonowy podglad, statyczny (tylko po kliknieciu Podglad), sztywny numer kategorii, mysteriozna pusta czerwona ramka bledu, domyslnie zaznaczone wszystkie warianty i natywne oranzowe checkboxy. Naprawa: apps/web/assets/js/dam-explorer-add-product.js (+ apps/desktop/explorer_create.py: seq, undo_create; local_bridge.py: /explorer/next-category-seq, /explorer/undo-create, /explorer/add-variant-type). HARD 2026-07-22: Szablony YES - Dodaj typ tworzy foldery w Szablonach.",
       "category": "explorer",
       "must_not": [
         "Wyswietlac tekstu 'Plan: skopiuj szablon...' / 'Drzewo:' w #damExpPreview",
         "Zaznaczac warianty domyslnie (checked) w #damExpVariants",
         "Pokazywac pustej czerwonej ramki #damExpErr gdy brak komunikatu",
         "Uzywac natywnego accent-color checkboxa (oranzowy) w modalu tworzenia",
-        "Usuwac na Cofnij starszy niz ~2-3 min katalog (guard st_ctime w undo_create)",
-        "Tworzyc fizycznego podfolderu wariantu w szablonie produktu na X: z samego dodania globalnego wariantu - to tylko etykieta/prefiks, fizyczny folder szablonu wymaga recznej pracy admina na dysku"
+        "Usuwac na Cofnij starszy niz ~2-3 min katalog (guard st_ctime w undo_create)"
       ],
       "priority": "high",
       "title_pl": "Explorer: modal tworzenia kategorii/produktu (UX + undo + wariant globalny)",
@@ -1656,6 +1769,125 @@
         "apps/web/assets/js/dam-explorer.js",
         "apps/desktop/local_bridge.py",
         "apps/web/explorer.html"
+      ]
+    },
+    {
+      "id": "ui.dashboard_branding_latest_filter",
+      "must": [
+        "Widget branding_latest (.dam-widget--branding-latest): tylko gotowe grafiki raster/SVG z indeksu branding (packshot / material marketingowy)",
+        "Tytuly wierszy = nazwa produktu/assetu (nie folder WIZKI / links / ELEMENTY)",
+        "Gdy brak pliku na dysku: honest gray 'brak podgladu'; preferuj kolejny asset z czytelnym thumb (file-availability local/sync_pending)"
+      ],
+      "body_pl": "HARD 2026-07-22: lista Najnowsze materialy branding nie moze pokazywac smieci folderowych ani zrodel — ten sam duch co Tylko grafiki w Brandingu.",
+      "category": "ui",
+      "must_not": [
+        "Pokazywac w branding_latest assetow z ELEMENTY w sciezce/nazwie",
+        "Pokazywac folder links / segment sciezki /links (product_element Links)",
+        "Pokazywac plikow zrodlowych PSD/PSB/AI/INDD/EPS/TIF ani media_type=source / asset_role=artwork_source / product_element",
+        "Uzywac tytulow wiersza '4 - WIZKI', 'links', 'ELEMENTY' zamiast nazwy produktu/assetu"
+      ],
+      "priority": "critical",
+      "title_pl": "Dashboard: branding_latest tylko packshot/grafiki",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/web/assets/js/dam-dashboard-widgets.js",
+        "apps/web/dashboard.html"
+      ]
+    },
+    {
+      "id": "integrations.menu_label",
+      "must": [
+        "Etykieta menu sidebar i tytul strony: Integracja i produkcja (nie samo Integracje)",
+        "i18n nav.integrations = Integracja i produkcja; fallback w dam-shell.js zgodny",
+        "Hub obejmuje OAuth/FMCG + Wykrojniki + Stany rekawkow"
+      ],
+      "body_pl": "HARD 2026-07-22: pozycja menu i naglowek strony integrations.html = Integracja i produkcja.",
+      "category": "integrations",
+      "must_not": [
+        "Zostawiac etykiete Integracje w sidebar gdy i18n jest zaladowane"
+      ],
+      "priority": "high",
+      "title_pl": "Nav: Integracja i produkcja",
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/web/i18n/pl.json",
+        "apps/web/assets/js/dam-shell.js",
+        "apps/web/integrations.html"
+      ]
+    },
+    {
+      "id": "sleeve.stock_panel",
+      "must": [
+        "Panel Stany rekawkow na integrations.html pod Wykrojniki↔produkty (dam-sleeve-stock.js)",
+        "Zrodlo: sleeve-stock.json; reimport z X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/STANY RĘKAWKÓW 2026.xlsx lub upload CSV/XLSX",
+        "Tagi: critical / order_now / on_order / waiting_retailer / transition / automat_alias / ok z progow w JSON",
+        "GET /sleeve-stock; POST /sleeve-stock/reimport; POST /sleeve-stock/import (admin)",
+        "Stakeholders UI: Dzial zakupow + Inni (lista w sleeve-stock.json) - bez ACL v1"
+      ],
+      "body_pl": "HARD 2026-07-22: stany rekawkow z XLSX zakupow; tagi zagrozenia i wyprzedzenie zamowienia. Cross-ref article_code do produktow DAM gdy mozliwe.",
+      "category": "integrations",
+      "must_not": [
+        "Traktowac localStorage jako zrodlo prawdy stanow",
+        "Kasowac komentarze/tagi zakupow przy samym reimportcie bez zachowania pol UI"
+      ],
+      "priority": "critical",
+      "title_pl": "Integracja i produkcja: Stany rekawkow",
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/web/data/sleeve-stock.json",
+        "apps/web/scripts/import-sleeve-stock-xlsx.py",
+        "apps/web/assets/js/dam-sleeve-stock.js",
+        "apps/desktop/local_bridge.py",
+        "apps/web/integrations.html"
+      ]
+    },
+    {
+      "id": "production.asana_costing",
+      "must": [
+        "Panel dam-inv-asana na invoices.html: zadania Asana + kosztorys z production-cost-catalog.json",
+        "Match task name → line (regex); seed ceny wyimaginowane do edycji pozniej",
+        "Wygeneruj pozycje faktury + Dodaj do faktury (bridge POST /finance/invoices)",
+        "Fallback asana-tasks.json gdy brak OAuth (A1)"
+      ],
+      "body_pl": "HARD 2026-07-22: przeliczanie zadan Asana (proof/druk) na pozycje faktury wg katalogu kosztow seed.",
+      "category": "finance",
+      "must_not": [
+        "Wymagac live Asana OAuth do pokazania kosztorysu na eksporcie JSON"
+      ],
+      "priority": "high",
+      "title_pl": "Faktury: kosztorys Asana → pozycje",
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/web/data/production-cost-catalog.json",
+        "apps/web/assets/js/dam-invoices.js",
+        "apps/web/invoices.html"
+      ]
+    },
+    {
+      "id": "finance.invoice_mail_outlook",
+      "must": [
+        "Panel wysylki faktur: odbiorcy faktury@kubara.pl + alina.andzel@kubara.pl; nr ksiegowosci 509012414",
+        "POST /finance/invoices/outlook-draft (admin, Win32 Outlook COM) z zalacznikami PDF/CSV",
+        "Fallback web-only: ZIP + mailto tresci bez zalacznikow + komunikat desktop DAM",
+        "Nie usuwac istniejacego ERP stub export"
+      ],
+      "body_pl": "HARD 2026-07-22: przygotowanie maila z fakturami w Outlooku (zalaczniki). Mailto w przegladarce nie dolacza plikow.",
+      "category": "finance",
+      "must_not": [
+        "Udawac wysylke SMTP gdy brak konfiguracji",
+        "Wysylac mail bez potwierdzenia usera (tylko draft Outlook)"
+      ],
+      "priority": "critical",
+      "title_pl": "Faktury: Outlook draft z zalacznikami",
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/desktop/invoice_mail.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-invoices.js",
+        "apps/web/invoices.html"
       ]
     }
   ],

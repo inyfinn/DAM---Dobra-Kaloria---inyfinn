@@ -5,23 +5,23 @@
   <style id="dam-shell-boot-critical">
 html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
   </style>
-  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=shellboot20260721a">
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=perObjSkel20260722c">
   <script>
   (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Integracje - DAM</title>
+  <title>Integracja i produkcja - DAM</title>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=geexTaste20260721a">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=darkFix20260722e">
   <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=ctaUnify20260721b">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=ctaUnify20260721b">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=darkFix20260722e">
   <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=geexF3tut20260721a">
   <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad08">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=invClose20260721b">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=dostosujPeek20260722b">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
   <link rel="stylesheet" href="./assets/css/dam-integrations-hub.css?v=3.0.5b">
   <link rel="stylesheet" href="./assets/css/dam-integrations.css?v=geexTaste20260721a">
@@ -65,17 +65,21 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
     <div class="geex-content">
       <div class="geex-content__header">
         <div class="geex-content__header__content">
-          <h2 class="geex-content__header__title">Integracje</h2>
-          <p class="geex-content__header__subtitle">Asana, Microsoft Teams, Entra ID i Synology/LDAP. Sekrety w dam-connection.env na P. <a href="settings.html#damIntegrations" class="dam-int-settings-link">Ustawienia DAM</a></p>
+          <h2 class="geex-content__header__title">Integracja i produkcja</h2>
+          <p class="geex-content__header__subtitle">Asana, Microsoft Teams, Entra ID, Synology/LDAP, wykrojniki i stany rękawków. Sekrety w dam-connection.env na P. <a href="settings.html#damIntegrations" class="dam-int-settings-link">Ustawienia DAM</a></p>
         </div>
       </div>
 
       <div id="damIntegrationsList" class="dam-integrations-page">
-        <p class="dam-widget__meta">Wczytywanie statusu integracji…</p>
+        <p class="dam-widget__meta">Wczytywanie statusu integracji.</p>
       </div>
 
       <div class="dam-int-queue-wrap" id="damWykrojnikQueue" aria-live="polite">
-        <p class="dam-widget__meta">Ładowanie panelu wykrojników…</p>
+        <p class="dam-widget__meta">Ładowanie panelu wykrojników.</p>
+      </div>
+
+      <div class="dam-int-queue-wrap" id="damSleeveStock" aria-live="polite">
+        <p class="dam-widget__meta">Ładowanie stanów rękawków.</p>
       </div>
     </div>
   </main>
@@ -88,10 +92,10 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-i18n.js?v=i18nboot20260721c"></script>
   <script src="./assets/js/dam-runtime.js?v=20260719app1"></script>
   <script src="./assets/js/dam-version.js?v=3.1.0"></script>
-  <script src="./assets/js/dam-shell.js?v=geexF620260721a"></script>
+  <script src="./assets/js/dam-shell.js?v=dostosujPeek20260722b"></script>
   <script src="./assets/js/dam-paths.js?v=selects20260720a"></script>
   <script src="./assets/js/dam-tooltips.js?v=usab20260720b"></script>
-  <script src="./assets/js/dam-user-prefs.js?v=viztb20260720d"></script>
+  <script src="./assets/js/dam-user-prefs.js?v=prefsKv20260721a"></script>
   <script src="./assets/js/dam-danger.js?v=safedel20260720b"></script>
   <script src="./assets/js/dam-fmcg-catalog.js?v=safedel20260720b"></script>
   <script src="./assets/vendor/js/gsap/gsap.min.js"></script>
@@ -99,6 +103,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-grid-reveal.js?v=i18nboot20260721e"></script>
   <script src="./assets/js/dam-integrations.js?v=intfix20260720c"></script>
   <script src="./assets/js/dam-wykrojnik-queue.js?v=wykbadge20260720b"></script>
+  <script src="./assets/js/dam-sleeve-stock.js?v=sleeve20260722a"></script>
   <script>
     (function () {
       var intOpts = {
@@ -144,6 +149,6 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       });
     })();
   </script>
-  <script src="./assets/js/dam-tutorial.js?v=tutorialPraiseToast20260721b"></script>
+  <script src="./assets/js/dam-tutorial.js?v=cheerSlideR70t20260722a"></script>
 </body>
 </html>

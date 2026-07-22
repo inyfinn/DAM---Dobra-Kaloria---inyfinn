@@ -9,10 +9,11 @@
   "version": 2,
   "updated_at": "2026-07-18",
   "instructions": {
-    "count": 71,
-    "version": 15,
+    "count": 80,
+    "version": 21,
     "source_kv": "program-instructions",
     "critical_ids": [
+      "nav.tasks_page",
       "preview.file_state.local",
       "preview.file_state.online_only",
       "preview.cache.disk",
@@ -48,7 +49,10 @@
       "viz.assoc_no_visualization_loop",
       "explorer.product_from_template",
       "explorer.demo_index_rules",
-      "ui.tutorial_dobrokalorius_hard"
+      "ui.tutorial_dobrokalorius_hard",
+      "ui.dashboard_branding_latest_filter",
+      "sleeve.stock_panel",
+      "finance.invoice_mail_outlook"
     ],
     "settings_anchor": "settings.html#damProgramInstructions"
   }

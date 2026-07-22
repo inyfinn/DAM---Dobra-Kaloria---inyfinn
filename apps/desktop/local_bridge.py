@@ -108,6 +108,11 @@ except ImportError:
     invoice_erp_mod = None  # type: ignore
 
 try:
+    import invoice_mail as invoice_mail_mod
+except ImportError:
+    invoice_mail_mod = None  # type: ignore
+
+try:
     import dam_redis
 except ImportError:
     dam_redis = None  # type: ignore
@@ -130,7 +135,7 @@ except ImportError:
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
-BRIDGE_API_VERSION = 6
+BRIDGE_API_VERSION = 7
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
@@ -2124,9 +2129,15 @@ BRANDING_ASSOC_OVERRIDES_FILE = WEB_ROOT / "data" / "branding-associations-overr
 BRANDING_STATUS_FILE = WEB_ROOT / "data" / "branding-build-status.json"
 BRANDING_RECOGNIZE_STATUS_FILE = WEB_ROOT / "data" / "branding-recognize-status.json"
 WYKROJNIKI_REGISTRY_FILE = WEB_ROOT / "data" / "wykrojniki-registry.json"
+SLEEVE_STOCK_FILE = WEB_ROOT / "data" / "sleeve-stock.json"
+PRODUCTION_COST_CATALOG_FILE = WEB_ROOT / "data" / "production-cost-catalog.json"
+DEFAULT_SLEEVE_STOCK_XLSX = Path(
+    r"X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/STANY RĘKAWKÓW 2026.xlsx"
+)
 BUILD_BRANDING_INDEX = WEB_ROOT / "scripts" / "build-branding-index.py"
 FETCH_PRODUCT_PRICES = WEB_ROOT / "scripts" / "fetch-product-prices.py"
 IMPORT_WYKROJNIKI = WEB_ROOT / "scripts" / "import-wykrojniki-xlsx.py"
+IMPORT_SLEEVE_STOCK = WEB_ROOT / "scripts" / "import-sleeve-stock-xlsx.py"
 LINK_WYKROJNIKI = WEB_ROOT / "scripts" / "link-wykrojniki-products.py"
 ENRICH_BRANDING_RECOGNIZE = WEB_ROOT / "scripts" / "enrich-branding-recognize.py"
 COST_RATES_FILE = WEB_ROOT / "data" / "cost-rates.json"
@@ -2361,6 +2372,48 @@ def _extract_post_csv(raw: bytes, content_type: str, data: dict | None = None) -
             if body:
                 return body.decode("utf-8", errors="replace")
     return ""
+
+
+def _extract_multipart_file(raw: bytes, content_type: str) -> tuple[bytes | None, str]:
+    """Return (file_bytes, filename) from multipart upload; empty if none."""
+    import re
+
+    if not raw or "multipart/form-data" not in (content_type or "").lower():
+        return None, ""
+    m = re.search(r"boundary=([^;\s]+)", content_type or "")
+    if not m:
+        return None, ""
+    boundary = m.group(1).strip().strip('"')
+    marker = ("--" + boundary).encode("ascii", errors="ignore")
+    for part in raw.split(marker):
+        if b"Content-Disposition" not in part or b"filename=" not in part:
+            continue
+        head, _, body = part.partition(b"\r\n\r\n")
+        if not body:
+            head, _, body = part.partition(b"\n\n")
+        body = body.rstrip(b"\r\n-")
+        fm = re.search(br'filename="([^"]+)"', head) or re.search(br"filename=([^\r\n;]+)", head)
+        name = fm.group(1).decode("utf-8", errors="replace").strip() if fm else "upload.bin"
+        if body:
+            return body, name
+    return None, ""
+
+
+def _run_sleeve_stock_import(path: Path) -> dict:
+    """Import sleeve stock via script module (in-process) and push KV."""
+    import importlib.util
+
+    if not IMPORT_SLEEVE_STOCK.is_file():
+        raise FileNotFoundError("import_sleeve_stock_script_missing")
+    spec = importlib.util.spec_from_file_location("import_sleeve_stock_xlsx", IMPORT_SLEEVE_STOCK)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("import_sleeve_stock_load_failed")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    data = mod.import_path(path, dry_run=False, write=True)
+    # Ensure KV mirror via _save_json
+    _save_json(SLEEVE_STOCK_FILE, data)
+    return data
 
 
 def _fmcg_default_catalog() -> dict:
@@ -4073,6 +4126,57 @@ def manage_carrier_type(payload: dict) -> dict:
 
 
 _VARIANT_CODE_RE = re.compile(r"^[A-Z0-9][A-Z0-9\-]{0,15}$")
+_SUBCATEGORY_SLUG_RE = re.compile(r"^[a-z0-9-]{1,48}$")
+
+
+def add_global_subcategory(payload: dict, *, actor: str = "") -> dict:
+    """Global subcategory append to naming-dictionary.subcategories[] (no Szablony copytree)."""
+    slug = str(payload.get("slug") or "").strip().lower()
+    label_pl = str(payload.get("label_pl") or "").strip()
+    if not slug:
+        return {"ok": False, "error": "slug_required", "message": "Podaj slug podkategorii."}
+    if not _SUBCATEGORY_SLUG_RE.match(slug):
+        return {
+            "ok": False,
+            "error": "slug_invalid",
+            "message": "Slug: 1-48 znakow, male litery/cyfry/myslnik.",
+        }
+    if not label_pl:
+        return {"ok": False, "error": "label_pl_required", "message": "Podaj etykiete PL."}
+
+    naming = _load_json(NAMING_DICTIONARY_FILE, {})
+    if not isinstance(naming, dict):
+        naming = {}
+    subs = naming.setdefault("subcategories", [])
+    if not isinstance(subs, list):
+        subs = []
+        naming["subcategories"] = subs
+    for row in subs:
+        if isinstance(row, dict) and str(row.get("slug") or "").strip().lower() == slug:
+            return {
+                "ok": False,
+                "error": "already_exists",
+                "message": f"Podkategoria {slug} juz istnieje.",
+            }
+
+    entry = {
+        "slug": slug,
+        "label_pl": label_pl,
+        "added_at": utc_now(),
+        "added_by": actor or "",
+        "custom": True,
+    }
+    subs.append(entry)
+    naming["version"] = int(naming.get("version") or 1) + 1
+    _save_json(NAMING_DICTIONARY_FILE, naming)
+    reload_naming_policy_from_disk()
+    return {
+        "ok": True,
+        "slug": slug,
+        "label_pl": label_pl,
+        "subcategory": entry,
+        "message": f"Dodano podkategorie globalna: {label_pl} ({slug}).",
+    }
 
 
 def add_global_variant_type(payload: dict, *, actor: str = "") -> dict:
@@ -5846,6 +5950,10 @@ class Handler(BaseHTTPRequestHandler):
                         "/branding/status",
                         "/wykrojniki-registry",
                         "/wykrojnik-mapping-queue",
+                        "/sleeve-stock",
+                        "/sleeve-stock/reimport",
+                        "/sleeve-stock/import",
+                        "/production-cost-catalog",
                         "/integrations/config",
                         "/integrations/status",
                         "/integrations/asana/sync",
@@ -5859,6 +5967,7 @@ class Handler(BaseHTTPRequestHandler):
                         "/finance/invoices/import",
                         "/finance/invoices/export",
                         "/finance/invoices/erp-status",
+                        "/finance/invoices/outlook-draft",
                         "/file-availability",
                         "/thumb-cache",
                         "/thumb-cache/warm",
@@ -6485,6 +6594,24 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, {"ok": True, **data})
             return
+        if parsed.path == "/sleeve-stock":
+            if self._require_login() is None:
+                return
+            data = _load_json(SLEEVE_STOCK_FILE, None)
+            if not isinstance(data, dict):
+                self._json(404, {"ok": False, "error": "sleeve_stock_missing"})
+                return
+            self._json(200, {"ok": True, **data})
+            return
+        if parsed.path == "/production-cost-catalog":
+            if self._require_login() is None:
+                return
+            data = _load_json(
+                PRODUCTION_COST_CATALOG_FILE,
+                {"version": 1, "currency": "PLN", "lines": []},
+            )
+            self._json(200, {"ok": True, **data})
+            return
         if parsed.path == "/wykrojnik-mapping-queue":
             if self._require_login() is None:
                 return
@@ -6650,6 +6777,51 @@ class Handler(BaseHTTPRequestHandler):
                 200,
                 {"ok": True, "imported": imported, "errors": errors[:20]},
             )
+            return
+
+        if parsed.path == "/sleeve-stock/import" and "multipart/form-data" in content_type.lower():
+            if not self._origin_ok():
+                self._json(403, {"ok": False, "error": "origin_forbidden"})
+                return
+            if self._require_admin() is None:
+                return
+            import tempfile
+
+            blob, fname = _extract_multipart_file(raw, content_type)
+            if not blob:
+                self._json(400, {"ok": False, "error": "file_required"})
+                return
+            suffix = Path(fname).suffix.lower() or ".xlsx"
+            try:
+                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                    tmp.write(blob)
+                    tmp_path = Path(tmp.name)
+                result = _run_sleeve_stock_import(tmp_path)
+                try:
+                    tmp_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                append_audit(
+                    {
+                        "action": "sleeve_stock_import",
+                        "user": str((self._session_user() or {}).get("email") or "admin"),
+                        "meta": {
+                            "entry_count": result.get("entry_count"),
+                            "filename": fname,
+                        },
+                    }
+                )
+                self._json(
+                    200,
+                    {
+                        "ok": True,
+                        "entry_count": result.get("entry_count"),
+                        "updated_at": result.get("updated_at"),
+                        "source_xlsx": result.get("source_xlsx"),
+                    },
+                )
+            except Exception as exc:  # noqa: BLE001
+                self._json(500, {"ok": False, "error": str(exc)})
             return
 
         try:
@@ -7019,6 +7191,86 @@ class Handler(BaseHTTPRequestHandler):
             except OSError as exc:
                 self._json(500, {"ok": False, "error": str(exc)})
             return
+        if parsed.path == "/sleeve-stock/reimport":
+            if self._require_admin() is None:
+                return
+            xlsx = Path(str(data.get("path") or DEFAULT_SLEEVE_STOCK_XLSX))
+            try:
+                result = _run_sleeve_stock_import(xlsx)
+                append_audit(
+                    {
+                        "action": "sleeve_stock_reimport",
+                        "user": str((self._session_user() or {}).get("email") or "admin"),
+                        "meta": {
+                            "entry_count": result.get("entry_count"),
+                            "source": result.get("source_xlsx"),
+                        },
+                    }
+                )
+                self._json(
+                    200,
+                    {
+                        "ok": True,
+                        "entry_count": result.get("entry_count"),
+                        "updated_at": result.get("updated_at"),
+                        "source_xlsx": result.get("source_xlsx"),
+                    },
+                )
+            except FileNotFoundError:
+                self._json(404, {"ok": False, "error": "xlsx_not_found", "path": str(xlsx)})
+            except Exception as exc:  # noqa: BLE001
+                self._json(500, {"ok": False, "error": str(exc)})
+            return
+        if parsed.path == "/sleeve-stock/import":
+            # Multipart handled before JSON parse - re-read is not possible; use early branch.
+            # If we reached here, body was JSON with optional base64.
+            if self._require_admin() is None:
+                return
+            import base64
+            import tempfile
+
+            b64 = data.get("file_base64") or data.get("content_base64")
+            fname = str(data.get("filename") or "sleeve-stock.xlsx")
+            if not b64:
+                self._json(400, {"ok": False, "error": "file_required"})
+                return
+            try:
+                blob = base64.b64decode(b64)
+            except Exception:  # noqa: BLE001
+                self._json(400, {"ok": False, "error": "invalid_base64"})
+                return
+            suffix = Path(fname).suffix.lower() or ".xlsx"
+            try:
+                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                    tmp.write(blob)
+                    tmp_path = Path(tmp.name)
+                result = _run_sleeve_stock_import(tmp_path)
+                try:
+                    tmp_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                append_audit(
+                    {
+                        "action": "sleeve_stock_import",
+                        "user": str((self._session_user() or {}).get("email") or "admin"),
+                        "meta": {
+                            "entry_count": result.get("entry_count"),
+                            "filename": fname,
+                        },
+                    }
+                )
+                self._json(
+                    200,
+                    {
+                        "ok": True,
+                        "entry_count": result.get("entry_count"),
+                        "updated_at": result.get("updated_at"),
+                        "source_xlsx": result.get("source_xlsx"),
+                    },
+                )
+            except Exception as exc:  # noqa: BLE001
+                self._json(500, {"ok": False, "error": str(exc)})
+            return
         if parsed.path == "/wykrojniki/link-products":
             if self._require_admin() is None:
                 return
@@ -7355,6 +7607,7 @@ class Handler(BaseHTTPRequestHandler):
                 demo=bool(payload.get("demo")),
                 dry_run=dry_run,
                 confirm=confirm,
+                existing_product_path=str(payload.get("existing_product_path") or ""),
             )
             if result.get("ok") and not result.get("dry_run"):
                 try:
@@ -7414,6 +7667,18 @@ class Handler(BaseHTTPRequestHandler):
                 return
             payload = data if isinstance(data, dict) else {}
             result = add_global_variant_type(
+                payload,
+                actor=str(user.get("email") or user.get("name") or ""),
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/explorer/add-subcategory":
+            # Admin: globalna podkategoria → naming-dictionary.subcategories[]
+            user = self._require_admin()
+            if user is None:
+                return
+            payload = data if isinstance(data, dict) else {}
+            result = add_global_subcategory(
                 payload,
                 actor=str(user.get("email") or user.get("name") or ""),
             )
@@ -7760,6 +8025,49 @@ class Handler(BaseHTTPRequestHandler):
                 dry_run=dry_run,
             )
             self._json(200, result)
+            return
+        if parsed.path == "/finance/invoices/outlook-draft":
+            if self._require_admin() is None:
+                return
+            if invoice_mail_mod is None:
+                self._json(503, {"ok": False, "error": "invoice_mail_unavailable"})
+                return
+            ids = data.get("invoice_ids") or data.get("ids") or []
+            if not isinstance(ids, list) or not ids:
+                self._json(400, {"ok": False, "error": "invoice_ids_required"})
+                return
+            to = data.get("to") or []
+            if isinstance(to, str):
+                to = [x.strip() for x in to.replace(";", ",").split(",") if x.strip()]
+            if not isinstance(to, list) or not to:
+                self._json(400, {"ok": False, "error": "recipients_required"})
+                return
+            result = invoice_mail_mod.prepare_invoice_mail(
+                WEB_ROOT,
+                invoice_ids=[str(x) for x in ids],
+                to=[str(x) for x in to],
+                accounting_no=str(data.get("accounting_no") or "509012414"),
+                body=str(data.get("body") or data.get("body_note") or ""),
+                load_json=_load_json,
+                invoices_file=INVOICES_FILE,
+            )
+            append_audit(
+                {
+                    "action": "invoice_outlook_draft",
+                    "user": str((self._session_user() or {}).get("email") or "admin"),
+                    "meta": {
+                        "invoice_ids": ids,
+                        "to": to,
+                        "ok": result.get("ok"),
+                        "error": result.get("error"),
+                    },
+                }
+            )
+            # Expose zip via relative data path for browser fallback
+            if result.get("zip_name"):
+                result["zip_url"] = f"/data/_invoice_mail_stage/{result['zip_name']}"
+            status = 200 if result.get("ok") or result.get("zip_path") else 500
+            self._json(status, result)
             return
         if parsed.path == "/finance/invoices":
             if self._require_admin() is None:

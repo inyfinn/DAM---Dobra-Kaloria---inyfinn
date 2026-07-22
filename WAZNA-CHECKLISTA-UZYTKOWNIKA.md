@@ -39,7 +39,7 @@ Legenda statusu: `[ ]` otwarte · `[~]` w toku · `[x]` zrobione
 | ID | Status | Zadanie | Notatka |
 |----|--------|---------|---------|
 | C1 | [ ] | Pełne **Entra / LDAP** produkcyjne | ADR-006 |
-| C2 | [x] | Dwukierunkowy **ERP faktur** | Kontrakt stub 2026-07-20: GET erp-status + POST export; stan invoice-erp-sync.json; UI Faktury Import/Eksport |
+| C2 | [x] | Dwukierunkowy **ERP faktur** | Kontrakt stub 2026-07-20: GET erp-status + POST export; stan invoice-erp-sync.json; UI Faktury Import/Eksport. 2026-07-22: + `POST /finance/invoices/outlook-draft` (Outlook COM / ZIP+PDF fallback), panel wysyłki Kubara + nr 509012414 |
 | C3 | [x] | Duży redesign **BENTO** siatki kart | 2026-07-20: **freeze anatomii (nie redesign)** — `agents/shared/bento-card-freeze.md` + komentarze FROZEN w CSS; chrome hubów OK |
 
 ---

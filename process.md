@@ -8653,3 +8653,30 @@ ode --check dam-media-preview.js OK.
 
 **Zrodla:** plan v5, dam_redis.py, dam_path_resolve.py, dam_file_availability.py, dam_thumb_cache.py, local_bridge.py, dam-preview-truth.js, dam-media-preview.js, dam-branding.js, program-instructions.json, README, code-doctrine.md, process.md
 
+## 2026-07-22 ~16:15 - Integracja produkcja faktury KROK 6-7 (WORKER)
+
+**Komenda/Akcja:** Domknij plan integracja_produkcja_faktury (KROK 6 Outlook draft + KROK 7 docs/commit).
+
+**Log/Status:**
+1. KROK 0-5 juz w kodzie (PI, sleeve-stock, rename menu, Asana costing, panel 4 sekcji).
+2. KROK 6: invoice_mail.py - CSV+HTML+PDF (reportlab), Outlook COM + ZIP fallback; bridge POST /finance/invoices/outlook-draft (admin) + audit invoice_outlook_draft.
+3. Bridge restart (stary proces bez handlera POST -> 404; po restarcie 401->200 z tokenem).
+4. Outlook COM na sesji agenta: Operacja przerwana - fallback ZIP+mailto Pass (plan guardrail).
+5. UI: 4 sekcje gap 24px; odbiorcy Kubara; nr 509012414; screenshot inv-mail-panel-krok6.png + Read.
+6. Fix mojibake naglowka panelu w invoices.html (ASCII-safe PL).
+7. .gitignore: apps/web/data/_invoice_mail_stage/.
+8. Docs: process.md, PROGRESS.md, agents/shared/release-2026-07-22-integracja-produkcja.md.
+9. Commit plan-scoped: bez dam-shell.js (kolizja Dostosuj), bez dam-dashboard-widgets/tasks (obcy scope); menu rename w i18n/pl.json.
+
+**Efekt/Fix:** Endpoint outlook-draft zyjacy; zalaczniki PDF w ZIP; panel wysylki gotowy; COM zalezy od Outlooka usera.
+
+**Backup:** brak
+
+**Test/Ewaluacja:**
+- POST outlook-draft bez auth -> 401 login_required (nie 404)
+- POST z admin Bearer -> 200, attachments=3, zip ma .pdf, to=[faktury@, alina.andzel@], accounting 509012414
+- CDP: 4x .dam-inv-mail__section, gap 24px
+- Screenshot+Read: inv-mail-panel-krok6.png Pass
+- Outlook Display: blocked/aborted w headless agent - fallback Pass
+
+**Zrodla:** plan integracja_produkcja_faktury_c9e97532; invoice_mail.py; local_bridge.py; dam-invoices.js; invoices.html

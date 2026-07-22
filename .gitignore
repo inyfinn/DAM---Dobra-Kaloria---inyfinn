@@ -58,6 +58,9 @@ data/postgres/*.log
 apps/web/data/thumbs/
 apps/web/data/audit-log.jsonl
 
+# Invoice Outlook mail staging (ZIP/PDF/CSV runtime)
+apps/web/data/_invoice_mail_stage/
+
 # PAMIEC-PODRECZNA — disk thumb cache on D: (binaries never in git; keep README)
 PAMIEC-PODRECZNA/**
 !PAMIEC-PODRECZNA/README.md
