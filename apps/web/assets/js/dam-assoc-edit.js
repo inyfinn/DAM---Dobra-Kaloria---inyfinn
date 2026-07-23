@@ -20,6 +20,42 @@
     );
   }
 
+  // #region agent log
+  function __damDbg(location, message, data, hypothesisId) {
+    var payload = JSON.stringify({
+      sessionId: "3ca09b",
+      runId: "post-fix",
+      hypothesisId: hypothesisId || "",
+      location: location,
+      message: message,
+      data: data || {},
+      timestamp: Date.now(),
+    });
+    try {
+      if (!global.__damDbgBuf) global.__damDbgBuf = [];
+      global.__damDbgBuf.push(JSON.parse(payload));
+      if (global.__damDbgBuf.length > 200) global.__damDbgBuf.shift();
+    } catch (eBuf) {
+      /* ignore */
+    }
+  }
+  // #endregion
+
+  /** Abort fetch after ms (default 5s) so picker never hangs forever. */
+  function fetchWithTimeout(url, ms) {
+    ms = ms || 5000;
+    if (typeof AbortController === "undefined") return fetch(url);
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () {
+      try {
+        ctrl.abort();
+      } catch (eAbort) { /* ignore */ }
+    }, ms);
+    return fetch(url, { signal: ctrl.signal }).finally(function () {
+      clearTimeout(timer);
+    });
+  }
+
   function authHeaders() {
     if (global.DamApi && typeof global.DamApi.authHeaders === "function") {
       return global.DamApi.authHeaders();
@@ -79,40 +115,198 @@
     }, 3600);
   }
 
-  function ensureFileIndex() {
-    if (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products) {
+  function hasWarmProductCatalog(fi) {
+    fi = fi || global._DAM_FILE_INDEX;
+    return !!(fi && Array.isArray(fi.products) && fi.products.length > 0);
+  }
+
+  /** True when catalog is the light search-index stub (safe for picker scans). */
+  function isLightProductCatalog(fi) {
+    fi = fi || global._DAM_FILE_INDEX;
+    return !!(fi && fi._fromSearchIndex && Array.isArray(fi.products) && fi.products.length > 0);
+  }
+
+  function productsFromSearchIndex(si) {
+    if (!si || !Array.isArray(si.entries)) return [];
+    return si.entries
+      .map(function (e) {
+        if (!e || !e.id) return null;
+        return {
+          id: e.id,
+          name: e.name || e.id,
+          display_name: e.display_name || e.name || e.id,
+          category: e.category || "",
+          tags: e.tags || [],
+          indexes: e.indexes || [],
+          index_bases: e.index_bases || [],
+          search_blob: e.search_blob || "",
+          path: e.path || "",
+          brand: e.brand || "",
+          subcategory_label: e.subcategory || "",
+          _fromSearchIndex: true,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  /** Fast bootstrap: search-index only (no 8MB file-index parse on click). */
+  function ensureSearchIndexBootstrap() {
+    if (global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries) {
+      return Promise.resolve(global._DAM_SEARCH_INDEX);
+    }
+    if (global.DamSearch && typeof global.DamSearch.loadSearchOnly === "function") {
+      return global.DamSearch.loadSearchOnly().then(function (si) {
+        return si || global._DAM_SEARCH_INDEX || { entries: [] };
+      });
+    }
+    return fetchWithTimeout("data/search-index.json?v=" + Date.now(), 5000)
+      .then(function (r) {
+        if (!r.ok) throw new Error("search-index_http_" + r.status);
+        return r.text();
+      })
+      .then(function (text) {
+        var parse =
+          global.DamSearch && typeof global.DamSearch.parseJsonInWorker === "function"
+            ? global.DamSearch.parseJsonInWorker(text, "search-index", 12000)
+            : Promise.resolve().then(function () {
+                return JSON.parse(text);
+              });
+        return parse.then(function (d) {
+          global._DAM_SEARCH_INDEX = d;
+          return d;
+        });
+      });
+  }
+
+  var __assocCatalogInflight = null;
+
+  /** Apply search-index products onto global stub; never leave products:[] as "warm". */
+  function applyLightProductCatalog(products) {
+    var list = Array.isArray(products) ? products : [];
+    /* Never keep a warm full file-index when picker needs light search-index rows. */
+    if (isLightProductCatalog()) return global._DAM_FILE_INDEX;
+    if (!global._DAM_FILE_INDEX) {
+      global._DAM_FILE_INDEX = { products: list, _fromSearchIndex: true };
+    } else {
+      global._DAM_FILE_INDEX.products = list;
+      global._DAM_FILE_INDEX._fromSearchIndex = true;
+    }
+    return global._DAM_FILE_INDEX;
+  }
+
+  /**
+   * Light catalog for pickers / enrich: search-index products only.
+   * NEVER call DamSearch.load() here (it pulls ~8MB file-index and freezes UI).
+   */
+  function ensureFileIndex(opts) {
+    opts = opts || {};
+    if (isLightProductCatalog() && !opts.forceLight) {
       return Promise.resolve(global._DAM_FILE_INDEX);
     }
-    /* Prefer direct fetch over DamSearch.load — large indexes must not hang
-       enrichLinkedProducts / assoc paint (gapship20260721a). */
-    var fetchP = fetch("data/file-index.json?v=" + Date.now())
+    if (hasWarmProductCatalog() && !opts.forceLight && !opts.allowFull) {
+      /* Full file-index warm (e.g. viz page) - still serve light catalog for pickers. */
+      if (__assocCatalogInflight) return __assocCatalogInflight;
+    } else if (hasWarmProductCatalog() && opts.allowFull && !opts.forceLight) {
+      return Promise.resolve(global._DAM_FILE_INDEX);
+    }
+    if (__assocCatalogInflight) return __assocCatalogInflight;
+    __assocCatalogInflight = ensureSearchIndexBootstrap()
+      .then(function (si) {
+        var products = productsFromSearchIndex(si);
+        var fi = applyLightProductCatalog(products);
+        __assocCatalogInflight = null;
+        return fi;
+      })
+      .catch(function (e) {
+        __assocCatalogInflight = null;
+        console.error("[DamAssocEdit] light catalog failed", e);
+        return applyLightProductCatalog([]) || { products: [] };
+      });
+    return __assocCatalogInflight;
+  }
+
+  /** Session cache: branding picker uses /branding-search-picker (never full ~40MB JSON). */
+  var __damAssocBrandingPickerInflight = null;
+
+  function searchBrandingPicker(query, limit, includeIds) {
+    var q = String(query || "").trim();
+    var lim = Math.max(1, Math.min(parseInt(limit, 10) || 80, 120));
+    var params = "q=" + encodeURIComponent(q) + "&limit=" + String(lim);
+    var inc = (includeIds || []).filter(Boolean);
+    if (inc.length) params += "&include=" + encodeURIComponent(inc.join(","));
+    return fetchWithTimeout(bridgeUrl() + "/branding-search-picker?" + params + "&v=" + Date.now(), 5000)
       .then(function (r) {
+        if (!r.ok) throw new Error("branding_picker_http_" + r.status);
         return r.json();
       })
       .then(function (d) {
-        global._DAM_FILE_INDEX = d;
-        return d;
-      });
-    if (global.DamSearch && typeof global.DamSearch.load === "function") {
-      var searchP = global.DamSearch.load()
-        .then(function (bundle) {
-          return (bundle && bundle.fileIndex) || global._DAM_FILE_INDEX || null;
-        })
-        .catch(function () {
-          return null;
+        var entries = (d && d.entries) || [];
+        var byId = {};
+        entries.forEach(function (e) {
+          if (e && e.id) byId[e.id] = e;
         });
-      return Promise.race([
-        fetchP,
-        searchP.then(function (fi) {
-          return fi || fetchP;
-        }),
-      ]).catch(function () {
-        return global._DAM_FILE_INDEX || { products: [] };
+        return { entries: entries, byId: byId };
       });
+  }
+
+  function ensureBrandingSearchIndex() {
+    /* Legacy name: picker only ever loads a capped slice from bridge. */
+    return searchBrandingPicker("", 80, []);
+  }
+
+  function brandingThumb(entry) {
+    if (!entry || !entry.path) return PLACEHOLDER_SVG;
+    if (global.DamPreviewTruth && typeof global.DamPreviewTruth.thumbCacheUrl === "function") {
+      return global.DamPreviewTruth.thumbCacheUrl(entry.path, "grid");
     }
-    return fetchP.catch(function () {
-      return global._DAM_FILE_INDEX || { products: [] };
+    if (global.DamMediaPreview && typeof global.DamMediaPreview.previewUrl === "function") {
+      return global.DamMediaPreview.previewUrl(entry.path, entry);
+    }
+    return PLACEHOLDER_SVG;
+  }
+
+  function brandingLabel(entry) {
+    if (!entry) return "";
+    if (entry.name) return entry.name;
+    var p = String(entry.path || "").replace(/\\/g, "/");
+    var i = p.lastIndexOf("/");
+    return i >= 0 ? p.slice(i + 1) : p || entry.id || "";
+  }
+
+  /** Tab switch: click inactive tab only (no XOR flip on active tab). */
+  function commitAssocListTab(nextTab, curTab, brandingDisabled) {
+    nextTab = nextTab === "branding" ? "branding" : "products";
+    if (brandingDisabled) return "products";
+    if (nextTab === curTab) return curTab;
+    return nextTab;
+  }
+
+  /** Variant row thumb without sync previewUrl (freeze: ~150× previewUrl blocked WebView2). */
+  function variantThumbFast(v) {
+    if (!v) return PLACEHOLDER_SVG;
+    var existing = v.thumb || v.thumb_url || "";
+    if (existing && String(existing).indexOf("data:image/svg+xml") !== 0) return existing;
+    return PLACEHOLDER_SVG;
+  }
+
+  function collectBrandingIdsFromCtx(ctx) {
+    var ids = [];
+    var seen = {};
+    function add(id) {
+      id = String(id || "").trim();
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      ids.push(id);
+    }
+    var gc = (ctx && ctx.groupContext) || {};
+    (gc.variants || []).forEach(function (v) {
+      if (v && v.id) add(v.id);
     });
+    var asset = (ctx && ctx.asset) || {};
+    (asset.folder_variants || asset.variants || []).forEach(function (v) {
+      if (v && v.id) add(v.id);
+    });
+    return ids;
   }
 
   function productIndexOf(p) {
@@ -143,6 +337,86 @@
     return parts.join(" ").toLowerCase();
   }
 
+  /** Light search on search-index only — never walks full file-index.revisions. */
+  function searchProductIdsFromIndex(q, cap) {
+    cap = Math.max(1, cap || 120);
+    var si = global._DAM_SEARCH_INDEX;
+    if (!si || !Array.isArray(si.entries)) return [];
+    var nq = String(q || "")
+      .toLowerCase()
+      .trim();
+    if (!nq) return [];
+    var idSet = {};
+    var ordered = [];
+    function pushId(id) {
+      id = String(id || "").trim();
+      if (!id || idSet[id] || ordered.length >= cap) return;
+      idSet[id] = true;
+      ordered.push(id);
+    }
+    var dig = nq.replace(/\D/g, "");
+    var numericOnly = /^[\d.\s]+$/.test(nq.replace(/\s/g, ""));
+    if (dig.length >= 4 && si.by_prefix) {
+      for (var L = Math.min(dig.length, 10); L >= 4; L--) {
+        var pref = dig.slice(0, L);
+        var arr = si.by_prefix[pref];
+        if (arr && arr.length) {
+          arr.forEach(function (pid) {
+            pushId(pid);
+          });
+          break;
+        }
+      }
+      /* HARD: brak prefixu dla numeru — nie skanuj calego katalogu (freeze UI). */
+      if (!ordered.length && numericOnly) return [];
+    }
+    if (ordered.length < cap) {
+      var entryScanCap = 600;
+      for (var i = 0; i < si.entries.length && ordered.length < cap && i < entryScanCap; i++) {
+        var e = si.entries[i];
+        if (!e || !e.id) continue;
+        var blob = (
+          String(e.search_blob || "") +
+          " " +
+          String(e.name || "") +
+          " " +
+          String(e.display_name || "") +
+          " " +
+          String(e.id || "") +
+          " " +
+          (e.indexes || []).join(" ") +
+          " " +
+          (e.index_bases || []).join(" ") +
+          " " +
+          (e.tags || []).join(" ")
+        ).toLowerCase();
+        if (blob.indexOf(nq) === -1) continue;
+        pushId(e.id);
+      }
+    }
+    return ordered;
+  }
+
+  function findSearchEntryById(id) {
+    var si = global._DAM_SEARCH_INDEX;
+    if (!si || !Array.isArray(si.entries)) return null;
+    id = String(id || "").trim();
+    if (!id) return null;
+    for (var i = 0; i < si.entries.length; i++) {
+      var e = si.entries[i];
+      if (e && e.id === id) return e;
+    }
+    return null;
+  }
+
+  function productStubById(id, productById, entryById) {
+    if (productById && productById[id]) return productById[id];
+    var e = (entryById && entryById[id]) || findSearchEntryById(id);
+    if (!e) return null;
+    var stub = productsFromSearchIndex({ entries: [e] });
+    return stub[0] || null;
+  }
+
   function normPath(s) {
     return String(s == null ? "" : s)
       .replace(/\\/g, "/")
@@ -170,28 +444,50 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  /** Keyboard Shift latch — mouseleave/mousemove must not clear while key is down. */
+  /** Keyboard Shift latch - mouseleave/mousemove must not clear while key is down. */
   var shiftKeyDown = false;
 
   /** Wstrzykuje style: Bento grid + pkt 36 podglad LEWA | lista PRAWA (nie ruszamy plikow agentow). */
   function ensureInjectedCss() {
     var css =
-      /* Shell / bento grid popover — HARD: 70vw × 90vh (wszędzie: branding + viz) */
+      /* Shell / bento grid popover - HARD: 80vw × 90vh (cap 1400px; branding + viz) */
       ".dam-assoc-edit-overlay{overflow:hidden;}" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover.dam-assoc-edit-popover," +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover--wide.dam-assoc-edit-popover{" +
       "display:grid!important;grid-template-columns:minmax(0,1fr);" +
       "grid-template-rows:auto auto auto minmax(0,1fr) auto;" +
       "grid-template-areas:'head' 'pinned' 'search' 'body' 'actions';" +
-      "width:70vw!important;min-width:min(70vw,calc(100vw - 16px))!important;" +
-      "max-width:min(70vw,calc(100vw - 16px))!important;" +
+      "width:min(80vw,1400px)!important;min-width:min(80vw,calc(100vw - 16px))!important;" +
+      "max-width:min(80vw,1400px)!important;" +
       "height:90vh!important;min-height:90vh!important;max-height:90vh!important;" +
       "overflow-x:hidden!important;overflow-y:hidden!important;}" +
       ".dam-assoc-edit-popover > .dam-tag-edit-popover__head{grid-area:head;}" +
       ".dam-assoc-edit-popover > .dam-assoc-edit-popover__pinned-wrap{grid-area:pinned;min-width:0;}" +
       ".dam-assoc-edit-popover > .dam-assoc-edit-popover__section-sep{display:none;}" +
       ".dam-assoc-edit-popover > .dam-tag-edit-popover__search-wrap{grid-area:search;margin:0!important;" +
-      "padding:10px 14px;border-bottom:1px solid #ececf2;}" +
+      "padding:10px 14px;border-bottom:1px solid #ececf2;display:flex;flex-direction:column;gap:8px;}" +
+      ".dam-assoc-edit-popover__tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}" +
+      ".dam-assoc-edit-popover__tab{min-height:32px;padding:0 12px;border-radius:999px;border:1px solid #e2e2ea;" +
+      "background:#fff;color:#6b6b76;font-size:11px;font-weight:600;cursor:pointer;transition:background .12s ease,border-color .12s ease,color .12s ease;}" +
+      ".dam-assoc-edit-popover__tab.is-active{background:color-mix(in srgb,var(--dam-primary,#ab54db) 14%,#fff);" +
+      "border-color:color-mix(in srgb,var(--dam-primary,#ab54db) 55%,#fff);color:#7a3aa8;}" +
+      ".dam-assoc-edit-popover__tab[aria-disabled='true']{opacity:.45;cursor:not-allowed;pointer-events:none;}" +
+      ".dam-assoc-edit-popover__search-row{display:flex;align-items:center;gap:8px;min-width:0;}" +
+      ".dam-assoc-edit-popover__search-row .dam-tag-edit-popover__search{flex:1 1 auto;min-width:0;}" +
+      ".dam-assoc-edit-popover__opt-row.is-pending-remove{opacity:.62;background:#fffbeb!important;" +
+      "box-shadow:inset 0 0 0 1px #fde68a;}" +
+      ".dam-assoc-edit-popover__soft-x{width:28px;height:28px;flex:0 0 28px;display:inline-flex;align-items:center;" +
+      "justify-content:center;border:1px solid #fecaca;border-radius:7px;background:#fff;color:#dc2626;cursor:pointer;font-size:14px;}" +
+      ".dam-assoc-edit-popover__soft-x:hover{background:#fef2f2;}" +
+      ".dam-assoc-edit-popover__undo-btn{min-height:28px;padding:0 10px;border-radius:7px;border:1px solid #fcd34d;" +
+      "background:#fef9c3;color:#854d0e;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;}" +
+      ".dam-assoc-edit-popover__undo-btn:hover{background:#fef08a;}" +
+      ".dam-assoc-edit-popover__summary{padding:12px 14px;overflow-y:auto;min-height:0;}" +
+      ".dam-assoc-edit-popover__summary-title{margin:0 0 8px;font-size:12px;font-weight:700;color:#464255;}" +
+      ".dam-assoc-edit-popover__summary-list{display:flex;flex-direction:column;gap:6px;}" +
+      ".dam-assoc-edit-popover__summary-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;" +
+      "background:#f7f6fa;border:1px solid #ececf2;font-size:12px;color:#464255;}" +
+      ".dam-assoc-edit-popover__summary-row.is-remove{background:#fffbeb;border-color:#fde68a;color:#92400e;}" +
       ".dam-assoc-edit-popover > .dam-assoc-edit-popover__body{grid-area:body;min-height:0;min-width:0;overflow:hidden;}" +
       ".dam-assoc-edit-popover > .dam-tag-edit-popover__actions{grid-area:actions;}" +
       /* Body: preview LEFT | list RIGHT (scroll w liscie) */
@@ -233,7 +529,7 @@
       ".dam-assoc-edit-popover__meta{min-width:0;overflow:hidden;}" +
       ".dam-assoc-edit-popover__label{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
       "font-size:13px;font-weight:600;color:#464255;}" +
-      /* Tagi jak na kartach viz (DK / BATONY / Mixy / PL) — nie tiny cut-off */
+      /* Tagi jak na kartach viz (DK / BATONY / Mixy / PL) - nie tiny cut-off */
       ".dam-assoc-edit-popover__tags{display:flex;flex-wrap:wrap;gap:4px;max-height:none;overflow:visible;margin-top:4px;}" +
       ".dam-assoc-edit-popover__tags .dam-viz-badge{" +
       "font-size:calc((var(--dam-tag-fs-pill,10.5px) + 1px) * var(--dam-badge-scale,1.05))!important;font-weight:500;" +
@@ -258,9 +554,11 @@
       ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-item," +
       ".dam-media-preview__variant-grid.is-shift-hover .dam-media-preview__assoc-item{position:relative;}" +
       ".dam-media-preview__assoc-item," +
-      ".dam-media-preview__all-file{position:relative;}" +
+      ".dam-media-preview__all-file," +
+      ".dam-viz-modal__variant{position:relative;}" +
       ".dam-media-preview__assoc-item .dam-assoc-quick-minus," +
-      ".dam-media-preview__all-file .dam-assoc-quick-minus{" +
+      ".dam-media-preview__all-file .dam-assoc-quick-minus," +
+      ".dam-viz-modal__variant .dam-assoc-quick-minus{" +
       "position:absolute;top:3px;right:3px;z-index:4;width:21px;height:21px;border-radius:999px;" +
       "border:1px solid rgba(255,255,255,.96);" +
       "background:linear-gradient(180deg,color-mix(in srgb,#ef4444 88%,#fff) 0%,#dc2626 100%);" +
@@ -271,6 +569,7 @@
       "transition:opacity .12s ease,visibility .12s ease,background .12s ease,transform .12s ease,box-shadow .12s ease;}" +
       ".dam-media-preview__assoc-grid.is-shift-hover .dam-assoc-quick-minus," +
       ".dam-media-preview__variant-grid.is-shift-hover .dam-assoc-quick-minus," +
+      ".dam-media-preview__variant-grid.is-shift-hover .dam-viz-modal__variant .dam-assoc-quick-minus," +
       ".dam-media-preview__all-files.is-shift-hover .dam-assoc-quick-minus," +
       ".dam-assoc-quick-minus.is-shift-visible{" +
       "opacity:1!important;visibility:visible!important;pointer-events:auto!important;}" +
@@ -290,15 +589,26 @@
       "width:9px;height:2.5px;background:#fff;border-radius:2px;" +
       "box-shadow:0 0 0 0.5px rgba(255,255,255,.35);}" +
       ".dam-assoc-quick-minus i::before{content:none!important;display:none!important;}" +
+      /* Square Dodaj (= thumb slot 70×70). Shift+Admin only via html.is-shift-revealed / is-shift-hover. */
       ".dam-media-preview__assoc-plus-tile{" +
-      "display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;" +
-      "min-height:96px;border:1.5px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 45%,#d7d7e0);" +
-      "border-radius:12px;background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff);color:#7a3aa8;" +
-      "cursor:pointer;font-size:12px;font-weight:600;padding:10px;}" +
-      ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-plus-tile{display:flex;}" +
-      ".dam-media-preview__assoc-plus-tile i{font-size:22px;}" +
-      ".dam-media-preview__assoc-plus-tile:hover{background:color-mix(in srgb,var(--dam-primary,#ab54db) 12%,#fff);" +
+      "display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px;" +
+      "box-sizing:border-box;width:70px;height:70px;min-width:70px;min-height:70px;" +
+      "max-width:70px;max-height:70px;aspect-ratio:1;padding:4px;" +
+      "border:1.5px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 45%,var(--dam-border,#d7d7e0));" +
+      "border-radius:8px;background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,var(--dam-surface,#fff));" +
+      "color:var(--dam-primary,#7a3aa8);" +
+      "cursor:pointer;font-size:10px;font-weight:600;justify-self:start;align-self:start;line-height:1.15;}" +
+      "html.is-shift-revealed .dam-media-preview__assoc-plus-tile," +
+      ".dam-media-preview__assoc-plus-tile.is-shift-revealed," +
+      ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-plus-tile," +
+      ".dam-media-preview__variant-grid.is-shift-hover .dam-media-preview__assoc-plus-tile{display:flex!important;}" +
+      ".dam-media-preview__assoc-plus-tile i{font-size:20px;line-height:1;}" +
+      ".dam-media-preview__assoc-plus-tile span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
+      ".dam-media-preview__assoc-plus-tile:hover{background:color-mix(in srgb,var(--dam-primary,#ab54db) 12%,var(--dam-surface,#fff));" +
       "border-color:var(--dam-primary,#ab54db);}" +
+      "html[data-theme=\"dark\"] .dam-media-preview__assoc-plus-tile{" +
+      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 14%,var(--dam-surface,#201f28));" +
+      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 75%,#fff);}" +
       /* Footer DAM */
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__actions{" +
       "display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;" +
@@ -338,7 +648,7 @@
       "}" +
       "@media (min-width:768px){" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover.dam-assoc-edit-popover{" +
-      "width:70vw!important;max-width:min(70vw,calc(100vw - 24px))!important;" +
+      "width:min(80vw,1400px)!important;max-width:min(80vw,1400px)!important;" +
       "height:90vh!important;min-height:90vh!important;max-height:90vh!important;}" +
       ".dam-assoc-edit-popover__body{grid-template-columns:minmax(180px,24%) minmax(0,1fr);}" +
       "}";
@@ -419,6 +729,22 @@
     return false;
   }
 
+  var __vizLatestThumbByProduct = null;
+
+  function vizLatestThumbForProduct(productId) {
+    if (!productId) return "";
+    if (!__vizLatestThumbByProduct) {
+      __vizLatestThumbByProduct = {};
+      var latest = (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.viz_latest) || [];
+      latest.forEach(function (row) {
+        if (row && row.product_id && row.thumb_url && !__vizLatestThumbByProduct[row.product_id]) {
+          __vizLatestThumbByProduct[row.product_id] = String(row.thumb_url);
+        }
+      });
+    }
+    return __vizLatestThumbByProduct[productId] || "";
+  }
+
   function productThumb(p) {
     if (!p) return PLACEHOLDER_SVG;
     var existing = p.thumb_url != null ? String(p.thumb_url).trim() : "";
@@ -439,13 +765,8 @@
       if (rev.index) idx = String(rev.index).split(".")[0];
     }
     if (!idx) {
-      /* Fallback: wizka z file-index.viz_latest (jak karty siatki). */
-      var fi = global._DAM_FILE_INDEX;
-      var latest = (fi && fi.viz_latest) || [];
-      for (var i = 0; i < latest.length; i++) {
-        var row = latest[i];
-        if (row && row.product_id === p.id && row.thumb_url) return String(row.thumb_url);
-      }
+      var fromLatest = vizLatestThumbForProduct(p.id);
+      if (fromLatest) return fromLatest;
       return PLACEHOLDER_SVG;
     }
     var base = String(idx).replace(/[^0-9A-Za-z]+/g, "") || idx;
@@ -614,13 +935,68 @@
     return String(s || "").replace(/^\d+\s*-\s*/, "").trim();
   }
 
+  function closeVizMaterialAddPopover() {
+    var pop = document.getElementById("damVizMaterialAddPopover");
+    if (pop) {
+      if (typeof pop._damVizMatCleanup === "function") pop._damVizMatCleanup();
+      pop.remove();
+    }
+    document.removeEventListener("click", onVizMatDocClick, true);
+    document.removeEventListener("keydown", onVizMatDocKey, true);
+  }
+
+  function closeBrandingProductAddPopover() {
+    var pop = document.getElementById("damBrandingProductAddPopover");
+    if (pop) {
+      if (typeof pop._damBrandProdCleanup === "function") pop._damBrandProdCleanup();
+      pop.remove();
+    }
+    document.removeEventListener("click", onBrandProdDocClick, true);
+    document.removeEventListener("keydown", onBrandProdDocKey, true);
+  }
+
+  function onBrandProdDocClick(e) {
+    var pop = document.getElementById("damBrandingProductAddPopover");
+    if (pop && !pop.contains(e.target)) closeBrandingProductAddPopover();
+  }
+
+  function onBrandProdDocKey(e) {
+    if (e.key === "Escape") closeBrandingProductAddPopover();
+  }
+
+  function onVizMatDocClick(e) {
+    var pop = document.getElementById("damVizMaterialAddPopover");
+    if (pop && !pop.contains(e.target)) closeVizMaterialAddPopover();
+  }
+
+  function onVizMatDocKey(e) {
+    if (e.key === "Escape") closeVizMaterialAddPopover();
+  }
+
   function closePicker() {
+    closeVizMaterialAddPopover();
+    closeBrandingProductAddPopover();
     var overlay = document.getElementById("damAssocEditOverlay");
     if (overlay) overlay.remove();
+    var thumb = document.getElementById("damThumbPicker");
+    if (thumb) thumb.remove();
     hideThumbZoom();
     document.removeEventListener("click", onDocClick, true);
     document.removeEventListener("keydown", onDocKey, true);
+    _assocPickerOpening = false;
   }
+
+  function panicAssocReset() {
+    __assocCatalogInflight = null;
+    __damAssocBrandingPickerInflight = null;
+    _assocPickerOpening = false;
+    try {
+      closePicker();
+    } catch (eClose) { /* ignore */ }
+  }
+  try {
+    global.addEventListener("dam:panic-reset", panicAssocReset);
+  } catch (ePanic) { /* ignore */ }
 
   function onDocClick(e) {
     var overlay = document.getElementById("damAssocEditOverlay");
@@ -719,97 +1095,929 @@
     document.removeEventListener("keydown", closeActionMenuOnKey, true);
   }
 
+  var _assocPickerOpening = false;
+
+  /**
+   * HARD (2026-07-22): "Dodaj wariant materiału" NIE otwiera ciezkiego assoc-pickera
+   * (microtask + ewentualny JSON/index walk zacinal caly DAM). Zamiast tego:
+   * odroczony macrotask → lekki folder picker (Wskaz plik) → zapis skojarzen.
+   */
+  function openMaterialVariantAdd(ctx) {
+    if (!canEditAssoc()) {
+      toast("Włącz tryb admina, aby edytować skojarzenia.");
+      return;
+    }
+    if (document.getElementById("damThumbPicker")) {
+      toast("Picker juz otwarty…");
+      return;
+    }
+    ctx = ctx || {};
+    if (!ctx.groupContext) ctx.groupContext = {};
+    if (!ctx.asset || !ctx.asset.id) {
+      toast("Brak materialu do dodania wariantu.");
+      return;
+    }
+    var selected = {};
+    collectLinkedIdsFromCtx(ctx, "variant").forEach(function (id) {
+      selected[id] = true;
+    });
+    var prevPids = collectLinkedIdsFromCtx(ctx, "product");
+    var prevVids = Object.keys(selected);
+    toast("Wskaz plik wariantu materialu…");
+    openVariantBrowsePicker(
+      { asset: ctx.asset, groupContext: ctx.groupContext },
+      selected,
+      function (ids) {
+        var next = ids || [];
+        var removed = prevVids.filter(function (x) {
+          return next.indexOf(x) === -1;
+        });
+        saveAssociations(ctx, prevPids, next, { silentToast: removed.length > 0 }).then(function () {
+          if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+          if (removed.length && global.DamDanger && typeof global.DamDanger.toastUndo === "function") {
+            global.DamDanger.toastUndo({
+              message:
+                removed.length === 1
+                  ? "Usunieto 1 skojarzenie"
+                  : "Usunieto skojarzenia: " + removed.length,
+              actionLabel: "Cofnij",
+              duration: 8000,
+              onUndo: function () {
+                saveAssociations(ctx, prevPids, prevVids, { silentToast: true }).then(function () {
+                  if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+                });
+              },
+            });
+          }
+        });
+      }
+    );
+  }
+
+  /**
+   * WARIANTY PRODUKTU (viz strip) — lekki DamFolderPicker, bez ciezkiego COMBO shell.
+   * Start: folder produktu z productContext / pierwszego wariantu.
+   */
+  function openProductStripVariantAdd(ctx) {
+    if (!canEditAssoc()) {
+      toast("Włącz tryb admina, aby edytować skojarzenia.");
+      return;
+    }
+    if (document.getElementById("damThumbPicker") || document.getElementById("damAssocEditOverlay")) {
+      toast("Picker juz otwarty…");
+      return;
+    }
+    ctx = ctx || {};
+    var pc = ctx.productContext || {};
+    var start =
+      pc.path ||
+      pc.folder ||
+      pc.dir ||
+      (pc.files && pc.files[0] && (pc.files[0].path || pc.files[0].file)) ||
+      "";
+    if (!start && ctx.groupContext && ctx.groupContext.variants && ctx.groupContext.variants[0]) {
+      var v0 = ctx.groupContext.variants[0];
+      start = v0.path || v0.file || "";
+    }
+    if (!start) start = "X:/Marketing";
+    var dir = String(start).replace(/\\/g, "/");
+    var slash = dir.lastIndexOf("/");
+    if (slash > 0 && /\.[a-z0-9]{2,5}$/i.test(dir)) dir = dir.slice(0, slash);
+    toast("Wskaz plik wariantu produktu…");
+    openDamFolderPickerSafe({
+      startDir: dir,
+      mode: "file",
+      allowFolderPick: true,
+      title: "Wskaz plik wariantu produktu",
+      showWindowsButton: true,
+      resolveBrandingAssetId: false,
+      onPicked: function (picked) {
+        if (!picked) return;
+        var path =
+          picked.type === "folder"
+            ? picked.folder || picked.path
+            : picked.filePath || picked.path;
+        if (!path) return;
+        toast("Wybrano: " + String(path).split(/[/\\]/).pop());
+        if (typeof ctx.onRefresh === "function") {
+          try {
+            ctx.onRefresh({
+              addedVariantPath: path,
+              pickedType: picked.type || "file",
+            });
+          } catch (eRef) {
+            /* ignore */
+          }
+        }
+      },
+    });
+  }
+
+  function resolveAssocGrid(el) {
+    if (!el) return null;
+    if (
+      el.id === "damVizModalAssoc" ||
+      (el.classList && el.classList.contains("dam-media-preview__assoc-grid"))
+    ) {
+      return el;
+    }
+    if (el.querySelector) {
+      return el.querySelector("#damVizModalAssoc, .dam-media-preview__assoc-grid");
+    }
+    return null;
+  }
+
+  function resolveVizProductId(ctx) {
+    ctx = ctx || {};
+    var id =
+      (ctx.productContext && ctx.productContext.id) ||
+      (ctx.groupContext && ctx.groupContext.product_id) ||
+      (global.__damLastAssocProductCtx && global.__damLastAssocProductCtx.id) ||
+      "";
+    if (id) return String(id).trim();
+    try {
+      var badge = document.querySelector(
+        "#damVizModal [data-product-id], #damVizModalBadges [data-product-id]"
+      );
+      if (badge) id = badge.getAttribute("data-product-id") || "";
+    } catch (eDom) {
+      /* ignore */
+    }
+    if (!id) {
+      try {
+        id = new URLSearchParams(global.location.search).get("product") || "";
+      } catch (eUrl) {
+        /* ignore */
+      }
+    }
+    return String(id || "").trim();
+  }
+
+  function isInsideVizModal(el) {
+    if (!el) return false;
+    if (el.id === "damVizModal" || el.id === "damVizModalAssoc") return true;
+    return !!(
+      el.closest &&
+      (el.closest("#damVizModal") || el.closest(".dam-viz-modal__assoc-pane"))
+    );
+  }
+
+  function isVizProductMaterialsAdd(grid, ctx) {
+    grid = resolveAssocGrid(grid) || grid;
+    if (!grid || grid.classList.contains("dam-media-preview__variant-grid")) return false;
+    if (grid.classList.contains("dam-viz-modal__variant-strip")) return false;
+    if (grid.closest && grid.closest(".dam-viz-modal__product-variants")) return false;
+    /* HARD: any materials assoc Dodaj inside viz modal — never require productId
+       for routing (missing id used to fall through into freezing COMBO). */
+    return isInsideVizModal(grid);
+  }
+
+  function isBrandingProductAssocAdd(grid, ctx) {
+    grid = resolveAssocGrid(grid) || grid;
+    if (!grid || grid.classList.contains("dam-media-preview__variant-grid")) return false;
+    if (grid.closest && grid.closest("#damVizModal")) return false;
+    var col = grid.closest(
+      ".dam-media-preview__assoc-col--products, .dam-media-preview__assoc-col--product"
+    );
+    if (!col || !(grid.closest && grid.closest("#damMediaPreview"))) return false;
+    return !!(ctx && ctx.asset && ctx.asset.id);
+  }
+
+  function productDisplayName(p) {
+    if (!p) return "";
+    return p.display_name || p.name || p.title || p.id || "";
+  }
+
+  function positionAssocLightPopover(pop, anchorEl) {
+    if (!pop || !anchorEl) return;
+    if (pop.parentNode !== document.body) document.body.appendChild(pop);
+    var rect = anchorEl.getBoundingClientRect();
+    var margin = 12;
+    pop.style.setProperty("position", "fixed", "important");
+    pop.style.setProperty("z-index", "12350", "important");
+    pop.style.setProperty("transform", "none", "important");
+    var w = pop.offsetWidth || 420;
+    var h = pop.offsetHeight || 360;
+    var top = rect.bottom + margin;
+    var left = Math.max(margin, Math.min(rect.left, window.innerWidth - w - margin));
+    if (top + h > window.innerHeight - margin) {
+      top = Math.max(margin, rect.top - h - margin);
+    }
+    pop.style.top = top + "px";
+    pop.style.left = left + "px";
+  }
+
+  /**
+   * Viz modal (#damVizModalAssoc): dodaj skojarzony material brandingowy do produktu.
+   * Lekki picker (/branding-search-picker) — bez ciezkiego COMBO produktow i bez overlay 12100.
+   */
+  function openVizProductMaterialAdd(anchorEl, ctx) {
+    if (!canEditAssoc()) {
+      toast("Wlacz tryb admina, aby edytowac skojarzenia.");
+      return;
+    }
+    closePicker();
+    ctx = ctx || {};
+    var productId = resolveVizProductId(ctx);
+    if (!productId) {
+      toast("Brak produktu — nie mozna dodac materialu.");
+      return;
+    }
+    if (!ctx.productContext) ctx.productContext = { id: productId };
+    if (!ctx.groupContext) ctx.groupContext = {};
+    if (!ctx.groupContext.product_id) ctx.groupContext.product_id = productId;
+    global.__damLastAssocProductCtx = ctx.productContext;
+    if (document.getElementById("damThumbPicker")) {
+      toast("Picker juz otwarty…");
+      return;
+    }
+    ensureInjectedCss();
+    var pop = document.createElement("div");
+    pop.id = "damVizMaterialAddPopover";
+    pop.className =
+      "dam-tag-edit-popover dam-tag-edit-popover--wide dam-assoc-edit-popover";
+    pop.setAttribute("role", "dialog");
+    pop.setAttribute("aria-modal", "true");
+    pop.innerHTML =
+      '<div class="dam-tag-edit-popover__head">' +
+      "<span>Dodaj skojarzony material</span>" +
+      '<button type="button" class="dam-tag-edit-popover__close" data-close aria-label="Zamknij">' +
+      '<i class="uil uil-times"></i></button></div>' +
+      '<div class="dam-tag-edit-popover__search-wrap">' +
+      '<div class="dam-assoc-edit-popover__search-row">' +
+      '<i class="uil uil-search" aria-hidden="true"></i>' +
+      '<input type="text" id="damVizMatAddSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj material (nazwa, sciezka, id)…" autocomplete="off" />' +
+      "</div></div>" +
+      '<div class="dam-tag-edit-popover__list dam-assoc-edit-popover__list" role="listbox">' +
+      '<p class="dam-tag-edit-popover__empty">Ladowanie…</p></div>' +
+      '<div class="dam-tag-edit-popover__actions">' +
+      '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm disabled>' +
+      '<i class="uil uil-check"></i><span>Dodaj skojarzenie</span></button>' +
+      '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel>' +
+      '<i class="uil uil-arrow-left"></i><span>Anuluj</span></button></div>';
+    document.body.appendChild(pop);
+    requestAnimationFrame(function () {
+      positionAssocLightPopover(pop, anchorEl || document.body);
+    });
+
+    var selectedId = "";
+    var selectedEntry = null;
+    var searchTimer = null;
+    var listEl = pop.querySelector(".dam-assoc-edit-popover__list");
+    var confirmBtn = pop.querySelector("[data-confirm]");
+    var searchInput = pop.querySelector("#damVizMatAddSearch");
+
+    function paintBrandingList(entries) {
+      if (!listEl || !document.getElementById("damVizMaterialAddPopover")) return;
+      if (!entries || !entries.length) {
+        listEl.innerHTML =
+          '<p class="dam-tag-edit-popover__empty">Brak wynikow — zmien wyszukiwanie.</p>';
+        return;
+      }
+      listEl.innerHTML = entries
+        .map(function (entry) {
+          if (!entry || !entry.id) return "";
+          var sel = entry.id === selectedId ? " is-selected" : "";
+          return (
+            '<button type="button" class="dam-assoc-edit-popover__opt' +
+            sel +
+            '" data-id="' +
+            esc(entry.id) +
+            '" data-thumb-path="' +
+            esc(entry.path || "") +
+            '" role="option">' +
+            '<span class="dam-assoc-edit-popover__opt-thumb"><img src="' +
+            esc(PLACEHOLDER_SVG) +
+            '" alt="" loading="lazy" /></span>' +
+            '<span class="dam-assoc-edit-popover__opt-body">' +
+            '<span class="dam-assoc-edit-popover__opt-label">' +
+            esc(brandingLabel(entry)) +
+            "</span>" +
+            '<span class="dam-assoc-edit-popover__opt-sub">' +
+            esc(entry.id) +
+            "</span></span></button>"
+          );
+        })
+        .join("");
+      listEl.querySelectorAll("[data-id]").forEach(function (btn) {
+        function hydrateThumb() {
+          var img = btn.querySelector("img");
+          var path = btn.getAttribute("data-thumb-path") || "";
+          if (!img || !path || img.getAttribute("data-hydrated") === "1") return;
+          var src = brandingThumb({ path: path, id: btn.getAttribute("data-id") });
+          if (src && src !== PLACEHOLDER_SVG) {
+            img.src = src;
+            img.setAttribute("data-hydrated", "1");
+          }
+        }
+        btn.addEventListener("mouseenter", hydrateThumb);
+        btn.addEventListener("focus", hydrateThumb);
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          hydrateThumb();
+          selectedId = btn.getAttribute("data-id") || "";
+          selectedEntry =
+            entries.find(function (x) {
+              return x && x.id === selectedId;
+            }) || null;
+          listEl.querySelectorAll("[data-id]").forEach(function (b) {
+            b.classList.toggle("is-selected", b.getAttribute("data-id") === selectedId);
+          });
+          if (confirmBtn) confirmBtn.disabled = !selectedId;
+        });
+      });
+    }
+
+    function loadBranding(q) {
+      if (!listEl) return;
+      listEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Ladowanie…</p>';
+      searchBrandingPicker(q, 80, selectedId ? [selectedId] : [])
+        .then(function (res) {
+          paintBrandingList((res && res.entries) || []);
+        })
+        .catch(function () {
+          if (listEl) {
+            listEl.innerHTML =
+              '<p class="dam-tag-edit-popover__empty">Blad ladowania katalogu brandingu.</p>';
+          }
+        });
+    }
+
+    function collectLinkedProductIds(entry) {
+      var ids = [];
+      var seen = {};
+      function add(id) {
+        id = String(id || "").trim();
+        if (!id || seen[id]) return;
+        seen[id] = true;
+        ids.push(id);
+      }
+      if (!entry) return ids;
+      (entry.linked_product_ids || []).forEach(add);
+      (entry.linked_products || []).forEach(function (p) {
+        if (p && p.id) add(p.id);
+      });
+      return ids;
+    }
+
+    function commitLink() {
+      if (!selectedId || !selectedEntry) return;
+      if (confirmBtn) confirmBtn.disabled = true;
+      var pids = collectLinkedProductIds(selectedEntry);
+      if (pids.indexOf(productId) === -1) pids.push(productId);
+      saveAssociations(
+        {
+          asset: {
+            id: selectedId,
+            folder_group_id: selectedEntry.folder_group_id || "",
+          },
+          groupContext: { folder_group_id: selectedEntry.folder_group_id || "" },
+        },
+        pids,
+        [],
+        { silentToast: false }
+      ).then(function () {
+        closeVizMaterialAddPopover();
+        if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+      });
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+          loadBranding(searchInput.value || "");
+        }, 120);
+      });
+      searchInput.addEventListener("keydown", function (e) {
+        e.stopPropagation();
+      });
+      requestAnimationFrame(function () {
+        searchInput.focus();
+      });
+    }
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        commitLink();
+      });
+    }
+    pop.querySelector("[data-cancel]").addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeVizMaterialAddPopover();
+    });
+    pop.querySelector("[data-close]").addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeVizMaterialAddPopover();
+    });
+    pop._damVizMatCleanup = function () {
+      clearTimeout(searchTimer);
+    };
+    setTimeout(function () {
+      document.addEventListener("click", onVizMatDocClick, true);
+      document.addEventListener("keydown", onVizMatDocKey, true);
+    }, 0);
+    loadBranding("");
+  }
+
+  /**
+   * Branding preview (#damMediaPreview): dodaj skojarzony produkt do materialu.
+   * Lekki picker (search-index) — bez ciezkiego COMBO i overlay 12100.
+   */
+  function openBrandingProductAssocAdd(anchorEl, ctx) {
+    if (!canEditAssoc()) {
+      toast("Wlacz tryb admina, aby edytowac skojarzenia.");
+      return;
+    }
+    closePicker();
+    ctx = ctx || {};
+    if (!ctx.asset || !ctx.asset.id) {
+      toast("Brak materialu — nie mozna dodac produktu.");
+      return;
+    }
+    if (document.getElementById("damThumbPicker") || document.getElementById("damBrandingProductAddPopover")) {
+      toast("Picker juz otwarty…");
+      return;
+    }
+    ensureInjectedCss();
+    var pop = document.createElement("div");
+    pop.id = "damBrandingProductAddPopover";
+    pop.className =
+      "dam-tag-edit-popover dam-tag-edit-popover--wide dam-assoc-edit-popover";
+    pop.setAttribute("role", "dialog");
+    pop.setAttribute("aria-modal", "true");
+    pop.innerHTML =
+      '<div class="dam-tag-edit-popover__head">' +
+      "<span>Dodaj skojarzony produkt</span>" +
+      '<button type="button" class="dam-tag-edit-popover__close" data-close aria-label="Zamknij">' +
+      '<i class="uil uil-times"></i></button></div>' +
+      '<div class="dam-tag-edit-popover__search-wrap">' +
+      '<div class="dam-assoc-edit-popover__search-row">' +
+      '<i class="uil uil-search" aria-hidden="true"></i>' +
+      '<input type="text" id="damBrandProdAddSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj produkt (nazwa, indeks, id)…" autocomplete="off" />' +
+      "</div></div>" +
+      '<div class="dam-tag-edit-popover__list dam-assoc-edit-popover__list" role="listbox">' +
+      '<p class="dam-tag-edit-popover__empty">Wpisz nazwe lub indeks produktu…</p></div>' +
+      '<div class="dam-tag-edit-popover__actions">' +
+      '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm disabled>' +
+      '<i class="uil uil-check"></i><span>Dodaj skojarzenie</span></button>' +
+      '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel>' +
+      '<i class="uil uil-arrow-left"></i><span>Anuluj</span></button></div>';
+    document.body.appendChild(pop);
+    requestAnimationFrame(function () {
+      positionAssocLightPopover(pop, anchorEl || document.body);
+    });
+
+    var selectedId = "";
+    var searchTimer = null;
+    var listEl = pop.querySelector(".dam-assoc-edit-popover__list");
+    var confirmBtn = pop.querySelector("[data-confirm]");
+    var searchInput = pop.querySelector("#damBrandProdAddSearch");
+    var linkedIds = collectLinkedIdsFromCtx(ctx, "product");
+    var linkedSet = {};
+    linkedIds.forEach(function (id) {
+      linkedSet[id] = true;
+    });
+
+    function paintProductList(products) {
+      if (!listEl || !document.getElementById("damBrandingProductAddPopover")) return;
+      if (!products || !products.length) {
+        listEl.innerHTML =
+          '<p class="dam-tag-edit-popover__empty">Brak wynikow — zmien wyszukiwanie.</p>';
+        return;
+      }
+      listEl.innerHTML = products
+        .map(function (p) {
+          if (!p || !p.id) return "";
+          if (linkedSet[p.id]) return "";
+          var sel = p.id === selectedId ? " is-selected" : "";
+          var idx =
+            (p.indexes && p.indexes[0]) ||
+            (p.index_bases && p.index_bases[0]) ||
+            p.index ||
+            "";
+          return (
+            '<button type="button" class="dam-assoc-edit-popover__opt' +
+            sel +
+            '" data-id="' +
+            esc(p.id) +
+            '" role="option">' +
+            '<span class="dam-assoc-edit-popover__opt-body">' +
+            '<span class="dam-assoc-edit-popover__opt-label">' +
+            esc(productDisplayName(p)) +
+            "</span>" +
+            '<span class="dam-assoc-edit-popover__opt-sub">' +
+            esc(p.id + (idx ? " · " + idx : "")) +
+            "</span></span></button>"
+          );
+        })
+        .filter(Boolean)
+        .join("");
+      if (!listEl.innerHTML) {
+        listEl.innerHTML =
+          '<p class="dam-tag-edit-popover__empty">Wszystkie wyniki sa juz skojarzone.</p>';
+      }
+      listEl.querySelectorAll("[data-id]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          selectedId = btn.getAttribute("data-id") || "";
+          listEl.querySelectorAll("[data-id]").forEach(function (b) {
+            b.classList.toggle("is-selected", b.getAttribute("data-id") === selectedId);
+          });
+          if (confirmBtn) confirmBtn.disabled = !selectedId;
+        });
+      });
+    }
+
+    function loadProducts(q) {
+      if (!listEl) return;
+      var nq = String(q || "").trim();
+      if (!nq) {
+        listEl.innerHTML =
+          '<p class="dam-tag-edit-popover__empty">Wpisz nazwe lub indeks produktu…</p>';
+        return;
+      }
+      listEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Ladowanie…</p>';
+      var boot =
+        global.DamSearch && typeof global.DamSearch.ensureSearchIndexBootstrap === "function"
+          ? global.DamSearch.ensureSearchIndexBootstrap()
+          : Promise.resolve(global._DAM_SEARCH_INDEX || null);
+      boot
+        .then(function () {
+          var ids = searchProductIdsFromIndex(nq, 80);
+          var products = ids
+            .map(function (id) {
+              return productStubById(id);
+            })
+            .filter(Boolean);
+          paintProductList(products);
+        })
+        .catch(function () {
+          if (listEl) {
+            listEl.innerHTML =
+              '<p class="dam-tag-edit-popover__empty">Blad ladowania indeksu produktow.</p>';
+          }
+        });
+    }
+
+    function commitLink() {
+      if (!selectedId) return;
+      if (confirmBtn) confirmBtn.disabled = true;
+      var prevPids = collectLinkedIdsFromCtx(ctx, "product");
+      var prevVids = collectLinkedIdsFromCtx(ctx, "variant");
+      var nextPids = prevPids.slice();
+      if (nextPids.indexOf(selectedId) === -1) nextPids.push(selectedId);
+      saveAssociations(ctx, nextPids, prevVids, { silentToast: false }).then(function () {
+        closeBrandingProductAddPopover();
+        if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+      });
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+          loadProducts(searchInput.value || "");
+        }, 120);
+      });
+      searchInput.addEventListener("keydown", function (e) {
+        e.stopPropagation();
+      });
+      requestAnimationFrame(function () {
+        searchInput.focus();
+      });
+    }
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        commitLink();
+      });
+    }
+    pop.querySelector("[data-cancel]").addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeBrandingProductAddPopover();
+    });
+    pop.querySelector("[data-close]").addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeBrandingProductAddPopover();
+    });
+    pop._damBrandProdCleanup = function () {
+      clearTimeout(searchTimer);
+    };
+    setTimeout(function () {
+      document.addEventListener("click", onBrandProdDocClick, true);
+      document.addEventListener("keydown", onBrandProdDocKey, true);
+    }, 0);
+  }
+
   function openMediaPicker(anchorEl, opts) {
+    opts = opts || {};
+    var gridOrAnchor = resolveAssocGrid(anchorEl) || anchorEl;
+    /* HARD gate: viz modal never mounts #damAssocEditOverlay (z-index 12100 freeze). */
+    if (isInsideVizModal(gridOrAnchor) || isInsideVizModal(anchorEl)) {
+      if (opts.kind === "variant") {
+        openProductStripVariantAdd(opts);
+        return;
+      }
+      openVizProductMaterialAdd(anchorEl, opts);
+      return;
+    }
+    if (
+      opts.kind === "product" &&
+      isBrandingProductAssocAdd(gridOrAnchor, opts)
+    ) {
+      openBrandingProductAssocAdd(anchorEl, opts);
+      return;
+    }
+    if (
+      opts.kind === "product" &&
+      isVizProductMaterialsAdd(gridOrAnchor, opts)
+    ) {
+      openVizProductMaterialAdd(anchorEl, opts);
+      return;
+    }
+    // #region agent log
+    __damDbg("dam-assoc-edit.js:openMediaPicker", "entry", {
+      kind: opts.kind || "",
+      opening: _assocPickerOpening,
+      warmProducts: (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products || []).length,
+      fromSearchIndex: !!(global._DAM_FILE_INDEX && global._DAM_FILE_INDEX._fromSearchIndex),
+      variantCandidates: (opts.variantCandidates || []).length,
+    }, "H2");
+    // #endregion
+    /* HARD: re-entry / double-click must never stack pickers or re-parse file-index. */
+    if (_assocPickerOpening) {
+      if (document.getElementById("damAssocEditOverlay")) {
+        // #region agent log
+        __damDbg("dam-assoc-edit.js:openMediaPicker", "ignored_duplicate_while_open", { kind: opts.kind || "" }, "H2");
+        // #endregion
+        return;
+      }
+      // #region agent log
+      __damDbg("dam-assoc-edit.js:openMediaPicker", "blocked_stuck_flag", { kind: opts.kind || "" }, "H2");
+      // #endregion
+      _assocPickerOpening = false;
+      toast("Picker juz sie otwiera…");
+      return;
+    }
+    _assocPickerOpening = true;
+    /* Macrotask: click handler / CDP evaluate musi wrócić zanim budujemy DOM pickera. */
+    setTimeout(function () {
+      try {
+        openMediaPickerNow(anchorEl, opts);
+      } catch (errSync) {
+        console.error("[DamAssocEdit] openMediaPicker sync failed", errSync);
+        toast("Nie udalo sie otworzyc pickera: " + ((errSync && errSync.message) || errSync));
+        _assocPickerOpening = false;
+      }
+    }, 0);
+  }
+
+  function openMediaPickerNow(anchorEl, opts) {
     opts = opts || {};
     closePicker();
     ensureInjectedCss();
-    ensureFileIndex().then(function (fi) {
-      var products = (fi && fi.products) || [];
-      var selected = {};
-      (opts.selectedIds || []).forEach(function (id) {
-        selected[id] = true;
-      });
-      var pinnedIds = (opts.pinnedIds || opts.selectedIds || []).slice();
-      var pinnedSet = {};
-      pinnedIds.forEach(function (id) {
-        pinnedSet[id] = true;
-      });
+    _assocPickerOpening = true;
 
-      var overlay = document.createElement("div");
-      overlay.id = "damAssocEditOverlay";
-      overlay.className = "dam-assoc-edit-overlay";
-      overlay.setAttribute("role", "presentation");
+    /**
+     * HARD freeze fix (2026-07-22k): shell FIRST (empty + loading), THEN light
+     * search-index hydrate. Never wait on fetch/parse before painting overlay —
+     * waiting was the "click Dodaj = permanent freeze" regression.
+     * NEVER load file-index (~8MB) / branding-index on this path.
+     */
+    var needsProductIndex = opts.kind !== "variant";
+    // #region agent log
+    __damDbg("dam-assoc-edit.js:openMediaPickerNow", "start_shell_first", {
+      kind: opts.kind || "",
+      needsProductIndex: needsProductIndex,
+      hasSearchIndex: !!(global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries),
+      warmProducts: (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products || []).length,
+    }, "H1");
+    // #endregion
 
-      var pop = document.createElement("div");
-      pop.id = "damAssocEditPopover";
-      pop.className = "dam-tag-edit-popover dam-tag-edit-popover--wide dam-assoc-edit-popover";
-      pop.setAttribute("role", "dialog");
-      pop.setAttribute("aria-modal", "true");
+    var searchIndexReady = !!(global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries);
+    /* HARD 2026-07-23f: never materialize full catalog synchronously on click
+       (productsFromSearchIndex on warm index froze entire DAM on assoc Dodaj). */
+    var initialList = [];
+    var loading = !!needsProductIndex && !searchIndexReady;
+    if (!needsProductIndex) {
+      loading = false;
+    }
 
-      var head = opts.kind === "variant" ? "Warianty materiału" : "Skojarzone produkty";
-      var html =
-        '<div class="dam-tag-edit-popover__head">' +
-        "<span>" +
-        esc(head) +
-        '</span><button type="button" class="dam-tag-edit-popover__close" data-close aria-label="Zamknij">' +
-        '<i class="uil uil-times"></i></button></div>' +
-        '<div class="dam-assoc-edit-popover__pinned-wrap">' +
-        '<div class="dam-assoc-edit-popover__pinned-label">Aktualne</div>' +
-        '<div class="dam-assoc-edit-popover__pinned"></div>' +
-        "</div>" +
-        '<div class="dam-assoc-edit-popover__section-sep" aria-hidden="true"></div>' +
-        '<div class="dam-tag-edit-popover__search-wrap">' +
-        '<i class="uil uil-search" aria-hidden="true"></i>' +
-        '<input type="text" id="damAssocEditSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj tytuł, indeks, wariant…" autocomplete="off" />' +
-        "</div>" +
-        '<div class="dam-assoc-edit-popover__body">' +
-        '<aside class="dam-assoc-edit-popover__preview is-empty" id="damAssocEditPreview" aria-live="polite">' +
-        '<p class="dam-assoc-edit-popover__preview-label">Podgląd</p>' +
-        '<div class="dam-assoc-edit-popover__preview-frame">' +
-        '<img alt="" class="is-placeholder" />' +
-        '<div class="dam-assoc-edit-popover__preview-empty" aria-hidden="true">' +
-        '<i class="uil uil-image"></i><span>Najedź wynik</span></div>' +
-        "</div>" +
-        '<div class="dam-assoc-edit-popover__preview-caption">Najedź wynik, aby podejrzeć</div>' +
-        '<div class="dam-assoc-edit-popover__preview-meta"></div>' +
-        "</aside>" +
-        '<div class="dam-tag-edit-popover__list dam-assoc-edit-popover__list" role="listbox">';
+    try {
+      buildAssocMediaPickerUi(anchorEl, opts, initialList, loading);
+    } catch (eBuild) {
+      console.error("[DamAssocEdit] buildAssocMediaPickerUi failed", eBuild);
+      toast("Nie udalo sie otworzyc COMBO.");
+      _assocPickerOpening = false;
+      return;
+    }
+    _assocPickerOpening = false;
 
-      function lookupItem(id) {
-        if (opts.kind === "variant") {
-          var v = (opts.variantCandidates || []).find(function (x) {
-            return x && x.id === id;
+    if (!needsProductIndex) return;
+
+    /**
+     * HARD freeze fix 2026-07-23l: DO NOT bootstrap/parse search-index on Dodaj open.
+     * Parsing warm/cold index on the main thread froze DAM + blocked X (overlay 12100).
+     * Hydrate flag only — list stays "Wpisz nazwe…" until user types (search-as-you-type).
+     */
+    var popReady = document.getElementById("damAssocEditPopover");
+    if (popReady && typeof popReady._damAssocHydrateProducts === "function") {
+      popReady._damAssocHydrateProducts({ _indexReady: true });
+    }
+    if (!(global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries)) {
+      /* Idle bootstrap — never on click tick. */
+      setTimeout(function () {
+        if (!document.getElementById("damAssocEditPopover")) return;
+        ensureSearchIndexBootstrap()
+          .then(function (si) {
+            global._DAM_SEARCH_INDEX = si || global._DAM_SEARCH_INDEX;
+          })
+          .catch(function () {
+            /* user can still type later after retry */
           });
-          if (v) {
+      }, 400);
+    }
+  }
+
+  function buildAssocMediaPickerUi(anchorEl, opts, productsIn, isLoadingProducts) {
+    var __buildT0 = Date.now();
+    // #region agent log
+    __damDbg("dam-assoc-edit.js:buildAssocMediaPickerUi", "start", {
+      kind: opts.kind || "",
+      productsIn: (productsIn || []).length,
+      isLoadingProducts: !!isLoadingProducts,
+      variantCandidates: (opts.variantCandidates || []).length,
+    }, "H3");
+    // #endregion
+    var products = productsIn || [];
+    /**
+     * COMBO tabs PRODUKT | BRANDING stay (user requirement).
+     * Freeze fix: branding loads ONLY on tab click / typed search via
+     * /branding-search-picker (cap 80) — never full branding-index JSON.
+     */
+    var brandingDisabled = opts.kind === "variant";
+    var listTab = "products";
+    var summaryMode = false;
+    var pendingRemove = {};
+    var brandingSearch = null;
+    var brandingLoading = false;
+
+    var selectedProducts = {};
+    var selectedBranding = {};
+    (opts.selectedProductIds || opts.selectedIds || []).forEach(function (id) {
+      selectedProducts[id] = true;
+    });
+    (opts.selectedBrandingIds || []).forEach(function (id) {
+      if (id) selectedBranding[id] = true;
+    });
+
+    function activeSelected() {
+      return listTab === "branding" ? selectedBranding : selectedProducts;
+    }
+
+    var pinnedProductIds = (opts.pinnedProductIds || opts.pinnedIds || opts.selectedIds || []).slice();
+    var pinnedBrandingIds = (opts.pinnedBrandingIds || opts.selectedBrandingIds || []).slice();
+    var pinnedIds = pinnedProductIds;
+    var pinnedSet = {};
+    pinnedIds.forEach(function (id) {
+      pinnedSet[id] = true;
+    });
+
+    var overlay = document.createElement("div");
+    overlay.id = "damAssocEditOverlay";
+    overlay.className = "dam-assoc-edit-overlay";
+    overlay.setAttribute("role", "presentation");
+
+    var pop = document.createElement("div");
+    pop.id = "damAssocEditPopover";
+    pop.className = "dam-tag-edit-popover dam-tag-edit-popover--wide dam-assoc-edit-popover";
+    pop.setAttribute("role", "dialog");
+    pop.setAttribute("aria-modal", "true");
+
+    var head = opts.kind === "variant" ? "Warianty materiału" : "Skojarzone";
+    var html =
+      '<div class="dam-tag-edit-popover__head">' +
+      "<span>" +
+      esc(head) +
+      '</span><button type="button" class="dam-tag-edit-popover__close" data-close aria-label="Zamknij">' +
+      '<i class="uil uil-times"></i></button></div>' +
+      (opts.kind !== "variant" && !brandingDisabled
+        ? '<div class="dam-assoc-edit-popover__tabs" role="tablist" aria-label="Typ skojarzenia">' +
+          '<button type="button" class="dam-assoc-edit-popover__tab is-active" data-list-tab="products" role="tab" aria-selected="true">PRODUKT</button>' +
+          '<button type="button" class="dam-assoc-edit-popover__tab" data-list-tab="branding" role="tab" aria-selected="false">BRANDING</button>' +
+          "</div>"
+        : "") +
+      '<div class="dam-assoc-edit-popover__pinned-wrap">' +
+      '<div class="dam-assoc-edit-popover__pinned-label">Aktualne</div>' +
+      '<div class="dam-assoc-edit-popover__pinned"></div>' +
+      "</div>" +
+      '<div class="dam-assoc-edit-popover__section-sep" aria-hidden="true"></div>' +
+      '<div class="dam-tag-edit-popover__search-wrap">' +
+      '<div class="dam-assoc-edit-popover__search-row">' +
+      '<i class="uil uil-search" aria-hidden="true"></i>' +
+      '<input type="text" id="damAssocEditSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj tytuł, indeks, wariant…" autocomplete="off" />' +
+      "</div></div>" +
+      '<div class="dam-assoc-edit-popover__body">' +
+      '<aside class="dam-assoc-edit-popover__preview is-empty" id="damAssocEditPreview" aria-live="polite">' +
+      '<p class="dam-assoc-edit-popover__preview-label">Podgląd</p>' +
+      '<div class="dam-assoc-edit-popover__preview-frame">' +
+      '<img alt="" class="is-placeholder" />' +
+      '<div class="dam-assoc-edit-popover__preview-empty" aria-hidden="true">' +
+      '<i class="uil uil-image"></i><span>Najedź wynik</span></div>' +
+      "</div>" +
+      '<div class="dam-assoc-edit-popover__preview-caption">Najedź wynik, aby podejrzeć</div>' +
+      '<div class="dam-assoc-edit-popover__preview-meta"></div>' +
+      "</aside>" +
+      '<div class="dam-tag-edit-popover__list dam-assoc-edit-popover__list" role="listbox">';
+
+    function lookupBrandingEntry(id) {
+      id = String(id || "").trim();
+      if (!id) return null;
+      if (brandingSearch && brandingSearch.byId && brandingSearch.byId[id]) {
+        return brandingSearch.byId[id];
+      }
+      var entries = (brandingSearch && brandingSearch.entries) || [];
+      for (var bi = 0; bi < entries.length; bi++) {
+        if (entries[bi] && entries[bi].id === id) return entries[bi];
+      }
+      return null;
+    }
+
+    function lookupItem(id) {
+      id = String(id || "").trim();
+      if (!id) return { id: "", label: "", thumb: PLACEHOLDER_SVG, sub: "", path: "" };
+      if (opts.kind === "variant") {
+        var v = (opts.variantCandidates || []).find(function (x) {
+          return x && x.id === id;
+        });
+        if (v) {
+          return {
+            id: v.id,
+            label: v.name || v.label || v.id,
+            thumb: variantThumbFast(v),
+            sub: v.id || "",
+            path: v.path || "",
+          };
+        }
+      } else if (listTab === "branding") {
+        var be = lookupBrandingEntry(id);
+        if (be) {
+          return {
+            id: be.id,
+            label: brandingLabel(be),
+            thumb: brandingThumb(be),
+            sub: be.id || "",
+            path: be.path || "",
+          };
+        }
+        return { id: id, label: id, thumb: PLACEHOLDER_SVG, sub: "", path: "" };
+      } else {
+        var p = products.find(function (x) {
+          return x && x.id === id;
+        });
+        if (p) {
+          var revL = (p.revisions && p.revisions[0]) || {};
+          return {
+            id: p.id,
+            label: p.display_name || p.name || p.id,
+            thumb: productThumb(p),
+            sub: productIndexOf(p) || "",
+            path: p.path || "",
+            brand: p.brand || "",
+            category: p.category || "",
+            subcategory: p.subcategory_label || "",
+            langs: revL.langs || [],
+          };
+        }
+        var e = findSearchEntryById(id);
+        if (e) {
+          var stub = productsFromSearchIndex({ entries: [e] });
+          if (stub[0]) {
             return {
-              id: v.id,
-              label: v.name || v.label || v.id,
-              thumb: v.path && global.DamMediaPreview ? global.DamMediaPreview.previewUrl(v.path, v) : "",
-              sub: v.id || "",
-              path: v.path || "",
-            };
-          }
-        } else {
-          var p = products.find(function (x) {
-            return x && x.id === id;
-          });
-          if (p) {
-            var revL = (p.revisions && p.revisions[0]) || {};
-            return {
-              id: p.id,
-              label: p.display_name || p.name || p.id,
-              thumb: productThumb(p),
-              sub: productIndexOf(p) || "",
-              path: p.path || "",
-              brand: p.brand || "",
-              category: p.category || "",
-              subcategory: p.subcategory_label || "",
-              langs: revL.langs || [],
+              id: stub[0].id,
+              label: stub[0].display_name || stub[0].name || stub[0].id,
+              thumb: productThumb(stub[0]),
+              sub: productIndexOf(stub[0]) || "",
+              path: stub[0].path || "",
+              brand: stub[0].brand || "",
+              category: stub[0].category || "",
+              subcategory: stub[0].subcategory_label || "",
+              langs: [],
             };
           }
         }
-        return { id: id, label: id, thumb: PLACEHOLDER_SVG, sub: "", path: "" };
       }
+      return { id: id, label: id, thumb: PLACEHOLDER_SVG, sub: "", path: "" };
+    }
 
       function checkIconHtml(on, pinned) {
         if (on) return '<i class="uil uil-check"></i>';
@@ -825,7 +2033,7 @@
             esc(it.path) +
             '" title="Otworz folder" aria-label="Otworz folder"><i class="uil uil-folder"></i></button>';
         }
-        if (opts.kind !== "variant") {
+        if (opts.kind !== "variant" && listTab === "products") {
           actions +=
             '<button type="button" class="dam-assoc-edit-popover__row-btn" data-row-copy data-pid="' +
             esc(it.id) +
@@ -871,9 +2079,25 @@
       }
 
       function optionButtonHtml(it, pinned) {
-        var on = !!selected[it.id];
+        var sel = activeSelected();
+        var on = !!sel[it.id];
+        var pending = !!pendingRemove[it.id];
+        var rowCls = "dam-assoc-edit-popover__opt-row" + (pending ? " is-pending-remove" : "");
+        var softX =
+          pinned && on
+            ? '<button type="button" class="dam-assoc-edit-popover__soft-x" data-soft-remove data-id="' +
+              esc(it.id) +
+              '" aria-label="Oznacz do usuniecia" title="Oznacz do usuniecia"><i class="uil uil-times"></i></button>' +
+              (pending
+                ? '<button type="button" class="dam-assoc-edit-popover__undo-btn" data-soft-undo data-id="' +
+                  esc(it.id) +
+                  '">Cofnij</button>'
+                : "")
+            : "";
         return (
-          '<div class="dam-assoc-edit-popover__opt-row">' +
+          '<div class="' +
+          rowCls +
+          '">' +
           '<button type="button" class="dam-assoc-edit-popover__opt' +
           (on ? " is-selected" : "") +
           (pinned ? " is-pinned" : "") +
@@ -896,6 +2120,7 @@
           '<span class="dam-assoc-edit-popover__check" aria-hidden="true">' +
           checkIconHtml(on, pinned) +
           "</span></button>" +
+          softX +
           rowActionsHtml(it) +
           "</div>"
         );
@@ -908,29 +2133,39 @@
         scope.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
           var id = btn.getAttribute("data-id");
           function toggle() {
-            if (selected[id]) delete selected[id];
-            else selected[id] = true;
+            var sel = activeSelected();
+            if (sel[id]) delete sel[id];
+            else sel[id] = true;
+            if (pendingRemove[id]) delete pendingRemove[id];
             renderPinned();
             var s = pop.querySelector("#damAssocEditSearch");
             renderOptions(s ? s.value : "");
           }
-          /* Pkt 27-29: odznaczenie AKTUALNEGO skojarzenia = akcja destrukcyjna ->
-             hold-to-delete (ring). Dodawanie / ponowne zaznaczenie = zwykly klik. */
-          var isRemove = btn.classList.contains("is-pinned") && !!selected[id];
-          if (isRemove && global.DamDanger && typeof global.DamDanger.bind === "function") {
-            global.DamDanger.bind(btn, {
-              label: "Usun skojarzenie",
-              hint: "Przytrzymaj 3 sekundy, aby usunac skojarzenie",
-              holdMs: 3000,
-              onConfirm: toggle,
-            });
-          } else {
-            btn.addEventListener("click", function (e) {
-              e.preventDefault();
-              e.stopPropagation();
-              toggle();
-            });
-          }
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggle();
+          });
+        });
+        scope.querySelectorAll("[data-soft-remove]").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var id = btn.getAttribute("data-id") || "";
+            if (!id) return;
+            pendingRemove[id] = true;
+            renderPinned();
+          });
+        });
+        scope.querySelectorAll("[data-soft-undo]").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var id = btn.getAttribute("data-id") || "";
+            if (!id) return;
+            delete pendingRemove[id];
+            renderPinned();
+          });
         });
         scope.querySelectorAll("[data-row-folder]").forEach(function (btn) {
           btn.addEventListener("click", function (e) {
@@ -978,67 +2213,279 @@
         });
       }
 
+      function currentPinnedIds() {
+        if (opts.kind === "variant") return pinnedProductIds;
+        return listTab === "branding" ? pinnedBrandingIds : pinnedProductIds;
+      }
+
       function renderPinned() {
         var pinnedEl = pop.querySelector(".dam-assoc-edit-popover__pinned");
         if (!pinnedEl) return;
-        if (!pinnedIds.length) {
+        var ids = currentPinnedIds();
+        if (!ids.length) {
           pinnedEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Brak aktualnych skojarzen.</p>';
           setSearchPreview(pop, null);
           return;
         }
-        pinnedEl.innerHTML = pinnedIds
+        pinnedEl.innerHTML = ids
           .map(function (id) {
             return optionButtonHtml(lookupItem(id), true);
           })
           .join("");
         bindOptionButtons(pinnedEl);
-        /* Podglad: pierwsza przypieta miniatura (nie "Brak miniatury" przy otwarciu). */
         activatePreviewFromBtn(pinnedEl.querySelector(".dam-assoc-edit-popover__opt[data-id]"));
       }
 
-      function renderOptions(filter) {
+      function paintOptionList(listEl, items) {
+        if (!listEl || !document.getElementById("damAssocEditPopover")) return;
+        if (!items.length) {
+          listEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Brak wyników dla tego wyszukiwania.</p>';
+          var pinnedKeep = pop.querySelector(
+            ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
+          );
+          if (pinnedKeep) activatePreviewFromBtn(pinnedKeep);
+          else setSearchPreview(pop, null);
+          return;
+        }
+        listEl.innerHTML = items
+          .map(function (it) {
+            return optionButtonHtml(it, false);
+          })
+          .join("");
+        bindOptionButtons(listEl);
+        var pinnedBtn = pop.querySelector(
+          ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
+        );
+        if (pinnedBtn) activatePreviewFromBtn(pinnedBtn);
+        else {
+          var firstBtn = listEl.querySelector(".dam-assoc-edit-popover__opt[data-id]");
+          if (firstBtn) activatePreviewFromBtn(firstBtn);
+        }
+      }
+
+      function renderOptionsNow(filter, passGen) {
         var q = String(filter || "")
           .toLowerCase()
           .trim();
         var listEl = pop.querySelector(".dam-assoc-edit-popover__list");
-        if (!listEl) return;
-        var excl = buildAssocExclude(opts);
-        var seenIds = {};
-        var seenIdx = {};
-        var items = [];
-        if (opts.kind === "variant") {
-          (opts.variantCandidates || []).forEach(function (v) {
-            if (!v || !v.id || pinnedSet[v.id]) return;
-            if (seenIds[v.id]) return;
-            if (excl.ids[String(v.id)]) return;
-            var vIdx = normIndexKey(v.index || v.id);
-            if (vIdx && excl.indexes[vIdx]) return;
-            if (vIdx && seenIdx[vIdx]) return;
-            var blob = ((v.name || v.label || "") + " " + (v.id || "") + " " + (v.index || "")).toLowerCase();
+        if (!listEl || summaryMode) return;
+        if (passGen && passGen !== pop._damRenderPass) return;
+        // #region agent log
+        __damDbg("dam-assoc-edit.js:renderOptions", "start", {
+          kind: opts.kind || "",
+          listTab: listTab,
+          productsLen: products.length,
+          variantCandidates: (opts.variantCandidates || []).length,
+          filter: q.slice(0, 40),
+          brandingLoading: !!brandingLoading,
+        }, "H1");
+        // #endregion
+
+        if (opts.kind !== "variant" && listTab === "branding") {
+          if (brandingLoading || !brandingSearch) {
+            listEl.innerHTML =
+              '<p class="dam-tag-edit-popover__empty">Ladowanie katalogu brandingu…</p>';
+            return;
+          }
+          var bPinned = {};
+          pinnedBrandingIds.forEach(function (id) {
+            bPinned[id] = true;
+          });
+          var bItems = [];
+          (brandingSearch.entries || []).forEach(function (entry) {
+            if (!entry || !entry.id || bPinned[entry.id]) return;
+            var blob = (
+              String(entry.id || "") +
+              " " +
+              String(entry.name || "") +
+              " " +
+              String(entry.path || "")
+            ).toLowerCase();
             if (q && blob.indexOf(q) === -1) return;
+            bItems.push({
+              id: entry.id,
+              label: brandingLabel(entry),
+              thumb: brandingThumb(entry),
+              sub: entry.id,
+              path: entry.path || "",
+            });
+          });
+          requestAnimationFrame(function () {
+            if (passGen && passGen !== pop._damRenderPass) return;
+            paintOptionList(listEl, bItems);
+          });
+          return;
+        }
+
+        if (
+          opts.kind !== "variant" &&
+          listTab === "products" &&
+          isLoadingProducts &&
+          !products.length &&
+          !(global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries)
+        ) {
+          listEl.innerHTML =
+            '<p class="dam-tag-edit-popover__empty">Ladowanie katalogu produktow…</p>';
+          if (!pop._damAssocLoadGuard) {
+            pop._damAssocLoadGuard = setTimeout(function () {
+              if (!document.getElementById("damAssocEditPopover")) return;
+              if (!isLoadingProducts || products.length) return;
+              ensureSearchIndexBootstrap()
+                .then(function (si) {
+                  global._DAM_SEARCH_INDEX = si || global._DAM_SEARCH_INDEX;
+                  isLoadingProducts = false;
+                  renderOptions(filter);
+                })
+                .catch(function () {
+                  isLoadingProducts = false;
+                  listEl.innerHTML =
+                    '<p class="dam-tag-edit-popover__empty">Nie udalo sie zaladowac katalogu. Sprobuj ponownie.</p>';
+                });
+            }, 2500);
+          }
+          return;
+        }
+
+        /* Never linear-scan full file-index (viz warm catalog without _fromSearchIndex). */
+        if (
+          opts.kind !== "variant" &&
+          listTab === "products" &&
+          products.length > 600 &&
+          !(products[0] && products[0]._fromSearchIndex)
+        ) {
+          listEl.innerHTML =
+            '<p class="dam-tag-edit-popover__empty">Przygotowywanie lekkiego indeksu…</p>';
+          ensureSearchIndexBootstrap()
+            .then(function (si) {
+              global._DAM_SEARCH_INDEX = si || global._DAM_SEARCH_INDEX;
+              isLoadingProducts = false;
+              renderOptions(filter);
+            })
+            .catch(function () {
+              listEl.innerHTML =
+                '<p class="dam-tag-edit-popover__empty">Nie udalo sie zaladowac katalogu. Sprobuj ponownie.</p>';
+            });
+          return;
+        }
+
+        var excl = buildAssocExclude(opts);
+        var matchCap = 120;
+        var items = [];
+
+        if (opts.kind === "variant") {
+          var seenIds = {};
+          var seenIdx = {};
+          (opts.variantCandidates || []).some(function (v) {
+            if (!v || !v.id || pinnedSet[v.id]) return false;
+            if (seenIds[v.id]) return false;
+            if (excl.ids[String(v.id)]) return false;
+            var vIdx = normIndexKey(v.index || v.id);
+            if (vIdx && excl.indexes[vIdx]) return false;
+            if (vIdx && seenIdx[vIdx]) return false;
+            var blob = ((v.name || v.label || "") + " " + (v.id || "") + " " + (v.index || "")).toLowerCase();
+            if (q && blob.indexOf(q) === -1) return false;
             seenIds[v.id] = true;
             if (vIdx) seenIdx[vIdx] = true;
             items.push({
               id: v.id,
               label: v.name || v.label || v.id,
-              thumb: v.path && global.DamMediaPreview ? global.DamMediaPreview.previewUrl(v.path, v) : "",
+              thumb: variantThumbFast(v),
               sub: v.id || "",
               path: v.path || "",
             });
+            return items.length >= matchCap;
           });
-        } else {
-          products.forEach(function (p) {
-            if (!p || !p.id || pinnedSet[p.id]) return;
-            if (seenIds[p.id]) return;
-            /* Zakaz self-assoc / petli + dedupe po indeksie */
-            if (productMatchesExclude(p, excl)) return;
-            /* W kontekscie produktu/viz: nie proponuj wizualizacji jako "produktow" */
-            if (opts.filterType !== "all" && isVisualizationLike(p)) return;
+          paintOptionList(listEl, items);
+          __damDbg("dam-assoc-edit.js:renderOptions", "rendered", {
+            kind: opts.kind || "",
+            itemsLen: items.length,
+            listTab: listTab,
+          }, "H3");
+          return;
+        }
+
+        /* Typed filter: search-index lookup (by_prefix + search_blob) — O(cap) not O(catalog). */
+        if (opts.kind !== "variant" && listTab === "products" && q) {
+          var indexHits = searchProductIdsFromIndex(q, matchCap + 40);
+          if (indexHits.length) {
+            var productById = {};
+            products.forEach(function (p) {
+              if (p && p.id) productById[p.id] = p;
+            });
+            indexHits.some(function (id) {
+              if (pinnedSet[id] || items.length >= matchCap) return items.length >= matchCap;
+              var p = productStubById(id, productById, null);
+              if (!p || !p.id) return false;
+              if (productMatchesExclude(p, excl)) return false;
+              if (opts.filterType !== "all" && isVisualizationLike(p)) return false;
+              var rev0 = (p.revisions && p.revisions[0]) || {};
+              items.push({
+                id: p.id,
+                label: p.display_name || p.name || p.id,
+                thumb: productThumb(p),
+                sub: productIndexOf(p) || p.id,
+                path: p.path || "",
+                brand: p.brand || "",
+                category: p.category || "",
+                subcategory: p.subcategory_label || "",
+                langs: rev0.langs || [],
+              });
+              return items.length >= matchCap;
+            });
+            requestAnimationFrame(function () {
+              if (passGen && passGen !== pop._damRenderPass) return;
+              paintOptionList(listEl, items);
+            });
+            return;
+          }
+          /* Trafienie w search-index = 0 — natychmiast pusto, bez skanowania calego file-index. */
+          if (global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries) {
+            listEl.innerHTML =
+              '<p class="dam-tag-edit-popover__empty">Brak wyników dla „' +
+              esc(String(filter || "").trim()) +
+              '".</p>';
+            setSearchPreview(pop, null);
+            return;
+          }
+        }
+
+        /* Empty filter: never linear-scan whole catalog (freeze on viz + full file-index). */
+        if (!q && opts.kind !== "variant" && listTab === "products") {
+          listEl.innerHTML =
+            '<p class="dam-tag-edit-popover__empty">Wpisz nazwę, indeks lub tag, aby wyszukać produkt…</p>';
+          return;
+        }
+
+        /* Search-index loaded — no chunked scan fallback (would walk thousands of rows). */
+        if (global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries) {
+          listEl.innerHTML =
+            '<p class="dam-tag-edit-popover__empty">Brak wyników dla „' +
+            esc(String(filter || "").trim()) +
+            '".</p>';
+          setSearchPreview(pop, null);
+          return;
+        }
+
+        /* Chunked scan: yield every 350 rows so full file-index never blocks F5. */
+        var scanSeenIds = {};
+        var scanSeenIdx = {};
+        var scanPi = 0;
+        var scanChunk = 350;
+        function scanProductChunk() {
+          if (!document.getElementById("damAssocEditPopover")) return;
+          if (passGen && passGen !== pop._damRenderPass) return;
+          var end = Math.min(scanPi + scanChunk, products.length);
+          for (; scanPi < end && items.length < matchCap; scanPi++) {
+            var p = products[scanPi];
+            if (!p || !p.id || pinnedSet[p.id]) continue;
+            if (scanSeenIds[p.id]) continue;
+            if (productMatchesExclude(p, excl)) continue;
+            if (opts.filterType !== "all" && isVisualizationLike(p)) continue;
             var idxKey = normIndexKey(productIndexOf(p));
-            if (idxKey && seenIdx[idxKey]) return;
-            if (q && productSearchBlob(p).indexOf(q) === -1) return;
-            seenIds[p.id] = true;
-            if (idxKey) seenIdx[idxKey] = true;
+            if (idxKey && scanSeenIdx[idxKey]) continue;
+            if (q && productSearchBlob(p).indexOf(q) === -1) continue;
+            scanSeenIds[p.id] = true;
+            if (idxKey) scanSeenIdx[idxKey] = true;
             var rev0 = (p.revisions && p.revisions[0]) || {};
             items.push({
               id: p.id,
@@ -1051,32 +2498,204 @@
               subcategory: p.subcategory_label || "",
               langs: rev0.langs || [],
             });
-          });
+          }
+          if (items.length >= matchCap || scanPi >= products.length) {
+            requestAnimationFrame(function () {
+              if (passGen && passGen !== pop._damRenderPass) return;
+              paintOptionList(listEl, items);
+              __damDbg("dam-assoc-edit.js:renderOptions", items.length ? "rendered" : "empty", {
+                kind: opts.kind || "",
+                itemsLen: items.length,
+                listTab: listTab,
+              }, "H3");
+            });
+            return;
+          }
+          requestAnimationFrame(scanProductChunk);
         }
-        items = items.slice(0, 120);
-        if (!items.length) {
-          listEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Brak wyników dla tego wyszukiwania.</p>';
-          var pinnedKeep = pop.querySelector(
-            ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
-          );
-          if (pinnedKeep) activatePreviewFromBtn(pinnedKeep);
-          else setSearchPreview(pop, null);
+        requestAnimationFrame(scanProductChunk);
+      }
+
+      function renderOptions(filter) {
+        pop._damRenderPass = (pop._damRenderPass || 0) + 1;
+        var passGen = pop._damRenderPass;
+        if (pop._damRenderOptionsTimer) clearTimeout(pop._damRenderOptionsTimer);
+        var q = String(filter || "").trim();
+        /* Empty filter: paint list immediately (shell already in DOM). Deferred chain caused empty/frozen picker. */
+        if (!q) {
+          renderOptionsNow(filter, passGen);
           return;
         }
-        listEl.innerHTML = items.map(function (it) {
-          return optionButtonHtml(it, false);
-        }).join("");
-        bindOptionButtons(listEl);
-        /* Preferuj podglad z AKTUALNYCH (pinned), nie z pierwszego wyniku wyszukiwania. */
-        var pinnedBtn = pop.querySelector(
-          ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
-        );
-        if (pinnedBtn) {
-          activatePreviewFromBtn(pinnedBtn);
+        pop._damRenderOptionsTimer = setTimeout(function () {
+          pop._damRenderOptionsTimer = null;
+          if (!document.getElementById("damAssocEditPopover")) return;
+          renderOptionsNow(filter, passGen);
+        }, 70);
+      }
+
+      function effectiveIdsForTab(tabKey) {
+        var src = tabKey === "branding" ? selectedBranding : selectedProducts;
+        return Object.keys(src).filter(function (id) {
+          return src[id] && !pendingRemove[id];
+        });
+      }
+
+      function renderSummary() {
+        summaryMode = true;
+        var body = pop.querySelector(".dam-assoc-edit-popover__body");
+        var searchWrap = pop.querySelector(".dam-tag-edit-popover__search-wrap");
+        var pinnedWrap = pop.querySelector(".dam-assoc-edit-popover__pinned-wrap");
+        if (searchWrap) searchWrap.hidden = true;
+        if (pinnedWrap) pinnedWrap.hidden = true;
+        if (!body) return;
+        var rows = [];
+        if (opts.kind !== "variant") {
+          effectiveIdsForTab("products").forEach(function (id) {
+            var it = lookupItem(id);
+            rows.push(
+              '<div class="dam-assoc-edit-popover__summary-row"><span>PRODUKT</span><strong>' +
+                esc(it.label || id) +
+                "</strong></div>"
+            );
+          });
+          effectiveIdsForTab("branding").forEach(function (id) {
+            var it = lookupItem(id);
+            rows.push(
+              '<div class="dam-assoc-edit-popover__summary-row"><span>BRANDING</span><strong>' +
+                esc(it.label || id) +
+                "</strong></div>"
+            );
+          });
         } else {
-          var firstBtn = listEl.querySelector(".dam-assoc-edit-popover__opt[data-id]");
-          if (firstBtn) activatePreviewFromBtn(firstBtn);
+          effectiveIdsForTab("products").forEach(function (id) {
+            var it = lookupItem(id);
+            rows.push(
+              '<div class="dam-assoc-edit-popover__summary-row"><strong>' +
+                esc(it.label || id) +
+                "</strong></div>"
+            );
+          });
         }
+        Object.keys(pendingRemove).forEach(function (id) {
+          if (!pendingRemove[id]) return;
+          var it = lookupItem(id);
+          rows.push(
+            '<div class="dam-assoc-edit-popover__summary-row is-remove"><span>Usuniecie</span><strong>' +
+              esc(it.label || id) +
+              "</strong></div>"
+          );
+        });
+        body.innerHTML =
+          '<div class="dam-assoc-edit-popover__summary">' +
+          '<p class="dam-assoc-edit-popover__summary-title">Podsumowanie zmian</p>' +
+          '<div class="dam-assoc-edit-popover__summary-list">' +
+          (rows.length
+            ? rows.join("")
+            : '<p class="dam-tag-edit-popover__empty">Brak zmian do zatwierdzenia.</p>') +
+          "</div></div>";
+        updateActionsForSummary(true);
+      }
+
+      function exitSummary() {
+        summaryMode = false;
+        var body = pop.querySelector(".dam-assoc-edit-popover__body");
+        var searchWrap = pop.querySelector(".dam-tag-edit-popover__search-wrap");
+        var pinnedWrap = pop.querySelector(".dam-assoc-edit-popover__pinned-wrap");
+        if (searchWrap) searchWrap.hidden = false;
+        if (pinnedWrap) pinnedWrap.hidden = false;
+        if (!body) return;
+        body.innerHTML =
+          '<aside class="dam-assoc-edit-popover__preview is-empty" id="damAssocEditPreview" aria-live="polite">' +
+          '<p class="dam-assoc-edit-popover__preview-label">Podgląd</p>' +
+          '<div class="dam-assoc-edit-popover__preview-frame">' +
+          '<img alt="" class="is-placeholder" />' +
+          '<div class="dam-assoc-edit-popover__preview-empty" aria-hidden="true">' +
+          '<i class="uil uil-image"></i><span>Najedź wynik</span></div></div>' +
+          '<div class="dam-assoc-edit-popover__preview-caption">Najedź wynik, aby podejrzeć</div>' +
+          '<div class="dam-assoc-edit-popover__preview-meta"></div></aside>' +
+          '<div class="dam-tag-edit-popover__list dam-assoc-edit-popover__list" role="listbox"></div>';
+        updateActionsForSummary(false);
+        renderPinned();
+        var s = pop.querySelector("#damAssocEditSearch");
+        renderOptions(s ? s.value : "");
+      }
+
+      function updateActionsForSummary(inSummary) {
+        var actions = pop.querySelector(".dam-tag-edit-popover__actions");
+        if (!actions) return;
+        actions.querySelectorAll("[data-disk],[data-browse],[data-summary],[data-confirm]").forEach(function (el) {
+          el.hidden = !!inSummary;
+        });
+        var okBtn = actions.querySelector("[data-summary-ok]");
+        var backBtn = actions.querySelector("[data-summary-back]");
+        if (okBtn) okBtn.hidden = !inSummary;
+        if (backBtn) backBtn.hidden = !inSummary;
+        var cancelBtn = actions.querySelector("[data-cancel]");
+        if (cancelBtn) cancelBtn.hidden = !!inSummary;
+      }
+
+      function commitPicker() {
+        var payload = {
+          productIds: effectiveIdsForTab("products"),
+          brandingIds: effectiveIdsForTab("branding"),
+          listTab: listTab,
+        };
+        closePicker();
+        if (typeof opts.onConfirm === "function") {
+          opts.onConfirm(
+            listTab === "branding" ? payload.brandingIds : payload.productIds,
+            listTab === "branding" ? selectedBranding : selectedProducts,
+            payload
+          );
+        }
+      }
+
+      function paintTabs() {
+        pop.querySelectorAll("[data-list-tab]").forEach(function (btn) {
+          var on = btn.getAttribute("data-list-tab") === listTab;
+          btn.classList.toggle("is-active", on);
+          btn.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        var label = pop.querySelector(".dam-assoc-edit-popover__pinned-label");
+        if (label) {
+          label.textContent = listTab === "branding" ? "Aktualne (branding)" : "Aktualne (produkty)";
+        }
+        pinnedIds = currentPinnedIds();
+        pinnedSet = {};
+        pinnedIds.forEach(function (id) {
+          pinnedSet[id] = true;
+        });
+        renderPinned();
+        var s = pop.querySelector("#damAssocEditSearch");
+        renderOptions(s ? s.value : "");
+      }
+
+      function loadBrandingIfNeeded(query) {
+        if (brandingDisabled) return;
+        if (brandingLoading) return;
+        brandingLoading = true;
+        var listEl = pop.querySelector(".dam-assoc-edit-popover__list");
+        if (listEl) {
+          listEl.innerHTML =
+            '<p class="dam-tag-edit-popover__empty">Ladowanie katalogu brandingu…</p>';
+        }
+        searchBrandingPicker(query || "", 80, pinnedBrandingIds)
+          .then(function (res) {
+            brandingSearch = res || { entries: [], byId: {} };
+            brandingLoading = false;
+            if (listTab === "branding") {
+              var s = pop.querySelector("#damAssocEditSearch");
+              renderOptions(s ? s.value : "");
+            }
+          })
+          .catch(function () {
+            brandingLoading = false;
+            brandingSearch = { entries: [], byId: {} };
+            if (listTab === "branding" && listEl) {
+              listEl.innerHTML =
+                '<p class="dam-tag-edit-popover__empty">Blad ladowania brandingu (timeout 5s).</p>';
+            }
+          });
       }
 
       html +=
@@ -1090,53 +2709,153 @@
           ? '<button type="button" class="dam-tag-edit-popover__confirm dam-assoc-edit-popover__disk" data-browse data-dam-tip="Wyszukaj plik w eksploratorze">' +
             '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Wskaż plik</span></button>'
           : "") +
+        '<button type="button" class="dam-tag-edit-popover__confirm" data-summary><i class="uil uil-list-ul"></i><span>Podsumowanie</span></button>' +
         '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm><i class="uil uil-check"></i><span>Zatwierdź</span></button>' +
+        '<button type="button" class="dam-tag-edit-popover__confirm" data-summary-ok hidden><i class="uil uil-check"></i><span>Ok</span></button>' +
+        '<button type="button" class="dam-tag-edit-popover__cancel" data-summary-back hidden><i class="uil uil-arrow-left"></i><span>Anuluj</span></button>' +
         '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel><i class="uil uil-arrow-left"></i><span>Wstecz</span></button>' +
         "</div>";
       pop.innerHTML = html;
       overlay.appendChild(pop);
       document.body.appendChild(overlay);
+      // #region agent log
+      __damDbg("dam-assoc-edit.js:buildAssocMediaPickerUi", "dom_appended", {
+        kind: opts.kind || "",
+        ms: Date.now() - __buildT0,
+        overlayInDom: !!document.getElementById("damAssocEditOverlay"),
+      }, "H3");
+      // #endregion
       document.addEventListener("click", onDocClick, true);
       document.addEventListener("keydown", onDocKey, true);
 
       var search = pop.querySelector("#damAssocEditSearch");
       if (search) {
-        search.focus();
+        var productSearchTimer = null;
         search.addEventListener("input", function () {
-          renderOptions(search.value);
+          /* Debounce — never sync-scan catalog on every keystroke. */
+          clearTimeout(productSearchTimer);
+          productSearchTimer = setTimeout(function () {
+            if (!document.getElementById("damAssocEditPopover")) return;
+            if (listTab === "branding") {
+              loadBrandingIfNeeded(search.value || "");
+              return;
+            }
+            renderOptions(search.value);
+          }, 120);
         });
       }
-      renderPinned();
-      renderOptions("");
-      activatePreviewFromBtn(
-        pop.querySelector(".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]")
-      );
+
+      pop.querySelectorAll("[data-list-tab]").forEach(function (tabBtn) {
+        tabBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var next = commitAssocListTab(
+            tabBtn.getAttribute("data-list-tab"),
+            listTab,
+            brandingDisabled
+          );
+          if (next === listTab) return;
+          listTab = next;
+          paintTabs();
+          if (listTab === "branding") {
+            loadBrandingIfNeeded((search && search.value) || "");
+          }
+        });
+      });
+
+      var listBoot = pop.querySelector(".dam-assoc-edit-popover__list");
+      if (listBoot) {
+        listBoot.innerHTML = '<p class="dam-tag-edit-popover__empty">Ładowanie listy…</p>';
+      }
+      /* One macrotask after shell mount: list must paint in this turn (no rAF+setTimeout chain). */
+      setTimeout(function () {
+        if (!document.getElementById("damAssocEditPopover")) return;
+        renderPinned();
+        renderOptions("");
+        if (search) {
+          try {
+            search.focus({ preventScroll: true });
+          } catch (eFocus) {
+            search.focus();
+          }
+        }
+        __damDbg("dam-assoc-edit.js:buildAssocMediaPickerUi", "list_painted", {
+          kind: opts.kind || "",
+          variantCandidates: (opts.variantCandidates || []).length,
+        }, "H3");
+      }, 0);
 
       pop.querySelector("[data-close]") &&
         pop.querySelector("[data-close]").addEventListener("click", closePicker);
       pop.querySelector("[data-cancel]") &&
         pop.querySelector("[data-cancel]").addEventListener("click", closePicker);
+      pop.querySelector("[data-summary]") &&
+        pop.querySelector("[data-summary]").addEventListener("click", function () {
+          renderSummary();
+        });
       pop.querySelector("[data-confirm]") &&
         pop.querySelector("[data-confirm]").addEventListener("click", function () {
-          var ids = Object.keys(selected);
-          closePicker();
-          if (typeof opts.onConfirm === "function") opts.onConfirm(ids, selected);
+          renderSummary();
+        });
+      pop.querySelector("[data-summary-ok]") &&
+        pop.querySelector("[data-summary-ok]").addEventListener("click", function () {
+          commitPicker();
+        });
+      pop.querySelector("[data-summary-back]") &&
+        pop.querySelector("[data-summary-back]").addEventListener("click", function () {
+          exitSummary();
         });
       pop.querySelector("[data-disk]") &&
         pop.querySelector("[data-disk]").addEventListener("click", function () {
-          openDiskFolderPicker(opts, selected, function (ids) {
-            closePicker();
-            if (typeof opts.onConfirm === "function") opts.onConfirm(ids, selected);
+          openDiskFolderPicker(opts, selectedProducts, function (ids) {
+            ids.forEach(function (id) {
+              selectedProducts[id] = true;
+            });
+            renderPinned();
+            var s2 = pop.querySelector("#damAssocEditSearch");
+            renderOptions(s2 ? s2.value : "");
           });
         });
       pop.querySelector("[data-browse]") &&
         pop.querySelector("[data-browse]").addEventListener("click", function () {
-          openVariantBrowsePicker(opts, selected, function (ids) {
-            closePicker();
-            if (typeof opts.onConfirm === "function") opts.onConfirm(ids, selected);
+          openVariantBrowsePicker(opts, selectedProducts, function (ids) {
+            ids.forEach(function (id) {
+              selectedProducts[id] = true;
+            });
+            renderPinned();
+            var s2 = pop.querySelector("#damAssocEditSearch");
+            renderOptions(s2 ? s2.value : "");
           });
         });
-    });
+
+      pop._damAssocHydrateProducts = function (nextProducts) {
+        if (nextProducts && nextProducts._indexReady) {
+          isLoadingProducts = false;
+        } else {
+          products = nextProducts || [];
+          isLoadingProducts = false;
+        }
+        if (pop._damAssocLoadGuard) {
+          clearTimeout(pop._damAssocLoadGuard);
+          pop._damAssocLoadGuard = null;
+        }
+        var s = pop.querySelector("#damAssocEditSearch");
+        setTimeout(function () {
+          if (!document.getElementById("damAssocEditPopover")) return;
+          if (summaryMode) return;
+          renderPinned();
+          renderOptions(s ? s.value : "");
+        }, 0);
+      };
+  }
+
+  function openDamFolderPickerSafe(opts) {
+    if (!window.DamFolderPicker || typeof window.DamFolderPicker.open !== "function") {
+      toast("DamFolderPicker niedostepny - odswiez strone (cache).");
+      return false;
+    }
+    window.DamFolderPicker.open(opts);
+    return true;
   }
 
   function openVariantBrowsePicker(opts, selected, onDone) {
@@ -1144,10 +2863,61 @@
     var dir = start.replace(/\\/g, "/");
     var i = dir.lastIndexOf("/");
     if (i > 0) dir = dir.slice(0, i);
-    openFolderGrid(dir, function (picked) {
-      if (picked && picked.variant_id) selected[picked.variant_id] = true;
-      onDone(Object.keys(selected));
-    }, true);
+    openDamFolderPickerSafe({
+      startDir: dir,
+      mode: "file",
+      allowFolderPick: true,
+      title: "Wskaz plik wariantu",
+      showWindowsButton: true,
+      resolveBrandingAssetId: true,
+      onPicked: function (picked) {
+        if (!picked) return;
+        function commitKey(key) {
+          key = String(key || "").trim();
+          if (!key) {
+            toast("Nie udalo sie zapisac wariantu - pusty identyfikator.");
+            return;
+          }
+          selected[key] = true;
+          if (typeof onDone === "function") onDone(Object.keys(selected));
+        }
+        if (picked.type === "folder") {
+          var folder = picked.folder || picked.path;
+          if (!folder) {
+            toast("Brak folderu wariantu.");
+            return;
+          }
+          var folderNorm = normPath(folder);
+          searchBrandingPicker(String(folder).split(/[/\\]/).pop(), 40, [])
+            .then(function (res) {
+              var entries = (res && res.entries) || [];
+              var match = entries.find(function (entry) {
+                if (!entry || !entry.path) return false;
+                var ep = normPath(entry.path);
+                return ep === folderNorm || ep.indexOf(folderNorm + "/") === 0;
+              });
+              if (match && match.id) {
+                commitKey(match.id);
+              } else {
+                toast("Folder nie jest w indeksie brandingu.");
+                commitKey(folder);
+              }
+            })
+            .catch(function () {
+              toast("Nie udalo sie sprawdzic indeksu - zapisuje sciezke folderu.");
+              commitKey(folder);
+            });
+          return;
+        }
+        /* File path from DamFolderPicker.finish: path = branding asset id when resolve ok. */
+        var key = picked.id || picked.path || picked.filePath || "";
+        if (!key) {
+          toast("Brak id/sciezki wariantu po wyborze.");
+          return;
+        }
+        commitKey(key);
+      },
+    });
   }
 
   function openDiskFolderPicker(opts, selected, onDone) {
@@ -1155,140 +2925,33 @@
     var dir = start.replace(/\\/g, "/");
     var i = dir.lastIndexOf("/");
     if (i > 0) dir = dir.slice(0, i);
-    openFolderGrid(dir, function (picked) {
-      if (!picked || !picked.folder) return;
-      ensureFileIndex().then(function (fi) {
-        var products = (fi && fi.products) || [];
-        var ids = matchProductsByFolder(products, picked.folder);
-        if (!ids.length) {
-          toast("Nie znaleziono produktu dla tego folderu. Wybierz produkt z listy.");
-          return;
-        }
-        ids.forEach(function (id) {
-          selected[id] = true;
-        });
-        toast(
-          ids.length === 1
-            ? "Dodano produkt z folderu"
-            : "Dodano produkty z folderu: " + ids.length
-        );
-        if (typeof onDone === "function") onDone(Object.keys(selected));
-      });
-    }, false);
-  }
-
-  function openFolderGrid(startDir, onPicked, pickVariants) {
-    var existing = document.getElementById("damAssocFolderPicker");
-    if (existing) existing.remove();
-    var overlay = document.createElement("div");
-    overlay.id = "damAssocFolderPicker";
-    overlay.className = "dam-thumb-picker-overlay";
-    // Musi byc NAD nakladka edycji skojarzen (z-index 12100), inaczej nie da sie kliknac.
-    overlay.style.zIndex = "12300";
-    overlay.innerHTML =
-      '<div class="dam-thumb-picker-box">' +
-      '<div class="dam-thumb-picker__head"><strong>' +
-      (pickVariants ? "Wskaż plik wariantu" : "Wybierz folder projektu") +
-      "</strong>" +
-      '<button type="button" class="dam-admin-control" id="damAssocFolderPickerClose">×</button></div>' +
-      '<div class="dam-thumb-picker__nav">' +
-      '<button type="button" class="dam-admin-control" id="damAssocFolderPickerUp"><i class="uil uil-arrow-up"></i></button>' +
-      '<input type="text" id="damAssocFolderPickerPath" class="dam-thumb-picker__path-input" />' +
-      '<button type="button" class="dam-admin-control" id="damAssocFolderPickerGo">Idź</button>' +
-      "</div>" +
-      '<div class="dam-thumb-picker__grid" id="damAssocFolderPickerGrid">Ładowanie…</div></div>';
-    document.body.appendChild(overlay);
-    document.getElementById("damAssocFolderPickerClose").onclick = function () {
-      overlay.remove();
-    };
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) overlay.remove();
-    });
-
-    function loadDir(target) {
-      var grid = document.getElementById("damAssocFolderPickerGrid");
-      var pathInput = document.getElementById("damAssocFolderPickerPath");
-      if (grid) grid.innerHTML = "Ładowanie…";
-      fetch(bridgeUrl() + "/folder-browse?path=" + encodeURIComponent(target) + "&mode=assets")
-        .then(function (r) {
-          return r.json();
-        })
-        .then(function (data) {
-          grid = document.getElementById("damAssocFolderPickerGrid");
-          if (!grid) return;
-          if (!data || !data.ok) {
-            grid.innerHTML = "<p>Nie udało się otworzyć folderu.</p>";
+    openDamFolderPickerSafe({
+      startDir: dir,
+      mode: "folder",
+      title: "Wybierz folder",
+      showWindowsButton: true,
+      onPicked: function (picked) {
+        var folder = (picked && (picked.folder || picked.path)) || "";
+        if (!folder) return;
+        ensureFileIndex().then(function (fi) {
+          var products = (fi && fi.products) || [];
+          var ids = matchProductsByFolder(products, folder);
+          if (!ids.length) {
+            toast("Nie znaleziono produktu dla tego folderu. Wybierz produkt z listy.");
             return;
           }
-          if (pathInput) pathInput.value = data.path || target;
-          var folders = data.folders || [];
-          var files = data.files || [];
-          var html = "";
-          if (!pickVariants) {
-            html +=
-              '<button type="button" class="dam-thumb-picker__item dam-thumb-picker__item--folder dam-admin-control" data-select-folder="' +
-              esc(data.path || target) +
-              '"><i class="uil uil-check-circle"></i><span class="dam-thumb-picker__name">Użyj tego folderu</span></button>';
-          }
-          html += folders
-            .map(function (f) {
-              return (
-                '<button type="button" class="dam-thumb-picker__item dam-thumb-picker__item--folder dam-admin-control" data-open="' +
-                esc(f.path) +
-                '"><i class="uil uil-folder"></i><span class="dam-thumb-picker__name">' +
-                esc(f.name) +
-                "</span></button>"
-              );
-            })
-            .join("");
-          html += files
-            .map(function (f) {
-              return (
-                '<button type="button" class="dam-thumb-picker__item dam-admin-control" data-file="' +
-                esc(f.path) +
-                '" data-name="' +
-                esc(f.name) +
-                '"><span class="dam-thumb-picker__name">' +
-                esc(f.name) +
-                "</span></button>"
-              );
-            })
-            .join("");
-          grid.innerHTML = html || "<p>Folder pusty.</p>";
-          grid.querySelectorAll("[data-open]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              loadDir(btn.getAttribute("data-open"));
-            });
+          ids.forEach(function (id) {
+            selected[id] = true;
           });
-          grid.querySelectorAll("[data-select-folder]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              overlay.remove();
-              onPicked({ folder: btn.getAttribute("data-select-folder") });
-            });
-          });
-          grid.querySelectorAll("[data-file]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              overlay.remove();
-              onPicked({
-                path: btn.getAttribute("data-file"),
-                name: btn.getAttribute("data-name"),
-                variant_id: btn.getAttribute("data-file"),
-              });
-            });
-          });
+          toast(
+            ids.length === 1
+              ? "Dodano produkt z folderu"
+              : "Dodano produkty z folderu: " + ids.length
+          );
+          if (typeof onDone === "function") onDone(Object.keys(selected));
         });
-    }
-
-    document.getElementById("damAssocFolderPickerGo").onclick = function () {
-      loadDir(document.getElementById("damAssocFolderPickerPath").value || startDir);
-    };
-    document.getElementById("damAssocFolderPickerUp").onclick = function () {
-      var cur = document.getElementById("damAssocFolderPickerPath").value || startDir;
-      var p = cur.replace(/\\/g, "/");
-      var j = p.lastIndexOf("/");
-      if (j > 0) loadDir(p.slice(0, j));
-    };
-    loadDir(startDir);
+      }
+    });
   }
 
   function saveAssociations(ctx, productIds, variantIds, opts) {
@@ -1352,7 +3015,7 @@
 
   /**
    * Pelne ID skojarzen do edycji.
-   * Preferuj groupContext (juz przefiltrowany w UI brandingu) — NIE doklejaj
+   * Preferuj groupContext (juz przefiltrowany w UI brandingu) - NIE doklejaj
    * z powrotem folder_linked_product_ids (spray SLIDERY KATEGORIE).
    */
   function collectLinkedIdsFromCtx(ctx, kind) {
@@ -1391,26 +3054,70 @@
   }
 
   function openEditPicker(colEl, kind, ctx) {
+    /* Macrotask: "Edytuj wszystko" click must return before any list/index work. */
+    setTimeout(function () {
+      try {
+        openEditPickerNow(colEl, kind, ctx);
+      } catch (errOpen) {
+        console.error("[DamAssocEdit] openEditPicker failed", errOpen);
+        toast("Nie udalo sie otworzyc edycji: " + ((errOpen && errOpen.message) || errOpen));
+        _assocPickerOpening = false;
+      }
+    }, 0);
+  }
+
+  function openEditPickerNow(colEl, kind, ctx) {
+    // #region agent log
+    __damDbg("dam-assoc-edit.js:openEditPickerNow", "entry", {
+      kind: kind || "",
+      canEdit: canEditAssoc(),
+      variantCount: ((ctx && ctx.groupContext && ctx.groupContext.variants) || []).length,
+    }, "H5");
+    // #endregion
+    var assocGrid = resolveAssocGrid(colEl) || colEl;
+    if (isInsideVizModal(assocGrid) || isInsideVizModal(colEl)) {
+      if (kind === "variant") {
+        openProductStripVariantAdd(ctx || {});
+        return;
+      }
+      openVizProductMaterialAdd(colEl, ctx || {});
+      return;
+    }
+    if (kind === "product") {
+      if (isBrandingProductAssocAdd(assocGrid, ctx || {})) {
+        openBrandingProductAssocAdd(colEl, ctx || {});
+        return;
+      }
+      if (isVizProductMaterialsAdd(assocGrid, ctx || {})) {
+        openVizProductMaterialAdd(colEl, ctx || {});
+        return;
+      }
+    }
     if (!canEditAssoc()) {
       toast("Włącz tryb admina, aby edytować skojarzenia.");
       return;
     }
+    ctx = ctx || {};
+    if (!ctx.groupContext) ctx.groupContext = {};
     var selectedIds = collectLinkedIdsFromCtx(ctx, kind);
+    var brandingIds = kind === "product" ? collectBrandingIdsFromCtx(ctx) : [];
     var excludeIds = [];
     var excludeIndexes = [];
-    var gc = ctx.groupContext || {};
+    var gc = ctx.groupContext;
     if (gc.product_id) excludeIds.push(gc.product_id);
     if (gc.source_product_id) excludeIds.push(gc.source_product_id);
     if (gc.product_index) excludeIndexes.push(gc.product_index);
     if (gc.index) excludeIndexes.push(gc.index);
     if (ctx.asset && ctx.asset.product_id) excludeIds.push(ctx.asset.product_id);
     if (ctx.asset && ctx.asset.product_index) excludeIndexes.push(ctx.asset.product_index);
-    /* Kontekst wizualizacji / produktu: filtr typu produktu (bez innych wizualizacji) */
     var filterType = kind === "product" ? "product" : "all";
-    if (ctx.sourceType === "viz" || ctx.mode === "viz" || (ctx.asset && /viz|wizual/i.test(String(ctx.asset.type || ctx.asset.kind || "")))) {
+    if (
+      ctx.sourceType === "viz" ||
+      ctx.mode === "viz" ||
+      (ctx.asset && /viz|wizual/i.test(String(ctx.asset.type || ctx.asset.kind || "")))
+    ) {
       filterType = "product";
     }
-    /* Upewnij sie, ze groupContext ma pelna liste do zapisu/undo (nie tylko uciety linked_products). */
     if (kind === "product") {
       gc.linked_product_ids = selectedIds.slice();
       var byId = {};
@@ -1427,31 +3134,38 @@
     openMediaPicker(colEl, {
       kind: kind,
       selectedIds: selectedIds,
+      selectedProductIds: selectedIds,
+      selectedBrandingIds: brandingIds,
       pinnedIds: selectedIds.slice(),
-      variantCandidates: ctx.groupContext.variants || [],
+      pinnedProductIds: selectedIds.slice(),
+      pinnedBrandingIds: brandingIds.slice(),
+      variantCandidates: (gc.variants || []).slice(),
       asset: ctx.asset,
-      groupContext: ctx.groupContext,
+      groupContext: gc,
       excludeIds: excludeIds,
       excludeIndexes: excludeIndexes,
       filterType: filterType,
-      onConfirm: function (ids) {
-        var prevPids = (ctx.groupContext.linked_products || [])
-          .map(function (p) { return p && p.id; })
+      onConfirm: function (ids, selectedMap, payload) {
+        payload = payload || {};
+        var nextProductIds = payload.productIds || ids || [];
+        var nextBrandingIds = payload.brandingIds || [];
+        var prevPids = (gc.linked_products || [])
+          .map(function (p) {
+            return p && p.id;
+          })
           .filter(Boolean);
-        var prevVids = (ctx.groupContext.variants || [])
-          .map(function (v) { return v && v.id; })
+        var prevVids = (gc.variants || [])
+          .map(function (v) {
+            return v && v.id;
+          })
           .filter(Boolean);
-        var pids = kind === "product" ? ids : prevPids;
-        var vids = kind === "variant" ? ids : prevVids;
-
-        /* Pkt 32: cooldown / soft-delete. Jesli zapis USUWA skojarzenia,
-           daj okno "Cofnij" (~7 s) przywracajace poprzedni stan. */
+        var pids = kind === "product" ? nextProductIds : prevPids;
+        var vids = kind === "variant" ? nextProductIds : nextBrandingIds.length ? nextBrandingIds : prevVids;
         var prevForKind = kind === "product" ? prevPids : prevVids;
-        var nextForKind = ids || [];
+        var nextForKind = kind === "product" ? nextProductIds : kind === "variant" ? nextProductIds : nextBrandingIds;
         var removed = prevForKind.filter(function (x) {
           return nextForKind.indexOf(x) === -1;
         });
-
         saveAssociations(ctx, pids, vids, { silentToast: removed.length > 0 }).then(function () {
           if (typeof ctx.onRefresh === "function") ctx.onRefresh();
           if (removed.length && global.DamDanger && typeof global.DamDanger.toastUndo === "function") {
@@ -1611,7 +3325,7 @@
     });
   }
 
-  /** Shift+minus na kafelku WARIANTY MATERIAŁU — usuwa wariant z grupy. */
+  /** Shift+minus na kafelku WARIANTY MATERIAŁU - usuwa wariant z grupy. */
   function quickRemoveVariantAssoc(ctx, variantId) {
     if (!canEditAssoc() || !variantId) return Promise.resolve();
     var prevVids = collectLinkedIdsFromCtx(ctx, "variant");
@@ -1736,7 +3450,7 @@
     btn.className = "dam-assoc-quick-minus";
     btn.setAttribute("role", "button");
     btn.tabIndex = 0;
-    var tipText = tip || "Shift + przytrzymaj 2 s, aby usunąć";
+    var tipText = tip || "Shift + przytrzymaj 1,5 s, aby usunąć";
     btn.setAttribute("aria-label", tipText);
     btn.title = tipText;
     btn.setAttribute("data-dam-tip", tipText);
@@ -1846,7 +3560,7 @@
           function () {
             softHideAllFileTile(tile);
           },
-          "Shift + przytrzymaj 2 s, aby ukryć z listy (nie usuwa z dysku)"
+          "Shift + przytrzymaj 1,5 s, aby ukryć z listy (nie usuwa z dysku)"
         );
       });
       bindShiftHoverHost(panel);
@@ -1871,13 +3585,22 @@
         grid.querySelectorAll(".dam-assoc-quick-minus").forEach(function (btn) {
           btn.classList.toggle("is-shift-visible", !!down);
         });
-        if (down && grid.classList.contains("dam-media-preview__assoc-grid")) {
-          var plus = grid.querySelector(".dam-media-preview__assoc-plus-tile");
-          if (!plus) {
+        if (down) {
+          var plusMissing = !grid.querySelector(".dam-media-preview__assoc-plus-tile");
+          if (
+            plusMissing &&
+            (grid.classList.contains("dam-media-preview__assoc-grid") ||
+              grid.classList.contains("dam-media-preview__variant-grid"))
+          ) {
             grid.dispatchEvent(new MouseEvent("mousemove", { shiftKey: true, bubbles: true }));
           }
         }
       });
+    if (typeof global.showAdminShiftPlus === "function") {
+      global.showAdminShiftPlus(!!down);
+    } else if (global.DamAdminShiftPlus && typeof global.DamAdminShiftPlus.show === "function") {
+      global.DamAdminShiftPlus.show(!!down);
+    }
   }
 
   function ensureGlobalShiftKeyLatch(scopeEl) {
@@ -1910,7 +3633,7 @@
   }
 
   /**
-   * Shift+hover UX — JEDNA sciezka globalna:
+   * Shift+hover UX - JEDNA sciezka globalna:
    * branding (#damMediaPreviewAssoc) + viz (#damVizModalAssoc) + studio all-files
    * + WARIANTY / explorer media-preview assoc tiles.
    * - item z data-product-id → minus usuwa produkt
@@ -1928,7 +3651,7 @@
     var scope = resolveModalScope(assocEl) || assocEl;
 
     /* Collect grids from assoc pane AND modal (Elementy / Surowe mount late).
-       Use array identity — object-keying HTMLElements collapses to one slot. */
+       Use array identity - object-keying HTMLElements collapses to one slot. */
     var gridList = [];
     function collectGrids(root) {
       if (!root || !root.querySelectorAll) return;
@@ -1949,33 +3672,113 @@
           grid.closest(".dam-media-preview__elementy-panel, .dam-media-preview__elementy")
         );
         function ensurePlusTile() {
-          /* brandComposer20260721a: material WARIANTY grid gets plus → Edytuj wszystko (variant). */
-          if (
-            isVariantGrid &&
-            !grid.classList.contains("dam-media-preview__variant-grid--material")
-          ) {
-            return null;
-          }
+          /* Assoc products + material/product WARIANTY: Shift+Admin square Dodaj. */
           if (inElementy) return null;
+          if (!canEditAssoc()) return null;
           var plus = grid.querySelector(".dam-media-preview__assoc-plus-tile");
-          if (plus) return plus;
-          plus = document.createElement("button");
-          plus.type = "button";
-          plus.className = "dam-media-preview__assoc-plus-tile";
-          plus.setAttribute("aria-label", "Edytuj wszystko — dodaj skojarzenie");
-          plus.innerHTML = '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span>';
-          plus.addEventListener("click", function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
-            var editBtn = col.querySelector("[data-assoc-edit-all]");
-            if (editBtn) {
-              editBtn.click();
-              return;
+          if (!plus) {
+            plus = document.createElement("button");
+            plus.type = "button";
+            plus.className =
+              "dam-media-preview__assoc-plus-tile dam-admin-shift-plus dam-admin-shift-plus--tile";
+            var isProductStrip = !!(
+              grid.classList.contains("dam-viz-modal__variant-strip") ||
+              (grid.closest && grid.closest(".dam-viz-modal__product-variants"))
+            );
+            plus.setAttribute(
+              "aria-label",
+              isVariantGrid
+                ? isProductStrip
+                  ? "Dodaj wariant produktu"
+                  : "Dodaj wariant materiału"
+                : "Edytuj wszystko - dodaj skojarzenie"
+            );
+            plus.innerHTML = '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span>';
+            if (grid.firstChild) {
+              grid.insertBefore(plus, grid.firstChild);
+            } else {
+              grid.appendChild(plus);
             }
-            openEditPicker(col, isVariantGrid ? "variant" : "product", ctx);
-          });
-          grid.appendChild(plus);
+          }
+          if (global.DamAdminShiftPlus && typeof global.DamAdminShiftPlus.mount === "function") {
+            global.DamAdminShiftPlus.mount(plus, "tile");
+          }
+          if (!plus._damAssocPlusBound) {
+            plus._damAssocPlusBound = true;
+            plus.addEventListener("click", function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              // #region agent log
+              __damDbg(
+                "dam-assoc-edit.js:plusClick",
+                "sync",
+                {
+                  isVariantGrid: isVariantGrid,
+                  variantCandidates: (((ctx || {}).groupContext || {}).variants || []).length,
+                },
+                "H6"
+              );
+              // #endregion
+              var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
+              var isProductStrip = !!(
+                grid.classList.contains("dam-viz-modal__variant-strip") ||
+                (grid.closest && grid.closest(".dam-viz-modal__product-variants"))
+              );
+              /* Macrotask: nigdy nie buduj pickera w tym samym ticku co click (freeze UI). */
+              setTimeout(function () {
+                try {
+                  /* Soft reset only - never dam:panic-reset here (re-enters handlers / freeze). */
+                  _assocPickerOpening = false;
+                  closePicker();
+                  if (!canEditAssoc()) {
+                    toast("Włącz tryb admina, aby edytować skojarzenia.");
+                    return;
+                  }
+                  if (
+                    global.DamAdminShiftPlus &&
+                    typeof global.DamAdminShiftPlus.isRevealed === "function" &&
+                    !global.DamAdminShiftPlus.isRevealed() &&
+                    !grid.classList.contains("is-shift-hover") &&
+                    !document.documentElement.classList.contains("is-shift-revealed")
+                  ) {
+                    return;
+                  }
+                  /* HARD: #damVizModal Dodaj NEVER opens heavy COMBO (freeze + dead X). */
+                  if (isInsideVizModal(grid) || isInsideVizModal(col)) {
+                    if (isVariantGrid) {
+                      openProductStripVariantAdd(ctx || {});
+                      return;
+                    }
+                    openVizProductMaterialAdd(col, ctx || {});
+                    return;
+                  }
+                  /* Material WARIANTY: lekki DamFolderPicker. */
+                  if (isVariantGrid) {
+                    if (ctx && ctx.asset && ctx.asset.id) {
+                      openMaterialVariantAdd(ctx || {});
+                      return;
+                    }
+                    openProductStripVariantAdd(ctx || {});
+                    return;
+                  }
+                  if (isVizProductMaterialsAdd(grid, ctx || {})) {
+                    openVizProductMaterialAdd(col, ctx || {});
+                    return;
+                  }
+                  if (isBrandingProductAssocAdd(grid, ctx || {})) {
+                    openBrandingProductAssocAdd(col, ctx || {});
+                    return;
+                  }
+                  /* Branding "Edytuj wszystko" / non-viz: COMBO with PRODUKT|BRANDING tabs (lazy). */
+                  openEditPickerNow(col, "product", ctx || {});
+                } catch (errClick) {
+                  console.error("[DamAssocEdit] plus click failed", errClick);
+                  toast("Blad dodawania wariantu (UI nie zablokowane).");
+                  _assocPickerOpening = false;
+                }
+              }, 0);
+            });
+          }
           return plus;
         }
 
@@ -2032,16 +3835,48 @@
           });
         });
 
+        /* Viz modal: WARIANTY PRODUKTU chips (.dam-viz-modal__variant). */
+        if (
+          grid.classList.contains("dam-viz-modal__variant-strip") ||
+          (grid.closest && grid.closest(".dam-viz-modal__product-variants"))
+        ) {
+          grid.querySelectorAll(".dam-viz-modal__variant[data-variant-key]").forEach(function (item) {
+            wireQuickMinusControl(
+              item,
+              grid,
+              function () {
+                var vkey = item.getAttribute("data-variant-key") || "";
+                var vpath = item.getAttribute("data-path") || "";
+                if (typeof ctx.onRemoveProductVariant === "function") {
+                  ctx.onRemoveProductVariant(vkey, vpath, item);
+                  return;
+                }
+                toast("Brak handlera usuwania wariantu — odśwież stronę.");
+              },
+              "Shift + przytrzymaj 2 s, aby usunąć wariant"
+            );
+          });
+        }
+
+        /* Prefetch plus node (hidden until Shift+Admin). */
+        ensurePlusTile();
+
         bindShiftHoverHost(grid, {
           onShiftOn: function () {
             ensurePlusTile();
+            if (typeof global.showAdminShiftPlus === "function") {
+              global.showAdminShiftPlus(true);
+            }
           },
         });
       });
 
-    /* Studio all-files live under modal (sibling of assoc pane) — wire globally. */
+    /* Studio all-files live under modal (sibling of assoc pane) - wire globally. */
     wireStudioAllFiles(scope);
     ensureGlobalShiftKeyLatch(scope);
+    if (global.DamAdminShiftPlus && typeof global.DamAdminShiftPlus.ensureLatch === "function") {
+      global.DamAdminShiftPlus.ensureLatch();
+    }
   }
 
   /** Odetnij produkt od materialu brandingowego (viz Shift+minus). */
@@ -2117,13 +3952,21 @@
       btn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
+        var col = btn.closest(".dam-media-preview__assoc-col") || assocEl;
+        if (isVizProductMaterialsAdd(assocEl.querySelector(".dam-media-preview__assoc-grid") || assocEl, ctx)) {
+          openVizProductMaterialAdd(btn, ctx);
+          return;
+        }
+        if (isBrandingProductAssocAdd(assocEl.querySelector(".dam-media-preview__assoc-grid") || assocEl, ctx)) {
+          openBrandingProductAssocAdd(btn, ctx);
+          return;
+        }
         var materials = ctx.materialsList || [];
         var asset = materials[0] || ctx.asset;
         if (!asset) {
-          toast("Brak materiału do edycji skojarzeń.");
+          toast("Brak materialu do edycji skojarzen.");
           return;
         }
-        var col = btn.closest(".dam-media-preview__assoc-col") || assocEl;
         var ids = [];
         var seen = {};
         function add(id) {
@@ -2270,6 +4113,10 @@
     closePicker: closePicker,
     /** Otwiera picker skojarzen (produkty/warianty); uzywane tez w QA/CDP gdy synthetic click nie odpala handlerow. */
     openPicker: openMediaPicker,
+    /** Lekki dodaj wariant materialu (folder) - bez ciezkiego assoc shell / branding-index. */
+    openMaterialVariantAdd: openMaterialVariantAdd,
+    openVizProductMaterialAdd: openVizProductMaterialAdd,
+    openBrandingProductAssocAdd: openBrandingProductAssocAdd,
     /** Shift+edit na karcie materialu brandingowego (viz assoc / Elementy). */
     openEditPicker: openEditPicker,
     save: saveAssociations,

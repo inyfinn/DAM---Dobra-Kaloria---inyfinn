@@ -1,12 +1,13 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en" dir="ltr" class="dam-booting">
 
 <head>
+  <script src="./assets/js/dam-panic-reload.js?v=panicHead20260722k"></script>
   <script>(function(){try{var r=document.documentElement,p=localStorage.getItem('dam_theme_pref')||localStorage.getItem('theme')||'light',t=p;if(p==='system'){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t!=='dark'&&t!=='light')t='light';r.setAttribute('data-theme',t);r.style.colorScheme=t;if(p==='system'||p==='dark'||p==='light')r.setAttribute('data-dam-theme-pref',p);}catch(e){}})();</script>
   <style id="dam-shell-boot-critical">
 html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
   </style>
-  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=shellboot20260721a">
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=perObjSkel20260722c">
   <script>
   (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
   </script>
@@ -35,12 +36,12 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 		if (localStorage.layout) document.documentElement.setAttribute("data-nav", localStorage.navbar);
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
-<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=geexTaste20260721a">
+<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=darkFix20260722e">
 <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=ctaUnify20260721b">
-<link rel="stylesheet" href="./assets/css/dam-app.css?v=ctaUnify20260721b">
+<link rel="stylesheet" href="./assets/css/dam-app.css?v=darkFix20260722e">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=geexF3tut20260721a">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=assocSplit20260721c">
-<link rel="stylesheet" href="./assets/css/dam-branding.css?v=assocSplit20260721c">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=peekGone20260722a">
+<link rel="stylesheet" href="./assets/css/dam-branding.css?v=emptyMascotTrim20260723w">
 <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200g">
 </head>
 
@@ -891,7 +892,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
                     <div id="damSearchTags" class="dam-tag-groups"></div>
                   </div>
                   <div id="damAdminBar" class="dam-admin-bar" role="status">
-                    <span id="damAdminBarText">Status F/X/D: most zapisuje na dysk Marketing + <code>lifecycle-status.json</code> / <code>product-status.json</code> (+ Postgres KV gdy baza online). localStorage w tej przegladarce to tylko kopia robocza.</span>
+                    <span id="damAdminBarText">Status F/X/D: most zapisuje na dysk Marketing + <code>lifecycle-status.json</code> / <code>product-status.json</code> (+ Postgres KV gdy baza online). localStorage w tej przeglądarce to tylko kopia robocza.</span>
                   </div>
                   <p id="damExplorerStatus" class="dam-explorer-status-line" hidden aria-live="polite"></p>
                   <div class="dam-viz-grid-toolbar dam-explorer-grid-toolbar">
@@ -2300,32 +2301,33 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<script src="./assets/js/dam-i18n.js?v=studiofix20260721e"></script>
 	<script src="./assets/js/dam-runtime.js?v=20260718app1"></script>
 	<script src="./assets/js/dam-version.js?v=3.1.0"></script>
-	<script src="./assets/js/dam-shell.js?v=prefsKv20260721a"></script>
-	<script src="./assets/js/dam-search.js?v=viztb20260720d"></script>
+	<script src="./assets/js/dam-shell.js?v=freezeFix20260722i"></script>
+	<script src="./assets/js/dam-search.js?v=freezeFix20260722i"></script>
 	<script src="./assets/js/dam-tag-bar.js?v=hub20260719j12"></script>
 	<script src="./assets/js/dam-labels.js?v=langAdj20260721b"></script>
 	<script src="./assets/js/dam-badges.js?v=prefsKv20260721a"></script>
-	<script src="./assets/js/dam-tag-edit.js?v=tagPopGrid20260721b"></script>
+	<script src="./assets/js/dam-tag-edit.js?v=freezeFix20260722k"></script>
 	<script src="./assets/js/dam-paths.js?v=selects20260720a"></script>
+	<script src="./assets/js/dam-folder-picker.js?v=comboPickFix20260723b"></script>
 	<script src="./assets/js/dam-icons.js?v=20260718uxbatch1"></script>
 	<script src="./assets/js/dam-brand-filter.js?v=20260718showall1"></script>
 	<script src="./assets/js/dam-tooltips.js?v=lifehistmodal20260721b"></script>
 	<script src="./assets/js/dam-assoc-action-tips.js?v=1"></script>
 	<script src="./assets/js/dam-modal-shared.js?v=vizCtaNav20260721b"></script>
 	<script src="./assets/js/dam-marketing-id.js?v=usab20260720c"></script>
-	<link rel="stylesheet" href="./assets/css/dam-viz-modal.css?v=assocSplit20260721c">
-	<script src="./assets/js/dam-assoc-edit.js?v=minusGlobal20260721b"></script>
-	<script src="./assets/js/dam-preview-truth.js?v=previewRedis20260721a"></script>
-	<script src="./assets/js/dam-media-preview.js?v=previewRedis20260721a"></script>
+	<link rel="stylesheet" href="./assets/css/dam-viz-modal.css?v=assocFreezeFix20260722a">
+	<script src="./assets/js/dam-assoc-edit.js?v=holdTip1500ms20260723a"></script>
+	<script src="./assets/js/dam-preview-truth.js?v=noThumbWarm20260722c"></script>
+	<script src="./assets/js/dam-media-preview.js?v=assocFreezeFix20260722c"></script>
 	<script src="./assets/js/dam-user-prefs.js?v=prefsKv20260721a"></script>
-  <script src="./assets/js/dam-danger.js?v=safedel20260720b"></script>
+  <script src="./assets/js/dam-danger.js?v=holdRing1500ms20260723b"></script>
 	<script src="./assets/vendor/js/gsap/gsap.min.js"></script>
 	<script src="./assets/js/dam-loader.js?v=actionsLeftLoader20260721a"></script>
 	<script src="./assets/js/dam-grid-reveal.js?v=i18nboot20260721e"></script>
-	<script src="./assets/js/dam-explorer.js?v=forceModalArrow20260721b"></script>
-	<script src="./assets/js/dam-explorer-add-product.js?v=expc20260720d"></script>
+	<script src="./assets/js/dam-explorer.js?v=expAddVariantFix20260723a"></script>
+	<script src="./assets/js/dam-explorer-add-product.js?v=expAddVariantFix20260723a"></script>
 	<script>
-	/* Po zaladowaniu DOM: jednorazowy init jesli folder pusty (bez petli reload). */
+	/* Po zaladowaniu DOM: jednorazowy init jeśli folder pusty (bez petli reload). */
 	(function () {
 	  function bootOnce() {
 	    if (!window.DamExplorer || typeof window.DamExplorer.init !== "function") return;
@@ -2341,7 +2343,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	  }
 	})();
 	</script>
-	<script src="./assets/js/dam-tutorial.js?v=assocSplit20260721c"></script>
+	<script src="./assets/js/dam-tutorial.js?v=cheerSlideR70t20260722a"></script>
 </body>
 
 </html>

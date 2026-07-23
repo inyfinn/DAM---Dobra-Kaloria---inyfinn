@@ -3414,13 +3414,51 @@
     return parts;
   }
 
+  function pickEmptyMascotBundle() {
+    if (window.DamEmptyMascot && typeof window.DamEmptyMascot.pick === "function") {
+      return window.DamEmptyMascot.pick();
+    }
+    return {
+      text: "Skryło się to tak, że nawet najstarsi graficy tego nie znajdą.",
+      mood: "think",
+      poseUrl: "assets/img/maskotka/pose-think-q.png"
+    };
+  }
+
+  function wrapEmptyWithMascot(cardHtml) {
+    var bundle = pickEmptyMascotBundle();
+    var pose = String(bundle.poseUrl || "").replace(/'/g, "%27");
+    var line = bundle.text || "";
+    return (
+      '<div class="dam-empty-mascot-row" data-empty-mood="' +
+      esc(bundle.mood || "think") +
+      '">' +
+      '<div class="dam-empty-mascot-row__speak">' +
+      '<div class="dam-empty-mascot-row__bubble">' +
+      '<p class="dam-empty-mascot-row__bubble-text">' +
+      esc(line) +
+      "</p>" +
+      "</div>" +
+      '<div class="dam-empty-mascot-row__mascot" aria-hidden="true" style="--dam-empty-pose:url(\'' +
+      pose +
+      "')\">" +
+      '<span class="dam-empty-mascot-row__mascot-img"></span>' +
+      "</div>" +
+      "</div>" +
+      '<div class="dam-empty-mascot-row__card">' +
+      cardHtml +
+      "</div>" +
+      "</div>"
+    );
+  }
+
   function emptyGridMessage(defaultMsg, totalBeforeLimit) {
     if (totalBeforeLimit > 0) {
-      return (
+      return wrapEmptyWithMascot(
         '<div class="dam-branding-empty dam-branding-empty--limited" role="status">' +
-        '<p class="dam-branding-empty__desc">' +
-        esc(defaultMsg) +
-        "</p></div>"
+          '<p class="dam-branding-empty__desc">' +
+          esc(defaultMsg) +
+          "</p></div>"
       );
     }
     var filters = activeFilterLabels();
@@ -3433,14 +3471,14 @@
           .join("") +
         "</ul>"
       : "";
-    return (
+    return wrapEmptyWithMascot(
       '<div class="dam-branding-empty" role="status">' +
-      '<div class="dam-branding-empty__icon" aria-hidden="true"><i class="uil uil-image-slash"></i></div>' +
-      '<h3 class="dam-branding-empty__title">Brak wyników</h3>' +
-      '<p class="dam-branding-empty__desc">Żaden materiał nie pasuje do aktywnych filtrów w tej sekcji.</p>' +
-      filterHtml +
-      '<button type="button" class="geex-btn geex-btn--primary-transparent dam-branding-clear-filters">Wyczyść filtry</button>' +
-      "</div>"
+        '<div class="dam-branding-empty__icon" aria-hidden="true"><i class="uil uil-image-slash"></i></div>' +
+        '<h3 class="dam-branding-empty__title">Brak wyników</h3>' +
+        '<p class="dam-branding-empty__desc">Żaden materiał nie pasuje do aktywnych filtrów w tej sekcji.</p>' +
+        filterHtml +
+        '<button type="button" class="geex-btn geex-btn--primary-transparent dam-branding-clear-filters">Wyczyść filtry</button>' +
+        "</div>"
     );
   }
 

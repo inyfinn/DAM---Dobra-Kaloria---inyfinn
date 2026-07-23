@@ -30,6 +30,8 @@ Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 10. **Em-dash ban:** zakaz `?` i `?` w UI, commit messages, copy agentow. Tylko `-`.
 11. **Nie kopiowac** kodu structure-mcp do DAM; tylko wiedza domenowa (sloty 0-4, indeksy).
 12. **Weryfikacja UI (2026-07-18):** po kazdej zmianie wizualnej - screenshot przegladarki + Read obrazu. Zakaz oddania "na oko"/sam CDP. Sidebar collapsed: logo w calosci czytelne (`object-fit: contain`, nie crop). Regula: `.cursor/rules/verify-ui-after-changes.mdc`.
+12a. **Serwery przed browserem (HARD, 2026-07-22):** `:8765` + `:8766` musza odpowiedziec HTTP 2xx w **5 s** (`scripts/ops/smoke-dam-ports.ps1` lub `curl.exe --max-time 5`). Brak = martwe - **nie** `browser_navigate`, restart `python apps/desktop/serve_browser.py`, smoke ponownie, **kontynuuj zadanie**. Kazde curl/fetch/MCP z timeoutem; wiszacy browser MCP != done. Regula: `.cursor/rules/server-timeout-never-hang.mdc`, `code-doctrine.md` §5.0.
+12a2. **Zacinanie agenta = Browser MCP (2026-07-23, HARD):** `CallMcpTool` (`browser_navigate` / `browser_lock` / czasem screenshot) wisi **minuty** az do `interrupted` (~500s–1400s). **To nie jest wolny kod DAM** — tool MCP nie wraca (zablokowany Chromium/Electron webview, wiszacy lock, niewidoczna karta). **ZAKAZ `browser_navigate`** — agent **nigdy** nie otwiera nowego URL przez MCP (nawet z `?v=` cache-bust). Nawigacja = **tylko karta, ktora user dolaczyl w czacie** (`Browser Tab` / Browser ID z kontekstu): krotki `browser_tabs` list → `browser_cdp` `Runtime.evaluate` / `browser_snapshot` na **tej** karcie. Pusta karta = prosba do usera o reczny refresh/URL, **nie** navigate agenta. **Neutralizacja deliverable:** (1) kod + cache-bust + `node --check` + `curl.exe --max-time 5`; (2) **nie** zaczynaj tury od browser MCP; (3) MCP >~10s bez wyniku = porzuc browser, oddaj kod; (4) nie parallelizuj navigate+Write. UI screenshot tylko gdy karta juz na wlasciwej stronie.
 12b. **Plany (HARD, 2026-07-21):** każdy plan techniczny przez globalny skill `/planner`
     (`~/.cursor/skills/planner/SKILL.md`) — rada Grok Planner + Composer Critic, 10–20 rund
     lub konwergencja; tie/niewiedza = AskQuestion do usera. Reguła: `~/.cursor/rules/planner-mad-always.mdc`.
@@ -1138,3 +1140,30 @@ eturn !isSourceVariantFile(v). Zrodla tylko SourceMount w belce akcji.
 
 - 2026-07-21: Etykiety jezykow = Polski/Niemiecki/Angielski (nie kraje). #damVizModalMeta klik = Folder/reveal. Zrodlo: naming-dictionary + DamLabels. Instrukcja ui.lang_labels_are_languages.
 
+## #146 (2026-07-22) - PAMIEC-PODRECZNA / C-WARM: indexed-only; M: later; pause X: walk
+
+- **User decision HARD (2026-07-22):** Zostaw aktywny C-WARM w spokoju na teraz. Biezacy job trafial w sciezki Synology/cloud-only na X:.
+- **Regula na przyszle prosby o "pamiec podreczna" / warm miniatur:**
+  1. Dysk **M:** w przyszlosci = materialy w pelni dostepne lokalnie (preferowany zrodlo full warm, gdy bedzie gotowy).
+  2. **Do tego czasu / na teraz:** warm **tylko** to, co program **juz indeksuje** (sciezki z istniejacych indeksow DAM: `file-index`, `branding-index`, powiazane listy). **NIE** chodz calymi drzewami Marketing. **NIE** probuj materializowac plikow Synology Drive online-only.
+  3. **Zakaz:** wymyslanie skanowania calego X: gdy user prosi o cache.
+- **Sesja assoc-dash-branding/session-02:** G-WARM pozostaje **InProgress** (pause udokumentowany w process.md). Zakres inventory: **A only** (indexed paths), nie A∪B walk Marketing, do czasu M:. DoD commit stref UI (B/A/C) **nie wymaga** `avif_pct >= 85`.
+
+## #147 (2026-07-22) - Cache ephemeral: Redis/PAMIEC tylko first paint; klik = dysk
+
+- **User HARD:** Elementy z pamieci podrecznej ladujesz przez Redis **tylko** zeby strona szybciej sie pokazala.
+- Po zaladowaniu / po kliknieciu pokazujesz **zrodlowe grafiki z dysku** (`/media`), **nigdy** cache jako staly obiekt UI.
+- PI: `preview.cache.ephemeral_only` (+ dopisek w `preview.cache.redis`). Grid = thumb-cache OK; modal/lightbox = `/media`.
+
+
+## 2026-07-23 - CHECKPOINT: Dodaj wariant produktu DZIALA
+
+Status (user confirmed live): w modalu Wizualizacje przycisk Dodaj wariant
+(`button.dam-media-preview__assoc-plus-tile[data-product-variant-plus]`, SHIFT reveal)
+dziala (UI + flow otwarcia).
+
+NIE PSUJ tego przycisku / SHIFT reveal / strip wariantow przy kolejnych fixach.
+
+Osobny bug: zapis nowego wariantu czasem sie nie dodaje (regresja) - nie mylic z przyciskiem.
+
+Browser: zakaz Browser MCP navigate (zacina agenta) - headless CDP / curl.

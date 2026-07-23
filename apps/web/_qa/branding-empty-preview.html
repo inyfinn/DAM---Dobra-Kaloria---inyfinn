@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>QA branding empty: bubble + mascot low / card high RIGHT</title>
+  <link rel="stylesheet" href="http://127.0.0.1:8765/assets/css/dam-branding.css?v=emptyMascotTrim20260723w" />
+  <style>
+    :root {
+      --dam-primary: #ab54db;
+      --dam-surface: #fff;
+      --dam-border: #ececf2;
+      --dam-text: #1e1e2f;
+      --dam-hub-border: #e0dfe8;
+      --dam-hub-muted: #8f8b9f;
+    }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f4f3f8; padding: 24px; }
+    #damBrandingSectionGrid {
+      background: #eceaf3;
+      border-radius: 16px;
+      padding: 20px;
+      min-height: 480px;
+      overflow: visible;
+    }
+    .geex-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: 1px solid #ab54db;
+      background: transparent;
+      color: #ab54db;
+      font: inherit;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="damBrandingSectionGrid">
+    <div class="dam-branding-empty-wrap">
+      <div class="dam-empty-mascot-row" data-empty-mood="think">
+        <div class="dam-empty-mascot-row__speak">
+          <div class="dam-empty-mascot-row__bubble">
+            <p class="dam-empty-mascot-row__bubble-text">Zero hitów. Ale dymek mam - to już coś!</p>
+          </div>
+          <div class="dam-empty-mascot-row__mascot" aria-hidden="true" style="--dam-empty-pose:url('http://127.0.0.1:8765/assets/img/maskotka/pose-think-q.png?v=trimAlpha20260723b')">
+            <span class="dam-empty-mascot-row__mascot-img"></span>
+          </div>
+        </div>
+        <div class="dam-empty-mascot-row__card">
+          <div class="dam-branding-empty" role="status">
+            <div class="dam-branding-empty__icon" aria-hidden="true">&#128683;</div>
+            <h3 class="dam-branding-empty__title">Brak wyników</h3>
+            <p class="dam-branding-empty__desc">Żaden materiał nie pasuje do aktywnych filtrów w tej sekcji.</p>
+            <ul class="dam-branding-empty__filters">
+              <li>Szukaj: dsad</li>
+              <li>Tylko grafiki</li>
+            </ul>
+            <button type="button" class="geex-btn geex-btn--primary-transparent dam-branding-clear-filters">Wyczyść filtry</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

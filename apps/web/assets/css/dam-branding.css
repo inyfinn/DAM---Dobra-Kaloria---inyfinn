@@ -1,4 +1,4 @@
-/* Branding hub — layout only; karty = dam-viz-card z dam-brand.css */
+﻿/* Branding hub â€” layout only; karty = dam-viz-card z dam-brand.css */
 
 /* Discovery panel removed from branding.html (empty spacer when no recent).
    Keep selectors inert if leftover markup appears. */
@@ -153,48 +153,48 @@
   white-space: nowrap;
 }
 
+/* Legacy outer frame removed â€” tabs live inside .dam-search-wrap--branding-chrome */
 .dam-branding-tabs-row {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  margin: 0 0 12px;
-  padding: 8px 10px;
-  border: 1px solid var(--dam-border, #ececf2);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--dam-surface, #fff) 88%, var(--dam-surface-muted, #f5f6fa));
+  display: contents;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .dam-branding-tabs-cluster {
+  display: contents;
+}
+
+/* Single chrome: search + tabs in one panel (no second framed row). */
+.dam-search-wrap--panel.dam-search-wrap--branding-chrome {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 12px;
+}
+
+.dam-search-wrap--branding-chrome .dam-branding-tabs {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 16px;
   width: 100%;
-  min-width: 0;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 14%, transparent);
+  background: transparent;
 }
 
-.dam-branding-tabs-row .dam-branding-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 0;
-}
-
-/* Archive switch sits inline next to „Pokaż wszystko” (same flex row as tabs). */
-.dam-branding-tabs > .dam-branding-scope-toggles {
+/* Archive switch inline in tablist â€” no extra framed wrapper. */
+.dam-search-wrap--branding-chrome .dam-branding-tabs > .dam-switch {
   display: inline-flex;
   flex: 0 0 auto;
-  flex-wrap: nowrap;
   align-items: center;
   align-self: center;
-  gap: 8px 12px;
+  gap: 8px;
   margin: 0;
-  padding: 4px 10px;
   min-height: 40px;
-  border: 1px solid var(--dam-border, #ececf2);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 70%, #fff);
+  padding: 0 4px 0 2px;
 }
 
 .dam-branding-scope-toggles {
@@ -202,10 +202,10 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
-  padding: 6px 12px;
-  border: 1px solid var(--dam-border, #ececf2);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 70%, #fff);
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
 .dam-branding-tabs__sep {
@@ -421,7 +421,7 @@
 }
 
 .dam-branding-grid {
-  /* dam-viz-grid w dam-brand.css — tylko odstęp panelu */
+  /* dam-viz-grid w dam-brand.css â€” tylko odstÄ™p panelu */
   margin-top: 4px;
 }
 
@@ -435,13 +435,13 @@
   /* 84px z prawej = pas na help fab (#damHelpFab, ~48px + 24px marginesu),
      zeby fab nie zaslanial licznika */
   margin: -44px 84px 10px auto;
-  /* pad 15/26 = baza 7/14 +8/+12 — spójnie z Viz light count pill */
+  /* pad 15/26 = baza 7/14 +8/+12 â€” spĂłjnie z Viz light count pill */
   padding: 15px 26px;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 10%, var(--dam-border, #ececf2));
-  /* HARD: always light elevated pill — never dark toast (user 2026-07-20) */
-  background: #fff;
-  background: color-mix(in srgb, #fff 96%, transparent);
+  /* HARD: always light elevated pill â€” never dark toast (user 2026-07-20) */
+  background: var(--dam-surface, #fff);
+  background: color-mix(in srgb, var(--dam-surface, #fff) 96%, transparent);
   box-shadow:
     0 2px 8px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.04),
     0 8px 24px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.08);
@@ -719,8 +719,8 @@
   margin-bottom: 12px;
 }
 
-/* FROZEN ANATOMY (C3 / memory §123) — .dam-branding-card layout locked.
-   Spec: agents/shared/bento-card-freeze.md — nie redesign; chrome hubów OK. */
+/* FROZEN ANATOMY (C3 / memory Â§123) â€” .dam-branding-card layout locked.
+   Spec: agents/shared/bento-card-freeze.md â€” nie redesign; chrome hubĂłw OK. */
 .dam-branding-card .dam-viz-thumb {
   padding-top: calc(8px * var(--dam-viz-card-scale, 1));
 }
@@ -767,7 +767,7 @@
   border-radius: 12px 12px 0 0;
   position: relative;
   isolation: isolate;
-  /* clip-path + contain: paint — transform:scale nie wychodzi poza zaokraglenie karty */
+  /* clip-path + contain: paint â€” transform:scale nie wychodzi poza zaokraglenie karty */
   clip-path: inset(0 round 12px 12px 0 0);
   contain: paint;
 }
@@ -815,7 +815,7 @@
   flex-shrink: 0;
   width: 100%;
   max-width: 100%;
-  margin-top: 0; /* body gap handles title-wrap → meta (viz rhythm) */
+  margin-top: 0; /* body gap handles title-wrap â†’ meta (viz rhythm) */
   margin-bottom: 0;
   padding: 0 6px;
   box-sizing: border-box;
@@ -827,7 +827,7 @@
 
 .dam-branding-card .dam-viz-card__actions {
   flex-shrink: 0;
-  /* Same as .dam-viz-card__actions: body gap 14 + extra 4 = 18 meta→CTA */
+  /* Same as .dam-viz-card__actions: body gap 14 + extra 4 = 18 metaâ†’CTA */
   margin-top: var(--dam-branding-card-actions-gap, 4px);
   width: 100%;
 }
@@ -927,7 +927,7 @@
   padding: 2px 8px;
   line-height: 1.25;
   min-height: 0;
-  border-radius: var(--_dam-badge-radius, 14px); /* F4 MASTER — was 999px */
+  border-radius: var(--_dam-badge-radius, 14px); /* F4 MASTER â€” was 999px */
   letter-spacing: 0.01em;
 }
 
@@ -957,6 +957,161 @@
 .dam-branding-empty-wrap {
   grid-column: 1 / -1;
   padding: 8px 0 24px;
+  overflow: visible;
+}
+
+/*
+ * Shared empty: [bubble + mascot LEFT, lower] | [card RIGHT, higher].
+ * Tip of pose must stay uncut (overflow visible + tall slot).
+ */
+.dam-empty-mascot-row {
+  /* 150px + 15% → tip clearance stays relative via calc */
+  --dam-empty-medal: 172.5px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  /* room for leaf tip above medal */
+  padding: 28px 8px 8px;
+  overflow: visible;
+}
+
+.dam-empty-mascot-row__speak {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 0 0 auto;
+  max-width: min(340px, 46%);
+  /* mascot cluster LOWER than card */
+  margin-top: 52px;
+  overflow: visible;
+}
+
+.dam-empty-mascot-row__bubble {
+  position: relative;
+  z-index: 2;
+  width: max-content;
+  max-width: min(300px, 100%);
+  min-width: 200px;
+  padding: 12px 16px 14px;
+  border-radius: 16px;
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #ececf2);
+  box-shadow:
+    0 10px 24px rgba(0, 130, 68, 0.14),
+    0 2px 8px rgba(23, 22, 30, 0.06);
+  box-sizing: border-box;
+}
+
+.dam-empty-mascot-row__bubble::after {
+  content: "";
+  position: absolute;
+  left: 36px;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  background: var(--dam-surface, #fff);
+  border-right: 1px solid var(--dam-border, #ececf2);
+  border-bottom: 1px solid var(--dam-border, #ececf2);
+  transform: rotate(45deg);
+}
+
+.dam-empty-mascot-row__bubble-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--dam-text, #1e1e2f);
+  text-align: left;
+}
+
+.dam-empty-mascot-row__mascot {
+  position: relative;
+  flex: 0 0 var(--dam-empty-medal);
+  width: var(--dam-empty-medal);
+  /* medal size FIXED; tip may stick slightly above circle */
+  height: calc(var(--dam-empty-medal) * 1.18);
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.dam-empty-mascot-row__mascot::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--dam-empty-medal);
+  height: var(--dam-empty-medal);
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--dam-border, #ececf2);
+  box-shadow:
+    0 10px 26px rgba(0, 130, 68, 0.34),
+    0 2px 8px rgba(0, 130, 68, 0.18);
+}
+
+.dam-empty-mascot-row__mascot-img {
+  /* sprite box ≈ medal — trimmed PNGs fill circle; tip can overflow up */
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: calc(var(--dam-empty-medal) * 1.14);
+  background-image: var(--dam-empty-pose);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center bottom;
+  filter: drop-shadow(0 2px 4px rgba(0, 130, 68, 0.2));
+  pointer-events: none;
+}
+
+.dam-empty-mascot-row__card {
+  flex: 0 0 auto;
+  width: min(520px, calc(100% - 230px));
+  min-width: 0;
+  /* card HIGHER than mascot */
+  margin-top: 0;
+  margin-left: auto;
+  box-sizing: border-box;
+}
+
+.dam-empty-mascot-row .dam-branding-empty {
+  margin: 0;
+  max-width: none;
+  width: 100%;
+  /* solid surface — nie „comic bubble” */
+  background: var(--dam-surface, #fff);
+  border-style: solid;
+  border-color: var(--dam-hub-border, #e0dfe8);
+  box-shadow: 0 8px 24px rgba(23, 22, 30, 0.06);
+}
+
+@media (max-width: 640px) {
+  .dam-empty-mascot-row {
+    flex-direction: column;
+    align-items: stretch;
+    --dam-empty-medal: 138px;
+  }
+  .dam-empty-mascot-row__speak {
+    margin-top: 0;
+    max-width: 100%;
+    align-self: flex-start;
+  }
+  .dam-empty-mascot-row__mascot {
+    align-self: flex-start;
+  }
+  .dam-empty-mascot-row__card {
+    margin-top: 12px;
+    margin-left: 0;
+    width: 100%;
+    flex: 1 1 auto;
+  }
 }
 
 .dam-branding-empty {
@@ -972,6 +1127,7 @@
   background: color-mix(in srgb, var(--dam-surface, #fff) 92%, #f3f0ff);
   max-width: 520px;
   margin: 12px auto 0;
+  box-sizing: border-box;
 }
 
 .dam-branding-empty__icon {
@@ -1335,7 +1491,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   min-width: fit-content;
   max-width: none;
   margin-top: 14px;
-  margin-bottom: -8px; /* body gap 14 → chip↔meta ~6px air */
+  margin-bottom: -8px; /* body gap 14 â†’ chipâ†”meta ~6px air */
   padding: 6px 20px;
   overflow: visible;
   text-overflow: clip;
@@ -1355,7 +1511,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 .dam-branding-clear-btn {
   border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
   border-radius: 999px;
-  background: #fff;
+  background: var(--dam-surface, #fff);
   color: var(--dam-primary, #ab54db);
   font-size: 12px;
   font-weight: 600;
@@ -1366,7 +1522,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 
 .dam-branding-clear-btn:hover,
 .dam-branding-clear-btn:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, var(--dam-surface, #fff));
 }
 
 .dam-branding-thumb-stack {
@@ -1381,7 +1537,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 }
 
 .dam-branding-thumb-stack__layer--back {
-  /* Mniejszy offset — caly stack miesci sie w clipowanym .dam-viz-thumb */
+  /* Mniejszy offset â€” caly stack miesci sie w clipowanym .dam-viz-thumb */
   transform: translate(5px, 5px) scale(0.92);
   opacity: 0.55;
   filter: saturate(0.85);
@@ -1396,7 +1552,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   overflow: hidden !important;
 }
 
-/* legacy — filtry używają .dam-tag-groups (dam-brand.css) */
+/* legacy â€” filtry uĹĽywajÄ… .dam-tag-groups (dam-brand.css) */
 
 .dam-branding-context {
   display: flex;
@@ -1665,9 +1821,9 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 .dam-media-preview__title-block {
   display: flex;
   flex-direction: column;
-  /* Title → ID 5px; ID → filemeta 10px; filemeta internal 5px (parity viz). */
+  /* Title â†’ ID 5px; ID â†’ filemeta 10px; filemeta internal 5px (parity viz). */
   gap: 0;
-  /* Badges → title gap owned by dam-brand / dam-viz-modal adjacent rules (≥12px HARD). */
+  /* Badges â†’ title gap owned by dam-brand / dam-viz-modal adjacent rules (â‰Ą12px HARD). */
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -1686,11 +1842,11 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 #damMediaPreviewTitleMeta,
 .dam-media-preview__title-meta-slot {
   flex: 0 0 auto;
-  margin: 5px 0 0; /* title → ID = 5px */
+  margin: 5px 0 0; /* title â†’ ID = 5px */
   max-width: 100%;
 }
 
-/* Inner wrap nie doklada drugiego gap — slot juz trzyma 5px. */
+/* Inner wrap nie doklada drugiego gap â€” slot juz trzyma 5px. */
 #damMediaPreviewTitleMeta .dam-media-preview__title-meta,
 .dam-media-preview__title-meta-slot .dam-media-preview__title-meta {
   margin: 0;
@@ -1701,7 +1857,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  margin-top: 10px; /* ID → filename = 10px (global) */
+  margin-top: 10px; /* ID â†’ filename = 10px (global) */
   min-width: 0;
   width: 100%;
 }
@@ -1710,12 +1866,12 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   min-width: 0;
   word-break: break-word;
   font-size: inherit;
-  margin-top: 0; /* offset na #damMediaPreviewTitle (10px) — nie podwajaj */
+  margin-top: 0; /* offset na #damMediaPreviewTitle (10px) â€” nie podwajaj */
 }
 
 /* Ext tag = small variant MASTER badge (primitives BADGES section); gap 10px od tytulu */
 .dam-media-preview__ext-tag {
-  margin-inline-start: 10px; /* celowe odsunicie od nazwy pliku — anatomy w dam-primitives.css */
+  margin-inline-start: 10px; /* celowe odsunicie od nazwy pliku â€” anatomy w dam-primitives.css */
 }
 
 .dam-media-preview__ext-tag--png,
@@ -1949,8 +2105,37 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   height: 70px;
   object-fit: contain;
   border-radius: 6px;
-  background: #f4f4f6;
+  /* Checkerboard: przezroczyste PNG (ELEMENTY) nie moga lezec na czarnym. */
+  background-color: #f4f4f6;
+  background-image:
+    linear-gradient(45deg, #e4e4ea 25%, transparent 25%),
+    linear-gradient(-45deg, #e4e4ea 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e4e4ea 75%),
+    linear-gradient(-45deg, transparent 75%, #e4e4ea 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
   border: 1px solid #ececf1;
+}
+
+/* Elementy panel: jawny jasny checker â€” dark theme nie moze wstawic #000. */
+.dam-media-preview__elementy-panel .dam-media-preview__assoc-thumb,
+html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__assoc-thumb {
+  background-color: var(--dam-surface-muted, #f5f6fa) !important;
+  background-image:
+    linear-gradient(45deg, #e4e4ea 25%, transparent 25%),
+    linear-gradient(-45deg, #e4e4ea 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e4e4ea 75%),
+    linear-gradient(-45deg, transparent 75%, #e4e4ea 75%) !important;
+  background-size: 10px 10px !important;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0px !important;
+}
+html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__assoc-thumb {
+  background-color: #2a2933 !important;
+  background-image:
+    linear-gradient(45deg, #353440 25%, transparent 25%),
+    linear-gradient(-45deg, #353440 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #353440 75%),
+    linear-gradient(-45deg, transparent 75%, #353440 75%) !important;
 }
 
 .dam-media-preview__assoc-name {
@@ -2215,7 +2400,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
     height: auto;
     align-self: stretch;
     min-height: 72px;
-    margin: 0;
+  margin: 0;
     grid-column: 2;
     grid-row: 1 / -1;
     background: linear-gradient(180deg, transparent, #e2e2ea 12%, #e2e2ea 88%, transparent);
@@ -2335,7 +2520,7 @@ body.dam-media-preview-open {
   line-height: 1.3;
 }
 
-/* #damMediaPreviewMeta usuniete z UI - nie przywracac linii TIF · Indeks */
+/* #damMediaPreviewMeta usuniete z UI - nie przywracac linii TIF Â· Indeks */
 
 /* Etykiety wariantow: pelna szerokosc kafelka, max 2 linie */
 #damMediaPreview .dam-viz-modal__variant-label {
@@ -2414,7 +2599,7 @@ body.dam-media-preview-open {
   margin: 0 0 12px;
 }
 
-/* 3 ramki obok siebie: Tło | Perspektywa | Jakość (CSS Grid) */
+/* 3 ramki obok siebie: TĹ‚o | Perspektywa | JakoĹ›Ä‡ (CSS Grid) */
 .dam-media-preview__studio--tri {
   display: flex;
   flex-direction: column;
@@ -2438,10 +2623,10 @@ body.dam-media-preview-open {
   align-self: flex-start;
 }
 
-/* bgSections20260721a: sections (Bez tła / Z tłem) stack as full-width ROWS; groups
+/* bgSections20260721a: sections (Bez tĹ‚a / Z tĹ‚em) stack as full-width ROWS; groups
    inside each section use a fluid, auto-fit grid so 1-2 groups still fill the row
    width instead of leaving dead space on the right (auto-fit collapses empty tracks,
-   auto-fill does not — see code-doctrine §12, 2026-07-21). */
+   auto-fill does not â€” see code-doctrine Â§12, 2026-07-21). */
 .dam-media-preview__all-files {
   display: flex;
   flex-direction: column;
@@ -2492,7 +2677,7 @@ body.dam-media-preview-open {
    column tracks for the WHOLE section, so a lone leftover item in the last row
    still sits in column 1 with dead space beside it. Flexbox redistributes grow
    space per-row, so 1 group = full width, 2 groups = half each, and a trailing
-   4th-of-3 group in its own row also stretches full width — never dead space. */
+   4th-of-3 group in its own row also stretches full width â€” never dead space. */
 .dam-media-preview__all-section-grid {
   display: flex;
   flex-wrap: wrap;
@@ -2516,7 +2701,7 @@ body.dam-media-preview-open {
 }
 
 /* data-bg="z-tlem" (default): muted fill, no border.
-   data-bg="bez-tla": no fill, thin 1px border only — global visual distinction.
+   data-bg="bez-tla": no fill, thin 1px border only â€” global visual distinction.
    Width comes from the flex-basis above (not 100%), so groups share the row. */
 .dam-media-preview__all-group {
   min-width: 0;
@@ -2532,7 +2717,7 @@ body.dam-media-preview-open {
   border: 1px solid var(--dam-surface-muted, #f5f6fa);
 }
 
-/* Horizontal quality strip XL → L → S → S-SKLEP; tiles grow to fill the group width. */
+/* Horizontal quality strip XL â†’ L â†’ S â†’ S-SKLEP; tiles grow to fill the group width. */
 .dam-media-preview__all-group-grid {
   display: flex;
   flex-direction: row;
@@ -2740,7 +2925,7 @@ body.dam-media-preview-open {
   z-index: 40;
   margin-top: 0;
   margin-bottom: 0;
-  /* HARD 2026-07-21: klaster CTA = lewy dolny rog, nie wyśrodkowany full-width footer */
+  /* HARD 2026-07-21: klaster CTA = lewy dolny rog, nie wyĹ›rodkowany full-width footer */
   padding: 10px 6px 8px;
   min-height: 0;
   box-sizing: border-box;
@@ -2861,6 +3046,7 @@ body.dam-media-preview-open {
     padding: 10px 8px;
   }
   .dam-branding-tabs > .dam-branding-tab--all,
+  .dam-branding-tabs > .dam-switch,
   .dam-branding-tabs > .dam-branding-scope-toggles {
     flex: 0 0 auto;
   }
@@ -2910,4 +3096,53 @@ body.dam-media-preview-open {
   .dam-branding-tag-filters .dam-viz-badge:hover {
     transform: none;
   }
+}
+
+/* Dark: count pill + clear filters â€” dark surface + light text (AA) */
+html[data-theme="dark"] .dam-branding-grid-count {
+  background: color-mix(in srgb, var(--dam-surface-elevated, #2a2833) 94%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 28%, var(--dam-border, #2c2b36));
+  color: var(--dam-text, #eeeaf6);
+  box-shadow:
+    0 2px 8px rgb(0 0 0 / 0.28),
+    0 8px 24px rgb(0 0 0 / 0.36);
+}
+
+html[data-theme="dark"] .dam-branding-clear-btn,
+html[data-theme="dark"] .dam-branding-clear-filters {
+  background: var(--dam-surface-elevated, #2a2833) !important;
+  color: #e2c4f5 !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 42%, var(--dam-border, #2c2b36)) !important;
+}
+
+html[data-theme="dark"] .dam-branding-clear-btn:hover,
+html[data-theme="dark"] .dam-branding-clear-btn:focus-visible,
+html[data-theme="dark"] .dam-branding-clear-filters:hover,
+html[data-theme="dark"] .dam-branding-clear-filters:focus-visible {
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 18%, var(--dam-surface-elevated, #2a2833)) !important;
+  color: #f0e6fa !important;
+}
+
+html[data-theme="dark"] .dam-branding-section-desc,
+html[data-theme="dark"] .dam-branding-muted,
+html[data-theme="dark"] .dam-toolbar-status {
+  color: var(--dam-text-muted, #b8b3c6);
+}
+
+html[data-theme="dark"] .dam-branding-page-size__num {
+  background: var(--dam-surface-elevated, #2a2833);
+  border-color: var(--dam-border, #2c2b36);
+  color: var(--dam-text, #eeeaf6);
+}
+
+html[data-theme="dark"] .dam-branding-page-size__num:focus {
+  border-color: var(--dam-primary, #ab54db);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
+}
+
+html[data-theme="dark"] .dam-branding-filters--meta .dam-branding-sort select,
+html[data-theme="dark"] .dam-branding-filters--meta select {
+  background: var(--dam-surface-elevated, #2a2833);
+  color: var(--dam-text, #eeeaf6);
+  border-color: var(--dam-border, #2c2b36);
 }

@@ -497,6 +497,228 @@
     return v.thumb_url || mediaPreviewUrl(v.path) || "";
   }
 
+  function normFolderPath(p) {
+    return String(p || "")
+      .replace(/\\/g, "/")
+      .replace(/\/+$/, "")
+      .toLowerCase();
+  }
+
+  function pathLooksArchive(p) {
+    var u = String(p || "").toUpperCase();
+    if (!u || u.indexOf("ARCHIWUM") === -1) return false;
+    return (
+      u.indexOf("\u2014 ARCHIWUM") !== -1 ||
+      u.indexOf("- ARCHIWUM") !== -1 ||
+      u.indexOf("/ARCHIWUM/") !== -1 ||
+      u.indexOf("\\ARCHIWUM\\") !== -1 ||
+      u.indexOf("0 - ARCHIWUM") !== -1
+    );
+  }
+
+  function rowIsArchive(v) {
+    return !!(v && (v.in_archive || pathLooksArchive(v.revision_path || v.path)));
+  }
+
+  function mergeLinkedVariantsIntoItems(items, productId) {
+    if (!productId || !indexData || !items) return items;
+    var linked = (vizFlags.linked_variants && vizFlags.linked_variants[productId]) || [];
+    if (!linked.length) return items;
+    var existingKeys = {};
+    items.forEach(function (it) {
+      existingKeys[productVariantKey(it)] = true;
+    });
+    linked.forEach(function (folderPath) {
+      var hit = findRevisionByFolderPath(indexData, productId, folderPath);
+      if (!hit) return;
+      var newRows = expandModalWizkiVariants(vizRowsFromRevision(indexData, hit.product, hit.revision));
+      newRows.forEach(function (row) {
+        var k = productVariantKey(row);
+        if (k && existingKeys[k]) return;
+        if (k) existingKeys[k] = true;
+        items.push(row);
+      });
+    });
+    return items;
+  }
+
+  function persistLinkedVariant(productId, folderPath) {
+    if (!productId || !folderPath) return;
+    vizFlags.linked_variants = vizFlags.linked_variants || {};
+    var arr = vizFlags.linked_variants[productId] || [];
+    var want = normFolderPath(folderPath);
+    if (
+      arr.some(function (p) {
+        return normFolderPath(p) === want;
+      })
+    ) {
+      return;
+    }
+    arr.push(folderPath);
+    vizFlags.linked_variants[productId] = arr;
+    /* Re-link clears unlinked key for this revision folder if present. */
+    vizFlags.unlinked_variants = vizFlags.unlinked_variants || {};
+    var unl = vizFlags.unlinked_variants[productId] || [];
+    if (unl.length) {
+      var keysFromFolder = variantKeysForRevisionFolder(productId, folderPath);
+      vizFlags.unlinked_variants[productId] = unl.filter(function (k) {
+        return keysFromFolder.indexOf(k) < 0;
+      });
+    }
+    persistVizFlags();
+    postVizFlag({ flags: vizFlags });
+  }
+
+  function revisionFolderFromItem(v) {
+    if (!v) return "";
+    if (v.revision_path) return normFolderPath(v.revision_path);
+    var p = String(v.path || "").replace(/\\/g, "/");
+    if (!p) return "";
+    if (/\.[a-z0-9]{2,5}$/i.test(p)) {
+      var slash = p.lastIndexOf("/");
+      if (slash > 0) p = p.slice(0, slash);
+    }
+    return normFolderPath(p);
+  }
+
+  function variantKeysForRevisionFolder(productId, folderPath) {
+    if (!productId || !folderPath || !indexData) return [];
+    var hit = findRevisionByFolderPath(indexData, productId, folderPath);
+    if (!hit) return [];
+    var rows = expandModalWizkiVariants(vizRowsFromRevision(indexData, hit.product, hit.revision));
+    var keys = [];
+    rows.forEach(function (row) {
+      var k = productVariantKey(row);
+      if (k) keys.push(k);
+    });
+    return keys;
+  }
+
+  function filterUnlinkedVariants(items, productId) {
+    if (!productId || !items || !items.length) return items || [];
+    var unl = (vizFlags.unlinked_variants && vizFlags.unlinked_variants[productId]) || [];
+    if (!unl.length) return items;
+    var hide = {};
+    unl.forEach(function (k) {
+      hide[String(k)] = true;
+    });
+    return items.filter(function (it) {
+      return !hide[productVariantKey(it)];
+    });
+  }
+
+  function removeLinkedVariant(productId, variantKey, revisionFolderPath) {
+    if (!productId || !variantKey) return;
+    vizFlags.unlinked_variants = vizFlags.unlinked_variants || {};
+    var unl = vizFlags.unlinked_variants[productId] || [];
+    if (unl.indexOf(variantKey) < 0) unl.push(variantKey);
+    vizFlags.unlinked_variants[productId] = unl;
+    if (revisionFolderPath && vizFlags.linked_variants && vizFlags.linked_variants[productId]) {
+      var want = normFolderPath(revisionFolderPath);
+      vizFlags.linked_variants[productId] = (vizFlags.linked_variants[productId] || []).filter(function (p) {
+        return normFolderPath(p) !== want;
+      });
+    }
+    persistVizFlags();
+    postVizFlag({ flags: vizFlags });
+  }
+
+  function findRevisionByFolderPath(data, productId, folderPath) {
+    var want = normFolderPath(folderPath);
+    if (!want || !data) return null;
+    var prod = (data.products || []).find(function (p) {
+      return p && p.id === productId;
+    });
+    if (!prod) return null;
+    var revs = prod.revisions || [];
+    for (var i = 0; i < revs.length; i++) {
+      var r = revs[i];
+      if (!r) continue;
+      if (normFolderPath(r.path) === want) return { product: prod, revision: r };
+      if (r.folder && want.endsWith("/" + normFolderPath(r.folder))) return { product: prod, revision: r };
+      var seg = want.split("/").pop() || "";
+      if (seg && (String(r.folder || "") === seg || normFolderPath(r.path).split("/").pop() === seg)) {
+        return { product: prod, revision: r };
+      }
+    }
+    return null;
+  }
+
+  function vizRowsFromRevision(data, prod, r) {
+    if (!prod || !r) return [];
+    var labels = data.lang_labels || langLabels || {};
+    var brand = prod.brand || "DK";
+    var pid = prod.id || "p";
+    var name = prod.display_name || prod.name || pid;
+    var wizki = r.wizki || [];
+    var hasViz = wizki.length > 0 || r.wizki_count > 0;
+    var langs = (r.langs && r.langs.length) ? r.langs.slice() : [];
+    langs = langs
+      .map(function (lg) {
+        if (window.DamLabels && typeof window.DamLabels.normalizeLangCode === "function") {
+          return window.DamLabels.normalizeLangCode(lg);
+        }
+        var c = String(lg || "").toLowerCase();
+        if (c === "gb" || c === "uk") return "en";
+        return c;
+      })
+      .filter(Boolean);
+    langs = langs.filter(function (lg, i) {
+      return langs.indexOf(lg) === i;
+    });
+    if (!langs.length && String(brand || "").toUpperCase() === "DK") langs = ["pl"];
+    var langUnknown = !langs.length;
+    if (langUnknown) langs = ["?"];
+    var indexBase = resolveIndexBase({
+      index_base: r.index_base,
+      index: r.index,
+      revision_folder: r.folder,
+      folder: r.folder,
+      path: r.path || firstWizkiPath(r),
+      file: (r.wizki && r.wizki[0] && r.wizki[0].name) || "",
+    });
+    var inArchive = !!r.in_archive || pathLooksArchive(r.path);
+    var out = [];
+    langs.forEach(function (lang) {
+      out.push(
+        normalizeVizRow({
+          product_id: pid,
+          product_name: name,
+          category: prod.category,
+          brand: brand,
+          carrier: r.carrier,
+          carrier_guessed: !!r.carrier_guessed,
+          subcategory_slug: prod.subcategory_slug,
+          subcategory_label: prod.subcategory_label,
+          linked_products: prod.linked_products,
+          alias_langs: prod.alias_langs,
+          index: r.index || (indexBase ? indexBase + ".00" : ""),
+          index_base: indexBase,
+          revision_folder: r.folder,
+          revision_path: r.path,
+          in_archive: inArchive,
+          langs: langUnknown ? [] : langs,
+          lang: lang,
+          lang_label:
+            lang === "?"
+              ? "?"
+              : labelForLang(lang) ||
+                labels[lang] ||
+                (lang === "en" ? "Angielski" : String(lang).toUpperCase()),
+          lang_unknown: langUnknown || lang === "?",
+          langs_manual: !!r.langs_manual,
+          path: hasViz ? firstWizkiPath(r) || r.path || "" : r.path || "",
+          thumb_url: hasViz ? thumbStem(pid, indexBase, lang === "?" ? "unknown" : lang) : "",
+          has_viz: hasViz,
+          is_latest: !!r.is_latest,
+          tags: prod.tags || [],
+          tag_groups: prod.tag_groups || {},
+        })
+      );
+    });
+    return out;
+  }
+
   function expandVizFromProducts(data, onlyLatest) {
     if (onlyLatest) {
       return (data.viz_latest || []).map(function (v) {
@@ -549,6 +771,7 @@
           path: r.path || firstWizkiPath(r),
           file: (r.wizki && r.wizki[0] && r.wizki[0].name) || "",
         });
+        var inArchive = !!r.in_archive || pathLooksArchive(r.path);
         langs.forEach(function (lang) {
           out.push({
             product_id: pid,
@@ -565,6 +788,7 @@
             index_base: indexBase,
             revision_folder: r.folder,
             revision_path: r.path,
+            in_archive: inArchive,
             langs: langUnknown ? [] : langs,
             lang: lang,
             lang_label:
@@ -579,7 +803,8 @@
             thumb_url: hasViz ? thumbStem(pid, indexBase, lang === "?" ? "unknown" : lang) : "",
             has_viz: hasViz,
             is_latest: !!r.is_latest,
-            tags: p.tags || []
+            tags: p.tags || [],
+            tag_groups: p.tag_groups || {},
           });
         });
       });
@@ -762,6 +987,24 @@
     return "path|" + String(v.revision_folder || v.path || "");
   }
 
+  /** Map viz modal items to assoc picker variant rows. */
+  function vizItemsAsVariantCandidates(items) {
+    return (items || [])
+      .map(function (v, i) {
+        if (!v) return null;
+        var id = String(v.id || v.path || v.revision_path || "viz-" + i);
+        var label = variantChipLabel(v, null) || v.product_name || id;
+        return {
+          id: id,
+          name: label,
+          label: label,
+          path: v.path || v.revision_path || "",
+          index: v.index_base || v.index || v.product_index || "",
+        };
+      })
+      .filter(Boolean);
+  }
+
   /** Po jednym przedstawicielu na indeks (+jezyk) - nie kazdy plik WIZKI. */
   function productVariantRepresentatives(items) {
     var map = {};
@@ -802,8 +1045,12 @@
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--variants">' +
       '<div class="dam-media-preview__assoc-label-row">' +
       '<span class="dam-media-preview__assoc-label">Warianty produktu</span>' +
+      '<button type="button" class="dam-assoc-edit-all" data-assoc-edit-all="variant" hidden>Edytuj wszystko</button>' +
       "</div>" +
-      '<div class="dam-viz-modal__variant-strip dam-media-preview__variant-grid" role="listbox" aria-label="Warianty produktu">' +
+      '<div class="dam-viz-modal__variant-strip dam-media-preview__variant-grid dam-media-preview__variant-grid--product" role="listbox" aria-label="Warianty produktu">' +
+      /* Shift+Admin square Dodaj — revealed by DamAdminShiftPlus / DamAssocEdit */
+      '<button type="button" class="dam-media-preview__assoc-plus-tile dam-admin-shift-plus dam-admin-shift-plus--tile" aria-label="Dodaj wariant produktu" data-product-variant-plus="1">' +
+      '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span></button>' +
       reps
         .map(function (rep) {
           var v = rep.v;
@@ -883,7 +1130,7 @@
    * (kopiuj indeksy / otworz w Eksploratorze) - w DAM nie ma masowej edycji
    * wariantow produktu (tylko materialow), wiec SHIFT tutaj = multi-select + akcje,
    * nie assoc-edit popover. */
-  function bindProductVariantStrip(modal, items, getActiveIdx, selectFn) {
+  function bindProductVariantStrip(modal, items, getActiveIdx, selectFn, uxExtras) {
     var strip = modal && modal.querySelector(".dam-viz-modal__variant-strip");
     if (!strip) return { sync: function () {} };
     ensureVariantSelectCss();
@@ -1010,6 +1257,53 @@
     });
     paintActive();
     paintSelection();
+
+    /* Shift+Admin square Dodaj for WARIANTY PRODUKTU */
+    var plusBtn = strip.querySelector("[data-product-variant-plus], .dam-media-preview__assoc-plus-tile");
+    var canAdminPlus =
+      window.DamAdminShiftPlus && typeof window.DamAdminShiftPlus.isAdmin === "function"
+        ? window.DamAdminShiftPlus.isAdmin()
+        : window.DamTagEdit &&
+          typeof window.DamTagEdit.isPrivileged === "function" &&
+          window.DamTagEdit.isPrivileged();
+    if (!canAdminPlus && plusBtn) {
+      plusBtn.remove();
+      plusBtn = null;
+    }
+    if (plusBtn) {
+      if (window.DamAdminShiftPlus && typeof window.DamAdminShiftPlus.mount === "function") {
+        window.DamAdminShiftPlus.mount(plusBtn, "tile");
+      }
+      if (window.DamAdminShiftPlus && typeof window.DamAdminShiftPlus.ensureLatch === "function") {
+        window.DamAdminShiftPlus.ensureLatch();
+      }
+      /* Click handled by DamAssocEdit.ensureShiftHoverAssocUx (avoid double openEditPicker). */
+    }
+    if (
+      window.DamAssocEdit &&
+      typeof window.DamAssocEdit.ensureShiftHoverAssocUx === "function" &&
+      canAdminPlus
+    ) {
+      window.DamAssocEdit.ensureShiftHoverAssocUx(
+        strip.closest(".dam-viz-modal__product-variants") || strip,
+        Object.assign(
+          {
+            productContext: items[0] || null,
+            groupContext: {
+              product_id: (items[0] && items[0].product_id) || "",
+              variants: vizItemsAsVariantCandidates(items),
+            },
+            onRemoveProductVariant: function (vkey, vpath) {
+              if (uxExtras && typeof uxExtras.onRemoveProductVariant === "function") {
+                uxExtras.onRemoveProductVariant(vkey, vpath);
+              }
+            },
+          },
+          uxExtras || {}
+        )
+      );
+    }
+
     return {
       sync: function () {
         paintActive();
@@ -1617,9 +1911,13 @@
         demo: local.demo || {},
         hidden: local.hidden || {},
         manual: Array.isArray(local.manual) ? local.manual : [],
+        linked_variants:
+          local.linked_variants && typeof local.linked_variants === "object" ? local.linked_variants : {},
+        unlinked_variants:
+          local.unlinked_variants && typeof local.unlinked_variants === "object" ? local.unlinked_variants : {},
       };
     } catch (e) {
-      vizFlags = { demo: {}, hidden: {}, manual: [] };
+      vizFlags = { demo: {}, hidden: {}, manual: [], linked_variants: {}, unlinked_variants: {} };
     }
   }
 
@@ -1762,458 +2060,40 @@
     return i > 0 ? p.slice(0, i) : p;
   }
 
-  /* Generyczny picker folderu/pliku - startuje w startDir, ale admin moze
-     nawigowac gore/w dol (potrzebne przy parowaniu z folderem INNEGO jezyka,
-     2026-07-18). Native dialog (desktop) i tak pozwala na dowolna nawigacje;
-     to dotyczy glownie fallback-grid w przegladarce. */
+  /* THIN-DELEGATE: COMBO picker lives in dam-folder-picker.js (DamFolderPicker).
+     folderDirFromPath STAYS here (locked). */
   function openFolderPicker(startDir, onPicked) {
+    function openCombo() {
+      if (!window.DamFolderPicker || typeof window.DamFolderPicker.open !== "function") {
+        showToast("DamFolderPicker niedostepny - odswiez strone (cache).");
+        return;
+      }
+      window.DamFolderPicker.open({
+        startDir: startDir,
+        mode: "file",
+        title: "Wybierz plik",
+        showWindowsButton: true,
+        onPicked: onPicked
+      });
+    }
     var api = window.pywebview && window.pywebview.api;
     if (api && typeof api.pick_thumb === "function") {
       Promise.resolve(api.pick_thumb(startDir))
         .then(function (res) {
           if (res && res.ok && res.path) onPicked(res);
           else if (res && res.cancelled) showToast("Anulowano wybor pliku");
-          else openThumbGridPicker(startDir, onPicked);
+          else openCombo();
         })
         .catch(function () {
-          openThumbGridPicker(startDir, onPicked);
+          openCombo();
         });
       return;
     }
-    openThumbGridPicker(startDir, onPicked);
+    openCombo();
   }
 
   function openThumbPicker(v, onPicked) {
     openFolderPicker(folderDirFromPath(v.path || ""), onPicked);
-  }
-
-  var THUMB_PICKER_VIEW_KEY = "dam_thumb_picker_view";
-
-  function thumbPickerIndexOf(nameOrPath) {
-    if (window.DamMarketingId && typeof window.DamMarketingId.parseIndexFromPath === "function") {
-      return window.DamMarketingId.parseIndexFromPath(nameOrPath);
-    }
-    var m = /(\d{6,7})(?:\.\d{2})?/.exec(String(nameOrPath || ""));
-    return m ? m[1] : "";
-  }
-
-  function thumbPickerDateOf(f) {
-    var raw = (f && (f.mtime || f.modified || f.date)) || "";
-    if (!raw) return "";
-    var d = new Date(raw);
-    if (isNaN(d.getTime())) return String(raw).slice(0, 10);
-    return (
-      String(d.getDate()).padStart(2, "0") +
-      "." +
-      String(d.getMonth() + 1).padStart(2, "0") +
-      "." +
-      d.getFullYear()
-    );
-  }
-
-  function thumbPickerTagsHtml(f) {
-    var tags = "";
-    var idx = thumbPickerIndexOf(f.path || f.name);
-    if (idx) {
-      tags += '<span class="dam-viz-badge dam-viz-badge--index" title="Indeks produktu">' + esc(idx) + "</span>";
-    }
-    var ext = /\.([a-z0-9]{1,6})$/i.exec(String(f.name || ""));
-    if (ext) {
-      tags += '<span class="dam-viz-badge" title="Format pliku">' + esc(ext[1].toUpperCase()) + "</span>";
-    }
-    var date = thumbPickerDateOf(f);
-    if (date) {
-      tags += '<span class="dam-viz-badge" title="Data modyfikacji">' + esc(date) + "</span>";
-    }
-    return tags ? '<span class="dam-thumb-picker__item-tags">' + tags + "</span>" : "";
-  }
-
-  /* thumbPick combo: folders = list strips, files = tiles; crumbs tab inside frame. */
-  function ensureThumbPickerTilesCss() {
-    var TOKEN = "thumbCombo20260721b";
-    var style = document.getElementById("dam-thumb-picker-tiles");
-    if (!style) {
-      style = document.createElement("style");
-      style.id = "dam-thumb-picker-tiles";
-      document.head.appendChild(style);
-    }
-    if (style.getAttribute("data-token") === TOKEN && style.textContent) return;
-    style.setAttribute("data-token", TOKEN);
-    style.textContent =
-      /* Crumbs: row-gap -3px vs old 4px; current tab fully inside muted frame */
-      "#damThumbPicker .dam-thumb-picker__crumbs{" +
-      "flex:1 1 240px;min-width:0;display:flex;align-items:center;flex-wrap:wrap;" +
-      "gap:1px 2px;row-gap:1px;column-gap:2px;" +
-      "overflow:hidden;white-space:normal!important;" +
-      "padding:6px 12px 8px;min-height:36px;max-height:none;box-sizing:border-box;" +
-      "border:none;border-radius:12px;line-height:1.2;" +
-      "background:var(--dam-surface-muted,#f5f6fa);scrollbar-width:none;}" +
-      "#damThumbPicker .dam-thumb-picker__crumbs::-webkit-scrollbar{display:none;height:0;}" +
-      "#damThumbPicker .dam-thumb-picker__crumb{" +
-      "border:none;background:transparent;padding:2px 8px;border-radius:7px;" +
-      "color:#6b6980;font-size:12px;cursor:pointer;white-space:nowrap;" +
-      "min-height:24px;height:auto;line-height:1.2;box-sizing:border-box;" +
-      "max-width:100%;margin:0;}" +
-      "#damThumbPicker .dam-thumb-picker__crumb:hover{" +
-      "background:#fff;color:var(--dam-primary,#ab54db);}" +
-      "#damThumbPicker .dam-thumb-picker__crumb.is-current{" +
-      "background:#fff;color:#464255;font-weight:600;cursor:default;" +
-      "box-shadow:none;}" +
-      "#damThumbPicker .dam-thumb-picker__crumb-sep{" +
-      "color:#c3c1cc;font-size:11px;padding:0 1px;line-height:1.2;align-self:center;}" +
-      "#damThumbPicker .dam-thumb-picker__nav-btn{" +
-      "width:36px;height:36px;min-width:36px;min-height:36px;}" +
-      /* Shared tile grid (thumbs = all tiles; tiles alias kept) */
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs]," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles]," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo]{" +
-      "display:grid;background:var(--dam-surface-muted,#f5f6fa);" +
-      "gap:12px;padding:16px;" +
-      "grid-template-columns:repeat(auto-fill,minmax(128px,1fr));align-content:start;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder)," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item.dam-admin-control," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.dam-admin-control," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder).dam-admin-control{" +
-      "display:flex;flex-direction:column;align-items:stretch;gap:8px;" +
-      "padding:10px!important;min-width:0;min-height:44px!important;" +
-      "border:1px solid transparent!important;border-radius:14px!important;background:#fff!important;" +
-      "box-shadow:none!important;text-align:left;overflow:hidden;box-sizing:border-box;" +
-      "font-size:12px!important;color:#464255!important;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item:hover," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item:hover," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:hover," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item.is-hover," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.is-hover," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item.is-hover{" +
-      "border-color:transparent!important;" +
-      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff)!important;" +
-      "outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 28%,transparent);" +
-      "outline-offset:1px;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item.is-focus," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item.is-focus," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item.is-focus," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item.is-focus{" +
-      "border-color:transparent!important;" +
-      "outline:3px solid rgba(171,84,219,.55)!important;outline-offset:2px;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item img," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item img," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder) img{" +
-      "display:block;width:100%;max-width:100%;height:auto!important;aspect-ratio:1;" +
-      "object-fit:contain;border-radius:10px;background:#fff;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item-tags," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item-tags{display:none;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item--folder > i," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item--folder > i," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__item > i.uil-image," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__item > i.uil-image," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder) > i.uil-image{" +
-      "display:flex;align-items:center;justify-content:center;" +
-      "width:100%;aspect-ratio:1;border-radius:10px;" +
-      "background:var(--dam-surface-muted,#f5f6fa);font-size:36px;" +
-      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 55%,#8b8d97);}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=thumbs] .dam-thumb-picker__name," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=tiles] .dam-thumb-picker__name," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item:not(.dam-thumb-picker__item--folder) .dam-thumb-picker__name{" +
-      "font-size:11.5px;font-weight:600;color:#464255;line-height:1.35;" +
-      "overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;" +
-      "word-break:break-word;}" +
-      /* LIST: all rows as strips */
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list]{" +
-      "display:flex;flex-direction:column;gap:8px;" +
-      "background:var(--dam-surface-muted,#f5f6fa);padding:12px 16px 16px;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item.dam-admin-control{" +
-      "display:flex!important;flex-direction:row!important;align-items:center;gap:12px;" +
-      "width:100%;padding:10px 14px!important;min-height:44px!important;" +
-      "background:#fff!important;border:1px solid transparent!important;border-radius:12px!important;" +
-      "box-shadow:none!important;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item img{" +
-      "width:40px;height:40px;aspect-ratio:1;object-fit:contain;border-radius:8px;flex:0 0 auto;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item > i," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item--folder > i{" +
-      "display:flex;align-items:center;justify-content:center;" +
-      "width:36px;height:36px;flex:0 0 auto;aspect-ratio:auto;border-radius:8px;" +
-      "background:var(--dam-surface-muted,#f5f6fa);font-size:20px;" +
-      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 55%,#8b8d97);}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__meta{flex:1 1 auto;min-width:0;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__name{" +
-      "display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
-      "font-size:13px;font-weight:600;-webkit-line-clamp:unset;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=list] .dam-thumb-picker__item:hover{" +
-      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,#fff)!important;}" +
-      /* COMBO: folders = full-width strips; files = tiles (default) */
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder," +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder.dam-admin-control{" +
-      "grid-column:1/-1;display:flex!important;flex-direction:row!important;align-items:center;" +
-      "gap:12px;width:100%;padding:10px 14px!important;min-height:44px!important;" +
-      "background:#fff!important;border:1px solid transparent!important;border-radius:12px!important;" +
-      "overflow:hidden;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder > i{" +
-      "display:flex;align-items:center;justify-content:center;" +
-      "width:36px;height:36px;flex:0 0 auto;aspect-ratio:auto!important;border-radius:8px;" +
-      "background:var(--dam-surface-muted,#f5f6fa);font-size:20px;" +
-      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 55%,#8b8d97);}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder .dam-thumb-picker__meta{" +
-      "flex:1 1 auto;min-width:0;}" +
-      "#damThumbPicker .dam-thumb-picker__grid[data-view=combo] .dam-thumb-picker__item--folder .dam-thumb-picker__name{" +
-      "display:block!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
-      "font-size:13px;font-weight:600;line-height:1.3;" +
-      "-webkit-line-clamp:unset!important;-webkit-box-orient:unset!important;}";
-  }
-
-  /* Pkt 8: #damThumbPicker mini-eksplorator. Widoki: combo (domyslny) /
-     lista / miniatury. Combo = foldery lista + pliki kafelki. */
-  function openThumbGridPicker(dir, onPicked) {
-    ensureThumbPickerTilesCss();
-    var existing = document.getElementById("damThumbPicker");
-    if (existing) existing.remove();
-    var view = localStorage.getItem(THUMB_PICKER_VIEW_KEY) || "combo";
-    /* tiles == thumbs (legacy); migrate stale prefs to combo */
-    if (view === "tiles") view = "thumbs";
-    if (["combo", "list", "thumbs"].indexOf(view) < 0) view = "combo";
-    var history = [];
-    var histPos = -1;
-    var currentPath = "";
-    var currentParent = "";
-
-    var overlay = document.createElement("div");
-    overlay.id = "damThumbPicker";
-    overlay.className = "dam-thumb-picker-overlay";
-    overlay.style.zIndex = "12300"; /* nad nakladkami edycji ~12100 */
-    overlay.innerHTML =
-      '<div class="dam-thumb-picker-box" role="dialog" aria-modal="true" aria-label="Wybierz plik">' +
-      '<div class="dam-thumb-picker__head"><strong>Wybierz plik</strong>' +
-      '<button type="button" class="dam-viz-modal-close" id="damThumbPickerClose" aria-label="Zamknij"><i class="uil uil-times"></i></button></div>' +
-      '<div class="dam-thumb-picker__toolbar">' +
-      '<button type="button" class="dam-thumb-picker__nav-btn" id="damThumbPickerBack" data-dam-tip="Wstecz" aria-label="Wstecz" disabled><i class="uil uil-angle-left"></i></button>' +
-      '<button type="button" class="dam-thumb-picker__nav-btn" id="damThumbPickerFwd" data-dam-tip="Dalej" aria-label="Dalej" disabled><i class="uil uil-angle-right"></i></button>' +
-      '<button type="button" class="dam-thumb-picker__nav-btn" id="damThumbPickerUp" data-dam-tip="Folder wyżej" aria-label="Folder wyżej" disabled><i class="uil uil-arrow-up"></i></button>' +
-      '<button type="button" class="dam-thumb-picker__nav-btn" id="damThumbPickerRefresh" data-dam-tip="Odśwież" aria-label="Odśwież"><i class="uil uil-refresh"></i></button>' +
-      '<div class="dam-thumb-picker__crumbs" id="damThumbPickerCrumbs" aria-label="Ścieżka"></div>' +
-      '<div class="dam-thumb-picker__views" role="group" aria-label="Widok">' +
-      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="combo" data-dam-tip="Combo: foldery lista, pliki kafelki" aria-label="Combo"><i class="uil uil-apps"></i></button>' +
-      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="list" data-dam-tip="Lista" aria-label="Lista"><i class="uil uil-list-ul"></i></button>' +
-      '<button type="button" class="dam-thumb-picker__view-btn" data-picker-view="thumbs" data-dam-tip="Miniatury" aria-label="Miniatury"><i class="uil uil-table"></i></button>' +
-      "</div>" +
-      "</div>" +
-      '<div class="dam-thumb-picker__grid" id="damThumbPickerGrid" data-view="' +
-      esc(view) +
-      '"><p class="dam-thumb-picker__status">Ładowanie…</p></div></div>';
-    document.body.appendChild(overlay);
-    try {
-      localStorage.setItem(THUMB_PICKER_VIEW_KEY, view);
-    } catch (eLs) {}
-
-    var backBtn = document.getElementById("damThumbPickerBack");
-    var fwdBtn = document.getElementById("damThumbPickerFwd");
-    var upBtn = document.getElementById("damThumbPickerUp");
-    var refreshBtn = document.getElementById("damThumbPickerRefresh");
-    var crumbsEl = document.getElementById("damThumbPickerCrumbs");
-
-    document.getElementById("damThumbPickerClose").onclick = function () {
-      overlay.remove();
-    };
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) overlay.remove();
-    });
-
-    function syncNavButtons() {
-      if (backBtn) backBtn.disabled = histPos <= 0;
-      if (fwdBtn) fwdBtn.disabled = histPos >= history.length - 1;
-      if (upBtn) upBtn.disabled = !currentParent;
-    }
-
-    function paintCrumbs(path) {
-      if (!crumbsEl) return;
-      var norm = String(path || "").replace(/\\/g, "/");
-      var parts = norm.split("/").filter(Boolean);
-      var html = "";
-      var acc = "";
-      parts.forEach(function (seg, i) {
-        acc += (i === 0 ? "" : "/") + seg;
-        var isLast = i === parts.length - 1;
-        if (i > 0) html += '<span class="dam-thumb-picker__crumb-sep" aria-hidden="true">/</span>';
-        html +=
-          '<button type="button" class="dam-thumb-picker__crumb' +
-          (isLast ? " is-current" : "") +
-          '" data-crumb-path="' +
-          esc(acc + (i === 0 && /^[a-z]:$/i.test(seg) ? "/" : "")) +
-          '"' +
-          (isLast ? " disabled" : "") +
-          ' title="' +
-          esc(acc) +
-          '">' +
-          esc(seg) +
-          "</button>";
-      });
-      crumbsEl.innerHTML = html || '<span class="dam-thumb-picker__crumb is-current">-</span>';
-      crumbsEl.querySelectorAll("[data-crumb-path]:not([disabled])").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          navigateTo(btn.getAttribute("data-crumb-path"));
-        });
-      });
-      crumbsEl.scrollLeft = crumbsEl.scrollWidth;
-    }
-
-    function folderItemHtml(f) {
-      /* No dam-admin-control here: that class forces Geex pill radius 50px + purple
-         stroke (!important) and crushes padding - tiles must stay square cards. */
-      return (
-        '<button type="button" class="dam-thumb-picker__item dam-thumb-picker__item--folder" data-open-folder="' +
-        esc(f.path) +
-        '" title="' +
-        esc(f.path) +
-        '"><i class="uil uil-folder" aria-hidden="true"></i>' +
-        '<span class="dam-thumb-picker__meta"><span class="dam-thumb-picker__name">' +
-        esc(f.name) +
-        "</span></span>" +
-        "</button>"
-      );
-    }
-
-    function fileItemHtml(f) {
-      var prev = mediaPreviewUrl(f.path);
-      return (
-        '<button type="button" class="dam-thumb-picker__item" data-path="' +
-        esc(f.path) +
-        '" data-file="' +
-        esc(f.name) +
-        '" title="' +
-        esc(f.path) +
-        '">' +
-        (prev
-          ? '<img src="' + esc(prev) + '" alt="" loading="lazy">'
-          : '<i class="uil uil-image" aria-hidden="true"></i>') +
-        '<span class="dam-thumb-picker__meta"><span class="dam-thumb-picker__name">' +
-        esc(f.name) +
-        "</span></span>" +
-        thumbPickerTagsHtml(f) +
-        "</button>"
-      );
-    }
-
-    function loadDir(target) {
-      var grid = document.getElementById("damThumbPickerGrid");
-      if (grid) grid.innerHTML = '<p class="dam-thumb-picker__status">Ładowanie…</p>';
-      fetch(bridgeBase() + "/folder-images?path=" + encodeURIComponent(target))
-        .then(function (r) {
-          return r.json();
-        })
-        .then(function (data) {
-          grid = document.getElementById("damThumbPickerGrid");
-          if (!grid) return;
-          if (!data || !data.ok) {
-            grid.innerHTML =
-              '<p class="dam-thumb-picker__status">Nie udało się otworzyć: ' +
-              esc((data && data.error) || "?") +
-              "</p>";
-            return;
-          }
-          currentPath = data.path || target || "";
-          currentParent = data.parent || "";
-          paintCrumbs(currentPath);
-          syncNavButtons();
-          var folders = data.folders || [];
-          var files = data.files || [];
-          if (!folders.length && !files.length) {
-            grid.innerHTML =
-              '<p class="dam-thumb-picker__status">Folder jest pusty (brak podfolderów i obrazów).</p>';
-            return;
-          }
-          grid.innerHTML = folders.map(folderItemHtml).join("") + files.map(fileItemHtml).join("");
-          grid.querySelectorAll(".dam-thumb-picker__item").forEach(function (btn) {
-            btn.addEventListener("focus", function () {
-              btn.classList.add("is-focus");
-            });
-            btn.addEventListener("blur", function () {
-              btn.classList.remove("is-focus");
-            });
-            btn.addEventListener("mouseenter", function () {
-              btn.classList.add("is-hover");
-            });
-            btn.addEventListener("mouseleave", function () {
-              btn.classList.remove("is-hover");
-            });
-          });
-          grid.querySelectorAll("[data-open-folder]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              navigateTo(btn.getAttribute("data-open-folder"));
-            });
-          });
-          grid.querySelectorAll("[data-path]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              onPicked({
-                ok: true,
-                path: btn.getAttribute("data-path"),
-                file: btn.getAttribute("data-file"),
-              });
-              overlay.remove();
-            });
-          });
-        })
-        .catch(function () {
-          grid = document.getElementById("damThumbPickerGrid");
-          if (grid) {
-            grid.innerHTML =
-              '<p class="dam-thumb-picker__status">Nie udało się wczytać listy (most lokalny offline?).</p>';
-          }
-        });
-    }
-
-    function navigateTo(target) {
-      if (!target) return;
-      history = history.slice(0, histPos + 1);
-      history.push(target);
-      histPos = history.length - 1;
-      syncNavButtons();
-      loadDir(target);
-    }
-
-    if (backBtn) {
-      backBtn.addEventListener("click", function () {
-        if (histPos <= 0) return;
-        histPos -= 1;
-        syncNavButtons();
-        loadDir(history[histPos]);
-      });
-    }
-    if (fwdBtn) {
-      fwdBtn.addEventListener("click", function () {
-        if (histPos >= history.length - 1) return;
-        histPos += 1;
-        syncNavButtons();
-        loadDir(history[histPos]);
-      });
-    }
-    if (upBtn) {
-      upBtn.addEventListener("click", function () {
-        if (currentParent) navigateTo(currentParent);
-      });
-    }
-    if (refreshBtn) {
-      refreshBtn.addEventListener("click", function () {
-        if (currentPath) loadDir(currentPath);
-      });
-    }
-    overlay.querySelectorAll("[data-picker-view]").forEach(function (btn) {
-      var v = btn.getAttribute("data-picker-view");
-      btn.classList.toggle("is-active", v === view);
-      btn.addEventListener("click", function () {
-        view = v;
-        localStorage.setItem(THUMB_PICKER_VIEW_KEY, view);
-        overlay.querySelectorAll("[data-picker-view]").forEach(function (b) {
-          b.classList.toggle("is-active", b === btn);
-        });
-        var grid = document.getElementById("damThumbPickerGrid");
-        if (grid) grid.setAttribute("data-view", view);
-      });
-    });
-    if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
-      window.DamTooltips.bind(overlay);
-    }
-    navigateTo(dir);
   }
 
   function applyOverrideToItem(v) {
@@ -2233,6 +2113,8 @@
 
     /* buildModalItems: expand KAZDY plik z 4 - WIZKI (SZKIC (1)/(2)/(3) itd.). */
     var items = orderGroupItemsForCard(buildModalItems(group));
+    mergeLinkedVariantsIntoItems(items, (group && group.pid) || "");
+    items = filterUnlinkedVariants(items, (group && group.pid) || "");
     var first = pickCardHero(items) || items[0];
     if (!first) return;
     /* Aktywny chip = hero z wizka (nie pierwsza rewizja bez pliku). */
@@ -2290,6 +2172,7 @@
             revisionFolder: first.revision_folder,
             revisionFullPath: first.revision_path,
             showCarrierPlaceholder: true,
+            isArchive: !!(first.in_archive || pathLooksArchive(first.revision_path || first.path)),
             maxPerKind: 4,
             overflow: true,
             packagingTags: packagingTagsFrom(first),
@@ -2405,10 +2288,10 @@
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>') +
       "<span>Folder</span></button>" +
-      /* --- FILE OPEN CTA (left of copy): in-app gallery when siblings exist --- */
+      /* --- FILE OPEN CTA (left of copy): OS default app + clipboard --- */
       '<button type="button" class="dam-viz-icon-btn" id="damVizModalOpenFile" data-path="' +
       esc(first.path || "") +
-      '" aria-label="Otwórz plik" title="Otwórz plik" data-dam-tip="Otwiera podgląd w aplikacji (←/→ między plikami) albo domyślną aplikację Windows">' +
+      '" aria-label="Otwórz plik" title="Otwórz plik" data-dam-tip="Otwiera plik w domyślnej aplikacji Windows i kopiuje ścieżkę">' +
       '<i class="uil uil-external-link-alt" aria-hidden="true"></i></button>' +
       '<button type="button" class="dam-viz-icon-btn" id="damVizModalCopyPath" data-path="' +
       esc(first.path || "") +
@@ -2504,6 +2387,12 @@
           esc(tipCarrier) +
           '">' +
           esc(typeLine) +
+          "</p></div>" +
+          '<div class="dam-viz-modal__meta-line dam-viz-modal__meta-line--path">' +
+          '<span class="dam-viz-modal__meta-k">Ścieżka</span>' +
+          '<p class="dam-viz-modal__filepath" id="damVizModalFilePath">' +
+          '<span class="dam-viz-modal__filepath-text" id="damVizModalFilePathText"></span>' +
+          '<button type="button" class="dam-tag-more dam-viz-modal__filepath-more" id="damVizModalFilePathMore" hidden aria-expanded="false">…</button>' +
           "</p></div>"
         );
       })() +
@@ -2549,7 +2438,6 @@
     var html =
       '<div class="dam-viz-modal-overlay" id="damVizModal" role="dialog" aria-modal="true" aria-label="Podglad wizualizacji">' +
       '<div class="dam-viz-modal-box dam-viz-modal-box--assoc-split">' +
-      '<button type="button" class="dam-viz-modal-close" id="damVizModalClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
       '<div class="dam-viz-modal__main">' +
       thumbHtml +
       '<div class="dam-viz-modal__body">' +
@@ -2560,22 +2448,36 @@
       '<aside class="dam-viz-modal__assoc-pane" aria-label="Skojarzone materiały">' +
       assocColHtml +
       "</aside>" +
+      /* Close LAST in DOM so it paints above assoc-pane (was covered at top-right). */
+      '<button type="button" class="dam-viz-modal-close" id="damVizModalClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
       "</div></div>";
 
     if (!document.getElementById("dam-viz-modal-css")) {
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=brandModalPad20260721a";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=vizModalFix20260723m";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=brandModalPad20260721a";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=vizModalFix20260723m";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
     var modal = document.getElementById("damVizModal");
+    /* Strip leftover pickers from prior session so X is never covered (z-index 12100). */
+    [
+      "damAssocEditOverlay",
+      "damAssocEditPopover",
+      "damTagEditPopover",
+      "damThumbPicker",
+      "damVizMaterialAddPopover",
+      "damBrandingProductAddPopover",
+    ].forEach(function (id) {
+      var orphan = document.getElementById(id);
+      if (orphan) orphan.remove();
+    });
     var thumbStage = modal.querySelector(".dam-viz-modal__thumb");
 
     /* Pkt 5/7: chip ID marketingowego kopiuje widoczne V-... (klik i prawy klik) */
@@ -2627,9 +2529,48 @@
     var zoomCtrl = null;
     var teardownChrome =
       shared && typeof shared.bindChromeFit === "function" ? shared.bindChromeFit(modal) : function () {};
+    function forceStripBlockingOverlays() {
+      [
+        "damAssocEditOverlay",
+        "damAssocEditPopover",
+        "damTagEditPopover",
+        "damThumbPicker",
+        "damVizMaterialAddPopover",
+        "damBrandingProductAddPopover",
+      ].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.remove();
+      });
+      try {
+        if (window.DamAssocEdit && typeof window.DamAssocEdit.closePicker === "function") {
+          window.DamAssocEdit.closePicker();
+        }
+      } catch (eAssoc) {
+        /* ignore */
+      }
+      try {
+        if (window.DamTagEdit && typeof window.DamTagEdit.closePopover === "function") {
+          window.DamTagEdit.closePopover();
+        }
+      } catch (eTag) {
+        /* ignore */
+      }
+    }
+
     function removeModal() {
+      forceStripBlockingOverlays();
+      try {
+        global.dispatchEvent(new Event("dam:panic-reset"));
+      } catch (ePanic) {
+        /* ignore */
+      }
+      forceStripBlockingOverlays();
       teardownChrome();
-      modal.remove();
+      global._damVizOnTagApplied = null;
+      global._damVizModalRefresh = null;
+      global._damVizModalItems = null;
+      global._damVizModalActiveIdx = null;
+      if (modal && modal.parentNode) modal.remove();
     }
 
     modal.querySelectorAll("[data-request-lang]").forEach(function (btn) {
@@ -2654,6 +2595,145 @@
 
     var studioCtrl = null;
     var variantStripCtrl = null;
+
+    function fullFilePathFor(v) {
+      if (!v) return "";
+      return String(v.path || v.revision_path || "").replace(/\//g, "\\");
+    }
+
+    function syncFilePathLine(v) {
+      var textEl = document.getElementById("damVizModalFilePathText");
+      var moreBtn = document.getElementById("damVizModalFilePathMore");
+      var row = modal.querySelector(".dam-viz-modal__meta-line--path");
+      if (!textEl || !row) return;
+      var full = fullFilePathFor(v);
+      if (!full) {
+        row.hidden = true;
+        return;
+      }
+      row.hidden = false;
+      textEl.textContent = full;
+      textEl.setAttribute("title", full);
+      if (!moreBtn) return;
+      moreBtn.hidden = true;
+      moreBtn.setAttribute("aria-expanded", "false");
+      if (moreBtn._damPathTipBound) return;
+      moreBtn._damPathTipBound = true;
+      moreBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var expanded = moreBtn.getAttribute("aria-expanded") === "true";
+        moreBtn.setAttribute("aria-expanded", expanded ? "false" : "true");
+        if (window.DamTooltips && typeof window.DamTooltips.show === "function") {
+          window.DamTooltips.show(moreBtn, full, { placement: "bottom" });
+        } else {
+          showToast(full);
+        }
+      });
+      requestAnimationFrame(function () {
+        if (!document.body.contains(textEl)) return;
+        var overflow = textEl.scrollWidth > textEl.clientWidth + 2;
+        if (overflow) {
+          moreBtn.hidden = false;
+          moreBtn.textContent = "…";
+          moreBtn.setAttribute("data-dam-tip", full);
+          moreBtn.setAttribute("title", full);
+          if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
+            window.DamTooltips.bind(moreBtn.parentNode || modal);
+          }
+        }
+      });
+    }
+
+    function rebuildVariantStripDom() {
+      var wrap = modal.querySelector(".dam-viz-modal__product-variants");
+      if (!wrap) return;
+      var html = buildProductVariantStripHtml(items, activeIdx, ctx);
+      var tmp = document.createElement("div");
+      tmp.innerHTML = html;
+      var fresh = tmp.querySelector(".dam-viz-modal__product-variants");
+      if (!fresh) return;
+      wrap.innerHTML = fresh.innerHTML;
+      variantStripCtrl = bindProductVariantStrip(modal, items, function () {
+        return activeIdx;
+      }, selectVariant, variantUxExtras);
+      if (variantStripCtrl && typeof variantStripCtrl.sync === "function") {
+        variantStripCtrl.sync();
+      }
+    }
+
+    function mergeVariantFromPicker(payload) {
+      payload = payload || {};
+      var folderPath = payload.addedVariantPath;
+      if (!folderPath) return;
+      var pid = (items[0] && items[0].product_id) || "";
+      if (!pid || !indexData) {
+        showToast("Brak indeksu produktu — odśwież stronę.");
+        return;
+      }
+      var hit = findRevisionByFolderPath(indexData, pid, folderPath);
+      if (!hit) {
+        showToast("Nie znaleziono rewizji w indeksie dla tego folderu. Uruchom rebuild indeksu.");
+        return;
+      }
+      var newRows = expandModalWizkiVariants(vizRowsFromRevision(indexData, hit.product, hit.revision));
+      if (!newRows.length) {
+        showToast("Nie udało się zbudować wariantu z tego folderu.");
+        return;
+      }
+      var existingKeys = {};
+      items.forEach(function (it) {
+        existingKeys[productVariantKey(it)] = true;
+      });
+      var added = 0;
+      newRows.forEach(function (row) {
+        var k = productVariantKey(row);
+        if (k && existingKeys[k]) return;
+        if (k) existingKeys[k] = true;
+        items.push(row);
+        added++;
+      });
+      if (!added) {
+        showToast("Ten wariant jest już na liście.");
+        return;
+      }
+      persistLinkedVariant(pid, hit.revision.path || folderPath);
+      rebuildVariantStripDom();
+      selectVariant(items.length - 1);
+      showToast("Dodano wariant produktu.");
+    }
+
+    var variantUxExtras = {
+      onRefresh: function (payload) {
+        mergeVariantFromPicker(payload);
+      },
+      onRemoveProductVariant: function (vkey, vpath) {
+        if (!vkey) return;
+        var pid = (items[0] && items[0].product_id) || "";
+        if (!pid) return;
+        var repsBefore = productVariantRepresentatives(items);
+        if (repsBefore.length <= 1) {
+          showToast("Musi zostać co najmniej jeden wariant produktu.");
+          return;
+        }
+        var revFolder = "";
+        for (var ri = 0; ri < items.length; ri++) {
+          if (productVariantKey(items[ri]) === vkey) {
+            revFolder = revisionFolderFromItem(items[ri]);
+            break;
+          }
+        }
+        if (!revFolder && vpath) revFolder = revisionFolderFromItem({ path: vpath });
+        for (var ii = items.length - 1; ii >= 0; ii--) {
+          if (productVariantKey(items[ii]) === vkey) items.splice(ii, 1);
+        }
+        if (activeIdx >= items.length) activeIdx = Math.max(0, items.length - 1);
+        removeLinkedVariant(pid, vkey, revFolder);
+        rebuildVariantStripDom();
+        selectVariant(activeIdx);
+        showToast("Usunięto wariant produktu.");
+      },
+    };
 
     function selectVariant(idx) {
       activeIdx = idx;
@@ -2735,6 +2815,7 @@
       if (typeof refreshModalBadgesAndAdmin === "function") {
         refreshModalBadgesAndAdmin();
       }
+      syncFilePathLine(v);
       if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
     }
 
@@ -2744,7 +2825,8 @@
       function () {
         return activeIdx;
       },
-      selectVariant
+      selectVariant,
+      variantUxExtras
     );
     studioCtrl = bindVizModalStudioControls(
       modal,
@@ -2825,17 +2907,67 @@
           revisionFolder: v.revision_folder,
           revisionFullPath: v.revision_path,
           showCarrierPlaceholder: true,
+          isArchive: !!(v.in_archive || pathLooksArchive(v.revision_path || v.path)),
           maxPerKind: 4,
           overflow: true,
           packagingTags: packagingTagsFrom(v),
           includeTagTiers: badgeTierOpt().includeTagTiers,
         });
+        if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
+          badgesEl._damBadgesBound = false;
+          window.DamBadges.bindClicks(badgesEl, "viz");
+        }
+        if (
+          window.DamMediaPreview &&
+          typeof window.DamMediaPreview.ensureModalTagPlusUx === "function"
+        ) {
+          window.DamMediaPreview.ensureModalTagPlusUx(badgesEl, {
+            mode: "viz",
+            product: v,
+            tagGroups: v.tag_groups || {},
+            onTagsApplied: function (nextGroups) {
+              v.tag_groups = nextGroups || {};
+              if (indexData && v.product_id) {
+                var prod = (indexData.products || []).find(function (p) {
+                  return p && p.id === v.product_id;
+                });
+                if (prod) prod.tag_groups = nextGroups || {};
+              }
+              refreshModalBadgesAndAdmin();
+            },
+          });
+        }
       }
+      syncFilePathLine(v);
       syncAdminControls(v);
       if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
         window.DamTooltips.bind(modal);
       }
     }
+
+    global._damVizModalItems = items;
+    global._damVizModalActiveIdx = function () {
+      return activeIdx;
+    };
+    global._damVizOnTagApplied = function (res) {
+      var v = items[activeIdx];
+      if (!v || !res) return;
+      if (res.new_carrier_code) {
+        v.carrier = res.new_carrier_code;
+        v.carrier_guessed = false;
+        if (res.new_path) {
+          v.path = res.new_path;
+          v.revision_path = res.new_path;
+        }
+      }
+      if (res.langs && res.langs.length) {
+        v.langs = res.langs.slice();
+        v.lang = res.langs[0] || v.lang;
+      }
+      refreshModalBadgesAndAdmin();
+      applyFilters();
+    };
+    global._damVizModalRefresh = refreshModalBadgesAndAdmin;
 
     function syncAdminControls(v) {
       if (!admin || !v) return;
@@ -3046,6 +3178,17 @@
     if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
       window.DamBadges.bindClicks(document.getElementById("damVizModalBadges"), "viz");
     }
+    if (
+      window.DamMediaPreview &&
+      typeof window.DamMediaPreview.ensureModalTagPlusUx === "function"
+    ) {
+      window.DamMediaPreview.ensureModalTagPlusUx(document.getElementById("damVizModalBadges"), {
+        mode: "viz",
+        product: first,
+        tagGroups: first.tag_groups || {},
+      });
+    }
+    syncFilePathLine(first);
     if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
       window.DamTooltips.bind(modal);
     }
@@ -3123,7 +3266,7 @@
       });
     }
 
-    /* --- OPEN FILE: in-app gallery with siblings (←/→); OS open only when alone --- */
+    /* --- OPEN FILE: default app + clipboard (parity with #damMediaPreviewOpenFile) --- */
     var openFileBtn = document.getElementById("damVizModalOpenFile");
     if (openFileBtn) {
       openFileBtn.addEventListener("click", function () {
@@ -3132,63 +3275,6 @@
         if (path) this.setAttribute("data-path", path);
         if (!path) {
           showToast("Brak ścieżki pliku");
-          return;
-        }
-        var siblings = items
-          .filter(function (it) {
-            return it && it.path;
-          })
-          .map(function (it, i) {
-            return {
-              id: it.id || "viz-modal-" + i + "-" + String(it.path || "").slice(-48),
-              name: it.name || it.file || "",
-              path: it.path || "",
-              perspective: it.perspective || it.persp || "",
-              persp: it.persp || it.perspective || "",
-              size: it.size || "",
-              bg: it.bg || "",
-              lang: it.lang || "",
-              media_type: it.media_type || "image",
-              product_index: it.index_base || it.index || "",
-              product_id: it.product_id || "",
-              product_name: it.product_name || "",
-              brand: it.brand || "",
-              thumb_url: it.thumb_url || "",
-              mtime: it.mtime || "",
-              carrier: it.carrier || "",
-            };
-          });
-        var idx = siblings.findIndex(function (s) {
-          return s.path === path;
-        });
-        if (idx < 0) idx = 0;
-        if (
-          siblings.length > 1 &&
-          window.DamMediaPreview &&
-          typeof window.DamMediaPreview.openAsset === "function"
-        ) {
-          window.DamMediaPreview.openAsset(siblings[idx], {
-            siblings: siblings,
-            index: idx,
-            groupContext: {
-              variants: siblings.slice(),
-              linked_products: first.product_id
-                ? [
-                    {
-                      id: first.product_id,
-                      name: first.product_name || productName || "",
-                    },
-                  ]
-                : [],
-            },
-            productContext: first.product_id
-              ? {
-                  id: first.product_id,
-                  name: first.product_name || productName || "",
-                  index: first.index_base || first.index || "",
-                }
-              : null,
-          });
           return;
         }
         if (window.DamPaths && typeof window.DamPaths.openFileAndCopyPath === "function") {
@@ -3248,16 +3334,65 @@
       });
     }
 
-    document.getElementById("damVizModalClose").addEventListener("click", function () {
-      closeVariantInfoPopover();
-      removeModal();
-    });
+    var closeBtn = document.getElementById("damVizModalClose");
+    if (closeBtn) {
+      closeBtn.addEventListener(
+        "click",
+        function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeVariantInfoPopover();
+          removeModal();
+        },
+        true
+      );
+    }
     modal.addEventListener("click", function (e) {
       if (e.target === modal) {
         closeVariantInfoPopover();
         removeModal();
       }
     });
+    /**
+     * HARD: orphaned #damAssocEditOverlay (z-index ~12100) sits ABOVE #damVizModal (~9999)
+     * and eats clicks on X. Capture mousedown: backdrop click strips overlays; click over
+     * close-button geometry always closes modal even when overlay intercepts.
+     */
+    document.addEventListener(
+      "mousedown",
+      function onVizModalBlockerGuard(e) {
+        if (!document.getElementById("damVizModal")) {
+          document.removeEventListener("mousedown", onVizModalBlockerGuard, true);
+          return;
+        }
+        var t = e.target;
+        if (t && (t.id === "damAssocEditOverlay" || t.id === "damThumbPicker")) {
+          forceStripBlockingOverlays();
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        var xBtn = document.getElementById("damVizModalClose");
+        if (!xBtn) return;
+        var r = xBtn.getBoundingClientRect();
+        if (
+          e.clientX < r.left ||
+          e.clientX > r.right ||
+          e.clientY < r.top ||
+          e.clientY > r.bottom
+        ) {
+          return;
+        }
+        var topEl = document.elementFromPoint(e.clientX, e.clientY);
+        if (topEl === xBtn || (xBtn.contains && xBtn.contains(topEl))) return;
+        /* Something (overlay) sits on top of X — force close modal. */
+        e.preventDefault();
+        e.stopPropagation();
+        closeVariantInfoPopover();
+        removeModal();
+      },
+      true
+    );
     document.addEventListener("keydown", function onEsc(e) {
       if (!document.getElementById("damVizModal")) {
         document.removeEventListener("keydown", onEsc);
@@ -3266,6 +3401,17 @@
       /* When DamMediaPreview is stacked on top, let it own arrows / Escape. */
       if (document.getElementById("damMediaPreview")) return;
       if (e.key === "Escape") {
+        e.preventDefault();
+        if (
+          document.getElementById("damAssocEditOverlay") ||
+          document.getElementById("damTagEditPopover") ||
+          document.getElementById("damVizMaterialAddPopover") ||
+          document.getElementById("damThumbPicker") ||
+          document.getElementById("damBrandingProductAddPopover")
+        ) {
+          forceStripBlockingOverlays();
+          return;
+        }
         closeVariantInfoPopover();
         removeModal();
         document.removeEventListener("keydown", onEsc);
@@ -3320,6 +3466,7 @@
     var indexLbl = displayIndex(first);
     var demo = isDemo(first);
     var hidden = isHidden(first);
+    var archive = items.some(rowIsArchive);
     // Preferuj miniaturke z poprawnym indeksem (po naprawie noid -> 6300xxx)
     if (indexLbl && thumb && thumb.indexOf("__noid_") !== -1) {
       thumb = thumbStem(first.product_id || group.pid, indexLbl, first.lang || "pl");
@@ -3351,6 +3498,7 @@
             demo: demo,
             mix: !!(first.is_mix || (window.DamLabels && DamLabels.isMixProduct(productName, first.tags))),
             hidden: hidden && isAdminMode(),
+            isArchive: archive,
             productName: productName,
             productId: first.product_id,
             flagKey: hideKey(first),
@@ -3379,6 +3527,7 @@
         (demo ? " dam-viz-card--demo" : "") +
         (noViz ? " dam-viz-card--no-viz" : "") +
         (hidden && isAdminMode() ? " dam-viz-card--hidden" : "") +
+        (archive ? " dam-viz-card--archive dam-gradient-tile dam-gradient-tile--archive" : "") +
         '" data-group-pid="' +
         esc(group.pid) +
         '">' +
@@ -3515,6 +3664,123 @@
     clearChromeRevealInline(document.getElementById("vizSearchTags"));
   }
 
+  function pickVizEmptyBundle() {
+    if (window.DamEmptyMascot && typeof window.DamEmptyMascot.pick === "function") {
+      return window.DamEmptyMascot.pick();
+    }
+    return {
+      text: "Skryło się to tak, że nawet najstarsi graficy tego nie znajdą.",
+      mood: "think",
+      poseUrl: "assets/img/maskotka/pose-think-q.png"
+    };
+  }
+
+  function clearVizFiltersSoft() {
+    var search = document.getElementById("vizSearch");
+    if (search) {
+      search.value = "";
+      try {
+        search.dispatchEvent(new Event("input", { bubbles: true }));
+      } catch (e1) {
+        /* ignore */
+      }
+    }
+    var lang = document.getElementById("vizLangFilter");
+    if (lang && lang.value) {
+      lang.value = "";
+      try {
+        lang.dispatchEvent(new Event("change", { bubbles: true }));
+      } catch (e2) {
+        /* ignore */
+      }
+    }
+    if (window.DamBrandFilter && typeof window.DamBrandFilter.clear === "function") {
+      try {
+        window.DamBrandFilter.clear();
+      } catch (e3) {
+        /* ignore */
+      }
+    }
+    applyFilters();
+  }
+
+  function vizActiveFilterLabels() {
+    var parts = [];
+    var q = ((document.getElementById("vizSearch") || {}).value || "").trim();
+    if (q) parts.push("Szukaj: " + q);
+    var lang = ((document.getElementById("vizLangFilter") || {}).value || "").trim();
+    if (lang) parts.push("Język: " + lang);
+    try {
+      if (brandFilter) {
+        var dk = !!brandFilter.DK;
+        var gc = !!brandFilter.GC;
+        if (dk && !gc) parts.push("Marka: DK");
+        else if (gc && !dk) parts.push("Marka: GC");
+      }
+    } catch (e0) {
+      /* ignore */
+    }
+    return parts;
+  }
+
+  function renderVizEmptyState(grid) {
+    if (!grid) return;
+    var bundle = pickVizEmptyBundle();
+    var pose = String(bundle.poseUrl || "").replace(/'/g, "%27");
+    var line = bundle.text || "";
+    var filters = vizActiveFilterLabels();
+    var filterHtml = filters.length
+      ? '<ul class="dam-branding-empty__filters">' +
+        filters
+          .map(function (f) {
+            return "<li>" + esc(f) + "</li>";
+          })
+          .join("") +
+        "</ul>"
+      : "";
+    /* Unified with Branding: [bubble+mascot LEFT lower] | [card RIGHT higher]; pose by mood */
+    grid.innerHTML =
+      '<div class="dam-viz-empty" role="status" aria-live="polite" aria-label="Brak wynik\u00f3w dla filtra">' +
+      '<div class="dam-empty-mascot-row" data-empty-mood="' +
+      esc(bundle.mood || "think") +
+      '">' +
+      '<div class="dam-empty-mascot-row__speak">' +
+      '<div class="dam-empty-mascot-row__bubble">' +
+      '<p class="dam-empty-mascot-row__bubble-text">' +
+      esc(line) +
+      "</p>" +
+      "</div>" +
+      '<div class="dam-empty-mascot-row__mascot" aria-hidden="true" style="--dam-empty-pose:url(\'' +
+      pose +
+      "')\">" +
+      '<span class="dam-empty-mascot-row__mascot-img"></span>' +
+      "</div>" +
+      "</div>" +
+      '<div class="dam-empty-mascot-row__card">' +
+      '<div class="dam-branding-empty" role="presentation">' +
+      '<div class="dam-branding-empty__icon" aria-hidden="true"><i class="uil uil-image-slash"></i></div>' +
+      '<h3 class="dam-branding-empty__title">Brak wynik\u00f3w</h3>' +
+      '<p class="dam-branding-empty__desc">\u017baden materia\u0142 nie pasuje do aktywnych filtr\u00f3w w tej sekcji.</p>' +
+      filterHtml +
+      '<button type="button" class="geex-btn geex-btn--primary-transparent dam-viz-empty__clear">Wyczy\u015b\u0107 filtry</button>' +
+      "</div>" +
+      "</div>" +
+      "</div>" +
+      "</div>";
+    var root = grid.querySelector(".dam-viz-empty");
+    var clearBtn = root && root.querySelector(".dam-viz-empty__clear");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        clearVizFiltersSoft();
+      });
+    }
+    if (root) {
+      void root.offsetWidth;
+      root.classList.add("is-enter");
+    }
+  }
+
   function render() {
     var grid = document.getElementById("vizGrid");
     var status = document.getElementById("vizStatus");
@@ -3530,7 +3796,7 @@
     updateVizGridCount(groups, filtered);
 
     if (!groups.length) {
-      grid.innerHTML = '<p style="color:#888;padding:12px">Brak wynikow dla filtra.</p>';
+      renderVizEmptyState(grid);
       return;
     }
 
@@ -3740,6 +4006,8 @@
       }
       /* Bez "Pokaz wszystkie": ukryj Demo (prototypy) */
       if (!showAll && isDemo(v)) return false;
+      /* Bez "Pokaz wszystkie": ukryj ARCHIWUM (starsze rewizje z folderu ARCHIWUM) */
+      if (!showAll && rowIsArchive(v)) return false;
       if (lang && (v.lang || "") !== lang) return false;
       if (!parts.length) return true;
       var meta = productMeta(v.product_id) || {};
@@ -3825,6 +4093,9 @@
     try {
       localStorage.setItem(CARD_ZOOM_KEY, String(n));
     } catch (e) {}
+    if (window.DamUserPrefs && typeof DamUserPrefs.setCardZoom === "function") {
+      DamUserPrefs.setCardZoom(n, true).catch(function () {});
+    }
     return n;
   }
 
@@ -3832,9 +4103,17 @@
     var input = document.getElementById("vizCardZoom");
     if (!input || input._damZoomBound) return;
     input._damZoomBound = true;
-    var saved = parseInt(localStorage.getItem(CARD_ZOOM_KEY) || "100", 10);
+    var saved =
+      window.DamUserPrefs && typeof DamUserPrefs.getCardZoom === "function"
+        ? DamUserPrefs.getCardZoom()
+        : parseInt(localStorage.getItem(CARD_ZOOM_KEY) || "100", 10);
     if (isNaN(saved)) saved = 100;
     applyCardZoom(saved);
+    if (window.DamUserPrefs && typeof DamUserPrefs.load === "function") {
+      DamUserPrefs.load().then(function (prefs) {
+        if (prefs && prefs.card_zoom != null) applyCardZoom(prefs.card_zoom);
+      });
+    }
     input.addEventListener("input", function () {
       applyCardZoom(this.value);
     });
@@ -3983,6 +4262,16 @@
             packagingTags: packagingTagsFrom(v),
             includeTagTiers: badgeTierOpt().includeTagTiers,
           });
+          if (
+            window.DamMediaPreview &&
+            typeof window.DamMediaPreview.ensureModalTagPlusUx === "function"
+          ) {
+            window.DamMediaPreview.ensureModalTagPlusUx(badgesEl, {
+              mode: "viz",
+              product: v,
+              tagGroups: v.tag_groups || {},
+            });
+          }
           var setOn = function (btn, on, label, tip, icon) {
             if (!btn) return;
             btn.classList.toggle("is-on", !!on);
@@ -4037,7 +4326,9 @@
     };
 
     /* Pkt 8: dostep dla innych modulow (dam-explorer "Dodaj miniature") + QA */
-    window.damVizOpenThumbPicker = openThumbGridPicker;
+    window.damVizOpenThumbPicker = function (dir, onPicked) {
+      openFolderPicker(dir, onPicked);
+    };
 
     window.damVizToggleDemo = function (opts) {
       opts = opts || {};
@@ -4124,6 +4415,24 @@
       indexData = data;
       langLabels = data.lang_labels || {};
       window._DAM_FILE_INDEX = data;
+      // #region agent log
+      fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "3ca09b" },
+        body: JSON.stringify({
+          sessionId: "3ca09b",
+          runId: "pre-fix",
+          hypothesisId: "H1",
+          location: "dam-viz.js:boot",
+          message: "page_index_loaded",
+          data: {
+            productsLen: (data.products || []).length,
+            fromSearchIndex: !!data._fromSearchIndex,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(function () {});
+      // #endregion
       renderSubcatPills(data.products);
       showAll = readShowAll();
       var showAllEl = document.getElementById("vizShowAll") || document.getElementById("vizLatestOnly");
@@ -4303,9 +4612,16 @@
             all.forEach(function (v) {
               if (v.path === res.old_path || v.revision_path === res.old_path) {
                 v.carrier = res.new_carrier_code || v.carrier;
+                v.carrier_guessed = false;
                 v.path = res.new_path;
+                v.revision_path = res.new_path;
               }
             });
+          }
+          if (typeof global._damVizOnTagApplied === "function") {
+            global._damVizOnTagApplied(res);
+          } else if (typeof global._damVizModalRefresh === "function" && document.getElementById("damVizModal")) {
+            global._damVizModalRefresh();
           }
         } catch (ignore) {}
         applyFilters();

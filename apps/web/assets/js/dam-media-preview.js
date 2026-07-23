@@ -218,6 +218,296 @@
   if (document.head) injectA3Styles();
   else document.addEventListener("DOMContentLoaded", injectA3Styles);
 
+  /**
+   * Content modals: Shift+Admin PLUS gate + dark surfaces.
+   * HARD: admin affordances visible ONLY while Shift held (class is-shift-revealed).
+   */
+  function injectContentModalChrome() {
+    var id = "dam-content-modal-chrome-20260722";
+    var st = document.getElementById(id);
+    if (!st) {
+      st = document.createElement("style");
+      st.id = id;
+      (document.head || document.documentElement).appendChild(st);
+    }
+    st.textContent = [
+      "#damVizModalBadges,#damMediaPreviewBadges,",
+      "#damVizModal .dam-viz-modal__meta-block--badges .dam-viz-card__badges,",
+      "#damMediaPreview .dam-viz-modal__meta-block--badges .dam-viz-card__badges{",
+      "display:flex;flex-wrap:wrap;align-items:center;gap:6px;}",
+      /* Tag PLUS: hidden unless html.is-shift-revealed (Shift+Admin) */
+      ".dam-modal-tag-plus,.dam-admin-shift-plus--tag{",
+      "display:inline-flex;align-items:center;justify-content:center;",
+      "width:0;height:0;min-width:0;min-height:0;padding:0;margin:0;border:0;",
+      "overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;",
+      "border-radius:999px;flex:0 0 auto;",
+      "transition:opacity .12s ease,visibility .12s ease;}",
+      "html.is-shift-revealed .dam-modal-tag-plus,",
+      "html.is-shift-revealed .dam-admin-shift-plus--tag,",
+      ".dam-modal-tag-plus.is-shift-revealed,",
+      ".dam-admin-shift-plus--tag.is-shift-revealed{",
+      "width:28px;height:28px;min-width:28px;min-height:28px;",
+      "border:1.5px solid color-mix(in srgb,var(--dam-primary,#ab54db) 55%,var(--dam-border,#d7d7e0));",
+      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 16%,var(--dam-surface,#fff));",
+      "color:var(--dam-primary,#7a3aa8);cursor:pointer;",
+      "opacity:1;visibility:visible;pointer-events:auto;",
+      "box-shadow:0 1px 4px color-mix(in srgb,var(--dam-primary,#ab54db) 28%,transparent);}",
+      ".dam-modal-tag-plus i,.dam-admin-shift-plus--tag i{font-size:16px;line-height:1;}",
+      ".dam-modal-tag-plus:focus-visible,.dam-admin-shift-plus--tag:focus-visible{",
+      "outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px;}",
+      /* Square Dodaj tile (assoc / material / product variants) — Shift+Admin only */
+      ".dam-media-preview__assoc-plus-tile,.dam-admin-shift-plus--tile{",
+      "display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px;",
+      "box-sizing:border-box;width:70px;height:70px;min-width:70px;min-height:70px;",
+      "max-width:70px;max-height:70px;aspect-ratio:1;padding:4px;",
+      "border:1.5px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 45%,var(--dam-border,#d7d7e0));",
+      "border-radius:8px;background:color-mix(in srgb,var(--dam-primary,#ab54db) 6%,var(--dam-surface,#fff));",
+      "color:var(--dam-primary,#7a3aa8);cursor:pointer;font-size:10px;font-weight:600;",
+      "justify-self:start;align-self:start;line-height:1.15;}",
+      "html.is-shift-revealed .dam-media-preview__assoc-plus-tile,",
+      "html.is-shift-revealed .dam-admin-shift-plus--tile,",
+      ".dam-media-preview__assoc-plus-tile.is-shift-revealed,",
+      ".dam-admin-shift-plus--tile.is-shift-revealed,",
+      ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-plus-tile,",
+      ".dam-media-preview__variant-grid.is-shift-hover .dam-media-preview__assoc-plus-tile{",
+      "display:flex!important;}",
+      ".dam-media-preview__assoc-plus-tile i,.dam-admin-shift-plus--tile i{font-size:20px;line-height:1;}",
+      ".dam-media-preview__assoc-plus-tile span,.dam-admin-shift-plus--tile span{",
+      "max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
+      ".dam-viz-modal__variant-strip .dam-media-preview__assoc-plus-tile,",
+      ".dam-viz-modal__product-variants .dam-media-preview__assoc-plus-tile{",
+      "width:64px;height:64px;min-width:64px;min-height:64px;max-width:64px;max-height:64px;}",
+      "html[data-theme=\"dark\"] .dam-media-preview__assoc-plus-tile,",
+      "html[data-theme=\"dark\"] .dam-admin-shift-plus--tile,",
+      "html[data-theme=\"dark\"] html.is-shift-revealed .dam-modal-tag-plus,",
+      "html[data-theme=\"dark\"].is-shift-revealed .dam-modal-tag-plus{",
+      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 14%,var(--dam-surface,#201f28));",
+      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 80%,#fff);}",
+      /* --- Dark content modals --- */
+      "html[data-theme=\"dark\"] .dam-viz-modal-box,",
+      "html[data-theme=\"dark\"] #damVizModal .dam-viz-modal-box,",
+      "html[data-theme=\"dark\"] #damMediaPreview .dam-viz-modal-box{",
+      "background:var(--dam-surface,#201f28)!important;color:var(--dam-text,#eeeaf6);",
+      "box-shadow:0 16px 56px rgba(0,0,0,.55);}",
+      "html[data-theme=\"dark\"] .dam-viz-modal-close{",
+      "background:var(--dam-surface-elevated,#2a2833)!important;",
+      "border-color:var(--dam-border,#2c2b36)!important;color:var(--dam-text,#eeeaf6)!important;}",
+      "html[data-theme=\"dark\"] .dam-viz-modal__thumb,",
+      "html[data-theme=\"dark\"] #damVizModal .dam-viz-modal__thumb,",
+      "html[data-theme=\"dark\"] #damMediaPreview .dam-viz-modal__thumb{",
+      "background:var(--dam-surface-muted,#17161e)!important;}",
+      "html[data-theme=\"dark\"] .dam-viz-modal__thumb img{background:transparent!important;}",
+      "html[data-theme=\"dark\"] .dam-viz-modal__body,",
+      "html[data-theme=\"dark\"] #damVizModal .dam-viz-modal__body,",
+      "html[data-theme=\"dark\"] #damMediaPreview .dam-viz-modal__body{",
+      "background:var(--dam-surface,#201f28)!important;color:var(--dam-text,#eeeaf6);}",
+      "html[data-theme=\"dark\"] .dam-viz-modal__title,",
+      "html[data-theme=\"dark\"] #damMediaPreviewTitle,",
+      "html[data-theme=\"dark\"] .dam-media-preview__title-base{",
+      "color:var(--dam-text,#eeeaf6)!important;}",
+      "html[data-theme=\"dark\"] .dam-viz-modal__filename,",
+      "html[data-theme=\"dark\"] .dam-viz-modal__carrier,",
+      "html[data-theme=\"dark\"] .dam-media-preview__assoc-label,",
+      "html[data-theme=\"dark\"] .dam-media-preview__assoc-empty{",
+      "color:var(--dam-text-muted,#b8b3c6)!important;}",
+      "html[data-theme=\"dark\"] .dam-viz-modal__zoom{",
+      "background:color-mix(in srgb,var(--dam-surface,#201f28) 92%,transparent)!important;",
+      "border-color:var(--dam-border,#2c2b36)!important;}",
+      "html[data-theme=\"dark\"] .dam-viz-modal__zoom-btn,",
+      "html[data-theme=\"dark\"] .dam-viz-modal__zoom-label{color:var(--dam-text,#eeeaf6)!important;}",
+    ].join("");
+  }
+  if (document.head) injectContentModalChrome();
+  else document.addEventListener("DOMContentLoaded", injectContentModalChrome);
+
+  var _adminShiftDown = false;
+  var _adminShiftBound = false;
+
+  /** Existing privilege: admin | power_user (DamTagEdit / DamAssocEdit). */
+  function isAdminForShiftPlus() {
+    if (
+      window.DamTagEdit &&
+      typeof window.DamTagEdit.isPrivileged === "function" &&
+      window.DamTagEdit.isPrivileged()
+    ) {
+      return true;
+    }
+    try {
+      var role =
+        (window.DamAuth && typeof window.DamAuth.role === "function" && window.DamAuth.role()) ||
+        localStorage.getItem("dam_role") ||
+        "";
+      role = String(role || "").toLowerCase();
+      return role === "admin" || role === "power_user";
+    } catch (eRole) {
+      return false;
+    }
+  }
+
+  /**
+   * Global Shift+Admin reveal for modal PLUS controls.
+   * @param {boolean} down - Shift keydown
+   */
+  function showAdminShiftPlus(down) {
+    injectContentModalChrome();
+    var reveal = !!down && isAdminForShiftPlus();
+    _adminShiftDown = reveal;
+    document.documentElement.classList.toggle("is-shift-revealed", reveal);
+    document.documentElement.classList.toggle("dam-shift-held", reveal);
+    document
+      .querySelectorAll(
+        ".dam-modal-tag-plus, .dam-admin-shift-plus, .dam-admin-shift-plus--tag, .dam-admin-shift-plus--tile, .dam-media-preview__assoc-plus-tile"
+      )
+      .forEach(function (el) {
+        el.classList.toggle("is-shift-revealed", reveal);
+      });
+    return reveal;
+  }
+
+  function ensureAdminShiftPlusLatch() {
+    if (_adminShiftBound) return;
+    _adminShiftBound = true;
+    window.addEventListener(
+      "keydown",
+      function (e) {
+        if (e.key === "Shift") showAdminShiftPlus(true);
+      },
+      true
+    );
+    window.addEventListener(
+      "keyup",
+      function (e) {
+        if (e.key === "Shift") showAdminShiftPlus(false);
+      },
+      true
+    );
+    window.addEventListener(
+      "blur",
+      function () {
+        showAdminShiftPlus(false);
+      },
+      true
+    );
+  }
+
+  function mountAdminShiftPlus(el, kind) {
+    if (!el || !isAdminForShiftPlus()) return null;
+    ensureAdminShiftPlusLatch();
+    el.classList.add("dam-admin-shift-plus");
+    if (kind === "tag") el.classList.add("dam-admin-shift-plus--tag");
+    if (kind === "tile") el.classList.add("dam-admin-shift-plus--tile");
+    el.classList.toggle("is-shift-revealed", _adminShiftDown);
+    return el;
+  }
+
+  window.DamAdminShiftPlus = {
+    show: showAdminShiftPlus,
+    ensureLatch: ensureAdminShiftPlusLatch,
+    isAdmin: isAdminForShiftPlus,
+    isRevealed: function () {
+      return _adminShiftDown;
+    },
+    mount: mountAdminShiftPlus,
+  };
+  window.showAdminShiftPlus = showAdminShiftPlus;
+
+  /**
+   * Shift+Admin PLUS next to modal tag row → DamTagEdit.openTagPicker.
+   * ctx: { mode: "branding"|"viz"|"product", asset?, product?, kind? }
+   */
+  function ensureModalTagPlusUx(badgesEl, ctx) {
+    injectContentModalChrome();
+    if (!badgesEl || !isAdminForShiftPlus()) {
+      var stale = badgesEl && badgesEl.querySelector(".dam-modal-tag-plus");
+      if (stale) stale.remove();
+      return null;
+    }
+    ensureAdminShiftPlusLatch();
+    ctx = ctx || {};
+    var plus = badgesEl.querySelector(".dam-modal-tag-plus");
+    if (!plus) {
+      plus = document.createElement("button");
+      plus.type = "button";
+      plus.className = "dam-modal-tag-plus dam-admin-shift-plus dam-admin-shift-plus--tag";
+      plus.setAttribute("aria-label", "Dodaj tag");
+      plus.setAttribute(
+        "data-dam-tip",
+        "Admin: przytrzymaj Shift, potem kliknij +, aby dodać tag"
+      );
+      plus.title = "Admin: przytrzymaj Shift, potem kliknij +, aby dodać tag";
+      plus.innerHTML = '<i class="uil uil-plus" aria-hidden="true"></i>';
+      badgesEl.appendChild(plus);
+    }
+    mountAdminShiftPlus(plus, "tag");
+    if (!plus._damTagPlusBound) {
+      plus._damTagPlusBound = true;
+      plus.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!_adminShiftDown || !isAdminForShiftPlus()) return;
+        if (!window.DamTagEdit || typeof window.DamTagEdit.openTagPicker !== "function") {
+          return;
+        }
+        var mode = ctx.mode || "branding";
+        var product = ctx.product || null;
+        var asset = ctx.asset || null;
+        var isProductModal = mode === "viz" || mode === "product";
+        var brandingId =
+          (asset && (asset.id || asset.branding_asset_id)) ||
+          (badgesEl.getAttribute && badgesEl.getAttribute("data-branding-asset-id")) ||
+          "";
+        var productId =
+          (product && (product.id || product.product_id)) ||
+          (asset && (asset.product_id || (asset.linked_product_ids && asset.linked_product_ids[0]))) ||
+          "";
+        var productName =
+          (product && (product.name || product.display_name || product.product_name)) ||
+          (asset && asset.name) ||
+          "";
+        /* Macrotask: never build tag picker in the same tick as click (freeze). */
+        setTimeout(function () {
+          try {
+            if (isProductModal && window.DamTagEdit && typeof window.DamTagEdit.openProductTagsMultiPicker === "function") {
+              window.DamTagEdit.openProductTagsMultiPicker(plus, {
+                product: product,
+                productId: productId || "",
+                productName: productName || "",
+                tagGroups: ctx.tagGroups || (product && product.tag_groups) || {},
+                onTagsApplied: ctx.onTagsApplied,
+              });
+              return;
+            }
+            if (!window.DamTagEdit || typeof window.DamTagEdit.openTagPicker !== "function") {
+              return;
+            }
+            var kind =
+              ctx.kind ||
+              (mode === "branding" ? "appearance" : "carrier");
+            window.DamTagEdit.openTagPicker(plus, {
+              kind: kind,
+              value: "",
+              currentCode: "",
+              brandingAssetId: brandingId || "",
+              productId: productId || "",
+              productName: productName || "",
+              revisionPath:
+                (product && (product.revision_path || product.revision_folder)) ||
+                (asset && asset.path) ||
+                "",
+              brand: (asset && asset.brand) || (product && product.brand) || "",
+            });
+          } catch (errTag) {
+            console.error("[DamMediaPreview] openTagPicker failed", errTag);
+          }
+        }, 0);
+      });
+    }
+    if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
+      window.DamTooltips.bind(badgesEl);
+    }
+    return plus;
+  }
+
   /** Tile skeleton + per-row opacity fade (own id — always refresh, no stale A3 early-return). */
   function injectAssocSkeletonStyles() {
     var id = "dam-assoc-skel-styles";
@@ -1155,7 +1445,7 @@
   }
 
   function mediaUrl(path, asset) {
-    /* Grid thumbs: prefer /thumb-cache (PAMIEC AVIF); modal/video keep /media */
+    /* Grid first-paint: /thumb-cache (PAMIEC+Redis). Klik/modal/video: /media = zrodlo z dysku. */
     var ext = fileExt(path || (asset && (asset.name || asset.path)) || "");
     var isVid = isVideoAsset(asset) || VIDEO_EXTS[ext];
     if (
@@ -1389,35 +1679,18 @@
 
   function loadIndexAssets() {
     if (_indexAssetsPromise) return _indexAssetsPromise;
-    // Reuzyj indeksu zaladowanego przez dam-branding.js (ta sama sesja) zamiast
-    // pobierac ~35 MB drugi raz.
+    // Reuzyj indeksu zaladowanego przez dam-branding.js (ta sama sesja).
     if (window.__damBrandingIndex && window.__damBrandingIndex.assets) {
       _indexAssetsPromise = Promise.resolve(window.__damBrandingIndex.assets);
       return _indexAssetsPromise;
     }
-    _indexAssetsPromise = fetch(bridgeUrl() + "/branding-index")
-      .then(function (r) {
-        if (!r.ok) throw new Error("bridge_branding_index");
-        return r.json();
-      })
-      .catch(function () {
-        return fetch("data/branding-index.json").then(function (r) {
-          return r.ok ? r.json() : null;
-        });
-      })
-      .then(function (d) {
-        if (d && d.assets && !window.__damBrandingIndex) {
-          try {
-            window.__damBrandingIndex = d;
-          } catch (eShare) {
-            /* ignore */
-          }
-        }
-        return (d && d.assets) || [];
-      })
-      .catch(function () {
-        return [];
-      });
+    /*
+     * HARD freeze fix (2026-07-22): NEVER fetch/parse data/branding-index.json
+     * (~388MB) from the UI thread. Sync r.json() kills the whole DAM tab.
+     * Bridge /branding-index is the same payload - also forbidden on interactive paths.
+     * Without an in-memory index, return [] (assoc pane stays empty / seed-only).
+     */
+    _indexAssetsPromise = Promise.resolve([]);
     return _indexAssetsPromise;
   }
 
@@ -1840,6 +2113,7 @@
             })
             .join("")
         : '<p class="dam-media-preview__assoc-empty">Brak wariantów</p>';
+    /* Dodaj wariant: created by DamAssocEdit (Shift+Admin only) — not always in HTML. */
     var toggle = collapsible
       ? '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-media-preview__variants-toggle" data-variants-toggle aria-expanded="false">' +
         '<i class="uil uil-angle-down" aria-hidden="true"></i><span>Pokaż wszystkie (' +
@@ -4529,6 +4803,12 @@
         if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
           window.DamBadges.bindClicks(badges, "branding");
         }
+        ensureModalTagPlusUx(badges, {
+          mode: options.mode === "viz-studio" ? "product" : "branding",
+          asset: a,
+          product: options.productContext || null,
+          kind: options.mode === "viz-studio" ? "carrier" : "appearance",
+        });
       }
       var goProduct = document.getElementById("damMediaPreviewGoProduct");
       var explorer = document.getElementById("damMediaPreviewExplorer");
@@ -4719,7 +4999,7 @@
   };
 
   function ensureVizModalCss() {
-    var href = "assets/css/dam-viz-modal.css?v=assocSplit20260721c";
+    var href = "assets/css/dam-viz-modal.css?v=modalShiftAdmin20260722a";
     var existing = document.getElementById("dam-viz-modal-css");
     if (existing) {
       if (existing.tagName === "LINK" && existing.getAttribute("href") !== href) {
@@ -4740,6 +5020,9 @@
     renderLinkedAssetsInto: function (mount, labelEl, productContext) {
       renderLinkedBrandingAssets({ mount: mount, labelEl: labelEl, productContext: productContext });
     },
+    /** Shift+Admin PLUS przy wierszu tagow w modalach content (viz/branding/product). */
+    ensureModalTagPlusUx: ensureModalTagPlusUx,
+    showAdminShiftPlus: showAdminShiftPlus,
     assocPaneSkeletonHtml: assocPaneSkeletonHtml,
     showAssocPaneLoading: showAssocPaneLoading,
     passesMarketingAssocMaterial: passesMarketingAssocMaterial,

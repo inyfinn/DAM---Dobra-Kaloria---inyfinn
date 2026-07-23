@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>QA viz empty: bubble + mascot low / card high RIGHT</title>
+  <link rel="stylesheet" href="http://127.0.0.1:8765/assets/css/dam-branding.css?v=emptyMascotTrim20260723w" />
+  <link rel="stylesheet" href="http://127.0.0.1:8765/assets/css/dam-viz.css?v=emptyMascotTrim20260723w" />
+  <style>
+    :root {
+      --dam-primary: #ab54db;
+      --dam-surface: #fff;
+      --dam-border: #ececf2;
+      --dam-text: #464255;
+      --dam-text-muted: #7a7489;
+      --dam-hub-border: #e0dfe8;
+      --dam-hub-muted: #8f8b9f;
+      --dam-font: system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--dam-font); background: #eef1f6; min-height: 100vh; display: flex; }
+    .fake-sidebar { width: 260px; flex: 0 0 260px; background: #f3f4f8; border-right: 1px solid #e5e5ea; padding: 20px 16px; color: #8b8d97; font-size: 13px; }
+    .fake-main { flex: 1 1 auto; min-width: 0; padding: 24px; background: #fff; }
+    #vizGrid { border: 1px dashed rgba(171, 84, 219, 0.35); background: #fafafa; min-height: 420px; overflow: visible; }
+    .geex-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: 1px solid #ab54db;
+      background: transparent;
+      color: #ab54db;
+      font: inherit;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <aside class="fake-sidebar" id="fakeSidebar">Sidebar</aside>
+  <main class="fake-main">
+    <div class="dam-viz-panel">
+      <div id="vizGrid" class="dam-viz-grid">
+        <div class="dam-viz-empty is-enter" role="status">
+          <div class="dam-empty-mascot-row">
+            <div class="dam-empty-mascot-row__speak">
+              <div class="dam-empty-mascot-row__bubble">
+                <p class="dam-empty-mascot-row__bubble-text">Filtr złapał powietrze. Dosłownie.</p>
+              </div>
+              <div class="dam-empty-mascot-row__mascot" aria-hidden="true" style="--dam-empty-pose:url('http://127.0.0.1:8765/assets/img/maskotka/pose-think-q.png?v=trimAlpha20260723b')">
+                <span class="dam-empty-mascot-row__mascot-img"></span>
+              </div>
+            </div>
+            <div class="dam-empty-mascot-row__card">
+              <div class="dam-branding-empty" role="presentation">
+                <div class="dam-branding-empty__icon" aria-hidden="true">&#128683;</div>
+                <h3 class="dam-branding-empty__title">Brak wyników</h3>
+                <p class="dam-branding-empty__desc">Żaden materiał nie pasuje do aktywnych filtrów w tej sekcji.</p>
+                <ul class="dam-branding-empty__filters">
+                  <li>Szukaj: kmkm</li>
+                </ul>
+                <button type="button" class="geex-btn geex-btn--primary-transparent dam-viz-empty__clear">Wyczyść filtry</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
