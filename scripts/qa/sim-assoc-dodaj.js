@@ -48,7 +48,7 @@ function ok(name, cond, detail) {
 
 
 
-ok("version 4.0.70", ver.version === "4.0.70");
+ok("version 4.0.71", ver.version === "4.0.71");
 ok(
   "branding picker anti-freeze",
   /function collectBrandingPickerRows/.test(assoc) &&
@@ -179,7 +179,7 @@ ok(
 ok(
   "cache token all assoc pages",
   [branding, visualizations, explorer, dashboard].every(function (html) {
-    return /4\.0\.70-assocRestoreBProdNoFreeze20260726e/.test(html);
+    return /4\.0\.71-assocTutorialMoGuard20260726a/.test(html);
   })
 );
 

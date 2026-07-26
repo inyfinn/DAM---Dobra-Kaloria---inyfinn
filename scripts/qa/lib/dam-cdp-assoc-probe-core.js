@@ -18,9 +18,9 @@ const ASYNC_WAIT_MS = 8000;
 const PICKER_OPEN_MS = 8000;
 const NAV_MS = 5000;
 const EVAL_HARD_MS = 12000;
-const CACHE = "4.0.69-assocWarmSearchNoParse20260726b";
+const CACHE = "4.0.71-assocTutorialMoGuard20260726a";
 const UI = "http://127.0.0.1:8765";
-const VERSION = "4.0.69"; /* branding freeze fix chain: 4.0.67 for+break/seed + 4.0.68 no auto /media */
+const VERSION = "4.0.71"; /* 4.0.71: tutorial MO guard + assoc empty-msg class */
 
 const CTAS = [
   {

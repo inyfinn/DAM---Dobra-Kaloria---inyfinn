@@ -412,6 +412,14 @@ v3.1.5 = `2b3873a` — **sync** `input → renderOptions(value)`, bez debounce s
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
 
+- 2026-07-26 | **Tutorial MO + assoc empty class (4.0.71)** | B warianty freeze w
+  WebView2; CDP z `.dam-tag-edit-popover__empty` w showListMessage: tutorial on/off
+  oba PASS (headless nie łapie pętli MO); z `.dam-assoc-edit-popover__empty-msg` +
+  guard w `maybeEmptySearchSad` → BOTH_PASS |
+  `showListMessage` NIGDY `.dam-tag-edit-popover__empty` (trigger MO → showSad loop);
+  `dam-tutorial.js`: skip gdy `#damAssocEditPopover`/`Overlay` otwarty + `_lock` 800ms;
+  izolacja Step1: `_isolate-tutorial-step1.js`. Lekcja: v4.0.71.
+
 - 2026-07-26 | **B produkty dead + B warianty/search freeze (4.0.70)** | B
   `data-viz-assoc-cta=product` nie działa (pusty picker / stuck); B warianty +
   `#damAssocEditSearch` garbage q zacinają app |

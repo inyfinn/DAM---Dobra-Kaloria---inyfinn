@@ -1,4 +1,29 @@
-﻿## 2026-07-26 - fix(assoc): v4.0.70 B produkty restore + B warianty/search no freeze
+﻿## 2026-07-26 - fix(assoc): v4.0.71 tutorial MO guard + assoc empty-msg class
+
+**Komenda/Akcja:** Continue cloud 64adae4a — Step1 isolate dam-tutorial.js; fix B warianty freeze + B produkty; 4 CTA + search `asdhaskljdas`; fresh CDP/sim; commit bump.
+
+**Log/Status:**
+1. Step1 isolation CDP @2026-07-26T20:59: tutorial=off PASS (open 2ms, type 2ms); tutorial=on PASS (open 1ms, type 2ms, ping_max 2ms) → **BOTH_PASS** with `.dam-assoc-edit-popover__empty-msg` + MO guard (headless nie reprodukuje MO loop; prior buggy-class test też inconclusive).
+2. Fix: `dam-tutorial.js` `maybeEmptySearchSad` guard picker open + `_lock`; `showListMessage` stays `dam-assoc-edit-popover__empty-msg` (HEAD); tutorial script restored in branding.html.
+3. Fresh sim: `node --check` OK; `sim-assoc-dodaj` ALL PASS @4.0.71; `sim-assoc-picker-search-cap` brokenIters=50000 fixedIters=81 oldMs=0.25 newMs=0.04.
+4. Fresh CDP @2026-07-26T21:00: open **4/4**; search+responsive `asdhaskljdas` **4/4** (search_ms 57–59).
+
+**Macierz Open/Search (fresh ms):**
+
+| CTA | Open | Search `asdhaskljdas` |
+|-----|------|------------------------|
+| B produkty | AA (2ms) | AA (58ms) |
+| B warianty | AA (1ms) | AA (57ms) |
+| V sugestie | AA (2ms) | AA (59ms) |
+| V warianty | AA (2ms) | AA (57ms) |
+
+**Efekt/Fix:** v4.0.71; cache `4.0.71-assocTutorialMoGuard20260726a`; Ctrl+F5 `http://127.0.0.1:8765/branding.html?v=4.0.71-assocTutorialMoGuard20260726a`
+
+**Źródła:** dam-tutorial.js:1708-1742, dam-assoc-edit.js:2032-2036, `_isolate-tutorial-step1.js`, `_diag-cta-*-matrix.js`
+
+---
+
+## 2026-07-26 - fix(assoc): v4.0.70 B produkty restore + B warianty/search no freeze
 
 **Komenda/Akcja:** WORKER Composer — fix branding picker regression @4.0.69: B warianty freeze on open; B produkty broken; `#damAssocEditSearch` garbage q freeze; V variants+suggestions no regression.
 
