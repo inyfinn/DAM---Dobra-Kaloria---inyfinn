@@ -1,4 +1,19 @@
-﻿## 2026-07-26 - fix(assoc): v4.0.67 branding picker no-freeze
+﻿## 2026-07-26 - fix(assoc): v4.0.68 no auto /media on picker paint
+
+**Komenda/Akcja:** Follow-up B freeze — `activatePreviewFromBtn` po paint NIE ładuje `/media` (NFS); hover OK.
+
+**Log/Status:**
+1. `activatePreviewFromBtn(btn, allowMedia)` — default `listSafeThumb`; hover/`bindSearchPreview` używa `data-preview-src`.
+2. Bump **4.0.68** + cache `assocNoMediaAutoPreview20260726a`.
+3. Base anti-freeze z **4.0.67** (`69cbd23`): for+break branding rows, defer API seed, bridge empty-q includes-only.
+
+**Macierz:** V 2/2 AA keep; B target 2/2 AA (Ctrl+F5).
+
+**Źródła:** dam-assoc-edit.js @4.0.68, commit po 69cbd23
+
+---
+
+## 2026-07-26 - fix(assoc): v4.0.67 branding picker no-freeze
 
 **Komenda/Akcja:** B 2/2 AX → AA: „Dodaj produkty” / „Dodaj warianty” freezują po open/search; V 2/2 AA nie regresować.
 
@@ -7,6 +22,7 @@
 2. Root cause B produkty: sync map rebuild + post-open list paint pod hydrate; DamSearch bez `limit`.
 3. Fix: `collectBrandingPickerRows` for+break; `listSafeThumb`; defer API seed (`bootstrapQuery>=2`, bez `asset.name`); bridge empty-q = includes-only; memo `productsById`; DamSearch `limit:80`.
 4. Bump **4.0.67** + cache `assocBrandFreeze20260726a`; doctrine §12; sim + smoke.
+5. Test: `node --check` OK; `sim-assoc-picker-search-cap` ALL PASS; `sim-assoc-dodaj` ALL PASS @4.0.67; smoke ports OK; bridge empty-q → `count:0`. Committed `69cbd23`.
 
 **Macierz (target po fix):**
 
@@ -17,7 +33,7 @@
 | B produkty | AA | AA | fix |
 | B warianty | AA | AA | fix |
 
-**Źródła:** dam-assoc-edit.js, local_bridge.py, version 4.0.67, sim-assoc-*.js
+**Źródła:** dam-assoc-edit.js, local_bridge.py, version 4.0.67→4.0.68, sim-assoc-*.js
 
 ---
 

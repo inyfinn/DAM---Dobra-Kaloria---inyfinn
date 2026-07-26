@@ -806,7 +806,7 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  var ASSOC_CSS_TOKEN = "assocBrandFreeze20260726a";
+  var ASSOC_CSS_TOKEN = "assocNoMediaAutoPreview20260726a";
   var PICKER_LIST_CAP = 80;
   /* Max raw iterations in collect (defense vs filter that skips most rows before CAP). */
   var PICKER_SCAN_BUDGET = 400;
@@ -1302,17 +1302,18 @@
     if (data && data.btn) data.btn.classList.add("is-preview-active");
   }
 
-      function bindSearchPreview(pop, scope) {
+  function bindSearchPreview(pop, scope) {
     if (!pop || !scope) return;
     scope.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
       function activate() {
         var thumb = btn.querySelector(".dam-assoc-edit-popover__thumb");
         var labelEl = btn.querySelector(".dam-assoc-edit-popover__label");
         var idxBadge = btn.querySelector(".dam-viz-badge--index");
-        var src = "";
-        if (thumb) {
-          src = thumb.getAttribute("src") || thumb.currentSrc || thumb.src || "";
-        }
+        /* Hover = one on-demand /media via data-preview-src OK (not N× on paint). */
+        var src =
+          btn.getAttribute("data-preview-src") ||
+          (thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "") ||
+          "";
         setSearchPreview(pop, {
           thumb: src,
           label: labelEl ? labelEl.textContent : btn.getAttribute("data-id") || "",
@@ -1951,15 +1952,18 @@
         });
       }
 
-      function activatePreviewFromBtn(btn) {
+      function activatePreviewFromBtn(btn, allowMedia) {
         if (!btn) return;
         var thumb = btn.querySelector(".dam-assoc-edit-popover__thumb");
         var labelEl = btn.querySelector(".dam-assoc-edit-popover__label");
         var idxBadge = btn.querySelector(".dam-viz-badge--index");
-        /* Prefer data-preview-src (may be /media) — single on-demand load OK. */
-        var src =
-          btn.getAttribute("data-preview-src") ||
-          (thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "");
+        /* HARD: auto-activate after renderOptions NEVER uses /media (NFS stall = app freeze).
+           Hover/focus may pass allowMedia=true for one on-demand preview. */
+        var raw =
+          (allowMedia ? btn.getAttribute("data-preview-src") : "") ||
+          (thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "") ||
+          "";
+        var src = allowMedia ? raw : listSafeThumb(raw);
         setSearchPreview(pop, {
           thumb: src,
           label: labelEl ? labelEl.textContent : btn.getAttribute("data-id") || "",

@@ -1,7 +1,7 @@
 {
-  "version": "4.0.67",
+  "version": "4.0.68",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-07-26",
-  "note": "4.0.67: picker input no double-paint; Mode B probe per-CTA; soft quiet-before-type; expand/sugestie from 4.0.66."
+  "note": "4.0.68: no auto /media preview on picker paint (NFS freeze); scheduleListPaint+DamSearch; viz thumb click; expand rev:."
 }

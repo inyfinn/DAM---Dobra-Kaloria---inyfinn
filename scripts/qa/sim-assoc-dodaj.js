@@ -48,7 +48,7 @@ function ok(name, cond, detail) {
 
 
 
-ok("version 4.0.67", ver.version === "4.0.67");
+ok("version 4.0.68", ver.version === "4.0.68");
 ok(
   "branding picker anti-freeze",
   /function collectBrandingPickerRows/.test(assoc) &&

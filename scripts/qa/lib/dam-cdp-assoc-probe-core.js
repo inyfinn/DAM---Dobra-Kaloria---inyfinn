@@ -18,9 +18,9 @@ const ASYNC_WAIT_MS = 8000;
 const PICKER_OPEN_MS = 8000;
 const NAV_MS = 5000;
 const EVAL_HARD_MS = 12000;
-const CACHE = "4.0.67-assocBrandFreeze20260726a";
+const CACHE = "4.0.68-assocNoMediaAutoPreview20260726a";
 const UI = "http://127.0.0.1:8765";
-const VERSION = "4.0.67";
+const VERSION = "4.0.68"; /* branding freeze fix chain: 4.0.67 for+break/seed + 4.0.68 no auto /media */
 
 const CTAS = [
   {
