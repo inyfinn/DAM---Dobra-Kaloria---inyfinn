@@ -48,7 +48,7 @@ function ok(name, cond, detail) {
 
 
 
-ok("version 4.0.63", ver.version === "4.0.63");
+ok("version 4.0.66", ver.version === "4.0.66");
 
 ok("bindVizAssocCtas export", /bindVizAssocCtas:\s*bindVizAssocCtas/.test(assoc));
 
@@ -84,11 +84,30 @@ ok(
 );
 
 ok(
-  "viz variant golden warm index",
-  /productSearchForVariants/.test(assoc) &&
-    !/opts\.productSearchForVariants\)\s*\)/.test(
-      assoc.slice(assoc.indexOf("function pickerSkipsWarmFileIndex"), assoc.indexOf("function collectProductPickerRows"))
-    )
+  "viz variant product expand UI",
+  /dam-assoc-edit-popover__expand/.test(assoc) &&
+    /expandedProductId/.test(assoc) &&
+    /isProductRow/.test(assoc)
+);
+ok(
+  "viz variant rev select only",
+  /indexOf\("rev:"\)\s*!==\s*0/.test(assoc) &&
+    /parseRevisionPickerKey/.test(assoc) &&
+    /Rozwiń produkt i zaznacz wariant/.test(assoc)
+);
+ok(
+  "picker search DamSearch gate",
+  /scheduleListPaint\(raw\)/.test(assoc) &&
+    /scheduleProductSearchFetch\(raw\)/.test(assoc) &&
+    !/scheduleProductSearchFetch\(raw\);\s*return/.test(assoc) &&
+    /qq\.length\s*>=\s*2/.test(assoc) &&
+    /collectProductPickerRows\(productSearchHits/.test(assoc) &&
+    /renderOptionsDebounced/.test(assoc)
+);
+ok(
+  "sugestie empty ctx seed",
+  /seedMaterialsCtx\(modal/.test(assoc) &&
+    /Pusty stan/.test(assoc)
 );
 
 ok(
@@ -140,7 +159,7 @@ ok(
 ok(
   "cache token all assoc pages",
   [branding, visualizations, explorer, dashboard].every(function (html) {
-    return /4\.0\.63-vizVariantsGolden20260726a/.test(html);
+    return /4\.0\.66-assocRevSelectSearch20260726b/.test(html);
   })
 );
 

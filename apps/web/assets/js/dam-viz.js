@@ -2645,9 +2645,6 @@
     }
     document.body.insertAdjacentHTML("beforeend", html);
     var modal = document.getElementById("damVizModal");
-    if (window.DamAssocEdit && typeof window.DamAssocEdit.bindVizAssocCtas === "function") {
-      window.DamAssocEdit.bindVizAssocCtas(modal, {});
-    }
     var vizProductCtx = {
       id: resolveBrandingProductId(
         first.product_id || "",
@@ -2657,7 +2654,7 @@
       index: displayIndex(first) || first.index_base || "",
       revision_path: first.revision_path || "",
     };
-    /* P1 sync ctx20260726a: karteczka od razu; lista materialow — async enrich. */
+    /* P1: seed ctx PRZED bind CTA — pusty stan materiałów nie może zgubić kontekstu. */
     if (window.DamAssocEdit && typeof window.DamAssocEdit.seedMaterialsCtx === "function") {
       window.DamAssocEdit.seedMaterialsCtx(modal, {
         productContext: vizProductCtx,
@@ -2674,6 +2671,9 @@
           }
         },
       });
+    }
+    if (window.DamAssocEdit && typeof window.DamAssocEdit.bindVizAssocCtas === "function") {
+      window.DamAssocEdit.bindVizAssocCtas(modal, {});
     }
     /* Strip leftover pickers from prior session so X is never covered (z-index 12100). */
     [

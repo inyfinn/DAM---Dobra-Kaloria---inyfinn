@@ -1,4 +1,94 @@
-﻿## 2026-07-26 - fix(assoc): viz-warianty golden path v4.0.63
+﻿## 2026-07-26 - fix(assoc): v4.0.66 expand + search no-freeze + sugestie empty
+
+**Komenda/Akcja:** Follow-up po abort subagentów — 4 CTA + picker search bez freeze; viz warianty menu→submenu; sugestie bez powiązań.
+
+**Log/Status:**
+1. **Viz warianty expand:** product row + chevron → nested `rev:*` rows; selekcja tylko rewizji; `scheduleListPaint` on expand.
+2. **Sugestie empty:** `openVizMaterialsEdit315` seed z pid/index gdy brak ctx; material init zawsze paint + bootstrapQuery.
+3. **Search no-freeze:** q≥2 → `scheduleProductSearchFetch` + return (DamSearch); q<2 → `renderOptionsDebounced` + `collectProductPickerRows` for+break + `productQ` filter; „Szukam…” gdy hits puste.
+4. sim-assoc-dodaj + sim-assoc-picker-search-cap ALL PASS @4.0.66.
+5. CDP resilience probe: viz modal_not_open (brak karty testowej/admin) — static PASS, runtime wymaga manual Ctrl+F5.
+
+**Macierz docelowa:**
+
+| CTA | Open | Search | Mechanizm |
+|-----|------|--------|-----------|
+| B produkty | AA | debounced CAP + DamSearch q≥2 | golden |
+| B warianty | AA | API branding-search | skip warm OK |
+| V sugestie | AA | API + bootstrap 630xxxx | empty seed |
+| V warianty | AA | expand rev: + golden browse | productSearchForVariants |
+
+**Źródła:** dam-assoc-edit.js @4.0.66, cache `assocSearchNoFreeze20260726j`
+
+---
+
+## 2026-07-26 - follow-up: [Fix false PASS e2e probes](7c8f4822) closed
+
+**Komenda/Akcja:** Parent follow-up po domknięciu subagenta 7c8f4822 (Mode B probe truth @ 4.0.64).
+
+**Log/Status:**
+1. Scope subagenta **DONE** — false PASS usunięty; `overall_pass` = Mode B only; raport @ 4.0.64 uczciwie FAIL (4/4).
+2. Kod poszedł dalej do **4.0.65** (expand warianty + sugestie empty) — poza scope 7c8f4822.
+3. Re-run e2e @ 4.0.65 uruchomiony z parenta — **hang >230s**, bez nowego raportu; ostatni artefakt nadal `e2e-assoc-report.json` @ 4.0.64.
+4. **Następny krok (osobny worker):** Mode B e2e @ token `4.0.65-assocExpandSugestie20260726a` + fix post-open jam / viz boot — dopiero potem claim PASS.
+
+**Efekt/Fix:** Brak dodatkowych zmian probe z tego follow-upu. Manual Ctrl+F5 nadal bramka.
+
+**Źródła:** agent 7c8f4822, logs/dam-connection/e2e-assoc-report.json, dam-version.js 4.0.65
+
+---
+
+## 2026-07-26 - fix(assoc): expand warianty + sugestie empty v4.0.65
+
+**Komenda/Akcja:** Viz „Dodaj warianty” = rozwijane product→rewizje (nie flat); „Dodaj/Edytuj sugestie” musi otwierać picker gdy brak skojarzeń; commit + bump + browser test.
+
+**Log/Status:**
+1. `collectProductPickerRows`: enrich `productsById`, nested `rev:` rows + empty-hint; chevron/`aria-expanded` w `optionButtonHtml`; CSS indent submenu.
+2. Sugestie: `pickerBootstrapQueryFromCtx` zawsze; material init zawsze paint; `openVizMaterialsEdit315` seed-fallback; `seedMaterialsCtx` przed `bindVizAssocCtas`; empty materials nadal `bindMaterialsPane`.
+3. Bump **4.0.65** + cache `4.0.65-assocExpandSugestie20260726a`; sim-assoc-dodaj + material-empty-seed PASS; doctrine §12 lekcja.
+
+**Efekt/Fix:** Target V2/2-AA (expand + empty sugestie). Browser smoke po restarcie :8765.
+
+**Źródła:** dam-assoc-edit.js, dam-viz.js, dam-media-preview.js, version 4.0.65, sim-assoc-*.js
+
+---
+
+## 2026-07-26 - PRIMARY WORKER: Mode B probe truth (no false PASS) + 4.0.64
+
+**Komenda/Akcja:** User/parent: poprzedni agent [84aa7ce9] dał false PASS (sync paint / programmatic openPicker / Node localStorage / WS). Napraw infrastrukturę e2e — overall = Mode B only; fix JS tylko gdy Mode B dowodzi hang.
+
+**Log/Status:**
+1. **BEFORE (broken probes):** Mode A-ish programmatic `openPicker` + sync „Szukam” 0–1ms = PASS; resilience PASS ≠ e2e; Node `localStorage` / bad WS = zero real measurement. „connection false-FREEZE cleared” ≠ JS innocent.
+2. **Probe fix:** `scripts/qa/lib/dam-cdp-assoc-probe-core.js` — WS z `/json/list` + normalize `127.0.0.1`; browser API tylko w `Runtime.evaluate` strings; Mode A labeled; Mode B = card → CTA → async DamSearch ≤8s; overall_pass = Mode B only. Resilience aligned (Mode B only, max 20 default).
+3. **Mode B evidence of hang:** after real CTA, main thread jammed (`busy_before_type` / `type_cdp_timeout`) — Mode A sync paint still PASS. Isolated: early open OK; after branding hydrate storm open/type FREEZE.
+4. **JS (4.0.64):** `enrichLinkedProducts` = warm cache only (no `ensureFileIndex`); product cold open = empty shell, no `DamSearch.load`; defer `ensureInjectedCss` via `setTimeout(0)`. Token `4.0.64-modeBProbeTruth20260726p`.
+5. **ACTUAL e2e @ 4.0.64 (Mode B = truth):**
+
+| CTA | Mode A | Mode B | overall |
+|-----|--------|--------|---------|
+| branding-product | PASS sync~1ms | FAIL busy_before_type / freeze after open | **FAIL** |
+| branding-variant | PASS sync~6ms | FAIL type CDP timeout | **FAIL** |
+| viz-suggestions | FAIL (boot/timeout) | FAIL DamAssocEdit_boot_timeout | **FAIL** |
+| viz-variants | FAIL (boot/timeout) | FAIL boot / modal_not_open (resilience) | **FAIL** |
+
+6. Resilience (max 5, Mode B): viz-suggestions FAIL `modal_not_open` — **no false PASS**.
+7. **automated PASS does not replace manual Ctrl+F5 until Mode B green.**
+
+**PREDICTION vs ACTUAL (Mode B only):** branding trusted manual PASS ≠ Mode B green yet (probe catches post-open jam); viz FREEZE/boot risk confirmed as FAIL not false PASS.
+
+**User manual slot (fill):** Ctrl+F5 `?v=4.0.64-modeBProbeTruth20260726p` — card → each CTA → type `bu` → list update &lt;2s?
+- branding-product: ___
+- branding-variant: ___
+- viz-suggestions: ___
+- viz-variants: ___
+
+**Efekt/Fix:** False PASS killed. Overall FAIL honest. Code mitigations landed; Mode B still FAIL on branding post-open jam + viz boot — needs further JS/hydrate work or quieter page boot.
+
+**Źródła:** `scripts/qa/dam-assoc-picker-e2e-probe.js`, `dam-cdp-resilience-probe.js`, `lib/dam-cdp-assoc-probe-core.js`, `apps/web/assets/js/dam-assoc-edit.js`, `logs/dam-connection/e2e-assoc-report.json`, `code-doctrine.md` §12
+
+---
+
+## 2026-07-26 - fix(assoc): viz-warianty golden path v4.0.63
 
 **Komenda/Akcja:** Po commicie 3/4 — viz „Dodaj warianty” = ten sam model co branding „Dodaj produkty”.
 

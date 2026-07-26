@@ -1423,10 +1423,7 @@
     if (pid && _linkedBrandingByProductCache[pid]) {
       return Promise.resolve(_linkedBrandingByProductCache[pid].slice());
     }
-    /* Sesja z Branding: indeks juz w RAM — filtrowanie po stronie UI OK (bez fetch). */
-    if (window.__damBrandingIndex && window.__damBrandingIndex.assets) {
-      return Promise.resolve(window.__damBrandingIndex.assets);
-    }
+    /* NIGDY zwracaj calego __damBrandingIndex (~392MB / 50k+ assetow) — sync filter = freeze UI. */
     var tokens = linkedBrandingProductTokens(ctx);
     if (
       window.DamProductCorrelation &&
@@ -2621,6 +2618,25 @@
       if (resizerHost) {
         resizerHost.hidden = true;
         resizerHost.innerHTML = "";
+      }
+      /* Nadal podłącz CTA sugestie (seed z częściowego ctx) — nie blokuj „Dodaj/Edytuj sugestie”. */
+      var AEEmpty = window.DamAssocEdit;
+      if (AEEmpty && typeof AEEmpty.bindMaterialsPane === "function") {
+        var paneEmpty =
+          mount.closest(".dam-media-preview__assoc-col") ||
+          mount.closest(".dam-viz-modal__assoc-pane") ||
+          mount;
+        AEEmpty.bindMaterialsPane(paneEmpty, {
+          asset: null,
+          materialsList: [],
+          shownPrimaries: [],
+          productContext: ctx,
+          groupContext: {
+            product_id: pid || "",
+            linked_product_ids: pid ? [pid] : [],
+          },
+          onRefresh: refreshLinkedBrandingAfterEdit,
+        });
       }
       return;
     }

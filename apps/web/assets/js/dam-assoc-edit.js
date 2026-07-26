@@ -303,7 +303,26 @@
   /**
    * Zbierz wiersze produktów do pickera z TWARDyn break (for, nie forEach).
    * forEach + `return` przy CAP NIE przerywa pętli → freeze UI na całym file-index.
+   * PICKER_SCAN_BUDGET: twardy limit iteracji gdy filtr odrzuca dużo wierszy (nie czekaj na CAP items).
    */
+  function resolvePickerProductFull(p, productsById) {
+    if (!p || !p.id) return p;
+    if (p.revisions && p.revisions.length) return p;
+    if (productsById && productsById[p.id]) return productsById[p.id];
+    if (
+      global._DAM_FILE_INDEX &&
+      global._DAM_FILE_INDEX.productsById &&
+      global._DAM_FILE_INDEX.productsById[p.id]
+    ) {
+      return global._DAM_FILE_INDEX.productsById[p.id];
+    }
+    if (global.DamSearch && typeof global.DamSearch.productById === "function") {
+      var fromSearch = global.DamSearch.productById(p.id);
+      if (fromSearch) return fromSearch;
+    }
+    return p;
+  }
+
   function collectProductPickerRows(src, optsCollect) {
     optsCollect = optsCollect || {};
     var pinnedSet = optsCollect.pinnedSet || {};
@@ -311,65 +330,81 @@
     var q = optsCollect.q || "";
     var filterType = optsCollect.filterType || "all";
     var cap = optsCollect.cap || PICKER_LIST_CAP;
+    var scanBudget = optsCollect.scanBudget || PICKER_SCAN_BUDGET;
     var asProductRow = !!optsCollect.asProductRow;
+    var productsById = optsCollect.productsById || null;
     var items = [];
     var seenIds = {};
     var seenIdx = {};
     var list = src || [];
     for (var i = 0; i < list.length; i++) {
       if (items.length >= cap) break;
+      if (i >= scanBudget) break;
       var p = list[i];
       if (!p || !p.id || pinnedSet[p.id]) continue;
       if (seenIds[p.id]) continue;
-      if (productMatchesExclude(p, excl)) continue;
-      if (filterType !== "all" && isVisualizationLike(p)) continue;
-      var idxKey = normIndexKey(productIndexOf(p));
+      /* Prefer full product (revisions[]) when DamSearch hit is thin — lazy, no map-build on open. */
+      var full = resolvePickerProductFull(p, productsById);
+      if (productMatchesExclude(full, excl)) continue;
+      if (filterType !== "all" && isVisualizationLike(full)) continue;
+      var idxKey = normIndexKey(productIndexOf(full) || productIndexOf(p));
       if (idxKey && seenIdx[idxKey]) continue;
-      if (q && productSearchBlob(p).indexOf(q) === -1) continue;
+      if (q && productSearchBlob(full).indexOf(q) === -1 && productSearchBlob(p).indexOf(q) === -1) {
+        continue;
+      }
       seenIds[p.id] = true;
       if (idxKey) seenIdx[idxKey] = true;
-      var rev0 = (p.revisions && p.revisions[0]) || {};
+      var rev0 = (full.revisions && full.revisions[0]) || {};
+      var revCount = (full.revisions && full.revisions.length) || 0;
       var row = {
         id: p.id,
-        label: p.display_name || p.name || p.id,
-        thumb: productThumb(p),
-        sub: productIndexOf(p) || p.id,
-        path: p.path || "",
-        brand: p.brand || "",
-        category: p.category || "",
-        subcategory: p.subcategory_label || "",
+        label: full.display_name || full.name || p.display_name || p.name || p.id,
+        thumb: productThumb(full),
+        sub: productIndexOf(full) || productIndexOf(p) || p.id,
+        path: full.path || p.path || "",
+        brand: full.brand || p.brand || "",
+        category: full.category || p.category || "",
+        subcategory: full.subcategory_label || p.subcategory_label || "",
         langs: rev0.langs || [],
+        revCount: revCount,
       };
       if (asProductRow) row.isProductRow = true;
       items.push(row);
-      if (
-        asProductRow &&
-        optsCollect.expandedProductId === p.id &&
-        p.revisions &&
-        p.revisions.length
-      ) {
-        for (var ri = 0; ri < p.revisions.length; ri++) {
-          if (items.length >= cap) break;
-          var rev = p.revisions[ri];
-          if (!rev || !rev.path) continue;
-          var revKey = revisionPickerKey(p.id, rev.path);
-          if (seenIds[revKey]) continue;
-          seenIds[revKey] = true;
-          var revIdx = String(rev.index || rev.index_base || productIndexOf(p) || "");
-          if (revIdx.indexOf(".") > 0) revIdx = revIdx.split(".")[0];
+      if (asProductRow && optsCollect.expandedProductId === p.id) {
+        if (revCount) {
+          for (var ri = 0; ri < full.revisions.length; ri++) {
+            if (items.length >= cap) break;
+            var rev = full.revisions[ri];
+            if (!rev || !rev.path) continue;
+            var revKey = revisionPickerKey(p.id, rev.path);
+            if (seenIds[revKey]) continue;
+            seenIds[revKey] = true;
+            var revIdx = String(rev.index || rev.index_base || productIndexOf(full) || "");
+            if (revIdx.indexOf(".") > 0) revIdx = revIdx.split(".")[0];
+            items.push({
+              id: revKey,
+              label:
+                (rev.folder || rev.label || rev.name || "Wariant " + (ri + 1)) +
+                (rev.langs && rev.langs.length ? " · " + rev.langs.join(", ").toUpperCase() : ""),
+              thumb: productThumb(full),
+              sub: revIdx,
+              path: rev.path,
+              brand: full.brand || "",
+              category: full.category || "",
+              subcategory: full.subcategory_label || "",
+              langs: rev.langs || rev0.langs || [],
+              isRevisionRow: true,
+            });
+          }
+        } else {
           items.push({
-            id: revKey,
-            label:
-              (rev.label || rev.name || "Wariant " + (ri + 1)) +
-              (rev.langs && rev.langs.length ? " · " + rev.langs.join(", ").toUpperCase() : ""),
-            thumb: productThumb(p),
-            sub: revIdx,
-            path: rev.path,
-            brand: p.brand || "",
-            category: p.category || "",
-            subcategory: p.subcategory_label || "",
-            langs: rev.langs || rev0.langs || [],
+            id: "rev-empty:" + p.id,
+            label: "Brak folderów rewizji w indeksie",
+            thumb: PLACEHOLDER_SVG,
+            sub: "",
+            path: "",
             isRevisionRow: true,
+            isEmptyRevHint: true,
           });
         }
       }
@@ -714,8 +749,10 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  var ASSOC_CSS_TOKEN = "assocSearchNoFreeze20260726i";
+  var ASSOC_CSS_TOKEN = "assocSearchNoFreeze20260726j";
   var PICKER_LIST_CAP = 80;
+  /* Max raw iterations in collect (defense vs filter that skips most rows before CAP). */
+  var PICKER_SCAN_BUDGET = 400;
   var PICKER_TAG_GROUP_ORDER = ["marka", "autor", "skojarzenia", "przeznaczenie", "produkt", "kanal"];
   var PICKER_TAG_GROUP_LABELS = {
     marka: "Marka",
@@ -808,8 +845,18 @@
       "border:1px solid #e7e7ec;border-radius:7px;background:#fff;color:#6b6b76;cursor:pointer;font-size:14px;" +
       "transition:background .12s ease,color .12s ease,border-color .12s ease;}" +
       ".dam-assoc-edit-popover__row-btn:hover{background:#f8f4fd;color:var(--dam-primary,#ab54db);border-color:#e2d3f2;}" +
-      ".dam-assoc-edit-popover__opt-row--revision{margin-left:18px;opacity:.96;}" +
-      ".dam-assoc-edit-popover__opt--product .dam-assoc-edit-popover__label{font-weight:500;}" +
+      ".dam-assoc-edit-popover__opt-row--revision{margin-left:28px;padding-left:8px;" +
+      "border-left:2px solid #e2d3f2;opacity:.98;min-height:56px;}" +
+      ".dam-assoc-edit-popover__opt--product .dam-assoc-edit-popover__label{font-weight:600;}" +
+      ".dam-assoc-edit-popover__opt--product{cursor:pointer;}" +
+      ".dam-assoc-edit-popover__opt--product.is-expanded{background:#f8f4fd!important;" +
+      "box-shadow:inset 0 0 0 1px #e2d3f2;}" +
+      ".dam-assoc-edit-popover__expand{flex:0 0 22px;display:inline-flex;align-items:center;" +
+      "justify-content:center;color:#8b8d97;font-size:18px;line-height:1;}" +
+      ".dam-assoc-edit-popover__opt--product.is-expanded .dam-assoc-edit-popover__expand{color:#7a3aa8;}" +
+      ".dam-assoc-edit-popover__opt--revision .dam-assoc-edit-popover__label{font-weight:400;}" +
+      ".dam-assoc-edit-popover__opt-row--revision.is-hint .dam-assoc-edit-popover__opt{opacity:.7;cursor:default;}" +
+      ".dam-assoc-edit-popover__expand-hint{display:block;font-size:11px;font-weight:500;color:#8b8d97;margin-top:2px;}" +
       ".dam-assoc-edit-popover__tag-filters-wrap{grid-area:tagfilters;padding:0 14px;border-bottom:1px solid #ececf2;}" +
       ".dam-assoc-edit-popover__tag-filters{display:flex;gap:10px;align-items:stretch;padding:20px 0;min-height:0;}" +
       ".dam-assoc-edit-popover__tag-filters-nav{flex:0 0 132px;display:flex;flex-direction:column;gap:6px;}" +
@@ -1059,30 +1106,37 @@
   }
 
   function enrichLinkedProducts(list) {
-    return ensureFileIndex().then(function (fi) {
-      var byId = {};
-      (fi && fi.products ? fi.products : []).forEach(function (p) {
-        if (p && p.id) byId[p.id] = p;
-      });
-      var mapped = (list || []).map(function (lp) {
-        var p = byId[lp.id] || lp;
-        return {
-          id: lp.id,
-          display_name: lp.display_name || p.display_name || p.name || lp.id,
-          thumb_url: lp.thumb_url || productThumb(p),
-          product_index: lp.product_index || productIndexOf(p),
-          path: p.path || lp.path || "",
-          search_blob: p.search_blob || lp.search_blob || "",
-          category: p.category || lp.category || "",
-          subcategory_label: p.subcategory_label || p.subcategory || "",
-          tags: p.tags || lp.tags || [],
-          indexes: p.indexes || [],
-          index_bases: p.index_bases || [],
-          brand: p.brand || "",
-        };
-      });
-      return dedupeLinkedProductRecords(mapped, byId);
+    /* HARD Mode B: never ensureFileIndex/DamSearch.load here — modal open enrich
+       parsing file-index freezes main thread after CTA (shell already painted). */
+    var fi =
+      global._DAM_FILE_INDEX &&
+      global._DAM_FILE_INDEX.products &&
+      global._DAM_FILE_INDEX.products.length
+        ? global._DAM_FILE_INDEX
+        : null;
+    if (!fi) return Promise.resolve(list || []);
+    var byId = {};
+    fi.products.forEach(function (p) {
+      if (p && p.id) byId[p.id] = p;
     });
+    var mapped = (list || []).map(function (lp) {
+      var p = byId[lp.id] || lp;
+      return {
+        id: lp.id,
+        display_name: lp.display_name || p.display_name || p.name || lp.id,
+        thumb_url: lp.thumb_url || productThumb(p),
+        product_index: lp.product_index || productIndexOf(p),
+        path: p.path || lp.path || "",
+        search_blob: p.search_blob || lp.search_blob || "",
+        category: p.category || lp.category || "",
+        subcategory_label: p.subcategory_label || p.subcategory || "",
+        tags: p.tags || lp.tags || [],
+        indexes: p.indexes || [],
+        index_bases: p.index_bases || [],
+        brand: p.brand || "",
+      };
+    });
+    return Promise.resolve(dedupeLinkedProductRecords(mapped, byId));
   }
 
   /* Pkt 9 brief 2026-07-20: powiekszony podglad miniatury ~400x400 nad popoverem */
@@ -1333,6 +1387,17 @@
     ensureInjectedCss();
     function paintPicker(fi) {
       var products = (fi && fi.products) || [];
+      if (
+        (!products.length || products.length < 2) &&
+        global._DAM_FILE_INDEX &&
+        global._DAM_FILE_INDEX.products &&
+        global._DAM_FILE_INDEX.products.length
+      ) {
+        products = global._DAM_FILE_INDEX.products;
+      }
+      /* Lazy lookup only — never O(n) map-build of full file-index on every open. */
+      var productsById =
+        (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.productsById) || null;
       var materialEntries = [];
       var productSearchHits = [];
       var pickerActiveTags = [];
@@ -1486,13 +1551,65 @@
             };
           }
           if (opts.productSearchForVariants) {
-            var pv =
-              productSearchHits.find(function (x) {
-                return x && x.id === id;
-              }) ||
-              products.find(function (x) {
-                return x && x.id === id;
-              });
+            var parsedRev = parseRevisionPickerKey(id);
+            if (parsedRev) {
+              var fullRevP =
+                resolvePickerProductFull(
+                  (productsById && productsById[parsedRev.productId]) ||
+                    productSearchHits.find(function (x) {
+                      return x && x.id === parsedRev.productId;
+                    }) ||
+                    products.find(function (x) {
+                      return x && x.id === parsedRev.productId;
+                    }) ||
+                    { id: parsedRev.productId },
+                  productsById
+                );
+              if (fullRevP) {
+                var revMatch = null;
+                var revs = fullRevP.revisions || [];
+                for (var rli = 0; rli < revs.length; rli++) {
+                  var rp = String((revs[rli] && revs[rli].path) || "").replace(/\\/g, "/");
+                  if (rp === parsedRev.revisionPath) {
+                    revMatch = revs[rli];
+                    break;
+                  }
+                }
+                if (revMatch) {
+                  var revIdxL = String(
+                    revMatch.index || revMatch.index_base || productIndexOf(fullRevP) || ""
+                  );
+                  if (revIdxL.indexOf(".") > 0) revIdxL = revIdxL.split(".")[0];
+                  return {
+                    id: id,
+                    label:
+                      (revMatch.folder || revMatch.label || revMatch.name || "Wariant") +
+                      (revMatch.langs && revMatch.langs.length
+                        ? " · " + revMatch.langs.join(", ").toUpperCase()
+                        : ""),
+                    thumb: productThumb(fullRevP),
+                    sub: revIdxL,
+                    brand: fullRevP.brand || "",
+                    category: fullRevP.category || "",
+                    subcategory: fullRevP.subcategory_label || "",
+                    langs: revMatch.langs || [],
+                    path: revMatch.path || "",
+                    isRevisionRow: true,
+                  };
+                }
+              }
+            }
+            var pv = resolvePickerProductFull(
+              (productsById && productsById[id]) ||
+                productSearchHits.find(function (x) {
+                  return x && x.id === id;
+                }) ||
+                products.find(function (x) {
+                  return x && x.id === id;
+                }) ||
+                null,
+              productsById
+            );
             if (pv) {
               var rev0p = (pv.revisions && pv.revisions[0]) || {};
               return {
@@ -1505,6 +1622,8 @@
                 subcategory: pv.subcategory_label || "",
                 langs: rev0p.langs || [],
                 path: pv.path || "",
+                isProductRow: true,
+                revCount: (pv.revisions && pv.revisions.length) || 0,
               };
             }
           }
@@ -1597,18 +1716,48 @@
 
       function optionButtonHtml(it, pinned) {
         var on = !!selected[it.id];
+        var isProd = !!it.isProductRow;
+        var isRev = !!it.isRevisionRow;
+        var isHint = !!it.isEmptyRevHint;
+        var expanded = isProd && expandedProductId === it.id;
+        var trailing = "";
+        if (isProd) {
+          trailing =
+            '<span class="dam-assoc-edit-popover__expand" aria-hidden="true">' +
+            '<i class="uil uil-angle-' +
+            (expanded ? "down" : "right") +
+            '"></i></span>';
+        } else if (!isHint) {
+          trailing =
+            '<span class="dam-assoc-edit-popover__check" aria-hidden="true">' +
+            checkIconHtml(on, pinned) +
+            "</span>";
+        }
+        var subHint =
+          isProd && it.revCount
+            ? '<span class="dam-assoc-edit-popover__expand-hint">' +
+              esc(String(it.revCount) + (it.revCount === 1 ? " wariant" : " warianty")) +
+              "</span>"
+            : "";
         return (
           '<div class="dam-assoc-edit-popover__opt-row' +
-          (it.isRevisionRow ? " dam-assoc-edit-popover__opt-row--revision" : "") +
+          (isRev ? " dam-assoc-edit-popover__opt-row--revision" : "") +
+          (isHint ? " is-hint" : "") +
           '">' +
           '<button type="button" class="dam-assoc-edit-popover__opt' +
           (on ? " is-selected" : "") +
           (pinned ? " is-pinned" : "") +
-          (it.isRevisionRow ? " dam-assoc-edit-popover__opt--revision" : "") +
-          (it.isProductRow ? " dam-assoc-edit-popover__opt--product" : "") +
+          (isRev ? " dam-assoc-edit-popover__opt--revision" : "") +
+          (isProd ? " dam-assoc-edit-popover__opt--product" : "") +
+          (expanded ? " is-expanded" : "") +
           '" data-id="' +
           esc(it.id) +
-          '">' +
+          '"' +
+          (isProd
+            ? ' aria-expanded="' + (expanded ? "true" : "false") + '" title="Kliknij, aby rozwinąć warianty"'
+            : "") +
+          (isHint ? " disabled" : "") +
+          ">" +
           '<span class="dam-assoc-edit-popover__thumb-wrap">' +
           '<img class="dam-assoc-edit-popover__thumb" src="' +
           esc(it.thumb || PLACEHOLDER_SVG) +
@@ -1620,12 +1769,12 @@
           '<span class="dam-assoc-edit-popover__label">' +
           esc(it.label) +
           "</span>" +
+          subHint +
           optionTagsHtml(it) +
           "</span>" +
-          '<span class="dam-assoc-edit-popover__check" aria-hidden="true">' +
-          checkIconHtml(on, pinned) +
-          "</span></button>" +
-          rowActionsHtml(it) +
+          trailing +
+          "</button>" +
+          (isHint ? "" : rowActionsHtml(it)) +
           "</div>"
         );
       }
@@ -1637,10 +1786,11 @@
         scope.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
           var id = btn.getAttribute("data-id");
           function toggle() {
+            if (String(id).indexOf("rev-empty:") === 0) return;
             if (opts.productSearchForVariants && String(id).indexOf("rev:") !== 0) {
               expandedProductId = expandedProductId === id ? null : id;
               var sExpand = pop.querySelector("#damAssocEditSearch");
-              renderOptions(sExpand ? sExpand.value : "");
+              scheduleListPaint(sExpand ? sExpand.value : "");
               return;
             }
             if (selected[id]) delete selected[id];
@@ -1658,9 +1808,14 @@
               }
               selected[id] = true;
             }
+            /* Viz warianty: selekcja tylko rev:* — odśwież pinned + listę (nie pomijaj pinned). */
             if (opts.productSearchForVariants) {
+              pinnedIds = Object.keys(selected).filter(function (sid) {
+                return selected[sid] && String(sid).indexOf("rev:") === 0;
+              });
+              renderPinned();
               var sRev = pop.querySelector("#damAssocEditSearch");
-              renderOptions(sRev ? sRev.value : "");
+              scheduleListPaint(sRev ? sRev.value : "");
               return;
             }
             pinnedIds = Object.keys(selected).filter(function (sid) {
@@ -1938,26 +2093,33 @@
         var seenIdx = {};
         var items = [];
         if (opts.kind === "variant" && opts.productSearchForVariants) {
-          /* Golden path jak branding „Dodaj produkty”: browse q<2 = for+break na products; q≥2 = DamSearch hits. */
+          /* Golden: browse q<2 = for+break CAP; q≥2 = TYLKO DamSearch hits (q już w silniku). */
+          var variantQ = q.length >= 2 ? "" : q;
+          if (q.length >= 2 && !productSearchHits.length) {
+            showListMessage("Szukam produktów…");
+            return;
+          }
           if (q.length >= 2) {
             items = collectProductPickerRows(productSearchHits, {
               pinnedSet: pinnedSet,
               excl: excl,
-              q: "",
+              q: variantQ,
               filterType: opts.filterType || "product",
               cap: PICKER_LIST_CAP,
               asProductRow: true,
               expandedProductId: expandedProductId,
+              productsById: productsById,
             });
           } else {
             items = collectProductPickerRows(products, {
               pinnedSet: pinnedSet,
               excl: excl,
-              q: "",
+              q: variantQ,
               filterType: opts.filterType || "product",
               cap: PICKER_LIST_CAP,
               asProductRow: true,
               expandedProductId: expandedProductId,
+              productsById: productsById,
             });
           }
         } else if (opts.kind === "variant" && opts.brandingSearch) {
@@ -2040,13 +2202,17 @@
             });
           });
         } else if (opts.kind === "product") {
-          /* GOLDEN: browse (q<2) = lokalny for+break; filtr (q>=2) = tylko DamSearch hits
-             (jak #damFileSearch) — pełny scan products[] przy rzadkim q zacinał UI. */
+          /* GOLDEN: browse q<2 = for+break + lokalny q; q≥2 = TYLKO DamSearch hits. */
+          var productQ = q.length >= 2 ? "" : q;
+          if (q.length >= 2 && !productSearchHits.length) {
+            showListMessage("Szukam produktów…");
+            return;
+          }
           if (q.length >= 2) {
             items = collectProductPickerRows(productSearchHits, {
               pinnedSet: pinnedSet,
               excl: excl,
-              q: "",
+              q: productQ,
               filterType: opts.filterType || "product",
               cap: PICKER_LIST_CAP,
               asProductRow: false,
@@ -2055,7 +2221,7 @@
             items = collectProductPickerRows(products, {
               pinnedSet: pinnedSet,
               excl: excl,
-              q: "",
+              q: productQ,
               filterType: opts.filterType || "product",
               cap: PICKER_LIST_CAP,
               asProductRow: false,
@@ -2188,21 +2354,23 @@
       }
 
       if (search) {
-        /* Bez autofocus — WebView2 freeze (code-doctrine §12).
-           q>=2 na product / viz-warianty → TYLKO DamSearch (globalny silnik). */
+        /* HARD 4.0.66: scheduleListPaint(raw) natychmiast (rAF) + renderOptionsDebounced.
+           q≥2 product/viz → dodatkowo DamSearch async (bez early-return przed paint).
+           Browse q<2 = for+break CAP; nigdy sync full products.forEach. */
         search.addEventListener("input", function () {
           var raw = search.value;
           var qq = String(raw || "").trim();
+          if ((opts.productSearchForVariants || opts.kind === "product") && qq.length < 2) {
+            productSearchHits = [];
+          }
+          scheduleListPaint(raw);
+          renderOptionsDebounced(raw);
           if ((opts.productSearchForVariants || opts.kind === "product") && qq.length >= 2) {
             scheduleProductSearchFetch(raw);
-            return;
           }
           if (pickerUsesBrandingApi(opts) && qq.length >= 2) {
             scheduleMaterialSearchFetch(raw);
-            return;
           }
-          renderOptionsDebounced(raw);
-          scheduleMaterialSearchFetch(raw);
         });
       }
 
@@ -2212,8 +2380,10 @@
 
       materialEntries = (opts.materialCandidates || []).slice();
       renderPinned();
-      /* Init jak 5fb3493 — golden product → renderOptionsDebounced(""); brandingSearch → fetch seed. */
+      /* Init jak 5fb3493 — golden product → renderOptionsDebounced(""); brandingSearch → fetch seed.
+         Material: ZAWSZE od razu paint (minQ hint / seed), nawet przy pustym materialCandidates. */
       if (opts.kind === "material") {
+        renderOptionsDebounced(search ? search.value : "");
         if (opts.bootstrapQuery) {
           loadBrandingMaterialCandidates(opts).then(function (entries) {
             if (!pickerStillOpen()) return;
@@ -2223,8 +2393,6 @@
             renderPinned();
             renderOptionsDebounced(search ? search.value : "");
           });
-        } else if (materialEntries.length) {
-          renderOptionsDebounced("");
         }
       } else if (opts.kind === "variant" && opts.brandingSearch) {
         loadBrandingMaterialCandidates(opts).then(function (entries) {
@@ -2298,28 +2466,28 @@
       };
       pop._damAssocRebindChrome();
     }
-    /* Wszystkie kind (product|variant|material): ten sam async gate co „Dodaj/Edytuj produkty”. */
+    /* Shell first. NEVER ensureFileIndex/DamSearch.load on open — Mode B freeze.
+       Warm index: use if already present (cap empty shell when huge). Cold: empty browse;
+       q>=2 → DamSearch light. */
     function schedulePaintPicker(fi) {
       setTimeout(function () {
         paintPicker(fi || { products: [] });
       }, 0);
     }
-    if (
-      global._DAM_FILE_INDEX &&
-      global._DAM_FILE_INDEX.products &&
-      global._DAM_FILE_INDEX.products.length &&
-      !pickerSkipsWarmFileIndex(opts)
-    ) {
-      schedulePaintPicker(global._DAM_FILE_INDEX);
-      return;
-    }
     if (pickerSkipsWarmFileIndex(opts)) {
       schedulePaintPicker({ products: [] });
       return;
     }
-    ensureFileIndex().then(function (fi) {
-      schedulePaintPicker(fi);
-    });
+    /* GOLDEN: warm file-index + for+break CAP w collect — nigdy pusty shell gdy index jest w RAM. */
+    if (
+      global._DAM_FILE_INDEX &&
+      global._DAM_FILE_INDEX.products &&
+      global._DAM_FILE_INDEX.products.length
+    ) {
+      schedulePaintPicker(global._DAM_FILE_INDEX);
+      return;
+    }
+    schedulePaintPicker({ products: [] });
   }
 
   function assocPickerStartDir(opts) {
@@ -2773,17 +2941,15 @@
         ctx.materialCandidates ||
         []
       ).slice();
-      /* 5fb3493 bootstrap + fallback indeksu gdy brak materials (pusty stan nie crashuje). */
-      var bootstrapQuery = "";
-      if (ctx.productContext) {
-        bootstrapQuery =
+      /* Pusty materialsList NIE blokuje open — bootstrap z indeksu produktu (630xxxx). */
+      var bootstrapQuery = pickerBootstrapQueryFromCtx(ctx);
+      if (!String(bootstrapQuery || "").trim() && ctx.productContext) {
+        bootstrapQuery = String(
           ctx.productContext.index ||
-          ctx.productContext.display_name ||
-          ctx.productContext.name ||
-          "";
-      }
-      if (!String(bootstrapQuery || "").trim()) {
-        bootstrapQuery = pickerBootstrapQueryFromCtx(ctx);
+            ctx.productContext.display_name ||
+            ctx.productContext.name ||
+            ""
+        ).trim();
       }
       var prevMatIds = selectedIds.slice();
       var matPickerOpts = {
@@ -3605,8 +3771,35 @@
       document.getElementById("damVizModal");
     var col =
       (anchorBtn && anchorBtn.closest(".dam-media-preview__assoc-col")) ||
-      (modalRoot && modalRoot.querySelector(".dam-media-preview__assoc-col--materials"));
+      (modalRoot &&
+        (modalRoot.querySelector(".dam-media-preview__assoc-col--materials") ||
+          modalRoot.querySelector(".dam-viz-modal__assoc"))) ||
+      null;
     var ctx = resolveMaterialsCtx(modalRoot, col);
+    /* Pusty stan „Brak skojarzonych materiałów” NIE blokuje CTA — dogeneruj seed z produktu. */
+    if (!ctx && modalRoot) {
+      var goBtn = modalRoot.querySelector("#damVizModalGoProduct");
+      var pid = (goBtn && goBtn.getAttribute("data-pid")) || "";
+      var titleEl = modalRoot.querySelector(".dam-viz-modal__title");
+      var idxChip = modalRoot.querySelector("#damVizModalAssetId, .dam-viz-badge--index");
+      var idxBlob = (idxChip && (idxChip.getAttribute("data-marketing-id") || idxChip.textContent)) || "";
+      var idxMatch = String(idxBlob).match(/\b(630\d{4}|000\d{3})\b/);
+      if (pid || idxMatch) {
+        ctx = seedMaterialsCtx(modalRoot, {
+          productContext: {
+            id: pid,
+            name: (titleEl && titleEl.textContent) || "",
+            index: idxMatch ? idxMatch[1] : "",
+          },
+        });
+      }
+    }
+    if (!col && modalRoot) {
+      col =
+        modalRoot.querySelector(".dam-media-preview__assoc-col--materials") ||
+        modalRoot.querySelector(".dam-viz-modal__assoc-pane") ||
+        modalRoot;
+    }
     if (!col || !ctx) {
       toast("Brak kontekstu materiałów.");
       return;
@@ -3664,10 +3857,18 @@
     if (kind === "suggestions") kind = "material";
     if (kind === "variants") kind = "variant";
     /* product: golden path — bez zmian (openEditPicker → ensureFileIndex async). */
+    if (kind === "material") {
+      openVizMaterialsEdit315(btn, root);
+      return;
+    }
+    if (kind === "variant" && root && root.id === "damVizModal") {
+      openVizAssocVariantsPicker(root, root._damVizAssocCtasOpts || {});
+      return;
+    }
     var col = btn.closest(".dam-media-preview__assoc-col");
     var ctx = resolvePickerCtx(root, col, kind);
     if (!col || !ctx) {
-      toast(kind === "material" ? "Brak kontekstu materiałów." : "Brak kontekstu skojarzeń.");
+      toast("Brak kontekstu skojarzeń.");
       return;
     }
     openEditPicker(col, kind, ctx);
@@ -3911,11 +4112,10 @@
     save: saveAssociations,
   };
 
-  /* Anti-FOUC and bounded click path: prepare styles once at module load. */
-  if (document.head) ensureInjectedCss();
-  else {
-    document.addEventListener("DOMContentLoaded", function () {
+  /* Defer CSS inject — sync inject during script eval blocks DamAssocEdit boot CDP. */
+  setTimeout(function () {
+    try {
       ensureInjectedCss();
-    });
-  }
+    } catch (eCss) { /* ignore */ }
+  }, 0);
 })(window);
