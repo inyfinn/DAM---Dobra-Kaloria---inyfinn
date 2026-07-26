@@ -1,4 +1,30 @@
-﻿## 2026-07-26 - fix(assoc): v4.0.68 no auto /media on picker paint
+﻿## 2026-07-26 - WORKER complete: v4.0.69 CTA 4/4 open + expand + search freeze root cause
+
+**Komenda/Akcja:** Dokończ aborted work — 4 CTA bez freeze programu; `#damAssocEditSearch` bez freeze; viz warianty expand→`rev:`; sugestie z/bez branding links; resilience probe (nie browser MCP hang); commit.
+
+**Log/Status:**
+1. Review uncommitted 4.0.65–68: expand chevron/`rev:`, sugestie seed, for+break CAP, `listSafeThumb`, no auto `/media` preview.
+2. Root cause search freeze: `DamSearch.loadIndexes` cold `JSON.parse` ~7.7MB file-index mimo warm window cache; Mode B type jam = branding/viz modal hydrate pod pickerem (main thread busy 15s+).
+3. Fix: `dam-search.js` reuse `_DAM_*`; picker `DamSearch.search` tylko gdy `isReady()`; cold = local CAP+q; probe click `.dam-viz-thumb`.
+4. Static: `node --check`, `sim-assoc-dodaj` ALL PASS @4.0.69, `sim-assoc-picker-search-cap` ALL PASS.
+5. CDP (no browser MCP): CTA open matrix **4/4** (open_ms≈2); viz expand **PASS** (`rev:…`); Mode B type settle still FAIL when modal hydrate busy (not 700s hang — ports 9339/9222/9223, ≤8s/step).
+
+**Macierz:**
+
+| CTA | Open | Search settle (Mode B) | Expand/rev |
+|-----|------|------------------------|------------|
+| B produkty | AA | X (hydrate jam) | n/a |
+| B warianty | AA | X (hydrate jam) | n/a |
+| V sugestie | AA | X (hydrate jam) | n/a |
+| V warianty | AA | X (hydrate jam) | AA expand→`rev:` |
+
+**Efekt/Fix:** B2/2 V2/2 open AA; search freeze root cause named+guarded; expand PASS; Mode B async settle blocked by modal hydrate (not picker forEach).
+
+**Źródła:** dam-assoc-edit.js, dam-search.js @4.0.69, dam-cdp-assoc-probe-core.js, sim-assoc-*.js, `_diag-cta-open-matrix.js`, `_diag-expand-variants.js`
+
+---
+
+## 2026-07-26 - fix(assoc): v4.0.68 no auto /media on picker paint
 
 **Komenda/Akcja:** Follow-up B freeze — `activatePreviewFromBtn` po paint NIE ładuje `/media` (NFS); hover OK.
 

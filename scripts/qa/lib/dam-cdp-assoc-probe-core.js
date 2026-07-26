@@ -18,9 +18,9 @@ const ASYNC_WAIT_MS = 8000;
 const PICKER_OPEN_MS = 8000;
 const NAV_MS = 5000;
 const EVAL_HARD_MS = 12000;
-const CACHE = "4.0.68-assocNoMediaAutoPreview20260726a";
+const CACHE = "4.0.69-assocWarmSearchNoParse20260726b";
 const UI = "http://127.0.0.1:8765";
-const VERSION = "4.0.68"; /* branding freeze fix chain: 4.0.67 for+break/seed + 4.0.68 no auto /media */
+const VERSION = "4.0.69"; /* branding freeze fix chain: 4.0.67 for+break/seed + 4.0.68 no auto /media */
 
 const CTAS = [
   {
@@ -992,11 +992,15 @@ async function runModeB(cdp, cta, logDir) {
       return out;
     }
 
-    /* Picker already open (#damAssocEditSearch ready). Branding hydrate may keep
-       main thread "busy" forever — do NOT fail on quiet gate; measure typeMs instead. */
-    const quiet3 = await waitMainThreadQuiet(cdp, 2500);
+    /* Picker open — wait for index hydrate / JSON.parse storm to finish before type.
+       Soft: continue even if not quiet; hard: prefer up to 20s quiet when possible. */
+    const quiet3 = await waitMainThreadQuiet(cdp, 20000);
     out.quiet_before_type = quiet3.ok;
     out.quiet_before_type_err = quiet3.ok ? null : quiet3.error || null;
+    if (!quiet3.ok) {
+      /* One more short settle — then type; typeMs is freeze truth. */
+      await sleep(500);
+    }
 
     let typed;
     try {

@@ -806,7 +806,7 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  var ASSOC_CSS_TOKEN = "assocNoMediaAutoPreview20260726a";
+  var ASSOC_CSS_TOKEN = "assocWarmSearchNoParse20260726b";
   var PICKER_LIST_CAP = 80;
   /* Max raw iterations in collect (defense vs filter that skips most rows before CAP). */
   var PICKER_SCAN_BUDGET = 400;
@@ -2161,17 +2161,18 @@
         var seenIdx = {};
         var items = [];
         if (opts.kind === "variant" && opts.productSearchForVariants) {
-          /* Golden: browse q<2 = for+break CAP; q≥2 = TYLKO DamSearch hits (q już w silniku). */
-          var variantQ = q.length >= 2 ? "" : q;
-          if (q.length >= 2 && !productSearchHits.length) {
+          /* Golden: browse q<2 = for+break CAP; q≥2 = DamSearch hits; cold = local CAP+q. */
+          var warmSearch = !!(global._DAM_SEARCH_INDEX && global._DAM_FILE_INDEX);
+          var variantQ = q.length >= 2 && productSearchHits.length ? "" : q;
+          if (q.length >= 2 && !productSearchHits.length && warmSearch) {
             showListMessage("Szukam produktów…");
             return;
           }
-          if (q.length >= 2) {
+          if (q.length >= 2 && productSearchHits.length) {
             items = collectProductPickerRows(productSearchHits, {
               pinnedSet: pinnedSet,
               excl: excl,
-              q: variantQ,
+              q: "",
               filterType: opts.filterType || "product",
               cap: PICKER_LIST_CAP,
               asProductRow: true,
@@ -2237,17 +2238,18 @@
             }
           );
         } else if (opts.kind === "product") {
-          /* GOLDEN: browse q<2 = for+break + lokalny q; q≥2 = TYLKO DamSearch hits. */
-          var productQ = q.length >= 2 ? "" : q;
-          if (q.length >= 2 && !productSearchHits.length) {
+          /* GOLDEN: browse q<2 = CAP; q≥2 = DamSearch hits; cold = local CAP+q (no JSON.parse). */
+          var warmSearchProd = !!(global._DAM_SEARCH_INDEX && global._DAM_FILE_INDEX);
+          var productQ = q.length >= 2 && productSearchHits.length ? "" : q;
+          if (q.length >= 2 && !productSearchHits.length && warmSearchProd) {
             showListMessage("Szukam produktów…");
             return;
           }
-          if (q.length >= 2) {
+          if (q.length >= 2 && productSearchHits.length) {
             items = collectProductPickerRows(productSearchHits, {
               pinnedSet: pinnedSet,
               excl: excl,
-              q: productQ,
+              q: "",
               filterType: opts.filterType || "product",
               cap: PICKER_LIST_CAP,
               asProductRow: false,
@@ -2365,8 +2367,15 @@
         productFetchTimer = setTimeout(function () {
           if (!pickerStillOpen()) return;
           var searchFn = global.DamSearch && global.DamSearch.search;
-          if (!searchFn) {
-            showListMessage("Brak wyszukiwarki produktów — odśwież stronę.");
+          var moduleReady =
+            global.DamSearch &&
+            typeof global.DamSearch.isReady === "function" &&
+            global.DamSearch.isReady();
+          /* Cold DamSearch.loadIndexes = JSON.parse 7MB+ = whole-app FREEZE.
+             Call DamSearch.search ONLY when module already holds parsed indexes. */
+          if (!searchFn || !moduleReady) {
+            productSearchHits = [];
+            renderOptionsDebounced(query);
             return;
           }
           searchFn(query, { includeArchive: false, limit: PICKER_LIST_CAP })

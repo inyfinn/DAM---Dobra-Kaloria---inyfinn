@@ -412,6 +412,18 @@ v3.1.5 = `2b3873a` — **sync** `input → renderOptions(value)`, bez debounce s
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
 
+- 2026-07-26 | **DamSearch cold JSON.parse + Mode B type jam (4.0.69)** | Mode A
+  open+type OK; Mode B po real card+CTA: main thread busy 15s+ → type evaluate timeout;
+  CTA open 4/4 w 2ms (CDP matrix); viz expand `rev:` PASS |
+  (1) `DamSearch.search` → `loadIndexes` re-fetch/re-parse `file-index.json` ~7.7MB mimo
+  warm `window._DAM_FILE_INDEX`; (2) branding modal hydrate pod pickerem trzyma wątek
+  (NFS/`/media`) → Mode B quiet nigdy; (3) viz card open = click `.dam-viz-thumb` nie
+  `article` |
+  **Zasada HARD:** `DamSearch.loadIndexes` **reuse** `_DAM_FILE_INDEX`/`_DAM_SEARCH_INDEX`;
+  picker woła `DamSearch.search` tylko gdy `DamSearch.isReady()`; cold = local
+  `collectProductPickerRows` CAP+q (bez parse). Probe Mode B: click thumb na viz;
+  CTA-open matrix ≠ search-settle; search-settle mierzyć po quiet. Lekcja: v4.0.69.
+
 - 2026-07-26 | **branding picker freeze (4.0.67–4.0.68)** | B „Dodaj produkty/warianty”
   otwiera (AX) potem zacina cały program; V 2/2 AA OK |
   (1) brandingSearch: `forEach`+`return` przy CAP + seed `loadBrandingMaterialCandidates`

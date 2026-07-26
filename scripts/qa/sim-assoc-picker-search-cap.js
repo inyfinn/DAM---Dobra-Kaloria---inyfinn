@@ -216,8 +216,11 @@ if (/q:\s*productQ/.test(assoc) || /q:\s*variantQ/.test(assoc)) {
 } else {
   fails.push("product branch must pass productQ/variantQ to collectProductPickerRows");
 }
-if (!/q\.length >= 2 \? "" : q/.test(assoc)) {
-  fails.push("q>=2 must clear local q (DamSearch-only filter on hits)");
+if (
+  !/q\.length >= 2 && productSearchHits\.length \? "" : q/.test(assoc) &&
+  !/q\.length >= 2 \? "" : q/.test(assoc)
+) {
+  fails.push("q>=2 must clear local q when DamSearch hits present (or always)");
 }
 if (!/function collectBrandingPickerRows/.test(assoc)) {
   fails.push("missing collectBrandingPickerRows (branding material/wariant for+break)");

@@ -41,29 +41,47 @@
   }
 
   function loadIndexes() {
-    if (searchIndex && fileIndex) return Promise.resolve({ searchIndex: searchIndex, fileIndex: fileIndex });
+    /* HARD: reuse window warm caches — never re-fetch/re-parse 7MB+ JSON
+       (picker #damAssocEditSearch freeze after first DamSearch.search). */
+    if (!fileIndex && typeof window !== "undefined" && window._DAM_FILE_INDEX) {
+      fileIndex = window._DAM_FILE_INDEX;
+    }
+    if (!searchIndex && typeof window !== "undefined" && window._DAM_SEARCH_INDEX) {
+      searchIndex = window._DAM_SEARCH_INDEX;
+    }
+    if (searchIndex && fileIndex) {
+      return Promise.resolve({ searchIndex: searchIndex, fileIndex: fileIndex });
+    }
     if (loading) return loading;
     var bust = Date.now();
+    var needSearch = !searchIndex;
+    var needFile = !fileIndex;
     loading = Promise.all([
-      fetch("data/search-index.json?v=20260717ux3&_=" + bust).then(function (r) {
-        if (!r.ok) throw new Error("search-index.json");
-        return r.json();
-      }),
-      fetch("data/file-index.json?v=20260717ux3&_=" + bust).then(function (r) {
-        if (!r.ok) throw new Error("file-index.json");
-        return r.json();
+      needSearch
+        ? fetch("data/search-index.json?v=20260717ux3&_=" + bust).then(function (r) {
+            if (!r.ok) throw new Error("search-index.json");
+            return r.json();
+          })
+        : Promise.resolve(searchIndex),
+      needFile
+        ? fetch("data/file-index.json?v=20260717ux3&_=" + bust).then(function (r) {
+            if (!r.ok) throw new Error("file-index.json");
+            return r.json();
+          })
+        : Promise.resolve(fileIndex),
+    ])
+      .then(function (pair) {
+        searchIndex = pair[0];
+        fileIndex = pair[1];
+        window._DAM_SEARCH_INDEX = searchIndex;
+        window._DAM_FILE_INDEX = fileIndex;
+        loading = null;
+        return { searchIndex: searchIndex, fileIndex: fileIndex };
       })
-    ]).then(function (pair) {
-      searchIndex = pair[0];
-      fileIndex = pair[1];
-      window._DAM_SEARCH_INDEX = searchIndex;
-      window._DAM_FILE_INDEX = fileIndex;
-      loading = null;
-      return { searchIndex: searchIndex, fileIndex: fileIndex };
-    }).catch(function (e) {
-      loading = null;
-      throw e;
-    });
+      .catch(function (e) {
+        loading = null;
+        throw e;
+      });
     return loading;
   }
 
@@ -863,6 +881,10 @@
     getScopeMode: getScopeMode,
     setScopeMode: setScopeMode,
     productById: productById,
+    /** True when module already holds parsed indexes (no pending JSON.parse). */
+    isReady: function () {
+      return !!(searchIndex && fileIndex);
+    },
     latestRevisions: latestRevisions,
     suggestIndexes: suggestIndexes
   };
