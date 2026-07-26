@@ -1,4 +1,16 @@
-﻿## 2026-07-26 - User: CTA warianty/sugestie zamrażają całą app — napraw (golden path produktów)
+﻿## 2026-07-26 - User: commit 4.0.48 + assoc picker UX unify (4.0.49)
+
+**Komenda/Akcja:** Commit poprawki freeze; viz warianty = wyszukiwanie produktów po indeksie jak branding; sugestie crash; branding warianty lista+tagi; footery globalne Wstecz|Dodaj z dysku|Zatwierdź.
+
+**Log/Status:** Commit `e91aba0` (4.0.48 pinned≠pool). v4.0.49: `productSearchForVariants` (viz), `brandingSearch`+bootstrap fetch (branding warianty), unified footer, `schedulePaintPicker`+rAF debounce, min 2 znaki search guard, bubble index tags, `shortAssocLabel`. QA sims PASS.
+
+**Efekt/Fix:** [viz](http://127.0.0.1:8765/visualizations.html?v=4.0.49-assocPickerUxUnify20260726a) [branding](http://127.0.0.1:8765/branding.html?v=4.0.49-assocPickerUxUnify20260726a)
+
+**Źródła:** dam-assoc-edit.js, dam-viz.js, version 4.0.49
+
+---
+
+## 2026-07-26 - User: CTA warianty/sugestie zamrażają całą app — napraw (golden path produktów)
 
 **Komenda/Akcja:** Branding „Dodaj/Edytuj warianty” + viz „Dodaj/Edytuj warianty” i „Dodaj/Edytuj sugestie” — freeze całej strony; produkty działają — ta sama ścieżka click→picker.
 

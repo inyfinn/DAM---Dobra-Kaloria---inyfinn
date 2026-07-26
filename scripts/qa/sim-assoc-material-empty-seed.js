@@ -388,15 +388,12 @@ function main() {
       if (!(vizMs < BUDGET_MS)) fails.push("viz_path_sync_over_budget_" + Math.round(vizMs));
 
       const goldenEnsureFileIndex =
-        /ensureFileIndex\(\)\.then\(function \(fi\)/.test(openBody) &&
-        !/openMediaPickerImmediate/.test(openBody);
+        /schedulePaintPicker/.test(openBody) && !/openMediaPickerImmediate/.test(openBody);
       if (!goldenEnsureFileIndex) fails.push("golden_ensureFileIndex_path_missing");
 
-      const skipRenderOptionsWhenEmpty =
-        /if\s*\(\s*materialEntries\.length\s*&&\s*materialEntries\.length\s*<=\s*40\s*\)\s*renderOptions/.test(
-          openBody
-        );
-      if (!skipRenderOptionsWhenEmpty) fails.push("empty_material_should_skip_renderOptions");
+      const materialBootstrapOnOpen =
+        /opts\.kind === "material"[\s\S]{0,400}loadBrandingMaterialCandidates\(opts\)/.test(openBody);
+      if (!materialBootstrapOnOpen) fails.push("material_bootstrap_fetch_on_open");
 
       const results = {
         test: "sim-assoc-material-empty-seed",
@@ -406,7 +403,7 @@ function main() {
         budgetMs: BUDGET_MS,
         fetchDuringOpen: metrics.fetchDuringOpen,
         goldenEnsureFileIndexInSource: goldenEnsureFileIndex,
-        skipRenderOptionsWhenEmpty: skipRenderOptionsWhenEmpty,
+        materialBootstrapOnOpen: materialBootstrapOnOpen,
       };
 
       console.log("=== sim-assoc-material-empty-seed ===");

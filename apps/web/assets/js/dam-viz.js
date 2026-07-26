@@ -1167,6 +1167,7 @@
         if (!v) return null;
         var id = String(v.id || v.path || v.revision_path || "viz-" + i);
         var label = variantChipLabel(v, null) || v.product_name || id;
+        var idx = v.index_base || v.index || v.product_index || "";
         return {
           id: id,
           variant_key: productVariantKey(v),
@@ -1175,7 +1176,9 @@
           path: v.path || v.revision_path || "",
           thumb: v.thumb_url || "",
           thumb_url: v.thumb_url || "",
-          index: v.index_base || v.index || v.product_index || "",
+          index: idx,
+          lang: v.lang || "",
+          langs: v.lang ? [v.lang] : [],
         };
       })
       .filter(Boolean);

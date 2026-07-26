@@ -152,6 +152,25 @@
     };
   }
 
+  function shortAssocLabel(raw, maxLen) {
+    raw = String(raw || "").trim();
+    if (!raw) return "";
+    maxLen = maxLen || 80;
+    var slash = raw.replace(/\\/g, "/");
+    if (slash.indexOf("/") >= 0) {
+      var base = slash.split("/").pop() || slash;
+      if (base.length <= maxLen) return base;
+      return base.slice(0, maxLen - 1) + "…";
+    }
+    if (raw.length <= maxLen) return raw;
+    return raw.slice(0, maxLen - 1) + "…";
+  }
+
+  function assocSearchMinChars(kind) {
+    if (kind === "product") return 0;
+    return 2;
+  }
+
   function productSearchBlob(p) {
     if (!p) return "";
     var parts = [
@@ -573,8 +592,7 @@
       "padding:12px 14px;background:#f7f6fa;border-top:1px solid #ececf2;}" +
       ".dam-assoc-edit-overlay .dam-thumb-picker__footer .dam-dialog-actions__spacer{display:none;}" +
       ".dam-assoc-edit-overlay .dam-thumb-picker__footer > [data-cancel]{grid-column:1;}" +
-      ".dam-assoc-edit-overlay .dam-thumb-picker__footer > [data-goto-combo]," +
-      ".dam-assoc-edit-overlay .dam-thumb-picker__footer > [data-browse]{grid-column:2;}" +
+      ".dam-assoc-edit-overlay .dam-thumb-picker__footer > [data-goto-combo]{grid-column:2;}" +
       ".dam-assoc-edit-overlay .dam-thumb-picker__footer > [data-confirm]{grid-column:4;justify-self:end;}" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__confirm," +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__cancel{" +
@@ -1025,10 +1043,17 @@
       var products = (fi && fi.products) || [];
       var materialEntries = [];
       var selected = {};
-      (opts.selectedIds || []).forEach(function (id) {
-        selected[id] = true;
-      });
-      var pinnedIds = (opts.pinnedIds || opts.selectedIds || []).slice();
+      var pinnedIds;
+      if (opts.productSearchForVariants) {
+        /* Viz: pinned = warianty stripu; wyszukiwarka = produkty z indeksu (jak „Dodaj produkty”). */
+        pinnedIds = (opts.pinnedIds || []).slice();
+        selected = {};
+      } else {
+        (opts.selectedIds || []).forEach(function (id) {
+          selected[id] = true;
+        });
+        pinnedIds = (opts.pinnedIds || opts.selectedIds || []).slice();
+      }
       if (opts.kind === "product") {
         var metaPinned = linkedMetaByIdFromRecords(
           (opts.groupContext && opts.groupContext.linked_products) || []
@@ -1114,20 +1139,58 @@
             };
           }
         } else if (opts.kind === "variant") {
+          if (opts.brandingSearch) {
+            var matV =
+              materialEntries.find(function (x) {
+                return x && x.id === id;
+              }) ||
+              (opts.materialCandidates || []).find(function (x) {
+                return x && x.id === id;
+              });
+            if (matV) {
+              return {
+                id: matV.id,
+                label: shortAssocLabel(matV.name || matV.label || matV.title || matV.id),
+                thumb: matV.thumb || matV.thumb_url || PLACEHOLDER_SVG,
+                sub: matV.marketing_id || matV.index || matV.id || "",
+                path: matV.path || "",
+              };
+            }
+          }
           var v = (opts.variantCandidates || []).find(function (x) {
             return x && x.id === id;
           });
           if (v) {
             return {
               id: v.id,
-              label: v.name || v.label || v.id,
+              label: shortAssocLabel(v.name || v.label || v.id),
               thumb:
                 v.thumb ||
                 v.thumb_url ||
                 (v.path && global.DamMediaPreview ? global.DamMediaPreview.previewUrl(v.path, v) : ""),
-              sub: v.id || "",
+              sub: v.index || v.marketing_id || normIndexKey(v.id) || "",
+              langs: v.lang ? [v.lang] : v.langs || [],
               path: v.path || "",
             };
+          }
+          if (opts.productSearchForVariants) {
+            var pv = products.find(function (x) {
+              return x && x.id === id;
+            });
+            if (pv) {
+              var rev0p = (pv.revisions && pv.revisions[0]) || {};
+              return {
+                id: pv.id,
+                label: pv.display_name || pv.name || pv.id,
+                thumb: productThumb(pv),
+                sub: productIndexOf(pv) || "",
+                brand: pv.brand || "",
+                category: pv.category || "",
+                subcategory: pv.subcategory_label || "",
+                langs: rev0p.langs || [],
+                path: pv.path || "",
+              };
+            }
           }
         } else {
           var p = products.find(function (x) {
@@ -1373,11 +1436,79 @@
           .trim();
         var listEl = pop.querySelector(".dam-assoc-edit-popover__list");
         if (!listEl) return;
+        var minQ = 0;
+        if (opts.kind === "variant" && !opts.productSearchForVariants && !opts.brandingSearch) {
+          minQ = 2;
+        } else if (opts.kind === "material" && !materialEntries.length) {
+          minQ = 2;
+        }
+        if (minQ && q.length < minQ) {
+          listEl.innerHTML =
+            '<p class="dam-tag-edit-popover__empty">Wpisz co najmniej ' +
+            minQ +
+            " znaki, aby przeszukać indeks…</p>";
+          var pinnedKeep0 = pop.querySelector(
+            ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
+          );
+          if (pinnedKeep0) activatePreviewFromBtn(pinnedKeep0);
+          else setSearchPreview(pop, null);
+          return;
+        }
         var excl = buildAssocExclude(opts);
         var seenIds = {};
         var seenIdx = {};
         var items = [];
-        if (opts.kind === "variant") {
+        if (opts.kind === "variant" && opts.productSearchForVariants) {
+          products.forEach(function (p) {
+            if (!p || !p.id || pinnedSet[p.id]) return;
+            if (seenIds[p.id]) return;
+            if (productMatchesExclude(p, excl)) return;
+            if (opts.filterType !== "all" && isVisualizationLike(p)) return;
+            var idxKey = normIndexKey(productIndexOf(p));
+            if (idxKey && seenIdx[idxKey]) return;
+            if (q && productSearchBlob(p).indexOf(q) === -1) return;
+            seenIds[p.id] = true;
+            if (idxKey) seenIdx[idxKey] = true;
+            var rev0 = (p.revisions && p.revisions[0]) || {};
+            items.push({
+              id: p.id,
+              label: p.display_name || p.name || p.id,
+              thumb: productThumb(p),
+              sub: productIndexOf(p) || p.id,
+              path: p.path || "",
+              brand: p.brand || "",
+              category: p.category || "",
+              subcategory: p.subcategory_label || "",
+              langs: rev0.langs || [],
+            });
+          });
+        } else if (opts.kind === "variant" && opts.brandingSearch) {
+          (materialEntries.length ? materialEntries : opts.materialCandidates || []).forEach(
+            function (material) {
+              if (!material || !material.id || pinnedSet[material.id] || seenIds[material.id]) {
+                return;
+              }
+              var blob = (
+                (material.name || material.label || material.title || "") +
+                " " +
+                (material.id || "") +
+                " " +
+                (material.marketing_id || material.index || "") +
+                " " +
+                (material.search_blob || "")
+              ).toLowerCase();
+              if (q && blob.indexOf(q) === -1) return;
+              seenIds[material.id] = true;
+              items.push({
+                id: material.id,
+                label: shortAssocLabel(material.name || material.label || material.title || material.id),
+                thumb: material.thumb || material.thumb_url || PLACEHOLDER_SVG,
+                sub: material.marketing_id || material.index || "",
+                path: material.path || "",
+              });
+            }
+          );
+        } else if (opts.kind === "variant") {
           (opts.variantCandidates || []).forEach(function (v) {
             if (!v || !v.id || pinnedSet[v.id]) return;
             if (seenIds[v.id]) return;
@@ -1391,12 +1522,13 @@
             if (vIdx) seenIdx[vIdx] = true;
             items.push({
               id: v.id,
-              label: v.name || v.label || v.id,
+              label: shortAssocLabel(v.name || v.label || v.id),
               thumb:
                 v.thumb ||
                 v.thumb_url ||
                 (v.path && global.DamMediaPreview ? global.DamMediaPreview.previewUrl(v.path, v) : ""),
-              sub: v.id || "",
+              sub: v.index || v.marketing_id || normIndexKey(v.id) || "",
+              langs: v.lang ? [v.lang] : v.langs || [],
               path: v.path || "",
             });
           });
@@ -1419,8 +1551,8 @@
               seenIds[material.id] = true;
               items.push({
                 id: material.id,
-                label: material.name || material.label || material.title || material.id,
-                thumb: material.thumb || material.thumb_url || "",
+                label: shortAssocLabel(material.name || material.label || material.title || material.id),
+                thumb: material.thumb || material.thumb_url || PLACEHOLDER_SVG,
                 sub: material.marketing_id || material.index || "",
                 path: material.path || "",
               });
@@ -1481,24 +1613,20 @@
         }
       }
 
+      var footerComboTip =
+        opts.kind === "material" || opts.brandingSearch
+          ? "Eksplorator COMBO — wybierz plik materiału brandingowego"
+          : opts.kind === "variant"
+            ? "Eksplorator COMBO — wybierz folder wariantu / produktu"
+            : "Eksplorator COMBO — wybierz folder produktu (pliki wyszarzone)";
       html +=
         "</div></div>" +
         '<div class="dam-thumb-picker__footer dam-tag-edit-popover__actions dam-dialog-actions dam-modal-footer">' +
         '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel><i class="uil uil-arrow-left"></i><span>Wstecz</span></button>' +
-        (opts.kind === "product" || opts.kind === "material"
-          ? '<button type="button" class="dam-tag-edit-popover__confirm dam-assoc-edit-popover__combo" data-goto-combo data-eksplorer data-dam-tip="' +
-            (opts.kind === "material"
-              ? "Eksplorator COMBO — wybierz plik materiału brandingowego"
-              : "Eksplorator COMBO — wybierz folder produktu (pliki wyszarzone)") +
-            '">' +
-            '<i class="uil uil-folder-plus" aria-hidden="true"></i><span>Dodaj z dysku</span></button>'
-          : "") +
-        (opts.kind === "variant"
-          ? '<button type="button" class="dam-tag-edit-popover__confirm dam-assoc-edit-popover__disk" data-browse data-dam-tip="Wyszukaj plik w eksploratorze">' +
-            '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Wskaż plik</span></button>' +
-            '<button type="button" class="dam-tag-edit-popover__confirm dam-assoc-edit-popover__combo" data-goto-combo data-eksplorer data-dam-tip="Otwórz Eksplorator COMBO (foldery + miniatury)">' +
-            '<i class="uil uil-apps" aria-hidden="true"></i><span>Eksplorator</span></button>'
-          : "") +
+        '<button type="button" class="dam-tag-edit-popover__confirm dam-assoc-edit-popover__combo" data-goto-combo data-eksplorer data-dam-tip="' +
+        esc(footerComboTip) +
+        '">' +
+        '<i class="uil uil-folder-plus" aria-hidden="true"></i><span>Dodaj z dysku</span></button>' +
         '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
         '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm><i class="uil uil-check"></i><span>Zatwierdź</span></button>' +
         "</div>";
@@ -1515,7 +1643,14 @@
 
       var search = pop.querySelector("#damAssocEditSearch");
       var renderOptionsDebounced = debounce(function (filter) {
-        renderOptions(filter);
+        var run = function () {
+          renderOptions(filter);
+        };
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(run);
+        } else {
+          setTimeout(run, 0);
+        }
       }, 180);
       var materialFetchTimer = null;
 
@@ -1550,17 +1685,31 @@
       }
 
       materialEntries = (opts.materialCandidates || []).slice();
-      var variantPoolOpen = (opts.variantCandidates || []).length;
+      renderPinned();
       if (opts.kind === "material") {
-        renderPinned();
-        if (materialEntries.length && materialEntries.length <= 40) renderOptions("");
+        if (opts.bootstrapQuery) {
+          loadBrandingMaterialCandidates(opts).then(function (entries) {
+            if (!pickerStillOpen()) return;
+            if (entries && entries.length) materialEntries = entries;
+            renderPinned();
+            renderOptionsDebounced(search ? search.value : "");
+          });
+        } else if (materialEntries.length) {
+          renderOptionsDebounced("");
+        }
+      } else if (opts.kind === "variant" && opts.brandingSearch) {
+        loadBrandingMaterialCandidates(opts).then(function (entries) {
+          if (!pickerStillOpen()) return;
+          if (entries && entries.length) materialEntries = entries;
+          renderPinned();
+          renderOptionsDebounced(search ? search.value : "");
+        });
+      } else if (opts.kind === "variant" && opts.productSearchForVariants) {
+        renderOptionsDebounced("");
       } else if (opts.kind === "variant") {
-        renderPinned();
-        /* Ten sam guard co material: bez sync previewUrl × setek wariantów viz. */
-        if (variantPoolOpen && variantPoolOpen <= 40) renderOptions("");
+        if ((opts.variantCandidates || []).length <= 40) renderOptionsDebounced("");
       } else {
-        renderPinned();
-        renderOptions("");
+        renderOptionsDebounced("");
       }
       activatePreviewFromBtn(
         pop.querySelector(".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]")
@@ -1583,15 +1732,11 @@
               ));
             }
             closePicker();
+            if (typeof opts.onConfirmVariants === "function") {
+              opts.onConfirmVariants(ids);
+              return;
+            }
             if (typeof opts.onConfirm === "function") opts.onConfirm(ids, selected);
-          };
-        }
-        var browseEl = pop.querySelector("[data-browse]");
-        if (browseEl) {
-          browseEl.onclick = function () {
-            openVariantBrowsePicker(opts, selected, function () {
-              if (typeof pop._damAssocRefresh === "function") pop._damAssocRefresh();
-            });
           };
         }
         var comboEl = pop.querySelector("[data-goto-combo]");
@@ -1606,16 +1751,21 @@
       pop._damAssocRebindChrome();
     }
     /* Wszystkie kind (product|variant|material): ten sam async gate co „Dodaj/Edytuj produkty”. */
+    function schedulePaintPicker(fi) {
+      setTimeout(function () {
+        paintPicker(fi || { products: [] });
+      }, 0);
+    }
     if (
       global._DAM_FILE_INDEX &&
       global._DAM_FILE_INDEX.products &&
       global._DAM_FILE_INDEX.products.length
     ) {
-      paintPicker(global._DAM_FILE_INDEX);
+      schedulePaintPicker(global._DAM_FILE_INDEX);
       return;
     }
     ensureFileIndex().then(function (fi) {
-      paintPicker(fi);
+      schedulePaintPicker(fi);
     });
   }
 
@@ -2104,10 +2254,24 @@
     }
     if (kind === "variant") {
       var prevVarIds = selectedIds.slice();
+      var isVizProductPick = typeof ctx.onConfirmVariants === "function";
+      var isBrandingMat = !isVizProductPick;
       var varPickerOpts = {
         kind: "variant",
-        head: "Warianty produktu",
-        selectedIds: selectedIds,
+        head: isVizProductPick
+          ? "Warianty produktu — wybierz produkt (indeks)"
+          : "Warianty materiału",
+        productSearchForVariants: isVizProductPick,
+        brandingSearch: isBrandingMat,
+        bootstrapQuery: isBrandingMat
+          ? String(
+              (asset && (asset.marketing_id || asset.index || asset.name)) ||
+                (gc && gc.index) ||
+                ""
+            ).trim()
+          : "",
+        filterType: isVizProductPick ? "product" : filterType,
+        selectedIds: isVizProductPick ? [] : selectedIds,
         pinnedIds: selectedIds.slice(),
         variantCandidates: variantPool,
         asset: ctx.asset,
@@ -2115,7 +2279,7 @@
         assocCtx: ctx,
         excludeIds: excludeIds,
         excludeIndexes: excludeIndexes,
-        filterType: filterType,
+        onConfirmVariants: ctx.onConfirmVariants,
         onConfirm: function (ids) {
           if (typeof ctx.onConfirmVariants === "function") {
             ctx.onConfirmVariants(ids);

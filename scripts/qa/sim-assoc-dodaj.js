@@ -48,7 +48,7 @@ function ok(name, cond, detail) {
 
 
 
-ok("version 4.0.48", ver.version === "4.0.48");
+ok("version 4.0.49", ver.version === "4.0.49");
 
 ok("bindVizAssocCtas export", /bindVizAssocCtas:\s*bindVizAssocCtas/.test(assoc));
 
@@ -69,7 +69,18 @@ ok(
   /ctx\.variantPinnedIds/.test(assoc) &&
     /poolIsCandidates/.test(assoc) &&
     !/openMediaPickerImmediate/.test(assoc) &&
-    /ensureFileIndex\(\)\.then\(function \(fi\)/.test(assoc)
+    /schedulePaintPicker/.test(assoc)
+);
+
+ok(
+  "footer global Dodaj z dysku",
+  /Dodaj z dysku<\/span>/.test(assoc) &&
+    !/data-browse data-dam-tip="Wyszukaj plik/.test(assoc)
+);
+
+ok(
+  "viz variant productSearchForVariants",
+  /productSearchForVariants/.test(assoc) && /onConfirmVariants\(ids\)/.test(assoc)
 );
 
 ok(
@@ -121,7 +132,7 @@ ok(
 ok(
   "cache token all assoc pages",
   [branding, visualizations, explorer, dashboard].every(function (html) {
-    return /4\.0\.48-variantPinnedPoolFix20260726a/.test(html);
+    return /4\.0\.49-assocPickerUxUnify20260726a/.test(html);
   })
 );
 
