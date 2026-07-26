@@ -327,14 +327,37 @@
     }
   }
 
-  function appendFileIndexMatches(productIds, nq, dig, includeArchive, fi) {
+  function appendFileIndexMatches(productIds, nq, dig, includeArchive, fi, optsScan) {
     if (!nq || !fi || !fi.products) return productIds;
-    fi.products.forEach(function (p) {
-      if (!p || !p.id || productIds.indexOf(p.id) !== -1) return;
-      if (!includeArchive && !productHasLivePresence(p)) return;
+    optsScan = optsScan || {};
+    var limit = optsScan.limit || 0;
+    /* Picker/light: hard budget — full 50k forEach = whole-app FREEZE on nonsense q. */
+    var budget =
+      typeof optsScan.scanBudget === "number"
+        ? optsScan.scanBudget
+        : limit
+          ? Math.max(400, limit * 10)
+          : fi.products.length;
+    var list = fi.products;
+    for (var i = 0; i < list.length; i++) {
+      if (i >= budget) break;
+      if (limit && productIds.length >= limit) break;
+      var p = list[i];
+      if (!p || !p.id || productIds.indexOf(p.id) !== -1) continue;
+      if (!includeArchive && !productHasLivePresence(p)) continue;
       if (productMatchesTextQuery(p, nq, dig, includeArchive)) productIds.push(p.id);
-    });
+    }
     return unique(productIds);
+  }
+
+  function adoptWarmCaches() {
+    if (!fileIndex && typeof window !== "undefined" && window._DAM_FILE_INDEX) {
+      fileIndex = window._DAM_FILE_INDEX;
+    }
+    if (!searchIndex && typeof window !== "undefined" && window._DAM_SEARCH_INDEX) {
+      searchIndex = window._DAM_SEARCH_INDEX;
+    }
+    return !!(searchIndex && fileIndex);
   }
 
   function buildStructuredHits(products, nq, dig, scope, includeArchive) {
@@ -421,6 +444,8 @@
       var mode = "text";
       var message = null;
       var suggestions = [];
+      var light = !!opts.light;
+      var hitLimit = opts.limit || 0;
 
       // Index / numeric search
       if (dig.length >= 4 && /^[\d.\s]+$/.test(q.replace(/\s/g, ""))) {
@@ -473,69 +498,83 @@
             return sb - sa;
           });
         }
-      } else {
-        // Tag or text
-        mode = "tag_or_text";
-        var assocIds = [];
-        var rev = searchIndex.association_reverse || {};
-        nq.split(/\s+/).forEach(function (tok) {
-          if (!tok) return;
-          (rev[tok] || []).forEach(function (id) {
-            assocIds.push(id);
-          });
-        });
-        assocIds = unique(assocIds);
-        var tagHits = (searchIndex.by_tag && searchIndex.by_tag[nq]) || [];
-        if (tagHits.length) {
-          mode = "tag";
-          productIds = unique(tagHits.concat(assocIds));
-        } else if (assocIds.length) {
-          mode = "association";
-          productIds = assocIds.slice();
         } else {
-          // partial tag
-          Object.keys(searchIndex.by_tag || {}).forEach(function (tag) {
-            if (tag.indexOf(nq) !== -1 || nq.indexOf(tag) !== -1) {
-              (searchIndex.by_tag[tag] || []).forEach(function (id) { productIds.push(id); });
-            }
+          // Tag or text
+          mode = "tag_or_text";
+          var assocIds = [];
+          var rev = searchIndex.association_reverse || {};
+          nq.split(/\s+/).forEach(function (tok) {
+            if (!tok) return;
+            (rev[tok] || []).forEach(function (id) {
+              assocIds.push(id);
+            });
           });
-          productIds = unique(productIds);
-          if (!productIds.length) {
-            // blob search
-            (searchIndex.entries || []).forEach(function (e) {
-              if ((e.search_blob || "").indexOf(nq) !== -1) productIds.push(e.id);
-            });
-            productIds = unique(productIds);
-            // partial match on alphanumeric bases (np. TEST-TEST dla query "test")
-            Object.keys(searchIndex.by_base || {}).forEach(function (base) {
-              var nb = norm(base);
-              if (!nb || nb.indexOf(nq) === -1) return;
-              (searchIndex.by_base[base] || []).forEach(function (x) {
-                productIds.push(x.product_id);
-              });
-            });
-            productIds = unique(productIds);
-            // exact alfanumeryczny indeks (TEST-TEST2)
-            var exactAlpha = String(q || "")
-              .trim()
-              .toUpperCase();
-            if (/^TEST-[A-Z0-9-]+$/.test(exactAlpha) && searchIndex.by_base[exactAlpha]) {
-              (searchIndex.by_base[exactAlpha] || []).forEach(function (x) {
-                productIds.push(x.product_id);
-              });
-              productIds = unique(productIds);
-              mode = "index";
-            } else {
-              mode = "text";
-            }
-          } else {
+          assocIds = unique(assocIds);
+          var tagHits = (searchIndex.by_tag && searchIndex.by_tag[nq]) || [];
+          if (tagHits.length) {
             mode = "tag";
+            productIds = unique(tagHits.concat(assocIds));
+          } else if (assocIds.length) {
+            mode = "association";
+            productIds = assocIds.slice();
+          } else {
+            // partial tag — light: skip full Object.keys scans (picker freeze on garbage q)
+            var tagKeys = Object.keys(searchIndex.by_tag || {});
+            var tagScanCap = light ? Math.min(tagKeys.length, 200) : tagKeys.length;
+            for (var ti = 0; ti < tagScanCap; ti++) {
+              var tag = tagKeys[ti];
+              if (tag.indexOf(nq) !== -1 || nq.indexOf(tag) !== -1) {
+                (searchIndex.by_tag[tag] || []).forEach(function (id) {
+                  productIds.push(id);
+                });
+              }
+              if (hitLimit && productIds.length >= hitLimit) break;
+            }
+            productIds = unique(productIds);
+            if (!productIds.length) {
+              var entries = searchIndex.entries || [];
+              var entryCap = light ? Math.min(entries.length, 600) : entries.length;
+              for (var ei = 0; ei < entryCap; ei++) {
+                var e = entries[ei];
+                if (e && (e.search_blob || "").indexOf(nq) !== -1) productIds.push(e.id);
+                if (hitLimit && productIds.length >= hitLimit) break;
+              }
+              productIds = unique(productIds);
+              var baseKeys = Object.keys(searchIndex.by_base || {});
+              var baseScanCap = light ? Math.min(baseKeys.length, 300) : baseKeys.length;
+              for (var bi = 0; bi < baseScanCap; bi++) {
+                var base = baseKeys[bi];
+                var nb = norm(base);
+                if (!nb || nb.indexOf(nq) === -1) continue;
+                (searchIndex.by_base[base] || []).forEach(function (x) {
+                  productIds.push(x.product_id);
+                });
+                if (hitLimit && productIds.length >= hitLimit) break;
+              }
+              productIds = unique(productIds);
+              var exactAlpha = String(q || "")
+                .trim()
+                .toUpperCase();
+              if (/^TEST-[A-Z0-9-]+$/.test(exactAlpha) && searchIndex.by_base[exactAlpha]) {
+                (searchIndex.by_base[exactAlpha] || []).forEach(function (x) {
+                  productIds.push(x.product_id);
+                });
+                productIds = unique(productIds);
+                mode = "index";
+              } else {
+                mode = "text";
+              }
+            } else {
+              mode = "tag";
+            }
           }
         }
-      }
 
-      /* Dolacz produkty, ktorych wariant pasuje do query (nawet gdy blob produktu nie) */
-      productIds = appendFileIndexMatches(productIds, nq, dig, includeArchive, fi);
+      /* Dolacz produkty z file-index — ALWAYS budgeted when light/limit (picker). */
+      productIds = appendFileIndexMatches(productIds, nq, dig, includeArchive, fi, {
+        limit: hitLimit || 0,
+        scanBudget: light ? Math.max(400, (hitLimit || 80) * 10) : undefined,
+      });
 
       if (!includeArchive) {
         productIds = productIds.filter(function (pid) {
@@ -881,8 +920,11 @@
     getScopeMode: getScopeMode,
     setScopeMode: setScopeMode,
     productById: productById,
+    /** Sync-adopt window._DAM_* without fetch/JSON.parse. */
+    adoptWarmCaches: adoptWarmCaches,
     /** True when module already holds parsed indexes (no pending JSON.parse). */
     isReady: function () {
+      adoptWarmCaches();
       return !!(searchIndex && fileIndex);
     },
     latestRevisions: latestRevisions,

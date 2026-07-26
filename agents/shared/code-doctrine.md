@@ -412,6 +412,21 @@ v3.1.5 = `2b3873a` — **sync** `input → renderOptions(value)`, bez debounce s
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
 
+- 2026-07-26 | **B produkty dead + B warianty/search freeze (4.0.70)** | B
+  `data-viz-assoc-cta=product` nie działa (pusty picker / stuck); B warianty +
+  `#damAssocEditSearch` garbage q zacinają app |
+  (1) openMediaPicker cold na branding: **zero** `ensureFileIndex` → `products=[]`
+  na zawsze (branding nie warmuje `_DAM_FILE_INDEX`); (2) `isReady()` false mimo
+  window cache + `warmSearchProd` → „Szukam…” forever; (3) `DamSearch.search`
+  `appendFileIndexMatches` + full `entries`/`by_tag` forEach ~50k na nonsense q;
+  (4) `resolvePickerProductFull` → `productById` O(n) find; (5) `Object.keys(productsById)`
+  50k na open branding API path |
+  **Zasada HARD:** cold GOLDEN = shell natychmiast + `ensureFileIndexForPicker`
+  (tylko file-index) → `_damAssocApplyFileIndex`; search-index idle; `adoptWarmCaches`
+  w `isReady`; picker `DamSearch.search(..., {light:true, limit})` z budgeted scans;
+  NIGDY `productById` find w collect; brandingSearch **bez** productsById map build.
+  Lekcja: v4.0.70.
+
 - 2026-07-26 | **DamSearch cold JSON.parse + Mode B type jam (4.0.69)** | Mode A
   open+type OK; Mode B po real card+CTA: main thread busy 15s+ → type evaluate timeout;
   CTA open 4/4 w 2ms (CDP matrix); viz expand `rev:` PASS |

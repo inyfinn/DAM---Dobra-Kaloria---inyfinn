@@ -133,6 +133,28 @@
     });
   }
 
+  /**
+   * Picker cold-open: fetch ONLY file-index (browse CAP). Do NOT DamSearch.load both
+   * indexes on CTA (double JSON.parse = freeze). Search-index warms idle after apply.
+   */
+  function ensureFileIndexForPicker() {
+    if (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products && global._DAM_FILE_INDEX.products.length) {
+      return Promise.resolve(global._DAM_FILE_INDEX);
+    }
+    return fetch("data/file-index.json?v=" + Date.now())
+      .then(function (r) {
+        if (!r.ok) throw new Error("file-index");
+        return r.json();
+      })
+      .then(function (d) {
+        global._DAM_FILE_INDEX = d;
+        return d;
+      })
+      .catch(function () {
+        return global._DAM_FILE_INDEX || { products: [] };
+      });
+  }
+
   function productIndexOf(p) {
     if (!p) return "";
     var idx = "";
@@ -215,11 +237,9 @@
 
   function brandingThumbUrl(entry) {
     if (!entry) return PLACEHOLDER_SVG;
-    if (entry.thumb || entry.thumb_url) return entry.thumb || entry.thumb_url;
-    var path = entry.path || "";
-    if (path && global.DamMediaPreview && typeof global.DamMediaPreview.previewUrl === "function") {
-      return global.DamMediaPreview.previewUrl(path, entry) || PLACEHOLDER_SVG;
-    }
+    var t = entry.thumb || entry.thumb_url || "";
+    /* List path: never build /media URLs (NFS). Hover uses data-preview-src separately. */
+    if (t && t.indexOf("/media?") === -1 && t.indexOf("preview=1") === -1) return t;
     return PLACEHOLDER_SVG;
   }
 
@@ -316,10 +336,7 @@
     ) {
       return global._DAM_FILE_INDEX.productsById[p.id];
     }
-    if (global.DamSearch && typeof global.DamSearch.productById === "function") {
-      var fromSearch = global.DamSearch.productById(p.id);
-      if (fromSearch) return fromSearch;
-    }
+    /* NEVER DamSearch.productById here — it is O(n) find over 50k (picker freeze). */
     return p;
   }
 
@@ -806,7 +823,7 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  var ASSOC_CSS_TOKEN = "assocWarmSearchNoParse20260726b";
+  var ASSOC_CSS_TOKEN = "assocRestoreBProdNoFreeze20260726e";
   var PICKER_LIST_CAP = 80;
   /* Max raw iterations in collect (defense vs filter that skips most rows before CAP). */
   var PICKER_SCAN_BUDGET = 400;
@@ -825,6 +842,13 @@
   /** Wstrzykuje style: Bento grid + pkt 36 podglad LEWA | lista PRAWA (nie ruszamy plikow agentow). */
   function ensureInjectedCss() {
     var style = document.getElementById(ASSOC_CSS_ID);
+    if (style && style.textContent) {
+      /* Keep existing inject — rebuilding 30KB CSS + style recalc on branding grid freezes CTA. */
+      if (style.getAttribute("data-token") !== ASSOC_CSS_TOKEN) {
+        style.setAttribute("data-token", ASSOC_CSS_TOKEN);
+      }
+      return;
+    }
     if (style && style.getAttribute("data-token") === ASSOC_CSS_TOKEN && style.textContent) return;
     var css =
       /* Shell / bento grid popover — HARD: 70vw × 90vh (wszędzie: branding + viz) */
@@ -867,6 +891,8 @@
       "gap:6px;color:#a8a8b3;font-size:11px;font-weight:500;}" +
       ".dam-assoc-edit-popover__preview-empty i{font-size:28px;color:#c4bdd2;}" +
       ".dam-assoc-edit-popover__preview.is-empty .dam-assoc-edit-popover__preview-empty{display:flex;}" +
+      /* Assoc empty copy — NOT .dam-tag-edit-popover__empty (tutorial MO + showSad = freeze). */
+      ".dam-assoc-edit-popover__empty-msg{margin:12px 8px;padding:0;color:#8b8d97;font-size:13px;line-height:1.4;text-align:center;}" +
       ".dam-assoc-edit-popover__preview-caption{font-size:12px;font-weight:600;color:#464255;line-height:1.3;" +
       "text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}" +
       ".dam-assoc-edit-popover__preview-meta{font-size:10px;font-weight:600;color:#8b8d97;text-align:center;" +
@@ -1440,10 +1466,15 @@
   function openMediaPicker(anchorEl, opts) {
     opts = opts || {};
     closePicker();
-    ensureInjectedCss();
+    /* Defer CSS inject off the CTA click turn (style recalc on branding grid can jam). */
+    setTimeout(function () {
+      ensureInjectedCss();
+    }, 0);
     function paintPicker(fi) {
       var products = (fi && fi.products) || [];
+      /* HARD: never pull 50k file-index into branding API pickers (closure + later scans = freeze). */
       if (
+        !pickerSkipsWarmFileIndex(opts) &&
         (!products.length || products.length < 2) &&
         global._DAM_FILE_INDEX &&
         global._DAM_FILE_INDEX.products &&
@@ -1451,9 +1482,17 @@
       ) {
         products = global._DAM_FILE_INDEX.products;
       }
-      /* Lazy lookup — memoized productsById (never rebuild map on every open). */
-      var productsById = productsByIdFromCache();
-      if (!productsById || !Object.keys(productsById).length) productsById = null;
+      /* Lazy lookup — memoized productsById. Skip on branding API paths (no Object.keys 50k). */
+      var productsById = null;
+      if (!pickerSkipsWarmFileIndex(opts)) {
+        if (
+          global._DAM_FILE_INDEX &&
+          global._DAM_FILE_INDEX.products &&
+          global._DAM_FILE_INDEX.products.length
+        ) {
+          productsById = productsByIdFromCache();
+        }
+      }
       var materialEntries = [];
       var productSearchHits = [];
       var pickerActiveTags = [];
@@ -1976,7 +2015,7 @@
         var pinnedEl = pop.querySelector(".dam-assoc-edit-popover__pinned");
         if (!pinnedEl) return;
         if (!pinnedIds.length) {
-          pinnedEl.innerHTML = '<p class="dam-tag-edit-popover__empty">Brak aktualnych skojarzen.</p>';
+          pinnedEl.innerHTML = '<p class="dam-assoc-edit-popover__empty-msg">Brak aktualnych skojarzen.</p>';
           setSearchPreview(pop, null);
           return;
         }
@@ -1993,7 +2032,7 @@
       function showListMessage(msg) {
         var listEl = pop.querySelector(".dam-assoc-edit-popover__list");
         if (!listEl) return;
-        listEl.innerHTML = '<p class="dam-tag-edit-popover__empty">' + esc(msg) + "</p>";
+        listEl.innerHTML = '<p class="dam-assoc-edit-popover__empty-msg">' + esc(msg) + "</p>";
       }
 
       function renderPickerTagFilters() {
@@ -2146,7 +2185,7 @@
         }
         if (minQ && q.length < minQ) {
           listEl.innerHTML =
-            '<p class="dam-tag-edit-popover__empty">Wpisz co najmniej ' +
+            '<p class="dam-assoc-edit-popover__empty-msg">Wpisz co najmniej ' +
             minQ +
             " znaki, aby przeszukać indeks…</p>";
           var pinnedKeep0 = pop.querySelector(
@@ -2161,10 +2200,20 @@
         var seenIdx = {};
         var items = [];
         if (opts.kind === "variant" && opts.productSearchForVariants) {
-          /* Golden: browse q<2 = for+break CAP; q≥2 = DamSearch hits; cold = local CAP+q. */
-          var warmSearch = !!(global._DAM_SEARCH_INDEX && global._DAM_FILE_INDEX);
+          /* Golden: browse q<2 = for+break CAP; q≥2 = DamSearch hits; cold = local CAP+q.
+             "Szukam…" only while DamSearch module is ready AND fetch in flight — never stuck. */
+          if (
+            global.DamSearch &&
+            typeof global.DamSearch.adoptWarmCaches === "function"
+          ) {
+            global.DamSearch.adoptWarmCaches();
+          }
+          var searchReadyVar =
+            global.DamSearch &&
+            typeof global.DamSearch.isReady === "function" &&
+            global.DamSearch.isReady();
           var variantQ = q.length >= 2 && productSearchHits.length ? "" : q;
-          if (q.length >= 2 && !productSearchHits.length && warmSearch) {
+          if (q.length >= 2 && !productSearchHits.length && searchReadyVar && productFetchTimer) {
             showListMessage("Szukam produktów…");
             return;
           }
@@ -2239,9 +2288,18 @@
           );
         } else if (opts.kind === "product") {
           /* GOLDEN: browse q<2 = CAP; q≥2 = DamSearch hits; cold = local CAP+q (no JSON.parse). */
-          var warmSearchProd = !!(global._DAM_SEARCH_INDEX && global._DAM_FILE_INDEX);
+          if (
+            global.DamSearch &&
+            typeof global.DamSearch.adoptWarmCaches === "function"
+          ) {
+            global.DamSearch.adoptWarmCaches();
+          }
+          var searchReadyProd =
+            global.DamSearch &&
+            typeof global.DamSearch.isReady === "function" &&
+            global.DamSearch.isReady();
           var productQ = q.length >= 2 && productSearchHits.length ? "" : q;
-          if (q.length >= 2 && !productSearchHits.length && warmSearchProd) {
+          if (q.length >= 2 && !productSearchHits.length && searchReadyProd && productFetchTimer) {
             showListMessage("Szukam produktów…");
             return;
           }
@@ -2268,8 +2326,8 @@
         items = items.slice(0, PICKER_LIST_CAP);
         if (!items.length) {
           listEl.innerHTML = q
-            ? '<p class="dam-tag-edit-popover__empty">Brak wyników dla tego wyszukiwania.</p>'
-            : '<p class="dam-tag-edit-popover__empty">Wpisz frazę, aby zawęzić listę…</p>';
+            ? '<p class="dam-assoc-edit-popover__empty-msg">Brak wyników dla tego wyszukiwania.</p>'
+            : '<p class="dam-assoc-edit-popover__empty-msg">Wpisz frazę, aby zawęzić listę…</p>';
           var pinnedKeep = pop.querySelector(
             ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
           );
@@ -2367,33 +2425,52 @@
         productFetchTimer = setTimeout(function () {
           if (!pickerStillOpen()) return;
           var searchFn = global.DamSearch && global.DamSearch.search;
+          if (
+            global.DamSearch &&
+            typeof global.DamSearch.adoptWarmCaches === "function"
+          ) {
+            global.DamSearch.adoptWarmCaches();
+          }
           var moduleReady =
             global.DamSearch &&
             typeof global.DamSearch.isReady === "function" &&
             global.DamSearch.isReady();
           /* Cold DamSearch.loadIndexes = JSON.parse 7MB+ = whole-app FREEZE.
-             Call DamSearch.search ONLY when module already holds parsed indexes. */
+             Call DamSearch.search ONLY when module already holds parsed indexes.
+             light:true = capped scans (no 50k forEach on garbage q). */
           if (!searchFn || !moduleReady) {
             productSearchHits = [];
+            productFetchTimer = null;
             renderOptionsDebounced(query);
             return;
           }
-          searchFn(query, { includeArchive: false, limit: PICKER_LIST_CAP })
+          searchFn(query, {
+            includeArchive: false,
+            limit: PICKER_LIST_CAP,
+            light: true,
+          })
             .then(function (res) {
+              productFetchTimer = null;
               if (!pickerStillOpen()) return;
-              var ids = ((res && res.products) || []).slice(0, PICKER_LIST_CAP);
-              productSearchHits = ids
-                .map(function (id) {
-                  return (
-                    (productsById && productsById[id]) ||
-                    (global.DamSearch.productById && global.DamSearch.productById(id)) ||
-                    null
-                  );
+              if (!productsById && global._DAM_FILE_INDEX) {
+                productsById = productsByIdFromCache();
+              }
+              /* DamSearch.search returns product OBJECTS in res.products (not bare ids). */
+              var raw = ((res && res.products) || []).slice(0, PICKER_LIST_CAP);
+              productSearchHits = raw
+                .map(function (p) {
+                  if (!p) return null;
+                  if (typeof p === "object" && p.id) {
+                    return resolvePickerProductFull(p, productsById);
+                  }
+                  var id = String(p);
+                  return (productsById && productsById[id]) || null;
                 })
                 .filter(Boolean);
               renderOptionsDebounced(query);
             })
             .catch(function () {
+              productFetchTimer = null;
               if (!pickerStillOpen()) return;
               productSearchHits = [];
               showListMessage("Błąd wyszukiwania produktów.");
@@ -2426,7 +2503,6 @@
       }
 
       materialEntries = (opts.materialCandidates || []).slice(0, PICKER_LIST_CAP);
-      renderPinned();
       /* Init: shell + pinned first. Branding API seed only when bootstrapQuery >= 2
          (never block open on /branding-search-picker + N× /media thumbs). */
       function applyBrandingSeed(entries) {
@@ -2437,28 +2513,49 @@
         renderPinned();
         scheduleListPaint(search ? search.value : "");
       }
-      if (opts.kind === "material") {
-        renderOptionsDebounced(search ? search.value : "");
-        if (String(opts.bootstrapQuery || "").trim().length >= 2) {
-          loadBrandingMaterialCandidates(opts).then(applyBrandingSeed);
+      function finishPickerInit() {
+        if (!pickerStillOpen()) return;
+        renderPinned();
+        if (opts.kind === "material") {
+          renderOptionsDebounced(search ? search.value : "");
+          if (String(opts.bootstrapQuery || "").trim().length >= 2) {
+            loadBrandingMaterialCandidates(opts).then(applyBrandingSeed);
+          }
+        } else if (opts.kind === "variant" && opts.brandingSearch) {
+          showListMessage("Wpisz co najmniej 2 znaki, aby szukać wariantów…");
+          if (String(opts.bootstrapQuery || "").trim().length >= 2) {
+            loadBrandingMaterialCandidates(opts).then(applyBrandingSeed);
+          }
+        } else if (opts.kind === "variant" && opts.productSearchForVariants) {
+          renderOptionsDebounced("");
+        } else if (opts.kind === "variant") {
+          if ((opts.variantCandidates || []).length <= 40) renderOptionsDebounced("");
+        } else {
+          renderOptionsDebounced("");
         }
-      } else if (opts.kind === "variant" && opts.brandingSearch) {
-        renderOptionsDebounced(search ? search.value : "");
-        if (String(opts.bootstrapQuery || "").trim().length >= 2) {
-          loadBrandingMaterialCandidates(opts).then(applyBrandingSeed);
-        }
-      } else if (opts.kind === "variant" && opts.productSearchForVariants) {
-        /* Ten sam init co golden kind=product */
-        renderOptionsDebounced("");
-      } else if (opts.kind === "variant") {
-        if ((opts.variantCandidates || []).length <= 40) renderOptionsDebounced("");
-      } else {
-        /* GOLDEN: kind=product */
-        renderOptionsDebounced("");
+        activatePreviewFromBtn(
+          pop.querySelector(".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]")
+        );
       }
-      activatePreviewFromBtn(
-        pop.querySelector(".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]")
-      );
+      /* HARD: brandingSearch — shell first; init pinned/list on next macrotasks (anti-freeze). */
+      if (opts.kind === "variant" && opts.brandingSearch) {
+        setTimeout(function () {
+          if (!pickerStillOpen()) return;
+          renderPinned();
+          showListMessage("Wpisz co najmniej 2 znaki, aby szukać wariantów…");
+          activatePreviewFromBtn(
+            pop.querySelector(".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]")
+          );
+        }, 0);
+        setTimeout(function () {
+          if (!pickerStillOpen()) return;
+          if (String(opts.bootstrapQuery || "").trim().length >= 2) {
+            loadBrandingMaterialCandidates(opts).then(applyBrandingSeed);
+          }
+        }, 50);
+      } else {
+        finishPickerInit();
+      }
 
       pop._damAssocRebindChrome = function () {
         var closeBtn = pop.querySelector("[data-close]");
@@ -2508,30 +2605,65 @@
           };
         }
       };
+      pop._damAssocApplyFileIndex = function (nextFi) {
+        if (!pickerStillOpen()) return;
+        var next = (nextFi && nextFi.products) || [];
+        if (!next.length) return;
+        products = next;
+        productsById = productsByIdFromCache();
+        renderPinned();
+        scheduleListPaint(search ? search.value : "");
+      };
       pop._damAssocRebindChrome();
     }
-    /* Shell first. NEVER ensureFileIndex/DamSearch.load on open — Mode B freeze.
-       Warm index: use if already present (cap empty shell when huge). Cold: empty browse;
-       q>=2 → DamSearch light. */
+    /* Shell first — never BLOCK open on ensureFileIndex/JSON.parse.
+       Warm: paint immediately. Cold golden product/viz: empty shell + background load → refresh. */
     function schedulePaintPicker(fi) {
+      /* Double-yield: let CTA click + modal handlers finish before picker DOM work. */
       setTimeout(function () {
-        paintPicker(fi || { products: [] });
+        setTimeout(function () {
+          ensureInjectedCss();
+          paintPicker(fi || { products: [] });
+        }, 0);
       }, 0);
     }
     if (pickerSkipsWarmFileIndex(opts)) {
       schedulePaintPicker({ products: [] });
       return;
     }
-    /* GOLDEN: warm file-index + for+break CAP w collect — nigdy pusty shell gdy index jest w RAM. */
     if (
       global._DAM_FILE_INDEX &&
       global._DAM_FILE_INDEX.products &&
       global._DAM_FILE_INDEX.products.length
     ) {
+      if (global.DamSearch && typeof global.DamSearch.adoptWarmCaches === "function") {
+        global.DamSearch.adoptWarmCaches();
+      }
       schedulePaintPicker(global._DAM_FILE_INDEX);
       return;
     }
+    /* Cold GOLDEN: open empty shell NOW; load file-index in background; re-fill list. */
     schedulePaintPicker({ products: [] });
+    ensureFileIndexForPicker().then(function (fi) {
+      if (global.DamSearch && typeof global.DamSearch.adoptWarmCaches === "function") {
+        global.DamSearch.adoptWarmCaches();
+      }
+      var popLive = document.getElementById("damAssocEditPopover");
+      if (popLive && typeof popLive._damAssocApplyFileIndex === "function") {
+        popLive._damAssocApplyFileIndex(fi || global._DAM_FILE_INDEX);
+      }
+      /* Idle: warm search-index only (file already in RAM → DamSearch.load skips re-parse file). */
+      setTimeout(function () {
+        if (
+          global.DamSearch &&
+          typeof global.DamSearch.load === "function" &&
+          typeof global.DamSearch.isReady === "function" &&
+          !global.DamSearch.isReady()
+        ) {
+          global.DamSearch.load().catch(function () {});
+        }
+      }, 0);
+    });
   }
 
   function assocPickerStartDir(opts) {

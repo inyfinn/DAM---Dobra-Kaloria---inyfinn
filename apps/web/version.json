@@ -1,7 +1,7 @@
 {
-  "version": "4.0.69",
+  "version": "4.0.70",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-07-26",
-  "note": "4.0.69: DamSearch reuses warm _DAM_* indexes (no cold JSON.parse freeze); picker cold = local CAP."
+  "note": "4.0.70: restore B produkty; fix B warianty freeze (tutorial MO vs .dam-tag-edit-popover__empty + showSad loop); light DamSearch."
 }

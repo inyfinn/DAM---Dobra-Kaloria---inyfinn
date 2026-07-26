@@ -1,4 +1,29 @@
-﻿## 2026-07-26 - WORKER complete: v4.0.69 CTA 4/4 open + expand + search freeze root cause
+﻿## 2026-07-26 - fix(assoc): v4.0.70 B produkty restore + B warianty/search no freeze
+
+**Komenda/Akcja:** WORKER Composer — fix branding picker regression @4.0.69: B warianty freeze on open; B produkty broken; `#damAssocEditSearch` garbage q freeze; V variants+suggestions no regression.
+
+**Log/Status:**
+1. Root cause: (a) cold branding product open skipped `ensureFileIndexForPicker` → `products=[]` forever; (b) `DamSearch.isReady()` false despite window cache; (c) `appendFileIndexMatches` + full tag/entry scans ~50k on nonsense q; (d) `resolvePickerProductFull` → `productById` O(n); (e) `Object.keys(productsById)` on branding API open.
+2. Fix: `ensureFileIndexForPicker` + `_damAssocApplyFileIndex` cold shell; `adoptWarmCaches` in `isReady`; picker `DamSearch.search(...,{light:true})` budgeted; `collectBrandingPickerRows` for+break; brandingSearch no productsById map; `listSafeThumb` thumbs.
+3. Static: `node --check` OK; `sim-assoc-dodaj` ALL PASS @4.0.70; `sim-assoc-picker-search-cap` ALL PASS.
+4. CDP `_diag-cta-search-matrix`: open **4/4**, search+responsive `asdhaskljdas` **4/4** (open_ms 2–5, search_ms 53–67).
+
+**Macierz Open/Search:**
+
+| CTA | Open | Search `asdhaskljdas` |
+|-----|------|------------------------|
+| B produkty | AA (5ms) | AA (67ms) |
+| B warianty | AA (3ms) | AA (58ms) |
+| V sugestie | AA (2ms) | AA (60ms) |
+| V warianty | AA (4ms) | AA (53ms) |
+
+**Efekt/Fix:** v4.0.70; cache `4.0.70-assocRestoreBProdNoFreeze20260726d`; URL `http://127.0.0.1:8765/branding.html?v=4.0.70-assocRestoreBProdNoFreeze20260726d`
+
+**Źródła:** dam-assoc-edit.js, dam-search.js, sim-assoc-*.js, `_diag-cta-search-matrix.js`, code-doctrine §12
+
+---
+
+## 2026-07-26 - WORKER complete: v4.0.69 CTA 4/4 open + expand + search freeze root cause
 
 **Komenda/Akcja:** Dokończ aborted work — 4 CTA bez freeze programu; `#damAssocEditSearch` bez freeze; viz warianty expand→`rev:`; sugestie z/bez branding links; resilience probe (nie browser MCP hang); commit.
 

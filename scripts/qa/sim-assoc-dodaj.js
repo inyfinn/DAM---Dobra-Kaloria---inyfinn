@@ -48,7 +48,7 @@ function ok(name, cond, detail) {
 
 
 
-ok("version 4.0.69", ver.version === "4.0.69");
+ok("version 4.0.70", ver.version === "4.0.70");
 ok(
   "branding picker anti-freeze",
   /function collectBrandingPickerRows/.test(assoc) &&
@@ -56,6 +56,18 @@ ok(
     /applyBrandingSeed/.test(assoc) &&
     /bootstrapQuery[\s\S]{0,120}marketing_id \|\| asset\.index/.test(assoc) &&
     !/asset\.marketing_id \|\| asset\.index \|\| asset\.name/.test(assoc)
+);
+ok(
+  "B produkty cold restore bg file-index",
+  /function ensureFileIndexForPicker/.test(assoc) &&
+    /_damAssocApplyFileIndex/.test(assoc) &&
+    /ensureFileIndexForPicker\(\)/.test(assoc)
+);
+ok(
+  "DamSearch light picker + adoptWarmCaches",
+  /adoptWarmCaches/.test(fs.readFileSync(path.join(root, "apps/web/assets/js/dam-search.js"), "utf8")) &&
+    /light:\s*true/.test(assoc) &&
+    /NEVER DamSearch\.productById here/.test(assoc)
 );
 
 ok("bindVizAssocCtas export", /bindVizAssocCtas:\s*bindVizAssocCtas/.test(assoc));
@@ -167,7 +179,7 @@ ok(
 ok(
   "cache token all assoc pages",
   [branding, visualizations, explorer, dashboard].every(function (html) {
-    return /4\.0\.67-assocBrandFreeze20260726a/.test(html);
+    return /4\.0\.70-assocRestoreBProdNoFreeze20260726e/.test(html);
   })
 );
 
