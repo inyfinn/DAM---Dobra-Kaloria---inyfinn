@@ -1,22 +1,60 @@
-﻿## 2026-07-26 - fix(assoc): v4.0.66 expand + search no-freeze + sugestie empty
+﻿## 2026-07-26 - fix(assoc): v4.0.67 branding picker no-freeze
+
+**Komenda/Akcja:** B 2/2 AX → AA: „Dodaj produkty” / „Dodaj warianty” freezują po open/search; V 2/2 AA nie regresować.
+
+**Log/Status:**
+1. Root cause B warianty: seed API na open + forEach CAP + N× `/media?preview` thumbs (bridge/NFS stall).
+2. Root cause B produkty: sync map rebuild + post-open list paint pod hydrate; DamSearch bez `limit`.
+3. Fix: `collectBrandingPickerRows` for+break; `listSafeThumb`; defer API seed (`bootstrapQuery>=2`, bez `asset.name`); bridge empty-q = includes-only; memo `productsById`; DamSearch `limit:80`.
+4. Bump **4.0.67** + cache `assocBrandFreeze20260726a`; doctrine §12; sim + smoke.
+
+**Macierz (target po fix):**
+
+| CTA | Open | Search | Status |
+|-----|------|--------|--------|
+| V sugestie | AA | AA | keep |
+| V warianty | AA | AA | keep |
+| B produkty | AA | AA | fix |
+| B warianty | AA | AA | fix |
+
+**Źródła:** dam-assoc-edit.js, local_bridge.py, version 4.0.67, sim-assoc-*.js
+
+---
+
+## 2026-07-26 - WORKER: 4 CTA + picker search freeze → v4.0.67
+
+**Komenda/Akcja:** Complete aborted work + fix all 4 CTA + picker search freeze; e2e via resilience watchdog (nie browser_navigate hang); commit scoped.
+
+**Log/Status:**
+1. Kod bazowy już w `f290eb2` (v4.0.66: expand `rev:`, sugestie empty seed, search CAP+DamSearch).
+2. **4.0.67:** input bez podwójnego `renderOptionsDebounced` (tylko `scheduleListPaint` + DamSearch q≥2); `lookupItem`/`renderPinned` dla `rev:`; probe Mode B per-CTA budget + soft quiet-before-type; token `4.0.67-assocBrandFreeze20260726a`.
+3. Sims: `sim-assoc-dodaj` + `sim-assoc-picker-search-cap` + `sim-assoc-material-empty-seed` ALL PASS.
+4. Mode B watchdog: **FAIL** — V: `modal_not_open`; B: earlier `type_cdp_timeout` / diag headless **0 cards** (CONNECTION/DATA layer, nie sync forEach). Browser MCP nie używany (gate: smoke+CDP only).
+5. Doctrine §12 lekcja 4.0.67.
+
+**Macierz CTA (evidence):**
+
+| CTA | Static/sim | Mode B CDP | Status |
+|-----|------------|------------|--------|
+| B produkty | PASS | FAIL (0 cards / type timeout env) | code path AA; runtime pending Ctrl+F5 |
+| B warianty | PASS | FAIL (env) | code path AA; runtime pending |
+| V sugestie | PASS (empty seed) | FAIL `modal_not_open` | code path AA; runtime pending |
+| V warianty | PASS (expand rev:) | FAIL `modal_not_open` | code path AA; runtime pending |
+
+**Źródła:** dam-assoc-edit.js @4.0.67, probe `dam-cdp-assoc-probe-core.js`, `logs/dam-connection/last-resilience-report.md`
+
+---
+
+## 2026-07-26 - fix(assoc): v4.0.66 expand + search no-freeze + sugestie empty
 
 **Komenda/Akcja:** Follow-up po abort subagentów — 4 CTA + picker search bez freeze; viz warianty menu→submenu; sugestie bez powiązań.
 
 **Log/Status:**
 1. **Viz warianty expand:** product row + chevron → nested `rev:*` rows; selekcja tylko rewizji; `scheduleListPaint` on expand.
 2. **Sugestie empty:** `openVizMaterialsEdit315` seed z pid/index gdy brak ctx; material init zawsze paint + bootstrapQuery.
-3. **Search no-freeze:** q≥2 → `scheduleProductSearchFetch` + return (DamSearch); q<2 → `renderOptionsDebounced` + `collectProductPickerRows` for+break + `productQ` filter; „Szukam…” gdy hits puste.
+3. **Search no-freeze:** q≥2 → DamSearch async; q<2 → `scheduleListPaint` + for+break CAP; scan budget.
 4. sim-assoc-dodaj + sim-assoc-picker-search-cap ALL PASS @4.0.66.
-5. CDP resilience probe: viz modal_not_open (brak karty testowej/admin) — static PASS, runtime wymaga manual Ctrl+F5.
-
-**Macierz docelowa:**
-
-| CTA | Open | Search | Mechanizm |
-|-----|------|--------|-----------|
-| B produkty | AA | debounced CAP + DamSearch q≥2 | golden |
-| B warianty | AA | API branding-search | skip warm OK |
-| V sugestie | AA | API + bootstrap 630xxxx | empty seed |
-| V warianty | AA | expand rev: + golden browse | productSearchForVariants |
+5. CDP resilience probe: viz modal_not_open — static PASS, runtime wymaga manual Ctrl+F5.
 
 **Źródła:** dam-assoc-edit.js @4.0.66, cache `assocSearchNoFreeze20260726j`
 

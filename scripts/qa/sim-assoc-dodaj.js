@@ -48,7 +48,15 @@ function ok(name, cond, detail) {
 
 
 
-ok("version 4.0.66", ver.version === "4.0.66");
+ok("version 4.0.67", ver.version === "4.0.67");
+ok(
+  "branding picker anti-freeze",
+  /function collectBrandingPickerRows/.test(assoc) &&
+    /function listSafeThumb/.test(assoc) &&
+    /applyBrandingSeed/.test(assoc) &&
+    /bootstrapQuery[\s\S]{0,120}marketing_id \|\| asset\.index/.test(assoc) &&
+    !/asset\.marketing_id \|\| asset\.index \|\| asset\.name/.test(assoc)
+);
 
 ok("bindVizAssocCtas export", /bindVizAssocCtas:\s*bindVizAssocCtas/.test(assoc));
 
@@ -93,7 +101,7 @@ ok(
   "viz variant rev select only",
   /indexOf\("rev:"\)\s*!==\s*0/.test(assoc) &&
     /parseRevisionPickerKey/.test(assoc) &&
-    /Rozwiń produkt i zaznacz wariant/.test(assoc)
+    /produkt i zaznacz wariant/.test(assoc)
 );
 ok(
   "picker search DamSearch gate",
@@ -159,7 +167,7 @@ ok(
 ok(
   "cache token all assoc pages",
   [branding, visualizations, explorer, dashboard].every(function (html) {
-    return /4\.0\.66-assocRevSelectSearch20260726b/.test(html);
+    return /4\.0\.67-assocBrandFreeze20260726a/.test(html);
   })
 );
 

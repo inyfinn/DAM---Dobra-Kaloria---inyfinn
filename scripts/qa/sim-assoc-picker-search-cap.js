@@ -219,6 +219,18 @@ if (/q:\s*productQ/.test(assoc) || /q:\s*variantQ/.test(assoc)) {
 if (!/q\.length >= 2 \? "" : q/.test(assoc)) {
   fails.push("q>=2 must clear local q (DamSearch-only filter on hits)");
 }
+if (!/function collectBrandingPickerRows/.test(assoc)) {
+  fails.push("missing collectBrandingPickerRows (branding material/wariant for+break)");
+}
+if (!/function listSafeThumb/.test(assoc)) {
+  fails.push("missing listSafeThumb (block N× /media?preview list storm)");
+}
+if (!/limit:\s*PICKER_LIST_CAP/.test(assoc) && !/limit:\s*PICKER_LIST_CAP/.test(assoc.replace(/\s/g, ""))) {
+  /* DamSearch call uses limit: PICKER_LIST_CAP */
+}
+if (!/includeArchive:\s*false,\s*limit:\s*PICKER_LIST_CAP/.test(assoc)) {
+  fails.push("DamSearch picker path must pass limit: PICKER_LIST_CAP");
+}
 
 if (fails.length) {
   console.error("FAIL sim-assoc-picker-search-cap");

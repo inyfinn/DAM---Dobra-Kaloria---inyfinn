@@ -545,11 +545,68 @@
   }
 
   function productsByIdFromCache() {
+    var fi = global._DAM_FILE_INDEX;
+    if (!fi || !fi.products || !fi.products.length) return {};
+    if (fi.productsById) return fi.productsById;
     var byId = {};
-    ((global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products) || []).forEach(function (p) {
+    var list = fi.products;
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i];
       if (p && p.id) byId[p.id] = p;
-    });
+    }
+    fi.productsById = byId;
     return byId;
+  }
+
+  /** List thumbs: never N× /media?preview=1 (NFS bridge stall = whole-app freeze). */
+  function listSafeThumb(url) {
+    var u = String(url || "");
+    if (!u || u === PLACEHOLDER_SVG) return PLACEHOLDER_SVG;
+    if (u.indexOf("/media?") !== -1 || u.indexOf("preview=1") !== -1) return PLACEHOLDER_SVG;
+    return u;
+  }
+
+  /**
+   * Branding material/wariant rows — for+break CAP (forEach+return does NOT stop).
+   */
+  function collectBrandingPickerRows(src, optsCollect) {
+    optsCollect = optsCollect || {};
+    var pinnedSet = optsCollect.pinnedSet || {};
+    var q = optsCollect.q || "";
+    var cap = optsCollect.cap || PICKER_LIST_CAP;
+    var scanBudget = optsCollect.scanBudget || PICKER_SCAN_BUDGET;
+    var activeTags = optsCollect.activeTags || [];
+    var items = [];
+    var seenIds = {};
+    var list = src || [];
+    for (var i = 0; i < list.length; i++) {
+      if (items.length >= cap) break;
+      if (i >= scanBudget) break;
+      var material = list[i];
+      if (!material || !material.id || pinnedSet[material.id] || seenIds[material.id]) continue;
+      var row = brandingEntryToPickerRow(material) || material;
+      if (!row || !row.id) continue;
+      if (!materialMatchesPickerTags(row, activeTags)) continue;
+      var blob = (
+        (row.label || row.name || "") +
+        " " +
+        (row.id || "") +
+        " " +
+        (row.marketing_id || row.index || "") +
+        " " +
+        (row.search_blob || "")
+      ).toLowerCase();
+      if (q && blob.indexOf(q) === -1) continue;
+      seenIds[row.id] = true;
+      items.push({
+        id: row.id,
+        label: shortAssocLabel(row.label || row.name),
+        thumb: row.thumb || brandingThumbUrl(row),
+        sub: row.marketing_id || row.index || marketingIdForBranding(row) || "",
+        path: row.path || "",
+      });
+    }
+    return items;
   }
 
   function linkedMetaByIdFromRecords(list) {
@@ -749,7 +806,7 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  var ASSOC_CSS_TOKEN = "assocSearchNoFreeze20260726j";
+  var ASSOC_CSS_TOKEN = "assocBrandFreeze20260726a";
   var PICKER_LIST_CAP = 80;
   /* Max raw iterations in collect (defense vs filter that skips most rows before CAP). */
   var PICKER_SCAN_BUDGET = 400;
@@ -1115,11 +1172,9 @@
         ? global._DAM_FILE_INDEX
         : null;
     if (!fi) return Promise.resolve(list || []);
-    var byId = {};
-    fi.products.forEach(function (p) {
-      if (p && p.id) byId[p.id] = p;
-    });
+    var byId = productsByIdFromCache();
     var mapped = (list || []).map(function (lp) {
+      if (!lp || !lp.id) return lp;
       var p = byId[lp.id] || lp;
       return {
         id: lp.id,
@@ -1395,9 +1450,9 @@
       ) {
         products = global._DAM_FILE_INDEX.products;
       }
-      /* Lazy lookup only — never O(n) map-build of full file-index on every open. */
-      var productsById =
-        (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.productsById) || null;
+      /* Lazy lookup — memoized productsById (never rebuild map on every open). */
+      var productsById = productsByIdFromCache();
+      if (!productsById || !Object.keys(productsById).length) productsById = null;
       var materialEntries = [];
       var productSearchHits = [];
       var pickerActiveTags = [];
@@ -1628,9 +1683,11 @@
             }
           }
         } else {
-          var p = products.find(function (x) {
-            return x && x.id === id;
-          });
+          var p =
+            (productsById && productsById[id]) ||
+            products.find(function (x) {
+              return x && x.id === id;
+            });
           if (p) {
             var revL = (p.revisions && p.revisions[0]) || {};
             return {
@@ -1739,6 +1796,8 @@
               esc(String(it.revCount) + (it.revCount === 1 ? " wariant" : " warianty")) +
               "</span>"
             : "";
+        var rawThumb = it.thumb || PLACEHOLDER_SVG;
+        var safeThumb = listSafeThumb(rawThumb);
         return (
           '<div class="dam-assoc-edit-popover__opt-row' +
           (isRev ? " dam-assoc-edit-popover__opt-row--revision" : "") +
@@ -1752,6 +1811,8 @@
           (expanded ? " is-expanded" : "") +
           '" data-id="' +
           esc(it.id) +
+          '" data-preview-src="' +
+          esc(rawThumb) +
           '"' +
           (isProd
             ? ' aria-expanded="' + (expanded ? "true" : "false") + '" title="Kliknij, aby rozwinąć warianty"'
@@ -1760,7 +1821,7 @@
           ">" +
           '<span class="dam-assoc-edit-popover__thumb-wrap">' +
           '<img class="dam-assoc-edit-popover__thumb" src="' +
-          esc(it.thumb || PLACEHOLDER_SVG) +
+          esc(safeThumb) +
           '" alt="" loading="lazy" onerror="this.src=\'' +
           PLACEHOLDER_SVG.replace(/'/g, "%27") +
           "'\">" +
@@ -1838,7 +1899,7 @@
             }
             renderPinned();
             var s = pop.querySelector("#damAssocEditSearch");
-            renderOptions(s ? s.value : "");
+            scheduleListPaint(s ? s.value : "");
           }
           /* Pkt 27-29: odznaczenie AKTUALNEGO skojarzenia = akcja destrukcyjna ->
              hold-to-delete (ring). Dodawanie / ponowne zaznaczenie = zwykly klik. */
@@ -1895,7 +1956,10 @@
         var thumb = btn.querySelector(".dam-assoc-edit-popover__thumb");
         var labelEl = btn.querySelector(".dam-assoc-edit-popover__label");
         var idxBadge = btn.querySelector(".dam-viz-badge--index");
-        var src = thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "";
+        /* Prefer data-preview-src (may be /media) — single on-demand load OK. */
+        var src =
+          btn.getAttribute("data-preview-src") ||
+          (thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "");
         setSearchPreview(pop, {
           thumb: src,
           label: labelEl ? labelEl.textContent : btn.getAttribute("data-id") || "",
@@ -2123,42 +2187,27 @@
             });
           }
         } else if (opts.kind === "variant" && opts.brandingSearch) {
-          (materialEntries.length ? materialEntries : []).forEach(function (material) {
-            if (items.length >= PICKER_LIST_CAP) return;
-            if (!material || !material.id || pinnedSet[material.id] || seenIds[material.id]) {
-              return;
-            }
-            var row = brandingEntryToPickerRow(material) || material;
-            if (!materialMatchesPickerTags(row, pickerActiveTags)) return;
-              var blob = (
-                (row.label || row.name || "") +
-                " " +
-                (row.id || "") +
-                " " +
-                (row.marketing_id || row.index || "") +
-                " " +
-                (row.search_blob || "")
-              ).toLowerCase();
-              if (q && blob.indexOf(q) === -1) return;
-              seenIds[row.id] = true;
-              items.push({
-                id: row.id,
-                label: shortAssocLabel(row.label || row.name),
-                thumb: row.thumb || brandingThumbUrl(row),
-                sub: row.marketing_id || row.index || marketingIdForBranding(row) || "",
-                path: row.path || "",
-              });
+          items = collectBrandingPickerRows(materialEntries.length ? materialEntries : [], {
+            pinnedSet: pinnedSet,
+            q: q,
+            filterType: "all",
+            cap: PICKER_LIST_CAP,
+            activeTags: pickerActiveTags,
           });
         } else if (opts.kind === "variant") {
-          (opts.variantCandidates || []).forEach(function (v) {
-            if (!v || !v.id || pinnedSet[v.id]) return;
-            if (seenIds[v.id]) return;
-            if (excl.ids[String(v.id)]) return;
+          var vCands = opts.variantCandidates || [];
+          for (var vi = 0; vi < vCands.length; vi++) {
+            if (items.length >= PICKER_LIST_CAP) break;
+            if (vi >= PICKER_SCAN_BUDGET) break;
+            var v = vCands[vi];
+            if (!v || !v.id || pinnedSet[v.id]) continue;
+            if (seenIds[v.id]) continue;
+            if (excl.ids[String(v.id)]) continue;
             var vIdx = normIndexKey(v.index || v.id);
-            if (vIdx && excl.indexes[vIdx]) return;
-            if (vIdx && seenIdx[vIdx]) return;
-            var blob = ((v.name || v.label || "") + " " + (v.id || "") + " " + (v.index || "")).toLowerCase();
-            if (q && blob.indexOf(q) === -1) return;
+            if (vIdx && excl.indexes[vIdx]) continue;
+            if (vIdx && seenIdx[vIdx]) continue;
+            var vBlob = ((v.name || v.label || "") + " " + (v.id || "") + " " + (v.index || "")).toLowerCase();
+            if (q && vBlob.indexOf(q) === -1) continue;
             seenIds[v.id] = true;
             if (vIdx) seenIdx[vIdx] = true;
             items.push({
@@ -2172,35 +2221,17 @@
               langs: v.lang ? [v.lang] : v.langs || [],
               path: v.path || "",
             });
-          });
+          }
         } else if (opts.kind === "material") {
-          (materialEntries.length ? materialEntries : opts.materialCandidates || []).forEach(
-            function (material) {
-            if (items.length >= PICKER_LIST_CAP) return;
-            if (!material || !material.id || pinnedSet[material.id] || seenIds[material.id]) {
-              return;
+          items = collectBrandingPickerRows(
+            materialEntries.length ? materialEntries : opts.materialCandidates || [],
+            {
+              pinnedSet: pinnedSet,
+              q: q,
+              cap: PICKER_LIST_CAP,
+              activeTags: pickerActiveTags,
             }
-            var row = brandingEntryToPickerRow(material) || material;
-            if (!materialMatchesPickerTags(row, pickerActiveTags)) return;
-            var blob = (
-              (row.label || row.name || "") +
-              " " +
-              (row.id || "") +
-              " " +
-              (row.marketing_id || row.index || "") +
-              " " +
-              (row.search_blob || "")
-            ).toLowerCase();
-            if (q && blob.indexOf(q) === -1) return;
-            seenIds[row.id] = true;
-            items.push({
-              id: row.id,
-              label: shortAssocLabel(row.label || row.name),
-              thumb: row.thumb || brandingThumbUrl(row),
-              sub: row.marketing_id || row.index || marketingIdForBranding(row) || "",
-              path: row.path || "",
-            });
-          });
+          );
         } else if (opts.kind === "product") {
           /* GOLDEN: browse q<2 = for+break + lokalny q; q≥2 = TYLKO DamSearch hits. */
           var productQ = q.length >= 2 ? "" : q;
@@ -2334,13 +2365,17 @@
             showListMessage("Brak wyszukiwarki produktów — odśwież stronę.");
             return;
           }
-          searchFn(query, { includeArchive: false })
+          searchFn(query, { includeArchive: false, limit: PICKER_LIST_CAP })
             .then(function (res) {
               if (!pickerStillOpen()) return;
               var ids = ((res && res.products) || []).slice(0, PICKER_LIST_CAP);
               productSearchHits = ids
                 .map(function (id) {
-                  return global.DamSearch.productById(id);
+                  return (
+                    (productsById && productsById[id]) ||
+                    (global.DamSearch.productById && global.DamSearch.productById(id)) ||
+                    null
+                  );
                 })
                 .filter(Boolean);
               renderOptionsDebounced(query);
@@ -2354,9 +2389,9 @@
       }
 
       if (search) {
-        /* HARD 4.0.66: scheduleListPaint(raw) natychmiast (rAF) + renderOptionsDebounced.
-           q≥2 product/viz → dodatkowo DamSearch async (bez early-return przed paint).
-           Browse q<2 = for+break CAP; nigdy sync full products.forEach. */
+        /* HARD 4.0.66: scheduleListPaint(raw) natychmiast (rAF).
+           q≥2 product/viz → DamSearch async → renderOptionsDebounced po settle.
+           Browse q<2 = for+break CAP via scheduleListPaint; NIE podwójny sync paint. */
         search.addEventListener("input", function () {
           var raw = search.value;
           var qq = String(raw || "").trim();
@@ -2364,7 +2399,6 @@
             productSearchHits = [];
           }
           scheduleListPaint(raw);
-          renderOptionsDebounced(raw);
           if ((opts.productSearchForVariants || opts.kind === "product") && qq.length >= 2) {
             scheduleProductSearchFetch(raw);
           }
@@ -2378,31 +2412,28 @@
         return document.getElementById("damAssocEditPopover") === pop;
       }
 
-      materialEntries = (opts.materialCandidates || []).slice();
+      materialEntries = (opts.materialCandidates || []).slice(0, PICKER_LIST_CAP);
       renderPinned();
-      /* Init jak 5fb3493 — golden product → renderOptionsDebounced(""); brandingSearch → fetch seed.
-         Material: ZAWSZE od razu paint (minQ hint / seed), nawet przy pustym materialCandidates. */
+      /* Init: shell + pinned first. Branding API seed only when bootstrapQuery >= 2
+         (never block open on /branding-search-picker + N× /media thumbs). */
+      function applyBrandingSeed(entries) {
+        if (!pickerStillOpen()) return;
+        if (entries && entries.length) {
+          materialEntries = entries.slice(0, PICKER_LIST_CAP);
+        }
+        renderPinned();
+        scheduleListPaint(search ? search.value : "");
+      }
       if (opts.kind === "material") {
         renderOptionsDebounced(search ? search.value : "");
-        if (opts.bootstrapQuery) {
-          loadBrandingMaterialCandidates(opts).then(function (entries) {
-            if (!pickerStillOpen()) return;
-            if (entries && entries.length) {
-              materialEntries = entries.slice(0, PICKER_LIST_CAP);
-            }
-            renderPinned();
-            renderOptionsDebounced(search ? search.value : "");
-          });
+        if (String(opts.bootstrapQuery || "").trim().length >= 2) {
+          loadBrandingMaterialCandidates(opts).then(applyBrandingSeed);
         }
       } else if (opts.kind === "variant" && opts.brandingSearch) {
-        loadBrandingMaterialCandidates(opts).then(function (entries) {
-          if (!pickerStillOpen()) return;
-          if (entries && entries.length) {
-            materialEntries = entries.slice(0, PICKER_LIST_CAP);
-          }
-          renderPinned();
-          renderOptionsDebounced(search ? search.value : "");
-        });
+        renderOptionsDebounced(search ? search.value : "");
+        if (String(opts.bootstrapQuery || "").trim().length >= 2) {
+          loadBrandingMaterialCandidates(opts).then(applyBrandingSeed);
+        }
       } else if (opts.kind === "variant" && opts.productSearchForVariants) {
         /* Ten sam init co golden kind=product */
         renderOptionsDebounced("");
@@ -2505,37 +2536,50 @@
 
   function loadBrandingMaterialCandidates(opts) {
     opts = opts || {};
+    var q = String(opts.bootstrapQuery || "").trim();
     var include = (opts.selectedIds || opts.pinnedIds || []).slice(0, 40).join(",");
+    /* Cap to PICKER_LIST_CAP — never pull 120 rows that all hit /media?preview. */
     var url =
       bridgeUrl() +
       "/branding-search-picker?q=" +
-      encodeURIComponent(String(opts.bootstrapQuery || "").trim()) +
-      "&limit=120" +
+      encodeURIComponent(q) +
+      "&limit=" +
+      PICKER_LIST_CAP +
       (include ? "&include=" + encodeURIComponent(include) : "");
     return fetch(url, { headers: { Accept: "application/json" } })
       .then(function (r) {
         return r.json();
       })
       .then(function (data) {
-        return ((data && (data.entries || data.items || data.results)) || [])
-          .map(function (entry) {
-            if (!entry) return null;
-            if (entry.thumb_url && String(entry.thumb_url).indexOf("/media?") === 0) {
-              entry = Object.assign({}, entry, { thumb_url: bridgeUrl() + entry.thumb_url });
-            }
-            var row = brandingEntryToPickerRow(entry);
-            if (!row) return null;
-            row.linked_product_ids = entry.linked_product_ids || [];
-            row.linked_variant_ids = entry.linked_variant_ids || [];
-            row.folder_group_id = entry.folder_group_id || "";
-            return row;
-          })
-          .filter(function (entry) {
-            return entry && entry.id;
-          });
+        var raw = ((data && (data.entries || data.items || data.results)) || []).slice(
+          0,
+          PICKER_LIST_CAP
+        );
+        var out = [];
+        for (var i = 0; i < raw.length; i++) {
+          var entry = raw[i];
+          if (!entry) continue;
+          /* Keep /media URL for hover preview only — list uses listSafeThumb. */
+          if (entry.thumb_url && String(entry.thumb_url).indexOf("/media?") === 0) {
+            entry = Object.assign({}, entry, { thumb_url: bridgeUrl() + entry.thumb_url });
+          }
+          if (entry.search_blob && String(entry.search_blob).length > 240) {
+            entry = Object.assign({}, entry, {
+              search_blob: String(entry.search_blob).slice(0, 240),
+            });
+          }
+          var row = brandingEntryToPickerRow(entry);
+          if (!row || !row.id) continue;
+          row.linked_product_ids = entry.linked_product_ids || [];
+          row.linked_variant_ids = entry.linked_variant_ids || [];
+          row.folder_group_id = entry.folder_group_id || "";
+          out.push(row);
+          if (out.length >= PICKER_LIST_CAP) break;
+        }
+        return out;
       })
       .catch(function () {
-        return (opts.materialCandidates || []).slice();
+        return (opts.materialCandidates || []).slice(0, PICKER_LIST_CAP);
       });
   }
 
@@ -2982,17 +3026,13 @@
           : "Warianty materiału",
         productSearchForVariants: isVizProductPick,
         brandingSearch: isBrandingMat,
-        /* bootstrapQuery jak 5fb3493 — marketing_id/index assetu, nie agresywny pickerBootstrapQueryFromCtx */
+        /* Seed query: tylko marketing_id/index (NIE asset.name — szeroki match + thumb storm). */
         bootstrapQuery: isBrandingMat
-          ? String(
-              (asset && (asset.marketing_id || asset.index || asset.name)) ||
-                (gc && gc.index) ||
-                ""
-            ).trim()
+          ? String((asset && (asset.marketing_id || asset.index)) || (gc && gc.index) || "").trim()
           : "",
         filterType: isVizProductPick ? "product" : filterType,
-        selectedIds: isVizProductPick ? [] : selectedIds,
-        pinnedIds: selectedIds.slice(),
+        selectedIds: isVizProductPick ? [] : selectedIds.slice(0, 40),
+        pinnedIds: selectedIds.slice(0, 40),
         variantCandidates: variantPool,
         asset: ctx.asset,
         groupContext: gc,

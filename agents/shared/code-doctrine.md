@@ -391,6 +391,7 @@ v3.1.5 = `2b3873a` — **sync** `input → renderOptions(value)`, bez debounce s
 | working 4.0.58–59 | 4.0.58/59 | scheduleListPaint + shell-first hydrate; DamSearch `light` | Branding PASS; **viz CDP timeout** | Viz main-thread + poll false-FREEZE; material bez init list paint |
 | working **4.0.60** | 4.0.60 | Material always `scheduleListPaint`; sync Szukam; DamSearch `light`; e2e `#damAssocEditSearch` only | Stary e2e: false PASS (sync paint); **Mode B** = prawda (card+CTA+async) | Predykcja viz freeze — weryfikuj Mode B, nie sync 0ms |
 | working **4.0.61** | 4.0.61 | Product cold open: **no** `ensureFileIndex()` after shell (DamSearch.load parse = post-CTA FREEZE) | Mode B caught hang; Mode A sync paint false PASS | Manual Ctrl+F5 nadal wyższy priorytet do potwierdzenia |
+| working **4.0.64** | 4.0.64 | Mode B e2e truth; enrich warm-only; cold shell no ensureFileIndex; defer CSS inject | Mode B FAIL honest (post-open jam / viz boot); Mode A can still PASS | Nie raportuj all PASS bez Mode B |
 | **4.0.62 rollback** | 4.0.62 | Przywrócono bundle `5cf1ca4` | **3/4** B2/2-AA V1/2-XA | viz-warianty skip-warm + minQ=2 |
 | **4.0.63** | 4.0.63 | Viz-warianty = golden product path (warm index, browse CAP, DamSearch q≥2) | Target **4/4** open | test user Ctrl+F5 |
 
@@ -410,6 +411,43 @@ v3.1.5 = `2b3873a` — **sync** `input → renderOptions(value)`, bez debounce s
 **FREEZE log:** `logs/dam-connection/freeze-log.jsonl` (pola: ts, tool, url, outcome, latency_ms, diagnosis, recovery_action). Raport: `logs/dam-connection/last-unstick-report.md`.
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
+
+- 2026-07-26 | **branding picker freeze (4.0.67)** | B „Dodaj produkty/warianty”
+  otwiera (AX) potem zacina cały program; V 2/2 AA OK |
+  (1) brandingSearch: `forEach`+`return` przy CAP + seed `loadBrandingMaterialCandidates`
+  na open z `asset.name` → szeroki match; (2) N× `/media?preview=1` w list thumbs
+  (NFS bridge stall = whole-app freeze); (3) empty-q picker API wypełniał limit z
+  głowy indeksu 52k; (4) `productsByIdFromCache` rebuild mapy na każdy open |
+  **Zasada HARD:** branding material/wariant = `collectBrandingPickerRows` **for+break**
+  CAP; open = shell+pinned natychmiast, API seed tylko gdy `bootstrapQuery.length>=2`
+  (marketing_id/index, NIE `asset.name`); list thumbs = `listSafeThumb` (placeholder
+  zamiast N× `/media`); hover preview może 1× `/media`; bridge empty-q = **tylko
+  include_ids**; `productsById` memo na `_DAM_FILE_INDEX`. Lekcja: v4.0.67.
+
+- 2026-07-26 | **picker search + Mode B probe (4.0.66/67)** | Search w `#damAssocEditSearch`
+  zamarzał UI; viz warianty: klik produktu zamiast `rev:`; e2e false-FREEZE / burned
+  attempts na pierwszym CTA; headless branding = 0 kart |
+  (1) sync `products.forEach` / pełny scan w input; (2) select `rev:` bez pinned/
+  `lookupItem`; (3) resilience `maxAttempts` wspólny → first CTA wyczerpuje budżet;
+  (4) `busy_before_type` quiet gate false-FREEZE gdy picker już otwarty |
+  **Zasada HARD:** input: `scheduleListPaint(raw)` natychmiast + q≥2
+  `scheduleProductSearchFetch` (bez podwójnego `renderOptionsDebounced`). Browse =
+  for+break CAP + `PICKER_SCAN_BUDGET`. Viz warianty: expand parent, select tylko
+  `rev:*`. Probe: budżet **per-CTA**; po open search → type mimo busy hydrate;
+  e2e tylko `#damAssocEditSearch`. Headless bez kart ≠ JS freeze. Lekcja: v4.0.67.
+
+- 2026-07-26 | **viz warianty flat + sugestie empty** | User: picker wariantów = płaska lista
+  produktów bez submenu rewizji; „Dodaj/Edytuj sugestie” pada gdy produkt nie ma
+  skojarzonych materiałów |
+  (1) `asProductRow` + `expandedProductId` były w logice, ale UI bez chevron/indent
+  wyglądało jak flat select; DamSearch hit bez pełnego `revisions[]` nie rozwijał
+  folderów; (2) CTA sugestie: bind przed `seedMaterialsCtx`, empty materials bez
+  synchronicznego paint listy, bootstrapQuery słabszy niż `pickerBootstrapQueryFromCtx` |
+  **Zasada:** viz-warianty = produkt = parent (chevron + `aria-expanded`), selekcja
+  tylko `rev:productId:path`; przy expand enrich z `productsById` / warm file-index;
+  sugestie = zawsze open z seed produktu (630xxxx) nawet przy `materialsList=[]`;
+  seed ctx **przed** `bindVizAssocCtas`; material init zawsze `renderOptionsDebounced`
+  (+ opcjonalny fetch bootstrap). Lekcja: v4.0.65.
 
 - 2026-07-26 | **4.0.58–4.0.61 regresja — żaden CTA** | User: po v4.0.57 wszystkie 4 przyciski
   przestały otwierać picker; v4.0.56 baseline (open OK, search freeze) utracony |

@@ -2161,12 +2161,15 @@ def _light_branding_picker_entry(entry: dict) -> dict:
         from urllib.parse import quote
 
         thumb_url = "/media?path=" + quote(path) + "&preview=1"
+    blob = str(entry.get("search_blob") or "")
+    if len(blob) > 240:
+        blob = blob[:240]
     return {
         "id": entry.get("id") or "",
         "name": title,
         "title": title,
         "path": path,
-        "search_blob": entry.get("search_blob") or "",
+        "search_blob": blob,
         "thumb_url": thumb_url,
     }
 
@@ -2175,28 +2178,26 @@ def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: lis
     """Light picker search — never ship full branding-search-index (~40MB) to browser."""
     data = _branding_search_index_mem()
     entries = data.get("entries") if isinstance(data.get("entries"), list) else []
-    limit = max(1, min(int(limit or 80), 120))
+    limit = max(1, min(int(limit or 80), 80))
     q = str(query or "").strip().lower()
     include_ids = [str(x).strip() for x in (include_ids or []) if str(x).strip()]
-    by_id: dict[str, dict] = {}
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        eid = str(entry.get("id") or "").strip()
-        if eid:
-            by_id[eid] = entry
     out: list[dict] = []
     seen: set[str] = set()
-    for iid in include_ids:
-        if iid in seen:
-            continue
-        src = by_id.get(iid)
-        if not src:
-            continue
-        seen.add(iid)
-        out.append(_light_branding_picker_entry(src))
-    # Empty query without include_ids must not scan the full index (UI freeze on open).
-    if not q and not include_ids:
+    # Resolve includes without building a full by_id map of 50k+ entries when possible.
+    if include_ids:
+        want = set(include_ids)
+        for entry in entries:
+            if not want:
+                break
+            if not isinstance(entry, dict):
+                continue
+            eid = str(entry.get("id") or "").strip()
+            if eid in want and eid not in seen:
+                seen.add(eid)
+                want.discard(eid)
+                out.append(_light_branding_picker_entry(entry))
+    # Empty query: return includes only (do NOT fill to limit from index head).
+    if not q:
         return {"ok": True, "entries": out, "count": len(out), "query": q}
     for entry in entries:
         if len(out) >= limit:
@@ -2207,7 +2208,7 @@ def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: lis
         if not eid or eid in seen:
             continue
         blob = str(entry.get("search_blob") or eid or entry.get("path") or "").lower()
-        if q and q not in blob:
+        if q not in blob:
             continue
         seen.add(eid)
         out.append(_light_branding_picker_entry(entry))
