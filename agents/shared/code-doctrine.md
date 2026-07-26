@@ -412,17 +412,18 @@ v3.1.5 = `2b3873a` — **sync** `input → renderOptions(value)`, bez debounce s
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
 
-- 2026-07-26 | **branding picker freeze (4.0.67)** | B „Dodaj produkty/warianty”
+- 2026-07-26 | **branding picker freeze (4.0.67–4.0.68)** | B „Dodaj produkty/warianty”
   otwiera (AX) potem zacina cały program; V 2/2 AA OK |
   (1) brandingSearch: `forEach`+`return` przy CAP + seed `loadBrandingMaterialCandidates`
   na open z `asset.name` → szeroki match; (2) N× `/media?preview=1` w list thumbs
-  (NFS bridge stall = whole-app freeze); (3) empty-q picker API wypełniał limit z
-  głowy indeksu 52k; (4) `productsByIdFromCache` rebuild mapy na każdy open |
+  **oraz** `activatePreviewFromBtn` po paint (NFS bridge stall = whole-app freeze);
+  (3) empty-q picker API wypełniał limit z głowy indeksu 52k; (4) `productsByIdFromCache`
+  rebuild mapy na każdy open |
   **Zasada HARD:** branding material/wariant = `collectBrandingPickerRows` **for+break**
   CAP; open = shell+pinned natychmiast, API seed tylko gdy `bootstrapQuery.length>=2`
-  (marketing_id/index, NIE `asset.name`); list thumbs = `listSafeThumb` (placeholder
-  zamiast N× `/media`); hover preview może 1× `/media`; bridge empty-q = **tylko
-  include_ids**; `productsById` memo na `_DAM_FILE_INDEX`. Lekcja: v4.0.67.
+  (marketing_id/index, NIE `asset.name`); list thumbs = `listSafeThumb`;
+  `activatePreviewFromBtn` po paint **bez** `/media` (hover/`allowMedia` = 1× OK);
+  bridge empty-q = **tylko include_ids**; `productsById` memo. Lekcja: v4.0.67/68.
 
 - 2026-07-26 | **picker search + Mode B probe (4.0.66/67)** | Search w `#damAssocEditSearch`
   zamarzał UI; viz warianty: klik produktu zamiast `rev:`; e2e false-FREEZE / burned
