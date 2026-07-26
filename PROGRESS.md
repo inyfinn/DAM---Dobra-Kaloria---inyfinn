@@ -1,6 +1,35 @@
 ﻿# PROGRESS.md - DAM - Dobra Kaloria - Inyfinn
 
-Ostatnia aktualizacja: **2026-07-21** (v3.1.0 gap ship)
+Ostatnia aktualizacja: **2026-07-26** (v5.0.0 assoc picker milestone)
+
+## 2026-07-26 — v5.0.0 assoc picker milestone (user confirmed)
+
+| Obszar | Status | Notatka |
+|--------|--------|---------|
+| **Assoc picker 4/4 CTA** | **done** | B2/2 V2/2 AA open + search; user confirmed WebView2 |
+| **Major version 5.0.0** | **done** | Arc 4.0.62 → 4.0.71 d91cd0d → 5.0.0 |
+| **Release doc** | **done** | `docs/releases/5.0.0-assoc-picker-milestone.md` |
+| **code-doctrine §12** | **done** | MILESTONE entry + false PASS traps |
+
+---
+
+Ostatnia aktualizacja (archiwum): **2026-07-26** (assoc docs + P1 bramka)
+
+## 2026-07-26 — Dokumentacja skojarzeń (assoc) + P1 preflight
+
+| Obszar | Status | Notatka |
+|--------|--------|---------|
+| **Słownik ASSOC (metafory)** | **done** | `docs/ASSOC-GLOSSARY.md` — sync/async, ctx, typ A/B, bind = 2 zjawiska |
+| **code-doctrine §12** | **done** | REFERENCE + link do glossary; poprawione „bind” (strażnik vs karteczka) |
+| **Bramka picker pusty seed** | **done** | `sim-assoc-material-empty-seed.js` PASS |
+| **P1 sync ctx w dam-viz.js** | **done** | **4.0.44** · seed + lite `/branding-for-product` · harness PASS · runtime user `[ ]` |
+| **Regresja złoty path branding produkty** | **wymagane** | przy każdej zmianie assoc |
+
+**Pliki:** `docs/ASSOC-GLOSSARY.md`, `agents/shared/code-doctrine.md` §12, `docs/ARCHITECTURE.md` (link).
+
+---
+
+Ostatnia aktualizacja (archiwum): **2026-07-21** (v3.1.0 gap ship)
 
 | Obszar | Status | Notatka |
 |--------|--------|---------|

@@ -1,7 +1,7 @@
 {
-  "version": "4.0.71",
+  "version": "5.0.0",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-07-26",
-  "note": "4.0.71: tutorial MO guard for assoc picker empty copy; assoc empty-msg class; B produkty/warianty no freeze."
+  "note": "5.0.0 milestone: assoc picker 4/4 CTA AA + search no freeze (arc 4.0.58-71, user confirmed)."
 }

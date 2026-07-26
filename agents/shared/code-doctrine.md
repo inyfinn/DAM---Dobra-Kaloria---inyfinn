@@ -354,6 +354,47 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
 
+### 2026-07-26 — MILESTONE v5.0.0: assoc picker 4/4 CTA AA + search (user confirmed)
+
+**Objaw (regresja 4.0.58–4.0.61):** Po v4.0.57 wszystkie 4 CTA przestały otwierać picker lub zacinały cały program po open/search. User raportował: B warianty freeze, B produkty dead (pusty picker), `#damAssocEditSearch` garbage q freeze, viz warianty zacięcie. Arc naprawczy: 4.0.62 baseline rollback → 4.0.67–4.0.70 → 4.0.71 (`d91cd0d`) → **5.0.0 user confirmed all 4 CTA + search work**.
+
+**Root causes (plik:linia / mechanizm):**
+
+| # | Objaw | Przyczyna | Plik / mechanizm |
+|---|--------|-----------|------------------|
+| 1 | B warianty freeze (WebView2) | Tutorial MutationObserver loop: `showListMessage` używał `.dam-tag-edit-popover__empty` → `watchEmptyResults` → `showSad` → repaint → MO ponownie | `dam-tutorial.js` ~1708–1742 `maybeEmptySearchSad`; `dam-assoc-edit.js` ~2032–2036 `showListMessage` |
+| 2 | B produkty dead | Cold `openMediaPicker` na branding: zero `ensureFileIndex` → `products=[]` na zawsze; `isReady()` false mimo window cache | `dam-assoc-edit.js` cold product path; branding nie warmuje `_DAM_FILE_INDEX` |
+| 3 | Search freeze (garbage q) | `DamSearch.search` cold `JSON.parse` ~7.7MB `file-index.json` mimo warm `_DAM_FILE_INDEX`; `appendFileIndexMatches` + full `entries`/`by_tag` forEach ~50k | `dam-search.js` `loadIndexes` / `search` |
+| 4 | Picker input freeze | `products.forEach` + `if (items.length>=CAP) return` — `return` w forEach **nie** przerywa pętli → O(n) na keystroke | `dam-assoc-edit.js` browse/filter branches |
+| 5 | Open freeze (branding) | N× `/media?preview=1` storm przy paint listy + `activatePreviewFromBtn` po paint (NFS bridge stall) | `dam-assoc-edit.js` list thumbs; `dam-media-preview.js` |
+| 6 | Post-open jam | `loadIndexAssets` sync filter 52k po open; `productsByIdFromCache` rebuild mapy na każdy open; empty-q API wypełniał limit z głowy indeksu | `dam-assoc-edit.js` `schedulePaintPicker` / `collectProductPickerRows` |
+| 7 | 4.0.58–61 regresja open | Usunięto `renderOptionsDebounced` z init/handler; product cold bez `ensureFileIndex` + pusty paint | `dam-assoc-edit.js` refactor anti-freeze |
+
+**Co naprawiło (4.0.67–4.0.71 → 5.0.0):**
+
+- **4.0.67–68:** `collectBrandingPickerRows` for+break CAP; open = shell+pinned natychmiast; `listSafeThumb` bez auto `/media` po paint; bridge empty-q tylko `include_ids`; Mode B probe per-CTA.
+- **4.0.69:** `DamSearch.loadIndexes` reuse `_DAM_FILE_INDEX`/`_DAM_SEARCH_INDEX`; picker `DamSearch.search` tylko gdy `isReady()`; cold = local `collectProductPickerRows` CAP+q.
+- **4.0.70:** `ensureFileIndexForPicker` na cold product open; `adoptWarmCaches` w `isReady`; `DamSearch.search(..., {light:true, limit})` z budgeted scans; brandingSearch bez `productsById` map build.
+- **4.0.71:** `showListMessage` → `.dam-assoc-edit-popover__empty-msg` (nie tag-edit class); tutorial guard gdy `#damAssocEditPopover`/`Overlay` otwarty + `_lock` 800ms.
+- **5.0.0:** major bump po user confirmation (B2/2 V2/2 AA, search `asdhaskljdas` OK).
+
+**False PASS traps (HARD — nie raportuj done bez tego):**
+
+1. **Node sim vs WebView2:** headless/CDP nie reprodukuje tutorial MO loop; `sim-assoc-dodaj` PASS ≠ WebView2 PASS.
+2. **Programmatic `openPicker()`** omija real card → modal → CTA click path.
+3. **Sync paint 0–1 ms** po `input` (natychmiastowe „Szukam…”) ≠ pełny async DamSearch settle.
+4. **Mode A** (programmatic + sync paint) **nigdy** nie ustawia overall pass — tylko **Mode B**: real card click → `[data-viz-assoc-cta]` → `#damAssocEditSearch` → poll ≤8s.
+5. **CTA-open matrix 4/4 w 2ms** ≠ search-settle; mierzyć osobno po quiet ping.
+6. Manual **Ctrl+F5** usera > automated PASS dopóki user nie potwierdzi.
+
+**PASS definition (milestone):**
+
+- **Open:** 4/4 CTA (B produkty, B warianty, V sugestie, V warianty) otwierają picker bez freeze main thread >2s.
+- **Search:** `#damAssocEditSearch` przy garbage q (np. `asdhaskljdas`) zwraca settled empty/options w ≤8s bez whole-app freeze.
+- **User confirmation** w WebView2/desktop shell = wyższy priorytet niż CDP/Node.
+
+**Źródła:** `dam-assoc-edit.js`, `dam-search.js`, `dam-tutorial.js`, `dam-viz.js`, `scripts/qa/lib/dam-cdp-assoc-probe-core.js`, `docs/releases/5.0.0-assoc-picker-milestone.md`, commits `6e2a5ba` → `d91cd0d`.
+
 ### 2026-07-26 — Probe false PASS: openPicker ≠ real click; sync paint ≠ DamSearch async
 
 **Objaw:** Agent raportował „all 4 CTA PASS” (search_ms 0–1) podczas gdy user widział FREEZE na viz CTA. Resilience probe też dawał PASS.

@@ -1,4 +1,32 @@
-﻿## 2026-07-26 - fix(assoc): v4.0.71 tutorial MO guard + assoc empty-msg class
+﻿## 2026-07-26 - release: v5.0.0 assoc picker milestone (user confirmed)
+
+**Komenda/Akcja:** User confirmed **ALL 4 CTA buttons work, search works** — major milestone v5.0.0.
+
+**Log/Status:**
+1. Bump 5.0.0: `version.json`, `dam-version.js`, `runtime_config.py`.
+2. Cache bust `5.0.0-assocPickerMilestone20260726` w branding/explorer/dashboard/visualizations/index.html (dam-assoc-edit.js, dam-search.js, dam-tutorial.js).
+3. code-doctrine §12: comprehensive MILESTONE v5.0.0 entry (root causes, fixes 4.0.67–71, false PASS traps, PASS definition).
+4. `docs/releases/5.0.0-assoc-picker-milestone.md` created.
+5. `node --check` dam-version.js OK.
+
+**Macierz (user confirmed):**
+
+| CTA | Open | Search |
+|-----|------|--------|
+| B produkty | AA | AA |
+| B warianty | AA | AA |
+| V sugestie | AA | AA |
+| V warianty | AA | AA |
+
+**Efekt/Fix:** v5.0.0 milestone shipped; arc 4.0.58–61 regression → 4.0.62 baseline → 4.0.67–70 → 4.0.71 d91cd0d → 5.0.0.
+
+**Ctrl+F5:** `http://127.0.0.1:8765/branding.html?v=5.0.0-assocPickerMilestone20260726`
+
+**Źródła:** version.json, dam-version.js, runtime_config.py, code-doctrine.md §12, docs/releases/5.0.0-assoc-picker-milestone.md
+
+---
+
+## 2026-07-26 - fix(assoc): v4.0.71 tutorial MO guard + assoc empty-msg class
 
 **Komenda/Akcja:** Continue cloud 64adae4a — Step1 isolate dam-tutorial.js; fix B warianty freeze + B produkty; 4 CTA + search `asdhaskljdas`; fresh CDP/sim; commit bump.
 
