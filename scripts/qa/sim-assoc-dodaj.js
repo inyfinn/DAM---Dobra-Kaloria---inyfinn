@@ -48,7 +48,7 @@ function ok(name, cond, detail) {
 
 
 
-ok("version 4.0.49", ver.version === "4.0.49");
+ok("version 4.0.57", ver.version === "4.0.57");
 
 ok("bindVizAssocCtas export", /bindVizAssocCtas:\s*bindVizAssocCtas/.test(assoc));
 
@@ -57,7 +57,12 @@ ok("openVizMaterialsEdit315 export", /openVizMaterialsEdit315:\s*openVizMaterial
 ok("315 plus editBtn click", /editBtn\.click\s*\(\s*\)/.test(assoc));
 
 ok("branding no edit-all button", !/data-assoc-edit-all/.test(preview) && /dam-viz-assoc-cta/.test(preview));
-ok("picker debounce", /renderOptionsDebounced/.test(assoc) && /function debounce/.test(assoc));
+ok("picker debounce", /renderOptionsDebounced/.test(assoc) && /scheduleMaterialSearchFetch/.test(assoc));
+ok("picker async product search", /pickerUsesAsyncProductSearch/.test(assoc) && /scheduleProductSearchFetch/.test(assoc));
+ok(
+  "materialCandidates seed from ctx",
+  /ctx\.materialsList[\s\S]{0,80}ctx\.shownPrimaries/.test(assoc)
+);
 ok("openModal primary first", /ensurePrimaryFirstInList/.test(fs.readFileSync(path.join(root, "apps/web/assets/js/dam-branding.js"), "utf8")));
 
 ok("viz modal no product edit-all", !/data-assoc-edit-all="product"/.test(viz));
@@ -132,7 +137,7 @@ ok(
 ok(
   "cache token all assoc pages",
   [branding, visualizations, explorer, dashboard].every(function (html) {
-    return /4\.0\.49-assocPickerUxUnify20260726a/.test(html);
+    return /4\.0\.57-assocSearchNoFreeze20260726i/.test(html);
   })
 );
 
@@ -166,5 +171,6 @@ if (fails.length) {
 console.log("ALL PASS sim-assoc-dodaj version=" + ver.version);
 
 process.exit(0);
+
 
 

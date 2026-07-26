@@ -2926,10 +2926,15 @@
       });
     }
 
-    function mergeProductsFromVariantPicker(productIds) {
-      productIds = (productIds || []).map(String).filter(Boolean);
+    function mergeProductsFromVariantPicker(payload) {
+      payload = payload || [];
+      var picks = Array.isArray(payload) ? payload : payload.productIds || [];
+      if (!picks.length) {
+        showToast("Brak wybranych wariantów.");
+        return;
+      }
       var pid = (items[0] && items[0].product_id) || "";
-      if (!pid || !indexData || !productIds.length) {
+      if (!pid || !indexData) {
         showToast("Brak indeksu produktu — odśwież stronę.");
         return;
       }
@@ -2938,15 +2943,12 @@
         existingKeys[productVariantKey(it)] = true;
       });
       var added = 0;
-      productIds.forEach(function (selPid) {
-        if (selPid === pid) return;
-        var prod = (indexData.products || []).find(function (p) {
-          return p && p.id === selPid;
-        });
-        if (!prod || !prod.revisions || !prod.revisions.length) return;
-        var rev = prod.revisions[0];
-        var hit = { product: prod, revision: rev };
-        var newRows = expandModalWizkiVariants(vizRowsFromRevision(indexData, hit.product, hit.revision));
+
+      function applyHit(hit, persistPath) {
+        if (!hit) return;
+        var newRows = expandModalWizkiVariants(
+          vizRowsFromRevision(indexData, hit.product, hit.revision)
+        );
         newRows.forEach(function (row) {
           var k = productVariantKey(row);
           if (k && existingKeys[k]) return;
@@ -2954,8 +2956,24 @@
           items.push(row);
           added++;
         });
-        var persistPath = rev.path || "";
         if (persistPath) persistLinkedVariant(pid, persistPath);
+      }
+
+      picks.forEach(function (pick) {
+        if (pick && typeof pick === "object" && pick.revisionPath) {
+          applyHit(
+            findRevisionByFolderPath(indexData, pick.productId, pick.revisionPath),
+            pick.revisionPath
+          );
+          return;
+        }
+        var selPid = String(pick);
+        if (selPid === pid) return;
+        var prod = (indexData.products || []).find(function (p) {
+          return p && p.id === selPid;
+        });
+        if (!prod || !prod.revisions || !prod.revisions.length) return;
+        applyHit({ product: prod, revision: prod.revisions[0] }, prod.revisions[0].path || "");
       });
       if (!added) {
         showToast("Brak nowych wariantow do dodania.");
@@ -3886,6 +3904,17 @@
             '">' +
             esc(carrierLbl || "BRAK TYPU") +
             "</p>" +
+          (indexLbl
+            ? '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-viz-card__id-chip" data-copy-id="' +
+              esc(indexLbl) +
+              '" data-tag-value="' +
+              esc(indexLbl) +
+              '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj indeks ' +
+              esc(indexLbl) +
+              '"><i class="uil uil-copy" aria-hidden="true"></i>' +
+              esc(indexLbl) +
+              "</button>"
+            : "") +
           '<div class="dam-viz-card__actions">' +
             (noViz
               ? '<button type="button" class="geex-btn geex-btn--primary dam-btn-icon dam-viz-request-btn" data-group-pid="' + esc(group.pid) + '" title="Zglos zapotrzebowanie" data-dam-tip="Zglos zapotrzebowanie na wizualizacje dla tego wariantu">' +

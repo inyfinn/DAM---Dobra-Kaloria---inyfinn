@@ -138,6 +138,7 @@ PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 BRIDGE_API_VERSION = 7
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
+DEBUG_SESSION_LOG = WEB_ROOT.parent.parent / "debug-0f6c29.log"
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
 INDEX_FILE = WEB_ROOT / "data" / "file-index.json"
 # Inyfinn Image / Photo Resizer (GUI launcher + opcjonalny CLI w BIN/dev)
@@ -2124,6 +2125,177 @@ BULK_PACKAGING_FILE = WEB_ROOT / "data" / "bulk-packaging.json"
 SHOP_CATEGORIES_FILE = WEB_ROOT / "data" / "shop-categories.json"
 BRANDING_INDEX_FILE = WEB_ROOT / "data" / "branding-index.json"
 BRANDING_SEARCH_INDEX_FILE = WEB_ROOT / "data" / "branding-search-index.json"
+_BRANDING_SEARCH_INDEX_MEM: dict | None = None
+
+
+def _branding_search_index_mem() -> dict:
+    global _BRANDING_SEARCH_INDEX_MEM
+    if _BRANDING_SEARCH_INDEX_MEM is None:
+        loaded = _load_json(BRANDING_SEARCH_INDEX_FILE, None)
+        _BRANDING_SEARCH_INDEX_MEM = loaded if isinstance(loaded, dict) else {"entries": []}
+    return _BRANDING_SEARCH_INDEX_MEM
+
+
+def _branding_picker_title(entry: dict) -> str:
+    blob = str(entry.get("search_blob") or "")
+    low = blob.lower()
+    sep = low.find(" x:")
+    if sep > 0:
+        return blob[:sep].strip()
+    path = str(entry.get("path") or "").replace("\\", "/")
+    if path:
+        base = path.rsplit("/", 1)[-1]
+        if base:
+            dot = base.rfind(".")
+            if dot > 0:
+                return base[:dot]
+            return base
+    return str(entry.get("id") or "")
+
+
+def _light_branding_picker_entry(entry: dict) -> dict:
+    path = str(entry.get("path") or "").replace("\\", "/")
+    title = _branding_picker_title(entry)
+    thumb_url = ""
+    if path and path.lower().endswith((".jpg", ".jpeg", ".png", ".webp", ".gif", ".tif", ".tiff")):
+        from urllib.parse import quote
+
+        thumb_url = "/media?path=" + quote(path) + "&preview=1"
+    return {
+        "id": entry.get("id") or "",
+        "name": title,
+        "title": title,
+        "path": path,
+        "search_blob": entry.get("search_blob") or "",
+        "thumb_url": thumb_url,
+    }
+
+
+def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: list | None = None) -> dict:
+    """Light picker search — never ship full branding-search-index (~40MB) to browser."""
+    data = _branding_search_index_mem()
+    entries = data.get("entries") if isinstance(data.get("entries"), list) else []
+    limit = max(1, min(int(limit or 80), 120))
+    q = str(query or "").strip().lower()
+    include_ids = [str(x).strip() for x in (include_ids or []) if str(x).strip()]
+    by_id: dict[str, dict] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        eid = str(entry.get("id") or "").strip()
+        if eid:
+            by_id[eid] = entry
+    out: list[dict] = []
+    seen: set[str] = set()
+    for iid in include_ids:
+        if iid in seen:
+            continue
+        src = by_id.get(iid)
+        if not src:
+            continue
+        seen.add(iid)
+        out.append(_light_branding_picker_entry(src))
+    # Empty query without include_ids must not scan the full index (UI freeze on open).
+    if not q and not include_ids:
+        return {"ok": True, "entries": out, "count": len(out), "query": q}
+    for entry in entries:
+        if len(out) >= limit:
+            break
+        if not isinstance(entry, dict):
+            continue
+        eid = str(entry.get("id") or "").strip()
+        if not eid or eid in seen:
+            continue
+        blob = str(entry.get("search_blob") or eid or entry.get("path") or "").lower()
+        if q and q not in blob:
+            continue
+        seen.add(eid)
+        out.append(_light_branding_picker_entry(entry))
+    return {"ok": True, "entries": out, "count": len(out), "query": q}
+
+
+def _branding_digits_only(s) -> str:
+    return re.sub(r"\D", "", str(s or ""))
+
+
+def _branding_is_archived(a: dict) -> bool:
+    if not isinstance(a, dict):
+        return False
+    if "ARCHIWUM" in (a.get("tags") or []) or a.get("is_archive"):
+        return True
+    return "ARCHIWUM" in str(a.get("path") or "").upper()
+
+
+def _branding_asset_matches(a: dict, product_id: str, tokens: list) -> bool:
+    """Port 1:1 z dam-product-correlation.js brandingAssetMatches (UI nie parsuje 388MB)."""
+    ids = list(a.get("linked_product_ids") or []) + list(a.get("product_ids") or [])
+    if product_id and product_id in ids:
+        return True
+    sku = str(a.get("sku") or "")
+    if sku:
+        for t in tokens:
+            if not t:
+                continue
+            if sku == t or sku.startswith(t) or t.startswith(sku):
+                return True
+    hay = (
+        str(a.get("path") or "")
+        + " "
+        + str(a.get("name") or "")
+        + " "
+        + str(a.get("search_blob") or "")
+    ).lower()
+    for tok in tokens:
+        tl = str(tok or "").lower()
+        if len(tl) >= 6 and tl in hay:
+            return True
+        td = _branding_digits_only(tl)
+        if len(td) >= 6 and td in hay:
+            return True
+    return False
+
+
+def resolve_branding_for_product(
+    product_id: str,
+    tokens: list,
+    limit: int = 400,
+    include_archive: bool = False,
+    sort: str = "",
+) -> dict:
+    """Filtr pelnego branding-index po stronie bridge — UI dostaje tylko dopasowane assety.
+
+    Bez product_id/tokens: zwraca wszystkie nie-archiwalne (dla sort=recent widget dashboardu).
+    """
+    data = _load_json(BRANDING_INDEX_FILE, None)
+    assets = (
+        data.get("assets")
+        if isinstance(data, dict) and isinstance(data.get("assets"), list)
+        else []
+    )
+    limit = max(1, min(int(limit or 400), 2000))
+    tokens = [str(t).strip() for t in (tokens or []) if str(t).strip()]
+    product_id = str(product_id or "").strip()
+    has_filter = bool(product_id or tokens)
+    out: list = []
+    for a in assets:
+        if not isinstance(a, dict):
+            continue
+        if not include_archive and _branding_is_archived(a):
+            continue
+        if has_filter and not _branding_asset_matches(a, product_id, tokens):
+            continue
+        out.append(a)
+        if not sort and len(out) >= limit:
+            break
+    if sort == "recent":
+        out.sort(
+            key=lambda x: str(x.get("mtime") or x.get("modified") or x.get("date") or ""),
+            reverse=True,
+        )
+    out = out[:limit]
+    return {"ok": True, "assets": out, "count": len(out), "product_id": product_id}
+
+
 BRANDING_OVERRIDES_FILE = WEB_ROOT / "data" / "branding-metadata-overrides.json"
 BRANDING_ASSOC_OVERRIDES_FILE = WEB_ROOT / "data" / "branding-associations-overrides.json"
 BRANDING_STATUS_FILE = WEB_ROOT / "data" / "branding-build-status.json"
@@ -2782,6 +2954,8 @@ def _patch_branding_associations(
     linked_product_ids: list,
     linked_variant_ids: list | None,
     updated_by: str = "local_bridge",
+    product_link_id: str = "",
+    product_link_action: str = "",
 ) -> tuple[bool, str | None]:
     """Reczna edycja skojarzen produktow / wariantow w branding-index + overrides."""
     aid = str(asset_id or "").strip()
@@ -2802,8 +2976,37 @@ def _patch_branding_associations(
     if not group:
         group = str(target.get("folder_group_id") or "").strip().lower()
     file_index = _load_json(INDEX_FILE, {"products": []})
-    pids = [str(x).strip() for x in (linked_product_ids or []) if str(x).strip()]
-    vids = [str(x).strip() for x in (linked_variant_ids or []) if str(x).strip()]
+    delta_pid = str(product_link_id or "").strip()
+    delta_action = str(product_link_action or "").strip().lower()
+    if delta_pid:
+        if delta_action not in ("add", "remove"):
+            return False, "invalid_product_link_action"
+        existing_pids = list(target.get("linked_product_ids") or [])
+        if not existing_pids:
+            existing_pids = [
+                item.get("id")
+                for item in (target.get("linked_products") or [])
+                if isinstance(item, dict) and item.get("id")
+            ]
+        pids = [str(x).strip() for x in existing_pids if str(x).strip()]
+        if delta_action == "add" and delta_pid not in pids:
+            pids.append(delta_pid)
+        elif delta_action == "remove":
+            pids = [pid for pid in pids if pid != delta_pid]
+        vids = [
+            str(x).strip()
+            for x in (
+                linked_variant_ids
+                if linked_variant_ids is not None
+                else target.get("linked_variant_ids") or []
+            )
+            if str(x).strip()
+        ]
+    else:
+        pids = [str(x).strip() for x in (linked_product_ids or []) if str(x).strip()]
+        vids = [str(x).strip() for x in (linked_variant_ids or []) if str(x).strip()]
+    pids = list(dict.fromkeys(pids))
+    vids = list(dict.fromkeys(vids))
 
     ov = _load_json(
         BRANDING_ASSOC_OVERRIDES_FILE,
@@ -5220,7 +5423,7 @@ def open_image_resizer(input_path: str = "", output_path: str = "", product_id: 
 
 def read_viz_flags() -> dict:
     flags_file = WEB_ROOT / "data" / "viz-flags.json"
-    default = {"demo": {}, "hidden": {}, "manual": [], "updated_at": ""}
+    default = {"demo": {}, "hidden": {}, "manual": [], "linked_variants": {}, "unlinked_variants": {}, "updated_at": ""}
     raw = _load_json(flags_file, default)
     if not isinstance(raw, dict):
         return default
@@ -5228,6 +5431,8 @@ def read_viz_flags() -> dict:
         "demo": raw.get("demo") if isinstance(raw.get("demo"), dict) else {},
         "hidden": raw.get("hidden") if isinstance(raw.get("hidden"), dict) else {},
         "manual": raw.get("manual") if isinstance(raw.get("manual"), list) else [],
+        "linked_variants": raw.get("linked_variants") if isinstance(raw.get("linked_variants"), dict) else {},
+        "unlinked_variants": raw.get("unlinked_variants") if isinstance(raw.get("unlinked_variants"), dict) else {},
         "updated_at": raw.get("updated_at") or "",
     }
 
@@ -5243,6 +5448,10 @@ def write_viz_flags(payload: dict) -> dict:
         current["hidden"] = incoming.get("hidden") if isinstance(incoming.get("hidden"), dict) else current["hidden"]
         if isinstance(incoming.get("manual"), list):
             current["manual"] = incoming["manual"]
+        if isinstance(incoming.get("linked_variants"), dict):
+            current["linked_variants"] = incoming["linked_variants"]
+        if isinstance(incoming.get("unlinked_variants"), dict):
+            current["unlinked_variants"] = incoming["unlinked_variants"]
     elif action in ("demo", "hidden"):
         key = (payload.get("key") or "").strip()
         if key:
@@ -5931,6 +6140,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/health":
             redis_info = dam_redis.status() if dam_redis else {"redis": "down", "circuit": "open", "reason": "module_missing"}
+            warm_info = dam_thumb_cache_mod.warm_status() if dam_thumb_cache_mod else {}
+            circuit = redis_info.get("circuit") or "open"
+            redis_state = redis_info.get("redis") or "down"
             self._json(
                 200,
                 {
@@ -5938,13 +6150,22 @@ class Handler(BaseHTTPRequestHandler):
                     "service": "dam-local-bridge",
                     "port": PORT,
                     "api_version": BRIDGE_API_VERSION,
-                    "redis": redis_info.get("redis") or "down",
-                    "redis_circuit": redis_info.get("circuit") or "open",
+                    "redis_status": redis_state,
+                    "redis_circuit": circuit,
                     "redis_detail": redis_info,
+                    "redis": {
+                        "ok": redis_state == "ok",
+                        "circuit": circuit,
+                        "state": redis_state,
+                        "detail": redis_info,
+                    },
+                    "warm": warm_info,
                     "redis_fallback_matrix": dam_redis.fallback_matrix() if dam_redis else [],
                     "hub_routes": [
                         "/branding-index",
                         "/branding-search-index",
+                        "/branding-search-picker",
+                        "/branding-for-product",
                         "/product-catalog",
                         "/bulk-packaging",
                         "/branding/status",
@@ -6563,6 +6784,28 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, {"ok": True, **data})
             return
+        if parsed.path == "/branding-for-product":
+            qs = parse_qs(parsed.query or "")
+            tokens = [
+                t.strip()
+                for t in (qs.get("tokens") or [""])[0].split(",")
+                if t.strip()
+            ]
+            try:
+                lim = int((qs.get("limit") or ["400"])[0])
+            except Exception:
+                lim = 400
+            self._json(
+                200,
+                resolve_branding_for_product(
+                    (qs.get("product_id") or [""])[0],
+                    tokens,
+                    lim,
+                    (qs.get("include_archive") or ["0"])[0] in ("1", "true"),
+                    (qs.get("sort") or [""])[0],
+                ),
+            )
+            return
         if parsed.path == "/product-links-elementy":
             # STREFA A3: Links (surowe) vs ELEMENTY (gotowe) dla rewizji produktu
             qs = parse_qs(parsed.query or "")
@@ -6581,6 +6824,21 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(404, {"ok": False, "error": "branding_search_index_missing"})
                 return
             self._json(200, {"ok": True, **data})
+            return
+        if parsed.path == "/branding-search-picker":
+            qs = parse_qs(parsed.query or "")
+            q = (qs.get("q") or [""])[0]
+            try:
+                lim = int((qs.get("limit") or ["80"])[0])
+            except (TypeError, ValueError):
+                lim = 80
+            raw_include = (qs.get("include") or [""])[0]
+            include_ids = [x.strip() for x in str(raw_include).split(",") if x.strip()]
+            data = _branding_search_index_mem()
+            if not isinstance(data, dict) or not isinstance(data.get("entries"), list):
+                self._json(404, {"ok": False, "error": "branding_search_index_missing"})
+                return
+            self._json(200, resolve_branding_search_picker(q, lim, include_ids))
             return
         if parsed.path in ("/branding/status", "/branding/recognize/status"):
             status_file = BRANDING_RECOGNIZE_STATUS_FILE if "recognize" in parsed.path else BRANDING_STATUS_FILE
@@ -6689,6 +6947,29 @@ class Handler(BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b"{}"
         parsed = urlparse(self.path)
         content_type = self.headers.get("Content-Type") or ""
+
+        if parsed.path == "/debug-ingest":
+            if not self._origin_ok():
+                self._json(403, {"ok": False, "error": "origin_forbidden"})
+                return
+            try:
+                payload = json.loads(raw.decode("utf-8") or "{}")
+            except json.JSONDecodeError:
+                self._json(400, {"ok": False, "error": "invalid_json"})
+                return
+            line = json.dumps(payload, ensure_ascii=False) + "\n"
+            for dbg_path in (
+                DEBUG_SESSION_LOG,
+                WEB_ROOT / "data" / "debug-0f6c29.log",
+            ):
+                try:
+                    dbg_path.parent.mkdir(parents=True, exist_ok=True)
+                    with open(dbg_path, "a", encoding="utf-8") as dbg_f:
+                        dbg_f.write(line)
+                except OSError:
+                    pass
+            self._json(200, {"ok": True})
+            return
 
         if parsed.path == "/thumb-cache/warm":
             if not self._origin_ok():
@@ -7138,6 +7419,8 @@ class Handler(BaseHTTPRequestHandler):
                 data.get("linked_product_ids") or [],
                 data.get("linked_variant_ids"),
                 updated_by=str(user.get("email") or user.get("name") or "user"),
+                product_link_id=data.get("product_link_id") or "",
+                product_link_action=data.get("product_link_action") or "",
             )
             if not ok:
                 self._json(400, {"ok": False, "error": err or "patch_failed"})
@@ -7149,6 +7432,8 @@ class Handler(BaseHTTPRequestHandler):
                     "asset_id": data.get("asset_id"),
                     "linked_product_ids": data.get("linked_product_ids") or [],
                     "linked_variant_ids": data.get("linked_variant_ids") or [],
+                    "product_link_id": data.get("product_link_id") or "",
+                    "product_link_action": data.get("product_link_action") or "",
                 },
             )
             return
@@ -8143,8 +8428,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "groups": clean})
             return
         if parsed.path in ("/db/reconnect", "/db/refresh"):
-            if self._require_admin() is None:
-                return
+            # Jak GET /db/status: reconnect + opcjonalny pull dump na localhost (bez Bearera).
             if not dam_db:
                 self._json(500, {"ok": False, "error": "dam_db_missing"})
                 return
@@ -8205,6 +8489,17 @@ def main() -> None:
                 dam_redis.bootstrap()
             except Exception as exc:  # noqa: BLE001
                 print("dam_redis.bootstrap warning:", exc)
+        if dam_thumb_cache_mod is not None and os.environ.get("DAM_WARM_BOOT_CONSUMER", "1") == "1":
+            if os.environ.get("DAM_WARM_BOOT_ENQUEUE", "0") != "0":
+                print("[C-WARM] DAM_WARM_BOOT_ENQUEUE must stay 0 on boot path")
+            warm_json = os.environ.get(
+                "DAM_WARM_LOCAL_JSON",
+                str(DESKTOP_DIR.parent.parent / "PAMIEC-PODRECZNA" / "warm-local-20260722.json"),
+            )
+            try:
+                dam_thumb_cache_mod.dam_warm_boot_consumer(warm_json)
+            except Exception as exc:  # noqa: BLE001
+                print("dam_warm_boot_consumer warning:", exc)
         seed_owner_from_env()
     except Exception as exc:
         print("auth/db seed:", exc)
@@ -8214,6 +8509,14 @@ def main() -> None:
         print("naming policy seed:", exc)
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     threading.Thread(target=_kv_cache_watcher, daemon=True).start()
+    try:
+        from dam_sync import spawn_sync_quiet, start_periodic_sync
+
+        if dam_db and not dam_db.latest_database_dump():
+            spawn_sync_quiet(push=False, no_commit=True)
+        start_periodic_sync()
+    except Exception as exc:
+        print("db dump bootstrap:", exc)
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"DAM local bridge http://{HOST}:{PORT}")
     try:

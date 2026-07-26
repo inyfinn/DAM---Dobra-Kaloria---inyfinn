@@ -3,6 +3,47 @@
 Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-07-18**.  
 Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 
+## Preferencje UX odpowiedzi agenta (2026-07-26)
+
+- **Zawsze dawaj klikalny link** do strony DAM przy weryfikacji UI / po bumpie wersji (pełny URL z `?v=` cache-bust). Nie tylko „Ctrl+F5 na visualizations” — markdown link `http://127.0.0.1:8765/...`.
+
+## GOLDEN path assoc (HARD, 2026-07-26, v4.0.56/57)
+
+- **Baseline kodu pickera:** commit `5fb3493` (`dam-assoc-edit.js`).
+- **„Dodaj/Edytuj produkty” (branding)** = `kind: "product"` → warm `file-index` do browse; **q≥2** → `DamSearch.search` (jak `#damFileSearch`). **Zakaz:** skip-warm dla product.
+- **Viz „Dodaj warianty”** = `productSearchForVariants` → skip cold file-index przy open + tylko DamSearch (ta sama mechanika co produkty, inny silnik listowania).
+- **Zakaz:** `products.forEach` jako filtr wyszukiwania — `return` przy CAP nie przerywa forEach → freeze. Używaj `collectProductPickerRows` (for+break).
+- Baseline UI 2026-07-26: wszystkie CTA otwierają; tylko viz-warianty zacinają przy open; picker search zacina; global search OK.
+
+## Reflection loop actor-critic (2026-07-26)
+
+- **Skill uniwersalny:** `reflection-loop` — sekcja **Bootstrap** w SKILL.md (jak stworzyć overlay + READ); `/reflect` globalnie.
+- **Global:** `~/.cursor/agents/critic.md` + `~/.cursor/rules/reflection-loop.mdc`.
+- **Overlay DAM (ten repo):** `.cursor/agents/critic.md` — MERGE READ domenowy (§12, PI, P1-P4).
+- Max 3 rundy; `run_in_background: false`. Po PASS nadal `dam-dobrakaloria`.
+
+## Assoc CTA adaptery domenowe (2026-07-26, v4.0.27)
+
+- **Shell wspólny** `openMediaPicker`; **zapis osobny**: branding product/variant → `saveAssociations` tylko z `ctx.asset.id`; viz sugestie → `saveProductMaterialSuggestions`; viz warianty produktu → `onRefresh` / `onRemoveProductVariant` — nigdy blind POST asset-associations.
+- **`bindVizAssocCtas`:** merge opts pomija `null` (nie kasuj `variantsCtx` przy init modala).
+- **Debug assoc:** user HARD — bez CDP/klików agenta; static QA + Ctrl+F5 usera.
+
+
+**F5 / Ctrl+R = circuit breaker poza watkiem UI aplikacji.**
+
+1. **Desktop (pywebview):** `launch.py` → `start_hard_reset_watchdog()` — osobny wątek Python polluje `GetAsyncKeyState(F5)` gdy okno DAM na foreground → `restart_window()` **bez JS**.
+2. **JS (`dam-panic-reload.js` + inline w `<head>`):** abort fetch + stop + navigate / restart_window. **ZERO `preventDefault`** — natywny F5 przeglądarki/WebView2 musi działać gdy handler JS nie dojedzie.
+3. **Assoc freeze root cause (2026-07-26):** `ensureFileIndex()` w `dam-assoc-edit.js` robiło `fetch().json()` = `JSON.parse` ~8MB na main thread → F5 martwy. Fix: tylko `DamSearch.load()` / `parseJsonInWorker`.
+4. **Limit teorii:** synchroniczny parse bez yield nadal blokuje — dlatego worker + native watchdog, nie „uczciwa granica".
+
+
+1. **Nazewnictwo paneli (HARD):** `#damAssocEditOverlay` / `#damAssocEditPopover` = **Assoc Edit / Skojarzone produkty**. **COMBO** = osobny eksplorator `#damThumbPicker` / `DamFolderPicker` (foldery + miniatury + Windows Explorer). Nie mieszac w planach ani copy.
+2. **Stable assoc baseline:** commit `092821f` (instancja 3.2.0, port 8767). Regresja freeze od `6e9462e` (`buildAssocMediaPickerUi`, sync index bootstrap). Mapowanie user „3.5" dla search freeze -> **092821f**, nie wersja 3.5.0 w git.
+3. **Incydent assoc freeze - browser circuit breaker (2026-07-25, korekta 2026-07-26):** Browser MCP / Playwright / CDP **dozwolone**, gdy daja potrzebny dowod wizualny lub DOM. Procedura: (1) smoke portow `:8765`/`:8766` **max 5 s** przed nawigacja; (2) **jedna celowa proba** na hipoteze; (3) stall **~10 s** (regula ogolna) = przerwanie tej akcji; (4) **2026-07-26 user HARD:** ta sama akcja browser/CDP bez postepu **60 s** = stall — **parent przerywa workerowi natychmiast**; aktywny spinner MCP **nie** oznacza pracy w toku; (5) po abort: wroc do curl/node/statycznych suite — **„Navigated to..." nie jest sukcesem**; (6) statyczny ALL PASS **nie** zastepuje dowodu klik -> `#damAssocEditPopover`. Przyklad incydentu: 15 akcji browser, hang na `Runtime.evaluate` po kliku suggestions CTA (v4.0.20 final QA).
+4. **Preserve v4.0.14+ DB fix:** `/db/reconnect` bez auth, lokalny `dam_eta_*.sql.gz` = OK. Nie cofac przy restore assoc UI.
+5. **Dane skojarzen:** `linked_products` nie sa w `file-index.json`; zrodla: `branding-index.json`, `branding-associations-overrides.json`, POST `_patch_branding_associations`. Brak LP na sliderze M-SLI505490 = dane 0, nie bug. M-SHOP405510 / `br-005510` ma 6 LP w index (2026-07-25) - pusty UI = render/cache, nie reindex first.
+6. **Workery assoc freeze (2026-07-25):** tylko Grok (front mapa) + Composer (historia/dane/critique). Orchestrator nie edytuje hot-path prod rownolegle z audytem.
+
 ## Indeks dokumentacji (czytaj to pierwsze)
 
 | Temat | Plik |
@@ -31,7 +72,8 @@ Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 11. **Nie kopiowac** kodu structure-mcp do DAM; tylko wiedza domenowa (sloty 0-4, indeksy).
 12. **Weryfikacja UI (2026-07-18):** po kazdej zmianie wizualnej - screenshot przegladarki + Read obrazu. Zakaz oddania "na oko"/sam CDP. Sidebar collapsed: logo w calosci czytelne (`object-fit: contain`, nie crop). Regula: `.cursor/rules/verify-ui-after-changes.mdc`.
 12a. **Serwery przed browserem (HARD, 2026-07-22):** `:8765` + `:8766` musza odpowiedziec HTTP 2xx w **5 s** (`scripts/ops/smoke-dam-ports.ps1` lub `curl.exe --max-time 5`). Brak = martwe - **nie** `browser_navigate`, restart `python apps/desktop/serve_browser.py`, smoke ponownie, **kontynuuj zadanie**. Kazde curl/fetch/MCP z timeoutem; wiszacy browser MCP != done. Regula: `.cursor/rules/server-timeout-never-hang.mdc`, `code-doctrine.md` §5.0.
-12a2. **Zacinanie agenta = Browser MCP (2026-07-23, HARD):** `CallMcpTool` (`browser_navigate` / `browser_lock` / czasem screenshot) wisi **minuty** az do `interrupted` (~500s–1400s). **To nie jest wolny kod DAM** — tool MCP nie wraca (zablokowany Chromium/Electron webview, wiszacy lock, niewidoczna karta). **ZAKAZ `browser_navigate`** — agent **nigdy** nie otwiera nowego URL przez MCP (nawet z `?v=` cache-bust). Nawigacja = **tylko karta, ktora user dolaczyl w czacie** (`Browser Tab` / Browser ID z kontekstu): krotki `browser_tabs` list → `browser_cdp` `Runtime.evaluate` / `browser_snapshot` na **tej** karcie. Pusta karta = prosba do usera o reczny refresh/URL, **nie** navigate agenta. **Neutralizacja deliverable:** (1) kod + cache-bust + `node --check` + `curl.exe --max-time 5`; (2) **nie** zaczynaj tury od browser MCP; (3) MCP >~10s bez wyniku = porzuc browser, oddaj kod; (4) nie parallelizuj navigate+Write. UI screenshot tylko gdy karta juz na wlasciwej stronie.
+12a2. **Weryfikacja UI = wewnetrzna przegladarka Cursor `@Browser` (2026-07-24, HARD):** User **nigdy** nie otwiera stron recznie. Agent sam nawiguje, klika, robi screenshot+Read przez MCP `cursor-ide-browser` (`browser_navigate`, `browser_snapshot`, `browser_take_screenshot`, `browser_cdp`). **ZAKAZ** prosic usera o reczny URL/refresh. **ZAKAZ** Perplexity/Comet (`comet_*`). Gdy MCP wisi >~10 s = porzuc na te ture, napraw kod + curl smoke, sprobuj ponownie; nie blokuj calego zadania. Smoke `:8765`/`:8766` (i rownolegle porty) przed pierwsza nawigacja.
+12a3. **3 wersje rownolegle (HARD, 2026-07-24):** `scripts/ops/start-dam-parallel-versions.ps1`. **Najnowsza (current/main) = BEZ prefiksu wersji w URL:** `serve_browser.py` na :8765/:8766 → `http://127.0.0.1:8765/visualizations.html`. **Tylko legacy** ma prefiks: `:8767/3.2.0/...`, `:8769/3.1.5/...` (`serve_dam_instance.py`). **NIGDY** `/4.0.0/...` na :8765 — to lamie current i daje 404. Bridge legacy: :8768, :8770.
 12b. **Plany (HARD, 2026-07-21):** każdy plan techniczny przez globalny skill `/planner`
     (`~/.cursor/skills/planner/SKILL.md`) — rada Grok Planner + Composer Critic, 10–20 rund
     lub konwergencja; tie/niewiedza = AskQuestion do usera. Reguła: `~/.cursor/rules/planner-mad-always.mdc`.
@@ -1164,6 +1206,61 @@ dziala (UI + flow otwarcia).
 
 NIE PSUJ tego przycisku / SHIFT reveal / strip wariantow przy kolejnych fixach.
 
-Osobny bug: zapis nowego wariantu czasem sie nie dodaje (regresja) - nie mylic z przyciskiem.
+Osobny bug (FIXED `variantPersist20260723a`): zapis wariantu —
+(1) merge `viz-flags.json` NIE wolno dropowac `linked_variants`/`unlinked_variants`;
+(2) pick FILE → normalizuj do folderu rewizji przed `findRevisionByFolderPath`.
 
 Browser: zakaz Browser MCP navigate (zacina agenta) - headless CDP / curl.
+
+## #148 (2026-07-23) - HARD: branding-index.json (388MB) NIGDY w watku UI + ESC abort
+
+- **Root cause zamrozen UI:** kazdy `fetch + r.json()` na `data/branding-index.json`
+  (387.9 MB) lub bridge `/branding-index` w watku UI blokuje petle zdarzen na
+  dziesiatki sekund. Wtedy NIE dziala zaden handler (F5/ESC tez nie) - to nie
+  "wolne ladowanie", to zablokowany main thread przez JSON.parse.
+- **Regula HARD:** UI wolno tylko lekkie endpointy bridge:
+  `/branding-search-picker` (picker), `/branding-for-product?product_id=&tokens=&limit=`
+  (assety per produkt, filtr serwerowy), `?sort=recent&limit=N` (widget dashboardu).
+  Pelny indeks moze parsowac wylacznie bridge (Python, cache po mtime) i strona
+  Branding (swiadomie, dedykowana).
+- **ESC:** `dam-panic-reload.js` - ESC = `__damAbortAll()` (abort zarejestrowanych
+  AbortControllerow przez `window.__damRegisterAbort(ctrl)`) + teardown overlayow.
+  F5/Ctrl+R = hard reload (juz bylo). Nowe ciezkie fetche MUSZA rejestrowac controller.
+- **Autostart (user rule):** DAM nie spawnuje nic bez wiedzy usera.
+  Zidentyfikowane: (1) `\EnklawaObozowa-NextWatcher` - powershell.exe przy logowaniu
+  (INNY projekt, Enklawa Obozowa) = to bylo "okno PowerShell z System32" -
+  WYLACZONE 2026-07-23 (Disable-ScheduledTask, odwracalne: Enable-ScheduledTask).
+  (2) `\DAM-ETA-Database-Git-Sync` - co 1h wscript->pythonw sync dumpow PG do git
+  (pomija gdy DAM dziala; utworzone 2026-07-19) - ZOSTAWIONE, user ma zdecydowac.
+  Skrypt audytu: `scripts/ops/audit-autostart.ps1`.
+
+## #152 (2026-07-26) - Assoc freeze: zakaz runtime reproduce w tej rundzie
+- Przy naprawie przycisków Assoc Edit nie klikaj ich przez browser/CDP i nie używaj `Runtime.evaluate`: wadliwy deferred path blokuje renderer i narzędzie.
+- Pracuj wyłącznie na kodzie oraz testach statycznych/syntax/QA. Runtime sprawdza użytkownik po dostarczeniu cache-bustu.
+- Wszystkie CTA assoc mają korzystać z jednego lekkiego adaptera otwarcia, różnić się tylko jawnie przekazanym kontekstem/kind.
+- Assoc Edit i COMBO są osobne: stopka `#damAssocEditPopover` otwiera wyłącznie `DamFolderPicker.open` / `#damThumbPicker`; nigdy `#damAssocFolderPicker` / `openFolderGrid`.
+
+## #149 (2026-07-23) - uiFreezeFix20260723q
+- Viz SKOJARZONE Shift+Dodaj = pelny COMBO PRODUKT|BRANDING (shell-first); NIGDY openVizProductMaterialAdd jako jedyna sciezka; NIGDY branding-index 388MB w UI.
+- Variant: pathTailKey (drive/Marketing-agnostic); po miss tearDown picker + ESC.
+- Tag plus: e.shiftKey OR latch; multi-picker shell-first + cap/debounce.
+
+## #150 (2026-07-23) - assocFreezeE2E20260723r (Grok worker)
+- **HARD:** `ensureInjectedCss` — early-return PRZED budowa CSS stringa (concat = freeze Dodaj).
+- Viz SKOJARZONE: `openVizAssocComboPicker` + `linkBrandingAssetsToProduct` (bridge only); pane = `/branding-for-product`.
+- Wariant: product-folder → latest revision; miss → `/index/rebuild` + corner indicator; UI unlock always.
+- AbortController: `__damRegisterAbort` na picker fetchach.
+- Cache: `?v=assocFreezeE2E20260723r`.
+
+
+## #151 (2026-07-24) - Panele tag/assoc + log dumpow
+- **`#damTagEditPopover`** = jeden picker `DamTagEdit`; kind: category / subcategory (wide) / lang / carrier / index / …
+- **Apply category/subcategory/index:** historycznie toast-only (brak rename bridge) — „otwiera sie, nie nadaje” na 3.1.5+ to nie regresja 4.0 alone.
+- **Search:** 3.1.5 = hide/show; 4.0 przed 4.0.2 = innerHTML rebuild = lag. Prefer light filter.
+- **`#damAssocEditPopover`** = panel **Assoc Edit / Skojarzone produkty** (`DamAssocEdit`, overlay `#damAssocEditOverlay`). Footer classic: **Dodaj z dysku | Eksplorer** (`data-goto-combo`) **| Zatwierdz | Wstecz**. Sugestie (viz) = `_vizBrandingList`; warianty (viz) = `_vizVariantsList`.
+- **`#damAssocFolderPicker`** = stary eksplorator folderow (3.1.5/3.2); w 4.0 usuniety → `DamFolderPicker` / COMBO. Hang „Ladowanie…” = `/folder-images` lub stary loadDir.
+- **Viz modal assoc CTAs (2026-07-25, v4.0.13):** w `#damVizModal` **zero** plus tiles i `dam-assoc-edit-all`. Zamiast: **`+Dodaj/Edytuj sugestie`** i **`+Dodaj/Edytuj warianty`** (`.dam-int-cta.dam-viz-assoc-cta`). Otwieraja `#damAssocEditPopover` via `bindVizAssocCtas`. Save: `ensureBridgeSession()` przed POST.
+- **Tag search:** `applySearchFilterLight` (3.1.5); bez autofocus on open (`requestAnimationFrame+focus` usuniety z open path).
+- **Indeks:** `re-enrich-branding-index.py` po zmianach (linked_product_id); `file-index` `linked_products` tylko gdy oba czlonki grupy aliasow istnieja w `products[]`.
+- **QA weryfikacja (circuit breaker):** zawsze `node scripts/qa/sim-assoc-dodaj.js` + `curl --max-time 5` smoke; browser/Playwright/CDP gdy daja dowod (smoke 5 s, jedna proba/hipoteze, abort ~10 s, screenshot+Read lub blocker).
+

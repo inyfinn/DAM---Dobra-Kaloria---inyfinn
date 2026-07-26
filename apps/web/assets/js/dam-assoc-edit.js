@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DAM - edycja skojarzen produktow / wariantow w podgladzie mediow (Shift+klik, admin).
  */
 (function (global) {
@@ -93,6 +93,13 @@
     if (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products) {
       return Promise.resolve(global._DAM_FILE_INDEX);
     }
+    if (global.DamSearch && typeof global.DamSearch.load === "function") {
+      return global.DamSearch.load().then(function (bundle) {
+        var fi = (bundle && bundle.fileIndex) || global._DAM_FILE_INDEX || { products: [] };
+        if (fi) global._DAM_FILE_INDEX = fi;
+        return fi;
+      });
+    }
     /* 3.1.5: fetch + worker race — szybsze pierwsze otwarcie pickera produktów. */
     var fetchP = fetch("data/file-index.json?v=" + Date.now())
       .then(function (r) {
@@ -164,6 +171,266 @@
     }
     if (raw.length <= maxLen) return raw;
     return raw.slice(0, maxLen - 1) + "…";
+  }
+
+  function isLegacyBrId(id) {
+    return /^br-\d+$/i.test(String(id || "").trim());
+  }
+
+  function assetDirKey(path) {
+    var p = String(path || "").replace(/\\/g, "/");
+    var i = p.lastIndexOf("/");
+    return i > 0 ? p.slice(0, i).toLowerCase() : p.toLowerCase();
+  }
+
+  function nameFromBrandingEntry(entry) {
+    if (!entry) return "";
+    var title = entry.title || entry.label || entry.name || "";
+    if (title && !isLegacyBrId(title)) return String(title).trim();
+    var blob = String(entry.search_blob || "");
+    var parts = blob.split(/\s+x:/i);
+    if (parts[0]) return parts[0].trim();
+    var path = String(entry.path || "");
+    if (path) {
+      var base = path.replace(/\\/g, "/").split("/").pop() || "";
+      if (base) return base.replace(/\.[a-z0-9]{2,8}$/i, "");
+    }
+    return "";
+  }
+
+  function marketingIdForBranding(entry) {
+    if (!entry) return "";
+    var mid = entry.marketing_id || entry.index || "";
+    if (mid && !isLegacyBrId(mid)) return String(mid);
+    if (global.DamMarketingId && typeof global.DamMarketingId.format === "function") {
+      var fmt = global.DamMarketingId.format({
+        id: entry.id,
+        path: entry.path || "",
+        name: entry.name || nameFromBrandingEntry(entry),
+      });
+      if (fmt && !isLegacyBrId(fmt)) return fmt;
+    }
+    return "";
+  }
+
+  function brandingThumbUrl(entry) {
+    if (!entry) return PLACEHOLDER_SVG;
+    if (entry.thumb || entry.thumb_url) return entry.thumb || entry.thumb_url;
+    var path = entry.path || "";
+    if (path && global.DamMediaPreview && typeof global.DamMediaPreview.previewUrl === "function") {
+      return global.DamMediaPreview.previewUrl(path, entry) || PLACEHOLDER_SVG;
+    }
+    return PLACEHOLDER_SVG;
+  }
+
+  function brandingEntryToPickerRow(entry) {
+    if (!entry || !entry.id) return null;
+    var label = nameFromBrandingEntry(entry);
+    if (!label || isLegacyBrId(label)) {
+      label = shortAssocLabel(
+        entry.path ? String(entry.path).replace(/\\/g, "/").split("/").pop() : entry.id
+      );
+    }
+    var mid = marketingIdForBranding(entry);
+    return {
+      id: entry.id,
+      name: label,
+      label: label,
+      thumb: brandingThumbUrl(entry),
+      thumb_url: brandingThumbUrl(entry),
+      path: entry.path || "",
+      marketing_id: mid,
+      index: mid,
+      search_blob: entry.search_blob || "",
+    };
+  }
+
+  function brandingPathById(entries) {
+    var map = {};
+    (entries || []).forEach(function (entry) {
+      if (entry && entry.id) map[entry.id] = entry.path || "";
+    });
+    return map;
+  }
+
+  function filterBrandingVariantIdsForPrimary(primary, ids, pathById) {
+    pathById = pathById || {};
+    primary = primary || {};
+    if (!primary.path) return (ids || []).slice();
+    var primaryDir = assetDirKey(primary.path);
+    return (ids || []).filter(function (id) {
+      id = String(id || "").trim();
+      if (!id) return false;
+      if (id === primary.id) return true;
+      var p = pathById[id] || "";
+      if (!p) return false;
+      return assetDirKey(p) === primaryDir;
+    });
+  }
+
+  function revisionPickerKey(productId, revPath) {
+    return "rev:" + productId + ":" + String(revPath || "").replace(/\\/g, "/");
+  }
+
+  function parseRevisionPickerKey(key) {
+    var m = /^rev:([^:]+):(.+)$/.exec(String(key || ""));
+    if (!m) return null;
+    return { productId: m[1], revisionPath: m[2] };
+  }
+
+  function pickerUsesBrandingApi(opts) {
+    return opts && (opts.kind === "material" || (opts.kind === "variant" && opts.brandingSearch));
+  }
+
+  /* Viz „Dodaj warianty” = async DamSearch (jak #damFileSearch), NIE full products.forEach.
+     GOLDEN path (kind=product) = warm file-index + lokalny filter z twardym break na CAP. */
+  function pickerUsesAsyncProductSearch(opts) {
+    return !!(opts && opts.productSearchForVariants);
+  }
+
+  /* Skip warm TYLKO gdy lista nie pochodzi z file-index:
+     - material / brandingSearch → API branding-search-picker
+     - productSearchForVariants → DamSearch (cold ensureFileIndex na viz = freeze przy open)
+     GOLDEN kind=product NIGDY tu nie wchodzi. */
+  function pickerSkipsWarmFileIndex(opts) {
+    return !!(
+      opts &&
+      (opts.kind === "material" ||
+        (opts.kind === "variant" && opts.brandingSearch) ||
+        opts.productSearchForVariants)
+    );
+  }
+
+  /**
+   * Zbierz wiersze produktów do pickera z TWARDyn break (for, nie forEach).
+   * forEach + `return` przy CAP NIE przerywa pętli → freeze UI na całym file-index.
+   */
+  function collectProductPickerRows(src, optsCollect) {
+    optsCollect = optsCollect || {};
+    var pinnedSet = optsCollect.pinnedSet || {};
+    var excl = optsCollect.excl || { ids: {}, indexes: {} };
+    var q = optsCollect.q || "";
+    var filterType = optsCollect.filterType || "all";
+    var cap = optsCollect.cap || PICKER_LIST_CAP;
+    var asProductRow = !!optsCollect.asProductRow;
+    var items = [];
+    var seenIds = {};
+    var seenIdx = {};
+    var list = src || [];
+    for (var i = 0; i < list.length; i++) {
+      if (items.length >= cap) break;
+      var p = list[i];
+      if (!p || !p.id || pinnedSet[p.id]) continue;
+      if (seenIds[p.id]) continue;
+      if (productMatchesExclude(p, excl)) continue;
+      if (filterType !== "all" && isVisualizationLike(p)) continue;
+      var idxKey = normIndexKey(productIndexOf(p));
+      if (idxKey && seenIdx[idxKey]) continue;
+      if (q && productSearchBlob(p).indexOf(q) === -1) continue;
+      seenIds[p.id] = true;
+      if (idxKey) seenIdx[idxKey] = true;
+      var rev0 = (p.revisions && p.revisions[0]) || {};
+      var row = {
+        id: p.id,
+        label: p.display_name || p.name || p.id,
+        thumb: productThumb(p),
+        sub: productIndexOf(p) || p.id,
+        path: p.path || "",
+        brand: p.brand || "",
+        category: p.category || "",
+        subcategory: p.subcategory_label || "",
+        langs: rev0.langs || [],
+      };
+      if (asProductRow) row.isProductRow = true;
+      items.push(row);
+      if (
+        asProductRow &&
+        optsCollect.expandedProductId === p.id &&
+        p.revisions &&
+        p.revisions.length
+      ) {
+        for (var ri = 0; ri < p.revisions.length; ri++) {
+          if (items.length >= cap) break;
+          var rev = p.revisions[ri];
+          if (!rev || !rev.path) continue;
+          var revKey = revisionPickerKey(p.id, rev.path);
+          if (seenIds[revKey]) continue;
+          seenIds[revKey] = true;
+          var revIdx = String(rev.index || rev.index_base || productIndexOf(p) || "");
+          if (revIdx.indexOf(".") > 0) revIdx = revIdx.split(".")[0];
+          items.push({
+            id: revKey,
+            label:
+              (rev.label || rev.name || "Wariant " + (ri + 1)) +
+              (rev.langs && rev.langs.length ? " · " + rev.langs.join(", ").toUpperCase() : ""),
+            thumb: productThumb(p),
+            sub: revIdx,
+            path: rev.path,
+            brand: p.brand || "",
+            category: p.category || "",
+            subcategory: p.subcategory_label || "",
+            langs: rev.langs || rev0.langs || [],
+            isRevisionRow: true,
+          });
+        }
+      }
+    }
+    return items;
+  }
+
+  /** Indeks 630xxxx / 000xxx z kontekstu viz — dziala tez gdy brak skojarzonych materialow. */
+  function pickerBootstrapQueryFromCtx(ctx, asset) {
+    ctx = ctx || {};
+    asset = asset || ctx.asset || {};
+    var pc = ctx.productContext || {};
+    var gc = ctx.groupContext || {};
+    var idx = String(pc.index || pc.index_base || gc.index || asset.index || "")
+      .split(".")[0]
+      .trim();
+    if (!idx) {
+      var blob = String(
+        pc.name || pc.display_name || asset.name || asset.title || asset.label || ""
+      );
+      var m = blob.match(/\b(630\d{4}|000\d{3})\b/);
+      if (m) idx = m[1];
+    }
+    if (idx && idx.length >= 4) return idx;
+    return String(
+      asset.marketing_id ||
+        pc.index ||
+        pc.display_name ||
+        pc.name ||
+        asset.index ||
+        asset.name ||
+        ""
+    ).trim();
+  }
+
+  function materialMatchesPickerTags(row, activeTags) {
+    if (!activeTags || !activeTags.length) return true;
+    var blob = String(
+      (row && (row.search_blob || row.label || row.name || "")) +
+        " " +
+        (row.path || "") +
+        " " +
+        (row.marketing_id || row.index || "")
+    ).toLowerCase();
+    return activeTags.every(function (tag) {
+      return blob.indexOf(String(tag).toLowerCase()) >= 0;
+    });
+  }
+
+  function loadPickerTagGroups(cb) {
+    cb = typeof cb === "function" ? cb : function () {};
+    if (global.DamSearch && typeof global.DamSearch.loadSearchOnly === "function") {
+      global.DamSearch.loadSearchOnly().then(function (si) {
+        cb((si && si.tag_groups) || {});
+      }).catch(function () {
+        cb((global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.tag_groups) || {});
+      });
+      return;
+    }
+    cb((global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.tag_groups) || {});
   }
 
   function assocSearchMinChars(kind) {
@@ -448,7 +715,17 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  var ASSOC_CSS_TOKEN = "assocHoldRingSeed20260726a";
+  var ASSOC_CSS_TOKEN = "assocSearchNoFreeze20260726i";
+  var PICKER_LIST_CAP = 80;
+  var PICKER_TAG_GROUP_ORDER = ["marka", "autor", "skojarzenia", "przeznaczenie", "produkt", "kanal"];
+  var PICKER_TAG_GROUP_LABELS = {
+    marka: "Marka",
+    autor: "Autor",
+    skojarzenia: "Skojarzenia",
+    przeznaczenie: "Przeznaczenie",
+    produkt: "Produkt",
+    kanal: "Kanał",
+  };
   /** Keyboard Shift latch — mouseleave/mousemove must not clear while key is down. */
   var shiftKeyDown = false;
 
@@ -511,13 +788,15 @@
       ".dam-assoc-edit-popover__opt-row .dam-assoc-edit-popover__opt{flex:1 1 auto;min-width:0;}" +
       ".dam-assoc-edit-popover__opt{display:flex!important;flex-direction:row;align-items:center;gap:10px;" +
       "width:100%;min-height:64px;padding:8px 10px!important;border-radius:10px;box-sizing:border-box;}" +
-      ".dam-assoc-edit-popover__thumb-wrap{flex:0 0 52px;}" +
+      ".dam-assoc-edit-popover__thumb-wrap{flex:0 0 52px;width:52px;height:52px;border-radius:8px;" +
+      "overflow:hidden;background:linear-gradient(180deg,#faf9fc 0%,#f3f1f7 100%);" +
+      "border:1px solid #ececf1;display:flex;align-items:center;justify-content:center;}" +
       ".dam-assoc-edit-popover__check{flex:0 0 22px;}" +
-      ".dam-assoc-edit-popover__thumb{width:52px!important;height:52px!important;object-fit:contain;" +
-      "border-radius:8px;background:#f4f4f6;border:1px solid #ececf1;}" +
+      ".dam-assoc-edit-popover__thumb{width:100%!important;height:100%!important;max-width:100%;max-height:100%;" +
+      "object-fit:contain;border-radius:0;background:transparent;border:none;}" +
       ".dam-assoc-edit-popover__meta{min-width:0;overflow:hidden;}" +
       ".dam-assoc-edit-popover__label{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
-      "font-size:13px;font-weight:600;color:#464255;}" +
+      "font-size:13px;font-weight:400;color:#464255;line-height:1.35;}" +
       /* Tagi jak na kartach viz (DK / BATONY / Mixy / PL) — nie tiny cut-off */
       ".dam-assoc-edit-popover__tags{display:flex;flex-wrap:wrap;gap:4px;max-height:none;overflow:visible;margin-top:4px;}" +
       ".dam-assoc-edit-popover__tags .dam-viz-badge{" +
@@ -530,6 +809,20 @@
       "border:1px solid #e7e7ec;border-radius:7px;background:#fff;color:#6b6b76;cursor:pointer;font-size:14px;" +
       "transition:background .12s ease,color .12s ease,border-color .12s ease;}" +
       ".dam-assoc-edit-popover__row-btn:hover{background:#f8f4fd;color:var(--dam-primary,#ab54db);border-color:#e2d3f2;}" +
+      ".dam-assoc-edit-popover__opt-row--revision{margin-left:18px;opacity:.96;}" +
+      ".dam-assoc-edit-popover__opt--product .dam-assoc-edit-popover__label{font-weight:500;}" +
+      ".dam-assoc-edit-popover__tag-filters-wrap{grid-area:tagfilters;padding:0 14px;border-bottom:1px solid #ececf2;}" +
+      ".dam-assoc-edit-popover__tag-filters{display:flex;gap:10px;align-items:stretch;padding:20px 0;min-height:0;}" +
+      ".dam-assoc-edit-popover__tag-filters-nav{flex:0 0 132px;display:flex;flex-direction:column;gap:6px;}" +
+      ".dam-assoc-edit-popover__tag-filters-nav select{width:100%;font-size:12px;padding:6px 8px;border-radius:8px;border:1px solid #e7e7ec;background:#fff;}" +
+      ".dam-assoc-edit-popover__tag-filters-viewport{flex:1 1 auto;overflow:hidden;position:relative;min-width:0;}" +
+      ".dam-assoc-edit-popover__tag-filters-track{display:flex;flex-direction:column;transition:transform .15s ease;will-change:transform;}" +
+      ".dam-assoc-edit-popover__tag-filters-page{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;min-height:88px;}" +
+      ".dam-assoc-edit-popover__tag-group-row{display:flex;align-items:flex-start;gap:8px;min-height:36px;}" +
+      ".dam-assoc-edit-popover__tag-group-label{flex:0 0 92px;font-size:11px;font-weight:600;color:#8b8d97;padding-top:6px;}" +
+      ".dam-assoc-edit-popover__tag-group-pills{display:flex;flex-wrap:wrap;gap:4px;min-width:0;}" +
+      ".dam-assoc-edit-popover__tag-group-pills .dam-viz-badge{font-size:11px!important;padding:4px 9px!important;cursor:pointer;}" +
+      ".dam-assoc-edit-popover__tag-group-pills .dam-viz-badge.is-active{outline:2px solid var(--dam-primary,#ab54db);outline-offset:1px;}" +
       ".dam-assoc-edit-popover__opt.is-pinned:not(.is-selected) .dam-assoc-edit-popover__check{color:#e2506b;}" +
       ".dam-assoc-edit-popover__opt.is-pinned .dam-assoc-edit-popover__check{width:22px;font-size:17px;}" +
       ".dam-assoc-edit-popover__opt.is-preview-active{background:#f8f4fd!important;" +
@@ -1042,10 +1335,15 @@
     function paintPicker(fi) {
       var products = (fi && fi.products) || [];
       var materialEntries = [];
+      var productSearchHits = [];
+      var pickerActiveTags = [];
+      var pickerTagPage = 0;
+      var listRenderToken = 0;
       var selected = {};
       var pinnedIds;
+      var expandedProductId = null;
       if (opts.productSearchForVariants) {
-        /* Viz: pinned = warianty stripu; wyszukiwarka = produkty z indeksu (jak „Dodaj produkty”). */
+        /* Viz: pinned = warianty stripu; wyszukiwarka = produkty → rozwijane rewizje. */
         pinnedIds = (opts.pinnedIds || []).slice();
         selected = {};
       } else {
@@ -1130,12 +1428,13 @@
               return x && x.id === id;
             });
           if (material) {
+            var rowM = brandingEntryToPickerRow(material) || material;
             return {
-              id: material.id,
-              label: material.name || material.label || material.title || material.id,
-              thumb: material.thumb || material.thumb_url || "",
-              sub: material.marketing_id || material.index || material.id || "",
-              path: material.path || "",
+              id: rowM.id,
+              label: shortAssocLabel(rowM.label || rowM.name || rowM.title),
+              thumb: rowM.thumb || brandingThumbUrl(rowM),
+              sub: rowM.marketing_id || rowM.index || marketingIdForBranding(rowM) || "",
+              path: rowM.path || "",
             };
           }
         } else if (opts.kind === "variant") {
@@ -1148,12 +1447,13 @@
                 return x && x.id === id;
               });
             if (matV) {
+              var rowV = brandingEntryToPickerRow(matV) || matV;
               return {
-                id: matV.id,
-                label: shortAssocLabel(matV.name || matV.label || matV.title || matV.id),
-                thumb: matV.thumb || matV.thumb_url || PLACEHOLDER_SVG,
-                sub: matV.marketing_id || matV.index || matV.id || "",
-                path: matV.path || "",
+                id: rowV.id,
+                label: shortAssocLabel(rowV.label || rowV.name),
+                thumb: rowV.thumb || brandingThumbUrl(rowV),
+                sub: rowV.marketing_id || rowV.index || marketingIdForBranding(rowV) || "",
+                path: rowV.path || "",
               };
             }
           }
@@ -1161,22 +1461,39 @@
             return x && x.id === id;
           });
           if (v) {
+            var matCand =
+              materialEntries.find(function (x) {
+                return x && x.id === id;
+              }) || v;
+            var rowCand = brandingEntryToPickerRow(matCand) || matCand;
             return {
-              id: v.id,
-              label: shortAssocLabel(v.name || v.label || v.id),
+              id: rowCand.id || v.id,
+              label: shortAssocLabel(rowCand.label || rowCand.name || v.name || v.label),
               thumb:
+                rowCand.thumb ||
                 v.thumb ||
                 v.thumb_url ||
+                brandingThumbUrl(rowCand) ||
                 (v.path && global.DamMediaPreview ? global.DamMediaPreview.previewUrl(v.path, v) : ""),
-              sub: v.index || v.marketing_id || normIndexKey(v.id) || "",
+              sub:
+                rowCand.marketing_id ||
+                rowCand.index ||
+                v.marketing_id ||
+                marketingIdForBranding(rowCand) ||
+                normIndexKey(v.index || v.id) ||
+                "",
               langs: v.lang ? [v.lang] : v.langs || [],
-              path: v.path || "",
+              path: rowCand.path || v.path || "",
             };
           }
           if (opts.productSearchForVariants) {
-            var pv = products.find(function (x) {
-              return x && x.id === id;
-            });
+            var pv =
+              productSearchHits.find(function (x) {
+                return x && x.id === id;
+              }) ||
+              products.find(function (x) {
+                return x && x.id === id;
+              });
             if (pv) {
               var rev0p = (pv.revisions && pv.revisions[0]) || {};
               return {
@@ -1211,7 +1528,13 @@
             };
           }
         }
-        return { id: id, label: id, thumb: PLACEHOLDER_SVG, sub: "", path: "" };
+        return {
+          id: id,
+          label: isLegacyBrId(id) ? "Materiał" : id,
+          thumb: PLACEHOLDER_SVG,
+          sub: isLegacyBrId(id) && global.DamMarketingId ? global.DamMarketingId.format({ id: id }) : "",
+          path: "",
+        };
       }
 
       function checkIconHtml(on, pinned) {
@@ -1276,10 +1599,14 @@
       function optionButtonHtml(it, pinned) {
         var on = !!selected[it.id];
         return (
-          '<div class="dam-assoc-edit-popover__opt-row">' +
+          '<div class="dam-assoc-edit-popover__opt-row' +
+          (it.isRevisionRow ? " dam-assoc-edit-popover__opt-row--revision" : "") +
+          '">' +
           '<button type="button" class="dam-assoc-edit-popover__opt' +
           (on ? " is-selected" : "") +
           (pinned ? " is-pinned" : "") +
+          (it.isRevisionRow ? " dam-assoc-edit-popover__opt--revision" : "") +
+          (it.isProductRow ? " dam-assoc-edit-popover__opt--product" : "") +
           '" data-id="' +
           esc(it.id) +
           '">' +
@@ -1311,6 +1638,12 @@
         scope.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
           var id = btn.getAttribute("data-id");
           function toggle() {
+            if (opts.productSearchForVariants && String(id).indexOf("rev:") !== 0) {
+              expandedProductId = expandedProductId === id ? null : id;
+              var sExpand = pop.querySelector("#damAssocEditSearch");
+              renderOptions(sExpand ? sExpand.value : "");
+              return;
+            }
             if (selected[id]) delete selected[id];
             else {
               if (opts.kind === "product") {
@@ -1325,6 +1658,11 @@
                 }
               }
               selected[id] = true;
+            }
+            if (opts.productSearchForVariants) {
+              var sRev = pop.querySelector("#damAssocEditSearch");
+              renderOptions(sRev ? sRev.value : "");
+              return;
             }
             pinnedIds = Object.keys(selected).filter(function (sid) {
               return selected[sid];
@@ -1430,6 +1768,145 @@
         activatePreviewFromBtn(pinnedEl.querySelector(".dam-assoc-edit-popover__opt[data-id]"));
       }
 
+      function showListMessage(msg) {
+        var listEl = pop.querySelector(".dam-assoc-edit-popover__list");
+        if (!listEl) return;
+        listEl.innerHTML = '<p class="dam-tag-edit-popover__empty">' + esc(msg) + "</p>";
+      }
+
+      function renderPickerTagFilters() {
+        if (!pickerUsesBrandingApi(opts)) return;
+        var host = pop.querySelector("#damAssocEditTagFilters");
+        if (!host) return;
+        loadPickerTagGroups(function (tagGroups) {
+          if (!pickerStillOpen() || !host.isConnected) return;
+          var pages = [];
+          var page = [];
+          PICKER_TAG_GROUP_ORDER.forEach(function (gk) {
+            var chips = (tagGroups && tagGroups[gk]) || [];
+            if (!chips.length && gk === "produkt" && tagGroups && tagGroups.smak) {
+              chips = tagGroups.smak.slice();
+            }
+            chips = chips.slice(0, 24).map(function (label) {
+              return { key: String(label), label: String(label) };
+            });
+            if (!chips.length) return;
+            page.push({ key: gk, label: PICKER_TAG_GROUP_LABELS[gk] || gk, chips: chips });
+            if (page.length === 2) {
+              pages.push(page);
+              page = [];
+            }
+          });
+          if (page.length) pages.push(page);
+          if (!pages.length) {
+            host.innerHTML = "";
+            return;
+          }
+          if (pickerTagPage >= pages.length) pickerTagPage = 0;
+          var nav =
+            '<div class="dam-assoc-edit-popover__tag-filters-nav">' +
+            '<select id="damAssocEditTagNav" aria-label="Kategoria tagów">' +
+            pages
+              .map(function (_p, idx) {
+                var labels = _p.map(function (g) {
+                  return g.label;
+                }).join(" · ");
+                return (
+                  '<option value="' +
+                  idx +
+                  '"' +
+                  (idx === pickerTagPage ? " selected" : "") +
+                  ">" +
+                  esc(labels) +
+                  "</option>"
+                );
+              })
+              .join("") +
+            "</select></div>";
+          var track =
+            '<div class="dam-assoc-edit-popover__tag-filters-viewport"><div class="dam-assoc-edit-popover__tag-filters-track" style="transform:translateY(-' +
+            pickerTagPage * 96 +
+            'px)">';
+          pages.forEach(function (pg) {
+            track += '<div class="dam-assoc-edit-popover__tag-filters-page">';
+            pg.forEach(function (group) {
+              track +=
+                '<div class="dam-assoc-edit-popover__tag-group-row" data-group="' +
+                esc(group.key) +
+                '"><span class="dam-assoc-edit-popover__tag-group-label">' +
+                esc(group.label) +
+                ':</span><span class="dam-assoc-edit-popover__tag-group-pills">';
+              group.chips.forEach(function (chip) {
+                var active = pickerActiveTags.indexOf(chip.key) >= 0;
+                track +=
+                  '<button type="button" class="dam-viz-badge dam-viz-badge--subcat' +
+                  (active ? " is-active" : "") +
+                  '" data-picker-tag="' +
+                  esc(chip.key) +
+                  '">' +
+                  esc(chip.label) +
+                  "</button>";
+              });
+              track += "</span></div>";
+            });
+            track += "</div>";
+          });
+          track += "</div></div>";
+          host.innerHTML = nav + track;
+          var navSel = host.querySelector("#damAssocEditTagNav");
+          if (navSel) {
+            navSel.addEventListener("change", function () {
+              pickerTagPage = parseInt(navSel.value, 10) || 0;
+              renderPickerTagFilters();
+              scheduleListPaint(pop.querySelector("#damAssocEditSearch")
+                ? pop.querySelector("#damAssocEditSearch").value
+                : "");
+            });
+          }
+          host.querySelectorAll("[data-picker-tag]").forEach(function (btn) {
+            btn.addEventListener("click", function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              var tag = btn.getAttribute("data-picker-tag") || "";
+              if (!tag) return;
+              var ix = pickerActiveTags.indexOf(tag);
+              if (ix >= 0) pickerActiveTags.splice(ix, 1);
+              else pickerActiveTags.push(tag);
+              renderPickerTagFilters();
+              scheduleListPaint(
+                pop.querySelector("#damAssocEditSearch")
+                  ? pop.querySelector("#damAssocEditSearch").value
+                  : ""
+              );
+            });
+          });
+          var viewport = host.querySelector(".dam-assoc-edit-popover__tag-filters-viewport");
+          if (viewport) {
+            viewport.addEventListener(
+              "wheel",
+              function (e) {
+                if (pages.length <= 1) return;
+                e.preventDefault();
+                if (e.deltaY > 0 && pickerTagPage < pages.length - 1) pickerTagPage++;
+                else if (e.deltaY < 0 && pickerTagPage > 0) pickerTagPage--;
+                renderPickerTagFilters();
+              },
+              { passive: false }
+            );
+          }
+        });
+      }
+
+      function scheduleListPaint(filter) {
+        var token = ++listRenderToken;
+        var run = function () {
+          if (token !== listRenderToken || !pickerStillOpen()) return;
+          renderOptions(filter);
+        };
+        if (typeof requestAnimationFrame === "function") requestAnimationFrame(run);
+        else setTimeout(run, 0);
+      }
+
       function renderOptions(filter) {
         var q = String(filter || "")
           .toLowerCase()
@@ -1437,9 +1914,14 @@
         var listEl = pop.querySelector(".dam-assoc-edit-popover__list");
         if (!listEl) return;
         var minQ = 0;
-        if (opts.kind === "variant" && !opts.productSearchForVariants && !opts.brandingSearch) {
+        /* Viz-warianty / wariant-pool: min 2 znaki. GOLDEN product: minQ=0 (browse pierwsze CAP). */
+        if (opts.productSearchForVariants) {
+          minQ = 2;
+        } else if (opts.kind === "variant" && !opts.productSearchForVariants && !opts.brandingSearch) {
           minQ = 2;
         } else if (opts.kind === "material" && !materialEntries.length) {
+          minQ = 2;
+        } else if (opts.kind === "variant" && opts.brandingSearch && !materialEntries.length) {
           minQ = 2;
         }
         if (minQ && q.length < minQ) {
@@ -1459,55 +1941,43 @@
         var seenIdx = {};
         var items = [];
         if (opts.kind === "variant" && opts.productSearchForVariants) {
-          products.forEach(function (p) {
-            if (!p || !p.id || pinnedSet[p.id]) return;
-            if (seenIds[p.id]) return;
-            if (productMatchesExclude(p, excl)) return;
-            if (opts.filterType !== "all" && isVisualizationLike(p)) return;
-            var idxKey = normIndexKey(productIndexOf(p));
-            if (idxKey && seenIdx[idxKey]) return;
-            if (q && productSearchBlob(p).indexOf(q) === -1) return;
-            seenIds[p.id] = true;
-            if (idxKey) seenIdx[idxKey] = true;
-            var rev0 = (p.revisions && p.revisions[0]) || {};
-            items.push({
-              id: p.id,
-              label: p.display_name || p.name || p.id,
-              thumb: productThumb(p),
-              sub: productIndexOf(p) || p.id,
-              path: p.path || "",
-              brand: p.brand || "",
-              category: p.category || "",
-              subcategory: p.subcategory_label || "",
-              langs: rev0.langs || [],
-            });
+          /* TYLKO DamSearch hits — NIGDY fallback na pełne products[] (to zacinało UI). */
+          items = collectProductPickerRows(productSearchHits, {
+            pinnedSet: pinnedSet,
+            excl: excl,
+            q: "",
+            filterType: opts.filterType || "product",
+            cap: PICKER_LIST_CAP,
+            asProductRow: true,
+            expandedProductId: expandedProductId,
           });
         } else if (opts.kind === "variant" && opts.brandingSearch) {
-          (materialEntries.length ? materialEntries : opts.materialCandidates || []).forEach(
-            function (material) {
-              if (!material || !material.id || pinnedSet[material.id] || seenIds[material.id]) {
-                return;
-              }
+          (materialEntries.length ? materialEntries : []).forEach(function (material) {
+            if (items.length >= PICKER_LIST_CAP) return;
+            if (!material || !material.id || pinnedSet[material.id] || seenIds[material.id]) {
+              return;
+            }
+            var row = brandingEntryToPickerRow(material) || material;
+            if (!materialMatchesPickerTags(row, pickerActiveTags)) return;
               var blob = (
-                (material.name || material.label || material.title || "") +
+                (row.label || row.name || "") +
                 " " +
-                (material.id || "") +
+                (row.id || "") +
                 " " +
-                (material.marketing_id || material.index || "") +
+                (row.marketing_id || row.index || "") +
                 " " +
-                (material.search_blob || "")
+                (row.search_blob || "")
               ).toLowerCase();
               if (q && blob.indexOf(q) === -1) return;
-              seenIds[material.id] = true;
+              seenIds[row.id] = true;
               items.push({
-                id: material.id,
-                label: shortAssocLabel(material.name || material.label || material.title || material.id),
-                thumb: material.thumb || material.thumb_url || PLACEHOLDER_SVG,
-                sub: material.marketing_id || material.index || "",
-                path: material.path || "",
+                id: row.id,
+                label: shortAssocLabel(row.label || row.name),
+                thumb: row.thumb || brandingThumbUrl(row),
+                sub: row.marketing_id || row.index || marketingIdForBranding(row) || "",
+                path: row.path || "",
               });
-            }
-          );
+          });
         } else if (opts.kind === "variant") {
           (opts.variantCandidates || []).forEach(function (v) {
             if (!v || !v.id || pinnedSet[v.id]) return;
@@ -1535,57 +2005,55 @@
         } else if (opts.kind === "material") {
           (materialEntries.length ? materialEntries : opts.materialCandidates || []).forEach(
             function (material) {
-              if (!material || !material.id || pinnedSet[material.id] || seenIds[material.id]) {
-                return;
-              }
-              var blob = (
-                (material.name || material.label || material.title || "") +
-                " " +
-                (material.id || "") +
-                " " +
-                (material.marketing_id || material.index || "") +
-                " " +
-                (material.search_blob || "")
-              ).toLowerCase();
-              if (q && blob.indexOf(q) === -1) return;
-              seenIds[material.id] = true;
-              items.push({
-                id: material.id,
-                label: shortAssocLabel(material.name || material.label || material.title || material.id),
-                thumb: material.thumb || material.thumb_url || PLACEHOLDER_SVG,
-                sub: material.marketing_id || material.index || "",
-                path: material.path || "",
-              });
+            if (items.length >= PICKER_LIST_CAP) return;
+            if (!material || !material.id || pinnedSet[material.id] || seenIds[material.id]) {
+              return;
             }
-          );
-        } else {
-          products.forEach(function (p) {
-            if (!p || !p.id || pinnedSet[p.id]) return;
-            if (seenIds[p.id]) return;
-            /* Zakaz self-assoc / petli + dedupe po indeksie */
-            if (productMatchesExclude(p, excl)) return;
-            /* W kontekscie produktu/viz: nie proponuj wizualizacji jako "produktow" */
-            if (opts.filterType !== "all" && isVisualizationLike(p)) return;
-            var idxKey = normIndexKey(productIndexOf(p));
-            if (idxKey && seenIdx[idxKey]) return;
-            if (q && productSearchBlob(p).indexOf(q) === -1) return;
-            seenIds[p.id] = true;
-            if (idxKey) seenIdx[idxKey] = true;
-            var rev0 = (p.revisions && p.revisions[0]) || {};
+            var row = brandingEntryToPickerRow(material) || material;
+            if (!materialMatchesPickerTags(row, pickerActiveTags)) return;
+            var blob = (
+              (row.label || row.name || "") +
+              " " +
+              (row.id || "") +
+              " " +
+              (row.marketing_id || row.index || "") +
+              " " +
+              (row.search_blob || "")
+            ).toLowerCase();
+            if (q && blob.indexOf(q) === -1) return;
+            seenIds[row.id] = true;
             items.push({
-              id: p.id,
-              label: p.display_name || p.name || p.id,
-              thumb: productThumb(p),
-              sub: productIndexOf(p) || p.id,
-              path: p.path || "",
-              brand: p.brand || "",
-              category: p.category || "",
-              subcategory: p.subcategory_label || "",
-              langs: rev0.langs || [],
+              id: row.id,
+              label: shortAssocLabel(row.label || row.name),
+              thumb: row.thumb || brandingThumbUrl(row),
+              sub: row.marketing_id || row.index || marketingIdForBranding(row) || "",
+              path: row.path || "",
             });
           });
+        } else if (opts.kind === "product") {
+          /* GOLDEN: browse (q<2) = lokalny for+break; filtr (q>=2) = tylko DamSearch hits
+             (jak #damFileSearch) — pełny scan products[] przy rzadkim q zacinał UI. */
+          if (q.length >= 2) {
+            items = collectProductPickerRows(productSearchHits, {
+              pinnedSet: pinnedSet,
+              excl: excl,
+              q: "",
+              filterType: opts.filterType || "product",
+              cap: PICKER_LIST_CAP,
+              asProductRow: false,
+            });
+          } else {
+            items = collectProductPickerRows(products, {
+              pinnedSet: pinnedSet,
+              excl: excl,
+              q: "",
+              filterType: opts.filterType || "product",
+              cap: PICKER_LIST_CAP,
+              asProductRow: false,
+            });
+          }
         }
-        items = items.slice(0, 120);
+        items = items.slice(0, PICKER_LIST_CAP);
         if (!items.length) {
           listEl.innerHTML = q
             ? '<p class="dam-tag-edit-popover__empty">Brak wyników dla tego wyszukiwania.</p>'
@@ -1634,7 +2102,7 @@
       pop._damAssocRefresh = function () {
         renderPinned();
         var s = pop.querySelector("#damAssocEditSearch");
-        renderOptions(s ? s.value : "");
+        renderOptionsDebounced(s ? s.value : "");
       };
       overlay.appendChild(pop);
       document.body.appendChild(overlay);
@@ -1646,37 +2114,91 @@
         var run = function () {
           renderOptions(filter);
         };
-        if (typeof requestAnimationFrame === "function") {
-          requestAnimationFrame(run);
-        } else {
-          setTimeout(run, 0);
-        }
+        if (typeof requestAnimationFrame === "function") requestAnimationFrame(run);
+        else setTimeout(run, 0);
       }, 180);
       var materialFetchTimer = null;
+      var productFetchTimer = null;
 
+      /* API jak lekki odpowiednik #damBrandingSearch — material + brandingSearch warianty. */
       function scheduleMaterialSearchFetch(q) {
-        if (opts.kind !== "material") return;
+        if (!pickerUsesBrandingApi(opts)) return;
         clearTimeout(materialFetchTimer);
         var query = String(q || "").trim();
         if (query.length < 2) return;
+        showListMessage("Szukam materiałów…");
         materialFetchTimer = setTimeout(function () {
           if (!pickerStillOpen()) return;
           loadBrandingMaterialCandidates(
             Object.assign({}, opts, { bootstrapQuery: query })
           ).then(function (entries) {
             if (!pickerStillOpen()) return;
-            if (entries && entries.length) materialEntries = entries;
+            if (entries && entries.length) {
+              materialEntries = entries.slice(0, PICKER_LIST_CAP);
+            }
             renderPinned();
             renderOptionsDebounced(search ? search.value : query);
           });
         }, 220);
       }
 
+      /* DamSearch = ten sam silnik co #damFileSearch (indeks). Nie full products.forEach. */
+      function scheduleProductSearchFetch(q) {
+        if (!(opts.productSearchForVariants || opts.kind === "product")) return;
+        clearTimeout(productFetchTimer);
+        var query = String(q || "").trim();
+        if (query.length < 2) {
+          productSearchHits = [];
+          return;
+        }
+        showListMessage("Szukam produktów…");
+        productFetchTimer = setTimeout(function () {
+          if (!pickerStillOpen()) return;
+          var searchFn = global.DamSearch && global.DamSearch.search;
+          if (!searchFn) {
+            showListMessage("Brak wyszukiwarki produktów — odśwież stronę.");
+            return;
+          }
+          searchFn(query, { includeArchive: false })
+            .then(function (res) {
+              if (!pickerStillOpen()) return;
+              var ids = ((res && res.products) || []).slice(0, PICKER_LIST_CAP);
+              productSearchHits = ids
+                .map(function (id) {
+                  return global.DamSearch.productById(id);
+                })
+                .filter(Boolean);
+              renderOptionsDebounced(query);
+            })
+            .catch(function () {
+              if (!pickerStillOpen()) return;
+              productSearchHits = [];
+              showListMessage("Błąd wyszukiwania produktów.");
+            });
+        }, 220);
+      }
+
       if (search) {
-        /* Bez autofocus — WebView2 freeze (code-doctrine §12). */
+        /* Bez autofocus — WebView2 freeze (code-doctrine §12).
+           q>=2 na product / viz-warianty → TYLKO DamSearch (globalny silnik). */
         search.addEventListener("input", function () {
-          renderOptionsDebounced(search.value);
-          scheduleMaterialSearchFetch(search.value);
+          var raw = search.value;
+          var qq = String(raw || "").trim();
+          if ((opts.productSearchForVariants || opts.kind === "product") && qq.length >= 2) {
+            scheduleProductSearchFetch(raw);
+            return;
+          }
+          if (opts.productSearchForVariants && qq.length < 2) {
+            productSearchHits = [];
+            showListMessage("Wpisz co najmniej 2 znaki (indeks / nazwa produktu)…");
+            return;
+          }
+          if (pickerUsesBrandingApi(opts) && qq.length >= 2) {
+            scheduleMaterialSearchFetch(raw);
+            return;
+          }
+          renderOptionsDebounced(raw);
+          scheduleMaterialSearchFetch(raw);
         });
       }
 
@@ -1686,11 +2208,14 @@
 
       materialEntries = (opts.materialCandidates || []).slice();
       renderPinned();
+      /* Init jak 5fb3493 — golden product → renderOptionsDebounced(""); brandingSearch → fetch seed. */
       if (opts.kind === "material") {
         if (opts.bootstrapQuery) {
           loadBrandingMaterialCandidates(opts).then(function (entries) {
             if (!pickerStillOpen()) return;
-            if (entries && entries.length) materialEntries = entries;
+            if (entries && entries.length) {
+              materialEntries = entries.slice(0, PICKER_LIST_CAP);
+            }
             renderPinned();
             renderOptionsDebounced(search ? search.value : "");
           });
@@ -1700,7 +2225,9 @@
       } else if (opts.kind === "variant" && opts.brandingSearch) {
         loadBrandingMaterialCandidates(opts).then(function (entries) {
           if (!pickerStillOpen()) return;
-          if (entries && entries.length) materialEntries = entries;
+          if (entries && entries.length) {
+            materialEntries = entries.slice(0, PICKER_LIST_CAP);
+          }
           renderPinned();
           renderOptionsDebounced(search ? search.value : "");
         });
@@ -1709,6 +2236,7 @@
       } else if (opts.kind === "variant") {
         if ((opts.variantCandidates || []).length <= 40) renderOptionsDebounced("");
       } else {
+        /* GOLDEN: kind=product */
         renderOptionsDebounced("");
       }
       activatePreviewFromBtn(
@@ -1723,7 +2251,9 @@
         var confirmEl = pop.querySelector("[data-confirm]");
         if (confirmEl) {
           confirmEl.onclick = function () {
-            var ids = Object.keys(selected);
+            var ids = Object.keys(selected).filter(function (k) {
+              return selected[k];
+            });
             if (opts.kind === "product") {
               ids = dedupeProductIds(ids, products, linkedMetaByIdFromRecords(
                 ids.map(function (pid) {
@@ -1731,11 +2261,24 @@
                 })
               ));
             }
-            closePicker();
+            if (opts.brandingSearch && opts.kind === "variant") {
+              ids = filterBrandingVariantIdsForPrimary(
+                opts.asset || {},
+                ids,
+                brandingPathById(materialEntries)
+              );
+            }
             if (typeof opts.onConfirmVariants === "function") {
-              opts.onConfirmVariants(ids);
+              var picks = ids.map(parseRevisionPickerKey).filter(Boolean);
+              if (opts.productSearchForVariants && !picks.length) {
+                toast("Rozwiń produkt i zaznacz wariant (folder rewizji).");
+                return;
+              }
+              closePicker();
+              opts.onConfirmVariants(picks.length ? picks : ids);
               return;
             }
+            closePicker();
             if (typeof opts.onConfirm === "function") opts.onConfirm(ids, selected);
           };
         }
@@ -1759,9 +2302,14 @@
     if (
       global._DAM_FILE_INDEX &&
       global._DAM_FILE_INDEX.products &&
-      global._DAM_FILE_INDEX.products.length
+      global._DAM_FILE_INDEX.products.length &&
+      !pickerSkipsWarmFileIndex(opts)
     ) {
       schedulePaintPicker(global._DAM_FILE_INDEX);
+      return;
+    }
+    if (pickerSkipsWarmFileIndex(opts)) {
+      schedulePaintPicker({ products: [] });
       return;
     }
     ensureFileIndex().then(function (fi) {
@@ -1789,7 +2337,7 @@
       bridgeUrl() +
       "/branding-search-picker?q=" +
       encodeURIComponent(String(opts.bootstrapQuery || "").trim()) +
-      "&limit=80" +
+      "&limit=120" +
       (include ? "&include=" + encodeURIComponent(include) : "");
     return fetch(url, { headers: { Accept: "application/json" } })
       .then(function (r) {
@@ -1799,19 +2347,15 @@
         return ((data && (data.entries || data.items || data.results)) || [])
           .map(function (entry) {
             if (!entry) return null;
-            return {
-              id: entry.id || entry.asset_id || "",
-              name: entry.title || entry.name || entry.label || entry.id || "",
-              label: entry.title || entry.name || entry.label || entry.id || "",
-              thumb: entry.thumb_url || entry.thumb || "",
-              thumb_url: entry.thumb_url || entry.thumb || "",
-              path: entry.path || "",
-              marketing_id: entry.marketing_id || entry.index || "",
-              search_blob: entry.search_blob || "",
-              linked_product_ids: entry.linked_product_ids || [],
-              linked_variant_ids: entry.linked_variant_ids || [],
-              folder_group_id: entry.folder_group_id || "",
-            };
+            if (entry.thumb_url && String(entry.thumb_url).indexOf("/media?") === 0) {
+              entry = Object.assign({}, entry, { thumb_url: bridgeUrl() + entry.thumb_url });
+            }
+            var row = brandingEntryToPickerRow(entry);
+            if (!row) return null;
+            row.linked_product_ids = entry.linked_product_ids || [];
+            row.linked_variant_ids = entry.linked_variant_ids || [];
+            row.folder_group_id = entry.folder_group_id || "";
+            return row;
           })
           .filter(function (entry) {
             return entry && entry.id;
@@ -2224,6 +2768,7 @@
         ctx.materialCandidates ||
         []
       ).slice();
+      /* 5fb3493 bootstrap + fallback indeksu gdy brak materials (pusty stan nie crashuje). */
       var bootstrapQuery = "";
       if (ctx.productContext) {
         bootstrapQuery =
@@ -2231,6 +2776,9 @@
           ctx.productContext.display_name ||
           ctx.productContext.name ||
           "";
+      }
+      if (!String(bootstrapQuery || "").trim()) {
+        bootstrapQuery = pickerBootstrapQueryFromCtx(ctx);
       }
       var prevMatIds = selectedIds.slice();
       var matPickerOpts = {
@@ -2259,10 +2807,11 @@
       var varPickerOpts = {
         kind: "variant",
         head: isVizProductPick
-          ? "Warianty produktu — wybierz produkt (indeks)"
+          ? "Warianty produktu — wybierz rewizję (folder)"
           : "Warianty materiału",
         productSearchForVariants: isVizProductPick,
         brandingSearch: isBrandingMat,
+        /* bootstrapQuery jak 5fb3493 — marketing_id/index assetu, nie agresywny pickerBootstrapQueryFromCtx */
         bootstrapQuery: isBrandingMat
           ? String(
               (asset && (asset.marketing_id || asset.index || asset.name)) ||

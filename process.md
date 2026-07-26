@@ -1,4 +1,178 @@
-﻿## 2026-07-26 - User: commit 4.0.48 + assoc picker UX unify (4.0.49)
+﻿## 2026-07-26 - COMMIT v4.0.57 assoc picker search freeze + macierz 20 commitów
+
+**Komenda/Akcja:** User: commit po fixach; porównaj 20 commitów + v3.1.5 vs 4.0.57; wyszukiwarka pickera ma nie zacinać UI; model v3.1.5 „Edytuj wszystko” jako golden search.
+
+**Log/Status:** Scoped commit (assoc picker only). sim-assoc-dodaj ALL PASS @4.0.57. node --check dam-assoc-edit.js OK.
+
+**Macierz commitów (assoc picker / search):**
+
+| Commit | Co działało | Co nie / regresja | Przyczyna |
+|--------|-------------|-------------------|-----------|
+| `2b3873a` v3.1.5 | Edytuj wszystko (viz) + search bez zacięć; prosty picker | Brak COMBO; dodawanie produktu słabe; mniej tagów | `renderOptions("")` od razu; `input→renderOptions` sync; `slice(0,120)`; mniejszy DOM |
+| `092821f` v3.2.0 | Dodawanie produktu UI OK | Zapis do DB niepewny | poza scope freeze |
+| `5fb3493` | Golden „Dodaj produkty”; unify UX; viz warianty product-index | Search przy dużym indeksie mógł scanować całość | warm file-index + lokalny filter; bez for+break |
+| `e91aba0` | Rozdzielenie pinned vs candidate pool | Viz warianty cold index | productSearchForVariants bez skip-warm |
+| `4.0.51` (uncommitted) | Edytuj produkty | Reszta CTA freeze / puste listy | async-only + wycięty materialCandidates seed |
+| `4.0.52-53` | Częściowy restore 5fb3493 | Search nadal sync scan | revert init bez for+break |
+| `4.0.54-55` | — | **Cały moduł SyntaxError** + skip-warm dla product | orphan `else` w renderOptions; product w pickerSkipsWarm |
+| `4.0.56` | Golden product restore | Search forEach full scan | `return` w forEach nie stopuje pętli |
+| **`4.0.57`** | for+break CAP; q≥2→DamSearch; viz skip cold; material→API | Runtime screenshot QA pickera **nie domknięte** | patrz fix poniżej |
+
+**v3.1.5 vs 4.0.57 — dlaczego tam działało:**
+1. `renderOptions(search.value)` **bez debounce** (4.0 ma 180ms + rAF).
+2. Browse q="" od razu — **brak minQ=2** na `kind=product` (Edytuj wszystko = product).
+3. Prostszy wiersz listy — mniej bindów (brak tag filters / COMBO footer w tej wersji).
+4. Indeks mniejszy / częściej warm na stronie z explorerem — viz 3.1.5 i tak woła `ensureFileIndex`, ale scan kończył się na slice(0,120) **po** pełnym forEach (teraz wiemy: przy ~8MB index to już za wolno).
+
+**Co zrobiono (4.0.57 — zachowujemy COMBO + nowy Dodaj z dysku):**
+- `collectProductPickerRows`: **for + break** zamiast forEach+return.
+- GOLDEN `kind=product`: warm file-index; browse q<2 → cap 120; q≥2 → **tylko** `DamSearch.search` (jak `#damFileSearch`).
+- `productSearchForVariants`: **pickerSkipsWarmFileIndex** — bez cold fetch na visualizations.
+- material/brandingSearch: API `/branding-search-picker` (jak `#damBrandingSearch`).
+- Bridge: guard pustego q w `resolve_branding_search_picker`.
+
+**Czego NIE zrobiono (świadomie):**
+- Pełny port 1:1 v3.1.5 (sync forEach bez DamSearch) — regresja perf przy obecnym file-index.
+- Zapis produktu do DB (v3.2.0 scope).
+- Browser screenshot PASS wszystkich 4 CTA po search (blocker: wymaga live Ctrl+F5 user / kolejna tura).
+- Commit całego dirty tree (111+ plików JSON/docs) — tylko scoped assoc.
+
+**15 podejść (ui-taste / reflect — analiza, nie wszystkie wdrożone):**
+1. v3.1.5 sync renderOptions — odrzucone (full scan).
+2. Debounce 180ms — zostaje (INP).
+3. DamSearch q≥2 — **wdrożone**.
+4. for+break CAP — **wdrożone**.
+5. skip warm index viz variants — **wdrożone**.
+6. API branding search — **wdrożone**.
+7. DocumentFragment batch DOM — odłożone.
+8. Virtual scroll listy — odłożone (120 cap wystarczy).
+9. Web Worker filter — odłożone.
+10. Precompute search_blob map — odłożone.
+11. rAF-only bez debounce product — częściowo (debounce+zachowane).
+12. SyntaxError fix 4.0.55 — **wdrożone wcześniej**.
+13. Golden never skip warm — **wdrożone**.
+14. Empty-q bridge guard — **wdrożone**.
+15. sim-assoc-dodaj regression gate — **PASS**.
+
+**Efekt/Fix:** git commit scoped; wersja 4.0.57; cache `4.0.57-assocSearchNoFreeze20260726i`.
+
+**Test:** sim-assoc-dodaj ALL PASS; node --check OK.
+
+**Źródła:** dam-assoc-edit.js, 2b3873a worktree, 5fb3493, doctrine §12, memory GOLDEN
+
+---
+
+## 2026-07-26 - User: linki do poprzednich wersji nie działają
+
+**Komenda/Akcja:** User: „nieprawda nie działają te strony” po liście URL 8765/8767/8769.
+
+**Log/Status:** curl przed fixem: :8765/:8766 OK; :8767/:8769 = connection refused (000). `start-dam-parallel-versions.ps1` ubija porty, ale procesy legacy nie wstały w czasie smoke. Ręczny start: `serve_browser.py` + 2× `serve_dam_instance.py`.
+
+**Efekt/Fix:** Po restarcie wszystkie 6 endpointów HTTP 200. Działające linki poniżej w odpowiedzi userowi.
+
+**Test/Ewaluacja:** curl 8765/8766/8767/8768/8769/8770 = 200.
+
+**Źródła:** scripts/ops/smoke-dam-ports.ps1, start-dam-parallel-versions.ps1
+
+---
+
+## 2026-07-26 - BASELINE + fix search/viz-warianty (4.0.57)
+
+**Stan wyjściowy (user):** wszystkie CTA otwierają; viz-warianty open→freeze; picker search zacina; `#damBrandingSearch`/`#vizSearch`/`#damFileSearch` OK.
+
+**Root cause:** (1) `forEach`+`return` przy CAP nie stopuje pętli → full file-index scan; (2) viz-warianty cold `ensureFileIndex` na visualizations; (3) fallback hits→products.
+
+**Fix v4.0.57:** `collectProductPickerRows` for+break; q≥2 product/viz → DamSearch only; viz-warianty skip-warm; material/brandingSearch → API `#damBrandingSearch`-style. Cache `4.0.57-assocSearchNoFreeze20260726i`.
+
+**Źródła:** dam-assoc-edit.js, dam-search.js, doctrine §12, memory GOLDEN
+
+---
+
+## 2026-07-26 - User: zepsuty GOLDEN + porównanie 10 commitów (4.0.56)
+
+**Komenda/Akcja:** Zepsuty golden „Dodaj produkty” branding; viz warianty nie; sugestie OK ale search zacina; branding warianty otwiera i zacina. Porównać z poprzednimi commitami.
+
+**Log/Status:** Diff vs `5fb3493`: root cause = `pickerSkipsWarmFileIndex` + async-only input dla `kind=product` (puste products). Restore v4.0.56: product znowu warm file-index + lokalny filter jak 5fb3493; input ZAWSZE `renderOptionsDebounced` najpierw; material API jak wcześniej; brandingSearch bootstrapQuery z asset.marketing_id; viz variants lokalny products + opcjonalny DamSearch bez blokady. Cache `4.0.56-assocGoldenRestore20260726h`.
+
+**Efekt/Fix:** Linki poniżej — Ctrl+F5. sim ALL PASS.
+
+**Źródła:** dam-assoc-edit.js vs 5fb3493, version 4.0.56, code-doctrine §12
+
+---
+
+## 2026-07-26 - User: zaciął się agent + picker freeze (4.0.55)
+
+**Komenda/Akcja:** User: wyszukiwarka w pickerach zacina UI; sugestie tylko 6300728/9; pusty stan materiałów blokuje; warianty viz dalej freeze; chip indeksu na kartach viz; miniatury bez białego wyrwania; agent nie może wisieć na browserze.
+
+**Log/Status:** v4.0.55: (1) naprawiono SyntaxError w `dam-assoc-edit.js` (`renderOptions` — orphan `else` po refactorze product branch — moduł w ogóle nie ładował się); (2) search input tylko async: `scheduleProductSearchFetch` (DamSearch) / `scheduleBrandingSearchFetch` (API); (3) `materialCandidates` z ctx + `pickerBootstrapQueryFromCtx`; (4) viz chip indeksu pod meta; (5) thumb picker `#f4f4f6` zamiast białego; cache `4.0.55-assocPickerSyntaxFix20260726g`. Smoke :8765/:8766 HTTP 200. sim-assoc-dodaj ALL PASS. Browser MCP przerwany (381s) — nie używany dalej.
+
+**Efekt/Fix:** Ctrl+F5 na visualizations/branding z nowym `?v=`. Test: Edytuj produkty/warianty (branding), Dodaj sugestie (viz bez materiałów, np. 6300783), Dodaj warianty (viz) — search po 2+ znakach bez freeze.
+
+**Źródła:** dam-assoc-edit.js, dam-viz.js, dam-brand.css, local_bridge.py, version 4.0.55
+
+---
+
+## 2026-07-26 - User: nie kazać restartu — agent robi sam + dalej freeze (4.0.53)
+
+**Komenda/Akcja:** User: nie mam prawa kazać restartu bridge — agent ma sam zrobić; dalej wszystko tnie.
+
+**Log/Status:** v4.0.53: pełny revert ścieżki open pickera do 5fb3493 — przywrócono `materialCandidates` z ctx (było `[]`!), usunięto tag filters + API-only input, debounce lokalny jak golden path; zachowano async viz variant search. Restart `serve_browser.py` wykonany przez agenta (:8765/:8766 HTTP 200). sim ALL PASS.
+
+**Efekt/Fix:** Bridge empty-q guard OK; JS `?v=4.0.53-assocPickerRevert20260726e`.
+
+**Źródła:** dam-assoc-edit.js, local_bridge.py, serve_browser restart
+
+---
+
+## 2026-07-26 - User: ZNOWU zepsute przyciski — restore + /reflect (4.0.52)
+
+**Komenda/Akcja:** Regresja 4.0.51 — wszystko crashuje oprócz „Edytuj produkty”; 6300478 zamarza całą app; przywrócić poprzednie działanie.
+
+**Log/Status:** Root cause: przy otwarciu material/brandingSearch picker wymuszono `loadBrandingMaterialCandidates({ bootstrapQuery: "" })` → bridge skanował cały branding-search-index; wycięto seed `materialCandidates` i `bootstrapQuery` wariantów. Fix v4.0.52: przywrócono init z 5fb3493 (bootstrapQuery z kontekstu, seed kandydatów, brak fetch bez q≥2); bridge guard pustego q; golden path product nietknięty. sim-assoc-dodaj ALL PASS.
+
+**Efekt/Fix:** Restart `python apps/desktop/serve_browser.py` + Ctrl+F5 z `?v=4.0.52-assocPickerRestore20260726d`.
+
+**Źródła:** dam-assoc-edit.js, local_bridge.py resolve_branding_search_picker, version 4.0.52
+
+---
+
+## 2026-07-26 - User: picker freeze 6300478, search zacina, 90vw, tagi (4.0.51)
+
+**Komenda/Akcja:** Freeze przy Dodaj warianty/sugestie; 6300728 OK / 6300478 freeze; wyszukiwarka zacina UI; picker 90vw + regular font; tagi jak branding skondensowane.
+
+**Log/Status:** v4.0.51: usunięto zwrot całego `__damBrandingIndex` w loadLinkedBrandingAssetsForProduct; picker bez sync scan; DamSearch.search async; material search tylko API; cap 80; tag filters scroll snap; 90vw.
+
+**Efekt/Fix:** Ctrl+F5 `?v=4.0.51-assocPickerFreezeFix20260726c` + restart serve_browser.py.
+
+**Źródła:** dam-assoc-edit.js, dam-media-preview.js, version 4.0.51
+
+---
+
+## 2026-07-26 - User: br-* stale indeksy w pickerze, miniatury, viz revision expand, sugestie freeze (4.0.50)
+
+**Komenda/Akcja:** Usunąć wyświetlanie starych `br-005510` jako etykiet; pokazać nazwę materiału + bubble M-SHOP*; miniatury; filtrować skojarzenia spoza folderu; viz warianty = klik produkt → rewizje; sugestie bez ładowania file-index.
+
+**Log/Status:** v4.0.50: `brandingEntryToPickerRow`, `filterBrandingVariantIdsForPrimary`, bridge `_light_branding_picker_entry` + title/thumb_url; material/branding picker skip `ensureFileIndex`; `productSearchForVariants` expand+rev pick bez nadpisywania pinnedIds; `mergeProductsFromVariantPicker` revisionPath. QA sim-assoc-dodaj PASS.
+
+**Efekt/Fix:** [branding](http://127.0.0.1:8765/branding.html?v=4.0.50-brLegacyPurge20260726b) [viz](http://127.0.0.1:8765/visualizations.html?v=4.0.50-brLegacyPurge20260726b)
+
+**Źródła:** dam-assoc-edit.js, dam-viz.js, local_bridge.py, version 4.0.50
+
+---
+
+## 2026-07-26 - User: br-* stale indeksy w pickerze, miniatury, viz revision expand, sugestie freeze (4.0.50)
+
+**Komenda/Akcja:** Usunąć wyświetlanie starych `br-005510` jako etykiet; pokazać nazwę materiału + bubble M-SHOP*; miniatury; filtrować skojarzenia spoza folderu; viz warianty = klik produkt → rewizje; sugestie bez ładowania file-index.
+
+**Log/Status:** v4.0.50: `brandingEntryToPickerRow`, `filterBrandingVariantIdsForPrimary`, bridge `_light_branding_picker_entry` + title/thumb_url; material/branding picker skip `ensureFileIndex`; `productSearchForVariants` expand+rev pick bez nadpisywania pinnedIds; `mergeProductsFromVariantPicker` revisionPath. QA sim-assoc-dodaj PASS.
+
+**Efekt/Fix:** [branding](http://127.0.0.1:8765/branding.html?v=4.0.50-brLegacyPurge20260726b) [viz](http://127.0.0.1:8765/visualizations.html?v=4.0.50-brLegacyPurge20260726b)
+
+**Źródła:** dam-assoc-edit.js, dam-viz.js, local_bridge.py, version 4.0.50
+
+---
+
+## 2026-07-26 - User: commit 4.0.48 + assoc picker UX unify (4.0.49)
 
 **Komenda/Akcja:** Commit poprawki freeze; viz warianty = wyszukiwanie produktów po indeksie jak branding; sugestie crash; branding warianty lista+tagi; footery globalne Wstecz|Dodaj z dysku|Zatwierdź.
 
@@ -31,6 +205,42 @@
 **Efekt/Fix:** Hold minus pokazuje ring przy kursorze; kafelek znika od razu; toast „Usunięto…” bez czekania na POST. `node --check` OK.
 
 **Źródła:** dam-assoc-edit.js, version 4.0.47, visualizations.html
+
+---
+
+## 2026-07-26 - User: audyt agenta 4.0.50 (Aplikacja szczegółowy opis) vs Reflect; freeze pickerów
+
+**Komenda/Akcja:** Porównanie zmian v4.0.50; czy Reflect zmniejszyłby błędy; freeze warianty/sugestie; wyszukiwarka; UI 90vw/tagi.
+
+**Log/Status:** Przegląd commitów 5fb3493/e91aba0 + diff uncommitted; transcript `1e5bbfd1-c534-4bbf-95ec-bb4cb68afcbf`. Hipoteza freeze: productSearchForVariants → ensureFileIndex; brandingSearch → load 120 przy pustym q; search → sync pętla po products.
+
+**Efekt/Fix:** Odpowiedź reflect po ludzku; skill final-deliverable już zaktualizowany pod język human.
+
+**Źródła:** dam-assoc-edit.js, local_bridge.py resolve_branding_search_picker, agent-transcripts/1e5bbfd1…
+
+---
+
+## 2026-07-26 - User: final /reflect ma brzmieć jak do człowieka, nie telegraf techniczny
+
+**Komenda/Akcja:** Przykład rozmowy critic→parent; odrzucenie skrótu „preflight [x]”; final = przebieg rozumowania + plan po ludzku; prawdziwość bez sztucznych 5 przelotów.
+
+**Log/Status:** final-deliverable.md §2 przepisany: język HARD, szablon po ludzku, opcjonalny appendix kodu.
+
+**Efekt/Fix:** Skill wymusza narrację jak w paste.txt (Sonnet critic + czytelny parent), nie suchą tabelę bramek.
+
+**Źródła:** final-deliverable.md, user feedback reflect format
+
+---
+
+## 2026-07-26 - User: format finalu /reflect — czytelna odpowiedź + handoff agenta
+
+**Komenda/Akcja:** Po /reflect agent ma pokazać sensowną odpowiedź dla człowieka + wnioski/instrukcje dla agenta; krytyk z atrybucją Sonnet osobno.
+
+**Log/Status:** Dodano `references/final-deliverable.md`; zaktualizowano critic-core (format krytyka + atrybucja), SKILL reflection-loop §4 Final, skill reflect.
+
+**Efekt/Fix:** Trzy warstwy: krytyk wewnętrzny → final user (podsumowanie, bramki, co dalej) → sekcja „Dla agenta (następna tura)”.
+
+**Źródła:** final-deliverable.md, wzorzec rozmowy DAM bind→paint/P1
 
 ---
 
@@ -859,7 +1069,18 @@
 **Źródła:** dam-assoc-edit.js, sim-assoc-dodaj.js, v4.0.5.
 
 ---
-## 2026-07-24 ~18:44 - Cursor Sync syncNow CONFLICT (1 plik)
+## 2026-07-26 ~15:35 - User: sync nie działa, 11 konfliktów, ręczny push skilli + naprawa wtyczki
+
+**Komenda/Akcja:** Przyciski Cursor Sync „nic nie robią”; syncNow CONFLICT x11; najpierw manual push skilli na git, potem napraw wtyczkę; `/SYNC-status`.
+
+**Log/Status:** Przyczyna: uszkodzony manifest (3 pliki zamiast ~1938). Regeneracja manifest, push `e094ad8` + `44e4a34`. rebuild-sync-state (1938 kl.). Wtyczka 0.9.6-inyfinn: skipConfirm syncNow, withProgress, stale manifest guard, isDualEditConflict, sidebar syncing UI. Deploy do extensions.
+
+**Efekt/Fix:** 141/143 skilli OK. User: **Developer: Reload Window**, potem Synchronizuj teraz.
+
+**Źródła:** skills-sync-status.json, regenerate-manifest.ps1, cursor-sync-dev 0.9.6.
+
+---
+
 
 **Komenda/Akcja:** syncNow failed — CONFLICT count 1, extension 0.9.5-inyfinn.
 

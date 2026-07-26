@@ -132,6 +132,22 @@ Zasady:
 
 ## 5. Weryfikacja: DOM/CDP vs screenshot
 
+### 5.0 HARD GATE: serwery zanim przeglądarka (wszyscy agenci)
+
+**Zasada usera:** brak odpowiedzi w **5 s** = port martwy; **nie czekaj** na navigate ani screenshot.
+
+Przed `browser_navigate`, screenshotem lub CDP UI:
+
+1. Smoke `:8765` (HTML) i `:8766` (`/health`) - `curl.exe --max-time 5` lub
+   `scripts/ops/smoke-dam-ports.ps1`.
+2. Nie 2xx w 5 s -> **nie otwieraj przeglądarki**. Start:
+   `python apps/desktop/serve_browser.py` (albo `run-dam.vbs`), smoke ponownie, **kontynuuj zadanie**.
+3. Browser MCP wiszący / interrupt po ~10 s+ -> awaria narzędzia; nie kończ tury na
+   „Navigated to…”. Timeout na każde curl/fetch/MCP. Raportuj blocker, jedź dalej
+   (kod, `node --check`, curl API).
+
+Reguła Cursor: `.cursor/rules/server-timeout-never-hang.mdc`.
+
 Regula repo (`verify-ui-after-changes.mdc`) to HARD GATE: po zmianie wizualnej
 robisz screenshot i CZYTASZ go narzedziem Read (vision). To zostaje.
 
@@ -340,6 +356,112 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
 
+- 2026-07-26 | picker search freeze vs global search | `#damBrandingSearch` / `#vizSearch`
+  / `#damFileSearch` OK; `#damAssocEditSearch` zacina cały UI; viz „Dodaj warianty”
+  otwiera i natychmiast zacina |
+  (1) `products.forEach` + `if (items.length>=CAP) return` — `return` w forEach NIE
+  przerywa pętli → O(n) po całym file-index na każdy keystroke; (2) viz-warianty
+  cold `ensureFileIndex` na stronie visualizations (branding ma już warm index);
+  (3) fallback `productSearchHits || products` wracał do full scan |
+  **Zasada:** global search = debounce + indeks/mała lista w RAM. Picker product/viz:
+  q≥2 → **tylko** `DamSearch.search` (jak explorer); browse golden q&lt;2 →
+  `collectProductPickerRows` z **for+break** na CAP; viz-warianty =
+  `pickerSkipsWarmFileIndex` (paint bez file-index) + DamSearch. NIGDY forEach po
+  całym `products[]` jako filtr wyszukiwania. Lekcja: v4.0.57.
+
+- 2026-07-26 | GOLDEN path regresja 4.0.54/55 | „Dodaj/Edytuj produkty” w brandingu
+  (zawsze działał) przestał działać; wiz warianty też; branding warianty otwiera i zacina |
+  `pickerSkipsWarmFileIndex` obejmował `kind==="product"` i `productSearchForVariants`
+  → `schedulePaintPicker({products:[]})` bez file-index; input szedł tylko w DamSearch
+  async i `return` przed lokalnym `renderOptionsDebounced`; odbiegało od 5fb3493 |
+  **Zasada HARD:** golden path product = warm `_DAM_FILE_INDEX` / `ensureFileIndex` +
+  lokalny browse z for+break (commit `5fb3493` + v4.0.57). NIGDY nie dodawaj
+  `kind==="product"` do skip-warm. Material/brandingSearch/productSearchForVariants
+  mogą malować bez products. Przy regresji: `git show 5fb3493:...dam-assoc-edit.js`.
+  Lekcja: v4.0.56/57.
+
+- 2026-07-26 | assoc picker search freeze | wyszukiwarka w pickerze zacina całe UI;
+  sugestie działają tylko dla 6300728/9; pusty stan „Brak skojarzonych materiałów”
+  blokuje CTA; v4.0.54 miał SyntaxError (orphan `else`) — moduł w ogóle nie ładował się |
+  (1) `renderOptionsDebounced` na `input` wołał sync `products.forEach` po całym
+  file-index (~8MB); (2) `materialCandidates = []` zerowało seed przy braku materiałów;
+  (3) fetch branding z `bootstrapQuery: ""` skanował cały indeks; (4) błąd składni
+  w `renderOptions` po refactorze product branch |
+  **Zasada:** picker search = async only: produkty/warianty viz → `DamSearch.search`;
+  materiały/warianty branding → `/branding-search-picker` (min. 2 znaki); nigdy sync
+  scan `products`/`file-index` w handlerze `input`; nigdy `materialCandidates = []`
+  gdy ctx ma `materialsList`; bootstrapQuery z `pickerBootstrapQueryFromCtx` (630xxxx
+  nawet bez linked materials); golden path „Edytuj produkty” nietknięty; agent
+  nie wisi na browser_navigate — curl/CDP 5–15s. Lekcja: v4.0.55.
+
+- 2026-07-26 | adaptery Assoc Edit w Viz | sugestie działały, ale produkty/warianty
+  wpadały w błąd lub blokadę | CTA bez materiału brandingowego przekazywały
+  `ctx.asset = null` do ścieżki POST wymagającej `asset_id`; dodatkowo sugestie
+  materiałów są relacją odwrotną (kontekst produktu), a nie edycją jednego assetu |
+  **Zasada:** shell `openMediaPicker` jest wspólny, ale adapter zapisu musi odpowiadać
+  domenie: branding product/variant -> `saveAssociations(assetCtx)`, Viz suggestions
+  -> patch `linked_product_ids` każdego materiału, Viz product variants ->
+  `onRefresh({addedVariantPath})` / `onRemoveProductVariant(variant_key)`. Nigdy nie
+  wywołuj `saveAssociations` bez `ctx.asset.id`; COMBO zwraca jawny payload `picked`.
+  Lekcja: v4.0.26.
+
+- 2026-07-26 | assoc freeze mimo MATCH served=workspace | user: brak reakcji CTA
+  mimo v4.0.20 i hash MATCH | (1) `openMediaPicker` robil `renderPinned` +
+  `renderOptions` + seed `materialCandidates` **w click stacku** przed return
+  (false-green static); (2) `bindVizAssocCtas` per-button + `_damVizAssocCtasBound`
+  gubil CTA dodane po pierwszym bind; (3) stale `dam-shell.js?v=4.0.19` w
+  branding.html (niezalezny cache bug, nie root cause freeze) | **Zasada:**
+  paint-first: shell + „Ładowanie…” sync; populate/fetch w `setTimeout(0)`;
+  CTA = jeden delegowany listener; budget click &lt;16ms (harness
+  `harness-assoc-click-timing.js`); served=workspace ≠ runtime PASS.
+  Lekcja: v4.0.21.
+
+- 2026-07-25 | assoc freeze / viz CTA | UI freeze po Dodaj/Edytuj sugestie|warianty
+  oraz Edytuj wszystko | (1) fat path `buildAssocMediaPickerUi` + sync index
+  bootstrap w HEAD `6e9462e`; (2) po restore 092821f warstwa 4.0.19 robila
+  `editBtn.click()` i `saveAssociations` bez `ctx.asset` dla viz variants;
+  (3) `ensureInjectedCss` budowal CSS string przed early-return | **Zasada:**
+  Assoc Edit = wspolny shell `#damAssocEditPopover` z jawnymi adapterami
+  (product / variant / material); COMBO osobno (`DamFolderPicker`);
+  `ensureInjectedCss` return PRZED concat; zapis: `DamApi.ensureSession` +
+  optimistic UI + status corner; nigdy `editBtn.click()` z CTA; nigdy
+  `asset-associations` bez assetCtx; browser circuit breaker (smoke 5s /
+  jedna proba ~10s). Lekcja wdrozenia: v4.0.20.
+
+- 2026-07-22 | explorer zaciety loader | caly panel na "ladowanie", pusty main,
+  tagi bez danych | init czekal na Promise chain: 8MB index + loadLifecycleStore +
+  bootLifecycleReconcile (admin: skan X: enforce_moves) + syncLifecycleFromDiskIndex
+  przed DamLoader.done() | **UI first:** loadExplorerMetaLight + index z timeoutem,
+  renderAll, DamLoader.done(), lifecycle w requestIdleCallback; fetchWithTimeout
+  na bridge (8-15s); usun debug fetch :7922. Regula serwerow: server-timeout-never-hang.mdc.
+- 2026-07-22 | serwery + browser MCP | agent robi `browser_navigate`, wisi 224s,
+  tura się urywa; user: curl też nie odpowiadał wcześniej | (a) :8765/:8766 down
+  lub zombie; (b) MCP browser hang nawet gdy curl OK | **5 s bez HTTP 2xx = martwe**
+  - smoke curl przed navigate; restart `serve_browser.py`; **nie czekać w nieskończoność**;
+  timeout na każde żądanie; po blockerze **kontynuuj pracę** (kod/test/process.md).
+  Skrypt: `scripts/ops/smoke-dam-ports.ps1`. Reguła: `.cursor/rules/server-timeout-never-hang.mdc`.
+- 2026-07-22 | stale Geex Demo shell | user widzi Demo/Layout/App/Features/Pages
+  + footer v1.00 zamiast DAM nav + `#damDashGrid` | (a) `dashboard.html` trzymał
+  markup Geex jako pre-rewrite (DamShell dopiero po JS); (b) SW `dam-page-1h-*`
+  oddawał cached HTML do 1h (cache-first) zanim network; (c) HTTP Cache-Control
+  max-age=3600 na HTML | HTML navigations = network-first + bump CACHE name;
+  serve_browser: no-cache na `.html`/`sw.js`; charset UTF-8 first; wyrzuć Demo
+  nav z markup dashboard (puste `ul`, DamShell wstrzykuje); anti-demo wipe
+  guard. Hard refresh gdy stary SW. index.html = Projekty (NIE demo).
+- 2026-07-22 | Geex customizer peek clipped | closed DOSTOSUJ ~sliver / "zniknal"
+  mimo translateX(100%-50px) i z=12600 | `.geex-customizer` zyl w
+  `.geex-main-content` z `overflow-x:clip` (dashboard widgets); fixed child
+  jest clipowany do prawej krawedzi main (~15px przed viewport) |
+  `mountCustomizerToBody()` przed peek bind; closed = translateX(calc(100%-50px))
+  + 50px `.dam-customizer-peek`; open = translateX(0) + fade content;
+  NIGDY nie montuj off-canvas pod overflow:clip/hidden.
+- 2026-07-22 | Geex customizer vs header | panel "Dostosuj wyglad" pod ikonami
+  headera / ledwo widoczny (15px) | (a) Geex z-index 99 < header 200;
+  (b) `"css" + /* comment */ + "more"` → `NaN` w inject string;
+  (c) `left`+`width`+`right` over-constrain fixed panel | customizer z≥12600,
+  header action z=60; NIGDY komentarz JS miedzy `+` w CSS concat; open via
+  `left:auto; right:-400px` → `.active { right:0 }` (nie `left: calc(100%-400px)`
+  razem z `right:0`).
 - 2026-07-21 | preview onerror ≠ Synology | tooltip "Synology Drive / brak sync"
   na kazdym padnietym `<img>` | onerror mylony z cloud-only | onerror = "Podglad
   niedostepny"; stan `online_only` TYLKO z `GET /file-availability` +
@@ -451,6 +573,13 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   7832 assetach | filtr `media_type === "raster"` (legacy) vs indeks z `image`/`vector`/`source`
   | uzywaj `normalizeMediaType` (raster->image) + `isBrandingWidgetThumb`; wspoldziel
   `window.__damBrandingIndex` z brandingiem.
+- 2026-07-22 | dashboard branding_latest | "Indeks branding niedostepny" mimo
+  branding.html (1000+ OK) i `__damBrandingIndex.assets.length≈51615` | `.catch` na
+  renderze traktowal blad POST-JSON (ciezki filter po `search_blob`/OCR zaraz po
+  parse ~387 MB) jako brak indeksu; brak bridge fallbacku | (1) dual URL jak
+  `dam-branding.js` (`data/` + `/branding-index`), shared promise, (2) filter
+  path/name only + `collectRecentBrandingThumbs`, (3) yieldTick + retry ze
+  skeletonem; "niedostepny" tylko gdy brak danych po retry.
 - 2026-07-20 | skeleton / branding+viz | pusta siatka podczas ladowania indeksu
   | skeleton tylko w costs/invoices; boot brandingu czekal na `await loadIndex()` zanim
   cos w `#damBrandingSectionGrid` | `showInitialBootSkeletons()` synchronicznie na starcie
@@ -1018,4 +1147,521 @@ evealSequence fade uzywa opacity nie utoAlpha; po
 - **Objaw:** puste `#damVizModalAssoc` zajmowalo ~cale assoc-pane; Elementy w `max-height:min(240px,32vh)`.
 - **Zasada:** wrap grid+host w `.dam-assoc-pane-split` + suwak 44px; default 60/40 gdy sa materialy, 20/80 gdy empty; persist `localStorage["dam-assoc-elementy-split:"+product_id]`. W splocie `elementy-panel` ma `max-height:none`.
 - **Checkerboard:** tylko `.dam-media-preview__assoc-thumb` / Elementy — NIE `.dam-viz-thumb__img` na kartach `#vizGrid` (tam plain `#fff`).
+
+
+- 2026-07-22 | dark mode glare + invisible text | white search/count pills + nearly invisible h1–h6/widget titles | Geex `style.css` paints `body/h1–h6` with `--gray-color`; DAM aliased `--gray-color` to `--dam-border` (#2c2b36 ≈ surface) so headings vanished; count/search used hardcoded `#fff` while `--dam-text` flipped light → unreadable; remapping `--dark-color` to text also broke Geex body `background: var(--dark-color)` | In dark: keep `--dark-color` = charcoal bg; set `--gray-color` to readable light text (#d2cedc) for Geex heading paint; never force white elevated pills; use `--dam-surface` / `--dam-surface-elevated` + `--dam-text`; status pills/nav-back need explicit dark overrides (they use `--gray-color` as fill in light).
+
+### 2026-07-22 - Bento min spans (shrink floor)
+
+- **Objaw:** drag resize shrinkowal `notify_new_viz` / `quick_links` / media ponizej contentu (clip + inner scrollbar).
+- **Zasada:** `DamBentoResize.DEFAULT_MIN_SIZES` + `getMinSize` - clamp przy drag i migracja persisted layoutu w gore przy mount; `quick_links` przełącza H/V po aspekcie (`w > h` → horizontal). Nie pozwalaj siblingowi zejsc ponizej jego min przy push.
+
+### 2026-07-22 - Viz card min-height vs border-box (icon rail clip)
+
+- **Objaw:** dolne ikony w `.dam-nav-circles--stack` na kartach `newest_viz_3` / branding "poucinane" mimo `min-height:152px` i bento h=7.
+- **Przyczyna:** `.dam-widget__viz-row` ma `box-sizing:border-box` + `padding:~12` + `overflow:hidden`. `min-height:152` liczy padding+border w srodku flooru → contentBox ≈140px < rail 144px (CDP shortfall ~3.4px). Dodatkowo `@container viz-latest (min-width:980px)` obnizalo floor do `clamp(124px…)`.
+- **Zasada:** card floor ≥ rail + padY + borderY + oddech (clamp 180–200). Grid `minmax(180px,1fr)`. Bento: viz h≥8, branding h≥9, strip/notify h≥6, quick_links wąski h≥8. Nie obnizaj card min w szerokich container queries.
+
+### 2026-07-22 - COMBO DamFolderPicker extract + bridge mutate window
+
+- **Objaw / kontekst:** branding.html laduje assoc, **nie** dam-viz - nie mozna polegac na `damVizOpenThumbPicker`. Stary `#damAssocFolderPicker` / `#damElementsPicker` do usuniecia.
+- **Zasada:** COMBO zyje w `apps/web/assets/js/dam-folder-picker.js` → `window.DamFolderPicker.open`. Chrome HARD: CTA **Otwórz Eksplorator Windows** w toolbarze przy `.dam-thumb-picker__views` (nie footer LD); box `70vw×90vh` + min/max; `#damThumbPickerGrid` padding = baseline+10px. `folderDirFromPath` STAY w viz.
+- **Bridge:** restart tylko early (K2 PI seed + K2b Python; K0 cold-start carve-out). Po K2b **nigdy** Stop-Process :8766 rownolegle z CDP. Health green przed kazdym CDP trafiajacym w bridge.
+
+### 2026-07-22 - Asana tasks: complete nie usuwa z biezacej listy
+
+- **Objaw:** checkbox "ukonczone" w Nadchodzace/Zalegle natychmiast chowal wiersz (`filterTab` wymaga `!isDone`) - user nie mogl odznaczyc.
+- **Przyczyna:** lokalny `dam_asana_local_done_v1` + re-render filtrowal done z active tab.
+- **Zasada:** `state.stickyDoneIds` trzyma id w biezacej zakladce do zmiany tabu; UI `is-done` + line-through; uncomplete usuwa z localStorage i sticky. Liczniki tabow nadal bez sticky. A1 OAuth otwarte - mutacja tylko lokalna, nie Asana API.
+
+### 2026-07-23 - Plus-tile Dodaj: picker 092821f, COMBO tylko z flagi; dwa agenty = jeden wlasciciel pliku
+
+- **Objaw:** Dodaj (skojarzenia/wariant) mrozil DAM - router plus-tile szedl prosto w ciezki COMBO (PRODUKT|BRANDING) budowany synchronicznie.
+- **Przyczyna:** po wprowadzeniu TABow zgubiono szybki openMediaPicker z 092821f; dodatkowo opts _vizComboDirect:true przekazywane z call-site plus-tile omijalo picker i wracalo do COMBO.
+- **Zasada:** openMediaPicker = jedyne wejscie z plus-tile (shell-first, ensureFileIndex async, nigdy branding-index.json). _vizComboDirect wolno ustawiac WYLACZNIE przyciskowi stopki Przejdz do COMBO (openVizAssocComboPicker), nigdy w handlerach klikniec.
+- **Zasada (agenci):** rownolegli agenci NIGDY nie pisza do tego samego pliku JS; wlasciciel = jeden agent, drugi dostaje kontrakt (sygnatura window.DamX). Tokeny ?v= bumpuje orchestrator raz, po scaleniu.
+- **Test wzorcowy:** tools/_sim_picker.js (DOM-shim, mierzy czas shellu i fetch-e) + tools/verify-picker-freeze.js.
+
+### 2026-07-24 - Dodaj: ciemny overlay bez widocznego panelu (shell CSS tylko lite)
+
+- **Objaw:** klik `#damVizModalAssoc` Dodaj / `data-product-variant-plus` = UI „tnie się”, nic nie widać (przyciski `is-shift-revealed`).
+- **Przyczyna:** `openMediaPicker` → `buildAssocMediaPickerUi` montuje `#damAssocEditOverlay` + `#damAssocEditPopover` z klasami `.dam-tag-edit-popover.dam-assoc-edit-popover`. `ensureShellCssMinimal` stylował **tylko** `.dam-assoc-lite-popover`. Pełny CSS (`ensureInjectedCssFullNow`) był odkładany 45 s i **pomijany gdy overlay otwarty** → ciemny blocker bez dialogu.
+- **Zasada:** shell CSS on open MUSI stylować **classic** `#damAssocEditPopover.dam-assoc-edit-popover` (flex center overlay + widoczny panel + actions). Token `classicShell20260724c`. Nie wolno zostawiać overlay bez widocznego dialogu.
+- **Test:** `node scripts/qa/sim-assoc-dodaj.js` assert `classicShell` + selector classic; Ctrl+F5 `?v=4.0.10-classicShellVisible20260724`.
+
+### 2026-07-24 - Dodaj bez handlera + freeze listy + brak linked_products w indeksie
+
+- **Objaw:** `#damVizModal` plus `Dodaj` widoczny (`is-shift-revealed`) ale klik nic nie robi albo UI zamarza po otwarciu `#damAssocEditPopover`; w 4.0 brak skojarzonych produktow vs 3.2.
+- **Przyczyna (3 warstwy):** (1) `ensureShiftHoverAssocUx` wczesniej wychodzil na `!canEditAssoc()` zanim dopinal `_damAssocPlusBound` - admin wlaczony PO otwarciu modala = brak click handlera; (2) `renderOptions`/`productThumb()` na pelnym katalogu = main-thread freeze; (3) `file-index.json` bez `linked_products` na `viz_latest` (aliasy DK/GC nie zastosowane - brak czlonka grupy w indeksie) + branding wymaga `re-enrich-branding-index.py` po zmianach danych.
+- **Zasada:** plus bind **bez** guarda na wejsciu `ensureShiftHoverAssocUx`; `openSkojarzoneFromPlusClick` + capture fallback `_damVizPlusCaptureBound` gdy brak bound; wariant produktu w viz = `kind:"product"` (Skojarzone produkty, nie Warianty materialu); lista w pickerze = `PLACEHOLDER_SVG`, nie `productThumb` per wiersz; **zero** `searchInput.focus()` on open (tag + assoc); zamkniecie `#damVizModalClose` na `.dam-viz-modal-shell` z `z-index:50200` + `removeModal()` strip overlayow.
+- **Dane:** po zmianie aliasow / branding: `python apps/web/scripts/re-enrich-branding-index.py`; `apply_product_aliases` w build-file-index (oba czlonki grupy musza istniec w `products[]`).
+- **Test:** `node scripts/qa/sim-assoc-dodaj.js` (bez browser MCP gdy user zakazuje).
+
+### 2026-07-25 - Viz modal: plus tiles zamiast CTA; login_required przy Zatwierdz
+
+- **Objaw:** `#damVizModal` plus `Dodaj` / `Edytuj wszystko` / `data-product-variant-plus` = freeze, wrong panel, toast „Blad zapisu: login_required” mimo ADMIN ON.
+- **Przyczyna:** (1) plus tiles + capture fallback routowaly do `openEditPickerNow(kind:product)` bez kontekstu branding list / wariantow; (2) `ensureShiftHoverAssocUx` wstrzykiwal plus do `#damVizModalAssoc` i variant strip; (3) `saveAssociations` POST bez `DamApi.ensureSession()` gdy token pusty/demo/qa mimo admin switch.
+- **Zasada:** w `#damVizModal` **zero** plus tiles i `dam-assoc-edit-all` — tylko CTA `+Dodaj/Edytuj sugestie|warianty` (`.dam-int-cta.dam-viz-assoc-cta`); sugestie = `#damAssocEditPopover` + `_vizBrandingList`; warianty = `_vizVariantsList`; footer classic = Dodaj z dysku + **Eksplorer** (`data-goto-combo`) + Zatwierdz + Wstecz; **nigdy** inject pelnego assoc CSS on click; save = `ensureBridgeSession()` przed POST; weryfikacja bez browser gdy user zakazuje (`sim-assoc-dodaj.js`).
+- **Test:** `node --check` + `node scripts/qa/sim-assoc-dodaj.js`; curl static `dam-assoc-edit.js?v=4.0.13-*` 200.
+
+### 2026-07-26 - v4.0.30 otwarcie sugestii vs v4.0.31 regresja + freeze wyszukiwarki assoc
+
+- **Objaw:** v4.0.30 **Dodaj/Edytuj sugestie** (viz) otwierało `#damAssocEditPopover` natychmiast, ale panel = „Skojarzone produkty” (zla tresc). v4.0.31 poprawilo tresc (`kind:material` + `saveProductMaterialSuggestions`), ale user: freeze po wpisaniu w search; branding **warianty** martwe; tylko **Dodaj/Edytuj produkty** OK.
+- **Przyczyna otwarcia v4.0.30:** `openVizMaterialsEdit315` → `openEditPicker(..., "product")` = sync shell + `renderOptions("")` skanuje caly `file-index.products[]` (szybkie gdy cache, zla etykieta).
+- **Przyczyna freeze v4.0.31:** (1) kazdy `input` na `#damAssocEditSearch` = sync petla po calym katalogu produktow (`productSearchBlob`); (2) material picker: `loadBrandingMaterialCandidates` na open + ponowny render; (3) branding karta: `data-id` = `assets[0]` (sort nazwy), nie `pickPrimaryMarketing` → klik „Proteina · E-commerce” otwiera inny plik z folderu.
+- **Zasada (4.0.32):** picker produktow = **debounce 180 ms** + **min. 2 znaki** przed skanem indeksu; material = kandydaci z `ctx.materialsList` on open, fetch `/branding-search-picker` dopiero przy search >=2 znaki; `resolveProductThumbUrl` fallback `DamAssocEdit.productThumb`; branding `assocLabelRow` bez `data-assoc-edit-all`; karta `cardHtml` → `data-id` = primary marketing asset.
+- **Dodaj z dysku vs Eksplorator (4.0.33, legacy):** dwa przyciski wołały `DamFolderPicker` z **różnymi** flagami — `openDiskFolderPicker` miał `allowFolderPick: materialMode` (dla produktu **false** → pliki klikalne) i `showWindowsButton: false`; `openComboExplorerFromAssoc` miał `allowFolderPick: !materialMode` (produkt **true** → pliki wyszarzone) + Windows. **4.0.34:** jeden przycisk **Eksplorator COMBO** = zawsze `openComboExplorerFromAssoc`; `openDiskFolderPicker` = alias. Kontekst PRODUKT vs BRANDING = `opts.kind`: `product` → folder + gray files; `material` → file pick.
+- **Test:** `node scripts/qa/sim-assoc-dodaj.js` v4.0.32; user Ctrl+F5 `?v=4.0.32-assocPickerFreeze20260726a`.
+
+### 2026-07-26 - openModal: spaczone folder_variants bez primary = zly asset w podgladzie
+
+- **Objaw:** klik karty **Proteina · E-commerce** (`br-005515`, M-SHOP405515-06-26) otwiera modal **ZESTAWY-BATON** (`br-005510`, M-SHOP405510-03-26); zle miniatury wariantow/skojarzen.
+- **Przyczyna:** w indeksie `br-005515.folder_variants` zawiera `br-005510` z **innego folderu** (Orzech Solony vs BLIX ADINSERT). `openModal` budowalo `list` tylko z variantow **bez primary**; `findIndex(id)` = -1 → `list[0]` = obcy asset.
+- **Zasada (4.0.33):** `ensurePrimaryFirstInList` + `filterFolderVariantsForPrimary` (ten sam `assetDirKey`); nigdy nie pokazuj variantow spoza folderu primary. Product picker: przywroc sciezke open 4.0.31 + **debounce** na input (bez min-2-chars gate). Ext tag JPG/PNG inline na koncu tytulu (`injectTitleExtLayoutCss`).
+- **Test:** Ctrl+F5 branding; karta Proteina → modal PROTEINA-NISKI-INDEKS; przycisk Dodaj/Edytuj produkty otwiera picker.
+
+### 2026-07-26 - Linki dev UI: NIE `/4.0.x/` na domyslnym :8765
+
+- **Objaw:** user dostaje **Error response 404** na `http://127.0.0.1:8765/4.0.33/branding.html`.
+- **Przyczyna:** `serve_browser.py` serwuje `apps/web/` z roota — **brak** fizycznego folderu `4.0.33/` w WEB_ROOT. Prefiks `/{version}/` dotyczy **rownoleglych worktree** (`8767` / `8769`), nie biezacego `:8765`.
+- **Zasada:** link dla usera na main dev = `http://127.0.0.1:8765/branding.html?v=<cacheToken>` (to samo: `explorer.html`, `visualizations.html`, `dashboard.html`). Wersja aplikacji = `version.json` + `?v=` na **assetach JS/CSS**, nie segment sciezki URL.
+- **Smoke:** `curl.exe -s -o NUL -w "%{http_code}" http://127.0.0.1:8765/branding.html` musi byc **200** zanim podasz link.
+
+### 2026-07-26 - v4.0.34: ujednolicony COMBO + branding Produkty toggle
+
+- **Objaw:** „Dodaj z dysku” i „Eksplorator” w pickerze produktow wygladaly jak to samo COMBO, ale pliki raz aktywne, raz wyszarzone; brak „Otworz Eksplorator Windows” na dysku. Branding nie mial zwijanej listy **Produkty (N)** jak viz **Elementy / Surowe elementy**.
+- **Nazwy funkcji:** kanoniczny = `openComboExplorerFromAssoc(opts, selected, onDone)`; legacy alias = `openDiskFolderPicker` (4.0.34 deleguje). W `DamFolderPicker.fileItemHtml`: `allowFolderPick === true` → `<div ...--file-disabled>` (wyszarzenie).
+- **Kontekst PRODUKT vs BRANDING:** program wie z `opts.kind` przekazanego przy otwarciu pickera (`openEditPicker` / `openMediaPicker`): `product` → `mode: folder`, `allowFolderPick: true`, `matchProductsByFolder`; `material` → `mode: file`, pliki klikalne, `resolveBrandingAssetId`.
+- **Fix:** jeden footer **Eksplorator COMBO**; branding `linkedProductsHtml` → `[data-produkty-host]` + toggle `Produkty (N)` (reuse klas `elementy-toggle` / `elementy-panel`).
+- **Test:** `node scripts/qa/sim-assoc-dodaj.js` + `sim-assoc-ui-contracts.js`; user Ctrl+F5 `?v=4.0.34-comboUnifyProduktyTab20260726a`.
+
+### 2026-07-26 - REFERENCE (zloty path): branding „Dodaj/Edytuj produkty” — pelny lancuch
+
+**Cel wpisu:** ten jeden przycisk w `#damMediaPreview` (branding) jest **wzorcowy** — dziala przed
+i po otwarciu pickera, zapisuje przez bridge, odswieza modal. Inne CTA (viz sugestie/warianty,
+plus-tile, stary `data-assoc-edit-all`) ida innymi galeziami i latwiej sie psuja. Przy debugu
+alignu COMBO / pickera **najpierw** porownuj z tym path.
+
+#### DOM (co user klika)
+
+```
+#damMediaPreview                          ← modal podgladu materialu brandingowego
+  .dam-viz-modal-box
+    #damMediaPreviewAssoc                 ← STABILNY host (nie jest kasowany przy re-renderze calego modala)
+      .dam-media-preview__assoc
+        .dam-media-preview__assoc-col--products
+          .dam-media-preview__assoc-label-row
+            button.dam-viz-assoc-cta[data-viz-assoc-cta="product"]
+              „Dodaj/Edytuj produkty”
+```
+
+Selektor kanoniczny: `[data-viz-assoc-cta="product"]` w `#damMediaPreviewAssoc`.
+
+#### Kto buduje przycisk (HTML)
+
+| Krok | Plik | Funkcja |
+|------|------|---------|
+| 1 | `dam-media-preview.js` | `assocLabelRow("Skojarzone produkty", "product")` — generuje `<button … data-viz-assoc-cta="product">` |
+| 2 | `dam-media-preview.js` | `linkedProductsHtml(linked)` — owija kolumne `.dam-media-preview__assoc-col--products` |
+| 3 | `dam-media-preview.js` | `associationsFooterHtml(asset, groupContext, options)` — dwie kolumny: warianty + produkty |
+| 4 | `dam-media-preview.js` | `renderMeta(a)` → `paintAssoc()` → `assocHost.innerHTML = associationsFooterHtml(...)` |
+
+**Wazne:** przycisk jest **w HTML stringu** i ginie przy kazdym `innerHTML` — **nie ma** wlasnego
+`addEventListener` na buttonie.
+
+#### Kto podpina handler (dlaczego dziala ZAWSZE)
+
+| Krok | Plik | Funkcja | Mechanizm |
+|------|------|---------|-----------|
+| 5 | `dam-media-preview.js` | `renderMeta` → `DamAssocEdit.bind(assocHost, ctx)` | po kazdym malowaniu sekcji assoc |
+| 6 | `dam-assoc-edit.js` | `bindAssocSection` → `bindAssocCtas` | **delegowany** `click` na `#damMediaPreviewAssoc` |
+| 7 | `dam-assoc-edit.js` | flaga `root._damAssocCtasBound` | listener dodawany **raz**; kolejne `bind()` tylko aktualizuja `root._damAssocCtx` |
+
+```js
+// bindAssocCtas — sedno „dziala przed i po pickerze”
+root._damAssocCtx = ctx;           // ZAWSZE swiezy kontekst (asset, onRefresh, …)
+if (root._damAssocCtasBound) return; // drugi+ bind NIE duplikuje listenera
+root.addEventListener("click", onAssocCtaClick);
+```
+
+**Przed pickerem:** modal otwarty → `paintAssoc()` → `bind()` → ctx + listener OK.  
+**Po pickerze:** `onRefresh` / `onSaved` → `renderMeta(asset)` → nowy HTML przycisku, ale
+**ten sam** listener na rodzicu + **nowy** `_damAssocCtx`.
+
+Branding **NIE** uzywa `bindVizAssocCtas` (to sciezka `#damVizModal` z galeziami sugestie/warianty).
+
+#### Klik — `onAssocCtaClick`
+
+Plik: `dam-assoc-edit.js`
+
+1. `e.target.closest("[data-viz-assoc-cta], [data-assoc-edit-all]")` — trafia w przycisk.
+2. `canEditAssoc()` — wymaga **roli** `admin|power_user` (`DamApi.role` / `dam_role`) **ORAZ**
+   `localStorage dam_admin_mode=1` lub `dam_viz_admin_mode=1`. Bez tego: toast, stop.
+3. `kind = btn.getAttribute("data-viz-assoc-cta")` → `"product"`.
+4. **NIE** wchodzi w galezie `suggestions` / `variants` (to tylko viz modal).
+5. `col = btn.closest(".dam-media-preview__assoc-col")` — kolumna produktow.
+6. `ctx = root._damAssocCtx` — obiekt przekazany z `renderMeta`.
+7. `openEditPicker(col, "product", ctx)`.
+
+#### `openEditPicker` — przygotowanie kontekstu
+
+Plik: `dam-assoc-edit.js`
+
+- `collectLinkedIdsFromCtx(ctx, "product")` — ID juz przypietych produktow (preferuje
+  `groupContext.linked_products` / `linked_product_ids`, dedupe po indeksie).
+- Auto-czyszczenie duplikatow indeksu w DB jesli w asset wiecej ID niz po dedupe.
+- `excludeIds` / `excludeIndexes` — nie proponuj self-assoc (product_id z kontekstu grupy).
+- `filterType: "product"` — lista w pickerze bez „wizualizacji jako produktow”.
+- `openMediaPicker(colEl, { kind:"product", selectedIds, pinnedIds, asset, groupContext, assocCtx: ctx, onConfirm: … })`.
+
+#### `openMediaPicker` — UI pickera
+
+Plik: `dam-assoc-edit.js`
+
+- `closePicker()` — zamyka stary overlay jesli byl.
+- `ensureInjectedCss()` — shell CSS (obecnie `dam-thumb-picker-box` jak COMBO).
+- `ensureFileIndex()` → `paintPicker(fi)` — buduje `#damAssocEditOverlay` + `#damAssocEditPopover`.
+- Footer pickera: **Wstecz** | **Dodaj z dysku** (`data-goto-combo`) | **Zatwierdz**.
+- **Dodaj z dysku** → `openComboExplorerFromAssoc` → `DamFolderPicker.open({ stackOnAssoc:true })`.
+
+#### Zatwierdzenie — zapis
+
+1. User klika **Zatwierdz** → `onConfirm(ids)`.
+2. `saveAssociations(ctx, pids, vids)` → `POST :8766/branding/asset-associations`
+   `{ asset_id, folder_group_id, linked_product_ids, linked_variant_ids }`.
+3. Wymaga sesji bridge: `ensureBridgeSession()` (inaczej `login_required`).
+4. `ctx.onSaved(productIds, variantIds)` — z `renderMeta`: aktualizuje `a.linked_product_ids`,
+   `groupContext`, opcjonalnie `enrichLinkedProducts` z file-index.
+5. `ctx.onRefresh()` → `renderMeta(asset)` — **pelny repaint** sekcji assoc + **ponowny** `bind()`.
+
+#### Obiekt `ctx` przekazywany z brandingu (kontrakt)
+
+Ustawiany w `dam-media-preview.js` → `DamAssocEdit.bind(assocHost, { … })`:
+
+| Pole | Znaczenie |
+|------|-----------|
+| `asset` | biezacy asset brandingowy (`a`) — `id`, `path`, `linked_product_ids`, … |
+| `groupContext` | warianty folderu, `linked_products`, `folder_group_id` |
+| `onRefresh` | `function(){ renderMeta(asset); }` — repaint modala |
+| `onSaved` | patch pol asset + enrich + `renderMeta` |
+
+#### Diagram przeplywu (skrot)
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Btn as button[data-viz-assoc-cta=product]
+  participant Host as #damMediaPreviewAssoc
+  participant AE as DamAssocEdit
+  participant Picker as #damAssocEditPopover
+  participant Bridge as :8766/branding/asset-associations
+  participant MP as dam-media-preview.renderMeta
+
+  User->>Btn: click
+  Btn->>Host: bubble (delegacja)
+  Host->>AE: onAssocCtaClick
+  AE->>AE: canEditAssoc?
+  AE->>AE: openEditPicker(product, ctx)
+  AE->>Picker: openMediaPicker
+  User->>Picker: Zatwierdz
+  Picker->>AE: onConfirm(ids)
+  AE->>Bridge: POST save
+  Bridge-->>AE: ok
+  AE->>MP: ctx.onSaved + onRefresh
+  MP->>Host: paintAssoc + bind (ctx update)
+```
+
+#### Diagram fazy bind→paint (renderMeta **przed** klikiem CTA)
+
+**Cel:** osobny od diagramu klik→zapis. Tu jest root cause freeze z lekcji **v4.0.20 / v4.0.21**
+(`ensureInjectedCss` przed early-return; blokada `paintAssoc` na `enrichLinkedProducts` /
+`ensureFileIndex`; sync `renderOptions` w click stack pickera). Przy fixie viz **sugestii**
+nie wolno wrzucac ciezkiego skanu katalogu do tej fazy — tylko do **otwarcia pickera**
+(deferred) albo do **async** po malowaniu seed UI.
+
+##### Branding `#damMediaPreview` — co robi `renderMeta(a)`
+
+| Krok | Sync / Async | Plik | Funkcja | Uwaga |
+|------|--------------|------|---------|-------|
+| 1 | **SYNC** | `dam-media-preview.js` | `renderMeta` | tytul, filename, badges, sourceMount, quality pills |
+| 2 | **SYNC** | `dam-media-preview.js` | `paintAssoc()` | wywolane **natychmiast** (nie czeka na indeks) |
+| 3 | **SYNC** | `dam-media-preview.js` | `associationsFooterHtml` | HTML string: warianty + `linkedProductsHtml(seed)` — **bez** `ensureFileIndex` |
+| 4 | **SYNC** | `dam-media-preview.js` | `assocHost.innerHTML = …` | kasuje stary DOM przycisku; buduje nowy |
+| 5 | **ASYNC** (nie blokuje bind) | `dam-media-preview.js` | `renderBrandingRelatedMaterials` | `loadIndexAssets()` → filtr po `linked_product_ids`; spinner w `#damMediaPreviewBrandingRelatedMaterials` |
+| 6 | **SYNC** lub **ASYNC** | `dam-media-preview.js` | `renderLinkedBrandingAssets` | branding bez `productContext`: early return; viz-studio: async `loadIndexAssets` + pozniej `bindMaterialsPane` |
+| 7 | **SYNC** | `dam-assoc-edit.js` | `DamAssocEdit.bind` → `bindAssocSection` | patrz tabela ponizej |
+| 8 | **SYNC** | `dam-media-preview.js` | `bindProduktyToggle`, `renderVizStudioControls`, `scheduleFitChrome` | po bind |
+| 9 | **ASYNC** (drugi pass) | oba | `enrichLinkedProducts(seedLinked)` → `paintAssoc()` | **po** pierwszym paint; komentarz `brandComposer20260721a` |
+
+```js
+// dam-media-preview.js — sedno „paint seed first”
+paintAssoc();  // SYNC — CTA + lista z ID/display_name seed
+if (seedLinked.length) {
+  DamAssocEdit.enrichLinkedProducts(seedLinked).then(function (linked) {
+    a.linked_products = linked;
+    paintAssoc();  // drugi pass — miniatury/nazwy z file-index
+  });
+}
+```
+
+##### Wewnatrz `bindAssocSection` (krok 7) — wszystko **SYNC** w tej turze
+
+| Krok | Plik | Funkcja | Koszt / ryzyko |
+|------|------|---------|----------------|
+| 7a | `dam-assoc-edit.js` | `ensureInjectedCss()` | **early-return** gdy token OK — NIE buduje stringa CSS (fix v4.0.20) |
+| 7b | `dam-assoc-edit.js` | `assocEl._damAssocCtx = ctx` | swiezy kontekst asset/onRefresh |
+| 7c | `dam-assoc-edit.js` | `ensureShiftHoverAssocUx` | DOM: plus-tile, quick-minus — tylko gdy `canEditAssoc()` |
+| 7d | `dam-assoc-edit.js` | `bindAssocCtas` | delegowany `click` **raz**; kolejne bind = tylko ctx |
+| 7e | `dam-assoc-edit.js` | per-col / per-item listeners | `[data-assoc-name]` klient → `ensureFileIndex().then(...)` **dopiero na klik**, nie przy bind |
+
+**Na bindzie branding produkty NIE ma:** fetch `file-index.json`, petli po calym katalogu produktow,
+`renderOptions`, `openMediaPicker`.
+
+##### Viz `#damVizModal` — inna sciezka malowania (kontrast)
+
+| Faza | Sync / Async | Gdzie | Co |
+|------|--------------|-------|-----|
+| Otwarcie modala | **SYNC** | `dam-viz.js` | `insertAdjacentHTML` + `bindVizAssocCtas(modal, {})` — listener sugestie/warianty |
+| Kolumna materialow | **ASYNC** | `dam-media-preview.js` → `renderLinkedBrandingAssets` | `loadIndexAssets` → filter → `innerHTML` kart → **`bindMaterialsPane`** (CTA materialow + Shift UX) |
+| Pasek wariantow produktu | **SYNC** | `dam-viz.js` | `ensureShiftHoverAssocUx` + `bindVizAssocCtas` z `variantsCtx` |
+| CTA sugestie | handler juz na modalu | `dam-assoc-edit.js` | `onAssocCtaClick` → `openVizMaterialsEdit315` → **`openMediaPicker`** — ciezki load **po** kliku, nie w `renderMeta` brandingu |
+
+##### Diagram sekwencji bind→paint (branding, pierwszy pass)
+
+```mermaid
+sequenceDiagram
+  participant MP as renderMeta
+  participant PA as paintAssoc
+  participant HTML as associationsFooterHtml
+  participant Host as #damMediaPreviewAssoc
+  participant AE as bindAssocSection
+  participant Idx as loadIndexAssets / enrichLinkedProducts
+
+  MP->>PA: paintAssoc() SYNC
+  PA->>HTML: string z seed linked (ID only)
+  HTML-->>Host: innerHTML (przycisk CTA w DOM)
+  PA->>Idx: renderBrandingRelatedMaterials ASYNC
+  Note over Idx,Host: spinner w osobnym mount — nie blokuje bind
+  PA->>AE: DamAssocEdit.bind SYNC
+  AE->>AE: ensureInjectedCss early-return?
+  AE->>AE: bindAssocCtas (ctx + delegacja)
+  Note over Host: User moze kliknac CTA — listener juz jest
+  MP->>Idx: enrichLinkedProducts(seed) ASYNC
+  Idx-->>PA: paintAssoc() drugi pass (miniatury)
+  PA->>AE: bind ponownie (ctx refresh, bez duplikatu listenera)
+```
+
+##### Reguly anty-freeze (fix viz sugestii — trzymaj sie tego)
+
+1. **Nigdy** `await ensureFileIndex()` / pelny skan katalogu **przed** pierwszym `innerHTML` sekcji assoc.
+2. **Nigdy** sync `renderPinned` + `renderOptions` w tej samej turze co `openMediaPicker` — tylko shell + „Ladowanie…”, populate w `setTimeout(0)` (v4.0.21).
+3. **`ensureInjectedCss`:** return **przed** concat stringa CSS (v4.0.20).
+4. **Search w pickerze:** debounce / budget — nie sync petla `productSearchBlob` na kazdy `input` (v4.0.31).
+5. **Async panele** (`renderBrandingRelatedMaterials`, `renderLinkedBrandingAssets`): OK — o ile nie `await`-uja glownego watku przed `bindAssocCtas`.
+6. Fix **sugestii viz** = gałąź `openVizMaterialsEdit315` / zapis `saveProductMaterialSuggestions` — **nie** zmieniaj `paintAssoc` brandingu produktow.
+
+##### `seedLinkedProducts` — skad bierze sie seed (sync)
+
+Plik: `dam-media-preview.js`
+
+- Preferuje `groupContext.linked_products` / `asset.linked_products`.
+- Fallback: `folder_linked_product_ids` → `{ id, display_name:id, thumb_url:"" }`.
+- To wystarcza do **natychmiastowego** HTML przycisku i listy; enrich uzupelnia pozniej.
+
+#### Dwa typy awarii assoc (nie mylic z „freeze”)
+
+| Typ | Objaw | Mechanizm | Przyklad |
+|-----|-------|-----------|----------|
+| **A — silent freeze** | UI zawieszone, brak reakcji | sync petla / await indeksu / CSS concat przed return | v4.0.20 `ensureInjectedCss`, v4.0.21 `renderOptions` w click stack |
+| **B — responsywny odmowa** | klik reaguje, toast / brak akcji | listener OK, **brak ctx** lub pusty seed | viz sugestie: „Brak kontekstu materiałów” przed koncem `loadIndexAssets` |
+
+Agent naprawiajacy „freeze” musi najpierw ustalic typ **A** vs **B** — inaczej szuka zlego mechanizmu.
+
+#### Tabela warstw: listener / kontekst / dane listy (branding vs viz)
+
+| Warstwa | Branding produkty (`#damMediaPreviewAssoc`) | Viz sugestie (`#damVizModal`, stan **4.0.41**) |
+|---------|---------------------------------------------|-----------------------------------------------|
+| **1. Listener CTA** | **SYNC** — `bindAssocCtas` na `#damMediaPreviewAssoc`, delegacja, `_damAssocCtasBound` na rodzicu | **SYNC** — `bindVizAssocCtas(modal)` zaraz po `insertAdjacentHTML`, `_damVizAssocCtasBound` na `#damVizModal` (fix v4.0.21 **utrzymany**, brak per-button) |
+| **2. Kontekst do pickera** | **SYNC** — `_damAssocCtx` w `paintAssoc()` przed bindem | **ASYNC** — `_damMaterialsCtx` tylko w `bindMaterialsPane` w `.then()` po `loadIndexAssets` → klik przed fetch = toast „Brak kontekstu materiałów” (**typ B**, nie A) |
+| **3. Dane listy (seed → enrich)** | **SYNC seed** (`seedLinkedProducts`) → **ASYNC enrich** (`enrichLinkedProducts`) | **ASYNC calosc** — `materialsList` / `selectedIds` / `materialCandidates` dopiero po skan `branding-index` w `renderLinkedBrandingAssets` |
+
+**Korekta dokumentacji (2026-07-26):** wczesniejsze sformulowanie „bindMaterialsPane czeka na loadIndexAssets” bylo **mylace** —
+dotyczy warstwy **2–3**, nie warstwy **1**. Listener sugestii jest od razu; **otwarcie pickera** wymaga ctx, ktorego jeszcze nie ma.
+
+##### `_damVizAssocCtasBound` — potwierdzenie (pytanie 2)
+
+Plik: `dam-assoc-edit.js` → `bindVizAssocCtas(root, opts)`
+
+- Flaga: `root._damVizAssocCtasBound` na **`root`** (`#damVizModal`), nie na przycisku.
+- Handler: jeden `root.addEventListener("click", onAssocCtaClick)` + `closest("[data-viz-assoc-cta]")`.
+- Kolejne wywolania (np. z `bindMaterialsPane`) tylko merguja `_damVizAssocCtasOpts` — **bez** duplikatu listenera.
+- Zgodne z `program-instructions.json`: „jeden delegowany listener na root”.
+
+#### Zasada: **sync ctx przed async enrich** (obowiazkowy wzorzec)
+
+Analogicznie do **sync seed, async enrich** dla **danych** w brandingu (`brandComposer20260721a`), obowiazuje tez dla **kontekstu** potrzebnego do otwarcia pickera:
+
+1. **SYNC:** minimalny ctx (IDs, `productContext`, puste `materialCandidates` / seed `selectedIds`) — picker moze sie otworzyc bez toastu.
+2. **SYNC:** delegowany listener + przypisanie ctx na stabilnym rodzicu.
+3. **ASYNC:** enrich listy (miniatury, pelne kandydaty, filtr indeksu) — **po** kroku 1–2, bez blokowania bind.
+
+**Branding produkty:** wzorzec spelniony (ctx + seed sync, enrich async).  
+**Viz sugestie:** warstwa 1 OK; warstwa 2 **niespelniona** w 4.0.41 — to luka typu B, nie regresja v4.0.21.
+
+#### Backlog **P1** (otwarty — **nie** zrobione w 4.0.41)
+
+**Tytul:** viz sugestie — sync seed `_damMaterialsCtx` przy otwarciu modala.
+
+**Objaw:** CTA „Dodaj/Edytuj sugestie” reaguje na klik, ale przed zakonczeniem `loadIndexAssets` pokazuje toast „Brak kontekstu materiałów”.
+
+**Kierunek fixu (propozycja, do wdrozenia):**
+
+- W `dam-viz.js`: zaraz po `bindVizAssocCtas(modal)` (lub w tym samym bloku sync) ustawic **minimalny** `modal._damMaterialsCtx` / wywolac lekki helper (np. `DamAssocEdit.seedMaterialsCtx(modal, productContext)`).
+- W `.then()` po `loadIndexAssets`: `bindMaterialsPane` **uzupelnia** `materialsList`, `shownPrimaries`, `selectedIds` — drugi pass (enrich), bez kasowania listenera.
+
+**Preflight przed implementacja (potwierdzone w kodzie 2026-07-26):**
+
+| Pole minimalnego ctx | Zrodlo | Czy wymaga `loadIndexAssets`? |
+|----------------------|--------|-------------------------------|
+| `productContext.id` | `resolveBrandingProductId(first.product_id, index)` w `dam-viz.js` | **NIE** — `first` z `buildModalItems(group)`, juz w pamieci |
+| `productContext.name` | `productName` z `first.product_name` | **NIE** |
+| `productContext.index` | `displayIndex(first)` / `first.index_base` | **NIE** |
+| `productContext.revision_path` | `first.revision_path` | **NIE** |
+| `groupContext.product_id` | `first.product_id` | **NIE** |
+| `materialsList` / `selectedIds` / `materialCandidates` | filtr `branding-index` po `linked_products` | **TAK** — seed moze startowac jako `[]`, enrich async (jak branding produkty) |
+
+**Wniosek preflight:** fix P1 jest **mozliwy bez** czekania na fetch — `productContext` nie zalezy od async danych; tylko lista kandydatow wymaga enrich. Nie obiecywac „prostego przeniesienia jednej linii” bez osobnego seed-kroku dla pustej listy w pickerze materialow.
+
+##### Bramka przed wdrożeniem P1: pusty `materialCandidates` (2026-07-26)
+
+**Pytanie:** czy `openMediaPicker(kind:material)` z pustym seed toleruje otwarcie bez freeze w click stacku?
+
+**Test:** `node scripts/qa/sim-assoc-material-empty-seed.js` (DOM-shim, produkcyjny `dam-assoc-edit.js`).
+
+**Wynik:** **PASS** (sync < 16 ms, 0 fetch w click stacku):
+
+| Sciezka | sync ms | fetch w open | Uwaga |
+|---------|---------|--------------|-------|
+| `openPicker` + `materialCandidates: []` | ~0,4 | 0 | shell OK |
+| `openVizAssocSuggestionsPicker` + seed ctx pusty | ~0,2 | 0 | ta sama gałąź co CTA |
+
+**Kontrakty w kodzie (potwierdzone statycznie + harness):**
+
+- `kind === "material"` → `paintPicker({ products: [] })` **bez** `ensureFileIndex()` (linia ~1523).
+- Pusta lista: `renderOptions("")` **pomijane** gdy `materialEntries.length === 0` (linia ~1472–1474) — brak sync skanu katalogu przy open.
+- Fetch kandydatow dopiero po wpisaniu ≥2 znakow w search (`scheduleMaterialSearchFetch` → `loadBrandingMaterialCandidates`, debounce).
+
+**Status bramki:** `[x]` picker toleruje pusty seed — **zielone światło na wdrożenie sync ctx** (krok kodu P1).  
+**Nadal wymagane po kodzie:** user Ctrl+F5 + klik sugestii zaraz po otwarciu modala (runtime WebView2).
+
+**Status P1 (całość):** `[x]` sync ctx w `dam-viz.js` + `seedMaterialsCtx` — **4.0.43** · harness PASS · runtime Ctrl+F5 USER `[ ]`.
+
+**Pliki (plan):** `dam-viz.js` (sync seed ctx), `dam-assoc-edit.js` (ctx refresh po enrich), `dam-media-preview.js` (`renderLinkedBrandingAssets` enrich pass).
+
+#### Czemu INNE sciezki bywaja zle (kontrast)
+
+| Wejscie | Handler | Uwaga |
+|---------|---------|-------|
+| Branding **Dodaj/Edytuj produkty** | `bindAssocCtas` → `openEditPicker(product)` | **WZORZEC** |
+| Branding **Dodaj/Edytuj warianty** | ten sam listener, `kind=variant` | inny picker (warianty folderu) |
+| Viz **sugestie** | `bindVizAssocCtas` → `openVizMaterialsEdit315` | `kind:material`, inny zapis |
+| Viz **warianty** | `openVizAssocVariantsPicker` | lista `_vizVariantsList` |
+| Shift+klik kafel / plus-tile | `ensureShiftHoverAssocUx` / capture | osobne sciezki, latwiejsze regresje |
+| Stary `data-assoc-edit-all` | usuniety z brandingu (4.0.32) | tylko w legacy HTML |
+
+#### Checklist QA (ten path)
+
+1. Admin ON + rola privileged.
+2. Klik CTA → `#damAssocEditPopover` w DOM w <500 ms (shell-first).
+3. `GET`/`POST` `:8766` po Zatwierdz — 200, nie `login_required`.
+4. Po zapisie: `renderMeta` — lista **Produkty (N)** i toggle sie odswieza.
+5. Drugi klik CTA (po zamknieciu pickera) — ten sam flow (delegacja + ctx refresh).
+
+#### Pliki (mapa 1:1)
+
+- HTML przycisku: `dam-media-preview.js` (`assocLabelRow`, `linkedProductsHtml`)
+- Bind + click: `dam-assoc-edit.js` (`bindAssocSection`, `bindAssocCtas`, `onAssocCtaClick`)
+- Picker + COMBO: `dam-assoc-edit.js` (`openEditPicker`, `openMediaPicker`, `openComboExplorerFromAssoc`)
+- Zapis: `dam-assoc-edit.js` (`saveAssociations`) + `apps/desktop/local_bridge.py` endpoint
+- Repaint: `dam-media-preview.js` (`renderMeta` → `paintAssoc`)
+
+**Test statyczny:** `node scripts/qa/sim-assoc-dodaj.js` (exporty + brak `data-assoc-edit-all` w preview).
+**User:** Ctrl+F5 `http://127.0.0.1:8765/branding.html?v=<token>`.
+
+#### Model domenowy: branding vs viz (skojarzenia)
+
+| Obszar | Perspektywa | Warianty | Produkty | Materiały powiązane |
+|--------|-------------|----------|----------|---------------------|
+| **Branding** (`#damMediaPreview`) | **material-centric** — warianty = pliki w folderze materiału (PSD/JPG…) | kolumna WARIANTY (`folderVariantsHtml`) | kolumna Produkty — produkty przypięte **do materiału** | „Skojarzone materiały” = **inne foldery** wskazujące te same produkty (`renderBrandingRelatedMaterials`) |
+| **Viz** (`#damVizModal`) | **product-centric** — warianty = indeksy/języki **produktu** | pasek wariantów produktu (`dam-viz.js`) | zwykle zbędne (produkt jest kontekstem modala) | „Skojarzone materiały” = assety brandingowe wskazujące ten produkt (`renderLinkedBrandingAssets`) |
+
+**Zasady zapisu (adaptery — lekcja v4.0.26):**
+
+| CTA / kind | Kontekst | Zapis | Wymaga `ctx.asset.id` |
+|------------|----------|-------|------------------------|
+| branding `product` / `variant` | materiał brandingowy | `saveAssociations` → `POST /branding/asset-associations` | **tak** |
+| viz `suggestions` | produkt (material picker) | `saveProductMaterialSuggestions` — patch `linked_product_ids` na materiałach | **nie** (kontekst produktu) |
+| viz `variants` | produkt | `onRefresh({ addedVariantPath })` / `onRemoveProductVariant` | **nie** |
+
+Źródło prawdy copy/reguł: `apps/web/data/program-instructions.json` (4 entry pointy assoc).
+
+#### Macierz priorytetów fixów (2026-07-26)
+
+| Priorytet | Co naprawiać | Czego **nie** ruszać |
+|-----------|--------------|----------------------|
+| **P1** | Viz sugestie — **sync seed `_damMaterialsCtx`** + enrich listy po `loadIndexAssets` (**wdrozone 4.0.42**, typ B) | branding `data-viz-assoc-cta="product"` (złoty path) |
+| **P2** | Viz warianty — `openVizAssocVariantsPicker` | wspólny `paintAssoc` brandingu |
+| **P3** | Align COMBO ↔ picker shell (`stackOnAssoc`, `dam-thumb-picker-box`) | embed COMBO w `#damAssocEditPopover` (cofnięte 4.0.41) |
+| **P4** | Unifikacja handlerów (delegacja, jeden `openEditPicker` entry) | zamiana `DamFolderPicker` pickera produktów (inna rola: dysk vs indeks) |
+
+**Benchmark UI modali:** shell **COMBO** (`#damThumbPicker` overlay) — picker skojarzeń **dociąga się do COMBO**, nie odwrotnie (v4.0.41).
+
+#### Ocena propozycji unifikacji (2026-07-26)
+
+| Propozycja | Werdykt | Uzasadnienie |
+|------------|---------|--------------|
+| Wspólny wzorzec bind (delegowany click + ctx refresh) | **TAK** | działa w złotym path; viz ma `bindVizAssocCtas` — ten sam model |
+| Wszystkie CTA → `openEditPicker` | **CZĘŚCIOWO** | product/variant OK; viz suggestions = `kind:material` + inny save |
+| Scal `bind` + `bindVizAssocCtas` w jeden moduł | **TAK, ostrożnie** | różne rooty DOM (`#damMediaPreviewAssoc` vs `#damVizModal`) |
+| Jeden picker zamiast COMBO + assoc picker | **NIE** | COMBO = browse dysku/folder; assoc picker = indeks produktów/materiałów |
+| `ctx.asset` obowiązkowy wszędzie | **NIE** | viz suggestions/variants nie edytują jednego assetu |
+| `openMediaPicker` jako wspólny shell | **TAK** (już jest) | adaptery `onConfirm` / kind decydują o zapisie |
+
+#### Historia skrócona 4.0.18 → 4.0.41 (assoc/COMBO — co zostało)
+
+| Wersja | Co weszło / wyszło |
+|--------|-------------------|
+| **4.0.18** | restore baseline `092821f` |
+| **4.0.19** | `DamFolderPicker`, shell-first picker, częściowy viz CTA bind |
+| **4.0.20–21** | anty-freeze: `ensureInjectedCss` early-return; paint seed przed enrich; deferred populate pickera; delegowany CTA |
+| **4.0.24** | ponowny full restore assoc do `092821f` |
+| **4.0.25+** | CTA Dodaj/Edytuj, viz pickers, dedupe produktów, modal chrome unify |
+| **4.0.36** | `dedupeProductIds` / `dedupeLinkedProductRecords` globalnie |
+| **4.0.37–38** | zamknięcie modala + `dam-dialog-actions` footer grid |
+| **4.0.39** | COMBO `stackOnAssoc`, Wstecz wraca do pickera |
+| **4.0.40** | embed COMBO w popover — **FAIL, cofnięte** |
+| **4.0.41** | picker = `dam-thumb-picker-box`; COMBO overlay; kierunek: picker → COMBO shell |
+
+**Aktualna wersja:** `4.0.44` · token cache `4.0.44-vizAssocLite20260726a`.
+
+#### Wyjaśnienie po ludzku (dlaczego produkty branding działają)
+
+1. Przycisk jest w HTML, ale **klik łapie rodzic** `#damMediaPreviewAssoc` — **strażnik (listener) stoi przy szafie raz** (delegacja), więc po przerysowaniu guzików w środku drugi klik nadal dochodzi do handlera.
+2. Przy **każdym** `bind()` karteczka **ctx jest wymieniana na nową** (`root._damAssocCtx = ctx`) — po zapisie / `renderMeta` masz świeże ID produktów, nie starą karteczkę sprzed pickera. **Nie mylić:** zostaje strażnik, **nie** ta sama karteczka.
+3. Przed kliknięciem modal **maluje od razu** listę produktów z ID (seed), a dopiero potem **w tle** dociąga nazwy/miniatury (enrich) — UI nie czeka na kuriera.
+4. Zapis: picker → `saveAssociations` → bridge → `renderMeta` → `paintAssoc` + `bind()` (nowa karteczka + ten sam strażnik).
+5. Viz sugestie to **inna gra** (inny ctx, inny zapis) — patrz typ awarii B w słowniku.
+
+#### Słownik pojęć (metafory) — ASSOC
+
+Pelna wersja dla GitHub / onboarding: [`docs/ASSOC-GLOSSARY.md`](../../docs/ASSOC-GLOSSARY.md).
+
+Skrót — **bind = dwie osobne rzeczy**:
+
+| Zjawisko | Co zostaje / co się zmienia | Metafora | Kod |
+|----------|----------------------------|----------|-----|
+| **Delegacja listenera** | Strażnik **zostaje** (jeden na rodzicu) | Drzwi szafy `#damMediaPreviewAssoc` | `_damAssocCtasBound` + `addEventListener` raz |
+| **Odświeżenie ctx** | Karteczka **wymieniana** przy każdym `bind()` | Nowa karteczka z aktualnym assetem / ID | `root._damAssocCtx = ctx` zawsze |
+
+**Sync / async / typ A vs B / seed / enrich / P1 bramki** — w [`docs/ASSOC-GLOSSARY.md`](../../docs/ASSOC-GLOSSARY.md) § sekcje odpowiednio.
 
