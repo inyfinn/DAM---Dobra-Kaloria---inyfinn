@@ -1,4 +1,36 @@
-﻿## 2026-07-26 - release: v5.0.0 assoc picker milestone (user confirmed)
+﻿## 2026-07-26 - fix(stage1): v5.0.2 assoc instant save + tag edit + folder path sync
+
+**Komenda/Akcja:** User expanded Stage 1: (A) instant persist+UI on Zatwierdz assoc picker, (B) tag edit broken viz+branding, (C) folder rename stale data-path after carrier tag change (6300728 Banoffee DOY→BIGPAK), (D) prior Stage1 thumbs/source filter/cynamonka matrix.
+
+**Log/Status:**
+1. **A assoc instant:** `flushOptimisticAssocUi` — patch ctx + `onRefresh`/`onSaved` przed POST; rollback przy bledzie; material suggestions tez optimistic `ctx.selectedIds`.
+2. **B tag edit:** `revisionBadgeData` / `brandingBadgeData` w `dam-badges.js` — `data-revision-path` na lang/index/brand/cat; re-bind badges w media preview.
+3. **C folder sync:** bridge `new_carrier_code`; `submitCarrierChange` DOM patch; `applyDiskRenameResult` + `selectVariant` w `dam-viz.js`.
+4. Bump **5.0.2** + cache bust `5.0.2-assocInstantTagPath20260726`.
+5. code-doctrine §12 lekcja tag-path + folder-rename.
+
+**Efekt/Fix:** Kod wdrożony v5.0.2; weryfikacja automatyczna poniżej.
+
+**Test/Ewaluacja:**
+- `node --check` (5 plikow JS): PASS
+- smoke `:8765`/`:8766`: PASS (po restarcie bridge)
+- `_diag-cta-search-matrix.js`: open **4/4**, search **4/4** (52–58 ms) — brak regresji freeze
+- `_diag-tag-badge-revision-path.js`: lang badge `data-revision-path` **PASS** (6300728 Banoffee DOY path); picker paint async — wymaga Shift+klik w WebView2
+
+**Macierz deliverable:**
+
+| Obszar | Status | Dowod |
+|--------|--------|-------|
+| Assoc instant save (A) | CODE PASS / DB manual | `flushOptimisticAssocUi` przed POST; rollback przy bledzie |
+| Tag edit (B) | PASS (revision-path) | CDP: lang badge ma revision-path + dam-tag-editable |
+| Folder path sync (C) | CODE PASS / disk manual | `applyDiskRenameResult` + bridge `new_carrier_code` |
+| Stage1 cynamonka matrix (D) | PENDING manual | 4/4 CTA search OK; ADD matrix wymaga sesji admin + Ctrl+F5 |
+
+**Źródła:** dam-assoc-edit.js, dam-badges.js, dam-tag-edit.js, dam-viz.js, dam-media-preview.js, local_bridge.py, version 5.0.2
+
+---
+
+## 2026-07-26 - release: v5.0.0 assoc picker milestone (user confirmed)
 
 **Komenda/Akcja:** User confirmed **ALL 4 CTA buttons work, search works** — major milestone v5.0.0.
 

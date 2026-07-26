@@ -258,6 +258,7 @@
       label: label,
       thumb: brandingThumbUrl(entry),
       thumb_url: brandingThumbUrl(entry),
+      preview_src: pickerPreviewSrc(entry),
       path: entry.path || "",
       marketing_id: mid,
       index: mid,
@@ -583,6 +584,45 @@
     return u;
   }
 
+  var PICKER_SOURCE_EXTS = { psd: 1, psb: 1, ai: 1, indd: 1, eps: 1, pdf: 1 };
+
+  function fileExtPicker(path) {
+    var n = String(path || "").replace(/\\/g, "/");
+    var dot = n.lastIndexOf(".");
+    if (dot < 0) return "";
+    return n.slice(dot + 1).toLowerCase();
+  }
+
+  /** PSD/PSB/AI/PDF = zrodla — NIE w browse/search pickera B warianty (HARD 2026-07-26). */
+  function isBrandingPickerSourceFile(entry) {
+    if (!entry) return true;
+    var ext = fileExtPicker(entry.path || entry.name || "");
+    if (PICKER_SOURCE_EXTS[ext]) return true;
+    var mt = String(entry.media_type || "").toLowerCase();
+    return mt === "source" || mt === "vector" || mt === "document";
+  }
+
+  function isBrandingPickerDeliverable(entry) {
+    return entry && entry.id && !isBrandingPickerSourceFile(entry);
+  }
+
+  function pickerPreviewFromPath(path) {
+    path = String(path || "").trim();
+    if (!path) return "";
+    if (global.DamMediaPreview && typeof global.DamMediaPreview.previewUrl === "function") {
+      return global.DamMediaPreview.previewUrl(path, { path: path, name: path });
+    }
+    return bridgeUrl() + "/media?path=" + encodeURIComponent(path) + "&preview=1";
+  }
+
+  /** Hover / PODGLAD: jeden on-demand /media (list img = listSafeThumb). */
+  function pickerPreviewSrc(entry) {
+    if (!entry) return "";
+    var path = entry.path || "";
+    if (!path) return "";
+    return pickerPreviewFromPath(path);
+  }
+
   /**
    * Branding material/wariant rows — for+break CAP (forEach+return does NOT stop).
    */
@@ -601,6 +641,7 @@
       if (i >= scanBudget) break;
       var material = list[i];
       if (!material || !material.id || pinnedSet[material.id] || seenIds[material.id]) continue;
+      if (!isBrandingPickerDeliverable(material)) continue;
       var row = brandingEntryToPickerRow(material) || material;
       if (!row || !row.id) continue;
       if (!materialMatchesPickerTags(row, activeTags)) continue;
@@ -619,6 +660,7 @@
         id: row.id,
         label: shortAssocLabel(row.label || row.name),
         thumb: row.thumb || brandingThumbUrl(row),
+        preview_src: row.preview_src || pickerPreviewSrc(row),
         sub: row.marketing_id || row.index || marketingIdForBranding(row) || "",
         path: row.path || "",
       });
@@ -785,9 +827,19 @@
     gc.variants = (variantIds || []).map(function (id) {
       return byId[id] || { id: id };
     });
-    if (ctx.asset && ctx.asset.variants) {
+    gc.linked_variant_ids = (variantIds || []).slice();
+    if (ctx.asset) {
       ctx.asset.variants = gc.variants.slice();
+      ctx.asset.linked_variant_ids = (variantIds || []).slice();
     }
+  }
+
+  /** Natychmiastowy UI po Zatwierdz (zapis bridge w tle). */
+  function flushOptimisticAssocUi(ctx, productIds, variantIds) {
+    patchCtxProductIds(ctx, productIds);
+    patchCtxVariantIds(ctx, variantIds);
+    if (typeof ctx.onSaved === "function") ctx.onSaved(productIds, variantIds);
+    if (typeof ctx.onRefresh === "function") ctx.onRefresh();
   }
 
   function patchAssetProductIds(asset, productIds) {
@@ -1592,6 +1644,7 @@
               id: rowM.id,
               label: shortAssocLabel(rowM.label || rowM.name || rowM.title),
               thumb: rowM.thumb || brandingThumbUrl(rowM),
+              preview_src: rowM.preview_src || pickerPreviewSrc(rowM),
               sub: rowM.marketing_id || rowM.index || marketingIdForBranding(rowM) || "",
               path: rowM.path || "",
             };
@@ -1611,6 +1664,7 @@
                 id: rowV.id,
                 label: shortAssocLabel(rowV.label || rowV.name),
                 thumb: rowV.thumb || brandingThumbUrl(rowV),
+                preview_src: rowV.preview_src || pickerPreviewSrc(rowV),
                 sub: rowV.marketing_id || rowV.index || marketingIdForBranding(rowV) || "",
                 path: rowV.path || "",
               };
@@ -1634,6 +1688,10 @@
                 v.thumb_url ||
                 brandingThumbUrl(rowCand) ||
                 (v.path && global.DamMediaPreview ? global.DamMediaPreview.previewUrl(v.path, v) : ""),
+              preview_src:
+                rowCand.preview_src ||
+                pickerPreviewSrc(rowCand) ||
+                (v.path ? pickerPreviewFromPath(v.path) : ""),
               sub:
                 rowCand.marketing_id ||
                 rowCand.index ||
@@ -1836,8 +1894,8 @@
               esc(String(it.revCount) + (it.revCount === 1 ? " wariant" : " warianty")) +
               "</span>"
             : "";
-        var rawThumb = it.thumb || PLACEHOLDER_SVG;
-        var safeThumb = listSafeThumb(rawThumb);
+        var rawThumb = it.preview_src || it.thumb || PLACEHOLDER_SVG;
+        var safeThumb = listSafeThumb(it.thumb || PLACEHOLDER_SVG);
         return (
           '<div class="dam-assoc-edit-popover__opt-row' +
           (isRev ? " dam-assoc-edit-popover__opt-row--revision" : "") +
@@ -2679,6 +2737,49 @@
     return picked.filePath || picked.folder || picked.path || "";
   }
 
+  function enrichBrandingAssetsByIds(ids) {
+    ids = (ids || [])
+      .map(function (id) {
+        return String(id || "").trim();
+      })
+      .filter(Boolean);
+    if (!ids.length) return Promise.resolve([]);
+    var include = ids.slice(0, 40).join(",");
+    var url =
+      bridgeUrl() +
+      "/branding-search-picker?q=&limit=80&include=" +
+      encodeURIComponent(include);
+    return fetch(url, { headers: { Accept: "application/json" } })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        var raw = ((data && (data.entries || data.items)) || []).slice();
+        var byId = {};
+        raw.forEach(function (entry) {
+          if (!entry || !entry.id) return;
+          var row = brandingEntryToPickerRow(entry) || entry;
+          byId[entry.id] = {
+            id: row.id,
+            name: row.label || row.name || entry.id,
+            label: row.label || row.name || entry.id,
+            path: row.path || entry.path || "",
+            thumb_url: row.thumb || brandingThumbUrl(row),
+            marketing_id: row.marketing_id || row.index || marketingIdForBranding(row) || "",
+            index: row.index || row.marketing_id || "",
+          };
+        });
+        return ids.map(function (id) {
+          return byId[id] || { id: id, name: id };
+        });
+      })
+      .catch(function () {
+        return ids.map(function (id) {
+          return { id: id, name: id };
+        });
+      });
+  }
+
   function loadBrandingMaterialCandidates(opts) {
     opts = opts || {};
     var q = String(opts.bootstrapQuery || "").trim();
@@ -2704,6 +2805,7 @@
         for (var i = 0; i < raw.length; i++) {
           var entry = raw[i];
           if (!entry) continue;
+          if (!isBrandingPickerDeliverable(entry)) continue;
           /* Keep /media URL for hover preview only — list uses listSafeThumb. */
           if (entry.thumb_url && String(entry.thumb_url).indexOf("/media?") === 0) {
             entry = Object.assign({}, entry, { thumb_url: bridgeUrl() + entry.thumb_url });
@@ -3152,8 +3254,13 @@
         groupContext: gc,
         assocCtx: ctx,
         onConfirm: function (ids) {
+          ctx.selectedIds = (ids || []).slice();
+          if (typeof ctx.onRefresh === "function") ctx.onRefresh();
           saveProductMaterialSuggestions(productId, ids, prevMatIds).then(function (res) {
-            if (res && res.ok && typeof ctx.onRefresh === "function") ctx.onRefresh();
+            if (!res || res.ok === false) {
+              ctx.selectedIds = prevMatIds.slice();
+              if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+            }
           });
         },
       };
@@ -3195,8 +3302,12 @@
               return p && p.id;
             })
             .filter(Boolean);
-          saveAssociations(ctx, prevPids, ids || [], { silentToast: false }).then(function () {
-            if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+          var vids = ids || [];
+          flushOptimisticAssocUi(ctx, prevPids, vids);
+          saveAssociations(ctx, prevPids, vids, { silentToast: false }).then(function (res) {
+            if (!res || res.ok === false) {
+              flushOptimisticAssocUi(ctx, prevPids, prevVarIds);
+            }
           });
         },
         onVariantPicked: function (picked) {
@@ -3243,8 +3354,9 @@
 
         if (kind === "product" && ctx.lastFolderPick) {
           patchLinkedProductsWithFolderPick(ctx, pids, ctx.lastFolderPick);
-          if (typeof ctx.onRefresh === "function") ctx.onRefresh();
         }
+
+        flushOptimisticAssocUi(ctx, pids, vids);
 
         /* Pkt 32: cooldown / soft-delete. Jesli zapis USUWA skojarzenia,
            daj okno "Cofnij" (~7 s) przywracajace poprzedni stan. */
@@ -3254,9 +3366,12 @@
           return nextForKind.indexOf(x) === -1;
         });
 
-        saveAssociations(ctx, pids, vids, { silentToast: removed.length > 0 }).then(function () {
+        saveAssociations(ctx, pids, vids, { silentToast: removed.length > 0 }).then(function (res) {
           ctx.lastFolderPick = null;
-          if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+          if (!res || res.ok === false) {
+            flushOptimisticAssocUi(ctx, prevPids, prevVids);
+            return;
+          }
           if (removed.length && global.DamDanger && typeof global.DamDanger.toastUndo === "function") {
             global.DamDanger.toastUndo({
               message:
@@ -3266,6 +3381,7 @@
               actionLabel: "Cofnij",
               duration: 8000,
               onUndo: function () {
+                flushOptimisticAssocUi(ctx, prevPids, prevVids);
                 saveAssociations(ctx, prevPids, prevVids, { silentToast: true }).then(function () {
                   if (typeof ctx.onRefresh === "function") ctx.onRefresh();
                 });
@@ -4284,6 +4400,7 @@
     /** Shift-minus on studio .all-file tiles (soft-hide picker; no disk delete). */
     wireStudioAllFiles: wireStudioAllFiles,
     enrichLinkedProducts: enrichLinkedProducts,
+    enrichBrandingAssetsByIds: enrichBrandingAssetsByIds,
     dedupeProductIds: dedupeProductIds,
     dedupeLinkedProductRecords: dedupeLinkedProductRecords,
     productThumb: productThumb,

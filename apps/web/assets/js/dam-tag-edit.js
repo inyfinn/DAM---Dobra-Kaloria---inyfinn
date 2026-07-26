@@ -123,9 +123,14 @@
 
   function closePopover() {
     var pop = document.getElementById("damTagEditPopover");
-    if (pop) pop.remove();
+    if (pop) {
+      if (pop._damTagSearchTimer) clearTimeout(pop._damTagSearchTimer);
+      if (typeof pop._damTagPopCleanup === "function") pop._damTagPopCleanup();
+      pop.remove();
+    }
     document.removeEventListener("click", onDocClick, true);
     document.removeEventListener("keydown", onDocKey, true);
+    _tagPickerOpening = false;
   }
 
   function onDocClick(e) {
@@ -204,6 +209,7 @@
           );
           return res;
         }
+        res.new_carrier_code = newCode === NONE_CODE ? "" : newCode;
         if (res.immediate) {
           var shown = newCode === NONE_CODE ? "BRAK TYPU" : newCode;
           var nFiles = res.file_rename_count || (res.file_renames && res.file_renames.length) || 0;
@@ -233,6 +239,22 @@
               }
             });
           } catch (ignore) {}
+          if (res.old_path && res.new_path && res.old_path !== res.new_path) {
+            try {
+              document.querySelectorAll("[data-revision-path]").forEach(function (el) {
+                var rp = el.getAttribute("data-revision-path") || "";
+                if (rp === ctx.revisionPath || rp === res.old_path) {
+                  el.setAttribute("data-revision-path", res.new_path);
+                }
+              });
+              document.querySelectorAll("[data-path]").forEach(function (el) {
+                var p = el.getAttribute("data-path") || "";
+                if (p === ctx.revisionPath || p === res.old_path || p.indexOf(res.old_path) >= 0) {
+                  el.setAttribute("data-path", p.replace(res.old_path, res.new_path));
+                }
+              });
+            } catch (ignorePath) {}
+          }
           if (typeof ctx.onApplied === "function") ctx.onApplied(res);
           else if (global.DamViz && typeof global.DamViz.refreshAfterTagChange === "function") {
             global.DamViz.refreshAfterTagChange(res);
@@ -306,7 +328,18 @@
     return "Dodaj tag";
   }
 
+  function ensureTagPopoverWideCss() {
+    if (document.getElementById("dam-tag-edit-popover-wide")) return;
+    var s = document.createElement("style");
+    s.id = "dam-tag-edit-popover-wide";
+    s.textContent =
+      "#damTagEditPopover.dam-tag-edit-popover--wide{" +
+      "width:min(50vw,960px)!important;min-width:min(50vw,480px);min-height:500px;}";
+    document.head.appendChild(s);
+  }
+
   function ensureTagPopoverBtnStyles() {
+    ensureTagPopoverWideCss();
     var old = document.getElementById("damTagEditDodajStyles");
     if (old && old.parentNode) old.parentNode.removeChild(old);
     var st = document.getElementById("damTagEditPopBtnStyles");
@@ -315,10 +348,12 @@
       st.id = "damTagEditPopBtnStyles";
       document.head.appendChild(st);
     }
-    st.setAttribute("data-token", "tagPopGrid20260721b");
+    st.setAttribute("data-token", "dialogActions20260726a");
     /* Equal CSS grid: 2 columns, full-width cells; + left of label; actions bottom */
     st.textContent =
-      "#damTagEditPopover.dam-tag-edit-popover{min-width:320px;width:min(340px,calc(100vw - 24px));}" +
+      "#damTagEditPopover.dam-tag-edit-popover{position:fixed!important;z-index:12350!important;" +
+      "min-width:320px;width:min(340px,calc(100vw - 24px));}" +
+      "#damTagEditPopover.dam-tag-edit-popover--wide{width:min(50vw,960px)!important;min-height:500px;}" +
       "#damTagEditPopover .dam-tag-edit-popover__foot{" +
       "display:grid!important;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;" +
       "padding:10px 12px;border-top:1px solid #ececf2;flex:0 0 auto;box-sizing:border-box;}" +
@@ -345,11 +380,29 @@
       "#damTagEditPopover .dam-tag-edit-popover__foot > button:focus-visible{" +
       "outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px;}" +
       "#damTagEditPopover .dam-tag-edit-popover__actions{" +
-      "display:grid!important;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;" +
-      "padding:10px 12px;border-top:1px solid #ececf2;background:#fafafc;flex:0 0 auto;}" +
+      "display:flex!important;flex-wrap:wrap;align-items:center;justify-content:flex-start;" +
+      "gap:8px;padding:10px 12px;border-top:1px solid #ececf2;background:#fafafc;flex:0 0 auto;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__actions .dam-dialog-actions__spacer{" +
+      "flex:1 1 auto;min-width:12px;height:1px;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__actions > [data-confirm]{margin-left:auto;}" +
       "#damTagEditPopover .dam-tag-edit-popover__confirm," +
       "#damTagEditPopover .dam-tag-edit-popover__cancel{" +
-      "width:100%!important;min-width:0;min-height:40px;justify-content:center;}";
+      "width:auto!important;min-width:44px;min-height:40px;justify-content:center;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__list--checks{" +
+      "display:flex;flex-direction:column;gap:4px;max-height:min(52vh,420px);overflow:auto;padding:6px 8px;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__check{" +
+      "display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center;" +
+      "padding:6px 8px;border-radius:8px;cursor:pointer;border:1px solid transparent;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__check.is-selected{" +
+      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 8%,#fff);" +
+      "border-color:color-mix(in srgb,var(--dam-primary,#ab54db) 35%,#ececf2);}" +
+      "#damTagEditPopover .dam-tag-edit-popover__check-group{" +
+      "font-size:10px;font-weight:600;text-transform:uppercase;color:#9a9caa;white-space:nowrap;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__check-label{font-size:13px;color:#3d3a48;min-width:0;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__opt--check{" +
+      "display:grid!important;grid-template-columns:20px 1fr;gap:8px;align-items:center;text-align:left;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__opt-check{" +
+      "width:18px;text-align:center;font-weight:700;color:var(--dam-primary,#ab54db);}";
   }
 
   /** PL / EN gdy slug angielski rozni sie od etykiety PL. */
@@ -366,48 +419,109 @@
     return (fi && Array.isArray(fi.products) && fi.products) || [];
   }
 
-  function ensureFileIndex() {
-    if (fileIndexProducts().length) {
-      return Promise.resolve(global._DAM_FILE_INDEX);
+  function isLightProductCatalog() {
+    var fi = global._DAM_FILE_INDEX;
+    return !!(fi && fi._fromSearchIndex && Array.isArray(fi.products) && fi.products.length);
+  }
+
+  function applyLightProductCatalogFromSearch(si) {
+    var entries = (si && si.entries) || [];
+    var products = entries
+      .map(function (e) {
+        if (!e || !e.id) return null;
+        return {
+          id: e.id,
+          name: e.name || e.id,
+          display_name: e.display_name || e.name || e.id,
+          category: e.category || "",
+          tags: e.tags || [],
+          indexes: e.indexes || [],
+          index_bases: e.index_bases || [],
+          search_blob: e.search_blob || "",
+          path: e.path || "",
+          brand: e.brand || "",
+          subcategory_label: e.subcategory || "",
+          _fromSearchIndex: true,
+        };
+      })
+      .filter(Boolean);
+    var light = { products: products, _fromSearchIndex: true };
+    if (!global._DAM_FILE_INDEX || !global._DAM_FILE_INDEX._fromSearchIndex) {
+      global._DAM_FILE_INDEX = light;
+    } else {
+      global._DAM_FILE_INDEX.products = products;
+      global._DAM_FILE_INDEX._fromSearchIndex = true;
     }
-    if (global.DamSearch && typeof global.DamSearch.reload === "function") {
-      return global.DamSearch.reload()
-        .then(function () {
-          return global._DAM_FILE_INDEX;
-        })
-        .catch(function () {
-          return fetch("data/file-index.json?v=" + Date.now())
+    return global._DAM_FILE_INDEX;
+  }
+
+  function ensureSearchIndexBootstrap() {
+    if (global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries) {
+      return Promise.resolve(global._DAM_SEARCH_INDEX);
+    }
+    if (global.DamSearch && typeof global.DamSearch.loadSearchOnly === "function") {
+      return global.DamSearch.loadSearchOnly().then(function (si) {
+        return si || global._DAM_SEARCH_INDEX || { entries: [] };
+      });
+    }
+    return fetch("data/search-index.json?v=" + Date.now())
             .then(function (r) {
-              return r.ok ? r.json() : null;
-            })
-            .then(function (d) {
-              if (d) global._DAM_FILE_INDEX = d;
+        return r.ok ? r.text() : "";
+      })
+      .then(function (text) {
+        if (!text) throw new Error("search-index empty");
+        var parse =
+          global.DamSearch && typeof global.DamSearch.parseJsonInWorker === "function"
+            ? global.DamSearch.parseJsonInWorker(text, "search-index", 12000)
+            : Promise.resolve().then(function () {
+                return JSON.parse(text);
+              });
+        return parse.then(function (d) {
+          global._DAM_SEARCH_INDEX = d;
               return d;
             });
         });
     }
-    return fetch("data/file-index.json?v=" + Date.now())
-      .then(function (r) {
-        return r.ok ? r.json() : null;
-      })
-      .then(function (d) {
-        if (d) global._DAM_FILE_INDEX = d;
-        return d;
+
+  function ensureFileIndex() {
+    if (isLightProductCatalog()) {
+      return Promise.resolve(global._DAM_FILE_INDEX);
+    }
+    /* HARD: prefer light search-index; never block UI with ~8MB main-thread file-index parse. */
+    return ensureSearchIndexBootstrap()
+      .then(function (si) {
+        return applyLightProductCatalogFromSearch(si);
       })
       .catch(function () {
-        return null;
+        return global._DAM_FILE_INDEX || { products: [], _fromSearchIndex: true };
       });
   }
 
   function collectSubcategoryOptions(cur) {
     var map = {};
-    fileIndexProducts().forEach(function (p) {
+    var dictSubs =
+      (global.DamNaming && Array.isArray(global.DamNaming.subcategories) && global.DamNaming.subcategories) ||
+      [];
+    dictSubs.forEach(function (row) {
+      if (!row) return;
+      var slug = String(row.slug || row.code || "").trim();
+      if (!slug) return;
+      var key = slug.toLowerCase();
+      var pl = String(row.label_pl || row.pl || slug).trim() || slug;
+      map[key] = { code: slug, pl: pl, label: bilingualSubcatLabel(slug, pl) };
+    });
+    var scanCap = 800;
+    var scanN = 0;
+    fileIndexProducts().some(function (p) {
+      if (scanN >= scanCap) return true;
+      scanN++;
       var slug = String(p.subcategory_slug || "").trim();
       if (!slug) return;
       var key = slug.toLowerCase();
       if (map[key]) return;
       var pl = String(p.subcategory_label || slug).trim() || slug;
       map[key] = { code: slug, pl: pl, label: bilingualSubcatLabel(slug, pl) };
+      return false;
     });
     if (cur) {
       var ck = String(cur).toLowerCase();
@@ -433,20 +547,39 @@
 
   function collectIndexOptions(cur) {
     var map = {};
+    var mapCount = 0;
+    var MAX_IX = 400;
     function addIx(raw) {
+      if (mapCount >= MAX_IX) return;
       var v = String(raw || "").trim();
       if (!v) return;
       var base = v.indexOf(".") > 0 ? v.split(".")[0] : v;
       if (!/^\d{4,}/.test(base)) return;
+      if (map[base]) return;
       map[base] = base;
+      mapCount++;
     }
-    fileIndexProducts().forEach(function (p) {
+    var entries = (global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries) || [];
+    if (entries.length) {
+      for (var ei = 0; ei < entries.length && mapCount < MAX_IX; ei++) {
+        var ent = entries[ei];
+        if (!ent) continue;
+        (ent.index_bases || []).forEach(addIx);
+        (ent.indexes || []).forEach(addIx);
+      }
+    } else {
+      var products = fileIndexProducts();
+      for (var i = 0; i < products.length && mapCount < MAX_IX; i++) {
+        var p = products[i];
       (p.index_bases || []).forEach(addIx);
       (p.indexes || []).forEach(addIx);
+        if (!p._fromSearchIndex && p.revisions) {
       (p.revisions || []).forEach(function (r) {
         addIx(r && r.index);
       });
-    });
+        }
+      }
+    }
     if (cur) {
       var c = String(cur).trim();
       var cb = c.indexOf(".") > 0 ? c.split(".")[0] : c;
@@ -742,8 +875,11 @@
     if (k === "carrier") {
       return submitCarrierChange(ctx, newCode || NONE_CODE);
     }
-    if (k === "lang") {
-      return submitLangChange(ctx, newCode || "");
+    if (kind === "lang") {
+      return submitLangChange(
+        Object.assign({}, ctx, { replaceLangs: true }),
+        Array.isArray(newCode) ? newCode : newCode || ""
+      );
     }
     if (k === "status") {
       if (typeof global.damSetRevisionStatus === "function") {
@@ -777,26 +913,103 @@
       return Promise.resolve({ ok: true });
     }
     if (isAdmin()) {
-      showToast("Wybrano " + newCode + " dla tagu " + k + ".");
-      if (typeof ctx.onApplied === "function") ctx.onApplied({ ok: true, code: newCode, kind: k });
+      var shown =
+        k === "category" && global.DamLabels && typeof global.DamLabels.categoryTitle === "function"
+          ? global.DamLabels.categoryTitle(newCode)
+          : k === "subcategory" && global.DamLabels && typeof global.DamLabels.formatTagLabel === "function"
+            ? global.DamLabels.formatTagLabel(newCode, "subcategory")
+            : String(newCode || "");
+      showToast("Wybrano " + shown + " dla tagu " + k + ".");
+      try {
+        document.querySelectorAll('.dam-badge-tag[data-tag-kind="' + k + '"]').forEach(function (el) {
+          var rp = el.getAttribute("data-revision-path") || "";
+          if (ctx.revisionPath && rp && rp !== ctx.revisionPath) return;
+          el.setAttribute("data-tag-value", newCode);
+          el.setAttribute("data-current-code", newCode);
+          el.textContent = shown;
+        });
+      } catch (ignoreDom) {}
+      if (typeof ctx.onApplied === "function") {
+        ctx.onApplied({ ok: true, code: newCode, kind: k, immediate: true });
+      }
       return Promise.resolve({ ok: true, immediate: true });
     }
     showToast("Wybrano " + newCode + " dla tagu " + k + ". Zgloszenie trafia do moderacji (Wiadomosci).");
     return Promise.resolve({ ok: true });
   }
 
+  // #region agent log
+  function __damTagDbg() {
+    /* noop — debug ingest wylaczony (martwy port 7922 potrafil wisiec UI). */
+  }
+  // #endregion
+
+  var _tagPickerOpening = false;
+
+  function panicTagReset() {
+    _tagPickerOpening = false;
+    try {
+      closePopover();
+    } catch (eClose) {
+      /* ignore */
+    }
+  }
+  try {
+    global.addEventListener("dam:panic-reset", panicTagReset);
+  } catch (ePanic) {
+    /* ignore */
+  }
+
   function openTagPicker(anchorEl, ctx) {
+    // #region agent log
+    __damTagDbg("dam-tag-edit.js:openTagPicker", "entry", {
+      opening: _tagPickerOpening,
+      kind: (ctx && ctx.kind) || "",
+    }, "H2");
+    // #endregion
+    /* Soft unstick only: never dispatch dam:panic-reset here (re-enters handlers / UI freeze). */
+    if (_tagPickerOpening) {
+      if (document.getElementById("damTagEditPopover")) {
+        closePopover();
+      } else {
+        _tagPickerOpening = false;
+      }
+    } else if (document.getElementById("damTagEditPopover")) {
+      closePopover();
+    }
+    /* Do not call DamAssocEdit.closePicker here - it can tear down unrelated overlays mid-click. */
+    _tagPickerOpening = true;
+    /* Macrotask: click / CDP evaluate must return before building popover DOM. */
+    setTimeout(function () {
+      try {
+        openTagPickerNow(anchorEl, ctx);
+      } catch (errSync) {
+        console.error("[DamTagEdit] openTagPicker sync failed", errSync);
+        showToast("Nie udalo sie otworzyc pickera tagow.");
+        _tagPickerOpening = false;
+      }
+    }, 0);
+  }
+
+  function openTagPickerNow(anchorEl, ctx) {
     ctx = ctx || {};
     var kind = ctx.kind || (anchorEl && anchorEl.getAttribute("data-tag-kind")) || "carrier";
+    // #region agent log
+    __damTagDbg("dam-tag-edit.js:openTagPickerNow", "start", {
+      kind: kind,
+      warmProducts: (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products || []).length,
+      fromSearchIndex: !!(global._DAM_FILE_INDEX && global._DAM_FILE_INDEX._fromSearchIndex),
+    }, "H1");
+    // #endregion
     if (kind === "carrier" || kind === "lang") {
       ctx = Object.assign(
         {
-          revisionPath: anchorEl.getAttribute("data-revision-path") || "",
-          currentCode: anchorEl.getAttribute("data-current-code") || ctx.value || "",
-          productId: anchorEl.getAttribute("data-product-id") || "",
-          productName: anchorEl.getAttribute("data-product-name") || "",
-          revisionIndex: anchorEl.getAttribute("data-revision-index") || ctx.revisionIndex || "",
-          brand: anchorEl.getAttribute("data-brand") || ctx.brand || "",
+          revisionPath: (anchorEl && anchorEl.getAttribute("data-revision-path")) || "",
+          currentCode: (anchorEl && anchorEl.getAttribute("data-current-code")) || ctx.value || "",
+          productId: (anchorEl && anchorEl.getAttribute("data-product-id")) || "",
+          productName: (anchorEl && anchorEl.getAttribute("data-product-name")) || "",
+          revisionIndex: (anchorEl && anchorEl.getAttribute("data-revision-index")) || ctx.revisionIndex || "",
+          brand: (anchorEl && anchorEl.getAttribute("data-brand")) || ctx.brand || "",
         },
         ctx
       );
@@ -814,6 +1027,9 @@
         ctx.replaceLangs = false;
       }
     }
+    if (typeof global._damVizOnTagApplied === "function" && !ctx.onApplied) {
+      ctx.onApplied = global._damVizOnTagApplied;
+    }
     if (!ctx.value && anchorEl) {
       ctx.value = anchorEl.getAttribute("data-tag-value") || ctx.value || "";
     }
@@ -828,60 +1044,245 @@
     autoEnableAdminModeIfPrivileged();
     if (kind === "carrier") refreshCarrierTypesCache();
 
-    var needsIndex = kind === "subcategory" || kind === "index";
-    var ready = needsIndex ? ensureFileIndex() : Promise.resolve(null);
-    ready
-      .then(function () {
-        var options = tagPickerOptions(kind, ctx);
-        renderTagPicker(anchorEl, ctx, kind, options);
-      })
-      .catch(function () {
-        var options = tagPickerOptions(kind, ctx);
-        renderTagPicker(anchorEl, ctx, kind, options);
+    /**
+     * HARD: ALWAYS paint picker synchronously from warm/dict data.
+     * Never await ensureFileIndex / search-index BEFORE first paint —
+     * that left UI with no popover, stuck _tagPickerOpening, and orphaned
+     * overlays that blocked #damVizModalClose (z-index 12100 over modal).
+     */
+    var options = tagPickerOptions(kind, ctx) || [];
+    if (options.length > 400) options = options.slice(0, 400);
+    if (!options.length && ctx.value) {
+      options = [
+        {
+          code: ctx.value,
+          label: String(ctx.value),
+          search: String(ctx.value).toLowerCase(),
+        },
+      ];
+    }
+    renderTagPicker(anchorEl, ctx, kind, options);
+    _tagPickerOpening = false;
+
+    /* Background enrich list only (index/subcategory) — never block open. */
+    if (kind === "index" || kind === "subcategory") {
+      var enrichKind = kind;
+      var enrichCtx = ctx;
+      var enrichAnchor = anchorEl;
+      setTimeout(function () {
+        var boot =
+          enrichKind === "index"
+            ? ensureSearchIndexBootstrap().then(function (si) {
+                applyLightProductCatalogFromSearch(si);
+                return si;
+              })
+            : ensureFileIndex();
+        boot
+          .then(function () {
+            var pop = document.getElementById("damTagEditPopover");
+            if (!pop || pop._damTagKind !== enrichKind) return;
+            var next = tagPickerOptions(enrichKind, enrichCtx) || [];
+            if (next.length > 400) next = next.slice(0, 400);
+            if (!next.length) return;
+            pop._damTagOptions = next.slice();
+            var list = pop.querySelector("[data-tag-list]");
+            if (!list || typeof pop._damTagRepaint !== "function") {
+              /* Full re-render only if same popover still open for this kind. */
+              renderTagPicker(enrichAnchor, enrichCtx, enrichKind, next);
+            } else {
+              pop._damTagRepaint("");
+            }
+          })
+          .catch(function () {
+            /* keep sync list */
+          });
+      }, 0);
+    }
+  }
+
+  function findTagPopoverScrollRoots(anchorEl) {
+    var roots = [];
+    if (!anchorEl || !anchorEl.closest) return roots;
+    [
+      ".dam-viz-modal__assoc-pane",
+      ".dam-viz-modal__body",
+      "#damVizModal",
+      "#damMediaPreview",
+      ".dam-media-preview__body",
+    ].forEach(function (sel) {
+      var el = anchorEl.closest(sel);
+      if (el && roots.indexOf(el) < 0) roots.push(el);
+    });
+    return roots;
+  }
+
+  function positionTagPopover(pop, anchorEl) {
+    if (!pop || !anchorEl) return;
+    /* HARD: always on body + fixed to viewport (transform ancestors trap fixed). */
+    if (pop.parentNode !== document.body) {
+      document.body.appendChild(pop);
+    }
+    var rect = anchorEl.getBoundingClientRect();
+    var margin = 12;
+    var vw = window.innerWidth || document.documentElement.clientWidth || 1024;
+    var vh = window.innerHeight || document.documentElement.clientHeight || 768;
+    pop.style.setProperty("position", "fixed", "important");
+    pop.style.setProperty("z-index", "12350", "important");
+    pop.style.setProperty("transform", "none", "important");
+    pop.style.setProperty("inset", "auto", "important");
+    pop.style.setProperty("right", "auto", "important");
+    pop.style.setProperty("bottom", "auto", "important");
+    pop.style.setProperty("margin", "0", "important");
+    /* Prefer measured size; width:min(50vw,…) can be 0 before first layout. */
+    var pr = pop.getBoundingClientRect();
+    var w = pr.width || pop.offsetWidth || 0;
+    var h = pr.height || pop.offsetHeight || 0;
+    if (!w || w < 40) w = pop.classList.contains("dam-tag-edit-popover--wide") ? Math.min(vw * 0.5, 960) : 320;
+    if (!h || h < 40) h = pop.classList.contains("dam-tag-edit-popover--wide") ? 500 : 360;
+    var anchorOk =
+      rect &&
+      isFinite(rect.left) &&
+      isFinite(rect.top) &&
+      (rect.width > 0 || rect.height > 0 || (rect.left !== 0 && rect.top !== 0));
+    var top = anchorOk ? rect.bottom + 6 : margin;
+    var left = anchorOk ? rect.left : margin;
+    if (top + h > vh - margin) {
+      top = (anchorOk ? rect.top : margin) - h - 6;
+    }
+    if (!isFinite(top) || top < margin) top = margin;
+    if (top + h > vh - margin) top = Math.max(margin, vh - h - margin);
+    if (left + w > vw - margin) {
+      left = Math.max(margin, vw - w - margin);
+    }
+    if (!isFinite(left) || left < margin) left = margin;
+    if (left > vw - margin) left = margin;
+    if (top > vh - margin) top = margin;
+    pop.style.top = Math.round(top) + "px";
+    pop.style.left = Math.round(left) + "px";
+  }
+
+  /** Double rAF: first paint may measure width 0 for 50vw; second pass clamps for real size. */
+  function scheduleTagPopoverPosition(pop, anchorEl) {
+    if (!pop || !anchorEl) return;
+    positionTagPopover(pop, anchorEl);
+    requestAnimationFrame(function () {
+      if (!document.getElementById("damTagEditPopover")) return;
+      positionTagPopover(pop, anchorEl);
+      requestAnimationFrame(function () {
+        if (!document.getElementById("damTagEditPopover")) return;
+        positionTagPopover(pop, anchorEl);
+      });
+    });
+  }
+
+  function bindTagPopoverReposition(pop, anchorEl) {
+    if (!pop || !anchorEl) return;
+    if (pop._damTagPopReposition) return;
+    pop._damTagPopReposition = true;
+    var scrollRoots = findTagPopoverScrollRoots(anchorEl);
+    var reposition = function () {
+      if (!document.getElementById("damTagEditPopover")) return;
+      positionTagPopover(pop, anchorEl);
+    };
+    pop._damTagPopCleanup = function () {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+      scrollRoots.forEach(function (host) {
+        host.removeEventListener("scroll", reposition);
+      });
+    };
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    scrollRoots.forEach(function (host) {
+      host.addEventListener("scroll", reposition, { passive: true });
       });
   }
 
   function renderTagPicker(anchorEl, ctx, kind, options) {
     if (!options.length) {
       showToast("Brak listy opcji dla tego tagu.");
+      _tagPickerOpening = false;
       return;
     }
 
-    var rect = anchorEl.getBoundingClientRect();
     var pop = document.createElement("div");
     pop.id = "damTagEditPopover";
     pop.className =
       "dam-tag-edit-popover" +
       (kind === "subcategory" || kind === "index" ? " dam-tag-edit-popover--wide" : "");
-    pop.style.top = window.scrollY + rect.bottom + 6 + "px";
-    pop.style.left = window.scrollX + rect.left + "px";
 
     var pendingCode = ctx.currentCode || ctx.value || "";
     if (kind === "index" && pendingCode.indexOf(".") > 0) {
       pendingCode = pendingCode.split(".")[0];
     }
+    var isLangMulti = kind === "lang";
+    var pendingLangs = isLangMulti
+      ? (ctx.currentLangs && ctx.currentLangs.slice()) || (pendingCode ? [pendingCode] : [])
+      : null;
     var headTxt = tagPickerHead(kind);
     var canDirect = isAdmin() && adminModeOn();
 
     var html =
       '<div class="dam-tag-edit-popover__head">' +
-      "<span>" + esc(headTxt) + "</span>" +
+      "<span>" + esc(headTxt) + (isLangMulti ? " <small style=\"font-weight:500;color:#8b8d97\">(wielokrotny)</small>" : "") + "</span>" +
       '<button type="button" class="dam-tag-edit-popover__close" aria-label="Zamknij" data-close data-dam-tip="Zamknij bez zapisu">' +
       '<i class="uil uil-times"></i></button></div>' +
       '<div class="dam-tag-edit-popover__search-wrap">' +
       '<i class="uil uil-search" aria-hidden="true"></i>' +
       '<input type="text" id="damTagEditSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj..." autocomplete="off" />' +
       "</div>" +
-      '<div class="dam-tag-edit-popover__list">';
+      '<div class="dam-tag-edit-popover__list" data-tag-list></div>' +
+      '<p class="dam-tag-edit-popover__empty" data-empty hidden>Brak opcji dla tego wyszukiwania.</p>';
 
-    options.forEach(function (opt) {
+    /* Tylko typ nośnika: admin może dodać nowy typ do słownika */
+    if (isAdmin() && kind === "carrier") {
+      html +=
+        '<div class="dam-tag-edit-popover__foot">' +
+        '<button type="button" class="dam-tag-edit-popover__addtype" data-add-type data-dam-tip="Dodaj nowy typ nośnika do słownika i Szablonów folderów (admin)">' +
+        '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj typ</span></button></div>';
+    }
+
+    html +=
+      '<div class="dam-tag-edit-popover__actions dam-dialog-actions">' +
+      '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel data-dam-tip="Anuluj bez zapisu">' +
+      '<i class="uil uil-times" aria-hidden="true"></i><span>Anuluj</span></button>' +
+      '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
+      '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm data-dam-tip="' +
+      (canDirect ? "Zatwierdź wybór" : "Zgłoś propozycję") +
+      '"><i class="uil uil-check" aria-hidden="true"></i><span>' +
+      (canDirect ? "Zatwierdź" : "Zgłoś") +
+      "</span></button></div>";
+
+    ensureTagPopoverBtnStyles();
+
+    pop._damTagOptions = options.slice();
+    pop._damTagKind = kind;
+    pop._damTagCtx = ctx;
+
+    function optionBtnHtml(opt) {
+      if (isLangMulti) {
+        var langSel = pendingLangs.indexOf(String(opt.code)) !== -1;
+        return (
+          '<button type="button" class="dam-tag-edit-popover__opt dam-tag-edit-popover__opt--check' +
+          (langSel ? " is-selected" : "") +
+          '" data-code="' +
+          esc(opt.code) +
+          '" data-search-label="' +
+          esc(String(opt.search || opt.label || opt.code).toLowerCase()) +
+          '"><span class="dam-tag-edit-popover__opt-check" aria-hidden="true">' +
+          (langSel ? "✓" : "") +
+          '</span><span class="dam-tag-edit-popover__opt-label">' +
+          esc(opt.label) +
+          "</span></button>"
+        );
+      }
       var isCur =
         String(opt.code) === String(pendingCode) ||
         String(opt.label) === String(ctx.value) ||
         (kind === "subcategory" &&
           String(opt.code).toLowerCase() === String(ctx.value || "").toLowerCase());
       var isSel = String(opt.code) === String(pendingCode);
-      html +=
+      return (
         '<button type="button" class="dam-tag-edit-popover__opt' +
         (isCur ? " is-current" : "") +
         (isSel ? " is-selected" : "") +
@@ -893,82 +1294,53 @@
         esc(opt.label) +
         "</span>" +
         (isCur ? ' <i class="uil uil-check"></i>' : "") +
-        "</button>";
-    });
-    html += '<p class="dam-tag-edit-popover__empty" data-empty hidden>Brak opcji dla tego wyszukiwania.</p></div>';
-
-    /* Admin toolbar: equal 2-col grid [Dodaj … | Zmień kategorię], then confirm row */
-    if (isAdmin()) {
-      var addTagLbl = addTagButtonLabel(kind);
-      var addBtnHtml =
-        kind === "carrier"
-          ? '<button type="button" class="dam-tag-edit-popover__addtype" data-add-type data-dam-tip="Dodaj nowy typ nośnika do słownika i Szablonów folderów (admin)">' +
-            '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj typ</span></button>'
-          : '<button type="button" class="dam-tag-edit-popover__addtag" data-add-tag data-dam-tip="' +
-            esc(addTagLbl) +
-            ' z wybranej kategorii">' +
-            '<i class="uil uil-plus" aria-hidden="true"></i><span>' +
-            esc(addTagLbl) +
-            "</span></button>";
-      html +=
-        '<div class="dam-tag-edit-popover__foot">' +
-        addBtnHtml +
-        '<button type="button" class="dam-tag-edit-popover__changecat" data-change-cat data-dam-tip="Zmień kategorię tagu">' +
-        '<i class="uil uil-exchange" aria-hidden="true"></i><span>Zmień kategorię</span></button></div>';
+        "</button>"
+      );
     }
 
-    html +=
-      '<div class="dam-tag-edit-popover__actions">' +
-      '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm data-dam-tip="' +
-      (canDirect ? "Zatwierdź wybór" : "Zgłoś propozycję") +
-      '"><i class="uil uil-check" aria-hidden="true"></i><span>' +
-      (canDirect ? "Zatwierdź" : "Zgłoś") +
-      "</span></button>" +
-      '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel data-dam-tip="Anuluj bez zapisu">' +
-      '<i class="uil uil-times" aria-hidden="true"></i><span>Anuluj</span></button></div>';
-
-    ensureTagPopoverBtnStyles();
-
-    pop.innerHTML = html;
-    document.body.appendChild(pop);
-
-    requestAnimationFrame(function () {
-      var pr = pop.getBoundingClientRect();
-      var margin = 12;
-      var top = window.scrollY + rect.bottom + 6;
-      if (pr.bottom > window.innerHeight - margin) {
-        top = window.scrollY + rect.top - pr.height - 6;
-      }
-      if (top < window.scrollY + margin) top = window.scrollY + margin;
-      var left = window.scrollX + rect.left;
-      if (pr.right > window.innerWidth - margin) {
-        left = Math.max(margin, window.scrollX + window.innerWidth - pr.width - margin);
-      }
-      pop.style.top = top + "px";
-      pop.style.left = left + "px";
-    });
-
-    function setPending(code) {
-      pendingCode = code;
-      pop.querySelectorAll("[data-code]").forEach(function (btn) {
-        btn.classList.toggle("is-selected", btn.getAttribute("data-code") === String(code));
+    function bindOptionClicks(scope) {
+      if (!scope) return;
+      scope.querySelectorAll("[data-code]").forEach(function (btn) {
+        if (btn._damTagBound) return;
+        btn._damTagBound = true;
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          setPending(btn.getAttribute("data-code"));
+        });
       });
     }
 
-    pop.querySelectorAll("[data-code]").forEach(function (btn) {
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        setPending(btn.getAttribute("data-code"));
-      });
-    });
+    function paintTagList(filtered) {
+      var listEl = pop.querySelector("[data-tag-list]");
+      var emptyMsg = pop.querySelector("[data-empty]");
+      if (!listEl) return;
+      if (!filtered.length) {
+        listEl.innerHTML = "";
+        if (emptyMsg) emptyMsg.hidden = false;
+        return;
+      }
+      if (emptyMsg) emptyMsg.hidden = true;
+      listEl.innerHTML = filtered.map(optionBtnHtml).join("");
+      bindOptionClicks(listEl);
+    }
 
-    var searchInput = pop.querySelector("#damTagEditSearch");
-    var emptyMsg = pop.querySelector("[data-empty]");
-    function applySearch() {
-      var q = (searchInput.value || "").trim().toLowerCase();
+    /** Lekki filtr jak 3.1.5: hide/show istniejacych btn — bez rebuild innerHTML na kazdy znak. */
+    function applySearchFilterLight(q) {
+      var listEl = pop.querySelector("[data-tag-list]");
+      var emptyMsg = pop.querySelector("[data-empty]");
+      if (!listEl) return;
+      q = String(q || "")
+        .trim()
+        .toLowerCase();
+      var btns = listEl.querySelectorAll("[data-code]");
+      if (!btns.length) {
+        var boot = pop._damTagOptions || [];
+        paintTagList(boot.length > 400 ? boot.slice(0, 400) : boot.slice());
+        btns = listEl.querySelectorAll("[data-code]");
+      }
       var visibleCount = 0;
-      pop.querySelectorAll("[data-code]").forEach(function (btn) {
+      btns.forEach(function (btn) {
         var label = btn.getAttribute("data-search-label") || "";
         var match = !q || label.indexOf(q) !== -1;
         btn.hidden = !match;
@@ -976,23 +1348,94 @@
       });
       if (emptyMsg) emptyMsg.hidden = visibleCount > 0;
     }
+
+    function filterTagOptions(q) {
+      q = String(q || "")
+        .trim()
+        .toLowerCase();
+      var src = pop._damTagOptions || [];
+      if (!q) return src.length > 200 ? src.slice(0, 200) : src.slice();
+      var out = [];
+      var cap = 120;
+      var numericOnly = kind === "index" && /^[\d.\s]+$/.test(q.replace(/\s/g, ""));
+      for (var fi = 0; fi < src.length && out.length < cap; fi++) {
+        var opt = src[fi];
+        var label = String(opt.search || opt.label || opt.code || "").toLowerCase();
+        if (numericOnly) {
+          if (label.indexOf(q) === 0) out.push(opt);
+        } else if (label.indexOf(q) !== -1) {
+          out.push(opt);
+        }
+      }
+      return out;
+    }
+
+    pop.innerHTML = html;
+    document.body.appendChild(pop);
+    requestAnimationFrame(function () {
+      var boot = pop._damTagOptions || [];
+      paintTagList(boot.length > 400 ? boot.slice(0, 400) : boot.slice());
+      scheduleTagPopoverPosition(pop, anchorEl);
+      bindTagPopoverReposition(pop, anchorEl);
+    });
+
+    function setPending(code) {
+      if (isLangMulti) {
+        var c = String(code);
+        var ix = pendingLangs.indexOf(c);
+        if (ix === -1) pendingLangs.push(c);
+        else pendingLangs.splice(ix, 1);
+        paintTagList(filterTagOptions(searchInput ? searchInput.value : ""));
+        return;
+      }
+      pendingCode = code;
+      pop.querySelectorAll("[data-code]").forEach(function (btn) {
+        btn.classList.toggle("is-selected", btn.getAttribute("data-code") === String(code));
+      });
+    }
+
+    bindOptionClicks(pop);
+
+    var searchInput = pop.querySelector("#damTagEditSearch");
+    function applySearch() {
+      if (!searchInput) return;
+      if (pop._damTagSearchTimer) clearTimeout(pop._damTagSearchTimer);
+      pop._damTagSearchTimer = setTimeout(function () {
+        pop._damTagSearchTimer = null;
+        if (!document.getElementById("damTagEditPopover")) return;
+        /* Light path: toggle hidden (3.1.5). Full paint only for lang multi (checkbox state). */
+        if (isLangMulti) {
+          requestAnimationFrame(function () {
+            if (!document.getElementById("damTagEditPopover")) return;
+            paintTagList(filterTagOptions(searchInput.value));
+          });
+          return;
+        }
+        applySearchFilterLight(searchInput.value);
+      }, 80);
+    }
     if (searchInput) {
       searchInput.addEventListener("input", applySearch);
       searchInput.addEventListener("keydown", function (e) {
         e.stopPropagation();
       });
-      requestAnimationFrame(function () {
-        searchInput.focus();
-      });
+      /* No auto-focus on open — WebView2 focus() freezes shell (parity assoc picker). */
     }
+
+    pop._damTagRepaint = function (q) {
+      applySearchFilterLight(q);
+    };
 
     var confirmBtn = pop.querySelector("[data-confirm]");
     if (confirmBtn) {
       confirmBtn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
+        var choice = isLangMulti
+          ? pendingLangs.slice()
+          : pendingCode || ctx.currentCode || ctx.value || "";
         closePopover();
-        applyTagPickerChoice(kind, ctx, pendingCode);
+        applyTagPickerChoice(kind, ctx, choice);
       });
     }
 
@@ -1058,12 +1501,61 @@
       addTagBtn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        /* Same category first: keep current kind, focus search to pick/add */
+        if (kind === "subcategory") {
+          if (!isAdmin()) {
+            showToast("Dodaj podkategorie: tylko admin.");
+            return;
+          }
+          var labelPl = window.prompt("Etykieta PL podkategorii (np. Mini batoniki):");
+          if (!labelPl) return;
+          var slugHint = String(labelPl)
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 48);
+          var slug = window.prompt("Slug (a-z0-9-, max 48):", slugHint || "");
+          if (!slug) return;
+          fetch(bridgeUrl() + "/explorer/add-subcategory", {
+            method: "POST",
+            headers: bridgeAuthHeaders(),
+            body: JSON.stringify({
+              slug: String(slug).trim().toLowerCase(),
+              label_pl: String(labelPl).trim(),
+            }),
+          })
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (res) {
+              if (!res || !res.ok) {
+                showToast("Blad: " + ((res && (res.message || res.error)) || "nie dodano"));
+                return;
+              }
+              if (global.DamNaming) {
+                if (!Array.isArray(global.DamNaming.subcategories)) {
+                  global.DamNaming.subcategories = [];
+                }
+                global.DamNaming.subcategories.push(
+                  res.subcategory || { slug: res.slug, label_pl: res.label_pl, custom: true }
+                );
+              }
+              closePopover();
+              showToast(res.message || ("Dodano podkategorie: " + res.label_pl));
+              setTimeout(function () {
+                openTagPicker(anchorEl, Object.assign({}, ctx, { kind: "subcategory" }));
+              }, 200);
+            })
+            .catch(function () {
+              showToast("Bridge offline - nie dodano podkategorii.");
+            });
+          return;
+        }
         if (searchInput) {
           searchInput.focus();
           searchInput.placeholder = addTagButtonLabel(kind) + " (kategoria: " + kind + ")";
         }
-        showToast("Zaznacz tag z listy i zatwierdź (kategoria: " + kind + ").");
+        showToast("Zaznacz tag z listy i zatwierdz (kategoria: " + kind + ").");
       });
     }
 
@@ -1173,7 +1665,7 @@
     return base.replace(/\s*-\s*[FXD]$/i, "").trim();
   }
 
-  /** Nazwa produktu z product_name albo folderu „NAZWA — [ wariant ]” w sciezce. */
+  /** Nazwa produktu z product_name albo folderu „NAZWA - [ wariant ]” w sciezce. */
   function productLabelForLog(entry) {
     if (!entry) return "";
     var named = String(entry.product_name || "").trim();
@@ -1184,10 +1676,10 @@
     var i;
     for (i = parts.length - 1; i >= 0; i--) {
       var part = String(parts[i] || "");
-      if (!/[—–]\s*\[/.test(part) && !/\s-\s\[/.test(part)) continue;
+      if (!/[\u2014\u2013]\s*\[/.test(part) && !/\s-\s\[/.test(part)) continue;
       return part
         .replace(/\s*-\s*[FXD]\s*$/i, "")
-        .replace(/\s*[—–-]\s*\[[^\]]*\]\s*$/, "")
+        .replace(/\s*[\u2014\u2013-]\s*\[[^\]]*\]\s*$/, "")
         .trim();
     }
     return "";
@@ -1209,7 +1701,7 @@
     if (c === "f" || c === "aktualne" || c === "current" || c === "active") return "F";
     if (c === "x" || c === "nieaktualne" || c === "outdated" || c === "obsolete") return "X";
     if (c === "d" || c === "demo" || c === "prototype" || c === "prototyp") return "D";
-    if (c === "clear" || c === "none" || c === "bez" || c === "bez statusu") return "—";
+    if (c === "clear" || c === "none" || c === "bez" || c === "bez statusu") return "-";
     if (/^[fxd]$/i.test(String(code).trim())) return String(code).trim().toUpperCase();
     return "";
   }
@@ -1218,7 +1710,7 @@
     if (letter === "F") return "dam-lifecycle-chip dam-lifecycle-chip--f";
     if (letter === "X") return "dam-lifecycle-chip dam-lifecycle-chip--x";
     if (letter === "D") return "dam-lifecycle-chip dam-lifecycle-chip--d";
-    if (letter === "—" || letter === "-" || letter === "∅") {
+    if (letter === "-" || letter === "\u2014" || letter === "∅") {
       return "dam-lifecycle-chip dam-lifecycle-chip--clear";
     }
     return "dam-lifecycle-chip dam-lifecycle-chip--clear";
@@ -1236,7 +1728,7 @@
   /** Struktura wpisu jak w modalu Historia statusów (dam-life-hist) - do popovera. */
   function changeLogEntryParts(entry) {
     var empty = {
-      letter: "—",
+      letter: "-",
       scope: "Zmiana",
       title: "zmiana na dysku",
       product: "",
@@ -1253,7 +1745,7 @@
     var prod = productLabelForLog(entry);
     var idx = String(entry.revision_index || entry.index || "").trim();
     var parts = {
-      letter: "—",
+      letter: "-",
       scope: "Zmiana",
       title: "",
       product: prod,
@@ -1289,7 +1781,7 @@
       parts.letter =
         statusLetterFromCode(entry.status_to || entry.to || entry.status) ||
         statusLetterFromCode(entry.status_from || entry.from) ||
-        "—";
+        "-";
       if (stFrom && stTo && stFrom !== stTo) {
         parts.title = whoLabel + ": " + stFrom + " -> " + stTo;
       } else if (stTo) {
@@ -1410,7 +1902,7 @@
     bar.style.transform = "";
   }
 
-  /* === Shared Historia (product chrome) — modes: global | recent | product === */
+  /* === Shared Historia (product chrome) - modes: global | recent | product === */
   var lastChangeLogEntries = [];
   var lastLifecycleHistory = [];
   var lastMergedLifeRows = [];
@@ -1460,7 +1952,7 @@
   }
 
   function lifeHistFilterLetter(letter) {
-    var l = String(letter || "—");
+    var l = String(letter || "-");
     if (l === "-" || l === "∅" || l === "clear" || !l) return "∅";
     if (l === "F" || l === "X" || l === "D") return l;
     return "∅";
@@ -1487,9 +1979,9 @@
     if (action.indexOf("reconcile") !== -1 && !h.letter && !h.status && !h.scope) return null;
     var letter =
       statusLetterFromCode(h.letter || h.status || h.to || h.after) ||
-      (h.letter == null && (h.status === "clear" || !h.status) ? "—" : "");
+      (h.letter == null && (h.status === "clear" || !h.status) ? "-" : "");
     if (!letter && action !== "lifecycle_status" && action !== "lifecycle_restore") return null;
-    if (!letter) letter = "—";
+    if (!letter) letter = "-";
     var scope = String(h.scope || "").toLowerCase();
     var scopeLabel =
       scope === "product" ? "Produkt" : scope === "variant" ? "Wariant" : "Status";
@@ -1497,7 +1989,7 @@
     var title =
       scopeLabel +
       ": " +
-      (st || (letter === "—" ? "Bez statusu" : letter));
+      (st || ((letter === "-" || letter === "\u2014") ? "Bez statusu" : letter));
     var pid = String(h.product_id || "");
     var pname = productLabelForLog(h) || pid;
     var idx = String(h.revision_index || h.index || "").trim();
@@ -1540,10 +2032,10 @@
     var letter = isLife
       ? statusLetterFromCode(entry.letter || entry.status_to || entry.to || entry.status) ||
         statusLetterFromCode(entry.status_from || entry.from) ||
-        "—"
+        "-"
       : p.letter === "I" || p.letter === "T" || p.letter === "R"
-        ? "—"
-        : p.letter || "—";
+        ? "-"
+        : p.letter || "-";
     var scope = String(entry.scope || "").toLowerCase();
     var scopeLabel = p.scope || (isLife ? "Status" : "Zmiana");
     return {
@@ -1588,8 +2080,8 @@
         if (!byId[row.id].product_name && row.product_name) {
           byId[row.id].product_name = row.product_name;
         }
-        return;
-      }
+      return;
+    }
       byId[row.id] = row;
     });
     Object.keys(byId).forEach(function (k) {
@@ -1606,12 +2098,12 @@
   function lifeHistFilterChipsHtml() {
     return ["F", "X", "D", "∅"]
       .map(function (l) {
-        var label = l === "∅" ? "—" : l;
+        var label = l === "∅" ? "-" : l;
         var tip =
           l === "∅"
             ? "Filtruj wpisy: bez statusu (odznaczono) oraz inne zmiany dysku"
             : "Filtruj wpisy: status " + l;
-        var chipL = l === "∅" ? "—" : l;
+        var chipL = l === "∅" ? "-" : l;
         return (
           '<button type="button" class="dam-life-hist__filter ' +
           changelogChipClass(chipL) +
@@ -1632,7 +2124,7 @@
   function lifeHistEntryHtml(h, opts) {
     opts = opts || {};
     var letter = lifeHistFilterLetter(h.letter);
-    var dotLetter = letter === "∅" ? "—" : letter;
+    var dotLetter = letter === "∅" ? "-" : letter;
     var when = formatChangeLogTs(h.ts) || String(h.ts || "").replace("T", " ").slice(0, 16);
     var who = lifeHistAuthorShort(h.actor);
     var scope = h._isCurrent ? "Teraz" : h.scopeLabel || "Status";
@@ -1660,7 +2152,7 @@
           esc(fromTag) +
           "</strong></span>"
       );
-    } else if (!h._isCurrent && h.kind === "lifecycle" && (h.letter === "—" || h.status === "clear")) {
+    } else if (!h._isCurrent && h.kind === "lifecycle" && (h.letter === "-" || h.letter === "\u2014" || h.status === "clear")) {
       noteParts.push(
         '<span class="dam-life-hist__note">Bez statusu (odznaczono F/X/D)</span>'
       );
@@ -2018,8 +2510,8 @@
           var row = findLifeRowById(btn.getAttribute("data-life-restore") || "");
           if (!row) {
             showToast("Nie znaleziono wpisu historii");
-            return;
-          }
+          return;
+        }
           applyLifecycleFromHistRow(row, "restore");
         };
       });
@@ -2096,7 +2588,7 @@
     if (!host && !hint) return;
 
     if (state === "role" || state === "login" || state === "offline") {
-      if (hint) {
+        if (hint) {
         hint.textContent =
           state === "role"
             ? "Wymaga roli administratora."
@@ -2204,8 +2696,8 @@
           (lr.product_name ? " · " + lr.product_name : "") +
           (lr.ts ? " · " + formatChangeLogTs(lr.ts) : "");
         hint.setAttribute("data-dam-tip", CHANGELOG_HINT_TIP);
-      } else {
-        hint.textContent = "Brak historii zmian";
+          } else {
+            hint.textContent = "Brak historii zmian";
         hint.setAttribute(
           "data-dam-tip",
           "Historia zmian na dysku X: jest pusta. Po zatwierdzeniu rename typu/indeksu/plików albo zmianie statusu produktu/wariantu pojawi się tu ostatni wpis."
@@ -2325,7 +2817,7 @@
   }
 
   /**
-   * Global Historia — TEN SAM DOM co produkt:
+   * Global Historia - TEN SAM DOM co produkt:
    * #damLifecycleHistoryModal > .dam-basepath-box.dam-lifecycle-history-modal
    * + --global (70vw × 90vh) + search (indeks / nazwa / tagi).
    */
@@ -2379,7 +2871,7 @@
     setChangeLogTipSuppress(true);
   }
 
-  /** Settings + Viz: zawsze duży modal produktowy (global data) — bez chudego popovera. */
+  /** Settings + Viz: zawsze duży modal produktowy (global data) - bez chudego popovera. */
   function openChangeHistoryPopover(anchorBtn) {
     var open = document.getElementById("damLifecycleHistoryModal");
     if (open && open.getAttribute("data-life-hist-scope") === "global") {
@@ -2410,7 +2902,7 @@
     } catch (e) { /* ignore */ }
     var diskChip = document.querySelector('#damSettingsFilter [data-filter="disk"]');
     if (diskChip) diskChip.click();
-    setTimeout(function () {
+          setTimeout(function () {
       sec.scrollIntoView({ behavior: "smooth", block: "start" });
       sec.classList.add("is-hash-focus");
       setTimeout(function () {
@@ -2468,9 +2960,241 @@
     });
   }
 
+  var PRODUCT_TAG_GROUP_ORDER = ["smak", "typ", "opakowanie", "autor"];
+  var PRODUCT_TAG_GROUP_LABELS = {
+    smak: "Smak",
+    typ: "Typ",
+    opakowanie: "Opakowanie",
+    autor: "Autor",
+  };
+
+  function productTagCatalogFromGroups(tagGroups) {
+    var out = [];
+    PRODUCT_TAG_GROUP_ORDER.forEach(function (gk) {
+      (tagGroups[gk] || []).forEach(function (tag) {
+        if (!tag) return;
+        var label =
+          global.DamLabels && typeof global.DamLabels.formatTagLabel === "function"
+            ? global.DamLabels.formatTagLabel(String(tag), gk === "opakowanie" ? "opakowanie" : gk)
+            : String(tag);
+        out.push({
+          group: gk,
+          groupLabel: PRODUCT_TAG_GROUP_LABELS[gk] || gk,
+          code: String(tag),
+          label: label,
+          search: (PRODUCT_TAG_GROUP_LABELS[gk] + " " + label + " " + tag).toLowerCase(),
+        });
+      });
+    });
+    return out;
+  }
+
+  function selectionFromTagGroups(tagGroups) {
+    var sel = {};
+    PRODUCT_TAG_GROUP_ORDER.forEach(function (gk) {
+      (tagGroups[gk] || []).forEach(function (t) {
+        sel[gk + "::" + String(t)] = true;
+      });
+    });
+    return sel;
+  }
+
+  function tagGroupsFromSelection(catalog, selectedMap) {
+    var out = { smak: [], typ: [], opakowanie: [], autor: [] };
+    catalog.forEach(function (opt) {
+      var key = opt.group + "::" + opt.code;
+      if (!selectedMap[key]) return;
+      if (!out[opt.group]) out[opt.group] = [];
+      if (out[opt.group].indexOf(opt.code) < 0) out[opt.group].push(opt.code);
+    });
+    return out;
+  }
+
+  function openProductTagsMultiPicker(anchorEl, ctx) {
+    ctx = ctx || {};
+    if (_tagPickerOpening) {
+      if (document.getElementById("damTagEditPopover")) return;
+      _tagPickerOpening = false;
+    }
+    _tagPickerOpening = true;
+    setTimeout(function () {
+      try {
+        openProductTagsMultiPickerNow(anchorEl, ctx);
+      } catch (err) {
+        console.error("[DamTagEdit] openProductTagsMultiPicker failed", err);
+        showToast("Nie udalo sie otworzyc pickera tagow produktu.");
+        _tagPickerOpening = false;
+      }
+    }, 0);
+  }
+
+  function openProductTagsMultiPickerNow(anchorEl, ctx) {
+    closePopover();
+    autoEnableAdminModeIfPrivileged();
+    _tagPickerOpening = false;
+
+    /* Shell FIRST — never await search-index before paint (freeze on open). */
+    var pop = document.createElement("div");
+    pop.id = "damTagEditPopover";
+    pop.className = "dam-tag-edit-popover dam-tag-edit-popover--wide";
+    pop.innerHTML =
+      '<div class="dam-tag-edit-popover__head">' +
+      "<span>Tagi produktu</span>" +
+      '<button type="button" class="dam-tag-edit-popover__close" aria-label="Zamknij" data-close>' +
+      '<i class="uil uil-times"></i></button></div>' +
+      '<div class="dam-tag-edit-popover__search-wrap">' +
+      '<i class="uil uil-search" aria-hidden="true"></i>' +
+      '<input type="text" id="damTagEditSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj tag…" autocomplete="off" />' +
+      "</div>" +
+      '<div class="dam-tag-edit-popover__list dam-tag-edit-popover__list--checks" data-tag-list>' +
+      '<p class="dam-tag-edit-popover__empty">Ladowanie slownika tagow…</p></div>' +
+      '<p class="dam-tag-edit-popover__empty" data-empty hidden>Brak tagow dla tego wyszukiwania.</p>' +
+      '<div class="dam-tag-edit-popover__actions dam-dialog-actions">' +
+      '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel><i class="uil uil-times"></i><span>Anuluj</span></button>' +
+      '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
+      '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm disabled><i class="uil uil-check"></i><span>Zatwierdz</span></button></div>';
+
+    ensureTagPopoverBtnStyles();
+    document.body.appendChild(pop);
+    scheduleTagPopoverPosition(pop, anchorEl);
+    bindTagPopoverReposition(pop, anchorEl);
+    pop.querySelector("[data-close]") &&
+      pop.querySelector("[data-close]").addEventListener("click", closePopover);
+    pop.querySelector("[data-cancel]") &&
+      pop.querySelector("[data-cancel]").addEventListener("click", closePopover);
+    document.addEventListener("click", onDocClick, true);
+    document.addEventListener("keydown", onDocKey, true);
+
+    ensureSearchIndexBootstrap()
+      .then(function (si) {
+        if (!document.getElementById("damTagEditPopover")) return;
+        var tagGroups = (si && si.tag_groups) || {};
+        var catalog = productTagCatalogFromGroups(tagGroups);
+        if (!catalog.length) {
+          var listEmpty = pop.querySelector("[data-tag-list]");
+          if (listEmpty) {
+            listEmpty.innerHTML =
+              '<p class="dam-tag-edit-popover__empty">Brak slownika tagow produktu (search-index).</p>';
+          }
+          showToast("Brak slownika tagow produktu (search-index).");
+          return;
+        }
+        var selected = selectionFromTagGroups(ctx.tagGroups || (ctx.product && ctx.product.tag_groups) || {});
+
+        function rowHtml(opt) {
+          var key = opt.group + "::" + opt.code;
+          var on = !!selected[key];
+          return (
+            '<label class="dam-tag-edit-popover__check' +
+            (on ? " is-selected" : "") +
+            '" data-tag-key="' +
+            esc(key) +
+            '" data-search-label="' +
+            esc(opt.search) +
+            '">' +
+            '<input type="checkbox"' +
+            (on ? " checked" : "") +
+            ' data-tag-key="' +
+            esc(key) +
+            '" />' +
+            '<span class="dam-tag-edit-popover__check-group">' +
+            esc(opt.groupLabel) +
+            "</span>" +
+            '<span class="dam-tag-edit-popover__check-label">' +
+            esc(opt.label) +
+            "</span></label>"
+          );
+        }
+
+        function paintList(filtered) {
+          var listEl = pop.querySelector("[data-tag-list]");
+          var emptyMsg = pop.querySelector("[data-empty]");
+          if (!listEl) return;
+          if (!filtered.length) {
+            listEl.innerHTML = "";
+            if (emptyMsg) emptyMsg.hidden = false;
+            return;
+          }
+          if (emptyMsg) emptyMsg.hidden = true;
+          listEl.innerHTML = filtered.map(rowHtml).join("");
+          listEl.querySelectorAll(".dam-tag-edit-popover__check").forEach(function (row) {
+            row.addEventListener("click", function (e) {
+              if (e.target && e.target.tagName === "INPUT") return;
+              var cb = row.querySelector('input[type="checkbox"]');
+              if (!cb) return;
+              cb.checked = !cb.checked;
+              var k = cb.getAttribute("data-tag-key");
+              selected[k] = cb.checked;
+              row.classList.toggle("is-selected", cb.checked);
+            });
+            var cb = row.querySelector('input[type="checkbox"]');
+            if (cb) {
+              cb.addEventListener("change", function () {
+                var k = cb.getAttribute("data-tag-key");
+                selected[k] = cb.checked;
+                row.classList.toggle("is-selected", cb.checked);
+              });
+            }
+          });
+        }
+
+        function filterCatalog(q) {
+          q = String(q || "")
+            .trim()
+            .toLowerCase();
+          if (!q) return catalog.length > 200 ? catalog.slice(0, 200) : catalog.slice();
+          var out = [];
+          var cap = 120;
+          for (var ci = 0; ci < catalog.length && out.length < cap; ci++) {
+            var opt = catalog[ci];
+            if (opt.search.indexOf(q) !== -1) out.push(opt);
+          }
+          return out;
+        }
+
+        paintList(filterCatalog(""));
+        var confirmBtn = pop.querySelector("[data-confirm]");
+        if (confirmBtn) confirmBtn.disabled = false;
+
+        var searchInput = pop.querySelector("#damTagEditSearch");
+        if (searchInput) {
+          var catSearchTimer = null;
+          searchInput.addEventListener("input", function () {
+            clearTimeout(catSearchTimer);
+            catSearchTimer = setTimeout(function () {
+              if (!document.getElementById("damTagEditPopover")) return;
+              paintList(filterCatalog(searchInput.value));
+            }, 160);
+          });
+        }
+
+        if (confirmBtn) {
+          confirmBtn.addEventListener("click", function () {
+            var nextGroups = tagGroupsFromSelection(catalog, selected);
+            if (typeof ctx.onTagsApplied === "function") {
+              ctx.onTagsApplied(nextGroups);
+            }
+            if (ctx.product) ctx.product.tag_groups = nextGroups;
+            showToast("Zaktualizowano tagi produktu (podglad). Zapis na dysk: kolejka moderacji.");
+            closePopover();
+          });
+        }
+      })
+      .catch(function () {
+        showToast("Nie udalo sie zaladowac slownika tagow.");
+        var listErr = pop.querySelector("[data-tag-list]");
+        if (listErr) {
+          listErr.innerHTML =
+            '<p class="dam-tag-edit-popover__empty">Blad ladowania. ESC zamyka.</p>';
+        }
+      });
+  }
+
   global.DamTagEdit = {
     openCarrierPicker: openCarrierPicker,
     openTagPicker: openTagPicker,
+    closePopover: closePopover,
+    openProductTagsMultiPicker: openProductTagsMultiPicker,
     renderModerationPanel: renderModerationPanel,
     isPrivileged: isPrivileged,
     adminModeOn: adminModeOn,

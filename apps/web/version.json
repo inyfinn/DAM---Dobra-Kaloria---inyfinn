@@ -1,7 +1,7 @@
 {
-  "version": "5.0.0",
+  "version": "5.0.2",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-07-26",
-  "note": "5.0.0 milestone: assoc picker 4/4 CTA AA + search no freeze (arc 4.0.58-71, user confirmed)."
+  "note": "5.0.2: assoc instant save UI, tag edit revision-path, folder rename path sync."
 }

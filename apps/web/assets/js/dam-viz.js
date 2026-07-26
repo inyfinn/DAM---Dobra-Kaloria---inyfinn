@@ -3339,16 +3339,97 @@
     global._damVizModalActiveIdx = function () {
       return activeIdx;
     };
+
+    function normPathKey(p) {
+      return String(p || "").replace(/\//g, "\\").toLowerCase();
+    }
+
+    function applyDiskRenameResult(res) {
+      if (!res || !res.ok) return;
+      var oldPath = res.old_path || "";
+      var newPath = res.new_path || "";
+      var renames = res.file_renames || [];
+      var renameMap = {};
+      if (oldPath && newPath && normPathKey(oldPath) !== normPathKey(newPath)) {
+        renameMap[normPathKey(oldPath)] = newPath;
+      }
+      renames.forEach(function (r) {
+        if (r.old_path && r.new_path) renameMap[normPathKey(r.old_path)] = r.new_path;
+      });
+      function remapPath(p) {
+        if (!p) return p;
+        var key = normPathKey(p);
+        if (renameMap[key]) return renameMap[key];
+        var ok = normPathKey(oldPath);
+        if (ok && newPath && key.indexOf(ok) === 0) {
+          return newPath + p.slice(oldPath.length);
+        }
+        return p;
+      }
+      function patchItem(it) {
+        if (!it) return;
+        if (res.new_carrier_code) {
+          it.carrier = res.new_carrier_code;
+          it.carrier_guessed = false;
+        }
+        if (it.path) it.path = remapPath(it.path);
+        if (it.revision_path) it.revision_path = remapPath(it.revision_path);
+        if (it.thumb_url) it.thumb_url = remapPath(it.thumb_url);
+        if (it.revision_folder && oldPath && newPath) {
+          var oldFolder = oldPath.split(/[/\\]/).pop();
+          var newFolder = newPath.split(/[/\\]/).pop();
+          if (it.revision_folder === oldFolder) it.revision_folder = newFolder;
+        }
+      }
+      items.forEach(patchItem);
+      all.forEach(patchItem);
+      if (indexData && indexData.products) {
+        indexData.products.forEach(function (prod) {
+          (prod.revisions || []).forEach(function (rev) {
+            if (rev.path) rev.path = remapPath(rev.path);
+            if (res.new_carrier_code && normPathKey(rev.path) === normPathKey(newPath)) {
+              rev.carrier = res.new_carrier_code;
+            }
+          });
+        });
+      }
+      if (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products) {
+        global._DAM_FILE_INDEX.products.forEach(function (prod) {
+          (prod.revisions || []).forEach(function (rev) {
+            if (rev.path) rev.path = remapPath(rev.path);
+            if (res.new_carrier_code && normPathKey(rev.path) === normPathKey(newPath)) {
+              rev.carrier = res.new_carrier_code;
+            }
+          });
+        });
+      }
+      try {
+        if (oldPath && newPath) {
+          document.querySelectorAll("[data-revision-path]").forEach(function (el) {
+            var rp = el.getAttribute("data-revision-path") || "";
+            if (normPathKey(rp) === normPathKey(oldPath)) {
+              el.setAttribute("data-revision-path", newPath);
+            }
+          });
+        }
+        document.querySelectorAll("[data-path]").forEach(function (el) {
+          var p = el.getAttribute("data-path") || "";
+          if (!p) return;
+          var next = remapPath(p);
+          if (next !== p) el.setAttribute("data-path", next);
+        });
+      } catch (ignoreDom) {}
+    }
+
+    global._damVizApplyDiskRename = applyDiskRenameResult;
+
     global._damVizOnTagApplied = function (res) {
+      applyDiskRenameResult(res);
       var v = items[activeIdx];
       if (!v || !res) return;
       if (res.new_carrier_code) {
         v.carrier = res.new_carrier_code;
         v.carrier_guessed = false;
-        if (res.new_path) {
-          v.path = res.new_path;
-          v.revision_path = res.new_path;
-        }
       }
       if (res.langs && res.langs.length) {
         v.langs = res.langs.slice();
@@ -3366,6 +3447,7 @@
         v.indexes = [String(res.code)];
       }
       refreshModalBadgesAndAdmin();
+      selectVariant(activeIdx);
       applyFilters();
     };
     global._damVizModalRefresh = refreshModalBadgesAndAdmin;
@@ -4973,7 +5055,19 @@
       /* HARD: AJAX refresh after admin tag/lang apply - no full page reload */
       refreshAfterTagChange: function (res) {
         try {
-          if (res && res.langs && res.new_path) {
+          if (typeof global._damVizApplyDiskRename === "function") {
+            global._damVizApplyDiskRename(res);
+          } else if (res && res.new_path && res.old_path && res.new_carrier_code) {
+            all.forEach(function (v) {
+              if (v.path === res.old_path || v.revision_path === res.old_path) {
+                v.carrier = res.new_carrier_code || v.carrier;
+                v.carrier_guessed = false;
+                v.path = res.new_path;
+                v.revision_path = res.new_path;
+              }
+            });
+          }
+          if (res && res.langs && res.langs.length) {
             all.forEach(function (v) {
               if (
                 v.path === res.old_path ||
@@ -4986,16 +5080,6 @@
                   v.path = res.new_path;
                   v.revision_path = res.new_path;
                 }
-              }
-            });
-          }
-          if (res && res.new_path && res.old_path && res.new_carrier_code) {
-            all.forEach(function (v) {
-              if (v.path === res.old_path || v.revision_path === res.old_path) {
-                v.carrier = res.new_carrier_code || v.carrier;
-                v.carrier_guessed = false;
-                v.path = res.new_path;
-                v.revision_path = res.new_path;
               }
             });
           }

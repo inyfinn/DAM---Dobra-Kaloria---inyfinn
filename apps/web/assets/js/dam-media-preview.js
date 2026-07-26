@@ -1488,6 +1488,38 @@
     return _indexAssetsPromise;
   }
 
+  /** HARD: never sync-scan 52k branding assets while assoc picker is open (whole-app freeze). */
+  function assocPickerOpen() {
+    return !!document.getElementById("damAssocEditPopover");
+  }
+
+  /**
+   * Chunked scan of branding assets — yields to main thread; pauses while picker open.
+   * visitor(item, index) → may return { done:true } to stop early.
+   */
+  function scanBrandingAssetsChunked(all, visitor, done) {
+    var list = all || [];
+    var i = 0;
+    var CHUNK = 200;
+    function step() {
+      if (assocPickerOpen()) {
+        setTimeout(step, 250);
+        return;
+      }
+      var end = Math.min(i + CHUNK, list.length);
+      for (; i < end; i++) {
+        var stop = visitor(list[i], i);
+        if (stop && stop.done) {
+          if (typeof done === "function") done();
+          return;
+        }
+      }
+      if (i < list.length) setTimeout(step, 0);
+      else if (typeof done === "function") done();
+    }
+    setTimeout(step, 0);
+  }
+
   function normSlashesLower(p) {
     return String(p || "").replace(/\\/g, "/").toLowerCase();
   }
@@ -1682,14 +1714,17 @@
     }
     var seen = {};
     var matches = [];
-    (allAssets || []).forEach(function (x) {
-      if (!x || !x.path) return;
-      if (fileExt(x.name || x.path) !== ext) return;
+    /* for+break — never forEach 52k when early data enough; still bounded by caller chunking. */
+    var list = allAssets || [];
+    for (var qi = 0; qi < list.length; qi++) {
+      var x = list[qi];
+      if (!x || !x.path) continue;
+      if (fileExt(x.name || x.path) !== ext) continue;
       var xdir = dirOfPath(x.path);
-      if (xdir !== root && xdir.indexOf(root + "/") !== 0) return;
-      if (creativeKey(x.name || x.path) !== key) return;
+      if (xdir !== root && xdir.indexOf(root + "/") !== 0) continue;
+      if (creativeKey(x.name || x.path) !== key) continue;
       var pkey = normSlashesLower(x.path);
-      if (seen[pkey]) return;
+      if (seen[pkey]) continue;
       seen[pkey] = 1;
       matches.push({
         id: x.id || "",
@@ -1697,7 +1732,8 @@
         path: x.path,
         score: qualityScoreFor(x.path, root),
       });
-    });
+      if (matches.length >= 24) break;
+    }
     if (matches.length < 2) return null;
     matches.sort(function (a, b) {
       return a.score - b.score || String(a.path).localeCompare(String(b.path));
@@ -1739,28 +1775,38 @@
     if (!dir) return [];
     var baseName = asset.name || asset.path;
     var anc = dir;
+    var list = allAssets || [];
+    var SCAN_BUDGET = 800; /* HARD: never walk full 52k branding index sync */
+    var CAND_CAP = 40;
     for (var up = 0; up < 2; up++) {
       var p = parentDir(anc);
       if (!p || p.split("/").length < 3) break;
       anc = p;
+      /* Skip overly broad ancestors (would match tens of thousands of assets). */
+      if (anc.split("/").filter(Boolean).length < 4) continue;
       var cands = [];
-      (allAssets || []).forEach(function (x) {
-        if (!x || !x.path) return;
-        if (!EDITABLE_EXTS[fileExt(x.name || x.path)]) return;
+      var scanned = 0;
+      for (var i = 0; i < list.length; i++) {
+        if (scanned >= SCAN_BUDGET || cands.length >= CAND_CAP) break;
+        var x = list[i];
+        if (!x || !x.path) continue;
+        if (!EDITABLE_EXTS[fileExt(x.name || x.path)]) continue;
+        scanned++;
         var xdir = dirOfPath(x.path);
-        if (xdir !== anc && xdir.indexOf(anc + "/") !== 0) return;
+        if (xdir !== anc && xdir.indexOf(anc + "/") !== 0) continue;
         var rel = xdir === anc ? "" : xdir.slice(anc.length + 1);
         var relSegs = rel ? rel.split("/") : [];
-        if (relSegs.length > 2) return;
+        if (relSegs.length > 2) continue;
         var inSourceDir = relSegs.some(function (s) {
           return SOURCE_DIR_RE.test(s);
         });
-        // Podfoldery zasobow w PSD/ (Linki, fonts, Zdjecia) to skladniki, nie zrodla
-        if (inSourceDir && relSegs.length > 1 && !SOURCE_DIR_RE.test(relSegs[relSegs.length - 1])) return;
+        if (inSourceDir && relSegs.length > 1 && !SOURCE_DIR_RE.test(relSegs[relSegs.length - 1])) {
+          continue;
+        }
         var similar = nameSimilar(baseName, x.name || x.path);
         var rank = (similar ? 0 : 2) + (inSourceDir ? 0 : 1) + relSegs.length * 0.1;
         cands.push({ id: x.id || "", name: x.name || "", path: x.path, rank: rank });
-      });
+      }
       if (cands.length) {
         cands.sort(function (a, b) {
           return a.rank - b.rank;
@@ -1786,7 +1832,9 @@
       );
     }
     return (
-      '<img class="dam-viz-modal__variant-thumb" src="' +
+      '<img class="dam-viz-modal__variant-thumb" data-path="' +
+      esc(v.path || "") +
+      '" src="' +
       esc(previewUrl(v.path, v)) +
       '" alt="' +
       esc(fileName) +
@@ -1973,31 +2021,25 @@
     var selfId = asset.id || "";
     var selfFolder = normAssetFolderKey(asset.folder_group_id || asset.path || "");
     showAssocPaneLoading(mount, labelEl);
-    loadIndexAssets()
-      .then(function (all) {
+    /* HARD: NEVER filter full __damBrandingIndex (52k) — use bridge /branding-for-product. */
+    var jobs = productIds.slice(0, 6).map(function (pid) {
+      return loadLinkedBrandingAssetsForProduct({ id: pid });
+    });
+    Promise.all(jobs)
+      .then(function (lists) {
         if (!document.body.contains(mount)) return;
-        var pidSet = {};
-        productIds.forEach(function (id) {
-          pidSet[id] = true;
-        });
-        var materials = (all || []).filter(function (x) {
-          if (!x || !x.id || x.id === selfId) return false;
-          var xFolder = normAssetFolderKey(x.folder_group_id || x.path || "");
-          if (selfFolder && xFolder && xFolder === selfFolder) return false;
-          var linked = x.linked_product_ids || [];
-          if (!linked.length && x.linked_products) {
-            linked = x.linked_products
-              .map(function (p) {
-                return p && p.id;
-              })
-              .filter(Boolean);
-          }
-          if (!linked.some(function (id) {
-            return pidSet[id];
-          })) {
-            return false;
-          }
-          return classifyAssocAsset(x) === "material" && passesMarketingAssocMaterial(x, {});
+        var seen = {};
+        var materials = [];
+        lists.forEach(function (assets) {
+          (assets || []).forEach(function (x) {
+            if (!x || !x.id || x.id === selfId || seen[x.id]) return;
+            var xFolder = normAssetFolderKey(x.folder_group_id || x.path || "");
+            if (selfFolder && xFolder && xFolder === selfFolder) return;
+            if (classifyAssocAsset(x) !== "material") return;
+            if (!passesMarketingAssocMaterial(x, {})) return;
+            seen[x.id] = true;
+            materials.push(x);
+          });
         });
         var grouped = groupAssocMaterials(materials);
         clearAssocPaneLoadingState(mount);
@@ -2901,6 +2943,19 @@
     if (Array.isArray(options.siblings) && options.siblings.length) {
       variants = options.siblings.slice();
     }
+    /* linked_variant_ids: skojarzone materialy (inne assety) — pokaz obok siblingow. */
+    var linkedVarAssets = (asset.linked_variant_assets || groupContext.linked_variant_assets || []).slice();
+    if (linkedVarAssets.length) {
+      var seenVid = {};
+      variants.forEach(function (v) {
+        if (v && v.id) seenVid[v.id] = true;
+      });
+      linkedVarAssets.forEach(function (lv) {
+        if (!lv || !lv.id || seenVid[lv.id] || isSourceVariantFile(lv)) return;
+        seenVid[lv.id] = true;
+        variants.push(lv);
+      });
+    }
     var linked = (groupContext && groupContext.linked_products) || asset.linked_products || [];
     if (!linked.length && (asset.folder_linked_product_ids || asset.linked_product_ids)) {
       linked = (asset.linked_product_ids || asset.folder_linked_product_ids || []).map(function (pid) {
@@ -3406,6 +3461,12 @@
 
     window.__damVariantThumbFallback = function (img) {
       if (!img || !img.parentNode) return;
+      var path = img.getAttribute("data-path") || "";
+      if (path && !img.dataset.fallbackTried) {
+        img.dataset.fallbackTried = "1";
+        img.src = previewUrl(path) + (previewUrl(path).indexOf("?") >= 0 ? "&" : "?") + "_t=" + Date.now();
+        return;
+      }
       var alt = img.getAttribute("alt") || "Plik";
       var ph = document.createElement("div");
       ph.className = "dam-viz-modal__variant-placeholder dam-media-preview__variant-placeholder";
@@ -4231,15 +4292,16 @@
       host.hidden = true;
       host.innerHTML = "";
       var token = ++qualityReqSeq;
-      loadIndexAssets().then(function (all) {
+
+      function paintQuality(set) {
         if (token !== qualityReqSeq) return;
-        if (!document.getElementById("damMediaPreviewQuality")) return;
-        var set = findQualitySet(a, all);
+        if (!host || !document.getElementById("damMediaPreviewQuality")) return;
         if (!set || set.length < 2) return;
         var currentPath = normSlashesLower(a.path);
         var activeFound = set.some(function (t) {
           return normSlashesLower(t.path) === currentPath;
         });
+        host.hidden = false;
         host.innerHTML =
           '<span class="dam-media-preview__quality-label">Jakość:</span>' +
           set
@@ -4264,7 +4326,6 @@
               );
             })
             .join("");
-        host.hidden = false;
         host.querySelectorAll("[data-quality-idx]").forEach(function (btn) {
           btn.addEventListener("click", function () {
             var t = set[parseInt(btn.getAttribute("data-quality-idx"), 10)];
@@ -4284,24 +4345,99 @@
           window.DamTooltips.bind(host);
         }
         if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
+      }
+
+      /* Prefer siblings already in modal (no 52k scan). */
+      var fromSiblings = findQualitySet(a, siblings && siblings.length ? siblings : null);
+      if (fromSiblings && fromSiblings.length >= 2) {
+        paintQuality(fromSiblings);
+        return;
+      }
+      /* Fallback: chunked index scan — pauses while #damAssocEditPopover open. */
+      loadIndexAssets().then(function (all) {
+        if (token !== qualityReqSeq) return;
+        var key = creativeKey(a.name || a.path);
+        var ext = fileExt(a.name || a.path);
+        var dir = dirOfPath(a.path);
+        if (!key || !dir) return;
+        var root = dir;
+        for (var up = 0; up < 2; up++) {
+          var p = parentDir(root);
+          if (!p || p.split("/").length < 3) break;
+          root = p;
+        }
+        var seen = {};
+        var matches = [];
+        scanBrandingAssetsChunked(
+          all,
+          function (x) {
+            if (!x || !x.path) return;
+            if (fileExt(x.name || x.path) !== ext) return;
+            var xdir = dirOfPath(x.path);
+            if (xdir !== root && xdir.indexOf(root + "/") !== 0) return;
+            if (creativeKey(x.name || x.path) !== key) return;
+            var pkey = normSlashesLower(x.path);
+            if (seen[pkey]) return;
+            seen[pkey] = 1;
+            matches.push({
+              id: x.id || "",
+              name: x.name || "",
+              path: x.path,
+              score: qualityScoreFor(x.path, root),
+            });
+            if (matches.length >= 24) return { done: true };
+          },
+          function () {
+            if (token !== qualityReqSeq) return;
+            paintQuality(findQualitySet(a, matches));
+          }
+        );
       });
     }
 
     /** Rule B (UI): brak zrodel w folderze -> szukaj w gore drzewa w indeksie. */
     function renderSourceFallback(a, sourceMount) {
       var token = ++sourceReqSeq;
-      loadIndexAssets().then(function (all) {
+      function runWhenIdle() {
         if (token !== sourceReqSeq) return;
-        if (!sourceMount || !document.body.contains(sourceMount) || sourceMount.firstChild) return;
-        var files = dedupeSourceFilesByExt(findEditableUpTree(a, all));
-        if (!files.length) return;
-        sourceMount.innerHTML = sourceButtonsHtml(files);
-        bindSourceButtons(sourceMount);
-        if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
-          window.DamTooltips.bind(sourceMount);
+        /* HARD: pause while assoc picker open — even budgeted scan steals the thread. */
+        if (assocPickerOpen()) {
+          setTimeout(runWhenIdle, 400);
+          return;
         }
-        if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
-      });
+        /* Prefer asset.folder_editable_files — no index walk. */
+        var local = dedupeSourceFilesByExt(
+          (a && (a.folder_editable_files || a.editable_files)) || []
+        );
+        if (local.length) {
+          if (!sourceMount || !document.body.contains(sourceMount) || sourceMount.firstChild) return;
+          sourceMount.innerHTML = sourceButtonsHtml(local);
+          bindSourceButtons(sourceMount);
+          if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
+            window.DamTooltips.bind(sourceMount);
+          }
+          if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
+          return;
+        }
+        loadIndexAssets().then(function (all) {
+          if (token !== sourceReqSeq) return;
+          if (!sourceMount || !document.body.contains(sourceMount) || sourceMount.firstChild) return;
+          if (assocPickerOpen()) {
+            setTimeout(runWhenIdle, 400);
+            return;
+          }
+          var files = dedupeSourceFilesByExt(findEditableUpTree(a, all));
+          if (!files.length) return;
+          sourceMount.innerHTML = sourceButtonsHtml(files);
+          bindSourceButtons(sourceMount);
+          if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
+            window.DamTooltips.bind(sourceMount);
+          }
+          if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
+        });
+      }
+      /* Defer past first paint + assoc CTA window. */
+      setTimeout(runWhenIdle, 1200);
     }
 
     function renderMeta(a) {
@@ -4394,28 +4530,47 @@
                   a.linked_product_ids = productIds.slice();
                   a.folder_linked_product_ids = productIds.slice();
                 }
+                if (variantIds && variantIds.length) {
+                  a.linked_variant_ids = variantIds.slice();
+                  groupContext.linked_variant_ids = variantIds.slice();
+                }
+                var enrichChain = Promise.resolve();
+                if (variantIds && variantIds.length && window.DamAssocEdit.enrichBrandingAssetsByIds) {
+                  enrichChain = window.DamAssocEdit.enrichBrandingAssetsByIds(variantIds).then(function (linked) {
+                    a.linked_variant_assets = linked;
+                    groupContext.linked_variant_assets = linked;
+                  });
+                }
                 if (variantIds && variantIds.length && groupContext.variants) {
                   var byId = {};
                   groupContext.variants.forEach(function (v) {
                     if (v && v.id) byId[v.id] = v;
                   });
-                  groupContext.variants = variantIds.map(function (id) {
-                    return byId[id] || { id: id, name: id };
+                  enrichChain = enrichChain.then(function () {
+                    var extras = (a.linked_variant_assets || []).slice();
+                    extras.forEach(function (lv) {
+                      if (lv && lv.id) byId[lv.id] = lv;
+                    });
+                    groupContext.variants = variantIds.map(function (id) {
+                      return byId[id] || { id: id, name: id };
+                    });
                   });
                 }
-                if (window.DamAssocEdit.enrichLinkedProducts) {
-                  window.DamAssocEdit.enrichLinkedProducts(
-                    (productIds || []).map(function (id) {
-                      return { id: id };
-                    })
-                  ).then(function (linked) {
-                    groupContext.linked_products = linked;
-                    a.linked_products = linked;
+                enrichChain.then(function () {
+                  if (productIds && productIds.length && window.DamAssocEdit.enrichLinkedProducts) {
+                    window.DamAssocEdit.enrichLinkedProducts(
+                      (productIds || []).map(function (id) {
+                        return { id: id };
+                      })
+                    ).then(function (linked) {
+                      groupContext.linked_products = linked;
+                      a.linked_products = linked;
+                      renderMeta(asset);
+                    });
+                  } else {
                     renderMeta(asset);
-                  });
-                } else {
-                  renderMeta(asset);
-                }
+                  }
+                });
               },
             });
           }
@@ -4458,6 +4613,7 @@
       if (badges) {
         badges.innerHTML = badgesHtml(a);
         if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
+          badges._damBadgesBound = false;
           window.DamBadges.bindClicks(badges, "branding");
         }
       }

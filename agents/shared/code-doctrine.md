@@ -354,6 +354,22 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
 
+### 2026-07-26 — v5.0.2: tag edit bez revision-path + stale path po rename nosnika
+
+**Objaw A (tag edit):** Shift+klik / dblclick na badge jezyka (`data-tag-kind="lang"`) w `#damVizModalBadges` nie otwiera pickera albo zapis pada — `openTagEdit` dostaje pusty `revisionPath`.
+
+**Przyczyna A:** `buildBadgeItems` dodawal `data-revision-path` tylko na badge nosnika (`carrier`), nie na `lang` / `index` / marka-kategoria. `DamTagEdit.openTagPicker` wymaga `revisionPath` do POST `/revision-langs` i `/rename-revision-prefix`.
+
+**Fix A:** `revisionBadgeData(opts)` w `dam-badges.js` — wspolne `data-revision-path`, `data-product-id`, `data-revision-index` na wszystkich edytowalnych badge; branding: `brandingBadgeData(asset)` na `asset_role` / `appearance`.
+
+**Objaw B (folder sync):** Po zmianie typu DOY→BIGPAK folder na dysku OK, ale `#damVizModalWinExplorer` trzymal stary `data-path` → toast „Folder nie istnieje”.
+
+**Przyczyna B:** Bridge `create_or_apply_tag_proposal` zwracal `old_path`/`new_path`/`file_renames` ale **bez** `new_carrier_code`; `_damVizOnTagApplied` aktualizowal sciezki tylko w bloku `if (res.new_carrier_code)`; brak remap `items[]`/`all[]`/`file_renames` i brak `selectVariant()` po rename.
+
+**Fix B:** Bridge dodaje `new_carrier_code`; `submitCarrierChange` ustawia `res.new_carrier_code` + patch DOM `[data-revision-path]`/`[data-path]`; `applyDiskRenameResult(res)` w `dam-viz.js` remapuje `items`, `all`, `_DAM_FILE_INDEX`, DOM, potem `selectVariant(activeIdx)`.
+
+**Weryfikacja:** Shift+klik PL badge → picker; po rename nosnika `data-path` na `#damVizModalWinExplorer` = `v.path` z dysku; Folder otwiera bez toastu bledu.
+
 ### 2026-07-26 — MILESTONE v5.0.0: assoc picker 4/4 CTA AA + search (user confirmed)
 
 **Objaw (regresja 4.0.58–4.0.61):** Po v4.0.57 wszystkie 4 CTA przestały otwierać picker lub zacinały cały program po open/search. User raportował: B warianty freeze, B produkty dead (pusty picker), `#damAssocEditSearch` garbage q freeze, viz warianty zacięcie. Arc naprawczy: 4.0.62 baseline rollback → 4.0.67–4.0.70 → 4.0.71 (`d91cd0d`) → **5.0.0 user confirmed all 4 CTA + search work**.

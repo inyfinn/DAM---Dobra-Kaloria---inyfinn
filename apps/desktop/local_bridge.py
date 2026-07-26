@@ -2153,6 +2153,18 @@ def _branding_picker_title(entry: dict) -> str:
     return str(entry.get("id") or "")
 
 
+def _branding_picker_is_source_path(path: str) -> bool:
+    """PSD/PSB/AI/PDF — zrodla edycyjne, nie deliverable w pickerze B warianty."""
+    p = str(path or "").replace("\\", "/").lower()
+    if not p:
+        return False
+    dot = p.rfind(".")
+    if dot < 0:
+        return False
+    ext = p[dot + 1:]
+    return ext in {"psd", "psb", "ai", "indd", "eps", "pdf"}
+
+
 def _light_branding_picker_entry(entry: dict) -> dict:
     path = str(entry.get("path") or "").replace("\\", "/")
     title = _branding_picker_title(entry)
@@ -2193,6 +2205,9 @@ def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: lis
                 continue
             eid = str(entry.get("id") or "").strip()
             if eid in want and eid not in seen:
+                if _branding_picker_is_source_path(str(entry.get("path") or "")):
+                    want.discard(eid)
+                    continue
                 seen.add(eid)
                 want.discard(eid)
                 out.append(_light_branding_picker_entry(entry))
@@ -2206,6 +2221,8 @@ def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: lis
             continue
         eid = str(entry.get("id") or "").strip()
         if not eid or eid in seen:
+            continue
+        if _branding_picker_is_source_path(str(entry.get("path") or "")):
             continue
         blob = str(entry.get("search_blob") or eid or entry.get("path") or "").lower()
         if q not in blob:
@@ -3725,7 +3742,7 @@ def create_or_apply_tag_proposal(
                 "product_id": payload.get("product_id") or "",
                 "product_name": payload.get("product_name") or "",
             })
-        return {"ok": result.get("ok", False), "applied": True, "immediate": True, **result}
+        return {"ok": result.get("ok", False), "applied": True, "immediate": True, "new_carrier_code": new_code, **result}
 
     data = load_tag_proposals()
     proposals = data.setdefault("proposals", [])

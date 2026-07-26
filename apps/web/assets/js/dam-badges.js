@@ -68,6 +68,26 @@
     appearance: 1,
   };
 
+  /** Wspolne data-* dla edycji tagow (Shift+klik / dblclick w viz + branding preview). */
+  function revisionBadgeData(opts) {
+    opts = opts || {};
+    return {
+      "revision-path": opts.revisionFullPath || opts.revision_path || "",
+      "revision-index": opts.revisionIndex || opts.index || "",
+      "product-id": opts.productId || "",
+      "product-name": opts.productName || "",
+    };
+  }
+
+  function brandingBadgeData(asset) {
+    asset = asset || {};
+    return {
+      "revision-path": asset.path || asset.revision_path || "",
+      "product-id": asset.product_id || asset.linked_product_id || "",
+      "product-name": asset.product_name || "",
+    };
+  }
+
   function esc(s) {
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;")
@@ -147,10 +167,7 @@
         label: tagText(brand, "brand"),
         cls: "dam-viz-badge--brand",
         tip: brandTip,
-        data: {
-          "product-id": opts.productId || "",
-          "product-name": opts.productName || "",
-        },
+        data: revisionBadgeData(opts),
       });
     }
     if (opts.category) {
@@ -167,10 +184,7 @@
         label: catTitle,
         cls: "dam-viz-badge--cat",
         tip: catTip,
-        data: {
-          "product-id": opts.productId || "",
-          "product-name": opts.productName || "",
-        },
+        data: revisionBadgeData(opts),
       });
     }
     if (opts.subcategory) {
@@ -183,10 +197,7 @@
         label: subLbl,
         cls: "dam-viz-badge--subcat",
         tip: subTip,
-        data: {
-          "product-id": opts.productId || "",
-          "product-name": opts.productName || "",
-        },
+        data: revisionBadgeData(opts),
       });
     }
 
@@ -297,6 +308,7 @@
             label: short,
             cls: "dam-viz-badge--lang",
             tip: langFull(lg) || short,
+            data: revisionBadgeData(opts),
           });
         });
       }
@@ -309,6 +321,7 @@
         label: short1,
         cls: "dam-viz-badge--lang",
         tip: langFull(lg1) || short1,
+        data: revisionBadgeData(opts),
       });
     } else if (opts.langUnknown || opts.lang === "?" || opts.langLabel === "?") {
       items.push({
@@ -317,6 +330,7 @@
         label: "?",
         cls: "dam-viz-badge--lang dam-viz-badge--lang-unknown",
         tip: "Jezyk nieznany - brak kodu w nazwie folderu/pliku (ustaw recznie)",
+        data: revisionBadgeData(opts),
       });
     } else if (opts.langLabel && !opts.compact) {
       items.push({
@@ -325,6 +339,7 @@
         label: langShort(opts.lang) || opts.langLabel,
         cls: "dam-viz-badge--lang",
         tip: opts.langLabel,
+        data: revisionBadgeData(opts),
       });
     }
 
@@ -335,6 +350,7 @@
         label: String(opts.index),
         cls: "dam-viz-badge--index",
         tip: "Indeks produktu",
+        data: revisionBadgeData(opts),
       });
     } else if (opts.showNoIndex) {
       items.push({
@@ -383,6 +399,17 @@
           "product-id": opts.productId || "",
           "flag-key": opts.flagKey || "",
         },
+      });
+    }
+
+    if (opts.isArchive) {
+      items.push({
+        kind: "flag",
+        value: "archive",
+        label: "ARCHIWUM",
+        cls: "dam-viz-badge--archive",
+        tip: "Plik z folderu ARCHIWUM — nie jest aktualną rewizją produktu",
+        style: "background:rgba(120,120,128,0.14);color:#5C5C66",
       });
     }
 
@@ -679,6 +706,10 @@
 
   function openTagEdit(btn) {
     if (!global.DamTagEdit) return;
+    /* Soft cleanup only - never dam:panic-reset / closePicker (re-entry freeze). */
+    if (global.DamTagEdit.closePopover && typeof global.DamTagEdit.closePopover === "function") {
+      global.DamTagEdit.closePopover();
+    }
     var card = btn.closest("[data-id]");
     var brandingId =
       btn.getAttribute("data-branding-asset-id") ||
@@ -907,16 +938,32 @@
       var ctx = context || detectContext();
       var now = Date.now();
       var dblClick = lastClick.btn === btn && now - lastClick.t <= 420;
-      var wantEdit = e.shiftKey || e.altKey || dblClick;
+      var shiftLatch =
+        !!(
+          global.document &&
+          global.document.documentElement &&
+          global.document.documentElement.classList.contains("is-shift-revealed")
+        );
+      var wantEdit = e.shiftKey || e.altKey || dblClick || (shiftLatch && editable);
       var wantAppend = e.ctrlKey || e.metaKey;
 
-      /* Shift / Alt / podwojny klik: edycja tagu (Projekty / Viz / Explorer) */
+      /* Shift / Alt / podwojny klik / latch Shift+Admin: edycja tagu */
       if (wantEdit && editable && global.DamTagEdit && (canEditTags() || isPlaceholder)) {
         e.preventDefault();
         e.stopPropagation();
         lastClick = { t: 0, btn: null };
         clearTimeout(btn._damFilterTimer);
-        openTagEdit(btn);
+        /* Macrotask: never build picker in same tick as click. */
+        setTimeout(function () {
+          try {
+            openTagEdit(btn);
+          } catch (errTag) {
+            console.error("[DamBadges] openTagEdit failed", errTag);
+            if (global.DamTagEdit && typeof global.DamTagEdit.closePopover === "function") {
+              global.DamTagEdit.closePopover();
+            }
+          }
+        }, 0);
         return;
       }
 
@@ -952,6 +999,10 @@
         e.preventDefault();
         e.stopPropagation();
         lastClick = { t: now, btn: btn };
+        /* HARD: tags in preview/viz modal must NOT drive page search/filters behind the modal. */
+        if (btn.closest && (btn.closest("#damMediaPreview") || btn.closest("#damVizModal"))) {
+          return;
+        }
         /* Natychmiastowy filtr (AJAX-like). Ctrl/Meta = dolacz token po spacji. */
         applyTagFilter(kind, value, ctx, {
           append: wantAppend,
@@ -1133,6 +1184,7 @@
         cls: "dam-viz-badge--cat",
         tip: "Przeznaczenie biznesowe (rola assetu). Shift+klik: edytuj.",
         tier: "primary",
+        data: brandingBadgeData(asset),
       });
     }
 
@@ -1233,6 +1285,7 @@
         cls: "dam-viz-badge--mix",
         tip: "Skojarzenie produktu / OCR. Shift+klik: edytuj.",
         tier: "primary",
+        data: brandingBadgeData(asset),
       });
     });
 
@@ -1368,7 +1421,12 @@
 
   function getIncludeTagTiers() {
     try {
-      if (localStorage.getItem(TAG_TIER_REVEAL_KEY) === "1") {
+      if (
+        (window.DamUserPrefs &&
+          typeof DamUserPrefs.getSync === "function" &&
+          DamUserPrefs.getSync().reveal_low_tags) ||
+        localStorage.getItem(TAG_TIER_REVEAL_KEY) === "1"
+      ) {
         return ["primary", "low", "minimal"];
       }
     } catch (eReveal) { /* ignore */ }
@@ -1379,6 +1437,9 @@
     try {
       localStorage.setItem(TAG_TIER_REVEAL_KEY, on ? "1" : "0");
     } catch (eSet) { /* ignore */ }
+    if (window.DamUserPrefs && typeof DamUserPrefs.set === "function") {
+      DamUserPrefs.set({ reveal_low_tags: !!on }).catch(function () {});
+    }
     if (typeof document !== "undefined") {
       document.dispatchEvent(new CustomEvent("dam-tag-tiers-changed"));
     }
