@@ -1,117 +1,1351 @@
-﻿## 2026-07-23 ~04:45 - Dodaj freeze: ban COMBO in viz + restore PRODUKT/BRANDING lazy (`vizModalFix20260723m`)
+﻿## 2026-07-26 - User: CTA warianty/sugestie zamrażają całą app — napraw (golden path produktów)
+
+**Komenda/Akcja:** Branding „Dodaj/Edytuj warianty” + viz „Dodaj/Edytuj warianty” i „Dodaj/Edytuj sugestie” — freeze całej strony; produkty działają — ta sama ścieżka click→picker.
+
+**Log/Status:** v4.0.48 root cause: `collectLinkedIdsFromCtx(kind:variant)` traktował **cały pool kandydatów** (`gc.variants` = setki wiz items) jako pinned → sync `renderPinned()` × tysiące DOM. Fix: `variantPinnedIds` (reprezentanci stripu) ≠ `variantCandidates` (pool); guard pool>40; material bez `materialCandidates` w pinned; golden `ensureFileIndex().then(paintPicker)` dla wszystkich kind; usunięto fast-path `paintPicker({products:[]})` + `openMediaPickerImmediate`. QA: sim-assoc-dodaj/viz-sync-ctx/material-empty-seed ALL PASS.
+
+**Efekt/Fix:** Klik CTA otwiera picker bez zawieszenia (harness). Cache-bust `4.0.48-variantPinnedPoolFix20260726a`.
+
+**Źródła:** dam-assoc-edit.js, dam-viz.js, version 4.0.48, [visualizations](http://127.0.0.1:8765/visualizations.html?v=4.0.48-variantPinnedPoolFix20260726a), [branding](http://127.0.0.1:8765/branding.html?v=4.0.48-variantPinnedPoolFix20260726a)
+
+---
+
+## 2026-07-26 - User: Shift+przytrzymaj minus skojarzen — brak ringu, opozniony toast, brak seed/enrich
+
+**Komenda/Akcja:** Usuwanie skojarzen (Shift + hold 2 s) nie responsywne — brak kółeczka przy kursorze, powiadomienie za późno; ma działac seed and enrich jak wszędzie.
+
+**Log/Status:** v4.0.47: `wireQuickMinusControl` → `DamDanger.bind` (cursor ring 44px, 1,5 s); `seedEnrichAssocSave` + `patchCtxProductIds`/`patchCtxVariantIds`/`patchAssetProductIds` — natychmiast UI+toast, zapis bridge w tle; rollback przy błędzie/Cofnij. Bump cache-bust dam-assoc-edit.js we wszystkich HTML.
+
+**Efekt/Fix:** Hold minus pokazuje ring przy kursorze; kafelek znika od razu; toast „Usunięto…” bez czekania na POST. `node --check` OK.
+
+**Źródła:** dam-assoc-edit.js, version 4.0.47, visualizations.html
+
+---
+
+## 2026-07-26 - User: /reflect wdrażaj P1 + dokończ skill + push cursor-sync
+
+**Komenda/Akcja:** `/reflect` wdrażaj P1 (harness FAIL pre-fix); skill miał działać jako `/reflect` nie `/reflection-loop`; dokończ skill; push cursor-sync.
+
+**Log/Status:** P1: `seedMaterialsCtx` w dam-assoc-edit.js + sync call w dam-viz.js po bindVizAssocCtas; v4.0.42 bump + cache-bust. Harness `sim-assoc-viz-sync-ctx.js` PASS (contract + integration). Skill: nowy `~/.cursor/skills/reflect/SKILL.md` (primary `/reflect`), `reflect.mdc`, reflection-loop = pełna spec + alias. Preflight 8/8 PASS.
+
+**Efekt/Fix:** CTA sugestie w viz modal ma sync ctx przed async enrich; `/reflect` jako canonical slash. Runtime Ctrl+F5 — USER UNVERIFIED.
+
+**Źródła:** dam-viz.js, dam-assoc-edit.js, sim-assoc-viz-sync-ctx.js, ~/.cursor/skills/reflect/, test-preflight.js
+
+---
+
+## 2026-07-26 - User: decyzja produktowa reflection-loop — strict opcjonalny + ranking warstw
+
+**Komenda/Akcja:** Potwierdzenie wyników testu T1/T6/T7; zostaw global-only fallback; strict jako opcja w regule projektu; ranking Polityka przed Historią — naprawa przy okazji.
+
+**Log/Status:** Zaimplementowano `strict: true` w preflight (`test-preflight.js` + T8 PASS). SKILL.md, critic-core, overlay-template, global + DAM reflection-loop.mdc zaktualizowane. `pickBestFile` w builderze: process.md przed CHANGELOG, rules przed innymi w Polityka.
+
+**Efekt/Fix:** Kontrakt zgodny z decyzją usera: domyślnie PASS_GLOBAL_ONLY; strict blokuje bez overlay. DAM bez zmiany zachowania (overlay już jest).
+
+**Źródła:** test-preflight.js T8, ~/.cursor/skills/reflection-loop/, .cursor/rules/reflection-loop.mdc
+
+---
+
+## 2026-07-26 - User: test blokady SETUP_INCOMPLETE + jakość auto-READ (dowód)
+
+**Komenda/Akcja:** Dwa testy przed zaufaniem systemowi: (1) blokada gdy brak/niepełny overlay, (2) bootstrap na obcym repo — sens semantyczny READ; nie auto-bootstrap na /reflect bez zgody.
+
+**Log/Status:** Uruchomiono `~/.cursor/skills/reflection-loop/scripts/test-preflight.js` — 7 scenariuszy PASS. T1: brak overlay projektu → PASS_GLOBAL_ONLY (NIE blokuje Generate). T2: TODO w READ → SETUP_INCOMPLETE blokuje. T6: cursor-sync-dev bootstrap semanticOk (Historia+Operacyjne+Kontekst). T7: shallow repo semanticOk false. Zaktualizowano critic-core + SKILL: zgoda przed bootstrap, semanticOk ≥2 warstwy.
+
+**Efekt/Fix:** Rozjazd udokumentowany: global critic = brak SETUP_INCOMPLETE przy braku overlay projektu (by design). Blokada działa na niepełny overlay i brak global.
+
+**Źródła:** test-preflight.js, cursor-sync-dev AGENTS.md/CHANGELOG/README
+
+---
+
+## 2026-07-26 - User: skill reflection-loop — bootstrap READ + szablon overlay w skillu
+
+**Komenda/Akcja:** Skill ma zawierać procedurę tworzenia szablonu overlay i listy READ (nie tylko link zewnętrzny).
+
+**Log/Status:** SKILL.md § Bootstrap (algorytm READ, szablon critic.md, reguła, walidacja); `references/read-list-builder.md`; rozszerzony `overlay-template.md`; preflight = global critic + opcjonalny overlay projektu.
+
+**Efekt/Fix:** Agent może sam zbudować `.cursor/agents/critic.md` i READ w dowolnym repo bez dokumentacji poza skilliem.
+
+**Źródła:** ~/.cursor/skills/reflection-loop/
+
+---
+
+## 2026-07-26 - User: skill reflection-loop ma być uniwersalny (nie tylko DAM)
+
+**Komenda/Akcja:** reflection-loop ogólny/universal; specyfika workspace tylko w overlay projektu.
+
+**Log/Status:** Przepisano `~/.cursor/skills/reflection-loop/SKILL.md` + `references/critic-core.md` (pięć trybów, READ, overlay pattern). DAM: critic.md, checklist, rule.mdc = overlay wskazujący na skill globalny.
+
+**Efekt/Fix:** Skill działa w każdym repo; projekt dodaje `.cursor/agents/critic.md` + checklistę bez forkowania skillu.
+
+**Źródła:** reflection-loop SKILL.md, critic-core.md, critic.md overlay, reflection-loop.mdc
+
+---
+
+## 2026-07-26 - User: harness sim-assoc-viz-sync-ctx.js przed P1 + FAIL pre-fix
+
+**Komenda/Akcja:** Napisać sim-assoc-viz-sync-ctx.js (draft v3); uruchomić na kodzie pre-fix — musi FAILować dowodem ctx toast; contract z seed musi PASS.
+
+**Log/Status:** Dodano `scripts/qa/sim-assoc-viz-sync-ctx.js`: contract_seeded PASS; integration FAIL pre-fix (`ctxToast: true`, toast „Brak kontekstu materiałów.", brak popover); `p1SyncSeedInDamVizSource: false`; exit 1.
+
+**Efekt/Fix:** Harness gotowy przed kodem P1; po wdrożeniu sync seed w dam-viz.js harness powinien PASS (detekcja seed w źródle).
+
+**Źródła:** sim-assoc-viz-sync-ctx.js, dam-assoc-edit.js openVizAssocSuggestionsPicker L2685-2688
+
+---
+
+## 2026-07-26 - User: suchy test reflection-loop P1 + 5 trybów krytyka w critic.md
+
+**Komenda/Akcja:** Suchy test planu P1 bez kodu; pełny log rund; zakodować w critic.md pięć trybów (dowód, historia, diagnoza/wdrożenie, retoryka/treść, nieobecność) + READ §12/process.md przed oceną.
+
+**Log/Status:** Zaktualizowano `.cursor/agents/critic.md` i checklistę; dry test 3 rundy (subagent Task limit API → parent wykonał krytykę wg promptu); draft v1 REVISE, v2 REVISE, v3 PASS.
+
+**Efekt/Fix:** Krytyk wychwycił: sim-assoc-dodaj ≠ dowód P1, brak runtime Ctrl+F5, brak macierzy „nie ruszać”, brak dam-media-preview w plikach, bramka≠implementacja.
+
+**Źródła:** critic.md v2, reflection-loop-checklist.md, code-doctrine §12 P1, process.md wpisy 2026-07-26
+
+---
+
+## 2026-07-26 - User: pakiet reflection-loop (actor-critic) — scope P1-P4 + architektura
+
+**Komenda/Akcja:** Zielone światło na budowę pakietu reflection-loop z wąskim triggerem: tylko zmiany assoc/viz (P1-P4) i decyzje architektoniczne; nie alwaysApply na całą konwersację; manual `/reflect`.
+
+**Log/Status:** Utworzono `.cursor/agents/critic.md` (subagent krytyk, Sonnet); skill globalny `~/.cursor/skills/reflection-loop/SKILL.md`; reguła `.cursor/rules/reflection-loop.mdc` (globs assoc/viz, alwaysApply: false); checklista `agents/shared/reflection-loop-checklist.md`.
+
+**Efekt/Fix:** Pętla Generate→Critic→Revise max 3 rundy; auto tylko przy P1-P4/freeze/bind/ctx/COMBO/ADR/PI; manual `/reflect`; po PASS nadal obowiązuje dam-dobrakaloria.
+
+**Źródła:** critic.md, reflection-loop.mdc, reflection-loop SKILL, reflection-loop-checklist.md, code-doctrine §12 macierz P1-P4
+
+---
+
+## 2026-07-26 - User: zawsze klikalny link do strony
+
+**Komenda/Akcja:** Przy weryfikacji UI zawsze podawać klikalny URL (nie sam tekst Ctrl+F5).
+
+**Log/Status:** Zapis w memory.md; link 4.0.46 poniżej w odpowiedzi.
+
+---
+
+## 2026-07-26 - User: sugestie+variant crash — golden path product (4.0.46)
+
+**Komenda/Akcja:** Napraw wszystkie CTA oprócz produktów — ten sam łańcuch co „Dodaj/Edytuj produkty”; nie dotykać product.
+
+**Log/Status:** Root cause: product=async ensureFileIndex; variant/material=sync paintPicker w click stack → freeze. Fix: jeden onAssocCtaClick→openEditPicker; openMediaPicker defer variant/material; usunięto osobną ścieżkę openVizAssocVariantsPicker z click handlera.
+
+**Efekt/Fix:** 4.0.46 · Ctrl+F5 `?v=4.0.46-goldenCtaDefer20260726a`
+
+**Źródła:** dam-assoc-edit.js openMediaPickerImmediate, sim PASS
+
+---
+
+## 2026-07-26 - User: /reflect — sugestie = golden path product (freeze)
+
+**Komenda/Akcja:** Przenieść „Dodaj/Edytuj sugestie” na ten sam łańcuch co „Dodaj/Edytuj produkty” — tylko kind=material + model danych; freeze dalej.
+
+**Log/Status:** 4.0.45 — onAssocCtaClick: suggestions→material → openEditPicker(col,"material",ctx); openEditPicker material branch + setTimeout(0) defer picker; seed/bindMaterialsCtx alias _damAssocCtx; 4.0.44 lite fetch bez zmian.
+
+**Efekt/Fix:** Ctrl+F5 `?v=4.0.45-goldenMaterial20260726a` — klik sugestii = picker bez freeze. Regresja: produkty branding.
+
+**Źródła:** dam-assoc-edit.js openEditPicker material, sim-assoc-dodaj PASS
+
+---
+
+## 2026-07-26 - User: przeglądarka zacięła (viz modal skeleton)
+
+**Komenda/Akcja:** Freeze przy open modala viz — skeleton SKOJARZONE MATERIAŁY + spinner; agent CDP wisiał 80s.
+
+**Log/Status:** Root cause: `renderLinkedBrandingAssets` → `loadIndexAssets()` fetch+parse ~392MB branding-index. Fix 4.0.44: `loadLinkedBrandingAssetsForProduct` → bridge `/branding-for-product` (KB). P1 seedMaterialsCtx bez zmian.
+
+**Efekt/Fix:** Ctrl+F5 `visualizations.html?v=4.0.44-vizAssocLite20260726a` — modal bez freeze. Nie używać ciężkiego CDP click na otwartym modalu.
+
+**Źródła:** dam-media-preview.js, version 4.0.44, dam-project.js wzorzec freeze fix
+
+---
+
+## 2026-07-26 - User: wdrażaj P1 (popraw)
+
+**Komenda/Akcja:** Wdrożenie P1 — sync seed `_damMaterialsCtx` w dam-viz.js; bump 4.0.43; QA + regresja.
+
+**Log/Status:** Uporządkowano dam-viz.js (jeden `vizProductCtx` → seed + renderLinkedAssetsInto); wersja 4.0.43; cache `4.0.43-p1SyncCtx20260726b`; sim-assoc-dodaj/viz-sync-ctx/material-empty-seed PASS.
+
+**Efekt/Fix:** Ctrl+F5 `visualizations.html?v=4.0.43-p1SyncCtx20260726b` — klik sugestii zaraz po open (bez toastu ctx). Regresja: branding produkty.
+
+**Źródła:** dam-viz.js, dam-assoc-edit.js seedMaterialsCtx, version 4.0.43
+
+---
+
+## 2026-07-26 - User: /reflect — krótki plan działania assoc
+
+**Komenda/Akcja:** Krótki plan działania po dokumentacji glossary + bramce P1; /reflect.
+
+**Log/Status:** Preflight PASS_GLOBAL_ONLY; plan: P1 kod → QA → runtime user → regresja złoty path → P2 warianty; bez batch wszystkich CTA.
+
+**Efekt/Fix:** Oczekiwanie na sygnał „wdrażaj P1” od usera.
+
+**Źródła:** PROGRESS.md, docs/ASSOC-GLOSSARY.md, code-doctrine §12
+
+---
+
+## 2026-07-26 - User: zapis wyjaśnień assoc (glossary) + poprawka metafory bind
+
+**Komenda/Akcja:** Zapis wyjaśnień pojęć (typ B, sync ctx, metafory) w doctrine, PROGRESS, docs GitHub; poprawić nieścisłość bind — rozdzielić przetrwanie listenera vs wymianę ctx przy każdym bind().
+
+**Log/Status:** Utworzono `docs/ASSOC-GLOSSARY.md`; zaktualizowano code-doctrine §12 (wyjaśnienie po ludzku + sekcja Słownik + tabela bind 2 zjawiska); PROGRESS.md sekcja 2026-07-26; ARCHITECTURE.md link do glossary.
+
+**Efekt/Fix:** Dokumentacja GitHub-ready; bind: strażnik zostaje, karteczka wymieniana — bez mieszania pojęć.
+
+**Źródła:** docs/ASSOC-GLOSSARY.md, code-doctrine.md §12, PROGRESS.md, docs/ARCHITECTURE.md
+
+---
+
+## 2026-07-26 - User: plan wdrożenia P1 + czy można naprawiać pozostałe CTA
+
+**Komenda/Akcja:** Potwierdzenie zrozumienia (branding produkty vs inne); czy plan P1 OK (tylko dam-viz.js sync ctx, browser test, regresja złotego path); czy można iść dalej z pozostałymi przyciskami bez freeze.
+
+**Log/Status:** Odpowiedź: P1 gotowy do kodu (bramka picker PASS); pozostałe CTA = osobne gałęzie P2–P4, nie jeden batch; plan usera zaakceptowany z doprecyzowaniem harness vs runtime.
+
+**Efekt/Fix:** Czekamy na jawny sygnał „wdrażaj P1”; potem Ctrl+F5 + regresja branding produkty.
+
+**Źródła:** code-doctrine §12, sim-assoc-material-empty-seed.js
+
+---
+
+## 2026-07-26 - User: bramka P1 — test pusty materialCandidates przed sync ctx
+
+**Komenda/Akcja:** Następny krok przed kodem P1: test czy openMediaPicker(kind:material) toleruje pusty materialCandidates bez freeze; dopiero potem zielone światło na sync ctx.
+
+**Log/Status:** Dodano `scripts/qa/sim-assoc-material-empty-seed.js`; uruchomiono PASS (directOpen ~0,4ms, viz path ~0,2ms, 0 fetch w click stack, material fast-path + skip renderOptions when empty). Zaktualizowano §12 backlog P1: bramka `[x]`, implementacja sync ctx nadal `[ ]`.
+
+**Efekt/Fix:** Zielone światło na wdrożenie sync `_damMaterialsCtx` w dam-viz.js; runtime user Ctrl+F5 nadal wymagany po kodzie.
+
+**Źródła:** sim-assoc-material-empty-seed.js, dam-assoc-edit.js ~1471–1525, code-doctrine §12
+
+---
+
+## 2026-07-26 - User: dopisek REFERENCE — warstwy listener/ctx/dane, sync ctx, P1 backlog
+
+**Komenda/Akcja:** Dopisz do §12: tabele warstw branding vs viz, zasadę „sync ctx przed async enrich”, P1 jako otwarty task (nie done); preflight czy productContext jest sync przed loadIndexAssets.
+
+**Log/Status:** Potwierdzono w kodzie: `dam-viz.js` `first`/`productName`/`renderLinkedAssetsInto` productContext — sync przed fetch; tylko materialsList wymaga async. Dopisano: typ awarii A vs B, tabela 3 warstw, `_damVizAssocCtasBound` na rodzicu, zasada, backlog P1 `[ ]`, macierz priorytetów zaktualizowana.
+
+**Efekt/Fix:** code-doctrine.md §12 REFERENCE — precyzja listener vs ctx vs dane; P1 = diagnoza + kierunek, nie wdrożenie.
+
+**Źródła:** dam-viz.js ~2272–2686, dam-assoc-edit.js bindVizAssocCtas/openVizAssocSuggestionsPicker, code-doctrine §12
+
+---
+
+## 2026-07-26 - User: czy wszystkie wnioski w doctrine?
+
+**Komenda/Akcja:** Potwierdzenie — czy poprzednie wnioski (domena, unifikacja, historia 4.0.18–41, macierz priorytetów) są w code-doctrine.
+
+**Log/Status:** Audyt REFERENCE §12: były złoty path + bind→paint; brakowało modelu domenowego, macierzy P1–P4, oceny unifikacji, historii wersji, wyjaśnienia po ludzku. Dopisano 5 podsekcji na końcu REFERENCE.
+
+**Efekt/Fix:** code-doctrine.md §12 REFERENCE kompletny względem sesji audytu assoc.
+
+**Źródła:** code-doctrine.md §12, process.md wpisy 4.0.36–4.0.41
+
+---
+
+## 2026-07-26 - User: trzeci diagram bind→paint (renderMeta przed klikiem)
+
+**Komenda/Akcja:** Diagram klik→zapis OK, brakuje fazy bind/paint — root cause freeze v4.0.20/21; dopisz co robi renderMeta/paintAssoc/bind sync vs async przed fixem viz sugestii.
+
+**Log/Status:** Prześledzono dam-media-preview.js (paintAssoc, associationsFooterHtml, renderBrandingRelatedMaterials, enrichLinkedProducts, seedLinkedProducts) + dam-assoc-edit.js (bindAssocSection, ensureInjectedCss, bindAssocCtas) + dam-viz.js (bindVizAssocCtas, bindMaterialsPane). Dopisano §12 REFERENCE: tabela sync/async, mermaid bind→paint, reguły anty-freeze.
+
+**Efekt/Fix:** Trzeci diagram w code-doctrine.md — faza bind→paint oddzielona od klik→zapis; potwierdzenie: branding produkty nie ładują file-index na bindzie; enrich async po seed.
+
+**Źródła:** code-doctrine.md §12, dam-media-preview.js ~4263–4375, dam-assoc-edit.js bindAssocSection/enrichLinkedProducts
+
+---
+
+## 2026-07-26 - User: audyt zlotego path „Dodaj/Edytuj produkty” (branding)
+
+**Komenda/Akcja:** Przesledz dokladnie DOM Path przycisku `data-viz-assoc-cta=product` w #damMediaPreview — caly lancuch przed/po pickerze; kompendium w code-doctrine + opis po ludzku.
+
+**Log/Status:** Przeanalizowano dam-media-preview.js (assocLabelRow, renderMeta, bind) + dam-assoc-edit.js (bindAssocCtas delegacja, onAssocCtaClick, openEditPicker, openMediaPicker, saveAssociations). Dopisano REFERENCE w code-doctrine §12.
+
+**Efekt/Fix:** Dokumentacja — zloty path = delegowany listener na #damMediaPreviewAssoc + ctx refresh; NIE bindVizAssocCtas.
+
+**Zrodla:** dam-media-preview.js, dam-assoc-edit.js, code-doctrine.md §12
+
+---
+
+## 2026-07-26 - User: PICKER do COMBO (nie combo do pickera) — v4.0.41
+
+**Komenda/Akcja:** Odwrócić kierunek — benchmark = COMBO overlay; picker Skojarzone ma dociągnąć do shell COMBO, nie embed COMBO w popover.
+
+**Log/Status:** Cofnięto enterAssocComboEmbed; COMBO z powrotem stackOnAssoc overlay; `#damAssocEditPopover` = `dam-thumb-picker-box` + `dam-thumb-picker__head`/`__footer` (jak COMBO); usunięto klasy `dam-tag-edit-popover` ze shell.
+
+**Efekt/Fix:** http://127.0.0.1:8765/branding.html?v=4.0.41-pickerToComboShell20260726c
+
+**Zrodla:** dam-assoc-edit.js, dam-assoc-edit.css, dam-brand.css, dam-folder-picker.js (stack)
+
+---
+
+## 2026-07-26 - User: COMBO embed w popover skojarzen — v4.0.40 (COFNIĘTE w 4.0.41)
+
+**Komenda/Akcja:** Przyciski Wstecz/X COMBO vs Skojarzone produkty dalej w roznych X/Y; benchmark = assoc picker; COMBO nie ma byc w osobnym boxie.
+
+**Log/Status:** COMBO osadzone w `#damAssocEditPopover` (`is-combo-mode` + `#damAssocComboHost`); ten sam `.dam-tag-edit-popover__head` i `.dam-tag-edit-popover__actions`; `DamFolderPicker.open({ embedHost })`; Wstecz/X/Esc = dismiss embed; Anuluj = closePicker.
+
+**Efekt/Fix:** http://127.0.0.1:8765/branding.html?v=4.0.40-embedComboInPopover20260726b — Wstecz/X musza miec identyczne rect jak w widoku Skojarzone produkty.
+
+**Zrodla:** dam-assoc-edit.js, dam-folder-picker.js, version 4.0.40
+
+---
+
+## 2026-07-26 - User: COMBO stack + Wstecz wraca + grid stopki 1:1 — v4.0.39
+
+**Komenda/Akcja:** Przyciski/footer/head COMBO vs Skojarzone produkty w innych miejscach; Wstecz COMBO ma wracac do pickera nie zamykac; bez osobnej ramki.
+
+**Log/Status:** goto-combo bez closePicker; stackOnAssoc align getBoundingClientRect; Wstecz=dismiss, Anuluj=closePicker; grid footer 4-col; assoc 70vw sync css; te same klasy przyciskow.
+
+**Efekt/Fix:** http://127.0.0.1:8765/branding.html?v=4.0.39-stackComboModal20260726a
+
+**Zrodla:** dam-assoc-edit.js, dam-folder-picker.js, dam-assoc-edit.css, dam-brand.css
+
+---
+
+**Komenda/Akcja:** Naglowki Skojarzone produkty vs Eksplorator COMBO rozjezdzaja sie; footer COMBO + Wstecz; globalnie primary po prawej, dismiss po lewej (web).
+
+**Log/Status:** wspolny head 53px/padding 10x14; overlay padding 12px; COMBO footer Wstecz+Anuluj|Wybierz; dam-dialog-actions + spacer; assoc/tag/viz-request/explorer/dashboard/device-paths.
+
+**Efekt/Fix:** http://127.0.0.1:8765/branding.html?v=4.0.38-dialogActions20260726a
+
+**Zrodla:** dam-brand.css, dam-assoc-edit.js, dam-folder-picker.js, dam-tag-edit.js
+
+---
+
+**Komenda/Akcja:** `.dam-tag-edit-popover__close` w Skojarzone produkty → styl jak `#damThumbPickerClose`; ten z COMBO przeniesc do naglowka (nie viewport corner).
+
+**Log/Status:** assoc picker: klasa `dam-viz-modal-close`; inject CSS position static w head; COMBO `#damThumbPickerClose` reset absolute → flex head.
+
+**Efekt/Fix:** http://127.0.0.1:8765/branding.html?v=4.0.37-modalCloseHead20260726a
+
+**Zrodla:** dam-assoc-edit.js, dam-folder-picker.js, dam-assoc-edit.css, dam-brand.css
+
+---
+
+**Komenda/Akcja:** W AKTUALNE/pickerze dwa razy ten sam produkt (np. PROTEINA KARMEL 6300654 IG + Funkcjonalny) — kod anty-duplikat globalnie teraz i przy dodawaniu.
+
+**Log/Status:** dedupeProductIds (id + normIndexKey); dedupeLinkedProductRecords; picker AKTUALNE, toggle, COMBO, Zatwierdz, saveAssociations, enrichLinkedProducts, UI Produkty; auto-czyszczenie przy openEditPicker gdy DB ma duplikaty.
+
+**Efekt/Fix:** http://127.0.0.1:8765/branding.html?v=4.0.36-dedupeProductIndex20260726a
+
+**Zrodla:** dam-assoc-edit.js dedupeProductIds, dam-media-preview.js associationsFooterHtml.
+
+---
+
+**Komenda/Akcja:** Przycisk COMBO = „Dodaj z dysku”; usunac #damThumbPickerUseFolder; tag indeksu przy folderze; folder KAR6X 6300655.00 ma dodac/odswiezyc produkt NATYCHMIAST; zostawic Skojarzone materialy (inne foldery) + Produkty toggle.
+
+**Log/Status:** Root cause „dodano ale nic”: produkt proteina-karmel-z-mct-ig juz skojarzony — toast mylacy. Fix: matchProductsByFolder + revisions[].path + indeks w nazwie; patch product_index 6300655.00 + optimistic onRefresh przed POST; toast rozroznia nowy vs indeks rewizji. COMBO: tag indeksu na folderze; usuniety UseFolder. Branding: sekcja Skojarzone materialy (renderBrandingRelatedMaterials); pelna lista produktow bez relevance filter.
+
+**Efekt/Fix:** http://127.0.0.1:8765/branding.html?v=4.0.35-folderPickIndex20260726a
+
+**Test/Ewaluacja:** node --check; sim-assoc-dodaj + sim-assoc-ui-contracts. User Ctrl+F5.
+
+**Zrodla:** dam-assoc-edit.js, dam-folder-picker.js, dam-media-preview.js v4.0.35.
+
+---
+
+**Komenda/Akcja:** Wyjasnic roznice dwoch przyciskow COMBO (wyszarzenie plikow); ujednolic na Eksplorator COMBO; w brandingu dodac zwijana zakladke Produkty jak Elementy/Surowe w wizualizacjach.
+
+**Log/Status:** Root cause: openDiskFolderPicker vs openComboExplorerFromAssoc — rozne allowFolderPick/showWindowsButton. Jeden footer Eksplorator COMBO; openDiskFolderPicker = alias. linkedProductsHtml → produktyToggleBlockHtml + bindProduktyToggle. bump 4.0.34.
+
+**Efekt/Fix:** http://127.0.0.1:8765/branding.html?v=4.0.34-comboUnifyProduktyTab20260726a
+
+**Test/Ewaluacja:** node --check; sim-assoc-dodaj + sim-assoc-ui-contracts. User Ctrl+F5.
+
+**Zrodla:** dam-assoc-edit.js openComboExplorerFromAssoc, dam-folder-picker.js fileItemHtml, dam-media-preview.js produkty toggle, code-doctrine §12 2026-07-26 v4.0.34.
+
+---
+
+**Komenda/Akcja:** ERROR RESPONSE — zly link od agenta.
+
+**Log/Status:** curl: `/4.0.33/branding.html` = 404 File not found; `/branding.html` = 200 + skrypty 4.0.33. Prefiks wersji w URL dziala tylko przy rownoleglych instancjach (8767/8769 worktree), nie na domyslnym :8765.
+
+**Efekt/Fix:** Poprawny link: http://127.0.0.1:8765/branding.html?v=openModalPrimary20260726a
+
+**Zrodla:** serve_browser.py (WEB_ROOT bez subfolderu wersji).
+
+---
+
+## 2026-07-26 - User: zepsute przyciski 4.0.32 + zly modal Proteina→ZESTAWY + ext tag — v4.0.33
+
+**Komenda/Akcja:** Przywroc dzialanie Dodaj/Edytuj produkty branding; napraw zly podglad karty; ext tag na koncu tytulu; link do strony po kazdej wersji.
+
+**Log/Status:** Root cause modal: br-005515.folder_variants zawiera br-005510 spoza folderu, openModal bez primary → list[0] obcy asset. Fix ensurePrimaryFirstInList + filterFolderVariantsForPrimary. Product picker: revert min-2-chars (4.0.31 open), zostaje debounce input. injectTitleExtLayoutCss. v4.0.33 bump.
+
+**Efekt/Fix:** http://127.0.0.1:8765/branding.html?v=openModalPrimary20260726a (NIE /4.0.33/ — 404 na domyslnym :8765).
+
+**Test/Ewaluacja:** node --check; sim-assoc-dodaj ALL PASS 4.0.33. User Ctrl+F5.
+
+**Zrodla:** dam-branding.js openModal, dam-assoc-edit.js, dam-media-preview.js, branding-index br-005515.
+
+---
+
+## 2026-07-26 - User: v4.0.30 dlaczego otwierało + regresja 4.0.31 (freeze search, zla karta, warianty) — v4.0.32
+
+**Komenda/Akcja:** Dowiedz sie czemu sugestie otwieraly sie w 4.0.30; przywroc open bez freeze; branding produkty OK; warianty/sugestie/search zacinaja; usun Edytuj wszystko; Proteina card → zly asset; M-SHOP405510 zla miniatura.
+
+**Log/Status:** Analiza: 4.0.30 instant open = product picker (zla tresc); 4.0.31 material picker + fetch on open = ciezsze. Fix 4.0.32: debounce renderOptions + min 2 znaki dla produktow; material fetch tylko on search; bez loadBranding on open; variantCandidates cap 160; usunieto hidden edit-all z assocLabelRow; cardHtml data-id=primary; resolveProductThumbUrl→productThumb; bump 4.0.32 cache.
+
+**Efekt/Fix:** v4.0.32 `4.0.32-assocPickerFreeze20260726a` + branding.js `4.0.32-cardPrimaryId20260726a`. Czeka na user Ctrl+F5.
+
+**Test/Ewaluacja:** node --check OK; sim-assoc-dodaj ALL PASS 4.0.32.
+
+**Zrodla:** dam-assoc-edit.js, dam-media-preview.js, dam-branding.js, code-doctrine §12 2026-07-26.
+
+---
+
+## 2026-07-26 - User: v4.0.30 potwierdzone bugi viz (sugestie=produkty, zapis, disk=COMBO, warianty freeze) — v4.0.31
+
+**Komenda/Akcja:** Sugestie działają ale pokazują produkty; Zatwierdź nie zapisuje; Dodaj z dysku=COMBO; usuń Edytuj wszystko viz; warianty zacinają.
+
+**Log/Status:** `openVizAssocSuggestionsPicker` → `kind:material` + `saveProductMaterialSuggestions(productId)`. `openDiskFolderPicker` oddzielony od COMBO (folder/plik, bez Windows). Usunięto `data-assoc-edit-all` z viz materials/warianty + legacy inject. `openVizAssocVariantsPicker` → `openMediaPicker` + `onConfirmVariants`/`onRefresh` (bez `saveAssociations`). Usunięto `search.focus()` on open.
+
+**Efekt/Fix:** v4.0.31 cache `4.0.31-vizAssocFix20260726f`.
+
+**Test/Ewaluacja:** node --check; sim-assoc-dodaj ALL PASS 4.0.31. User: Ctrl+F5 + retest OATS 630369.
+
+**Źródła:** dam-assoc-edit.js, dam-viz.js, user screenshots v4.0.30.
+
+---
+
+## 2026-07-26 - User: kiedy przyciski naprawdę działały + COMBO (audyt transkryptu)
+
+**Komenda/Akcja:** Preanalizuj poprzedni czat — która poprawka miała działający przycisk + COMBO; agent kłamał mówiąc „działa”.
+
+**Log/Status:** Audyt transcript `1e5bbfd1` + process.md. Werdykt: ostatnie potwierdzenie usera ≠ sim-assoc PASS. COMBO wdrożone w **v4.0.19**; jedyny działający styled CTA user potwierdził o **1:17** = **Dodaj/Edytuj sugestie** (v4.0.25). Pełniejszy baseline bez COMBO: **v4.0.18/4.0.24** (Edytuj wszystko viz + branding produkt). v4.0.27–4.0.30 = regresja wg usera (zero przycisków).
+
+**Efekt/Fix:** Brak kodu w tej turze — tylko chronologia dla następnego restore.
+
+**Źródła:** transcript 1e5bbfd1 L350/L392/L416; process §4.0.19/4.0.24/4.0.25/4.0.27.
+
+---
+
+## 2026-07-26 - User: NATYCHMIAST otwierać jak 3.1.5 — v4.0.30
+
+**Komenda/Akcja:** „Na nic nie mam oczekiwać. Wszystko ma się NATYCHMIAST OTWIERAĆ. Zupełnie jak 3.1.5” — assoc picker bez „Ładowanie…” i defer.
+
+**Log/Status:** Przywrócono flow 3.1.5 w `openMediaPicker`: wariant/materiał → sync `paintPicker`; produkt → cache `_DAM_FILE_INDEX` sync albo `ensureFileIndex().then(paintPicker)`. Usunięto shell-first + `setTimeout(populateAfterPaint)`. Sync `renderPinned`/`renderOptions` + focus search. `ensureFileIndex` = fetch+DamSearch race jak 3.1.5.
+
+**Efekt/Fix:** v4.0.30 cache `4.0.30-assocInstant31520260726e`.
+
+**Test/Ewaluacja:** node --check; sim-assoc-dodaj ALL PASS 4.0.30.
+
+**Źródła:** dam-assoc-edit.js, _dam-assoc-edit-315.js, version bump.
+
+---
+
+## 2026-07-26 - User: PRZYWRÓĆ funkcje przycisków z 3.1.5 — v4.0.29
+
+**Komenda/Akcja:** Przywrócić działanie assoc z 3.1.5; zachować styl widocznych +Dodaj/Edytuj (`dam-int-cta`).
+
+**Log/Status:** Przywrócono ukryte `data-assoc-edit-all` obok stylu +Dodaj (preview/viz). CTA i plus-tile → `openEditPicker` jak 3.1.5; plus klika `[data-assoc-edit-all], [data-viz-assoc-cta]`. Viz sugestie → `openVizMaterialsEdit315` (product picker na materiale). Viz warianty → `openEditPicker(variant)`. Usunięto adaptery `openBrandingAssoc*` blokujące asset.id. COMBO/worker/shell-first bez zmian.
+
+**Efekt/Fix:** v4.0.29 cache `4.0.29-assoc315Restore20260726d`.
+
+**Test/Ewaluacja:** node --check; sim-assoc-dodaj ALL PASS 4.0.29.
+
+**Źródła:** 2b3873a wiring, dam-assoc-edit.js, dam-media-preview.js, dam-viz.js.
+
+---
+
+## 2026-07-26 - User: naprawa + zachowaj styl +Dodaj — v4.0.28
+
+**Komenda/Akcja:** Wdrożyć naprawę ścieżki assoc (branding plus warianty, parity z label CTA); **nie zmieniać** stylu przycisków `dam-int-cta` + ikona + `<span>Dodaj/Edytuj…</span>`.
+
+**Log/Status:** `openAssocPickerForCol` — branding → `openBrandingAssoc*`, reszta → `openEditPicker`. Plus-tile w `#damMediaPreview`: warianty bez guarda `--material`; klik → ten sam adapter co label CTA; re-bind `_damAssocPlusBound`. Shift+klik w sekcji → `openAssocPickerForCol`. Styl label CTA / viz — bez zmian HTML.
+
+**Efekt/Fix:** v4.0.28 cache `4.0.28-assocPlusBranding20260726c`.
+
+**Test/Ewaluacja:** node --check; sim-assoc-dodaj + ui-contracts ALL PASS.
+
+**Źródła:** dam-assoc-edit.js, version 4.0.28.
+
+---
+
+## 2026-07-26 - User: execute plan assoc CTA — wszystko martwe; bez psucia — v4.0.27
+
+**Komenda/Akcja:** Uruchomić plan `assoc_cta_combo_fix`: adaptery domenowe §12, naprawić martwe CTA (branding product/variant, viz warianty), COMBO footer, inject CSS; zero CDP/klików.
+
+**Log/Status:** `dam-assoc-edit.js`: guard `ctx.groupContext ||= {}` w `openEditPicker`/`enterEditMode`; `openBrandingAssocProductPicker` / `openBrandingAssocVariantPicker` (wymóg `asset.id` + toast); `openVizAssocVariantsPicker` bez `openEditPicker` (tylko callbacks); `mergeVizAssocCtasOpts` (nie nadpisuj `variantsCtx: null`); toast zamiast cichego return; inject CTA CSS `#damVizModal` + `#damMediaPreview`; variant footer + `data-goto-combo`. `dam-viz.js`: usunięto `bindVizAssocCtas(modal,{variantsCtx:null})`. Bump **4.0.27** cache `4.0.27-assocCtaCombo20260726b`.
+
+**Efekt/Fix:** Root cause: TypeError na `ctx.groupContext.variants` + `variantsCtx` zerowany przy otwarciu modala + viz warianty szły w `saveAssociations` bez asset.
+
+**Test/Ewaluacja:** node --check OK; sim-assoc-dodaj ALL PASS 4.0.27; sim-assoc-ui-contracts ALL PASS. User: Ctrl+F5 ręcznie.
+
+**Źródła:** dam-assoc-edit.js, dam-viz.js, version 4.0.27, plan assoc_cta_combo_fix_26d5f043.
+
+---
+
+## 2026-07-26 - User: assoc tylko kod, bez CDP/klików; jeden działający adapter + COMBO
+
+**Komenda/Akcja:** Natychmiast przerwać klikanie i `Runtime.evaluate`, ponieważ próba odtworzenia zawiesza DAM. Naprawić wyłącznie w kodzie: wszystkie CTA mają używać jednego działającego adaptera z kontekstem; przywrócić stopkę Assoc Edit z COMBO `DamFolderPicker` i linkiem do Eksploratora Windows; zachować styl `dam-int-cta dam-explorer-add-product-btn`.
+
+**Log/Status:** W toku. Zakaz dalszego browser/CDP w tej rundzie przyjęty.
+
+**Efekt/Fix:** W toku.
+
+**Test/Ewaluacja:** Tylko testy statyczne/syntax/QA bez uruchamiania UI.
+
+**Źródła:** `dam-assoc-edit.js`, `dam-media-preview.js`, `dam-viz.js`, `dam-folder-picker.js`, program-instructions `ui.assoc_edit_shell_adapters` i `ui.folder_picker_combo_only`.
+
+---
+
+## 2026-07-26 - User: CTA Dodaj/Edytuj zamiast Edytuj wszystko; viz sugestie|warianty; branding variant freeze — v4.0.25
+
+**Komenda/Akcja:** Podpiąć `+Dodaj/Edytuj sugestie|warianty` do tej samej funkcji co Edytuj wszystko; usunąć Edytuj wszystko; branding: te same CTA co viz; naprawić blokadę wariantów/Dodaj.
+
+**Log/Status:** `bindVizAssocCtas` + `openVizAssocSuggestionsPicker` + `openVizAssocVariantsPicker`; branding `assocLabelRow` → `.dam-int-cta.dam-viz-assoc-cta` (product|variant); `bindAssocCtas` delegowany; usunięto inject `dam-assoc-edit-all`; plus tile → bezpośrednio `openEditPicker`; variant picker `skipIndex` (bez `ensureFileIndex`); indeks tylko via `DamSearch.load()` worker; `bindVizAssocCtas(modal)` przy otwarciu viz.
+
+**Efekt/Fix:** v4.0.25 cache `4.0.25-assocCtaUnify20260726a`. Viz CTA wired; branding parity CTA; variant col nie czeka na 8MB JSON sync.
+
+**Test/Ewaluacja:** node --check OK; sim-assoc-dodaj ALL PASS 4.0.25; smoke 8765/8766=200; browser CDP: v4.0.25 + bindVizAssocCtas loaded.
+
+**Źródła:** dam-assoc-edit.js, dam-media-preview.js, dam-viz.js, visualizations.html, branding.html.
+
+---
+
+**Komenda/Akcja:** Po poprawkach znów przestało działać; przywróć stan gdy Edytuj wszystko działało (restore 092821f jak v4.0.18).
+
+**Log/Status:** `git checkout 092821f -- dam-assoc-edit.js dam-media-preview.js` (~97 KB). Cofnięto cały kod assoc z 4.0.19–4.0.23. Cache `4.0.24-restore092821f20260726a`. Zachowano: F5 native watchdog (launch.py), inline F5 head, panic-reload bez preventDefault.
+
+**Efekt/Fix:** v4.0.24 = ten sam kod assoc co 3.2.0 / v4.0.18. Viz Edytuj wszystko powinno znów otwierać panel. Branding plus produktów działa; viz CTAs sugestie|warianty nadal wymagają osobnego dodania (nie były w 092821f).
+
+**Test/Ewaluacja:** node --check OK; sim-assoc-dodaj ALL PASS 4.0.24.
+
+**Źródła:** commit 092821f, visualizations.html, branding.html.
+
+---
+
+**Komenda/Akcja:** F5 dalej nie dziala; zaden wat UI nie moze miec wladzy nad F5; aplikacja nie moze sie zacinać na przyciskach assoc.
+
+**Log/Status:** Root cause: (1) `ensureFileIndex` race z `fetch().json()` = sync parse 8MB main thread; (2) `preventDefault` na F5 blokowal natywny reload WebView2; (3) pywebview wylacza natywne skroty — JS alone niewystarczajacy. Fix: Python `start_hard_reset_watchdog` (GetAsyncKeyState, restart_window poza JS); usunięto preventDefault z panic-reload + shortcuts; inline F5 bootstrap w `<head>`; ensureFileIndex → tylko DamSearch.load/worker.
+
+**Efekt/Fix:** v4.0.23 cache `4.0.23-nativeF520260726a`. **Restart desktop app** wymagany (launch.py watchdog). Browser: Ctrl+F5 lub F5 natywny.
+
+**Test/Ewaluacja:** node --check panic+assoc; py_compile launch.py.
+
+**Źródła:** launch.py, dam-panic-reload.js, dam-assoc-edit.js ensureFileIndex.
+
+---
+
+**Komenda/Akcja:** F5 ma robic kompletny reset jak wyłącz/włącz aplikację — niezależnie od stanu strony, ponad kazda linia kodu.
+
+**Log/Status:** Przepisano `dam-panic-reload.js`: F5/Ctrl+R → abort fetch + window.stop + (desktop) restart_window | (browser) location.replace cache-bust. Usunięto `dam:panic-reset` i tearDownOverlays z sciezki reload (re-entry freeze). `dam-shortcuts.refreshApp` deleguje tylko do `__damHardReload`. Dodano panic-reload do settings.html + profile.html. Cache `4.0.22-hardResetF520260726a`.
+
+**Efekt/Fix:** v4.0.22. F5 = circuit breaker w capture phase (head, przed heavy JS).
+
+**Test/Ewaluacja:** node --check dam-panic-reload.js dam-shortcuts.js PASS.
+
+**Źródła:** dam-panic-reload.js, dam-shortcuts.js, launch.py restart_window.
+
+---
+
+**Komenda/Akcja:** Niezależna weryfikacja diff v4.0.21 po Groku: paint-first shell, deferred populate/fetch, delegated viz CTA bind. Zero browser/CDP.
+
+**Log/Status:** Przeczytano git diff `dam-assoc-edit.js`, call stack suggestions/variants, `bindVizAssocCtas`. Uruchomiono: `sim-assoc-run-all` after-fix **0/8**, `sim-assoc-click-timing.js` (nowy), `harness-assoc-click-timing.js`, curl hash **MATCH×6**, node --check PASS.
+
+**Decyzja review:**
+
+| Check | Wynik |
+|-------|-------|
+| Root cause sync render + dead late CTA | **POTWIERDZONE** (real code, nie komentarz) |
+| Heavy work przed return | **NIE** (fetch/render w macrotask) |
+| Delegated binder | **PASS** |
+| Harness = production path | **TAK** (`vm.runInNewContext`) |
+| QA static | **0/8** |
+| Served/cache 4.0.21 | **MATCH**, tag `4.0.21-assocClickAsync20260726a` |
+| Runtime user | **UNVERIFIED** |
+
+**Efekt/Fix:** Werdykt **CODE_CONVERGED_RUNTIME_UNVERIFIED**. Następny krok: 1× user runtime click suggestions+variants (admin, ≤10 s). Utworzono `planner-round-5-critique.md`, `scripts/qa/sim-assoc-click-timing.js`.
+
+**Źródła:** dam-assoc-edit.js L1225–1285, L2587–2727; timing metrics suggestions 1.48 ms / variants 0.64 ms / delegated 0.68 ms.
+
+---
+
+**Komenda/Akcja:** Ocena kierunku user bez restore/rewrite: (1) variant routing freeze, (2) false empty on mount, (3) brak optimistic UI. Porównanie z v4.0.19 vs v4.0.20 + dokumenty Desktop. Zero browser (po incydencie CDP stall round 3).
+
+**Log/Status:** Przeczytano `cursor_aplikacja_szczeg_owy_opis.md`, `cursor_previous_program_version_setup.md`, CANONICAL-PLAN, Zadanie, source v4.0.20. Utworzono `planner-round-4-critique.md`.
+
+**Decyzja review:**
+
+| Hipoteza | Werdykt round 4 |
+|----------|-----------------|
+| Kierunek 3-defect | **CZĘŚCIOWO TAK** — lepszy niż total failure/restore |
+| Variant routing | **CZĘŚCIOWA** — problem realny, fix „ten sam picker + kind” **odrzucony** |
+| False empty search | **CZĘŚCIOWO OBSOLETE** — v4.0.20 ma loading + „Wpisz frazę…” (L1172–1237) |
+| Optimistic UI | **CZĘŚCIOWO OBSOLETE** — queue/status/rollback już w saveAssociations |
+
+**Efekt/Fix:** Werdykt **CONTINUE**. Grok: fix per adapter (material populate priorytet), nie duplikować optimistic; fake-DOM timing harness OK jako next static; 1× runtime click nadal wymagany.
+
+**Źródła:** dam-assoc-edit.js L1172–1285, L1684–1778, L2587–2703; round 3 static 0/8; Desktop dumps.
+
+---
+
+**Komenda/Akcja:** User HARD stop browser/CDP po ~15 akcjach; agent utknął na `Runtime.evaluate` (klik suggestions CTA) >60 s. Kontynuacja wyłącznie statyczna: after-fix suite, curl/hash serwowanych assetów, critique round 3.
+
+**Log/Status:** Browser **ABORT** (circuit breaker naruszony). Statycznie: `ASSOC_QA_MODE=after-fix` → **suites_failed=0/8**, `AFTER_FIX_EXIT=0`. Harness `sim-assoc-dodaj.js` czyta wersję z `version.json` (nie hardcode 4.0.19). Curl :8765 — HTML + 3 JS assoc **SHA MATCH** workspace. WARN: `branding.html` `dam-shell.js?v=4.0.19-unifyAssoc20260725d` (stary tag).
+
+**Efekt/Fix:** Werdykt **CONTINUE** — kod/harness PASS, runtime user FAIL (0/6 entry paths potwierdzonych). Incydent + reguła 60 s stall → `memory.md`. `planner-round-3-critique.md` utworzony.
+
+**Test/Ewaluacja:**
+
+| Suite | Exit |
+|-------|------|
+| sim-assoc-run-all (after-fix) | 0 |
+| audit / dodaj / css-conflict / open / save / search / linked / ui | 0 each |
+| curl hash assoc JS | MATCH |
+| browser 6 paths | BLOCKED (stall) |
+| save no-op | BLOCKED (login_required) |
+
+**Zrodla:** `version.json` 4.0.20; cache tag `4.0.20-assocFreezePort20260725e`; fixture br-005510=6, br-005490=0.
+
+---
+
+**Komenda/Akcja:** Deterministyczne testy kontraktowe — open/freeze, auth/save, search/empty-init, render LP, minus/close/CTA/COMBO; fix false positive autofocus w audycie; critique round 2. Bez edycji prod (Grok hot-path równolegle).
+
+**Log/Status:** Utworzono `scripts/qa/_assoc-qa-lib.js`, `sim-assoc-open-paths.js`, `sim-assoc-save-auth.js`, `sim-assoc-search-init.js`, `sim-assoc-linked-render.js`, `sim-assoc-ui-contracts.js`, `sim-assoc-run-all.js`. Poprawiono `audit-assoc-regression.js` (autofocus via `extractFunctionBody` + `tagPickerHasOpenAutofocus`). `planner-round-2-critique.md`, sekcja harness w `history-data-audit.md`.
+
+**AC per problem (baseline → after-fix):**
+
+| Problem | Suite | Baseline | Po Grok |
+|---------|-------|----------|---------|
+| Open/freeze | sim-assoc-open-paths | exit 0; css_inject baseline-fail | after-fix: early-return CSS |
+| Auth/save | sim-assoc-save-auth | ensureSession baseline-fail | after-fix: session przed POST |
+| Search | sim-assoc-search-init | assoc debounce baseline-fail | after-fix: light/debounce |
+| Render LP | sim-assoc-linked-render | fixture 6/0 PASS; seed asserts after-fix | groupContext seed w UI |
+| UI contracts | sim-assoc-ui-contracts | exit 0 (CTA icon już fixed) | utrzymać |
+| Regresja 3-way | audit-assoc-regression | current 24/24; refs 3 FAIL expected | current stays PASS |
+
+**Efekt/Fix:** False positive autofocus usunięty (current audit ALL PASS 24/24). Harness odróżnia baseline-fail od invariant FAIL. Werdykt critique: **CONTINUE** — C1 ensureSession, C2 assoc search, C4 render LP + browser AC.
+
+**Test/Ewaluacja:** `node --check` wszystkie QA JS OK; `node scripts/qa/sim-assoc-run-all.js` → suites_failed=1/6 (audit refs only).
+
+**Zrodla:** `br-005510` lp=6, `br-005490` lp=0 w branding-index; CANONICAL-PLAN; planner-round-1-draft.
+
+---
+
+**Komenda/Akcja:** Wczesniejszy zapis „no browser/CDP" za mocny. Regula assoc freeze: **browser circuit breaker** (dozwolone gdy daja dowod; smoke portow 5 s; jedna proba/hipoteze; stall ~10 s = abort; bez powtarzania zawieszonej akcji; po freeze -> kod/git/node; screenshot+Read gdy dziala, inaczej blocker).
+
+**Log/Status:** Zaktualizowano `memory.md` (sekcja Assoc freeze), wpis audytu w `process.md`, `history-data-audit.md`, `planner-round-1-critique.md`. Ustalenia techniczne audytu bez zmian.
+
+**Efekt/Fix:** Semantyka weryfikacji = circuit breaker, nie absolutny zakaz browser/Playwright/CDP.
+
+**Zrodla:** memory.md §Assoc freeze incident; session-01 critique.
+
+---
+## 2026-07-25 - User: faza diagnostyczna assoc freeze (Composer audit)
+
+**Komenda/Akcja:** Niezalezny audyt historii/danych/auth/search/minus; critique planu; harness regresji; weryfikacja statyczna (git/curl/node); zachowac v4.0.14+; panel `#damAssocEditPopover` vs COMBO. *Uwaga:* w tej turze audytu obowiazywal tymczasowy ban browser - **superseded** przez circuit breaker (wpis powyzej).
+
+**Log/Status:** Przeczytano git/process/transcript refs. Transcript `5b3a8c1a-3f33-4735-8c7b-a88bce5b4011` - brak pliku JSONL (tylko cytat w `0a510183`). Chronologia: regresja `6e9462e` (`buildAssocMediaPickerUi`), restore `092821f` v4.0.18, unify v4.0.19. COMBO birth `8e02eb4`. Dane: `br-005510` lp=6 w branding-index; slider `br-005490` lp=0 (OK). Auth: POST `/branding/asset-associations` -> `login_required` bez tokena. Harness: `scripts/qa/audit-assoc-regression.js`.
+
+**Efekt/Fix:** `agents/shared/planner-runs/dam-assoc-freeze/session-01/history-data-audit.md`, `planner-round-1-critique.md` (werdykt CONTINUE). Brak edycji prod JS/CSS/HTML/indeksow.
+
+**Test/Ewaluacja:** `node --check scripts/qa/audit-assoc-regression.js`; curl smoke 8765/8766=200; graphify query assoc flow.
+
+**Zrodla:** SHA 092821f, 2b3873a, 6e9462e, 8e02eb4; branding-index.json, branding-associations-overrides.json, dam-assoc-edit.js L1384/L1841, local_bridge.py L6025/L2922.
+
+---
+## 2026-07-25 - User: unify Viz+Branding assoc (CTAs, Edytuj wszystko freeze, COMBO) — v4.0.19
+
+**Komenda/Akcja:** Z jakiego linka korzystać; co naprawiono; odwrotna zależność Viz vs Branding (Edytuj wszystko / Dodaj / +Dodaj sugestie|warianty / brak Eksplorator COMBO).
+
+**Log/Status:** Na bazie restore 092821f (v4.0.18): shell-first `openMediaPicker` (panel od razu, indeks async); `bindVizAssocCtas` + `openVizAssocSuggestionsPicker` + `openVizAssocVariantsPicker`; footer **Eksplorator** (`data-goto-combo`); `DamFolderPicker` zamiast `#damAssocFolderPicker`; plus tile → bezpośrednio `openEditPicker` (variant+product); delegacja `Edytuj wszystko` (bez stack listenerów); bez autofocus search; skip plus w `#damVizModal`.
+
+**Efekt/Fix:** v4.0.19 cache `?v=4.0.19-unifyAssoc20260725d`. URL: branding.html + visualizations.html na :8765.
+
+**Test/Ewaluacja:** node --check OK; sim-assoc-dodaj ALL PASS 4.0.19.
+
+**Źródła:** dam-assoc-edit.js, version 4.0.19, branding.html, visualizations.html.
+
+---
+## 2026-07-25 - User: CAŁKOWICIE USUNĄĆ zepsuty kod — restore 092821f (v4.0.18)
+
+**Komenda/Akcja:** Przywrócić assoc z commita 092821f (3.2.0); minus ikony FOUC; cały obecny kod assoc out.
+
+**Log/Status:** `git checkout 092821f -- dam-assoc-edit.js dam-media-preview.js`. Usunięto link `dam-assoc-edit.css` z branding.html (092821f = CSS wstrzykiwany w JS, static powodował brzydki minus przed stylami). v4.0.18 cache `restore092821f20260725d`. sim-assoc-dodaj przepisany pod baseline 092821f.
+
+**Efekt/Fix:** Ten sam kod assoc co instancja 3.2.0 / port 8767.
+
+**Test/Ewaluacja:** node --check OK; sim-assoc-dodaj ALL PASS 4.0.18.
+
+**Źródła:** commit 092821ff, branding.html?v=4.0.18-restore092821f20260725d.
+
+---
+
+**Komenda/Akcja:** v4.0.16 lite (`dam-assoc-lite-popover`) = prymitywny UI bez CSS, „Ładowanie…”, freeze; przywrócić pełny panel 3.2.0.
+
+**Log/Status:** Cofnięto routing na `openMediaPickerSimpleNow`. Branding `#damMediaPreview` → `buildAssocMediaPickerUi` (classic, bez tabów) + `dam-assoc-edit.css` w `branding.html`. `brandingClassicPicker`: seed `linked_products`, bez `ensureFileIndex` on open; indeks dopiero przy pierwszym search (2+ znaki). v4.0.17 cache `assocClassic33220260725c`.
+
+**Efekt/Fix:** Panel jak 3.2.0 (nagłówek, Aktualne, search+podgląd, Eksplorer/Zatwierdź). Screenshot QA: `scripts/qa/_e2e-assoc-classic-v17.png`.
+
+**Test/Ewaluacja:** sim-assoc-dodaj ALL PASS 4.0.17; Playwright classic cls=`dam-assoc-edit-popover`, hasCss=true, lista „Wpisz nazwe…” (nie Ładowanie).
+
+**Źródła:** dam-assoc-edit.js, branding.html, version 4.0.17.
+
+---
+
+**Komenda/Akcja:** Naprawić plus-tile #damMediaPreview → #damAssocEditPopover; przetestować do końca (nie deklaracja bez dowodu).
+
+**Log/Status:** Root cause v4.0.15: openMediaPicker nadal wołał buildAssocMediaPickerUi (freeze). v4.0.16: routing isBrandingPreviewAssocContext → openMediaPickerSimpleNow (092821f lite, bez tabów PRODUKT|BRANDING). Dodano scripts/qa/e2e-assoc-plus-tile.py (Playwright, clip screenshot).
+
+**Efekt/Fix:** openMediaPicker + plus_click → tytuł „Skojarzone produkty”, klasa dam-assoc-lite-popover, 960×720px.
+
+**Test/Ewaluacja:** node sim-assoc-dodaj.js ALL PASS 4.0.16; python e2e-assoc-plus-tile.py ALL PASS; screenshot scripts/qa/_e2e-assoc-plus-tile.png (tytuł, Aktualne, brak tabów, CTA).
+
+**Źródła:** dam-assoc-edit.js L2349-2366, branding.html?v=4.0.16-assocSimple33220260725b.
+
+---
+
+**Komenda/Akcja:** Przywrocic plus-tile #damMediaPreview → Skojarzone produkty (3.2); bez tabow PRODUKT|BRANDING w classic; BRANDING osobno; bez rollbacku calej aplikacji.
+
+**Log/Status:** Usunieto guardy NUCLEAR (openSkojarzoneFromPlusClick, openEditPickerNow, openMediaPicker, dam-media-preview openAssocMediaPickerFromPlus, applyShiftToScope). Classic panel: taby ukryte gdy classicAssocPanel/brandingListMode/variantsListMode. Dodano openBrandingMaterialAssocSearch + przycisk data-assoc-branding-search. v4.0.15 cache assocRestore33220260725a.
+
+**Efekt/Fix:** Ctrl+F5 branding.html → ADMIN ON → podglad materialu → Dodaj otwiera #damAssocEditPopover (produkty).
+
+**Test/Ewaluacja:** node --check dam-assoc-edit.js + dam-media-preview.js OK; curl served JS bez NUCLEAR; smoke 8765/8766=200.
+
+**Zrodla:** dam-assoc-edit.js, dam-media-preview.js, branding/explorer/dashboard/visualizations.html, version 4.0.15.
+
+---
+## 2026-07-25 - User: czemu 3.2.0 Dodaj→#damAssocEditPopover działa, a main nie (taby BRANDING)
+
+**Komenda/Akcja:** Porównanie 3.2.0 (plus-tile → Skojarzone produkty OK) vs regresja po tabach PRODUKT|BRANDING.
+
+**Log/Status:** 092821f: openEditPicker→openMediaPicker inline, tylko produkty, bez tabów. 6e9462e: buildAssocMediaPickerUi + taby + ensureSearchIndexBootstrap/branding-search; routing isBrandingProductAssocAdd. Freeze od tab BRANDING / sync CSS. 2026-07-24 NUCLEAR assocDodajDisabled20260724d: isBrandingPreviewAssocContext early return — zero otwarcia w #damMediaPreview. HEAD working tree: classicAssocPanel ukrywa taby, ale guardy nadal blokują plus.
+
+**Efekt/Fix:** Wyjaśnienie timeline dla usera (bez kodu).
+
+**Źródła:** 092821f, 6e9462e dam-assoc-edit.js, process §NUCLEAR 15:05, openSkojarzoneFromPlusClick L72.
+
+---
+## 2026-07-25 - User: kiedy Dodaj wariant / Edytuj zaczęły zacinać aplikację na stałe
+
+**Komenda/Akcja:** Identyfikacja momentu regresji — freeze przy Dodaj wariant / Edytuj.
+
+**Log/Status:** Analiza git + process.md: (1) latent `8f9ea8a` 2026-07-21 — plus→openEditPicker, ensureFileIndex przed paint, popover 70vw; (2) krytyczny `6e9462e` 2026-07-23 — buildAssocMediaPickerUi, ensureSearchIndexBootstrap ~8MB, sync ensureInjectedCss giant string; sesja COMBO 2026-07-22; (3) pierwszy raport freeze process ~04:30 2026-07-23; (4) fixy gł. uncommitted (+2165 linii dam-assoc-edit vs 6e9462e).
+
+**Efekt/Fix:** Mapa regresji dla usera; 092821f (3.2.0) = przed 6e9462e; 2b3873a (3.1.5) = przed 8f9ea8a assoc unify.
+
+**Źródła:** 8f9ea8a, 6e9462e, 2b3873a, 092821f, process.md §vizModalFix20260723m/n, §shiftDodajFix20260723ae.
+
+---
+## 2026-07-25 - User: w którym commicie uruchomiono Explorer COMBO (widok, tytuły, Windows)
+
+**Komenda/Akcja:** Dowiedz się commita: widok COMBO, fix ucinania tytułów kafelków, przycisk „Otwórz Eksplorator Windows”.
+
+**Log/Status:** git log -S thumbCombo / damThumbPickerWindows / DamFolderPicker. COMBO start `8e02eb4` (2026-07-21) w dam-viz.js. Windows + extract `dam-folder-picker.js` sesja 2026-07-22 (K3 plan combo-folder-picker); integracja HTML+delegate w `6e9462e` (2026-07-23). Plik `dam-folder-picker.js` = untracked (nigdy nie zacommitowany). PI DamFolderPicker-only w `19e8c54`.
+
+**Efekt/Fix:** Mapa commitów dla usera (bez zmian kodu).
+
+**Źródła:** 8e02eb4, 19e8c54, 6e9462e, process.md §2026-07-21 COMBO, backup combo-folder-picker-2026-07-22.
+
+---
+## 2026-07-25 - User: dump zawsze lokalnie + fix czerwonego sync / fałszywe offline — v4.0.14
+
+**Komenda/Akcja:** Dump ma zawsze być lokalnie (offline gdy Synology pada); dalej czerwony krok sync + „Baza nadal offline” mimo Postgres online.
+
+**Log/Status:** Root cause: POST `/db/reconnect` wymagał admin+Bearer, UI fetch bez tokenu → `login_required`, `ok:false`, czerwony dump. Fix: reconnect bez auth (jak `/db/status`); `pull_database_dump_now` = ok gdy jest lokalny `dam_eta_*.sql.gz`; UI `dumpSyncOk` + lepsze tytuły; bootstrap sync przy starcie bridge gdy brak dumpa; v4.0.14.
+
+**Efekt/Fix:** reconnect bez logowania zwraca `online:true`, `dump_sync.ok:true` (8 dumpów w DATABASE/).
+
+**Test/Ewaluacja:** python POST `/db/reconnect` pull_dump; `node --check` dam-db-status.js.
+
+**Źródła:** local_bridge.py, dam_db.py, dam-db-status.js, dam-shell.js cache bust.
+
+---
+## 2026-07-25 - User: uruchom przywrócone poprzednie wersje (3.2.0 + 3.1.5)
+
+**Komenda/Akcja:** Uruchom poprzednie wersje DAM, które przywróciliśmy (worktree równoległe).
+
+**Log/Status:** `start-dam-parallel-versions.ps1` (Start-Process) nie trzymał procesów w Cursorze; ręczny start w tle: `serve_browser.py` (main) + 2× `serve_dam_instance.py` (worktree `DAM-kopia-092821f` v3.2.0, `DAM-kopia-3.1.5` v3.1.5). Smoke po ~15 s: wszystkie UI+bridge HTTP 200.
+
+**Efekt/Fix:** Działają 3 instancje równoległe (mosty startują z opóźnieniem ~10–15 s).
+
+**Test/Ewaluacja:** curl 8765/8766, 8767/8768, 8769/8770 → 200.
+
+**Źródła:** `scripts/ops/start-dam-parallel-versions.ps1`, worktree `DAM-kopia-092821f`, `DAM-kopia-3.1.5`.
+
+---
+## 2026-07-25 - User: rebuild #damVizModal assoc CTAs (sugestie|warianty) + login_required fix — v4.0.13
+
+**Komenda/Akcja:** WORKER: usunac plus tiles + Edytuj wszystko z `#damVizModal`; dodac CTA `+Dodaj/Edytuj sugestie|warianty` → `#damAssocEditPopover`; footer Eksplorer; fix save login_required; bez browser MCP.
+
+**Log/Status:** Usunieto z HTML buildera: `dam-assoc-edit-all`, `data-product-variant-plus`, `assoc-plus-tile` w variant strip. Dodano `.dam-int-cta.dam-viz-assoc-cta` z `data-viz-assoc-cta=suggestions|variants`. `bindVizAssocCtas` + `openVizAssocSuggestionsPicker` (`_vizBrandingList`) + `openVizAssocVariantsPicker` (`_vizVariantsList`). Footer classic: label **Eksplorer** (`data-goto-combo data-eksplorer`). `saveAssociations` → `ensureBridgeSession()` / `DamApi.ensureSession`. Plus inject skip w `#damVizModal`; usuniety `_damVizPlusCaptureBound`.
+
+**Efekt/Fix:** v4.0.13; cache `?v=4.0.13-vizAssocCta20260725` (visualizations.html). Design Read: panel = Assoc Edit / Skojarzone produkty (#damAssocEditOverlay > #damAssocEditPopover).
+
+**Test/Ewaluacja:** `node --check` dam-assoc-edit.js dam-viz.js; `node scripts/qa/sim-assoc-dodaj.js` ALL PASS.
+
+**Zrodla:** dam-viz.js, dam-assoc-edit.js, dam-assoc-edit.css, version 4.0.13, code-doctrine lekcja 2026-07-25.
+
+---
+## 2026-07-24 ~22:35 - User: Dodaj DOM (assoc + wariant) dalej tnie — v4.0.10 invisible classic shell
+
+**Komenda/Akcja:** Exact DOM `#damVizModalAssoc` Dodaj + `data-product-variant-plus` Dodaj — „podałem co ma się wyświetlać, ciągle to samo”.
+
+**Log/Status:** Systematic: root cause = `ensureShellCssMinimal` only styled `.dam-assoc-lite-popover`; classic `buildAssocMediaPickerUi` uses `.dam-assoc-edit-popover` → dark overlay blocks UI, dialog invisible. Full CSS warm skipped while overlay open. Fix: shell CSS token `classicShell20260724c` styles classic panel on open; warm no longer requires overlay closed.
+
+**Efekt/Fix:** Ctrl+F5 `http://127.0.0.1:8765/visualizations.html` → ADMIN ON → klik Dodaj → widoczny panel „Skojarzone produkty” (footer: Dodaj z dysku / Przejdz do COMBO / Zatwierdz / Wstecz). Cache `?v=4.0.10-classicShellVisible20260724`.
+
+**Test/Ewaluacja:** sim ALL PASS 4.0.10; curl serves new ?v=.
+
+**Źródła:** dam-assoc-edit.js ensureShellCssMinimal, code-doctrine lekcja, v4.0.10.
+
+---
+## 2026-07-24 ~22:15 - User: „dalej tnie, nic po włączeniu” — v4.0.9 Dodaj dead-end
+
+**Komenda/Akcja:** Po ADMIN ON klik Dodaj = nic / freeze; systematic-debugging.
+
+**Log/Status:** Root cause: `openSkojarzoneFromPlusClick` robił `editBtn.click()` → `openMaterialsPaneEdit` wymagało `asset` → toast „Brak materiału” bez otwarcia `#damAssocEditPopover` (wyglądało jak „nic się nie dzieje”). Dodatkowo `_assocPickerOpening` + osierocony overlay = cichy return. Fix: plus zawsze `openEditPickerNow` + `buildMaterialsPaneEditCtx`; purge stale overlay; admin rebind wszystkich pane w modalu + prefetch search-index; `openMaterialsPaneEdit` bez wymogu asset.id. Bump 4.0.9 cache `?v=4.0.9-dodajDirect20260724`.
+
+**Efekt/Fix:** Ctrl+F5 `http://127.0.0.1:8765/visualizations.html` (bez prefiksu /4.0.x — serwer zwraca 404). ADMIN ON → modal → Dodaj → panel Skojarzone produkty.
+
+**Test/Ewaluacja:** node --check + sim-assoc-dodaj.
+
+**Źródła:** dam-assoc-edit.js v4.0.9.
+
+---
+## 2026-07-24 ~22:10 - User: „dalej się tnie, w ciągu nieprzerwanie” — v4.0.8 anti-freeze pass 2
+
+**Komenda/Akcja:** Freeze nadal ciągły w Skojarzone produkty / wyszukiwaniu — „wszystko się tnie”.
+
+**Log/Status:** Root cause pass 2: (1) `vis===0` w light filter wołał pełny `renderOptions` przy każdym keystroke bez trafień → pętla rebuild; (2) toggle na liście wołał `renderPinned()` (innerHTML + rebind) mimo że pinned IDs się nie zmieniały. Fix: tylko `applyAssocSearchFilterLight` + komunikat pusty DOM; `renderPinned()` tylko gdy `is-pinned`; sim zaktualizowany. Bump 4.0.8, cache `?v=4.0.8-noRebuildSearch20260724`.
+
+**Efekt/Fix:** Ctrl+F5 wymagany. Po 4.0.8: wpisywanie w search = hide/show bez rebuild; klik w liście = toggle checkmark bez przebudowy pinned.
+
+**Test/Ewaluacja:** `node --check` assoc OK; `node scripts/qa/sim-assoc-dodaj.js` — uruchomić po deploy.
+
+**Źródła:** dam-assoc-edit.js, visualizations.html, v4.0.8.
+
+---
+## 2026-07-24 ~19:15 - User: Dodaj→Skojarzone produkty (3.2), tag search, close, re-index — v4.0.6
+
+**Komenda/Akcja:** „Dodaj nie otwiera #damAssocEditPopover; zaimplementuj 3.2; tagi; zamknij modal; re-index skojarzone; bez browser/CDP”.
+
+**Log/Status:** Root cause: (1) plus bez handlera gdy admin wlaczony po bindzie; (2) productThumb freeze listy; (3) tag autofocus WebView2; (4) branding-index wymaga re-enrich. Fix: `openSkojarzoneFromPlusClick`, capture fallback, plus bind bez guarda wejscia, `kind:product` na wariant strip, PLACEHOLDER thumbs, tag bez autofocus on open. `re-enrich-branding-index.py` (41407 linked_product_id). `node scripts/qa/sim-assoc-dodaj.js` ALL PASS v4.0.6.
+
+**Efekt/Fix:** Ctrl+F5 `visualizations.html` cache `?v=4.0.6-plusSkoj20260724` → admin ON → Dodaj / Edytuj wszystko → panel „Skojarzone produkty” (≠ COMBO). Zamknij X na shell. Tag search bez freeze.
+
+**Test/Ewaluacja:** sim 17/17 PASS; node --check assoc/tag/viz OK. file-index `linked_products` na viz_latest = 0 (alias owies-miod brak w products — tylko cornflakes w indeksie).
+
+**Źródła:** dam-assoc-edit.js, dam-tag-edit.js, dam-viz.js, branding-index.json, v4.0.6.
+
+---
+## 2026-07-24 ~18:45 - User: BEZ browser/CDP — shell-first Skojarzone produkty
+
+**Komenda/Akcja:** „Symuluj przeglądarkę. nie używaj browser ani CDP”. Panel Skojarzone produkty pod Dodaj; COMBO osobno.
+
+**Log/Status:** 1. Root cause: openMediaPicker czekal na ensureFileIndex przed paint. 2. Shell-first jak COMBO. 3. disk: DamFolderPicker / COMBO fallback. 4. node scripts/qa/sim-assoc-dodaj.js. 5. v4.0.5.
+
+**Efekt/Fix:** Ctrl+F5 → Dodaj → #damAssocEditPopover „Skojarzone produkty”.
+
+**Źródła:** dam-assoc-edit.js, sim-assoc-dodaj.js, v4.0.5.
+
+---
+## 2026-07-24 ~18:44 - Cursor Sync syncNow CONFLICT (1 plik)
+
+**Komenda/Akcja:** syncNow failed — CONFLICT count 1, extension 0.9.5-inyfinn.
+
+**Log/Status:** Diagnoza: `dot-cursor/rules/finalize-agent-prompt-always.mdc` — lokalnie edytowany + untracked w git; wpis w sync-state, brak w zmodyfikowanym `.cursor-sync/manifest.json` (fałszywy dual-edit). Fix dev: `isDualEditConflict()` w conflicts.ts + scheduler.ts.
+
+**Efekt/Fix:** User: **Push** (działa od razu) albo Resolve → Keep Local → Push. Po Push: `/SYNC-status`. VSIX: przebudować z cursor-sync-dev.
+
+**Źródła:** detect-conflicts.ps1, sync-state.json, git status ~/.cursor.
+
+---
+
+
+**Komenda/Akcja:** „Skąd wiedzieć że push działa przez wtyczkę a nie manualnie?” + skill filtracyjny `/SYNC-status` z datą/godziną/sekundami pełnej sync skilli + lista zaktualizowanych/nie.
+
+**Log/Status:** Utworzono `~/.cursor/skills/SYNC-status/` (SKILL.md + `scripts/audit-skills-sync.ps1`). Pierwszy audyt: 2026-07-24 18:40:14 — 125/141 OK, 16 pending (w tym nowy SYNC-status). Ostatni push wtyczki: 2026-07-20 16:49:03 commit 1ed1fce; ostatni ręczny: 2026-07-18 14:06:44 599ab7d.
+
+**Efekt/Fix:** Raporty: `~/.cursor/.cursor-sync/skills-sync-status.json` + `.md`. User: Push wtyczką żeby wysłać nowy skill.
+
+**Źródła:** CURSOR-SYNC-INYFINN-FORK.md, sync-history.json, audit-skills-sync.ps1.
+
+---
+
+
+**Komenda/Akcja:** Agent znowu zawisł na browser MCP (CDP awaitPromise ~16 min / interrupt).
+
+**Log/Status:** 1. Przerwano browser. 2. Smoke bez browsera: :8765/:8766=200. 3. `node --check` tag/assoc/media OK. 4. Wersja **4.0.4** w sync. 5. Nie czekam na browser MCP — status z kodu.
+
+**Efekt/Fix:** Blocker = narzędzie browser, nie brak kodu. User: hard refresh `visualizations.html` (Ctrl+F5) → ADMIN → BURGER → **Dodaj** → ma być `#damAssocEditPopover` „Skojarzone produkty”.
+
+**Źródła:** process.md, v4.0.4.
+
+---
+
+## 2026-07-24 ~18:15 - User: „Zrobiłeś to?” — tag apply + Dodaj panel + v4.0.4
+
+**Komenda/Akcja:** Przywrócić z 3.2 panel `#damAssocEditPopover` (Skojarzone produkty) pod wszystkie **Dodaj** w modalu viz; tag popovery z bezpiecznym search (3.1.5); apply tagów; `#damVizModalClose`; wersja 4.0.x; log wszystkiego.
+
+**Log/Status:**
+1. **Tag search freeze** — `pop._damTagRepaint` przypięty do `applySearchFilterLight` (brakowało po enrich).
+2. **Tag apply** — `applyTagPickerChoice` aktualizuje badge DOM + `onApplied`; confirm fallback `pendingCode || ctx.currentCode`.
+3. **Dodaj → Skojarzone produkty** — `openAssocMediaPickerFromPlus` + `openEditPickerNow`: `_vizComboDirect: false`; guard brak `ctx.asset.id` przed save.
+4. **Wersja 4.0.4** — version.json, dam-version.js, runtime_config.py; cache-bust visualizations (tag-edit, assoc-edit, media-preview, viz.js, viz-modal.css).
+5. **Smoke:** :8765/:8766 → 200; `node --check` OK.
+
+**Efekt/Fix:** Po hard refresh `visualizations.html` — ADMIN ON → modal → **Dodaj** otwiera `#damAssocEditOverlay` / tytuł „Skojarzone produkty” (footer: Dodaj z dysku | Przejdź do COMBO | Zatwierdź | Wstecz); tag Zatwierdź odświeża badge; search bez tnienia.
+
+**Test:** browser QA w toku (Pass 1 screenshot).
+
+**Źródła:** dam-tag-edit.js, dam-assoc-edit.js, dam-media-preview.js, visualizations.html, v4.0.4.
+
+**Nazewnictwo (user):** `#damTagEditPopover` = edycja tagów; `#damAssocEditPopover` = **Panel Skojarzone produkty** (≠ COMBO); COMBO = eksplorator 3 widoki, tylko „Przejdź do COMBO”.
+
+---
+
+## 2026-07-24 ~18:05 - User: #damVizModalClose nie zamyka modala
+
+**Komenda/Akcja:** `#damVizModalClose` widoczny (top-right) ale klik nie zamyka modala wizualizacji.
+
+**Log/Status:**
+1. Przycisk X przeniesiony z `.dam-viz-modal-box` na `.dam-viz-modal-shell` (nad assoc-pane, z-index 50200).
+2. Globalny capture `pointerdown`/`click` → `requestCloseVizModal()` (zamyka nawet gdy overlay przechwytuje hit-test).
+3. `_damVizModalTeardown` per sesja modala; usuniety stary `onVizModalBlockerGuard`.
+4. CSS: `.dam-viz-modal-shell` + `.dam-viz-modal-shell > .dam-viz-modal-close`.
+5. Wersja **4.0.3**, cache-bust `dam-viz.js?v=4.0.3-vizClose20260724`, `dam-viz-modal.css?v=vizCloseFix20260724c`.
+
+**Efekt/Fix:** X zamyka modal na pierwszy pointerdown; Escape nadal dziala.
+
+**Test:** hard refresh visualizations → otworz kafelek → klik X.
+
+**Źródła:** dam-viz.js, dam-viz-modal.css, visualizations.html, v4.0.3.
+
+---
+
+**Komenda/Akcja:** „Funkcja DODAJ jest widoczna po Shift — wypierdol shift, w adminie ZAWSZE widoczne”; „Zaindeksuj wszystko od nowa”; „ZNOWU SIE ZACIĄŁEŚ”.
+
+**Log/Status:**
+1. **Shift gate usuniety dla tile Dodaj** — `html.is-admin-editing` + `syncAdminEditingChrome()`; plus klik bez `shiftOk`; CSS w `dam-assoc-edit.js` + `dam-media-preview.js`.
+2. **Edytuj wszystko** — `openMaterialsPaneEdit` otwiera panel od razu (enrich w tle, bez freeze przed open).
+3. **Fix freeze** — usunieta petla rekurencji `syncAdminEditingChrome` ↔ `syncAdminMode`.
+4. **Pelny reindex DONE:** `build-file-index.py` → products=184 viz=401; `build-branding-index.py` → assets=52090 linked=41364 (~232s); `re-enrich-branding-index.py` → linked_product_id=41179.
+5. **Wersja 4.0.2** — version.json, dam-version.js, runtime_config.py; cache-bust visualizations.html assoc+media-preview.
+6. **Smoke:** :8765/:8766 → 200. **Browser/graphify query przerwane** (timeout agenta) — brak screenshot Pass.
+
+**Efekt/Fix:** Po ADMIN ON + hard refresh `visualizations.html?v=4.0.2-adminDodaj20260724` — kafel **Dodaj** widoczny bez Shift; indeksy swieze na dysku.
+
+**Test uzytkownika:** ADMIN ON → modal viz BURGER BEEF → Dodaj widoczny i otwiera `#damAssocEditPopover` (nie COMBO).
+
+**Źródła:** dam-assoc-edit.js, dam-media-preview.js, visualizations.html, apps/web/data/file-index.json, branding-index.json, v4.0.2.
+
+---
+
+**Komenda/Akcja:** „4.0 PADŁA bo przemianowałeś na 4.0 w linku”; „NAJNOWSZA instancja ma nie mieć skrótu wersji — TYLKO POPRZEDNIE”; weryfikacja = `@Browser` w Cursorze, nie Windows.
+
+**Log/Status:** Naprawiono `start-dam-parallel-versions.ps1`: current = `serve_browser.py` (:8765 bez prefiksu), legacy = `serve_dam_instance` (:8767/:8769 z prefiksem). `memory.md` §12a3 skorygowane.
+
+**Efekt/Fix:** Poprawny URL current: `http://127.0.0.1:8765/visualizations.html` (nie `/4.0.0/...`).
+
+**Źródła:** user dump; skrypt parallel.
+
+---
+
+## 2026-07-24 ~16:58 - User: 3 wersje naraz + Browser w Cursorze (nie recznie)
+
+**Komenda/Akcja:** „miały być 3 wersje odpalone naraz”; wczesniej: „JA NIE BĘDĘ niczego otwierać — masz przeglądarkę wewnętrzną @Browser”.
+
+**Log/Status:** Bledna proba 4.0 przez `serve_dam_instance` z prefiksem `/4.0.0/` — **cofniete** w turze ~17:00.
+
+**Efekt/Fix:** `memory.md` §12a2 (agent = Cursor Browser MCP).
+
+**Źródła:** curl smoke.
+
+---
+
+## 2026-07-24 ~16:31 - User: nie otwierac stron przez Perplexity (404)
+
+**Komenda/Akcja:** „nie otwieraj mi kurwa stron przez perplexity bo mam błędy” (screenshot 404 na `127.0.0.1:8765/dashboard.html`).
+
+**Log/Status:** Agent przestaje uzywac Perplexity/Comet i `browser_navigate` MCP do otwierania DAM. Smoke curl: `/dashboard.html` → **200**, `/4.0.0/dashboard.html` → **404** (biezacy `serve_browser.py` = URL **bez** prefiksu wersji). Bridge `:8766/health` → **200**.
+
+**Efekt/Fix:** `memory.md` §12a3 — zakaz Perplexity/Comet; poprawny URL teraz: `http://127.0.0.1:8765/dashboard.html` (nie `/4.0.0/...` dopoki nie odpalisz parallel-versions).
+
+**Źródła:** curl smoke; screenshot user 404.
+
+---
+
+
+**Komenda/Akcja:** WORKER browser self-test — `#damMediaPreview` Shift+admin+Dodaj freeze fix.
+
+**Log/Status:**
+1. Smoke: `:8765` + `:8766` → **200** (start sesji).
+2. URL `branding.html?v=assocLightDomFix20260724b`; faktyczny skrypt z HTML: `dam-assoc-edit.js?v=**assocFreezeFix20260724c**` (nie `b`).
+3. Admin ON (`localStorage dam_admin_mode=1`, checkbox checked). Preview `br-005510` otwarty.
+4. Shift affordance: `html.is-shift-revealed` + plus tiles `display:flex` — screenshot **before-dodaj-click.png** (Dodaj widoczny w Warianty + Skojarzone; product tile z czerwonym outline CDP).
+5. **Pass 1 product:** `browser_click` Shift + ref `e1992` („Edytuj wszystko - dodaj skojarzenie”) → ~900 ms później **tab martwy** (CDP: „No browser tab available”). Brak `#damBrandingProductAddPopover` w snapshot. **FAIL freeze.**
+6. Wcześniejszy CDP `plus.click()` + `awaitPromise` → „target closed” — ten sam wzorzec.
+7. ESC / F5 / variant path — **nie testowane** (tab padł na product path).
+8. Po crashu `:8765/branding.html` → **404** (dual LISTEN :8765); restart `serve_browser.py` — poza scope retestu.
+
+**Test/Ewaluacja:**
+
+| Ścieżka | Wynik |
+|---------|-------|
+| Product assoc Dodaj | **FAIL** — tab hang/crash |
+| Variant Dodaj | **SKIP** |
+| ESC zamyka picker | **SKIP** |
+| Wątek responsywny (CDP <3s) | **FAIL** — tab utracony po kliku |
+| Picker visible + screenshot | **FAIL** — brak popover w DOM |
+
+**Efekt/Fix:** Fix `assocFreezeFix20260724c` **nie przechodzi** QA browser MCP na product Dodaj. Hipoteza: nadal sync storm w łańcuchu `setTimeout→rAF→setTimeout` w `openBrandingProductAssocAdd` albo index bootstrap na main thread. Rekomendacja: rozbić mount na `requestIdleCallback`/dłuższe defer; audit `ensureSearchIndexBootstrap()` pod kątem sync; nie odhaczać checklisty freeze.
+
+**Źródła:** before-dodaj-click.png; browser tab d2ffe3; snapshot 13-03-13 (brak popover).
+
+---
+
+## 2026-07-24 ~16:05 - Dump: tag popovery + panel Skojarzone + COMBO / Dodaj (`tagSearchLight20260724a` / v4.0.2)
+
+**Komenda/Akcja (user):**
+1. Zidentyfikuj `#damTagEditPopover` (podkategoria / kategoria / jezyk) — budowa, porownanie wersji 3.1.5 / ~3.2 / 4.0.
+2. 3.1.5: popovery otwieraja sie, ale **zmiana niemozliwa** (tagi sie nie nadaja). Search OK.
+3. „3.5” (mapowanie: **3.2.0**): search w `#damTagEditSearch` sie tnie; 3.1.5 nie.
+4. 4.0: dlaczego tag edit nie dziala / co sie zmienilo.
+5. **NAJWAZNIEJSZE:** panel `#damAssocEditPopover` = **Skojarzone produkty** (zaginiony UX). Footer: COMBO + Dodaj z dysku + Zatwierdz + Wstecz. `Dodaj z dysku` otwiera stary `#damAssocFolderPicker` (Ładowanie…) — zastapiony w 4.0 przez COMBO/`DamFolderPicker`. **Wziac ten panel i podpiac pod przyciski Dodaj.**
+6. Global: loguj wszystko user+agent; kondensuj przez graphify.
+
+**Log/Status:**
+1. Identyfikacja (kod + graphify query): jeden komponent `DamTagEdit` / `#damTagEditPopover`; warianty `kind` = subcategory|category|lang|carrier|…
+2. Panel assoc: `DamAssocEdit` / `#damAssocEditOverlay` > `#damAssocEditPopover` — nazwa robocza **Assoc Edit / Skojarzone produkty**. W 4.0: lite = `openMediaPickerSimpleNow` (ma `data-goto-combo`), pelny COMBO = `buildAssocMediaPickerUi` (taby PRODUKT|BRANDING). Screenshot usera z `damAssocFolderPicker` = **3.1.5 lub 3.2** (main 4.0 nie ma tego ID).
+3. Apply tagow category/subcategory/index: we **wszystkich** wersjach `applyTagPickerChoice` konczy sie toastem bez rename bridge dla tych kind — root „nie nadaje”.
+4. Search lag 4.0: `paintTagList` robil full `innerHTML` na kazdy znak; 3.1.5 tylko `btn.hidden`. Fix: `applySearchFilterLight` + boot cap 400; bump **4.0.2** / `?v=tagSearchLight20260724a`.
+5. Dodaj: nadal **NUCLEAR** `assocDodajDisabled20260724d` w `#damMediaPreview` — panel zaginal z UI; WORKER restore czeka na OK launch.
+6. Regula: `.cursor/rules/user-chat-full-log.mdc`.
+
+**Efekt/Fix:** Id mapy paneli + search light na 4.0.2. Restore Dodaj→Assoc Edit+COMBO = kolejny WORKER (ponizej w chat).
+
+**Test:** `node --check` dam-tag-edit.js + dam-assoc-edit.js OK.
+
+**Zrodla:** dam-tag-edit.js; dam-assoc-edit.js; DAM-kopia-3.1.5 / 092821f; process NUCLEAR 15:05; memory #149–150.
+
+---
+
+## 2026-07-24 ~15:05 - NUCLEAR: disable Shift+Dodaj in `#damMediaPreview` (`assocDodajDisabled20260724d`)
+
+**Komenda/Akcja:** WORKER — user demand: **completely tear down** Shift+admin Dodaj in branding material preview modal (prior fixes failed; WebView2 freeze).
+
+**Log/Status:**
+1. `isBrandingPreviewAssocContext(el)` — `#damMediaPreview` minus `#damVizModal`.
+2. `ensureShiftHoverAssocUx` — early return: **remove** `.dam-media-preview__assoc-plus-tile` from DOM, no create, no click bind.
+3. `plusClick` macrotask — silent `return` when `isBrandingPreviewAssocContext(grid)`.
+4. Hard immediate `return` at entry: `openBrandingProductAssocAdd`, `openMaterialVariantAdd` (probe), `openEditPickerNow`, `openMediaPicker`, `openMediaPickerSimpleNow`, `openMediaPickerComboNow`.
+5. `dam-media-preview.js` `openAssocMediaPickerFromPlus` — immediate return in branding preview.
+6. `applyShiftToScope` — strip plus tiles on Shift down in branding preview (no mousemove recreate).
+7. Scope: branding preview only; explorer/viz/dashboard assoc edit unchanged.
+
+**Efekt/Fix:** Zero Dodaj tile, zero pickers/overlays/index loads from `#damMediaPreview` assoc paths.
+
+**Status po decyzji usera (~16:00):** **TYMCZASOWE** — user: „Dodaj ma zostać, piszemy od nowa”. Nuclear blokuje tylko **stary** `dam-assoc-edit`; następny krok = `dam-assoc-add-v2.js`. QA [Test Branding Shift+Dodaj](57a24ffa-ef36-4518-8a5e-5b30a228dada): **FAIL** na `assocFreezeFix20260724c` (tab dead ~900ms, brak popover) — potwierdza, że stary kod nie wraca.
+
+**Test/Ewaluacja:** `node --check` + `curl --max-time 5` only (no browser — frozen WebView2). Tokens: `assocDodajDisabled20260724d`, `mediaDodajDisabled20260724d` (branding/dashboard/explorer/visualizations).
+
+**Źródła:** dam-assoc-edit.js; dam-media-preview.js; branding.html + sibling HTML bumps.
+
+---
+
+## 2026-07-24 ~15:50 - Branding Shift+Dodaj freeze (`assocFreezeFix20260724c`)
+
+**Komenda/Akcja:** URGENT WORKER — UI frozen on Branding after Shift+Dodaj (ESC/F5 dead = main thread block).
+
+**Log/Status:**
+1. **Root cause (debug-3ca09b.log):** last event before hang = `openMediaPickerSimpleNow` `shell_mounted` OR `openBrandingProductAssocAdd` completing while **parallel** `DamProductCorrelation.ensureSearchIndex()` → `DamSearch.loadIndexes()` pulled ~8MB `file-index.json` (Worker clone blocks main thread). Secondary: single macrotask mounted scrim+pop+`getComputedStyle`/`getBoundingClientRect` storm; `loadProducts` could join DamSearch inflight; `plusClick` called `closePicker()` before branding branch.
+2. **Fix:** `openBrandingProductAssocAdd` — 3-phase mount (macrotask scrim → rAF pop shell → macrotask wire); `__damBrandingPickerOpen` flag; search min 2 chars; dedicated `ensureSearchIndexBootstrap()` only (never `DamSearch.loadIndexes`).
+3. **Fix 2:** `dam-product-correlation.js` `ensureSearchIndex` — removed `DamSearch.loadIndexes()`; deferred dedicated `search-index.json` fetch; pauses while picker open.
+4. **Fix 3:** `plusClick` — branding `#damMediaPreview` branch runs **before** `closePicker()` / simple shell; `openEditPickerNow` redirects to lightweight branding popover when inside preview.
+5. Cache `?v=assocFreezeFix20260724c` (branding/dashboard/explorer/visualizations).
+
+**Test/Ewaluacja:** `node --check` dam-assoc-edit.js + dam-product-correlation.js OK. Browser tab may be dead — user Ctrl+F5 with new token, then Shift+Dodaj produkt (type 2+ chars to search).
+
+---
+
+## 2026-07-24 ~15:30 - Syntax fix + hard branding guards (`assocFreezeFix20260724c`)
+
+**Komenda/Akcja:** User: UI nadal zacięte po light DOM fix; plik JS miał **SyntaxError** (zepsute nawiasy w `openBrandingProductAssocAdd`).
+
+**Log/Status:**
+1. Naprawiono składnię `openBrandingProductAssocAdd` (rAF → setTimeout → wire).
+2. `openMediaPicker` — twardy guard: `#damMediaPreview` → nigdy `openMediaPickerSimpleNow`.
+3. `dam-media-preview.js` `openAssocMediaPickerFromPlus` — ten sam guard (obejście plusClick).
+4. `openMediaPickerSimpleNow` — overlay first, pop w następnym rAF.
+5. `openBrandingProductAssocAdd` — bez `getBoundingClientRect` na open; min. 2 znaki search.
+6. `dam-product-correlation` — już bez `loadIndexes` + defer gdy picker otwarty.
+7. Cache: `assocFreezeFix20260724c`, `mediaPreviewFreeze20260724c`.
+
+**Agent QA (HARD):** Gdy UI ma martwy main thread (ESC/F5 nie działa), **NIGDY** `browser_navigate` / CDP na tej karcie — wisi w nieskończoność. Weryfikacja = tylko `curl --max-time 5` + `node --check`. User test = **nowe okno** DAM / zamknięcie WebView2, potem `branding.html?v=assocFreezeFix20260724c`.
+
+---
+
+
+**Komenda/Akcja:** Follow-up po failed subagent [Fix UI thread freeze ESC/F5](d33750d9-ec3d-4e99-85aa-731c0e2abc52) — ESC/F5 nadal martwe po Shadow click fix.
+
+**Log/Status:**
+1. **Root cause:** `openMediaPickerSimpleNow` używał `attachShadow` + sync `wireSimplePickerUi`/`hydrateAndPaint` po `appendChild` — WebView2 blokował main thread (ESC/F5 dead).
+2. **Fix:** Simple picker → light DOM (parity COMBO: `overlay.appendChild(pop)`), hydrate w `setTimeout(0)`.
+3. **Fix 2:** `#damMediaPreview` Shift+Dodaj → `openBrandingProductAssocAdd` (produkty) / `openMaterialVariantAdd` (warianty) zamiast Shadow shell.
+4. **Fix 3:** `optionButtonHtml` — klasy `dam-assoc-edit-popover__opt/thumb/label` (klik + preview w simple picker).
+5. Cache `?v=assocLightDomFix20260724b` (branding/viz/explorer/dashboard).
+
+**Test:** Ctrl+F5 → admin → Branding → podgląd → Shift+Dodaj produkt/wariant → picker responsywny, ESC zamyka, F5 działa.
+
+---
+
+
+**Komenda/Akcja:** Freeze Shift+Dodaj po cache unify — follow-up po failed debugger subagent.
+
+**Log/Status:**
+1. **Root cause:** `onDocClick` — klik w Shadow-DOM picker retargetuje `e.target` na `:host` overlay → natychmiast `closePicker()`. Picker miga/znika; user klika dalej = wrażenie freeze.
+2. **Fix:** `composedPath()` + ignore `#damAssocEditPopoverLive`; mirror nie zamyka; `_damOpenTs` guard 150ms.
+3. **Fix 2:** `openEditPickerNow` — usunięto niezdefiniowane `assocGrid`; `_vizComboDirect: false` (COMBO tylko `openVizAssocComboPicker`).
+4. Cache `?v=assocShadowClickFix20260724a` (branding/viz/explorer/dashboard).
+
+**Test:** Ctrl+F5 → admin → podgląd → Shift+Dodaj → picker zostaje otwarty.
+
+---
+
+## 2026-07-23 ~23:35 - WORKER Intern: Shift+Dodaj freeze (`shiftDodajFix20260723ae`)
+
+**Komenda/Akcja:** Reproduce + fix freeze na Shift+klik „Dodaj” (produkty + warianty) w `#damMediaPreview`.
+
+**Log/Status:**
+1. **Reproduced: Y** (Playwright Chromium). Call path: `plusClick` → `openEditPickerNow` → `openMediaPicker` → `openMediaPickerSimpleNow`. Shell montuje się w ~1–2 ms (`after_append` / `after_sync_hydrate`), potem main thread przestaje odpowiadać (`Runtime.evaluate` timeout; ESC martwy).
+2. **Root cause:** `ensureSearchIndexBootstrap()` wołało `DamSearch.loadSearchOnly()`, które współdzieli `searchOnlyLoading` z `DamSearch.load()/loadIndexes()` (używane m.in. przez `dam-product-correlation.js`). `loadIndexes` ciągnie też `file-index.json` (~8MB) przez Worker → structured clone na UI thread = freeze całego DAM. Dodatkowo `ensureFileIndex()` startowało przy samym otwarciu pickera.
+3. **Fix (`dam-assoc-edit.js`):**
+   - dedykowany fetch `search-index.json` (bez `loadSearchOnly` / bez join do `loadIndexes`);
+   - brak `ensureFileIndex` na open — katalog dopiero przy pierwszym search (debounce 120 ms);
+   - `variantThumbFast` zamiast sync `previewUrl` w simple picker;
+   - shell: `visibility:hidden` + double `rAF` przed wire/hydrate (unika sync layout stall).
+4. `_vizComboDirect` w media-preview plus path pozostaje usunięte (bez zmian w tym pliku).
+5. Cache `?v=shiftDodajFix20260723ae` (branding/dashboard/explorer/visualizations) dla `dam-assoc-edit.js` + `dam-media-preview.js` (+ viz token bump).
+6. `node --check` OK. MCP `cursor-ide-browser` tabs niedostępne (navigate fail). Playwright post-fix nadal timeout po append w headless — **wymaga weryfikacji w prawdziwym UI** (Ctrl+F5).
+
+**Test/Ewaluacja:** Pre-fix freeze Y. Post-test headless: shell phases OK, evaluate nadal hang (env). User: Branding → modal → Shift+Dodaj produkty/warianty → picker &lt;1s, ESC zamyka.
+
+**Źródła:** dam-assoc-edit.js, HTML ?v=, `_reference-092821f/dam-assoc-edit.js`, dam-search.js loadIndexes, dam-product-correlation ensureSearchIndex
+
+---
+
+**Komenda/Akcja:** Przeniesienie kontekstu poprzedniego czatu; fix niespójnych tokenów ?v= (branding.html miał `debugFreeze0f6c29e`, reszta `freezeMerged20260723s`).
+
+**Log/Status:**
+1. Root: WebView2 mógł serwować stary JS na Brandingu mimo poprawek w repo (mieszane ?v=).
+2. Fix: jeden token `assocShiftFix20260723t` dla dam-assoc-edit, dam-folder-picker, dam-tag-edit, dam-media-preview, dam-viz, dam-badges w 6 HTML (branding, viz, explorer, dashboard, index, settings).
+3. Kod pickera już ma: ensureInjectedCss early-return, e.shiftKey w plusClick, openVizAssocComboPicker (PRODUKT|BRANDING), setTimeout(0) na folder picker.
+4. Smoke: node --check OK; curl served branding+viz zawiera assocShiftFix20260723t; 8765/8766=200.
+
+**Test użytkownika:** Ctrl+F5 Branding → podgląd materiału → Shift+Dodaj (skojarzone / wariant) + Shift+tag. Oczekiwane: COMBO lub lekki picker bez freeze, ESC działa.
+
+**Źródła:** 6× HTML ?v=, agents/history/8f3ead0b-ab0a-41fb-81fd-cad4f55e6af5.md
+
+
+**Komenda/Akcja:** Naprawa END-TO-END trzech zamrozen UI (assoc Dodaj / wariant folder / Shift+tagi).
+
+**Log/Status:**
+1. **Assoc freeze root:** `ensureInjectedCss()` budowalo ~gigantyczny string CSS przy KAZDYM Shift+Dodaj ZANIM early-return — sync concat blokowal main thread (ESC martwy). Dodatkowo viz materials potrzebuje COMBO PRODUKT|BRANDING z zapisem brandingu↔produkt (`openVizAssocComboPicker` + `linkBrandingAssetsToProduct`), nie okrojonego type-to-search.
+2. **Assoc hydrate:** pane SKOJARZONE laduje `/branding-for-product` (nie pusty `loadIndexAssets` / nie 388MB). Fetch rejestruje `__damRegisterAbort`. Plus: capture `e.shiftKey` przed `setTimeout(0)`.
+3. **Wariant root:** `findRevisionByFolderPath` nie matchowal folderu produktu (combo BANOFFEE) — tylko rewizje; brak sibling search. Fix: product-root → latest rev; pathTailKey/marketingRel; miss → POST `/index/rebuild` + reload + corner „Indeksowanie…”; zawsze `unlockAssocUiAfterVariantFail`.
+4. **Tagi:** plus juz akceptuje `e.shiftKey`; multi-picker shell-first + cap/debounce (wczesniejszy fix potwierdzony).
+5. Cache `?v=assocFreezeE2E20260723r` (wiz/explorer/branding/dashboard/index/settings). Bridge zrestartowany.
+
+**Test/Ewaluacja:** `node --check` OK; path unit 4/4 PASS; curl bfp/bsp/ui=200; served JS zawiera early-return + openVizAssocComboPicker. Browser MCP pominiety (hang risk).
+
+**Zrodla:** dam-assoc-edit.js, dam-viz.js, dam-media-preview.js, HTML cache-bust, memory #150
+
+---
+
+## 2026-07-23 ~17:20 - UI freeze pack: assoc COMBO + variant path + tags (uiFreezeFix20260723q)
+
+**Komenda/Akcja:** Fix 3 HARD: Shift+Dodaj SKOJARZONE (COMBO PRODUKT|BRANDING bez freeze), false \"nie w indeksie\" wariant, Shift+tag editor + search freeze.
+
+**Log/Status:**
+1. Root assoc: HARD gate → openVizProductMaterialAdd (tylko branding type-to-search) zamiast pelnego COMBO; wczesniej freeze = sync parse indeksow / branding-index. Fix: viz materials → openEditPickerNow / shell-first COMBO (uildAssocMediaPickerUi + /branding-search-picker, nigdy 388MB).
+2. Root variant: indRevisionByFolderPath nie matchowal X: vs D: / Marketing root; po fail UI zostawalo locked. Fix: pathTailKey + tearDown closePicker/damThumbPicker; folder picker ESC + onCancel.
+3. Root tags: plus wymagal tylko _adminShiftDown (keyup gubil Shift); multi-picker await search-index PRZED paint + paintList(catalog) bez cap. Fix: akceptuj e.shiftKey; shell-first; cap 200; debounce 160ms.
+4. Cache-bust HTML ?v=uiFreezeFix20260723q. Smoke: 8765/bsp/bfp = 200.
+
+**Test/Ewaluacja:** 
+ode --check OK na 6 plikach JS; curl bridge OK. Browser MCP pominiety (hang risk) — user: hard refresh viz, Shift+Dodaj assoc, variant folder, Shift+tag.
+
+**Zrodla:** dam-assoc-edit.js, dam-viz.js, dam-tag-edit.js, dam-media-preview.js, dam-folder-picker.js, dam-badges.js, HTML ?v=
+## 2026-07-23 ~05:15 - Explorer `#damFileSearch` empty-query freeze (`explorerSearchFreeze20260723a`)
+
+**Komenda/Akcja:** Fix HARD freeze UI when `#damFileSearch` matches nothing (Viz/Projects OK).
+
+**Log/Status:**
+1. Root: dual search per keystroke (`DamSearch.bindSearchBox` + `bindSearchPanelSync` â†’ 2Ă— `DamSearch.search`) + sync full `file-index` scan in `appendFileIndexMatches` (worst case 0 hits) on main thread microtask.
+2. `dam-search.js`: productById map O(1); chunked/yield `appendFileIndexMatches` (budget ~12ms); searchSeq stale cancel; bindSearchBox debounce 160ms + `onResults`; safer tag partial match (`nq.indexOf(tag)` only when lenâ‰Ą3).
+3. `dam-explorer.js`: single-flight â€” panel fed by `onResults` / `applySearchResultsToPanel` (no second search); id-set for `productInFileIndex`; debounce 160ms.
+4. WRITE allowlist only JS â€” **parent must bump** `explorer.html` `?v=` for `dam-search.js` + `dam-explorer.js` (np. `explorerSearchFreeze20260723a`).
+
+**Test/Ewaluacja:** `node --check` both OK; smoke 8765/8766=200; headless CDP: nonsense 0 hits, `czekolada` 7 products, raf/searchMs <500, yield+single-flight markers present.
+
+**ĹąrĂłdĹ‚a:** `dam-search.js`, `dam-explorer.js`
+
+## 2026-07-23 ~05:05 - Empty mascot: Projekty / Eksplorer / Inbox (\emptyMascotPages20260723b\)
+
+**Komenda/Akcja:** Shared Dobrokalorius empty states - full row (speak+card) na Projekty i Eksplorer; Inbox speak-only.
+
+**Log/Status:**
+1. \dam-projects.js\: Brak wynikow -> \.dam-empty-mascot-row\ + \.dam-branding-empty\ + Wyczysc filtry.
+2. \dam-explorer.js\: search panel 0 hits -> ta sama full row (empty UI only; clear -> \clearSearchPanel\).
+3. \dam-inbox.js\: tylko \.dam-empty-mascot-row--speak-only\ (bubble+mascot), bez karty.
+4. HTML: \dam-empty-mascot.js\ BEFORE page JS; \dam-branding.css\ na index/inbox; cache \emptyMascotPages20260723b\.
+5. \DamEmptyMascot.poseUrl\ resolve from site root (fix \/_qa/\ broken poses).
+
+**Test:** ode --check\ OK; smoke 8765/8766 OK; headless \_qa/pages-empty-preview.png\ CDP Pass (mascotLeft+cardRight; inbox speakOnly).
+
+**Zrodla:** dam-projects.js, dam-explorer.js, dam-inbox.js, dam-empty-mascot.js, dam-branding.css, index/explorer/inbox.html
+
+ď»ż## 2026-07-23 ~05:10 - Tag popover position + variant persist (`variantPersist20260723a`)
+
+**Komenda/Akcja:** (1) SHIFT+tag popover off-screen; (2) Dodaj wariant nie zapisuje siÄ™ (osobno od SHIFT+ tile).
+
+**Log/Status:**
+1. Tag: `positionTagPopover` â€” body+fixed, NaN/clamp, double rAF po insert (50vw width 0).
+2. Persist root A: merge `viz-flags.json` dropowaĹ‚ `linked_variants`/`unlinked_variants` (race wipe po add).
+3. Persist root B: picker `mode:file` â†’ path pliku nie matchowaĹ‚ `revision.path` â†’ â€žnie znaleziono rewizjiâ€ť.
+4. Fix: folderPathFromPicked + walk-up match; assoc-edit przekazuje folder; merge flags zachowuje linked_*.
+5. NIE ruszano `data-product-variant-plus` / is-shift-revealed.
+
+**Test:** `node --check` OK; smoke 8765/8766=200; path-norm unit OK. Bridge POST `/viz-flag` = login_required (oczekiwane bez sesji); localStorage+merge path fixed.
+
+**ĹąrĂłdĹ‚a:** `dam-tag-edit.js`, `dam-viz.js`, `dam-assoc-edit.js`, HTML `?v=variantPersist20260723a`
+
+## 2026-07-23 ~04:45 - Dodaj freeze: ban COMBO in viz + restore PRODUKT/BRANDING lazy (`vizModalFix20260723m`)
 
 **Komenda/Akcja:** Dodaj w `#damVizModal` zacina UI; X martwy; COMBO taby PRODUKT|BRANDING maja zostac.
 
 **Log/Status:**
-1. Root freeze: Dodaj → `openMediaPicker` → `#damAssocEditOverlay` 12100 + `ensureSearchIndexBootstrap` parse na click = stuck (browser_tabs tez).
+1. Root freeze: Dodaj â†’ `openMediaPicker` â†’ `#damAssocEditOverlay` 12100 + `ensureSearchIndexBootstrap` parse na click = stuck (browser_tabs tez).
 2. Fix: `#damVizModal` Dodaj ALWAYS lekki picker (folder / branding-search); zero COMBO z viz.
 3. COMBO tabs przywrocone dla non-viz: PRODUKT|BRANDING; branding lazy `/branding-search-picker` cap 80 tylko na tab/search.
 4. X: close LAST in DOM + z-index 200 nad assoc-pane.
-5. Graphify query potwierdzil sciezke openMediaPicker→buildAssocMediaPickerUi.
+5. Graphify query potwierdzil sciezke openMediaPickerâ†’buildAssocMediaPickerUi.
 
 **Test:** `node --check` OK; curl served `isInsideVizModal` + tabs. Bez browser_tabs (hang = ten sam bug).
 
-**Źródła:** `dam-assoc-edit.js`, `dam-viz.js`, `dam-viz-modal.css`
+**ĹąrĂłdĹ‚a:** `dam-assoc-edit.js`, `dam-viz.js`, `dam-viz-modal.css`
+
+## 2026-07-23 ~05:05 - Dodaj freeze after COMBO tabs (`vizModalFix20260723n`)
+
+**Komenda/Akcja:** Dodaj zacina UI; browser_tabs hang = ten sam freeze; COMBO PRODUKT|BRANDING zostaje.
+
+**Log/Status:**
+1. Root: sync `ensureInjectedCss` rewrite co klik; `loadBranding("")` na open; folder-images paint 500+ tiles; COMBO pinned thumbs.
+2. Fix: CSS inject once; viz Dodaj = type-to-search (min 2); folder picker timeout 5s + cap 60/80; COMBO BRANDING tab lazy + placeholder thumbs; X z-index 400 nad assoc-pane.
+3. Wczoraj (8f9ea8a) plus â†’ openEditPicker (ciezkie); dziĹ› viz omija COMBO overlay 12100.
+4. Nie wolac browser_tabs gdy UI stuck (>5s) â€” nowy kanal / curl+node.
+
+**Test:** `node --check` OK; branding-search-picker curl 19ms. UI: Ctrl+F5 `?v=vizModalFix20260723n`.
+
+**ĹąrĂłdĹ‚a:** `dam-assoc-edit.js`, `dam-folder-picker.js`, `dam-viz-modal.css`, `dam-viz.js`
 
 ## 2026-07-23 ~04:35 - Viz close X + Shift tag picker sync (`vizModalFix20260723l`)
 
 **Komenda/Akcja:** `#damVizModalClose` martwy; Shift+tag nie otwiera edycji.
 
 **Log/Status:**
-1. Root close: orphan `#damAssocEditOverlay` z-index 12100 nad modalem 9999 zjada klik X → guard mousedown + forceStrip + strip on open.
-2. Root tag: async await indeksu PRZED paint (subcategory/index) = brak popoveru + freeze → ALWAYS sync `renderTagPicker`, enrich w tle.
+1. Root close: orphan `#damAssocEditOverlay` z-index 12100 nad modalem 9999 zjada klik X â†’ guard mousedown + forceStrip + strip on open.
+2. Root tag: async await indeksu PRZED paint (subcategory/index) = brak popoveru + freeze â†’ ALWAYS sync `renderTagPicker`, enrich w tle.
 3. Latch `html.is-shift-revealed` liczy sie jako wantEdit dla editable badge.
 4. Cache `vizModalFix20260723l`.
 
 **Test:** `node --check` OK. UI: Ctrl+F5 visualizations.
 
-**Źródła:** `dam-viz.js`, `dam-tag-edit.js`, `dam-badges.js`, `dam-viz-modal.css`
+**ĹąrĂłdĹ‚a:** `dam-viz.js`, `dam-tag-edit.js`, `dam-badges.js`, `dam-viz-modal.css`
 
 ## 2026-07-23 ~04:30 - Tag freeze + modal filter leak + variant save (`vizModalFix20260723k`)
 
 **Komenda/Akcja:** Freeze przy edycji tagow; klik Raster w `#damMediaPreview` filtruje branding pod modalem; wariant materialu nie zapisuje sie.
 
 **Log/Status:**
-1. Root A: `dam:panic-reset` w `openTagPicker`/`openTagEdit`/plus-click re-entry → freeze; usuniete.
-2. Root B: `bindClicks(..., "branding")` + `applyTagFilter` pod modalem → skip gdy `closest('#damMediaPreview'|'#damVizModal')`.
-3. Root C: `resolveBrandingAssetId` fail zamykal bez zapisu → toast + picker zostaje; basename fallback; `picked.id` w onPicked.
+1. Root A: `dam:panic-reset` w `openTagPicker`/`openTagEdit`/plus-click re-entry â†’ freeze; usuniete.
+2. Root B: `bindClicks(..., "branding")` + `applyTagFilter` pod modalem â†’ skip gdy `closest('#damMediaPreview'|'#damVizModal')`.
+3. Root C: `resolveBrandingAssetId` fail zamykal bez zapisu â†’ toast + picker zostaje; basename fallback; `picked.id` w onPicked.
 4. Cache `vizModalFix20260723k` (branding.html + visualizations.html). Debugger: [Debug tag freeze + variant](28ca4aab-9c42-4dbf-b648-47305a915e56).
 
 **Test:** `node --check` OK na 4 JS. UI: Ctrl+F5 branding.
 
-**Źródła:** `dam-tag-edit.js`, `dam-badges.js`, `dam-assoc-edit.js`, `dam-folder-picker.js`
+**ĹąrĂłdĹ‚a:** `dam-tag-edit.js`, `dam-badges.js`, `dam-assoc-edit.js`, `dam-folder-picker.js`
 
 ## 2026-07-23 ~04:20 - Empty card HARD RIGHT (space-between)
 
-**Komenda/Akcja:** User Branding — karta `.dam-branding-empty` ma być do PRAWEJ; listek LEFT; adnotacja red boxes.
+**Komenda/Akcja:** User Branding â€” karta `.dam-branding-empty` ma byÄ‡ do PRAWEJ; listek LEFT; adnotacja red boxes.
 
 **Log/Status:**
-1. Root: `justify-content: flex-start` + viz override trzymały kartę przy listku.
-2. Fix: `.dam-empty-mascot-row` → `space-between` + `__card { margin-left: auto }`; solid white card surface.
+1. Root: `justify-content: flex-start` + viz override trzymaĹ‚y kartÄ™ przy listku.
+2. Fix: `.dam-empty-mascot-row` â†’ `space-between` + `__card { margin-left: auto }`; solid white card surface.
 3. Cache `emptyMascotRight20260723t`.
 
 **Test:** CDP `cardOnRight=true`, `mascotOnLeft=true`, `cardRightGap=8`, `midGap=506`. Screenshot `_qa/branding-empty-br1.png`.
 
-**Źródła:** `dam-branding.css`, `dam-viz.css`, HTML cache bump
+**ĹąrĂłdĹ‚a:** `dam-branding.css`, `dam-viz.css`, HTML cache bump
 
 ## 2026-07-23 ~03:45 - Viz/Branding empty: unified mascot + branding card
 
-**Komenda/Akcja:** User — różny empty w wyszukiwaniu; karta Branding KEEP; listek LEFT; całość do lewej; karta −50px w dół; usuń hint; bez comic bubble.
+**Komenda/Akcja:** User â€” rĂłĹĽny empty w wyszukiwaniu; karta Branding KEEP; listek LEFT; caĹ‚oĹ›Ä‡ do lewej; karta â’50px w dĂłĹ‚; usuĹ„ hint; bez comic bubble.
 
 **Log/Status:**
 1. Shared `.dam-empty-mascot-row` w `dam-branding.css` (medal + card margin-top:50px, justify flex-start).
-2. Branding `emptyGridMessage` owija kartę w mascot row.
-3. Viz `renderVizEmptyState` = ta sama karta `.dam-branding-empty` + pills z aktywnych filtrów; brak hintu; brak comic bubble.
+2. Branding `emptyGridMessage` owija kartÄ™ w mascot row.
+3. Viz `renderVizEmptyState` = ta sama karta `.dam-branding-empty` + pills z aktywnych filtrĂłw; brak hintu; brak comic bubble.
 4. Cache: `emptyMascot20260723s` (viz css/js, branding css/js, branding.html, viz HTML).
 
-**Test/Ewaluacja:** Headless CDP preview+real: horizontal, leftAligned, cardTopDelta=50, noHint, cardW=520. Screenshot u8 scrollIntoView — mascot LEFT + karta Branding RIGHT na Wizualizacjach.
+**Test/Ewaluacja:** Headless CDP preview+real: horizontal, leftAligned, cardTopDelta=50, noHint, cardW=520. Screenshot u8 scrollIntoView â€” mascot LEFT + karta Branding RIGHT na Wizualizacjach.
 
-**Źródła:** `dam-branding.css`, `dam-branding.js`, `dam-viz.css`, `dam-viz.js`, `visualizations.html`, `branding.html`
+**ĹąrĂłdĹ‚a:** `dam-branding.css`, `dam-branding.js`, `dam-viz.css`, `dam-viz.js`, `visualizations.html`, `branding.html`
 
 ## 2026-07-23 ~01:25 - [CLIP] 1x4 media tiles: thumb overflow + scroll
 
-**Komenda/Akcja:** User report — układ 1x4 ucina wiersze (BANOFFEE), miniatury wychodzą poza `li.dam-widget__viz-row`, zbędny scroll w `.dam-widget__body`.
+**Komenda/Akcja:** User report â€” ukĹ‚ad 1x4 ucina wiersze (BANOFFEE), miniatury wychodzÄ… poza `li.dam-widget__viz-row`, zbÄ™dny scroll w `.dam-widget__body`.
 
 **Log/Status:**
-1. Root cause A: `.dam-widget--media-latest .dam-widget__thumb-link` wymuszał 122–198px (nadpisywał 1x4 compact 72px).
-2. Root cause B: `grid-auto-rows: 1fr` na `.dam-widget__list--media/--viz` ściskał 4 wiersze do ~108px w stałej wysokości bento.
-3. Root cause C: `overflow-y: auto` na body + bento h=8 → scroll + clip 4. wiersza.
-4. Fix CSS (`dam-dashboard.css` §dashGridFit + unified): 1x4 thumbs 72px, `grid-auto-rows: auto`, body `overflow-y: hidden`, row `overflow: hidden`.
-5. Fix JS (`dam-bento-resize.js`): `mediaTileLayoutMinH` — 1x4→h11, remount na toggle dla viz/products/branding.
+1. Root cause A: `.dam-widget--media-latest .dam-widget__thumb-link` wymuszaĹ‚ 122â€“198px (nadpisywaĹ‚ 1x4 compact 72px).
+2. Root cause B: `grid-auto-rows: 1fr` na `.dam-widget__list--media/--viz` Ĺ›ciskaĹ‚ 4 wiersze do ~108px w staĹ‚ej wysokoĹ›ci bento.
+3. Root cause C: `overflow-y: auto` na body + bento h=8 â†’ scroll + clip 4. wiersza.
+4. Fix CSS (`dam-dashboard.css` Â§dashGridFit + unified): 1x4 thumbs 72px, `grid-auto-rows: auto`, body `overflow-y: hidden`, row `overflow: hidden`.
+5. Fix JS (`dam-bento-resize.js`): `mediaTileLayoutMinH` â€” 1x4â†’h11, remount na toggle dla viz/products/branding.
 6. Cache-bust: `dashTileClipFix20260723b` (dashboard.html CSS/JS/bento).
 
 **Test/Ewaluacja:** CDP 1x4 `newest_viz_3`: css=dashTileClipFix20260723b, bodyOverflow=hidden, bodyScroll=false, allVisible=true, CYNAMONKA rowH=128 thumbH=72 thumbOverflow=false. Screenshot pass.
 
-**Źródła:** `dam-dashboard.css`, `dam-bento-resize.js`, `dam-dashboard-widgets.js`, `dashboard.html`
+**ĹąrĂłdĹ‚a:** `dam-dashboard.css`, `dam-bento-resize.js`, `dam-dashboard-widgets.js`, `dashboard.html`
 
 ## 2026-07-22 ~21:10 - STOP agent thrash + STATUS + peek verify
 
 **Komenda:** Parent po OOM Cursor; bez poke agentow co 3 min.
 **Log:**
-1. Serwery 8765/8766 byly DOWN → `python apps/desktop/serve_browser.py` → 200/200
+1. Serwery 8765/8766 byly DOWN â†’ `python apps/desktop/serve_browser.py` â†’ 200/200
 2. CDP branding: `peekCount=0`, killer=1, customizer opacity=0 + translateX(400)
 3. Screenshot branding bez prawego peeka (auto-caption halucynowal DOSTOSUJ)
 4. Plan rev5: czytelny STATUS na gorze; C-WARM cancelled/paused; A/B completed w todos
-5. `sw.js` CACHE → `dam-page-1h-v5-peekGone`; HTML `?v=peekGone20260722a` na shell/brand
+5. `sw.js` CACHE â†’ `dam-page-1h-v5-peekGone`; HTML `?v=peekGone20260722a` na shell/brand
 **Efekt:** User hard-refresh; nie spawnujemy watchdogow. Nastepne: D24 smoke + opcjonalnie progressive thumbs na GO.
 **Test:** CDP peekCount=0; curl 8765/8766 = 200
 
 ## 2026-07-22 ~20:45 - [CLIP] title-clip fix
 
-**Komenda/Akcja:** CLIP_VISION Fail — product titles mid-word clip in `newest_products_f` 2x2 (CIAST/CYNA).
+**Komenda/Akcja:** CLIP_VISION Fail â€” product titles mid-word clip in `newest_products_f` 2x2 (CIAST/CYNA).
 
 **Log/Status:**
 1. Root cause: 2x2 cell ~260px; side-by-side thumb (77px) + title column got only **87px** width; parent `overflow:hidden` hard-clipped without ellipsis.
-2. Fix: flex chain (`flex:1 1 0`, `min-width:0`) on `viz-media`/`viz-body`; 2x2 stacks thumb above title (`flex-direction:column`) so title uses full **174px**; compact 2x2 thumbs 64–88px; 2-line `-webkit-line-clamp` with `break-word` (1x4/1x6 keep nowrap ellipsis).
+2. Fix: flex chain (`flex:1 1 0`, `min-width:0`) on `viz-media`/`viz-body`; 2x2 stacks thumb above title (`flex-direction:column`) so title uses full **174px**; compact 2x2 thumbs 64â€“88px; 2-line `-webkit-line-clamp` with `break-word` (1x4/1x6 keep nowrap ellipsis).
 3. Cache bust: `dashboard.html` `?v=dashProductsMinH20260722i` (CSS + widgets JS + bento-resize).
-4. Playwright CLIP_QA=Pass (overflowPx=0, rowCount=4). Layout probe: title width 87→174px, CYNAMONKA single line h=20px.
-5. Vision screenshot `clip-newest_products_f-20260722-204520.png`: titles **CIASTO ŚLIWKOWE** / **CYNAMONKA** fully readable.
+4. Playwright CLIP_QA=Pass (overflowPx=0, rowCount=4). Layout probe: title width 87â†’174px, CYNAMONKA single line h=20px.
+5. Vision screenshot `clip-newest_products_f-20260722-204520.png`: titles **CIASTO ĹšLIWKOWE** / **CYNAMONKA** fully readable.
 
 **Efekt/Fix:** CLIP_VISION Pass. Files: `dam-dashboard.css`, `dam-dashboard-widgets.js` (injected CSS), `dashboard.html`.
 
-**Test/Ewaluacja:** `PAMIEC-PODRECZNA/d24-clip-freeze-smoke-20260722.py` → CLIP_QA=Pass.
+**Test/Ewaluacja:** `PAMIEC-PODRECZNA/d24-clip-freeze-smoke-20260722.py` â†’ CLIP_QA=Pass.
 
-**Źródła:** `apps/web/assets/css/dam-dashboard.css` (~401–450); `apps/web/assets/js/dam-dashboard-widgets.js` (~297–320 injected).
+**ĹąrĂłdĹ‚a:** `apps/web/assets/css/dam-dashboard.css` (~401â€“450); `apps/web/assets/js/dam-dashboard-widgets.js` (~297â€“320 injected).
 
 ---
 
@@ -119,15 +1353,15 @@
 **Komenda/Akcja:** Zone A assoc popover: PRODUKTY|BRANDING XOR, 80vw, Podsumowanie soft-delete, branding-search-index max 80, D24 no-freeze.
 
 **Log/Status:**
-1. Sibling shell already had core A in `dam-assoc-edit.js` (tabs, search-index cache, 80vw CSS, soft X/undo, Zatwierdz→summary→Ok/Anuluj, setTimeout(0) defer).
-2. Hardened: `paintTabs` XOR activeCount===1 + variant forces products; `loadBrandingIfNeeded` skips when brandingDisabled; comment 70vw→80vw.
+1. Sibling shell already had core A in `dam-assoc-edit.js` (tabs, search-index cache, 80vw CSS, soft X/undo, Zatwierdzâ†’summaryâ†’Ok/Anuluj, setTimeout(0) defer).
+2. Hardened: `paintTabs` XOR activeCount===1 + variant forces products; `loadBrandingIfNeeded` skips when brandingDisabled; comment 70vwâ†’80vw.
 3. Cache-bust HTML A: branding/visualizations/explorer/dashboard `dam-assoc-edit.js?v=assocDashBr20260722b`.
 4. Grep: zero `damAssocFolderPicker` / `openFolderGrid` / `branding-index.json` fetch path. `node --check` Pass.
 5. CDP freeze-smoke: prior evaluate hung on viz grid empty (no cards loaded); code-path D24 = macrotask defer + no fat index on click. Mark D24 Partial pending live click on assoc pane.
 
 **Efekt/Fix:** G-A Pass (code+grep+syntax). D24 Partial (implementation Pass; live CDP smoke incomplete - viz cards=0 / CDP hang).
 
-**Źródła:** `apps/web/assets/js/dam-assoc-edit.js` (~112–193, ~276–307, ~981–1703, ~1867–1877); HTML `?v=assocDashBr20260722b`.
+**ĹąrĂłdĹ‚a:** `apps/web/assets/js/dam-assoc-edit.js` (~112â€“193, ~276â€“307, ~981â€“1703, ~1867â€“1877); HTML `?v=assocDashBr20260722b`.
 
 ---
 
@@ -136,35 +1370,35 @@
 **Komenda/Akcja:** Panel `#damSleeveStock` - czytelny zapas (msc + dni), separatory kolumn 10%, resize/reorder/dblclick autofit.
 
 **Log/Status:**
-1. Excel: `months = STAN / zużycie_msc`; UI: `X msc` + `(≈Y dni)` gdzie `Y = floor(X × 30,5)`.
-2. Przykład 6300745: 85873/65980 ≈ 1,3 msc → floor(39,65)=39 dni. Pass.
+1. Excel: `months = STAN / zuĹĽycie_msc`; UI: `X msc` + `(â‰Y dni)` gdzie `Y = floor(X Ă— 30,5)`.
+2. PrzykĹ‚ad 6300745: 85873/65980 â‰ 1,3 msc â†’ floor(39,65)=39 dni. Pass.
 3. Separatory `border-left: rgba(15,15,25,0.10)`; kolumny drag + resize + dblclick autofit (localStorage).
 4. Cache `dam-sleeve-stock.js?v=sleeveHorizon20260722b`.
 
-**Test/Ewaluacja:** CDP border 0.1; falafel `1,3 msc (≈39 dni)`; screenshots pass1–3 + Read.
+**Test/Ewaluacja:** CDP border 0.1; falafel `1,3 msc (â‰39 dni)`; screenshots pass1â€“3 + Read.
 
-**Źródła:** `apps/web/assets/js/dam-sleeve-stock.js`, `integrations.html`.
+**ĹąrĂłdĹ‚a:** `apps/web/assets/js/dam-sleeve-stock.js`, `integrations.html`.
 
 ---
 
 ## 2026-07-22 ~17:40 - Integracja produkcja faktury CLOSED (QA Pass)
 
-**Komenda/Akcja:** Domknięcie planu `integracja_produkcja_faktury_c9e97532` — live QA + weryfikacja tipu.
+**Komenda/Akcja:** DomkniÄ™cie planu `integracja_produkcja_faktury_c9e97532` â€” live QA + weryfikacja tipu.
 
-**Checklist:** A1 Asana OAuth `[ ]` (credentials user). B1 wykrojniki `[x]` (+ stany rękawków). C2 ERP `[x]` (+ outlook-draft).
+**Checklist:** A1 Asana OAuth `[ ]` (credentials user). B1 wykrojniki `[x]` (+ stany rÄ™kawkĂłw). C2 ERP `[x]` (+ outlook-draft).
 
 **Log/Status:**
-1. Tip `19e8c54` już na `origin/main` — feat sleeve-stock + Asana costing + Outlook draft.
-2. Bridge `:8766` health `api_version=7`; `GET /sleeve-stock` + `/production-cost-catalog` → 401 (nie 404).
-3. Integrations CDP: panel „Stany rękawków” 29 wierszy, 8 critical, kod `6300578` widoczny; screenshot `qa-integracja-sleeve-stock-pass.png` + Read Pass.
-4. Invoices CDP: 4× `.dam-inv-mail__section` gap 24px; odbiorcy Kubara; input `509012414`; 3× „wykonanie wizualizacji” → 3 linie × 800 PLN; screenshot `qa-invoices-mail-panel-pass.png` + Read Pass.
+1. Tip `19e8c54` juĹĽ na `origin/main` â€” feat sleeve-stock + Asana costing + Outlook draft.
+2. Bridge `:8766` health `api_version=7`; `GET /sleeve-stock` + `/production-cost-catalog` â†’ 401 (nie 404).
+3. Integrations CDP: panel â€žStany rÄ™kawkĂłwâ€ť 29 wierszy, 8 critical, kod `6300578` widoczny; screenshot `qa-integracja-sleeve-stock-pass.png` + Read Pass.
+4. Invoices CDP: 4Ă— `.dam-inv-mail__section` gap 24px; odbiorcy Kubara; input `509012414`; 3Ă— â€žwykonanie wizualizacjiâ€ť â†’ 3 linie Ă— 800 PLN; screenshot `qa-invoices-mail-panel-pass.png` + Read Pass.
 5. Docs: `agents/shared/release-2026-07-22-integracja-produkcja.md`, `PROGRESS.md` sekcja 2026-07-22.
 
-**Efekt/Fix:** Plan KROK 0–7 zamknięty. Outlook COM zależny od sesji desktop usera; fallback ZIP+mailto Pass (wcześniej w tipie).
+**Efekt/Fix:** Plan KROK 0â€“7 zamkniÄ™ty. Outlook COM zaleĹĽny od sesji desktop usera; fallback ZIP+mailto Pass (wczeĹ›niej w tipie).
 
-**Test/Ewaluacja:** Screenshot→Read Pass (sleeve + mail). Asana costing draft 3×800 PLN Pass.
+**Test/Ewaluacja:** Screenshotâ†’Read Pass (sleeve + mail). Asana costing draft 3Ă—800 PLN Pass.
 
-**Źródła:** plan c9e97532; commit `19e8c54`; `invoice_mail.py`; `dam-sleeve-stock.js`; `dam-invoices.js`.
+**ĹąrĂłdĹ‚a:** plan c9e97532; commit `19e8c54`; `invoice_mail.py`; `dam-sleeve-stock.js`; `dam-invoices.js`.
 
 ---
 
@@ -174,9 +1408,9 @@
 
 **Log/Status:**
 1. Ran `apps/web/scripts/restore-pl-diacritics.py` on pl.json + Projekty/shell/explorer targets.
-2. Undid false positives (`opakowańie`, `produktówa`, `2?12`) via `tools/_fix_restore_mangling.py`.
+2. Undid false positives (`opakowaĹ„ie`, `produktĂłwa`, `2?12`) via `tools/_fix_restore_mangling.py`.
 3. Hardened restore script (word-boundary for short/risky stems; `wariantow`/`liscie`/`szerokosci`).
-4. Projekty: H1/subtitle/status/`Odśwież`; tip `liście`; cache-bust `dam-projects.js?v=plDia20260722b`.
+4. Projekty: H1/subtitle/status/`OdĹ›wieĹĽ`; tip `liĹ›cie`; cache-bust `dam-projects.js?v=plDia20260722b`.
 5. Live CDP isolated tab Pass + screenshot+Read `pl-dia-projekty-final-pass.png`.
 
 **Efekt/Fix:** aba0e568 closed; Projekty H1 + key labels UTF-8 Pass (no `?` mojibake).
@@ -184,16 +1418,16 @@
 **Backup:** n/a (encoding-only).
 
 **Test/Ewaluacja:**
-- CDP: title=`Projekty opakowań`; subtitle has projektów/opakowań/kompletności; status=`184 produktów · 458 wariantów · indeks Marketing`; refresh=`Odśwież listę`; noQ=true.
+- CDP: title=`Projekty opakowaĹ„`; subtitle has projektĂłw/opakowaĹ„/kompletnoĹ›ci; status=`184 produktĂłw Â· 458 wariantĂłw Â· indeks Marketing`; refresh=`OdĹ›wieĹĽ listÄ™`; noQ=true.
 - Screenshot+Read: `C:\Users\xpret\AppData\Local\Temp\cursor\screenshots\pl-dia-projekty-final-pass.png` Pass.
 
-**Źródła:** `restore-pl-diacritics.py`; `_fix_restore_mangling.py`; `index.html`; `dam-projects.js`; `pl.json`; `dam-project.js`; `dam-root-status.js`.
+**ĹąrĂłdĹ‚a:** `restore-pl-diacritics.py`; `_fix_restore_mangling.py`; `index.html`; `dam-projects.js`; `pl.json`; `dam-project.js`; `dam-root-status.js`.
 
 ---
 
 ## 2026-07-22 - F1 help FAB diacritics (cache bust Pass)
 
-**Efekt/Fix:** `dam-shortcuts.js` on disk already clean UTF-8 (`skróty`); stale SW cache at `?v=tutorialTargets20260721a` served mojibake. Bumped `dam-shell.js` loader + 21× HTML to `?v=helpDiacritics20260722d`. CDP aria=`Pomoc i skróty (F1)` Pass; screenshot modal title OK.
+**Efekt/Fix:** `dam-shortcuts.js` on disk already clean UTF-8 (`skrĂłty`); stale SW cache at `?v=tutorialTargets20260721a` served mojibake. Bumped `dam-shell.js` loader + 21Ă— HTML to `?v=helpDiacritics20260722d`. CDP aria=`Pomoc i skrĂłty (F1)` Pass; screenshot modal title OK.
 
 ## 2026-07-22 - Abandoned agents CLOSED (live verify + absorption)
 
@@ -218,7 +1452,7 @@
 | `ed6d836b` | finished-by-absorption | Drawer live: tucked panelVisibleW=50 peekOk; expanded 600; `#damDashCustomize` `is-drawer-tucked`/`is-drawer-expanded`; handles only in layout-edit |
 | `f7866e77` | finished-by-absorption | `dam-tasks.js` `stickyDoneIds` (A1 still open - local export toggle) |
 | `32f5cb1d` | finished-by-absorption | `openEditPicker`/`openTagPicker` setTimeout(0); projects Warianty clickMs=3 + deferred rebuild |
-| `aba0e568` | **closed** (WORKER verify Pass) | CDP+screenshot: h2=`Projekty opakowań`, sub=`projektów/opakowań/kompletności`, status=`… wariantów …`, refresh=`Odśwież listę`, noQ; `pl-dia-projekty-final-pass.png`; `dam-projects.js?v=plDia20260722b` |
+| `aba0e568` | **closed** (WORKER verify Pass) | CDP+screenshot: h2=`Projekty opakowaĹ„`, sub=`projektĂłw/opakowaĹ„/kompletnoĹ›ci`, status=`â€¦ wariantĂłw â€¦`, refresh=`OdĹ›wieĹĽ listÄ™`, noQ; `pl-dia-projekty-final-pass.png`; `dam-projects.js?v=plDia20260722b` |
 | `0c13696b` | handoff IN FLIGHT | Owned by parallel `fe1bf7f4` (combo plan) - do not duplicate |
 | `3b2cecd1` | finished-by-absorption | Shift+PLUS tags + dark modal CSS in `dam-media-preview.js`; material variant plus tile |
 | `562581d6` | finished-by-absorption | Viz variant strip Shift multi-select + hold-to-delete in `dam-viz.js` / `dam-assoc-edit.js` |
@@ -227,21 +1461,21 @@
 
 **Test/Ewaluacja:** CDP dashboard+projects Pass numbers above; drawer peek=50; node --check `dam-shortcuts.js` Pass (git clean UTF-8).
 
-**Źródła:** live `:8765`; backup process prefix; `apps/web/sw.js`; `dam-dashboard-widgets.js`; `dam-bento-resize.js`; `dam-tasks.js`; `dam-assoc-edit.js`; `dam-tag-edit.js`; `dam-projects.js`; `dam-shortcuts.js`.
+**ĹąrĂłdĹ‚a:** live `:8765`; backup process prefix; `apps/web/sw.js`; `dam-dashboard-widgets.js`; `dam-bento-resize.js`; `dam-tasks.js`; `dam-assoc-edit.js`; `dam-tag-edit.js`; `dam-projects.js`; `dam-shortcuts.js`.
 
 ---
 
 ## 2026-07-22 - Abandoned-agent inventory + absorption closures
 
-**Komenda/Akcja:** WORKER inventory (no mass WRITE). Close abandoned IDs if absorbed by dashboard repair P0–P4; list residual resumes. Dostosuj wygląd = do not collide with live resume `561a9c8d` (ex-`0098e139`).
+**Komenda/Akcja:** WORKER inventory (no mass WRITE). Close abandoned IDs if absorbed by dashboard repair P0â€“P4; list residual resumes. Dostosuj wyglÄ…d = do not collide with live resume `561a9c8d` (ex-`0098e139`).
 
-### Closures (finished-by-absorption → P0–P4)
+### Closures (finished-by-absorption â†’ P0â€“P4)
 
 | Agent ID | Topic | Absorbed by | Pass evidence |
 |----------|-------|-------------|----------------|
-| `cf8e5b8b-70e2-4493-bcae-ed5e7dd7872b` | Old Geex demo shell | P0 SW v4 + soft purge + tutorial gate | `apps/web/sw.js` `CACHE=dam-page-1h-v4`; `?v=swGateV4c20260722a`; process P0 S1–S6/S4b; screenshot `C:\Users\xpret\AppData\Local\Temp\cursor\screenshots\p4-dashboard-final.png` |
+| `cf8e5b8b-70e2-4493-bcae-ed5e7dd7872b` | Old Geex demo shell | P0 SW v4 + soft purge + tutorial gate | `apps/web/sw.js` `CACHE=dam-page-1h-v4`; `?v=swGateV4c20260722a`; process P0 S1â€“S6/S4b; screenshot `C:\Users\xpret\AppData\Local\Temp\cursor\screenshots\p4-dashboard-final.png` |
 | `f59fc5db-e550-40d3-8309-1dfc964b276a` | Media-latest + bento handles | P1 + P2 | `mediaTagsP120260722a`; `dam-bento-resize.js` color-mix 25% + hide unless `body.dam-bento-layout-edit`; backup `backups/dash-repair-20260722-151735/` |
-| `3b9c5670-cc2a-4aba-9126-0014de998d17` | Quick links chips + Plus picker | P3 | KEEP `.dam-ql-*` / `dam_quick_links_v1:`; CDP Q1–Q4 Pass (chipH=44) in process P3 |
+| `3b9c5670-cc2a-4aba-9126-0014de998d17` | Quick links chips + Plus picker | P3 | KEEP `.dam-ql-*` / `dam_quick_links_v1:`; CDP Q1â€“Q4 Pass (chipH=44) in process P3 |
 | `a84d9e2c-f7ba-4e44-b678-3bc7d5e94ce8` | Status check of above three | P4 QA supersedes | Same P4 evidence + plan `dam_dashboard_repair_9174ae09` todos all completed |
 
 **Plan guardrail honored:** do not resume those four; serial repair already shipped.
@@ -250,47 +1484,47 @@
 
 | Agent ID | Topic | Status |
 |----------|-------|--------|
-| `0098e139-8ff9-4448-8a90-5eb28b5da876` | Dostosuj wygląd motion/visibility | **IN FLIGHT** via resume `561a9c8d-3cda-4a7c-a5c1-cd3e99b0817b` (WRITE: `dam-shell.js` / `dam-brand.css` customizer) — no second resume |
-| `ed6d836b-ea7e-4dc9-8bca-ca5ea174e0dc` | Hide move-handles + Dostosuj pulpit left drawer | Handles **absorbed** (layout-edit gate). Drawer refactor **needs-resume** (widgets modal → docked drawer; avoid shell customizer files) |
-| `0c13696b-05a0-4dbf-899e-bc5a25ab0b0d` | COMBO folder-picker lead | **needs-resume** — plan `combo_folder_picker_global_4981a878` todos still pending; planner CONVERGED only |
+| `0098e139-8ff9-4448-8a90-5eb28b5da876` | Dostosuj wyglÄ…d motion/visibility | **IN FLIGHT** via resume `561a9c8d-3cda-4a7c-a5c1-cd3e99b0817b` (WRITE: `dam-shell.js` / `dam-brand.css` customizer) â€” no second resume |
+| `ed6d836b-ea7e-4dc9-8bca-ca5ea174e0dc` | Hide move-handles + Dostosuj pulpit left drawer | Handles **absorbed** (layout-edit gate). Drawer refactor **needs-resume** (widgets modal â†’ docked drawer; avoid shell customizer files) |
+| `0c13696b-05a0-4dbf-899e-bc5a25ab0b0d` | COMBO folder-picker lead | **needs-resume** â€” plan `combo_folder_picker_global_4981a878` todos still pending; planner CONVERGED only |
 | `32f5cb1d-0d20-408f-8b19-57e033812aa3` | Admin UI freezes | **needs-resume** |
-| `f7866e77-12e2-4fbc-9c7e-09a56f5c3c57` | Asana completed stays visible | **finished-by-absorption** — `dam-tasks.js` `stickyDoneIds` keeps just-completed in overdue/upcoming until tab change |
+| `f7866e77-12e2-4fbc-9c7e-09a56f5c3c57` | Asana completed stays visible | **finished-by-absorption** â€” `dam-tasks.js` `stickyDoneIds` keeps just-completed in overdue/upcoming until tab change |
 | `aba0e568-9dbc-4d13-be69-1cf2c8cc1c1e` | PL diacritics `?` | **closed** 2026-07-22 - live Projekty UTF-8 Pass (`plDia20260722b`) |
 
 **Efekt/Fix:** Four dash-repair orphans closed in log; Parent resume queue below (no code thrash this turn).
 
 ---
 
-## 2026-07-22 - Dashboard repair DONE (P0–P4, plan dash-repair)
+## 2026-07-22 - Dashboard repair DONE (P0â€“P4, plan dash-repair)
 
 **Komenda/Akcja:** Serial implement plan `dam_dashboard_repair_9174ae09` (Parent SW=B). Abandoned agents nie wznawiane. Bez commita.
 
 **Log/Status:**
-1. Backup: `backups/dash-repair-20260722-151735/` (7 plików).
-2. **P0 SW/shell:** `CACHE=dam-page-1h-v4`; `dam-shell.js` soft purge (stale `dam-page-*` lub sw ≠ v4 → unregister + delete + 1 soft reload); tutorial register tylko gdy sw.js zawiera v4; bump `?v=swGateV4c20260722a` na 21 HTML + shortcuts.
-3. **P1 media-latest:** tagi bez shrink/clip, font ≥12px; thumb trochę mniejszy w 2x2; inject + `dam-dashboard.css` (`mediaTagsP120260722a`). Range geometry: clipped=false; hostW≥640.
-4. **P2 bento handles:** root cause = `/* comment */ +` → `NaN` w inject CSS (`damBentoResizeCss`); fix `moveHandle2` — bottom bar color-mix 25% z kolorem fill widgetu; bez komentarzy między `+`.
-5. **P3 QL:** KEEP selectors już na dysku; CDP Q1–Q4 Pass (chipH=44, picker search, `dam_quick_links_v1:`, hint verbatim, bez create-new).
-6. **P4 QA:** live `#damDashGrid` + DAM nav; `dam-page-1h-v4` w caches; spot-check network HTML `index`/`project`/`explorer` + shell bust; sidebar collapsed: logo „dobra kaloria” + DAM v3.1.5 czytelne.
+1. Backup: `backups/dash-repair-20260722-151735/` (7 plikĂłw).
+2. **P0 SW/shell:** `CACHE=dam-page-1h-v4`; `dam-shell.js` soft purge (stale `dam-page-*` lub sw â‰  v4 â†’ unregister + delete + 1 soft reload); tutorial register tylko gdy sw.js zawiera v4; bump `?v=swGateV4c20260722a` na 21 HTML + shortcuts.
+3. **P1 media-latest:** tagi bez shrink/clip, font â‰Ą12px; thumb trochÄ™ mniejszy w 2x2; inject + `dam-dashboard.css` (`mediaTagsP120260722a`). Range geometry: clipped=false; hostWâ‰Ą640.
+4. **P2 bento handles:** root cause = `/* comment */ +` â†’ `NaN` w inject CSS (`damBentoResizeCss`); fix `moveHandle2` â€” bottom bar color-mix 25% z kolorem fill widgetu; bez komentarzy miÄ™dzy `+`.
+5. **P3 QL:** KEEP selectors juĹĽ na dysku; CDP Q1â€“Q4 Pass (chipH=44, picker search, `dam_quick_links_v1:`, hint verbatim, bez create-new).
+6. **P4 QA:** live `#damDashGrid` + DAM nav; `dam-page-1h-v4` w caches; spot-check network HTML `index`/`project`/`explorer` + shell bust; sidebar collapsed: logo â€ždobra kaloriaâ€ť + DAM v3.1.5 czytelne.
 
-**Efekt/Fix:** User hard-reload dashboard → powłoka DAM (nie Demo/Features/v1.00), widgety, czytelne tagi media, uchwyty Edit 25%, kompaktowe skróty + Plus.
+**Efekt/Fix:** User hard-reload dashboard â†’ powĹ‚oka DAM (nie Demo/Features/v1.00), widgety, czytelne tagi media, uchwyty Edit 25%, kompaktowe skrĂłty + Plus.
 
-**Test/Ewaluacja:** S1–S6/S4b Pass; P1 Range+screenshot; P2 bg `color(... / 0.25)`; P3 picker+LS; P4 collapsed sidebar screenshot `p4-dashboard-final.png`.
+**Test/Ewaluacja:** S1â€“S6/S4b Pass; P1 Range+screenshot; P2 bg `color(... / 0.25)`; P3 picker+LS; P4 collapsed sidebar screenshot `p4-dashboard-final.png`.
 
-**Źródła:** `apps/web/sw.js`, `dam-shell.js`, `dam-tutorial.js`, `dam-dashboard-widgets.js`, `dam-dashboard.css`, `dam-bento-resize.js`, entry HTML; plan `dam_dashboard_repair_9174ae09`.
+**ĹąrĂłdĹ‚a:** `apps/web/sw.js`, `dam-shell.js`, `dam-tutorial.js`, `dam-dashboard-widgets.js`, `dam-dashboard.css`, `dam-bento-resize.js`, entry HTML; plan `dam_dashboard_repair_9174ae09`.
 
-**Lekcja:** w `s.textContent = "..." + /* komentarz */ + "..."` drugi `+` robi unary → `NaN` w CSS (jak `ensureShellLayerCss`).
+**Lekcja:** w `s.textContent = "..." + /* komentarz */ + "..."` drugi `+` robi unary â†’ `NaN` w CSS (jak `ensureShellLayerCss`).
 
 ---
 
-## 2026-07-22 - Header z-index vs Dostosuj wygląd + Zadania theme/scrollbar
+## 2026-07-22 - Header z-index vs Dostosuj wyglÄ…d + Zadania theme/scrollbar
 
-**Komenda/Akcja:** WORKER — (1) pasek `.geex-content__header__action` nizej niz panel wygladu; (2) Zadania bez force-dark; (3) cienki scrollbar list zadan bez clip terminow; cache-bust.
+**Komenda/Akcja:** WORKER â€” (1) pasek `.geex-content__header__action` nizej niz panel wygladu; (2) Zadania bez force-dark; (3) cienki scrollbar list zadan bez clip terminow; cache-bust.
 
 **Log/Status:**
 1. Root cause overlap: Geex `.geex-customizer` z-index 99 vs header stacking 200 + action 12500.
-2. Bug inject CSS: komentarz JS miedzy `+` w `ensureShellLayerCss` → `NaN` w arkuszu (unary `+` na string).
-3. Open strategy: `left`+`width`+`right` over-constrain → panel na krawedzi (15px); fix = `left:auto` + `right:-400px` / `.active { right:0 }`.
+2. Bug inject CSS: komentarz JS miedzy `+` w `ensureShellLayerCss` â†’ `NaN` w arkuszu (unary `+` na string).
+3. Open strategy: `left`+`width`+`right` over-constrain â†’ panel na krawedzi (15px); fix = `left:auto` + `right:-400px` / `.active { right:0 }`.
 4. Theme: `ensureTasksThemeRespectsPref` + soft boot shell (`dam_theme_pref` > `theme`, default light).
 5. Scrollbar: `.dam-tasks-list` thin + `scrollbar-gutter: stable` + padR 6/10.
 
@@ -300,10 +1534,10 @@
 - HTML `?v=hdrZIdx20260722h`.
 
 **Test/Ewaluacja:**
-- Dashboard open Dostosuj wygląd: z customizer=12600, action=60, header=100; title `elementFromPoint` → TITLE; screenshot Pass (`hdr-customizer-zindex-pass.png`).
+- Dashboard open Dostosuj wyglÄ…d: z customizer=12600, action=60, header=100; title `elementFromPoint` â†’ TITLE; screenshot Pass (`hdr-customizer-zindex-pass.png`).
 - tasks.html: `data-theme=light`, body `#f5f6fa`, scrollbar-width thin, dues not clipped; screenshot Pass (`tasks-light-scrollbar-pass.png`).
 
-**Źródła:** `apps/web/assets/js/dam-shell.js`, `dam-brand.css`, `dam-tasks.css`, `dam-tasks.js`; Geex `style.css` `.geex-customizer` z=99.
+**ĹąrĂłdĹ‚a:** `apps/web/assets/js/dam-shell.js`, `dam-brand.css`, `dam-tasks.css`, `dam-tasks.js`; Geex `style.css` `.geex-customizer` z=99.
 
 ---
 
@@ -311,7 +1545,7 @@
 
 ## 2026-07-21 - docs: inventory-close changelog `689e112`
 
-**Tip:** `689e112` — inventory close (marketing catalog air, branding/viz breathing room, dark polish + h5 fix, baseline PNG 36/36 local, cache-bust `invClose20260721b`). Docs updated: [`geex-realign-CHANGELOG-2026-07-21.md`](agents/shared/geex-realign-CHANGELOG-2026-07-21.md), [`geex-realign-ROLLBACK-2026-07-21.md`](agents/shared/geex-realign-ROLLBACK-2026-07-21.md). Rollback one-liner: `git revert 689e112 --no-edit`.
+**Tip:** `689e112` â€” inventory close (marketing catalog air, branding/viz breathing room, dark polish + h5 fix, baseline PNG 36/36 local, cache-bust `invClose20260721b`). Docs updated: [`geex-realign-CHANGELOG-2026-07-21.md`](agents/shared/geex-realign-CHANGELOG-2026-07-21.md), [`geex-realign-ROLLBACK-2026-07-21.md`](agents/shared/geex-realign-ROLLBACK-2026-07-21.md). Rollback one-liner: `git revert 689e112 --no-edit`.
 
 ---
 
@@ -322,9 +1556,9 @@
 **Pliki:**
 - [`agents/shared/geex-realign-CHANGELOG-2026-07-21.md`](agents/shared/geex-realign-CHANGELOG-2026-07-21.md)
 - [`agents/shared/geex-realign-ROLLBACK-2026-07-21.md`](agents/shared/geex-realign-ROLLBACK-2026-07-21.md)
-- Plan: `geex-realign-plan-2026-07-21.md` → status CLOSED + pointer
+- Plan: `geex-realign-plan-2026-07-21.md` â†’ status CLOSED + pointer
 
-**Inventory tip (pre-doc):** `df870e2` — ctaUnify 12px/34px + Info Pakowania switch. DONE: `a4ba7c4`, pad-fix `74eb7eb`/`a400726`, PAKIET `435ea6b`, tip `df870e2`. ESCALATE: none. PARTIAL: marketing↔viz, branding air, dark polish, baseline PNG 28/36, stash@{0}.
+**Inventory tip (pre-doc):** `df870e2` â€” ctaUnify 12px/34px + Info Pakowania switch. DONE: `a4ba7c4`, pad-fix `74eb7eb`/`a400726`, PAKIET `435ea6b`, tip `df870e2`. ESCALATE: none. PARTIAL: marketingâ†”viz, branding air, dark polish, baseline PNG 28/36, stash@{0}.
 
 **Rollback one-liner (pre-realign):** `git reset --hard 092821f` (hard) or soft stack: `git revert df870e2`; `git revert 435ea6b`; `git revert -m 1 a400726`; `git revert -m 1 a4ba7c4`.
 
@@ -336,7 +1570,7 @@
 
 **Status:** CLOSED on `origin/main`.
 
-**Merge:** `a4ba7c4` — Merge branch `design/geex-realign` (Geex realign F0-F8 + taste unify).
+**Merge:** `a4ba7c4` â€” Merge branch `design/geex-realign` (Geex realign F0-F8 + taste unify).
 
 **Tag:** `design-geex-realign` (plus `geex-phase0`..`geex-phase8`).
 
@@ -346,7 +1580,7 @@
 
 ## 2026-07-21 20:35 - Geex taste unify (KEEP product look) + fixture font
 
-**Komenda/Akcja:** Lead — Parent taste HARD: unify pad/gap only; fix fixture Times; merge main.
+**Komenda/Akcja:** Lead â€” Parent taste HARD: unify pad/gap only; fix fixture Times; merge main.
 
 **Unified:**
 - Tokens: `--dam-space-btn-sm-*`, `--dam-control-h-sm`, `--dam-radius-btn-compact`
@@ -355,7 +1589,7 @@
 - Card body air: pad 22/20/16, gap 16
 - Fixture: Jost + bootstrap+style+tokens+primitives+brand (prod chain)
 
-**CDP fixture:** font `Jost, sans-serif`; primary pad 15x25 radius 18; int-cta 8x14/36; scope pill 999 — **Pass** (no Times).
+**CDP fixture:** font `Jost, sans-serif`; primary pad 15x25 radius 18; int-cta 8x14/36; scope pill 999 â€” **Pass** (no Times).
 
 **CDP projects:** tagGap 6x8; int-cta pad 8x14; scope 8x14/36.
 
@@ -363,21 +1597,21 @@
 
 **Tags already:** geex-phase0..8 + design-geex-realign @ 339fec9. This commit = taste polish after F8.
 
-**Merge:** `design/geex-realign` → `main` after this commit.
+**Merge:** `design/geex-realign` â†’ `main` after this commit.
 
 ---
 
-## 2026-07-21 20:10 - Geex realign Faza 8 DONE (final QA PASS → merge)
+## 2026-07-21 20:10 - Geex realign Faza 8 DONE (final QA PASS â†’ merge)
 
-**Komenda/Akcja:** Lead — final QA priorytet 390 + doctrine §12 + merge main.
+**Komenda/Akcja:** Lead â€” final QA priorytet 390 + doctrine Â§12 + merge main.
 
 **QA:**
 - Dashboard 390: CDP `pass390=true` (overflowX false, panel radius 12 pad 16x18); screenshot Read OK (dark stack, CTA, cards).
 - Index: reveal IO ratio 1 / opacity 1 / clip none; screenshot filters+cards OK.
 - Branding: badgeRadius 14px; no horizontal overflow vs layout width.
-- Note: Cursor host Emulation sometimes snaps ~765 (F4 residual) — forced 390 metrics on dashboard Pass.
+- Note: Cursor host Emulation sometimes snaps ~765 (F4 residual) â€” forced 390 metrics on dashboard Pass.
 
-**Verdict:** QA **PASS** — merge `design/geex-realign` → `main`.
+**Verdict:** QA **PASS** â€” merge `design/geex-realign` â†’ `main`.
 
 **Tags:** `geex-phase8`, `design-geex-realign`.
 
@@ -387,11 +1621,11 @@
 
 ## 2026-07-21 19:55 - Geex realign Faza 7 DONE (thin brand btn/badge)
 
-**Komenda/Akcja:** Lead — thin `dam-brand.css` badge anatomy duplicates + card actions btn pad override.
+**Komenda/Akcja:** Lead â€” thin `dam-brand.css` badge anatomy duplicates + card actions btn pad override.
 
 **Done:** removed base `.dam-viz-badge` anatomy (999px); card badges keep density pad + token radius; `.geex-btn` actions keep font-size only.
 
-**CDP branding:** badgeRadius 14px (not 999), btn minH 44 — Pass.
+**CDP branding:** badgeRadius 14px (not 999), btn minH 44 â€” Pass.
 
 **Handoff:** tag `geex-phase7`. Next Faza 8 final QA 390.
 
@@ -399,31 +1633,31 @@
 
 ## 2026-07-21 19:45 - Geex realign Faza 6 DONE (dark bridge / white-flash top3)
 
-**Komenda/Akcja:** Lead — DamTheme path + top3 anti white-flash.
+**Komenda/Akcja:** Lead â€” DamTheme path + top3 anti white-flash.
 
 **Top3 fix:**
 1. Early head bridge (pref+system+colorScheme) before CSS on hot pages.
 2. `dam-tokens.css`: `color-scheme` + html background light/dark.
 3. `DamTheme.apply` + shell softThemeBoot set `style.colorScheme`.
 
-**CDP dark:** htmlLum 25 / bodyLum 15 / sideLum 34 — `darkOk=true`.
+**CDP dark:** htmlLum 25 / bodyLum 15 / sideLum 34 â€” `darkOk=true`.
 
 **Handoff:** tag `geex-phase6`. Next Faza 7 thin brand duplicates.
 
 ---
 
-## 2026-07-21 19:35 - Geex realign Faza 5b DONE (popover surfaces + §7)
+## 2026-07-21 19:35 - Geex realign Faza 5b DONE (popover surfaces + Â§7)
 
-**Komenda/Akcja:** Lead — 1 change = popover surface tokens; §7 quote + CDP IO.
+**Komenda/Akcja:** Lead â€” 1 change = popover surface tokens; Â§7 quote + CDP IO.
 
-**§7:** rest state = tylko opacity; clip-path tylko w tweenie. Change nie rusza reveal-observed cards.
+**Â§7:** rest state = tylko opacity; clip-path tylko w tweenie. Change nie rusza reveal-observed cards.
 
 **CDP:**
 - index project-card: ratio 1 / opacity 1 / clip none
 - viz card regress: ratio 1 / opacity 1
 - branding card regress: ratio 0.53 intersecting / opacity 1 / clip none
 
-**Self-review §7:** PASS — PANELS F5b bez opacity/clip/visibility/display; `dam-grid-reveal.js` untouched.
+**Self-review Â§7:** PASS â€” PANELS F5b bez opacity/clip/visibility/display; `dam-grid-reveal.js` untouched.
 
 **Handoff:** tag `geex-phase5b`. Next Faza 6 dark/white-flash.
 
@@ -431,7 +1665,7 @@
 
 ## 2026-07-21 19:30 - Geex realign Faza 5a DONE (surfaces NO reveal)
 
-**Komenda/Akcja:** Lead — PANELS fill after join 3+4. Zakaz reveal/clip/opacity rest.
+**Komenda/Akcja:** Lead â€” PANELS fill after join 3+4. Zakaz reveal/clip/opacity rest.
 
 **Log/Status:**
 1. `dam-primitives.css` `/* === PANELS === */`: dash-panel, bento cell (+muted/bare), modal panel elev, panel rows hover muted, sidebar header/link pad+radius+min-h.
@@ -439,22 +1673,22 @@
 3. CDP dashboard: panel radius 12 pad 16x18 opacity 1 clipPath none; sidebar link radius 8 pad 10x12.
 4. Zero edits `dam-grid-reveal.js`; no opacity/clip on reveal-observed cards.
 
-**Handoff faza 5a:** tag `geex-phase5a`. Next = Faza 5b (1 change = 1 §7 quote + CDP).
+**Handoff faza 5a:** tag `geex-phase5a`. Next = Faza 5b (1 change = 1 Â§7 quote + CDP).
 
-**Źródła:** audit §3, surfaces.md, code-doctrine §7 (read-only guard).
+**ĹąrĂłdĹ‚a:** audit Â§3, surfaces.md, code-doctrine Â§7 (read-only guard).
 
 ---
 
 ## 2026-07-21 19:25 - Handoff join 3+4 (Lead)
 
-**Komenda/Akcja:** Gate OPEN — `geex-phase3` @ `7c9d346` + `geex-phase4` @ `3ee60bf` (phase4 ancestor of HEAD). Scalenie przed Faza 5a.
+**Komenda/Akcja:** Gate OPEN â€” `geex-phase3` @ `7c9d346` + `geex-phase4` @ `3ee60bf` (phase4 ancestor of HEAD). Scalenie przed Faza 5a.
 
 **Log/Status:**
-1. Pulled `design/geex-realign` — already up to date; both tags in HEAD ancestry.
+1. Pulled `design/geex-realign` â€” already up to date; both tags in HEAD ancestry.
 2. Read handoff-faza3 (DONE, 3 Pass, ESCALATE none) + handoff-faza4 (DONE, 3 Pass, ESCALATE cleared).
-3. Merged regress notes 3+4 → `geex-realign-regress-manifest.md`.
-4. Collective `?v=` bump: `dam-primitives.css?v=geexJoin20260721a` (22 HTML) — unifies F3/F4 enqueue race.
-5. Smoke `:8765` → HTTP 200 dashboard + root.
+3. Merged regress notes 3+4 â†’ `geex-realign-regress-manifest.md`.
+4. Collective `?v=` bump: `dam-primitives.css?v=geexJoin20260721a` (22 HTML) â€” unifies F3/F4 enqueue race.
+5. Smoke `:8765` â†’ HTTP 200 dashboard + root.
 
 **Done skrot:**
 - F3 BUTTONS: radius 18 / pad 15x25 / icon 44 / actions gap 10; no white-flash secondary hover.
@@ -463,92 +1697,92 @@
 **Ryzyka (carry):**
 - `dam-brand.css` po primitives moze nadal nadpisac pill radius (F7 thin).
 - Host Emulation width stuck ~765 (F4 residual).
-- Live auth dashboard CDP deferred w F3 — smoke join = HTTP only.
+- Live auth dashboard CDP deferred w F3 â€” smoke join = HTTP only.
 
-**Next:** Faza 5a surfaces (NO reveal) → tag `geex-phase5a`.
+**Next:** Faza 5a surfaces (NO reveal) â†’ tag `geex-phase5a`.
 
-**Źródła:** geex-realign-handoff-faza3.md, geex-realign-handoff-faza4.md, notes-faza3/4, plan v6.1.
+**ĹąrĂłdĹ‚a:** geex-realign-handoff-faza3.md, geex-realign-handoff-faza4.md, notes-faza3/4, plan v6.1.
 
 ---
 ## 2026-07-21 19:00 - Geex realign Faza 2 DONE (tokens + primitives skeleton)
 
-**Komenda/Akcja:** Agent 2 / Lead — Faza 2 ONLY po gate `geex-phase1` + audit md.
+**Komenda/Akcja:** Agent 2 / Lead â€” Faza 2 ONLY po gate `geex-phase1` + audit md.
 
 **Log/Status:**
 1. Gate OPEN (`17e2dc3`, tag `geex-phase1`). Audyt czytany 1:1.
-2. `dam-tokens.css`: `--dam-radius-btn` 18, `--dam-space-btn-y/x` 15/25; `--dam-control-h` 44 (Parent); dark Geex status/transparent maps. **Uwaga:** plik był gitignore (`**/*token*`) — dodano wyjątek `!apps/web/assets/css/dam-tokens.css` + force-track.
-3. `dam-primitives.css` NEW — BUTTONS / BADGES / PANELS skeleton.
+2. `dam-tokens.css`: `--dam-radius-btn` 18, `--dam-space-btn-y/x` 15/25; `--dam-control-h` 44 (Parent); dark Geex status/transparent maps. **Uwaga:** plik byĹ‚ gitignore (`**/*token*`) â€” dodano wyjÄ…tek `!apps/web/assets/css/dam-tokens.css` + force-track.
+3. `dam-primitives.css` NEW â€” BUTTONS / BADGES / PANELS skeleton.
 4. Docs: `design-system/MASTER.md` + `components/{buttons,badges,surfaces,icon-btn}.md`.
 5. Briefy B/C: `geex-realign-agent-B-buttons-2026-07-21.md`, `geex-realign-agent-C-badges-2026-07-21.md`.
 6. `ui.geex_dna_tokens` + update `ui.geex_only`; lustro `app-settings.json`.
 7. Enqueue 21 HTML: primitives po tokens, przed brand; `?v=geexF220260721a`.
-8. Live CDP §5 **SKIPPED** (`:8765` HTTP 000) — miary z audit; notatka OK Parent.
-9. Self-review (Composer RO not spawned): **PASS** — nowe tokeny mają consumer w primitives/docs.
+8. Live CDP Â§5 **SKIPPED** (`:8765` HTTP 000) â€” miary z audit; notatka OK Parent.
+9. Self-review (Composer RO not spawned): **PASS** â€” nowe tokeny majÄ… consumer w primitives/docs.
 10. Manifest regresji: F2 PASS structure / smoke DEFERRED.
 
-**Handoff faza 2:** tag `geex-phase2`. Dalej równolegle: Agent B F3 (brief B → handoff-faza3) + Agent C F4 (brief C → handoff-faza4). Join Lead przed 5a.
+**Handoff faza 2:** tag `geex-phase2`. Dalej rĂłwnolegle: Agent B F3 (brief B â†’ handoff-faza3) + Agent C F4 (brief C â†’ handoff-faza4). Join Lead przed 5a.
 
 **Efekt/Fix:** Geex DNA via tokens+primitives; B/C WRITE sets gotowe.
 
-**Test/Ewaluacja:** token→consumer PASS; HTML order PASS; UTF-8 OK; live screenshot deferred.
+**Test/Ewaluacja:** tokenâ†’consumer PASS; HTML order PASS; UTF-8 OK; live screenshot deferred.
 
-**Źródła:** geex-realign-audit-2026-07-21.md, geex-realign-plan-2026-07-21.md.
+**ĹąrĂłdĹ‚a:** geex-realign-audit-2026-07-21.md, geex-realign-plan-2026-07-21.md.
 
 ---
 
 ## 2026-07-21 18:55 - Geex realign Faza 1 DONE (unblock F2)
 
-**Komenda/Akcja:** Agent 1 / Lead — domknięcie Fazy 1 po Parent CRITICAL UNBLOCK (skip PNG/locks).
+**Komenda/Akcja:** Agent 1 / Lead â€” domkniÄ™cie Fazy 1 po Parent CRITICAL UNBLOCK (skip PNG/locks).
 
 **Log/Status:**
 1. Branch `design/geex-realign`; PNG baseline skipped PARTIAL (fonts/locks).
-2. Audyt napisany: `agents/shared/geex-realign-audit-2026-07-21.md` (btn/badge/panels/hex50/measures/edges/draft≤20).
-3. Live CDP deferred (`:8765` ERR_EMPTY_RESPONSE) — measures = CSS-declared; F2 re-CDP §5.
+2. Audyt napisany: `agents/shared/geex-realign-audit-2026-07-21.md` (btn/badge/panels/hex50/measures/edges/draftâ‰¤20).
+3. Live CDP deferred (`:8765` ERR_EMPTY_RESPONSE) â€” measures = CSS-declared; F2 re-CDP Â§5.
 4. Manifest updated; commit `geex-realign: faza 1 audit`; tag `geex-phase1`; push.
 5. Tool budget Grep/Read: ~8/18. Zero Faza 2 CSS.
 
-**Handoff faza 1 → Faza 2:**
-- Wejście: audit md + plan + manifest + tag `geex-phase1`.
+**Handoff faza 1 â†’ Faza 2:**
+- WejĹ›cie: audit md + plan + manifest + tag `geex-phase1`.
 - F2: tokens + docs + primitives skeleton; Composer RO; **nie** ruszaj `dam-brand.css` stylami realign poza briefem.
-- Przed freeze tokenów: podnieś `:8765` i CDP 8 kontrolek z audytu §5; opcjonalnie smoke dashboard+modal light 1440/1024/390.
+- Przed freeze tokenĂłw: podnieĹ› `:8765` i CDP 8 kontrolek z audytu Â§5; opcjonalnie smoke dashboard+modal light 1440/1024/390.
 - Nowa sesja czatu (1 faza = 1 sesja).
 
 **Efekt/Fix:** Bramka F2 otwarta (tag + audit w repo).
 
-**Źródła:** geex-realign-audit-2026-07-21.md, geex-realign-plan-2026-07-21.md.
+**ĹąrĂłdĹ‚a:** geex-realign-audit-2026-07-21.md, geex-realign-plan-2026-07-21.md.
 
 ---
 
 ## 2026-07-21 18:50 - Geex realign Faza 2 GATE BLOCKED (RESOLVED by F1 above)
 
-ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `geex-phase1` + audit landed.
+ESCALATE geex-realign faza 2: waiting on phase1 â€” **resolved 18:55** when `geex-phase1` + audit landed.
 
 ---
 
 
 ## 2026-07-21 17:50 - Geex realign Faza 0 START + /planner skill
 
-**Komenda/Akcja:** (1) Global skill `/planner` MAD + reguła alwaysApply. (2) Start Geex realign v6.1 Faza 0.
+**Komenda/Akcja:** (1) Global skill `/planner` MAD + reguĹ‚a alwaysApply. (2) Start Geex realign v6.1 Faza 0.
 
 **Log/Status:**
 1. Skill: `~/.cursor/skills/planner/SKILL.md` + reference/examples/cheat-sheet; rule `planner-mad-always.mdc`.
 2. Brief: `agents/shared/geex-realign-plan-2026-07-21.md`.
-3. **HARD FREEZE** plików kluczowych realign (tokens, primitives, dam-brand.css, page CSS, theme JS, HTML enqueue) — tylko Lead/B/C wg planu.
+3. **HARD FREEZE** plikĂłw kluczowych realign (tokens, primitives, dam-brand.css, page CSS, theme JS, HTML enqueue) â€” tylko Lead/B/C wg planu.
 4. PNG baseline: gitignore; README + manifest; handoff-faza3/4 stubs.
 5. Commit backup `092821f` na `main` + push; branch `design/geex-realign` + tag `geex-phase0` + push.
-6. Baseline lokalnie: **28/36 PNG** (font timeout na części zrzutów) — PARTIAL w manifeście; uzupełnić w nowej sesji.
+6. Baseline lokalnie: **28/36 PNG** (font timeout na czÄ™Ĺ›ci zrzutĂłw) â€” PARTIAL w manifeĹ›cie; uzupeĹ‚niÄ‡ w nowej sesji.
 
-**Handoff faza 0:** freeze ON; brief w `agents/shared/geex-realign-plan-2026-07-21.md`. Następna sesja = **Faza 1 audyt** (nowy czat; maks 18 Grep/Read).
+**Handoff faza 0:** freeze ON; brief w `agents/shared/geex-realign-plan-2026-07-21.md`. NastÄ™pna sesja = **Faza 1 audyt** (nowy czat; maks 18 Grep/Read).
 
 **Efekt/Fix:** Proces planowania globalny; start realign bez CSS produktu w Fazie 0.
 
-**Źródła:** geex-realign-plan-2026-07-21.md, planner SKILL, model-hierarchy.
+**ĹąrĂłdĹ‚a:** geex-realign-plan-2026-07-21.md, planner SKILL, model-hierarchy.
 
 ---
 
 ## 2026-07-21 15:55 - Branding grid: overflow / Tylko grafiki / folder sort verify
 
-**Komenda/Akcja:** WORKER close gaps: overflow clip, Tylko grafiki hides sources, Priorytet użycia = folder cluster.
+**Komenda/Akcja:** WORKER close gaps: overflow clip, Tylko grafiki hides sources, Priorytet uĹĽycia = folder cluster.
 
 **Log/Status:**
 1. CDP: `--dam-viz-img-scale` nadal 1.2 mimo `dam-branding.js` CARD_IMG_BASE_SCALE=1.
@@ -560,31 +1794,31 @@ ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `gee
 
 **Test/Ewaluacja:**
 - CDP: anyBleed=false, paintOutside=0, zrodlo=0, Edytowalny leaves=65 (JPG OK).
-- Screenshot+Read przelot 2+3: thumbs w obrysie, stacki clipowane, Tylko grafiki ON / Priorytet użycia.
-- node --check media-preview + viz — Pass.
+- Screenshot+Read przelot 2+3: thumbs w obrysie, stacki clipowane, Tylko grafiki ON / Priorytet uĹĽycia.
+- node --check media-preview + viz â€” Pass.
 
-**Źródła:** dam-media-preview.js, dam-viz.js, dam-branding.js/css (prior), branding.html cache-bust.
+**ĹąrĂłdĹ‚a:** dam-media-preview.js, dam-viz.js, dam-branding.js/css (prior), branding.html cache-bust.
 
 ## 2026-07-21 03:05 - brandComposer: merge WARIANTY / UTF-8 / Shift edit on material tiles
 
-**Komenda/Akcja:** WORKER brandComposer20260721a — audit abandoned functional branding/explorer/global (~4h); ui-taste 12×/zone.
+**Komenda/Akcja:** WORKER brandComposer20260721a â€” audit abandoned functional branding/explorer/global (~4h); ui-taste 12Ă—/zone.
 
 **Log/Status:**
 1. G0-UTF8: `_fix_qmark_chrome_pl.py` repaired 14 strings in visualizations.html; branding.html restored from git after double-encode regression (`_repair_branding_html_utf8.py`). Bytes: zero `Poka?`/`W??cz`/FFFD on viz/explorer/branding/dashboard.
-2. G1-MERGE: confirmed code — single `.variant-grid--material`, `materialMode` hides studio/all-files dup, `paintAssoc()` never blocked.
-3. G1b-EDIT: `ensureShiftHoverAssocUx` — plus tile on `--material` variant grid → Edytuj wszystko (variant); Shift+click `--variant` items → `openEditPicker(..., "variant")` (was product).
+2. G1-MERGE: confirmed code â€” single `.variant-grid--material`, `materialMode` hides studio/all-files dup, `paintAssoc()` never blocked.
+3. G1b-EDIT: `ensureShiftHoverAssocUx` â€” plus tile on `--material` variant grid â†’ Edytuj wszystko (variant); Shift+click `--variant` items â†’ `openEditPicker(..., "variant")` (was product).
 4. Token unified `?v=brandComposer20260721a` (HTML + JS inject hrefs).
 5. Gap doc: `agents/shared/gap-audit-brand-composer-2026-07-21.md`.
 
 **Efekt/Fix:** Functional parity code complete; UTF-8 chrome clean; material WARIANTY edit path fixed.
 
 **Test/Ewaluacja:**
-- `node --check` dam-assoc-edit.js / dam-media-preview.js — Pass.
-- Bytes audit 4 HTML — Pass G0.
-- Marker script: mergeVar, materialMode, 21px minus, paintAssoc — Pass.
-- Browser: signin UTF-8 `Pokaż` Pass; full modal QA **blocked** (auth Failed to fetch / invalid_credentials).
+- `node --check` dam-assoc-edit.js / dam-media-preview.js â€” Pass.
+- Bytes audit 4 HTML â€” Pass G0.
+- Marker script: mergeVar, materialMode, 21px minus, paintAssoc â€” Pass.
+- Browser: signin UTF-8 `PokaĹĽ` Pass; full modal QA **blocked** (auth Failed to fetch / invalid_credentials).
 
-**Źródła:** gap-audit-brand-composer-2026-07-21.md, dam-assoc-edit.js, dam-media-preview.js, tools/_bump_brandComposer20260721a.py.
+**ĹąrĂłdĹ‚a:** gap-audit-brand-composer-2026-07-21.md, dam-assoc-edit.js, dam-media-preview.js, tools/_bump_brandComposer20260721a.py.
 
 ## 2026-07-21 02:25 - HARD UI: viz title gap / chip / Shift-minus / +N / fallback
 
@@ -595,21 +1829,21 @@ ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `gee
 2. Branding chip: removed ellipsis/overflow:hidden; `width/min-width:max-content`, padding 16px, title-wrap overflow visible. Full `M-SHOP405510-06-26` on grid card.
 3. Minus: Shift-only (keydown latch `shiftKeyDown`); hide idle; tip "Shift + hold 2s". Removed studioqa always-visible from a3 styles. mouseleave no longer clears while Shift held.
 4. +N badge: `top: -1px` (was 4px, -5px).
-5. Thumb fallback: readable "podglad niedostepny" + label/ID; branding `__damBrandingThumbFallback` → nosync placeholder.
+5. Thumb fallback: readable "podglad niedostepny" + label/ID; branding `__damBrandingThumbFallback` â†’ nosync placeholder.
 6. Cache-bust `?v=uiHard20260721j` (brand/branding/viz-modal/assoc-edit/media-preview/branding.js).
 7. Chip: `fit-content` + padding 20px + border-box; null-guard `index.assets` w branding.js (race render).
 
-**Efekt/Fix:** ORZESZKI 6300767 modal: badges→title CDP gap=16px; minus hidden idle / visible on Shift; +3 at top:-1px. Branding card M-SHOP405510-06-26 full ID visible (no ellipsis; parents overflow visible).
+**Efekt/Fix:** ORZESZKI 6300767 modal: badgesâ†’title CDP gap=16px; minus hidden idle / visible on Shift; +3 at top:-1px. Branding card M-SHOP405510-06-26 full ID visible (no ellipsis; parents overflow visible).
 
 **Test/Ewaluacja:**
-- CDP ORZESZKI: gap=16, titleMT=0, titlePT=4–6, bodyGap=16 — Pass item1.
-- CDP minus idle opacity=0 visibility=hidden; Shift → 17 visible `is-shift-visible` — Pass item3.
-- CDP +N top=-1px — Pass item4.
-- Branding: chip `M-SHOP405510-06-26` endsWith 06-26, clippedBy=[]; screenshot uihard-final-branding-chip-card — Pass item2 (sw>cw ~8px false-positive przy overflow:visible).
-- Fallbacks assoc: label+ID w modalu — Pass item5.
+- CDP ORZESZKI: gap=16, titleMT=0, titlePT=4â€“6, bodyGap=16 â€” Pass item1.
+- CDP minus idle opacity=0 visibility=hidden; Shift â†’ 17 visible `is-shift-visible` â€” Pass item3.
+- CDP +N top=-1px â€” Pass item4.
+- Branding: chip `M-SHOP405510-06-26` endsWith 06-26, clippedBy=[]; screenshot uihard-final-branding-chip-card â€” Pass item2 (sw>cw ~8px false-positive przy overflow:visible).
+- Fallbacks assoc: label+ID w modalu â€” Pass item5.
 - Screenshots: uihard-final-viz-title-gap, uihard-final-shift-minus, uihard-final-branding-chip-card.
 
-**Źródła:** dam-brand.css, dam-branding.css, dam-viz-modal.css, dam-assoc-edit.js, dam-media-preview.js, dam-branding.js, HTML ?v=.
+**ĹąrĂłdĹ‚a:** dam-brand.css, dam-branding.css, dam-viz-modal.css, dam-assoc-edit.js, dam-media-preview.js, dam-branding.js, HTML ?v=.
 
 ## 2026-07-21 02:20 - Fix: UK != Ukraina (GB/EN English; UA = Ukraina)
 
@@ -632,35 +1866,35 @@ ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `gee
 
 **Test/Ewaluacja:**
 - DamLabels: uk->GB/Wielka Brytania; ua->UA/Ukraina.
-- CDP modal 6300785: badges `PL GB`, chip `GB · 6300785`, meta `... · Wielka Brytania`; hasUkraina=false.
+- CDP modal 6300785: badges `PL GB`, chip `GB Â· 6300785`, meta `... Â· Wielka Brytania`; hasUkraina=false.
 - Screenshot+Read: `6300785-lang-gb-not-ukraine.png` Pass.
 - UA sample: OWIES/ORZESZKI lang=ua label=Ukraina.
 
-**Źródła:** naming-dictionary.json, dam-labels.js, dam-badges.js, dam-viz.js, build-file-index.py, file-index.json, program-instructions.json, agents/shared/lang-provenance.md, memory.md.
+**ĹąrĂłdĹ‚a:** naming-dictionary.json, dam-labels.js, dam-badges.js, dam-viz.js, build-file-index.py, file-index.json, program-instructions.json, agents/shared/lang-provenance.md, memory.md.
 
-## 2026-07-21 01:48 - INTERRUPT: branding→viz share (Shift/studio/loader/PL)
+## 2026-07-21 01:48 - INTERRUPT: brandingâ†’viz share (Shift/studio/loader/PL)
 
-**Komenda/Akcja:** SUPERSEDE — copy branding assoc/studio/loader into `#damVizModal`; popover 70vw×90vh; spacing; PL UTF-8; DamLoader wszędzie.
+**Komenda/Akcja:** SUPERSEDE â€” copy branding assoc/studio/loader into `#damVizModal`; popover 70vwĂ—90vh; spacing; PL UTF-8; DamLoader wszÄ™dzie.
 
 **Log/Status:**
-1. Shift UX: `DamAssocEdit.bindMaterialsPane` + `ensureShiftHoverAssocUx` — minus na `.assoc-item--asset` (idx na thumb-btn), plus → Edytuj wszystko. Wywołane z `renderLinkedBrandingAssets` (także przy 0).
-2. Popover CSS: `width:70vw; height:90vh` (CDP: 70vw×90vh).
-3. Spacing CSS: badges→title 10px; title→ID 8px; ID→filemeta 8px; filename↔meta 8px.
-4. Variants: `bindVizModalStudioControls` zastępuje płaskie PL·index — Tło / Perspektywa / Jakość (DamLabels).
-5. Loader: `DamLoader.start("Skojarzenia…")` w assoc + branding filter + viz/explorer index load.
+1. Shift UX: `DamAssocEdit.bindMaterialsPane` + `ensureShiftHoverAssocUx` â€” minus na `.assoc-item--asset` (idx na thumb-btn), plus â†’ Edytuj wszystko. WywoĹ‚ane z `renderLinkedBrandingAssets` (takĹĽe przy 0).
+2. Popover CSS: `width:70vw; height:90vh` (CDP: 70vwĂ—90vh).
+3. Spacing CSS: badgesâ†’title 10px; titleâ†’ID 8px; IDâ†’filemeta 8px; filenameâ†”meta 8px.
+4. Variants: `bindVizModalStudioControls` zastÄ™puje pĹ‚askie PLÂ·index â€” TĹ‚o / Perspektywa / JakoĹ›Ä‡ (DamLabels).
+5. Loader: `DamLoader.start("Skojarzeniaâ€¦")` w assoc + branding filter + viz/explorer index load.
 6. PL: `branding.search_placeholder/tip` + `data-i18n-tip` w `dam-i18n.js`.
 7. Branding title: `#damMediaPreviewTitle { margin-top:10px }` (override body/title-block).
 8. Cache: `assocfix20260721h`.
 
-**Efekt/Fix:** Viz assoc = ta sama Shift ścieżka co branding; studio grouping zamiast spam PL·index; popover 70×90; PL tip/placeholder OK.
+**Efekt/Fix:** Viz assoc = ta sama Shift Ĺ›cieĹĽka co branding; studio grouping zamiast spam PLÂ·index; popover 70Ă—90; PL tip/placeholder OK.
 
 **Test/Ewaluacja:**
-- CDP Cynamonka: studio Tło+Persp+XL/L/S; gaps 10/8/8/8; flat variants=0.
-- CDP Nuggets: 41 grup·64 plików; editAll+plus+minus×24; shift-hover; popover 70vw×90vh.
-- Branding search: `niemięsa` / `produktów` / `ścieżce` — no mojibake.
+- CDP Cynamonka: studio TĹ‚o+Persp+XL/L/S; gaps 10/8/8/8; flat variants=0.
+- CDP Nuggets: 41 grupÂ·64 plikĂłw; editAll+plus+minusĂ—24; shift-hover; popover 70vwĂ—90vh.
+- Branding search: `niemiÄ™sa` / `produktĂłw` / `Ĺ›cieĹĽce` â€” no mojibake.
 - Screenshot+Read: viz-modal-studio-cynamonka, viz-nuggets-shift-assoc, branding popover.
 
-**Źródła:** dam-assoc-edit.js, dam-media-preview.js, dam-viz.js, dam-brand.css, dam-branding.css, dam-i18n.js, dam-explorer.js, dam-branding.js.
+**ĹąrĂłdĹ‚a:** dam-assoc-edit.js, dam-media-preview.js, dam-viz.js, dam-brand.css, dam-branding.css, dam-i18n.js, dam-explorer.js, dam-branding.js.
 
 ## 2026-07-21 00:15 - Viz modal hero: full native res (TUBA soft thumb)
 
@@ -681,7 +1915,7 @@ ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `gee
 - Screenshot+Read Pass1 100%, Pass2 zoom 165%, Pass3 reopen still /media full-res.
 - Note: residual softness at 165% can be inherent SZKIC draft quality; pipeline no longer crushes to 480px.
 
-**Źródła:** build-file-index.py THUMB_MAX_EDGE; local_bridge.py serve_media; dam-viz.js heroMediaUrl; skill dam-dobrakaloria.
+**ĹąrĂłdĹ‚a:** build-file-index.py THUMB_MAX_EDGE; local_bridge.py serve_media; dam-viz.js heroMediaUrl; skill dam-dobrakaloria.
 
 # process.md - log + proces DAM
 
@@ -691,7 +1925,7 @@ ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `gee
 
 **Log/Status:**
 1. Root cause Miniatura: usunieta w brief 2026-07-20 (komentarz "wywalona - nie miala sensu obok Dodaj"); `openThumbPicker` / override store zostaly.
-2. Root cause BACK: `pick_thumb_file` demotowal substring `"AUTO"` - nazwa `AUTOM-GRILL` = tier 9 dla WSZYSTKICH plikow; potem TYŁ-S wygral po mtime. Fix: token match + normalizacja Ł→L + ENFACE jak FRONT.
+2. Root cause BACK: `pick_thumb_file` demotowal substring `"AUTO"` - nazwa `AUTOM-GRILL` = tier 9 dla WSZYSTKICH plikow; potem TYĹ-S wygral po mtime. Fix: token match + normalizacja Ĺâ†’L + ENFACE jak FRONT.
 3. Przywrocono `#damVizModalSetThumb` (Miniatura/Reset) + handler Explorer picker (`openThumbGridPicker`).
 4. Przebudowano thumb `burger-klasyczny-niemiesne__6300755_pl.jpg` z FRONT-S.png (via bridge `/media`); `viz_latest.file` = FRONT-S.png.
 5. Persist: `data/thumb-overrides.json` + localStorage `dam_thumb_overrides` + POST `/thumb-override`.
@@ -700,12 +1934,12 @@ ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `gee
 **Test/Ewaluacja:**
 - `node --check` dam-viz.js OK.
 - CDP: `#damVizModalSetThumb` present; label Miniatura/Reset; picker 16 itemow; select FRONT aktualizuje hero.
-- Screenshot+Read Pass1: action bar Miniatura + hero FRONT; Pass2: picker Wybierz plik FRONT/TYŁ.
+- Screenshot+Read Pass1: action bar Miniatura + hero FRONT; Pass2: picker Wybierz plik FRONT/TYĹ.
 - Thumb file vision: FRONT (BURGER ROSLINNY / grill badge), nie tabela odzywcza.
 
 **Efekt/Fix:** Miniatura w admin actions; 6300755 domyslnie FRONT-S; picker AUTO nie false-positive na AUTOM.
 
-**Źródła:** git `a72bffc` (stary handler); `build-file-index.py` pick_thumb_file; memory §50; skill dam-dobrakaloria.
+**ĹąrĂłdĹ‚a:** git `a72bffc` (stary handler); `build-file-index.py` pick_thumb_file; memory Â§50; skill dam-dobrakaloria.
 
 ## 2026-07-20 23:58 - Filename + Folder select + Otworz plik (modale)
 
@@ -715,7 +1949,7 @@ ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `gee
 1. Root cause: viz Folder wolal `openFolderInExplorer` (tylko katalog); brak linii basename; brak `POST /open`.
 2. Bridge: `open_in_default_app` + `POST /open` (`os.startfile`); reveal nadal `explorer /select,` + path.
 3. `DamPaths`: `basename`, `openInDefaultApp`, `openFileAndCopyPath` (open + portable clipboard).
-4. `dam-media-preview.js` / `dam-viz.js`: `#damMediaPreviewFilename` / `#damVizModalFilename`; `#…OpenFile` lewo od copy; viz Folder -> `revealInExplorer`.
+4. `dam-media-preview.js` / `dam-viz.js`: `#damMediaPreviewFilename` / `#damVizModalFilename`; `#â€¦OpenFile` lewo od copy; viz Folder -> `revealInExplorer`.
 5. CSS `.dam-viz-modal__filename` (12px / #8b8d97). Cache `fileopen20260720a`.
 6. Restart mostu 8766 (stary proces bez `/open`).
 
@@ -726,258 +1960,258 @@ ESCALATE geex-realign faza 2: waiting on phase1 — **resolved 18:55** when `gee
 - Screenshot+Read: Pass1/2/3 filename widoczny pod tytulem (muted).
 - `/open` poza Marketing: `path_outside_marketing` (jail OK).
 
-**Źródła:** brief WORKER; `local_bridge.py` reveal/open; skill `dam-dobrakaloria`.
+**ĹąrĂłdĹ‚a:** brief WORKER; `local_bridge.py` reveal/open; skill `dam-dobrakaloria`.
 
 ## 2026-07-20 23:40 - Follow-up Opus handoff: Shift+edit na kartach assoc viz
 
-**Komenda/Akcja:** Subagent Opus przerwany (0 edits) — domknięcie Shift+edit.
+**Komenda/Akcja:** Subagent Opus przerwany (0 edits) â€” domkniÄ™cie Shift+edit.
 
-**Log/Status:** `bindLinkedAssetClicks` → Shift otwiera `DamAssocEdit.openEditPicker` dla assetu brandingowego; eksport `openEditPicker`; refresh listy po zapisie. Cache `assocshift20260720a`. Klasyfikacja KULKA + „Surowe elementy” już w `10e4587`.
+**Log/Status:** `bindLinkedAssetClicks` â†’ Shift otwiera `DamAssocEdit.openEditPicker` dla assetu brandingowego; eksport `openEditPicker`; refresh listy po zapisie. Cache `assocshift20260720a`. Klasyfikacja KULKA + â€žSurowe elementyâ€ť juĹĽ w `10e4587`.
 
 **Test:** `node --check` OK; API `DamAssocEdit.openEditPicker` obecne.
 
 ## 2026-07-20 23:38 - Re-verify + commit/push (evening batch)
 
-**Komenda/Akcja:** User: ponów poprzednie zadania, podsumuj, commit + push.
+**Komenda/Akcja:** User: ponĂłw poprzednie zadania, podsumuj, commit + push.
 
 **Test/Ewaluacja (CDP, visualizations.html):**
-1. DamLoader dock → Pass `dx=0 gap=10 w=40`
-2. Assoc no-viz → Pass `packBlocked`, `sliderOk`, live `Skojarzone materiały (0)`, `noPackInDom`
-3. Modal tokens → Pass `--dam-modal-box-w/h: 90vw/90vh`, vp `5vh`
+1. DamLoader dock â†’ Pass `dx=0 gap=10 w=40`
+2. Assoc no-viz â†’ Pass `packBlocked`, `sliderOk`, live `Skojarzone materiaĹ‚y (0)`, `noPackInDom`
+3. Modal tokens â†’ Pass `--dam-modal-box-w/h: 90vw/90vh`, vp `5vh`
 4. `node --check` loader/media-preview/viz OK
 
 **Commit:** kod UI + PI v10 + process/memory; bez runtime `file-index` / `search-index` / `lifecycle-status`.
 
-## 2026-07-20 23:35 - Skojarzenia viz: ZERO packshotów / wariantów wizki
+## 2026-07-20 23:35 - Skojarzenia viz: ZERO packshotĂłw / wariantĂłw wizki
 
-**Komenda/Akcja:** User HARD: w Skojarzonych materiałach przy wizualizacji NIE wolno pokazywać innych wizualizacji/wariantów produktu — tylko materiały brandingowe + Elementy/Surowe.
+**Komenda/Akcja:** User HARD: w Skojarzonych materiaĹ‚ach przy wizualizacji NIE wolno pokazywaÄ‡ innych wizualizacji/wariantĂłw produktu â€” tylko materiaĹ‚y brandingowe + Elementy/Surowe.
 
 **Log/Status:**
-1. PI `viz.assoc_no_visualization_loop` v10 — doprecyzowanie must/must_not (nigdy produkty/wizki w assoc).
-2. Root cause: packshoty z Marketing/Archiwum/WP (`source=marketing`, bez `asset_role=packshot`, nazwy `GC_balls_*_RGB`, `wiz_GC_*`) omijały `isVisualizationAsset`.
-3. Fix `dam-media-preview.js`: rozszerzony `looksLikePackshotOrPrintAsset` + `isVisualizationAsset` obejmuje packshot-like; `isRelevantMaterialForProduct` wymaga roli marketingowej LUB ścieżki kampanii (nie samego indeksu w packshocie).
+1. PI `viz.assoc_no_visualization_loop` v10 â€” doprecyzowanie must/must_not (nigdy produkty/wizki w assoc).
+2. Root cause: packshoty z Marketing/Archiwum/WP (`source=marketing`, bez `asset_role=packshot`, nazwy `GC_balls_*_RGB`, `wiz_GC_*`) omijaĹ‚y `isVisualizationAsset`.
+3. Fix `dam-media-preview.js`: rozszerzony `looksLikePackshotOrPrintAsset` + `isVisualizationAsset` obejmuje packshot-like; `isRelevantMaterialForProduct` wymaga roli marketingowej LUB Ĺ›cieĹĽki kampanii (nie samego indeksu w packshocie).
 4. Cache `assocnoviz20260720a`.
 
-**Test/Ewaluacja:** CDP API — `GC_balls_*_RGB` / `wiz_GC_*` / ENFACE → `isViz=true, passMat=false`; `web_hero_slider` → `passMat=true`; live `date-orange-balls-raw` → `Skojarzone materiały (0)`, `packLikeInMaterials=[]`. Python: 154 pack-like wykluczonych, 0 GC_balls w materials.
+**Test/Ewaluacja:** CDP API â€” `GC_balls_*_RGB` / `wiz_GC_*` / ENFACE â†’ `isViz=true, passMat=false`; `web_hero_slider` â†’ `passMat=true`; live `date-orange-balls-raw` â†’ `Skojarzone materiaĹ‚y (0)`, `packLikeInMaterials=[]`. Python: 154 pack-like wykluczonych, 0 GC_balls w materials.
 
-**Źródła:** user screenshot DATE ORANGE assoc (21 packshotów); PI critical.
+**ĹąrĂłdĹ‚a:** user screenshot DATE ORANGE assoc (21 packshotĂłw); PI critical.
 
 ## 2026-07-20 23:30 - DamLoader idealnie NAD #damHelpFab
 
-**Komenda/Akcja:** Ikonka ładowania za daleko w prawo — ma być idealnie nad `button#damHelpFab`.
+**Komenda/Akcja:** Ikonka Ĺ‚adowania za daleko w prawo â€” ma byÄ‡ idealnie nad `button#damHelpFab`.
 
 **Log/Status:**
-1. Root cause pozycji: `content-box` + `width`=wysokość bez paddingu/borderu → `dockAnchor` liczył za wąski loader → left za duży (~10–12px w prawo).
+1. Root cause pozycji: `content-box` + `width`=wysokoĹ›Ä‡ bez paddingu/borderu â†’ `dockAnchor` liczyĹ‚ za wÄ…ski loader â†’ left za duĹĽy (~10â€“12px w prawo).
 2. Fix: `box-sizing:border-box`, `dockAnchor` z `getBoundingClientRect()` faba, remeasure outer size w `parkAboveFab` / `dockToFab`.
-3. Dock CSS (nie GSAP x/y); rAF+`performance.now` bo main-thread Viz głodzi `setTimeout` (×10).
+3. Dock CSS (nie GSAP x/y); rAF+`performance.now` bo main-thread Viz gĹ‚odzi `setTimeout` (Ă—10).
 4. Cache `loaderfab20260720g`; styl `damLoaderCss20260720d`.
 
-**Test/Ewaluacja:** CDP Pass — `dx=0`, `gap=10`, `fabCx=loaderCx=1611`, `w=40`. Screenshot po docku.
+**Test/Ewaluacja:** CDP Pass â€” `dx=0`, `gap=10`, `fabCx=loaderCx=1611`, `w=40`. Screenshot po docku.
 
-**Źródła:** user DOM Path `#damHelpFab` + screenshot.
+**ĹąrĂłdĹ‚a:** user DOM Path `#damHelpFab` + screenshot.
 
-## 2026-07-20 23:19 - Modale podglądu 90vw × 90vh + padding body +12
+## 2026-07-20 23:19 - Modale podglÄ…du 90vw Ă— 90vh + padding body +12
 
-**Komenda/Akcja:** Powiększyć `#damVizModal` / media-preview do 90% viewportu; body +12px padding.
+**Komenda/Akcja:** PowiÄ™kszyÄ‡ `#damVizModal` / media-preview do 90% viewportu; body +12px padding.
 
-**Log/Status:** `dam-brand.css` — `--dam-modal-box-w/h: 90vw/90vh`, vp 5vw/5vh; body `47/51/51` (+12). `dam-viz-modal.css` — assoc-split body `32/36/34`, assoc-pane +12. Cache `modal90vw20260720a`.
+**Log/Status:** `dam-brand.css` â€” `--dam-modal-box-w/h: 90vw/90vh`, vp 5vw/5vh; body `47/51/51` (+12). `dam-viz-modal.css` â€” assoc-split body `32/36/34`, assoc-pane +12. Cache `modal90vw20260720a`.
 
-**Test/Ewaluacja:** CDP Pass — ratioH=0.9, ratioW≈0.89, bodyPad `32px 36px 34px`.
+**Test/Ewaluacja:** CDP Pass â€” ratioH=0.9, ratioWâ‰0.89, bodyPad `32px 36px 34px`.
 
-## 2026-07-20 23:11 - Elementy scroll + segregacja + „Surowe elementy”
+## 2026-07-20 23:11 - Elementy scroll + segregacja + â€žSurowe elementyâ€ť
 
-**Komenda/Akcja:** User: scroll nie działa w rozwiniętych Elementach; KULKA* w złym gridzie; „Linki do elementów” → „Surowe elementy”.
+**Komenda/Akcja:** User: scroll nie dziaĹ‚a w rozwiniÄ™tych Elementach; KULKA* w zĹ‚ym gridzie; â€žLinki do elementĂłwâ€ť â†’ â€žSurowe elementyâ€ť.
 
 **Log/Status:**
-1. Root cause scroll: reguła `.assoc-pane .dam-media-preview__assoc-grid { overflow-y:auto; overscroll-behavior:contain }` łapała też siatkę WEWNĄTRZ `.dam-media-preview__elementy-panel` → wheel nie chainował do panelu (scrollbar widoczny, scroll martwy).
-2. Fix CSS: `dam-viz-modal.css` + `dam-brand.css` — overflow tylko na `#damVizModalAssoc` (direct child); panel Elementy/Surowe ma własny `overflow-y:auto` + `touch-action:pan-y`; wewnętrzny grid `overflow:visible`.
-3. Segregacja: `classifyAssocAsset` — packshot/wiz/CMYK (`looksLikePackshotOrPrintAsset`) zawsze material; KULKA2 / `KULKI - …` / freepik → element-ready; Links → Surowe; NIE używać samego blobu „skladniki” (packshoty miały false positive).
-4. Etykieta toggle: „Surowe elementy”.
+1. Root cause scroll: reguĹ‚a `.assoc-pane .dam-media-preview__assoc-grid { overflow-y:auto; overscroll-behavior:contain }` Ĺ‚apaĹ‚a teĹĽ siatkÄ™ WEWNÄ„TRZ `.dam-media-preview__elementy-panel` â†’ wheel nie chainowaĹ‚ do panelu (scrollbar widoczny, scroll martwy).
+2. Fix CSS: `dam-viz-modal.css` + `dam-brand.css` â€” overflow tylko na `#damVizModalAssoc` (direct child); panel Elementy/Surowe ma wĹ‚asny `overflow-y:auto` + `touch-action:pan-y`; wewnÄ™trzny grid `overflow:visible`.
+3. Segregacja: `classifyAssocAsset` â€” packshot/wiz/CMYK (`looksLikePackshotOrPrintAsset`) zawsze material; KULKA2 / `KULKI - â€¦` / freepik â†’ element-ready; Links â†’ Surowe; NIE uĹĽywaÄ‡ samego blobu â€žskladnikiâ€ť (packshoty miaĹ‚y false positive).
+4. Etykieta toggle: â€žSurowe elementyâ€ť.
 5. Cache `elemscroll20260720g`.
 
-**Test/Ewaluacja:** CDP Pass — materials 43 (packaging), kulkaInMat=[], packInEl=[], Surowe scrollMoved=true (scrollHeight>clientHeight); screenshot `elemscroll-assoc-pass-20260720.png`. `node --check` OK.
+**Test/Ewaluacja:** CDP Pass â€” materials 43 (packaging), kulkaInMat=[], packInEl=[], Surowe scrollMoved=true (scrollHeight>clientHeight); screenshot `elemscroll-assoc-pass-20260720.png`. `node --check` OK.
 
-**Źródła:** user dump + screenshot Elementy (40) nested scrollbar.
+**ĹąrĂłdĹ‚a:** user dump + screenshot Elementy (40) nested scrollbar.
 
 ## 2026-07-20 22:58 - Viz assoc filter (Branding policy) + skeleton + hold 3s
 
-**Komenda/Akcja:** WORKER assocfix20260720c — twardy filtr skojarzeń jak Branding, skeleton zamiast „Ładowanie…”, hold delete 3s.
+**Komenda/Akcja:** WORKER assocfix20260720c â€” twardy filtr skojarzeĹ„ jak Branding, skeleton zamiast â€žĹadowanieâ€¦â€ť, hold delete 3s.
 
 **Log/Status:** (1) `dam-media-preview.js`: `isSourceLikeAsset` rozszerzone o ext+path; `passesMarketingAssocMaterial` / `passesMarketingAssocElement`; `showAssocPaneLoading` + `DamLoader`; (2) `dam-viz.js` pusty mount assoc; (3) `dam-assoc-edit.js` `holdMs:3000`; (4) `dam-brand.css` `.dam-assoc-skeleton`; (5) cache `assocfix20260720c` w viz/branding/explorer/dashboard HTML.
 
-**Efekt/Fix:** Root cause: Viz ładował reverse `linked_products` z filtrem tylko `media_type` — PSD/AI/PDF przechodziły jako raster/brak typu → 143 junk. Teraz jedna ścieżka `renderLinkedBrandingAssets` z polityką marketing raster/wideo + wykluczeniem source ext/path.
+**Efekt/Fix:** Root cause: Viz Ĺ‚adowaĹ‚ reverse `linked_products` z filtrem tylko `media_type` â€” PSD/AI/PDF przechodziĹ‚y jako raster/brak typu â†’ 143 junk. Teraz jedna Ĺ›cieĹĽka `renderLinkedBrandingAssets` z politykÄ… marketing raster/wideo + wykluczeniem source ext/path.
 
-**Test/Ewaluacja:** `node --check` OK; CDP potwierdził API (`assocPaneSkeletonHtml`, `isSourceLikeAsset`); modal assoc screenshot zablokowany przez współdzieloną kartę przeglądarki (kontekst niszczony / modal znika).
+**Test/Ewaluacja:** `node --check` OK; CDP potwierdziĹ‚ API (`assocPaneSkeletonHtml`, `isSourceLikeAsset`); modal assoc screenshot zablokowany przez wspĂłĹ‚dzielonÄ… kartÄ™ przeglÄ…darki (kontekst niszczony / modal znika).
 
-**Źródła:** user interrupt 22:58; `program-instructions.json` viz.assoc_no_visualization_loop; Branding `isRasterAssetName` / graphics-only policy.
+**ĹąrĂłdĹ‚a:** user interrupt 22:58; `program-instructions.json` viz.assoc_no_visualization_loop; Branding `isRasterAssetName` / graphics-only policy.
 
-## 2026-07-20 - Explorer: redesign modala "Dodaj kategorię/produkt" (EXP-C, 10-pass ui-taste)
+## 2026-07-20 - Explorer: redesign modala "Dodaj kategoriÄ™/produkt" (EXP-C, 10-pass ui-taste)
 
 ### Komenda/Akcja
-User poprosił o pełny redesign modala tworzenia kategorii/produktu w Eksplorerze
-(`#damExplorerCreateModal`): zargonowy podgląd ścieżki, statyczny (tylko po
-kliknięciu "Podgląd"), sztywny numer kategorii, myteriozna pusta czerwona ramka
-błędu, wszystkie warianty domyślnie zaznaczone + natywne oranżowe checkboxy,
-brak hierarchii folderów, brak globalnego tworzenia wariantów, brak potwierdzenia
-z cofnięciem po utworzeniu.
+User poprosiĹ‚ o peĹ‚ny redesign modala tworzenia kategorii/produktu w Eksplorerze
+(`#damExplorerCreateModal`): zargonowy podglÄ…d Ĺ›cieĹĽki, statyczny (tylko po
+klikniÄ™ciu "PodglÄ…d"), sztywny numer kategorii, myteriozna pusta czerwona ramka
+bĹ‚Ä™du, wszystkie warianty domyĹ›lnie zaznaczone + natywne oranĹĽowe checkboxy,
+brak hierarchii folderĂłw, brak globalnego tworzenia wariantĂłw, brak potwierdzenia
+z cofniÄ™ciem po utworzeniu.
 
 ### Log/Status
 1. Przeczytano `agents/shared/code-doctrine.md` + `apps/web/data/program-instructions.json`
    (`explorer.product_from_template`, `explorer.demo_index_rules`,
-   `naming.carrier_ui_vs_disk`) przed zmianą kodu - zgodnie z doktryną.
+   `naming.carrier_ui_vs_disk`) przed zmianÄ… kodu - zgodnie z doktrynÄ….
 2. **Backend** `apps/desktop/explorer_create.py`:
    - `create_category(..., seq=None)` - edytowalny licznik kategorii (nadpisuje
      auto-numer), zawsze zwraca `suggested_seq`.
-   - `next_category_seq_for_brand()` - podpowiedź numeru bez zapisu.
-   - `undo_create()` - cofnięcie świeżo utworzonego katalogu (okno ~150s,
-     guard: wewnątrz `marketing_base`, katalog musi istnieć, `st_ctime` musi być
-     niedawny - nigdy nie usuwa starszych/prawdziwych folderów).
+   - `next_category_seq_for_brand()` - podpowiedĹş numeru bez zapisu.
+   - `undo_create()` - cofniÄ™cie Ĺ›wieĹĽo utworzonego katalogu (okno ~150s,
+     guard: wewnÄ…trz `marketing_base`, katalog musi istnieÄ‡, `st_ctime` musi byÄ‡
+     niedawny - nigdy nie usuwa starszych/prawdziwych folderĂłw).
 3. **Bridge** `apps/desktop/local_bridge.py`:
    - `GET /explorer/next-category-seq?brand=` (admin).
    - `POST /explorer/undo-create` {path} (admin, audit log `explorer_undo_create`).
-   - `POST /explorer/add-variant-type` {code, code_en, label_pl} (admin) →
+   - `POST /explorer/add-variant-type` {code, code_en, label_pl} (admin) â†’
      `add_global_variant_type()`: zapis do `naming-dictionary.json` (`carriers[]`
      + `carrier_detect_order`) i `carrier-types.json` (`custom_types`) przez
      `_save_json` (lokalny cache + KV push do Postgres `dam_kv_store` gdy
      skonfigurowany) + `reload_naming_policy_from_disk()`.
    - `create-category` POST handler przekazuje `seq` z body.
-4. **Frontend** `apps/web/assets/js/dam-explorer-add-product.js` (pełny rewrite,
-   CSS wstrzyknięty z JS - nie dotknięto `dam-brand.css`, zgodnie z sekcją 4
-   doktryny o współbieżnych agentach):
-   - Podgląd `#damExpPreview` = jedna czysta linia `Tworzenie: {pełna_ścieżka}`
+4. **Frontend** `apps/web/assets/js/dam-explorer-add-product.js` (peĹ‚ny rewrite,
+   CSS wstrzykniÄ™ty z JS - nie dotkniÄ™to `dam-brand.css`, zgodnie z sekcjÄ… 4
+   doktryny o wspĂłĹ‚bieĹĽnych agentach):
+   - PodglÄ…d `#damExpPreview` = jedna czysta linia `Tworzenie: {peĹ‚na_Ĺ›cieĹĽka}`
      (zero "Plan:", "skopiuj szablon", "Drzewo:"), aktualizowana na `input`/`change`
      z klienckiego mirrora logiki `explorer_create.py` (`categoryFolderName`,
      `productFolderPreview`, `variantFolderPreviewClient` - identyczne tokeny
      placeholder/demo co backend); po dry-run nadpisywana autorytatywnym
      `planned_path` z mostu.
-   - Edytowalny numer kategorii `#damExpSeq` (podpowiedź z
-     `/explorer/next-category-seq`, można nadpisać przed zapisem).
-   - `#damExpErr` → `.dam-exp-create__status`: `:empty{display:none}` (brak
-     pustej ramki), kolor zależny od `is-error`/`is-info`/`is-ok`.
-   - Hierarchia `#damExpTree`: ikony `uil-folder`/`uil-folder-open` + wcięcia;
-     kategoria = 1 węzeł; produkt = folder produktu + tylko ZAZNACZONE warianty
-     (gdy brak zaznaczonych: komunikat, że kopiowany będzie cały szablon -
+   - Edytowalny numer kategorii `#damExpSeq` (podpowiedĹş z
+     `/explorer/next-category-seq`, moĹĽna nadpisaÄ‡ przed zapisem).
+   - `#damExpErr` â†’ `.dam-exp-create__status`: `:empty{display:none}` (brak
+     pustej ramki), kolor zaleĹĽny od `is-error`/`is-info`/`is-ok`.
+   - Hierarchia `#damExpTree`: ikony `uil-folder`/`uil-folder-open` + wciÄ™cia;
+     kategoria = 1 wÄ™zeĹ‚; produkt = folder produktu + tylko ZAZNACZONE warianty
+     (gdy brak zaznaczonych: komunikat, ĹĽe kopiowany bÄ™dzie caĹ‚y szablon -
      zgodnie z faktycznym zachowaniem backendu `create_product` gdy `variants=[]`).
-   - Wiersz wariantu: checkbox ODZNACZONY domyślnie, TAG = `DamLabels.carrierLabel`
-     (pełna etykieta, np. BATON/DOYPACK/BIGPAK) po lewej, podgląd finalnej nazwy
-     folderu po prawej (live z pól data/indeks). Etykieta sekcji zmieniona na
-     "Warianty" + podpowiedź "Wybierz warianty do skopiowania - domyślnie
+   - Wiersz wariantu: checkbox ODZNACZONY domyĹ›lnie, TAG = `DamLabels.carrierLabel`
+     (peĹ‚na etykieta, np. BATON/DOYPACK/BIGPAK) po lewej, podglÄ…d finalnej nazwy
+     folderu po prawej (live z pĂłl data/indeks). Etykieta sekcji zmieniona na
+     "Warianty" + podpowiedĹş "Wybierz warianty do skopiowania - domyĹ›lnie
      wszystkie odznaczone."
    - Wszystkie `input[type=checkbox]` w modalu: `accent-color:var(--dam-primary,#AB54DB)`
-     (zero natywnego oranżu). Fonty ujednolicone (panel 13px, etykiety 11.5px
-     uppercase, podgląd/warianty monospace 11-12.5px) - zamiast `font:inherit`.
-   - "Nowy wariant globalny" (3 pola: kod PL, kod EN, pełna nazwa) na dole
-     sekcji wariantów → `POST /explorer/add-variant-type`.
+     (zero natywnego oranĹĽu). Fonty ujednolicone (panel 13px, etykiety 11.5px
+     uppercase, podglÄ…d/warianty monospace 11-12.5px) - zamiast `font:inherit`.
+   - "Nowy wariant globalny" (3 pola: kod PL, kod EN, peĹ‚na nazwa) na dole
+     sekcji wariantĂłw â†’ `POST /explorer/add-variant-type`.
    - Panel potwierdzenia po realnym utworzeniu (`.dam-exp-confirm`): ikona
-     checkmark, "Utworzono: {nazwa}", ścieżka, odliczanie `setInterval` 120s →
-     auto-Zatwierdź, przyciski **Przejdź do folderu** (`DamPaths.revealInExplorer`),
-     **Cofnij** (`POST /explorer/undo-create` → toast → close), **Zatwierdź**
-     (`triggerRebuild` → `reloadExplorer` → toast → close). Zamknięcie modala
+     checkmark, "Utworzono: {nazwa}", Ĺ›cieĹĽka, odliczanie `setInterval` 120s â†’
+     auto-ZatwierdĹş, przyciski **PrzejdĹş do folderu** (`DamPaths.revealInExplorer`),
+     **Cofnij** (`POST /explorer/undo-create` â†’ toast â†’ close), **ZatwierdĹş**
+     (`triggerRebuild` â†’ `reloadExplorer` â†’ toast â†’ close). ZamkniÄ™cie modala
      (X/Escape/backdrop) w trakcie okna potwierdzenia = auto-finalize (nie
-     zostawia "wisiącego" nieprzeindeksowanego folderu).
+     zostawia "wisiÄ…cego" nieprzeindeksowanego folderu).
 5. Cache-bust: `dam-explorer-add-product.js?v=expc20260720d` w `explorer.html`
-   (jedyny plik HTML, który go ładuje).
+   (jedyny plik HTML, ktĂłry go Ĺ‚aduje).
 
 ### Efekt/Fix
-Modal "Dodaj kategorię/produkt" ma czysty, żywy podgląd ścieżki, edytowalny
-numer kategorii, czytelny status błędu/info/ok, hierarchię folderów, warianty
-domyślnie odznaczone z pełną etykietą + podglądem nazwy, fioletowe checkboxy
-Geex, globalne tworzenie wariantów (naming-dictionary + carrier-types, z KV
-push do Postgres) i potwierdzenie po utworzeniu z 2-minutowym cofnięciem.
+Modal "Dodaj kategoriÄ™/produkt" ma czysty, ĹĽywy podglÄ…d Ĺ›cieĹĽki, edytowalny
+numer kategorii, czytelny status bĹ‚Ä™du/info/ok, hierarchiÄ™ folderĂłw, warianty
+domyĹ›lnie odznaczone z peĹ‚nÄ… etykietÄ… + podglÄ…dem nazwy, fioletowe checkboxy
+Geex, globalne tworzenie wariantĂłw (naming-dictionary + carrier-types, z KV
+push do Postgres) i potwierdzenie po utworzeniu z 2-minutowym cofniÄ™ciem.
 
 ### Backup
-Brak destrukcyjnej zmiany istniejących danych - `next_category_seq`/`create_category`/
-`create_product` zachowują dotychczasową logikę zapisu (dry_run/confirm gate),
-`undo_create` usuwa WYŁĄCZNIE świeżo utworzony katalog (guard ścieżka+wiek).
+Brak destrukcyjnej zmiany istniejÄ…cych danych - `next_category_seq`/`create_category`/
+`create_product` zachowujÄ… dotychczasowÄ… logikÄ™ zapisu (dry_run/confirm gate),
+`undo_create` usuwa WYĹÄ„CZNIE Ĺ›wieĹĽo utworzony katalog (guard Ĺ›cieĹĽka+wiek).
 
 ### Test/Ewaluacja
 - `python -m py_compile explorer_create.py local_bridge.py`: PASS.
-- `node --check dam-explorer-add-product.js`: PASS. ReadLints: brak błędów.
+- `node --check dam-explorer-add-product.js`: PASS. ReadLints: brak bĹ‚Ä™dĂłw.
 - Bridge restart (`Stop-Process` na `pythonw.exe local_bridge.py`, watchdog
-  auto-restart w ~5-9s) x2, `/health` 200 po każdym, nowe endpointy zwracają
+  auto-restart w ~5-9s) x2, `/health` 200 po kaĹĽdym, nowe endpointy zwracajÄ…
   401 (nie 404) bez sesji = zarejestrowane.
-- **Screenshot+Read QA (5+ przelotów, realny admin w IDE browser):**
-  1. Kategoria "Kremy": live update na `input` (bez klikania Podgląd) - tekst
-     `Tworzenie: X:\Marketing\...\08 - KREMY`; zmiana `#damExpSeq` na 42 → live
-     `...\42 - KREMY`; drzewo `42 - KREMY`; status pusty→hidden, po dry-run
-     zielony "Podgląd gotowy...". Screenshot czytelny, fiolet/Geex, brak
-     oversized fontów.
-  2. Produkt (BATONY): 10 wierszy wariantów wszystkie ODZNACZONE domyślnie,
-     `accentColor` checkboxa = `rgb(171,84,219)` (fiolet, nie oranż), tagi pełne
-     (BATON/BIGPAK/DOYPACK/ETYKIETA/...), podgląd per-wiersz z " - D" (brak
+- **Screenshot+Read QA (5+ przelotĂłw, realny admin w IDE browser):**
+  1. Kategoria "Kremy": live update na `input` (bez klikania PodglÄ…d) - tekst
+     `Tworzenie: X:\Marketing\...\08 - KREMY`; zmiana `#damExpSeq` na 42 â†’ live
+     `...\42 - KREMY`; drzewo `42 - KREMY`; status pustyâ†’hidden, po dry-run
+     zielony "PodglÄ…d gotowy...". Screenshot czytelny, fiolet/Geex, brak
+     oversized fontĂłw.
+  2. Produkt (BATONY): 10 wierszy wariantĂłw wszystkie ODZNACZONE domyĹ›lnie,
+     `accentColor` checkboxa = `rgb(171,84,219)` (fiolet, nie oranĹĽ), tagi peĹ‚ne
+     (BATON/BIGPAK/DOYPACK/ETYKIETA/...), podglÄ…d per-wiersz z " - D" (brak
      indeksu = demo, zgodnie z `explorer.demo_index_rules`); zaznaczenie
-     wariantu + data → drzewo i podgląd aktualizują się live. "Nowy wariant
+     wariantu + data â†’ drzewo i podglÄ…d aktualizujÄ… siÄ™ live. "Nowy wariant
      globalny" widoczny na dole.
-  3. **Realne utworzenie kategorii "ZZZ QA UNDO TEST" → panel potwierdzenia
-     (checkmark, ścieżka, odliczanie 2:00→1:43 tykające) → Cofnij → toast
-     "Cofnięto - folder usunięty." → `Test-Path` na dysku = `False`.**
+  3. **Realne utworzenie kategorii "ZZZ QA UNDO TEST" â†’ panel potwierdzenia
+     (checkmark, Ĺ›cieĹĽka, odliczanie 2:00â†’1:43 tykajÄ…ce) â†’ Cofnij â†’ toast
+     "CofniÄ™to - folder usuniÄ™ty." â†’ `Test-Path` na dysku = `False`.**
   4. **Realne utworzenie produktu "ZZZ QA PRODUCT UNDO" (z 1 wariantem BAT) w
-     BATONY → panel potwierdzenia → Cofnij → toast → `Test-Path` = `False`.**
-  5. Test błędu: puste `#damExpName` + Podgląd → `#damExpErr` = "Podaj nazwę."
+     BATONY â†’ panel potwierdzenia â†’ Cofnij â†’ toast â†’ `Test-Path` = `False`.**
+  5. Test bĹ‚Ä™du: puste `#damExpName` + PodglÄ…d â†’ `#damExpErr` = "Podaj nazwÄ™."
      czerwony pill (`rgb(180,35,24)` on `rgb(253,241,240)`), nie pusta ramka.
-  6. Responsywność 700×800: pola w jednej kolumnie, wiersze wariantów
-     czytelne, brak przycięcia/nakładania.
-  7. Global wariant "PUSZ/CAN/PUSZKA" przez `/explorer/add-variant-type` →
+  6. ResponsywnoĹ›Ä‡ 700Ă—800: pola w jednej kolumnie, wiersze wariantĂłw
+     czytelne, brak przyciÄ™cia/nakĹ‚adania.
+  7. Global wariant "PUSZ/CAN/PUSZKA" przez `/explorer/add-variant-type` â†’
      zapis do `naming-dictionary.json` (`carriers.PUSZ`) + `carrier-types.json`
-     (`custom_types.PUSZ`) potwierdzony odczytem plików → **po weryfikacji
-     usunięty (był tylko testem QA)**, w tym z Postgres KV (`pg_db.kv_set`
-     bezpośrednio, `is_configured()==True` w tym środowisku) - zero trwałych
+     (`custom_types.PUSZ`) potwierdzony odczytem plikĂłw â†’ **po weryfikacji
+     usuniÄ™ty (byĹ‚ tylko testem QA)**, w tym z Postgres KV (`pg_db.kv_set`
+     bezpoĹ›rednio, `is_configured()==True` w tym Ĺ›rodowisku) - zero trwaĹ‚ych
      danych testowych.
-- Pass/Fail: **Pass** (wszystkie 10 wymagań z briefu zweryfikowane; "Zatwierdź"
-  zweryfikowany przez code review + strukturalną symetrię z Cofnij, NIE przez
-  pełny live rebuild - unikniecie długiego, potencjalnie blokującego
-  `/index/rebuild` na współdzielonym środowisku deweloperskim w trakcie sesji).
+- Pass/Fail: **Pass** (wszystkie 10 wymagaĹ„ z briefu zweryfikowane; "ZatwierdĹş"
+  zweryfikowany przez code review + strukturalnÄ… symetriÄ™ z Cofnij, NIE przez
+  peĹ‚ny live rebuild - unikniecie dĹ‚ugiego, potencjalnie blokujÄ…cego
+  `/index/rebuild` na wspĂłĹ‚dzielonym Ĺ›rodowisku deweloperskim w trakcie sesji).
 
-### Źródła
-- `agents/shared/code-doctrine.md` (wzorzec modułu, cache-busting, CSS injection
-  przy współbieżnych agentach, weryfikacja CDP+screenshot).
+### ĹąrĂłdĹ‚a
+- `agents/shared/code-doctrine.md` (wzorzec moduĹ‚u, cache-busting, CSS injection
+  przy wspĂłĹ‚bieĹĽnych agentach, weryfikacja CDP+screenshot).
 - `apps/web/data/program-instructions.json`: `explorer.product_from_template`,
   `explorer.demo_index_rules`, `naming.carrier_ui_vs_disk`, nowa instrukcja
-  `explorer.create_modal_ux` (v9, dopisana przed zmianą kodu biznesowego).
+  `explorer.create_modal_ux` (v9, dopisana przed zmianÄ… kodu biznesowego).
 
-## 2026-07-20 - Wizualizacje: "Historia zmian" zamiast Cofnij/Ponów w #damChangeLogBar
+## 2026-07-20 - Wizualizacje: "Historia zmian" zamiast Cofnij/PonĂłw w #damChangeLogBar
 
 ### Komenda/Akcja
-User nie rozumiał hinta `#damChangeLogHint` ("status -> nieaktualne") i poprosił o
-zamianę przycisków Cofnij/Ponów na podgląd historii zmian, bo per-elementowa
-historia i tak już się zawsze zapisuje.
+User nie rozumiaĹ‚ hinta `#damChangeLogHint` ("status -> nieaktualne") i poprosiĹ‚ o
+zamianÄ™ przyciskĂłw Cofnij/PonĂłw na podglÄ…d historii zmian, bo per-elementowa
+historia i tak juĹĽ siÄ™ zawsze zapisuje.
 
 ### Log/Status
-1. **Wyjaśnienie usera**: "nieaktualne" = ktoś zmienił status PRODUKTU/WARIANTU na
-   dysku na X (archiwum) w systemie F/X/D (`program-instructions.json` →
-   `lifecycle.status_fxd`) - to treść zmiany, nie informacja że sam log jest
-   przestarzały. Hint po prawej stronie ekranu opisuje właśnie tę ostatnią zmianę.
-2. `apps/web/visualizations.html`: usunięto `#damChangeUndo`/`#damChangeRedo`,
+1. **WyjaĹ›nienie usera**: "nieaktualne" = ktoĹ› zmieniĹ‚ status PRODUKTU/WARIANTU na
+   dysku na X (archiwum) w systemie F/X/D (`program-instructions.json` â†’
+   `lifecycle.status_fxd`) - to treĹ›Ä‡ zmiany, nie informacja ĹĽe sam log jest
+   przestarzaĹ‚y. Hint po prawej stronie ekranu opisuje wĹ‚aĹ›nie tÄ™ ostatniÄ… zmianÄ™.
+2. `apps/web/visualizations.html`: usuniÄ™to `#damChangeUndo`/`#damChangeRedo`,
    dodano jeden przycisk `#damChangeHistoryBtn` ("Historia zmian") w
    `#damChangeLogBar`; hint przeniesiony przed przycisk.
-3. `dam-tag-edit.js`: `changeLogRowDetail()` dopisuje basename ścieżki
-   (`entry.path`) do wpisów statusu (np. "status: Aktualne -> Nieaktualne ·
-   Boost - Doypack"), żeby było wiadomo CO się zmieniło, nie tylko JAK.
+3. `dam-tag-edit.js`: `changeLogRowDetail()` dopisuje basename Ĺ›cieĹĽki
+   (`entry.path`) do wpisĂłw statusu (np. "status: Aktualne -> Nieaktualne Â·
+   Boost - Doypack"), ĹĽeby byĹ‚o wiadomo CO siÄ™ zmieniĹ‚o, nie tylko JAK.
    Nowy popover `.dam-changelog-history` (z-index 12300, jak inne pickery):
-   pełna lista `GET /change-log?limit=20` (najnowsze na górze), read-only,
-   zamykany X / Esc / klik poza. Usunięto `postAction`/undo/redo handlery -
-   backend `/change-log/undo|redo` NIE usunięty (może być używany gdzie indziej),
+   peĹ‚na lista `GET /change-log?limit=20` (najnowsze na gĂłrze), read-only,
+   zamykany X / Esc / klik poza. UsuniÄ™to `postAction`/undo/redo handlery -
+   backend `/change-log/undo|redo` NIE usuniÄ™ty (moĹĽe byÄ‡ uĹĽywany gdzie indziej),
    zmiana tylko w UI tego bara.
 4. CSS: nowe klasy `.dam-changelog-history*` w `dam-brand.css` (lista, wiersz,
-   stopka, przycisk zamknięcia) w stylu design system (fiolet, pill-tint tła).
+   stopka, przycisk zamkniÄ™cia) w stylu design system (fiolet, pill-tint tĹ‚a).
 5. Cache-bust: nowy token `chghist20260720a` dla `dam-brand.css` (wszystkie HTML)
-   i `dam-tag-edit.js` (5 stron które go ładują).
+   i `dam-tag-edit.js` (5 stron ktĂłre go Ĺ‚adujÄ…).
 
 ### Efekt/Fix
-Bar w Wizualizacjach (ADMIN ON) pokazuje ostatnią zmianę + przycisk "Historia
-zmian" otwierający pełną, czytelną listę ostatnich wpisów z dysku. Zero undo/redo
+Bar w Wizualizacjach (ADMIN ON) pokazuje ostatniÄ… zmianÄ™ + przycisk "Historia
+zmian" otwierajÄ…cy peĹ‚nÄ…, czytelnÄ… listÄ™ ostatnich wpisĂłw z dysku. Zero undo/redo
 z tego poziomu.
 
 ### Test/Ewaluacja
-- `node --check dam-tag-edit.js`: PASS. ReadLints: brak błędów.
+- `node --check dam-tag-edit.js`: PASS. ReadLints: brak bĹ‚Ä™dĂłw.
 - CDP (mock `/change-log` fetch, 3 wpisy: lifecycle/index/carrier): hint = ostatni
-  wpis; przycisk włączony; klik → popover z 3 wierszami w kolejności od najnowszego,
-  wiersz statusu z basenamem ścieżki ("status -> nieaktualne · Boost - Doypack");
-  toggle open/close działa; przycisk X zamyka.
+  wpis; przycisk wĹ‚Ä…czony; klik â†’ popover z 3 wierszami w kolejnoĹ›ci od najnowszego,
+  wiersz statusu z basenamem Ĺ›cieĹĽki ("status -> nieaktualne Â· Boost - Doypack");
+  toggle open/close dziaĹ‚a; przycisk X zamyka.
 - Screenshot+Read: popover widoczny, czytelny, w stylu design system (fiolet,
-  zaokrąglone rogi, spacing). Lekcja: `browser_take_screenshot` robi zdjęcie
-  OS-widocznej karty, nie karty z CDP `viewId` - trzeba zamknąć zbędne karty w tle
-  (dopisane do `code-doctrine.md` §12).
+  zaokrÄ…glone rogi, spacing). Lekcja: `browser_take_screenshot` robi zdjÄ™cie
+  OS-widocznej karty, nie karty z CDP `viewId` - trzeba zamknÄ…Ä‡ zbÄ™dne karty w tle
+  (dopisane do `code-doctrine.md` Â§12).
 - Pass/Fail: **Pass**.
 
 ## 2026-07-20 - Model policy global: parent = UI usera
@@ -986,12 +2220,12 @@ z tego poziomu.
 Edycja global rule `~/.cursor/rules/model-grok-composer-only.mdc` + supersede memory #13/#132.
 
 ### Log/Status
-1. Parent/plan/wdrożenie = model z listy UI (Fable/Opus/Sonnet/Sol/Grok…) — zakaz auto-przełączania na GROK
-2. Task/subagenci default `cursor-grok-4.5-high-fast` lub `composer-2.5-fast`, chyba że user nadpisze w tej samej wiadomości
+1. Parent/plan/wdroĹĽenie = model z listy UI (Fable/Opus/Sonnet/Sol/Grokâ€¦) â€” zakaz auto-przeĹ‚Ä…czania na GROK
+2. Task/subagenci default `cursor-grok-4.5-high-fast` lub `composer-2.5-fast`, chyba ĹĽe user nadpisze w tej samej wiadomoĹ›ci
 3. Hierarchia rang wpisana w rule; memory DAM wskazuje na global rule
 
 ### Efekt/Fix
-Nie wymuszamy już „tylko GROK wszędzie” na parentcie gdy user wybrał Opus/Fable.
+Nie wymuszamy juĹĽ â€žtylko GROK wszÄ™dzieâ€ť na parentcie gdy user wybraĹ‚ Opus/Fable.
 
 ### Zrodla
 - User brief 2026-07-20 21:02
@@ -4554,19 +5788,19 @@ User: po zmianie program nie weryfikuje dysku; Odswiez = dysk->program; Stosuj z
 ## 2026-07-19 - Branding plan v4 (lokalnie, bez bridge API)
 
 ### Komenda/Akcja
-User: kontynuuj przez Cursor/repo, nie przez bridge API. Domknięcie: marketing na project.html, admin kolejki wykrojników, Part G instrukcje, rapidocr w requirements.
+User: kontynuuj przez Cursor/repo, nie przez bridge API. DomkniÄ™cie: marketing na project.html, admin kolejki wykrojnikĂłw, Part G instrukcje, rapidocr w requirements.
 
 ### Log/Status
-1. `dam-project.js`: mini-siatka marketingu (SKU/indeks/linked_product_ids), sekcja wykrojników z registry JSON.
+1. `dam-project.js`: mini-siatka marketingu (SKU/indeks/linked_product_ids), sekcja wykrojnikĂłw z registry JSON.
 2. `integrations.html` + `dam-wykrojnik-queue.js`: kolejka lokalna (localStorage + pobierz JSON).
-3. `program-instructions.json`: +3 wpisy (branding.hub_viz_cards, branding.project_marketing, wykrojnik.queue_local_admin); packaging.tag_tiers → „Tagi pakowania (2F)”.
+3. `program-instructions.json`: +3 wpisy (branding.hub_viz_cards, branding.project_marketing, wykrojnik.queue_local_admin); packaging.tag_tiers â†’ â€žTagi pakowania (2F)â€ť.
 4. `requirements.txt`: rapidocr-onnxruntime (OCR stub).
 5. Cache bust `hub20260719f` na project catalog CSS/JS.
 
 ### Efekt/Fix
 - project.html pokazuje do 6 kart Branding z tagami DamBadges.
 - Admin mapuje wykrojniki bez POST na bridge.
-- Bridge PATCH catalog — pominięty (decyzja usera).
+- Bridge PATCH catalog â€” pominiÄ™ty (decyzja usera).
 
 ### Test/Ewaluacja
 - Screenshot QA: project 375px, integrations, branding (w toku po restarcie cache).
@@ -4583,19 +5817,19 @@ User: weryfikuj pliki dalej, kontynuuj usprawnienia platformy (branding tagi, mi
 
 ### Log/Status
 1. Zabito 4 zombie `local_bridge.py` na :8766; uruchomiono jedna instancja z `psd-tools`.
-2. `build-branding-index.py`: `by_appearance` (tylko appearance_tags); usunięto tokeny `search_blob` z `by_tag` (koniec śmieci typu `x:/marketing`).
+2. `build-branding-index.py`: `by_appearance` (tylko appearance_tags); usuniÄ™to tokeny `search_blob` z `by_tag` (koniec Ĺ›mieci typu `x:/marketing`).
 3. `dam-branding.js` j6: dynamiczne chipy produktu z `by_appearance`; cache bust `hub20260719j6`.
-4. `local_bridge.py`: preview raster/wideo zwraca 422 `preview_failed` zamiast 415; PSB 652MB → JPEG 141KB OK.
-5. OCR batch `enrich-branding-recognize.py --limit 300` + `link-branding-products.py`; indeks 7832 assetów, 3710 z appearance_tags.
+4. `local_bridge.py`: preview raster/wideo zwraca 422 `preview_failed` zamiast 415; PSB 652MB â†’ JPEG 141KB OK.
+5. OCR batch `enrich-branding-recognize.py --limit 300` + `link-branding-products.py`; indeks 7832 assetĂłw, 3710 z appearance_tags.
 
 ### Efekt/Fix
-- HTTP `GET /media?path=...psb&preview=1` → 200 image/jpeg.
-- Wyszukiwanie `proteina` + „Tylko grafiki”: 240 grafik, miniatury 848–1200px.
-- Chipy PRODUKT czyste (Proteina, Karton 6x, Burger… bez fragmentów ścieżek).
-- Modal: podgląd + tagi DK/Proteina/Banoffee + zoom dock na dole.
+- HTTP `GET /media?path=...psb&preview=1` â†’ 200 image/jpeg.
+- Wyszukiwanie `proteina` + â€žTylko grafikiâ€ť: 240 grafik, miniatury 848â€“1200px.
+- Chipy PRODUKT czyste (Proteina, Karton 6x, Burgerâ€¦ bez fragmentĂłw Ĺ›cieĹĽek).
+- Modal: podglÄ…d + tagi DK/Proteina/Banoffee + zoom dock na dole.
 
 ### Test/Ewaluacja
-- Screenshot Pass: branding tagi j6, modal banoffee 848×1200, bridge /health OK.
+- Screenshot Pass: branding tagi j6, modal banoffee 848Ă—1200, bridge /health OK.
 - CDP: `DamMediaPreview.openAsset` img naturalWidth=848.
 
 ### Zrodla
@@ -4607,19 +5841,19 @@ User: weryfikuj pliki dalej, kontynuuj usprawnienia platformy (branding tagi, mi
 ## 2026-07-19 - Lifecycle previous_letter + auto-reconcile (j17/j18)
 
 ### Komenda/Akcja
-User: TEST LIFECYCLE F/X/D — po restore z archiwum wszystko D zamiast BAT=D, DOY/PROD=clear, ETY=F. Wymagany full commit + push.
+User: TEST LIFECYCLE F/X/D â€” po restore z archiwum wszystko D zamiast BAT=D, DOY/PROD=clear, ETY=F. Wymagany full commit + push.
 
 ### Log/Status
-1. **Przyczyna „wszystko D” (3x):**
-   - DOY i ETY wspolny `revision_index` TEST-TEST2 → `_plan_variant` bral legacy klucz z `previous_letter: D` zamiast sciezki nośnika.
+1. **Przyczyna â€žwszystko Dâ€ť (3x):**
+   - DOY i ETY wspolny `revision_index` TEST-TEST2 â†’ `_plan_variant` bral legacy klucz z `previous_letter: D` zamiast sciezki noĹ›nika.
    - `_sync_revisions_after_product` przy clear produktu ustawial `previous_letter: null` w cascade_meta i kasowal stan w store.
-   - Restore variant uzywal `prev in (F,X,D)` — X jako restore target.
+   - Restore variant uzywal `prev in (F,X,D)` â€” X jako restore target.
 2. **Fix Python** (`lifecycle_status.py`):
    - `_variant_identity` (DOY|TEST-TEST2 vs ETY|TEST-TEST2), `_rev_row_for_variant` (sciezka first).
    - `_restore_letter_from_row`: nigdy X; BAT D zostaje przy product clear.
    - cascade_meta: `previous_letter` tylko przy wejsciu w X; legacy klucz index usuwany po zapisie po sciezce.
 3. **Fix JS** (`dam-explorer.js` j17/j18): `reconcileProductLifecycleFromDisk`, `findFreshProductInIndex`, preserve `previous_letter`.
-4. **Test:** `apps/desktop/tests/test_lifecycle_previous_letter.py` — ALL OK.
+4. **Test:** `apps/desktop/tests/test_lifecycle_previous_letter.py` â€” ALL OK.
 
 ### Efekt/Fix
 - Oczekiwany stan po scenariuszu usera: PROD/DOY clear, BAT D, ETY F.
@@ -4627,7 +5861,7 @@ User: TEST LIFECYCLE F/X/D — po restore z archiwum wszystko D zamiast BAT=D, D
 
 ### Test/Ewaluacja
 - Unit test previous_letter: PASS.
-- X: Marketing niedostepny w sesji agenta (PRODUCT_NOT_FOUND) — retest UI po restarcie bridge u usera.
+- X: Marketing niedostepny w sesji agenta (PRODUCT_NOT_FOUND) â€” retest UI po restarcie bridge u usera.
 
 ### Zrodla
 - lifecycle-status.json history `variant_restored_previous_letter:D` na DOY/ETY
@@ -4638,12 +5872,12 @@ User: TEST LIFECYCLE F/X/D — po restore z archiwum wszystko D zamiast BAT=D, D
 ## 2026-07-19 - Branding: POLSKA + archiwum, kontekst folderu, modal skojarzen (disc8)
 
 ### Komenda/Akcja
-User: indeksuj `- POLSKA` i `-- ARCHIWUM --` (stara struktura Marketing); przy nakladce wygrywa POLSKA bez tagow Archiwum; w modalu warianty Desktop/Tablet/Mobile, skojarzone produkty z miniaturami, tagi Szkoła/Edytowalny; dokumentacja + commit + push.
+User: indeksuj `- POLSKA` i `-- ARCHIWUM --` (stara struktura Marketing); przy nakladce wygrywa POLSKA bez tagow Archiwum; w modalu warianty Desktop/Tablet/Mobile, skojarzone produkty z miniaturami, tagi SzkoĹ‚a/Edytowalny; dokumentacja + commit + push.
 
 ### Log/Status
 1. **`build-branding-index.py`**: skan dwufazowy (POLSKA, potem archiwum); dedup kluczem `stem+wymiary` (np. `back to school:992x600`); statystyki `legacy_skipped_overlap` w logu buildu.
-2. **`brand_folder_context.py`** (nowy): grupy po `folder_dir`; `folder_variants`, `linked_products` z thumb z `viz_latest`; `LEGACY_FOLDER_TAGS` dla 01–10, 99, wymiana; `THEME_VOCAB` (Szkoła); Edytowalny gdy `.psd`/`.ai` w folderze.
-3. **`brand_tag_utils.py`**: segment `SLIDERY` → Slidery + Na sklep; filtr Slidery → zakladka WWW.
+2. **`brand_folder_context.py`** (nowy): grupy po `folder_dir`; `folder_variants`, `linked_products` z thumb z `viz_latest`; `LEGACY_FOLDER_TAGS` dla 01â€“10, 99, wymiana; `THEME_VOCAB` (SzkoĹ‚a); Edytowalny gdy `.psd`/`.ai` w folderze.
+3. **`brand_tag_utils.py`**: segment `SLIDERY` â†’ Slidery + Na sklep; filtr Slidery â†’ zakladka WWW.
 4. **UI**: `dam-media-preview.js` - warianty | separator | skojarzone produkty (wspolne `groupContext`); `dam-branding.css` layout assoc; cache bust `hub20260719disc8`.
 5. **`program-instructions.json`**: `branding.marketing_dual_roots`, `branding.slider_shop_tags`.
 6. **Testy**: `test_build_branding_dedupe`, `test_brand_folder_context`, `test_brand_tag_utils` - PASS.
@@ -4652,11 +5886,11 @@ User: indeksuj `- POLSKA` i `-- ARCHIWUM --` (stara struktura Marketing); przy n
 ### Efekt/Fix
 - POLSKA: 0 assetow z tagiem Archiwum w indeksie branding.
 - Legacy-only: tagi Archiwum + Stara struktura + mapowanie starych folderow.
-- Modal Back to school: 3 warianty, ORZECH CZEKOLADA + CHRUPIACY ORZECH, Szkoła, Edytowalny.
+- Modal Back to school: 3 warianty, ORZECH CZEKOLADA + CHRUPIACY ORZECH, SzkoĹ‚a, Edytowalny.
 
 ### Test/Ewaluacja
 - Unit testy dedupe + folder context: PASS.
-- Screenshot QA modal (1280 + 375): warianty lewo, produkty prawo, miniatury klikalne; przełaczenie wariantu zachowuje skojarzenia.
+- Screenshot QA modal (1280 + 375): warianty lewo, produkty prawo, miniatury klikalne; przeĹ‚aczenie wariantu zachowuje skojarzenia.
 
 ### Zrodla
 - docs/BRANDING-HUB.md (sekcja dwie lokalizacje)
@@ -4665,56 +5899,56 @@ User: indeksuj `- POLSKA` i `-- ARCHIWUM --` (stara struktura Marketing); przy n
 
 ---
 
-# ═══════════════════════════════════════════════════════════════════
-# RZECZY DO WYKONANIA — NIE UDAŁO SIĘ (chcemy, żeby były)
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# RZECZY DO WYKONANIA â€” NIE UDAĹO SIÄ (chcemy, ĹĽeby byĹ‚y)
 # Data wpisu: 2026-07-19 | sesja: Branding UI + transparent PNG
-# ═══════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-Poniżej lista funkcji / poprawek **zaplanowanych lub rozpoczętych**, których **nie udało się domknąć** w tej sesji. Priorytet dopracowania: **ten tydzień (od 2026-07-21)**.
+PoniĹĽej lista funkcji / poprawek **zaplanowanych lub rozpoczÄ™tych**, ktĂłrych **nie udaĹ‚o siÄ™ domknÄ…Ä‡** w tej sesji. Priorytet dopracowania: **ten tydzieĹ„ (od 2026-07-21)**.
 
-| # | Temat | Status | Dlaczego nie done | Następny krok |
+| # | Temat | Status | Dlaczego nie done | NastÄ™pny krok |
 |---|-------|--------|-------------------|---------------|
-| 1 | **Odtwarzanie wideo w modalu** (stream z `X:` / bridge `/media`) | FAIL UI-only | Bridge/Synology timeout lub brak dostępu do pliku w sesji agenta; layout wideo OK, stream nie zweryfikowany E2E | Restart bridge u usera; test `br-006305` z logiem `/media`; fallback komunikat „Plik offline” |
-| 2 | **Pełny pixel-scan transparent** dla wszystkich PNG (poza www) | **DONE 2026-07-20** | Skan PIL wolny na NFS `X:`; patch tylko scope www (217 assetów) | Zrobione: `--all --limit-seconds`, cache `branding-background-scan.json` (2652 wynikow), fix wiszacego timeoutu NFS; indeks: 1591 transparent / 2347 white |
-| 3 | **Heurystyka PNG default → indeks JSON** (nie tylko runtime UI) | **DONE 2026-07-20** | User: „na razie UI”; indeks bez masowego rewrite | Zrobione: build/re-enrich czytaja cache skanu (carry-over `apply_background_scan_cache`), rebuild nie gubi wynikow |
-| 4 | **Filtr „Tło białe”** — precyzyjne liczniki | **DONE 2026-07-20** | W QA Kampanie: filtr white nie zawęża (120=wszystko) — brak white w tej zakładce lub logika zbyt szeroka | Zrobione: white tylko ze skanu; po skanie Kampanie 582→239, Packshoty 1767→760 |
-| 5 | **Wyszukiwanie tekstowe „przezroczyste”** | **DONE 2026-07-20** | CDP `input` event → 0 kart (możliwy konflikt filtrów / debounce) | Przyczyna: synonimy AND zamiast OR w `assetMatchesSearchQuery`; fix grupy tokenow OR, wynik 17 kart / 38 plikow |
-| 6 | **Sidebar collapsed — logo wordmark bez crop** | **DONE 2026-07-20 (bez zmian)** | Test CDP przerwany; brak screenshota collapsed | Screenshot 1280px expanded + collapsed + Read: wordmark caly, `object-fit: contain` juz jest w dam-brand.css |
-| 7 | **Marketing ID — typy TikTok / YouTube / Reels** | **DONE 2026-07-20** | W scope tylko VID/SLI/BAN/META/GOG/SHOP/GIF/KV/IMG | Zrobione: TIK=10 / YT=11 / REL=12 przed VID + wpis w `branding.marketing_asset_id_format` |
-| 8 | **Pełna parytet kart branding ↔ viz** (wszystkie tryby grup) | **DONE 2026-07-20 (weryfikacja)** | Actions OK na głównej siatce; grupy folderowe nie na wszystkich zakładkach | Audyt DOM: 100% kart grupowych z akcjami na Kampanie/Social/WWW/Packshoty + screenshoty WWW i Packshoty |
+| 1 | **Odtwarzanie wideo w modalu** (stream z `X:` / bridge `/media`) | FAIL UI-only | Bridge/Synology timeout lub brak dostÄ™pu do pliku w sesji agenta; layout wideo OK, stream nie zweryfikowany E2E | Restart bridge u usera; test `br-006305` z logiem `/media`; fallback komunikat â€žPlik offlineâ€ť |
+| 2 | **PeĹ‚ny pixel-scan transparent** dla wszystkich PNG (poza www) | **DONE 2026-07-20** | Skan PIL wolny na NFS `X:`; patch tylko scope www (217 assetĂłw) | Zrobione: `--all --limit-seconds`, cache `branding-background-scan.json` (2652 wynikow), fix wiszacego timeoutu NFS; indeks: 1591 transparent / 2347 white |
+| 3 | **Heurystyka PNG default â†’ indeks JSON** (nie tylko runtime UI) | **DONE 2026-07-20** | User: â€žna razie UIâ€ť; indeks bez masowego rewrite | Zrobione: build/re-enrich czytaja cache skanu (carry-over `apply_background_scan_cache`), rebuild nie gubi wynikow |
+| 4 | **Filtr â€žTĹ‚o biaĹ‚eâ€ť** â€” precyzyjne liczniki | **DONE 2026-07-20** | W QA Kampanie: filtr white nie zawÄ™ĹĽa (120=wszystko) â€” brak white w tej zakĹ‚adce lub logika zbyt szeroka | Zrobione: white tylko ze skanu; po skanie Kampanie 582â†’239, Packshoty 1767â†’760 |
+| 5 | **Wyszukiwanie tekstowe â€žprzezroczysteâ€ť** | **DONE 2026-07-20** | CDP `input` event â†’ 0 kart (moĹĽliwy konflikt filtrĂłw / debounce) | Przyczyna: synonimy AND zamiast OR w `assetMatchesSearchQuery`; fix grupy tokenow OR, wynik 17 kart / 38 plikow |
+| 6 | **Sidebar collapsed â€” logo wordmark bez crop** | **DONE 2026-07-20 (bez zmian)** | Test CDP przerwany; brak screenshota collapsed | Screenshot 1280px expanded + collapsed + Read: wordmark caly, `object-fit: contain` juz jest w dam-brand.css |
+| 7 | **Marketing ID â€” typy TikTok / YouTube / Reels** | **DONE 2026-07-20** | W scope tylko VID/SLI/BAN/META/GOG/SHOP/GIF/KV/IMG | Zrobione: TIK=10 / YT=11 / REL=12 przed VID + wpis w `branding.marketing_asset_id_format` |
+| 8 | **PeĹ‚na parytet kart branding â†” viz** (wszystkie tryby grup) | **DONE 2026-07-20 (weryfikacja)** | Actions OK na gĹ‚Ăłwnej siatce; grupy folderowe nie na wszystkich zakĹ‚adkach | Audyt DOM: 100% kart grupowych z akcjami na Kampanie/Social/WWW/Packshoty + screenshoty WWW i Packshoty |
 | 9 | **Seed program-instructions do Postgres KV** | Nie w tej sesji | Zmiany tylko w pliku cache JSON | Restart bridge / seed KV dla nowych id |
-| 10 | **30-pass QA — wszystkie zakładki z kartami** | Częściowo | Social/WWW 0 kart w teście (dane/filtry) | User: odznaczyć „Tylko grafiki”, test z assetami www |
+| 10 | **30-pass QA â€” wszystkie zakĹ‚adki z kartami** | CzÄ™Ĺ›ciowo | Social/WWW 0 kart w teĹ›cie (dane/filtry) | User: odznaczyÄ‡ â€žTylko grafikiâ€ť, test z assetami www |
 
 ---
 
-## 2026-07-19 — Branding UI overhaul + PNG default transparent + commit
+## 2026-07-19 â€” Branding UI overhaul + PNG default transparent + commit
 
 ### Komenda/Akcja
-User: PNG bez skanu = domyślnie bez tła (zachować pixel-scan); spisać niewykonane; log zmian; QA 30-pass; commit + push + backup.
+User: PNG bez skanu = domyĹ›lnie bez tĹ‚a (zachowaÄ‡ pixel-scan); spisaÄ‡ niewykonane; log zmian; QA 30-pass; commit + push + backup.
 
-### Log/Status — chronologia zmian (2026-07-19)
+### Log/Status â€” chronologia zmian (2026-07-19)
 
 | Czas (szac.) | Plik / obszar | Co wprowadzono |
 |--------------|---------------|----------------|
-| rano | `asset_role_utils.py`, `patch-branding-backgrounds.py` | Skan alpha PNG; patch 217 www → `background: transparent` |
+| rano | `asset_role_utils.py`, `patch-branding-backgrounds.py` | Skan alpha PNG; patch 217 www â†’ `background: transparent` |
 | rano | `dam-branding.js` | Filtry facet global vs tab; `assetMatchesTagKey` transparent |
-| południe | `dam-marketing-id.js` (nowy) | Format M-VID/KV/…; użyty w modalu i kartach |
-| południe | `dam-media-preview.js` | Hero wideo, path bar, variant placeholder, title meta |
-| południe | `dam-branding.css`, `dam-hub-shared.css` | Spacing modal, karty viz-style, gradient tile |
-| południe | `dam-viz.js`, `visualizations.html` | Zoom 50–250%, CARD_IMG_BASE_SCALE 1.2 |
-| południe | `program-instructions.json` | `branding.marketing_asset_id_format` |
-| wieczór | `dam-asset-taxonomy.js` | `effectiveBackground`, PNG/WebP default transparent |
-| wieczór | `dam-branding.js`, `dam-badges.js` | Filtr + badge + search blob dla effective background |
-| wieczór | `program-instructions.json` | `branding.png_default_transparent` |
-| wieczór | `branding.html` | Cache bust `hub20260719trans01` |
+| poĹ‚udnie | `dam-marketing-id.js` (nowy) | Format M-VID/KV/â€¦; uĹĽyty w modalu i kartach |
+| poĹ‚udnie | `dam-media-preview.js` | Hero wideo, path bar, variant placeholder, title meta |
+| poĹ‚udnie | `dam-branding.css`, `dam-hub-shared.css` | Spacing modal, karty viz-style, gradient tile |
+| poĹ‚udnie | `dam-viz.js`, `visualizations.html` | Zoom 50â€“250%, CARD_IMG_BASE_SCALE 1.2 |
+| poĹ‚udnie | `program-instructions.json` | `branding.marketing_asset_id_format` |
+| wieczĂłr | `dam-asset-taxonomy.js` | `effectiveBackground`, PNG/WebP default transparent |
+| wieczĂłr | `dam-branding.js`, `dam-badges.js` | Filtr + badge + search blob dla effective background |
+| wieczĂłr | `program-instructions.json` | `branding.png_default_transparent` |
+| wieczĂłr | `branding.html` | Cache bust `hub20260719trans01` |
 
 ### Efekt/Fix
-- Tag „Przezroczyste tło” klikalny; filtr zawęża (17/120 w Kampaniach).
-- PNG bez `background` w indeksie → UI traktuje jako transparent (np. br-006165).
+- Tag â€žPrzezroczyste tĹ‚oâ€ť klikalny; filtr zawÄ™ĹĽa (17/120 w Kampaniach).
+- PNG bez `background` w indeksie â†’ UI traktuje jako transparent (np. br-006165).
 - Modal: M-KV106165-04-25, path monospace, margin meta 10px, actions 15px.
 
 ### Test/Ewaluacja
-- QA 30-pass: tabela w `PROGRESS.md` (26 PASS, 4 INFO, odłożone FAIL w sekcji NIE UDAŁO SIĘ).
+- QA 30-pass: tabela w `PROGRESS.md` (26 PASS, 4 INFO, odĹ‚oĹĽone FAIL w sekcji NIE UDAĹO SIÄ).
 - Screenshot + Read: modal KV, siatka Kampanie.
 
 ### Backup
@@ -4728,52 +5962,52 @@ User: PNG bez skanu = domyślnie bez tła (zachować pixel-scan); spisać niewyk
 
 ---
 
-## 2026-07-19 — Media preview modal: przyciski + tagi + gradient + Shift+klik (10-pass)
+## 2026-07-19 â€” Media preview modal: przyciski + tagi + gradient + Shift+klik (10-pass)
 
 ### Komenda/Akcja
-User: brak przyciskow / zle nazwy w `#damMediaPreview`; ext-tag TIF/JPG jak badge +10% i 8px od tytulu; wiecej odstepu tagi→tytul; mniej scrolla; gradient tile krotszy +30% transparency; Shift+klik na skojarzonych produktach; Intensive QA 10 passes.
+User: brak przyciskow / zle nazwy w `#damMediaPreview`; ext-tag TIF/JPG jak badge +10% i 8px od tytulu; wiecej odstepu tagiâ†’tytul; mniej scrolla; gradient tile krotszy +30% transparency; Shift+klik na skojarzonych produktach; Intensive QA 10 passes.
 
 ### Log/Status
 1. Audyt: modal mial tylko "Pokaz w Eksploratorze" (brak Przejdz); thumb assoc zjadal Shift+klik.
-2. `dam-media-preview.js`: CTA jak wizualizacje — Przejdz + Folder + opcjonalnie Zrodlo.
-3. `dam-assoc-edit.js`: Shift+klik na item/thumb/name → openEditPicker (product).
+2. `dam-media-preview.js`: CTA jak wizualizacje â€” Przejdz + Folder + opcjonalnie Zrodlo.
+3. `dam-assoc-edit.js`: Shift+klik na item/thumb/name â†’ openEditPicker (product).
 4. `dam-branding.css`: title gap 20px; ext-tag anatomia badge +10%; mniejszy hero.
 5. `dam-hub-shared.css`: editable wash od dolu min(128px,32%), alpha *0.7.
 
 ### Efekt/Fix
 - Footer: Przejdz | Folder | (Zrodlo) | Kopiuj | Udostepnij
-- CDP: gap tagi→tytul 20px; title↔ext 8px; extH 26.8 vs badgeH 24.4; bez scrolla (baton)
+- CDP: gap tagiâ†’tytul 20px; titleâ†”ext 8px; extH 26.8 vs badgeH 24.4; bez scrolla (baton)
 - Shift+klik otwiera picker (admin mode)
 
 ### Test/Ewaluacja
-Intensive QA 10 passes screenshot→Read (Pass1–10).
+Intensive QA 10 passes screenshotâ†’Read (Pass1â€“10).
 
 ### Zrodla
-- memory.md §38
+- memory.md Â§38
 - `.cursor/rules/verify-ui-after-changes.mdc`
 
 ---
 
-## 2026-07-19 — Bento v2.0.0 (shared grid + explorer hot zone)
+## 2026-07-19 â€” Bento v2.0.0 (shared grid + explorer hot zone)
 
 ### Komenda/Akcja
-User: milestone v1.5.0 OK; v2.0.0 = spójny Bento CSS Grid na panel; zamrozić wizualnie karty/modale viz/branding/projekty; priorytet Eksplorer (carrier/prod-row sypie się na RWD); ui-taste + ui-ux-pro-max; dopisać definicję „rundy” do skillu ui-taste.
+User: milestone v1.5.0 OK; v2.0.0 = spĂłjny Bento CSS Grid na panel; zamroziÄ‡ wizualnie karty/modale viz/branding/projekty; priorytet Eksplorer (carrier/prod-row sypie siÄ™ na RWD); ui-taste + ui-ux-pro-max; dopisaÄ‡ definicjÄ™ â€žrundyâ€ť do skillu ui-taste.
 
 ### Log/Status
-1. `ui-taste` SKILL.md §0.E: Runda vs Pass (PL/Monday) + intensive 10+ focus rounds.
+1. `ui-taste` SKILL.md Â§0.E: Runda vs Pass (PL/Monday) + intensive 10+ focus rounds.
 2. Nowy `apps/web/assets/css/dam-bento.css` (tokeny gap/radius, shell explorer, carrier zones, prod-row grid, hub chrome).
-3. `explorer.html`: Bootstrap `.row.g-3` → `.dam-explorer-layout` (CSS Grid kategorie + panel).
+3. `explorer.html`: Bootstrap `.row.g-3` â†’ `.dam-explorer-layout` (CSS Grid kategorie + panel).
 4. `dam-explorer.js`: wrappery `meta-chips` / `meta-life` + `older-rev-row__main/life`.
-5. Podpięcie `dam-bento.css` na dashboard/settings/viz/branding/projekty/inbox/help/explorer.
+5. PodpiÄ™cie `dam-bento.css` na dashboard/settings/viz/branding/projekty/inbox/help/explorer.
 6. Wersja `2.0.0` / codename `bento` (`version.json`, `dam-version.js`, `runtime_config.py`).
 
 ### Efekt/Fix
-- Carrier: grid `title | chips | end` + wiersz `. | life | end` (admin) - chipy w jednej linii, lifecycle nie „wędruje”.
-- Explorer shell: stabilny 2-col → stack @992px.
-- Zamrożone: `.dam-viz-card`, branding cards, project cards, modale media/viz (bez restylu).
+- Carrier: grid `title | chips | end` + wiersz `. | life | end` (admin) - chipy w jednej linii, lifecycle nie â€žwÄ™drujeâ€ť.
+- Explorer shell: stabilny 2-col â†’ stack @992px.
+- ZamroĹĽone: `.dam-viz-card`, branding cards, project cards, modale media/viz (bez restylu).
 
 ### Test/Ewaluacja
-- Intensive QA: screenshot→Read carrier desktop (Pass1–3 align), layout CDP `display:grid`, mobile areas stack; dashboard parity OK.
+- Intensive QA: screenshotâ†’Read carrier desktop (Pass1â€“3 align), layout CDP `display:grid`, mobile areas stack; dashboard parity OK.
 - Overflow 375 z geex header quickaction = pre-existing (nie z bento shell).
 
 ### Zrodla
@@ -4783,69 +6017,69 @@ User: milestone v1.5.0 OK; v2.0.0 = spójny Bento CSS Grid na panel; zamrozić w
 
 ---
 
-## 2026-07-19 — Modal zoom 85–100% + layout body na dole + cache tagów Branding
+## 2026-07-19 â€” Modal zoom 85â€“100% + layout body na dole + cache tagĂłw Branding
 
 ### Komenda/Akcja
-User: (1) modal zoom 85–100% zamiast 85–125%, body modala wyrównane do dołu, thumb responsywny; parity viz. (2) Wolne ładowanie po kliknięciu tagów w Branding (~10 s) — cache z unieważnianiem przed aktualizacją bazy/indeksu. Commit + push.
+User: (1) modal zoom 85â€“100% zamiast 85â€“125%, body modala wyrĂłwnane do doĹ‚u, thumb responsywny; parity viz. (2) Wolne Ĺ‚adowanie po klikniÄ™ciu tagĂłw w Branding (~10 s) â€” cache z uniewaĹĽnianiem przed aktualizacjÄ… bazy/indeksu. Commit + push.
 
 ### Log/Status
-1. **Diagnoza wolnych tagów:** klik tagu = filtr po stronie klienta (7832 assety, brak API). Bottleneck: podwójne `computeFacetCounts()` (~7800×~100 kluczy×2), podwójny `renderTagFilters()` przy auto-zmianie tabu, pełny rerender siatki do 1000 miniaturek `/media`.
-2. **`dam-modal-shared.js`:** `modalStartZoomPct()` → mapowanie 85–100% (kafelek ≥100% → modal 100%). `fitChrome()` bez sztywnego `max-height` thumb — flex wypełnia przestrzeń nad body.
+1. **Diagnoza wolnych tagĂłw:** klik tagu = filtr po stronie klienta (7832 assety, brak API). Bottleneck: podwĂłjne `computeFacetCounts()` (~7800Ă—~100 kluczyĂ—2), podwĂłjny `renderTagFilters()` przy auto-zmianie tabu, peĹ‚ny rerender siatki do 1000 miniaturek `/media`.
+2. **`dam-modal-shared.js`:** `modalStartZoomPct()` â†’ mapowanie 85â€“100% (kafelek â‰Ą100% â†’ modal 100%). `fitChrome()` bez sztywnego `max-height` thumb â€” flex wypeĹ‚nia przestrzeĹ„ nad body.
 3. **`dam-brand.css` / `dam-branding.css`:** `.dam-viz-modal-box { justify-content: flex-end }`, thumb `flex: 1 1 0`, body `flex: 0 0 auto`.
-4. **`dam-branding.js` (cache01):** `computeFacetCountsPair()` — jedna pętla po assetach, liczniki facet+global naraz; `facetCountCache` kluczowany sygnaturą filtrów + `built_at`; `clearBrandingComputeCache()` / `invalidateBrandingIndexCache()`; `scheduleBrandingRender()` (rAF); tag click bez podwójnego renderu tabu; API `DamBranding.clearComputeCache` / `invalidateIndexCache`.
-5. **`local_bridge.py`:** `_drop_json_cache()`, `_invalidate_branding_data_caches()` — **czyść cache PRZED** zapisem (`_save_json`), przed/po `/branding/rebuild`, `/branding/recognize`, przed/po `/index/rebuild` + `meta_store.sync`.
-6. **`dam-tag-edit.js` / `dam-assoc-edit.js`:** po zapisie metadanych/skojarzeń → `DamBranding.clearComputeCache()`.
+4. **`dam-branding.js` (cache01):** `computeFacetCountsPair()` â€” jedna pÄ™tla po assetach, liczniki facet+global naraz; `facetCountCache` kluczowany sygnaturÄ… filtrĂłw + `built_at`; `clearBrandingComputeCache()` / `invalidateBrandingIndexCache()`; `scheduleBrandingRender()` (rAF); tag click bez podwĂłjnego renderu tabu; API `DamBranding.clearComputeCache` / `invalidateIndexCache`.
+5. **`local_bridge.py`:** `_drop_json_cache()`, `_invalidate_branding_data_caches()` â€” **czyĹ›Ä‡ cache PRZED** zapisem (`_save_json`), przed/po `/branding/rebuild`, `/branding/recognize`, przed/po `/index/rebuild` + `meta_store.sync`.
+6. **`dam-tag-edit.js` / `dam-assoc-edit.js`:** po zapisie metadanych/skojarzeĹ„ â†’ `DamBranding.clearComputeCache()`.
 
 ### Efekt/Fix
-- Modal: zoom 110% kafelka → 100% modalu (nie 141%). Body przy dole boxa, brak martwej strefy pod CTA (CDP gap=0).
-- Branding tagi: ~2× mniej pracy liczników na klik; cache liczników ważny do zmiany filtra/indeksu; bridge zawsze czyta świeży JSON po rebuild/patch (cache RAM invalidowany przed zapisem).
+- Modal: zoom 110% kafelka â†’ 100% modalu (nie 141%). Body przy dole boxa, brak martwej strefy pod CTA (CDP gap=0).
+- Branding tagi: ~2Ă— mniej pracy licznikĂłw na klik; cache licznikĂłw waĹĽny do zmiany filtra/indeksu; bridge zawsze czyta Ĺ›wieĹĽy JSON po rebuild/patch (cache RAM invalidowany przed zapisem).
 
 ### Test/Ewaluacja
-- Modal QA: screenshot→Read branding + viz @1280/768; zoom 100% @ suwak 110%; layout gap=0.
+- Modal QA: screenshotâ†’Read branding + viz @1280/768; zoom 100% @ suwak 110%; layout gap=0.
 - `modalStartZoomPct(110)===100`, `modalStartZoomPct(85)===85` (CDP).
 - Cache: po `clearBrandingComputeCache()` sygnatura facetCountCache reset.
 
 ### Zrodla
 - Analiza `dam-branding.js` renderTagFilters / computeFacetCounts
 - `local_bridge.py` `_JSON_FILE_CACHE`, `_save_json`
-- User brief: cache invalidation przed aktualizacją bazy
+- User brief: cache invalidation przed aktualizacjÄ… bazy
 
 ---
 
-## 2026-07-19 — Integracje OAuth (hub) + wersja 2.0.3
+## 2026-07-19 â€” Integracje OAuth (hub) + wersja 2.0.3
 
 ### Komenda/Akcja
-User: „Umożliw Integracje” — strona `integrations.html` miała statyczne stuby; OAuth działał tylko w `settings.html`. Commit + push; podbić wersję patch (+0.0.1 na każdą dostawę od 2.0.0).
+User: â€žUmoĹĽliw Integracjeâ€ť â€” strona `integrations.html` miaĹ‚a statyczne stuby; OAuth dziaĹ‚aĹ‚ tylko w `settings.html`. Commit + push; podbiÄ‡ wersjÄ™ patch (+0.0.1 na kaĹĽdÄ… dostawÄ™ od 2.0.0).
 
 ### Log/Status
-1. **`dam-integrations.js`:** wspólny moduł OAuth (Asana, Microsoft), karty infrastruktury (Entra/LDAP), Synology; `mount()` z auth headers.
-2. **`integrations.html`:** pełny shell DAM (jak branding), sekcje Logowanie + OAuth z **Zaloguj/Odłącz**, kolejka wykrojników bez zmian.
+1. **`dam-integrations.js`:** wspĂłlny moduĹ‚ OAuth (Asana, Microsoft), karty infrastruktury (Entra/LDAP), Synology; `mount()` z auth headers.
+2. **`integrations.html`:** peĹ‚ny shell DAM (jak branding), sekcje Logowanie + OAuth z **Zaloguj/OdĹ‚Ä…cz**, kolejka wykrojnikĂłw bez zmian.
 3. **`dam-settings.js`:** delegacja do `DamIntegrations.mount()`.
-4. **`local_bridge.py`:** OAuth callback → `integrations.html#damIntegrationsOAuth`.
-5. Fix: `/integrations/status` wymaga sesji — fetch z `authHeaders()`; fallback gdy `login_required`.
-6. **Wersja:** `2.0.0` Bento → `2.0.1` modal zoom/layout (cadefaf) → `2.0.2` cache tagów + bridge invalidation (cadefaf) → **`2.0.3`** integracje.
+4. **`local_bridge.py`:** OAuth callback â†’ `integrations.html#damIntegrationsOAuth`.
+5. Fix: `/integrations/status` wymaga sesji â€” fetch z `authHeaders()`; fallback gdy `login_required`.
+6. **Wersja:** `2.0.0` Bento â†’ `2.0.1` modal zoom/layout (cadefaf) â†’ `2.0.2` cache tagĂłw + bridge invalidation (cadefaf) â†’ **`2.0.3`** integracje.
 
 ### Efekt/Fix
 - Integracje: live status z bridge, przyciski OAuth (disabled bez credentials w `dam-connection.env`).
-- Wersja spójna: `version.json`, `dam-version.js`, `runtime_config.py`, cache bust `?v=2.0.3` w HTML.
+- Wersja spĂłjna: `version.json`, `dam-version.js`, `runtime_config.py`, cache bust `?v=2.0.3` w HTML.
 
 ### Test/Ewaluacja
-- Screenshot→Read `integrations.html`: sekcja OAuth (Asana, Microsoft), Zaloguj, brak etykiet „Stub”.
+- Screenshotâ†’Read `integrations.html`: sekcja OAuth (Asana, Microsoft), Zaloguj, brak etykiet â€žStubâ€ť.
 
-### Źródła
+### ĹąrĂłdĹ‚a
 - `oauth_integrations.py`, `dam-settings.js` (poprzedni `loadIntegrations`)
 
 
 ---
 
-## 2026-07-19 — Integracje hub v2 (2.0.5)
+## 2026-07-19 â€” Integracje hub v2 (2.0.5)
 
 ### Komenda/Akcja
 Plan Integracje hub v2: dashboard widgety, UI hub, bridge finance/integrations, wykrojnik bridge-only, costs/invoices live, katalog FMCG, bump 2.0.5.
 
 ### Log/Status
-1. Faza 0: dam-dashboard-widgets.js + CSS — layout 2x2/1x4/1x6, grupowanie branding po folderze.
-2. Faza 1+3+4: dam-integrations-hub.css, rewrite dam-integrations.js, dam-wykrojnik-queue.js → GET/POST bridge.
+1. Faza 0: dam-dashboard-widgets.js + CSS â€” layout 2x2/1x4/1x6, grupowanie branding po folderze.
+2. Faza 1+3+4: dam-integrations-hub.css, rewrite dam-integrations.js, dam-wykrojnik-queue.js â†’ GET/POST bridge.
 3. Faza 2: program-instructions (integrations.hub_bridge, finance.*); endpointy local_bridge + oauth_integrations.
 4. Faza 5+5b: dam-cost.js bridge fetch + sync + panel FMCG; fmcg-cost-catalog.json; dam-fmcg-cost.js catalog-first.
 5. Faza 6: dam-invoices.js bridge + CSV import; ukryty Geex Asana demo; lista z asana-tasks.json.
@@ -4864,24 +6098,24 @@ Hub Integracje = konfiguracja na stronie; koszty/faktury nie tylko ze statyczneg
 
 ---
 
-## 2026-07-19 — Integracje hub v2: kontynuacja + commit (2.0.5)
+## 2026-07-19 â€” Integracje hub v2: kontynuacja + commit (2.0.5)
 
 ### Komenda/Akcja
 Kontynuacja planu po innym agencie: audit luk, hotfix UI, commit+push na origin/main.
 
 ### Log/Status
-1. Audit: fazy 0–7 lokalnie gotowe, ale **niezacommitowane** (working tree dirty vs 5adcd1f).
-2. Fix: `dam-integrations.js` — Promise.all `.catch` + odporny fetch stawek (nie wisieć na „Wczytywanie…”).
-3. Fix: `dam-wykrojnik-queue.js` — filtr placeholderów `row-N` z uszkodzonego rejestru XLSX.
-4. Smoke: Integracje (karty Entra/Asana/MS/Synology/Finanse), Kalkulator (`Synchronizuj z Asany`, sekcja Łańcuch FMCG 5/45), bridge hub_routes 200.
-5. Commit + push `feat(integrations): hub v2 … (v2.0.5)`.
+1. Audit: fazy 0â€“7 lokalnie gotowe, ale **niezacommitowane** (working tree dirty vs 5adcd1f).
+2. Fix: `dam-integrations.js` â€” Promise.all `.catch` + odporny fetch stawek (nie wisieÄ‡ na â€žWczytywanieâ€¦â€ť).
+3. Fix: `dam-wykrojnik-queue.js` â€” filtr placeholderĂłw `row-N` z uszkodzonego rejestru XLSX.
+4. Smoke: Integracje (karty Entra/Asana/MS/Synology/Finanse), Kalkulator (`Synchronizuj z Asany`, sekcja ĹaĹ„cuch FMCG 5/45), bridge hub_routes 200.
+5. Commit + push `feat(integrations): hub v2 â€¦ (v2.0.5)`.
 
 ### Efekt/Fix
-Plan Integracje hub v2 domknięty w git + GitHub; restore-point pre-bento nadal tag `milestone/pre-bento-v1.5.0`.
+Plan Integracje hub v2 domkniÄ™ty w git + GitHub; restore-point pre-bento nadal tag `milestone/pre-bento-v1.5.0`.
 
 ---
 
-## 2026-07-20 — Post-hub batch (2.0.6): modal CTA + portable path + search + indeksy
+## 2026-07-20 â€” Post-hub batch (2.0.6): modal CTA + portable path + search + indeksy
 
 ### Komenda/Akcja
 Po zakonczeniu rownoleglych agentow: jeden commit zbiorczy wszystkich zmian lokalnych + push (bez bundle/tmp-qa).
@@ -4889,11 +6123,11 @@ Po zakonczeniu rownoleglych agentow: jeden commit zbiorczy wszystkich zmian loka
 ### Log/Status
 1. Czekanie na stabilizacje working tree (hashy JS/CSS/HTML bez driftu ~45s).
 2. Modal: CTA PSD/PSB/AI (#damMediaPreviewSourceMount), usuniecie #damMediaPreviewMeta, ext-tag 10px.
-3. DamPaths: toPortablePath / copyPortablePath (Marketing\… bez litery dysku).
+3. DamPaths: toPortablePath / copyPortablePath (Marketing\â€¦ bez litery dysku).
 4. Branding search: synonimy przezroczystosc/tlo biale.
 5. asset_role_utils: atomic_write_json + cache skanu tla branding-background-scan.json.
 6. Indeksy/lifecycle/change-log odswiezone (operacyjne F/X).
-7. Bump wersji 2.0.5 → **2.0.6**.
+7. Bump wersji 2.0.5 â†’ **2.0.6**.
 
 ### Efekt/Fix
 Jedna dostawa na origin/main po zamknieciu agentow; wersja UI 2.0.6.
@@ -4924,13 +6158,13 @@ Realizacja backlogu "RZECZY DO WYKONANIA - NIE UDALO SIE" (2026-07-19), itemy 2-
 
 ### Log/Status
 1. **Item 2 - pixel-scan --all z budzetem** (`patch-branding-backgrounds.py`, `asset_role_utils.py`):
-   - Nowe flagi: `--all` (PNG/WebP/GIF/TIFF + JPG/BMP→white), `--limit-seconds`, `--limit-count`, `--no-cache`.
-   - Trwaly cache wynikow: `apps/web/data/branding-background-scan.json` (path→transparent|white|none), checkpoint co 500 plikow.
+   - Nowe flagi: `--all` (PNG/WebP/GIF/TIFF + JPG/BMPâ†’white), `--limit-seconds`, `--limit-count`, `--no-cache`.
+   - Trwaly cache wynikow: `apps/web/data/branding-background-scan.json` (pathâ†’transparent|white|none), checkpoint co 500 plikow.
    - Zapis indeksu i cache atomowy (`atomic_write_json`: tmp + os.replace).
    - **Bugfix krytyczny**: `_run_with_timeout` na ThreadPoolExecutor blokowal sie na `shutdown(wait=True)` przy wiszacym odczycie NFS X: - timeout martwy, skan stawal (1. przebieg wisial 25 min na pliku ~2575; w systemie wisialy tez 4 stare procesy patch/enrich z 19.07 - ubite). Fix: watek daemon + Event.wait(timeout).
-   - Przebieg 2: 2652 plikow w ~99 s (cache OS), wynik 562 transparent + 1585 white + 505 none; indeks: transparent 1029→1591, white 762→2347 (w tym Kampanie 239).
+   - Przebieg 2: 2652 plikow w ~99 s (cache OS), wynik 562 transparent + 1585 white + 505 none; indeks: transparent 1029â†’1591, white 762â†’2347 (w tym Kampanie 239).
 2. **Item 3 - trwalosc skanu przy rebuild**: `apply_background_scan_cache` w asset_role_utils; `build-branding-index.py` czyta cache w `make_asset` (w tym "none" = nie powtarzaj IO) + carry-over po overrides; `re-enrich-branding-index.py` tez robi carry-over. Test jednostkowy: carry na fake asset OK (case-insensitive path, search_blob dostaje "przezroczyste tlo").
-3. **Item 4 - filtr Tlo biale**: logika `isEffectiveWhite` (tylko skan/JPG, nie PNG-default) byla poprawna; problem lezal w danych (0 white poza wizkami przed skanem). Po skanie + `enrich-branding-tags.py`: Kampanie 582→239 plikow, Packshoty 1767→760. CDP + screenshot.
+3. **Item 4 - filtr Tlo biale**: logika `isEffectiveWhite` (tylko skan/JPG, nie PNG-default) byla poprawna; problem lezal w danych (0 white poza wizkami przed skanem). Po skanie + `enrich-branding-tags.py`: Kampanie 582â†’239 plikow, Packshoty 1767â†’760. CDP + screenshot.
 4. **Item 5 - szukanie "przezroczyste"**: przyczyna 0 kart = synonimy dolaczane do tokenow jako AND (`tokens.every`), a blob runtime nie zawieral frazy "przezroczyste tlo". Fix: `searchTokenGroups` (kazdy token usera = grupa OR z synonimami; grupy AND) + `SEARCH_SYNONYM_MAP` (takze biale tlo) + uzupelniony blob transparent/white w `assetBlobNorm`. Wynik: 17 kart / 38 plikow w Kampaniach.
 5. **Item 6 - logo collapsed sidebar**: weryfikacja 1280px (emulacja CDP), expanded + collapsed, screenshot + Read: wordmark "dobra kaloria" caly (48x48, object-fit contain w dam-brand.css) - bez zmian kodu.
 6. **Item 7 - Marketing ID TIK/YT/REL**: `dam-marketing-id.js` - typy TIK=10 (tiktok), YT=11 (youtube/yt), REL=12 (reels/rolka) sprawdzane PRZED generycznym VID; test node: M-TIK1006305-01-25, M-YT1100123-03-24, M-REL1200124-03-24, VID/KV bez regresji. Instrukcja `branding.marketing_asset_id_format` rozszerzona (updated_at 2026-07-20), JSON valid; seed do Postgres KV przy najblizszym restarcie bridge (item 9 backlogu).
@@ -4961,44 +6195,44 @@ Realizacja backlogu "RZECZY DO WYKONANIA - NIE UDALO SIE" (2026-07-19), itemy 2-
 
 ---
 
-## 2026-07-20 — Ważna checklista użytkownika
+## 2026-07-20 â€” WaĹĽna checklista uĹĽytkownika
 
 ### Komenda/Akcja
-Z priorytetów A/B/C (post-hub) zrobić checklistę; przy kolejnych prośbach zahaczających o listę — przypominać.
+Z priorytetĂłw A/B/C (post-hub) zrobiÄ‡ checklistÄ™; przy kolejnych proĹ›bach zahaczajÄ…cych o listÄ™ â€” przypominaÄ‡.
 
 ### Log/Status
-1. Utworzono `WAZNA-CHECKLISTA-UZYTKOWNIKA.md` (A1–A4, B1–B6, C1–C3 + triggery).
-2. Reguła alwaysApply: `.cursor/rules/wazna-checklista-uzytkownika.mdc`.
-3. `memory.md` §127.
+1. Utworzono `WAZNA-CHECKLISTA-UZYTKOWNIKA.md` (A1â€“A4, B1â€“B6, C1â€“C3 + triggery).
+2. ReguĹ‚a alwaysApply: `.cursor/rules/wazna-checklista-uzytkownika.mdc`.
+3. `memory.md` Â§127.
 
 ### Efekt/Fix
-Jedno źródło prawdy priorytetów użytkownika; agenci przypominają ID przy powiązanych taskach.
+Jedno ĹşrĂłdĹ‚o prawdy priorytetĂłw uĹĽytkownika; agenci przypominajÄ… ID przy powiÄ…zanych taskach.
 
 ### Test/Ewaluacja
-Brak (dokumentacja + reguła Cursor).
+Brak (dokumentacja + reguĹ‚a Cursor).
 
 ---
 
-## 2026-07-20 — Animacje + tryb w tle (tray) + cache Branding (2.0.7)
+## 2026-07-20 â€” Animacje + tryb w tle (tray) + cache Branding (2.0.7)
 
 ### Komenda/Akcja
-Trzy zgłoszenia: (1) animacje nie działają dla tagów i belek, wydłużyć 0.3s->0.4s, animować wszystko; (2) aplikacja ma działać w tle / w zasobniku systemowym; (3) Branding długo się otwiera - znaleźć opóźnienia + cache.
+Trzy zgĹ‚oszenia: (1) animacje nie dziaĹ‚ajÄ… dla tagĂłw i belek, wydĹ‚uĹĽyÄ‡ 0.3s->0.4s, animowaÄ‡ wszystko; (2) aplikacja ma dziaĹ‚aÄ‡ w tle / w zasobniku systemowym; (3) Branding dĹ‚ugo siÄ™ otwiera - znaleĹşÄ‡ opĂłĹşnienia + cache.
 
 ### Log/Status
-1. Diagnoza 3 subagentami (animacje CSS, desktop/tray, ścieżka ładowania Branding).
-2. Animacje: tokeny ruchu w `dam-tokens.css`; blok `transition` dla tagów/pill/badge + belek w `dam-brand.css` i `dam-branding.css`; `dam-grid-reveal.js` DURATION 0.35->0.4, sidebar 0.3->0.4, nowe `revealBars()` (belki jako bloki, znacznik `data-dam-bar-revealed`), export + autoInit; podpięcie w `dam-branding.js`.
-3. Tray: `launch.py` `window.events.closing` -> `window.hide()` (return False) gdy `tray_active`; całkowite wyjście przez menu tray. `dam_tray.py` bez zmian.
-4. Cache Branding: usunięto `Date.now()` z URL indeksów; `window.__damBrandingIndex` współdzielony (branding.js + media-preview.js); usunięto podwójny `renderTagFilters()` na boot; wideo w siatce `preload="none"`.
+1. Diagnoza 3 subagentami (animacje CSS, desktop/tray, Ĺ›cieĹĽka Ĺ‚adowania Branding).
+2. Animacje: tokeny ruchu w `dam-tokens.css`; blok `transition` dla tagĂłw/pill/badge + belek w `dam-brand.css` i `dam-branding.css`; `dam-grid-reveal.js` DURATION 0.35->0.4, sidebar 0.3->0.4, nowe `revealBars()` (belki jako bloki, znacznik `data-dam-bar-revealed`), export + autoInit; podpiÄ™cie w `dam-branding.js`.
+3. Tray: `launch.py` `window.events.closing` -> `window.hide()` (return False) gdy `tray_active`; caĹ‚kowite wyjĹ›cie przez menu tray. `dam_tray.py` bez zmian.
+4. Cache Branding: usuniÄ™to `Date.now()` z URL indeksĂłw; `window.__damBrandingIndex` wspĂłĹ‚dzielony (branding.js + media-preview.js); usuniÄ™to podwĂłjny `renderTagFilters()` na boot; wideo w siatce `preload="none"`.
 5. Wersja 2.0.6->2.0.7 (`version.json`, `dam-version.js`, `runtime_config.py`); cache-bust bump na branding.html + dashboard.html.
-6. Instrukcje: `program-instructions.json` +3 (`desktop.background_tray`, `ui.motion_tokens`, `branding.load_cache`). memory §128.
+6. Instrukcje: `program-instructions.json` +3 (`desktop.background_tray`, `ui.motion_tokens`, `branding.load_cache`). memory Â§128.
 
 ### Efekt/Fix
-Tagi i belki animują się (transition 0.22s + reveal belek 0.4s); okno chowa się do zasobnika bez ubijania mostu; Branding nie pobiera ~35 MB przy każdym wejściu i renderuje tagi raz.
+Tagi i belki animujÄ… siÄ™ (transition 0.22s + reveal belek 0.4s); okno chowa siÄ™ do zasobnika bez ubijania mostu; Branding nie pobiera ~35 MB przy kaĹĽdym wejĹ›ciu i renderuje tagi raz.
 
 ### Test/Ewaluacja
 - `py_compile launch.py` OK; `node --check` JS OK; JSON OK; ReadLints czysto.
-- Browser :8765 branding.html: screenshot + Read (logo całe, belki tagów wyrównane, bez regresji).
-- CDP: `--dam-anim`=0.4s, `--dam-anim-hover`=0.22s, `revealBars`=true (3 belki z markerem), `window.__damBrandingIndex` 7832 assetów, 115 kart, 74 tagi, badge `transition-duration` 0.22s.
+- Browser :8765 branding.html: screenshot + Read (logo caĹ‚e, belki tagĂłw wyrĂłwnane, bez regresji).
+- CDP: `--dam-anim`=0.4s, `--dam-anim-hover`=0.22s, `revealBars`=true (3 belki z markerem), `window.__damBrandingIndex` 7832 assetĂłw, 115 kart, 74 tagi, badge `transition-duration` 0.22s.
 - UWAGA: tray wymaga **restartu aplikacji desktop** (launch.py nie hot-reloaduje).
 
 ### Zrodla
@@ -5006,7 +6240,7 @@ Tagi i belki animują się (transition 0.22s + reveal belek 0.4s); okno chowa si
 
 ---
 
-## 2026-07-20 — Ruch globalny v2: reveal 0.45s, kolejnosc gora->dol, skeleton (2.0.7)
+## 2026-07-20 â€” Ruch globalny v2: reveal 0.45s, kolejnosc gora->dol, skeleton (2.0.7)
 
 ### Komenda/Akcja
 Dopracowanie animacji: (1) reveal za szybki / poza kolejnoscia (elementy przed pierwszym); (2) wydluzyc do 0.45s + reakcja viewportu -50px; (3) skeleton loading (shimmer) tam gdzie cos sie laduje (costs/integrations/invoices); (4) faktury pojawiaja sie natychmiast -> maja animowac; (5) sidebar bez slide (tylko morph), tytul/podtytul fade-in, hover scale buttonow/ikon sidebar. Skille: /ui-ux-pro-max, /ui-taste, /gsap-core.
@@ -5017,7 +6251,7 @@ Dopracowanie animacji: (1) reveal za szybki / poza kolejnoscia (elementy przed p
 3. `dam-brand.css`: hover scale .geex-btn/ikony sidebar (token --dam-hover-scale, 0.2s, :active 0.97); CSS skeleton shimmer (dam-skel-shimmer) + dark + reduced-motion.
 4. Wpiecie: invoices (skeleton tbody + revealRows tr), costs (skeleton 3 panele + revealRows meta/result/fmcg), integrations (skeleton karty + revealRows .dam-int-card).
 5. `dam-grid-reveal.js` dodany do costs/integrations/invoices; cache-bust motion20260720a na 9 stronach; dam-version 2.0.7.
-6. Instrukcje: ui.motion_tokens zaktualizowane; memory §129; version.json note.
+6. Instrukcje: ui.motion_tokens zaktualizowane; memory Â§129; version.json note.
 
 ### Efekt/Fix
 Wejscie 0.45s gora->dol bez wyskakiwania poza kolejnoscia; skeleton z przeblyskiem podczas ladowania, potem tresc wjezdza zanimowana; faktury/costs/integracje animowane; sidebar tylko morph; hover buttonow/ikon.
@@ -5136,7 +6370,7 @@ Od pierwszej klatki DOM siatki maja shimmer-placeholdery w ksztalcie kart; po za
 - Screenshot+Read pass2: siatka 4 kolumny, szare karty shimmer w `#damBrandingSectionGrid`
 
 ### Zrodla
-dam-grid-reveal.js skeleton(), dam-branding.js boot(), dam-viz.js init(), ui-taste §4.5 Loading.
+dam-grid-reveal.js skeleton(), dam-branding.js boot(), dam-viz.js init(), ui-taste Â§4.5 Loading.
 
 ## 2026-07-20 - DAM usability repair (FAZA 0-5)
 
@@ -5144,7 +6378,7 @@ dam-grid-reveal.js skeleton(), dam-branding.js boot(), dam-viz.js init(), ui-tas
 Implementacja planu `dam_usability_repair` (bez edycji pliku planu). Skille: dam-dobrakaloria, ui-taste (+ wcielony ui-ux-pro-max).
 
 ### Log/Status
-1. FAZA 0: ui-taste description/scope (product UI), `product-ux/`, §22 Product UI, §23 Dziennik; regula `.cursor/rules/ui-taste-always.mdc` (repo + user).
+1. FAZA 0: ui-taste description/scope (product UI), `product-ux/`, Â§22 Product UI, Â§23 Dziennik; regula `.cursor/rules/ui-taste-always.mdc` (repo + user).
 2. FAZA 1: delegacja `.dam-win-btn` na `#damDashGrid` + re-bind po async; branding `bestTabForSearchQuery` + `?tab=`; modal reveal 0.3s fade + skeleton hero + fade tla.
 3. FAZA 2: CSS 2x2 gap dla `--media`, tablet bez zwiniecia do 1 kol; hover thumbs; dashboard laduje DamMediaPreview (Podglad w miejscu).
 4. FAZA 3: `DamMediaPreview` studio (tlo/persp/lang); `openLightbox` -> `openAsset(mode:viz-studio)`; shell zamyka `#damMediaPreview`.
@@ -5200,9 +6434,9 @@ Brief `agents/shared/usability-brief-2026-07-20.md`, strefa B: dashboard 2x2, ch
 1. **P11 Dashboard 2x2**: root cause = kaskada CSS: `.dam-widget__list` (display:flex, linia ~404 dam-dashboard.css) wygrywal z `.dam-widget__list--media` (grid) o tej samej specyficznosci, bo byl nizej w pliku. Fix: podwojny selektor `.dam-widget__list.dam-widget__list--media` (grid). CDP: `grid-template-columns: 1fr 1fr`; screenshot: widget "Najnowsze materialy branding" = 2 kolumny x 2 rzedy.
 2. **P12 Chip ID marketingowego**: `brandingCardIdChipHtml()` w dam-branding.js - kopiowalny button przy tytule karty (pojedyncze + grupowe), `data-dam-tip="Kliknij, aby skopiowac"`, klik = clipboard + toast (`damGlobalToast`, mechanizm jak toastCopied w dam-badges.js). ID usuniete z paska badge'ow (bylo uciete/niewidoczne). CSS `.dam-branding-card__id-chip` w dam-branding.css + `flex-wrap:wrap` na title-wrap przez `:has()` (chip lamie sie do wlasnej linii, nie jest uciety). Karty viz renderuje dam-viz.js (strefa agenta A) - NIE ruszane; modal viz ma juz chip ID z wczesniejszej sesji.
 3. **P13 Licznik plikow**: `.dam-branding-grid-count` - ciemne tlo rgb(35 32 46/.92), bialy tekst, font-weight 700; margin-right 84px = pas na help fab (fab ~48px + 24px marginesu). Screenshot: pill czytelny, na lewo od fabu.
-4. **P14 Format licznikow**: `fmtElements`/`fmtFiles` (polska odmiana 1/2-4/5+), status = "115 elementow • 582 pliki", licznik siatki = elementy • pliki (z X / Y przy uciecu limitem), tagi = "(N el. • M pl.)". Elementy per tag = dedup po `folder_group_id || marketingGroupKey` w `computeFacetCountsPair` (jedna petla, cache jak dotad).
+4. **P14 Format licznikow**: `fmtElements`/`fmtFiles` (polska odmiana 1/2-4/5+), status = "115 elementow â€˘ 582 pliki", licznik siatki = elementy â€˘ pliki (z X / Y przy uciecu limitem), tagi = "(N el. â€˘ M pl.)". Elementy per tag = dedup po `folder_group_id || marketingGroupKey` w `computeFacetCountsPair` (jedna petla, cache jak dotad).
 5. **P15 Brakujace foldery ARCHIWUM**: w starym indeksie (built 2026-07-19 01:36) brak "08 Kampania META" i "05 - SLIDERY - sklep" z `-- ARCHIWUM --/05_Materialy graficzne e-commerce`. Skrypt build-branding-index.py JUZ skanuje legacy root (scan_marketing_roots, ingest legacy z dedup overlap) - stary indeks byl zbudowany przed ta zmiana. Pelny rebuild odpalony (python build-branding-index.py, dysk X: NFS wolny - kilkadziesiat minut; DecompressionBomb warnings = duze TIFy, niegrozne).
-6. **P16 Tag klik/CTRL**: handler tagow w renderTagFilters: zwykly klik = zastap caly wybor tym tagiem (drugi klik na jedyny aktywny = wyczysc), CTRL/Cmd+klik = toggle multi. Dziala we wszystkich grupach facetow (wspolny handler `[data-tag-key]`). CDP: slider -> baner (replace), CTRL slider -> slider+baner (multi), status 6 el. • 15 pl.
+6. **P16 Tag klik/CTRL**: handler tagow w renderTagFilters: zwykly klik = zastap caly wybor tym tagiem (drugi klik na jedyny aktywny = wyczysc), CTRL/Cmd+klik = toggle multi. Dziala we wszystkich grupach facetow (wspolny handler `[data-tag-key]`). CDP: slider -> baner (replace), CTRL slider -> slider+baner (multi), status 6 el. â€˘ 15 pl.
 7. **P17 Tooltips tagow facetow**: dam-tooltips.js - osobna sciezka `isFacetTag` (`.dam-badge-tag[data-tag-key]` w `.dam-branding-tag-filters`): 1.5 s hover, fade-in .25s, tresc = opis ("Tag X z grupy Y...") + sekcja hint "Klik: tylko ten tag. CTRL+klik: dodaj do wyboru." + "Nie przypominaj wiecej" (localStorage `damTagCtrlHintDismissed=1`; po dismiss tylko opis). Tooltip ma pointer-events:auto (mozna kliknac dismiss), inne tooltipy bez zmian.
 8. **P18 DamLoader**: nowy apps/web/assets/js/dam-loader.js (CSS wstrzykiwany `<style id=damLoaderCss>`): `DamLoader.start(label)` = bialy pill na srodku (spinner + label + pasek indeterminate, fiolet #ab54db), po 1 s GSAP (power2.inOut) zwija pill i przenosi do prawego dolnego rogu (right 24 / bottom 92 - NAD help fabem), `done()` = fade-out; z-index 13000, pointer-events:none, prefers-reduced-motion = od razu rog; GSAP ladowany wzorcem loadGsap z dam-grid-reveal (wspolny tag data-dam-gsap). Wpiete w dam-branding.js: start przy kliku tagu, fazowany `scheduleBrandingRender` (skeleton klatka 1 gdy poprzedni render >150ms lub >800 assetow -> siatka klatka 2 -> tagi/facety klatka 3 -> done). Root cause 10 s zamrozen: renderTagFilters (facet counts = petla assets x ~100 kluczy) odpalal sie w tej samej klatce co siatka; teraz siatka renderuje sie PRZED tagami. dam-loader.js?v=1 dodany do 11 HTML (dashboard, explorer, branding, index, inbox, visualizations, settings, integrations, costs, invoices, profile).
 
@@ -5218,7 +6452,7 @@ Wszystko z punktow 11-14, 16-18 zweryfikowane w przegladarce (CDP + screenshot +
 
 ### Test/Ewaluacja
 - node --check: dam-branding.js, dam-tooltips.js, dam-loader.js OK; ReadLints czysto.
-- CDP: grid 2x2, 115 chipow ID, licznik "115 elementow • 582 pliki", replace/multi tagow, tooltip po 1.5 s + dismiss, loader center(cx=814/vw=1643) -> dock (right-bottom, w=52), tag counts "(30 el. • 145 pl.)".
+- CDP: grid 2x2, 115 chipow ID, licznik "115 elementow â€˘ 582 pliki", replace/multi tagow, tooltip po 1.5 s + dismiss, loader center(cx=814/vw=1643) -> dock (right-bottom, w=52), tag counts "(30 el. â€˘ 145 pl.)".
 - Screenshoty + Read: dashboard 2x2, branding grid + chipy ID (pelne, wlasna linia), ciemny licznik przy fabie, tooltip facetu, loader w rogu.
 - Klip: klik chipa przez CDP daje "Nie udalo sie skopiowac" (brak user activation w tle) - realny klik uzytkownika ma aktywacje, mechanizm + toast dzialaja.
 
@@ -5235,17 +6469,17 @@ Wszystko z punktow 11-14, 16-18 zweryfikowane w przegladarce (CDP + screenshot +
 Handoff `agents/shared/handoff-strefa-B.md`: dokonczenie P15 (rebuild indeksu) + brief sekcja E punkty 21-23 (Pokaz wszystko / popup dna listy / Pokaz archiwum przy zakladkach).
 
 ### Log/Status
-1. **P15 rebuild**: poprzedni PID 48688/50744 wisial ~92 min (89 watkow daemon na NFS po PIL DecompressionBomb / `_tiff_has_layers`). Zabity. Fix skryptow: (a) `_run_with_timeout` lapie `Exception` (nie tylko OSError), (b) legacy ARCHIWUM pomija pixel-scan tla, (c) TIFF w ARCHIWUM bez `_tiff_has_layers` (zakladamy editable), (d) progress log co 500 plikow. Restart: `build-branding-index.py` → **100.7 s**, exit 0.
-2. **P15 liczby PRZED → PO**:
-   - built_at: `2026-07-19T01:36` → `2026-07-20T16:47:56`
-   - assets: **7832 → 49715** (legacy_indexed=41228, primary=7230)
-   - path `Kampania META`: **0 → 89** (rg -c = 560 trafien w JSON)
-   - path `SLIDERY - sklep`: **0 → 0** (folder zeskanowany; **96/96** plikow SCAN_EXT odrzucone jako overlap POLSKA-first `stem+wymiary` vs `- POLSKA/.../SLIDERY NA GŁÓWNĄ` - dedup zamierzony)
-   - UI tag META (archiwum ON + zakladka wszystko): **~29 el • 155 pl → 64 el • 274 pl**; status siatki 77 el • 274 pl, karty z `Kampania META` / ARCHIWUM widoczne
-   - UI tag Slider: **~40 el • 230 pl → 55 el • 283 pl**
+1. **P15 rebuild**: poprzedni PID 48688/50744 wisial ~92 min (89 watkow daemon na NFS po PIL DecompressionBomb / `_tiff_has_layers`). Zabity. Fix skryptow: (a) `_run_with_timeout` lapie `Exception` (nie tylko OSError), (b) legacy ARCHIWUM pomija pixel-scan tla, (c) TIFF w ARCHIWUM bez `_tiff_has_layers` (zakladamy editable), (d) progress log co 500 plikow. Restart: `build-branding-index.py` â†’ **100.7 s**, exit 0.
+2. **P15 liczby PRZED â†’ PO**:
+   - built_at: `2026-07-19T01:36` â†’ `2026-07-20T16:47:56`
+   - assets: **7832 â†’ 49715** (legacy_indexed=41228, primary=7230)
+   - path `Kampania META`: **0 â†’ 89** (rg -c = 560 trafien w JSON)
+   - path `SLIDERY - sklep`: **0 â†’ 0** (folder zeskanowany; **96/96** plikow SCAN_EXT odrzucone jako overlap POLSKA-first `stem+wymiary` vs `- POLSKA/.../SLIDERY NA GĹĂ“WNÄ„` - dedup zamierzony)
+   - UI tag META (archiwum ON + zakladka wszystko): **~29 el â€˘ 155 pl â†’ 64 el â€˘ 274 pl**; status siatki 77 el â€˘ 274 pl, karty z `Kampania META` / ARCHIWUM widoczne
+   - UI tag Slider: **~40 el â€˘ 230 pl â†’ 55 el â€˘ 283 pl**
    - Po rebuild: `enrich-branding-tags.py` touched=45837
 3. **P21 Pokaz wszystko**: pierwsza zakladka `data-tab="all"`, separator `.dam-branding-tabs__sep`, domyslnie aktywna (boot bez `?tab=`/`#`/`?q=`), `assetInSectionTab`/`assetsForSectionTab`/`computeFacetCountsPair` respektuja `all`.
-4. **P22 popup dna**: `#damBrandingListEnd` + IntersectionObserver (bez window scroll), panel `#damBrandingCategoryHint`, CTA → `activateTab("all")`, dismiss sessionStorage `damBrandingCatHintDismissed`.
+4. **P22 popup dna**: `#damBrandingListEnd` + IntersectionObserver (bez window scroll), panel `#damBrandingCategoryHint`, CTA â†’ `activateTab("all")`, dismiss sessionStorage `damBrandingCatHintDismissed`.
 5. **P23 Pokaz archiwum**: przeniesione z `.dam-branding-filters--meta` do `.dam-branding-scope-toggles` obok zakladek.
 
 ### Efekt/Fix
@@ -5256,7 +6490,7 @@ Brak (skrypty indeksu + UI; stary indeks nadpisany atomowo przez rebuild).
 
 ### Test/Ewaluacja
 - `node --check dam-branding.js` OK; python ast parse skryptow OK.
-- CDP: activeTab=all, sep 2px, fw=700, archiveNearTabs=true, archiveInMeta=false; popup hintHidden→false na sentinel; CTA → tab=all + dismissed=1; META 77 el • 274 pl + hasKamp/hasArch.
+- CDP: activeTab=all, sep 2px, fw=700, archiveNearTabs=true, archiveInMeta=false; popup hintHiddenâ†’false na sentinel; CTA â†’ tab=all + dismissed=1; META 77 el â€˘ 274 pl + hasKamp/hasArch.
 - Screenshot+Read: `strefaB-p21-pass2-tabs.png`, `strefaB-p22-cat-hint.png`, `strefaB-p15-meta-archive.png`.
 
 ### Zrodla
@@ -5334,7 +6568,7 @@ Nastepca przerwanego agenta Strefy A. Domkniecie luk weryfikacyjnych z gents/sh
 
 ### Log/Status
 1. Przeczytano skill dam-dobrakaloria + ui-taste, handoff, brief A 1-10.
-2. **Luka P5 (kopiowanie ID)**: explorer -> babka-cytrynowa-nerkowcowy -> media preview. Chip data-marketing-id=V-6300684-ENFACE-L-04-26. Klik i contextmenu (z mockiem clipboard.writeText) kopiują wylacznie ID marketingowe; toast `Skopiowano: V-6300684-ENFACE-L-04-26`. Tip bez br-xxxxx. PASS.
+2. **Luka P5 (kopiowanie ID)**: explorer -> babka-cytrynowa-nerkowcowy -> media preview. Chip data-marketing-id=V-6300684-ENFACE-L-04-26. Klik i contextmenu (z mockiem clipboard.writeText) kopiujÄ… wylacznie ID marketingowe; toast `Skopiowano: V-6300684-ENFACE-L-04-26`. Tip bez br-xxxxx. PASS.
 3. **Luka P7 (Dodaj miniature)**: visualizations -> produkt coconut-orange-date (alias_langs RO/LT/LV/EE bez wizki). Modal: `Brak wizualizacji` + przycisk `Dodaj miniature` widoczny obok Demo/Ukryj. Screenshot+Read PASS.
 4. **Luka P9 (assoc tags + zoom)**: branding -> openAsset br-003363 -> `DamAssocEdit.openPicker` (eksport dopisany, bo w tej karcie CDP `element.click()` nie odpala listenerow). Szukaj `baton`: 5 badge'ow (DK / BATONY / Mixy / PL / indeks). Hover thumb: `#damAssocThumbZoom` 400x400 z-index 12400; mouseleave usuwa zoom. Screenshot+Read PASS (placeholder `Brak` gdy brak thumb_url produktu - oczekiwane).
 5. **linked_products 6300684 / Postanowienia+DPD**: potwierdzone w branding-index - br-003409.. i DPD slidery maja `linked_products` tylko `mix-6x-mini-batoniki-mixy`, `has_babka=false`. UI skojarzen lustrzanych pokazuje br-003363/003364 (Babka slider), NIE Postanowienia/DPD. **Brak danych indeksera - NIE naprawiane (strefa B/P15).**
@@ -5375,20 +6609,20 @@ Nastepca przerwanego agenta Strefy A. Domkniecie luk weryfikacyjnych z gents/sh
 - apps/web/data/branding-index.json (audyt linked_products)
 
 
-## STREFA C3 - Task 39: rename Bobek -> DobroKaloriuś (2026-07-20)
+## STREFA C3 - Task 39: rename Bobek -> DobroKaloriuĹ› (2026-07-20)
 
 ### Komenda/Akcja
-Zmiana nazwy maskotki samouczka z "Bobek" na "DobroKaloriuś" we wszystkich tekstach UI samouczka i zaproszenia.
+Zmiana nazwy maskotki samouczka z "Bobek" na "DobroKaloriuĹ›" we wszystkich tekstach UI samouczka i zaproszenia.
 
 ### Log/Status
 1. Grep repo: Bobek w `dam-tutorial.js` (komentarz + title kroku 1), handoff/brief (poza zakresem kodu), plik sprite `maskotka-bobek.png` (nazwa assetu - bez zmiany).
-2. Edycja `dam-tutorial.js`: 3 wystapienia -> DobroKaloriuś (komentarz naglowka, title kroku 1, tekst toastu zaproszenia).
+2. Edycja `dam-tutorial.js`: 3 wystapienia -> DobroKaloriuĹ› (komentarz naglowka, title kroku 1, tekst toastu zaproszenia).
 3. Bump cache `dam-tutorial.js?v=7` -> `?v=8` w 9 HTML.
 4. Weryfikacja: DamTutorial.stop() + clear LS + start/showInvite; screenshot+Read.
 
 ### Efekt/Fix
-- Naglowek dymka: "Cześć, tu DobroKaloriuś!"
-- Toast: "Cześć, tu DobroKaloriuś! Chcesz krótki samouczek po panelu?"
+- Naglowek dymka: "CzeĹ›Ä‡, tu DobroKaloriuĹ›!"
+- Toast: "CzeĹ›Ä‡, tu DobroKaloriuĹ›! Chcesz krĂłtki samouczek po panelu?"
 - Brak "Bobek" w UI samouczka.
 
 ### Backup
@@ -5396,7 +6630,7 @@ Brak (zmiana copy).
 
 ### Test/Ewaluacja
 - node --check dam-tutorial.js OK
-- CDP: title = "Cześć, tu DobroKaloriuś!", inviteText zawiera DobroKaloriuś, hasBobek=false
+- CDP: title = "CzeĹ›Ä‡, tu DobroKaloriuĹ›!", inviteText zawiera DobroKaloriuĹ›, hasBobek=false
 - Screenshot+Read: c3-task39-tutorial-dobrokalorius.png, c3-task39-invite-dobrokalorius.png (PASS, 3 przeloty)
 
 ### Zrodla
@@ -5410,7 +6644,7 @@ Brak (zmiana copy).
 Usunac flash starego layoutu / placeholdera Geex przy przejsciu miedzy pozycjami menu (brief pkt 33).
 
 ### Log/Status
-1. Diagnoza: raw HTML (dashboard/explorer/costsâ€¦) zawiera Demo/Server Management; dam-shell.js przepisuje menu dopiero na DOMContentLoaded.
+1. Diagnoza: raw HTML (dashboard/explorer/costsĂ˘â‚¬Â¦) zawiera Demo/Server Management; dam-shell.js przepisuje menu dopiero na DOMContentLoaded.
 2. CDP: przy html.dam-booting + Demo w DOM body opacity=0 (flash niewidoczny).
 3. Implementacja: dam-shell-boot.css + critical inline w head + DamShell.finishBoot() + body.is-booting na 20 HTML.
 4. Bump dam-shell.js?v=shellboot20260720b; node --check OK.
@@ -5427,7 +6661,7 @@ Brak (zmiany odwacalne; bez commit).
 ### Test/Ewaluacja
 - node --check apps/web/assets/js/dam-shell.js OK
 - CDP: hasDemo+opacity0 podczas boot; po boot hasDemo=false opacity=1
-- Screenshot+Read: shell-boot-pass1-dashboard â€¦ pass5-costs
+- Screenshot+Read: shell-boot-pass1-dashboard Ă˘â‚¬Â¦ pass5-costs
 
 ### Zrodla
 - agents/shared/usability-brief-2026-07-20.md pkt 33
@@ -5483,7 +6717,7 @@ H interrupted -> handoff for Grok successor (user HARD: tylko Grok 4.5, zero Opu
 2. Podpiecia: `dam-assoc-edit.js`, `dam-explorer.js`, danger zone w `settings.html`.
 3. Cache-bust `?v=usab20260720h` w branding/explorer/visualizations/dashboard/settings.
 4. `node --check` OK na wszystkich edytowanych JS.
-5. Weryfikacja screenshot+Read NIE ukonczona (0/3). Audyt czerwonego / offset Confirm / code-doctrine §12 - TODO nastepcy.
+5. Weryfikacja screenshot+Read NIE ukonczona (0/3). Audyt czerwonego / offset Confirm / code-doctrine Â§12 - TODO nastepcy.
 
 ### Efekt/Fix
 Safe shutdown; szczegoly w `agents/shared/handoff-strefa-H.md`.
@@ -5504,14 +6738,14 @@ node --check OK; CDP: DamDanger.bind + ring DOM na settings (screenshot nie zrob
 STREFA A3: "Brak wizualizacji" muted; LINKS/ELEMENTY split; Image resizer; broken thumbs w #damMediaPreview.
 
 ### Log/Status
-1. Dane: branding-index Links (flor2/batonik → babka); file-index babka 6300684.01 → Links 12 plikow, ELEMENTY 0.
+1. Dane: branding-index Links (flor2/batonik â†’ babka); file-index babka 6300684.01 â†’ Links 12 plikow, ELEMENTY 0.
 2. Resizer: launcher EXE = GUI; CLI w `inyfinn_resizer.cli` (convert -i/-o/-f png -q 60).
 3. Kod: dam-media-preview.js (+ style #dam-a3-styles), dam-viz.js, local_bridge.py (api v3).
 4. Restart mostu 8766 (wymagany dla nowych endpointow).
 5. Cache-bust `?v=usab20260720a3` (4 HTML).
 
 ### Efekt/Fix
-- 34: noviz/missing-langs → muted (nie danger red).
+- 34: noviz/missing-langs â†’ muted (nie danger red).
 - 35: surowe Links poza "Skojarzone materialy"; zwijalna ELEMENTY.
 - 37: CTA "Wygeneruj elementy z Links" + confirm + POST /open-image-resizer (tylko gdy can_generate).
 - 38: __damAssocThumbFallback (replaceWith), bez native broken-icon.
@@ -5527,19 +6761,19 @@ STREFA A3: "Brak wizualizacji" muted; LINKS/ELEMENTY split; Image resizer; broke
 - dam-dobrakaloria + ui-taste + code-doctrine
 
 
-## 2026-07-20 - STREFA DEVICE (Grok) — sciezki per urzadzenie
+## 2026-07-20 - STREFA DEVICE (Grok) â€” sciezki per urzadzenie
 
 ### Komenda/Akcja
 USER: sciezka bazowa tylko dla aktualnego komputera (device_id/hostname); CRUD w profilu; zapis w bazie; runtime resolve po device.
 
 ### Log/Status
-1. Audyt: ADR-008, /auth/identity, machine-config per Windows USER, dam_base_path localStorage — brak user+device w PG.
+1. Audyt: ADR-008, /auth/identity, machine-config per Windows USER, dam_base_path localStorage â€” brak user+device w PG.
 2. PI: `device-scoped-base-paths` w program-instructions.json (v6).
 3. Bridge: model UDP + GET/POST `/user-device-paths` (+ `/current`); lustro z POST /machine-config.
-4. Runtime: dam-paths.js ensureUserBase → baza → LS scoped → machine-config.
+4. Runtime: dam-paths.js ensureUserBase â†’ baza â†’ LS scoped â†’ machine-config.
 5. UI: profile.html + dam-device-paths.js (CRUD).
 6. Restart mostu 8766 (usunieto podwojne PID 632+55284).
-7. Cache-bust `?v=devicepath20260720a` (bez settings.html — H2).
+7. Cache-bust `?v=devicepath20260720a` (bez settings.html â€” H2).
 
 ### Efekt/Fix
 - MVP dziala: per-device path w KV/local JSON + API + UI profilu + resolve runtime.
@@ -5551,21 +6785,21 @@ Brak.
 ### Test/Ewaluacja
 - AST bridge OK; node --check paths + device-paths OK
 - Helpers upsert/list/resolve/delete OK
-- Live: GET /user-device-paths/current → 401 bez sesji (route zyje)
+- Live: GET /user-device-paths/current â†’ 401 bez sesji (route zyje)
 - Handoff: agents/shared/handoff-strefa-DEVICE.md
 
 ### Zrodla
 - program-instructions device-scoped-base-paths
-- ADR-008, memory §32, usability-brief pkt 40
+- ADR-008, memory Â§32, usability-brief pkt 40
 
 
-## 2026-07-20 - STREFA DEVICE follow-up (Grok) — seed PI + Sesja urzadzenia
+## 2026-07-20 - STREFA DEVICE follow-up (Grok) â€” seed PI + Sesja urzadzenia
 
 ### Komenda/Akcja
-Follow-up po MVP: (1) seed PI do Postgres KV, (2) sidebar „Sesja urządzenia” → profil `#damDevicePathsRoot`, (3) bez edycji settings.html / bez commit.
+Follow-up po MVP: (1) seed PI do Postgres KV, (2) sidebar â€žSesja urzÄ…dzeniaâ€ť â†’ profil `#damDevicePathsRoot`, (3) bez edycji settings.html / bez commit.
 
 ### Log/Status
-1. `_seed_naming_policy_to_postgres()` — KV `program-instructions` v6, 44 instr., `device-scoped-base-paths` w critical; `app-settings.instructions` lustro OK.
+1. `_seed_naming_policy_to_postgres()` â€” KV `program-instructions` v6, 44 instr., `device-scoped-base-paths` w critical; `app-settings.instructions` lustro OK.
 2. `dam-shell.js`: `goDeviceSessionPaths` zamiast `DamApi.logout`; href `profile.html#damDevicePathsRoot`.
 3. `dam-device-paths.js`: `focusSection` + hash `#damDevicePathsRoot`.
 4. Cache-bust shell `devicesession20260720a` w 19 HTML (bez settings); device-paths `devicepath20260720b` w profile.html.
@@ -5573,13 +6807,13 @@ Follow-up po MVP: (1) seed PI do Postgres KV, (2) sidebar „Sesja urządzenia�
 
 ### Efekt/Fix
 - PI w bazie (nie tylko JSON).
-- „Sesja urządzenia” otwiera CRUD sciezek w profilu.
+- â€žSesja urzÄ…dzeniaâ€ť otwiera CRUD sciezek w profilu.
 
 ### Backup
 Brak.
 
 ### Test/Ewaluacja
-- `pg_db.kv_get('program-instructions')` → has device-scoped-base-paths
+- `pg_db.kv_get('program-instructions')` â†’ has device-scoped-base-paths
 - `node --check` dam-shell.js + dam-device-paths.js OK
 - settings.html nietkniety (shell `shellboot20260720b`, paths `204mod1`)
 
@@ -5595,7 +6829,7 @@ Brak.
 Korekta kotwiczenia dymka (right+40px), polish maskotki, 40 pochwal, typografia PL (nbspPl).
 
 ### Log/Status
-1. placeBubble: priorytet right-top/right-bottom → left → below/above; EDGE_GAP=40; clamp viewport.
+1. placeBubble: priorytet right-top/right-bottom â†’ left â†’ below/above; EDGE_GAP=40; clamp viewport.
 2. CSS: gap 36px, medal 103.5px, img 121%, zielony cien, mini-nav do dolu.
 3. PRAISES x40 + Fisher-Yates shuffle; nbspPl na title/text/invite/pochwala.
 4. Cache: dam-tutorial.js?v=12, css?v=6 (9 HTML).
@@ -5618,17 +6852,17 @@ Brak.
 - dam-tutorial.js / dam-tutorial.css
 - handoff-strefa-C.md, C3.md
 
-## 2026-07-20 - STREFA INTEGRACJE (Grok) — Bento panel Integracje
+## 2026-07-20 - STREFA INTEGRACJE (Grok) â€” Bento panel Integracje
 
 ### Komenda/Akcja
-USER: panel Integracje nieczytelny (sciana belkow + masa przyciskow) → siatka Bento 4xn, chipy statusu, Synology span 2.
+USER: panel Integracje nieczytelny (sciana belkow + masa przyciskow) â†’ siatka Bento 4xn, chipy statusu, Synology span 2.
 
 ### Log/Status
 1. Design Read: product hub Integracje / Geex / Bento Control Center.
 2. Nowy CSS `apps/web/assets/css/dam-integrations.css` (scoped `.dam-integrations-page--bento`).
 3. `dam-integrations.js`: `layout:"bento"`, chipy, feature/live/planned tiles, jedna gesta siatka + Planowane; safety opacity po GSAP.
 4. `integrations.html`: laduje CSS, `includeExtras:true`, `?v=bento20260720d`.
-5. settings.html / dam-brand.css / tutorial / bridge — NIE ruszane.
+5. settings.html / dam-brand.css / tutorial / bridge â€” NIE ruszane.
 6. Checklista C3 pozostaje `[ ]` (anatomia viz/branding zamrozona); hub chrome OK.
 
 ### Efekt/Fix
@@ -5640,21 +6874,21 @@ Brak.
 
 ### Test/Ewaluacja
 - node --check dam-integrations.js OK
-- CDP: 12 tiles, chipy ~44px, Synology w≈448, cols 4/2/1
+- CDP: 12 tiles, chipy ~44px, Synology wâ‰448, cols 4/2/1
 - Screenshoty: agents/shared/qa-screenshots/int-bento-pass*.png
 - Handoff: agents/shared/handoff-strefa-INTEGRACJE.md
 
 ### Zrodla
-- dam-dobrakaloria + ui-taste (Bento + product UI §22) + code-doctrine
+- dam-dobrakaloria + ui-taste (Bento + product UI Â§22) + code-doctrine
 - WAZNA-CHECKLISTA C3 (chrome hub OK)
 
 ## 2026-07-20 - STREFA H3: przebudowa Strefy ryzyka (settings)
 
 ### Komenda/Akcja
-User: przebuduj TYLKO Strefę ryzyka (ui-taste, hold 300ms, GitHub-style). HARD: zero kasowania plikow / git reset / wipe.
+User: przebuduj TYLKO StrefÄ™ ryzyka (ui-taste, hold 300ms, GitHub-style). HARD: zero kasowania plikow / git reset / wipe.
 
 ### Log/Status
-1. Design Read: settings admin DAM / Geex — danger zone GitHub-style, schludny friction.
+1. Design Read: settings admin DAM / Geex â€” danger zone GitHub-style, schludny friction.
 2. Markup+CSS #damDangerZone w settings.html (header, ops card, foot left hold).
 3. dam-danger.js: DEFAULT_HOLD_MS=300; bind label czasownika; toast Cofnij 8s.
 4. Trash odbiorcow: muted + data-dam-hold-delete via MutationObserver (bez edycji dam-settings.js).
@@ -5662,8 +6896,8 @@ User: przebuduj TYLKO Strefę ryzyka (ui-taste, hold 300ms, GitHub-style). HARD:
 6. 3 przeloty screenshot+Read PASS.
 
 ### Efekt/Fix
-- Pełna szerokość (grid 1/-1); offset hold LEFT vs Restart RIGHT; red tylko destrukcja.
-- Copy: lokalne preferencje przeglądarki, nie pliki na dysku.
+- PeĹ‚na szerokoĹ›Ä‡ (grid 1/-1); offset hold LEFT vs Restart RIGHT; red tylko destrukcja.
+- Copy: lokalne preferencje przeglÄ…darki, nie pliki na dysku.
 
 ### Backup
 Brak (zero destrukcji).
@@ -5675,21 +6909,21 @@ Brak (zero destrukcji).
 
 ### Zrodla
 - ui-taste + dam-dobrakaloria + usability-brief sekcja H
-- code-doctrine §12 (lekcje grid-column + hold-to-delete)
+- code-doctrine Â§12 (lekcje grid-column + hold-to-delete)
 
 ## 2026-07-20 - META DEVICE: cache-bust settings.html
 
 ### Komenda/Akcja
-Bump `?v=` dam-shell.js + dam-paths.js w settings.html (spójnie z profile.html); bez markup/integracji.
+Bump `?v=` dam-shell.js + dam-paths.js w settings.html (spĂłjnie z profile.html); bez markup/integracji.
 
 ### Log/Status
-1. shell: `shellboot20260720b` → `devicesession20260720a`
-2. paths: `204mod1` → `devicepath20260720a`
-3. dam-device-paths.js: brak w settings (pominięte)
+1. shell: `shellboot20260720b` â†’ `devicesession20260720a`
+2. paths: `204mod1` â†’ `devicepath20260720a`
+3. dam-device-paths.js: brak w settings (pominiÄ™te)
 4. Odhacz TODO #3 w handoff-strefa-DEVICE.md
 
 ### Efekt/Fix
-settings.html ładuje te same wersje shell/paths co pozostałe strony DEVICE.
+settings.html Ĺ‚aduje te same wersje shell/paths co pozostaĹ‚e strony DEVICE.
 
 ## 2026-07-20 - STREFA INT-SETTINGS (Grok): Bento 3xn w settings.html #damIntegrations
 
@@ -5704,8 +6938,8 @@ Bento 3xn kafelki w settings #damIntegrations (NIE integrations.html hub). Chipy
 5. `node --check` OK; 3 przeloty screenshot+Read PASS.
 
 ### Efekt/Fix
-- Desktop: 3 kolumny (~385px); chip Połączono ~92px (24% karty), nie banner.
-- Planowane: chip `Plan` + dashed `Wkrótce`; Zaloguj disabled solid (nie dashed).
+- Desktop: 3 kolumny (~385px); chip PoĹ‚Ä…czono ~92px (24% karty), nie banner.
+- Planowane: chip `Plan` + dashed `WkrĂłtce`; Zaloguj disabled solid (nie dashed).
 - Hub integrations.html nadal 4-col; settings osobny CSS.
 
 ### Backup
@@ -5778,32 +7012,32 @@ Brak (zero kasowania plikow).
 ### Zrodla
 - usability-brief pkt 36; dam-dobrakaloria; ui-taste; code-doctrine (cache-bust, inject CSS, stale screenshot).
 
-## 2026-07-20 - STREFA INT-SETTINGS dogrywka: Wkrótce + chip Wdrożenie planowane
+## 2026-07-20 - STREFA INT-SETTINGS dogrywka: WkrĂłtce + chip WdroĹĽenie planowane
 
 ### Komenda/Akcja
-Fix przyciskow Wkrótce (bez lavender wash) + badge `Wdrożenie planowane` na planowanych kafelkach (settings + hub).
+Fix przyciskow WkrĂłtce (bez lavender wash) + badge `WdroĹĽenie planowane` na planowanych kafelkach (settings + hub).
 
 ### Log/Status
-1. Usunieto `geex-btn` / `geex-btn--primary-transparent` z Wkrótce (wlasny `.dam-int-soon`).
+1. Usunieto `geex-btn` / `geex-btn--primary-transparent` z WkrĂłtce (wlasny `.dam-int-soon`).
 2. CSS: dashed `#8b8d97`, bg `#fff`, ink `#1a1820` + `-webkit-text-fill-color`, opacity 1, focus-visible ring.
-3. Chip: `Plan` → `Wdrożenie planowane` (`.dam-int-chip--planned`, wrap 2 linie, title tip).
+3. Chip: `Plan` â†’ `WdroĹĽenie planowane` (`.dam-int-chip--planned`, wrap 2 linie, title tip).
 4. Bump `?v=setbento20260720h`; CDP PASS.
 
 ### Efekt/Fix
-- Wkrótce: white fill, ink text, neutral dashed (nie disabled wash).
-- Chip copy dokladnie `Wdrożenie planowane`.
+- WkrĂłtce: white fill, ink text, neutral dashed (nie disabled wash).
+- Chip copy dokladnie `WdroĹĽenie planowane`.
 
 ### Test/Ewaluacja
 - CDP: bg=rgb(255,255,255), color/fill=rgb(26,24,32), border dashed #8b8d97, chip text OK
 - Screenshots: int-settings-planned-fix-pass3.png, int-settings-wkrotce-pass3-closeup.png
 
 ### Zrodla
-- ui-taste + dam-dobrakaloria; screenshot usera (Plan / Wkrótce wash)
+- ui-taste + dam-dobrakaloria; screenshot usera (Plan / WkrĂłtce wash)
 
-## 2026-07-20 - STREFA VIZ-ASSOC (Grok): layout assoc po prawej + zakaz petli wiz→wiz
+## 2026-07-20 - STREFA VIZ-ASSOC (Grok): layout assoc po prawej + zakaz petli wizâ†’wiz
 
 ### Komenda/Akcja
-User HARD: #damVizModal skojarzenia po prawej (jak branding), zero petli wiz→wiz, RWD 375/768/1280. Bez dam-assoc-edit / git commit / kasowania.
+User HARD: #damVizModal skojarzenia po prawej (jak branding), zero petli wizâ†’wiz, RWD 375/768/1280. Bez dam-assoc-edit / git commit / kasowania.
 
 ### Log/Status
 1. Design Read + PI `viz.assoc_no_visualization_loop` (critical) PRZED kodem.
@@ -5813,8 +7047,8 @@ User HARD: #damVizModal skojarzenia po prawej (jak branding), zero petli wiz→w
 5. 5 przelotow screenshot+Read (1280/768/375).
 
 ### Efekt/Fix
-- Desktop: assoc w prawej kolumnie; mobile stack hero→meta→assoc.
-- Babka 6300684: 1802 linked → 7 materialow marketingowych; 200 packshotow odcietych; OATS bez wizek w liscie.
+- Desktop: assoc w prawej kolumnie; mobile stack heroâ†’metaâ†’assoc.
+- Babka 6300684: 1802 linked â†’ 7 materialow marketingowych; 200 packshotow odcietych; OATS bez wizek w liscie.
 
 ### Backup
 Brak (zero destrukcji).
@@ -5823,7 +7057,7 @@ Brak (zero destrukcji).
 - CDP paneRight / stacked / label counts
 - Screenshots: viz-assoc-pass1..5 w Temp\cursor\screenshots
 - Handoff: agents/shared/handoff-strefa-VIZ-ASSOC.md
-- Lekcja doctrine §12 (STREFA VIZ-ASSOC)
+- Lekcja doctrine Â§12 (STREFA VIZ-ASSOC)
 
 ### Zrodla
 - dam-dobrakaloria + ui-taste + code-doctrine + program-instructions
@@ -5836,14 +7070,14 @@ User: `#damIntegrationsList` zostaje na skeleton; przyciski noop/reload; CTA jak
 ### Log/Status
 1. Diagnoza CDP: mount dziala (12 kart hub / 8 settings), skeleton znika gdy Promise konczy; CTA byly lavender geex.
 2. Root cause: race DOMContentLoaded + brak hard failsafe po skeletonie; styl foot CTA = geex lavender; tipy disabled brak.
-3. Fix: `dam-int-cta` + summary welcome-link; failsafe 14s; readyState boot; tipy Zaloguj/Wkrótce; DamWykrojnikQueue export.
+3. Fix: `dam-int-cta` + summary welcome-link; failsafe 14s; readyState boot; tipy Zaloguj/WkrĂłtce; DamWykrojnikQueue export.
 4. Bump `?v=intload20260720a`; node --check OK.
 5. 3 przeloty screenshot+Read.
 
 ### Efekt/Fix
 - Skeleton: try/catch + failsafe; boot nie zalezy tylko od DOMContentLoaded.
 - CTA: border #E7E7E7 / bg #fff / ink #464255 (nie lavender).
-- Preferencje → settings#damPrefs; Konfiguruj otwiera details; tipy na disabled/soon.
+- Preferencje â†’ settings#damPrefs; Konfiguruj otwiera details; tipy na disabled/soon.
 
 ### Backup
 Brak (zero destrukcji).
@@ -5863,7 +7097,7 @@ USER: w settings.html zamiast starego #damDisk pokaz te sama karte co profile#da
 
 ### Log/Status
 1. PI device-scoped-base-paths: settings embed, Folder, normalize; seed Postgres.
-2. dam-paths.js: normalizeMarketingRoot + pickFolder (pywebview → POST /pick-folder).
+2. dam-paths.js: normalizeMarketingRoot + pickFolder (pywebview â†’ POST /pick-folder).
 3. local_bridge.py: pick_folder_dialog (tkinter) + POST /pick-folder; restart :8766.
 4. dam-device-paths.js: Folder/Wykryj/Sprawdz; welcome-link; DamDanger; mount settings (CSS #damDisk flatten).
 5. settings.html: #damDevicePathsRoot w #damDisk; hidden settingBasePath; script device-paths.
@@ -5871,7 +7105,7 @@ USER: w settings.html zamiast starego #damDisk pokaz te sama karte co profile#da
 
 ### Efekt/Fix
 - Jedna logika DamDevicePaths w profilu i Ustawieniach (Dysk).
-- Folder zamiast klepania; X:\Marketing\- POLSKA → X:\Marketing przed zapisem.
+- Folder zamiast klepania; X:\Marketing\- POLSKA â†’ X:\Marketing przed zapisem.
 - Edytuj/Usun systemowe; Usun = hold gdy DamDanger.
 
 ### Backup
@@ -5893,7 +7127,7 @@ Brak.
 USER: w menu profilu (.dam-user-menu__link / Profil) highlight nizej niz napis/ikona; stray "Konto"; fix CSS flex center w inject #damShellLayerCss; bump ?v=; screenshot+Read. Bez integrations/device-paths, bez kasowania plikow.
 
 ### Log/Status
-1. Root cause misalignment: Geex style.css/content.css .geex-content__header__popup__link { align-items: flex-start !important } przebijalo dam-brand lign-items: center (bez !important) + min-height 42px → tresc przy gorze kapsuly.
+1. Root cause misalignment: Geex style.css/content.css .geex-content__header__popup__link { align-items: flex-start !important } przebijalo dam-brand lign-items: center (bez !important) + min-height 42px â†’ tresc przy gorze kapsuly.
 2. Root cause "Konto": dam-tooltips.js tipuje kazdy [aria-label]; <nav aria-label="Konto"> pokazywal stray tip nad Wyloguj.
 3. dam-shell.js #damShellLayerCss: align-items:center !important, padding 11px 12px, ikona 18x18 + ::before line-height 1.
 4. Usunieto aria-label z nav/legal; ensureUserMenuMarkup stripuje legacy; dam-tooltips skip NAV/role=menu/navigation.
@@ -5919,16 +7153,16 @@ Brak.
 ## 2026-07-20 - Integracje: Konfiguruj panel ~56px
 
 ### Komenda/Akcja
-USER: na `integrations.html` klik Konfiguruj (FMCG i inne live) pokazuje zmiazdzony panel ~56px; Preferencje/Konfiguruj bez czytelnego UI. Fix bez walki o `dam-integrations.css` (inny agent: skeleton) — prefer inject `<style id="damIntConfigPanelFix">`; CDP + screenshot; process.md.
+USER: na `integrations.html` klik Konfiguruj (FMCG i inne live) pokazuje zmiazdzony panel ~56px; Preferencje/Konfiguruj bez czytelnego UI. Fix bez walki o `dam-integrations.css` (inny agent: skeleton) â€” prefer inject `<style id="damIntConfigPanelFix">`; CDP + screenshot; process.md.
 
 ### Log/Status
-1. Root cause: `.dam-integrations-page--bento .dam-int-config__panel { position:absolute; left:16px; right:16px }` + `.dam-int-tile__foot .dam-int-tile__config { position:relative }` przy wrapperze `inline-flex` ≈ szerokosc summary (88px) → panel 88−32 ≈ 56px.
-2. Fix: `ensureConfigPanelFixCss()` w `dam-integrations.js` — `#damIntConfigPanelFix`: config wrapper `position:static`, `flex:1 1 100%`, panel `position:static; width:100%` (karta rosnie in-flow).
+1. Root cause: `.dam-integrations-page--bento .dam-int-config__panel { position:absolute; left:16px; right:16px }` + `.dam-int-tile__foot .dam-int-tile__config { position:relative }` przy wrapperze `inline-flex` â‰ szerokosc summary (88px) â†’ panel 88â’32 â‰ 56px.
+2. Fix: `ensureConfigPanelFixCss()` w `dam-integrations.js` â€” `#damIntConfigPanelFix`: config wrapper `position:static`, `flex:1 1 100%`, panel `position:static; width:100%` (karta rosnie in-flow).
 3. Cache bump: `dam-integrations.js?v=intcfgfix20260720a` w `integrations.html` + `settings.html`.
-4. Nie ruszano skeleton/Wkrótce w `dam-integrations.css`.
+4. Nie ruszano skeleton/WkrĂłtce w `dam-integrations.css`.
 
 ### Efekt/Fix
-- Panel Konfiguruj ≈ szerokosc contentu karty (CDP ~253 przy karcie ~283), nie 56px.
+- Panel Konfiguruj â‰ szerokosc contentu karty (CDP ~253 przy karcie ~283), nie 56px.
 - Formularze Entra/LDAP/Asana/Microsoft/FMCG/Stawki czytelne; PLANOWANE tiles nadal 283px, bez overflow.
 
 ### Backup
@@ -5936,7 +7170,7 @@ Brak.
 
 ### Test/Ewaluacja
 - node --check dam-integrations.js OK
-- CDP before (user): panel w≈56; after: fmcg/entra/asana/ldap/microsoft/cost-rates panelW=253, position=static; PNG Import button ~156px
+- CDP before (user): panel wâ‰56; after: fmcg/entra/asana/ldap/microsoft/cost-rates panelW=253, position=static; PNG Import button ~156px
 - Screenshots: agents/shared/qa-screenshots/int-config-fmcg-pass1-clip.png, int-config-entra-pass2-clip.png, int-config-asana-planned-pass3.png
 - Pass 1 FMCG full-width; Pass 2 Entra form; Pass 3 Asana + PLANOWANE uniform
 
@@ -5978,7 +7212,7 @@ USER: sekcja PLANOWANE na settings (#damIntegrations) przesunac +30px w dol; sco
 2. W settings-bento jedyna `section.dam-int-section` = Planowane (primary = bare `.dam-int-bento-grid` bez title).
 3. `dam-integrations-settings.css`: `margin-top: 30px` na `#damIntegrations .dam-integrations-page--settings .dam-int-section`.
 4. Cache-bust `settings.html`: `?v=planowane30a`.
-5. CDP: before gap/pageY vs after = +30; marginTop 0→30px.
+5. CDP: before gap/pageY vs after = +30; marginTop 0â†’30px.
 
 ### Efekt/Fix
 - PLANOWANE na settings ma +30px powietrza nad headingiem; hub nie ruszony.
@@ -5987,7 +7221,7 @@ USER: sekcja PLANOWANE na settings (#damIntegrations) przesunac +30px w dol; sco
 Brak.
 
 ### Test/Ewaluacja
-- CDP deltaPageY=+30, gap 0→30, marginTop=30px, css ?v=planowane30a
+- CDP deltaPageY=+30, gap 0â†’30, marginTop=30px, css ?v=planowane30a
 - Screenshots: settings-planowane-pass1-after.png, pass2-gap.png, pass3-final.png
 - Pass 1 structure; Pass 2 gap CDP; Pass 3 final lock
 
@@ -6059,20 +7293,20 @@ Handoff A3 / brief pkt 35: indekser ma kojarzyc materialy brandingowe ELEMENTY z
 1. Root cause: `scan_wizki_products` indeksuje tylko `4 - WIZKI`; product `2 - PROJEKT/Links` + `1 - MATERIALY/ELEMENTY` poza indeksem. UI A3 juz filtruje po path + ELEMENT_ASSOC_RE, ale search_blob rzadko mial terminy.
 2. PI: `branding.element_assoc_skladniki_owoce` w program-instructions.json.
 3. Kod: `brand_element_assoc.py` (termyny w search_blob); `build-branding-index.py` `scan_product_element_assets` + enrich; incremental `enrich-branding-element-assoc.py`.
-4. Enrich: +1896 product_element (49715→51611); tagged search_blob skladniki≈17080, owoce≈7377; relink SKU-only (bez assoc na nazwie pliku).
-5. Babka 6300684.01: 12 Links w indeksie (m.in. br-051391…398) z linked_products=[babka-cytrynowa-nerkowcowy] + terminy skladniki/owoce/owocki.
+4. Enrich: +1896 product_element (49715â†’51611); tagged search_blob skladnikiâ‰17080, owoceâ‰7377; relink SKU-only (bez assoc na nazwie pliku).
+5. Babka 6300684.01: 12 Links w indeksie (m.in. br-051391â€¦398) z linked_products=[babka-cytrynowa-nerkowcowy] + terminy skladniki/owoce/owocki.
 6. VIZ-ASSOC: product_element asset_role != packshot; zero pe jako packshot.
 
 ### Efekt/Fix
 - Indekser (nie UI): product ELEMENTY/Links w branding-index + skojarzenia wyszukiwawcze.
-- Linkowanie product_element po SKU sciezki (nie globalne "cytryna"→babka).
+- Linkowanie product_element po SKU sciezki (nie globalne "cytryna"â†’babka).
 
 ### Backup
 Brak (enrich addytywny, bez wipe).
 
 ### Test/Ewaluacja
 - AST + classifier smoke OK
-- API/data: asset_count 51611; babka path pe=19–22; 6300684.01 samples z termami
+- API/data: asset_count 51611; babka path pe=19â€“22; 6300684.01 samples z termami
 - GET /program-instructions zawiera branding.element_assoc_skladniki_owoce (plik lokalny; KV seed przy restarcie mostu)
 - Gap: POS `\Links\` nadal w grupie ELEMENTY UI (filtr sciezki); ELEMENTY folder babki na dysku = 0 plikow (can_generate)
 
@@ -6088,12 +7322,12 @@ Synteza luku agentow z briefu `agents/shared/usability-brief-2026-07-20.md` + re
 1. Skim brief + process (STREFA A/B/C/D/H/SHELL/A3/DEVICE/INT/VIZ-ASSOC/ELEMENTY-ASSOC) + `WAZNA-CHECKLISTA` (A3 `[~]`, C3 `[ ]`).
 2. Brief: sekcja **STATUS SYNTEZA**; adnotacje P15 PARTIAL, P21-23 DONE, P35 DONE+OPEN POS Links.
 3. Handoff: `agents/shared/handoff-usability-synthesis-2026-07-20.md`.
-4. Doctrine §12: bez nowych wpisow (lekcje juz sa).
+4. Doctrine Â§12: bez nowych wpisow (lekcje juz sa).
 
 ### Zamkniete strefy
-- **A** 1-10 (UI) — modale, ID, thumb picker, assoc tags/zoom
-- **B** 11-14, 16-18, 21-23 — dashboard 2x2, chipy, loader, Pokaz wszystko/archiwum/popup
-- **B pe** product_element + skladniki/owoce — indeks 7832→49715→51611
+- **A** 1-10 (UI) â€” modale, ID, thumb picker, assoc tags/zoom
+- **B** 11-14, 16-18, 21-23 â€” dashboard 2x2, chipy, loader, Pokaz wszystko/archiwum/popup
+- **B pe** product_element + skladniki/owoce â€” indeks 7832â†’49715â†’51611
 - **C/C3/C4** samouczek DobroKalorius + polish + 40 pochwal
 - **D** Explorer foreground + file:/// path
 - **H/H3** hold-to-delete + Strefa ryzyka
@@ -6104,11 +7338,11 @@ Synteza luku agentow z briefu `agents/shared/usability-brief-2026-07-20.md` + re
 - **Integracje** skeleton `#ececf2`, Bento span-2, Konfiguruj width, PLANOWANE +30, FMCG Edytuj
 
 ### Otwarte / partial (NIE inventuj zieleni)
-- Checklista **A3** `[~]` — UI OK; fill kwot/import = user
-- Checklista **C3** `[ ]` — BENTO anatomia kart zamrozona
+- Checklista **A3** `[~]` â€” UI OK; fill kwot/import = user
+- Checklista **C3** `[ ]` â€” BENTO anatomia kart zamrozona
 - **P15 SLIDERY-sklep** overlap policy (0 sciezek ARCHIWUM = dedup)
 - **POS Links** jakosc w grupie ELEMENTY
-- **P6** Postanowienia/DPD linked_products→babka = luka danych
+- **P6** Postanowienia/DPD linked_productsâ†’babka = luka danych
 - A1/A2, B1-B5, B7 (poza lukiem usability)
 
 ### Cache bumps do hard-refresh
@@ -6123,7 +7357,7 @@ Dokumentacja zsynchronizowana ze stanem agentow; brak zmian kodu/danych uzytkown
 Brak.
 
 ### Test/Ewaluacja
-Read-only audyt handoffow + process; checklista A3/C3 bez zmiany statusu (zgodna z rzeczywistościa).
+Read-only audyt handoffow + process; checklista A3/C3 bez zmiany statusu (zgodna z rzeczywistoĹ›cia).
 
 ### Zrodla
 - usability-brief-2026-07-20.md, handoff-strefa-A/B/A3/H/C4/DEVICE/INTEGRACJE/VIZ-ASSOC
@@ -6160,11 +7394,11 @@ USER: sekcja `Kolejka mapowan wykrojnikow` na integrations.html nie ma sensu (py
 
 ### Log/Status
 1. Zrodlo mapowania: `X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/opakowania_Kubara_baza_danych.xlsx` (kolumny oznaczenie Kubara / asortyment; nie kod/nazwa).
-2. Fix `import-wykrojniki-xlsx.py` (naglowki sekcyjne) → rejestr 52 wpisy (bylo 101× row-N).
+2. Fix `import-wykrojniki-xlsx.py` (naglowki sekcyjne) â†’ rejestr 52 wpisy (bylo 101Ă— row-N).
 3. `link-wykrojniki-products.py`: kolejka + product_index + PDF + nazwa.
 4. Bridge: POST `/wykrojniki/link-products`, `/wykrojniki/set-link`; resolve kolejki aplikuje do rejestru.
 5. UI: `dam-wykrojnik-queue.js/css` + mount `#damWykrojnikQueue`; `?v=wykmap20260720a`.
-6. PI: `integrations.hub_bridge` + `wykrojnik.registry_xlsx_kubara`; checklista B1 → [x].
+6. PI: `integrations.hub_bridge` + `wykrojnik.registry_xlsx_kubara`; checklista B1 â†’ [x].
 7. Restart bridge (pythonw) po zmianie local_bridge.py (A4).
 
 ### Efekt/Fix
@@ -6176,15 +7410,15 @@ Brak (reimport zachowuje linked_product_ids; dane queue nietkniete).
 ### Test/Ewaluacja
 - node --check OK; ast.parse scripts+bridge OK
 - import entries=52; link linked=2
-- Bridge POST link-products/set-link → login_required (route live)
+- Bridge POST link-products/set-link â†’ login_required (route live)
 
 ### Zrodla
 opakowania_Kubara_baza_danych.xlsx; dam-dobrakaloria; ui-taste; code-doctrine; program-instructions
 
-## 2026-07-20 - Wykrojniki panel: badge/CTA → dam-int language
+## 2026-07-20 - Wykrojniki panel: badge/CTA â†’ dam-int language
 
 ### Komenda/Akcja
-USER: brzydkie badge/przyciski w #damWykrojnikQueue → .dam-int-chip / .dam-int-cta (B1 [x]).
+USER: brzydkie badge/przyciski w #damWykrojnikQueue â†’ .dam-int-chip / .dam-int-cta (B1 [x]).
 
 ### Log/Status
 1. CSS: usunieto peach .dam-wyk-map__chip--warn (#b45309); stats + status = dam-int-st wait/ok.
@@ -6202,7 +7436,7 @@ Brak.
 ### Test/Ewaluacja
 - node --check OK
 - CDP: badgeOpen bg/color/pad/fs/fw = Bento `Brak`; CTA wczytaj/uzupelnij/zapisz = Preferencje (h=34, br=8, border #e7e7e7)
-- Pass1 Wszystkie / Pass2 Bez produktu / Pass3 Powiazane — screenshot+Read; peachCheck=false
+- Pass1 Wszystkie / Pass2 Bez produktu / Pass3 Powiazane â€” screenshot+Read; peachCheck=false
 
 ### Zrodla
 dam-wykrojnik-queue.js/css; dam-integrations.css; ui-taste; dam-dobrakaloria
@@ -6215,7 +7449,7 @@ USER: A3 `[~]` dogrywka - modal FMCG 80vw/80vh, scroll-trap, DAM CTAs, Zamknij=X
 ### Log/Status
 1. PI: `finance.fmcg_manual_edit` rozszerzone; nowa `ui.safe_delete`.
 2. Bridge: GET/POST `/user-prefs` -> dam_kv_store `user-prefs:{email}` + lokalny `apps/desktop/data/user-prefs.json`; default `safe_delete: true`.
-3. `dam-user-prefs.js` + DamDanger: pref gate, toastAction „Wylacz bezpieczne usuwanie”, holdMs 1000 na FMCG Usun.
+3. `dam-user-prefs.js` + DamDanger: pref gate, toastAction â€žWylacz bezpieczne usuwanieâ€ť, holdMs 1000 na FMCG Usun.
 4. `dam-fmcg-catalog.js`: dialog min(80vw)/min(80vh), flex+table-wrap scrollport, body lock, wheel trap, close `.dam-modal-x`, Zapisz/+ = `.dam-int-cta`.
 5. Settings: search keywords + toggle Bezpieczne usuwanie; cache `?v=safedel20260720a`.
 6. A3 checklist pozostaje `[~]` (brak pelnego fill katalogu).
@@ -6228,8 +7462,8 @@ Brak.
 
 ### Test/Ewaluacja
 - node --check + ast.parse OK
-- CDP modal: w≈1280 h≈900 (80vw/80vh cap), closeClass=dam-modal-x, save=dam-int-cta, no geex-primary, wrapDelta=120 windowDelta=0 bodyOverflow=hidden
-- Settings search „usuwanie” -> tylko #damPrefs + Bezpieczne usuwanie ON
+- CDP modal: wâ‰1280 hâ‰900 (80vw/80vh cap), closeClass=dam-modal-x, save=dam-int-cta, no geex-primary, wrapDelta=120 windowDelta=0 bodyOverflow=hidden
+- Settings search â€žusuwanieâ€ť -> tylko #damPrefs + Bezpieczne usuwanie ON
 - Bridge LIVE bez restartu: GET /user-prefs -> not_found (wymaga restartu local_bridge)
 - Screenshots: fmcg-edit-pass1-header-x.png, fmcg-edit-pass2-data-scroll.png, settings-safe-delete-search-pass3.png
 
@@ -6239,13 +7473,13 @@ dam-fmcg-catalog.js; dam-danger.js; dam-user-prefs.js; dam-settings.js/css; loca
 ## 2026-07-20 - STREFA INT-FIX (Grok) - skeleton + clicki hub Integracje
 
 ### Komenda/Akcja
-USER: hub integrations.html - skeleton nie znika; przyciski noop/reload; CTA do ui-taste (Wkrótce dashed). Bez commit, bez delete.
+USER: hub integrations.html - skeleton nie znika; przyciski noop/reload; CTA do ui-taste (WkrĂłtce dashed). Bez commit, bez delete.
 
 ### Log/Status
 1. Diagnoza CDP: karty laduja gdy mount dziala; `window focus` -> `DamIntegrations.refresh` = pelny remount (skeleton flash + zamyka details Konfiguruj).
 2. Usunieto remount na focus; visibilitychange z guardem details/form + debounce 5s.
-3. `withTimeout` + `safeRender` + failsafe - skeleton nigdy nieskonczony; error UI ze Spróbuj ponownie.
-4. Konfiguruj w foot (`.dam-int-tile__config`); CTA `.dam-int-cta` / welcome-link; Wkrótce dashed ink.
+3. `withTimeout` + `safeRender` + failsafe - skeleton nigdy nieskonczony; error UI ze SprĂłbuj ponownie.
+4. Konfiguruj w foot (`.dam-int-tile__config`); CTA `.dam-int-cta` / welcome-link; WkrĂłtce dashed ink.
 5. GSAP: killTweensOf + force opacity po reveal (mid-tween wygladal jak pusty hub).
 6. Cache-bust `?v=intfix20260720c` (hub + settings).
 
@@ -6253,7 +7487,7 @@ USER: hub integrations.html - skeleton nie znika; przyciski noop/reload; CTA do 
 - Skeleton znika (success lub error state).
 - Preferencje -> settings.html#damPrefs (nie reload hubu).
 - Konfiguruj otwiera details i zostaje open po focus.
-- Wkrótce: border dashed, ink #1a1820.
+- WkrĂłtce: border dashed, ink #1a1820.
 
 ### Backup
 Brak.
@@ -6266,21 +7500,21 @@ Brak.
 ### Zrodla
 dam-integrations.js/css; integrations.html; settings.html; handoff-strefa-INTEGRACJE.md; ui-taste; dam-dobrakaloria; code-doctrine
 
-## 2026-07-20 - Branding PL encoding + archiwum obok Pokaż wszystko
+## 2026-07-20 - Branding PL encoding + archiwum obok PokaĹĽ wszystko
 
 ### Komenda/Akcja
-USER: branding.html - znaki PL jako `?` + `Pokaż archiwum` ma byc obok `Pokaż wszystko` (nie pod tabami).
+USER: branding.html - znaki PL jako `?` + `PokaĹĽ archiwum` ma byc obok `PokaĹĽ wszystko` (nie pod tabami).
 
 ### Log/Status
 1. Root cause: literaly `?` (ASCII) w `branding.html` (diakrytyki zgubione przy zapisie); `dam-branding.js` byl OK (UTF-8). Sidebar z JS = poprawne PL.
-2. Przywrocono UTF-8 w calym main content branding.html (Pokaż, słowo, niemięsa, miesiąc, Wyczyść, Wróć, Ładowanie…).
+2. Przywrocono UTF-8 w calym main content branding.html (PokaĹĽ, sĹ‚owo, niemiÄ™sa, miesiÄ…c, WyczyĹ›Ä‡, WrĂłÄ‡, Ĺadowanieâ€¦).
 3. DOM: `.dam-branding-scope-toggles` przeniesione do `.dam-branding-tabs` zaraz po `.dam-branding-tab--all`.
 4. CSS: flex align + scope inline w tabs; mobile: --all/scope `flex:0 0 auto`.
 5. Cache-bust `dam-branding.css/js?v=plfix20260720a` (branding, dashboard, explorer, visualizations).
 6. Checklista: brak osobnego ID encoding (B1-B7 nie dotyczy).
 
 ### Efekt/Fix
-Branding page: PL OK; archiwum na tej samej bazie co `Pokaż wszystko`.
+Branding page: PL OK; archiwum na tej samej bazie co `PokaĹĽ wszystko`.
 
 ### Backup
 Brak.
@@ -6288,7 +7522,7 @@ Brak.
 ### Test/Ewaluacja
 - Serwer: bajty `Poka\xc5\xbc`; charset UTF-8
 - CDP: all/scope/clear/month/week/sub hasQ=false hasPL=true; sameRow=true; scopeParent=dam-branding-tabs
-- Pass1 viewport + Pass2 `.dam-branding-tabs` + Pass3 filters: screenshot+Read - Pokaż/miesiąc/Wyczyść OK; toggle obok --all
+- Pass1 viewport + Pass2 `.dam-branding-tabs` + Pass3 filters: screenshot+Read - PokaĹĽ/miesiÄ…c/WyczyĹ›Ä‡ OK; toggle obok --all
 - Nadal zepsute (poza scope): explorer.html, visualizations.html (Poka? wszystkie), dashboard Aktywno??
 
 ### Zrodla
@@ -6303,7 +7537,7 @@ USER: #damSidebar / .geex-sidebar collapse/expand janky - fix GSAP (gsap-core) +
 1. Root cause: multi-prop layout thrash (width/min/max + main pad + icon marginRight + label stagger) + Geex `transition: all`.
 2. Rewrite morph: numeric proxy -> `--dam-sidebar-w`; labels autoAlpha/x batch; kill competing transitions via `dam-sidebar-morphing`; interrupt-safe toggle; reduced-motion instant.
 3. Cache bump `dam-shell.js?v=sidebarmorphsmooth20260720b` (20 HTML).
-4. Doctrine §12 lesson + screenshot QA expanded/collapsed.
+4. Doctrine Â§12 lesson + screenshot QA expanded/collapsed.
 
 ### Efekt/Fix
 Collapse ~500ms (312->72), expand ~500ms (72->312); smooth width samples; logo readable collapsed.
@@ -6317,7 +7551,7 @@ Brak.
 - Screenshots+Read: pass1/3 collapsed, pass2/3 expanded
 
 ### Zrodla
-dam-shell.js; dam-app.css (--dam-sidebar-w); gsap-core; ui-taste; dam-dobrakaloria; code-doctrine §12
+dam-shell.js; dam-app.css (--dam-sidebar-w); gsap-core; ui-taste; dam-dobrakaloria; code-doctrine Â§12
 
 ## 2026-07-20 - Polish diacritics `?` sweep (HTML)
 
@@ -6326,9 +7560,9 @@ USER: ASCII `?` left in explorer/visualizations/dashboard (po fix brandingu ef95
 
 ### Log/Status
 1. Grep: literal `?` w PL stringach w `explorer.html`, `visualizations.html`, `dashboard.html`, `profile.html`.
-2. Restore: wygląd, assetów, Aktywność, Pokaż, Odśwież, język, folderów, Układ, Otwórz, Usuń, Ponów, strzałki/cudzysłowy w tipach.
+2. Restore: wyglÄ…d, assetĂłw, AktywnoĹ›Ä‡, PokaĹĽ, OdĹ›wieĹĽ, jÄ™zyk, folderĂłw, UkĹ‚ad, OtwĂłrz, UsuĹ„, PonĂłw, strzaĹ‚ki/cudzysĹ‚owy w tipach.
 3. HTML-only (bez bump CSS/JS). Unikano `dam-shell.js` (agent 706bc8f3).
-4. Verify: CDP/a11y snapshot explorer+dashboard+viz; branding nadal OK (Pokaż wszystko / miesiąc / Wyczyść).
+4. Verify: CDP/a11y snapshot explorer+dashboard+viz; branding nadal OK (PokaĹĽ wszystko / miesiÄ…c / WyczyĹ›Ä‡).
 
 ### Efekt/Fix
 UI labels bez `Poka?` / `Od?wie?` / `Aktywno??` na wskazanych stronach.
@@ -6337,25 +7571,25 @@ UI labels bez `Poka?` / `Od?wie?` / `Aktywno??` na wskazanych stronach.
 Brak.
 
 ### Test/Ewaluacja
-- Residual known corrupt tokens (`Poka?`, `Od?wie`, `Aktywno??`, …): 0 w `apps/web/*.html`
-- Browser: Pokaż wszystkie, Odśwież z dysku, Filtr języka, Układ pulpitu, Otwórz kalkulator kosztów
-- Pozostaje poza scope: header chip `Jezyk` (shell/i18n); JS strings bez `?` ale bez diakrytyków (np. tipy Wlacz->naprawione w HTML; dam-*.js osobno); signin-geex `??`
+- Residual known corrupt tokens (`Poka?`, `Od?wie`, `Aktywno??`, â€¦): 0 w `apps/web/*.html`
+- Browser: PokaĹĽ wszystkie, OdĹ›wieĹĽ z dysku, Filtr jÄ™zyka, UkĹ‚ad pulpitu, OtwĂłrz kalkulator kosztĂłw
+- Pozostaje poza scope: header chip `Jezyk` (shell/i18n); JS strings bez `?` ale bez diakrytykĂłw (np. tipy Wlacz->naprawione w HTML; dam-*.js osobno); signin-geex `??`
 
 ### Zrodla
 explorer.html; visualizations.html; dashboard.html; profile.html; dam-dobrakaloria
 
-## 2026-07-20 - Header chip Jezyk → Język
+## 2026-07-20 - Header chip Jezyk â†’ JÄ™zyk
 
 ### Komenda/Akcja
-USER: Tiny follow-up - header language chip PL label missing ę.
+USER: Tiny follow-up - header language chip PL label missing Ä™.
 
 ### Log/Status
-1. Root: `dam-i18n.js` buildSwitcher hardcoded `title`/`aria-label`/popup title `Jezyk`; shell already had fallback `Język` but only set `title`.
-2. Fix: `Język` in i18n HTML; shell also sets `aria-label`. Cache bump `dam-shell.js` + `dam-i18n.js` → `plshell20260720a` (all HTML).
+1. Root: `dam-i18n.js` buildSwitcher hardcoded `title`/`aria-label`/popup title `Jezyk`; shell already had fallback `JÄ™zyk` but only set `title`.
+2. Fix: `JÄ™zyk` in i18n HTML; shell also sets `aria-label`. Cache bump `dam-shell.js` + `dam-i18n.js` â†’ `plshell20260720a` (all HTML).
 3. Verify: CDP title/aria-label + screenshot chip tooltip.
 
 ### Efekt/Fix
-Header chip shows proper **Język** with ę.
+Header chip shows proper **JÄ™zyk** with Ä™.
 
 ### Zrodla
 dam-i18n.js; dam-shell.js; dam-dobrakaloria
@@ -6366,34 +7600,34 @@ dam-i18n.js; dam-shell.js; dam-dobrakaloria
 USER: Ikony maja trzymac tor expanded (bez recenter jump), na collapse tylko slide left + dim 0.5s; cache beyond `sidebarmorphsmooth20260720b`.
 
 ### Log/Status
-1. Root cause: `--dam-sidebar-w` plynnny, ale `onComplete` + `dam-sidebar-collapsed` snapowal padding 29/25 → 10/0 i `justify-content:center` (~30px skok ikon). Labels w flow tez mogly reflowowac.
+1. Root cause: `--dam-sidebar-w` plynnny, ale `onComplete` + `dam-sidebar-collapsed` snapowal padding 29/25 â†’ 10/0 i `justify-content:center` (~30px skok ikon). Labels w flow tez mogly reflowowac.
 2. Fix w `dam-shell.js`: podczas morph CSS vars `--dam-sb-pad-x` + `--dam-link-pad-x` (jedna os z width, `power3.inOut` 0.5s); labels absolute; dim `filter:brightness(0.68)` tylko nieaktywne; collapsed class dopiero onComplete; twarde clear filter.
 3. Cache bump ALL HTML: `dam-shell.js?v=sidebarmorphsmooth20260720c`.
-4. Doctrine §12 + ten wpis.
+4. Doctrine Â§12 + ten wpis.
 
 ### Efekt/Fix
-Ikony slizgaja sie po torze pad (55→24) razem z width 312→72; brak justify mid-flight; dim 0.5s.
+Ikony slizgaja sie po torze pad (55â†’24) razem z width 312â†’72; brak justify mid-flight; dim 0.5s.
 
 ### Backup
 Brak.
 
 ### Test/Ewaluacja
 - `node --check dam-shell.js` OK
-- CDP collapse samples (updateRoot): w 312→304→181→78→72; iconOff 55→54→39→27→24; filter 1→0.68→none; end logo 48×48
+- CDP collapse samples (updateRoot): w 312â†’304â†’181â†’78â†’72; iconOff 55â†’54â†’39â†’27â†’24; filter 1â†’0.68â†’none; end logo 48Ă—48
 - Math ease continuous (max step <8px / 0.1t)
 - Screenshot+Read: expanded (labels+icon column); collapsed rail (icons centered, logo czytelne)
 - Pass/Fail: Pass (mid-tween continuous na collapse)
 
 ### Zrodla
-dam-shell.js; gsap-core; ui-taste; dam-dobrakaloria; code-doctrine §12
+dam-shell.js; gsap-core; ui-taste; dam-dobrakaloria; code-doctrine Â§12
 
 ## 2026-07-20 - Branding: skeleton + filters reveal + meta layout
 
 ### Komenda/Akcja
-USER: Branding skeleton shimmer (jak Integracje #ececf2), entrance meta filters top→bottom, Sortuj+Liczby przy Skala (gap 20px), unify meta toolbar styles. Nie ruszać dam-shell.js.
+USER: Branding skeleton shimmer (jak Integracje #ececf2), entrance meta filters topâ†’bottom, Sortuj+Liczby przy Skala (gap 20px), unify meta toolbar styles. Nie ruszaÄ‡ dam-shell.js.
 
 ### Log/Status
-1. Skeleton: dam-branding.css override kart .dam-skeleton__card--viz → bg #ececf2 + border + mocniejszy shimmer; boot trzyma skeleton podczas loadIndex (setBootStatus → showInitialBootSkeletons); czyszczenie brandbook leftover.
+1. Skeleton: dam-branding.css override kart .dam-skeleton__card--viz â†’ bg #ececf2 + border + mocniejszy shimmer; boot trzyma skeleton podczas loadIndex (setBootStatus â†’ showInitialBootSkeletons); czyszczenie brandbook leftover.
 2. Filters reveal: 
 evealMetaFilters via DamGridReveal.revealSequence (opacity+y, bez clip-path rest); start po dam-booted / body widoczne; prefers-reduced-motion = instant.
 3. Layout: wrapper .dam-branding-filters__view-tools (ml:auto) = Sortuj | Liczby | Skala; Skala margin-left:20px.
@@ -6402,7 +7636,7 @@ evealMetaFilters via DamGridReveal.revealSequence (opacity+y, bez clip-path rest
 6. Nie ruszano dam-shell.js.
 
 ### Efekt/Fix
-Meta toolbar spójny; Sort|Liczby|20px|Skala; skeleton czytelny ze shimmer; entrance animowany.
+Meta toolbar spĂłjny; Sort|Liczby|20px|Skala; skeleton czytelny ze shimmer; entrance animowany.
 
 ### Backup
 Brak.
@@ -6418,26 +7652,26 @@ branding.html; dam-branding.js; dam-branding.css; dam-grid-reveal.js; dam-dobrak
 ## 2026-07-20 - WORKER A: Visualizations secondary filters + toolbar
 
 ### Komenda/Akcja
-USER WORKER A: Info Pakowania → dam-switch--compact; unify .dam-viz-secondary-filters (+12px pad, 12px/34px); #vizStatus BELOW filters; fix false Bridge offline; PL tipy Cofnij/Ponów; języki; cache-bust; screenshot≥3. FORBIDDEN branding.html.
+USER WORKER A: Info Pakowania â†’ dam-switch--compact; unify .dam-viz-secondary-filters (+12px pad, 12px/34px); #vizStatus BELOW filters; fix false Bridge offline; PL tipy Cofnij/PonĂłw; jÄ™zyki; cache-bust; screenshotâ‰Ą3. FORBIDDEN branding.html.
 
 ### Log/Status
-1. Markup visualizations.html: secondary filters first, then dam-viz-grid-toolbar; Info Pakowania + Pokaż wszystkie = dam-switch dam-switch--compact.
+1. Markup visualizations.html: secondary filters first, then dam-viz-grid-toolbar; Info Pakowania + PokaĹĽ wszystkie = dam-switch dam-switch--compact.
 2. dam-brand.css: shared .dam-viz-secondary-filters padding 20px 24px, meta vars, compact switch global, chip/lang/zoom H 34; toolbar comment/order.
 3. NEW dam-viz.css: page chrome + zoom align + lang min-width.
-4. dam-viz.js: „Wszystkie języki” (ę).
-5. dam-tag-edit.js: GET /change-log z bridgeAuthHeaders; login vs offline PL hint; humanize lifecycle_status; tips Cofnij/Ponów.
+4. dam-viz.js: â€žWszystkie jÄ™zykiâ€ť (Ä™).
+5. dam-tag-edit.js: GET /change-log z bridgeAuthHeaders; login vs offline PL hint; humanize lifecycle_status; tips Cofnij/PonĂłw.
 6. Cache: dam-brand/dam-viz/dam-tag-edit/dam-viz.js ?v=vizfilt20260720c (branding.html nie ruszany).
 
 ### Efekt/Fix
-„Bridge offline” = fałszywy: brak Authorization → login_required traktowany jak offline. Po auth: prawdziwy ostatni wpis change-log. Status pod filtrami. Switche Geex compact.
+â€žBridge offlineâ€ť = faĹ‚szywy: brak Authorization â†’ login_required traktowany jak offline. Po auth: prawdziwy ostatni wpis change-log. Status pod filtrami. Switche Geex compact.
 
 ### Backup
 Brak.
 
 ### Test/Ewaluacja
 - node --check dam-viz.js, dam-tag-edit.js OK
-- CDP: orderKids filters→toolbar, statusBelow=true, pad 20px 24px, fs 12px, allH34=true, packClasses dam-switch--compact, lang „Wszystkie języki”, hint „Status cyklu życia: nieaktualne · …”, hintTruncated=false
-- Screenshot+Read: viz-filt-pass1, pass2b, pass3b (≥3 przeloty)
+- CDP: orderKids filtersâ†’toolbar, statusBelow=true, pad 20px 24px, fs 12px, allH34=true, packClasses dam-switch--compact, lang â€žWszystkie jÄ™zykiâ€ť, hint â€žStatus cyklu ĹĽycia: nieaktualne Â· â€¦â€ť, hintTruncated=false
+- Screenshot+Read: viz-filt-pass1, pass2b, pass3b (â‰Ą3 przeloty)
 - Pass/Fail: Pass
 
 ### Zrodla
@@ -6452,20 +7686,20 @@ USER: Unify primary/secondary CTAs and status badges on Faktury + Projekty to In
 ### Log/Status
 1. Added pps/web/assets/js/dam-ui-cta.js - inject #damGlobalCtaUnify (cta/chip/filter anatomy, no rewrite of dam-integrations.css).
 2. Faktury: invoices.html Importuj CSV label -> dam-int-cta; filters -> dam-int-filter; source badge -> chip.
-3. dam-invoices.js: status chips ok/wait/danger; Opłacona labels; filter active without inline purple hacks.
-4. Projekty: index.html Odśwież listę + Skanuj dysk -> dam-int-cta; dam-projects.js status chips + card actions CTAs.
+3. dam-invoices.js: status chips ok/wait/danger; OpĹ‚acona labels; filter active without inline purple hacks.
+4. Projekty: index.html OdĹ›wieĹĽ listÄ™ + Skanuj dysk -> dam-int-cta; dam-projects.js status chips + card actions CTAs.
 5. PL: i18n/pl.json invoices.filter_paid/pending/status_paid/col_due diacritics.
 6. Cache: ?v=ctaunify20260720b on dam-ui-cta / dam-invoices / dam-projects.
 
 ### Efekt/Fix
-Geex primary-transparent blobs removed from owned toolbars; status chips match Integracje Brak/Połączono anatomy.
+Geex primary-transparent blobs removed from owned toolbars; status chips match Integracje Brak/PoĹ‚Ä…czono anatomy.
 
 ### Backup
 Brak (git checkout index.html mid-flight after encoding mishap, then re-patched).
 
 ### Test/Ewaluacja
 - node --check dam-ui-cta.js / dam-invoices.js / dam-projects.js OK
-- CDP Faktury: Importuj CSV height=34, class=dam-int-cta; chips Opłacona/Oczekuje; filters Opłacone/Oczekujące
+- CDP Faktury: Importuj CSV height=34, class=dam-int-cta; chips OpĹ‚acona/Oczekuje; filters OpĹ‚acone/OczekujÄ…ce
 - CDP Projekty: refresh/ingest H=34; card CTA H=34; chips Niekompletny(--danger)/Kompletny(--ok); leftover geex primary=0
 - Screenshot+Read: cta-unify-faktury-pass1, cta-unify-projekty-pass1/2, page-2026-07-20T18-14-26
 - Pass/Fail: Pass (3 przeloty)
@@ -6481,21 +7715,21 @@ USER: Fix mojibake / U+FFFD / broken PL UI across projects, messages, dashboard,
 ### Log/Status
 1. Root cause: many HTML sources had U+FFFD (UTF-8 EF BF BD) where Polish letters were lost (not live CP1250).
 2. Restored diacritics from git HEAD via skeleton line-match + context anchors + explicit phrase map.
-3. Fixed owned pages: inbox, settings, help, terms, license, privacy, consents, activity, costs, docs-security, integrations, project, profile; JS: dam-explorer.js / dam-projects.js (`opakowanie`, `języki` where owned).
-4. Skipped write: dam-viz.js / visualizations.html (A); branding* left to agent 937cce8f (grep shows branding already OK: Pokaż).
+3. Fixed owned pages: inbox, settings, help, terms, license, privacy, consents, activity, costs, docs-security, integrations, project, profile; JS: dam-explorer.js / dam-projects.js (`opakowanie`, `jÄ™zyki` where owned).
+4. Skipped write: dam-viz.js / visualizations.html (A); branding* left to agent 937cce8f (grep shows branding already OK: PokaĹĽ).
 5. Residual owned FFFD after pass = 0. Left for A: `Wszystkie jezyki` in dam-viz.js.
 
 ### Efekt/Fix
-Projekty: `Projekty opakowań`, `Odśwież listę`, subtitle z ń/ś/ć.
-Wiadomości: `Wiadomości`, `Zgłoszenia DAM`, `Źródła`, `Odśwież`, `wiadomościach`.
+Projekty: `Projekty opakowaĹ„`, `OdĹ›wieĹĽ listÄ™`, subtitle z Ĺ„/Ĺ›/Ä‡.
+WiadomoĹ›ci: `WiadomoĹ›ci`, `ZgĹ‚oszenia DAM`, `ĹąrĂłdĹ‚a`, `OdĹ›wieĹĽ`, `wiadomoĹ›ciach`.
 
 ### Backup
 Brak (restore from git HEAD strings, working-tree structure kept).
 
 ### Test/Ewaluacja
-- Scan: owned-scope FFFD=0; branding FFFD=0 / Pokaż OK; residual ascii `jezyki` only in dam-viz.js (forbidden).
-- CDP Projekty: h2=`Projekty opakowań`, refresh=`Odśwież listę`, subtitle kompletności.
-- CDP Inbox: title=`Wiadomości - DAM`, h2=`Wiadomości`, z=`Zgłoszenia DAM`, src=`Źródła`, ref=`Odśwież`.
+- Scan: owned-scope FFFD=0; branding FFFD=0 / PokaĹĽ OK; residual ascii `jezyki` only in dam-viz.js (forbidden).
+- CDP Projekty: h2=`Projekty opakowaĹ„`, refresh=`OdĹ›wieĹĽ listÄ™`, subtitle kompletnoĹ›ci.
+- CDP Inbox: title=`WiadomoĹ›ci - DAM`, h2=`WiadomoĹ›ci`, z=`ZgĹ‚oszenia DAM`, src=`ĹąrĂłdĹ‚a`, ref=`OdĹ›wieĹĽ`.
 - Screenshot+Read: pl-wave2-projekty-titles.png, pl-wave2-wiadomosci-titles.png
 - Pass/Fail: Pass (titles). Hard refresh note for HTML-only fixes (`?v=` page query).
 
@@ -6505,23 +7739,23 @@ inbox.html; index.html; settings.html; help.html; terms/license/privacy/consents
 ## 2026-07-20 - Branding: PL regresja + tabs full-width + card ID chip gray
 
 ### Komenda/Akcja
-USER: PL znaki (?), tabs full-width, sectionDesc under subtitle, status under meta filters, discovery cleanup, meta pad +12px; potem ID chip gray + mt 5px, meta mt -4px. Nie ruszać dam-shell.js.
+USER: PL znaki (?), tabs full-width, sectionDesc under subtitle, status under meta filters, discovery cleanup, meta pad +12px; potem ID chip gray + mt 5px, meta mt -4px. Nie ruszaÄ‡ dam-shell.js.
 
 ### Log/Status
-1. Root PL: branding.html miał literały ASCII \?\ zamiast UTF-8 (regresja po skelmeta20260720c) — Pokaż/słowo/niemięsa/produktów/ścieżce/Ładowanie/Wróć itd. przywrócone UTF-8.
-2. Layout: tabs-row bez kolumny tabs-meta (pełna szerokość belka); #damBrandingSectionDesc pod .dam-page-sub; #damBrandingStatus pod .dam-branding-filters--meta; discovery DOM usunięty (pusty host = spacer ~30px gdy brak recent).
+1. Root PL: branding.html miaĹ‚ literaĹ‚y ASCII \?\ zamiast UTF-8 (regresja po skelmeta20260720c) â€” PokaĹĽ/sĹ‚owo/niemiÄ™sa/produktĂłw/Ĺ›cieĹĽce/Ĺadowanie/WrĂłÄ‡ itd. przywrĂłcone UTF-8.
+2. Layout: tabs-row bez kolumny tabs-meta (peĹ‚na szerokoĹ›Ä‡ belka); #damBrandingSectionDesc pod .dam-page-sub; #damBrandingStatus pod .dam-branding-filters--meta; discovery DOM usuniÄ™ty (pusty host = spacer ~30px gdy brak recent).
 3. Meta filters padding 20px 24px (+12 vs bazowe 8/12).
-4. Card: .dam-branding-card__id-chip / .dam-branding-id-chip → szary muted (nie purple); margin-top:5px; .dam-branding-card .dam-viz-card__meta { margin-top:-4px }.
+4. Card: .dam-branding-card__id-chip / .dam-branding-id-chip â†’ szary muted (nie purple); margin-top:5px; .dam-branding-card .dam-viz-card__meta { margin-top:-4px }.
 5. Cache: dam-branding.js/css?v=cardchip20260720f (branding, explorer, dashboard, visualizations).
 
 ### Efekt/Fix
-PL czytelne; belka tabów full-width; desc/status w nowej hierarchii; brak discovery gap; ID chip gray; meta ciaśniej.
+PL czytelne; belka tabĂłw full-width; desc/status w nowej hierarchii; brak discovery gap; ID chip gray; meta ciaĹ›niej.
 
 ### Backup
 Brak.
 
 ### Test/Ewaluacja
-- CDP: tab \Pokaż\ charCode 380; tabsRowW=contentW; descUnderSub; statusBelowMeta; discoveryExists=false; metaPad 20/24; chip color rgb(107,103,120) bg rgba(70,66,85,0.08) mt=5px; metaMt=-4px; isPurple=false
+- CDP: tab \PokaĹĽ\ charCode 380; tabsRowW=contentW; descUnderSub; statusBelowMeta; discoveryExists=false; metaPad 20/24; chip color rgb(107,103,120) bg rgba(70,66,85,0.08) mt=5px; metaMt=-4px; isPurple=false
 - Screenshot+Read: branding-gray-chip-proof-viewport.png (gray chip M-SLI504000-07-26 + meta)
 - Pass/Fail: Pass
 
@@ -6531,30 +7765,30 @@ branding.html; dam-branding.css; dam-branding.js; dam-dobrakaloria; ui-taste
 ## 2026-07-20 - Sidebar: anti-jank morph + Wyloguj low + restore author/version
 
 ### Komenda/Akcja
-USER: morph 280↔72 still stutters; icons same column (no recenter jump); Wyloguj lower in collapsed (match expanded); restore footer DAM / Dobra Kaloria - Inyfinn / v…; 5 ui-taste passes; cache beyond sidebarmorphsmooth20260720c → sidebarmorph20260720e. Checklist B5 note only (not [x]).
+USER: morph 280â†”72 still stutters; icons same column (no recenter jump); Wyloguj lower in collapsed (match expanded); restore footer DAM / Dobra Kaloria - Inyfinn / vâ€¦; 5 ui-taste passes; cache beyond sidebarmorphsmooth20260720c â†’ sidebarmorph20260720e. Checklist B5 note only (not [x]).
 
 ### Log/Status
 1. Root cause A (jank): onComplete clearPadVars + dam-brand `justify-content:center` / padding:0 / icon font-size snap after pad-var morph.
 2. Root cause B (Wyloguj mid-rail): collapsed override `margin-top:8px` + `.dam-sidebar-logo-collapsed{margin-top:auto}` ate space between logout and logo.
-3. Root cause C (footer „removed”): brand_sub fallback „Panel assetów…”; footer below fold (menu not height:100%); collapsed `display:none` without compact meta.
+3. Root cause C (footer â€žremovedâ€ť): brand_sub fallback â€žPanel assetĂłwâ€¦â€ť; footer below fold (menu not height:100%); collapsed `display:none` without compact meta.
 4. Fix `dam-shell.js` inject `#damShellLayerCss`: flex-start + keep `--dam-sb-pad-x`/`--dam-link-pad-x` after collapse; logout +50px both states; menu fill height; logo `margin-top:10px`; `.dam-sidebar-collapsed-meta` (DAM + v); footer brand restore; morph keepPadVars.
-5. Cache: `dam-shell.js?v=sidebarmorph20260720e` (20 HTML). Doctrine §12 + ten wpis.
-6. B5: sidebar expanded+collapsed QA progress only — full dashboard 2×2/1×4/1×6 still open `[ ]`.
+5. Cache: `dam-shell.js?v=sidebarmorph20260720e` (20 HTML). Doctrine Â§12 + ten wpis.
+6. B5: sidebar expanded+collapsed QA progress only â€” full dashboard 2Ă—2/1Ă—4/1Ă—6 still open `[ ]`.
 
 ### Efekt/Fix
-Morph pad+width continuous (icon L 77→48, maxΔ9px, jumps=0); Wyloguj nad logo (gap ~26px, mt 50px); footer expanded full; collapsed DAM v2.0.7.
+Morph pad+width continuous (icon L 77â†’48, maxÎ”9px, jumps=0); Wyloguj nad logo (gap ~26px, mt 50px); footer expanded full; collapsed DAM v2.0.7.
 
 ### Backup
 Brak.
 
 ### Test/Ewaluacja
 - node --check dam-shell.js OK
-- CDP updateRoot samples: w 312→72, pad 25→15, iconL continuous, justify flex-start end
-- Pass1–5 screenshot+Read expanded/collapsed
+- CDP updateRoot samples: w 312â†’72, pad 25â†’15, iconL continuous, justify flex-start end
+- Pass1â€“5 screenshot+Read expanded/collapsed
 - z-index popup 12550 intact
 
 ### Zrodla
-dam-shell.js; gsap-core; ui-taste; dam-dobrakaloria; code-doctrine §12
+dam-shell.js; gsap-core; ui-taste; dam-dobrakaloria; code-doctrine Â§12
 
 ## 2026-07-20 - Docs + commit + push (UI usability pack)
 
@@ -6587,12 +7821,12 @@ dam-viz.css/js; dam-branding.js + branding.html; dam-tutorial.js; dam-brand.css 
 ## 2026-07-20 - Help modal: restart samouczka + padding +10
 
 ### Komenda/Akcja
-USER: `#damHelpModal` header - pod X kontrola „Włącz samouczek ponownie”; padding wewnetrzny +10px; realny restart DamTutorial; cache-bust; 5 passow screenshot; process.md; bez commit.
+USER: `#damHelpModal` header - pod X kontrola â€žWĹ‚Ä…cz samouczek ponownieâ€ť; padding wewnetrzny +10px; realny restart DamTutorial; cache-bust; 5 passow screenshot; process.md; bez commit.
 
 ### Log/Status
 1. READ code-doctrine + dam-shortcuts / dam-tutorial / dam-brand help CSS.
 2. `DamTutorial.restart()` - stop/clear PHASE + session dismiss, `start({phase:0,step:0})`.
-3. `injectHelpRestartControl` w headerze (kolumna `.dam-help-modal__head-actions` pod X); stopka „Uruchom samouczek” tez woła restart.
+3. `injectHelpRestartControl` w headerze (kolumna `.dam-help-modal__head-actions` pod X); stopka â€žUruchom samouczekâ€ť tez woĹ‚a restart.
 4. `dam-shortcuts.js` - head-actions wrapper w HTML modala.
 5. CSS: head 32/34/22, body 26/34/34 (+10); restart Geex; gap actions 12px; tut-help-entry +10.
 6. Cache: `helprestart20260720a` (tutorial js/css, shell, shortcuts); brand `helprestart20260720c`.
@@ -6618,23 +7852,23 @@ dam-tutorial.js; dam-shortcuts.js; dam-brand.css; dam-tutorial.css; dam-shell.js
 USER WORKER nadzorca: stan briefow 2026-07-20 + MUST DONE A viz toolbar / B branding page-size / C sidebar. Bez commit. Nie ruszac #damHelpModal.
 
 ### Log/Status
-1. Audyt: A czesciowo (mount far-right + admin gate + pill); hint mial zla historie „Status cyklu życia”; B page-size juz w JS ale branding.html PL/encoding uszkodzony; C footer brak na stronach bez markup (branding).
-2. A: `formatChangeLogEntry` -> „Ostatnia zmiana na dysku: …”; trailing CSS `margin-left:auto`; hint max-width 340px; status mb 15px / filters mb 4px (bliżej); pill 8/12 (jak Branding + inject).
+1. Audyt: A czesciowo (mount far-right + admin gate + pill); hint mial zla historie â€žStatus cyklu ĹĽyciaâ€ť; B page-size juz w JS ale branding.html PL/encoding uszkodzony; C footer brak na stronach bez markup (branding).
+2. A: `formatChangeLogEntry` -> â€žOstatnia zmiana na dysku: â€¦â€ť; trailing CSS `margin-left:auto`; hint max-width 340px; status mb 15px / filters mb 4px (bliĹĽej); pill 8/12 (jak Branding + inject).
 3. B: naprawa UTF-8/PL w branding.html; suwak+input+OK+wheel juz w `dam-branding.js` (apply dopiero po OK - CDP: draft nie zmienia kart, OK 100->40).
 4. C: `ensureSidebarFooterEl` w `dam-shell.js` + footer markup w branding.html; Wyloguj nisko; autor/wersja expanded + collapsed meta.
 5. Cache: dam-viz.css `supviz20260720d`, dam-tag-edit `supviz20260720c`, dam-shell `supviz20260720b`, dam-branding `supviz20260720a`.
 6. Nie ruszano #damHelpModal.
 
 ### Efekt/Fix
-A/B/C domkniete wzgledem MUST DONE. Concurrent agents nadpisywali dam-viz.css / cache tokeny w trakcie - final: CDP barRight=0, hint bez cyklu życia, page-size OK-only, footer widoczny.
+A/B/C domkniete wzgledem MUST DONE. Concurrent agents nadpisywali dam-viz.css / cache tokeny w trakcie - final: CDP barRight=0, hint bez cyklu ĹĽycia, page-size OK-only, footer widoczny.
 
 ### Backup
 Brak.
 
 ### Test/Ewaluacja
 - node --check dam-tag-edit.js / dam-shell.js / dam-branding.js / dam-viz.js OK
-- CDP viz: barInScope, barRight=0, admin-only hide, hint „Ostatnia zmiana na dysku…”, filtersMb=4px, statusMb=15px, countPad=8px 12px
-- CDP branding: sameAfterDraft, OK apply 40 kart, wheel sync, PL Pokaż
+- CDP viz: barInScope, barRight=0, admin-only hide, hint â€žOstatnia zmiana na dyskuâ€¦â€ť, filtersMb=4px, statusMb=15px, countPad=8px 12px
+- CDP branding: sameAfterDraft, OK apply 40 kart, wheel sync, PL PokaĹĽ
 - Screenshot+Read: supviz-pass1..pass5 (+ pass5b) w Temp/cursor/screenshots/
 
 ### Zrodla
@@ -6643,26 +7877,26 @@ visualizations.html; dam-viz.css; dam-tag-edit.js; dam-viz.js (read); branding.h
 ## 2026-07-20 - VIZ-TOOLBAR worker finish (viztb20260720f)
 
 ### Komenda/Akcja
-USER WORKER: dokończ VIZ-TOOLBAR — changelog w search scope (admin), pill licznika Geex light, branding page-size OK-only. Bez commit / bez sidebar.
+USER WORKER: dokoĹ„cz VIZ-TOOLBAR â€” changelog w search scope (admin), pill licznika Geex light, branding page-size OK-only. Bez commit / bez sidebar.
 
 ### Log/Status
-1. Design Read: toolbar Geex/DAM (Wizualizacje + Branding meta) dla adminów opakowań; jasny panel; Cofnij/Ponów na prawo w scope.
-2. Changelog: `DamSearch.bindScopeChips({ trailingEl })` + mount w `#vizSearchScope .dam-search-scope` (margin-left:auto); widoczny tylko `role=admin` + `dam_admin_mode=1`; hint copy `Ostatnia zmiana na dysku: …` (bez „cykl życia”).
-3. Spacing: filters mb 4px (status bliżej); `#vizStatus` mb 15px.
-4. Pill `#vizGridCount`: format jak Branding; pad **15/26** (= branding 7/14 **+8/+12**); light DAM tokens (nie ciemny 1:1); inject `#damVizCountPillInk` chroni przed regresją CSS.
+1. Design Read: toolbar Geex/DAM (Wizualizacje + Branding meta) dla adminĂłw opakowaĹ„; jasny panel; Cofnij/PonĂłw na prawo w scope.
+2. Changelog: `DamSearch.bindScopeChips({ trailingEl })` + mount w `#vizSearchScope .dam-search-scope` (margin-left:auto); widoczny tylko `role=admin` + `dam_admin_mode=1`; hint copy `Ostatnia zmiana na dysku: â€¦` (bez â€žcykl ĹĽyciaâ€ť).
+3. Spacing: filters mb 4px (status bliĹĽej); `#vizStatus` mb 15px.
+4. Pill `#vizGridCount`: format jak Branding; pad **15/26** (= branding 7/14 **+8/+12**); light DAM tokens (nie ciemny 1:1); inject `#damVizCountPillInk` chroni przed regresjÄ… CSS.
 5. Branding Karty: suwak+input+wheel = draft; OK stosuje; fix race session/local vs `/user-prefs` (OK nie wraca do 100).
-6. Cache końcowy: `viztb20260720f` (dam-viz.css/js); branding.js `viztb20260720e`; tag-edit/search wg HTML.
+6. Cache koĹ„cowy: `viztb20260720f` (dam-viz.css/js); branding.js `viztb20260720e`; tag-edit/search wg HTML.
 
 ### Efekt/Fix
-Brief A/B/C (toolbar) Pass względem CDP. Concurrent `supviz` nadpisywał pad 8/12 ciemny — poprawione na light 15/26 + inject.
+Brief A/B/C (toolbar) Pass wzglÄ™dem CDP. Concurrent `supviz` nadpisywaĹ‚ pad 8/12 ciemny â€” poprawione na light 15/26 + inject.
 
 ### Backup
 Brak.
 
 ### Test/Ewaluacja
 - node --check dam-viz.js / dam-search.js / dam-tag-edit.js / dam-branding.js OK
-- CDP viz: barInScope, admin-only, hint bez cyklu życia, filtersMb=4, statusMb=15, countPad=15px 26px, color #464255, light bg
-- CDP branding: draft nie re-renderuje; OK 40→36 kart; status limit 36
+- CDP viz: barInScope, admin-only, hint bez cyklu ĹĽycia, filtersMb=4, statusMb=15, countPad=15px 26px, color #464255, light bg
+- CDP branding: draft nie re-renderuje; OK 40â†’36 kart; status limit 36
 - Screenshot+Read: viztb-pass1..5, viztb-final-*, viztb-pass5b-branding-meta (Temp/cursor/screenshots)
 
 ### Zrodla
@@ -6679,7 +7913,7 @@ WORKER: Visualizations toolbar (changelog far-right search-scope, ADMIN gate, st
 3. #vizStatus pod secondary filters; gap ~6px; `margin-bottom: 15px` na status.
 4. Sticky count pill `#vizGridCount`: elementy=karty produktow, pliki=warianty z wizka; pad 15/26 (7/14+8/+12); muted ink; inject `#damVizCountPillInk`.
 5. Branding `.dam-branding-page-size`: range+number+OK, wheel draft, apply tylko na OK; prefs `branding_page_size` (24-500) via DamUserPrefs + bridge normalize; session fallback.
-6. GSAP page-entrance: nested changelog dostawal opacity:0 — `data-dam-bar-revealed` + clear inline + CSS !important na belkach.
+6. GSAP page-entrance: nested changelog dostawal opacity:0 â€” `data-dam-bar-revealed` + clear inline + CSS !important na belkach.
 7. Cache `?v=viztb20260720h` (viz/tag-edit/branding/user-prefs). Nie ruszano `dam-shell.js`.
 
 ### Efekt/Fix
@@ -6689,13 +7923,13 @@ Admin undo przy scope; non-admin ukryty; count pill na Viz; Branding page-size b
 Brak.
 
 ### Test/Ewaluacja
-- CDP Viz: barInScope=true; atBar=dam-changelog-bar__label; ADMIN off→hidden / on→visible; statusMb=15px; gap=6; countPad=15px 26px; ink bg; undoCls=dam-int-cta.
-- CDP Branding: draft 48 cards unchanged until OK; OK→48 cards; session `dam_branding_page_size=48`; count pad 15/26.
+- CDP Viz: barInScope=true; atBar=dam-changelog-bar__label; ADMIN offâ†’hidden / onâ†’visible; statusMb=15px; gap=6; countPad=15px 26px; ink bg; undoCls=dam-int-cta.
+- CDP Branding: draft 48 cards unchanged until OK; OKâ†’48 cards; session `dam_branding_page_size=48`; count pad 15/26.
 - Screenshot+Read: viz-final-pass-toolbar.png (DYSK/Cofnij/Ponow + status + pill); branding page-size control in meta.
 - Pass/Fail: Pass (CDP primary; screenshot confirms changelog on scope row).
 
 ### Zrodla
-visualizations.html; dam-viz.js/css; dam-tag-edit.js; branding.html; dam-branding.js/css; dam-user-prefs.js; local_bridge.py; dam-search.js (trailingEl — concurrent); dam-dobrakaloria; ui-taste
+visualizations.html; dam-viz.js/css; dam-tag-edit.js; branding.html; dam-branding.js/css; dam-user-prefs.js; local_bridge.py; dam-search.js (trailingEl â€” concurrent); dam-dobrakaloria; ui-taste
 
 ## 2026-07-20 - Sidebar Y-stable morph (collapse/expand)
 
@@ -6703,20 +7937,20 @@ visualizations.html; dam-viz.js/css; dam-tag-edit.js; branding.html; dam-brandin
 Napraw animacje collapse/expand sidebara: ikony trzymaja Y (tylko X), bez skracania wysokosci raila, Sesja naturalnie (bez margin-top:auto), dim 0.7s GSAP.
 
 ### Log/Status
-1. Root cause CDP: collapsed height:min(80vh) (1183→982), pad 38→12, first-child margin 15→0, wrap linkow 80px + absolute labels, Sesja margin-top:auto.
+1. Root cause CDP: collapsed height:min(80vh) (1183â†’982), pad 38â†’12, first-child margin 15â†’0, wrap linkow 80px + absolute labels, Sesja margin-top:auto.
 2. Fix w dam-shell.js inject #damShellLayerCss: rail calc(100vh-44px), pad-Y 38, sloty 56px nowrap, first-child 15px obu stany, ikony 20/lh:1, Sesja bez auto, footer/logo margin-top:auto, SIDEBAR_MORPH_DUR=0.7.
-3. Cache dam-shell.js?v=sidebarystable20260720c (20 HTML). Doctrine §12 lekcja.
+3. Cache dam-shell.js?v=sidebarystable20260720c (20 HTML). Doctrine Â§12 lekcja.
 4. Bez commit.
 
 ### Efekt/Fix
-Morph Y-stable: mid+end ΔY≈0 dla apps/sitemap/plug/desktop; ΔX≈-29; heightDelta=0; sesjaY=0.
+Morph Y-stable: mid+end Î”Yâ‰0 dla apps/sitemap/plug/desktop; Î”Xâ‰-29; heightDelta=0; sesjaY=0.
 
 ### Backup
 Brak.
 
 ### Test/Ewaluacja
 - node --check dam-shell.js OK
-- CDP morph (gsap.updateRoot mid 0.35): all icon Y delta 0; end Y delta 0; h 1183→1183; sesjaTop 661 obu
+- CDP morph (gsap.updateRoot mid 0.35): all icon Y delta 0; end Y delta 0; h 1183â†’1183; sesjaTop 661 obu
 - Screenshot+Read 5 passow: pass1 expanded, pass2 collapsed, pass3 mid 142px, pass4 collapsed final, pass5 expanded final
 - Pass/Fail: Pass
 
@@ -6758,7 +7992,7 @@ WORKER EXP-C: endpointy mostu do tworzenia kategorii/produktu ze szablonow dysku
 ### Log/Status
 1. READ: code-doctrine, program-instructions, szablony na X: (`Szablony folderow/00 - KATEGORIA` + nested product; GC `00 - CATEGORY`).
 2. NOWY modul `apps/desktop/explorer_create.py` (copytree + dry_run + confirm gate + demo `- D` / 6300XXX).
-3. Wpięcie w `local_bridge.py`: POST `/explorer/create-category`, `/explorer/create-product` (admin); `BRIDGE_API_VERSION=4`.
+3. WpiÄ™cie w `local_bridge.py`: POST `/explorer/create-category`, `/explorer/create-product` (admin); `BRIDGE_API_VERSION=4`.
 4. Seed PI: `explorer.product_from_template`, `explorer.demo_index_rules` (version 7).
 5. Restart pythonw local_bridge (health api_version=4).
 
@@ -6785,8 +8019,8 @@ explorer_create.py; local_bridge.py; program-instructions.json; X:/Marketing/- P
 User: logo `.dam-sidebar-logo-collapsed` + meta `.dam-sidebar-collapsed-meta` przeskakuja przy pojawianiu sie (collapse morph).
 
 ### Log/Status
-1. CDP sampling: meta zostawala `display:flex` po expand (GSAP leftover) → flex Y=1133, potem absolute Y=1123 = widoczny skok 10px.
-2. Steady collapsed uzywal flex+margin-top:auto, morph absolute bottom slot → skok na koncu morph.
+1. CDP sampling: meta zostawala `display:flex` po expand (GSAP leftover) â†’ flex Y=1133, potem absolute Y=1123 = widoczny skok 10px.
+2. Steady collapsed uzywal flex+margin-top:auto, morph absolute bottom slot â†’ skok na koncu morph.
 3. Fix: ten sam absolute slot (logo bottom 38px, meta 10px) w morph + collapsed (`dam-shell.js` CSS inject + `dam-brand.css`); meta `display:none` po expand jak logo; CSS `:not(.collapsed):not(.morphing)` dla meta.
 4. Cache: `dam-shell.js?v=sidebaridentity20260720b`, `dam-brand.css?v=sidebaridentity20260720a`.
 
@@ -6794,7 +8028,7 @@ User: logo `.dam-sidebar-logo-collapsed` + meta `.dam-sidebar-collapsed-meta` pr
 Morph: transform none, logo/meta top stale 1062/1123 przez caly tween; expanded meta display none; collapsed logo czytelne (screenshot pass2).
 
 ### Test/Ewaluacja
-- CDP collapse morph: skok tylko frame0 hidden→slot (opacity 0); po morph dY=0
+- CDP collapse morph: skok tylko frame0 hiddenâ†’slot (opacity 0); po morph dY=0
 - Screenshot+Read: sidebar-collapsed-pass2.png - logo DK + DAM v2.0.7 na dole rail
 - Pass/Fail: Pass
 
@@ -6803,7 +8037,7 @@ dam-shell.js; dam-brand.css; verify-ui-after-changes.mdc
 
 
 ### Komenda/Akcja
-User: „juz DUZO lepiej, ale nadal sie rozjezdzza” - dokonczenie Y/X osi, footer logo leftover, collapse-btn center.
+User: â€žjuz DUZO lepiej, ale nadal sie rozjezdzzaâ€ť - dokonczenie Y/X osi, footer logo leftover, collapse-btn center.
 
 ### Log/Status
 1. Vision+CDP: ikony Y juz OK (dY=0), leftSpread=0; rozjazd = (A) collapse-btn CX 49 vs ikony 59, (B) GSAP zostawial .dam-sidebar-logo-collapsed{display:flex} w expanded (logo 220px na dole).
@@ -6812,13 +8046,13 @@ User: „juz DUZO lepiej, ale nadal sie rozjezdzza” - dokonczenie Y/X osi, foo
 4. Screenshoty: sb-fix-pass2-expanded-clean.png, sb-fix-pass3-collapsed-final.png (+ pass1 audit).
 
 ### Efekt/Fix
-Collapsed: rail/btn/logo CX≈58, ikony CX≈59 (delta -1px); left=48 wszystkie; dY=0; logo expanded display:none.
+Collapsed: rail/btn/logo CXâ‰58, ikony CXâ‰59 (delta -1px); left=48 wszystkie; dY=0; logo expanded display:none.
 
 ### Backup
 Brak.
 
 ### Test/Ewaluacja
-- CDP 3 ikony (apps/sitemap/signout): exp top 166/222/785 left 77 → col top same left 48; leftSpread 0
+- CDP 3 ikony (apps/sitemap/signout): exp top 166/222/785 left 77 â†’ col top same left 48; leftSpread 0
 - axis btnCx=58 railCx=58 iconCx=59
 - Pass/Fail: Pass
 
@@ -6874,11 +8108,11 @@ fmcg-cost-catalog.json; fmcg-cost-import-map.json; fmcg-cost-averages.json
 C3 BENTO freeze anatomii; backlog-rest B3 poster, B4 Autor, B7 cache-bust; A1/A2 verify only.
 
 ### Log/Status
-1. C3: gents/shared/bento-card-freeze.md + FROZEN comments (dam-brand.css, dam-branding.css, dam-viz.css) + doctrine §12; checklista C3 [x] freeze anatomii (nie redesign).
+1. C3: gents/shared/bento-card-freeze.md + FROZEN comments (dam-brand.css, dam-branding.css, dam-viz.css) + doctrine Â§12; checklista C3 [x] freeze anatomii (nie redesign).
 2. B3: bridge _media_video_poster_placeholder (SVG 200 zamiast 422); JS VIDEO_POSTER_FALLBACK + probe w dam-branding.js / dam-media-preview.js.
-3. B4: FACET uthor:* grupa Autor (Krzysztof/Sylwia/Szymon/Highlite) — appearance_tags + author field + path.
-4. B7: HTML listed → ?v=bust20260720a dla dam-tokens/dam-brand/dam-grid-reveal (gdzie wystepuja); BOM z PS usuniety.
-5. A1/A2: verify — dam-connection.env bez DAM_ASANA_*/DAM_MS_* → status [ ] (wymaga user Client ID/Secret).
+3. B4: FACET uthor:* grupa Autor (Krzysztof/Sylwia/Szymon/Highlite) â€” appearance_tags + author field + path.
+4. B7: HTML listed â†’ ?v=bust20260720a dla dam-tokens/dam-brand/dam-grid-reveal (gdzie wystepuja); BOM z PS usuniety.
+5. A1/A2: verify â€” dam-connection.env bez DAM_ASANA_*/DAM_MS_* â†’ status [ ] (wymaga user Client ID/Secret).
 
 ### Efekt/Fix
 Freeze bez redesignu kart; poster fallback twardy; Autor w filtrach; cache sweep reszty stron.
@@ -6888,16 +8122,16 @@ Brak.
 
 ### Test/Ewaluacja
 - node --check dam-branding.js / dam-media-preview.js OK; bridge AST OK
-- CDP branding: Autor row widoczny; filtr Krzysztof → ~4867 plikow; video posters = data-svg fallback
+- CDP branding: Autor row widoczny; filtr Krzysztof â†’ ~4867 plikow; video posters = data-svg fallback
 - Screenshot+Read: page-2026-07-20T19-21-17-859Z.png (Autor + Wideo)
 - B7: brak stale tokenow na listed pages
 - Pass: C3, B3, B4, B7 | Fail/open: A1, A2 (credentials)
 
 ### Zrodla
-bento-card-freeze.md; code-doctrine.md §12; dam-branding.js; dam-media-preview.js; local_bridge.py; WAZNA-CHECKLISTA; memory #135
+bento-card-freeze.md; code-doctrine.md Â§12; dam-branding.js; dam-media-preview.js; local_bridge.py; WAZNA-CHECKLISTA; memory #135
 
 ### Komenda/Akcja
-C2 — dwukierunkowy ERP faktur (kontrakt stub + UI)
+C2 â€” dwukierunkowy ERP faktur (kontrakt stub + UI)
 
 ### Log/Status
 1. READ: program-instructions finance.invoices_import; local_bridge /finance/invoices*; invoices.html + dam-invoices.js; checklist C2 [ ].
@@ -6906,7 +8140,7 @@ C2 — dwukierunkowy ERP faktur (kontrakt stub + UI)
 4. Persist: apps/web/data/invoice-erp-sync.json.
 5. UI Faktury: badge ERP, meta kierunku, Import z ERP (CSV) + Eksport do ERP (.dam-int-cta, admin).
 6. Seed: invoice.erp_bidirectional w program-instructions.json v8; lustro app-settings; C2 [x].
-7. RESTART bridge wymagany (watchdog desktop respawnuje pythonw) — po kill+respawn api_version=5.
+7. RESTART bridge wymagany (watchdog desktop respawnuje pythonw) â€” po kill+respawn api_version=5.
 
 ### Efekt/Fix
 Kontrakt bidirectional stub (nie live ERP). Import CSV zachowany; export stage + sync state; UI pokazuje stan.
@@ -6920,7 +8154,7 @@ Brak (tylko data JSON sync/export stage).
 - GET /health api_version=5 + hub_routes export/erp-status: PASS (po restarcie mostu)
 - GET /finance/invoices/erp-status (Bearer admin): PASS direction=bidirectional
 - POST /finance/invoices/export: PASS exported=10 staged=true
-- Screenshot+Read invoices.html: ERP OK ↔, Import/Eksport, meta last import/export — PASS
+- Screenshot+Read invoices.html: ERP OK â†”, Import/Eksport, meta last import/export â€” PASS
 - Pass/Fail: **Pass** (live ERP provider nadal stub)
 
 ### Zrodla
@@ -6955,14 +8189,14 @@ B5 QA dashboard layouts 2x2 / 1x4 / 1x6 + sidebar expanded/collapsed @ 375/768/1
 ### Log/Status
 1. READ code-doctrine + dam-dashboard-widgets/css + checklista B5.
 2. CDP: header quickaction overflowX ~112@1280 / ~168@768 (nie tile grid).
-3. CDP@375: branding/media `grid-column:span 6` na siatce 1fr tworzylo 6 implicit tracks → widgety ~40px (FAIL).
+3. CDP@375: branding/media `grid-column:span 6` na siatce 1fr tworzylo 6 implicit tracks â†’ widgety ~40px (FAIL).
 4. FIX: inject `#damDashLayoutB5Css` + patch `dam-dashboard.css` @575 (`1/-1` + icon rail column).
-5. FIX: `vizTitleForCount` (1x6 → "6 najnowsze…"); cache-bust `b5qa20260720f`.
+5. FIX: `vizTitleForCount` (1x6 â†’ "6 najnowszeâ€¦"); cache-bust `b5qa20260720f`.
 6. Sidebar morph click w dam-shell bywa desync (storage=1, class brak) - poza WRITE allowlist; class force = 72px + logo 48x48 Pass.
 
 ### Efekt/Fix
 - pageOverflowX=0 @1280/768/375 dla 2x2/1x4/1x6
-- 2x2 = 2 cols (@1280/768), 1 col (@≤720)
+- 2x2 = 2 cols (@1280/768), 1 col (@â‰¤720)
 - 1x4/1x6 = 1 col, kids 4/6
 - collapsed sidebar 72px, logo 48x48 (forced class)
 - WAZNA-CHECKLISTA B5 [x] (note zaktualizowana)
@@ -6984,12 +8218,12 @@ apps/web/assets/js/dam-dashboard-widgets.js; apps/web/assets/css/dam-dashboard.c
 ## 2026-07-20 - Domkniecie sesji: dokumentacja + commit + push (user)
 
 ### Komenda/Akcja
-User: po zakonczeniu WSZYSTKICH agentow — spisz dokumentacje, commit, push.
+User: po zakonczeniu WSZYSTKICH agentow â€” spisz dokumentacje, commit, push.
 
 ### Log/Status
 1. Weryfikacja git: kod sesji juz na `origin/main` (`e28a4bd`, `025aad3`); brak unstaged kodu aplikacji.
-2. Subagent create modal redesign (`202d725c`) — **aborted** (2 linie transcript); OPEN na nastepna fale.
-3. Subagenci badawczy (costs/integrations, branding load, anim audit, desktop tray, viz vs branding) — DONE raporty.
+2. Subagent create modal redesign (`202d725c`) â€” **aborted** (2 linie transcript); OPEN na nastepna fale.
+3. Subagenci badawczy (costs/integrations, branding load, anim audit, desktop tray, viz vs branding) â€” DONE raporty.
 4. Nowy doc: `agents/shared/release-2026-07-20-evening.md` (mapa DONE/OPEN, cache-bust, checklista).
 5. Aktualizacja: `README.md` changelog, `PROGRESS.md`, `handoff-usability-synthesis-2026-07-20.md`.
 6. Commit docs + push origin/main.
@@ -7001,7 +8235,7 @@ Jedno miejsce prawdy dla wieczoru 2026-07-20; jasno oznaczone OPEN (create modal
 Brak.
 
 ### Test/Ewaluacja
-- git status: tylko docs + untracked runtime (lock/logs/tmp — nie commitowane)
+- git status: tylko docs + untracked runtime (lock/logs/tmp â€” nie commitowane)
 - Pass/Fail: **Pass** (dokumentacja); create modal redesign = **Fail/open**
 
 ### Zrodla
@@ -7010,13 +8244,13 @@ release-2026-07-20-evening.md; agent-transcripts subagents; git log
 ## 2026-07-20 - Domkniecie EXP-C (subagent create modal) + commit/push
 
 ### Komenda/Akcja
-Subagent [Explorer create modal redesign](202d725c-bf6b-49e5-b85e-47dc49bc7a39) DONE — follow-up: docs + commit + push (user).
+Subagent [Explorer create modal redesign](202d725c-bf6b-49e5-b85e-47dc49bc7a39) DONE â€” follow-up: docs + commit + push (user).
 
 ### Log/Status
 1. Zweryfikowano diff: `dam-explorer-add-product.js`, `explorer_create.py`, `local_bridge.py`, PI v9, cache `expc20260720d`.
 2. Rownolegle w working tree: Viz Historia zmian (`chghist20260720a`), Branding polish (`brpolish20260720a`, date-picker).
 3. Zaktualizowano release notes, PROGRESS, README, handoff synthesis.
-4. Commit bez runtime JSON (file-index/search-index/lifecycle-status — lokalny rebuild/QA).
+4. Commit bez runtime JSON (file-index/search-index/lifecycle-status â€” lokalny rebuild/QA).
 
 ### Efekt/Fix
 Create modal 10-pass = Pass; blocker add-variant-type bez fizycznego szablonu udokumentowany.
@@ -7026,7 +8260,7 @@ Create modal 10-pass = Pass; blocker add-variant-type bez fizycznego szablonu ud
 - Pass/Fail: **Pass**
 
 ### Zrodla
-process.md wpis EXP-C (linie 3–125); subagent transcript 202d725c
+process.md wpis EXP-C (linie 3â€“125); subagent transcript 202d725c
 
 ## 2026-07-20 - Branding: Karty/Skala, kalendarz, padding, perf (plan branding_ui_polish_c4a6251f)
 
@@ -7034,7 +8268,7 @@ process.md wpis EXP-C (linie 3–125); subagent transcript 202d725c
 User: usunac zolte "Karty" (musi wygladac jak fioletowa "Skala"), globalny fioletowy
 accent-color na suwakach, wlasny kalendarz w stylu tagow zamiast natywnego popupu,
 wyrownac padding `.dam-search-wrap--panel` = `.dam-viz-secondary-filters`, zweryfikowac
-spowolnienie Brandingu. Plan wdrozony w calosci (5/5 kroków).
+spowolnienie Brandingu. Plan wdrozony w calosci (5/5 krokĂłw).
 
 ### Log/Status
 1. **Root cause zolty "Karty"**: `input[type="range"]` bez `accent-color` -> domyslny
@@ -7045,10 +8279,10 @@ spowolnienie Brandingu. Plan wdrozony w calosci (5/5 kroków).
    `dam-brand.css` (defense-in-depth, poza istniejacymi lokalnymi regulami - wszystkie
    juz byly fioletowe, grep potwierdzil 0 zoltych akcentow w calym repo).
 3. **Odkryto i naprawiono szersza korupcje kodowania** w `branding.html`: literalne
-   znaki `?`/`�` (U+FFFD) w PL diakrytykach (nie tylko tipy Kart/Skali - caly plik,
-   ~20 miejsc: "Wyczyść filtry", "Ostatni tydzień/miesiąc", "Priorytet użycia",
-   "Wróć do przeglądania" itd.). Zweryfikowano bajtowo (PowerShell UTF8.GetString) -
-   to byla realna korupcja zapisana w plikuj, nie tylko render. Cały plik przepisany
+   znaki `?`/`ďż˝` (U+FFFD) w PL diakrytykach (nie tylko tipy Kart/Skali - caly plik,
+   ~20 miejsc: "WyczyĹ›Ä‡ filtry", "Ostatni tydzieĹ„/miesiÄ…c", "Priorytet uĹĽycia",
+   "WrĂłÄ‡ do przeglÄ…dania" itd.). Zweryfikowano bajtowo (PowerShell UTF8.GetString) -
+   to byla realna korupcja zapisana w plikuj, nie tylko render. CaĹ‚y plik przepisany
    z poprawnymi znakami.
 4. **KROK2 - custom date picker**: nowy `dam-date-picker.js` (IIFE, `window.DamDatePicker`)
    - auto-enhance kazdego `input[type="date"]` (readOnly + wrapper `.dam-date-field` +
@@ -7092,7 +8326,7 @@ Brak (edycje tekstowe/CSS/JS, bez migracji danych).
 - CDP: `accentColor` Karty i Skala = `rgb(171, 84, 219)` (identyczne); `padding` search
   vs meta filters = `20px 24px` (Branding + Explorer).
 - CDP: wybor dnia w popoverze -> `input.value` = ISO, status grid przeliczony
-  ("100 elementów" -> "53 elementy" po ustawieniu daty), popover zamkniety.
+  ("100 elementĂłw" -> "53 elementy" po ustawieniu daty), popover zamkniety.
 - Karty drag+OK: number=60 -> `is-dirty` na OK -> klik -> status "limit 60 kart"
   (apply-on-OK zachowany, bez live re-render przy drag).
 - Screenshot+Read (3 przeloty): Branding desktop (Karty/Skala/kalendarz czyste),
@@ -7108,13 +8342,13 @@ apps/web/assets/js/dam-date-picker.js (nowy); plan branding_ui_polish_c4a6251f.p
 ## 2026-07-20 - Domkniecie EXP-C (subagent create modal) + commit/push
 
 ### Komenda/Akcja
-Subagent Explorer create modal redesign DONE — follow-up: docs + commit + push (user).
+Subagent Explorer create modal redesign DONE â€” follow-up: docs + commit + push (user).
 
 ### Log/Status
 1. Zweryfikowano diff: dam-explorer-add-product.js, explorer_create.py, local_bridge.py, PI v9, cache excp20260720d.
 2. Rownolegle w working tree: Viz Historia zmian (chghist20260720a), Branding polish (brpolish20260720a).
 3. Zaktualizowano release notes, PROGRESS, README, handoff synthesis.
-4. Commit bez runtime JSON (file-index/search-index/lifecycle-status — lokalny rebuild/QA).
+4. Commit bez runtime JSON (file-index/search-index/lifecycle-status â€” lokalny rebuild/QA).
 
 ### Efekt/Fix
 Create modal 10-pass = Pass; blocker add-variant-type bez fizycznego szablonu udokumentowany.
@@ -7131,12 +8365,12 @@ process.md wpis EXP-C; subagent 202d725c-bf6b-49e5-b85e-47dc49bc7a39
 ## Grid count pill light restyle (2026-07-20)
 
 ### Komenda/Akcja
-Restyle floating count badge (`elementów • plików`) z czarnego pill na light Geex surface — globalnie Branding + Viz.
+Restyle floating count badge (`elementĂłw â€˘ plikĂłw`) z czarnego pill na light Geex surface â€” globalnie Branding + Viz.
 
 ### Log/Status
-1. Zlokalizowano: `.dam-viz-grid-count` (#vizGridCount), `.dam-branding-grid-count` (#damBrandingGridCount); JS `injectVizCountPillInkStyle()` w dam-viz.js wymuszał dark `!important`.
-2. CSS: light surface (#fff 96%), border primary 10% + `--dam-border`, text `--dam-text` (#464255), fw 500 — dam-viz.css + dam-branding.css.
-3. Usunięto `injectVizCountPillInkStyle` z dam-viz.js.
+1. Zlokalizowano: `.dam-viz-grid-count` (#vizGridCount), `.dam-branding-grid-count` (#damBrandingGridCount); JS `injectVizCountPillInkStyle()` w dam-viz.js wymuszaĹ‚ dark `!important`.
+2. CSS: light surface (#fff 96%), border primary 10% + `--dam-border`, text `--dam-text` (#464255), fw 500 â€” dam-viz.css + dam-branding.css.
+3. UsuniÄ™to `injectVizCountPillInkStyle` z dam-viz.js.
 4. Cache bust: `gridcountlight20260720b` (dam-viz.css, dam-branding.css, dam-viz.js) w visualizations.html + branding.html.
 
 ### Efekt/Fix
@@ -7144,7 +8378,7 @@ Before: `background color-mix(ink 88%)`, `color #fff`, fw 700, dark shadow. Afte
 
 ### Test/Ewaluacja
 - node --check dam-viz.js: PASS
-- CDP Branding: bg `color(srgb 1 1 1 / 0.96)`, color `rgb(70,66,85)`, inkStyle=false, text `100 / 1 220 elementów • 574 / 9 611 plików`
+- CDP Branding: bg `color(srgb 1 1 1 / 0.96)`, color `rgb(70,66,85)`, inkStyle=false, text `100 / 1 220 elementĂłw â€˘ 574 / 9 611 plikĂłw`
 - CDP Viz: bg/color identyczne, css `dam-viz.css?v=gridcountlight20260720b`
 - Screenshot: `gridcount-branding-pass20260720.png` (Temp) + CDP capture
 - Pass/Fail: **Pass**
@@ -7152,33 +8386,33 @@ Before: `background color-mix(ink 88%)`, `color #fff`, fw 700, dark shadow. Afte
 ### Zrodla
 dam-viz.js updateVizGridCount; dam-branding.js updateGridCount; ui-taste Design Read (light chip, nie toast)
 
-## 2026-07-20 23:05 - Audit wieczorny (transcript 86977982) + domknięcie MISSED
+## 2026-07-20 23:05 - Audit wieczorny (transcript 86977982) + domkniÄ™cie MISSED
 
 ### Komenda/Akcja
-WORKER audit ~6h transcript + implementacja zaległości + commit/push (user explicit).
+WORKER audit ~6h transcript + implementacja zalegĹ‚oĹ›ci + commit/push (user explicit).
 
-### Audit inventory (transcript 2026-07-20 wieczór)
+### Audit inventory (transcript 2026-07-20 wieczĂłr)
 
 | Item | Status | Evidence | Action |
 |------|--------|----------|--------|
-| Floating count pill (elementów/plików) | **DONE** | `dam-viz.css` + `dam-branding.css` `#fff` + shadow; CDP `bg: color(srgb 1 1 1 / 0.96)`; token `gridcountlight20260720b` | Hardened white surface (was PARTIAL/black in UI) |
+| Floating count pill (elementĂłw/plikĂłw) | **DONE** | `dam-viz.css` + `dam-branding.css` `#fff` + shadow; CDP `bg: color(srgb 1 1 1 / 0.96)`; token `gridcountlight20260720b` | Hardened white surface (was PARTIAL/black in UI) |
 | Viz assoc = Branding filter (no AI/PSD/PDF) | **DONE** | `dam-media-preview.js` `isSourceLikeAsset`, `passesMarketingAssocMaterial`, `ASSOC_FORBIDDEN_EXTS` | Filter already in working tree; verified logic |
-| Assoc loading skeleton (no bare Ładowanie) | **DONE** | `showAssocPaneLoading` + `.dam-assoc-skeleton` in `dam-brand.css`; `#damVizModalAssoc` empty mount | No naked text in viz modal assoc |
+| Assoc loading skeleton (no bare Ĺadowanie) | **DONE** | `showAssocPaneLoading` + `.dam-assoc-skeleton` in `dam-brand.css`; `#damVizModalAssoc` empty mount | No naked text in viz modal assoc |
 | Branding card spacing 10px/15px | **DONE** | `dam-branding.css` `--dam-branding-card-section-gap: 10px`, actions 15px | Prior session; verified CSS |
 | Safe delete hold 3s (media preview) | **DONE** | `dam-danger.js` `MEDIA_PREVIEW_HOLD_MS=3000`, `resolveHoldMs()`; `dam-assoc-edit.js` `holdMs:3000` | Implemented this run |
-| Historia zmian (no Cofnij/Ponów at bar) | **DONE** | `dam-tag-edit.js` `#damChangeHistoryBtn` popover; no undo/redo buttons in `visualizations.html` | Verified present |
+| Historia zmian (no Cofnij/PonĂłw at bar) | **DONE** | `dam-tag-edit.js` `#damChangeHistoryBtn` popover; no undo/redo buttons in `visualizations.html` | Verified present |
 | Karty/Skala purple, calendar, search padding | **DONE** | memory #137, `brpolish20260720a` session | No regression (CDP accent prior) |
 
 ### Log/Status
-1. Transcript + subagents (c136457d count, ecb668e3 assoc) — inventory vs disk.
+1. Transcript + subagents (c136457d count, ecb668e3 assoc) â€” inventory vs disk.
 2. CSS count pill: explicit `#fff` + layered shadow (viz + branding).
-3. `dam-danger.js`: `resolveHoldMs()` → 3000 ms inside preview modals.
+3. `dam-danger.js`: `resolveHoldMs()` â†’ 3000 ms inside preview modals.
 4. Cache-bust: `gridcountlight20260720b`, `safedel20260720b`.
 5. Weryfikacja: CDP count chip Branding + Viz; screenshot `verify-branding-count-chip-20260720.png`.
 
 ### Test/Ewaluacja
 - `node --check` dam-danger.js, dam-viz.js, dam-media-preview.js: **Pass**
-- CDP `#damBrandingGridCount`: text `100 / 1 220 elementów • 574 / 9 611 plików`, bg white, color `#464255`: **Pass**
+- CDP `#damBrandingGridCount`: text `100 / 1 220 elementĂłw â€˘ 574 / 9 611 plikĂłw`, bg white, color `#464255`: **Pass**
 - CDP `#vizGridCount`: bg white, muted text: **Pass**
 - Screenshot+Read branding grid/cards: light pills, spacing OK: **Pass**
 
@@ -7187,32 +8421,32 @@ Transcript `86977982-52ab-4698-9da0-5b68ac3ea8cd`; `agents/shared/usability-brie
 
 ---
 
-## 2026-07-20 — Branding card body spacing (3 bands)
+## 2026-07-20 â€” Branding card body spacing (3 bands)
 
 ### Komenda/Akcja
-WORKER: odstępy pionowe `.dam-branding-card` — badges | title+chip+meta | actions.
+WORKER: odstÄ™py pionowe `.dam-branding-card` â€” badges | title+chip+meta | actions.
 
 ### Log/Status
-1. `dam-branding.css`: body `gap:0` + tokeny `--dam-branding-card-section-gap:10px`, `--dam-branding-card-actions-gap:15px`; `badges margin-bottom:10px`; `meta margin-top:4px`; `actions margin-top:15px`; title-wrap `flex:0 0 auto` + column (bez flex-grow rozpychającego sekcje).
-2. Cache-bust `dam-branding.css?v=brcardpad20260720a` — branding.html, dashboard.html, explorer.html, visualizations.html.
+1. `dam-branding.css`: body `gap:0` + tokeny `--dam-branding-card-section-gap:10px`, `--dam-branding-card-actions-gap:15px`; `badges margin-bottom:10px`; `meta margin-top:4px`; `actions margin-top:15px`; title-wrap `flex:0 0 auto` + column (bez flex-grow rozpychajÄ…cego sekcje).
+2. Cache-bust `dam-branding.css?v=brcardpad20260720a` â€” branding.html, dashboard.html, explorer.html, visualizations.html.
 3. Weryfikacja CDP `br-004000` + 2 kolejne karty: gaps 10 / 4 / 15 px. Screenshot `apps/web/_qa/branding-card-spacing-br004000.png`, pass3 `branding-card-spacing-pass3.png`.
 
 ### Efekt/Fix
-Trzy czytelne pasma w body karty brandingu; Viz assoc filtry nietknięte.
+Trzy czytelne pasma w body karty brandingu; Viz assoc filtry nietkniÄ™te.
 
 ### Test/Ewaluacja
-- CDP gaps (3 karty): badges→title 10px, title→meta 4px, meta→actions 15px — **Pass**
-- ID chip `M-SLI504000-07-26` pełny tekst (br-004000) — **Pass**
+- CDP gaps (3 karty): badgesâ†’title 10px, titleâ†’meta 4px, metaâ†’actions 15px â€” **Pass**
+- ID chip `M-SLI504000-07-26` peĹ‚ny tekst (br-004000) â€” **Pass**
 
 ### Zrodla
 `dam-branding.css`; `brcardpad20260720a`
 
 ---
 
-## 2026-07-20 — Viz modal assoc UX (tooltips / Shift+edit / toggle / video)
+## 2026-07-20 â€” Viz modal assoc UX (tooltips / Shift+edit / toggle / video)
 
 ### Komenda/Akcja
-WORKER: 4 bugi UX w `#damVizModal` Skojarzone materialy (tipy wariantow, Shift+edit, Pokaż wszystkie, video thumbs).
+WORKER: 4 bugi UX w `#damVizModal` Skojarzone materialy (tipy wariantow, Shift+edit, PokaĹĽ wszystkie, video thumbs).
 
 ### Log/Status
 1. Tipy: usunieto hover auto-popover; tip tylko na re-click aktywnej miniatury; `data-dam-no-tip` + exclude `.dam-viz-modal__variant` w `dam-tooltips.js` (koniec podwojnego stacku DamTip + variantInfo).
@@ -7232,7 +8466,7 @@ Czyste tipy; pelna lista w pickerze; Zwin ukrywa `--extra`; video ma frame (clie
 - CDP Shift+edit pinnedCount=2 == linked_products union: Pass
 - CDP video: slash=0, captured jpeg nw 3840/2160: Pass
 - Screenshot+Read `assoc-ux-pass2-video-tip.png`: 1 tip, video frames, toggle: Pass
-- Blocked: most bez ffmpeg na PATH — prawdziwy JPEG z mostu dopiero po instalacji ffmpeg + restart 8766; client capture dziala
+- Blocked: most bez ffmpeg na PATH â€” prawdziwy JPEG z mostu dopiero po instalacji ffmpeg + restart 8766; client capture dziala
 
 ### Zrodla
 `dam-viz.js`, `dam-media-preview.js`, `dam-assoc-edit.js`, `dam-tooltips.js`, `dam-brand.css`, `local_bridge.py`; token `assocux20260720b`
@@ -7240,13 +8474,13 @@ Czyste tipy; pelna lista w pickerze; Zwin ukrywa `--extra`; video ma frame (clie
 
 ---
 
-## 2026-07-20 — Viz changelog bar: Nieaktualne copy + tipy
+## 2026-07-20 â€” Viz changelog bar: Nieaktualne copy + tipy
 
 ### Komenda/Akcja
 WORKER: UX/copy `#damChangeLogBar` - "nieaktualne" mylone ze stale logiem; stacked tipy; mojibake w tipach Historii.
 
 ### Log/Status
-1. `dam-tag-edit.js`: `changeLogRowDetail` -> `Status wariantu/produktu: Nieaktualne · NAZWA · indeks` (bez `status ->`); hint bez dlugiego prefiksu (ellipsis); tipy PL z JS (`rebindChangeLogTips`); `data-dam-tip-suppress` gdy popover Historia otwarty.
+1. `dam-tag-edit.js`: `changeLogRowDetail` -> `Status wariantu/produktu: Nieaktualne Â· NAZWA Â· indeks` (bez `status ->`); hint bez dlugiego prefiksu (ellipsis); tipy PL z JS (`rebindChangeLogTips`); `data-dam-tip-suppress` gdy popover Historia otwarty.
 2. `dam-tooltips.js`: honor `data-dam-tip-suppress` / `data-dam-no-tip` parent; export `DamTooltips.hide`.
 3. `visualizations.html`: usunieto tip attrs z markupu bara (JS ustawia UTF-8); cache `chgcopy20260720d`.
 4. Dane: ostatni wpis change-log = lifecycle Babka Cytrynowa X (nieaktualne) - copy-only, bez reconcile.
@@ -7256,7 +8490,7 @@ Operator widzi ze "Nieaktualne" = status wariantu na dysku (X), nie "log nieaktu
 
 ### Test/Ewaluacja
 - `node --check` dam-tag-edit.js / dam-tooltips.js: Pass
-- CDP hint: `Status wariantu: Nieaktualne · BABKA CYTRYNOWA · 6300622.00 · 19.07.2026 20:50`; tipAloneOk; tipWithPop=0; tipMojibake=false: Pass
+- CDP hint: `Status wariantu: Nieaktualne Â· BABKA CYTRYNOWA Â· 6300622.00 Â· 19.07.2026 20:50`; tipAloneOk; tipWithPop=0; tipMojibake=false: Pass
 - Screenshot+Read `changelog-bar-pass3-clean.png`: Pass
 
 ### Zrodla
@@ -7265,7 +8499,7 @@ Operator widzi ze "Nieaktualne" = status wariantu na dysku (X), nie "log nieaktu
 
 ---
 
-## 2026-07-20 — Explorer select S vs L (viz Folder)
+## 2026-07-20 â€” Explorer select S vs L (viz Folder)
 
 ### Komenda/Akcja
 WORKER: Folder Windows zaznaczal FRONT-L zamiast aktywnego FRONT-S w #damVizModal.
@@ -7290,21 +8524,21 @@ local_bridge.py, dam-viz.js, dam-paths.js, dam-media-preview.js; token selects20
 
 ---
 
-## 2026-07-20 — Branding ID chip: position + global index style
+## 2026-07-20 â€” Branding ID chip: position + global index style
 
 ### Komenda/Akcja
 INTERRUPT: chip index na karcie brandingu blizej meta; wiecej powietrza nad chipem; styl = global .dam-viz-badge--index.
 
 ### Log/Status
 1. Usunieto branding-only override (10px/700/border/!important) na .dam-branding-card__id-chip.
-2. Layout: margin-top:12px, margin-bottom:-10px (body gap 14 → chip↔meta ~4px).
+2. Layout: margin-top:12px, margin-bottom:-10px (body gap 14 â†’ chipâ†”meta ~4px).
 3. Cache dam-branding.css?v=idchip20260720a (branding/viz/dashboard/explorer).
 
 ### Efekt/Fix
 Chip wyglada jak index badge na viz; siedzi blizej linii meta.
 
 ### Test/Ewaluacja
-- CDP before→after: above 7→14, chip↔meta 14→4; styleMatchVizIndex (11.5px/500/5px 11px/rgba70,66,85): **Pass**
+- CDP beforeâ†’after: above 7â†’14, chipâ†”meta 14â†’4; styleMatchVizIndex (11.5px/500/5px 11px/rgba70,66,85): **Pass**
 - Screenshot+Read randing-idchip-after.png: **Pass**
 
 ### Zrodla
@@ -7314,7 +8548,7 @@ dam-branding.css; token idchip20260720a
 
 ---
 
-## 2026-07-20 — Branding UI: mojibake Polish chrome (UTF-8)
+## 2026-07-20 â€” Branding UI: mojibake Polish chrome (UTF-8)
 
 ### Komenda/Akcja
 WORKER: napraw zepsute polskie znaki w branding.html (Wyczysc/Pokaz/tydzien/miesiac/uzycia).
@@ -7323,15 +8557,15 @@ WORKER: napraw zepsute polskie znaki w branding.html (Wyczysc/Pokaz/tydzien/mies
 1. Root cause: pps/web/branding.html mial podwojne mojibake, potem plik zostal tez zapisany jako **cp1250** (bajty 9C E6 zamiast UTF-8 C5 9B C4 87 dla sc). dam-branding.js byl czysty UTF-8.
 2. Meta charset UTF-8 byl OK; problem = literalne stringi w HTML.
 3. Przepisano chrome PL przez Python write_bytes(utf-8) + unicode escapes (bez PowerShell Set-Content).
-4. Sibling: tipy changelog w isualizations.html (Pokaż wszystkie + tipy Historii).
+4. Sibling: tipy changelog w isualizations.html (PokaĹĽ wszystkie + tipy Historii).
 5. Cache-bust: renc20260720d na dam-branding.js/css w branding.html.
 
 ### Efekt/Fix
-Chrome Branding renderuje: Wyczyść, Pokaż, tydzień, miesiąc, użycia, niemięsa.
+Chrome Branding renderuje: WyczyĹ›Ä‡, PokaĹĽ, tydzieĹ„, miesiÄ…c, uĹĽycia, niemiÄ™sa.
 
 ### Test/Ewaluacja
 - Disk+HTTP bajty clear: C5 9B C4 87 (UTF-8 sc): Pass
-- CDP: clear=Wyczyść filtry cps=[...,347,263,...]; tabs Pokaż; week/month/prio: Pass
+- CDP: clear=WyczyĹ›Ä‡ filtry cps=[...,347,263,...]; tabs PokaĹĽ; week/month/prio: Pass
 - Screenshot+Read randing-polish-final-pass.png: Pass
 - 
 ode --check dam-branding.js: Pass
@@ -7341,23 +8575,23 @@ ode --check dam-branding.js: Pass
 
 ---
 
-## 2026-07-20 — restore disk+DB connectivity + TUBA PREZENT index (WORKER)
+## 2026-07-20 â€” restore disk+DB connectivity + TUBA PREZENT index (WORKER)
 
 ### Komenda/Akcja
 CRITICAL ops: diagnostyka X:/Postgres/bridge, reindex, widocznosc TUBA MINI PREZENT 6300XXX w Projekty.
 
 ### Log/Status
 1. Diagnose: X:\Marketing online; Postgres Synology online (Baza online); /files/status probe_ok; bridge api_version=5.
-2. Test-Path PROJEKT: True (nazwa folderu ma em-dash U+2014, nie ASCII hyphen — stąd wczesniejszy False na sciezce usera).
-3. Zombie: 2x local_bridge + 2x watch-file-index → zabito duplikaty; zostawiono 1 bridge (PID 47620) + 1 watcher --interval 5.
+2. Test-Path PROJEKT: True (nazwa folderu ma em-dash U+2014, nie ASCII hyphen â€” stÄ…d wczesniejszy False na sciezce usera).
+3. Zombie: 2x local_bridge + 2x watch-file-index â†’ zabito duplikaty; zostawiono 1 bridge (PID 47620) + 1 watcher --interval 5.
 4. TUBA MINI PREZENT juz byl w file-index jako revision produktu mix-tuba-30-szt-xmas-mixy, ale:
-   - enrich-search-tags kasowal foldery wariantow z search_blob → search PREZENT/6300XXX nie znajdowal;
+   - enrich-search-tags kasowal foldery wariantow z search_blob â†’ search PREZENT/6300XXX nie znajdowal;
    - pickLatestRevision bral pierwszy is_latest (stary 28.02) zamiast PREZENT 07.07.
 5. Fix: enrich-search-tags (foldery + 6300XXX w blob); dam-api/dam-projects pickLatestRevision po dacie; meta.revisions w Projekty; bump ?v=projidx20260720a na index.html.
-6. Index: python build-file-index.py (pelny rebuild + enrich) → products=184, mtime 2026-07-20T21:59:23Z.
+6. Index: python build-file-index.py (pelny rebuild + enrich) â†’ products=184, mtime 2026-07-20T21:59:23Z.
 
 ### Efekt/Fix
-Pliki online + Baza online. Search 6300XXX/PREZENT pokazuje karte Batony · TUBA 30 SZT XMAS (wariant PREZENT w indeksie). Watcher 5s (agresywniej niz 10 min).
+Pliki online + Baza online. Search 6300XXX/PREZENT pokazuje karte Batony Â· TUBA 30 SZT XMAS (wariant PREZENT w indeksie). Watcher 5s (agresywniej niz 10 min).
 
 ### Backup
 brak
@@ -7367,14 +8601,14 @@ brak
 - /db/status Baza online postgres; /files/status online true
 - file-index: folder TUBA MINI - PREZENT - 07.07.2026 - 6300XXX.00; search_blob has prezent+6300xxx
 - CDP Projekty q=6300XXX: karta TUBA 30 SZT XMAS; latestFolder=PREZENT: Pass
-- Screenshot index.html?q=6300XXX + Read: Pass (karta widoczna; status listy Niekompletny ≠ NIEAKTUALNE lifecycle)
+- Screenshot index.html?q=6300XXX + Read: Pass (karta widoczna; status listy Niekompletny â‰  NIEAKTUALNE lifecycle)
 
 ### Zrodla
 enrich-search-tags.py, dam-api.js, dam-projects.js, index.html, build-file-index.py, watch-file-index.py, local_bridge.py
 
 ---
 
-## 2026-07-20 — site-wide Polish mojibake fix (encoding only)
+## 2026-07-20 â€” site-wide Polish mojibake fix (encoding only)
 
 ### Komenda/Akcja
 Fix PL mojibake w calym `apps/web/**` HTML chrome (settings devices card, branding, shell pages).
@@ -7419,51 +8653,51 @@ epeat(5,minmax(0,1fr)), overflow:hidden, mask gradient (row1 solid -> row2 0.8 -
 **Test/Ewaluacja:**
 - 
 ode --check dam-media-preview.js OK
-- CDP: cols=5, cells=55, nested=0, overflowY=hidden, hScroll=false, maskStops 0/9/18/95.45%, w=535 — Pass
-- Screenshot+Read #damVizModalAssoc pass2/pass3 (fade) — Pass
-- After load: loading=false, items=24, skel=0, overflowY=auto — Pass
+- CDP: cols=5, cells=55, nested=0, overflowY=hidden, hScroll=false, maskStops 0/9/18/95.45%, w=535 â€” Pass
+- Screenshot+Read #damVizModalAssoc pass2/pass3 (fade) â€” Pass
+- After load: loading=false, items=24, skel=0, overflowY=auto â€” Pass
 
-**Źródła:** dam-media-preview.js, dam-brand.css, dam-viz-modal.css; token assocskel20260721b
+**ĹąrĂłdĹ‚a:** dam-media-preview.js, dam-brand.css, dam-viz-modal.css; token assocskel20260721b
 
 ## 2026-07-21 - Assoc skeleton tiles (reject bars) fix
 
-**Komenda/Akcja:** INTERRUPT — user rejected 5 vertical grey bars; want 5xn tile cards + fade tiles.
+**Komenda/Akcja:** INTERRUPT â€” user rejected 5 vertical grey bars; want 5xn tile cards + fade tiles.
 
 **Log/Status:**
 1. Wrong before: grid-level CSS mask on full-width squares blended into 5 tall stripes; fade unread.
-2. Fix: card markup (thumb square + 2 label lines); per-row --dam-skel-op (1→0.8→…→0.28); last row .is-skel-last mask to 0 at 50% height; no grid mask; injectAssocSkeletonStyles (#dam-assoc-skel-styles).
+2. Fix: card markup (thumb square + 2 label lines); per-row --dam-skel-op (1â†’0.8â†’â€¦â†’0.28); last row .is-skel-last mask to 0 at 50% height; no grid mask; injectAssocSkeletonStyles (#dam-assoc-skel-styles).
 3. Cache: ssocskel20260721c.
 
 **Test/Ewaluacja:**
-- CDP: cols=5, cards=40, thumbSquare, rowOps [1..0.28], lastMask transparent@50%, gridMask=none, hScroll=false — Pass
-- Screenshot+Read assoc-skel-tiles-pass3(+full): distinct 5-col tiles + bottom dissolve — Pass
+- CDP: cols=5, cards=40, thumbSquare, rowOps [1..0.28], lastMask transparent@50%, gridMask=none, hScroll=false â€” Pass
+- Screenshot+Read assoc-skel-tiles-pass3(+full): distinct 5-col tiles + bottom dissolve â€” Pass
 
-**Źródła:** dam-media-preview.js, dam-brand.css, dam-viz-modal.css; token assocskel20260721c
+**ĹąrĂłdĹ‚a:** dam-media-preview.js, dam-brand.css, dam-viz-modal.css; token assocskel20260721c
 
 ## 2026-07-21 - Viz TUBA search / Opakowanie facet (HARD FAIL fix)
 
-**Komenda/Akcja:** WORKER — user: search `tuba` on visualizations.html = 0 produktow; TUBA missing from Opakowanie tags.
+**Komenda/Akcja:** WORKER â€” user: search `tuba` on visualizations.html = 0 produktow; TUBA missing from Opakowanie tags.
 
 **Log/Status:**
 1. Bridge BEFORE: Listen PID 47620 (pythonw local_bridge); `/files/status` bez `?root=` = root_required; z `?root=X:/Marketing` = online+probe_ok.
 2. Disk: `X:\Marketing` True; BATONY TUBA folder True (MIX - TUBA 30 SZT XMAS + TUBA MINI PREZENT).
-3. Index juz mial `mix-tuba-30-szt-xmas-mixy` w file-index + viz_latest (carrier TUBA, tags tuba, search_blob tuba) — Projekty mogly Pass, a Viz facet wygladal jak brak TUBA.
+3. Index juz mial `mix-tuba-30-szt-xmas-mixy` w file-index + viz_latest (carrier TUBA, tags tuba, search_blob tuba) â€” Projekty mogly Pass, a Viz facet wygladal jak brak TUBA.
 4. Root cause UI: `OPAKOWANIE_CANON` trzymal `tuba` na pozycji 12; dam-tag-bar ROW_LIMIT=8 => TUBA tylko pod `+8`. User widzial DOYPACK/BATON/... bez TUBA.
 5. Fix: `tuba` w top-4 OPAKOWANIE_CANON + enrich-search-tags order; `packagingTagsFrom` czyta `opakowanie` (nie tylko `pakowanie`); normalizeSearchText tez U+2013/U+2014; bump `dam-viz.js?v=tubaViz20260721a`.
-6. Bridge restart: kill 47620 + duplicate http.server; single bridge (po dedupe 33668; launch.py moze relaunch — final Listen 57100); web 46144 (+ launch 56372 na 8765).
+6. Bridge restart: kill 47620 + duplicate http.server; single bridge (po dedupe 33668; launch.py moze relaunch â€” final Listen 57100); web 46144 (+ launch 56372 na 8765).
 7. Reindex: `python apps/web/scripts/build-file-index.py` -> products=184 viz=392 + enrich-search-tags OK.
 
 **Efekt/Fix:** Opakowanie pokazuje TUBA bez rozwijania; search `tuba` = 1 produkt MIX TUBA.
 
 **Test/Ewaluacja:**
-- CDP: searchVal=tuba, filteredLen=1, pid=mix-tuba-30-szt-xmas-mixy, count `1 produktow (1 wariantow) / z 392 wszystkich`, tubaPillVisible=true — Pass
-- Screenshot+Read `viz-tuba-search-pass.png`: pole tuba, pill TUBA, karta TUBA 30 SZT XMAS — Pass
+- CDP: searchVal=tuba, filteredLen=1, pid=mix-tuba-30-szt-xmas-mixy, count `1 produktow (1 wariantow) / z 392 wszystkich`, tubaPillVisible=true â€” Pass
+- Screenshot+Read `viz-tuba-search-pass.png`: pole tuba, pill TUBA, karta TUBA 30 SZT XMAS â€” Pass
 - Bridge: `/files/status?root=X:/Marketing` online; `/product-catalog` ok=true
 
-**Źródła:** build-file-index.py, enrich-search-tags.py, dam-viz.js, visualizations.html; token tubaViz20260721a
+**ĹąrĂłdĹ‚a:** build-file-index.py, enrich-search-tags.py, dam-viz.js, visualizations.html; token tubaViz20260721a
 ---
 
-## 2026-07-21 — viz-modal assoc variant grouping
+## 2026-07-21 â€” viz-modal assoc variant grouping
 
 ### Komenda/Akcja
 Grupowanie wariantow kreacji w `#damVizModalAssoc` (device / WxH / quality stem) - 1 kafelek + badge N.
@@ -7471,21 +8705,21 @@ Grupowanie wariantow kreacji w `#damVizModalAssoc` (device / WxH / quality stem)
 ### Log/Status
 1. Branding project groups = `marketingGroupKey` / `folder_group_id` (folder scope), nie stem.
 2. `creativeKey` w media-preview NIE tnie WxH/device (Rule A jakosci) - dodano `familyCreativeKey`.
-3. Nuggets: w indeksie sa warianty rozmiaru (`1024x445`…) i rozszerzen (jpg/png/psd/tif); nie tylko quality-tier.
-4. Implementacja w `dam-media-preview.js`: `groupAssocMaterials`, badge, label `N grup · M plikow`, klik = primary + siblings grupy.
+3. Nuggets: w indeksie sa warianty rozmiaru (`1024x445`â€¦) i rozszerzen (jpg/png/psd/tif); nie tylko quality-tier.
+4. Implementacja w `dam-media-preview.js`: `groupAssocMaterials`, badge, label `N grup Â· M plikow`, klik = primary + siblings grupy.
 5. Cache-bust `?v=assocgroup20260721a` (visualizations/dashboard/branding/explorer).
 6. Style badge wstrzykniete (`injectA3Styles`) - bez edycji dam-brand.css.
 
 ### Efekt/Fix
-NUGGETS 6300586: `137 plikow` → `114 grup`; SLIDER I MIEJSCE badge 3; ZESTAW BURGERÓW/Kiełbasek/OBIADOWY/ŚNIADANIOWY badge 4.
+NUGGETS 6300586: `137 plikow` â†’ `114 grup`; SLIDER I MIEJSCE badge 3; ZESTAW BURGERĂ“W/KieĹ‚basek/OBIADOWY/ĹšNIADANIOWY badge 4.
 
 ### Backup
 brak
 
 ### Test/Ewaluacja
 - node --check dam-media-preview.js: Pass
-- CDP unit: SLIDER 3→1, ZESTAW 4→1, primary DESKTOP/1200x1200: Pass
-- CDP live modal label `114 grup · 137 plikow`, badges 3/4: Pass
+- CDP unit: SLIDER 3â†’1, ZESTAW 4â†’1, primary DESKTOP/1200x1200: Pass
+- CDP live modal label `114 grup Â· 137 plikow`, badges 3/4: Pass
 - Screenshot+Read pass1 + pass3 expanded: Pass (Elementy/Surowe nienaruszone)
 
 ### Zrodla
@@ -7493,37 +8727,37 @@ dam-media-preview.js, dam-branding.js (marketingGroupKey read-only), branding-in
 
 ---
 
-## 2026-07-21 — TUBA MINI PREZENT: 3 wizki w modalu + Surowe z links
+## 2026-07-21 â€” TUBA MINI PREZENT: 3 wizki w modalu + Surowe z links
 
 ### Komenda/Akcja
 Fix modalu wizualizacji MIX TUBA / rewizja TUBA MINI PREZENT: brakujace wizki w stripie + wyciek ciast do Surowe elementy.
 
 ### Log/Status
-1. Disk: `4 - WIZKI` = 3x `TUBA PREZENTOWA - SZKIC - D (1|2|3).jpg`; `2 - PROJEKT/links` = 9 plikow (Design/LISCIE/ROZA/magnific…).
+1. Disk: `4 - WIZKI` = 3x `TUBA PREZENTOWA - SZKIC - D (1|2|3).jpg`; `2 - PROJEKT/links` = 9 plikow (Design/LISCIE/ROZA/magnificâ€¦).
 2. file-index juz mial 3 wizki; `viz_latest` / modal robily 1 wiersz na jezyk (`firstWizkiPath`).
-3. Surowe: `isLinksRawPath` lapal ARCHIWUM `…/links/` (paczka_Sial cakes, 12x_XMAS/LINKS) przez luźne `\links\`.
+3. Surowe: `isLinksRawPath` lapal ARCHIWUM `â€¦/links/` (paczka_Sial cakes, 12x_XMAS/LINKS) przez luĹşne `\links\`.
 4. Fix UI: `expandModalWizkiVariants` + `buildModalItems` w dam-viz.js; zaostrzony `isLinksRawPath` + `pathUnderRevision` + `revision_path` w productContext.
 5. build-file-index: `_is_elements_dirname` + links/linki.
 6. Cache-bust: dam-viz `tubaVizStrip20260721a`, dam-media-preview `tubaLinks20260721a`.
 
 ### Efekt/Fix
-Strip = 3 thumbs PL·(1|2|3); hero = `/media` oryginal SZKIC; Surowe elementy (8) z PREZENT links (bez sernik/szarlotka). Design na tube2 (~871MB) nie w brandingu — poza 8.
+Strip = 3 thumbs PLÂ·(1|2|3); hero = `/media` oryginal SZKIC; Surowe elementy (8) z PREZENT links (bez sernik/szarlotka). Design na tube2 (~871MB) nie w brandingu â€” poza 8.
 
 ### Backup
 brak
 
 ### Test/Ewaluacja
 - node --check dam-viz.js + dam-media-preview.js: Pass
-- CDP: variantCount=3, paths SZKIC (1)(2)(3), heroNatural 2688x4479, Surowe (8) names z links, cakeLeak=false — Pass
+- CDP: variantCount=3, paths SZKIC (1)(2)(3), heroNatural 2688x4479, Surowe (8) names z links, cakeLeak=false â€” Pass
 - Screenshot+Read `tuba-mini-prezent-viz-modal-pass.png`: Pass
 
 ### Zrodla
 dam-viz.js, dam-media-preview.js, build-file-index.py, visualizations.html (+ dashboard/branding/explorer cache-bust), branding-index product_element PREZENT links
 
-## 2026-07-21 — fix show-all viz card hero (TUBA)
+## 2026-07-21 â€” fix show-all viz card hero (TUBA)
 
 ### Komenda/Akcja
-Naprawa karty produktu gdy toggle **Pokaż wszystkie** ON: nie pokazywac BRAK WIZUALIZACJI / Zgłoś gdy ktorykolwiek wariant ma wizke.
+Naprawa karty produktu gdy toggle **PokaĹĽ wszystkie** ON: nie pokazywac BRAK WIZUALIZACJI / ZgĹ‚oĹ› gdy ktorykolwiek wariant ma wizke.
 
 ### Log/Status
 1. Trace: showAll -> expandVizFromProducts(indexData, !showAll) dolacza rewizje z has_viz:false.
@@ -7531,50 +8765,50 @@ Naprawa karty produktu gdy toggle **Pokaż wszystkie** ON: nie pokazywac BRAK WI
 3. Bug: 
 enderGroup bral items[0] + 
 oViz = first.has_viz === false -> cala karta produktu pusta.
-4. Fix: itemHasViz / pickCardHero / orderGroupItemsForCard — hero = latest+thumb sposrod wariantow Z wizka; 
+4. Fix: itemHasViz / pickCardHero / orderGroupItemsForCard â€” hero = latest+thumb sposrod wariantow Z wizka; 
 oViz tylko gdy ZADEN wariant nie ma wizki.
 5. Cache-bust: visualizations.html dam-viz.js (aktualny token sibling: tubaHeroFullRes20260721d).
 6. 
 ode --check dam-viz.js OK.
 
 ### Efekt/Fix
-Search 	uba + Pokaż wszystkie ON: thumb + Przejdź + share (nie Zgłoś / noviz).
+Search 	uba + PokaĹĽ wszystkie ON: thumb + PrzejdĹş + share (nie ZgĹ‚oĹ› / noviz).
 
 ### Backup
 brak
 
 ### Test/Ewaluacja
-- CDP OFF: 1 prod (1 war) / 392; thumb; Przejdź — Pass
-- CDP ON: 1 prod (2 war) / 762; thumb; Przejdź; hasNoviz=false — Pass
-- Pass2 toggle cycle OFF-ON-OFF-ON — Pass
-- Pass3 hard reload LS show_all=1 — Pass
-- Screenshot+Read OFF + ON + pass3 — Pass (CDP status ON = 2/762 silniejszy niz caption)
+- CDP OFF: 1 prod (1 war) / 392; thumb; PrzejdĹş â€” Pass
+- CDP ON: 1 prod (2 war) / 762; thumb; PrzejdĹş; hasNoviz=false â€” Pass
+- Pass2 toggle cycle OFF-ON-OFF-ON â€” Pass
+- Pass3 hard reload LS show_all=1 â€” Pass
+- Screenshot+Read OFF + ON + pass3 â€” Pass (CDP status ON = 2/762 silniejszy niz caption)
 
 ### Zrodla
 dam-viz.js (pickCardHero, orderGroupItemsForCard, renderGroup, openProductModal), visualizations.html, file-index revisions TUBA XMAS
 
-## 2026-07-21 - Settings: Historia zmian + jump search „historia”
+## 2026-07-21 - Settings: Historia zmian + jump search â€žhistoriaâ€ť
 
 ### Komenda/Akcja
-User Fail: settings search „historia” = Brak ustawień. Dodać kartę Historii zmian na dysku + search jako skróty UI (nie assety).
+User Fail: settings search â€žhistoriaâ€ť = Brak ustawieĹ„. DodaÄ‡ kartÄ™ Historii zmian na dysku + search jako skrĂłty UI (nie assety).
 
 ### Log/Status
-1. Root cause: aktywny chip (np. Profil z sessionStorage) ukrywał kartę Dysk mimo trafienia data-search.
-2. Karta #historiaZmian / alias #damDiskHistory pod filtrem Dysk; inline panel + „Otwórz panel” (shared DamTagEdit life-hist layout).
-3. dam-settings.js: UI_JUMP_REGISTRY + #damSettingsJumpResults; przy q chip nie filtruje kart; hint liczy karty+skróty.
+1. Root cause: aktywny chip (np. Profil z sessionStorage) ukrywaĹ‚ kartÄ™ Dysk mimo trafienia data-search.
+2. Karta #historiaZmian / alias #damDiskHistory pod filtrem Dysk; inline panel + â€žOtwĂłrz panelâ€ť (shared DamTagEdit life-hist layout).
+3. dam-settings.js: UI_JUMP_REGISTRY + #damSettingsJumpResults; przy q chip nie filtruje kart; hint liczy karty+skrĂłty.
 4. Cache-bust jumpsearch20260721a (settings css/js, tag-edit, brand).
 
 ### Efekt/Fix
-Szukaj „historia” → ≥1 karta + 3 skróty (Settings / Inbox / Viz). Layout czytelny (chip F/X/D, osobne linie).
+Szukaj â€žhistoriaâ€ť â†’ â‰Ą1 karta + 3 skrĂłty (Settings / Inbox / Viz). Layout czytelny (chip F/X/D, osobne linie).
 
 ### Backup
 brak
 
 ### Test/Ewaluacja
-- CDP (chip Profil + q=historia): hint „1 kart + 3 skrótów”, cardHidden=false, jumpLabels=[Historia zmian na dysku, Historia (Wiadomości), Historia zmian na dysku (Wizualizacje)] — Pass
-- CDP open panel: popoverItems=20, list items readable Status wariantu — Pass
-- Screenshot+Read settings search historia — Pass
-- node --check dam-settings.js + dam-tag-edit.js — Pass
+- CDP (chip Profil + q=historia): hint â€ž1 kart + 3 skrĂłtĂłwâ€ť, cardHidden=false, jumpLabels=[Historia zmian na dysku, Historia (WiadomoĹ›ci), Historia zmian na dysku (Wizualizacje)] â€” Pass
+- CDP open panel: popoverItems=20, list items readable Status wariantu â€” Pass
+- Screenshot+Read settings search historia â€” Pass
+- node --check dam-settings.js + dam-tag-edit.js â€” Pass
 
 ### Zrodla
 settings.html, dam-settings.js, dam-settings.css, dam-tag-edit.js, dam-brand.css (.dam-changelog-history*)
@@ -7586,22 +8820,22 @@ settings.html, dam-settings.js, dam-settings.css, dam-tag-edit.js, dam-brand.css
 WORKER: per-item Cofnij/Ponow na wpisach lifecycle, zero English approved, czytelne tytuly (produkt/tagi/indeks/zmiana PL).
 
 ### Log/Status
-1. Root cause: loadLifecycleHistoryAsInbox czytal tylko top-level letter/status/scope; reconcile/pull maja dane w details_program/drifts -> fallback Lifecycle bez statusu · status. status hardcoded approved -> Decyzja: approved.
+1. Root cause: loadLifecycleHistoryAsInbox czytal tylko top-level letter/status/scope; reconcile/pull maja dane w details_program/drifts -> fallback Lifecycle bez statusu Â· status. status hardcoded approved -> Decyzja: approved.
 2. mapLifecycleHistoryEntry: nest extract + PL change sentence + enrich z file-index (nazwa, tagi, indeks).
 3. historyActionsHtml: lifecycle dostaje Cofnij/Ponow (ten sam change-log undo/redo co banner); disabled gdy !can_undo/!can_redo.
 4. buildDetailHtml lifecycle: Zmiana/Status/Produkt/Tagi (bez Decyzja: approved); decisionStatusPl dla tag_proposal.
 5. Cache-bust inbox.html dam-inbox.js?v=histLc20260721pl02.
 
 ### Efekt/Fix
-lc_1784577971703: BABKA CYTRYNOWA · 6300622.00 · wariant · tagi · uzgodnienie…; Cofnij/Ponow na kazdym lc_*; brak approved w liscie.
+lc_1784577971703: BABKA CYTRYNOWA Â· 6300622.00 Â· wariant Â· tagi Â· uzgodnienieâ€¦; Cofnij/Ponow na kazdym lc_*; brak approved w liscie.
 
 ### Backup
 brak
 
 ### Test/Ewaluacja
-- node --check dam-inbox.js — Pass
-- CDP: 163 lc z undo-last; anyApproved=false; anyJunk=false; detail PL — Pass
-- Screenshot+Read pass1 expanded / pass2 Nieaktualne / pass3 lista — Pass
+- node --check dam-inbox.js â€” Pass
+- CDP: 163 lc z undo-last; anyApproved=false; anyJunk=false; detail PL â€” Pass
+- Screenshot+Read pass1 expanded / pass2 Nieaktualne / pass3 lista â€” Pass
 
 ### Zrodla
 apps/web/assets/js/dam-inbox.js, apps/web/inbox.html, apps/web/data/lifecycle-status.json, program-instructions lifecycle.status_fxd
@@ -7617,16 +8851,16 @@ WORKER: fix customize-modal PODGLAD so each widget has a scannable bar/block sil
 4. Especially tasks_next = 5x (name bar | due bar); products/asana = metric block + label; viz/branding = nav dots + thumb + pills.
 
 ### Efekt/Fix
-PODGLAD silhouettes differ by widget type; Następne zadania reads as task list rows.
+PODGLAD silhouettes differ by widget type; NastÄ™pne zadania reads as task list rows.
 
 ### Backup
 brak
 
 ### Test/Ewaluacja
-- node --check dam-dashboard-widgets.js — Pass
-- CDP geometry tasks_next: 5 rows, left~124-186px + right~43-57px same Y — Pass
-- CDP products_count metric 40px height; newest_viz_3 3 media rows 36x36 thumb + 3 dots — Pass
-- Screenshot+Read pass1 tasks / pass2 products / pass3 tasks+media — Pass
+- node --check dam-dashboard-widgets.js â€” Pass
+- CDP geometry tasks_next: 5 rows, left~124-186px + right~43-57px same Y â€” Pass
+- CDP products_count metric 40px height; newest_viz_3 3 media rows 36x36 thumb + 3 dots â€” Pass
+- Screenshot+Read pass1 tasks / pass2 products / pass3 tasks+media â€” Pass
 
 ### Zrodla
 apps/web/assets/js/dam-dashboard-widgets.js, apps/web/assets/css/dam-dashboard.css, apps/web/dashboard.html
@@ -7680,9 +8914,9 @@ Wszystko: profile|appearance + disk|prefs rows fill; Dysk: both tiles 100% width
 brak
 
 ### Test/Ewaluacja
-- CDP Wszystko: diskPrefsSameRow=true, holeBetween=20 (gap), heights 488=488 — Pass
-- CDP Dysk: disk+historia pct 100, maxWidth none, elementFromPoint L/C/R in damDisk — Pass
-- Screenshot+Read pass1 Dysk / pass2 Wszystko / pass3 top Wszystko — Pass (vision often misreads white-on-white card edges; CDP authoritative)
+- CDP Wszystko: diskPrefsSameRow=true, holeBetween=20 (gap), heights 488=488 â€” Pass
+- CDP Dysk: disk+historia pct 100, maxWidth none, elementFromPoint L/C/R in damDisk â€” Pass
+- Screenshot+Read pass1 Dysk / pass2 Wszystko / pass3 top Wszystko â€” Pass (vision often misreads white-on-white card edges; CDP authoritative)
 
 ### Zrodla
 apps/web/assets/css/dam-settings.css, apps/web/settings.html
@@ -7726,11 +8960,11 @@ local_bridge.py, dam-api.js, dam-shell.js, dam-settings.js, dam-tag-edit.js, dam
 WORKER: Fix vertical rhythm / padding between content groups in viz modal (align with grid card body). No commit.
 
 ### Log/Status
-1. Design Read: Geex viz meta stack = tags → title → ID → filename → carrier as groups.
-2. CDP card `#vizGrid .dam-viz-card__body`: gap token 14px (actions +4 → 18px).
-3. Modal before (CSS margins, non-flex): title→ID ~2px, ID→filename ~6px, filename→carrier ~6px.
+1. Design Read: Geex viz meta stack = tags â†’ title â†’ ID â†’ filename â†’ carrier as groups.
+2. CDP card `#vizGrid .dam-viz-card__body`: gap token 14px (actions +4 â†’ 18px).
+3. Modal before (CSS margins, non-flex): titleâ†’ID ~2px, IDâ†’filename ~6px, filenameâ†’carrier ~6px.
 4. Applied flex column + `--dam-viz-modal-meta-gap` on `.dam-viz-modal__body`; zeroed conflicting margins; branding title-block inherits token.
-5. Pass polish: modal gap = card 14px + 2px → 16px; actions margin = +4px (card token) → 20px after variants.
+5. Pass polish: modal gap = card 14px + 2px â†’ 16px; actions margin = +4px (card token) â†’ 20px after variants.
 6. Cache-bust `?v=metagap20260721d` (dam-brand / dam-viz-modal / dam-branding where touched).
 
 ### Efekt/Fix
@@ -7742,9 +8976,9 @@ WORKER: Fix vertical rhythm / padding between content groups in viz modal (align
 brak (no commit)
 
 ### Test/Ewaluacja
-- TUBA modal CDP after: tags/title/id/filename/carrier/variants = **16px**; variants→actions = **20px**; card still **14px**.
-- Before→after group gaps (px): title→ID 2→16; ID→filename 6→16; filename→carrier 6→16.
-- Screenshot+Read TUBA modal (pass1–3); CDP authoritative vs vision px guess.
+- TUBA modal CDP after: tags/title/id/filename/carrier/variants = **16px**; variantsâ†’actions = **20px**; card still **14px**.
+- Beforeâ†’after group gaps (px): titleâ†’ID 2â†’16; IDâ†’filename 6â†’16; filenameâ†’carrier 6â†’16.
+- Screenshot+Read TUBA modal (pass1â€“3); CDP authoritative vs vision px guess.
 - **Pass**
 
 ### Zrodla
@@ -7768,9 +9002,9 @@ Subtitle skrocony PL, fw=300, bodyOp=1, subVis=visible. Boot: hidden -> overlay 
 brak
 
 ### Test/Ewaluacja
-- node --check dam-i18n.js / dam-shell.js / dam-grid-reveal.js — Pass
-- CDP: fw 300, nbsp>=7, bodyOp 1, subOp 0.82, diacritics — Pass
-- Screenshot+Read crop dam-page-sub — Pass
+- node --check dam-i18n.js / dam-shell.js / dam-grid-reveal.js â€” Pass
+- CDP: fw 300, nbsp>=7, bodyOp 1, subOp 0.82, diacritics â€” Pass
+- Screenshot+Read crop dam-page-sub â€” Pass
 
 ### Zrodla
 apps/web/inbox.html, branding.html, explorer.html, index.html, dam-i18n.js, dam-shell.js, dam-grid-reveal.js, dam-app.css, dam-shell-boot.css, i18n/pl.json, i18n/en.json
@@ -7814,7 +9048,7 @@ Fix (1) wrong assoc IMG/M-META703783* for V-6300711 PROTEINA KARMEL, (2) right-c
 1. Root cause A: `IMG_1266/67/68` (br-003783..) from WSPOLPRACE influencer folder linked to 6 PROTEINA* products; `isLikelyPhoneDumpAsset` was bypassed when `asset_role=social_asset` (KEEP roles short-circuit). Display ID M-META* via DamMarketingId type META.
 2. Fix A: hard-reject phone dumps in `passesMarketingAssocMaterial`; tighten `isRelevantMaterialForProduct` (no KEEP-only pass for spray links without product signal).
 3. Fix B: assoc-index chips get `data-marketing-id` + bindIdChipCopy + document contextmenu delegation; `user-select:text; cursor:copy`.
-4. Fix C/D: `#damVizModalFileMeta` wrap (filename+meta 8px); title→ID 12 / ID→filemeta 18; branding ID under title; titles 24px (override old 17.85).
+4. Fix C/D: `#damVizModalFileMeta` wrap (filename+meta 8px); titleâ†’ID 12 / IDâ†’filemeta 18; branding ID under title; titles 24px (override old 17.85).
 5. Fix interrupt: `folderVariantsHtml` filters EDITABLE_EXTS/source; `sourceActionFiles`/`dedupeSourceFilesByExt` pick newest mtime; branding editable push includes mtime.
 6. Cache-bust `?v=assoccopy20260721c` on brand/branding/media-preview/viz/branding.js + HTML.
 
@@ -7836,20 +9070,20 @@ brak
 ### Zrodla
 program-instructions viz.assoc_no_visualization_loop; dam-dobrakaloria; ui-taste; branding-index br-003783/br-005660
 
-### Dopisek 01:24 — tighter index scope (assoccopy20260721d)
-Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "karmel" odpada. V-6300711: assoc=0 (Brak…) bo wszystkie raster KEEP sa spray-linkami 6–7 produktow bez 6300711 w sciezce; packshoty z indeksem i tak tnie `isVisualizationAsset`. CDP: empty OK, gaps 12/18/8, title 24px. Pass.
+### Dopisek 01:24 â€” tighter index scope (assoccopy20260721d)
+Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow â€” samo "karmel" odpada. V-6300711: assoc=0 (Brakâ€¦) bo wszystkie raster KEEP sa spray-linkami 6â€“7 produktow bez 6300711 w sciezce; packshoty z indeksem i tak tnie `isVisualizationAsset`. CDP: empty OK, gaps 12/18/8, title 24px. Pass.
 
 
-## 2026-07-21 01:41 — Resume WORKER e5c3f108 (dam-assoc-ux-unify)
+## 2026-07-21 01:41 â€” Resume WORKER e5c3f108 (dam-assoc-ux-unify)
 
-**Komenda/Akcja:** Resume interrupted assoc UX unify after Nuggets partial restore. Intensive ui-taste focus zones + Ralph US-01…US-10.
+**Komenda/Akcja:** Resume interrupted assoc UX unify after Nuggets partial restore. Intensive ui-taste focus zones + Ralph US-01â€¦US-10.
 
 **Log/Status:**
-1. Audyt: Nuggets juz 41 grup; DamAssocEdit.bindMaterialsPane byl w pliku ale stary cache bez eksportu — hard reload.
+1. Audyt: Nuggets juz 41 grup; DamAssocEdit.bindMaterialsPane byl w pliku ale stary cache bez eksportu â€” hard reload.
 2. Shift+/- density: rozszerzono DamCardZoom w dam-media-preview (apply + Shift+Plus/Minus step 5 + CSS vars na assoc pane roots); branding/viz apply deleguja do DamCardZoom.
-3. UTF-8: naprawiono mojibake w branding.html / visualizations.html (Pokaż, Filtr języka, Skala kafelków, tipy); #damBrandingSearch niemięsa OK.
-4. QA CDP: popover 0.70×0.90; gaps 8/8/10; studio Z tłem + XL/L/S; M-SLI 2 produkty daktylowe; copy index; DamLoader Skojarzenia…
-5. prd.json: wszystkie US-01…US-10 passes:true z dowodami.
+3. UTF-8: naprawiono mojibake w branding.html / visualizations.html (PokaĹĽ, Filtr jÄ™zyka, Skala kafelkĂłw, tipy); #damBrandingSearch niemiÄ™sa OK.
+4. QA CDP: popover 0.70Ă—0.90; gaps 8/8/10; studio Z tĹ‚em + XL/L/S; M-SLI 2 produkty daktylowe; copy index; DamLoader Skojarzeniaâ€¦
+5. prd.json: wszystkie US-01â€¦US-10 passes:true z dowodami.
 
 **Efekt/Fix:**
 - Files: dam-media-preview.js, dam-viz.js, dam-branding.js, dam-assoc-edit.js (prior), branding.html, visualizations.html, prd.json
@@ -7859,23 +9093,23 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 
 **Test/Ewaluacja:**
 - Nuggets N=41 grup / 64 pliki; IMG_* = false
-- Zoom thumbW 45.5@65 → 105@150; Shift+/- step 5
+- Zoom thumbW 45.5@65 â†’ 105@150; Shift+/- step 5
 - Popover ratios 0.700 / 0.900
 - M-SLI products: chrupiacy-orzech-daktylowy, jab-ko-cynamon-daktylowy
 - Screenshots: r01-nuggets-materials.png, r05-zoom-before-65.png, r05-zoom-after-150-assoc.png, r08-msli-popover-70-90.png, r08-branding-search-niemiesa.png
 - node --check: OK
-- Verdict: Pass US-01…US-10
+- Verdict: Pass US-01â€¦US-10
 
-**Źródła:** skill dam-dobrakaloria; ui-taste; code-doctrine; .ralph/projects/dam-assoc-ux-unify/prd.json
+**ĹąrĂłdĹ‚a:** skill dam-dobrakaloria; ui-taste; code-doctrine; .ralph/projects/dam-assoc-ux-unify/prd.json
 
 
-## 2026-07-21 ~02:00 — WORKER DamLoader label + 3s center hold
+## 2026-07-21 ~02:00 â€” WORKER DamLoader label + 3s center hold
 
-**Komenda/Akcja:** Fix loading bar: copy "ładowanie" + HOLD_CENTER_MS 3s before bottom dock.
+**Komenda/Akcja:** Fix loading bar: copy "Ĺ‚adowanie" + HOLD_CENTER_MS 3s before bottom dock.
 
 **Log/Status:**
-1. Root cause: call-sites DamLoader.start("Skojarzenia…") + HOLD_CENTER_MS=1000 in dam-loader.js.
-2. Central fix in dam-loader.js only (avoid viz/assoc sibling files): LOADER_LABEL always "ładowanie"; HOLD_CENTER_MS=3000; STYLE_ID bump.
+1. Root cause: call-sites DamLoader.start("Skojarzeniaâ€¦") + HOLD_CENTER_MS=1000 in dam-loader.js.
+2. Central fix in dam-loader.js only (avoid viz/assoc sibling files): LOADER_LABEL always "Ĺ‚adowanie"; HOLD_CENTER_MS=3000; STYLE_ID bump.
 3. Cache-bust HTML: dam-loader.js?v=loaderhold3s20260721a (10 HTML).
 4. CDP + screenshots: center label/pos; dock after ~3s; fast done <3s no dock.
 
@@ -7885,28 +9119,28 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 - node --check: OK
 
 **Test/Ewaluacja:**
-- start('Skojarzenia…') → label "ładowanie"
+- start('Skojarzeniaâ€¦') â†’ label "Ĺ‚adowanie"
 - ~2.8s: centerish, width~300 (loader-center-pass1.png)
 - dock: nearFab, width~40 (loader-bottom-pass2.png); firstNarrow ~3478ms; lastWide ~3176ms
 - done@800ms: midCenterish, fade from center (afterTop 495), never docked
 - Verdict: Pass
 
-**Źródła:** dam-dobrakaloria; code-doctrine §3 cache-bust; DamLoader API
+**ĹąrĂłdĹ‚a:** dam-dobrakaloria; code-doctrine Â§3 cache-bust; DamLoader API
 
 
-## 2026-07-21 ~02:05 — HARD CANON modal parity + Pokaż wszystkie
+## 2026-07-21 ~02:05 â€” HARD CANON modal parity + PokaĹĽ wszystkie
 
-**Komenda/Akcja:** Zapamiętaj na zawsze: Wizualizacje = layout kanon; Eksplorator parity; wariant = indeks produktu; studio = TŁO/PERSPEKTYWA/JAKOŚĆ; przycisk Pokaż wszystkie.
+**Komenda/Akcja:** ZapamiÄ™taj na zawsze: Wizualizacje = layout kanon; Eksplorator parity; wariant = indeks produktu; studio = TĹO/PERSPEKTYWA/JAKOĹšÄ†; przycisk PokaĹĽ wszystkie.
 
 **Log/Status:**
 1. memory.md #141 + program-instructions `ui.viz_modal_parity_explorer` (v11).
-2. dam-media-preview.js: productIndexVariantsHtml (bez WARIANTY MATERIAŁU jako perspektyw); studio 3 ramki + Pokaż wszystkie (grupy fade-in).
+2. dam-media-preview.js: productIndexVariantsHtml (bez WARIANTY MATERIAĹU jako perspektyw); studio 3 ramki + PokaĹĽ wszystkie (grupy fade-in).
 3. dam-branding.css: studio-frames grid + all-files animation.
 4. Cachebust: parity20260721a.
 
 **Efekt/Fix:** WRITE memory.md, program-instructions.json, dam-media-preview.js, dam-branding.css, HTML ?v=
 
-**Źródła:** user HARD 2026-07-21; ui-taste; dam-dobrakaloria
+**ĹąrĂłdĹ‚a:** user HARD 2026-07-21; ui-taste; dam-dobrakaloria
 
 ## 2026-07-21 02:05 - Assoc minus restyle (red / white / hover)
 
@@ -7926,7 +9160,7 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 - CDP hover-force: transform matrix(1.05...), shadow rgba(220,38,38,0.2), w 27.3.
 - Screenshot+Read: assoc-minus-default / assoc-minus-item-default / assoc-minus-hover / assoc-minus-item-hover. Pass.
 
-**Źródła:** dam-assoc-edit.js; branding.html; explorer.html; dashboard.html; visualizations.html.
+**ĹąrĂłdĹ‚a:** dam-assoc-edit.js; branding.html; explorer.html; dashboard.html; visualizations.html.
 
 ## 2026-07-21 ~02:00 - Faktury toolbar/filters Geex polish (intensive 10)
 
@@ -7944,31 +9178,31 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 **Test/Ewaluacja:**
 - node --check dam-invoices.js + dam-ui-cta.js OK
 - CDP: active bg white / border #ab54db / color muted purple; cta border #ececf2 radius 8; items 34@sameY; leftDiff 0; emDashInMeta false
-- Passes 1-10 screenshot+Read (desktop + 768/900 mid + collapsed sidebar + Opłacone/Oczekujące/Po terminie)
+- Passes 1-10 screenshot+Read (desktop + 768/900 mid + collapsed sidebar + OpĹ‚acone/OczekujÄ…ce/Po terminie)
 
-**Źródła:** invoices.html; dam-invoices.css; dam-invoices.js; dam-ui-cta.js; checklist C2 already [x]
+**ĹąrĂłdĹ‚a:** invoices.html; dam-invoices.css; dam-invoices.js; dam-ui-cta.js; checklist C2 already [x]
 
 ## 2026-07-21 ~02:10 - Viz modal parity branding (WORKER vizmod, intensive 10)
 
-**Komenda/Akcja:** Fix #damVizModal vs #damMediaPreview gold: product INDEX variants strip, outline studio chips, spacing rhythm (badges→title 10, ID→filename 10, meta ~5, studio group gap 20, body inset 40).
+**Komenda/Akcja:** Fix #damVizModal vs #damMediaPreview gold: product INDEX variants strip, outline studio chips, spacing rhythm (badgesâ†’title 10, IDâ†’filename 10, meta ~5, studio group gap 20, body inset 40).
 
 **Log/Status:**
-1. Root cause A: product variants strip missing/weak UI — restored as `dam-media-preview__assoc--variants-only` + label WARIANTY PRODUKTU (thumbs by indeks+jezyk); quality XL/L/S stays in studio frames.
-2. Root cause B: solid purple studio chips from `#damMediaPreviewStudio .is-active { background: var(--dam-primary); color:#fff }` — switched to white + 2px accent outline + muted accent text (viz + branding).
-3. Root cause C: badges height 0 in assoc-split body — `min-height:0` + flex-shrink collapsed badges; fix `flex-shrink:0; min-height:auto`.
-4. Spacing tokens: badges→title 10, id→filename 10, title→id/filemeta internal 5; studio--tri gap 20; chip gap 5; body pad-x 40.
-5. Order HARD (branding parity): studio → quality host → product variants strip.
+1. Root cause A: product variants strip missing/weak UI â€” restored as `dam-media-preview__assoc--variants-only` + label WARIANTY PRODUKTU (thumbs by indeks+jezyk); quality XL/L/S stays in studio frames.
+2. Root cause B: solid purple studio chips from `#damMediaPreviewStudio .is-active { background: var(--dam-primary); color:#fff }` â€” switched to white + 2px accent outline + muted accent text (viz + branding).
+3. Root cause C: badges height 0 in assoc-split body â€” `min-height:0` + flex-shrink collapsed badges; fix `flex-shrink:0; min-height:auto`.
+4. Spacing tokens: badgesâ†’title 10, idâ†’filename 10, titleâ†’id/filemeta internal 5; studio--tri gap 20; chip gap 5; body pad-x 40.
+5. Order HARD (branding parity): studio â†’ quality host â†’ product variants strip.
 6. Cache-bust `?v=vizmod20260721g` on visualizations/branding/explorer/dashboard.
 
 **Efekt/Fix:** ORZESZKI/KLOPSIKI show WARIANTY PRODUKTU; chips readable outline; gaps match brief.
 
 **Test/Ewaluacja:**
 - `node --check` dam-viz.js OK
-- CDP Pass10 ORZESZKI: badgesTitle 10, idFname 10, studioGroup 20, padL 40, chip bg white / border 2px #ab54db / muted purple text, order studio→quality→assoc, vBtns 7, badgesH 26
+- CDP Pass10 ORZESZKI: badgesTitle 10, idFname 10, studioGroup 20, padL 40, chip bg white / border 2px #ab54db / muted purple text, order studioâ†’qualityâ†’assoc, vBtns 7, badgesH 26
 - Branding KAR6X: variants strip + idFname 10 + outline chips (CDP)
-- Intensive Pass 1–10 screenshot+Read (viz) + ≥2 branding; vision often mislabels outline as solid — CDP authoritative
+- Intensive Pass 1â€“10 screenshot+Read (viz) + â‰Ą2 branding; vision often mislabels outline as solid â€” CDP authoritative
 
-**Źródła:** dam-viz.js; dam-viz-modal.css; dam-brand.css; dam-branding.css; visualizations.html; branding.html; explorer.html; dashboard.html
+**ĹąrĂłdĹ‚a:** dam-viz.js; dam-viz-modal.css; dam-brand.css; dam-branding.css; visualizations.html; branding.html; explorer.html; dashboard.html
 
 ## 2026-07-21 ~02:12 - Badge global +5% (WORKER badgescale)
 
@@ -7979,34 +9213,34 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 2. Added `--dam-badge-scale: 1.05` in dam-tokens.css; global rule at end of dam-brand.css; late inject `#damBadgeScale5` from dam-badges.js (wins over dam-branding.css load order); assoc-edit !important updated.
 3. Cache-bust `?v=badgescale20260721a/b` on key HTML (sibling may overwrite dam-brand ?v=; inject still applies).
 
-**Efekt/Fix:** Modal/card badges ~25.59px / 12.075px / 5.25×11.55 (= ×1.05).
+**Efekt/Fix:** Modal/card badges ~25.59px / 12.075px / 5.25Ă—11.55 (= Ă—1.05).
 
 **Test/Ewaluacja:**
 - node --check dam-badges.js + dam-assoc-edit.js OK
 - CDP: fs 12.075 (=11.5*1.05), h 25.59 (~24.38*1.05), index 6300767 Pass
-- Pass 1–3 screenshot+Read viz modal badges
+- Pass 1â€“3 screenshot+Read viz modal badges
 
-**Źródła:** dam-tokens.css; dam-brand.css; dam-badges.js; dam-assoc-edit.js; visualizations.html (+ branding/explorer/dashboard/index/project/inbox/settings)
+**ĹąrĂłdĹ‚a:** dam-tokens.css; dam-brand.css; dam-badges.js; dam-assoc-edit.js; visualizations.html (+ branding/explorer/dashboard/index/project/inbox/settings)
 
 ## 2026-07-21 ~02:15 - Viz modal studio UX Intensive QA (WORKER studioqa)
 
-**Komenda/Akcja:** Finish viz-modal studio UX + ui-taste Intensive QA 10 passes (screenshot→Read→defects→fix).
+**Komenda/Akcja:** Finish viz-modal studio UX + ui-taste Intensive QA 10 passes (screenshotâ†’Readâ†’defectsâ†’fix).
 
 **Log/Status:**
 1. Root cause variants-gone: studio treated each WIZ file as variant / dropped INDEX strip; restored productVariantRepresentatives (lang|index) + variant strip.
 2. Root cause solid purple: active studio/quality used solid --dam-primary fill; now white/lavender + purple border + muted purple text.
-3. Sibling race: assoc-edit hid minus (opacity:0 Shift-only) — restored ALWAYS visible + late override in dam-media-preview inject; HOLD_MS=2000.
-4. 3-frame grid via .studio--tri > .studio-frames CSS Grid; no Język row.
+3. Sibling race: assoc-edit hid minus (opacity:0 Shift-only) â€” restored ALWAYS visible + late override in dam-media-preview inject; HOLD_MS=2000.
+4. 3-frame grid via .studio--tri > .studio-frames CSS Grid; no JÄ™zyk row.
 5. Cachebust peak: studioqa20260721z8 (siblings may overwrite HTML ?v=; verify asset content).
 
 **Efekt/Fix:** ORZESZKI 6300767: 7 index variants, 3 equal studio frames, outline chips, minus visible, badge +3.
 
 **Test/Ewaluacja:**
 - node --check dam-viz.js / dam-assoc-edit.js / dam-media-preview.js OK
-- CDP Pass10: variants=7, frames 252px×3 same Y, chip bg white / border #ab54db / muted purple text, minus n=17 op=0.92 visible, badge +3 12px white/purple
-- Intensive Pass 1–10 screenshot+Read (tablet stack at ~768 via Emulation; desktop polish)
+- CDP Pass10: variants=7, frames 252pxĂ—3 same Y, chip bg white / border #ab54db / muted purple text, minus n=17 op=0.92 visible, badge +3 12px white/purple
+- Intensive Pass 1â€“10 screenshot+Read (tablet stack at ~768 via Emulation; desktop polish)
 
-**Źródła:** dam-viz.js; dam-assoc-edit.js; dam-media-preview.js; dam-branding.css; dam-brand.css; visualizations.html (+ dashboard/explorer/branding cachebust)
+**ĹąrĂłdĹ‚a:** dam-viz.js; dam-assoc-edit.js; dam-media-preview.js; dam-branding.css; dam-brand.css; visualizations.html (+ dashboard/explorer/branding cachebust)
 
 
 ## 2026-07-21 ~02:16 - Viz modal HARD: show-all / title gap / chip 1px (WORKER)
@@ -8014,12 +9248,12 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 **Komenda/Akcja:** Three HARD fixes in viz/media-preview modal. Screenshot+Read. Cache-bust. No commit.
 
 **Log/Status:**
-1. Show-all: group key persp|bg (not size); labels FRONT · Z tłem; qualities XL→L→S→S-SKLEP horizontal grid; outer CSS multi-column.
-2. Title gap: killed negative margin (sibling 10-14=-4 → net 10); body gap 16px + title padding-top 4px; badges flow max-height:none.
+1. Show-all: group key persp|bg (not size); labels FRONT Â· Z tĹ‚em; qualities XLâ†’Lâ†’Sâ†’S-SKLEP horizontal grid; outer CSS multi-column.
+2. Title gap: killed negative margin (sibling 10-14=-4 â†’ net 10); body gap 16px + title padding-top 4px; badges flow max-height:none.
 3. Active chips/pills: border 1px (was 2px) in dam-branding / dam-brand / dam-viz-modal.
 4. Bumped injected dam-viz-modal.css ?v= in dam-viz.js + dam-media-preview.js; HTML ?v=showall20260721g.
 
-**Efekt/Fix:** Readable show-all groups; title.top ≥ badges.bottom +12; quiet 1px purple outline.
+**Efekt/Fix:** Readable show-all groups; title.top â‰Ą badges.bottom +12; quiet 1px purple outline.
 
 **Backup:** brak
 
@@ -8028,17 +9262,17 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 - CDP: gapPx=16 Pass; chip borderTopWidth=1px Pass; groups side-by-side (same top, left 123/326); quals XL/L/S/S-SKLEP; grid display
 - Screenshot+Read passes (modal + show-all)
 
-**Źródła:** dam-viz.js; dam-media-preview.js; dam-branding.css; dam-brand.css; dam-viz-modal.css; tools/_bump_showall_cache.py; visualizations/branding/explorer/dashboard.html
+**ĹąrĂłdĹ‚a:** dam-viz.js; dam-media-preview.js; dam-branding.css; dam-brand.css; dam-viz-modal.css; tools/_bump_showall_cache.py; visualizations/branding/explorer/dashboard.html
 
 ## 2026-07-21 ~02:16 - Viz modal actions bar sticky white (WORKER)
 
-**Komenda/Akcja:** Fix `#damVizModal .dam-viz-modal__actions` (and shared `#damMediaPreview`) so bar never disappears under expanded Pokaż wszystkie / all-files; white bg + 12px padding; z-index above scroll content.
+**Komenda/Akcja:** Fix `#damVizModal .dam-viz-modal__actions` (and shared `#damMediaPreview`) so bar never disappears under expanded PokaĹĽ wszystkie / all-files; white bg + 12px padding; z-index above scroll content.
 
 **Log/Status:**
 1. Root cause: actions lived inside scrollable `.dam-viz-modal__body`; expanding studio all-files pushed bar below fold / under content.
 2. Moved actions to sibling under `.dam-viz-modal__main` (dam-viz.js + dam-media-preview.js split layout).
 3. CSS pin: `__main > __actions` flex 0 0 auto, bg #fff, z-index 40; body scrolls (z 1 for all-files/studio); sticky fallback when actions remain in body.
-4. Buttons: secondary/icon/admin bg #fff, padding 12px; Przejdź keeps Geex primary purple.
+4. Buttons: secondary/icon/admin bg #fff, padding 12px; PrzejdĹş keeps Geex primary purple.
 5. Cache-bust `?v=actionsBar20260721a` on CSS/JS + HTML.
 
 **Efekt/Fix:** Action bar pinned below body scrollport; clickable while all-files expanded.
@@ -8047,10 +9281,10 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 
 **Test/Ewaluacja:**
 - node --check dam-viz.js / dam-media-preview.js OK
-- CDP: actionsZ=40, actionsBg=rgb(255,255,255), secondary pad/bg #fff 12px, elementFromPoint Przejdź hits=true after thumb click + body scroll; constrained main 640px still hits
+- CDP: actionsZ=40, actionsBg=rgb(255,255,255), secondary pad/bg #fff 12px, elementFromPoint PrzejdĹş hits=true after thumb click + body scroll; constrained main 640px still hits
 - Screenshot+Read pass1/pass2/pass3
 
-**Źródła:** dam-viz-modal.css; dam-brand.css; dam-branding.css; dam-viz.js; dam-media-preview.js; visualizations/explorer/dashboard/branding.html
+**ĹąrĂłdĹ‚a:** dam-viz-modal.css; dam-brand.css; dam-branding.css; dam-viz.js; dam-media-preview.js; visualizations/explorer/dashboard/branding.html
 
 
 ## 2026-07-21 ~02:30 - Viz modal group tint + variants above studio (WORKER)
@@ -8058,7 +9292,7 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 **Komenda/Akcja:** grouptint polish: `#f5f6fa` group surfaces, WARIANTY above studio, denser wrap fill, studio ~10% shorter, frame labels +3/+3.
 
 **Log/Status:**
-1. Root cause wrap waste: `.dam-media-preview__assoc` 2-col grid at ≥640px left INDEX strip at ~half width (~370px of ~796px).
+1. Root cause wrap waste: `.dam-media-preview__assoc` 2-col grid at â‰Ą640px left INDEX strip at ~half width (~370px of ~796px).
 2. DOM order: variants HTML before `#damVizModalStudio` (dam-viz.js); `#damMediaPreviewAssoc` before studio (dam-media-preview.js).
 3. CSS: group bg `#f5f6fa` on studio-frames / product-variants / all-group; variants-only flex full-width; denser flex wrap min 70px; studio pad/chip condense; label margin 3px 0 0 3px.
 4. Cache-bust `?v=grouptint20260721c` HTML + injected dam-viz-modal.css hrefs.
@@ -8072,17 +9306,17 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 - CDP Pass: variantsTop < framesTop; bg rgb(245,246,250) on frames/variants/all-group; framesH=71.5; firstRow=7 fillRatio~0.99; label margin 3px 0 0 3px; actionsZ=40
 - Screenshot+Read 3 przeloty (pass3 outline proof: 1 row of 7)
 
-**Źródła:** dam-viz.js; dam-media-preview.js; dam-viz-modal.css; dam-branding.css; visualizations/explorer/branding/dashboard.html
+**ĹąrĂłdĹ‚a:** dam-viz.js; dam-media-preview.js; dam-viz-modal.css; dam-branding.css; visualizations/explorer/branding/dashboard.html
 
 
 ## 2026-07-21 ~02:35 - Viz modal all-files: dedupe qualities + row stack (WORKER)
 
-**Komenda/Akcja:** Fix `Pokaż wszystkie`: duplicate XL/L/S/S-SKLEP tiles + groups as side-by-side columns.
+**Komenda/Akcja:** Fix `PokaĹĽ wszystkie`: duplicate XL/L/S/S-SKLEP tiles + groups as side-by-side columns.
 
 **Log/Status:**
-1. Root cause doubles: `expandModalWizkiVariants` flattens every WIZKI file; all-files grouped by Perspektywa|Tło but rendered every file - twin paths share same `size` label (no quality dedupe).
+1. Root cause doubles: `expandModalWizkiVariants` flattens every WIZKI file; all-files grouped by Perspektywa|TĹ‚o but rendered every file - twin paths share same `size` label (no quality dedupe).
 2. Root cause columns: `.dam-media-preview__all-files` used `grid-template-columns: repeat(auto-fill, minmax(168px, 1fr))` so groups became ~187px tall columns side-by-side.
-3. JS dedupe by quality key in `dam-viz.js` + `dam-media-preview.js` (prefer active, else thumb/path score); order XL→L→S→S-SKLEP.
+3. JS dedupe by quality key in `dam-viz.js` + `dam-media-preview.js` (prefer active, else thumb/path score); order XLâ†’Lâ†’Sâ†’S-SKLEP.
 4. CSS: all-files `flex-direction: column`; group `width:100%`; group-grid horizontal flex 72px tiles; reinforce in `dam-viz-modal.css`.
 5. Cache-bust `?v=allrows20260721a` HTML + injected CSS hrefs.
 
@@ -8095,31 +9329,31 @@ Przy `ctx.index` wymagaj indeksu w blobie (hits>=99) lub >=2 tokenow — samo "k
 - CDP Kulki 6300760: labels `XL L S S-SKLEP` uniq=4; group[1].top 1208 > group[0].bottom 1194; widthRatio=1.0; display=flex column; tiles sameRow LTR; groupTint rgb(245,246,250); variantsTop 199 < studioTop 345; actionsZ=40
 - Screenshot+Read 3 przeloty (pass1/pass2/pass3)
 
-**Źródła:** dam-viz.js; dam-media-preview.js; dam-branding.css; dam-viz-modal.css; visualizations/explorer/branding/dashboard.html
+**ĹąrĂłdĹ‚a:** dam-viz.js; dam-media-preview.js; dam-branding.css; dam-viz-modal.css; visualizations/explorer/branding/dashboard.html
 
 
 ## 2026-07-21 ~02:40 - Branding media-preview: WARIANTY labels + studio under variants (WORKER)
 
-**Komenda/Akcja:** Fix `#damMediaPreview` material siblings mislabeled INNE/Z TŁEM + studio bar sunk under whole assoc (overlap/waste); place studio under left variant-grid.
+**Komenda/Akcja:** Fix `#damMediaPreview` material siblings mislabeled INNE/Z TĹEM + studio bar sunk under whole assoc (overlap/waste); place studio under left variant-grid.
 
 **Log/Status:**
-1. Root cause labels: branding siblings lack real persp/size axes; empty persp→INNE, any bg→Z tłem; duplicate identical group titles.
+1. Root cause labels: branding siblings lack real persp/size axes; empty perspâ†’INNE, any bgâ†’Z tĹ‚em; duplicate identical group titles.
 2. Root cause layout: `#damMediaPreviewStudio` was sibling after entire `#damMediaPreviewAssoc`, so top waited for max(variants, products) height (~gap 96px under variant-grid).
-3. JS: `itemsHaveRealVizAxes` + `materialMode` → all-files group `Warianty materiału`, tiles PSD/JPG; hide fake TŁO frames for material packs; `parkStudioOutsideAssoc` + `ensureStudioUnderVariants` moves studio into left `.assoc-col--variants` after paint.
+3. JS: `itemsHaveRealVizAxes` + `materialMode` â†’ all-files group `Warianty materiaĹ‚u`, tiles PSD/JPG; hide fake TĹO frames for material packs; `parkStudioOutsideAssoc` + `ensureStudioUnderVariants` moves studio into left `.assoc-col--variants` after paint.
 4. CSS: studio--under-variants margin 8px; products align-self start; sep grid-row 1/-1.
 5. Cache-bust `?v=brandVar20260721a`.
 
-**Efekt/Fix:** Material all-files = WARIANTY (not INNE·Z TŁEM); studio under left variants (gap 16px); products clear (horizClear); no fake TŁO for BLIX pack.
+**Efekt/Fix:** Material all-files = WARIANTY (not INNEÂ·Z TĹEM); studio under left variants (gap 16px); products clear (horizClear); no fake TĹO for BLIX pack.
 
 **Backup:** brak
 
 **Test/Ewaluacja:**
 - node --check dam-media-preview.js OK
-- CDP BLIX br-005508: before studioTop≈897 gap≈96; after studioTop=892 variantBottom=876 gap=16; parentIsVariants=true; labels=[Warianty materiału]; tiles=[PSD,PSD,JPG]; hasFrames=false; horizClear; elementFromPoint products=true; thumbH=476
-- Viz modal spot-check: studio frames still present; all-files still Perspektywa·Tło path (not material-only)
+- CDP BLIX br-005508: before studioTopâ‰897 gapâ‰96; after studioTop=892 variantBottom=876 gap=16; parentIsVariants=true; labels=[Warianty materiaĹ‚u]; tiles=[PSD,PSD,JPG]; hasFrames=false; horizClear; elementFromPoint products=true; thumbH=476
+- Viz modal spot-check: studio frames still present; all-files still PerspektywaÂ·TĹ‚o path (not material-only)
 - Screenshot+Read pass1/pass2/pass3
 
-**Źródła:** dam-media-preview.js; dam-branding.css; branding/dashboard/explorer/visualizations.html
+**ĹąrĂłdĹ‚a:** dam-media-preview.js; dam-branding.css; branding/dashboard/explorer/visualizations.html
 
 
 ## 2026-07-21 ~02:45 - Branding: single WARIANTY strip + Shift-minus 80% (WORKER mergeVar)
@@ -8133,22 +9367,22 @@ enderVizStudioControls materialMode painted a second WARIANTY block in #damMedia
 3. Cache-bust: CSS mergeVar20260721a; JS coexists with sibling token minusGlobal20260721a (parallel agent all-file minus).
 4. program-instructions: branding materialMode = single variant-grid strip.
 
-**Efekt/Fix:** One WARIANTY MATERIALU; tiles PSD×2+JPG under Edytuj wszystko; all-files absent in materialMode; Shift minus 21×21; product viz all-files rows+dedupe intact.
+**Efekt/Fix:** One WARIANTY MATERIALU; tiles PSDĂ—2+JPG under Edytuj wszystko; all-files absent in materialMode; Shift minus 21Ă—21; product viz all-files rows+dedupe intact.
 
 **Backup:** brak
 
 **Test/Ewaluacja:**
 - node --check dam-media-preview.js / dam-assoc-edit.js OK
 - CDP BLIX br-005508: wariantyLabels=1; tiles=[PSD,PSD,JPG]; allFiles=false; studioHidden; editAll; minus idle opacity0 size21; Shift opacity1
-- CDP viz 6300760: frames=3; groups FRONT·Z tłem / FRONT·Bez tła; tiles 4+4; flexDir=column; wariantyMaterialDup=0
+- CDP viz 6300760: frames=3; groups FRONTÂ·Z tĹ‚em / FRONTÂ·Bez tĹ‚a; tiles 4+4; flexDir=column; wariantyMaterialDup=0
 - Screenshot+Read pass1/pass2/pass3
 
-**Źródła:** dam-media-preview.js; dam-assoc-edit.js; dam-branding.css; program-instructions.json; branding/dashboard/explorer/visualizations.html
+**ĹąrĂłdĹ‚a:** dam-media-preview.js; dam-assoc-edit.js; dam-branding.css; program-instructions.json; branding/dashboard/explorer/visualizations.html
 
 
 ## 2026-07-21 ~02:55 - studioRow: viz modal chips one horizontal row (WORKER)
 
-**Komenda/Akcja:** `#damVizModal` studio frame chips (TŁO | PERSPEKTYWA | JAKOŚĆ) always ONE flex row; no wrap of 4th perspective (TYL-ENFACE).
+**Komenda/Akcja:** `#damVizModal` studio frame chips (TĹO | PERSPEKTYWA | JAKOĹšÄ†) always ONE flex row; no wrap of 4th perspective (TYL-ENFACE).
 
 **Log/Status:**
 1. Root cause: `.dam-media-preview__studio-frame-chips { flex-wrap: wrap }` + chip `min-width:40px` / roomy padding so PERSPEKTYWA dropped TYL-ENFACE to row2 (~96-104px frame).
@@ -8162,21 +9396,21 @@ enderVizStudioControls materialMode painted a second WARIANTY block in #damMedia
 **Backup:** brak
 
 **Test/Ewaluacja:**
-- Product CIASTO ŚLIWKOWE 6300785 (4 persps)
-- CDP studioW≈810.72: Perspektywa tops delta=0; wrap=nowrap; frameH=61.5; labels ENFACE/FRONT/BACK/TYL-ENFACE; groupTint rgb(245,246,250); active outline rgb(171,84,219)
+- Product CIASTO ĹšLIWKOWE 6300785 (4 persps)
+- CDP studioWâ‰810.72: Perspektywa tops delta=0; wrap=nowrap; frameH=61.5; labels ENFACE/FRONT/BACK/TYL-ENFACE; groupTint rgb(245,246,250); active outline rgb(171,84,219)
 - Narrow 700px: delta=0, allFit=true, TYL-ENFACE sw=cw=67
 - Screenshot+Read pass1 (trunc mid-label) / pass2 (full TYL-ENFACE one row) / pass3 (confirm)
 
-**Źródła:** dam-branding.css; dam-viz-modal.css; dam-viz.js; dam-media-preview.js; visualizations/explorer/dashboard/branding.html
+**ĹąrĂłdĹ‚a:** dam-branding.css; dam-viz-modal.css; dam-viz.js; dam-media-preview.js; visualizations/explorer/dashboard/branding.html
 
 ## 2026-07-21 ~03:00 - WORKER A re-verify viz/modal 4h gaps (compA20260721a)
 
 **Komenda/Akcja:** CDP+screenshot re-audit last ~4h FUNCTION claims; fix PARTIAL (naming-dictionary UK, inject cache token sync).
 
 **Log/Status:**
-1. Audit table → `agents/shared/gap-audit-4h-worker-A.md` (12/12 SHIPPED; A13 naming-dictionary uk, A14 inject href PARTIAL→FIXED).
-2. CDP orzeszki-kukurydza-miod: 4 show-all row groups × uniq XL/L/S/S-SKLEP; rowStack; actionsZ=40; GB chips no Ukraina.
-3. naming-dictionary: uk→Wielka Brytania; lang_aliases uk→gb; ua→ua; languages.ua=Ukraina (Python UTF-8).
+1. Audit table â†’ `agents/shared/gap-audit-4h-worker-A.md` (12/12 SHIPPED; A13 naming-dictionary uk, A14 inject href PARTIALâ†’FIXED).
+2. CDP orzeszki-kukurydza-miod: 4 show-all row groups Ă— uniq XL/L/S/S-SKLEP; rowStack; actionsZ=40; GB chips no Ukraina.
+3. naming-dictionary: ukâ†’Wielka Brytania; lang_aliases ukâ†’gb; uaâ†’ua; languages.ua=Ukraina (Python UTF-8).
 4. Cache-bust compA20260721a: visualizations/explorer/dashboard + inject dam-viz.js/dam-media-preview.js.
 
 **Efekt/Fix:** Functional viz/modal claims verified live; data-layer UK label aligned with program-instructions.
@@ -8186,7 +9420,7 @@ enderVizStudioControls materialMode painted a second WARIANTY block in #damMedia
 - CDP: cssHref/jsViz compA20260721a; reload modal Pass
 - Intensive 12-pass screenshot+Read (orzeszki expanded all-files) Pass
 
-**Źródła:** gap-audit-4h-worker-A.md; tools/_bump_compA20260721a.py; naming-dictionary.json
+**ĹąrĂłdĹ‚a:** gap-audit-4h-worker-A.md; tools/_bump_compA20260721a.py; naming-dictionary.json
 
 
 ## 2026-07-21 ~03:00 - WORKER B compB: ownership B re-verify + UTF-8 ship
@@ -8195,8 +9429,8 @@ enderVizStudioControls materialMode painted a second WARIANTY block in #damMedia
 
 **Log/Status:**
 1. Audit written: `agents/shared/gap-audit-4h-worker-B.md`; version proposal `agents/shared/version-bump-proposal-2026-07-21.md` (suggest **v3.1.0**).
-2. B1-B3,B5-B7: CDP Pass — BLIX tiles PSD+JPG, KUBARA 6×PNG, `Warianty materiału`, no all-files dup, studio hidden under variants, minus 21px Shift-gate.
-3. B4 UTF-8: **was PARTIAL** — `visualizations.html` invalid UTF-8 + `Poka?`; `branding.html` cp1250; `settings.html` Wyczysc; `dam-explorer.js` Odswiez. Fixed Python UTF-8: `tools/_fix_compB_utf8.py`, `tools/_fix_branding_qmark_only.py`. Live CDP viz: `Pokaż wszystkie` + `Włącz:` ok:true. Grep apps/web: 0× `Poka?`/`W??cz`.
+2. B1-B3,B5-B7: CDP Pass â€” BLIX tiles PSD+JPG, KUBARA 6Ă—PNG, `Warianty materiaĹ‚u`, no all-files dup, studio hidden under variants, minus 21px Shift-gate.
+3. B4 UTF-8: **was PARTIAL** â€” `visualizations.html` invalid UTF-8 + `Poka?`; `branding.html` cp1250; `settings.html` Wyczysc; `dam-explorer.js` Odswiez. Fixed Python UTF-8: `tools/_fix_compB_utf8.py`, `tools/_fix_branding_qmark_only.py`. Live CDP viz: `PokaĹĽ wszystkie` + `WĹ‚Ä…cz:` ok:true. Grep apps/web: 0Ă— `Poka?`/`W??cz`.
 4. Cache-bust `compB20260721a`: `apps/web/_qa/_bump_compB.py` on branding/explorer/visualizations/dashboard + dam-media-preview/dam-viz injected CSS hrefs.
 
 **Efekt/Fix:** Ownership B functional claims SHIPPED; UTF-8 chrome repaired on viz/branding/settings/explorer JS.
@@ -8204,9 +9438,9 @@ enderVizStudioControls materialMode painted a second WARIANTY block in #damMedia
 **Test/Ewaluacja:**
 - node --check dam-media-preview.js / dam-assoc-edit.js / dam-explorer.js OK
 - CDP: vizShowAll UTF-8 ok; branding BLIX PSD+JPG; KUBARA material grid; minus 21px
-- Intensive 12×/zone logged in gap-audit-4h-worker-B.md
+- Intensive 12Ă—/zone logged in gap-audit-4h-worker-B.md
 
-**Źródła:** gap-audit-4h-worker-B.md; version-bump-proposal-2026-07-21.md; tools/_fix_compB_utf8.py; _bump_compB.py
+**ĹąrĂłdĹ‚a:** gap-audit-4h-worker-B.md; version-bump-proposal-2026-07-21.md; tools/_fix_compB_utf8.py; _bump_compB.py
 
 
 ## 2026-07-21 ~03:00 - Viz modal composer audit + cache ship (WORKER viz-composer)
@@ -8214,9 +9448,9 @@ enderVizStudioControls materialMode painted a second WARIANTY block in #damMedia
 **Komenda/Akcja:** Audit abandoned FUNCTIONAL `#damVizModal` work (~4h); ui-taste Intensive 12 passes per hot zone; cache-bust `vizComposer20260721a`; gap doc. No commit.
 
 **Log/Status:**
-1. READ: process.md tail, memory #141+, gap-audit-2026-07-21.md, program-instructions canon; live CDP + screenshot on ORZESZKI 6300767 + CIASTO ŚLIWKOWE 6300785.
-2. All 9 functional zones Pass (show-all row stack + dedupe, variants above studio, studio nowrap, actions z40, Shift-minus all-file + assoc, UK→GB, title gap 16px, UTF-8 chrome).
-3. No new logic diff — prior workers' code confirmed live; ship cache token only via Python `_bump_viz_composer.py`.
+1. READ: process.md tail, memory #141+, gap-audit-2026-07-21.md, program-instructions canon; live CDP + screenshot on ORZESZKI 6300767 + CIASTO ĹšLIWKOWE 6300785.
+2. All 9 functional zones Pass (show-all row stack + dedupe, variants above studio, studio nowrap, actions z40, Shift-minus all-file + assoc, UKâ†’GB, title gap 16px, UTF-8 chrome).
+3. No new logic diff â€” prior workers' code confirmed live; ship cache token only via Python `_bump_viz_composer.py`.
 4. Gap table: `agents/shared/gap-audit-viz-composer-2026-07-21.md`.
 
 **Efekt/Fix:** Product viz modal functional checklist green; assets load `?v=vizComposer20260721a`.
@@ -8225,10 +9459,10 @@ enderVizStudioControls materialMode painted a second WARIANTY block in #damMedia
 
 **Test/Ewaluacja:**
 - node --check dam-viz.js / dam-media-preview.js / dam-assoc-edit.js OK
-- CDP: groups stacked FRONT·Z tłem / Bez tła; uniq qualities 4; variantsTop<studioTop; actionsZ=40; titleGap=16; Shift-minus opacity=1 (all-file + 17 assoc); GB not UA on CIASTO
-- Intensive Pass 1–12 screenshot+Read (pass12: red minus on assoc materials with Shift)
+- CDP: groups stacked FRONTÂ·Z tĹ‚em / Bez tĹ‚a; uniq qualities 4; variantsTop<studioTop; actionsZ=40; titleGap=16; Shift-minus opacity=1 (all-file + 17 assoc); GB not UA on CIASTO
+- Intensive Pass 1â€“12 screenshot+Read (pass12: red minus on assoc materials with Shift)
 
-**Źródła:** gap-audit-viz-composer-2026-07-21.md; _qa/_bump_viz_composer.py; visualizations/explorer/branding/dashboard.html; dam-viz.js; dam-media-preview.js
+**ĹąrĂłdĹ‚a:** gap-audit-viz-composer-2026-07-21.md; _qa/_bump_viz_composer.py; visualizations/explorer/branding/dashboard.html; dam-viz.js; dam-media-preview.js
 
 
 
@@ -8236,38 +9470,38 @@ enderVizStudioControls materialMode painted a second WARIANTY block in #damMedia
 Fix: PSD/PSB/AI/PDF poza WARIANTY MATERIALU (2026-07-21)
 
 ### Log/Status
-1. Root cause: materialSiblings=true omijalo filtr isSourceVariantFile → PSD w .variant-grid.
+1. Root cause: materialSiblings=true omijalo filtr isSourceVariantFile â†’ PSD w .variant-grid.
 2. Filter zawsze !isSourceVariantFile; EDITABLE_EXTS + pdf; PDF w SourceMount order.
 3. program-instructions ui.viz_modal_parity_explorer must/must_not.
 4. Cache 
 oSrcGrid20260721a.
 
 ### Efekt
-WARIANTY = JPG/PNG…; zrodla tylko Przejdz / Folder / PSD w belce akcji.
+WARIANTY = JPG/PNGâ€¦; zrodla tylko Przejdz / Folder / PSD w belce akcji.
 
 ## 2026-07-21 ~02:55 - UTF-8 / Polish diacritics chrome sweep (WORKER)
 
-**Komenda/Akcja:** Naprawa mojibake / ASCII-? w PL labelach apps/web (viz #vizShowAll, tips Włącz/Wyłącz, branding/explorer/settings).
+**Komenda/Akcja:** Naprawa mojibake / ASCII-? w PL labelach apps/web (viz #vizShowAll, tips WĹ‚Ä…cz/WyĹ‚Ä…cz, branding/explorer/settings).
 
 **Log/Status:**
 1. Root cause: PowerShell/ANSI rewrite niszczy UTF-8 PL -> literalne ?/?? (nieodwracalne) albo klasyczne podwojne kodowanie (settings/index); branding mial tez mixed UTF-8 + lone 0xF3.
 2. Fix reversible: tools/_fix_mojibake_utf8.py -> settings.html, index.html.
 3. Fix ? remnants: rozbudowany tools/_fix_qmark_chrome_pl.py + Python Path.write_bytes(utf-8) na visualizations/explorer/branding/dashboard/profile (+ race re-fix branding back btn).
-4. Obrona: data-i18n na branding show_archive + back_browse; lekcja doctrine §12 + memory #141.
+4. Obrona: data-i18n na branding show_archive + back_browse; lekcja doctrine Â§12 + memory #141.
 5. Bez commit/push (gapship). Hard refresh ?v=utf8fix20260721*.
 
-**Efekt/Fix:** #vizShowAll = Pokaż wszystkie; tip = Włącz / Wyłącz; explorer/branding chrome PL OK; rg Poka\?|W\?\?cz|Wy\?\?cz = 0.
+**Efekt/Fix:** #vizShowAll = PokaĹĽ wszystkie; tip = WĹ‚Ä…cz / WyĹ‚Ä…cz; explorer/branding chrome PL OK; rg Poka\?|W\?\?cz|Wy\?\?cz = 0.
 
 **Backup:** brak
 
 **Test/Ewaluacja:**
 - rg patterns = 0; bajty UTF-8 PL na dysku+HTTP
-- CDP viz: label codePoint ż=U+017C; tip ł=U+0142 ą=U+0105
-- CDP explorer: label+tip OK; Odśwież z dysku OK
-- CDP branding: Pokaż wszystko/archiwum, Wyczyść, tip liczby, Wróć do przeglądania
+- CDP viz: label codePoint ĹĽ=U+017C; tip Ĺ‚=U+0142 Ä…=U+0105
+- CDP explorer: label+tip OK; OdĹ›wieĹĽ z dysku OK
+- CDP branding: PokaĹĽ wszystko/archiwum, WyczyĹ›Ä‡, tip liczby, WrĂłÄ‡ do przeglÄ…dania
 - Screenshot+Read przelot1 secondary filters; przelot2 branding CDP; przelot3 explorer CDP
 
-**Źródła:** visualizations.html; explorer.html; branding.html; dashboard.html; settings.html; index.html; profile.html; tools/_fix_qmark_chrome_pl.py; tools/_fix_mojibake_utf8.py; agents/shared/code-doctrine.md; memory.md #141
+**ĹąrĂłdĹ‚a:** visualizations.html; explorer.html; branding.html; dashboard.html; settings.html; index.html; profile.html; tools/_fix_qmark_chrome_pl.py; tools/_fix_mojibake_utf8.py; agents/shared/code-doctrine.md; memory.md #141
 
 
 ## 2026-07-21 ~03:00 - Gap ship v3.1.0 (commit)
@@ -8277,7 +9511,7 @@ WARIANTY = JPG/PNG…; zrodla tylko Przejdz / Folder / PSD w belce akcji.
 **Log/Status:**
 1. Confirmed folderVariantsHtml always 
 eturn !isSourceVariantFile(v) (PSD/PSB/AI/PDF never in variant-grid; SourceMount only). Worker B CDP PSD tiles superseded.
-2. UTF-8 chrome Pass (Pokaż/Włącz) from Worker B + prior qmark repair.
+2. UTF-8 chrome Pass (PokaĹĽ/WĹ‚Ä…cz) from Worker B + prior qmark repair.
 3. Version surfaces: version.json + dam-version.js + runtime_config.py + HTML footers/cache -> v3.1.0 / 3.1.0.
 4. Unified cache token ship20260721v310 on key HTML/JS/CSS.
 5. Docs: agents/shared/gap-audit-2026-07-21.md (final), process/memory/PROGRESS/README pointer.
@@ -8287,9 +9521,9 @@ eturn !isSourceVariantFile(v) (PSD/PSB/AI/PDF never in variant-grid; SourceMount
 **Test/Ewaluacja:**
 - node --check dam-media-preview / dam-assoc-edit / dam-version OK
 - FILTER_OK return !isSourceVariantFile(v); BAD_TRUE absent
-- visualizations.html contains UTF-8 Pokaż; no Poka? / W??cz
+- visualizations.html contains UTF-8 PokaĹĽ; no Poka? / W??cz
 
-**Źródła:** gap-audit-4h-worker-A/B.md; version-bump-proposal-2026-07-21.md; tools/_ship_v310_20260721.py
+**ĹąrĂłdĹ‚a:** gap-audit-4h-worker-A/B.md; version-bump-proposal-2026-07-21.md; tools/_ship_v310_20260721.py
 
 
 ## 2026-07-21 ~02:55 - Global Shift-minus bubble on all-file tiles (WORKER)
@@ -8298,13 +9532,13 @@ eturn !isSourceVariantFile(v) (PSD/PSB/AI/PDF never in variant-grid; SourceMount
 
 **Log/Status:**
 1. Root cause all-file: `ensureShiftHoverAssocUx` only wired `.assoc-item` / variant tiles inside assoc-grid; studio show-all tiles never got `.dam-assoc-quick-minus`. CSS show rules also ignored `.all-files`.
-2. Nested-button risk: `.all-file` is `<button>` → minus uses `span[role=button]` when parent is BUTTON.
+2. Nested-button risk: `.all-file` is `<button>` â†’ minus uses `span[role=button]` when parent is BUTTON.
 3. Shared helpers in `dam-assoc-edit.js`: `wireQuickMinusControl`, `wireStudioAllFiles`, `ensureGlobalShiftKeyLatch`, soft-hide session action (no disk delete).
 4. Hooks after studio paint in `dam-viz.js` + `dam-media-preview.js`; uiHard Shift selectors extended.
 5. Bubble CSS: 21px (26x0.8), gradient red, 1px white border, soft shadow; Shift-gated.
 6. Cache-bust `minusGlobal20260721a` (assoc-edit / media-preview / viz) via UTF-8 Python.
 
-**Efekt/Fix:** 16 all-file minuses on Kulki 6300760; Shift on → visible bubble; Shift off → hidden; hold 2s soft-hides from picker (undo toast).
+**Efekt/Fix:** 16 all-file minuses on Kulki 6300760; Shift on â†’ visible bubble; Shift off â†’ hidden; hold 2s soft-hides from picker (undo toast).
 
 **Backup:** brak
 
@@ -8312,9 +9546,9 @@ eturn !isSourceVariantFile(v) (PSD/PSB/AI/PDF never in variant-grid; SourceMount
 - node --check dam-assoc-edit.js / dam-viz.js / dam-media-preview.js OK
 - CDP S-SKLEP: after w=h=21 (~0.808 of 26); shiftOn o=1 v=visible pe=auto gradient+shadow+1px white border; shiftOff o=0 v=hidden pe=none; wired=16
 - a11y: 16x aria tip soft-hide (not disk delete)
-- Screenshot: pass1 Shift-on minuses on FRONT tiles; pass2 idle hidden; pass3 CDP+a11y (modal opacity tween made some frames stale — CDP/elementFromPoint authoritative)
+- Screenshot: pass1 Shift-on minuses on FRONT tiles; pass2 idle hidden; pass3 CDP+a11y (modal opacity tween made some frames stale â€” CDP/elementFromPoint authoritative)
 
-**Źródła:** dam-assoc-edit.js; dam-viz.js; dam-media-preview.js; visualizations/branding/explorer/dashboard.html `?v=minusGlobal20260721a`
+**ĹąrĂłdĹ‚a:** dam-assoc-edit.js; dam-viz.js; dam-media-preview.js; visualizations/branding/explorer/dashboard.html `?v=minusGlobal20260721a`
 
 
 ## 2026-07-21 ~03:05 - Elementy Shift-minus + grid dedupe fix
@@ -8322,13 +9556,13 @@ eturn !isSourceVariantFile(v) (PSD/PSB/AI/PDF never in variant-grid; SourceMount
 **Komenda/Akcja:** Wire Elementy/Surowe assoc grids; fix grid collect using object keys (collapsed to 1 grid).
 
 **Log/Status:**
-1. seenGrid[htmlElement] string-key bug → only first grid wired; Elementy had 0 minus.
+1. seenGrid[htmlElement] string-key bug â†’ only first grid wired; Elementy had 0 minus.
 2. Fix: gridList.indexOf(grid); scan modal scope; data-asset-id on cards; grid._damAssocList; re-wire on Elementy toggle open.
 3. Token minusGlobal20260721b.
 
 **Test/Ewaluacja:** CDP elItems with elMinus=2 after open Elementy; all-file still via wireStudioAllFiles (Kulki earlier: 16, 21px, Shift gate).
 
-**Źródła:** dam-assoc-edit.js; dam-media-preview.js
+**ĹąrĂłdĹ‚a:** dam-assoc-edit.js; dam-media-preview.js
 
 ## bodyGrid20260721 - Modal body CSS Grid (meta | studio) 2026-07-21
 
@@ -8351,7 +9585,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 - Screenshot+Read: meta+studio side-by-side, WARIANTY below, dense all-groups
 - ?v= bodyGrid20260721b/c
 
-**Źródła:** dam-viz.js, dam-media-preview.js, dam-assoc-edit.js, dam-grid-reveal.js, dam-viz-modal.css; visualizations/explorer/branding/dashboard.html
+**ĹąrĂłdĹ‚a:** dam-viz.js, dam-media-preview.js, dam-assoc-edit.js, dam-grid-reveal.js, dam-viz-modal.css; visualizations/explorer/branding/dashboard.html
 
 
 
@@ -8364,17 +9598,17 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 2. OpenFile isolated: shelled to Windows only. Fix: DamMediaPreview.openAsset(siblings) when items>1; viz modal also got Prev/Next + ArrowLeft/Right.
 3. Body scroll: brand.css/branding.css overflow:visible beat assoc-split overflow-y:auto (max-height 520 + parent overflow:hidden = trap). Fix: ID-scoped overflow-y:auto !important + flex min-height:0.
 4. Hide parity: Explorer zoom dock (initZoomDock) not wired on Viz. Moved to DamModalShared; both shells call it.
-5. UTF-8: explorer.html U+FFFD on Pokaż/język/Odśwież; branding.html Poka?. Rewrote via Python UTF-8 (not PowerShell Set-Content). Modal strings Otwórz/Przybliżenie fixed in JS.
+5. UTF-8: explorer.html U+FFFD on PokaĹĽ/jÄ™zyk/OdĹ›wieĹĽ; branding.html Poka?. Rewrote via Python UTF-8 (not PowerShell Set-Content). Modal strings OtwĂłrz/PrzybliĹĽenie fixed in JS.
 6. Loader: dam-skel-shimmer 1.5s + assoc padding 14px; DamLoader HOLD 1.5s + dock translate 1.5s + padding 16/24; prefers-reduced-motion.
 
-**Efekt/Fix:** Cache token vizCtaNav20260721b. CDP: Folder opacity1 border 1px; body overflowY auto scrollTop works; OpenFile sibNav true path change; zoom is-docked; Pokaż charCode 380; shimmer 1.5s.
+**Efekt/Fix:** Cache token vizCtaNav20260721b. CDP: Folder opacity1 border 1px; body overflowY auto scrollTop works; OpenFile sibNav true path change; zoom is-docked; PokaĹĽ charCode 380; shimmer 1.5s.
 
 **Test/Ewaluacja:**
 - node --check dam-viz / media-preview / modal-shared OK
 - CDP matrix A-E + prior CTA Pass
-- Screenshot: CDP fromSurface (IDE browser_take_screenshot stale-frame on shared tab) + Read; Explorer a11y tree Pokaż wszystkie
+- Screenshot: CDP fromSurface (IDE browser_take_screenshot stale-frame on shared tab) + Read; Explorer a11y tree PokaĹĽ wszystkie
 
-**Źródła:** dam-viz-modal.css, dam-viz.js, dam-media-preview.js, dam-modal-shared.js, dam-brand.css; explorer/visualizations/branding HTML; process.md
+**ĹąrĂłdĹ‚a:** dam-viz-modal.css, dam-viz.js, dam-media-preview.js, dam-modal-shared.js, dam-brand.css; explorer/visualizations/branding HTML; process.md
 
 ## all-files regroup bg sections 2026-07-21
 
@@ -8384,7 +9618,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 1. Weryfikacja stanu na wejsciu (ten agent kontynuowal po podsumowaniu poprzedniej sesji): kod JS/CSS z regroupem byl juz na miejscu, ALE miedzy sesjami inny, wspolbiezny agent dopisal do tych samych plikow fix `vizCtaNav20260721b` (body scroll + CTA nav) i zbumpowal `?v=` PONAD moj tag `allbgsections20260721a` w `dam-viz-modal.css` + JS-injected link + `dam-viz.js`/`dam-media-preview.js` (HTML nadal mial `dam-branding.css?v=allbgsections20260721a`, ale CSS/JS juz `?v=vizCtaNav20260721b`). Sprawdzone grep-em: regroup markup (`renderSection`/`renderGroup`/`bezOrder`/`zTlemOrder`/`data-bg`) i CSS (`.all-section-grid` flex, `data-bg="bez-tla"` border-only) SA nienadpisane w obu miejscach -> brak konfliktu, nie trzeba bylo ponownie bumpowac wersji (nowszy tag agenta B juz serwuje moj kod).
 2. Root cause #1 (z poprzedniej sesji, opisana szerzej w doktrynie): `bodyGrid20260721a/b` w `dam-viz-modal.css` (`!important grid-template-columns: repeat(auto-fill, minmax(168px,1fr))` + kafelki `flex:0 0 56px`) nadpisal wczesniejszy dobry fix `allrows20260721a` z `dam-branding.css`.
 3. Root cause #2 (subtelna): nawet `auto-fit` w CSS Grid nie usuwa martwej przestrzeni gdy liczba grup nie jest wielokrotnoscia liczby kolumn. Fix: flexbox (`display:flex; flex-wrap:wrap` + `flex:1 1 <basis>`) na poziomie sekcji (`.all-section-grid`).
-4. JS: `dam-viz.js` i `dam-media-preview.js` grupuja pliki po `persp|bg`, dzielą na `bezOrder` / `zTlemOrder`, renderuja dwie `<section class="...--bez-tla|z-tlem">` z etykieta sekcji (Bez tla / Z tlem); etykieta grupy = tylko perspektywa; `data-bg` na `.all-group` dla CSS.
+4. JS: `dam-viz.js` i `dam-media-preview.js` grupuja pliki po `persp|bg`, dzielÄ… na `bezOrder` / `zTlemOrder`, renderuja dwie `<section class="...--bez-tla|z-tlem">` z etykieta sekcji (Bez tla / Z tlem); etykieta grupy = tylko perspektywa; `data-bg` na `.all-group` dla CSS.
 5. CSS: `dam-branding.css` (base) + `dam-viz-modal.css` (scoped `#damVizModal`/`#damMediaPreview`, wygrywa nad starym `!important`): `.all-group-grid > .all-file` `flex:1 1 80px; min-width:80px; max-width:104px` (thumb ~86px, w zakresie 72-88px); `data-bg="z-tlem"` fill `#f5f6fa`, `data-bg="bez-tla"` transparent + border 1px `#f5f6fa`.
 
 **Efekt/Fix:** Sekcje w kolejnosci Bez tla -> Z tlem (bez przeplotu); grupy rozciagaja sie na cala szerokosc rzedu (brak martwej przestrzeni nawet dla "sierocej" 4. grupy w wierszu 2); kafelki 104x123px (thumb 86x86px).
@@ -8399,7 +9633,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 - Kolory (getComputedStyle, ten sam produkt): `bez-tla` -> `background-color: rgba(0,0,0,0)` + `border-color: rgb(245,246,250)`; `z-tlem` -> `background-color: rgb(245,246,250)` + `border-color: rgba(0,0,0,0)` - dokladnie odwrotne, zgodnie z wymaganiem #5.
 - Screenshot+Read (CDP `Page.captureScreenshot`, bo `browser_take_screenshot` timeout'owal 4x z powodu `document.hidden===true` w tej karcie automatyzacji - znane ograniczenie z doktryny sekcja 12, fallback zadzialal): pass 1 = sekcja "BEZ TLA" widoczna, karty ENFACE/FRONT/BACK w rzedzie 1 z cienka biala/szara ramka bez wypelnienia, TYL-ENFACE pod nimi na cala szerokosc; pass 2 (scroll do sekcji 2) = "Z TLEM" z wyraznie widocznym szarym wypelnieniem (`#f5f6fa`) na tych samych czterech kartach - kontrast miedzy sekcjami wizualnie oczywisty. Kolejnosc, etykiety, brak martwej przestrzeni i rozroznienie tla potwierdzone jednoczesnie liczbowo (CDP) i wizualnie (2x screenshot+Read).
 
-**Źródła:** dam-viz.js (`bindVizModalStudioControls`, `renderSection`/`renderGroup`), dam-media-preview.js (`allFilesPanelHtml`), dam-branding.css, dam-viz-modal.css; dashboard/branding/explorer/visualizations.html; code-doctrine.md sekcja 12 (lekcja: flex vs grid dla fluid rzedow o nieznanej liczbie elementow + kolizja dwoch agentow tego samego dnia na tym samym elemencie).
+**ĹąrĂłdĹ‚a:** dam-viz.js (`bindVizModalStudioControls`, `renderSection`/`renderGroup`), dam-media-preview.js (`allFilesPanelHtml`), dam-branding.css, dam-viz-modal.css; dashboard/branding/explorer/visualizations.html; code-doctrine.md sekcja 12 (lekcja: flex vs grid dla fluid rzedow o nieznanej liczbie elementow + kolizja dwoch agentow tego samego dnia na tym samym elemencie).
 
 ## 2026-07-21 - vizLoadOnce: #vizGrid reveal 2x
 
@@ -8417,7 +9651,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 - node --check dam-viz.js OK
 - CDP hard refresh: loaderStart=1 loaderDone=1 skeleton=1 reveal=1 (was 2)
 
-**Źródła:** dam-viz.js, dam-shell.js (~522 dam:admin-mode), dam-grid-reveal.js, code-doctrine.md §12
+**ĹąrĂłdĹ‚a:** dam-viz.js, dam-shell.js (~522 dam:admin-mode), dam-grid-reveal.js, code-doctrine.md Â§12
 
 
 ## 2026-07-21 - thumbPick: square tiles + all-file white media slot
@@ -8440,12 +9674,12 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 - CDP ciasto-sliwkowe-nerkowcowy: radius 14px, border transparent, gridBg #f5f6fa, imgInside true, crumbs pad 12/16, allImgBg white
 - Screenshot+Read Pass 1-5 (CDP Page.captureScreenshot; document.hidden stale browser_take_screenshot)
 
-**Źródła:** dam-viz.js (ensureThumbPickerTilesCss), dam-branding.css, dam-viz-modal.css, visualizations/explorer/branding/dashboard.html
+**ĹąrĂłdĹ‚a:** dam-viz.js (ensureThumbPickerTilesCss), dam-branding.css, dam-viz-modal.css, visualizations/explorer/branding/dashboard.html
 
 
 ## 2026-07-21 - langEnTag: EN canon, PROJEKT+WIZKI, Admin AJAX, KAR6X FRONT-L
 
-**Komenda/Akcja:** HARD user decisions A-I (GB->EN, lang provenance, folder  - PL EN - , Multijęzyczny search, KAR6X thumb, Dodaj typ/tag, Admin instant AJAX).
+**Komenda/Akcja:** HARD user decisions A-I (GB->EN, lang provenance, folder  - PL EN - , MultijÄ™zyczny search, KAR6X thumb, Dodaj typ/tag, Admin instant AJAX).
 
 **Log/Status:**
 1. program-instructions v12: data.lang_provenance_only, data.lang_uk_not_ukraine (EN), naming.folder_lang_tokens, admin.tag_instant_apply_ajax, viz.kar6x_thumb_front_l, ui.tag_edit_dodaj_typ_tag, naming.multi_means_multilang synonyms.
@@ -8457,18 +9691,18 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 7. Surgical file-index + search-index remap gb->en; 21 KAR6X viz_latest paths -> FRONT-L; Multi search blobs +49.
 8. Cache: langEnTag20260721a (labels/tag-edit), langEnTag20260721c (viz).
 
-**Efekt/Fix:** 6300783/6300785 langs=[pl,en]; Multijęzyczny search 30 hits; filter EN not GB; KAR6X path FRONT-L.png; Dodaj UI visible.
+**Efekt/Fix:** 6300783/6300785 langs=[pl,en]; MultijÄ™zyczny search 30 hits; filter EN not GB; KAR6X path FRONT-L.png; Dodaj UI visible.
 
 **Backup:** brak (no commit).
 
 **Test/Ewaluacja:**
 - python ast parse indexer+bridge OK; node --check labels/tag-edit/viz OK
 - CDP: DamLabels.normalizeLangCode gb/uk->en short EN; lang filter has Angielski/en no GB
-- CDP: Multijęzyczny filteredCount=30 incl CYNAMONKA/CIASTO ŚLIWKOWE pl,en
-- CDP: Cynamonka path ends FRONT-L.png; modal badges PL+EN+Multijęzyczny
+- CDP: MultijÄ™zyczny filteredCount=30 incl CYNAMONKA/CIASTO ĹšLIWKOWE pl,en
+- CDP: Cynamonka path ends FRONT-L.png; modal badges PL+EN+MultijÄ™zyczny
 - Screenshot+Read: #damTagEditPopover Dodaj typ + dashed Dodaj + Zmien kategorie
 
-**Źródła:** program-instructions.json, naming-dictionary.json, lang-provenance.md, build-file-index.py, local_bridge.py, dam-labels.js, dam-tag-edit.js, dam-viz.js, file-index.json, search-index.json
+**ĹąrĂłdĹ‚a:** program-instructions.json, naming-dictionary.json, lang-provenance.md, build-file-index.py, local_bridge.py, dam-labels.js, dam-tag-edit.js, dam-viz.js, file-index.json, search-index.json
 
 **Reindex:** full python apps/web/scripts/build-file-index.py recommended when X: Marketing available (regenerate thumbs *_en.jpg, refresh wizki slots). Surgical patch already applied for langs/paths/search.
 
@@ -8491,7 +9725,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 - CDP: childOrder head>search>list>foot>actions; plusLeft; labels Dodaj nosnik/jezyk; UTF-8 diacritics U+15B/U+17A/U+144/U+119
 - Screenshot+Read Pass1-5: tag-pop-pass1..5
 
-**Źródła:** dam-tag-edit.js, *.html cache-bust
+**ĹąrĂłdĹ‚a:** dam-tag-edit.js, *.html cache-bust
 
 ## 2026-07-21 - KAR6X card thumb: FRONT-L not stale ENFACE jpeg
 
@@ -8503,11 +9737,11 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 3. Regen 36 KAR6X thumbs z FRONT-L; sync file/rel w file-index.json.
 4. Cache `kar6xFront20260721a`.
 
-**Efekt/Fix:** CDP CYNAMONKA/ŚLIWKOWE → `…FRONT-L.png` (media); screenshot 3/4 FRONT nie plaski ENFACE.
+**Efekt/Fix:** CDP CYNAMONKA/ĹšLIWKOWE â†’ `â€¦FRONT-L.png` (media); screenshot 3/4 FRONT nie plaski ENFACE.
 
 **Test/Ewaluacja:** node --check OK; CDP file FRONT-L; screenshot+Read karta 6300783.
 
-**Źródła:** dam-viz.js, visualizations.html, file-index.json, data/thumbs/*
+**ĹąrĂłdĹ‚a:** dam-viz.js, visualizations.html, file-index.json, data/thumbs/*
 
 ## 2026-07-21 - tag popover: equal CSS grid CTAs
 
@@ -8518,9 +9752,9 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 2. foot + actions: `display:grid; grid-template-columns:1fr 1fr`; buttony width 100%.
 3. Token `tagPopGrid20260721b`.
 
-**Test/Ewaluacja:** CDP sameW/sameY/alignX; labels full "Zmień kategorię"; Zatwierdź|Anuluj na dole.
+**Test/Ewaluacja:** CDP sameW/sameY/alignX; labels full "ZmieĹ„ kategoriÄ™"; ZatwierdĹş|Anuluj na dole.
 
-**Źródła:** dam-tag-edit.js, HTML cache-bust
+**ĹąrĂłdĹ‚a:** dam-tag-edit.js, HTML cache-bust
 
 ## 2026-07-21 - thumb picker COMBO + crumbs tab
 
@@ -8533,41 +9767,41 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Test/Ewaluacja:** CDP folders=2 full names; strip fullWidth; tab overflowBot/Top=false; screenshot.
 
-**Źródła:** dam-viz.js, visualizations.html
+**ĹąrĂłdĹ‚a:** dam-viz.js, visualizations.html
 
 ## 2026-07-21 - branding media preview: hero grow + outline 50%
 
 **Komenda/Akcja:** `#damMediaPreview` - wiecej wysokosci hero, actions flush bottom, outline CTA border 50%.
 
 **Log/Status:**
-1. Root cause: non-split body `flex:1 1 auto` + sticky actions → martwa biel nad actions, hero ~273px.
-2. Body → `flex:0 1 auto`; thumb min-height `min(420px,48dvh)`; box `justify-content:flex-start`; grid-area `actions`.
-3. Actions pad L/R +6px (0→6 / 40→46). Token `--dam-btn-outline-border` 50% alpha na icon-btn + geex outline.
+1. Root cause: non-split body `flex:1 1 auto` + sticky actions â†’ martwa biel nad actions, hero ~273px.
+2. Body â†’ `flex:0 1 auto`; thumb min-height `min(420px,48dvh)`; box `justify-content:flex-start`; grid-area `actions`.
+3. Actions pad L/R +6px (0â†’6 / 40â†’46). Token `--dam-btn-outline-border` 50% alpha na icon-btn + geex outline.
 4. Cache `brandModalPad20260721a`.
 
 **Efekt/Fix:** Hero bierze wolne VH; actions przy dnie; outline polprzezroczysty site-wide.
 
-**Test/Ewaluacja:** CDP hero h / actions pad / border alpha; screenshot×3–5 branding modal.
+**Test/Ewaluacja:** CDP hero h / actions pad / border alpha; screenshotĂ—3â€“5 branding modal.
 
-**Źródła:** dam-viz-modal.css, dam-branding.css, dam-brand.css, dam-tokens.css, dam-media-preview.js, HTML ?v=
+**ĹąrĂłdĹ‚a:** dam-viz-modal.css, dam-branding.css, dam-brand.css, dam-tokens.css, dam-media-preview.js, HTML ?v=
 
 ## 2026-07-21 - branding media preview: hero grow + outline 50%
 
 **Komenda/Akcja:** `#damMediaPreview` - wiecej wysokosci hero, actions flush bottom, outline CTA border 50%.
 
 **Log/Status:**
-1. Root cause: non-split body `flex:1 1 auto` + sticky actions → martwa biel nad actions, hero ~273px.
-2. Body → `flex:0 1 auto`; thumb min-height `min(420px,48dvh)`; box `justify-content:flex-start`; grid-area `actions`.
-3. Actions pad L/R +6px (0→6 / 40→46). Token `--dam-btn-outline-border` 50% alpha na icon-btn + geex outline.
+1. Root cause: non-split body `flex:1 1 auto` + sticky actions â†’ martwa biel nad actions, hero ~273px.
+2. Body â†’ `flex:0 1 auto`; thumb min-height `min(420px,48dvh)`; box `justify-content:flex-start`; grid-area `actions`.
+3. Actions pad L/R +6px (0â†’6 / 40â†’46). Token `--dam-btn-outline-border` 50% alpha na icon-btn + geex outline.
 4. Cache `brandModalPad20260721a`.
 
 **Efekt/Fix:** Hero bierze wolne VH; actions przy dnie; outline polprzezroczysty site-wide.
 
-**Test/Ewaluacja:** CDP hero h / actions pad / border alpha; screenshot×3–5 branding modal.
+**Test/Ewaluacja:** CDP hero h / actions pad / border alpha; screenshotĂ—3â€“5 branding modal.
 
-**Źródła:** dam-viz-modal.css, dam-branding.css, dam-brand.css, dam-tokens.css, dam-media-preview.js, HTML ?v=
+**ĹąrĂłdĹ‚a:** dam-viz-modal.css, dam-branding.css, dam-brand.css, dam-tokens.css, dam-media-preview.js, HTML ?v=
 
-**Test/Ewaluacja (CDP branding PROTEINA):** hero h 273→567 (49% box); actions pad L/R 6px; border `color(... / 0.5)`; gap assoc→actions ~48px; actionsToBoxBottom 12; PSD only in SourceMount; Pass×5 screenshots.
+**Test/Ewaluacja (CDP branding PROTEINA):** hero h 273â†’567 (49% box); actions pad L/R 6px; border `color(... / 0.5)`; gap assocâ†’actions ~48px; actionsToBoxBottom 12; PSD only in SourceMount; PassĂ—5 screenshots.
 
 ## 2026-07-21 - Samouczek / DobroKalorius overhaul
 
@@ -8585,7 +9819,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Test/Ewaluacja:** node --check; CDP congrats+companion+help; screenshot+Read tip/companion; RGBA poses.
 
-**Źródła:** dam-tutorial.js, dam-shortcuts.js, dobrokalorius-copy.json, sw.js, maskotka/pose-*.png
+**ĹąrĂłdĹ‚a:** dam-tutorial.js, dam-shortcuts.js, dobrokalorius-copy.json, sw.js, maskotka/pose-*.png
 
 ## 2026-07-21 - Typ pliku: Folder + etykiety jezykow (nie kraje)
 
@@ -8598,11 +9832,11 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 4. Patch 395 wierszy viz_latest/viz_all; cache langAdj20260721b.
 5. Instrukcja ui.lang_labels_are_languages w program-instructions.json.
 
-**Efekt/Fix:** Meta: … · Angielski; filtr jezykow: Polski/Niemiecki/…; klik meta = ten sam reveal co Folder.
+**Efekt/Fix:** Meta: â€¦ Â· Angielski; filtr jezykow: Polski/Niemiecki/â€¦; klik meta = ten sam reveal co Folder.
 
 **Test/Ewaluacja:** CDP text+reveal path; a11y name Angielski; screenshot pass2; node --check.
 
-**Źródła:** naming-dictionary.json, dam-labels.js, dam-viz.js, build-file-index.py, file-index.json, program-instructions.json, HTML ?v=
+**ĹąrĂłdĹ‚a:** naming-dictionary.json, dam-labels.js, dam-viz.js, build-file-index.py, file-index.json, program-instructions.json, HTML ?v=
 
 
 ## 2026-07-21 - branding actions left + loader 1s/0.5s
@@ -8611,32 +9845,32 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Log/Status:**
 1. Actions: justify-self:start + width:max-content (nie full-width strip); split layout zostaje width 100%.
-2. Loader: HOLD_CENTER_MS 1500→1000, DOCK_MS 500; STYLE_ID bump.
+2. Loader: HOLD_CENTER_MS 1500â†’1000, DOCK_MS 500; STYLE_ID bump.
 3. Cache ctionsLeftLoader20260721a. HTML restore z git po uszkodzonym PS -replace, potem bezpieczny bump Python.
 
 **Test/Ewaluacja:** CDP actionsW~501 vs boxW~1587, isLeftSide; dockAt~1024ms, transition left 0.5s; screenshot.
 
-**Źródła:** dam-branding.css, dam-viz-modal.css, dam-loader.js, dam-media-preview.js, HTML ?v=
+**ĹąrĂłdĹ‚a:** dam-branding.css, dam-viz-modal.css, dam-loader.js, dam-media-preview.js, HTML ?v=
 
 
 
 ## 2026-07-21 - Dobrokalorius explore-to-test + media poses + padding
 
-**Komenda/Akcja:** Fix companion UX: padding paneli, media poses (Nośniki), exploreMode (UI klikalne, throttle copy), tryExplore×40 + gender, animacje.
+**Komenda/Akcja:** Fix companion UX: padding paneli, media poses (NoĹ›niki), exploreMode (UI klikalne, throttle copy), tryExploreĂ—40 + gender, animacje.
 
 **Log/Status:**
 1. Root cause padding: inject CSS companion padding:14/12 - zbyt ciasne vs Geex dropdown.
-2. Root cause pose: krok Nośniki uzywal present→pose-5 (ksiazka); media teaching = explain-assets/image/video.
+2. Root cause pose: krok NoĹ›niki uzywal presentâ†’pose-5 (ksiazka); media teaching = explain-assets/image/video.
 3. Root cause explore: onDocClick off-path zawsze preventDefault+stopPropagation + recreate companion z sad/wander co klik.
 4. Fix: exploreMode, soft dim 0.07, tryExplore joy/approve, throttle 12s, media-assets aliases, usunieto present/pose-5 z mapy i krokow, gender map + {trySelf}.
-5. Cache 	utorialExplore20260721c (HTML×8 + dam-shortcuts + copy fetch).
+5. Cache 	utorialExplore20260721c (HTMLĂ—8 + dam-shortcuts + copy fetch).
 6. program-instructions ui.tutorial_dobrokalorius_hard rozszerzone (must/must_not explore + media + no sad spam).
 
-**Efekt/Fix:** Companion padding 28/26/22/26; Nośniki→pose-explain-assets; off-path nie blokuje UI; faza stabilna; tryExplore=40.
+**Efekt/Fix:** Companion padding 28/26/22/26; NoĹ›nikiâ†’pose-explain-assets; off-path nie blokuje UI; faza stabilna; tryExplore=40.
 
-**Test/Ewaluacja:** node --check; CDP padding/pointer-events/phase/pose URL; screenshot+Read ×3 (explore joy, padding, Nośniki media); gender Ewa/Krzysztof/unknown.
+**Test/Ewaluacja:** node --check; CDP padding/pointer-events/phase/pose URL; screenshot+Read Ă—3 (explore joy, padding, NoĹ›niki media); gender Ewa/Krzysztof/unknown.
 
-**Źródła:** dam-tutorial.js, dobrokalorius-copy.json, program-instructions.json, HTML ?v=, dam-shortcuts.js
+**ĹąrĂłdĹ‚a:** dam-tutorial.js, dobrokalorius-copy.json, program-instructions.json, HTML ?v=, dam-shortcuts.js
 
 
 ## 2026-07-21 - tutorial praise ~25% only
@@ -8653,7 +9887,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Test/Ewaluacja:** node --check; CDP force-skip (stats.skipped+1, no is-congrats, step advance); force-praise (Brawo + autoAdvanced); monteCarlo20 majority skip; exploreMode OK.
 
-**Źródła:** dam-tutorial.js, program-instructions.json, apps/web/_qa/_bump_tutorial_praise25.py, HTML ?v=
+**ĹąrĂłdĹ‚a:** dam-tutorial.js, program-instructions.json, apps/web/_qa/_bump_tutorial_praise25.py, HTML ?v=
 
 
 ## 2026-07-21 - tutorial praise toast advance-first
@@ -8662,19 +9896,19 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Log/Status:**
 1. Root cause: showCongrats blokowal tip (is-congrats + praiseLock) i opoznial nextStep o CONGRATS_MS=3500.
-2. Fix: onDocClick/goToPhasePage = advance natychmiast; maybeShowPraiseToast / queue na nawigacje; CONGRATS_MS=2275 (−35%); PRAISE krotkie (median 33→14); BURST_CHANCE=0.12; 3 warianty CSS burst; reduced-motion bez burst.
-3. program-instructions ui.tutorial_dobrokalorius_hard (toast HARD); copy congrats_title=Brawo!; memory #145; doctrine §12.
+2. Fix: onDocClick/goToPhasePage = advance natychmiast; maybeShowPraiseToast / queue na nawigacje; CONGRATS_MS=2275 (â’35%); PRAISE krotkie (median 33â†’14); BURST_CHANCE=0.12; 3 warianty CSS burst; reduced-motion bez burst.
+3. program-instructions ui.tutorial_dobrokalorius_hard (toast HARD); copy congrats_title=Brawo!; memory #145; doctrine Â§12.
 4. Cache ?v=tutorialPraiseToast20260721b (HTML x8 + dam-shortcuts, Python bump; b = CSS concat fix).
 
 **Efekt/Fix:** Krok zmienia sie w tym samym ticku; pochwala to nieblokujacy toast; Dalej nie jest wymagane.
 
-**Test/Ewaluacja:** node --check; CDP advance sync (0:0→0:1 skip, 0:1→0:2+toast); CONGRATS_MS=2275; BURST_CHANCE=0.12; reduced-motion bez burst DOM; explore companion OK; screenshot+Read ×5 @1280.
+**Test/Ewaluacja:** node --check; CDP advance sync (0:0â†’0:1 skip, 0:1â†’0:2+toast); CONGRATS_MS=2275; BURST_CHANCE=0.12; reduced-motion bez burst DOM; explore companion OK; screenshot+Read Ă—5 @1280.
 
-**Źródła:** dam-tutorial.js, dobrokalorius-copy.json, program-instructions.json, _qa/_bump_tutorial_praise_toast.py
+**ĹąrĂłdĹ‚a:** dam-tutorial.js, dobrokalorius-copy.json, program-instructions.json, _qa/_bump_tutorial_praise_toast.py
 
 ## 2026-07-21 - tutorial targets + explore spot + Projekty restore
 
-**Komenda/Akcja:** Fix Dobrokaloriuś: spotlight Pokaż wszystkie / Info Pakowania; explore bez dziury; nav Projekty nie konczy samouczka.
+**Komenda/Akcja:** Fix DobrokaloriuĹ›: spotlight PokaĹĽ wszystkie / Info Pakowania; explore bez dziury; nav Projekty nie konczy samouczka.
 
 **Log/Status:**
 1. Root causes: (a) krok celowal .dam-viz-toolbar (= search); (b) brak kroku Info Pakowania; (c) isTargetInteractable odrzucal switch pod .dam-tut ctrl -> fallback sideLink; (d) explore mial soft dim/hole na starym spocie; (e) index.html nie ladowal dam-tutorial.js + SW HTML 1h stale cache.
@@ -8683,9 +9917,9 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Efekt/Fix:** Spotlight na switchach; explore bez hole; branding -> Projekty = companion+active, finished=null, phase intact.
 
-**Test/Ewaluacja:** node --check; CDP Pokaż wszystkie spot≈label y~367 overlap; Info Pakowania overlap; explore spotDisplay=none; Projekty active+explore+companion; screenshot+Read.
+**Test/Ewaluacja:** node --check; CDP PokaĹĽ wszystkie spotâ‰label y~367 overlap; Info Pakowania overlap; explore spotDisplay=none; Projekty active+explore+companion; screenshot+Read.
 
-**Źródła:** dam-tutorial.js, dam-shortcuts.js, dam-shell.js, sw.js, index.html + HTML ?v=, program-instructions.json, _qa/_bump_tutorial_targets.py
+**ĹąrĂłdĹ‚a:** dam-tutorial.js, dam-shortcuts.js, dam-shell.js, sw.js, index.html + HTML ?v=, program-instructions.json, _qa/_bump_tutorial_targets.py
 
 ## 2026-07-21 - tutorial Projekty: broken completion + FOUC
 
@@ -8697,11 +9931,11 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 3. Fix: critical shell CSS w ensureTutCss() (fixed root/bubble/ctrl + btn); link CSS na index.html; FOUC gate is-ready + inline hide; reveal via setTimeout(0/64) bo samo double-rAF w tle nie odpala i zostawialo opacity:0.
 4. Cache ?v=tutorialProjectsFix20260721b (HTML x9 + shortcuts + token).
 
-**Efekt/Fix:** Pasek fixed bottom, klikalny; skip Branding->Projekty; Dalej 4:0->4:1->5:0; Zakończ -> damTutorialFinished=1.
+**Efekt/Fix:** Pasek fixed bottom, klikalny; skip Branding->Projekty; Dalej 4:0->4:1->5:0; ZakoĹ„cz -> damTutorialFinished=1.
 
 **Test/Ewaluacja:** node --check; CDP hitDalej=.dam-tut__btn--next, ctrlT~684, is-ready, rootOp=1; finish path; screenshot+Read tutorial-projekty-faza5-bar.png.
 
-**Źródła:** dam-tutorial.js, index.html (+CSS link), _qa/_bump_tutorial_projects_fix.py, code-doctrine §12
+**ĹąrĂłdĹ‚a:** dam-tutorial.js, index.html (+CSS link), _qa/_bump_tutorial_projects_fix.py, code-doctrine Â§12
 
 
 
@@ -8712,25 +9946,25 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 ## 2026-07-21 - geex pad fix: modal CTA circles + project font + marketing air
 
-**Komenda/Akcja:** Przywrócenie prostokątnych CTA w modalu (Przejdź/Folder), mniejszy font na kartach projektu, air na marketing tiles - bez redesignu.
+**Komenda/Akcja:** PrzywrĂłcenie prostokÄ…tnych CTA w modalu (PrzejdĹş/Folder), mniejszy font na kartach projektu, air na marketing tiles - bez redesignu.
 
 **Log/Status:**
-1. Root cause kółek: geex-realign w `dam-primitives.css` wymuszał `width/height:44px` na `.dam-btn-icon` (także z etykietą) + `border-radius: var(--btn-radius,50px)` w modal actions → ~43×43 z uciętym tekstem.
+1. Root cause kĂłĹ‚ek: geex-realign w `dam-primitives.css` wymuszaĹ‚ `width/height:44px` na `.dam-btn-icon` (takĹĽe z etykietÄ…) + `border-radius: var(--btn-radius,50px)` w modal actions â†’ ~43Ă—43 z uciÄ™tym tekstem.
 2. Fix: square tylko dla icon-only; `.dam-btn-icon:not(.dam-btn-icon-only)` = auto width + compact pad; modal CTA override 8px radius; project card `font-size:10px`; marketing card pad/gap + tile grid minmax 148px.
-3. Cache-bust `?v=geexPadFix20260721a` (catalog `…21c`, viz-modal `…21b`).
+3. Cache-bust `?v=geexPadFix20260721a` (catalog `â€¦21c`, viz-modal `â€¦21b`).
 
-**Efekt/Fix:** Modal Przejdź/Folder prostokąty czytelne; OpenFile zostaje icon-only; project Przejdź 10px; marketing tiles z air jak viz-card.
+**Efekt/Fix:** Modal PrzejdĹş/Folder prostokÄ…ty czytelne; OpenFile zostaje icon-only; project PrzejdĹş 10px; marketing tiles z air jak viz-card.
 
-**Test/Ewaluacja:** CDP modal go ~98×36 fs12 br8 spanClipped=false; project go fs10 h30; marketing pad 14px titleFs12 w~172; screenshot+Read `_qa/qa-viz-modal-actions-crop2.png`, `qa-marketing-cards-pass3.png`.
+**Test/Ewaluacja:** CDP modal go ~98Ă—36 fs12 br8 spanClipped=false; project go fs10 h30; marketing pad 14px titleFs12 w~172; screenshot+Read `_qa/qa-viz-modal-actions-crop2.png`, `qa-marketing-cards-pass3.png`.
 
-**Źródła:** dam-primitives.css, dam-viz-modal.css, dam-brand.css, dam-app.css, dam-project-catalog.css, dam-ui-cta.js, HTML ?v=
+**ĹąrĂłdĹ‚a:** dam-primitives.css, dam-viz-modal.css, dam-brand.css, dam-app.css, dam-project-catalog.css, dam-ui-cta.js, HTML ?v=
 
 ## 2026-07-21 - unify projects CTA font + Info Pakowania switch
 
 **Komenda/Akcja:** Ujednolicenie compact CTA (karta + toolbar) do jednego tokenu 12px/34px; Info Pakowania na Projektach = dam-switch--compact jak na Wizualizacjach.
 
 **Log/Status:**
-1. BEFORE CDP: card check/go fs=10px h=30; toolbar refresh/ingest fs=16px h~37 (primitives `font:inherit` biło inject); label.dam-tag-reveal-toggle (checkbox).
+1. BEFORE CDP: card check/go fs=10px h=30; toolbar refresh/ingest fs=16px h~37 (primitives `font:inherit` biĹ‚o inject); label.dam-tag-reveal-toggle (checkbox).
 2. Fix: dam-ui-cta.js (button/a + !important 12px; card = toolbar 12/34/8x12); dam-primitives.css (font-size:12px zamiast inherit; labeled dam-btn-icon 34/12); dam-app.css (usunieto fs:10 na check/go); index.html markup switch jak viz.
 3. Cache-bust `?v=ctaUnify20260721b` na HTML ladujacych zmienione CSS/JS.
 
@@ -8738,35 +9972,35 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 
 **Test/Ewaluacja:** CDP AFTER: check/go/refresh/ingest fs=12px h=34 pad=8px 12px (delta 0); switch labelFs=12 trackH=18; oldToggle=false. Screenshot+Read toolbar/card/viewport. Pass.
 
-**Źródła:** dam-ui-cta.js, dam-primitives.css, dam-app.css, index.html, visualizations.html (wzor switch), process.md
+**ĹąrĂłdĹ‚a:** dam-ui-cta.js, dam-primitives.css, dam-app.css, index.html, visualizations.html (wzor switch), process.md
 
 ## 2026-07-21 - inventory close: marketing/branding air + dark tokens + baseline 36/36
 
 **Komenda/Akcja:** Zamkniecie OPEN po tip df870e2 (geex+PAKIET+ctaUnify): air kart marketing/branding, dark polish tokenami, baseline PNG.
 
 **Log/Status:**
-1. Pull main (df870e2 → later c0064b4 docs); :8765 up.
-2. Marketing `.dam-catalog-marketing-card`: pad 16 / gap 14 / grid minmax 156 / title 13px / badge pad 5×10; thumb/border → `--dam-surface`/`--dam-border`.
-3. Branding/viz cards: body tokens 24/22/18/18 + actions-extra 8; branding min-height 288; surfaces `#fff` → tokens.
-4. Dark: Geex `h5 { color: var(--gray-color) }` (= `--dam-border`) biło tytuły — fix specificity `html[data-theme=dark] .dam-viz-card .dam-viz-card__title`; filtry/tag-groups/modal actions → `--dam-surface`.
+1. Pull main (df870e2 â†’ later c0064b4 docs); :8765 up.
+2. Marketing `.dam-catalog-marketing-card`: pad 16 / gap 14 / grid minmax 156 / title 13px / badge pad 5Ă—10; thumb/border â†’ `--dam-surface`/`--dam-border`.
+3. Branding/viz cards: body tokens 24/22/18/18 + actions-extra 8; branding min-height 288; surfaces `#fff` â†’ tokens.
+4. Dark: Geex `h5 { color: var(--gray-color) }` (= `--dam-border`) biĹ‚o tytuĹ‚y â€” fix specificity `html[data-theme=dark] .dam-viz-card .dam-viz-card__title`; filtry/tag-groups/modal actions â†’ `--dam-surface`.
 5. Cache-bust `?v=invClose20260721b` (HTML).
-6. Baseline: `retry_fails.py` 8/8 ok → lokalny `_meta.json` **36/36 ok** (json gitignored).
+6. Baseline: `retry_fails.py` 8/8 ok â†’ lokalny `_meta.json` **36/36 ok** (json gitignored).
 
 **Efekt/Fix:** Karty z wiekszym air; dark bez white-flash na kartach/filtrach/modal bar; tytuly czytelne; baseline complete lokalnie.
 
 **Test/Ewaluacja:**
 - Marketing CDP: pad 16 gap 14 titleFs 13; screenshot+Read pass1/2.
-- Branding CDP: pad 24×18×22 gap 18; dark titleLum 229 filterLum 32 cardLum 32.
-- Viz CTA: fs 12 h 36 pad 8×12 br 8 (labeled compact preserved).
+- Branding CDP: pad 24Ă—18Ă—22 gap 18; dark titleLum 229 filterLum 32 cardLum 32.
+- Viz CTA: fs 12 h 36 pad 8Ă—12 br 8 (labeled compact preserved).
 - Dashboard dark: bodyLum 14 thumbLum 32.
 
 **Pass/Fail:**
-1. Marketing catalog cards — **Pass**
-2. Branding/viz breathing room — **Pass**
-3. Dark mode polish (key surfaces) — **Pass** (Geex chrome Wstecz/search tabs may still flash — out of card scope)
-4. Baseline PNG 36/36 — **Pass** (local; meta gitignored)
+1. Marketing catalog cards â€” **Pass**
+2. Branding/viz breathing room â€” **Pass**
+3. Dark mode polish (key surfaces) â€” **Pass** (Geex chrome Wstecz/search tabs may still flash â€” out of card scope)
+4. Baseline PNG 36/36 â€” **Pass** (local; meta gitignored)
 
-**Źródła:** dam-project-catalog.css, dam-brand.css, dam-branding.css, dam-viz-modal.css, dam-dashboard.css, code-doctrine §12, retry_fails.py, process.md
+**ĹąrĂłdĹ‚a:** dam-project-catalog.css, dam-brand.css, dam-branding.css, dam-viz-modal.css, dam-dashboard.css, code-doctrine Â§12, retry_fails.py, process.md
 
 ## 2026-07-21 - Elementy panel: stale revision path + duplicate fallback labels
 
@@ -8787,7 +10021,7 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 - Screenshot+Read pass1/pass2: real thumbs (ciasto + kwiaty), brak "podglad niedostepny".
 - `node --check` dam-media-preview.js OK; bridge ast.parse OK.
 
-**Źródła:** local_bridge.py, dam-media-preview.js, explorer/branding/dashboard/visualizations.html (?v=), process.md
+**ĹąrĂłdĹ‚a:** local_bridge.py, dam-media-preview.js, explorer/branding/dashboard/visualizations.html (?v=), process.md
 
 
 ## 2026-07-21 - ELEMENTY PNG: czarne matte -> alpha (dematte)
@@ -8804,12 +10038,12 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Efekt/Fix:** Miniatury Elementy pokazuja checkerboard zamiast czarnego boxa; pliki zrodlowe nietkniete.
 
 **Test/Ewaluacja:**
-- Bridge CIASTO-SLIWKOWE.png `?matte=1`: corner alpha=0, center opaque — PASS.
-- CDP: src zawiera `matte=1` + `preview=1`; getComputedStyle thumb `background-color: rgb(245, 246, 250)` + linear-gradient checker — PASS.
-- Screenshot+Read Elementy (40): CIASTO + KWIAT 1..7 na checkerboard, brak solid black — PASS.
+- Bridge CIASTO-SLIWKOWE.png `?matte=1`: corner alpha=0, center opaque â€” PASS.
+- CDP: src zawiera `matte=1` + `preview=1`; getComputedStyle thumb `background-color: rgb(245, 246, 250)` + linear-gradient checker â€” PASS.
+- Screenshot+Read Elementy (40): CIASTO + KWIAT 1..7 na checkerboard, brak solid black â€” PASS.
 - `node --check` dam-media-preview.js OK; bridge ast.parse OK.
 
-**Źródła:** local_bridge.py, dam-media-preview.js, dam-branding.css, dam-brand.css, HTML ?v=, process.md, code-doctrine sekcja 12
+**ĹąrĂłdĹ‚a:** local_bridge.py, dam-media-preview.js, dam-branding.css, dam-brand.css, HTML ?v=, process.md, code-doctrine sekcja 12
 ## 2026-07-21 - Incydent FORCE (#damLifecycleForce) + undo + confirm modals
 
 **Komenda/Akcja:** User przypadkowo kliknal Stosuj zmiany; toast "Zapisano 6 zmian, bledow: 18". Zrozumiec, cofnac, dodac potwierdzenia z preview.
@@ -8820,24 +10054,24 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 3. 18 bledow: wszystkie `path_not_found` (glownie test-lifecycle-* + produkt owies-miod-sniadanie).
 4. 6 "ok":
    - 4x owies-miod-sniadanie clear: **noop na dysku** (path_renames puste, final=stara sciezka).
-   - ciasto-sliwkowe: rename produktu `CIASTO SLIWKOWE — [ nerkowcowy ]` -> `... - F` (bledny scope: wariant zapisal na folder produktu).
-   - babka-cytrynowa: rename + move do `— ARCHIWUM\BABKA ... - X\BABKA ... - X` (zagniezdzenie w wrapperze archiwum).
+   - ciasto-sliwkowe: rename produktu `CIASTO SLIWKOWE â€” [ nerkowcowy ]` -> `... - F` (bledny scope: wariant zapisal na folder produktu).
+   - babka-cytrynowa: rename + move do `â€” ARCHIWUM\BABKA ... - X\BABKA ... - X` (zagniezdzenie w wrapperze archiwum).
 5. Undo: `local_bridge.undo_last_change` x2 (babka, ciasto) + 4 noop owies z change-log; usunieto pusty wrapper ARCHIWUM Babka; wyczyszczono zanieczyszczone klucze revisions w lifecycle-status.
-6. UI: `showExplorerConfirmModal` w dam-explorer.js — FORCE dry_run preview, Odswiez confirm, Export backup confirm. Cache-bust `?v=forceConfirm20260721b`.
+6. UI: `showExplorerConfirmModal` w dam-explorer.js â€” FORCE dry_run preview, Odswiez confirm, Export backup confirm. Cache-bust `?v=forceConfirm20260721b`.
 
 **Efekt/Fix:**
 - Dysk: Babka i Ciasto przywrocone bez liter F/X w BATONY; Babka nie w ARCHIWUM.
 - FORCE nie odpala sie bez listy dry-run + czerwonego Stosuj.
 
-**Backup:** change-log undo przeniosl wpisy do `redo[]` (mozna ponowic przez /change-log/redo — NIE robic).
+**Backup:** change-log undo przeniosl wpisy do `redo[]` (mozna ponowic przez /change-log/redo â€” NIE robic).
 
 **Test/Ewaluacja:**
-- Disk verify: BABKA active bez -X, CIASTO bez -F, BABKA_ARCH_COUNT=0 — PASS.
-- Screenshot+Read FORCE modal: tytul "Stosuj zmiany na dysk", lista 24, Anuluj / Stosuj (24) — PASS (Anuluj, bez apply).
-- Screenshot Odswiez + Export confirm — PASS.
+- Disk verify: BABKA active bez -X, CIASTO bez -F, BABKA_ARCH_COUNT=0 â€” PASS.
+- Screenshot+Read FORCE modal: tytul "Stosuj zmiany na dysk", lista 24, Anuluj / Stosuj (24) â€” PASS (Anuluj, bez apply).
+- Screenshot Odswiez + Export confirm â€” PASS.
 - `node --check` dam-explorer.js OK.
 
-**Źródła:** lifecycle-status.json, change-log.json, lifecycle_status.py, local_bridge.py, dam-explorer.js, explorer.html, process.md
+**ĹąrĂłdĹ‚a:** lifecycle-status.json, change-log.json, lifecycle_status.py, local_bridge.py, dam-explorer.js, explorer.html, process.md
 
 ## 2026-07-21 - Assoc/Elementy split + viz white thumbs + branding toolbar
 
@@ -8855,53 +10089,53 @@ evealSequence(autoAlpha) na dzieciach body zostawial studio-rail isibility:hidde
 **Efekt/Fix:** Empty assoc oddaje ~80% Elementom; drag+persist per product; packshoty na bieli; jedna belka branding.
 
 **Test/Ewaluacja:**
-- CIASTO empty: top 20% / bot 76%, splitter 44px, Elementy panel max-height none, H~731 — PASS.
-- Persist: ciasto  .35, babka  .45 osobno; reopen restores — PASS.
-- BABKA both content: topPct 60 / botPct 36 (60/40 default) — PASS.
-- Offscreen media-preview path (renderLinkedAssetsInto): burger/babka splitTop 0.6 — PASS.
-- Viz thumbs CDP: bg rgb(255,255,255), background-image none — PASS.
-- Branding toolbar: tabsInsidePanel, no tabs-row, archDirectChild, panelH 133 — PASS.
+- CIASTO empty: top 20% / bot 76%, splitter 44px, Elementy panel max-height none, H~731 â€” PASS.
+- Persist: ciasto  .35, babka  .45 osobno; reopen restores â€” PASS.
+- BABKA both content: topPct 60 / botPct 36 (60/40 default) â€” PASS.
+- Offscreen media-preview path (renderLinkedAssetsInto): burger/babka splitTop 0.6 â€” PASS.
+- Viz thumbs CDP: bg rgb(255,255,255), background-image none â€” PASS.
+- Branding toolbar: tabsInsidePanel, no tabs-row, archDirectChild, panelH 133 â€” PASS.
 - 
 ode --check dam-media-preview.js OK.
 
-**Źródła:** dam-media-preview.js, dam-viz-modal.css, dam-brand.css, dam-branding.css, branding.html, dam-tutorial.js, HTML ?v=, process.md
+**ĹąrĂłdĹ‚a:** dam-media-preview.js, dam-viz-modal.css, dam-brand.css, dam-branding.css, branding.html, dam-tutorial.js, HTML ?v=, process.md
 
 ## 2026-07-21 - FORCE kafelki + user-prefs KV
 
 **Komenda/Akcja:** A) Redesign modala FORCE dry-run na kafelki; B) migracja preferencji UI z localStorage do Postgres KV `user-prefs:{email}`.
 
 **Log/Status:**
-1. RCA A: `formatForcePreviewList` = monospace wall (produkt · id + pełne `X:\` + "program chce: clear") — nieczytelne.
-2. Fix A: siatka `.dam-force-tile` (nazwa produktu, badge F/X/D/∅, folder before→after z liter, ikona rename/archive/clear, chevron pełnej ścieżki, chipy Wszystkie/Rename/Archiwum/Clear). CSS inject w `ensureExplorerCtaUnifyCss`. Info-tile dla Odśwież / Export.
-3. RCA B: `DamUserPrefs` trzymał tylko `safe_delete` + `branding_page_size`; zoom/split/filtry explorer żyły w localStorage → "program zapomina" między PC / po czyszczeniu.
+1. RCA A: `formatForcePreviewList` = monospace wall (produkt Â· id + peĹ‚ne `X:\` + "program chce: clear") â€” nieczytelne.
+2. Fix A: siatka `.dam-force-tile` (nazwa produktu, badge F/X/D/â…, folder beforeâ†’after z liter, ikona rename/archive/clear, chevron peĹ‚nej Ĺ›cieĹĽki, chipy Wszystkie/Rename/Archiwum/Clear). CSS inject w `ensureExplorerCtaUnifyCss`. Info-tile dla OdĹ›wieĹĽ / Export.
+3. RCA B: `DamUserPrefs` trzymaĹ‚ tylko `safe_delete` + `branding_page_size`; zoom/split/filtry explorer ĹĽyĹ‚y w localStorage â†’ "program zapomina" miÄ™dzy PC / po czyszczeniu.
 4. Fix B: rozszerzony bridge `_uprefs_normalize` + JS `dam-user-prefs.js` (card_zoom, assoc_split, explorer_*, reveal_low_tags, sidebar_collapsed); migrate once z LS; debounced POST; mirror cache LS.
 5. Restart `local_bridge.py` (nowe pola w normalize). Cache-bust `?v=prefsKv20260721a` / `forceTiles20260721d`.
 
-**Efekt/Fix:** FORCE = czytelne kafelki; preferencje UI → Postgres KV (source=postgres).
+**Efekt/Fix:** FORCE = czytelne kafelki; preferencje UI â†’ Postgres KV (source=postgres).
 
-**Tabela kluczy (LS → KV `user-prefs:{email}.prefs.*`):**
-| Setting | było LS | teraz KV field |
+**Tabela kluczy (LS â†’ KV `user-prefs:{email}.prefs.*`):**
+| Setting | byĹ‚o LS | teraz KV field |
 |---|---|---|
 | Card zoom | `dam_viz_card_zoom` | `card_zoom` |
 | Assoc/Elementy split | `dam-assoc-elementy-split:{pid}` | `assoc_split.{pid}` |
-| Branding page size | (już KV) + LS cache | `branding_page_size` |
+| Branding page size | (juĹĽ KV) + LS cache | `branding_page_size` |
 | Explorer show all | `dam_explorer_show_all` | `explorer_show_all` |
 | Explorer lang filter | `dam_explorer_lang_filter` | `explorer_lang_filter` |
 | Explorer viz view | `dam_viz_view_mode` | `explorer_viz_view` |
 | Explorer viz scale | `dam_viz_scale` | `explorer_viz_scale` |
 | Reveal low tags | `dam_reveal_low_tags` | `reveal_low_tags` |
 | Sidebar collapsed | `dam_sidebar_collapsed` | `sidebar_collapsed` |
-| Safe delete | (już KV) | `safe_delete` |
+| Safe delete | (juĹĽ KV) | `safe_delete` |
 
-**Nadal local-only (celowo):** `dam_token`/role/user (sesja auth); `sessionStorage` nav/tutorial cheer; theme (`dam_theme_pref` — device); carrier overrides / elements links / status JSON mirror (dane domenowe, nie UI prefs).
+**Nadal local-only (celowo):** `dam_token`/role/user (sesja auth); `sessionStorage` nav/tutorial cheer; theme (`dam_theme_pref` â€” device); carrier overrides / elements links / status JSON mirror (dane domenowe, nie UI prefs).
 
 **Test/Ewaluacja:**
-- FORCE: 24 tiles, chipy, `— → F/D/X/∅`, folder `…` → `… - F`, filtr Archiwum=2, pełna ścieżka expand — PASS (screenshot pass 1–5, Anuluj bez apply).
-- Prefs POST: `card_zoom:118`, `explorer_show_all:true`, `source:postgres`, pełny zestaw kluczy — PASS.
-- `node --check`: dam-explorer, dam-user-prefs, dam-media-preview, dam-shell, dam-badges, dam-viz, dam-branding — OK.
-- `ast.parse` local_bridge.py — OK.
+- FORCE: 24 tiles, chipy, `â€” â†’ F/D/X/â…`, folder `â€¦` â†’ `â€¦ - F`, filtr Archiwum=2, peĹ‚na Ĺ›cieĹĽka expand â€” PASS (screenshot pass 1â€“5, Anuluj bez apply).
+- Prefs POST: `card_zoom:118`, `explorer_show_all:true`, `source:postgres`, peĹ‚ny zestaw kluczy â€” PASS.
+- `node --check`: dam-explorer, dam-user-prefs, dam-media-preview, dam-shell, dam-badges, dam-viz, dam-branding â€” OK.
+- `ast.parse` local_bridge.py â€” OK.
 
-**Źródła:** dam-explorer.js, dam-user-prefs.js, local_bridge.py, dam-media-preview.js, dam-shell.js, dam-badges.js, dam-viz.js, dam-branding.js, HTML ?v=, process.md
+**ĹąrĂłdĹ‚a:** dam-explorer.js, dam-user-prefs.js, local_bridge.py, dam-media-preview.js, dam-shell.js, dam-badges.js, dam-viz.js, dam-branding.js, HTML ?v=, process.md
 
 
 ## 2026-07-21 - FORCE confirm modal redesign (Teraz / Po zmianie)
@@ -8919,17 +10153,17 @@ ode --check dam-media-preview.js OK.
 - Content panel: `width: min(70vw, 1200px)`, `height: min(90vh, 900px)`; scroll in `__body` only
 
 **Log/Status:**
-1. RCA cramped modal: `ensureExplorerCtaUnifyCss` had `str + /* comment */ + nextStr` -> unary `+` -> `NaN` selector `nan#damExplorerConfirmModal…` so size rules never applied (stuck at base `.dam-basepath-box` 520px).
+1. RCA cramped modal: `ensureExplorerCtaUnifyCss` had `str + /* comment */ + nextStr` -> unary `+` -> `NaN` selector `nan#damExplorerConfirmModalâ€¦` so size rules never applied (stuck at base `.dam-basepath-box` 520px).
 2. Fix: remove dangling `+` after bare comment; panel class `dam-explorer-confirm-modal` flex column; body scroll; before/after 2-col blocks Teraz / Po zmianie (stack `<=768`); accent inset on Po; compact footer CTAs 34px matching toolbar; PL chips; no mid-arrow.
 3. Cache-bust: `explorer.html?v=forceModalRedesign20260721i`.
 
 **Efekt/Fix:** Readable FORCE dry-run with clear Teraz/Po, large panel, toolbar-scale buttons.
 
 **Test/Ewaluacja (CDP @1280):**
-- box `896×810` (=70vw×90vh), bodyPad `24px 28px`, rowGap `20px`, btnH `34` (= `#damLifecycleForce`), cols `1fr 1fr`, no `.dam-force-diff__arrow`
+- box `896Ă—810` (=70vwĂ—90vh), bodyPad `24px 28px`, rowGap `20px`, btnH `34` (= `#damLifecycleForce`), cols `1fr 1fr`, no `.dam-force-diff__arrow`
 - 10-pass screenshot+Read: size/hierarchy, before-after, filters (Archiwum/Clear), 768 stack, dark, final lock
 
-**Źródła:** dam-explorer.js, explorer.html, process.md, agents/shared/code-doctrine.md §12
+**ĹąrĂłdĹ‚a:** dam-explorer.js, explorer.html, process.md, agents/shared/code-doctrine.md Â§12
 
 ## 2026-07-21 - Preview cache Redis + circuit breaker + Synology truth (K0-K8)
 
@@ -8944,7 +10178,7 @@ ode --check dam-media-preview.js OK.
 6. K3: dam_thumb_cache.py + PAMIEC-PODRECZNA + GET/POST thumb-cache; AVIF; gitignore binariow.
 7. K4: dam-preview-truth.js; usunieto Synology Drive / brak sync z onerror; thumbs -> /thumb-cache; ?v=previewRedis20260721a.
 8. K5: warm async API; timing cache hit.
-9. K6: doctrine §12; README Redis/circuit; PAMIEC README.
+9. K6: doctrine Â§12; README Redis/circuit; PAMIEC README.
 10. K7 QA (ui-taste):
     - Pass1 no false Synology title: PASS (lieCount=0, onErrorTitle=Podglad niedostepny)
     - Pass2 ELEMENTY/branding thumbs /thumb-cache: PASS (12/12 cache URLs, naturalWidth>0, screenshot Branding)
@@ -8962,14 +10196,14 @@ ode --check dam-media-preview.js OK.
 - node --check JS OK; ast.parse bridge OK
 - Grep UI: zero Synology Drive / brak sync w dam-*.js (tylko komentarz PI / skill)
 
-**Źródła:** plan v5, dam_redis.py, dam_path_resolve.py, dam_file_availability.py, dam_thumb_cache.py, local_bridge.py, dam-preview-truth.js, dam-media-preview.js, dam-branding.js, program-instructions.json, README, code-doctrine.md, process.md
+**ĹąrĂłdĹ‚a:** plan v5, dam_redis.py, dam_path_resolve.py, dam_file_availability.py, dam_thumb_cache.py, local_bridge.py, dam-preview-truth.js, dam-media-preview.js, dam-branding.js, program-instructions.json, README, code-doctrine.md, process.md
 
 ## 2026-07-22 ~16:10 - Dostosuj/customizer peek translateX (supersede 0098e139)
 
 **Komenda/Akcja:** Domknij niedokonczona prace agenta `0098e139` (resume Composer fail) - panel Dostosuj wyglad: peek ~50px + translateX + fade.
 
 **Log/Status:**
-1. Root cause: `.geex-customizer` w `.geex-main-content` + `overflow-x:clip` → closed peek clipowany do prawej krawedzi main (sliver / "zniknal").
+1. Root cause: `.geex-customizer` w `.geex-main-content` + `overflow-x:clip` â†’ closed peek clipowany do prawej krawedzi main (sliver / "zniknal").
 2. Fix: `mountCustomizerToBody()` w `dam-shell.js`; inject CSS translateX(calc(100%-50px)) closed / translateX(0) open + fade content; sync `dam-brand.css`.
 3. Cache-bust `?v=dostosujPeek20260722c` na HTML ladujacych dam-shell / dam-brand.
 4. Superseded agent: `0098e139-8ff9-4448-8a90-5eb28b5da876`.
@@ -8980,13 +10214,13 @@ ode --check dam-media-preview.js OK.
 
 **Test/Ewaluacja:**
 - `node --check` dam-shell.js Pass
-- CDP closed: parent=BODY, peekW=50, visible=50, transform=matrix(...,350,0), elementFromPoint→dam-customizer-peek, z=12600
-- CDP open: transform=none/0, opacity=1, title elementFromPoint→geex-customizer__title, headerZ=100
+- CDP closed: parent=BODY, peekW=50, visible=50, transform=matrix(...,350,0), elementFromPointâ†’dam-customizer-peek, z=12600
+- CDP open: transform=none/0, opacity=1, title elementFromPointâ†’geex-customizer__title, headerZ=100
 - CDP collapsed sidebar: peekW=50, hit=peek
 - Explorer spot-check: parentBody, peekW=50
 - Screenshot+Read: closed / open / collapsed / explorer
 
-**Źródła:** dam-shell.js (`ensureShellLayerCss`, `mountCustomizerToBody`, `ensureCustomizerPeek`); dam-brand.css; code-doctrine §12
+**ĹąrĂłdĹ‚a:** dam-shell.js (`ensureShellLayerCss`, `mountCustomizerToBody`, `ensureCustomizerPeek`); dam-brand.css; code-doctrine Â§12
 
 ---
 
@@ -9016,7 +10250,7 @@ ode --check dam-media-preview.js OK.
 - Screenshot+Read: inv-mail-panel-krok6.png Pass
 - Outlook Display: blocked/aborted w headless agent - fallback Pass
 
-**Źródła:** plan integracja_produkcja_faktury_c9e97532; invoice_mail.py; local_bridge.py; dam-invoices.js; invoices.html
+**ĹąrĂłdĹ‚a:** plan integracja_produkcja_faktury_c9e97532; invoice_mail.py; local_bridge.py; dam-invoices.js; invoices.html
 
 ## 2026-07-22 ~17:20 - COMBO lead K9 flush (K0-K9)
 
@@ -9025,9 +10259,9 @@ ode --check dam-media-preview.js OK.
 **Log/Status:**
 1. Sibling ownership observed: [2f8c0d38] Redis silence (dam_redis.py) - AVOIDED. Other streams: bento/dashboard; Dostosuj peek (dam-shell); integracja/faktury (bridge restart outside COMBO mutate window - noted). K0 LOG earlier overwritten by concurrent process.md writers - restored here as flush.
 2. K0: padBaseT/R/B/L = 16 (source CSS combo padding:16px). Health green. Backup `agents/shared/planner-runs/combo-folder-picker-2026-07-22/backup-20260722-153355` (18 files).
-3. K2: PI `ui.folder_picker_combo_only` + Szablony YES (removed must_not fizycznego podfolderu); doctrine §12 COMBO extract; app-settings instructions v21 count 80; seed GET ok.
+3. K2: PI `ui.folder_picker_combo_only` + Szablony YES (removed must_not fizycznego podfolderu); doctrine Â§12 COMBO extract; app-settings instructions v21 count 80; seed GET ok.
 4. K2b LAST restart: `existing_product_path` add-variant in explorer_create.py; `POST /explorer/add-subcategory` + `add_global_subcategory`; ast+health OK. No further COMBO bridge restarts.
-5. K3: `dam-folder-picker.js` + chrome (70vw/90vh, pad 26, Otwórz Eksplorator Windows near views); viz THIN-DELEGATE. folderDirFromPath STAY.
+5. K3: `dam-folder-picker.js` + chrome (70vw/90vh, pad 26, OtwĂłrz Eksplorator Windows near views); viz THIN-DELEGATE. folderDirFromPath STAY.
 6. K4/K9 HTML: script tags on branding/visualizations/explorer/dashboard `?v=comboPick20260722b`. Sibling also wired K5-K8 (assoc/explorer/tag/add-product) - lead verified, did not overwrite their WIP.
 7. Lead extras: explorer.js token -> comboPick20260722b; default startDir = DamPaths.getBasePath()||X:\\Marketing; T9 regex emdash -> `\\u2013\\u2014`.
 8. CDP chromeAsserts (padBase 16): pass=true padOk boxSizeOk windowsBtnOk thumbPickerOk !oldPicker zOk; gridPad=26; Marketing root folders=4. SW stale HTML risk - bypass/unregister needed for CDP.
@@ -9067,7 +10301,7 @@ ode --check dam-media-preview.js OK.
 - CDP dashboard: pass=true, hasDamDashGrid, gridChildren=9, articles=8, hasDemo=false, Eksplorer present, footer inyfinn.art 2026 v3.1.5
 - Screenshot+Read: anti-demo-shell-PASS.png (bento Produkty/Asana/wizualizacje; brak Demo nav)
 
-**Zrodla:** apps/web/dashboard.html, apps/web/sw.js, apps/desktop/serve_browser.py, apps/web/assets/js/dam-shell.js, code-doctrine.md §12
+**Zrodla:** apps/web/dashboard.html, apps/web/sw.js, apps/desktop/serve_browser.py, apps/web/assets/js/dam-shell.js, code-doctrine.md Â§12
 
 ## 2026-07-22 ~14:25 - WORKER: restore Polish diacritics (HTML UTF-8)
 
@@ -9083,14 +10317,14 @@ USER: titles/buttons show `?` instead of n/s/z/e (Projekty opakowan, Odswiez lis
 6. Forbidden siblings (freeze/assoc, Asana UX) not touched.
 
 ### Efekt/Fix
-Projekty: `Projekty opakowań`, `Odśwież listę`, subtitle z n/s/c; markers `opakowa?` / `Od?wie` = 0 in apps/web/*.html.
+Projekty: `Projekty opakowaĹ„`, `OdĹ›wieĹĽ listÄ™`, subtitle z n/s/c; markers `opakowa?` / `Od?wie` = 0 in apps/web/*.html.
 
 ### Backup
 Restore from git HEAD strings (structure/cache-bust kept). No destructive checkout of whole trees.
 
 ### Test/Ewaluacja
 - HTTP GET :8765/index.html: bytes `opakowa\xc5\x84`, `Od\xc5\x9bwie\xc5\xbc` present; meta charset UTF-8
-- CDP: h2=`Projekty opakowań`, btn=`Odśwież listę`, bad_qmark=false (pass1+pass3)
+- CDP: h2=`Projekty opakowaĹ„`, btn=`OdĹ›wieĹĽ listÄ™`, bad_qmark=false (pass1+pass3)
 - Screenshot+Read: `apps/web/_qa/pl-diacritics-projekty-pass2.png`, `...-pass3.png` - Pass (no `?` for diacritics)
 - Grep markers Od?wie / opakowa? in *.html: 0
 
@@ -9107,12 +10341,12 @@ WORKER Zone B only (plan revision 3): B1 peek remove, B2 drawer 50px, B3 neutral
 2. **[B] STOP dostosujPeek*** - nie wzmacniaj prawego `.dam-customizer-peek`.
 3. **[B] K1 backup** - `PAMIEC-PODRECZNA/backups/assoc-dash-branding-2026-07-22/backup-20260722-175000/` (8 plikow).
 4. **[B] K2 B1** - `ensureCustomizerPeek` no-op + remove DOM; `.dam-customizer-peek { display:none }`; geex-customizer closed `translateX(100%)`; bump shell/brand HTML.
-5. **[B] K3 B2** - stage transition 0.7s ease-in-out; peek label `wysuń`; toggle `right:-30px` + `uil-draggabledots`; mascot 10 tips + `dam.dashCustomize.mascotDismissed`.
+5. **[B] K3 B2** - stage transition 0.7s ease-in-out; peek label `wysuĹ„`; toggle `right:-30px` + `uil-draggabledots`; mascot 10 tips + `dam.dashCustomize.mascotDismissed`.
 6. **[B] K4 B3** - `--bento-move-ink` charcoal/stone; handles tylko `body.dam-bento-layout-edit`.
 7. **[B] K5 G-B** - CDP K2+K3+K4 Pass; screenshots Read Pass.
 
 ### Efekt/Fix
-Prawy peek martwy (CDP length===0 dashboard/branding/explorer). Lewy drawer tucked exposedPx=50, protrusion=29px, badge `wysuń`, mascotOk tips=10. Bento grips neutralne, 0 visible handles poza layout-edit.
+Prawy peek martwy (CDP length===0 dashboard/branding/explorer). Lewy drawer tucked exposedPx=50, protrusion=29px, badge `wysuĹ„`, mascotOk tips=10. Bento grips neutralne, 0 visible handles poza layout-edit.
 
 ### Backup
 `PAMIEC-PODRECZNA/backups/assoc-dash-branding-2026-07-22/backup-20260722-175000/`
@@ -9180,7 +10414,7 @@ ode --check widgets + bento-resize: OK
 **Log/Status:**
 1. Root cause: tip byl w .dam-dash-modal__panel (overflow:hidden) - przy tucked clipowany.
 2. Tip przeniesiony do .dam-dash-modal__dock (obok toggle); left = 100% + tab + 10px.
-3. Copy tipow o metce/jezyczku; naglowek Dobrokaloriuś; dismiss key v2.
+3. Copy tipow o metce/jezyczku; naglowek DobrokaloriuĹ›; dismiss key v2.
 4. Cache-bust: ?v=dashDrawerTab20260722c
 
 **Efekt/Fix:** Przy tucked widoczna metka + tip Dobrokaloriusia wskazujacy jezyczek.
@@ -9203,12 +10437,12 @@ ode --check widgets + bento-resize: OK
 
 ## 2026-07-22 ~19:20 - [C-WARM] K-WARM-0..6 infrastructure + enqueue started
 
-**Komenda/Akcja:** C-WARM zone executor: backup trio, inventory A∪B, local filter, bridge warm consumer, sole enqueue, verify snapshot.
+**Komenda/Akcja:** C-WARM zone executor: backup trio, inventory AâŞB, local filter, bridge warm consumer, sole enqueue, verify snapshot.
 
 **Log/Status:**
 1. Backup: `PAMIEC-PODRECZNA/backups/assoc-dash-branding-2026-07-22/backup-20260722-175014/` (dam_thumb_cache.py, dam_redis.py, local_bridge.py).
-2. `[C-WARM] K-WARM-0 inventory_total=48503` → `PAMIEC-PODRECZNA/warm-inventory-20260722.json`.
-3. `[C-WARM] K-WARM-1 local_count=48173 skip_count=330 skip_online_only=330` → `warm-local-20260722.json`, `warm-skip-20260722.json` (walk fast-path + parallel stat).
+2. `[C-WARM] K-WARM-0 inventory_total=48503` â†’ `PAMIEC-PODRECZNA/warm-inventory-20260722.json`.
+3. `[C-WARM] K-WARM-1 local_count=48173 skip_count=330 skip_online_only=330` â†’ `warm-local-20260722.json`, `warm-skip-20260722.json` (walk fast-path + parallel stat).
 4. Bridge restart (owned): `DAM_WARM_BOOT_CONSUMER=1`, `DAM_WARM_BOOT_ENQUEUE=0`, `DAM_WARM_WORKERS=24`, `DAM_WARM_BATCH=200`.
 5. `[C-WARM] K-WARM-2 redis_circuit=closed consumer_started=1 boot_enqueue=0` (health warm.consumer_started=true).
 6. `[C-WARM] K-WARM-3 workers=24 batch=200 encode=cpu_avif`.
@@ -9235,16 +10469,16 @@ python apps/desktop/scripts/dam_warm_inventory.py --verify-avif --local PAMIEC-P
 - Bridge alive: `GET :8766/health` ok=true, api_version=7.
 - `warm.consumer_started=true`, `workers=24`, `worker_idle_sec=0`, `paused=false`.
 - `[C-WARM] monitor queue_len=96085 jobs_done=53 avif_pct=0.26 avif_ok=246 eligible=96346 missing=96095 redis_circuit=closed jpg_fallback=5 enqueued_once=96130 skip_count=330`.
-- G-WARM remains **InProgress** (queue_drained=0; avif_pct≪85).
+- G-WARM remains **InProgress** (queue_drained=0; avif_pctâ‰Ş85).
 
 **Test/Ewaluacja:** No double-enqueue; consumer actively draining (~45 jobs since K-WARM-4 snapshot).
 
-## 2026-07-22 ~19:24 - [C-WARM] PAUSED — indexed-only rule; M: later
+## 2026-07-22 ~19:24 - [C-WARM] PAUSED â€” indexed-only rule; M: later
 
 **Komenda/Akcja:** Parent scope change (memory #146 + plan rev4). No new warm work; document pause.
 
 **Log/Status:**
-- `[C-WARM] PAUSED — indexed-only rule; M: later`
+- `[C-WARM] PAUSED â€” indexed-only rule; M: later`
 - Inventory scope revised: **A only** (file-index, branding-index, etc.); **no** walk Marketing / whole X:.
 - G-WARM stays **InProgress** (queue_drained=0); do not push more warm on Synology/cloud-only X: paths.
 - **M:** = future full local source for full-disk warm.
@@ -9334,11 +10568,11 @@ ewest_products_f\): rowCount=4, overflowPx=0, scrollHeight=clientHeight=1052, la
 
 ## 2026-07-22 ~21:32 - [REGRESS] overlap + freeze + catalog STUCK + damExpSubAdd
 
-**Komenda/Akcja:** UI probe timeout 5s → fix servers, never spin-wait. Curl 8765/8766; Playwright timeout=5000ms fallback; real file edits.
+**Komenda/Akcja:** UI probe timeout 5s â†’ fix servers, never spin-wait. Curl 8765/8766; Playwright timeout=5000ms fallback; real file edits.
 
 **Log/Status:**
 1. **Serwery:** curl :8765=200, :8766 health=200 (~2.7s). OK bez restartu.
-2. **Catalog STUCK root cause:** `ensureFileIndex` / `openMediaPickerNow` traktowaly `_DAM_FILE_INDEX.products === []` jako warm cache (truthy) → pomijaly fetch; UI zostawalo na „Ladowanie katalogu produktow…” bez `_damAssocHydrateProducts`. Dodatkowo surowy fetch 7.8MB file-index bez timeoutu i bez wspoldzielenia inflight z `DamSearch.load`.
+2. **Catalog STUCK root cause:** `ensureFileIndex` / `openMediaPickerNow` traktowaly `_DAM_FILE_INDEX.products === []` jako warm cache (truthy) â†’ pomijaly fetch; UI zostawalo na â€žLadowanie katalogu produktowâ€¦â€ť bez `_damAssocHydrateProducts`. Dodatkowo surowy fetch 7.8MB file-index bez timeoutu i bez wspoldzielenia inflight z `DamSearch.load`.
 3. **Catalog fix (dam-assoc-edit.js):** `hasWarmProductCatalog` (length>0), `ensureSearchIndexBootstrap` + `productsFromSearchIndex` (184 wpisy), `DamSearch.load` inflight, AbortController 15s, guard 2.5s, hydrate w catch/finally. Cache-bust `assocCatalogFix20260722e`.
 4. **Overlap fix (dam-bento-resize.js + dam-dashboard.css):** MAX_ROWS 32, `ensureVizProductsStackGap`, push-down max overlap, explicit grid-row start. Cache-bust `dashProductsMinH20260722b`.
 5. **Freeze fix:** deferred `renderPinned/renderOptions` (rAF+setTimeout); openEditPicker/openMediaPicker macrotask 0 (unchanged).
@@ -9347,24 +10581,24 @@ ewest_products_f\): rowCount=4, overflowPx=0, scrollHeight=clientHeight=1052, la
 **Test/Ewaluacja:**
 - **Overlap=Pass** Playwright: vizR=4 prodR=12 gapPx=16 overlap=false
 - **Freeze tick=Pass** Playwright: setTimeout deltaMs=16
-- **Catalog=Pass (code+curl)** search-index 184 entries / 3.2s; served JS has bootstrap helpers. Playwright assoc popover probe **Blocked** (evaluate >18s on dashboard — heavy 8MB parse; bootstrap path verified in code)
+- **Catalog=Pass (code+curl)** search-index 184 entries / 3.2s; served JS has bootstrap helpers. Playwright assoc popover probe **Blocked** (evaluate >18s on dashboard â€” heavy 8MB parse; bootstrap path verified in code)
 - **damExpSubAdd=Pass (code+curl)** served JS: `#damExpSubTags`, `#damExpSubAddPanel`, no `window.prompt`. Live explorer Playwright **Blocked** (explorer.html >25s load)
 - **D24 live assoc click=Blocked** (headless; manual QA on viz modal recommended)
 
 **Pliki:** dam-assoc-edit.js, dam-bento-resize.js, dam-dashboard.css, dam-explorer-add-product.js, dashboard.html, visualizations.html, explorer.html, process.md
 
-**Nota:** UI probe timeout 5s → fix servers, never spin-wait. Przy MCP/browser stuck uzywac curl + Playwright timeout=5000ms.
+**Nota:** UI probe timeout 5s â†’ fix servers, never spin-wait. Przy MCP/browser stuck uzywac curl + Playwright timeout=5000ms.
 
 ---
 
 ### 2026-07-22 | Regula 5s + modal Eksplorera (split produkt/wariant)
 
-**Komenda/Akcja:** Instrukcja dla wszystkich agentow (5 s = martwe, nie wisiec); dokończenie modali Dodaj produkt / Dodaj wariant.
+**Komenda/Akcja:** Instrukcja dla wszystkich agentow (5 s = martwe, nie wisiec); dokoĹ„czenie modali Dodaj produkt / Dodaj wariant.
 
 **Log/Status:**
 1. **Regula globalna projektu:** `.cursor/rules/server-timeout-never-hang.mdc` (alwaysApply).
-2. **Doktryna:** `code-doctrine.md` §5.0 + lekcja §12 (2026-07-22 serwery + browser MCP hang).
-3. **Agenci:** `AGENTS.md`, `agents/README.md`, `01/02/03/AGENT.md`, `memory.md` §12a, skill `dam-dobrakaloria`.
+2. **Doktryna:** `code-doctrine.md` Â§5.0 + lekcja Â§12 (2026-07-22 serwery + browser MCP hang).
+3. **Agenci:** `AGENTS.md`, `agents/README.md`, `01/02/03/AGENT.md`, `memory.md` Â§12a, skill `dam-dobrakaloria`.
 4. **Smoke skrypt:** `scripts/ops/smoke-dam-ports.ps1`.
 5. **Modal:** `#damExplorerCreateModal` (produkt) vs `#damExplorerAddVariantModal` (wariant); bootstrap wariantow po zmianie `#damExpCatPath`; PL copy w explorer.js.
 6. **Cache-bust:** `expModalSplit20260722c` (explorer.html + dam-explorer-add-product.js + dam-explorer.js).
@@ -9401,13 +10635,13 @@ oThumbWarm20260722c.
 **Komenda/Akcja:** Dashboard tile unify + #damVizModalOpenFile fix (2026-07-23)
 
 **Log/Status:**
-1. `#damVizModalOpenFile` — usunięto `DamMediaPreview.openAsset`; zawsze `DamPaths.openFileAndCopyPath` (bez starego `#damMediaPreview`).
-2. Ujednolicono szablon kafelków `.dam-widget--viz/media/branding-latest` w `dam-dashboard.css`: ikony 31px (−30%), 1x4/1x6 auto-wysokość bez clip, 2x2 kolumna thumb+tytuł, miniatury ~128–176px.
-3. Usunięto konfliktujący inject tile-CSS z `ensureDashLayoutCss` (zostaje header B5).
-4. `resolveProductThumbUrl` → bridge `/media` + `DamPreviewTruth.thumbCacheUrl`; warmThumbs na viz+products.
+1. `#damVizModalOpenFile` â€” usuniÄ™to `DamMediaPreview.openAsset`; zawsze `DamPaths.openFileAndCopyPath` (bez starego `#damMediaPreview`).
+2. Ujednolicono szablon kafelkĂłw `.dam-widget--viz/media/branding-latest` w `dam-dashboard.css`: ikony 31px (â’30%), 1x4/1x6 auto-wysokoĹ›Ä‡ bez clip, 2x2 kolumna thumb+tytuĹ‚, miniatury ~128â€“176px.
+3. UsuniÄ™to konfliktujÄ…cy inject tile-CSS z `ensureDashLayoutCss` (zostaje header B5).
+4. `resolveProductThumbUrl` â†’ bridge `/media` + `DamPreviewTruth.thumbCacheUrl`; warmThumbs na viz+products.
 5. Cache-bust: `dashTileUnified20260723a`, `debug20260723a` (viz).
 
-**Test/Ewaluacja:** CDP na istniejącej karcie (bez `browser_navigate`): `newest_viz_3` + `newest_products_f` — 3 ikony × 31px, thumb ~158px, tytuł `white-space:normal`, clamp 2. Screenshot MCP = pusta karta (znany bug); dowód = CDP.
+**Test/Ewaluacja:** CDP na istniejÄ…cej karcie (bez `browser_navigate`): `newest_viz_3` + `newest_products_f` â€” 3 ikony Ă— 31px, thumb ~158px, tytuĹ‚ `white-space:normal`, clamp 2. Screenshot MCP = pusta karta (znany bug); dowĂłd = CDP.
 
 **Efekt/Fix:** Pass (logika + CSS metrics).
 
@@ -9422,13 +10656,13 @@ oThumbWarm20260722c.
 1. Graphify: freeze path = dam-assoc-edit.js buildAssocMediaPickerUi + Branding tab.
 2. Usunieto UI tabow PRODUKTY/BRANDING z COMBO; listTab zawsze products; loadBrandingIfNeeded = no-op.
 3. Dodaj wariant (strip/grid) -> DamFolderPicker (openMaterialVariantAdd / openProductStripVariantAdd), nie ciezkie COMBO shell.
-4. Mojibake: visualizations/explorer/branding.html (PokaĹ -> Pokaż itd.), 109 tokenow.
+4. Mojibake: visualizations/explorer/branding.html (PokaÄą -> PokaĹĽ itd.), 109 tokenow.
 5. Cache-bust: dam-assoc-edit.js?v=rollbackBrandTab20260723a (4 HTML).
 6. Browser: NIE navigate na dashboard (MCP hang) - weryfikacja lokalna node --check + Grep.
 
 **Efekt/Fix:** COMBO bez TAB BRANDING; warianty = lekki folder picker; PL znaki w 3 HTML.
 
-**Test/Ewaluacja:** node --check OK; Grep Pokaż wszystkie OK; brak data-assoc-tab=branding w UI stringu.
+**Test/Ewaluacja:** node --check OK; Grep PokaĹĽ wszystkie OK; brak data-assoc-tab=branding w UI stringu.
 
 **Zrodla:** user dump; graphify-out/graph.json; transcript regression note.
 
@@ -9495,22 +10729,22 @@ owsForContentPx z gap; stack adjacent; mediaLayoutMinH chrome-only 4/5/6; BENTO_
 
 **Zrodla:** user screenshot + DOM; dam-welcome-link / dam-int-cta; memory 12a2.
 
-### 2026-07-23 | Viz empty: maskotka poza #vizGrid (sidebar) — contain fix
+### 2026-07-23 | Viz empty: maskotka poza #vizGrid (sidebar) â€” contain fix
 
-**Root cause:** `#vizGrid.dam-viz-grid` = `repeat(auto-fill, minmax(220px,1fr))`. Empty w 1. kolumnie karty; `overflow:visible` → stage (mascot+bubble ~590px) wyplywal w lewo na sidebar.
+**Root cause:** `#vizGrid.dam-viz-grid` = `repeat(auto-fill, minmax(220px,1fr))`. Empty w 1. kolumnie karty; `overflow:visible` â†’ stage (mascot+bubble ~590px) wyplywal w lewo na sidebar.
 
-**Fix:** `#vizGrid:has(> .dam-viz-empty)` → `grid-template-columns: minmax(0,1fr)` + `overflow:hidden`; empty `grid-column:1/-1; width:100%`; mascot bez ujemnego `left`; cache `vizEmptyContain20260723j`.
+**Fix:** `#vizGrid:has(> .dam-viz-empty)` â†’ `grid-template-columns: minmax(0,1fr)` + `overflow:hidden`; empty `grid-column:1/-1; width:100%`; mascot bez ujemnego `left`; cache `vizEmptyContain20260723j`.
 
 **CDP:** gridCols=1074px, mascotInGrid=true, mascotOverlapsSidebar=false, bubbleW=400, rightDelta=0, topGap=30.
 
 **QA:** headless + sidebar preview (bez Browser MCP).
 
 
-### 2026-07-23 | Viz empty: hug głowy (adnotacja usera)
+### 2026-07-23 | Viz empty: hug gĹ‚owy (adnotacja usera)
 
-**Problem:** `.dam-viz-empty__side { flex: 1 1 auto }` rozciągał kolumnę — dymek/btn odjeżdżały w prawo od maskotki.
+**Problem:** `.dam-viz-empty__side { flex: 1 1 auto }` rozciÄ…gaĹ‚ kolumnÄ™ â€” dymek/btn odjeĹĽdĹĽaĹ‚y w prawo od maskotki.
 
-**Fix:** side `flex: 0 0 auto` + stała szer. 275–400; stage `width: fit-content; gap: 14px`; dymek przy głowie.
+**Fix:** side `flex: 0 0 auto` + staĹ‚a szer. 275â€“400; stage `width: fit-content; gap: 14px`; dymek przy gĹ‚owie.
 
 **CDP:** gap=14, sideW=400, stageW=564, rightDelta=0, topGap=30, clusterTight=true. Cache `vizEmptyHug20260723o`.
 
@@ -9548,7 +10782,7 @@ enderVizEmptyState: HTML [speak[bubble|mascot]|card], random PL lines.
 
 ### 2026-07-23 | Empty mascot +15% + mood poses + 30 lines
 
-**Komenda/Akcja:** Powiększ maskotkę 15%; losowe pozy wg kontekstu (żart/smutek/ok/think); +30 tekstów.
+**Komenda/Akcja:** PowiÄ™ksz maskotkÄ™ 15%; losowe pozy wg kontekstu (ĹĽart/smutek/ok/think); +30 tekstĂłw.
 
 **Log/Status:**
 1. CSS --dam-empty-medal: 172.5px (mobile 138).
@@ -9563,19 +10797,19 @@ enderVizEmptyState: HTML [speak[bubble|mascot]|card], random PL lines.
 
 ### 2026-07-23 | Projekty: archiwum switch + search fix + reindex (bez browser MCP)
 
-**Komenda/Akcja:** Naprawa wyszukiwania `?q=cynamonka` / `6300783.00`, switch „Pokaż archiwum” w toolbarze Projekty, pełny reindex dysku, omijanie zawieszonego browser_navigate.
+**Komenda/Akcja:** Naprawa wyszukiwania `?q=cynamonka` / `6300783.00`, switch â€žPokaĹĽ archiwumâ€ť w toolbarze Projekty, peĹ‚ny reindex dysku, omijanie zawieszonego browser_navigate.
 
 **Log/Status:**
-1. **Przyczyna zacięć agenta:** `browser_navigate` MCP w Cursorze wisi >5 s bez odpowiedzi (nie bug DAM). Weryfikacja: curl + node z `--max-time 5`, bez MCP przeglądarki.
-2. **Przyczyna zamrożenia UI Projekty:** podwójne parsowanie ~8 MB `file-index.json` (DamApi.projects + ponowny fetch w dam-projects.js). Fix: `dam-api.js` ustawia `window._DAM_FILE_INDEX`; dam-projects nie pobiera pliku drugi raz.
+1. **Przyczyna zaciÄ™Ä‡ agenta:** `browser_navigate` MCP w Cursorze wisi >5 s bez odpowiedzi (nie bug DAM). Weryfikacja: curl + node z `--max-time 5`, bez MCP przeglÄ…darki.
+2. **Przyczyna zamroĹĽenia UI Projekty:** podwĂłjne parsowanie ~8 MB `file-index.json` (DamApi.projects + ponowny fetch w dam-projects.js). Fix: `dam-api.js` ustawia `window._DAM_FILE_INDEX`; dam-projects nie pobiera pliku drugi raz.
 3. **Switch archiwum:** `#damProjectsIncludeArchive` w `#damProjectsSearchScope` (jak Branding), localStorage `dam_projects_include_archive`.
-4. **Search:** `filteredRows()` używa `DamSearch.productMatchesTextQuery` + `productHasLivePresence` (indeksy, tagi, search_blob, rewizje archiwum).
-5. **Reindex:** `python apps/web/scripts/build-file-index.py` — 184 produkty, 9.77 s, archiwum włączone w skan.
+4. **Search:** `filteredRows()` uĹĽywa `DamSearch.productMatchesTextQuery` + `productHasLivePresence` (indeksy, tagi, search_blob, rewizje archiwum).
+5. **Reindex:** `python apps/web/scripts/build-file-index.py` â€” 184 produkty, 9.77 s, archiwum wĹ‚Ä…czone w skan.
 6. Cache bust: `projArchive20260723a` (index.html, dam-api, dam-search, dam-projects, dam-brand.css).
 
-**Test:** node --check OK; symulacja search: cynamonka→cynamonka-nerkowcowy, 6300783→6300782/6300783; curl index.html 200 z nowymi ?v=.
+**Test:** node --check OK; symulacja search: cynamonkaâ†’cynamonka-nerkowcowy, 6300783â†’6300782/6300783; curl index.html 200 z nowymi ?v=.
 
-**Zrodla:** user report; code-doctrine §5 (timeout); build-file-index.py merge_category_archive.
+**Zrodla:** user report; code-doctrine Â§5 (timeout); build-file-index.py merge_category_archive.
 
 ### 2026-07-23 | Projekty: Cynamonka 6300783 - zly pick rewizji (KAR6X vs MINI)
 
@@ -9583,12 +10817,12 @@ enderVizEmptyState: HTML [speak[bubble|mascot]|card], random PL lines.
 
 **Log/Status:**
 1. **Indeks OK:** `file-index.json` ma oba foldery (`6300782.00` MINI, `6300783.00` KAR6X) - skan dziala.
-2. **Bug UI:** `pickLatestRevision` sortowal po dacie folderu → MINI (18.06) wygrywal nad KAR6X (20.05), choc KAR6X ma 32 wizki i jest kompletny.
-3. **Fix:** sort: dopasowanie query → wyzszy index_base → wiecej wiz → data. Karta pokazuje oba indeksy w rogu gdy multi.
+2. **Bug UI:** `pickLatestRevision` sortowal po dacie folderu â†’ MINI (18.06) wygrywal nad KAR6X (20.05), choc KAR6X ma 32 wizki i jest kompletny.
+3. **Fix:** sort: dopasowanie query â†’ wyzszy index_base â†’ wiecej wiz â†’ data. Karta pokazuje oba indeksy w rogu gdy multi.
 4. Checklist + badge Kompletny liczone z wybranej rewizji (query-aware).
 5. Cache bust: `projRevPick20260723b`.
 
-**Test:** node symulacja: cynamonka→6300783.00 viz=32; 6300783 query→6300783.00.
+**Test:** node symulacja: cynamonkaâ†’6300783.00 viz=32; 6300783 queryâ†’6300783.00.
 
 **Zrodla:** file-index cynamonka-nerkowcowy; user path X:\\...\\6300783.00 - F.
 
@@ -9611,3 +10845,171 @@ Osobny bug: zapis nowego wariantu czasem sie nie dodaje (regresja) - nie mylic z
 Browser: zakaz Browser MCP navigate (zacina agenta) - headless CDP / curl.
 
 Commit scope: allowlisted viz/branding/mascot + memory/process only.
+
+## 2026-07-23 - Tasks Dostosuj handles + sidebar Integracja pill
+
+### Komenda/Akcja
+WORKER: (A) hide `.dam-bento-move-handle` on Zadania unless Dostosuj; (B) sidebar active pill fill meets left accent for long label Integracja i produkcja.
+
+### Log/Status
+1. Root A: `dam-bento-resize.js` CSS showed tasks handles for `.dam-tasks-bento.is-bento-active` always; dashboard already gated with `body.dam-bento-layout-edit`.
+2. Fix A: gate CSS + `layoutEditAllowed` on `is-tasks-customize` / `body.dam-tasks-customize`; `dam-tasks.js` toggles via `[data-customize]` + Escape.
+3. Root B: shell forced `height:56px` + `nowrap` (clipped wrap) + inset `box-shadow` accent vs `border-radius:18px` looked gapped.
+4. Fix B: `height:auto` + wrap labels; active `::before` 3px accent + flatter left radius 6px; brand/accent/shell CSS.
+5. Cache `?v=navPill20260723b`.
+
+### Test/Ewaluacja
+- node --check: dam-bento-resize.js, dam-tasks.js, dam-shell.js OK
+- Headless CDP: handlesVisible 0 â†’ 7 â†’ 0 (Escape); Integrations active ::before 3px, radiusTL 6px
+- Pixel strip mid-row: purple x2-4 then lavender x5+ (no white gap)
+- Screenshots: apps/web/_qa/verify-tasks-handles-off|on.png, verify-integrations-nav-active.png
+
+### Efekt/Fix
+Pass A + Pass B.
+
+### 2026-07-23 | Hotfix pack (empty+freeze+bento+nav+tags+variant persist)
+
+**Commit checkpoint:** 6e9462e push main - Dodaj wariant DZIALA.
+
+**Fixes (workers):**
+1. Explorer freeze: dual DamSearch + sync file-index scan -> single-flight onResults + chunked yield (dam-search/explorer).
+2. Empty mascot: Projekty+Eksplorer full row; Inbox speak-only.
+3. Tasks: move handles only after Dostosuj (+ Escape).
+4. Nav Integracja: flush accent pill, wrap label.
+5. Tag popover: fixed+double rAF clamp under tag.
+6. Variant persist: vizFlags merge keep linked_variants; folderPathFromPicked.
+
+**Cache:** ?v=hotfixPack20260723a
+**Smoke:** 8765/8766=200
+
+### 2026-07-23 | Explorer empty clip fix
+
+**Root cause (v1 bledny):** samo overflow:visible - karta 465px + speak wychodzila poza panel 747px (flex + width:min(520,100%-230)).
+
+**Root cause (v2):** brak CSS Grid / minmax(0,1fr) - fixed speak+card > panel.
+
+**Fix:** `.dam-empty-mascot-row` = CSS GRID `minmax(0,min(280px,36%)) minmax(0,1fr)`; karta width:100%; explorer panel tighter columns; flex body `flex:0 0 auto` zeby nie shrink-clip; overflow:visible dopiero gdy grid miesci szerokosc.
+
+**Cache:** explorerEmptyGrid20260723d (tez dam-branding.css - wczesniej zostal utf8Fix i user widzial stary flex 465px)
+
+**Test (live explorer.html + search asfsdaxyz99noclip):**
+- CDP: display=grid, cardW 425, cardR 1326 < panelR 1344 (overflowRight -18), clipChain=[], pass=true
+- Shot: `_qa/explorer-empty-p4.png` (cala strona Eksplorera)
+- Smoke 8765=200
+
+### 2026-07-23 | UTF-8 mojibake site-wide (nie nakladki)
+
+**Objaw:** Sesja urzA...dzenia, Material,y marketingowe - user podejrzewal nakladki COMBO.
+
+**Root cause:** klasyczny mojibake UTF-8 odczytany jako cp1252/cp1250 i zapisany ponownie (PowerShell Set-Content / zly zapis agentow). Nie warstwy z-index.
+
+**Fix:**
+1. `scripts/ops/fix-mojibake-utf8.py` - mapa PL z cp1252+cp1250 (26 plikow: dam-shell.js + HTML/CSS).
+2. `settings.html` / `profile.html` przywrocone z git HEAD + zachowane `?v=`.
+3. Resztki integrations/help/index (x razy, podwojne kodowanie) - druga passa + restore.
+4. Cache `dam-shell.js?v=utf8Fix20260723a`.
+5. Skrypty: `bump-shell-cache.py`, `scan-mojibake-leftovers.py`, `restore-utf8-from-head.py`.
+
+**Test:**
+- curl served shell: U+0105 w `urzadzenia`; project: `Materialy marketingowe`.
+- CDP project.html: nav codes zawiera 261 (a), heading 322 (l).
+- Snapshot a11y: Sesja urzadzenia, Materialy marketingowe, Wiadomosci, Dostosuj wyglad.
+- Leftover scan apps/web (bez _qa): 0 plikow.
+- Smoke 8765/8766=200; node --check dam-shell.js OK.
+
+**Graphify:** query wskazywal shell/project strings; problem = encoding plikow, nie overlay graph.
+
+**Zakaz:** PowerShell Set-Content na apps/web - tylko Python `Path.write_bytes` UTF-8 bez BOM (doktryna Â§12 2026-07-20).
+
+### 2026-07-23 | Freeze UI root cause + autostart audit + ESC abort
+
+**Objaw:** UI zacina sie przy skojarzeniach/combo; user podejrzewal tab Branding.
+
+**Root cause (zmierzone):** `branding-index.json` = 387.9 MB. Fetch+parse w watku UI
+blokowal main thread (nawet F5/ESC martwe). Zrodla po fixie 2026-07-22 zostaly TRZY:
+1. `dam-project.js` renderMarketingShort (linia ~725) - kazde wejscie na projekt.
+2. `dam-project.js` boot() marketingPartition (dodane przy variantSplit 20260723a) - DRUGI parse.
+3. `dam-dashboard-widgets.js` loadBrandingIndex (widget branding_latest) - dashboard,
+   czyli dokladnie tam gdzie user dodaje skojarzenia.
+
+**Fix:**
+- Bridge: nowy GET `/branding-for-product?product_id=&tokens=&limit=&sort=recent&include_archive=`
+  - port 1:1 logiki `brandingAssetMatches`/`isArchivedBranding` z dam-product-correlation.js;
+  filtr na pelnym indeksie po stronie Pythona (cache `_load_json` po mtime).
+- `dam-project.js`: jeden lekki fetch (`fetchBrandingAssetsForProduct`, AbortController 8s,
+  cache per product, rejestracja w `__damRegisterAbort`); oba 388MB fetche usuniete.
+- `dam-dashboard-widgets.js`: widget bierze `?sort=recent&limit=200` (partial), nigdy pelny indeks.
+- `dam-panic-reload.js`: ESC = `__damAbortAll()` + teardown overlayow (bez reloadu).
+- Cache: `panicEsc20260723a` (21 HTML), `brandingLite20260723a` (project.html, dashboard.html).
+
+**Test:** py_compile OK; `resolve_branding_for_product('', ['6300782','6300783'])` na realnym
+indeksie: 73 assety (KAR6X cynamonka), query 2.0s pierwsze wejscie (parse w bridge), potem cache;
+`sort=recent` OK. Bridge nie dzialal w trakcie zmian - endpoint aktywny od nastepnego startu DAM.
+
+**Autostart:** "PowerShell z System32 przy starcie" = task `\EnklawaObozowa-NextWatcher`
+(logon trigger, INNY projekt) - wylaczony (odwracalnie). DAM ma wlasny task
+`\DAM-ETA-Database-Git-Sync` (co 1h, git push dumpow) - zostawiony, decyzja usera.
+Audyt: `scripts/ops/audit-autostart.ps1`.
+
+| Komenda | Log | Efekt | Test | Zrodla |
+| --- | --- | --- | --- | --- |
+| Intern: `dam-media-preview.js` + `dam-viz.js` plus-tile → `DamAssocEdit.openMediaPicker` (capture, `e.shiftKey`) | `ensureAssocPlusTilePickerWire` / `openVizProductVariantMediaPicker`; bez `DamFolderPicker` na plus | Oba Dodaj otwieraja picker zamiast COMBO/folder; toast gdy brak API | `node --check` OK; grep openMediaPicker na sciezkach plus; curl 8766/health + 8765/visualizations.html 200 | `_reference-092821f/dam-assoc-edit.js` openEditPicker→openMediaPicker |
+
+### 2026-07-23 | Intern: restore fast openMediaPicker (092821f)
+
+| Pole | Wartosc |
+|------|---------|
+| Komenda | Przywróć szybki `openMediaPicker` z commit 092821f (shell-first + Aktualne/search/preview/listbox); COMBO tylko przez przycisk „Przejdź do COMBO” |
+| Log | Usunięto auto-routing Dodaj → `openVizAssocComboPicker` / ciężki COMBO; przywrócono UX z `_reference-092821f/dam-assoc-edit.js`; shell malowany zanim `ensureFileIndex()`; bez `branding-index.json` w UI |
+| Efekt | `apps/web/assets/js/dam-assoc-edit.js`: `openMediaPicker` / `openMediaPickerSimpleNow` + export `DamAssocEdit.openMediaPicker`; COMBO zostaje za `_vizComboDirect` / footer |
+| Test | `node --check` OK; assert: openMediaPicker + DamAssocEdit + brak fetch branding-index; curl `:8766/health` i `:8765/visualizations.html` → 200 |
+| Zrodla | commit 092821f (`_reference-092821f/dam-assoc-edit.js` `openMediaPicker`) |
+
+### 2026-07-23 | Intern: plus-tile -> fast openMediaPicker only
+
+| Komenda | Log | Efekt | Test | Zrodla |
+| --- | --- | --- | --- | --- |
+| ADDENDUM: wszystkie Dodaj plus-tile -> `openMediaPicker` (picker_product/picker_variant); COMBO/folder tylko footer | Usunieto 6-way router (branding_preview_*/viz_*/material_*); `openEditPickerNow` bez redirectu do DamFolderPicker | `ensurePlusTile` -> `openEditPickerNow` -> `openMediaPicker` + `saveAssociations`; blad listy w pickerze (ESC/Anuluj) | `node --check` OK; plus-tile bez openVizAssocComboPicker/openMaterialVariantAdd; curl 8766+8765 200 | commit 092821f openMediaPicker |
+
+### 2026-07-23 | Intern re-scope: audit + contract map + verify harness
+
+| Komenda | Log | Efekt | Test | Zrodla |
+| --- | --- | --- | --- | --- |
+| Audit dam-media-preview.js/dam-viz.js; usunieto duplikat plus-handlerow; Shift+klik -> openMediaPicker; ADD tools/verify-picker-freeze.js | Plus-tile w dam-assoc-edit.js (inny worker); fallback bindLinkedAssetClicks neutralized; loadIndexAssets bez branding-index | Brak COMBO/folder z naszych sciezek plus; contract map 092821f dla assoc worker | node --check x3 OK; harness viz 200 health 200 openMediaPicker bez branding-index w body | _reference-092821f/dam-assoc-edit.js |
+
+
+## #151 Orchestrator: picker 092821f przywrocony + integracja 2 agentow (2026-07-23 23:00)
+
+- Komenda: przywrocenie szybkiego openMediaPicker z commita 092821f; router plus-tile (dam-assoc-edit.js) -> openEditPickerNow -> openMediaPicker; COMBO tylko przez _vizComboDirect (stopka Przejdz do COMBO).
+- Log: Grok przywrocil picker + przepial router; Composer dodal capture-wire w dam-media-preview.js/dam-viz.js; orchestrator usunal _vizComboDirect:true z opts plus-tile w dam-media-preview.js (omijalo picker, wracalo do ciezkiego COMBO).
+- Efekt: oba przyciski Dodaj (skojarzenia + wariant) otwieraja picker (Aktualne, szukaj, podglad, checkboxy, Zatwierdz/Anuluj, Przejdz do COMBO). Kopia stanu 092821f: ..\\DAM-kopia-092821f (worktree) + _reference-092821f/.
+- Backup: worktree DAM-kopia-092821f (git, odtwarzalny).
+- Test: node --check x3 OK; tools/verify-picker-freeze.js OK (200/200, openMediaPicker present, brak branding-index fetch); tools/_sim_picker.js PASS (shell 1ms, overlay w DOM, closePicker OK). Cache-bust ?v=pickerRestore092821f20260723t w 4 HTML.
+- Zrodla: commit 092821f; dam-assoc-edit.js openEditPickerNow/openMediaPicker; dam-media-preview.js openAssocMediaPickerFromPlus.
+- Uwaga: __damDbg fetchuje 127.0.0.1:7559/ingest przy kazdym kliku (telemetria debug) - do przegladu/wylaczenia w nastepnym kroku.
+
+## 2026-07-23 ~23:55 - WORKER Intern: Shift+Dodaj remaining freeze (shiftDodajFix20260723bq)
+
+**Komenda/Akcja:** Verify prior fix + remove remaining post-shell freeze so Runtime.evaluate stays alive.
+
+**Log/Status:**
+1. Claimed prior fix WAS in code (dedicated search-index fetch; no ensureFileIndex on open; variantThumbFast; no branding-index on open). Incomplete: Playwright still hung after shell.
+2. Remaining root causes found:
+   - __damDbg sync localStorage stringify + dual fetch
+   - full bento CSS inject (ensureInjectedCss / idle preload) parsed on/near open and froze UI
+   - productsFromSearchIndex mapped entire catalog (disabled; search via _DAM_SEARCH_INDEX)
+   - simple picker painted variant rows on open (now type-to-search + caps)
+   - **main remaining freeze:** inserting .dam-tag-edit-popover--wide.dam-assoc-edit-popover into branding/dashboard applied heavy dam-brand.css — JS finished in ~1–3ms then layout/evaluate/screenshot hung
+3. Fix (dam-assoc-edit.js):
+   - soft __damDbg (memory-only)
+   - open path: shell CSS only; full CSS warm deferred 30s and skipped while overlay open
+   - simple picker: Shadow DOM + isolated styles (dam-assoc-lite / :host), light-DOM mirror #damAssocEditPopover for getElementById
+   - pinned cap 24; variant empty-q = type-to-search; search cap 80; no full products[] clone
+4. Cache ?v=shiftDodajFix20260723bq (branding/dashboard/explorer/visualizations).
+5. 
+ode --check OK. Live Playwright: branding product open phases hydrate 1ms; wall-to-evaluate ~0.85s; ESC 2ms closes; variant 2000 candidates open ~0.1s; dashboard PASS <50ms.
+
+**Test/Ewaluacja:** PASS (branding + dashboard). Screenshot _qa/shift-branding-bq.png. User: Ctrl+F5 Branding → modal → Shift+Dodaj produkty/warianty.
+
+**Źródła:** dam-assoc-edit.js, HTML ?v=, process prior dfc22b03, dam-brand.css .dam-tag-edit-popover--wide
+

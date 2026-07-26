@@ -5,6 +5,78 @@
  */
 (function () {
   "use strict";
+  var global = typeof window !== "undefined" ? window : globalThis;
+
+  /** Set on each openProductModal; global capture uses this to close. */
+  global._damVizModalTeardown = null;
+
+  function pointInRect(x, y, r) {
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  }
+
+  function requestCloseVizModal(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+    }
+    [
+      "damAssocEditOverlay",
+      "damAssocEditPopover",
+      "damTagEditPopover",
+      "damThumbPicker",
+      "damVizMaterialAddPopover",
+      "damBrandingProductAddPopover",
+      "damAssocFolderPicker",
+    ].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.remove();
+    });
+    try {
+      if (global.DamAssocEdit && typeof global.DamAssocEdit.closePicker === "function") {
+        global.DamAssocEdit.closePicker();
+      }
+    } catch (eClose) {
+      /* ignore */
+    }
+    if (typeof global._damVizModalTeardown === "function") {
+      global._damVizModalTeardown();
+      document.body.classList.remove("dam-media-preview-open");
+      return;
+    }
+    var modal = document.getElementById("damVizModal");
+    if (modal && modal.parentNode) modal.remove();
+    document.body.classList.remove("dam-media-preview-open");
+  }
+
+  if (!global._damVizCloseGlobalBound) {
+    global._damVizCloseGlobalBound = true;
+    document.addEventListener(
+      "pointerdown",
+      function (e) {
+        if (!document.getElementById("damVizModal")) return;
+        var btn = document.getElementById("damVizModalClose");
+        if (!btn) return;
+        if (e.target === btn || (btn.contains && btn.contains(e.target))) {
+          requestCloseVizModal(e);
+          return;
+        }
+        var r = btn.getBoundingClientRect();
+        if (!pointInRect(e.clientX, e.clientY, r)) return;
+        requestCloseVizModal(e);
+      },
+      true
+    );
+    document.addEventListener(
+      "click",
+      function (e) {
+        if (!document.getElementById("damVizModal")) return;
+        var btn = e.target && e.target.closest ? e.target.closest("#damVizModalClose") : null;
+        if (btn) requestCloseVizModal(e);
+      },
+      true
+    );
+  }
 
   var all = [];
   var filtered = [];
@@ -504,6 +576,18 @@
       .toLowerCase();
   }
 
+  /** Compare index paths across drive letters (X:/ vs D:/Marketing/...). */
+  function marketingRelKey(p) {
+    var n = normFolderPath(p);
+    if (!n) return "";
+    if (window.DamPaths && typeof window.DamPaths.relativeFromMarketing === "function") {
+      var rel = window.DamPaths.relativeFromMarketing(p);
+      if (rel) return normFolderPath(rel);
+    }
+    var m = n.match(/^[a-z]:\/marketing\/(.*)$/);
+    return m ? m[1] : n;
+  }
+
   function pathLooksArchive(p) {
     var u = String(p || "").toUpperCase();
     if (!u || u.indexOf("ARCHIWUM") === -1) return false;
@@ -546,7 +630,8 @@
     if (!productId || !folderPath) return;
     vizFlags.linked_variants = vizFlags.linked_variants || {};
     var arr = vizFlags.linked_variants[productId] || [];
-    var want = normFolderPath(folderPath);
+    var storePath = folderPathFromPicked(folderPath) || folderPath;
+    var want = normFolderPath(storePath);
     if (
       arr.some(function (p) {
         return normFolderPath(p) === want;
@@ -554,7 +639,7 @@
     ) {
       return;
     }
-    arr.push(folderPath);
+    arr.push(storePath);
     vizFlags.linked_variants[productId] = arr;
     /* Re-link clears unlinked key for this revision folder if present. */
     vizFlags.unlinked_variants = vizFlags.unlinked_variants || {};
@@ -623,22 +708,110 @@
     postVizFlag({ flags: vizFlags });
   }
 
+  /** File pick → parent folder; also used when user picks WIZKI child path. */
+  function folderPathFromPicked(path) {
+    var p = String(path || "").replace(/\\/g, "/");
+    if (!p) return "";
+    if (/\.[a-z0-9]{2,5}$/i.test(p)) {
+      var slash = p.lastIndexOf("/");
+      if (slash > 0) p = p.slice(0, slash);
+    }
+    return p.replace(/\/+$/, "");
+  }
+
+  /** Porównanie ścieżek niezależne od litery dysku / Marketing root (X: vs D:). */
+  function pathTailKey(p) {
+    var s = normFolderPath(p);
+    s = s.replace(/^[a-z]:/, "");
+    s = s.replace(/^\/+marketing\/?/i, "/");
+    s = s.replace(/^\/+/, "");
+    return s;
+  }
+
   function findRevisionByFolderPath(data, productId, folderPath) {
-    var want = normFolderPath(folderPath);
-    if (!want || !data) return null;
-    var prod = (data.products || []).find(function (p) {
+    var seedRaw = folderPathFromPicked(folderPath) || folderPath;
+    var seed = normFolderPath(seedRaw);
+    if (!seed || !data) return null;
+    var products = data.products || [];
+    var prod = products.find(function (p) {
       return p && p.id === productId;
     });
-    if (!prod) return null;
-    var revs = prod.revisions || [];
-    for (var i = 0; i < revs.length; i++) {
-      var r = revs[i];
-      if (!r) continue;
-      if (normFolderPath(r.path) === want) return { product: prod, revision: r };
-      if (r.folder && want.endsWith("/" + normFolderPath(r.folder))) return { product: prod, revision: r };
-      var seg = want.split("/").pop() || "";
-      if (seg && (String(r.folder || "") === seg || normFolderPath(r.path).split("/").pop() === seg)) {
-        return { product: prod, revision: r };
+
+    function matchInProduct(targetProd) {
+      if (!targetProd) return null;
+      var revs = targetProd.revisions || [];
+      var prodPath = normFolderPath(targetProd.path);
+      var prodTail = pathTailKey(targetProd.path);
+      var seedTail = pathTailKey(seed);
+      /* Picked product root (combo folder under KULKI) → latest revision. */
+      if (
+        (prodPath && seed === prodPath) ||
+        (prodTail && seedTail && prodTail === seedTail)
+      ) {
+        if (revs.length) {
+          return { product: targetProd, revision: revs[revs.length - 1] };
+        }
+      }
+      var candidates = [];
+      var cur = seed;
+      for (var up = 0; up < 10 && cur; up++) {
+        candidates.push(cur);
+        var slash = cur.lastIndexOf("/");
+        if (slash <= 2) break;
+        cur = cur.slice(0, slash);
+      }
+      function matchRev(want) {
+        var wantTail = pathTailKey(want);
+        var wantSeg = want.split("/").pop() || "";
+        for (var i = 0; i < revs.length; i++) {
+          var r = revs[i];
+          if (!r) continue;
+          var rPath = normFolderPath(r.path);
+          var rTail = pathTailKey(r.path);
+          if (rPath && rPath === want) return { product: targetProd, revision: r };
+          if (rTail && wantTail && rTail === wantTail) return { product: targetProd, revision: r };
+          if (rPath && want.indexOf(rPath + "/") === 0) {
+            return { product: targetProd, revision: r };
+          }
+          if (rTail && wantTail && wantTail.indexOf(rTail + "/") === 0) {
+            return { product: targetProd, revision: r };
+          }
+          if (r.folder && want.endsWith("/" + normFolderPath(r.folder))) {
+            return { product: targetProd, revision: r };
+          }
+          var rSeg = rPath ? rPath.split("/").pop() : "";
+          if (
+            wantSeg &&
+            !/\.[a-z0-9]{2,5}$/i.test(wantSeg) &&
+            (String(r.folder || "").toLowerCase() === wantSeg || rSeg === wantSeg)
+          ) {
+            return { product: targetProd, revision: r };
+          }
+        }
+        return null;
+      }
+      for (var c = 0; c < candidates.length; c++) {
+        var hit = matchRev(candidates[c]);
+        if (hit) return hit;
+      }
+      return null;
+    }
+
+    var hit = matchInProduct(prod);
+    if (hit) return hit;
+    /* Sibling product folder under same category (e.g. other BANOFFEE combo). */
+    var seedTail = pathTailKey(seed);
+    for (var pi = 0; pi < products.length; pi++) {
+      var p2 = products[pi];
+      if (!p2 || (prod && p2.id === prod.id)) continue;
+      var p2Tail = pathTailKey(p2.path);
+      if (
+        seedTail &&
+        p2Tail &&
+        (seedTail === p2Tail || seedTail.indexOf(p2Tail + "/") === 0 || p2Tail.indexOf(seedTail + "/") === 0)
+      ) {
+        hit = matchInProduct(p2);
+        if (hit) return hit;
       }
     }
     return null;
@@ -996,9 +1169,12 @@
         var label = variantChipLabel(v, null) || v.product_name || id;
         return {
           id: id,
+          variant_key: productVariantKey(v),
           name: label,
           label: label,
           path: v.path || v.revision_path || "",
+          thumb: v.thumb_url || "",
+          thumb_url: v.thumb_url || "",
           index: v.index_base || v.index || v.product_index || "",
         };
       })
@@ -1043,14 +1219,12 @@
     return (
       '<div class="dam-media-preview__assoc dam-media-preview__assoc--variants-only dam-viz-modal__product-variants">' +
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--variants">' +
-      '<div class="dam-media-preview__assoc-label-row">' +
+      '<div class="dam-media-preview__assoc-label-row dam-viz-modal__assoc-label-row">' +
       '<span class="dam-media-preview__assoc-label">Warianty produktu</span>' +
-      '<button type="button" class="dam-assoc-edit-all" data-assoc-edit-all="variant" hidden>Edytuj wszystko</button>' +
+      '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="variants" data-dam-tip="Dodaj lub edytuj warianty produktu (indeks / jezyk)">' +
+      '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj/Edytuj warianty</span></button>' +
       "</div>" +
       '<div class="dam-viz-modal__variant-strip dam-media-preview__variant-grid dam-media-preview__variant-grid--product" role="listbox" aria-label="Warianty produktu">' +
-      /* Shift+Admin square Dodaj — revealed by DamAdminShiftPlus / DamAssocEdit */
-      '<button type="button" class="dam-media-preview__assoc-plus-tile dam-admin-shift-plus dam-admin-shift-plus--tile" aria-label="Dodaj wariant produktu" data-product-variant-plus="1">' +
-      '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj</span></button>' +
       reps
         .map(function (rep) {
           var v = rep.v;
@@ -1258,50 +1432,46 @@
     paintActive();
     paintSelection();
 
-    /* Shift+Admin square Dodaj for WARIANTY PRODUKTU */
-    var plusBtn = strip.querySelector("[data-product-variant-plus], .dam-media-preview__assoc-plus-tile");
-    var canAdminPlus =
-      window.DamAdminShiftPlus && typeof window.DamAdminShiftPlus.isAdmin === "function"
-        ? window.DamAdminShiftPlus.isAdmin()
-        : window.DamTagEdit &&
-          typeof window.DamTagEdit.isPrivileged === "function" &&
-          window.DamTagEdit.isPrivileged();
-    if (!canAdminPlus && plusBtn) {
-      plusBtn.remove();
-      plusBtn = null;
-    }
-    if (plusBtn) {
-      if (window.DamAdminShiftPlus && typeof window.DamAdminShiftPlus.mount === "function") {
-        window.DamAdminShiftPlus.mount(plusBtn, "tile");
-      }
-      if (window.DamAdminShiftPlus && typeof window.DamAdminShiftPlus.ensureLatch === "function") {
-        window.DamAdminShiftPlus.ensureLatch();
-      }
-      /* Click handled by DamAssocEdit.ensureShiftHoverAssocUx (avoid double openEditPicker). */
-    }
+    var variantsPane = strip.closest(".dam-viz-modal__product-variants") || strip;
+    var variantCandidates = vizItemsAsVariantCandidates(items);
+    var variantPinnedIds = productVariantRepresentatives(items)
+      .map(function (rep) {
+        var v = rep.v;
+        if (!v) return "";
+        return String(v.id || v.path || v.revision_path || "");
+      })
+      .filter(Boolean);
+    var variantsCtx = Object.assign(
+      {
+        productContext: items[0] || null,
+        variantPinnedIds: variantPinnedIds,
+        variantCandidates: variantCandidates,
+        groupContext: {
+          product_id: (items[0] && items[0].product_id) || "",
+          variants: variantCandidates,
+          variantCandidates: variantCandidates,
+        },
+        onRemoveProductVariant: function (vkey, vpath) {
+          if (uxExtras && typeof uxExtras.onRemoveProductVariant === "function") {
+            uxExtras.onRemoveProductVariant(vkey, vpath);
+          }
+        },
+      },
+      uxExtras || {}
+    );
+    variantsPane._damAssocCtx = variantsCtx;
+    var vizModalRoot = strip.closest("#damVizModal");
+    if (vizModalRoot) vizModalRoot._damVizVariantsCtx = variantsCtx;
     if (
       window.DamAssocEdit &&
-      typeof window.DamAssocEdit.ensureShiftHoverAssocUx === "function" &&
-      canAdminPlus
+      typeof window.DamAssocEdit.ensureShiftHoverAssocUx === "function"
     ) {
-      window.DamAssocEdit.ensureShiftHoverAssocUx(
-        strip.closest(".dam-viz-modal__product-variants") || strip,
-        Object.assign(
-          {
-            productContext: items[0] || null,
-            groupContext: {
-              product_id: (items[0] && items[0].product_id) || "",
-              variants: vizItemsAsVariantCandidates(items),
-            },
-            onRemoveProductVariant: function (vkey, vpath) {
-              if (uxExtras && typeof uxExtras.onRemoveProductVariant === "function") {
-                uxExtras.onRemoveProductVariant(vkey, vpath);
-              }
-            },
-          },
-          uxExtras || {}
-        )
-      );
+      window.DamAssocEdit.ensureShiftHoverAssocUx(variantsPane, variantsCtx);
+    }
+    if (window.DamAssocEdit && typeof window.DamAssocEdit.bindVizAssocCtas === "function") {
+      window.DamAssocEdit.bindVizAssocCtas(vizModalRoot || variantsPane, {
+        variantsCtx: variantsCtx,
+      });
     }
 
     return {
@@ -2270,8 +2440,12 @@
 
     var assocColHtml =
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--materials dam-viz-modal__assoc">' +
-      '<div class="dam-media-preview__assoc-label-row">' +
+      '<div class="dam-media-preview__assoc-label-row dam-viz-modal__assoc-label-row">' +
       '<span class="dam-media-preview__assoc-label" id="damVizModalAssocLabel">Skojarzone materiały</span>' +
+      (admin
+        ? '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="suggestions" data-dam-tip="Dodaj lub edytuj sugestie materialow brandingowych">' +
+          '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj/Edytuj sugestie</span></button>'
+        : "") +
       "</div>" +
       '<div class="dam-media-preview__assoc-grid" id="damVizModalAssoc" role="list"></div></div>';
     var actionsHtml =
@@ -2437,6 +2611,7 @@
        expanded studio / Pokaż wszystkie grid. */
     var html =
       '<div class="dam-viz-modal-overlay" id="damVizModal" role="dialog" aria-modal="true" aria-label="Podglad wizualizacji">' +
+      '<div class="dam-viz-modal-shell">' +
       '<div class="dam-viz-modal-box dam-viz-modal-box--assoc-split">' +
       '<div class="dam-viz-modal__main">' +
       thumbHtml +
@@ -2448,24 +2623,55 @@
       '<aside class="dam-viz-modal__assoc-pane" aria-label="Skojarzone materiały">' +
       assocColHtml +
       "</aside>" +
-      /* Close LAST in DOM so it paints above assoc-pane (was covered at top-right). */
-      '<button type="button" class="dam-viz-modal-close" id="damVizModalClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
+      "</div>" +
+      /* Close on shell (above assoc-pane / overlays inside box). */
+      '<button type="button" class="dam-viz-modal-close" id="damVizModalClose" aria-label="Zamknij"><i class="uil uil-times" aria-hidden="true"></i></button>' +
       "</div></div>";
 
     if (!document.getElementById("dam-viz-modal-css")) {
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=vizModalFix20260723m";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=vizCloseFix20260724d";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=vizModalFix20260723m";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=vizCloseFix20260724d";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
     var modal = document.getElementById("damVizModal");
+    if (window.DamAssocEdit && typeof window.DamAssocEdit.bindVizAssocCtas === "function") {
+      window.DamAssocEdit.bindVizAssocCtas(modal, {});
+    }
+    var vizProductCtx = {
+      id: resolveBrandingProductId(
+        first.product_id || "",
+        displayIndex(first) || first.index_base || ""
+      ),
+      name: productName,
+      index: displayIndex(first) || first.index_base || "",
+      revision_path: first.revision_path || "",
+    };
+    /* P1 sync ctx20260726a: karteczka od razu; lista materialow — async enrich. */
+    if (window.DamAssocEdit && typeof window.DamAssocEdit.seedMaterialsCtx === "function") {
+      window.DamAssocEdit.seedMaterialsCtx(modal, {
+        productContext: vizProductCtx,
+        onRefresh: function () {
+          if (
+            window.DamMediaPreview &&
+            typeof window.DamMediaPreview.renderLinkedAssetsInto === "function"
+          ) {
+            window.DamMediaPreview.renderLinkedAssetsInto(
+              document.getElementById("damVizModalAssoc"),
+              document.getElementById("damVizModalAssocLabel"),
+              vizProductCtx
+            );
+          }
+        },
+      });
+    }
     /* Strip leftover pickers from prior session so X is never covered (z-index 12100). */
     [
       "damAssocEditOverlay",
@@ -2511,12 +2717,7 @@
       window.DamMediaPreview.renderLinkedAssetsInto(
         document.getElementById("damVizModalAssoc"),
         document.getElementById("damVizModalAssocLabel"),
-        {
-          id: first.product_id || "",
-          name: productName,
-          index: displayIndex(first) || first.index_base || "",
-          revision_path: first.revision_path || "",
-        }
+        vizProductCtx
       );
     } else {
       var assocMount = document.getElementById("damVizModalAssoc");
@@ -2570,8 +2771,14 @@
       global._damVizModalRefresh = null;
       global._damVizModalItems = null;
       global._damVizModalActiveIdx = null;
+      global._damVizModalTeardown = null;
       if (modal && modal.parentNode) modal.remove();
     }
+
+    global._damVizModalTeardown = function () {
+      closeVariantInfoPopover();
+      removeModal();
+    };
 
     modal.querySelectorAll("[data-request-lang]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
@@ -2662,23 +2869,65 @@
       }
     }
 
-    function mergeVariantFromPicker(payload) {
-      payload = payload || {};
-      var folderPath = payload.addedVariantPath;
-      if (!folderPath) return;
+    function unlockAssocUiAfterVariantFail() {
+      try {
+        if (window.DamAssocEdit && typeof window.DamAssocEdit.closePicker === "function") {
+          window.DamAssocEdit.closePicker();
+        }
+      } catch (eClose) {
+        /* ignore */
+      }
+      try {
+        var thumb = document.getElementById("damThumbPicker");
+        if (thumb) thumb.remove();
+        var overlay = document.getElementById("damAssocEditOverlay");
+        if (overlay) overlay.remove();
+      } catch (eDom) {
+        /* ignore */
+      }
+    }
+
+    function showIndexProgress(on) {
+      var id = "damIndexProgressCorner";
+      var el = document.getElementById(id);
+      if (!on) {
+        if (el) el.remove();
+        return;
+      }
+      if (el) return;
+      el = document.createElement("div");
+      el.id = id;
+      el.setAttribute("role", "status");
+      el.textContent = "Indeksowanie…";
+      el.style.cssText =
+        "position:fixed;right:20px;bottom:84px;z-index:12950;pointer-events:none;" +
+        "padding:8px 12px;border-radius:999px;background:#fff;border:1px solid #ececf2;" +
+        "box-shadow:0 4px 16px rgba(40,36,56,.12);font-size:12px;font-weight:600;color:#464255;";
+      document.body.appendChild(el);
+    }
+
+    function reloadFileIndexFresh() {
+      var p =
+        window.DamSearch && typeof window.DamSearch.load === "function"
+          ? window.DamSearch.load({ force: true })
+          : fetch("data/file-index.json?_=" + Date.now()).then(function (r) {
+              if (!r.ok) throw new Error("file-index");
+              return r.json();
+            });
+      return Promise.resolve(p).then(function (data) {
+        if (data && data.products) {
+          indexData = data;
+          window._DAM_FILE_INDEX = data;
+        }
+        return indexData;
+      });
+    }
+
+    function mergeProductsFromVariantPicker(productIds) {
+      productIds = (productIds || []).map(String).filter(Boolean);
       var pid = (items[0] && items[0].product_id) || "";
-      if (!pid || !indexData) {
+      if (!pid || !indexData || !productIds.length) {
         showToast("Brak indeksu produktu — odśwież stronę.");
-        return;
-      }
-      var hit = findRevisionByFolderPath(indexData, pid, folderPath);
-      if (!hit) {
-        showToast("Nie znaleziono rewizji w indeksie dla tego folderu. Uruchom rebuild indeksu.");
-        return;
-      }
-      var newRows = expandModalWizkiVariants(vizRowsFromRevision(indexData, hit.product, hit.revision));
-      if (!newRows.length) {
-        showToast("Nie udało się zbudować wariantu z tego folderu.");
         return;
       }
       var existingKeys = {};
@@ -2686,26 +2935,146 @@
         existingKeys[productVariantKey(it)] = true;
       });
       var added = 0;
-      newRows.forEach(function (row) {
-        var k = productVariantKey(row);
-        if (k && existingKeys[k]) return;
-        if (k) existingKeys[k] = true;
-        items.push(row);
-        added++;
+      productIds.forEach(function (selPid) {
+        if (selPid === pid) return;
+        var prod = (indexData.products || []).find(function (p) {
+          return p && p.id === selPid;
+        });
+        if (!prod || !prod.revisions || !prod.revisions.length) return;
+        var rev = prod.revisions[0];
+        var hit = { product: prod, revision: rev };
+        var newRows = expandModalWizkiVariants(vizRowsFromRevision(indexData, hit.product, hit.revision));
+        newRows.forEach(function (row) {
+          var k = productVariantKey(row);
+          if (k && existingKeys[k]) return;
+          if (k) existingKeys[k] = true;
+          items.push(row);
+          added++;
+        });
+        var persistPath = rev.path || "";
+        if (persistPath) persistLinkedVariant(pid, persistPath);
       });
       if (!added) {
-        showToast("Ten wariant jest już na liście.");
+        showToast("Brak nowych wariantow do dodania.");
         return;
       }
-      persistLinkedVariant(pid, hit.revision.path || folderPath);
       rebuildVariantStripDom();
       selectVariant(items.length - 1);
-      showToast("Dodano wariant produktu.");
+      showToast("Dodano warianty produktu.");
+    }
+
+    function mergeVariantFromPicker(payload) {
+      payload = payload || {};
+      var rawPath = payload.addedVariantPath;
+      if (!rawPath) {
+        unlockAssocUiAfterVariantFail();
+        return;
+      }
+      /* Folder picker often returns a FILE — persist/lookup needs revision folder. */
+      var folderPath = folderPathFromPicked(rawPath) || rawPath;
+      var pid = (items[0] && items[0].product_id) || "";
+      if (!pid || !indexData) {
+        showToast("Brak indeksu produktu — odśwież stronę.");
+        unlockAssocUiAfterVariantFail();
+        return;
+      }
+
+      function applyHit(hit) {
+        if (!hit) {
+          showToast(
+            "Nie znaleziono rewizji dla tego folderu w indeksie DAM (UI odblokowane)."
+          );
+          unlockAssocUiAfterVariantFail();
+          showIndexProgress(false);
+          return;
+        }
+        var newRows = expandModalWizkiVariants(vizRowsFromRevision(indexData, hit.product, hit.revision));
+        if (!newRows.length) {
+          showToast("Nie udało się zbudować wariantu z tego folderu.");
+          unlockAssocUiAfterVariantFail();
+          showIndexProgress(false);
+          return;
+        }
+        var existingKeys = {};
+        items.forEach(function (it) {
+          existingKeys[productVariantKey(it)] = true;
+        });
+        var added = 0;
+        newRows.forEach(function (row) {
+          var k = productVariantKey(row);
+          if (k && existingKeys[k]) return;
+          if (k) existingKeys[k] = true;
+          items.push(row);
+          added++;
+        });
+        if (!added) {
+          showToast("Ten wariant jest już na liście.");
+          unlockAssocUiAfterVariantFail();
+          showIndexProgress(false);
+          return;
+        }
+        var persistPath = hit.revision.path || folderPath;
+        persistLinkedVariant(pid, persistPath);
+        rebuildVariantStripDom();
+        selectVariant(items.length - 1);
+        showToast("Dodano wariant produktu.");
+        unlockAssocUiAfterVariantFail();
+        showIndexProgress(false);
+      }
+
+      var hit = findRevisionByFolderPath(indexData, pid, folderPath);
+      if (hit) {
+        applyHit(hit);
+        return;
+      }
+      /* Miss: trigger real-time index rebuild, then retry lookup (no permanent freeze). */
+      unlockAssocUiAfterVariantFail();
+      showIndexProgress(true);
+      showToast("Szukam folderu w indeksie / odświeżam z dysku…");
+      var bridge =
+        (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function"
+          ? window.DamRuntime.bridgeUrl()
+          : null) ||
+        (window.DamRuntime && window.DamRuntime.bridge) ||
+        "http://127.0.0.1:8766";
+      fetch(bridge + "/index/rebuild", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: "{}",
+      })
+        .catch(function () {
+          return null;
+        })
+        .then(function () {
+          return new Promise(function (resolve) {
+            setTimeout(resolve, 1200);
+          });
+        })
+        .then(function () {
+          return reloadFileIndexFresh();
+        })
+        .then(function () {
+          applyHit(findRevisionByFolderPath(indexData, pid, folderPath));
+        })
+        .catch(function () {
+          showToast(
+            "Ten folder nie jest jeszcze w indeksie DAM. Spróbuj ponownie za chwilę (UI odblokowane)."
+          );
+          unlockAssocUiAfterVariantFail();
+          showIndexProgress(false);
+        });
     }
 
     var variantUxExtras = {
       onRefresh: function (payload) {
+        if (payload && payload.productIds) {
+          mergeProductsFromVariantPicker(payload.productIds);
+          return;
+        }
         mergeVariantFromPicker(payload);
+      },
+      onConfirmVariants: function (productIds) {
+        mergeProductsFromVariantPicker(productIds || []);
       },
       onRemoveProductVariant: function (vkey, vpath) {
         if (!vkey) return;
@@ -2963,6 +3332,17 @@
       if (res.langs && res.langs.length) {
         v.langs = res.langs.slice();
         v.lang = res.langs[0] || v.lang;
+      }
+      if (res.kind === "category" && res.code) {
+        v.category = res.code;
+      }
+      if (res.kind === "subcategory" && res.code) {
+        v.subcategory_slug = res.code;
+        v.subcategory = res.code;
+      }
+      if (res.kind === "index" && res.code) {
+        v.index_base = String(res.code).split(".")[0];
+        v.indexes = [String(res.code)];
       }
       refreshModalBadgesAndAdmin();
       applyFilters();
@@ -3336,16 +3716,8 @@
 
     var closeBtn = document.getElementById("damVizModalClose");
     if (closeBtn) {
-      closeBtn.addEventListener(
-        "click",
-        function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          closeVariantInfoPopover();
-          removeModal();
-        },
-        true
-      );
+      closeBtn.addEventListener("pointerdown", requestCloseVizModal, true);
+      closeBtn.addEventListener("click", requestCloseVizModal, true);
     }
     modal.addEventListener("click", function (e) {
       if (e.target === modal) {
@@ -3353,46 +3725,6 @@
         removeModal();
       }
     });
-    /**
-     * HARD: orphaned #damAssocEditOverlay (z-index ~12100) sits ABOVE #damVizModal (~9999)
-     * and eats clicks on X. Capture mousedown: backdrop click strips overlays; click over
-     * close-button geometry always closes modal even when overlay intercepts.
-     */
-    document.addEventListener(
-      "mousedown",
-      function onVizModalBlockerGuard(e) {
-        if (!document.getElementById("damVizModal")) {
-          document.removeEventListener("mousedown", onVizModalBlockerGuard, true);
-          return;
-        }
-        var t = e.target;
-        if (t && (t.id === "damAssocEditOverlay" || t.id === "damThumbPicker")) {
-          forceStripBlockingOverlays();
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        var xBtn = document.getElementById("damVizModalClose");
-        if (!xBtn) return;
-        var r = xBtn.getBoundingClientRect();
-        if (
-          e.clientX < r.left ||
-          e.clientX > r.right ||
-          e.clientY < r.top ||
-          e.clientY > r.bottom
-        ) {
-          return;
-        }
-        var topEl = document.elementFromPoint(e.clientX, e.clientY);
-        if (topEl === xBtn || (xBtn.contains && xBtn.contains(topEl))) return;
-        /* Something (overlay) sits on top of X — force close modal. */
-        e.preventDefault();
-        e.stopPropagation();
-        closeVariantInfoPopover();
-        removeModal();
-      },
-      true
-    );
     document.addEventListener("keydown", function onEsc(e) {
       if (!document.getElementById("damVizModal")) {
         document.removeEventListener("keydown", onEsc);
@@ -3965,10 +4297,34 @@
   function productMeta(pid) {
     var fi = window._DAM_FILE_INDEX;
     if (!fi || !fi.products) return null;
+    var needle = String(pid || "").trim();
+    if (!needle) return null;
     for (var i = 0; i < fi.products.length; i++) {
-      if (fi.products[i].id === pid) return fi.products[i];
+      if (fi.products[i].id === needle) return fi.products[i];
+    }
+    if (/^\d+$/.test(needle)) {
+      for (var j = 0; j < fi.products.length; j++) {
+        var p = fi.products[j];
+        if (!p) continue;
+        if (String(p.index || "") === needle) return p;
+        var bases = p.index_bases || [];
+        var idxs = p.indexes || [];
+        if (bases.indexOf(needle) >= 0 || idxs.indexOf(needle) >= 0) return p;
+      }
     }
     return null;
+  }
+
+  function resolveBrandingProductId(rawId, idxHint) {
+    var pid = String(rawId || "").trim();
+    if (!pid && !idxHint) return "";
+    var meta = pid ? productMeta(pid) : null;
+    if (meta && meta.id) return meta.id;
+    if (idxHint) {
+      meta = productMeta(String(idxHint).split(".")[0]);
+      if (meta && meta.id) return meta.id;
+    }
+    return pid;
   }
 
   /* "balls_raw" / "balls-raw" -> "balls raw" - zeby query i blob mialy ta sama
@@ -4351,10 +4707,21 @@
       })
       .then(function (fileFlags) {
         if (!fileFlags || typeof fileFlags !== "object") return;
+        /* HARD: keep linked/unlinked variants — older merge dropped them (race wipe after add). */
         vizFlags = {
           demo: Object.assign({}, fileFlags.demo || {}, vizFlags.demo || {}),
           hidden: Object.assign({}, fileFlags.hidden || {}, vizFlags.hidden || {}),
           manual: [].concat(fileFlags.manual || [], vizFlags.manual || []),
+          linked_variants: Object.assign(
+            {},
+            fileFlags.linked_variants || {},
+            vizFlags.linked_variants || {}
+          ),
+          unlinked_variants: Object.assign(
+            {},
+            fileFlags.unlinked_variants || {},
+            vizFlags.unlinked_variants || {}
+          ),
         };
         persistVizFlags();
         if (indexData) {
@@ -4415,24 +4782,6 @@
       indexData = data;
       langLabels = data.lang_labels || {};
       window._DAM_FILE_INDEX = data;
-      // #region agent log
-      fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "3ca09b" },
-        body: JSON.stringify({
-          sessionId: "3ca09b",
-          runId: "pre-fix",
-          hypothesisId: "H1",
-          location: "dam-viz.js:boot",
-          message: "page_index_loaded",
-          data: {
-            productsLen: (data.products || []).length,
-            fromSearchIndex: !!data._fromSearchIndex,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(function () {});
-      // #endregion
       renderSubcatPills(data.products);
       showAll = readShowAll();
       var showAllEl = document.getElementById("vizShowAll") || document.getElementById("vizLatestOnly");

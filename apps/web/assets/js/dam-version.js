@@ -1,9 +1,8 @@
 /**
  * Wersja programu DAM (single source w UI).
- * Przy releasie: podbij string tutaj ORAZ w version.json (ten sam numer).
- * 3.1.5 — EN not GB; langs PROJEKT+WIZKI; Multi search; KAR6X FRONT-L; admin AJAX tags; cache langEnTag20260721c
+ * Etykieta instancji dev: 4.0.0
  */
 (function (global) {
   "use strict";
-  global.DAM_APP_VERSION = "3.1.5";
+  global.DAM_APP_VERSION = "4.0.48";
 })(typeof window !== "undefined" ? window : globalThis);
