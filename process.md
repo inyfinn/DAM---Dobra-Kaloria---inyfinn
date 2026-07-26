@@ -1,4 +1,18 @@
-﻿## 2026-07-26 - User: commit stan 3/4 (B2/2-AA, V1/2-XA)
+﻿## 2026-07-26 - fix(assoc): viz-warianty golden path v4.0.63
+
+**Komenda/Akcja:** Po commicie 3/4 — viz „Dodaj warianty” = ten sam model co branding „Dodaj produkty”.
+
+**Log/Status:**
+1. `pickerSkipsWarmFileIndex`: usunięto `productSearchForVariants`.
+2. `renderOptions`: q&lt;2 browse `collectProductPickerRows(products, asProductRow)`; q≥2 DamSearch hits.
+3. Input: usunięto blokadę min 2 znaki przed browse.
+4. Bump **4.0.63** + cache `4.0.63-vizVariantsGolden20260726a`; sim ALL PASS.
+
+**Target:** V2/2-AA (4/4 open). Search freeze w pickerze — osobny ticket.
+
+---
+
+## 2026-07-26 - User: commit stan 3/4 (B2/2-AA, V1/2-XA)
 
 **Komenda/Akcja:** User potwierdził rollback 4.0.62; commit stanu; prześledzić dlaczego działa/nie; viz warianty = golden path jak branding produkty.
 

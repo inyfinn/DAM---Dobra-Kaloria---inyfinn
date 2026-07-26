@@ -290,14 +290,13 @@
 
   /* Skip warm TYLKO gdy lista nie pochodzi z file-index:
      - material / brandingSearch → API branding-search-picker
-     - productSearchForVariants → DamSearch (cold ensureFileIndex na viz = freeze przy open)
-     GOLDEN kind=product NIGDY tu nie wchodzi. */
+     GOLDEN kind=product + viz-warianty (productSearchForVariants) = warm file-index + lokalny browse.
+     NIGDY nie skip warm dla productSearchForVariants (4.0.63 — jak branding „Dodaj produkty”). */
   function pickerSkipsWarmFileIndex(opts) {
     return !!(
       opts &&
       (opts.kind === "material" ||
-        (opts.kind === "variant" && opts.brandingSearch) ||
-        opts.productSearchForVariants)
+        (opts.kind === "variant" && opts.brandingSearch))
     );
   }
 
@@ -1914,10 +1913,8 @@
         var listEl = pop.querySelector(".dam-assoc-edit-popover__list");
         if (!listEl) return;
         var minQ = 0;
-        /* Viz-warianty / wariant-pool: min 2 znaki. GOLDEN product: minQ=0 (browse pierwsze CAP). */
-        if (opts.productSearchForVariants) {
-          minQ = 2;
-        } else if (opts.kind === "variant" && !opts.productSearchForVariants && !opts.brandingSearch) {
+        /* Material / brandingSearch wariant bez seed: min 2 znaki. GOLDEN product + viz-warianty: minQ=0 browse CAP. */
+        if (opts.kind === "variant" && !opts.productSearchForVariants && !opts.brandingSearch) {
           minQ = 2;
         } else if (opts.kind === "material" && !materialEntries.length) {
           minQ = 2;
@@ -1941,16 +1938,28 @@
         var seenIdx = {};
         var items = [];
         if (opts.kind === "variant" && opts.productSearchForVariants) {
-          /* TYLKO DamSearch hits — NIGDY fallback na pełne products[] (to zacinało UI). */
-          items = collectProductPickerRows(productSearchHits, {
-            pinnedSet: pinnedSet,
-            excl: excl,
-            q: "",
-            filterType: opts.filterType || "product",
-            cap: PICKER_LIST_CAP,
-            asProductRow: true,
-            expandedProductId: expandedProductId,
-          });
+          /* Golden path jak branding „Dodaj produkty”: browse q<2 = for+break na products; q≥2 = DamSearch hits. */
+          if (q.length >= 2) {
+            items = collectProductPickerRows(productSearchHits, {
+              pinnedSet: pinnedSet,
+              excl: excl,
+              q: "",
+              filterType: opts.filterType || "product",
+              cap: PICKER_LIST_CAP,
+              asProductRow: true,
+              expandedProductId: expandedProductId,
+            });
+          } else {
+            items = collectProductPickerRows(products, {
+              pinnedSet: pinnedSet,
+              excl: excl,
+              q: "",
+              filterType: opts.filterType || "product",
+              cap: PICKER_LIST_CAP,
+              asProductRow: true,
+              expandedProductId: expandedProductId,
+            });
+          }
         } else if (opts.kind === "variant" && opts.brandingSearch) {
           (materialEntries.length ? materialEntries : []).forEach(function (material) {
             if (items.length >= PICKER_LIST_CAP) return;
@@ -2188,11 +2197,6 @@
             scheduleProductSearchFetch(raw);
             return;
           }
-          if (opts.productSearchForVariants && qq.length < 2) {
-            productSearchHits = [];
-            showListMessage("Wpisz co najmniej 2 znaki (indeks / nazwa produktu)…");
-            return;
-          }
           if (pickerUsesBrandingApi(opts) && qq.length >= 2) {
             scheduleMaterialSearchFetch(raw);
             return;
@@ -2232,6 +2236,7 @@
           renderOptionsDebounced(search ? search.value : "");
         });
       } else if (opts.kind === "variant" && opts.productSearchForVariants) {
+        /* Ten sam init co golden kind=product */
         renderOptionsDebounced("");
       } else if (opts.kind === "variant") {
         if ((opts.variantCandidates || []).length <= 40) renderOptionsDebounced("");

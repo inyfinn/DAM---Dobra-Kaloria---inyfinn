@@ -391,7 +391,8 @@ v3.1.5 = `2b3873a` — **sync** `input → renderOptions(value)`, bez debounce s
 | working 4.0.58–59 | 4.0.58/59 | scheduleListPaint + shell-first hydrate; DamSearch `light` | Branding PASS; **viz CDP timeout** | Viz main-thread + poll false-FREEZE; material bez init list paint |
 | working **4.0.60** | 4.0.60 | Material always `scheduleListPaint`; sync Szukam; DamSearch `light`; e2e `#damAssocEditSearch` only | Stary e2e: false PASS (sync paint); **Mode B** = prawda (card+CTA+async) | Predykcja viz freeze — weryfikuj Mode B, nie sync 0ms |
 | working **4.0.61** | 4.0.61 | Product cold open: **no** `ensureFileIndex()` after shell (DamSearch.load parse = post-CTA FREEZE) | Mode B caught hang; Mode A sync paint false PASS | Manual Ctrl+F5 nadal wyższy priorytet do potwierdzenia |
-| **4.0.62 rollback** | 4.0.62 | Przywrócono bundle `5cf1ca4` (`renderOptionsDebounced`, golden `ensureFileIndex`, `pickerSkipsWarmFileIndex` bez product) | **4 CTA open** (baseline v4.0.56); search freeze nadal znany | 4.0.58–61 usunęły debounce + zablokowały cold product open → **żaden przycisk** |
+| **4.0.62 rollback** | 4.0.62 | Przywrócono bundle `5cf1ca4` | **3/4** B2/2-AA V1/2-XA | viz-warianty skip-warm + minQ=2 |
+| **4.0.63** | 4.0.63 | Viz-warianty = golden product path (warm index, browse CAP, DamSearch q≥2) | Target **4/4** open | test user Ctrl+F5 |
 
 **PREDICTION rule:** po tej tabeli zawsze wskaż CTA najbardziej ryzykowne na bieżącej wersji i zweryfikuj w e2e **Mode B** (patrz `process.md`). Stary raport „connection false-FREEZE cleared” bez Mode B = nieważny.
 

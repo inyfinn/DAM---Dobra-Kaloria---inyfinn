@@ -48,7 +48,7 @@ function ok(name, cond, detail) {
 
 
 
-ok("version 4.0.62", ver.version === "4.0.62");
+ok("version 4.0.63", ver.version === "4.0.63");
 
 ok("bindVizAssocCtas export", /bindVizAssocCtas:\s*bindVizAssocCtas/.test(assoc));
 
@@ -84,8 +84,11 @@ ok(
 );
 
 ok(
-  "viz variant productSearchForVariants",
-  /productSearchForVariants/.test(assoc) && /onConfirmVariants\(ids\)/.test(assoc)
+  "viz variant golden warm index",
+  /productSearchForVariants/.test(assoc) &&
+    !/opts\.productSearchForVariants\)\s*\)/.test(
+      assoc.slice(assoc.indexOf("function pickerSkipsWarmFileIndex"), assoc.indexOf("function collectProductPickerRows"))
+    )
 );
 
 ok(
@@ -137,7 +140,7 @@ ok(
 ok(
   "cache token all assoc pages",
   [branding, visualizations, explorer, dashboard].every(function (html) {
-    return /4\.0\.62-rollbackAssocOpen20260726a/.test(html);
+    return /4\.0\.63-vizVariantsGolden20260726a/.test(html);
   })
 );
 
