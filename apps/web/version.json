@@ -1,7 +1,7 @@
 {
-  "version": "4.0.57",
+  "version": "4.0.62",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-07-26",
-  "note": "4.0.57: viz-warianty skip cold file-index; picker search via DamSearch/API; for+break CAP."
+  "note": "4.0.62: rollback 4.0.58-4.0.61 assoc regressions; restore 5cf1ca4 open path (4 CTA open)."
 }

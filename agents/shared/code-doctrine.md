@@ -354,7 +354,71 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
 
+### 2026-07-26 — Probe false PASS: openPicker ≠ real click; sync paint ≠ DamSearch async
+
+**Objaw:** Agent raportował „all 4 CTA PASS” (search_ms 0–1) podczas gdy user widział FREEZE na viz CTA. Resilience probe też dawał PASS.
+
+**Root cause (infrastruktura testów, nie dowód niewinności JS):**
+1. **Programmatic `openPicker()`** omija realny UI path (card → modal → CTA click) — mierzy inny kod niż user.
+2. **Sync paint 0–1 ms** po `input` (natychmiastowe „Szukam…”) ≠ pełny cykl async DamSearch+filter; stare e2e kończyło PASS na sync paint.
+3. **`localStorage` / `window` w Node** → `ReferenceError: localStorage is not defined` — diagnostyka poza przeglądarką nic nie mierzy.
+4. **Zepsuty WebSocket URL** (DOMException) → warstwa CDP martwa; „connection false-FREEZE recovered” ≠ JS OK.
+5. **Resilience PASS ≠ e2e PASS** gdy kryteria się rozjeżdżają — jedna prawda: Mode B.
+
+**Zasada (HARD):**
+- overall_pass CTA = **Mode B only**: real card click → real `[data-viz-assoc-cta]` → `#damAssocEditSearch` → poll ≤8s na options / settled message; freeze jeśli main thread >2s lub brak update.
+- Mode A (programmatic + sync paint) tylko etykieta diagnostyczna — **nigdy** nie ustawia overall pass.
+- Browser API wyłącznie w stringach `Runtime.evaluate` / `Page.addScriptToEvaluateOnNewDocument`.
+- WS URL wyłącznie z `/json/list` → `webSocketDebuggerUrl` (normalize `127.0.0.1`), nigdy ręcznie sklejany bez walidacji.
+- „Connection recovered” na starym sync-paint probe **nie** dowodzi niewinności kodu.
+- Manual Ctrl+F5 usera > automated PASS dopóki Mode B nie jest zielone.
+- **Branding hydrate storm:** po siatce kart / `loadSearchIndex` main thread bywa zajęty >5s — Mode B musi czekać na quiet ping (`1+1` <250ms ×3) zanim kliknie CTA. `enrichLinkedProducts` **nie** wolno wołać `ensureFileIndex`/`DamSearch.load` (seed only gdy brak warm cache). Product cold open **nie** woła `ensureFileIndex` po shellu.
+
+**Źródła:** `scripts/qa/lib/dam-cdp-assoc-probe-core.js`, `dam-assoc-picker-e2e-probe.js`, `dam-cdp-resilience-probe.js`.
+
+### REFERENCE: assoc picker search history (2026-07-26)
+
+Źródło: `git log -20` na `dam-assoc-edit.js` / `dam-search.js` / `dam-media-preview.js` / `dam-viz.js`.
+v3.1.5 = `2b3873a` — **sync** `input → renderOptions(value)`, bez debounce scheduleListPaint.
+
+| Commit | Version | Search model | Worked / froze | Why |
+|--------|---------|--------------|----------------|-----|
+| `2b3873a` | **3.1.5** | Sync `input→renderOptions`; init `renderOptions("")`; no DamSearch debounce on picker | **Worked** (golden UX) | Mała lista / sync paint; brak cold full-index scan w handlerze |
+| `092821f` | 3.1.6 era | Backup / Geex realign | Mixed | Baseline przed 4.x assoc refactor |
+| `e91aba0` | 4.0.48 | Pinned ≠ candidate pool; golden ensureFileIndex | Fixed freeze on open renderPinned | `renderPinned` × tysiące kandydatów |
+| `5fb3493` | 4.0.49 | Unify picker; viz variants → product-index search | Worked (unify) | bootstrapQuery + material list; footer Dodaj z dysku |
+| `5cf1ca4` | 4.0.57 | **for+break CAP**; viz `productSearchForVariants` + DamSearch; `pickerSkipsWarmFileIndex` | Fixed forEach freeze; **viz still risk** | forEach+return nie break; cold `ensureFileIndex` na visualizations |
+| working 4.0.58–59 | 4.0.58/59 | scheduleListPaint + shell-first hydrate; DamSearch `light` | Branding PASS; **viz CDP timeout** | Viz main-thread + poll false-FREEZE; material bez init list paint |
+| working **4.0.60** | 4.0.60 | Material always `scheduleListPaint`; sync Szukam; DamSearch `light`; e2e `#damAssocEditSearch` only | Stary e2e: false PASS (sync paint); **Mode B** = prawda (card+CTA+async) | Predykcja viz freeze — weryfikuj Mode B, nie sync 0ms |
+| working **4.0.61** | 4.0.61 | Product cold open: **no** `ensureFileIndex()` after shell (DamSearch.load parse = post-CTA FREEZE) | Mode B caught hang; Mode A sync paint false PASS | Manual Ctrl+F5 nadal wyższy priorytet do potwierdzenia |
+| **4.0.62 rollback** | 4.0.62 | Przywrócono bundle `5cf1ca4` (`renderOptionsDebounced`, golden `ensureFileIndex`, `pickerSkipsWarmFileIndex` bez product) | **4 CTA open** (baseline v4.0.56); search freeze nadal znany | 4.0.58–61 usunęły debounce + zablokowały cold product open → **żaden przycisk** |
+
+**PREDICTION rule:** po tej tabeli zawsze wskaż CTA najbardziej ryzykowne na bieżącej wersji i zweryfikuj w e2e **Mode B** (patrz `process.md`). Stary raport „connection false-FREEZE cleared” bez Mode B = nieważny.
+
+**Connection resilience (2026-07-26m+):** odpal `scripts/ops/dam-cdp-resilience-watchdog.ps1` (default max **20**, Mode B only). PASS = real UI click + async DamSearch settle. False confidence sources: (1) sync paint PASS; (2) programmatic openPicker; (3) Node `localStorage`; (4) bad WS URL; (5) CDP target `chrome-extension://…`; (6) `#vizSearch` fallback. Logi: `resilience-attempts.jsonl`, `e2e-assoc-report.json`, `last-resilience-report.md`.
+
+### 2026-07-26 — Browser MCP hang != server down (connection watchdog)
+
+**Objaw:** `cursor-ide-browser` (`browser_tabs` / `browser_navigate` / `browser_cdp` Runtime.evaluate) wisi minuty, podczas gdy `curl --max-time 5` na `:8765` / `:8766` wraca 2xx w ~2 ms.
+
+**Lekcja:** Hang MCP przegladarki **nie** oznacza, ze DAM UI/bridge nie zyje. Zawsze przed `browser_navigate`:
+1. `powershell -File scripts/ops/dam-pre-browser.ps1` (watchdog + probe w jednym; preferowane przed MCP).
+2. Albo osobno: `dam-connection-watchdog.ps1` + `node scripts/qa/dam-browser-probe.js`.
+3. Przy stuck: `powershell -File scripts/ops/dam-agent-unstick.ps1 -MaxAttempts 20`.
+
+**FREEZE log:** `logs/dam-connection/freeze-log.jsonl` (pola: ts, tool, url, outcome, latency_ms, diagnosis, recovery_action). Raport: `logs/dam-connection/last-unstick-report.md`.
+
 Format wpisu: data | obszar | objaw | przyczyna | zasada.
+
+- 2026-07-26 | **4.0.58–4.0.61 regresja — żaden CTA** | User: po v4.0.57 wszystkie 4 przyciski
+  przestały otwierać picker; v4.0.56 baseline (open OK, search freeze) utracony |
+  (1) usunięto `renderOptionsDebounced` z input init/handler; (2) product cold open
+  bez `ensureFileIndex()` + pusty `schedulePaintPicker({products:[]})` przy dużym warm
+  index; (3) `scheduleListPaint` zastąpił debounce bez golden browse |
+  **Zasada HARD:** przed kolejnym „anti-freeze” fixem — **nigdy** nie usuwać
+  `renderOptionsDebounced` ani golden `ensureFileIndex` dla `kind==="product"`.
+  Rollback = `git checkout 5cf1ca4 -- dam-assoc-edit.js` (+ HTML cache). Baseline
+  akceptowalny: 4 CTA open, search może mulić. Lekcja: v4.0.62.
 
 - 2026-07-26 | picker search freeze vs global search | `#damBrandingSearch` / `#vizSearch`
   / `#damFileSearch` OK; `#damAssocEditSearch` zacina cały UI; viz „Dodaj warianty”

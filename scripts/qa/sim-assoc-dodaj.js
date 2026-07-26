@@ -48,7 +48,7 @@ function ok(name, cond, detail) {
 
 
 
-ok("version 4.0.57", ver.version === "4.0.57");
+ok("version 4.0.62", ver.version === "4.0.62");
 
 ok("bindVizAssocCtas export", /bindVizAssocCtas:\s*bindVizAssocCtas/.test(assoc));
 
@@ -137,7 +137,7 @@ ok(
 ok(
   "cache token all assoc pages",
   [branding, visualizations, explorer, dashboard].every(function (html) {
-    return /4\.0\.57-assocSearchNoFreeze20260726i/.test(html);
+    return /4\.0\.62-rollbackAssocOpen20260726a/.test(html);
   })
 );
 

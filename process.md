@@ -1,4 +1,159 @@
-﻿## 2026-07-26 - COMMIT v4.0.57 assoc picker search freeze + macierz 20 commitów
+﻿## 2026-07-26 - User: commit stan 3/4 (B2/2-AA, V1/2-XA)
+
+**Komenda/Akcja:** User potwierdził rollback 4.0.62; commit stanu; prześledzić dlaczego działa/nie; viz warianty = golden path jak branding produkty.
+
+**Macierz CTA (stan 3/4):**
+
+| Strefa | CTA | Open | Search | Kod |
+|--------|-----|------|--------|-----|
+| **B** branding | Dodaj produkty | AA | freeze znany | `kind=product`, warm `_DAM_FILE_INDEX`, `renderOptionsDebounced`, for+break CAP |
+| **B** branding | Dodaj warianty | AA | freeze znany | `kind=variant` + `brandingSearch`, API `/branding-search-picker`, skip warm OK |
+| **V** viz | Dodaj sugestię | AA | OK | `kind=material`, seed z ctx, API |
+| **V** viz | Dodaj warianty | **X** (freeze po open) | — | `productSearchForVariants` + `pickerSkipsWarmFileIndex` → pusty index, minQ=2, brak browse |
+
+**Notacja:** B2/2-AA = oba przyciski branding otwierają; V1/2-XA = sugestie AA, warianty X (freeze).
+
+**Dlaczego B produkty działa:** `pickerSkipsWarmFileIndex` **false** → warm index lub async `ensureFileIndex` → `collectProductPickerRows(products, cap 120)` przy q&lt;2.
+
+**Dlaczego V warianty zacina:** celowo wyłączono warm index (`pickerSkipsWarmFileIndex` true dla `productSearchForVariants`); przy open sync praca na pustym stanie + po wpisaniu/expand sync `renderOptions` bez browse; regresja 4.0.58–4.0.61 zabiła wszystkie CTA — rollback 4.0.62 przywrócił 3/4.
+
+**Fix plan (4.0.63):** viz warianty → ten sam gate co golden product (warm index, minQ=0 browse, DamSearch q≥2), zachować `asProductRow` + rewizje.
+
+---
+
+## 2026-07-26 - User: przywróć v4.0.56 — żaden przycisk nie działa (rollback 4.0.62)
+
+**Komenda/Akcja:** User: nie stosuj v4.0.57+ fixów search; przywróć stan gdy 4 CTA otwierały panel (v4.0.56 baseline); wyciągnij wnioski co zepsuło 4.0.58–4.0.61.
+
+**Log/Status:**
+1. `git checkout 5cf1ca4 --` bundle assoc (dam-assoc-edit.js, dam-viz.js, dam-search.js, branding/visualizations HTML, version, sim).
+2. Bump **4.0.62** + cache `4.0.62-rollbackAssocOpen20260726a` (branding, viz, explorer, dashboard).
+3. `node --check` OK; `sim-assoc-dodaj.js` ALL PASS @4.0.62.
+4. Doctrine §12: wiersz 4.0.62 + lekcja regresji 4.0.58–4.0.61.
+
+**Efekt/Fix — co zepsuło vs co przywrócono:**
+
+| Wersja | Open 4 CTA | Przyczyna regresji |
+|--------|------------|-------------------|
+| v4.0.56 (baseline user) | OK | search freeze (forEach) — akceptowane |
+| 5cf1ca4 / 4.0.57 commit | OK (doc) | for+break + DamSearch — user nie chciał jeszcze |
+| 4.0.58–4.0.61 dirty | **FAIL wszystkie** | usunięty `renderOptionsDebounced`; product bez `ensureFileIndex`; pusty picker |
+| **4.0.62** | przywrócono 5cf1ca4 open path | search freeze nadal do osobnego ticketu |
+
+**Test user:** Ctrl+F5 → branding.html / visualizations.html?v=4.0.62-rollbackAssocOpen20260726a — 4 CTA powinny otworzyć `#damAssocEditPopover`.
+
+**Źródła:** commit 5cf1ca4, dam-assoc-edit.js (renderOptionsDebounced L2113+), process baseline v4.0.56.
+
+---
+
+## 2026-07-26 - User: bialy ekran / aplikacja nie startuje
+
+**Komenda/Akcja:** User: cala aplikacja bialy ekran, nie uruchamia sie.
+
+**Log/Status:**
+1. Smoke: :8765/:8766 HTTP 200 (~2ms); node --check glowne JS OK.
+2. Headless Chrome: dashboard + branding renderuja pelny UI (nie bialy ekran po stronie serwera).
+3. Prawdopodobna przyczyna u usera: stuck `html.dam-booting` (body opacity:0) LUB cache desktop/WebView2 LUB martwy proces po testach agentow.
+4. Fix: `dam-panic-reload.js` — failsafe 6s wymusza reveal (dam-booted + opacity:1); cache token `4.0.61-bootFailsafe20260726n` na glownych HTML.
+5. Uruchomiono `dam-agent-unstick.ps1` — PASS.
+
+**Recovery user:** zamknij okno DAM, otworz `apps/desktop/run-dam.vbs` LUB przegladarka `http://127.0.0.1:8765/dashboard.html?_damr=1` Ctrl+F5.
+
+**Źródła:** dam-panic-reload.js, logs/dam-connection/dashboard-probe.png
+
+---
+
+**Komenda/Akcja:** Mandatory connection resilience loop (max 100) before blaming JS for viz FREEZE; Step -1 history→prediction; fail→pass sim; e2e 4 CTA; fix code only if Step 2c proves code hang.
+
+**Log/Status:**
+1. **Step -1 / PREDICTION:** z REFERENCE `code-doctrine` §12 + v3.1.5 `2b3873a` → primary risk **viz-variants**, secondary **viz-suggestions** (cold viz + DamSearch / `5cf1ca4`); branding-product = golden.
+2. **Step 0:** `dam-pre-browser.ps1` PASS (8765/8766 2xx).
+3. **Step 0b dirty tree:** `M` `dam-assoc-edit.js`, `dam-search.js`, `version.json` (+ probe scripts untracked). Server = working tree.
+4. **Step 2a fail→pass:** `sim-assoc-picker-search-cap.js` ALL PASS — forEach iterations **50000** vs for+break **81** (contract; timing alone too fast on empty V8 loops).
+5. **Step 2b/2c:** built `dam-cdp-resilience-probe.js` + `dam-cdp-resilience-watchdog.ps1`; rotate ports 9339/9222/9223/9340, http_only, ws reconnect, killall, puppeteer-if-present; logs `resilience-attempts.jsonl` / `freeze-log.jsonl` / `last-resilience-report.md`.
+6. **False FREEZE root (connection/probe, not forEach):** e2e typed via fallback `.dam-tag-edit-popover__search-wrap input` → **#vizSearch** + DamSearch full load; also `awaitPromise:true` + port reuse on dying chrome. Resilience recovery: viz-suggestions fail@9339 → pass@9222; viz-variants pass.
+7. **Step 3 e2e ACTUAL @ 4.0.60** `4.0.60-assocVizShellPaint20260726m`: all 4 CTA golden PASS (search_ms 0–1).
+8. **Step 4:** no further JS bump — code hang not proven after resilience; keep 4.0.60 assoc fixes already on disk.
+9. **Step 5:** sim-assoc-picker-search-cap + sim-assoc-dodaj PASS @4.0.60; e2e re-PASS.
+
+**PREDICTION vs ACTUAL:**
+
+| CTA | Predicted | Actual (e2e) | Match? |
+|-----|-----------|--------------|--------|
+| branding-product | PASS (golden) | PASS search_ms=0 | yes |
+| branding-variant | PASS | PASS search_ms=1 | yes |
+| viz-suggestions | FREEZE (secondary) | PASS search_ms=1 | predicted risk; **connection false-FREEZE cleared** |
+| viz-variants | FREEZE (primary) | PASS search_ms=0 | predicted risk; **cleared after probe fixes + resilience** |
+
+**Resilience summary (final aligned probe):** attempts used 3/30 (cap 100); methods: cdp_9339 (1 fail evaluate timeout), cdp_9222 (pass), cdp_9339 variants (pass). Diagnosis: **CONNECTION layer** intermittent evaluate timeout — rotate port recovers. Not JS forEach after Step 2c.
+
+**Per-CTA final:**
+
+| CTA | Open | Search | Freeze | Golden |
+|-----|------|--------|--------|--------|
+| viz-suggestions | OK | 1ms | no | yes |
+| viz-variants | OK | 0ms | no | yes |
+| branding-product | OK | 0ms | no | yes |
+| branding-variant | OK | 1ms | no | yes |
+
+**Efekt/Fix:** Watchdog + e2e selector/`awaitPromise`/unique port; Pass overall. JS Fail **not** attributed (Step 2c evidence = connection recovery).
+
+**Źródła:** `scripts/ops/dam-cdp-resilience-watchdog.ps1`, `scripts/qa/dam-cdp-resilience-probe.js`, `scripts/qa/dam-assoc-picker-e2e-probe.js`, `logs/dam-connection/e2e-assoc-report.json`, `logs/dam-connection/last-resilience-report.md`, `agents/shared/code-doctrine.md` §12
+
+---
+
+## 2026-07-26 - Follow-up: pre-browser gate + probe chrome fix
+
+**Komenda/Akcja:** Po [Browser freeze watchdog](f2145cf0-5fcf-4056-a11e-b4dc8292e87d): follow-up — naprawic probe chrome, dodac bramke przed MCP, potwierdzic sim 4.0.58.
+
+**Log/Status:**
+1. `dam-pre-browser.ps1` — watchdog + probe w petli (MaxAttempts 5); exit 0 = HTTP gate OK.
+2. `dam-browser-probe.js` — chrome: profil w %TEMP%, `--disable-extensions`, 20s timeout; `--try-chrome` FAIL = WARN nie FAIL (chyba `--chrome-strict`); FREEZE log nadal zapisuje.
+3. Pierwszy `--try-chrome`: FREEZE 10s (SIGTERM) — branding ciezki; HTTP gate PASS.
+4. Sim: `sim-assoc-picker-search-cap.js` PASS (50000 vs 81 iter); `sim-assoc-dodaj.js` PASS @4.0.58.
+
+**Efekt/Fix:** Agent ma jedna komende przed browser_navigate; nie czeka w nieskonczonosc na MCP gdy HTTP dziala.
+
+**Workflow:** `powershell -File scripts/ops/dam-pre-browser.ps1` -> jesli PASS, test usera Ctrl+F5 token `4.0.58-assocSearchInstantPaint20260726j`.
+
+**Źródła:** scripts/ops/dam-pre-browser.ps1, scripts/qa/dam-browser-probe.js, logs/dam-connection/freeze-log.jsonl
+
+---
+
+**Komenda/Akcja:** User/WORKER: agent FREEZE na cursor-ide-browser MCP mimo curl :8765/:8766 ~2ms; zbudowac watchdog + recovery; weryfikacja UI w 5s/attempt bez browser MCP.
+
+**Log/Status:**
+1. Utworzono `scripts/ops/dam-connection-watchdog.ps1` (smoke 5s, restart serve_browser, log `logs/dam-connection/`).
+2. Utworzono `scripts/qa/dam-browser-probe.js` + wrapper `scripts/ops/dam-browser-freeze-probe.ps1` (HTTP+assets; opcjonalnie `--try-chrome`; FREEZE → `freeze-log.jsonl`).
+3. Utworzono `scripts/ops/dam-agent-unstick.ps1` (watchdog → probe → diag → kill/restart → raport).
+4. Zaostrzono `scripts/ops/smoke-dam-ports.ps1` (strict 2xx + time_total, hint watchdog).
+5. Lekcja w `agents/shared/code-doctrine.md` §12.
+6. Pierwszy run (po fix BOM/`-FilePath`/path spaces):
+   - `dam-connection-watchdog.ps1` EXIT 0 — UI HTTP 200 ~0.002s, Bridge HTTP 200 ~0.001s
+   - `node scripts/qa/dam-browser-probe.js` PASS — branding 200/5–9ms; assets 200/~24–49ms
+   - `dam-agent-unstick.ps1 -MaxAttempts 20` RESULT **PASS** attempt 1, elapsed ~5–6s, watchdogExit=0, probeExit=0
+   - FREEZE: brak wpisow w tej sesji (probe nie timeoutowal); log path gotowy
+
+**Efekt/Fix:** Agent ma sciezke weryfikacji DAM UI bez MCP; hang browser MCP ≠ restart paniki bez smoke.
+
+**Źródła:** scripts/ops/dam-*.ps1, scripts/qa/dam-browser-probe.js, logs/dam-connection/, code-doctrine §12
+
+---
+## 2026-07-26 - User: dziury 1–3 przed runtime (odpowiedź na pytania)
+
+**Komenda/Akcja:** User: brak dowodu fail pre-fix; czy :8765 = commit czy working tree; nie proponować kolejnego fixu przed testem.
+
+**Odpowiedź dziura 1 (test fail→pass):** **NIE** — brak testu jak `sim-assoc-viz-sync-ctx.js` dla freeze search. `sim-assoc-dodaj.js` = regex/kontrakt źródeł (exporty, debounce, cache token), **nie** wykonuje `collectProductPickerRows` ani nie mierzy czasu pętli. `sim-assoc-search-init.js` = debounce/autofocus w źródle. `verify-picker-freeze.js` = HTTP + brak branding-index w openMediaPicker. `tools/_sim_picker.js` = behawioralny stub, ale szuka `openMediaPicker` export (jest alias `openPicker`) → FAIL. **Żaden harness nie failował na forEach+return i nie przechodzi na for+break.**
+
+**Odpowiedź dziura 2 (:8765 vs commit):** Serwer (`dam_ui_http.py`) serwuje **`apps/web` z dysku (working tree)**, nie izolowany snapshot git. Commit `5cf1ca4` obejmuje m.in. `dam-assoc-edit.js`, HTML cache, `dam-viz.js` — **ale poza commitem (dirty)** m.in. `dam-media-preview.js`, `dam-branding.js`, `dam-search.js`, `dam-branding.css`. Test w przeglądarce = **mieszanka** zacommitowanego pickera + niezacommitowanych modułów CTA/DamSearch. `dam-assoc-edit.js` na dysku = zgodny z `5cf1ca4` (`git diff 5cf1ca4` pusty).
+
+**Dziura 3:** Kolejny fix (sync rAF bez debounce) **wstrzymany** do wyniku runtime usera per-CTA.
+
+**Źródła:** sim-assoc-dodaj.js, sim-assoc-viz-sync-ctx.js (wzorzec P1), dam_ui_http.py, git show 5cf1ca4 --name-only
+
+---
+
+## 2026-07-26 - COMMIT v4.0.57 assoc picker search freeze + macierz 20 commitów
 
 **Komenda/Akcja:** User: commit po fixach; porównaj 20 commitów + v3.1.5 vs 4.0.57; wyszukiwarka pickera ma nie zacinać UI; model v3.1.5 „Edytuj wszystko” jako golden search.
 
