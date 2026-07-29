@@ -762,8 +762,23 @@
   grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
 }
 
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-item--asset {
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  justify-items: center;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-item--asset .dam-media-preview__assoc-name,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-item--asset .dam-media-preview__assoc-index {
+  text-align: center;
+  width: 100%;
+  max-width: 100%;
+}
+
 .dam-viz-modal-box--assoc-split .dam-viz-modal__actions {
-  /* Body flex gap owns stack rhythm; keep only card-style +4px nudge. */
   margin-top: var(--dam-viz-card-actions-extra-gap, 4px);
 }
 

@@ -3414,7 +3414,23 @@
           if (!searchFn || !moduleReady) {
             productSearchHits = [];
             productFetchTimer = null;
-            renderOptionsDebounced(query);
+            if (
+              global.DamSearch &&
+              typeof global.DamSearch.load === "function" &&
+              typeof global.DamSearch.isReady === "function" &&
+              !global.DamSearch.isReady()
+            ) {
+              global.DamSearch.load()
+                .then(function () {
+                  if (!pickerStillOpen()) return;
+                  scheduleProductSearchFetch(query);
+                })
+                .catch(function () {
+                  renderOptionsDebounced(query);
+                });
+            } else {
+              renderOptionsDebounced(query);
+            }
             return;
           }
           searchFn(query, {
@@ -3503,6 +3519,8 @@
           renderOptionsDebounced("");
         } else if (opts.kind === "variant") {
           if ((opts.variantCandidates || []).length <= 40) renderOptionsDebounced("");
+        } else if (opts.kind === "product" && products.length) {
+          renderOptions(search ? search.value : "");
         } else {
           renderOptionsDebounced("");
         }
@@ -3533,13 +3551,18 @@
       pop._damAssocRebindChrome = function () {
         var closeBtn = pop.querySelector("[data-close]");
         if (closeBtn) {
+          closeBtn.onclick = function (e) {
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            closePicker();
+          };
           if (
             global.DamModalShared &&
             typeof global.DamModalShared.bindModalClose === "function"
           ) {
             global.DamModalShared.bindModalClose(closeBtn, closePicker);
-          } else {
-            closeBtn.onclick = closePicker;
           }
         }
         var cancelEl = pop.querySelector("[data-cancel]");
@@ -4290,8 +4313,14 @@
     /* Golden path parity: material = ten sam openEditPicker co product, inny kind + model danych. */
     if (kind === "material") {
       var productId = String(
-        (ctx.productContext && ctx.productContext.id) || gc.product_id || ""
+        (ctx.productContext && ctx.productContext.id) ||
+          gc.product_id ||
+          (gc.linked_product_ids && gc.linked_product_ids[0]) ||
+          ""
       ).trim();
+      if (!productId && ctx.asset && ctx.asset.linked_product_ids && ctx.asset.linked_product_ids.length) {
+        productId = String(ctx.asset.linked_product_ids[0]).trim();
+      }
       if (!productId) {
         toast("Brak produktu wizualizacji do sugestii materiałów.");
         return;
@@ -4320,8 +4349,8 @@
         pinnedIds: selectedIds.slice(),
         materialCandidates: materialCandidates,
         bootstrapQuery: bootstrapQuery,
-        productContext: ctx.productContext,
-        groupContext: gc,
+        productContext: Object.assign({}, ctx.productContext || {}, { id: productId }),
+        groupContext: Object.assign({}, gc, { product_id: productId }),
         assocCtx: ctx,
         onConfirm: function (ids) {
           var nextIds = (ids || []).slice();
@@ -5218,6 +5247,20 @@
         });
       }
     }
+    if (!ctx || !(ctx.productContext && ctx.productContext.id)) {
+      var linkedProd =
+        modalRoot &&
+        modalRoot.querySelector(
+          "#damMediaPreviewLinkedProductsHost [data-product-id], .dam-media-preview__assoc-pane-section--products [data-product-id]"
+        );
+      var linkedPid = linkedProd && linkedProd.getAttribute("data-product-id");
+      if (linkedPid) {
+        ctx = seedMaterialsCtx(modalRoot, {
+          productContext: { id: linkedPid },
+          groupContext: { linked_product_ids: [linkedPid] },
+        });
+      }
+    }
     if (!col && modalRoot) {
       col =
         modalRoot.querySelector(".dam-media-preview__assoc-col--materials") ||
@@ -5282,6 +5325,39 @@
     if (kind === "variants") kind = "variant";
     /* product: golden path — bez zmian (openEditPicker → ensureFileIndex async). */
     if (kind === "material") {
+      var mediaMatRoot =
+        root && (root.id === "damMediaPreview" ? root : root.closest("#damMediaPreview"));
+      if (mediaMatRoot) {
+        var colMat = btn.closest(
+          ".dam-media-preview__assoc-col--materials, .dam-media-preview__assoc-section"
+        );
+        var mctx = resolveMaterialsCtx(mediaMatRoot, colMat);
+        var hasVizProduct =
+          mctx &&
+          String(
+            (mctx.productContext && mctx.productContext.id) ||
+              (mctx.groupContext && mctx.groupContext.product_id) ||
+              (mctx.groupContext &&
+                mctx.groupContext.linked_product_ids &&
+                mctx.groupContext.linked_product_ids[0]) ||
+              ""
+          ).trim();
+        if (
+          !hasVizProduct &&
+          mctx &&
+          (mctx.asset ||
+            (mctx.groupContext &&
+              mctx.groupContext.linked_product_ids &&
+              mctx.groupContext.linked_product_ids.length))
+        ) {
+          openEditPicker(
+            colMat || btn.closest(".dam-media-preview__assoc-col"),
+            "variant",
+            Object.assign({}, mctx, { brandingSearch: true })
+          );
+          return;
+        }
+      }
       openVizMaterialsEdit315(btn, root);
       return;
     }

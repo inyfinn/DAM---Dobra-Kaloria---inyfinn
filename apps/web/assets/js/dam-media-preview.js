@@ -1339,12 +1339,17 @@
   }
 
   function variantFileLabel(v) {
-    if (v && v.name) return v.name;
+    var pathName = "";
     if (v && v.path) {
       var p = String(v.path).replace(/\\/g, "/");
       var i = p.lastIndexOf("/");
-      return i >= 0 ? p.slice(i + 1) : p;
+      pathName = i >= 0 ? p.slice(i + 1) : p;
     }
+    var name = v && v.name ? String(v.name).trim() : "";
+    /* v.name = "JPG" / "PNG" z indeksu — pokaz basename z path. */
+    if (name && pathName && /^[a-z0-9]{2,5}$/i.test(name)) return pathName;
+    if (name) return name;
+    if (pathName) return pathName;
     return v && (v.label || v.id) ? String(v.label || v.id) : "Plik";
   }
 
@@ -2141,21 +2146,11 @@
     return mt === "source" || mt === "vector" || mt === "document";
   }
 
-  /** Krotka etykieta kafelka materiału: PSD / JPG / stem. */
+  /** Krotka etykieta kafelka materiału: skrocony stem pliku (nie samo JPG). */
   function materialSiblingTileLabel(v) {
     var name = variantFileLabel(v) || (v && v.name) || "";
-    if (!name && v && v.path) {
-      var n = String(v.path).replace(/\\/g, "/");
-      var i = n.lastIndexOf("/");
-      name = i >= 0 ? n.slice(i + 1) : n;
-    }
-    var ext = String(name || "")
-      .split(".")
-      .pop()
-      .toUpperCase();
-    if (ext && ext !== String(name || "").toUpperCase()) return ext;
     var stem = String(name || "").replace(/\.[^.]+$/, "");
-    if (stem.length > 18) stem = stem.slice(0, 16) + "…";
+    if (stem.length > 18) stem = stem.slice(0, 8) + "\u2026" + stem.slice(-8);
     return stem || "Plik";
   }
 
@@ -2317,8 +2312,9 @@
             return m && m.id;
           })
           .filter(Boolean),
-        productContext: {},
+        productContext: productIds.length ? { id: productIds[0] } : {},
         groupContext: {
+          product_id: productIds[0] || "",
           linked_product_ids: productIds.slice(),
         },
         onRefresh: function () {
@@ -3610,10 +3606,11 @@
           return g.primary;
         });
         var collapsible = shownGroups.length > LINKED_ASSETS_VISIBLE;
-        var assocCol = mount.parentElement;
-        if (assocCol) {
-          var staleToggle = assocCol.querySelector("[data-linked-assets-toggle]");
-          if (staleToggle) staleToggle.remove();
+        var assocScope = resolveAssocPaneScope(mount) || mount.parentElement;
+        if (assocScope) {
+          assocScope.querySelectorAll("[data-linked-assets-toggle]").forEach(function (el) {
+            el.remove();
+          });
         }
         mount.innerHTML = shownGroups
           .map(function (g, i) {
@@ -3665,33 +3662,10 @@
             onRefresh: refreshLinkedBrandingAfterEdit,
           });
         }
-        var toggle = null;
         if (collapsible) {
-          toggle = document.createElement("button");
-          toggle.type = "button";
-          toggle.className = "geex-btn geex-btn--sm dam-btn-icon dam-media-preview__variants-toggle";
-          toggle.setAttribute("data-linked-assets-toggle", "");
-          toggle.setAttribute("aria-expanded", "false");
-          toggle.innerHTML =
-            '<i class="uil uil-angle-down" aria-hidden="true"></i><span>Pokaż wszystkie (' +
-            shownGroups.length +
-            ")</span>";
-          mount.insertAdjacentElement("afterend", toggle);
-        }
-        if (toggle) {
-          toggle.addEventListener("click", function () {
-            var expanded = toggle.getAttribute("aria-expanded") === "true";
-            var next = !expanded;
-            mount.classList.toggle("is-collapsed-assets", !next);
-            toggle.setAttribute("aria-expanded", next ? "true" : "false");
-            var icon = toggle.querySelector("i");
-            if (icon) icon.className = next ? "uil uil-angle-up" : "uil uil-angle-down";
-            var lbl = toggle.querySelector("span");
-            if (lbl) lbl.textContent = next ? "Zwiń" : "Pokaż wszystkie (" + shownGroups.length + ")";
-            var m = document.getElementById("damMediaPreview") || document.getElementById("damVizModal");
-            var shared = window.DamModalShared;
-            if (m && shared && shared.scheduleFitChrome) shared.scheduleFitChrome(m);
-          });
+          mount._damLinkedAssetsToggleCount = shownGroups.length;
+        } else {
+          mount._damLinkedAssetsToggleCount = 0;
         }
       }
       renderElementyGroups(
@@ -3722,6 +3696,51 @@
       } else {
         teardownAssocElementySplit(mount, bottomHost || elementyHost);
       }
+      var toggleCount = mount._damLinkedAssetsToggleCount || 0;
+      if (toggleCount > LINKED_ASSETS_VISIBLE) {
+        var colRoot =
+          mount.closest(
+            ".dam-media-preview__assoc-col--materials, .dam-viz-modal__assoc, .dam-media-preview__assoc-col"
+          ) || resolveAssocPaneScope(mount);
+        if (colRoot) {
+          colRoot.querySelectorAll("[data-linked-assets-toggle]").forEach(function (el) {
+            el.remove();
+          });
+        }
+        var toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "geex-btn geex-btn--sm dam-btn-icon dam-media-preview__variants-toggle";
+        toggle.setAttribute("data-linked-assets-toggle", "");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.innerHTML =
+          '<i class="uil uil-angle-down" aria-hidden="true"></i><span>Pokaż wszystkie (' +
+          toggleCount +
+          ")</span>";
+        var toggleParent = mount.parentElement;
+        if (
+          toggleParent &&
+          toggleParent.classList &&
+          toggleParent.classList.contains("dam-assoc-pane-split__top")
+        ) {
+          toggleParent.appendChild(toggle);
+        } else {
+          mount.insertAdjacentElement("afterend", toggle);
+        }
+        toggle.addEventListener("click", function () {
+          var expanded = toggle.getAttribute("aria-expanded") === "true";
+          var next = !expanded;
+          mount.classList.toggle("is-collapsed-assets", !next);
+          toggle.setAttribute("aria-expanded", next ? "true" : "false");
+          var icon = toggle.querySelector("i");
+          if (icon) icon.className = next ? "uil uil-angle-up" : "uil uil-angle-down";
+          var lbl = toggle.querySelector("span");
+          if (lbl) lbl.textContent = next ? "Zwiń" : "Pokaż wszystkie (" + toggleCount + ")";
+          var m = document.getElementById("damMediaPreview") || document.getElementById("damVizModal");
+          var shared = window.DamModalShared;
+          if (m && shared && shared.scheduleFitChrome) shared.scheduleFitChrome(m);
+        });
+      }
+      mount._damLinkedAssetsToggleCount = 0;
       var m = document.getElementById("damMediaPreview") || document.getElementById("damVizModal");
       var shared = window.DamModalShared;
       if (m && shared && shared.scheduleFitChrome) shared.scheduleFitChrome(m);

@@ -7308,7 +7308,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-viz-modal__body #damMediaPreviewTitle,
 #damMediaPreview .dam-media-preview__title-block > .dam-viz-modal__title,
 #damMediaPreview .dam-viz-modal__body #damMediaPreviewTitle {
-  margin-top: 0 !important;
+  margin-top: 10px !important;
   margin-bottom: 0;
   line-height: 1.35;
 }
@@ -7316,6 +7316,11 @@ button.dam-status-badge.dam-tag-editable:hover {
 #damMediaPreview .dam-viz-modal__body > .dam-media-preview__title-block,
 #damMediaPreview .dam-media-preview__title-block {
   margin-top: 0 !important;
+}
+
+#damMediaPreviewTitleMeta,
+#damMediaPreview .dam-media-preview__title-meta-slot {
+  margin-top: 5px !important;
 }
 
 #damMediaPreviewTitleMeta .dam-media-preview__title-meta + .dam-media-preview__editable-row,

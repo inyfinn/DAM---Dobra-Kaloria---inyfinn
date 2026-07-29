@@ -1911,22 +1911,14 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 }
 
 #damMediaPreview .dam-media-preview__title-block > .dam-viz-modal__title,
-#damMediaPreviewTitle,
-#damVizModalTitle {
-  margin: 0;
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  column-gap: 15px !important;
-  row-gap: 6px;
-  min-width: 0;
-  width: 100%;
+#damMediaPreviewTitle {
+  margin-top: 10px !important;
 }
 
 #damMediaPreviewTitleMeta,
 .dam-media-preview__title-meta-slot {
   flex: 0 0 auto;
-  margin: 2px 0 0;
+  margin: 5px 0 0;
   max-width: 100%;
 }
 
@@ -2167,14 +2159,15 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 
 .dam-media-preview__assoc-item {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  align-items: end;
+  grid-template-rows: auto auto auto;
+  align-items: center;
   justify-items: center;
   gap: 4px;
   width: 100%;
   max-width: 110px;
-  min-height: 118px;
-  justify-self: start;
+  min-height: 0;
+  height: auto;
+  justify-self: center;
   color: inherit;
   border-radius: 8px;
   padding: 4px;
@@ -2183,8 +2176,32 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 .dam-media-preview__assoc-col--branding-split {
   display: flex;
   flex-direction: column;
-  gap: 70px;
+  gap: 12px;
   align-items: stretch;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+#damMediaPreview .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-section,
+#damMediaPreview .dam-media-preview__assoc-pane-section--products {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: 48%;
+  overflow: hidden;
+}
+
+#damMediaPreview .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-grid,
+#damMediaPreview .dam-media-preview__assoc-pane-section--products .dam-media-preview__assoc-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  align-content: start;
 }
 
 .dam-media-preview__assoc-thumb-btn {

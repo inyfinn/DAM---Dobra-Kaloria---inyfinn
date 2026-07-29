@@ -1,7 +1,7 @@
 {
-  "version": "5.0.80",
+  "version": "5.0.81",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-07-29",
-  "note": "5.0.80: explorer cat panel PRODUKTY/MATERIAŁY, toolbar bleed fix, damRootStatus re-index."
+  "note": "5.0.81: fix assoc picker/search, scroll, tile layout, variant labels, title spacing."
 }
