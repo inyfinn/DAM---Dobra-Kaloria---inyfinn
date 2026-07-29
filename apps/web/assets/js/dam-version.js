@@ -4,5 +4,5 @@
  */
 (function (global) {
   "use strict";
-  global.DAM_APP_VERSION = "5.0.79";
+  global.DAM_APP_VERSION = "5.0.80";
 })(typeof window !== "undefined" ? window : globalThis);

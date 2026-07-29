@@ -41,9 +41,9 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.65">
 <link rel="stylesheet" href="./assets/css/dam-app.css?v=darkFix20260722e">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=geexF3tut20260721a">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.78">
-<link rel="stylesheet" href="./assets/css/dam-branding.css?v=5.0.59">
-<link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.72">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.80">
+<link rel="stylesheet" href="./assets/css/dam-branding.css?v=5.0.80">
+<link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.80">
 </head>
 
 <body class="geex-dashboard file-manager is-booting">
@@ -515,7 +515,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 		</nav>
         <div class="geex-sidebar__footer">
 			<span class="geex-sidebar__footer__title">DAM</span>
-			<p class="geex-sidebar__footer__copyright">Panel asset�w opakowań</p>
+			<p class="geex-sidebar__footer__copyright">Panel assetów opakowań</p>
 			<p class="geex-sidebar__footer__author"><a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a> &copy; 2026 <span class="dam-app-version" title="Wersja programu DAM">v1.00</span></p>
 		</div>
 	</div>
@@ -900,6 +900,16 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
                     <div id="damExplorerGridStatus" class="dam-toolbar-status"></div>
                   </div>
                   <div class="dam-viz-secondary-filters dam-explorer-secondary-filters" role="group" aria-label="Filtry widoku">
+                    <div id="damExplorerCatMode" class="dam-explorer-cat-mode" role="radiogroup" aria-label="Kategorie eksploratora" data-dam-tip="PRODUKTY = drzewo FMCG (01 - PRODUKTY). MATERIA?Y = kampanie i assety marketingowe.">
+                      <label class="dam-db-mode-chip">
+                        <input type="radio" name="damExplorerCatMode" value="PRODUCT" checked />
+                        Produkty
+                      </label>
+                      <label class="dam-db-mode-chip">
+                        <input type="radio" name="damExplorerCatMode" value="MATERIAL" />
+                        Materia?y
+                      </label>
+                    </div>
                     <label class="dam-switch is-off" for="damExplorerShowAll" data-i18n-tip="explorer.show_all_tip" data-dam-tip="Włącz: starsze warianty oraz szkice/archiwum w Projekt / źródło. Wyłącz: tylko aktualne warianty i pliki z 2 - PROJEKT (bez SZKICE).">
                       <input type="checkbox" id="damExplorerShowAll" class="dam-switch__input" />
                       <span class="dam-switch__track" aria-hidden="true"></span>
@@ -928,9 +938,9 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
                           <span id="damExplorerMeta" class="dam-explorer-results__meta"></span>
                           <div class="dam-explorer-results__actions">
                             <div class="dam-admin-slot">
-                              <button type="button" id="damStatusExport" class="dam-int-cta dam-admin-extra" hidden title="Pobierz plik JSON ze statusami z tej sesji (backup)" data-dam-tip="Tylko backup na dysk Twojego PC. Nie zmienia folderów Marketing ani bazy. Wspólny zapis F/X/D robi most (dysk + JSON + Postgres).">Backup statusów</button>
+                              <button type="button" id="damStatusExport" class="dam-int-cta dam-admin-extra" hidden title="Pobierz plik JSON ze statusami z tej sesji (backup)" data-dam-tip="Tylko backup na dysk Twojego PC. Nie zmienia folder�w Marketing ani bazy. Wsp�lny zapis F/X/D robi most (dysk + JSON + Postgres).">Backup status�w</button>
                             </div>
-                            <button type="button" id="damIndexRefresh" class="dam-int-cta" title="Przeskanuj Marketing i wczytaj listę do programu" data-dam-tip="Odśwież z dysku: skan folder�w Marketing - indeks - panel. Aktualizuje warianty i litery F/X/D według nazw folder�w. Nie zmienia dysku. Warianty z ARCHIWUM widoczne przy Pokaż wszystko.">Odśwież z dysku</button>
+                            <button type="button" id="damIndexRefresh" class="dam-int-cta" title="Przeskanuj Marketing i wczytaj listę do programu" data-dam-tip="Odśwież z dysku: skan folderów Marketing - indeks - panel. Aktualizuje warianty i litery F/X/D według nazw folderów. Nie zmienia dysku. Warianty z ARCHIWUM widoczne przy Pokaż wszystko.">Odśwież z dysku</button>
                             <button type="button" id="damLifecycleForce" class="dam-int-cta dam-admin-control" title="Stosuj zmiany: program na dysk (FORCE)" data-dam-tip="Stosuj zmiany = FORCE. Zapisuje statusy z programu na foldery Marketing (rename / archiwum). Odwrotność Odśwież. Tylko admin." aria-label="Stosuj zmiany">
                               <i class="uil uil-upload" aria-hidden="true"></i>
                               <span class="dam-force-btn__label">Stosuj zmiany</span>
@@ -2301,13 +2311,13 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<script src="./assets/js/dam-api.js?v=privgate20260721a"></script>
 	<script src="./assets/js/dam-i18n.js?v=studiofix20260721e"></script>
 	<script src="./assets/js/dam-runtime.js?v=servicesBoot20260723a"></script>
-	<script src="./assets/js/dam-version.js?v=5.0.59"></script>
+	<script src="./assets/js/dam-version.js?v=5.0.80"></script>
 	<script src="./assets/js/dam-shell.js?v=4.0.14-dbDumpFix20260725"></script>
-	<script src="./assets/js/dam-search.js?v=5.0.59"></script>
+	<script src="./assets/js/dam-search.js?v=5.0.80"></script>
 	<script src="./assets/js/dam-tag-bar.js?v=hub20260719j12"></script>
 	<script src="./assets/js/dam-labels.js?v=langAdj20260721b"></script>
 	<script src="./assets/js/dam-badges.js?v=5.0.5-linkedMaterialsPersist20260727"></script>
-	<script src="./assets/js/dam-tag-edit.js?v=5.0.7-tagComboFlush20260727a"></script>
+	<script src="./assets/js/dam-tag-edit.js?v=5.0.80"></script>
 	<script src="./assets/js/dam-paths.js?v=selects20260720a"></script>
 	<script src="./assets/js/dam-folder-picker.js?v=4.0.41-pickerToComboShell20260726c"></script>
 	<script src="./assets/js/dam-icons.js?v=20260718uxbatch1"></script>
@@ -2316,17 +2326,17 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<script src="./assets/js/dam-assoc-action-tips.js?v=1"></script>
 	<script src="./assets/js/dam-modal-shared.js?v=5.0.21-modalShellFix"></script>
 	<script src="./assets/js/dam-marketing-id.js?v=usab20260720c"></script>
-	<link rel="stylesheet" href="./assets/css/dam-viz-modal.css?v=5.0.78">
-	<script src="./assets/js/dam-assoc-edit.js?v=5.0.78"></script>
+	<link rel="stylesheet" href="./assets/css/dam-viz-modal.css?v=5.0.80">
+	<script src="./assets/js/dam-assoc-edit.js?v=5.0.80"></script>
 	<script src="./assets/js/dam-preview-truth.js?v=noThumbWarm20260722c"></script>
-	<script src="./assets/js/dam-media-preview.js?v=5.0.78"></script>
+	<script src="./assets/js/dam-media-preview.js?v=5.0.80"></script>
 	<script src="./assets/js/dam-user-prefs.js?v=prefsKv20260721a"></script>
   <script src="./assets/js/dam-danger.js?v=5.0.34-sesja3"></script>
 	<script src="./assets/vendor/js/gsap/gsap.min.js"></script>
 	<script src="./assets/js/dam-loader.js?v=actionsLeftLoader20260721a"></script>
 	<script src="./assets/js/dam-grid-reveal.js?v=i18nboot20260721e"></script>
 	<script src="./assets/js/dam-empty-mascot.js?v=hotfixPack20260723a"></script>
-	<script src="./assets/js/dam-explorer.js?v=5.0.59"></script>
+	<script src="./assets/js/dam-explorer.js?v=5.0.80"></script>
 	<script src="./assets/js/dam-explorer-add-product.js?v=expCreateCssFix20260723d"></script>
 	<script>
 	/* Po zaladowaniu DOM: jednorazowy init jeśli folder pusty (bez petli reload). */

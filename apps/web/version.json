@@ -1,7 +1,7 @@
 {
-  "version": "5.0.79",
+  "version": "5.0.80",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-07-29",
-  "note": "5.0.79: globalny fix polskich znakow UTF-8 (HTML/JS) + audit-polish-chars.py + i18n filtry."
+  "note": "5.0.80: explorer cat panel PRODUKTY/MATERIAŁY, toolbar bleed fix, damRootStatus re-index."
 }

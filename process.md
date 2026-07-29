@@ -1,4 +1,14 @@
-## 2026-07-29 - v5.0.78: variants-toggle + assoc picker (verify/push)
+## 2026-07-29 - v5.0.80: multi-fix explorer toolbar, cat panel, root reindex
+
+**Komenda/Akcja:** User: multi-fix session — UTF-8 audit, explorer toolbar bleed, cat panel PRODUKTY/MATERIAŁY, `#damRootStatus` re-index jak `#damDbStatus`, bump 5.0.80, commit+push.
+
+**Log/Status:** UTF-8 audit PASS. Explorer: override full-bleed w `.dam-explorer-shell` (toolbar nie pod sidebar); `EXPLORER_CAT_PRODUCT`/`MATERIAL` + toggle; `#damRootStatus` refresh → `DamExplorer.reload` lub POST `/index/rebuild` + `DamLoader`. Cache-bust 5.0.80 w 23 HTML + dam-shell. Doktryna §12.
+
+**Efekt/Fix:** v5.0.80 — sidebar kategorii FMCG domyślnie; materiały marketingowe tylko w trybie MATERIAŁY.
+
+**Źródła:** dam-brand.css, dam-explorer.js, dam-root-status.js, explorer.html, version 5.0.80
+
+
 
 **Komenda/Akcja:** Subagent: napraw toggle `#damVizModalAssoc`, assoc picker jak Explorer hits, bump 5.0.78, commit+push, QA screenshot.
 

@@ -3911,6 +3911,41 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   margin-bottom: 0;
 }
 
+/* Explorer: bez full-bleed 100vw — sticky toolbar nie wchodzi pod sidebar */
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar::before,
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar::after {
+  width: 100%;
+  left: 0;
+  right: auto;
+  transform: none;
+}
+
+.dam-explorer-shell > .dam-viz-secondary-filters.dam-explorer-secondary-filters {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+.dam-explorer-shell > .dam-viz-secondary-filters.dam-explorer-secondary-filters::before {
+  width: 100%;
+  left: 0;
+  right: auto;
+  transform: none;
+}
+
+.dam-explorer-cat-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+
 /* Akcje nawigacji: Eksplorer DAM / Folder Windows / Wizualizacje */
 .dam-nav-circles {
   display: inline-flex;
@@ -7570,7 +7605,8 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-root-status.is-offline .dam-root-status__dot {
   background: #e11d48;
 }
-.dam-db-status__refresh {
+.dam-db-status__refresh,
+.dam-root-status__refresh {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -7588,18 +7624,22 @@ button.dam-status-badge.dam-tag-editable:hover {
   flex-shrink: 0;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
-.dam-db-status__refresh i {
+.dam-db-status__refresh i,
+.dam-root-status__refresh i {
   font-size: 18px;
   line-height: 1;
   color: inherit;
 }
 .dam-db-status__refresh:hover,
-.dam-db-status__refresh:focus-visible {
+.dam-db-status__refresh:focus-visible,
+.dam-root-status__refresh:hover,
+.dam-root-status__refresh:focus-visible {
   color: var(--primary-color, #ab54db);
   background: color-mix(in srgb, var(--primary-color, #ab54db) 10%, transparent);
   outline: none;
 }
-.dam-db-status__refresh.is-busy i {
+.dam-db-status__refresh.is-busy i,
+.dam-root-status__refresh.is-busy i {
   animation: dam-db-spin 0.8s linear infinite;
 }
 @keyframes dam-db-spin {
@@ -7878,7 +7918,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   justify-content: center;
 }
 @media (prefers-reduced-motion: reduce) {
-  .dam-db-status__refresh.is-busy i {
+  .dam-db-status__refresh.is-busy i,
+.dam-root-status__refresh.is-busy i {
     animation: none;
   }
 }

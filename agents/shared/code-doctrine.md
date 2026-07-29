@@ -1931,3 +1931,13 @@ Skrót — **bind = dwie osobne rzeczy**:
 
 **Weryfikacja:** CDP banoffee + linked 6300783 → chipSizes `XL,L,S,S-SKLEP`, tileCount 32 po „Pokaż wszystkie”.
 
+#### Lekcja 2026-07-29: sticky full-bleed 100vw + explorer cat panel vs file-index root
+
+**Objaw:** (1) `.dam-explorer-toolbar` wchodzi pod sidebar po fixie sticky chrome v5.0.77. (2) Panel kategorii pokazuje „Kampanie E-Commerce” zamiast Batony/Kulki.
+
+**Przyczyny:** (1) Reguła `margin-left: calc(50% - 50vw)` na `.dam-explorer-shell > … > .dam-explorer-toolbar` — full-bleed dla viz/branding nie może dotyczyć eksploratora. (2) `getCanonicalCategoryList()` brało **wszystkie** `products` z `file-index.json`; indeks zbudowany z `--root` na `07 - E-COMMERCE` (45 pozycji marketingowych) zamiast `01 - PRODUKTY` — UI było poprawne, dane złe.
+
+**Fix:** (1) Override w `dam-brand.css`: explorer toolbar bez 100vw bleed. (2) `EXPLORER_CAT_PRODUCT` / `EXPLORER_CAT_MATERIAL` — domyślnie filtr ścieżek `01 - PRODUKTY` + `CATEGORY_CANON`; materiały tylko po przełączeniu. `#damRootStatus` refresh = ten sam flow co Odśwież z dysku (`DamExplorer.reload` lub POST `/index/rebuild`).
+
+**Wersja:** `5.0.80`.
+

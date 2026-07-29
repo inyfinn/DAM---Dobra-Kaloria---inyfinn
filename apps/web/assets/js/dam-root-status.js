@@ -1,7 +1,7 @@
 /**
  * Status ROOT plików (nie API metadanych).
  * Online = da sie odczytać folder usera z -- ARCHIWUM -- / - EKSPORT / - POLSKA.
- * Offline = czerwona kropka + przycisk "Wskaż ścieżkę" + delikatny pasek u gory okna.
+ * Offline = czerwona kropka + przycisk "Wskaż ścieżkę" + delikatny pasek u góry okna.
  */
 (function () {
   "use strict";
@@ -10,6 +10,7 @@
   var POLL_OFFLINE_MS = 4000;
   var _timer = null;
   var _lastOnline = null;
+  var _refreshBusy = false;
 
   function bridgeBase() {
     if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
@@ -26,6 +27,75 @@
       return window.DamPaths.getBasePath() || "";
     }
     return localStorage.getItem("dam_base_path") || "";
+  }
+
+  function authHeaders() {
+    var h = { "Content-Type": "application/json" };
+    var tok =
+      (window.DamApi && typeof window.DamApi.token === "function" && window.DamApi.token()) ||
+      localStorage.getItem("dam_token") ||
+      "";
+    if (tok) h.Authorization = "Bearer " + tok;
+    return h;
+  }
+
+  function ensureBridgeSession() {
+    if (window.DamApi && typeof window.DamApi.ensureSession === "function") {
+      return window.DamApi.ensureSession().catch(function () {
+        return { ok: false, error: "login_required" };
+      });
+    }
+    return Promise.resolve({ ok: true });
+  }
+
+  function waitForIndexRebuild(timeoutMs) {
+    var started = Date.now();
+    var limit = timeoutMs || 120000;
+    function poll() {
+      return fetch(bridgeBase() + "/index/status", { cache: "no-store", headers: authHeaders() })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (d) {
+          var running = d && d.rebuild && d.rebuild.running;
+          if (!running) return d;
+          if (Date.now() - started > limit) return d;
+          return new Promise(function (resolve) {
+            setTimeout(function () {
+              resolve(poll());
+            }, 600);
+          });
+        })
+        .catch(function () {
+          return {};
+        });
+    }
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        resolve(poll());
+      }, 400);
+    });
+  }
+
+  function reloadIndexesGlobally() {
+    var reloader =
+      window.DamSearch && typeof window.DamSearch.reload === "function"
+        ? window.DamSearch.reload()
+        : fetch("data/file-index.json?v=" + Date.now(), { cache: "no-store" })
+            .then(function (r) {
+              if (!r.ok) throw new Error("file-index");
+              return r.json();
+            })
+            .then(function (d) {
+              window._DAM_FILE_INDEX = d;
+              return d;
+            });
+    return reloader.then(function (data) {
+      window.dispatchEvent(
+        new CustomEvent("dam:index-refreshed", { detail: { fileIndex: data } })
+      );
+      return { ok: true, data: data };
+    });
   }
 
   function ensureOfflineBar() {
@@ -67,11 +137,23 @@
           '<span class="dam-status-line">online</span>' +
         "</span>" +
       "</span>" +
+      '<button type="button" class="dam-root-status__refresh" id="damRootRefreshBtn" title="Przeskanuj Marketing i odśwież indeks plików" data-dam-tip="Skan dysku Marketing → file-index → miniatury. Jak „Odśwież z dysku” w eksploratorze." aria-label="Odśwież pliki z dysku">' +
+        '<i class="uil uil-redo" aria-hidden="true"></i>' +
+      "</button>" +
       '<button type="button" class="dam-root-status__btn" id="damRootResetBtn" hidden title="Wskaż folder Marketing">' +
         '<i class="uil uil-folder-open" aria-hidden="true"></i>' +
         '<span>Wskaż folder</span>' +
       "</button>";
     host.insertBefore(el, host.firstChild);
+    var refreshBtn = el.querySelector("#damRootRefreshBtn");
+    if (refreshBtn && !refreshBtn.getAttribute("data-bound")) {
+      refreshBtn.setAttribute("data-bound", "1");
+      refreshBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerRootReindex();
+      });
+    }
     var btn = el.querySelector("#damRootResetBtn");
     if (btn && !btn.getAttribute("data-bound")) {
       btn.setAttribute("data-bound", "1");
@@ -104,6 +186,7 @@
     el.title = detail || (online ? "ROOT plików online" : "ROOT plików offline");
     var label = el.querySelector(".dam-root-status__label");
     var btn = el.querySelector("#damRootResetBtn");
+    var refreshBtn = el.querySelector("#damRootRefreshBtn");
     if (label) {
       var line1 = "Pliki";
       var line2 = online ? "online" : "offline";
@@ -121,6 +204,7 @@
         line2 +
         "</span>";
     }
+    if (refreshBtn) refreshBtn.hidden = !online;
     if (btn) {
       btn.hidden = !!online;
       btn.setAttribute("data-reason", reason || "");
@@ -135,6 +219,58 @@
       _lastOnline = online;
       schedulePoll(online);
     }
+  }
+
+  function triggerRootReindex() {
+    if (_refreshBusy) return Promise.resolve({ ok: false, busy: true });
+    _refreshBusy = true;
+    var refreshBtn = document.getElementById("damRootRefreshBtn");
+    if (refreshBtn) refreshBtn.classList.add("is-busy");
+    if (window.DamLoader && typeof window.DamLoader.start === "function") {
+      window.DamLoader.start("Skanuję Marketing…");
+    }
+
+    var chain;
+    if (window.DamExplorer && typeof window.DamExplorer.reload === "function") {
+      chain = window.DamExplorer.reload({ silent: false });
+    } else {
+      chain = ensureBridgeSession()
+        .then(function (sess) {
+          if (!sess || !sess.ok) return { ok: false, skippedRebuild: true };
+          return fetch(bridgeBase() + "/index/rebuild", {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({}),
+          })
+            .then(function (r) {
+              return r.json().catch(function () {
+                return { ok: false };
+              });
+            })
+            .then(function () {
+              return waitForIndexRebuild(120000);
+            });
+        })
+        .then(function () {
+          return reloadIndexesGlobally();
+        });
+    }
+
+    return chain
+      .then(function (res) {
+        check();
+        return res;
+      })
+      .catch(function (err) {
+        return { ok: false, error: err && err.message ? err.message : String(err) };
+      })
+      .finally(function () {
+        _refreshBusy = false;
+        if (refreshBtn) refreshBtn.classList.remove("is-busy");
+        if (window.DamLoader && typeof window.DamLoader.done === "function") {
+          window.DamLoader.done();
+        }
+      });
   }
 
   function check() {
@@ -198,12 +334,19 @@
     window.addEventListener("dam:bridge-ready", function () {
       check();
     });
+    window.addEventListener("dam:index-refreshed", function () {
+      check();
+    });
   }
 
   window.DamRootStatus = {
     check: check,
     start: start,
-    setState: setState
+    setState: setState,
+    refresh: triggerRootReindex,
+    isRefreshing: function () {
+      return _refreshBusy;
+    },
   };
 
   if (document.readyState === "loading") {

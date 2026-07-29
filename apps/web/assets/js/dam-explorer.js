@@ -24,6 +24,17 @@
   var VIZ_SCALE_KEY = "dam_viz_scale";
   var SHOW_ALL_KEY = "dam_explorer_show_all";
   var LANG_FILTER_KEY = "dam_explorer_lang_filter";
+  var CAT_MODE_KEY = "dam_explorer_cat_mode";
+  var EXPLORER_CAT_PRODUCT = "PRODUCT";
+  var EXPLORER_CAT_MATERIAL = "MATERIAL";
+  var PRODUCT_PATH_MARKERS = ["01 - PRODUKTY", "01 - PRODUCTS"];
+  var MATERIAL_PATH_MARKERS = [
+    "03 - MATERIAŁY",
+    "03 - MATERIALY",
+    "07 - E-COMMERCE",
+    "05 - SOCIAL",
+    "04 - DRUKOWANE"
+  ];
 
   var state = {
     fileIndex:        null,
@@ -47,6 +58,7 @@
     navStack:         [],
     navPos:           -1,
     navSilent:        false,
+    catMode:          localStorage.getItem(CAT_MODE_KEY) || EXPLORER_CAT_PRODUCT,
     searchQuery:      "",
     searchHits:       null,
     searchPanelTimer: null
@@ -1174,36 +1186,92 @@
   /* Category helpers                                                     */
   /* ------------------------------------------------------------------ */
 
+  function productPathUpper(p) {
+    return String((p && (p.path || p.root_key)) || "").toUpperCase();
+  }
+
+  function isExplorerProductItem(p) {
+    if (!p) return false;
+    var path = productPathUpper(p);
+    var i;
+    for (i = 0; i < PRODUCT_PATH_MARKERS.length; i++) {
+      if (path.indexOf(PRODUCT_PATH_MARKERS[i].toUpperCase()) !== -1) return true;
+    }
+    if (DL && typeof DL.categoryCanonId === "function" && DL.CATEGORY_CANON) {
+      var cid = DL.categoryCanonId(p.category);
+      for (i = 0; i < DL.CATEGORY_CANON.length; i++) {
+        if (DL.CATEGORY_CANON[i].id === cid) return true;
+      }
+    }
+    return false;
+  }
+
+  function isExplorerMaterialItem(p) {
+    if (!p || isExplorerProductItem(p)) return false;
+    var path = productPathUpper(p);
+    var i;
+    for (i = 0; i < MATERIAL_PATH_MARKERS.length; i++) {
+      if (path.indexOf(MATERIAL_PATH_MARKERS[i].toUpperCase()) !== -1) return true;
+    }
+    if (path.indexOf("MARKETING") !== -1) return true;
+    return false;
+  }
+
+  function productMatchesExplorerCatMode(p) {
+    if (state.catMode === EXPLORER_CAT_MATERIAL) return isExplorerMaterialItem(p);
+    return isExplorerProductItem(p);
+  }
+
   function getCanonicalCategoryList() {
     var products = (state.fileIndex && state.fileIndex.products) || [];
     var map = {};
     var orderMap = {};
-    if (DL) {
-      DL.CATEGORY_CANON.forEach(function (c, idx) { orderMap[c.id] = idx; });
+    var isProductMode = state.catMode !== EXPLORER_CAT_MATERIAL;
+    if (isProductMode && DL && DL.CATEGORY_CANON) {
+      DL.CATEGORY_CANON.forEach(function (c, idx) {
+        orderMap[c.id] = idx;
+        map[c.id] = { id: c.id, title: c.title, count: 0 };
+      });
     }
     products.forEach(function (p) {
       if (!isBrandEnabled(p)) return;
-      var cid = DL ? DL.categoryCanonId(p.category) : p.category;
-      var ctitle = DL ? DL.categoryTitle(p.category) : p.category;
+      if (!productMatchesExplorerCatMode(p)) return;
+      var cid;
+      var ctitle;
+      if (isProductMode) {
+        cid = DL ? DL.categoryCanonId(p.category) : p.category;
+        ctitle = DL ? DL.categoryTitle(p.category) : p.category;
+      } else {
+        cid = String(p.category || "INNE");
+        ctitle = DL && DL.stripCategoryNumber
+          ? DL.stripCategoryNumber(p.category) || p.category
+          : p.category;
+      }
       if (!map[cid]) map[cid] = { id: cid, title: ctitle, count: 0 };
       map[cid].count++;
     });
     var list = Object.keys(map).map(function (k) { return map[k]; });
     list.sort(function (a, b) {
-      var oa = (orderMap[a.id] !== undefined ? orderMap[a.id] : 99);
-      var ob = (orderMap[b.id] !== undefined ? orderMap[b.id] : 99);
-      return oa - ob;
+      var oa = orderMap[a.id] !== undefined ? orderMap[a.id] : 99;
+      var ob = orderMap[b.id] !== undefined ? orderMap[b.id] : 99;
+      if (oa !== ob) return oa - ob;
+      return String(a.title).localeCompare(String(b.title), "pl");
     });
     return list;
   }
 
   function getProductsForCanonCat() {
     if (!state.canonCat || !state.fileIndex) return [];
+    var isProductMode = state.catMode !== EXPLORER_CAT_MATERIAL;
     return filterProductsForExplorerView(
       (state.fileIndex.products || []).filter(function (p) {
         if (!isBrandEnabled(p)) return false;
-        var cid = DL ? DL.categoryCanonId(p.category) : p.category;
-        return cid === state.canonCat;
+        if (!productMatchesExplorerCatMode(p)) return false;
+        if (isProductMode) {
+          var cid = DL ? DL.categoryCanonId(p.category) : p.category;
+          return cid === state.canonCat;
+        }
+        return String(p.category || "INNE") === state.canonCat;
       })
     );
   }
@@ -4111,8 +4179,38 @@
     revealExplorerModules(mount);
   }
 
+  function syncExplorerCatModeUi() {
+    var mount = document.getElementById("damExplorerCatMode");
+    if (!mount) return;
+    mount.querySelectorAll('input[name="damExplorerCatMode"]').forEach(function (inp) {
+      inp.checked = inp.value === state.catMode;
+    });
+  }
+
+  function setExplorerCatMode(mode) {
+    var next = mode === EXPLORER_CAT_MATERIAL ? EXPLORER_CAT_MATERIAL : EXPLORER_CAT_PRODUCT;
+    if (state.catMode === next) return;
+    state.catMode = next;
+    state.canonCat = null;
+    state.product = null;
+    localStorage.setItem(CAT_MODE_KEY, next);
+    syncExplorerCatModeUi();
+    renderSidebar();
+    renderMain();
+  }
+
   function bindGlobalExplorerFilters() {
     syncExplorerShowAllUi();
+    syncExplorerCatModeUi();
+    var catModeMount = document.getElementById("damExplorerCatMode");
+    if (catModeMount && !catModeMount._damBound) {
+      catModeMount._damBound = true;
+      catModeMount.addEventListener("change", function (e) {
+        var inp = e.target;
+        if (!inp || inp.name !== "damExplorerCatMode") return;
+        setExplorerCatMode(inp.value);
+      });
+    }
     var showAllEl = document.getElementById("damExplorerShowAll");
     if (showAllEl && !showAllEl._damBound) {
       showAllEl._damBound = true;
