@@ -312,7 +312,7 @@
     return mt === "image" || mt === "vector";
   }
 
-  /** Pliki zrodlowe (PSD/PSB/AI/INDD…) — nie gotowy JPG/PNG. Tag Edytowalny na JPG zostaje. */
+  /** Pliki źródłowe (PSD/PSB/AI/INDD…) — nie gotowy JPG/PNG. Tag Edytowalny na JPG zostaje. */
   function isSourceEditableAsset(a) {
     if (!a) return false;
     var mt = normalizeMediaType(a.media_type);
@@ -1110,7 +1110,7 @@
     { id: "grill", label: "Grill / lato" },
     { id: "jesien", label: "Jesień" },
     { id: "zima", label: "Zima" },
-    { id: "swieta", label: "Święta" },
+    { id: "święta", label: "Święta" },
     { id: "wielkanoc", label: "Wielkanoc" },
     { id: "walentynki", label: "Walentynki" },
     { id: "dzienmatki", label: "Dzień matki" },
@@ -1156,7 +1156,7 @@
     { id: "slidery", label: "Slider sklepu", tab: "www", facet: "slider" },
     { id: "packshoty", label: "Packshoty produktów", tab: "packshots" },
     { id: "wielkanoc26", label: "Wielkanoc 2026", when: "wielkanoc", search: "wielkanoc", tab: "campaigns" },
-    { id: "swieta25", label: "Święta 2025", when: "swieta", search: "święta", tab: "campaigns" },
+    { id: "święta25", label: "Święta 2025", when: "święta", search: "święta", tab: "campaigns" },
     { id: "rossmann", label: "Rossmann", search: "rossmann", tab: "campaigns" },
     { id: "lidl", label: "Lidl", search: "lidl", tab: "campaigns" },
     { id: "burgerkamp", label: "Burger — kampania", search: "burger", tab: "campaigns" },
@@ -1800,7 +1800,7 @@
     if (whenId === "grill") {
       return /grill|burger|parowk|kaszank|listonic|niemies|roslinn|wakacj|lato/.test(blob);
     }
-    if (whenId === "swieta") {
+    if (whenId === "święta") {
       return /swiet|adwent|boze|narodzen|gwiazd/.test(blob);
     }
     if (whenId === "wielkanoc") {
@@ -2620,13 +2620,13 @@
       var wrap = document.createElement("div");
       wrap.className = "dam-viz-thumb__noviz dam-branding-thumb__icon dam-branding-thumb__icon--nosync";
       wrap.setAttribute("role", "img");
-      wrap.setAttribute("aria-label", "Podglad niedostepny: " + label);
+      wrap.setAttribute("aria-label", "Podglad niedostępny: " + label);
       wrap.title =
         (window.DamPreviewTruth && DamPreviewTruth.onErrorTitle()) ||
-        "Podglad niedostepny";
+        "Podglad niedostępny";
       wrap.innerHTML =
         '<i class="uil uil-cloud-slash" aria-hidden="true"></i>' +
-        "<span>Podglad niedostepny</span>" +
+        "<span>Podglad niedostępny</span>" +
         (label
           ? '<span class="dam-branding-thumb__nosync-id">' +
             String(label)
@@ -2975,7 +2975,7 @@
         if (grid) {
           window.DamGridReveal.skeleton(grid, { variant: "cards", count: 8, layout: "viz-grid" });
         }
-        /* daj przegladarce klatke na wymalowanie skeletonow przed ciezkim renderem */
+        /* daj przeglądarce klatke na wymalowanie skeletonow przed ciezkim renderem */
         requestAnimationFrame(function () {
           setTimeout(runPhases, 0);
         });
@@ -4347,7 +4347,7 @@
       "key-visuale": "packshots",
       brandbook: "brandbook",
       browse: "all",
-      przegladaj: "all",
+      przeglądaj: "all",
     };
     return map[h] || null;
   }

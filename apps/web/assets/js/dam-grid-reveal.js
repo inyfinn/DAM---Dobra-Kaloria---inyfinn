@@ -527,7 +527,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Wiersze / pozycje list (tabele faktur, kosztow) — fade + lekki zjazd
+  // Wiersze / pozycje list (tabele faktur, kosztów) — fade + lekki zjazd
   // ---------------------------------------------------------------------------
 
   function revealRows(container, selector, opts) {

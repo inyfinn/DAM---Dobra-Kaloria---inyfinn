@@ -16,10 +16,10 @@
     global.DAM_DISABLE_THUMB_WARM = true;
   }
 
-  var LABEL_ONLINE_ONLY = "Element z dysku dostepny tylko online - Synology";
-  var LABEL_MISSING = "Podglad niedostepny";
-  var LABEL_HINT = "brak podgladu";
-  var LABEL_ROOT = "Ustaw sciezke Marketing w ustawieniach dysku";
+  var LABEL_ONLINE_ONLY = "Element z dysku dostępny tylko online - Synology";
+  var LABEL_MISSING = "Podglad niedostępny";
+  var LABEL_HINT = "brak podglądu";
+  var LABEL_ROOT = "Ustaw ścieżke Marketing w ustawieniach dysku";
   var CTA_DISK = "settings.html#damDisk";
 
   function bridgeUrl() {
@@ -38,7 +38,7 @@
   /**
    * Grid/card FIRST PAINT only (PI preview.cache.ephemeral_only).
    * Redis/PAMIEC przyspiesza pokazanie karty — NIGDY nie uzywac jako stale src
-   * po kliknieciu (modal/lightbox = /media, zrodlo z dysku).
+   * po kliknieciu (modal/lightbox = /media, źródło z dysku).
    */
   function thumbCacheUrl(path, profile) {
     if (!path) return "";

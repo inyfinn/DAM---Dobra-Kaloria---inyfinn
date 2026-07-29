@@ -54,7 +54,7 @@
     });
   }
 
-  /** Odswiez label dropdownow + chipy - bez ponownego notify */
+  /** Odśwież label dropdownow + chipy - bez ponownego notify */
   function syncAllUi(brands) {
     pruneChipInstances();
     dropdownInstances.forEach(function (inst) {

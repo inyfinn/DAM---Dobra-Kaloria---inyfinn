@@ -1,5 +1,5 @@
 /**
- * Wspolny podglad mediow (branding, explorer, …) - ten sam DOM/CSS co dam-viz-modal.
+ * Wspolny podgląd mediow (branding, explorer, …) - ten sam DOM/CSS co dam-viz-modal.
  */
 (function () {
   "use strict";
@@ -9,7 +9,7 @@
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">' +
         '<rect fill="#f1f3f6" width="320" height="240"/>' +
-        '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="14">Brak podgladu</text>' +
+        '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="14">Brak podglądu</text>' +
         "</svg>"
     );
 
@@ -170,7 +170,7 @@
       ".dam-media-preview__resizer-warn{",
       "margin:0;font-size:11px;line-height:1.4;color:var(--dam-text-muted,#6b6b76);",
       "background:#f7f7f9;border:1px solid var(--dam-border,#e2e2ea);border-radius:8px;padding:8px 10px;}",
-      /* Task 38: czytelny placeholder gdy Synology/Drive nie zsynchronizowal podgladu */
+      /* Task 38: czytelny placeholder gdy Synology/Drive nie zsynchronizowal podglądu */
       ".dam-media-preview__assoc-thumb--fallback{",
       "display:grid;grid-template-rows:auto 1fr auto;align-items:end;justify-items:center;",
       "width:100%;height:100%;min-height:56px;max-height:80px;padding:6px 4px;box-sizing:border-box;overflow:hidden;",
@@ -372,7 +372,7 @@
     /* Packshot/wizka — nie element; do material trafi i i tak odpadnie w isVisualizationAsset. */
     if (isLinksRawPath(x.path)) return "element-link";
     if (isMaterialyElementyPath(x.path)) return "element-ready";
-    /* KULKA2 / KULKI - … / freepik — izolowane elementy (NIE packshot produktowy). */
+    /* KULKA2 / KULKI - … / freepik — izolowane elementy (NIE packshot produktówy). */
     if (!looksLikePackshotOrPrintAsset(x) && looksLikeIsolatedElementName(x.name)) {
       return "element-ready";
     }
@@ -380,12 +380,12 @@
   }
 
   /**
-   * HARD (user 2026-07-20): pliki zrodlowe (wektor/AI/EPS, PDF, PSD i inne "source")
+   * HARD (user 2026-07-20): pliki źródłowe (wektor/AI/EPS, PDF, PSD i inne "source")
    * NIGDY nie moga trafic do "Skojarzone materialy" ani do elementow w tym podglądzie -
-   * to widok dla materialow marketingowych, nie miejsce na zrodla graficzne.
+   * to widok dla materialow marketingowych, nie miejsce na źródła graficzne.
    */
   var ASSOC_EXCLUDE_MEDIA_TYPES = { vector: 1, document: 1, source: 1 };
-  /** Rozszerzenia zrodlowe / edytowalne — NIGDY w Skojarzone materialy (jak Branding grid). */
+  /** Rozszerzenia źródłowe / edytowalne — NIGDY w Skojarzone materialy (jak Branding grid). */
   var ASSOC_FORBIDDEN_EXTS = {
     ai: 1,
     psd: 1,
@@ -405,7 +405,7 @@
   var ASSOC_MARKETING_RASTER_EXTS = { jpg: 1, jpeg: 1, png: 1, webp: 1, gif: 1, bmp: 1, tif: 1, tiff: 1 };
 
   /**
-   * HARD GLOBAL (user 2026-07-20): wektor/PDF/PSD/AI/source + heurystyki sciezki.
+   * HARD GLOBAL (user 2026-07-20): wektor/PDF/PSD/AI/source + heurystyki ścieżki.
    * Branding grid nie pokazuje tych plikow jako skojarzone materialy — ten sam zakaz.
    */
   function isSourceLikeAsset(x) {
@@ -421,7 +421,7 @@
       for (var si = 0; si < segs.length; si++) {
         if (SOURCE_DIR_RE && SOURCE_DIR_RE.test(segs[si])) return true;
       }
-      if (/\/(zrodla|zrodlo|zrodlowe|sources|src|edytowalne)\//.test(path)) return true;
+      if (/\/(źródła|źródło|źródłowe|sources|src|edytowalne)\//.test(path)) return true;
     }
     return false;
   }
@@ -441,10 +441,10 @@
     var base = name.replace(/\.[a-z0-9]+$/i, "");
     if (/^IMG_\d{3,}/i.test(base) || /\bIMG_\d{3,}/i.test(name)) return true;
     if (/^DSC[_\-]?\d{3,}/i.test(base) || /^WA\d{4,}/i.test(base)) return true;
-    /* M-META* w nazwie bez sciezki kampanii - zwykle dump Meta Ads, nie slider. */
+    /* M-META* w nazwie bez ścieżki kampanii - zwykle dump Meta Ads, nie slider. */
     if (/\bM-META\d+/i.test(name) && !isCampaignMarketingPath(x.path)) return true;
     var path = normSlashesLower(x.path);
-    /* WSPOLPRACE / influencerzy: zdjecia z telefonu spryskane na wiele produktow PROTEINA*. */
+    /* WSPOLPRACE / influencerzy: zdjecia z telefonu spryskane na wiele produktów PROTEINA*. */
     if (
       path &&
       (/\/02\s*-\s*wsp[oó]lprace\b/.test(path) ||
@@ -600,7 +600,7 @@
    * Material marketingowy przy wizce produktu.
    * HARD: phone dump juz odciety w passesMarketingAssocMaterial.
    * Spray (linkedN>=4) bez sygnalu produktu = out (IMG/WSPOLPRACE false+).
-   * Wazne: NIE wymagaj hits>=2 przy jawnych skojarzeniach 1–3 produktow —
+   * Wazne: NIE wymagaj hits>=2 przy jawnych skojarzeniach 1–3 produktów —
    * to wyzerowalo Nuggets (6300586) mimo realnych sliderow/meta.
    */
   function isRelevantMaterialForProduct(x, ctx) {
@@ -673,7 +673,7 @@
   }
 
   /**
-   * Filtr produktow przy materialie brandingowym (odwrotnosc viz→materials).
+   * Filtr produktów przy materialie brandingowym (odwrotnosc viz→materials).
    * Folder SLIDERY KATEGORIE czesto ma spray folder_linked_product_ids (Banoffee/
    * Proteina przy "batony daktylowe") - zostaw tylko produkty ze sygnalem w nazwie
    * assetu / podkategorii (np. daktylow*).
@@ -827,15 +827,15 @@
     ph.setAttribute("role", "img");
     ph.setAttribute(
       "aria-label",
-      "Podglad niedostepny" + (label ? ": " + label : "") + (idHint && idHint !== label ? " (" + idHint + ")" : "")
+      "Podglad niedostępny" + (label ? ": " + label : "") + (idHint && idHint !== label ? " (" + idHint + ")" : "")
     );
-    ph.title = "Podglad niedostepny (Synology Drive / brak sync)";
+    ph.title = "Podglad niedostępny (Synology Drive / brak sync)";
     ph.innerHTML =
       '<i class="uil uil-image-slash" aria-hidden="true"></i>' +
       (label
         ? '<span class="dam-assoc-thumb-fallback__label">' + escText(label) + "</span>"
         : "") +
-      '<span class="dam-assoc-thumb-fallback__hint">podglad niedostepny</span>' +
+      '<span class="dam-assoc-thumb-fallback__hint">podgląd niedostępny</span>' +
       (idHint && idHint !== label
         ? '<span class="dam-assoc-thumb-fallback__label">' + escText(idHint) + "</span>"
         : "");
@@ -850,7 +850,7 @@
     img.onerror = null;
     img.src = VIDEO_POSTER_FALLBACK;
     img.classList.add("dam-media-preview__assoc-thumb--video-fallback");
-    /* Most bez ffmpeg: sprobuj klatke w przegladarce (~25%). */
+    /* Most bez ffmpeg: sprobuj klatke w przeglądarce (~25%). */
     tryCaptureAssocVideoFrame(img);
   };
 
@@ -1025,7 +1025,8 @@
   }
 
   function injectTitleExtLayoutCss() {
-    if (document.getElementById("damMediaPreviewTitleExtCss")) return;
+    var old = document.getElementById("damMediaPreviewTitleExtCss");
+    if (old) old.remove();
     var st = document.createElement("style");
     st.id = "damMediaPreviewTitleExtCss";
     st.textContent =
@@ -1033,14 +1034,14 @@
       "display:flex!important;flex-wrap:wrap;align-items:center;gap:0 15px!important;column-gap:15px!important;}" +
       "#damMediaPreviewTitle .dam-media-preview__title-base," +
       "#damVizModalTitle .dam-media-preview__title-base{" +
-      "display:inline;flex:0 1 auto;min-width:0;word-break:break-word;line-height:1.3;}" +
+      "display:inline-flex!important;align-items:center;flex:0 1 auto;min-width:0;word-break:break-word;line-height:1!important;padding:0!important;}" +
       "#damMediaPreviewTitle .dam-media-preview__ext-tag," +
       "#damVizModalTitle .dam-media-preview__ext-tag{" +
-      "display:inline-flex;flex-shrink:0;align-self:center;margin-inline-start:0;" +
+      "display:inline-flex!important;flex-shrink:0;align-self:center!important;margin:0!important;" +
       "--_dam-badge-scale:var(--dam-badge-scale,1.05);" +
       "padding:calc(5px * var(--_dam-badge-scale)) calc(11px * var(--_dam-badge-scale));" +
       "font-size:calc((var(--dam-tag-fs-pill,10.5px) + 1px) * var(--_dam-badge-scale));" +
-      "line-height:1.25;min-height:calc(26px * var(--_dam-badge-scale,1));}";
+      "line-height:1.25!important;min-height:calc(26px * var(--_dam-badge-scale,1));height:calc(26px * var(--_dam-badge-scale,1));}";
     document.head.appendChild(st);
   }
 
@@ -1381,14 +1382,14 @@
           '" alt="' +
           esc(label) +
           '" loading="lazy" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
-        : '<span class="dam-media-preview__assoc-thumb dam-media-preview__assoc-thumb--fallback" role="img" aria-label="Podglad niedostepny: ' +
+        : '<span class="dam-media-preview__assoc-thumb dam-media-preview__assoc-thumb--fallback" role="img" aria-label="Podglad niedostępny: ' +
           esc(label) +
-          '" title="Podglad niedostepny (Synology Drive / brak sync)">' +
+          '" title="Podglad niedostępny (Synology Drive / brak sync)">' +
           '<i class="uil uil-image-slash" aria-hidden="true"></i>' +
           '<span class="dam-assoc-thumb-fallback__label">' +
           esc(label) +
           "</span>" +
-          '<span class="dam-assoc-thumb-fallback__hint">podglad niedostepny</span>' +
+          '<span class="dam-assoc-thumb-fallback__hint">podgląd niedostępny</span>' +
           (idx
             ? '<span class="dam-assoc-thumb-fallback__label">' + esc(idx) + "</span>"
             : "") +
@@ -1518,7 +1519,7 @@
     });
     host.hidden = false;
     host.innerHTML =
-      '<div class="dam-media-preview__assoc-pane-section dam-media-preview__assoc-pane-section--products">' +
+      '<div class="dam-media-preview__assoc-section dam-media-preview__assoc-pane-section dam-media-preview__assoc-pane-section--products">' +
       assocLabelRow("Skojarzone produkty", "product") +
       '<div data-produkty-host="1">' +
       produktyGridBlockHtml(list) +
@@ -1539,11 +1540,11 @@
     return base;
   }
 
-  /* ---------- Rule A/B: indeks branding w runtime (tiery jakosci + zrodla w gore drzewa) ---------- */
+  /* ---------- Rule A/B: indeks branding w runtime (tiery jakosci + źródła w gore drzewa) ---------- */
 
   /* Zrodla edycyjne: CTA w SourceMount / actions — NIGDY w .variant-grid (HARD 2026-07-21). */
   var EDITABLE_EXTS = { psd: 1, psb: 1, ai: 1, indd: 1, eps: 1, pdf: 1 };
-  var SOURCE_DIR_RE = /^(psd|psb|ai|edytowalne|zrodla|zrodlo|source|sources|src)$/i;
+  var SOURCE_DIR_RE = /^(psd|psb|ai|edytowalne|źródła|źródło|source|sources|src)$/i;
   var QUALITY_LABELS = ["XL", "L", "S", "XS", "XXS", "XXXS"];
   var _indexAssetsPromise = null;
   var _linkedBrandingByProductCache = {};
@@ -1962,7 +1963,7 @@
 
   /**
    * Rule A: ta sama kreacja w roznych poziomach kompresji (identyczny creativeKey + ext)
-   * w obrebie wspolnego przodka (2 poziomy w gore). Zwraca posortowana liste tierow
+   * w obrebie wspólnego przodka (2 poziomy w gore). Zwraca posortowana liste tierow
    * z etykietami XL/L/S/XS albo null, gdy kreacja ma tylko jeden plik.
    */
   function findQualitySet(asset, allAssets) {
@@ -2129,7 +2130,7 @@
     });
   }
 
-  /** PSD/PSB/AI/PDF/… = zrodla edycyjne — TYLKO CTA w SourceMount / actions.
+  /** PSD/PSB/AI/PDF/… = źródła edycyjne — TYLKO CTA w SourceMount / actions.
    *  NIGDY w .variant-grid / WARIANTY MATERIALU (HARD user 2026-07-21, wszedzie). */
   function isSourceVariantFile(v) {
     if (!v) return true;
@@ -2167,7 +2168,7 @@
   function isPhantomMaterialVariant(v) {
     if (!v) return true;
     var idx = String(v.index_base || v.index || v.product_index || "").split(".")[0];
-    if (isPhantomProductIndex(idx)) return true;
+    if (idx && isPhantomProductIndex(idx)) return true;
     if (!v.path && !v.thumb_url) {
       var fn = variantFileLabel(v);
       if (/\b00\b/.test(fn) && !/\b630\d{4}\b/.test(fn)) return true;
@@ -2191,7 +2192,7 @@
     var list = (variants || []).filter(function (v) {
       if (!v || !v.id) return false;
       if (isPhantomMaterialVariant(v)) return false;
-      /* HARD: zrodla nigdy w gridzie — ani w materialMode, ani poza nim. */
+      /* HARD: źródła nigdy w gridzie — ani w materialMode, ani poza nim. */
       return !isSourceVariantFile(v);
     });
     if (!materialSiblings) {
@@ -2394,7 +2395,7 @@
     return (
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--branding-split">' +
       '<div class="dam-media-preview__pane-products" id="damMediaPreviewLinkedProductsHost">' +
-      '<div class="dam-media-preview__assoc-pane-section dam-media-preview__assoc-pane-section--products">' +
+      '<div class="dam-media-preview__assoc-section dam-media-preview__assoc-pane-section dam-media-preview__assoc-pane-section--products">' +
       assocLabelRow("Skojarzone produkty", "product") +
       '<div data-produkty-host="1"><p class="dam-media-preview__assoc-empty">Brak skojarzonych produktów</p></div>' +
       "</div></div>" +
@@ -2467,14 +2468,14 @@
           '" loading="lazy" onerror="' +
           onErr +
           '">'
-        : '<span class="dam-media-preview__assoc-thumb dam-media-preview__assoc-thumb--fallback" role="img" aria-label="Podglad niedostepny: ' +
+        : '<span class="dam-media-preview__assoc-thumb dam-media-preview__assoc-thumb--fallback" role="img" aria-label="Podglad niedostępny: ' +
           esc(label) +
-          '" title="Podglad niedostepny (Synology Drive / brak sync)">' +
+          '" title="Podglad niedostępny (Synology Drive / brak sync)">' +
           '<i class="uil uil-image-slash" aria-hidden="true"></i>' +
           '<span class="dam-assoc-thumb-fallback__label">' +
           esc(label) +
           "</span>" +
-          '<span class="dam-assoc-thumb-fallback__hint">podglad niedostepny</span>' +
+          '<span class="dam-assoc-thumb-fallback__hint">podgląd niedostępny</span>' +
           (mkId
             ? '<span class="dam-assoc-thumb-fallback__label">' + esc(mkId) + "</span>"
             : "") +
@@ -2619,7 +2620,7 @@
     }
   }
 
-  /** Ostatni productContext z renderLinkedBrandingAssets — do odswiezenia po Shift+edit. */
+  /** Ostatni productContext z renderLinkedBrandingAssets — do odświeżenia po Shift+edit. */
   var _lastLinkedProductContext = null;
   var _lastExplicitMaterialIds = [];
 
@@ -2725,7 +2726,7 @@
     return (asset.folder_linked_product_ids || []).slice();
   }
 
-  /** Pelna lista ID produktow skojarzonych z assetem (linked_products + *_ids). */
+  /** Pelna lista ID produktów skojarzonych z assetem (linked_products + *_ids). */
   function collectAssetLinkedProductIds(asset) {
     var ids = [];
     var seen = {};
@@ -3304,7 +3305,7 @@
         });
       })
       .catch(function () {
-        /* most niedostepny - cicho */
+        /* most niedostępny - cicho */
       });
   }
 
@@ -3580,6 +3581,11 @@
       }
       clearAssocPaneLoadingState(mount);
       if (!materials.length) {
+        var assocColEmpty = mount.parentElement;
+        if (assocColEmpty) {
+          var staleToggleEmpty = assocColEmpty.querySelector("[data-linked-assets-toggle]");
+          if (staleToggleEmpty) staleToggleEmpty.remove();
+        }
         mount.innerHTML = '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów</p>';
         /* Nawet przy 0 materialach: Edytuj wszystko + Shift plus (jak branding). */
         var AE0 = window.DamAssocEdit;
@@ -3604,27 +3610,25 @@
           return g.primary;
         });
         var collapsible = shownGroups.length > LINKED_ASSETS_VISIBLE;
-        mount.innerHTML =
-          shownGroups
-            .map(function (g, i) {
-              return linkedBrandingCardHtml(
-                g.primary,
-                i,
-                collapsible && i >= LINKED_ASSETS_VISIBLE,
-                "data-linked-asset-idx",
-                {
-                  count: (g.assets && g.assets.length) || 1,
-                  label: g.label || assocGroupDisplayLabel(g.primary),
-                }
-              );
-            })
-            .join("") +
-          (collapsible
-            ? '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-media-preview__variants-toggle" data-linked-assets-toggle aria-expanded="false">' +
-              '<i class="uil uil-angle-down" aria-hidden="true"></i><span>Pokaż wszystkie (' +
-              shownGroups.length +
-              ")</span></button>"
-            : "");
+        var assocCol = mount.parentElement;
+        if (assocCol) {
+          var staleToggle = assocCol.querySelector("[data-linked-assets-toggle]");
+          if (staleToggle) staleToggle.remove();
+        }
+        mount.innerHTML = shownGroups
+          .map(function (g, i) {
+            return linkedBrandingCardHtml(
+              g.primary,
+              i,
+              collapsible && i >= LINKED_ASSETS_VISIBLE,
+              "data-linked-asset-idx",
+              {
+                count: (g.assets && g.assets.length) || 1,
+                label: g.label || assocGroupDisplayLabel(g.primary),
+              }
+            );
+          })
+          .join("");
         if (collapsible) mount.classList.add("is-collapsed-assets");
         else mount.classList.remove("is-collapsed-assets");
         bindLinkedAssetClicks(mount, shownPrimaries, "data-linked-asset-idx", shownGroups);
@@ -3635,7 +3639,7 @@
         if (window.DamCardZoom && typeof window.DamCardZoom.apply === "function") {
           window.DamCardZoom.apply(window.DamCardZoom.readPct());
         }
-        /* HARD: ta sama Shift+/−/plus sciezka co branding (#damMediaPreviewAssoc). */
+        /* HARD: ta sama Shift+/−/plus ścieżka co branding (#damMediaPreviewAssoc). */
         var AE = window.DamAssocEdit;
         if (AE && typeof AE.bindMaterialsPane === "function") {
           var paneHost = resolveAssocPaneScope(mount);
@@ -3661,7 +3665,19 @@
             onRefresh: refreshLinkedBrandingAfterEdit,
           });
         }
-        var toggle = mount.querySelector("[data-linked-assets-toggle]");
+        var toggle = null;
+        if (collapsible) {
+          toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "geex-btn geex-btn--sm dam-btn-icon dam-media-preview__variants-toggle";
+          toggle.setAttribute("data-linked-assets-toggle", "");
+          toggle.setAttribute("aria-expanded", "false");
+          toggle.innerHTML =
+            '<i class="uil uil-angle-down" aria-hidden="true"></i><span>Pokaż wszystkie (' +
+            shownGroups.length +
+            ")</span>";
+          mount.insertAdjacentElement("afterend", toggle);
+        }
         if (toggle) {
           toggle.addEventListener("click", function () {
             var expanded = toggle.getAttribute("aria-expanded") === "true";
@@ -3940,13 +3956,13 @@
     return String((b && b.path) || "").localeCompare(String((a && a.path) || "")) >= 0 ? b : a;
   }
 
-  /** Pliki zrodlowe (PSD/PSB/AI/…) - CTA w #damMediaPreviewSourceMount (nie w variant-grid). */
+  /** Pliki źródłowe (PSD/PSB/AI/…) - CTA w #damMediaPreviewSourceMount (nie w variant-grid). */
   function sourceActionFiles(asset, groupContext) {
     var order = { psd: 0, psb: 1, ai: 2, pdf: 3, indd: 4, eps: 5 };
     var byExt = {};
     editableFilesFor(asset, groupContext).forEach(function (f) {
       if (!f || !f.path) return;
-      /* Gdy podglad = raster, zrodla PSD i tak w mount; gdy podglad = PSD, pokaz inne zrodla. */
+      /* Gdy podgląd = raster, źródła PSD i tak w mount; gdy podgląd = PSD, pokaz inne źródła. */
       if (asset && asset.path && f.path === asset.path) return;
       var ext = splitNameExt(f.name || f.path).ext;
       if (!(ext in order)) return;
@@ -4107,7 +4123,7 @@
 
 
   /**
-   * CTA zrodlowe obok Przejdz / Folder - osobny przycisk na kazdy plik (etykieta = PSD/PSB/AI).
+   * CTA źródłowe obok Przejdz / Folder - osobny przycisk na kazdy plik (etykieta = PSD/PSB/AI).
    * Nie pomylac z tagiem rozszerzenia w tytule.
    */
   function sourceFileActionHtml(asset, groupContext) {
@@ -4141,7 +4157,7 @@
         var parts = splitNameExt(f.name || f.path);
         var extLabel = (parts.ext || "plik").toUpperCase();
         var label = f.name || f.path;
-        var tip = "Otwiera plik zrodlowy (" + extLabel + "): " + label;
+        var tip = "Otwiera plik źródłowy (" + extLabel + "): " + label;
         return (
           '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-modal__cta dam-media-preview__source-btn" data-media-source-btn="1" data-path="' +
           esc(f.path) +
@@ -4254,7 +4270,7 @@
     if (existing) existing.remove();
 
     var syEnabled = localStorage.getItem("dam_synology_enabled") !== "false";
-    var shareTitle = syEnabled ? "Udostepnij przez Synology" : "Udostepnij (wylaczone)";
+    var shareTitle = syEnabled ? "Udostępnij przez Synology" : "Udostępnij (wylaczone)";
 
     var navPrev =
       siblings.length > 1
@@ -4278,7 +4294,7 @@
         ? window.DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>') +
       "<span>Folder</span></button>" +
-      '<span id="damMediaPreviewSourceMount" class="dam-media-preview__source-mount" aria-label="Pliki zrodlowe"></span>' +
+      '<span id="damMediaPreviewSourceMount" class="dam-media-preview__source-mount" aria-label="Pliki źródłowe"></span>' +
       /* --- FILE OPEN CTA (left of copy) --- */
       '<button type="button" class="dam-viz-icon-btn" id="damMediaPreviewOpenFile" data-dam-tip="Otwiera plik w domyślnej aplikacji Windows i kopiuje ścieżkę" aria-label="Otwórz plik" title="Otwórz plik">' +
       '<i class="uil uil-external-link-alt" aria-hidden="true"></i></button>' +
@@ -5767,7 +5783,7 @@
       openFileBtn.addEventListener("click", function () {
         var p = openFileBtn.getAttribute("data-path") || "";
         if (!p) {
-          toast("Brak sciezki pliku");
+          toast("Brak ścieżki pliku");
           return;
         }
         if (window.DamPaths && typeof window.DamPaths.openFileAndCopyPath === "function") {
@@ -5789,7 +5805,7 @@
           return;
         }
         copyToClipboard(rawPath).then(function () {
-          toast("Skopiowano sciezke do schowka");
+          toast("Skopiowano ścieżke do schowka");
         });
       });
     }
@@ -5832,7 +5848,7 @@
   };
 
   function ensureVizModalCss() {
-    var href = "assets/css/dam-viz-modal.css?v=5.0.64";
+    var href = "assets/css/dam-viz-modal.css?v=5.0.77";
     var existing = document.getElementById("dam-viz-modal-css");
     if (existing) {
       if (existing.tagName === "LINK" && existing.getAttribute("href") !== href) {

@@ -1,12 +1,12 @@
 /**
 
- * DAM - UI zarzadzania sciezkami Marketing per urzadzenie.
+ * DAM - UI zarządzania ścieżkami Marketing per urządzenie.
 
  * Mount: profile.html#damDevicePathsRoot oraz settings.html#damDisk (ta sama karta).
 
  * Zalezy od DamPaths (API bridge) + opcjonalnie DamDanger (hold-to-delete).
 
- * Style wstrzykniete lokalnie (nie ruszamy cudzych CSS przy wspolbieznych agentach).
+ * Style wstrzykniete lokalnie (nie ruszamy cudzych CSS przy współbieżnych agentach).
 
  */
 
@@ -230,13 +230,13 @@
 
           "<div>" +
 
-            '<h3 class="dam-devpath-title">Urzadzenia i sciezki Marketing</h3>' +
+            '<h3 class="dam-devpath-title">Urzadzenia i ścieżki Marketing</h3>' +
 
             '<p class="dam-devpath-lead">Kazda stacja (dom, praca) ma wlasna litere dysku. ' +
 
-              "Sciezka zapisana tu dotyczy tylko wybranego urzadzenia - nie przenosi sie miedzy komputerami. " +
+              "Sciezka zapisana tu dotyczy tylko wybranego urządzeńia - nie przenosi sie miedzy komputerami. " +
 
-              "Wskaz folder przyciskiem Folder (nie musisz klepac sciezki).</p>" +
+              "Wskaz folder przyciskiem Folder (nie musisz klepac ścieżki).</p>" +
 
           "</div>" +
 
@@ -264,7 +264,7 @@
 
           '<input type="text" id="damDevPathLabel" class="form-control" placeholder="np. Dom, Praca, Laptop" maxlength="64" />' +
 
-          '<label for="damDevPathHostname">Nazwa urzadzenia (hostname)</label>' +
+          '<label for="damDevPathHostname">Nazwa urządzeńia (hostname)</label>' +
 
           '<input type="text" id="damDevPathHostname" class="form-control" placeholder="np. DESKTOP-ABC" />' +
 
@@ -280,7 +280,7 @@
 
             '<button type="button" class="geex-btn geex-btn--primary" id="damDevPathFolder" ' +
 
-              'title="Wskaz folder w Eksploratorze Windows" data-dam-tip="Otwiera wybor folderu - nie musisz klepac sciezki">' +
+              'title="Wskaz folder w Eksploratorze Windows" data-dam-tip="Otwiera wybor folderu - nie musisz klepac ścieżki">' +
 
               '<i class="uil uil-folder" aria-hidden="true"></i> Folder</button>' +
 
@@ -398,7 +398,7 @@
 
         if (res && res.ok) {
 
-          toast("Usunieto wpis urzadzenia");
+          toast("Usunieto wpis urządzeńia");
 
           if (current && current.device_id === id && DamPaths.setBasePath) {
 
@@ -436,7 +436,7 @@
 
         DamDanger.bind(btn, {
 
-          label: "Usun urzadzenie",
+          label: "Usun urządzenie",
 
           hint: "Przytrzymaj, aby usunac",
 
@@ -452,7 +452,7 @@
 
       btn.addEventListener("click", function () {
 
-        if (!window.confirm("Usunac sciezke dla urzadzenia " + id + "?")) return;
+        if (!window.confirm("Usunac ścieżke dla urządzeńia " + id + "?")) return;
 
         doDelete(id, current);
 
@@ -484,7 +484,7 @@
 
         '<span class="dam-devpath-pill' + (has || path ? "" : " is-missing") + '">' +
 
-          (has || path ? "To urzadzenie" : "Brak sciezki") +
+          (has || path ? "To urządzenie" : "Brak ścieżki") +
 
         "</span>" +
 
@@ -512,9 +512,9 @@
 
         listEl.innerHTML =
 
-          '<p class="dam-devpath-empty">Brak zapisanych urzadzen w bazie. ' +
+          '<p class="dam-devpath-empty">Brak zapisanych urządzeń w bazie. ' +
 
-          "Ustaw sciezke dla tego komputera przyciskiem Dodaj / ustaw, potem Folder.</p>";
+          "Ustaw ścieżke dla tego komputera przyciskiem Dodaj / ustaw, potem Folder.</p>";
 
         return;
 
@@ -604,7 +604,7 @@
 
         document.getElementById("damDevPathList").innerHTML =
 
-          '<p class="dam-devpath-empty">DamPaths niedostepne - odswiez strone.</p>';
+          '<p class="dam-devpath-empty">DamPaths niedostępne - odśwież strone.</p>';
 
         return;
 
@@ -618,7 +618,7 @@
 
             '<span class="dam-devpath-pill is-missing">Wymagane logowanie</span>' +
 
-            '<span class="dam-devpath-meta">Zaloguj sie, aby zarzadzac sciezkami urzadzen w bazie.</span>';
+            '<span class="dam-devpath-meta">Zaloguj się, aby zarzadzac ścieżkami urządzeń w bazie.</span>';
 
           document.getElementById("damDevPathList").innerHTML = "";
 
@@ -690,7 +690,7 @@
 
       if (!global.DamPaths || !DamPaths.pickFolder) {
 
-        setMsg("Wybor folderu niedostepny - wpisz sciezke lub uruchom most.", false);
+        setMsg("Wybor folderu niedostępny - wpisz ścieżke lub uruchom most.", false);
 
         return;
 
@@ -752,13 +752,13 @@
 
         } else {
 
-          setMsg("Nie znaleziono automatycznie - uzyj Folder albo wpisz sciezke.", false);
+          setMsg("Nie znaleziono automatycznie - uzyj Folder albo wpisz ścieżke.", false);
 
         }
 
       }).catch(function () {
 
-        setMsg("Most offline - uzyj Folder albo wpisz sciezke.", false);
+        setMsg("Most offline - uzyj Folder albo wpisz ścieżke.", false);
 
       });
 
@@ -780,7 +780,7 @@
 
       if (!global.DamPaths || !DamPaths.validateBaseRemote) {
 
-        setMsg("Walidacja niedostepna offline.", false);
+        setMsg("Walidacja niedostępna offline.", false);
 
         return;
 
@@ -802,7 +802,7 @@
 
         if (res && res.ok) {
 
-          setMsg("OK - ta sciezka zawiera ARCHIWUM / EKSPORT / POLSKA.", true);
+          setMsg("OK - ta ścieżka zawiera ARCHIWUM / EKSPORT / POLSKA.", true);
 
         } else if (res && res.missing && res.missing.length) {
 
@@ -868,7 +868,7 @@
 
       if (!global.DamPaths || !DamPaths.upsertUserDevicePath) {
 
-        setMsg("DamPaths niedostepne.", false);
+        setMsg("DamPaths niedostępne.", false);
 
         return;
 
@@ -916,7 +916,7 @@
 
         setMsg("Zapisano.", true);
 
-        toast("Zapisano sciezke urzadzenia");
+        toast("Zapisano ścieżke urządzeńia");
 
         closeForm();
 

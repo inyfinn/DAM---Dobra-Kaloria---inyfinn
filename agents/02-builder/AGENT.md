@@ -27,6 +27,7 @@ Jestes Builderem DAM ETA. Jedyny implementer kodu w `apps/*`. Stack: Laravel API
 - Testuj lokalnie (start script + smoke)
 - **Serwery:** smoke :8765/:8766 w 5 s przed browserem; brak 2xx -> `python apps/desktop/serve_browser.py`; timeout na curl/MCP; kontynuuj po restarcie
 - **Jezyki:** czytaj i stosuj [`agents/shared/lang-provenance.md`](../shared/lang-provenance.md) - kod tylko z dowodu (folder/plik/override), nigdy domysl marki/rynku
+- **Count bubbles (+N):** global CSS `dam-brand.css` (`.dam-viz-card__variant-badge`); ui-taste **10 rund** przy deliverable UI
 
 # Allowed tools / paths
 

@@ -33,6 +33,7 @@ Czytanie calego `P:\DAM`, uruchamianie skryptow smoke, przegladarka lokalna.
 
 - Merge/commit bez GATE
 - Zapis sekretow do repo
+- Count bubbles (+N) poza globalnym CSS w `dam-brand.css`; UI deliverable bez ui-taste 10 rund (chyba ze user zrzeka)
 
 # Definition of Done
 

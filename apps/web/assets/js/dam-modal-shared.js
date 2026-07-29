@@ -243,7 +243,7 @@
       labelEl.setAttribute("contenteditable", "true");
       labelEl.setAttribute("spellcheck", "false");
       labelEl.setAttribute("role", "textbox");
-      labelEl.setAttribute("aria-label", "Skala podgladu w procentach");
+      labelEl.setAttribute("aria-label", "Skala podglądu w procentach");
       labelEl.setAttribute("data-dam-tip", ZOOM_SHORTCUT_TIP);
       labelEl.setAttribute("title", ZOOM_SHORTCUT_TIP);
     }

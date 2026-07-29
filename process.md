@@ -1,3 +1,83 @@
+## 2026-07-29 - v5.0.78: variants-toggle + assoc picker Explorer hits layout
+
+**Komenda/Akcja:** User: napraw przycisk „Pokaż wszystkie (N)” (rozciągnięty w pionie, ucięty z lewej); lista pickera assoc jak Explorer `dam-search-hits` (padding, meta bez ścieżek); zachować miniatury; commit+push; podsumowanie.
+
+**Log/Status:** `dam-media-preview.js`: toggle `data-linked-assets-toggle` poza gridem (`insertAdjacentElement afterend`). `dam-brand.css`: reguły dla `.dam-assoc-pane-split__top > .variants-toggle` (flex-start, fit-content). `dam-assoc-edit.js`: `pickerRowMetaText` bez pełnych ścieżek; wiersze produkt/wariant bez tag-pillów (tylko badge+nazwa+meta); `<ul class="dam-search-hits">` zamiast `<div>`; inline CSS align center 76px; token CSS `assocExplorerHitsLayout20260729a`. Bump 5.0.77→5.0.78.
+
+**Efekt/Fix:** `node --check` OK. Commit+push na main.
+
+**Źródła:** dam-brand.css, dam-assoc-edit.js, dam-media-preview.js, v5.0.78
+
+
+
+**Komenda/Akcja:** User: w `#damMediaPreview` branding-split — wyrównaj CTA „Dodaj/Edytuj produkty” i „Dodaj/Edytuj materiały”; sekcja produktów jak materiały (well/box); globalnie w viz; bump +0.0.1.
+
+**Log/Status:** `dam-viz-modal.css`: wspólny well dla `.dam-media-preview__assoc-pane-section--products` + `.dam-media-preview__assoc-section.dam-media-preview__assoc-col--materials` (padding 8px 16px 12px, radius 12px, `--dam-surface-muted`); label-row flex parity (nowrap, label flex:1, CTA margin-left:auto). `dam-branding.css`: global label-row CTA alignment. `dam-media-preview.js`: klasa `dam-media-preview__assoc-section` na products host. Bump 5.0.76→5.0.77; cache-bust branding/viz/explorer + dynamic `dam-viz-modal.css` href w JS.
+
+**Efekt/Fix:** CDP branding modal PASS — obie sekcje left/right 785–1186, bg rgb(245,246,250), CTA right=1170 (aligned:true). `node --check` dam-media-preview.js OK. Smoke :8765/:8766 200.
+
+**Źródła:** dam-viz-modal.css, dam-branding.css, dam-media-preview.js, v5.0.77
+
+
+**Komenda/Akcja:** User: zacieśnij odstępy Branding — meta filtry → status 12px; status mb 5px + panel mt 12px (wizualnie 17px); usuń `.dam-branding-grid { margin-top:4px }`; selektory adjacency w dam-branding.css; bump 5.0.75→5.0.76.
+
+**Log/Status:** `dam-branding.css`: meta `margin-bottom:0`, adjacency `.dam-branding-filters--meta + .dam-branding-status-row` i `~ #damBrandingPanelSection` z `calc(12px - var(--dam-bento-gap))` (kompensacja flex gap 16px na `.geex-content:has(#damBrandingSectionGrid)`); status `margin-bottom:5px`; panel `margin-top:12px` (efektywnie -4px); grid `margin-top:0`. Bump version.json / dam-version.js / runtime_config.py; cache-bust branding.html `dam-branding.css?v=5.0.76`.
+
+**Efekt/Fix:** CDP gapMetaStatus=12px, gapStatusPanel=17px (było ~16/45). Screenshot PASS @1280px — ciaśniejszy rytm meta→status→karty. Viz/explorer bez zmian (tylko branding-scoped selektory).
+
+**Źródła:** dam-branding.css, branding.html, v5.0.76, smoke :8765/:8766 OK
+
+
+**Komenda/Akcja:** User: bąbelki +N na miniaturach kart muszą wyglądać IDENTYCZNIE w Branding i Visualizations (kanon: ciemnoszary okrąg 28px); reguła projektu: ui-taste 10 rund intensive przy UI polish.
+
+**Log/Status:** Globalna reguła `.dam-viz-card__variant-badge` + tokeny `--dam-count-bubble-*` w `dam-brand.css`; usunięto scoped override z `dam-branding.css` i fioletowy inline z `dam-viz.js` `ensureVizGridCardCss`. Bump 5.0.74→5.0.75 (version.json, dam-version.js, runtime_config.py); cache-bust `dam-brand.css`/`dam-branding.css`/`dam-viz.js` w branding.html i visualizations.html. Doktryna §12, memory.md, AGENT builder/QA.
+
+**Efekt/Fix:** Parity bubble branding↔viz PASS (CDP: `rgba(70,66,85,0.82)`, 28px, 12px; inline purple usunięty). Screenshot+Read branding grid z +3/+11 ciemnoszarymi bąbelkami.
+
+**Źródła:** dam-brand.css, dam-branding.css, dam-viz.js, v5.0.75, branding.html, visualizations.html
+
+## 2026-07-29 - v5.0.74: Assoc picker thumbs + explorer hit rows (15 rund QA)
+
+**Komenda/Akcja:** User: reindex/mapowanie + miniatury AKTUALNE/wyszukiwarka pickera jak `dam-search-hits`; 15 rund ui-taste; DOM `damAssocEditPopover` pinned + list.
+
+**Log/Status:** `dam-assoc-edit.js` v5.0.73→5.0.74: `normalizeBridgeMediaUrl` (fix `/media` bez leading slash), `pickerThumbOnError`, `resolvePickerThumbProbeUrl`, eager hydrate pinned, `dam-search-hit__head` (badge+name 20px), `ul.dam-search-hits--panel`, `li` opt-row, `min-height:76px` fix overlap. Bump cache-bust branding/explorer/viz.
+
+**Efekt/Fix:** Screenshot PASS — AKTUALNE: thumb+badge+tytuł+tagi+ID czytelne; wyszukiwarka „kakao” grupy folderów + miniatury (ZGRANE częściowo offline); PODGLĄD TIF = „Brak miniatury” (bridge 200 dla JPG). curl `/media?path=...slider_newsletter_3.jpg` → 200.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, version 5.0.74, branding.html?v=pickerqa74
+
+## 2026-07-29 - v5.0.72: Modal title JPG align + phantom variants + reindex
+
+**Komenda/Akcja:** User: `#damMediaPreview` title↔ext-tag vertical align + badge-scale JPG tag; fix `--png` on JPG; tags/indexes reindex consistency.
+
+**Log/Status:** `injectTitleExtLayoutCss` center align + ext-tag ~26px badge scale; `extTagClass` jpg/jpeg→`--jpg`; `isPhantomMaterialVariant` empty index ≠ phantom; `re-enrich-branding-index.py` + `enrich-branding-tags.py` run.
+
+**Efekt/Fix:** slider_newsletter_3 modal: 4 folder variants (index parity); smoke :8765/:8766 OK; node --check OK; screenshot pass2 variants OK.
+
+**Źródła:** dam-media-preview.js, dam-primitives.css, dam-branding.css, branding.html, branding-index.json, branding-search-index.json
+
+## 2026-07-29 - v5.0.71: Projects sort date-score fix
+
+**Komenda/Akcja:** Subagent: dokończenie sort Projekty — usunięcie zduplikowanych funkcji sort, `projectDateScore` skanuje wszystkie segmenty ścieżki + rewizje (wzór dam-viz).
+
+**Log/Status:** `dam-projects.js` — cleanup duplikatów `sortProjectRows`; rozszerzone `projectDateScore`. Bump 5.0.71.
+
+**Efekt/Fix:** Lepsze wykrywanie dat z folderów DAM (`19.09.2025`, `24_03_2026`); bez broken refs `SORT_STATE_KEY`.
+
+**Test:** `node --check` OK; smoke 200; snapshot combobox 6 opcji + status 183 produktów.
+
+**Źródła:** dam-projects.js, index.html, dam-brand.css, version 5.0.71
+
+## 2026-07-29 - v5.0.72: Global sticky chrome frost blur (gaps above/between panels)
+
+**Komenda/Akcja:** User: sticky panele search + projects toolbar — prześwitują karty w szczelinie i nad panelem; globalny blur.
+
+**Log/Status:** `dam-brand.css` — `--dam-sticky-chrome-blur/bg-frost`, backdrop-filter na `.dam-explorer-toolbar`, `.dam-projects-grid-toolbar`, `.dam-viz-secondary-filters`; pseudo `::before/::after` wypełniają `--dam-sticky-top` (nad) i `--dam-sticky-search-gap` (między). `dam-bento.css` — usunięty opaque bg z projects toolbar. Bump 5.0.72, cache-bust index/explorer/viz/branding.
+
+**Efekt/Fix:** Frost 14px + półprzezroczyste tło w szczelinach sticky chrome na Projekty/Viz/Branding/Eksplorator.
+
+**Źródła:** dam-brand.css, dam-bento.css, v5.0.72
+
 ## 2026-07-29 - v5.0.69: Projects grid sort + release commit
 
 **Komenda/Akcja:** User: auto-sort `#damProjectsGrid` po dacie z nazwy folderu; toolbar `#damProjectsStatus` — Sortuj (nazwa, data, priorytet, ostatnie); commit+push całego pakietu v5.0.54–5.0.69.
@@ -8,7 +88,23 @@
 
 **Źródła:** index.html, dam-projects.js, dam-brand.css, version 5.0.69
 
-## 2026-07-29 - v5.0.68: Assoc picker thumbs/tags + branding cards viz-parity
+## 2026-07-29 - v5.0.69: Konwersja elementów globalna (PNG+JPG, 50%)
+
+**Komenda/Akcja:** User: przycisk „Podejmij próbę konwersji elementów” ma konwertować Links→ELEMENTY (PNG alpha + JPG, 50% kompresja); globalne ustawienia admina w Settings → Konwersja; wire do bridge.
+
+**Log/Status:**
+1. **v5.0.69** `local_bridge.py`: `load_elementy_conversion_settings()`, `save_elementy_conversion_settings()`, `_save_elementy_jpg_file()`, `convert_links_elementy()` PNG+JPG wg formats/quality; GET+POST `/app-settings`.
+2. `app-settings.json`: sekcja `elementy_conversion` (enabled, quality 50, png+jpg, png_transparency).
+3. `settings.html` + `dam-settings.js`: nav chip **Konwersja**, karta `#damElementyConversion` (admin-only edycja), load/save przez bridge.
+4. `dam-media-preview.js`: `fetchElementyConversionSettings()` + `renderResizerCta` przekazuje quality/formats; ukrywa CTA gdy disabled.
+5. `program-instructions.json`: `viz.elementy_links_conversion` (v26).
+
+**Efekt/Fix:** Built-in konwersja TIFF/PSD/PSB → PNG (dematte/alpha) + JPG z globalną jakością; admin steruje w Ustawienia → Konwersja.
+
+**Test:** `node --check` dam-media-preview.js + dam-settings.js OK; Python ast.parse local_bridge OK; smoke :8765/:8766 200; GET `/app-settings` → elementy_conversion quality=50; snapshot settings: chip „Konwersja” + heading „Konwersja elementów” PASS.
+
+**Źródła:** local_bridge.py, app-settings.json, settings.html, dam-settings.js, dam-media-preview.js, program-instructions.json, version 5.0.69
+
 
 **Komenda/Akcja:** User: (A) assoc picker — hierarchy lines, purple MATERIAŁ badge, 20px badge→tags gap, max 7 tags, fix thumbs/preview, branding-style grouping; (B) branding group cards = viz pattern (+N bubble, id-chip/show-indexes), fix card↔modal variant drift.
 

@@ -24,7 +24,7 @@
   var ASSET_ROLE_LABELS = {
     brand_asset: "Materiał marki",
     document_spec: "Karta wprowadzenia",
-    product_photo: "Zdjęcie produktowe",
+    product_photo: "Zdjęcie produktówe",
     artwork_source: "Plik roboczy artwork",
     print_ready: "Plik do druku",
     packshot: "Wizualizacja opakowania",

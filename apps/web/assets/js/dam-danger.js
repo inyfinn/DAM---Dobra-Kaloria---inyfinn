@@ -9,7 +9,7 @@
  *  - Etykiety czasownikowe ("Usun skojarzenie"), nigdy "Tak"/"OK".
  *  - Czerwony = budzet: kolor destrukcji rezerwowany dla tego mechanizmu.
  *  - Cooldown: opcjonalny toast "Cofnij" (soft-delete) - DamDanger.toastUndo(...).
- *  - Dostepnosc: prefers-reduced-motion => ring bez plynnej animacji, hold nadal wymagany.
+ *  - Dostępnosc: prefers-reduced-motion => ring bez plynnej animacji, hold nadal wymagany.
  *    Klawiatura (Enter/Spacja) => tryb "uzbrojony" z jawnym labelem + drugie
  *    Enter/Spacja potwierdza (alternatywa dla przytrzymania myszy).
  *

@@ -717,7 +717,7 @@
   /** Honest PL placeholder (never Synology Drive lie). */
   function brandingThumbPlaceholderDataUri() {
     var label =
-      (global.DamPreviewTruth && DamPreviewTruth.LABEL_HINT) || "brak podgladu";
+      (global.DamPreviewTruth && DamPreviewTruth.LABEL_HINT) || "brak podglądu";
     var svg =
       '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">' +
       '<rect width="160" height="160" fill="#efeef3"/>' +
@@ -737,7 +737,7 @@
       (global.DamPreviewTruth &&
         typeof DamPreviewTruth.onErrorTitle === "function" &&
         DamPreviewTruth.onErrorTitle()) ||
-      "Podglad niedostepny";
+      "Podglad niedostępny";
     root.querySelectorAll("img.dam-widget__thumb").forEach(function (img) {
       if (img._damHonestThumb) return;
       img._damHonestThumb = true;
@@ -1928,9 +1928,9 @@
 
   var CUSTOMIZE_META = {
     products_count: {
-      label: "Liczba produktow",
+      label: "Liczba produktów",
       description:
-        "Pokazuje ile produktow jest w indeksie DAM. Szybki licznik katalogu na pulpicie."
+        "Pokazuje ile produktów jest w indeksie DAM. Szybki licznik katalogu na pulpicie."
     },
     asana_open: {
       label: "Otwarte zadania Asana",
@@ -1940,57 +1940,57 @@
     asana_home: {
       label: "Asana - Moje zadania",
       description:
-        "Kokpit zadan Asana: zakladki Nadchodzace / Zalegle / Ukonczone, lista z terminami oraz boczne karty projektow, osob i zrodla danych."
+        "Kokpit zadan Asana: zakladki Nadchodzace / Zalegle / Ukonczone, lista z terminami oraz boczne karty projektow, osob i źródła danych."
     },
     checklists_ok: {
       label: "Kompletne checklisty",
       description:
-        "Ile produktow ma uzupelniona checklistę (kompletne). Sygnal gotowosci do dalszych krokow."
+        "Ile produktów ma uzupelniona checklistę (kompletne). Sygnal gotowosci do dalszych krokow."
     },
     checklists_gap: {
       label: "Checklisty z brakami",
       description:
-        "Ile produktow ma niekompletna checklistę. Lista do uzupelnienia w indeksie lub Eksplorerze."
+        "Ile produktów ma niekompletna checklistę. Lista do uzupelnienia w indeksie lub Eksplorerze."
     },
     cost_month: {
-      label: "Szacowany koszt miesiaca",
+      label: "Szacowany koszt miesiąca",
       description:
-        "Suma szacunkowego kosztu miesiaca (landed / FMCG). Domyslnie wylaczona - wlacz, gdy potrzebujesz widoku kosztow."
+        "Suma szacunkowego kosztu miesiąca (landed / FMCG). Domyślnie wylaczona - wlacz, gdy potrzebujesz widoku kosztów."
     },
     cost_fmcg_breakdown: {
-      label: "Rozbicie kosztow FMCG",
+      label: "Rozbicie kosztów FMCG",
       description:
-        "Szczegolowe linie landed cost: praca, druk, ryzyko i suma. Pokazuje skad bierze sie koszt miesiaca."
+        "Szczegolowe linie landed cost: praca, druk, ryzyko i suma. Pokazuje skad bierze sie koszt miesiąca."
     },
     cost_swot_risk: {
-      label: "SWOT kosztow i ryzyka",
+      label: "SWOT kosztów i ryzyka",
       description:
-        "Cztery pola SWOT (sily, slabe strony, szanse, zagrozenia) dla ryzyka kosztowego. Szybki kontekst decyzyjny."
+        "Cztery pola SWOT (sily, slabe strony, szanse, zagrozenia) dla ryzyka kosztówego. Szybki kontekst decyzyjny."
     },
     projects_this_month: {
-      label: "Projekty w tym miesiacu",
+      label: "Projekty w tym miesiącu",
       description:
-        "Ile nowych lub aktywnych projektow / wizualizacji pojawilo sie w biezacym miesiacu."
+        "Ile nowych lub aktywnych projektow / wizualizacji pojawilo sie w biezacym miesiącu."
     },
     newest_viz_3: {
-      label: "Najnowsze wizualizacje produktow",
+      label: "Najnowsze wizualizacje produktów",
       description:
         "Siatka najnowszych wizualizacji z miniaturami, tagami i skrotami do Eksplorera, folderu Windows oraz strony wizualizacji. Uklad 2x2 / 1x4 / 1x6."
     },
     newest_products_f: {
       label: "Najnowsze",
       description:
-        "Najnowsze warianty produktow na dysku, posortowane po dacie rewizji. Miniatury, tagi DK/opakowanie/indeks oraz skroty jak przy wizualizacjach."
+        "Najnowsze warianty produktów na dysku, posortowane po dacie rewizji. Miniatury, tagi DK/opakowanie/indeks oraz skroty jak przy wizualizacjach."
     },
     branding_latest: {
       label: "Najnowsze materialy brandingowe",
       description:
-        "Ostatnie assety z Brandingu (miniatury, marka, warianty) ze skrotami do Brandingu, folderu i podgladu. Uklad jak przy wizualizacjach."
+        "Ostatnie assety z Brandingu (miniatury, marka, warianty) ze skrotami do Brandingu, folderu i podglądu. Uklad jak przy wizualizacjach."
     },
     notify_new_viz: {
       label: "Powiadomienia o nowych wizualizacjach",
       description:
-        "Przelacznik powiadomien przegladarki, gdy w indeksie pojawi sie nowa wizualizacja. Pokazuje tez status uprawnien."
+        "Przelacznik powiadomien przeglądarki, gdy w indeksie pojawi sie nowa wizualizacja. Pokazuje tez status uprawnien."
     },
     tasks_next: {
       label: "Nastepne zadania",
@@ -2030,7 +2030,7 @@
     index_health: {
       label: "Stan indeksu plikow",
       description:
-        "Liczba wizualizacji i produktow w indeksie oraz data ostatniej generacji. Diagnostyka swiezosci danych."
+        "Liczba wizualizacji i produktów w indeksie oraz data ostatniej generacji. Diagnostyka swiezosci danych."
     },
     viz_flags: {
       label: "Flagi wizualizacji (admin)",
@@ -2060,7 +2060,7 @@
     efficiency_mock: {
       label: "Koszt na wariant",
       description:
-        "Szacunkowy koszt miesiaca podzielony przez liczbe otwartych wariantow. Jedna liczba efektywnosci."
+        "Szacunkowy koszt miesiąca podzielony przez liczbe otwartych wariantow. Jedna liczba efektywnosci."
     }
   };
 
@@ -2643,7 +2643,7 @@
                 if (!groups.length) {
                   el.outerHTML = shell(
                     self,
-                    '<p class="dam-widget__meta">Brak miniatur graficznych do podgladu. <a href="branding.html">Otworz Branding</a></p>',
+                    '<p class="dam-widget__meta">Brak miniatur graficznych do podglądu. <a href="branding.html">Otworz Branding</a></p>',
                     "dam-widget--branding-latest dam-widget--media-latest",
                     layoutToggleHtml(self.id, layout)
                   );
@@ -2788,7 +2788,7 @@
                 }
                 failHost.outerHTML = shell(
                   self,
-                  '<p class="dam-widget__meta">Indeks branding niedostepny. <a href="branding.html">Otworz Branding</a></p>',
+                  '<p class="dam-widget__meta">Indeks branding niedostępny. <a href="branding.html">Otworz Branding</a></p>',
                   "dam-widget--branding-latest dam-widget--media-latest",
                   layoutToggleHtml(self.id, layout)
                 );
@@ -2814,7 +2814,7 @@
         render: function (el, ctx) {
           var enabled = global.DamNotify && DamNotify.isEnabled();
           var status =
-            (global.DamNotify && DamNotify.statusText()) || "Niedostepne";
+            (global.DamNotify && DamNotify.statusText()) || "Niedostępne";
           var id = "damNotifyToggle";
           el.outerHTML = shell(
             this,
@@ -4623,7 +4623,7 @@
     var label = customizeLabel(w);
     var desc = customizeDescription(w);
     var fallbackHint = w.defaultOn
-      ? "Widget widoczny domyslnie na pulpicie."
+      ? "Widget widoczny domyślnie na pulpicie."
       : "Widget opcjonalny. Wlacz, jesli go potrzebujesz.";
     var hint = desc || fallbackHint;
     return (

@@ -1,6 +1,6 @@
 /**
  * DAM - Faza 4 (2026-07-18): edycja typu (nosnika) dla WSZYSTKICH rol.
- * Wybor w liscie = podglad (pending). Zatwierdz (zielony check) / Anuluj (czerwony X).
+ * Wybor w liscie = podgląd (pending). Zatwierdz (zielony check) / Anuluj (czerwony X).
  * Opcja BRAK TYPU. Admin: dblclick <=500ms lub Shift+klik otwiera picker.
  */
 (function (global) {
@@ -154,14 +154,14 @@
     var label = String(newCode || "").toUpperCase();
     var types = allCarrierTypes();
     var typedLabel = (types[newCode] || newCode || "").toUpperCase();
-    /* Zmiana marki w tagach brand - osobna sciezka. Tu: ostrzezenie gdy folder GC a user
+    /* Zmiana marki w tagach brand - osobna ścieżka. Tu: ostrzezenie gdy folder GC a user
        ustawia cos typowo DK-only nie dotyczy nosnika. Ostrzezenie brand jest w openBrandConfirm. */
     void typedLabel;
     void label;
     return true;
   }
 
-  /** Potwierdzenie gdy admin zmienia tag marki sprzeczny ze sciezka folderu. */
+  /** Potwierdzenie gdy admin zmienia tag marki sprzeczny ze ścieżka folderu. */
   function confirmBrandTagChange(revisionPath, newBrand) {
     var pathBrand = pathBrandHint(revisionPath);
     var nb = String(newBrand || "").toUpperCase();
@@ -220,7 +220,7 @@
               (nFiles ? " (+" + nFiles + " plikow)" : "") +
               "."
           );
-          /* Po zatwierdzeniu znika "?" (carrier_guessed) - odswiez badge w DOM */
+          /* Po zatwierdzeniu znika "?" (carrier_guessed) - odśwież badge w DOM */
           try {
             document.querySelectorAll(".dam-viz-badge--guessed").forEach(function (el) {
               var rp = el.getAttribute("data-revision-path") || "";
@@ -291,7 +291,7 @@
       localStorage.setItem(ADMIN_MODE_KEY, "1");
       global.dispatchEvent(new CustomEvent("dam:admin-mode", { detail: { on: true } }));
     } catch (e) {
-      /* localStorage niedostepny - kontynuuj bez auto-wlaczenia */
+      /* localStorage niedostępny - kontynuuj bez auto-wlaczenia */
     }
   }
 
@@ -308,7 +308,7 @@
     if (k === "subcategory") return "Wybierz podkategorię";
     if (k === "index") return "Wybierz / wpisz indeks";
     if (k === "asset_role") return "Wybierz przeznaczenie";
-    if (k === "appearance") return "Wybierz tag produktowy";
+    if (k === "appearance") return "Wybierz tag produktówy";
     if (k === "carrier") return isAdmin() && adminModeOn() ? "Wybierz typ" : "Zaproponuj typ";
     return "Wybierz wartość tagu";
   }
@@ -1777,7 +1777,7 @@
     return String(code);
   }
 
-  /* Etykieta pochodzi z basename sciezki na dysku (np. "Boost - Doypack - F") -
+  /* Etykieta pochodzi z basename ścieżki na dysku (np. "Boost - Doypack - F") -
      usuwamy koncowa litere statusu, zeby nie duplikowac jej z detalem statusu. */
   function pathBasenameForLog(p) {
     var s = String(p || "").replace(/[\\/]+$/, "");
@@ -2992,7 +2992,7 @@
     setChangeLogTipSuppress(true);
   }
 
-  /** Settings + Viz: zawsze duży modal produktowy (global data) - bez chudego popovera. */
+  /** Settings + Viz: zawsze duży modal produktówy (global data) - bez chudego popovera. */
   function openChangeHistoryPopover(anchorBtn) {
     var open = document.getElementById("damLifecycleHistoryModal");
     if (open && open.getAttribute("data-life-hist-scope") === "global") {
@@ -3345,7 +3345,7 @@
               ctx.onTagsApplied(nextGroups);
             }
             if (ctx.product) ctx.product.tag_groups = nextGroups;
-            showToast("Zaktualizowano tagi produktu (podglad). Zapis na dysk: kolejka moderacji.");
+            showToast("Zaktualizowano tagi produktu (podgląd). Zapis na dysk: kolejka moderacji.");
             closePopover();
           });
         }

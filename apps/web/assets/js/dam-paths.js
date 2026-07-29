@@ -1,8 +1,8 @@
 /**
- * DAM - sciezki lokalne, reveal w Eksploratorze, audit log.
+ * DAM - ścieżki lokalne, reveal w Eksploratorze, audit log.
  *
  * Struktura katalogow ZAWSZE ta sama (-- ARCHIWUM --, - EKSPORT, - POLSKA).
- * Prefix Marketing = TYLKO dla BIEZACEGO urzadzenia (device_id), nie globalnie
+ * Prefix Marketing = TYLKO dla BIEZACEGO urządzeńia (device_id), nie globalnie
  * dla konta na wszystkich PC (dom X: vs praca D:). Patrz program-instruction
  * device-scoped-base-paths + ADR-008.
  *
@@ -148,7 +148,7 @@
     var paths = roots.map(function (r) { return trimSlash(r.path || r); });
     if (!paths.length) return getIndexBase();
     var parts = paths[0].split("/");
-    // Tylko do remap (prefix w indeksie). NIE jest sciezka usera.
+    // Tylko do remap (prefix w indeksie). NIE jest ścieżka usera.
     if (parts.length >= 2) {
       var candidate = parts.slice(0, 2).join("/");
       var shared = paths.every(function (p) {
@@ -176,7 +176,7 @@
     if (did) {
       localStorage.setItem(BASE_KEY_PREFIX + did, win);
     }
-    // Legacy key = cache TYLKO biezacego urzadzenia (kompatybilnosc starych readerow)
+    // Legacy key = cache TYLKO biezacego urządzeńia (kompatybilnosc starych readerow)
     localStorage.setItem(BASE_KEY, win);
   }
 
@@ -192,7 +192,7 @@
       headers: bridgeAuthHeaders(),
       body: JSON.stringify({ base_path: win })
     }).catch(function () { return null; });
-    // 2) jawny zapis per-urzadzenie (gdy token jest)
+    // 2) jawny zapis per-urządzenie (gdy token jest)
     var p2 = fetch(bridgeBase() + "/user-device-paths", {
       method: "POST",
       headers: bridgeAuthHeaders(),
@@ -261,7 +261,7 @@
   }
 
   /**
-   * Natywny wybor folderu: pywebview (desktop) albo bridge POST /pick-folder (przegladarka + most).
+   * Natywny wybor folderu: pywebview (desktop) albo bridge POST /pick-folder (przeglądarka + most).
    * Zwraca Promise<{ ok, path?, cancelled?, error? }>.
    */
   function pickFolder(startDir) {
@@ -323,7 +323,7 @@
 
   /**
    * Wytnij prefix Marketing z dowolnej litery dysku (X:/ D:/ ...) albo ze starego dam_index_base.
-   * Zwraca sciezke wzgledna: "- POLSKA/..." albo "".
+   * Zwraca ścieżke wzgledna: "- POLSKA/..." albo "".
    */
   function relativeFromMarketing(indexPath) {
     var src = trimSlash(indexPath);
@@ -339,9 +339,9 @@
   }
 
   /**
-   * Mapuj sciezke z indeksu na lokalna baze TEJ MASZYNY.
+   * Mapuj ścieżke z indeksu na lokalna baze TEJ MASZYNY.
    * Indeks moze miec X:/Marketing/... a Ty na innym kompie D:\Marketing -> remap OK.
-   * Stary localStorage dam_index_base=D: przy indeksie X: NIE psuje juz sciezki.
+   * Stary localStorage dam_index_base=D: przy indeksie X: NIE psuje juz ścieżki.
    */
   function toLocal(indexPath) {
     if (!indexPath) return "";
@@ -363,7 +363,7 @@
     return /\.[A-Za-z0-9]{1,8}$/.test(name);
   }
 
-  /** Basename pliku (lub ostatni segment folderu) ze sciezki index/local. */
+  /** Basename pliku (lub ostatni segment folderu) ze ścieżki index/local. */
   function basename(path) {
     var n = normSlashes(path);
     if (!n) return "";
@@ -512,11 +512,11 @@
   }
 
   /**
-   * Preferencja PER URZADZENIE jest swieta.
+   * Preferencja PER URZADZENIE jest święta.
    * Kolejnosc prawdy:
    *  1) baza (bridge /user-device-paths/current dla tego device_id)
    *  2) cache localStorage dla tego device_id
-   *  3) machine-config (tylko ten PC / Windows USER) - nigdy sciezka z innego device
+   *  3) machine-config (tylko ten PC / Windows USER) - nigdy ścieżka z innego device
    * Auto-detect NIGDY nie nadpisuje zapisu.
    */
   function ensureUserBase() {
@@ -572,7 +572,7 @@
         };
       }
 
-      // 2) Cache lokalny juz pod to urzadzenie
+      // 2) Cache lokalny juz pod to urządzenie
       var current = getBasePath();
       if (current) {
         // Migacja: jesli jest lokalny cache a brak wpisu w bazie - wypchnij do UDP
@@ -589,7 +589,7 @@
         };
       }
 
-      // 3) machine-config TYLKO tego PC (nie innego urzadzenia konta)
+      // 3) machine-config TYLKO tego PC (nie innego urządzeńia konta)
       var saved = machine && machine.base_path ? String(machine.base_path).trim() : "";
       if (saved) {
         setBasePathLocalCache(saved, did);
@@ -628,7 +628,7 @@
   /**
    * Sciezka przenosna (do schowka): bez litery dysku, od "Marketing\..." z backslashami.
    * Kazdy user montuje udzial pod inna litera, wiec kopiujemy bez root-a.
-   * Gdy sciezka nie zawiera segmentu "Marketing" - tylko zdejmij prefix dysku / UNC.
+   * Gdy ścieżka nie zawiera segmentu "Marketing" - tylko zdejmij prefix dysku / UNC.
    */
   function toPortablePath(path) {
     var src = normSlashes(path);
@@ -650,7 +650,7 @@
     return toWin(rel);
   }
 
-  /** Kopiuje sciezke przenosna (Marketing\...) do schowka + toast + audit. */
+  /** Kopiuje ścieżke przenosna (Marketing\...) do schowka + toast + audit. */
   function copyPortablePath(indexPath) {
     var portable = toPortablePath(indexPath);
     var p;
@@ -660,7 +660,7 @@
       p = Promise.reject();
     }
     return p.then(function () {
-      logAction("copy_path", { path: indexPath, local_path: portable, detail: "Skopiowano sciezke przenosna (bez litery dysku)" });
+      logAction("copy_path", { path: indexPath, local_path: portable, detail: "Skopiowano ścieżke przenosna (bez litery dysku)" });
       showToast("Skopiowano: " + portable);
     }).catch(function () {
       showToast("Skopiuj recznie: " + portable);
@@ -676,7 +676,7 @@
       p = Promise.reject();
     }
     return p.then(function () {
-      logAction("copy_path", { path: indexPath, local_path: local, detail: "Skopiowano sciezke lokalna" });
+      logAction("copy_path", { path: indexPath, local_path: local, detail: "Skopiowano ścieżke lokalna" });
       showToast("Skopiowano: " + local);
     }).catch(function () {
       showToast("Skopiuj recznie: " + local);
@@ -689,7 +689,7 @@
   function openInDefaultApp(indexPath) {
     if (!hasBasePath()) {
       openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      showToast("Najpierw ustaw ścieżke bazowa");
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
@@ -700,7 +700,7 @@
     logAction("open_file", { path: indexPath, local_path: local, detail: "Otworz plik w domyslnej aplikacji" });
     return checkBridge().then(function (ok) {
       if (!ok) {
-        showToast("Funkcja niedostepna - uruchom aplikacje DAM (skrot na pulpicie).", "error");
+        showToast("Funkcja niedostępna - uruchom aplikacje DAM (skrot na pulpicie).", "error");
         return { ok: false, error: "bridge_offline", path: local };
       }
       return fetch(bridgeBase() + "/open", {
@@ -723,17 +723,17 @@
   }
 
   /**
-   * Otworz plik + skopiuj sciezke przenosna (Marketing\\...) do schowka.
-   * Uzywane przez przycisk "Otworz plik" w modalach (lewo od Kopiuj sciezke).
+   * Otworz plik + skopiuj ścieżke przenosna (Marketing\\...) do schowka.
+   * Uzywane przez przycisk "Otworz plik" w modalach (lewo od Kopiuj ścieżke).
    */
   function openFileAndCopyPath(indexPath) {
     if (!indexPath) {
-      showToast("Brak sciezki pliku", "error");
+      showToast("Brak ścieżki pliku", "error");
       return Promise.resolve({ ok: false, error: "path_required" });
     }
     if (!hasBasePath()) {
       openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      showToast("Najpierw ustaw ścieżke bazowa");
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
@@ -749,12 +749,12 @@
     logAction("open_file_copy", {
       path: indexPath,
       local_path: local,
-      detail: "Otworz plik + kopiuj sciezke przenosna"
+      detail: "Otworz plik + kopiuj ścieżke przenosna"
     });
     return clipP.catch(function () { /* ignore clipboard fail */ }).then(function () {
       return checkBridge().then(function (ok) {
         if (!ok) {
-          showToast("Skopiowano sciezke. Uruchom aplikacje DAM, aby otworzyc plik.");
+          showToast("Skopiowano ścieżke. Uruchom aplikacje DAM, aby otworzyc plik.");
           return { ok: false, error: "bridge_offline", copied: true, path: local };
         }
         return fetch(bridgeBase() + "/open", {
@@ -763,17 +763,17 @@
           body: JSON.stringify({ path: local })
         }).then(function (r) { return r.json(); }).then(function (res) {
           if (res && res.ok) {
-            showToast("Otwarto plik i skopiowano sciezke", "success");
+            showToast("Otwarto plik i skopiowano ścieżke", "success");
           } else {
             var hint = bridgeErrorMessage(res && res.error);
             showToast(
-              hint || ("Skopiowano sciezke. Nie udalo sie otworzyc pliku."),
+              hint || ("Skopiowano ścieżke. Nie udalo sie otworzyc pliku."),
               res && res.error === "path_not_found" ? "error" : "error"
             );
           }
           return Object.assign({}, res || {}, { copied: true });
         }).catch(function () {
-          showToast("Skopiowano sciezke. Blad mostu przy otwieraniu pliku.", "error");
+          showToast("Skopiowano ścieżke. Blad mostu przy otwieraniu pliku.", "error");
           return { ok: false, error: "fetch_failed", copied: true, path: local };
         });
       });
@@ -787,7 +787,7 @@
   function revealInExplorer(indexPath) {
     if (!hasBasePath()) {
       openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      showToast("Najpierw ustaw ścieżke bazowa");
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
@@ -795,14 +795,14 @@
 
     return checkBridge().then(function (ok) {
       if (!ok) {
-        // Fallback: skopiuj sciezke folderu / pliku + instrukcja
+        // Fallback: skopiuj ścieżke folderu / pliku + instrukcja
         var hint = looksLikeFile(local)
           ? parentOf(local)
           : local;
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(local);
         }
-        showToast("Funkcja niedostepna - uruchom aplikacje DAM (skrot na pulpicie).");
+        showToast("Funkcja niedostępna - uruchom aplikacje DAM (skrot na pulpicie).");
         return { ok: false, error: "bridge_offline", path: local, folder: hint };
       }
       var headers = bridgeAuthHeaders();
@@ -892,7 +892,7 @@
   function openFolderInExplorer(indexPath) {
     if (!hasBasePath()) {
       openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      showToast("Najpierw ustaw ścieżke bazowa");
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
@@ -908,7 +908,7 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(folder);
         }
-        showToast("Funkcja niedostepna - uruchom aplikacje DAM (skrot na pulpicie).");
+        showToast("Funkcja niedostępna - uruchom aplikacje DAM (skrot na pulpicie).");
         return { ok: false, error: "bridge_offline", path: folder };
       }
       var headers = bridgeAuthHeaders();
@@ -965,18 +965,18 @@
   }
 
   /**
-   * Udostepnij przez Synology Drive: wywoluje okno klienta
+   * Udostępnij przez Synology Drive: wywoluje okno klienta
    * (menu kontekstowe Synology Drive > Uzyskaj lacze / Get link).
    */
   function shareViaSynology(indexPath) {
     if (!hasBasePath()) {
       openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      showToast("Najpierw ustaw ścieżke bazowa");
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
     if (!looksLikeFile(local)) {
-      showToast("Wybierz plik do udostepnienia");
+      showToast("Wybierz plik do udostępnienia");
       return Promise.resolve({ ok: false, error: "not_a_file" });
     }
     logAction("share_synology", {
@@ -987,7 +987,7 @@
 
     return checkBridge().then(function (ok) {
       if (!ok) {
-        showToast("Funkcja niedostepna - uruchom aplikacje DAM (skrot na pulpicie).");
+        showToast("Funkcja niedostępna - uruchom aplikacje DAM (skrot na pulpicie).");
         return { ok: false, error: "bridge_offline", path: local };
       }
       showToast("Otwieram okno Synology Drive...");
@@ -1022,7 +1022,7 @@
     return (
       '<div class="dam-path-actions' + cls + '">' +
         '<button type="button" class="dam-file-copy" data-path="' + esc(indexPath) + '" ' +
-          'data-dam-tip="Kopiuj sciezke lokalna (po mapowaniu dysku)" title="Kopiuj sciezke">' +
+          'data-dam-tip="Kopiuj ścieżke lokalna (po mapowaniu dysku)" title="Kopiuj ścieżke">' +
           '<i class="uil uil-copy" aria-hidden="true"></i></button>' +
         '<button type="button" class="dam-file-reveal" data-path="' + esc(indexPath) + '" ' +
           'data-dam-tip="Pokaz w Eksploratorze Windows (zaznacz plik / otworz folder)" title="Pokaz w eksploratorze">' +
@@ -1064,7 +1064,7 @@
       '<div class="dam-basepath-box" role="dialog" aria-modal="true" aria-labelledby="damBasePathTitle">' +
         '<button type="button" class="dam-modal-x" id="damBasePathClose" aria-label="Zamknij"><i class="uil uil-times" aria-hidden="true"></i></button>' +
         '<h3 id="damBasePathTitle">Sciezka Marketing na tym komputerze</h3>' +
-        '<p class="dam-basepath-lead">Ustawienie dotyczy tylko <strong>tego urzadzenia</strong> ' +
+        '<p class="dam-basepath-lead">Ustawienie dotyczy tylko <strong>tego urządzeńia</strong> ' +
           '(dom / praca moga miec inna litere dysku). Folder musi zawierac: ' +
           '<strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>' +
         '<p class="dam-basepath-examples">Przyklady: <code>X:\\Marketing</code> | <code>D:\\Marketing</code> | <code>M:\\</code></p>' +
@@ -1131,25 +1131,25 @@
       detectMarketingBasesRemote().then(function (res) {
         if (res && res.recommended) {
           document.getElementById("damBasePathInput").value = res.recommended;
-          setMsg("Znaleziono: " + res.recommended + " - kliknij \"Zapisz i kontynuuj\", jesli to prawidlowa sciezka.", true);
+          setMsg("Znaleziono: " + res.recommended + " - kliknij \"Zapisz i kontynuuj\", jesli to prawidlowa ścieżka.", true);
         } else {
-          setMsg("Nie znaleziono folderu Marketing automatycznie - wpisz sciezke recznie.", false);
+          setMsg("Nie znaleziono folderu Marketing automatycznie - wpisz ścieżke recznie.", false);
         }
       }).catch(function () {
-        setMsg("Nie mozna wykryc - most lokalny jest offline. Wpisz sciezke recznie.", false);
+        setMsg("Nie mozna wykryc - most lokalny jest offline. Wpisz ścieżke recznie.", false);
       });
     });
     document.getElementById("damBasePathSave").addEventListener("click", function () {
       var raw = (document.getElementById("damBasePathInput").value || "").trim();
       if (!raw) {
-        setMsg("Podaj sciezke bazowa.", false);
+        setMsg("Podaj ścieżke bazowa.", false);
         return;
       }
       setBasePath(raw);
       validateBaseRemote(raw).then(function (res) {
         if (res && res.ok) {
           setMsg("OK - zapisano Twoje ustawienie.", true);
-          logAction("set_base_path", { local_path: raw, detail: "Uzytkownik ustawil sciezke bazowa" });
+          logAction("set_base_path", { local_path: raw, detail: "Uzytkownik ustawil ścieżke bazowa" });
           setTimeout(function () { modal.remove(); }, 500);
         } else if (res && res.missing && res.missing.length) {
           setMsg("Zapisano Twoj wybor; brakuje: " + res.missing.join(", ") + ".", false);
@@ -1164,7 +1164,7 @@
       });
     });
 
-    // Podpis urzadzenia (hostname / device_id)
+    // Podpis urządzeńia (hostname / device_id)
     ensureUserBase().then(function (info) {
       var hint = document.getElementById("damBasePathDeviceHint");
       if (!hint) return;

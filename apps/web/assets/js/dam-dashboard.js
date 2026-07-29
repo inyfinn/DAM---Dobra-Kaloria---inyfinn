@@ -187,7 +187,7 @@
       .catch(function () {
         teamsList.innerHTML =
           '<li class="dam-dash-panel__item dam-dash-panel__item--empty">' +
-          "Teams niedostepny (brak sync)." +
+          "Teams niedostępny (brak sync)." +
           "</li>";
       });
   }

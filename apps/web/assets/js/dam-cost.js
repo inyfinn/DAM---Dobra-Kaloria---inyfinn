@@ -435,7 +435,7 @@
       "</p>" +
       '<div class="dam-cost-total">' +
       '<div class="dam-cost-total__label">' +
-      escapeHtml(t("cost.total_label", "Koszt calkowity projektu")) +
+      escapeHtml(t("cost.total_label", "Koszt całkowity projektu")) +
       "</div>" +
       '<div class="dam-cost-total__value">' +
       formatPLN(project.total) +

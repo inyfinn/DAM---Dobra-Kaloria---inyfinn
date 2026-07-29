@@ -437,7 +437,7 @@
   }
 
   /**
-   * Etykieta UI nosnika - z policy.carrier_display_in_ui (domyslnie label_pl = DOYPACK).
+   * Etykieta UI nosnika - z policy.carrier_display_in_ui (domyślnie label_pl = DOYPACK).
    * Skrot (DOY) tylko gdy policy wymusi short LUB przy rename na dysku (bridge).
    */
   function carrierLabel(code, gramFromName, opts) {
@@ -478,7 +478,7 @@
     return c.toUpperCase();
   }
 
-  /** PL vs eksport z kanonicznej sciezki indeksu */
+  /** PL vs eksport z kanonicznej ścieżki indeksu */
   function detectMarketFromPath(path) {
     var p = String(path || "").replace(/\\/g, "/").toUpperCase();
     if (p.indexOf("/- EKSPORT") !== -1 || p.indexOf("/-EKSPORT") !== -1 || /\/-?\s*GC\b/.test(p) || p.indexOf("/GC/") !== -1) {
@@ -624,7 +624,7 @@
     var ext = (u.split(".").pop() || "");
     if (ext === "AI" || ext === "PSD" || ext === "INDD") return "edytowalny";
     if (/FQ/.test(u) && ext === "PDF") return "druk";
-    if (/\bPREV\b/.test(u) || /[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u)) return "podglad";
+    if (/\bPREV\b/.test(u) || /[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u)) return "podgląd";
     // ZIP/RAR: zwykle pakiet do druku. NIGDY wizualizacja (nawet gdy lezy w 4-WIZKI).
     if (ext === "ZIP" || ext === "RAR" || ext === "7Z") {
       if (layer === "source" && !/PAKIET|FQ|DRUK|KUBARA|PRODUKCYJ|POLZDOB/.test(u)) return "inny";

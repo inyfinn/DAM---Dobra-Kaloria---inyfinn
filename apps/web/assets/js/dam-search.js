@@ -666,7 +666,7 @@
 
   /**
    * Radio + odklik:
-   * - domyslnie Wszystko
+   * - domyślnie Wszystko
    * - klik Produkty/Warianty = tylko ten zakres
    * - ponowny klik aktywnego Produkty/Warianty = Wszystko
    * - klik Wszystko zawsze = Wszystko

@@ -1,6 +1,6 @@
 /**
  * DAM - Visualizations gallery v4
- * Grupy po product_id, badge Multijezyczny, modal podgladu, Synology share.
+ * Grupy po product_id, badge Multijezyczny, modal podglądu, Synology share.
  * Wymaga: dam-brand-filter.js zaladowanego PRZED tym plikiem.
  */
 (function () {
@@ -484,10 +484,6 @@
     st.id = VIZ_GRID_CARD_CSS_ID;
     st.textContent =
       ".dam-viz-thumb{position:relative;}" +
-      ".dam-viz-card__variant-badge{position:absolute;top:8px;right:8px;z-index:2;" +
-      "min-width:28px;height:22px;padding:0 7px;border-radius:999px;font-size:11px;font-weight:700;" +
-      "background:#7c3aed;color:#fff;display:inline-flex;align-items:center;justify-content:center;" +
-      "box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none;}" +
       ".dam-viz-card__variants-tag{margin-top:4px;}" +
       ".dam-viz-card__actions{margin-top:auto;width:100%;}" +
       ".dam-viz-card__indexes-wrap{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}" +
@@ -501,7 +497,7 @@
   /* Populuj filtr jezykow                                                */
   /* ------------------------------------------------------------------ */
 
-  /** OFF (domyslnie) = tylko aktualne; ON = wszystkie (stare, nieaktualne, demo). */
+  /** OFF (domyślnie) = tylko aktualne; ON = wszystkie (stare, nieaktualne, demo). */
   function readShowAll() {
     var stored = localStorage.getItem(SHOW_ALL_KEY);
     if (stored !== null && stored !== undefined && stored !== "") {
@@ -524,7 +520,7 @@
     return /^\d{5,9}(?:\.\d{2})?$/.test(s);
   }
 
-  /** Indeks z pola, folderu lub sciezki - nigdy "noid" w UI. */
+  /** Indeks z pola, folderu lub ścieżki - nigdy "noid" w UI. */
   function resolveIndexBase(row) {
     if (!row) return "";
     var candidates = [
@@ -1171,7 +1167,7 @@
         var hasViz = wizki.length > 0 || r.wizki_count > 0;
         /* Faza 5/P2: "Pokaz wszystko" (showAll=true, onlyLatest=false) odslania
            TEZ rewizje bez wizki - plik/folder istnieje, ale brak wizualizacji.
-           Domyslnie (onlyLatest=true) - jak dawniej, calkowicie pominiete. */
+           Domyślnie (onlyLatest=true) - jak dawniej, calkowicie pominiete. */
         if (!hasViz && onlyLatest) return;
         /* Langs z indeksu. DK ma PL z buildera (baseline). Zakaz GC=en bez dowodu. */
         var langs = (r.langs && r.langs.length) ? r.langs.slice() : [];
@@ -1271,7 +1267,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Render modal podgladu                                                */
+  /* Render modal podglądu                                                */
   /* ------------------------------------------------------------------ */
 
   /** Unikalne warianty w modalu: klucz = indeks + jezyk (nie powielaj tego samego). */
@@ -1531,7 +1527,7 @@
         copy.perspective = "";
         copy.bg = "";
         copy.viz_file_label = shortVizFileLabel(f.name, fi);
-        /* Kazdy plik = wlasny podglad (bridge /media), zeby strip nie pokazywal 1x tego samego thumb. */
+        /* Kazdy plik = wlasny podgląd (bridge /media), zeby strip nie pokazywal 1x tego samego thumb. */
         copy.thumb_url = mediaPreviewUrl(copy.path) || base.thumb_url || "";
         out.push(enrichVizStudioMeta(copy));
       });
@@ -2291,7 +2287,7 @@
 
   /**
    * Podpis chipa wariantu w modalu: ZAWSZE skrot jezyka + indeks (nie pelna
-   * nazwa jak "Wielka Brytania" - 2026-07-18). Pelna nazwa + sciezka -> tooltip,
+   * nazwa jak "Wielka Brytania" - 2026-07-18). Pelna nazwa + ścieżka -> tooltip,
    * patrz variantChipTip(). Przy wielu plikach WIZKI: jezyk + (1)/(2) z nazwy.
    */
   function variantChipLabel(v, ctx) {
@@ -2306,7 +2302,7 @@
     return short || idx || fileBit || "Aktualna";
   }
 
-  /** Pelny tekst (aria-label / fallback) chipa wariantu: jezyk + sciezka. */
+  /** Pelny tekst (aria-label / fallback) chipa wariantu: jezyk + ścieżka. */
   function variantChipTip(v) {
     var langFull = labelForLang(v.lang) || v.lang_label || "";
     var parts = [];
@@ -2375,9 +2371,9 @@
         "</div>" +
         '<button type="button" class="dam-variant-info__copy" data-copy-path="' +
         esc(path) +
-        '"><i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj sciezke</span></button>';
+        '"><i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj ścieżke</span></button>';
     } else {
-      html += '<div class="dam-variant-info__path-label">Brak sciezki dla tego wariantu</div>';
+      html += '<div class="dam-variant-info__path-label">Brak ścieżki dla tego wariantu</div>';
     }
     return html;
   }
@@ -2414,7 +2410,7 @@
         e.stopPropagation();
         copyToClipboard(copyBtn.getAttribute("data-copy-path") || "").then(
           function () {
-            showToast("Skopiowano sciezke do schowka");
+            showToast("Skopiowano ścieżke do schowka");
           },
           function () {
             showToast("Nie udalo sie skopiowac");
@@ -2675,7 +2671,7 @@
   function openFolderPicker(startDir, onPicked) {
     function openCombo() {
       if (!window.DamFolderPicker || typeof window.DamFolderPicker.open !== "function") {
-        showToast("DamFolderPicker niedostepny - odswiez strone (cache).");
+        showToast("DamFolderPicker niedostępny - odśwież strone (cache).");
         return;
       }
       window.DamFolderPicker.open({
@@ -2804,7 +2800,7 @@
         : '<span class="dam-viz-badge dam-viz-badge--brand">' + esc(brand) + "</span>";
 
     var shareBtnTitle = syEnabled
-      ? "Udostepnij przez Synology Drive"
+      ? "Udostępnij przez Synology Drive"
       : "Wlacz Synology Drive w Ustawieniach";
 
     /* Faza 5 / P2: jezyki bez realnej wizki - wyszarzone + "Zglos zapotrzebowanie". */
@@ -2846,7 +2842,7 @@
     }
 
     /* Pkt 7 brief 2026-07-20: "Dodaj miniature" TYLKO gdy produkt ma brakujaca
-       wizualizacje (missing langs / wariant bez podgladu) albo istnieje juz
+       wizualizacje (missing langs / wariant bez podglądu) albo istnieje juz
        reczne sparowanie (zeby dalo sie je cofnac). */
     var manualPairedN = countManualForProduct(first.product_id || "");
     var lacksViz =
@@ -2858,7 +2854,7 @@
 
     var adminActions = "";
     if (admin) {
-      /* Miniatura = zmiana podgladu karty/hero (Explorer-style picker, thumb-overrides).
+      /* Miniatura = zmiana podglądu karty/hero (Explorer-style picker, thumb-overrides).
          Dodaj miniature = parowanie brakujacej wizualizacji z folderem innego
          jezyka/wariantu (damVizModalAddManual) - osobna akcja, nie zamiennik. */
       adminActions =
@@ -3086,12 +3082,12 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=5.0.64";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=5.0.77";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=5.0.64";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=5.0.77";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
@@ -4294,7 +4290,7 @@
         var v = items[activeIdx] || first;
         var path = (v && v.path) || "";
         if (!path) {
-          showToast("Brak sciezki pliku");
+          showToast("Brak ścieżki pliku");
           return;
         }
         var winBtn = document.getElementById("damVizModalWinExplorer");
@@ -4347,7 +4343,7 @@
         var path = (v && v.path) || this.getAttribute("data-path") || "";
         if (path) this.setAttribute("data-path", path);
         if (!path) {
-          showToast("Brak sciezki produktu");
+          showToast("Brak ścieżki produktu");
           return;
         }
         /* Folder = reveal + select pliku (NIE openFolderInExplorer, ktore bierze tylko katalog) */
@@ -4410,7 +4406,7 @@
           return;
         }
         copyToClipboard(path).then(function () {
-          showToast("Skopiowano sciezke do schowka");
+          showToast("Skopiowano ścieżke do schowka");
         });
       });
     }
@@ -4424,7 +4420,7 @@
         if (window.DamPaths && typeof window.DamPaths.shareViaSynology === "function") {
           window.DamPaths.shareViaSynology(path);
         } else {
-          showToast("DamPaths niedostepne - odswiez strone");
+          showToast("DamPaths niedostępne - odśwież strone");
         }
       });
     }
@@ -4681,7 +4677,7 @@
             "</button>" +
             (noViz
               ? ""
-              : '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-viz-share-btn" data-group-pid="' + esc(group.pid) + '" aria-label="Udostepnij" title="Udostepnij" data-dam-tip="Udostepnij plik przez Synology Drive">' +
+              : '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-viz-share-btn" data-group-pid="' + esc(group.pid) + '" aria-label="Udostępnij" title="Udostępnij" data-dam-tip="Udostępnij plik przez Synology Drive">' +
                 '<i class="uil uil-share-alt" aria-hidden="true"></i></button>') +
           '</div>' +
         '</div>' +
@@ -4907,7 +4903,7 @@
 
     if (status) {
       status.textContent =
-        groups.length + " produktow (" + filtered.length + " wariantow)" +
+        groups.length + " produktów (" + filtered.length + " wariantow)" +
         (all.length !== filtered.length ? " / z " + all.length + " wszystkich" : "");
     }
     updateVizGridCount(groups, filtered);
@@ -4959,7 +4955,7 @@
         e.stopPropagation();
         var path = this.getAttribute("data-path") || "";
         if (!path) {
-          showToast("Brak sciezki produktu");
+          showToast("Brak ścieżki produktu");
           return;
         }
         if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
@@ -4992,7 +4988,7 @@
       });
     });
 
-    // Przycisk Udostepnij
+    // Przycisk Udostępnij
     grid.querySelectorAll(".dam-viz-share-btn").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
@@ -5007,7 +5003,7 @@
         if (window.DamPaths && typeof window.DamPaths.shareViaSynology === "function") {
           window.DamPaths.shareViaSynology(group.items[0].path || "");
         } else {
-          showToast("DamPaths niedostepne - odswiez strone");
+          showToast("DamPaths niedostępne - odśwież strone");
         }
       });
     });
@@ -5486,7 +5482,7 @@
       refreshOpenModalAfterFlag();
     };
 
-    /* Pkt 8: dostep dla innych modulow (dam-explorer "Dodaj miniature") + QA */
+    /* Pkt 8: dostęp dla innych modulow (dam-explorer "Dodaj miniature") + QA */
     window.damVizOpenThumbPicker = function (dir, onPicked) {
       openFolderPicker(dir, onPicked);
     };

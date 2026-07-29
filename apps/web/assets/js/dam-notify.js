@@ -141,11 +141,11 @@
 
   function statusText() {
     var p = permission();
-    if (p === "unsupported") return "Powiadomienia niedostepne w tym srodowisku";
+    if (p === "unsupported") return "Powiadomienia niedostępne w tym srodowisku";
     if (!isEnabled()) return "Wylaczone";
-    if (p === "denied") return "Zablokowane w przegladarce";
+    if (p === "denied") return "Zablokowane w przeglądarce";
     if (p === "granted") return "Aktywne (co 60 s)";
-    return "Wymaga zgody przegladarki";
+    return "Wymaga zgody przeglądarki";
   }
 
   global.DamNotify = {

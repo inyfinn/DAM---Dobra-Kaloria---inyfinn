@@ -584,7 +584,7 @@
         {
           pose: "explain",
           title: "Faktury",
-          text: "Sekcja Faktury to dokumenty sprzedażowe i kosztowe w jednym miejscu, z podglądem i statusami.",
+          text: "Sekcja Faktury to dokumenty sprzedażowe i kosztówe w jednym miejscu, z podglądem i statusami.",
           target: [".geex-content__section-wrapper", sideLink("invoices.html")]
         },
         {

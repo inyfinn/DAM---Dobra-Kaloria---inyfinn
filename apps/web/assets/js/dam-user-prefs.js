@@ -1,7 +1,7 @@
 /**
  * DAM - preferencje UI per konto (Postgres KV via bridge /user-prefs).
  * PI: ui.safe_delete + ui.user_prefs_kv.
- * localStorage = cache / fallback offline, nie zrodlo prawdy.
+ * localStorage = cache / fallback offline, nie źródło prawdy.
  */
 (function (global) {
   "use strict";

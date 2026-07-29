@@ -776,8 +776,12 @@
 .dam-media-preview__assoc-pane-section--products {
   flex: 0 0 auto;
   margin-top: 0;
-  padding-top: 0;
   border-top: none;
+}
+
+.dam-media-preview__assoc-col--branding-split .dam-media-preview__pane-products {
+  width: 100%;
+  min-width: 0;
 }
 
 .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-pane-section--products {
@@ -788,8 +792,10 @@
   margin-top: 0;
 }
 
-/* Sekcja materiałów — ten sam separator/box co warianty (#damMediaPreviewAssoc) */
+/* Assoc pane section well — products + materials parity (branding-split + viz assoc pane) */
+.dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-pane-section--products,
 .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-section.dam-media-preview__assoc-col--materials,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-pane-section--products,
 .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-col--materials,
 .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-section.dam-media-preview__assoc-col--materials {
   margin: 0;
@@ -797,6 +803,29 @@
   border-radius: 12px;
   background: var(--dam-surface-muted, #f5f6fa);
   box-sizing: border-box;
+}
+
+/* CTA parity: same right edge in products + materials label rows */
+.dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-label-row,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-label,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dam-media-preview__assoc-col--branding-split .dam-viz-assoc-cta.dam-int-cta,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-viz-assoc-cta.dam-int-cta {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .dam-assoc-pane-bottom-stack {

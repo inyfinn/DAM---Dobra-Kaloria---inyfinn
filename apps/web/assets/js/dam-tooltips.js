@@ -2,7 +2,7 @@
  * DAM - Global Tooltips Helper
  * Pokazuje tooltip dla elementow z data-dam-tip, title lub aria-label.
  * Szanuje localStorage.dam_tooltips=off.
- * Ustawienie: localStorage.dam_tooltips ("on" | "off"), domyslnie on.
+ * Ustawienie: localStorage.dam_tooltips ("on" | "off"), domyślnie on.
  */
 (function () {
   "use strict";

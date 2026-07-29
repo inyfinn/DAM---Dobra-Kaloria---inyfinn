@@ -10,7 +10,7 @@
     marketing: "Materiały marketingowe",
     karta: "Karta wprowadzenia",
     presentation: "Prezentacja",
-    photo: "Fotografia produktowa",
+    photo: "Fotografia produktówa",
     packaging_text: "Teksty na opakowanie",
   };
 

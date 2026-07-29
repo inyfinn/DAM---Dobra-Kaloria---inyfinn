@@ -1,5 +1,5 @@
 /**
- * DAM - wspolny renderer tagow (explorer + wizualizacje).
+ * DAM - wspólny renderer tagow (explorer + wizualizacje).
  * Klikalne, kontekstowe: filtr w biezacym widoku.
  */
 (function (global) {
@@ -1241,8 +1241,8 @@
         label: "Edytowalny",
         cls: "dam-viz-badge--editable",
         tip: isSourceEditableFile(asset)
-          ? "Plik zrodlowy Adobe (PSD/AI) z warstwami"
-          : "W folderze jest plik zrodlowy do edycji",
+          ? "Plik źródłowy Adobe (PSD/AI) z warstwami"
+          : "W folderze jest plik źródłowy do edycji",
         tier: "primary",
       });
     }
@@ -1320,7 +1320,7 @@
         value: "tiff",
         label: "TIFF",
         cls: "dam-viz-badge--source",
-        tip: "Raster zrodlowy wysokiej jakosci",
+        tip: "Raster źródłowy wysokiej jakosci",
         tier: "primary",
       });
     } else if ((ext === "ai" || ext === "eps") && !hasEditableBadge) {
@@ -1329,7 +1329,7 @@
         value: ext,
         label: ext.toUpperCase(),
         cls: "dam-viz-badge--editable",
-        tip: "Plik wektorowy zrodlowy",
+        tip: "Plik wektorowy źródłowy",
         tier: "low",
       });
     }

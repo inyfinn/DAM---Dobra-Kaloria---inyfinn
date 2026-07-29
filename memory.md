@@ -3,6 +3,11 @@
 Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-07-18**.  
 Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 
+## Global +N count bubble + ui-taste 10 rund (2026-07-29)
+
+- **Bąbelek liczby (+N)** na miniaturach kart: jedna reguła CSS w `apps/web/assets/css/dam-brand.css` (`.dam-viz-card__variant-badge`, tokeny `--dam-count-bubble-*`). Branding i Viz **nie** mogą nadpisywać (żadnego inline purple w `dam-viz.js`, żadnego scoped w `dam-branding.css`).
+- **UI polish:** przy deliverable wizualnym obowiązkowe **10 przelotów /ui-taste w trybie intensywnym** (viewporty 375/768/1280 + screenshot+Read), chyba że user wyraźnie zrzeka się iteracji.
+
 ## /planner + /reflect — Warstwa A/B (2026-07-28, GLOBAL skills)
 
 - Plan = **Warstwa A (user, po polsku, screen Done)** + **Warstwa B (agent, załącznik)**. Źródło prawdy = przeglądarka.

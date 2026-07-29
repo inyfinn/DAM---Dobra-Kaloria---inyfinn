@@ -1,7 +1,7 @@
 /**
  * DAM - tipy dla #damAssocActionMenu (.dam-assoc-action-menu__item)
- * Binder osobny od dam-assoc-edit.js (wspolbieznosc agentow).
- * Dopina data-dam-tip i odswieza DamTooltips.bind.
+ * Binder osobny od dam-assoc-edit.js (współbieżność agentow).
+ * Dopina data-dam-tip i odświeża DamTooltips.bind.
  */
 (function () {
   "use strict";
@@ -25,7 +25,7 @@
 
     if (action === "explorer" || label === "eksplorator") {
       if (el.disabled || el.getAttribute("disabled") !== null || !el.getAttribute("data-path")) {
-        return "Brak sciezki folderu na dysku";
+        return "Brak ścieżki folderu na dysku";
       }
       return "Otworz folder w Windows Explorerze";
     }

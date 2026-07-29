@@ -354,6 +354,14 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
 
+### 2026-07-29 — v5.0.75: +N count bubble drift (Branding vs Viz)
+
+**Objaw:** Bąbelki `+N` na miniaturach kart w Viz były fioletowe (`#7c3aed`), 22px, 11px font (inline CSS w `dam-viz.js` `ensureVizGridCardCss`); Branding miał poprawny ciemnoszary `rgba(70,66,85,0.82)`, 28px, 12px (`dam-branding.css`).
+
+**Fix:** Jedna globalna reguła `.dam-viz-card__variant-badge` w `dam-brand.css` (tokeny `--dam-count-bubble-*`); usunięto override z `dam-branding.css` i inline badge CSS z `dam-viz.js` (zostaje tylko `.dam-viz-thumb{position:relative}`).
+
+**Metryka PASS:** screenshot+Read branding.html i visualizations.html — ten sam kolor, rozmiar, pozycja top-right; `node --check dam-viz.js`.
+
 **Weryfikacja:** CDP variant ids `br-005627` incl. `br-049510`; overrides JSON; `DamViz.getLinkedMaterialIds('banoffee-kakao-deserowe')` incl. `br-049510`.
 
 ### 2026-07-27 — v5.0.14: viz grid group/variant + folder-date hero + preview nav

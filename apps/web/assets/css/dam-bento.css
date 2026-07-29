@@ -379,7 +379,6 @@
   gap: 10px var(--dam-bento-gap);
   border-radius: var(--dam-bento-radius);
   border: 1px solid var(--dam-bento-border);
-  background: var(--dam-bento-surface);
   box-shadow: var(--dam-bento-shadow);
   padding: 12px 16px;
 }

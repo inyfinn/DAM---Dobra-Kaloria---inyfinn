@@ -2352,7 +2352,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-search-hit__head {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 8px;
   min-width: 0;
   margin-bottom: 2px;
 }
@@ -2373,7 +2373,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-assoc-edit-popover__list .dam-search-hit__row {
   padding: 7px 12px;
   min-height: 76px;
-  align-items: flex-start;
+  align-items: center;
 }
 .dam-assoc-edit-popover__list .dam-search-hit__body {
   gap: 2px;
@@ -2400,6 +2400,20 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-assoc-edit-popover__opt-row + .dam-assoc-edit-popover__opt-row,
 .dam-assoc-edit-popover__folder-block + .dam-assoc-edit-popover__folder-block {
   margin-top: 2px;
+}
+.dam-assoc-edit-popover__hits .dam-assoc-edit-popover__opt-row {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dam-assoc-edit-popover__pinned .dam-search-hits,
+.dam-assoc-edit-popover__list .dam-search-hits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .dam-search-hit--variant .dam-search-hit__badge {
   color: #0f7b5f;
@@ -3350,7 +3364,6 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   margin: 0 0 12px;
   /* Stare: 8px 12px; +12px = 20px 24px (jak Branding meta) */
   padding: 20px 24px;
-  background: var(--dam-surface, #fff);
   border: 1px solid var(--dam-border, #E7E7E7);
   border-radius: 10px;
   position: sticky;
@@ -3440,7 +3453,6 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   margin: 0 0 12px;
   padding: 8px 12px;
   min-height: 44px;
-  background: #fff;
   border: 1px solid #E7E7E7;
   border-radius: 10px;
   position: sticky;
@@ -3788,7 +3800,96 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   --dam-sticky-search-h: 68px;
   --dam-sticky-filters-top: calc(var(--dam-sticky-top) + var(--dam-sticky-search-h) + var(--dam-sticky-search-gap));
   --dam-sticky-chrome-bg: var(--dam-bento-muted, #f4f3f8);
+  --dam-sticky-chrome-blur: 14px;
+  --dam-sticky-chrome-bg-frost: color-mix(in srgb, var(--dam-sticky-chrome-bg) 92%, transparent);
 }
+
+/* Full-bleed frost: zakrywa boczne guttery .geex-content (tagi pod sticky chrome) */
+.geex-content > .dam-global-search-block > .dam-explorer-toolbar,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar,
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar,
+.dam-projects-grid-toolbar,
+.dam-viz-secondary-filters {
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: calc(50vw - 50%);
+  padding-right: calc(50vw - 50%);
+}
+
+/* Frost + blur na sticky belkach i w szczelinach (nad / miedzy panelami) */
+.geex-content > .dam-global-search-block > .dam-explorer-toolbar,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar,
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar,
+.dam-projects-grid-toolbar,
+.dam-viz-secondary-filters {
+  isolation: isolate;
+}
+
+.geex-content > .dam-global-search-block > .dam-explorer-toolbar,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar,
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar {
+  background: var(--dam-sticky-chrome-bg-frost);
+  backdrop-filter: blur(var(--dam-sticky-chrome-blur));
+  -webkit-backdrop-filter: blur(var(--dam-sticky-chrome-blur));
+}
+
+.dam-projects-grid-toolbar,
+.dam-viz-secondary-filters {
+  background: var(--dam-sticky-chrome-bg-frost);
+  backdrop-filter: blur(var(--dam-sticky-chrome-blur));
+  -webkit-backdrop-filter: blur(var(--dam-sticky-chrome-blur));
+}
+
+/* Nad pierwszym panelem (0 .. sticky-top) */
+.geex-content > .dam-global-search-block > .dam-explorer-toolbar::before,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar::before,
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: auto;
+  width: 100vw;
+  transform: translateX(-50%);
+  top: calc(-1 * var(--dam-sticky-top));
+  height: var(--dam-sticky-top);
+  background: var(--dam-sticky-chrome-bg-frost);
+  backdrop-filter: blur(var(--dam-sticky-chrome-blur));
+  -webkit-backdrop-filter: blur(var(--dam-sticky-chrome-blur));
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Miedzy panelem search a dolnym sticky (filtry / toolbar projektow) */
+.geex-content > .dam-global-search-block > .dam-explorer-toolbar::after,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar::after,
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar::after,
+.dam-projects-grid-toolbar::before,
+.dam-viz-secondary-filters::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: auto;
+  width: 100vw;
+  transform: translateX(-50%);
+  height: var(--dam-sticky-search-gap);
+  background: var(--dam-sticky-chrome-bg-frost);
+  backdrop-filter: blur(var(--dam-sticky-chrome-blur));
+  -webkit-backdrop-filter: blur(var(--dam-sticky-chrome-blur));
+  pointer-events: none;
+  z-index: -1;
+}
+
+.geex-content > .dam-global-search-block > .dam-explorer-toolbar::after,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar::after,
+.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar::after {
+  bottom: calc(-1 * var(--dam-sticky-search-gap));
+}
+
+.dam-projects-grid-toolbar::before,
+.dam-viz-secondary-filters::before {
+  top: calc(-1 * var(--dam-sticky-search-gap));
+}
+
 /* Bez wlasnego boxa: toolbar sticky w tym samym scroll-parent co siatka wynikow */
 .geex-content > .dam-global-search-block,
 .geex-content__section-wrapper > .dam-global-search-block,
@@ -3803,7 +3904,6 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   z-index: 52;
   margin-bottom: var(--dam-sticky-search-gap);
   padding-bottom: 2px;
-  background: var(--dam-sticky-chrome-bg);
 }
 .geex-content > .dam-global-search-block > .dam-explorer-toolbar .dam-search-wrap--panel,
 .geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar .dam-search-wrap--panel,
@@ -11487,11 +11587,29 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   overflow-y: auto;
 }
 
-/* Toggle "Pokaz wszystkie" w siatce skojarzonych materialow = pelny wiersz */
-.dam-media-preview__assoc-col--materials .dam-media-preview__variants-toggle {
-  grid-column: 1 / -1;
+/* Toggle "Pokaz wszystkie" — poza siatka (JS: afterend #damVizModalAssoc); fallback gdy w grid */
+.dam-assoc-pane-split__top > .dam-media-preview__variants-toggle,
+.dam-media-preview__assoc-col--materials > .dam-media-preview__variants-toggle {
+  align-self: flex-start;
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  min-height: unset;
+  margin-top: 8px;
+  margin-left: 0;
+}
+.dam-media-preview__assoc-col--materials .dam-media-preview__assoc-grid .dam-media-preview__variants-toggle {
+  align-self: start;
   justify-self: start;
-  margin-top: 4px;
+  grid-column: 1 / -1;
+  grid-row: auto;
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  min-height: unset;
+  margin-top: 8px;
+  margin-left: 0;
 }
 
 /* Menu akcji (Przejdz/Eksplorator/Wizualizacja/Kopiuj) po kliku nazwy skojarzonego
@@ -11688,6 +11806,10 @@ html[data-theme="dark"] .dam-global-search-block .dam-explorer-toolbar {
   color: var(--dam-text, #eeeaf6);
 }
 
+html[data-theme="dark"] {
+  --dam-sticky-chrome-bg-frost: color-mix(in srgb, var(--dam-sticky-chrome-bg, #1a1922) 92%, transparent);
+}
+
 /* Geex secondary / outline buttons — no white flash in dark */
 html[data-theme="dark"] .geex-btn--primary-transparent,
 html[data-theme="dark"] .geex-btn.geex-btn--primary-transparent {
@@ -11810,6 +11932,38 @@ html[data-theme="dark"] .dam-admin-header-switch:has(.dam-switch__input:not(:che
 html[data-theme="dark"] .dam-admin-header-switch:has(.dam-switch__input:checked) {
   background: color-mix(in srgb, var(--dam-primary, #ab54db) 18%, var(--dam-surface-elevated, #2a2833));
   border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #2c2b36));
+}
+
+/* Global +N count bubble (Branding + Viz thumbs) — single source of truth */
+:root {
+  --dam-count-bubble-bg: rgba(70, 66, 85, 0.82);
+  --dam-count-bubble-color: #fff;
+  --dam-count-bubble-size: 28px;
+  --dam-count-bubble-font: 12px;
+  --dam-count-bubble-offset: 8px;
+  --dam-count-bubble-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.dam-viz-thumb .dam-viz-card__variant-badge,
+.dam-viz-card__variant-badge {
+  position: absolute;
+  top: var(--dam-count-bubble-offset);
+  right: var(--dam-count-bubble-offset);
+  z-index: 2;
+  min-width: var(--dam-count-bubble-size);
+  height: var(--dam-count-bubble-size);
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--dam-count-bubble-font);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--dam-count-bubble-color);
+  background: var(--dam-count-bubble-bg);
+  box-shadow: var(--dam-count-bubble-shadow);
+  pointer-events: none;
 }
 
 

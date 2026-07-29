@@ -1,10 +1,10 @@
 /**
  * DAM - globalny custom date picker (design system: tagi/pill, bez natywnego
- * "zoltego" popupu przegladarki). Progresywnie wzbogaca KAZDY input[type="date"]
+ * "zoltego" popupu przeglądarki). Progresywnie wzbogaca KAZDY input[type="date"]
  * w panelu: chowa natywny picker (readOnly), doklada ikone-trigger i wlasny
  * popover z siatka dni w stylu .dam-viz-badge / .dam-int-cta.
  *
- * Kontrakt: oryginalny <input type="date"> zostaje jedynym zrodlem prawdy
+ * Kontrakt: oryginalny <input type="date"> zostaje jedynym źródłem prawdy
  * (ISO yyyy-mm-dd w .value) - po wyborze dnia odpalamy input+change (bubbles),
  * zeby istniejace listenery (np. dam-branding.js bindFilters) dzialaly bez zmian.
  */
@@ -81,9 +81,9 @@
     popoverEl.setAttribute("aria-label", "Wybierz date");
     popoverEl.innerHTML =
       '<div class="dam-date-popover__head">' +
-      '<button type="button" class="dam-date-popover__nav" data-nav="-1" aria-label="Poprzedni miesiac"><i class="uil uil-angle-left-b" aria-hidden="true"></i></button>' +
+      '<button type="button" class="dam-date-popover__nav" data-nav="-1" aria-label="Poprzedni miesiąc"><i class="uil uil-angle-left-b" aria-hidden="true"></i></button>' +
       '<span class="dam-date-popover__title" id="damDatePopoverTitle"></span>' +
-      '<button type="button" class="dam-date-popover__nav" data-nav="1" aria-label="Nastepny miesiac"><i class="uil uil-angle-right-b" aria-hidden="true"></i></button>' +
+      '<button type="button" class="dam-date-popover__nav" data-nav="1" aria-label="Nastepny miesiąc"><i class="uil uil-angle-right-b" aria-hidden="true"></i></button>' +
       "</div>" +
       '<div class="dam-date-popover__weekdays">' +
       WEEKDAYS_PL.map(function (w) {

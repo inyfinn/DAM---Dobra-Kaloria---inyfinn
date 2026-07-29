@@ -1,7 +1,7 @@
 {
-  "version": "5.0.69",
+  "version": "5.0.78",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-07-29",
-  "note": "5.0.69: projects grid sort (date/name/priority/recent); 5.0.68 assoc picker thumbs+branding viz-parity."
+  "note": "5.0.78: viz modal variants-toggle poza gridem; assoc picker meta/layout jak Explorer hits."
 }

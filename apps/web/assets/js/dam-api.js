@@ -6,7 +6,7 @@
 
   /* ------------------------------------------------------------------ */
   /* Lokalna baza plikow (w repo)                                        */
-  /* Struktura katalogow jest zawsze ta sama; prefix sciezki (D:/ P:/)   */
+  /* Struktura katalogow jest zawsze ta sama; prefix ścieżki (D:/ P:/)   */
   /* tylko odblokowuje otwieranie plikow. Metadane = file-index.json.    */
   /* ------------------------------------------------------------------ */
 
@@ -548,7 +548,7 @@
       data = null;
     }
     if (r.status === 401) {
-      // Sesja urzadzenia: nie kasuj tokenu automatycznie przy chwilowym 401 API Laravel.
+      // Sesja urządzeńia: nie kasuj tokenu automatycznie przy chwilowym 401 API Laravel.
       // Tylko przekieruj gdy naprawde brak lokalnej sesji.
       if (!token()) location.href = "signin.html";
       throw new Error("Unauthenticated");
@@ -674,7 +674,7 @@
         }
         throw new Error("Nie udalo sie utworzyc konta.");
       }
-      // Po rejestracji od razu zaloguj na tym urzadzeniu
+      // Po rejestracji od razu zaloguj na tym urządzeńiu
       return this.login(email, password);
     },
     logout: async function () {
@@ -728,7 +728,7 @@
       }
       return data || { ok: false, error: "rehydrate_failed" };
     },
-    /** Sesja bridge przed zapisem F/X/D, odswiezaniem indeksu itd. */
+    /** Sesja bridge przed zapisem F/X/D, odświeżaniem indeksu itd. */
     async ensureSession() {
       var t = token();
       if (!t || t === "demo-admin-dev-token" || t === "qa") {
@@ -809,7 +809,7 @@
           });
           return { data: data.user, source: "bridge" };
         }
-        /* Token wygasl / "qa" / stary localStorage: odswiez z bound-session (bez hasla). */
+        /* Token wygasl / "qa" / stary localStorage: odśwież z bound-session (bez hasla). */
         if (
           data &&
           (data.error === "invalid_session" ||

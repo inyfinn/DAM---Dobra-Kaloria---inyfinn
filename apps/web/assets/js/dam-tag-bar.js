@@ -1,5 +1,5 @@
 /**
- * DAM - wspolny pasek tagow skojarzen (Smak / Typ / Opakowanie / Autor).
+ * DAM - wspólny pasek tagow skojarzen (Smak / Typ / Opakowanie / Autor).
  * Wszystkie kategorie widoczne od razu. Gdy w kategorii > ROW_LIMIT tagow:
  * pierwsze N widoczne, "rozwin" dla TEJ kategorii rozwija wiersz w dol
  * i przesuwa reszte UI nizej (bez globalnego przycinania).

@@ -1,5 +1,5 @@
 /**
- * DAM - edycja skojarzen produktow / wariantow w podgladzie mediow (Shift+klik, admin).
+ * DAM - edycja skojarzen produktów / wariantow w podglądzie mediow (Shift+klik, admin).
  */
 (function (global) {
   "use strict";
@@ -293,6 +293,53 @@
     }
     if (raw.length <= maxLen) return raw;
     return raw.slice(0, maxLen - 1) + "…";
+  }
+
+  function looksLikeFullPath(s) {
+    s = String(s || "");
+    if (!s) return false;
+    if (/^[a-z]:[\\/]/i.test(s)) return true;
+    if (/[\\/]/.test(s) && s.replace(/\\/g, "/").split("/").length > 2) return true;
+    return /marketing[\\/]/i.test(s);
+  }
+
+  function shortPickerMetaPath(path) {
+    return String(path || "")
+      .replace(/^.*[\\/]Marketing[\\/]/i, "")
+      .replace(/\//g, "\\");
+  }
+
+  /** Meta wiersza pickera — jak Explorer buildHitItemHtml (bez pelnych ścieżek X:/). */
+  function pickerRowMetaText(it) {
+    if (!it) return "";
+    var isProd = !!it.isProductRow;
+    var isRev = !!it.isRevisionRow;
+    var isMat =
+      it.kind === "material" ||
+      (!isProd && !isRev && isBrandingMaterialId(it.id));
+    var parts = [];
+    if (isMat) {
+      var msub = it.sub || it.marketing_id || it.index || "";
+      if (!msub && it.id && !looksLikeFullPath(it.id)) msub = it.id;
+      if (msub) parts.push(msub);
+    } else if (isProd) {
+      if (it.sub && !looksLikeFullPath(it.sub)) parts.push(it.sub);
+      if (it.revCount) {
+        parts.push(
+          String(it.revCount) + (it.revCount === 1 ? " wariant" : " warianty")
+        );
+      }
+    } else if (isRev) {
+      var idx = it.sub || "";
+      if (idx && /[/\\]/.test(idx) && it.path) {
+        idx = String(it.path).split(/[/\\]/).filter(Boolean).pop() || idx;
+      }
+      if (idx) parts.push(idx);
+    } else {
+      if (it.sub && !looksLikeFullPath(it.sub)) parts.push(it.sub);
+      if (it.id && it.id !== it.label && !looksLikeFullPath(it.id)) parts.push(it.id);
+    }
+    return parts.join(" · ");
   }
 
   function isLegacyBrId(id) {
@@ -798,6 +845,14 @@
     return u;
   }
 
+  function normalizeBridgeMediaUrl(src) {
+    var s = String(src || "").trim();
+    if (!s) return "";
+    var m = s.match(/^https?:\/\/127\.0\.0\.1:\d+(\/.*)$/i);
+    if (m) return m[1];
+    return s;
+  }
+
   function pickerListThumbUrl(entry) {
     if (!entry) return PLACEHOLDER_SVG;
     var t = entry.thumb || entry.thumb_url || "";
@@ -812,8 +867,44 @@
     ) {
       return global.DamPreviewTruth.thumbCacheUrl(path, "grid");
     }
+    if (path && /^(png|jpe?g|webp|gif|bmp|tif|tiff)$/i.test(ext)) {
+      return pickerPreviewFromPath(path);
+    }
     return PLACEHOLDER_SVG;
   }
+
+  function pickerThumbOnError(img) {
+    if (!img) return;
+    var wrap = img.closest(".dam-assoc-edit-popover__thumb-wrap");
+    if (!wrap) {
+      if (global.__damBrandingThumbFallback) global.__damBrandingThumbFallback(img);
+      return;
+    }
+    if (img.dataset.pickerThumbFallback === "2") {
+      img.classList.add("is-broken");
+      img.removeAttribute("src");
+      wrap.classList.add("is-broken");
+      return;
+    }
+    var path = img.getAttribute("data-path") || "";
+    if (!path) {
+      img.dataset.pickerThumbFallback = "2";
+      img.classList.add("is-broken");
+      wrap.classList.add("is-broken");
+      return;
+    }
+    img.dataset.pickerThumbFallback = "1";
+    var preview = normalizeBridgeMediaUrl(pickerPreviewFromPath(path));
+    if (preview) {
+      img.src = preview;
+      return;
+    }
+    img.dataset.pickerThumbFallback = "2";
+    img.classList.add("is-broken");
+    wrap.classList.add("is-broken");
+  }
+
+  global.__damPickerThumbOnError = pickerThumbOnError;
 
   var _pickerThumbIo = null;
   var _pickerThumbLoads = 0;
@@ -825,7 +916,16 @@
     return PLACEHOLDER_SVG;
   }
 
-  function hydratePickerThumbs(scope) {
+  function resolvePickerThumbProbeUrl(path) {
+    var url = pickerListThumbUrl({ path: path });
+    if (!url || url === PLACEHOLDER_SVG) {
+      url = pickerPreviewFromPath(path);
+    }
+    return url && url !== PLACEHOLDER_SVG ? url : "";
+  }
+
+  function hydratePickerThumbs(scope, hydrateOpts) {
+    hydrateOpts = hydrateOpts || {};
     if (!scope || !scope.querySelectorAll) return;
     var imgs = scope.querySelectorAll(
       ".dam-assoc-edit-popover__thumb[data-path]:not([data-thumb-hydrated])"
@@ -842,8 +942,8 @@
         return;
       }
       img.setAttribute("data-thumb-hydrated", "1");
-      var url = pickerListThumbUrl({ path: path });
-      if (!url || url === PLACEHOLDER_SVG) return;
+      var url = resolvePickerThumbProbeUrl(path);
+      if (!url) return;
       _pickerThumbLoads++;
       var probe = new Image();
       probe.onload = function () {
@@ -852,11 +952,11 @@
       };
       probe.onerror = function () {
         _pickerThumbLoads = Math.max(0, _pickerThumbLoads - 1);
-        if (global.__damBrandingThumbFallback) global.__damBrandingThumbFallback(img);
+        pickerThumbOnError(img);
       };
       probe.src = url;
     }
-    if (typeof IntersectionObserver === "undefined") {
+    if (hydrateOpts.eager || typeof IntersectionObserver === "undefined") {
       imgs.forEach(loadOne);
       return;
     }
@@ -964,8 +1064,9 @@
           ' <span class="dam-assoc-edit-popover__folder-count">(' +
           g.items.length +
           ")</span></p>" +
+          '<ul class="dam-search-hits dam-search-hits--panel">' +
           rows +
-          "</div>"
+          "</ul></div>"
         );
       })
       .join("");
@@ -980,7 +1081,7 @@
     return n.slice(dot + 1).toLowerCase();
   }
 
-  /** PSD/PSB/AI/PDF = zrodla — NIE w browse/search pickera B warianty (HARD 2026-07-26). */
+  /** PSD/PSB/AI/PDF = źródła — NIE w browse/search pickera B warianty (HARD 2026-07-26). */
   function isBrandingPickerSourceFile(entry) {
     if (!entry) return true;
     var ext = fileExtPicker(entry.path || entry.name || "");
@@ -1093,7 +1194,7 @@
   }
 
   /**
-   * Globalna deduplikacja skojarzonych produktow: po id + po indeksie bazowym
+   * Globalna deduplikacja skojarzonych produktów: po id + po indeksie bazowym
    * (np. proteina-karmel-z-mct-ig i proteina-karmel-mct-funkcjonalny oba 6300654).
    * preferLast: nowszy id wygrywa przy konflikcie indeksu (pick folder COMBO).
    */
@@ -1238,7 +1339,7 @@
     bustAssocThumbsInScope();
   }
 
-  /** Odswiez miniatury w modalach po zapisie / zamknieciu pickera. */
+  /** Odśwież miniatury w modalach po zapisie / zamknieciu pickera. */
   function bustMaterialAssocCaches(opts) {
     opts = opts || {};
     if (global.DamBranding && typeof global.DamBranding.clearComputeCache === "function") {
@@ -1305,7 +1406,7 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  var ASSOC_CSS_TOKEN = "assocSpacingQa10Pass20260726a";
+  var ASSOC_CSS_TOKEN = "assocExplorerHitsLayout20260729a";
   var PICKER_LIST_CAP = 80;
   /* Max raw iterations in collect (defense vs filter that skips most rows before CAP). */
   var PICKER_SCAN_BUDGET = 400;
@@ -1321,7 +1422,7 @@
   /** Keyboard Shift latch — mouseleave/mousemove must not clear while key is down. */
   var shiftKeyDown = false;
 
-  /** Wstrzykuje style: Bento grid + pkt 36 podglad LEWA | lista PRAWA (nie ruszamy plikow agentow). */
+  /** Wstrzykuje style: Bento grid + pkt 36 podgląd LEWA | lista PRAWA (nie ruszamy plikow agentow). */
   function ensureInjectedCss() {
     var style = document.getElementById(ASSOC_CSS_ID);
     if (style && style.getAttribute("data-token") === ASSOC_CSS_TOKEN && style.textContent) {
@@ -1380,11 +1481,11 @@
       ".dam-assoc-edit-popover__body .dam-tag-edit-popover__list{" +
       "min-width:0;max-height:none;height:100%;overflow-x:hidden!important;overflow-y:auto;" +
       "padding:6px 0;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;}" +
-      ".dam-assoc-edit-popover__opt-row{display:flex!important;flex-direction:row;align-items:stretch;" +
-      "gap:6px;border-radius:0;min-width:0;min-height:0;width:100%;box-sizing:border-box;" +
-      "margin:0;border:none;background:transparent;}" +
+      ".dam-assoc-edit-popover__opt-row{display:flex!important;flex-direction:row;align-items:center;" +
+      "gap:6px;border-radius:0;min-width:0;min-height:76px;width:100%;box-sizing:border-box;" +
+      "margin:0;border:none;background:transparent;flex:0 0 auto;list-style:none;}" +
       ".dam-assoc-edit-popover__opt-row .dam-assoc-edit-popover__opt{flex:1 1 auto;min-width:0;}" +
-      ".dam-assoc-edit-popover__opt{display:flex!important;flex-direction:row;align-items:flex-start!important;" +
+      ".dam-assoc-edit-popover__opt{display:flex!important;flex-direction:row;align-items:center!important;" +
       "gap:10px;width:100%;min-height:76px;padding:7px 12px!important;border-radius:0;box-sizing:border-box;" +
       "border:none;background:transparent;}" +
       ".dam-assoc-edit-popover__opt .dam-search-hit__thumb-wrap{order:0;flex:0 0 44px;width:44px;height:44px;" +
@@ -1392,13 +1493,24 @@
       "display:flex;align-items:center;justify-content:center;}" +
       ".dam-assoc-edit-popover__opt .dam-search-hit__body{order:1;flex:1 1 auto;min-width:0;display:flex!important;" +
       "flex-direction:column!important;gap:2px;overflow:visible;}" +
-      ".dam-assoc-edit-popover__opt .dam-search-hit__body .dam-search-hit__badge{align-self:flex-start;margin-bottom:20px;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__head{display:flex!important;align-items:center;gap:8px;" +
+      "min-width:0;flex-wrap:wrap;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__head .dam-search-hit__badge{flex:0 0 auto;margin:0;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__head .dam-search-name{flex:1 1 auto;min-width:0;margin:0;}" +
       ".dam-assoc-edit-popover__opt .dam-search-hit__body .dam-search-name{display:block!important;" +
       "font-size:13px;font-weight:600;line-height:1.35;color:#464255;white-space:normal;overflow:visible;" +
       "text-overflow:clip;word-break:break-word;}" +
       ".dam-assoc-edit-popover__opt .dam-search-hit__body .dam-search-meta{display:block!important;" +
       "font-size:11px;line-height:1.35;color:#8b8d97;white-space:normal;overflow:visible;margin-top:2px;}" +
-      ".dam-assoc-edit-popover__opt .dam-search-hit__tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:0;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__tags-inline{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__tags-inline .dam-viz-badge{" +
+      "font-size:calc(var(--dam-tag-fs-pill,10.5px) * 0.8);padding:1px 6px;line-height:1.35;max-width:100%;}" +
+      ".dam-assoc-edit-popover__pinned .dam-search-hits,.dam-assoc-edit-popover__list .dam-search-hits{" +
+      "list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;flex:1 1 auto;" +
+      "min-height:0;width:100%;overflow:visible;}" +
+      ".dam-assoc-edit-popover__thumb-wrap.is-broken::after{content:\"\";position:absolute;inset:0;" +
+      "background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23b8b8c3' d='M4 5h16v14H4zm2 2v10h12V7zm2 2h8v6H8z'/%3E%3C/svg%3E\") center/20px no-repeat;}" +
+      ".dam-assoc-edit-popover__thumb-wrap{position:relative;}" +
       ".dam-assoc-edit-popover__list .dam-search-hit--material .dam-search-hit__badge{color:#6c5ce7;background:#f3eefc;}" +
       ".dam-assoc-edit-popover__list .dam-search-hit--nested .dam-search-hit__row::before{content:\"\";position:absolute;" +
       "left:14px;top:10px;bottom:10px;width:2px;border-radius:2px;background:#d7c9f0;}" +
@@ -1625,7 +1737,7 @@
     return /WIZKI|wizualizac|\bviz-2\b|\bviz-\d|\b\/viz\b/i.test(blob);
   }
 
-  /** Zbior id/indeksow zrodlowych - zakaz self-assoc / petli. */
+  /** Zbior id/indeksow źródłowych - zakaz self-assoc / petli. */
   function buildAssocExclude(opts) {
     var ids = {};
     var indexes = {};
@@ -1815,7 +1927,7 @@
       });
   }
 
-  /* Pkt 9 brief 2026-07-20: powiekszony podglad miniatury ~400x400 nad popoverem */
+  /* Pkt 9 brief 2026-07-20: powiekszony podgląd miniatury ~400x400 nad popoverem */
   function hideThumbZoom() {
     var el = document.getElementById("damAssocThumbZoom");
     if (el) el.remove();
@@ -1869,7 +1981,7 @@
     return !s || s.indexOf("data:image/svg+xml") === 0;
   }
 
-  /* Pkt 36: staly panel podgladu po LEWEJ od listy wynikow */
+  /* Pkt 36: staly panel podglądu po LEWEJ od listy wynikow */
   function setSearchPreview(pop, data) {
     if (!pop) return;
     var panel = pop.querySelector("#damAssocEditPreview");
@@ -1878,13 +1990,7 @@
     var empty = panel.querySelector(".dam-assoc-edit-popover__preview-empty");
     var cap = panel.querySelector(".dam-assoc-edit-popover__preview-caption");
     var meta = panel.querySelector(".dam-assoc-edit-popover__preview-meta");
-    var src = (data && data.thumb) || "";
-    if (src && src.indexOf("http://127.0.0.1") === 0) {
-      /* normalize absolute → relative for same-origin thumbs */
-      try {
-        src = src.replace(/^https?:\/\/127\.0\.0\.1:\d+\//, "");
-      } catch (e) {}
-    }
+    var src = normalizeBridgeMediaUrl((data && data.thumb) || "");
     var label = (data && data.label) || "Najedź wynik, aby podejrzeć";
     var sub = (data && data.sub) || "";
     var emptyThumb = isPlaceholderThumb(src);
@@ -1897,10 +2003,14 @@
         img.onerror = function () {
           var pathBtn =
             (data && data.btn && data.btn.getAttribute("data-path")) || "";
-          if (pathBtn && global.__damBrandingThumbFallback) {
+          if (pathBtn && !img.dataset.previewFallback) {
+            img.dataset.previewFallback = "1";
             img.setAttribute("data-path", pathBtn);
-            global.__damBrandingThumbFallback(img);
-            return;
+            var retry = normalizeBridgeMediaUrl(pickerPreviewFromPath(pathBtn));
+            if (retry) {
+              img.src = retry;
+              return;
+            }
           }
           img.onerror = null;
           img.classList.add("is-placeholder");
@@ -1939,9 +2049,9 @@
         var idxBadge = btn.querySelector(".dam-viz-badge--index");
         /* Hover = one on-demand /media via data-preview-src OK (not N× on paint). */
         var src =
-          btn.getAttribute("data-preview-src") ||
+          normalizeBridgeMediaUrl(btn.getAttribute("data-preview-src")) ||
           (btn.getAttribute("data-path")
-            ? pickerPreviewFromPath(btn.getAttribute("data-path"))
+            ? normalizeBridgeMediaUrl(pickerPreviewFromPath(btn.getAttribute("data-path")))
             : "") ||
           (thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "") ||
           "";
@@ -2515,7 +2625,7 @@
             (expanded ? "down" : "right") +
             '"></i></span>';
         }
-        var rawThumb = it.preview_src || it.thumb || PLACEHOLDER_SVG;
+        var rawThumb = it.preview_src || pickerPreviewSrc(it) || (it.path ? pickerPreviewFromPath(it.path) : "") || it.thumb || PLACEHOLDER_SVG;
         var thumbCandidate = pickerThumbLazySrc(it);
         if (!thumbCandidate || thumbCandidate === PLACEHOLDER_SVG) {
           thumbCandidate = it.thumb || it.thumb_url || rawThumb;
@@ -2526,30 +2636,14 @@
         }
         var pathAttr = it.path ? ' data-path="' + esc(it.path) + '"' : "";
         var thumbOnErr =
-          "window.__damBrandingThumbFallback&&__damBrandingThumbFallback(this)";
-        var tagsInline = isMat ? optionMaterialTagsHtml(it) : optionTagsHtml(it);
-        var metaParts = [];
-        if (isMat) {
-          if (it.id) metaParts.push(it.id);
-          else if (it.sub) metaParts.push(it.sub);
-        } else if (isProd) {
-          if (it.sub) metaParts.push(it.sub);
-          if (it.revCount) {
-            metaParts.push(
-              String(it.revCount) + (it.revCount === 1 ? " wariant" : " warianty")
-            );
-          }
-        } else if (isRev) {
-          if (it.sub) metaParts.push(it.sub);
-        } else {
-          if (it.sub) metaParts.push(it.sub);
-          if (it.id && it.id !== it.label) metaParts.push(it.id);
-        }
-        var metaHtml = metaParts.length
-          ? '<span class="dam-search-meta">' + esc(metaParts.join(" · ")) + "</span>"
+          "window.__damPickerThumbOnError&&__damPickerThumbOnError(this)";
+        var tagsInline = isMat ? optionMaterialTagsHtml(it) : "";
+        var metaText = pickerRowMetaText(it);
+        var metaHtml = metaText
+          ? '<span class="dam-search-meta">' + esc(metaText) + "</span>"
           : "";
         var tagsBlock = tagsInline
-          ? '<span class="dam-search-hit__tags">' + tagsInline + "</span>"
+          ? '<span class="dam-search-hit__tags-inline">' + tagsInline + "</span>"
           : "";
         var checkHtml =
           '<span class="dam-search-hit__check' +
@@ -2558,7 +2652,7 @@
           checkIconHtml(on, pinned) +
           "</span>";
         return (
-          '<div class="dam-assoc-edit-popover__opt-row dam-search-hit dam-search-hit--' +
+          '<li class="dam-assoc-edit-popover__opt-row dam-search-hit dam-search-hit--' +
           esc(hitKind) +
           (isRev || nestedInGroup ? " dam-search-hit--nested" : "") +
           (isHint ? " is-hint" : "") +
@@ -2572,7 +2666,7 @@
           '" data-id="' +
           esc(it.id) +
           '" data-preview-src="' +
-          esc(rawThumb) +
+          esc(normalizeBridgeMediaUrl(rawThumb)) +
           '"' +
           pathAttr +
           (isProd
@@ -2590,11 +2684,13 @@
           '">' +
           "</span>" +
           '<span class="dam-search-hit__body">' +
+          '<span class="dam-search-hit__head">' +
           '<span class="dam-search-hit__badge">' +
           esc(badge) +
           "</span>" +
           '<span class="dam-search-name">' +
           esc(it.label) +
+          "</span>" +
           "</span>" +
           tagsBlock +
           metaHtml +
@@ -2603,7 +2699,7 @@
           trailing +
           "</button>" +
           (isHint ? "" : rowActionsHtml(it)) +
-          "</div>"
+          "</li>"
         );
       }
 
@@ -2796,9 +2892,9 @@
         /* HARD: auto-activate after renderOptions NEVER uses /media (NFS stall = app freeze).
            Hover/focus may pass allowMedia=true for one on-demand preview. */
         var src =
-          (allowMedia ? btn.getAttribute("data-preview-src") : "") ||
+          (allowMedia ? normalizeBridgeMediaUrl(btn.getAttribute("data-preview-src")) : "") ||
           (allowMedia && btn.getAttribute("data-path")
-            ? pickerPreviewFromPath(btn.getAttribute("data-path"))
+            ? normalizeBridgeMediaUrl(pickerPreviewFromPath(btn.getAttribute("data-path")))
             : "") ||
           (thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "") ||
           "";
@@ -2825,11 +2921,14 @@
           setSearchPreview(pop, null);
           return;
         }
-        pinnedEl.innerHTML = pinnedIds
-          .map(function (id) {
-            return optionButtonHtml(lookupItem(id), true);
-          })
-          .join("");
+        pinnedEl.innerHTML =
+          '<ul class="dam-search-hits dam-search-hits--panel dam-assoc-edit-popover__hits">' +
+          pinnedIds
+            .map(function (id) {
+              return optionButtonHtml(lookupItem(id), true);
+            })
+            .join("") +
+          "</ul>";
         pinnedEl.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
           var pid = btn.getAttribute("data-id");
           if (!pid || !prevThumbs[pid]) return;
@@ -2837,6 +2936,7 @@
           if (img) img.src = prevThumbs[pid];
         });
         bindOptionButtons(pinnedEl);
+        hydratePickerThumbs(pinnedEl, { eager: true });
         /* Podglad: pierwsza przypieta miniatura (hover = /media on-demand). */
         activatePreviewFromBtn(pinnedEl.querySelector(".dam-assoc-edit-popover__opt[data-id]"), true);
       }
@@ -3159,7 +3259,7 @@
             prevListThumbs[pid] = img.src;
           }
         });
-        listEl.innerHTML =
+        var rowsHtml =
           opts.kind === "material" || (opts.kind === "variant" && opts.brandingSearch)
             ? renderPickerFolderGroups(items, optionButtonHtml)
             : items
@@ -3167,6 +3267,16 @@
                   return optionButtonHtml(it, false);
                 })
                 .join("");
+        listEl.innerHTML =
+          opts.kind === "material" || (opts.kind === "variant" && opts.brandingSearch)
+            ? rowsHtml.indexOf("dam-assoc-edit-popover__folder-block") >= 0
+              ? '<div class="dam-assoc-edit-popover__hits">' + rowsHtml + "</div>"
+              : '<ul class="dam-search-hits dam-search-hits--panel dam-assoc-edit-popover__hits">' +
+                rowsHtml +
+                "</ul>"
+            : '<ul class="dam-search-hits dam-search-hits--panel dam-assoc-edit-popover__hits">' +
+              rowsHtml +
+              "</ul>";
         listEl.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
           var pid = btn.getAttribute("data-id");
           if (!pid || !prevListThumbs[pid]) return;
@@ -3189,7 +3299,7 @@
             "grid"
           );
         }
-        /* Preferuj podglad z AKTUALNYCH (pinned), nie z pierwszego wyniku wyszukiwania. */
+        /* Preferuj podgląd z AKTUALNYCH (pinned), nie z pierwszego wyniku wyszukiwania. */
         var pinnedBtn = pop.querySelector(
           ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
         );
@@ -4820,7 +4930,7 @@
   }
 
   /**
-   * Shift+hover UX — JEDNA sciezka globalna:
+   * Shift+hover UX — JEDNA ścieżka globalna:
    * branding (#damMediaPreviewAssoc) + viz (#damVizModalAssoc) + studio all-files
    * + WARIANTY / explorer media-preview assoc tiles.
    * - item z data-product-id → minus usuwa produkt

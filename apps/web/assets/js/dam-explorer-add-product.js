@@ -141,7 +141,7 @@
 
   /* ---------------------------------------------------------------------
    * Client-side path preview (mirror apps/desktop/explorer_create.py) -
-   * kosmetyczny podglad na biezaco, autorytatywny wynik zawsze z mostu
+   * kosmetyczny podgląd na biezaco, autorytatywny wynik zawsze z mostu
    * (dry-run). Zgodnie z program-instructions explorer.create_modal_ux.
    * ------------------------------------------------------------------- */
   var BRAND_REL = {

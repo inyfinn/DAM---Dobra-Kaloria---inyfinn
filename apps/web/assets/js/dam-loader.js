@@ -117,7 +117,7 @@
     );
   }
 
-  /* GSAP ladowany tym samym wzorcem co dam-grid-reveal.js (wspolny tag). */
+  /* GSAP ladowany tym samym wzorcem co dam-grid-reveal.js (wspólny tag). */
   function loadGsap(cb) {
     if (global.gsap) {
       cb(global.gsap);

@@ -182,7 +182,7 @@
     return "V-" + idx + "-" + persp + (size ? "-" + size : "") + "-" + mm + "-" + yy;
   }
 
-  /** Wyciaga indeks produktu (6-7 cyfr, opcjonalnie .NN) ze sciezki/nazwy pliku. */
+  /** Wyciaga indeks produktu (6-7 cyfr, opcjonalnie .NN) ze ścieżki/nazwy pliku. */
   function parseIndexFromPath(path) {
     var p = String(path || "").replace(/\\/g, "/");
     var m;

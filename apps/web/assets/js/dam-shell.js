@@ -706,7 +706,7 @@
     '</a></li>';
   }
 
-  /** Sidebar: Sesja urządzenia -> profil z CRUD sciezek per device (nie logout). */
+  /** Sidebar: Sesja urządzenia -> profil z CRUD ścieżek per device (nie logout). */
   function goDeviceSessionPaths(e) {
     if (e) e.preventDefault();
     var target = "profile.html#damDevicePathsRoot";
@@ -2810,7 +2810,7 @@
 
   /**
    * Typografia PL na podtytulach stron (sieroty / wdowy).
-   * Shared z DamI18n.nbspPl gdy dostepne.
+   * Shared z DamI18n.nbspPl gdy dostępne.
    */
   function nbspPlLocal(s) {
     if (window.DamI18n && typeof window.DamI18n.nbspPl === "function") {

@@ -509,7 +509,7 @@
               "Wczytano rejestr: " + (data.entry_count != null ? data.entry_count : "?") + " wpisow.",
               true
             );
-            toast("Rejestr wykrojnikow odswiezony");
+            toast("Rejestr wykrojnikow odświeżony");
             return reloadAll();
           })
           .catch(function (err) {

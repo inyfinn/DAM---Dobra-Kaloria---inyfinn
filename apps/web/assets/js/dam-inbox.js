@@ -673,7 +673,7 @@
     var disk = res.current_disk || {};
     if (disk.kind === "missing") {
       lines.push(
-        "<strong>Dysk:</strong> sciezka nie istnieje" +
+        "<strong>Dysk:</strong> ścieżka nie istnieje" +
           (disk.path ? " (" + esc(disk.path) + ")" : "") +
           ". Mozliwe usuniecie lub przeniesienie poza logi DAM."
       );
@@ -709,7 +709,7 @@
       );
     });
     if (!lines.length) {
-      return "<p class=\"dam-inbox-timeline__empty\">Brak dalszych wpisow w change-log dla tej sciezki.</p>";
+      return "<p class=\"dam-inbox-timeline__empty\">Brak dalszych wpisow w change-log dla tej ścieżki.</p>";
     }
     return "<ul class=\"dam-inbox-timeline__list\">" + lines.join("") + "</ul>";
   }
@@ -1090,7 +1090,7 @@
     bits.push(
       '<button type="button" class="dam-inbox-hist-item__btn dam-inbox-hist-item__btn--ghost" data-hist="timeline" data-proposal-id="' +
         esc(it.id) +
-        '" title="Pokaz przebieg change-log i audyt dla tej sciezki">' +
+        '" title="Pokaz przebieg change-log i audyt dla tej ścieżki">' +
         '<i class="uil uil-list-ul" aria-hidden="true"></i><span>Przebieg zmian</span></button>'
     );
     if (!bits.length) return "";
@@ -1396,7 +1396,7 @@
               }
               showUndoConflict(
                 Object.assign({}, res, {
-                  hint: "Przebieg change-log i audyt dla tej sciezki.",
+                  hint: "Przebieg change-log i audyt dla tej ścieżki.",
                 })
               );
             });

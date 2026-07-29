@@ -621,7 +621,7 @@
     return rev ? (rev.index || rev.folder || "") : "";
   }
 
-  /** Wiersz lifecycle dla wariantu - po sciezce (index moze byc wspolny: DOY + ETY). */
+  /** Wiersz lifecycle dla wariantu - po sciezce (index moze byc wspólny: DOY + ETY). */
   function lifecycleRowForRev(rev) {
     if (!rev) return null;
     var store = state.lifecycleStore && state.lifecycleStore.revisions;
@@ -673,7 +673,7 @@
     /* DYSK (nazwa folderu w indeksie) = prawda. Brak literki = clear / Bez statusu.
        NIGDY: is_latest → aktualne (to mylilo F z "bez statusu").
        NIGDY: lookup po samym index (TEST-TEST2 moze byc DOY live + ETY w archiwum).
-       Gdy jest rev.path - tylko basename sciezki (folder w indeksie moze byc nieaktualny). */
+       Gdy jest rev.path - tylko basename ścieżki (folder w indeksie moze byc nieaktualny). */
     var diskLit = letterFromFolderName(rev.path || "");
     if (!diskLit && !rev.path && rev.folder) diskLit = letterFromFolderName(rev.folder);
     if (diskLit) return statusFromLetter(diskLit);
@@ -1147,7 +1147,7 @@
   /* ------------------------------------------------------------------ */
 
   function showToast(msg, kind) {
-    /* kind: success | error | info (domyslnie info - nie "straszny" szary log) */
+    /* kind: success | error | info (domyślnie info - nie "straszny" szary log) */
     var el = document.getElementById("damExplorerToast");
     if (!el) {
       el = document.createElement("div");
@@ -2860,7 +2860,7 @@
               : err === "ai_project_missing"
                 ? "Brak pliku .ai projektu w 2 - PROJEKT."
                 : err === "login_required"
-                  ? "Zaloguj sie, aby utworzyc PAKIET."
+                  ? "Zaloguj się, aby utworzyc PAKIET."
                   : "Nie udalo sie utworzyc pakietu (" + err + ").");
           showToast(msg, "error");
           return;
@@ -3341,7 +3341,7 @@
         lifeBlock +
         renderChecklist(cl, rev, product) +
         renderFileSection(
-          "Projekt / zrodlo",
+          "Projekt / źródło",
           filterSourceFilesForView(fbr.source),
           "source"
         ) +

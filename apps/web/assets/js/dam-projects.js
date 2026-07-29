@@ -42,164 +42,6 @@
     sortMode: "date_desc",
   };
 
-  function readStoredSort() {
-    try {
-      var v = localStorage.getItem(SORT_STATE_KEY);
-      if (v) return String(v);
-    } catch (eSortRead) { /* ignore */ }
-    return "date_desc";
-  }
-
-  function persistSortMode(mode) {
-    var m = String(mode || "date_desc");
-    state.sortMode = m;
-    try {
-      localStorage.setItem(SORT_STATE_KEY, m);
-    } catch (eSortStore) { /* ignore */ }
-  }
-
-  /**
-   * Parsuje datę z nazwy folderu (jak dam-viz.js) + podkreślniki w nazwach DAM.
-   * Przykłady: 19.09.2025, 24_03_2026, MINI - 08.09.2023 - 6300410.00
-   */
-  function parseFolderDateScore(folderName) {
-    var s = String(folderName || "");
-    var m = s.match(/(\d{1,2})[.\/_\-](\d{1,2})[.\/_\-](\d{2,4})/);
-    if (m) {
-      var y = parseInt(m[3], 10);
-      if (y < 100) y += 2000;
-      return y * 10000 + parseInt(m[2], 10) * 100 + parseInt(m[1], 10);
-    }
-    m = s.match(/\b(\d{1,2})[.\/_\-](\d{2})\b/);
-    if (m) return (2000 + parseInt(m[2], 10)) * 10000 + parseInt(m[1], 10) * 100;
-    return 0;
-  }
-
-  function parseIsoDateScore(raw) {
-    var t = Date.parse(String(raw || ""));
-    if (!t || isNaN(t)) return 0;
-    var dt = new Date(t);
-    return dt.getFullYear() * 10000 + (dt.getMonth() + 1) * 100 + dt.getDate();
-  }
-
-  function productDateScore(p) {
-    var meta = state.metaById[p.id] || {};
-    var raw = rawProduct(p);
-    var best = 0;
-    if (meta.revisionFolder) {
-      best = Math.max(best, parseFolderDateScore(meta.revisionFolder));
-    }
-    var path = p.path || (raw && raw.path) || "";
-    if (path) {
-      var parts = String(path).replace(/\\/g, "/").split("/");
-      for (var pi = 0; pi < parts.length; pi++) {
-        best = Math.max(best, parseFolderDateScore(parts[pi]));
-      }
-    }
-    if (raw && raw.revisions) {
-      raw.revisions.forEach(function (r) {
-        if (!r) return;
-        if (r.folder) best = Math.max(best, parseFolderDateScore(r.folder));
-        if (r.date) best = Math.max(best, parseIsoDateScore(r.date));
-        if (r.path) {
-          var seg = String(r.path).replace(/\\/g, "/").split("/").pop() || "";
-          best = Math.max(best, parseFolderDateScore(seg));
-        }
-      });
-    }
-    return best;
-  }
-
-  function productSortName(p) {
-    var cat = cardCategoryLabel(p);
-    var name = p.title || "";
-    var label = cat ? cat + " · " + name : name;
-    return String(label).toLowerCase();
-  }
-
-  function productPriorityScore(p) {
-    var c = projectCompleteness(p);
-    if (c === "incomplete") return 2;
-    if (c === "complete") return 0;
-    return 1;
-  }
-
-  function recentProductIdOrder() {
-    var order = [];
-    var seen = {};
-    try {
-      var stack = JSON.parse(sessionStorage.getItem(NAV_STACK_KEY) || "[]");
-      if (!Array.isArray(stack)) stack = [];
-      for (var si = stack.length - 1; si >= 0; si--) {
-        var url = String(stack[si] || "");
-        var m = url.match(/(?:project\.html\?id=|explorer\.html\?product=)([^&]+)/i);
-        if (m) {
-          var id = decodeURIComponent(m[1]);
-          if (!seen[id]) {
-            seen[id] = true;
-            order.push(id);
-          }
-        }
-      }
-    } catch (eNav) { /* ignore */ }
-    return order;
-  }
-
-  function recentSortIndex(p, recentOrder) {
-    var id = String(p.id || "");
-    for (var ri = 0; ri < recentOrder.length; ri++) {
-      if (recentOrder[ri] === id) return ri;
-    }
-    return 999999;
-  }
-
-  function sortProjectRows(rows) {
-    if (!rows || rows.length < 2) return rows || [];
-    var mode = state.sortMode || readStoredSort();
-    var out = rows.slice();
-
-    if (mode === "recent") {
-      var recent = recentProductIdOrder();
-      out.sort(function (a, b) {
-        var ra = recentSortIndex(a, recent);
-        var rb = recentSortIndex(b, recent);
-        if (ra !== rb) return ra - rb;
-        return productDateScore(b) - productDateScore(a);
-      });
-      return out;
-    }
-
-    if (mode === "priority") {
-      out.sort(function (a, b) {
-        var pa = productPriorityScore(a);
-        var pb = productPriorityScore(b);
-        if (pb !== pa) return pb - pa;
-        return productDateScore(b) - productDateScore(a);
-      });
-      return out;
-    }
-
-    if (mode === "name_asc" || mode === "name_desc") {
-      out.sort(function (a, b) {
-        var cmp = productSortName(a).localeCompare(productSortName(b), "pl", { sensitivity: "base" });
-        if (mode === "name_desc") cmp = -cmp;
-        if (cmp) return cmp;
-        return productDateScore(b) - productDateScore(a);
-      });
-      return out;
-    }
-
-    out.sort(function (a, b) {
-      var da = productDateScore(a);
-      var db = productDateScore(b);
-      if (da !== db) {
-        return mode === "date_asc" ? da - db : db - da;
-      }
-      return productSortName(a).localeCompare(productSortName(b), "pl", { sensitivity: "base" });
-    });
-    return out;
-  }
-
   function includeArchive() {
     var cb = document.getElementById("damProjectsIncludeArchive");
     return cb && cb.checked;
@@ -826,19 +668,47 @@
   }
 
   function projectDateScore(p) {
+    var meta = state.metaById[p.id] || {};
     var raw = rawProduct(p);
+    var best = 0;
     var rev = pickLatestRevision(raw || p, state.query);
     var folder =
       (rev && (rev.folder || rev.revision_folder)) ||
-      (state.metaById[p.id] && state.metaById[p.id].revisionFolder) ||
+      meta.revisionFolder ||
       "";
-    if (!folder && rev && rev.revision_path) {
-      folder = String(rev.revision_path).replace(/\\/g, "/").split("/").pop() || "";
+    best = Math.max(best, parseFolderDateScore(folder));
+    if (rev && rev.revision_path) {
+      var revSeg = String(rev.revision_path).replace(/\\/g, "/").split("/").pop() || "";
+      best = Math.max(best, parseFolderDateScore(revSeg));
     }
-    if (!folder && p.path) {
-      folder = String(p.path).replace(/\\/g, "/").split("/").pop() || "";
+    if (rev && rev.path) {
+      var rpSeg = String(rev.path).replace(/\\/g, "/").split("/").pop() || "";
+      best = Math.max(best, parseFolderDateScore(rpSeg));
     }
-    return parseFolderDateScore(folder);
+    var path = p.path || (raw && raw.path) || "";
+    if (path) {
+      var parts = String(path).replace(/\\/g, "/").split("/");
+      for (var pi = 0; pi < parts.length; pi++) {
+        best = Math.max(best, parseFolderDateScore(parts[pi]));
+      }
+    }
+    if (raw && raw.revisions) {
+      raw.revisions.forEach(function (r) {
+        if (!r) return;
+        if (r.folder) best = Math.max(best, parseFolderDateScore(r.folder));
+        if (r.date) {
+          var t = Date.parse(String(r.date || ""));
+          if (t && !isNaN(t)) {
+            var dt = new Date(t);
+            best = Math.max(
+              best,
+              dt.getFullYear() * 10000 + (dt.getMonth() + 1) * 100 + dt.getDate()
+            );
+          }
+        }
+      });
+    }
+    return best;
   }
 
   function projectDisplayName(p) {
