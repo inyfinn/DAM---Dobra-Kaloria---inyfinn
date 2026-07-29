@@ -1,3 +1,31 @@
+## 2026-07-29 - v5.0.78: variants-toggle + assoc picker (verify/push)
+
+**Komenda/Akcja:** Subagent: napraw toggle `#damVizModalAssoc`, assoc picker jak Explorer hits, bump 5.0.78, commit+push, QA screenshot.
+
+**Log/Status:** Deliverable już w `5848d76` (release/web v5.0.78). Weryfikacja tej tury: `node --check` OK; smoke :8765/:8766 200; CDP toggle mock poza grid 151×32 pass; `git push` → Everything up-to-date (`5848d76` = `origin/main`). Picker popover CDP `openPicker` nie utrzymał DOM w tej sesji (częściowa weryfikacja wizualna).
+
+**Efekt/Fix:** Push potwierdzony; kod toggle/picker w HEAD.
+
+**Źródła:** commit `5848d76`, dam-media-preview.js, dam-brand.css, dam-assoc-edit.js
+
+
+**Komenda/Akcja:** User: „znów napraw polskie znaki… dowiedz się skąd wynika błąd. Globalnie. Ostatecznie.”
+
+**Log/Status:** Root cause: literalne `?` w źródle HTML/JS (nie charset serwera, nie meta, nie pl.json). `scripts/qa/fix-polish-chars.py` — 369+ zamian w 48 plikach; `scripts/qa/audit-polish-chars.py` — PASS. Rozszerzono `pl.json` (`common.show_all`, `common.all_languages`, `explorer.refresh_disk`…); `data-i18n` na filtrach explorer/viz/branding. `.gitattributes` UTF-8. Doktryna §12. Bump 5.0.79.
+
+**Efekt/Fix:** Audit 0 hitów; explorer filtry: „Pokaż wszystkie”, „Wszystkie języki” UTF-8 + i18n overlay.
+
+**Źródła:** fix-polish-chars.py, audit-polish-chars.py, pl.json, explorer/visualizations/branding.html, v5.0.79
+
+
+**Komenda/Akcja:** User: nieszczelność blur na bokach sticky search/toolbar (tagi kart w gutterach `.geex-content`); fix full-bleed `100vw` na pseudo + margin bleed; frost 86%→92%; bump 5.0.77.
+
+**Log/Status:** `dam-brand.css`: pseudo `::before`/`::after` → `left:50%; width:100vw; transform:translateX(-50%)`; full-bleed na `.dam-explorer-toolbar`, `.dam-projects-grid-toolbar`, `.dam-viz-secondary-filters` (`margin/padding calc(50%±50vw)`); frost 92%. Cache-bust `dam-brand.css?v=5.0.77` index/explorer/visualizations/branding. QA 1280px: CDP gutter hit-test PASS (viz), screenshot+Read explorer/viz/branding. Doktryna §12.
+
+**Efekt/Fix:** Frost/blur zakrywa boczne guttery; `display:contents` na `.dam-global-search-block` bez zmian.
+
+**Źródła:** dam-brand.css ~3793–3890, v5.0.77, index/explorer/visualizations/branding.html
+
 ## 2026-07-29 - v5.0.78: variants-toggle + assoc picker Explorer hits layout
 
 **Komenda/Akcja:** User: napraw przycisk „Pokaż wszystkie (N)” (rozciągnięty w pionie, ucięty z lewej); lista pickera assoc jak Explorer `dam-search-hits` (padding, meta bez ścieżek); zachować miniatury; commit+push; podsumowanie.

@@ -354,6 +354,22 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
 
+### 2026-07-29 — v5.0.79: polskie znaki UTF-8 — korupcja `?` w źródle HTML/JS
+
+**Przyczyna (NIE serwer, NIE meta, NIE pl.json):** pliki `apps/web/*.html` i część `dam-*.js` miały literalne `?` zamiast diakrytyków po edycjach narzędzi zapisujących non-ASCII jako `?` (np. `Poka? wszystkie`, `j?zyk`, `Wyczy?? filtry`).
+
+**Fix:** (1) `scripts/qa/fix-polish-chars.py` — mapa zamian + sync `data-i18n` z `pl.json`. (2) `scripts/qa/audit-polish-chars.py` — exit 1 przy wzorcach korupcji (CI/pre-commit). (3) Klucze i18n: `common.show_all`, `common.all_languages`, `explorer.refresh_disk` itd. + `data-i18n` na filtrach explorer/viz/branding. (4) `.gitattributes`: `*.html|*.json|*.js text working-tree-encoding=UTF-8`.
+
+**Zasada:** copy PL tylko UTF-8 w źródle; kanoniczne stringi w `pl.json` + `data-i18n`; nigdy nie akceptować `?` jako placeholder diakrytyku.
+
+### 2026-07-29 — v5.0.77: sticky chrome blur — boczne guttery `.geex-content`
+
+**Objaw:** Przy scrollu kolorowe tagi/karty przeświecały w wąskich pasach po lewej i prawej stronie sticky search/toolbar — pseudo `::before`/`::after` miały tylko `left:0; right:0` (szerokość panelu w paddingu contentu), nie pełny viewport.
+
+**Fix:** (1) Pseudo-elementy sticky chrome: `left:50%; width:100vw; transform:translateX(-50%)`. (2) Sam element sticky: klasyczny full-bleed `margin-left/right: calc(50% - 50vw)` + `padding-left/right: calc(50vw - 50%)` — frost/backdrop-filter na całej szerokości, treść panelu zostaje wyrównana. (3) Frost opacity 86%→92%. Nie ruszać `display:contents` na `.dam-global-search-block`.
+
+**Weryfikacja:** CDP `getBoundingClientRect` → width ≈ 100vw; `elementFromPoint` na lewym brzegu belki → ten sam sticky node z `backdrop-filter: blur(...)`.
+
 ### 2026-07-29 — v5.0.75: +N count bubble drift (Branding vs Viz)
 
 **Objaw:** Bąbelki `+N` na miniaturach kart w Viz były fioletowe (`#7c3aed`), 22px, 11px font (inline CSS w `dam-viz.js` `ensureVizGridCardCss`); Branding miał poprawny ciemnoszary `rgba(70,66,85,0.82)`, 28px, 12px (`dam-branding.css`).

@@ -3,6 +3,15 @@
 Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-07-18**.  
 Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 
+## Polskie znaki UTF-8 — copy tylko w UTF-8 (2026-07-29)
+
+- **Root cause korupcji:** edycje zapisujące non-ASCII jako literal `?` w plikach źródłowych HTML/JS — NIE problem serwera (`charset=utf-8` OK), NIE brak `<meta charset>`, NIE `pl.json`.
+- **Kanoniczne stringi:** `apps/web/i18n/pl.json` + atrybuty `data-i18n` / `data-i18n-tip` / `data-i18n-placeholder` w HTML.
+- **Zakaz:** nigdy nie akceptować `?` jako placeholder diakrytyku (`Poka?`, `j?zyk`, `Wyczy??`).
+- **Audit:** `python scripts/qa/audit-polish-chars.py` — exit 1 przy wzorcach korupcji.
+- **Fix batch:** `python scripts/qa/fix-polish-chars.py`.
+- **Git:** `.gitattributes` → `*.html`, `*.json`, `*.js` = `text working-tree-encoding=UTF-8`.
+
 ## Global +N count bubble + ui-taste 10 rund (2026-07-29)
 
 - **Bąbelek liczby (+N)** na miniaturach kart: jedna reguła CSS w `apps/web/assets/css/dam-brand.css` (`.dam-viz-card__variant-badge`, tokeny `--dam-count-bubble-*`). Branding i Viz **nie** mogą nadpisywać (żadnego inline purple w `dam-viz.js`, żadnego scoped w `dam-branding.css`).

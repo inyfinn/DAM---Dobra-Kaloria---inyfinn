@@ -928,7 +928,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
                           <span id="damExplorerMeta" class="dam-explorer-results__meta"></span>
                           <div class="dam-explorer-results__actions">
                             <div class="dam-admin-slot">
-                              <button type="button" id="damStatusExport" class="dam-int-cta dam-admin-extra" hidden title="Pobierz plik JSON ze statusami z tej sesji (backup)" data-dam-tip="Tylko backup na dysk Twojego PC. Nie zmienia folder�w Marketing ani bazy. Wsp?lny zapis F/X/D robi most (dysk + JSON + Postgres).">Backup status?w</button>
+                              <button type="button" id="damStatusExport" class="dam-int-cta dam-admin-extra" hidden title="Pobierz plik JSON ze statusami z tej sesji (backup)" data-dam-tip="Tylko backup na dysk Twojego PC. Nie zmienia folderów Marketing ani bazy. Wspólny zapis F/X/D robi most (dysk + JSON + Postgres).">Backup statusów</button>
                             </div>
                             <button type="button" id="damIndexRefresh" class="dam-int-cta" title="Przeskanuj Marketing i wczytaj listę do programu" data-dam-tip="Odśwież z dysku: skan folder�w Marketing - indeks - panel. Aktualizuje warianty i litery F/X/D według nazw folder�w. Nie zmienia dysku. Warianty z ARCHIWUM widoczne przy Pokaż wszystko.">Odśwież z dysku</button>
                             <button type="button" id="damLifecycleForce" class="dam-int-cta dam-admin-control" title="Stosuj zmiany: program na dysk (FORCE)" data-dam-tip="Stosuj zmiany = FORCE. Zapisuje statusy z programu na foldery Marketing (rename / archiwum). Odwrotność Odśwież. Tylko admin." aria-label="Stosuj zmiany">
@@ -2329,7 +2329,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<script src="./assets/js/dam-explorer.js?v=5.0.59"></script>
 	<script src="./assets/js/dam-explorer-add-product.js?v=expCreateCssFix20260723d"></script>
 	<script>
-	/* Po zaladowaniu DOM: jednorazowy init je?li folder pusty (bez petli reload). */
+	/* Po zaladowaniu DOM: jednorazowy init jeśli folder pusty (bez petli reload). */
 	(function () {
 	  function bootOnce() {
 	    if (!window.DamExplorer || typeof window.DamExplorer.init !== "function") return;
