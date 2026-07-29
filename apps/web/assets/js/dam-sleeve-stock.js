@@ -1,17 +1,40 @@
 /**
  * DamSleeveStock - panel STANY RĘKAWKÓW na integrations.html
  * (pod Wykrojniki ↔ produkty). Bridge GET /sleeve-stock + reimport/import.
+ *
+ * Zapas msc (Excel) = STAN / zużycie_msc.
+ * Dni w UI = floor(msc × DAYS_PER_MONTH), DAYS_PER_MONTH = 30.5.
  */
 (function () {
   "use strict";
 
   var STYLE_ID = "dam-sleeve-stock-inject";
   var MOUNT_ID = "damSleeveStock";
+  /** Średnia długość miesiąca kalendarzowego (365 / 12 ≈ 30.42; 30.5 jak w briefie zakupów). */
+  var DAYS_PER_MONTH = 30.5;
+  var LS_ORDER = "dam_sleeve_col_order_v1";
+  var LS_WIDTHS = "dam_sleeve_col_widths_v1";
+
+  var COL_DEFS = [
+    { id: "code", label: "Kod", min: 72, w: 96 },
+    { id: "name", label: "Nazwa", min: 160, w: 240 },
+    { id: "usage", label: "Zużycie / msc", min: 88, w: 110 },
+    { id: "stock", label: "STAN", min: 72, w: 96 },
+    { id: "months", label: "Zapas", min: 96, w: 118 },
+    { id: "on_order", label: "W zam.", min: 64, w: 80 },
+    { id: "months_ord", label: "Z zam.", min: 96, w: 118 },
+    { id: "tags", label: "Tagi", min: 120, w: 160 },
+    { id: "die", label: "Wykrojnik", min: 72, w: 100 },
+    { id: "comment", label: "Kom.", min: 100, w: 160 },
+  ];
+
   var state = {
     data: null,
     filter: "",
     tagFilter: "all",
     busy: "",
+    colOrder: null,
+    colWidths: null,
   };
 
   var TAG_LABELS = {
@@ -62,14 +85,68 @@
     }, 2800);
   }
 
+  function loadColPrefs() {
+    try {
+      var order = JSON.parse(localStorage.getItem(LS_ORDER) || "null");
+      var widths = JSON.parse(localStorage.getItem(LS_WIDTHS) || "null");
+      var ids = COL_DEFS.map(function (c) {
+        return c.id;
+      });
+      if (Array.isArray(order)) {
+        order = order.filter(function (id) {
+          return ids.indexOf(id) !== -1;
+        });
+        ids.forEach(function (id) {
+          if (order.indexOf(id) === -1) order.push(id);
+        });
+        state.colOrder = order;
+      } else {
+        state.colOrder = ids.slice();
+      }
+      state.colWidths = widths && typeof widths === "object" ? widths : {};
+    } catch (e) {
+      state.colOrder = COL_DEFS.map(function (c) {
+        return c.id;
+      });
+      state.colWidths = {};
+    }
+  }
+
+  function saveColPrefs() {
+    try {
+      localStorage.setItem(LS_ORDER, JSON.stringify(state.colOrder || []));
+      localStorage.setItem(LS_WIDTHS, JSON.stringify(state.colWidths || {}));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function colDef(id) {
+    for (var i = 0; i < COL_DEFS.length; i++) {
+      if (COL_DEFS[i].id === id) return COL_DEFS[i];
+    }
+    return { id: id, label: id, min: 64, w: 100 };
+  }
+
+  function colWidth(id) {
+    var d = colDef(id);
+    var w = state.colWidths && state.colWidths[id];
+    w = Number(w);
+    if (!isFinite(w) || w < d.min) return d.w;
+    return w;
+  }
+
   function ensureCss() {
-    if (document.getElementById(STYLE_ID)) return;
-    var st = document.createElement("style");
-    st.id = STYLE_ID;
+    var st = document.getElementById(STYLE_ID);
+    if (!st) {
+      st = document.createElement("style");
+      st.id = STYLE_ID;
+      document.head.appendChild(st);
+    }
     st.textContent =
       ".dam-sleeve-stock.dam-int-card{padding:18px 20px 22px;display:flex;flex-direction:column;gap:14px;margin-top:20px}" +
       ".dam-sleeve-stock__title{margin:0;font-size:1.15rem;font-weight:650}" +
-      ".dam-sleeve-stock__purpose{margin:4px 0 0;font-size:13px;line-height:1.45;color:#5c5c6a;max-width:70ch}" +
+      ".dam-sleeve-stock__purpose{margin:4px 0 0;font-size:13px;line-height:1.45;color:#5c5c6a;max-width:78ch}" +
       ".dam-sleeve-stock__meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}" +
       ".dam-sleeve-stock__chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;background:#f0eef6;color:#3d2a55;border:1px solid #e2dced}" +
       ".dam-sleeve-stock__actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}" +
@@ -79,11 +156,20 @@
       ".dam-sleeve-stock__filter.is-active{background:color-mix(in srgb,var(--dam-primary,#ab54db) 14%,#fff);border-color:color-mix(in srgb,var(--dam-primary,#ab54db) 45%,#ccc);color:#4a1f6b;font-weight:600}" +
       ".dam-sleeve-stock__search{min-width:200px;max-width:280px}" +
       ".dam-sleeve-stock__table-wrap{overflow:auto;max-height:min(62vh,640px);border:1px solid #e8e8ee;border-radius:12px}" +
-      ".dam-sleeve-stock__table{width:100%;border-collapse:collapse;font-size:12.5px}" +
-      ".dam-sleeve-stock__table th,.dam-sleeve-stock__table td{padding:8px 10px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}" +
-      ".dam-sleeve-stock__table th{position:sticky;top:0;background:#f7f7fa;z-index:1;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#666}" +
+      ".dam-sleeve-stock__table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;table-layout:fixed}" +
+      ".dam-sleeve-stock__table th,.dam-sleeve-stock__table td{padding:8px 10px;border-bottom:1px solid #eee;text-align:left;vertical-align:top;overflow:hidden;box-sizing:border-box}" +
+      ".dam-sleeve-stock__table th:not(:first-child),.dam-sleeve-stock__table td:not(:first-child){border-left:1px solid rgba(15,15,25,0.10)}" +
+      ".dam-sleeve-stock__table th{position:sticky;top:0;background:#f7f7fa;z-index:2;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#666;user-select:none;cursor:grab;white-space:nowrap}" +
+      ".dam-sleeve-stock__table th.is-dragging{opacity:.55;cursor:grabbing}" +
+      ".dam-sleeve-stock__table th.is-drop-target{box-shadow:inset 3px 0 0 var(--dam-primary,#ab54db)}" +
+      ".dam-sleeve-stock__th-inner{position:relative;display:block;padding-right:8px;min-height:1.2em}" +
+      ".dam-sleeve-stock__col-resizer{position:absolute;top:0;right:-4px;width:10px;height:100%;cursor:col-resize;z-index:3}" +
+      ".dam-sleeve-stock__col-resizer:hover,.dam-sleeve-stock__col-resizer.is-active{background:rgba(171,84,219,0.18)}" +
       ".dam-sleeve-stock__table tr.is-critical{background:#fff5f4}" +
-      ".dam-sleeve-stock__num{font-variant-numeric:tabular-nums;white-space:nowrap}" +
+      ".dam-sleeve-stock__num{font-variant-numeric:tabular-nums}" +
+      ".dam-sleeve-stock__horizon{line-height:1.25}" +
+      ".dam-sleeve-stock__horizon-m{display:block;font-weight:650;white-space:nowrap}" +
+      ".dam-sleeve-stock__horizon-d{display:block;font-size:11px;color:#5c5c6a;white-space:nowrap}" +
       ".dam-sleeve-stock__tags{display:flex;flex-wrap:wrap;gap:4px}" +
       ".dam-sleeve-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:600;line-height:1.4}" +
       ".dam-sleeve-tag--critical{background:#fde8e6;color:#b42318}" +
@@ -96,8 +182,9 @@
       ".dam-sleeve-stock__people{font-size:12px;color:#5c5c6a;line-height:1.45}" +
       ".dam-sleeve-stock__people strong{color:#2a2a32;font-weight:600}" +
       ".dam-sleeve-stock__hint{font-size:11.5px;color:#7a7a88}" +
-      ".dam-sleeve-stock__lead{color:#b54708;font-weight:600;white-space:nowrap}";
-    document.head.appendChild(st);
+      ".dam-sleeve-stock__lead{color:#b54708;font-weight:600;white-space:nowrap}" +
+      "body.dam-sleeve-col-resizing{cursor:col-resize;user-select:none}" +
+      "body.dam-sleeve-col-resizing *{cursor:col-resize!important}";
   }
 
   function fmtNum(n) {
@@ -109,11 +196,68 @@
       .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   }
 
-  function fmtMonths(n) {
+  function fmtMonthsPlain(n) {
     if (n == null || n === "") return "—";
     var v = Number(n);
     if (!isFinite(v)) return "—";
     return v.toLocaleString("pl-PL", { maximumFractionDigits: 2 });
+  }
+
+  /**
+   * Excel: months = stock / avg_monthly_usage.
+   * UI: "1,3 msc" + "≈39 dni" where days = floor(months × 30.5).
+   */
+  function fmtHorizonHtml(months, stock, usage, kind) {
+    if (months == null || months === "") {
+      return '<span class="dam-sleeve-stock__num">—</span>';
+    }
+    var m = Number(months);
+    if (!isFinite(m)) {
+      return '<span class="dam-sleeve-stock__num">—</span>';
+    }
+    var days = Math.floor(m * DAYS_PER_MONTH);
+    var mLabel = fmtMonthsPlain(m);
+    var dayLabel =
+      days <= 0
+        ? m > 0
+          ? "(<1 dzień)"
+          : "(0 dni)"
+        : "(≈" + days.toLocaleString("pl-PL") + " dni)";
+    var tipParts = [];
+    tipParts.push(
+      (kind === "with_order" ? "Zapas z zamówieniem" : "Zapas") +
+        " (Excel) = " +
+        (kind === "with_order" ? "(STAN + w zam.)" : "STAN") +
+        " ÷ zużycie/msc"
+    );
+    var u = Number(usage);
+    var s = Number(stock);
+    if (isFinite(u) && u > 0 && isFinite(s)) {
+      tipParts.push(
+        fmtNum(s) +
+          " ÷ " +
+          fmtNum(u) +
+          " ≈ " +
+          mLabel +
+          " msc"
+      );
+    } else {
+      tipParts.push(mLabel + " msc");
+    }
+    tipParts.push(
+      "Dni ≈ floor(" + mLabel + " × " + String(DAYS_PER_MONTH).replace(".", ",") + ") = " + dayLabel.replace("≈", "")
+    );
+    return (
+      '<div class="dam-sleeve-stock__horizon dam-sleeve-stock__num" title="' +
+      esc(tipParts.join(" · ")) +
+      '">' +
+      '<span class="dam-sleeve-stock__horizon-m">' +
+      esc(mLabel) +
+      " msc</span>" +
+      '<span class="dam-sleeve-stock__horizon-d">' +
+      esc(dayLabel) +
+      "</span></div>"
+    );
   }
 
   function fmtDate(iso) {
@@ -203,16 +347,151 @@
     );
   }
 
+  function cellHtml(colId, e) {
+    var critLead =
+      e.order_lead_weeks != null
+        ? '<div class="dam-sleeve-stock__lead">Zamów ≥' +
+          esc(String(e.order_lead_weeks)) +
+          " tyg. wcześniej</div>"
+        : "";
+    switch (colId) {
+      case "code":
+        return (
+          '<td class="dam-sleeve-stock__num" data-col="' +
+          colId +
+          '"><strong>' +
+          esc(e.article_code) +
+          "</strong>" +
+          (e.automat_alias_code
+            ? '<div class="dam-sleeve-stock__hint">→ ' +
+              esc(e.automat_alias_code) +
+              "</div>"
+            : "") +
+          "</td>"
+        );
+      case "name":
+        return (
+          '<td data-col="' +
+          colId +
+          '">' +
+          esc(e.name) +
+          (e.extra_name
+            ? '<div class="dam-sleeve-stock__hint">' + esc(e.extra_name) + "</div>"
+            : "") +
+          critLead +
+          "</td>"
+        );
+      case "usage":
+        return (
+          '<td class="dam-sleeve-stock__num" data-col="' +
+          colId +
+          '">' +
+          esc(fmtNum(e.avg_monthly_usage)) +
+          "</td>"
+        );
+      case "stock":
+        return (
+          '<td class="dam-sleeve-stock__num" data-col="' +
+          colId +
+          '"><strong>' +
+          esc(fmtNum(e.stock)) +
+          "</strong></td>"
+        );
+      case "months":
+        return (
+          '<td data-col="' +
+          colId +
+          '">' +
+          fmtHorizonHtml(e.months_of_stock, e.stock, e.avg_monthly_usage, "stock") +
+          "</td>"
+        );
+      case "on_order":
+        return (
+          '<td class="dam-sleeve-stock__num" data-col="' +
+          colId +
+          '">' +
+          esc(fmtNum(e.on_order || 0)) +
+          "</td>"
+        );
+      case "months_ord":
+        return (
+          '<td data-col="' +
+          colId +
+          '">' +
+          fmtHorizonHtml(
+            e.months_with_order,
+            Number(e.stock || 0) + Number(e.on_order || 0),
+            e.avg_monthly_usage,
+            "with_order"
+          ) +
+          "</td>"
+        );
+      case "tags":
+        return '<td data-col="' + colId + '">' + tagHtml(e.tags) + "</td>";
+      case "die":
+        return (
+          '<td data-col="' + colId + '">' + esc(e.die_type || "—") + "</td>"
+        );
+      case "comment":
+        return (
+          '<td data-col="' + colId + '">' + esc(e.comment || "—") + "</td>"
+        );
+      default:
+        return '<td data-col="' + colId + '">—</td>';
+    }
+  }
+
   function paint() {
     var mount = document.getElementById(MOUNT_ID);
     if (!mount) return;
     ensureCss();
+    if (!state.colOrder) loadColPrefs();
     var data = state.data || {};
     var rows = filtered();
     var people = data.stakeholders || {};
     var zakupy = (people.zakupy || []).join(", ");
     var inni = (people.inni || []).join(", ");
     var sched = data.schedule_lead_days || {};
+    var order = state.colOrder || [];
+
+    var colgroup =
+      "<colgroup>" +
+      order
+        .map(function (id) {
+          return (
+            '<col data-col="' +
+            esc(id) +
+            '" style="width:' +
+            colWidth(id) +
+            'px" />'
+          );
+        })
+        .join("") +
+      "</colgroup>";
+
+    var thead =
+      "<thead><tr>" +
+      order
+        .map(function (id) {
+          var d = colDef(id);
+          var tip =
+            id === "months" || id === "months_ord"
+              ? "Przeciągnij = kolejność · krawędź = szerokość · podwójny klik = dopasuj. Zapas msc = STAN÷zużycie; dni = floor(msc×30,5)."
+              : "Przeciągnij = kolejność · krawędź = szerokość · podwójny klik = dopasuj do treści";
+          return (
+            '<th draggable="true" data-col="' +
+            esc(id) +
+            '" title="' +
+            esc(tip) +
+            '"><span class="dam-sleeve-stock__th-inner">' +
+            esc(d.label) +
+            '<span class="dam-sleeve-stock__col-resizer" data-resize="' +
+            esc(id) +
+            '" aria-hidden="true"></span></span></th>'
+          );
+        })
+        .join("") +
+      "</tr></thead>";
 
     mount.innerHTML =
       '<article class="dam-int-card dam-sleeve-stock" data-sleeve-stock="1">' +
@@ -223,7 +502,8 @@
       esc(String(sched.new_flavor_family || 30)) +
       " d.r., przeformatowanie " +
       esc(String(sched.reformat || 19)) +
-      " d.r.</p></div>" +
+      " d.r. " +
+      "<strong>Zapas</strong> = STAN ÷ zużycie/msc (jak w Excelu); obok pokazujemy też dni: floor(msc × 30,5).</p></div>" +
       '<div class="dam-sleeve-stock__meta">' +
       '<span class="dam-sleeve-stock__chip">' +
       esc(String(data.entry_count || entries().length)) +
@@ -269,75 +549,38 @@
         ? '<span class="dam-sleeve-stock__hint">' + esc(state.busy) + "</span>"
         : "") +
       "</div>" +
-      '<div class="dam-sleeve-stock__table-wrap"><table class="dam-sleeve-stock__table"><thead><tr>' +
-      "<th>Kod</th><th>Nazwa</th><th>Zużycie / msc</th><th>STAN</th><th>Zapas msc</th><th>W zam.</th><th>Z zam. msc</th><th>Tagi</th><th>Wykrojnik</th><th>Kom.</th>" +
-      "</tr></thead><tbody>" +
+      '<div class="dam-sleeve-stock__table-wrap"><table class="dam-sleeve-stock__table" id="damSleeveTable">' +
+      colgroup +
+      thead +
+      "<tbody>" +
       (rows.length
         ? rows
             .map(function (e) {
               var crit = (e.tags || []).indexOf("critical") !== -1;
-              var lead =
-                e.order_lead_weeks != null
-                  ? '<div class="dam-sleeve-stock__lead">Zamów ≥' +
-                    esc(String(e.order_lead_weeks)) +
-                    " tyg. wcześniej</div>"
-                  : "";
               return (
                 '<tr class="' +
                 (crit ? "is-critical" : "") +
                 '">' +
-                '<td class="dam-sleeve-stock__num"><strong>' +
-                esc(e.article_code) +
-                "</strong>" +
-                (e.automat_alias_code
-                  ? '<div class="dam-sleeve-stock__hint">→ ' +
-                    esc(e.automat_alias_code) +
-                    "</div>"
-                  : "") +
-                "</td>" +
-                "<td>" +
-                esc(e.name) +
-                (e.extra_name
-                  ? '<div class="dam-sleeve-stock__hint">' + esc(e.extra_name) + "</div>"
-                  : "") +
-                lead +
-                "</td>" +
-                '<td class="dam-sleeve-stock__num">' +
-                esc(fmtNum(e.avg_monthly_usage)) +
-                "</td>" +
-                '<td class="dam-sleeve-stock__num"><strong>' +
-                esc(fmtNum(e.stock)) +
-                "</strong></td>" +
-                '<td class="dam-sleeve-stock__num">' +
-                esc(fmtMonths(e.months_of_stock)) +
-                "</td>" +
-                '<td class="dam-sleeve-stock__num">' +
-                esc(fmtNum(e.on_order || 0)) +
-                "</td>" +
-                '<td class="dam-sleeve-stock__num">' +
-                esc(fmtMonths(e.months_with_order)) +
-                "</td>" +
-                "<td>" +
-                tagHtml(e.tags) +
-                "</td>" +
-                "<td>" +
-                esc(e.die_type || "—") +
-                "</td>" +
-                "<td>" +
-                esc(e.comment || "—") +
-                "</td>" +
+                order
+                  .map(function (id) {
+                    return cellHtml(id, e);
+                  })
+                  .join("") +
                 "</tr>"
               );
             })
             .join("")
-        : '<tr><td colspan="10">Brak pozycji dla filtra.</td></tr>') +
+        : '<tr><td colspan="' +
+          order.length +
+          '">Brak pozycji dla filtra.</td></tr>') +
       "</tbody></table></div>" +
       '<p class="dam-sleeve-stock__hint">Źródło: ' +
       esc(data.source_xlsx || "sleeve-stock.json") +
-      ". Import nadpisuje listę z XLSX / CSV (admin).</p>" +
+      ". Kolumny: przeciągnij nagłówek (kolejność), przeciągnij krawędź (szerokość), podwójny klik nagłówka = dopasuj do treści. Hover na Zapas pokazuje wzór Excel.</p>" +
       "</article>";
 
     bind();
+    bindColumnUi();
   }
 
   function filterBtn(id, label) {
@@ -350,6 +593,135 @@
       esc(label) +
       "</button>"
     );
+  }
+
+  function setColWidth(id, px) {
+    var d = colDef(id);
+    var w = Math.max(d.min, Math.round(px));
+    if (!state.colWidths) state.colWidths = {};
+    state.colWidths[id] = w;
+    var col = document.querySelector(
+      '#damSleeveTable colgroup col[data-col="' + id + '"]'
+    );
+    if (col) col.style.width = w + "px";
+  }
+
+  function autofitColumn(id) {
+    var table = document.getElementById("damSleeveTable");
+    if (!table) return;
+    var th = table.querySelector('thead th[data-col="' + id + '"]');
+    var cells = table.querySelectorAll('tbody td[data-col="' + id + '"]');
+    var max = 0;
+    var probe = document.createElement("div");
+    probe.style.cssText =
+      "position:absolute;left:-9999px;top:0;visibility:hidden;white-space:nowrap;font:12.5px/1.25 Jost,system-ui,sans-serif;padding:0 10px;box-sizing:border-box";
+    document.body.appendChild(probe);
+    if (th) {
+      probe.textContent = (colDef(id).label || "").toUpperCase();
+      max = Math.max(max, probe.offsetWidth + 28);
+    }
+    cells.forEach(function (td) {
+      probe.innerHTML = td.innerHTML;
+      probe.style.whiteSpace = "nowrap";
+      max = Math.max(max, probe.offsetWidth + 20);
+      var nested = td.querySelector(".dam-sleeve-stock__horizon");
+      if (nested) {
+        probe.textContent = nested.innerText.replace(/\n/g, " ");
+        max = Math.max(max, probe.offsetWidth + 20);
+      }
+    });
+    document.body.removeChild(probe);
+    setColWidth(id, Math.min(max, 520));
+    saveColPrefs();
+  }
+
+  function bindColumnUi() {
+    var table = document.getElementById("damSleeveTable");
+    if (!table) return;
+    var dragId = null;
+
+    table.querySelectorAll("thead th[data-col]").forEach(function (th) {
+      th.addEventListener("dragstart", function (ev) {
+        if (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-resize")) {
+          ev.preventDefault();
+          return;
+        }
+        dragId = th.getAttribute("data-col");
+        th.classList.add("is-dragging");
+        try {
+          ev.dataTransfer.setData("text/plain", dragId || "");
+          ev.dataTransfer.effectAllowed = "move";
+        } catch (e) {
+          /* ignore */
+        }
+      });
+      th.addEventListener("dragend", function () {
+        th.classList.remove("is-dragging");
+        table.querySelectorAll("thead th.is-drop-target").forEach(function (el) {
+          el.classList.remove("is-drop-target");
+        });
+        dragId = null;
+      });
+      th.addEventListener("dragover", function (ev) {
+        ev.preventDefault();
+        th.classList.add("is-drop-target");
+      });
+      th.addEventListener("dragleave", function () {
+        th.classList.remove("is-drop-target");
+      });
+      th.addEventListener("drop", function (ev) {
+        ev.preventDefault();
+        th.classList.remove("is-drop-target");
+        var from = dragId || (ev.dataTransfer && ev.dataTransfer.getData("text/plain"));
+        var to = th.getAttribute("data-col");
+        if (!from || !to || from === to || !state.colOrder) return;
+        var order = state.colOrder.slice();
+        var fi = order.indexOf(from);
+        var ti = order.indexOf(to);
+        if (fi < 0 || ti < 0) return;
+        order.splice(fi, 1);
+        order.splice(ti, 0, from);
+        state.colOrder = order;
+        saveColPrefs();
+        paint();
+      });
+      th.addEventListener("dblclick", function (ev) {
+        if (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-resize")) {
+          return;
+        }
+        ev.preventDefault();
+        autofitColumn(th.getAttribute("data-col"));
+      });
+    });
+
+    table.querySelectorAll("[data-resize]").forEach(function (handle) {
+      handle.addEventListener("mousedown", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var id = handle.getAttribute("data-resize");
+        var startX = ev.clientX;
+        var startW = colWidth(id);
+        handle.classList.add("is-active");
+        document.body.classList.add("dam-sleeve-col-resizing");
+        function onMove(e2) {
+          setColWidth(id, startW + (e2.clientX - startX));
+        }
+        function onUp() {
+          handle.classList.remove("is-active");
+          document.body.classList.remove("dam-sleeve-col-resizing");
+          document.removeEventListener("mousemove", onMove);
+          document.removeEventListener("mouseup", onUp);
+          saveColPrefs();
+        }
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+      });
+      handle.addEventListener("dblclick", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        autofitColumn(handle.getAttribute("data-resize"));
+      });
+    });
   }
 
   function bind() {
@@ -460,6 +832,7 @@
 
   async function boot() {
     ensureCss();
+    loadColPrefs();
     var mount = document.getElementById(MOUNT_ID);
     if (!mount) {
       var after = document.getElementById("damWykrojnikQueue");
@@ -475,7 +848,12 @@
     paint();
   }
 
-  window.DamSleeveStock = { boot: boot, reload: boot };
+  window.DamSleeveStock = {
+    boot: boot,
+    reload: boot,
+    DAYS_PER_MONTH: DAYS_PER_MONTH,
+    fmtHorizonHtml: fmtHorizonHtml,
+  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);

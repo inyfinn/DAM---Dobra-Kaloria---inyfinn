@@ -35,3 +35,9 @@ Event (upload / set current_revision / checklist change)
 ## Integracje
 
 Jobs: `SyncAsanaChecklistJob`, `NotifyTeamsMissingAssetsJob` (ADR-005).
+
+## Dokumentacja skojarzeń (assoc UI)
+
+- **Słownik pojęć (metafory, typ A/B, bind = listener vs ctx):** [`docs/ASSOC-GLOSSARY.md`](ASSOC-GLOSSARY.md)
+- **Pełny łańcuch techniczny + diagramy:** [`agents/shared/code-doctrine.md`](../agents/shared/code-doctrine.md) §12 REFERENCE
+- **QA bramka P1 (pusty materialCandidates):** `scripts/qa/sim-assoc-material-empty-seed.js`

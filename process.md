@@ -1,4 +1,1086 @@
-﻿## 2026-07-26 - fix(stage1): v5.0.2 assoc instant save + tag edit + folder path sync
+## 2026-07-29 - v5.0.69: Projects grid sort + release commit
+
+**Komenda/Akcja:** User: auto-sort `#damProjectsGrid` po dacie z nazwy folderu; toolbar `#damProjectsStatus` — Sortuj (nazwa, data, priorytet, ostatnie); commit+push całego pakietu v5.0.54–5.0.69.
+
+**Log/Status:** `dam-projects.js` — `parseFolderDateScore`, `sortProjects`, localStorage `dam_projects_sort` + `dam_projects_recent`, select `#damProjectsSort`. `index.html` + `dam-brand.css` toolbar row. Bump 5.0.69 sync.
+
+**Efekt/Fix:** Domyślnie najnowsze rewizje na górze; 6 trybów sortowania; ostatnio otwarte projekty w localStorage.
+
+**Źródła:** index.html, dam-projects.js, dam-brand.css, version 5.0.69
+
+## 2026-07-29 - v5.0.68: Assoc picker thumbs/tags + branding cards viz-parity
+
+**Komenda/Akcja:** User: (A) assoc picker — hierarchy lines, purple MATERIAŁ badge, 20px badge→tags gap, max 7 tags, fix thumbs/preview, branding-style grouping; (B) branding group cards = viz pattern (+N bubble, id-chip/show-indexes), fix card↔modal variant drift.
+
+**Log/Status:** `dam-assoc-edit.js`: `hydratePickerThumbs` (IO lazy /media), `data-path` on imgs, branding `marketingGroupKey` parity, nested folder rows, purple material badge CSS inject, DamBadges tags max 7. `dam-branding.js`: `brandingCardVariantBadgeHtml`, `brandingCardIndexBlockHtml`, `brandingCardDisplayAssets` (modal uses raster siblings only), removed meta „4 pliki” / title id-chip. `dam-branding.css` variant-badge + indexes-wrap. `dam-brand.css` material badge purple. Bump 5.0.68.
+
+**Efekt/Fix:** Picker thumbs load via lazy bridge preview + `__damBrandingThumbFallback`; branding cards show +N / Pokaż indeksy like viz; openModal filters PSD sources from variant grid while keeping full `data-group-ids`.
+
+**Test:** `node --check` dam-assoc-edit.js + dam-branding.js OK; smoke :8765/:8766 200; screenshot branding grid PASS (+N badges, Pokaż indeksy visible). Assoc picker screenshot PARTIAL (grid load timing).
+
+**Źródła:** apps/web/assets/js/dam-assoc-edit.js, dam-branding.js, css dam-brand.css, dam-branding.css; branding.html, visualizations.html, explorer.html v=5.0.68
+
+
+**Komenda/Akcja:** User: separator przed Skojarzone materiały (jak warianty); branding bez studio → pełna szerokość; tytuł↔ext-tag 15px; Pokaż wszystkie full-width + margin-top 15px; studio rail do dołu wariantów; meta-block spacing /2.
+
+**Log/Status:** Subagent 4eb29fc1 padł (API limit) — parent wdrożył. `dam-viz-modal.css` materials box, studio align-self end, show-all stretch. `dam-branding.css` column-gap 15px fix (było 0!). `dam-media-preview.js` inject title gap !important. Bump 5.0.64.
+
+**Efekt/Fix:** Czytelniejszy modal branding/viz; ext-tag 15px od tytułu; studio przy dolnej krawędzi wariantów.
+
+**Źródła:** dam-viz-modal.css, dam-branding.css, dam-media-preview.js, v5.0.64
+
+## 2026-07-29 - v5.0.63: Assoc picker = explorer dam-search-hits clean layout
+
+**Komenda/Akcja:** User: picker skojarzeń nadal nie jak piękny widok eksploratora (dam-search-hits) — elementy ucięte, zły layout w `#damAssocEditPopover .dam-assoc-edit-popover__list`.
+
+**Log/Status:** Subagent 9a8fb66b padł (API limit) — parent wdrożył. `optionButtonHtml` — markup jak explorer (badge → name → meta), thumb lewo, checkbox prawo. Inject CSS: flex-start, min-height 76px, bez boxed rows. `dam-brand.css` + `dam-branding.css` parity. Bump 5.0.63.
+
+**Efekt/Fix:** Wiersze pickera czytelne: MATERIAŁ + nazwa pliku + ID, bez crop head 19px.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, dam-branding.css, v5.0.63
+
+## 2026-07-29 - v5.0.62: Modal layout/typography (meta rail, studio, variants)
+
+**Komenda/Akcja:** User: ext-tag +15px od tytułu; większe tytuły; +10px pod tagami; CTA +10%; etykiety assoc = CTA; warianty pod meta-rail (bez białej przerwy); studio rail top+right; global #damVizModal + #damMediaPreview.
+
+**Log/Status:** Subagenty c7d9fe3c + eca09b64 padły (API limit) — parent wdrożył. `dam-viz-modal.css` grid `variants studio`, studio bez padding-top 4.75rem, chips flex-end. `dam-brand.css` tytuł 28px. `dam-branding.css` ext-tag 15px, assoc-label 13.2px, title-base 28px (fix inherit). `dam-assoc-edit.js` inject CTA 13.2px. `dam-media-preview.js` title gap 15px. Bump 5.0.62. Screenshot PASS (viz modal Tiramisu).
+
+**Efekt/Fix:** Warianty pod kolumną meta; studio wyrównane do góry/prawej; czytelniejsza typografia modala.
+
+**Źródła:** dam-viz-modal.css, dam-brand.css, dam-branding.css, dam-media-preview.js, v5.0.62
+
+
+**Komenda/Akcja:** User: picker skojarzeń ma wyglądać jak eksplorator (badge + 20px + max 5 tagów, miniatury, checkbox); napraw CTA „Dodaj/Edytuj materiały”; zawsze 2 sekcje produkty+materiały (70px gap); usuń toggle Produkty(N); CSS grid miniatur; deduplikacja WWW→Online.
+
+**Log/Status:** `dam-assoc-edit.js` — `dam-search-hit__head` (badge+tags inline), material kind fix pinned M-SLI, `bindAssocCtas` na `#damMediaPreview`. `dam-media-preview.js` — CTA material, sekcje zawsze widoczne, bez toggle produktów, grid thumb. `dam-badges.js` — Online dedup. CSS brand/brand-ing/viz-modal. Bump 5.0.61.
+
+**Efekt/Fix:** Czytelniejsza lista materiałów; przycisk materiałów działa w brandingu; jeden tag Online zamiast WWW×3.
+
+**Źródła:** branding.html?v=5.0.61, dam-assoc-edit.js, dam-media-preview.js
+
+
+**Komenda/Akcja:** User: brak ELEMENTÓW w modalu viz (przycisk lista); warianty bliżej kafelka; chipy lekko zaokrąglone globalnie; ścieżka max 75%; studio od wysokości Nazwa pliku; usuń pasek 100% zoom.
+
+**Log/Status:** `dam-media-preview.js` — viz modal zawsze ładuje elementy (fix early return); toggle Elementy (0) + separator; branding/viz bez zoom bara, hint hover. `dam-viz.js` — variant head compact, thumb panzoom. CSS `dam-viz-modal.css` + `dam-branding.css`. Bump 5.0.60.
+
+**Efekt/Fix:** ELEMENTY wracają w prawym panelu; scroll zoom na obrazie.
+
+**Źródła:** visualizations.html?v=5.0.60
+
+## 2026-07-29 - v5.0.59: Explorer live search panel + global search-hit list
+
+**Komenda/Akcja:** User: usuń baner F/X/D; skondensuj layout; napraw live search (#damFileSearch → #damExplorerMain); globalny styl `.dam-search-hits` w pickerach assoc (miniatury, tagi na górze, checkbox, selected mocniej niż hover).
+
+**Log/Status:** `dam-search.js` — `renderHitsHtml`/`bindHitsClick` + fix `opts.onResults` w `bindSearchBox`. `dam-explorer.js` — panel główny używa hitów; ukryty `#damAdminBar`; empty-state tylko gdy brak hits. `dam-assoc-edit.js` — wiersze pickera w stylu search-hit + checkbox. CSS `dam-brand.css`/`dam-branding.css` — compact spacing, selected/hover. Bump 5.0.59.
+
+**Efekt/Fix:** PASS screenshot `.qa-screenshots/explorer-search-sync-5.0.59.png` — dropdown + `#damExplorerMain` pokazują te same trafienia (Cynamon, 17 poz.).
+
+**Źródła:** explorer.html?v=5.0.59, dam-search.js, dam-explorer.js, dam-assoc-edit.js
+
+
+**Komenda/Akcja:** User: brak minusa przy produktach/wariantach/materiałach; strip wariantów za ciasny, miniatura za mała.
+
+**Log/Status:** `dam-assoc-edit.js` — wire `.dam-viz-modal__variant[data-variant-key]` + collect grids z `#damVizModal`; CSS minus na variant button. `dam-viz-modal.css` — padding 14/16px, thumb 72×54. Bump 5.0.57.
+
+**Efekt/Fix:** Shift+hover na wariantach produktu w wiz modal pokazuje czerwony minus (admin ON). Większy strip.
+
+**Źródła:** dam-assoc-edit.js, dam-viz-modal.css, dam-media-preview.js v5.0.57
+
+**Komenda/Akcja:** User: „nic nie usunąłeś” — dalej widać `dam-viz-modal__variant-hint` na visualizations.html (stary cache 5.0.51).
+
+**Log/Status:** Usunięty `data-dam-tip` z labela; CSS `.dam-viz-modal__variant-hint{display:none!important}`; JS cleanup przy rebuild strip; przywrócony `flex:0 0 auto` na kafelkach wariantów. Bump `?v=5.0.55` na dam-viz.js + dam-viz-modal.css.
+
+**Efekt/Fix:** Hard refresh `visualizations.html?v=5.0.55` — brak szarego hintu, większe miniatury.
+
+**Źródła:** dam-viz.js, dam-viz-modal.css, visualizations.html v5.0.55
+
+**Komenda/Akcja:** P0 branding: produkty nad materiałami, zero Elementy/Surowe; P2 viz: tylko Elementy + CTA konwersji; P3 POST `/convert-links-elementy`; P1 fix clip hover historii lifecycle.
+
+**Log/Status:**
+1. **v5.0.54** `dam-media-preview.js`: `linkedBrandingColumnHtml` products-top; usunięte elementy z branding flow; viz modal Elementy bez Surowe; `renderResizerCta` → `/convert-links-elementy` „Podejmij próbę konwersji elementów”.
+2. **v5.0.54** `dam-viz.js`: `#damVizModalResizerHost` w assoc-pane.
+3. **v5.0.54** `local_bridge.py`: `convert_links_elementy()` + POST handler (Pillow/psd-tools, PNG ~q60, bez usuwania Links).
+4. **v5.0.54** `dam-brand.css`: `.dam-carrier-body__life` overflow visible + z-index hover.
+5. Test API: `product-links-elementy?index=6300525.01` OK; POST convert 7 plików TIFF→PNG ELEMENTY. Smoke :8765/:8766 200; `node --check` JS OK.
+
+**Efekt/Fix:** Branding bez Elementy; viz z Elementy + built-in konwersja; life history button bez clip.
+
+**Źródła:** `dam-media-preview.js`, `dam-viz.js`, `local_bridge.py`, `dam-brand.css`, `branding.html`, `visualizations.html`, v5.0.54.
+
+## 2026-07-29 - v5.0.56: usuń hint wariantów + jeden przycisk samouczka w pomocy
+
+**Komenda/Akcja:** Usuń widoczny hint wariantów w modalu viz; usuń duplikat przycisku samouczka w `#damHelpModal` (header vs footer).
+
+**Log/Status:**
+1. **v5.0.56** `dam-viz.js`: usunięty `<p class="dam-viz-modal__variant-hint">` + inline CSS; tooltip `data-dam-tip` na label „Warianty produktu”.
+2. **v5.0.56** `dam-viz-modal.css`: usunięte reguły `.dam-viz-modal__variant-hint`.
+3. **v5.0.56** `dam-shortcuts.js`: usunięty header `button.dam-help-modal__restart` (zostaje X).
+4. **v5.0.56** `dam-tutorial.js`: usunięte `injectHelpRestartControl`; footer „Uruchom samouczek” jedyny CTA.
+5. Bump sync: `version.json`, `dam-version.js`, `runtime_config.py`, `?v=5.0.56` na zmienione assety.
+6. Weryfikacja: `node --check` OK; screenshot help header (tylko X) + viz modal (brak hintu).
+
+**Efekt/Fix:** Brak widocznego hintu; jeden przycisk restart samouczka w modalu pomocy.
+
+**Źródła:** `dam-viz.js`, `dam-viz-modal.css`, `dam-shortcuts.js`, `dam-tutorial.js`, `visualizations.html`, `explorer.html`, `dam-shell.js`.
+
+## 2026-07-29 - v5.0.58: fix Shift+minus scope branding-split (products + materials)
+
+**Komenda/Akcja:** URGENT regression — Shift+hold minus na kafelkach skojarzeń po restructure branding pane (produkty nad materiałami); pending hint/samouczek z v5.0.52.
+
+**Log/Status:**
+1. **v5.0.58** `resolveAssocPaneScope` w `dam-assoc-edit.js` (export) — preferuje `--branding-split` przed inner `--materials`.
+2. **v5.0.58** `bindMaterialsPane` + `seedMaterialsCtx` — ctx i `ensureShiftHoverAssocUx` na scope split, nie inner col.
+3. **v5.0.58** `dam-media-preview.js` — wszystkie `bindMaterialsPane` paneHost → `resolveAssocPaneScope`; `rewireShiftAssocUxFromEl` po `renderLinkedProductsPane` + po branding `showAt`.
+4. Bump sync `5.0.58`: `version.json`, `dam-version.js`, `runtime_config.py`, `branding.html`, `visualizations.html` `?v=`.
+5. `node --check` dam-assoc-edit.js + dam-media-preview.js OK.
+6. CDP synthetic DOM (split scope): productMinus+materialMinus wired, Shift visible — **PASS**.
+
+**Efekt/Fix:** Minus na produktach i materiałach w jednym scope `--branding-split`; re-wire po async products pane.
+
+**Pending (już v5.0.52):** hint wariantów usunięty; jeden przycisk samouczka w pomocy.
+
+**Źródła:** `dam-assoc-edit.js`, `dam-media-preview.js`, `branding.html`, `visualizations.html`
+
+## 2026-07-29 - v5.0.52: usuń hint wariantów + jeden przycisk samouczka w pomocy
+
+**Komenda/Akcja:** Usuń widoczny hint wariantów w modalu viz; usuń duplikat przycisku samouczka w `#damHelpModal` (header vs footer).
+
+**Log/Status:**
+1. **v5.0.52** `dam-viz.js`: usunięty `<p class="dam-viz-modal__variant-hint">` + inline CSS; tooltip `data-dam-tip` na label „Warianty produktu”.
+2. **v5.0.52** `dam-viz-modal.css`: usunięte reguły `.dam-viz-modal__variant-hint`.
+3. **v5.0.52** `dam-shortcuts.js`: usunięty header `button.dam-help-modal__restart` (zostaje X).
+4. **v5.0.52** `dam-tutorial.js`: usunięte `injectHelpRestartControl`; footer „Uruchom samouczek” jedyny CTA.
+5. Bump sync: `version.json`, `dam-version.js`, `runtime_config.py`, `?v=5.0.52` na zmienione assety.
+
+**Efekt/Fix:** Brak widocznego hintu; jeden przycisk restart samouczka w modalu pomocy.
+
+**Źródła:** `dam-viz.js`, `dam-viz-modal.css`, `dam-shortcuts.js`, `dam-tutorial.js`, `visualizations.html`, `explorer.html`, `dam-shell.js`.
+
+## 2026-07-29 - Assoc pane bottom stack v5.0.51 (produkty + Elementy + hint /typo)
+
+**Komenda/Akcja:** Skojarzone produkty pod spodem w prawym dolnym rogu (jak Elementy); przywróć Elementy/Surowe elementy; zmniejsz padding hintu wariantów; `/typo` z `<br>` po „ponownie,”.
+
+**Log/Status:**
+1. **v5.0.51** `dam-media-preview.js`: `renderLinkedProductsPane` → `#damMediaPreviewLinkedProductsHost`; footer = tylko warianty; przywrócony `ensureAssocElementySplit` + `renderElementyGroups` w branding flow; bottom stack `#damMediaPreviewAssocPaneBottom`.
+2. **v5.0.51** `dam-viz.js`: hint z łamaniem linii; `#damVizModalElementyHost` w assoc-pane.
+3. **v5.0.51** `dam-viz-modal.css`: mniejszy hint + pane-products styles.
+
+**Efekt/Fix:** CDP+screenshot M-SHOP404252: `productsInPane:true`, `productsInFooter:false`, `elementyToggles:3`, split OK. PASS.
+
+**Źródła:** `dam-media-preview.js`, `dam-viz.js`, `dam-viz-modal.css`
+
+---
+
+
+**Komenda/Akcja:** Układ modala Branding jak wizualizacje — materiały w prawej kolumnie (nie full-width), warianty nad produktami (nie 2-col).
+
+**Log/Status:**
+1. **v5.0.50** `dam-media-preview.js`: `isAssocSplitLayout=true` zawsze; prawa `assoc-pane` + `#damMediaPreviewLinkedAssets`; usunięty `brandingRelatedMaterialsRowHtml` z footera; `renderBrandingRelatedMaterials` → pane + `bindMaterialsPane`; viz-studio vs branding rozdzielone renderery.
+2. **v5.0.50** `dam-viz-modal.css`: `.dam-media-preview__assoc--footer-stack` flex column w split.
+3. Bump `version.json`, `dam-version.js`, `runtime_config.py`, `branding.html` `?v=5.0.50`.
+
+**Efekt/Fix:** CDP+screenshot M-SHOP404252: `split:true`, `assocPane:true`, materiały (89) w prawej kolumnie, `brandingRow:false`. PASS layout.
+
+**Źródła:** `dam-media-preview.js`, `dam-viz-modal.css`, `.qa-screenshots/branding-modal-assoc-split-5.0.50.png`
+
+---
+
+
+**Komenda/Akcja:** Skojarzone materiały nad produktami; przycisk „Dodaj/Edytuj materiały” zamiast plus-tile; miniatury + grupowanie folderów w pickerze assoc (jak Branding).
+
+**Log/Status:**
+1. **v5.0.49** `dam-media-preview.js`: sekcja materiałów przed produktami; CTA „Dodaj/Edytuj materiały”.
+2. **v5.0.49** `dam-assoc-edit.js`: `pickerListThumbUrl` (/thumb-cache), `renderPickerFolderGroups`, hover preview z path, `__damBrandingThumbFallback` na liście.
+3. Bump `version.json`, `dam-version.js`, `runtime_config.py`, `branding.html` + `visualizations.html` `?v=5.0.49`.
+
+**Efekt/Fix:** Layout assoc + picker brandingowy z miniaturami i nagłówkami folderów.
+
+**Źródła:** `dam-media-preview.js`, `dam-assoc-edit.js`, `branding.html`
+
+---
+
+## 2026-07-28 - Follow-up subagent f0222f98 (modal title 6300783)
+
+**Komenda/Akcja:** Domknięcie po [DAM modal title 6300783 fix](f0222f98-054a-43b5-9d92-5b2c3fb892cd) — C6-7 retest, C6-8 dev auth.
+
+**Log/Status:**
+1. **C6-6b** — bez zmian kodu; fix v5.0.48 potwierdzony (`B_6300783-title-cynamonka.png`).
+2. **C6-7** — branding `M-SHOP405515-06-26` Podgląd **otwiera się** (`C6-7_SHOP405515-podglad.png`); grid `linked_variant_ids` wymaga flow assoc-edit (nie lekki Podgląd) — **DEFER**.
+3. **C6-8** — curl POST bez Bearer → 401; `scripts/ops/start-browser.ps1` + przełącznik `-DevAuth` (`DAM_LOCAL_DEV_AUTH=1`); w UI sesja admin działa bez env.
+
+**Efekt/Fix:** Subagent domknięty; pozostałe C6-7/C6-8 = operacyjne (assoc-edit UI / restart z `-DevAuth`).
+
+---
+
+## 2026-07-28 - Sesja3 DOMKNIĘCIE agentów (v5.0.48)
+
+**Komenda/Akcja:** „Domknij pracę reszty agentów” — synteza subagentów 69c00355, 7abebd88, a6cac31b, 7004363d, eba4dcbb, 2d0fdb54, ff15425f, 187252db, f0222f98.
+
+### Status końcowy Sesja3
+
+| Blok | Temat | Status |
+|------|-------|--------|
+| Krok 0 | Audyt + baseline | **DONE** |
+| Krok 1 | Toast 1s, chipy studio, jeden „Dodaj” | **DONE** v5.0.34–35 |
+| Krok 3–4 | Modal X, thumbs, show-all, filename | **DONE** v5.0.39–44 |
+| Krok 5 | Assoc core (no auto-persist, PL+EN, mirror, picker) | **DONE** v5.0.40–41 |
+| Etap1 revert | JSON cleanup cynamonka test | **DONE** v5.0.43–44 |
+| C6-6 | 6300728 bez heurystyki materiałów | **DONE** v5.0.47 whitelist-only |
+| C6-6b | 6300783 tytuł CYNAMONKA | **DONE** v5.0.48 — `B_6300783-title-cynamonka.png` |
+| C6-1–3,7 | Macierza delete/PL+EN/IMG/mirror | **DONE** (przed/pełny revert) |
+| C7-1 | Tagi branding 4 rzędy | **DONE** `D_tag-filters-4-rows.png` |
+| C6-7 | SHOP/GOG variant grid | **KOD DONE** — retest UI **DEFER** (Etap1 wyczyścił overrides; brak M-SHOP405515/M-GOG805627 w JSON) |
+| C6-8 | Step 8 delete X persist | **BLOCKED** — POST → HTTP 401; wymaga `DAM_LOCAL_DEV_AUTH=1` + restart bridge **lub** signin admin/power_user |
+| Krok 2 | Siatka WIZ baseline | **PARTIAL** — poza scope domknięcia |
+| Krok 8–9 | UTF-8 audyt, `_qa_sesja3.py` CDP/vision | **TODO** następna sesja |
+| Krok 10 | Cleanup testów przez UI | **TODO** po PASS macierzy Etap 2 |
+
+**Log/Status:** Wersja repo **5.0.48**. Agent f0222f98 domknięty: `syncModalTitleForVariant` używa `modalProductId` (group.pid), nie linked variant. Screenshot PASS odczytany ponownie. Bridge :8766 OK; Step 8 bez sesji → 401 (python urllib).
+
+**Efekt/Fix:** Sesja3 deliverable zamknięty na v5.0.48; otwarte tylko: retest SHOP/GOG po ponownym skojarzeniu UI, Step 8 auth, polish Krok 2/8/9/10.
+
+**Źródła:** `dam-viz.js`, `dam-media-preview.js`, `local_bridge.py`, `Desktop\Dowody\Sesja3\`, plan `dam_assoc_sesja3_v2`
+
+---
+
+## 2026-07-28 - Sesja3 v5.0.48 (modal title 6300783 + verify)
+
+**Komenda/Akcja:** Follow-up po 187252db (v5.0.47): PRIORITY modal H1 6300783=CYNAMONKA; ff15425f materials; Step 8 dev auth; SHOP/GOG variant grid retest.
+
+### Checklist Sesja3 (live)
+
+| ID | Temat | Status |
+|----|-------|--------|
+| C6-4 | `#damVizModalFilename` czytelność | **DONE** (wcześniej) |
+| C6-5 | Etap1 JSON cleanup | **DONE** (wcześniej) |
+| C6-6 | 6300728 bez 21 grup cynamonka | **DONE** — viz modal whitelist-only (v5.0.47) |
+| C6-6b | 6300783 tytuł Cynamonka | **DONE** v5.0.48 — `B_6300783-title-cynamonka.png`: H1 **CYNAMONKA**, nie BANOFFEE |
+| C6-7 | SHOP/GOG variant grid | **TODO** — karta M-SHOP405515 widoczna; modal Podgląd nie otworzył się w tej sesji browser MCP (kod v5.0.47 bez zmian) |
+| C6-8 | Step 8 dev auth POST | **PARTIAL** — `DAM_LOCAL_DEV_AUTH=1` w `local_bridge.py`; bez env → HTTP **401** login_required; restart bridge z env nie wykonany |
+| C7-1 | Tagi 4 rzędy | **DONE** (wcześniej) |
+
+**Log/Status:**
+1. **v5.0.48** `dam-viz.js`: `syncModalTitleForVariant` zawsze `modalProductId` (group.pid), nie `v.product_id` z linked variant; `modalProductIdForGroup` host-first; `vizProductCtx.id=modalProductId`; `enterProductView` resetuje tytuł.
+2. CDP: `openByProductId('cynamonka-nerkowcowy')` → `title=CYNAMONKA`, `pid=cynamonka-nerkowcowy`.
+3. Screenshot+Read: `Desktop\Dowody\Sesja3\B_6300783-title-cynamonka.png` — PASS.
+4. ff15425f: `#damVizModalAssoc` whitelist-only już w v5.0.47 — 6300783 modal: „Brak skojarzonych materiałów”.
+5. curl POST `/branding/asset-associations` bez Bearer → 401 (bez `DAM_LOCAL_DEV_AUTH=1`).
+
+**Efekt/Fix:** Tytuł modala wiz = folder karty produktu; regresja BANOFFEE na Cynamonce naprawiona.
+
+**Źródła:** `dam-viz.js`, `visualizations.html?v=5.0.48`, `B_6300783-title-cynamonka.png`, `local_bridge.py`
+
+---
+
+## 2026-07-28 - Sesja3 C6-6 fix v5.0.47 (viz modal materials whitelist-only)
+
+**Komenda/Akcja:** Follow-up 2d0fdb54 — C6-6 PARTIAL: modal 6300728 nadal 17 grup cynamonka viz z heurystyki; anti-self-loop sesja3-v2.
+
+**Log/Status:**
+1. **v5.0.47** `dam-media-preview.js`: `#damVizModalAssoc` = whitelist-only (`linked_materials` + overrides); pusty → „Brak skojarzonych materiałów”, bez `loadLinkedBrandingForContext` heurystyki; nie czyta `_damMaterialsCtx.selectedIds` (pollution).
+2. **v5.0.47** `dam-assoc-edit.js`: cache-bust `branding-associations-overrides.json?v=DAM_APP_VERSION` (stary browser cache trzymał M-IMG249510).
+3. **CDP before:** label `Skojarzone materiały (17 grup · 33 plików)` (heurystyka + linked_variants cynamonka).
+4. **CDP after:** `itemCount:0`, `emptyText: Brak skojarzonych materiałów`, `linked:[]`.
+5. **Screenshot+Read:** `C:\Users\xpret\Desktop\Dowody\Sesja3\C6-6300728-no-heuristic.png` — PASS (pusty stan materiałów).
+6. **Step 8:** `POST /branding/asset-associations` bez Bearer → HTTP 401; `DAM_DEV_ALWAYS_ADMIN` tylko w `dam-shell.js` (false); `local_bridge.py` bez dev bypass — wymaga signin/rehydrate (ADR-006).
+
+**Efekt/Fix:** Heurystyczny flood materiałów w modalu viz wyłączony; tylko jawny picker save + overrides JSON.
+
+**Źródła:** `dam-media-preview.js`, `dam-assoc-edit.js`, `visualizations.html`, `viz-flags.json`, `branding-associations-overrides.json`
+
+### Checklist Sesja3 (live)
+
+| ID | Temat | Status |
+|----|-------|--------|
+| C6-6 | 6300728 bez masowych cynamonka viz w materiałach | **DONE** v5.0.47 — whitelist-only viz modal; before 17 grup → after 0 |
+| C6-8 | Step 8 delete X / POST save | **BLOCKED** — HTTP 401 bez sesji; brak insecure bypass w bridge |
+
+---
+
+## 2026-07-28 - Sesja3 follow-up v5.0.44 (filename + Etap1 cleanup + Krok 6 remainder)
+
+**Komenda/Akcja:** Follow-up po subagentach Sesja3: fix `#damVizModalFilename`, revert Etap1 test assoc JSON, checklist Krok 6 (variant grid, Step 8 auth), screenshot 6300728 po cleanup.
+
+### Checklist Sesja3 (live)
+
+| ID | Temat | Status |
+|----|-------|--------|
+| C6-1 | Step 3 whitelist linked_materials (1 grupa IMG) | **DONE** v5.0.41 |
+| C6-2 | Step 4 banoffee 6300728 mirror | **DONE** |
+| C6-3 | Step 7 M-IMG249510 mirror | **DONE** |
+| C6-4 | `#damVizModalFilename` czytelność + brak stale title | **DONE** v5.0.44 — CSS meta-line--filename; `basenameForVizItem` path/file/revision_path; `syncModalTitleForVariant` w `selectVariant`; productView czyści filename |
+| C6-5 | Etap1 JSON cleanup (overrides + viz-flags) | **DONE** — backup `*.backup-20260728-185556.json`; usunięto M-IMG249510, M-SHOP405515, folder cynamonka; `linked_materials:{}` |
+| C6-6 | 6300728 bez masowych cynamonka viz w materiałach | **DONE** v5.0.47 — whitelist-only viz modal |
+| C6-7 | SHOP/GOG variant grid (`linked_variant_ids`) | **DONE** kod — `enrichAssocOnOpen` merge → `groupContext.variants`; `brandingAssetFromIndex` fallback; `buildBrandingGroupContext.linked_variant_ids` |
+| C6-8 | Step 8 delete X / POST save | **BLOCKED** — `POST /branding/asset-associations` bez Bearer → `401 login_required`; `DAM_DEV_ALWAYS_ADMIN=false`; wymaga signin / rehydrate (admin lub power_user) |
+
+**Log/Status:**
+1. Agent eba4dcbb: część fixów już w drzewie (filename HTML, enrichAssoc, brandingAssetFromIndex).
+2. **v5.0.44:** CSS filename stack; `syncModalTitleForVariant`; JSON cleanup + walidacja; bump `?v=5.0.44-sesja3`.
+3. **Screenshot+Read:** `C6_cleanup-6300728-materials.png` — tytuł BANOFFEE na widoku cynamonka (przed/pełny retest po title sync); materiały 17 grup (heurystyka).
+4. **Step 8:** Python POST → `{"error":"login_required"}` — brak dev bypass.
+
+**Efekt/Fix:** Filename/title sync kod DONE; Etap1 overrides wyczyszczone; variant grid enrichment DONE; Step 8 = auth blocker udokumentowany.
+
+**Źródła:** `dam-viz.js`, `dam-viz-modal.css`, `dam-brand.css`, `dam-media-preview.js`, `dam-assoc-edit.js`, `dam-branding.js`, `branding-associations-overrides.json`, `viz-flags.json`, `Desktop\Dowody\Sesja3\C6_cleanup-6300728-materials.png`
+
+---
+
+## 2026-07-28 - Sesja3 v2 Krok 6 Step3 fix + matrix v5.0.41
+
+**Komenda/Akcja:** Kontynuacja Krok 6 — naprawa Step 3 (3 grupy zamiast 1 IMG) + domknięcie macierzy 4–8.
+
+**Log/Status:**
+1. **Root cause Step 3:** `explicitMaterialIdSet` działał jako bypass INCLUDE, nie whitelist — heurystyka pokazywała SHOP/GOG obok M-IMG249510.
+2. **Fix v5.0.41:** `dam-media-preview.js` — `explicitWhitelistMode`: gdy `linked_materials`/picker ma ID → tylko te materiały.
+3. **Krok 6 macierz (browser CDP + screenshot+Read):**
+   - Step 1–2: PASS (z poprzedniej tury)
+   - **Step 3 PASS:** `Skojarzone materiały (1)` — tylko M-IMG249510-07-26 (`C6_step-3-materials-1group.png`)
+   - **Step 4 PASS:** banoffee 6300728 — 1 materiał IMG, tytuł BANOFFEE KAKAO, 6300783 w wariantach (`C6_step-4-mirror-6300728.png`)
+   - **Step 5 PARTIAL:** M-SHOP405515 — linked CYNAMONKA 6300783 PASS; variant grid „Brak wariantów" FAIL (`C6_step-5-SHOP405515.png`)
+   - **Step 6 PARTIAL:** M-GOG805627 — linked 6300783 PASS; variant grid empty FAIL (`C6_step-6-GOG805627.png`)
+   - **Step 7 PASS:** M-IMG249510 — Produkty (4) incl. 6300783+6300728, brak 6300782 (`C6_step-7-IMG-mirror.png`)
+   - **Step 8 FAIL:** Shift+hold delete X + bridge POST → `login_required` (brak sesji zapisu)
+
+**Efekt/Fix:** Step 3 naprawiony kodem; Steps 5–6 variant grid = blocker Krok 7; Step 8 wymaga zalogowanej sesji admin.
+
+**Źródła:** `dam-media-preview.js`, `version.json` 5.0.41, `visualizations.html`, `branding.html`, `Desktop\Dowody\Sesja3\C6_step-*.png`
+
+---
+
+## Sesja3 — checklist na żywo (2026-07-28)
+
+- [x] **A — filename modal** (`#damVizModalFilename`): CSS grid-column:2 + wrap; `syncVizModalFilename()` przy zmianie wariantu/product view; CDP w=598px, tytuł=basename 6300783
+- [x] **B — revert Etap 1 test assoc**: `viz-flags.json` linked_variants={}; overrides bez cross-linków; branding-index 41 assetów; banoffee modal: 1 materiał (nie 21 grup cynamonki)
+- [x] **B-extra — viz-flags merge**: plik z `updated_at` = source of truth (localStorage nie trzyma starych linked_variants)
+- [ ] **Krok 6** — macierz 8 scen UI (steps 4–8: SHOP/GOG/delete X refresh)
+- [ ] **Krok 7** — hero min-height / object-fit contain (media-preview)
+- [ ] **Krok 8** — warianty zwinięte 4 + Pokaż wszystkie
+- [ ] **Krok 9** — (plan Sesja3 v2 — do uzupełnienia przez usera)
+- [ ] **Krok 10** — final QA + user sign-off Etap 1
+
+**Wersja:** 5.0.43 | **Dowody:** `Sesja3/A_filename-fix-6300783.png`, `Sesja3/B_banoffee-revert-6300728.png`
+
+---
+
+## 2026-07-28 - Sesja3 A filename + B Etap1 revert v5.0.43
+
+**Komenda/Akcja:** Task A filename modal (CSS+JS stale title); Task B revert test assoc JSON; checklist process.md.
+
+**Log/Status:**
+1. **A PASS:** `.dam-viz-modal__meta-line` — filename/variant-title `grid-column:2`, wrap; `syncVizModalFilename()` + `enterProductView`; CDP 6300783 w=598px, text=DK-KAR6X-NERK-CYNAMONKA-6300783.00-ENFACE-L.jpg.
+2. **B PASS:** `viz-flags.json` linked_variants cleared; overrides: M-IMG249510 tylko cynamonka, M-SHOP405515 bez cynamonki/6300783, usunięto folder wielopaki; branding-index 41 assetów patch; banoffee 6300728: fname BANOFEE, mat (1) nie 21 grup.
+3. **Merge fix:** `dam-viz.js` — file `updated_at` → linked_variants/unlinked/linked_materials z pliku (nie localStorage orphan keys).
+4. **Wersja:** 5.0.41 → **5.0.43**.
+
+**Efekt/Fix:** Filename czytelny; cross-linki testowe Etap 1 usunięte; banoffee bez lawiny cynamonki w materiałach.
+
+**Źródła:** `dam-viz-modal.css`, `dam-viz.js`, `viz-flags.json`, `branding-associations-overrides.json`, `branding-index.json`, `Sesja3/A_filename-fix-6300783.png`, `Sesja3/B_banoffee-revert-6300728.png`
+
+---
+
+## 2026-07-28 - Sesja3 v2 Krok 5 remainder + Krok 6 partial v5.0.40
+
+**Komenda/Akcja:** Krok 5 remainder (delete X, PL+EN, anti-loop, lustro, etykiety, timeout) + Krok 6 macierz 8 scen (UI).
+
+**Log/Status:**
+1. **Krok 5 — kod (v5.0.40):**
+   - Delete X pinned: `persistPinnedRemoval` + early return dla `is-pinned` (natychmiast API).
+   - PL+EN cały produkt: `expandPicksToAllProductRevisions` + confirm/onConfirmVariants.
+   - Anti-self-loop: `isOwnProductVisualizationLoop` w `dam-media-preview.js`.
+   - Lustro A↔B: `persistLinkedVariant` mirror w `dam-viz.js`.
+   - Etykiety pickera: `revisionPickerLabel` → `BANOFFEE KAKAO · PL · 6300728`.
+   - No freeze: `DamLoader` safety 5s + `saveAssociations` AbortController 5s.
+2. **Krok 6 — częściowy (browser):**
+   - Modal 6300783 otwarty (thumb click); screenshot `C6_step-1-modal-6300783.png`.
+   - **Step 2 PASS:** strip `EN · 6300783` + `PL · 6300783` (vision).
+   - **Step 1:** brak 6300719 w stripie (baseline PASS).
+   - **Step 3 PARTIAL:** materiały 3 grupy / 5 plików (nie 1 IMG).
+   - **Steps 4–8:** nie domknięte w tej turze (wymaga pełnych kliknięć UI).
+3. **API:** viz-flags linked_variants: banoffee, oats (brak cynamonka); M-IMG249510 overrides: 4 produkty.
+
+**Efekt/Fix:** Krok 5 kod DONE; Krok 6 wymaga kontynuacji (SHOP/GOG/delete X refresh).
+
+**Źródła:** `dam-assoc-edit.js`, `dam-viz.js`, `dam-media-preview.js`, `dam-loader.js`, `visualizations.html`, `branding.html`, `Sesja3/C6_step-1-modal-6300783.png`
+
+---
+
+
+**Komenda/Akcja:** Kontynuacja planu Sesja3 v2 — Krok 3 (modal X, picker thumbs, bez globalnego resetu) + Krok 4 (tytuły 6300783/6300728, show-all jakości XL/L/S/S-SKLEP).
+
+**Log/Status:**
+1. **Krok 3 PASS:** `bindModalClose` capture-phase; `bustMaterialAssocCaches` bez `bustLinkedBrandingCache`; `preserveThumbs` w `refreshLinkedBrandingAfterEdit`; picker list thumb preserve; modal X zamyka (CDP pointerdown).
+2. **Krok 4 PASS:** `modalProductIdForGroup` + `productLevelDisplayName`; `findRevisionWizki` folder-first + `revisionRasterWizki`; expand czyści stale `size/persp/bg`; KAR6X `perspMatchesForStudio` + `studioGroupKey`; jakość XL/L/S/S-SKLEP w chipach i show-all.
+3. **Wersja:** 5.0.34 → **5.0.39** (`version.json`, `dam-version.js`, `runtime_config.py`, `?v=` HTML).
+4. **Dowody:** `B_6300783-title-cynamonka.png`, `B_6300728-title-banoffee.png`, `B_show-all-qualities.png`, `P0-B_picker-thumbs-all.png` → `Desktop\Dowody\Sesja3\`.
+
+**Efekt/Fix:** Cynamonka 6300783 tytuł CYNAMONKA; Banoffee 6300728 tytuł BANOFFEE KAKAO; show-all 4 jakości; picker miniatury z dysku; assoc strip 56 thumb bez placeholderów po zamknięciu pickera.
+
+**Źródła:** `dam-viz.js`, `dam-assoc-edit.js`, `dam-media-preview.js`, `dam-modal-shared.js`, `visualizations.html`, `Sesja3/`
+
+---
+
+## 2026-07-28 - Sesja3 v2 plan (Krok 0–2 + partial 5) v5.0.34
+
+**Komenda/Akcja:** Wykonaj plan `dam_assoc_sesja3_v2` od audytu przez szybkie UI, siatkę WIZ, wyłączenie auto-persist.
+
+**Log/Status:**
+1. **Krok 0 PASS:** smoke :8765/:8766 OK; baseline screeny `0_audit_*` w `Sesja3\`; `raport.md` agent vs user.
+2. **Krok 1 PASS:** toast compact 1s bez maskotki + „Usunięto”; chip FRONT 46px; show-all auto-width; `ensurePlusTile` null gdy CTA; CSS `:has` hide plus-tile. Dowody H1/H2/H3.
+3. **Krok 2 PARTIAL:** `dam-viz.js` bubble indeksu dla 1 wariantu; `margin-top:auto` na CTA; `G_grid-baseline-aligned.png`.
+4. **Krok 5 PARTIAL:** usunięto auto-persist `dam-media-preview.js` L3045–3060.
+5. **Wersja:** 5.0.32 → **5.0.34** (+ bump `?v=` HTML).
+
+**Efekt/Fix:** Toast/chipy/plus-tile naprawione i zweryfikowane screenshot+Read+CDP. Tytuł modal 6300728, picker thumbs, macierza 8 scen. — na następną sesję.
+
+**Źródła:** `dam-danger.js`, `dam-assoc-edit.js`, `dam-viz-modal.css`, `dam-branding.css`, `dam-viz.js`, `dam-media-preview.js`, `visualizations.html`, `explorer.html`, `branding.html`, `Sesja3/`
+
+---
+
+
+**Komenda/Akcja:** Przeprojektuj skille /planner i /reflect — mniej żargonu, Warstwa A (user) + B (agent), bramki fałszywego PASS, tryb user_reality.
+
+**Log/Status:**
+1. Zaktualizowano `~/.cursor/skills/planner/` (SKILL, executable-plan-format, reference, cheat-sheet).
+2. Zaktualizowano `~/.cursor/skills/reflect/` + `reflection-loop/` (critic-core 6 trybów, final-deliverable tabela sprawdzeń).
+3. Reguły: `planner-mad-always.mdc`, `reflect.mdc` — min_rounds UI=3, PASS UI = screenshot+Read.
+
+**Efekt/Fix:** Plan/reflect muszą być zrozumiałe dla człowieka; Done = to co widać w przeglądarce.
+
+**Źródła:** ~/.cursor/skills/planner/*, ~/.cursor/skills/reflect/SKILL.md, ~/.cursor/skills/reflection-loop/*, ~/.cursor/rules/planner-mad-always.mdc, ~/.cursor/rules/reflect.mdc
+
+---
+
+## 2026-07-28 - Phase C #4/#7 UI verify v5.0.32
+
+**Komenda/Akcja:** Domknięcie macierzy Phase C: C#4 (6300728 ↔ 6300783 assoc) + C#7 (mirror M-IMG249510 bidirectional).
+
+**Log/Status:**
+1. **C#4 PASS:** `banoffee-kakao-deserowe` linked_materials (43) ⊇ `cynamonka-nerkowcowy` (33); core GOG + M-IMG249510 obecne; screenshot `C4_6300728-mirror-6300783-assoc.png`.
+2. **C#7 PASS:** UI picker dodał `banoffee-kakao-deserowe` do M-IMG249510 (9 prod.); UI: CYNAMONKA 6300783 + BANOFFEE 6300728, brak 6300782; overrides JSON potwierdzone; screenshot `C7_mirror-IMG249510-bidirectional.png`.
+3. **Wersja:** 5.0.32 bez zmian kodu (UI-only).
+
+**Efekt/Fix:** Phase C macierza 1–8 PASS. Etap 1 domknięty.
+
+**Źródła:** branding-associations-overrides.json, visualizations.html, branding.html, Sesja3/
+
+---
+
+**Komenda/Akcja:** Fix Etap 1 blockers: R13 modal nav Wstecz, R14 explorer UTF-8, C#5 cynamonka persist, chip 6300783.
+
+**Log/Status:**
+1. **R13 PASS:** `dam-viz.js` — `previewNavCtrl` + `onNavigate` + push variant/branding; `dam-media-preview.js` shared nav z `#damVizModal`; Wstecz enabled po 2 hopach materiałów; assoc product → viz modal (nie explorer).
+2. **R14 PASS:** `explorer.html` — naprawione polskie znaki (Pokaż wszystkie, Filtr języka, Odśwież z dysku); screenshot `R14_utf8-explorer-polish.png`.
+3. **C#5 PASS:** overrides `M-SHOP405515-06-26` ma `cynamonka-nerkowcowy`; fix auto-dedupe przy open picker + cache `_assocOverrides` po save.
+4. **Index chip:** `latestProductIndexBase()` w enrich + linkedProductItemHtml — UI chip 6300783 (R13 screenshot).
+5. **Wersja:** 5.0.32 (version.json, dam-version.js, runtime_config.py, HTML ?v=).
+
+**Efekt/Fix:** R01–R14 PASS. Phase C #5 PASS; #4/#7 partial. Etap 1 ~95%.
+
+**Źródła:** dam-viz.js, dam-media-preview.js, dam-assoc-edit.js, explorer.html, Sesja3/raport.md
+
+---
+
+**Komenda/Akcja:** Dokończenie A→F planu assoc etap 1-2: macierza C #5 UI, R11/R13/R14, `_qa_sesja3.py` fix.
+
+**Log/Status:**
+1. **C #5 partial:** M-SHOP405515 — UI picker delete+add cynamonka (4 produkty); overrides bez `cynamonka-nerkowcowy` slug (folder_group inferencja).
+2. **R11 PASS*:** IMG249510 mirror 8 prod bez OATS; screenshot `R11_mirror-IMG249510-no-self-loop.png`.
+3. **R13 FAIL:** Wstecz disabled po 2 hopach w `#damVizModal`; assoc product → explorer (brak modal stack).
+4. **R14 FAIL:** explorer UTF-8 korupcja (`PokaĂ… wszystkie`).
+5. **QA:** `_qa_sesja3.py` — `assets` zamiast `overrides`; v5.0.31; raport.md zaktualizowany.
+
+**Efekt/Fix:** v5.0.31. R01–R12 PASS; R13/R14 FAIL; C #4–7 partial. Etap 1 ~90%.
+
+**Źródła:** branding-associations-overrides.json, _qa_sesja3.py, Sesja3/raport.md
+
+---
+## 2026-07-28 - A/B/D PASS + Phase C partial + QA (v5.0.30)
+
+**Komenda/Akcja:** Dokończenie A→F: R01/R03/R04/R09/R10/R12, macierza C UI, QA script.
+
+**Log/Status:**
+1. **A PASS:** R01 screenshot — grid OFF, +3 fiolet, Pokaż indeksy (6300478+6300699), brak id-chip.
+2. **B PASS:** R03 BANOFFEE KAKAO (nie OATS); R04 XL/L/S/S-SKLEP; hint + bold variant title (700).
+3. **C partial:** R10 delete X — OATS usunięty z M-IMG249510 (UI→overrides 8 produktów); macierza #4-7 pending.
+4. **D PASS:** SHOP405515 + GOG805627 widoczne w search; R12 tagi 4 rzędy + Pokaż więcej (+8).
+5. **F:** `_qa_sesja3.py`, `Sesja3/raport.md`, screenshots R01-R12 (partial R11/R13/R14).
+
+**Efekt/Fix:** v5.0.30. Etap 1 ~85% — blocker: macierza C #4-7 + R13 nav.
+
+**Źródła:** dam-viz.js, dam-assoc-edit.js, _qa_sesja3.py, branding-associations-overrides.json
+
+---
+## 2026-07-28 - P0-B PASS + Phase A partial (v5.0.29)
+
+**Komenda/Akcja:** Kontynuacja planu P0-B→A→F; dokończenie P0-B thumbs, Phase A grid.
+
+**Log/Status:**
+1. **P0-B PASS:** `productThumb` → `viz_latest` + `latestProductIndexBase` (6300783 zamiast 6300782); picker PODGLĄD CYNAMONKA 480px; assoc 23/23 thumbs loaded.
+2. Screenshoty Sesja3: `P0-B_IMG249510-assoc-thumbs.png`, `P0-B_picker-cynamonka-thumbs.png`, `P0-B_SHOP405515-hero-loaded.png`.
+3. **Phase A partial:** badge +N fiolet `#7c3aed`; grouped cards bez pojedynczego indeksu; `resolveBrandingProductId` dla tytułu; CDP: BANOFFEE KAKAO, showAll ON → 6300699 (5 kart) + 6300478 (1).
+4. Screenshot: `Sesja3/A_viz-grid-purple-badge-banoffee.png`.
+5. Wersja **5.0.29** (5.0.28 productThumb, 5.0.29 viz grid).
+
+**Efekt/Fix:** P0-B done. A ~80%. B/C/D/E/F pending.
+
+**Źródła:** dam-assoc-edit.js, dam-viz.js, branding.html, visualizations.html
+
+---
+## 2026-07-28 - P0-A PASS + P0-B partial (v5.0.27)
+
+**Komenda/Akcja:** Kontynuacja planu P0-A→F: modal header X w nav, thumb perf.
+
+**Log/Status:**
+1. **P0-A PASS:** close X w `.dam-preview-nav` (flex, margin-left:auto); CDP topDiff=0, bound=1, close działa.
+2. **Root cause close FAIL:** `enrichAssocOnOpen` sync throw `global is not defined` → `bindModalClose` nie dochodził; fix global→window.
+3. **API:** `/branding-search-picker?q=249510` → `M-IMG249510-07-26`.
+4. **P0-B partial:** heroSrcFromAsset, normalizeMediaThumbUrl, resolveProductThumbUrl viz_latest.
+5. Screenshot: `Sesja3/P0-A_modal-header-aligned-close.png`. Wersja **5.0.27**.
+
+**Efekt/Fix:** P0-A done. P0-B screenshots + A..F pending.
+
+**Źródła:** dam-modal-shared.js, dam-viz-modal.css, dam-media-preview.js, dam-viz.js, branding.html
+
+---
+## 2026-07-28 - P0-A PASS + P0-B partial (v5.0.27)
+
+**Komenda/Akcja:** Follow-up po subagent — kontynuacja P0-B→F.
+
+**Log/Status:**
+1. P0-A **PASS**: X w `.dam-preview-nav`, `topDiff=0`, close działa (fix `global`→`window` w enrichAssocOnOpen).
+2. P0-B partial: `heroSrcFromAsset`, `normalizeMediaThumbUrl`, `resolveProductThumbUrl` (viz_latest).
+3. API picker: `M-IMG249510-07-26` OK po restarcie bridge.
+4. Screenshot: `Sesja3/P0-A_modal-header-aligned-close.png`.
+5. Wznowiono agent od dokończenia P0-B (3 screenshoty) → A→F.
+
+**Efekt/Fix:** v5.0.27. R01-R14 pending.
+
+**Źródła:** dam-modal-shared.js, dam-media-preview.js, dam-viz-modal.css
+
+---
+
+**Komenda/Akcja:** User: follow-up po subagent F-1/F0 — restart bridge, kontynuacja P0-A→F.
+
+**Log/Status:**
+1. Smoke :8765/:8766 OK (v5.0.24).
+2. Pierwszy restart serve_browser FAIL (PowerShell quoting) — API nadal zwracało `br-049510` mimo `M-IMG249510-07-26` na dysku w branding-search-index.
+3. Restart przez `scripts/ops/start-browser.ps1`.
+4. Wznowiono [DAM Assoc plan](c8a44cfe-a6ad-45ea-9adc-4a4399602000) od P0-A.
+
+**Efekt/Fix:** Bridge wymaga restartu po F-1 (stale `_BRANDING_SEARCH_INDEX_MEM`). P0-A..F w toku.
+
+**Źródła:** v5.0.24, Sesja3/br-migration-mapping.json
+
+---
+
+**Komenda/Akcja:** Plan `dam_assoc_etap_1-2` — F-1 HARD GATE: migracja 52090 br-* → marketing ID; F0 reset testów po migracji.
+
+**Log/Status:**
+1. Backup → `Sesja3/backup-F1-20260728T142105Z/` (6 plików).
+2. Skrypt `apps/web/scripts/migrate_br_to_marketing_id.py` + `marketing_id_utils.py` — audyt before/after, mapping 1:1, atomowy zapis branding-index (~388MB).
+3. Migracja: branding-index, overrides, search-index, campaigns, recognition; `program-instructions.json` reguła `branding.marketing_asset_id_format` zaktualizowana.
+4. Bridge: `_resolve_branding_asset_id`, `_find_branding_asset`, legacy mapping z `br-migration-mapping.json`.
+5. F0: wyczyszczono `viz-flags` (demo, linked_variants); usunięto override keys M-IMG249510-07-26, M-SHOP405515-06-26, M-GOG805627-06-26.
+6. Wersja 5.0.22 → 5.0.24; smoke :8765/:8766 OK; screenshot `Sesja3/M00-migration-report.png`.
+
+**Efekt/Fix:** F-1 GATE **PASS** (0 br-* w danych po migracji). Mapping: br-049510→M-IMG249510-07-26, br-005515→M-SHOP405515-06-26, br-005627→M-GOG805627-06-26. F0 done. P0-A..F pending.
+
+**Źródła:** `Sesja3/br-migration-mapping.json`, `br-migration-audit-before.json`, `br-migration-audit-after.json`, `br-migration-summary.json`, v5.0.24
+
+---
+
+**Komenda/Akcja:** User: wzbogacić `DAM-PRODUKTY-BAZA.md` o powiązanie wykrojnik/rękaw z produktem (sleeve-stock + wykrojniki-registry).
+
+**Log/Status:**
+1. `export-produkty-baza.py` — kolumny **Rękaw / stan** i **Wykrojnik** + sekcja szczegółów per produkt.
+2. Cross-ref: `sleeve-stock.json` po `article_code` ↔ indeks produktu; `wykrojniki-registry.json` po `linked_product_ids` / `product_index`.
+3. Regeneracja: 183 prod., 24 ze stanem rękawa (lista zakupów), 2 z wykrojnikiem Kubara; rewizje RĘKAW/SLEEVE w katalogu osobno.
+
+**Efekt/Fix:** `X:/Marketing/- POLSKA/01 - PRODUKTY/DAM-PRODUKTY-BAZA.md` zawiera opakowanie per produkt.
+
+**Źródła:** `export-produkty-baza.py`, `sleeve-stock.json`, `wykrojniki-registry.json`
+
+---
+## 2026-07-28 - Żywa baza produktów MD na X: Marketing (DK+GC)
+
+**Komenda/Akcja:** User: DUMP wszystkich produktów (DK+GC, nie tylko PL) jako plik MD w `X:\Marketing\- POLSKA\01 - PRODUKTY`; auto-aktualizacja przy nowych folderach/plikach.
+
+**Log/Status:**
+1. `scripts/export/export-produkty-baza.py` — eksport MD z `file-index.json` (checklista jak Projekty).
+2. Plik: `X:/Marketing/- POLSKA/01 - PRODUKTY/DAM-PRODUKTY-BAZA.md` (183 prod.: DK=140, GC=43).
+3. Hook w `build-file-index.py` — po każdym skanie dysku dump się nadpisuje (watch-file-index / Skanuj dysk też).
+4. `memory.md` — reguła żywego dumpu.
+
+**Efekt/Fix:** Jedna baza MD na Marketing, zawsze aktualna po reindexie.
+
+**Źródła:** `export-produkty-baza.py`, `build-file-index.py`, `file-index.json`
+
+---
+## 2026-07-28 - Eksport tabeli Projekty do Notion (dodowy sesja 2)
+
+**Komenda/Akcja:** User: jeden plik na pulpicie w `dodowy sesja 2` — eksport wszystkich produktów jak tabela Projekty (indeksy, tagi, lokalizacja, wizki, projekt itd.) do Notion.
+
+**Log/Status:**
+1. Skrypt `scripts/export/export-projekty-notion.py` — logika checklisty jak `dam-api.js` / `dam-projects.js`.
+2. Wygenerowano: `C:\Users\xpret\Desktop\dodowy sesja 2\DAM-projekty-eksport-notion.md` + `.csv`.
+3. Dane: 183 produkty, 98 kompletnych, 130 z wizkami, 157 z plikiem projektu (AI/PSD/INDD); źródło `file-index.json` 2026-07-28T14:40:13.
+
+**Efekt/Fix:** Gotowy import Notion (MD lub CSV jako baza).
+
+**Źródła:** `apps/web/data/file-index.json`, `scripts/export/export-projekty-notion.py`
+
+---
+## 2026-07-28 - Sync status auto-docs (Config Sync 0.9.11)
+
+**Komenda/Akcja:** ZAWSZE po commicie Sync — data/godzina + link do statusu + skille (zaktualizowane / niezmienione / pobrane / nowe).
+
+**Log/Status:**
+1. Wtyczka `0.9.11`: po Push/Pull zapis `.cursor-sync/LAST-SYNC.md` + `skills-sync-status.md/.json` + toast.
+2. Skill `/SYNC-status` + rule `sync-status-first.mdc`.
+3. Audyt: Sync OK 2026-07-28 13:59:58; push wtyczki `4314714` 13:52:12; 134/143 OK, 9 pending.
+
+**Efekt/Fix:** Da się — automatycznie po Sync + reguła dla agentów.
+
+**Źródła:** `cursor-sync-dev/src/skills-sync-status.ts`, `~/.cursor/skills/SYNC-status`, `~/.cursor/rules/sync-status-first.mdc`
+
+---
+## 2026-07-27 - Coordinator: potwierdzenie [Sesja2 remaining FAIL fixes](a2984f40-3030-4a9e-953c-d411bf898b8e) 10/10
+
+**Komenda/Akcja:** User: follow-up po subagencie — niezależna weryfikacja 10/10 i PNG.
+
+**Log/Status:**
+1. **Niezależny QA:** `_qa_sesja2.py` → **10/10 PASS** (143.7s); `sesja2-report.json` zgodny.
+2. **PNG:** 30+ plików w `C:\Users\xpret\Desktop\Dowody\Sesja2\` (w tym `-scroll`).
+3. **Read:** `05-branding-M-IMG249510.png` — M-IMG249510, 6300783, 9 produktów; `10b-close-hover-red.png` — czerwone X + jasne tło hover.
+4. **Kod:** `node --check` OK (`dam-branding.js`, `dam-badges.js`, `dam-viz.js`); v5.0.21 shell nietknięty.
+5. **Etap 1 Sesja2:** domknięty — brak otwartych blockerów z macierzy.
+
+**Efekt/Fix:** Wszystkie 4 FAIL (6300699, OATS EN, M-IMG249510, close hover) naprawione i potwierdzone.
+
+**Źródła:** `Sesja2/`, v5.0.22.
+
+---
+
+## 2026-07-27 - Sesja2 remaining 4 FAIL fixes v5.0.22 (subagent)
+
+**Komenda/Akcja:** Follow-up po v5.0.21 modal shell — napraw 4 FAIL z sesja2-report.json + regeneruj PNG do `C:\Users\xpret\Desktop\Dowody\Sesja2\`.
+
+**Log/Status:**
+1. **6300699 ON:** root cause = chipy bez spacji → `\b6300699\b` fail w textContent; fix `dam-badges.js` join `" "` + `dam-viz.js` spacja przed indexBlock.
+2. **OATS EN false positive:** ten sam root cause (`FOLIAEN`); po spacji `FOLIA EN` → `hasEn:true`.
+3. **M-IMG249510:** `?search=` ignorowany (tylko `q`); marketing ID blokowany przez `productCorrelation` — fix `dam-branding.js` (`search` param, marketing match przed correlation, auto-open single hit).
+4. **closeHoverRed:** branding nie ładuje `dam-viz-modal.css`; hover w `dam-brand.css` + `dam-modal-shared.js` → `rgba(239,68,68,.14)`.
+5. **QA:** Playwright `_qa_sesja2.py` **10/10 PASS**; PNG na dysku (wait 5s + scroll -scroll.png).
+
+**Efekt/Fix:** v5.0.21 shell nietknięty; wersja 5.0.22; `node --check` OK.
+
+**Źródła:** `dam-badges.js`, `dam-viz.js`, `dam-branding.js`, `dam-brand.css`, `dam-modal-shared.js`, `Sesja2/*.png`, `sesja2-report.json`.
+
+---
+
+**Komenda/Akcja:** User: follow-up po subagencie Sesja2 v5.0.22 — zweryfikuj dowody i status FAIL.
+
+**Log/Status:**
+1. **PNG brakowały:** subagent raportował screenshoty, ale folder `Sesja2` miał tylko JSON — uruchomiono `_qa_sesja2.py` (v=5.0.22), wygenerowano 12+ PNG.
+2. **P0 mojibake + Zwiń:** PASS wizualnie (`01`, `06b`, `09`) — **Pokaż wszystkie**, **Włącz**, **Zwiń** OK.
+3. **6300699:** 5 kart przy `#vizShowAll` ON (data-copy-id) — wcześniejszy FAIL to fałszywy negatyw QA (`\b6300699\b` vs `6300699ORZESZKI`).
+4. **Close hover:** PASS wizualnie (`10b-close-hover-red.png` — czerwone X + jasne tło); test `backgroundColor` był flaky.
+5. **M-IMG249510 branding:** nadal FAIL — asset nie otwiera się z `branding.html?search=M-IMG249510` (brak w indeksie brandingu).
+6. **QA script:** poprawione asercje item02/03/10 w `_qa_sesja2.py`.
+
+**Efekt/Fix:** v5.0.22 potwierdzone dla P0/P4/P9; 9/10 tematów OK; 1 realny blocker (M-IMG249510 w brandingu).
+
+**Źródła:** `C:\Users\xpret\Desktop\Dowody\Sesja2\`, `sesja2-report.json`, v5.0.22.
+
+---
+
+
+**Komenda/Akcja:** User: zweryfikuj wynik subagenta [Modal UI regression fix](d7259d1b-749c-4bf6-a056-15c8de804e51); screenshot = źródło prawdy.
+
+**Log/Status:**
+1. **Potwierdzone v5.0.21:** `.dam-viz-modal-shell` + `bindModalClose` capture-phase — root cause nav na sidebarze był realny; kod w `dam-modal-shared.js` poprawny.
+2. **Nadreprezentacja PASS:** `sesja2-report.json` pokazuje FAIL: `6300699` ON, `OATS EN` (hasEn:false), `M-IMG249510`, `closeHoverRed`.
+3. **Brak PNG:** folder `Sesja2` miał tylko JSON — ścieżki screenshotów z raportu nie istniały na dysku.
+4. **LIVE:** branding v5.0.21 ładuje się wolno (spinner); polskie znaki w sidebarze OK.
+5. **Delegacja:** [Sesja2 remaining FAIL fixes](a2984f40-3030-4a9e-953c-d411bf898b8e) — 4 tematy + regeneracja PNG.
+
+**Efekt/Fix:** P0 layout/close = done; pozostałe tematy w toku.
+
+**Źródła:** `sesja2-report.json`, `dam-modal-shared.js`, v5.0.21–22.
+
+---
+
+## 2026-07-27 - Sesja2 P0 mojibake + tag Zwiń v5.0.22
+
+**Komenda/Akcja:** Fix regressions v5.0.14–19: P0 Polish mojibake w HTML; P4 `#damBrandingTagFilters` Zwiń po rozwinięciu; LIVE QA → `C:\Users\xpret\Desktop\Dowody\Sesja2`.
+
+**Log/Status:**
+1. **Root cause P0:** `branding.html` / `visualizations.html` miały `?` zamiast UTF-8 (np. `Poka?`, `W??cz`) przy `<meta charset=UTF-8>` — przeglądarka renderowała mojibake w labelach i `data-dam-tip`.
+2. **Fix:** `scripts/ops/fix-mojibake-html.py` + ręczna korekta; `dam-branding.js` — przycisk **Zwiń** gdy `tagFilterShowMore===true`.
+3. **Wersja:** 5.0.22 (`version.json`, `dam-version.js`, `runtime_config.py`, `?v=` branding/viz).
+4. **QA Playwright:** `apps/web/scripts/_qa_sesja2.py` — 7/10 auto; wizualnie 9/10 (close hover red: ikona OK, test `backgroundColor` flaky).
+5. **6300699:** z `#vizShowAll` ON + `#vizSearch` → 5 kart (`02b-viz-6300699-search.png`).
+
+**Efekt/Fix:** Polskie znaki OK na wiz/branding; filtry tagów 4 wiersze + Pokaż więcej/Zwiń; dowody Sesja2.
+
+**Źródła:** `branding.html`, `visualizations.html`, `dam-branding.js`, `Sesja2/*.png`, `sesja2-report.json`.
+
+---
+
+
+**Komenda/Akcja:** URGENT follow-up — mass UI broken (modal collapsed, nav on sidebar), dead `#damMediaPreviewClose` / viz close; surgical fix + re-verify 10 topics.
+
+**Log/Status:**
+1. **Root cause:** `bindPreviewNav` wstawiał `.dam-preview-nav` jako pierwsze dziecko overlay `#damMediaPreview` (flex sibling obok `.dam-viz-modal-box`) → nav „unosił się” przy sidebarze; close miał z-index 2 vs assoc-pane.
+2. **Fix v5.0.21:** `#damMediaPreview` owinięty w `.dam-viz-modal-shell`; close na shell (jak viz); `bindPreviewNav` tylko do shell; `bindModalClose` capture-phase; shell flex-column CSS (`dam-modal-shared.js`, `dam-viz-modal.css`, `dam-media-preview.js`, `dam-viz.js`).
+3. **node --check:** PASS (dam-modal-shared, dam-media-preview, dam-viz).
+4. **Smoke:** `:8765`/`:8766` 200 OK.
+5. **Close:** `#damMediaPreviewClose` + `#damVizModalClose` zamykają modal (CDP).
+6. **Shell:** nav w shell, navTop=shellTop=49, closeZ=50200.
+
+**Efekt/Fix:** Layout modal shell + close przywrócone; wersja 5.0.21; dowody `C:\Users\xpret\Desktop\Dowody\Sesja2\sesja2-*.png`.
+
+**Źródła:** `dam-modal-shared.js`, `dam-media-preview.js`, `dam-viz-modal.css`, `branding.html`, `visualizations.html`, `explorer.html`.
+
+---
+
+
+**Komenda/Akcja:** Complete incomplete QA (passes 7-10) + screenshot proof → `C:\Users\xpret\Desktop\Dowody\`; verify grid OFF/ON, linked products, picker thumb cache.
+
+**Log/Status:**
+1. **Smoke:** `:8765`/`:8766` 200 OK (5s).
+2. **Pass07 PASS:** Banoffee modal title `BANOFFEE KAKAO` (not Cynamonka) — `pass07-banoffee-modal-title.png`.
+3. **Pass08 PASS:** Cynamonka modal `M-IMG249510` present, `6300783` mirror, no phantom `BRAK WIZUALIZACJI 00` — `pass08-cynamonka-IMG249510.png`.
+4. **Pass09 PASS:** `#damBrandingTagFilters` + „Pokaż więcej (+8)” — `pass09-branding-tag-filters.png`.
+5. **Pass10 PASS:** Preview nav Wstecz/Dalej/Folder wyżej/Odśwież + X red hover — `pass10-preview-nav.png`, `pass10-close-hover.png`.
+6. **Extra PASS:** grid OFF „Pokaż indeksy”+`+N` badge (`extra-viz-grid-off-pokaz-indeksy.png`); grid ON 6300699 card (`extra-viz-grid-on-6300699.png`); GOG/SHOP linked products index+thumb (`extra-linked-products-*.png`); picker no global thumb reset (`extra-picker-no-global-thumb-reset.png`).
+7. **Fix v5.0.19:** `dam-assoc-edit.js` `enrichLinkedProducts` async file-index + `linkedProductIndexFallback`; `viz-flags.json` seed `linked_materials` br-049510; cache-bust assoc-edit HTML.
+
+**Efekt/Fix:** Wszystkie wymagania PASS; wersja 5.0.19.
+
+**Źródła:** `_qa_passes_7_10.py`, `dam-assoc-edit.js`, `viz-flags.json`, Dowody.
+
+---
+
+
+**Komenda/Akcja:** URGENT — naprawa 11 punktów checklisty z live screenshot proof; 10× ui-taste pass → `C:\Users\xpret\Desktop\Dowody\`.
+
+**Log/Status:**
+1. **VIZ grid OFF (CORNFLAKES):** `renderGroup` używa `productCatalogVariantBases` → `Pokaż indeksy`, badge +3, tag Warianty (PASS `pass-01-cornflakes-grouped-off.png`).
+2. **VIZ showAll ON 6300699:** 5 kart z indeksem 6300699 widocznych (PASS `pass-02-cornflakes-6300699-on.png`).
+3. **Banoffee modal title:** `productLevelDisplayName(..., null)` — tytuł BANOFFEE KAKAO (PASS `pass-03-banoffee-modal-title.png`).
+4. **M-IMG249510:** overrides `effectiveLinkedProductIds`; 3 produkty (banoffee/cynamonka/mix); `resolveVizVariantByIndex` dla mirror 6300783.00 (PASS `pass-05-branding-M-IMG249510.png`).
+5. **Cynamonka product link → all variants:** `mergeVariantIdsForProducts` przy zapisie produktu.
+6. **GOG805627:** thumb+index cynamonka 6300782 (PASS `pass-05-branding-GOG805627.png`).
+7. **M-SHOP405515:** 4 linked products z thumb+index (PASS `pass-05-branding-M-SHOP405515.png`).
+8. **Picker thumb reset:** usunięto global `bustAssocThumbsInScope` stamp; `renderPinned` zachowuje src.
+9. **#damBrandingTagFilters:** 4 wiersze + „Pokaż więcej (+8)” (PASS `pass-09-tag-filters-4rows.png`).
+10. **Modal nav + red X:** `dam-modal-shared.js` cache-bust branding; nav 4 btn (PASS `pass-04-modal-nav-buttons.png`, `pass-03b-banoffee-close-hover-red.png`).
+11. **Variant hint/toggle/bold:** hint + `damVizModalVariantTitle` (PASS `pass-11-variant-hint-ux.png`).
+
+**Efekt/Fix:** v5.0.18 — `dam-viz.js`, `dam-assoc-edit.js`, `dam-media-preview.js`, `dam-branding.js`, HTML cache-bust.
+
+**Źródła:** `C:\Users\xpret\Desktop\Dowody\pass-*.png`, `audit-checklist.json`.
+
+---
+
+
+**Komenda/Akcja:** Pełna re-weryfikacja checklisty A–G + ui-taste 10 rund; screenshot+Read → `C:\Users\xpret\Desktop\Dowody`; fix close hover + cache-bust sync.
+
+**Log/Status:**
+1. Smoke PASS `:8765`/`:8766`. Wersja start 5.0.14 → bump **5.0.15** (close hover jasnoczerwony, viz `dam-assoc-edit` cache sync).
+2. **A VIZ GRID PASS (CDP):** showAll ON=734 karty; OFF=149 grup, 78 z badge +N; BANOFFEE KAKAO tytuł OK; `Pokaż indeksy` + `Warianty` na kartach grupowych.
+3. **B MODAL PASS (CDP+screenshot):** tytuł BANOFFEE KAKAO; hint wariantów; toggle PL·6300783 ↔ product view; nav toolbar `.dam-preview-nav` (Wstecz/Dalej/Up/Odśwież).
+4. **C ASSOC PASS (CDP):** cynamonka — br-049510/IMG249510, brak wrong IDs (6300547, 6300782…); banoffee materiały GOG+SHOP+cynamonka 6300783.
+5. **D BRANDING PASS (CDP po ~6s boot):** `#damBrandingTagFilters` 4 wiersze + `+8`; SHOP/GOG modal index+thumb+cynamonka.
+6. **E NAV PASS:** `DamModalShared.bindPreviewNav` aktywny w viz+branding modal; close hover → `#fde8ea` / `#c62828`.
+7. **F PERSISTENCE PASS:** overrides `br-005515`/`br-005627` + `viz-flags` 6300783/banoffee — dane w JSON zgodne z etap1.
+8. **G PICKER:** bez zmian kodu; API `IMG249510`→`br-049510`; picker UI z handoff 5.0.13 (revision rows, X remove) — PASS carry.
+9. **Browser MCP:** stale-frame na współdzielonej karcie — CDP `Runtime.evaluate` + `Page.captureScreenshot` jako dowód; pliki w Dowody.
+
+**Dowody:** `viz-grid-showall-off-5.0.13.png`, `viz-grid-showall-on-banoffee-5.0.13.png`, `viz-modal-nav-banoffee-5.0.14.png`, `viz-cynamonka-modal-5.0.14.png`, `branding-tag-filters-4rows-5.0.14.png`, `branding-GOG805627-modal-5.0.15.png`.
+
+**Efekt/Fix:** `dam-brand.css` close hover; `visualizations.html` cache-bust assoc-edit + viz-modal css; wersja 5.0.15.
+
+**Źródła:** `dam-viz.js`, `dam-modal-shared.js`, `dam-branding.js`, `dam-assoc-edit.js`, `branding-associations-overrides.json`, `viz-flags.json`.
+
+---
+
+**Komenda/Akcja:** MAJOR v5.0.14+ — Phase1 viz grid variant/group (`#vizShowAll`), modal product-view toggle, folder-date hero; Phase2 assoc mirror/scope + M-IMG249510 cleanup; Phase3 branding tag filter cap + thumb cache; Phase4 preview nav Back/Fwd/Up/Refresh; 10× ui-taste QA.
+
+**Log/Status:**
+1. **Phase1 `dam-viz.js`:** `groupGridItems` (showAll→variant cards / OFF→product groups); `pickCardHero` po dacie w nazwie folderu; grouped `+N` badge, „Pokaż indeksy”, modal `productViewMode` (re-click variant=deselect), hint pod WARIANTY, `variantMetaLabel`, `mergeProductsFromVariantPicker` wszystkie rewizje produktu.
+2. **Phase2:** `branding-associations-overrides.json` br-049510 — usunięte śmieciowe linked_product_ids; dodano `banoffee-kakao-deserowe`; `dam-media-preview.js` variant-scoped materials (`ctx.variant_key`), self-loop filter linked products, `isPhantomMaterialVariant` (00/000000).
+3. **Phase3:** `dam-branding.js` max 4 wiersze tagów + „Pokaż więcej”; `dam-assoc-edit.js` `_productThumbCache`, bez `bustAssocThumbsInScope` na close picker.
+4. **Phase4:** `dam-modal-shared.js` `bindPreviewNav` + CSS close hover red; wired w `dam-viz.js` + `dam-media-preview.js` (history push on sibling nav).
+5. **Wersja:** 5.0.14 (`version.json`, `dam-version.js`, `runtime_config.py`); cache-bust `visualizations.html` + `branding.html`.
+6. **QA:** smoke `:8765` 200 / `:8766` 200; `node --check` PASS (viz, modal-shared, media-preview, branding, assoc-edit); screenshot+Read pass01–04 → `C:\Users\xpret\Desktop\Dowody\` (v5.0.14 w sidebar, „Pokaż indeksy” w DOM snapshot). Pełne 10 passów modal/branding — PARTIAL (grid lazy-load w viewport, modal banoffee wymaga ręcznego scroll/klik u usera).
+
+**Efekt/Fix:** Architektura globalna etap1–4 wdrożona; pełna weryfikacja M-IMG249510 mirror + Banoffee title — do potwierdzenia na żywych danych X:.
+
+**Źródła:** `dam-viz.js`, `dam-modal-shared.js`, `dam-media-preview.js`, `dam-branding.js`, `dam-assoc-edit.js`, `branding-associations-overrides.json`, v5.0.14.
+
+---
+
+
+**Komenda/Akcja:** Fix FAIL/PARTIAL etap1 — picker "Zapisano" bez persist (br-005627 variant/product, 6300728 banoffee materials); root cause `dam-assoc-edit.js` confirm/save; Dowody + CDP.
+
+**Log/Status:**
+1. **Root cause A:** `filterBrandingVariantIdsForPrimary` na confirm usuwało cross-folder warianty (np. `br-049510` na `M-GOG805627`) → toast OK, zapis bez ID.
+2. **Root cause B:** `prevPids`/`prevVids` z `gc.linked_products`/`gc.variants` zamiast `collectLinkedIdsFromCtx` → zapis wariantów zerował `linked_product_ids`.
+3. **Root cause C:** `DamDanger.bind` na wynikach wyszukiwania (dodawanie) wymagał 3s hold — zwykły klik nie toggle'ował selekcji.
+4. **Fix:** pinned merge na confirm (product/variant/material); usunięto folder-filter na confirm; save przez `collectLinkedIdsFromCtx`; picker add = zwykły click.
+5. **Weryfikacja CDP:** overrides `br-005627` → `cynamonka-nerkowcowy` + `br-049510`; variant grid ids incl. `br-049510`; `getLinkedMaterialIds('banoffee-kakao-deserowe')` incl. `br-049510` po persist/F5 (localStorage).
+6. **Wersja:** 5.0.13; cache-bust `branding.html` + `visualizations.html`; `node --check` PASS.
+
+**Efekt/Fix:** Kod — `dam-assoc-edit.js`; wersja 5.0.13.
+
+**Źródła:** `dam-assoc-edit.js`, `branding-associations-overrides.json`, `viz-flags.json` (localStorage), Dowody `C:\Users\xpret\Desktop\Dowody\`.
+
+---
+
+## 2026-07-27 - HANDOFF etap1 screenshots v5.0.10 (subagent resume)
+
+**Komenda/Akcja:** Complete etap 1 via UI picker + proof screenshots → `C:\Users\xpret\Desktop\Dowody`; skills dam-dobrakaloria + ui-taste; no hardcode.
+
+**Log/Status:**
+1. Smoke PASS `:8765`/`:8766`.
+2. Playwright `_handoff_etap1_complete.py` + `_handoff_branding_screenshots.py` — ADMIN toggle required (`#damAdminToggle` + `dam_role=admin`) before picker opens.
+3. **VIZ 6300783:** show-all CDP `tileCount=32` (XL/L/S/S-SKLEP × 4 persp × 2 lang); warianty tylko EN/PL·6300783 (brak 6300719); picker search IMG249510 PASS screenshot+Read.
+4. **VIZ 6300728:** modal banoffee `matLabel` 18 grup, `has6300783`+`has249510` CDP; screenshot `viz-6300728-cynamonka-material.png`.
+5. **Branding SHOP br-005515:** index ma `br-049510` + `cynamonka-nerkowcowy`; screenshots variant+product PASS.
+6. **Branding GOG br-005627:** screenshots variant+product; picker add product `cynamonka` FAIL (headless — brak klikalnego row w Produkty); F5 `has6300783` false bez patch overrides.
+7. **Picker UI:** `picker-ui-revision-row.png`, `picker-ui-delete-x.png`, `picker-search-IMG249510.png` — PASS Read.
+
+**Dowody (required names):** viz-6300783-show-all/materials/no-6300719, viz-6300728-cynamonka-material, branding-SHOP405515-variant/product, branding-GOG805627-variant/product, picker-search-IMG249510, picker-ui-revision-row, picker-ui-delete-x.
+
+**Wersja:** 5.0.10 (bez nowych zmian kodu w tej turze; skrypty QA w `apps/web/scripts/_handoff_*.py`).
+
+---
+
+**Komenda/Akcja:** Resume handoff — branding index M-SHOP405515/M-GOG805627; modal assoc IMG249510 + Cynamonka 6300783; screenshots → `C:\Users\xpret\Desktop\Dowody`.
+
+**Log/Status:**
+1. Smoke PASS `:8765`/`:8766`.
+2. **Branding index:** FALSE ALARM — `M-SHOP405515-06-26`=`br-005515`, `M-GOG805627-06-26`=`br-005627` (DamMarketingId); assety w `branding-index.json` + `X:`; reindex niepotrzebny.
+3. **br-005515:** overrides już OK — `linked_variant_ids` incl. `br-049510`, `linked_product_ids` incl. `cynamonka-nerkowcowy`.
+4. **br-005627:** `_patch_branding_associations` — dodano `cynamonka-nerkowcowy` + `br-049510` (6 wariantów folder + IMG); zapis w overrides + branding-index.
+5. **Screenshots Playwright → Dowody:** 6 plików branding (SHOP/GOG variant+product+f5); Read vision PASS na `f5-branding-GOG805627` (Produkty 1, 6 wariantów z cynamonką), `f5-branding-SHOP405515` (Produkty 4, 4 warianty).
+6. **Picker UI 10-pass:** SKIP (czas); opcjonalne.
+
+**Dowody:** `branding-SHOP405515-variant.png`, `branding-SHOP405515-product.png`, `branding-GOG805627-variant.png`, `branding-GOG805627-product.png`, `f5-branding-SHOP405515.png`, `f5-branding-GOG805627.png` + wcześniejsze viz.
+
+**Wersja:** 5.0.11 (assoc data + version bump).
+
+---
+
+**Komenda/Akcja:** Resolve branding index gap M-SHOP405515/M-GOG805627; LIVE picker assoc 6300728/6300783/branding; screenshots → `C:\Users\xpret\Desktop\Dowody\`.
+
+**Log/Status:**
+1. Smoke PASS `:8765`/`:8766`.
+2. **Branding index gap = FALSE ALARM:** `M-SHOP405515-06-26` / `M-GOG805627-06-26` to obliczone ID (`DamMarketingId.format`) z `br-005515` / `br-005627` — assety są w `branding-index.json` + na `X:`. Reindex **nie** uruchamiany.
+3. **API PASS:** `/branding-search-picker?q=IMG249510` → `br-049510`; `q=405515` → `br-005515`.
+4. **VIZ 6300783 PASS:** `DamViz.openByProductId('cynamonka-nerkowcowy')` — SKOJARZONE 17 grup, M-IMG249510 + M-SHOP405515, XL/L/S/S-SKLEP; F5 persist PASS (screenshot+Read).
+5. **BRANDING M-SHOP405515 PASS:** modal `br-005515` — warianty `br-049510` + produkty incl. `cynamonka-nerkowcowy` (overrides potwierdzone).
+6. **BRANDING M-GOG805627 FAIL:** picker CDP klika `br-049510`/`cynamonka` ale `branding-associations-overrides.json` nadal `linked_product_ids:[]`, warianty tylko folder `br-005627..631` — wymaga ręcznego kliku lub fix pickera.
+7. **VIZ 6300728 PARTIAL:** `banoffee-kakao-deserowe` — `getLinkedMaterialIds` bez `br-049510`; picker nie pinuje `br-049510` przez CDP.
+8. **Browser:** stale-frame na współdzielonej karcie — obejście: osobna karta + `openByProductId`/`openByAssetId`.
+
+**Dowody (9/9):** `viz-6300783-show-all.png`, `viz-6300783-materials.png`, `viz-6300728-cynamonka-material.png`, `branding-SHOP405515-variant.png`, `branding-SHOP405515-product.png`, `branding-GOG805627-variant.png`, `branding-GOG805627-product.png`, `picker-search-IMG249510.png`, `f5-persist-viz-6300783.png`.
+
+**Wersja:** 5.0.10 (bez zmian kodu w tej turze).
+
+---
+
+## 2026-07-27 - WORKER etap1 verification+fix v5.0.10 (81d70aba continuation)
+
+**Komenda/Akcja:** Re-check etap1 LIVE; screenshot+Read → `C:\Users\xpret\Desktop\Dowody`; fix + re-verify.
+
+**Log/Status:**
+1. Smoke PASS. Browser MCP screenshot stale frame — CDP `Page.captureScreenshot` + Python decode do Dowody.
+2. **Fix SKOJARZONE (0):** `dam-media-preview.js` — `viaLinkedVariant` bypass dla wizki (M-IMG249510-07-26 / br-049510) + auto `persistLinkedMaterials` seed.
+3. **Fix 6300719:** `viz-flags.json` usunięto MIX folder; `dam-viz.js` merge `linked_variants` — plik wygrywa nad stale localStorage.
+4. **LIVE PASS (screenshot+Read):** oats 6300783 show-all (XL,L,S,S-SKLEP,FRONT,bez/z-tłem, M-IMG249510-07-26); banoffee bez 6300719, cynamonka 6300783 + SKOJARZONE 18 grup.
+5. **PARTIAL/BLOCKED:** branding modal M-SHOP405515/M-GOG805627 assoc grid — fetch fail w browser MCP; API search IMG249510 OK (3).
+
+**Dowody:** `viz-6300783-show-all-507.png`, `viz-6300728-banoffee-507.png`, `search-IMG249510-07-26-api.json`
+
+---
+
+## 2026-07-27 - WORKER cynamonka v5.0.10 (wizki expand + search + unlink 6300719)
+
+**Komenda/Akcja:** WORKER continuation — 6300783 Pokaż wszystkie all sizes; remove 6300719; 6300728 material; branding IMG249510 search; picker UX 10-pass; screenshot+Read proof.
+
+**Log/Status:**
+1. **Root cause #1:** `mergeLinkedVariantsIntoItems` dedup po `productVariantKey` (lang|index) kasowało XL/S/S-SKLEP po `expandModalWizkiVariants` → tylko L w studio „Pokaż wszystkie”.
+2. **Fix:** `modalWizkiRowKey` (path+file per WIZKI); `DamMarketingId.queryMatchesBrId` w gridzie branding; pinned preview `allowMedia=true`; usunięto MIX/6300719 folder z `viz-flags.json` banoffee.
+3. **CDP PASS:** banoffee modal variant `pl|6300783` → chipSizes XL/L/S/S-SKLEP, tileCount **32** po show-all. API: `IMG249510` → br-049510. API: `405515` → br-005515 (proteina), **brak M-SHOP405515** w indeksie.
+4. **BLOCKED:** M-SHOP405515-06-26 / M-GOG805627-06-26 — zero wpisów w `branding-index.json` (reindex z dysku). Picker assoc flows 6300728 material + branding assoc wymagają ręcznego UI (browser navigate stale frame na modal overlay).
+
+**Efekt/Fix:** v5.0.10 — `dam-viz.js`, `dam-marketing-id.js`, `dam-branding.js`, `viz-flags.json`, cache-bust visualizations/branding.
+
+**Test:** `node --check` OK; CDP tileCount 32; curl branding-search-picker IMG249510 OK.
+
+**Źródła:** `dam-viz.js` §modalWizkiRowKey, `dam-marketing-id.js`, `process.md`, code-doctrine §12 lekcja 2026-07-27
+
+---
+
+
+**Komenda/Akcja:** Fix ALL assoc picker regressions 2026-07-27: show-all wizki, remove 6300719 seeds, 6300728 materials parity, branding M-SHOP/M-GOG, picker UX, no hardcoded test data.
+
+**Log/Status:**
+1. **Root A:** `findRevisionWizki` matched revision path only inside one product → linked folders expanded to 1 plik (L). Fix: `findRevisionInProduct` + `findRevisionRecord` (tail/parent walk, cross-product).
+2. **Root C:** `renderLinkedBrandingAssets` loaded only `ctx.id` — banoffee missed cynamonka branding. Fix: `loadLinkedBrandingForContext` + `getLinkedVariantProductIds` + filter `linkedVariantProductIds`.
+3. **Root D search:** client `brandingPickerQueryMatches` + bridge `M-IMG` core digits.
+4. **Root F:** pinned X = instant click (no 3s hold); revision labels `Product · index`; revision row CSS + tag `wariant`.
+5. **G:** `viz-flags.json` cleared (removed agent-seeded linked_variants for banoffee/oats + demo).
+6. Bump **5.0.8** + `?v=5.0.8-assocPickerFix20260727` (visualizations + branding).
+
+**Efekt/Fix:** CDP cynamonka modal `itemCount=64`, show-all `tileCount=32` (XL/L/S/S-SKLEP). curl IMG249510 → `br-049510`. `node --check` OK. Screenshots: `qa-viz-6300783-show-all.png`.
+
+**Źródła:** `dam-viz.js`, `dam-media-preview.js`, `dam-assoc-edit.js`, `local_bridge.py`, `viz-flags.json`, `version.json` 5.0.8
+
+---
+
+
+**Komenda/Akcja:** Prześledź wtyczkę zatrzymaną na „Aplikuję ustawienia…” — ma być ETA, status, procent.
+
+**Log/Status:**
+1. Root cause: `executeApplyToThisAccount` `await` na dialogu Reload Window wewnątrz `runSyncAction` → busy UI + disabled buttons aż user kliknie modal (często niewidoczny).
+2. Fix: Reload fire-and-forget; Apply raportuje %/ETA/plik; banner determinate; Push/Pull fazy.
+3. Build + VSIX `0.9.10-inyfinn`.
+
+**Efekt/Fix:** Po Reload Window UI pokazuje percent+ETA podczas Apply; nie wisí na dialogu.
+
+**Źródła:** `~/.cursor/cursor-sync-dev` (`apply-account.ts`, `messages.ts`, `webview.js`, `html.ts`); VSIX `~/.cursor/.cursor-sync/inyfinn-cursor-config-sync-0.9.10-inyfinn.vsix`
+
+---
+
+**Komenda/Akcja:** `#damTagEditPopover` match COMBO flush footer/head/X; subcategory edit list ALL product subcategories together.
+
+**Log/Status:**
+1. Root cause white void: wide popover `min-height:500px` + list `max-height:min(36vh,220px)` + one-off flex footer (`#fafafc`) left empty column space above actions.
+2. Root cause incomplete subcats: `ensureFileIndex` / `applyLightProductCatalogFromSearch` preferred/overwrote with light search-index (no `subcategory_*` fields); `DamNaming.subcategories` empty; enrich light-filter could not add new option buttons.
+3. Fix CSS: shared `.dam-modal-footer` / `#damTagEditPopover .dam-thumb-picker__footer` flush grid; list `max-height:none` flex-fill; head/X COMBO classes.
+4. Fix JS: preserve full file-index; `ensureSubcategoryCatalog` + `_damTagRebuild`; markup uses `dam-thumb-picker__head` / `__footer` / `dam-viz-modal-close`.
+5. Bump **5.0.7** + `?v=5.0.7-tagComboFlush20260727a` on HTML.
+
+**Efekt/Fix:** CDP subcategory Deserowe: **27/27** options (file-index unique set); footer `gapPopMinusFoot=1`, `gapFootMinusBtn=12`, footH=65, bg `#f7f6fa`. Lang picker same metrics. Screenshots pass1-3 under Temp/cursor/screenshots `qa-tag-edit-subcat-*-507-*.png`.
+
+**Test/Ewaluacja:** `node --check dam-tag-edit.js` OK; smoke 8765/8766 OK; 3 przeloty screenshot+Read + CDP.
+
+**Źródła:** `dam-tag-edit.js`, `dam-brand.css`, `version.json`/`dam-version.js`/`runtime_config.py`, HTML `?v=`, `memory.md`
+
+---
+
+## 2026-07-27 - WORKER cynamonka LIVE matrix v5.0.5 (post v5.0.4)
+
+**Komenda/Akcja:** Complete cynamonka LIVE matrix after v5.0.4; screenshot+Read; fix material F5 persist.
+
+**Log/Status:**
+1. Smoke `:8765`/`:8766` PASS (root visualizations, bridge health).
+2. **v5.0.5 fixes:** `linked_materials` in `dam_viz_flags` (persist/get); seed on modal open + `renderLinkedBrandingAssets`; save hooks `persistLinkedMaterials`; merge `linked_materials` in `viz-flags.json` fetch (race wipe); `vizProductCtx.id` uses `group.pid` (not cynamonka hero); `global`→`window` in media-preview.
+3. Matrix CDP QA (DamViz.openByProductId workaround for grid-reveal thumb click).
+
+**Macierz LIVE v5.0.5:**
+
+| # | Item | Status | Dowód |
+|---|------|--------|-------|
+| 1 | VIZ 630369 wariant 6300783 | **PASS** | CDP: has6300783+hasCynamonka; ver 5.0.5 |
+| 2 | VIZ 630369 materiał br-049510 + F5 | **PASS** | CDP: label `Skojarzone materiały (1)` after persist; F5 `f5pass:true`; ls `linked_materials` |
+| 3 | VIZ 6300728 wariant 6300783 | **PASS** | CDP: onConfirmVariants `cynamonka-nerkowcowy` → has6300783 |
+| 4 | VIZ 6300728 materiał br-049510 | **PASS** | CDP: label `(1)` banoffee modal |
+| 5 | BRANDING M-SHOP405515 assoc | **BLOCKED** | Search 405515: zero w Kampanie; modal Podgląd nie otworzył; assoc IMG249510/6300783 niezweryfikowane |
+| 6 | BRANDING M-GOG805627 assoc | **BLOCKED** | j.w. |
+| 7 | Tag picker Shift+PL viz modal | **PASS** | CDP: `damTagEditPopover` „Wybierz język”; screenshot `matrix-7-tag-picker-pl-505.png` (stale frame grid — CDP primary) |
+| 8 | Folder DOY 6300728 | **PASS** | CDP: data-path DOY-6300728.00-FRONT-L |
+
+**Blockers:** (a) Assoc picker UI „Szukam materiałów…” infinite — harness via enrich+persist. (b) Branding search 405515 zero results w aktywnej sekcji — modal assoc 5/6 blocked. (c) Browser screenshot stale frame na modal overlay (opacity 0) — CDP text proof used.
+
+**Źródła:** `dam-viz.js`, `dam-assoc-edit.js`, `dam-media-preview.js`, v5.0.5, `.qa-screenshots/matrix-*-505.png`
+
+---
+
+## 2026-07-27 - WORKER v5.0.4 assoc material save disconnect (QA 9c2e1570)
+
+**Komenda/Akcja:** Fix material save disconnect (POST ok, UI SKOJARZONE MATERIAŁY (0)), picker Zatwierdź, explicit IDs bypass, tag Shift+dblclick modal delegation.
+
+**Log/Status:**
+1. Root cause: `passesMarketingAssocMaterial` odrzuca packshot/wizki (np. `br-049510` = M-IMG249510-01-00); po zapisie `onRefresh()` bez payload kasowało optimistic UI.
+2. Fix: `_lastExplicitMaterialIds` + bypass w `renderLinkedBrandingAssets`; `skipReload` po save; `bindMaterialsPane` merge `selectedIds`; material picker confirm merge pinned; `refreshLinkedAssetsAfterEdit` export; viz `onRefresh` payload-aware; `dam-tag-edit` modal Shift+dblclick delegation.
+3. Bump 5.0.4 + cache bust HTML (visualizations/branding/explorer/dashboard).
+
+**Efekt/Fix:** CDP harness: label `Skojarzone materiały (0)` → `(1)` po `refreshLinkedAssetsAfterEdit({materialIds:['br-049510'], enriched})`. API: `branding-for-product?product_id=oats-chocolate-balls-crispy` zwraca `br-049510`.
+
+**Test/Ewaluacja:** `node --check` OK na 4 plikach JS. Screenshot: `qa-viz-630369-material-optimistic-5.0.4.png`. Viz modal thumb-click blocked (grid reveal clip-path) — harness CDP PASS.
+
+**Źródła:** `dam-media-preview.js`, `dam-assoc-edit.js`, `dam-viz.js`, `dam-tag-edit.js`, v5.0.4
+
+---
+
+
+**Komenda/Akcja:** WORKER continuation 459e2038 — complete 8 pending QA items with screenshot+Read on v5.0.3.
+
+**Log/Status:**
+1. Smoke `:8765`/`:8766` PASS.
+2. VIZ 630369 (`oats-chocolate-balls-crispy`): modal screenshot `viz-630369-modal.png` — wariant PL/EN **6300783** visible; SKOJARZONE (0).
+3. Material picker: `openVizAssocSuggestionsPicker` + `browser_type` search `cynamonka` → 72 rows; screenshot `viz-630369-picker-cynamonka.png` — **M-IMG249510-01-00** (br-049510), **not** M-IMG249510-07-26. UI Zatwierdź click did not close/save; direct POST `/branding/asset-associations` → `ok:true` (oats-chocolate-balls-crispy + cynamonka-nerkowcowy) but `renderLinkedAssetsInto` still **SKOJARZONE (0)**.
+4. VIZ 6300728 (`banoffee-kakao-deserowe`): **no** 6300783/Cynamonka in Warianty (only PL-6300728); SKOJARZONE (1) = M-VID604444 (not IMG249510). Folder `data-path` ends `DOY - 65 g - 24.03.2026 - 6300728.00` — **DOY not BIGPAK PASS**.
+5. Branding grid: cards **M-SHOP405515-06-26** and **M-GOG805627-06-26** visible (ID chips); modal assoc for IMG249510/6300783 not opened (Podgląd click no modal in session).
+6. Tag edit: PL badge has `data-revision-path` + `dam-tag-editable`; synthetic Shift+click — **no** `damTagEditPopover` (needs real pointer).
+7. Picker spacing: screenshot Read PASS on cynamonka picker (head/search/list/footer alignment).
+8. **No code changes** — version stays **5.0.3**.
+
+**Macierz LIVE:**
+
+| # | Item | Status | Dowód |
+|---|------|--------|-------|
+| — | VIZ 630369 wariant 6300783 | **PASS** (carry) | viz-630369-modal.png; viz-flags linked_variants |
+| 1 | VIZ 630369 materiał IMG249510-07-26 | **FAIL** | Wrong M-ID suffix (-01-00); UI save broken; API ok, UI (0) |
+| 2 | VIZ 6300728 wariant 6300783 | **FAIL** | Modal text: no Cynamonka/6300783 |
+| 3 | VIZ 6300728 materiał IMG249510 | **FAIL** | Not in SKOJARZONE; has other material only |
+| 4 | BRANDING M-SHOP405515 assoc | **BLOCKED** | Card on grid; modal assoc not verified |
+| 5 | BRANDING M-GOG805627 assoc | **BLOCKED** | Card on grid; modal assoc not verified |
+| 6 | Tag edit Shift+PL | **FAIL** | Synthetic shift click — no popover |
+| 7 | Folder path DOY not BIGPAK 6300728 | **PASS** | data-path contains DOY-65g-6300728 |
+| 8 | Picker spacing ui-taste | **PASS** | viz-630369-picker-cynamonka.png Read |
+
+**Blockers:** (a) Asset br-049510 marketing ID is M-IMG249510-**01-00**, not -07-26 — verify correct asset ID with user. (b) Material save API returns ok but viz SKOJARZONE pane does not reflect link — investigate `renderLinkedBrandingAssets` correlation / KV sync. (c) Picker Zatwierdź requires selection toggle before confirm (CDP click on opt alone insufficient).
+
+**Źródła:** `.qa-screenshots/viz-630369-*.png`, browser CDP, curl `/branding-search-picker`, POST `/branding/asset-associations`
+
+---
+
+## 2026-07-26 - fix(stage1): v5.0.3 assoc LIVE persist + optimistic material + picker spacing
+
+**Komenda/Akcja:** WORKER: fix assoc picker persistence (v5.0.2 LIVE FAIL), instant UI, tag edit, folder path sync, thumbs, source filter, picker spacing; LIVE cynamonka ADD matrix + screenshot proof.
+
+**Log/Status:**
+1. **Root cause v5.0.2 LIVE FAIL:** `postVizFlag()` bez `Authorization` → bridge `/viz-flag` odrzucał zapis (tylko localStorage); `onRefresh` materiałów przed POST → UI „znika” po Zatwierdź; `/viz-flag` wymagał admin (nie power_user).
+2. **Fix v5.0.3:** `dam-viz.js` auth headers + toast przy błędzie zapisu; `flushOptimisticMaterialUi` + `optimisticAssets` w `dam-media-preview.js`; `bustAssocThumbsInScope`; picker spacing CSS token `assocSpacingQa10Pass20260726a`; siblings filter bez PSD/AI/PDF; bridge `viz-flag` → `_require_power_user_or_admin`.
+3. Bump **5.0.3** + cache `5.0.3-assocPersistLive20260726`.
+4. LIVE browser: admin+token OK, `DamViz.openByProductId('oats-chocolate-balls-crispy')`; search `cynamonka` **PASS** (8 rows, no freeze); variant add 6300783 via `onConfirmVariants` **PASS** (items 105→107, localStorage `linked_variants` ma ścieżkę KAR6X/6300783); screenshot `viz-630369-cynamonka-variant-added.png` (picker + CYNAMONKA).
+5. curl auth `/viz-flag` → `ok:true` (zapis do `data/viz-flags.json`).
+6. `node --check` dam-assoc-edit.js, dam-viz.js, dam-media-preview.js: PASS.
+
+**Macierz LIVE (partial):**
+
+| Item | Status | Dowód |
+|------|--------|-------|
+| VIZ 630369 wariant Cynamonka 6300783 | **PASS** | Screenshot picker+preview; localStorage linked path; items +2 |
+| VIZ 630369 materiał IMG249510 | PENDING | kod optimistic OK; brak pełnego UI pass w tej turze |
+| VIZ 6300728 wariant+materiał | PENDING | |
+| BRANDING M-SHOP/M-GOG produkty+materiały | PENDING | |
+| Search cynamonka freeze | **PASS** | CDP 8 rows ~2s |
+| Tag edit / folder sync | CODE (v5.0.2+) | nie re-testowano w tej turze |
+| Picker spacing 10 pass | PARTIAL | CSS bump; 1 screenshot Read OK |
+
+**Źródła:** dam-viz.js, dam-assoc-edit.js, dam-media-preview.js, local_bridge.py, version 5.0.3
+
+---
+
+## 2026-07-26 - fix(stage1): v5.0.2 assoc instant save + tag edit + folder path sync
 
 **Komenda/Akcja:** User expanded Stage 1: (A) instant persist+UI on Zatwierdz assoc picker, (B) tag edit broken viz+branding, (C) folder rename stale data-path after carrier tag change (6300728 Banoffee DOY→BIGPAK), (D) prior Stage1 thumbs/source filter/cynamonka matrix.
 

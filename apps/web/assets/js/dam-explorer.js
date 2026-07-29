@@ -100,7 +100,7 @@
     return !!(state.product || state.canonCat || (state.searchQuery && state.searchHits));
   }
 
-  /** Obetnij koniec stosu nawigacji do biezacego snapshota (bez push - anty-pulapka Wstecz). */
+  /** Obetnij koniec stosu nawigacji do bieżącego snapshota (bez push - anty-pulapka Wstecz). */
   function navReplaceTip() {
     var snap = navSnapshot();
     if (!snap.canonCat && !snap.productId) {
@@ -167,7 +167,9 @@
       ".dam-explorer-results__actions #damIndexRefresh," +
       ".dam-explorer-results__actions #damLifecycleForce," +
       "#damExplorerAddCategory.dam-int-cta," +
-      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta{" +
+      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta," +
+      ".dam-panel-head .dam-explorer-add-variant-btn.dam-int-cta," +
+      "#damExplorerAddVariantHead.dam-int-cta{" +
       "display:inline-flex!important;align-items:center;justify-content:center;gap:6px;" +
       "min-height:34px!important;height:34px!important;padding:8px 12px!important;margin:0;" +
       "box-sizing:border-box;" +
@@ -182,25 +184,188 @@
       ".dam-explorer-results__actions #damIndexRefresh:hover," +
       ".dam-explorer-results__actions #damLifecycleForce:hover," +
       "#damExplorerAddCategory.dam-int-cta:hover," +
-      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta:hover{" +
+      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta:hover," +
+      ".dam-panel-head .dam-explorer-add-variant-btn.dam-int-cta:hover," +
+      "#damExplorerAddVariantHead.dam-int-cta:hover{" +
       "border-color:var(--dam-primary,#ab54db)!important;background:#fbf7fe!important;" +
       "color:var(--dam-primary,#ab54db)!important}" +
       ".dam-explorer-results__actions .dam-int-cta:focus-visible," +
       "#damExplorerAddCategory.dam-int-cta:focus-visible," +
-      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta:focus-visible{" +
+      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta:focus-visible," +
+      ".dam-panel-head .dam-explorer-add-variant-btn.dam-int-cta:focus-visible," +
+      "#damExplorerAddVariantHead.dam-int-cta:focus-visible{" +
       "outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 55%,transparent);" +
       "outline-offset:2px}" +
       "#damExplorerAddCategory.dam-int-cta--icon{" +
       "min-width:34px!important;width:34px!important;padding:0!important;flex:0 0 34px}" +
       "#damExplorerAddCategory.dam-int-cta--icon i," +
-      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta i{" +
+      ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta i," +
+      ".dam-panel-head .dam-explorer-add-variant-btn.dam-int-cta i," +
+      "#damExplorerAddVariantHead.dam-int-cta i{" +
       "font-size:16px;line-height:1}" +
       "#damLifecycleForce.dam-int-cta{gap:6px}" +
       "#damLifecycleForce.dam-int-cta .dam-force-btn__label{font-size:12px!important;font-weight:500!important}" +
       "#damLifecycleForce.dam-int-cta i{font-size:16px;line-height:1}" +
       ".dam-panel-head__top{" +
       "display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}" +
-      ".dam-panel-head__actions{display:inline-flex;align-items:center;gap:8px;margin-left:auto}";
+      ".dam-panel-head__actions{display:inline-flex;align-items:center;gap:8px;margin-left:auto}" +
+      /* Confirm dialogs FORCE: before/after rows - never place unary + after a bare comment */ 
+      "#damExplorerConfirmModal.dam-basepath-overlay{z-index:12200;padding:20px}" +
+      "#damExplorerConfirmModal .dam-basepath-box.dam-explorer-confirm-modal," +
+      "#damExplorerConfirmModal .dam-explorer-confirm-modal{" +
+      "width:min(70vw,1200px)!important;height:min(90vh,900px)!important;max-width:none!important;" +
+      "max-height:min(90vh,900px)!important;" +
+      "display:flex!important;flex-direction:column;padding:0!important;overflow:hidden!important;" +
+      "box-sizing:border-box}" +
+      "#damExplorerConfirmModal .dam-explorer-confirm-modal__header{" +
+      "flex:0 0 auto;padding:22px 28px 16px;border-bottom:1px solid #ebe6f0}" +
+      "#damExplorerConfirmModal .dam-explorer-confirm-modal__header h3{" +
+      "margin:0 36px 10px 0;font-size:18px;font-weight:700;color:#1f1f2e;line-height:1.3}" +
+      "#damExplorerConfirmModal .dam-confirm-lead{" +
+      "margin:0 0 8px;font-size:13px;line-height:1.5;color:#6b6578}" +
+      "#damExplorerConfirmModal .dam-confirm-meta{" +
+      "margin:0;font-size:12px;line-height:1.45;color:#464255}" +
+      "#damExplorerConfirmModal .dam-explorer-confirm-modal__body{" +
+      "flex:1 1 auto;min-height:0;overflow:auto;padding:24px 28px}" +
+      "#damExplorerConfirmModal .dam-explorer-confirm-modal__footer{" +
+      "flex:0 0 auto;padding:16px 28px 20px;border-top:1px solid #ebe6f0;" +
+      "display:flex;flex-direction:column;gap:12px;background:#faf9fb}" +
+      "#damExplorerConfirmModal .dam-confirm-warn{" +
+      "margin:0;font-size:12px;line-height:1.45;color:#b45309}" +
+      "#damExplorerConfirmModal .dam-basepath-actions{" +
+      "display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin:0}" +
+      "#damExplorerConfirmModal .dam-basepath-actions .dam-int-cta," +
+      "#damExplorerConfirmModal .dam-basepath-actions .geex-btn{" +
+      "display:inline-flex!important;align-items:center;justify-content:center;gap:6px;" +
+      "min-height:34px!important;height:34px!important;max-height:36px;" +
+      "padding:8px 14px!important;margin:0;box-sizing:border-box;" +
+      "font-family:inherit;font-size:12px!important;font-weight:500!important;line-height:1.2;" +
+      "border-radius:8px!important;width:auto!important;flex:0 0 auto;" +
+      "box-shadow:none!important;white-space:nowrap;cursor:pointer}" +
+      "#damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--cancel{" +
+      "background:#fff!important;border:1px solid #e7e7e7!important;color:#464255!important}" +
+      "#damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--cancel:hover{" +
+      "border-color:var(--dam-primary,#ab54db)!important;background:#fbf7fe!important;" +
+      "color:var(--dam-primary,#ab54db)!important}" +
+      "#damExplorerConfirmModal .dam-basepath-actions .geex-btn--danger," +
+      "#damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--danger{" +
+      "background:#dc2626!important;border:1px solid #dc2626!important;color:#fff!important}" +
+      "#damExplorerConfirmModal .dam-basepath-actions .geex-btn--danger:hover," +
+      "#damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--danger:hover{" +
+      "background:#b91c1c!important;border-color:#b91c1c!important;color:#fff!important}" +
+      "#damExplorerConfirmModal .dam-basepath-actions .geex-btn--primary{" +
+      "background:var(--dam-primary,#ab54db)!important;border:1px solid var(--dam-primary,#ab54db)!important;" +
+      "color:#fff!important}" +
+      "#damExplorerConfirmModal .dam-force-preview{display:flex;flex-direction:column;gap:20px;margin:0}" +
+      "#damExplorerConfirmModal .dam-force-preview__head{" +
+      "display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;" +
+      "margin:0;padding:0 0 16px;position:sticky;top:0;z-index:2;background:#fff;" +
+      "border-bottom:1px solid #f0ecf4}" +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-preview__head{background:var(--dam-surface,#1e1e28);border-color:rgba(255,255,255,.08)}" +
+      "#damExplorerConfirmModal .dam-force-preview__count{" +
+      "font-size:15px;font-weight:700;color:#464255;letter-spacing:-0.01em}" +
+      "#damExplorerConfirmModal .dam-force-preview__chips{display:inline-flex;flex-wrap:wrap;gap:8px}" +
+      "#damExplorerConfirmModal .dam-force-chip{" +
+      "appearance:none;border:1px solid #e2dde8;background:#fff;color:#6b6578;" +
+      "border-radius:999px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;line-height:1.2}" +
+      "#damExplorerConfirmModal .dam-force-chip:hover{border-color:#cbb8e0;color:#464255}" +
+      "#damExplorerConfirmModal .dam-force-chip.is-on{" +
+      "border-color:var(--dam-primary,#ab54db);background:#f7f0fc;color:var(--dam-primary,#ab54db)}" +
+      "#damExplorerConfirmModal .dam-force-preview__list{" +
+      "display:flex;flex-direction:column;gap:20px;margin:0;padding:0;list-style:none}" +
+      "#damExplorerConfirmModal .dam-force-preview__empty{" +
+      "margin:8px 0 0;padding:20px 18px;border:1px dashed #e2dde8;border-radius:10px;" +
+      "font-size:13px;line-height:1.45;color:#8b8d97;text-align:center;background:#faf9fb}" +
+      "#damExplorerConfirmModal .dam-force-preview__empty[hidden]{display:none!important}" +
+      "#damExplorerConfirmModal .dam-force-row{" +
+      "display:flex;flex-direction:column;gap:12px;padding:16px 18px;" +
+      "border:1px solid #ebe6f0;border-radius:12px;background:#fff;min-width:0}" +
+      "#damExplorerConfirmModal .dam-force-row[hidden]{display:none!important}" +
+      "#damExplorerConfirmModal .dam-force-row__head{" +
+      "display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}" +
+      "#damExplorerConfirmModal .dam-force-row__title{" +
+      "margin:0;font-size:14px;font-weight:600;line-height:1.35;color:#464255;min-width:0;flex:1 1 200px}" +
+      "#damExplorerConfirmModal .dam-force-row__meta{" +
+      "display:flex;flex-wrap:wrap;gap:8px;align-items:center}" +
+      "#damExplorerConfirmModal .dam-force-row__scope{" +
+      "font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#8b8d97}" +
+      "#damExplorerConfirmModal .dam-force-row__kind{" +
+      "display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;" +
+      "color:#6b6578;padding:2px 8px;border-radius:6px;background:#f4f1f7}" +
+      "#damExplorerConfirmModal .dam-force-row__kind--archive{background:rgba(255,86,83,.1);color:#D63B38}" +
+      "#damExplorerConfirmModal .dam-force-row__kind--clear{background:rgba(70,66,85,.08);color:#6b6980}" +
+      "#damExplorerConfirmModal .dam-force-row__kind--rename{background:rgba(40,199,111,.12);color:#1E9E5A}" +
+      "#damExplorerConfirmModal .dam-force-diff{" +
+      "display:flex;align-items:stretch;gap:14px;min-width:0}" +
+      "@media (max-width:768px){" +
+      "#damExplorerConfirmModal .dam-force-diff{flex-direction:column;align-items:stretch}" +
+      "#damExplorerConfirmModal .dam-force-diff__arrow{padding:0;transform:rotate(90deg);align-self:center}" +
+      "}" +
+      "#damExplorerConfirmModal .dam-force-diff__arrow{" +
+      "flex:0 0 auto;display:flex;align-items:center;justify-content:center;" +
+      "min-width:28px;color:#8b8d97;font-size:22px;line-height:1;user-select:none}" +
+      "#damExplorerConfirmModal .dam-force-block{" +
+      "display:flex;flex-direction:column;gap:8px;padding:16px 18px;min-width:0;flex:1 1 0;" +
+      "border:1px solid #e8e4ee;border-radius:10px;background:#faf9fb;box-shadow:none}" +
+      "#damExplorerConfirmModal .dam-force-block--to{" +
+      "border-color:#e2dde8;background:#f7f5fa}" +
+      "#damExplorerConfirmModal .dam-force-block--to.dam-force-block--archive{" +
+      "border-color:#eddada;background:#fbf7f7}" +
+      "#damExplorerConfirmModal .dam-force-block--to.dam-force-block--clear{" +
+      "border-color:#e0dde6;background:#f7f7f9}" +
+      "#damExplorerConfirmModal .dam-force-block__label{" +
+      "font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;" +
+      "color:#8b8d97;line-height:1.2}" +
+      "#damExplorerConfirmModal .dam-force-block--to .dam-force-block__label{color:#6b6578}" +
+      "#damExplorerConfirmModal .dam-force-block--to.dam-force-block--archive .dam-force-block__label{color:#8b6b6b}" +
+      "#damExplorerConfirmModal .dam-force-block--to.dam-force-block--clear .dam-force-block__label{color:#6b6980}" +
+
+      "#damExplorerConfirmModal .dam-force-block__name{" +
+      "font-size:13px;font-weight:600;line-height:1.45;color:#464255;word-break:break-word}" +
+      "#damExplorerConfirmModal .dam-force-block--from .dam-force-block__name{font-weight:500;color:#6b6578}" +
+      "#damExplorerConfirmModal .dam-force-block__badge-row{" +
+      "display:flex;flex-wrap:wrap;gap:6px;align-items:center}" +
+      "#damExplorerConfirmModal .dam-force-block__path-btn{" +
+      "appearance:none;border:0;background:transparent;padding:0;margin:0;" +
+      "font-size:11px;font-weight:600;color:#8b8d97;cursor:pointer;text-align:left;" +
+      "display:inline-flex;align-items:center;gap:4px}" +
+      "#damExplorerConfirmModal .dam-force-block__path-btn:hover{color:var(--dam-primary,#ab54db)}" +
+      "#damExplorerConfirmModal .dam-force-block__path{" +
+      "margin:0;font-size:11px;line-height:1.4;color:#8a8494;word-break:break-all;" +
+      "background:#fff;border:1px solid #ebe6f0;border-radius:6px;padding:8px 10px}" +
+      "#damExplorerConfirmModal .dam-force-block__path[hidden]{display:none!important}" +
+      "#damExplorerConfirmModal .dam-force-skel{display:flex;flex-direction:column;gap:16px}" +
+      "#damExplorerConfirmModal .dam-force-skel__row{" +
+      "height:88px;border-radius:12px;border:1px solid #ebe6f0;background:linear-gradient(90deg,#f4f2f7 25%,#ebe7f1 37%,#f4f2f7 63%);" +
+      "background-size:400% 100%;animation:damForceSkel 1.2s ease-in-out infinite}" +
+      "@keyframes damForceSkel{0%{background-position:100% 0}100%{background-position:0 0}}" +
+      "#damExplorerConfirmModal .dam-confirm-info-tile{" +
+      "display:flex;gap:12px;align-items:flex-start;padding:16px 18px;" +
+      "border:1px solid #ebe6f0;border-radius:12px;background:#faf9fb;margin:0}" +
+      "#damExplorerConfirmModal .dam-confirm-info-tile i{font-size:18px;color:var(--dam-primary,#ab54db);margin-top:1px}" +
+      "#damExplorerConfirmModal .dam-confirm-info-tile p{margin:0;font-size:13px;line-height:1.5;color:#464255}" +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-explorer-confirm-modal{" +
+      "background:var(--dam-surface,#1e1e28);color:#e8e6ef}" +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-explorer-confirm-modal__header," +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-explorer-confirm-modal__footer," +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-preview__head{" +
+      "border-color:rgba(255,255,255,.08);background:#1a1a24}" +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-row{" +
+      "background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)}" +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-block{" +
+      "background:rgba(0,0,0,.25);border-color:rgba(255,255,255,.12)}" +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-block--to{background:rgba(255,255,255,.06)}" +
+
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-row__title," +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-block__name," +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-preview__count," +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-explorer-confirm-modal__header h3{color:#e8e6ef}" +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-confirm-lead," +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-block--from .dam-force-block__name{color:#a8a4b4}" +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-force-chip{" +
+      "background:transparent;border-color:rgba(255,255,255,.18);color:#c4c0ce}" +
+      "html[data-theme=dark] #damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--cancel{" +
+      "background:transparent!important;border-color:rgba(255,255,255,.22)!important;color:#e8e6ef!important}";
     var style = document.getElementById(EXPLORER_CTA_STYLE_ID);
     if (!style) {
       style = document.createElement("style");
@@ -218,12 +383,12 @@
     var kicker = opts.kicker || "Kategoria";
     var title = opts.title || "";
     var meta = opts.meta || "";
-    var addProductHtml = "";
+    var headActionsHtml = "";
     if (opts.showAddProduct) {
       var catId = (opts.categoryContext && opts.categoryContext.id) || state.canonCat || "";
       var catTitle =
         (opts.categoryContext && opts.categoryContext.title) || title || "";
-      addProductHtml =
+      headActionsHtml =
         '<div class="dam-panel-head__actions">' +
           '<button type="button" class="dam-int-cta dam-explorer-add-product-btn" data-dam-add-product="1"' +
             ' data-canon-cat="' + esc(catId) + '"' +
@@ -231,6 +396,15 @@
             ' aria-label="Dodaj produkt" title="Dodaj produkt" data-dam-tip="Dodaj produkt do tej kategorii">' +
             '<i class="uil uil-plus" aria-hidden="true"></i>' +
             "<span>Dodaj produkt</span>" +
+          "</button>" +
+        "</div>";
+    } else if (opts.showAddVariant) {
+      headActionsHtml =
+        '<div class="dam-panel-head__actions">' +
+          '<button type="button" class="dam-int-cta dam-explorer-add-variant-btn" id="damExplorerAddVariantHead"' +
+            ' aria-label="Dodaj wariant" title="Dodaj wariant" data-dam-tip="Utworz wariant ze Szablonow w tym produkcie">' +
+            '<i class="uil uil-plus" aria-hidden="true"></i>' +
+            "<span>Dodaj wariant</span>" +
           "</button>" +
         "</div>";
     }
@@ -247,7 +421,7 @@
               ' aria-label="Do przodu" data-dam-tip="Do przodu">' +
               '<i class="uil uil-arrow-right" aria-hidden="true"></i></button>' +
           "</div>" +
-          addProductHtml +
+          headActionsHtml +
         "</div>" +
         '<div class="dam-panel-head__place">' +
           '<span class="dam-panel-head__icon" aria-hidden="true">' +
@@ -265,9 +439,17 @@
   function openExplorerAddProduct(opts) {
     var api = window.DamExplorerAddProduct;
     if (api && typeof api.open === "function") {
-      api.open(opts || {});
+      try {
+        api.open(opts || {});
+      } catch (eOpen) {
+        showToast(
+          "Nie udało się otworzyć Dodaj produkt: " + String((eOpen && eOpen.message) || eOpen),
+          "error"
+        );
+      }
       return;
     }
+    showToast("Moduł tworzenia produktu niedostępny - odśwież stronę (Ctrl+F5).");
     console.warn("[DamExplorer] DamExplorerAddProduct not loaded yet", opts || {});
   }
 
@@ -439,7 +621,7 @@
     return rev ? (rev.index || rev.folder || "") : "";
   }
 
-  /** Wiersz lifecycle dla wariantu — po sciezce (index moze byc wspolny: DOY + ETY). */
+  /** Wiersz lifecycle dla wariantu - po sciezce (index moze byc wspolny: DOY + ETY). */
   function lifecycleRowForRev(rev) {
     if (!rev) return null;
     var store = state.lifecycleStore && state.lifecycleStore.revisions;
@@ -456,7 +638,7 @@
     return null;
   }
 
-  /** Status z localStorage / statusStore — tylko gdy pasuje sciezka wariantu. */
+  /** Status z localStorage / statusStore - tylko gdy pasuje ścieżka wariantu. */
   function statusRowForRev(rev) {
     if (!rev) return null;
     var store = state.statusStore && state.statusStore.revisions;
@@ -491,7 +673,7 @@
     /* DYSK (nazwa folderu w indeksie) = prawda. Brak literki = clear / Bez statusu.
        NIGDY: is_latest → aktualne (to mylilo F z "bez statusu").
        NIGDY: lookup po samym index (TEST-TEST2 moze byc DOY live + ETY w archiwum).
-       Gdy jest rev.path — tylko basename sciezki (folder w indeksie moze byc nieaktualny). */
+       Gdy jest rev.path - tylko basename sciezki (folder w indeksie moze byc nieaktualny). */
     var diskLit = letterFromFolderName(rev.path || "");
     if (!diskLit && !rev.path && rev.folder) diskLit = letterFromFolderName(rev.folder);
     if (diskLit) return statusFromLetter(diskLit);
@@ -516,7 +698,7 @@
     return "starsza";
   }
 
-  /** Aktualna sciezka dyskowa z lifecycle-store (po rename/archiwum), nie z przeterminowanego indeksu. */
+  /** Aktualna ścieżka dyskowa z lifecycle-store (po rename/archiwum), nie z przeterminowanego indeksu. */
   function resolveLifecycleDiskPath(opts) {
     opts = opts || {};
     var idx = opts.index || "";
@@ -825,9 +1007,9 @@
   }
 
   /**
-   * Lista zrodel w karcie nosnika:
+   * Lista zrodel w karcie nośnika:
    * OFF (Pokaż wszystkie): tylko 2 - PROJEKT bez SZKICE.
-   * ON: pelna lista (archiwum / szkice) jak w indeksie.
+   * ON: pełna lista (archiwum / szkice) jak w indeksie.
    */
   function filterSourceFilesForView(files) {
     var list = files || [];
@@ -840,16 +1022,18 @@
   }
 
   function ensurePakietStyles() {
-    if (document.getElementById("dam-pakiet-style")) return;
-    var s = document.createElement("style");
-    s.id = "dam-pakiet-style";
+    /* PAKIET = lifecycle clear anatomy; only row-layout extras here (no geex chip). */
+    var s = document.getElementById("dam-pakiet-style");
+    if (!s) {
+      s = document.createElement("style");
+      s.id = "dam-pakiet-style";
+      document.head.appendChild(s);
+    }
     s.textContent =
-      ".dam-carrier-toggle-row__end .dam-pakiet-btn{" +
-      "flex-shrink:0;letter-spacing:.02em;font-weight:600;text-transform:uppercase;" +
-      "min-height:28px;padding:0 10px;line-height:1;" +
+      ".dam-carrier-toggle-row__end .dam-pakiet-btn.dam-lifecycle__btn{" +
+      "flex-shrink:0;letter-spacing:.02em;text-transform:uppercase;" +
       "}" +
       ".dam-carrier-toggle-row__end .dam-pakiet-btn:disabled{opacity:.55;cursor:wait;}";
-    document.head.appendChild(s);
   }
 
   function renderExplorerGridStatus() {
@@ -866,17 +1050,67 @@
       revAll += (p.revisions || []).length;
     });
     status.textContent =
-      visible.length + " produktow (" + revVisible + " wariantow)" +
+      visible.length + " produktów (" + revVisible + " wariantow)" +
       (visible.length !== all.length || revVisible !== revAll
         ? " / z " + all.length + " wszystkich"
         : "");
   }
 
+  function persistExplorerUiPrefs(patch) {
+    try {
+      if (patch && "explorer_show_all" in patch) {
+        localStorage.setItem(SHOW_ALL_KEY, patch.explorer_show_all ? "1" : "0");
+      }
+      if (patch && "explorer_lang_filter" in patch) {
+        localStorage.setItem(LANG_FILTER_KEY, patch.explorer_lang_filter || "");
+      }
+      if (patch && "explorer_viz_view" in patch) {
+        localStorage.setItem(VIZ_VIEW_KEY, patch.explorer_viz_view || "tiles");
+      }
+      if (patch && "explorer_viz_scale" in patch) {
+        localStorage.setItem(VIZ_SCALE_KEY, String(patch.explorer_viz_scale));
+      }
+    } catch (eLs) { /* ignore */ }
+    if (window.DamUserPrefs && typeof DamUserPrefs.set === "function") {
+      DamUserPrefs.set(patch || {}).catch(function () {});
+    }
+  }
+
+  function hydrateExplorerUiPrefsFromKv() {
+    if (!window.DamUserPrefs || typeof DamUserPrefs.load !== "function") return;
+    DamUserPrefs.load().then(function (prefs) {
+      if (!prefs) return;
+      var changed = false;
+      if (!!prefs.explorer_show_all !== !!state.showAllRevisions) {
+        state.showAllRevisions = !!prefs.explorer_show_all;
+        changed = true;
+      }
+      if (String(prefs.explorer_lang_filter || "") !== String(state.langFilter || "")) {
+        state.langFilter = String(prefs.explorer_lang_filter || "");
+        changed = true;
+      }
+      if ((prefs.explorer_viz_view || "tiles") !== state.vizViewMode) {
+        state.vizViewMode = prefs.explorer_viz_view === "list" ? "list" : "tiles";
+        changed = true;
+      }
+      var sc = parseInt(prefs.explorer_viz_scale, 10);
+      if (!isNaN(sc) && sc !== state.vizScale) {
+        state.vizScale = sc;
+        changed = true;
+      }
+      if (changed) {
+        syncExplorerShowAllUi();
+        var langSel = document.getElementById("damExplorerLangFilter");
+        if (langSel) langSel.value = state.langFilter || "";
+        renderExplorerGridStatus();
+        renderMain();
+      }
+    });
+  }
+
   function setShowAllRevisions(on) {
     state.showAllRevisions = !!on;
-    try {
-      localStorage.setItem(SHOW_ALL_KEY, state.showAllRevisions ? "1" : "0");
-    } catch (eSet) { /* ignore */ }
+    persistExplorerUiPrefs({ explorer_show_all: state.showAllRevisions });
     syncExplorerShowAllUi();
     renderExplorerGridStatus();
     if (state.searchQuery && state.searchQuery.length >= 2) {
@@ -1365,7 +1599,7 @@
     if (!raw && state.canonCat && !state.searchQuery && !state.product) raw = state.canonCat;
     if (!raw) return "";
     if (DL && typeof DL.categoryTitle === "function") return DL.categoryTitle(raw) || "";
-    return String(raw).replace(/^\s*\d+\s*[-–—]\s*/u, "").trim();
+    return String(raw).replace(/^\s*\d+\s*[-\u2013\u2014]\s*/u, "").trim();
   }
 
   function productDisplayTitle(product, rev) {
@@ -1415,13 +1649,45 @@
     return !!(tok && tok !== "demo-admin-dev-token" && tok !== "qa");
   }
 
-  /** Sesja mostu (rehydrate) przed zapisem F/X/D i odswiezaniem z dysku. */
+  /** Sesja mostu (rehydrate) przed zapisem F/X/D i odświeżaniem z dysku. */
   function ensureBridgeSession() {
     if (window.DamApi && typeof window.DamApi.ensureSession === "function") {
-      return window.DamApi.ensureSession();
+      return withTimeout(window.DamApi.ensureSession(), 8000, "bridge_session_timeout").catch(function () {
+        return { ok: false, error: "login_required" };
+      });
     }
     if (hasBridgeToken()) return Promise.resolve({ ok: true });
     return Promise.resolve({ ok: false, error: "login_required" });
+  }
+
+  function withTimeout(promise, ms, label) {
+    ms = ms || 12000;
+    return Promise.race([
+      promise,
+      new Promise(function (_resolve, reject) {
+        setTimeout(function () {
+          reject(new Error(label || "timeout"));
+        }, ms);
+      }),
+    ]);
+  }
+
+  function fetchWithTimeout(url, opts, timeoutMs) {
+    timeoutMs = timeoutMs || 12000;
+    opts = opts || {};
+    if (typeof AbortController === "undefined") {
+      return fetch(url, opts);
+    }
+    var ac = new AbortController();
+    var tid = setTimeout(function () {
+      try {
+        ac.abort();
+      } catch (_eAbort) { /* ignore */ }
+    }, timeoutMs);
+    var merged = Object.assign({}, opts, { signal: ac.signal });
+    return fetch(url, merged).finally(function () {
+      clearTimeout(tid);
+    });
   }
 
   function showSessionRequiredToast(errCode) {
@@ -1429,23 +1695,28 @@
     var hint =
       code === "admin_required"
         ? "Tylko admin może zapisywać F/X/D na dysku."
-        : "Sesja wygasła — zaloguj się ponownie (profil w prawym górnym rogu), potem włącz ADMIN.";
+        : "Sesja wygasła - zaloguj się ponownie (profil w prawym górnym rogu), potem włącz ADMIN.";
     showToast(hint, "error");
   }
 
-  function bridgeFetchJson(url, opts) {
+  function bridgeFetchJson(url, opts, timeoutMs) {
     opts = opts || {};
     var method = opts.method || "GET";
     var body = opts.body;
+    timeoutMs = timeoutMs || 12000;
     return ensureBridgeSession().then(function (sess) {
       if (!sess || !sess.ok) {
         return { http: 401, data: { ok: false, error: (sess && sess.error) || "login_required" } };
       }
-      return fetch(url, {
-        method: method,
-        headers: authHeaders(),
-        body: body
-      }).then(function (r) {
+      return fetchWithTimeout(
+        url,
+        {
+          method: method,
+          headers: authHeaders(),
+          body: body,
+        },
+        timeoutMs
+      ).then(function (r) {
         return r.json().then(function (data) {
           return { http: r.status, data: data };
         });
@@ -1599,7 +1870,7 @@
     if (s === "aktualne" || s === "f") return "F";
     if (s === "nieaktualne" || s === "x" || s === "archiwum") return "X";
     if (s === "demo" || s === "d") return "D";
-    if (s === "clear" || s === "starsza" || !s) return "—";
+    if (s === "clear" || s === "starsza" || !s) return "-";
     return String(status || "").toUpperCase().slice(0, 3);
   }
 
@@ -1646,7 +1917,7 @@
     if (letter === "F") return "dam-lifecycle-chip dam-lifecycle-chip--f";
     if (letter === "X") return "dam-lifecycle-chip dam-lifecycle-chip--x";
     if (letter === "D") return "dam-lifecycle-chip dam-lifecycle-chip--d";
-    if (letter === "—" || letter === "-" || letter === "∅") {
+    if (letter === "-" || letter === "\u2014" || letter === "∅") {
       return "dam-lifecycle-chip dam-lifecycle-chip--clear";
     }
     return "dam-lifecycle-chip";
@@ -1818,10 +2089,10 @@
     function rowLetter(h) {
       if (h && h._isCurrent) {
         var cur = lifecycleLetterFromStatus(h.letter || h.status);
-        return cur === "—" ? "∅" : cur;
+        return (cur === "-" || cur === "\u2014") ? "∅" : cur;
       }
       var lit = lifecycleLetterFromStatus(h.letter || h.status || h.to || h.after);
-      return lit === "—" ? "∅" : lit;
+      return (lit === "-" || lit === "\u2014") ? "∅" : lit;
     }
 
     function visibleRows() {
@@ -1864,7 +2135,7 @@
 
     function entryHtml(h) {
       var letter = rowLetter(h);
-      var dotLetter = letter === "∅" ? "—" : letter;
+      var dotLetter = letter === "∅" ? "-" : letter;
       var when = String(h.ts || "").replace("T", " ").slice(0, 16);
       var who = lifecycleAuthorShort(h.actor || h.user || h.by || "");
       var scope =
@@ -1988,14 +2259,14 @@
 
     var filterChips = ["F", "X", "D", "∅"]
       .map(function (l) {
-        var label = l === "∅" ? "—" : l;
+        var label = l === "∅" ? "-" : l;
         var tip =
           l === "∅"
             ? "Filtruj wpisy: bez statusu (odznaczono)"
             : "Filtruj wpisy: status " + l;
         return (
           '<button type="button" class="dam-life-hist__filter ' +
-          lifecycleChipClass(l === "∅" ? "—" : l) +
+          lifecycleChipClass(l === "∅" ? "-" : l) +
           '" data-life-filter="' +
           l +
           '" aria-pressed="false" title="' +
@@ -2462,7 +2733,7 @@
         saveLocalStatus(local);
         state.statusStore = mergeStatusStore(state.statusStore);
         var keepProductId = body.product_id || opts.productId || (state.product && state.product.id) || "";
-        /* Po FS rename: przebuduj indeks z dysku, potem odswiez UI */
+        /* Po FS rename: przebuduj indeks z dysku, potem odśwież UI */
         showToast("Odświeżam listę plików…", "info");
         var tRebuildStart = Date.now();
         return fetch(bridgeUrl() + "/index/rebuild", {
@@ -2559,7 +2830,7 @@
       (state.product && state.product.id) ||
       "";
     if (!revPath && !productId) {
-      showToast("Brak sciezki wariantu do pakietu.", "error");
+      showToast("Brak ścieżki wariantu do pakietu.", "error");
       return;
     }
     btn.disabled = true;
@@ -2617,7 +2888,7 @@
       })
       .catch(function (err) {
         showToast(
-          "Brak polaczenia z mostem: " + (err && err.message ? err.message : err),
+          "Brak połączenia z mostem: " + (err && err.message ? err.message : err),
           "error"
         );
       })
@@ -2721,7 +2992,7 @@
         (cl.elementsLinked
           ? '<button type="button" class="dam-check-action dam-check-action--danger" data-elements-unlink="' +
             esc(cl.revisionPath || "") + '" data-elements-index="' + esc(cl.revisionIndex || "") +
-            '" data-dam-hold-delete data-dam-label="Usun powiazanie"' +
+            '" data-dam-hold-delete data-dam-label="Usuń powiazanie"' +
             ' data-dam-hint="Przytrzymaj, aby usunac powiazanie"' +
             ' title="Przytrzymaj, aby usunac powiazanie" data-dam-tip="Przytrzymaj, aby usunac reczne powiazanie">' +
             '<i class="uil uil-link-broken" aria-hidden="true"></i></button>'
@@ -2955,7 +3226,7 @@
       revLangs = Object.keys(langSet).sort();
     }
 
-    // Tagi globalne 22px. Label = nazwa (bez duplikatu tagu nosnika). Indeks TYLKO w meta.
+    // Tagi globalne 22px. Label = nazwa (bez duplikatu tagu nośnika). Indeks TYLKO w meta.
     // Toggle = DIV role=button (nested <button> rozrywa DOM i wyrzuca karty z listy).
     var tags = "";
     var hasVisibleLabel = !!(label && !/^NOSNIK/i.test(label));
@@ -3015,7 +3286,7 @@
     var statusOutside = statusBadge(st, rev);
     if (rev.in_archive) {
       statusOutside =
-        '<span class="dam-status-badge dam-status-badge--archive" title="Folder w — ARCHIWUM kategorii">Archiwum</span> ' +
+        '<span class="dam-status-badge dam-status-badge--archive" title="Folder w - ARCHIWUM kategorii">Archiwum</span> ' +
         statusOutside;
     }
 
@@ -3089,7 +3360,7 @@
 
     ensurePakietStyles();
     var pakietBtn =
-      '<button type="button" class="geex-btn geex-btn--sm dam-pakiet-btn" ' +
+      '<button type="button" class="dam-lifecycle__btn dam-lifecycle__btn--clear dam-pakiet-btn" ' +
       'data-pakiet-path="' +
       esc(rev.path || "") +
       '" data-pakiet-index="' +
@@ -3120,7 +3391,7 @@
               esc((product && product.id) || "") +
               '" data-product-name="' +
               esc((product && (product.display_name || product.name || product.title)) || "") +
-              '" data-dam-tip="Nosnik. Klik: filtr. Admin: Shift+klik lub podwojny klik - wybierz z listy.">' +
+              '" data-dam-tip="Nośnik. Klik: filtr. Admin: Shift+klik lub podwojny klik - wybierz z listy.">' +
               esc(label) +
               "</span>" +
               '<div class="dam-carrier-toggle__chips">' +
@@ -3446,7 +3717,7 @@
       : "";
     var actionsHtml = productPath
       ? '<div class="dam-prod-row__end" data-stop-nav="1">' +
-        '<div class="dam-prod-row__actions dam-carrier-toggle__actions" data-dam-tip="Kopiuj sciezke / otworz folder w Windows">' +
+        '<div class="dam-prod-row__actions dam-carrier-toggle__actions" data-dam-tip="Kopiuj ścieżkę / otwórz folder w Windows">' +
         pathActions(productPath) +
         "</div>" +
         '<i class="uil uil-angle-down dam-prod-row__chevron" aria-hidden="true"></i>' +
@@ -3480,10 +3751,28 @@
     );
   }
 
+  var _explorerRevealSig = "";
   function revealExplorerModules(mount) {
-    if (window.DamGridReveal && mount) {
-      window.DamGridReveal.reveal(mount, window.DamGridReveal.selectors.explorerRow);
-    }
+    if (!window.DamGridReveal || !mount) return;
+    var rows = mount.querySelectorAll(
+      (window.DamGridReveal.selectors &&
+        window.DamGridReveal.selectors.explorerRow) ||
+        ".dam-prod-row"
+    );
+    if (!rows.length) return;
+    /* Skip re-animating identical list (boot reconcile / prefs → double renderAll). */
+    var sig =
+      rows.length +
+      ":" +
+      (rows[0].getAttribute("data-pid") || "") +
+      ":" +
+      (rows[rows.length - 1].getAttribute("data-pid") || "");
+    if (sig === _explorerRevealSig) return;
+    _explorerRevealSig = sig;
+    window.DamGridReveal.reveal(
+      mount,
+      window.DamGridReveal.selectors.explorerRow
+    );
   }
 
   function bindProductRowClicks(mount) {
@@ -3502,7 +3791,7 @@
     var products = (res.products || []).slice();
     var hits = res.hits || [];
     var q = state.searchQuery || "";
-    /* Fallback: zbuduj liste produktow z hitow (gdy API odda same hits) */
+    /* Fallback: zbuduj liste produktów z hitow (gdy API odda same hits) */
     if (!products.length && hits.length) {
       var seen = {};
       hits.forEach(function (h) {
@@ -3525,45 +3814,95 @@
             ? "trafiony produkt"
             : products.length >= 2 && products.length <= 4
               ? "trafione produkty"
-              : "trafionych produktow") +
+              : "trafionych produktów") +
           (hits.length ? " · " + hits.length + " pozycji" : "")
       });
 
-    if (!products.length && !(res.suggestions && res.suggestions.length)) {
+    if (!hits.length && !products.length && !(res.suggestions && res.suggestions.length)) {
+      var emptyBundle =
+        window.DamEmptyMascot && typeof window.DamEmptyMascot.pick === "function"
+          ? window.DamEmptyMascot.pick()
+          : {
+              text: "Hmm... albo literówka, albo ten produkt żyje w innej galaktyce.",
+              mood: "think",
+              poseUrl: "assets/img/maskotka/pose-think-q.png"
+            };
+      var emptyPose = String(emptyBundle.poseUrl || "").replace(/'/g, "%27");
+      var emptyDesc = !state.showAllRevisions
+        ? "Włącz Pokaż wszystkie, aby przeszukiwać też warianty z archiwum kategorii (- ARCHIWUM)."
+        : "Brak trafień w indeksie. Kliknij Odśwież z dysku, aby zindeksować archiwum na dysku.";
+      var emptyFilters = q
+        ? '<ul class="dam-branding-empty__filters"><li>Szukaj: ' + esc(q) + "</li></ul>"
+        : "";
       html +=
-        '<div class="dam-explorer-empty">Brak wynikow dla: <strong>' +
-        esc(q) +
-        "</strong>";
-      if (!state.showAllRevisions) {
-        html +=
-          '<p class="dam-explorer-empty__hint">Wlacz <strong>Pokaż wszystkie</strong>, aby przeszukiwac tez warianty z archiwum kategorii (— ARCHIWUM).</p>';
-      } else {
-        html +=
-          '<p class="dam-explorer-empty__hint">Brak trafien w indeksie. Kliknij <strong>Odśwież z dysku</strong>, aby zindeksować archiwum na dysku.</p>';
-      }
-      html += "</div></div>";
+        '<div class="dam-branding-empty-wrap">' +
+        '<div class="dam-empty-mascot-row" data-empty-mood="' +
+        esc(emptyBundle.mood || "think") +
+        '">' +
+        '<div class="dam-empty-mascot-row__speak">' +
+        '<div class="dam-empty-mascot-row__bubble">' +
+        '<p class="dam-empty-mascot-row__bubble-text">' +
+        esc(emptyBundle.text || "") +
+        "</p>" +
+        "</div>" +
+        '<div class="dam-empty-mascot-row__mascot" aria-hidden="true" style="--dam-empty-pose:url(\'' +
+        emptyPose +
+        "')\">" +
+        '<span class="dam-empty-mascot-row__mascot-img"></span>' +
+        "</div>" +
+        "</div>" +
+        '<div class="dam-empty-mascot-row__card">' +
+        '<div class="dam-branding-empty" role="status">' +
+        '<div class="dam-branding-empty__icon" aria-hidden="true"><i class="uil uil-search-alt"></i></div>' +
+        '<h3 class="dam-branding-empty__title">Brak wyników</h3>' +
+        '<p class="dam-branding-empty__desc">' +
+        esc(emptyDesc) +
+        "</p>" +
+        emptyFilters +
+        '<button type="button" class="geex-btn geex-btn--primary-transparent dam-explorer-clear-filters">Wyczyść filtry</button>' +
+        "</div>" +
+        "</div>" +
+        "</div>" +
+        "</div></div>";
       mount.innerHTML = html;
       bindPanelNav(mount);
+      var clearBtn = mount.querySelector(".dam-explorer-clear-filters");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", function () {
+          clearSearchPanel();
+        });
+      }
       return;
     }
 
     if (res.message) {
-      html += '<p class="dam-panel-head__meta" style="margin:0 0 10px">' + esc(res.message) + "</p>";
+      html += '<p class="dam-panel-head__meta" style="margin:0 0 8px">' + esc(res.message) + "</p>";
     }
 
-    html += '<div class="dam-prod-list">';
-    var seenProd = {};
-    products.forEach(function (p) {
-      if (!p || !p.id) return;
-      var ep = enrichSearchProduct(p);
-      if (!ep || !ep.id || seenProd[ep.id]) return;
-      seenProd[ep.id] = true;
-      html += buildProductRowHtml(ep);
-    });
-    html += "</div></div>";
+    if (hits.length && window.DamSearch && typeof window.DamSearch.renderHitsHtml === "function") {
+      html += window.DamSearch.renderHitsHtml(res, { limit: 40, panel: true });
+    } else if (products.length) {
+      html += '<div class="dam-prod-list">';
+      var seenProd = {};
+      products.forEach(function (p) {
+        if (!p || !p.id) return;
+        var ep = enrichSearchProduct(p);
+        if (!ep || !ep.id || seenProd[ep.id]) return;
+        seenProd[ep.id] = true;
+        html += buildProductRowHtml(ep);
+      });
+      html += "</div>";
+    }
+    html += "</div>";
     mount.innerHTML = html;
     bindPanelNav(mount);
-    bindProductRowClicks(mount);
+    if (hits.length && window.DamSearch && typeof window.DamSearch.bindHitsClick === "function") {
+      window.DamSearch.bindHitsClick(mount, function (prod) {
+        openProduct(prod);
+      }, { clearInput: false });
+    } else {
+      bindProductRowClicks(mount);
+    }
     bindCopyButtons(mount);
     bindLifecycleControls(mount);
     if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
@@ -3711,7 +4050,8 @@
         title: pName,
         meta: visibleGroups + " typ" + (visibleGroups === 1 ? "" : "y") +
           " nośnika" + (showAllOn ? " (wszystkie)" : " (aktualne)") +
-          ". Kliknij, aby rozwinąć szczegóły."
+          ". Kliknij, aby rozwinąć szczegóły.",
+        showAddVariant: true
       }) +
       '<div class="dam-product-toolbar">' +
         '<div class="dam-product-toolbar__main">' +
@@ -3758,6 +4098,13 @@
     bindProductToolbar(mount);
     bindCarrierInteractions(mount);
     bindCopyButtons(mount);
+    var addVariantHead = mount.querySelector("#damExplorerAddVariantHead");
+    if (addVariantHead && !addVariantHead._damBound) {
+      addVariantHead._damBound = true;
+      addVariantHead.addEventListener("click", function () {
+        openCreateVariantFromTemplates();
+      });
+    }
     if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
       window.DamTooltips.refresh(mount);
     }
@@ -3779,9 +4126,7 @@
       if (state.langFilter) langSel.value = state.langFilter;
       langSel.addEventListener("change", function () {
         state.langFilter = this.value || "";
-        try {
-          localStorage.setItem(LANG_FILTER_KEY, state.langFilter);
-        } catch (eLang) { /* ignore */ }
+        persistExplorerUiPrefs({ explorer_lang_filter: state.langFilter });
         renderExplorerGridStatus();
         if (state.searchQuery && state.searchQuery.length >= 2) {
           applySearchToPanel(state.searchQuery);
@@ -3811,7 +4156,7 @@
     mount.querySelectorAll("[data-viz-mode]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         state.vizViewMode = this.getAttribute("data-viz-mode") || "tiles";
-        localStorage.setItem(VIZ_VIEW_KEY, state.vizViewMode);
+        persistExplorerUiPrefs({ explorer_viz_view: state.vizViewMode });
         renderMain();
       });
     });
@@ -3819,12 +4164,13 @@
     if (scaleEl) {
       scaleEl.addEventListener("input", function () {
         state.vizScale = parseInt(this.value, 10) || 140;
-        localStorage.setItem(VIZ_SCALE_KEY, String(state.vizScale));
+        persistExplorerUiPrefs({ explorer_viz_scale: state.vizScale });
         mount.querySelectorAll(".dam-viz-studio").forEach(function (el) {
           el.style.setProperty("--dam-viz-hero", state.vizScale + "px");
         });
       });
       scaleEl.addEventListener("change", function () {
+        persistExplorerUiPrefs({ explorer_viz_scale: state.vizScale });
         renderMain();
       });
     }
@@ -3909,7 +4255,7 @@
       });
     });
 
-    // Caly pasek nośnika rozwija szczegoly (chevron / puste miejsce).
+    // Caly pasek nośnika rozwija szczegóły (chevron / puste miejsce).
     // Sterowanie (button/a/input/tagi/edycja/F-X-D/akcje) NIE toggle'uje.
     var CARRIER_TOGGLE_IGNORE =
       "button, a, input, select, textarea, label, " +
@@ -4067,7 +4413,7 @@
         mode: "viz-studio",
         vizStudio: { items: items, model: model },
         groupContext: { variants: siblings, linked_products: [] },
-        /* pkt 6: kontekst produktu -> lustrzane "Skojarzone materialy" */
+        /* pkt 6: kontekst produktu -> lustrzane "Skojarzone materiały" */
         productContext: state.product
           ? {
               id: state.product.id || "",
@@ -4151,7 +4497,7 @@
       fetch(metaUrl(f.path), { headers: authHeaders() }).then(function (r) { return r.json(); }).then(function (data) {
         if (!data || !data.ok) {
           box.innerHTML = (sizeKnown ? '<div><strong>Rozmiar</strong> ' + esc(sizeKnown) + "</div>" : "") +
-            '<div class="dam-lb-meta__muted">Metadane niedostepne - uruchom aplikacje DAM.</div>';
+            '<div class="dam-lb-meta__muted">Metadane niedostępne - uruchom aplikację DAM.</div>';
           return;
         }
         var dims = (data.width && data.height) ? (data.width + " x " + data.height + " px") : "-";
@@ -4325,7 +4671,7 @@
     if (existing) existing.remove();
 
     var html =
-      '<div class="dam-lightbox dam-lightbox--studio dam-lightbox--studio-v2" id="damLightbox" role="dialog" aria-modal="true" aria-label="Studio podgladu wizualizacji">' +
+      '<div class="dam-lightbox dam-lightbox--studio dam-lightbox--studio-v2" id="damLightbox" role="dialog" aria-modal="true" aria-label="Studio podglądu wizualizacji">' +
         '<div class="dam-lightbox__box">' +
           '<button type="button" class="dam-lightbox__close" data-lb-close aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
           '<div class="dam-lightbox__layout">' +
@@ -4341,7 +4687,7 @@
                   '<div class="dam-lb-persp-grid" id="damLbPersp"></div>' +
                 "</div>" +
                 '<div class="dam-lb-section" id="damLbLangWrap" hidden>' +
-                  '<div class="dam-lb-section__title">Jezyk</div>' +
+                  '<div class="dam-lb-section__title">Język</div>' +
                   '<div class="dam-lb-chips" id="damLbLang"></div>' +
                 "</div>" +
               "</div>" +
@@ -4371,10 +4717,10 @@
               '<div class="dam-lightbox__footer-bar">' +
                 '<div class="dam-lightbox__title" title=""></div>' +
                 '<div class="dam-lightbox__cta">' +
-                  '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-lb-cta-reveal" id="damLbRevealFile" data-dam-tip="Otworz folder w Windows i zaznacz ten plik">' +
+                  '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-lb-cta-reveal" id="damLbRevealFile" data-dam-tip="Otwórz folder w Windows i zaznacz ten plik">' +
                     '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Pokaz w Explorerze</span></button>' +
-                  '<button type="button" class="geex-btn geex-btn--sm dam-lb-cta-copy" id="damLbCopyPath" data-dam-tip="Kopiuj sciezke pliku">' +
-                    '<i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj sciezke</span></button>' +
+                  '<button type="button" class="geex-btn geex-btn--sm dam-lb-cta-copy" id="damLbCopyPath" data-dam-tip="Kopiuj ścieżkę pliku">' +
+                    '<i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj ścieżkę</span></button>' +
                 "</div>" +
               "</div>" +
             "</div>" +
@@ -4481,8 +4827,32 @@
     paint();
   }
 
+  function openCreateVariantFromTemplates() {
+    if (!state.product) return;
+    if (!window.DamExplorerAddProduct || typeof window.DamExplorerAddProduct.open !== "function") {
+      showToast("Moduł tworzenia produktu niedostępny - odśwież stronę.");
+      return;
+    }
+    try {
+      window.DamExplorerAddProduct.open({
+        mode: "add-variant",
+        productPath: state.product.path || "",
+        categoryContext: { id: state.canonCat || "", title: "" }
+      });
+    } catch (eOpen) {
+      showToast(
+        "Nie udało się otworzyć Dodaj wariant: " + String((eOpen && eOpen.message) || eOpen),
+        "error"
+      );
+    }
+  }
+
   function openAddVariantModal() {
     if (!state.product) return;
+    if (!window.DamFolderPicker || typeof window.DamFolderPicker.open !== "function") {
+      showToast("DamFolderPicker niedostępny - odśwież stronę (cache).");
+      return;
+    }
     var existing = document.getElementById("damAddVariantModal");
     if (existing) existing.remove();
 
@@ -4496,11 +4866,14 @@
       '<div class="dam-basepath-overlay" id="damAddVariantModal">' +
         '<div class="dam-basepath-box" role="dialog" aria-modal="true" aria-labelledby="damAddVariantTitle">' +
           '<button type="button" class="dam-modal-x" id="damAddVariantClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
-          '<h3 id="damAddVariantTitle">Dodaj / popraw wariant</h3>' +
-          '<p class="dam-basepath-lead">Wklej ścieżkę folderu wariantu (z D: lub Twojej bazy). Okresl typ nośnika i status. Rynek (DK/GC) rozpoznamy ze sciezki.</p>' +
-          '<label class="dam-basepath-label" for="damAddVariantPath">Ścieżka folderu</label>' +
-          '<input type="text" id="damAddVariantPath" class="dam-basepath-input" placeholder="D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\...">' +
-          '<label class="dam-basepath-label" for="damAddVariantCarrier">Typ nośnika</label>' +
+          '<h3 id="damAddVariantTitle">Mapuj wariant z dysku</h3>' +
+          '<p class="dam-basepath-lead">Wskaż folder wariantu (COMBO lub Eksplorator Windows). Określ typ nośnika i status. Rynek (DK/GC) rozpoznamy ze ścieżki.</p>' +
+          '<label class="dam-basepath-label" for="damAddVariantPath">Sciezka folderu</label>' +
+          '<div class="dam-add-variant-path-row" style="display:flex;gap:8px;align-items:center">' +
+            '<input type="text" id="damAddVariantPath" class="dam-basepath-input" placeholder="Wklej ścieżkę lub wybierz folder…" style="flex:1" autocomplete="off" spellcheck="false">' +
+            '<button type="button" class="geex-btn geex-btn--primary" id="damAddVariantPick">Wybierz folder</button>' +
+          "</div>" +
+          '<label class="dam-basepath-label" for="damAddVariantCarrier">Typ nosnika</label>' +
           '<select id="damAddVariantCarrier" class="dam-basepath-input">' + opts + "</select>" +
           '<label class="dam-basepath-label" for="damAddVariantStatus">Status</label>' +
           '<select id="damAddVariantStatus" class="dam-basepath-input">' +
@@ -4509,9 +4882,10 @@
             '<option value="starsza">Starsze</option>' +
           "</select>" +
           '<p id="damAddVariantMarket" class="dam-basepath-msg" hidden></p>' +
-          '<div class="dam-basepath-actions">' +
-            '<button type="button" class="geex-btn geex-btn--primary" id="damAddVariantSave">Zapisz do bazy</button>' +
+          '<div class="dam-basepath-actions dam-dialog-actions">' +
             '<button type="button" class="geex-btn" id="damAddVariantCancel">Anuluj</button>' +
+            '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
+            '<button type="button" class="geex-btn geex-btn--primary" id="damAddVariantSave">Zapisz do bazy</button>' +
           "</div>" +
         "</div>" +
       "</div>";
@@ -4526,29 +4900,47 @@
       if (!path) { msg.hidden = true; return; }
       msg.hidden = false;
       msg.className = "dam-basepath-msg is-ok";
-      msg.textContent = market ? ("Rozpoznany rynek: " + market + (market === "DK" ? " (Polska)" : " (Eksport)")) : "Nie rozpoznano rynku ze sciezki - uzupelnij recznie w notatce.";
+      msg.textContent = market ? ("Rozpoznany rynek: " + market + (market === "DK" ? " (Polska)" : " (Eksport)")) : "Nie rozpoznano rynku ze ścieżki - uzupełnij ręcznie w notatce.";
       msg.dataset.market = market || "";
     }
 
+    function openComboPick() {
+      var start = (state.product && state.product.path) || "X:\\";
+      window.DamFolderPicker.open({
+        startDir: start,
+        mode: "folder",
+        title: "Wybierz folder wariantu",
+        showWindowsButton: true,
+        onPicked: function (picked) {
+          var path = picked && picked.path;
+          if (!path) return;
+          var input = document.getElementById("damAddVariantPath");
+          if (input) input.value = path;
+          updateMarket();
+        }
+      });
+    }
+
     document.getElementById("damAddVariantPath").addEventListener("input", updateMarket);
+    document.getElementById("damAddVariantPick").addEventListener("click", openComboPick);
     document.getElementById("damAddVariantCancel").addEventListener("click", function () { modal.remove(); });
     document.getElementById("damAddVariantClose").addEventListener("click", function () { modal.remove(); });
     modal.addEventListener("click", function (e) { if (e.target === modal) modal.remove(); });
     document.addEventListener("keydown", function onEsc(e) {
       if (e.key === "Escape") { modal.remove(); document.removeEventListener("keydown", onEsc); }
     });
+    openComboPick();
     document.getElementById("damAddVariantSave").addEventListener("click", function () {
       var pathRaw = (document.getElementById("damAddVariantPath").value || "").trim();
       var carrier = document.getElementById("damAddVariantCarrier").value;
       var status = document.getElementById("damAddVariantStatus").value;
       var market = (document.getElementById("damAddVariantMarket").dataset.market) || "";
-      if (!pathRaw) { showToast("Podaj ścieżkę folderu"); return; }
+      if (!pathRaw) { showToast("Wklej ścieżkę lub wybierz folder wariantu"); return; }
       if (!carrier || carrier === "UNKNOWN") {
-        showToast("Wybierz konkretny typ nośnika - nie zapisujemy UNKNOWN");
+        showToast("Wybierz konkretny typ nosnika - nie zapisujemy UNKNOWN");
         return;
       }
       var canonPath = pathRaw.replace(/\\/g, "/");
-      // Remap local base back to index D:/Marketing if possible
       if (window.DamPaths && window.DamPaths.getBasePath && window.DamPaths.getIndexBase) {
         var base = window.DamPaths.getBasePath().replace(/\\/g, "/").replace(/\/+$/, "");
         var idxBase = window.DamPaths.getIndexBase();
@@ -4566,11 +4958,11 @@
         folder: canonPath.split("/").pop()
       };
       saveCarrierOverride(canonPath, entry).then(function () {
-        showToast("Zapisano mapowanie nośnika");
+        showToast("Zapisano mapowanie nosnika");
         modal.remove();
         return loadCarrierOverrides().then(function () { renderMain(); });
       }).catch(function (err) {
-        showToast("Błąd zapisu: " + (err && err.message ? err.message : "bridge"));
+        showToast("Blad zapisu: " + (err && err.message ? err.message : "bridge"));
       });
     });
   }
@@ -4797,7 +5189,7 @@
         /* Pkt 32: soft-delete z oknem cofniecia zamiast twardej destrukcji. */
         if (prevTarget && window.DamDanger && typeof window.DamDanger.toastUndo === "function") {
           window.DamDanger.toastUndo({
-            message: "Usunieto powiazanie Elementy",
+            message: "Usuńieto powiazanie Elementy",
             actionLabel: "Cofnij",
             duration: 8000,
             onUndo: function () {
@@ -4805,124 +5197,28 @@
             }
           });
         } else {
-          showToast("Usunieto powiazanie Elementy");
+          showToast("Usuńieto powiazanie Elementy");
         }
       });
   }
 
   function openElementsLinkPicker(revPath, index) {
-    var startDir = revPath || "";
-    var existing = document.getElementById("damElementsPicker");
-    if (existing) existing.remove();
-    var overlay = document.createElement("div");
-    overlay.id = "damElementsPicker";
-    overlay.className = "dam-thumb-picker-overlay";
-    overlay.innerHTML =
-      '<div class="dam-thumb-picker-box">' +
-      '<div class="dam-thumb-picker__head"><strong>Wskaż Elementy / składniki</strong>' +
-      '<button type="button" class="dam-admin-control" id="damElementsPickerClose" aria-label="Zamknij">×</button></div>' +
-      '<p class="dam-elements-picker__hint">Wybierz folder z elementami albo konkretny plik. Potem checklista uzna je za obecne.</p>' +
-      '<div class="dam-thumb-picker__nav">' +
-      '<button type="button" class="dam-admin-control" id="damElementsPickerUp" data-dam-tip="Folder wyzej">' +
-      '<i class="uil uil-arrow-up" aria-hidden="true"></i></button>' +
-      '<input type="text" id="damElementsPickerPathInput" class="dam-thumb-picker__path-input" placeholder="Wklej ścieżkę folderu ELEMENTY" />' +
-      '<button type="button" class="dam-admin-control" id="damElementsPickerGo">Idz</button>' +
-      '<button type="button" class="dam-admin-control dam-elements-picker__use" id="damElementsPickerUse">Uzyj tego folderu</button>' +
-      "</div>" +
-      '<div class="dam-thumb-picker__grid" id="damElementsPickerGrid">Ładowanie…</div></div>';
-    document.body.appendChild(overlay);
-    var pathInput = document.getElementById("damElementsPickerPathInput");
-    var upBtn = document.getElementById("damElementsPickerUp");
-    var currentPath = startDir;
-
-    function closePicker() { overlay.remove(); }
-    document.getElementById("damElementsPickerClose").onclick = closePicker;
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) closePicker();
+    var startDir = revPath || "X:\\";
+    if (!window.DamFolderPicker || typeof window.DamFolderPicker.open !== "function") {
+      showToast("DamFolderPicker niedostępny - odśwież stronę (cache).");
+      return;
+    }
+    window.DamFolderPicker.open({
+      startDir: startDir,
+      mode: "folder",
+      title: "Wskaz Elementy / skladniki",
+      showWindowsButton: true,
+      onPicked: function (picked) {
+        var path = picked && picked.path;
+        if (!path) return;
+        saveElementsLink(revPath, index, path);
+      }
     });
-
-    function pickTarget(target) {
-      closePicker();
-      saveElementsLink(revPath, index, target);
-    }
-
-    document.getElementById("damElementsPickerUse").onclick = function () {
-      if (currentPath) pickTarget(currentPath);
-      else showToast("Najpierw otwórz folder");
-    };
-
-    function loadDir(target) {
-      var grid = document.getElementById("damElementsPickerGrid");
-      if (grid) grid.innerHTML = "Ładowanie…";
-      if (pathInput) pathInput.value = target || "";
-      currentPath = target || "";
-      fetch(bridgeUrl() + "/folder-browse?mode=assets&path=" + encodeURIComponent(target))
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          grid = document.getElementById("damElementsPickerGrid");
-          if (!grid) return;
-          if (!data || !data.ok) {
-            grid.innerHTML = "<p>Nie udalo sie otwórzyc: " + esc((data && data.error) || "?") +
-              "</p><p class=\"dam-elements-picker__hint\">Mozesz wkleic pełna ścieżkę i kliknac „Uzyj tego folderu”.</p>";
-            return;
-          }
-          currentPath = data.path || target || "";
-          if (pathInput) pathInput.value = currentPath;
-          if (upBtn) upBtn.disabled = !data.parent;
-          upBtn.onclick = data.parent ? function () { loadDir(data.parent); } : null;
-          var folders = data.folders || [];
-          var files = data.files || [];
-          var countHint = typeof data.file_count === "number"
-            ? '<p class="dam-elements-picker__hint">W tym folderze: ' + data.file_count + " plików (AI/PDF/PNG…)</p>"
-            : "";
-          if (!folders.length && !files.length) {
-            grid.innerHTML = countHint + "<p>Folder pusty albo bez rozpoznanych plików. Mozesz i tak uzyc „Uzyj tego folderu”.</p>";
-            return;
-          }
-          var html = countHint;
-          html += folders.map(function (f) {
-            return (
-              '<button type="button" class="dam-thumb-picker__item dam-thumb-picker__item--folder dam-admin-control" data-open-folder="' +
-              esc(f.path) + '"><i class="uil uil-folder" aria-hidden="true"></i>' +
-              '<span class="dam-thumb-picker__name">' + esc(f.name) + "</span></button>"
-            );
-          }).join("");
-          html += files.map(function (f) {
-            return (
-              '<button type="button" class="dam-thumb-picker__item dam-admin-control" data-pick-path="' +
-              esc(f.path) + '"><i class="uil uil-file" aria-hidden="true"></i>' +
-              '<span class="dam-thumb-picker__name">' + esc(f.name) + "</span></button>"
-            );
-          }).join("");
-          grid.innerHTML = html;
-          grid.querySelectorAll("[data-open-folder]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              loadDir(btn.getAttribute("data-open-folder"));
-            });
-          });
-          grid.querySelectorAll("[data-pick-path]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              pickTarget(btn.getAttribute("data-pick-path"));
-            });
-          });
-        })
-        .catch(function () {
-          grid = document.getElementById("damElementsPickerGrid");
-          if (grid) {
-            grid.innerHTML = "<p>Bridge niedostępny. Wklej ścieżkę i kliknij „Uzyj tego folderu”.</p>";
-          }
-        });
-    }
-
-    document.getElementById("damElementsPickerGo").addEventListener("click", function () {
-      if (pathInput && pathInput.value.trim()) loadDir(pathInput.value.trim());
-    });
-    if (pathInput) {
-      pathInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && pathInput.value.trim()) loadDir(pathInput.value.trim());
-      });
-    }
-    loadDir(startDir);
   }
 
   /* ------------------------------------------------------------------ */
@@ -4953,52 +5249,517 @@
   /* Admin controls                                                       */
   /* ------------------------------------------------------------------ */
 
-  function exportStatusJson() {
-    var data = mergeStatusStore(state.statusStore);
-    data.updated_at = new Date().toISOString();
-    var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "product-status.json";
-    a.click();
-    URL.revokeObjectURL(a.href);
-    showToast("Pobrano backup statusów (JSON). To nie zapisuje na dysk Marketing — do tego jest „Stosuj zmiany”.", "info");
+  /**
+   * Shared confirm modal (dam-basepath-overlay). Returns Promise<boolean>.
+   * opts: { title, lead, metaHtml, listHtml, warn, confirmLabel, danger,
+   *         confirmDisabled, waitFor(Promise → partial opts to patch) }
+   */
+  function showExplorerConfirmModal(opts) {
+    opts = opts || {};
+    return new Promise(function (resolve) {
+      var existing = document.getElementById("damExplorerConfirmModal");
+      if (existing) existing.remove();
+      ensureExplorerCtaUnifyCss();
+      var confirmLabel = opts.confirmLabel || "Kontynuuj";
+      var okCls = opts.danger
+        ? "dam-int-cta dam-int-cta--danger geex-btn geex-btn--danger"
+        : "dam-int-cta geex-btn geex-btn--primary";
+      var html =
+        '<div class="dam-basepath-overlay" id="damExplorerConfirmModal">' +
+          '<div class="dam-basepath-box dam-explorer-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="damExplorerConfirmTitle">' +
+            '<button type="button" class="dam-modal-x" id="damExplorerConfirmClose" aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
+            '<div class="dam-explorer-confirm-modal__header">' +
+              '<h3 id="damExplorerConfirmTitle">' + esc(opts.title || "Potwierdź") + "</h3>" +
+              (opts.lead ? '<p class="dam-confirm-lead">' + esc(opts.lead) + "</p>" : "") +
+              '<div class="dam-confirm-meta" id="damExplorerConfirmMeta">' +
+                (opts.metaHtml || "") +
+              "</div>" +
+            "</div>" +
+            '<div class="dam-explorer-confirm-modal__body" id="damExplorerConfirmBody">' +
+              (opts.listHtml || "") +
+            "</div>" +
+            '<div class="dam-explorer-confirm-modal__footer">' +
+              '<p class="dam-confirm-warn" id="damExplorerConfirmWarn"' +
+                (opts.warn ? "" : " hidden") +
+              ">" +
+                (opts.warn ? esc(opts.warn) : "") +
+              "</p>" +
+              '<div class="dam-basepath-actions">' +
+                '<button type="button" class="dam-int-cta dam-int-cta--cancel" id="damExplorerConfirmCancel">Anuluj</button>' +
+                '<button type="button" class="' + okCls + '" id="damExplorerConfirmOk"' +
+                  (opts.confirmDisabled ? " disabled" : "") +
+                ">" +
+                  esc(confirmLabel) +
+                "</button>" +
+              "</div>" +
+            "</div>" +
+          "</div>" +
+        "</div>";
+      document.body.insertAdjacentHTML("beforeend", html);
+      var modal = document.getElementById("damExplorerConfirmModal");
+      var okBtn = document.getElementById("damExplorerConfirmOk");
+      var bodyEl = document.getElementById("damExplorerConfirmBody");
+      var metaEl = document.getElementById("damExplorerConfirmMeta");
+      var warnEl = document.getElementById("damExplorerConfirmWarn");
+      bindForcePreviewInteractions(modal);
+      var settled = false;
+      function finish(ok) {
+        if (settled) return;
+        settled = true;
+        document.removeEventListener("keydown", onEsc);
+        if (modal && modal.parentNode) modal.remove();
+        resolve(!!ok);
+      }
+      function onEsc(e) {
+        if (e.key === "Escape") finish(false);
+      }
+      function applyPatch(patch) {
+        if (!patch || settled) return;
+        if (typeof patch.listHtml === "string" && bodyEl) {
+          bodyEl.innerHTML = patch.listHtml;
+          bindForcePreviewInteractions(modal);
+        }
+        if (typeof patch.metaHtml === "string" && metaEl) {
+          metaEl.innerHTML = patch.metaHtml;
+        }
+        if (typeof patch.warn === "string" && warnEl) {
+          if (patch.warn) {
+            warnEl.textContent = patch.warn;
+            warnEl.removeAttribute("hidden");
+          } else {
+            warnEl.textContent = "";
+            warnEl.setAttribute("hidden", "");
+          }
+        }
+        if (typeof patch.confirmLabel === "string" && okBtn) {
+          okBtn.textContent = patch.confirmLabel;
+        }
+        if (okBtn && typeof patch.confirmDisabled === "boolean") {
+          okBtn.disabled = patch.confirmDisabled;
+        }
+        if (okBtn && typeof patch.danger === "boolean") {
+          okBtn.className = patch.danger
+            ? "dam-int-cta dam-int-cta--danger geex-btn geex-btn--danger"
+            : "dam-int-cta geex-btn geex-btn--primary";
+        }
+      }
+      document.getElementById("damExplorerConfirmCancel").addEventListener("click", function () { finish(false); });
+      document.getElementById("damExplorerConfirmClose").addEventListener("click", function () { finish(false); });
+      modal.addEventListener("click", function (e) { if (e.target === modal) finish(false); });
+      document.addEventListener("keydown", onEsc);
+      okBtn.addEventListener("click", function () {
+        if (okBtn.disabled) return;
+        finish(true);
+      });
+      if (opts.waitFor && typeof opts.waitFor.then === "function") {
+        opts.waitFor.then(applyPatch).catch(function (err) {
+          applyPatch({
+            listHtml:
+              '<div class="dam-confirm-info-tile">' +
+                '<i class="uil uil-exclamation-triangle" aria-hidden="true"></i>' +
+                "<p><strong>Błąd podglądu.</strong> " +
+                esc((err && err.message) || String(err || "nieznany")) +
+                "</p>" +
+              "</div>",
+            confirmLabel: "Zamknij",
+            confirmDisabled: false,
+            danger: false,
+            warn: "",
+          });
+        });
+      }
+    });
   }
 
-  /** Prawda o zapisie statusu - nie mylic z "Baza online" (Postgres) ani starym workflow P:DAM. */
-  function updateAdminStatusTruthBar() {
-    var el = document.getElementById("damAdminBarText") || document.querySelector("#damAdminBar span");
-    if (!el) return;
-    var dbOnline = false;
-    try {
-      if (window.DamDbStatus && typeof window.DamDbStatus.last === "function" && window.DamDbStatus.last()) {
-        dbOnline = !!window.DamDbStatus.isOnline();
-      } else {
-        var pillEl = document.getElementById("damDbStatus");
-        if (pillEl && pillEl.classList.contains("is-online")) dbOnline = true;
-        if (pillEl && pillEl.classList.contains("is-offline")) dbOnline = false;
-        var pill = document.querySelector(".dam-db-status__label");
-        var pt = (pill && pill.textContent) || "";
-        if (/online/i.test(pt) && !/offline/i.test(pt)) dbOnline = true;
-        if (/offline/i.test(pt)) dbOnline = false;
-      }
-    } catch (e) { /* ignore */ }
+  function folderBasename(path) {
+    var parts = String(path || "").replace(/\//g, "\\").split("\\").filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : "";
+  }
 
-    if (dbOnline) {
-      el.innerHTML =
-        "<strong>Prawda zapisu F/X/D:</strong> most <code>/lifecycle-status</code> → rename na dysku Marketing + " +
-        "<code>apps/web/data/lifecycle-status.json</code> + mirror <code>product-status.json</code> + " +
-        "<strong>Postgres KV</strong> (to wlasnie oznacza „Baza online”). " +
-        "<code>localStorage</code> = tylko kopia w tej przegladarce. " +
-        "Przycisk „Pobierz kopie” = opcjonalny backup, nie zrodlo prawdy dla zespolu.";
-    } else {
-      el.innerHTML =
-        "<strong>Prawda zapisu F/X/D:</strong> most → dysk Marketing + lokalne JSON " +
-        "(<code>lifecycle-status.json</code> / <code>product-status.json</code>). " +
-        "Gdy Baza offline: bez sync Postgres do innych PC. " +
-        "<code>localStorage</code> = kopia w tej przegladarce. " +
-        "Nie zastepuj recznie pliku na P: - sciezka to <code>apps/web/data/</code> w instalacji DAM.";
+  function stripStatusSuffixName(name) {
+    return String(name || "").replace(/\s-\s([FXD])$/i, "").trim();
+  }
+
+  function withStatusSuffixName(name, letter) {
+    var base = stripStatusSuffixName(name);
+    var lit = String(letter || "").toUpperCase();
+    if (!base) return lit ? ("(brak) - " + lit) : "(brak)";
+    if (lit === "F" || lit === "X" || lit === "D") return base + " - " + lit;
+    return base;
+  }
+
+  function forceActionKind(item) {
+    var want = String((item && item.letter) || "").toUpperCase();
+    if (!want) return "clear";
+    if (want === "X") return "archive";
+    return "rename";
+  }
+
+  function humanizeProductId(id) {
+    var raw = String(id || "").replace(/^dk[-_]?|^gc[-_]?/i, "");
+    return raw
+      .split(/[-_]+/)
+      .filter(Boolean)
+      .map(function (p) {
+        return p.charAt(0).toUpperCase() + p.slice(1);
+      })
+      .join(" ");
+  }
+
+  function lookupProductForForce(productId) {
+    var pid = String(productId || "");
+    if (!pid) return null;
+    var products =
+      (state.fileIndex && state.fileIndex.products) ||
+      (state.fileIndex && state.fileIndex.items) ||
+      [];
+    if (!Array.isArray(products)) return null;
+    for (var i = 0; i < products.length; i++) {
+      if (String(products[i].id || "") === pid) return products[i];
     }
+    return null;
+  }
+
+  function looksLikeRevisionFolderName(name) {
+    var n = stripStatusSuffixName(name);
+    if (!n) return false;
+    if (isVariantFolderName(n)) return true;
+    if (/\d{2}[.\-]\d{2}[.\-]\d{4}/.test(n)) return true;
+    if (/\b6300[\dXx]{3}/i.test(n)) return true;
+    if (/^(KAR|BAT|DOY|ETY|MINI|TUBA|FOL|BIG|KARTON)/i.test(n)) return true;
+    return false;
+  }
+
+  /** Product folder segment from disk/index path (skip revision + archive wrappers). */
+  function forceProductFolderFromPath(path) {
+    var parts = String(path || "")
+      .replace(/\//g, "\\")
+      .split("\\")
+      .filter(Boolean);
+    while (parts.length) {
+      var last = parts[parts.length - 1];
+      var cleaned = stripStatusSuffixName(last);
+      if (/archiwum/i.test(cleaned)) {
+        parts.pop();
+        continue;
+      }
+      if (looksLikeRevisionFolderName(cleaned) && parts.length > 1) {
+        parts.pop();
+        continue;
+      }
+      break;
+    }
+    if (!parts.length) return "";
+    var folder = stripStatusSuffixName(parts[parts.length - 1]);
+    return DL && DL.cleanProductDisplayName
+      ? DL.cleanProductDisplayName(folder) || folder
+      : folder;
+  }
+
+  function forceTileProductTitle(item) {
+    if (item && item.display_name) {
+      var dn = DL
+        ? DL.cleanProductDisplayName(item.display_name)
+        : String(item.display_name);
+      if (dn) return dn;
+    }
+    var p = lookupProductForForce(item && item.product_id);
+    if (p) {
+      var nm = DL
+        ? DL.cleanProductDisplayName(p.display_name || p.name || "")
+        : (p.display_name || p.name || "");
+      if (nm) return nm;
+    }
+    var fromPath = forceProductFolderFromPath(
+      (item && (item.disk_path || item.path)) || ""
+    );
+    if (fromPath) return fromPath;
+    return (
+      humanizeProductId(item && item.product_id) ||
+      String((item && item.product_id) || "Produkt")
+    );
+  }
+
+  function letterBadgeHtml(letter, opts) {
+    opts = opts || {};
+    var lit = String(letter || "").toUpperCase();
+    if (lit === "F" || lit === "X" || lit === "D") {
+      var tip =
+        lit === "F" ? "Aktualne (F)" : lit === "X" ? "Nieaktualne / archiwum (X)" : "Demo (D)";
+      return '<span class="' + lifecycleChipClass(lit) + '" title="' + tip + '">' + lit + "</span>";
+    }
+    var emptyText = opts.emptyText || "-";
+    var emptyTip = opts.emptyTip || "Bez litery";
+    return (
+      '<span class="' +
+      lifecycleChipClass("-") +
+      '" title="' +
+      esc(emptyTip) +
+      '">' +
+      esc(emptyText) +
+      "</span>"
+    );
+  }
+
+  function forceKindLabel(kind) {
+    if (kind === "archive") return "Archiwum";
+    if (kind === "clear") return "Bez litery";
+    return "Zmiana nazwy";
+  }
+
+  function formatForcePreviewLoading() {
+    return (
+      '<div class="dam-force-preview" id="damForcePreview">' +
+        '<div class="dam-force-preview__head">' +
+          '<div class="dam-force-preview__count">Liczenie zmian…</div>' +
+        "</div>" +
+        '<div class="dam-force-skel" aria-hidden="true">' +
+          '<div class="dam-force-skel__row"></div>' +
+          '<div class="dam-force-skel__row"></div>' +
+          '<div class="dam-force-skel__row"></div>' +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  function formatForcePreviewList(planned) {
+    planned = planned || [];
+    if (!planned.length) {
+      return (
+        '<div class="dam-confirm-info-tile">' +
+          '<i class="uil uil-check-circle" aria-hidden="true"></i>' +
+          "<p><strong>Brak zmian.</strong> Dysk Marketing jest już zgodny z programem.</p>" +
+        "</div>"
+      );
+    }
+    var counts = { all: planned.length, rename: 0, archive: 0, clear: 0 };
+    planned.forEach(function (it) {
+      counts[forceActionKind(it)] += 1;
+    });
+    var rows = planned.map(function (item, idx) {
+      var kind = forceActionKind(item);
+      var diskPath = item.disk_path || item.path || "";
+      var rawName = folderBasename(diskPath) || "(brak folderu)";
+      /* Before/after from status letters (basename may already include -F/-X/-D). */
+      var baseName = stripStatusSuffixName(rawName) || rawName;
+      var fromName = withStatusSuffixName(baseName, item.disk_letter);
+      var toName = withStatusSuffixName(baseName, item.letter);
+      var title = forceTileProductTitle(item);
+      var scopeLabel = item.scope === "product" ? "Produkt" : "Wariant";
+      var revRaw = String(item.revision_index || "");
+      var revBit = "";
+      if (revRaw) {
+        /* Store sometimes keys variants by full path - show short segment only */
+        if (/[:\\\/]/.test(revRaw) || revRaw.length > 36) {
+          revBit = " · " + (folderBasename(revRaw) || revRaw.slice(0, 28));
+        } else {
+          revBit = " · " + revRaw;
+        }
+      }
+      var kindLabel = forceKindLabel(kind);
+      var toBlockExtra =
+        kind === "archive"
+          ? " dam-force-block--archive"
+          : kind === "clear"
+            ? " dam-force-block--clear"
+            : "";
+      var pathShort = diskPathShort(diskPath) || diskPath;
+      var pathId = "damForcePath-" + idx;
+      var pathFromId = pathId + "-from";
+      return (
+        '<article class="dam-force-row" data-force-kind="' +
+        esc(kind) +
+        '">' +
+          '<div class="dam-force-row__head">' +
+            '<h4 class="dam-force-row__title" title="' +
+            esc(title) +
+            '">' +
+            esc(title) +
+            "</h4>" +
+            '<div class="dam-force-row__meta">' +
+              '<span class="dam-force-row__kind dam-force-row__kind--' +
+              esc(kind) +
+              '">' +
+              esc(kindLabel) +
+              "</span>" +
+              '<span class="dam-force-row__scope">' +
+              esc(scopeLabel + revBit) +
+              "</span>" +
+            "</div>" +
+          "</div>" +
+          '<div class="dam-force-diff">' +
+            '<div class="dam-force-block dam-force-block--from">' +
+              '<div class="dam-force-block__label">Teraz</div>' +
+              '<div class="dam-force-block__name" title="' +
+              esc(fromName) +
+              '">' +
+              esc(fromName) +
+              "</div>" +
+              '<div class="dam-force-block__badge-row">' +
+                letterBadgeHtml(item.disk_letter, {
+                  emptyText: "-",
+                  emptyTip: "Na dysku: bez litery",
+                }) +
+              "</div>" +
+              (pathShort
+                ? '<button type="button" class="dam-force-block__path-btn" data-force-path-toggle="' +
+                  pathFromId +
+                  '" aria-expanded="false">' +
+                  '<i class="uil uil-angle-down" aria-hidden="true"></i> Pełna ścieżka' +
+                  "</button>" +
+                  '<p class="dam-force-block__path" id="' +
+                  pathFromId +
+                  '" hidden>' +
+                  esc(pathShort) +
+                  "</p>"
+                : "") +
+            "</div>" +
+            '<div class="dam-force-diff__arrow" aria-hidden="true">→</div>' +
+            '<div class="dam-force-block dam-force-block--to' +
+            toBlockExtra +
+            '">' +
+              '<div class="dam-force-block__label">Po zmianie</div>' +
+
+              '<div class="dam-force-block__name" title="' +
+              esc(toName) +
+              '">' +
+              esc(toName) +
+              "</div>" +
+              '<div class="dam-force-block__badge-row">' +
+                letterBadgeHtml(item.letter, {
+                  emptyText: "∅",
+                  emptyTip: "Program: bez litery",
+                }) +
+              "</div>" +
+            "</div>" +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+
+    return (
+      '<div class="dam-force-preview" id="damForcePreview">' +
+        '<div class="dam-force-preview__head">' +
+          '<div class="dam-force-preview__count" id="damForcePreviewCount">' +
+            esc(String(counts.all)) +
+            (counts.all === 1 ? " zmiana" : " zmian") +
+          "</div>" +
+          '<div class="dam-force-preview__chips" role="group" aria-label="Filtr zmian">' +
+            '<button type="button" class="dam-force-chip is-on" data-force-filter="all">Wszystkie (' +
+            counts.all +
+            ")</button>" +
+            '<button type="button" class="dam-force-chip" data-force-filter="rename">Zmiana nazwy (' +
+            counts.rename +
+            ")</button>" +
+            '<button type="button" class="dam-force-chip" data-force-filter="archive">Archiwum (' +
+            counts.archive +
+            ")</button>" +
+            '<button type="button" class="dam-force-chip" data-force-filter="clear">Bez litery (' +
+            counts.clear +
+            ")</button>" +
+          "</div>" +
+        "</div>" +
+        '<div class="dam-force-preview__list" id="damForcePreviewList">' +
+          rows +
+        "</div>" +
+        '<div class="dam-force-preview__empty" id="damForcePreviewEmpty" hidden>' +
+          "Brak zmian w tym filtrze." +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  function bindForcePreviewInteractions(root) {
+    if (!root) return;
+    var list = root.querySelector("#damForcePreviewList");
+    var emptyEl = root.querySelector("#damForcePreviewEmpty");
+    var countEl = root.querySelector("#damForcePreviewCount");
+    var chips = root.querySelectorAll("[data-force-filter]");
+    if (chips.length && list) {
+      chips.forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          var filter = chip.getAttribute("data-force-filter") || "all";
+          chips.forEach(function (c) {
+            c.classList.toggle("is-on", c === chip);
+          });
+          var visible = 0;
+          list.querySelectorAll(".dam-force-row").forEach(function (row) {
+            var kind = row.getAttribute("data-force-kind") || "";
+            var show = filter === "all" || kind === filter;
+            row.hidden = !show;
+            if (show) visible += 1;
+          });
+          if (countEl) {
+            countEl.textContent =
+              String(visible) +
+              (visible === 1 ? " zmiana" : " zmian") +
+              (filter !== "all" ? " (filtr)" : "");
+          }
+          if (emptyEl) {
+            if (visible === 0) emptyEl.removeAttribute("hidden");
+            else emptyEl.setAttribute("hidden", "");
+          }
+        });
+      });
+    }
+    root.querySelectorAll("[data-force-path-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-force-path-toggle");
+        var pathEl = id ? document.getElementById(id) : null;
+        if (!pathEl) return;
+        var open = pathEl.hasAttribute("hidden");
+        if (open) pathEl.removeAttribute("hidden");
+        else pathEl.setAttribute("hidden", "");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        btn.innerHTML =
+          '<i class="uil ' +
+          (open ? "uil-angle-up" : "uil-angle-down") +
+          '" aria-hidden="true"></i>' +
+          (open ? " Ukryj ścieżkę" : " Pełna ścieżka");
+      });
+    });
+  }
+
+  function confirmInfoTileHtml(text) {
+    return (
+      '<div class="dam-confirm-info-tile">' +
+        '<i class="uil uil-info-circle" aria-hidden="true"></i>' +
+        "<p>" +
+        text +
+        "</p>" +
+      "</div>"
+    );
+  }
+
+  function exportStatusJson() {
+    return showExplorerConfirmModal({
+      title: "Pobierz backup JSON",
+      lead: "Pobierze lokalny plik product-status.json (backup statusów w przeglądarce). Nie zmienia folderów na dysku Marketing.",
+      listHtml: confirmInfoTileHtml(
+        "<strong>Backup lokalny.</strong> To kopia statusów z przeglądarki - nie zapis na dysk Marketing."
+      ),
+      confirmLabel: "Pobierz backup",
+      danger: false
+    }).then(function (ok) {
+      if (!ok) return;
+      var data = mergeStatusStore(state.statusStore);
+      data.updated_at = new Date().toISOString();
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "product-status.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast("Pobrano backup statusów (JSON). To nie zapisuje na dysk Marketing - do tego jest „Stosuj zmiany”.", "info");
+    });
+  }
+
+  /** Prawda o zapisie statusu - ukryty pasek (user nie chce copy w eksploratorze). */
+  function updateAdminStatusTruthBar() {
+    var bar = document.getElementById("damAdminBar");
+    if (bar) bar.style.display = "none";
+    var el = document.getElementById("damAdminBarText");
+    if (el) el.textContent = "";
   }
 
   function isAdminRole() {
@@ -5128,7 +5889,7 @@
       state.adminMode = localStorage.getItem(ADMIN_KEY) === "1";
       if (exportBtn) exportBtn.hidden = !state.adminMode;
       var bar = document.getElementById("damAdminBar");
-      if (bar) bar.style.display = state.adminMode ? "flex" : "none";
+      if (bar) bar.style.display = "none";
       updateAdminStatusTruthBar();
     }
     if (!window._damExplorerAdminBound) {
@@ -5329,7 +6090,7 @@
           return state.lifecycleStore;
         });
     }
-    return fetch(bridgeUrl() + "/lifecycle-status", { headers: authHeaders() })
+    return fetchWithTimeout(bridgeUrl() + "/lifecycle-status", { headers: authHeaders() }, 10000)
       .then(function (r) {
         if (r.status === 401 || r.status === 403) throw new Error("bridge_lifecycle_auth");
         if (!r.ok) throw new Error("bridge_lifecycle_" + r.status);
@@ -5340,7 +6101,7 @@
         return ensureBridgeSession()
           .then(function (sess) {
             if (!sess || !sess.ok) throw new Error("bridge_lifecycle_auth");
-            return fetch(bridgeUrl() + "/lifecycle-status", { headers: authHeaders() });
+            return fetchWithTimeout(bridgeUrl() + "/lifecycle-status", { headers: authHeaders() }, 10000);
           })
           .then(function (r) {
             if (!r.ok) throw new Error("bridge_lifecycle_" + r.status);
@@ -5351,6 +6112,66 @@
             return loadLifecycleFileFallback();
           });
       });
+  }
+
+  function dismissExplorerLoader() {
+    if (window.DamLoader && typeof window.DamLoader.done === "function") {
+      window.DamLoader.done();
+    }
+  }
+
+  function scheduleExplorerRender() {
+    var run = function () {
+      renderAll();
+      renderTagChips();
+    };
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(run);
+    } else {
+      setTimeout(run, 0);
+    }
+  }
+
+  function loadExplorerMetaLight() {
+    return Promise.all([
+      loadStatusStore(),
+      loadCarrierOverrides(),
+      loadElementsLinks()
+    ]);
+  }
+
+  function runDeferredLifecycleBoot() {
+    if (state._lifecycleBootScheduled) return;
+    state._lifecycleBootScheduled = true;
+    var run = function () {
+      loadLifecycleStore()
+        .then(function () {
+          return bootLifecycleReconcile();
+        })
+        .then(function (boot) {
+          syncLifecycleFromDiskIndex({
+            skipProgramWins: boot && boot.ok ? (boot.program_wins || []) : [],
+          });
+          scheduleExplorerRender();
+        })
+        .catch(function (err) {
+          try {
+            console.warn(
+              "[DAM explorer] lifecycle deferred:",
+              err && err.message ? err.message : err
+            );
+          } catch (_eLog) { /* ignore */ }
+          try {
+            syncLifecycleFromDiskIndex({ skipProgramWins: [] });
+            scheduleExplorerRender();
+          } catch (_eSync) { /* ignore */ }
+        });
+    };
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(function () { run(); }, { timeout: 2500 });
+    } else {
+      setTimeout(run, 80);
+    }
   }
 
   function loadStatusStore() {
@@ -5369,7 +6190,7 @@
     ]);
   }
 
-  /** Po przeładowaniu file-index: odswiez otwarty produkt (nowe warianty, litery F/X/D). */
+  /** Po przeładowaniu file-index: odśwież otwarty produkt (nowe warianty, litery F/X/D). */
   function findFreshProductInIndex(preferredId, pathHint) {
     var list = (state.fileIndex && state.fileIndex.products) || [];
     if (!list.length) return null;
@@ -5542,19 +6363,21 @@
     state.fileIndex = bundle.fileIndex || window._DAM_FILE_INDEX;
     if (!state.fileIndex && bundle.products) state.fileIndex = bundle;
     window._DAM_FILE_INDEX = state.fileIndex;
+    _fileIndexIdSet = null;
+    _fileIndexIdSetSource = null;
     if (window.DamPaths && state.fileIndex && state.fileIndex.roots) {
       window.DamPaths.detectIndexBaseFromRoots(state.fileIndex.roots);
     }
     refreshOpenProductFromIndex();
     setStatus("");
-    renderAll();
-    renderTagChips();
+    scheduleExplorerRender();
 
     var input = document.getElementById("damFileSearch");
     var results = document.getElementById("damSearchResults");
     if (window.DamSearch && input && !input._damBound) {
       input._damBound = true;
       var scopeEl = document.getElementById("damSearchScope");
+      /* HARD: one search flight for dropdown + panel (no dual DamSearch.search). */
       window.DamSearch.bindSearchBox(
         input,
         results,
@@ -5562,9 +6385,16 @@
           openProduct(prod);
         },
         scopeEl,
-        {}
+        {
+          debounceMs: 160,
+          limit: 40,
+          fileIndex: state.fileIndex || window._DAM_FILE_INDEX,
+          onResults: function (res, q) {
+            applySearchResultsToPanel(q, res);
+          }
+        }
       );
-      /* Po zmianie scope odswiez AJAX panel */
+      /* Po zmianie scope odśwież AJAX panel (reuse single search path) */
       if (scopeEl && !scopeEl._damPanelScopeBound) {
         scopeEl._damPanelScopeBound = true;
         scopeEl.addEventListener("click", function () {
@@ -5572,11 +6402,12 @@
             clearTimeout(state.searchPanelTimer);
             state.searchPanelTimer = setTimeout(function () {
               applySearchToPanel(input.value);
-            }, 80);
+            }, 160);
           }
         });
       }
     }
+    /* Panel clear for short query only — full search owned by bindSearchBox.onResults */
     if (input) bindSearchPanelSync(input);
   }
 
@@ -5594,10 +6425,10 @@
     }
   }
 
-  /** Po odswiezeniu indeksu: zsynchronizuj store/UI z literkami na dysku (nazwy folderow). */
+  /** Po odświeżeniu indeksu: zsynchronizuj store/UI z literkami na dysku (nazwy folderow). */
   function syncLifecycleFromDiskIndex(opts) {
     opts = opts || {};
-    /* skipProgramWins: po boot mtime program ma pierwszenstwo az do Odswiez/FORCE */
+    /* skipProgramWins: po boot mtime program ma pierwszenstwo az do Odśwież/FORCE */
     var skipProd = {};
     var skipRev = {};
     (opts.skipProgramWins || []).forEach(function (w) {
@@ -5734,54 +6565,50 @@
   function bootLifecycleReconcile() {
     if (state._lifecycleBootDone) return Promise.resolve(null);
     state._lifecycleBootDone = true;
-    /* Boot z enforce_moves (przenosiny X) = tylko admin na mostcie. */
-    if (!isAdminRole()) {
-      return pullLifecycleFromBridge().catch(function () {
-        return null;
-      });
-    }
-    return bridgeFetchJson(bridgeUrl() + "/lifecycle-reconcile?mode=boot")
+    /* Na starcie strony: pull (odczyt), NIE boot z enforce_moves - to blokuje admina na minuty. */
+    return bridgeFetchJson(bridgeUrl() + "/lifecycle-reconcile?mode=pull", {}, 8000)
       .then(function (res) {
         if (!res.data || !res.data.ok) {
           if (res.http === 401 || res.http === 403) return null;
           return null;
         }
-        var data = res.data;
-        var nDisk = (data.disk_wins || []).length;
-        var nProg = (data.program_wins || []).length;
-        var nEnf = (data.enforced || []).length;
-        // #region agent log
-        fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
-          body: JSON.stringify({
-            sessionId: "a78fa0",
-            hypothesisId: "F",
-            location: "dam-explorer.js:bootLifecycleReconcile",
-            message: "boot reconcile result (not an error)",
-            data: { nDisk: nDisk, nProg: nProg, nEnf: nEnf, toastSuppressed: true },
-            timestamp: Date.now(),
-            runId: "post-fix",
-          }),
-        }).catch(function () {});
-        // #endregion
-        /* Boot sync to info w konsoli/statusie - NIE toast (wygladal jak blad). */
-        try {
-          console.info(
-            "[DAM lifecycle boot] dysk=" + nDisk + " program=" + nProg + " enforced_X=" + nEnf
-          );
-        } catch (_e) { /* ignore */ }
-        if (nEnf > 0) {
-          setStatus("Przy starcie przeniesiono foldery X: " + nEnf);
-        } else if (nDisk || nProg) {
-          setStatus("Statusy zsynchronizowane z dyskiem (" + nDisk + ")");
-        }
-        return data;
+        return res.data;
       })
       .catch(function () { return null; });
   }
 
-  /** Stosuj zmiany: PROGRAM -> dysk (FORCE). */
+
+  var _forcePreviewCache = { at: 0, data: null, ttlMs: 8000 };
+  var _forceApplyBusy = false;
+
+  function fetchLifecycleForcePreview() {
+    var now = Date.now();
+    if (
+      _forcePreviewCache.data &&
+      now - _forcePreviewCache.at < _forcePreviewCache.ttlMs
+    ) {
+      return Promise.resolve({
+        data: _forcePreviewCache.data,
+        http: 200,
+        fromCache: true,
+      });
+    }
+    return bridgeFetchJson(bridgeUrl() + "/lifecycle-force", {
+      method: "POST",
+      body: JSON.stringify({ dry_run: true }),
+    }).then(function (previewRes) {
+      if (previewRes.data && previewRes.data.ok) {
+        _forcePreviewCache = {
+          at: Date.now(),
+          data: previewRes.data,
+          ttlMs: _forcePreviewCache.ttlMs,
+        };
+      }
+      return previewRes;
+    });
+  }
+
+  /** Stosuj zmiany: PROGRAM -> dysk (FORCE). Skeleton first, then dry-run fill. */
   function forceApplyLifecycleToDisk() {
     if (!isAdminRole() || !state.adminMode) {
       showToast("Włącz tryb admina, aby stosować zmiany na dysku.", "error");
@@ -5796,44 +6623,132 @@
         return forceApplyLifecycleToDisk();
       });
     }
-    var ok = true;
-    try {
-      ok = window.confirm(
-        "Stosuj zmiany (FORCE):\n" +
-          "Zapisze statusy z PROGRAMU na foldery Marketing (rename / archiwum).\n" +
-          "To odwrotnosc Odśwież (Odśwież tylko czyta dysk).\n\nKontynuować?"
-      );
-    } catch (e) { ok = true; }
-    if (!ok) return Promise.resolve({ ok: false, cancelled: true });
-    showToast("Stosuję zmiany na dysku…");
-    setStatus("FORCE lifecycle…");
-    return bridgeFetchJson(bridgeUrl() + "/lifecycle-force", {
-      method: "POST",
-      body: JSON.stringify({ dry_run: false })
-    })
-      .then(function (res) {
-        if (!res.data || !res.data.ok) {
-          var err = (res.data && res.data.error) || res.http;
-          if (err === "login_required" || err === "admin_required" || res.http === 401 || res.http === 403) {
+    if (_forceApplyBusy) {
+      return Promise.resolve({ ok: false, busy: true });
+    }
+    _forceApplyBusy = true;
+    setStatus("FORCE dry-run…");
+    var previewCount = 0;
+    var previewReady = false;
+    var waitPreview = fetchLifecycleForcePreview()
+      .then(function (previewRes) {
+        if (!previewRes.data || !previewRes.data.ok) {
+          var err =
+            (previewRes.data && previewRes.data.error) || previewRes.http;
+          if (
+            err === "login_required" ||
+            err === "admin_required" ||
+            previewRes.http === 401 ||
+            previewRes.http === 403
+          ) {
             showSessionRequiredToast(err);
-          } else {
-            showToast("Nie udało się zastosować zmian: " + err, "error");
           }
-          return res.data || { ok: false };
+          throw new Error(
+            typeof err === "string" ? err : "Nie udało się przygotować podglądu"
+          );
         }
-        var n = res.data.applied_ok || 0;
-        var fail = res.data.applied_fail || 0;
-        if (fail) {
-          showToast("Zapisano " + n + " zmian, błędów: " + fail, "error");
-        } else {
-          showToast("Pomyślnie zastosowano zmiany na dysku (" + n + ")", "success");
+        var planned = previewRes.data.planned || [];
+        previewCount =
+          typeof previewRes.data.count === "number"
+            ? previewRes.data.count
+            : planned.length;
+        previewReady = true;
+        return {
+          listHtml: formatForcePreviewList(planned),
+          metaHtml: previewCount
+            ? "<strong>Podgląd bez zapisu</strong> - jeszcze nic nie zapisano na dysku."
+            : "",
+          warn: previewCount
+            ? "Tej operacji nie da się łatwo cofnąć. Sprawdź bloki Teraz / Po zmianie przed potwierdźeniem."
+            : "",
+          confirmLabel: previewCount
+            ? "Stosuj (" + previewCount + ")"
+            : "Zamknij",
+          confirmDisabled: false,
+          danger: !!previewCount,
+        };
+      });
+
+    return showExplorerConfirmModal({
+      title: "Stosuj zmiany na dysk",
+      lead:
+        "FORCE zapisze statusy z PROGRAMU na foldery Marketing (zmiana nazwy / archiwum). Odśwież tylko czyta dysk - to odwrotność.",
+      metaHtml: "Trwa liczenie zmian z dysku…",
+      listHtml: formatForcePreviewLoading(),
+      warn: "",
+      confirmLabel: "Stosuj",
+      confirmDisabled: true,
+      danger: true,
+      waitFor: waitPreview,
+    })
+      .then(function (confirmed) {
+        _forceApplyBusy = false;
+        if (!confirmed) return { ok: false, cancelled: true };
+        if (!previewReady) return { ok: false, error: "preview_failed" };
+        if (!previewCount) {
+          return { ok: true, applied_ok: 0, applied_fail: 0, dry_run: true };
         }
-        return refreshIndex({ silent: true }).then(function () { return res.data; });
+        _forcePreviewCache = { at: 0, data: null, ttlMs: _forcePreviewCache.ttlMs };
+        showToast("Stosuję zmiany na dysku…");
+        setStatus("FORCE lifecycle…");
+        return bridgeFetchJson(bridgeUrl() + "/lifecycle-force", {
+          method: "POST",
+          body: JSON.stringify({ dry_run: false }),
+        }).then(function (res) {
+          if (!res.data || !res.data.ok) {
+            var err2 = (res.data && res.data.error) || res.http;
+            if (
+              err2 === "login_required" ||
+              err2 === "admin_required" ||
+              res.http === 401 ||
+              res.http === 403
+            ) {
+              showSessionRequiredToast(err2);
+            } else {
+              showToast("Nie udało się zastosować zmian: " + err2, "error");
+            }
+            return res.data || { ok: false };
+          }
+          var n = res.data.applied_ok || 0;
+          var fail = res.data.applied_fail || 0;
+          if (fail) {
+            showToast("Zapisano " + n + " zmian, błędów: " + fail, "error");
+          } else {
+            showToast(
+              "Pomyślnie zastosowano zmiany na dysku (" + n + ")",
+              "success"
+            );
+          }
+          return refreshIndex({ silent: true }).then(function () {
+            return res.data;
+          });
+        });
       })
       .catch(function (err) {
-        showToast("Błąd zapisu na dysk: " + (err && err.message ? err.message : err), "error");
+        _forceApplyBusy = false;
+        showToast(
+          "Błąd zapisu na dysk: " +
+            (err && err.message ? err.message : err),
+          "error"
+        );
         return { ok: false };
       });
+  }
+
+  /** Toolbar Odśwież: confirm read-only scan, then refreshIndex. */
+  function confirmAndRefreshIndex() {
+    return showExplorerConfirmModal({
+      title: "Odśwież listę z dysku",
+      lead: "Skan tylko odczytu - nie zmienia dysku Marketing. Wczyta foldery do programu (dysk -> program) i odświeży indeks.",
+      listHtml: confirmInfoTileHtml(
+        "<strong>Tylko odczyt.</strong> Nie zapisuje liter F/X/D na folderach. Do zapisu na dysk służy „Stosuj zmiany”."
+      ),
+      confirmLabel: "Odśwież",
+      danger: false
+    }).then(function (ok) {
+      if (!ok) return { ok: false, cancelled: true };
+      return refreshIndex();
+    });
   }
 
   function refreshIndex(opts) {
@@ -5871,7 +6786,7 @@
                   archN = state.product.revisions.filter(function (r) { return r.in_archive; }).length;
                 }
                 if (archN > 0) {
-                  showToast("Odświeżono listę (+" + archN + " w archiwum — włącz Pokaż wszystko)", "success");
+                  showToast("Odświeżono listę (+" + archN + " w archiwum - włącz Pokaż wszystko)", "success");
                 } else {
                   showToast("Pomyślnie odświeżono listę", "success");
                 }
@@ -5899,13 +6814,16 @@
       });
     }
 
-    /* Przebudowa indeksu z dysku = tylko admin (PI). User: przeladuj JSON + pull statusow. */
+    /* Przebudowa indeksu z dysku = tylko admin (PI). User: przeładuj JSON + pull statusow. */
     var rebuild = ensureBridgeSession()
       .then(function (sess) {
         if (!sess || !sess.ok) {
           return { ok: false, authError: true, error: (sess && sess.error) || "login_required" };
         }
         if (!isAdminRole()) {
+          return { ok: true, skippedRebuild: true };
+        }
+        if (opts.skipRebuild) {
           return { ok: true, skippedRebuild: true };
         }
         return fetch(bridgeUrl() + "/index/rebuild", {
@@ -5923,7 +6841,7 @@
               if (!r.ok || (data && data.ok === false)) {
                 return { ok: false, error: (data && data.error) || "rebuild_failed" };
               }
-              return waitForIndexRebuild(60000);
+              return waitForIndexRebuild(silent ? 15000 : 60000);
             });
           });
       })
@@ -5935,7 +6853,7 @@
       if (rebuildResult && rebuildResult.authError && !silent) {
         showSessionRequiredToast(rebuildResult.error || "login_required");
       } else if (rebuildResult && rebuildResult.error && !silent) {
-        showToast("Indeks dysku: " + rebuildResult.error + " — wczytuję ostatnią kopię.", "info");
+        showToast("Indeks dysku: " + rebuildResult.error + " - wczytuję ostatnią kopię.", "info");
       }
       var reloader = window.DamSearch && window.DamSearch.reload
         ? window.DamSearch.reload()
@@ -6017,7 +6935,7 @@
     var p = String(path || "").toUpperCase();
     if (!p || p.indexOf("ARCHIWUM") === -1) return false;
     return (
-      p.indexOf("— ARCHIWUM") !== -1 ||
+      p.indexOf("\u2014 ARCHIWUM") !== -1 || p.indexOf("- ARCHIWUM") !== -1 ||
       p.indexOf("/ARCHIWUM/") !== -1 ||
       p.indexOf("\\ARCHIWUM\\") !== -1 ||
       p.indexOf("0 - ARCHIWUM") !== -1
@@ -6029,9 +6947,26 @@
     return /[:\\\/]/.test(s) || /^[A-Za-z]:/.test(s);
   }
 
+  var _fileIndexIdSet = null;
+  var _fileIndexIdSetSource = null;
+  function getFileIndexIdSet() {
+    var fi = state.fileIndex;
+    if (!fi || !fi.products) return null;
+    if (_fileIndexIdSet && _fileIndexIdSetSource === fi) return _fileIndexIdSet;
+    var set = Object.create(null);
+    for (var i = 0; i < fi.products.length; i++) {
+      var p = fi.products[i];
+      if (p && p.id) set[p.id] = 1;
+    }
+    _fileIndexIdSet = set;
+    _fileIndexIdSetSource = fi;
+    return set;
+  }
+
   function productInFileIndex(id) {
     if (!id || !state.fileIndex || !state.fileIndex.products) return false;
-    return state.fileIndex.products.some(function (p) { return p && p.id === id; });
+    var set = getFileIndexIdSet();
+    return !!(set && set[id]);
   }
 
   function resolveProductFromIndexStrict(id) {
@@ -6178,44 +7113,81 @@
     return Object.assign({}, res, { products: products, hits: hits });
   }
 
-  function applySearchToPanel(query) {
+  /** Apply already-fetched DamSearch result to explorer panel (no second search). */
+  function applySearchResultsToPanel(query, res) {
     var q = String(query || "").trim();
     state.searchQuery = q;
     if (!q || q.length < 2) {
       state.searchHits = null;
-      if (!state.product) renderAll();
+      if (!state.product) {
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(function () { renderAll(); });
+        } else {
+          setTimeout(function () { renderAll(); }, 0);
+        }
+      }
+      return;
+    }
+    if (res && res.stale) return;
+    state.searchHits = filterSearchResponse(res || { products: [], hits: [], query: q });
+    /* Szukanie w panelu ma pierwszenstwo - zamknij produkt, pokaz liste wynikow */
+    if (state.product) state.product = null;
+    renderMain();
+    renderBreadcrumb();
+  }
+
+  function applySearchToPanel(query) {
+    var q = String(query || "").trim();
+    state.searchQuery = q;
+    if (!q || q.length < 2) {
+      applySearchResultsToPanel(q, null);
       return;
     }
     if (!window.DamSearch || typeof window.DamSearch.search !== "function") return;
+    var seq = (state._searchPanelSeq = (state._searchPanelSeq || 0) + 1);
     window.DamSearch.search(q, {
       limit: 40,
       includeArchive: !!state.showAllRevisions,
       fileIndex: state.fileIndex
     }).then(function (res) {
+      if (state._searchPanelSeq !== seq) return;
       if (state.searchQuery !== q) return;
-      state.searchHits = filterSearchResponse(res || { products: [], hits: [], query: q });
-      /* Szukanie w panelu ma pierwszenstwo - zamknij produkt, pokaz liste wynikow */
-      if (state.product) state.product = null;
-      renderMain();
-      renderBreadcrumb();
+      applySearchResultsToPanel(q, res);
     }).catch(function () {
+      if (state._searchPanelSeq !== seq) return;
       if (state.searchQuery !== q) return;
-      state.searchHits = { products: [], hits: [], query: q, message: "Blad wyszukiwania" };
-      if (state.product) state.product = null;
-      renderMain();
-      renderBreadcrumb();
+      applySearchResultsToPanel(q, {
+        products: [],
+        hits: [],
+        query: q,
+        message: "Błąd wyszukiwania"
+      });
     });
   }
 
   function bindSearchPanelSync(input) {
     if (!input || input._damPanelSearchBound) return;
     input._damPanelSearchBound = true;
+    /*
+     * When DamSearch.bindSearchBox owns input (onResults → panel), only handle
+     * short-query clear here — never fire a second DamSearch.search on input.
+     */
+    var boxOwnsSearch = !!(input._damBound);
     input.addEventListener("input", function () {
       clearTimeout(state.searchPanelTimer);
       var q = input.value || "";
+      var trimmed = String(q).trim();
+      if (boxOwnsSearch) {
+        if (trimmed.length < 2) {
+          state.searchPanelTimer = setTimeout(function () {
+            applySearchResultsToPanel(trimmed, null);
+          }, 160);
+        }
+        return;
+      }
       state.searchPanelTimer = setTimeout(function () {
         applySearchToPanel(q);
-      }, 140);
+      }, 160);
     });
     if ((input.value || "").trim().length >= 2) {
       applySearchToPanel(input.value);
@@ -6227,8 +7199,10 @@
   /* ------------------------------------------------------------------ */
 
   function init() {
+    if (init._damDone) return;
     var main = document.getElementById("damExplorerMain");
     if (!main) return;
+    init._damDone = true;
 
     ensureExplorerCtaUnifyCss();
     bindCategoryAddButton();
@@ -6236,13 +7210,21 @@
     var revealLow = document.getElementById("damRevealLowTags");
     if (revealLow && window.DamBadges && typeof window.DamBadges.setRevealLowTags === "function") {
       try {
-        revealLow.checked = localStorage.getItem("dam_reveal_low_tags") === "1";
+        var revealOn =
+          window.DamUserPrefs && typeof DamUserPrefs.getSync === "function"
+            ? !!DamUserPrefs.getSync().reveal_low_tags
+            : localStorage.getItem("dam_reveal_low_tags") === "1";
+        revealLow.checked = revealOn;
       } catch (eRev) { /* ignore */ }
       revealLow.addEventListener("change", function () {
         window.DamBadges.setRevealLowTags(revealLow.checked);
+        if (window.DamUserPrefs && typeof DamUserPrefs.set === "function") {
+          DamUserPrefs.set({ reveal_low_tags: !!revealLow.checked }).catch(function () {});
+        }
         if (typeof renderProductList === "function") renderProductList();
       });
     }
+    hydrateExplorerUiPrefsFromKv();
 
     /* Tag bar NAJPIERW - zanim brand/admin cos rzuci */
     try {
@@ -6288,43 +7270,40 @@
     }
 
     var loader = Promise.all([
-      window.DamSearch
-        ? window.DamSearch.load()
-        : fetch("data/file-index.json?v=20260717ux3").then(function (r) { return r.json(); }).then(function (d) { return { fileIndex: d }; }),
-      loadAllMeta()
+      withTimeout(
+        window.DamSearch
+          ? window.DamSearch.load()
+          : fetch("data/file-index.json?v=20260717ux3").then(function (r) { return r.json(); }).then(function (d) { return { fileIndex: d }; }),
+        15000,
+        "index_load_timeout"
+      ),
+      loadExplorerMetaLight()
     ]);
 
     loader.then(function (pair) {
+      dismissExplorerLoader();
       bindExplorerData(pair[0]);
       populateExplorerLangFilter();
       bindGlobalExplorerFilters();
       renderTagChips();
       applyDeepLink();
-      return bootLifecycleReconcile().then(function (boot) {
-        return loadLifecycleStore().then(function () {
-          /* Gdy boot nieudany (brak sesji) - zawsze sync z indeksu, bez skip program_wins */
-          syncLifecycleFromDiskIndex({
-            skipProgramWins: boot && boot.ok ? (boot.program_wins || []) : []
-          });
-          renderAll();
-        });
-      });
+      setStatus("");
+      runDeferredLifecycleBoot();
     }).catch(function (err) {
-      setStatus("Błąd indeksu: " + err.message);
+      dismissExplorerLoader();
+      setStatus("Błąd indeksu: " + (err && err.message ? err.message : err));
       main.innerHTML =
-        '<div class="dam-explorer-empty"><p style="color:#FF5653">Nie zaladowano file-index.json</p>' +
+        '<div class="dam-explorer-empty"><p style="color:#FF5653">Nie załadowano file-index.json</p>' +
         "<p>Uruchom: <code>python apps/web/scripts/build-file-index.py</code></p></div>";
       renderTagChips();
     }).finally(function () {
-      if (window.DamLoader && typeof window.DamLoader.done === "function") {
-        window.DamLoader.done();
-      }
+      dismissExplorerLoader();
     });
 
     var refreshBtn = document.getElementById("damIndexRefresh");
     if (refreshBtn && !refreshBtn._damBound) {
       refreshBtn._damBound = true;
-      refreshBtn.addEventListener("click", refreshIndex);
+      refreshBtn.addEventListener("click", confirmAndRefreshIndex);
     }
     var forceBtn = document.getElementById("damLifecycleForce");
     if (forceBtn && !forceBtn._damBound) {
@@ -6365,6 +7344,24 @@
     applyLifecycleStatus: applyLifecycleStatus,
     forceApplyLifecycle: forceApplyLifecycleToDisk,
     pullLifecycle: pullLifecycleFromBridge,
+    /** QA helper: FORCE confirm from real dry-run (or explicit planned). No disk write. */
+    debugForcePreview: function (planned) {
+      if (Array.isArray(planned) && planned.length) {
+        return showExplorerConfirmModal({
+          title: "Stosuj zmiany na dysk",
+          lead:
+            "FORCE zapisze statusy z PROGRAMU na foldery Marketing (zmiana nazwy / archiwum). Odśwież tylko czyta dysk - to odwrotność.",
+          metaHtml:
+            "<strong>Podgląd bez zapisu</strong> - jeszcze nic nie zapisano na dysku.",
+          listHtml: formatForcePreviewList(planned),
+          warn:
+            "Tej operacji nie da się łatwo cofnąć. Sprawdź bloki Teraz / Po zmianie przed potwierdźeniem.",
+          confirmLabel: "Stosuj (" + planned.length + ")",
+          danger: true,
+        });
+      }
+      return forceApplyLifecycleToDisk();
+    },
     init: init,
   };
 

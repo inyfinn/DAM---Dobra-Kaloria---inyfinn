@@ -354,6 +354,42 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
 
+**Weryfikacja:** CDP variant ids `br-005627` incl. `br-049510`; overrides JSON; `DamViz.getLinkedMaterialIds('banoffee-kakao-deserowe')` incl. `br-049510`.
+
+### 2026-07-27 — v5.0.14: viz grid group/variant + folder-date hero + preview nav
+
+**Objaw:** Grid „Pokaż wszystkie” nie rozdzielał wariantów; grouped cards pokazywały tylko hero index; modal nie pozwalał odznaczyć wariantu; hero thumb zły (mtime zamiast daty w folderze); brak globalnej nawigacji w modalach preview.
+
+**Fix:** `groupGridItems` + `revisionFolderDateScore`; modal `productViewMode` + hint; `DamModalShared.bindPreviewNav` + CSS; variant-scoped materials w `renderLinkedBrandingAssets`; thumb cache assoc bez bust na close picker.
+
+**Metryka PASS:** snapshot DOM „Pokaż indeksy” na grouped cards; sidebar `v5.0.14`; `node --check` wszystkie edytowane JS.
+
+### 2026-07-27 — v5.0.13: assoc picker confirm drop + DamDanger na dodawaniu
+
+**Objaw:** Toast „Zapisano skojarzenia”, ale overrides/`getLinkedMaterialIds` bez nowego ID (np. `br-049510` na `M-GOG805627`, materiał cynamonka na banoffee 6300728).
+
+**Przyczyna A (warianty branding):** `filterBrandingVariantIdsForPrimary` na **confirm** usuwało ID spoza folderu primary — cross-folder pick ginął po Zatwierdź mimo widocznej selekcji.
+
+**Przyczyna B (produkty):** `saveAssociations` brało `prevPids` z `gc.linked_products` (często puste) zamiast `collectLinkedIdsFromCtx(ctx,'product')` — zapis wariantów zerował `linked_product_ids`.
+
+**Przyczyna C (dodawanie z listy):** `bindOptionButtons` wiązało `DamDanger.bind` (hold 3s) na **nie-pinowanych** wynikach wyszukiwania — zwykły klik nie wywoływał `toggle()`; tylko pinned X miał natychmiastowy click.
+
+**Fix:** merge `pinnedIds`→`selected` przed confirm (product/variant/material); **brak** folder-filter na confirm; `prevPids`/`prevVids` z `collectLinkedIdsFromCtx`; picker add/remove = zwykły `click`→`toggle`.
+
+**Weryfikacja:** CDP variant ids `br-005627` incl. `br-049510`; overrides JSON; `DamViz.getLinkedMaterialIds('banoffee-kakao-deserowe')` incl. `br-049510`.
+
+### 2026-07-27 — v5.0.7: tag-edit flush footer + full subcategory catalog
+
+**Objaw:** `#damTagEditPopover` miał białą dziurę pod Anuluj/Zatwierdź; edycja podkategorii (Deserowe) nie listowała pełnego katalogu.
+
+**Przyczyna (footer):** `min-height:500px` na wide + `max-height` na liście + osobny flex footer (`#fafafc`) — lista nie wypełniała kolumny, footer nie był „flush strip” jak COMBO.
+
+**Przyczyna (subcats):** `applyLightProductCatalogFromSearch` nadpisywał pełny `_DAM_FILE_INDEX` katalogiem z `search-index` (brak `subcategory_slug`); enrich robił tylko light filter (nie dokładał nowych `[data-code]`).
+
+**Fix:** wspólne klasy COMBO (`.dam-thumb-picker__head|__footer`, `.dam-viz-modal-close`, `.dam-modal-footer`); lista `max-height:none` + flex-fill; nie nadpisuj full file-index; `ensureSubcategoryCatalog` + `_damTagRebuild`.
+
+**Metryka PASS:** `gapPopMinusFoot≈1`, `gapFootMinusBtn≈12`, footH=65, bg `#f7f6fa`; unique subcats = 27 z file-index.
+
 ### 2026-07-26 — v5.0.2: tag edit bez revision-path + stale path po rename nosnika
 
 **Objaw A (tag edit):** Shift+klik / dblclick na badge jezyka (`data-tag-kind="lang"`) w `#damVizModalBadges` nie otwiera pickera albo zapis pada — `openTagEdit` dostaje pusty `revisionPath`.
@@ -1860,4 +1896,14 @@ Skrót — **bind = dwie osobne rzeczy**:
 | **Odświeżenie ctx** | Karteczka **wymieniana** przy każdym `bind()` | Nowa karteczka z aktualnym assetem / ID | `root._damAssocCtx = ctx` zawsze |
 
 **Sync / async / typ A vs B / seed / enrich / P1 bramki** — w [`docs/ASSOC-GLOSSARY.md`](../../docs/ASSOC-GLOSSARY.md) § sekcje odpowiednio.
+
+#### Lekcja 2026-07-27: `mergeLinkedVariantsIntoItems` dedup po `productVariantKey` = tylko L w „Pokaż wszystkie”
+
+**Objaw:** Po podlinkowaniu rewizji cynamonki (6300783) w modalu viz, studio „Pokaż wszystkie” pokazywało tylko **L** (jeden plik na lang|index).
+
+**Przyczyna:** `mergeLinkedVariantsIntoItems` po `expandModalWizkiVariants` deduplikowało wiersze kluczem `productVariantKey` (lang|index). Wszystkie pliki XL/L/S/S-SKLEP/FRONT/BACK miały ten sam klucz → zostawał pierwszy (zwykle L).
+
+**Fix:** `modalWizkiRowKey(row)` = product_id + path + file + revision_path (dedup per plik WIZKI). Nigdy nie deduplikuj rozwiniętych wizki po `productVariantKey`.
+
+**Weryfikacja:** CDP banoffee + linked 6300783 → chipSizes `XL,L,S,S-SKLEP`, tileCount 32 po „Pokaż wszystkie”.
 

@@ -535,50 +535,80 @@ def force_reconnect(*, pull_dump: bool = False) -> dict[str, Any]:
 
 
 def pull_database_dump_now() -> dict[str, Any]:
-    """Wymus pobranie dumpa z NAS do DATABASE/ (ten sam skrypt co sync godzinowy)."""
+    """Wymus pobranie dumpa z NAS do DATABASE/ (ten sam skrypt co sync godzinowy).
+
+    Sukces = po probie istnieje lokalny dam_eta_*.sql.gz (offline fallback).
+    Gdy SSH/NAS pada, zachowany lokalny dump nadal liczy sie jako ok.
+    """
+    before = latest_database_dump()
+    result: dict[str, Any] = {"ok": False}
+
     try:
         from dam_sync import run_sync_blocking
 
         result = run_sync_blocking(push=False, no_commit=True)
-        dump = latest_database_dump()
-        result["dump"] = str(dump) if dump else None
-        return result
     except ImportError:
-        pass
-    import subprocess
-    import sys
-    from pathlib import Path
+        import subprocess
+        import sys
+        from pathlib import Path
 
-    if not SYNC_SCRIPT.is_file():
-        return {"ok": False, "error": "sync_script_missing", "path": str(SYNC_SCRIPT)}
-    py_exe = sys.executable
-    if sys.platform == "win32":
-        pyw = Path(py_exe).with_name("pythonw.exe")
-        if pyw.is_file():
-            py_exe = str(pyw)
-    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
-    try:
-        proc = subprocess.run(
-            [py_exe, str(SYNC_SCRIPT), "--no-commit", "--quiet"],
-            cwd=str(DESKTOP_DIR.parent.parent),
-            capture_output=True,
-            text=True,
-            timeout=120,
-            check=False,
-            creationflags=flags,
-        )
-        dump = latest_database_dump()
+        if not SYNC_SCRIPT.is_file():
+            result = {"ok": False, "error": "sync_script_missing", "path": str(SYNC_SCRIPT)}
+        else:
+            py_exe = sys.executable
+            if sys.platform == "win32":
+                pyw = Path(py_exe).with_name("pythonw.exe")
+                if pyw.is_file():
+                    py_exe = str(pyw)
+            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
+            try:
+                proc = subprocess.run(
+                    [py_exe, str(SYNC_SCRIPT), "--no-commit", "--quiet"],
+                    cwd=str(DESKTOP_DIR.parent.parent),
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    check=False,
+                    creationflags=flags,
+                )
+                result = {
+                    "ok": proc.returncode == 0,
+                    "exit_code": proc.returncode,
+                    "stdout": (proc.stdout or "")[-800:],
+                    "stderr": (proc.stderr or "")[-400:],
+                }
+            except subprocess.TimeoutExpired:
+                result = {"ok": False, "error": "timeout"}
+            except Exception as exc:  # noqa: BLE001
+                result = {"ok": False, "error": str(exc)}
+
+    dump = latest_database_dump()
+    if dump:
+        result["dump"] = str(dump)
+        sync_failed = bool(result.get("error")) or result.get("exit_code", 0) not in (0, None)
+        result["ok"] = True
+        if sync_failed and before:
+            result["skipped"] = True
+            result["note"] = "local_retained"
+        elif sync_failed and not before:
+            result["note"] = "local_created_despite_sync_warn"
+        return result
+
+    if before:
         return {
-            "ok": proc.returncode == 0,
-            "exit_code": proc.returncode,
-            "stdout": (proc.stdout or "")[-800:],
-            "stderr": (proc.stderr or "")[-400:],
-            "dump": str(dump) if dump else None,
+            "ok": True,
+            "skipped": True,
+            "dump": str(before),
+            "note": "local_retained_after_sync_fail",
+            "sync_error": result.get("error") or result.get("stderr"),
         }
-    except subprocess.TimeoutExpired:
-        return {"ok": False, "error": "timeout"}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": str(exc)}
+
+    return {
+        **result,
+        "ok": False,
+        "error": result.get("error") or "no_local_dump",
+        "hint": "Brak dam_eta_*.sql.gz w DATABASE/. Uruchom sync-database-backups-to-git.py lub backup na Synology.",
+    }
 
 
 def status() -> dict[str, Any]:

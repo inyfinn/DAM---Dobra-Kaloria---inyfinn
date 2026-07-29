@@ -140,9 +140,12 @@
       "?v=" +
       POSE_ASSET_V;
     try {
+      /* Resolve from site root — pages under /_qa/ must not break poses */
+      var origin = window.location.origin || "";
+      if (origin) return new URL("/" + rel.replace(/^\/+/, ""), origin + "/").href;
       return new URL(rel, window.location.href).href;
     } catch (e) {
-      return rel;
+      return "/" + rel.replace(/^\/+/, "");
     }
   }
 

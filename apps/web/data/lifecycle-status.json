@@ -45857,57 +45857,734 @@
     {
       "id": "lc_1784649066960",
       "ts": "2026-07-21T15:51:06.960117+00:00",
-      "action": "lifecycle_reconcile_boot",
       "actor": "krzysztof.wieczorek@kubara.pl",
-      "disk_wins": 0,
-      "program_wins": 3,
+      "action": "lifecycle_reconcile_boot",
       "enforced": 0,
+      "disk_wins": 0,
       "details_disk": [],
+      "program_wins": 3,
       "details_program": [
         {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00",
           "scope": "variant",
+          "winner": "program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-14T06:38:38+00:00",
+          "in_archive": false,
           "product_id": "babka-cytrynowa-nerkowcowy",
+          "disk_letter": null,
+          "needs_force": true,
           "revision_index": "6300622.00",
           "previous_letter": null,
-          "disk_letter": null,
-          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00",
-          "in_archive": false,
-          "disk_mtime": "2026-05-14T06:38:38+00:00",
-          "applied_at": "2026-07-18T22:13:18.708094+00:00",
-          "needs_archive_move": false,
-          "winner": "program",
-          "needs_force": true
+          "needs_archive_move": false
         },
         {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300785.00 - F",
           "scope": "variant",
+          "winner": "program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-21T12:07:10+00:00",
+          "in_archive": false,
           "product_id": "ciasto-sliwkowe-nerkowcowy",
+          "disk_letter": "F",
+          "needs_force": true,
           "revision_index": "6300785.00",
           "previous_letter": null,
-          "disk_letter": "F",
-          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300785.00 - F",
-          "in_archive": false,
-          "disk_mtime": "2026-05-21T12:07:10+00:00",
-          "applied_at": "2026-07-18T22:13:18.708094+00:00",
-          "needs_archive_move": false,
-          "winner": "program",
-          "needs_force": true
+          "needs_archive_move": false
         },
         {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
           "scope": "variant",
+          "winner": "program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-20T13:02:31+00:00",
+          "in_archive": false,
           "product_id": "cynamonka-nerkowcowy",
+          "disk_letter": null,
+          "needs_force": true,
           "revision_index": "6300783.00",
           "previous_letter": null,
-          "disk_letter": null,
-          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
-          "in_archive": false,
-          "disk_mtime": "2026-05-20T13:02:31+00:00",
-          "applied_at": "2026-07-18T22:13:18.708094+00:00",
-          "needs_archive_move": false,
-          "winner": "program",
-          "needs_force": true
+          "needs_archive_move": false
         }
       ],
       "details_enforced": []
+    },
+    {
+      "id": "lc_1785007911733",
+      "ts": "2026-07-25T19:31:51.733570+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-14T06:38:38+00:00",
+          "in_archive": false,
+          "product_id": "babka-cytrynowa-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300622.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300785.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-21T12:07:10+00:00",
+          "in_archive": false,
+          "product_id": "ciasto-sliwkowe-nerkowcowy",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300785.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300784.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-06-09T08:40:39+00:00",
+          "in_archive": false,
+          "product_id": "ciasto-sliwkowe-nerkowcowy",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300784.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-20T13:02:31+00:00",
+          "in_archive": false,
+          "product_id": "cynamonka-nerkowcowy",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300783.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-06-16T12:08:02+00:00",
+          "in_archive": false,
+          "product_id": "cynamonka-nerkowcowy",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300782.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PĄCZEK RÓŻANY — [ nerkowcowy ]\\KAR6X - 28.11.2025 - 6300687.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-07-17T21:52:40.664531+00:00",
+          "in_archive": false,
+          "product_id": "paczek-rozany-nerkowcowy",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300687.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PĄCZEK RÓŻANY — [ nerkowcowy ]\\MINI - 27.11.2025 - 6300686.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-07-17T21:52:41.416922+00:00",
+          "in_archive": false,
+          "product_id": "paczek-rozany-nerkowcowy",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300686.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ROGAL POZNAŃSKI — [ nerkowcowy ]\\KAR6X - 30.12.2025 - 6300682.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-17T21:52:42.217917+00:00",
+          "in_archive": false,
+          "product_id": "rogal-poznanski-nerkowcowy",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300682.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ROGAL POZNAŃSKI — [ nerkowcowy ]\\MINI - 19.09.2025 - 6300679.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-14T06:38:39+00:00",
+          "in_archive": false,
+          "product_id": "rogal-poznanski-nerkowcowy",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300679.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\09.02.2024 - 6300450.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-19T17:08:57.713112+00:00",
+          "in_archive": false,
+          "product_id": "orzeszki-kukurydza-miod-sniadanie",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300450.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\30.07.2025 - 6300524.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-19T17:08:57.499766+00:00",
+          "in_archive": false,
+          "product_id": "orzeszki-kukurydza-miod-sniadanie",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300524.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\31.10.2025 - 6300699.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-16T11:48:36+00:00",
+          "in_archive": false,
+          "product_id": "orzeszki-kukurydza-miod-sniadanie",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300699.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\FOLIA - 3.07.2026 - PL UA - 6300767 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-07-14T14:45:18+00:00",
+          "in_archive": false,
+          "product_id": "orzeszki-kukurydza-miod-sniadanie",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300767.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\— ARCHIWUM\\ORZESZKI MIOD — [ sniadanie ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-07-22T23:52:44.973539+00:00",
+          "in_archive": true,
+          "product_id": "orzeszki-miod-sniadanie",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\— ARCHIWUM\\ORZESZKI MIOD — [ sniadanie ]\\26.06.2024 - 6300524.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-19T17:08:58.173417+00:00",
+          "in_archive": true,
+          "product_id": "orzeszki-miod-sniadanie",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300524.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\— ARCHIWUM\\ORZESZKI MIOD — [ sniadanie ]\\DOY - 31.10.2025 - 6300699.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-22T09:10:20.065939+00:00",
+          "in_archive": true,
+          "product_id": "orzeszki-miod-sniadanie",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300699.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\MIELONE WOLOWE — [ niemięsne ]\\RĘKAW_2026_07_21-6300406.01",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-07-16T12:45:45+00:00",
+          "in_archive": false,
+          "product_id": "mielone-wolowe-niemiesne",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300406.01",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 17,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1785239381026",
+      "ts": "2026-07-28T11:49:41.026628+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-07-16T11:03:52+00:00",
+          "in_archive": true,
+          "product_id": "proteina-karmel-mct-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\BAT - 35 g - 22.10.2025 - 6300702.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-16T11:04:07+00:00",
+          "in_archive": true,
+          "product_id": "proteina-karmel-mct-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300702.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\KAR6X - 12.06.2025 - 6300655.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-16T11:04:06+00:00",
+          "in_archive": true,
+          "product_id": "proteina-karmel-mct-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300655.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\MINI - 29.07.2025 - 6300654.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-16T11:04:07+00:00",
+          "in_archive": true,
+          "product_id": "proteina-karmel-mct-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300654.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\27.01.2023 - 0000000.00 - GB AR FR NL - D",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-07-27T16:44:49.714386+00:00",
+          "in_archive": false,
+          "product_id": "cornflakes-peanuts-honey-balls-crispy",
+          "disk_letter": "D",
+          "disk_status": "demo",
+          "revision_index": "0000000.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 5,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1785281274621",
+      "ts": "2026-07-28T23:27:54.621734+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER BURACZANY — [ niemięsne ]\\RĘKAW - 03.07.2025 - 6300757.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-07-01T14:44:38+00:00",
+          "in_archive": false,
+          "product_id": "burger-buraczany-niemiesne",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300757.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 1,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1785281307110",
+      "ts": "2026-07-28T23:28:27.110100+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+          "from": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+          "kind": "product",
+          "new_name": "CYNAMONKA — [ nerkowcowy ] - F",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+          "previous_name": "CYNAMONKA — [ nerkowcowy ]",
+          "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]"
+        }
+      ],
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "product_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "revision_index": ""
+    },
+    {
+      "id": "lc_1785281324815",
+      "ts": "2026-07-28T23:28:44.815525+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-07-22T17:18:45.684811+00:00",
+          "in_archive": false,
+          "product_id": "cynamonka-nerkowcowy-f",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-28T23:28:27.110459+00:00",
+          "disk_mtime": "2026-05-20T13:02:31+00:00",
+          "in_archive": false,
+          "product_id": "cynamonka-nerkowcowy-f",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300783.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 2,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1785281335183",
+      "ts": "2026-07-28T23:28:55.183975+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
+          "from": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+          "kind": "variant_cascade",
+          "new_name": "KAR6X - 20.05.2026  - PL EN - 6300783.00",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
+          "previous_name": "KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+          "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F"
+        },
+        {
+          "op": "rename",
+          "to": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\MINI - 18 06 2026 - 6300782.00",
+          "from": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\MINI - 18 06 2026 - 6300782.00 - F",
+          "kind": "variant_cascade",
+          "new_name": "MINI - 18 06 2026 - 6300782.00",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\MINI - 18 06 2026 - 6300782.00",
+          "previous_name": "MINI - 18 06 2026 - 6300782.00 - F",
+          "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\MINI - 18 06 2026 - 6300782.00 - F"
+        },
+        {
+          "op": "rename",
+          "to": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+          "from": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+          "kind": "product",
+          "new_name": "CYNAMONKA — [ nerkowcowy ]",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+          "previous_name": "CYNAMONKA — [ nerkowcowy ] - F",
+          "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F"
+        }
+      ],
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "cynamonka-nerkowcowy-f",
+      "product_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+      "revision_index": ""
+    },
+    {
+      "id": "lc_1785281348943",
+      "ts": "2026-07-28T23:29:08.943115+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-28T23:28:27.110111+00:00",
+          "disk_mtime": "2026-07-28T23:28:55.168896+00:00",
+          "in_archive": false,
+          "product_id": "cynamonka-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": "F",
+          "previous_status": "aktualne",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-28T23:28:27.110459+00:00",
+          "disk_mtime": "2026-05-20T13:02:31+00:00",
+          "in_archive": false,
+          "product_id": "cynamonka-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300783.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-28T23:28:27.110388+00:00",
+          "disk_mtime": "2026-06-16T12:08:02+00:00",
+          "in_archive": false,
+          "product_id": "cynamonka-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300782.00",
+          "previous_letter": "F",
+          "previous_status": "aktualne",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 3,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1785281353145",
+      "ts": "2026-07-28T23:29:13.145047+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00 - F",
+          "from": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00",
+          "kind": "variant",
+          "new_name": "MINI - 18 06 2026 - 6300782.00 - F",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00 - F",
+          "previous_name": "MINI - 18 06 2026 - 6300782.00",
+          "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00"
+        }
+      ],
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "product_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "revision_index": "6300782.00"
+    },
+    {
+      "id": "lc_1785281370509",
+      "ts": "2026-07-28T23:29:30.509798+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+          "from": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
+          "kind": "variant",
+          "new_name": "KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+          "previous_name": "KAR6X - 20.05.2026  - PL EN - 6300783.00",
+          "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00"
+        }
+      ],
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "product_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "revision_index": "6300783.00"
+    },
+    {
+      "id": "lc_1785281386929",
+      "ts": "2026-07-28T23:29:46.929700+00:00",
+      "ops": [],
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "product_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "revision_index": "6300783.00"
+    },
+    {
+      "id": "lc_1785281404792",
+      "ts": "2026-07-28T23:30:04.792820+00:00",
+      "ops": [],
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "product_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "revision_index": "6300783.00"
+    },
+    {
+      "id": "lc_1785281751098",
+      "ts": "2026-07-28T23:35:51.098879+00:00",
+      "ops": [],
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "muffin-jagodowy-nerkowcowy",
+      "product_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]",
+      "revision_index": "6300525.00"
+    },
+    {
+      "id": "lc_1785281774322",
+      "ts": "2026-07-28T23:36:14.322460+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00 - X",
+          "from": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00",
+          "kind": "variant",
+          "new_name": "KAR6X - 20.03.2025 - 6300525.00 - X",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00 - X",
+          "previous_name": "KAR6X - 20.03.2025 - 6300525.00",
+          "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00"
+        },
+        {
+          "op": "move",
+          "to": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\MUFFIN JAGODOWY — [ nerkowcowy ] - X\\KAR6X - 20.03.2025 - 6300525.00 - X",
+          "from": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00 - X",
+          "kind": "variant_archive",
+          "new_name": "KAR6X - 20.03.2025 - 6300525.00 - X",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\MUFFIN JAGODOWY — [ nerkowcowy ] - X\\KAR6X - 20.03.2025 - 6300525.00 - X",
+          "previous_name": "KAR6X - 20.03.2025 - 6300525.00 - X",
+          "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00 - X"
+        }
+      ],
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [
+        "variant_moved_to_archive_with_product_wrapper"
+      ],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "X",
+      "status": "nieaktualne",
+      "product_id": "muffin-jagodowy-nerkowcowy",
+      "product_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]",
+      "revision_index": "6300525.00"
     }
   ],
   "products": {
@@ -46277,8 +46954,12 @@
       "source": "disk",
       "status": "clear",
       "synced_by": "krzysztof.wieczorek@kubara.pl",
-      "disk_mtime": "2026-06-22T14:21:25+00:00",
-      "updated_at": "2026-07-18T22:13:18.708094+00:00",
+      "applied_at": "2026-07-28T23:28:27.110111+00:00",
+      "disk_mtime": "2026-07-28T23:28:55.168896+00:00",
+      "updated_at": "2026-07-28T23:29:08.926378+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "previous_letter": null,
       "synced_from_disk": true
     },
     "energia-funkcjonalne": {
@@ -46440,6 +47121,16 @@
       "disk_mtime": "2026-07-17T14:15:16+00:00",
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
+    },
+    "cynamonka-nerkowcowy-f": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "letter": null,
+      "source": "program",
+      "status": "clear",
+      "applied_at": "2026-07-28T23:28:55.183986+00:00",
+      "updated_at": "2026-07-28T23:28:55.183986+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F"
     },
     "dla-serca-funkcjonalny": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\DLA SERCA— [ funkcjonalny ]",
@@ -46642,13 +47333,13 @@
       "synced_from_disk": true
     },
     "orzeszki-miod-sniadanie": {
-      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI MIOD — [ sniadanie ]",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\— ARCHIWUM\\ORZESZKI MIOD — [ sniadanie ]",
       "letter": null,
       "source": "disk",
       "status": "clear",
       "synced_by": "krzysztof.wieczorek@kubara.pl",
-      "disk_mtime": "2026-07-17T14:15:15+00:00",
-      "updated_at": "2026-07-18T22:13:18.708094+00:00",
+      "disk_mtime": "2026-07-22T23:52:44.973539+00:00",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
       "synced_from_disk": true
     },
     "pate-tomato-plant-based": {
@@ -47583,13 +48274,13 @@
       "synced_from_disk": true
     },
     "proteina-karmel-mct-funkcjonalny": {
-      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PROTEINA - KARMEL MCT — [ funkcjonalny ]",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]",
       "letter": null,
       "source": "disk",
       "status": "clear",
       "synced_by": "krzysztof.wieczorek@kubara.pl",
       "disk_mtime": "2026-07-16T11:03:52+00:00",
-      "updated_at": "2026-07-18T22:13:18.708094+00:00",
+      "updated_at": "2026-07-28T11:49:41.004640+00:00",
       "synced_from_disk": true
     },
     "bio-jaglanka-z-miodem-sniadaniowe": {
@@ -50093,17 +50784,6 @@
       "updated_at": "2026-07-19T01:27:16.938489+00:00",
       "synced_from_disk": true
     },
-    "6300525.00": {
-      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00",
-      "letter": null,
-      "source": "disk",
-      "status": "clear",
-      "synced_by": "krzysztof.wieczorek@kubara.pl",
-      "disk_mtime": "2026-07-16T11:24:08+00:00",
-      "product_id": "muffin-jagodowy-nerkowcowy",
-      "updated_at": "2026-07-18T22:13:18.708094+00:00",
-      "synced_from_disk": true
-    },
     "6300525.01": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2026 - 6300525.01",
       "letter": null,
@@ -51580,28 +52260,6 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
-    "6300782.00": {
-      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00",
-      "letter": null,
-      "source": "disk",
-      "status": "clear",
-      "synced_by": "krzysztof.wieczorek@kubara.pl",
-      "disk_mtime": "2026-06-16T12:08:02+00:00",
-      "product_id": "cynamonka-nerkowcowy",
-      "updated_at": "2026-07-18T22:13:18.708094+00:00",
-      "synced_from_disk": true
-    },
-    "6300783.00": {
-      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026 - 6300783.00",
-      "letter": null,
-      "source": "disk",
-      "status": "clear",
-      "synced_by": "krzysztof.wieczorek@kubara.pl",
-      "disk_mtime": "2026-05-20T13:02:31+00:00",
-      "product_id": "cynamonka-nerkowcowy",
-      "updated_at": "2026-07-18T22:13:18.708094+00:00",
-      "synced_from_disk": true
-    },
     "6300784.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300784.00",
       "letter": null,
@@ -51824,6 +52482,20 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-06-16T12:08:02+00:00",
+      "product_id": "cynamonka-nerkowcowy",
+      "updated_at": "2026-07-28T23:29:08.926378+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00",
+      "synced_from_disk": true,
+      "synced_from_product": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI CARAMEL — [ bars_protein ]\\BAR - 20.02.2026 - 6300XXX.00": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI CARAMEL — [ bars_protein ]\\BAR - 20.02.2026 - 6300XXX.00",
       "letter": null,
@@ -51956,6 +52628,19 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00 - F",
+      "letter": "F",
+      "source": "program",
+      "status": "aktualne",
+      "applied_at": "2026-07-28T23:29:13.145057+00:00",
+      "product_id": "cynamonka-nerkowcowy",
+      "updated_at": "2026-07-28T23:29:13.145057+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00",
+      "revision_index": "6300782.00",
+      "previous_letter": null
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PROTEINA KARMEL Z MCT — [ IG ]\\MINI - 29.07.2025 - 6300654.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PROTEINA KARMEL Z MCT — [ IG ]\\MINI - 29.07.2025 - 6300654.00",
       "letter": null,
@@ -52011,6 +52696,50 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\09.02.2024 - 6300450.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\09.02.2024 - 6300450.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-19T17:08:57.713112+00:00",
+      "product_id": "orzeszki-kukurydza-miod-sniadanie",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\30.07.2025 - 6300524.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\30.07.2025 - 6300524.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-19T17:08:57.499766+00:00",
+      "product_id": "orzeszki-kukurydza-miod-sniadanie",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\31.10.2025 - 6300699.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\31.10.2025 - 6300699.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-16T11:48:36+00:00",
+      "product_id": "orzeszki-kukurydza-miod-sniadanie",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\MIELONE WOLOWE — [ niemięsne ]\\RĘKAW_2026_07_21-6300406.01": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\MIELONE WOLOWE — [ niemięsne ]\\RĘKAW_2026_07_21-6300406.01",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-16T12:45:45+00:00",
+      "product_id": "mielone-wolowe-niemiesne",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CASHEWS COCONUT — [ date ]\\27.01.2023 - 0000000.00 - GB AR FR NL": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CASHEWS COCONUT — [ date ]\\27.01.2023 - 0000000.00 - GB AR FR NL",
       "letter": null,
@@ -52054,6 +52783,30 @@
       "product_id": "nuggets-xxl-niemiesne",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-14T06:38:38+00:00",
+      "product_id": "babka-cytrynowa-nerkowcowy",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00",
+      "letter": null,
+      "source": "program",
+      "status": "clear",
+      "applied_at": "2026-07-28T23:35:51.098887+00:00",
+      "product_id": "muffin-jagodowy-nerkowcowy",
+      "updated_at": "2026-07-28T23:35:51.098887+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00",
+      "revision_index": "6300525.00",
+      "previous_letter": null
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\6300 000 - 17.11.2025 — [ niemięsne ]\\24.02.2026 - 6300XXX.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\6300 000 - 17.11.2025 — [ niemięsne ]\\24.02.2026 - 6300XXX.00",
@@ -52176,6 +52929,17 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\— ARCHIWUM\\ORZESZKI MIOD — [ sniadanie ]\\26.06.2024 - 6300524.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\— ARCHIWUM\\ORZESZKI MIOD — [ sniadanie ]\\26.06.2024 - 6300524.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-19T17:08:58.173417+00:00",
+      "product_id": "orzeszki-miod-sniadanie",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\04 - SYPKIE\\OWSIANKA FIGA PORZECZKA — [ sniadaniowe ]\\28.02.2026 - 6300XXX.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\04 - SYPKIE\\OWSIANKA FIGA PORZECZKA — [ sniadaniowe ]\\28.02.2026 - 6300XXX.00",
       "letter": null,
@@ -52286,6 +53050,20 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-20T13:02:31+00:00",
+      "product_id": "cynamonka-nerkowcowy",
+      "updated_at": "2026-07-28T23:29:08.926378+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026 - 6300783.00",
+      "synced_from_disk": true,
+      "synced_from_product": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ] - X\\BAT - 35 g - 18.07.2026 - TEST-TEST - D",
       "letter": "D",
@@ -52374,6 +53152,39 @@
       "disk_mtime": "2026-05-08T10:02:56+00:00",
       "product_id": "gyros-wheat-plant-based",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300784.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300784.00 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-06-09T08:40:39+00:00",
+      "product_id": "ciasto-sliwkowe-nerkowcowy",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PĄCZEK RÓŻANY — [ nerkowcowy ]\\MINI - 27.11.2025 - 6300686.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PĄCZEK RÓŻANY — [ nerkowcowy ]\\MINI - 27.11.2025 - 6300686.00 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-17T21:52:41.416922+00:00",
+      "product_id": "paczek-rozany-nerkowcowy",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ROGAL POZNAŃSKI — [ nerkowcowy ]\\MINI - 19.09.2025 - 6300679.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ROGAL POZNAŃSKI — [ nerkowcowy ]\\MINI - 19.09.2025 - 6300679.00 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-14T06:38:39+00:00",
+      "product_id": "rogal-poznanski-nerkowcowy",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\SZARLOTKA CYNAMON — [ nerkowcowy ]\\KAR6X - 02.06.2022 - KAR000118.00": {
@@ -52541,6 +53352,28 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PĄCZEK RÓŻANY — [ nerkowcowy ]\\KAR6X - 28.11.2025 - 6300687.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PĄCZEK RÓŻANY — [ nerkowcowy ]\\KAR6X - 28.11.2025 - 6300687.00 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-17T21:52:40.664531+00:00",
+      "product_id": "paczek-rozany-nerkowcowy",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ROGAL POZNAŃSKI — [ nerkowcowy ]\\KAR6X - 30.12.2025 - 6300682.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ROGAL POZNAŃSKI — [ nerkowcowy ]\\KAR6X - 30.12.2025 - 6300682.00 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-17T21:52:42.217917+00:00",
+      "product_id": "rogal-poznanski-nerkowcowy",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI CARAMEL — [ bars_protein ]\\DOYPACK 6x MINI - 20.02.2026 - 6300XXX.00": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI CARAMEL — [ bars_protein ]\\DOYPACK 6x MINI - 20.02.2026 - 6300XXX.00",
       "letter": null,
@@ -52640,6 +53473,19 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+      "letter": "F",
+      "source": "program",
+      "status": "aktualne",
+      "applied_at": "2026-07-28T23:30:04.792836+00:00",
+      "product_id": "cynamonka-nerkowcowy",
+      "updated_at": "2026-07-28T23:30:04.792836+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+      "revision_index": "6300783.00",
+      "previous_letter": "F"
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\MINI - 29.07.2025 - 6300654.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\MINI - 29.07.2025 - 6300654.00",
       "letter": null,
@@ -52674,6 +53520,17 @@
       "updated_by": "krzysztof.wieczorek@kubara.pl",
       "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ] - X\\BAT - 35 g - 18.07.2026 - TEST-TEST - D",
       "synced_from_product": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\— ARCHIWUM\\ORZESZKI MIOD — [ sniadanie ]\\DOY - 31.10.2025 - 6300699.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\— ARCHIWUM\\ORZESZKI MIOD — [ sniadanie ]\\DOY - 31.10.2025 - 6300699.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-22T09:10:20.065939+00:00",
+      "product_id": "orzeszki-miod-sniadanie",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER BURACZANY — [ niemięsne ]\\RĘKAW - 16.07.2021 - KARP000018.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER BURACZANY — [ niemięsne ]\\RĘKAW - 16.07.2021 - KARP000018.00",
@@ -52769,6 +53626,17 @@
       "previous_letter": "F",
       "synced_from_product": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER BURACZANY — [ niemięsne ]\\RĘKAW - 03.07.2025 - 6300757.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER BURACZANY — [ niemięsne ]\\RĘKAW - 03.07.2025 - 6300757.00 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-01T14:44:38+00:00",
+      "product_id": "burger-buraczany-niemiesne",
+      "updated_at": "2026-07-28T23:27:54.604723+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM SALT — [ bars_protein ]\\06.02.2023 - GB_SE_FI_DK_DE_000000.00": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM SALT — [ bars_protein ]\\06.02.2023 - GB_SE_FI_DK_DE_000000.00",
       "letter": null,
@@ -52835,6 +53703,20 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-20T13:02:31+00:00",
+      "product_id": "cynamonka-nerkowcowy-f",
+      "updated_at": "2026-07-28T23:28:55.184194+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+      "synced_from_disk": true,
+      "synced_from_product": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\DOY - 3.07.2026 - PL UA - 6300699.01": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\DOY - 3.07.2026 - PL UA - 6300699.01",
       "letter": null,
@@ -52900,6 +53782,28 @@
       "disk_mtime": "2026-05-22T18:25:58.694464+00:00",
       "product_id": "poledwiczka-17.11.2025-niemiesne",
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300785.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300785.00 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-21T12:07:10+00:00",
+      "product_id": "ciasto-sliwkowe-nerkowcowy",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\FOLIA - 3.07.2026 - PL UA - 6300767 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\FOLIA - 3.07.2026 - PL UA - 6300767 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-14T14:45:18+00:00",
+      "product_id": "orzeszki-kukurydza-miod-sniadanie",
+      "updated_at": "2026-07-25T19:31:51.715589+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\- ARCHIWUM\\01 KABANOS BBQ — [ niemięsne ]\\WARIANT - 06.05.2021 - 6300XXX.00": {
@@ -53001,6 +53905,52 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\MINI - 29.07.2025 - 6300654.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\MINI - 29.07.2025 - 6300654.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-16T11:04:07+00:00",
+      "product_id": "proteina-karmel-mct-funkcjonalny",
+      "updated_at": "2026-07-28T11:49:41.004640+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\27.01.2023 - 0000000.00 - GB AR FR NL - D": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\27.01.2023 - 0000000.00 - GB AR FR NL - D",
+      "letter": "D",
+      "source": "disk",
+      "status": "demo",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-27T16:44:49.714386+00:00",
+      "product_id": "cornflakes-peanuts-honey-balls-crispy",
+      "updated_at": "2026-07-28T11:49:41.004640+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\MUFFIN JAGODOWY — [ nerkowcowy ] - X\\KAR6X - 20.03.2025 - 6300525.00 - X": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\MUFFIN JAGODOWY — [ nerkowcowy ] - X\\KAR6X - 20.03.2025 - 6300525.00 - X",
+      "letter": "X",
+      "source": "program",
+      "status": "nieaktualne",
+      "applied_at": "2026-07-28T23:36:14.322469+00:00",
+      "product_id": "muffin-jagodowy-nerkowcowy",
+      "updated_at": "2026-07-28T23:36:14.322469+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00",
+      "revision_index": "6300525.00",
+      "previous_letter": null
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\KAR6X - 12.06.2025 - 6300655.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\KAR6X - 12.06.2025 - 6300655.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-16T11:04:06+00:00",
+      "product_id": "proteina-karmel-mct-funkcjonalny",
+      "updated_at": "2026-07-28T11:49:41.004640+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\- ARCHIWUM\\BURGER KLASYCZNY XXL — [ niemięsne ]\\BIGPAK - 02.03.2021 - FOLP000015.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\- ARCHIWUM\\BURGER KLASYCZNY XXL — [ niemięsne ]\\BIGPAK - 02.03.2021 - FOLP000015.00",
       "letter": null,
@@ -53079,6 +54029,17 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\BAT - 35 g - 22.10.2025 - 6300702.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]\\BAT - 35 g - 22.10.2025 - 6300702.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-16T11:04:07+00:00",
+      "product_id": "proteina-karmel-mct-funkcjonalny",
+      "updated_at": "2026-07-28T11:49:41.004640+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM VANILLA — [ bars_protein ]\\06.02.2023 - GB_SE_FI_DK_DE_0000000.00 - GB SE FI DK DE": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM VANILLA — [ bars_protein ]\\06.02.2023 - GB_SE_FI_DK_DE_0000000.00 - GB SE FI DK DE",
       "letter": null,
@@ -53091,5 +54052,5 @@
       "synced_from_disk": true
     }
   },
-  "updated_at": "2026-07-21T15:51:06.960362+00:00"
+  "updated_at": "2026-07-28T23:36:14.322722+00:00"
 }

@@ -19,6 +19,18 @@
   ];
 
   var VIEW_STATE_KEY = "dam_projects_view";
+  var PROJECTS_ARCHIVE_KEY = "dam_projects_include_archive";
+  var PROJECTS_SORT_KEY = "dam_projects_sort";
+  var PROJECTS_RECENT_KEY = "dam_projects_recent";
+
+  var SORT_OPTIONS = [
+    { id: "date_desc", label: "Data: najnowsze" },
+    { id: "date_asc", label: "Data: najstarsze" },
+    { id: "name_asc", label: "Nazwa: A–Z" },
+    { id: "name_desc", label: "Nazwa: Z–A" },
+    { id: "priority", label: "Priorytet: niekompletne" },
+    { id: "recent", label: "Ostatnio przeglądane" },
+  ];
 
   var state = {
     all: [],
@@ -26,7 +38,193 @@
     query: "",
     variantsHint: "",
     metaById: {},
+    rawById: {},
+    sortMode: "date_desc",
   };
+
+  function readStoredSort() {
+    try {
+      var v = localStorage.getItem(SORT_STATE_KEY);
+      if (v) return String(v);
+    } catch (eSortRead) { /* ignore */ }
+    return "date_desc";
+  }
+
+  function persistSortMode(mode) {
+    var m = String(mode || "date_desc");
+    state.sortMode = m;
+    try {
+      localStorage.setItem(SORT_STATE_KEY, m);
+    } catch (eSortStore) { /* ignore */ }
+  }
+
+  /**
+   * Parsuje datę z nazwy folderu (jak dam-viz.js) + podkreślniki w nazwach DAM.
+   * Przykłady: 19.09.2025, 24_03_2026, MINI - 08.09.2023 - 6300410.00
+   */
+  function parseFolderDateScore(folderName) {
+    var s = String(folderName || "");
+    var m = s.match(/(\d{1,2})[.\/_\-](\d{1,2})[.\/_\-](\d{2,4})/);
+    if (m) {
+      var y = parseInt(m[3], 10);
+      if (y < 100) y += 2000;
+      return y * 10000 + parseInt(m[2], 10) * 100 + parseInt(m[1], 10);
+    }
+    m = s.match(/\b(\d{1,2})[.\/_\-](\d{2})\b/);
+    if (m) return (2000 + parseInt(m[2], 10)) * 10000 + parseInt(m[1], 10) * 100;
+    return 0;
+  }
+
+  function parseIsoDateScore(raw) {
+    var t = Date.parse(String(raw || ""));
+    if (!t || isNaN(t)) return 0;
+    var dt = new Date(t);
+    return dt.getFullYear() * 10000 + (dt.getMonth() + 1) * 100 + dt.getDate();
+  }
+
+  function productDateScore(p) {
+    var meta = state.metaById[p.id] || {};
+    var raw = rawProduct(p);
+    var best = 0;
+    if (meta.revisionFolder) {
+      best = Math.max(best, parseFolderDateScore(meta.revisionFolder));
+    }
+    var path = p.path || (raw && raw.path) || "";
+    if (path) {
+      var parts = String(path).replace(/\\/g, "/").split("/");
+      for (var pi = 0; pi < parts.length; pi++) {
+        best = Math.max(best, parseFolderDateScore(parts[pi]));
+      }
+    }
+    if (raw && raw.revisions) {
+      raw.revisions.forEach(function (r) {
+        if (!r) return;
+        if (r.folder) best = Math.max(best, parseFolderDateScore(r.folder));
+        if (r.date) best = Math.max(best, parseIsoDateScore(r.date));
+        if (r.path) {
+          var seg = String(r.path).replace(/\\/g, "/").split("/").pop() || "";
+          best = Math.max(best, parseFolderDateScore(seg));
+        }
+      });
+    }
+    return best;
+  }
+
+  function productSortName(p) {
+    var cat = cardCategoryLabel(p);
+    var name = p.title || "";
+    var label = cat ? cat + " · " + name : name;
+    return String(label).toLowerCase();
+  }
+
+  function productPriorityScore(p) {
+    var c = projectCompleteness(p);
+    if (c === "incomplete") return 2;
+    if (c === "complete") return 0;
+    return 1;
+  }
+
+  function recentProductIdOrder() {
+    var order = [];
+    var seen = {};
+    try {
+      var stack = JSON.parse(sessionStorage.getItem(NAV_STACK_KEY) || "[]");
+      if (!Array.isArray(stack)) stack = [];
+      for (var si = stack.length - 1; si >= 0; si--) {
+        var url = String(stack[si] || "");
+        var m = url.match(/(?:project\.html\?id=|explorer\.html\?product=)([^&]+)/i);
+        if (m) {
+          var id = decodeURIComponent(m[1]);
+          if (!seen[id]) {
+            seen[id] = true;
+            order.push(id);
+          }
+        }
+      }
+    } catch (eNav) { /* ignore */ }
+    return order;
+  }
+
+  function recentSortIndex(p, recentOrder) {
+    var id = String(p.id || "");
+    for (var ri = 0; ri < recentOrder.length; ri++) {
+      if (recentOrder[ri] === id) return ri;
+    }
+    return 999999;
+  }
+
+  function sortProjectRows(rows) {
+    if (!rows || rows.length < 2) return rows || [];
+    var mode = state.sortMode || readStoredSort();
+    var out = rows.slice();
+
+    if (mode === "recent") {
+      var recent = recentProductIdOrder();
+      out.sort(function (a, b) {
+        var ra = recentSortIndex(a, recent);
+        var rb = recentSortIndex(b, recent);
+        if (ra !== rb) return ra - rb;
+        return productDateScore(b) - productDateScore(a);
+      });
+      return out;
+    }
+
+    if (mode === "priority") {
+      out.sort(function (a, b) {
+        var pa = productPriorityScore(a);
+        var pb = productPriorityScore(b);
+        if (pb !== pa) return pb - pa;
+        return productDateScore(b) - productDateScore(a);
+      });
+      return out;
+    }
+
+    if (mode === "name_asc" || mode === "name_desc") {
+      out.sort(function (a, b) {
+        var cmp = productSortName(a).localeCompare(productSortName(b), "pl", { sensitivity: "base" });
+        if (mode === "name_desc") cmp = -cmp;
+        if (cmp) return cmp;
+        return productDateScore(b) - productDateScore(a);
+      });
+      return out;
+    }
+
+    out.sort(function (a, b) {
+      var da = productDateScore(a);
+      var db = productDateScore(b);
+      if (da !== db) {
+        return mode === "date_asc" ? da - db : db - da;
+      }
+      return productSortName(a).localeCompare(productSortName(b), "pl", { sensitivity: "base" });
+    });
+    return out;
+  }
+
+  function includeArchive() {
+    var cb = document.getElementById("damProjectsIncludeArchive");
+    return cb && cb.checked;
+  }
+
+  function rawProduct(p) {
+    if (!p || !p.id) return null;
+    if (state.rawById[p.id]) return state.rawById[p.id];
+    var fi = window._DAM_FILE_INDEX;
+    if (!fi || !fi.products) return null;
+    for (var i = 0; i < fi.products.length; i++) {
+      if (fi.products[i] && fi.products[i].id === p.id) return fi.products[i];
+    }
+    return null;
+  }
+
+  function projectVisibleInList(p) {
+    if (includeArchive()) return true;
+    var raw = rawProduct(p);
+    if (!raw) return true;
+    if (window.DamSearch && typeof window.DamSearch.productHasLivePresence === "function") {
+      return window.DamSearch.productHasLivePresence(raw);
+    }
+    return true;
+  }
 
   function readStoredQuery() {
     try {
@@ -112,16 +310,45 @@
     return ["zip", "rar", "7z"].indexOf(fileExt(name)) >= 0;
   }
 
-  function pickLatestRevision(product) {
+  function pickLatestRevision(product, queryOpt) {
     var revs = (product && product.revisions) || [];
     if (!revs.length) return null;
-    /* Wiele is_latest (np. dwa TUBA z 6300XXX) - wybierz najnowsza date. */
     var candidates = [];
     for (var i = 0; i < revs.length; i++) {
       if (revs[i] && revs[i].is_latest) candidates.push(revs[i]);
     }
     if (!candidates.length) candidates = revs.slice();
+    var qDig = "";
+    if (queryOpt) {
+      if (window.DamSearch && typeof window.DamSearch.digitsOnly === "function") {
+        qDig = window.DamSearch.digitsOnly(queryOpt);
+      } else {
+        qDig = String(queryOpt).replace(/\D/g, "");
+      }
+    }
     candidates.sort(function (a, b) {
+      if (qDig && qDig.length >= 3) {
+        var da = String((a && a.index) || "").replace(/\D/g, "");
+        var db = String((b && b.index) || "").replace(/\D/g, "");
+        var ma = da.indexOf(qDig) === 0 || qDig.indexOf(da) === 0;
+        var mb = db.indexOf(qDig) === 0 || qDig.indexOf(db) === 0;
+        if (ma && !mb) return -1;
+        if (mb && !ma) return 1;
+      }
+      var ibA =
+        parseInt(String((a && a.index_base) || String((a && a.index) || "").replace(/\D/g, "") || "0"), 10) ||
+        0;
+      var ibB =
+        parseInt(String((b && b.index_base) || String((b && b.index) || "").replace(/\D/g, "") || "0"), 10) ||
+        0;
+      if (ibB !== ibA) return ibB - ibA;
+      var vizA =
+        (((a && a.files_by_role) && a.files_by_role.viz) || []).length +
+        (((a && a.wizki) || []).length);
+      var vizB =
+        (((b && b.files_by_role) && b.files_by_role.viz) || []).length +
+        (((b && b.wizki) || []).length);
+      if (vizB !== vizA) return vizB - vizA;
       var dd = String((b && b.date) || "").localeCompare(String((a && a.date) || ""));
       if (dd) return dd;
       return String((b && b.folder) || "").localeCompare(String((a && a.folder) || ""));
@@ -130,8 +357,8 @@
   }
 
   /* Mini-checklista jak Eksplorator - z najnowszej rewizji produktu. */
-  function computeWideChecklist(product) {
-    var rev = pickLatestRevision(product);
+  function computeWideChecklist(product, queryOpt) {
+    var rev = pickLatestRevision(product, queryOpt);
     var fbr = (rev && rev.files_by_role) || {};
     var src = fbr.source || [];
     var prt = fbr.print || [];
@@ -211,9 +438,22 @@
     };
   }
 
+  function projectCompleteness(p) {
+    var raw = rawProduct(p);
+    if (!raw) return p.completeness || "incomplete";
+    var flags = computeWideChecklist(raw, state.query);
+    var missing = [];
+    ["artwork", "viz_3d", "print_pdf"].forEach(function (r) {
+      if (!flags[r]) missing.push(r);
+    });
+    return missing.length ? "incomplete" : "complete";
+  }
+
   function renderGaps(p) {
     var meta = state.metaById[p.id] || {};
-    var flags = meta.checklist || null;
+    var raw = rawProduct(p);
+    var flags =
+      (raw ? computeWideChecklist(raw, state.query) : null) || meta.checklist || null;
     var missing = p.missing_roles || [];
     var missSet = {};
     missing.forEach(function (r) {
@@ -359,28 +599,47 @@
   }
 
   function renderIndexCorner(p) {
-    var idx = p.product_index || (state.metaById[p.id] && state.metaById[p.id].index) || "";
-    if (!idx) return "";
-    if (window.DamBadges && typeof window.DamBadges.render === "function") {
-      return (
-        '<div class="dam-project-card__index-corner">' +
-        window.DamBadges.render({
-          index: idx,
-          compact: true,
-          maxTotal: 1,
-          showCarrierPlaceholder: false,
-        }) +
-        "</div>"
-      );
+    var meta = state.metaById[p.id] || {};
+    var raw = rawProduct(p);
+    var indexes = (meta.indexes && meta.indexes.length ? meta.indexes.slice() : []) ||
+      (raw && raw.indexes ? raw.indexes.slice() : []);
+    if (!indexes.length) {
+      var rev = pickLatestRevision(raw, state.query);
+      var idx = (rev && rev.index) || p.product_index || meta.index || "";
+      if (idx) indexes = [idx];
     }
-    return (
-      '<div class="dam-project-card__index-corner">' +
-      '<button type="button" class="dam-viz-badge dam-badge-tag dam-viz-badge--index" data-tag-kind="index" data-tag-value="' +
-      String(idx).replace(/"/g, "&quot;") +
-      '">' +
-      String(idx).replace(/</g, "&lt;") +
-      "</button></div>"
-    );
+    indexes.sort(function (a, b) {
+      var na = parseFloat(String(a)) || 0;
+      var nb = parseFloat(String(b)) || 0;
+      if (nb !== na) return nb - na;
+      return String(b).localeCompare(String(a));
+    });
+    if (!indexes.length) return "";
+    var multi = indexes.length > 1;
+    var html =
+      '<div class="dam-project-card__index-corner' +
+      (multi ? " dam-project-card__index-corner--multi" : "") +
+      '">';
+    indexes.slice(0, 3).forEach(function (ix) {
+      if (window.DamBadges && typeof window.DamBadges.render === "function") {
+        html +=
+          window.DamBadges.render({
+            index: ix,
+            compact: true,
+            maxTotal: 1,
+            showCarrierPlaceholder: false,
+          });
+      } else {
+        html +=
+          '<button type="button" class="dam-viz-badge dam-badge-tag dam-viz-badge--index" data-tag-kind="index" data-tag-value="' +
+          String(ix).replace(/"/g, "&quot;") +
+          '">' +
+          String(ix).replace(/</g, "&lt;") +
+          "</button>";
+      }
+    });
+    html += "</div>";
+    return html;
   }
 
   function cardCategoryLabel(p) {
@@ -411,7 +670,7 @@
   }
 
   function renderCard(p) {
-    var meta = statusMeta(p.completeness);
+    var meta = statusMeta(projectCompleteness(p));
     var listHtml = renderGaps(p);
     var indexHtml = renderIndexCorner(p);
     var badgesHtml = renderCardBadges(p, { includeIndex: false });
@@ -491,6 +750,7 @@
     return [
       p.id,
       p.product_index,
+      (meta.indexes || []).join(" "),
       p.title,
       p.market,
       p.completeness,
@@ -531,16 +791,163 @@
     return productHaystack(p) + " " + variantHaystack(p);
   }
 
-  function filteredRows() {
-    var q = (state.query || "").trim().toLowerCase();
-    if (!q) return state.all.slice();
-    var parts = q.split(/\s+/).filter(Boolean);
-    return state.all.filter(function (p) {
-      var h = haystackForScope(p);
-      return parts.every(function (part) {
-        return h.indexOf(part) !== -1;
-      });
+  function projectMatchesTextQuery(p, q) {
+    var raw = rawProduct(p);
+    if (raw && window.DamSearch && typeof window.DamSearch.productMatchesTextQuery === "function") {
+      var normFn = window.DamSearch.normQuery || function (s) { return String(s || "").toLowerCase(); };
+      var digFn = window.DamSearch.digitsOnly || function (s) { return String(s || "").replace(/\D/g, ""); };
+      var nq = normFn(q);
+      var dig = digFn(q);
+      return window.DamSearch.productMatchesTextQuery(raw, nq, dig, includeArchive());
+    }
+    var parts = String(q || "")
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (!parts.length) return true;
+    var h = haystackForScope(p);
+    return parts.every(function (part) {
+      return h.indexOf(part) !== -1;
     });
+  }
+
+  function parseFolderDateScore(folderName) {
+    var s = String(folderName || "");
+    var m = s.match(/(\d{1,2})[./_-](\d{1,2})[./_-](\d{2,4})/);
+    if (m) {
+      var y = parseInt(m[3], 10);
+      if (y < 100) y += 2000;
+      return y * 10000 + parseInt(m[2], 10) * 100 + parseInt(m[1], 10);
+    }
+    m = s.match(/\b(\d{1,2})[./_-](\d{2})\b/);
+    if (m) return (2000 + parseInt(m[2], 10)) * 10000 + parseInt(m[1], 10) * 100;
+    return 0;
+  }
+
+  function projectDateScore(p) {
+    var raw = rawProduct(p);
+    var rev = pickLatestRevision(raw || p, state.query);
+    var folder =
+      (rev && (rev.folder || rev.revision_folder)) ||
+      (state.metaById[p.id] && state.metaById[p.id].revisionFolder) ||
+      "";
+    if (!folder && rev && rev.revision_path) {
+      folder = String(rev.revision_path).replace(/\\/g, "/").split("/").pop() || "";
+    }
+    if (!folder && p.path) {
+      folder = String(p.path).replace(/\\/g, "/").split("/").pop() || "";
+    }
+    return parseFolderDateScore(folder);
+  }
+
+  function projectDisplayName(p) {
+    var meta = state.metaById[p.id] || {};
+    return String(p.name || p.title || meta.index || p.product_index || p.id || "").trim();
+  }
+
+  function priorityRank(p) {
+    var status = projectCompleteness(p);
+    if (status === "incomplete") return 0;
+    if (status === "warn") return 1;
+    if (status === "complete") return 2;
+    return 3;
+  }
+
+  function readRecentProjectIds() {
+    try {
+      var raw = localStorage.getItem(PROJECTS_RECENT_KEY);
+      var list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list.map(String) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function touchRecentProject(id) {
+    var pid = String(id || "").trim();
+    if (!pid) return;
+    var list = readRecentProjectIds().filter(function (x) {
+      return x !== pid;
+    });
+    list.unshift(pid);
+    if (list.length > 80) list.length = 80;
+    try {
+      localStorage.setItem(PROJECTS_RECENT_KEY, JSON.stringify(list));
+    } catch (e) { /* ignore */ }
+  }
+
+  function readStoredSortMode() {
+    try {
+      var stored = localStorage.getItem(PROJECTS_SORT_KEY);
+      if (stored && SORT_OPTIONS.some(function (o) { return o.id === stored; })) return stored;
+    } catch (e) { /* ignore */ }
+    return "date_desc";
+  }
+
+  function persistSortMode(mode) {
+    state.sortMode = mode || "date_desc";
+    try {
+      localStorage.setItem(PROJECTS_SORT_KEY, state.sortMode);
+    } catch (e) { /* ignore */ }
+  }
+
+  function sortProjects(rows) {
+    var mode = state.sortMode || "date_desc";
+    var out = rows.slice();
+    if (mode === "recent") {
+      var recent = readRecentProjectIds();
+      var rank = {};
+      recent.forEach(function (id, i) {
+        rank[id] = i;
+      });
+      out.sort(function (a, b) {
+        var ra = rank[a.id];
+        var rb = rank[b.id];
+        if (ra == null && rb == null) return projectDateScore(b) - projectDateScore(a);
+        if (ra == null) return 1;
+        if (rb == null) return -1;
+        return ra - rb;
+      });
+      return out;
+    }
+    if (mode === "name_asc" || mode === "name_desc") {
+      var dir = mode === "name_asc" ? 1 : -1;
+      out.sort(function (a, b) {
+        var cmp = projectDisplayName(a).localeCompare(projectDisplayName(b), "pl", { sensitivity: "base" });
+        if (cmp !== 0) return cmp * dir;
+        return String(a.id).localeCompare(String(b.id)) * dir;
+      });
+      return out;
+    }
+    if (mode === "priority") {
+      out.sort(function (a, b) {
+        var pa = priorityRank(a);
+        var pb = priorityRank(b);
+        if (pa !== pb) return pa - pb;
+        return projectDateScore(b) - projectDateScore(a);
+      });
+      return out;
+    }
+    var dateDir = mode === "date_asc" ? 1 : -1;
+    out.sort(function (a, b) {
+      var da = projectDateScore(a);
+      var db = projectDateScore(b);
+      if (da !== db) return (da - db) * dateDir;
+      return projectDisplayName(a).localeCompare(projectDisplayName(b), "pl", { sensitivity: "base" });
+    });
+    return out;
+  }
+
+  function filteredRows() {
+    var q = (state.query || "").trim();
+    var base = state.all.filter(projectVisibleInList);
+    var rows = !q
+      ? base
+      : base.filter(function (p) {
+          return projectMatchesTextQuery(p, q);
+        });
+    return sortProjects(rows);
   }
 
   function revealProjectCards(grid) {
@@ -549,16 +956,98 @@
     }
   }
 
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function pickEmptyMascotBundle() {
+    if (window.DamEmptyMascot && typeof window.DamEmptyMascot.pick === "function") {
+      return window.DamEmptyMascot.pick();
+    }
+    return {
+      text: "Hmm... albo literówka, albo ten produkt żyje w innej galaktyce.",
+      mood: "think",
+      poseUrl: "assets/img/maskotka/pose-think-q.png"
+    };
+  }
+
+  function wrapEmptyWithMascot(cardHtml) {
+    var bundle = pickEmptyMascotBundle();
+    var pose = String(bundle.poseUrl || "").replace(/'/g, "%27");
+    var line = bundle.text || "";
+    return (
+      '<div class="dam-empty-mascot-row" data-empty-mood="' +
+      esc(bundle.mood || "think") +
+      '">' +
+      '<div class="dam-empty-mascot-row__speak">' +
+      '<div class="dam-empty-mascot-row__bubble">' +
+      '<p class="dam-empty-mascot-row__bubble-text">' +
+      esc(line) +
+      "</p>" +
+      "</div>" +
+      '<div class="dam-empty-mascot-row__mascot" aria-hidden="true" style="--dam-empty-pose:url(\'' +
+      pose +
+      "')\">" +
+      '<span class="dam-empty-mascot-row__mascot-img"></span>' +
+      "</div>" +
+      "</div>" +
+      '<div class="dam-empty-mascot-row__card">' +
+      cardHtml +
+      "</div>" +
+      "</div>"
+    );
+  }
+
+  function clearProjectsSearchFilters() {
+    var search = document.getElementById("damProjectsSearch");
+    if (search) search.value = "";
+    state.query = "";
+    persistViewState("");
+    var grid = document.getElementById("damProjectsGrid");
+    var statusEl = document.getElementById("damProjectsStatus");
+    if (grid) scheduleRenderGrid(grid, statusEl);
+  }
+
+  function projectsEmptySearchHtml() {
+    var q = (state.query || "").trim();
+    var filters = q
+      ? '<ul class="dam-branding-empty__filters"><li>Szukaj: ' + esc(q) + "</li></ul>"
+      : "";
+    var clearBtn = q
+      ? '<button type="button" class="geex-btn geex-btn--primary-transparent dam-projects-clear-filters">Wyczyść filtry</button>'
+      : "";
+    return (
+      '<div class="col-12"><div class="dam-branding-empty-wrap">' +
+      wrapEmptyWithMascot(
+        '<div class="dam-branding-empty" role="status">' +
+          '<div class="dam-branding-empty__icon" aria-hidden="true"><i class="uil uil-search-alt"></i></div>' +
+          '<h3 class="dam-branding-empty__title">Brak wyników</h3>' +
+          '<p class="dam-branding-empty__desc">Żaden produkt nie pasuje do aktywnego wyszukiwania.</p>' +
+          filters +
+          clearBtn +
+          "</div>"
+      ) +
+      "</div></div>"
+    );
+  }
+
+  var _renderGridScheduled = false;
+
   function renderGrid(grid, statusEl) {
     var rows = filteredRows();
     if (!state.all.length) {
       grid.innerHTML =
         '<div class="col-12"><p class="dam-page-status">Brak projektów. Kliknij <strong>Wczytaj z dysku</strong> (admin) albo odśwież indeks w Eksplorerze.</p></div>';
     } else if (!rows.length) {
-      grid.innerHTML =
-        '<div class="col-12"><p class="dam-page-status">Brak wyników dla: <strong>' +
-        (state.query || "") +
-        "</strong></p></div>";
+      grid.innerHTML = projectsEmptySearchHtml();
+      var clearBtn = grid.querySelector(".dam-projects-clear-filters");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", clearProjectsSearchFilters);
+      }
     } else {
       grid.innerHTML = rows.map(renderCard).join("");
       if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
@@ -571,6 +1060,19 @@
         window.DamIcons.bindWinButtons(grid);
       }
       revealProjectCards(grid);
+      if (!grid._damProjectsRecentBound) {
+        grid._damProjectsRecentBound = true;
+        grid.addEventListener("click", function (e) {
+          var link = e.target && e.target.closest
+            ? e.target.closest("a[href*='project.html?id='], a[href*='explorer.html?product=']")
+            : null;
+          if (!link) return;
+          var card = link.closest("[data-product-id]");
+          if (card && card.getAttribute("data-product-id")) {
+            touchRecentProject(card.getAttribute("data-product-id"));
+          }
+        });
+      }
     }
     if (statusEl) {
       var src =
@@ -579,7 +1081,7 @@
           : state.source === "local"
             ? " · dane lokalne"
             : "";
-      var variantsHint = state.variantsHint ? " · " + state.variantsHint + " wariantow" : "";
+      var variantsHint = state.variantsHint ? " · " + state.variantsHint + " wariantów" : "";
       if (state.query) {
         statusEl.textContent =
           rows.length + " / " + state.all.length + " produktów" + variantsHint + src;
@@ -590,6 +1092,76 @@
     }
   }
 
+  /** Defer heavy grid rebuild so chip clicks (Warianty) never block the click tick. */
+  function scheduleRenderGrid(grid, statusEl) {
+    if (_renderGridScheduled) return;
+    _renderGridScheduled = true;
+    setTimeout(function () {
+      _renderGridScheduled = false;
+      try {
+        renderGrid(grid, statusEl);
+      } catch (errRender) {
+        console.error("[DamProjects] renderGrid failed", errRender);
+      }
+    }, 0);
+  }
+
+  function parseFileIndexDeferred(text) {
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        try {
+          resolve(JSON.parse(text));
+        } catch (eParse) {
+          console.error("[DamProjects] file-index parse failed", eParse);
+          resolve(null);
+        }
+      }, 0);
+    });
+  }
+
+  function applyFileIndexMeta(idx) {
+    if (!idx || !idx.products) return;
+    var revs = 0;
+    var map = {};
+    var rawMap = {};
+    idx.products.forEach(function (p) {
+      revs += (p.revisions || []).length;
+      if (p.id) {
+        rawMap[p.id] = p;
+        var latest = pickLatestRevision(p);
+        var langs = (latest && latest.langs) || [];
+        var indexes = p.indexes || p.index_bases || [];
+        map[p.id] = {
+          tags: p.tags || [],
+          authors: p.authors || [],
+          tag_groups: p.tag_groups || {},
+          search_blob: p.search_blob || "",
+          revisions: p.revisions || [],
+          indexes: indexes,
+          brand: p.brand || "DK",
+          category: p.category || "",
+          subcategory_slug: p.subcategory_slug || "",
+          subcategory_label: p.subcategory_label || "",
+          carrier: (latest && latest.carrier) || p.carrier || "",
+          carrier_guessed: !!(latest && latest.carrier_guessed),
+          revisionFolder: (latest && latest.folder) || "",
+          langs: langs,
+          index: (latest && latest.index) || (indexes[0] || ""),
+          multiIndex: indexes.length > 1,
+          checklist: computeWideChecklist(p, state.query),
+        };
+      }
+    });
+    state.metaById = map;
+    state.rawById = rawMap;
+    if (revs > state.all.length) state.variantsHint = String(revs);
+    try {
+      window._DAM_FILE_INDEX = idx;
+    } catch (eShare) {
+      /* ignore */
+    }
+  }
+
   async function loadProjects(grid, statusEl) {
     try {
       if (statusEl) statusEl.textContent = "Ładowanie...";
@@ -597,52 +1169,36 @@
       state.all = (res && res.data) || [];
       state.source = (res && res.source) || "";
       state.variantsHint = "";
+      /* Paint shell immediately - never await 388MB branding-index or sync 8MB parse. */
+      renderGrid(grid, statusEl);
       try {
-        if (window.DamProductCorrelation) {
-          await DamProductCorrelation.ensureBrandingCounts();
-        }
-        var idx = await fetch("./data/file-index.json", { cache: "no-store" }).then(function (r) {
-          return r.ok ? r.json() : null;
-        });
-        if (idx && idx.products) {
-          var revs = 0;
-          var map = {};
-          idx.products.forEach(function (p) {
-            revs += (p.revisions || []).length;
-            if (p.id) {
-              var latest = pickLatestRevision(p);
-              var langs = (latest && latest.langs) || [];
-              var indexes = p.indexes || p.index_bases || [];
-              map[p.id] = {
-                tags: p.tags || [],
-                authors: p.authors || [],
-                tag_groups: p.tag_groups || {},
-                search_blob: p.search_blob || "",
-                revisions: p.revisions || [],
-                indexes: indexes,
-                brand: p.brand || "DK",
-                category: p.category || "",
-                subcategory_slug: p.subcategory_slug || "",
-                subcategory_label: p.subcategory_label || "",
-                carrier: (latest && latest.carrier) || p.carrier || "",
-                carrier_guessed: !!(latest && latest.carrier_guessed),
-                revisionFolder: (latest && latest.folder) || "",
-                langs: langs,
-                index: (latest && latest.index) || (indexes[0] || ""),
-                multiIndex: indexes.length > 1,
-                checklist: computeWideChecklist(p),
-              };
-            }
+        if (window.DamProductCorrelation && typeof DamProductCorrelation.ensureBrandingCounts === "function") {
+          DamProductCorrelation.ensureBrandingCounts().then(function () {
+            scheduleRenderGrid(grid, statusEl);
           });
-          state.metaById = map;
-          if (revs > state.all.length) state.variantsHint = String(revs);
+        }
+        var cached = window._DAM_FILE_INDEX;
+        if (cached && cached.products) {
+          applyFileIndexMeta(cached);
+          scheduleRenderGrid(grid, statusEl);
         }
       } catch (ignore) {}
-      renderGrid(grid, statusEl);
     } catch (e) {
       grid.innerHTML = '<div class="col-12"><p class="text-danger">' + e.message + "</p></div>";
       if (statusEl) statusEl.textContent = "Błąd API";
     }
+  }
+
+  function bindProjectsSortControl(grid, statusEl) {
+    var select = document.getElementById("damProjectsSort");
+    if (!select || select._damBound) return;
+    select._damBound = true;
+    state.sortMode = readStoredSortMode();
+    select.value = state.sortMode;
+    select.addEventListener("change", function () {
+      persistSortMode(select.value);
+      scheduleRenderGrid(grid, statusEl);
+    });
   }
 
   async function boot() {
@@ -652,6 +1208,8 @@
     var search = document.getElementById("damProjectsSearch");
     var refreshBtn = document.getElementById("damProjectsRefresh");
     if (!window.DamApi || !grid) return;
+    state.sortMode = readStoredSortMode();
+    bindProjectsSortControl(grid, statusEl);
     /* Shell ustawia sesje async - nie blokuj listy gdy requireAuth jeszcze false */
     if (typeof DamApi.requireAuth === "function") {
       try {
@@ -696,7 +1254,7 @@
       var onSearch = function () {
         state.query = search.value || "";
         persistViewState(state.query);
-        renderGrid(grid, statusEl);
+        scheduleRenderGrid(grid, statusEl);
       };
       search.addEventListener("input", onSearch);
       search.addEventListener("search", onSearch);
@@ -707,10 +1265,44 @@
         }
       });
       var scopeEl = document.getElementById("damProjectsSearchScope");
+      var archSwitch = document.createElement("label");
+      archSwitch.className = "dam-switch";
+      archSwitch.setAttribute("for", "damProjectsIncludeArchive");
+      archSwitch.setAttribute(
+        "data-dam-tip",
+        "Domyślnie ukryte foldery ARCHIWUM na dysku Marketing"
+      );
+      archSwitch.innerHTML =
+        '<input type="checkbox" id="damProjectsIncludeArchive" class="dam-switch__input" />' +
+        '<span class="dam-switch__track" aria-hidden="true"></span>' +
+        '<span class="dam-switch__label">Pokaż archiwum</span>';
+      try {
+        var archInput = archSwitch.querySelector("#damProjectsIncludeArchive");
+        if (archInput) archInput.checked = localStorage.getItem(PROJECTS_ARCHIVE_KEY) === "1";
+      } catch (eArchInit) { /* ignore */ }
+      archSwitch.addEventListener("change", function (e) {
+        var t = e.target;
+        if (!t || t.id !== "damProjectsIncludeArchive") return;
+        try {
+          localStorage.setItem(PROJECTS_ARCHIVE_KEY, t.checked ? "1" : "0");
+        } catch (eArchStore) { /* ignore */ }
+        scheduleRenderGrid(grid, statusEl);
+      });
       if (scopeEl && window.DamSearch && typeof window.DamSearch.bindScopeChips === "function") {
-        window.DamSearch.bindScopeChips(scopeEl, function () {
-          onSearch();
-        });
+        window.DamSearch.bindScopeChips(
+          scopeEl,
+          function () {
+            /*
+             * HARD: empty query → scope (Wszystko/Produkty/Warianty) does not change
+             * the row set. Skip full card rebuild so "Warianty" never freezes UI.
+             */
+            if (!(state.query || "").trim()) {
+              return;
+            }
+            scheduleRenderGrid(grid, statusEl);
+          },
+          { trailingEl: archSwitch }
+        );
       }
       /* Sync URL/stack even when query restored from session (no input event) */
       persistViewState(state.query);

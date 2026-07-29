@@ -215,6 +215,9 @@ REPLS: list[tuple[str, str]] = sorted(
         ("rozjezdzaja", "rozjeżdżają"),
         ("Lista projektow", "Lista projektów"),
         ("ich kompletnosci", "ich kompletności"),
+        ("wariantow", "wariantów"),
+        ("liscie", "liście"),
+        ("szerokosci", "szerokości"),
     },
     key=lambda x: -len(x[0]),
 )
@@ -232,9 +235,46 @@ TARGETS = [
 ]
 
 
+def _needs_boundary(src: str) -> bool:
+    """Short/stem replacements are unsafe as raw substring replace."""
+    if len(src) <= 8:
+        return True
+    risky = {
+        "opakowan",
+        "produktow",
+        "projektow",
+        "plikow",
+        "kosztow",
+        "assetow",
+        "jezyk",
+        "dziala",
+        "gosci",
+        "status",
+        "data",
+        "opis",
+        "nazwa",
+        "pomoc",
+        "szukaj",
+        "anuluj",
+        "haslo",
+    }
+    return src.lower() in risky
+
+
 def apply_text(text: str) -> str:
     for a, b in REPLS:
-        text = text.replace(a, b)
+        if a == b:
+            continue
+        if _needs_boundary(a):
+            text = re.sub(
+                r"(?<![A-Za-ząćęłńóśźżĄĆĘŁŃÓŚŹŻ])"
+                + re.escape(a)
+                + r"(?![A-Za-ząćęłńóśźżĄĆĘŁŃÓŚŹŻ])",
+                b,
+                text,
+            )
+        else:
+            text = text.replace(a, b)
     return text
 
 

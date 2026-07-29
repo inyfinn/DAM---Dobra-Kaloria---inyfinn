@@ -192,11 +192,47 @@
     return last;
   }
 
+  function digitsOnly(s) {
+    return String(s || "").replace(/\D/g, "");
+  }
+
+  /** Cores M-{TYP}{typeNum}{brDigits[1:]} — szukanie 249510 / 405515 bez pełnego M-IMG…. */
+  function marketingCoreDigits(brId) {
+    var d = parseBrDigits(brId);
+    if (!d) return [];
+    if (d.length < 2) return [d];
+    var cores = [d];
+    for (var t = 1; t <= 12; t++) {
+      cores.push(String(t) + d.slice(1));
+    }
+    return cores;
+  }
+
+  function queryMatchesBrId(query, brId) {
+    var q = String(query || "").trim().toLowerCase();
+    if (!q) return false;
+    var eid = String(brId || "").trim().toLowerCase();
+    if (!eid) return false;
+    if (q === eid || eid.indexOf(q) !== -1) return true;
+    var qd = digitsOnly(q);
+    if (qd.length < 4) return false;
+    var idDigits = digitsOnly(eid);
+    if (idDigits && (qd.indexOf(idDigits) !== -1 || idDigits.indexOf(qd) !== -1)) return true;
+    var cores = marketingCoreDigits(brId);
+    for (var i = 0; i < cores.length; i++) {
+      var c = cores[i];
+      if (c && (qd.indexOf(c) !== -1 || c.indexOf(qd) !== -1)) return true;
+    }
+    return false;
+  }
+
   window.DamMarketingId = {
     format: formatMarketingAssetId,
     formatViz: formatVizId,
     parseIndexFromPath: parseIndexFromPath,
     resolveType: resolveType,
     parseBrDigits: parseBrDigits,
+    marketingCoreDigits: marketingCoreDigits,
+    queryMatchesBrId: queryMatchesBrId,
   };
 })();

@@ -47,18 +47,47 @@
     return isAdminRole();
   }
 
-  function refreshApp() {
+  /** Tear down stuck overlays so reload is not fighting a frozen modal layer. */
+  function panicResetUi() {
     try {
-      if (
-        window.pywebview &&
-        window.pywebview.api &&
-        typeof window.pywebview.api.restart_window === "function"
-      ) {
-        window.pywebview.api.restart_window();
-        return;
+      window.dispatchEvent(new CustomEvent("dam:panic-reset"));
+    } catch (eEv) { /* ignore */ }
+    try {
+      document
+        .querySelectorAll(
+          ".dam-assoc-edit-overlay,#damAssocEditPopover,#damTagEditPopover," +
+            "#damAssocThumbZoom,#damTutorialInvite,.dam-tut-companion"
+        )
+        .forEach(function (n) {
+          if (n && n.parentNode) n.parentNode.removeChild(n);
+        });
+    } catch (eDom) { /* ignore */ }
+    try {
+      window.stop();
+    } catch (eStop) { /* ignore */ }
+  }
+
+  function refreshApp() {
+    if (typeof window.__damHardReload === "function") {
+      window.__damHardReload();
+      return;
+    }
+    try {
+      window.stop();
+    } catch (eStop) {
+      /* ignore */
+    }
+    try {
+      var url = window.location.pathname + window.location.search;
+      var sep = url.indexOf("?") >= 0 ? "&" : "?";
+      window.location.replace(url + sep + "_damr=" + Date.now() + (window.location.hash || ""));
+    } catch (eNav) {
+      try {
+        window.location.reload();
+      } catch (eRel) {
+        /* ignore */
       }
-    } catch (e) { /* browser / no api */ }
-    window.location.reload();
+    }
   }
 
   function keyRow(keysHtml, text) {
@@ -84,8 +113,8 @@
 
     var keys =
       keyRow(kbd("F1") + " / " + kbd("?"), "Otwiera to okno pomocy (ikona ? w prawym dolnym rogu)") +
-      keyRow(kbd("F5"), "Odświeża aplikację. W oknie DAM restartuje cały shell.") +
-      keyRow(kbd("Ctrl") + "+" + kbd("R"), "To samo co F5 - odśwież widok") +
+      keyRow(kbd("F5"), "Twardy reset aplikacji (jak wyłącz/włącz). Przerywa wszystko na stronie.") +
+      keyRow(kbd("Ctrl") + "+" + kbd("R"), "To samo co F5 — twardy reset") +
       keyRow(kbd("Esc"), "Zamyka pomoc, lightbox, popupy i panele") +
       keyRow(kbd("Ctrl") + " / " + kbd("Alt") + " + scroll", "Przybliża / oddala obraz w studio wizualizacji") +
       keyRow(kbd("+") + " / " + kbd("-"), "Zoom w podglądzie (lightbox) w Eksploratorze");
@@ -258,10 +287,6 @@
             '<p class="dam-help-modal__lead">Szybki przewodnik - jak korzystać z panelu plików opakowań.</p>' +
           "</div>" +
           '<div class="dam-help-modal__head-actions">' +
-            '<button type="button" class="dam-help-modal__restart" data-dam-tut-restart="1" aria-label="Włącz samouczek ponownie">' +
-              '<i class="uil uil-refresh" aria-hidden="true"></i>' +
-              "<span>Włącz samouczek ponownie</span>" +
-            "</button>" +
             '<button type="button" class="dam-help-modal__close" data-dam-help-close="1" aria-label="Zamknij">' +
               '<i class="uil uil-times" aria-hidden="true"></i>' +
             "</button>" +
@@ -285,7 +310,7 @@
         } else {
           // Lazy-load samouczka gdy strona nie dolaczyla skryptu w HTML
           var s = document.createElement("script");
-          s.src = "assets/js/dam-tutorial.js?v=tutorialPraiseToast20260721b";
+          s.src = "assets/js/dam-tutorial.js?v=5.0.56";
           s.onload = function () {
             if (window.DamTutorial && typeof window.DamTutorial.restart === "function") {
               window.DamTutorial.restart();
@@ -353,14 +378,14 @@
     }
 
     if (key === "F5") {
-      e.preventDefault();
       refreshApp();
+      /* NIE preventDefault — natywny F5 musi dzialac gdy JS zamrozone. */
       return;
     }
 
     if ((e.ctrlKey || e.metaKey) && (key === "r" || key === "R")) {
-      e.preventDefault();
       refreshApp();
+      /* NIE preventDefault */
     }
   }
 

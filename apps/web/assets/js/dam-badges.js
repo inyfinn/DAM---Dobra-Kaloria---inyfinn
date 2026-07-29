@@ -581,7 +581,8 @@
         });
       }
     }
-    return items.map(badgeHtml).join("");
+    /* Spacja miedzy chipami: textContent karty musi miec granice slow (\bEN\b, \b6300699\b). */
+    return items.map(badgeHtml).join(" ");
   }
 
   /**
@@ -1079,7 +1080,7 @@
       ch.push("meta", "instagram");
     }
     if (p.indexOf("STRONY WWW") !== -1 || p.indexOf("E-COMMERCE") !== -1) {
-      ch.push("www");
+      ch.push("online");
     }
     if (p.indexOf("GOOGLE") !== -1) {
       ch.push("google");
@@ -1131,10 +1132,17 @@
       .replace(/ź|ż/g, "z")
       .replace(/[^a-z0-9]/g, "");
     if (!s) return "";
+    if (s === "www" || s === "stronywww" || s === "stronywwwinternet") return "online";
     if (s === "kampanie" || s === "kampanii") return "kampania";
     if (s.endsWith("ie") && s.length > 4) return s.slice(0, -2) + "ia";
     if (s.endsWith("y") && s.length > 4) return s.slice(0, -1) + "a";
     return s;
+  }
+
+  function channelDisplayLabel(ch) {
+    var c = String(ch || "").toLowerCase();
+    if (c === "www") return "Online";
+    return String(ch || "").toUpperCase();
   }
 
   function hasSimilarBrandingTag(items, label) {
@@ -1290,13 +1298,17 @@
     });
 
     var folderLbl = folderLabelFromPath(asset.path);
+    if (folderLbl && brandingTagStem(folderLbl) === "online") folderLbl = "Online";
     if (folderLbl && !hasSimilarBrandingTag(items, folderLbl)) {
       pushItem({
         kind: "folder",
         value: folderLbl,
         label: folderLbl,
         cls: "dam-viz-badge--cat",
-        tip: "Obszar na dysku Marketing (synonimy w wyszukiwaniu)",
+        tip:
+          folderLbl === "Online"
+            ? "Kanał online (strony WWW / e-commerce)"
+            : "Obszar na dysku Marketing (synonimy w wyszukiwaniu)",
         tier: "minimal",
       });
     }
@@ -1323,10 +1335,12 @@
     }
 
     inferBrandingChannels(asset).forEach(function (ch) {
+      var lbl = channelDisplayLabel(ch);
+      if (hasSimilarBrandingTag(items, lbl)) return;
       pushItem({
         kind: "channel",
         value: ch,
-        label: String(ch).toUpperCase(),
+        label: lbl,
         cls: "dam-viz-badge--cat",
         tip: "Kanał dystrybucji",
       });
@@ -1368,10 +1382,14 @@
 
     (asset.tags || []).forEach(function (t) {
       if (!t || t === "ARCHIWUM") return;
+      var lbl = String(t);
+      if (brandingTagStem(lbl) === "online" && hasSimilarBrandingTag(items, "Online")) return;
+      if (brandingTagStem(lbl) === "online") lbl = "Online";
+      if (hasSimilarBrandingTag(items, lbl)) return;
       pushItem({
         kind: "tag",
         value: t,
-        label: String(t),
+        label: lbl,
         cls: "dam-viz-badge--subcat",
         tip: "Tag z indeksu branding",
       });

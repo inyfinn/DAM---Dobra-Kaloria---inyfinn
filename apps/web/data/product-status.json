@@ -1,5 +1,17 @@
 {
   "products": {
+    "cynamonka-nerkowcowy": {
+      "note": "Lifecycle F",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+      "letter": "F",
+      "status": "aktualne"
+    },
+    "cynamonka-nerkowcowy-f": {
+      "note": "Lifecycle clear",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "letter": null,
+      "status": "clear"
+    },
     "test-lifecycle-nerkowcowy": {
       "note": "Lifecycle X",
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ] - X",
@@ -17,6 +29,18 @@
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]",
       "letter": null,
       "status": "clear"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]": {
+      "note": "Lifecycle clear",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "letter": null,
+      "status": "clear"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F": {
+      "note": "Lifecycle F",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+      "letter": "F",
+      "status": "aktualne"
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]": {
       "note": "Lifecycle clear",
@@ -48,6 +72,11 @@
       "note": "Lifecycle D",
       "letter": "D",
       "status": "demo"
+    },
+    "6300525.00": {
+      "note": "Lifecycle X",
+      "letter": "X",
+      "status": "nieaktualne"
     },
     "6300622.00": {
       "note": "Lifecycle X",
@@ -91,6 +120,16 @@
       "note": "MALINA - MAGNEZ & ZELAZO",
       "status": "aktualne"
     },
+    "6300782.00": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
+    },
+    "6300783.00": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
+    },
     "6300785.00": {
       "note": "Lifecycle F",
       "letter": "F",
@@ -110,10 +149,30 @@
       "letter": "X",
       "status": "nieaktualne"
     },
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CYNAMONKA — [ nerkowcowy ]/MINI - 18 06 2026 - 6300782.00": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00 - F": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
+    },
     "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/BABKA CYTRYNOWA — [ nerkowcowy ]/KAR6X - 07.05.2026 - 6300684.01": {
       "note": "Lifecycle F",
       "letter": "F",
       "status": "aktualne"
+    },
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2025 - 6300525.00": {
+      "note": "Lifecycle X",
+      "letter": "X",
+      "status": "nieaktualne"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00": {
+      "note": "Lifecycle clear",
+      "letter": null,
+      "status": "clear"
     },
     "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - MAGNEZ - 65 g - 24.02.2026 - 6300727.02": {
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
@@ -132,12 +191,22 @@
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
       "status": "nieaktualne"
     },
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CYNAMONKA — [ nerkowcowy ]/KAR6X - 20.05.2026  - PL EN - 6300783.00": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
+    },
     "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/TEST LIFECYCLE — [ nerkowcowy ]/BAT - 35 g - 18.07.2026 - TEST-TEST": {
       "note": "Lifecycle D",
       "letter": "D",
       "status": "demo"
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\BAT - 35 g - 18.07.2026 - TEST-TEST": {
+      "note": "Lifecycle clear",
+      "letter": null,
+      "status": "clear"
+    },
+    "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2025 - 6300525.00 - X": {
       "note": "Lifecycle clear",
       "letter": null,
       "status": "clear"
@@ -181,6 +250,11 @@
       "note": "Lifecycle D",
       "letter": "D",
       "status": "demo"
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - F\\BAT - 35 g - 18.07.2026 - TEST-TEST": {
       "note": "Lifecycle clear",
@@ -273,6 +347,11 @@
       "letter": null,
       "status": "clear"
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\MUFFIN JAGODOWY — [ nerkowcowy ] - X\\KAR6X - 20.03.2025 - 6300525.00 - X": {
+      "note": "Lifecycle X",
+      "letter": "X",
+      "status": "nieaktualne"
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ]\\ETY - 35 g - 18.07.2026 - TEST-TEST2 - X": {
       "note": "Lifecycle X",
       "letter": "X",
@@ -299,5 +378,5 @@
       "status": "nieaktualne"
     }
   },
-  "updated_at": "2026-07-19T20:50:13.091526+00:00"
+  "updated_at": "2026-07-28T23:36:15.154431+00:00"
 }

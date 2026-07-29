@@ -56,6 +56,200 @@
     return roles.map(function (r) { return ROLE_LABEL[r] || r; }).join(", ");
   }
 
+  function digitsOnly(s) {
+    return String(s || "").replace(/\D/g, "");
+  }
+
+  function variantRevisions(raw, p) {
+    if (window.DamApi && typeof window.DamApi.listVariantRevisions === "function" && raw) {
+      return window.DamApi.listVariantRevisions(raw);
+    }
+    if (p && p.variants && p.variants.length) {
+      return p.variants.map(function (v) {
+        return {
+          index: v.revision_index || "",
+          carrier: v.carrier || "",
+          folder: v.folder || "",
+          path: v.path || p.path || "",
+          langs: v.langs || [],
+        };
+      });
+    }
+    return [];
+  }
+
+  function variantCarrierLabel(rev, productTitle) {
+    if (window.DamLabels && typeof window.DamLabels.carrierLabel === "function") {
+      return (
+        window.DamLabels.carrierLabel(rev.carrier || "", rev.path || rev.folder || "", {
+          productName: productTitle,
+        }) ||
+        rev.carrier ||
+        rev.folder ||
+        "Wariant"
+      );
+    }
+    return rev.carrier || rev.folder || "Wariant";
+  }
+
+  function revisionRoles(rev, raw, marketingAssets) {
+    if (window.DamApi && typeof window.DamApi.revisionRoles === "function") {
+      return window.DamApi.revisionRoles(rev, raw, {
+        marketingAssets: marketingAssets || [],
+      });
+    }
+    return {};
+  }
+
+  function revisionRolePaths(rev, raw) {
+    if (window.DamApi && typeof window.DamApi.revisionRolePaths === "function") {
+      return window.DamApi.revisionRolePaths(rev, raw);
+    }
+    return { artwork: rev.path || "" };
+  }
+
+  function variantStatusFromRoles(roles) {
+    var missing = [];
+    ["artwork", "viz_3d", "print_pdf"].forEach(function (r) {
+      if (!roles[r]) missing.push(r);
+    });
+    return {
+      status: missing.length ? "incomplete" : "complete",
+      missing_roles: missing,
+    };
+  }
+
+  function assetMatchesRevision(a, rev, allRevs) {
+    if (!a || !rev) return false;
+    var hay = (
+      (a.path || "") +
+      " " +
+      (a.name || "") +
+      " " +
+      (a.search_blob || "") +
+      " " +
+      (a.sku || "")
+    ).toLowerCase();
+    var rp = String(rev.path || "").replace(/\\/g, "/").toLowerCase();
+    if (rp.length > 12 && hay.indexOf(rp) >= 0) return true;
+    var idx = String(rev.index || "").toLowerCase();
+    if (idx && hay.indexOf(idx) >= 0) return true;
+    var d = digitsOnly(rev.index);
+    if (d.length >= 6 && hay.indexOf(d) >= 0) return true;
+    var folder = String(rev.folder || "").toLowerCase();
+    if (folder.length >= 4 && hay.indexOf(folder) >= 0) return true;
+    var carrier = String(rev.carrier || "").toLowerCase();
+    if (carrier.length >= 3 && hay.indexOf(carrier) >= 0) return true;
+    if (/kar6x|karton|6xmini|6x mini/.test(folder + " " + carrier)) {
+      if (/kar6x|6300783|nerk-cynamonka-6300783/.test(hay)) return true;
+    }
+    if (/mini/.test(folder + " " + carrier)) {
+      if (/6300782|mini baton|mini-baton/.test(hay) && !/kar6x|6300783/.test(hay)) return true;
+    }
+    if (allRevs && allRevs.length === 2) {
+      var other = allRevs.find(function (r) {
+        return String(r.index) !== String(rev.index);
+      });
+      if (other && !assetMatchesRevision(a, other, allRevs)) {
+        if (/\.tif(f)?$/i.test(a.name || "") && !/kar6x|6300783/.test(hay)) return true;
+      }
+    }
+    return false;
+  }
+
+  function partitionMarketingAssets(assets, revs) {
+    var buckets = {};
+    var shared = [];
+    revs.forEach(function (r) {
+      buckets[String(r.index)] = [];
+    });
+    (assets || []).forEach(function (a) {
+      var hits = revs.filter(function (r) {
+        return assetMatchesRevision(a, r, revs);
+      });
+      if (hits.length === 1) {
+        buckets[String(hits[0].index)].push(a);
+      } else if (hits.length > 1) {
+        shared.push(a);
+      } else {
+        shared.push(a);
+      }
+    });
+    return { buckets: buckets, shared: shared };
+  }
+
+  function variantStatusChip(status) {
+    if (status === "complete") {
+      return '<span class="dam-variant-panel__chip dam-variant-panel__chip--ok">Kompletny</span>';
+    }
+    return '<span class="dam-variant-panel__chip dam-variant-panel__chip--gap">Niekompletny</span>';
+  }
+
+  function variantPanelHtml(rev, raw, p, marketingAssets) {
+    var roles = revisionRoles(rev, raw, marketingAssets);
+    var paths = revisionRolePaths(rev, raw);
+    var st = variantStatusFromRoles(roles);
+    var carrierLbl = variantCarrierLabel(rev, p.title);
+    var panelCls =
+      "dam-variant-panel" +
+      (st.status === "complete" ? " dam-variant-panel--complete" : " dam-variant-panel--incomplete");
+    var rows = REQUIRED.map(function (r) {
+      return rowHtml(r, !!roles[r], paths[r] || rev.path || p.path, p.id, rev.index);
+    }).join("");
+    var winIcon =
+      window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
+        ? window.DamIcons.winExplorerSvg()
+        : '<i class="uil uil-folder" aria-hidden="true"></i>';
+    return (
+      '<section class="' +
+      panelCls +
+      '" data-variant-index="' +
+      esc(rev.index || "") +
+      '">' +
+      '<header class="dam-variant-panel__head">' +
+      '<div class="dam-variant-panel__titles">' +
+      '<h4 class="dam-variant-panel__title">' +
+      esc(carrierLbl) +
+      "</h4>" +
+      '<p class="dam-variant-panel__meta">' +
+      '<span class="dam-variant-index-chip">' +
+      esc(rev.index || "") +
+      "</span>" +
+      (rev.folder ? " · " + esc(rev.folder) : "") +
+      "</p></div>" +
+      '<div class="dam-variant-panel__actions">' +
+      variantStatusChip(st.status) +
+      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-win-btn dam-variant-panel__folder" data-path="' +
+      esc(rev.path || p.path || "") +
+      '" title="Folder Windows wariantu">' +
+      winIcon +
+      '<span>Folder</span></button>' +
+      '<a class="geex-btn geex-btn--sm geex-btn--primary-transparent" href="explorer.html?product=' +
+      encodeURIComponent(p.id) +
+      "&index=" +
+      encodeURIComponent(rev.index || "") +
+      '" title="Eksplorer tego wariantu"><i class="uil uil-sitemap" aria-hidden="true"></i><span>Eksplorer</span></a>' +
+      "</div></header>" +
+      '<div class="dam-slot-checklist">' +
+      rows +
+      "</div></section>"
+    );
+  }
+
+  function summarizeVariantStatuses(revs, raw, marketingPartition, productTitle) {
+    return revs.map(function (rev) {
+      var mkt = (marketingPartition.buckets[String(rev.index)] || []).slice();
+      var roles = revisionRoles(rev, raw, mkt);
+      var st = variantStatusFromRoles(roles);
+      return {
+        rev: rev,
+        label: variantCarrierLabel(rev, productTitle || ""),
+        status: st.status,
+        missing: st.missing_roles,
+      };
+    });
+  }
+
   function openWin(path) {
     if (!path) return;
     if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
@@ -65,10 +259,15 @@
     if (window.DamPaths) window.DamPaths.revealInExplorer(path);
   }
 
-  function rowHtml(role, ok, path, productId) {
+  function rowHtml(role, ok, path, productId, indexOpt) {
     var label = humanizeRole(role);
     var cls = ok ? "dam-check-ok" : "dam-check-brak";
     var mark = ok ? "uil-check-circle" : "uil-times-circle";
+    var explorerHref =
+      "explorer.html?product=" + encodeURIComponent(productId || "");
+    if (indexOpt) {
+      explorerHref += "&index=" + encodeURIComponent(indexOpt);
+    }
     var winIcon =
       window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
         ? window.DamIcons.winExplorerSvg()
@@ -77,8 +276,8 @@
     if (ok) {
       actions =
         '<span class="dam-slot-row__actions" hidden>' +
-        '<a class="geex-btn geex-btn--sm dam-btn-icon dam-slot-go" href="explorer.html?product=' +
-        encodeURIComponent(productId || "") +
+        '<a class="geex-btn geex-btn--sm dam-btn-icon dam-slot-go" href="' +
+        esc(explorerHref) +
         '" title="Przejdź do Eksplorera" data-dam-tip="Otwórz slot w Eksplorerze">' +
         '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdź</span></a>' +
         '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-btn-icon-only dam-slot-win dam-win-btn" data-path="' +
@@ -516,40 +715,118 @@
     });
   }
 
-  async function renderMarketingShort(p) {
+  /*
+   * HARD freeze fix (2026-07-23): NIGDY nie fetch/parse data/branding-index.json
+   * (~388MB) w watku UI — to zamraza cala aplikacje (nawet F5/ESC nie dziala,
+   * bo JSON.parse blokuje petle zdarzen). Filtrowanie robi bridge
+   * (/branding-for-product), UI dostaje tylko dopasowane assety (KB, nie MB).
+   */
+  var _brandingAssetsCache = {};
+  async function fetchBrandingAssetsForProduct(prod) {
+    var productId = typeof prod === "string" ? prod : prod && prod.id;
+    if (!productId) return [];
+    if (_brandingAssetsCache[productId]) return _brandingAssetsCache[productId];
+    var tokens = productIndexTokens(typeof prod === "object" ? prod : { id: productId });
+    var ctrl = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = ctrl
+      ? setTimeout(function () {
+          try {
+            ctrl.abort();
+          } catch (eAb) {
+            /* ignore */
+          }
+        }, 8000)
+      : null;
+    if (ctrl && window.__damRegisterAbort) window.__damRegisterAbort(ctrl);
+    try {
+      var url =
+        bridgeUrl() +
+        "/branding-for-product?product_id=" +
+        encodeURIComponent(productId) +
+        "&tokens=" +
+        encodeURIComponent(tokens.join(",")) +
+        "&limit=400&v=" +
+        encodeURIComponent(String(window.DAM_APP_VERSION || "1"));
+      var r = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+      if (!r.ok) throw new Error("branding_for_product_http_" + r.status);
+      var data = await r.json();
+      var assets = data && Array.isArray(data.assets) ? data.assets : [];
+      _brandingAssetsCache[productId] = assets;
+      return assets;
+    } catch (e) {
+      return [];
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  async function renderMarketingShort(p, revs, marketingPartition, preloadedAssets) {
     var host = document.getElementById("damMarketingShortBody");
     if (!host) return;
     var productId = typeof p === "string" ? p : p && p.id;
     if (!productId) return;
     var prod = typeof p === "object" && p ? p : { id: productId };
     try {
-      var idx = await fetchJsonLocal("data/branding-index.json");
-      var tokens = productIndexTokens(prod);
-      var assets = (idx.assets || []).filter(function (a) {
-        if (isArchivedBranding(a)) return false;
-        return brandingAssetMatches(a, productId, tokens);
-      });
-      if (window.DamProductCorrelation) {
-        DamProductCorrelation.registerBrandingCountsFromAssets(idx.assets || []);
-      }
+      var assets = Array.isArray(preloadedAssets)
+        ? preloadedAssets
+        : await fetchBrandingAssetsForProduct(prod);
       if (!assets.length) {
         host.innerHTML =
           '<p class="dam-catalog-marketing__empty">Brak powiązanych assetów w indeksie Branding (SKU, ścieżka lub linked_product_ids).</p>';
         return;
       }
-      var tiles = window.DamProductCorrelation
-        ? DamProductCorrelation.groupMarketingTiles(assets)
-        : [{ id: "all", title: "Materiały", assets: assets, kind: "graphics" }];
       var brandHref = brandingLinkForProduct(prod);
+      var partition =
+        marketingPartition ||
+        (revs && revs.length > 1 ? partitionMarketingAssets(assets, revs) : null);
+      var bodyHtml = "";
+      if (partition && revs && revs.length > 1) {
+        revs.forEach(function (rev) {
+          var revAssets = partition.buckets[String(rev.index)] || [];
+          if (!revAssets.length) return;
+          var tiles = window.DamProductCorrelation
+            ? DamProductCorrelation.groupMarketingTiles(revAssets)
+            : [{ id: "all", title: "Materiały", assets: revAssets, kind: "graphics" }];
+          bodyHtml +=
+            '<section class="dam-variant-marketing-block" data-variant-index="' +
+            esc(rev.index || "") +
+            '">' +
+            '<h5 class="dam-variant-marketing-block__title">' +
+            esc(variantCarrierLabel(rev, prod.title || "")) +
+            ' <span class="dam-variant-index-chip">' +
+            esc(rev.index || "") +
+            "</span></h5>" +
+            '<div class="dam-marketing-tiles" data-expanded="">' +
+            tiles.map(marketingTileHtml).join("") +
+            "</div></section>";
+        });
+        if (partition.shared && partition.shared.length) {
+          var sharedTiles = window.DamProductCorrelation
+            ? DamProductCorrelation.groupMarketingTiles(partition.shared)
+            : [{ id: "shared", title: "Materiały", assets: partition.shared, kind: "graphics" }];
+          bodyHtml +=
+            '<section class="dam-variant-marketing-block dam-variant-marketing-block--shared">' +
+            '<h5 class="dam-variant-marketing-block__title">Materiały wspólne</h5>' +
+            '<div class="dam-marketing-tiles" data-expanded="">' +
+            sharedTiles.map(marketingTileHtml).join("") +
+            "</div></section>";
+        }
+      } else {
+        var tiles = window.DamProductCorrelation
+          ? DamProductCorrelation.groupMarketingTiles(assets)
+          : [{ id: "all", title: "Materiały", assets: assets, kind: "graphics" }];
+        bodyHtml =
+          '<div class="dam-marketing-tiles" data-expanded="">' +
+          tiles.map(marketingTileHtml).join("") +
+          "</div>";
+      }
       host.innerHTML =
         '<p class="dam-catalog-marketing__summary">' +
         assets.length +
         ' assetów · <a href="' +
         esc(brandHref) +
         '">Otwórz Branding</a></p>' +
-        '<div class="dam-marketing-tiles" data-expanded="">' +
-        tiles.map(marketingTileHtml).join("") +
-        "</div>";
+        bodyHtml;
       bindMarketingTiles(host);
     } catch (e) {
       host.innerHTML =
@@ -618,62 +895,138 @@
       actionDescEl.textContent =
         "Przelicz status, zgłoś potrzebę albo otwórz hub / folder / Asanę.";
     }
+    var slotHint = document.getElementById("damSlotChecklistHint");
 
     try {
+      if (window.DamApi && typeof window.DamApi.loadLocalIndex === "function") {
+        await window.DamApi.loadLocalIndex();
+      }
       var res = await DamApi.project(id);
       var p = res.data;
+      var raw =
+        (window.DamApi && typeof window.DamApi.rawProductById === "function"
+          ? window.DamApi.rawProductById(p.id)
+          : null) || null;
+      var revs = variantRevisions(raw, p);
       var variant = (p.variants && p.variants[0]) || null;
 
       if (titleEl) {
         titleEl.textContent = p.title || "Projekt";
         titleEl.classList.add("dam-project-title--light");
         if (window.DamShell && typeof window.DamShell.setTrailLeaf === "function") {
+          var trailIdx =
+            revs.length > 1
+              ? revs.length + " warianty"
+              : p.product_index
+                ? p.product_index + " - "
+                : "";
           window.DamShell.setTrailLeaf(
-            (p.product_index ? p.product_index + " - " : "") + (p.title || "Projekt")
+            trailIdx + (p.title || "Projekt")
           );
         }
       }
+
+      /* Jeden lekki fetch (bridge filtruje 388MB serwerowo) — nigdy pelny indeks w UI. */
+      var marketingAssets = await fetchBrandingAssetsForProduct(p);
+      var marketingPartition = null;
+      if (revs.length > 1) {
+        marketingPartition = partitionMarketingAssets(marketingAssets, revs);
+      }
+
+      var variantSummaries = revs.length
+        ? summarizeVariantStatuses(
+            revs,
+            raw,
+            marketingPartition || { buckets: {}, shared: [] },
+            p.title
+          )
+        : [];
+
       if (subEl) {
-        var st = variant && variant.checklist_status ? variant.checklist_status.status : "";
-        var stHuman =
-          st === "complete" ? "kompletny" : st === "incomplete" ? "niekompletny" : "do sprawdzenia";
-        subEl.textContent = "Status: " + stHuman;
+        if (variantSummaries.length > 1) {
+          subEl.textContent = variantSummaries
+            .map(function (s) {
+              var stH = s.status === "complete" ? "kompletny" : "niekompletny";
+              return s.label + ": " + stH;
+            })
+            .join(" · ");
+        } else {
+          var st = variant && variant.checklist_status ? variant.checklist_status.status : "";
+          var stHuman =
+            st === "complete" ? "kompletny" : st === "incomplete" ? "niekompletny" : "do sprawdzenia";
+          subEl.textContent = "Status: " + stHuman;
+        }
       }
       var catalogBundle = await loadCatalogBundle(p.id);
       renderCatalog(p, catalogBundle);
-      renderMarketingShort(p);
+      renderMarketingShort(p, revs, marketingPartition, marketingAssets);
       renderWykrojnikiShort(p.id);
       renderHeaderBadges(p, catalogBundle);
 
-      var present = {};
-      var paths = {};
-      if (variant && variant.assets) {
-        variant.assets.forEach(function (a) {
-          if (a.current_revision_id) present[a.asset_role] = true;
-          if (a.path) paths[a.asset_role] = a.path;
-        });
-      }
-      var basePath = p.path || "";
-
       if (listEl) {
-        listEl.innerHTML = REQUIRED.map(function (r) {
-          return rowHtml(r, !!present[r], paths[r] || basePath, p.id);
-        }).join("");
+        if (revs.length > 1 && raw) {
+          listEl.className = "dam-variant-checklists";
+          listEl.innerHTML = revs
+            .map(function (rev) {
+              var mkt = marketingPartition
+                ? marketingPartition.buckets[String(rev.index)] || []
+                : [];
+              return variantPanelHtml(rev, raw, p, mkt);
+            })
+            .join("");
+        } else {
+          listEl.className = "dam-slot-checklist";
+          var present = {};
+          var paths = {};
+          if (variant && variant.assets) {
+            variant.assets.forEach(function (a) {
+              if (a.current_revision_id) present[a.asset_role] = true;
+              if (a.path) paths[a.asset_role] = a.path;
+            });
+          }
+          var basePath = p.path || "";
+          var idxOne = revs.length === 1 && revs[0] ? revs[0].index : p.product_index;
+          listEl.innerHTML = REQUIRED.map(function (r) {
+            return rowHtml(r, !!present[r], paths[r] || basePath, p.id, idxOne);
+          }).join("");
+        }
         bindSlotRows(listEl);
       }
 
-      var completeness = variant && variant.checklist_status;
-      if (statusEl && completeness) {
-        var missingHuman = humanizeMissing(completeness.missing_roles);
-        var stH = completeness.status === "complete" ? "kompletny" : "niekompletny";
-        statusEl.textContent =
-          missingHuman !== "brak"
-            ? "Brakuje: " + missingHuman
-            : "Wszystkie wymagane pliki kompletne";
+      if (slotHint) {
+        slotHint.textContent =
+          revs.length > 1
+            ? "Produkt ma " +
+              revs.length +
+              " warianty. Każdy panel ma osobną checklistę slotów. Kliknij zielony wiersz, aby pokazać Przejdź i Folder Windows."
+            : "Kliknij zielony wiersz, aby pokazać Przejdź i Folder Windows.";
+      }
+
+      if (statusEl) {
+        if (variantSummaries.length > 1) {
+          var parts = variantSummaries.map(function (s) {
+            if (s.status === "complete") {
+              return s.label + " kompletny";
+            }
+            var miss = humanizeMissing(s.missing);
+            return s.label + ": brakuje " + miss;
+          });
+          statusEl.textContent = parts.join(" · ");
+        } else {
+          var completeness = variant && variant.checklist_status;
+          if (completeness) {
+            var missingHuman = humanizeMissing(completeness.missing_roles);
+            statusEl.textContent =
+              missingHuman !== "brak"
+                ? "Brakuje: " + missingHuman
+                : "Wszystkie wymagane pliki kompletne";
+          }
+        }
       }
 
       var role = DamApi.role();
       var canWrite = role === "admin" || role === "power_user";
+      var basePath = p.path || "";
       fillActions(p, variant, canWrite);
 
       var recomputeBtn = document.getElementById("damRecomputeBtn");
@@ -683,6 +1036,15 @@
       if (winBtn) {
         winBtn.addEventListener("click", function () {
           openWin(this.getAttribute("data-path") || basePath);
+        });
+      }
+      if (listEl) {
+        listEl.querySelectorAll(".dam-variant-panel__folder").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openWin(this.getAttribute("data-path") || basePath);
+          });
         });
       }
 

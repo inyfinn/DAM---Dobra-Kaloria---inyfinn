@@ -1,8 +1,44 @@
 {
-  "version": 21,
+  "version": 26,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-22T15:40:00+02:00",
+  "updated_at": "2026-07-29T00:00:00+02:00",
   "instructions": [
+    {
+      "id": "ui.assoc_edit_shell_adapters",
+      "must": [
+        "Assoc Edit = wspolny shell #damAssocEditOverlay > #damAssocEditPopover (Skojarzone produkty / warianty) - NIE jest COMBO",
+        "COMBO = osobny #damThumbPicker / DamFolderPicker (trzy widoki, sciezka, Otworz Eksplorator Windows); footer Assoc: Dodaj z dysku + Eksplorator [data-goto-combo]",
+        "Cztery entry: viz suggestions, viz variants, branding product, branding material variant - kazda z jawnym adapterem danych",
+        "ensureInjectedCss: early-return PRZED budowa stringa CSS; bez static dam-assoc-edit.css w HTML (FOUC minus)",
+        "Click path paint-first: shell + 'Ladowanie…' synchronicznie; renderPinned/renderOptions/loadBrandingMaterialCandidates/ensureFileIndex dopiero w setTimeout(0) po paint (budget click <16ms)",
+        "bindVizAssocCtas: jeden delegowany listener na root; aktualizuj opts przy kazdym wywolaniu (CTA moga dojsc po pierwszym bind)",
+        "Zapis: DamApi.ensureSession() przed POST /branding/asset-associations; login_required = jawny blad; optimistic UI + status corner + rollback",
+        "Browser circuit breaker: smoke 5s, jedna proba/hipoteze ~10s, abort przy stall; nie absolutny ban",
+        "Preserve v4.0.14 /db/reconnect bez auth i lokalny dump OK"
+      ],
+      "body_pl": "HARD 2026-07-26: freeze = sync populate w click stacku (nie zly root). Shell natychmiast; ciezkie kandydaty async. v4.0.21.",
+      "category": "ui",
+      "must_not": [
+        "Przywracac buildAssocMediaPickerUi / ensureSearchIndexBootstrap / sync parse branding-index.json na click",
+        "Uzywac editBtn.click() z viz CTA suggestions",
+        "Wolac asset-associations bez assetCtx (viz variants produktu)",
+        "Laczyc COMBO i Assoc Edit w jeden overlay",
+        "Cofac v4.0.14 reconnect / dump semantics",
+        "Wywolywac renderOptions/renderPinned/loadBrandingMaterialCandidates synchronicznie w click stacku przed return handlera"
+      ],
+      "priority": "critical",
+      "title_pl": "Assoc Edit: shell + 4 adaptery + COMBO osobno",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-26",
+      "related_code": [
+        "apps/web/assets/js/dam-assoc-edit.js",
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/assets/js/dam-folder-picker.js"
+      ]
+    },
     {
       "id": "ui.folder_picker_combo_only",
       "must": [
@@ -212,24 +248,52 @@
         "Redis opcjonalny (Docker nie wymagany do UI); DAM_REDIS_URL default redis://127.0.0.1:6379/0",
         "Circuit breaker: po 3 bledach OPEN = pelny bypass Redis (zero connect per HTTP request)",
         "Background probe co ~12s; HALF-OPEN jedna proba; sukces = CLOSED bez restartu mostu",
-        "Fallback matrix: avail=RAM/recompute; thumb meta=disk SoT; dry-run FORCE=RAM; warm=no-op/sync"
+        "Fallback matrix: avail=RAM/recompute; thumb meta=disk SoT; dry-run FORCE=RAM; warm=no-op/sync",
+        "Rola Redis/warm: TYLKO przyspieszyc pierwsze pokazanie (szybszy load strony/siatki) - nigdy trwaly obiekt UI"
       ],
-      "body_pl": "HARD 2026-07-21: production circuit breaker + explicite fallback per rola. Redis down/OPEN nie crashuje UI.",
+      "body_pl": "HARD 2026-07-21 + 2026-07-22: circuit breaker + fallback. Redis/warm = booster pierwszego paintu, nie zrodlo po kliknieciu.",
       "category": "preview",
       "must_not": [
         "Probowa connect Redis na kazdym requescie gdy circuit OPEN",
-        "Udawac ze RAM fallback przezywa restart mostu dla rol wymagajacych trwalosci (thumbs = dysk)"
+        "Udawac ze RAM fallback przezywa restart mostu dla rol wymagajacych trwalosci (thumbs = dysk)",
+        "Traktowac Redis/PAMIEC jako staly obiekt wyswietlany po kliknieciu zamiast zrodla z dysku"
       ],
       "priority": "critical",
       "title_pl": "Redis: circuit breaker + fallback matrix",
       "related_kv": [
         "program-instructions"
       ],
-      "updated_at": "2026-07-21",
+      "updated_at": "2026-07-22",
       "related_code": [
         "apps/desktop/dam_redis.py",
         "apps/desktop/docker-compose.redis.yml",
         "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "preview.cache.ephemeral_only",
+      "must": [
+        "PAMIEC-PODRECZNA / Redis /thumb-cache = TYLKO szybki pierwszy paint (karty siatki, skeleton, warm)",
+        "Po zaladowaniu / po kliknieciu (modal, lightbox, podglad pelny, odtwarzanie) ZAWSZE zrodlo z dysku przez /media (albo natywna sciezka Marketing)",
+        "Cache moze zniknac, przegenerowac sie, byc AVIF/JPEG - UI nie moze zalezec od niego jako jedynego obrazu po interakcji"
+      ],
+      "body_pl": "HARD 2026-07-22 (user): pamiec podreczna nie jest stalym obiektem. Laduje sie przez Redis zeby strona szybciej sie pokazala; klik = grafika zrodlowa z dysku, nie cache.",
+      "category": "preview",
+      "must_not": [
+        "Zostawiac /thumb-cache jako src w modalu/lightboxie/pelnym podgladzie po kliknieciu",
+        "Uzywac cache jako jedynego trwalego podgladu assetu",
+        "Mylc warm/Redis z plikiem Marketing na dysku"
+      ],
+      "priority": "critical",
+      "title_pl": "Cache ephemeral: tylko first paint, klik = dysk",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-22",
+      "related_code": [
+        "apps/web/assets/js/dam-preview-truth.js",
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/desktop/dam_thumb_cache.py"
       ]
     },
     {
@@ -1364,11 +1428,14 @@
         "Bezpieczne usuwanie (hold-to-delete) domyslnie ON",
         "Preferencja w Postgres dam_kv_store klucz user-prefs:{email} pole prefs.safe_delete (bridge GET/POST /user-prefs)",
         "localStorage tylko cache zsynchronizowany z DB",
-        "Krotki klik przy hold ON: toast 'Sprobuj przytrzymac, by usunac' + akcja 'Wylacz bezpieczne usuwanie' (przywrocenie w ustawieniach profilu)",
-        "Gdy safe_delete OFF: Usun dziala na zwykly klik",
-        "Reuse DamDanger - bez trzeciego systemu hold"
+        "DEFAULT holdMs = 2000 ms (2 s); media preview moze byc 3000 ms",
+        "Ring postepu przy kursorze (fixed) + na przycisku podczas hold",
+        "Krotki klik / krotkie przytrzymanie przy hold ON: toast na dole 'Sprobuj przytrzymac…' + akcja 'Wylacz bezpieczne usuwanie'",
+        "Gdy safe_delete OFF: Usun/Anuluj dziala na zwykly klik",
+        "Reuse DamDanger - bez trzeciego systemu hold",
+        "Dashboard: w trybie Dostosuj pulpit #damDashCustomizeBtn = Zatwierdz, #damDashCustomizeCancel = Anuluj (hold 2 s)"
       ],
-      "body_pl": "Globalna preferencja UX: destrukcyjne Usun wymaga przytrzymania (~1 s w FMCG / DamDanger). Wylaczenie w ustawieniach profilu (Preferencje / Bezpieczenstwo) zapisuje sie w bazie per konto.",
+      "body_pl": "Globalna preferencja UX: destrukcyjne Usun/Anuluj wymaga przytrzymania (~2 s w DamDanger) z kółkiem przy kursorze. Wylaczenie w ustawieniach profilu (Preferencje / Bezpieczenstwo) zapisuje sie w bazie per konto.",
       "category": "ui",
       "must_not": [
         "Traktowac localStorage jako jedyne zrodlo prawdy preferencji safe_delete",
@@ -1376,7 +1443,7 @@
       ],
       "priority": "high",
       "title_pl": "UI: bezpieczne usuwanie (hold-to-delete)",
-      "updated_at": "2026-07-20",
+      "updated_at": "2026-07-22",
       "related_code": [
         "apps/web/assets/js/dam-danger.js",
         "apps/web/assets/js/dam-user-prefs.js",
@@ -1872,13 +1939,16 @@
         "Panel wysylki faktur: odbiorcy faktury@kubara.pl + alina.andzel@kubara.pl; nr ksiegowosci 509012414",
         "POST /finance/invoices/outlook-draft (admin, Win32 Outlook COM) z zalacznikami PDF/CSV",
         "Fallback web-only: ZIP + mailto tresci bez zalacznikow + komunikat desktop DAM",
-        "Nie usuwac istniejacego ERP stub export"
+        "Nie usuwac istniejacego ERP stub export",
+        "Checkboxy na Faktury (Asana kosztorys + panel mail): custom Geex purple (.dam-inv-cb__input), appearance:none - nigdy natywny pomaranczowy",
+        "Kolumna szacunku (.dam-inv-asana-item__est) ma staly minmax w gridzie i text-align:left - lewe krawedzie etykiet/cen w jednej linii miedzy wierszami"
       ],
-      "body_pl": "HARD 2026-07-22: przygotowanie maila z fakturami w Outlooku (zalaczniki). Mailto w przegladarce nie dolacza plikow.",
+      "body_pl": "HARD 2026-07-22: przygotowanie maila z fakturami w Outlooku (zalaczniki). Mailto w przegladarce nie dolacza plikow. HARD 2026-07-22b: checkboxy Geex purple + wyrównanie prawej kolumny kosztorysu Asana.",
       "category": "finance",
       "must_not": [
         "Udawac wysylke SMTP gdy brak konfiguracji",
-        "Wysylac mail bez potwierdzenia usera (tylko draft Outlook)"
+        "Wysylac mail bez potwierdzenia usera (tylko draft Outlook)",
+        "Uzywac natywnego pomaranczowego checkboxa w #damInvAsanaCard / #damInvMailPanel"
       ],
       "priority": "critical",
       "title_pl": "Faktury: Outlook draft z zalacznikami",
@@ -1888,6 +1958,37 @@
         "apps/desktop/local_bridge.py",
         "apps/web/assets/js/dam-invoices.js",
         "apps/web/invoices.html"
+      ]
+    },
+    {
+      "id": "viz.elementy_links_conversion",
+      "must": [
+        "Konwersja Links -> ELEMENTY w modalu wizualizacji: globalne ustawienia admina w app-settings.json (elementy_conversion) + Ustawienia -> Konwersja",
+        "Domyslnie: PNG z przezroczystoscia (dematte czarnego matte) + JPG, jakosc/kompresja 50%",
+        "Zrodla wejsciowe: TIFF/PSD/PSB z folderu Links; oryginaly w Links NIE sa usuwane",
+        "Przycisk 'Podejmij probe konwersji elementow' widoczny tylko gdy ELEMENTY puste i Links ma pliki (can_generate)",
+        "POST /convert-links-elementy przyjmuje quality i formats z globalnych ustawien lub body requestu"
+      ],
+      "body_pl": "HARD 2026-07-29: built-in konwersja elementow (nie Photo Resizer GUI) - PNG alpha + JPG, kompresja konfigurowalna globalnie przez admina.",
+      "category": "viz",
+      "must_not": [
+        "Trzymac ustawien konwersji elementow per-user w localStorage",
+        "Usuwac oryginalow TIFF/PSD/PSB z folderu Links po konwersji",
+        "Pokazywac CTA konwersji gdy elementy_conversion.enabled=false"
+      ],
+      "priority": "high",
+      "title_pl": "Viz: konwersja Links -> ELEMENTY (PNG+JPG)",
+      "related_kv": [
+        "app-settings",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-29",
+      "related_code": [
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/web/assets/js/dam-settings.js",
+        "apps/web/data/app-settings.json",
+        "apps/web/settings.html"
       ]
     }
   ],

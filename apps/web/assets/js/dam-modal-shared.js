@@ -423,5 +423,137 @@
     bindChromeFit: bindChromeFit,
     bindZoom: bindZoom,
     initZoomDock: initZoomDock,
+    bindPreviewNav: bindPreviewNav,
+    bindModalClose: bindModalClose,
   };
+
+  /**
+   * Capture-phase close (parity #damVizModalClose / #damMediaPreviewClose).
+   * Beats assoc overlays that swallow bubble-phase clicks.
+   */
+  function bindModalClose(closeBtn, onClose) {
+    if (!closeBtn || closeBtn.dataset.damModalCloseBound === "1") return;
+    closeBtn.dataset.damModalCloseBound = "1";
+    function fire(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+      }
+      if (typeof onClose === "function") onClose();
+    }
+    closeBtn.addEventListener("pointerdown", fire, true);
+    closeBtn.addEventListener("click", fire, true);
+  }
+
+  function ensurePreviewNavCss() {
+    if (document.getElementById("damPreviewNavCss")) return;
+    var st = document.createElement("style");
+    st.id = "damPreviewNavCss";
+    st.textContent =
+      ".dam-viz-modal-shell{display:flex;flex-direction:column;position:relative;" +
+      "width:var(--dam-modal-box-w,90vw);max-width:var(--dam-modal-box-w,90vw);" +
+      "height:var(--dam-modal-box-h,90vh);min-height:min(var(--dam-modal-box-min-h),var(--dam-modal-box-h,90vh));" +
+      "max-height:var(--dam-modal-box-h,90vh);box-sizing:border-box;}" +
+      ".dam-viz-modal-shell>.dam-viz-modal-box{flex:1 1 0;min-height:0;height:auto!important;max-height:none!important;}" +
+      ".dam-preview-nav{display:flex;align-items:center;gap:4px;padding:6px 8px;min-height:45px;" +
+      "border-bottom:1px solid rgba(70,66,85,.12);background:rgba(255,255,255,.96);" +
+      "flex:0 0 auto;width:100%;box-sizing:border-box;border-radius:16px 16px 0 0;position:relative;z-index:2;}" +
+      ".dam-viz-modal-shell:has(.dam-preview-nav)>.dam-viz-modal-box{border-top-left-radius:0;border-top-right-radius:0;}" +
+      ".dam-preview-nav__btn{width:32px;height:32px;border-radius:8px;border:1px solid rgba(70,66,85,.16);" +
+      "background:#fff;color:#464255;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}" +
+      ".dam-preview-nav__btn:hover:not(:disabled){background:#f3f2f6;border-color:rgba(70,66,85,.28);}" +
+      ".dam-preview-nav__btn:disabled{opacity:.4;cursor:not-allowed;}" +
+      ".dam-preview-nav .dam-viz-modal-close,.dam-preview-nav__close{" +
+      "margin-left:auto!important;position:static!important;top:auto!important;right:auto!important;" +
+      "width:32px;height:32px;border-radius:8px;border:1px solid rgba(70,66,85,.16);" +
+      "background:#fff;color:#464255;display:inline-flex;align-items:center;justify-content:center;" +
+      "cursor:pointer;flex:0 0 auto;z-index:1;pointer-events:auto!important;}" +
+      ".dam-preview-nav .dam-viz-modal-close:hover,.dam-preview-nav__close:hover{" +
+      "background:rgba(239,68,68,.14)!important;border-color:#fecaca!important;color:#b91c1c!important;}";
+    document.head.appendChild(st);
+  }
+
+  /**
+   * Back/Forward/Up/Refresh toolbar for #damVizModal and #damMediaPreview (not pickers).
+   * opts: { modalRoot, getPath, onNavigate, onUp, onRefresh }
+   */
+  function bindPreviewNav(opts) {
+    ensurePreviewNavCss();
+    opts = opts || {};
+    var modalRoot = opts.modalRoot;
+    if (!modalRoot || modalRoot.dataset.damPreviewNavBound === "1") return;
+    modalRoot.dataset.damPreviewNavBound = "1";
+    var history = [];
+    var cursor = -1;
+    var shell = modalRoot.querySelector(".dam-viz-modal-shell");
+    if (!shell) return;
+    var nav = document.createElement("div");
+    nav.className = "dam-preview-nav";
+    nav.setAttribute("role", "toolbar");
+    nav.setAttribute("aria-label", "Nawigacja podglądu");
+    nav.innerHTML =
+      '<button type="button" class="dam-preview-nav__btn" data-preview-back aria-label="Wstecz" title="Wstecz" disabled><i class="uil uil-angle-left"></i></button>' +
+      '<button type="button" class="dam-preview-nav__btn" data-preview-fwd aria-label="Dalej" title="Dalej" disabled><i class="uil uil-angle-right"></i></button>' +
+      '<button type="button" class="dam-preview-nav__btn" data-preview-up aria-label="Folder wyżej" title="Folder wyżej"><i class="uil uil-arrow-up"></i></button>' +
+      '<button type="button" class="dam-preview-nav__btn" data-preview-refresh aria-label="Odśwież" title="Odśwież"><i class="uil uil-refresh"></i></button>';
+    /* Header row: nav must live inside .dam-viz-modal-shell (not overlay flex sibling). */
+    if (shell.firstChild) shell.insertBefore(nav, shell.firstChild);
+    else shell.appendChild(nav);
+
+    /* P0-A: close X in same flex row as nav (margin-left:auto), not absolute on shell. */
+    var closeBtn =
+      (opts.closeBtnId && shell.querySelector("#" + opts.closeBtnId)) ||
+      shell.querySelector(".dam-viz-modal-close");
+    if (closeBtn && closeBtn.parentElement !== nav) {
+      closeBtn.classList.add("dam-preview-nav__close");
+      nav.appendChild(closeBtn);
+    }
+
+    function paintBtns() {
+      var back = nav.querySelector("[data-preview-back]");
+      var fwd = nav.querySelector("[data-preview-fwd]");
+      if (back) back.disabled = cursor <= 0;
+      if (fwd) fwd.disabled = cursor < 0 || cursor >= history.length - 1;
+    }
+
+    function pushState(state) {
+      if (!state) return;
+      if (cursor < history.length - 1) history = history.slice(0, cursor + 1);
+      var last = history[history.length - 1];
+      if (last && last.key === state.key) return;
+      history.push(state);
+      cursor = history.length - 1;
+      paintBtns();
+    }
+
+    function goTo(idx) {
+      if (idx < 0 || idx >= history.length) return;
+      cursor = idx;
+      paintBtns();
+      if (typeof opts.onNavigate === "function") opts.onNavigate(history[cursor]);
+    }
+
+    nav.querySelector("[data-preview-back]").addEventListener("click", function () {
+      goTo(cursor - 1);
+    });
+    nav.querySelector("[data-preview-fwd]").addEventListener("click", function () {
+      goTo(cursor + 1);
+    });
+    nav.querySelector("[data-preview-up]").addEventListener("click", function () {
+      if (typeof opts.onUp === "function") opts.onUp();
+    });
+    nav.querySelector("[data-preview-refresh]").addEventListener("click", function () {
+      if (typeof opts.onRefresh === "function") opts.onRefresh();
+    });
+
+    return {
+      push: pushState,
+      reset: function () {
+        history = [];
+        cursor = -1;
+        paintBtns();
+      },
+    };
+  }
 })();

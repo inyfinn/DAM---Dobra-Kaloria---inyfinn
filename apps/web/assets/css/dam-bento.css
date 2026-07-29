@@ -238,6 +238,15 @@
   min-width: 0;
   overflow: hidden;
 }
+/* Empty: grid already fits; allow tip/shadow (no horizontal bleed) */
+.dam-explorer-results:has(.dam-branding-empty-wrap),
+.dam-explorer-results:has(.dam-empty-mascot-row) {
+  overflow: visible;
+}
+.dam-explorer-layout__main:has(.dam-branding-empty-wrap) {
+  min-width: 0;
+  overflow: visible;
+}
 
 .dam-explorer-results__toolbar {
   display: grid;

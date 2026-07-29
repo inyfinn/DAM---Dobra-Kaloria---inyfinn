@@ -1232,6 +1232,8 @@
     if (!a) return "other";
     if (a.perspective || a.source === "wizki") return "packshots";
     var p = String(a.path || "").toUpperCase();
+    /* 07-E-COMMERCE/02-KAMPANIE E-COMMERCE = materiały kampanii (nie zakładka WWW). */
+    if (/02\s*-\s*KAMPANIE\s*E-COMMERCE/i.test(p)) return "campaigns";
     if (SECTION_MARKERS.campaigns.test(p)) return "campaigns";
     if (SECTION_MARKERS.social.test(p)) return "social";
     if (SECTION_MARKERS.www.test(p)) return "www";
@@ -1501,6 +1503,27 @@
     return associations;
   }
 
+  function marketingSearchTokens(a) {
+    if (!a) return "";
+    var bits = [];
+    if (a.id) {
+      bits.push(a.id);
+      bits.push(String(a.id).replace(/^br-/i, ""));
+      var brDigits = String(a.id).replace(/\D/g, "");
+      if (brDigits) bits.push(brDigits);
+    }
+    if (window.DamMarketingId && typeof window.DamMarketingId.format === "function") {
+      var mid = window.DamMarketingId.format(a);
+      if (mid) {
+        bits.push(mid);
+        bits.push(mid.replace(/^M-/i, ""));
+        var midDigits = String(mid).replace(/\D/g, "");
+        if (midDigits) bits.push(midDigits);
+      }
+    }
+    return bits.join(" ");
+  }
+
   function assetBlobNorm(a) {
     var extra = "";
     if (window.DamAssetTaxonomy && DamAssetTaxonomy.isEffectiveTransparent && DamAssetTaxonomy.isEffectiveTransparent(a)) {
@@ -1520,6 +1543,7 @@
     if (a.campaign_id && window.DamBadges && typeof window.DamBadges.brandingSearchSynonymsForLabel === "function") {
       extra += " kampanie kampanie reklamowe " + String(a.campaign_id).replace(/_/g, " ");
     }
+    extra += " " + marketingSearchTokens(a);
     return normTag(
       (a.search_blob || "") +
         " " +
@@ -1533,15 +1557,105 @@
   }
 
   function metaAssetIdsForCard(a, siblings) {
+    var display = brandingCardDisplayAssets(siblings && siblings.length ? siblings : a ? [a] : []);
     var ids = [];
-    if (siblings && siblings.length) {
-      siblings.forEach(function (x) {
-        if (x && x.id) ids.push(x.id);
-      });
-    } else if (a && a.id) {
-      ids.push(a.id);
+    display.forEach(function (x) {
+      if (x && x.id) ids.push(x.id);
+    });
+    if (!ids.length) {
+      if (siblings && siblings.length) {
+        siblings.forEach(function (x) {
+          if (x && x.id) ids.push(x.id);
+        });
+      } else if (a && a.id) {
+        ids.push(a.id);
+      }
     }
     return ids;
+  }
+
+  var BRANDING_SOURCE_EXTS = { psd: 1, psb: 1, ai: 1, indd: 1, eps: 1, pdf: 1 };
+
+  function isBrandingSourceAsset(a) {
+    if (!a) return true;
+    var name = a.name || a.path || "";
+    var ext = String(name).split(".").pop().toLowerCase();
+    if (BRANDING_SOURCE_EXTS[ext]) return true;
+    var mt = String(a.media_type || "").toLowerCase();
+    return mt === "source" || mt === "vector" || mt === "document";
+  }
+
+  function brandingCardDisplayAssets(assets) {
+    return (assets || []).filter(function (a) {
+      return a && a.id && !isBrandingSourceAsset(a);
+    });
+  }
+
+  function brandingCardIndexLabels(assets) {
+    var display = brandingCardDisplayAssets(assets);
+    var pool = display.length ? display : (assets || []).filter(function (a) {
+      return a && a.id;
+    });
+    var seen = {};
+    var out = [];
+    pool.forEach(function (a) {
+      var lbl = marketingDisplayId(a);
+      if (!lbl || seen[lbl]) return;
+      seen[lbl] = true;
+      out.push(lbl);
+    });
+    return out;
+  }
+
+  function brandingCardVariantBadgeHtml(displayCount) {
+    if (!displayCount || displayCount <= 1) return "";
+    return (
+      '<span class="dam-viz-card__variant-badge" aria-label="' +
+      esc("+" + (displayCount - 1) + " plików") +
+      '">+' +
+      (displayCount - 1) +
+      "</span>"
+    );
+  }
+
+  function brandingCardIndexBlockHtml(assets) {
+    var labels = brandingCardIndexLabels(assets);
+    if (!labels.length) return "";
+    if (labels.length > 1) {
+      return (
+        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-card__show-indexes" data-dam-tip="Pokaż wszystkie indeksy materiałów (klik = kopiuj)">' +
+        '<i class="uil uil-list-ul" aria-hidden="true"></i><span>Pokaż indeksy</span></button>' +
+        '<div class="dam-viz-card__indexes-wrap" hidden>' +
+        labels
+          .map(function (idx) {
+            return (
+              '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-viz-card__id-chip" data-copy-id="' +
+              esc(idx) +
+              '" data-tag-value="' +
+              esc(idx) +
+              '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj indeks ' +
+              esc(idx) +
+              '"><i class="uil uil-copy" aria-hidden="true"></i>' +
+              esc(idx) +
+              "</button>"
+            );
+          })
+          .join("") +
+        "</div>"
+      );
+    }
+    var single = labels[0];
+    return (
+      '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-viz-card__id-chip" data-copy-id="' +
+      esc(single) +
+      '" data-tag-value="' +
+      esc(single) +
+      '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj indeks ' +
+      esc(single) +
+      '"><i class="uil uil-copy" aria-hidden="true"></i>' +
+      esc(single) +
+      "</button>"
+    );
   }
 
   function brandingCardMetaHtml(metaText, assetIds) {
@@ -1608,6 +1722,30 @@
   }
 
   function assetMatchesSearchQuery(a, q) {
+    if (!q) return true;
+    /* Marketing ID (M-IMG249510) przed productCorrelation — inaczej 0 wynikow. */
+    if (window.DamMarketingId && typeof window.DamMarketingId.format === "function") {
+      var midNormEarly = normTag(window.DamMarketingId.format(a) || "");
+      var qNormEarly = normTag(q);
+      if (midNormEarly && qNormEarly && midNormEarly.indexOf(qNormEarly) !== -1) return true;
+      if (
+        typeof window.DamMarketingId.queryMatchesBrId === "function" &&
+        window.DamMarketingId.queryMatchesBrId(q, a.id)
+      ) {
+        return true;
+      }
+      var qDigitsEarly = String(q).replace(/\D/g, "");
+      if (qDigitsEarly.length >= 4) {
+        var midDigitsEarly = midNormEarly.replace(/\D/g, "");
+        var brDigitsEarly = String(a.id || "").replace(/\D/g, "");
+        if (
+          (midDigitsEarly && midDigitsEarly.indexOf(qDigitsEarly) !== -1) ||
+          (brDigitsEarly && brDigitsEarly.indexOf(qDigitsEarly) !== -1)
+        ) {
+          return true;
+        }
+      }
+    }
     if (productCorrelation && window.DamProductCorrelation) {
       if (productCorrelation.productId) {
         return DamProductCorrelation.brandingAssetMatches(
@@ -1620,7 +1758,6 @@
         return DamProductCorrelation.brandingAssetMatches(a, "", productCorrelation.tokens);
       }
     }
-    if (!q) return true;
     var tokenGroups = searchTokenGroups(q);
     if (!tokenGroups.length) return true;
     var tokens = searchTokens(q);
@@ -2244,7 +2381,9 @@
   }
 
   var TAG_FILTER_ROW_LIMIT = 8;
+  var TAG_FILTER_MAX_VISIBLE_ROWS = 4;
   var tagFilterExpanded = {};
+  var tagFilterShowMore = false;
 
   function renderTagFilters() {
     var host = document.getElementById("damBrandingTagFilters");
@@ -2316,8 +2455,11 @@
     var activeMap = buildAssocActiveMap();
     var buildRow = window.DamTagBar && DamTagBar.buildGroupRow;
     var html = '<div class="dam-tag-groups__inner">';
+    var rowCount = 0;
     GROUP_ORDER.forEach(function (g) {
       if (!groups[g] || !groups[g].length || !buildRow) return;
+      if (!tagFilterShowMore && rowCount >= TAG_FILTER_MAX_VISIBLE_ROWS) return;
+      rowCount++;
       var rowClass =
         "dam-branding-tag-group--" +
         g +
@@ -2372,6 +2514,21 @@
         },
       });
     });
+    var totalRows = GROUP_ORDER.filter(function (g) {
+      return groups[g] && groups[g].length;
+    }).length;
+    var hiddenRows = tagFilterShowMore ? 0 : Math.max(0, totalRows - TAG_FILTER_MAX_VISIBLE_ROWS);
+    if (hiddenRows > 0 || tagFilterShowMore) {
+      html +=
+        '<div class="dam-branding-tag-filters__more-row">' +
+        '<button type="button" class="dam-tag-more" data-branding-tag-more aria-expanded="' +
+        (tagFilterShowMore ? "true" : "false") +
+        '" title="' +
+        (tagFilterShowMore ? "Zwiń listę filtrów tagów" : "Pokaż więcej grup filtrów") +
+        '">' +
+        (tagFilterShowMore ? "Zwiń" : "Pokaż więcej (+" + hiddenRows + ")") +
+        "</button></div>";
+    }
     html += "</div>";
     host.innerHTML = html;
     host.className = "dam-tag-groups dam-branding-tag-filters";
@@ -2386,6 +2543,15 @@
         renderTagFilters();
       });
     });
+    var moreBtn = host.querySelector("[data-branding-tag-more]");
+    if (moreBtn) {
+      moreBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        tagFilterShowMore = !tagFilterShowMore;
+        renderTagFilters();
+      });
+    }
 
     host.querySelectorAll(".dam-viz-badge[data-tag-key]").forEach(function (btn) {
       btn.addEventListener("click", function (ev) {
@@ -3165,43 +3331,48 @@
   function cardHtml(a, siblings, cardOpts) {
     cardOpts = cardOpts || {};
     var hint = folderHint(a.path);
-    var title = cardOpts.title || a.name;
-    var meta = cardOpts.meta != null ? cardOpts.meta : hint || a.sku || "Kliknij kartę · podgląd";
-    var thumbAsset = pickPrimaryMarketing(siblings && siblings.length ? siblings : [a]) || a;
+    var assetList = siblings && siblings.length ? siblings : [a];
+    var cardAsset =
+      siblings && siblings.length > 1 ? pickPrimaryMarketing(siblings) || a : a;
+    var thumbAsset = pickPrimaryMarketing(assetList) || cardAsset;
+    var displayAssets = brandingCardDisplayAssets(assetList);
+    var displayCount = displayAssets.length || assetList.length;
     var tileCls =
       window.DamBadges && typeof window.DamBadges.brandingGradientTileClass === "function"
-        ? window.DamBadges.brandingGradientTileClass(a)
+        ? window.DamBadges.brandingGradientTileClass(cardAsset)
         : "";
     var groupIds =
-      siblings && siblings.length > 1
-        ? siblings
+      assetList.length > 1
+        ? assetList
             .map(function (x) {
               return x.id;
             })
             .join(",")
         : "";
-    var displayTitle = cardOpts.title || a.name;
-    var metaLine = cardOpts.meta != null ? cardOpts.meta : brandingCardTypeMeta(a);
-    var isVideoCard = a.media_type === "video";
+    var displayTitle = cardOpts.title || cardAsset.name;
+    var metaLine = brandingCardTypeMeta(cardAsset);
+    var isVideoCard = cardAsset.media_type === "video";
     return (
       '<article class="dam-viz-card dam-branding-card dam-viz-card--clickable' +
       (isVideoCard ? " dam-branding-card--video" : "") +
       (tileCls ? " " + tileCls : "") +
       '" data-id="' +
-      esc(a.id) +
+      esc(cardAsset.id) +
       '"' +
       (groupIds ? ' data-group-ids="' + esc(groupIds) + '"' : "") +
       ' title="Kliknij, aby otworzyć podgląd">' +
       '<div class="dam-viz-thumb">' +
+      brandingCardVariantBadgeHtml(displayCount) +
       thumbHtml(thumbAsset) +
       "</div>" +
       '<div class="dam-viz-card__body">' +
       '<div class="dam-viz-card__badges">' +
-      badgesHtml(a) +
+      badgesHtml(cardAsset) +
       "</div>" +
-      brandingCardTitleHtml(displayTitle, brandingCardSubtitle(a, displayTitle), brandingCardIdChipHtml(a)) +
-      brandingCardMetaHtml(metaLine || hint || a.sku || "Materiał", metaAssetIdsForCard(a, siblings)) +
-      brandingCardActionsHtml(a) +
+      brandingCardTitleHtml(displayTitle, brandingCardSubtitle(cardAsset, displayTitle), "") +
+      brandingCardMetaHtml(metaLine || hint || cardAsset.sku || "Materiał", metaAssetIdsForCard(cardAsset, assetList)) +
+      brandingCardIndexBlockHtml(assetList) +
+      brandingCardActionsHtml(cardAsset) +
       "</div></article>"
     );
   }
@@ -3223,20 +3394,15 @@
         return x.id;
       })
       .join(",");
-    var variantLabel =
-      assets.length + (isKv ? " wizualizacji" : isProject ? " plików" : " wariantów");
-    var meta = isKv
-      ? keyVisualGroupMeta(assets)
-      : isProject
-        ? marketingGroupMeta(assets)
-        : hint || "Warianty logo · kliknij kartę";
+    var displayAssets = brandingCardDisplayAssets(assets);
+    var displayCount = displayAssets.length || assets.length;
+    var groupTitle = entry.label || primary.name;
+    var groupMeta = brandingCardTypeMeta(primary);
     var cardTitle = isProject
       ? "Kliknij, aby przejrzeć pliki projektu"
       : isKv
         ? "Kliknij, aby przejrzeć wizualizacje produktu"
-        : "Kliknij, aby przejrzeć warianty logo";
-    var groupTitle = entry.label || primary.name;
-    var groupMeta = meta || brandingCardTypeMeta(primary);
+        : "Kliknij, aby przejrzeć warianty materiału";
     return (
       '<article class="dam-viz-card dam-branding-card dam-branding-card--group dam-viz-card--clickable' +
       (tileCls ? " " + tileCls : "") +
@@ -3248,14 +3414,16 @@
       esc(cardTitle) +
       '">' +
       '<div class="dam-viz-thumb">' +
+      brandingCardVariantBadgeHtml(displayCount) +
       thumbStackHtml(assets, primary) +
       "</div>" +
       '<div class="dam-viz-card__body">' +
       '<div class="dam-viz-card__badges">' +
-      badgesHtml(primary, [variantLabel]) +
+      badgesHtml(primary) +
       "</div>" +
-      brandingCardTitleHtml(groupTitle, brandingCardSubtitle(primary, groupTitle), brandingCardIdChipHtml(primary)) +
-      brandingCardMetaHtml(groupMeta, metaAssetIdsForCard(primary, assets)) +
+      brandingCardTitleHtml(groupTitle, brandingCardSubtitle(primary, groupTitle), "") +
+      brandingCardMetaHtml(groupMeta || hint || "Materiał", metaAssetIdsForCard(primary, assets)) +
+      brandingCardIndexBlockHtml(assets) +
       brandingCardActionsHtml(primary) +
       "</div></article>"
     );
@@ -3627,7 +3795,7 @@
       });
     });
 
-    grid.querySelectorAll(".dam-branding-card__id-chip").forEach(function (chip) {
+    grid.querySelectorAll(".dam-branding-card__id-chip, .dam-viz-card__id-chip").forEach(function (chip) {
       chip.addEventListener("click", function (ev) {
         ev.preventDefault();
         ev.stopPropagation();
@@ -3665,6 +3833,19 @@
         } else if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(onOk).catch(onFail);
         }
+      });
+    });
+
+    grid.querySelectorAll(".dam-viz-card__show-indexes").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var wrap = btn.parentNode && btn.parentNode.querySelector(".dam-viz-card__indexes-wrap");
+        if (!wrap) return;
+        var open = wrap.hasAttribute("hidden");
+        if (open) wrap.removeAttribute("hidden");
+        else wrap.setAttribute("hidden", "");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
       });
     });
 
@@ -3716,8 +3897,43 @@
     return base || "Plik";
   }
 
+  function assetDirKey(path) {
+    var p = String(path || "").replace(/\\/g, "/");
+    var i = p.lastIndexOf("/");
+    return i > 0 ? p.slice(0, i).toLowerCase() : "";
+  }
+
+  /** Odrzuc folder_variants spoza folderu primary (spaczone wpisy indeksu). */
+  function variantSameFolderAsPrimary(primary, variantRef, assetsById) {
+    if (!primary || !variantRef || !variantRef.id) return false;
+    if (variantRef.id === primary.id) return true;
+    var va = (assetsById && assetsById[variantRef.id]) || variantRef;
+    if (!primary.path || !va.path) return false;
+    return assetDirKey(primary.path) === assetDirKey(va.path);
+  }
+
+  function filterFolderVariantsForPrimary(primary, variants, assetsById) {
+    return (variants || []).filter(function (v) {
+      return variantSameFolderAsPrimary(primary, v, assetsById);
+    });
+  }
+
+  function ensurePrimaryFirstInList(list, primary) {
+    list = (list || []).filter(Boolean);
+    if (!primary) return list;
+    if (!list.length) return [primary];
+    var rest = list.filter(function (x) {
+      return x && x.id !== primary.id;
+    });
+    return [primary].concat(rest);
+  }
+
   function buildBrandingGroupContext(primary, assetsById, optSiblings) {
-    var variants = (primary && primary.folder_variants) || [];
+    var variants = filterFolderVariantsForPrimary(
+      primary,
+      (primary && primary.folder_variants) || [],
+      assetsById
+    );
     var linked = (primary && primary.linked_products) || [];
     var editable = (primary && primary.folder_editable_files) || [];
     var groupId = (primary && primary.folder_group_id) || folderDirFromPath(primary && primary.path);
@@ -3789,6 +4005,32 @@
       });
     }
 
+    /* Cross-folder linked_variant_ids (np. M-SHOP405515 → M-IMG205857) — grid wariantów. */
+    var linkedVarIds = (primary && primary.linked_variant_ids) || [];
+    if (linkedVarIds.length) {
+      var seenVar = {};
+      (variants || []).forEach(function (v) {
+        if (v && v.id) seenVar[v.id] = true;
+      });
+      linkedVarIds.forEach(function (lid) {
+        if (!lid || seenVar[lid]) return;
+        var va = assetsById && assetsById[lid];
+        if (va) {
+          seenVar[lid] = true;
+          variants.push({
+            id: va.id,
+            name: va.name,
+            path: va.path,
+            label: variantLabelFromAsset(va),
+            media_type: va.media_type || "",
+          });
+        } else if (lid !== (primary && primary.id)) {
+          seenVar[lid] = true;
+          variants.push({ id: lid, name: lid });
+        }
+      });
+    }
+
     // Zawsze uzupelnij PSD/PSB/AI z tej samej grupy folderu (nie tylko gdy lista pusta).
     if (groupId && assetsById) {
       var seenPath = {};
@@ -3815,6 +4057,7 @@
     return {
       variants: variants || [],
       linked_products: linked || [],
+      linked_variant_ids: (primary && primary.linked_variant_ids) || [],
       folder_group_id: groupId || "",
       folder_editable_files: editable || [],
     };
@@ -3828,41 +4071,76 @@
     var primary = assetsById[id];
     if (!primary) return;
 
+    function launchModal() {
+      if (window.DamAssocEdit && typeof window.DamAssocEdit.applyAssetAssocOverrides === "function") {
+        primary = window.DamAssocEdit.applyAssetAssocOverrides(primary);
+        assetsById[id] = primary;
+      }
     var list = [];
     if (siblings && siblings.length > 1) {
       list = siblings.filter(Boolean);
     }
-    if (!list.length && primary.folder_variants && primary.folder_variants.length) {
-      primary.folder_variants.forEach(function (v) {
-        if (v.id && assetsById[v.id]) list.push(assetsById[v.id]);
-      });
+    if (!list.length) {
+      list = [primary];
+      if (primary.folder_variants && primary.folder_variants.length) {
+        filterFolderVariantsForPrimary(primary, primary.folder_variants, assetsById).forEach(
+          function (v) {
+            if (!v || !v.id || v.id === primary.id) return;
+            var va = assetsById[v.id];
+            if (va && !list.some(function (x) {
+              return x.id === va.id;
+            })) {
+              list.push(va);
+            }
+          }
+        );
+      }
     }
-    if (!list.length) list = [primary];
+    list = ensurePrimaryFirstInList(list, primary);
+
+    var displayList = brandingCardDisplayAssets(list);
+    if (displayList.length > 1) {
+      list = ensurePrimaryFirstInList(displayList, primary);
+    }
 
     var groupContext = buildBrandingGroupContext(primary, assetsById, list.length > 1 ? list : null);
     if (list.length <= 1 && groupContext.variants && groupContext.variants.length > 1) {
-      list = groupContext.variants
+      var fromGc = groupContext.variants
         .map(function (v) {
           return v.id && assetsById[v.id];
         })
-        .filter(Boolean);
-      groupContext = buildBrandingGroupContext(primary, assetsById, list);
+        .filter(Boolean)
+        .filter(function (va) {
+          return variantSameFolderAsPrimary(primary, va, assetsById);
+        });
+      if (fromGc.length > 1) {
+        list = ensurePrimaryFirstInList(fromGc, primary);
+        groupContext = buildBrandingGroupContext(primary, assetsById, list);
+      }
     }
 
     var idx = list.findIndex(function (x) {
       return x.id === id;
     });
-    var a = list[idx >= 0 ? idx : 0];
+    if (idx < 0) idx = 0;
+    var a = list[idx] || primary;
     if (!a) return;
     trackRecentAsset(a);
     if (window.DamMediaPreview && typeof window.DamMediaPreview.openAsset === "function") {
       window.DamMediaPreview.openAsset(a, {
         siblings: list,
-        index: idx >= 0 ? idx : 0,
+        index: idx,
         alwaysShowAssociations: true,
         groupContext: groupContext,
       });
     }
+    }
+
+    var chain = Promise.resolve();
+    if (window.DamAssocEdit && typeof window.DamAssocEdit.loadAssocOverrides === "function") {
+      chain = window.DamAssocEdit.loadAssocOverrides();
+    }
+    chain.then(launchModal);
   }
 
   function closeModal() {
@@ -4523,6 +4801,24 @@
     }, 4800);
   }
 
+  function tryAutoOpenSingleMarketingSearch(qsText) {
+    if (!qsText) return;
+    var q = String(qsText).trim();
+    if (!q) return;
+  if (!/(?:^m[-_]?[a-z]{2,8}[-_]?\d{5,6}$)|(?:img\d{5,6})|(?:^br-\d{4,8}$)|(?:^\d{5,7}$)/i.test(q.replace(/\s/g, ""))) {
+      return;
+    }
+    window.requestAnimationFrame(function () {
+      setTimeout(function () {
+        if (document.getElementById("damMediaPreview")) return;
+        var cards = document.querySelectorAll("#damBrandingSectionGrid .dam-branding-card[data-id]");
+        if (cards.length !== 1) return;
+        var id = cards[0].getAttribute("data-id");
+        if (id) openModal(id);
+      }, 120);
+    });
+  }
+
   async function boot() {
     try {
       showInitialBootSkeletons();
@@ -4574,7 +4870,7 @@
         }
       }
       var params = new URLSearchParams(location.search);
-      var qs = params.get("q");
+      var qs = params.get("q") || params.get("search");
       var productParam = params.get("product");
       var tabParam = params.get("tab");
       await searchPromise;
@@ -4613,6 +4909,7 @@
         activateTab("all", { skipHash: true });
       }
       if (assetId) openModal(assetId);
+      else if (qs) tryAutoOpenSingleMarketingSearch(qs);
       window.addEventListener("hashchange", function () {
         var t = tabFromHash();
         if (t) activateTab(t, { skipHash: true });
@@ -4653,6 +4950,13 @@
     clearTagFilters: clearTagFilters,
     renderTagFilters: renderTagFilters,
     patchAssetField: patchAssetField,
+    openByAssetId: function (id) {
+      if (id) openModal(String(id).trim());
+    },
+    findAssetById: findAssetById,
+    marketingGroupLabelForAssets: marketingGroupLabel,
+    brandingCardDisplayAssets: brandingCardDisplayAssets,
+    brandingCardIndexLabels: brandingCardIndexLabels,
   };
 
   document.addEventListener("DOMContentLoaded", boot);

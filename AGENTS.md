@@ -54,5 +54,6 @@ Bez tego agent "zapomina" miedzy sesjami i robi cos innego.
 - Em-dash ban
 - Auth: Entra ID / Synology LDAP + role `admin` | `power_user` | `user` (ADR-006)
 - **Weryfikacja UI:** po zmianach wizualnych zawsze screenshot + Read (regula `.cursor/rules/verify-ui-after-changes.mdc`). Bez tego nie oddawac.
+- **Serwery przed przeglądarką (HARD):** `:8765` i `:8766` muszą dać HTTP 2xx w **5 s** (`scripts/ops/smoke-dam-ports.ps1` lub curl `--max-time 5`). Brak odpowiedzi = restart `python apps/desktop/serve_browser.py`, potem kontynuuj. Nigdy nie wisieć na navigate; timeout = napraw, nie czekaj. Reguła: `.cursor/rules/server-timeout-never-hang.mdc`, doktryna §5.0.
 - **Instrukcje programu:** `program-instructions` w KV (patrz wyzej).
 - **Pochodzenie jezykow (HARD):** [`agents/shared/lang-provenance.md`](agents/shared/lang-provenance.md) - rozumiesz skad bierze sie kod (folder/plik/override), nie hardcodujesz produktu. Drafty 3 podejsc: [`lang-provenance.DRAFTS.md`](agents/shared/lang-provenance.DRAFTS.md).

@@ -348,12 +348,26 @@
       st.id = "damTagEditPopBtnStyles";
       document.head.appendChild(st);
     }
-    st.setAttribute("data-token", "dialogActions20260726a");
-    /* Equal CSS grid: 2 columns, full-width cells; + left of label; actions bottom */
+    st.setAttribute("data-token", "comboChromeFlush20260727a");
+    /* COMBO/assoc chrome: flex column, list fills, footer flush grid (no white void). */
     st.textContent =
       "#damTagEditPopover.dam-tag-edit-popover{position:fixed!important;z-index:12350!important;" +
-      "min-width:320px;width:min(340px,calc(100vw - 24px));}" +
+      "min-width:320px;width:min(340px,calc(100vw - 24px));display:flex!important;flex-direction:column!important;" +
+      "overflow:hidden!important;padding:0!important;box-sizing:border-box;}" +
       "#damTagEditPopover.dam-tag-edit-popover--wide{width:min(50vw,960px)!important;min-height:500px;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__list{flex:1 1 auto!important;min-height:0!important;max-height:none!important;}" +
+      "#damTagEditPopover .dam-thumb-picker__footer," +
+      "#damTagEditPopover .dam-tag-edit-popover__actions{" +
+      "display:grid!important;grid-template-columns:minmax(96px,auto) minmax(148px,auto) 1fr minmax(120px,auto)!important;" +
+      "align-items:center!important;gap:8px!important;min-height:65px!important;box-sizing:border-box!important;" +
+      "padding:12px 14px!important;margin:0!important;border-top:1px solid #ececf2!important;" +
+      "background:#f7f6fa!important;flex:0 0 auto!important;border-radius:0!important;}" +
+      "#damTagEditPopover .dam-thumb-picker__footer .dam-dialog-actions__spacer," +
+      "#damTagEditPopover .dam-tag-edit-popover__actions .dam-dialog-actions__spacer{display:none!important;}" +
+      "#damTagEditPopover .dam-thumb-picker__footer > [data-cancel]," +
+      "#damTagEditPopover .dam-tag-edit-popover__actions > [data-cancel]{grid-column:1!important;}" +
+      "#damTagEditPopover .dam-thumb-picker__footer > [data-confirm]," +
+      "#damTagEditPopover .dam-tag-edit-popover__actions > [data-confirm]{grid-column:4!important;justify-self:end!important;margin-left:0!important;}" +
       "#damTagEditPopover .dam-tag-edit-popover__foot{" +
       "display:grid!important;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;" +
       "padding:10px 12px;border-top:1px solid #ececf2;flex:0 0 auto;box-sizing:border-box;}" +
@@ -379,17 +393,12 @@
       "border-color:var(--dam-primary,#ab54db)!important;color:#7a3aa8;}" +
       "#damTagEditPopover .dam-tag-edit-popover__foot > button:focus-visible{" +
       "outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px;}" +
-      "#damTagEditPopover .dam-tag-edit-popover__actions{" +
-      "display:flex!important;flex-wrap:wrap;align-items:center;justify-content:flex-start;" +
-      "gap:8px;padding:10px 12px;border-top:1px solid #ececf2;background:#fafafc;flex:0 0 auto;}" +
-      "#damTagEditPopover .dam-tag-edit-popover__actions .dam-dialog-actions__spacer{" +
-      "flex:1 1 auto;min-width:12px;height:1px;}" +
-      "#damTagEditPopover .dam-tag-edit-popover__actions > [data-confirm]{margin-left:auto;}" +
       "#damTagEditPopover .dam-tag-edit-popover__confirm," +
       "#damTagEditPopover .dam-tag-edit-popover__cancel{" +
       "width:auto!important;min-width:44px;min-height:40px;justify-content:center;}" +
       "#damTagEditPopover .dam-tag-edit-popover__list--checks{" +
-      "display:flex;flex-direction:column;gap:4px;max-height:min(52vh,420px);overflow:auto;padding:6px 8px;}" +
+      "display:flex;flex-direction:column;gap:4px;overflow:auto;padding:6px 8px;" +
+      "flex:1 1 auto;min-height:0;max-height:none;}" +
       "#damTagEditPopover .dam-tag-edit-popover__check{" +
       "display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center;" +
       "padding:6px 8px;border-radius:8px;cursor:pointer;border:1px solid transparent;}" +
@@ -425,10 +434,24 @@
   }
 
   function applyLightProductCatalogFromSearch(si) {
+    var existing = global._DAM_FILE_INDEX;
+    /* HARD: never overwrite a full file-index (has subcategory_slug / revisions)
+       with light search-index rows — that emptied subcategory tag picker. */
+    if (
+      existing &&
+      !existing._fromSearchIndex &&
+      Array.isArray(existing.products) &&
+      existing.products.length
+    ) {
+      return existing;
+    }
     var entries = (si && si.entries) || [];
     var products = entries
       .map(function (e) {
         if (!e || !e.id) return null;
+        var subLabel = String(e.subcategory || e.subcategory_label || "").trim();
+        var subSlug = String(e.subcategory_slug || "").trim();
+        if (!subSlug && subLabel) subSlug = subLabel;
         return {
           id: e.id,
           name: e.name || e.id,
@@ -440,17 +463,15 @@
           search_blob: e.search_blob || "",
           path: e.path || "",
           brand: e.brand || "",
-          subcategory_label: e.subcategory || "",
+          subcategory_slug: subSlug,
+          subcategory_label: subLabel || subSlug,
           _fromSearchIndex: true,
         };
       })
       .filter(Boolean);
     var light = { products: products, _fromSearchIndex: true };
-    if (!global._DAM_FILE_INDEX || !global._DAM_FILE_INDEX._fromSearchIndex) {
+    if (!global._DAM_FILE_INDEX || global._DAM_FILE_INDEX._fromSearchIndex) {
       global._DAM_FILE_INDEX = light;
-    } else {
-      global._DAM_FILE_INDEX.products = products;
-      global._DAM_FILE_INDEX._fromSearchIndex = true;
     }
     return global._DAM_FILE_INDEX;
   }
@@ -484,6 +505,10 @@
     }
 
   function ensureFileIndex() {
+    var fi = global._DAM_FILE_INDEX;
+    if (fi && !fi._fromSearchIndex && Array.isArray(fi.products) && fi.products.length) {
+      return Promise.resolve(fi);
+    }
     if (isLightProductCatalog()) {
       return Promise.resolve(global._DAM_FILE_INDEX);
     }
@@ -497,38 +522,116 @@
       });
   }
 
+  function productsHaveSubcategorySlugs(products) {
+    var list = products || [];
+    for (var i = 0; i < list.length; i++) {
+      var p = list[i];
+      if (p && String(p.subcategory_slug || "").trim()) return true;
+    }
+    return false;
+  }
+
+  function ingestSubcategoryRowsIntoCache(rows) {
+    var map = global._DAM_SUBCATEGORY_CATALOG || {};
+    (rows || []).forEach(function (row) {
+      if (!row) return;
+      var slug = String(row.slug || row.code || row.subcategory_slug || "").trim();
+      if (!slug) return;
+      var pl = String(row.label_pl || row.pl || row.subcategory_label || slug).trim() || slug;
+      map[slug.toLowerCase()] = { code: slug, pl: pl };
+    });
+    global._DAM_SUBCATEGORY_CATALOG = map;
+    return map;
+  }
+
+  function ensureSubcategoryCatalog() {
+    if (productsHaveSubcategorySlugs(fileIndexProducts())) {
+      return Promise.resolve(true);
+    }
+    if (global._DAM_SUBCATEGORY_CATALOG && Object.keys(global._DAM_SUBCATEGORY_CATALOG).length) {
+      return Promise.resolve(true);
+    }
+    if (global._DAM_SUBCATEGORY_CATALOG_P) return global._DAM_SUBCATEGORY_CATALOG_P;
+    global._DAM_SUBCATEGORY_CATALOG_P = fetch("data/file-index.json?v=" + Date.now())
+      .then(function (r) {
+        return r.ok ? r.text() : "";
+      })
+      .then(function (text) {
+        if (!text) return false;
+        var parse =
+          global.DamSearch && typeof global.DamSearch.parseJsonInWorker === "function"
+            ? global.DamSearch.parseJsonInWorker(text, "file-index-subcats", 20000)
+            : Promise.resolve().then(function () {
+                return JSON.parse(text);
+              });
+        return parse.then(function (d) {
+          var products = (d && d.products) || [];
+          var rows = [];
+          for (var i = 0; i < products.length; i++) {
+            var p = products[i];
+            if (!p) continue;
+            var slug = String(p.subcategory_slug || "").trim();
+            if (!slug) continue;
+            rows.push({
+              slug: slug,
+              label_pl: String(p.subcategory_label || slug).trim() || slug,
+            });
+          }
+          ingestSubcategoryRowsIntoCache(rows);
+          /* If UI still has only light catalog, keep it — do not replace with 8MB index. */
+          if (!global._DAM_FILE_INDEX || global._DAM_FILE_INDEX._fromSearchIndex) {
+            /* optional: leave light; catalog cache is enough for picker */
+          } else if (!productsHaveSubcategorySlugs(global._DAM_FILE_INDEX.products)) {
+            /* full index without slugs — unlikely; still have cache */
+          }
+          return true;
+        });
+      })
+      .catch(function () {
+        return false;
+      })
+      .then(function (ok) {
+        global._DAM_SUBCATEGORY_CATALOG_P = null;
+        return ok;
+      });
+    return global._DAM_SUBCATEGORY_CATALOG_P;
+  }
+
   function collectSubcategoryOptions(cur) {
     var map = {};
+    function addSub(slug, plLabel) {
+      var s = String(slug || "").trim();
+      if (!s) return;
+      var key = s.toLowerCase();
+      if (map[key]) return;
+      var pl = String(plLabel || s).trim() || s;
+      map[key] = { code: s, pl: pl, label: bilingualSubcatLabel(s, pl) };
+    }
     var dictSubs =
       (global.DamNaming && Array.isArray(global.DamNaming.subcategories) && global.DamNaming.subcategories) ||
       [];
     dictSubs.forEach(function (row) {
       if (!row) return;
-      var slug = String(row.slug || row.code || "").trim();
-      if (!slug) return;
-      var key = slug.toLowerCase();
-      var pl = String(row.label_pl || row.pl || slug).trim() || slug;
-      map[key] = { code: slug, pl: pl, label: bilingualSubcatLabel(slug, pl) };
+      addSub(row.slug || row.code, row.label_pl || row.pl);
     });
-    var scanCap = 800;
-    var scanN = 0;
-    fileIndexProducts().some(function (p) {
-      if (scanN >= scanCap) return true;
-      scanN++;
+    var cached = global._DAM_SUBCATEGORY_CATALOG || {};
+    Object.keys(cached).forEach(function (k) {
+      var row = cached[k];
+      if (row) addSub(row.code || k, row.pl);
+    });
+    var products = fileIndexProducts();
+    for (var i = 0; i < products.length; i++) {
+      var p = products[i];
+      if (!p) continue;
       var slug = String(p.subcategory_slug || "").trim();
-      if (!slug) return;
-      var key = slug.toLowerCase();
-      if (map[key]) return;
-      var pl = String(p.subcategory_label || slug).trim() || slug;
-      map[key] = { code: slug, pl: pl, label: bilingualSubcatLabel(slug, pl) };
-      return false;
-    });
-    if (cur) {
-      var ck = String(cur).toLowerCase();
-      if (!map[ck]) {
-        map[ck] = { code: cur, pl: cur, label: bilingualSubcatLabel(cur, cur) };
+      if (!slug) {
+        var lblOnly = String(p.subcategory_label || "").trim();
+        if (lblOnly) slug = lblOnly;
       }
+      if (!slug) continue;
+      addSub(slug, p.subcategory_label || slug);
     }
+    if (cur) addSub(cur, cur);
     return Object.keys(map)
       .map(function (k) {
         return map[k];
@@ -1076,7 +1179,9 @@
                 applyLightProductCatalogFromSearch(si);
                 return si;
               })
-            : ensureFileIndex();
+            : ensureSubcategoryCatalog().then(function () {
+                return ensureFileIndex();
+              });
         boot
           .then(function () {
             var pop = document.getElementById("damTagEditPopover");
@@ -1084,13 +1189,22 @@
             var next = tagPickerOptions(enrichKind, enrichCtx) || [];
             if (next.length > 400) next = next.slice(0, 400);
             if (!next.length) return;
+            var prevLen = (pop._damTagOptions && pop._damTagOptions.length) || 0;
             pop._damTagOptions = next.slice();
             var list = pop.querySelector("[data-tag-list]");
-            if (!list || typeof pop._damTagRepaint !== "function") {
-              /* Full re-render only if same popover still open for this kind. */
+            if (!list) {
               renderTagPicker(enrichAnchor, enrichCtx, enrichKind, next);
-            } else {
+              return;
+            }
+            /* Rebuild when catalog grew (light filter cannot add new option buttons). */
+            if (next.length !== prevLen && typeof pop._damTagRebuild === "function") {
+              pop._damTagRebuild("");
+            } else if (typeof pop._damTagRebuild === "function") {
+              pop._damTagRebuild("");
+            } else if (typeof pop._damTagRepaint === "function") {
               pop._damTagRepaint("");
+            } else {
+              renderTagPicker(enrichAnchor, enrichCtx, enrichKind, next);
             }
           })
           .catch(function () {
@@ -1223,9 +1337,14 @@
     var canDirect = isAdmin() && adminModeOn();
 
     var html =
-      '<div class="dam-tag-edit-popover__head">' +
-      "<span>" + esc(headTxt) + (isLangMulti ? " <small style=\"font-weight:500;color:#8b8d97\">(wielokrotny)</small>" : "") + "</span>" +
-      '<button type="button" class="dam-tag-edit-popover__close" aria-label="Zamknij" data-close data-dam-tip="Zamknij bez zapisu">' +
+      '<div class="dam-thumb-picker__head dam-tag-edit-popover__head">' +
+      "<strong>" +
+      esc(headTxt) +
+      (isLangMulti
+        ? ' <small style="font-weight:500;color:#8b8d97">(wielokrotny)</small>'
+        : "") +
+      "</strong>" +
+      '<button type="button" class="dam-viz-modal-close" aria-label="Zamknij" data-close data-dam-tip="Zamknij bez zapisu">' +
       '<i class="uil uil-times"></i></button></div>' +
       '<div class="dam-tag-edit-popover__search-wrap">' +
       '<i class="uil uil-search" aria-hidden="true"></i>' +
@@ -1243,11 +1362,10 @@
     }
 
     html +=
-      '<div class="dam-tag-edit-popover__actions dam-dialog-actions">' +
+      '<div class="dam-thumb-picker__footer dam-tag-edit-popover__actions dam-dialog-actions dam-modal-footer">' +
       '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel data-dam-tip="Anuluj bez zapisu">' +
       '<i class="uil uil-times" aria-hidden="true"></i><span>Anuluj</span></button>' +
-      '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
-      '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm data-dam-tip="' +
+      '<button type="button" class="dam-tag-edit-popover__confirm dam-modal-footer__primary" data-confirm data-dam-tip="' +
       (canDirect ? "Zatwierdź wybór" : "Zgłoś propozycję") +
       '"><i class="uil uil-check" aria-hidden="true"></i><span>' +
       (canDirect ? "Zatwierdź" : "Zgłoś") +
@@ -1424,6 +1542,9 @@
 
     pop._damTagRepaint = function (q) {
       applySearchFilterLight(q);
+    };
+    pop._damTagRebuild = function (q) {
+      paintTagList(filterTagOptions(q));
     };
 
     var confirmBtn = pop.querySelector("[data-confirm]");
@@ -2957,7 +3078,57 @@
   if (typeof document !== "undefined") {
     document.addEventListener("DOMContentLoaded", function () {
       bindChangeLogBar();
+      ensureModalTagEditableDelegation();
     });
+  }
+
+  var _modalTagEditLastClick = { t: 0, el: null };
+
+  /** Fallback Shift+dblclick na .dam-tag-editable w modalach (viz + branding preview). */
+  function ensureModalTagEditableDelegation() {
+    if (typeof document === "undefined" || document.documentElement._damModalTagEditBound) return;
+    document.documentElement._damModalTagEditBound = true;
+    document.addEventListener(
+      "click",
+      function (e) {
+        var root = e.target.closest("#damVizModal, #damMediaPreview");
+        if (!root) return;
+        var btn = e.target.closest(".dam-tag-editable[data-tag-kind], .dam-badge-tag[data-tag-kind]");
+        if (!btn || !root.contains(btn)) return;
+        if (!isPrivileged()) return;
+        var now = Date.now();
+        var dblClick = _modalTagEditLastClick.el === btn && now - _modalTagEditLastClick.t <= 420;
+        if (!(e.shiftKey || e.altKey || dblClick)) {
+          _modalTagEditLastClick = { t: now, el: btn };
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        _modalTagEditLastClick = { t: 0, el: null };
+        setTimeout(function () {
+          var kind = btn.getAttribute("data-tag-kind") || "";
+          var tagCtx = {
+            kind: kind,
+            value: btn.getAttribute("data-tag-value") || "",
+            revisionPath: btn.getAttribute("data-revision-path") || "",
+            revisionIndex: btn.getAttribute("data-revision-index") || "",
+            currentCode: btn.getAttribute("data-current-code") || btn.getAttribute("data-tag-value") || "",
+            productId: btn.getAttribute("data-product-id") || "",
+            productName: btn.getAttribute("data-product-name") || "",
+            brandingAssetId:
+              btn.getAttribute("data-branding-asset-id") ||
+              (btn.closest("[data-id]") && btn.closest("[data-id]").getAttribute("data-id")) ||
+              "",
+          };
+          if (kind === "carrier") {
+            openCarrierPicker(btn, tagCtx);
+          } else {
+            openTagPicker(btn, tagCtx);
+          }
+        }, 0);
+      },
+      true
+    );
   }
 
   var PRODUCT_TAG_GROUP_ORDER = ["smak", "typ", "opakowanie", "autor"];
@@ -3038,9 +3209,9 @@
     pop.id = "damTagEditPopover";
     pop.className = "dam-tag-edit-popover dam-tag-edit-popover--wide";
     pop.innerHTML =
-      '<div class="dam-tag-edit-popover__head">' +
-      "<span>Tagi produktu</span>" +
-      '<button type="button" class="dam-tag-edit-popover__close" aria-label="Zamknij" data-close>' +
+      '<div class="dam-thumb-picker__head dam-tag-edit-popover__head">' +
+      "<strong>Tagi produktu</strong>" +
+      '<button type="button" class="dam-viz-modal-close" aria-label="Zamknij" data-close>' +
       '<i class="uil uil-times"></i></button></div>' +
       '<div class="dam-tag-edit-popover__search-wrap">' +
       '<i class="uil uil-search" aria-hidden="true"></i>' +
@@ -3049,10 +3220,9 @@
       '<div class="dam-tag-edit-popover__list dam-tag-edit-popover__list--checks" data-tag-list>' +
       '<p class="dam-tag-edit-popover__empty">Ladowanie slownika tagow…</p></div>' +
       '<p class="dam-tag-edit-popover__empty" data-empty hidden>Brak tagow dla tego wyszukiwania.</p>' +
-      '<div class="dam-tag-edit-popover__actions dam-dialog-actions">' +
+      '<div class="dam-thumb-picker__footer dam-tag-edit-popover__actions dam-dialog-actions dam-modal-footer">' +
       '<button type="button" class="dam-tag-edit-popover__cancel" data-cancel><i class="uil uil-times"></i><span>Anuluj</span></button>' +
-      '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
-      '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm disabled><i class="uil uil-check"></i><span>Zatwierdz</span></button></div>';
+      '<button type="button" class="dam-tag-edit-popover__confirm dam-modal-footer__primary" data-confirm disabled><i class="uil uil-check"></i><span>Zatwierdz</span></button></div>';
 
     ensureTagPopoverBtnStyles();
     document.body.appendChild(pop);

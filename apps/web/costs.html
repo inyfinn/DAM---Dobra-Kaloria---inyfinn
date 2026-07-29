@@ -2,11 +2,13 @@
 <html lang="en" dir="ltr" class="dam-booting">
 
 <head>
+  <script>(function(){function g(){try{var u=location.pathname+location.search,h=location.hash||"";location.replace(u+(u.indexOf("?")>=0?"&":"?")+"_damr="+Date.now()+h);}catch(e){try{location.reload();}catch(x){}}}addEventListener("keydown",function(e){if(e.key==="F5"||(e.ctrlKey&&!e.shiftKey&&(e.key==="r"||e.key==="R")))g();},true);window.__damInlineHardReset=g;})();</script>
+  <script src="./assets/js/dam-panic-reload.js?v=4.0.23-nativeF520260726a"></script>
   <script>(function(){try{var r=document.documentElement,p=localStorage.getItem('dam_theme_pref')||localStorage.getItem('theme')||'light',t=p;if(p==='system'){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t!=='dark'&&t!=='light')t='light';r.setAttribute('data-theme',t);r.style.colorScheme=t;if(p==='system'||p==='dark'||p==='light')r.setAttribute('data-dam-theme-pref',p);}catch(e){}})();</script>
   <style id="dam-shell-boot-critical">
 html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
   </style>
-  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=shellboot20260721a">
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=perObjSkel20260722c">
   <script>
   (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
   </script>
@@ -33,11 +35,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 		if (localStorage.layout) document.documentElement.setAttribute("data-nav", localStorage.navbar);
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
-<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=geexTaste20260721a">
-<link rel="stylesheet" href="./assets/css/dam-primitives.css?v=ctaUnify20260721b">
-<link rel="stylesheet" href="./assets/css/dam-app.css?v=ctaUnify20260721b">
+<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=darkFix20260722e">
+<link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.65">
+<link rel="stylesheet" href="./assets/css/dam-app.css?v=darkFix20260722e">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=geexF3tut20260721a">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=invClose20260721b">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.7-tagComboFlush20260727a">
 </head>
 
 <body class="geex-dashboard demo-invoice is-booting">
@@ -912,15 +914,15 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<!-- DAM scripts -->
 	<script src="./assets/js/dam-api.js?v=privgate20260721a"></script>
 	<script src="./assets/js/dam-i18n.js?v=i18nboot20260721c"></script>
-	<script src="./assets/js/dam-runtime.js?v=20260719app1"></script>
-    <script src="./assets/js/dam-version.js?v=3.1.0"></script>
-	<script src="./assets/js/dam-shell.js?v=geexF620260721a"></script>
+	<script src="./assets/js/dam-runtime.js?v=servicesBoot20260723a"></script>
+    <script src="./assets/js/dam-version.js?v=5.0.7"></script>
+	<script src="./assets/js/dam-shell.js?v=4.0.14-dbDumpFix20260725"></script>
     <script src="./assets/js/dam-fmcg-cost.js?v=3.0.5"></script>
     <script src="./assets/vendor/js/gsap/gsap.min.js"></script>
     <script src="./assets/js/dam-loader.js?v=actionsLeftLoader20260721a"></script>
     <script src="./assets/js/dam-grid-reveal.js?v=i18nboot20260721e"></script>
     <script src="./assets/js/dam-cost.js?v=perf20260720a"></script>
-    <script src="./assets/js/dam-tutorial.js?v=tutorialPraiseToast20260721b"></script>
+    <script src="./assets/js/dam-tutorial.js?v=5.0.56"></script>
 </body>
 
 </html>

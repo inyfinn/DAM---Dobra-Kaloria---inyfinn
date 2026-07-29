@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="pl" dir="ltr">
 <head>
+  <script>(function(){function g(){try{var u=location.pathname+location.search,h=location.hash||"";location.replace(u+(u.indexOf("?")>=0?"&":"?")+"_damr="+Date.now()+h);}catch(e){try{location.reload();}catch(x){}}}addEventListener("keydown",function(e){if(e.key==="F5"||(e.ctrlKey&&!e.shiftKey&&(e.key==="r"||e.key==="R")))g();},true);window.__damInlineHardReset=g;})();</script>
+  <script src="./assets/js/dam-panic-reload.js?v=4.0.23-nativeF520260726a"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -8,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=geexTaste20260721a">
-  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=ctaUnify20260721b">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=ctaUnify20260721b">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=invClose20260721b">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=darkFix20260722e">
+  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.65">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=darkFix20260722e">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.7-tagComboFlush20260727a">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <script>
@@ -197,7 +199,7 @@
             <p class="dam-auth-msg" id="authMsg" role="status" aria-live="polite"></p>
 
             <div class="geex-content__authentication__form-footer" id="authFooter">
-              Nie masz konta? Poproś administratora o dostęp.
+              Nie masz konta. Poproś administratora o dostęp.
             </div>
           </form>
         </div>
@@ -209,7 +211,7 @@
   </main>
 
   <script src="./assets/js/main.js"></script>
-  <script src="./assets/js/dam-runtime.js?v=20260719auth3"></script>
+  <script src="./assets/js/dam-runtime.js?v=servicesBoot20260723a"></script>
   <script src="./assets/js/dam-api.js?v=privgate20260721a"></script>
   <script>
     (function () {
@@ -241,7 +243,7 @@
         submitBtn.textContent = m === "register" ? "Utworz konto" : "Zaloguj";
         if (registrationOpen) {
           footer.innerHTML = m === "register"
-            ? 'Masz juz konto? <a href="#" id="switchToLogin">Zaloguj sie</a>'
+            ? 'Masz juz konto. <a href="#" id="switchToLogin">Zaloguj sie</a>'
             : 'Pierwsze uruchomienie: <a href="#" id="switchToRegister">Utworz konto admina</a>';
           var link = footer.querySelector("a");
           if (link) {
@@ -251,7 +253,7 @@
             });
           }
         } else {
-          footer.textContent = "Nie masz konta? Poproś administratora o dostęp.";
+          footer.textContent = "Nie masz konta. Poproś administratora o dostęp.";
         }
         msg.textContent = "";
         msg.className = "dam-auth-msg";

@@ -1930,38 +1930,6 @@
     restart();
   }
 
-  /**
-   * Header pomocy: pod X kontrola „Włącz samouczek ponownie”.
-   * Modal tworzy dam-shortcuts.js (head jest trwaly) - dopinamy raz.
-   */
-  function injectHelpRestartControl(head) {
-    if (!head || head.querySelector("[data-dam-tut-restart]")) return;
-    var closeBtn = head.querySelector(".dam-help-modal__close");
-    if (!closeBtn) return;
-
-    var actions = head.querySelector(".dam-help-modal__head-actions");
-    if (!actions) {
-      actions = document.createElement("div");
-      actions.className = "dam-help-modal__head-actions";
-      closeBtn.parentNode.insertBefore(actions, closeBtn);
-      actions.appendChild(closeBtn);
-    }
-
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "dam-help-modal__restart";
-    btn.setAttribute("data-dam-tut-restart", "1");
-    btn.setAttribute("aria-label", "Włącz samouczek ponownie");
-    btn.innerHTML =
-      '<i class="uil uil-refresh" aria-hidden="true"></i>' +
-      "<span>Włącz samouczek ponownie</span>";
-    btn.addEventListener("click", function (e) {
-      e.preventDefault();
-      closeHelpThenRestart();
-    });
-    actions.appendChild(btn);
-  }
-
   // ---------------------------------------------------------------------------
   // Wpis "Uruchom samouczek" w panelu pomocy (modal tworzy dam-shortcuts.js;
   // panel jest trwaly, przebudowywane jest tylko body - dopinamy stopke raz)
@@ -1973,7 +1941,6 @@
       var panel = document.querySelector("#damHelpModal .dam-help-modal__panel");
       if (panel) {
         global.clearInterval(timer);
-        injectHelpRestartControl(panel.querySelector(".dam-help-modal__head"));
         if (panel.querySelector(".dam-tut-help-entry")) return;
         var wrap = document.createElement("div");
         wrap.className = "dam-tut-help-entry";

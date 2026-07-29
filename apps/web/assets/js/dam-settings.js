@@ -40,6 +40,12 @@
   function gateAdminSettingsUi() {
     var hist = document.getElementById("historiaZmian");
     var notify = document.getElementById("damNotificationGroups");
+    var conv = document.getElementById("damElementyConversion");
+    var convAdminBadge = document.getElementById("damElementyConvAdminBadge");
+    var convGateHint = document.getElementById("damElementyConvGateHint");
+    var convInputs = conv
+      ? conv.querySelectorAll("input, button, select, textarea")
+      : [];
     if (!isAdminRole()) {
       if (hist) {
         hist.setAttribute("hidden", "");
@@ -60,9 +66,24 @@
           else notify.appendChild(hint);
         }
       }
+      if (conv) {
+        convInputs.forEach(function (el) {
+          el.disabled = true;
+        });
+        if (convGateHint) convGateHint.hidden = false;
+      }
     } else if (hist) {
       hist.removeAttribute("hidden");
       hist.removeAttribute("aria-hidden");
+    }
+    if (isAdminRole()) {
+      if (convAdminBadge) convAdminBadge.hidden = false;
+      if (convGateHint) convGateHint.hidden = true;
+      if (conv) {
+        convInputs.forEach(function (el) {
+          if (el.id !== "damElementyConvPngTransparency") el.disabled = false;
+        });
+      }
     }
   }
 
@@ -210,6 +231,14 @@
       icon: "uil-tag-alt",
     },
     {
+      id: "settings-conversion",
+      label: "Konwersja elementów",
+      where: "Ustawienia → Konwersja",
+      keywords: "konwersja elementy links png jpg kompresja jakosc transparency",
+      href: "#damElementyConversion",
+      icon: "uil-compress-arrows",
+    },
+    {
       id: "settings-instructions",
       label: "Instrukcje programu",
       where: "Ustawienia → Instrukcje",
@@ -275,7 +304,7 @@
     },
     {
       id: "nav-integrations",
-      label: "Integracje",
+      label: "Integracja i produkcja",
       where: "Menu → Integracje",
       keywords: "integracje asana teams microsoft entra fmcg",
       href: "integrations.html",
@@ -885,7 +914,7 @@
           localStorage.setItem("dam_base_path", raw);
         }
         saveProfile();
-        Promise.all([saveNotifications(), safeP]).then(function () {
+        Promise.all([saveNotifications(), saveElementyConversion(), safeP]).then(function () {
           var msg = document.getElementById("settingsSaveMsg");
           if (msg) {
             msg.classList.add("is-on");
@@ -1046,6 +1075,112 @@
             list.innerHTML =
               '<p class="dam-widget__meta">Nie udało się wczytać instrukcji (bridge offline / brak pliku).</p>';
           });
+      });
+  }
+
+  /* ---------- Elementy conversion (admin global) ---------- */
+  var elementyConvState = {
+    enabled: true,
+    quality: 50,
+    formats: { png: true, jpg: true },
+    png_transparency: true,
+  };
+
+  function applyElementyConvUi(cfg) {
+    var enabledEl = document.getElementById("damElementyConvEnabled");
+    var pngEl = document.getElementById("damElementyConvFmtPng");
+    var jpgEl = document.getElementById("damElementyConvFmtJpg");
+    var qualEl = document.getElementById("damElementyConvQuality");
+    var qualVal = document.getElementById("damElementyConvQualityVal");
+    var alphaEl = document.getElementById("damElementyConvPngTransparency");
+    if (enabledEl) enabledEl.checked = cfg.enabled !== false;
+    if (pngEl) pngEl.checked = cfg.formats ? cfg.formats.png !== false : true;
+    if (jpgEl) jpgEl.checked = cfg.formats ? cfg.formats.jpg !== false : true;
+    if (alphaEl) alphaEl.checked = cfg.png_transparency !== false;
+    if (qualEl) qualEl.value = String(cfg.quality || 50);
+    if (qualVal) qualVal.textContent = String(cfg.quality || 50) + "%";
+  }
+
+  function readElementyConvFromUi() {
+    var enabledEl = document.getElementById("damElementyConvEnabled");
+    var pngEl = document.getElementById("damElementyConvFmtPng");
+    var jpgEl = document.getElementById("damElementyConvFmtJpg");
+    var qualEl = document.getElementById("damElementyConvQuality");
+    var alphaEl = document.getElementById("damElementyConvPngTransparency");
+    return {
+      enabled: enabledEl ? !!enabledEl.checked : true,
+      quality: qualEl ? parseInt(qualEl.value, 10) || 50 : 50,
+      formats: {
+        png: pngEl ? !!pngEl.checked : true,
+        jpg: jpgEl ? !!jpgEl.checked : true,
+      },
+      png_transparency: alphaEl ? !!alphaEl.checked : true,
+    };
+  }
+
+  function loadElementyConversion() {
+    var qualEl = document.getElementById("damElementyConvQuality");
+    var qualVal = document.getElementById("damElementyConvQualityVal");
+    if (qualEl && qualVal) {
+      qualEl.addEventListener("input", function () {
+        qualVal.textContent = qualEl.value + "%";
+      });
+    }
+    function applyCfg(cfg) {
+      elementyConvState = cfg || elementyConvState;
+      applyElementyConvUi(elementyConvState);
+    }
+    fetch(bridge() + "/app-settings")
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        if (data && data.elementy_conversion) {
+          applyCfg(data.elementy_conversion);
+          return;
+        }
+        throw new Error("bridge");
+      })
+      .catch(function () {
+        fetch("data/app-settings.json?v=5.0.69")
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (json) {
+            applyCfg((json && json.elementy_conversion) || elementyConvState);
+          })
+          .catch(function () {
+            applyCfg(elementyConvState);
+          });
+      });
+  }
+
+  function saveElementyConversion() {
+    if (!isAdminRole()) {
+      return Promise.resolve({ ok: false, error: "admin_required" });
+    }
+    var payload = readElementyConvFromUi();
+    if (!payload.formats.png && !payload.formats.jpg) {
+      alert("Wybierz co najmniej jeden format wyjściowy (PNG lub JPG).");
+      return Promise.resolve({ ok: false, error: "no_formats" });
+    }
+    elementyConvState = payload;
+    return fetch(bridge() + "/app-settings", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ elementy_conversion: payload }),
+    })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (res) {
+        if (!(res && res.ok)) {
+          console.warn("app-settings save:", res);
+        }
+        return res;
+      })
+      .catch(function () {
+        return { ok: false, offline: true };
       });
   }
 
@@ -1281,6 +1416,7 @@
     gateAdminSettingsUi();
     loadInstructions();
     loadNaming();
+    loadElementyConversion();
     loadIntegrations();
     loadNotifications();
     if (window.DamApi && typeof DamApi.me === "function") {

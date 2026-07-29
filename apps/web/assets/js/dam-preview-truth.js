@@ -8,6 +8,14 @@
 (function (global) {
   "use strict";
 
+  /* TYMCZASOWO (decyzja usera 2026-07-22): cache miniatur WYLACZONY calkowicie.
+   * Powod: /thumb-cache serwowal niskiej jakosci placeholder, ktory "zostawal na zawsze"
+   * zamiast realnego pliku z dysku, plus zzeral RAM (warm/Redis). Wracamy do /media (pelny plik).
+   * Aby wrocic do cache: usun te linie lub ustaw window.DAM_DISABLE_THUMB_WARM = false przed tym plikiem. */
+  if (typeof global.DAM_DISABLE_THUMB_WARM === "undefined") {
+    global.DAM_DISABLE_THUMB_WARM = true;
+  }
+
   var LABEL_ONLINE_ONLY = "Element z dysku dostepny tylko online - Synology";
   var LABEL_MISSING = "Podglad niedostepny";
   var LABEL_HINT = "brak podgladu";
@@ -27,9 +35,24 @@
     return path || "";
   }
 
-  /** Grid/card thumbs go through /thumb-cache (disk PAMIEC + Redis meta). */
+  /**
+   * Grid/card FIRST PAINT only (PI preview.cache.ephemeral_only).
+   * Redis/PAMIEC przyspiesza pokazanie karty — NIGDY nie uzywac jako stale src
+   * po kliknieciu (modal/lightbox = /media, zrodlo z dysku).
+   */
   function thumbCacheUrl(path, profile) {
     if (!path) return "";
+    if (global.DAM_DISABLE_THUMB_WARM) {
+      /* Cache off: use bridge preview (disk), NOT Redis /thumb-cache and NOT raw multi-MB /media. */
+      var localDirect = toLocal(path);
+      var ext = String(localDirect.split(".").pop() || "").toLowerCase();
+      var url =
+        bridgeUrl() + "/media?path=" + encodeURIComponent(localDirect);
+      if (/^(png|jpe?g|webp|gif|tif|tiff|bmp|psd|psb|ai|pdf)$/i.test(ext)) {
+        url += "&preview=1";
+      }
+      return url;
+    }
     var local = toLocal(path);
     var p = (profile || "grid").trim() || "grid";
     return (
@@ -110,6 +133,9 @@
   }
 
   function warmThumbs(paths, profile) {
+    if (global.DAM_DISABLE_THUMB_WARM) {
+      return Promise.resolve({ ok: true, queued: 0, skipped: "disabled" });
+    }
     var list = (paths || []).filter(Boolean).slice(0, 40);
     if (!list.length) return Promise.resolve({ ok: true, queued: 0 });
     var headers = { "Content-Type": "application/json" };

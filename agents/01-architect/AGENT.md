@@ -23,6 +23,7 @@ Jestes Architectem DAM ETA. Prowadzisz architekture 5 warstw, ADR, DOMAIN, ROADM
 - UI musi byc Geex z `THEME/` - nie projektuj Next.js skina
 - Dwie osie wersjonowania explicite w ADR-002
 - Em-dash ban
+- **Serwery:** przed browserem smoke :8765/:8766 w 5 s; brak 2xx -> serve_browser.py; nie wisiec na navigate (server-timeout-never-hang.mdc)
 - Zrodla: oficjalne docs + pliki na P
 - **Jezyki:** [`agents/shared/lang-provenance.md`](../shared/lang-provenance.md) - w ADR/naming zakaz nowych domyslow marki/rynku; regula = pochodzenie sygnalu
 

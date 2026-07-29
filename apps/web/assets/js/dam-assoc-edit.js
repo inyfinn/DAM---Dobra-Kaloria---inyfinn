@@ -41,6 +41,106 @@
     return Promise.resolve({ ok: true });
   }
 
+  var _assocOverrides = null;
+  var _assocOverridesPromise = null;
+
+  function loadAssocOverrides() {
+    if (_assocOverrides) return Promise.resolve(_assocOverrides);
+    if (_assocOverridesPromise) return _assocOverridesPromise;
+    _assocOverridesPromise = fetch(
+      "data/branding-associations-overrides.json?v=" +
+        encodeURIComponent(String(global.DAM_APP_VERSION || "1"))
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : { assets: {}, folder_groups: {} };
+      })
+      .then(function (d) {
+        _assocOverrides = d && typeof d === "object" ? d : { assets: {}, folder_groups: {} };
+        _assocOverrides.assets = _assocOverrides.assets || {};
+        _assocOverrides.folder_groups = _assocOverrides.folder_groups || {};
+        return _assocOverrides;
+      })
+      .catch(function () {
+        _assocOverrides = { assets: {}, folder_groups: {} };
+        return _assocOverrides;
+      });
+    return _assocOverridesPromise;
+  }
+
+  /** Zapisane linked_product_ids wygrywaja nad spray folder_linked z indeksu. */
+  function effectiveLinkedProductIds(asset) {
+    if (!asset) return [];
+    if (asset.linked_product_ids && asset.linked_product_ids.length) {
+      return asset.linked_product_ids.slice();
+    }
+    return (asset.folder_linked_product_ids || []).slice();
+  }
+
+  function applyAssetAssocOverrides(asset) {
+    if (!asset || !asset.id) return asset;
+    var ov = _assocOverrides;
+    if (!ov || !ov.assets) return asset;
+    var entry = ov.assets[asset.id];
+    if (!entry) return asset;
+    if (entry.linked_product_ids && entry.linked_product_ids.length) {
+      asset.linked_product_ids = entry.linked_product_ids.slice();
+      asset.folder_linked_product_ids = [];
+    }
+    if (entry.linked_variant_ids) {
+      asset.linked_variant_ids = entry.linked_variant_ids.slice();
+    }
+    if (entry.folder_group_id) {
+      asset.folder_group_id = entry.folder_group_id;
+    }
+    return asset;
+  }
+
+  function isPhantomProductIndex(idx) {
+    var base = String(idx || "")
+      .split(".")[0]
+      .replace(/\D/g, "");
+    if (!base) return true;
+    if (base === "00" || base === "000000" || base === "0000000" || base === "000103") return true;
+    return base.length < 6;
+  }
+
+  function revisionVariantIdsForProduct(productId) {
+    var p = productsByIdFromCache()[productId];
+    if (!p) return [];
+    var out = [];
+    var seen = {};
+    function add(idx) {
+      idx = String(idx || "").trim();
+      if (!idx || isPhantomProductIndex(idx)) return;
+      if (!seen[idx]) {
+        seen[idx] = true;
+        out.push(idx);
+      }
+    }
+    (p.revisions || []).forEach(function (rev) {
+      add(rev.index);
+    });
+    (p.indexes || []).forEach(add);
+    return out;
+  }
+
+  function mergeVariantIdsForProducts(prevVids, productIds) {
+    var vids = (prevVids || []).slice();
+    var seen = {};
+    vids.forEach(function (v) {
+      seen[String(v)] = true;
+    });
+    (productIds || []).forEach(function (pid) {
+      revisionVariantIdsForProduct(pid).forEach(function (vid) {
+        if (!seen[vid]) {
+          seen[vid] = true;
+          vids.push(vid);
+        }
+      });
+    });
+    return vids;
+  }
+
   function role() {
     return String(
       (global.DamApi && typeof global.DamApi.role === "function" && global.DamApi.role()) ||
@@ -235,12 +335,48 @@
     return "";
   }
 
+  function brandingDigitsOnly(s) {
+    return String(s || "").replace(/\D/g, "");
+  }
+
+  /** Parity bridge _branding_picker_query_matches — M-IMG249510 / 249510 / br-049510. */
+  function brandingPickerQueryMatches(entry, q) {
+    q = String(q || "").trim().toLowerCase();
+    if (!q || !entry) return false;
+    var eid = String(entry.id || "").toLowerCase();
+    var blob = String(
+      (entry.search_blob || "") +
+        " " +
+        (entry.label || entry.name || "") +
+        " " +
+        (entry.marketing_id || entry.index || "") +
+        " " +
+        (entry.path || "")
+    ).toLowerCase();
+    if (q.length >= 2 && (blob.indexOf(q) >= 0 || eid.indexOf(q) >= 0)) return true;
+    var qd = brandingDigitsOnly(q);
+    if (qd.length < 4) return false;
+    if (brandingDigitsOnly(blob).indexOf(qd) >= 0) return true;
+    if (brandingDigitsOnly(eid).indexOf(qd) >= 0) return true;
+    var m = /^br-(\d+)$/.exec(eid);
+    if (m) {
+      var digits = m[1];
+      var cores = [digits];
+      for (var tn = 1; tn <= 12; tn++) cores.push(String(tn) + digits.slice(1));
+      for (var ci = 0; ci < cores.length; ci++) {
+        if (qd.indexOf(cores[ci]) >= 0 || cores[ci].indexOf(qd) >= 0) return true;
+      }
+    }
+    var mk = q.replace(/^m[-_]?/, "").match(/^([a-z]{2,8})[_-]?(\d{5,6})/);
+    if (mk) {
+      var wantCore = mk[2];
+      if (blob.indexOf(wantCore) >= 0 || brandingDigitsOnly(blob).indexOf(wantCore) >= 0) return true;
+    }
+    return false;
+  }
+
   function brandingThumbUrl(entry) {
-    if (!entry) return PLACEHOLDER_SVG;
-    var t = entry.thumb || entry.thumb_url || "";
-    /* List path: never build /media URLs (NFS). Hover uses data-preview-src separately. */
-    if (t && t.indexOf("/media?") === -1 && t.indexOf("preview=1") === -1) return t;
-    return PLACEHOLDER_SVG;
+    return pickerListThumbUrl(entry);
   }
 
   function brandingEntryToPickerRow(entry) {
@@ -297,6 +433,80 @@
     var m = /^rev:([^:]+):(.+)$/.exec(String(key || ""));
     if (!m) return null;
     return { productId: m[1], revisionPath: m[2] };
+  }
+
+  /** Etykieta wiersza rewizji: BANOFFEE KAKAO · PL · 6300728 */
+  function revisionPickerLabel(prodName, rev, revIdx) {
+    var name = String(prodName || rev.folder || rev.label || rev.name || "Wariant").trim();
+    var langs = (rev && rev.langs) || [];
+    var langBit =
+      langs.length > 0
+        ? langs
+            .map(function (lg) {
+              return String(lg).toUpperCase();
+            })
+            .join(", ")
+        : "";
+    var idx = String(revIdx || rev.index || rev.index_base || "")
+      .split(".")[0]
+      .trim();
+    var parts = [name];
+    if (langBit) parts.push(langBit);
+    if (idx) parts.push(idx);
+    return parts.join(" · ");
+  }
+
+  /** Po wyborze jednej rewizji — dodaj wszystkie rewizje produktu (PL+EN z file-index). */
+  function expandPicksToAllProductRevisions(picks) {
+    picks = picks || [];
+    if (!picks.length) return picks;
+    var fi = global._DAM_FILE_INDEX;
+    var products = (fi && fi.products) || [];
+    var byId = {};
+    products.forEach(function (p) {
+      if (p && p.id) byId[p.id] = p;
+    });
+    var out = [];
+    var seenRev = {};
+    var seenProd = {};
+    picks.forEach(function (pick) {
+      var productId = "";
+      var revPath = "";
+      if (pick && typeof pick === "object" && pick.revisionPath) {
+        productId = String(pick.productId || "").trim();
+        revPath = String(pick.revisionPath || "").trim();
+      } else if (typeof pick === "string") {
+        var parsed = parseRevisionPickerKey(pick);
+        if (parsed) {
+          productId = parsed.productId;
+          revPath = parsed.revisionPath;
+        } else {
+          productId = pick;
+        }
+      }
+      if (!productId) return;
+      var prod = byId[productId];
+      if (!prod || !prod.revisions || !prod.revisions.length) {
+        if (revPath) {
+          var k1 = productId + "|" + revPath;
+          if (!seenRev[k1]) {
+            seenRev[k1] = true;
+            out.push({ productId: productId, revisionPath: revPath });
+          }
+        }
+        return;
+      }
+      if (seenProd[productId]) return;
+      seenProd[productId] = true;
+      (prod.revisions || []).forEach(function (rev) {
+        if (!rev || !rev.path) return;
+        var k2 = productId + "|" + rev.path;
+        if (seenRev[k2]) return;
+        seenRev[k2] = true;
+        out.push({ productId: productId, revisionPath: rev.path });
+      });
+    });
+    return out.length ? out : picks;
   }
 
   function pickerUsesBrandingApi(opts) {
@@ -399,11 +609,10 @@
             seenIds[revKey] = true;
             var revIdx = String(rev.index || rev.index_base || productIndexOf(full) || "");
             if (revIdx.indexOf(".") > 0) revIdx = revIdx.split(".")[0];
+            var prodName = full.display_name || full.name || p.display_name || p.name || p.id;
             items.push({
               id: revKey,
-              label:
-                (rev.folder || rev.label || rev.name || "Wariant " + (ri + 1)) +
-                (rev.langs && rev.langs.length ? " · " + rev.langs.join(", ").toUpperCase() : ""),
+              label: revisionPickerLabel(prodName, rev, revIdx),
               thumb: productThumb(full),
               sub: revIdx,
               path: rev.path,
@@ -412,6 +621,7 @@
               subcategory: full.subcategory_label || "",
               langs: rev.langs || rev0.langs || [],
               isRevisionRow: true,
+              productName: prodName,
             });
           }
         } else {
@@ -576,12 +786,189 @@
     return byId;
   }
 
-  /** List thumbs: never N× /media?preview=1 (NFS bridge stall = whole-app freeze). */
+  /** List thumbs: static/data OK; /media blocked here (lazy hydrate via data-path). */
   function listSafeThumb(url) {
     var u = String(url || "");
     if (!u || u === PLACEHOLDER_SVG) return PLACEHOLDER_SVG;
+    if (u.indexOf("/thumb-cache?") >= 0) return u;
+    if (u.indexOf("data/thumbs/") >= 0 || (u.indexOf("data/") === 0 && u.indexOf("/media?") === -1)) {
+      return u;
+    }
     if (u.indexOf("/media?") !== -1 || u.indexOf("preview=1") !== -1) return PLACEHOLDER_SVG;
     return u;
+  }
+
+  function pickerListThumbUrl(entry) {
+    if (!entry) return PLACEHOLDER_SVG;
+    var t = entry.thumb || entry.thumb_url || "";
+    if (t && t.indexOf("/media?") === -1 && t.indexOf("preview=1") === -1) return t;
+    var path = String(entry.path || "").trim();
+    var ext = fileExtPicker(path);
+    if (
+      path &&
+      global.DamPreviewTruth &&
+      typeof global.DamPreviewTruth.thumbCacheUrl === "function" &&
+      /^(png|jpe?g|webp|gif|tif|tiff|bmp|psd|psb)$/i.test(ext)
+    ) {
+      return global.DamPreviewTruth.thumbCacheUrl(path, "grid");
+    }
+    return PLACEHOLDER_SVG;
+  }
+
+  var _pickerThumbIo = null;
+  var _pickerThumbLoads = 0;
+  var PICKER_THUMB_MAX_CONCURRENT = 4;
+
+  function pickerThumbLazySrc(entry) {
+    var direct = listSafeThumb(pickerListThumbUrl(entry));
+    if (direct !== PLACEHOLDER_SVG) return direct;
+    return PLACEHOLDER_SVG;
+  }
+
+  function hydratePickerThumbs(scope) {
+    if (!scope || !scope.querySelectorAll) return;
+    var imgs = scope.querySelectorAll(
+      ".dam-assoc-edit-popover__thumb[data-path]:not([data-thumb-hydrated])"
+    );
+    if (!imgs.length) return;
+    function loadOne(img) {
+      if (!img || img.getAttribute("data-thumb-hydrated")) return;
+      var path = img.getAttribute("data-path") || "";
+      if (!path) return;
+      if (_pickerThumbLoads >= PICKER_THUMB_MAX_CONCURRENT) {
+        setTimeout(function () {
+          loadOne(img);
+        }, 120);
+        return;
+      }
+      img.setAttribute("data-thumb-hydrated", "1");
+      var url = pickerListThumbUrl({ path: path });
+      if (!url || url === PLACEHOLDER_SVG) return;
+      _pickerThumbLoads++;
+      var probe = new Image();
+      probe.onload = function () {
+        _pickerThumbLoads = Math.max(0, _pickerThumbLoads - 1);
+        if (img.isConnected) img.src = url;
+      };
+      probe.onerror = function () {
+        _pickerThumbLoads = Math.max(0, _pickerThumbLoads - 1);
+        if (global.__damBrandingThumbFallback) global.__damBrandingThumbFallback(img);
+      };
+      probe.src = url;
+    }
+    if (typeof IntersectionObserver === "undefined") {
+      imgs.forEach(loadOne);
+      return;
+    }
+    if (!_pickerThumbIo) {
+      _pickerThumbIo = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (ent) {
+            if (!ent.isIntersecting) return;
+            loadOne(ent.target);
+            _pickerThumbIo.unobserve(ent.target);
+          });
+        },
+        { root: null, rootMargin: "80px", threshold: 0.01 }
+      );
+    }
+    imgs.forEach(function (img) {
+      _pickerThumbIo.observe(img);
+    });
+  }
+
+  function pathDirnamePicker(path) {
+    var p = String(path || "").replace(/\\/g, "/");
+    var i = p.lastIndexOf("/");
+    return i >= 0 ? p.slice(0, i) : "";
+  }
+
+  var PICKER_GENERIC_FOLDER_RE =
+    /^(close|final|gif|gifs|export|surowe|raw|temp|old|nowe|nowy|assets?|jpg|png|psd|webp|mp4|mov|wideo|video|final_bez|bez\s*plansz)$/i;
+
+  function pickerFileStem(name) {
+    return String(name || "").replace(/\.[a-z0-9]+$/i, "");
+  }
+
+  function pickerMarketingGroupKey(row) {
+    if (!row) return "_";
+    if (row.folder_group_id) return "fg:" + String(row.folder_group_id).toLowerCase();
+    var dir = pathDirnamePicker(row.path);
+    var folderName = dir.split("/").pop() || "";
+    if (PICKER_GENERIC_FOLDER_RE.test(folderName)) {
+      return "file:" + pickerFileStem(row.name || row.label || row.id || "").toLowerCase();
+    }
+    return "dir:" + dir.toLowerCase();
+  }
+
+  function pickerFolderGroupLabel(items) {
+    if (!items || !items.length) return "Materiał";
+    var p = items[0];
+    if (global.DamBranding && typeof global.DamBranding.marketingGroupLabelForAssets === "function") {
+      var lbl = global.DamBranding.marketingGroupLabelForAssets(items);
+      if (lbl) return lbl;
+    }
+    var path = String(p.path || "").replace(/\\/g, "/");
+    var parts = path.split("/").filter(Boolean);
+    for (var i = parts.length - 2; i >= 0; i--) {
+      var seg = parts[i];
+      if (!seg || /^(\d+|[a-z]{1,2})$/i.test(seg)) continue;
+      if (PICKER_GENERIC_FOLDER_RE.test(seg)) continue;
+      return seg.replace(/_/g, " ");
+    }
+    return shortAssocLabel(p.label || p.name || p.id || "Materiał");
+  }
+
+  function groupPickerRowsByFolder(items) {
+    var byKey = {};
+    var order = [];
+    (items || []).forEach(function (it) {
+      if (!it) return;
+      var key = pickerMarketingGroupKey(it);
+      if (!byKey[key]) {
+        byKey[key] = [];
+        order.push(key);
+      }
+      byKey[key].push(it);
+    });
+    return order.map(function (key) {
+      var bucket = (byKey[key] || []).slice().sort(function (a, b) {
+        return String(a.label || a.name || "").localeCompare(String(b.label || b.name || ""), "pl");
+      });
+      return { key: key, label: pickerFolderGroupLabel(bucket), items: bucket };
+    });
+  }
+
+  function renderPickerFolderGroups(items, renderRow) {
+    var groups = groupPickerRowsByFolder(items);
+    if (groups.length <= 1 && groups[0] && groups[0].items.length <= 1) {
+      return items
+        .map(function (it) {
+          return renderRow(it, false, false);
+        })
+        .join("");
+    }
+    return groups
+      .map(function (g) {
+        var rows = g.items
+          .map(function (it, idx) {
+            return renderRow(it, false, idx > 0);
+          })
+          .join("");
+        return (
+          '<div class="dam-assoc-edit-popover__folder-block" role="group" aria-label="' +
+          esc(g.label) +
+          '">' +
+          '<p class="dam-assoc-edit-popover__folder-label">' +
+          esc(g.label) +
+          ' <span class="dam-assoc-edit-popover__folder-count">(' +
+          g.items.length +
+          ")</span></p>" +
+          rows +
+          "</div>"
+        );
+      })
+      .join("");
   }
 
   var PICKER_SOURCE_EXTS = { psd: 1, psb: 1, ai: 1, indd: 1, eps: 1, pdf: 1 };
@@ -654,15 +1041,23 @@
         " " +
         (row.search_blob || "")
       ).toLowerCase();
-      if (q && blob.indexOf(q) === -1) continue;
+      if (q && blob.indexOf(q) === -1) {
+        if (!brandingPickerQueryMatches(row, q)) continue;
+      }
       seenIds[row.id] = true;
       items.push({
         id: row.id,
+        kind: "material",
         label: shortAssocLabel(row.label || row.name),
-        thumb: row.thumb || brandingThumbUrl(row),
+        thumb: pickerListThumbUrl(row),
         preview_src: row.preview_src || pickerPreviewSrc(row),
         sub: row.marketing_id || row.index || marketingIdForBranding(row) || "",
-        path: row.path || "",
+        path: row.path || material.path || "",
+        folder_group_id: material.folder_group_id || row.folder_group_id || "",
+        name: row.name || material.name || "",
+        tags: material.tags || row.tags || [],
+        asset_role: material.asset_role || row.asset_role || "",
+        media_type: material.media_type || row.media_type || "",
       });
     }
     return items;
@@ -840,6 +1235,41 @@
     patchCtxVariantIds(ctx, variantIds);
     if (typeof ctx.onSaved === "function") ctx.onSaved(productIds, variantIds);
     if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+    bustAssocThumbsInScope();
+  }
+
+  /** Odswiez miniatury w modalach po zapisie / zamknieciu pickera. */
+  function bustMaterialAssocCaches(opts) {
+    opts = opts || {};
+    if (global.DamBranding && typeof global.DamBranding.clearComputeCache === "function") {
+      global.DamBranding.clearComputeCache();
+    }
+  }
+
+  function bustAssocThumbsInScope(opts) {
+    opts = opts || {};
+    /* Nie bustuj src globalnie — psuje dzialajace miniatury po zamknieciu pickera. */
+    bustMaterialAssocCaches(opts);
+  }
+
+  /** Natychmiastowy UI sugestii materialow (viz) — enrich przed onRefresh. */
+  function flushOptimisticMaterialUi(ctx, materialIds) {
+    materialIds = (materialIds || []).map(String).filter(Boolean);
+    ctx.selectedIds = materialIds.slice();
+    if (!materialIds.length) {
+      if (typeof ctx.onRefresh === "function") ctx.onRefresh({ materialIds: [], enriched: [] });
+      bustAssocThumbsInScope();
+      return Promise.resolve();
+    }
+    return enrichBrandingAssetsByIds(materialIds).then(function (rows) {
+      ctx.materialsList = (rows || []).slice();
+      ctx.shownPrimaries = (rows || []).slice();
+      if (typeof ctx.onRefresh === "function") {
+        ctx.onRefresh({ materialIds: materialIds, enriched: rows || [] });
+      }
+      bustAssocThumbsInScope();
+      return rows;
+    });
   }
 
   function patchAssetProductIds(asset, productIds) {
@@ -875,7 +1305,7 @@
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  var ASSOC_CSS_TOKEN = "assocRestoreBProdNoFreeze20260726e";
+  var ASSOC_CSS_TOKEN = "assocSpacingQa10Pass20260726a";
   var PICKER_LIST_CAP = 80;
   /* Max raw iterations in collect (defense vs filter that skips most rows before CAP). */
   var PICKER_SCAN_BUDGET = 400;
@@ -894,14 +1324,10 @@
   /** Wstrzykuje style: Bento grid + pkt 36 podglad LEWA | lista PRAWA (nie ruszamy plikow agentow). */
   function ensureInjectedCss() {
     var style = document.getElementById(ASSOC_CSS_ID);
-    if (style && style.textContent) {
-      /* Keep existing inject — rebuilding 30KB CSS + style recalc on branding grid freezes CTA. */
-      if (style.getAttribute("data-token") !== ASSOC_CSS_TOKEN) {
-        style.setAttribute("data-token", ASSOC_CSS_TOKEN);
-      }
+    if (style && style.getAttribute("data-token") === ASSOC_CSS_TOKEN && style.textContent) {
       return;
     }
-    if (style && style.getAttribute("data-token") === ASSOC_CSS_TOKEN && style.textContent) return;
+    if (style) style.remove();
     var css =
       /* Shell / bento grid popover — HARD: 70vw × 90vh (wszędzie: branding + viz) */
       ".dam-assoc-edit-overlay{overflow:hidden;}" +
@@ -926,8 +1352,8 @@
       ".dam-assoc-edit-popover > .dam-assoc-edit-popover__body{grid-area:body;min-height:0;min-width:0;overflow:hidden;}" +
       ".dam-assoc-edit-popover > .dam-thumb-picker__footer{grid-area:actions;}" +
       /* Body: preview LEFT | list RIGHT (scroll w liscie) */
-      ".dam-assoc-edit-popover__body{display:grid;grid-template-columns:minmax(180px,22%) minmax(0,1fr);gap:12px;" +
-      "padding:12px 14px;min-height:0;overflow:hidden;}" +
+      ".dam-assoc-edit-popover__body{display:grid;grid-template-columns:minmax(180px,22%) minmax(0,1fr);gap:14px;" +
+      "padding:14px 16px;min-height:0;overflow:hidden;}" +
       ".dam-assoc-edit-popover__preview{min-width:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;" +
       "gap:6px;align-content:start;}" +
       ".dam-assoc-edit-popover__preview-label{margin:0;font-size:10px;font-weight:700;letter-spacing:.08em;" +
@@ -953,18 +1379,43 @@
       ".dam-assoc-edit-popover__body .dam-assoc-edit-popover__list," +
       ".dam-assoc-edit-popover__body .dam-tag-edit-popover__list{" +
       "min-width:0;max-height:none;height:100%;overflow-x:hidden!important;overflow-y:auto;" +
-      "padding:0;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin;}" +
+      "padding:6px 0;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;}" +
       ".dam-assoc-edit-popover__opt-row{display:flex!important;flex-direction:row;align-items:stretch;" +
-      "gap:4px;border-radius:10px;min-width:0;min-height:64px;width:100%;box-sizing:border-box;}" +
+      "gap:6px;border-radius:0;min-width:0;min-height:0;width:100%;box-sizing:border-box;" +
+      "margin:0;border:none;background:transparent;}" +
       ".dam-assoc-edit-popover__opt-row .dam-assoc-edit-popover__opt{flex:1 1 auto;min-width:0;}" +
-      ".dam-assoc-edit-popover__opt{display:flex!important;flex-direction:row;align-items:center;gap:10px;" +
-      "width:100%;min-height:64px;padding:8px 10px!important;border-radius:10px;box-sizing:border-box;}" +
-      ".dam-assoc-edit-popover__thumb-wrap{flex:0 0 52px;width:52px;height:52px;border-radius:8px;" +
+      ".dam-assoc-edit-popover__opt{display:flex!important;flex-direction:row;align-items:flex-start!important;" +
+      "gap:10px;width:100%;min-height:76px;padding:7px 12px!important;border-radius:0;box-sizing:border-box;" +
+      "border:none;background:transparent;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__thumb-wrap{order:0;flex:0 0 44px;width:44px;height:44px;" +
+      "margin-top:2px;border-radius:6px;overflow:hidden;background:#f4f4f6;border:1px solid #ececf1;" +
+      "display:flex;align-items:center;justify-content:center;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__body{order:1;flex:1 1 auto;min-width:0;display:flex!important;" +
+      "flex-direction:column!important;gap:2px;overflow:visible;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__body .dam-search-hit__badge{align-self:flex-start;margin-bottom:20px;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__body .dam-search-name{display:block!important;" +
+      "font-size:13px;font-weight:600;line-height:1.35;color:#464255;white-space:normal;overflow:visible;" +
+      "text-overflow:clip;word-break:break-word;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__body .dam-search-meta{display:block!important;" +
+      "font-size:11px;line-height:1.35;color:#8b8d97;white-space:normal;overflow:visible;margin-top:2px;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:0;}" +
+      ".dam-assoc-edit-popover__list .dam-search-hit--material .dam-search-hit__badge{color:#6c5ce7;background:#f3eefc;}" +
+      ".dam-assoc-edit-popover__list .dam-search-hit--nested .dam-search-hit__row::before{content:\"\";position:absolute;" +
+      "left:14px;top:10px;bottom:10px;width:2px;border-radius:2px;background:#d7c9f0;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__check{order:2;flex:0 0 18px;align-self:center;margin-left:auto;}" +
+      ".dam-assoc-edit-popover__opt .dam-assoc-edit-popover__expand{order:3;align-self:center;}" +
+      ".dam-assoc-edit-popover__thumb-wrap{flex:0 0 44px;width:44px;height:44px;border-radius:6px;" +
       "overflow:hidden;background:linear-gradient(180deg,#faf9fc 0%,#f3f1f7 100%);" +
       "border:1px solid #ececf1;display:flex;align-items:center;justify-content:center;}" +
       ".dam-assoc-edit-popover__check{flex:0 0 22px;}" +
       ".dam-assoc-edit-popover__thumb{width:100%!important;height:100%!important;max-width:100%;max-height:100%;" +
       "object-fit:contain;border-radius:0;background:transparent;border:none;}" +
+      ".dam-assoc-edit-popover__folder-block{margin:0 0 10px;padding:0;border-radius:0;" +
+      "border:none;border-top:1px solid color-mix(in srgb,var(--dam-border,#e2e6ee) 80%,transparent);overflow:visible;}" +
+      ".dam-assoc-edit-popover__folder-label{margin:0;padding:8px 12px;font-size:12px;font-weight:600;" +
+      "letter-spacing:.02em;text-transform:uppercase;color:var(--dam-muted,#6b7280);" +
+      "background:color-mix(in srgb,var(--dam-surface-2,#f6f7f9) 92%,#fff);}" +
+      ".dam-assoc-edit-popover__folder-count{font-weight:500;opacity:.85;}" +
       ".dam-assoc-edit-popover__meta{min-width:0;overflow:hidden;}" +
       ".dam-assoc-edit-popover__label{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
       "font-size:13px;font-weight:400;color:#464255;line-height:1.35;}" +
@@ -980,8 +1431,13 @@
       "border:1px solid #e7e7ec;border-radius:7px;background:#fff;color:#6b6b76;cursor:pointer;font-size:14px;" +
       "transition:background .12s ease,color .12s ease,border-color .12s ease;}" +
       ".dam-assoc-edit-popover__row-btn:hover{background:#f8f4fd;color:var(--dam-primary,#ab54db);border-color:#e2d3f2;}" +
-      ".dam-assoc-edit-popover__opt-row--revision{margin-left:28px;padding-left:8px;" +
-      "border-left:2px solid #e2d3f2;opacity:.98;min-height:56px;}" +
+      ".dam-assoc-edit-popover__opt-row--revision{margin:8px 0 8px 28px;padding:8px 10px 8px 12px;" +
+      "border-left:3px solid #e2d3f2;background:color-mix(in srgb,#f8f4fd 72%,#fff);border-radius:0 10px 10px 0;" +
+      "opacity:1;min-height:58px;}" +
+      ".dam-assoc-edit-popover__opt-row--revision .dam-assoc-edit-popover__label{" +
+      "white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;max-height:2.5em;" +
+      "display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}" +
+      ".dam-assoc-edit-popover__opt--product{margin-top:10px;margin-bottom:4px;}" +
       ".dam-assoc-edit-popover__opt--product .dam-assoc-edit-popover__label{font-weight:600;}" +
       ".dam-assoc-edit-popover__opt--product{cursor:pointer;}" +
       ".dam-assoc-edit-popover__opt--product.is-expanded{background:#f8f4fd!important;" +
@@ -989,7 +1445,8 @@
       ".dam-assoc-edit-popover__expand{flex:0 0 22px;display:inline-flex;align-items:center;" +
       "justify-content:center;color:#8b8d97;font-size:18px;line-height:1;}" +
       ".dam-assoc-edit-popover__opt--product.is-expanded .dam-assoc-edit-popover__expand{color:#7a3aa8;}" +
-      ".dam-assoc-edit-popover__opt--revision .dam-assoc-edit-popover__label{font-weight:400;}" +
+      ".dam-assoc-edit-popover__opt--revision .dam-assoc-edit-popover__label{font-weight:500;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.35;}" +
+      ".dam-assoc-edit-popover__opt--revision{padding:9px 11px!important;min-height:58px;}" +
       ".dam-assoc-edit-popover__opt-row--revision.is-hint .dam-assoc-edit-popover__opt{opacity:.7;cursor:default;}" +
       ".dam-assoc-edit-popover__expand-hint{display:block;font-size:11px;font-weight:500;color:#8b8d97;margin-top:2px;}" +
       ".dam-assoc-edit-popover__tag-filters-wrap{grid-area:tagfilters;padding:0 14px;border-bottom:1px solid #ececf2;}" +
@@ -1005,7 +1462,10 @@
       ".dam-assoc-edit-popover__tag-group-pills .dam-viz-badge{font-size:11px!important;padding:4px 9px!important;cursor:pointer;}" +
       ".dam-assoc-edit-popover__tag-group-pills .dam-viz-badge.is-active{outline:2px solid var(--dam-primary,#ab54db);outline-offset:1px;}" +
       ".dam-assoc-edit-popover__opt.is-pinned:not(.is-selected) .dam-assoc-edit-popover__check{color:#e2506b;}" +
-      ".dam-assoc-edit-popover__opt.is-pinned .dam-assoc-edit-popover__check{width:22px;font-size:17px;}" +
+      ".dam-assoc-edit-popover__opt.is-pinned .dam-assoc-edit-popover__check{width:22px;font-size:17px;color:#e2506b;}" +
+      ".dam-assoc-edit-popover__opt.is-pinned .dam-assoc-edit-popover__check .uil-times{" +
+      "font-size:17px!important;line-height:1;display:inline-block;width:auto;height:auto;" +
+      "background:none!important;box-shadow:none!important;color:#e2506b!important;}" +
       ".dam-assoc-edit-popover__opt.is-preview-active{background:#f8f4fd!important;" +
       "box-shadow:inset 0 0 0 1px #e2d3f2;}" +
       ".dam-assoc-edit-popover__pinned{max-height:min(22dvh,160px);overflow-x:hidden;overflow-y:auto;}" +
@@ -1015,11 +1475,14 @@
       ".dam-media-preview__variant-grid.is-shift-hover," +
       ".dam-media-preview__all-files.is-shift-hover," +
       ".dam-media-preview__assoc-grid.is-shift-hover .dam-media-preview__assoc-item," +
-      ".dam-media-preview__variant-grid.is-shift-hover .dam-media-preview__assoc-item{position:relative;}" +
+      ".dam-media-preview__variant-grid.is-shift-hover .dam-media-preview__assoc-item," +
+      ".dam-media-preview__variant-grid.is-shift-hover .dam-viz-modal__variant{position:relative;}" +
       ".dam-media-preview__assoc-item," +
-      ".dam-media-preview__all-file{position:relative;}" +
+      ".dam-media-preview__all-file," +
+      ".dam-viz-modal__variant{position:relative;}" +
       ".dam-media-preview__assoc-item .dam-assoc-quick-minus," +
-      ".dam-media-preview__all-file .dam-assoc-quick-minus{" +
+      ".dam-media-preview__all-file .dam-assoc-quick-minus," +
+      ".dam-viz-modal__variant .dam-assoc-quick-minus{" +
       "position:absolute;top:3px;right:3px;z-index:4;width:21px;height:21px;border-radius:999px;" +
       "border:1px solid rgba(255,255,255,.96);" +
       "background:linear-gradient(180deg,color-mix(in srgb,#ef4444 88%,#fff) 0%,#dc2626 100%);" +
@@ -1119,7 +1582,7 @@
       "display:inline-flex!important;align-items:center!important;justify-content:center!important;" +
       "gap:6px!important;margin-left:auto!important;flex-shrink:0!important;" +
       "min-height:34px!important;height:34px!important;padding:8px 12px!important;" +
-      "font-size:12px!important;font-weight:500!important;line-height:1.2;" +
+      "font-size:13.2px!important;font-weight:500!important;line-height:1.2;" +
       "border-radius:8px!important;border:1px solid #e7e7e7!important;" +
       "background:#fff!important;color:#464255!important;box-shadow:none!important;" +
       "white-space:nowrap!important;cursor:pointer;}" +
@@ -1207,11 +1670,73 @@
     return false;
   }
 
+  var _productThumbCache = {};
+
+  function rememberProductThumb(id, url) {
+    id = String(id || "").trim();
+    url = String(url || "").trim();
+    if (id && url && url.indexOf("data:image/svg+xml") !== 0) {
+      _productThumbCache[id] = url;
+    }
+  }
+
+  function stripThumbQuery(url) {
+    url = String(url || "").trim();
+    var q = url.indexOf("?");
+    return q > 0 ? url.slice(0, q) : url;
+  }
+
+  /** Najnowsza rewizja produktu (is_latest lub revisions[0]) — nie indexes[0]. */
+  function latestProductIndexBase(p) {
+    if (!p) return "";
+    var revs = p.revisions || [];
+    var i;
+    for (i = 0; i < revs.length; i++) {
+      if (revs[i] && revs[i].is_latest) {
+        if (revs[i].index_base) return String(revs[i].index_base);
+        if (revs[i].index) {
+          var ix = String(revs[i].index);
+          return ix.indexOf(".") > 0 ? ix.split(".")[0] : ix;
+        }
+      }
+    }
+    if (revs[0]) {
+      if (revs[0].index_base) return String(revs[0].index_base);
+      if (revs[0].index) {
+        var r0 = String(revs[0].index);
+        return r0.indexOf(".") > 0 ? r0.split(".")[0] : r0;
+      }
+    }
+    return productIndexOf(p);
+  }
+
+  function productThumbFromVizLatest(pid) {
+    var fi = global._DAM_FILE_INDEX;
+    var latest = (fi && fi.viz_latest) || [];
+    var i;
+    for (i = 0; i < latest.length; i++) {
+      var row = latest[i];
+      if (row && row.product_id === pid && row.thumb_url) {
+        return stripThumbQuery(row.thumb_url);
+      }
+    }
+    return "";
+  }
+
   function productThumb(p) {
     if (!p) return PLACEHOLDER_SVG;
+    var pid = String(p.id || "").trim();
+    if (pid && _productThumbCache[pid]) return _productThumbCache[pid];
+    var fromViz = pid ? productThumbFromVizLatest(pid) : "";
+    if (fromViz) {
+      rememberProductThumb(pid, fromViz);
+      return fromViz;
+    }
     var existing = p.thumb_url != null ? String(p.thumb_url).trim() : "";
     if (existing && existing.indexOf("data:image/svg+xml") !== 0) {
+      existing = stripThumbQuery(existing);
       if (/^(data:|blob:|https?:|\/|data\/)/i.test(existing) || existing.indexOf("thumbs/") >= 0) {
+        rememberProductThumb(pid, existing);
         return existing;
       }
     }
@@ -1221,55 +1746,73 @@
       .slice(0, 96)
       .toLowerCase();
     if (!slug) return PLACEHOLDER_SVG;
-    var idx = productIndexOf(p);
-    if (!idx) {
-      var rev = (p.revisions && p.revisions[0]) || {};
-      if (rev.index) idx = String(rev.index).split(".")[0];
+    var idx = latestProductIndexBase(p);
+    if (!idx && p.index_bases && p.index_bases.length) {
+      idx = String(p.index_bases[p.index_bases.length - 1]);
     }
-    if (!idx) {
-      /* Fallback: wizka z file-index.viz_latest (jak karty siatki). */
-      var fi = global._DAM_FILE_INDEX;
-      var latest = (fi && fi.viz_latest) || [];
-      for (var i = 0; i < latest.length; i++) {
-        var row = latest[i];
-        if (row && row.product_id === p.id && row.thumb_url) return String(row.thumb_url);
-      }
-      return PLACEHOLDER_SVG;
-    }
+    if (!idx) return PLACEHOLDER_SVG;
     var base = String(idx).replace(/[^0-9A-Za-z]+/g, "") || idx;
-    return "data/thumbs/" + slug + "__" + base + "_pl.jpg";
+    var built = "data/thumbs/" + slug + "__" + base + "_pl.jpg";
+    rememberProductThumb(pid, built);
+    return built;
   }
 
-  function enrichLinkedProducts(list) {
-    /* HARD Mode B: never ensureFileIndex/DamSearch.load here — modal open enrich
-       parsing file-index freezes main thread after CTA (shell already painted). */
-    var fi =
-      global._DAM_FILE_INDEX &&
-      global._DAM_FILE_INDEX.products &&
-      global._DAM_FILE_INDEX.products.length
-        ? global._DAM_FILE_INDEX
-        : null;
-    if (!fi) return Promise.resolve(list || []);
-    var byId = productsByIdFromCache();
-    var mapped = (list || []).map(function (lp) {
+  function linkedProductIndexFallback(lp) {
+    if (!lp) return "";
+    var idx = "";
+    if (lp.product_index) idx = String(lp.product_index);
+    else if (lp.index_bases && lp.index_bases.length) idx = String(lp.index_bases[0]);
+    else if (lp.indexes && lp.indexes.length) idx = String(lp.indexes[0]);
+    if (idx && idx.indexOf(".") > 0) idx = idx.split(".")[0];
+    if (idx && idx.replace(/\D/g, "").length >= 6) return idx;
+    var blob = [lp.search_blob, lp.display_name, lp.name, lp.id].join(" ");
+    var m = blob.match(/\b(630\d{4})(?:\.\d{2})?\b/);
+    if (m) return m[1];
+    return "";
+  }
+
+  function mapEnrichedLinkedProducts(list, byId) {
+    byId = byId || {};
+    return (list || []).map(function (lp) {
       if (!lp || !lp.id) return lp;
       var p = byId[lp.id] || lp;
+      var idx =
+        latestProductIndexBase(byId[lp.id] || p) ||
+        lp.product_index ||
+        productIndexOf(p) ||
+        linkedProductIndexFallback(lp) ||
+        linkedProductIndexFallback(p);
       return {
         id: lp.id,
         display_name: lp.display_name || p.display_name || p.name || lp.id,
         thumb_url: lp.thumb_url || productThumb(p),
-        product_index: lp.product_index || productIndexOf(p),
+        product_index: idx,
         path: p.path || lp.path || "",
         search_blob: p.search_blob || lp.search_blob || "",
         category: p.category || lp.category || "",
         subcategory_label: p.subcategory_label || p.subcategory || "",
         tags: p.tags || lp.tags || [],
-        indexes: p.indexes || [],
-        index_bases: p.index_bases || [],
+        indexes: p.indexes || lp.indexes || [],
+        index_bases: p.index_bases || lp.index_bases || [],
         brand: p.brand || "",
       };
     });
-    return Promise.resolve(dedupeLinkedProductRecords(mapped, byId));
+  }
+
+  function enrichLinkedProducts(list) {
+    /* Paint seed first (media-preview); enrich async — load file-index when cache cold. */
+    var byId = productsByIdFromCache();
+    if (Object.keys(byId).length) {
+      return Promise.resolve(dedupeLinkedProductRecords(mapEnrichedLinkedProducts(list, byId), byId));
+    }
+    return ensureFileIndex()
+      .then(function () {
+        var loaded = productsByIdFromCache();
+        return dedupeLinkedProductRecords(mapEnrichedLinkedProducts(list, loaded), loaded);
+      })
+      .catch(function () {
+        return dedupeLinkedProductRecords(mapEnrichedLinkedProducts(list, {}), {});
+      });
   }
 
   /* Pkt 9 brief 2026-07-20: powiekszony podglad miniatury ~400x400 nad popoverem */
@@ -1352,6 +1895,13 @@
         img.removeAttribute("src");
       } else {
         img.onerror = function () {
+          var pathBtn =
+            (data && data.btn && data.btn.getAttribute("data-path")) || "";
+          if (pathBtn && global.__damBrandingThumbFallback) {
+            img.setAttribute("data-path", pathBtn);
+            global.__damBrandingThumbFallback(img);
+            return;
+          }
           img.onerror = null;
           img.classList.add("is-placeholder");
           img.removeAttribute("src");
@@ -1385,11 +1935,14 @@
     scope.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
       function activate() {
         var thumb = btn.querySelector(".dam-assoc-edit-popover__thumb");
-        var labelEl = btn.querySelector(".dam-assoc-edit-popover__label");
+        var labelEl = btn.querySelector(".dam-search-name, .dam-assoc-edit-popover__label");
         var idxBadge = btn.querySelector(".dam-viz-badge--index");
         /* Hover = one on-demand /media via data-preview-src OK (not N× on paint). */
         var src =
           btn.getAttribute("data-preview-src") ||
+          (btn.getAttribute("data-path")
+            ? pickerPreviewFromPath(btn.getAttribute("data-path"))
+            : "") ||
           (thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "") ||
           "";
         setSearchPreview(pop, {
@@ -1642,11 +2195,16 @@
             var rowM = brandingEntryToPickerRow(material) || material;
             return {
               id: rowM.id,
+              kind: "material",
               label: shortAssocLabel(rowM.label || rowM.name || rowM.title),
               thumb: rowM.thumb || brandingThumbUrl(rowM),
               preview_src: rowM.preview_src || pickerPreviewSrc(rowM),
               sub: rowM.marketing_id || rowM.index || marketingIdForBranding(rowM) || "",
               path: rowM.path || "",
+              tags: material.tags || rowM.tags || [],
+              asset_role: material.asset_role || rowM.asset_role || "",
+              media_type: material.media_type || rowM.media_type || "",
+              folder_group_id: material.folder_group_id || rowM.folder_group_id || "",
             };
           }
         } else if (opts.kind === "variant") {
@@ -1735,11 +2293,11 @@
                   if (revIdxL.indexOf(".") > 0) revIdxL = revIdxL.split(".")[0];
                   return {
                     id: id,
-                    label:
-                      (revMatch.folder || revMatch.label || revMatch.name || "Wariant") +
-                      (revMatch.langs && revMatch.langs.length
-                        ? " · " + revMatch.langs.join(", ").toUpperCase()
-                        : ""),
+                    label: revisionPickerLabel(
+                      fullRevP.display_name || fullRevP.name || fullRevP.id,
+                      revMatch,
+                      revIdxL
+                    ),
                     thumb: productThumb(fullRevP),
                     sub: revIdxL,
                     brand: fullRevP.brand || "",
@@ -1833,11 +2391,18 @@
         return actions ? '<span class="dam-assoc-edit-popover__row-actions">' + actions + "</span>" : "";
       }
 
+      var PICKER_INLINE_TAG_MAX = 7;
+
+      function isBrandingMaterialId(id) {
+        return /^M-(IMG|SLI|VID|DOC|AUD|VEC)/i.test(String(id || ""));
+      }
+
       /* Pkt 9: wiersz tagow - marka, kategoria, podkategoria, jezyk, indeks (jak karty viz) */
-      function optionTagsHtml(it) {
+      function optionTagsHtml(it, maxTags) {
+        var limit = maxTags == null ? PICKER_INLINE_TAG_MAX : maxTags;
         var tags = [];
         function tag(v, cls, tip, copyVal) {
-          if (!v) return;
+          if (!v || tags.length >= limit) return;
           var copyAttrs = "";
           if (copyVal) {
             copyAttrs =
@@ -1865,16 +2430,83 @@
           tag(String(lg).toUpperCase(), "dam-viz-badge--lang", "Język");
         });
         tag(it.sub, "dam-viz-badge--index", "Indeks (klik / prawy = kopiuj)", it.sub);
+        if (it.isRevisionRow) {
+          tag("wariant", "dam-viz-badge--lang", "Folder rewizji produktu");
+        }
         if (!tags.length) return "";
-        return '<span class="dam-assoc-edit-popover__tags">' + tags.join("") + "</span>";
+        return tags.join("");
       }
 
-      function optionButtonHtml(it, pinned) {
+      function optionMaterialTagsHtml(it) {
+        if (global.DamBadges && typeof global.DamBadges.renderBranding === "function") {
+          var asset = {
+            id: it.id,
+            tags: it.tags || [],
+            appearance_tags: it.tags || [],
+            asset_role: it.asset_role || "",
+            media_type: it.media_type || "",
+            brand: it.brand || "",
+            campaign_id: it.campaign_id || "",
+            path: it.path || "",
+            name: it.name || it.label || "",
+          };
+          return global.DamBadges.renderBranding(asset, {
+            includeTagTiers: ["primary", "low", "minimal"],
+            maxPerKind: 3,
+            maxTotal: PICKER_INLINE_TAG_MAX,
+            overflow: false,
+          });
+        }
+        var tags = [];
+        function tag(v, cls) {
+          if (!v || tags.length >= PICKER_INLINE_TAG_MAX) return;
+          var norm = String(v).toLowerCase();
+          if (norm === "www" || norm === "strony www") v = "Online";
+          tags.push(
+            '<span class="dam-viz-badge' +
+              (cls ? " " + cls : "") +
+              '">' +
+              esc(v) +
+              "</span>"
+          );
+        }
+        (it.tags || []).forEach(function (t) {
+          tag(String(t), "dam-viz-badge--subcat");
+        });
+        if (it.asset_role) {
+          var roleLbl = String(it.asset_role).replace(/_/g, " ");
+          if (roleLbl === "web banner") roleLbl = "Baner WWW";
+          tag(roleLbl, "dam-viz-badge--cat");
+        }
+        if (it.media_type) tag(String(it.media_type), "dam-viz-badge--carrier");
+        if (it.folder_group_id) {
+          var folderBits = String(it.folder_group_id).split(/[\\/]/).filter(Boolean);
+          folderBits.slice(-2).forEach(function (bit) {
+            tag(bit, "dam-viz-badge--mix");
+          });
+        }
+        return tags.join("");
+      }
+
+      function optionButtonHtml(it, pinned, nestedInGroup) {
         var on = !!selected[it.id];
         var isProd = !!it.isProductRow;
         var isRev = !!it.isRevisionRow;
         var isHint = !!it.isEmptyRevHint;
         var expanded = isProd && expandedProductId === it.id;
+        var isMat =
+          opts.kind === "material" ||
+          it.kind === "material" ||
+          (!isProd && !isRev && isBrandingMaterialId(it.id));
+        var badge =
+          isRev || it.kind === "variant"
+            ? "Wariant"
+            : isProd
+              ? "Produkt"
+              : isMat
+                ? "Materiał"
+                : "Produkt";
+        var hitKind = isRev ? "variant" : isProd ? "product" : isMat ? "material" : "product";
         var trailing = "";
         if (isProd) {
           trailing =
@@ -1882,26 +2514,56 @@
             '<i class="uil uil-angle-' +
             (expanded ? "down" : "right") +
             '"></i></span>';
-        } else if (!isHint) {
-          trailing =
-            '<span class="dam-assoc-edit-popover__check" aria-hidden="true">' +
-            checkIconHtml(on, pinned) +
-            "</span>";
         }
-        var subHint =
-          isProd && it.revCount
-            ? '<span class="dam-assoc-edit-popover__expand-hint">' +
-              esc(String(it.revCount) + (it.revCount === 1 ? " wariant" : " warianty")) +
-              "</span>"
-            : "";
         var rawThumb = it.preview_src || it.thumb || PLACEHOLDER_SVG;
-        var safeThumb = listSafeThumb(it.thumb || PLACEHOLDER_SVG);
+        var thumbCandidate = pickerThumbLazySrc(it);
+        if (!thumbCandidate || thumbCandidate === PLACEHOLDER_SVG) {
+          thumbCandidate = it.thumb || it.thumb_url || rawThumb;
+        }
+        var safeThumb = listSafeThumb(thumbCandidate);
+        if (safeThumb === PLACEHOLDER_SVG && thumbCandidate.indexOf("data/thumbs/") >= 0) {
+          safeThumb = thumbCandidate;
+        }
+        var pathAttr = it.path ? ' data-path="' + esc(it.path) + '"' : "";
+        var thumbOnErr =
+          "window.__damBrandingThumbFallback&&__damBrandingThumbFallback(this)";
+        var tagsInline = isMat ? optionMaterialTagsHtml(it) : optionTagsHtml(it);
+        var metaParts = [];
+        if (isMat) {
+          if (it.id) metaParts.push(it.id);
+          else if (it.sub) metaParts.push(it.sub);
+        } else if (isProd) {
+          if (it.sub) metaParts.push(it.sub);
+          if (it.revCount) {
+            metaParts.push(
+              String(it.revCount) + (it.revCount === 1 ? " wariant" : " warianty")
+            );
+          }
+        } else if (isRev) {
+          if (it.sub) metaParts.push(it.sub);
+        } else {
+          if (it.sub) metaParts.push(it.sub);
+          if (it.id && it.id !== it.label) metaParts.push(it.id);
+        }
+        var metaHtml = metaParts.length
+          ? '<span class="dam-search-meta">' + esc(metaParts.join(" · ")) + "</span>"
+          : "";
+        var tagsBlock = tagsInline
+          ? '<span class="dam-search-hit__tags">' + tagsInline + "</span>"
+          : "";
+        var checkHtml =
+          '<span class="dam-search-hit__check' +
+          (on ? " is-on" : "") +
+          '" aria-hidden="true">' +
+          checkIconHtml(on, pinned) +
+          "</span>";
         return (
-          '<div class="dam-assoc-edit-popover__opt-row' +
-          (isRev ? " dam-assoc-edit-popover__opt-row--revision" : "") +
+          '<div class="dam-assoc-edit-popover__opt-row dam-search-hit dam-search-hit--' +
+          esc(hitKind) +
+          (isRev || nestedInGroup ? " dam-search-hit--nested" : "") +
           (isHint ? " is-hint" : "") +
           '">' +
-          '<button type="button" class="dam-assoc-edit-popover__opt' +
+          '<button type="button" class="dam-assoc-edit-popover__opt dam-search-hit__row' +
           (on ? " is-selected" : "") +
           (pinned ? " is-pinned" : "") +
           (isRev ? " dam-assoc-edit-popover__opt--revision" : "") +
@@ -1912,25 +2574,32 @@
           '" data-preview-src="' +
           esc(rawThumb) +
           '"' +
+          pathAttr +
           (isProd
             ? ' aria-expanded="' + (expanded ? "true" : "false") + '" title="Kliknij, aby rozwinąć warianty"'
             : "") +
           (isHint ? " disabled" : "") +
           ">" +
-          '<span class="dam-assoc-edit-popover__thumb-wrap">' +
-          '<img class="dam-assoc-edit-popover__thumb" src="' +
+          '<span class="dam-assoc-edit-popover__thumb-wrap dam-search-hit__thumb-wrap">' +
+          '<img class="dam-assoc-edit-popover__thumb dam-search-hit__thumb"' +
+          pathAttr +
+          ' src="' +
           esc(safeThumb) +
-          '" alt="" loading="lazy" onerror="this.src=\'' +
-          PLACEHOLDER_SVG.replace(/'/g, "%27") +
-          "'\">" +
+          '" alt="" loading="lazy" onerror="' +
+          thumbOnErr +
+          '">' +
           "</span>" +
-          '<span class="dam-assoc-edit-popover__meta">' +
-          '<span class="dam-assoc-edit-popover__label">' +
+          '<span class="dam-search-hit__body">' +
+          '<span class="dam-search-hit__badge">' +
+          esc(badge) +
+          "</span>" +
+          '<span class="dam-search-name">' +
           esc(it.label) +
           "</span>" +
-          subHint +
-          optionTagsHtml(it) +
+          tagsBlock +
+          metaHtml +
           "</span>" +
+          checkHtml +
           trailing +
           "</button>" +
           (isHint ? "" : rowActionsHtml(it)) +
@@ -1938,14 +2607,94 @@
         );
       }
 
+      function persistPinnedRemoval(removedId) {
+        var remaining = pinnedIds.slice();
+        if (opts.kind === "material") {
+          var productId = String(
+            (opts.productContext && opts.productContext.id) ||
+              (opts.groupContext && opts.groupContext.product_id) ||
+              ""
+          ).trim();
+          if (!productId) return;
+          var prevMat = (opts.selectedIds || opts.pinnedIds || []).slice();
+          opts.selectedIds = remaining.slice();
+          saveProductMaterialSuggestions(productId, remaining, prevMat).then(function (res) {
+            if (res && res.ok !== false) {
+              if (opts.assocCtx) opts.assocCtx.selectedIds = remaining.slice();
+              if (opts.assocCtx && typeof opts.assocCtx.onRefresh === "function") {
+                opts.assocCtx.onRefresh({ materialIds: remaining, skipReload: true });
+              }
+            }
+          });
+          return;
+        }
+        if (opts.kind === "product") {
+          var actxP = opts.assocCtx;
+          if (!actxP || !actxP.asset) return;
+          var prevPids = collectLinkedIdsFromCtx(actxP, "product");
+          var prevVidsP = collectLinkedIdsFromCtx(actxP, "variant");
+          var nextPids = dedupeProductIds(
+            remaining,
+            productsByIdFromCache(),
+            linkedMetaByIdFromCtx(actxP)
+          );
+          patchCtxProductIds(actxP, nextPids);
+          flushOptimisticAssocUi(actxP, nextPids, prevVidsP);
+          saveAssociations(actxP, nextPids, prevVidsP, { silentToast: true });
+          return;
+        }
+        if (opts.productSearchForVariants) {
+          var actxV = opts.assocCtx || {};
+          var parsed = parseRevisionPickerKey(removedId);
+          if (parsed && typeof actxV.onRemoveProductVariant === "function") {
+            actxV.onRemoveProductVariant("path|" + parsed.revisionPath, parsed.revisionPath);
+            return;
+          }
+          var pool = opts.variantCandidates || (actxV.groupContext && actxV.groupContext.variants) || [];
+          var hit = pool.find(function (v) {
+            return v && String(v.id || v.path || "") === String(removedId);
+          });
+          if (hit && typeof actxV.onRemoveProductVariant === "function") {
+            var vkey =
+              (hit.lang ? hit.lang + "|" : "") +
+              String(hit.index_base || hit.index || "").split(".")[0];
+            actxV.onRemoveProductVariant(vkey || "path|" + (hit.path || removedId), hit.path || removedId);
+          }
+          return;
+        }
+        if (opts.kind === "variant") {
+          var actxVar = opts.assocCtx;
+          if (!actxVar || !actxVar.asset) return;
+          var prevP = collectLinkedIdsFromCtx(actxVar, "product");
+          var nextV = remaining.slice();
+          patchCtxVariantIds(actxVar, nextV);
+          flushOptimisticAssocUi(actxVar, prevP, nextV);
+          saveAssociations(actxVar, prevP, nextV, { silentToast: true });
+        }
+      }
+
       function bindOptionButtons(scope) {
         if (!scope) return;
         bindThumbZoom(scope);
         bindSearchPreview(pop, scope);
+        hydratePickerThumbs(scope);
         scope.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
           var id = btn.getAttribute("data-id");
           function toggle() {
             if (String(id).indexOf("rev-empty:") === 0) return;
+            var isPinnedRow = btn.classList.contains("is-pinned") || !!pinnedSet[id];
+            if (isPinnedRow) {
+              delete selected[id];
+              pinnedIds = pinnedIds.filter(function (pid) {
+                return pid !== id;
+              });
+              delete pinnedSet[id];
+              renderPinned();
+              var sPin = pop.querySelector("#damAssocEditSearch");
+              scheduleListPaint(sPin ? sPin.value : "");
+              persistPinnedRemoval(id);
+              return;
+            }
             if (opts.productSearchForVariants && String(id).indexOf("rev:") !== 0) {
               expandedProductId = expandedProductId === id ? null : id;
               var sExpand = pop.querySelector("#damAssocEditSearch");
@@ -1999,23 +2748,13 @@
             var s = pop.querySelector("#damAssocEditSearch");
             scheduleListPaint(s ? s.value : "");
           }
-          /* Pkt 27-29: odznaczenie AKTUALNEGO skojarzenia = akcja destrukcyjna ->
-             hold-to-delete (ring). Dodawanie / ponowne zaznaczenie = zwykly klik. */
-          var isRemove = btn.classList.contains("is-pinned") && !!selected[id];
-          if (isRemove && global.DamDanger && typeof global.DamDanger.bind === "function") {
-            global.DamDanger.bind(btn, {
-              label: "Usun skojarzenie",
-              hint: "Przytrzymaj 3 sekundy, aby usunac skojarzenie",
-              holdMs: 3000,
-              onConfirm: toggle,
-            });
-          } else {
-            btn.addEventListener("click", function (e) {
-              e.preventDefault();
-              e.stopPropagation();
-              toggle();
-            });
-          }
+          /* Pinned X = natychmiastowe odpięcie; wyniki wyszukiwania = zwykły klik (dodaj).
+             DamDanger hold tylko gdy celowo usuwamy — NIE na dodawanie z listy (blokuje toggle). */
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggle();
+          });
         });
         scope.querySelectorAll("[data-row-folder]").forEach(function (btn) {
           btn.addEventListener("click", function (e) {
@@ -2052,17 +2791,20 @@
       function activatePreviewFromBtn(btn, allowMedia) {
         if (!btn) return;
         var thumb = btn.querySelector(".dam-assoc-edit-popover__thumb");
-        var labelEl = btn.querySelector(".dam-assoc-edit-popover__label");
+        var labelEl = btn.querySelector(".dam-search-name, .dam-assoc-edit-popover__label");
         var idxBadge = btn.querySelector(".dam-viz-badge--index");
         /* HARD: auto-activate after renderOptions NEVER uses /media (NFS stall = app freeze).
            Hover/focus may pass allowMedia=true for one on-demand preview. */
-        var raw =
+        var src =
           (allowMedia ? btn.getAttribute("data-preview-src") : "") ||
+          (allowMedia && btn.getAttribute("data-path")
+            ? pickerPreviewFromPath(btn.getAttribute("data-path"))
+            : "") ||
           (thumb ? thumb.getAttribute("src") || thumb.currentSrc || thumb.src : "") ||
           "";
-        var src = allowMedia ? raw : listSafeThumb(raw);
+        var safeSrc = allowMedia ? src : listSafeThumb(src);
         setSearchPreview(pop, {
-          thumb: src,
+          thumb: safeSrc,
           label: labelEl ? labelEl.textContent : btn.getAttribute("data-id") || "",
           sub: idxBadge ? idxBadge.textContent : "",
           btn: btn,
@@ -2072,6 +2814,12 @@
       function renderPinned() {
         var pinnedEl = pop.querySelector(".dam-assoc-edit-popover__pinned");
         if (!pinnedEl) return;
+        var prevThumbs = {};
+        pinnedEl.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
+          var pid = btn.getAttribute("data-id");
+          var img = btn.querySelector(".dam-assoc-edit-popover__thumb");
+          if (pid && img && img.src) prevThumbs[pid] = img.src;
+        });
         if (!pinnedIds.length) {
           pinnedEl.innerHTML = '<p class="dam-assoc-edit-popover__empty-msg">Brak aktualnych skojarzen.</p>';
           setSearchPreview(pop, null);
@@ -2082,9 +2830,15 @@
             return optionButtonHtml(lookupItem(id), true);
           })
           .join("");
+        pinnedEl.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
+          var pid = btn.getAttribute("data-id");
+          if (!pid || !prevThumbs[pid]) return;
+          var img = btn.querySelector(".dam-assoc-edit-popover__thumb");
+          if (img) img.src = prevThumbs[pid];
+        });
         bindOptionButtons(pinnedEl);
-        /* Podglad: pierwsza przypieta miniatura (nie "Brak miniatury" przy otwarciu). */
-        activatePreviewFromBtn(pinnedEl.querySelector(".dam-assoc-edit-popover__opt[data-id]"));
+        /* Podglad: pierwsza przypieta miniatura (hover = /media on-demand). */
+        activatePreviewFromBtn(pinnedEl.querySelector(".dam-assoc-edit-popover__opt[data-id]"), true);
       }
 
       function showListMessage(msg) {
@@ -2299,6 +3053,10 @@
             });
           }
         } else if (opts.kind === "variant" && opts.brandingSearch) {
+          if (q.length >= 2 && !materialEntries.length && materialFetchTimer) {
+            showListMessage("Szukam materiałów…");
+            return;
+          }
           items = collectBrandingPickerRows(materialEntries.length ? materialEntries : [], {
             pinnedSet: pinnedSet,
             q: q,
@@ -2393,10 +3151,44 @@
           else setSearchPreview(pop, null);
           return;
         }
-        listEl.innerHTML = items.map(function (it) {
-          return optionButtonHtml(it, false);
-        }).join("");
+        var prevListThumbs = {};
+        listEl.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
+          var pid = btn.getAttribute("data-id");
+          var img = btn.querySelector(".dam-assoc-edit-popover__thumb");
+          if (pid && img && img.src && img.src.indexOf("data:image/svg") < 0) {
+            prevListThumbs[pid] = img.src;
+          }
+        });
+        listEl.innerHTML =
+          opts.kind === "material" || (opts.kind === "variant" && opts.brandingSearch)
+            ? renderPickerFolderGroups(items, optionButtonHtml)
+            : items
+                .map(function (it) {
+                  return optionButtonHtml(it, false);
+                })
+                .join("");
+        listEl.querySelectorAll(".dam-assoc-edit-popover__opt[data-id]").forEach(function (btn) {
+          var pid = btn.getAttribute("data-id");
+          if (!pid || !prevListThumbs[pid]) return;
+          var img = btn.querySelector(".dam-assoc-edit-popover__thumb");
+          if (img) img.src = prevListThumbs[pid];
+        });
         bindOptionButtons(listEl);
+        if (
+          items.length &&
+          global.DamPreviewTruth &&
+          typeof global.DamPreviewTruth.warmThumbs === "function"
+        ) {
+          global.DamPreviewTruth.warmThumbs(
+            items
+              .map(function (it) {
+                return it && it.path;
+              })
+              .filter(Boolean)
+              .slice(0, 24),
+            "grid"
+          );
+        }
         /* Preferuj podglad z AKTUALNYCH (pinned), nie z pierwszego wyniku wyszukiwania. */
         var pinnedBtn = pop.querySelector(
           ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt[data-id]"
@@ -2459,14 +3251,27 @@
           if (!pickerStillOpen()) return;
           loadBrandingMaterialCandidates(
             Object.assign({}, opts, { bootstrapQuery: query })
-          ).then(function (entries) {
-            if (!pickerStillOpen()) return;
-            if (entries && entries.length) {
-              materialEntries = entries.slice(0, PICKER_LIST_CAP);
-            }
-            renderPinned();
-            renderOptionsDebounced(search ? search.value : query);
-          });
+          )
+            .then(function (entries) {
+              materialFetchTimer = null;
+              if (!pickerStillOpen()) return;
+              materialEntries = (entries || []).slice(0, PICKER_LIST_CAP);
+              renderPinned();
+              var qq = search ? search.value : query;
+              if (typeof requestAnimationFrame === "function") {
+                requestAnimationFrame(function () {
+                  renderOptions(qq);
+                });
+              } else {
+                renderOptions(qq);
+              }
+            })
+            .catch(function () {
+              materialFetchTimer = null;
+              if (!pickerStillOpen()) return;
+              renderPinned();
+              renderOptions(search ? search.value : query);
+            });
         }, 220);
       }
 
@@ -2617,12 +3422,25 @@
 
       pop._damAssocRebindChrome = function () {
         var closeBtn = pop.querySelector("[data-close]");
-        if (closeBtn) closeBtn.onclick = closePicker;
+        if (closeBtn) {
+          if (
+            global.DamModalShared &&
+            typeof global.DamModalShared.bindModalClose === "function"
+          ) {
+            global.DamModalShared.bindModalClose(closeBtn, closePicker);
+          } else {
+            closeBtn.onclick = closePicker;
+          }
+        }
         var cancelEl = pop.querySelector("[data-cancel]");
         if (cancelEl) cancelEl.onclick = closePicker;
         var confirmEl = pop.querySelector("[data-confirm]");
         if (confirmEl) {
           confirmEl.onclick = function () {
+            /* Parity product/variant/material: pinned must survive confirm even if toggle race. */
+            pinnedIds.forEach(function (pid) {
+              if (selected[pid] !== false) selected[pid] = true;
+            });
             var ids = Object.keys(selected).filter(function (k) {
               return selected[k];
             });
@@ -2633,15 +3451,11 @@
                 })
               ));
             }
-            if (opts.brandingSearch && opts.kind === "variant") {
-              ids = filterBrandingVariantIdsForPrimary(
-                opts.asset || {},
-                ids,
-                brandingPathById(materialEntries)
-              );
-            }
+            /* Do NOT filterBrandingVariantIdsForPrimary on confirm — strips cross-folder picks
+               (np. br-049510 cynamonka on M-GOG805627) while still showing "Zapisano". */
             if (typeof opts.onConfirmVariants === "function") {
               var picks = ids.map(parseRevisionPickerKey).filter(Boolean);
+              picks = expandPicksToAllProductRevisions(picks.length ? picks : ids);
               if (opts.productSearchForVariants && !picks.length) {
                 toast("Rozwiń produkt i zaznacz wariant (folder rewizji).");
                 return;
@@ -2737,6 +3551,46 @@
     return picked.filePath || picked.folder || picked.path || "";
   }
 
+  function resolveVizVariantByIndex(id) {
+    var idx = String(id || "").trim();
+    if (!/^\d{6}(\.\d+)?$/.test(idx)) return null;
+    var base = idx.split(".")[0];
+    var fi = global._DAM_FILE_INDEX;
+    var latest = (fi && fi.viz_latest) || [];
+    for (var i = 0; i < latest.length; i++) {
+      var row = latest[i];
+      if (!row) continue;
+      if (String(row.index || "") === idx || String(row.index_base || "") === base) {
+        return {
+          id: row.path || "vizidx:" + idx,
+          name: (row.product_name || base) + " " + (row.index || idx),
+          label: row.product_name || base,
+          thumb_url: row.thumb_url || "",
+          path: row.path || "",
+          index: row.index || idx,
+          marketing_id: base,
+        };
+      }
+    }
+    return null;
+  }
+
+  function brandingAssetFromIndex(id) {
+    id = String(id || "").trim();
+    if (!id) return null;
+    var idx = window.__damBrandingIndex;
+    if (!idx || !idx.assets) return null;
+    var hit = null;
+    (idx.assets || []).some(function (a) {
+      if (a && a.id === id) {
+        hit = a;
+        return true;
+      }
+      return false;
+    });
+    return hit;
+  }
+
   function enrichBrandingAssetsByIds(ids) {
     ids = (ids || [])
       .map(function (id) {
@@ -2744,6 +3598,19 @@
       })
       .filter(Boolean);
     if (!ids.length) return Promise.resolve([]);
+    var indexIds = ids.filter(function (id) {
+      return /^\d{6}(\.\d+)?$/.test(id);
+    });
+    var brIds = ids.filter(function (id) {
+      return !/^\d{6}(\.\d+)?$/.test(id);
+    });
+    if (!brIds.length) {
+      return Promise.resolve(
+        ids.map(function (id) {
+          return resolveVizVariantByIndex(id) || { id: id, name: id };
+        })
+      );
+    }
     var include = ids.slice(0, 40).join(",");
     var url =
       bridgeUrl() +
@@ -2770,13 +3637,69 @@
           };
         });
         return ids.map(function (id) {
+          if (/^\d{6}(\.\d+)?$/.test(id)) {
+            return resolveVizVariantByIndex(id) || { id: id, name: id };
+          }
+          var fromIdx = brandingAssetFromIndex(id);
+          if (fromIdx) {
+            return {
+              id: fromIdx.id,
+              name: fromIdx.name || fromIdx.label || fromIdx.id,
+              label: fromIdx.label || fromIdx.name || fromIdx.id,
+              path: fromIdx.path || "",
+              thumb_url: fromIdx.thumb_url || brandingThumbUrl(fromIdx),
+              marketing_id: marketingIdForBranding(fromIdx) || fromIdx.id,
+              index: fromIdx.index || fromIdx.product_index || "",
+            };
+          }
           return byId[id] || { id: id, name: id };
         });
       })
       .catch(function () {
         return ids.map(function (id) {
+          if (/^\d{6}(\.\d+)?$/.test(id)) {
+            return resolveVizVariantByIndex(id) || { id: id, name: id };
+          }
+          var fromIdx = brandingAssetFromIndex(id);
+          if (fromIdx) {
+            return {
+              id: fromIdx.id,
+              name: fromIdx.name || fromIdx.label || fromIdx.id,
+              label: fromIdx.label || fromIdx.name || fromIdx.id,
+              path: fromIdx.path || "",
+              thumb_url: fromIdx.thumb_url || brandingThumbUrl(fromIdx),
+              marketing_id: marketingIdForBranding(fromIdx) || fromIdx.id,
+              index: fromIdx.index || fromIdx.product_index || "",
+            };
+          }
           return { id: id, name: id };
         });
+      });
+  }
+
+  function fetchPickerJson(url, timeoutMs) {
+    timeoutMs = timeoutMs || 12000;
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = ctrl
+      ? setTimeout(function () {
+          try {
+            ctrl.abort();
+          } catch (eAbort) {
+            /* ignore */
+          }
+        }, timeoutMs)
+      : null;
+    return fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: ctrl ? ctrl.signal : undefined,
+    })
+      .then(function (r) {
+        if (timer) clearTimeout(timer);
+        return r.json();
+      })
+      .catch(function (err) {
+        if (timer) clearTimeout(timer);
+        throw err;
       });
   }
 
@@ -2976,15 +3899,22 @@
     }
     return ensureBridgeSession()
       .then(function () {
+        var ctrl = new AbortController();
+        var timer = setTimeout(function () {
+          ctrl.abort();
+        }, 5000);
         return fetch(bridgeUrl() + "/branding/asset-associations", {
           method: "POST",
           headers: authHeaders(),
+          signal: ctrl.signal,
           body: JSON.stringify({
             asset_id: ctx.asset.id,
             folder_group_id: (ctx.groupContext && ctx.groupContext.folder_group_id) || "",
             linked_product_ids: productIds || [],
             linked_variant_ids: variantIds || [],
           }),
+        }).finally(function () {
+          clearTimeout(timer);
         });
       })
       .then(function (r) {
@@ -3002,18 +3932,31 @@
       .then(function (res) {
         /* Pomin "Zapisano" gdy zaraz leci toastUndo (pkt 32 - bez podwojnego toasta). */
         if (!opts.silentToast) toast("Zapisano skojarzenia");
+        if (_assocOverrides && _assocOverrides.assets && ctx.asset && ctx.asset.id) {
+          _assocOverrides.assets[ctx.asset.id] = {
+            linked_product_ids: (productIds || []).slice(),
+            linked_variant_ids: (variantIds || []).slice(),
+            folder_group_id: (ctx.groupContext && ctx.groupContext.folder_group_id) || "",
+          };
+        }
         if (global.DamBranding && typeof global.DamBranding.clearComputeCache === "function") {
           global.DamBranding.clearComputeCache();
         }
         if (typeof ctx.onSaved === "function") ctx.onSaved(productIds, variantIds);
+        bustAssocThumbsInScope();
         return res;
       })
       .catch(function (err) {
         var message = (err && err.message) || String(err);
+        if (message === "AbortError" || /aborted/i.test(message)) {
+          message = "timeout_5s";
+        }
         toast(
           message === "login_required"
             ? "Zaloguj się, aby zapisać skojarzenia."
-            : "Błąd zapisu: " + message
+            : message === "timeout_5s"
+              ? "Zapis skojarzeń przekroczył 5 s — spróbuj ponownie."
+              : "Błąd zapisu: " + message
         );
         return { ok: false, error: message };
       });
@@ -3062,6 +4005,13 @@
       })
       .then(function () {
         toast("Zapisano skojarzone materiały.");
+        bustMaterialAssocCaches();
+        if (
+          global.DamViz &&
+          typeof global.DamViz.persistLinkedMaterials === "function"
+        ) {
+          global.DamViz.persistLinkedMaterials(productId, next);
+        }
         return { ok: true };
       })
       .catch(function (err) {
@@ -3151,11 +4101,12 @@
       (gc.linked_product_ids || []).forEach(add);
       return ids;
     }
-    (asset.linked_products || []).forEach(function (p) {
-      if (p && p.id) add(p.id);
-    });
-    (asset.linked_product_ids || []).forEach(add);
-    (asset.folder_linked_product_ids || []).forEach(add);
+    effectiveLinkedProductIds(asset).forEach(add);
+    if (!ids.length) {
+      (asset.linked_products || []).forEach(function (p) {
+        if (p && p.id) add(p.id);
+      });
+    }
     if (kind === "product") {
       return dedupeProductIds(ids, productsByIdFromCache(), linkedMetaByIdFromCtx(ctx));
     }
@@ -3173,15 +4124,23 @@
     var gc = ctx.groupContext = ctx.groupContext || {};
     var asset = ctx.asset || {};
     if (kind === "product") {
-      var rawIds = (asset.linked_product_ids || asset.folder_linked_product_ids || []).slice();
-      if (rawIds.length > selectedIds.length) {
-        gc.linked_product_ids = selectedIds.slice();
-        patchLinkedProductsWithFolderPick(ctx, selectedIds, null);
-        var prevVids = collectLinkedIdsFromCtx(ctx, "variant");
-        saveAssociations(ctx, selectedIds, prevVids, { silentToast: true }).then(function () {
-          if (typeof ctx.onRefresh === "function") ctx.onRefresh();
-        });
-        toast("Usunięto duplikaty indeksu ze skojarzeń");
+      var explicit = (asset.linked_product_ids || []).slice();
+      if (explicit.length) {
+        var dedupedExplicit = dedupeProductIds(
+          explicit,
+          productsByIdFromCache(),
+          linkedMetaByIdFromCtx(ctx)
+        );
+        if (dedupedExplicit.length !== explicit.length) {
+          gc.linked_product_ids = dedupedExplicit.slice();
+          patchLinkedProductsWithFolderPick(ctx, dedupedExplicit, null);
+          var prevVidsDedupe = collectLinkedIdsFromCtx(ctx, "variant");
+          saveAssociations(ctx, dedupedExplicit, prevVidsDedupe, { silentToast: true }).then(function () {
+            if (typeof ctx.onRefresh === "function") ctx.onRefresh();
+          });
+          toast("Usunięto duplikaty indeksu ze skojarzeń");
+          selectedIds = dedupedExplicit.slice();
+        }
       }
     }
     if (gc.product_id) excludeIds.push(gc.product_id);
@@ -3189,6 +4148,7 @@
     if (gc.product_index) excludeIndexes.push(gc.product_index);
     if (gc.index) excludeIndexes.push(gc.index);
     if (ctx.asset && ctx.asset.product_id) excludeIds.push(ctx.asset.product_id);
+    if (ctx.productContext && ctx.productContext.id) excludeIds.push(ctx.productContext.id);
     if (ctx.asset && ctx.asset.product_index) excludeIndexes.push(ctx.asset.product_index);
     /* Kontekst wizualizacji / produktu: filtr typu produktu (bez innych wizualizacji) */
     var filterType = kind === "product" ? "product" : "all";
@@ -3254,13 +4214,23 @@
         groupContext: gc,
         assocCtx: ctx,
         onConfirm: function (ids) {
-          ctx.selectedIds = (ids || []).slice();
-          if (typeof ctx.onRefresh === "function") ctx.onRefresh();
-          saveProductMaterialSuggestions(productId, ids, prevMatIds).then(function (res) {
-            if (!res || res.ok === false) {
-              ctx.selectedIds = prevMatIds.slice();
-              if (typeof ctx.onRefresh === "function") ctx.onRefresh();
-            }
+          var nextIds = (ids || []).slice();
+          ctx.selectedIds = nextIds.slice();
+          flushOptimisticMaterialUi(ctx, nextIds).then(function () {
+            saveProductMaterialSuggestions(productId, nextIds, prevMatIds).then(function (res) {
+              if (!res || res.ok === false) {
+                ctx.selectedIds = prevMatIds.slice();
+                flushOptimisticMaterialUi(ctx, prevMatIds);
+                return;
+              }
+              if (typeof ctx.onRefresh === "function") {
+                ctx.onRefresh({
+                  materialIds: nextIds,
+                  enriched: ctx.materialsList || [],
+                  skipReload: true,
+                });
+              }
+            });
           });
         },
       };
@@ -3297,11 +4267,7 @@
             ctx.onConfirmVariants(ids);
             return;
           }
-          var prevPids = (gc.linked_products || [])
-            .map(function (p) {
-              return p && p.id;
-            })
-            .filter(Boolean);
+          var prevPids = collectLinkedIdsFromCtx(ctx, "product");
           var vids = ids || [];
           flushOptimisticAssocUi(ctx, prevPids, vids);
           saveAssociations(ctx, prevPids, vids, { silentToast: false }).then(function (res) {
@@ -3335,21 +4301,19 @@
           ctx.onConfirmVariants(ids);
           return;
         }
-        var prevPids = (gc.linked_products || [])
-          .map(function (p) {
-            return p && p.id;
-          })
-          .filter(Boolean);
-        var prevVids = (gc.variants || [])
-          .map(function (v) {
-            return v && v.id;
-          })
-          .filter(Boolean);
+        var prevPids = collectLinkedIdsFromCtx(ctx, "product");
+        var prevVids = collectLinkedIdsFromCtx(ctx, "variant");
         var pids = kind === "product" ? ids : prevPids;
         var vids = kind === "variant" ? ids : prevVids;
 
         if (kind === "product") {
           pids = dedupeProductIds(pids, productsByIdFromCache(), linkedMetaByIdFromCtx(ctx));
+          var addedProducts = pids.filter(function (pid) {
+            return prevPids.indexOf(pid) === -1;
+          });
+          if (addedProducts.length) {
+            vids = mergeVariantIdsForProducts(vids, addedProducts);
+          }
         }
 
         if (kind === "product" && ctx.lastFolderPick) {
@@ -3376,10 +4340,10 @@
             global.DamDanger.toastUndo({
               message:
                 removed.length === 1
-                  ? "Usunieto 1 skojarzenie"
-                  : "Usunieto skojarzenia: " + removed.length,
+                  ? "Usunięto 1 skojarzenie"
+                  : "Usunięto skojarzenia: " + removed.length,
               actionLabel: "Cofnij",
-              duration: 8000,
+              duration: 1000,
               onUndo: function () {
                 flushOptimisticAssocUi(ctx, prevPids, prevVids);
                 saveAssociations(ctx, prevPids, prevVids, { silentToast: true }).then(function () {
@@ -3523,9 +4487,9 @@
     patchCtxProductIds(ctx, nextPids);
     if (typeof ctx.onRefresh === "function") ctx.onRefresh();
     return seedEnrichAssocSave(ctx, nextPids, prevVids, {
-      message: "Usunieto 1 skojarzenie",
+      message: "Usunięto 1 skojarzenie",
       actionLabel: "Cofnij",
-      duration: 8000,
+      duration: 1000,
       onUndo: function () {
         restoreSeed();
         saveAssociations(ctx, prevPids, prevVids, { silentToast: true });
@@ -3549,9 +4513,9 @@
     patchCtxVariantIds(ctx, nextVids);
     if (typeof ctx.onRefresh === "function") ctx.onRefresh();
     return seedEnrichAssocSave(ctx, prevPids, nextVids, {
-      message: "Usunieto 1 wariant",
+      message: "Usunięto 1 wariant",
       actionLabel: "Cofnij",
-      duration: 8000,
+      duration: 1000,
       onUndo: function () {
         restoreSeed();
         saveAssociations(ctx, prevPids, prevVids, { silentToast: true });
@@ -3616,7 +4580,7 @@
       global.DamDanger.toastUndo({
         message: "Ukryto " + label + " z listy (nie usunięto z dysku)",
         actionLabel: "Cofnij",
-        duration: 8000,
+        duration: 1000,
         onUndo: function () {
           var next = readAllFileSoftHide().filter(function (k) {
             return k !== key;
@@ -3752,6 +4716,20 @@
     );
   }
 
+  /** Assoc pane scope: branding-split (products + materials) before inner --materials col. */
+  function resolveAssocPaneScope(el) {
+    if (!el) return el;
+    if (el.closest) {
+      var brandingSplit = el.closest(".dam-media-preview__assoc-col--branding-split");
+      if (brandingSplit) return brandingSplit;
+      var vizPane = el.closest(".dam-viz-modal__assoc-pane");
+      if (vizPane) return vizPane;
+      var assocCol = el.closest(".dam-media-preview__assoc-col");
+      if (assocCol) return assocCol;
+    }
+    return el;
+  }
+
   /**
    * Wire Shift-minus onto studio "Pokaż wszystkie" quality tiles (.all-file).
    * Action = soft-hide from picker (session), never disk delete.
@@ -3873,6 +4851,13 @@
     }
     collectGrids(assocEl);
     collectGrids(scope);
+    /* Viz: product-variant strip lives outside assoc-pane — collect from modal root. */
+    var vizModal =
+      (scope && scope.id === "damVizModal" && scope) ||
+      (scope && scope.closest && scope.closest("#damVizModal")) ||
+      (assocEl && assocEl.closest && assocEl.closest("#damVizModal")) ||
+      null;
+    if (vizModal) collectGrids(vizModal);
 
     gridList.forEach(function (grid) {
         var isVariantGrid = grid.classList.contains("dam-media-preview__variant-grid");
@@ -3889,6 +4874,9 @@
             return null;
           }
           if (inElementy) return null;
+          var col = grid.closest(".dam-media-preview__assoc-col") || assocEl;
+          var visibleCta = col && col.querySelector("[data-viz-assoc-cta]:not([hidden])");
+          if (visibleCta) return null;
           var plus = grid.querySelector(".dam-media-preview__assoc-plus-tile");
           if (plus) return plus;
           plus = document.createElement("button");
@@ -3964,6 +4952,26 @@
           });
         });
 
+        /* Viz modal: WARIANTY PRODUKTU (button.dam-viz-modal__variant, not assoc-item). */
+        grid.querySelectorAll(".dam-viz-modal__variant[data-variant-key]").forEach(function (item) {
+          wireQuickMinusControl(item, grid, function () {
+            var vkey = item.getAttribute("data-variant-key") || "";
+            var vpath = item.getAttribute("data-path") || "";
+            if (typeof ctx.onRemoveProductVariant === "function") {
+              ctx.onRemoveProductVariant(vkey, vpath);
+              return;
+            }
+            var modalRoot = resolveModalScope(scope);
+            var vctx =
+              (modalRoot && modalRoot._damVizVariantsCtx) ||
+              (modalRoot && modalRoot._damAssocCtx) ||
+              null;
+            if (vctx && typeof vctx.onRemoveProductVariant === "function") {
+              vctx.onRemoveProductVariant(vkey, vpath);
+            }
+          });
+        });
+
         bindShiftHoverHost(grid, {
           onShiftOn: function () {
             ensurePlusTile();
@@ -4018,9 +5026,9 @@
     patchAssetProductIds(asset, next);
     if (typeof ctx.onRefresh === "function") ctx.onRefresh();
     return seedEnrichAssocSave(matCtx, next, [], {
-      message: "Usunieto 1 skojarzenie",
+      message: "Usunięto 1 skojarzenie",
       actionLabel: "Cofnij",
-      duration: 8000,
+      duration: 1000,
       onUndo: function () {
         restoreSeed();
         saveAssociations(matCtx, prev, [], { silentToast: true });
@@ -4068,8 +5076,10 @@
     }
     modalRoot =
       modalRoot ||
-      (anchorBtn && anchorBtn.closest("#damVizModal")) ||
-      document.getElementById("damVizModal");
+      (anchorBtn &&
+        (anchorBtn.closest("#damVizModal") || anchorBtn.closest("#damMediaPreview"))) ||
+      document.getElementById("damVizModal") ||
+      document.getElementById("damMediaPreview");
     var col =
       (anchorBtn && anchorBtn.closest(".dam-media-preview__assoc-col")) ||
       (modalRoot &&
@@ -4077,6 +5087,9 @@
           modalRoot.querySelector(".dam-viz-modal__assoc"))) ||
       null;
     var ctx = resolveMaterialsCtx(modalRoot, col);
+    if (!ctx && modalRoot && modalRoot._damMaterialsCtx) {
+      ctx = modalRoot._damMaterialsCtx;
+    }
     /* Pusty stan „Brak skojarzonych materiałów” NIE blokuje CTA — dogeneruj seed z produktu. */
     if (!ctx && modalRoot) {
       var goBtn = modalRoot.querySelector("#damVizModalGoProduct");
@@ -4162,6 +5175,22 @@
       openVizMaterialsEdit315(btn, root);
       return;
     }
+    var mediaPreviewRoot =
+      root && (root.id === "damMediaPreview" ? root : root.closest("#damMediaPreview"));
+    if (kind === "variant" && mediaPreviewRoot) {
+      var colBr = btn.closest(
+        ".dam-media-preview__assoc-col--related, .dam-media-preview__assoc-col--materials"
+      );
+      var actxBr = resolvePickerCtx(mediaPreviewRoot, colBr, "variant");
+      if (colBr && actxBr) {
+        openEditPicker(
+          colBr,
+          "variant",
+          Object.assign({}, actxBr, { brandingSearch: true })
+        );
+        return;
+      }
+    }
     if (kind === "variant" && root && root.id === "damVizModal") {
       openVizAssocVariantsPicker(root, root._damVizAssocCtasOpts || {});
       return;
@@ -4217,16 +5246,56 @@
   function bindMaterialsPane(assocEl, ctx) {
     if (!assocEl || !ctx) return;
     ensureInjectedCss();
-    assocEl._damMaterialsCtx = ctx;
-    assocEl._damAssocCtx = ctx;
-    var vizRoot = assocEl.closest("#damVizModal");
-    if (vizRoot) {
-      vizRoot._damMaterialsCtx = ctx;
-      vizRoot._damAssocCtx = ctx;
-      bindVizAssocCtas(vizRoot, { materialsCtx: ctx });
+    var scopeEl = resolveAssocPaneScope(assocEl);
+    var vizRoot = scopeEl.closest("#damVizModal") || assocEl.closest("#damVizModal");
+    var prev =
+      scopeEl._damMaterialsCtx ||
+      assocEl._damMaterialsCtx ||
+      (vizRoot && vizRoot._damMaterialsCtx) ||
+      {};
+    var merged = Object.assign({}, prev, ctx);
+    var selMap = {};
+    function addSel(id) {
+      id = String(id || "").trim();
+      if (id) selMap[id] = true;
     }
-    wireAssocEditButtons(assocEl, ctx, vizRoot || assocEl);
-    ensureShiftHoverAssocUx(assocEl, ctx);
+    (prev.selectedIds || []).forEach(addSel);
+    (ctx.selectedIds || []).forEach(addSel);
+    (merged.materialsList || merged.shownPrimaries || []).forEach(function (m) {
+      if (m && m.id) addSel(m.id);
+    });
+    merged.selectedIds = Object.keys(selMap);
+    if (!merged.onRefresh && prev.onRefresh) merged.onRefresh = prev.onRefresh;
+    scopeEl._damMaterialsCtx = merged;
+    scopeEl._damAssocCtx = merged;
+    if (scopeEl !== assocEl) {
+      assocEl._damMaterialsCtx = merged;
+      assocEl._damAssocCtx = merged;
+    }
+    if (vizRoot) {
+      vizRoot._damMaterialsCtx = merged;
+      vizRoot._damAssocCtx = merged;
+      bindVizAssocCtas(vizRoot, { materialsCtx: merged });
+    }
+    var mediaRoot =
+      scopeEl.closest("#damMediaPreview") ||
+      assocEl.closest("#damMediaPreview") ||
+      document.getElementById("damMediaPreview");
+    if (mediaRoot) {
+      mediaRoot._damMaterialsCtx = merged;
+      mediaRoot._damAssocCtx = merged;
+      bindAssocCtas(mediaRoot, merged);
+    }
+    wireAssocEditButtons(scopeEl, merged, vizRoot || mediaRoot || scopeEl);
+    ensureShiftHoverAssocUx(scopeEl, merged);
+    if (vizRoot && vizRoot._damVizVariantsCtx) {
+      var variantsHost =
+        vizRoot.querySelector(".dam-viz-modal__product-variants") ||
+        vizRoot.querySelector(".dam-media-preview__variant-grid--product");
+      if (variantsHost) {
+        ensureShiftHoverAssocUx(variantsHost, vizRoot._damVizVariantsCtx);
+      }
+    }
   }
 
   /**
@@ -4253,11 +5322,15 @@
       };
     }
     if (!productId) return null;
+    var persistedMatIds = [];
+    if (global.DamViz && typeof global.DamViz.getLinkedMaterialIds === "function") {
+      persistedMatIds = global.DamViz.getLinkedMaterialIds(productId);
+    }
     var ctx = {
       asset: null,
       materialsList: [],
       shownPrimaries: [],
-      selectedIds: [],
+      selectedIds: persistedMatIds.slice(),
       materialCandidates: [],
       productContext: pc,
       groupContext: Object.assign(
@@ -4276,8 +5349,13 @@
       modal.querySelector(".dam-viz-modal__assoc") ||
       modal.querySelector(".dam-viz-modal__assoc-pane");
     if (pane) {
-      pane._damMaterialsCtx = ctx;
-      pane._damAssocCtx = ctx;
+      var paneScope = resolveAssocPaneScope(pane);
+      paneScope._damMaterialsCtx = ctx;
+      paneScope._damAssocCtx = ctx;
+      if (paneScope !== pane) {
+        pane._damMaterialsCtx = ctx;
+        pane._damAssocCtx = ctx;
+      }
     }
     return ctx;
   }
@@ -4361,6 +5439,7 @@
           return;
         }
         var pid = btn.getAttribute("data-product-id") || "";
+        if (pid && navigateAssocProduct(pid)) return;
         if (pid) location.href = "explorer.html?product=" + encodeURIComponent(pid);
       });
     });
@@ -4384,26 +5463,46 @@
     });
   }
 
+  function navigateAssocProduct(pid) {
+    pid = String(pid || "").trim();
+    if (!pid) return false;
+    if (global.DamViz && typeof global.DamViz.openByProductId === "function") {
+      return !!global.DamViz.openByProductId(pid);
+    }
+    return false;
+  }
+
+  loadAssocOverrides();
+
   global.DamAssocEdit = {
     canEdit: canEditAssoc,
     bind: bindAssocSection,
+    loadAssocOverrides: loadAssocOverrides,
+    applyAssetAssocOverrides: applyAssetAssocOverrides,
+    effectiveLinkedProductIds: effectiveLinkedProductIds,
     /** Shift+/−/plus na panelu materialow (#damVizModalAssoc + branding linked). */
     bindMaterialsPane: bindMaterialsPane,
     /** P1: sync ctx przed async enrich (viz modal open). */
     seedMaterialsCtx: seedMaterialsCtx,
     /** Delegowany listener na CTA sugestie|warianty w #damVizModal. */
     bindVizAssocCtas: bindVizAssocCtas,
+    bindAssocCtas: bindAssocCtas,
     openVizAssocSuggestionsPicker: openVizAssocSuggestionsPicker,
     openVizAssocVariantsPicker: openVizAssocVariantsPicker,
     openVizMaterialsEdit315: openVizMaterialsEdit315,
     ensureShiftHoverAssocUx: ensureShiftHoverAssocUx,
+    resolveAssocPaneScope: resolveAssocPaneScope,
     /** Shift-minus on studio .all-file tiles (soft-hide picker; no disk delete). */
     wireStudioAllFiles: wireStudioAllFiles,
     enrichLinkedProducts: enrichLinkedProducts,
     enrichBrandingAssetsByIds: enrichBrandingAssetsByIds,
+    expandPicksToAllProductRevisions: expandPicksToAllProductRevisions,
+    revisionPickerLabel: revisionPickerLabel,
     dedupeProductIds: dedupeProductIds,
     dedupeLinkedProductRecords: dedupeLinkedProductRecords,
     productThumb: productThumb,
+    latestProductIndexBase: latestProductIndexBase,
+    navigateAssocProduct: navigateAssocProduct,
     openActionMenu: openActionMenu,
     closeActionMenu: closeActionMenu,
     closePicker: closePicker,

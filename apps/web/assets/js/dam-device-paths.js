@@ -286,9 +286,7 @@
 
           "</div>" +
 
-          '<div class="dam-devpath-actions" style="justify-content:flex-start;margin-top:4px">' +
-
-            '<button type="button" class="geex-btn geex-btn--primary" id="damDevPathSave">Zapisz</button>' +
+          '<div class="dam-devpath-actions dam-dialog-actions" style="justify-content:flex-start;margin-top:4px">' +
 
             '<button type="button" class="geex-btn geex-btn--primary-transparent" id="damDevPathCancel">Anuluj</button>' +
 
@@ -303,6 +301,10 @@
               'data-dam-tip="Sprawdza, czy sa wymagane foldery ARCHIWUM / EKSPORT / POLSKA">' +
 
               '<i class="uil uil-check-circle" aria-hidden="true"></i> Sprawdz</button>' +
+
+            '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
+
+            '<button type="button" class="geex-btn geex-btn--primary" id="damDevPathSave">Zapisz</button>' +
 
           "</div>" +
 

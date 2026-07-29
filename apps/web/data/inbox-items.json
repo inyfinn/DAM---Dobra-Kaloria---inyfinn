@@ -1,6 +1,227 @@
 {
   "items": [
     {
+      "id": "inbox_1784900398412",
+      "path": "X:\\NOPE",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "X:\\NOPE\nZglosil: karolina.kubara@kubara.pl\nproposal_id: prop_1784586717375\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-24T13:39:58.412977+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586717375",
+      "requested_by": "karolina.kubara@kubara.pl"
+    },
+    {
+      "id": "inbox_1784900397907",
+      "path": "X:\\NOPE",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "X:\\NOPE\nZglosil: agata.karon@kubara.pl\nproposal_id: prop_1784586716365\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-24T13:39:57.907468+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586716365",
+      "requested_by": "agata.karon@kubara.pl"
+    },
+    {
+      "id": "inbox_1784900397340",
+      "path": "X:\\\\NOPE",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "X:\\\\NOPE\nZglosil: agata.karon@kubara.pl\nproposal_id: prop_1784586554849\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-24T13:39:57.340864+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586554849",
+      "requested_by": "agata.karon@kubara.pl"
+    },
+    {
+      "id": "inbox_1784900396716",
+      "path": "x",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "x\nZglosil: agata.karon@kubara.pl\nproposal_id: prop_1784586539835\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-24T13:39:56.716886+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586539835",
+      "requested_by": "agata.karon@kubara.pl"
+    },
+    {
+      "id": "inbox_1784900396109",
+      "path": "x",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "x\nZglosil: karolina.kubara@kubara.pl\nproposal_id: prop_1784586539044\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-24T13:39:56.109899+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586539044",
+      "requested_by": "karolina.kubara@kubara.pl"
+    },
+    {
+      "id": "inbox_1784900394823",
+      "path": "x",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "x\nZglosil: agata.karon@kubara.pl\nproposal_id: prop_1784586537220\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-24T13:39:54.823662+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586537220",
+      "requested_by": "agata.karon@kubara.pl"
+    },
+    {
+      "id": "inbox_1784846215457",
+      "path": "X:\\NOPE",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "X:\\NOPE\nZglosil: karolina.kubara@kubara.pl\nproposal_id: prop_1784586717375\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-23T22:36:55.457084+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586717375",
+      "requested_by": "karolina.kubara@kubara.pl"
+    },
+    {
+      "id": "inbox_1784846214876",
+      "path": "X:\\NOPE",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "X:\\NOPE\nZglosil: agata.karon@kubara.pl\nproposal_id: prop_1784586716365\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-23T22:36:54.876740+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586716365",
+      "requested_by": "agata.karon@kubara.pl"
+    },
+    {
+      "id": "inbox_1784846214214",
+      "path": "X:\\\\NOPE",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "X:\\\\NOPE\nZglosil: agata.karon@kubara.pl\nproposal_id: prop_1784586554849\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-23T22:36:54.214706+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586554849",
+      "requested_by": "agata.karon@kubara.pl"
+    },
+    {
+      "id": "inbox_1784846213668",
+      "path": "x",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "x\nZglosil: agata.karon@kubara.pl\nproposal_id: prop_1784586539835\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-23T22:36:53.668064+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586539835",
+      "requested_by": "agata.karon@kubara.pl"
+    },
+    {
+      "id": "inbox_1784846213086",
+      "path": "x",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "x\nZglosil: karolina.kubara@kubara.pl\nproposal_id: prop_1784586539044\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-23T22:36:53.086233+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586539044",
+      "requested_by": "karolina.kubara@kubara.pl"
+    },
+    {
+      "id": "inbox_1784846212498",
+      "path": "x",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "x\nZglosil: agata.karon@kubara.pl\nproposal_id: prop_1784586537220\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-23T22:36:52.498607+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784586537220",
+      "requested_by": "agata.karon@kubara.pl"
+    },
+    {
+      "id": "inbox_1784656512847",
+      "path": "X:/Marketing/- POLSKA/- DK/_TEST_PROP_DUMMY2",
+      "read": false,
+      "tags": [
+        "moderacja",
+        "tag",
+        "wygaslo"
+      ],
+      "type": "tag_proposal_expired",
+      "title": "Propozycja wygasla - decyzja admina: DOY",
+      "detail": "test2\nZglosil: ola@test.pl\nproposal_id: prop_1784393454775\nSystem NIE zastosowal zmiany automatycznie - zatwierdz w Ustawieniach.",
+      "created_at": "2026-07-21T17:55:12.847187+00:00",
+      "product_id": "",
+      "proposal_id": "prop_1784393454775",
+      "requested_by": "ola@test.pl"
+    },
+    {
       "id": "inbox_1784586717849",
       "path": "X:\\NOPE",
       "read": false,

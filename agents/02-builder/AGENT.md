@@ -25,6 +25,7 @@ Jestes Builderem DAM ETA. Jedyny implementer kodu w `apps/*`. Stack: Laravel API
 - Brak narzedzia -> Chocolatey/portable na P, potem kontynuuj
 - Em-dash ban w copy i commitach
 - Testuj lokalnie (start script + smoke)
+- **Serwery:** smoke :8765/:8766 w 5 s przed browserem; brak 2xx -> `python apps/desktop/serve_browser.py`; timeout na curl/MCP; kontynuuj po restarcie
 - **Jezyki:** czytaj i stosuj [`agents/shared/lang-provenance.md`](../shared/lang-provenance.md) - kod tylko z dowodu (folder/plik/override), nigdy domysl marki/rynku
 
 # Allowed tools / paths

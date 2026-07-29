@@ -297,27 +297,41 @@
   }
 
   function ensureInvStyles() {
-    if (document.getElementById("damInvAsanaMailCss")) return;
-    var st = document.createElement("style");
-    st.id = "damInvAsanaMailCss";
+    var st = document.getElementById("damInvAsanaMailCss");
+    if (!st) {
+      st = document.createElement("style");
+      st.id = "damInvAsanaMailCss";
+      document.head.appendChild(st);
+    }
+    /* Geex purple checkbox (HARD: never native orange) + fixed left-aligned estimate column */
     st.textContent =
       ".dam-inv-asana__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto}" +
-      ".dam-inv-asana-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:start;padding:10px 12px;border:1px solid #ececf2;border-radius:10px;background:#fafafc}" +
-      ".dam-inv-asana-item__title{font-weight:600;font-size:13px}" +
-      ".dam-inv-asana-item__meta,.dam-inv-asana-item__due,.dam-inv-asana-item__est{font-size:12px;color:#5c5c6a}" +
+      ".dam-inv-asana-item{display:grid;grid-template-columns:28px minmax(0,1fr) minmax(15.5rem,18rem);gap:10px 14px;align-items:start;padding:10px 12px;border:1px solid #ececf2;border-radius:10px;background:#fafafc}" +
+      ".dam-inv-asana-item__main{min-width:0}" +
+      ".dam-inv-asana-item__title{font-weight:600;font-size:13px;display:block}" +
+      ".dam-inv-asana-item__meta,.dam-inv-asana-item__due{font-size:12px;color:#5c5c6a}" +
+      ".dam-inv-asana-item__est{min-width:15.5rem;width:100%;justify-self:stretch;text-align:left;font-size:12px;color:#5c5c6a;line-height:1.35;box-sizing:border-box}" +
+      ".dam-inv-asana-item__est-label{display:block;text-align:left}" +
+      ".dam-inv-asana-item__est-amt{display:block;margin-top:2px;text-align:left;font-size:13px;color:#2a2a32}" +
       ".dam-inv-asana__draft{margin-top:14px;padding:12px;border:1px solid #e2dced;border-radius:12px;background:#faf8ff}" +
       ".dam-inv-asana__draft table{width:100%;border-collapse:collapse;font-size:12.5px}" +
       ".dam-inv-asana__draft th,.dam-inv-asana__draft td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left}" +
+      ".dam-inv-cb{display:inline-flex;align-items:flex-start;margin:0;cursor:pointer}" +
+      ".dam-inv-cb__input{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin:1px 0 0;flex:0 0 20px;border:2px solid var(--dam-border-strong,#a8a3b5);border-radius:6px;background:var(--dam-surface,#fff);accent-color:var(--dam-primary,#ab54db);cursor:pointer;position:relative;transition:background .15s ease,border-color .15s ease}" +
+      ".dam-inv-cb__input:checked{background:var(--dam-primary,#ab54db);border-color:var(--dam-primary,#ab54db)}" +
+      ".dam-inv-cb__input:checked::after{content:\"\";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}" +
+      ".dam-inv-cb__input:focus-visible{outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px}" +
       ".dam-inv-mail{margin-top:24px!important;display:block!important}" +
       ".dam-inv-mail__content{display:flex;flex-direction:column;gap:24px;padding:8px 4px 16px}" +
       ".dam-inv-mail__section{padding:16px 18px;border:1px solid #e8e8ee;border-radius:14px;background:#fff}" +
       ".dam-inv-mail__section h5{margin:0 0 10px;font-size:13px;font-weight:650;text-transform:uppercase;letter-spacing:.04em;color:#5c5c6a}" +
       ".dam-inv-mail__chips{display:flex;flex-wrap:wrap;gap:8px}" +
-      ".dam-inv-mail__chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#f0eef6;border:1px solid #e2dced;font-size:13px}" +
+      ".dam-inv-mail__chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:#f0eef6;border:1px solid #e2dced;font-size:13px;cursor:pointer}" +
       ".dam-inv-mail__list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto}" +
-      ".dam-inv-mail__row{display:flex;gap:10px;align-items:flex-start;font-size:13px}" +
+      ".dam-inv-mail__row{display:grid;grid-template-columns:20px minmax(9.5rem,11rem) minmax(0,1fr);gap:10px 12px;align-items:start;font-size:13px;cursor:pointer}" +
+      ".dam-inv-mail__row-id{min-width:9.5rem;font-variant-numeric:tabular-nums}" +
+      ".dam-inv-mail__row-body{min-width:0;text-align:left;line-height:1.35;color:#3d3d48}" +
       ".dam-inv-mail__actions{display:flex;flex-wrap:wrap;gap:10px}";
-    document.head.appendChild(st);
   }
 
   function loadCostCatalog() {
@@ -415,12 +429,12 @@
         var tid = t.id || t.gid || "t" + idx;
         return (
           '<li class="dam-inv-asana-item">' +
-          '<label><input type="checkbox" class="dam-asana-task-cb" data-task-id="' +
+          '<label class="dam-inv-cb"><input type="checkbox" class="dam-asana-task-cb dam-inv-cb__input" data-task-id="' +
           escapeHtml(String(tid)) +
           '" data-task-idx="' +
           idx +
           '" /></label>' +
-          "<div>" +
+          '<div class="dam-inv-asana-item__main">' +
           '<span class="dam-inv-asana-item__title">' +
           escapeHtml(name) +
           "</span>" +
@@ -436,8 +450,10 @@
             : "") +
           "</div>" +
           '<div class="dam-inv-asana-item__est">' +
+          '<span class="dam-inv-asana-item__est-label">' +
           escapeHtml(est.label) +
-          "<br><strong>" +
+          "</span>" +
+          '<strong class="dam-inv-asana-item__est-amt">' +
           escapeHtml(formatPLN(est.amount)) +
           "</strong></div>" +
           "</li>"
@@ -634,7 +650,7 @@
       '<div class="dam-inv-mail__chips">' +
       DEFAULT_MAIL_TO.map(function (email) {
         return (
-          '<label class="dam-inv-mail__chip"><input type="checkbox" class="dam-mail-to" value="' +
+          '<label class="dam-inv-mail__chip"><input type="checkbox" class="dam-mail-to dam-inv-cb__input" value="' +
           escapeHtml(email) +
           '" checked /> ' +
           escapeHtml(email) +
@@ -657,15 +673,18 @@
         ? invs
             .map(function (inv) {
               return (
-                '<label class="dam-inv-mail__row"><input type="checkbox" class="dam-mail-inv" value="' +
+                '<label class="dam-inv-mail__row">' +
+                '<input type="checkbox" class="dam-mail-inv dam-inv-cb__input" value="' +
                 escapeHtml(inv.id) +
-                '" /> <span><strong>' +
+                '" />' +
+                '<span class="dam-inv-mail__row-id"><strong>' +
                 escapeHtml(inv.id) +
-                "</strong> · " +
+                "</strong></span>" +
+                '<div class="dam-inv-mail__row-body">' +
                 escapeHtml(inv.project || inv.client || "") +
                 " · " +
                 escapeHtml(formatPLN(inv.amount)) +
-                "</span></label>"
+                "</div></label>"
               );
             })
             .join("")

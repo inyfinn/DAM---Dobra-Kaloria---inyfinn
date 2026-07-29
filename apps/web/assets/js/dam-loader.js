@@ -35,6 +35,8 @@
   var dockGen = 0;
   var docked = false;
   var hiding = false;
+  var safetyTimer = null;
+  var SAFETY_TIMEOUT_MS = 5000;
 
   function clearDockTimers() {
     if (dockTimer) {
@@ -334,12 +336,23 @@
     /* GSAP prefetch w tle, dock po HOLD_CENTER_MS */
     loadGsap(function () {});
     scheduleDock();
+    if (safetyTimer) clearTimeout(safetyTimer);
+    safetyTimer = setTimeout(function () {
+      safetyTimer = null;
+      if (activeCount > 0) {
+        reset();
+      }
+    }, SAFETY_TIMEOUT_MS);
   }
 
   function done() {
     if (activeCount <= 0) return;
     activeCount -= 1;
     if (activeCount > 0 || !el) return;
+    if (safetyTimer) {
+      clearTimeout(safetyTimer);
+      safetyTimer = null;
+    }
     hiding = true;
     clearDockTimers();
     dockGen += 1;
@@ -367,6 +380,10 @@
     activeCount = 0;
     hiding = false;
     clearDockTimers();
+    if (safetyTimer) {
+      clearTimeout(safetyTimer);
+      safetyTimer = null;
+    }
     dockGen += 1;
     if (el) {
       if (global.gsap) global.gsap.killTweensOf([el, innerEl]);

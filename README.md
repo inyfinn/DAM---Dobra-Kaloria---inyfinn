@@ -105,13 +105,17 @@ Endpointy mostu:
 
 ## Redis (opcjonalny) + pamiec podreczna miniatur
 
-**Docker Desktop NIE jest wymagany** do dzialania UI. Redis przyspiesza metadata
-(TTL), ale most dziala bez niego (circuit breaker OPEN → fallback).
+**Redis bez Dockera: tak.** Preferujemy **natywny Redis na Windows**
+(`127.0.0.1:6379`) — kolegom nie narzucamy Docker Desktop.
+Docker Compose zostaje tylko jako opcjonalny fallback.
+
+Most dziala bez Redis (circuit breaker OPEN → fallback). Setup: [`apps/desktop/README-redis.md`](apps/desktop/README-redis.md).
 
 | | |
 |--|--|
-| URL | `DAM_REDIS_URL=redis://127.0.0.1:6379/0` (default) |
-| Compose | `docker compose -f apps/desktop/docker-compose.redis.yml up -d` (gdy Docker dziala) |
+| URL | `DAM_REDIS_URL=redis://127.0.0.1:6379/0` (default, bez zmian) |
+| **Primary** | Native: tporadowski Redis zip → `%LOCALAPPDATA%\DAM-Redis` **lub** Memurai (`choco install memurai-developer -y`, admin) |
+| Fallback | `docker compose -f apps/desktop/docker-compose.redis.yml up -d` (tylko gdy Docker juz dziala) |
 | Client | `apps/desktop/dam_redis.py` — circuit CLOSED/OPEN/HALF-OPEN + background probe |
 | Health | `GET :8766/health` → `redis` + `redis_circuit` + `redis_fallback_matrix` |
 | Thumbs | `{repo}/PAMIEC-PODRECZNA/` na D: (AVIF/JPEG); **nigdy** cache na `X:\` / `M:\` |
@@ -122,7 +126,7 @@ AOF opcjonalnie, latwiejsza migracja w gore. Memcached = tylko plaski string-cac
 
 **Circuit breaker (HARD):** po 3 kolejnych bledach OPEN = zero connect per HTTP
 request; daemon probe co ~12s; HALF-OPEN jedna proba; sukces → CLOSED bez
-restartu mostu. Connection refused przy starcie = od razu OPEN.
+restartu mostu. Connection refused przy starcie (Redis nigdy nie zainstalowany) = od razu OPEN.
 
 **Fallback matrix:** file-availability → RAM/recompute; thumb key→path → dysk
 PAMIEC (SoT); dry-run FORCE → RAM; warm queue → no-op/sync on demand.
@@ -214,7 +218,7 @@ apps/
 DATABASE/       # dumpy Postgres (sql.gz) - ADR-009, prywatne repo
 THEME/          # Motyw Geex
 design-system/  # MASTER.md, logo
-docs/           # VISION, ARCHITECTURE, ADR, DEPLOYMENT, LANG_PROVENANCE, PROGRAM_INSTRUCTIONS
+docs/           # VISION, ARCHITECTURE, ADR, ASSOC-GLOSSARY, DEPLOYMENT, LANG_PROVENANCE, PROGRAM_INSTRUCTIONS
 scripts/ops/    # skrot, release ZIP, smoke
 agents/         # Architect / Builder / QA + shared (lang-provenance)
 memory.md       # zasady dlugoterminowe (notatka; przy konflikcie wygrywa program-instructions)
@@ -362,6 +366,7 @@ GitHub Release: tag + upload ZIP (tworzone przy publikacji).
 | [`docs/PROGRAM_INSTRUCTIONS.md`](docs/PROGRAM_INSTRUCTIONS.md) | Reguly w bazie (KV), nie tylko memory |
 | [`docs/NAMING.md`](docs/NAMING.md) | Nazewnictwo nosnikow / slotow |
 | [`docs/BRANDING-HUB.md`](docs/BRANDING-HUB.md) | Branding, katalog, pakowanie zbiorcze, wykrojniki |
+| [`docs/ASSOC-GLOSSARY.md`](docs/ASSOC-GLOSSARY.md) | Skojarzenia UI: metafory, sync ctx, typ A/B, bind (listener vs ctx) |
 | [`docs/ADR/ADR-007-local-sqlite.md`](docs/ADR/ADR-007-local-sqlite.md) | SQLite lokalny / offline |
 | [`docs/ADR/ADR-008-device-session-binding.md`](docs/ADR/ADR-008-device-session-binding.md) | machine/session ID |
 | [`docs/ADR/ADR-009-postgres-synology.md`](docs/ADR/ADR-009-postgres-synology.md) | Wspolny Postgres na NAS |

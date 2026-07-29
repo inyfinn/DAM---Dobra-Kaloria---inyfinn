@@ -747,24 +747,121 @@
     paint();
   }
 
+  function buildHitItemHtml(h) {
+    var p = h.product || {};
+    var r = h.revision;
+    var cls = "dam-search-hit dam-search-hit--" + (h.kind || "product");
+    if (h.nested) cls += " dam-search-hit--nested";
+    var badge = h.kind === "variant" ? "Wariant" : "Produkt";
+    var focusIdx = r && r.index ? r.index : "";
+    if (focusIdx && /[/\\]/.test(focusIdx) && r && r.path) {
+      focusIdx = String(r.path).split(/[/\\]/).filter(Boolean).pop() || focusIdx;
+    }
+    var hitName =
+      h.label ||
+      (p.display_name || p.name || "") ||
+      (r && r.path ? String(r.path).split(/[/\\]/).filter(Boolean).pop() : "") ||
+      p.id ||
+      "";
+    var hitMeta = h.meta || "";
+    if (!hitMeta && r && r.path) {
+      hitMeta = String(r.path)
+        .replace(/^.*[\\/]Marketing[\\/]/i, "")
+        .replace(/\//g, "\\");
+    } else if (!hitMeta && p.path) {
+      hitMeta = String(p.path)
+        .replace(/^.*[\\/]Marketing[\\/]/i, "")
+        .replace(/\//g, "\\");
+    }
+    return (
+      '<li class="' +
+      cls +
+      '"><a href="#" data-pid="' +
+      escapeHtml(p.id || "") +
+      '"' +
+      (focusIdx ? ' data-suggest="' + escapeHtml(focusIdx) + '"' : "") +
+      ' data-hit-kind="' +
+      escapeHtml(h.kind || "product") +
+      '">' +
+      '<span class="dam-search-hit__badge">' +
+      escapeHtml(badge) +
+      "</span>" +
+      '<span class="dam-search-name">' +
+      escapeHtml(hitName) +
+      "</span>" +
+      '<span class="dam-search-meta">' +
+      escapeHtml(hitMeta) +
+      (h.kind === "product" && h.childCount
+        ? " · " + h.childCount + " dopas. wariant" + (h.childCount === 1 ? "" : "y")
+        : "") +
+      "</span></a></li>"
+    );
+  }
+
+  function renderHitsHtml(res, opts) {
+    opts = opts || {};
+    var hits = (res && res.hits) || [];
+    if (!hits.length) return "";
+    var panelCls = opts.panel ? " dam-search-hits--panel" : "";
+    var html = '<ul class="dam-search-hits' + panelCls + '">';
+    hits.slice(0, opts.limit || 40).forEach(function (h) {
+      html += buildHitItemHtml(h);
+    });
+    html += "</ul>";
+    return html;
+  }
+
+  function bindHitsClick(root, onSelect, opts) {
+    opts = opts || {};
+    (root || document).querySelectorAll(".dam-search-hits a[data-pid]").forEach(function (a) {
+      if (a._damHitBound) return;
+      a._damHitBound = true;
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        var pid = this.getAttribute("data-pid");
+        var sug = this.getAttribute("data-suggest");
+        if (opts.clearInput !== false) {
+          var wrap = this.closest(".dam-search-wrap");
+          var inp = wrap && wrap.querySelector("input");
+          if (inp) inp.value = "";
+          var drop = wrap && wrap.querySelector("#damSearchResults, .dam-search-results");
+          if (drop) {
+            drop.innerHTML = "";
+            drop.style.display = "none";
+          }
+        }
+        var prod = productById(pid);
+        if (onSelect) onSelect(prod, sug || null);
+      });
+    });
+  }
+
   function bindSearchBox(inputEl, resultsEl, onSelect, scopeEl, opts) {
     if (!inputEl) return;
     opts = opts || {};
     var timer = null;
+    function notifyResults(res, q) {
+      if (opts.onResults && typeof opts.onResults === "function") {
+        opts.onResults(res, q);
+      }
+    }
     function runSearch() {
       var q = inputEl.value;
       return search(q, {
-        limit: 30,
+        limit: opts.limit || 30,
         includeArchive: explorerShowAllEnabled(),
-        fileIndex: window._DAM_FILE_INDEX
+        fileIndex: opts.fileIndex || window._DAM_FILE_INDEX
       }).then(function (res) {
         if (opts.enrichResults && typeof opts.enrichResults === "function") {
           res = opts.enrichResults(res, q) || res;
         }
-        return render(res);
+        render(res);
+        notifyResults(res, q);
+        return res;
       }).catch(function (err) {
         resultsEl.innerHTML = '<div class="dam-search-msg">Blad indeksu: ' + escapeHtml(err.message) + "</div>";
         resultsEl.style.display = "block";
+        notifyResults({ query: q, hits: [], products: [], message: err.message }, q);
       });
     }
     if (scopeEl) {
@@ -781,6 +878,7 @@
       if (!res.query) {
         resultsEl.innerHTML = "";
         resultsEl.style.display = "none";
+        notifyResults({ query: "", hits: [], products: [], suggestions: [] }, "");
         return;
       }
       var html = "";
@@ -798,57 +896,7 @@
       }
       var hits = res.hits || [];
       if (hits.length) {
-        html += '<ul class="dam-search-hits">';
-        hits.slice(0, 40).forEach(function (h) {
-          var p = h.product || {};
-          var r = h.revision;
-          var cls = "dam-search-hit dam-search-hit--" + (h.kind || "product");
-          if (h.nested) cls += " dam-search-hit--nested";
-          var badge = h.kind === "variant" ? "Wariant" : "Produkt";
-          var focusIdx = r && r.index ? r.index : "";
-          if (focusIdx && /[/\\]/.test(focusIdx) && r && r.path) {
-            focusIdx = String(r.path).split(/[/\\]/).filter(Boolean).pop() || focusIdx;
-          }
-          var hitName =
-            h.label ||
-            (p.display_name || p.name || "") ||
-            (r && r.path ? String(r.path).split(/[/\\]/).filter(Boolean).pop() : "") ||
-            p.id ||
-            "";
-          var hitMeta = h.meta || "";
-          if (!hitMeta && r && r.path) {
-            hitMeta = String(r.path)
-              .replace(/^.*[\\/]Marketing[\\/]/i, "")
-              .replace(/\//g, "\\");
-          } else if (!hitMeta && p.path) {
-            hitMeta = String(p.path)
-              .replace(/^.*[\\/]Marketing[\\/]/i, "")
-              .replace(/\//g, "\\");
-          }
-          html +=
-            '<li class="' +
-            cls +
-            '"><a href="#" data-pid="' +
-            escapeHtml(p.id || "") +
-            '"' +
-            (focusIdx ? ' data-suggest="' + escapeHtml(focusIdx) + '"' : "") +
-            ' data-hit-kind="' +
-            escapeHtml(h.kind || "product") +
-            '">' +
-            '<span class="dam-search-hit__badge">' +
-            escapeHtml(badge) +
-            "</span>" +
-            '<span class="dam-search-name">' +
-            escapeHtml(hitName) +
-            "</span>" +
-            '<span class="dam-search-meta">' +
-            escapeHtml(hitMeta) +
-            (h.kind === "product" && h.childCount
-              ? " · " + h.childCount + " dopas. wariant" + (h.childCount === 1 ? "" : "y")
-              : "") +
-            "</span></a></li>";
-        });
-        html += "</ul>";
+        html += renderHitsHtml(res, { limit: opts.limit || 40 });
       } else if (res.products && res.products.length) {
         html += '<ul class="dam-search-hits">';
         res.products.slice(0, 20).forEach(function (p) {
@@ -865,17 +913,7 @@
       }
       resultsEl.innerHTML = html;
       resultsEl.style.display = "block";
-      resultsEl.querySelectorAll("a[data-pid]").forEach(function (a) {
-        a.addEventListener("click", function (e) {
-          e.preventDefault();
-          var pid = this.getAttribute("data-pid");
-          var sug = this.getAttribute("data-suggest");
-          inputEl.value = "";
-          resultsEl.style.display = "none";
-          var prod = productById(pid);
-          if (onSelect) onSelect(prod, sug || null);
-        });
-      });
+      bindHitsClick(resultsEl, onSelect, { clearInput: true });
     }
 
     inputEl.addEventListener("input", function () {
@@ -914,6 +952,8 @@
     reload: reload,
     search: search,
     bindSearchBox: bindSearchBox,
+    renderHitsHtml: renderHitsHtml,
+    bindHitsClick: bindHitsClick,
     bindScopeChips: bindScopeChips,
     getScope: getScope,
     setScope: setScope,

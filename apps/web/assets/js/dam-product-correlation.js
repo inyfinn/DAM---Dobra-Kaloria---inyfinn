@@ -107,34 +107,62 @@
     });
   }
 
+  function brandingPickerBlocksIndexLoad() {
+    return !!(
+      (typeof global !== "undefined" && global.__damBrandingPickerOpen) ||
+      (typeof global !== "undefined" && global.__damAssocPickerOpening)
+    );
+  }
+
   function ensureSearchIndex() {
     if (searchIndex) return Promise.resolve(searchIndex);
-    if (global._DAM_SEARCH_INDEX) {
+    if (global._DAM_SEARCH_INDEX && global._DAM_SEARCH_INDEX.entries) {
       searchIndex = global._DAM_SEARCH_INDEX;
       return Promise.resolve(searchIndex);
     }
-    if (global.DamSearch && typeof global.DamSearch.loadIndexes === "function") {
-      return global.DamSearch.loadIndexes().then(function (pair) {
-        searchIndex = pair.searchIndex || pair;
-        return searchIndex;
-      });
-    }
+    /*
+     * HARD freeze fix (2026-07-24c): NEVER DamSearch.loadIndexes() here.
+     * It pulls ~8MB file-index; Worker postMessage clone blocks main thread
+     * when user opens Shift+Dodaj on Branding preview (ESC/F5 dead).
+     * Dedicated search-index fetch + deferred JSON.parse only.
+     */
     if (searchLoading) return searchLoading;
-    searchLoading = fetch("data/search-index.json?v=corr1&_=" + CB)
-      .then(function (r) {
-        if (!r.ok) throw new Error("search-index.json");
-        return r.json();
-      })
-      .then(function (data) {
-        searchIndex = data;
-        searchLoading = null;
-        return searchIndex;
-      })
-      .catch(function () {
-        searchIndex = { by_base: {}, by_prefix: {} };
-        searchLoading = null;
-        return searchIndex;
-      });
+    searchLoading = new Promise(function (resolve) {
+      function attemptLoad() {
+        if (brandingPickerBlocksIndexLoad()) {
+          setTimeout(attemptLoad, 200);
+          return;
+        }
+        fetch("data/search-index.json?v=corrFreeze20260724c&_=" + Date.now())
+          .then(function (r) {
+            if (!r.ok) throw new Error("search-index.json");
+            return r.text();
+          })
+          .then(function (text) {
+            return new Promise(function (res, rej) {
+              setTimeout(function () {
+                try {
+                  res(JSON.parse(text));
+                } catch (eParse) {
+                  rej(eParse);
+                }
+              }, 0);
+            });
+          })
+          .then(function (data) {
+            searchIndex = data;
+            global._DAM_SEARCH_INDEX = data;
+            searchLoading = null;
+            resolve(searchIndex);
+          })
+          .catch(function () {
+            searchIndex = { by_base: {}, by_prefix: {}, entries: [] };
+            searchLoading = null;
+            resolve(searchIndex);
+          });
+      }
+      attemptLoad();
+    });
     return searchLoading;
   }
 
@@ -312,22 +340,22 @@
   function ensureBrandingCounts() {
     if (brandingCounts) return Promise.resolve(brandingCounts);
     if (brandingCountsLoading) return brandingCountsLoading;
-    brandingCountsLoading = fetch("data/branding-index.json?v=corr1&_=" + CB)
-      .then(function (r) {
-        if (!r.ok) throw new Error("branding-index.json");
-        return r.json();
-      })
-      .then(function (data) {
-        registerBrandingCountsFromAssets(data.assets || []);
-        brandingCountsLoading = null;
-        return brandingCounts;
-      })
-      .catch(function () {
-        brandingCounts = brandingCounts || {};
-        brandingCountsLoading = null;
-        return brandingCounts;
-      });
-    return brandingCountsLoading;
+    /*
+     * HARD freeze fix (2026-07-22): NEVER fetch/parse data/branding-index.json
+     * (~388MB). Sync r.json() on that file freezes the whole DAM tab.
+     * Reuse in-memory index from Branding page if present; otherwise empty map.
+     */
+    var shared =
+      (typeof window !== "undefined" && window.__damBrandingIndex) ||
+      (typeof globalThis !== "undefined" && globalThis.__damBrandingIndex) ||
+      null;
+    if (shared && Array.isArray(shared.assets) && shared.assets.length) {
+      registerBrandingCountsFromAssets(shared.assets);
+      return Promise.resolve(brandingCounts);
+    }
+    brandingCounts = brandingCounts || {};
+    brandingCountsLoading = null;
+    return Promise.resolve(brandingCounts);
   }
 
   function getBrandingCount(productId) {

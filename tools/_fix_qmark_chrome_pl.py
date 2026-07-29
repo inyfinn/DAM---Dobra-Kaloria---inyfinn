@@ -117,11 +117,19 @@ PAIRS: list[tuple[str, str]] = [
     ("Wszystkie j?zyki", "Wszystkie języki"),
     ("Backup status?w", "Backup statusów"),
     ("Od?wie? z dysku", "Odśwież z dysku"),
+    ("Od?wie? list?", "Odśwież listę"),
+    ("Od?wie?", "Odśwież"),
+    ("Projekty opakowa?", "Projekty opakowań"),
+    ("Lista projekt?w opakowa?", "Lista projektów opakowań"),
+    ("kompletno?ci plik?w", "kompletności plików"),
+    ("Prze?aduj list?", "Przeładuj listę"),
+    ("bie??cego indeksu", "bieżącego indeksu"),
     ("Dodaj kategori?", "Dodaj kategorię"),
     ("Dostosuj wygl?d", "Dostosuj wygląd"),
     ("Panel asset?w opakowa?", "Panel assetów opakowań"),
     ("Aktywno??", "Aktywność"),
     ("?adowanie faktur...", "Ładowanie faktur..."),
+    ("??czenie...", "Łączenie..."),
     ("Bie??ce zadania graficzne", "Bieżące zadania graficzne"),
     ("Ten tydzie?", "Ten tydzień"),
     ("Szacowany koszt miesi?ca", "Szacowany koszt miesiąca"),
@@ -129,6 +137,7 @@ PAIRS: list[tuple[str, str]] = [
     # short leftovers (after longer tips)
     ("Nie myli? z Postgres ?Baza?.", "Nie mylić z Postgres „Baza”."),
     ("Usu?", "Usuń"),
+    ("i?ich", "i\u00a0ich"),
 ]
 
 

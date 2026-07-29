@@ -121,8 +121,9 @@
       '<button type="button" data-bulk="clear">Wyczysc</button>' +
       '<button type="button" data-bulk="invert">Odwroc</button>' +
       "</div>" +
-      '<div class="dam-viz-request-actions">' +
+      '<div class="dam-viz-request-actions dam-dialog-actions">' +
       '<button type="button" class="geex-btn geex-btn--sm" id="damVizRequestCancel">Anuluj</button>' +
+      '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
       '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm" id="damVizRequestSend"><i class="uil uil-message"></i><span>Wyslij</span></button>' +
       "</div></div></div>";
 

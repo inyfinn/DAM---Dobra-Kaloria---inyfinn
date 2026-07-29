@@ -2125,7 +2125,58 @@ BULK_PACKAGING_FILE = WEB_ROOT / "data" / "bulk-packaging.json"
 SHOP_CATEGORIES_FILE = WEB_ROOT / "data" / "shop-categories.json"
 BRANDING_INDEX_FILE = WEB_ROOT / "data" / "branding-index.json"
 BRANDING_SEARCH_INDEX_FILE = WEB_ROOT / "data" / "branding-search-index.json"
+BR_MIGRATION_MAPPING_FILE = WEB_ROOT / "data" / "br-migration-mapping.json"
 _BRANDING_SEARCH_INDEX_MEM: dict | None = None
+_BR_MIGRATION_MAPPING_MEM: dict[str, str] | None = None
+
+
+def _load_br_migration_mapping() -> dict[str, str]:
+    """Legacy br-* -> marketing ID (F-1). Pusty gdy brak pliku."""
+    global _BR_MIGRATION_MAPPING_MEM
+    if _BR_MIGRATION_MAPPING_MEM is not None:
+        return _BR_MIGRATION_MAPPING_MEM
+    raw = _load_json(BR_MIGRATION_MAPPING_FILE, None)
+    mapping: dict[str, str] = {}
+    if isinstance(raw, dict):
+        m = raw.get("mapping")
+        if isinstance(m, dict):
+            mapping = {str(k): str(v) for k, v in m.items() if k and v}
+    _BR_MIGRATION_MAPPING_MEM = mapping
+    return mapping
+
+
+def _resolve_branding_asset_id(asset_id: str) -> str:
+    """Kanoniczny marketing ID; legacy br-* przez mapping (okres przejsciowy)."""
+    aid = str(asset_id or "").strip()
+    if not aid:
+        return aid
+    if re.match(r"^br-\d+$", aid, re.I):
+        mapped = _load_br_migration_mapping().get(aid) or _load_br_migration_mapping().get(
+            aid.lower()
+        )
+        if mapped:
+            return mapped
+    return aid
+
+
+def _find_branding_asset(asset_id: str, assets: list) -> dict | None:
+    """Szukaj assetu po marketing ID lub legacy br-* (mapping + indeks)."""
+    aid = str(asset_id or "").strip()
+    if not aid:
+        return None
+    canonical = _resolve_branding_asset_id(aid)
+    for a in assets:
+        if not isinstance(a, dict):
+            continue
+        eid = str(a.get("id") or "")
+        if eid == canonical or eid == aid:
+            return a
+    # Odwrotne: query marketing, indeks juz zmigrowany
+    if canonical != aid:
+        for a in assets:
+            if isinstance(a, dict) and str(a.get("id") or "") == canonical:
+                return a
+    return None
 
 
 def _branding_search_index_mem() -> dict:
@@ -2225,7 +2276,7 @@ def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: lis
         if _branding_picker_is_source_path(str(entry.get("path") or "")):
             continue
         blob = str(entry.get("search_blob") or eid or entry.get("path") or "").lower()
-        if q not in blob:
+        if not _branding_picker_query_matches(eid, blob, q):
             continue
         seen.add(eid)
         out.append(_light_branding_picker_entry(entry))
@@ -2234,6 +2285,49 @@ def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: lis
 
 def _branding_digits_only(s) -> str:
     return re.sub(r"\D", "", str(s or ""))
+
+
+def _branding_marketing_core_digits(br_id: str) -> list[str]:
+    """Cores M-{TYP}{typeNum}{brDigits[1:]} — szukanie 405515 / 249510 bez pełnego indeksu."""
+    m = re.match(r"^br-(\d+)$", str(br_id or "").strip(), re.I)
+    if not m:
+        return []
+    digits = m.group(1)
+    if len(digits) < 2:
+        return [digits]
+    cores = [digits]
+    for type_num in range(1, 13):
+        cores.append(str(type_num) + digits[1:])
+    return cores
+
+
+def _branding_picker_query_matches(eid: str, blob: str, query: str) -> bool:
+    q = str(query or "").strip().lower()
+    if not q:
+        return False
+    if q in blob or q in str(eid or "").lower():
+        return True
+    qd = _branding_digits_only(q)
+    if len(qd) < 4:
+        return False
+    if qd in _branding_digits_only(blob):
+        return True
+    id_digits = _branding_digits_only(eid)
+    if qd in id_digits:
+        return True
+    for core in _branding_marketing_core_digits(eid):
+        if qd in core or core in qd:
+            return True
+    # M-IMG249510-07-26 / IMG249510 → core 249510
+    mk = re.match(r"^(?:m[-_])?([a-z]{2,8})[_-]?(\d{5,6})", q.replace(" ", ""), re.I)
+    if mk:
+        want_core = mk.group(2)
+        if want_core in _branding_digits_only(blob) or want_core in blob:
+            return True
+        for core in _branding_marketing_core_digits(eid):
+            if want_core in core or core in want_core:
+                return True
+    return False
 
 
 def _branding_is_archived(a: dict) -> bool:
@@ -2884,13 +2978,10 @@ def _patch_branding_metadata(asset_id: str, field: str, value) -> tuple[bool, st
     if not isinstance(idx, dict):
         return False, "branding_index_missing"
     assets = idx.get("assets") or []
-    found = None
-    for a in assets:
-        if a.get("id") == aid:
-            found = a
-            break
+    found = _find_branding_asset(aid, assets)
     if not found:
         return False, "asset_not_found"
+    aid = str(found.get("id") or aid)
     if fld == "asset_role":
         found["asset_role"] = str(value or "").strip() or None
     elif fld == "appearance_primary":
@@ -2984,13 +3075,10 @@ def _patch_branding_associations(
     if not isinstance(idx, dict):
         return False, "branding_index_missing"
     assets = idx.get("assets") or []
-    target = None
-    for a in assets:
-        if a.get("id") == aid:
-            target = a
-            break
+    target = _find_branding_asset(aid, assets)
     if not target:
         return False, "asset_not_found"
+    aid = str(target.get("id") or aid)
     if not group:
         group = str(target.get("folder_group_id") or "").strip().lower()
     file_index = _load_json(INDEX_FILE, {"products": []})
@@ -3024,6 +3112,7 @@ def _patch_branding_associations(
         pids = [str(x).strip() for x in (linked_product_ids or []) if str(x).strip()]
         vids = [str(x).strip() for x in (linked_variant_ids or []) if str(x).strip()]
     pids = list(dict.fromkeys(pids))
+    vids = [_resolve_branding_asset_id(v) for v in vids]
     vids = list(dict.fromkeys(vids))
 
     ov = _load_json(
@@ -3178,7 +3267,7 @@ def _seed_naming_policy_to_postgres() -> None:
     ]
 
     app_settings = {
-        "version": 2,
+        "version": 3,
         "naming": {
             "source_kv": "naming-dictionary",
             "carrier_display_in_ui": policy.get("carrier_display_in_ui") or "label_pl",
@@ -3197,6 +3286,14 @@ def _seed_naming_policy_to_postgres() -> None:
         or (instructions.get("updated_at") if instructions else "")
         or "",
     }
+    existing = _load_json(APP_SETTINGS_FILE, {})
+    if isinstance(existing, dict) and isinstance(existing.get("elementy_conversion"), dict):
+        app_settings["elementy_conversion"] = existing["elementy_conversion"]
+    else:
+        app_settings["elementy_conversion"] = _default_elementy_conversion()
+        app_settings["elementy_conversion"]["description_pl"] = (
+            "Globalne ustawienia konwersji Links -> ELEMENTY w modalu wizualizacji."
+        )
     _save_json(APP_SETTINGS_FILE, app_settings)
     if naming:
         _save_json(NAMING_DICTIONARY_FILE, naming)
@@ -5333,6 +5430,248 @@ def resolve_product_links_elementy(
     }
 
 
+_LINKS_CONVERT_EXT = {".tif", ".tiff", ".psd", ".psb"}
+
+
+def _default_elementy_conversion() -> dict:
+    return {
+        "enabled": True,
+        "quality": 50,
+        "formats": {"png": True, "jpg": True},
+        "png_transparency": True,
+    }
+
+
+def load_elementy_conversion_settings() -> dict:
+    """Globalne ustawienia konwersji Links -> ELEMENTY (app-settings.json)."""
+    data = _load_json(APP_SETTINGS_FILE, {})
+    raw = data.get("elementy_conversion") if isinstance(data, dict) else {}
+    if not isinstance(raw, dict):
+        raw = {}
+    defaults = _default_elementy_conversion()
+    formats_raw = raw.get("formats") if isinstance(raw.get("formats"), dict) else {}
+    try:
+        quality = int(raw.get("quality", defaults["quality"]))
+    except (TypeError, ValueError):
+        quality = defaults["quality"]
+    return {
+        "enabled": bool(raw.get("enabled", defaults["enabled"])),
+        "quality": max(1, min(quality, 100)),
+        "formats": {
+            "png": bool(formats_raw.get("png", defaults["formats"]["png"])),
+            "jpg": bool(formats_raw.get("jpg", defaults["formats"]["jpg"])),
+        },
+        "png_transparency": bool(
+            raw.get("png_transparency", defaults["png_transparency"])
+        ),
+    }
+
+
+def save_elementy_conversion_settings(patch: dict) -> dict:
+    """Zapis globalnych ustawien konwersji elementow (admin)."""
+    current = _load_json(APP_SETTINGS_FILE, {})
+    if not isinstance(current, dict):
+        current = {}
+    merged = load_elementy_conversion_settings()
+    if isinstance(patch, dict):
+        if "enabled" in patch:
+            merged["enabled"] = bool(patch.get("enabled"))
+        if "quality" in patch:
+            try:
+                merged["quality"] = max(1, min(int(patch.get("quality")), 100))
+            except (TypeError, ValueError):
+                pass
+        if isinstance(patch.get("formats"), dict):
+            fm = patch["formats"]
+            if "png" in fm:
+                merged["formats"]["png"] = bool(fm.get("png"))
+            if "jpg" in fm:
+                merged["formats"]["jpg"] = bool(fm.get("jpg"))
+        if "png_transparency" in patch:
+            merged["png_transparency"] = bool(patch.get("png_transparency"))
+    current["elementy_conversion"] = {
+        **merged,
+        "description_pl": (
+            "Globalne ustawienia konwersji Links -> ELEMENTY w modalu wizualizacji. "
+            "PNG z przezroczystoscia (dematte czarnego matte) + opcjonalnie JPG. "
+            "Jakosc/kompresja w skali 1-100 (domyslnie 50%)."
+        ),
+    }
+    current["updated_at"] = utc_now()[:10]
+    _save_json(APP_SETTINGS_FILE, current)
+    return merged
+
+
+def _open_raster_image(path: Path):
+    """Otworz TIFF/PSD/PSB do konwersji elementow (Pillow + psd-tools)."""
+    ext = path.suffix.lower()
+    if ext not in _LINKS_CONVERT_EXT:
+        return None
+    from PIL import Image  # type: ignore
+
+    try:
+        with Image.open(path) as pil_im:
+            return pil_im.copy()
+    except Exception:
+        if ext in {".psd", ".psb"}:
+            from psd_tools import PSDImage  # type: ignore
+
+            return PSDImage.open(path).composite()
+        raise
+
+
+def _save_elementy_png_file(im, dest: Path, *, quality: int = 50) -> None:
+    """Zapis PNG do ELEMENTY: dematte + downscale wg quality (~50 domyslnie)."""
+    from PIL import Image  # type: ignore
+
+    rgba = _dematte_black_to_alpha(im)
+    q = max(1, min(int(quality), 100))
+    max_side = max(800, int(3200 * q / 100))
+    if max(rgba.size) > max_side:
+        rgba.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    rgba.save(dest, format="PNG", optimize=True)
+
+
+def _save_elementy_jpg_file(im, dest: Path, *, quality: int = 50) -> None:
+    """Zapis JPG do ELEMENTY: dematte -> biale tlo, kompresja wg quality."""
+    from PIL import Image  # type: ignore
+
+    rgba = _dematte_black_to_alpha(im)
+    q = max(1, min(int(quality), 100))
+    max_side = max(800, int(3200 * q / 100))
+    if max(rgba.size) > max_side:
+        rgba.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+    bg = Image.new("RGB", rgba.size, (255, 255, 255))
+    bg.paste(rgba, mask=rgba.split()[-1])
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    bg.save(dest, format="JPEG", quality=q, optimize=True)
+
+
+def convert_links_elementy(
+    product_id: str = "",
+    index: str = "",
+    revision_path: str = "",
+    quality: int | None = None,
+    formats: dict | None = None,
+) -> dict:
+    """
+    Built-in Links -> ELEMENTY: TIFF/PSD/PSB do PNG (dematte, alpha) + JPG.
+    Nie usuwa oryginalow w Links. Ustawienia globalne z app-settings.json.
+    """
+    settings = load_elementy_conversion_settings()
+    if not settings.get("enabled"):
+        return {"ok": False, "error": "conversion_disabled", "settings": settings}
+
+    q = settings["quality"] if quality is None else max(1, min(int(quality), 100))
+    fmt = settings["formats"] if not isinstance(formats, dict) else {
+        "png": bool(formats.get("png", settings["formats"]["png"])),
+        "jpg": bool(formats.get("jpg", settings["formats"]["jpg"])),
+    }
+    if not fmt.get("png") and not fmt.get("jpg"):
+        return {"ok": False, "error": "no_output_formats", "settings": settings}
+    info = resolve_product_links_elementy(product_id, index, revision_path)
+    if not info.get("ok"):
+        return {"ok": False, "error": info.get("error") or "revision_not_found", "info": info}
+
+    links_raw = (info.get("links_path") or "").strip()
+    if not links_raw:
+        return {"ok": False, "error": "links_not_found", "info": info}
+
+    links_p = Path(normalize_path(links_raw))
+    if not links_p.is_dir() or not _is_under_marketing(links_p):
+        return {"ok": False, "error": "links_invalid", "links_path": links_raw}
+
+    elementy_raw = (info.get("elementy_path") or "").strip()
+    elementy_p = Path(normalize_path(elementy_raw)) if elementy_raw else None
+    if elementy_p is None:
+        rev = Path(normalize_path(info.get("revision_path") or ""))
+        materials = _child_dir_prefix(rev, "1 - materia")
+        nested = _child_dir_named(materials, "elementy") if materials else None
+        elementy_p = nested
+    if elementy_p is None:
+        return {"ok": False, "error": "elementy_not_found", "info": info}
+    if not _is_under_marketing(elementy_p):
+        return {"ok": False, "error": "elementy_outside_marketing", "elementy_path": str(elementy_p)}
+
+    try:
+        elementy_p.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return {"ok": False, "error": f"elementy_mkdir_failed:{exc}", "elementy_path": str(elementy_p)}
+
+    converted: list[dict] = []
+    failed: list[dict] = []
+    skipped: list[str] = []
+
+    try:
+        for root, _dirs, files in os.walk(links_p):
+            for fname in files:
+                src = Path(root) / fname
+                if src.suffix.lower() not in _LINKS_CONVERT_EXT:
+                    continue
+                try:
+                    im = _open_raster_image(src)
+                    if im is None:
+                        failed.append(
+                            {"source": str(src).replace("\\", "/"), "error": "unsupported_format"}
+                        )
+                        continue
+                    wrote_any = False
+                    if fmt.get("png"):
+                        dest_png = elementy_p / f"{src.stem}.png"
+                        if dest_png.is_file():
+                            skipped.append(str(dest_png).replace("\\", "/"))
+                        else:
+                            _save_elementy_png_file(im, dest_png, quality=q)
+                            converted.append(
+                                {
+                                    "source": str(src).replace("\\", "/"),
+                                    "output": str(dest_png).replace("\\", "/"),
+                                    "format": "png",
+                                }
+                            )
+                            wrote_any = True
+                    if fmt.get("jpg"):
+                        dest_jpg = elementy_p / f"{src.stem}.jpg"
+                        if dest_jpg.is_file():
+                            skipped.append(str(dest_jpg).replace("\\", "/"))
+                        else:
+                            _save_elementy_jpg_file(im, dest_jpg, quality=q)
+                            converted.append(
+                                {
+                                    "source": str(src).replace("\\", "/"),
+                                    "output": str(dest_jpg).replace("\\", "/"),
+                                    "format": "jpg",
+                                }
+                            )
+                            wrote_any = True
+                    if not wrote_any and not (
+                        (fmt.get("png") and (elementy_p / f"{src.stem}.png").is_file())
+                        or (fmt.get("jpg") and (elementy_p / f"{src.stem}.jpg").is_file())
+                    ):
+                        skipped.append(str(src).replace("\\", "/"))
+                except Exception as exc:  # noqa: BLE001
+                    failed.append(
+                        {"source": str(src).replace("\\", "/"), "error": str(exc)}
+                    )
+    except OSError as exc:
+        return {"ok": False, "error": f"links_walk_failed:{exc}", "info": info}
+
+    return {
+        "ok": True,
+        "converted_count": len(converted),
+        "converted": converted,
+        "failed": failed,
+        "skipped": skipped,
+        "links_path": str(links_p).replace("\\", "/"),
+        "elementy_path": str(elementy_p).replace("\\", "/"),
+        "quality": q,
+        "formats": fmt,
+        "warning": "Konwersja automatyczna moze dac elementy slabej jakosci.",
+        "info": info,
+    }
+
+
 def open_image_resizer(input_path: str = "", output_path: str = "", product_id: str = "", index: str = "") -> dict:
     """
     STREFA A3 / pkt 37: otworz Inyfinn Photo Resizer.
@@ -6100,8 +6439,24 @@ class Handler(BaseHTTPRequestHandler):
             return None
         return user
 
+    def _localhost_dev_user(self) -> dict | None:
+        """Opcjonalny stub admin na 127.0.0.1 gdy brak Bearer (DAM_LOCAL_DEV_AUTH=1)."""
+        flag = os.environ.get("DAM_LOCAL_DEV_AUTH", "").strip().lower()
+        if flag not in ("1", "true", "yes", "on"):
+            return None
+        addr = (self.client_address[0] or "").strip()
+        if addr not in ("127.0.0.1", "::1"):
+            return None
+        return {
+            "email": "dev@localhost",
+            "name": "Local Dev",
+            "role": "admin",
+        }
+
     def _require_login(self) -> dict | None:
         user = self._session_user()
+        if not user:
+            user = self._localhost_dev_user()
         if not user:
             self._json(
                 401,
@@ -6709,6 +7064,19 @@ class Handler(BaseHTTPRequestHandler):
             }
             self._json(200, {"ok": True, "groups": clean})
             return
+        if parsed.path == "/app-settings":
+            data = _load_json(APP_SETTINGS_FILE, {})
+            if not isinstance(data, dict):
+                data = {}
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "settings": data,
+                    "elementy_conversion": load_elementy_conversion_settings(),
+                },
+            )
+            return
         if parsed.path == "/oauth/callback":
             # Redirect z Asana / Microsoft - wymiana code, potem HTML z komunikatem
             import html as _html
@@ -7182,6 +7550,25 @@ class Handler(BaseHTTPRequestHandler):
                     (data.get("output") or "").strip(),
                     (data.get("product_id") or "").strip(),
                     (data.get("index") or "").strip(),
+                ),
+            )
+            return
+        if parsed.path == "/convert-links-elementy":
+            settings = load_elementy_conversion_settings()
+            try:
+                q_raw = data.get("quality")
+                quality = int(q_raw) if q_raw is not None else settings["quality"]
+            except (TypeError, ValueError):
+                quality = settings["quality"]
+            formats = data.get("formats") if isinstance(data.get("formats"), dict) else None
+            self._json(
+                200,
+                convert_links_elementy(
+                    (data.get("product_id") or "").strip(),
+                    (data.get("index") or "").strip(),
+                    (data.get("revision_path") or "").strip(),
+                    quality,
+                    formats,
                 ),
             )
             return
@@ -7750,7 +8137,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, append_thumb_override(pid, data if isinstance(data, dict) else {}))
             return
         if parsed.path == "/viz-flag":
-            if self._require_admin() is None:
+            if self._require_power_user_or_admin() is None:
                 return
             self._json(200, write_viz_flags(data if isinstance(data, dict) else {}))
             return
@@ -8444,6 +8831,18 @@ class Handler(BaseHTTPRequestHandler):
                 if isinstance(v, list) and not str(k).startswith("_")
             }
             self._json(200, {"ok": True, "groups": clean})
+            return
+        if parsed.path == "/app-settings":
+            if self._require_admin() is None:
+                return
+            patch = data.get("elementy_conversion")
+            if patch is None and isinstance(data.get("settings"), dict):
+                patch = data["settings"].get("elementy_conversion")
+            if not isinstance(patch, dict):
+                self._json(400, {"ok": False, "error": "elementy_conversion_required"})
+                return
+            merged = save_elementy_conversion_settings(patch)
+            self._json(200, {"ok": True, "elementy_conversion": merged})
             return
         if parsed.path in ("/db/reconnect", "/db/refresh"):
             # Jak GET /db/status: reconnect + opcjonalny pull dump na localhost (bez Bearera).

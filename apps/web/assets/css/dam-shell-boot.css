@@ -1,7 +1,8 @@
 /**
  * DAM shell boot - anti-FOUC / anti flash Geex placeholder
  * Body ukryty (html.dam-booting) az DamShell przepisze chrome.
- * Fade-in po usunieciu dam-booting (+ dam-booted).
+ * HARD: NO full-page skeleton overlay. Sidebar/header NEVER skel.
+ * Per-object skeletons live in widget bodies (see dam-dashboard.css).
  */
 html.dam-booting {
   background: #f3f5f4;
@@ -21,6 +22,9 @@ body.is-booting {
 html.dam-booted body {
   opacity: 1 !important;
   pointer-events: auto;
-  /* Bez transition: CSSTransition 0->1 potrafi zostac w playState:running
-     i trzymac body na opacity:0 mimo klasy dam-booted (pusty ekran). */
+}
+
+/* Legacy cleanup: hide old full-page skel if cached HTML still injects it */
+#damPageSkeleton {
+  display: none !important;
 }

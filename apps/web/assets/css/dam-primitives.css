@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DAM Geex primitives ÔÇö anatomia CTA / badge / panel (skeleton Faza 2).
  * Konsument tokenow z dam-tokens.css. Anatomie wypelniaja Agenci 3/4 (F3/F4).
  * Zrodlo miar: agents/shared/geex-realign-audit-2026-07-21.md ┬ž5.
@@ -369,7 +369,7 @@ html body .dam-media-preview__ext-tag {
   font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale, 1.05));
 }
 
-/* ext-tag = small variant of MASTER badge (not +10% local bypass) */
+/* ext-tag = modal badge scale (parity #damMediaPreviewBadges dam-viz-badge ~26px) */
 .dam-media-preview__ext-tag {
   --_dam-badge-scale: var(--dam-badge-scale, 1.05);
   --_dam-badge-radius: 14px;
@@ -387,8 +387,9 @@ html body .dam-media-preview__ext-tag {
   text-transform: uppercase;
   white-space: nowrap;
   vertical-align: middle;
-  padding: calc(4px * var(--_dam-badge-scale)) calc(9px * var(--_dam-badge-scale));
-  font-size: calc(var(--dam-tag-fs-pill, 10.5px) * var(--_dam-badge-scale));
+  padding: calc(5px * var(--_dam-badge-scale)) calc(11px * var(--_dam-badge-scale));
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale));
+  min-height: calc(26px * var(--_dam-badge-scale, 1));
 }
 
 /* Status uses badge fs token; --lg is size mod only */

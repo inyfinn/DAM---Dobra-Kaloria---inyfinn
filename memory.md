@@ -3,9 +3,55 @@
 Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-07-18**.  
 Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
 
+## /planner + /reflect — Warstwa A/B (2026-07-28, GLOBAL skills)
+
+- Plan = **Warstwa A (user, po polsku, screen Done)** + **Warstwa B (agent, załącznik)**. Źródło prawdy = przeglądarka.
+- Critic planner: `czytelnosc_usera` · `dowod_wizualny` · `falszywy_PASS` · `scope_usera` (obok kategorii procesu).
+- UI: `min_rounds: 3`; multi-agent/prod: 10. Po CONVERGED UI → 1× `/reflect` tryb `user_reality`.
+- PASS UI tylko ze screenshot+Read; nie obcinaj scope bez AskQuestion. Skills: `~/.cursor/skills/planner`, `reflect`, `reflection-loop`.
+
+## Baza produktów MD na dysku Marketing (2026-07-28)
+
+- **Żywy dump:** `X:/Marketing/- POLSKA/01 - PRODUKTY/DAM-PRODUKTY-BAZA.md` — wszystkie produkty DK+GC (183), auto-nadpisywany po każdym `build-file-index.py` (Skanuj dysk / watch-file-index).
+- Skrypt: `scripts/export/export-produkty-baza.py`; hook w `apps/web/scripts/build-file-index.py` (koniec pipeline).
+- Ręcznie: `python scripts/export/export-produkty-baza.py` (opcjonalnie `--out`).
+
+## Inyfinn Config Sync (2026-07-27, upd 2026-07-28)
+
+- Id: `inyfinn.cursor-config-sync` — **tylko VSIX z GitHub**, nie Marketplace Marcelo.
+- Dev: `~/.cursor/cursor-sync-dev`; VSIX: `~/.cursor/.cursor-sync/`.
+- **0.9.10+**: Apply nie `await` Reload dialogu podczas busy. Progress: % + ETA + plik.
+- **0.9.11+**: po Push/Pull auto-raport — `LAST-SYNC.md` + `skills-sync-status.md` (data/godzina + buckety skilli). Rule: `~/.cursor/rules/sync-status-first.mdc`.
+- Po instalacji VSIX: **Developer: Reload Window**.
+
+- Viz grid v5.0.14 (2026-07-27): `#vizShowAll` OFF = karty produktu (`groupByProduct`) z badge `+N`, tag Warianty (`multiIndex`), przycisk „Pokaż indeksy”; ON = osobna karta per wariant (`groupByVariant`). Hero = rewizja z najnowszą datą w **nazwie folderu** (`revisionFolderDateScore`), nie mtime. Modal: `productViewMode` — klik wariant=podgląd wariantu, re-click=widok produktu; tytuł z `productLevelDisplayName(group.pid)`.
+- Preview nav (v5.0.14): `DamModalShared.bindPreviewNav` na `#damVizModal` + `#damMediaPreview` (Back/Fwd/Up/Refresh); close X hover czerwony — global CSS w `dam-modal-shared.js`.
+- Assoc scope (v5.0.14): materiały filtrowane po `ctx.variant_key` + `linked_variant_ids`; self-loop wyklucza `productContext.id` z listy linked products; phantom warianty `00`/`000000` ukryte w material variant grid.
+
+- Skojarzone materiały wiz: `viaLinkedVariant` pokazuje wizki z produktu dodanego jako linked variant (br-049510 = M-IMG249510-07-26); auto-seed `linked_materials` przy pierwszym renderze.
+
+## Assoc linked WIZKI expand (HARD, 2026-07-27, v5.0.10)
+
+- Po `expandModalWizkiVariants` deduplikuj linked rows kluczem **pliku** (`modalWizkiRowKey`: path+file), nigdy `productVariantKey` (lang|index) — inaczej „Pokaż wszystkie” pokazuje tylko L.
+- Szukanie branding `IMG249510-07-26` / `M-IMG…`: `DamMarketingId.queryMatchesBrId` (core digits br-049510 → 249510) w `dam-branding.js` i pickerze.
+- M-SHOP405515 / M-GOG805627: jeśli brak w `branding-index.json` — blocker reindexu, nie bug search UI.
+
+
+- Tag-edit / assoc / COMBO share one footer language: `.dam-thumb-picker__footer` + `.dam-dialog-actions` + `.dam-modal-footer` — grid, `padding: 12px 14px`, `min-height: 65px`, bg `#f7f6fa`, flush to box bottom (no white void under the strip).
+- Head/X: `.dam-thumb-picker__head` + `.dam-viz-modal-close` (not a one-off text X).
+- List in tall pickers: `flex:1; max-height:none` — never cap list height while the shell has `min-height` (that created the white void).
+- Subcategory options: full unique set from `file-index` `subcategory_slug`/`subcategory_label` (not search-index alone; search-index has no subcategory field). Never overwrite a full `_DAM_FILE_INDEX` with light search catalog.
+
 ## Preferencje UX odpowiedzi agenta (2026-07-26)
 
 - **Zawsze dawaj klikalny link** do strony DAM przy weryfikacji UI / po bumpie wersji (pełny URL z `?v=` cache-bust). Nie tylko „Ctrl+F5 na visualizations” — markdown link `http://127.0.0.1:8765/...`.
+
+## Assoc picker FREEZE: connection vs code (2026-07-26)
+
+- Przed winą JS na viz CTA: `powershell -File scripts/ops/dam-cdp-resilience-watchdog.ps1` (rotate CDP ports, max 100).
+- E2E: type **tylko** `#damAssocEditSearch` w popoverze — nigdy fallback na `.dam-tag-edit-popover__search-wrap input` (to `#vizSearch` → full DamSearch = false FREEZE).
+- CDP: sync keystroke z `awaitPromise:false`; unikalny `--remote-debugging-port` per attempt; unikaj targetów `chrome-extension://`.
+- sim fail→pass: `sim-assoc-picker-search-cap.js` kontrakt **50000 vs 81** iteracji (nie sam timing).
 
 ## GOLDEN path assoc (HARD, 2026-07-26, v4.0.56/57)
 

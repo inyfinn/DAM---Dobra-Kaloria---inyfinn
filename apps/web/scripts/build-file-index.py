@@ -2140,6 +2140,23 @@ def main() -> None:
     except Exception as exc:  # noqa: BLE001
         print(f"WARN: enrich-product-associations failed: {exc}")
 
+    # Zywy dump bazy produktow (DK+GC) na dysku Marketing - Notion / audyt.
+    try:
+        import importlib.util
+
+        export_baza = Path(__file__).resolve().parents[2] / "scripts" / "export" / "export-produkty-baza.py"
+        spec3 = importlib.util.spec_from_file_location("export_produkty_baza", export_baza)
+        if spec3 and spec3.loader:
+            mod3 = importlib.util.module_from_spec(spec3)
+            spec3.loader.exec_module(mod3)
+            stats = mod3.export_produkty_baza(index_path=OUT)
+            print(
+                "export-produkty-baza: "
+                f"products={stats['products']} dk={stats['dk']} gc={stats['gc']} -> {stats['out']}"
+            )
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARN: export-produkty-baza failed: {exc}")
+
 
 if __name__ == "__main__":
     main()

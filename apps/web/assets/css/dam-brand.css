@@ -2121,13 +2121,13 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-search-suggest {
   list-style: none;
   margin: 0;
-  padding: 6px 0;
+  padding: 4px 0;
 }
 
 .dam-search-hits a,
 .dam-search-suggest a {
   display: block;
-  padding: 10px 14px;
+  padding: 7px 12px;
   text-decoration: none;
   color: #464255;
 }
@@ -2135,6 +2135,106 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-search-hits a:hover,
 .dam-search-suggest a:hover {
   background: #f8f4fd;
+}
+
+.dam-search-hits--panel {
+  padding: 0;
+}
+
+.dam-search-hits--panel .dam-search-hits a,
+.dam-search-hits--panel a {
+  padding: 7px 12px;
+}
+
+.dam-search-hit__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 7px 12px;
+  text-align: left;
+  cursor: pointer;
+  color: #464255;
+  border-radius: 0;
+}
+
+.dam-search-hit__row:hover {
+  background: #f8f4fd;
+}
+
+.dam-search-hit__row.is-selected {
+  background: #ede4fb;
+  box-shadow: inset 3px 0 0 #ab54db;
+}
+
+.dam-search-hit__check {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid #d7c9f0;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: transparent;
+  background: #fff;
+}
+
+.dam-search-hit__check.is-on {
+  border-color: #ab54db;
+  background: #ab54db;
+  color: #fff;
+}
+
+.dam-search-hit__thumb-wrap {
+  flex: 0 0 auto;
+}
+
+.dam-search-hit__thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #f4f4f6;
+  border: 1px solid #ececf1;
+}
+
+.dam-search-hit__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dam-search-hit__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.dam-assoc-edit-popover__list .dam-search-hit {
+  list-style: none;
+}
+
+.dam-assoc-edit-popover__list .dam-search-hit--nested .dam-search-hit__row {
+  padding-left: 28px;
+  position: relative;
+}
+
+.dam-assoc-edit-popover__list .dam-search-hit--nested .dam-search-hit__row::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: #d7c9f0;
 }
 
 .dam-search-name {
@@ -2221,21 +2321,24 @@ body:has(.geex-customizer.active) .geex-content__header {
   outline-offset: 2px;
 }
 .dam-search-hit--nested > a {
-  padding-left: 28px;
+  padding-left: 24px;
   position: relative;
 }
 .dam-search-hit--nested > a::before {
   content: "";
   position: absolute;
-  left: 14px;
-  top: 14px;
-  bottom: 14px;
+  left: 12px;
+  top: 10px;
+  bottom: 10px;
   width: 2px;
   border-radius: 2px;
   background: #d7c9f0;
 }
 .dam-search-hit__badge {
   display: inline-block;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: max-content;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -2244,7 +2347,59 @@ body:has(.geex-customizer.active) .geex-content__header {
   background: #f3eefc;
   border-radius: 4px;
   padding: 2px 6px;
-  margin-bottom: 4px;
+  margin-bottom: 0;
+}
+.dam-search-hit__head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+  margin-bottom: 2px;
+}
+.dam-search-hit__tags-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.dam-search-hit__tags-inline .dam-viz-badge {
+  font-size: calc(var(--dam-tag-fs-pill, 10.5px) * 0.8);
+  padding: 1px 6px;
+  line-height: 1.35;
+  max-width: 100%;
+}
+.dam-assoc-edit-popover__list .dam-search-hit__row {
+  padding: 7px 12px;
+  min-height: 76px;
+  align-items: flex-start;
+}
+.dam-assoc-edit-popover__list .dam-search-hit__body {
+  gap: 2px;
+  overflow: visible;
+}
+.dam-assoc-edit-popover__list .dam-search-hit__row:hover {
+  background: #f8f4fd;
+}
+.dam-assoc-edit-popover__list .dam-search-hit__row.is-selected {
+  background: #ede4fb;
+  box-shadow: inset 3px 0 0 #ab54db;
+}
+.dam-search-hit--material .dam-search-hit__badge {
+  color: #6c5ce7;
+  background: #f3eefc;
+}
+.dam-assoc-edit-popover__list .dam-search-hit--nested .dam-search-hit__row {
+  padding-left: 28px;
+  position: relative;
+}
+.dam-assoc-edit-popover__list {
+  padding: 4px 0;
+}
+.dam-assoc-edit-popover__opt-row + .dam-assoc-edit-popover__opt-row,
+.dam-assoc-edit-popover__folder-block + .dam-assoc-edit-popover__folder-block {
+  margin-top: 2px;
 }
 .dam-search-hit--variant .dam-search-hit__badge {
   color: #0f7b5f;
@@ -3293,10 +3448,43 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   z-index: 51;
   box-shadow: 0 4px 16px rgb(23 22 30 / 0.04);
 }
+.dam-projects-grid-toolbar__status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  min-width: 0;
+}
 .dam-projects-grid-toolbar .dam-projects-status-line,
 .dam-projects-grid-toolbar .dam-page-status {
   margin: 0;
   min-width: 0;
+}
+.dam-projects-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.dam-projects-sort__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dam-text-muted, #8f8b9f);
+  white-space: nowrap;
+}
+.dam-projects-sort__select {
+  border: 1px solid color-mix(in srgb, var(--dam-text, #464255) 16%, transparent);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  background: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
+  height: 34px;
+  min-height: 34px;
+  box-sizing: border-box;
+  max-width: 220px;
 }
 .dam-projects-grid-toolbar__actions {
   display: inline-flex;
@@ -3698,10 +3886,10 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-explorer-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .dam-explorer-toolbar__actions {
   display: flex;
@@ -4046,12 +4234,12 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   color: #ccc;
 }
 .dam-explorer-panel {
-  --dam-surface-inset-x: 18px;
-  --dam-surface-inset-y: 14px;
-  --dam-surface-inset-y-sm: 12px;
+  --dam-surface-inset-x: 14px;
+  --dam-surface-inset-y: 10px;
+  --dam-surface-inset-y-sm: 8px;
   container-type: inline-size;
   container-name: dam-explorer-panel;
-  padding: var(--dam-surface-inset-y) var(--dam-surface-inset-x) 22px;
+  padding: var(--dam-surface-inset-y) var(--dam-surface-inset-x) 16px;
 }
 .dam-explorer-welcome .dam-explorer-panel__lead {
   margin-bottom: 16px;
@@ -5795,15 +5983,20 @@ button.dam-status-badge.dam-tag-editable:hover {
   border-radius: 10px;
   background: #fafafb;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
 }
 
 .dam-carrier-body__life .dam-lifecycle-history {
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
   word-break: break-word;
   overflow-wrap: anywhere;
+}
+
+.dam-carrier-body__life .dam-lifecycle-history__open:hover,
+.dam-carrier-body__life .dam-lifecycle-history__open:focus-visible {
+  z-index: 2;
 }
 
 @media (max-width: 900px) {
@@ -6541,8 +6734,9 @@ button.dam-status-badge.dam-tag-editable:hover {
   transition: background 0.12s ease, color 0.12s ease;
 }
 .dam-viz-modal-close:hover {
-  background: #f8f4fd;
-  color: var(--dam-primary, #AB54DB);
+  background: rgba(239, 68, 68, 0.14) !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
 }
 
 .dam-viz-modal__thumb {
@@ -6672,7 +6866,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-viz-modal__title,
 #damMediaPreviewTitle,
 .dam-media-preview__title-base {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: #464255;
   margin: 0;
@@ -6731,13 +6925,15 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-viz-modal__filename,
 #damMediaPreviewFilename,
 #damVizModalFilename {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 400;
   color: #8b8d97;
   margin: 0;
-  line-height: 1.35;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
   word-break: break-word;
   overflow-wrap: anywhere;
+  max-width: 100%;
 }
 
 #damMediaPreviewFilename {
@@ -9514,8 +9710,9 @@ button.dam-viz-badge:focus-visible,
   margin-left: auto;
 }
 
-/* Dialog chrome: spójny nagłówek + stopka (web: primary po prawej, dismiss po lewej) */
+/* Dialog chrome: spójny nagłówek + stopka flush (COMBO / assoc = 4-col; tag-edit = 2-btn) */
 .dam-dialog-actions,
+.dam-modal-footer,
 #damAssocEditPopover .dam-thumb-picker__footer,
 .dam-assoc-edit-overlay .dam-tag-edit-popover__actions,
 #damThumbPicker .dam-thumb-picker__footer {
@@ -9526,16 +9723,42 @@ button.dam-viz-badge:focus-visible,
   min-height: 65px;
   box-sizing: border-box;
   padding: 12px 14px;
+  margin: 0;
   border-top: 1px solid #ececf2;
   background: #f7f6fa;
   flex: 0 0 auto;
+  border-radius: 0;
+}
+/* Tag-edit: only Anuluj + Zatwierdź. 4-col COMBO grid (minmax 148 middle)
+   overflowed ~320px shell → confirm clipped by overflow:hidden + unclickable. */
+#damTagEditPopover .dam-thumb-picker__footer,
+#damTagEditPopover .dam-tag-edit-popover__actions {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 65px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  margin: 0;
+  border-top: 1px solid #ececf2;
+  background: #f7f6fa;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  border-radius: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  z-index: 2;
 }
 .dam-dialog-actions__spacer {
   display: none;
 }
 .dam-modal-footer > [data-cancel],
 .dam-modal-footer > .dam-modal-footer__back,
-#damThumbPicker .dam-thumb-picker__footer > .dam-modal-footer__back {
+#damThumbPicker .dam-thumb-picker__footer > .dam-modal-footer__back,
+#damTagEditPopover .dam-thumb-picker__footer > [data-cancel],
+#damTagEditPopover .dam-tag-edit-popover__actions > [data-cancel] {
   grid-column: 1;
 }
 .dam-modal-footer > [data-goto-combo],
@@ -9548,6 +9771,12 @@ button.dam-viz-badge:focus-visible,
 #damThumbPicker .dam-thumb-picker__footer > [data-confirm] {
   grid-column: 4;
   justify-self: end;
+}
+#damTagEditPopover .dam-thumb-picker__footer > [data-confirm],
+#damTagEditPopover .dam-tag-edit-popover__actions > [data-confirm] {
+  grid-column: 3;
+  justify-self: end;
+  max-width: 100%;
 }
 #damThumbPicker.dam-thumb-picker-overlay--stacked {
   background: transparent !important;
@@ -9594,7 +9823,9 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-assoc-edit-overlay .dam-thumb-picker__head,
 #damAssocEditPopover .dam-thumb-picker__head,
-#damThumbPicker .dam-thumb-picker__head {
+#damThumbPicker .dam-thumb-picker__head,
+#damTagEditPopover .dam-thumb-picker__head,
+#damTagEditPopover .dam-tag-edit-popover__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -9608,11 +9839,21 @@ button.dam-viz-badge:focus-visible,
 }
 #damAssocEditPopover .dam-thumb-picker__head strong,
 .dam-assoc-edit-overlay .dam-tag-edit-popover__head > span,
-#damThumbPicker .dam-thumb-picker__head strong {
+#damThumbPicker .dam-thumb-picker__head strong,
+#damTagEditPopover .dam-thumb-picker__head strong,
+#damTagEditPopover .dam-tag-edit-popover__head strong {
   font-size: 15px;
   font-weight: 600;
   line-height: 1.25;
   color: #464255;
+}
+#damTagEditPopover .dam-thumb-picker__head .dam-viz-modal-close,
+#damTagEditPopover .dam-tag-edit-popover__head .dam-viz-modal-close {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  flex: 0 0 auto;
+  margin-left: 8px;
 }
 
 /* Faza 4 (2026-07-18): popover edycji typu + panel moderacji */
@@ -9620,7 +9861,7 @@ button.dam-viz-badge:focus-visible,
   position: absolute;
   z-index: 10060;
   background: #fff;
-  border-radius: 10px;
+  border-radius: 14px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
   min-width: 240px;
   max-width: 300px;
@@ -9628,7 +9869,8 @@ button.dam-viz-badge:focus-visible,
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid #ececf2;
+  border: 1px solid #e2e2ea;
+  padding: 0;
 }
 .dam-tag-edit-popover--wide {
   min-width: 360px;
@@ -9637,38 +9879,35 @@ button.dam-viz-badge:focus-visible,
   max-height: min(80vh, 550px);
 }
 .dam-tag-edit-popover__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
   color: #464255;
-  border-bottom: 1px solid #ececf2;
-  flex: 0 0 auto;
-  background: #fff;
 }
 .dam-tag-edit-popover__close {
-  border: none;
-  background: none;
+  border: 1px solid #e7e7e7;
+  background: #fff;
   cursor: pointer;
-  color: #8b8d97;
-  min-width: 28px;
-  min-height: 28px;
+  color: #464255;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 18px;
 }
 .dam-tag-edit-popover__close:hover {
-  color: #ff5b5b;
+  background: #f8f4fd;
+  color: var(--dam-primary, #ab54db);
 }
 /* Paseczek wyszukiwania na gorze listy typow - live filter, autofocus (2026-07-18) */
 .dam-tag-edit-popover__search-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 10px 14px;
   border-bottom: 1px solid #ececf2;
   flex: 0 0 auto;
   color: #8b8d97;
@@ -9696,11 +9935,13 @@ button.dam-viz-badge:focus-visible,
 .dam-tag-edit-popover__list {
   display: flex;
   flex-direction: column;
-  padding: 6px;
+  padding: 6px 8px;
   overflow: auto;
   flex: 1 1 auto;
   min-height: 0;
-  max-height: min(36vh, 220px);
+  /* HARD: no max-height cap — with min-height on wide popover a capped list
+     left a white void above the footer (COMBO/assoc keep list flex-fill). */
+  max-height: none;
 }
 .dam-tag-edit-popover__opt.is-selected {
   background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
@@ -9712,16 +9953,10 @@ button.dam-viz-badge:focus-visible,
   margin-bottom: 4px;
   color: #8b8d97;
 }
-.dam-tag-edit-popover__actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-top: 1px solid #ececf2;
-  background: #fafafc;
-  flex: 0 0 auto;
-}
+/* Footer flush: shared .dam-dialog-actions / .dam-modal-footer grid above.
+   Keep button anatomy aligned with COMBO (#damThumbPicker). */
+#damTagEditPopover .dam-tag-edit-popover__confirm,
+#damTagEditPopover .dam-tag-edit-popover__cancel,
 .dam-tag-edit-popover__confirm,
 .dam-tag-edit-popover__cancel {
   display: inline-flex;
@@ -9729,29 +9964,44 @@ button.dam-viz-badge:focus-visible,
   justify-content: center;
   gap: 6px;
   min-width: 44px;
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: var(--btn-radius, 50px);
-  border: 1.5px solid transparent;
-  font-size: 12px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e2ea;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
 }
-.dam-tag-edit-popover__confirm {
-  background: rgba(40, 199, 111, 0.14);
-  border-color: #28c76f;
-  color: #1B8F52;
+.dam-tag-edit-popover__confirm,
+#damTagEditPopover .dam-tag-edit-popover__confirm {
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, #fff);
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 55%, #fff);
+  color: #7a3aa8;
 }
-.dam-tag-edit-popover__confirm:hover {
-  background: rgba(40, 199, 111, 0.24);
+.dam-tag-edit-popover__confirm:hover,
+#damTagEditPopover .dam-tag-edit-popover__confirm:hover {
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 22%, #fff);
 }
-.dam-tag-edit-popover__cancel {
-  background: rgba(255, 91, 91, 0.1);
-  border-color: #ff5b5b;
-  color: #e11d48;
+.dam-tag-edit-popover__confirm[data-confirm],
+#damTagEditPopover .dam-tag-edit-popover__confirm[data-confirm] {
+  background: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #ab54db);
+  color: #fff;
 }
-.dam-tag-edit-popover__cancel:hover {
-  background: rgba(255, 91, 91, 0.2);
+.dam-tag-edit-popover__confirm[data-confirm]:hover,
+#damTagEditPopover .dam-tag-edit-popover__confirm[data-confirm]:hover {
+  filter: brightness(0.96);
+}
+.dam-tag-edit-popover__cancel,
+#damTagEditPopover .dam-tag-edit-popover__cancel {
+  background: #fff;
+  border-color: #e2e2ea;
+  color: #6b6b76;
+}
+.dam-tag-edit-popover__cancel:hover,
+#damTagEditPopover .dam-tag-edit-popover__cancel:hover {
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, #e2e2ea);
+  color: #7a3aa8;
 }
 .dam-tag-edit-popover__foot {
   flex: 0 0 auto;

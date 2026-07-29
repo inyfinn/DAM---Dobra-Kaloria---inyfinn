@@ -2629,6 +2629,622 @@
       },
       "revision_index": "6300622.00",
       "lifecycle_history_id": "lc_1784494212429"
+    },
+    {
+      "id": "chg_1785100798950",
+      "ts": "2026-07-26T21:19:58.950425+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "rename_carrier",
+      "category": "carrier",
+      "carrier_to": "BIGPAK",
+      "product_id": "banoffee-kakao-deserowe",
+      "carrier_from": "DOY",
+      "file_renames": [
+        {
+          "new_name": "DK-BIGPAK-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-BIGPAK-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai",
+          "old_name": "DK_Doypack-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00-F.ai",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK_Doypack-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00-F.ai"
+        },
+        {
+          "new_name": "DK-BIGPAK-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-BIGPAK-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf",
+          "old_name": "DK_Doypack-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00-F.pdf",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK_Doypack-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00-F.pdf"
+        },
+        {
+          "new_name": "DK-BIGPAK-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\3 - DRUK\\DK-BIGPAK-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip",
+          "old_name": "DK_Doypack-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00-F.zip",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\3 - DRUK\\DK_Doypack-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00-F.zip"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-L.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-L.jpg"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-L.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-L.png"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-S-SKLEP.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-S-SKLEP.jpg"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-S-SKLEP.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-S-SKLEP.png"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-S.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-S.jpg"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-S.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-S.png"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-XL.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-XL.jpg"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-XL.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-FRONT-XL.png"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-L.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-L.jpg"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-L.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-L.png"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-S-SKLEP.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-S-SKLEP.jpg"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-S-SKLEP.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-S-SKLEP.png"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-S.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-S.jpg"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-S.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-S.png"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-XL.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-XL.jpg"
+        },
+        {
+          "new_name": "DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-BIGPAK-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-XL.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-6300728.00-TYŁ-XL.png"
+        }
+      ],
+      "product_name": "BANOFFEE KAKAO",
+      "folder_rename": {
+        "new_name": "BIGPAK - 65 g - 24.03.2026 - 6300728.00",
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\BIGPAK - 65 g - 24.03.2026 - 6300728.00",
+        "old_name": "DOY - 65 g - 24.03.2026 - 6300728.00",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00"
+      }
+    },
+    {
+      "id": "chg_1785100807262",
+      "ts": "2026-07-26T21:20:07.262217+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "rename_carrier",
+      "category": "carrier",
+      "carrier_to": "DOY",
+      "product_id": "banoffee-kakao-deserowe",
+      "carrier_from": "DOY",
+      "file_renames": [],
+      "product_name": "BANOFFEE KAKAO",
+      "folder_rename": {
+        "new_name": null,
+        "new_path": null,
+        "old_name": null,
+        "old_path": null
+      }
+    },
+    {
+      "id": "chg_1785148604928",
+      "ts": "2026-07-27T10:36:44.928396+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "rename_carrier",
+      "category": "carrier",
+      "carrier_to": "DOY6X",
+      "product_id": "banoffee-kakao-deserowe",
+      "carrier_from": "DOY",
+      "file_renames": [
+        {
+          "new_name": "DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai",
+          "old_name": "DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai"
+        },
+        {
+          "new_name": "DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf",
+          "old_name": "DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf"
+        },
+        {
+          "new_name": "DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\3 - DRUK\\DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip",
+          "old_name": "DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\3 - DRUK\\DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png",
+          "old_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png"
+        }
+      ],
+      "product_name": "CYNAMONKA",
+      "folder_rename": {
+        "new_name": "DOY6X - 65 g - 24.03.2026 - 6300728.00",
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00",
+        "old_name": "DOY - 65 g - 24.03.2026 - 6300728.00",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00"
+      }
+    },
+    {
+      "id": "chg_1785148618416",
+      "ts": "2026-07-27T10:36:58.416700+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "rename_carrier",
+      "category": "carrier",
+      "carrier_to": "DOY",
+      "product_id": "banoffee-kakao-deserowe",
+      "carrier_from": "DOY6X",
+      "file_renames": [
+        {
+          "new_name": "DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai",
+          "old_name": "DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.ai"
+        },
+        {
+          "new_name": "DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf",
+          "old_name": "DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\2 - PROJEKT\\DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.pdf"
+        },
+        {
+          "new_name": "DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\3 - DRUK\\DK-DOY-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip",
+          "old_name": "DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\3 - DRUK\\DK-DOY6X-Kulki - BANOFEE 65 g -24_03_2026 - 6300728.00_F.zip"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-L - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-S-SKLEP - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-FRONT-XL - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-L - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-S-SKLEP - 6300728.00.png"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.jpg"
+        },
+        {
+          "new_name": "DK-DOY-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png",
+          "old_name": "DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00\\4 - WIZKI\\DK-DOY6X-KULKI-BANOFEE-65-G-TYŁ-XL - 6300728.00.png"
+        }
+      ],
+      "product_name": "CYNAMONKA",
+      "folder_rename": {
+        "new_name": "DOY - 65 g - 24.03.2026 - 6300728.00",
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY - 65 g - 24.03.2026 - 6300728.00",
+        "old_name": "DOY6X - 65 g - 24.03.2026 - 6300728.00",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]\\DOY6X - 65 g - 24.03.2026 - 6300728.00"
+      }
+    },
+    {
+      "id": "chg_1785281307125",
+      "ts": "2026-07-28T23:28:27.125852+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "product",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1785281307110"
+    },
+    {
+      "id": "chg_1785281335199",
+      "ts": "2026-07-28T23:28:55.199464+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "cynamonka-nerkowcowy-f",
+      "path_renames": [
+        {
+          "kind": "variant_cascade",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F"
+        },
+        {
+          "kind": "variant_cascade",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\MINI - 18 06 2026 - 6300782.00",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\MINI - 18 06 2026 - 6300782.00 - F"
+        },
+        {
+          "kind": "product",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1785281335183"
+    },
+    {
+      "id": "chg_1785281353159",
+      "ts": "2026-07-28T23:29:13.159770+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00 - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00 - F",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00 - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\MINI - 18 06 2026 - 6300782.00"
+      },
+      "revision_index": "6300782.00",
+      "lifecycle_history_id": "lc_1785281353145"
+    },
+    {
+      "id": "chg_1785281370524",
+      "ts": "2026-07-28T23:29:30.524973+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00"
+      },
+      "revision_index": "6300783.00",
+      "lifecycle_history_id": "lc_1785281370509"
+    },
+    {
+      "id": "chg_1785281386947",
+      "ts": "2026-07-28T23:29:46.947043+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "path_renames": [],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F"
+      },
+      "revision_index": "6300783.00",
+      "lifecycle_history_id": "lc_1785281386929"
+    },
+    {
+      "id": "chg_1785281404807",
+      "ts": "2026-07-28T23:30:04.807553+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "cynamonka-nerkowcowy",
+      "path_renames": [],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F"
+      },
+      "revision_index": "6300783.00",
+      "lifecycle_history_id": "lc_1785281404792"
+    },
+    {
+      "id": "chg_1785281751118",
+      "ts": "2026-07-28T23:35:51.118997+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "muffin-jagodowy-nerkowcowy",
+      "path_renames": [],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00"
+      },
+      "revision_index": "6300525.00",
+      "lifecycle_history_id": "lc_1785281751098"
+    },
+    {
+      "id": "chg_1785281774337",
+      "ts": "2026-07-28T23:36:14.337343+00:00",
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\MUFFIN JAGODOWY — [ nerkowcowy ] - X\\KAR6X - 20.03.2025 - 6300525.00 - X",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [
+        "variant_moved_to_archive_with_product_wrapper"
+      ],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "X",
+      "status": "nieaktualne",
+      "product_id": "muffin-jagodowy-nerkowcowy",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00 - X",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00"
+        },
+        {
+          "kind": "variant_archive",
+          "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\MUFFIN JAGODOWY — [ nerkowcowy ] - X\\KAR6X - 20.03.2025 - 6300525.00 - X",
+          "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00 - X"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\MUFFIN JAGODOWY — [ nerkowcowy ] - X\\KAR6X - 20.03.2025 - 6300525.00 - X",
+        "old_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]\\KAR6X - 20.03.2025 - 6300525.00"
+      },
+      "revision_index": "6300525.00",
+      "lifecycle_history_id": "lc_1785281774322"
     }
   ]
 }

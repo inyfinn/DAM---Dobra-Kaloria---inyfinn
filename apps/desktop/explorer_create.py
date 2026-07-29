@@ -357,6 +357,7 @@ def create_product(
     demo: bool = False,
     dry_run: bool = True,
     confirm: bool = False,
+    existing_product_path: str = "",
 ) -> dict[str, Any]:
     """
     POST /explorer/create-product
@@ -364,7 +365,8 @@ def create_product(
     Body: {
       brand, category_path, name, subcategory,
       variants: [{enabled, template_folder, date, index}],
-      demo, dry_run, confirm
+      demo, dry_run, confirm,
+      existing_product_path  # optional: add variants into existing product folder
     }
     """
     gate = _gate_write(bool(dry_run), bool(confirm))
@@ -386,8 +388,26 @@ def create_product(
             "message": f"Brak bazy Marketing: {base}",
         }
 
+    existing_raw = str(existing_product_path or "").strip()
+    existing_product: Path | None = None
+    if existing_raw:
+        cand = Path(existing_raw)
+        if not cand.is_dir():
+            return {
+                "ok": False,
+                "error": "existing_product_not_found",
+                "message": f"Brak folderu produktu: {existing_raw}",
+            }
+        existing_product = cand.resolve()
+        if not str(existing_product).lower().startswith(str(base).lower()):
+            return {
+                "ok": False,
+                "error": "existing_product_outside_base",
+                "message": "existing_product_path poza baza Marketing.",
+            }
+
     cat = resolve_category_path(base, b, category_path)
-    if cat is None:
+    if cat is None and existing_product is None:
         return {
             "ok": False,
             "error": "category_not_found",
@@ -444,6 +464,100 @@ def create_product(
             }
         )
 
+    # --- mode add-variant: copy only selected variants into existing product ---
+    if existing_product is not None:
+        if not var_specs:
+            if dry_run:
+                return {
+                    "ok": True,
+                    "mode": "add-variant",
+                    "dry_run": True,
+                    "bootstrap": True,
+                    "brand": b,
+                    "name": safe_name or existing_product.name,
+                    "subcategory": safe_sub,
+                    "demo": bool(demo),
+                    "category_path": str(cat) if cat is not None else str(existing_product.parent),
+                    "template_path": str(product_tmpl),
+                    "available_variants": available,
+                    "variants_planned": [],
+                    "planned_path": str(existing_product),
+                    "planned_tree": [str(existing_product)],
+                    "existing_product_path": str(existing_product),
+                    "message": "Wybierz warianty ze Szablonów.",
+                }
+            return {
+                "ok": False,
+                "error": "variants_required",
+                "message": "Wybierz co najmniej jeden wariant ze Szablonow.",
+            }
+        planned_tree = [str(existing_product / v["planned_name"]) for v in var_specs]
+        for v in var_specs:
+            dest = existing_product / v["planned_name"]
+            if dest.exists():
+                return {
+                    "ok": False,
+                    "error": "variant_already_exists",
+                    "planned_path": str(dest),
+                    "message": f"Wariant juz istnieje: {v['planned_name']}",
+                }
+        payload: dict[str, Any] = {
+            "ok": True,
+            "mode": "add-variant",
+            "dry_run": bool(dry_run),
+            "brand": b,
+            "name": safe_name or existing_product.name,
+            "subcategory": safe_sub,
+            "demo": bool(demo),
+            "category_path": str(cat) if cat is not None else str(existing_product.parent),
+            "template_path": str(product_tmpl),
+            "available_variants": available,
+            "variants_planned": var_specs,
+            "planned_path": str(existing_product),
+            "planned_tree": planned_tree,
+            "existing_product_path": str(existing_product),
+            "message": (
+                f"Plan: dodaj warianty do {existing_product.name}"
+                if dry_run
+                else f"Dodano warianty do: {existing_product.name}"
+            ),
+        }
+        if dry_run:
+            return payload
+        created_paths: list[str] = []
+        try:
+            for v in var_specs:
+                src = product_tmpl / v["template_folder"]
+                dest = existing_product / v["planned_name"]
+                shutil.copytree(str(src), str(dest))
+                created_paths.append(str(dest))
+                _rename_placeholder_files(
+                    dest,
+                    product_name=safe_name or existing_product.name,
+                    date=v.get("date") or "",
+                    index=v.get("index") or "",
+                )
+            payload["created_path"] = str(existing_product)
+            payload["created_paths"] = created_paths
+            payload["index_rebuild_suggested"] = True
+            payload["index_rebuild_hint"] = "POST /index/rebuild"
+            return payload
+        except OSError as exc:
+            for p in created_paths:
+                try:
+                    pp = Path(p)
+                    if pp.is_dir() and pp.resolve().is_relative_to(existing_product.resolve()):
+                        shutil.rmtree(str(pp))
+                except OSError:
+                    pass
+            return {
+                "ok": False,
+                "error": "copy_failed",
+                "message": str(exc),
+                "planned_path": str(existing_product),
+                "mode": "add-variant",
+            }
+
     # Product-level demo: explicit flag OR any variant with missing/6300XXX index
     # OR no variants (placeholder product).
     product_demo = bool(demo)
@@ -469,7 +583,7 @@ def create_product(
     for v in var_specs:
         planned_tree.append(str(planned_product / v["planned_name"]))
 
-    payload: dict[str, Any] = {
+    payload = {
         "ok": True,
         "dry_run": bool(dry_run),
         "brand": b,

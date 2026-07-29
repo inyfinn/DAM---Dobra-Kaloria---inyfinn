@@ -10,7 +10,9 @@
   "use strict";
 
   var MODAL_ID = "damExplorerCreateModal";
-  var STYLE_ID = "damExplorerCreateModalCss";
+  /* Shared shell with Dodaj wariant (same CSS via both()); modal markup may be added by openAddVariant. */
+  var VARIANT_MODAL_ID = "damExplorerAddVariantModal";
+  var STYLE_ID = "damExplorerCreateModalCss20260723d";
   var EM_DASH = "\u2014";
   var UNDO_WINDOW_SECONDS = 120;
 
@@ -277,85 +279,129 @@
   /* ------------------------------------------------------------------- */
 
   function injectCss() {
-    if (document.getElementById(STYLE_ID)) return;
+    /* STYLE_ID bumped when selector grammar changes - force replace of broken sheet.
+       Also strip any legacy damExplorerCreateModalCss* nodes (old id left a 34px overlay). */
+    try {
+      document.querySelectorAll('style[id^="damExplorerCreateModalCss"]').forEach(function (n) {
+        n.remove();
+      });
+    } catch (eStrip) { /* ignore */ }
+    /* both(" input") => #modal input  (NEVER bare #modal in a comma list - that collapsed the overlay to 34px) */
+    function both(sel) {
+      var ids = [MODAL_ID];
+      if (typeof VARIANT_MODAL_ID === "string" && VARIANT_MODAL_ID) ids.push(VARIANT_MODAL_ID);
+      return ids.map(function (id) { return "#" + id + sel; }).join(",");
+    }
     var css =
-      "#" + MODAL_ID + "{position:fixed;inset:0;z-index:12400;display:flex;align-items:center;justify-content:center;font-size:13px;}" +
-      "#" + MODAL_ID + "[hidden]{display:none!important}" +
-      "#" + MODAL_ID + " .dam-exp-create__backdrop{position:absolute;inset:0;background:rgba(28,22,40,.45)}" +
-      "#" + MODAL_ID + " .dam-exp-create__panel{position:relative;z-index:1;width:min(920px,92vw);max-height:min(88vh,920px);overflow:auto;" +
+      both("") + "{position:fixed;inset:0;z-index:12400;display:flex;align-items:center;justify-content:center;font-size:13px;font-family:var(--dam-font,Jost,sans-serif)}" +
+      both("[hidden]") + "{display:none!important}" +
+      both(" .dam-exp-create__backdrop") + "{position:absolute;inset:0;background:rgba(28,22,40,.45)}" +
+      both(" .dam-exp-create__panel") + "{position:relative;z-index:1;width:min(920px,92vw);max-height:min(88vh,920px);overflow:auto;" +
       "background:#fff;border-radius:16px;box-shadow:0 24px 80px rgba(40,30,60,.22);padding:26px 32px 30px;" +
       "display:flex;flex-direction:column;gap:14px;font-size:13px;line-height:1.42;color:#464255}" +
-      "#" + MODAL_ID + " .dam-exp-create__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}" +
-      "#" + MODAL_ID + " .dam-exp-create__eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#ab54db;margin:0 0 4px}" +
-      "#" + MODAL_ID + " .dam-exp-create__title{margin:0;font-size:20px;font-weight:700;color:#1f1a2a}" +
-      "#" + MODAL_ID + " .dam-exp-create__sub{margin:5px 0 0;font-size:12.5px;color:#6b6578}" +
-      "#" + MODAL_ID + " .dam-exp-create__grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}" +
-      "#" + MODAL_ID + " .dam-exp-create__field{display:flex;flex-direction:column;gap:5px;min-width:0}" +
-      "#" + MODAL_ID + " .dam-exp-create__field--full{grid-column:1/-1}" +
-      "#" + MODAL_ID + " .dam-exp-create__field--seq{max-width:130px}" +
-      "#" + MODAL_ID + " label{font-size:11.5px;font-weight:600;color:#6b6578;text-transform:uppercase;letter-spacing:.03em}" +
-      "#" + MODAL_ID + " input[type=text],#" + MODAL_ID + " input[type=number],#" + MODAL_ID + " select{" +
-      "height:34px;border:1px solid #e7e2ef;border-radius:8px;padding:0 11px;font-size:13px;line-height:1;color:#302b3d;background:#fff}" +
-      "#" + MODAL_ID + " input:focus,#" + MODAL_ID + " select:focus{outline:2px solid rgba(171,84,219,.35);outline-offset:1px;border-color:#ab54db}" +
-      "#" + MODAL_ID + " input[type=checkbox]{width:16px;height:16px;accent-color:var(--dam-primary,#AB54DB);cursor:pointer;margin:0}" +
-      "#" + MODAL_ID + " .dam-exp-create__checkline{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:#464255;" +
+      both(" .dam-exp-create__head") + "{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}" +
+      both(" .dam-exp-create__eyebrow") + "{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#ab54db;margin:0 0 4px}" +
+      both(" .dam-exp-create__title") + "{margin:0;font-size:20px;font-weight:700;color:#1f1a2a}" +
+      both(" .dam-exp-create__sub") + "{margin:5px 0 0;font-size:12.5px;color:#6b6578}" +
+      both(" .dam-exp-create__grid") + "{display:grid;grid-template-columns:1fr 1fr;gap:12px}" +
+      both(" .dam-exp-create__field") + "{display:flex;flex-direction:column;gap:5px;min-width:0}" +
+      both(" .dam-exp-create__field--full") + "{grid-column:1/-1}" +
+      both(" .dam-exp-create__field--seq") + "{max-width:130px}" +
+      both(" label") + "{font-size:11.5px;font-weight:600;color:#6b6578;text-transform:uppercase;letter-spacing:.03em}" +
+      both(" input[type=text]") + "," + both(" input[type=number]") + "," + both(" select") + "{" +
+      "height:34px;border:1px solid #e7e2ef;border-radius:8px;padding:0 11px;font-size:13px;line-height:1;color:#302b3d;background:#fff;font-family:var(--dam-font,Jost,sans-serif)}" +
+      both(" input:focus") + "," + both(" select:focus") + "{outline:2px solid rgba(171,84,219,.35);outline-offset:1px;border-color:#ab54db}" +
+      both(" input[type=checkbox]") + "{width:16px;height:16px;accent-color:var(--dam-primary,#AB54DB);cursor:pointer;margin:0}" +
+      both(" .dam-exp-create__checkline") + "{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:#464255;" +
       "text-transform:none;cursor:pointer}" +
-      "#" + MODAL_ID + " .dam-exp-create__preview{background:#f7f4fb;border:1px solid #ebe4f4;border-radius:10px;padding:11px 13px;" +
+      both(" .dam-exp-create__preview") + "{background:#f7f4fb;border:1px solid #ebe4f4;border-radius:10px;padding:11px 13px;" +
       "font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#3d3550;word-break:break-all;line-height:1.5}" +
-      "#" + MODAL_ID + " .dam-exp-create__preview b{font-weight:700;color:#1f1a2a;font-family:inherit}" +
-      "#" + MODAL_ID + " .dam-exp-create__status{font-size:12.5px;min-height:0;display:flex;align-items:center;gap:6px;border-radius:8px;" +
+      both(" .dam-exp-create__preview b") + "{font-weight:700;color:#1f1a2a;font-family:inherit}" +
+      both(" .dam-exp-create__status") + "{font-size:12.5px;min-height:0;display:flex;align-items:center;gap:6px;border-radius:8px;" +
       "padding:0;transition:padding .15s ease}" +
-      "#" + MODAL_ID + " .dam-exp-create__status:empty{display:none}" +
-      "#" + MODAL_ID + " .dam-exp-create__status.is-error{color:#b42318;background:#fdf1f0;padding:8px 12px;border:1px solid #f6d9d6}" +
-      "#" + MODAL_ID + " .dam-exp-create__status.is-info{color:#6b3fa0;background:#f7f2fb;padding:7px 12px;border:1px solid #ebdff5}" +
-      "#" + MODAL_ID + " .dam-exp-create__status.is-ok{color:#1a7a4c;background:#f0faf4;padding:7px 12px;border:1px solid #d3ede0}" +
-      "#" + MODAL_ID + " .dam-exp-create__tree{border:1px dashed #e7e2ef;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}" +
-      "#" + MODAL_ID + " .dam-exp-create__tree:empty{display:none;padding:0;border:0}" +
-      "#" + MODAL_ID + " .dam-exp-create__tree-title{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#9a93ab;margin:0 0 2px}" +
-      "#" + MODAL_ID + " .dam-exp-create__tree-row{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#3d3550}" +
-      "#" + MODAL_ID + " .dam-exp-create__tree-row i{color:#ab54db;font-size:15px}" +
-      "#" + MODAL_ID + " .dam-exp-create__tree-row--child{margin-left:22px;color:#5c5468}" +
-      "#" + MODAL_ID + " .dam-exp-create__tree-row--child i{color:#c6a8e0;font-size:14px}" +
-      "#" + MODAL_ID + " .dam-exp-create__tree-row--muted{color:#9a93ab;font-style:italic}" +
-      "#" + MODAL_ID + " .dam-exp-create__variants-head{display:flex;flex-direction:column;gap:1px}" +
-      "#" + MODAL_ID + " .dam-exp-create__variants-hint{font-size:11.5px;font-weight:500;color:#9a93ab;text-transform:none;letter-spacing:0}" +
-      "#" + MODAL_ID + " .dam-exp-create__variants{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow:auto;border:1px solid #ece7f3;border-radius:10px;padding:6px}" +
-      "#" + MODAL_ID + " .dam-exp-create__var-legend,#" + MODAL_ID + " .dam-exp-create__var{display:grid;" +
+      both(" .dam-exp-create__status:empty") + "{display:none}" +
+      both(" .dam-exp-create__status.is-error") + "{color:#b42318;background:#fdf1f0;padding:8px 12px;border:1px solid #f6d9d6}" +
+      both(" .dam-exp-create__status.is-info") + "{color:#6b3fa0;background:#f7f2fb;padding:7px 12px;border:1px solid #ebdff5}" +
+      both(" .dam-exp-create__status.is-ok") + "{color:#1a7a4c;background:#f0faf4;padding:7px 12px;border:1px solid #d3ede0}" +
+      both(" .dam-exp-create__tree") + "{border:1px dashed #e7e2ef;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}" +
+      both(" .dam-exp-create__tree:empty") + "{display:none;padding:0;border:0}" +
+      both(" .dam-exp-create__tree-title") + "{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#9a93ab;margin:0 0 2px}" +
+      both(" .dam-exp-create__tree-row") + "{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#3d3550}" +
+      both(" .dam-exp-create__tree-row i") + "{color:#ab54db;font-size:15px}" +
+      both(" .dam-exp-create__tree-row--child") + "{margin-left:22px;color:#5c5468}" +
+      both(" .dam-exp-create__tree-row--child i") + "{color:#c6a8e0;font-size:14px}" +
+      both(" .dam-exp-create__tree-row--muted") + "{color:#9a93ab;font-style:italic}" +
+      both(" .dam-exp-create__variants-head") + "{display:flex;flex-direction:column;gap:1px}" +
+      both(" .dam-exp-create__variants-hint") + "{font-size:11.5px;font-weight:500;color:#9a93ab;text-transform:none;letter-spacing:0}" +
+      both(" .dam-exp-create__variants") + "{display:flex;flex-direction:column;gap:2px;min-height:160px;max-height:min(320px,38vh);overflow:auto;border:1px solid #ece7f3;border-radius:10px;padding:6px}" +
+      both(" .dam-exp-create__variants-loading") + "," + both(" .dam-exp-create__variants-hint") + "{padding:14px 10px;font-size:12.5px;color:#9a93ab;text-align:center;line-height:1.45}" +
+      both(" .dam-exp-create__variants-hint.is-error") + "{color:#b42318}" +
+      both(" .dam-exp-create__var-legend") + "," + both(" .dam-exp-create__var") + "{display:grid;" +
       "grid-template-columns:26px 108px 106px 122px 1fr;gap:8px;align-items:center;font-size:12px;padding:6px 6px}" +
-      "#" + MODAL_ID + " .dam-exp-create__var-legend{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#b0a9c0;padding-bottom:2px;border-bottom:1px solid #f1eef7}" +
-      "#" + MODAL_ID + " .dam-exp-create__var:hover{background:#faf8fd;border-radius:8px}" +
-      "#" + MODAL_ID + " .dam-exp-create__var-tag{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 8px;" +
+      both(" .dam-exp-create__var-legend") + "{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#b0a9c0;padding-bottom:2px;border-bottom:1px solid #f1eef7}" +
+      both(" .dam-exp-create__var:hover") + "{background:#faf8fd;border-radius:8px}" +
+      both(" .dam-exp-create__var-tag") + "{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 8px;" +
       "border-radius:999px;background:#f2e9fa;color:#7a2fae;font-size:11px;font-weight:700;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
-      "#" + MODAL_ID + " .dam-exp-create__var input[type=text]{height:28px;font-size:11.5px;padding:0 8px}" +
-      "#" + MODAL_ID + " .dam-exp-create__var-preview{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;color:#6b6578;" +
+      both(" .dam-exp-create__var input[type=text]") + "{height:28px;font-size:11.5px;padding:0 8px}" +
+      both(" .dam-exp-create__var-preview") + "{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;color:#6b6578;" +
       "white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
-      "#" + MODAL_ID + " .dam-exp-create__var.is-checked .dam-exp-create__var-preview{color:#3d3550;font-weight:600}" +
-      "#" + MODAL_ID + " .dam-exp-create__newvariant{border-top:1px solid #f1eef7;padding-top:12px;display:flex;flex-direction:column;gap:8px}" +
-      "#" + MODAL_ID + " .dam-exp-create__newvariant-head{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#9a93ab;text-transform:uppercase;letter-spacing:.03em}" +
-      "#" + MODAL_ID + " .dam-exp-create__newvariant-row{display:grid;grid-template-columns:110px 110px 1fr auto;gap:8px;align-items:end}" +
-      "#" + MODAL_ID + " .dam-exp-create__newvariant-hint{font-size:11.5px;color:#9a93ab}" +
-      "#" + MODAL_ID + " .dam-exp-create__actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:2px}" +
-      "#" + MODAL_ID + " .dam-int-cta{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;height:34px;padding:8px 14px;" +
+      both(" .dam-exp-create__var.is-checked .dam-exp-create__var-preview") + "{color:#3d3550;font-weight:600}" +
+      both(" .dam-exp-create__newvariant") + "{border-top:1px solid #f1eef7;padding-top:12px;display:flex;flex-direction:column;gap:8px}" +
+      both(" .dam-exp-create__newvariant-head") + "{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#9a93ab;text-transform:uppercase;letter-spacing:.03em}" +
+      both(" .dam-exp-create__newvariant-row") + "{display:grid;grid-template-columns:110px 110px 1fr auto;gap:8px;align-items:end}" +
+      both(" .dam-exp-create__newvariant-hint") + "{font-size:11.5px;color:#9a93ab}" +
+      both(" .dam-exp-create__subrow") + "{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}" +
+      both(" .dam-exp-create__subcombo") + "{position:relative;flex:1 1 240px;min-width:0}" +
+      both(" .dam-exp-create__subcombo-trigger") + "{display:flex;align-items:center;justify-content:space-between;gap:10px;" +
+      "width:100%;min-height:44px;padding:8px 12px;border:1px solid #e7e2ef;border-radius:10px;background:#fff;cursor:pointer;text-align:left}" +
+      both(" .dam-exp-create__subcombo-trigger:hover") + "{border-color:#d4c8e8;background:#fdfcfe}" +
+      both(" .dam-exp-create__subcombo-trigger.is-open") + "{border-color:#ab54db;box-shadow:0 0 0 3px rgba(171,84,219,.12)}" +
+      both(" .dam-exp-create__subcombo-value") + "{display:inline-flex;align-items:center;min-width:0;flex:1 1 auto}" +
+      both(" .dam-exp-create__subcombo-value .dam-viz-badge") + "{pointer-events:none;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+      both(" .dam-exp-create__subcombo-chevron") + "{flex:0 0 auto;color:#9a93ab;font-size:18px;line-height:1;transition:transform .15s ease,color .15s ease}" +
+      both(" .dam-exp-create__subcombo-trigger.is-open .dam-exp-create__subcombo-chevron") + "{transform:rotate(180deg);color:#ab54db}" +
+      both(" .dam-exp-create__subcombo-panel") + "{position:absolute;z-index:30;top:calc(100% + 6px);left:0;right:0;background:#fff;" +
+      "border:1px solid #ebe4f4;border-radius:12px;box-shadow:0 12px 32px rgba(28,22,40,.14);display:flex;flex-direction:column;overflow:hidden;max-height:min(300px,42vh)}" +
+      both(" .dam-exp-create__subcombo-panel[hidden]") + "{display:none!important}" +
+      both(" .dam-exp-create__subcombo-search-wrap") + "{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f1eef7;background:#faf8fd}" +
+      both(" .dam-exp-create__subcombo-search-wrap i") + "{color:#9a93ab;font-size:16px}" +
+      both(" .dam-exp-create__subcombo-search") + "{flex:1 1 auto;border:0;background:transparent;font-size:13px;color:#464255;outline:none;min-width:0}" +
+      both(" .dam-exp-create__subcombo-search::placeholder") + "{color:#b0a9c0}" +
+      both(" .dam-exp-create__subcombo-list") + "{overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:3px;min-height:0}" +
+      both(" .dam-exp-create__subcombo-opt") + "{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:40px;" +
+      "padding:6px 10px;border:0;border-radius:8px;background:transparent;cursor:pointer;text-align:left}" +
+      both(" .dam-exp-create__subcombo-opt:hover") + "{background:#f5f6fa}" +
+      both(" .dam-exp-create__subcombo-opt.is-selected") + "{background:color-mix(in srgb,#ab54db 8%,transparent)}" +
+      both(" .dam-exp-create__subcombo-opt .dam-viz-badge") + "{pointer-events:none;flex:0 1 auto;max-width:calc(100% - 72px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+      both(" .dam-exp-create__subcombo-slug") + "{flex:0 0 auto;font-size:10.5px;font-weight:500;color:#9a93ab;letter-spacing:.01em;font-family:var(--dam-font,Jost,sans-serif)}" +
+      both(" .dam-exp-create__subcombo-empty") + "{margin:0;padding:10px 12px 12px;font-size:12px;color:#9a93ab;text-align:center}" +
+      both(" .dam-exp-create__subcombo-empty[hidden]") + "{display:none!important}" +
+      both(" .dam-exp-create__subadd") + "{flex:0 0 auto;min-height:44px;align-self:stretch}" +
+      both(" .dam-exp-create__subadd-panel") + "{display:grid;grid-template-columns:1fr 140px auto auto;gap:8px;align-items:end;" +
+      "margin-top:8px;padding:10px 12px;border:1px solid #ebe4f4;border-radius:10px;background:#faf8fd}" +
+      both(" .dam-exp-create__subadd-panel[hidden]") + "{display:none!important}" +
+      both(" .dam-exp-create__actions") + "{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:2px}" +
+      both(" .dam-int-cta") + "{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;height:34px;padding:8px 14px;" +
       "border-radius:8px;border:1px solid #e7e2ef;background:#fff;color:#464255;font-size:12.5px;font-weight:500;cursor:pointer}" +
-      "#" + MODAL_ID + " .dam-int-cta:disabled{opacity:.5;cursor:not-allowed}" +
-      "#" + MODAL_ID + " .dam-int-cta--primary{background:#ab54db;border-color:#ab54db;color:#fff}" +
-      "#" + MODAL_ID + " .dam-int-cta--primary:hover{filter:brightness(1.05)}" +
-      "#" + MODAL_ID + " .dam-int-cta--danger{color:#b42318;border-color:#f0c6c1}" +
-      "#" + MODAL_ID + " .dam-int-cta--danger:hover{background:#fdf1f0}" +
-      "#" + MODAL_ID + " .dam-modal-x{flex:0 0 auto;background:transparent;border:0;font-size:18px;line-height:1;color:#9a93ab;cursor:pointer;padding:2px 4px}" +
-      "#" + MODAL_ID + " .dam-modal-x:hover{color:#464255}" +
-      "#" + MODAL_ID + " .dam-exp-confirm{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:18px 6px 6px}" +
-      "#" + MODAL_ID + " .dam-exp-confirm__icon{width:52px;height:52px;border-radius:50%;background:#eaf7ef;color:#1a7a4c;display:flex;" +
+      both(" .dam-int-cta:disabled") + "{opacity:.5;cursor:not-allowed}" +
+      both(" .dam-int-cta--primary") + "{background:#ab54db;border-color:#ab54db;color:#fff}" +
+      both(" .dam-int-cta--primary:hover") + "{filter:brightness(1.05)}" +
+      both(" .dam-int-cta--danger") + "{color:#b42318;border-color:#f0c6c1}" +
+      both(" .dam-int-cta--danger:hover") + "{background:#fdf1f0}" +
+      both(" .dam-modal-x") + "{flex:0 0 auto;background:transparent;border:0;font-size:18px;line-height:1;color:#9a93ab;cursor:pointer;padding:2px 4px}" +
+      both(" .dam-modal-x:hover") + "{color:#464255}" +
+      both(" .dam-exp-confirm") + "{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:18px 6px 6px}" +
+      both(" .dam-exp-confirm__icon") + "{width:52px;height:52px;border-radius:50%;background:#eaf7ef;color:#1a7a4c;display:flex;" +
       "align-items:center;justify-content:center;font-size:26px}" +
-      "#" + MODAL_ID + " .dam-exp-confirm__title{margin:0;font-size:18px;font-weight:700;color:#1f1a2a}" +
-      "#" + MODAL_ID + " .dam-exp-confirm__path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#6b6578;" +
+      both(" .dam-exp-confirm__title") + "{margin:0;font-size:18px;font-weight:700;color:#1f1a2a}" +
+      both(" .dam-exp-confirm__path") + "{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#6b6578;" +
       "background:#f7f4fb;border-radius:8px;padding:8px 12px;word-break:break-all;max-width:100%}" +
-      "#" + MODAL_ID + " .dam-exp-confirm__countdown{font-size:12px;color:#9a93ab}" +
-      "#" + MODAL_ID + " .dam-exp-confirm__actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}" +
-      "@media (max-width:720px){#" + MODAL_ID + " .dam-exp-create__grid{grid-template-columns:1fr}" +
-      "#" + MODAL_ID + " .dam-exp-create__var-legend{display:none}" +
-      "#" + MODAL_ID + " .dam-exp-create__var{grid-template-columns:1fr;gap:4px}" +
-      "#" + MODAL_ID + " .dam-exp-create__newvariant-row{grid-template-columns:1fr}}";
+      both(" .dam-exp-confirm__countdown") + "{font-size:12px;color:#9a93ab}" +
+      both(" .dam-exp-confirm__actions") + "{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}" +
+      "@media (max-width:720px){" + both(" .dam-exp-create__grid") + "{grid-template-columns:1fr}" +
+      both(" .dam-exp-create__var-legend") + "{display:none}" +
+      both(" .dam-exp-create__var") + "{grid-template-columns:1fr;gap:4px}" +
+      both(" .dam-exp-create__newvariant-row") + "{grid-template-columns:1fr}}";
     var st = document.createElement("style");
     st.id = STYLE_ID;
     st.textContent = css;
@@ -367,20 +413,38 @@
     document.body.style.overflow = on ? "hidden" : "";
   }
 
-  function closeModal() {
-    var el = document.getElementById(MODAL_ID);
-    if (el && el._damFinalizeOnClose) {
+  function activeModalRoot() {
+    var v = document.getElementById(VARIANT_MODAL_ID);
+    if (v && !v.hidden) return v;
+    var p = document.getElementById(MODAL_ID);
+    if (p && !p.hidden) return p;
+    return v || p || null;
+  }
+
+  function closeModal(modalId) {
+    var el = document.getElementById(modalId || MODAL_ID);
+    if (!el) return;
+    if (el._damFinalizeOnClose) {
       try { el._damFinalizeOnClose(); } catch (e) { /* ignore */ }
     }
-    if (el) el.hidden = true;
-    lockScroll(false);
-    document.removeEventListener("keydown", onEsc, true);
+    el.remove();
+    if (!activeModalRoot()) {
+      lockScroll(false);
+      document.removeEventListener("keydown", onEsc, true);
+    }
+  }
+
+  function closeAnyModal() {
+    closeModal(MODAL_ID);
+    closeModal(VARIANT_MODAL_ID);
   }
 
   function onEsc(e) {
     if (e.key === "Escape") {
+      var el = activeModalRoot();
       e.preventDefault();
-      closeModal();
+      if (el) closeModal(el.id);
+      else closeAnyModal();
     }
   }
 
@@ -503,7 +567,385 @@
     });
   }
 
+
+  function showVariantsLoading(host, msg) {
+    if (!host) return;
+    host.innerHTML =
+      '<div class="dam-exp-create__variants-loading">' +
+      esc(msg || "Ładowanie wariantów…") +
+      "</div>";
+  }
+
+  function showVariantsError(host, msg) {
+    if (!host) return;
+    host.innerHTML =
+      '<div class="dam-exp-create__variants-hint is-error">' +
+      esc(msg || "Nie udało się wczytać wariantów.") +
+      "</div>";
+  }
+
+  function brandFromProductPath(path) {
+    var up = String(path || "").toUpperCase();
+    if (up.indexOf("GOOD CALORIES") >= 0 || up.indexOf("- EKSPORT") >= 0 || up.indexOf("\\GC\\") >= 0) {
+      return "GC";
+    }
+    return detectBrand();
+  }
+
+  function bootstrapVariantList(root, variantsHost, bootBody, onReady) {
+    if (!variantsHost) return;
+    showVariantsLoading(variantsHost, "Ładowanie typów wariantów ze Szablonów…");
+    postJson("/explorer/create-product", bootBody)
+      .then(function (res) {
+        if (!variantsHost.isConnected) return;
+        var data = res.data || {};
+        if (res.http === 401 || data.error === "login_required" || data.error === "admin_required") {
+          showVariantsError(variantsHost, "Wymagana sesja admina (zaloguj się i włącz ADMIN).");
+          return;
+        }
+        if (data.available_variants && data.available_variants.length) {
+          renderVariantRows(data.available_variants, variantsHost);
+          if (typeof onReady === "function") onReady();
+          return;
+        }
+        if (data.ok && (!data.available_variants || !data.available_variants.length)) {
+          renderVariantRows([], variantsHost);
+          if (typeof onReady === "function") onReady();
+          return;
+        }
+        showVariantsError(
+          variantsHost,
+          data.message || data.error || "Brak listy wariantów. Sprawdź Szablony folderów."
+        );
+      })
+      .catch(function (e) {
+        if (!variantsHost.isConnected) return;
+        showVariantsError(variantsHost, String((e && e.message) || e || "Błąd połączenia z mostem."));
+      });
+  }
+
+  function openAddVariantModal(opts) {
+    opts = opts || {};
+    try {
+      injectCss();
+    } catch (eCss) {
+      toast("Nie udało się otworzyć modala wariantu.", "error");
+      return;
+    }
+    var existingProductPath = String(opts.productPath || "").trim();
+    var brand = brandFromProductPath(existingProductPath);
+    var existing = document.getElementById(VARIANT_MODAL_ID);
+    if (existing) existing.remove();
+    document.getElementById(MODAL_ID) && document.getElementById(MODAL_ID).remove();
+
+    var html =
+      "<div id=\"" + VARIANT_MODAL_ID + "\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"damExpVarTitle\">" +
+        "<div class=\"dam-exp-create__backdrop\" data-close=\"1\"></div>" +
+        "<div class=\"dam-exp-create__panel dam-exp-create__panel--variant\">" +
+          "<div class=\"dam-exp-create__head\">" +
+            "<div>" +
+              "<p class=\"dam-exp-create__eyebrow\">DAM · Eksplorer</p>" +
+              "<h2 class=\"dam-exp-create__title\" id=\"damExpVarTitle\">Dodaj wariant</h2>" +
+              "<p class=\"dam-exp-create__sub\">Kopiuje wybrane typy wariantów ze Szablonów do istniejącego produktu. Podgląd na bieżąco - zapis po potwierdzeniu.</p>" +
+            "</div>" +
+            "<button type=\"button\" class=\"dam-modal-x\" data-close=\"1\" aria-label=\"Zamknij\">×</button>" +
+          "</div>" +
+          "<div class=\"dam-exp-create__body\">" +
+            "<div class=\"dam-exp-create__grid\">" +
+              "<div class=\"dam-exp-create__field dam-exp-create__field--full\">" +
+                "<label>Produkt docelowy</label>" +
+                "<div class=\"dam-exp-create__preview\" id=\"damExpVarProductPath\">" +
+                  esc(existingProductPath || "(brak ścieżki produktu)") +
+                "</div>" +
+              "</div>" +
+              "<div class=\"dam-exp-create__field dam-exp-create__field--full\">" +
+                "<div class=\"dam-exp-create__variants-head\">" +
+                  "<label style=\"margin-bottom:0\">Typy wariantów</label>" +
+                  "<span class=\"dam-exp-create__variants-hint\">Zaznacz warianty do skopiowania - domyślnie wszystkie odznaczone.</span>" +
+                "</div>" +
+                "<div class=\"dam-exp-create__variants\" id=\"damExpVarVariants\"></div>" +
+              "</div>" +
+              "<div class=\"dam-exp-create__field dam-exp-create__field--full\">" +
+                "<label>Podgląd ścieżki</label>" +
+                "<div class=\"dam-exp-create__preview\" id=\"damExpVarPreview\" aria-live=\"polite\"></div>" +
+              "</div>" +
+              "<div class=\"dam-exp-create__field dam-exp-create__field--full\">" +
+                "<div class=\"dam-exp-create__status\" id=\"damExpVarErr\" role=\"status\"></div>" +
+              "</div>" +
+              "<div class=\"dam-exp-create__field dam-exp-create__field--full\">" +
+                "<div class=\"dam-exp-create__tree\" id=\"damExpVarTree\"></div>" +
+              "</div>" +
+            "</div>" +
+          "</div>" +
+          "<div class=\"dam-exp-create__actions\" id=\"damExpVarActions\">" +
+            "<button type=\"button\" class=\"dam-int-cta\" data-close=\"1\">Anuluj</button>" +
+            "<button type=\"button\" class=\"dam-int-cta\" id=\"damExpVarDryRun\">Podgląd</button>" +
+            "<button type=\"button\" class=\"dam-int-cta dam-int-cta--primary\" id=\"damExpVarConfirm\" disabled>Potwierdź i utwórz</button>" +
+          "</div>" +
+          "<input type=\"hidden\" id=\"damExpVarBrand\" value=\"" + esc(brand) + "\">" +
+        "</div>" +
+      "</div>";
+
+    document.body.insertAdjacentHTML("beforeend", html);
+    var root = document.getElementById(VARIANT_MODAL_ID);
+    if (!root) {
+      toast("Nie udało się utworzyć modala wariantu.", "error");
+      return;
+    }
+    lockScroll(true);
+    document.addEventListener("keydown", onEsc, true);
+
+    var errEl = root.querySelector("#damExpVarErr");
+    var previewEl = root.querySelector("#damExpVarPreview");
+    var treeEl = root.querySelector("#damExpVarTree");
+    var confirmBtn = root.querySelector("#damExpVarConfirm");
+    var variantsHost = root.querySelector("#damExpVarVariants");
+    var lastPlan = null;
+
+    function setStatus(msg, kind) {
+      msg = msg || "";
+      errEl.textContent = msg;
+      errEl.className = "dam-exp-create__status" + (msg ? " is-" + (kind || "error") : "");
+      errEl.setAttribute("role", kind === "error" || !kind ? "alert" : "status");
+    }
+
+    function updateVariantRowPreview(row) {
+      var folder = row.getAttribute("data-template-folder") || "";
+      var dateEl = row.querySelector("[data-var-date]");
+      var idxEl = row.querySelector("[data-var-index]");
+      var enEl = row.querySelector("[data-var-enabled]");
+      var previewEl2 = row.querySelector("[data-var-preview]");
+      var finalName = variantFolderPreviewClient(
+        folder,
+        dateEl ? dateEl.value : "",
+        idxEl ? idxEl.value : "",
+        false
+      );
+      if (previewEl2) previewEl2.textContent = finalName;
+      row.classList.toggle("is-checked", !!(enEl && enEl.checked));
+    }
+
+    function updateAllVariantPreviews() {
+      if (!variantsHost) return;
+      variantsHost.querySelectorAll("[data-var-row]").forEach(updateVariantRowPreview);
+    }
+
+    function buildTree() {
+      var rows = variantsHost ? variantsHost.querySelectorAll("[data-var-row]") : [];
+      var checkedRows = [];
+      rows.forEach(function (row) {
+        var en = row.querySelector("[data-var-enabled]");
+        if (en && en.checked) checkedRows.push(row);
+      });
+      var htmlTree =
+        "<p class=\"dam-exp-create__tree-title\">Zostanie utworzone</p>" +
+        "<div class=\"dam-exp-create__tree-row\">" + iconTree("folder") + "<span>" + esc(existingProductPath) + "</span></div>";
+      if (!checkedRows.length) {
+        htmlTree +=
+          "<div class=\"dam-exp-create__tree-row dam-exp-create__tree-row--child dam-exp-create__tree-row--muted\">" +
+          iconTree("info-circle") + "<span>Brak zaznaczonych wariantów - zaznacz typy ze Szablonów</span></div>";
+      } else {
+        checkedRows.forEach(function (row) {
+          var preview = row.querySelector("[data-var-preview]");
+          htmlTree +=
+            "<div class=\"dam-exp-create__tree-row dam-exp-create__tree-row--child\">" +
+            iconTree("folder-open") + "<span>" + esc(preview ? preview.textContent : "") + "</span></div>";
+        });
+      }
+      treeEl.innerHTML = htmlTree;
+    }
+
+    function updateLocalPreview() {
+      previewEl.innerHTML = "Tworzenie: <b>" + esc(existingProductPath || "(brak ścieżki produktu)") + "</b>";
+      updateAllVariantPreviews();
+      buildTree();
+    }
+
+    function bindVariantRowEvents() {
+      variantsHost.querySelectorAll("[data-var-row]").forEach(function (row) {
+        if (row._damBound) return;
+        row._damBound = true;
+        row.addEventListener("input", function () {
+          updateVariantRowPreview(row);
+          buildTree();
+        });
+        row.addEventListener("change", function () {
+          updateVariantRowPreview(row);
+          buildTree();
+        });
+      });
+    }
+
+    function collectVariantsFromRoot() {
+      var rows = root.querySelectorAll("[data-var-row]");
+      var out = [];
+      rows.forEach(function (row) {
+        var en = row.querySelector("[data-var-enabled]");
+        var folder = row.getAttribute("data-template-folder") || "";
+        var dateEl = row.querySelector("[data-var-date]");
+        var idxEl = row.querySelector("[data-var-index]");
+        out.push({
+          enabled: !!(en && en.checked),
+          template_folder: folder,
+          date: dateEl ? dateEl.value.trim() : "",
+          index: idxEl ? idxEl.value.trim() : ""
+        });
+      });
+      return out;
+    }
+
+    root.querySelectorAll("[data-close]").forEach(function (el) {
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        closeModal(VARIANT_MODAL_ID);
+      });
+    });
+
+    root.querySelector("#damExpVarDryRun").addEventListener("click", function () {
+      setStatus("");
+      confirmBtn.disabled = true;
+      lastPlan = null;
+      if (!existingProductPath) {
+        setStatus("Brak ścieżki produktu.", "error");
+        return;
+      }
+      var body = {
+        brand: root.querySelector("#damExpVarBrand").value,
+        category_path: ".",
+        name: "EXISTING",
+        subcategory: "standard",
+        demo: false,
+        variants: collectVariantsFromRoot(),
+        dry_run: true,
+        confirm: false,
+        existing_product_path: existingProductPath
+      };
+      setStatus("Sprawdzanie z dyskiem…", "info");
+      postJson("/explorer/create-product", body).then(function (res) {
+        var data = res.data || {};
+        if (res.http === 401 || data.error === "login_required" || data.error === "admin_required") {
+          setStatus("Wymagana sesja admina (zaloguj się i włącz ADMIN).", "error");
+          return;
+        }
+        if (!data.ok) {
+          setStatus(data.message || data.error || "Podgląd nieudany.", "error");
+          if (data.available_variants && variantsHost) {
+            renderVariantRows(data.available_variants, variantsHost);
+            bindVariantRowEvents();
+            updateLocalPreview();
+          }
+          return;
+        }
+        lastPlan = data;
+        previewEl.innerHTML = "Tworzenie: <b>" + esc(data.planned_path || existingProductPath) + "</b>";
+        if (variantsHost && data.available_variants && !variantsHost.querySelector("[data-var-row]")) {
+          renderVariantRows(data.available_variants, variantsHost);
+          bindVariantRowEvents();
+          updateAllVariantPreviews();
+        }
+        buildTree();
+        confirmBtn.disabled = false;
+        setStatus("Podgląd gotowy - sprawdź ścieżkę przed potwierdzeniem.", "ok");
+      }).catch(function (e) {
+        setStatus(String(e && e.message || e), "error");
+      });
+    });
+
+    root.querySelector("#damExpVarConfirm").addEventListener("click", function () {
+      if (!lastPlan || !lastPlan.ok) {
+        setStatus("Najpierw uruchom Podgląd.", "error");
+        return;
+      }
+      setStatus("");
+      var body = {
+        brand: root.querySelector("#damExpVarBrand").value,
+        category_path: ".",
+        name: "EXISTING",
+        subcategory: "standard",
+        demo: false,
+        variants: collectVariantsFromRoot(),
+        dry_run: false,
+        confirm: true,
+        existing_product_path: existingProductPath
+      };
+      confirmBtn.disabled = true;
+      postJson("/explorer/create-product", body).then(function (res) {
+        var data = res.data || {};
+        if (!data.ok) {
+          setStatus(data.message || data.error || "Tworzenie nieudane.", "error");
+          confirmBtn.disabled = false;
+          return;
+        }
+        toast("Dodano warianty do produktu.", "ok");
+        closeModal(VARIANT_MODAL_ID);
+        triggerRebuild().then(function () {
+          return reloadExplorer();
+        }).catch(function () {
+          /* ignore */
+        });
+      }).catch(function (e) {
+        setStatus(String(e && e.message || e), "error");
+        confirmBtn.disabled = false;
+      });
+    });
+
+    updateLocalPreview();
+    if (!existingProductPath) {
+      showVariantsError(variantsHost, "Brak ścieżki produktu - wróć do widoku produktu i spróbuj ponownie.");
+      setStatus("Brak ścieżki produktu (existing_product_path).", "error");
+      return;
+    }
+    setTimeout(function () {
+      if (!document.getElementById(VARIANT_MODAL_ID)) return;
+      bootstrapVariantList(
+        root,
+        variantsHost,
+        {
+          brand: brand,
+          category_path: ".",
+          name: "EXISTING",
+          subcategory: "standard",
+          demo: false,
+          variants: [],
+          dry_run: true,
+          confirm: false,
+          existing_product_path: existingProductPath
+        },
+        function () {
+          if (!document.getElementById(VARIANT_MODAL_ID)) return;
+          bindVariantRowEvents();
+          updateLocalPreview();
+        }
+      );
+    }, 0);
+  }
+
   function open(opts) {
+    opts = opts || {};
+    if (opts.mode === "add-variant") {
+      try {
+        openAddVariantModal(opts);
+      } catch (eOpenVar) {
+        lockScroll(false);
+        toast(
+          "Nie udało się otworzyć Dodaj wariant: " + String((eOpenVar && eOpenVar.message) || eOpenVar),
+          "error"
+        );
+      }
+      return;
+    }
+    try {
+      openProductOrCategoryModal(opts);
+    } catch (eOpenProd) {
+      lockScroll(false);
+      toast(
+        "Nie udało się otworzyć Dodaj produkt: " + String((eOpenProd && eOpenProd.message) || eOpenProd),
+        "error"
+      );
+    }
+  }
+
+  function openProductOrCategoryModal(opts) {
     opts = opts || {};
     injectCss();
     var mode = opts.mode === "category" ? "category" : "product";
@@ -513,6 +955,8 @@
 
     var existing = document.getElementById(MODAL_ID);
     if (existing) existing.remove();
+    var existingVar = document.getElementById(VARIANT_MODAL_ID);
+    if (existingVar) existingVar.remove();
 
     var html =
       "<div id=\"" + MODAL_ID + "\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"damExpCreateTitle\">" +
@@ -876,9 +1320,10 @@
         "<h3 class=\"dam-exp-confirm__title\">Utworzono: " + esc(label) + "</h3>" +
         "<div class=\"dam-exp-confirm__path\">" + esc(createdPath) + "</div>" +
         "<div class=\"dam-exp-confirm__countdown\" id=\"damExpCountdown\"></div>" +
-        "<div class=\"dam-exp-confirm__actions\">" +
+        "<div class=\"dam-exp-confirm__actions dam-dialog-actions\">" +
         "<button type=\"button\" class=\"dam-int-cta\" id=\"damExpGoFolder\">" + iconTree("folder-open") + " Przejdź do folderu</button>" +
         "<button type=\"button\" class=\"dam-int-cta dam-int-cta--danger\" id=\"damExpUndo\">" + iconTree("undo") + " Cofnij</button>" +
+        "<span class=\"dam-dialog-actions__spacer\" aria-hidden=\"true\"></span>" +
         "<button type=\"button\" class=\"dam-int-cta dam-int-cta--primary\" id=\"damExpFinalize\">" + iconTree("check") + " Zatwierdź</button>" +
         "</div>";
       root.querySelector(".dam-exp-create__panel").appendChild(panel);
@@ -1027,5 +1472,5 @@
     }, 30);
   }
 
-  global.DamExplorerAddProduct = { open: open, close: closeModal };
+  global.DamExplorerAddProduct = { open: open, close: closeAnyModal };
 })(window);

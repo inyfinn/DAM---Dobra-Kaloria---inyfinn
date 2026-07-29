@@ -43,7 +43,13 @@ PROFILES = {
 
 _warm_lock = threading.Lock()
 _warm_queue: list[dict] = []
-_warm_running = False
+_warm_workers_started = False
+_warm_consumer_started = False
+_warm_last_activity = 0.0
+_warm_jobs_done = 0
+_warm_local_json_path = ""
+_warm_worker_count = max(1, int(os.environ.get("DAM_WARM_WORKERS", "24") or "24"))
+_warm_batch_cap = max(1, int(os.environ.get("DAM_WARM_BATCH", "200") or "200"))
 
 
 def cache_root() -> Path:
@@ -292,26 +298,135 @@ def warm_paths(
     }
 
 
-def enqueue_warm(paths: list[str], profile: str = "grid", email: str = "") -> dict:
-    """Non-blocking warm queue (daemon thread)."""
-    global _warm_running
+def digest_for_path(
+    path: str,
+    *,
+    profile: str = "grid",
+    email: str = "",
+    resolve_physical: Optional[Callable[..., str]] = None,
+    marketing_relative: Optional[Callable[..., str]] = None,
+) -> str:
+    """Public digest helper for idempotent enqueue / verify."""
+    digest, _, _ = thumb_key(
+        path,
+        email=email,
+        profile=profile,
+        resolve_physical=resolve_physical,
+        marketing_relative=marketing_relative,
+    )
+    return digest
+
+
+def is_cached_on_disk(
+    path: str,
+    *,
+    profile: str = "grid",
+    email: str = "",
+    resolve_physical: Optional[Callable[..., str]] = None,
+    marketing_relative: Optional[Callable[..., str]] = None,
+) -> bool:
+    digest = digest_for_path(
+        path,
+        profile=profile,
+        email=email,
+        resolve_physical=resolve_physical,
+        marketing_relative=marketing_relative,
+    )
+    avif_p, jpg_p = _cache_paths(digest)
+    return avif_p.is_file() or jpg_p.is_file()
+
+
+def warm_status() -> dict:
+    """Snapshot for GET /health warm.* fields."""
     with _warm_lock:
+        qlen = len(_warm_queue)
+        started = _warm_consumer_started
+        last = _warm_last_activity
+        done = _warm_jobs_done
+        workers = _warm_worker_count
+        local_json = _warm_local_json_path
+    idle_sec = int(time.time() - last) if last > 0 else 0
+    return {
+        "consumer_started": started,
+        "queue_len": qlen,
+        "worker_idle_sec": idle_sec if qlen == 0 else 0,
+        "workers": workers,
+        "jobs_done": done,
+        "paused": os.environ.get("DAM_WARM_PAUSE", "0").strip() == "1",
+        "local_json": local_json,
+        "encode": "cpu_avif",
+    }
+
+
+def _ensure_warm_workers() -> None:
+    """Start fixed-size CPU worker pool (idempotent)."""
+    global _warm_workers_started, _warm_consumer_started
+    with _warm_lock:
+        if _warm_workers_started:
+            return
+        _warm_workers_started = True
+        _warm_consumer_started = True
+        for i in range(_warm_worker_count):
+            threading.Thread(
+                target=_warm_worker_loop,
+                name=f"dam-warm-worker-{i}",
+                daemon=True,
+            ).start()
+
+
+def dam_warm_boot_consumer(warm_local_json: str) -> None:
+    """
+    Bridge boot: load warm-local JSON metadata, start dequeue workers only.
+    NEVER calls enqueue_warm (K-WARM-4 sole enqueue).
+    """
+    global _warm_local_json_path, _warm_last_activity
+    path = (warm_local_json or "").strip()
+    _warm_local_json_path = path
+    if path and os.path.isfile(path):
+        try:
+            json.loads(Path(path).read_text(encoding="utf-8"))
+        except Exception as exc:
+            print(f"[dam_thumb_cache] warm boot JSON read warning: {exc}")
+    else:
+        print(f"[dam_thumb_cache] warm boot: local JSON missing ({path or 'unset'})")
+    _warm_last_activity = time.time()
+    _ensure_warm_workers()
+    print(
+        f"[dam_thumb_cache] warm consumer started workers={_warm_worker_count} "
+        f"boot_enqueue=0 json={path or 'none'}"
+    )
+
+
+def enqueue_warm(paths: list[str], profile: str = "grid", email: str = "") -> dict:
+    """Non-blocking warm queue (multi-worker pool)."""
+    global _warm_last_activity
+    added = 0
+    with _warm_lock:
+        cap = _warm_batch_cap
         for p in paths or []:
+            if added >= cap:
+                break
             _warm_queue.append({"path": p, "profile": profile, "email": email})
-        if not _warm_running:
-            _warm_running = True
-            threading.Thread(target=_warm_worker, daemon=True).start()
-    return {"ok": True, "queued": len(paths or []), "queue_len": len(_warm_queue)}
+            added += 1
+        qlen = len(_warm_queue)
+    _warm_last_activity = time.time()
+    _ensure_warm_workers()
+    return {"ok": True, "queued": added, "queue_len": qlen}
 
 
-def _warm_worker() -> None:
-    global _warm_running
+def _warm_worker_loop() -> None:
+    global _warm_last_activity, _warm_jobs_done
     while True:
+        if os.environ.get("DAM_WARM_PAUSE", "0").strip() == "1":
+            time.sleep(0.5)
+            continue
+        job: Optional[dict] = None
         with _warm_lock:
-            if not _warm_queue:
-                _warm_running = False
-                return
-            job = _warm_queue.pop(0)
+            if _warm_queue:
+                job = _warm_queue.pop(0)
+        if job is None:
+            time.sleep(0.25)
+            continue
         try:
             get_or_build_thumb(
                 job.get("path") or "",
@@ -320,3 +435,6 @@ def _warm_worker() -> None:
             )
         except Exception:
             pass
+        with _warm_lock:
+            _warm_jobs_done += 1
+        _warm_last_activity = time.time()

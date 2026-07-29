@@ -17,6 +17,8 @@ import threading
 import time
 from pathlib import Path
 
+from bridge_supervisor import BridgeSupervisor, LOCAL_BRIDGE
+from dam_ui_http import make_handler_class, prepare_runtime
 from runtime_config import (
     APP_TITLE,
     DEFAULT_BRIDGE_PORT,
@@ -25,13 +27,9 @@ from runtime_config import (
     HOST,
     MUTEX_NAME,
     WEB_ROOT,
-    env_for_bridge,
     pick_free_port,
     runtime_payload,
-    write_runtime_file,
 )
-
-LOCAL_BRIDGE = DESKTOP_DIR / "local_bridge.py"
 WATCH_INDEX = WEB_ROOT / "scripts" / "watch-file-index.py"
 ICON = DESKTOP_DIR / "dam_app.ico"
 LAUNCH_SCRIPT = Path(__file__).resolve()
@@ -222,52 +220,6 @@ class ReusableTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 
 
-class DamUiHandler(http.server.SimpleHTTPRequestHandler):
-    runtime: dict
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(WEB_ROOT), **kwargs)
-
-    def log_message(self, fmt, *args):
-        pass
-
-    def end_headers(self):
-        self.send_header("Cache-Control", "no-store")
-        super().end_headers()
-
-    def do_GET(self):  # noqa: N802
-        if self.path.split("?", 1)[0] == "/dam-runtime.json":
-            body = json_bytes(self.runtime)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-            return
-        super().do_GET()
-
-
-def json_bytes(payload: dict) -> bytes:
-    import json
-
-    return json.dumps(payload, ensure_ascii=False).encode("utf-8")
-
-
-def start_bridge(ui_port: int, bridge_port: int) -> subprocess.Popen | None:
-    if not LOCAL_BRIDGE.exists():
-        return None
-    flags = CREATE_NO_WINDOW if sys.platform == "win32" else 0
-    return subprocess.Popen(
-        [_silent_python(), str(LOCAL_BRIDGE)],
-        cwd=str(DESKTOP_DIR),
-        env=env_for_bridge(ui_port, bridge_port),
-        creationflags=flags,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-
 def start_index_watcher() -> subprocess.Popen | None:
     """Odswiezanie miniatur/indeksu co ~5s gdy zmienisz pliki w WIZKI."""
     if not WATCH_INDEX.is_file():
@@ -286,14 +238,13 @@ def start_index_watcher() -> subprocess.Popen | None:
         return None
 
 
-def start_ui_server(ui_port: int, bridge_port: int) -> tuple[socketserver.TCPServer, threading.Thread]:
-    runtime = runtime_payload(ui_port, bridge_port)
-    write_runtime_file(ui_port, bridge_port)
-
-    class Handler(DamUiHandler):
-        pass
-
-    Handler.runtime = runtime
+def start_ui_server(
+    ui_port: int,
+    bridge_port: int,
+    supervisor: BridgeSupervisor,
+) -> tuple[socketserver.TCPServer, threading.Thread]:
+    runtime = prepare_runtime(ui_port, bridge_port)
+    Handler = make_handler_class(runtime, supervisor)
     httpd = ReusableTCPServer((HOST, ui_port), Handler)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     thread.start()
@@ -528,6 +479,85 @@ class DamJsApi:
         return {"ok": True, "status": "restarting"}
 
 
+def _is_foreground_dam_window() -> bool:
+    """True gdy aktywne okno nalezy do DAM (nie Cursor/Chrome devtools)."""
+    hwnd = _find_app_hwnd()
+    if not hwnd:
+        return False
+    try:
+        import ctypes
+
+        user32 = ctypes.windll.user32
+        fg = user32.GetForegroundWindow()
+        if not fg:
+            return False
+        if fg == hwnd:
+            return True
+        # WebView2 host moze byc child — idz w gore drzewa
+        walk = fg
+        for _ in range(12):
+            parent = user32.GetParent(walk)
+            if not parent:
+                break
+            if parent == hwnd:
+                return True
+            walk = parent
+        return False
+    except Exception:
+        return False
+
+
+def start_hard_reset_watchdog(api: "DamJsApi") -> None:
+    """F5 / Ctrl+R poza wątkiem JS — dziala gdy WebView2 UI zamrozone.
+
+    pywebview w non-debug czesto wylacza natywne skroty przegladarki;
+    ten watchdog restartuje cala aplikacje niezaleznie od stanu strony.
+    """
+    if sys.platform != "win32":
+        return
+
+    def _fire_hard_reset() -> None:
+        try:
+            api.restart_window()
+        except Exception:
+            try:
+                schedule_relaunch()
+            except Exception:
+                os._exit(1)
+
+    def _loop() -> None:
+        import ctypes
+
+        user32 = ctypes.windll.user32
+        VK_F5 = 0x74
+        VK_CONTROL = 0x11
+        VK_R = 0x52
+        last_fire = 0.0
+        f5_was = False
+        ctrl_r_was = False
+        while True:
+            time.sleep(0.025)
+            if not _is_foreground_dam_window():
+                f5_was = False
+                ctrl_r_was = False
+                continue
+            f5_down = bool(user32.GetAsyncKeyState(VK_F5) & 0x8000)
+            ctrl_down = bool(user32.GetAsyncKeyState(VK_CONTROL) & 0x8000)
+            r_down = bool(user32.GetAsyncKeyState(VK_R) & 0x8000)
+            edge_f5 = f5_down and not f5_was
+            edge_ctrl_r = ctrl_down and r_down and not ctrl_r_was
+            f5_was = f5_down
+            ctrl_r_was = ctrl_down and r_down
+            if edge_f5 or edge_ctrl_r:
+                now = time.time()
+                if now - last_fire < 0.75:
+                    continue
+                last_fire = now
+                _fire_hard_reset()
+
+    threading.Thread(target=_loop, name="dam-hard-reset-watchdog", daemon=True).start()
+
+
 def preferred_window_size() -> tuple[int, int]:
     """Szerokie okno startowe: UI miesci sie bez scrolla poziomego."""
     width, height = 1680, 1000
@@ -638,31 +668,17 @@ def main() -> None:
     ui_port = pick_free_port(DEFAULT_UI_PORT)
     bridge_port = pick_free_port(DEFAULT_BRIDGE_PORT)
 
-    bridge_proc = start_bridge(ui_port, bridge_port)
+    bridge_supervisor = BridgeSupervisor(ui_port, bridge_port)
+    bridge_supervisor.ensure_running()
+    bridge_supervisor.start_supervisor_thread()
     watch_proc = start_index_watcher()
-    httpd, _thread = start_ui_server(ui_port, bridge_port)
+    httpd, _thread = start_ui_server(ui_port, bridge_port, bridge_supervisor)
     start_url = runtime_payload(ui_port, bridge_port)["start_url"]
-
-    # Pilnuj mostu: jesli padnie w trakcie sesji, podnies ponownie (inaczej "Pliki offline").
-    stop_supervise = threading.Event()
-
-    def _supervise_bridge() -> None:
-        nonlocal bridge_proc
-        while not stop_supervise.is_set():
-            time.sleep(2.5)
-            if stop_supervise.is_set():
-                break
-            if bridge_proc is None or bridge_proc.poll() is not None:
-                try:
-                    bridge_proc = start_bridge(ui_port, bridge_port)
-                except Exception:
-                    pass
-
-    threading.Thread(target=_supervise_bridge, daemon=True).start()
 
     webview = require_pywebview()
     icon_path = str(ICON) if ICON.is_file() else None
     js_api = DamJsApi()
+    start_hard_reset_watchdog(js_api)
     win_w, win_h = preferred_window_size()
 
     window = webview.create_window(
@@ -702,15 +718,13 @@ def main() -> None:
             pass
 
     def _shutdown_all() -> None:
-        stop_supervise.set()
+        bridge_supervisor.stop()
         try:
             httpd.shutdown()
         except Exception:
             pass
         if watch_proc and watch_proc.poll() is None:
             watch_proc.terminate()
-        if bridge_proc and bridge_proc.poll() is None:
-            bridge_proc.terminate()
         os._exit(0)
 
     tray_active = False
@@ -791,7 +805,7 @@ def main() -> None:
         )
         raise SystemExit(1) from exc
     finally:
-        stop_supervise.set()
+        bridge_supervisor.stop()
         if db_sync_stop is not None:
             db_sync_stop.set()
         try:
@@ -803,8 +817,6 @@ def main() -> None:
         httpd.shutdown()
         if watch_proc and watch_proc.poll() is None:
             watch_proc.terminate()
-        if bridge_proc and bridge_proc.poll() is None:
-            bridge_proc.terminate()
 
 
 if __name__ == "__main__":

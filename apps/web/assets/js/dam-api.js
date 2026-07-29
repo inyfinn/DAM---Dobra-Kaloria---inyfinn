@@ -18,16 +18,87 @@
     return m ? m[1] : "";
   }
 
-  function pickLatestRevision(product) {
+  function digitsOnly(s) {
+    return String(s || "").replace(/\D/g, "");
+  }
+
+  /** Wszystkie aktywne warianty (osobny indeks = osobna rewizja), nie jedna scalona checklista. */
+  function listLatestRevisionsByIndex(product) {
+    var revs = (product && product.revisions) || [];
+    if (!revs.length) return [];
+    var byIndex = {};
+    revs.forEach(function (r) {
+      if (!r || !r.index) return;
+      if (r.in_archive) return;
+      var key = String(r.index);
+      var cur = byIndex[key];
+      if (!cur) {
+        byIndex[key] = r;
+        return;
+      }
+      if (r.is_latest && !cur.is_latest) {
+        byIndex[key] = r;
+        return;
+      }
+      if (r.is_latest && cur.is_latest) {
+        var dd = String(r.date || "").localeCompare(String(cur.date || ""));
+        if (dd > 0) byIndex[key] = r;
+      }
+    });
+    return Object.keys(byIndex)
+      .sort(function (a, b) {
+        var ibA =
+          parseInt(String(byIndex[a].index_base || digitsOnly(a) || "0"), 10) || 0;
+        var ibB =
+          parseInt(String(byIndex[b].index_base || digitsOnly(b) || "0"), 10) || 0;
+        if (ibB !== ibA) return ibB - ibA;
+        return String(b).localeCompare(String(a));
+      })
+      .map(function (k) {
+        return byIndex[k];
+      });
+  }
+
+  function pickLatestRevision(product, queryOpt) {
     var revs = (product && product.revisions) || [];
     if (!revs.length) return null;
-    /* Wiele is_latest (np. dwa TUBA z 6300XXX) - wybierz najnowsza date. */
+    /* Wiele is_latest (np. KAR6X 6300783 + MINI 6300782) - nie sortuj tylko po dacie folderu. */
     var candidates = [];
     for (var i = 0; i < revs.length; i++) {
       if (revs[i] && revs[i].is_latest) candidates.push(revs[i]);
     }
     if (!candidates.length) candidates = revs.slice();
+    var qDig = "";
+    if (queryOpt) {
+      if (window.DamSearch && typeof window.DamSearch.digitsOnly === "function") {
+        qDig = window.DamSearch.digitsOnly(queryOpt);
+      } else {
+        qDig = String(queryOpt).replace(/\D/g, "");
+      }
+    }
     candidates.sort(function (a, b) {
+      if (qDig && qDig.length >= 3) {
+        var da = String((a && a.index) || "").replace(/\D/g, "");
+        var db = String((b && b.index) || "").replace(/\D/g, "");
+        var ma = da.indexOf(qDig) === 0 || qDig.indexOf(da) === 0;
+        var mb = db.indexOf(qDig) === 0 || qDig.indexOf(db) === 0;
+        if (ma && !mb) return -1;
+        if (mb && !ma) return 1;
+      }
+      var ibA =
+        parseInt(String((a && a.index_base) || String((a && a.index) || "").replace(/\D/g, "") || "0"), 10) ||
+        0;
+      var ibB =
+        parseInt(String((b && b.index_base) || String((b && b.index) || "").replace(/\D/g, "") || "0"), 10) ||
+        0;
+      if (ibB !== ibA) return ibB - ibA;
+      var vizA =
+        (((a && a.files_by_role) && a.files_by_role.viz) || []).length +
+        (((a && a.wizki) || []).length);
+      var vizB =
+        (((b && b.files_by_role) && b.files_by_role.viz) || []).length +
+        (((b && b.wizki) || []).length);
+      if (vizB !== vizA) return vizB - vizA;
       var dd = String((b && b.date) || "").localeCompare(String((a && a.date) || ""));
       if (dd) return dd;
       return String((b && b.folder) || "").localeCompare(String((a && a.folder) || ""));
@@ -49,7 +120,8 @@
   }
 
   /** Mapowanie rol z indeksu dysku -> checklista DAM (szersza, jak Eksplorator) */
-  function rolesFromRevision(rev, product) {
+  function rolesFromRevision(rev, product, opts) {
+    opts = opts || {};
     var fbr = (rev && rev.files_by_role) || {};
     var src = fbr.source || [];
     var prt = fbr.print || [];
@@ -97,10 +169,14 @@
       } catch (e) { /* ignore */ }
     }
 
-    var hasMarketing = ((product && product.related_materials) || []).some(function (m) {
+    var hasMarketing = false;
+    if (opts.marketingAssets && opts.marketingAssets.length) {
+      hasMarketing = true;
+    } else if (((product && product.related_materials) || []).some(function (m) {
       return m && m.file_count > 0;
-    });
-    if (!hasMarketing && window.DamProductCorrelation && product && product.id) {
+    })) {
+      hasMarketing = true;
+    } else if (window.DamProductCorrelation && product && product.id) {
       hasMarketing = DamProductCorrelation.hasBrandingMaterials(product.id);
     }
 
@@ -171,12 +247,43 @@
     };
   }
 
-  function productToProject(product, seq) {
-    var rev = pickLatestRevision(product);
+  function buildVariantEntry(product, rev) {
     var roles = rolesFromRevision(rev, product);
     var rolePaths = rolePathsFromRevision(rev, product);
-    // Wymagane z indeksu dysku: projekt + wizki + druk.
-    // prev / tech / marketing - w checklistcie, nie blokuja statusu listy.
+    var missing = [];
+    ["artwork", "viz_3d", "print_pdf"].forEach(function (r) {
+      if (!roles[r]) missing.push(r);
+    });
+    var status = missing.length ? "incomplete" : "complete";
+    return {
+      id: product.id + "::" + (rev && rev.index ? rev.index : "0"),
+      revision_index: (rev && rev.index) || "",
+      carrier: (rev && rev.carrier) || product.carrier || "",
+      folder: (rev && rev.folder) || "",
+      path: (rev && rev.path) || product.path || "",
+      langs: ((rev && rev.langs) || []).slice(),
+      checklist_status: { status: status, missing_roles: missing },
+      assets: [
+        asset("artwork", roles.artwork, rolePaths.artwork),
+        asset("prev", roles.prev, rolePaths.prev),
+        asset("viz_3d", roles.viz_3d, rolePaths.viz_3d),
+        asset("print_pdf", roles.print_pdf, rolePaths.print_pdf),
+        asset("tech", roles.tech, rolePaths.tech),
+        asset("marketing", roles.marketing, rolePaths.marketing),
+        asset("karta", roles.karta, rolePaths.karta),
+        asset("presentation", roles.presentation, rolePaths.presentation),
+      ],
+    };
+  }
+
+  function productToProject(product, seq) {
+    var revs = listLatestRevisionsByIndex(product);
+    if (!revs.length) {
+      var single = pickLatestRevision(product);
+      if (single) revs = [single];
+    }
+    var rev = revs[0] || pickLatestRevision(product);
+    var roles = rolesFromRevision(rev, product);
     var missing = [];
     ["artwork", "viz_3d", "print_pdf"].forEach(function (r) {
       if (!roles[r]) missing.push(r);
@@ -187,6 +294,10 @@
       (product.indexes && product.indexes[0]) ||
       (product.index_bases && product.index_bases[0]) ||
       "";
+    var indexes = revs.map(function (r) {
+      return r.index;
+    });
+    if (!indexes.length && index) indexes = [index];
     var title =
       (window.DamLabels && typeof window.DamLabels.cleanProductDisplayName === "function"
         ? window.DamLabels.cleanProductDisplayName(product.display_name || product.name)
@@ -205,6 +316,7 @@
       id: product.id,
       seq: seq,
       product_index: index,
+      indexes: indexes,
       title: title,
       market: product.brand === "GC" ? "GC" : "PL",
       brand: product.brand || "DK",
@@ -218,21 +330,9 @@
       completeness: status,
       missing_roles: missing,
       revision_count: (product.revisions || []).length,
-      variants: [
-        {
-          id: product.id + "::" + (rev && rev.index ? rev.index : "0"),
-          checklist_status: { status: status, missing_roles: missing },
-          assets: [
-            asset("artwork", roles.artwork, rolePaths.artwork),
-            asset("prev", roles.prev, rolePaths.prev),
-            asset("viz_3d", roles.viz_3d, rolePaths.viz_3d),
-            asset("print_pdf", roles.print_pdf, rolePaths.print_pdf),
-            asset("tech", roles.tech, rolePaths.tech),
-            asset("marketing", roles.marketing, rolePaths.marketing),
-            asset("karta", roles.karta, rolePaths.karta),
-            asset("presentation", roles.presentation, rolePaths.presentation),
-          ],
-        },
+      variant_count: revs.length || 1,
+      variants: revs.length ? revs.map(function (r) { return buildVariantEntry(product, r); }) : [
+        buildVariantEntry(product, rev),
       ],
     };
   }
@@ -252,6 +352,11 @@
         _projectsCache = products.map(function (p, i) {
           return productToProject(p, i + 1);
         });
+        try {
+          window._DAM_FILE_INDEX = data;
+        } catch (eShareIdx) {
+          /* ignore */
+        }
         return { index: data, projects: _projectsCache };
       })
       .catch(function (e) {
@@ -486,6 +591,18 @@
     },
     /** Jawne zasilenie z lokalnej bazy (file-index) */
     loadLocalIndex: loadFileIndex,
+    listVariantRevisions: listLatestRevisionsByIndex,
+    revisionRoles: rolesFromRevision,
+    revisionRolePaths: rolePathsFromRevision,
+    rawProductById: function (id) {
+      var data = window._DAM_FILE_INDEX;
+      if (!data || !data.products) return null;
+      var key = String(id || "");
+      for (var i = 0; i < data.products.length; i++) {
+        if (String(data.products[i].id) === key) return data.products[i];
+      }
+      return null;
+    },
     async health() {
       try {
         return await parse(await apiFetch(API + "/health"));

@@ -205,6 +205,34 @@
     });
   }
 
+  function authHeaders() {
+    var base = { "Content-Type": "application/json" };
+    if (window.DamApi && typeof window.DamApi.authHeaders === "function") {
+      var ah = window.DamApi.authHeaders() || {};
+      if (ah.Authorization) base.Authorization = ah.Authorization;
+    } else {
+      var tok = localStorage.getItem("dam_token") || "";
+      if (tok) base.Authorization = "Bearer " + tok;
+    }
+    return base;
+  }
+
+  function dumpSyncOk(res) {
+    if (res && res.dump_sync && res.dump_sync.ok) return true;
+    if (res && res.github_dump) return true;
+    if (res && res.sources && res.sources.github && res.sources.github.configured) return true;
+    return false;
+  }
+
+  function ensureSessionForDb() {
+    if (window.DamApi && typeof window.DamApi.ensureSession === "function") {
+      return window.DamApi.ensureSession().catch(function () {
+        return null;
+      });
+    }
+    return Promise.resolve(null);
+  }
+
   function sleep(ms) {
     return new Promise(function (resolve) {
       setTimeout(resolve, ms);
@@ -526,6 +554,14 @@
         return res;
       })
       .catch(function () {
+        if (window.DamRuntime && typeof window.DamRuntime.ensureServices === "function") {
+          return window.DamRuntime.ensureServices().then(function (boot) {
+            if (boot && boot.ok) return check();
+            _last = { ok: false, online: false, label: "Baza offline", engine: "?", sources: {} };
+            applyStatus(_last);
+            return _last;
+          });
+        }
         _last = { ok: false, online: false, label: "Baza offline", engine: "?", sources: {} };
         applyStatus(_last);
         return _last;
@@ -554,21 +590,32 @@
         return sleep(prefersReducedMotion() ? 0 : 160);
       })
       .then(function () {
-        return fetch(bridgeBase() + "/db/reconnect", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pull_dump: !!pullDump }),
+        return ensureSessionForDb().then(function () {
+          return fetch(bridgeBase() + "/db/reconnect", {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({ pull_dump: !!pullDump }),
+          });
         });
       })
       .then(function (r) {
         advanceSyncStep("postgres", "done", pullDump ? "dump" : "apply");
         setSyncProgress(pullDump ? 0.62 : 0.78);
-        return r.json();
+        return r.json().then(function (body) {
+          body._httpStatus = r.status;
+          return body;
+        });
       })
       .then(function (res) {
+        var dumpOk = dumpSyncOk(res);
         if (pullDump) {
-          advanceSyncStep("dump", res.dump_sync && res.dump_sync.ok ? "done" : "error", "apply");
+          advanceSyncStep("dump", dumpOk ? "done" : "error", "apply");
           setSyncProgress(0.88);
+        }
+        if (res && (res.error === "login_required" || res.error === "admin_required" || res._httpStatus === 401)) {
+          var titleAuth = ensureSyncToast().querySelector(".dam-db-sync-toast__title");
+          if (titleAuth) titleAuth.textContent = "Wymagane logowanie (odśwież bazę)";
+          return closeSyncToast(2400);
         }
         _last = res;
         applyStatus(res);
@@ -577,13 +624,15 @@
         setSyncProgress(1);
         var title = ensureSyncToast().querySelector(".dam-db-sync-toast__title");
         if (title) {
-          var dumpOk = res.dump_sync && res.dump_sync.ok;
+          var syncedFresh = res.dump_sync && res.dump_sync.ok && !res.dump_sync.skipped;
           if (res.online === false || res.ok === false) {
             title.textContent = "Baza nadal offline";
-          } else if (pullDump && dumpOk) {
+          } else if (pullDump && syncedFresh) {
             title.textContent = "Baza online, dump zsynchronizowany";
+          } else if (pullDump && dumpOk) {
+            title.textContent = "Baza online (dump lokalny gotowy)";
           } else if (pullDump) {
-            title.textContent = "Baza online (dump pominięty)";
+            title.textContent = "Baza online (brak dumpa lokalnego)";
           } else {
             title.textContent = "Połączenie odświeżone";
           }
@@ -611,10 +660,20 @@
   function start() {
     if (window.location.pathname.indexOf("signin") !== -1) return;
     ensureUi();
-    check();
-    if (_timer) clearInterval(_timer);
-    _timer = setInterval(check, POLL_MS);
+    function go() {
+      check();
+      if (_timer) clearInterval(_timer);
+      _timer = setInterval(check, POLL_MS);
+    }
+    if (window.DamRuntime && window.DamRuntime.ready) {
+      go();
+    } else {
+      window.addEventListener("dam-runtime-ready", go, { once: true });
+    }
     window.addEventListener("dam-runtime-ready", function () {
+      check();
+    });
+    window.addEventListener("dam:bridge-ready", function () {
       check();
     });
   }

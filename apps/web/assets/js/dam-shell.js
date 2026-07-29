@@ -27,11 +27,16 @@
     } catch (e) { /* ignore */ }
   })();
 
-  /* Soft-boot motywu (data-theme) gdy dam-theme.js nie jest na stronie. */
+  /* Soft-boot motywu (data-theme) gdy dam-theme.js nie jest na stronie.
+   * Prefer dam_theme_pref; default light. Nigdy nie wymuszaj dark bez jawnej preferencji.
+   * Sync localStorage.theme z resolved - main.js nie moze zostawic stale dark. */
   (function softThemeBoot() {
     if (window.DamTheme) return;
     try {
-      var pref = localStorage.getItem("dam_theme_pref") || localStorage.getItem("theme") || "light";
+      var prefRaw = localStorage.getItem("dam_theme_pref");
+      var themeRaw = localStorage.getItem("theme");
+      var pref = prefRaw || themeRaw || "light";
+      if (pref !== "dark" && pref !== "light" && pref !== "system") pref = "light";
       var resolved = pref;
       if (pref === "system") {
         resolved =
@@ -42,10 +47,93 @@
       if (resolved !== "dark" && resolved !== "light") resolved = "light";
       document.documentElement.setAttribute("data-theme", resolved);
       try { document.documentElement.style.colorScheme = resolved; } catch (e2) { /* ignore */ }
-      if (pref === "system" || pref === "dark" || pref === "light") {
-        document.documentElement.setAttribute("data-dam-theme-pref", pref);
-      }
+      document.documentElement.setAttribute("data-dam-theme-pref", pref);
+      try {
+        localStorage.setItem("theme", resolved);
+        if (!prefRaw || prefRaw !== pref) localStorage.setItem("dam_theme_pref", pref);
+      } catch (e3) { /* ignore */ }
     } catch (e) { /* ignore */ }
+  })();
+
+  /* P0 SW gate (Parent B): purge stale dam-page-* or non-v4 sw.js, then allow tutorial register.
+   * Trigger â‰  controller alone. One soft reload per session; after that still delete/unregister without loop. */
+  (function softSwV4PurgeBoot() {
+    if (!("serviceWorker" in navigator)) return;
+    var CACHE_MARK = "dam-page-1h-v4";
+    var SESSION_PURGE_KEY = "dam_sw_purge_v4_once";
+    var running = false;
+
+    function softReloadOnce() {
+      try {
+        if (sessionStorage.getItem(SESSION_PURGE_KEY)) return false;
+        sessionStorage.setItem(SESSION_PURGE_KEY, "1");
+      } catch (eSs) { /* ignore */ }
+      try {
+        var u = new URL(location.href);
+        u.searchParams.set("v", "swPurge" + Date.now().toString(36));
+        location.replace(u.toString());
+        return true;
+      } catch (eNav) {
+        try { location.reload(); } catch (eRel) { /* ignore */ }
+        return true;
+      }
+    }
+
+    function deleteDamPageCaches() {
+      if (!("caches" in window)) return Promise.resolve();
+      return caches.keys().then(function (keys) {
+        return Promise.all(
+          keys
+            .filter(function (k) {
+              return k.indexOf("dam-page-") === 0;
+            })
+            .map(function (k) {
+              return caches.delete(k);
+            })
+        );
+      });
+    }
+
+    function unregisterAll() {
+      return navigator.serviceWorker.getRegistrations().then(function (regs) {
+        return Promise.all(
+          regs.map(function (r) {
+            return r.unregister();
+          })
+        );
+      });
+    }
+
+    function listStaleKeys() {
+      if (!("caches" in window)) return Promise.resolve([]);
+      return caches.keys().then(function (keys) {
+        return keys.filter(function (k) {
+          return k.indexOf("dam-page-") === 0 && k !== CACHE_MARK;
+        });
+      });
+    }
+
+    fetch("./sw.js", { cache: "no-store" })
+      .then(function (res) {
+        return res.text();
+      })
+      .then(function (text) {
+        var hasV4 = !!(text && text.indexOf(CACHE_MARK) !== -1);
+        return listStaleKeys().then(function (stale) {
+          var needPurge = stale.length > 0 || !hasV4;
+          if (!needPurge) return;
+          if (running) return;
+          running = true;
+          return unregisterAll()
+            .then(deleteDamPageCaches)
+            .then(function () {
+              if (softReloadOnce()) return;
+              /* Already reloaded once this session: settle without loop; v4 register is tutorial S4b. */
+              return null;
+            });
+        });
+      })
+      .catch(function () { /* ignore */ });
   })();
 
   // Tryb roboczy: zawsze zalogowany jako admin (bez Microsoft).
@@ -66,7 +154,7 @@
     if (!head || head.querySelector('link[data-dam-accent-css]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "./assets/css/dam-accent.css?v=20260718accent3";
+    link.href = "./assets/css/dam-accent.css?v=navPill20260723b";
     link.setAttribute("data-dam-accent-css", "1");
     head.appendChild(link);
   }
@@ -153,6 +241,12 @@
       i18n: "nav.inbox"
     },
     {
+      key: "tasks",
+      href: "tasks.html",
+      icon: "uil-check-square",
+      i18n: "nav.tasks"
+    },
+    {
       key: "invoices",
       href: "invoices.html",
       icon: "uil-invoice",
@@ -182,6 +276,7 @@
     if (path === "index" || path === "projects") return "projects";
     if (path === "project") return "project";
     if (path === "inbox") return "inbox";
+    if (path === "tasks" || path === "zadania") return "tasks";
     if (path === "invoices") return "invoices";
     if (path === "costs") return "costs";
     if (path === "integrations") return "integrations";
@@ -203,12 +298,13 @@
     project: { labelKey: "nav.project", label: "Projekt", parent: "projects", href: "project.html" },
     invoices: { labelKey: "nav.invoices", label: "Faktury", parent: "dashboard", href: "invoices.html" },
     costs: { labelKey: "nav.costs", label: "Kalkulator kosztów", parent: "dashboard", href: "costs.html" },
-    integrations: { labelKey: "nav.integrations", label: "Integracje", parent: "dashboard", href: "integrations.html" },
+    integrations: { labelKey: "nav.integrations", label: "Integracja i produkcja", parent: "dashboard", href: "integrations.html" },
     profile: { labelKey: "user.profile", label: "Profil", parent: "dashboard", href: "profile.html" },
     settings: { labelKey: "user.settings", label: "Ustawienia", parent: "dashboard", href: "settings.html" },
     billing: { labelKey: "user.billing", label: "Rozliczenia", parent: "dashboard", href: "billing.html" },
     activity: { labelKey: "user.activity", label: "Aktywność", parent: "dashboard", href: "activity.html" },
     inbox: { labelKey: "nav.inbox", label: "Wiadomości", parent: "dashboard", href: "inbox.html" },
+    tasks: { labelKey: "nav.tasks", label: "Zadania", parent: "dashboard", href: "tasks.html" },
     help: { labelKey: "user.help", label: "Pomoc", parent: "dashboard", href: "help.html" }
   };
 
@@ -236,9 +332,10 @@
       "nav.branding": "Branding",
       "nav.projects": "Projekty",
       "nav.inbox": "Wiadomości",
+      "nav.tasks": "Zadania",
       "nav.invoices": "Faktury",
       "nav.costs": "Kalkulator kosztów",
-      "nav.integrations": "Integracje",
+      "nav.integrations": "Integracja i produkcja",
       "nav.logout": "Wyloguj"
     };
     return fallbacks[item.i18n] || item.i18n;
@@ -301,7 +398,6 @@
       "#damThumbPicker",
       "#damAddVariantModal",
       "#damBasepathModal",
-      "#damElementsPicker",
     ];
     for (var i = 0; i < overlaySelectors.length; i++) {
       var el = document.querySelector(overlaySelectors[i]);
@@ -592,7 +688,7 @@
         '<span class="dam-nav-label" data-i18n="' + item.i18n + '">' + label + '</span>' +
         '</a></li>';
     }).join("") +
-    /* (1) Sesja urzadzenia - naturalnie po nav (BEZ margin-top:auto = bez pchania w dol) */
+    /* (1) Sesja urządzenia - naturalnie po nav (BEZ margin-top:auto = bez pchania w dol) */
     '<li class="geex-sidebar__menu__item dam-nav-device-session">' +
     '<a href="profile.html#damDevicePathsRoot" class="geex-sidebar__menu__link dam-device-session-btn" id="damShellDeviceSession"' +
     ' title="Sesja urządzenia - ścieżki Marketing" aria-label="Sesja urządzenia"' +
@@ -610,7 +706,7 @@
     '</a></li>';
   }
 
-  /** Sidebar: Sesja urzadzenia -> profil z CRUD sciezek per device (nie logout). */
+  /** Sidebar: Sesja urządzenia -> profil z CRUD sciezek per device (nie logout). */
   function goDeviceSessionPaths(e) {
     if (e) e.preventDefault();
     var target = "profile.html#damDevicePathsRoot";
@@ -671,15 +767,50 @@
       created = true;
     }
     s.textContent =
-      "/* Header popups ZAWSZE nad sticky search/filters */" +
+      "/* Header chrome PONIZEJ panelu Dostosuj wygląd; popupy w kontekscie headera */" +
       ".geex-content__header{position:relative;z-index:200;isolation:isolate;}" +
-      ".geex-content__header__action{position:relative;z-index:12500;}" +
+      ".geex-content__header__action{position:relative;z-index:60;}" +
       ".geex-content__header__action .geex-content__header__popup," +
       ".geex-content__header__action .geex-content__header__popup.is-open," +
       ".geex-content__header__popup--author," +
       ".geex-content__header__popup--author.dam-user-menu," +
       ".geex-content__header__popup--author.dam-user-menu.is-open{" +
-      "z-index:12550!important;}" +
+      "z-index:250!important;}" +
+      "/* Appearance dock: body-mounted; closed = off-screen; header opens .active */" +
+      ".geex-customizer{" +
+      "z-index:12600!important;position:fixed!important;" +
+      "top:0!important;bottom:0!important;width:400px!important;" +
+      "max-width:min(400px,100vw)!important;" +
+      "left:auto!important;inset-inline-start:auto!important;" +
+      "right:0!important;inset-inline-end:0!important;" +
+      "transform:translateX(100%)!important;" +
+      "opacity:0!important;" +
+      "transition:transform .32s ease,opacity .28s ease!important;" +
+      "overflow:hidden!important;padding:0!important;" +
+      "box-shadow:none!important;pointer-events:none!important;}" +
+      ".dam-customizer-peek,button.dam-customizer-peek{" +
+      "display:none!important;visibility:hidden!important;pointer-events:none!important;" +
+      "width:0!important;height:0!important;max-width:0!important;max-height:0!important;" +
+      "opacity:0!important;overflow:hidden!important;position:fixed!important;left:-9999px!important;" +
+      "border:0!important;padding:0!important;margin:0!important;}" +
+      ".geex-customizer.active{" +
+      "transform:translateX(0)!important;opacity:1!important;" +
+      "padding:25px 30px!important;pointer-events:auto!important;" +
+      "box-shadow:-8px 0 28px rgba(23,22,30,.12)!important;}" +
+      ".geex-customizer:not(.active) .geex-customizer__header," +
+      ".geex-customizer:not(.active) .geex-customizer__body," +
+      ".geex-customizer:not(.active) .geex-customizer-overlay{" +
+      "visibility:hidden!important;opacity:0!important;pointer-events:none!important;}" +
+      ".geex-customizer.active .geex-customizer__header," +
+      ".geex-customizer.active .geex-customizer__body{" +
+      "visibility:visible!important;opacity:1!important;" +
+      "animation:damCustomizerFadeIn .28s ease both!important;}" +
+      "@keyframes damCustomizerFadeIn{from{opacity:0}to{opacity:1}}" +
+      ".geex-customizer .geex-customizer-overlay{z-index:0!important;}" +
+      ".geex-customizer__header,.geex-customizer__body{position:relative;z-index:2;}" +
+      "body:has(.geex-customizer.active) .geex-content__header{z-index:100!important;}" +
+      "body.dam-sidebar-collapsed .geex-customizer," +
+      "body:not(.dam-sidebar-collapsed) .geex-customizer{right:0!important;}" +
       "/* Gdy dowolny popup headera otwarty - sticky search schodzi nizej */" +
       "body.dam-header-popup-open .dam-explorer-toolbar," +
       "body.dam-header-popup-open .dam-global-search-block .dam-explorer-toolbar," +
@@ -701,20 +832,40 @@
       "flex:0 0 auto!important;min-height:0!important;height:auto!important;" +
       "gap:0!important;}" +
       "body.dam-sidebar-collapsed .geex-sidebar__menu{gap:0!important;}" +
-      "/* Geex first-child margin-top:15px - collapsed dam-brand zeruje → Y jump -15px */" +
+      "/* Geex first-child margin-top:15px - collapsed dam-brand zeruje â†’ Y jump -15px */" +
       ".geex-sidebar__menu__item:first-child," +
       "body.dam-sidebar-collapsed .geex-sidebar__menu__item:first-child," +
       "body.dam-sidebar-morphing .geex-sidebar__menu__item:first-child{" +
       "margin-top:15px!important;margin-bottom:0!important;}" +
       ".geex-sidebar__wrapper{gap:16px!important;}" +
       ".geex-sidebar__footer{flex-shrink:0;margin-top:auto!important;}" +
-      "/* Y-STABLE SLOTS: stale 56px (Geex pad 16+16+line) - bez wrap 80px na Kalkulator/Sesja */" +
+      "/* Y-STABLE min 56px; height:auto + wrap so long labels (Integracja i produkcja) do not clip pill */" +
       ".geex-sidebar .geex-sidebar__menu__link{" +
       "box-sizing:border-box!important;" +
-      "min-height:56px!important;height:56px!important;" +
-      "white-space:nowrap!important;" +
+      "min-height:56px!important;height:auto!important;" +
+      "white-space:normal!important;" +
+      "overflow:visible!important;" +
       "align-items:center!important;}" +
-      "/* Ikony: ten sam box 20×20 / line-height 1 w expanded+collapsed (bez 24→20 snap) */" +
+      ".geex-sidebar .geex-sidebar__menu__link .dam-nav-label{" +
+      "min-width:0!important;flex:1 1 auto!important;" +
+      "white-space:normal!important;line-height:1.25!important;" +
+      "overflow-wrap:break-word!important;}" +
+      ".geex-sidebar .geex-sidebar__menu__item.active > .geex-sidebar__menu__link," +
+      ".geex-sidebar .geex-sidebar__menu__link.active," +
+      ".geex-sidebar .geex-sidebar__menu__link[aria-current=\"page\"]{" +
+      "position:relative!important;" +
+      "border-radius:6px 18px 18px 6px!important;" +
+      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 16%,transparent)!important;" +
+      "background-clip:border-box!important;" +
+      "box-shadow:none!important;" +
+      "overflow:visible!important;}" +
+      ".geex-sidebar .geex-sidebar__menu__item.active > .geex-sidebar__menu__link::before," +
+      ".geex-sidebar .geex-sidebar__menu__link.active::before," +
+      ".geex-sidebar .geex-sidebar__menu__link[aria-current=\"page\"]::before{" +
+      "content:\"\";position:absolute;left:0;top:8px;bottom:8px;width:3px;" +
+      "border-radius:0 2px 2px 0;background:var(--dam-primary,#ab54db);" +
+      "pointer-events:none;z-index:1;}" +
+      "/* Ikony: ten sam box 20×20 / line-height 1 w expanded+collapsed (bez 24â†’20 snap) */" +
       ".geex-sidebar .geex-sidebar__menu__link i," +
       ".geex-sidebar .geex-sidebar__menu__link .uil," +
       "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i," +
@@ -759,7 +910,7 @@
       "visibility:hidden!important;opacity:0!important;" +
       "pointer-events:none!important;width:1px!important;height:1px!important;" +
       "overflow:hidden!important;margin:0!important;padding:0!important;}" +
-      "/* Collapse btn: WYŚRODKOWANY w railu (= ta sama oś X co ikony; bylo flex-start → CX 49 vs ikony 59) */" +
+      "/* Collapse btn: WYŚRODKOWANY w railu (= ta sama oś X co ikony; bylo flex-start â†’ CX 49 vs ikony 59) */" +
       "body.dam-sidebar-collapsed .dam-sidebar-collapse-btn," +
       "body.dam-sidebar-morphing .dam-sidebar-collapse-btn{" +
       "position:relative!important;z-index:1;" +
@@ -1229,6 +1380,8 @@
       '<div class="geex-content__header__customizer">' +
         '<button type="button" class="geex-btn geex-btn__toggle-sidebar" aria-label="Menu boczne" data-dam-tip="Otwórz / zamknij menu">' +
           '<i class="uil uil-align-center-alt"></i></button>' +
+        '<button type="button" class="geex-btn geex-btn__customizer" data-dam-tip="Dostosuj wygląd">' +
+          '<i class="uil uil-pen"></i><span>Dostosuj wygląd</span></button>' +
       "</div>" +
       '<div class="geex-content__header__action__wrap">' +
         '<ul class="geex-content__header__quickaction">' +
@@ -1278,7 +1431,7 @@
       wrap.innerHTML = adminSwitchHtml();
       existing = wrap.firstChild;
     }
-    // ZAWSZE tuż przed avatarem (po PL / jezyku, nie przed nim)
+    // ZAWSZE tuż przed avatarem (po PL / języku, nie przed nim)
     if (profileItem) {
       if (existing.nextElementSibling !== profileItem) {
         list.insertBefore(existing, profileItem);
@@ -1286,7 +1439,7 @@
     } else if (!existing.parentNode) {
       list.appendChild(existing);
     }
-    // Usun lokalne przełączniki trybu admina ze stron (jedyny switch = header)
+    // Usuń lokalne przełączniki trybu admina ze stron (jedyny switch = header)
     document.querySelectorAll("#damAdminToggle, #vizAdminToggle, label.dam-admin-toggle").forEach(function (el) {
       var kill = el.id === "vizAdminToggle" ? el.closest("label.dam-admin-toggle") || el : el;
       if (kill && kill.parentNode) kill.parentNode.removeChild(kill);
@@ -1390,6 +1543,101 @@
     popup.setAttribute("role", "menu");
     popup.setAttribute("aria-label", "Menu użytkownika");
     popup.innerHTML = authorPopupInnerHtml();
+  }
+
+  /**
+   * Must live on document.body. Inside .geex-main-content (overflow-x:clip)
+   * the closed translateX peek is clipped to main's right edge (~sliver).
+   */
+  function mountCustomizerToBody() {
+    document.querySelectorAll(".geex-customizer").forEach(function (panel) {
+      if (panel.parentElement === document.body) return;
+      document.body.appendChild(panel);
+    });
+  }
+
+  /** Panel Dostosuj wygląd - gdy strona (np. tasks) nie ma markupu Geex. */
+  function ensureAppearanceCustomizer() {
+    if (document.querySelector(".geex-customizer")) {
+      mountCustomizerToBody();
+      return;
+    }
+    var panel = document.createElement("div");
+    panel.className = "geex-customizer";
+    panel.innerHTML =
+      '<div class="geex-customizer__header">' +
+      '<h4 class="geex-customizer__title">Dostosuj wygląd</h4>' +
+      '<button type="button" class="geex-btn geex-btn__customizer-close" aria-label="Zamknij">' +
+      '<i class="uil uil-times" aria-hidden="true"></i></button></div>' +
+      '<div class="geex-customizer__body">' +
+      '<div class="geex-customizer__single"><h5 class="geex-customizer__single__title">Kierunek tekstu</h5>' +
+      '<ul class="geex-customizer__list geex-customizer__list--layout">' +
+      '<li class="geex-customizer__list__item"><button type="button" class="geex-btn geex-customizer__btn geex-customizer__btn--ltr active">LTR</button></li>' +
+      '<li class="geex-customizer__list__item"><button type="button" class="geex-btn geex-customizer__btn geex-customizer__btn--rtl">RTL</button></li>' +
+      "</ul></div>" +
+      '<div class="geex-customizer__single"><h4 class="geex-customizer__single__title">Motyw</h4>' +
+      '<ul class="geex-customizer__list geex-customizer__list--sidebar">' +
+      '<li class="geex-customizer__list__item"><button type="button" class="geex-btn geex-customizer__btn geex-customizer__btn--light active">Light</button></li>' +
+      '<li class="geex-customizer__list__item"><button type="button" class="geex-btn geex-customizer__btn geex-customizer__btn--dark">Dark</button></li>' +
+      "</ul></div>" +
+      '<div class="geex-customizer__single"><h4 class="geex-customizer__single__title">Nawigacja</h4>' +
+      '<ul class="geex-customizer__list geex-customizer__list--navbar">' +
+      '<li class="geex-customizer__list__item"><button type="button" class="geex-btn geex-customizer__btn geex-customizer__btn--side active">Side</button></li>' +
+      '<li class="geex-customizer__list__item"><button type="button" class="geex-btn geex-customizer__btn geex-customizer__btn--top">Top</button></li>' +
+      "</ul></div></div>" +
+      '<div class="geex-customizer-overlay"></div>';
+    document.body.appendChild(panel);
+  }
+
+  /** B1: prawy peek wylaczony - usun z DOM, nie tworz nowych; zabij race reinject. */
+  function killCustomizerPeekNodes() {
+    document.querySelectorAll("button.dam-customizer-peek, .dam-customizer-peek").forEach(function (el) {
+      try {
+        el.remove();
+      } catch (e) {
+        /* ignore */
+      }
+    });
+  }
+
+  function ensureCustomizerPeek() {
+    mountCustomizerToBody();
+    killCustomizerPeekNodes();
+    if (document.documentElement.getAttribute("data-dam-peek-killer") === "1") return;
+    document.documentElement.setAttribute("data-dam-peek-killer", "1");
+    try {
+      var mo = new MutationObserver(function () {
+        killCustomizerPeekNodes();
+      });
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+    } catch (e2) {
+      /* ignore */
+    }
+  }
+
+  /** Sync Geex customizer Motyw -> dam_theme_pref (main.js ustawia tylko theme). */
+  function bindThemeCustomizerSync() {
+    if (document.documentElement.getAttribute("data-dam-theme-sync") === "1") return;
+    document.documentElement.setAttribute("data-dam-theme-sync", "1");
+    document.addEventListener(
+      "click",
+      function (e) {
+        var dark = e.target.closest && e.target.closest(".geex-customizer__btn--dark");
+        var light = e.target.closest && e.target.closest(".geex-customizer__btn--light");
+        if (!dark && !light) return;
+        var pref = dark ? "dark" : "light";
+        try {
+          localStorage.setItem("dam_theme_pref", pref);
+          localStorage.setItem("theme", pref);
+        } catch (err) { /* ignore */ }
+        document.documentElement.setAttribute("data-theme", pref);
+        document.documentElement.setAttribute("data-dam-theme-pref", pref);
+        try {
+          document.documentElement.style.colorScheme = pref;
+        } catch (e2) { /* ignore */ }
+      },
+      true
+    );
   }
 
   function ensureHeaderChrome() {
@@ -1549,7 +1797,7 @@
     }
     var totalMsg = asanaTasks.length + teamsMessages.length + pendingMod;
     setHeaderBadge("damMsgBadge", totalMsg);
-    /* Odśwież licznik pending zgloszen (admin) w tle */
+    /* Odśwież licznik pending zgłoszeń (admin) w tle */
     try {
       var bridge =
         (window.DamPaths && window.DamPaths.bridgeUrl && window.DamPaths.bridgeUrl()) ||
@@ -2072,8 +2320,19 @@
     root.style.setProperty(LINK_PAD_X_VAR, Math.round(linkPad * 100) / 100 + "px");
   }
 
+  function persistSidebarCollapsedPref(collapsed) {
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSE_KEY, collapsed ? "1" : "0");
+    } catch (e) { /* ignore */ }
+    if (window.DamUserPrefs && typeof DamUserPrefs.setDebounced === "function") {
+      DamUserPrefs.setDebounced({ sidebar_collapsed: !!collapsed }, 350).catch(function () {});
+    } else if (window.DamUserPrefs && typeof DamUserPrefs.set === "function") {
+      DamUserPrefs.set({ sidebar_collapsed: !!collapsed }).catch(function () {});
+    }
+  }
+
   function applySidebarCollapsedClass(collapsed) {
-    localStorage.setItem(SIDEBAR_COLLAPSE_KEY, collapsed ? "1" : "0");
+    persistSidebarCollapsedPref(collapsed);
     document.body.classList.toggle("dam-sidebar-collapsed", !!collapsed);
     document.documentElement.style.removeProperty(SIDEBAR_W_VAR);
     var bottomLogo = document.querySelector(".dam-sidebar-logo-collapsed");
@@ -2256,12 +2515,12 @@
       document.body.classList.add(want ? "dam-sidebar-morph-to-collapsed" : "dam-sidebar-morph-to-expanded");
       _sidebarMorphing = true;
       _sidebarMorphWant = want;
-      localStorage.setItem(SIDEBAR_COLLAPSE_KEY, want ? "1" : "0");
+      persistSidebarCollapsedPref(want);
       syncCollapseBtn(want);
       document.body.classList.remove("dam-sidebar-collapsed");
       void sidebar.offsetWidth;
 
-      /* FLIP: zachowaj wizualna pozycje btn, tween x→0 (razem z kurczeniem raila = płynny tor). */
+      /* FLIP: zachowaj wizualna pozycje btn, tween xâ†’0 (razem z kurczeniem raila = płynny tor). */
       if (collapseBtn && btnFirst) {
         var btnLast = collapseBtn.getBoundingClientRect();
         var btnDx = btnFirst.left - btnLast.left;
@@ -2293,7 +2552,7 @@
           footer.style.removeProperty("opacity");
           footer.style.removeProperty("visibility");
         }
-        /* Expand koniec: logo wraca do flex → btn skacze w prawo; FLIP dogrywka. */
+        /* Expand koniec: logo wraca do flex â†’ btn skacze w prawo; FLIP dogrywka. */
         if (!want && collapseBtn && btnPre) {
           void sidebar.offsetWidth;
           var btnPost = collapseBtn.getBoundingClientRect();
@@ -2467,7 +2726,21 @@
 
   function applySidebarCollapse() {
     /* Boot / restore: BEZ morph (finishBoot / flash fix) */
-    setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1", false);
+    var fromLs = localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "1";
+    var fromKv =
+      window.DamUserPrefs && typeof DamUserPrefs.getSync === "function"
+        ? !!DamUserPrefs.getSync().sidebar_collapsed
+        : fromLs;
+    setSidebarCollapsed(fromKv || fromLs, false);
+    if (window.DamUserPrefs && typeof DamUserPrefs.load === "function") {
+      DamUserPrefs.load().then(function (prefs) {
+        if (!prefs) return;
+        var want = !!prefs.sidebar_collapsed;
+        if (want !== isSidebarCollapsedNow()) {
+          setSidebarCollapsed(want, false);
+        }
+      });
+    }
   }
 
   function injectSidebarCollapse() {
@@ -2567,9 +2840,56 @@
   }
 
   /**
+   * DamPageReady — lightweight ready marks only.
+   * HARD: NO full-page skeleton overlay. Sidebar/header NEVER skel.
+   * Per-object skeletons live inside widget bodies (dashboard / grids).
+   */
+  var pageReadyState = {
+    shell: false,
+    revealed: false,
+    marks: Object.create(null),
+  };
+
+  function pageReadyMark(name) {
+    if (!name) return;
+    pageReadyState.marks[name] = true;
+    if (name === "shell") pageReadyState.shell = true;
+    if (name === "content" || name.indexOf("dashboard") === 0 || name === "page") {
+      pageReadyState.revealed = true;
+      try {
+        document.dispatchEvent(new CustomEvent("dam:page-ready", { detail: { mark: name } }));
+      } catch (eEv) { /* ignore */ }
+    }
+  }
+
+  function pageReadyIsReady() {
+    return !!pageReadyState.revealed || !!pageReadyState.shell;
+  }
+
+  /* Kill leftover full-page skel from older builds if still in DOM */
+  function purgeLegacyPageSkeleton() {
+    var el = document.getElementById("damPageSkeleton");
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+    var root = document.documentElement;
+    root.classList.remove("dam-page-skel");
+    root.classList.remove("dam-page-skel-hiding");
+  }
+
+  window.DamPageReady = {
+    mark: pageReadyMark,
+    isReady: pageReadyIsReady,
+    showSkeleton: function () { /* intentionally no-op: never full-page skel */ },
+    reveal: function () {
+      pageReadyMark("content");
+      purgeLegacyPageSkeleton();
+    },
+  };
+
+  /**
    * Zdejmij html.dam-booting / body.is-booting po przepisaniu chrome.
    * Double rAF = pierwsza klatka po rewrite zanim fade-in (bez flashu Geex Demo).
    * HARD: nie odslaniaj zanim DamI18n overlay jest ready (anti mojibake flash).
+   * Sidebar + header stay real; skeletons only inside loading objects.
    */
   var bootFinished = false;
   var bootRevealScheduled = false;
@@ -2577,6 +2897,7 @@
     function reveal() {
       var root = document.documentElement;
       var body = document.body;
+      purgeLegacyPageSkeleton();
       root.classList.remove("dam-booting");
       root.classList.add("dam-booted");
       if (body) {
@@ -2594,6 +2915,7 @@
       }
       bootFinished = true;
       bootRevealScheduled = false;
+      pageReadyMark("shell");
     }
     // Juz odsloniete i nie wymuszamy - nic nie rob
     if (bootFinished && !force && !document.documentElement.classList.contains("dam-booting")) {
@@ -2684,7 +3006,7 @@
     // Status ROOT plików (czerwona kropka gdy offline)
     if (!window.DamRootStatus) {
       var rs = document.createElement("script");
-      rs.src = "assets/js/dam-root-status.js?v=20260719statusPill1";
+      rs.src = "assets/js/dam-root-status.js?v=servicesBoot20260723a";
       document.head.appendChild(rs);
     } else if (typeof window.DamRootStatus.start === "function") {
       window.DamRootStatus.start();
@@ -2693,7 +3015,7 @@
     // Status bazy danych (obok Pliki online)
     if (!window.DamDbStatus) {
       var dbs = document.createElement("script");
-      dbs.src = "assets/js/dam-db-status.js?v=20260719statusPill1";
+      dbs.src = "assets/js/dam-db-status.js?v=4.0.14-dbDumpFix20260725";
       document.head.appendChild(dbs);
     } else if (typeof window.DamDbStatus.start === "function") {
       window.DamDbStatus.start();
@@ -2702,7 +3024,7 @@
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=tutorialTargets20260721a";
+      sc.src = "assets/js/dam-shortcuts.js?v=5.0.56";
       document.head.appendChild(sc);
     }
 
@@ -2711,6 +3033,9 @@
       headerMenu.innerHTML = buildHeaderNav();
     }
 
+    ensureAppearanceCustomizer();
+    ensureCustomizerPeek();
+    bindThemeCustomizerSync();
     ensureHeaderChrome();
     normalizeHeaderIcons();
     ensureAdminModeSwitch();
@@ -2737,8 +3062,9 @@
     });
 
     // Re-apply after i18n / Geex main.js (odpinamy slideToggle jeśli wrocil)
-    // Po boot reveal - odswiez chrome, ale NIE flashuj wczesniej
+    // Po boot reveal - odśwież chrome, ale NIE flashuj wczesniej
     function refreshChrome() {
+      ensureCustomizerPeek();
       ensureHeaderChrome();
       bindDamHeaderPopups();
       normalizeHeaderIcons();
@@ -2757,7 +3083,7 @@
     }
     setTimeout(refreshChrome, 80);
     setTimeout(refreshChrome, 400);
-    // Po rehydrate sesji rola moze dojsc pozniej - odswiez widocznosc switcha
+    // Po rehydrate sesji rola moze dojsc pozniej - odśwież widocznosc switcha
     setTimeout(ensureAdminModeSwitch, 900);
     setTimeout(ensureAdminModeSwitch, 2000);
   }
@@ -2798,6 +3124,20 @@
     currentNavUrl: currentNavUrl,
     isAdminMode: isAdminModeOn,
     setAdminMode: setAdminMode,
-    syncAdminModeSwitch: ensureAdminModeSwitch
+    syncAdminModeSwitch: ensureAdminModeSwitch,
+    pageReady: window.DamPageReady,
+    /** Nav catalog for quick_links picker (pool only, no custom URLs). */
+    getNavItems: function () {
+      return NAV_ITEMS.map(function (item) {
+        return {
+          key: item.key,
+          href: item.href,
+          icon: item.icon,
+          i18n: item.i18n,
+          label: navItemLabel(item)
+        };
+      });
+    },
+    navItemLabel: navItemLabel
   };
 })();

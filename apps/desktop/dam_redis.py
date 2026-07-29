@@ -1,12 +1,19 @@
 """
 DAM Redis client — metadata TTL + warm queues + production circuit breaker.
 
-Env: DAM_REDIS_URL=redis://127.0.0.1:6379/0
+Env: DAM_REDIS_URL=redis://127.0.0.1:6379/0  (default unchanged)
+Env: DAM_REDIS_DEBUG=1  — verbose circuit/probe stdout (default: quiet)
 
-Docker Desktop is OPTIONAL. Connection refused at startup (no Docker, colleague PC)
-behaves the same as Redis crashing mid-flight: circuit OPEN immediately (or after
-first refuse), degrade to role fallbacks, background probes until Redis appears.
-Bridge must serve UI without `docker compose up`.
+Redis bez Dockera: TAK (preferred).
+  Primary: native Windows Redis on 127.0.0.1:6379
+    - tporadowski Redis for Windows (zip → %LOCALAPPDATA%\\DAM-Redis), or
+    - Memurai Developer (Chocolatey: choco install memurai-developer -y) — needs admin
+  See: apps/desktop/README-redis.md
+
+Docker Desktop / docker-compose.redis.yml is OPTIONAL fallback only.
+Connection refused at startup (Redis never installed) behaves the same as Redis
+crashing mid-flight: circuit OPEN, degrade to role fallbacks, background probes
+until Redis appears. Bridge must serve UI without Docker or Redis.
 
 ================================================================================
 CIRCUIT BREAKER (HARD)
@@ -40,6 +47,12 @@ from enum import Enum
 from typing import Any, Optional
 
 DAM_REDIS_URL = os.environ.get("DAM_REDIS_URL", "redis://127.0.0.1:6379/0").strip()
+_DAM_REDIS_DEBUG = os.environ.get("DAM_REDIS_DEBUG", "").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 
 # Circuit breaker knobs
 ERROR_THRESHOLD = int(os.environ.get("DAM_REDIS_CB_ERRORS", "3"))
@@ -67,6 +80,10 @@ _opened_at = 0.0
 _half_open_probe_allowed = False
 _probe_thread_started = False
 _probe_stop = threading.Event()
+# Quiet stdout: log OPEN once until CLOSED; half-open fail ≤1 / cooldown (or debug).
+_log_lock = threading.Lock()
+_last_open_log_key: Optional[str] = None
+_last_half_open_fail_log_at = 0.0
 
 # Process-local fallback (avail / dry-run / warm meta). NOT durable across restart.
 _mem: dict[str, tuple[float, Any]] = {}
@@ -89,15 +106,59 @@ def _try_import_redis():
         return None
 
 
+def _log_debug(msg: str) -> None:
+    """Per-probe / loop noise — only when DAM_REDIS_DEBUG=1."""
+    if _DAM_REDIS_DEBUG:
+        print(f"[dam_redis] {msg}")
+
+
+def _log_open_once(reason: str) -> None:
+    """Log OPEN at most once until circuit returns to CLOSED (or debug every time)."""
+    global _last_open_log_key
+    # Key on state, not reason — otherwise "after N errors" spam changes the key each time.
+    key = "open"
+    with _log_lock:
+        if _DAM_REDIS_DEBUG:
+            print(f"[dam_redis] circuit OPEN ({reason})")
+            _last_open_log_key = key
+            return
+        if _last_open_log_key == key:
+            return
+        _last_open_log_key = key
+        print(f"[dam_redis] circuit OPEN ({reason})")
+
+
+def _log_half_open_fail(reason: str) -> None:
+    """Half-open probe fail: no stdout by default; every fail when DAM_REDIS_DEBUG=1."""
+    global _last_half_open_fail_log_at
+    if not _DAM_REDIS_DEBUG:
+        return
+    now = time.time()
+    with _log_lock:
+        # Even in debug, cap to one line per cooldown so a tight probe loop stays readable.
+        if (now - _last_half_open_fail_log_at) < COOLDOWN_S:
+            return
+        _last_half_open_fail_log_at = now
+        print(f"[dam_redis] circuit OPEN again (half-open fail: {reason})")
+
+
+def _clear_open_log_gate() -> None:
+    global _last_open_log_key, _last_half_open_fail_log_at
+    with _log_lock:
+        _last_open_log_key = None
+        _last_half_open_fail_log_at = 0.0
+
+
 def _set_open(reason: str = "") -> None:
     global _circuit, _opened_at, _half_open_probe_allowed, _consec_errors
     with _cb_lock:
+        was = _circuit
         _circuit = CircuitState.OPEN
         _opened_at = time.time()
         _half_open_probe_allowed = False
         _consec_errors = ERROR_THRESHOLD
-    if reason:
-        print(f"[dam_redis] circuit OPEN ({reason})")
+    if reason and (was != CircuitState.OPEN or _DAM_REDIS_DEBUG):
+        _log_open_once(reason)
 
 
 def _set_closed() -> None:
@@ -108,16 +169,18 @@ def _set_closed() -> None:
         _consec_errors = 0
         _half_open_probe_allowed = False
     if was != CircuitState.CLOSED:
+        _clear_open_log_gate()
         print("[dam_redis] circuit CLOSED (Redis recovered)")
 
 
 def _record_success() -> None:
-    global _consec_errors
+    global _circuit, _consec_errors, _half_open_probe_allowed
     with _cb_lock:
         _consec_errors = 0
         if _circuit in (CircuitState.HALF_OPEN, CircuitState.OPEN):
             _circuit = CircuitState.CLOSED
             _half_open_probe_allowed = False
+            _clear_open_log_gate()
             print("[dam_redis] circuit CLOSED (probe/request OK)")
 
 
@@ -129,14 +192,14 @@ def _record_failure(reason: str = "error") -> None:
             _opened_at = time.time()
             _half_open_probe_allowed = False
             _consec_errors = ERROR_THRESHOLD
-            print(f"[dam_redis] circuit OPEN again (half-open fail: {reason})")
+            _log_half_open_fail(reason)
             return
         _consec_errors += 1
         if _consec_errors >= ERROR_THRESHOLD:
             _circuit = CircuitState.OPEN
             _opened_at = time.time()
             _half_open_probe_allowed = False
-            print(f"[dam_redis] circuit OPEN after {_consec_errors} errors ({reason})")
+            _log_open_once(f"after {_consec_errors} errors ({reason})")
 
 
 def circuit_state() -> str:
@@ -196,7 +259,7 @@ def _raw_ping() -> bool:
 
 def _probe_once() -> bool:
     """Background probe only. OPEN→HALF-OPEN after cooldown; one PING; success→CLOSED."""
-    global _circuit, _half_open_probe_allowed
+    global _circuit, _half_open_probe_allowed, _opened_at
     with _cb_lock:
         if _circuit == CircuitState.CLOSED:
             # Periodic liveness while closed
@@ -207,11 +270,18 @@ def _probe_once() -> bool:
             _circuit = CircuitState.HALF_OPEN
             _half_open_probe_allowed = True
         elif _circuit == CircuitState.HALF_OPEN:
-            # Only one in-flight probe
+            # Only one in-flight probe; if flag already spent, reopen after cooldown
+            # so a hung/stale half-open cannot stick forever (Redis appeared later).
             if not _half_open_probe_allowed:
+                if (time.time() - _opened_at) < COOLDOWN_S:
+                    return False
+                _circuit = CircuitState.OPEN
+                _opened_at = time.time()
                 return False
             _half_open_probe_allowed = False
 
+    # Fresh socket after long OPEN — avoids stale client hanging half-open
+    _drop_client()
     ok = _raw_ping()
     if ok:
         _record_success()
@@ -225,7 +295,7 @@ def _probe_loop() -> None:
         try:
             _probe_once()
         except Exception as exc:  # noqa: BLE001
-            print("[dam_redis] probe loop:", exc)
+            _log_debug(f"probe loop: {exc}")
         _probe_stop.wait(PROBE_INTERVAL_S)
 
 
@@ -286,6 +356,7 @@ def status() -> dict:
             "reason": "redis_package_missing",
             "url": DAM_REDIS_URL,
             "docker_optional": True,
+            "native_preferred": True,
         }
     # Do NOT force connect when OPEN — report open/down from circuit
     if st == CircuitState.OPEN:
@@ -295,6 +366,7 @@ def status() -> dict:
             "reason": "circuit_open_bypass",
             "url": DAM_REDIS_URL,
             "docker_optional": True,
+            "native_preferred": True,
             "cooldown_s": COOLDOWN_S,
             "probe_interval_s": PROBE_INTERVAL_S,
         }
@@ -304,6 +376,7 @@ def status() -> dict:
             "circuit": st,
             "url": DAM_REDIS_URL,
             "docker_optional": True,
+            "native_preferred": True,
         }
     # CLOSED — light check without hammering: use last known via quick ping if allowed
     ok = False
@@ -318,6 +391,7 @@ def status() -> dict:
         "circuit": circuit_state(),
         "url": DAM_REDIS_URL,
         "docker_optional": True,
+        "native_preferred": True,
         "reason": None if ok else "unreachable",
     }
 

@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="pl" dir="ltr" class="dam-booting">
 <head>
+  <script>(function(){function g(){try{var u=location.pathname+location.search,h=location.hash||"";location.replace(u+(u.indexOf("?")>=0?"&":"?")+"_damr="+Date.now()+h);}catch(e){try{location.reload();}catch(x){}}}addEventListener("keydown",function(e){if(e.key==="F5"||(e.ctrlKey&&!e.shiftKey&&(e.key==="r"||e.key==="R")))g();},true);window.__damInlineHardReset=g;})();</script>
+  <script src="./assets/js/dam-panic-reload.js?v=4.0.23-nativeF520260726a"></script>
   <script>(function(){try{var r=document.documentElement,p=localStorage.getItem('dam_theme_pref')||localStorage.getItem('theme')||'light',t=p;if(p==='system'){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t!=='dark'&&t!=='light')t='light';r.setAttribute('data-theme',t);r.style.colorScheme=t;if(p==='system'||p==='dark'||p==='light')r.setAttribute('data-dam-theme-pref',p);}catch(e){}})();</script>
   <style id="dam-shell-boot-critical">
 html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
   </style>
-  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=shellboot20260721a">
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=perObjSkel20260722c">
   <script>
   (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
   </script>
@@ -16,13 +18,13 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=geexTaste20260721a">
-  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=ctaUnify20260721b">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=ctaUnify20260721b">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=invClose20260721b">
-  <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=invClose20260721b">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=darkFix20260722e">
+  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.65">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=darkFix20260722e">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.7-tagComboFlush20260727a">
+  <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=expCreateCssFix20260723d">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
-  <link rel="stylesheet" href="./assets/css/dam-accent.css?v=20260719accent3">
+  <link rel="stylesheet" href="./assets/css/dam-accent.css?v=navPill20260723b">
   <link rel="stylesheet" href="./assets/css/dam-settings.css?v=bentoSet20260721a">
   <link rel="stylesheet" href="./assets/css/dam-integrations.css?v=geexTaste20260721a">
   <link rel="stylesheet" href="./assets/css/dam-integrations-settings.css?v=intfix20260720c">
@@ -96,6 +98,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         <button type="button" class="dam-settings-jump__chip" data-filter="integrations" aria-pressed="false"><i class="uil uil-link" aria-hidden="true"></i> Integracje</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="notify" aria-pressed="false"><i class="uil uil-users-alt" aria-hidden="true"></i> Powiadomienia</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="naming" aria-pressed="false"><i class="uil uil-tag-alt" aria-hidden="true"></i> Nazewnictwo</button>
+        <button type="button" class="dam-settings-jump__chip" data-filter="conversion" aria-pressed="false"><i class="uil uil-compress-arrows" aria-hidden="true"></i> Konwersja</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="instructions" aria-pressed="false"><i class="uil uil-book-open" aria-hidden="true"></i> Instrukcje</button>
         <button type="button" class="dam-settings-jump__clear" data-filter="all" id="damSettingsFilterClear" aria-label="Wyczyść filtr, pokaż wszystkie karty" title="Pokaż wszystkie"><i class="uil uil-times" aria-hidden="true"></i></button>
       </nav>
@@ -336,6 +339,56 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           </div>
         </section>
 
+        <section class="dam-widget dam-sw--conversion" id="damElementyConversion" data-section="conversion"
+          data-search="konwersja elementy links png jpg kompresja jakosc transparency przezroczystosc resizer">
+          <div class="dam-widget__head">
+            <div class="dam-widget__head-row">
+              <h2 class="dam-widget__title"><i class="uil uil-compress-arrows" aria-hidden="true"></i> Konwersja elementów</h2>
+              <span class="dam-settings-badge-ro" id="damElementyConvAdminBadge" hidden>Tylko admin</span>
+            </div>
+            <p class="dam-widget__meta">Globalne ustawienia konwersji Links → ELEMENTY w modalu wizualizacji. Dotyczy wszystkich użytkowników. PNG z przezroczystością (dematte czarnego matte) oraz opcjonalnie JPG.</p>
+          </div>
+          <div class="dam-widget__body">
+            <div class="dam-sw-row" data-search="wlacz konwersja automatyczna elementy">
+              <div>
+                <p class="dam-sw-row__name">Włącz próbę konwersji</p>
+                <p class="dam-sw-row__desc">Pokazuje przycisk „Podejmij próbę konwersji elementów” gdy folder ELEMENTY jest pusty, a Links ma pliki TIFF/PSD.</p>
+              </div>
+              <label class="dam-sw-toggle">
+                <input type="checkbox" id="damElementyConvEnabled" checked>
+                <span class="dam-sw-toggle__ui" aria-hidden="true"></span>
+              </label>
+            </div>
+            <div class="dam-sw-row" data-search="png przezroczystosc transparency alpha">
+              <div>
+                <p class="dam-sw-row__name">PNG z przezroczystością</p>
+                <p class="dam-sw-row__desc">Dematte czarnego matte → kanał alpha (jak podgląd ELEMENTY w panelu).</p>
+              </div>
+              <label class="dam-sw-toggle">
+                <input type="checkbox" id="damElementyConvPngTransparency" checked disabled>
+                <span class="dam-sw-toggle__ui" aria-hidden="true"></span>
+              </label>
+            </div>
+            <div class="dam-sw-row" data-search="format png jpg wyjscie output">
+              <div>
+                <p class="dam-sw-row__name">Formaty wyjściowe</p>
+                <p class="dam-sw-row__desc">Wybierz, jakie pliki zapisać do folderu ELEMENTY.</p>
+              </div>
+              <div class="dam-sw-inline-checks">
+                <label><input type="checkbox" id="damElementyConvFmtPng" checked> PNG</label>
+                <label><input type="checkbox" id="damElementyConvFmtJpg" checked> JPG</label>
+              </div>
+            </div>
+            <div class="dam-sw-field">
+              <label for="damElementyConvQuality">Jakość / kompresja (%)</label>
+              <input type="range" id="damElementyConvQuality" min="1" max="100" value="50" step="1">
+              <output id="damElementyConvQualityVal" for="damElementyConvQuality">50%</output>
+              <p class="dam-widget__meta">Domyślnie 50%. Niższa wartość = mniejszy plik i mniejszy rozmiar obrazu.</p>
+            </div>
+            <p id="damElementyConvGateHint" class="dam-widget__meta" hidden>Edycja wymaga roli administratora.</p>
+          </div>
+        </section>
+
         <section class="dam-widget dam-sw--naming" id="damNamingPolicy" data-section="naming"
           data-search="nazewnictwo naming nośniki nosniki doypack baton folia short label">
           <div class="dam-widget__head">
@@ -430,20 +483,20 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-app.js?v=20260718ux6"></script>
   <script src="./assets/js/dam-api.js?v=privgate20260721a"></script>
   <script src="./assets/js/dam-i18n.js?v=assocfix20260721h"></script>
-  <script src="./assets/js/dam-runtime.js?v=20260719app1"></script>
-  <script src="./assets/js/dam-version.js?v=3.1.0"></script>
-	<script src="./assets/js/dam-shell.js?v=geexF620260721a"></script>
+  <script src="./assets/js/dam-runtime.js?v=servicesBoot20260723a"></script>
+  <script src="./assets/js/dam-version.js?v=5.0.7"></script>
+	<script src="./assets/js/dam-shell.js?v=4.0.14-dbDumpFix20260725"></script>
   <script src="./assets/js/dam-loader.js?v=actionsLeftLoader20260721a"></script>
   <script src="./assets/js/dam-tooltips.js?v=lifehistmodal20260721b"></script>
   <script src="./assets/js/dam-paths.js?v=selects20260720a"></script>
   <script src="./assets/js/dam-labels.js?v=langAdj20260721b"></script>
-  <script src="./assets/js/dam-badges.js?v=ship20260721v310"></script>
-  <script src="./assets/js/dam-tag-edit.js?v=tagPopGrid20260721b"></script>
-  <script src="./assets/js/dam-user-prefs.js?v=viztb20260720d"></script>
-  <script src="./assets/js/dam-danger.js?v=safedel20260720b"></script>
+  <script src="./assets/js/dam-badges.js?v=assocShiftFix20260723t"></script>
+  <script src="./assets/js/dam-tag-edit.js?v=5.0.7-tagComboFlush20260727a"></script>
+  <script src="./assets/js/dam-user-prefs.js?v=prefsKv20260721a"></script>
+  <script src="./assets/js/dam-danger.js?v=holdRing1500ms20260723b"></script>
   <script src="./assets/js/dam-fmcg-catalog.js?v=safedel20260720b"></script>
   <script src="./assets/js/dam-integrations.js?v=intfix20260720c"></script>
-  <script src="./assets/js/dam-settings.js?v=privgate20260721a"></script>
+  <script src="./assets/js/dam-settings.js?v=5.0.69-elementyConv"></script>
   <script src="./assets/js/dam-device-paths.js?v=devicepath20260720c"></script>
   <style id="damDangerZoneCss">
     /* Pełna szerokość w siatce 12-col (bez .dam-sw--danger w dam-settings.css) */

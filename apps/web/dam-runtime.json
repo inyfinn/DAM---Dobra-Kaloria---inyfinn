@@ -1,0 +1,11 @@
+{
+  "app": "dam-eta",
+  "host": "127.0.0.1",
+  "ui_port": 8765,
+  "bridge_port": 8766,
+  "ui_origin": "http://127.0.0.1:8765/4.0.0",
+  "ui_base_path": "/4.0.0",
+  "bridge": "http://127.0.0.1:8766",
+  "start_url": "http://127.0.0.1:8765/4.0.0/dashboard.html",
+  "app_version": "4.0.0"
+}

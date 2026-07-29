@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-21T14:10:27",
-  "product_count": 184,
+  "generated_at": "2026-07-29T01:36:25",
+  "product_count": 183,
   "by_prefix": {
     "0000": [
       "chrupiacy-orzech-daktylowy",
@@ -15,7 +15,6 @@
       "owies-czekolada-sniadaniowe",
       "owies-miod-sniadaniowe",
       "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne",
       "gyros-pszenica-niemiesne",
       "kielbasa-grill-niemiesne",
       "kielbaska-biala-niemiesne",
@@ -148,7 +147,6 @@
     ],
     "00001": [
       "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne",
       "burger-klasyczny-xxl-niemiesne",
       "balans-boosty",
       "jaglanka-jab-ko-cynamon-sniadaniowe"
@@ -181,16 +179,13 @@
       "jaglanka-jab-ko-cynamon-sniadaniowe"
     ],
     "000018": [
-      "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne"
+      "burger-buraczany-niemiesne"
     ],
     "0000180": [
-      "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne"
+      "burger-buraczany-niemiesne"
     ],
     "00001800": [
-      "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne"
+      "burger-buraczany-niemiesne"
     ],
     "00003": [
       "krem-orzechowy-wanilia-proteinowy",
@@ -1015,7 +1010,6 @@
       "piernik-korzenny-nerkowcowy",
       "pina-colada-nerkowcowy",
       "prebiotyk-funkcjonalny",
-      "proteina-karmel-mct-funkcjonalny",
       "proteina-banoffee-ig",
       "proteina-karmel-z-mct-ig",
       "proteina-lemon-cheesecake-ig",
@@ -1028,6 +1022,7 @@
       "solony-orzech-daktylowy",
       "szarlotka-cynamon-nerkowcowy",
       "tarta-malinowa-nerkowcowy",
+      "proteina-karmel-mct-funkcjonalny",
       "banoffee-kakao-deserowe",
       "czarna-porzeczka-owocowe",
       "daktyl-limonka-raw",
@@ -1035,9 +1030,9 @@
       "daktyl-wisnia-raw",
       "malina-owocowe",
       "orzeszki-kukurydza-miod-sniadanie",
-      "orzeszki-miod-sniadanie",
       "owies-czekolada-sniadanie",
       "tiramisu-czekolada-kakao-deserowe",
+      "orzeszki-miod-sniadanie",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
       "burger-kurczak-niemiesne",
@@ -2021,7 +2016,6 @@
       "daktyl-pomarancza-raw",
       "daktyl-wisnia-raw",
       "orzeszki-kukurydza-miod-sniadanie",
-      "orzeszki-miod-sniadanie",
       "owies-czekolada-sniadanie",
       "burger-klasyczny-niemiesne",
       "kaszanka-niemiesne",
@@ -2223,20 +2217,16 @@
       "latte-waniliowe-nerkowcowy",
       "mango-lassi-nerkowcowy",
       "orzeszki-kukurydza-miod-sniadanie",
-      "orzeszki-miod-sniadanie",
       "owies-czekolada-sniadanie"
     ],
     "6300450": [
-      "orzeszki-kukurydza-miod-sniadanie",
-      "orzeszki-miod-sniadanie"
+      "orzeszki-kukurydza-miod-sniadanie"
     ],
     "63004500": [
-      "orzeszki-kukurydza-miod-sniadanie",
-      "orzeszki-miod-sniadanie"
+      "orzeszki-kukurydza-miod-sniadanie"
     ],
     "630045000": [
-      "orzeszki-kukurydza-miod-sniadanie",
-      "orzeszki-miod-sniadanie"
+      "orzeszki-kukurydza-miod-sniadanie"
     ],
     "6300451": [
       "owies-czekolada-sniadanie"
@@ -2551,8 +2541,8 @@
       "sernik-waniliowy-nerkowcowy",
       "tarta-malinowa-nerkowcowy",
       "orzeszki-kukurydza-miod-sniadanie",
-      "orzeszki-miod-sniadanie",
       "owies-czekolada-sniadanie",
+      "orzeszki-miod-sniadanie",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
       "burger-wolowy-niemiesne",
@@ -2645,8 +2635,8 @@
     "630052": [
       "muffin-jagodowy-nerkowcowy",
       "orzeszki-kukurydza-miod-sniadanie",
-      "orzeszki-miod-sniadanie",
-      "owies-czekolada-sniadanie"
+      "owies-czekolada-sniadanie",
+      "orzeszki-miod-sniadanie"
     ],
     "6300520": [
       "owies-czekolada-sniadanie"
@@ -2996,11 +2986,11 @@
       "odpornosc-funkcjonalny",
       "orzech-laskowy-daktylowy",
       "prebiotyk-funkcjonalny",
-      "proteina-karmel-mct-funkcjonalny",
       "proteina-karmel-z-mct-ig",
       "paczek-rozany-nerkowcowy",
       "rogal-poznanski-nerkowcowy",
       "serce-funkcjonalny",
+      "proteina-karmel-mct-funkcjonalny",
       "orzeszki-kukurydza-miod-sniadanie",
       "orzeszki-miod-sniadanie",
       "burger-klasyczny-niemiesne",
@@ -3328,9 +3318,9 @@
       "chrupiacy-orzech-daktylowy",
       "dla-serca-funkcjonalny",
       "prebiotyk-funkcjonalny",
-      "proteina-karmel-mct-funkcjonalny",
       "proteina-karmel-z-mct-ig",
       "serce-funkcjonalny",
+      "proteina-karmel-mct-funkcjonalny",
       "nuggets-xxl-niemiesne",
       "minced-plant-based",
       "nuggets-plant-based"
@@ -3378,28 +3368,28 @@
       "prebiotyk-funkcjonalny"
     ],
     "6300654": [
-      "proteina-karmel-mct-funkcjonalny",
-      "proteina-karmel-z-mct-ig"
+      "proteina-karmel-z-mct-ig",
+      "proteina-karmel-mct-funkcjonalny"
     ],
     "63006540": [
-      "proteina-karmel-mct-funkcjonalny",
-      "proteina-karmel-z-mct-ig"
+      "proteina-karmel-z-mct-ig",
+      "proteina-karmel-mct-funkcjonalny"
     ],
     "630065400": [
-      "proteina-karmel-mct-funkcjonalny",
-      "proteina-karmel-z-mct-ig"
+      "proteina-karmel-z-mct-ig",
+      "proteina-karmel-mct-funkcjonalny"
     ],
     "6300655": [
-      "proteina-karmel-mct-funkcjonalny",
-      "proteina-karmel-z-mct-ig"
+      "proteina-karmel-z-mct-ig",
+      "proteina-karmel-mct-funkcjonalny"
     ],
     "63006550": [
-      "proteina-karmel-mct-funkcjonalny",
-      "proteina-karmel-z-mct-ig"
+      "proteina-karmel-z-mct-ig",
+      "proteina-karmel-mct-funkcjonalny"
     ],
     "630065500": [
-      "proteina-karmel-mct-funkcjonalny",
-      "proteina-karmel-z-mct-ig"
+      "proteina-karmel-z-mct-ig",
+      "proteina-karmel-mct-funkcjonalny"
     ],
     "6300656": [
       "minced-plant-based"
@@ -3652,11 +3642,11 @@
       "matcha-lemon-nerkowcowy",
       "nerkowce-kokos-daktylowy",
       "prebiotyk-funkcjonalny",
-      "proteina-karmel-mct-funkcjonalny",
       "proteina-banoffee-ig",
       "proteina-karmel-z-mct-ig",
       "proteina-lemon-cheesecake-ig",
       "sernik-cytrynowy-nerkowcowy",
+      "proteina-karmel-mct-funkcjonalny",
       "banoffee-kakao-deserowe",
       "czarna-porzeczka-owocowe",
       "daktyl-limonka-raw",
@@ -3688,11 +3678,11 @@
     "630070": [
       "matcha-lemon-nerkowcowy",
       "prebiotyk-funkcjonalny",
-      "proteina-karmel-mct-funkcjonalny",
       "proteina-banoffee-ig",
       "proteina-karmel-z-mct-ig",
       "proteina-lemon-cheesecake-ig",
       "sernik-cytrynowy-nerkowcowy",
+      "proteina-karmel-mct-funkcjonalny",
       "owies-czekolada-sniadanie",
       "proteina-banoffee-krem-orzechowy",
       "proteina-lemon-cheesecake-krem-orzechowy",
@@ -3720,16 +3710,16 @@
       "oats-chocolate-balls-crispy"
     ],
     "6300702": [
-      "proteina-karmel-mct-funkcjonalny",
-      "proteina-karmel-z-mct-ig"
+      "proteina-karmel-z-mct-ig",
+      "proteina-karmel-mct-funkcjonalny"
     ],
     "63007020": [
-      "proteina-karmel-mct-funkcjonalny",
-      "proteina-karmel-z-mct-ig"
+      "proteina-karmel-z-mct-ig",
+      "proteina-karmel-mct-funkcjonalny"
     ],
     "630070200": [
-      "proteina-karmel-mct-funkcjonalny",
-      "proteina-karmel-z-mct-ig"
+      "proteina-karmel-z-mct-ig",
+      "proteina-karmel-mct-funkcjonalny"
     ],
     "6300703": [
       "prebiotyk-funkcjonalny"
@@ -4315,7 +4305,6 @@
       "burger-beef-plant-based",
       "burger-betroot",
       "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne",
       "burger-chicken-plant-based",
       "burger-klasyczny-niemiesne",
       "burger-klasyczny-xxl-niemiesne",
@@ -4589,7 +4578,6 @@
     "krzysztof": [
       "babka-cytrynowa-nerkowcowy",
       "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne",
       "burger-klasyczny-niemiesne",
       "cheesecake-cashews",
       "ciasto-porzeczkowe-nerkowcowy",
@@ -4641,7 +4629,6 @@
     "krzysztof wieczorek": [
       "babka-cytrynowa-nerkowcowy",
       "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne",
       "burger-klasyczny-niemiesne",
       "cheesecake-cashews",
       "ciasto-porzeczkowe-nerkowcowy",
@@ -4859,7 +4846,6 @@
       "02-kabanos-klas-niemiesne",
       "6300-000-17.11.2025-niemiesne",
       "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne",
       "burger-klasyczny-niemiesne",
       "burger-klasyczny-xxl-niemiesne",
       "burger-kurczak-niemiesne",
@@ -5037,7 +5023,6 @@
       "02-kabanos-klas-niemiesne",
       "6300-000-17.11.2025-niemiesne",
       "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne",
       "burger-klasyczny-niemiesne",
       "burger-klasyczny-xxl-niemiesne",
       "burger-kurczak-niemiesne",
@@ -5206,7 +5191,6 @@
     "wieczorek": [
       "babka-cytrynowa-nerkowcowy",
       "burger-buraczany-niemiesne",
-      "burger-burak-niemiesne",
       "burger-klasyczny-niemiesne",
       "cheesecake-cashews",
       "ciasto-porzeczkowe-nerkowcowy",
@@ -5457,11 +5441,6 @@
         "product_id": "burger-buraczany-niemiesne",
         "index": "000018.00",
         "name": "BURGER BURACZANY"
-      },
-      {
-        "product_id": "burger-burak-niemiesne",
-        "index": "000018.00",
-        "name": "BURGER BURAK"
       }
     ],
     "000038": [
@@ -6650,11 +6629,6 @@
         "product_id": "orzeszki-kukurydza-miod-sniadanie",
         "index": "6300450.00",
         "name": "ORZESZKI KUKURYDZA MIOD"
-      },
-      {
-        "product_id": "orzeszki-miod-sniadanie",
-        "index": "6300450.00",
-        "name": "ORZESZKI MIOD"
       }
     ],
     "6300451": [
@@ -7410,26 +7384,26 @@
     ],
     "6300654": [
       {
-        "product_id": "proteina-karmel-mct-funkcjonalny",
-        "index": "6300654.00",
-        "name": "PROTEINA - KARMEL MCT"
-      },
-      {
         "product_id": "proteina-karmel-z-mct-ig",
         "index": "6300654.00",
         "name": "PROTEINA KARMEL Z MCT"
+      },
+      {
+        "product_id": "proteina-karmel-mct-funkcjonalny",
+        "index": "6300654.00",
+        "name": "PROTEINA - KARMEL MCT"
       }
     ],
     "6300655": [
       {
-        "product_id": "proteina-karmel-mct-funkcjonalny",
-        "index": "6300655.00",
-        "name": "PROTEINA - KARMEL MCT"
-      },
-      {
         "product_id": "proteina-karmel-z-mct-ig",
         "index": "6300655.00",
         "name": "PROTEINA KARMEL Z MCT"
+      },
+      {
+        "product_id": "proteina-karmel-mct-funkcjonalny",
+        "index": "6300655.00",
+        "name": "PROTEINA - KARMEL MCT"
       }
     ],
     "6300656": [
@@ -7640,14 +7614,14 @@
     ],
     "6300702": [
       {
-        "product_id": "proteina-karmel-mct-funkcjonalny",
-        "index": "6300702.00",
-        "name": "PROTEINA - KARMEL MCT"
-      },
-      {
         "product_id": "proteina-karmel-z-mct-ig",
         "index": "6300702.00",
         "name": "PROTEINA KARMEL Z MCT"
+      },
+      {
+        "product_id": "proteina-karmel-mct-funkcjonalny",
+        "index": "6300702.00",
+        "name": "PROTEINA - KARMEL MCT"
       }
     ],
     "6300703": [
@@ -8223,7 +8197,7 @@
         "6300381",
         "6300651"
       ],
-      "search_blob": "mix kalendarz adwentowy mix kalendarz adwentowy mixy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 04.06.2025 6300651.00 14.07.2023 6300381.00 15.07.2026 6300xxx.00 17.04.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 04.06.2025 6300651.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 14.07.2023 6300381.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 15.07.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 17.04.2026 6300xxx.00 6300651.00 6300381.00 6300xxx.00 6300xxx.00 mix kalendarz adwentowy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 adwent kalendarz adwentowy swieta multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "mix kalendarz adwentowy mix kalendarz adwentowy mixy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 04.06.2025 6300651.00 14.07.2023 6300381.00 15.07.2026 6300xxx.00 17.04.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 04.06.2025 6300651.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 14.07.2023 6300381.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 15.07.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 17.04.2026 6300xxx.00 6300651.00 6300381.00 6300xxx.00 6300xxx.00 mix kalendarz adwentowy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 adwent kalendarz adwentowy swieta",
       "authors": [
         "Sylwia",
         "Szymon"
@@ -8499,7 +8473,7 @@
         "6300657",
         "6300761"
       ],
-      "search_blob": "chrupiacy orzech chrupiacy orzech daktylowy baton doy 6x folia mini baton orzech daktylowy 000096.00 6300427.00 6300454.00 6300515.00 6300657.00 6300761.00 bat 35 g 05.04.2022 fol000096.00 bat 35 g 17.06.2024 6300515.00 bat 35 g 27.06.2025 6300657.00 bat 35 g 28.06.2026 6300761 doy6x 30.11.2023 6300427.00 mini 23.02.2024 6300454.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 05.04.2022 fol000096.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 17.06.2024 6300515.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 27.06.2025 6300657.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 28.06.2026 6300761 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy doy6x 30.11.2023 6300427.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy mini 23.02.2024 6300454.00 000096.00 6300515.00 6300657.00 6300761.00 6300427.00 6300454.00 chrupiacy orzech baton doy 6x folia mini baton orzech daktylowy 000096.00 6300427.00 6300454.00 6300515.00 6300657.00 6300761.00 back to school chrupiacy orzech multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "chrupiacy orzech chrupiacy orzech daktylowy baton doy 6x folia mini baton orzech daktylowy 000096.00 6300427.00 6300454.00 6300515.00 6300657.00 6300761.00 bat 35 g 05.04.2022 fol000096.00 bat 35 g 17.06.2024 6300515.00 bat 35 g 27.06.2025 6300657.00 bat 35 g 28.06.2026 6300761 doy6x 30.11.2023 6300427.00 mini 23.02.2024 6300454.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 05.04.2022 fol000096.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 17.06.2024 6300515.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 27.06.2025 6300657.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 28.06.2026 6300761 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy doy6x 30.11.2023 6300427.00 x marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy mini 23.02.2024 6300454.00 000096.00 6300515.00 6300657.00 6300761.00 6300427.00 6300454.00 chrupiacy orzech baton doy 6x folia mini baton orzech daktylowy 000096.00 6300427.00 6300454.00 6300515.00 6300657.00 6300761.00 back to school chrupiacy orzech",
       "authors": []
     },
     {
@@ -8620,7 +8594,7 @@
         "6300784",
         "6300785"
       ],
-      "search_blob": "ciasto sliwkowe ciasto sliwkowe nerkowcowy baton karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300784.00 6300785.00 kar6x 20.05.2026 pl en 6300785.00 f mini 18 06 2026 6300784.00 x marketing polska 01 produkty dk 01 batony ciasto sliwkowe nerkowcowy kar6x 20.05.2026 pl en 6300785.00 f x marketing polska 01 produkty dk 01 batony ciasto sliwkowe nerkowcowy mini 18 06 2026 6300784.00 6300785.00 6300784.00 ciasto sliwkowe baton karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300784.00 6300785.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "ciasto sliwkowe ciasto sliwkowe nerkowcowy baton karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300784.00 6300785.00 kar6x 20.05.2026 pl en 6300785.00 f mini 18 06 2026 6300784.00 f x marketing polska 01 produkty dk 01 batony ciasto sliwkowe nerkowcowy kar6x 20.05.2026 pl en 6300785.00 f x marketing polska 01 produkty dk 01 batony ciasto sliwkowe nerkowcowy mini 18 06 2026 6300784.00 f 6300785.00 6300784.00 ciasto sliwkowe baton karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300784.00 6300785.00",
       "authors": [
         "Krzysztof"
       ]
@@ -8666,7 +8640,7 @@
         "6300782",
         "6300783"
       ],
-      "search_blob": "cynamonka cynamonka nerkowcowy baton cynamon cynamonka karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300782.00 6300783.00 kar6x 20.05.2026 pl en 6300783.00 mini 18 06 2026 6300782.00 x marketing polska 01 produkty dk 01 batony cynamonka nerkowcowy kar6x 20.05.2026 pl en 6300783.00 x marketing polska 01 produkty dk 01 batony cynamonka nerkowcowy mini 18 06 2026 6300782.00 6300783.00 6300782.00 cynamonka baton cynamon cynamonka karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300782.00 6300783.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "cynamonka cynamonka nerkowcowy baton cynamon cynamonka karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300782.00 6300783.00 kar6x 20.05.2026 pl en 6300783.00 f mini 18 06 2026 6300782.00 f x marketing polska 01 produkty dk 01 batony cynamonka nerkowcowy kar6x 20.05.2026 pl en 6300783.00 f x marketing polska 01 produkty dk 01 batony cynamonka nerkowcowy mini 18 06 2026 6300782.00 f 6300783.00 6300782.00 cynamonka baton cynamon cynamonka karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300782.00 6300783.00",
       "authors": [
         "Krzysztof"
       ]
@@ -8834,7 +8808,7 @@
         "6300763",
         "6300768"
       ],
-      "search_blob": "jab ko cynamon jab ko cynamon daktylowy baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 02.09.2024 6300428.00 bat 35 g 14.05.2026 6300768 bat 35 g 15.05.2026 6300763 bat 35 g 24.03.2022 fol000091.00 bat 35 g 26.06.2025 5300658.00 bat 35 g 27.05.2026 6300768 doy6x 09.02.2024 6300384.00 mini 09.02.2024 6300455.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy 02.09.2024 6300428.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 14.05.2026 6300768 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 15.05.2026 6300763 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 24.03.2022 fol000091.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 26.06.2025 5300658.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 27.05.2026 6300768 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy doy6x 09.02.2024 6300384.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy mini 09.02.2024 6300455.00 6300428.00 6300768.00 6300763.00 000091.00 5300658.00 6300768.00 6300384.00 6300455.00 jab ko cynamon baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 jablko cynamon jabłko cynamon cynamon jablko multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "jab ko cynamon jab ko cynamon daktylowy baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 02.09.2024 6300428.00 bat 35 g 14.05.2026 6300768 bat 35 g 15.05.2026 6300763 bat 35 g 24.03.2022 fol000091.00 bat 35 g 26.06.2025 5300658.00 bat 35 g 27.05.2026 6300768 doy6x 09.02.2024 6300384.00 mini 09.02.2024 6300455.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy 02.09.2024 6300428.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 14.05.2026 6300768 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 15.05.2026 6300763 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 24.03.2022 fol000091.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 26.06.2025 5300658.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 27.05.2026 6300768 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy doy6x 09.02.2024 6300384.00 x marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy mini 09.02.2024 6300455.00 6300428.00 6300768.00 6300763.00 000091.00 5300658.00 6300768.00 6300384.00 6300455.00 jab ko cynamon baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 jablko cynamon jabłko cynamon cynamon jablko",
       "authors": []
     },
     {
@@ -9091,7 +9065,7 @@
         "6300634",
         "6300640"
       ],
-      "search_blob": "krem orzechowy wanilia krem orzechowy wanilia proteinowy baton folia krem orzech wanilia proteinowy sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 000039.00 000101.00 6300486.00 6300634.00 6300640.00 11.02.2020 fol000039.00 23.06.2022 fol000101.00 26.03.2025 6300634.00 28.04.2025 6300640.00 en ar 6300486 2024 09 26 26.09.2024 6300486.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy 11.02.2020 fol000039.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy 23.06.2022 fol000101.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy 26.03.2025 6300634.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy 28.04.2025 6300640.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy en ar 6300486 2024 09 26 26.09.2024 6300486.00 000039.00 000101.00 6300634.00 6300640.00 6300486.00 krem orzechowy wanilia baton folia krem orzech wanilia proteinowy sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 000039.00 000101.00 6300486.00 6300634.00 6300640.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "krem orzechowy wanilia krem orzechowy wanilia proteinowy baton folia krem orzech wanilia proteinowy sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 000039.00 000101.00 6300486.00 6300634.00 6300640.00 11.02.2020 fol000039.00 23.06.2022 fol000101.00 26.03.2025 6300634.00 28.04.2025 6300640.00 gb ar 6300486 2024 09 26 26.09.2024 6300486.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy 11.02.2020 fol000039.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy 23.06.2022 fol000101.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy 26.03.2025 6300634.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy 28.04.2025 6300640.00 x marketing polska 01 produkty dk 01 batony krem orzechowy wanilia proteinowy gb ar 6300486 2024 09 26 26.09.2024 6300486.00 000039.00 000101.00 6300634.00 6300640.00 6300486.00 krem orzechowy wanilia baton folia krem orzech wanilia proteinowy sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 000039.00 000101.00 6300486.00 6300634.00 6300640.00",
       "authors": [
         "Sylwia",
         "Krzysztof"
@@ -9307,7 +9281,7 @@
         "6300525",
         "6300648"
       ],
-      "search_blob": "muffin jagodowy muffin jagodowy nerkowcowy baton folia jagodowy karton 6x mini baton muffin nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 000078.00 000086.00 000119.00 6300074.00 6300525.00 6300525.01 6300648.00 13.01.2022 kar000086.00 bat 35 g 07.05.2025 6300648.00 kar6x 06.07.2022 kar000119.00 kar6x 20.03.2025 6300525.00 kar6x 20.03.2026 6300525.01 mini 04.10.2023 6300074.00 mini 18.01.2022 fol000078.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy 13.01.2022 kar000086.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy bat 35 g 07.05.2025 6300648.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy kar6x 06.07.2022 kar000119.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy kar6x 20.03.2025 6300525.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy kar6x 20.03.2026 6300525.01 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy mini 04.10.2023 6300074.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy mini 18.01.2022 fol000078.00 000086.00 6300648.00 000119.00 6300525.00 6300525.01 6300074.00 000078.00 muffin jagodowy baton folia jagodowy karton 6x mini baton muffin nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 000078.00 000086.00 000119.00 6300074.00 6300525.00 6300525.01 6300648.00 muffin jagodowy jagodowy muffin jagoda",
+      "search_blob": "muffin jagodowy muffin jagodowy nerkowcowy baton folia jagodowy karton 6x mini baton muffin nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 000078.00 000086.00 000119.00 6300074.00 6300525.00 6300525.01 6300648.00 13.01.2022 kar000086.00 bat 35 g 07.05.2025 6300648.00 kar6x 06.07.2022 kar000119.00 kar6x 20.03.2026 6300525.01 mini 04.10.2023 6300074.00 mini 18.01.2022 fol000078.00 kar6x 20.03.2025 6300525.00 x x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy 13.01.2022 kar000086.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy bat 35 g 07.05.2025 6300648.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy kar6x 06.07.2022 kar000119.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy kar6x 20.03.2026 6300525.01 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy mini 04.10.2023 6300074.00 x marketing polska 01 produkty dk 01 batony muffin jagodowy nerkowcowy mini 18.01.2022 fol000078.00 x marketing polska 01 produkty dk 01 batony archiwum muffin jagodowy nerkowcowy x kar6x 20.03.2025 6300525.00 x 000086.00 6300648.00 000119.00 6300525.01 6300074.00 000078.00 6300525.00 muffin jagodowy baton folia jagodowy karton 6x mini baton muffin nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 000078.00 000086.00 000119.00 6300074.00 6300525.00 6300525.01 6300648.00 muffin jagodowy jagodowy muffin jagoda",
       "authors": [
         "Krzysztof"
       ]
@@ -9812,60 +9786,6 @@
       ]
     },
     {
-      "id": "proteina-karmel-mct-funkcjonalny",
-      "name": "PROTEINA - KARMEL MCT",
-      "display_name": "PROTEINA - KARMEL MCT",
-      "category": "01 - BATONY",
-      "tags": [
-        "baton",
-        "funkcjonalny",
-        "karton 6x",
-        "karmel",
-        "mct",
-        "mini baton",
-        "proteina"
-      ],
-      "tag_groups": {
-        "smak": [
-          "karmel",
-          "mct",
-          "proteina"
-        ],
-        "typ": [
-          "funkcjonalny"
-        ],
-        "opakowanie": [
-          "baton",
-          "karton 6x",
-          "mini baton"
-        ],
-        "autor": [
-          "Krzysztof",
-          "Sylwia"
-        ],
-        "osoba": [
-          "Krzysztof",
-          "Sylwia"
-        ],
-        "inne": []
-      },
-      "indexes": [
-        "6300654.00",
-        "6300655.00",
-        "6300702.00"
-      ],
-      "index_bases": [
-        "6300654",
-        "6300655",
-        "6300702"
-      ],
-      "search_blob": "proteina karmel mct proteina karmel mct funkcjonalny baton funkcjonalny karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300654.00 6300655.00 6300702.00 bat 35 g 22.10.2025 6300702.00 kar6x 12.06.2025 6300655.00 mini 29.07.2025 6300654.00 x marketing polska 01 produkty dk 01 batony proteina karmel mct funkcjonalny bat 35 g 22.10.2025 6300702.00 x marketing polska 01 produkty dk 01 batony proteina karmel mct funkcjonalny kar6x 12.06.2025 6300655.00 x marketing polska 01 produkty dk 01 batony proteina karmel mct funkcjonalny mini 29.07.2025 6300654.00 6300702.00 6300655.00 6300654.00 proteina karmel mct baton funkcjonalny karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300654.00 6300655.00 6300702.00",
-      "authors": [
-        "Sylwia",
-        "Krzysztof"
-      ]
-    },
-    {
       "id": "proteina-banoffee-ig",
       "name": "PROTEINA BANOFFEE",
       "display_name": "PROTEINA BANOFFEE",
@@ -9908,7 +9828,7 @@
         "6300710",
         "6300738"
       ],
-      "search_blob": "proteina banoffee proteina banoffee ig banoffee baton karton 6x mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300707.00 6300710.00 6300738.00 bat 45 g 06.02.2026 6300738.00 kar6x 20.11.2025 6300707.00 mini 07.11.2025 6300710.00 x marketing polska 01 produkty dk 01 batony proteina banoffee ig bat 45 g 06.02.2026 6300738.00 x marketing polska 01 produkty dk 01 batony proteina banoffee ig kar6x 20.11.2025 6300707.00 x marketing polska 01 produkty dk 01 batony proteina banoffee ig mini 07.11.2025 6300710.00 6300738.00 6300707.00 6300710.00 proteina banoffee banoffee baton karton 6x mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300707.00 6300710.00 6300738.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "proteina banoffee proteina banoffee ig banoffee baton karton 6x mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300707.00 6300710.00 6300738.00 bat 45 g 06.02.2026 6300738.00 kar6x 20.11.2025 6300707.00 mini 07.11.2025 6300710.00 x marketing polska 01 produkty dk 01 batony proteina banoffee ig bat 45 g 06.02.2026 6300738.00 x marketing polska 01 produkty dk 01 batony proteina banoffee ig kar6x 20.11.2025 6300707.00 x marketing polska 01 produkty dk 01 batony proteina banoffee ig mini 07.11.2025 6300710.00 6300738.00 6300707.00 6300710.00 proteina banoffee banoffee baton karton 6x mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300707.00 6300710.00 6300738.00",
       "authors": [
         "Sylwia",
         "Krzysztof"
@@ -10010,7 +9930,7 @@
         "6300709",
         "6300739"
       ],
-      "search_blob": "proteina lemon cheesecake proteina lemon cheesecake ig baton karton 6x lemon mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300708.00 6300709.00 6300739.00 bat 45 g 06.02.2026 6300739.00 kar6x 20.11.2025 6300708.00 mini 07.11.2025 6300709.00 x marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig bat 45 g 06.02.2026 6300739.00 x marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig kar6x 20.11.2025 6300708.00 x marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig mini 07.11.2025 6300709.00 6300739.00 6300708.00 6300709.00 proteina lemon cheesecake baton karton 6x lemon mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300708.00 6300709.00 6300739.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "proteina lemon cheesecake proteina lemon cheesecake ig baton karton 6x lemon mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300708.00 6300709.00 6300739.00 bat 45 g 06.02.2026 6300739.00 kar6x 20.11.2025 6300708.00 mini 07.11.2025 6300709.00 x marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig bat 45 g 06.02.2026 6300739.00 x marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig kar6x 20.11.2025 6300708.00 x marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig mini 07.11.2025 6300709.00 6300739.00 6300708.00 6300709.00 proteina lemon cheesecake baton karton 6x lemon mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300708.00 6300709.00 6300739.00",
       "authors": [
         "Sylwia",
         "Krzysztof"
@@ -10085,7 +10005,7 @@
         "6300686",
         "6300687"
       ],
-      "search_blob": "paczek rozany paczek rozany nerkowcowy baton karton 6x mini baton nerkowcowy 6300686.00 6300687.00 kar6x 28.11.2025 6300687.00 mini 27.11.2025 6300686.00 x marketing polska 01 produkty dk 01 batony paczek rozany nerkowcowy kar6x 28.11.2025 6300687.00 x marketing polska 01 produkty dk 01 batony paczek rozany nerkowcowy mini 27.11.2025 6300686.00 6300687.00 6300686.00 paczek rozany baton karton 6x mini baton nerkowcowy 6300686.00 6300687.00 paczek rozany paczek rozany paczek roz",
+      "search_blob": "paczek rozany paczek rozany nerkowcowy baton karton 6x mini baton nerkowcowy 6300686.00 6300687.00 kar6x 28.11.2025 6300687.00 f mini 27.11.2025 6300686.00 f x marketing polska 01 produkty dk 01 batony paczek rozany nerkowcowy kar6x 28.11.2025 6300687.00 f x marketing polska 01 produkty dk 01 batony paczek rozany nerkowcowy mini 27.11.2025 6300686.00 f 6300687.00 6300686.00 paczek rozany baton karton 6x mini baton nerkowcowy 6300686.00 6300687.00 paczek rozany paczek rozany paczek roz",
       "authors": []
     },
     {
@@ -10121,7 +10041,7 @@
         "6300679",
         "6300682"
       ],
-      "search_blob": "rogal poznanski rogal poznanski nerkowcowy baton karton 6x mini baton nerkowcowy 6300679.00 6300682.00 kar6x 30.12.2025 6300682.00 mini 19.09.2025 6300679.00 x marketing polska 01 produkty dk 01 batony rogal poznanski nerkowcowy kar6x 30.12.2025 6300682.00 x marketing polska 01 produkty dk 01 batony rogal poznanski nerkowcowy mini 19.09.2025 6300679.00 6300682.00 6300679.00 rogal poznanski baton karton 6x mini baton nerkowcowy 6300679.00 6300682.00 rogal poznanski rogal poznanski rogal",
+      "search_blob": "rogal poznanski rogal poznanski nerkowcowy baton karton 6x mini baton nerkowcowy 6300679.00 6300682.00 kar6x 30.12.2025 6300682.00 f mini 19.09.2025 6300679.00 f x marketing polska 01 produkty dk 01 batony rogal poznanski nerkowcowy kar6x 30.12.2025 6300682.00 f x marketing polska 01 produkty dk 01 batony rogal poznanski nerkowcowy mini 19.09.2025 6300679.00 f 6300682.00 6300679.00 rogal poznanski baton karton 6x mini baton nerkowcowy 6300679.00 6300682.00 rogal poznanski rogal poznanski rogal",
       "authors": []
     },
     {
@@ -10382,6 +10302,60 @@
       "authors": []
     },
     {
+      "id": "proteina-karmel-mct-funkcjonalny",
+      "name": "PROTEINA - KARMEL MCT",
+      "display_name": "PROTEINA - KARMEL MCT",
+      "category": "01 - BATONY",
+      "tags": [
+        "baton",
+        "funkcjonalny",
+        "karton 6x",
+        "karmel",
+        "mct",
+        "mini baton",
+        "proteina"
+      ],
+      "tag_groups": {
+        "smak": [
+          "karmel",
+          "mct",
+          "proteina"
+        ],
+        "typ": [
+          "funkcjonalny"
+        ],
+        "opakowanie": [
+          "baton",
+          "karton 6x",
+          "mini baton"
+        ],
+        "autor": [
+          "Krzysztof",
+          "Sylwia"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Sylwia"
+        ],
+        "inne": []
+      },
+      "indexes": [
+        "6300654.00",
+        "6300655.00",
+        "6300702.00"
+      ],
+      "index_bases": [
+        "6300654",
+        "6300655",
+        "6300702"
+      ],
+      "search_blob": "proteina karmel mct proteina karmel mct funkcjonalny baton funkcjonalny karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300654.00 6300655.00 6300702.00 bat 35 g 22.10.2025 6300702.00 kar6x 12.06.2025 6300655.00 mini 29.07.2025 6300654.00 x marketing polska 01 produkty dk 01 batony archiwum proteina karmel mct funkcjonalny bat 35 g 22.10.2025 6300702.00 x marketing polska 01 produkty dk 01 batony archiwum proteina karmel mct funkcjonalny kar6x 12.06.2025 6300655.00 x marketing polska 01 produkty dk 01 batony archiwum proteina karmel mct funkcjonalny mini 29.07.2025 6300654.00 6300702.00 6300655.00 6300654.00 proteina karmel mct baton funkcjonalny karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300654.00 6300655.00 6300702.00",
+      "authors": [
+        "Sylwia",
+        "Krzysztof"
+      ]
+    },
+    {
       "id": "banoffee-kakao-deserowe",
       "name": "BANOFFEE KAKAO",
       "display_name": "BANOFFEE KAKAO",
@@ -10487,7 +10461,7 @@
         "6300447",
         "6300760"
       ],
-      "search_blob": "daktyl limonka daktyl limonka raw doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300447.00 6300760.00 doy 02.02.2024 6300447.00 doy 23.06.2026 6300760 x marketing polska 01 produkty dk 02 kulki daktyl limonka raw doy 02.02.2024 6300447.00 x marketing polska 01 produkty dk 02 kulki daktyl limonka raw doy 23.06.2026 6300760 6300447.00 6300760.00 daktyl limonka doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300447.00 6300760.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "daktyl limonka daktyl limonka raw doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300447.00 6300760.00 doy 02.02.2024 6300447.00 doy 23.06.2026 6300760 x marketing polska 01 produkty dk 02 kulki daktyl limonka raw doy 02.02.2024 6300447.00 x marketing polska 01 produkty dk 02 kulki daktyl limonka raw doy 23.06.2026 6300760 6300447.00 6300760.00 daktyl limonka doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300447.00 6300760.00",
       "authors": [
         "Krzysztof"
       ]
@@ -10526,7 +10500,7 @@
         "6300448",
         "6300759"
       ],
-      "search_blob": "daktyl pomarancza daktyl pomarancza raw doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300448.00 6300759.00 02.02.2024 6300448.00 doy 15.05.2026 6300759 x marketing polska 01 produkty dk 02 kulki daktyl pomarancza raw 02.02.2024 6300448.00 x marketing polska 01 produkty dk 02 kulki daktyl pomarancza raw doy 15.05.2026 6300759 6300448.00 6300759.00 daktyl pomarancza doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300448.00 6300759.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "daktyl pomarancza daktyl pomarancza raw doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300448.00 6300759.00 02.02.2024 6300448.00 doy 15.05.2026 6300759 x marketing polska 01 produkty dk 02 kulki daktyl pomarancza raw 02.02.2024 6300448.00 x marketing polska 01 produkty dk 02 kulki daktyl pomarancza raw doy 15.05.2026 6300759 6300448.00 6300759.00 daktyl pomarancza doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300448.00 6300759.00",
       "authors": [
         "Krzysztof"
       ]
@@ -10567,7 +10541,7 @@
         "6300729",
         "6300758"
       ],
-      "search_blob": "daktyl wisnia daktyl wisnia raw doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300449.00 6300729.00 6300758.00 01.02.2024 6300449.00 doy 15.05.2026 6300758 doy 15.05 inyfinn lip 04 130950 2026 caseconflict.2026 6300758 wisnia trufle 02.03.2026 6300729.00 x marketing polska 01 produkty dk 02 kulki daktyl wisnia raw 01.02.2024 6300449.00 x marketing polska 01 produkty dk 02 kulki daktyl wisnia raw doy 15.05.2026 6300758 x marketing polska 01 produkty dk 02 kulki daktyl wisnia raw doy 15.05 inyfinn lip 04 130950 2026 caseconflict.2026 6300758 x marketing polska 01 produkty dk 02 kulki daktyl wisnia raw wisnia trufle 02.03.2026 6300729.00 6300449.00 6300758.00 6300758.00 6300729.00 daktyl wisnia doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300449.00 6300729.00 6300758.00 daktyl wisnia kakao wisnia kulki raw kakao raw kakao wisnia wisnia kakao multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "daktyl wisnia daktyl wisnia raw doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300449.00 6300729.00 6300758.00 01.02.2024 6300449.00 doy 15.05.2026 6300758 doy 15.05 inyfinn lip 04 130950 2026 caseconflict.2026 6300758 wisnia trufle 02.03.2026 6300729.00 x marketing polska 01 produkty dk 02 kulki daktyl wisnia raw 01.02.2024 6300449.00 x marketing polska 01 produkty dk 02 kulki daktyl wisnia raw doy 15.05.2026 6300758 x marketing polska 01 produkty dk 02 kulki daktyl wisnia raw doy 15.05 inyfinn lip 04 130950 2026 caseconflict.2026 6300758 x marketing polska 01 produkty dk 02 kulki daktyl wisnia raw wisnia trufle 02.03.2026 6300729.00 6300449.00 6300758.00 6300758.00 6300729.00 daktyl wisnia doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300449.00 6300729.00 6300758.00 daktyl wisnia kakao wisnia kulki raw kakao raw kakao wisnia wisnia kakao",
       "authors": [
         "Krzysztof"
       ]
@@ -10721,51 +10695,7 @@
         "6300699",
         "6300767"
       ],
-      "search_blob": "orzeszki kukurydza miod orzeszki kukurydza miod sniadanie doypack folia kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300450.00 6300524.00 6300699.00 6300699.01 6300767.00 doy 3.07.2026 pl ua 6300699.01 doy 31.10.2025 6300699.00 folia 09.02.2024 6300450.00 folia 26.06.2024 6300524.00 folia 3.07.2026 pl ua 6300767 folia 30.07.2025 6300524.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie doy 3.07.2026 pl ua 6300699.01 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie doy 31.10.2025 6300699.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 09.02.2024 6300450.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 26.06.2024 6300524.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 3.07.2026 pl ua 6300767 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 30.07.2025 6300524.00 6300699.01 6300699.00 6300450.00 6300524.00 6300767.00 6300524.00 orzeszki kukurydza miod doypack folia kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300450.00 6300524.00 6300699.00 6300699.01 6300767.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
-      "authors": [
-        "Krzysztof"
-      ]
-    },
-    {
-      "id": "orzeszki-miod-sniadanie",
-      "name": "ORZESZKI MIOD",
-      "display_name": "ORZESZKI MIOD",
-      "category": "02 - KULKI",
-      "tags": [
-        "doypack",
-        "kulki",
-        "miod",
-        "sniadanie"
-      ],
-      "tag_groups": {
-        "smak": [
-          "miod"
-        ],
-        "typ": [
-          "kulki"
-        ],
-        "opakowanie": [
-          "doypack"
-        ],
-        "autor": [
-          "Krzysztof"
-        ],
-        "osoba": [
-          "Krzysztof"
-        ],
-        "inne": []
-      },
-      "indexes": [
-        "6300450.00",
-        "6300524.00",
-        "6300699.00"
-      ],
-      "index_bases": [
-        "6300450",
-        "6300524",
-        "6300699"
-      ],
-      "search_blob": "orzeszki miod orzeszki miod sniadanie doypack kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300450.00 6300524.00 6300699.00 09.02.2024 6300450.00 26.06.2024 6300524.00 30.07.2025 6300524.00 31.10.2025 6300699.00 doy 31.10.2025 6300699.00 x marketing polska 01 produkty dk 02 kulki orzeszki miod sniadanie 09.02.2024 6300450.00 x marketing polska 01 produkty dk 02 kulki orzeszki miod sniadanie 26.06.2024 6300524.00 x marketing polska 01 produkty dk 02 kulki orzeszki miod sniadanie 30.07.2025 6300524.00 x marketing polska 01 produkty dk 02 kulki orzeszki miod sniadanie 31.10.2025 6300699.00 x marketing polska 01 produkty dk 02 kulki orzeszki miod sniadanie doy 31.10.2025 6300699.00 6300450.00 6300524.00 6300524.00 6300699.00 6300699.00 orzeszki miod doypack kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300450.00 6300524.00 6300699.00",
+      "search_blob": "orzeszki kukurydza miod orzeszki kukurydza miod sniadanie doypack folia kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300450.00 6300524.00 6300699.00 6300699.01 6300767.00 09.02.2024 6300450.00 30.07.2025 6300524.00 31.10.2025 6300699.00 doy 3.07.2026 pl ua 6300699.01 doy 31.10.2025 6300699.00 folia 09.02.2024 6300450.00 folia 26.06.2024 6300524.00 folia 3.07.2026 pl ua 6300767 f folia 30.07.2025 6300524.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie 09.02.2024 6300450.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie 30.07.2025 6300524.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie 31.10.2025 6300699.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie doy 3.07.2026 pl ua 6300699.01 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie doy 31.10.2025 6300699.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 09.02.2024 6300450.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 26.06.2024 6300524.00 x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 3.07.2026 pl ua 6300767 f x marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 30.07.2025 6300524.00 6300450.00 6300524.00 6300699.00 6300699.01 6300699.00 6300450.00 6300524.00 6300767.00 6300524.00 orzeszki kukurydza miod doypack folia kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300450.00 6300524.00 6300699.00 6300699.01 6300767.00",
       "authors": [
         "Krzysztof"
       ]
@@ -10815,7 +10745,7 @@
         "6300701",
         "6300766"
       ],
-      "search_blob": "owies czekolada owies czekolada sniadanie czekolada doypack folia kulki owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300451.00 6300520.00 6300701.00 6300766.00 doy 02.07.2026 pl ua 6300766 doy 31.10.2025 6300701.00 folia 09.02.2024 6300451.00 folia 20.06.2024 6300520.00 x marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie doy 02.07.2026 pl ua 6300766 x marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie doy 31.10.2025 6300701.00 x marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie folia 09.02.2024 6300451.00 x marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie folia 20.06.2024 6300520.00 6300766.00 6300701.00 6300451.00 6300520.00 owies czekolada czekolada doypack folia kulki owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300451.00 6300520.00 6300701.00 6300766.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "owies czekolada owies czekolada sniadanie czekolada doypack folia kulki owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300451.00 6300520.00 6300701.00 6300766.00 doy 02.07.2026 pl ua 6300766 doy 31.10.2025 6300701.00 folia 09.02.2024 6300451.00 folia 20.06.2024 6300520.00 x marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie doy 02.07.2026 pl ua 6300766 x marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie doy 31.10.2025 6300701.00 x marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie folia 09.02.2024 6300451.00 x marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie folia 20.06.2024 6300520.00 6300766.00 6300701.00 6300451.00 6300520.00 owies czekolada czekolada doypack folia kulki owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300451.00 6300520.00 6300701.00 6300766.00",
       "authors": [
         "Krzysztof"
       ]
@@ -10858,6 +10788,48 @@
       ],
       "search_blob": "tiramisu czekolada kakao tiramisu czekolada kakao deserowe czekolada deserowe doypack kakao kulki tiramisu 6300729.00 doy 65 g 24.03.2026 6300729.00 x marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65 g 24.03.2026 6300729.00 6300729.00 tiramisu czekolada kakao czekolada deserowe doypack kakao kulki tiramisu 6300729.00 tiramisu tiramisu czekolada deser",
       "authors": []
+    },
+    {
+      "id": "orzeszki-miod-sniadanie",
+      "name": "ORZESZKI MIOD",
+      "display_name": "ORZESZKI MIOD",
+      "category": "02 - KULKI",
+      "tags": [
+        "doypack",
+        "kulki",
+        "miod",
+        "sniadanie"
+      ],
+      "tag_groups": {
+        "smak": [
+          "miod"
+        ],
+        "typ": [
+          "kulki"
+        ],
+        "opakowanie": [
+          "doypack"
+        ],
+        "autor": [
+          "Krzysztof"
+        ],
+        "osoba": [
+          "Krzysztof"
+        ],
+        "inne": []
+      },
+      "indexes": [
+        "6300524.00",
+        "6300699.00"
+      ],
+      "index_bases": [
+        "6300524",
+        "6300699"
+      ],
+      "search_blob": "orzeszki miod orzeszki miod sniadanie doypack kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300524.00 6300699.00 26.06.2024 6300524.00 doy 31.10.2025 6300699.00 x marketing polska 01 produkty dk 02 kulki archiwum orzeszki miod sniadanie 26.06.2024 6300524.00 x marketing polska 01 produkty dk 02 kulki archiwum orzeszki miod sniadanie doy 31.10.2025 6300699.00 6300524.00 6300699.00 orzeszki miod doypack kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300524.00 6300699.00",
+      "authors": [
+        "Krzysztof"
+      ]
     },
     {
       "id": "6300-000-17.11.2025-niemiesne",
@@ -10923,44 +10895,7 @@
         "6300578",
         "6300757"
       ],
-      "search_blob": "burger buraczany burger buraczany niemiesne burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 000018.00 6300578.00 6300757.00 rekaw 08.11.2024 6300578.00 rekaw 14.01.2025 6300578.00 rekaw 14.01.2025 6300757.00 rekaw 16.07.2021 karp000018.00 x marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 08.11.2024 6300578.00 x marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 14.01.2025 6300578.00 x marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 14.01.2025 6300757.00 x marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 16.07.2021 karp000018.00 6300578.00 6300578.00 6300757.00 000018.00 burger buraczany burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 000018.00 6300578.00 6300757.00",
-      "authors": [
-        "Krzysztof"
-      ]
-    },
-    {
-      "id": "burger-burak-niemiesne",
-      "name": "BURGER BURAK",
-      "display_name": "BURGER BURAK",
-      "category": "03 - ROSLINNE",
-      "tags": [
-        "burger",
-        "niemiesne",
-        "roslinne"
-      ],
-      "tag_groups": {
-        "smak": [],
-        "typ": [
-          "niemiesne",
-          "roslinne",
-          "burger"
-        ],
-        "opakowanie": [],
-        "autor": [
-          "Krzysztof"
-        ],
-        "osoba": [
-          "Krzysztof"
-        ],
-        "inne": []
-      },
-      "indexes": [
-        "000018.00"
-      ],
-      "index_bases": [
-        "000018"
-      ],
-      "search_blob": "burger burak burger burak niemiesne burger niemiesne roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 000018.00 16.07.2021 karp000018.00 x marketing polska 01 produkty dk 03 roslinne burger burak niemiesne 16.07.2021 karp000018.00 000018.00 burger burak burger niemiesne roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 000018.00",
+      "search_blob": "burger buraczany burger buraczany niemiesne burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 000018.00 6300578.00 6300757.00 rekaw 03.07.2025 6300757.00 f rekaw 08.11.2024 6300578.00 rekaw 14.01.2025 6300578.00 rekaw 16.07.2021 karp000018.00 x marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 03.07.2025 6300757.00 f x marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 08.11.2024 6300578.00 x marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 14.01.2025 6300578.00 x marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 16.07.2021 karp000018.00 6300757.00 6300578.00 6300578.00 000018.00 burger buraczany burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 000018.00 6300578.00 6300757.00",
       "authors": [
         "Krzysztof"
       ]
@@ -11008,7 +10943,7 @@
         "6300631",
         "6300755"
       ],
-      "search_blob": "burger klasyczny burger klasyczny niemiesne burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300342.00 6300473.00 6300569.00 6300631.00 6300755.00 01.04.2025 6300631.00 02.04.2025 6300631.00 15.10.2024 6300569.00 27.04.2023 6300342.00 29.04.2024 6300473.00 rekaw 03.04.2025 6300631.00 rekaw 25.05.2026 6300755 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 01.04.2025 6300631.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 02.04.2025 6300631.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 15.10.2024 6300569.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 27.04.2023 6300342.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 29.04.2024 6300473.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne rekaw 03.04.2025 6300631.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne rekaw 25.05.2026 6300755 6300631.00 6300631.00 6300569.00 6300342.00 6300473.00 6300631.00 6300755.00 burger klasyczny burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300342.00 6300473.00 6300569.00 6300631.00 6300755.00 burger dzien bez miesa multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "burger klasyczny burger klasyczny niemiesne burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300342.00 6300473.00 6300569.00 6300631.00 6300755.00 01.04.2025 6300631.00 02.04.2025 6300631.00 15.10.2024 6300569.00 27.04.2023 6300342.00 29.04.2024 6300473.00 rekaw 03.04.2025 6300631.00 rekaw 25.05.2026 6300755 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 01.04.2025 6300631.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 02.04.2025 6300631.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 15.10.2024 6300569.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 27.04.2023 6300342.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 29.04.2024 6300473.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne rekaw 03.04.2025 6300631.00 x marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne rekaw 25.05.2026 6300755 6300631.00 6300631.00 6300569.00 6300342.00 6300473.00 6300631.00 6300755.00 burger klasyczny burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300342.00 6300473.00 6300569.00 6300631.00 6300755.00 burger dzien bez miesa",
       "authors": [
         "Krzysztof"
       ]
@@ -11910,7 +11845,7 @@
         "000138",
         "6300406"
       ],
-      "search_blob": "mielone wolowe mielone wolowe niemiesne niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta 000138.00 6300406.00 6300406.01 archiwum 26.09.2022 kar000138.00 rekaw 2026 07 13 6300406.01 rekaw 23.08.2023 6300406.00 x marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne archiwum 26.09.2022 kar000138.00 x marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 2026 07 13 6300406.01 x marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 23.08.2023 6300406.00 000138.00 6300406.01 6300406.00 mielone wolowe niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta 000138.00 6300406.00 6300406.01",
+      "search_blob": "mielone wolowe mielone wolowe niemiesne niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta 000138.00 6300406.00 6300406.01 archiwum 26.09.2022 kar000138.00 rekaw 23.08.2023 6300406.00 rekaw 2026 07 21 6300406.01 x marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne archiwum 26.09.2022 kar000138.00 x marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 23.08.2023 6300406.00 x marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 2026 07 21 6300406.01 000138.00 6300406.00 6300406.01 mielone wolowe niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta 000138.00 6300406.00 6300406.01",
       "authors": [
         "Sylwia"
       ]
@@ -12422,7 +12357,7 @@
       "index_bases": [
         "000015"
       ],
-      "search_blob": "burger klasyczny xxl burger klasyczny xxl niemiesne bigpak burger folia niemiesne roslinne 000015.00 bigpak 02.03.2021 folp000015.00 x marketing polska 01 produkty dk 03 roslinne archiwum burger klasyczny xxl niemiesne bigpak 02.03.2021 folp000015.00 000015.00 burger klasyczny xxl bigpak burger folia niemiesne roslinne 000015.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "burger klasyczny xxl burger klasyczny xxl niemiesne bigpak burger folia niemiesne roslinne 000015.00 bigpak 02.03.2021 folp000015.00 x marketing polska 01 produkty dk 03 roslinne archiwum burger klasyczny xxl niemiesne bigpak 02.03.2021 folp000015.00 000015.00 burger klasyczny xxl bigpak burger folia niemiesne roslinne 000015.00",
       "authors": []
     },
     {
@@ -13433,7 +13368,7 @@
       "index_bases": [
         "6300518"
       ],
-      "search_blob": "3pack oat 3pack oat bars mix mix 6300518.00 21.06.2024 6300518.00 en pl x marketing eksport 01 products gc 01 bars 3pack oat bars mix 21.06.2024 6300518.00 en pl 6300518.00 3pack oat mix 6300518.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "3pack oat 3pack oat bars mix mix 6300518.00 21.06.2024 6300518.00 gb pl x marketing eksport 01 products gc 01 bars 3pack oat bars mix 21.06.2024 6300518.00 gb pl 6300518.00 3pack oat mix 6300518.00",
       "authors": []
     },
     {
@@ -13460,7 +13395,7 @@
       "index_bases": [
         "6300519"
       ],
-      "search_blob": "3pack protein 3pack protein bars protein proteina 6300519.00 21.06.2024 6300519.00 en pl x marketing eksport 01 products gc 01 bars 3pack protein bars protein 21.06.2024 6300519.00 en pl 6300519.00 3pack protein proteina 6300519.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "3pack protein 3pack protein bars protein proteina 6300519.00 21.06.2024 6300519.00 gb pl x marketing eksport 01 products gc 01 bars 3pack protein bars protein 21.06.2024 6300519.00 gb pl 6300519.00 3pack protein proteina 6300519.00",
       "authors": []
     },
     {
@@ -13488,7 +13423,7 @@
       "index_bases": [
         "6300669"
       ],
-      "search_blob": "blackcurrant cake blackcurrant cake cashews doy 6x cashews 6300669.00 doy6x 10.07.2025 6300669.00 x marketing eksport 01 products gc 01 bars blackcurrant cake cashews doy6x 10.07.2025 6300669.00 6300669.00 blackcurrant cake doy 6x cashews 6300669.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "blackcurrant cake blackcurrant cake cashews doy 6x cashews 6300669.00 doy6x 10.07.2025 6300669.00 x marketing eksport 01 products gc 01 bars blackcurrant cake cashews doy6x 10.07.2025 6300669.00 6300669.00 blackcurrant cake doy 6x cashews 6300669.00",
       "authors": []
     },
     {
@@ -13524,7 +13459,7 @@
         "6300462",
         "6300480"
       ],
-      "search_blob": "cashews coconut cashews coconut date dates date 0000000.00 6300269.00 6300374.00 6300462.00 6300480.00 04.07.2023 6300374.00 en de 06.02.2023 0000000.00 en se fi dk de 09.01.2023 6300269.00 en ee lt lv ro 19.03.2024 6300462.00 en cz sk hu hr 20.09.2024 6300480.00 en ar 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 01 bars cashews coconut date 04.07.2023 6300374.00 en de x marketing eksport 01 products gc 01 bars cashews coconut date 06.02.2023 0000000.00 en se fi dk de x marketing eksport 01 products gc 01 bars cashews coconut date 09.01.2023 6300269.00 en ee lt lv ro x marketing eksport 01 products gc 01 bars cashews coconut date 19.03.2024 6300462.00 en cz sk hu hr x marketing eksport 01 products gc 01 bars cashews coconut date 20.09.2024 6300480.00 en ar x marketing eksport 01 products gc 01 bars cashews coconut date 27.01.2023 0000000.00 en ar fr nl 6300374.00 0000000.00 6300269.00 6300462.00 6300480.00 0000000.00 cashews coconut dates date 0000000.00 6300269.00 6300374.00 6300462.00 6300480.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "cashews coconut cashews coconut date dates date 0000000.00 6300269.00 6300374.00 6300462.00 6300480.00 04.07.2023 6300374.00 gb de 06.02.2023 0000000.00 gb se fi dk de 09.01.2023 6300269.00 gb ee lt lv ro 19.03.2024 6300462.00 gb cz sk hu hr 20.09.2024 6300480.00 gb ar 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 01 bars cashews coconut date 04.07.2023 6300374.00 gb de x marketing eksport 01 products gc 01 bars cashews coconut date 06.02.2023 0000000.00 gb se fi dk de x marketing eksport 01 products gc 01 bars cashews coconut date 09.01.2023 6300269.00 gb ee lt lv ro x marketing eksport 01 products gc 01 bars cashews coconut date 19.03.2024 6300462.00 gb cz sk hu hr x marketing eksport 01 products gc 01 bars cashews coconut date 20.09.2024 6300480.00 gb ar x marketing eksport 01 products gc 01 bars cashews coconut date 27.01.2023 0000000.00 gb ar fr nl 6300374.00 0000000.00 6300269.00 6300462.00 6300480.00 0000000.00 cashews coconut dates date 0000000.00 6300269.00 6300374.00 6300462.00 6300480.00",
       "authors": []
     },
     {
@@ -13570,7 +13505,7 @@
         "6300368",
         "6300491"
       ],
-      "search_blob": "cheesecake cheesecake cashews baton doy 6x mini baton cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300307.00 6300348.00 6300368.00 6300491.00 bar 05.07.2023 6300368.00 en de doy6x 06.02.2023 en se fi dk de 000000.00 doy6x 24.01.2023 6300307.00 en cz sk hu hr doy6x 24.01.2023 en lt lv ee ro 000000.00 doy6x 27.01.2023 0000000.00 en ar fr nl doy6x 30.09.2024 6300491.00 en ar mini 18.10.2022 en 0000000.00 en mini 19.04.2023 6300348.00 en x marketing eksport 01 products gc 01 bars cheesecake cashews bar 05.07.2023 6300368.00 en de x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 06.02.2023 en se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 24.01.2023 6300307.00 en cz sk hu hr x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 24.01.2023 en lt lv ee ro 000000.00 x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 30.09.2024 6300491.00 en ar x marketing eksport 01 products gc 01 bars cheesecake cashews mini 18.10.2022 en 0000000.00 en x marketing eksport 01 products gc 01 bars cheesecake cashews mini 19.04.2023 6300348.00 en 6300368.00 000000.00 6300307.00 000000.00 0000000.00 6300491.00 0000000.00 6300348.00 cheesecake baton doy 6x mini baton cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300307.00 6300348.00 6300368.00 6300491.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "cheesecake cheesecake cashews baton doy 6x mini baton cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300307.00 6300348.00 6300368.00 6300491.00 bar 05.07.2023 6300368.00 gb de doy6x 06.02.2023 gb se fi dk de 000000.00 doy6x 24.01.2023 6300307.00 gb cz sk hu hr doy6x 24.01.2023 gb lt lv ee ro 000000.00 doy6x 27.01.2023 0000000.00 gb ar fr nl doy6x 30.09.2024 6300491.00 gb ar mini 18.10.2022 gb 0000000.00 gb mini 19.04.2023 6300348.00 gb x marketing eksport 01 products gc 01 bars cheesecake cashews bar 05.07.2023 6300368.00 gb de x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 06.02.2023 gb se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 24.01.2023 6300307.00 gb cz sk hu hr x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 24.01.2023 gb lt lv ee ro 000000.00 x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 01 bars cheesecake cashews doy6x 30.09.2024 6300491.00 gb ar x marketing eksport 01 products gc 01 bars cheesecake cashews mini 18.10.2022 gb 0000000.00 gb x marketing eksport 01 products gc 01 bars cheesecake cashews mini 19.04.2023 6300348.00 gb 6300368.00 000000.00 6300307.00 000000.00 0000000.00 6300491.00 0000000.00 6300348.00 cheesecake baton doy 6x mini baton cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300307.00 6300348.00 6300368.00 6300491.00",
       "authors": [
         "Krzysztof"
       ]
@@ -13606,7 +13541,7 @@
         "000000",
         "0000000"
       ],
-      "search_blob": "coconut orange coconut orange date baton dates date 000000.00 0000000.00 0000000.01 bar 06.02.2023 0000000.01 en se fi dk de bar 09.01.2023 en ee lt lv ro 000000.00 bar 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 01 bars coconut orange date bar 06.02.2023 0000000.01 en se fi dk de x marketing eksport 01 products gc 01 bars coconut orange date bar 09.01.2023 en ee lt lv ro 000000.00 x marketing eksport 01 products gc 01 bars coconut orange date bar 27.01.2023 0000000.00 en ar fr nl 0000000.01 000000.00 0000000.00 coconut orange baton dates date 000000.00 0000000.00 0000000.01 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "coconut orange coconut orange date baton dates date 000000.00 0000000.00 0000000.01 bar 06.02.2023 0000000.01 gb se fi dk de bar 09.01.2023 gb ee lt lv ro 000000.00 bar 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 01 bars coconut orange date bar 06.02.2023 0000000.01 gb se fi dk de x marketing eksport 01 products gc 01 bars coconut orange date bar 09.01.2023 gb ee lt lv ro 000000.00 x marketing eksport 01 products gc 01 bars coconut orange date bar 27.01.2023 0000000.00 gb ar fr nl 0000000.01 000000.00 0000000.00 coconut orange baton dates date 000000.00 0000000.00 0000000.01",
       "authors": []
     },
     {
@@ -13657,7 +13592,7 @@
         "6300495",
         "6300641"
       ],
-      "search_blob": "crunchy peanuts crunchy peanuts date baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300301.00 6300438.00 6300463.00 6300481.00 6300495.00 6300641.00 bar 06.02.2023 en se fi dk de 000000.00 bar 09.01.2023 6300301.00 en ee lt lv ro bar 19.03.2024 6300463.00 en cz sk hu hr bar 20.09.2024 en ar 6300481.00 en ar bar 27.01.2023 0000000.00 en ar fr nl doy6x 07.05.2025 6300641.00 lt lv ee ro doy6x 19.01.2024 6300438.00 en cz sk hu hr doy6x 30.09.2024 6300495.00 en ar x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 06.02.2023 en se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 09.01.2023 6300301.00 en ee lt lv ro x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 19.03.2024 6300463.00 en cz sk hu hr x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 20.09.2024 en ar 6300481.00 en ar x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 01 bars crunchy peanuts date doy6x 07.05.2025 6300641.00 lt lv ee ro x marketing eksport 01 products gc 01 bars crunchy peanuts date doy6x 19.01.2024 6300438.00 en cz sk hu hr x marketing eksport 01 products gc 01 bars crunchy peanuts date doy6x 30.09.2024 6300495.00 en ar 000000.00 6300301.00 6300463.00 6300481.00 0000000.00 6300641.00 6300438.00 6300495.00 crunchy peanuts baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300301.00 6300438.00 6300463.00 6300481.00 6300495.00 6300641.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "crunchy peanuts crunchy peanuts date baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300301.00 6300438.00 6300463.00 6300481.00 6300495.00 6300641.00 bar 06.02.2023 gb se fi dk de 000000.00 bar 09.01.2023 6300301.00 gb ee lt lv ro bar 19.03.2024 6300463.00 gb cz sk hu hr bar 20.09.2024 gb ar 6300481.00 gb ar bar 27.01.2023 0000000.00 gb ar fr nl doy6x 07.05.2025 6300641.00 lt lv ee ro doy6x 19.01.2024 6300438.00 gb cz sk hu hr doy6x 30.09.2024 6300495.00 gb ar x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 06.02.2023 gb se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 09.01.2023 6300301.00 gb ee lt lv ro x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 19.03.2024 6300463.00 gb cz sk hu hr x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 20.09.2024 gb ar 6300481.00 gb ar x marketing eksport 01 products gc 01 bars crunchy peanuts date bar 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 01 bars crunchy peanuts date doy6x 07.05.2025 6300641.00 lt lv ee ro x marketing eksport 01 products gc 01 bars crunchy peanuts date doy6x 19.01.2024 6300438.00 gb cz sk hu hr x marketing eksport 01 products gc 01 bars crunchy peanuts date doy6x 30.09.2024 6300495.00 gb ar 000000.00 6300301.00 6300463.00 6300481.00 0000000.00 6300641.00 6300438.00 6300495.00 crunchy peanuts baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300301.00 6300438.00 6300463.00 6300481.00 6300495.00 6300641.00",
       "authors": [
         "Krzysztof"
       ]
@@ -13692,7 +13627,7 @@
       "index_bases": [
         "6300668"
       ],
-      "search_blob": "energy energy bars functional doypack mini baton krzysztof krzysztof wieczorek krzysztof wieczorek 6300668.00 doypack 6x mini 15.07.2025 6300668.00 x marketing eksport 01 products gc 01 bars energy bars functional doypack 6x mini 15.07.2025 6300668.00 6300668.00 energy doypack mini baton krzysztof krzysztof wieczorek krzysztof wieczorek 6300668.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "energy energy bars functional doypack mini baton krzysztof krzysztof wieczorek krzysztof wieczorek 6300668.00 doypack 6x mini 15.07.2025 6300668.00 x marketing eksport 01 products gc 01 bars energy bars functional doypack 6x mini 15.07.2025 6300668.00 6300668.00 energy doypack mini baton krzysztof krzysztof wieczorek krzysztof wieczorek 6300668.00",
       "authors": [
         "Krzysztof"
       ]
@@ -13732,7 +13667,7 @@
         "6300747",
         "6300749"
       ],
-      "search_blob": "gi banoffee gi banoffee bars protein banoffee baton doypack mini baton proteina 6300747.00 6300749.00 bar 20.02.2026 6300xxx.00 baton 45 g 27.04.2026 6300747.00 en cz sk baton 45 g 27.04.2026 6300749.00 en hu doypack 6x mini 20.02.2026 6300xxx.00 x marketing eksport 01 products gc 01 bars gi banoffee bars protein bar 20.02.2026 6300xxx.00 x marketing eksport 01 products gc 01 bars gi banoffee bars protein baton 45 g 27.04.2026 6300747.00 en cz sk x marketing eksport 01 products gc 01 bars gi banoffee bars protein baton 45 g 27.04.2026 6300749.00 en hu x marketing eksport 01 products gc 01 bars gi banoffee bars protein doypack 6x mini 20.02.2026 6300xxx.00 6300xxx.00 6300747.00 6300749.00 6300xxx.00 gi banoffee banoffee baton doypack mini baton proteina 6300747.00 6300749.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "gi banoffee gi banoffee bars protein banoffee baton doypack mini baton proteina 6300747.00 6300749.00 bar 20.02.2026 6300xxx.00 baton 45 g 27.04.2026 6300747.00 en cz sk baton 45 g 27.04.2026 6300749.00 gb hu doypack 6x mini 20.02.2026 6300xxx.00 x marketing eksport 01 products gc 01 bars gi banoffee bars protein bar 20.02.2026 6300xxx.00 x marketing eksport 01 products gc 01 bars gi banoffee bars protein baton 45 g 27.04.2026 6300747.00 en cz sk x marketing eksport 01 products gc 01 bars gi banoffee bars protein baton 45 g 27.04.2026 6300749.00 gb hu x marketing eksport 01 products gc 01 bars gi banoffee bars protein doypack 6x mini 20.02.2026 6300xxx.00 6300xxx.00 6300747.00 6300749.00 6300xxx.00 gi banoffee banoffee baton doypack mini baton proteina 6300747.00 6300749.00",
       "authors": []
     },
     {
@@ -13800,7 +13735,7 @@
         "6300748",
         "6300750"
       ],
-      "search_blob": "gi lemon cheesecake gi lemon cheesecake bars protein baton doypack lemon mini baton proteina 6300748.00 6300750.00 bar 20.02.2026 6300xxx.00 bar 45 g 24.04.2026 6300748.00 en cz sk bar 45 g 27.04.2026 6300750.00 en hu doypack 6x mini 20.02.2026 6300xxx.00 x marketing eksport 01 products gc 01 bars gi lemon cheesecake bars protein bar 20.02.2026 6300xxx.00 x marketing eksport 01 products gc 01 bars gi lemon cheesecake bars protein bar 45 g 24.04.2026 6300748.00 en cz sk x marketing eksport 01 products gc 01 bars gi lemon cheesecake bars protein bar 45 g 27.04.2026 6300750.00 en hu x marketing eksport 01 products gc 01 bars gi lemon cheesecake bars protein doypack 6x mini 20.02.2026 6300xxx.00 6300xxx.00 6300748.00 6300750.00 6300xxx.00 gi lemon cheesecake baton doypack lemon mini baton proteina 6300748.00 6300750.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "gi lemon cheesecake gi lemon cheesecake bars protein baton doypack lemon mini baton proteina 6300748.00 6300750.00 bar 20.02.2026 6300xxx.00 bar 45 g 24.04.2026 6300748.00 en cz sk bar 45 g 27.04.2026 6300750.00 gb hu doypack 6x mini 20.02.2026 6300xxx.00 x marketing eksport 01 products gc 01 bars gi lemon cheesecake bars protein bar 20.02.2026 6300xxx.00 x marketing eksport 01 products gc 01 bars gi lemon cheesecake bars protein bar 45 g 24.04.2026 6300748.00 en cz sk x marketing eksport 01 products gc 01 bars gi lemon cheesecake bars protein bar 45 g 27.04.2026 6300750.00 gb hu x marketing eksport 01 products gc 01 bars gi lemon cheesecake bars protein doypack 6x mini 20.02.2026 6300xxx.00 6300xxx.00 6300748.00 6300750.00 6300xxx.00 gi lemon cheesecake baton doypack lemon mini baton proteina 6300748.00 6300750.00",
       "authors": []
     },
     {
@@ -13834,7 +13769,7 @@
         "6300335",
         "6300494"
       ],
-      "search_blob": "gingerbread gingerbread cashews doy 6x mini baton cashews 6300334.00 6300335.00 6300494.00 doy6x 18.03.2023 6300334.00 en cz sk hu hr doy6x 30.09.2024 6300494.00 en ar mini 18.03.2023 6300335.00 en x marketing eksport 01 products gc 01 bars gingerbread cashews doy6x 18.03.2023 6300334.00 en cz sk hu hr x marketing eksport 01 products gc 01 bars gingerbread cashews doy6x 30.09.2024 6300494.00 en ar x marketing eksport 01 products gc 01 bars gingerbread cashews mini 18.03.2023 6300335.00 en 6300334.00 6300494.00 6300335.00 gingerbread doy 6x mini baton cashews 6300334.00 6300335.00 6300494.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "gingerbread gingerbread cashews doy 6x mini baton cashews 6300334.00 6300335.00 6300494.00 doy6x 18.03.2023 6300334.00 gb cz sk hu hr doy6x 30.09.2024 6300494.00 gb ar mini 18.03.2023 6300335.00 gb x marketing eksport 01 products gc 01 bars gingerbread cashews doy6x 18.03.2023 6300334.00 gb cz sk hu hr x marketing eksport 01 products gc 01 bars gingerbread cashews doy6x 30.09.2024 6300494.00 gb ar x marketing eksport 01 products gc 01 bars gingerbread cashews mini 18.03.2023 6300335.00 gb 6300334.00 6300494.00 6300335.00 gingerbread doy 6x mini baton cashews 6300334.00 6300335.00 6300494.00",
       "authors": []
     },
     {
@@ -13877,7 +13812,7 @@
         "6300641",
         "6300716"
       ],
-      "search_blob": "hazelnut chocolate hazelnut chocolate date baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00 bar 21.02.2025 6300607.00 doy6x 07.05.2025 6300641.00 en lt lv ee doy6x 23.12.2024 6300609.00 en cz sk hu hr doy6x 28.11.2025 6300716.00 en cz sk hu hr x marketing eksport 01 products gc 01 bars hazelnut chocolate date bar 21.02.2025 6300607.00 x marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 07.05.2025 6300641.00 en lt lv ee x marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 23.12.2024 6300609.00 en cz sk hu hr x marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 28.11.2025 6300716.00 en cz sk hu hr 6300607.00 6300641.00 6300609.00 6300716.00 hazelnut chocolate baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "hazelnut chocolate hazelnut chocolate date baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00 bar 21.02.2025 6300607.00 doy6x 07.05.2025 6300641.00 gb lt lv ee doy6x 23.12.2024 6300609.00 gb cz sk hu hr doy6x 28.11.2025 6300716.00 gb cz sk hu hr x marketing eksport 01 products gc 01 bars hazelnut chocolate date bar 21.02.2025 6300607.00 x marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 07.05.2025 6300641.00 gb lt lv ee x marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 23.12.2024 6300609.00 gb cz sk hu hr x marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 28.11.2025 6300716.00 gb cz sk hu hr 6300607.00 6300641.00 6300609.00 6300716.00 hazelnut chocolate baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00",
       "authors": [
         "Krzysztof"
       ]
@@ -13914,7 +13849,7 @@
       "index_bases": [
         "6300670"
       ],
-      "search_blob": "lemon bundt cake lemon bundt cake cashews lemon mini baton cashews krzysztof krzysztof wieczorek krzysztof wieczorek 6300670.00 mini 18.07.2025 6300670.00 en cz sk hu hr x marketing eksport 01 products gc 01 bars lemon bundt cake cashews mini 18.07.2025 6300670.00 en cz sk hu hr 6300670.00 lemon bundt cake lemon mini baton cashews krzysztof krzysztof wieczorek krzysztof wieczorek 6300670.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "lemon bundt cake lemon bundt cake cashews lemon mini baton cashews krzysztof krzysztof wieczorek krzysztof wieczorek 6300670.00 mini 18.07.2025 6300670.00 gb cz sk hu hr x marketing eksport 01 products gc 01 bars lemon bundt cake cashews mini 18.07.2025 6300670.00 gb cz sk hu hr 6300670.00 lemon bundt cake lemon mini baton cashews krzysztof krzysztof wieczorek krzysztof wieczorek 6300670.00",
       "authors": [
         "Krzysztof"
       ]
@@ -13949,7 +13884,7 @@
       "index_bases": [
         "6300484"
       ],
-      "search_blob": "mango cashews mango cashews bars date baton dates mango 6300484.00 bar 20.09.2024 en ar 6300484.00 en ar x marketing eksport 01 products gc 01 bars mango cashews bars date bar 20.09.2024 en ar 6300484.00 en ar 6300484.00 mango cashews baton dates mango 6300484.00",
+      "search_blob": "mango cashews mango cashews bars date baton dates mango 6300484.00 bar 20.09.2024 gb ar 6300484.00 gb ar x marketing eksport 01 products gc 01 bars mango cashews bars date bar 20.09.2024 gb ar 6300484.00 gb ar 6300484.00 mango cashews baton dates mango 6300484.00",
       "authors": []
     },
     {
@@ -14028,7 +13963,7 @@
       "index_bases": [
         "6300372"
       ],
-      "search_blob": "peanut cream caramel peanut cream caramel bars protein proteina 6300372.00 05.07.2023 6300372.00 en de x marketing eksport 01 products gc 01 bars peanut cream caramel bars protein 05.07.2023 6300372.00 en de 6300372.00 peanut cream caramel proteina 6300372.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "peanut cream caramel peanut cream caramel bars protein proteina 6300372.00 05.07.2023 6300372.00 gb de x marketing eksport 01 products gc 01 bars peanut cream caramel bars protein 05.07.2023 6300372.00 gb de 6300372.00 peanut cream caramel proteina 6300372.00",
       "authors": []
     },
     {
@@ -14072,7 +14007,7 @@
         "6300642",
         "6300664"
       ],
-      "search_blob": "peanut cream salt peanut cream salt bars protein folia proteina 000000.00 0000000.00 000118.00 6300270.00 6300371.00 6300485.00 6300642.00 6300664.00 05.06.2025 6300642.00 en lt lv ee 05.07.2023 6300371.00 en de 06.02.2023 en se fi dk de 000000.00 09.01.2023 6300270.00 en ee lt lv ro 12.06.2025 6300664.00 20.09.2024 6300485.00 en ar 27.01.2023 0000000.00 en ar fr nl archiwum 18.08.2022 fol000118.00 x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 05.06.2025 6300642.00 en lt lv ee x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 05.07.2023 6300371.00 en de x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 06.02.2023 en se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 09.01.2023 6300270.00 en ee lt lv ro x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 12.06.2025 6300664.00 x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 20.09.2024 6300485.00 en ar x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 01 bars peanut cream salt bars protein archiwum 18.08.2022 fol000118.00 6300642.00 6300371.00 000000.00 6300270.00 6300664.00 6300485.00 0000000.00 000118.00 peanut cream salt folia proteina 000000.00 0000000.00 000118.00 6300270.00 6300371.00 6300485.00 6300642.00 6300664.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "peanut cream salt peanut cream salt bars protein folia proteina 000000.00 0000000.00 000118.00 6300270.00 6300371.00 6300485.00 6300642.00 6300664.00 05.06.2025 6300642.00 gb lt lv ee 05.07.2023 6300371.00 gb de 06.02.2023 gb se fi dk de 000000.00 09.01.2023 6300270.00 gb ee lt lv ro 12.06.2025 6300664.00 20.09.2024 6300485.00 gb ar 27.01.2023 0000000.00 gb ar fr nl archiwum 18.08.2022 fol000118.00 x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 05.06.2025 6300642.00 gb lt lv ee x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 05.07.2023 6300371.00 gb de x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 06.02.2023 gb se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 09.01.2023 6300270.00 gb ee lt lv ro x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 12.06.2025 6300664.00 x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 20.09.2024 6300485.00 gb ar x marketing eksport 01 products gc 01 bars peanut cream salt bars protein 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 01 bars peanut cream salt bars protein archiwum 18.08.2022 fol000118.00 6300642.00 6300371.00 000000.00 6300270.00 6300664.00 6300485.00 0000000.00 000118.00 peanut cream salt folia proteina 000000.00 0000000.00 000118.00 6300270.00 6300371.00 6300485.00 6300642.00 6300664.00",
       "authors": []
     },
     {
@@ -14105,7 +14040,7 @@
         "6300486",
         "6300665"
       ],
-      "search_blob": "peanut cream vanilla peanut cream vanilla bars protein proteina 0000000.00 6300271.00 6300486.00 6300665.00 06.02.2023 en se fi dk de 0000000.00 en se fi dk de 09.01.2023 6300271.00 en ee lt lv ro 12.06.2025 6300665.00 en es pt fr 20.09.2024 6300486.00 en ar 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 06.02.2023 en se fi dk de 0000000.00 en se fi dk de x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 09.01.2023 6300271.00 en ee lt lv ro x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 12.06.2025 6300665.00 en es pt fr x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 20.09.2024 6300486.00 en ar x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 27.01.2023 0000000.00 en ar fr nl 0000000.00 6300271.00 6300665.00 6300486.00 0000000.00 peanut cream vanilla proteina 0000000.00 6300271.00 6300486.00 6300665.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "peanut cream vanilla peanut cream vanilla bars protein proteina 0000000.00 6300271.00 6300486.00 6300665.00 06.02.2023 gb se fi dk de 0000000.00 gb se fi dk de 09.01.2023 6300271.00 gb ee lt lv ro 12.06.2025 6300665.00 gb es pt fr 20.09.2024 6300486.00 gb ar 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 06.02.2023 gb se fi dk de 0000000.00 gb se fi dk de x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 09.01.2023 6300271.00 gb ee lt lv ro x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 12.06.2025 6300665.00 gb es pt fr x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 20.09.2024 6300486.00 gb ar x marketing eksport 01 products gc 01 bars peanut cream vanilla bars protein 27.01.2023 0000000.00 gb ar fr nl 0000000.00 6300271.00 6300665.00 6300486.00 0000000.00 peanut cream vanilla proteina 0000000.00 6300271.00 6300486.00 6300665.00",
       "authors": []
     },
     {
@@ -14156,7 +14091,7 @@
         "6300471",
         "6300492"
       ],
-      "search_blob": "raspberry tart raspberry tart cashews baton doy 6x mini baton tarta cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300276.00 6300349.00 6300367.00 6300471.00 6300492.00 bar 05.07.2023 6300367.00 en de doy6x 01.10.2024 6300492.00 en ar doy6x 02.04.2024 6300471.00 en cz sk hu hr doy6x 06.02.2023 en se fi dk de 000000.00 doy6x 24.01.2023 6300276.00 en lt lv ee ro doy6x 27.01.2023 0000000.00 en ar fr nl mini 18.10.2022 en lt lv ee ro 0000000.00 en lt lv ee ro mini 19.04.2023 6300349.00 en x marketing eksport 01 products gc 01 bars raspberry tart cashews bar 05.07.2023 6300367.00 en de x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 01.10.2024 6300492.00 en ar x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 02.04.2024 6300471.00 en cz sk hu hr x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 06.02.2023 en se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 24.01.2023 6300276.00 en lt lv ee ro x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 01 bars raspberry tart cashews mini 18.10.2022 en lt lv ee ro 0000000.00 en lt lv ee ro x marketing eksport 01 products gc 01 bars raspberry tart cashews mini 19.04.2023 6300349.00 en 6300367.00 6300492.00 6300471.00 000000.00 6300276.00 0000000.00 0000000.00 6300349.00 raspberry tart baton doy 6x mini baton tarta cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300276.00 6300349.00 6300367.00 6300471.00 6300492.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "raspberry tart raspberry tart cashews baton doy 6x mini baton tarta cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300276.00 6300349.00 6300367.00 6300471.00 6300492.00 bar 05.07.2023 6300367.00 gb de doy6x 01.10.2024 6300492.00 gb ar doy6x 02.04.2024 6300471.00 gb cz sk hu hr doy6x 06.02.2023 gb se fi dk de 000000.00 doy6x 24.01.2023 6300276.00 gb lt lv ee ro doy6x 27.01.2023 0000000.00 gb ar fr nl mini 18.10.2022 en lt lv ee ro 0000000.00 en lt lv ee ro mini 19.04.2023 6300349.00 gb x marketing eksport 01 products gc 01 bars raspberry tart cashews bar 05.07.2023 6300367.00 gb de x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 01.10.2024 6300492.00 gb ar x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 02.04.2024 6300471.00 gb cz sk hu hr x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 06.02.2023 gb se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 24.01.2023 6300276.00 gb lt lv ee ro x marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 01 bars raspberry tart cashews mini 18.10.2022 en lt lv ee ro 0000000.00 en lt lv ee ro x marketing eksport 01 products gc 01 bars raspberry tart cashews mini 19.04.2023 6300349.00 gb 6300367.00 6300492.00 6300471.00 000000.00 6300276.00 0000000.00 0000000.00 6300349.00 raspberry tart baton doy 6x mini baton tarta cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300276.00 6300349.00 6300367.00 6300471.00 6300492.00",
       "authors": [
         "Krzysztof"
       ]
@@ -14196,7 +14131,7 @@
         "6300375",
         "6300482"
       ],
-      "search_blob": "salty nut salty nut bars date baton dates 000000.00 0000000.00 6300302.00 6300375.00 6300482.00 bar 05.07.2023 6300375.00 en de bar 06.02.2023 en se fi dk de 000000.00 bar 09.01.2023 6300302.00 en ee lt lv ro bar 20.09.2024 en ar 6300482.00 en ar bar 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 01 bars salty nut bars date bar 05.07.2023 6300375.00 en de x marketing eksport 01 products gc 01 bars salty nut bars date bar 06.02.2023 en se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars salty nut bars date bar 09.01.2023 6300302.00 en ee lt lv ro x marketing eksport 01 products gc 01 bars salty nut bars date bar 20.09.2024 en ar 6300482.00 en ar x marketing eksport 01 products gc 01 bars salty nut bars date bar 27.01.2023 0000000.00 en ar fr nl 6300375.00 000000.00 6300302.00 6300482.00 0000000.00 salty nut baton dates 000000.00 0000000.00 6300302.00 6300375.00 6300482.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "salty nut salty nut bars date baton dates 000000.00 0000000.00 6300302.00 6300375.00 6300482.00 bar 05.07.2023 6300375.00 gb de bar 06.02.2023 gb se fi dk de 000000.00 bar 09.01.2023 6300302.00 gb ee lt lv ro bar 20.09.2024 gb ar 6300482.00 gb ar bar 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 01 bars salty nut bars date bar 05.07.2023 6300375.00 gb de x marketing eksport 01 products gc 01 bars salty nut bars date bar 06.02.2023 gb se fi dk de 000000.00 x marketing eksport 01 products gc 01 bars salty nut bars date bar 09.01.2023 6300302.00 gb ee lt lv ro x marketing eksport 01 products gc 01 bars salty nut bars date bar 20.09.2024 gb ar 6300482.00 gb ar x marketing eksport 01 products gc 01 bars salty nut bars date bar 27.01.2023 0000000.00 gb ar fr nl 6300375.00 000000.00 6300302.00 6300482.00 0000000.00 salty nut baton dates 000000.00 0000000.00 6300302.00 6300375.00 6300482.00",
       "authors": []
     },
     {
@@ -14237,7 +14172,7 @@
         "6300478",
         "6300699"
       ],
-      "search_blob": "cornflakes peanuts honey cornflakes peanuts honey balls crispy folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01 04.07.2023 6300370.00 en de 06.02.2023 en se fi dk de 000000.00 09.01.2023 6300273.00 en ee lt lv ro 2025 10 30 en de 6300699.01 80 g 05.07.2024 6300699.00 27.01.2023 0000000.00 en ar fr nl folia 20.09.2024 6300478.00 en ar x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 04.07.2023 6300370.00 en de x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 06.02.2023 en se fi dk de 000000.00 x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 09.01.2023 6300273.00 en ee lt lv ro x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 2025 10 30 en de 6300699.01 80 g 05.07.2024 6300699.00 x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy folia 20.09.2024 6300478.00 en ar 6300370.00 000000.00 6300273.00 6300699.01 0000000.00 6300478.00 cornflakes peanuts honey folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "cornflakes peanuts honey cornflakes peanuts honey balls crispy folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01 04.07.2023 6300370.00 gb de 06.02.2023 gb se fi dk de 000000.00 09.01.2023 6300273.00 gb ee lt lv ro 2025 10 30 gb de 6300699.01 80 g 05.07.2024 6300699.00 27.01.2023 0000000.00 gb ar fr nl d folia 20.09.2024 6300478.00 gb ar x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 04.07.2023 6300370.00 gb de x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 06.02.2023 gb se fi dk de 000000.00 x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 09.01.2023 6300273.00 gb ee lt lv ro x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 2025 10 30 gb de 6300699.01 80 g 05.07.2024 6300699.00 x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 27.01.2023 0000000.00 gb ar fr nl d x marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy folia 20.09.2024 6300478.00 gb ar 6300370.00 000000.00 6300273.00 6300699.01 0000000.00 6300478.00 cornflakes peanuts honey folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01",
       "authors": [
         "Krzysztof"
       ]
@@ -14283,7 +14218,7 @@
         "6300488",
         "6300542"
       ],
-      "search_blob": "date cherry date cherry balls raw dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300378.00 6300445.00 6300488.00 6300542.00 02.02.2024 6300445.00 en ee lt lv ro 06.02.2023 en se fi dk de 000000.00 15.01.2025 6300542.00 en ee lt lv ro 27.01.2023 0000000.00 en ar fr nl 29.11.2023 en cz sk hu hr 6300378.00 en cz sk hu hr doy 20.09.2024 6300488.00 en ar x marketing eksport 01 products gc 02 balls date cherry balls raw 02.02.2024 6300445.00 en ee lt lv ro x marketing eksport 01 products gc 02 balls date cherry balls raw 06.02.2023 en se fi dk de 000000.00 x marketing eksport 01 products gc 02 balls date cherry balls raw 15.01.2025 6300542.00 en ee lt lv ro x marketing eksport 01 products gc 02 balls date cherry balls raw 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 02 balls date cherry balls raw 29.11.2023 en cz sk hu hr 6300378.00 en cz sk hu hr x marketing eksport 01 products gc 02 balls date cherry balls raw doy 20.09.2024 6300488.00 en ar 6300445.00 000000.00 6300542.00 0000000.00 6300378.00 6300488.00 date cherry dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300378.00 6300445.00 6300488.00 6300542.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "date cherry date cherry balls raw dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300378.00 6300445.00 6300488.00 6300542.00 02.02.2024 6300445.00 gb ee lt lv ro 06.02.2023 gb se fi dk de 000000.00 15.01.2025 6300542.00 gb ee lt lv ro 27.01.2023 0000000.00 gb ar fr nl 29.11.2023 gb cz sk hu hr 6300378.00 gb cz sk hu hr doy 20.09.2024 6300488.00 gb ar x marketing eksport 01 products gc 02 balls date cherry balls raw 02.02.2024 6300445.00 gb ee lt lv ro x marketing eksport 01 products gc 02 balls date cherry balls raw 06.02.2023 gb se fi dk de 000000.00 x marketing eksport 01 products gc 02 balls date cherry balls raw 15.01.2025 6300542.00 gb ee lt lv ro x marketing eksport 01 products gc 02 balls date cherry balls raw 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 02 balls date cherry balls raw 29.11.2023 gb cz sk hu hr 6300378.00 gb cz sk hu hr x marketing eksport 01 products gc 02 balls date cherry balls raw doy 20.09.2024 6300488.00 gb ar 6300445.00 000000.00 6300542.00 0000000.00 6300378.00 6300488.00 date cherry dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300378.00 6300445.00 6300488.00 6300542.00",
       "authors": [
         "Krzysztof"
       ]
@@ -14326,7 +14261,7 @@
         "000121",
         "6300489"
       ],
-      "search_blob": "date lime date lime balls raw dates folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 000000.01 0000000.00 000121.00 6300489.00 06.02.2023 en se fi dk de 000000.01 09.01.2023 en ee lt lv ro 000000.00 16.08.2022 en cz sk hu hr fol000121.00 20.09.2024 6300489.00 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 02 balls date lime balls raw 06.02.2023 en se fi dk de 000000.01 x marketing eksport 01 products gc 02 balls date lime balls raw 09.01.2023 en ee lt lv ro 000000.00 x marketing eksport 01 products gc 02 balls date lime balls raw 16.08.2022 en cz sk hu hr fol000121.00 x marketing eksport 01 products gc 02 balls date lime balls raw 20.09.2024 6300489.00 x marketing eksport 01 products gc 02 balls date lime balls raw 27.01.2023 0000000.00 en ar fr nl 000000.01 000000.00 000121.00 6300489.00 0000000.00 date lime dates folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 000000.01 0000000.00 000121.00 6300489.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "date lime date lime balls raw dates folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 000000.01 0000000.00 000121.00 6300489.00 06.02.2023 gb se fi dk de 000000.01 09.01.2023 gb ee lt lv ro 000000.00 16.08.2022 en cz sk hu hr fol000121.00 20.09.2024 6300489.00 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 02 balls date lime balls raw 06.02.2023 gb se fi dk de 000000.01 x marketing eksport 01 products gc 02 balls date lime balls raw 09.01.2023 gb ee lt lv ro 000000.00 x marketing eksport 01 products gc 02 balls date lime balls raw 16.08.2022 en cz sk hu hr fol000121.00 x marketing eksport 01 products gc 02 balls date lime balls raw 20.09.2024 6300489.00 x marketing eksport 01 products gc 02 balls date lime balls raw 27.01.2023 0000000.00 gb ar fr nl 000000.01 000000.00 000121.00 6300489.00 0000000.00 date lime dates folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 000000.01 0000000.00 000121.00 6300489.00",
       "authors": [
         "Krzysztof"
       ]
@@ -14370,7 +14305,7 @@
         "6300490",
         "6300624"
       ],
-      "search_blob": "date orange date orange balls raw dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 0000000.00 6300010.00 6300275.00 6300490.00 6300624.00 06.02.2023 en se fi dk de 0000000.00 en se fi dk de 09.01.2023 6300275.00 en ee lt lv ro 22.05.2023 6300010.00 en cz sk hu hr 27.01.2023 0000000.00 en ar fr nl doy 17.02.2025 6300624.00 sk hu hr doy 20.09.2024 6300490.00 en ar x marketing eksport 01 products gc 02 balls date orange balls raw 06.02.2023 en se fi dk de 0000000.00 en se fi dk de x marketing eksport 01 products gc 02 balls date orange balls raw 09.01.2023 6300275.00 en ee lt lv ro x marketing eksport 01 products gc 02 balls date orange balls raw 22.05.2023 6300010.00 en cz sk hu hr x marketing eksport 01 products gc 02 balls date orange balls raw 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 02 balls date orange balls raw doy 17.02.2025 6300624.00 sk hu hr x marketing eksport 01 products gc 02 balls date orange balls raw doy 20.09.2024 6300490.00 en ar 0000000.00 6300275.00 6300010.00 0000000.00 6300624.00 6300490.00 date orange dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 0000000.00 6300010.00 6300275.00 6300490.00 6300624.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "date orange date orange balls raw dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 0000000.00 6300010.00 6300275.00 6300490.00 6300624.00 06.02.2023 gb se fi dk de 0000000.00 gb se fi dk de 09.01.2023 6300275.00 gb ee lt lv ro 22.05.2023 6300010.00 gb cz sk hu hr 27.01.2023 0000000.00 gb ar fr nl doy 17.02.2025 6300624.00 sk hu hr doy 20.09.2024 6300490.00 gb ar x marketing eksport 01 products gc 02 balls date orange balls raw 06.02.2023 gb se fi dk de 0000000.00 gb se fi dk de x marketing eksport 01 products gc 02 balls date orange balls raw 09.01.2023 6300275.00 gb ee lt lv ro x marketing eksport 01 products gc 02 balls date orange balls raw 22.05.2023 6300010.00 gb cz sk hu hr x marketing eksport 01 products gc 02 balls date orange balls raw 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 02 balls date orange balls raw doy 17.02.2025 6300624.00 sk hu hr x marketing eksport 01 products gc 02 balls date orange balls raw doy 20.09.2024 6300490.00 gb ar 0000000.00 6300275.00 6300010.00 0000000.00 6300624.00 6300490.00 date orange dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 0000000.00 6300010.00 6300275.00 6300490.00 6300624.00",
       "authors": [
         "Krzysztof"
       ]
@@ -14417,7 +14352,7 @@
         "6300701",
         "630369"
       ],
-      "search_blob": "oats chocolate oats chocolate balls crispy doypack folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300272.00 6300443.00 6300477.00 6300701.00 630369.00 doy 05.07.2024 6300701 fol 04.07.2023 en de 630369 2 .00 fol 04.07.2023 en de 630369.00 fol 06.02.2023 en se fi dk de 000000.00 fol 09.01.2023 6300272.00 en ee lt lv ro fol 16.02.2024 6300443.00 en cz sk hu hr fol 20.09.2024 6300477.00 en ar 2 fol 27.01.2023 0000000.00 en ar fr nl x marketing eksport 01 products gc 02 balls oats chocolate balls crispy doy 05.07.2024 6300701 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 04.07.2023 en de 630369 2 .00 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 04.07.2023 en de 630369.00 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 06.02.2023 en se fi dk de 000000.00 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 09.01.2023 6300272.00 en ee lt lv ro x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 16.02.2024 6300443.00 en cz sk hu hr x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 20.09.2024 6300477.00 en ar 2 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 27.01.2023 0000000.00 en ar fr nl 6300701.00 630369.00 630369.00 000000.00 6300272.00 6300443.00 6300477.00 0000000.00 oats chocolate doypack folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300272.00 6300443.00 6300477.00 6300701.00 630369.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "oats chocolate oats chocolate balls crispy doypack folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300272.00 6300443.00 6300477.00 6300701.00 630369.00 doy 05.07.2024 6300701 fol 04.07.2023 gb de 630369 2 .00 fol 04.07.2023 gb de 630369.00 fol 06.02.2023 gb se fi dk de 000000.00 fol 09.01.2023 6300272.00 gb ee lt lv ro fol 16.02.2024 6300443.00 gb cz sk hu hr fol 20.09.2024 6300477.00 gb ar 2 fol 27.01.2023 0000000.00 gb ar fr nl x marketing eksport 01 products gc 02 balls oats chocolate balls crispy doy 05.07.2024 6300701 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 04.07.2023 gb de 630369 2 .00 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 04.07.2023 gb de 630369.00 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 06.02.2023 gb se fi dk de 000000.00 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 09.01.2023 6300272.00 gb ee lt lv ro x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 16.02.2024 6300443.00 gb cz sk hu hr x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 20.09.2024 6300477.00 gb ar 2 x marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 27.01.2023 0000000.00 gb ar fr nl 6300701.00 630369.00 630369.00 000000.00 6300272.00 6300443.00 6300477.00 0000000.00 oats chocolate doypack folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300272.00 6300443.00 6300477.00 6300701.00 630369.00",
       "authors": [
         "Krzysztof"
       ]
@@ -14452,7 +14387,7 @@
         "6300299",
         "6300502"
       ],
-      "search_blob": "balls balls plant based rekaw 000106.00 000165.00 6300299.00 6300502.00 sleeve 03.06.2023 6300502.00 sleeve 19.01.2023 6300299.00 sleeve 21.12.2022 kar000165.00 sleeve 28.09.2022 kar000106.00 x marketing eksport 01 products gc 03 plant based balls plant based sleeve 03.06.2023 6300502.00 x marketing eksport 01 products gc 03 plant based balls plant based sleeve 19.01.2023 6300299.00 x marketing eksport 01 products gc 03 plant based balls plant based sleeve 21.12.2022 kar000165.00 x marketing eksport 01 products gc 03 plant based balls plant based sleeve 28.09.2022 kar000106.00 6300502.00 6300299.00 000165.00 000106.00 balls rekaw 000106.00 000165.00 6300299.00 6300502.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "balls balls plant based rekaw 000106.00 000165.00 6300299.00 6300502.00 sleeve 03.06.2023 6300502.00 sleeve 19.01.2023 6300299.00 sleeve 21.12.2022 kar000165.00 sleeve 28.09.2022 kar000106.00 x marketing eksport 01 products gc 03 plant based balls plant based sleeve 03.06.2023 6300502.00 x marketing eksport 01 products gc 03 plant based balls plant based sleeve 19.01.2023 6300299.00 x marketing eksport 01 products gc 03 plant based balls plant based sleeve 21.12.2022 kar000165.00 x marketing eksport 01 products gc 03 plant based balls plant based sleeve 28.09.2022 kar000106.00 6300502.00 6300299.00 000165.00 000106.00 balls rekaw 000106.00 000165.00 6300299.00 6300502.00",
       "authors": []
     },
     {
@@ -14484,7 +14419,7 @@
         "6300295",
         "6300772"
       ],
-      "search_blob": "burger beef burger beef plant based burger rekaw 6300295.00 6300772.00 sleeve 12.01.2023 6300295.00 sleeve de 19.06.2026 6300772 x marketing eksport 01 products gc 03 plant based burger beef plant based sleeve 12.01.2023 6300295.00 x marketing eksport 01 products gc 03 plant based burger beef plant based sleeve de 19.06.2026 6300772 6300295.00 6300772.00 burger beef burger rekaw 6300295.00 6300772.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "burger beef burger beef plant based burger rekaw 6300295.00 6300772.00 sleeve 12.01.2023 6300295.00 sleeve de 19.06.2026 6300772 x marketing eksport 01 products gc 03 plant based burger beef plant based sleeve 12.01.2023 6300295.00 x marketing eksport 01 products gc 03 plant based burger beef plant based sleeve de 19.06.2026 6300772 6300295.00 6300772.00 burger beef burger rekaw 6300295.00 6300772.00",
       "authors": []
     },
     {
@@ -14552,7 +14487,7 @@
         "6300355",
         "6300579"
       ],
-      "search_blob": "burger chicken burger chicken plant based burger rekaw 000123.00 000161.00 6300294.00 6300355.00 6300579.00 sleeve 03.06.2023 6300355.00 sleeve 12.01.2023 6300294.00 sleeve 16.05.2023 6300355.00 sleeve 21.12.2022 kar000161.00 sleeve 29.08.2022 kar000123.00 wizualizacje 16.10.2024 6300579.00 cz x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 03.06.2023 6300355.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 12.01.2023 6300294.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 16.05.2023 6300355.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 21.12.2022 kar000161.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 29.08.2022 kar000123.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based wizualizacje 16.10.2024 6300579.00 cz 6300355.00 6300294.00 6300355.00 000161.00 000123.00 6300579.00 burger chicken burger rekaw 000123.00 000161.00 6300294.00 6300355.00 6300579.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "burger chicken burger chicken plant based burger rekaw 000123.00 000161.00 6300294.00 6300355.00 6300579.00 sleeve 03.06.2023 6300355.00 sleeve 12.01.2023 6300294.00 sleeve 16.05.2023 6300355.00 sleeve 21.12.2022 kar000161.00 sleeve 29.08.2022 kar000123.00 wizualizacje 16.10.2024 6300579.00 cz x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 03.06.2023 6300355.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 12.01.2023 6300294.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 16.05.2023 6300355.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 21.12.2022 kar000161.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 29.08.2022 kar000123.00 x marketing eksport 01 products gc 03 plant based burger chicken plant based wizualizacje 16.10.2024 6300579.00 cz 6300355.00 6300294.00 6300355.00 000161.00 000123.00 6300579.00 burger chicken burger rekaw 000123.00 000161.00 6300294.00 6300355.00 6300579.00",
       "authors": []
     },
     {
@@ -14594,7 +14529,7 @@
         "6300572",
         "6300773"
       ],
-      "search_blob": "burger burger plant based burger rekaw 000105.00 000160.00 6300293.00 6300354.00 6300514.00 6300572.00 6300773.00 sleeve 01.17.2025 6300572.00 sleeve 03.06.2024 6300354.00 sleeve 12.01.2023 6300293.00 sleeve 29.08.2022 kar000105.00 sleeve 29.12.2022 kar000160.00 sleeve 19.06.2026 de 6300773 wizualizacje 31.07.2024 6300514.00 cz x marketing eksport 01 products gc 03 plant based burger plant based sleeve 01.17.2025 6300572.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 03.06.2024 6300354.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 12.01.2023 6300293.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 29.08.2022 kar000105.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 29.12.2022 kar000160.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 19.06.2026 de 6300773 x marketing eksport 01 products gc 03 plant based burger plant based wizualizacje 31.07.2024 6300514.00 cz 6300572.00 6300354.00 6300293.00 000105.00 000160.00 6300773.00 6300514.00 burger burger rekaw 000105.00 000160.00 6300293.00 6300354.00 6300514.00 6300572.00 6300773.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "burger burger plant based burger rekaw 000105.00 000160.00 6300293.00 6300354.00 6300514.00 6300572.00 6300773.00 sleeve 01.17.2025 6300572.00 sleeve 03.06.2024 6300354.00 sleeve 12.01.2023 6300293.00 sleeve 29.08.2022 kar000105.00 sleeve 29.12.2022 kar000160.00 sleeve 19.06.2026 de 6300773 wizualizacje 31.07.2024 6300514.00 cz x marketing eksport 01 products gc 03 plant based burger plant based sleeve 01.17.2025 6300572.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 03.06.2024 6300354.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 12.01.2023 6300293.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 29.08.2022 kar000105.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 29.12.2022 kar000160.00 x marketing eksport 01 products gc 03 plant based burger plant based sleeve 19.06.2026 de 6300773 x marketing eksport 01 products gc 03 plant based burger plant based wizualizacje 31.07.2024 6300514.00 cz 6300572.00 6300354.00 6300293.00 000105.00 000160.00 6300773.00 6300514.00 burger burger rekaw 000105.00 000160.00 6300293.00 6300354.00 6300514.00 6300572.00 6300773.00",
       "authors": []
     },
     {
@@ -14720,7 +14655,7 @@
         "6300297",
         "6300356"
       ],
-      "search_blob": "gyros wheat gyros wheat plant based gyros rekaw 000107.00 000163.00 6300297.00 6300356.00 sleeve 03.06.2023 6300356.00 sleeve 12.01.2023 6300297.00 sleeve 16.05.2023 6300356.00 sleeve 21.12.2022 kar000163.00 sleeve 29.08.2022 kar000107.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 03.06.2023 6300356.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 12.01.2023 6300297.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 16.05.2023 6300356.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 21.12.2022 kar000163.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 29.08.2022 kar000107.00 6300356.00 6300297.00 6300356.00 000163.00 000107.00 gyros wheat gyros rekaw 000107.00 000163.00 6300297.00 6300356.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "gyros wheat gyros wheat plant based gyros rekaw 000107.00 000163.00 6300297.00 6300356.00 sleeve 03.06.2023 6300356.00 sleeve 12.01.2023 6300297.00 sleeve 16.05.2023 6300356.00 sleeve 21.12.2022 kar000163.00 sleeve 29.08.2022 kar000107.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 03.06.2023 6300356.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 12.01.2023 6300297.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 16.05.2023 6300356.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 21.12.2022 kar000163.00 x marketing eksport 01 products gc 03 plant based gyros wheat plant based sleeve 29.08.2022 kar000107.00 6300356.00 6300297.00 6300356.00 000163.00 000107.00 gyros wheat gyros rekaw 000107.00 000163.00 6300297.00 6300356.00",
       "authors": []
     },
     {
@@ -14756,7 +14691,7 @@
         "6300476",
         "6300656"
       ],
-      "search_blob": "minced minced plant based rekaw 000164.00 6300298.00 6300361.00 6300476.00 6300656.00 6300656.01 sleeve 01.07.2026 6300656.01 sleeve 05.06.2024 6300476.00 sleeve 13.01.2023 6300298.00 sleeve 21.12.2022 kar000164.00 sleeve 27.10.2023 6300361.00 sleeve 29.05.2025 6300656.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 01.07.2026 6300656.01 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 05.06.2024 6300476.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 13.01.2023 6300298.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 21.12.2022 kar000164.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 27.10.2023 6300361.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 29.05.2025 6300656.00 6300656.01 6300476.00 6300298.00 000164.00 6300361.00 6300656.00 minced rekaw 000164.00 6300298.00 6300361.00 6300476.00 6300656.00 6300656.01 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "minced minced plant based rekaw 000164.00 6300298.00 6300361.00 6300476.00 6300656.00 6300656.01 sleeve 01.07.2026 6300656.01 sleeve 05.06.2024 6300476.00 sleeve 13.01.2023 6300298.00 sleeve 21.12.2022 kar000164.00 sleeve 27.10.2023 6300361.00 sleeve 29.05.2025 6300656.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 01.07.2026 6300656.01 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 05.06.2024 6300476.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 13.01.2023 6300298.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 21.12.2022 kar000164.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 27.10.2023 6300361.00 x marketing eksport 01 products gc 03 plant based minced plant based sleeve 29.05.2025 6300656.00 6300656.01 6300476.00 6300298.00 000164.00 6300361.00 6300656.00 minced rekaw 000164.00 6300298.00 6300361.00 6300476.00 6300656.00 6300656.01",
       "authors": []
     },
     {
@@ -14794,7 +14729,7 @@
         "6300650",
         "6300771"
       ],
-      "search_blob": "nuggets nuggets plant based nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300771.00 nuggets xxl 08.05.2025 6300650.00 sleeve cz sk 16.01.2025 6300610.01 sleeve de 19.06.2025 6300771 x marketing eksport 01 products gc 03 plant based nuggets plant based nuggets xxl 08.05.2025 6300650.00 x marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 16.01.2025 6300610.01 x marketing eksport 01 products gc 03 plant based nuggets plant based sleeve de 19.06.2025 6300771 6300650.00 6300610.01 6300771.00 nuggets nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300771.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "nuggets nuggets plant based nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300771.00 nuggets xxl 08.05.2025 6300650.00 sleeve cz sk 16.01.2025 6300610.01 sleeve de 19.06.2025 6300771 x marketing eksport 01 products gc 03 plant based nuggets plant based nuggets xxl 08.05.2025 6300650.00 x marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 16.01.2025 6300610.01 x marketing eksport 01 products gc 03 plant based nuggets plant based sleeve de 19.06.2025 6300771 6300650.00 6300610.01 6300771.00 nuggets nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300771.00",
       "authors": [
         "Krzysztof"
       ]
@@ -14854,7 +14789,7 @@
         "000167",
         "6300292"
       ],
-      "search_blob": "rissoless rissoless plant based rekaw 000126.00 000167.00 6300292.00 sleeve 12.01.2023 6300292.00 sleeve 21.12.2022 kar000167.00 sleeve 29.08.2022 kar000126.00 x marketing eksport 01 products gc 03 plant based rissoless plant based sleeve 12.01.2023 6300292.00 x marketing eksport 01 products gc 03 plant based rissoless plant based sleeve 21.12.2022 kar000167.00 x marketing eksport 01 products gc 03 plant based rissoless plant based sleeve 29.08.2022 kar000126.00 6300292.00 000167.00 000126.00 rissoless rekaw 000126.00 000167.00 6300292.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "rissoless rissoless plant based rekaw 000126.00 000167.00 6300292.00 sleeve 12.01.2023 6300292.00 sleeve 21.12.2022 kar000167.00 sleeve 29.08.2022 kar000126.00 x marketing eksport 01 products gc 03 plant based rissoless plant based sleeve 12.01.2023 6300292.00 x marketing eksport 01 products gc 03 plant based rissoless plant based sleeve 21.12.2022 kar000167.00 x marketing eksport 01 products gc 03 plant based rissoless plant based sleeve 29.08.2022 kar000126.00 6300292.00 000167.00 000126.00 rissoless rekaw 000126.00 000167.00 6300292.00",
       "authors": []
     },
     {
@@ -14881,7 +14816,7 @@
       "index_bases": [
         "000151"
       ],
-      "search_blob": "sousages bbq sousages bbq plant based rekaw 000151.00 sleeve 08.11.2022 kar000151.00 x marketing eksport 01 products gc 03 plant based sousages bbq plant based sleeve 08.11.2022 kar000151.00 000151.00 sousages bbq rekaw 000151.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "sousages bbq sousages bbq plant based rekaw 000151.00 sleeve 08.11.2022 kar000151.00 x marketing eksport 01 products gc 03 plant based sousages bbq plant based sleeve 08.11.2022 kar000151.00 000151.00 sousages bbq rekaw 000151.00",
       "authors": []
     },
     {
@@ -14920,7 +14855,7 @@
         "6300357",
         "6300770"
       ],
-      "search_blob": "sousages spicy sousages spicy plant based rekaw sylwia sylwia zarychta sylwia zarychta 000124.00 000162.00 6300296.00 6300357.00 6300770.00 12.04.2026 6300xxxx de.00 sleeve 03.06.2023 6300357.00 sleeve 12.01.2023 6300296.00 sleeve 16.05.2024 6300357.00 sleeve 19.06.2026 6300770 sleeve 21.12.2022 kar000162.00 sleeve 29.08.2022 kar000124.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based 12.04.2026 6300xxxx de.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 03.06.2023 6300357.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 12.01.2023 6300296.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 16.05.2024 6300357.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 19.06.2026 6300770 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 21.12.2022 kar000162.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 29.08.2022 kar000124.00 6300357.00 6300296.00 6300357.00 6300770.00 000162.00 000124.00 sousages spicy rekaw sylwia sylwia zarychta sylwia zarychta 000124.00 000162.00 6300296.00 6300357.00 6300770.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "sousages spicy sousages spicy plant based rekaw sylwia sylwia zarychta sylwia zarychta 000124.00 000162.00 6300296.00 6300357.00 6300770.00 12.04.2026 6300xxxx de.00 sleeve 03.06.2023 6300357.00 sleeve 12.01.2023 6300296.00 sleeve 16.05.2024 6300357.00 sleeve 19.06.2026 6300770 sleeve 21.12.2022 kar000162.00 sleeve 29.08.2022 kar000124.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based 12.04.2026 6300xxxx de.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 03.06.2023 6300357.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 12.01.2023 6300296.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 16.05.2024 6300357.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 19.06.2026 6300770 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 21.12.2022 kar000162.00 x marketing eksport 01 products gc 03 plant based sousages spicy plant based sleeve 29.08.2022 kar000124.00 6300357.00 6300296.00 6300357.00 6300770.00 000162.00 000124.00 sousages spicy rekaw sylwia sylwia zarychta sylwia zarychta 000124.00 000162.00 6300296.00 6300357.00 6300770.00",
       "authors": [
         "Sylwia"
       ]
@@ -14953,7 +14888,7 @@
       "index_bases": [
         "6300662"
       ],
-      "search_blob": "sznycel sznycel plant based rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300662.00 sleeve 23.06.2025 6300662.00 x marketing eksport 01 products gc 03 plant based sznycel plant based sleeve 23.06.2025 6300662.00 6300662.00 sznycel rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300662.00 multijezyczny multijęzyczny multi wielojezykowy wielojęzykowy wiele jezykow wiele języków multilang multi-lang Multijęzyczny",
+      "search_blob": "sznycel sznycel plant based rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300662.00 sleeve 23.06.2025 6300662.00 x marketing eksport 01 products gc 03 plant based sznycel plant based sleeve 23.06.2025 6300662.00 6300662.00 sznycel rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300662.00",
       "authors": [
         "Krzysztof"
       ]

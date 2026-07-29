@@ -1,30 +1,67 @@
 {
   "version": 1,
-  "updated_at": "2026-07-20T15:30:59.013877+00:00",
+  "updated_at": "2026-07-28T18:55:56.000000+00:00",
   "assets": {
-    "br-005237": {
+    "M-SHOP405237-05-22": {
       "linked_product_ids": [],
       "linked_variant_ids": [
-        "br-005237",
-        "br-005238",
-        "br-005239",
-        "br-005240",
-        "br-005241",
-        "br-005242",
-        "br-005243"
+        "M-SHOP405237-05-22",
+        "M-SHOP405238-05-22",
+        "M-SHOP405239-04-22",
+        "M-SHOP405240-04-22",
+        "M-SHOP405241-04-22",
+        "M-SHOP405242-04-22",
+        "M-SHOP405243-04-22"
       ],
       "folder_group_id": "x:/marketing/- polska/08 - kamapanie/2026/przekąski/justtag - outdoor/gif/skompresowane",
       "updated_by": "krzysztof.wieczorek@kubara.pl"
     },
-    "br-003347": {
+    "M-IMG203347-02-26": {
       "linked_product_ids": [
         "czarna-porzeczka-owocowe",
         "malina-owocowe"
       ],
       "linked_variant_ids": [
-        "br-003347"
+        "M-IMG203347-02-26"
       ],
       "folder_group_id": "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/02 - slidery  kategorie główne",
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "M-SHOP405510-03-26": {
+      "linked_product_ids": [
+        "proteina-boosty",
+        "proteina-karmel-mct-funkcjonalny",
+        "proteina-banoffee-ig",
+        "proteina-karmel-z-mct-ig",
+        "proteina-lemon-cheesecake-ig",
+        "proteina-banoffee-krem-orzechowy",
+        "proteina-karmel-krem-orzechowy",
+        "mix-6x-mini-batoniki-mixy"
+      ],
+      "linked_variant_ids": [
+        "M-SHOP405510-03-26",
+        "M-IMG205857-03-26"
+      ],
+      "folder_group_id": "x:/marketing/- polska/07 - e-commerce/02 - kampanie e-commerce/blix - proteiny 06.2026 adinsert",
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "M-BAN334104-99-00": {
+      "linked_product_ids": [
+        "hazelnut-chocolate-date",
+        "oats-chocolate-balls-crispy",
+        "mix-12x-xmas-mixy",
+        "owies-czekolada-sniadanie"
+      ],
+      "linked_variant_ids": [],
+      "folder_group_id": "x:/marketing/-- archiwum --/99_inne/hubert_wymiana/strona goodcalories/assets/grafiki_produkt/en_balls_crunchy/v1",
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "M-SHOP404321-01-26": {
+      "linked_product_ids": [
+        "mix-6x-mini-batoniki-mixy"
+      ],
+      "linked_variant_ids": [],
+      "folder_group_id": "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/proteina - kartony  mini batoniki - super cena na start",
       "updated_by": "krzysztof.wieczorek@kubara.pl"
     }
   },
@@ -32,13 +69,13 @@
     "x:/marketing/- polska/08 - kamapanie/2026/przekąski/justtag - outdoor/gif/skompresowane": {
       "linked_product_ids": [],
       "linked_variant_ids": [
-        "br-005237",
-        "br-005238",
-        "br-005239",
-        "br-005240",
-        "br-005241",
-        "br-005242",
-        "br-005243"
+        "M-SHOP405237-05-22",
+        "M-SHOP405238-05-22",
+        "M-SHOP405239-04-22",
+        "M-SHOP405240-04-22",
+        "M-SHOP405241-04-22",
+        "M-SHOP405242-04-22",
+        "M-SHOP405243-04-22"
       ],
       "updated_by": "krzysztof.wieczorek@kubara.pl"
     },
@@ -48,8 +85,25 @@
         "malina-owocowe"
       ],
       "linked_variant_ids": [
-        "br-003347"
+        "M-IMG203347-02-26"
       ],
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "x:/marketing/-- archiwum --/99_inne/hubert_wymiana/strona goodcalories/assets/grafiki_produkt/en_balls_crunchy/v1": {
+      "linked_product_ids": [
+        "hazelnut-chocolate-date",
+        "oats-chocolate-balls-crispy",
+        "mix-12x-xmas-mixy",
+        "owies-czekolada-sniadanie"
+      ],
+      "linked_variant_ids": [],
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/proteina - kartony  mini batoniki - super cena na start": {
+      "linked_product_ids": [
+        "mix-6x-mini-batoniki-mixy"
+      ],
+      "linked_variant_ids": [],
       "updated_by": "krzysztof.wieczorek@kubara.pl"
     }
   }

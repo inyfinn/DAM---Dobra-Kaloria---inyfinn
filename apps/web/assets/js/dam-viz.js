@@ -281,6 +281,17 @@
       return !!v.is_latest;
     });
     var pool = latest.length ? latest : withViz;
+    pool.sort(function (a, b) {
+      var ad = revisionFolderDateScore(a);
+      var bd = revisionFolderDateScore(b);
+      if (ad !== bd) return bd - ad;
+      var al = a.is_latest ? 1 : 0;
+      var bl = b.is_latest ? 1 : 0;
+      if (al !== bl) return bl - al;
+      var at = a.thumb_url ? 1 : 0;
+      var bt = b.thumb_url ? 1 : 0;
+      return bt - at;
+    });
     var i;
     for (i = 0; i < pool.length; i++) {
       if (pool[i].thumb_url) return pool[i];
@@ -303,11 +314,187 @@
       var al = a.is_latest ? 1 : 0;
       var bl = b.is_latest ? 1 : 0;
       if (al !== bl) return bl - al;
+      var ad = revisionFolderDateScore(a);
+      var bd = revisionFolderDateScore(b);
+      if (ad !== bd) return bd - ad;
       var at = a.thumb_url ? 1 : 0;
       var bt = b.thumb_url ? 1 : 0;
       return bt - at;
     });
     return [hero].concat(rest);
+  }
+
+  function parseFolderDateScore(folderName) {
+    var s = String(folderName || "");
+    var m = s.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);
+    if (m) {
+      var y = parseInt(m[3], 10);
+      if (y < 100) y += 2000;
+      return y * 10000 + parseInt(m[2], 10) * 100 + parseInt(m[1], 10);
+    }
+    m = s.match(/\b(\d{1,2})[./-](\d{2})\b/);
+    if (m) return (2000 + parseInt(m[2], 10)) * 10000 + parseInt(m[1], 10) * 100;
+    return 0;
+  }
+
+  function revisionFolderDateScore(v) {
+    if (!v) return 0;
+    var folder = v.revision_folder || v.folder || "";
+    if (!folder && v.revision_path) {
+      folder = String(v.revision_path).replace(/\\/g, "/").split("/").pop() || "";
+    }
+    if (!folder && v.path) {
+      folder = (folderPathFromPicked(v.path) || "").split("/").pop() || "";
+    }
+    return parseFolderDateScore(folder);
+  }
+
+  function groupGridItems(items) {
+    if (showAll) return groupByVariant(items);
+    return groupByProduct(items);
+  }
+
+  function groupByVariant(items) {
+    var map = {};
+    var order = [];
+    (items || []).forEach(function (v) {
+      var pid = v.product_id || v.index_base || v.index || v.product_name || "_";
+      var vkey = productVariantKey(v) || "path|" + String(v.path || v.revision_folder || "");
+      var gid = pid + "::" + vkey;
+      if (!map[gid]) {
+        map[gid] = { pid: pid, variantKey: vkey, items: [], isVariantCard: true };
+        order.push(gid);
+      }
+      map[gid].items.push(v);
+    });
+    return order.map(function (gid) {
+      var g = map[gid];
+      g.items = orderGroupItemsForCard(g.items);
+      return g;
+    });
+  }
+
+  function productLevelDisplayName(productId, fallback) {
+    var meta = productId ? productMeta(productId) : null;
+    /* Product-level title = folder produktu z file-index, nie product_name z wiersza wiz (merged variant). */
+    var name = (meta && (meta.display_name || meta.name)) || fallback || productId || "Produkt";
+    if (window.DamLabels && typeof window.DamLabels.cleanProductDisplayName === "function") {
+      name = window.DamLabels.cleanProductDisplayName(name) || name;
+    }
+    return name;
+  }
+
+  /** Tytul modala = karta produktu (group.pid), nie product_name z merged linked folder. */
+  function modalProductIdForGroup(group, first) {
+    var rawPid = String((group && group.pid) || "").trim();
+    if (rawPid) {
+      var hostResolved = resolveBrandingProductId(rawPid, "");
+      if (hostResolved && productMeta(hostResolved)) return hostResolved;
+      var hostMeta = productMeta(rawPid);
+      var idxFromHost =
+        (hostMeta && (hostMeta.index || (hostMeta.index_bases && hostMeta.index_bases[0]))) || "";
+      var idx =
+        String(idxFromHost || "").split(".")[0] ||
+        displayIndex(first) ||
+        String((first && first.index_base) || "").split(".")[0] ||
+        "";
+      if (idx) {
+        var byIdx = resolveBrandingProductId("", idx);
+        if (byIdx && productMeta(byIdx)) return byIdx;
+      }
+      return hostResolved || rawPid;
+    }
+    var firstPid = String((first && first.product_id) || "").trim();
+    var resolved = firstPid ? resolveBrandingProductId(firstPid, "") : "";
+    if (resolved && productMeta(resolved)) return resolved;
+    var idx2 = displayIndex(first) || String((first && first.index_base) || "").split(".")[0] || "";
+    if (idx2) {
+      var byIdx2 = resolveBrandingProductId("", idx2);
+      if (byIdx2 && productMeta(byIdx2)) return byIdx2;
+    }
+    return resolved || firstPid;
+  }
+
+  function variantMetaLabel(v) {
+    if (!v) return "";
+    var parts = [];
+    var sub = v.subcategory_label || v.subcategory_slug || "";
+    if (sub) parts.push(sub);
+    var carrier = carrierHuman(v.carrier || "", v);
+    if (carrier && carrier !== sub) parts.push(carrier);
+    var pname = v.product_name || "";
+    if (pname && parts.join(" ").toLowerCase().indexOf(String(pname).toLowerCase()) < 0) {
+      parts.push(pname);
+    }
+    return parts.join(" ").trim();
+  }
+
+  function isPhantomProductIndex(idx) {
+    var base = String(idx || "")
+      .split(".")[0]
+      .replace(/\D/g, "");
+    if (!base) return true;
+    if (base === "00" || base === "000000" || base === "0000000" || base === "000103") return true;
+    return base.length < 6;
+  }
+
+  /** Indeksy wariantów z katalogu produktu (file-index), bez placeholderów 000000. */
+  function productCatalogVariantBases(productId) {
+    var meta = productId ? productMeta(productId) : null;
+    var bases = (meta && meta.index_bases) || [];
+    var out = [];
+    var seen = {};
+    bases.forEach(function (raw) {
+      var base = String(raw || "").split(".")[0];
+      if (!base || isPhantomProductIndex(base) || seen[base]) return;
+      seen[base] = true;
+      out.push(base);
+    });
+    if (!out.length) {
+      collectVariantIndexKeys((meta && meta.revisions) || []).forEach(function (idx) {
+        if (idx && !isPhantomProductIndex(idx) && !seen[idx]) {
+          seen[idx] = true;
+          out.push(idx);
+        }
+      });
+    }
+    return out;
+  }
+
+  function collectVariantIndexKeys(items) {
+    var keys = {};
+    (items || []).forEach(function (v) {
+      if (!v) return;
+      var idx = displayIndex(v) || String(v.index_base || v.index || "").split(".")[0];
+      if (idx && !isPhantomProductIndex(idx)) keys[idx] = true;
+    });
+    if (!Object.keys(keys).length) {
+      productVariantRepresentatives(items || []).forEach(function (rep) {
+        var idx = displayIndex(rep.v);
+        if (idx && !isPhantomProductIndex(idx)) keys[idx] = true;
+      });
+    }
+    return Object.keys(keys);
+  }
+
+  var VIZ_GRID_CARD_CSS_ID = "damVizGridCardCss";
+  function ensureVizGridCardCss() {
+    if (document.getElementById(VIZ_GRID_CARD_CSS_ID)) return;
+    var st = document.createElement("style");
+    st.id = VIZ_GRID_CARD_CSS_ID;
+    st.textContent =
+      ".dam-viz-thumb{position:relative;}" +
+      ".dam-viz-card__variant-badge{position:absolute;top:8px;right:8px;z-index:2;" +
+      "min-width:28px;height:22px;padding:0 7px;border-radius:999px;font-size:11px;font-weight:700;" +
+      "background:#7c3aed;color:#fff;display:inline-flex;align-items:center;justify-content:center;" +
+      "box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none;}" +
+      ".dam-viz-card__variants-tag{margin-top:4px;}" +
+      ".dam-viz-card__actions{margin-top:auto;width:100%;}" +
+      ".dam-viz-card__indexes-wrap{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}" +
+      ".dam-viz-card__indexes-wrap[hidden]{display:none!important;}" +
+      ".dam-viz-modal__variant-title{font-weight:700;font-size:13px;line-height:1.35;margin:0 0 4px;color:#464255;}" +
+      ".dam-viz-modal-close:hover{background:rgba(239,68,68,.14)!important;border-color:#fecaca!important;color:#b91c1c!important;}";
+    document.head.appendChild(st);
   }
 
   /* ------------------------------------------------------------------ */
@@ -604,20 +791,37 @@
     return !!(v && (v.in_archive || pathLooksArchive(v.revision_path || v.path)));
   }
 
+  /** Dedup key for expanded WIZKI rows (XL/L/S/FRONT…), NOT lang|index alone. */
+  function modalWizkiRowKey(row) {
+    if (!row) return "";
+    return [
+      row.product_id || "",
+      row.path || "",
+      row.file || row.name || "",
+      row.revision_path || "",
+      row.revision_folder || "",
+    ].join("|");
+  }
+
   function mergeLinkedVariantsIntoItems(items, productId) {
     if (!productId || !indexData || !items) return items;
     var linked = (vizFlags.linked_variants && vizFlags.linked_variants[productId]) || [];
     if (!linked.length) return items;
     var existingKeys = {};
     items.forEach(function (it) {
-      existingKeys[productVariantKey(it)] = true;
+      existingKeys[modalWizkiRowKey(it)] = true;
     });
     linked.forEach(function (folderPath) {
-      var hit = findRevisionByFolderPath(indexData, productId, folderPath);
+      var storePath =
+        typeof folderPath === "object" && folderPath
+          ? folderPath.revisionPath || folderPath.path || ""
+          : folderPath;
+      var hit = findRevisionByFolderPath(indexData, productId, storePath);
+      if (!hit && storePath) hit = findRevisionRecord("", storePath, "");
       if (!hit) return;
       var newRows = expandModalWizkiVariants(vizRowsFromRevision(indexData, hit.product, hit.revision));
       newRows.forEach(function (row) {
-        var k = productVariantKey(row);
+        var k = modalWizkiRowKey(row);
         if (k && existingKeys[k]) return;
         if (k) existingKeys[k] = true;
         items.push(row);
@@ -626,7 +830,8 @@
     return items;
   }
 
-  function persistLinkedVariant(productId, folderPath) {
+  function persistLinkedVariant(productId, folderPath, opts) {
+    opts = opts || {};
     if (!productId || !folderPath) return;
     vizFlags.linked_variants = vizFlags.linked_variants || {};
     var arr = vizFlags.linked_variants[productId] || [];
@@ -650,8 +855,59 @@
         return keysFromFolder.indexOf(k) < 0;
       });
     }
+    /* Lustro A↔B: folder źródłowy ↔ folder hosta (bez rekurencji). */
+    if (!opts.skipMirror && indexData) {
+      var hit = findRevisionByFolderPath(indexData, productId, storePath);
+      if (!hit) hit = findRevisionRecord("", storePath, "");
+      if (hit && hit.product && hit.product.id && hit.product.id !== productId) {
+        var hostProd = (indexData.products || []).find(function (p) {
+          return p && p.id === productId;
+        });
+        var mirrorPath = "";
+        if (hostProd && hostProd.revisions && hostProd.revisions.length) {
+          mirrorPath = hostProd.revisions[0].path || "";
+        }
+        if (mirrorPath) {
+          var otherId = hit.product.id;
+          var arr2 = vizFlags.linked_variants[otherId] || [];
+          var want2 = normFolderPath(mirrorPath);
+          if (
+            !arr2.some(function (p) {
+              return normFolderPath(p) === want2;
+            })
+          ) {
+            arr2.push(mirrorPath);
+            vizFlags.linked_variants[otherId] = arr2;
+          }
+        }
+      }
+    }
     persistVizFlags();
-    postVizFlag({ flags: vizFlags });
+    postVizFlag({ flags: vizFlags }).then(function (res) {
+      if (res && res.ok === false && typeof showToast === "function") {
+        showToast(
+          res.error === "login_required" || res.error === "admin_required"
+            ? "Zaloguj się jako admin, aby zapisać warianty produktu."
+            : "Zapis wariantów na serwerze nie powiódł się (lokalnie zapisano)."
+        );
+      }
+    });
+  }
+
+  /** Persist viz material suggestions (picker) — survives Ctrl+F5 via explicitMaterialIdSet. */
+  function persistLinkedMaterials(productId, assetIds) {
+    productId = String(productId || "").trim();
+    if (!productId) return;
+    vizFlags.linked_materials = vizFlags.linked_materials || {};
+    vizFlags.linked_materials[productId] = (assetIds || []).map(String).filter(Boolean);
+    persistVizFlags();
+    postVizFlag({ flags: vizFlags }).catch(function () {});
+  }
+
+  function getLinkedMaterialIds(productId) {
+    productId = String(productId || "").trim();
+    if (!productId) return [];
+    return ((vizFlags.linked_materials && vizFlags.linked_materials[productId]) || []).slice();
   }
 
   function revisionFolderFromItem(v) {
@@ -1064,44 +1320,155 @@
     return base || String((idx || 0) + 1);
   }
 
-  /** Wizki z file-index dla danej rewizji (jpg/png/webp/gif). */
-  function findRevisionWizki(productId, revisionPath, revisionFolder) {
-    if (!indexData || !Array.isArray(indexData.products)) return [];
-    var prod = null;
-    for (var i = 0; i < indexData.products.length; i++) {
-      if (indexData.products[i] && indexData.products[i].id === productId) {
-        prod = indexData.products[i];
-        break;
-      }
-    }
-    if (!prod) return [];
+  /** Dopasuj rewizję po ścieżce folderu (tail + parent walk) — jak findRevisionByFolderPath. */
+  function findRevisionInProduct(prod, revisionPath, revisionFolder) {
+    if (!prod) return null;
     var revs = prod.revisions || [];
-    function norm(p) {
-      return String(p || "")
-        .replace(/\\/g, "/")
-        .toLowerCase();
+    var seedRaw = folderPathFromPicked(revisionPath) || revisionPath || revisionFolder;
+    var seed = normFolderPath(seedRaw);
+    if (!seed) return null;
+    var seedTail = pathTailKey(seed);
+    var folderNorm = normFolderPath(revisionFolder || "");
+    var candidates = [];
+    var cur = seed;
+    for (var up = 0; up < 10 && cur; up++) {
+      candidates.push(cur);
+      var slash = cur.lastIndexOf("/");
+      if (slash <= 2) break;
+      cur = cur.slice(0, slash);
     }
-    var want = norm(revisionPath);
-    var rev = null;
-    for (var j = 0; j < revs.length; j++) {
-      var r = revs[j];
-      if (!r) continue;
-      if (want && norm(r.path) === want) {
-        rev = r;
+    if (folderNorm && candidates.indexOf(folderNorm) < 0) candidates.unshift(folderNorm);
+
+    function matchRev(want) {
+      var wantTail = pathTailKey(want);
+      var wantSeg = want.split("/").pop() || "";
+      for (var i = 0; i < revs.length; i++) {
+        var r = revs[i];
+        if (!r) continue;
+        var rPath = normFolderPath(r.path);
+        var rTail = pathTailKey(r.path);
+        if (rPath && rPath === want) return r;
+        if (rTail && wantTail && rTail === wantTail) return r;
+        if (rPath && want.indexOf(rPath + "/") === 0) return r;
+        if (rTail && wantTail && wantTail.indexOf(rTail + "/") === 0) return r;
+        if (r.folder && want.endsWith("/" + normFolderPath(r.folder))) return r;
+        var rSeg = rPath ? rPath.split("/").pop() : "";
+        if (
+          wantSeg &&
+          !/\.[a-z0-9]{2,5}$/i.test(wantSeg) &&
+          (String(r.folder || "").toLowerCase() === wantSeg || rSeg === wantSeg)
+        ) {
+          return r;
+        }
+      }
+      return null;
+    }
+
+    for (var c = 0; c < candidates.length; c++) {
+      var hit = matchRev(candidates[c]);
+      if (hit) return hit;
+    }
+    if (folderNorm) {
+      for (var j = 0; j < revs.length; j++) {
+        if (revs[j] && normFolderPath(revs[j].folder) === folderNorm) return revs[j];
+      }
+    }
+    return null;
+  }
+
+  function findRevisionRecord(productId, revisionPath, revisionFolder) {
+    if (!indexData || !Array.isArray(indexData.products)) return null;
+    var products = indexData.products || [];
+    var prod = null;
+    for (var i = 0; i < products.length; i++) {
+      if (products[i] && products[i].id === productId) {
+        prod = products[i];
         break;
       }
-      if (revisionFolder && r.folder === revisionFolder) {
-        rev = r;
-        break;
-      }
     }
+    var rev = findRevisionInProduct(prod, revisionPath, revisionFolder);
+    if (rev) return { product: prod, revision: rev };
+    for (var pi = 0; pi < products.length; pi++) {
+      var p2 = products[pi];
+      if (!p2 || (prod && p2.id === prod.id)) continue;
+      rev = findRevisionInProduct(p2, revisionPath, revisionFolder);
+      if (rev) return { product: p2, revision: rev };
+    }
+    return null;
+  }
+
+  /** Wizki z file-index dla danej rewizji (jpg/png/webp/gif). Szuka też w innych produktach (linked variant). */
+  function revisionRasterWizki(rev) {
     if (!rev) return [];
+    var raw = (rev.wizki && rev.wizki.length ? rev.wizki : rev.viz) || [];
     var imgs = [];
-    (rev.wizki || []).forEach(function (f) {
+    raw.forEach(function (f) {
       var ext = String((f && f.ext) || "").toLowerCase();
       if (["jpg", "jpeg", "png", "webp", "gif"].indexOf(ext) !== -1) imgs.push(f);
     });
     return imgs;
+  }
+
+  function revisionPathIsWizkiChild(pathStr) {
+    var p = String(pathStr || "").replace(/\\/g, "/");
+    return (
+      /\.[a-z0-9]{2,5}$/i.test(p) ||
+      /(?:^|[\\/])4\s*-\s*WIZKI(?:[\\/]|$)/i.test(p) ||
+      /[\\/]WIZKI[\\/]/i.test(p)
+    );
+  }
+
+  function findRevisionWizki(productId, revisionPath, revisionFolder) {
+    var folderStr = String(revisionFolder || "").trim();
+    var pathStr = String(revisionPath || "");
+    var hit = null;
+    /* revision_path czasem wskazuje plik w 4 - WIZKI — folder rewizji jest pewniejszy. */
+    if (folderStr && (revisionPathIsWizkiChild(pathStr) || !pathStr)) {
+      hit = findRevisionRecord(productId, folderStr, folderStr);
+    }
+    if (!hit || !hit.revision) {
+      hit = findRevisionRecord(productId, revisionPath, revisionFolder);
+    }
+    if (!hit || !hit.revision) return [];
+    return revisionRasterWizki(hit.revision);
+  }
+
+  /** KAR6X: FRONT i ENFACE to ta sama rodzina perspektywy w studiu jakości. */
+  function perspMatchesForStudio(statePersp, it) {
+    var ip = it && it.persp ? it.persp : "";
+    if (!statePersp || !ip || statePersp === ip) return true;
+    if (!isKar6xCarrier(it)) return statePersp === ip;
+    var frontFamily = { FRONT: 1, ENFACE: 1 };
+    return !!(frontFamily[statePersp] && frontFamily[ip]);
+  }
+
+  function studioGroupKey(it) {
+    var persp = it && it.persp ? it.persp : "?";
+    if (isKar6xCarrier(it) && (persp === "ENFACE" || persp === "FRONT")) persp = "FRONT";
+    return persp + "|" + (it.bg || "?");
+  }
+
+  /** Product IDs z folderów linked_variants (np. cynamonka na banoffee → cynamonka-nerkowcowy). */
+  function getLinkedVariantProductIds(productId) {
+    productId = String(productId || "").trim();
+    if (!productId || !indexData) return [];
+    var linked = (vizFlags.linked_variants && vizFlags.linked_variants[productId]) || [];
+    if (!linked.length) return [];
+    var out = [];
+    var seen = {};
+    linked.forEach(function (entry) {
+      var folderPath =
+        typeof entry === "object" && entry
+          ? entry.revisionPath || entry.path || entry.folder || ""
+          : entry;
+      if (!folderPath) return;
+      var hit = findRevisionByFolderPath(indexData, productId, folderPath);
+      if (!hit) hit = findRevisionRecord("", folderPath, "");
+      if (!hit || !hit.product || !hit.product.id || seen[hit.product.id]) return;
+      seen[hit.product.id] = true;
+      out.push(hit.product.id);
+    });
+    return out;
   }
 
   /**
@@ -1125,6 +1492,13 @@
         "";
     }
     if (!v.size && DL && typeof DL.vizSize === "function") v.size = DL.vizSize(name) || "";
+    if (!v.size && name) {
+      var nm = String(name).toUpperCase();
+      if (nm.indexOf("S-SKLEP") >= 0 || nm.indexOf("S SKLEP") >= 0) v.size = "S-SKLEP";
+      else if (nm.indexOf("-XL") >= 0 || nm.indexOf("_XL") >= 0) v.size = "XL";
+      else if (nm.indexOf("-L") >= 0 || nm.indexOf("_L") >= 0) v.size = "L";
+      else if (nm.indexOf("-S") >= 0 || nm.indexOf("_S") >= 0) v.size = "S";
+    }
     return v;
   }
 
@@ -1139,9 +1513,23 @@
       }
       wizki.forEach(function (f, fi) {
         var copy = Object.assign({}, base);
+        var rec = findRevisionRecord(
+          base.product_id,
+          base.revision_folder || base.revision_path,
+          base.revision_folder
+        );
+        if (rec && rec.product) {
+          copy.product_id = rec.product.id;
+          copy.revision_path = rec.revision.path || copy.revision_path;
+          copy.revision_folder = rec.revision.folder || copy.revision_folder;
+        }
         copy.path = f.path || f.rel || base.path;
         copy.file = f.name || "";
         copy.name = f.name || "";
+        copy.size = "";
+        copy.persp = "";
+        copy.perspective = "";
+        copy.bg = "";
         copy.viz_file_label = shortVizFileLabel(f.name, fi);
         /* Kazdy plik = wlasny podglad (bridge /media), zeby strip nie pokazywal 1x tego samego thumb. */
         copy.thumb_url = mediaPreviewUrl(copy.path) || base.thumb_url || "";
@@ -1222,8 +1610,8 @@
     return (
       '<div class="dam-media-preview__assoc dam-media-preview__assoc--variants-only dam-viz-modal__product-variants">' +
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--variants">' +
-      '<div class="dam-media-preview__assoc-label-row dam-viz-modal__assoc-label-row">' +
-      '<span class="dam-media-preview__assoc-label">Warianty produktu</span>' +
+      '<div class="dam-viz-modal__variant-head">' +
+      '<span class="dam-media-preview__assoc-label" data-dam-tip="Zaznacz wariant, aby poznać szczegóły. Odznacz wariant klikając ponownie, aby zobaczyć szczegóły całego produktu.">Warianty produktu</span>' +
       '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="variants" data-dam-tip="Dodaj lub edytuj warianty produktu (indeks / jezyk)">' +
       '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj/Edytuj warianty</span></button>' +
       "</div>" +
@@ -1331,10 +1719,12 @@
       });
     }
     function paintActive() {
+      var inProductView =
+        uxExtras && typeof uxExtras.isProductView === "function" && uxExtras.isProductView();
       var active = items[getActiveIdx()] || items[0];
       var activeKey = productVariantKey(active);
       orderedButtons().forEach(function (btn) {
-        var on = (btn.getAttribute("data-variant-key") || "") === activeKey;
+        var on = !inProductView && (btn.getAttribute("data-variant-key") || "") === activeKey;
         btn.classList.toggle("is-active", on);
         btn.setAttribute("aria-selected", on ? "true" : "false");
       });
@@ -1418,16 +1808,41 @@
           selected = {};
           for (var p = from; p <= to; p++) selected[btns[p].getAttribute("data-vidx")] = true;
           if (anchorKey == null) anchorKey = key;
+          selectFn(i);
         } else if (e.ctrlKey || e.metaKey) {
           if (selected[key]) delete selected[key];
           else selected[key] = true;
           anchorKey = key;
+          selectFn(i);
         } else {
+          var curIdx = getActiveIdx();
+          var curKey = productVariantKey(items[curIdx]);
+          var clickedKey = productVariantKey(items[i]);
+          var inPv =
+            uxExtras && typeof uxExtras.isProductView === "function" && uxExtras.isProductView();
+          if (
+            !inPv &&
+            curIdx === i &&
+            clickedKey &&
+            curKey === clickedKey &&
+            uxExtras &&
+            typeof uxExtras.enterProductView === "function"
+          ) {
+            uxExtras.enterProductView();
+            selected = {};
+            anchorKey = null;
+            paintActive();
+            paintSelection();
+            return;
+          }
           selected = {};
           selected[key] = true;
           anchorKey = key;
+          if (uxExtras && typeof uxExtras.leaveProductView === "function") {
+            uxExtras.leaveProductView();
+          }
+          selectFn(i);
         }
-        selectFn(i);
         paintActive();
         paintSelection();
       });
@@ -1552,7 +1967,7 @@
       items.forEach(function (it, i) {
         if (productVariantKey(it) !== variantKey) return;
         if (state.bg && it.bg && it.bg !== state.bg) return;
-        if (state.persp && it.persp && it.persp !== state.persp) return;
+        if (state.persp && it.persp && !perspMatchesForStudio(state.persp, it)) return;
         if (state.size && it.size && it.size !== state.size) return;
         var sc = 0;
         if (state.bg && it.bg === state.bg) sc += 8;
@@ -1605,8 +2020,7 @@
       );
       var sizes = orderedSizes(
         uniqueKeys(function (it) {
-          if (state.bg && it.bg && it.bg !== state.bg) return "";
-          if (state.persp && it.persp && it.persp !== state.persp) return "";
+          if (state.persp && it.persp && !perspMatchesForStudio(state.persp, it)) return "";
           return it.size;
         })
       );
@@ -1667,7 +2081,7 @@
         var gOrder = [];
         items.forEach(function (it, i) {
           if (!inActiveProductVariant(it)) return;
-          var gk = (it.persp || "?") + "|" + (it.bg || "?");
+          var gk = studioGroupKey(it);
           if (!groups[gk]) {
             groups[gk] = [];
             gOrder.push(gk);
@@ -2088,9 +2502,18 @@
           local.linked_variants && typeof local.linked_variants === "object" ? local.linked_variants : {},
         unlinked_variants:
           local.unlinked_variants && typeof local.unlinked_variants === "object" ? local.unlinked_variants : {},
+        linked_materials:
+          local.linked_materials && typeof local.linked_materials === "object" ? local.linked_materials : {},
       };
     } catch (e) {
-      vizFlags = { demo: {}, hidden: {}, manual: [], linked_variants: {}, unlinked_variants: {} };
+      vizFlags = {
+        demo: {},
+        hidden: {},
+        manual: [],
+        linked_variants: {},
+        unlinked_variants: {},
+        linked_materials: {},
+      };
     }
   }
 
@@ -2136,16 +2559,30 @@
   }
 
   function postVizFlag(payload) {
+    var headers = { "Content-Type": "application/json", Accept: "application/json" };
+    if (window.DamApi && typeof window.DamApi.authHeaders === "function") {
+      var ah = window.DamApi.authHeaders();
+      if (ah && ah.Authorization) headers.Authorization = ah.Authorization;
+    }
     return fetch(bridgeBase() + "/viz-flag", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: headers,
       body: JSON.stringify(payload || {}),
     })
       .then(function (r) {
-        return r.json();
+        return r.json().then(function (data) {
+          if (!r.ok || !data || data.ok === false) {
+            return {
+              ok: false,
+              error: (data && data.error) || "viz_flag_save_failed",
+              _http: r.status,
+            };
+          }
+          return data;
+        });
       })
       .catch(function () {
-        return { ok: false };
+        return { ok: false, error: "network" };
       });
   }
 
@@ -2280,7 +2717,8 @@
     return copy;
   }
 
-  function openProductModal(group) {
+  function openProductModal(group, opts) {
+    opts = opts || {};
     var existing = document.getElementById("damVizModal");
     if (existing) existing.remove();
 
@@ -2288,11 +2726,23 @@
     var items = orderGroupItemsForCard(buildModalItems(group));
     mergeLinkedVariantsIntoItems(items, (group && group.pid) || "");
     items = filterUnlinkedVariants(items, (group && group.pid) || "");
+    global._damVizLastModalItems = items.length;
     var first = pickCardHero(items) || items[0];
     if (!first) return;
-    /* Aktywny chip = hero z wizka (nie pierwsza rewizja bez pliku). */
+    var productViewMode = !opts.initialVariantKey;
     var activeIdx = Math.max(0, items.indexOf(first));
-    var productName = first.product_name || first.product_id || "Produkt";
+    if (opts.initialVariantKey) {
+      items.some(function (it, idx) {
+        if (productVariantKey(it) === opts.initialVariantKey) {
+          activeIdx = idx;
+          productViewMode = false;
+          return true;
+        }
+        return false;
+      });
+    }
+    var modalProductId = modalProductIdForGroup(group, first);
+    var productName = productLevelDisplayName(modalProductId, null);
     var brand = first.brand || "DK";
     var syEnabled = localStorage.getItem("dam_synology_enabled") !== "false";
     var admin = isAdminMode();
@@ -2450,7 +2900,11 @@
           '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj/Edytuj sugestie</span></button>'
         : "") +
       "</div>" +
-      '<div class="dam-media-preview__assoc-grid" id="damVizModalAssoc" role="list"></div></div>';
+      '<div class="dam-media-preview__assoc-grid" id="damVizModalAssoc" role="list"></div>' +
+      '<div class="dam-assoc-pane-bottom-stack" id="damVizModalAssocPaneBottom">' +
+      '<div class="dam-media-preview__elementy" id="damVizModalElementyHost" hidden></div>' +
+      '<div class="dam-media-preview__resizer-wrap" id="damVizModalResizerHost" hidden></div>' +
+      "</div></div>";
     var actionsHtml =
       '<div class="dam-viz-modal__actions">' +
       '<div class="dam-viz-modal__actions-main">' +
@@ -2500,7 +2954,7 @@
       modalBadges +
       "</div></div>" +
       '<div class="dam-viz-modal__meta-block dam-viz-modal__meta-block--title">' +
-      '<h4 class="dam-viz-modal__title">' +
+      '<h4 class="dam-viz-modal__title" id="damVizModalTitle">' +
       esc(productName) +
       (window.DamLabels && typeof window.DamLabels.productNamePlMarkup === "function"
         ? window.DamLabels.productNamePlMarkup(productName, first.brand || brand, esc)
@@ -2524,14 +2978,16 @@
       '<div class="dam-viz-modal__filemeta" id="damVizModalFileMeta">' +
       (function () {
         var fname = "";
+        var pathish = first.path || first.file || first.revision_path || "";
         if (window.DamPaths && typeof window.DamPaths.basename === "function") {
-          fname = window.DamPaths.basename(first.path || "") || "";
+          fname = window.DamPaths.basename(pathish) || "";
         } else {
-          var n = String(first.path || "").replace(/\\/g, "/");
+          var n = String(pathish).replace(/\\/g, "/");
           var i = n.lastIndexOf("/");
           fname = i >= 0 ? n.slice(i + 1) : n;
         }
         if (!fname && first.name) fname = String(first.name);
+        if (!fname && first.file) fname = String(first.file);
         var langBit0 = "";
         if (first.lang_unknown || first.lang === "?" || first.lang === "unknown") {
           langBit0 = " · ?";
@@ -2548,8 +3004,9 @@
             ? " Shift+klik: zaproponuj zmiane typu nosnika (zapis natychmiastowy)."
             : " Shift+klik: zaproponuj zmiane typu nosnika.");
         return (
-          '<div class="dam-viz-modal__meta-line">' +
+          '<div class="dam-viz-modal__meta-line dam-viz-modal__meta-line--filename">' +
           '<span class="dam-viz-modal__meta-k">Nazwa pliku</span>' +
+          '<div class="dam-viz-modal__meta-v dam-viz-modal__meta-v--filename">' +
           (fname
             ? '<p class="dam-viz-modal__filename" id="damVizModalFilename" title="' +
               esc(fname) +
@@ -2557,7 +3014,7 @@
               esc(fname) +
               "</p>"
             : '<p class="dam-viz-modal__filename" id="damVizModalFilename" hidden></p>') +
-          "</div>" +
+          "</div></div>" +
           '<div class="dam-viz-modal__meta-line">' +
           '<span class="dam-viz-modal__meta-k">Typ pliku</span>' +
           '<p class="dam-viz-modal__carrier dam-viz-modal__carrier--editable" id="damVizModalMeta" role="button" tabindex="0" data-dam-tip="' +
@@ -2583,22 +3040,15 @@
     var initialHeroSrc = heroMediaUrl(first);
     var vizNavPrev =
       items.length > 1
-        ? '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizModalPrev" aria-label="Poprzedni" title="Poprzedni" data-dam-tip="Poprzedni plik (←)"><i class="uil uil-angle-left"></i></button>'
+        ? '<button type="button" class="dam-viz-modal__nav-btn" id="damVizModalPrev" aria-label="Poprzedni" title="Poprzedni" data-dam-tip="Poprzedni plik (←)"><i class="uil uil-angle-left"></i></button>'
         : "";
     var vizNavNext =
       items.length > 1
-        ? '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizModalNext" aria-label="Następny" title="Następny" data-dam-tip="Następny plik (→)"><i class="uil uil-angle-right"></i></button>'
+        ? '<button type="button" class="dam-viz-modal__nav-btn" id="damVizModalNext" aria-label="Następny" title="Następny" data-dam-tip="Następny plik (→)"><i class="uil uil-angle-right"></i></button>'
         : "";
     var thumbHtml =
-      '<div class="dam-viz-modal__thumb">' +
-      '<div class="dam-viz-modal__zoom" role="group" aria-label="Przybliżenie">' +
-      vizNavPrev +
-      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomOut" aria-label="Pomniejsz" title="Pomniejsz" data-dam-tip="Pomniejsz (CTRL/ALT+scroll)"><i class="uil uil-search-minus"></i></button>' +
-      '<span class="dam-viz-modal__zoom-label" id="damVizZoomLabel">100%</span>' +
-      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomIn" aria-label="Powiększ" title="Powiększ" data-dam-tip="Powiększ (CTRL/ALT+scroll)"><i class="uil uil-search-plus"></i></button>' +
-      '<button type="button" class="dam-viz-modal__zoom-btn" id="damVizZoomReset" aria-label="Reset" title="100%" data-dam-tip="Reset zoom i pozycji"><i class="uil uil-search"></i></button>' +
-      vizNavNext +
-      "</div>" +
+      '<div class="dam-viz-modal__thumb dam-viz-modal__thumb--panzoom" data-dam-tip="Scroll: powiększ/zmniejsz. Przybliżone: przeciągnij obraz.">' +
+      (items.length > 1 ? '<div class="dam-viz-modal__nav">' + vizNavPrev + vizNavNext + "</div>" : "") +
       (initialHeroSrc
         ? '<img id="damVizModalHero" src="' +
           esc(initialHeroSrc) +
@@ -2608,6 +3058,7 @@
           PLACEHOLDER_SVG.replace(/'/g, "%27") +
           '\'">'
         : '<div class="dam-viz-modal__nothumb"><i class="uil uil-image"></i></div>') +
+      '<div class="dam-viz-modal__thumb-hint" aria-hidden="true"><span>Powiększ · przesuń</span></div>' +
       "</div>";
     /* PI viz.assoc_no_visualization_loop: 2-col — lewa hero+meta, prawa skojarzenia.
        Actions = sibling under __main (not inside scrollable __body) so bar stays above
@@ -2635,21 +3086,47 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=vizCloseFix20260724d";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=5.0.64";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=vizCloseFix20260724d";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=5.0.64";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
     var modal = document.getElementById("damVizModal");
+    var previewNavCtrl = null;
+    if (window.DamModalShared && typeof window.DamModalShared.bindPreviewNav === "function") {
+      previewNavCtrl = window.DamModalShared.bindPreviewNav({
+        modalRoot: modal,
+        closeBtnId: "damVizModalClose",
+        onNavigate: function (state) {
+          if (!state) return;
+          if (state.kind === "variant" && typeof state.idx === "number") {
+            selectVariant(state.idx, { skipHistory: true });
+          } else if (typeof state._mpRestore === "function") {
+            state._mpRestore();
+          }
+        },
+        onUp: function () {
+          var v = items[activeIdx] || first;
+          var p = v && (v.revision_path || v.path || "");
+          if (!p) return;
+          var dir = folderDirFromPath(p);
+          if (window.DamPaths && typeof window.DamPaths.openFolderInExplorer === "function") {
+            window.DamPaths.openFolderInExplorer(dir);
+          }
+        },
+        onRefresh: function () {
+          refreshLinkedForView();
+          if (typeof refreshModalBadgesAndAdmin === "function") refreshModalBadgesAndAdmin();
+        },
+      });
+      modal._damPreviewNavCtrl = previewNavCtrl;
+    }
     var vizProductCtx = {
-      id: resolveBrandingProductId(
-        first.product_id || "",
-        displayIndex(first) || first.index_base || ""
-      ),
+      id: modalProductId,
       name: productName,
       index: displayIndex(first) || first.index_base || "",
       revision_path: first.revision_path || "",
@@ -2658,7 +3135,14 @@
     if (window.DamAssocEdit && typeof window.DamAssocEdit.seedMaterialsCtx === "function") {
       window.DamAssocEdit.seedMaterialsCtx(modal, {
         productContext: vizProductCtx,
-        onRefresh: function () {
+        onRefresh: function (payload) {
+          if (
+            window.DamMediaPreview &&
+            typeof window.DamMediaPreview.refreshLinkedAssetsAfterEdit === "function"
+          ) {
+            window.DamMediaPreview.refreshLinkedAssetsAfterEdit(payload);
+            return;
+          }
           if (
             window.DamMediaPreview &&
             typeof window.DamMediaPreview.renderLinkedAssetsInto === "function"
@@ -2864,6 +3348,9 @@
       var fresh = tmp.querySelector(".dam-viz-modal__product-variants");
       if (!fresh) return;
       wrap.innerHTML = fresh.innerHTML;
+      wrap.querySelectorAll(".dam-viz-modal__variant-hint").forEach(function (el) {
+        el.remove();
+      });
       variantStripCtrl = bindProductVariantStrip(modal, items, function () {
         return activeIdx;
       }, selectVariant, variantUxExtras);
@@ -2929,6 +3416,12 @@
     function mergeProductsFromVariantPicker(payload) {
       payload = payload || [];
       var picks = Array.isArray(payload) ? payload : payload.productIds || [];
+      if (
+        window.DamAssocEdit &&
+        typeof window.DamAssocEdit.expandPicksToAllProductRevisions === "function"
+      ) {
+        picks = window.DamAssocEdit.expandPicksToAllProductRevisions(picks);
+      }
       if (!picks.length) {
         showToast("Brak wybranych wariantów.");
         return;
@@ -2973,7 +3466,9 @@
           return p && p.id === selPid;
         });
         if (!prod || !prod.revisions || !prod.revisions.length) return;
-        applyHit({ product: prod, revision: prod.revisions[0] }, prod.revisions[0].path || "");
+        (prod.revisions || []).forEach(function (rev) {
+          applyHit({ product: prod, revision: rev }, rev.path || "");
+        });
       });
       if (!added) {
         showToast("Brak nowych wariantow do dodania.");
@@ -3087,6 +3582,31 @@
     }
 
     var variantUxExtras = {
+      isProductView: function () {
+        return !!productViewMode;
+      },
+      enterProductView: function () {
+        productViewMode = true;
+        syncModalTitleForVariant(null);
+        refreshLinkedForView();
+        refreshModalBadgesAndAdmin();
+        updateVariantTitleLine(null);
+        var fnameEl = document.getElementById("damVizModalFilename");
+        if (fnameEl) {
+          fnameEl.textContent = "";
+          fnameEl.hidden = true;
+          fnameEl.removeAttribute("title");
+        }
+        if (variantStripCtrl && typeof variantStripCtrl.sync === "function") {
+          variantStripCtrl.sync();
+        }
+      },
+      leaveProductView: function () {
+        productViewMode = false;
+        var v = items[activeIdx] || first;
+        syncVizModalFilename(v);
+        updateVariantTitleLine(v);
+      },
       onRefresh: function (payload) {
         if (payload && payload.productIds) {
           mergeProductsFromVariantPicker(payload.productIds);
@@ -3125,7 +3645,114 @@
       },
     };
 
-    function selectVariant(idx) {
+    function basenameForVizItem(v) {
+      if (!v) return "";
+      var pathish = v.path || v.file || v.revision_path || "";
+      var fname = "";
+      if (window.DamPaths && typeof window.DamPaths.basename === "function") {
+        fname = window.DamPaths.basename(pathish) || "";
+      } else {
+        var nPath = String(pathish).replace(/\\/g, "/");
+        var slash = nPath.lastIndexOf("/");
+        fname = slash >= 0 ? nPath.slice(slash + 1) : nPath;
+      }
+      if (!fname && v.name) fname = String(v.name);
+      if (!fname && v.file) fname = String(v.file);
+      return fname;
+    }
+
+    function syncModalTitleForVariant(v) {
+      var titleEl = document.getElementById("damVizModalTitle");
+      if (!titleEl) return;
+      /* Host card (group.pid / modalProductId) — never linked variant product_id/product_name. */
+      var hostPid = String(modalProductId || "").trim();
+      var name = productLevelDisplayName(hostPid, productName);
+      var plHtml =
+        window.DamLabels && typeof window.DamLabels.productNamePlMarkup === "function"
+          ? window.DamLabels.productNamePlMarkup(name, (v && v.brand) || brand, esc)
+          : "";
+      titleEl.innerHTML = esc(name) + plHtml;
+    }
+
+    function syncVizModalFilename(v) {
+      var fnameEl = document.getElementById("damVizModalFilename");
+      if (productViewMode) {
+        if (fnameEl) {
+          fnameEl.textContent = "";
+          fnameEl.hidden = true;
+          fnameEl.removeAttribute("title");
+        }
+        return;
+      }
+      var fname = basenameForVizItem(v);
+      if (fnameEl) {
+        fnameEl.textContent = fname || "";
+        fnameEl.hidden = !fname;
+        if (fname) fnameEl.setAttribute("title", fname);
+        else fnameEl.removeAttribute("title");
+        return;
+      }
+      if (!fname) return;
+      var meta = document.getElementById("damVizModalMeta");
+      if (!meta || !meta.parentNode) return;
+      var created = document.createElement("p");
+      created.className = "dam-viz-modal__filename";
+      created.id = "damVizModalFilename";
+      created.textContent = fname;
+      created.setAttribute("title", fname);
+      meta.parentNode.insertBefore(created, meta);
+    }
+
+    function updateVariantTitleLine(v) {
+      var el = document.getElementById("damVizModalVariantTitle");
+      if (!el) return;
+      if (!v || productViewMode) {
+        el.hidden = true;
+        el.textContent = "";
+        el.removeAttribute("title");
+        return;
+      }
+      var label = variantMetaLabel(v);
+      if (!label) {
+        el.hidden = true;
+        el.textContent = "";
+        el.removeAttribute("title");
+        return;
+      }
+      el.textContent = label;
+      el.setAttribute("title", label);
+      el.hidden = false;
+    }
+
+    function refreshLinkedForView() {
+      var v = productViewMode ? first : items[activeIdx] || first;
+      vizProductCtx.index = productViewMode
+        ? ""
+        : displayIndex(v) || v.index_base || "";
+      vizProductCtx.revision_path = productViewMode
+        ? first.revision_path || ""
+        : v.revision_path || v.path || "";
+      vizProductCtx.variant_key = productViewMode ? "" : productVariantKey(v);
+      if (
+        window.DamMediaPreview &&
+        typeof window.DamMediaPreview.renderLinkedAssetsInto === "function"
+      ) {
+        window.DamMediaPreview.renderLinkedAssetsInto(
+          document.getElementById("damVizModalAssoc"),
+          document.getElementById("damVizModalAssocLabel"),
+          vizProductCtx
+        );
+      }
+    }
+
+    function pushVizVariantNav(idx) {
+      if (!previewNavCtrl || typeof previewNavCtrl.push !== "function") return;
+      previewNavCtrl.push({ key: "variant:" + idx, kind: "variant", idx: idx });
+    }
+
+    function selectVariant(idx, navOpts) {
+      navOpts = navOpts || {};
+      productViewMode = false;
       activeIdx = idx;
       var v = items[idx];
       if (!v) return;
@@ -3158,29 +3785,8 @@
           (idxShow ? " · Indeks " + idxShow : "") +
           langBit;
       }
-      /* Update muted filename line on variant switch */
-      var fnameEl = document.getElementById("damVizModalFilename");
-      var fname = "";
-      if (window.DamPaths && typeof window.DamPaths.basename === "function") {
-        fname = window.DamPaths.basename(v.path || "") || "";
-      } else {
-        var nPath = String(v.path || "").replace(/\\/g, "/");
-        var slash = nPath.lastIndexOf("/");
-        fname = slash >= 0 ? nPath.slice(slash + 1) : nPath;
-      }
-      if (!fname && v.name) fname = String(v.name);
-      if (fnameEl) {
-        fnameEl.textContent = fname || "";
-        fnameEl.hidden = !fname;
-        if (fname) fnameEl.setAttribute("title", fname);
-      } else if (fname && meta && meta.parentNode) {
-        var created = document.createElement("p");
-        created.className = "dam-viz-modal__filename";
-        created.id = "damVizModalFilename";
-        created.textContent = fname;
-        created.setAttribute("title", fname);
-        meta.parentNode.insertBefore(created, meta);
-      }
+      syncVizModalFilename(v);
+      syncModalTitleForVariant(v);
       var idChipUpd = document.getElementById("damVizModalAssetId");
       if (idChipUpd) {
         var freshId = vizModalMarketingId(v);
@@ -3206,8 +3812,13 @@
         refreshModalBadgesAndAdmin();
       }
       syncFilePathLine(v);
+      updateVariantTitleLine(v);
+      refreshLinkedForView();
       if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
+      if (!navOpts.skipHistory) pushVizVariantNav(idx);
     }
+
+    if (previewNavCtrl) pushVizVariantNav(activeIdx);
 
     variantStripCtrl = bindProductVariantStrip(
       modal,
@@ -3227,23 +3838,19 @@
       selectVariant
     );
 
-    var vizZoomBar = thumbStage && thumbStage.querySelector(".dam-viz-modal__zoom");
+    var vizZoomBar = null;
     if (shared && typeof shared.bindZoom === "function") {
       zoomCtrl = shared.bindZoom({
         thumbStage: thumbStage,
-        labelEl: document.getElementById("damVizZoomLabel"),
-        zoomBar: vizZoomBar,
-        zoomInBtn: document.getElementById("damVizZoomIn"),
-        zoomOutBtn: document.getElementById("damVizZoomOut"),
-        zoomResetBtn: document.getElementById("damVizZoomReset"),
+        labelEl: null,
+        zoomBar: null,
+        zoomInBtn: null,
+        zoomOutBtn: null,
+        zoomResetBtn: null,
         getHero: function () {
           return document.getElementById("damVizModalHero");
         },
       });
-    }
-    /* Parity with Explorer #damMediaPreview: zoom pill docks / hides off the thumb. */
-    if (shared && typeof shared.initZoomDock === "function") {
-      shared.initZoomDock(thumbStage, vizZoomBar);
     }
     if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
 
@@ -3672,6 +4279,11 @@
       });
     }
     syncFilePathLine(first);
+    if (productViewMode && typeof variantUxExtras.enterProductView === "function") {
+      variantUxExtras.enterProductView();
+    } else {
+      selectVariant(activeIdx);
+    }
     if (window.DamTooltips && typeof window.DamTooltips.bind === "function") {
       window.DamTooltips.bind(modal);
     }
@@ -3818,7 +4430,9 @@
     }
 
     var closeBtn = document.getElementById("damVizModalClose");
-    if (closeBtn) {
+    if (window.DamModalShared && typeof window.DamModalShared.bindModalClose === "function") {
+      window.DamModalShared.bindModalClose(closeBtn, requestCloseVizModal);
+    } else if (closeBtn) {
       closeBtn.addEventListener("pointerdown", requestCloseVizModal, true);
       closeBtn.addEventListener("click", requestCloseVizModal, true);
     }
@@ -3876,11 +4490,15 @@
   window.damVizThumbError = onThumbError;
 
   function renderGroup(group) {
+    ensureVizGridCardCss();
     var items = group.items.map(applyOverrideToItem);
     var first = items[0];
     var thumb = cardThumbSrc(first);
     var brand = first.brand || "DK";
     var uniq = uniqueModalVariants(items);
+    var variantReps = productVariantRepresentatives(items);
+    var variantCount = variantReps.length;
+    var isGroupedProduct = !group.isVariantCard && !showAll;
     var langs = {};
     var indexes = {};
     uniq.forEach(function (v) {
@@ -3888,12 +4506,10 @@
       if (v.index_base || v.index) indexes[v.index_base || String(v.index).split(".")[0]] = true;
     });
     var isMultiLang = Object.keys(langs).length > 1;
-    var isMultiIndex = Object.keys(indexes).length > 1;
+    var isMultiIndex = Object.keys(indexes).length > 1 || variantCount > 1;
     var carrierLbl = carrierHuman(first.carrier || "", first);
-    var productName = first.product_name || group.pid || "Produkt";
-    if (window.DamLabels && typeof window.DamLabels.cleanProductDisplayName === "function") {
-      productName = window.DamLabels.cleanProductDisplayName(productName) || productName;
-    }
+    var modalProductId = modalProductIdForGroup(group, first);
+    var productName = productLevelDisplayName(modalProductId, null);
     var productNamePlHtml =
       window.DamLabels && typeof window.DamLabels.productNamePlMarkup === "function"
         ? window.DamLabels.productNamePlMarkup(productName, brand, esc)
@@ -3902,7 +4518,6 @@
     var demo = isDemo(first);
     var hidden = isHidden(first);
     var archive = items.some(rowIsArchive);
-    // Preferuj miniaturke z poprawnym indeksem (po naprawie noid -> 6300xxx)
     if (indexLbl && thumb && thumb.indexOf("__noid_") !== -1) {
       thumb = thumbStem(first.product_id || group.pid, indexLbl, first.lang || "pl");
     }
@@ -3943,19 +4558,80 @@
             showCarrierPlaceholder: true,
             compact: true,
             maxPerKind: 2,
-            /* 2026-07-18: Marka+Kategoria+Podkategoria+Typ+Warianty+Multijezyczny+Indeks
-               to typowo 7 tagow - maxTotal musi je wszystkie objac (bylo 6, ucinalo
-               Multijezyczny w "+N" po dodaniu Kategorii/Podkategorii do karty). */
             maxTotal: 9,
             packagingTags: packagingTagsFrom(first),
             includeTagTiers: badgeTierOpt().includeTagTiers,
           })
         : '<span class="dam-viz-badge dam-viz-badge--brand">' + esc(brand) + "</span>";
 
-    /* Faza 5/P2: "Pokaz wszystko" - folder istnieje, brak realnej wizki -> wyraznie
-       wyszarzony placeholder. Tylko gdy ZADEN wariant grupy nie ma wizki
-       (nie regresuj karty produktu przez starsza rewizje bez WIZKI). */
     var noViz = !items.some(itemHasViz);
+    var catalogBases = isGroupedProduct ? productCatalogVariantBases(group.pid || first.product_id) : [];
+    var indexKeys = isGroupedProduct && catalogBases.length ? catalogBases : collectVariantIndexKeys(items);
+    if (isGroupedProduct && catalogBases.length) {
+      variantCount = catalogBases.length;
+    }
+    var extraVariantBadge =
+      isGroupedProduct && variantCount > 1
+        ? '<span class="dam-viz-card__variant-badge" aria-label="' +
+          esc("+" + (variantCount - 1) + " wariantów") +
+          '">+' +
+          (variantCount - 1) +
+          "</span>"
+        : "";
+    var variantsTag =
+      isGroupedProduct && variantCount > 1
+        ? '<span class="dam-viz-badge dam-viz-badge--variants dam-viz-card__variants-tag">Warianty</span>'
+        : "";
+    var indexBlock = "";
+    if (isGroupedProduct && indexKeys.length > 1) {
+      indexBlock =
+        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-card__show-indexes" data-group-pid="' +
+        esc(group.pid) +
+        '" data-dam-tip="Pokaż wszystkie indeksy wariantów (klik = kopiuj)">' +
+        '<i class="uil uil-list-ul" aria-hidden="true"></i><span>Pokaż indeksy</span></button>' +
+        '<div class="dam-viz-card__indexes-wrap" hidden>' +
+        indexKeys
+          .map(function (idx) {
+            return (
+              '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip" data-copy-id="' +
+              esc(idx) +
+              '" data-tag-value="' +
+              esc(idx) +
+              '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj indeks ' +
+              esc(idx) +
+              '"><i class="uil uil-copy" aria-hidden="true"></i>' +
+              esc(idx) +
+              "</button>"
+            );
+          })
+          .join("") +
+        "</div>";
+    } else if (isGroupedProduct && variantCount === 1) {
+      var singleIdx = (indexKeys.length ? indexKeys[0] : null) || indexLbl;
+      if (singleIdx) {
+        indexBlock =
+          '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-viz-card__id-chip" data-copy-id="' +
+          esc(singleIdx) +
+          '" data-tag-value="' +
+          esc(singleIdx) +
+          '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj indeks ' +
+          esc(singleIdx) +
+          '"><i class="uil uil-copy" aria-hidden="true"></i>' +
+          esc(singleIdx) +
+          "</button>";
+      }
+    } else if (indexLbl && !isGroupedProduct) {
+      indexBlock =
+        '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-viz-card__id-chip" data-copy-id="' +
+        esc(indexLbl) +
+        '" data-tag-value="' +
+        esc(indexLbl) +
+        '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj indeks ' +
+        esc(indexLbl) +
+        '"><i class="uil uil-copy" aria-hidden="true"></i>' +
+        esc(indexLbl) +
+        "</button>";
+    }
 
     return (
       '<article class="dam-viz-card dam-viz-card--clickable' +
@@ -3963,10 +4639,14 @@
         (noViz ? " dam-viz-card--no-viz" : "") +
         (hidden && isAdminMode() ? " dam-viz-card--hidden" : "") +
         (archive ? " dam-viz-card--archive dam-gradient-tile dam-gradient-tile--archive" : "") +
+        (group.isVariantCard ? " dam-viz-card--variant" : "") +
         '" data-group-pid="' +
         esc(group.pid) +
-        '">' +
+        '"' +
+        (group.variantKey ? ' data-variant-key="' + esc(group.variantKey) + '"' : "") +
+        '>' +
         '<div class="dam-viz-thumb">' +
+          extraVariantBadge +
           (noViz
             ? '<div class="dam-viz-thumb__noviz"><i class="uil uil-image-slash"></i><span>Brak wizualizacji</span></div>'
             : thumb
@@ -3976,6 +4656,7 @@
         '<div class="dam-viz-card__body">' +
           '<div class="dam-viz-card__badges">' +
             badgesHtml +
+            variantsTag +
           '</div>' +
           '<h5 class="dam-viz-card__title">' +
             esc(productName) +
@@ -3986,17 +4667,7 @@
             '">' +
             esc(carrierLbl || "BRAK TYPU") +
             "</p>" +
-          (indexLbl
-            ? '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-viz-card__id-chip" data-copy-id="' +
-              esc(indexLbl) +
-              '" data-tag-value="' +
-              esc(indexLbl) +
-              '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj indeks ' +
-              esc(indexLbl) +
-              '"><i class="uil uil-copy" aria-hidden="true"></i>' +
-              esc(indexLbl) +
-              "</button>"
-            : "") +
+          (indexBlock ? " " + indexBlock : "") +
           '<div class="dam-viz-card__actions">' +
             (noViz
               ? '<button type="button" class="geex-btn geex-btn--primary dam-btn-icon dam-viz-request-btn" data-group-pid="' + esc(group.pid) + '" title="Zglos zapotrzebowanie" data-dam-tip="Zglos zapotrzebowanie na wizualizacje dla tego wariantu">' +
@@ -4047,7 +4718,7 @@
       el.textContent = "";
       return;
     }
-    var allGroups = groupByProduct(all);
+    var allGroups = groupGridItems(all);
     var totalCards = allGroups.length;
     var totalFiles = all.filter(function (v) {
       return v && v.has_viz !== false && (v.thumb_url || v.path);
@@ -4232,7 +4903,7 @@
     var status = document.getElementById("vizStatus");
     if (!grid) return;
 
-    var groups = groupByProduct(filtered);
+    var groups = groupGridItems(filtered);
 
     if (status) {
       status.textContent =
@@ -4251,14 +4922,34 @@
       window.DamBadges.bindClicks(grid, "viz");
     }
 
-    // Klik miniatury / karty
+    grid.querySelectorAll(".dam-viz-card__show-indexes").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var wrap = btn.parentNode && btn.parentNode.querySelector(".dam-viz-card__indexes-wrap");
+        if (!wrap) return;
+        var open = wrap.hasAttribute("hidden");
+        if (open) wrap.removeAttribute("hidden");
+        else wrap.setAttribute("hidden", "");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+    });
+
     grid.querySelectorAll(".dam-viz-card--clickable").forEach(function (card) {
       var pid = card.getAttribute("data-group-pid");
-      var group = groups.find(function (g) { return g.pid === pid; });
+      var variantKey = card.getAttribute("data-variant-key") || "";
+      var group = groups.find(function (g) {
+        return g.pid === pid && (!variantKey || g.variantKey === variantKey);
+      });
+      if (!group) {
+        group = groups.find(function (g) {
+          return g.pid === pid;
+        });
+      }
       if (!group) return;
       card.querySelector(".dam-viz-thumb").addEventListener("click", function (e) {
         e.preventDefault();
-        openProductModal(group);
+        openProductModal(group, { initialVariantKey: variantKey || group.variantKey || "" });
       });
     });
 
@@ -4821,21 +5512,22 @@
       })
       .then(function (fileFlags) {
         if (!fileFlags || typeof fileFlags !== "object") return;
-        /* HARD: keep linked/unlinked variants — older merge dropped them (race wipe after add). */
+        /* File is source of truth for assoc buckets when updated_at is set (revert/cleanup).
+           Race guard: bez updated_at — merge local→file jak wcześniej. */
+        var fileAssocAuthoritative = !!fileFlags.updated_at;
         vizFlags = {
           demo: Object.assign({}, fileFlags.demo || {}, vizFlags.demo || {}),
           hidden: Object.assign({}, fileFlags.hidden || {}, vizFlags.hidden || {}),
           manual: [].concat(fileFlags.manual || [], vizFlags.manual || []),
-          linked_variants: Object.assign(
-            {},
-            fileFlags.linked_variants || {},
-            vizFlags.linked_variants || {}
-          ),
-          unlinked_variants: Object.assign(
-            {},
-            fileFlags.unlinked_variants || {},
-            vizFlags.unlinked_variants || {}
-          ),
+          linked_variants: fileAssocAuthoritative
+            ? Object.assign({}, fileFlags.linked_variants || {})
+            : Object.assign({}, vizFlags.linked_variants || {}, fileFlags.linked_variants || {}),
+          unlinked_variants: fileAssocAuthoritative
+            ? Object.assign({}, fileFlags.unlinked_variants || {})
+            : Object.assign({}, vizFlags.unlinked_variants || {}, fileFlags.unlinked_variants || {}),
+          linked_materials: fileAssocAuthoritative
+            ? Object.assign({}, fileFlags.linked_materials || {})
+            : Object.assign({}, vizFlags.linked_materials || {}, fileFlags.linked_materials || {}),
         };
         persistVizFlags();
         if (indexData) {
@@ -5098,7 +5790,10 @@
         var group = groups.find(function (g) { return g.pid === pid; });
         if (group) openProductModal(group);
         return !!group;
-      }
+      },
+      persistLinkedMaterials: persistLinkedMaterials,
+      getLinkedMaterialIds: getLinkedMaterialIds,
+      getLinkedVariantProductIds: getLinkedVariantProductIds,
     };
   }
 

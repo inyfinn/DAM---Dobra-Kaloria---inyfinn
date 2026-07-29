@@ -6,18 +6,20 @@
     "carrier_display_in_ui": "label_pl",
     "carrier_prefix_on_disk": "short"
   },
-  "version": 2,
+  "version": 3,
   "updated_at": "2026-07-18",
   "instructions": {
-    "count": 80,
-    "version": 21,
+    "count": 83,
+    "version": 26,
     "source_kv": "program-instructions",
     "critical_ids": [
+      "ui.assoc_edit_shell_adapters",
       "nav.tasks_page",
       "preview.file_state.local",
       "preview.file_state.online_only",
       "preview.cache.disk",
       "preview.cache.redis",
+      "preview.cache.ephemeral_only",
       "paths.topology.device_scoped",
       "preview.onerror_not_synology",
       "ui.viz_modal_parity_explorer",
@@ -55,5 +57,15 @@
       "finance.invoice_mail_outlook"
     ],
     "settings_anchor": "settings.html#damProgramInstructions"
+  },
+  "elementy_conversion": {
+    "enabled": true,
+    "formats": {
+      "jpg": true,
+      "png": true
+    },
+    "quality": 50,
+    "description_pl": "Globalne ustawienia konwersji Links -> ELEMENTY w modalu wizualizacji.",
+    "png_transparency": true
   }
 }

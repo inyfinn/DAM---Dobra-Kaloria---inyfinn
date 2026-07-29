@@ -67,9 +67,9 @@
           '<span class="dam-status-line">online</span>' +
         "</span>" +
       "</span>" +
-      '<button type="button" class="dam-root-status__btn" id="damRootResetBtn" hidden title="Wskaz folder Marketing">' +
+      '<button type="button" class="dam-root-status__btn" id="damRootResetBtn" hidden title="Wskaż folder Marketing">' +
         '<i class="uil uil-folder-open" aria-hidden="true"></i>' +
-        '<span>Wskaz folder</span>' +
+        '<span>Wskaż folder</span>' +
       "</button>";
     host.insertBefore(el, host.firstChild);
     var btn = el.querySelector("#damRootResetBtn");
@@ -125,9 +125,9 @@
       btn.hidden = !!online;
       btn.setAttribute("data-reason", reason || "");
       if (reason === "bridge") {
-        btn.innerHTML = '<i class="uil uil-question-circle" aria-hidden="true"></i><span>Jak uruchomic</span>';
+        btn.innerHTML = '<i class="uil uil-question-circle" aria-hidden="true"></i><span>Jak uruchomić</span>';
       } else {
-        btn.innerHTML = '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Wskaz folder</span>';
+        btn.innerHTML = '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Wskaż folder</span>';
       }
     }
     setBodyOffline(!online);
@@ -157,6 +157,17 @@
         return res;
       })
       .catch(function () {
+        if (window.DamRuntime && typeof window.DamRuntime.ensureServices === "function") {
+          return window.DamRuntime.ensureServices().then(function (boot) {
+            if (boot && boot.ok) return check();
+            setState(
+              false,
+              "Most plików (bridge) nie odpowiada. Uruchom skrót DAM ETA na pulpicie.",
+              "bridge"
+            );
+            return { online: false, reason: "bridge" };
+          });
+        }
         setState(
           false,
           "Most plików (bridge) nie odpowiada na porcie 8766. Uruchom DAM albo serve_browser.py.",
@@ -169,12 +180,22 @@
   function start() {
     if (window.location.pathname.indexOf("signin") !== -1) return;
     ensureUi();
-    check();
-    schedulePoll(false);
+    function go() {
+      check();
+      schedulePoll(false);
+    }
+    if (window.DamRuntime && window.DamRuntime.ready) {
+      go();
+    } else {
+      window.addEventListener("dam-runtime-ready", go, { once: true });
+    }
     window.addEventListener("storage", function (e) {
       if (e.key === "dam_base_path") check();
     });
     window.addEventListener("dam-runtime-ready", function () {
+      check();
+    });
+    window.addEventListener("dam:bridge-ready", function () {
       check();
     });
   }

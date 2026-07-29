@@ -1,10 +1,12 @@
 <!doctype html>
 <html lang="pl" dir="ltr" class="dam-booting">
 <head>
+  <script>(function(){function g(){try{var u=location.pathname+location.search,h=location.hash||"";location.replace(u+(u.indexOf("?")>=0?"&":"?")+"_damr="+Date.now()+h);}catch(e){try{location.reload();}catch(x){}}}addEventListener("keydown",function(e){if(e.key==="F5"||(e.ctrlKey&&!e.shiftKey&&(e.key==="r"||e.key==="R")))g();},true);window.__damInlineHardReset=g;})();</script>
+  <script src="./assets/js/dam-panic-reload.js?v=4.0.23-nativeF520260726a"></script>
   <style id="dam-shell-boot-critical">
 html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
   </style>
-  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=shellboot20260721a">
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=perObjSkel20260722c">
   <script>
   (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
   </script>
@@ -14,10 +16,10 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
   <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=geexTaste20260721a">
-  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=ctaUnify20260721b">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=ctaUnify20260721b">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=invClose20260721b">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=darkFix20260722e">
+  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.65">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=darkFix20260722e">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.7-tagComboFlush20260727a">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=bento200f">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
@@ -58,7 +60,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
             <input
               type="search"
               id="damHelpSearch"
-              placeholder="Szukaj problemu (np. shift, offline, indeks, marka, zoom…))"
+              placeholder="Szukaj problemu (np. shift, offline, indeks, marka, zoom?))"
               autocomplete="off"
               aria-label="Szukaj w pomocy"
             />
@@ -78,11 +80,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="f5 odswiez ctrl r restart">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak odświeżyć widok?</div>
-            <p class="dam-faq-a"><kbd>F5</kbd> lub <kbd>Ctrl</kbd>+<kbd>R</kbd>. W oknie desktop DAM restartuje cały shell.</p>
+            <p class="dam-faq-a"><kbd>F5</kbd> lub <kbd>Ctrl</kbd>+<kbd>R</kbd> = <strong>twardy reset</strong> (przerywa wszystko na stronie). W oknie desktop DAM zamyka i uruchamia aplikację od nowa.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="wstecz nawigacja historia panel">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co robi przycisk Wstecz w panelu?</div>
-            <p class="dam-faq-a">Cofa w historii Eksploratora (produkt → kategoria → root) albo zamyka otwarty podgląd / filtr - nie wychodzi z aplikacji.</p>
+            <p class="dam-faq-a">Cofa w historii Eksploratora (produkt ? kategoria ? root) albo zamyka otwarty podgląd / filtr - nie wychodzi z aplikacji.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="zoom scroll ctrl alt przyblizenie wizualizacja lightbox">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak przybliżyć wizualizację?</div>
@@ -94,7 +96,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           <h3 class="dam-help-page__group-title"><i class="uil uil-sitemap" aria-hidden="true"></i> Eksplorer i produkty</h3>
           <div class="dam-faq-item" data-help-item data-keywords="znalezc produkt wyszukaj indeks kategoria czekolada 6300">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak znaleźć produkt?</div>
-            <p class="dam-faq-a">Menu lewe · Eksplorer. Wybierz kategorię albo wpisz indeks / nazwę  (np. <em>6300</em>, <em>czekolada</em>). Ostatnio otwarte produkty są pod spodem na starcie.</p>
+            <p class="dam-faq-a">Menu lewe ? Eksplorer. Wybierz kategorię albo wpisz indeks / nazwę  (np. <em>6300</em>, <em>czekolada</em>). Ostatnio otwarte produkty są pod spodem na starcie.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="marka dk gc filtr kategorie chipy">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Gdzie filtruję marki DK i GC?</div>
@@ -109,7 +111,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
             <p class="dam-faq-a">Rozwija kartę: checklista kompletności, pliki źródłowe / do druku, wizualizacje, marketing. Ikony obok otwierają folder Windows lub kopiują ścieżkę.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="warianty liczba prawa strona lista produktow">
-            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznacza „4 Warianty” na liście produktów?</div>
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznacza ?4 Warianty? na liście produktów?</div>
             <p class="dam-faq-a">Liczba wariantów / indeksów produktu. Blok jest po <strong>prawej</strong> stronie wiersza. Klik w wiersz otwiera produkt.</p>
           </div>
         </section>
@@ -121,19 +123,19 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
             <p class="dam-faq-a">Jeden styl wszędzie (Eksplorer, Wizualizacje, Projekty). Zwykły klik = filtr. Prawy przycisk myszy = kopiuj tekst tagu do schowka.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="shift typ nosnik admin picker folia doy">
-            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak zmienić typ nośnika (FOLIA → DOY)?</div>
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak zmienić typ nośnika (FOLIA ? DOY)?</div>
             <p class="dam-faq-a"><strong>Admin</strong> + włączony <em>Tryb admina</em>: <kbd>Shift</kbd>+klik na pomarańczowym tagu typu (albo podwójny klik). Otwiera picker. Zwykły użytkownik zgłasza propozycję - decyzja admina w Wiadomościach.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="aktualne nieaktualne status shift baza">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak oznaczyć wariant jako nieaktualny?</div>
-            <p class="dam-faq-a">Admin + Tryb admina: przyciski <kbd>F</kbd> / <kbd>X</kbd> / <kbd>D</kbd> / Bez statusu przy produkcie lub wariancie w Eksploratorze (albo Shift+klik na tagu statusu). <strong>X</strong> dopina <code> - X</code> do nazwy folderu i przenosi do <code>— ARCHIWUM</code> (wariant z wrapperem produktu; produkt LIVE zostaje). Historia poprzedniej nazwy i ścieżki jest zapisywana.</p>
+            <p class="dam-faq-a">Admin + Tryb admina: przyciski <kbd>F</kbd> / <kbd>X</kbd> / <kbd>D</kbd> / Bez statusu przy produkcie lub wariancie w Eksploratorze (albo Shift+klik na tagu statusu). <strong>X</strong> dopina <code> - X</code> do nazwy folderu i przenosi do <code>"ARCHIWUM</code> (wariant z wrapperem produktu; produkt LIVE zostaje). Historia poprzedniej nazwy i ścieżki jest zapisywana.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="lifecycle F X D demo archiwum folder status produkt wariant">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznaczają przyciski F, X, D przy produkcie?</div>
-            <p class="dam-faq-a"><strong>F</strong> = aktualny/skończony (<code> - F</code> w nazwie folderu). <strong>X</strong> na produkcie = cascade X na warianty + przeniesienie produktu do <code>— ARCHIWUM</code>. <strong>X</strong> na wariancie = tylko wariant do archiwum (produkt LIVE bez X). <strong>D</strong> = demo/szkic. <strong>Bez statusu</strong> zdejmuje literkę; przywrócenie wariantu z archiwum trafia do istniejącego produktu z jego aktualną literką. Wymaga Admin + Tryb admina. Testuj na <em>TEST LIFECYCLE</em> (TEST-TEST). <strong>Odśwież listę</strong> synchronizuje UI z literkami na dysku.</p>
+            <p class="dam-faq-a"><strong>F</strong> = aktualny/skończony (<code> - F</code> w nazwie folderu). <strong>X</strong> na produkcie = cascade X na warianty + przeniesienie produktu do <code>"ARCHIWUM</code>. <strong>X</strong> na wariancie = tylko wariant do archiwum (produkt LIVE bez X). <strong>D</strong> = demo/szkic. <strong>Bez statusu</strong> zdejmuje literkę; przywrócenie wariantu z archiwum trafia do istniejącego produktu z jego aktualną literką. Wymaga Admin + Tryb admina. Testuj na <em>TEST LIFECYCLE</em> (TEST-TEST). <strong>Odśwież listę</strong> synchronizuje UI z literkami na dysku.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="multijezyczny jezyk badge wariant">
-            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznacza badge Multijezyczny?</div>
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznacza badge Multijęzyczny?</div>
             <p class="dam-faq-a">Produkt ma wizualizacje w więcej niż jednym języku. Otwórz miniaturę / studio, żeby wybrać wariant językowy.</p>
           </div>
         </section>
@@ -153,15 +155,15 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         <section class="dam-help-page__group" data-help-group>
           <h3 class="dam-help-page__group-title"><i class="uil uil-hdd" aria-hidden="true"></i> Pliki, ścieżki, most</h3>
           <div class="dam-faq-item" data-help-item data-keywords="offline pliki most bridge launch">
-            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Widzę „Pliki offline” - co robić?</div>
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Widz? "Pliki offline? - co robić.</div>
             <p class="dam-faq-a">Uruchom skrót <strong>DAM</strong> z pulpitu. W przeglądarce: <code>python apps/desktop/serve_browser.py</code> albo osobno <code>local_bridge.py</code> na porcie 8766.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="sciezka marketing dysk ustawienia wykryj">
             <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Dlaczego ścieżki zaczynają się od D:\Marketing?</div>
-            <p class="dam-faq-a">Struktura folderów jest wspólna. Na każdym PC ustawiasz własną ścieżkę bazową Marketing w Ustawieniach (np. <code>X:\Marketing</code>). „Wykryj” tylko podpowiada - zapisujesz przyciskiem Zapisz.</p>
+            <p class="dam-faq-a">Struktura folderów jest wspólna. Na każdym PC ustawiasz własną ścieżkę bazową Marketing w Ustawieniach (np. <code>X:\Marketing</code>). "Wykryj" tylko podpowiada - zapisujesz przyciskiem Zapisz.</p>
           </div>
           <div class="dam-faq-item" data-help-item data-keywords="pokaz w eksploratorze folder windows kopiuj">
-            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co robi „Pokaż w eksploratorze”?</div>
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co robi "Pokaż w eksploratorze.</div>
             <p class="dam-faq-a">Otwiera folder w Windows i zaznacza plik (nie otwiera pliku). Wymaga mostu online.</p>
           </div>
         </section>
@@ -202,9 +204,9 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-app.js?v=20260718ux6"></script>
   <script src="./assets/js/dam-api.js?v=privgate20260721a"></script>
   <script src="./assets/js/dam-i18n.js?v=i18nboot20260721c"></script>
-  <script src="./assets/js/dam-runtime.js?v=20260719app1"></script>
-  <script src="./assets/js/dam-version.js?v=3.1.0"></script>
-	<script src="./assets/js/dam-shell.js?v=geexF620260721a"></script>
+  <script src="./assets/js/dam-runtime.js?v=servicesBoot20260723a"></script>
+  <script src="./assets/js/dam-version.js?v=5.0.7"></script>
+	<script src="./assets/js/dam-shell.js?v=4.0.14-dbDumpFix20260725"></script>
   <script>
     (function () {
       var input = document.getElementById("damHelpSearch");

@@ -1457,23 +1457,34 @@
     updateCounts();
     var items = filtered();
     if (!items.length) {
-      var emptyHint = "Brak wpisów dla tego filtra.";
-      if (activeTag === "zgloszenie" || activeTag === "historia") {
-        if (zgloszenieSub === "historia") {
-          emptyHint =
-            "Brak historii. Po zatwierdzeniu lub odrzuceniu propozycji typu pojawią się tutaj - z opcją cofnięcia.";
-        } else if (zgloszenieSub === "wizualizacja") {
-          emptyHint = "Brak zgłoszeń wizualizacji w kolejce.";
-        } else {
-          emptyHint = isAdmin()
-            ? "Brak oczekujących propozycji typów. Nowe zgłoszenia pojawią się tutaj."
-            : "Brak Twoich propozycji typów w kolejce.";
-        }
-      }
+      var emptyBundle =
+        window.DamEmptyMascot && typeof window.DamEmptyMascot.pick === "function"
+          ? window.DamEmptyMascot.pick()
+          : {
+              text: "Zero. Jak inbox po urlopie, tylko odwrotnie i smutniej.",
+              mood: "sad",
+              poseUrl: "assets/img/maskotka/pose-sad-1.png"
+            };
+      var emptyPose = String(emptyBundle.poseUrl || "").replace(/'/g, "%27");
       list.innerHTML =
-        '<li class="dam-inbox-item dam-inbox-item--empty"><div class="dam-widget__meta">' +
-        emptyHint +
-        "</div></li>";
+        '<li class="dam-inbox-item dam-inbox-item--empty" role="status">' +
+        '<div class="dam-empty-mascot-row dam-empty-mascot-row--speak-only" data-empty-mood="' +
+        esc(emptyBundle.mood || "think") +
+        '">' +
+        '<div class="dam-empty-mascot-row__speak">' +
+        '<div class="dam-empty-mascot-row__bubble">' +
+        '<p class="dam-empty-mascot-row__bubble-text">' +
+        esc(emptyBundle.text || "") +
+        "</p>" +
+        "</div>" +
+        '<div class="dam-empty-mascot-row__mascot" aria-hidden="true" style="--dam-empty-pose:url(\'' +
+        emptyPose +
+        "')\">" +
+        '<span class="dam-empty-mascot-row__mascot-img"></span>' +
+        "</div>" +
+        "</div>" +
+        "</div>" +
+        "</li>";
       return;
     }
     list.innerHTML = items

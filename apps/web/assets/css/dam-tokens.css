@@ -109,22 +109,30 @@ html[data-theme="dark"] {
   --dam-surface: #201f28;
   --dam-surface-muted: #17161e;
   --dam-border: #2c2b36;
-  --dam-text: #e6e4ee;
-  --dam-text-muted: #9b97ab;
+  /* Primary text: AA ≥4.5:1 on #201f28 / #17161e */
+  --dam-text: #eeeaf6;
+  /* Secondary/meta: AA ≥4.5:1 on charcoal (was #9b97ab — marginal) */
+  --dam-text-muted: #b8b3c6;
   --dam-muted: var(--dam-text-muted);
   --dam-shadow-alpha: 0.35;
   --dam-dark: #0e0d12;
+  /* Elevated input/toolbar fill (between surface and muted) */
+  --dam-surface-elevated: #2a2833;
 
-  /* Geex overlay w dark — pelne mapowanie status/surface (F2) */
+  /* Geex overlay w dark — pelne mapowanie status/surface (F2)
+     HARD: style.css paints body/h1–h6 with --gray-color in dark.
+     Never alias --gray-color to --dam-border (near-invisible on charcoal).
+     Borders stay on --dam-border / component tokens. */
   --white-color: var(--dam-surface);
   --section-color: var(--dam-surface-muted);
   --sectionTwo-color: var(--dam-surface-muted);
   --sectionThree-color: var(--dam-surface);
-  --gray-color: var(--dam-border);
+  --gray-color: #d2cedc;
   --body-color: var(--dam-text);
   --desc-color: var(--dam-text);
   --sec-color: var(--dam-text-muted);
   --light-color: var(--dam-surface-muted);
+  /* Geex uses --dark-color as BODY BACKGROUND in dark (style.css). Keep charcoal. */
   --dark-color: var(--dam-dark);
   --primary-color: var(--dam-primary);
   --success-color: var(--dam-ok);

@@ -11,7 +11,9 @@
 
 ## Redis (opcjonalny)
 
-Docker Desktop **nie jest wymagany**. Gdy Redis down / circuit OPEN: most czyta/pisze pliki tutaj bez crasha UI.
+**Redis bez Dockera: tak** — prefer native Windows Redis / Memurai na `127.0.0.1:6379`
+(patrz `apps/desktop/README-redis.md`). Docker Compose = opcjonalny fallback.
+Gdy Redis down / circuit OPEN: most czyta/pisze pliki tutaj bez crasha UI.
 
 Zobacz: `apps/desktop/dam_redis.py` (circuit breaker + fallback matrix), `apps/desktop/dam_thumb_cache.py`.
 

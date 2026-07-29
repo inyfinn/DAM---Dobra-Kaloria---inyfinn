@@ -5,6 +5,80 @@
  */
 
 /* ---------- Desktop / tablet: split layout ---------- */
+.dam-viz-modal-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: var(--dam-modal-box-w, 90vw);
+  max-width: var(--dam-modal-box-w, 90vw);
+  height: var(--dam-modal-box-h, 90vh);
+  min-height: min(var(--dam-modal-box-min-h), var(--dam-modal-box-h, 90vh));
+  max-height: var(--dam-modal-box-h, 90vh);
+  box-sizing: border-box;
+}
+
+.dam-viz-modal-shell > .dam-viz-modal-box {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto !important;
+  max-height: none !important;
+}
+
+.dam-viz-modal-shell > .dam-preview-nav {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 45px;
+  padding: 6px 8px;
+}
+
+.dam-viz-modal-shell:has(.dam-preview-nav) > .dam-viz-modal-box {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* P0-A: close lives inside .dam-preview-nav (flex row), not absolute on shell */
+.dam-preview-nav .dam-viz-modal-close,
+.dam-preview-nav__close {
+  margin-left: auto !important;
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  width: 32px;
+  height: 32px;
+  z-index: 1;
+  pointer-events: auto !important;
+  flex: 0 0 auto;
+}
+
+.dam-preview-nav .dam-viz-modal-close:hover,
+.dam-preview-nav__close:hover {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+
+/* Legacy fallback when nav not yet mounted */
+.dam-viz-modal-shell > .dam-viz-modal-close:not(.dam-preview-nav__close) {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  z-index: 50200 !important;
+  pointer-events: auto !important;
+}
+
+.dam-viz-modal-shell > .dam-viz-modal-close:not(.dam-preview-nav__close):hover {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+
 .dam-viz-modal-box--assoc-split {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.9fr);
@@ -17,12 +91,17 @@
 }
 
 .dam-viz-modal-box--assoc-split > .dam-viz-modal-close {
-  /* HARD: assoc-pane used to sit on top of X (same top-right geometry). */
-  z-index: 200 !important;
+  /* legacy: close now lives on .dam-viz-modal-shell */
+  z-index: 50200 !important;
   position: absolute !important;
-  top: 12px;
-  right: 12px;
+  top: 12px !important;
+  right: 12px !important;
   pointer-events: auto !important;
+}
+
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane {
+  position: relative;
+  z-index: 1;
 }
 
 
@@ -333,7 +412,7 @@
 #damVizModal .dam-viz-modal__product-variants,
 #damMediaPreview .dam-media-preview__assoc--variants-only {
   margin: 0 0 10px;
-  padding: 10px 12px;
+  padding: 8px 16px 12px;
   border-top: none;
   border-radius: 12px;
   background: var(--dam-surface-muted, #f5f6fa);
@@ -352,14 +431,15 @@
   width: 100%;
   max-width: none;
   flex: 1 1 auto;
+  padding: 0 2px;
 }
 
 .dam-viz-modal-box--assoc-split .dam-viz-modal__product-variants .dam-media-preview__assoc-label-row,
 #damVizModal .dam-viz-modal__product-variants .dam-media-preview__assoc-label-row,
 #damMediaPreview .dam-media-preview__assoc--variants-only .dam-media-preview__assoc-label-row {
-  /* user 2026-07-21: label ~5px lower / tighter strip chrome */
-  margin-top: 5px;
-  margin-bottom: 6px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding: 0 2px;
 }
 
 /* Dense wrap: pack chips to container edge, then wrap (not rigid 4-col) */
@@ -368,20 +448,34 @@
 #damMediaPreview .dam-media-preview__assoc--variants-only .dam-media-preview__variant-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
   justify-content: flex-start;
   align-content: flex-start;
+  padding: 2px 4px 4px;
 }
 
 #damVizModal .dam-viz-modal__product-variants .dam-viz-modal__variant,
 #damVizModal .dam-viz-modal__variant-strip .dam-viz-modal__variant,
 #damMediaPreview .dam-media-preview__assoc--variants-only .dam-viz-modal__variant {
-  flex: 1 1 70px;
-  min-width: 70px;
-  max-width: 104px;
+  flex: 0 0 auto;
+  min-width: 88px;
+  max-width: none;
   width: auto;
   box-sizing: border-box;
+  padding: 10px 12px 8px;
+}
+
+#damVizModal .dam-viz-modal__product-variants .dam-viz-modal__variant-thumb,
+#damVizModal .dam-viz-modal__variant-strip .dam-viz-modal__variant-thumb {
+  width: 72px;
+  height: 54px;
+}
+
+#damVizModal .dam-viz-modal__product-variants .dam-viz-modal__variant-placeholder,
+#damVizModal .dam-viz-modal__variant-strip .dam-viz-modal__variant-placeholder {
+  width: 72px;
+  height: 54px;
 }
 
 @media (max-width: 1100px) {
@@ -446,6 +540,12 @@
 #damVizModalStudio .dam-media-preview__studio-frame[aria-label="Perspektywa"] .dam-media-preview__studio-chip,
 #damMediaPreviewStudio .dam-media-preview__studio-frame[aria-label="Perspektywa"] .dam-media-preview__studio-chip {
   flex: 1 1 auto;
+}
+#damVizModalStudio .dam-media-preview__studio-frame[aria-label="Perspektywa"] .dam-media-preview__studio-chip:only-child,
+#damMediaPreviewStudio .dam-media-preview__studio-frame[aria-label="Perspektywa"] .dam-media-preview__studio-chip:only-child,
+#damVizModalStudio .dam-media-preview__studio-frame .dam-media-preview__studio-chip:only-child,
+#damMediaPreviewStudio .dam-media-preview__studio-frame .dam-media-preview__studio-chip:only-child {
+  flex: 0 1 auto;
 }
 
 /* Quiet outline active chips in viz modal (override any solid fill) — 1px HARD */
@@ -638,7 +738,11 @@
 }
 .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-assoc-pane-split__bottom > .dam-media-preview__elementy,
 .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-assoc-pane-split__bottom > [data-elementy-host-auto],
-.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-assoc-pane-split__bottom > #damMediaPreviewElementyHost {
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-assoc-pane-split__bottom > #damMediaPreviewElementyHost,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-assoc-pane-split__bottom > #damVizModalElementyHost,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-assoc-pane-split__bottom > .dam-assoc-pane-bottom-stack,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-assoc-pane-split__bottom > #damMediaPreviewAssocPaneBottom,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-assoc-pane-split__bottom > #damVizModalAssocPaneBottom {
   flex: 1 1 auto;
   min-height: 0;
   margin-top: 0;
@@ -666,6 +770,74 @@
 /* Hide legacy bottom assoc if any leftover inside body */
 .dam-viz-modal-box--assoc-split .dam-viz-modal__body > .dam-viz-modal__assoc {
   display: none;
+}
+
+.dam-media-preview__pane-products,
+.dam-media-preview__assoc-pane-section--products {
+  flex: 0 0 auto;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-pane-section--products {
+  margin-bottom: 0;
+}
+
+.dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-section {
+  margin-top: 0;
+}
+
+/* Sekcja materiałów — ten sam separator/box co warianty (#damMediaPreviewAssoc) */
+.dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-section.dam-media-preview__assoc-col--materials,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-col--materials,
+.dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane .dam-media-preview__assoc-section.dam-media-preview__assoc-col--materials {
+  margin: 0;
+  padding: 8px 16px 12px;
+  border-radius: 12px;
+  background: var(--dam-surface-muted, #f5f6fa);
+  box-sizing: border-box;
+}
+
+.dam-assoc-pane-bottom-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+/* Legacy hint removed (user 2026-07-29) — hide if stale cached JS injects it */
+.dam-viz-modal__variant-hint {
+  display: none !important;
+}
+
+/* Branding footer: warianty nad produktami (nie 2-col na pelnej szerokosci) */
+.dam-viz-modal-box--assoc-split #damMediaPreviewAssoc .dam-media-preview__assoc--footer-stack {
+  display: flex !important;
+  flex-direction: column;
+  grid-template-columns: none !important;
+  gap: 12px 0;
+  width: 100%;
+}
+
+.dam-viz-modal-box--assoc-split #damMediaPreviewAssoc .dam-media-preview__assoc--footer-stack .dam-media-preview__assoc-sep {
+  width: 100%;
+  height: 1px;
+  min-height: 1px;
+  margin: 0;
+  grid-column: auto;
+  grid-row: auto;
+  align-self: stretch;
+  background: #ececf1;
+}
+
+.dam-viz-modal-box--assoc-split #damMediaPreviewAssoc .dam-media-preview__assoc--footer-stack .dam-media-preview__assoc-col--variants,
+.dam-viz-modal-box--assoc-split #damMediaPreviewAssoc .dam-media-preview__assoc--footer-stack .dam-media-preview__assoc-col--products {
+  width: 100%;
+  max-width: none;
+  grid-column: auto;
+  grid-row: auto;
+  flex: 0 0 auto;
 }
 
 /* ---------- Mid: 768–1023 ---------- */
@@ -767,15 +939,15 @@
 #damVizModal .dam-viz-modal__body,
 #damMediaPreview .dam-viz-modal__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(148px, 30%);
+  grid-template-columns: minmax(0, 75fr) minmax(148px, 25fr);
   grid-template-areas:
     "meta studio"
-    "variants variants"
+    "variants studio"
     "allfiles allfiles"
     "extra extra"
     "actions actions";
-  column-gap: 16px;
-  row-gap: 10px;
+  column-gap: clamp(16px, 4%, 48px);
+  row-gap: 8px;
   align-items: start;
   --dam-viz-modal-filemeta-gap: 0px;
 }
@@ -815,7 +987,26 @@
 #damMediaPreview .dam-viz-modal__studio-rail {
   grid-area: studio;
   min-width: 0;
-  align-self: stretch;
+  align-self: end;
+  justify-self: end;
+  width: 100%;
+  max-width: max-content;
+  padding-top: 0;
+}
+
+/* Branding bez studio (ukryty #damMediaPreviewStudio) — meta na pelna szerokosc */
+#damMediaPreview .dam-viz-modal__body:has(#damMediaPreviewStudio[hidden]) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "meta"
+    "variants"
+    "allfiles"
+    "extra"
+    "actions";
+}
+
+#damMediaPreview .dam-viz-modal__studio-rail:has(#damMediaPreviewStudio[hidden]):has(#damMediaPreviewQuality[hidden]) {
+  display: none;
 }
 
 #damVizModal .dam-viz-modal__variants,
@@ -850,7 +1041,7 @@
 #damMediaPreview .dam-viz-modal__meta-block--title {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 2px;
   min-width: 0;
 }
 
@@ -858,7 +1049,7 @@
 #damMediaPreview .dam-viz-modal__meta-block--title .dam-media-preview__title-block {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 2px;
   margin: 0;
 }
 
@@ -886,6 +1077,34 @@
   margin-top: -1px; /* ~5px closer than previous 5px gap */
 }
 
+#damVizModal .dam-viz-modal__meta-line--filename,
+#damMediaPreview .dam-viz-modal__meta-line--filename {
+  align-items: start;
+}
+
+#damVizModal .dam-viz-modal__meta-v--filename,
+#damMediaPreview .dam-viz-modal__meta-v--filename {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+#damVizModal .dam-viz-modal__meta-v--filename .dam-viz-modal__filename,
+#damMediaPreview .dam-viz-modal__meta-v--filename .dam-viz-modal__filename,
+#damVizModal .dam-viz-modal__meta-line--filename #damVizModalFilename,
+#damMediaPreview .dam-viz-modal__meta-line--filename #damMediaPreviewFilename {
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
 #damVizModal .dam-viz-modal__meta-k,
 #damMediaPreview .dam-viz-modal__meta-k {
   font-size: 10px;
@@ -898,11 +1117,25 @@
 }
 
 #damVizModal .dam-viz-modal__meta-line .dam-viz-modal__filename,
+#damVizModal .dam-viz-modal__meta-line .dam-viz-modal__variant-title,
 #damVizModal .dam-viz-modal__meta-line .dam-viz-modal__carrier,
 #damMediaPreview .dam-viz-modal__meta-line .dam-viz-modal__filename,
+#damMediaPreview .dam-viz-modal__meta-line .dam-viz-modal__variant-title,
 #damMediaPreview .dam-viz-modal__meta-line .dam-viz-modal__carrier {
   margin: 0;
   min-width: 0;
+  grid-column: 2;
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+#damVizModal .dam-viz-modal__meta-line .dam-viz-modal__variant-title[hidden],
+#damMediaPreview .dam-viz-modal__meta-line .dam-viz-modal__variant-title[hidden] {
+  display: none;
 }
 
 #damVizModal .dam-viz-modal__filepath,
@@ -913,6 +1146,11 @@
   margin: 0;
   min-width: 0;
   max-width: 100%;
+}
+
+#damVizModal .dam-viz-modal__meta-block--filemeta,
+#damMediaPreview .dam-viz-modal__meta-block--filemeta {
+  max-width: 75%;
 }
 
 #damVizModal .dam-viz-modal__filepath-text,
@@ -943,6 +1181,12 @@
 #damMediaPreview .dam-media-preview__studio--rail {
   margin: 0;
   gap: 8px;
+  align-items: flex-end;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 #damVizModal .dam-media-preview__studio--rail .dam-media-preview__studio-frames,
@@ -970,6 +1214,7 @@
 #damMediaPreview .dam-media-preview__studio--rail .dam-media-preview__studio-frame-chips {
   flex-wrap: wrap;
   gap: 4px;
+  justify-content: flex-end;
 }
 
 #damVizModal .dam-media-preview__studio--rail .dam-media-preview__studio-chip,
@@ -986,7 +1231,14 @@
 #damMediaPreview .dam-media-preview__studio--rail .dam-media-preview__show-all-btn {
   align-self: stretch;
   width: 100%;
+  margin-top: 15px;
   justify-content: center;
+  flex: 0 0 auto;
+}
+
+.dam-media-preview__assoc-col:has(.dam-viz-assoc-cta:not([hidden])) .dam-media-preview__assoc-plus-tile,
+.dam-media-preview__assoc-col:has([data-viz-assoc-cta]:not([hidden])) .dam-media-preview__assoc-plus-tile {
+  display: none !important;
 }
 
 /* Badges inside meta rail */
@@ -996,6 +1248,23 @@
   flex-wrap: wrap;
   gap: 6px;
   margin: 0;
+}
+
+/* Tags/badges → title: +10px air in meta rail (on top of 10px column gap) */
+#damVizModal .dam-viz-modal__meta-block--badges + .dam-viz-modal__meta-block--title,
+#damMediaPreview .dam-viz-modal__meta-block--badges + .dam-viz-modal__meta-block--title {
+  margin-top: 5px;
+}
+
+/* Modal assoc CTA +10% (12px → 13.2px) */
+#damVizModal .dam-viz-assoc-cta,
+#damMediaPreview .dam-viz-assoc-cta {
+  font-size: 13.2px;
+}
+
+#damVizModal .dam-viz-assoc-cta span,
+#damMediaPreview .dam-viz-assoc-cta span {
+  font-size: inherit;
 }
 
 @media (max-width: 900px) {
@@ -1191,4 +1460,121 @@ html[data-theme="dark"] .dam-viz-modal__zoom {
 html[data-theme="dark"] .dam-viz-modal__zoom-btn,
 html[data-theme="dark"] .dam-viz-modal__zoom-label {
   color: var(--dam-text, #eeeaf6) !important;
+}
+
+/* v5.0.60: no zoom bar — scroll/pan on thumb + hover hint */
+#damVizModal .dam-viz-modal__zoom,
+#damMediaPreview .dam-viz-modal__zoom,
+.dam-viz-modal__thumb .dam-media-preview__zoom {
+  display: none !important;
+}
+
+.dam-viz-modal__thumb--panzoom {
+  position: relative;
+  cursor: zoom-in;
+}
+
+.dam-viz-modal__thumb--panzoom:has(img.is-zoomed) {
+  cursor: grab;
+}
+
+.dam-viz-modal__thumb-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(20, 18, 28, 0.72);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 3;
+}
+
+.dam-viz-modal__thumb--panzoom:hover .dam-viz-modal__thumb-hint,
+.dam-viz-modal__thumb--panzoom:focus-within .dam-viz-modal__thumb-hint {
+  opacity: 1;
+}
+
+.dam-viz-modal__nav {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.dam-viz-modal__nav-btn {
+  pointer-events: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(70, 66, 85, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  color: #464255;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dam-viz-modal__nav-btn:hover {
+  border-color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #ab54db);
+}
+
+.dam-viz-modal__variant-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding: 0 2px;
+}
+
+.dam-viz-modal__variant-head .dam-media-preview__assoc-label {
+  margin: 0;
+}
+
+.dam-viz-modal__product-variants {
+  margin-top: 4px !important;
+  padding-top: 10px !important;
+}
+
+.dam-media-preview__elementy-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 4px;
+  min-width: 0;
+}
+
+.dam-media-preview__elementy-sep {
+  flex: 1 1 auto;
+  height: 1px;
+  min-width: 24px;
+  background: rgba(70, 66, 85, 0.14);
+}
+
+/* Slightly rounded chips (not pill) — viz + branding */
+#damVizModal .dam-media-preview__studio-chip,
+#damVizModal .dam-media-preview__quality-pill,
+#damMediaPreview .dam-media-preview__studio-chip,
+#damMediaPreview .dam-media-preview__quality-pill,
+#damVizModal .dam-media-preview__elementy-toggle,
+#damMediaPreview .dam-media-preview__elementy-toggle,
+#damVizModal .dam-media-preview__show-all-btn,
+#damMediaPreview .dam-media-preview__show-all-btn,
+#damVizModal .dam-viz-assoc-cta,
+#damMediaPreview .dam-viz-assoc-cta {
+  border-radius: 6px !important;
 }

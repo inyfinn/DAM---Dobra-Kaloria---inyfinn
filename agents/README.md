@@ -42,6 +42,7 @@ Dokument: [`docs/PROGRAM_INSTRUCTIONS.md`](../docs/PROGRAM_INSTRUCTIONS.md).
 - Scope zapisu: `P:\DAM` (Marketing tylko odczyt przy indeksie).
 - UI = Geex THEME; em-dash ban (`-` zamiast dlugich myslnikow).
 - Po zmianie wizualnej: screenshot + Read (nie oddawac "na oko").
+- **Serwery przed browserem:** smoke `:8765`/`:8766` w 5 s; brak 2xx -> `serve_browser.py`, kontynuuj; nigdy wisieć na navigate (`.cursor/rules/server-timeout-never-hang.mdc`).
 - Jezyki: patrz `shared/lang-provenance.md`.
 - Reczne override (`lang-overrides.json` i inne) nigdy nie kasuj rebuildem.
 

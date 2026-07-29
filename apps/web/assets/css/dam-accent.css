@@ -73,6 +73,14 @@ button.geex-btn.geex-btn--primary:hover {
 a.geex-sidebar__menu__link[aria-current="page"] {
   color: var(--dam-primary, #ab54db) !important;
   background: color-mix(in srgb, var(--dam-primary, #ab54db) 15%, transparent) !important;
+  background-clip: border-box !important;
+  box-shadow: none !important;
+}
+.geex-sidebar__menu__link.default-active,
+.geex-sidebar__menu__link.active,
+.geex-sidebar__menu__item.active > .geex-sidebar__menu__link,
+a.geex-sidebar__menu__link[aria-current="page"] {
+  border-radius: 6px 18px 18px 6px !important;
 }
 .geex-sidebar__menu__link.default-active i,
 .geex-sidebar__menu__link.active i,

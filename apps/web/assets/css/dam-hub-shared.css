@@ -92,6 +92,36 @@
   );
 }
 
+/* ARCHIWUM: czerwony gradient obrysu (jak editable, ale czerwony) */
+.dam-gradient-tile--archive::before {
+  top: auto;
+  bottom: 0;
+  height: min(128px, 32%);
+  background: linear-gradient(
+    0deg,
+    rgba(220, 38, 38, 0.084) 0%,
+    rgba(220, 38, 38, 0.042) 45%,
+    rgba(220, 38, 38, 0.014) 72%,
+    rgba(220, 38, 38, 0) 100%
+  );
+}
+
+.dam-gradient-tile--archive::after {
+  padding: 2px;
+  background: linear-gradient(
+    0deg,
+    rgba(220, 38, 38, 0.28) 0%,
+    rgba(220, 38, 38, 0.15) 40%,
+    rgba(220, 38, 38, 0.05) 70%,
+    rgba(220, 38, 38, 0) 92%
+  );
+}
+
+.dam-viz-card.dam-gradient-tile--archive {
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
 /* Wektor / dokument źródłowy: AI, PDF */
 .dam-gradient-tile--vector::before {
   top: auto;

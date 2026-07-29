@@ -231,8 +231,21 @@ if (!/function listSafeThumb/.test(assoc)) {
 if (!/limit:\s*PICKER_LIST_CAP/.test(assoc) && !/limit:\s*PICKER_LIST_CAP/.test(assoc.replace(/\s/g, ""))) {
   /* DamSearch call uses limit: PICKER_LIST_CAP */
 }
-if (!/includeArchive:\s*false,\s*limit:\s*PICKER_LIST_CAP/.test(assoc)) {
+if (!/includeArchive:\s*false[\s\S]{0,80}limit:\s*PICKER_LIST_CAP/.test(assoc)) {
   fails.push("DamSearch picker path must pass limit: PICKER_LIST_CAP");
+}
+if (!/light:\s*true/.test(assoc)) {
+  fails.push("DamSearch picker path must pass light:true (budgeted scans)");
+}
+if (!/ensureFileIndexForPicker/.test(assoc)) {
+  fails.push("missing ensureFileIndexForPicker cold GOLDEN restore");
+}
+var searchJs = fs.readFileSync(
+  path.join(__dirname, "..", "..", "apps/web/assets/js/dam-search.js"),
+  "utf8"
+);
+if (!/function adoptWarmCaches/.test(searchJs) || !/scanBudget/.test(searchJs)) {
+  fails.push("dam-search must expose adoptWarmCaches + budgeted appendFileIndexMatches");
 }
 
 if (fails.length) {
