@@ -220,6 +220,10 @@
   }
 
   function mediaUrl(path, asset) {
+    if (window.DamMediaPreview && typeof window.DamMediaPreview.previewUrl === "function") {
+      var hi = window.DamMediaPreview.previewUrl(path, asset);
+      if (hi) return hi;
+    }
     var ext = ((path || "").split(".").pop() || "").toLowerCase();
     var mt = (asset && asset.media_type) || "";
     if (
@@ -230,9 +234,6 @@
       /^(png|jpe?g|webp|gif|tif|tiff|bmp)$/i.test(ext)
     ) {
       return DamPreviewTruth.thumbCacheUrl(path, "card");
-    }
-    if (window.DamMediaPreview && typeof window.DamMediaPreview.previewUrl === "function") {
-      return window.DamMediaPreview.previewUrl(path, asset);
     }
     return rawMediaUrl(path);
   }
@@ -1623,8 +1624,9 @@
     if (!labels.length) return "";
     if (labels.length > 1) {
       return (
-        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-card__show-indexes" data-dam-tip="Pokaż wszystkie indeksy materiałów (klik = kopiuj)">' +
-        '<i class="uil uil-list-ul" aria-hidden="true"></i><span>Pokaż indeksy</span></button>' +
+        '<div class="dam-viz-card__indexes-anchor">' +
+        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-card__show-indexes" data-dam-tip="Pokaż wszystkie indeksy materiałów (klik = kopiuj)" aria-expanded="false">' +
+        '<i class="uil uil-layer-group" aria-hidden="true"></i><span>Pokaż indeksy</span></button>' +
         '<div class="dam-viz-card__indexes-wrap" hidden>' +
         labels
           .map(function (idx) {
@@ -1641,7 +1643,7 @@
             );
           })
           .join("") +
-        "</div>"
+        "</div></div>"
       );
     }
     var single = labels[0];
@@ -2890,6 +2892,21 @@
     return sortAssetsForDisplay(list, q);
   }
 
+  /** Picker browse (pusty q) — lokalny indeks branding, bez pełnego API. */
+  function buildPickerBrowseRows(opts) {
+    opts = opts || {};
+    var cap = Math.max(1, Math.min(parseInt(opts.cap, 10) || 80, 80));
+    if (!index || !index.assets || !index.assets.length) return [];
+    var filtered = index.assets.filter(function (a) {
+      if (!a || !a.id) return false;
+      if (!includeArchive() && isArchived(a)) return false;
+      if (!passesGraphicsOnlyFilter(a)) return false;
+      return true;
+    });
+    var sorted = sortAssetsForDisplay(filtered, "");
+    return sorted.slice(0, cap);
+  }
+
   function facetFilterSignature(sectionTab) {
     var activeKeys = Object.keys(activeTagFilters)
       .filter(function (k) {
@@ -2973,7 +2990,7 @@
       if (showSkel && window.DamGridReveal && typeof window.DamGridReveal.skeleton === "function") {
         var grid = document.getElementById("damBrandingSectionGrid");
         if (grid) {
-          window.DamGridReveal.skeleton(grid, { variant: "cards", count: 8, layout: "viz-grid" });
+          window.DamGridReveal.skeleton(grid, { variant: "cards", layout: "viz-grid", responsive: true });
         }
         /* daj przeglądarce klatke na wymalowanie skeletonow przed ciezkim renderem */
         requestAnimationFrame(function () {
@@ -3371,8 +3388,10 @@
       "</div>" +
       brandingCardTitleHtml(displayTitle, brandingCardSubtitle(cardAsset, displayTitle), "") +
       brandingCardMetaHtml(metaLine || hint || cardAsset.sku || "Materiał", metaAssetIdsForCard(cardAsset, assetList)) +
+      '<div class="dam-viz-card__footer">' +
       brandingCardIndexBlockHtml(assetList) +
       brandingCardActionsHtml(cardAsset) +
+      "</div>" +
       "</div></article>"
     );
   }
@@ -3423,8 +3442,10 @@
       "</div>" +
       brandingCardTitleHtml(groupTitle, brandingCardSubtitle(primary, groupTitle), "") +
       brandingCardMetaHtml(groupMeta || hint || "Materiał", metaAssetIdsForCard(primary, assets)) +
+      '<div class="dam-viz-card__footer">' +
       brandingCardIndexBlockHtml(assets) +
       brandingCardActionsHtml(primary) +
+      "</div>" +
       "</div></article>"
     );
   }
@@ -3836,18 +3857,22 @@
       });
     });
 
-    grid.querySelectorAll(".dam-viz-card__show-indexes").forEach(function (btn) {
-      btn.addEventListener("click", function (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        var wrap = btn.parentNode && btn.parentNode.querySelector(".dam-viz-card__indexes-wrap");
-        if (!wrap) return;
-        var open = wrap.hasAttribute("hidden");
-        if (open) wrap.removeAttribute("hidden");
-        else wrap.setAttribute("hidden", "");
-        btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (window.DamCardIndexPopover && typeof window.DamCardIndexPopover.bind === "function") {
+      window.DamCardIndexPopover.bind(grid);
+    } else {
+      grid.querySelectorAll(".dam-viz-card__show-indexes").forEach(function (btn) {
+        btn.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          var wrap = btn.parentNode && btn.parentNode.querySelector(".dam-viz-card__indexes-wrap");
+          if (!wrap) return;
+          var open = wrap.hasAttribute("hidden");
+          if (open) wrap.removeAttribute("hidden");
+          else wrap.setAttribute("hidden", "");
+          btn.setAttribute("aria-expanded", open ? "true" : "false");
+        });
       });
-    });
+    }
 
     grid.querySelectorAll(".dam-branding-share-btn").forEach(function (btn) {
       btn.addEventListener("click", function (ev) {
@@ -4684,7 +4709,7 @@
 
   function showInitialBootSkeletons() {
     if (!window.DamGridReveal || typeof window.DamGridReveal.skeleton !== "function") return;
-    var skelOpts = { variant: "cards", count: 10, layout: "viz-grid" };
+    var skelOpts = { variant: "cards", layout: "viz-grid", responsive: true };
     var sectionGrid = document.getElementById("damBrandingSectionGrid");
     var brandbookGrid = document.getElementById("damBrandbookGrid");
     if (sectionGrid && !sectionGrid.querySelector(".dam-viz-card")) {
@@ -4698,8 +4723,8 @@
       if (!brandbookGrid.querySelector(".dam-skeleton__card")) {
         window.DamGridReveal.skeleton(brandbookGrid, {
           variant: "cards",
-          count: 8,
           layout: "viz-grid",
+          responsive: true,
         });
       }
     }
@@ -4955,6 +4980,9 @@
     },
     findAssetById: findAssetById,
     marketingGroupLabelForAssets: marketingGroupLabel,
+    marketingGroupKey: marketingGroupKey,
+    groupMarketingAssets: groupMarketingAssets,
+    buildPickerBrowseRows: buildPickerBrowseRows,
     brandingCardDisplayAssets: brandingCardDisplayAssets,
     brandingCardIndexLabels: brandingCardIndexLabels,
   };

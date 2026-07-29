@@ -21,11 +21,45 @@
 
 #vizSearchScope .dam-search-scope {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px 8px;
+  gap: 6px 10px;
   width: 100%;
   box-sizing: border-box;
+}
+
+#vizSearchScope .dam-search-scope--viz-filters {
+  padding-top: 2px;
+}
+
+#vizSearchScope .dam-search-scope--viz-filters > .dam-switch,
+#vizSearchScope .dam-search-scope--viz-filters > #vizBrandMount,
+#vizSearchScope .dam-search-scope--viz-filters > #vizLangFilter,
+#vizSearchScope .dam-search-scope--viz-filters > .dam-viz-zoom-control {
+  flex: 0 0 auto;
+}
+
+#vizSearchScope .dam-search-scope--viz-filters #vizLangFilter {
+  min-width: 9.5rem;
+  max-width: 14rem;
+  min-height: 34px;
+}
+
+#vizSearchScope .dam-search-scope--viz-filters .dam-viz-zoom-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+}
+
+#vizSearchScope .dam-search-scope--viz-filters .dam-viz-zoom-control input[type="range"] {
+  width: 120px;
+  margin: 0;
+}
+
+#vizSearchScope .dam-search-scope--viz-filters .dam-sidebar-brand-mount {
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Far-right mount for #damChangeLogBar (DamSearch trailingEl) */
@@ -132,6 +166,11 @@
 }
 
 /* Status bliżej filtrów; napisy #vizStatus (nad siatką) mb +15px */
+.geex-content > .dam-viz-secondary-filters,
+.geex-content__section-wrapper > .dam-viz-secondary-filters {
+  margin-bottom: 14px;
+}
+
 .dam-global-search-block > .dam-viz-secondary-filters {
   margin-bottom: 4px;
 }
@@ -173,7 +212,11 @@
 .dam-viz-panel {
   display: flex;
   flex-direction: column;
+  gap: 8px;
   position: relative;
+  z-index: 1;
+  margin-top: 4px;
+  scroll-margin-top: calc(var(--dam-sticky-filters-top, 103px) + 72px);
   overflow: visible;
 }
 

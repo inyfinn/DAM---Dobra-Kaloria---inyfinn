@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pl" dir="ltr" class="dam-booting">
 <head>
   <script>(function(){function g(){try{var u=location.pathname+location.search,h=location.hash||"";location.replace(u+(u.indexOf("?")>=0?"&":"?")+"_damr="+Date.now()+h);}catch(e){try{location.reload();}catch(x){}}}addEventListener("keydown",function(e){if(e.key==="F5"||(e.ctrlKey&&!e.shiftKey&&(e.key==="r"||e.key==="R")))g();},true);window.__damInlineHardReset=g;})();</script>
@@ -23,10 +23,10 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=darkFix20260722e">
   <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=geexF3tut20260721a">
   <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=hub20260719grad08">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.81">
-  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=5.0.81">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.121">
+  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=5.0.121">
   <link rel="stylesheet" href="./assets/css/dam-date-picker.css?v=brpolish20260720a">
-  <link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.81">
+  <link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.83">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   
@@ -100,6 +100,34 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
               <button type="button" class="dam-branding-tab" data-tab="www" role="tab" aria-selected="false">Strony WWW</button>
               <button type="button" class="dam-branding-tab" data-tab="packshots" role="tab" aria-selected="false">Packshoty</button>
               <button type="button" class="dam-branding-tab" data-tab="brandbook" role="tab" aria-selected="false">Brandbook</button>
+              <span class="dam-branding-tabs__sep dam-branding-tabs__sep--tools" aria-hidden="true"></span>
+              <div class="dam-branding-filters__view-tools" role="group" aria-label="Sortowanie i skala">
+                <label class="dam-branding-sort" for="damBrandingSort">
+                  <span class="dam-branding-date-range__label">Sortuj</span>
+                  <select id="damBrandingSort" aria-label="Sortowanie wyników">
+                    <option value="priority" selected data-i18n="branding.sort_priority">Priorytet użycia</option>
+                    <option value="newest">Najnowsze</option>
+                    <option value="oldest">Najstarsze</option>
+                    <option value="name">Nazwa</option>
+                  </select>
+                </label>
+                <label class="dam-switch dam-switch--compact" for="damBrandingTagCounts" data-dam-tip="Pokaż liczby dopasowań obok tagów (domyślnie wyłączone)">
+                  <input type="checkbox" id="damBrandingTagCounts" class="dam-switch__input" />
+                  <span class="dam-switch__track" aria-hidden="true"></span>
+                  <span class="dam-switch__label" data-i18n="branding.tag_counts">Liczby przy tagach</span>
+                </label>
+                <label class="dam-viz-zoom-control" for="damBrandingCardZoom" data-dam-tip="Suwak: 65-100% pomniejsza grafikę w kafelku; powyżej 100% powiększa kafelek (max 350%). Podgląd startuje z tej samej skali. Shift+Plus / Shift+Minus: ta sama skala.">
+                  <span class="dam-viz-zoom-control__label"><i class="uil uil-search-plus" aria-hidden="true"></i> Skala</span>
+                  <input type="range" id="damBrandingCardZoom" min="65" max="350" step="5" value="100" aria-label="Skala kafelków branding" />
+                  <span class="dam-viz-zoom-control__value" id="damBrandingCardZoomLabel">100%</span>
+                </label>
+                <div class="dam-viz-zoom-control dam-branding-page-size" id="damBrandingPageSize" role="group" aria-label="Liczba kart na stronie" data-dam-tip="Ile kart (elementów) pokazać w siatce. Suwak i pole nie odświeżają siatki na żywo - zatwierdź przyciskiem OK. Kółko myszy na kontrolce zmienia wartość.">
+                  <span class="dam-viz-zoom-control__label"><i class="uil uil-layer-group" aria-hidden="true"></i> Karty</span>
+                  <input type="range" id="damBrandingPageSizeRange" min="24" max="500" step="4" value="100" aria-label="Liczba kart (suwak)" />
+                  <input type="number" id="damBrandingPageSizeInput" class="dam-branding-page-size__num" min="24" max="500" step="1" value="100" aria-label="Liczba kart (liczba)" />
+                  <button type="button" class="dam-int-cta dam-branding-page-size__ok" id="damBrandingPageSizeOk" data-dam-tip="Zastosuj limit kart i zapisz preferencje">OK</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -123,33 +151,6 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
             <button type="button" data-preset="month" data-i18n="branding.date_month">Ostatni miesiąc</button>
             <button type="button" data-preset="2026">2026</button>
             <button type="button" data-preset="2025">2025</button>
-          </div>
-        </div>
-        <div class="dam-branding-filters__view-tools" role="group" aria-label="Sortowanie i skala">
-          <label class="dam-branding-sort" for="damBrandingSort">
-            <span class="dam-branding-date-range__label">Sortuj</span>
-            <select id="damBrandingSort" aria-label="Sortowanie wynik�w">
-              <option value="priority" selected data-i18n="branding.sort_priority">Priorytet użycia</option>
-              <option value="newest">Najnowsze</option>
-              <option value="oldest">Najstarsze</option>
-              <option value="name">Nazwa</option>
-            </select>
-          </label>
-          <label class="dam-switch dam-switch--compact" for="damBrandingTagCounts" data-dam-tip="Pokaż liczby dopasowań obok tag�w (domyślnie wyłączone)">
-            <input type="checkbox" id="damBrandingTagCounts" class="dam-switch__input" />
-            <span class="dam-switch__track" aria-hidden="true"></span>
-            <span class="dam-switch__label" data-i18n="branding.tag_counts">Liczby przy tagach</span>
-          </label>
-          <label class="dam-viz-zoom-control" for="damBrandingCardZoom" data-dam-tip="Suwak: 65-100% pomniejsza grafikę w kafelku; powyżej 100% powiększa kafelek (max 350%). Podgląd startuje z tej samej skali. Shift+Plus / Shift+Minus: ta sama skala.">
-            <span class="dam-viz-zoom-control__label"><i class="uil uil-search-plus" aria-hidden="true"></i> Skala</span>
-            <input type="range" id="damBrandingCardZoom" min="65" max="350" step="5" value="100" aria-label="Skala kafelk�w branding" />
-            <span class="dam-viz-zoom-control__value" id="damBrandingCardZoomLabel">100%</span>
-          </label>
-          <div class="dam-viz-zoom-control dam-branding-page-size" id="damBrandingPageSize" role="group" aria-label="Liczba kart na stronie" data-dam-tip="Ile kart (element�w) pokazać w siatce. Suwak i pole nie odświeżają siatk? na żywo - zatwierdź przyciskiem OK. K??ko myszy na kontrolce zmienia wartość.">
-            <span class="dam-viz-zoom-control__label"><i class="uil uil-layer-group" aria-hidden="true"></i> Karty</span>
-            <input type="range" id="damBrandingPageSizeRange" min="24" max="500" step="4" value="100" aria-label="Liczba kart (suwak)" />
-            <input type="number" id="damBrandingPageSizeInput" class="dam-branding-page-size__num" min="24" max="500" step="1" value="100" aria-label="Liczba kart (liczba)" />
-            <button type="button" class="dam-int-cta dam-branding-page-size__ok" id="damBrandingPageSizeOk" data-dam-tip="Zastosuj limit kart i zapisz preferencje">OK</button>
           </div>
         </div>
       </div>
@@ -202,16 +203,17 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-search.js?v=5.0.0-assocPickerMilestone20260726"></script>
   <script src="./assets/js/dam-user-prefs.js?v=prefsKv20260721a"></script>
   <script src="./assets/js/dam-danger.js?v=5.0.34-sesja3"></script>
-  <script src="./assets/js/dam-assoc-edit.js?v=5.0.81"></script>
-  <script src="./assets/js/dam-tag-edit.js?v=5.0.81"></script>
+  <script src="./assets/js/dam-assoc-edit.js?v=5.0.121"></script>
+  <script src="./assets/js/dam-tag-edit.js?v=5.0.121"></script>
   <script src="./assets/js/dam-marketing-id.js?v=5.0.8-marketingSearch20260727"></script>
   <script src="./assets/js/dam-modal-shared.js?v=5.0.26-p0a"></script>
   <script src="./assets/js/dam-preview-truth.js?v=noThumbWarm20260722c"></script>
-	<script src="./assets/js/dam-media-preview.js?v=5.0.81"></script>
-	<script src="./assets/js/dam-branding.js?v=5.0.68"></script>
+	<script src="./assets/js/dam-media-preview.js?v=5.0.121"></script>
+	<script src="./assets/js/dam-card-index-popover.js?v=5.0.121"></script>
+	<script src="./assets/js/dam-branding.js?v=5.0.121"></script>
   <script src="./assets/js/dam-product-correlation.js?v=assocFreezeFix20260724c"></script>
   <script src="./assets/js/dam-loader.js?v=actionsLeftLoader20260721a"></script>
-  <script src="./assets/js/dam-grid-reveal.js?v=i18nboot20260721e"></script>
+  <script src="./assets/js/dam-grid-reveal.js?v=5.0.121"></script>
   <script src="./assets/js/dam-date-picker.js?v=brpolish20260720a"></script>
   <script src="./assets/js/dam-empty-mascot.js?v=hotfixPack20260723a"></script>
   <script src="./assets/js/dam-tutorial.js?v=5.0.56"></script>

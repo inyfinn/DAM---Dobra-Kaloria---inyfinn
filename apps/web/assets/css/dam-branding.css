@@ -183,6 +183,51 @@
   padding-top: 8px;
   border-top: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 14%, transparent);
   background: transparent;
+  gap: 6px 8px;
+}
+
+.dam-search-wrap--branding-chrome .dam-branding-tab {
+  min-height: 34px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dam-search-wrap--branding-chrome .dam-branding-tabs > .dam-switch {
+  min-height: 34px;
+}
+
+.dam-search-wrap--branding-chrome .dam-branding-tabs .dam-branding-tabs__sep--tools {
+  margin-left: auto;
+}
+
+.dam-search-wrap--branding-chrome .dam-branding-tabs .dam-branding-filters__view-tools {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  margin-left: 0;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.dam-search-wrap--branding-chrome .dam-branding-tabs .dam-branding-sort {
+  margin-right: 12px;
+}
+
+.dam-search-wrap--branding-chrome .dam-branding-tabs .dam-viz-zoom-control {
+  margin-left: 12px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dam-search-wrap--branding-chrome .dam-branding-tabs .dam-branding-page-size {
+  gap: 6px;
 }
 
 /* Archive switch inline in tablist — no extra framed wrapper. */
@@ -738,18 +783,25 @@
 /* FROZEN ANATOMY (C3 / memory Â§123) — .dam-branding-card layout locked.
    Spec: agents/shared/bento-card-freeze.md — nie redesign; chrome hubów OK. */
 .dam-branding-card .dam-viz-thumb {
-  padding-top: calc(8px * var(--dam-viz-card-scale, 1));
+  padding-top: 0;
+  height: calc(178px * var(--dam-viz-card-scale, 1));
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-left: calc(12px * var(--dam-viz-card-scale, 1));
+  padding-right: calc(12px * var(--dam-viz-card-scale, 1));
+  padding-bottom: calc(12px * var(--dam-viz-card-scale, 1));
 }
 
 .dam-branding-card .dam-viz-thumb__img {
   object-fit: contain;
-  /* Bazowo 1; zoom suwakiem nadal ustawia --dam-viz-img-scale (clip w .dam-viz-thumb) */
+  object-position: center center;
   transform: scale(var(--dam-viz-img-scale, 1));
   transform-origin: center center;
-  max-width: 100%;
-  max-height: 100%;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   box-sizing: border-box;
 }
 
@@ -758,16 +810,17 @@
 }
 
 .dam-branding-card .dam-viz-card__body {
-  /* Inherit viz rhythm tokens from .dam-viz-card__body (dam-brand.css).
-     Inventory close: match bumped viz air (24/22/18/18 + actions 8).
-     min-height ~288: title+id-chip taller than viz title+meta. */
-  --dam-branding-card-section-gap: var(--dam-viz-card-body-gap, 18px);
-  --dam-branding-card-actions-gap: var(--dam-viz-card-actions-extra-gap, 8px);
+  /* Kompakt u góry; CTA przyklejone do dołu (margin-top:auto na actions). */
+  --dam-branding-card-section-gap: 13px;
+  --dam-viz-card-body-gap: 13px;
+  --dam-viz-card-body-pad-top: 10px;
+  --dam-viz-card-body-pad-bottom: 12px;
   flex: 1 1 auto;
-  min-height: 288px;
-  padding: var(--dam-viz-card-body-pad-top, 24px) var(--dam-viz-card-body-pad-x, 18px) var(--dam-viz-card-body-pad-bottom, 22px);
-  gap: var(--dam-viz-card-body-gap, 18px);
-  justify-content: flex-end;
+  min-height: 0;
+  padding: var(--dam-viz-card-body-pad-top, 10px) var(--dam-viz-card-body-pad-x, 18px)
+    var(--dam-viz-card-body-pad-bottom, 12px);
+  gap: var(--dam-viz-card-body-gap, 13px);
+  justify-content: flex-start;
   align-items: center;
   text-align: center;
   box-sizing: border-box;
@@ -841,29 +894,109 @@
   cursor: help;
 }
 
+.dam-branding-card .dam-viz-card__indexes-anchor {
+  flex-shrink: 0;
+}
+
 .dam-branding-card .dam-viz-card__actions {
   flex-shrink: 0;
-  /* Same as .dam-viz-card__actions: body gap 14 + extra 4 = 18 meta→CTA */
-  margin-top: var(--dam-branding-card-actions-gap, 4px);
+  margin-top: 0;
+  margin-bottom: 0;
   width: 100%;
+  align-items: center;
+}
+
+/* Podgląd + ikony folder/udostępnij — jedna wysokość (44px touch). */
+.dam-branding-card .dam-viz-card__actions > .geex-btn {
+  box-sizing: border-box;
+  min-height: var(--dam-control-h, 44px);
+  height: var(--dam-control-h, 44px);
+}
+
+.dam-branding-card .dam-viz-card__actions .dam-btn-icon:not(.dam-btn-icon-only) {
+  padding-block: 0;
 }
 
 /* +N count bubble: global rule in dam-brand.css (.dam-viz-card__variant-badge) */
 
 .dam-branding-card .dam-viz-card__show-indexes {
-  margin-top: 6px;
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dam-viz-card__indexes-anchor {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: var(--dam-control-h, 44px);
+}
+
+.dam-branding-card--group .dam-viz-card__title-wrap {
+  margin-bottom: 0;
+}
+
+.dam-branding-card--group .dam-viz-card__meta {
+  margin-top: 0;
+}
+
+.dam-branding-card--group .dam-viz-card__indexes-anchor {
+  margin-top: 0;
 }
 
 .dam-branding-card .dam-viz-card__indexes-wrap {
-  margin-top: 6px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
+  display: none !important;
 }
 
-.dam-branding-card .dam-viz-card__indexes-wrap[hidden] {
-  display: none !important;
+.dam-index-popover {
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #e5e7eb);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+  max-height: min(280px, 50vh);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.dam-index-popover .dam-viz-badge--index {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+  word-break: break-all;
+}
+
+.dam-media-preview__assoc-empty--guide {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-style: normal;
+  color: var(--dam-text-muted, #6b7280);
+  padding: 12px 0 4px;
+  max-width: 100%;
+}
+
+.dam-media-preview__assoc-empty--guide strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dam-text, #464255);
+}
+
+.dam-media-preview__assoc-empty-hint {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--dam-text-muted, #6b7280);
 }
 
 .dam-branding-meta-tip {
@@ -1564,16 +1697,16 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 }
 
 .dam-branding-card .dam-branding-id-chip,
-.dam-branding-card__id-chip {
+.dam-branding-card__id-chip,
+.dam-branding-card .dam-viz-card__id-chip {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   width: fit-content;
   min-width: fit-content;
   max-width: none;
-  margin-top: 14px;
-  margin-bottom: -8px; /* body gap 14 â†’ chipâ†”meta ~6px air */
   padding: 6px 20px;
   overflow: visible;
   text-overflow: clip;
@@ -1581,6 +1714,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   box-sizing: border-box;
   cursor: copy;
   pointer-events: auto;
+  align-self: center;
 }
 
 .dam-branding-card__id-chip .uil {
@@ -1616,6 +1750,20 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 .dam-branding-thumb-stack__layer {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dam-branding-thumb-stack__layer .dam-viz-thumb__img,
+.dam-branding-thumb-stack__layer .dam-branding-thumb__video-wrap {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center center;
 }
 
 .dam-branding-thumb-stack__layer--back {
@@ -2183,25 +2331,41 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   overflow: hidden;
 }
 
-#damMediaPreview .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-section,
-#damMediaPreview .dam-media-preview__assoc-pane-section--products {
+#damMediaPreview .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-pane-section--products {
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
   min-height: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+#damMediaPreview .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-col--materials {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
-  max-height: 48%;
+  min-height: 0;
+  max-height: none;
   overflow: hidden;
 }
 
-#damMediaPreview .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-grid,
+#damMediaPreview .dam-media-preview__assoc-pane-section--products [data-produkty-host] {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
 #damMediaPreview .dam-media-preview__assoc-pane-section--products .dam-media-preview__assoc-grid {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   align-content: start;
+  grid-auto-rows: min-content;
 }
 
 .dam-media-preview__assoc-thumb-btn {
@@ -2211,6 +2375,21 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   cursor: pointer;
   border-radius: 6px;
   transition: transform 0.16s ease, box-shadow 0.16s ease;
+  flex-shrink: 0;
+  align-self: center;
+  width: 70px;
+  height: 70px;
+  min-width: 70px;
+  min-height: 70px;
+}
+
+.dam-media-preview__assoc-thumb-btn .dam-media-preview__assoc-thumb {
+  width: 100%;
+  height: 100%;
+  min-width: 70px;
+  min-height: 70px;
+  max-width: 70px;
+  max-height: 70px;
 }
 
 .dam-media-preview__assoc-thumb-btn:hover,
@@ -2394,17 +2573,6 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
   gap: 4px;
   max-height: min(28dvh, 200px);
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
-}
-
-.dam-assoc-edit-popover__pinned::-webkit-scrollbar {
-  width: 2px;
-}
-
-.dam-assoc-edit-popover__pinned::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 999px;
 }
 
 .dam-assoc-edit-popover__section-sep {
@@ -2414,29 +2582,23 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
 }
 
 .dam-assoc-edit-popover__opt.is-pinned:not(.is-selected) {
-  opacity: 0.72;
+  opacity: 1;
+}
+
+.dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt.is-selected {
+  background: transparent;
+  box-shadow: inset 3px 0 0 #ab54db;
 }
 
 .dam-assoc-edit-popover__list {
   max-height: min(52dvh, 520px);
-  scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
   padding: 2px 0;
 }
 
-.dam-assoc-edit-popover__list::-webkit-scrollbar {
-  width: 2px;
-}
-
-.dam-assoc-edit-popover__list::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 999px;
-}
-
 .dam-assoc-edit-popover__opt {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  display: grid !important;
+  align-items: center;
+  gap: 12px;
   width: 100%;
   border: none;
   background: none;
@@ -2447,11 +2609,8 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
   min-height: 76px;
 }
 
-.dam-assoc-edit-popover__opt:hover {
-  background: #f8f4fd;
-}
-
-.dam-assoc-edit-popover__opt.is-selected {
+/* Hover/selected — injected CSS w dam-assoc-edit.js (unikaj podwójnego migotania) */
+.dam-assoc-edit-popover__opt.is-selected:not(.is-pinned) {
   background: #ede4fb;
   box-shadow: inset 3px 0 0 #ab54db;
 }
@@ -2461,8 +2620,8 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
 }
 
 .dam-assoc-edit-popover__thumb {
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
   border-radius: 6px;
   background: #f4f4f6;

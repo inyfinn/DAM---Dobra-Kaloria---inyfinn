@@ -25,6 +25,15 @@
         'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
     );
 
+  function assocEmptyMaterialsHtml() {
+    return (
+      '<p class="dam-media-preview__assoc-empty dam-media-preview__assoc-empty--guide">' +
+      "<strong>Brak skojarzonych materiałów</strong>" +
+      '<span class="dam-media-preview__assoc-empty-hint">System nie wykrył skojarzeń. Dodaj ręcznie.</span>' +
+      "</p>"
+    );
+  }
+
   var PREVIEW_EXTS = { tif: 1, tiff: 1, psd: 1, psb: 1, bmp: 1 };
   var VIDEO_EXTS = { mp4: 1, mov: 1, webm: 1, avi: 1, mkv: 1, m4v: 1 };
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
@@ -184,8 +193,8 @@
       "display:block;font-size:8px;font-weight:500;line-height:1.2;color:#8b8796;",
       "max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
       ".dam-media-preview__assoc-col--branding-split{display:flex;flex-direction:column;gap:70px;align-items:stretch;}",
-      ".dam-media-preview__assoc-item{display:grid;grid-template-rows:auto 1fr auto;align-items:end;justify-items:center;min-height:118px;}",
-      ".dam-media-preview__assoc-thumb-btn{align-self:start;justify-self:stretch;}",
+      ".dam-media-preview__assoc-item{display:grid;grid-template-rows:auto auto auto;align-items:center;justify-items:center;min-height:0;gap:4px;}",
+      ".dam-media-preview__assoc-thumb-btn{align-self:center;justify-self:center;flex-shrink:0;}",
       ".dam-media-preview__assoc-name{align-self:end;}",
       ".dam-media-preview__assoc-index{align-self:end;margin-top:auto;}",
       /* Collapse extras: viz modal uzywa #damVizModalAssoc, nie tylko media-preview id. */
@@ -1300,21 +1309,25 @@
         text: "Dodaj/Edytuj produkty",
         tip: "Dodaj lub edytuj skojarzone produkty",
         cta: "product",
+        pickerId: "2",
       },
       variant: {
         text: "Dodaj/Edytuj warianty",
         tip: "Dodaj lub edytuj warianty materiału (indeks / pliki w folderze)",
         cta: "variant",
+        pickerId: "1",
       },
       material: {
         text: "Dodaj/Edytuj materiały",
         tip: "Dodaj lub edytuj skojarzone materiały brandingowe",
         cta: "material",
+        pickerId: "3",
       },
       suggestions: {
         text: "Dodaj/Edytuj sugestie",
         tip: "Dodaj lub edytuj sugestie materiałów brandingowych",
         cta: "suggestions",
+        pickerId: "5",
       },
     };
     var meta = ctaMeta[ctaKind] || ctaMeta.product;
@@ -1322,6 +1335,8 @@
     var ctaBtn = ctaKind
       ? '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="' +
         esc(ctaAttr) +
+        '" data-dam-assoc-picker-id="' +
+        esc(meta.pickerId || "") +
         '" data-dam-tip="' +
         esc(meta.tip) +
         '"><i class="uil uil-plus" aria-hidden="true"></i><span>' +
@@ -2323,7 +2338,7 @@
       });
     }
     if (!productIds.length) {
-      mount.innerHTML = '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów</p>';
+      mount.innerHTML = assocEmptyMaterialsHtml();
       if (labelEl) labelEl.textContent = "Skojarzone materiały";
       bindBrandingMaterialsPane([], []);
       return;
@@ -2398,7 +2413,7 @@
       '<div class="dam-media-preview__assoc-section dam-media-preview__assoc-col--materials">' +
       '<div class="dam-media-preview__assoc-label-row">' +
       '<span class="dam-media-preview__assoc-label" id="damMediaPreviewLinkedAssetsLabel">Skojarzone materiały</span>' +
-      '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="material" data-dam-tip="Dodaj lub edytuj skojarzone materiały brandingowe">' +
+      '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="material" data-dam-assoc-picker-id="3" data-dam-tip="Dodaj lub edytuj skojarzone materiały brandingowe">' +
       '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj/Edytuj materiały</span></button>' +
       "</div>" +
       '<div class="dam-media-preview__assoc-grid" id="damMediaPreviewLinkedAssets" role="list"></div>' +
@@ -3413,7 +3428,7 @@
     }
     if (!pid && !idxBase) {
       clearAssocPaneLoadingState(mount);
-      mount.innerHTML = '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów</p>';
+      mount.innerHTML = assocEmptyMaterialsHtml();
       if (elementyHost) {
         elementyHost.hidden = true;
         elementyHost.innerHTML = "";
@@ -3443,7 +3458,7 @@
     }
     function showLinkedMaterialsEmptyBindPane() {
       clearAssocPaneLoadingState(mount);
-      mount.innerHTML = '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów</p>';
+      mount.innerHTML = assocEmptyMaterialsHtml();
       if (elementyHost) {
         elementyHost.hidden = true;
         elementyHost.innerHTML = "";
@@ -3582,7 +3597,7 @@
           var staleToggleEmpty = assocColEmpty.querySelector("[data-linked-assets-toggle]");
           if (staleToggleEmpty) staleToggleEmpty.remove();
         }
-        mount.innerHTML = '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów</p>';
+        mount.innerHTML = assocEmptyMaterialsHtml();
         /* Nawet przy 0 materialach: Edytuj wszystko + Shift plus (jak branding). */
         var AE0 = window.DamAssocEdit;
         if (AE0 && typeof AE0.bindMaterialsPane === "function") {

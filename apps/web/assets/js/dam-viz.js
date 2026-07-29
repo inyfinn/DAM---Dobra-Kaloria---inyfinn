@@ -1608,7 +1608,7 @@
       '<div class="dam-media-preview__assoc-col dam-media-preview__assoc-col--variants">' +
       '<div class="dam-viz-modal__variant-head">' +
       '<span class="dam-media-preview__assoc-label" data-dam-tip="Zaznacz wariant, aby poznać szczegóły. Odznacz wariant klikając ponownie, aby zobaczyć szczegóły całego produktu.">Warianty produktu</span>' +
-      '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="variants" data-dam-tip="Dodaj lub edytuj warianty produktu (indeks / jezyk)">' +
+      '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="variants" data-dam-assoc-picker-id="4" data-dam-tip="Dodaj lub edytuj warianty produktu (indeks / jezyk)">' +
       '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj/Edytuj warianty</span></button>' +
       "</div>" +
       '<div class="dam-viz-modal__variant-strip dam-media-preview__variant-grid dam-media-preview__variant-grid--product" role="listbox" aria-label="Warianty produktu">' +
@@ -2892,7 +2892,7 @@
       '<div class="dam-media-preview__assoc-label-row dam-viz-modal__assoc-label-row">' +
       '<span class="dam-media-preview__assoc-label" id="damVizModalAssocLabel">Skojarzone materiały</span>' +
       (admin
-        ? '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="suggestions" data-dam-tip="Dodaj lub edytuj sugestie materialow brandingowych">' +
+        ? '<button type="button" class="dam-int-cta dam-explorer-add-product-btn dam-viz-assoc-cta" data-viz-assoc-cta="suggestions" data-dam-assoc-picker-id="5" data-dam-tip="Dodaj lub edytuj sugestie materialow brandingowych">' +
           '<i class="uil uil-plus" aria-hidden="true"></i><span>Dodaj/Edytuj sugestie</span></button>'
         : "") +
       "</div>" +
@@ -4581,10 +4581,11 @@
     var indexBlock = "";
     if (isGroupedProduct && indexKeys.length > 1) {
       indexBlock =
+        '<div class="dam-viz-card__indexes-anchor">' +
         '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-card__show-indexes" data-group-pid="' +
         esc(group.pid) +
-        '" data-dam-tip="Pokaż wszystkie indeksy wariantów (klik = kopiuj)">' +
-        '<i class="uil uil-list-ul" aria-hidden="true"></i><span>Pokaż indeksy</span></button>' +
+        '" data-dam-tip="Pokaż wszystkie indeksy wariantów (klik = kopiuj)" aria-expanded="false">' +
+        '<i class="uil uil-layer-group" aria-hidden="true"></i><span>Pokaż indeksy</span></button>' +
         '<div class="dam-viz-card__indexes-wrap" hidden>' +
         indexKeys
           .map(function (idx) {
@@ -4601,7 +4602,7 @@
             );
           })
           .join("") +
-        "</div>";
+        "</div></div>";
     } else if (isGroupedProduct && variantCount === 1) {
       var singleIdx = (indexKeys.length ? indexKeys[0] : null) || indexLbl;
       if (singleIdx) {
@@ -4663,7 +4664,8 @@
             '">' +
             esc(carrierLbl || "BRAK TYPU") +
             "</p>" +
-          (indexBlock ? " " + indexBlock : "") +
+          '<div class="dam-viz-card__footer">' +
+          (indexBlock || "") +
           '<div class="dam-viz-card__actions">' +
             (noViz
               ? '<button type="button" class="geex-btn geex-btn--primary dam-btn-icon dam-viz-request-btn" data-group-pid="' + esc(group.pid) + '" title="Zglos zapotrzebowanie" data-dam-tip="Zglos zapotrzebowanie na wizualizacje dla tego wariantu">' +
@@ -4679,6 +4681,7 @@
               ? ""
               : '<button type="button" class="geex-btn dam-btn-icon dam-btn-icon-only dam-viz-share-btn" data-group-pid="' + esc(group.pid) + '" aria-label="Udostępnij" title="Udostępnij" data-dam-tip="Udostępnij plik przez Synology Drive">' +
                 '<i class="uil uil-share-alt" aria-hidden="true"></i></button>') +
+          '</div>' +
           '</div>' +
         '</div>' +
       '</article>'
@@ -4753,28 +4756,34 @@
     el.style.clipPath = "";
   }
 
-  function mountChangeLogInScope() {
-    var bar = document.getElementById("damChangeLogBar");
+  function mountVizFiltersInScope() {
     var scope =
       document.querySelector("#vizSearchScope > .dam-search-scope") ||
       document.querySelector("#vizSearchScope .dam-search-scope");
-    if (bar && scope && bar.parentElement !== scope) {
-      scope.appendChild(bar);
+    var source = document.getElementById("vizScopeFiltersSource");
+    if (!scope || !source) return;
+    while (source.firstChild) {
+      scope.appendChild(source.firstChild);
     }
-    clearChromeRevealInline(bar);
-    if (window.DamTagEdit && typeof window.DamTagEdit.refreshChangeLogBar === "function") {
-      window.DamTagEdit.refreshChangeLogBar();
-    } else if (bar) {
-      /* Ten sam gate co DamTagEdit: rola admin + dam_admin_mode (header ADMIN ON). */
-      bar.hidden = !(isAdminRole() && localStorage.getItem(ADMIN_KEY) === "1");
+    source.hidden = true;
+    source.setAttribute("aria-hidden", "true");
+    scope.classList.add("dam-search-scope--viz-filters");
+  }
+
+  function mountChangeLogInScope() {
+    /* v5.0.109: changelog bar removed from viz search scope */
+    var bar = document.getElementById("damChangeLogBar");
+    if (bar) {
+      bar.hidden = true;
+      bar.setAttribute("aria-hidden", "true");
     }
   }
 
   function ensureVizChromeVisible() {
-    clearChromeRevealInline(document.getElementById("damChangeLogBar"));
     clearChromeRevealInline(document.querySelector(".dam-explorer-toolbar.dam-viz-toolbar"));
     clearChromeRevealInline(document.querySelector(".dam-global-search-block > .dam-viz-grid-toolbar"));
     clearChromeRevealInline(document.getElementById("vizSearchTags"));
+    clearChromeRevealInline(document.querySelector("#vizSearchScope .dam-search-scope"));
   }
 
   function pickVizEmptyBundle() {
@@ -4918,18 +4927,22 @@
       window.DamBadges.bindClicks(grid, "viz");
     }
 
-    grid.querySelectorAll(".dam-viz-card__show-indexes").forEach(function (btn) {
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var wrap = btn.parentNode && btn.parentNode.querySelector(".dam-viz-card__indexes-wrap");
-        if (!wrap) return;
-        var open = wrap.hasAttribute("hidden");
-        if (open) wrap.removeAttribute("hidden");
-        else wrap.setAttribute("hidden", "");
-        btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (window.DamCardIndexPopover && typeof window.DamCardIndexPopover.bind === "function") {
+      window.DamCardIndexPopover.bind(grid);
+    } else {
+      grid.querySelectorAll(".dam-viz-card__show-indexes").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var wrap = btn.parentNode && btn.parentNode.querySelector(".dam-viz-card__indexes-wrap");
+          if (!wrap) return;
+          var open = wrap.hasAttribute("hidden");
+          if (open) wrap.removeAttribute("hidden");
+          else wrap.setAttribute("hidden", "");
+          btn.setAttribute("aria-expanded", open ? "true" : "false");
+        });
       });
-    });
+    }
 
     grid.querySelectorAll(".dam-viz-card--clickable").forEach(function (card) {
       var pid = card.getAttribute("data-group-pid");
@@ -5284,7 +5297,7 @@
     if (!grid) return;
 
     if (window.DamGridReveal && typeof window.DamGridReveal.skeleton === "function") {
-      window.DamGridReveal.skeleton(grid, { variant: "cards", count: 10, layout: "viz-grid" });
+      window.DamGridReveal.skeleton(grid, { variant: "cards", layout: "viz-grid", responsive: true });
     }
 
     // Synology enabled?
@@ -5292,22 +5305,15 @@
 
     bindCardZoomControl();
 
-    var changeLogBar = document.getElementById("damChangeLogBar");
-    if (!isAdminRole()) {
-      if (changeLogBar) changeLogBar.hidden = true;
-      localStorage.setItem(ADMIN_KEY, "0");
-    } else if (!window._damVizAdminBound) {
+    if (!window._damVizAdminBound) {
       window._damVizAdminBound = true;
       window.addEventListener("dam:admin-mode", function () {
-        mountChangeLogInScope();
-        /* Skip boot echo from DamApi.me (same admin/showAll) — avoids 2× reveal. */
         if (!indexData) return;
         if (adminVisibilityKey() === lastAdminVisibilityKey) return;
         applyFilters();
       });
       window.addEventListener("storage", function (e) {
         if (e.key === ADMIN_KEY) {
-          mountChangeLogInScope();
           if (!indexData) return;
           if (adminVisibilityKey() === lastAdminVisibilityKey) return;
           applyFilters();
@@ -5689,23 +5695,20 @@
       search.addEventListener("search", onSearch);
     }
 
-    /* Wizualizacje: UI zawsze Wszystko; Produkty/Warianty wygaszone (bez zmiany localStorage) */
+    /* Wizualizacje: UI zawsze Wszystko; filtry widoku w jednym rzędzie ze scope */
     var vizScopeEl = document.getElementById("vizSearchScope");
-    var changeLogBarEl = document.getElementById("damChangeLogBar");
     if (vizScopeEl && window.DamSearch && typeof window.DamSearch.bindScopeChips === "function") {
       window.DamSearch.bindScopeChips(vizScopeEl, null, {
         locked: true,
-        trailingEl: changeLogBarEl || null,
         afterPaint: function () {
-          mountChangeLogInScope();
+          mountVizFiltersInScope();
         },
       });
     } else {
-      mountChangeLogInScope();
+      mountVizFiltersInScope();
     }
     ensureVizChromeVisible();
-    /* Page-entrance GSAP (DamGridReveal) potrafi zostawić belki na opacity:0 —
-       zwłaszcza gdy #damChangeLogBar jest zagnieżdżony w .dam-viz-toolbar. */
+    /* Page-entrance GSAP (DamGridReveal) potrafi zostawić belki na opacity:0 */
     setTimeout(ensureVizChromeVisible, 700);
     setTimeout(ensureVizChromeVisible, 1600);
 

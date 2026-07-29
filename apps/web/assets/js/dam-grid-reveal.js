@@ -579,6 +579,22 @@
       (mount.classList &&
         (mount.classList.contains("dam-viz-grid") ||
           mount.classList.contains("dam-branding-grid")));
+    if (isVizGrid && opts.responsive !== false) {
+      var rect = mount.getBoundingClientRect ? mount.getBoundingClientRect() : { width: 0 };
+      var w = rect.width || mount.clientWidth || (typeof window !== "undefined" ? window.innerWidth - 360 : 1200);
+      var styles =
+        typeof window !== "undefined" && window.getComputedStyle
+          ? window.getComputedStyle(mount)
+          : null;
+      var minStr = styles ? styles.getPropertyValue("--dam-viz-card-min").trim() : "";
+      var min = parseFloat(minStr) || 220;
+      var gap = 14;
+      var cols = Math.max(1, Math.floor((w + gap) / (min + gap)));
+      var vh = typeof window !== "undefined" ? window.innerHeight || 800 : 800;
+      var cardH = 320;
+      var rows = Math.max(2, Math.ceil((vh * 0.58) / (cardH + gap)));
+      count = Math.min(36, Math.max(cols * rows, cols * 2));
+    }
     if (variant === "cards" && isVizGrid) {
       var cards = "";
       for (i = 0; i < count; i++) {

@@ -329,13 +329,13 @@ body.dam-tasks-page .dam-tasks-btn--primary:focus-visible {
   overflow-y: auto;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgb(var(--dam-shadow-rgb, 70 66 85) / 0.28) transparent;
+  scrollbar-color: var(--dam-scrollbar-thumb, rgb(var(--dam-shadow-rgb, 70 66 85) / 0.12)) transparent;
 }
 
 .dam-tasks-list::-webkit-scrollbar,
 .dam-tasks-comments::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: var(--dam-scrollbar-size, 4px);
+  height: var(--dam-scrollbar-size, 4px);
 }
 
 .dam-tasks-list::-webkit-scrollbar-track,
@@ -345,13 +345,20 @@ body.dam-tasks-page .dam-tasks-btn--primary:focus-visible {
 
 .dam-tasks-list::-webkit-scrollbar-thumb,
 .dam-tasks-comments::-webkit-scrollbar-thumb {
-  background: rgba(70, 66, 85, 0.28);
+  background: var(--dam-scrollbar-thumb, rgba(70, 66, 85, 0.12));
   border-radius: 999px;
 }
 
 .dam-tasks-list::-webkit-scrollbar-thumb:hover,
 .dam-tasks-comments::-webkit-scrollbar-thumb:hover {
-  background: rgba(70, 66, 85, 0.42);
+  background: var(--dam-scrollbar-thumb-hover, rgba(70, 66, 85, 0.24));
+}
+
+.dam-tasks-list::-webkit-scrollbar-button,
+.dam-tasks-comments::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .dam-tasks-row {

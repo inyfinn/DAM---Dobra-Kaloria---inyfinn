@@ -27,13 +27,17 @@
   var CAT_MODE_KEY = "dam_explorer_cat_mode";
   var EXPLORER_CAT_PRODUCT = "PRODUCT";
   var EXPLORER_CAT_MATERIAL = "MATERIAL";
+  var MARKETING_POLSKA_ROOT = "X:/Marketing/- POLSKA";
   var PRODUCT_PATH_MARKERS = ["01 - PRODUKTY", "01 - PRODUCTS"];
   var MATERIAL_PATH_MARKERS = [
-    "03 - MATERIAŁY",
-    "03 - MATERIALY",
-    "07 - E-COMMERCE",
+    "02 - FIRMOWE MATERIA",
+    "03 - MATERIA",
+    "04 - PROCESY",
+    "04 - DRUKOWANE",
     "05 - SOCIAL",
-    "04 - DRUKOWANE"
+    "06 - STRONY WWW",
+    "07 - E-COMMERCE",
+    "08 - KAMAPANIE"
   ];
 
   var state = {
@@ -58,7 +62,10 @@
     navStack:         [],
     navPos:           -1,
     navSilent:        false,
-    catMode:          localStorage.getItem(CAT_MODE_KEY) || EXPLORER_CAT_PRODUCT,
+    catMode:          EXPLORER_CAT_PRODUCT,
+    materialRoots:    null,
+    materialRootsLoading: false,
+    materialBrowseCache: {},
     searchQuery:      "",
     searchHits:       null,
     searchPanelTimer: null
@@ -1186,6 +1193,107 @@
   /* Category helpers                                                     */
   /* ------------------------------------------------------------------ */
 
+  function normExplorerPath(path) {
+    return String(path || "").replace(/\\/g, "/").replace(/\/+$/, "");
+  }
+
+  function parentExplorerPath(path) {
+    var p = normExplorerPath(path);
+    var i = p.lastIndexOf("/");
+    return i >= 0 ? p.slice(0, i) : p;
+  }
+
+  function countProductsUnderMaterialRoot(rootPath) {
+    var root = normExplorerPath(rootPath);
+    if (!root || !state.fileIndex) return 0;
+    return (state.fileIndex.products || []).filter(function (p) {
+      if (!isBrandEnabled(p)) return false;
+      if (!isExplorerMaterialItem(p)) return false;
+      var pPath = normExplorerPath(p.path || p.root_key || "");
+      return pPath && (pPath === root || pPath.indexOf(root + "/") === 0);
+    }).length;
+  }
+
+  function resolveCanonCatTitle() {
+    if (state.catMode === EXPLORER_CAT_MATERIAL) {
+      var roots = state.materialRoots || [];
+      var i;
+      for (i = 0; i < roots.length; i++) {
+        if (roots[i].id === state.canonCat || roots[i].path === state.canonCat) {
+          return roots[i].title;
+        }
+      }
+      var parts = normExplorerPath(state.canonCat).split("/");
+      return parts[parts.length - 1] || state.canonCat;
+    }
+    var catTitle = "";
+    if (DL && DL.CATEGORY_CANON) {
+      DL.CATEGORY_CANON.forEach(function (c) {
+        if (c.id === state.canonCat) catTitle = c.title;
+      });
+    }
+    return catTitle || state.canonCat;
+  }
+
+  function isMaterialMarketingFolderName(name) {
+    var u = String(name || "").toUpperCase();
+    var i;
+    for (i = 0; i < MATERIAL_PATH_MARKERS.length; i++) {
+      if (u.indexOf(MATERIAL_PATH_MARKERS[i].toUpperCase()) !== -1) return true;
+    }
+    return false;
+  }
+
+  function loadMaterialRoots() {
+    if (state.materialRoots) return Promise.resolve(state.materialRoots);
+    if (state.materialRootsLoading) {
+      return new Promise(function (resolve) {
+        var tries = 0;
+        (function wait() {
+          if (state.materialRoots || tries++ > 40) {
+            resolve(state.materialRoots || []);
+            return;
+          }
+          setTimeout(wait, 100);
+        })();
+      });
+    }
+    state.materialRootsLoading = true;
+    return fetch(
+      bridgeUrl() +
+        "/folder-browse?path=" +
+        encodeURIComponent(MARKETING_POLSKA_ROOT) +
+        "&mode=assets"
+    )
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        var folders = (data && data.folders) || [];
+        state.materialRoots = folders
+          .filter(function (f) {
+            return f && f.path && isMaterialMarketingFolderName(f.name);
+          })
+          .map(function (f) {
+            var title = String(f.name || "").replace(/^\d+\s*-\s*/, "").trim() || f.name;
+            return {
+              id: f.path,
+              title: title,
+              path: f.path,
+              count: countProductsUnderMaterialRoot(f.path),
+            };
+          });
+        return state.materialRoots;
+      })
+      .catch(function () {
+        state.materialRoots = [];
+        return [];
+      })
+      .finally(function () {
+        state.materialRootsLoading = false;
+      });
+  }
+
   function productPathUpper(p) {
     return String((p && (p.path || p.root_key)) || "").toUpperCase();
   }
@@ -1223,6 +1331,11 @@
   }
 
   function getCanonicalCategoryList() {
+    if (state.catMode === EXPLORER_CAT_MATERIAL) {
+      return (state.materialRoots || []).map(function (r) {
+        return { id: r.id, title: r.title, count: r.count || 0 };
+      });
+    }
     var products = (state.fileIndex && state.fileIndex.products) || [];
     var map = {};
     var orderMap = {};
@@ -1271,9 +1384,39 @@
           var cid = DL ? DL.categoryCanonId(p.category) : p.category;
           return cid === state.canonCat;
         }
-        return String(p.category || "INNE") === state.canonCat;
+        var root = normExplorerPath(state.canonCat);
+        var pPath = normExplorerPath(p.path || p.root_key || "");
+        return pPath && parentExplorerPath(pPath) === root;
       })
     );
+  }
+
+  function loadMaterialFolderBrowse(path) {
+    var key = normExplorerPath(path);
+    if (state.materialBrowseCache[key]) {
+      return Promise.resolve(state.materialBrowseCache[key]);
+    }
+    return fetch(
+      bridgeUrl() +
+        "/folder-browse?path=" +
+        encodeURIComponent(path) +
+        "&mode=assets"
+    )
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        var payload = {
+          ok: !!(data && data.ok),
+          folders: (data && data.folders) || [],
+          files: (data && data.files) || [],
+        };
+        state.materialBrowseCache[key] = payload;
+        return payload;
+      })
+      .catch(function () {
+        return { ok: false, folders: [], files: [] };
+      });
   }
 
   /* ------------------------------------------------------------------ */
@@ -3561,6 +3704,15 @@
     var mount = document.getElementById("damFolderList");
     if (!mount || !state.fileIndex) return;
 
+    if (state.catMode === EXPLORER_CAT_MATERIAL && !state.materialRoots) {
+      mount.innerHTML =
+        '<p class="dam-explorer-empty__hint">Ładowanie folderów materiałów…</p>';
+      loadMaterialRoots().then(function () {
+        renderSidebar();
+      });
+      return;
+    }
+
     var cats = getCanonicalCategoryList();
     var html = '<div class="dam-cat-list">';
     cats.forEach(function (c) {
@@ -3569,7 +3721,13 @@
         '<i class="uil uil-folder dam-folder-item__icon" aria-hidden="true"></i>' +
         '<div class="dam-folder-item__text">' +
           '<div class="dam-folder-item__name">' + esc(c.title) + "</div>" +
-          '<div class="dam-folder-item__count">' + c.count + " prod.</div>" +
+          '<div class="dam-folder-item__count">' +
+          (state.catMode === EXPLORER_CAT_MATERIAL
+            ? c.count
+              ? c.count + " elem."
+              : "folder"
+            : c.count + " prod.") +
+        "</div>" +
         "</div></div>";
     });
     html += "</div>";
@@ -3819,6 +3977,188 @@
     );
   }
 
+  function buildMaterialFolderRowHtml(folder) {
+    var folderPath = folder && folder.path ? folder.path : "";
+    var folderName = (folder && folder.name) || folderPath.split("/").pop() || "Folder";
+    var childMeta =
+      folder && folder.child_count != null
+        ? String(folder.child_count) + " elementów"
+        : "Folder materiałów";
+    var tagsHtml =
+      '<span class="dam-viz-badge dam-viz-badge--subcat">Folder</span>';
+    var actionsHtml = folderPath
+      ? '<div class="dam-prod-row__end" data-stop-nav="1">' +
+        '<div class="dam-prod-row__actions dam-carrier-toggle__actions" data-dam-tip="Kopiuj ścieżkę / otwórz folder w Windows">' +
+        pathActions(folderPath) +
+        "</div>" +
+        '<i class="uil uil-angle-right dam-prod-row__chevron" aria-hidden="true"></i>' +
+        "</div>"
+      : "";
+    return (
+      '<div class="dam-prod-row dam-prod-row--actions" data-mat-path="' +
+      esc(folderPath) +
+      '">' +
+      '<div class="dam-prod-row__main">' +
+      '<div class="dam-prod-row__title">' +
+      esc(folderName) +
+      "</div>" +
+      '<div class="dam-prod-row__tags">' +
+      tagsHtml +
+      "</div>" +
+      '<div class="dam-prod-row__sub"><span class="dam-prod-row__revs">' +
+      esc(childMeta) +
+      "</span></div>" +
+      "</div>" +
+      actionsHtml +
+      "</div>"
+    );
+  }
+
+  function bindMaterialFolderClicks(mount) {
+    mount.querySelectorAll("[data-mat-path]").forEach(function (row) {
+      if (row._damMatBound) return;
+      row._damMatBound = true;
+      row.addEventListener("click", function (e) {
+        if (productRowNavBlocked(e.target)) return;
+        var nextPath = this.getAttribute("data-mat-path");
+        if (!nextPath) return;
+        state.canonCat = nextPath;
+        state.product = null;
+        state.expandedCarriers = {};
+        state.showOlderCarriers = {};
+        navPush();
+        renderAll();
+      });
+    });
+  }
+
+  function materialCategoryMetaText(productCount, folderCount, fileCount) {
+    var bits = [];
+    if (productCount) {
+      bits.push(
+        productCount +
+          " " +
+          (productCount === 1
+            ? "produkt"
+            : productCount >= 2 && productCount <= 4
+              ? "produkty"
+              : "produktów")
+      );
+    }
+    if (folderCount) {
+      bits.push(
+        folderCount + " " + (folderCount === 1 ? "folder" : "foldery")
+      );
+    }
+    if (fileCount) {
+      bits.push(fileCount + " " + (fileCount === 1 ? "plik" : "pliki"));
+    }
+    return bits.length ? bits.join(" · ") : "Brak elementów w tym folderze";
+  }
+
+  function mountCategoryListPanel(mount, products, opts) {
+    opts = opts || {};
+    var mixProds = products.filter(function (p) {
+      return DL ? DL.isMixProduct(p.display_name || p.name, p.tags) : false;
+    });
+    var regularProds = products.filter(function (p) {
+      return !(DL ? DL.isMixProduct(p.display_name || p.name, p.tags) : false);
+    });
+    var catTitle = opts.title || resolveCanonCatTitle();
+    var extraRows = opts.extraRowsHtml || "";
+    var html =
+      '<div class="dam-explorer-panel">' +
+      panelHeadHtml({
+        icon: opts.icon || "uil-folder",
+        kicker: opts.kicker || "Kategoria",
+        title: catTitle,
+        meta: opts.meta || materialCategoryMetaText(products.length, 0, 0),
+        showAddProduct: !!opts.showAddProduct,
+        categoryContext: { id: state.canonCat, title: catTitle },
+      });
+
+    if (mixProds.length > 0) {
+      var mixOpen = !!state.expandedCarriers["__mix__"];
+      html +=
+        '<div class="dam-mix-section' +
+        (mixOpen ? " is-open" : "") +
+        '">' +
+        '<button type="button" class="dam-mix-toggle" data-toggle-mix="1">' +
+        "<span>MIXY (" +
+        mixProds.length +
+        ")</span>" +
+        '<i class="uil ' +
+        (mixOpen ? "uil-angle-up" : "uil-angle-down") +
+        '" aria-hidden="true"></i>' +
+        "</button>" +
+        '<div class="dam-mix-body"' +
+        (mixOpen ? "" : " hidden") +
+        ">" +
+        mixProds.map(buildProductRowHtml).join("") +
+        "</div></div>";
+    }
+
+    html +=
+      '<div class="dam-prod-list">' +
+      extraRows +
+      regularProds.map(buildProductRowHtml).join("") +
+      "</div></div>";
+    mount.innerHTML = html;
+    bindPanelNav(mount);
+    mount.querySelectorAll("[data-toggle-mix]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.expandedCarriers["__mix__"] = !state.expandedCarriers["__mix__"];
+        renderMain();
+      });
+    });
+    bindProductRowClicks(mount);
+    bindMaterialFolderClicks(mount);
+    bindCopyButtons(mount);
+    bindLifecycleControls(mount);
+    if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
+      window.DamTooltips.refresh(mount);
+    }
+    revealExplorerModules(mount);
+  }
+
+  function renderMaterialCategoryPanel(mount) {
+    var products = getProductsForCanonCat();
+    var requestedPath = normExplorerPath(state.canonCat);
+    mount.innerHTML =
+      '<div class="dam-explorer-panel"><div class="dam-explorer-empty">Ładowanie materiałów…</div></div>';
+    loadMaterialFolderBrowse(state.canonCat).then(function (data) {
+      if (!mount.isConnected) return;
+      if (state.catMode !== EXPLORER_CAT_MATERIAL || !state.canonCat) return;
+      if (normExplorerPath(state.canonCat) !== requestedPath) return;
+      if (!data || !data.ok) {
+        mount.innerHTML =
+          '<div class="dam-explorer-panel"><div class="dam-explorer-empty">Nie udało się otworzyć folderu materiałów.</div></div>';
+        return;
+      }
+      var folders = (data && data.folders) || [];
+      var files = (data && data.files) || [];
+      var folderRows = folders
+        .map(function (f) {
+          return buildMaterialFolderRowHtml(
+            Object.assign({}, f, {
+              child_count:
+                (f.file_count || 0) +
+                (f.folder_count || 0) +
+                (f.child_count || 0),
+            })
+          );
+        })
+        .join("");
+      mountCategoryListPanel(mount, products, {
+        icon: "uil-folder",
+        kicker: "Materiały",
+        title: resolveCanonCatTitle(),
+        meta: materialCategoryMetaText(products.length, folders.length, files.length),
+        extraRowsHtml: folderRows,
+      });
+    });
+  }
+
   var _explorerRevealSig = "";
   function revealExplorerModules(mount) {
     if (!window.DamGridReveal || !mount) return;
@@ -3844,7 +4184,9 @@
   }
 
   function bindProductRowClicks(mount) {
-    mount.querySelectorAll(".dam-prod-row").forEach(function (row) {
+    mount.querySelectorAll(".dam-prod-row[data-pid]").forEach(function (row) {
+      if (row._damProdBound) return;
+      row._damProdBound = true;
       row.addEventListener("click", function (e) {
         if (productRowNavBlocked(e.target)) return;
         var p = resolveProductFromIndexStrict(this.getAttribute("data-pid"));
@@ -4030,68 +4372,29 @@
       return;
     }
 
-    /* Product list */
+    /* Category list (products + materials share panel template) */
     if (!state.product) {
+      if (state.catMode === EXPLORER_CAT_MATERIAL && state.canonCat) {
+        renderMaterialCategoryPanel(mount);
+        return;
+      }
       var products = getProductsForCanonCat();
-      var mixProds = products.filter(function (p) {
-        return DL ? DL.isMixProduct(p.display_name || p.name, p.tags) : false;
+      var catTitle = resolveCanonCatTitle();
+      mountCategoryListPanel(mount, products, {
+        icon: "uil-folder",
+        kicker: "Kategoria",
+        title: catTitle,
+        meta:
+          products.length +
+          " " +
+          (products.length === 1
+            ? "produkt"
+            : products.length >= 2 && products.length <= 4
+              ? "produkty"
+              : "produktów") +
+          " w tej kategorii",
+        showAddProduct: true,
       });
-      var regularProds = products.filter(function (p) {
-        return !(DL ? DL.isMixProduct(p.display_name || p.name, p.tags) : false);
-      });
-
-      var catTitle = "";
-      if (DL) {
-        DL.CATEGORY_CANON.forEach(function (c) { if (c.id === state.canonCat) catTitle = c.title; });
-      }
-      catTitle = catTitle || state.canonCat;
-
-      function prodRowHtml(p) {
-        return buildProductRowHtml(p);
-      }
-
-      var html = '<div class="dam-explorer-panel">' +
-        panelHeadHtml({
-          icon: "uil-folder",
-          kicker: "Kategoria",
-          title: catTitle,
-          meta: products.length + " " +
-            (products.length === 1 ? "produkt" : (products.length >= 2 && products.length <= 4 ? "produkty" : "produktów")) +
-            " w tej kategorii",
-          showAddProduct: true,
-          categoryContext: { id: state.canonCat, title: catTitle }
-        });
-
-      if (mixProds.length > 0) {
-        var mixOpen = !!state.expandedCarriers["__mix__"];
-        html += '<div class="dam-mix-section' + (mixOpen ? " is-open" : "") + '">' +
-          '<button type="button" class="dam-mix-toggle" data-toggle-mix="1">' +
-            '<span>MIXY (' + mixProds.length + ")</span>" +
-            '<i class="uil ' + (mixOpen ? "uil-angle-up" : "uil-angle-down") + '" aria-hidden="true"></i>' +
-          "</button>" +
-          '<div class="dam-mix-body"' + (mixOpen ? "" : " hidden") + ">" +
-          mixProds.map(prodRowHtml).join("") +
-          "</div></div>";
-      }
-
-      html += '<div class="dam-prod-list">' + regularProds.map(prodRowHtml).join("") + "</div>";
-      html += "</div>";
-      mount.innerHTML = html;
-      bindPanelNav(mount);
-
-      mount.querySelectorAll("[data-toggle-mix]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          state.expandedCarriers["__mix__"] = !state.expandedCarriers["__mix__"];
-          renderMain();
-        });
-      });
-      bindProductRowClicks(mount);
-      bindCopyButtons(mount);
-      bindLifecycleControls(mount);
-      if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
-        window.DamTooltips.refresh(mount);
-      }
-      revealExplorerModules(mount);
       return;
     }
 
@@ -4193,10 +4496,16 @@
     state.catMode = next;
     state.canonCat = null;
     state.product = null;
+    state.materialBrowseCache = {};
     localStorage.setItem(CAT_MODE_KEY, next);
     syncExplorerCatModeUi();
-    renderSidebar();
-    renderMain();
+    if (next === EXPLORER_CAT_MATERIAL) {
+      loadMaterialRoots().then(function () {
+        renderAll();
+      });
+      return;
+    }
+    renderAll();
   }
 
   function bindGlobalExplorerFilters() {

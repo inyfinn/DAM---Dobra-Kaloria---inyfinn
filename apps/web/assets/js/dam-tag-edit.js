@@ -1346,10 +1346,11 @@
       "</strong>" +
       '<button type="button" class="dam-viz-modal-close" aria-label="Zamknij" data-close data-dam-tip="Zamknij bez zapisu">' +
       '<i class="uil uil-times"></i></button></div>' +
-      '<div class="dam-tag-edit-popover__search-wrap">' +
+      '<div class="dam-tag-edit-popover__search-wrap dam-search-wrap dam-search-wrap--picker">' +
+      '<div class="dam-search-input-wrap">' +
       '<i class="uil uil-search" aria-hidden="true"></i>' +
-      '<input type="text" id="damTagEditSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj..." autocomplete="off" />' +
-      "</div>" +
+      '<input type="text" id="damTagEditSearch" class="form-control dam-search-input dam-tag-edit-popover__search" placeholder="Szukaj..." autocomplete="off" />' +
+      "</div></div>" +
       '<div class="dam-tag-edit-popover__list" data-tag-list></div>' +
       '<p class="dam-tag-edit-popover__empty" data-empty hidden>Brak opcji dla tego wyszukiwania.</p>';
 
@@ -3213,10 +3214,11 @@
       "<strong>Tagi produktu</strong>" +
       '<button type="button" class="dam-viz-modal-close" aria-label="Zamknij" data-close>' +
       '<i class="uil uil-times"></i></button></div>' +
-      '<div class="dam-tag-edit-popover__search-wrap">' +
+      '<div class="dam-tag-edit-popover__search-wrap dam-search-wrap dam-search-wrap--picker">' +
+      '<div class="dam-search-input-wrap">' +
       '<i class="uil uil-search" aria-hidden="true"></i>' +
-      '<input type="text" id="damTagEditSearch" class="dam-tag-edit-popover__search" placeholder="Szukaj tag…" autocomplete="off" />' +
-      "</div>" +
+      '<input type="text" id="damTagEditSearch" class="form-control dam-search-input dam-tag-edit-popover__search" placeholder="Szukaj tag…" autocomplete="off" />' +
+      "</div></div>" +
       '<div class="dam-tag-edit-popover__list dam-tag-edit-popover__list--checks" data-tag-list>' +
       '<p class="dam-tag-edit-popover__empty">Ladowanie slownika tagow…</p></div>' +
       '<p class="dam-tag-edit-popover__empty" data-empty hidden>Brak tagow dla tego wyszukiwania.</p>' +

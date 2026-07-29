@@ -633,7 +633,9 @@
 
   function marketingTileHtml(tile, index) {
     var count = tile.assets.length;
-    var preview = marketingTilePreviewHtml(tile.assets, tile.kind === "viz" ? 6 : 4);
+    var previewLimit = tile.kind === "viz" ? 6 : 4;
+    var canExpand = count > previewLimit;
+    var preview = marketingTilePreviewHtml(tile.assets, previewLimit);
     return (
       '<article class="dam-marketing-tile" data-tile-id="' +
       esc(tile.id) +
@@ -651,11 +653,14 @@
       count +
       (count === 1 ? " asset" : " assetów") +
       "</p></div>" +
-      '<button type="button" class="dam-marketing-tile__toggle geex-btn geex-btn--sm geex-btn--primary-transparent" data-action="expand" aria-expanded="false">' +
-      "Pokaż wszystko</button></header>" +
+      (canExpand
+        ? '<button type="button" class="dam-marketing-tile__toggle geex-btn geex-btn--sm geex-btn--primary-transparent" data-action="expand" aria-expanded="false">' +
+          "Pokaż wszystko</button>"
+        : "") +
+      "</header>" +
       '<div class="dam-marketing-tile__body">' +
       preview +
-      (count > 4
+      (canExpand
         ? '<div class="dam-marketing-tile__full" hidden>' +
           '<div class="dam-marketing-tile__grid dam-marketing-tile__grid--full">' +
           tile.assets.map(marketingCardHtml).join("") +
@@ -667,49 +672,51 @@
 
   function bindMarketingTiles(host) {
     if (!host) return;
-    var wrap = host.querySelector(".dam-marketing-tiles");
-    if (!wrap) return;
-    wrap.querySelectorAll(".dam-marketing-tile__toggle").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var tile = btn.closest(".dam-marketing-tile");
-        if (!tile) return;
-        var expanded = wrap.getAttribute("data-expanded");
-        var tileId = tile.getAttribute("data-tile-id");
-        if (expanded === tileId) {
-          wrap.removeAttribute("data-expanded");
-          tile.classList.remove("is-expanded");
-          btn.setAttribute("aria-expanded", "false");
-          btn.textContent = "Pokaż wszystko";
-          var full = tile.querySelector(".dam-marketing-tile__full");
-          if (full) full.hidden = true;
-          return;
-        }
-        wrap.querySelectorAll(".dam-marketing-tile").forEach(function (el) {
-          el.classList.remove("is-expanded");
-          var fullEl = el.querySelector(".dam-marketing-tile__full");
-          if (fullEl) fullEl.hidden = true;
-          var tg = el.querySelector(".dam-marketing-tile__toggle");
-          if (tg) {
-            tg.setAttribute("aria-expanded", "false");
-            tg.textContent = "Pokaż wszystko";
+    host.querySelectorAll(".dam-marketing-tiles").forEach(function (wrap) {
+      wrap.querySelectorAll(".dam-marketing-tile__toggle").forEach(function (btn) {
+        if (btn._damMarketingToggleBound) return;
+        btn._damMarketingToggleBound = true;
+        btn.addEventListener("click", function () {
+          var tile = btn.closest(".dam-marketing-tile");
+          if (!tile) return;
+          var expanded = wrap.getAttribute("data-expanded");
+          var tileId = tile.getAttribute("data-tile-id");
+          if (expanded === tileId) {
+            wrap.removeAttribute("data-expanded");
+            tile.classList.remove("is-expanded");
+            btn.setAttribute("aria-expanded", "false");
+            btn.textContent = "Pokaż wszystko";
+            var full = tile.querySelector(".dam-marketing-tile__full");
+            if (full) full.hidden = true;
+            return;
           }
-        });
-        wrap.setAttribute("data-expanded", tileId);
-        tile.classList.add("is-expanded");
-        btn.setAttribute("aria-expanded", "true");
-        btn.textContent = "Zwiń";
-        var fullPanel = tile.querySelector(".dam-marketing-tile__full");
-        if (fullPanel) fullPanel.hidden = false;
-        var idx = parseInt(tile.getAttribute("data-tile-index") || "0", 10);
-        wrap.querySelectorAll(".dam-marketing-tile").forEach(function (el) {
-          var elIdx = parseInt(el.getAttribute("data-tile-index") || "0", 10);
-          if (el === tile) {
-            el.style.order = String(idx);
-          } else if (elIdx < idx) {
-            el.style.order = String(elIdx);
-          } else {
-            el.style.order = String(elIdx + 1);
-          }
+          wrap.querySelectorAll(".dam-marketing-tile").forEach(function (el) {
+            el.classList.remove("is-expanded");
+            var fullEl = el.querySelector(".dam-marketing-tile__full");
+            if (fullEl) fullEl.hidden = true;
+            var tg = el.querySelector(".dam-marketing-tile__toggle");
+            if (tg) {
+              tg.setAttribute("aria-expanded", "false");
+              tg.textContent = "Pokaż wszystko";
+            }
+          });
+          wrap.setAttribute("data-expanded", tileId);
+          tile.classList.add("is-expanded");
+          btn.setAttribute("aria-expanded", "true");
+          btn.textContent = "Zwiń";
+          var fullPanel = tile.querySelector(".dam-marketing-tile__full");
+          if (fullPanel) fullPanel.hidden = false;
+          var idx = parseInt(tile.getAttribute("data-tile-index") || "0", 10);
+          wrap.querySelectorAll(".dam-marketing-tile").forEach(function (el) {
+            var elIdx = parseInt(el.getAttribute("data-tile-index") || "0", 10);
+            if (el === tile) {
+              el.style.order = String(idx);
+            } else if (elIdx < idx) {
+              el.style.order = String(elIdx);
+            } else {
+              el.style.order = String(elIdx + 1);
+            }
+          });
         });
       });
     });

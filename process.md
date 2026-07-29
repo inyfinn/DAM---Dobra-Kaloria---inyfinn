@@ -1,3 +1,410 @@
+## 2026-07-30 - deploy Panel-DAM Synology + commit v5.0.121
+
+**Komenda/Akcja:** User: commit+push; hostowac Panel-DAM na inyfinn.synology.me (web folder NAS).
+
+**Log/Status:** deploy-panel-dam-synology.ps1 -> W:\web\Panel-DAM; docs/SYNOLOGY-WEB-PANEL.md (:5001=DSM, Web Station=/Panel-DAM/); commit picker v5.0.120-121.
+
+**Efekt/Fix:** Statyczny mirror na NAS; pelny DAM nadal wymaga bridge (lokalnie lub reverse proxy).
+
+**Źródła:** W:\web, scripts/ops/deploy-panel-dam-synology.ps1
+
+## 2026-07-29 - v5.0.121: picker align prod/wariant + polish
+
+**Komenda/Akcja:** User: popraw wyglad pickera (/ui-taste); subagent 6311aafc fail (API limit).
+
+**Log/Status:** Slot akcji 67px (folder+link); spacer na wariantach bez linku; tag gap 5px; checkbox 20px purple; expand hover; bump 5.0.121.
+
+**Efekt/Fix:** Checkboxy prod/wariant w jednej kolumnie; folder lewo, expand prawo bez regresji.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, version 5.0.121
+
+## 2026-07-29 - wyjaśnienie: Kopiuj link tylko na produkcie, nie wariancie
+
+**Komenda/Akcja:** User pyta czemu `data-row-copy` jest na wierszu PRODUKT, a na WARIANT (revision) już nie.
+
+**Log/Status:** Audyt `rowActionsHtml` w dam-assoc-edit.js — `showLink` tylko gdy `isProductRow`/`isVizGridGroup`/`kind===product`; wariant ma tylko folder (własny `path`). Explorer deep-link: tylko `?product=` / `?index=`, brak `?variant=`.
+
+**Efekt/Fix:** Wyjaśnienie intencji (link produktowy, nie wariantowy); bez zmian kodu.
+
+**Źródła:** dam-assoc-edit.js rowActionsHtml, dam-explorer.js applyDeepLink
+
+## 2026-07-29 - v5.0.120: picker folder lewo + expand prawo
+
+**Komenda/Akcja:** User: `row-btn` folder ma zostać po lewej; chevron `expand` po prawej (nie obok folderu na lewo).
+
+**Log/Status:** `opt-row` grid `actions | main | expand`; folder w `row-actions` sibling przed buttonem; expand sibling po buttonie; button grid tylko `check thumb body`; click handler na expand; bump 5.0.120.
+
+**Efekt/Fix:** Folder na lewej krawędzi wiersza, expand na prawej.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, dam-branding.css, version 5.0.120
+
+## 2026-07-29 - v5.0.119: revert thumb stack (center contain)
+
+**Komenda/Akcja:** User: warianty nakładają się / lewy górny róg; gorsza jakość miniatur.
+
+**Log/Status:** Cofnięto regresję v5.0.114 (`width/height:auto`); przywrócono fill+`object-fit:contain`+`object-position:center`; stack layers flex center; `mediaUrl` → `previewUrl` first; bump 5.0.119.
+
+**Efekt/Fix:** Karty branding jak przed regresją — wyśrodkowane miniatury, stos wariantów bez rozjechania.
+
+**Źródła:** dam-brand.css, dam-branding.css, dam-branding.js, version 5.0.119
+
+## 2026-07-29 - v5.0.117: fix thumb stack center + jakość kart
+
+**Komenda/Akcja:** User: warianty nakładają się / wyrównane do lewego górnego rogu; miniatury gorszej jakości po zmianie v5.0.114.
+
+**Log/Status:** Przywrócono `.dam-viz-thumb__img` `width/height:100%` + `object-position:center`; stack layers flex center; stack stretch w slocie; bump 5.0.117.
+
+**Efekt/Fix:** Stos wariantów wyśrodkowany, bez nakładania; grafiki fill contain center jak przed regresją.
+
+**Źródła:** dam-brand.css, dam-branding.css, version 5.0.117
+
+## 2026-07-29 - v5.0.116: merge check-left + alignment v5.0.115
+
+**Komenda/Akcja:** Follow-up po subagent v5.0.115 — scalenie z v5.0.114 (checkbox po lewej od miniatury).
+
+**Log/Status:** Grid `check thumb body actions expand` + HTML reorder (check przed thumb); zachowane actions inside button i folder na produktach z v5.0.115; bump 5.0.116.
+
+**Efekt/Fix:** Checkbox po lewej (12px gap) + wyrównanie 0px drift mat/prod.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, version 5.0.116
+
+## 2026-07-29 - v5.0.115: picker row alignment + folder na produktach
+
+**Komenda/Akcja:** Fix `#damAssocEditPopover` — wyrównanie check/expand/actions material vs product; row-actions wewnątrz `.dam-assoc-edit-popover__opt`; unified grid `thumb body check actions expand`; `pickerRowFolderPath`/`pickerRowProductId`; folder+link na produktach.
+
+**Log/Status:** `optionButtonHtml` — actions między check a expand (bez sibling); `rowActionsHtml` zawsze `<span class=row-actions>`; inject CSS + `dam-brand.css` 5-col grid; bump 5.0.115, ASSOC token `assocPickerRowAlignGrid20260729i`. QA 10 passów CDP: drift check/actions 0px (było 36px).
+
+**Efekt/Fix:** Material i product rows — check=1448px, actions=1530px (identyczne); 0 sibling row-actions poza buttonem; produkty z folder+link gdy path/PID resolvable.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, branding/visualizations/explorer.html ?v=5.0.115
+
+**Komenda/Akcja:** User: globalnie `dam-search-hit__check` po lewej od miniatury (12px gap); napraw broken thumbs w pickerze; branding `.dam-viz-thumb__img` nie upscale powyżej intrinsic.
+
+**Log/Status:** Grid `check thumb body actions expand`; HTML reorder w `optionButtonHtml`; `resolvePickerRowDisplayThumb` + hydrate po `data-product-id`; `pickerThumbOnError` fallback produktu; CSS picker thumb `max 60px` intrinsic; branding `width/height:auto`; bump 5.0.114.
+
+**Efekt/Fix:** Checkbox w pierwszej kolumnie grida; miniatury picker ładują z bridge/cache; małe logo w kartach nie rozciągane.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, dam-branding.css, version 5.0.114
+
+
+**Komenda/Akcja:** User: Shift-minus usuwa skojarzenia losowo; toast „zapis przekroczył 5 s / Failed to fetch”; usuwanie musi działać bezwzględnie — zakoduj kolejkę.
+
+**Log/Status:** `enqueueAssocSave` + `drainAssocSaveQueue` w dam-assoc-edit.js: timeout 15 s, do 10 retry z backoff, persist sessionStorage przy wyczerpaniu; `seedEnrichAssocSave` bez rollbacku UI; picker remove bez rollbacku; usunięty toast timeout_5s; bump 5.0.113.
+
+**Efekt/Fix:** UI usuwa natychmiast (optimistic); zapis w tle z retry; brak „spróbuj ponownie” przy wolnym bridge.
+
+**Źródła:** dam-assoc-edit.js, version 5.0.113
+
+## 2026-07-29 - v5.0.112: picker row alignment (check/expand/folder)
+
+**Komenda/Akcja:** User: checkbox/chevron/folder nie w jednej linii pionowej w pickerze Skojarzenia; nie widać folderów na produktach.
+
+**Log/Status:** row-actions przeniesione do grida wewnątrz `.dam-assoc-edit-opt`; stała kolumna actions 68px; `pickerRowFolderPath` dla produktów; bump 5.0.112.
+
+**Efekt/Fix:** Wszystkie typy wierszy mają tę samą siatkę kolumn.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, 5.0.112
+
+## 2026-07-29 - v5.0.111: picker search + stabilne miniatury + czytelne wybrane
+
+**Komenda/Akcja:** User: miniatury migaja, przyciski nieczytelne, wyszukiwarka okropna (/ui-taste) w pickerze skojarzen.
+
+**Log/Status:** Subagent [Fix picker thumbs search buttons](29a59f5c-9d4a-4be9-8b1e-ce56d7a43a71) fail API - fix reczny. Nowy `dam-search-wrap--picker` (assoc + tag picker); grid check `minmax(72px,auto)` w dam-brand.css + inject; stabilizacja thumb (`data-thumb-stable`, bez lazy, 1 fallback); row-btn 32px kontrast; bump 5.0.111.
+
+**Efekt/Fix:** Pass screenshot branding picker - search jedno pole, wybrane czytelne w AKTUALNE, ikony akcji widoczne. CDP grid `60px … 72px 28px`.
+
+**Źródła:** dam-assoc-edit.js, dam-tag-edit.js, dam-brand.css, ?v=5.0.111
+
+## 2026-07-29 - v5.0.110: miniatury skojarzonych produktow (sidebar modal)
+
+**Komenda/Akcja:** User: uciete miniatury w SKOJARZONE PRODUKTY (sidebar modal branding).
+
+**Log/Status:** Usunieto max-height 48% + overflow hidden na sekcji produktow; flex na [data-produkty-host]; thumb-btn 70x70 flex-shrink:0; assoc-item grid auto/auto/auto.
+
+**Efekt/Fix:** bump 5.0.110; dam-branding.css, dam-viz-modal.css, dam-media-preview.js.
+
+**Źródła:** ?v=5.0.110
+
+## 2026-07-29 - auto-start DAM dla przegladarki (bez recznego serve_browser)
+
+**Komenda/Akcja:** User: przy wejsciu w przegladarke ma sie samo uruchamiac — bez portow/build recznie.
+
+**Log/Status:** `ensure_dam_running.py` (--watch / --open), `serve_browser.py --headless`, skroty `open-dam-browser.vbs` + autostart `run-dam-watch.vbs`; zaktualizowano `install-desktop-shortcut.ps1`.
+
+**Efekt/Fix:** Po logowaniu porty 8765/8766 pilnowane w tle. Skrot „DAM (przegladarka)” startuje serwer + otwiera URL. BUILD niepotrzebny.
+
+**Źródła:** apps/desktop/ensure_dam_running.py, open-dam-browser.vbs, run-dam-watch.vbs, install-desktop-shortcut.ps1
+
+## 2026-07-29 - uruchomienie aplikacji desktop (bez portów / bez build)
+
+**Komenda/Akcja:** User: strona nie działa; chce tryb „jak aplikacja” — bez portów, bez BUILD.
+
+**Log/Status:** Porty 8765/8766 były martwe (brak serwera). Zainstalowano skrót pulpitu (`install-desktop-shortcut.ps1`). Uruchomiono `apps/desktop/launch.py` — UI 200, bridge OK.
+
+**Efekt/Fix:** Dwuklik **„DAM - Dobra Kaloria - Inyfinn”** na pulpicie = okno WebView2, most + UI startują automatycznie. Brak npm/webpack — pliki statyczne HTML/JS.
+
+**Źródła:** launch.py, run-dam.vbs, scripts/ops/install-desktop-shortcut.ps1
+
+## 2026-07-29 - v5.0.109: picker pinned + toolbar merge
+
+**Komenda/Akcja:** User: A) pinned rows = list design (left accent, wybrane label); B) search chrome align; C) viz filters into scope row; D) branding view-tools into tabs row; bump 5.0.109.
+
+**Log/Status:** dam-assoc-edit.js pinned/list parity + search in list-col with panel/branding chrome; visualizations.html filters → #vizSearchScope; branding.html view-tools in tabs; CSS dam-brand/dam-branding/dam-viz.
+
+**Efekt/Fix:** node --check OK; screenshot verify picker/viz/branding.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, dam-branding.css, dam-viz.js, dam-viz.css, visualizations.html, branding.html, ?v=5.0.109
+
+**Komenda/Akcja:** User: powiększ miniatury w pickrze do wielkości bloku tekstu (head+name+meta).
+
+**Log/Status:** grid kolumna thumb 60px; thumb-wrap/img 60×60; bump 5.0.108.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, dam-branding.css, ?v=5.0.108
+
+## 2026-07-29 - v5.0.107: picker tagi przy badge, bez migotania
+
+**Komenda/Akcja:** User: migocze, ucina tekst, tagi za daleko od PRODUKT/MATERIAŁ (dam-viz-card__badges width:100% + min-height:56px).
+
+**Log/Status:** Usunięto `dam-viz-card__badges` z tags-inline w pickerze; override width/min-height; wiersz 84px; jeden hover; bump 5.0.107.
+
+**Efekt/Fix:** CDP gap badge→tag <20px.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, dam-branding.css, ?v=5.0.107
+
+## 2026-07-29 - v5.0.106: globalne scrollbary 4px minimalistyczne
+
+**Komenda/Akcja:** User: scroll wszędzie cieńszy, bardziej minimalistyczny, globalnie (bez strzałek).
+
+**Log/Status:** `dam-brand.css` — `*::-webkit-scrollbar` 4px, ukryte button/corner; usunięto lokalne override w pickerze; sync dashboard/tasks/life-hist; bump 5.0.106.
+
+**Efekt/Fix:** Weryfikacja CDP szerokość scrollbara.
+
+**Źródła:** dam-brand.css, dam-branding.css, dam-dashboard.css, dam-tasks.css, ?v=5.0.106
+
+## 2026-07-29 - v5.0.105: popover indeksów — lista pionowa
+
+**Komenda/Akcja:** User: `.dam-index-popover` — indeksy zawsze lista od góry do dołu, nie w poziomie.
+
+**Log/Status:** `dam-branding.css` — `flex-direction: column`, chipy `width:100%`; bump 5.0.105.
+
+**Efekt/Fix:** Weryfikacja screenshot.
+
+**Źródła:** dam-branding.css, ?v=5.0.105
+
+## 2026-07-29 - v5.0.104: picker grid + fix nested button tags
+
+**Komenda/Akcja:** User: wiersze pickera rozjechane — CSS Grid 76px; fix: DamBadges `<button>` wewnątrz `<button>` psuło DOM.
+
+**Log/Status:** `pickerSanitizeInlineTags`; grid layout; bump 5.0.104.
+
+**Efekt/Fix:** CDP rowH=76; weryfikacja po sanitize.
+
+**Źródła:** dam-assoc-edit.js, ?v=5.0.104
+
+## 2026-07-29 - v5.0.103: picker skojarzeń CSS Grid 76px (jak eksplorator)
+
+**Komenda/Akcja:** User: wiersze pickera (materiał/produkt) rozjechane, 134px — ma być CSS Grid, skondensowane jak `#damSearchResults` (~76px).
+
+**Log/Status:** `pickerSearchHitBodyHtml` (badge+tagi+tytuł+meta jedna linia); grid na `.dam-assoc-edit-popover__opt`; usunięto meta-rail NAZWA/TYP PLIKU; bump 5.0.103.
+
+**Efekt/Fix:** W trakcie weryfikacji screenshot+CDP.
+
+**Źródła:** dam-assoc-edit.js, dam-brand.css, ?v=5.0.103
+
+## 2026-07-29 - v5.0.102: footer index+CTA wyrównany; ghost Pokaż indeksy
+
+**Komenda/Akcja:** User: chip indeksu vs „Pokaż indeksy” niewyrównane w rzędzie; usuń obrys przycisku globalnie.
+
+**Log/Status:** `dam-viz-card__footer` (index+actions) w dam-viz.js + dam-branding.js; CSS footer margin-top auto, show-indexes ghost border:none; bump 5.0.102.
+
+**Efekt/Fix:** CDP — indexTop=1031 na całym rzędzie (chip+show), border 0px. Bez commit.
+
+**Źródła:** dam-brand.css, dam-viz.js, dam-branding.js, ?v=5.0.102
+
+
+
+**Komenda/Akcja:** User: kafelek wizualizacji przebudować tak samo jak branding (kompakt body, thumb, CTA na dole 12px, przyciski 44px).
+
+**Log/Status:** `dam-brand.css` — base body rhythm + `:not(.dam-branding-card)` thumb 178, id-chip center, actions 44px, indexes popover; bump 5.0.100.
+
+**Efekt/Fix:** CDP vizGrid — bottomGap 12, actionsTop wyrównane. Bez commit.
+
+**Źródła:** dam-brand.css, visualizations.html ?v=5.0.100
+
+
+
+**Komenda/Akcja:** User: za dużo wolnego miejsca u dołu body; przyciski zawsze na dole kafelka (12px); tagi/tytuł/meta/indeks u góry, wyrównane między kartami.
+
+**Log/Status:** `dam-branding.css` — `.dam-viz-card__actions { margin-top: auto }`, `pad-bottom: 12px`; bump 5.0.99.
+
+**Efekt/Fix:** CDP — bottomGap 12px, actionsTop wyrównane w rzędzie. Bez commit.
+
+**Źródła:** dam-branding.css, ?v=5.0.99
+
+
+
+**Komenda/Akcja:** User: wyrównaj wysokość Podgląd + ikony folder/udostępnij na karcie branding.
+
+**Log/Status:** `dam-branding.css` — wszystkie `.geex-btn` w `.dam-viz-card__actions` = 44px; bump 5.0.98.
+
+**Efekt/Fix:** CDP — Podgląd i ikony ta sama wysokość. Bez commit.
+
+**Źródła:** dam-branding.css, ?v=5.0.98
+
+
+
+**Komenda/Akcja:** User: usuń białą przestrzeń u góry body karty branding (obraz za mały); tagi wyżej; chip indeksu center; lepsza ikona „Pokaż indeksy”; −5px odstępy title/meta/indexes na grupach.
+
+**Log/Status:** `dam-branding.css` — flex-start, pad-top 10, gap 13, thumb 178px bez padding-top; indexes-anchor flex center; `dam-branding.js`/`dam-viz.js` — ikona `uil-layer-group`; bump 5.0.97.
+
+**Efekt/Fix:** Browser verify branding grid. Bez commit.
+
+**Źródła:** dam-branding.css, dam-branding.js, dam-viz.js, ?v=5.0.97
+
+
+
+**Komenda/Akcja:** User: lista „Warianty materiału” ma pokazywać elementy od razu (nie białe pole „wpisz 2 znaki”); pinned rows jako materiał (nie product); scrollbar minimalistyczny wszędzie.
+
+**Log/Status:** `local_bridge.py` — `browse=1` na `/branding-search-picker`; `dam-assoc-edit.js` — `loadBrandingPickerBrowse`, `bootstrapBrandingPickerList`, minQ=0 dla branding API, pinned `kind:material`; `dam-branding.js` — `buildPickerBrowseRows`; `dam-brand.css` — scrollbars na html/body/#damAssocEditOverlay; bump 5.0.96.
+
+**Efekt/Fix:** Browser PASS branding ID1 — 44 wiersze listy od razu, `dam-search-hit--material`, pinned 4. Screenshot `.qa-screenshots/picker-browse-on-open-5096.png`. Bez commit.
+
+**Źródła:** dam-assoc-edit.js, dam-branding.js, local_bridge.py, dam-brand.css, ?v=5.0.96
+
+
+
+**Komenda/Akcja:** User: popover indeksów „wędruje” przy scrollu — ma być przypięty do przycisku; szerokość = kafelek; scrollbar minimalistyczny globalnie.
+
+**Log/Status:** `dam-card-index-popover.js` — reposition na scroll/resize (capture+rAF), width/left z `.dam-viz-card__body`, flip gdy brak miejsca pod spodem; CSS bez max-width 360px; `--dam-scrollbar-*` global w dam-brand.css; bump 5.0.95.
+
+**Efekt/Fix:** v5.0.95 lokalnie — browser verify. Bez commit.
+
+**Źródła:** dam-card-index-popover.js, dam-branding.css, dam-brand.css, branding/visualizations.html ?v=5.0.95
+
+
+**Komenda/Akcja:** User spec 2026-07-29: unified DAM assoc picker architecture; browser verify ID1/ID4/ID5; fix ID5 search stuck on „Szukam materiałów…”.
+
+**Log/Status:** pickerMode + CTA ids 1–5; branding groups nested; viz grid w sugestiach; `pickerStillOpen` → `pop.isConnected`; branding bootstrap gen cancel; input handler: branding q≥2 bez `scheduleListPaint` (rAF race); `fetchPickerJson` 12s; bump 5.0.94.
+
+**Efekt/Fix:** Browser PASS — branding ID1 meta-rail pinned; viz ID4 „Warianty produktu”; ID5 search „630” → 44 wiersze meta-rail. Bez commit.
+
+**Źródła:** dam-assoc-edit.js, dam-media-preview.js, dam-viz.js, dam-branding.js, ?v=5.0.94
+
+
+## 2026-07-29 - v5.0.93: ID5 picker search — fetch timeout + stale guard
+
+**Komenda/Akcja:** Follow-up unified picker: ID5 search stuck on „Szukam materiałów…”.
+
+**Log/Status:** `materialFetchInFlight` + `materialFetchGen` w scheduleMaterialSearchFetch; loading guard dla kind=material; `loadBrandingMaterialCandidates` → `fetchPickerJson` 12s; bump 5.0.93 + ?v=.
+
+**Efekt/Fix:** v5.0.93 lokalnie — browser retest ID5 search. Bez commit.
+
+**Źródła:** dam-assoc-edit.js, visualizations/branding.html ?v=5.0.93
+
+
+## 2026-07-29 - v5.0.92: unified assoc picker architecture (pickerMode + CTA ids 1–5)
+
+**Komenda/Akcja:** User spec 2026-07-29: unified DAM assoc picker — Panel A viz-products (ID2/4), Panel B branding-groups (ID1/3), viz-suggestions (ID5 + viz grid); `pickerMode` w `openEditPicker`; `data-dam-assoc-picker-id` na 5 CTA; nested branding groups; thumb stable cache; ARCHIWUM exclude; browser verify branding ID1, viz ID4+ID5.
+
+**Log/Status:** `resolvePickerMode` + `PICKER_ID_TO_MODE`; `groupBrandingPickerRows` via `DamBranding.groupMarketingAssets`; expand parent + nested 24px children; `collectVizGridGroupedRows` w sugestiach; CTA attrs w dam-media-preview/dam-viz; export `groupMarketingAssets` z dam-branding.js; bump 5.0.92 + ?v=.
+
+**Efekt/Fix:** v5.0.92 lokalnie — browser verify branding ID1 PASS (meta-rail pinned), viz ID4 PASS (head OK), ID5 picker shell PASS. Bez commit.
+
+**Źródła:** dam-assoc-edit.js, dam-media-preview.js, dam-viz.js, dam-branding.js, visualizations/branding.html ?v=5.0.92
+
+
+## 2026-07-29 - v5.0.90: picker meta-rail rows, index popover, skeleton, bento stretch
+
+**Komenda/Akcja:** User follow-up: pinned/search rows jak meta-rail (tagi, tytuł, ID); Pokaż indeksy = floating dropdown nie stretch kafelka; skeleton responsywny; +N bubble accent; studio Pokaż wszystkie nie zwęża wariantów; empty „System nie wykrył skojarzeń”; bento grid equal height.
+
+**Log/Status:** `pickerMetaRailBodyHtml` w dam-assoc-edit.js; `dam-card-index-popover.js` + CSS; `DamGridReveal` responsive count; assoc empty copy; dam-viz-modal variants width lock; bump 5.0.90 + ?v= w branding/visualizations/explorer.
+
+**Efekt/Fix:** v5.0.90 lokalnie — browser verify w toku. Bez commit.
+
+**Źródła:** dam-assoc-edit.js, dam-card-index-popover.js, dam-branding.js, dam-viz.js, dam-grid-reveal.js, dam-media-preview.js, dam-brand.css, dam-branding.css, dam-viz-modal.css
+
+
+## 2026-07-29 - v5.0.90: picker meta-rail rows, index popover, skeleton, bento stretch
+
+**Komenda/Akcja:** User: variant picker + sugestie materiałów — migające miniatury, brak wcięcia wariantu (jak dam-search-hits), materiały z fałszywym nest/separatorami; wykluczyć `X:\Marketing\-- ARCHIWUM --\01_Opakowania\`; lista z gridów viz/branding zamiast folderów.
+
+**Log/Status:** Fix: `_pickerThumbSrcCache` + `data-thumb-stable` (bez resetu src przy expand/re-render); `setSearchPreview` nie nadpisuje tego samego src; nested `margin-left:24px` + `padding-left:28px`; materiały — usunięto `nestedInGroup` dla idx>0 w grupie (fałszywe linie/separatory); filtr `isExcludedMarketingDupPath` w product/revision/branding rows + API seed.
+
+**Efekt/Fix:** v5.0.88 lokalnie — retest variant picker + sugestie. Bez commit.
+
+**Źródła:** dam-assoc-edit.js, visualizations/explorer/branding.html ?v=5.0.88
+
+
+**Komenda/Akcja:** Follow-up [Verify variant picker v5.0.85](9a781764-4f0c-4812-8b56-e4244d78adba): wiersze listy variant pickera — szare placeholdery (1/81 img CDP).
+
+**Log/Status:** Root: `pickerThumbOnError` używał `normalizeBridgeMediaUrl` → względne `/media?` na :8765 (404); brak thumb-cache w initial src wiersza. Fix: `pickerListRowThumbSrc()` → `thumb-cache` przez bridge :8766; `resolvePreviewMediaSrc` w onerror/hydrate; `data-product-id` fallback viz-latest; concurrent hydrate 8.
+
+**Efekt/Fix:** v5.0.87 lokalnie — do retestu listy w variant picker. Bez commit.
+
+**Źródła:** dam-assoc-edit.js, visualizations/explorer/branding.html ?v=5.0.87
+
+
+**Komenda/Akcja:** User: regresja pickera „Dodaj/Edytuj warianty” — miganie listy przy szukaniu, puste miniatury, brak browse CAP na cold open.
+
+**Log/Status:** Weryfikacja browser MCP na `visualizations.html?v=5.0.85` (modal BANOFFEE KAKAO → variant picker). Smoke :8765/:8766 = 200.
+
+**Efekt/Fix (PASS/FAIL):**
+- Browse CAP cold open (80 produktów bez wpisywania): **PASS**
+- Brak flicker / „Szukam produktów…” przy wpisywaniu „cy” (lista stabilna, 9 trafień): **PASS**
+- Miniatury: lewy podgląd + pinned „Aktualne” **PASS**; wiersze listy głównie szare placeholdery (1/81 załadowanych img w CDP): **PARTIAL/FAIL**
+- Rozwinięcie produktu (CYNAMONKA → 2 warianty): **PASS**
+- Zamknięcie X (overlay+popover znika, modal viz zostaje): **PASS**
+
+**Źródła:** dam-assoc-edit.js v5.0.85, screenshots `qa-screenshots/v5.0.85-variant-picker/01-03.png`, URL `http://127.0.0.1:8765/visualizations.html?v=5.0.85`
+
+## 2026-07-29 - v5.0.87: explorer Materiały reuse product-grid template
+
+**Komenda/Akcja:** User: Materiały tab w Eksploratorze pokazuje nieczytelne poziome boxy folderów zamiast szablonu Produkty (karty, panel-head, dam-prod-list).
+
+**Log/Status:** Root: `renderMaterialMain()` osobny renderer (buttony `dam-mat-folder-row` bez struktury `dam-prod-row__title/tags/end`) + `getProductsForCanonCat` w trybie MATERIAL porównywał `p.category` z pełną ścieżką folderu. Fix: `mountCategoryListPanel` wspólny dla Produkty/Materiały; `renderMaterialCategoryPanel` ładuje `folder-browse` i wstrzykuje `buildMaterialFolderRowHtml` do tej samej listy; filtrowanie produktów po `parentExplorerPath`; cache browse; bump 5.0.87 + `dam-explorer.js?v=5.0.87`.
+
+**Efekt/Fix:** PASS screenshot — Materiały/FIRMOWE MATERIAŁY: panel-head „Materiały”, wiersze jak produkty (badge Folder, copy/reveal, chevron); Produkty/Batony bez regresji (Dodaj produkt, indeksy, F/X/D). UTF-8 „Materiały” OK; domyślny tab Produkty bez zmian.
+
+**Źródła:** dam-explorer.js, explorer.html, version 5.0.87
+
+
+**Komenda/Akcja:** User: kompleksowa naprawa regresji A–G (viz overlap, explorer Produkty/Materiały, assoc picker close/list/preview/styling).
+
+**Log/Status:** Root pustej listy wariantów (D/G): `ReferenceError: isBrandingMaterialId is not defined` — helper zdefiniowany wewnątrz `paintPicker()`, wołany z modułowego `pickerRowMetaText()`. Fix: przeniesiono `isBrandingMaterialId` na poziom modułu. Root braku podglądu materiałów (E): `normalizeBridgeMediaUrl` obcinał host → `/media?` na :8765 (404); fix `resolvePreviewMediaSrc()` → pełny URL bridge :8766. QA browser 8+ passów: viz gap 62px bez overlap; explorer Produkty default + Materiały 7 folderów; variant picker 80 hitów PRODUKT; close X OK; material hits + preview 2195px natural.
+
+**Efekt/Fix:** v5.0.86 PASS A–G (krytyczne ścieżki). Bez commit.
+
+**Źródła:** dam-assoc-edit.js, visualizations.html, dam-viz.css, dam-explorer.js, explorer.html, version 5.0.86
+
+
+**Komenda/Akcja:** User: przyciski `dam-marketing-tile__toggle` w `#damMarketingShort` nie działają wg kontekstu (wariant + shared).
+
+**Log/Status:** Root: `bindMarketingTiles` wiązał tylko pierwszy `.dam-marketing-tiles` — sekcje shared i kolejne warianty bez handlerów. Fix: pętla po wszystkich `.dam-marketing-tiles`; przycisk tylko gdy `count > previewLimit` (4 grafika / 6 viz).
+
+**Efekt/Fix:** v5.0.84 — expand/zwiń per sekcja, bez martwego „Pokaż wszystko” gdy wszystko już widać.
+
+**Źródła:** dam-project.js, project.html
+
+## 2026-07-29 - v5.0.83: projects toolbar full-bleed + index.html cache bust
+
+**Komenda/Akcja:** User: `dam-projects-grid-toolbar` na Projekty „odjechał” — przyciski ucięte, belka 1975px.
+
+**Log/Status:** Ten sam root co viz: `calc(50% - 50vw)` full-bleed na `.dam-projects-grid-toolbar` (margin-left -214px). Dodano override bez bleed. **index.html** miał `dam-brand.css?v=5.0.80` — nie ładował poprawek z 5.0.82. CDP po fix: width 1546px, margin-left 0, „Skanuj dysk” widoczny. Screenshot PASS.
+
+**Efekt/Fix:** v5.0.83 — toolbar Projekty w siatce contentu, wszystkie CTA widoczne.
+
+**Źródła:** dam-brand.css, index.html, version 5.0.83
+
+## 2026-07-29 - v5.0.82: sticky chrome bleed + assoc kafelki stretch (follow-up user FAIL)
+
+**Komenda/Akcja:** User: „Dalej są te same błędy” — toolbar `dam-viz-toolbar` / `dam-viz-secondary-filters` + modal assoc.
+
+**Log/Status:** Subagent [Fix viz toolbar regressions](9bff2276-0efe-40f6-a268-026a59e16b38) error (API limit). Parent reprodukcja: (1) full-bleed `100vw` sticky chrome na Wizualizacjach/Brandingu zasłaniał sidebar — fix CSS jak w explorer-shell; (2) kafelki `#damVizModalAssoc` rozciągały się do ~483px (`align-items: stretch` w gridzie split-pane) — `align-content/align-items: start`, `grid-auto-rows: min-content`, `align-self: start` na item.
+
+**Efekt/Fix:** v5.0.82 lokalnie — sidebar czysty, kafelki assoc ~116px (thumb+name+chip zwarte). Screenshot: qa-viz-toolbar-5082.png, qa-viz-modal-tiles-5082.png. Bez commit (user nie prosił).
+
+**Źródła:** dam-brand.css, dam-viz-modal.css, version 5.0.82
+
 ## 2026-07-29 - v5.0.81: assoc picker + scroll + kafelki + etykiety wariantów — QA PASS + push
 
 **Komenda/Akcja:** User: po zakończeniu agentów ui-taste weryfikacja v5.0.81; commit+push jeśli działa.
