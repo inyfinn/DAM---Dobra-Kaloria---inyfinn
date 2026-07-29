@@ -1,12 +1,12 @@
-## 2026-07-29 - v5.0.81: assoc picker + scroll + kafelki + etykiety wariantów
+## 2026-07-29 - v5.0.81: assoc picker + scroll + kafelki + etykiety wariantów — QA PASS + push
 
-**Komenda/Akcja:** User: przywróć silnik skojarzeń (picker pusty, X nie zamyka, toast materiałów, JPG zamiast nazw, scroll, rozciągnięte kafelki, duplikat Pokaż wszystkie, title +10/+5px). ui-taste 15 rund.
+**Komenda/Akcja:** User: po zakończeniu agentów ui-taste weryfikacja v5.0.81; commit+push jeśli działa.
 
-**Log/Status:** `dam-assoc-edit.js`: close onclick fallback; product search retry DamSearch.load; material productId z linked_product_ids; branding CTA seed; `dam-media-preview.js`: variantFileLabel/materialSiblingTileLabel; toggle jeden w split__top; bindBrandingMaterialsPane productContext.id; CSS assoc-item compact center + branding-split scroll; title margins. Bump 5.0.81. QA: grid 109 prod <5s; modal assoc kompakt; picker sugestii z listą DRUK CMYK; X zamyka.
+**Log/Status:** ui-taste 5 passów: viz modal (assoc 30, scroll, kafelki kompakt, etykiety PL-6300728 + nazwy plików), picker sugestii (search DRUK CMYK, X zamyka), branding modal (Dodaj/Edytuj materiały bez toastu „Brak produktu wizualizacji”, picker Warianty materiału). `node --check` OK; smoke :8765/:8766 200. Commit `476eb74` push OK.
 
-**Efekt/Fix:** v5.0.81 — wizualizacje ładują się od razu; picker sugestii działa; kafelki bez rozciągania.
+**Efekt/Fix:** v5.0.81 zweryfikowane i wypchnięte na origin/main.
 
-**Źródła:** dam-assoc-edit.js, dam-media-preview.js, dam-branding.css, dam-brand.css, dam-viz-modal.css, visualizations/branding/explorer.html ?v=5.0.81
+**Źródła:** commit `476eb74`, .qa-screenshots/qa-*-5081.png, dam-assoc-edit.js, dam-media-preview.js, dam-branding.css, dam-brand.css, dam-viz-modal.css
 
 ## 2026-07-29 - v5.0.80: multi-fix explorer toolbar, cat panel, root reindex
 
