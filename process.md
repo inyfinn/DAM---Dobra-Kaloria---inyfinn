@@ -1,4 +1,79 @@
-## 2026-07-30 - deploy Panel-DAM Synology + commit v5.0.121
+## 2026-07-30 - Follow-up cache subagentow: export snapshot Python (v5.0.127)
+
+**Komenda/Akcja:** Follow-up po [Guest cache](5030a016-5c03-480d-a91a-15e91605dfe2) + [Thumb cache](a1bba907-06a7-4dc6-9d36-633954e161db).
+
+**Log/Status:** Naprawiono export-guest-snapshot.ps1 (ConvertFrom-Json na duzym file-index) -> export_guest_snapshot.py; deploy uzywa -SkipThumbBuild gdy manifest istnieje.
+
+**Efekt/Fix:** Deploy Panel-DAM nie wywala sie na snapshot; PAMIEC ~938 plikow AVIF.
+
+**Zrodla:** apps/desktop/scripts/export_guest_snapshot.py, scripts/ops/export-guest-snapshot.ps1
+
+## 2026-07-30 - :5001 caly Panel-DAM -> 443 (literowki, sciezki)
+
+**Komenda/Akcja:** User: redirect tez z https://inyfinn.synology.me:5001/Panel-DAM/ i literowek.
+
+**Log/Status:** dsm.panel-dam.conf: usunieto alias statyczny na :5001; tylko 301 na 443 z zachowaniem sciezki ($1) i query.
+
+**Efekt/Fix:** :5001/Panel-DAM/dashboard.html -> 443/Panel-DAM/dashboard.html; paneldam, dam-panel, bookmark Google -> 443.
+
+**Zrodla:** scripts/ops/synology/dsm.panel-dam.conf
+
+## 2026-07-30 - Redirect :5001 panel-dam Google bookmark -> Panel-DAM 443
+
+**Komenda/Akcja:** User: redirect z https://inyfinn.synology.me:5001/panel-dam%20-%20Szukaj%20w%20Google na panel.
+
+**Log/Status:** dsm.panel-dam.conf: location ~* ^/panel-dam -> 301 https://inyfinn.synology.me/Panel-DAM/; pozostale aliasy tez na 443.
+
+**Efekt/Fix:** Kazdy /panel-dam* na :5001 (w tym bookmark Google) przekierowuje na kanoniczny URL. Wdrozenie: install-panel-dam-synology.ps1 -WithDsm5001Nginx.
+
+**Zrodla:** scripts/ops/synology/dsm.panel-dam.conf
+
+## 2026-07-30 - Guest/offline thumb cache (v5.0.126)
+
+**Komenda/Akcja:** User: pamięć podręczna miniaturek dla trybu gościa — TYLKO gdy brak dysku Marketing; indeks → cache AVIF w PAMIEC-PODRECZNA/thumbs.
+
+**Log/Status:** dam_build_thumb_cache.py (warm+migrate+export); dam_thumb_cache.serve_cached_thumb + bridge `cache_only=1`; dam-preview-truth.js (disk /media vs manifest); dam-guest-cache.js + dam-guest-mode.js; export-guest-snapshot.ps1; warm-guest-cache.ps1; deploy kopiuje digest thumbs.
+
+**Efekt/Fix:** Klucz sha256(rel|mtime|profile); guest-cache-manifest.json mapuje path→data/thumbs/{digest}.avif; desktop z mostem = /media; guest/offline = manifest only. Warm start: 552 plików PAMIEC, 275 paths w manifeście; full warm ~39k paths w tle.
+
+**Zrodla:** PAMIEC-PODRECZNA/thumbs, apps/web/data/guest-cache-manifest.json, scripts/ops/dam_build_thumb_cache.py
+
+
+**Komenda/Akcja:** User: baza = zrodlo prawdy; przegladarka = podglad cache+bazy; pelna praca = instalator (folder + root Marketing).
+
+**Log/Status:** dam-guest-mode.js + ladowanie z dam-runtime; export-guest-snapshot.ps1; pobierz-instalator.html; Setup-DAM.ps1 (WinForms 3 kroki); build-dam-installer.ps1; deploy kopiuje snapshot + ZIP do releases/.
+
+**Efekt/Fix:** Panel-DAM bez mostu = banner + read-only snapshot; instalator zapisuje machine-config.json i skroty.
+
+**Zrodla:** apps/web/assets/js/dam-guest-mode.js, apps/desktop/installer/, scripts/ops/export-guest-snapshot.ps1
+
+
+**Komenda/Akcja:** User: olejmy port 5001 — czysta sciezka Web Station.
+
+**Log/Status:** docs/SYNOLOGY-WEB-PANEL.md przepisane; install-panel-dam-synology.ps1 = tylko deploy (nginx :5001 legacy -WithDsm5001Nginx / -RemoveDsm5001Nginx); dsm.panel-dam.conf oznaczony legacy.
+
+**Efekt/Fix:** Kanoniczny URL: `https://inyfinn.synology.me/Panel-DAM/` (bez :5001).
+
+**Źródła:** docs/SYNOLOGY-WEB-PANEL.md, scripts/ops/install-panel-dam-synology.ps1
+
+
+**Komenda/Akcja:** User: minus przy #damMediaPreviewLinkedAssets nie usuwa elementu (branding modal, REFORMATY PORZECZKA GC).
+
+**Log/Status:** Root cause: (1) onConfirm wymagalo Shift w momencie puszczenia po 1,5s hold; (2) branding related uzywal tylko productIds[0] zamiast wspolnych ID; (3) brak data-branding-related-idx w parserze idx. Fix: shift latch na pointerdown, resolveUnlinkProductIds overlap, grid._damAssocList.
+
+**Efekt/Fix:** Shift+przytrzymaj 1,5s na minus odcina produkt(y) od materialu i odswieza liste.
+
+**Źródła:** dam-assoc-edit.js v5.0.123, branding/explorer/viz HTML ?v=
+
+
+**Komenda/Akcja:** User: rozbudowa licencji przed deployem; konfiguracja Panel-DAM przez SSH Synology (jak panel-klienta).
+
+**Log/Status:** LICENSE.md EULA 2.0 (15 sekcji); license.html pełna EULA + UTF-8 (©, 6 900, ·); install-panel-dam-synology.ps1; dsm.panel-dam.conf → nginx DSM; deploy W:\web\Panel-DAM + LICENSE.md; bump 5.0.122.
+
+**Efekt/Fix:** https://inyfinn.synology.me:5001/Panel-DAM/ (alias statyczny); literówki → 301. SCP na Syno zablokowany — conf przez W:\web\_nginx + ssh sudo cp.
+
+**Źródła:** LICENSE.md, license.html, scripts/ops/synology/dsm.panel-dam.conf, install-panel-dam-synology.ps1
+
 
 **Komenda/Akcja:** User: commit+push; hostowac Panel-DAM na inyfinn.synology.me (web folder NAS).
 

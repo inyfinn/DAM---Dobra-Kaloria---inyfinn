@@ -74,6 +74,7 @@ def thumb_key(
     profile: str = "grid",
     resolve_physical: Optional[Callable[..., str]] = None,
     marketing_relative: Optional[Callable[..., str]] = None,
+    mtime_override: Optional[float] = None,
 ) -> tuple[str, str, float]:
     """Return (sha256_hex, relative_key, mtime)."""
     physical = path
@@ -92,7 +93,7 @@ def thumb_key(
         rel = path_resolve.marketing_relative_key(physical, email=email)
     if not rel:
         rel = Path(physical).name
-    mt = _mtime(physical)
+    mt = float(mtime_override) if mtime_override is not None else _mtime(physical)
     prof = (profile or "grid").strip().lower()
     if prof not in PROFILES:
         prof = "grid"
@@ -178,6 +179,63 @@ def _encode_thumb(src: str, dest_avif: Path, dest_jpg: Path, max_side: int) -> t
     return None, ""
 
 
+def serve_cached_thumb(
+    path: str,
+    *,
+    email: str = "",
+    profile: str = "grid",
+    resolve_physical: Optional[Callable[..., str]] = None,
+    marketing_relative: Optional[Callable[..., str]] = None,
+    mtime_override: Optional[float] = None,
+) -> tuple[int, bytes, str, dict]:
+    """
+    Serve existing PAMIEC cache only — never read Marketing disk or encode.
+    Used when bridge is up but source file is unavailable (guest fallback / online_only).
+    """
+    prof = (profile or "grid").strip().lower()
+    if prof not in PROFILES:
+        prof = "grid"
+    digest, rel, mt = thumb_key(
+        path,
+        email=email,
+        profile=prof,
+        resolve_physical=resolve_physical,
+        marketing_relative=marketing_relative,
+        mtime_override=mtime_override,
+    )
+    avif_p, jpg_p = _cache_paths(digest)
+    hit_path: Optional[Path] = None
+    ctype = ""
+    if avif_p.is_file():
+        hit_path, ctype = avif_p, "image/avif"
+    elif jpg_p.is_file():
+        hit_path, ctype = jpg_p, "image/jpeg"
+    if hit_path is None:
+        return 404, b"", "application/json", {
+            "ok": False,
+            "error": "cache_miss",
+            "digest": digest,
+            "rel": rel,
+        }
+    try:
+        body = hit_path.read_bytes()
+    except OSError:
+        return 404, b"", "application/json", {"ok": False, "error": "cache_read_failed"}
+    rel_cache = str(hit_path.relative_to(cache_root())).replace("\\", "/")
+    meta = {
+        "ok": True,
+        "digest": digest,
+        "profile": prof,
+        "cache_hit": True,
+        "cache_only": True,
+        "cache_path": rel_cache,
+        "source_mtime": mt,
+        "rel": rel,
+        "bytes": len(body),
+    }
+    return 200, body, ctype, meta
+
+
 def get_or_build_thumb(
     path: str,
     *,
@@ -185,6 +243,7 @@ def get_or_build_thumb(
     profile: str = "grid",
     resolve_physical: Optional[Callable[..., str]] = None,
     marketing_relative: Optional[Callable[..., str]] = None,
+    mtime_override: Optional[float] = None,
 ) -> tuple[int, bytes, str, dict]:
     """
     Returns (http_code, body, content_type, meta).
@@ -214,6 +273,7 @@ def get_or_build_thumb(
         profile=prof,
         resolve_physical=resolve_physical,
         marketing_relative=marketing_relative,
+        mtime_override=mtime_override,
     )
     avif_p, jpg_p = _cache_paths(digest)
 
@@ -305,6 +365,7 @@ def digest_for_path(
     email: str = "",
     resolve_physical: Optional[Callable[..., str]] = None,
     marketing_relative: Optional[Callable[..., str]] = None,
+    mtime_override: Optional[float] = None,
 ) -> str:
     """Public digest helper for idempotent enqueue / verify."""
     digest, _, _ = thumb_key(
@@ -313,6 +374,7 @@ def digest_for_path(
         profile=profile,
         resolve_physical=resolve_physical,
         marketing_relative=marketing_relative,
+        mtime_override=mtime_override,
     )
     return digest
 

@@ -1,0 +1,1121 @@
+{
+  "version": "1",
+  "generated_at": "2026-07-29T23:59:46Z",
+  "app_version": "5.0.126",
+  "mode": "guest_static_thumbs",
+  "profiles": [
+    "grid",
+    "card"
+  ],
+  "base_url": "data/thumbs/",
+  "entries": {
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/3pack oat — [ bars_mix ]/21.06.2024 - 6300518.00 - gb pl/4 - visuals/projekt-3pack-oat-bars-oats-honey-6300518-front-l.jpg": {
+      "grid": "data/thumbs/fdf69225e2a2888a83431509397565df757a2e82de87065cae7ed36f397c3685.avif",
+      "card": "data/thumbs/2b055982690b759259c106635ad859f9db9432a11b87fd78b0969b41e6225273.avif"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/3pack oat — [ bars_mix ]/21.06.2024 - 6300518.00 - gb pl/4 - visuals/projekt-3pack-oat-bars-oats-honey-6300518-front-l.png": {
+      "grid": "data/thumbs/e0d5b461af0543a11cc36ca91f4b1f76f20a8f97c65b78f43e8957902e57fb29.avif",
+      "card": "data/thumbs/46dc786ba04b3dded432f3e1e1b983faf70fbf5b1eaf435b0402af80c9517cda.avif"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/3pack oat — [ bars_mix ]/21.06.2024 - 6300518.00 - gb pl/4 - visuals/projekt-3pack-oat-bars-oats-honey-6300518-front-s-sklep.jpg": {
+      "grid": "data/thumbs/be708b8586abec8f6659145199bc219e65fb0151b1a4237970babcfeba684e44.avif",
+      "card": "data/thumbs/3c65c5b0d16bfb348a166d33cda9b84b14f48fcf456599397dcacf201f7eb529.avif"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/3pack oat — [ bars_mix ]/21.06.2024 - 6300518.00 - gb pl/4 - visuals/projekt-3pack-oat-bars-oats-honey-6300518-front-s-sklep.png": {
+      "grid": "data/thumbs/455471e6203d7ec0d14732247ff0e0503a598245a92aab81b98c940fd90eb4c4.avif",
+      "card": "data/thumbs/9e2306c00eabf61082469a07e2a89f1bf80623d09e469956ce7f61ca0a5b0a5d.avif"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/3pack oat — [ bars_mix ]/21.06.2024 - 6300518.00 - gb pl/4 - visuals/projekt-3pack-oat-bars-oats-honey-6300518-front-s.jpg": {
+      "grid": "data/thumbs/5db49f4386b042bd075df39d31a32ca5521b745eba4c170dfb74bda2b1e3c9db.avif",
+      "card": "data/thumbs/a6bbd105fbe6891ea7133ee3c292bb7eb37962a9a3199dfecaef4f035595d2ec.avif"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/3pack oat — [ bars_mix ]/21.06.2024 - 6300518.00 - gb pl/4 - visuals/projekt-3pack-oat-bars-oats-honey-6300518-front-s.png": {
+      "grid": "data/thumbs/bdd237e722a1754aa98141978bbba0a63e1f7d28c3c7193cfbed17fd35073b34.jpg",
+      "card": "data/thumbs/fd3e815d7be00acb24ca9e0a807f328c898dec8dbf12e005f6cc3fd56afcf621.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/3pack protein — [ bars_protein ]/21.06.2024 - 6300519.00 - gb pl/4 - visuals/projekt-3pack-protein-6300519-front-s.png": {
+      "grid": "data/thumbs/23ebf9d2e7735596081371ab18d3d2ce6528c3962f31284df6167d8889490ba0.jpg",
+      "card": "data/thumbs/e69aa417369a33ed42c6d3a22a85771ac366bbeaf0b9f363bcbd6f1b36f1beb7.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/blackcurrant cake — [ cashews ]/doy6x - 10.07.2025 - 6300669.00/4 - visuals/doy6x-blackcurrant-cake-6300669-front-s.png": {
+      "grid": "data/thumbs/1f15419f1fcd250ce11f60831497b6a82144444587e4735dc166602430be31e4.jpg",
+      "card": "data/thumbs/7afd7403ce1c4e04e8de2e87877cec6d5fda1c62209dd90f03167fbd6133eb68.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/cashews coconut — [ date ]/20.09.2024 - 6300480.00 - gb ar/4 - visuals/wariant-cashews-coconut-6300269-front-s.png": {
+      "grid": "data/thumbs/057c2f3e086d7ddc5dbaa8ceda81b7e1eebc34b7a72a95094daa79fff4f2adf8.jpg",
+      "card": "data/thumbs/755233e6c8ecb21a00050ba8fcee0c6bbf394c176e213dc666dcdb45e49695dc.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/cheesecake — [ cashews ]/bar - 05.07.2023 - 6300368.00 - gb de/4 - visuals/bat-cheesecake-6300368.00-front-s.png": {
+      "grid": "data/thumbs/6f46f6198e2cd365a1a307c4dfbdc51e3fa1513c72b8007fb4ed0176263a09b7.jpg",
+      "card": "data/thumbs/1b041302c8e8556e12fe8b052227f59fa739a308f0bdb7171998fefad10721b0.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/cheesecake — [ cashews ]/doy6x - 06.02.2023 - gb_se_fi_dk_de_000000.00/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/c6ae4abbe9de304c93b436233a0bba46955dbed23489d0d7d2f631c967dab424.jpg",
+      "card": "data/thumbs/873d65339036b05e874234b98abaa945b2522df1351475b7700bb1cabfc2b23f.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/cheesecake — [ cashews ]/doy6x - 30.09.2024 - 6300491.00 - gb ar/4 - visuals/doy6x-cheesecake-6300491.00-front-s.png": {
+      "grid": "data/thumbs/a5fdede19229e3cb76eaffaa18432655368d0cdaefaa6f10b92540d4ff78984f.jpg",
+      "card": "data/thumbs/0d1ebb4f6701bba4c9db6b8d930e6098c6a6625293509ca25745a80df8601351.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/cheesecake — [ cashews ]/mini - 19.04.2023 - 6300348.00 - gb/4 - visuals/dk_orzeszki_czekolada_6300348_rgb_bez_tla.png": {
+      "grid": "data/thumbs/ec5adedeb23ff9dba6d05af41641883e07dfd323c43a67fa85d806ec5357f70b.jpg",
+      "card": "data/thumbs/2d2c472aecafa5b7419e80991d724d94a2fc8676db594c3928f87cabdc0ba0e0.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/coconut orange — [ date ]/bar - 09.01.2023 - gb_ee_lt_lv_ro_000000.00/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/24ed2fd75a16fe9fee2d4ca044c373c619e20af9d8d827a6894b9bebfafb7cf1.jpg",
+      "card": "data/thumbs/28282fbae8fbd6498d5d8f44c4733d155fbb4082339f301193aea7d6847898b0.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/crunchy peanuts — [ date ]/bar - 06.02.2023 - gb_se_fi_dk_de_000000.00/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/00b5bb9070ace1467f7623b4323a99458b1d83ba796efe4bb2aa9179cf4b8135.jpg",
+      "card": "data/thumbs/c8b067582f633f6f38a3072ebd61c61aafa2bdc44aafa85587ae0923d5d2c660.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/crunchy peanuts — [ date ]/bar - 20.09.2024 - gb_ar_6300481.00 - gb ar/4 - visuals/gc_bar_crunchy_nut_6300481_gb_rgb.png": {
+      "grid": "data/thumbs/7fada077ceb738287a6f0195bcb02888834e54b334a434edf468eb74c91dd344.jpg",
+      "card": "data/thumbs/9885e74a925c57a77079a0ef3b9c4fb8bfc53890843ab6d55dd19418549d06e5.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/crunchy peanuts — [ date ]/doy6x - 19.01.2024 - 6300438.00 - gb cz sk hu hr/4 - visuals/gc_crunchy_nut_6300438_web_rgb_250.jpg": {
+      "grid": "data/thumbs/5924a9a7e5057183ca6773108dcc40df08688af2e0165a3e329cbc51774f3ad3.jpg",
+      "card": "data/thumbs/8d91a6f62e71ba1bd61304e9f750d6a201068d5113e353366784a3be93d0d159.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/crunchy peanuts — [ date ]/doy6x - 30.09.2024 - 6300495.00 - gb ar/4 - visuals/doy6x-crunchy-peanuts-6300495-front-s.png": {
+      "grid": "data/thumbs/3e338d7f22327cb3e2afc3f32970f696915c2175716c23b0bdb0df655f895417.jpg",
+      "card": "data/thumbs/dde630fa47e10b9f3a6753e436004f634fd197516a14691c6c6e106a355145cb.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi banoffee — [ bars_protein ]/bar - 20.02.2026 - 6300xxx.00/4 - visuals/bat-gi-banoffee-6300749-front-s.png": {
+      "grid": "data/thumbs/19c17668571b6ef5a2cf1b850d2e6ef5581db841623ffe3f33e74e1aab27e910.jpg",
+      "card": "data/thumbs/77815ebd9b18c608b6267c07c96e7db9e8106231d3d4aa298ad9938c1491889b.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi banoffee — [ bars_protein ]/baton 45 g - 27.04.2026 - 6300747.00 - en cz sk/4 - visuals/bat-gi-banoffee-6300747-front-s.png": {
+      "grid": "data/thumbs/1365a003244631ade03fd54060dafbc9aa921402cb65791ccd895bb9ce7403cb.jpg",
+      "card": "data/thumbs/279d80121241134cc4c7476536a73270f27c62d9b42e329f32c2f0040ccf3dac.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi banoffee — [ bars_protein ]/baton 45 g - 27.04.2026 - 6300749.00 - gb hu/4 - visuals/bat-gi-banoffee-6300749-front-s.png": {
+      "grid": "data/thumbs/2a0da5e257be74ab09d8d93a79c57a62121603bfbb52e57e49456210d7c130ba.jpg",
+      "card": "data/thumbs/b2eba7fa78c97273d7bbd17c2d21a0c840be6cf3140174fb3a884e2673753fa5.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi banoffee — [ bars_protein ]/doypack 6x mini - 20.02.2026 - 6300xxx.00/4 - visuals/doy-banoffee-6300xxx.00-front-s.png": {
+      "grid": "data/thumbs/baf285423de9767666658e0e1df60971ff6d946d5a45b7b3b453c6bd8f05db3c.jpg",
+      "card": "data/thumbs/33472cf298f3e5760f579186f3a69a3fd16b516396c855abc64b2d2004f45c71.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi caramel — [ bars_protein ]/bar - 20.02.2026 - 6300xxx.00/4 - visuals/bat-mct-caramel-6300xxx.00-front-s.png": {
+      "grid": "data/thumbs/f2dce305565e1ac5b86d455c690a410b32c77e3f04474843db78139b1ed3d44a.jpg",
+      "card": "data/thumbs/a380f215a56002f8857683251755bc179e33ccdf330ed01e9f77bb357a0384d4.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi caramel — [ bars_protein ]/doypack 6x mini - 20.02.2026 - 6300xxx.00/4 - visuals/doy-mct-caramel-6300xxx.00-front-s.png": {
+      "grid": "data/thumbs/9815e5c5bea335a1037e6bff6a1a41223355c6818affc4b79678dbd2c19554c2.jpg",
+      "card": "data/thumbs/4565e1640a9252fbb06f5ff7d41a128798c7972fed884615a65995316054ac21.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi lemon cheesecake — [ bars_protein ]/bar - 20.02.2026 - 6300xxx.00/4 - visuals/bat-gi-lemon-cheesecake-6300750-front-s.png": {
+      "grid": "data/thumbs/712bd386ad386bfbc0feb1668544160aa92d56e280b9aee18c188f3f8ae73994.jpg",
+      "card": "data/thumbs/2539f5434991133cac3ad5b7b5e660badbbb67ae6f375e9a226c60b8b6d482e8.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi lemon cheesecake — [ bars_protein ]/bar 45 g - 24.04.2026 - 6300748.00 - en cz sk/4 - visuals/bat-gi-lemon-cheesecake-6300750-front-s.png": {
+      "grid": "data/thumbs/82c6e2d803b68227d035a12d4272eeaace0db248d13028459233b72b108fdcec.jpg",
+      "card": "data/thumbs/39d46c386763c5f84ae2675f977ea3555cbc692a17fb7487e335a87cc9d7b9cd.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi lemon cheesecake — [ bars_protein ]/bar 45 g - 27.04.2026 - 6300750.00 - gb hu/4 - visuals/bat-gi-lemon-cheesecake-6300750-front-s.png": {
+      "grid": "data/thumbs/39c90b23a9cb34ba1be54cbd0b6d8157bf77a755f9abb595cda5d5c05cf72da3.jpg",
+      "card": "data/thumbs/6ab860f5a5207916ed4781384b3743e53e069ea033a1d44b0b75a0e8389585a1.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gi lemon cheesecake — [ bars_protein ]/doypack 6x mini - 20.02.2026 - 6300xxx.00/4 - visuals/doy-lemon-cheesecake-6300xxx.00-front-s.png": {
+      "grid": "data/thumbs/0d3273335b0f9fb582d8d7acac484412a4f0a7d6e67adfa289c7a12f463a012a.jpg",
+      "card": "data/thumbs/8e92087275b56d20e4cd68ea7c94eda1f950b4ebf7aa90474039267c008f795b.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/gingerbread — [ cashews ]/doy6x - 18.03.2023 - 6300334.00 - gb cz sk hu hr/4 - visuals/doy6x-gingerbread-6300334-front-s.png": {
+      "grid": "data/thumbs/a16ec76ab3b6773b52c8d98fd0b19c7b813e0ff1df972ba4fb5b331a07a00849.jpg",
+      "card": "data/thumbs/b39f42bcbe16d79f3ad983fed3a78e3f81968c02811266e1f46a742d006982f9.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/hazelnut chocolate — [ date ]/bar - 21.02.2025 - 6300607.00/4 - visuals/bat-hazelnut-chocolate-6300607-front-s.png": {
+      "grid": "data/thumbs/0bf56dedd9ebe1558fa9f5117c92c8abbdcf2ab05c53f6894bcdec813562d244.jpg",
+      "card": "data/thumbs/a13e5b863a1b53b9d19ad67c1b7e5d0cf500043d574e25ad3001c64544ccdc4d.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/hazelnut chocolate — [ date ]/doy6x - 23.12.2024 - 6300609.00 - gb cz sk hu hr/4 - visuals/doy6x-hazelnut-chocolate-6300609-front-s.png": {
+      "grid": "data/thumbs/cccd6a05126deb26170e3b8099b45a37de1ce6c63aecd9cc60fd429c72ed222a.jpg",
+      "card": "data/thumbs/80c567d160ccd99b2b6b92a069c3d544d80ed4695c65ecc16a3af3f2fd9f69b5.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/lemon bundt cake — [ cashews ]/mini - 18.07.2025 - 6300670.00 - gb cz sk hu hr/4 - visuals/mini-lemon-bundt-cake-6300670-front-s.png": {
+      "grid": "data/thumbs/4c1efb43ce84db28b17b913deb8be92b6224295264ce99cf16a65ab0d9edb3c6.jpg",
+      "card": "data/thumbs/23a0e06010e5469dd73df2d970d7817dedcfe279e97fd6c22b0cce254e81b9c6.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/mango cashews — [ bars_date ]/bar - 20.09.2024 - gb_ar_6300484.00 - gb ar/4 - visuals/gc_bar_mango_cashews_6300484_web_rgb.png": {
+      "grid": "data/thumbs/8c59e0484f6199799dcb453a73f519998a037d78f3b78f95c5ec5bd655c66e9b.jpg",
+      "card": "data/thumbs/2402b51aefe1f624d2961b9217492127e33ffe21743a54bc7ffa73781be38a49.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/matcha lemon — [ cashews ]/doy6x - 20.02.2026 - 6300xxx.00/4 - visuals/doy6x-matcha-lemon-6300xxx.00-front-s.png": {
+      "grid": "data/thumbs/ac2417942c95479e47cb5e306c90227da41bfc0968e315188e4b08a2ce20e9b3.jpg",
+      "card": "data/thumbs/c796a0fb2259f18d9fa2a5ade2ac685cc70da3d9bcc0fd714ccc5d0ed9e37102.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/peanut cream caramel — [ bars_protein ]/05.07.2023 - 6300372.00 - gb de/4 - visuals/gc_protein_bar_peanut_carmel_6300372_web_rgb_250.jpg": {
+      "grid": "data/thumbs/d40da4c33808676c275e7284731a893d0c43e7e5517014ce1c7c3d2f83c81b4e.jpg",
+      "card": "data/thumbs/1bf4262a43d53fff2ab861f6ac5937d14bdacfe05e29b8f14b3ba8efef96dc94.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/peanut cream salt — [ bars_protein ]/06.02.2023 - gb_se_fi_dk_de_000000.00/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/c19b426c422819ec5db0d15054761f04a52693813bd3e9da717a49fae994b95f.jpg",
+      "card": "data/thumbs/aabd45744d1d622a1e8668f22197b354b108925d40fd23e4489d7461ed5a9091.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/peanut cream salt — [ bars_protein ]/20.09.2024 - 6300485.00 - gb ar/4 - visuals/gc_protein_bar_peanut_salt_6300270_gb_rgb.png": {
+      "grid": "data/thumbs/07e29e4e6eac1f71ac7f98bb4f4d4d5228bed0947dff3bf8e0a217f847b1e207.jpg",
+      "card": "data/thumbs/227f54aa496369374a52f43404a7179b4d72a56ba847089508268834caea928e.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/peanut cream vanilla — [ bars_protein ]/20.09.2024 - 6300486.00 - gb ar/4 - visuals/gc_protein_bar_peanut_vanilia_6300271_gb_rgb.png": {
+      "grid": "data/thumbs/de1bfbd1a66d247236d0999af9d750216b6f142d07d16b391683c9c078834871.jpg",
+      "card": "data/thumbs/e61b8938458e403d30bc4c368e3d7519e29b2f7f82f4da91c533d145de36d6d2.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/raspberry tart — [ cashews ]/bar - 05.07.2023 - 6300367.00 - gb de/4 - visuals/bat-raspberry-tart-6300367.00-front-s.png": {
+      "grid": "data/thumbs/6129358589bdc13f5c90169d1e11df1721ef1ddea3a757ba628507c51089a488.jpg",
+      "card": "data/thumbs/0d136370165d9bb400ad370edc196d41d29813a87d9f53b3fe7df7434563b560.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/raspberry tart — [ cashews ]/doy6x - 01.10.2024 - 6300492.00 - gb ar/4 - visuals/doy6x-raspberry-tart-6300492.00-front-s.png": {
+      "grid": "data/thumbs/fc54d8422ed3fd9686f316536bb3b4b4dea0d39d5eeb4ccd9ed63186c8e0e2c4.jpg",
+      "card": "data/thumbs/793692ec05c5cd7a83a8396702c6df1ded61c8698445861cb78727eec2d1f3c0.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/raspberry tart — [ cashews ]/doy6x - 06.02.2023 - gb_se_fi_dk_de_000000.00/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/119df861b18453d719c10ddd42e132bb699546ad8051566193b7971e065922bf.jpg",
+      "card": "data/thumbs/5946c5fa34bd1d12829d189cfde4ba0af157f7ee1fc17ad8b183312602717580.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/salty nut — [ bars_date ]/bar - 06.02.2023 - gb_se_fi_dk_de_000000.00/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/c98b4dac5e583a64ac0f6542d263396b182234c2f24e2645cdfd3efa29f3443e.jpg",
+      "card": "data/thumbs/88a975c117a214ddb0bda589649ee911ff06ae4f32709055aa5c3e6c271316ae.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/01 - bars/salty nut — [ bars_date ]/bar - 20.09.2024 - gb_ar_6300482.00 - gb ar/4 - visuals/gc_bar_salty_nut_6300482_gb_rgb.png": {
+      "grid": "data/thumbs/a4536e42afea4ae800a05bf5cf3f7b778c7db04d16130a8c2393d82f8efe9552.jpg",
+      "card": "data/thumbs/54cb30c45e7cfd19ab452b7141e6cccf3f5cadb8d0cc590939f8af8d24d0bf17.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/cornflakes peanuts honey — [ balls_crispy ]/06.02.2023 - gb_se_fi_dk_de_000000.00/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/beeda102bc7ffc1aeb01a2b977dd07b731b3aebbf3aa3b5d4ebec7a02e168230.jpg",
+      "card": "data/thumbs/39b2cd7c1c223749193fe58860060cc66b3532c2db8ddab59605027c7fd72e93.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/cornflakes peanuts honey — [ balls_crispy ]/09.01.2023 - 6300273.00 - gb ee lt lv ro/4 - visuals/wariant-cornflakes-peanuts-honey-6300273-front-s.png": {
+      "grid": "data/thumbs/ddd5497968b585a52fa4d2b6d2e6b95c6fddb71f4333006523aef094aa197c5b.jpg",
+      "card": "data/thumbs/89b72d17a2a6f7c1f138e9dfdb3f97fe35f5a30b36a5f0d66d4cdbdbf750effc.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/cornflakes peanuts honey — [ balls_crispy ]/2025 10 30 gb de-6300699.01 - 80 g - 05.07.2024 - 6300699.00/4 - visuals/2025-10-30-gb-de-630-cornflakes-peanuts-honey-6300699-front-s.png": {
+      "grid": "data/thumbs/fb3f57c810056bab1f9f1281b2b93f4fa5fd8fc2f74b5330909fcdaaed10fe25.jpg",
+      "card": "data/thumbs/3a43b5570d8b09f8b68805b52ad8b1202c494bdcd33c63dbd203ed542bd3fee1.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/cornflakes peanuts honey — [ balls_crispy ]/folia - 20.09.2024 - 6300478.00 - gb ar/4 - visuals/wariant-cornflakes-peanuts-honey-6300478-front-s.png": {
+      "grid": "data/thumbs/f61969c8fd86dfff1c127d982895b12c1290d4c735371d8ba70fc34322fa9a9e.jpg",
+      "card": "data/thumbs/eba015f91e7fe0496dde89b1c8577a2070d1e5bc5a17e722d993ab7654290af2.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/date cherry — [ balls_raw ]/06.02.2023 - gb_se_fi_dk_de_000000.00/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/5132378eef0d99db8f3b6885432407fa9a252de6f0951b91ea7d0abfa7903736.jpg",
+      "card": "data/thumbs/35c7405608731ca5fdb58d161e66a1381308dee9fd156fc0a8094ac2c16c1abe.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/date cherry — [ balls_raw ]/15.01.2025 - 6300542.00 - gb ee lt lv ro/4 - visuals/gc-doy-balls-cocoa-cherry-gb-ee-lt-lv-ro-6300542-front-s.png": {
+      "grid": "data/thumbs/49abd8ae52721824712a88ae564e9b16d23aed183656ef3037c414fd0837f6ad.jpg",
+      "card": "data/thumbs/a9e13d3295e92090eb09438ca9cf2fd5ed5819d77e45ff5240ffafbeebd15ab9.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/date cherry — [ balls_raw ]/doy - 20.09.2024 - 6300488.00 - gb ar/4 - visuals/wariant-date-cherry-6300488.00-front-s.png": {
+      "grid": "data/thumbs/6922991e01cba3f8cbfbae235c8cbcddaab68259fffccc71b0804a4a387ae9e4.jpg",
+      "card": "data/thumbs/0ec440b2766f93a9fbde02a6ce54e18dc4926ca9e79410be158ff18d367ddf41.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/date lime — [ balls_raw ]/06.02.2023 - gb_se_fi_dk_de_000000.01/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/a18e6866adbf53b2805698807bd4e44e2376d526ceae104e1c71cf3a9518132c.jpg",
+      "card": "data/thumbs/5233546ff5c2ec4033974c5755adaff4df2a7dd93694ea68380698b01003390b.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/date lime — [ balls_raw ]/20.09.2024 - 6300489.00/4 - visuals/projekt-date-lime-6300489-front-s.png": {
+      "grid": "data/thumbs/82b0f7a0345afb5feadf6b4f52b3350c152102c5efce3ba6829794c9ff38280a.jpg",
+      "card": "data/thumbs/5f06732401826997133722b1e7c6e64400899d57aee2d8b8ab45ec2e296bfeb0.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/date orange — [ balls_raw ]/doy - 17.02.2025 - 6300624.00 - sk hu hr/4 - visuals/wariant-date-orange-6300624-front-s.png": {
+      "grid": "data/thumbs/5ea11735d1f462b27f3767cb1de5d037d85eb31984ef5c8c8cf79a3ce0390909.jpg",
+      "card": "data/thumbs/46cb70632bf38027eb35d108f2dffc8a00b1045d844fb20060e6143ae0244d5a.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/date orange — [ balls_raw ]/doy - 20.09.2024 - 6300490.00 - gb ar/4 - visuals/wariant-date-orange-6300490-front-s.png": {
+      "grid": "data/thumbs/1ddf326ab79b85ff65268db9b1e8c09350c10e4fab250b5edb324a2d3cebd55c.jpg",
+      "card": "data/thumbs/972d1b1713a3e5d25110a9625543876775beeac2c1e575abc1fda16f6a59229c.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/oats chocolate — [ balls_crispy ]/doy - 05.07.2024 - 6300701/4 - visuals/gc_crispy_balls_chocolate_2024_07_05_gb_ar_6300701.01-f-prev2.png": {
+      "grid": "data/thumbs/d7978556639365f335a45531c8d4ebaf3ffe9abb73877921f1fa1311da8a5fcc.jpg",
+      "card": "data/thumbs/3d938d2c4064a998dd1378215e839012f732c6974ed33855b96ed1b8ca678225.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/oats chocolate — [ balls_crispy ]/fol - 04.07.2023 - gb_de_630369.00/4 - visuals/wariant-oats-chocolate-6300272-front-s.png": {
+      "grid": "data/thumbs/8a88474acb0f16f3850e296cd12db6eb0a759718bd8090115550d1dd708ae780.jpg",
+      "card": "data/thumbs/5d4abac8fd24236ffc47487feaa536c9503163335bdd8dd1bfb760345d178db8.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/oats chocolate — [ balls_crispy ]/fol - 06.02.2023 - gb_se_fi_dk_de_000000.00/4 - visuals/gc_balls_cocoa-lime_000000_2023_02_06_gb_se_fi_dk_de-prev.png": {
+      "grid": "data/thumbs/81e7bf4506e1a53bc368ca3dc223988f5cad747f47b76c9ba91b894815e5d81e.jpg",
+      "card": "data/thumbs/e6a4c5c24c496e4c7fd80db647412ca371cec99b0525d79a4fa7770f78731b72.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/oats chocolate — [ balls_crispy ]/fol - 09.01.2023 - 6300272.00 - gb ee lt lv ro/4 - visuals/wariant-oats-chocolate-6300272-front-s.png": {
+      "grid": "data/thumbs/af764477a10e6df0fe52e74b235295f6b82de23eca1d6eb381bb567a58b698b6.jpg",
+      "card": "data/thumbs/1bd0a065eefa3f67ba776fe49eea480347fbde0198f396b482d40b9366fe49f7.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/oats chocolate — [ balls_crispy ]/fol - 16.02.2024 - 6300443.00 - gb cz sk hu hr/4 - visuals/projekt-oats-chocolate-6300477.00-front-s.png": {
+      "grid": "data/thumbs/1a0c3679c83be8395c8276c912cdac6acbe5c08e4e32fb5a024a5f01a86c2d95.jpg",
+      "card": "data/thumbs/92e5e1923d3798aa11202deaf304f901fb9ba70ac80058cdc0f13be29888ac2b.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/oats chocolate — [ balls_crispy ]/fol - 20.09.2024 - 6300477.00 - gb ar (2)/4 - visuals/wariant-oats-chocolate-6300477.00-front-s.png": {
+      "grid": "data/thumbs/00f58336dfcee82673e62a053fb472a6638ce075355985f1348f4e99ec0b5319.jpg",
+      "card": "data/thumbs/158e593da7c1043734a2e795643cfa414ed477c3d005e1208ada7461ded1531a.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/02 - balls/oats chocolate — [ balls_crispy ]/fol - 27.01.2023 - 0000000.00 - gb ar fr nl/4 - visuals/wariant-oats-chocolate-6300272-front-s.png": {
+      "grid": "data/thumbs/79ff79731d45dd2a238179f4bc7fda78095e89d6f2bedf0da394369f9b5f403a.jpg",
+      "card": "data/thumbs/76fd336df48435ceb6b6d0d4f71b3b06c7916f10b748355975f855c24dcd0b72.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/balls — [ plant based ]/sleeve - 19.01.2023 - 6300299.00/4 - visuals/wariant-balls-6300299.00-front-s.png": {
+      "grid": "data/thumbs/6a88e1f450d975efe039d2ab0a759641607dd47a099a7a00e720845ad7b3c41a.jpg",
+      "card": "data/thumbs/25b5a713909ac7004aa919707125e46f3bca248b42f24b44455364a8ed471e65.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/burger beef — [ plant based ]/sleeve - 12.01.2023 - 6300295.00/4 - visuals/wariant-burger-beef-6300295.00-front-s.png": {
+      "grid": "data/thumbs/b923636cc7c2ef00fc56771eab0bc0de724cab0ac7ef2c505f7abc822b9ad4f0.jpg",
+      "card": "data/thumbs/abefede5d1663425b5acac1b3b5cfbe4df652b641e6893b7d5f6465017c73d9e.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/burger chicken — [ plant based ]/sleeve - 12.01.2023 - 6300294.00/4 - visuals/wariant-burger-chicken-6300294.00-front-s.png": {
+      "grid": "data/thumbs/be423045c0802bd155b1181adbe7d5fdaa72500522e5ca7a39f1891ec0c0f3e3.jpg",
+      "card": "data/thumbs/3370febfc95370e2efcd2735b92f370ab37e20add705276dc82402c5a9ea682e.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/burger chicken — [ plant based ]/wizualizacje - 16.10.2024 - 6300579.00 - cz/4 - visuals/wizka-burger-chicken-6300579.00-front-s.png": {
+      "grid": "data/thumbs/49213e7d039fdec21d3c83835ad9f57ea75e0a592179d32da073144c6d422a48.jpg",
+      "card": "data/thumbs/5367bbb2fd2553078ba03343b64e577443371dfccca25d43775a2a090ce29cfa.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/burger — [ plant based ]/sleeve - 01.17.2025 - 6300572.00/4 - visuals/wariant-burger-6300572-front-s.png": {
+      "grid": "data/thumbs/c251663a36909a7aae083eebea8e0fb528b387e1b34a19f8f73c9e6e6c8fa971.jpg",
+      "card": "data/thumbs/991ee2d857f7f43f289fb87d86e846d34fe4328c91b9c5ccca5f3031b03a3c1d.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/burger — [ plant based ]/sleeve - 12.01.2023 - 6300293.00/4 - visuals/wariant-burger-6300293.00-front-s.png": {
+      "grid": "data/thumbs/cbeeb15ad347a7e4f6c938bfe0e1279cce634a1010ab63cc613de9509218a2b0.jpg",
+      "card": "data/thumbs/d99fce9888e3bdf541ce3c122acd947aa8f536ba2eeddb1f44fc2cc09490e7ca.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/burger — [ plant based ]/wizualizacje - 31.07.2024 - 6300514.00 - cz/4 - visuals/wizka-burger-6300514.00-front-s.png": {
+      "grid": "data/thumbs/2089e281f105f23440079da81efb189b1375a05897f36fb33a94a1fa9a8776b2.jpg",
+      "card": "data/thumbs/e7817dd31f0ac3154b52d492a8af3d484ed6ca5101c14661f9f66e889f09e9ae.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/ducat italian — [ plant based ]/sleeve - 29.08.2022 - kar000128.00/4 - visuals/wariant-ducat-italian-kar000128.00-front-s.png": {
+      "grid": "data/thumbs/fa2ec11da5564abf8714a6cd628e2ba6fa48dacf4d59ca0713fed1c0a193d77f.jpg",
+      "card": "data/thumbs/5730b6d833e77b97337de7ab0ab48caa12f794f5c5932928477c91eed6d1cc52.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/fish — [ plant based ]/sleeve - 12.01.2023 - 6300300.00/4 - visuals/wariant-fish-6300300.00-front-s.png": {
+      "grid": "data/thumbs/340ab74d72bc1f0b17dd8c3f07baa74ecc289ce094032fa87eb6d17127369057.jpg",
+      "card": "data/thumbs/7bc6b0bb08147458ec29a716bf162d23db02b3256a8df663ae02a8cefe55de4b.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/fish — [ plant based ]/sleeve - 29.08.2022 - kar000125.00/4 - visuals/wariant-fish-kar000125.00-front-s.png": {
+      "grid": "data/thumbs/10aeee80c8d990e08387501f31bcb0d9c2beed69ad87f7675e9937ab6404e2b2.jpg",
+      "card": "data/thumbs/64fa0fdccbfc757a9591d4b3ac077a75c3204c89fc9337247c2696ff64f75c2d.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/gyros pea — [ plant based ]/wizualizacje - 03.06.2024 - 6300356.00 - cz/4 - visuals/wizka-gyros-pea-6300356.00-front-s.png": {
+      "grid": "data/thumbs/fb6b37867afbab69350bad879904e34246bcb473b7246909783a238de0c783a6.jpg",
+      "card": "data/thumbs/eadebc67d51c274fb84b907150fed8c093191f9a59eb49c6c003777303003af8.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/gyros wheat — [ plant based ]/sleeve - 03.06.2023 - 6300356.00/4 - visuals/wariant-gyros-wheat-6300356.00-front-s.png": {
+      "grid": "data/thumbs/f1fc33a74ba2bc2160fef055504a9b6161407388a8ee6c7b8e53c9c34b2d5fdd.jpg",
+      "card": "data/thumbs/91cd144c8b8fd4703e872023afeae6dba2e9c0cb125d3c450783ed182aaf3f10.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/minced — [ plant based ]/sleeve - 05.06.2024 - 6300476.00/4 - visuals/wariant-minced-6300361-front-s.png": {
+      "grid": "data/thumbs/52bc4556fda79bf4c68336cd1e35cbe7fc66ce557ac74d770d79f0d292c116ba.jpg",
+      "card": "data/thumbs/ea3f9eb5151298a38a7c81ff71b26a8b377fe39a172acf102eb1b34138f589e3.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/minced — [ plant based ]/sleeve - 13.01.2023 - 6300298.00/4 - visuals/wariant-minced-6300298.00-front-s.png": {
+      "grid": "data/thumbs/30dff6ca71dba37431876e6e7f48f69591671afd2d729c94f709a68dc569e6c8.jpg",
+      "card": "data/thumbs/f4029973159ed4291df31fb33e008f99c819eca3c1cc7d20f8fa6c976bc7b1d7.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/nuggets — [ plant based ]/nuggets xxl - 08.05.2025 - 6300650.00/4 - visuals/dk_nuggets_xxl_6300650_2025_05_08_rgb_1200px.png": {
+      "grid": "data/thumbs/761affcece64994718d770b761cc2b12f1647175fc301011ad85aea21ac4571d.jpg",
+      "card": "data/thumbs/9350997f64c920e4000d35363f6318c99a64ca569413dace3dd961e1c120ceb3.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/nuggets — [ plant based ]/sleeve cz sk - 16.01.2025 - 6300610.01/4 - visuals/wariant-nuggets-6300610-front-s.png": {
+      "grid": "data/thumbs/257d8f4d02d5e4198bb203b451d502ed27522e3a9788831a644727bc541d8e94.jpg",
+      "card": "data/thumbs/b7cb5ee28d54a00536f00902ade4dfbc87edc58390ea92a6353d3cb098828c9e.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/pate tomato — [ plant based ]/carton - 05.09.2022 - kar000127.00/4 - visuals/wariant-pate-tomato-kar000127.00-front-s.png": {
+      "grid": "data/thumbs/9ed3bad9db594e6228410418d75ed3fd8a6d29b0cd5adfa972f32b5a9c67f233.jpg",
+      "card": "data/thumbs/dc3e6017067ac5a96f8775f0521c66715cf13341a20a6a81ee4b54a1bdfc8759.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/rissoless — [ plant based ]/sleeve - 21.12.2022 - kar000167.00/4 - visuals/wariant-rissoless-kar000167.00-front-s.png": {
+      "grid": "data/thumbs/9916b7426572f8664509c598b8f0e05c0f612ccf2b3dc73201e182adaa2e24de.jpg",
+      "card": "data/thumbs/a80ebb6c56153f664b31490a788cffd115f00af754212d2f5087876fb764b871.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/rissoless — [ plant based ]/sleeve - 29.08.2022 - kar000126.00/4 - visuals/wariant-rissoless-kar000126.00-front-s.png": {
+      "grid": "data/thumbs/633f4fac44525d049cfea7fd1b61703ef27a6f2eae674101e910c13e88e6e45e.jpg",
+      "card": "data/thumbs/7bdcae4b964566accb4fd0303b040acc5fe77ea1f603a692ef9f459c5df4542d.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/sousages bbq — [ plant based ]/sleeve - 08.11.2022 - kar000151.00/4 - visuals/wariant-sousages-bbq-kar000151.00-front-s.png": {
+      "grid": "data/thumbs/db99083cd0bd3920df2b27f548ceaa1a7a166afbbbb8f0a39bf6b4d123b30a9a.jpg",
+      "card": "data/thumbs/9b8b7bbe2b7378abee24e93359133f60ddeeaa0a8d5a214622ce10a29a8cf96a.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/sousages spicy — [ plant based ]/sleeve - 12.01.2023 - 6300296.00/4 - visuals/wariant-sousages-spicy-6300296.00-front-s.png": {
+      "grid": "data/thumbs/efef62b5b5de81d6cf74aae90cbe47fafe7f90a98c4552450ae27aa8cdc01cf2.jpg",
+      "card": "data/thumbs/a8ed651f3072d9f7ce621e91d177196a872993645c1d6e71393f3ec66ba81473.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/sousages spicy — [ plant based ]/sleeve - 16.05.2024 - 6300357.00/4 - visuals/wariant-sousages-spicy-6300357-front-s.png": {
+      "grid": "data/thumbs/f4abf77f6b4456281a040454c0c89e4d09fad576df43fe957017f14b437fcf4f.jpg",
+      "card": "data/thumbs/140b4188433ee5c1de0c8548d426458880c2825aa225019d976bd3f757b633bd.jpg"
+    },
+    "x:/marketing/- eksport/01 - products/- gc/03 - plant based/sznycel — [ plant based ]/sleeve - 23.06.2025 - 6300662.00/4 - visuals/projekt-sznycel-2025-06-23-6300662-front-s.png": {
+      "grid": "data/thumbs/3175a41557a54c969c14adeb01fde024916038584102f459ca630dbbe75ff504.jpg",
+      "card": "data/thumbs/76a2edaac7eb504b55aae79e7efa2bc7ae95bdba5ed1dd5b0c15f6f28f5bb00b.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/- mix - 6x mini batoniki — [ mixy ]/mini - 03.09.2024 - 6300547.00/4 - wizki/mini-mix-6x-mini-batoniki-6300547-front-l.png": {
+      "grid": "data/thumbs/a844b6ed9657dc997a981f064e1a7721e74cc6d85464c081ac1f1205b7638755.jpg",
+      "card": "data/thumbs/b9f370c2afeaf5b5bcd425bcee7a1e5c776f50b3ee4c4bb42b60c1f73a77184c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/- mix - bombonierka 11 szt mini — [ mixy ]/13.12.2023 - 6300424.00/4 - wizki/wariant-mix-bombonierka-11-szt-mini-6300424-front-l.png": {
+      "grid": "data/thumbs/975fb4a96703499de2e36f0a16068267cecc9675a7f0a6ca51e0df329b2bd8a0.jpg",
+      "card": "data/thumbs/1f7ad0404b9a2f880f4acd6387f52b53f8b5abe622470c38a4ddf04eecba4b57.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/- mix - kalendarz adwentowy — [ mixy ]/04.06.2025 - 6300651.00/4 - wizki/wariant-mix-kalendarz-adwentowy-6300651-front-s.png": {
+      "grid": "data/thumbs/55b1764615dc2d3dee4b2a1ec9e65175326bc7b5bd15a7f5d03c11f251f1aa00.jpg",
+      "card": "data/thumbs/acfa192d00bdb834a642960900feff7be1d95b10ba1e6fabdb958799e988bb87.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/- mix - kalendarz adwentowy — [ mixy ]/14.07.2023 - 6300381.00/4 - wizki/wariant-mix-kalendarz-adwentowy-6300381.00-front-s.png": {
+      "grid": "data/thumbs/6c94b54e2d0ae35b6ec59ed96aa9863898233ae32adba71050e3845f4632953a.jpg",
+      "card": "data/thumbs/2b947d8a43c1e514de7f8f521095ed480d60237b517304c6a907464af338b6e2.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/- mix - zestaw 15x mini batoniki — [ mixy ]/mini - 08.09.2023 - 6300410.00/4 - wizki/mini-mix-zestaw-15x-mini-batoniki-6300410.00-front-s.png": {
+      "grid": "data/thumbs/e840d69d8aee25258d33fa0c5d36b2bac1229de3a62033f0fdc9a91854648b62.jpg",
+      "card": "data/thumbs/5e556e1badf3159da2f08d1c991e742aec10a3e70188bee69b57427d2f3d0d42.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/- mix - zestaw mix ciast 1 — [ mixy ]/kar - 16.12.2025 - 6300719.00/4 - wizki/kar-mix-zestaw-mix-ciast-1-6300719-enface-s.png": {
+      "grid": "data/thumbs/1c808476e9d5b8d16deaa55703d8ebda93534479987bb1bab72b4622ff58bd37.jpg",
+      "card": "data/thumbs/c7b95f46a6c8ad7e05fb4c59eddfb4c76987a8a12491a6e91b238989cfed07aa.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/- mix - zestaw mix ciast 2 — [ mixy ]/kar6x - 08 05 2026 - 6300740.00/4 - wizki/mini-mix-zestaw-mix-ciast-2-6300740-front-l.png": {
+      "grid": "data/thumbs/742eebcb6540cd17f1c40dd4d1eb0c54a40964499df9cf20c2c0429d59d737ce.jpg",
+      "card": "data/thumbs/17d8f47f8f7de16e1bc80fd56b940a7d2cb778671bfcad0c0289a6eaf6fa2167.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/babka cytrynowa — [ nerkowcowy ]/kar6x - 07.05.2026 - 6300684.01/4 - wizki/kar6x-babka-cytrynowa-6300684-front-l.png": {
+      "grid": "data/thumbs/e07ca79bd77e4e641f73288bb6f997258aeea91216ec5c660e29d091b0a27ff6.jpg",
+      "card": "data/thumbs/904ff1976109c6c332a32ed69fb250aa2af64085698e0de71e7e5f591860500c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/babka cytrynowa — [ nerkowcowy ]/kar6x - 13.02.2025 - 6300622.00/4 - wizki/wizka-babka-cytrynowa-6300622-front-s.png": {
+      "grid": "data/thumbs/cf2ab111cd76f57d14c4c216638a7e49e9c1948be56778cc6c96d6fe548aa080.jpg",
+      "card": "data/thumbs/debfb77c653e5696b9dc9701e4cbc75ed286f7aa6d39ff57d5324e88d16461d7.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/babka cytrynowa — [ nerkowcowy ]/mini - 24.01.2025 - 6300621.00/4 - wizki/mini-babka-cytrynowa-6300621-front-s.png": {
+      "grid": "data/thumbs/d69ddccb77b45536310a71c78168591fcfccc17aeb989abd7e3321007da36cef.jpg",
+      "card": "data/thumbs/5e7073ed750d14da4b4745281ceb52c26fea92af33e16bca64405951031b02e0.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/chrupiący orzech — [ daktylowy ]/bat - 35 g - 05.04.2022 - fol000096.00/4 - wizki/bat-chrupiący-orzech-fol000096.00-front-s.png": {
+      "grid": "data/thumbs/3a790d56342871c68eb6259fdefb8961298f208c070f4d540ea353686a0d65ac.jpg",
+      "card": "data/thumbs/c898bbb93131c70e13e6374bb3e64b2f57ad840d7a622da6782e62343b4edff9.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/chrupiący orzech — [ daktylowy ]/bat - 35 g - 17.06.2024 - 6300515.00/4 - wizki/bat-chrupiący-orzech-6300515-front-s.png": {
+      "grid": "data/thumbs/2fd3bb8d9808ab0cdfad5f761e75407e82a8d661b26e8feb9e50d260e012c9ea.jpg",
+      "card": "data/thumbs/9358eb161f6e3bfcdbec1f9ff17240b46d15c5510b71d1d4e42ed7d68bb8d30c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/chrupiący orzech — [ daktylowy ]/bat - 35 g - 27.06.2025 - 6300657.00/4 - wizki/bat-chrupiący-orzech-6300657-front-s.png": {
+      "grid": "data/thumbs/38274d9ea5aec1e4b9a922326063051c5af1b790f2bad2b2106ba1f5a6524155.jpg",
+      "card": "data/thumbs/f1cdc33c7e1068f328dad570f827e6649996a06d07574f233ab8e3e374800720.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/chrupiący orzech — [ daktylowy ]/bat - 35 g - 28.06.2026 - 6300761/4 - wizki/bat-chrupiący-orzech-6300657-front-s.png": {
+      "grid": "data/thumbs/aa09e76fb8986c660998405312bb020ad70e4c72b6ca2cc22066e160e7aa1e2d.jpg",
+      "card": "data/thumbs/624b04b3e0747f6adb71995a9fc740a22f9730609d7e611006f1e3ce271ae706.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/chrupiący orzech — [ daktylowy ]/doy6x - 30.11.2023 - 6300427.00/4 - wizki/doy6x-chrupiący-orzech-6300427-front-s.png": {
+      "grid": "data/thumbs/517cc520324bcb7b48817817a86cd1d1d87a119ccb0fdd530ef3b99bb5e09a4e.jpg",
+      "card": "data/thumbs/b72d45389b23f48b4699fab4e5183e070090cb0cf6fb2a06c5d3ee55a2bd0a8f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/chrupiący orzech — [ daktylowy ]/mini - 23.02.2024 - 6300454.00/4 - wizki/mini-chrupiący-orzech-6300454-front-s.png": {
+      "grid": "data/thumbs/47a1aa160e2cfbb6d7ebab6c51382614a6968e2a604ed4d8959ca6a8c500f688.jpg",
+      "card": "data/thumbs/a42998baaa4f250be8cd67aebc425a2a104a7f869adcfd478eee9e028ffb9e02.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/ciasto marchewkowe — [ nerkowcowy ]/kar6x - 29.08.2024 - 6300548.00/4 - wizki/kar6x-ciasto-marchewkowe-6300548-front-s.png": {
+      "grid": "data/thumbs/0ee28016f35ea3804f26ddba6cbb414954fa0d146da76fc4c10bc3084df4f07c.jpg",
+      "card": "data/thumbs/3481f7288fa8a73fc7e8f82434f21e1b7bef0145f820f644703a5c46f50ccf93.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/ciasto marchewkowe — [ nerkowcowy ]/mini - 19.08.2024 - 6300550.00/4 - wizki/mini-ciasto-marchewkowe-6300550-front-s.png": {
+      "grid": "data/thumbs/1858d3d847e700f1b82bb3e2e057d4d8cabd8ab6f416d0060c3129df04fb08dc.jpg",
+      "card": "data/thumbs/cde682144108a64c8b8d3d291036725afc7c9c755aa3d24cc701bf6d9b6c9a41.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/ciasto porzeczkowe — [ nerkowcowy ]/bat - 35 g - 08.05.2025 - 6300638.00/4 - wizki/bat-ciasto-porzeczkowe-6300638-front-s.png": {
+      "grid": "data/thumbs/5afb846e07b0c5b5eb62764ee3da2f7c40b542ddbab0042a0bd8835832288821.jpg",
+      "card": "data/thumbs/4dc6a27ca485faeb829815fc9400717daa14d26e7bc7dd1c97dc1c6336df8140.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/ciasto porzeczkowe — [ nerkowcowy ]/kar6x - 05.05.2025 - 6300549.01/4 - wizki/kar6x-ciasto-porzeczkowe-6300549-front-s.png": {
+      "grid": "data/thumbs/d1ba14c27ec4a490c5cf47fc91c63c03e18189db9f50b86f2e9d09d49a3439b4.jpg",
+      "card": "data/thumbs/3372a83722846b6a36b823a06754d47704aba3d1a65ec179cf4f1d79e7efd15f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/ciasto porzeczkowe — [ nerkowcowy ]/mini - 19.08.2024 - 6300551.00/4 - wizki/mini-ciasto-porzeczkowe-6300551-front-s.png": {
+      "grid": "data/thumbs/64eb10e207ea3ad71d1208da5ebc5ca3c06cb5475fd6b0cdecb0e3664db666ec.jpg",
+      "card": "data/thumbs/7476c379e89bb5590e5658fab0c045dcaaeb9f85f5e6136b652c8310dcb0a3f8.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/ciasto śliwkowe — [ nerkowcowy ]/kar6x - 20.05.2026  - pl en - 6300785.00 - f/4 - wizki/dk-kar6x-nerk-ciasto-śliwkowe-6300785.00-front-l.png": {
+      "grid": "data/thumbs/78a78af7be3c5d6ebe25c367adfe24dbdf2d3b7660676691a87044c007bf8037.jpg",
+      "card": "data/thumbs/0cb54573c94450868638f7343dbdd0f6ed157f77fad774eb93b3468d8692dac2.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/cynamonka — [ nerkowcowy ]/kar6x - 20.05.2026  - pl en - 6300783.00 - f/4 - wizki/dk-kar6x-nerk-cynamonka-6300783.00-front-l.png": {
+      "grid": "data/thumbs/1b3e7a6182c23927b7e7902d29e826997d8380cd904be1595400ff7039605f3f.jpg",
+      "card": "data/thumbs/d6d704533132b6ee3929f0570200d6d09ba9f8ba199f2673d6719eed63893a2a.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/czekolada banan — [ orzechowe ]/bat - 29.01.2022 - fol000084.00/4 - wizki/bat-czekolada-banan-fol000084.00-front-s.png": {
+      "grid": "data/thumbs/ecc37763f00a30db62aab6d9356eff3cc10377ab1c5f2398832bbc227ab81def.jpg",
+      "card": "data/thumbs/78319dbfee804c4ff51a5713644754630365c072f5c3090f7f56dde6ac3111fb.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/dla serca— [ funkcjonalny ]/kar6x - 06.06.2025 - 6300659.00/4 - wizki/kar6x-serce-6300659-front-l.png": {
+      "grid": "data/thumbs/526edf093cd3860abe29f01691ade7c7b6234d80529213c4a1146a474b36fad7.jpg",
+      "card": "data/thumbs/3a59b4ebdb7b11e047b3b1c1458e8cc0306052da107d2f59a2231b368eb67e10.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/dla serca— [ funkcjonalny ]/mini - 03.06.2025 - 6300660.00/4 - wizki/mini-serce-2025-06-03-6300660-front-s.png": {
+      "grid": "data/thumbs/798a1e07704f9b57cdf34916a6981309374acc909be2970bf3d03dafdfb0577f.jpg",
+      "card": "data/thumbs/2686f02953c78619d9da9d8e12998dcf5e3e8f79987c6132657f24f9fa10e818.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/energia — [ funkcjonalny ]/08.12.2024 - 6300583.00/4 - wizki/wizka-energia-6300584-front-s.png": {
+      "grid": "data/thumbs/5f655902479b29c04c6f775f59bb4f7869e5335d9a935f690b9aae7deaf1d2f5.jpg",
+      "card": "data/thumbs/b77de85d70cd65fa505a3c5de4c3b1f9a46839512bd036bae087baa075dd8849.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/energia — [ funkcjonalny ]/mini - 09.12.2024 - 6300600.00/4 - wizki/mini-energia-6300600-front-s.png": {
+      "grid": "data/thumbs/06df25fd94bce6045f06e5cbaefdb5f579ae1d09b671ad3fe535415f329ea939.jpg",
+      "card": "data/thumbs/071694461a39b6ad49460fa805e148ff170403e432ede273a0dc6c0bc46c77de.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/jabłko cynamon — [ daktylowy ]/02.09.2024 - 6300428.00/4 - wizki/wizka-jabłko-cynamon-6300428-front-s.png": {
+      "grid": "data/thumbs/b22e4bc9d743bcf6ec11e40fdec582958a2ffed5e5143348cc513513cbb778d1.jpg",
+      "card": "data/thumbs/de569e9cf7d58e8ec45c60ca20b64efe62aaea8a549a5b4cfac4cb47810ab5ba.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/jabłko cynamon — [ daktylowy ]/bat - 35 g - 15.05.2026 – 6300763/4 - wizki/dk-bat-dakt-jablko-cynamon-pl-ua-6300763-front-s.png": {
+      "grid": "data/thumbs/955283faaf8b5c114ad6d8c8095fc93743ddee957d9da321543cdec4db53fade.jpg",
+      "card": "data/thumbs/5e7b0165270f129436cea4ead720643b93b032de8b88a28e58a698ab721b696e.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/jabłko cynamon — [ daktylowy ]/bat - 35 g - 24.03.2022 - fol000091.00/4 - wizki/bat-jabłko-cynamon-fol000091.00-front-s.png": {
+      "grid": "data/thumbs/ce4ac9816d4807f1ab3e6cc7d784b8e2163a51c05ed0ddeb4b3e119e6301ab1c.jpg",
+      "card": "data/thumbs/896beb37c27899c16cd3575bda4d939773a9a75722e9501815db872c24200d32.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/jabłko cynamon — [ daktylowy ]/doy6x - 09.02.2024 - 6300384.00/4 - wizki/doy6x-jabłko-cynamon-6300428-front-s.png": {
+      "grid": "data/thumbs/fd1832132c8247c8ea52124dac6bce8ae85088af95fff02a3d53ee7ac6089ca8.jpg",
+      "card": "data/thumbs/ea2f8d00e2fb4e34af2b63b77e568fa691cf02edbbd911f6c0ea3e860e83bb9f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/jabłko cynamon — [ daktylowy ]/mini - 09.02.2024 - 6300455.00/4 - wizki/mini-jabłko-cynamon-6300455.00-front-s.png": {
+      "grid": "data/thumbs/0880d8a03d9d70fcce683c2e9135c676b4bfe4e606cf6d2f5933b475c1e21426.jpg",
+      "card": "data/thumbs/0d2262b4d07d106eac7ca3d1d8bc6670e47a3b766ca44ae843e53d5c37617b06.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/kakao orzech — [ daktylowy ]/bat - 35 g - 05.04.2021 - fol000095.00/4 - wizki/bat-kakao-orzech-fol000095.00-front-s.png": {
+      "grid": "data/thumbs/45b747e08e7f6c72e1c3c287edb807c2165d3eddc6bc0f6c50dd428254cf023f.jpg",
+      "card": "data/thumbs/e70a09bf6dd80d8aed410ca5e2bade445da77806166bd831e657298559916661.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/kokos czekolada — [ daktylowy ]/bat - 35 g - 29.05.2024 - 6300469.00/4 - wizki/bat-kokos-czekolada-6300469-front-s.png": {
+      "grid": "data/thumbs/a32b43190fa6aebe3e33a9869acd4cc53c65ba80cc9c4d6c0f560c32390e012f.jpg",
+      "card": "data/thumbs/68c84120b12034cf3d31059919a741e5efb6dd57455aea40204bb5c4ae4f51cb.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/kokos czekolada — [ daktylowy ]/doy6x - 01.03.2023 - 6300457.00/4 - wizki/doy6x-kokos-czekolada-6300457-front-s.png": {
+      "grid": "data/thumbs/ca50d1c05bf3bf8286da1fe58581dd7647b7ec10e69f94c8b4555261e2e9bf5b.jpg",
+      "card": "data/thumbs/968a0ddde5fd0452188ef61a9b43057a0ca5e31ec3a2442c87eb2e325e0a4d54.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/kokos czekolada — [ daktylowy ]/mini - 05.03.2023 - 6300456.00/4 - wizki/mini-kokos-czekolada-6300456-front-s.png": {
+      "grid": "data/thumbs/7efa21c459b1e942731f0f657e4c6dac8c749f10711cfdd152ff3f1934e69ecb.jpg",
+      "card": "data/thumbs/d8aa823483592aa82fd98d78ea70cc60ac14a5fec91af614ea70ed0c69752001.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/kokos pomarańcza — [ daktylowy ]/bat - 35 g - 22.04.2022 - fol000098.00/4 - wizki/bat-kokos-pomarańcza-fol000098.00-front-s.png": {
+      "grid": "data/thumbs/6348cf0d9b2a93212b6dbb52d13686a113a59b7de5cc34a2914c8549206f02b6.jpg",
+      "card": "data/thumbs/68fe59e994c64f3467a4a8f872f374a1023b27d9eeb0670f33aa8f728770341e.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/krem orzechowy karmel — [ proteinowy ]/28.06.2022 - fol000109.00/4 - wizki/wariant-krem-orzechowy-karmel-fol000109.00-front-s.png": {
+      "grid": "data/thumbs/8ee09a701dc63962ffdd5ab38a1354cfce89731c52155914f2764c80a16791c6.jpg",
+      "card": "data/thumbs/980b04d4ad4fbbd888e653d288253d2101db34416bab1d9667ef065fb30b29bc.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/krem orzechowy sol — [ proteinowy ]/12.06.2024 - 6300516.00/4 - wizki/wariant-krem-orzechowy-sol-6300516.00-front-s.png": {
+      "grid": "data/thumbs/de4f91c2cb877abbedcdc8dcedc894ad2386fa80301871444c23ce861f7bdd07.jpg",
+      "card": "data/thumbs/abb2c2f17acb02132156f171c4554d5200eb2915a88539f0f044f6e1055fe7f1.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/krem orzechowy wanilia — [ proteinowy ]/23.06.2022 - fol000101.00/4 - wizki/wariant-krem-orzechowy-wanilia-fol000101.00-front-s.png": {
+      "grid": "data/thumbs/4a1b7c39fcfcda99d47dc467883b2d5ad9d481d42076e798c1e6adbde060101e.jpg",
+      "card": "data/thumbs/cbcf336f0291072e19f2dee738ce167f4e59a09ac2e163815655a0546d258e00.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/latte waniliowe — [ nerkowcowy ]/kar6x - 06.08.2022 - kar000129.00/4 - wizki/kar6x-latte-waniliowe-kar000129.00-front-s.png": {
+      "grid": "data/thumbs/7bb317f58db4d915dd14b01774d657a38c0dde4bf739df692945e249b77f60f7.jpg",
+      "card": "data/thumbs/e21ac2b51b9ef7aa2ba7292170137a7912a83a61dbedb8e0204585b505ce1428.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/latte waniliowe — [ nerkowcowy ]/mini - 16.04.2024 - 6300453.00/4 - wizki/mini-latte-waniliowe-6300453-front-s.png": {
+      "grid": "data/thumbs/4a39f4c75b76ca09c13391cbee107c6600f2e956df2cd75768cb488ff697c8f4.jpg",
+      "card": "data/thumbs/070de9bd10313a6330b6098dd90d6e40ebd98165cdac19920d94d8fe28e41220.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/makowiec — [ nerkowcowy ]/kar6x - 27.08.2024 - 6300555.00/4 - wizki/kar6x-makowiec-6300555-front-s.png": {
+      "grid": "data/thumbs/581785c900eace2b43ab7ee4c968211c1cbe324ff97f7b60d3a3615a2f376a70.jpg",
+      "card": "data/thumbs/459d095c50404a78b2519d821aa3d5214c556ac620d6963ef6f5d322a8d6147a.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/makowiec — [ nerkowcowy ]/mini - 29.08.2024 - 6300553.00/4 - wizki/mini-makowiec-6300553-front-s.png": {
+      "grid": "data/thumbs/7c2482a871ff0253ee6f6023921bfdc5d4f4d92e5f6ebe0c6414df5e9ea29dac.jpg",
+      "card": "data/thumbs/29fbf947bbb215b4ebfa3c2dc24e1e58f8a9d3bc92b5736d2692695b6f911e97.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/mango lassi — [ nerkowcowy ]/11.09.2025 - 6300678.00/4 - wizki/wizka-mango-lassi-6300678-front-l.png": {
+      "grid": "data/thumbs/418aa201b4490b96dccbb702dd0af9e843c4adbfe98affcd00986b6f2c4e3eac.jpg",
+      "card": "data/thumbs/db098b9494d5870c7d09a1f1dc58ced753121611a51712bf45be25c59ab6341f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/mango lassi — [ nerkowcowy ]/17.01.2024 - 6300452.00/4 - wizki/wizka-mango-lassi-6300452-front-s.png": {
+      "grid": "data/thumbs/e86a5236aca27ddf76206db74de42d37bbc4c0710a902accb502696f33fe7763.jpg",
+      "card": "data/thumbs/74fdd83bcf38f5da61b1e51c19f211a74d196bc87845e51ea384938710912a6e.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/mango lassi — [ nerkowcowy ]/kar6x - 28.04.2023 - 6300351.00/4 - wizki/kar6x-mango-lassi-6300351.00-front-s.png": {
+      "grid": "data/thumbs/46d77c5694a349b168b23fa740d43152d4761d512d77bead8fb60cadfaf650c8.jpg",
+      "card": "data/thumbs/74051e27908067193f1cf9ef769c6d09d132f83a15e8c1fb50c28ca08b146986.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/matcha lemon — [ nerkowcowy ]/bat - 35 g - 20.10.2025 - 6300700.00/4 - wizki/bat-matcha-lemon-6300700-front-s.png": {
+      "grid": "data/thumbs/27ea4db2b4917bb9fa4235fd36801c9aab98216e78c42fe09fc519d96aa00e9c.jpg",
+      "card": "data/thumbs/f78cb9a221089d52f535c4de343356081b63474c0f8d9c1d3707d8765f6cfb42.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/matcha lemon — [ nerkowcowy ]/kar6x - 10.09.2025 - 6300681.00/4 - wizki/kar6x-matcha-lemon-6300681-front-l.png": {
+      "grid": "data/thumbs/5b36b423dcb0ec10a386eb2b28168351383b7519e4b7ca109e1345488033243a.jpg",
+      "card": "data/thumbs/e87ec48d3380f060d92accf9b04b8b2a13b98ba301054bcd39b59826b70e0eb2.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/matcha lemon — [ nerkowcowy ]/mini - 23.10.2025 - 6300680.00/4 - wizki/mini-matcha-lemon-6300680-front-s.png": {
+      "grid": "data/thumbs/264c5c01bbe82742f726285904d197425c9d2ba2e7cd8da172d6be137043458b.jpg",
+      "card": "data/thumbs/073ab708fe8968105ff9e928872ae80ecc5baab7d1c1800be70a66b024af1527.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/muffin jagodowy — [ nerkowcowy ]/13.01.2022 - kar000086.00/4 - wizki/wizka-muffin-jagodowy-kar000086.00-front-s.png": {
+      "grid": "data/thumbs/0f451b0fbd25b9d3a2d111f614690445e0b718bb064e299e1100ec83e94893b3.jpg",
+      "card": "data/thumbs/c0db6bab0117cdfd88eaadc2047050ff5e0a903bb14d15c4aae5fdddfcda9e24.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/muffin jagodowy — [ nerkowcowy ]/bat - 35 g - 07.05.2025 - 6300648.00/4 - wizki/bat-muffin-jagodowy-6300648-front-s.png": {
+      "grid": "data/thumbs/eb7b95885abdc4c2e93c6cfbb7eb6f921a9009cb0a14bab201269af9da184432.jpg",
+      "card": "data/thumbs/4a2cc6e112e5dfd80e16e07fb14b519d2071a0de784ffbd146b9dd3e3d35ed72.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/muffin jagodowy — [ nerkowcowy ]/kar6x - 06.07.2022 - kar000119.00/4 - wizki/kar6x-muffin-jagodowy-kar000119.00-front-s.png": {
+      "grid": "data/thumbs/db23997d2b07954dd6dadaf0f4b2077b63cde419cd355ef6c57dfbf306e336d0.jpg",
+      "card": "data/thumbs/f08a37305024a9f32d865eb3d178e2fc0e8f7c65d7279d8366b997312e8a9918.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/muffin jagodowy — [ nerkowcowy ]/mini - 04.10.2023 - 6300074.00/4 - wizki/mini-muffin-jagodowy-6300074-front-s.png": {
+      "grid": "data/thumbs/87b83a7212ed414e7b57c1d7368fedf6d6797bc3b54708e11a73ba3f38f00657.jpg",
+      "card": "data/thumbs/b65929121d3559c4824a07ed25531d5bd37f54537148540a9d963df4ad4ac187.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/nerkowce banan — [ ziomki ]/27.06.2022 - fol000103.00/4 - wizki/wariant-nerkowce-banan-fol000103.00-front-s.png": {
+      "grid": "data/thumbs/8b224ca786f2619161295bed70ad70c204b343348c5c29551aaf1a5360978e8c.jpg",
+      "card": "data/thumbs/b4bb10d8f37984308b81585cd5bf186712a0b45d69a6d9ae16ce5a5473ee6214.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/nerkowce kawa — [ daktylowy ]/bat - 35 g - 14.07.2023 - 6300388.00/4 - wizki/bat-nerkowce-kawa-6300388-front-s.png": {
+      "grid": "data/thumbs/01d332dbb75e0b82d337ab51b91e4ac59f328fe840ec42c68393e143a0e02cf2.jpg",
+      "card": "data/thumbs/de850bad7b6f7cd74fe94c7e2721df8ac5b16df0f6ac34b807d49690d3bc37f5.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/nerkowce kokos — [ daktylowy ]/bat - 35 g - 17.07.2023 - 6300389.00/4 - wizki/bat-nerkowce-kokos-6300389-front-s.png": {
+      "grid": "data/thumbs/4d47e1138bdb4327d708dc58c43d380a917a3dfae510efb506499444a5458bab.jpg",
+      "card": "data/thumbs/337a5ee00537a095f9ce73f5eef35cef914817e25fa82c12abd817bb2c91d022.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/nerkowce kokos — [ daktylowy ]/bat - 35 g - 27.05.2025 - 6300752/4 - wizki/bat-nerkowce-kokos-6300389-front-s.png": {
+      "grid": "data/thumbs/3a241d319d80597cc9179e0a71364af15d1acc6bacc51ac72f9baa289d9b29b6.jpg",
+      "card": "data/thumbs/e42898aad17b395d5f970ab93f12423f8350e0581aaca048ad447cb4f356592c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/nerkowce mango — [ ziomki ]/27.06.2022 - fol000102.00/4 - wizki/wariant-nerkowce-mango-fol000102.00-front-s.png": {
+      "grid": "data/thumbs/06c7a5749eb6f1c1bf4585c17b7769e213441b22f86064bcdf2026df8de380f5.jpg",
+      "card": "data/thumbs/4521333e6b90d4d4cceea4808069f48c34413998438cf19ca8aea425a5a46ceb.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/odporność — [ funkcjonalny ]/08.12.2024 - 6300583.00/4 - wizki/wizka-odporność-6300583-front-s.png": {
+      "grid": "data/thumbs/b57de43796456d734e5fe7537403eb976cc63e4b28773a6cc2407d6cc6c6e2fd.jpg",
+      "card": "data/thumbs/a3d9e034465065f02dc1331f1968ef156521015f72049bd5ccadd0425bd9f33d.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/odporność — [ funkcjonalny ]/mini - 09.12.2024 - 6300601.00/4 - wizki/mini-odporność-6300601-front-s.png": {
+      "grid": "data/thumbs/b49bccb08c7555e9588dac22b386808bcff9b250d35c61a0bd78be1f1b7cebd7.jpg",
+      "card": "data/thumbs/a1889e2f0e4c60fdec4427faddbbfc6f607aec02aecb2acdf4f977ab7ff30920.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/orzech czekolada — [ daktylowy ]/bat - 35 g - 25.06.2024 - 6300348.00/4 - wizki/bat-orzech-czekolada-6300348-front-s.png": {
+      "grid": "data/thumbs/66514165288fd29aca3d25e55e65662200b274c6eaf24e2059680d6379b41b13.jpg",
+      "card": "data/thumbs/4811cd191d599c8aacc0e69d578e34642e5c614e24a74a36924d354511d1d906.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/orzech czekolada — [ daktylowy ]/bat - 35 g - 29.06.2023 - 6300365.00/4 - wizki/bat-orzech-czekolada-6300348-front-s.png": {
+      "grid": "data/thumbs/23089c77613362fb6dfcc1d6e9b6cbe1c85cec84d8609ea7ef8e0c24866fe763.jpg",
+      "card": "data/thumbs/a5481e5719399868327b6feb6f64b4335d1d06a906748187d7c7c3b54334606d.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/orzech czekolada — [ daktylowy ]/doy6x - 27.11.2023 - 6300421.00/4 - wizki/doy6x-orzech-czekolada-6300421-front-s.png": {
+      "grid": "data/thumbs/a8d72a1433fa112b0ccc19ff811729ab2a35762bf0cef48f2ecdfff7d2e9dc9a.jpg",
+      "card": "data/thumbs/b37c5f9947a07d8d4445469a7d2d2eb69f7fff500d63bda9316dd508d0727cf7.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/orzech czekolada — [ daktylowy ]/mini - 08.12.2023 - 6300429.00/4 - wizki/mini-orzech-czekolada-6300429-front-s.png": {
+      "grid": "data/thumbs/56b3c8b389c33b9f46b92df16fbe4b9bfb0c22f76736a9dfef79769494f70d1d.jpg",
+      "card": "data/thumbs/b9a59fcf6267605b50b8ee232553479fa9dffb9f53363074a0828103c00e3193.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/orzech laskowy migdał — [ orzechowe ]/bat - 29.01.2022 - fol000083.00/4 - wizki/bat-orzech-laskowy-migdał-fol000083.00-front-s.png": {
+      "grid": "data/thumbs/b0174045a7a7d0e95a6a3c62a2f9034ee14e566fdfb6fbcb2d841b2d7c077a71.jpg",
+      "card": "data/thumbs/ef607cf7933e3b60c8818abe1af5c5f00cb03194dd9161f5a8c3de0bd68388bc.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/orzech laskowy — [ daktylowy ]/bat - 35 g - 29.07.2024 - 6300546.00/4 - wizki/bat-orzech-laskowy-6300546-front-s.png": {
+      "grid": "data/thumbs/6e3d38a371bc5b32de3763122914f747d9ef4e68b5ec0f554a2bc93fb13f2a82.jpg",
+      "card": "data/thumbs/39421d0288741088b8aa6d5e353efcbc9f9084c617f804beabff80b40c60f34a.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/orzech laskowy — [ daktylowy ]/doy6x - 04.03.2025 - 6300620.00/4 - wizki/doy6x-orzech-laskowy-6300620-front-l.png": {
+      "grid": "data/thumbs/a49e8726f96656a7d7aeb7c5aed15c92ec5167b948f3be0e2648b950e05c05a2.jpg",
+      "card": "data/thumbs/555f3673a69d54e544f7b9ebd4d532c13ba6519bc618c54c39f91d824e1ae5ac.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/orzech laskowy — [ daktylowy ]/mini - 23.12.2024 - 6300619.00/4 - wizki/mini-orzech-laskowy-6300619-front-s.png": {
+      "grid": "data/thumbs/d80091ffc37f72897417b5b7a5df57c33956258f4cf4f59bbdc61aa161d4715b.jpg",
+      "card": "data/thumbs/9756df8e7bfdac9e0c86c8e7e921c14d83343706c56fd18960ca670278cf23d4.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/owies czekolada — [ sniadaniowe ]/bat - 31.01.2022 - fol000047.00/4 - wizki/bat-owies-czekolada-fol000047.00-front-s.png": {
+      "grid": "data/thumbs/ba0fbff21952698534f83f03d0461dfc1662867cd0063a3185b76e74e649adcc.jpg",
+      "card": "data/thumbs/bf16acad0317d81c88c8af1e9d57c77377557b6c0c61731352b422b0322c5a92.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/owies miod — [ sniadaniowe ]/bat - 31.01.2022 - fol000046.00/4 - wizki/bat-owies-miod-fol000046.00-front-s.png": {
+      "grid": "data/thumbs/04a6d34b3030ba483fea64a6cba196f78927a3ce6d67c2c529323648dfb04fe6.jpg",
+      "card": "data/thumbs/2cb08a780558416b486b1eda4b23b3736a8e7e004068aff0142e8db33e9c1532.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/piernik korzenny — [ nerkowcowy ]/kar6x - 23.07.2024 - 6300532.00/4 - wizki/kar6x-piernik-korzenny-6300532.00-front-s.png": {
+      "grid": "data/thumbs/2fb3c51fc6634deda00117faa83fbab51e098c0e877893ded9476e9e7bb46d36.jpg",
+      "card": "data/thumbs/a1fb97db9e023f74cb53dfb3a6f4f00637ebc13c481c0b0047c1937511477d8f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/piernik korzenny — [ nerkowcowy ]/mini - 11.10.2024 - 6300544.00/4 - wizki/mini-piernik-korzenny-6300544-front-s.png": {
+      "grid": "data/thumbs/a1fe2c380dad37eaa8dc770c93b9fa2b7120dcd4b81a5f6d4ba63d99adde8750.jpg",
+      "card": "data/thumbs/98efd50986dcb5cc8c90267a6f72ab8d8fab8297d82bf0bda0b6868ea5715269.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/pina colada — [ nerkowcowy ]/kar6x - 29.04.2023 - 6300337.00/4 - wizki/kar6x-pina-colada-6300337.00-front-s.png": {
+      "grid": "data/thumbs/014db6b26326896ad66c3b67539e2fcaf17a86896cd467812f89d4c6b53694d6.jpg",
+      "card": "data/thumbs/54db44f0e8a27fd3fee9091f3ab1f91f54b35470e7af516bc075cbfe05ee709b.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/pina colada — [ nerkowcowy ]/mini - 17.01.2024 - 6300444.00/4 - wizki/mini-pina-colada-6300444-front-s.png": {
+      "grid": "data/thumbs/b0bd60d905db8b3591549748fa1857e84ea1293c15871932ac6e7aca1fd96289.jpg",
+      "card": "data/thumbs/4a0759c9f5a08ff9a61197448adc9c38cc38125ff0c970917459467b4ddaa3b4.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/prebiotyk — [ funkcjonalny ]/mini - 06.06.2025 - 6300652.00/4 - wizki/mini-prebiotyk-6300652-front-s.png": {
+      "grid": "data/thumbs/0e3f31ef6f5389e9579f43fb77ec0f479499498f42e041872356ad89bd8ad117.jpg",
+      "card": "data/thumbs/01166d13684e1fd995eb3807d73631ecdf55a53155332bbe3a06f2667481ff48.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina banoffee — [ ig ]/bat - 45 g - 06.02.2026 - 6300738.00/4 - wizki/bat-proteina-banoffee-6300738-front-s.png": {
+      "grid": "data/thumbs/70629bc934aed17e42d48f8f844632dd1b6d2b673922ec55fa859d6b3c6679b7.jpg",
+      "card": "data/thumbs/36cd98d8e740260b13b3bc123ce702a06b3b48abc08a87e52b790a73dc3051bb.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina banoffee — [ ig ]/kar6x - 20.11.2025 - 6300707.00/4 - wizki/kar6x-proteina-banoffee-6300707-front-l.png": {
+      "grid": "data/thumbs/c52f7f63a85f942df90e7b612b7bcdc3759c2235066f4505082a2d47d5bd3e2f.jpg",
+      "card": "data/thumbs/5c90b5c1758142d9795fca6bef06e33f03abf12b06a676ec38a093c561d8c675.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina banoffee — [ ig ]/mini - 07.11.2025 - 6300710.00/4 - wizki/mini-proteina-banoffee-6300710-front-s.png": {
+      "grid": "data/thumbs/ca6d1cb1db9235e0c724eb97b4d5f48aed06881e4eb355e409784c0d8139b01e.jpg",
+      "card": "data/thumbs/78633eac18b3b8b5dadc7720bebd59b872adf6e8333d45b1b1d2fe97d22ce14c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina karmel z mct — [ ig ]/bat - 45 g - 22.10.2025 - 6300702.00/4 - wizki/bat-proteina-karmel-mct-6300702-front-s.png": {
+      "grid": "data/thumbs/0abfbc866a5273b7690599623207f063ef4b3de314d378fde99903b998a0b0e4.jpg",
+      "card": "data/thumbs/92e6a7b6b8eef9eca00bc3c4f4c08f3e5432b2df76b0ea18ed0ea9303307ed5c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina karmel z mct — [ ig ]/kar6x - 12.06.2025 - 6300655.00/4 - wizki/kar6x-proteina-karmel-mct-6300655-front-l.png": {
+      "grid": "data/thumbs/ff772cd02c26a61c09d09a5f53c54c80ce76651de81fddfff748b7b96f1620cd.jpg",
+      "card": "data/thumbs/afb5ffe9237eaf325ba1c07b93c2ad5c24a4313b7685050e2de6bab5bda38208.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina karmel z mct — [ ig ]/kar6x bez ig - 20.11.2025 - 6300711.00/4 - wizki/kar6x-proteina-karmel-z-mct-6300711-front-l.png": {
+      "grid": "data/thumbs/2ba1e0444468bedfad228aa78f1d6dfa9a61273a442837db9a01d86582d3367f.jpg",
+      "card": "data/thumbs/bede55a21f8c39e66a00512962c7543e8d8ec30b45af1b6251f84826f6d13eeb.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina karmel z mct — [ ig ]/mini - 29.07.2025 - 6300654.00/4 - wizki/mini-proteina-karmel-mct-6300654-front-s.png": {
+      "grid": "data/thumbs/6751a01408116be7bd5b2e35b8d733e73a84ae49638fee5b961f073711f2cfcc.jpg",
+      "card": "data/thumbs/1eba435aa369dab34181fdae948bd7a3c7c55e17e9739f677cd8ee805028489b.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina lemon cheesecake — [ ig ]/bat - 45 g - 06.02.2026 - 6300739.00/4 - wizki/bat-proteina-lemon-cheesecake-6300739-front-s.png": {
+      "grid": "data/thumbs/8c7ce350886ff4a829ef44615b329980a68f87b309f37e6b25686d3c14a679e2.jpg",
+      "card": "data/thumbs/44eec192bb09cddc41a76e9cee0a4da220259183d3de2899de5074960ba9db25.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina lemon cheesecake — [ ig ]/kar6x - 20.11.2025 - 6300708.00/4 - wizki/kar6x-proteina-lemon-cheesecake-6300708-front-l.png": {
+      "grid": "data/thumbs/a14738265d0b04265e14586659468639bffeda34889a6e1f5f416c8c7235022c.jpg",
+      "card": "data/thumbs/7f974fa8e14472681ca68fa7d68bba93b7f88fd846012fbf9e61a4a89a4c8b1f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/proteina lemon cheesecake — [ ig ]/mini - 07.11.2025 - 6300709.00/4 - wizki/mini-proteina-lemon-cheesecake-6300709-front-s.png": {
+      "grid": "data/thumbs/d09c8665284b9bb1baedebc093247ccb8ac48835beb6020e6ebaa2b64f2e6052.jpg",
+      "card": "data/thumbs/417e99e4ed4f21b21b7358f18e7b99e86e0fa90bcc6bccd5b85bafc66ebee922.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/pumpkin spice latte — [ nerkowcowy ]/kar6x - 29.08.2024 - 6300556.00/4 - wizki/kar6x-pumpkin-spice-latte-6300556-front-s.png": {
+      "grid": "data/thumbs/e9bfd73c2eb3b50f8f783a10f7f1e8f1fe6432bd37ff56a8426364b4b11f6371.jpg",
+      "card": "data/thumbs/b1a81913fd09b3b3a09b45f98fe8732febe7c6fd4396bb50c83cf63defec8b3f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/pumpkin spice latte — [ nerkowcowy ]/mini - 19.08.2024 - 6300554.00/4 - wizki/mini-pumpkin-spice-latte-6300554-front-s.png": {
+      "grid": "data/thumbs/4ec964824173489f48813cef44db663bcd629d24c0db39ec03d8d2f99c5c614f.jpg",
+      "card": "data/thumbs/990419587d3cbc43617c1882eb5c251df6e12525228555c1c0d6e6cc1a8a60e0.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/pączek różany — [ nerkowcowy ]/kar6x - 28.11.2025 - 6300687.00 - f/4 - wizki/kar6x-pączek-różany-6300687-front-l.png": {
+      "grid": "data/thumbs/d884dc25a40038240455c3eab9d1017ab10a3a5b67eb634de4fb07b7e1c66728.jpg",
+      "card": "data/thumbs/a5361f4e811541a5f9f0db41badda12d2920d0ec74742a987704c23c53c99c5b.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/pączek różany — [ nerkowcowy ]/mini - 27.11.2025 - 6300686.00 - f/4 - wizki/mini-pączek-różany-6300686.00-front-s.png": {
+      "grid": "data/thumbs/40493c77d1f82e8cd2f8f7763ba4855bf347d82d267d149ce9fc2606024c6915.jpg",
+      "card": "data/thumbs/18e4a8636233d535e542d909cc08f1d1045e92eb1727ce6a3949f00bb75c03d0.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/rogal poznański — [ nerkowcowy ]/kar6x - 30.12.2025 - 6300682.00 - f/4 - wizki/kar6x-rogal-poznański-6300682-front-l.png": {
+      "grid": "data/thumbs/ca32386fc08367232c6867af0411832145b10912be3bf8891ccd30c3f31f38ce.jpg",
+      "card": "data/thumbs/458dd848003182a50bb8b41642b07b6f7259c56f2adb9e75de15ba57e27d3ecb.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/rogal poznański — [ nerkowcowy ]/mini - 19.09.2025 - 6300679.00 - f/4 - wizki/mini-rogal-poznański-6300682-front-s.png": {
+      "grid": "data/thumbs/5ea8154764fa5bf2b297b3dc46cd4a6015ff027bcb407a0e7e0afa072b7a5b34.jpg",
+      "card": "data/thumbs/9a77237b39178d6f6507dec68a119bea9ada865f5ed7689de93ae60ac8874f77.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/serce — [ funkcjonalny ]/kar6x - 06.06.2025 - 6300659.00/4 - wizki/kar6x-serce-6300659-front-l.png": {
+      "grid": "data/thumbs/76e44d3b79934b3275737454defefb13c6a5dd448915aac27594000c243da50e.jpg",
+      "card": "data/thumbs/c6d358a676f982c47572d96e40f63540bebc2a61780f3215410367a7ad0e65a1.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/serce — [ funkcjonalny ]/mini - 03.06.2025 - 6300660.00/4 - wizki/mini-serce-6300660-front-s.png": {
+      "grid": "data/thumbs/01c211927fa302f74e55fbed929bd3028610f990d5143332cc05d89221303547.jpg",
+      "card": "data/thumbs/e684a047313802b3d447ec5887a762b1ac5b56773f4da4e0e1dad7b74667100e.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/sernik waniliowy — [ nerkowcowy ]/04.10.2023 - 6300079.00/4 - wizki/wizka-sernik-waniliowy-6300079-front-s.png": {
+      "grid": "data/thumbs/e3cc3537dbbd08f021fcde94cbd32b360a68a184db4910ae41d9f405a056a153.jpg",
+      "card": "data/thumbs/34421eab09703d3b7e05852e97df451b0248a9cf261e260e6aee24b230c1b6ed.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/sernik waniliowy — [ nerkowcowy ]/bat - 35 g - 18.07.2022 - fol000107.00/4 - wizki/bat-sernik-waniliowy-fol000107.00-front-s.png": {
+      "grid": "data/thumbs/68951c29aa92bdc11f581fd8743b2ba6dabbd8639b8ad40b712f0cc17fb93242.jpg",
+      "card": "data/thumbs/2174c4fb1479be9d6723f825f46c39576cb6249362af1b68cbba32915c1c65e0.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/sernik waniliowy — [ nerkowcowy ]/bat - 35 g - 25.05.2026 - 6300046.01/4 - wizki/bat-sernik-waniliowy-fol000107.00-front-s.png": {
+      "grid": "data/thumbs/265a8e886600bceb7441ccd5ff600e8b7e1c6d0bd2be921f731df12d643eab43.jpg",
+      "card": "data/thumbs/c235a530e9f0921a965cf736f742eb4c717bb3a675a31e8684abe4bf8ea60635.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/sernik waniliowy — [ nerkowcowy ]/kar6x - 30.05.2022 - kar000116.00/4 - wizki/kar6x-sernik-waniliowy-kar000116.00-front-l.png": {
+      "grid": "data/thumbs/cd3515cf56f41f5d073993b5f0adeb581faab962aff347088d8c2062fa9baabb.jpg",
+      "card": "data/thumbs/f454f055cd9eed7330b2c4c00d43ca2f5ffbf22130d4625c325693568ecdcec4.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/solony orzech — [ daktylowy ]/bat - 35 g - 14.07.2023 - 6300390.00/4 - wizki/bat-solony-orzech-6300390-front-s.png": {
+      "grid": "data/thumbs/94f8d406955a9cf58a5527de284bb152939c78589bd87097028e5353bb4d9163.jpg",
+      "card": "data/thumbs/e23c1e95b7637a52a80a74c25329c689c6130adc42fb88dc199e8153dde391bb.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/szarlotka cynamon — [ nerkowcowy ]/18.01.2022 - 6300080.00/4 - wizki/wizka-szarlotka-cynamon-6300080.00-front-l.png": {
+      "grid": "data/thumbs/9d9f57b0e368508ac7aeea2c1931ea1fcd31300dbf0afda00cdc4571e286c560.jpg",
+      "card": "data/thumbs/b80096874b7e6470d366a5116e2955f0528ebdb85221eaf233d11176a30a97c6.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/szarlotka cynamon — [ nerkowcowy ]/kar6x - 02.06.2022 - kar000118.00/4 - wizki/kar6x-szarlotka-cynamon-kar000118.00-front-l.png": {
+      "grid": "data/thumbs/e420d84c553afb94e9db49a491234517bf6bccdbe91877d4eeb15f47c039517d.jpg",
+      "card": "data/thumbs/7534622f9941d8946c8940b8bb27b7aa2f5731ef4b55dd96514d11de005736fd.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/tarta malinowa — [ nerkowcowy ]/01.06.2022 - kar000117.00/4 - wizki/wizka-tarta-malinowa-kar000117.00-front-s.tif": {
+      "grid": "data/thumbs/1120dcdf703853129d35922d7607ccf1cae98cc186ebbe5fc28a8f223cb94fd0.jpg",
+      "card": "data/thumbs/8a2a871f0fca650b342aca0d21f893da3e5588bf6bac4fe76b55774b9a327c7f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/tarta malinowa — [ nerkowcowy ]/kar6x - 05.05.2026 - 6300539.01/4 - wizki/dk-kar6x-tarta-malinowa-6300539.01-front-l.png": {
+      "grid": "data/thumbs/70d500363f9d1c6a48881a4950f789a14a6b85f6ae953be42010998850cdcd44.jpg",
+      "card": "data/thumbs/51c2bc8939659b7afc38b55d0b8dc424e988e003b7d3d4369f8d2848695a4e72.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/tarta malinowa — [ nerkowcowy ]/mini - 10.10.2023 - 6300084.00/4 - wizki/mini-tarta-malinowa-6300084-front-s.png": {
+      "grid": "data/thumbs/ffdd702fc4a5a3d8498c50e1aca2696abceb70db9d00cbc5cc5edf381da2f88a.jpg",
+      "card": "data/thumbs/289ca0d03acc298d4275145aec83dacf3162e42622a3169f45c8a2e34c94b0b6.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/01 - batony/— archiwum/proteina - karmel mct — [ funkcjonalny ]/mini - 29.07.2025 - 6300654.00/4 - wizki/mini-proteina-karmel-mct-6300654-front-s.png": {
+      "grid": "data/thumbs/4cfbbed40dfa522a827809b5c1f31ea4a7dde34fec108b1658852c05b45a8b13.jpg",
+      "card": "data/thumbs/66e93e4f1de6bb1c424393fc15e96e160e8d10d6da8adb018d88fab723380f03.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/czarna porzeczka — [ owocowe ]/doy - magnez & żelazo - 65 g - 24.02.2026 - 6300753.00/4 - wizki/dk-doy-kulki-czarna-porzeczka-65-g-magnez-żelazo-6300753.00-front-s.png": {
+      "grid": "data/thumbs/b779168810a67342d59b901dd7d8926897e525a1478bf453c5cf4eba29691f48.jpg",
+      "card": "data/thumbs/914578148f6eb622eaac0db353eed6b762eb667440dc7a3502d3166b6f58098c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/daktyl limonka — [ raw ]/doy - 02.02.2024 - 6300447.00/4 - wizki/projekt-daktyl-limonka-6300447-front-s.png": {
+      "grid": "data/thumbs/50adbce807ab0538ef8762b585be78d7d9a03de8255e1b5322bcbdd8426ccb05.jpg",
+      "card": "data/thumbs/fb89e3f8d95f79f065fa8f5991624b661400780f51897aba41a441909556b569.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/daktyl limonka — [ raw ]/doy - 23.06.2026 - 6300760/4 - wizki/dk-doy-kulki-limonka-pl-ua-6300760-front-s.png": {
+      "grid": "data/thumbs/f0a286ab5ffbf405a9737abe446ad55447cd42c3347028123458ebd46a9baf57.jpg",
+      "card": "data/thumbs/cf07a5373196d6616334f9dfea2bfadcb5c52e56a111862202bb39dc2c4534d8.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/daktyl pomarańcza — [ raw ]/02.02.2024 - 6300448.00/4 - wizki/wariant-daktyl-pomarańcza-6300448-front-s.png": {
+      "grid": "data/thumbs/7d9110acd9d1ee2a77a2df32e9c9416939914bacdea235aa3457654663fbd425.jpg",
+      "card": "data/thumbs/12949923e296f2f4b90864bc8fbfe07783c01f5d8168cde53b559cbf4d3984e2.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/daktyl wiśnia — [ raw ]/01.02.2024 - 6300449.00/4 - wizki/wariant-daktyl-wiśnia-6300449-front-s.png": {
+      "grid": "data/thumbs/5157cf05a72f7148c56e6fb0d52892bb4eb3a25227a7e31f787ae66fa8e6dc97.jpg",
+      "card": "data/thumbs/5de51136d89d06affce8ba28ca59f4c4a646292f116ea243e82058951af9414a.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/daktyl wiśnia — [ raw ]/doy - 15.05.2026 - 6300758/4 - wizki/projekt-daktyl-wiśnia-6300449-front-s.png": {
+      "grid": "data/thumbs/6ede41bdcc9766acd4c236adf491306fcb30542d2df9e897b967287362d6b083.jpg",
+      "card": "data/thumbs/c98948b15b8b23aca556f3dccbe82efca8322d8659c839cd9c40d29f7df76559.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/daktyl wiśnia — [ raw ]/wiśnia - trufle - 02.03.2026 - 6300729.00/4 - wizki/wiśnia-trufle-daktyl-wiśnia-6300729.00-front-l.png": {
+      "grid": "data/thumbs/0089e20453333794c6b20fcbe5ba4008e5e26d916b3d577af295e1a573e9f218.jpg",
+      "card": "data/thumbs/e4dd91c509b5806975430ad5299f890e77eaf5455a96718dc5340144aeb00a44.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/kokos ananas — [ ziomki ]/02.07.2022 - fol000106.00/4 - wizki/wariant-kokos-ananas-fol000106.00-front-s.png": {
+      "grid": "data/thumbs/105f794503002f7412af945b2a4b829b2615dba70cefe38e4754ffef09f44d72.jpg",
+      "card": "data/thumbs/5a1c2e2a37ac7063da11de2a70c0b6d800d860fa67abc01eb82d49d6c1763cc7.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/kokos truskawka — [ ziomki ]/02.07.2022 - fol000105.00/4 - wizki/wariant-kokos-truskawka-fol000105.00-front-s.png": {
+      "grid": "data/thumbs/06cba75059b1575590b6c2d9ad3735be444729b0c431701d46055af07625ab45.jpg",
+      "card": "data/thumbs/622f42583daefbfd4bd63a87e1ef2bb9eddaabef5bef676c14d5677aeaf12ed5.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/malina — [ owocowe ]/doy - magnez & żelazo - 65 g - 24.02.2026 - 6300754.00/4 - wizki/dk-doy-kulki-malina-65-g-magnez-żelazo-6300754.00-front-s.png": {
+      "grid": "data/thumbs/68b526815d3a9650faa5470ccc6d7b7bbdc332e40ab66d1e69ece534716a4867.jpg",
+      "card": "data/thumbs/01f3a74ca3d2ca29a6a22de2da24626c9ec3b535b01201a1f0f0582a5df3bc31.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/orzeszki kukurydza miod — [ sniadanie ]/doy - 3.07.2026 - pl ua - 6300699.01/4 - wizki/orzeszki-miod-6300699-front-s.png": {
+      "grid": "data/thumbs/398a39ce65ae39dfe8a209d6539ce531a5f9a65f0d754a7bd4f9296b6f550be4.jpg",
+      "card": "data/thumbs/2f8b95da740e7b7bccab5a392696190e1d833801e2736db1dc32e8c83dce62c5.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/orzeszki kukurydza miod — [ sniadanie ]/folia - 09.02.2024 - 6300450.00/4 - wizki/projekt-owies-miod-6300450-front-s.png": {
+      "grid": "data/thumbs/ae55c033c72e6b904032bd021d7e8e75aa4c22d8d01c9ab9c165db726f4d6170.jpg",
+      "card": "data/thumbs/c4ee59cf5ae2959e4b59099a27e01c93035de4df6ee424670f1171df7b2f5852.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/orzeszki kukurydza miod — [ sniadanie ]/folia - 3.07.2026 - pl ua - 6300767 - f/4 - wizki/projekt-owies-miod-6300524-front-s.png": {
+      "grid": "data/thumbs/bab493ef8cfc0a2b27fe2b8e2e949581436817fc629df6e91b513598e25fa6ad.jpg",
+      "card": "data/thumbs/5353f33640849d1e25e70fbf5d0fd8a71749603bfcde306508ec0d5946aa202a.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/orzeszki kukurydza miod — [ sniadanie ]/folia - 30.07.2025 - 6300524.00/4 - wizki/projekt-owies-miod-6300524-front-s.png": {
+      "grid": "data/thumbs/905f0f14206da81a5c5d6e2dfd5da68cfa9109146cfa53d2ad1b7a96d01dff9f.jpg",
+      "card": "data/thumbs/0dcf0beb90db8752ee581f09f569a1390581fca8ff169ca335b7d8aa81091a14.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/owies czekolada — [ sniadanie ]/doy - 02.07.2026 - pl ua - 6300766/4 - wizki/doy-owies-czekolada-6300766-front-s.png": {
+      "grid": "data/thumbs/9fdc66fc9717244545131eaca62b2c034debf4d30cf264e1dd17101b8503f1f9.jpg",
+      "card": "data/thumbs/1ecdc1e45a4eaea3aab96560ad9f41089d8ebf7d30aa90cdb365ff8136b0c34c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/owies czekolada — [ sniadanie ]/doy - 31.10.2025 - 6300701.00/4 - wizki/doy-owies-czekolada-6300701-front-s.png": {
+      "grid": "data/thumbs/e5870ba092004505a08812a77c2dc224903f5f66e5bc54d31c4af03b4ee8427b.jpg",
+      "card": "data/thumbs/bbd7a32bf0845ab65e391753ffa4c21561850f18776b23b593bef931d419a55d.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/owies czekolada — [ sniadanie ]/folia - 09.02.2024 - 6300451.00/4 - wizki/projekt-owies-czekolada-6300451-front-s.png": {
+      "grid": "data/thumbs/faa35e34ed6ced0b5cbde172cbb9f8f70f76815bea59d489db614ad5d1d92dd7.jpg",
+      "card": "data/thumbs/6ee835a9923513fcdcfe938a0447470e140a5ff5de23f1b1df43ea7a93cf05aa.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/owies czekolada — [ sniadanie ]/folia - 20.06.2024 - 6300520.00/4 - wizki/projekt-owies-czekolada-6300520-front-s.png": {
+      "grid": "data/thumbs/3cb74430754d77a8bd4a43d49eb05a1975ef23f0dd2ce290c072995b88e8817c.jpg",
+      "card": "data/thumbs/7a757c87cbe4994a58798cde24b6f00f03ede75be0f07f56948876dcf710fdb0.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/tiramisu czekolada kakao — [ deserowe ]/doy - 65 g - 24.03.2026 - 6300729.00/4 - wizki/dk-doy-kulki-tiramisu-65-g-6300729.00-front-s.png": {
+      "grid": "data/thumbs/e0b503c45159fe1631be53db87ba2428570397eb4c60b792699e19cd2b7b21bb.jpg",
+      "card": "data/thumbs/6a34e67c0a98aca379e7e39eacee462f83fb9b3de2d7d38e366ced2d44b20706.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/02 - kulki/— archiwum/orzeszki miod — [ sniadanie ]/doy - 31.10.2025 - 6300699.00/4 - wizki/doy-orzeszki-miod-6300699-front-s.png": {
+      "grid": "data/thumbs/57d9d6e59c6568db5d6506b6ef2a50b5ed510ea5eb4ccc1f80d71b382836219a.jpg",
+      "card": "data/thumbs/ef8cd417a72e31483bd0031fd3a9bb44a55e5a6e8281f4238de34dfe6ef6d9aa.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger buraczany — [ niemięsne ]/rękaw - 03.07.2025 - 6300757.00 - f/4 - wizki/projekt-burger-burak-2025-02-14-6300578-front-s.png": {
+      "grid": "data/thumbs/1a3bfcca872f0c554610a2d857bd4db0f008a81ec22a14f773198ed85aea1fa8.jpg",
+      "card": "data/thumbs/ecbc209420f84a33ae352aa1a6cb6de62f00cfe53d3330f24c8765f158f13a4d.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger buraczany — [ niemięsne ]/rękaw - 14.01.2025 - 6300578.00/4 - wizki/projekt-burger-burak-2025-02-14-6300578-front-s.png": {
+      "grid": "data/thumbs/c270a69e32cf88251fb6af30482fcdb6585104abee24b0a6d1f7dbbef326e785.jpg",
+      "card": "data/thumbs/b63f95bbe8b90f7a71e44e9311ca7c979af16ccd5525ee24b23438e889d811ac.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger klasyczny — [ niemięsne ]/15.10.2024 - 6300569.00/4 - wizki/wizka-burger-klasyczny-6300569-front-l.png": {
+      "grid": "data/thumbs/e5d5c789efb197433b01ea06f10184f1b4e05630088be85a5563c374056a78b7.jpg",
+      "card": "data/thumbs/3f9031633bf3fd98c4bcaba7edbe7990724983bff645da3e6c9517746aee2ba7.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger klasyczny — [ niemięsne ]/27.04.2023 - 6300342.00/4 - wizki/wizka-burger-klasyczny-6300342-front-s.png": {
+      "grid": "data/thumbs/d939b2336cd936a7025f0e8be67fde5f94b0a5327b18f743412e6c329cf7f042.jpg",
+      "card": "data/thumbs/a6f7aa7527114c6942c95b936b65bdae0a099e12be9d5fb0286178b8e3ff9834.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger klasyczny — [ niemięsne ]/29.04.2024 - 6300473.00/4 - wizki/wizka-burger-klasyczny-6300473-front-s.png": {
+      "grid": "data/thumbs/bcc8d8b40c8d29b14799f360091f910ac0c194043eb728a9f086af0f4ad78b8c.jpg",
+      "card": "data/thumbs/a1066ea7da851728c2b0b9fa40df018430edc2e59214db7051ca1174210ec99d.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger klasyczny — [ niemięsne ]/rękaw - 03.04.2025 - 6300631.00/4 - wizki/wizualizacje-burger-klasyczny-6300631-front-s.png": {
+      "grid": "data/thumbs/73e3cb6514d13d0ee77f2e01a8ceb91da7ac1a2909101e9682e6a6646d7c6491.jpg",
+      "card": "data/thumbs/efdcf66689c452f04a9b018748f0c10c3db3a6aeffe74e8327daae68b158abac.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger klasyczny — [ niemięsne ]/rękaw - 25.05.2026 - 6300755/4 - wizki/dk-rękaw-burger-klas-autom-grill-6300755-front-s.png": {
+      "grid": "data/thumbs/92beba5b56d84a933566cfd1a7d293dc51ec567a31805f8654aad68871efbec0.jpg",
+      "card": "data/thumbs/64fa7a188177fd2a33f82bb97c9cad0d01a288cfecb4b81d64c5938d43a1eca0.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger kurczak — [ niemięsne ]/01 archiwum - 28.02.2026 - kar000133.00/4 - wizki/01-archiwum-burger-kurczak-kar000133.00-front-s.png": {
+      "grid": "data/thumbs/945859b38388b9f1b22ac0242d0ee06ff69cc6076074923af8a6a41826bfb72c.jpg",
+      "card": "data/thumbs/fab3161c002531fece5923604e8740533a8cd02cf591a7ec333ee136123c8916.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger wolowy — [ niemięsne ]/11.10.2024 - 6300154.00/4 - wizki/wizka-burger-wolowy-6300154-front-s.png": {
+      "grid": "data/thumbs/0b60e223cbf767a9be9444624dcedd237b1360d9f6277f9de85ffe944acf8e19.jpg",
+      "card": "data/thumbs/181e4da9fff353d879aa53a07e31cc140ed5e6dc8f7f4775683d90ce11686aab.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger wolowy — [ niemięsne ]/rękaw - 03.04.2025 - 6300632.00/4 - wizki/projekt-burger-wolowy-6300632-front-s.png": {
+      "grid": "data/thumbs/960763df38f6c9ecb6d1e0eb3edd8aadb6b4d49367231c79324e9b1d6803d4e8.jpg",
+      "card": "data/thumbs/dd11783b5a3863e81a85016e4e6a21bd8eb9d4fff43b76cc6e7e7152d12c1e2e.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/burger wolowy — [ niemięsne ]/rękaw - 11.10.2024 - 6300560.00/4 - wizki/projekt-burger-wolowy-high-protein-2024-10-15-6300560-front-s.png": {
+      "grid": "data/thumbs/4a83594d95522f97a168b0d6b2a02736d429cbb59a4e998fcb9b32838e018406.jpg",
+      "card": "data/thumbs/1a7f9420cafe44f280ed16699bfbcaef94a49fbfc298aad1be80f3e058a2b630.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/dk pasztet śliwka 6300281 — [ niemięsne ]/karton - 02.11.2023 - 6300281.00/4 - wizki/projekt-dk-pasztet-śliwka-6300281-6300281-front-s.png": {
+      "grid": "data/thumbs/a07ea823ba51db23d989feacb26d6816614cff6d01a9a60b9c3f7d95e62ea63d.jpg",
+      "card": "data/thumbs/5a25eeab3c60f5082e8313a4362b7bed97b048fce46c65e960e51b62b6e74f58.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/falafel — [ niemięsne ]/rękaw - 24.03.2026 - 6300745.00/4 - wizki/wariant-falafel-6300745-front-s.png": {
+      "grid": "data/thumbs/b09d6648ae8b45322470eea8513b5516607ac806e48610579c26af3ee53242ad.jpg",
+      "card": "data/thumbs/1c368ddc1ee7e80250ffd392e369d8a2709027b51045f424a06bf79ddf051a1a.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/gyros groch — [ niemięsne ]/28.09.2023 - 6300329.00/4 - wizki/wizka-gyros-groch-6300329-front-s.png": {
+      "grid": "data/thumbs/8fee4d891801477b94a0caa4ec581aa82ebac95813300131c3c0f7a156055f24.jpg",
+      "card": "data/thumbs/9ed23d06d69eea2130c5c7c3c15d6b6cce8d1bb1e2b801b2e518c6a3a044e01e.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/gyros pszenica — [ niemięsne ]/rękaw - 07.06.2023 - 6300364.00/4 - wizki/projekt-gyros-pszenica-6300364-front-s.png": {
+      "grid": "data/thumbs/837e28483e88d76f82e8194207107de827474a4bdec611e2ef20d383d62a2ed8.jpg",
+      "card": "data/thumbs/971d1bbf45d0b7e6e6b595b2f1d290736292e32ed022381e52257e183f420426.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kaszanka — [ niemięsne ]/2026 04-24 - 22.04.2026 - 6300xxx.00/4 - wizki/2026-04-24-kaszanka-6300xxx.00-front-l.png": {
+      "grid": "data/thumbs/7486e70cfd9c8f4ce690c3277a1890a5ca548269f6a7b55dc785b817dc6a0ceb.jpg",
+      "card": "data/thumbs/77ad80872c6b8379290da6ee50c3cd7dcf8601fa3aa8ffe20af8902d8d4bbe51.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kaszanka — [ niemięsne ]/rękaw - 03.04.2025 - 6300633.00/4 - wizki/projekt-kaszanka-grill2025-04-01-6300633-front-s.png": {
+      "grid": "data/thumbs/98ec43858e8ba61ec80c1cc4ee05e7a52fa0ec3588c9b7997b7fdb998c8d8c65.jpg",
+      "card": "data/thumbs/c1e92a444bfcfcec4aaa06b8fc5d75e3dcc447d571113c0a444e31f5a78231d1.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kaszanka — [ niemięsne ]/rękaw - 23.04.2024 - 6300474.00/4 - wizki/projekt-kaszanka-grill2024-6300474-front-s.png": {
+      "grid": "data/thumbs/d75293e486ae49ec4d1c3e3c499aa070621dfb4896350a3caac33d6629b74ccd.jpg",
+      "card": "data/thumbs/99590cf49ca5b992b11ac711f87802f5e25b72ae3e549caa2230a49f23e9e4b5.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kaszanka — [ niemięsne ]/rękaw - 26.04.2023 - 6300345.00/4 - wizki/projekt-kaszanka-6300345.00-front-s.png": {
+      "grid": "data/thumbs/ea9c7da2eeae345edb9bdb67910c96eaefcd9df1f1e11a85325dac82af260933.jpg",
+      "card": "data/thumbs/1d154bdb5674e05be790b45ddec39b520d9732937015f0fae9155363457d7735.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kaszanka — [ niemięsne ]/rękaw - 28.05.2026 - 6300768.00/4 - wizki/dk-rękaw-kaszanka-dym-bukowy-6300768-front-s.png": {
+      "grid": "data/thumbs/a9ce17ce52fe60c40e7be7778e76c1ca7b0a1417b81cd85dcfc16a631f1d9669.jpg",
+      "card": "data/thumbs/aa15b8d9a00ba5005244018abe07c6c5a39b52fdd73b5fea855304dd6bc6a4fa.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska bbq — [ niemięsne ]/rękaw - 24.03.2022 - kar000103.00/4 - wizki/projekt-kielbaska-bbq-kar000103.00-front-s.png": {
+      "grid": "data/thumbs/2fe6f382f20ece19cc50504456f4c77e754bc9dfe2f54c76b968a1af68d66399.jpg",
+      "card": "data/thumbs/a8e722331297e7b4e319b56e5058b59af4992679dc510c609d3107091a4c74c4.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska bbq — [ niemięsne ]/rękaw - 48.04.2025 - 6300647.00/4 - wizki/projekt-kielbaska-bbq-2025-04-28-6300647-front-s.png": {
+      "grid": "data/thumbs/ad3886bce9bdf5509bfb304bd9114e2f975bbaff4bdb9c011ee6e24799d980a3.jpg",
+      "card": "data/thumbs/f1d5148a6c2895c116d66c8c1906471d98a4e2c0e1ad5c844090d461f32f285c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska chipotle cheddar — [ niemięsne ]/07.03.2023 - kar000104.00/4 - wizki/wizka-kielbaska-chipotle-cheddar-kar000104.00-front-l.png": {
+      "grid": "data/thumbs/3cf85b513aaf9c6cd67dbc30baa6a415e399170ee2118fe3a350a14c72f806fa.jpg",
+      "card": "data/thumbs/5138167218a50ac732eaf1e4efdc14cd7b50430922db18a41933bcd8bfd652ab.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska chipotle cheddar — [ niemięsne ]/rękaw - 07.03.2023 - 6300331.00/4 - wizki/projekt-kielbaska-chipotle-cheddar-6300331.00-front-s.png": {
+      "grid": "data/thumbs/75605299d7868705f03af453f459fcf158d162ba209f518f002e11a96a539a50.jpg",
+      "card": "data/thumbs/a42ed45f649ccec4256495e034c3e58e01ce87f4c73c3befbeec6d321a5a6698.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska klasyczna — [ niemięsne ]/28.05.2021 - kar000060.00/4 - wizki/wizka-kielbaska-klasyczna-kar000060.00-front-s.png": {
+      "grid": "data/thumbs/4a56c54c707763e37599e95beda9b5903f097d71be5cca91cc1caf693873501d.jpg",
+      "card": "data/thumbs/c091f23801ac6962826ae90f90dace87c788d3f9d8ec71334a96a55e41e434a5.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska klasyczna — [ niemięsne ]/archiwum - 28.11.2023 - 6300364.00/4 - wizki/archiwum-kielbaska-klasyczna-6300364-front-s.png": {
+      "grid": "data/thumbs/a74bf1b0e6074d83cf7eed2c1ceea43169f7355f902f9a63c587aa08aab24df0.jpg",
+      "card": "data/thumbs/f8d35b7ce99008496b0253108d790ff283d606a131ede9566dc873cd7cfe9d83.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska slaska — [ niemięsne ]/rękaw - 30.07.2024 - 6300533.00/4 - wizki/projekt-kielbaska-slaska-6300533-front-s.png": {
+      "grid": "data/thumbs/4793f4ce881fbe15f654b69f56627f9d1096dfb086c11fb6d48f509ba799100d.jpg",
+      "card": "data/thumbs/b940ecee2246d5aa4ed67b5669205786ed2dfe1cf4da9fdcd8b9d15289aeb6a5.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska warzywna — [ niemięsne ]/rękaw - 06.08.2024 - 6300534.00/4 - wizki/projekt-kielbaska-warzywna-6300534-front-s.png": {
+      "grid": "data/thumbs/cf4d2ae61114d3202a52174f39843de1556939d14691ef39948ac882b96fd049.jpg",
+      "card": "data/thumbs/0b06399640f568d7b997466a1200bb41bae21c59dfc08f75d0c61587629a8c5b.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska wegierska — [ niemięsne ]/rekaw – 26.06.2026 - 6300786/4 - wizki/doy-kielbaska-wegierska-6300746.00-front-s.png": {
+      "grid": "data/thumbs/4ee29b3a3fa7813695138997ef09b2a98526d943aea9033bffb169b43b41dea9.jpg",
+      "card": "data/thumbs/db8b317966fe47532610a3cf0bd19d3e00f4e45335b1ecf72e744af9a8349a5b.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska wegierska — [ niemięsne ]/rękaw - 26.09.2022 - kar000140.00/4 - wizki/projekt-kielbaska-wegierska-kar000140.00-front-s.png": {
+      "grid": "data/thumbs/b41ae079972ef219ed151681c987495d2af67f93ee028eb6b41ec541d1da3085.jpg",
+      "card": "data/thumbs/a42b6d661fc0dd397325441aee35f2ae69c99c2a89a6d36381f596a63274d057.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kielbaska wegierska — [ niemięsne ]/rękaw 180 g - 02.04.2026 - 6300746.00/4 - wizki/doy-kielbaska-wegierska-6300746.00-front-s.png": {
+      "grid": "data/thumbs/4deb8f4f24da088912d021e2f05499c26f446bcd3d3b6f0a44b63cb759a3c8e4.jpg",
+      "card": "data/thumbs/7f74ab9aaab36d8619f40131a5c3f3ba0811f7e6e9415492d817e153d94ee35d.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/klopsiki kimchi — [ niemięsne ]/rękaw - 24.10.2023 - 6300416.00/4 - wizki/projekt-klopsiki-kimchi-6300416-front-s.png": {
+      "grid": "data/thumbs/019e1c76477a9477668f81fd50d7eb23c02a2ffc4e314c789bf1cd49e4f01123.jpg",
+      "card": "data/thumbs/302145ae5486d3c11486d0b87ec4d84e3c4412956ae7577dbc762ed048930ff6.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/klopsiki klasyczne — [ niemięsne ]/22.09.2022 - kar000133.00/4 - wizki/wizualizacje-klopsiki-klasyczne-kar000133.00-front-s.png": {
+      "grid": "data/thumbs/dcc7042b985fd32d399717cd5bb254a9dec9300f24fbcd07af07102828928878.jpg",
+      "card": "data/thumbs/0e5699c71ee1dc414e4e3b829b28567ed2fce3fadbb0bd6c4a1fbd8ab882f520.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/klopsiki klasyczne — [ niemięsne ]/doypack 180 g - 14.01.2025 - 6300613.00/4 - wizki/doy-klopsiki-klasyczne-6300613-front-s.png": {
+      "grid": "data/thumbs/bb38314b1907a9a7c774205af5cca74861b42147be0ac1e27750982cf29e8109.jpg",
+      "card": "data/thumbs/86d477ed6bc456209e2ca2f652b606cbd1c2f35c4edd7bea368fb348f62c371b.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kotleciki rybne — [ niemięsne ]/rękaw - 03.11.2021 - kar000079.00/4 - wizki/projekt-kotleciki-rybne-kar000079.00-front-s.png": {
+      "grid": "data/thumbs/54ca7f59613d7c998f69e8ed89539fe0f8d71efe34ea43f7523a69a473333dad.jpg",
+      "card": "data/thumbs/7221a67442d4e7085cf520545c84e12326301200aa75ca5b7a905c2b5ab2950d.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/kotlety mielone — [ niemięsne ]/11.08.2021 - kar000069.00/4 - wizki/wizualizacje-kotlety-mielone-kar000069.00-front-s.png": {
+      "grid": "data/thumbs/e49a46e33286e38fe535296cffc32e9afac3b9f920038e7a17f93fff97e6c9d4.jpg",
+      "card": "data/thumbs/99a3088b2db122ef15028aa46f73394b29da55fa52969ea33380ad6adf496df4.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/mielone wolowe xxl — [ niemięsne ]/bigpak - 08.04.2021 - kar000057.00/4 - wizki/bigpak-mielone-wolowe-xxl-kar000057.00-front-s.png": {
+      "grid": "data/thumbs/d0292cd06e2750070b89e2665e7361dd78d10360835df7095fe0f68e5933ae2d.jpg",
+      "card": "data/thumbs/ce250659e6b30c91560ebd3b59147ebeccb2affeed16700330e1371db3c53424.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/mix na grill burger kaszanka — [ niemięsne ]/rękaw - 31.03.2023 - 6300324.00/4 - wizki/projekt-mix-na-grill-burger-kaszanka-6300324-front-s.png": {
+      "grid": "data/thumbs/e34cc7dc61f182b026e9759e24e5fbd18e7516f5379a3d9d280d7412e4e5b9a1.jpg",
+      "card": "data/thumbs/8e219ae1c1de6d249a7ce406fb6c0dca90e830a170346515a5db1f3596d3772f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/mix na grill slaska kaszanka — [ niemięsne ]/rękaw - 14.05.2024 - 6300508.00/4 - wizki/projekt-mix-na-grill-slaska-kaszanka-6300508-front-s.png": {
+      "grid": "data/thumbs/b60495badb69cca5a01b01a483fe19f6614d95fd0639e59ad8beed9ef3b64afa.jpg",
+      "card": "data/thumbs/5aa92ed24f0ced7d91ae892a801052e7c7c81e01a9d4cd3264b476455a62b557.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/nuggets xxl — [ niemięsne ]/rękaw - 08.05.2025 - 6300650.00/4 - wizki/projekt-nuggets-xxl-6300650-front-s.png": {
+      "grid": "data/thumbs/81d2f77aa3df49065f8649aac5657e47c76c85abec6858bed68b07d8c680205a.jpg",
+      "card": "data/thumbs/801544f6164c3babb24c7c45cda3ace3d492b531b34a6a48b87f1f49b003acd1.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/nuggets — [ niemięsne ]/rękaw - 22.11.2024 - 6300586.00/4 - wizki/projekt-nuggets-6300586-front-s.png": {
+      "grid": "data/thumbs/3c22264567d7d38dffbf1a24c630d7059fee60a64d81df79a6afdeae206725e9.jpg",
+      "card": "data/thumbs/548e334a5caf3f293ca6db835dffac68e7954e74b830082578afd663b7ee5f0c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/parówka roślinna — [ niemięsne ]/rękaw - 10.07.2025 - 6300685.00/4 - wizki/projekt-parówka-roślinna-6300685-front-s.png": {
+      "grid": "data/thumbs/64490268cef2653a5f8ca3122784ad1ecf42e6c39ab09d97f5e64be543eb7d2d.jpg",
+      "card": "data/thumbs/8a5c70e3534e731c510f3756d74a0de981c5803d4922f88ff596d95dc711b598.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/pasztet pomidor — [ niemięsne ]/karton - 08.11.2023 - 6300411.00/4 - wizki/projekt-pasztet-pomidor-6300411-front-s.png": {
+      "grid": "data/thumbs/27506bb5e5a2c0317a974912e35d42c8e614b88aa62e6245d347badc11ad043b.jpg",
+      "card": "data/thumbs/df0525f699bd0c7833eb859028faf57cdfc4d285bf1a85e6ba4cfc5b4bbac099.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/pasztet żurawina — [ niemięsne ]/karton - 02.11.2023 - 6300283.00/4 - wizki/projekt-pasztet-żurawina-6300283-front-s.png": {
+      "grid": "data/thumbs/7d1a83ad614fec5cadb46438774104d79d0b586657a22cdde07b3144108ed1c1.jpg",
+      "card": "data/thumbs/575824856b684eca64bb351f1e31ed21287a88ffaffdea05dd94d3b6651fc1b2.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/roladka wołowa — [ niemięsne ]/rękaw - 08.10.2025 - 6300697.00/4 - wizki/projekt-roladka-wołowa-6300697-front-s.png": {
+      "grid": "data/thumbs/21e069402b848e66068194509e48a21c9eb5b4f7eaac9b14ab8b9c243c512c83.jpg",
+      "card": "data/thumbs/8902770f97177706712dcb79315fca56b108160084829534ed705e2accfabcef.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/sznycel — [ niemięsne ]/rękaw - 29.05.2025 - 6300635.00/4 - wizki/projekt-sznycel-2025-05-29-6300635-front-s.png": {
+      "grid": "data/thumbs/595c5aca579e062b9bda6b25d054a8d794c60dc3b89fc6aed113310ef462e9e7.jpg",
+      "card": "data/thumbs/75a1743a7c289f4f67d06a538feab718790b006399f4a2fa7e5492cc9782df55.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/03 - roslinne/wedlina — [ niemięsne ]/rękaw - 28.12.2022 - kar000154.00/4 - wizki/projekt-wedlina-nuta-pieprz-papryka-kar000154.00-front-s.png": {
+      "grid": "data/thumbs/d072fbe81d9ec3e17f17ec3e22030b9f42ac83094018cd8b1829870db1b01975.jpg",
+      "card": "data/thumbs/efd07e84094dfa1a4cd3380c1d4861d5cec7f9e93be9f61f3ee25ed916da98f7.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/balans — [ boosty ]/(doypack) 200 g - 22.05.2019 - fol000010.00/4 - wizki/doy-balans-fol000010.00-front-s.png": {
+      "grid": "data/thumbs/7e6b351e481b8d761759aefc2cd4b48994bc67a7880fd798f3c247bd53d82011.jpg",
+      "card": "data/thumbs/9ff579d18f22f064f730593c59ad1cc3648ec025776ed30c000e5969b37f59fd.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/bio amarantus — [ sniadaniowe ]/19.12.2023 - fol0001059.00/4 - wizki/wizualizacje-bio-amarantus-ekspandowany-fol000059-fol0001059.00-front-s.png": {
+      "grid": "data/thumbs/e5f4295a39cb1313e87d2ce3113fd693eed11f882a75853c7fa049a320ace818.jpg",
+      "card": "data/thumbs/f9d1de6c4b782355b6140c90d43cd9454982b00265f51110dd78833045d4c628.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/bio jaglanka z miodem — [ sniadaniowe ]/14.07.2023 - 6300391.00/4 - wizki/projekt-bio-jaglanka-z-miodem-6300391-front-s.png": {
+      "grid": "data/thumbs/3bdea3772fb6976da3c0f32e5a43f947bd73d72cccd5b23d2b1b2824abdae3f0.jpg",
+      "card": "data/thumbs/1c95332e7a2941df0958297fd3d8d2d9003a8cecf66a76cb0c7ba33f38fd527c.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/bio orkisz — [ sniadaniowe ]/29.11.2022 - fol000136.00/4 - wizki/projekt-bio-orkisz-ekspandowany-fol000136-fol000136.00-front-s.png": {
+      "grid": "data/thumbs/aae8f9c64e88aaaa7bf05af47bc346a4d81a539fe45771df5b33c97b8e44d3ac.jpg",
+      "card": "data/thumbs/a19ce0c4d710b36911bb3878eb92824182320a68443a57999f21379e143611e3.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/bio pszenica z miodem — [ sniadaniowe ]/08.02.2023 - 6300310.00/4 - wizki/projekt-bio-pszenica-z-miodem-6300310-front-s.png": {
+      "grid": "data/thumbs/6e0c9399135babf48d97c940ddb1e2b8fac77ad29d53b1e88f3e2d80bdd820ed.jpg",
+      "card": "data/thumbs/8673ac98486d167421a86cf795a086c6ac993389a0b2c4aa22d1e1e68827a0d0.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/chrupiaca gryka z migdalami — [ sniadaniowe ]/23.07.2023 - 6300383.00/4 - wizki/projekt-chrupiaca-gryka-z-migdalami-6300383-front-s.png": {
+      "grid": "data/thumbs/1c5864b2849596ebd4894bde4101f6bb9fd4886ec576c475717b1b9362b0de3c.jpg",
+      "card": "data/thumbs/0920aabc3a0cd70a7aa7df3f620606a6cfbc2d239ecca9c07b8dbbe82ae38fab.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/chrupiaca pszenica z migdalami — [ sniadaniowe ]/27.03.2024 - 6300392.00/4 - wizki/wizualizacje-chrupiaca-pszenica-z-migdalami-6300392-front-s.png": {
+      "grid": "data/thumbs/54116a3ae2309052a09a6147dce0e222f84b4653123255667342749f8229c586.jpg",
+      "card": "data/thumbs/31b6b70ca30281c0732e87a678b23adfbfe6a396c5ebfa6f19cd00276ac78038.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/energia — [ boosty ]/(doypack) 200 g - 22.05.2019 - fol000008.00/4 - wizki/doy-energia-fol000008.00-front-s.png": {
+      "grid": "data/thumbs/de83a86584019c97158cff2b72c86efb1c396e2374645951f9a03d0040305a99.jpg",
+      "card": "data/thumbs/997cac0cfda61f65efef27f0561e4d823049cae4653aabdb2e324a00b804748f.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/gryka ekspandowana — [ sniadaniowe ]/29.11.2022 - fol000135.00/4 - wizki/projekt-gryka-ekspandowana-fol000135-fol000135.00-front-s.png": {
+      "grid": "data/thumbs/6df530c2b4486ddbbf458a078b21289f63301e207be141e0b35e092466739132.jpg",
+      "card": "data/thumbs/87bb9f3d122b990a6cf7d08f3ed8e80416c4f0dd3e4c7cdab92347487fc5f91d.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/owsianka krolewska — [ sniadaniowe ]/28.11.2022 - fol000137.00/4 - wizki/projekt-owsianka-krolewska-fol000137-fol000137.00-front-s.png": {
+      "grid": "data/thumbs/a42d004179c0ea1d02c817f48e56d66e83e5a870d47a1a3f171497453462fb0d.jpg",
+      "card": "data/thumbs/efa60c52db8fdd04dbae9350fa31224bfcf9b2fed03ca1d45b33bde268f15c20.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/proteina — [ boosty ]/(doypack) 200 g - 23.05.2019 - fol000009.00/4 - wizki/doy-proteina-fol000009.00-front-s.png": {
+      "grid": "data/thumbs/e4de2478cc8cf9192396cf687438beff8f8155e92f33a16c0f0706e550b7718c.jpg",
+      "card": "data/thumbs/b5aabb2e0ef81aa55f4c46720919636147167479ad00891b9a8877d691ebc032.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/04 - sypkie/quinoa z czekolada i truskawkami — [ sniadaniowe ]/24.06.2025 - 6300649.00/4 - wizki/projekt-quinoa-z-czekolada-i-truskawkami-6300649-front-s.png": {
+      "grid": "data/thumbs/926bdf357d5de4dde4ffce63575c6231afb2c250cecfa15adfac0491d096a8a7.jpg",
+      "card": "data/thumbs/edb35405cacd3d75570dee08cefd352e0089a5631b6e0f71a869aa3deca715fd.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/05 - napoje/chia — [ postbiotyk ]/ety-but - 200 ml - 30.04.2026 - 6300xxx.00/4 - wizki/ety-but-200-ml-chia-6300xxx.00-front-l.jpg": {
+      "grid": "data/thumbs/fb669a7f2ed36e8ba6c8025a2f35b4896ea28f7b6d064a9a5cefec09e7e2038d.jpg",
+      "card": "data/thumbs/5f5d0f4e96bdb42409f46db80d94d17423c68b7960c2a2e38f13eac744b926ad.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/05 - napoje/shot — [ funkcjonalne ]/ety-but - 100 ml - 30.04.2026 - 6300xxx.00/4 - wizki/ety-but-shot-restart-6300xxx.00-front-s.png": {
+      "grid": "data/thumbs/dc8f74c144194203624f44235456639a480d6a70f58f2e1f57508cc56e7f0844.jpg",
+      "card": "data/thumbs/c803aa515f7586c12db013c66fe6ae62cfd1cc1aaad01eb5494a12f4d30620e8.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/05 - napoje/shot — [ funkcjonalny ]/ety-but - 100 ml - 30.04.2026 - 6300xxx.00/4 - wizki/ety-but-100-ml-shot-6300xxx.00-front-l.png": {
+      "grid": "data/thumbs/99f615e015388cb0759395e12e7d65b5278f3fe82419b53bd29ac5bd5088d0e1.jpg",
+      "card": "data/thumbs/feb4700d4e0cac9a9c37a74d84d80db7debca7b8122f3ef1e7fb23dea29a6eba.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/06 - przetwory/proteina banoffee — [ krem_orzechowy ]/ety-sło - banoffee - 200 g/4 - wizki/dk-ety-sło-przetwory-banoffee-200-g-6300707.00-front-s.png": {
+      "grid": "data/thumbs/ac35fc298f5db298ee350e8eb84b3b53fe8f9284e7fcdd58f7c45410a50a1a6c.jpg",
+      "card": "data/thumbs/b4e3fd7c037c0926749a28c8fa7de837492c0275083e6ac221193313de76aab0.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/06 - przetwory/proteina karmel — [ krem_orzechowy ]/ety-sło - karmel - 200 g/4 - wizki/dk-ety-sło-przetwory-karmel-200-g-6300711.00-front-s.png": {
+      "grid": "data/thumbs/328e7e2c79f7c0c9084795005b63da29ddc077c9d24f2876b3457541ed3eaec7.jpg",
+      "card": "data/thumbs/d331bde419b02fa810049d3b261a1bd97b579b9e294235b9c7dc72c6106f1594.jpg"
+    },
+    "x:/marketing/- polska/01 - produkty/- dk/06 - przetwory/proteina lemon cheesecake — [ krem_orzechowy ]/ety-sło - lemon cheesecake 200 g/4 - wizki/dk-ety-sło-przetwory-lemon-cheesecake-200-g-6300708.00-front-s.png": {
+      "grid": "data/thumbs/1599c9459e75b34063425f25a5e719ef39029a9a898c2a7650bed22f72e77ed2.jpg",
+      "card": "data/thumbs/82782161a9821af4eb36646dc4cce8b8fc525dc3aaacad436e60fee16834ebfa.jpg"
+    }
+  },
+  "stats": {
+    "paths_total": 39584,
+    "paths_with_thumb": 275,
+    "thumbs_copied": 550,
+    "thumbs_warmed": 0,
+    "missing": 39309
+  },
+  "ms": 28126
+}

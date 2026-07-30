@@ -8,6 +8,7 @@ Uzyj tego skryptu albo skrotu pulpitu DAM ETA (launch.py).
 """
 from __future__ import annotations
 
+import argparse
 import socketserver
 import sys
 import threading
@@ -26,6 +27,14 @@ class ReusableTCPServer(socketserver.TCPServer):
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="DAM UI + bridge (tryb przegladarki)")
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Bez otwierania karty przegladarki (tlo / autostart)",
+    )
+    args = parser.parse_args()
+
     if not WEB_ROOT.is_dir():
         print(f"Brak UI: {WEB_ROOT}")
         raise SystemExit(1)
@@ -61,11 +70,14 @@ def main() -> None:
     print(f"DAM UI     {url}")
     print(f"DAM bridge http://{HOST}:{bridge_port}/health")
     print(f"Auto-start mostu: POST/GET {url.replace('dashboard.html', 'dam/ensure-services')}")
-    print("Ctrl+C aby zatrzymac.")
-    try:
-        webbrowser.open(url)
-    except Exception:
-        pass
+    if args.headless:
+        print("Headless — Ctrl+C aby zatrzymac.")
+    else:
+        print("Ctrl+C aby zatrzymac.")
+        try:
+            webbrowser.open(url)
+        except Exception:
+            pass
 
     try:
         while True:

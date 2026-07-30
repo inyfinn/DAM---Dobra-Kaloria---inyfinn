@@ -1,57 +1,76 @@
-# Panel DAM na Synology (Web Station)
+# Panel DAM na Synology (Web Station, port 443)
 
-## Gdzie lezy folder web na NAS
+## Kanoniczny URL (bez :5001)
 
-| Sciezka NAS | Udzial Windows (RaiDrive) |
+| URL | Rola |
+|-----|------|
+| **`https://inyfinn.synology.me/Panel-DAM/`** | **Panel DAM** (Web Station, HTTPS 443) |
+| `https://inyfinn.synology.me:5001/` | Panel **DSM** (admin Synology) — nie używamy do DAM |
+
+Czysta ścieżka = tylko Web Station. Port `:5001` **nie jest potrzebny** do Panel-DAM.
+
+## Gdzie leży folder web na NAS
+
+| Ścieżka NAS | Udział Windows (RaiDrive) |
 |-------------|---------------------------|
 | `/volume1/web` | `W:\web` |
 
-Deploy skryptu:
+Pliki Panel-DAM: `/volume1/web/Panel-DAM/` (= `W:\web\Panel-DAM\`).
+
+## Deploy (jedyna komenda)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ops/install-panel-dam-synology.ps1
+```
+
+Albo sam sync plików:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/ops/deploy-panel-dam-synology.ps1
 ```
 
-Tworzy / aktualizuje: `W:\web\Panel-DAM\` (kopia `apps/web`).
+Skrypt kopiuje `apps/web` → `W:\web\Panel-DAM\`, dopisuje `LICENSE.md`, `index.html`, `data/dam-runtime.json` (origin `https://inyfinn.synology.me/Panel-DAM`).
 
-## URL — wazne rozroznienie portow
+## Ręcznie (bez skryptu)
 
-| URL | Co to jest |
-|-----|------------|
-| `https://inyfinn.synology.me:5001/` | **Panel DSM** (admin Synology) — **nie** Web Station |
-| `https://inyfinn.synology.me/Panel-DAM/` | **Web Station** (port 443 domyslnie) — tu laduje sie statyczny UI |
-| `inyfinn.synology.me:5433` | PostgreSQL DAM (ADR-009) |
+1. Włącz **Web Station** (Package Center).
+2. Upewnij się, że host `inyfinn.synology.me` wskazuje na folder `web` (domyślnie `/volume1/web`).
+3. Skopiuj zawartość `apps/web` do `W:\web\Panel-DAM\`.
+4. Sprawdź: `https://inyfinn.synology.me/Panel-DAM/dashboard.html`
 
-Nie da sie podmienic calego `:5001` na Panel DAM bez psucia DSM. Panel DAM idzie przez **Web Station** (80/443) albo osobny **Reverse Proxy** w DSM.
+## Co działa po samym wrzuceniu plików
 
-## Co dziala po samym wrzuceniu plikow
+- HTML/CSS/JS (dashboard, eksplorer, wizualizacje, branding, licencja)
+- Ładowanie stron z `/Panel-DAM/...`
 
-- HTML/CSS/JS z `apps/web` (dashboard, eksplorer, wizualizacje, branding)
-- Ladowanie stron z `/Panel-DAM/dashboard.html`
+## Czego nie ma bez mostu (bridge)
 
-## Czego **nie** ma bez backendu
-
-DAM to nie czysty static site. Potrzebuje **mostu** `local_bridge.py` (`:8766`):
+DAM to nie czysty static site. Potrzebuje **`local_bridge.py`** (`:8766`):
 
 - logowanie / sesje
 - miniatury z dysku Marketing
-- zapis skojarzen, indeks, Postgres
+- zapis skojarzeń, indeks, Postgres
 
-Przegladarka z internetu nie widzi `127.0.0.1:8766` na Twoim PC.
+Przeglądarka **nie czyta dysku** — tylko `fetch()` do mostu. Patrz modal „Ścieżka Marketing na tym komputerze” (ścieżka lokalna urządzenia z mostem, np. `X:\Marketing`).
 
-## Pelny dostep z internetu (roadmap)
+## Pełny DAM z internetu (roadmap)
 
-1. **Reverse Proxy** (DSM → Panel logowania → Zaawansowane → Odwrotne proxy):
-   - Zrodlo: `https://inyfinn.synology.me` + sciezka `/dam-api/` → cel `http://127.0.0.1:8766` (most na NAS lub PC w LAN)
-   - Zrodlo: `/Panel-DAM/` → Web Station (statyczne pliki) **albo** proxy do `http://127.0.0.1:8765` jesli caly stack na NAS
+1. Most na NAS (Docker) + wolumen Marketing (`/volume1/...`).
+2. Reverse Proxy w DSM (port **443**, nie 5001):
+   - `/Panel-DAM/` → Web Station (statyczne pliki)
+   - `/Panel-DAM/dam-api/` → `http://127.0.0.1:8776` (most; 8765 zajęty przez panel-klienta)
+3. W `Panel-DAM/data/dam-runtime.json`: `"bridge": "https://inyfinn.synology.me/Panel-DAM/dam-api"`
 
-2. **Docker na NAS** (folder `W:\docker\`) — docelowo kontener z `serve_browser.py` + wolumen Marketing (read-only).
+## Legacy: nginx DSM :5001 (opcjonalnie, niezalecane)
 
-3. **Lokalnie** (jak teraz): skrot DAM ETA, `:8765` + `:8766` — zawsze pelna funkcja.
+Wcześniejsza próba serwowania Panel-DAM przez nginx DSM (`dsm.panel-dam.conf`) — **rezygnujemy** na rzecz czystego URL na 443.
 
-## Po deploy
+- Plik w repo (archiwum): `scripts/ops/synology/dsm.panel-dam.conf`
+- Instalacja tylko jeśli świadomie: `install-panel-dam-synology.ps1 -WithDsm5001Nginx`
+- Usunięcie z NAS: `install-panel-dam-synology.ps1 -RemoveDsm5001Nginx`
 
-Sprawdz w przegladarce:
+**Redirect z :5001** — caly ruch `/Panel-DAM*`, `/panel-dam*`, `paneldam`, `dam-panel` (w tym bookmark Google) → `https://inyfinn.synology.me/Panel-DAM/` na **443**. Na :5001 **nie serwujemy** plikow — tylko 301. Wdrozenie: `install-panel-dam-synology.ps1 -WithDsm5001Nginx`.
 
-- `https://inyfinn.synology.me/Panel-DAM/dashboard.html`
-- Jesli 404: wlacz **Web Station** w Package Center i upewnij sie, ze wirtualny host wskazuje na folder `web`.
+## Lokalnie (pełna funkcja)
+
+Skrót DAM ETA: `apps/desktop/run-dam.vbs` → UI `:8765` + most `:8766` na PC z `X:\Marketing`.

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-28T18:55:56.000000+00:00",
+  "updated_at": "2026-07-29T23:20:00.530855+00:00",
   "assets": {
     "M-SHOP405237-05-22": {
       "linked_product_ids": [],
@@ -63,6 +63,23 @@
       "linked_variant_ids": [],
       "folder_group_id": "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/proteina - kartony  mini batoniki - super cena na start",
       "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "M-VID604445-02-26": {
+      "linked_product_ids": [
+        "tiramisu-czekolada-kakao-deserowe"
+      ],
+      "linked_variant_ids": [],
+      "folder_group_id": "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/03 - przepisy/video/04 deser z truskawkami",
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "M-SHOP404317-02-26": {
+      "linked_product_ids": [
+        "ciasto-porzeczkowe-nerkowcowy",
+        "owsianka-figa-porzeczka-sniadaniowe"
+      ],
+      "linked_variant_ids": [],
+      "folder_group_id": "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/porzeczka",
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
     }
   },
   "folder_groups": {
@@ -102,6 +119,21 @@
     "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/proteina - kartony  mini batoniki - super cena na start": {
       "linked_product_ids": [
         "mix-6x-mini-batoniki-mixy"
+      ],
+      "linked_variant_ids": [],
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/03 - przepisy/video/04 deser z truskawkami": {
+      "linked_product_ids": [
+        "tiramisu-czekolada-kakao-deserowe"
+      ],
+      "linked_variant_ids": [],
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/porzeczka": {
+      "linked_product_ids": [
+        "ciasto-porzeczkowe-nerkowcowy",
+        "owsianka-figa-porzeczka-sniadaniowe"
       ],
       "linked_variant_ids": [],
       "updated_by": "krzysztof.wieczorek@kubara.pl"

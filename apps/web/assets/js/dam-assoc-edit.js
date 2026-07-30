@@ -5656,6 +5656,59 @@
     });
   }
 
+  function collectAssetLinkedProductIds(asset) {
+    var prev = [];
+    var seen = {};
+    function add(id) {
+      id = String(id || "").trim();
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      prev.push(id);
+    }
+    if (!asset) return prev;
+    (asset.linked_products || []).forEach(function (p) {
+      if (p && p.id) add(p.id);
+    });
+    (asset.linked_product_ids || []).forEach(add);
+    (asset.folder_linked_product_ids || []).forEach(add);
+    return prev;
+  }
+
+  function resolveUnlinkProductIds(ctx, asset) {
+    var scopeIds = [];
+    if (ctx.groupContext && ctx.groupContext.linked_product_ids && ctx.groupContext.linked_product_ids.length) {
+      scopeIds = ctx.groupContext.linked_product_ids.map(String);
+    } else {
+      var pid =
+        (ctx.productContext && ctx.productContext.id) ||
+        (ctx.groupContext && ctx.groupContext.product_id) ||
+        "";
+      if (pid) scopeIds = [String(pid)];
+    }
+    var onAsset = collectAssetLinkedProductIds(asset);
+    var overlap = scopeIds.filter(function (id) {
+      return onAsset.indexOf(id) >= 0;
+    });
+    return overlap.length ? overlap : scopeIds.slice(0, 1);
+  }
+
+  function readAssocIdxFromItem(item) {
+    if (!item) return 0;
+    var idxBtn = item.querySelector(
+      "[data-linked-asset-idx], [data-branding-related-idx], [data-element-asset-idx], [data-element-link-idx]"
+    );
+    if (!idxBtn) return 0;
+    return (
+      parseInt(
+        idxBtn.getAttribute("data-linked-asset-idx") ||
+          idxBtn.getAttribute("data-branding-related-idx") ||
+          idxBtn.getAttribute("data-element-asset-idx") ||
+          idxBtn.getAttribute("data-element-link-idx"),
+        10
+      ) || 0
+    );
+  }
+
   function formatHoldSecsLabel(ms) {
     var s = (ms > 0 ? ms : 1500) / 1000;
     if (Math.abs(s - Math.round(s)) < 0.001) return String(Math.round(s));
@@ -5692,27 +5745,40 @@
       );
     }
 
+    var shiftLatched = false;
+    function resetShiftLatch() {
+      shiftLatched = false;
+    }
+    function latchShiftFromEvent(e) {
+      shiftLatched = !!(e && (e.shiftKey || shiftArmed()));
+    }
+
     item.appendChild(btn);
 
+    btn.addEventListener(
+      "pointerdown",
+      function (e) {
+        if (e.button !== undefined && e.button !== 0) return;
+        latchShiftFromEvent(e);
+        if (!shiftLatched) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }
+      },
+      true
+    );
+    btn.addEventListener("pointerup", resetShiftLatch, true);
+    btn.addEventListener("pointercancel", resetShiftLatch, true);
+
     if (global.DamDanger && typeof global.DamDanger.bind === "function") {
-      btn.addEventListener(
-        "pointerdown",
-        function (e) {
-          if (e.button !== undefined && e.button !== 0) return;
-          if (!e.shiftKey && !shiftArmed()) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-          }
-        },
-        true
-      );
       global.DamDanger.bind(btn, {
         label: "Usuń skojarzenie",
         hint: tipText,
         holdMs: holdMs,
         disableSafeDeleteAction: true,
         onConfirm: function () {
-          if (!shiftArmed()) return;
+          if (!shiftLatched && !shiftArmed()) return;
+          resetShiftLatch();
           onClick();
         },
       });
@@ -5720,7 +5786,8 @@
 
     if (!global.DamDanger || !global.DamDanger.isSafeDeleteEnabled()) {
       btn.addEventListener("click", function (e) {
-        if (!shiftArmed()) return;
+        if (!shiftLatched && !shiftArmed()) return;
+        resetShiftLatch();
         e.preventDefault();
         e.stopPropagation();
         onClick();
@@ -5913,6 +5980,7 @@
           grid.closest &&
           grid.closest(".dam-media-preview__elementy-panel, .dam-media-preview__elementy")
         );
+        grid._damAssocList = (ctx.materialsList || ctx.shownPrimaries || []).slice();
         function ensurePlusTile() {
           /* 3.1.5: plus → klik ukrytego Edytuj wszystko / +Dodaj, fallback openEditPicker. */
           if (
@@ -5955,19 +6023,7 @@
 
         grid.querySelectorAll(".dam-media-preview__assoc-item--asset").forEach(function (item) {
           wireQuickMinusControl(item, grid, function () {
-            var idxBtn = item.querySelector(
-              "[data-linked-asset-idx], [data-element-asset-idx], [data-element-link-idx]"
-            );
-            var idx = 0;
-            if (idxBtn) {
-              idx =
-                parseInt(
-                  idxBtn.getAttribute("data-linked-asset-idx") ||
-                    idxBtn.getAttribute("data-element-asset-idx") ||
-                    idxBtn.getAttribute("data-element-link-idx"),
-                  10
-                ) || 0;
-            }
+            var idx = readAssocIdxFromItem(item);
             var materials = (
               grid._damAssocList ||
               ctx.materialsList ||
@@ -5981,16 +6037,12 @@
                 return a && String(a.id) === String(assetId);
               }) ||
               ctx.asset;
-            var pid =
-              (ctx.productContext && ctx.productContext.id) ||
-              (ctx.groupContext && ctx.groupContext.product_id) ||
-              (window.__damLastAssocProductCtx && window.__damLastAssocProductCtx.id) ||
-              "";
-            if (!asset || !pid) {
+            var unlinkIds = resolveUnlinkProductIds(ctx, asset);
+            if (!asset || !unlinkIds.length) {
               softHideAllFileTile(item);
               return;
             }
-            quickUnlinkProductFromMaterial(ctx, asset, pid);
+            quickUnlinkProductFromMaterial(ctx, asset, unlinkIds);
           });
         });
 
@@ -6032,24 +6084,19 @@
     ensureGlobalShiftKeyLatch(scope);
   }
 
-  /** Odetnij produkt od materialu brandingowego (viz Shift+minus). */
-  function quickUnlinkProductFromMaterial(ctx, asset, productId) {
-    if (!canEditAssoc() || !asset || !asset.id || !productId) return Promise.resolve();
-    var prev = [];
-    var seen = {};
-    function add(id) {
+  /** Odetnij produkt(y) od materialu brandingowego (viz/branding Shift+minus). */
+  function quickUnlinkProductFromMaterial(ctx, asset, productIdOrIds) {
+    if (!canEditAssoc() || !asset || !asset.id) return Promise.resolve();
+    var removeSet = {};
+    var ids = Array.isArray(productIdOrIds) ? productIdOrIds : [productIdOrIds];
+    ids.forEach(function (id) {
       id = String(id || "").trim();
-      if (!id || seen[id]) return;
-      seen[id] = true;
-      prev.push(id);
-    }
-    (asset.linked_products || []).forEach(function (p) {
-      if (p && p.id) add(p.id);
+      if (id) removeSet[id] = true;
     });
-    (asset.linked_product_ids || []).forEach(add);
-    (asset.folder_linked_product_ids || []).forEach(add);
+    if (!Object.keys(removeSet).length) return Promise.resolve();
+    var prev = collectAssetLinkedProductIds(asset);
     var next = prev.filter(function (id) {
-      return id !== productId;
+      return !removeSet[id];
     });
     if (next.length === prev.length) return Promise.resolve();
     var matCtx = {

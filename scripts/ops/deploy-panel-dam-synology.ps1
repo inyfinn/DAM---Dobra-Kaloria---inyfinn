@@ -56,7 +56,7 @@ function Copy-DamWebTree($src, $dst) {
 Write-Host "DAM deploy: $Source -> $Dest"
 Copy-DamWebTree $Source $Dest
 
-# Runtime dla przegladarki zdalnej (bridge musi byc wystawiony na NAS/PC — patrz docs/SYNOLOGY-WEB-PANEL.md)
+# Runtime dla przegladarki zdalnej (bridge musi byc wystawiony na NAS/PC - patrz docs/SYNOLOGY-WEB-PANEL.md)
 $runtimeSyno = @{
   app          = "dam-eta"
   host         = "inyfinn.synology.me"
@@ -65,7 +65,7 @@ $runtimeSyno = @{
   ui_origin    = "https://inyfinn.synology.me/Panel-DAM"
   bridge       = "https://inyfinn.synology.me:8766"
   start_url    = "https://inyfinn.synology.me/Panel-DAM/dashboard.html"
-  deploy_note  = "Synology Web Station static mirror; pelny DAM wymaga reverse proxy + local_bridge."
+  deploy_note  = "Synology Web Station 443; URL https://inyfinn.synology.me/Panel-DAM/ (bez :5001). Pelny DAM = bridge."
 }
 $runtimePath = Join-Path $Dest "data\dam-runtime.json"
 New-Item -ItemType Directory -Force -Path (Split-Path $runtimePath) | Out-Null
@@ -81,12 +81,50 @@ $indexHtml = @'
   <title>DAM Panel</title>
 </head>
 <body>
-  <p><a href="./dashboard.html">DAM — Dobra Kaloria</a></p>
+  <p><a href="./dashboard.html">DAM - Dobra Kaloria</a></p>
 </body>
 </html>
 '@
 Set-Content -LiteralPath (Join-Path $Dest "index.html") -Value $indexHtml -Encoding UTF8
 
+# Guest snapshot (podglad przegladarki bez mostu)
+$warmScript = Join-Path $Root "scripts\ops\warm-guest-cache.ps1"
+if (Test-Path -LiteralPath $warmScript) {
+  $hasThumbs = Test-Path -LiteralPath (Join-Path $Source "data\thumbs")
+  $hasManifest = Test-Path -LiteralPath (Join-Path $Source "data\guest-cache-manifest.json")
+  if (-not $hasThumbs -or -not $hasManifest) {
+    Write-Host 'WARN: brak guest cache - uruchom: powershell -File scripts/ops/warm-guest-cache.ps1 -Warm'
+  }
+}
+
+$exportScript = Join-Path $Root "scripts\ops\export-guest-snapshot.ps1"
+if (Test-Path -LiteralPath $exportScript) {
+  $hasManifest = Test-Path -LiteralPath (Join-Path $Source "data\guest-cache-manifest.json")
+  if ($hasManifest) {
+    & $exportScript -Dest (Join-Path $Dest "data") -SkipThumbBuild
+  } else {
+    & $exportScript -Dest (Join-Path $Dest "data")
+  }
+  Write-Host "OK: guest-snapshot.json + guest-cache-manifest.json + digest thumbs"
+}
+
+# Instalator Windows do pobrania (opcjonalnie - nie blokuje deployu UI)
+$buildInstaller = Join-Path $Root "apps\desktop\installer\build-dam-installer.ps1"
+if (Test-Path -LiteralPath $buildInstaller) {
+  try {
+    & $buildInstaller
+    $zip = Join-Path $Root "dist\DAM-DobraKaloria-Windows-Setup.zip"
+    if (Test-Path -LiteralPath $zip) {
+      $relDir = Join-Path $Dest "releases"
+      New-Item -ItemType Directory -Force -Path $relDir | Out-Null
+      Copy-Item -LiteralPath $zip -Destination (Join-Path $relDir "DAM-DobraKaloria-Windows-Setup.zip") -Force
+      Write-Host "OK: releases/DAM-DobraKaloria-Windows-Setup.zip"
+    }
+  } catch {
+    Write-Warning "Instalator ZIP pominiety: $($_.Exception.Message)"
+  }
+}
+
 Write-Host "OK: wrzucono Panel-DAM na NAS."
-Write-Host "Web Station (HTTPS): https://inyfinn.synology.me/Panel-DAM/"
-Write-Host "UWAGA: port 5001 to panel DSM, nie Web Station. Zobacz docs/SYNOLOGY-WEB-PANEL.md"
+Write-Host "Kanoniczny URL: https://inyfinn.synology.me/Panel-DAM/"
+Write-Host "Pelny DAM: wymaga mostu (bridge) - docs/SYNOLOGY-WEB-PANEL.md"

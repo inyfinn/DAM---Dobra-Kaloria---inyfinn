@@ -2237,7 +2237,9 @@ def _light_branding_picker_entry(entry: dict) -> dict:
     }
 
 
-def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: list | None = None) -> dict:
+def resolve_branding_search_picker(
+    query: str, limit: int = 80, include_ids: list | None = None, browse: bool = False
+) -> dict:
     """Light picker search — never ship full branding-search-index (~40MB) to browser."""
     data = _branding_search_index_mem()
     entries = data.get("entries") if isinstance(data.get("entries"), list) else []
@@ -2262,8 +2264,21 @@ def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: lis
                 seen.add(eid)
                 want.discard(eid)
                 out.append(_light_branding_picker_entry(entry))
-    # Empty query: return includes only (do NOT fill to limit from index head).
     if not q:
+        if browse:
+            for entry in entries:
+                if len(out) >= limit:
+                    break
+                if not isinstance(entry, dict):
+                    continue
+                eid = str(entry.get("id") or "").strip()
+                if not eid or eid in seen:
+                    continue
+                if _branding_picker_is_source_path(str(entry.get("path") or "")):
+                    continue
+                seen.add(eid)
+                out.append(_light_branding_picker_entry(entry))
+            return {"ok": True, "entries": out, "count": len(out), "query": q, "browse": True}
         return {"ok": True, "entries": out, "count": len(out), "query": q}
     for entry in entries:
         if len(out) >= limit:
@@ -6625,15 +6640,12 @@ class Handler(BaseHTTPRequestHandler):
             qs = parse_qs(parsed.query)
             path = (qs.get("path") or [""])[0]
             profile = (qs.get("profile") or ["grid"])[0]
+            cache_only = (qs.get("cache_only") or ["0"])[0].strip().lower() in ("1", "true", "yes")
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
                 return
             if dam_thumb_cache_mod is None:
                 self._json(500, {"ok": False, "error": "module_missing"})
-                return
-            target = _coerce_media_target(path)
-            if not os.path.isfile(target) or not _is_under_marketing(Path(target)):
-                self._json(403 if os.path.isfile(target) else 404, {"ok": False, "error": "path_outside_marketing" if os.path.isfile(target) else "not_found", "path": path})
                 return
 
             def _resolve(p: str, em: str = "") -> str:
@@ -6649,6 +6661,38 @@ class Handler(BaseHTTPRequestHandler):
                     marketing_candidates=MARKETING_CANDIDATES,
                     machine_config_path=MACHINE_CONFIG,
                 )
+
+            if cache_only:
+                t0 = time.time()
+                code, body, ctype, meta = dam_thumb_cache_mod.serve_cached_thumb(
+                    path,
+                    profile=profile,
+                    resolve_physical=_resolve,
+                    marketing_relative=_rel,
+                )
+                meta["ms"] = int((time.time() - t0) * 1000)
+                if code != 200:
+                    self._json(
+                        code if code in (403, 404, 422) else 404,
+                        {"ok": False, "error": meta.get("error") or "cache_miss", "path": path, **meta},
+                    )
+                    return
+                self.send_response(200)
+                self._cors()
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "private, max-age=86400")
+                self.send_header("X-DAM-Cache-Hit", "1")
+                self.send_header("X-DAM-Cache-Only", "1")
+                self.send_header("X-DAM-Thumb-Ms", str(meta.get("ms") or 0))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+
+            target = _coerce_media_target(path)
+            if not os.path.isfile(target) or not _is_under_marketing(Path(target)):
+                self._json(403 if os.path.isfile(target) else 404, {"ok": False, "error": "path_outside_marketing" if os.path.isfile(target) else "not_found", "path": path})
+                return
 
             t0 = time.time()
             code, body, ctype, meta = dam_thumb_cache_mod.get_or_build_thumb(
@@ -7220,11 +7264,12 @@ class Handler(BaseHTTPRequestHandler):
                 lim = 80
             raw_include = (qs.get("include") or [""])[0]
             include_ids = [x.strip() for x in str(raw_include).split(",") if x.strip()]
+            browse = (qs.get("browse") or [""])[0].lower() in ("1", "true", "yes")
             data = _branding_search_index_mem()
             if not isinstance(data, dict) or not isinstance(data.get("entries"), list):
                 self._json(404, {"ok": False, "error": "branding_search_index_missing"})
                 return
-            self._json(200, resolve_branding_search_picker(q, lim, include_ids))
+            self._json(200, resolve_branding_search_picker(q, lim, include_ids, browse=browse))
             return
         if parsed.path in ("/branding/status", "/branding/recognize/status"):
             status_file = BRANDING_RECOGNIZE_STATUS_FILE if "recognize" in parsed.path else BRANDING_STATUS_FILE

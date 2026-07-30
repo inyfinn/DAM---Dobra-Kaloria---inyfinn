@@ -95,11 +95,28 @@
     });
   }
 
+  function loadScript(src) {
+    var s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    document.head.appendChild(s);
+  }
+
+  function maybeLoadGuestMode() {
+    if (window.DamRuntime.services_ok) return;
+    var host = (window.location && window.location.hostname) || "";
+    if (host === "localhost" || host === "127.0.0.1") return;
+    loadScript("assets/js/dam-guest-cache.js?v=5.0.127");
+    loadScript("assets/js/dam-guest-mode.js?v=5.0.127");
+  }
+
   function finishReady() {
     window.DamRuntime.ready = true;
     window.dispatchEvent(new CustomEvent("dam-runtime-ready", { detail: window.DamRuntime }));
     if (window.DamRuntime.services_ok) {
       window.dispatchEvent(new CustomEvent("dam:bridge-ready", { detail: window.DamRuntime }));
+    } else {
+      maybeLoadGuestMode();
     }
   }
 

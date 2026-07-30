@@ -1186,8 +1186,40 @@
     return "";
   }
 
+  function guestStaticPreview(path, asset) {
+    if (
+      !window.DamGuestCache ||
+      typeof window.DamGuestCache.shouldUse !== "function" ||
+      !window.DamGuestCache.shouldUse()
+    ) {
+      return "";
+    }
+    if (isVideoAsset(asset) || VIDEO_EXTS[fileExt(path)]) {
+      return "";
+    }
+    var prof = "modal";
+    if (window.DamGuestCache.thumbUrl) {
+      return (
+        window.DamGuestCache.thumbUrl(path, "modal") ||
+        window.DamGuestCache.thumbUrl(path, "card") ||
+        window.DamGuestCache.thumbUrl(path, "grid") ||
+        ""
+      );
+    }
+    return "";
+  }
+
   function previewUrl(path, asset) {
     if (!path) return "";
+    var guest = guestStaticPreview(path, asset);
+    if (guest) return guest;
+    if (
+      window.DamGuestCache &&
+      window.DamGuestCache.shouldUse &&
+      window.DamGuestCache.shouldUse()
+    ) {
+      return "";
+    }
     if (isVideoAsset(asset) || VIDEO_EXTS[fileExt(path)]) {
       return streamUrl(path);
     }

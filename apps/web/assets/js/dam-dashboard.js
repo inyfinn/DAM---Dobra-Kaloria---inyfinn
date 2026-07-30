@@ -297,8 +297,8 @@
     if (window.__DAM_DASH_INIT__) return;
     window.__DAM_DASH_INIT__ = true;
 
-    /* Tymczasowo: bez warm Redis/RAM — bezposrednie /media na kartach. */
-    window.DAM_DISABLE_THUMB_WARM = true;
+    /* Tymczasowo: bez warm Redis/RAM — bezposrednie /media na kartach gdy bridge+dysk. */
+    /* Guest/offline: dam-preview-truth.js uzywa manifestu PAMIEC (nie nadpisuj). */
 
     var ctxRef = { current: {} };
     wireCustomize(ctxRef);

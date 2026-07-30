@@ -19,5 +19,16 @@ Zobacz: `apps/desktop/dam_redis.py` (circuit breaker + fallback matrix), `apps/d
 
 ## Endpointy mostu
 
-- `GET /thumb-cache?path=...&profile=grid|card|modal`
+- `GET /thumb-cache?path=...&profile=grid|card|modal` — encode z dysku Marketing (gdy plik lokalny)
+- `GET /thumb-cache?path=...&profile=...&cache_only=1` — tylko PAMIEC (bez odczytu dysku)
 - `POST /thumb-cache/warm` `{"paths":[...],"async":true}`
+
+## Budowa cache (dev / deploy)
+
+```powershell
+python apps/desktop/scripts/dam_build_thumb_cache.py --warm --migrate-legacy --export-guest
+```
+
+- **PAMIEC-PODRECZNA/thumbs/** — kanoniczny cache AVIF/JPEG (`sha256` klucz)
+- **apps/web/data/thumbs/** — kopia digestów dla Panel-DAM (statyczny HTTP)
+- **apps/web/data/guest-cache-manifest.json** — mapa `path` → URL profilu (grid/card)

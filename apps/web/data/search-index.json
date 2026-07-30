@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T01:36:25",
+  "generated_at": "2026-07-29T23:08:10",
   "product_count": 183,
   "by_prefix": {
     "0000": [
@@ -3633,6 +3633,7 @@
       "cornflakes-peanuts-honey-balls-crispy"
     ],
     "63007": [
+      "mix-kalendarz-adwentowy-mixy",
       "mix-zestaw-mix-ciast-1-mixy",
       "mix-zestaw-mix-ciast-2-mixy",
       "chrupiacy-orzech-daktylowy",
@@ -4088,6 +4089,7 @@
       "kaszanka-niemiesne"
     ],
     "630077": [
+      "mix-kalendarz-adwentowy-mixy",
       "burger-beef-plant-based",
       "burger-betroot",
       "burger-plant-based",
@@ -4138,6 +4140,15 @@
     ],
     "630077400": [
       "burger-betroot"
+    ],
+    "6300779": [
+      "mix-kalendarz-adwentowy-mixy"
+    ],
+    "63007790": [
+      "mix-kalendarz-adwentowy-mixy"
+    ],
+    "630077900": [
+      "mix-kalendarz-adwentowy-mixy"
     ],
     "630078": [
       "ciasto-sliwkowe-nerkowcowy",
@@ -7927,6 +7938,13 @@
         "name": "BURGER BETROOT"
       }
     ],
+    "6300779": [
+      {
+        "product_id": "mix-kalendarz-adwentowy-mixy",
+        "index": "6300779.00",
+        "name": "- MIX - KALENDARZ ADWENTOWY"
+      }
+    ],
     "6300782": [
       {
         "product_id": "cynamonka-nerkowcowy",
@@ -8191,13 +8209,15 @@
       },
       "indexes": [
         "6300381.00",
-        "6300651.00"
+        "6300651.00",
+        "6300779.00"
       ],
       "index_bases": [
         "6300381",
-        "6300651"
+        "6300651",
+        "6300779"
       ],
-      "search_blob": "mix kalendarz adwentowy mix kalendarz adwentowy mixy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 04.06.2025 6300651.00 14.07.2023 6300381.00 15.07.2026 6300xxx.00 17.04.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 04.06.2025 6300651.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 14.07.2023 6300381.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 15.07.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 17.04.2026 6300xxx.00 6300651.00 6300381.00 6300xxx.00 6300xxx.00 mix kalendarz adwentowy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 adwent kalendarz adwentowy swieta",
+      "search_blob": "mix kalendarz adwentowy mix kalendarz adwentowy mixy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 6300779.00 04.06.2025 6300651.00 14.07.2023 6300381.00 15.07.2026 6300xxx.00 17.04.2026 6300xxx.00 29.04.2026 6300779 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 04.06.2025 6300651.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 14.07.2023 6300381.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 15.07.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 17.04.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 29.04.2026 6300779 6300651.00 6300381.00 6300xxx.00 6300xxx.00 6300779.00 mix kalendarz adwentowy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 6300779.00 adwent kalendarz adwentowy swieta",
       "authors": [
         "Sylwia",
         "Szymon"

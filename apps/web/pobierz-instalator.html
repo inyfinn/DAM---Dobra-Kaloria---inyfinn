@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pobierz instalator DAM | Dobra Kaloria</title>
+  <meta name="description" content="Instalator DAM Dobra Kaloria dla Windows — pelny dostep do plikow Marketing i bazy." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #008244;
+      --purple: #ab54db;
+      --bg: #f8f9fc;
+      --text: #1e232d;
+      --muted: #5c6573;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Jost, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 520px;
+      width: 100%;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--green), var(--purple));
+      color: #fff;
+      padding: 32px 28px;
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 1.65rem;
+      font-weight: 700;
+    }
+    .hero p { margin: 0; opacity: 0.92; line-height: 1.5; }
+    .body { padding: 28px; }
+    .body ul {
+      margin: 0 0 24px;
+      padding-left: 1.2rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      background: var(--purple);
+      color: #fff;
+      font: 600 1rem Jost, sans-serif;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(171, 84, 219, 0.35);
+    }
+    .back {
+      display: block;
+      margin-top: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .note {
+      margin-top: 20px;
+      padding: 14px;
+      background: #f0faf4;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <header class="hero">
+      <h1>Instalator DAM</h1>
+      <p>Windows — pelna praca z plikami Marketing i zapisem do bazy</p>
+    </header>
+    <div class="body">
+      <ul>
+        <li>Przegladarka bez instalatora = <strong>tylko podglad</strong> snapshotu bazy i cache</li>
+        <li>Instalator = most lokalny, dysk Marketing, zapis skojarzen</li>
+        <li>Wybierasz folder instalacji i root Marketing (np. P:\Marketing)</li>
+      </ul>
+      <a class="cta" href="./releases/DAM-DobraKaloria-Windows-Setup.zip" download>
+        Pobierz dla Windows
+      </a>
+      <a class="back" href="./dashboard.html">Wroc do panelu (podglad)</a>
+      <p class="note">
+        Po pobraniu rozpakuj ZIP i uruchom <code>Setup-DAM.ps1</code>.
+        Wymaga PowerShell i mapowania dysku Marketing (Synology / lokalnie).
+      </p>
+    </div>
+  </main>
+</body>
+</html>

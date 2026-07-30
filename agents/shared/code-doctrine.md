@@ -1941,3 +1941,39 @@ Skrót — **bind = dwie osobne rzeczy**:
 
 **Wersja:** `5.0.80`.
 
+#### Lekcja 2026-07-29: unified assoc picker — pickerMode + branding groups + CTA id 1–5
+
+**Architektura (2 panele, 1 shell `openMediaPicker`):**
+
+| pickerMode | CTA `data-dam-assoc-picker-id` | Dane |
+|------------|-------------------------------|------|
+| `viz-products` | 2 product, 4 variants-viz | file-index + DamSearch; parent=produkt, child=rewizja (expand) |
+| `branding-groups` | 1 variant-branding, 3 material | `groupMarketingAssets` / branding-search-picker; parent=rep karty, child=sibling |
+| `viz-suggestions` | 5 suggestions | branding API + `viz_latest` pogrupowane po product_id (browse) |
+
+**Fixy:** `_pickerThumbSrcCache` + `data-thumb-stable` (bez thumb-cache w initial src); `isExcludedMarketingDupPath` na `-- ARCHIWUM --/01_Opakowania`; `flattenBrandingGroupSelection` przy confirm (parent / all children → childIds). Wiersz = `pickerMetaRailBodyHtml` (tagi DamBadges / tag_groups, tytuł, ID, meta).
+
+**Wersja:** `5.0.92`.
+
+#### Lekcja 2026-07-29: ID5 branding search — NIE `scheduleListPaint` przy q≥2 (v5.0.94)
+
+**Objaw:** picker materiałów (ID5 / branding API) zostaje na „Szukam materiałów…” mimo że `/branding-search-picker` zwraca dane (curl OK).
+
+**Przyczyna:** `input` wołał `scheduleListPaint` (rAF `renderOptions`) **oraz** `scheduleMaterialSearchFetch`. rAF z pustym `materialEntries` kończył **po** async fetch i nadpisywał listę stanem loading/pustym.
+
+**Fix:** dla `pickerUsesBrandingApi` + `q.length >= 2` — tylko `scheduleMaterialSearchFetch`; `pickerStillOpen()` = `pop.isConnected`; sync `renderOptions` po fetch (nie rAF); `brandingBootstrapGen` anuluje bootstrap gdy user szuka.
+
+**Wersja:** `5.0.94`.
+
+#### Lekcja 2026-07-29: picker meta-rail rows + index popover + responsive skeleton (v5.0.90)
+
+**Picker list row:** `pickerMetaRailBodyHtml` — ten sam układ co `dam-viz-modal__meta-rail` (tagi → tytuł+ext → ID → Nazwa pliku/Typ). Nie używać płaskiego `MATERIAŁ filename` w `dam-search-hit__head`.
+
+**Pokaż indeksy:** `DamCardIndexPopover` (`dam-card-index-popover.js`) — floating `position:fixed` popover 12px padding; przycisk „Zwiń”; zamykanie klik poza + Escape. **Nie** rozwijać `.dam-viz-card__indexes-wrap` inline (rozciąga kafelek / siatkę).
+
+**Skeleton viz-grid:** `DamGridReveal.skeleton(..., { responsive: true })` — liczba kafelków = kolumny × wiersze z viewportu (min 2 rzędy), nie stałe 8–10.
+
+**Studio „Pokaż wszystkie”:** `#damVizModalAllFiles` w osobnym wierszu grida — sekcja wariantów (`dam-viz-modal__variants--studio`) ma `grid-column:1; width:100%` żeby nie zwężała się przy rozwiniętym all-files.
+
+**Wersja:** `5.0.90`.
+

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T01:36:25",
+  "generated_at": "2026-07-29T23:08:10",
   "roots": [
     {
       "brand": "DK",
@@ -11,7 +11,7 @@
     }
   ],
   "root": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-  "elapsed_sec": 3.87,
+  "elapsed_sec": 7.25,
   "category_count": 12,
   "product_count": 183,
   "viz_count": 399,
@@ -922,13 +922,15 @@
       },
       "indexes": [
         "6300381.00",
-        "6300651.00"
+        "6300651.00",
+        "6300779.00"
       ],
       "index_bases": [
         "6300381",
-        "6300651"
+        "6300651",
+        "6300779"
       ],
-      "revision_count": 4,
+      "revision_count": 5,
       "revisions": [
         {
           "folder": "04.06.2025 - 6300651.00",
@@ -2151,6 +2153,35 @@
           "langs_source": "brand_dk",
           "carrier_guessed": true,
           "is_latest": true
+        },
+        {
+          "folder": "29.04.2026 - 6300779",
+          "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/29.04.2026 - 6300779",
+          "rel": "01 - BATONY/- MIX - KALENDARZ ADWENTOWY — [ mixy ]/29.04.2026 - 6300779",
+          "carrier": "MINI",
+          "index_base": "6300779",
+          "index_rev": "00",
+          "index": "6300779.00",
+          "date": "2026-04-29",
+          "slots": [
+            "2 - PROJEKT",
+            "4 - WIZKI"
+          ],
+          "files_by_role": {
+            "source": [],
+            "print": [],
+            "viz": [],
+            "elements": []
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "carrier_guessed": true,
+          "is_latest": true
         }
       ],
       "related_materials": [],
@@ -2158,7 +2189,7 @@
         "Sylwia",
         "Szymon"
       ],
-      "search_blob": "mix kalendarz adwentowy mix kalendarz adwentowy mixy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 04.06.2025 6300651.00 14.07.2023 6300381.00 15.07.2026 6300xxx.00 17.04.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 04.06.2025 6300651.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 14.07.2023 6300381.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 15.07.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 17.04.2026 6300xxx.00 6300651.00 6300381.00 6300xxx.00 6300xxx.00"
+      "search_blob": "mix kalendarz adwentowy mix kalendarz adwentowy mixy baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300381.00 6300651.00 6300779.00 04.06.2025 6300651.00 14.07.2023 6300381.00 15.07.2026 6300xxx.00 17.04.2026 6300xxx.00 29.04.2026 6300779 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 04.06.2025 6300651.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 14.07.2023 6300381.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 15.07.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 17.04.2026 6300xxx.00 x marketing polska 01 produkty dk 01 batony mix kalendarz adwentowy mixy 29.04.2026 6300779 6300651.00 6300381.00 6300xxx.00 6300xxx.00 6300779.00"
     },
     {
       "id": "mix-tuba-30-szt-xmas-mixy",
@@ -23631,12 +23662,30 @@
             "viz": [],
             "elements": [
               {
+                "name": "Muffin_kostki_sep.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/Muffin_kostki_sep.png",
+                "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/Muffin_kostki_sep.png",
+                "ext": "png",
+                "size": 2878855,
+                "mtime": "2026-07-29T01:43:49",
+                "lang": ""
+              },
+              {
                 "name": "Muffin_kostki_sep.tif",
                 "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/2 - PROJEKT/Links/Muffin_kostki_sep.tif",
                 "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/2 - PROJEKT/Links/Muffin_kostki_sep.tif",
                 "ext": "tif",
                 "size": 22759860,
                 "mtime": "2022-01-19T10:54:32",
+                "lang": ""
+              },
+              {
+                "name": "hi_ress_bitmap.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/hi_ress_bitmap.png",
+                "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/hi_ress_bitmap.png",
+                "ext": "png",
+                "size": 1745201,
+                "mtime": "2026-07-29T01:43:47",
                 "lang": ""
               },
               {
@@ -23649,12 +23698,30 @@
                 "lang": ""
               },
               {
+                "name": "jagoda_lisc_solo.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/jagoda_lisc_solo.png",
+                "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/jagoda_lisc_solo.png",
+                "ext": "png",
+                "size": 1533010,
+                "mtime": "2026-07-29T01:43:47",
+                "lang": ""
+              },
+              {
                 "name": "jagoda_lisc_solo.tif",
                 "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/2 - PROJEKT/Links/jagoda_lisc_solo.tif",
                 "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/2 - PROJEKT/Links/jagoda_lisc_solo.tif",
                 "ext": "tif",
                 "size": 4832852,
                 "mtime": "2022-01-11T17:13:37",
+                "lang": ""
+              },
+              {
+                "name": "jagoda_solo.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/jagoda_solo.png",
+                "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/jagoda_solo.png",
+                "ext": "png",
+                "size": 1043188,
+                "mtime": "2026-07-29T01:43:48",
                 "lang": ""
               },
               {
@@ -23667,6 +23734,15 @@
                 "lang": ""
               },
               {
+                "name": "muffin_solo_sep.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/muffin_solo_sep.png",
+                "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/muffin_solo_sep.png",
+                "ext": "png",
+                "size": 5013930,
+                "mtime": "2026-07-29T01:43:49",
+                "lang": ""
+              },
+              {
                 "name": "muffin_solo_sep.tif",
                 "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/2 - PROJEKT/Links/muffin_solo_sep.tif",
                 "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/2 - PROJEKT/Links/muffin_solo_sep.tif",
@@ -23676,12 +23752,30 @@
                 "lang": ""
               },
               {
+                "name": "muffins_sep_update.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/muffins_sep_update.png",
+                "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/muffins_sep_update.png",
+                "ext": "png",
+                "size": 3137878,
+                "mtime": "2026-07-29T01:43:48",
+                "lang": ""
+              },
+              {
                 "name": "muffins_sep_update.tif",
                 "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/2 - PROJEKT/Links/muffins_sep_update.tif",
                 "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/2 - PROJEKT/Links/muffins_sep_update.tif",
                 "ext": "tif",
                 "size": 23379212,
                 "mtime": "2022-01-19T10:16:27",
+                "lang": ""
+              },
+              {
+                "name": "plakietka_malina.png",
+                "path": "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/plakietka_malina.png",
+                "rel": "01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2026 - 6300525.01/1 - MATERIAŁY/ELEMENTY/plakietka_malina.png",
+                "ext": "png",
+                "size": 793338,
+                "mtime": "2026-07-29T01:43:49",
                 "lang": ""
               },
               {

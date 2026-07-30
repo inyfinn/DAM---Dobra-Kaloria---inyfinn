@@ -1,7 +1,7 @@
 {
-  "version": "5.0.121",
+  "version": "5.0.127",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
-  "released_at": "2026-07-29",
-  "note": "5.0.121: picker slot akcji 67px, align prod/wariant, tag gap, checkbox."
+  "released_at": "2026-07-30",
+  "note": "5.0.127: export guest-snapshot via Python (duzy file-index)."
 }

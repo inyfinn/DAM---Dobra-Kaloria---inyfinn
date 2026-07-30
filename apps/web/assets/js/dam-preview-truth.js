@@ -2,19 +2,11 @@
  * DamPreviewTruth — honest preview labels + thumb-cache URLs.
  * PI: preview.file_state.*, preview.onerror_not_synology, preview.cache.*
  *
- * NEVER use "Synology Drive / brak sync" as a generic onerror fallback.
- * online_only label only after /file-availability says so.
+ * Disk path (bridge /media) when bridge + local file available.
+ * PAMIEC-PODRECZNA cache ONLY when guest mode, bridge offline, or file unavailable.
  */
 (function (global) {
   "use strict";
-
-  /* TYMCZASOWO (decyzja usera 2026-07-22): cache miniatur WYLACZONY calkowicie.
-   * Powod: /thumb-cache serwowal niskiej jakosci placeholder, ktory "zostawal na zawsze"
-   * zamiast realnego pliku z dysku, plus zzeral RAM (warm/Redis). Wracamy do /media (pelny plik).
-   * Aby wrocic do cache: usun te linie lub ustaw window.DAM_DISABLE_THUMB_WARM = false przed tym plikiem. */
-  if (typeof global.DAM_DISABLE_THUMB_WARM === "undefined") {
-    global.DAM_DISABLE_THUMB_WARM = true;
-  }
 
   var LABEL_ONLINE_ONLY = "Element z dysku dostępny tylko online - Synology";
   var LABEL_MISSING = "Podglad niedostępny";
@@ -28,6 +20,10 @@
       : "http://127.0.0.1:8766";
   }
 
+  function bridgeOnline() {
+    return !!(global.DamRuntime && global.DamRuntime.services_ok);
+  }
+
   function toLocal(path) {
     if (global.DamPaths && typeof DamPaths.toLocal === "function") {
       return DamPaths.toLocal(path);
@@ -35,24 +31,43 @@
     return path || "";
   }
 
-  /**
-   * Grid/card FIRST PAINT only (PI preview.cache.ephemeral_only).
-   * Redis/PAMIEC przyspiesza pokazanie karty — NIGDY nie uzywac jako stale src
-   * po kliknieciu (modal/lightbox = /media, źródło z dysku).
-   */
-  function thumbCacheUrl(path, profile) {
-    if (!path) return "";
-    if (global.DAM_DISABLE_THUMB_WARM) {
-      /* Cache off: use bridge preview (disk), NOT Redis /thumb-cache and NOT raw multi-MB /media. */
-      var localDirect = toLocal(path);
-      var ext = String(localDirect.split(".").pop() || "").toLowerCase();
-      var url =
-        bridgeUrl() + "/media?path=" + encodeURIComponent(localDirect);
-      if (/^(png|jpe?g|webp|gif|tif|tiff|bmp|psd|psb|ai|pdf)$/i.test(ext)) {
-        url += "&preview=1";
-      }
-      return url;
+  function normPathKey(path) {
+    return String(path || "").replace(/\\/g, "/").trim().toLowerCase();
+  }
+
+  function shouldUseStaticThumbCache(opts) {
+    opts = opts || {};
+    if (opts.cacheOnly) return true;
+    if (opts.fileState === "online_only" || opts.fileState === "missing") return true;
+    if (global.DamGuestCache && typeof global.DamGuestCache.shouldUse === "function") {
+      if (global.DamGuestCache.shouldUse()) return true;
     }
+    if (global.DAM_GUEST_MODE) return true;
+    if (!bridgeOnline()) return true;
+    return false;
+  }
+
+  function manifestBaseUrl() {
+    var m = global.DAM_THUMB_MANIFEST;
+    return (m && m.base_url) || "data/thumbs/";
+  }
+
+  function staticThumbFromManifest(path, profile) {
+    if (global.DamGuestCache && typeof global.DamGuestCache.thumbUrl === "function") {
+      var guestUrl = global.DamGuestCache.thumbUrl(path, profile);
+      if (guestUrl) return guestUrl;
+    }
+    var m = global.DAM_THUMB_MANIFEST || global.DAM_GUEST_CACHE_MANIFEST;
+    if (!m || !m.entries) return "";
+    var key = normPathKey(path);
+    var localKey = normPathKey(toLocal(path));
+    var entry = m.entries[key] || m.entries[localKey];
+    if (!entry) return "";
+    var prof = (profile || "grid").trim() || "grid";
+    return entry[prof] || entry.grid || entry.card || entry.modal || "";
+  }
+
+  function bridgeCacheOnlyUrl(path, profile) {
     var local = toLocal(path);
     var p = (profile || "grid").trim() || "grid";
     return (
@@ -60,8 +75,39 @@
       "/thumb-cache?path=" +
       encodeURIComponent(local) +
       "&profile=" +
-      encodeURIComponent(p)
+      encodeURIComponent(p) +
+      "&cache_only=1"
     );
+  }
+
+  function liveDiskPreviewUrl(path) {
+    var localDirect = toLocal(path);
+    var ext = String(localDirect.split(".").pop() || "").toLowerCase();
+    var url = bridgeUrl() + "/media?path=" + encodeURIComponent(localDirect);
+    if (/^(png|jpe?g|webp|gif|tif|tiff|bmp|psd|psb|ai|pdf)$/i.test(ext)) {
+      url += "&preview=1";
+    }
+    return url;
+  }
+
+  /**
+   * Grid/card thumb URL.
+   * Guest / offline / unavailable file -> static PAMIEC manifest or bridge cache_only.
+   * Bridge + local disk -> /media?preview=1 (never stale Redis placeholder).
+   */
+  function thumbCacheUrl(path, profile, opts) {
+    if (!path) return "";
+    opts = opts || {};
+    var prof = (profile || "grid").trim() || "grid";
+
+    if (shouldUseStaticThumbCache(opts)) {
+      var staticUrl = staticThumbFromManifest(path, prof);
+      if (staticUrl) return staticUrl;
+      if (bridgeOnline()) return bridgeCacheOnlyUrl(path, prof);
+      return "";
+    }
+
+    return liveDiskPreviewUrl(path);
   }
 
   function fallbackTitle(state) {
@@ -76,10 +122,6 @@
     return LABEL_HINT;
   }
 
-  /**
-   * Honest onerror title — never the old Synology Drive lie.
-   * Optional state from file-availability.
-   */
   function onErrorTitle(state) {
     return fallbackTitle(state || "");
   }
@@ -99,6 +141,15 @@
     }
     if (_availCache[local] && Date.now() - _availCache[local]._ts < 25000) {
       return Promise.resolve(_availCache[local]);
+    }
+    if (!bridgeOnline()) {
+      return Promise.resolve({
+        ok: true,
+        state: "missing",
+        label_pl: LABEL_MISSING,
+        treat_as_local: false,
+        _ts: Date.now(),
+      });
     }
     if (_availInflight[local]) return _availInflight[local];
     var url =
@@ -133,8 +184,8 @@
   }
 
   function warmThumbs(paths, profile) {
-    if (global.DAM_DISABLE_THUMB_WARM) {
-      return Promise.resolve({ ok: true, queued: 0, skipped: "disabled" });
+    if (!bridgeOnline() || global.DAM_GUEST_MODE) {
+      return Promise.resolve({ ok: true, queued: 0, skipped: "cache_only_mode" });
     }
     var list = (paths || []).filter(Boolean).slice(0, 40);
     if (!list.length) return Promise.resolve({ ok: true, queued: 0 });
@@ -160,6 +211,27 @@
       });
   }
 
+  function loadThumbManifest(url) {
+    if (global.DamGuestCache && typeof global.DamGuestCache.loadManifest === "function") {
+      return global.DamGuestCache.loadManifest();
+    }
+    var src = url || "./data/guest-cache-manifest.json";
+    return fetch(src + (src.indexOf("?") >= 0 ? "&" : "?") + "_=" + Date.now(), {
+      cache: "no-store",
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("manifest_" + r.status);
+        return r.json();
+      })
+      .then(function (m) {
+        global.DAM_THUMB_MANIFEST = m;
+        return m;
+      })
+      .catch(function () {
+        return null;
+      });
+  }
+
   function rootUnsetCtaHref() {
     return CTA_DISK;
   }
@@ -179,10 +251,14 @@
     LABEL_HINT: LABEL_HINT,
     LABEL_ROOT: LABEL_ROOT,
     thumbCacheUrl: thumbCacheUrl,
+    shouldUseStaticThumbCache: shouldUseStaticThumbCache,
+    staticThumbFromManifest: staticThumbFromManifest,
+    liveDiskPreviewUrl: liveDiskPreviewUrl,
     onErrorTitle: onErrorTitle,
     fallbackHint: fallbackHint,
     fileAvailability: fileAvailability,
     warmThumbs: warmThumbs,
+    loadThumbManifest: loadThumbManifest,
     rootUnsetCtaHref: rootUnsetCtaHref,
     applyFallbackEl: applyFallbackEl,
   };

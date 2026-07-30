@@ -948,5 +948,20 @@
         return { data: { providers: ["local"], mode: "offline" } };
       }
     },
+    /** Thumb URL: dysk gdy bridge OK, cache PAMIEC gdy guest/offline/brak pliku. */
+    thumbUrl: function (path, profile, opts) {
+      if (
+        window.DamPreviewTruth &&
+        typeof window.DamPreviewTruth.thumbCacheUrl === "function"
+      ) {
+        return window.DamPreviewTruth.thumbCacheUrl(path, profile || "grid", opts || {});
+      }
+      return path || "";
+    },
+    isGuestOrOffline: function () {
+      if (window.DAM_GUEST_MODE) return true;
+      if (!window.DamRuntime || !window.DamRuntime.services_ok) return true;
+      return false;
+    },
   };
 })();
