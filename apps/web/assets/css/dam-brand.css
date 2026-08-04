@@ -6485,6 +6485,24 @@ button.dam-status-badge.dam-tag-editable:hover {
   box-shadow: 0 0 0 2px rgba(40, 199, 111, 0.1);
 }
 
+.dam-carrier-card--outdated {
+  border-color: rgba(108, 117, 125, 0.28);
+  background: linear-gradient(180deg, #fafafa 0%, #f8f7fb 100%);
+  opacity: 0.96;
+}
+
+.dam-carrier-card--outdated .dam-carrier-toggle__label {
+  color: #6c757d;
+}
+
+.dam-carrier-card--demo {
+  border-color: rgba(255, 159, 67, 0.28);
+}
+
+.dam-carrier-card--flat + .dam-carrier-card--flat {
+  margin-top: 10px;
+}
+
 /* Pasek nosnika: CSS Grid stref body | meta | end (RWD przez @container) */
 .dam-carrier-toggle-row {
   display: grid;

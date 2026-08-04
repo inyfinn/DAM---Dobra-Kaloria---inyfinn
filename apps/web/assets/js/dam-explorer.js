@@ -694,7 +694,7 @@
        NIGDY: lookup po samym index (TEST-TEST2 moze byc DOY live + ETY w archiwum).
        Gdy jest rev.path - tylko basename ścieżki (folder w indeksie moze byc nieaktualny). */
     var diskLit = letterFromFolderName(rev.path || "");
-    if (!diskLit && !rev.path && rev.folder) diskLit = letterFromFolderName(rev.folder);
+    if (!diskLit && rev.folder) diskLit = letterFromFolderName(rev.folder);
     if (diskLit) return statusFromLetter(diskLit);
     if (rev.path || rev.folder) return "clear";
 
@@ -752,6 +752,90 @@
     return leaf.replace(/\s-\s[FXD]$/i, "").toLowerCase();
   }
 
+  function statusLetterFromRevision(rev) {
+    if (!rev) return "";
+    return letterFromFolderName(rev.path || "") || letterFromFolderName(rev.folder || "");
+  }
+
+  /** Gdy indeks ma twin foldery (bez i z sufiksem F/X/D), zostaw wersje z sufiksem. */
+  function dedupeLifecycleTwinRevisions(revisions) {
+    var byBase = {};
+    var order = [];
+    (revisions || []).forEach(function (r) {
+      if (!r) return;
+      var base = normVariantBasename(r.path || r.folder || "");
+      if (!base) {
+        order.push({ kind: "loose", rev: r });
+        return;
+      }
+      if (!byBase[base]) {
+        byBase[base] = [];
+        order.push({ kind: "base", key: base });
+      }
+      byBase[base].push(r);
+    });
+    var out = [];
+    order.forEach(function (item) {
+      if (item.kind === "loose") {
+        out.push(item.rev);
+        return;
+      }
+      var items = byBase[item.key] || [];
+      if (items.length <= 1) {
+        out.push(items[0]);
+        return;
+      }
+      items.sort(function (a, b) {
+        var la = statusLetterFromRevision(a) ? 1 : 0;
+        var lb = statusLetterFromRevision(b) ? 1 : 0;
+        if (lb !== la) return lb - la;
+        return String(b.date || "").localeCompare(String(a.date || ""));
+      });
+      out.push(items[0]);
+    });
+    return out;
+  }
+
+  function revisionDisplayRank(rev) {
+    var st = getRevisionStatus(rev);
+    if (st === "aktualne") return 0;
+    if (st === "clear") return 1;
+    if (st === "demo") return 2;
+    if (st === "nieaktualne") return 3;
+    return 4;
+  }
+
+  function flattenAndSortAllRevisions(revisions) {
+    return dedupeLifecycleTwinRevisions(revisions || []).slice().sort(function (a, b) {
+      var ra = revisionDisplayRank(a);
+      var rb = revisionDisplayRank(b);
+      if (ra !== rb) return ra - rb;
+      var ca = resolveCarrierCode(a);
+      var cb = resolveCarrierCode(b);
+      if (ca !== cb) {
+        if (ca === "UNKNOWN") return 1;
+        if (cb === "UNKNOWN") return -1;
+        return ca.localeCompare(cb);
+      }
+      return String(b.date || "").localeCompare(String(a.date || ""));
+    });
+  }
+
+  function carrierCardExpandKey(rev, code) {
+    var pk = normPathKey(rev && rev.path);
+    if (pk) return String(code || "UNKNOWN") + "::" + pk;
+    return String(code || "UNKNOWN") + "::" + String((rev && rev.index) || (rev && rev.folder) || "");
+  }
+
+  function carrierCardDomId(expandKey) {
+    var slug = String(expandKey || "unknown")
+      .replace(/[/\\:]/g, "_")
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .replace(/_+/g, "_")
+      .slice(0, 120);
+    return "dam-carrier-" + slug;
+  }
+
   function patchPathsAfterLifecycle(res, body) {
     if (!res || !res.ok) return;
     if (!state.lifecycleStore) state.lifecycleStore = { products: {}, revisions: {}, history: [] };
@@ -781,8 +865,15 @@
         if (!r) return;
         if ((idx && r.index === idx) || (body.path && normPathKey(r.path || "") === normPathKey(body.path))) {
           r.path = vpath;
+          if (vpath) {
+            var leaf = String(vpath).split(/[/\\]/).pop();
+            if (leaf) r.folder = leaf;
+          }
         }
       });
+      if (state.product && state.product.revisions) {
+        state.product.revisions = dedupeLifecycleTwinRevisions(state.product.revisions);
+      }
     } else {
       var ppath = res.final_product_path || res.resolved_path || body.path;
       if (body.product_id) {
@@ -900,7 +991,7 @@
   }
 
   function revisionsForProductView(product, showAll) {
-    var revs = (product && product.revisions) || [];
+    var revs = dedupeLifecycleTwinRevisions((product && product.revisions) || []);
     if (!showAll) {
       revs = revs.filter(function (r) { return !r.in_archive; });
     }
@@ -2901,6 +2992,10 @@
           return res.data || { ok: false };
         }
         patchPathsAfterLifecycle(res.data, body);
+        var keepProductIdEarly = body.product_id || opts.productId || (state.product && state.product.id) || "";
+        if (keepProductIdEarly && state.product && state.product.id === keepProductIdEarly) {
+          renderMain();
+        }
         var letter = res.data.letter;
         showToast(
           letter
@@ -3079,8 +3174,8 @@
         applyPakietFileToProduct(data);
         var keepCode = null;
         try {
-          var card = btn.closest(".dam-carrier-card");
-          if (card && card.id) keepCode = card.id.replace(/^dam-carrier-/, "");
+          var toggleRow = btn.closest(".dam-carrier-toggle-row[data-toggle-code]");
+          if (toggleRow) keepCode = toggleRow.getAttribute("data-toggle-code");
         } catch (_eKeep) { /* ignore */ }
         if (keepCode) state.expandedCarriers[keepCode] = true;
         renderMain();
@@ -3396,7 +3491,8 @@
     );
   }
 
-  function renderCarrierCard(code, currentRevs, olderRevs, product, allProductRevisions) {
+  function renderCarrierCard(code, currentRevs, olderRevs, product, allProductRevisions, cardOpts) {
+    cardOpts = cardOpts || {};
     var rev = currentRevs[0]; // primary current revision
     if (!rev) return "";
 
@@ -3407,9 +3503,16 @@
     if (!label || /^NOSNIK/i.test(label)) {
       label = meta.label || headTokenSafe(rev.folder) || "WARIANT";
     }
+    if (cardOpts.flatMode && rev.folder) {
+      var folderLabel = String(rev.folder).replace(/\s-\s[FXD]$/i, "");
+      if (folderLabel && folderLabel !== label) label = folderLabel;
+    }
     var st = getRevisionStatus(rev);
-    var cardId = "dam-carrier-" + esc(resolvedCode);
-    var isExpanded = !!state.expandedCarriers[resolvedCode] || !!state.expandedCarriers[code];
+    var expandKey = cardOpts.expandKey || resolvedCode;
+    var cardId = carrierCardDomId(expandKey);
+    var isExpanded =
+      !!state.expandedCarriers[expandKey] ||
+      (!cardOpts.flatMode && (!!state.expandedCarriers[resolvedCode] || !!state.expandedCarriers[code]));
     var showOlder = !!state.showOlderCarriers[resolvedCode] || !!state.showOlderCarriers[code];
 
     // Gather viz images only (ZIP/Pakiet nigdy nie trafia do studia)
@@ -3512,9 +3615,9 @@
       "</div>";
     });
 
-    // Older revisions section (widoczne gdy Pokaż wszystko lub lokalny "Pokaz starsze")
+    // Older revisions section (tylko tryb grupowany bez flatMode)
     var olderHtml = "";
-    if (olderRevs.length > 0) {
+    if (!cardOpts.flatMode && olderRevs.length > 0) {
       var forceOlder = !!state.showAllRevisions;
       var olderOpen = forceOlder || showOlder;
       olderHtml = '<div class="dam-carrier-older">' +
@@ -3567,7 +3670,10 @@
     var cardCls =
       "dam-carrier-card" +
       (isExpanded ? " is-expanded" : "") +
-      (st === "aktualne" ? " dam-carrier-card--aktualne" : "");
+      (st === "aktualne" ? " dam-carrier-card--aktualne" : "") +
+      (st === "nieaktualne" || st === "starsza" ? " dam-carrier-card--outdated" : "") +
+      (st === "demo" ? " dam-carrier-card--demo" : "") +
+      (cardOpts.flatMode ? " dam-carrier-card--flat" : "");
 
     ensurePakietStyles();
     var pakietBtn =
@@ -3584,7 +3690,7 @@
     return (
       '<div class="' + cardCls + '" id="' + cardId + '">' +
         '<div class="dam-carrier-toggle-row" role="button" tabindex="0" data-toggle-code="' +
-        esc(resolvedCode) +
+        esc(expandKey) +
         '" aria-expanded="' +
         isExpanded +
         '" aria-label="' +
@@ -3630,7 +3736,7 @@
             '" aria-hidden="true"></i>' +
           "</div>" +
         "</div>" +
-        (state.showAllRevisions && olderHtml ? olderHtml : "") +
+        (state.showAllRevisions && !cardOpts.flatMode && olderHtml ? olderHtml : "") +
         '<div class="dam-carrier-body"' +
         (isExpanded ? "" : " hidden") +
         ">" +
@@ -4410,17 +4516,31 @@
     }
     catForProduct = catForProduct || state.canonCat || "Produkt";
     var visibleGroups = 0;
-    groups.forEach(function (g) {
-      if (pickCarrierDisplay(g.revisions, showAllOn)) visibleGroups++;
-    });
+    if (showAllOn) {
+      visibleGroups = flattenAndSortAllRevisions(allRevisions).length;
+    } else {
+      groups.forEach(function (g) {
+        if (pickCarrierDisplay(g.revisions, false)) visibleGroups++;
+      });
+    }
+
+    var variantMetaLabel = showAllOn
+      ? visibleGroups +
+        " wariant" +
+        (visibleGroups === 1 ? "" : visibleGroups >= 2 && visibleGroups <= 4 ? "y" : "ów") +
+        " (wszystkie)"
+      : visibleGroups +
+        " typ" +
+        (visibleGroups === 1 ? "" : "y") +
+        " nośnika" +
+        " (aktualne)";
 
     var html2 = '<div class="dam-explorer-panel">' +
       panelHeadHtml({
         icon: "uil-box",
         kicker: "Produkt · " + catForProduct,
         title: pName,
-        meta: visibleGroups + " typ" + (visibleGroups === 1 ? "" : "y") +
-          " nośnika" + (showAllOn ? " (wszystkie)" : " (aktualne)") +
+        meta: variantMetaLabel +
           ". Kliknij, aby rozwinąć szczegóły.",
         showAddVariant: true
       }) +
@@ -4442,16 +4562,27 @@
       "</div>" +
       '<div class="dam-carrier-list">';
 
-    if (groups.length === 0) {
+    if (groups.length === 0 && allRevisions.length === 0) {
       html2 += '<div class="dam-explorer-empty">Brak danych o nośnikach. Sprawdz indeks dysku.</div>';
     } else {
       var anyShown = false;
-      groups.forEach(function (g) {
-        var picked = pickCarrierDisplay(g.revisions, showAllOn);
-        if (!picked) return;
-        anyShown = true;
-        html2 += renderCarrierCard(g.code, picked.current, picked.older, state.product, allRevisions);
-      });
+      if (showAllOn) {
+        flattenAndSortAllRevisions(allRevisions).forEach(function (rev) {
+          anyShown = true;
+          var code = resolveCarrierCode(rev);
+          html2 += renderCarrierCard(code, [rev], [], state.product, allRevisions, {
+            flatMode: true,
+            expandKey: carrierCardExpandKey(rev, code)
+          });
+        });
+      } else {
+        groups.forEach(function (g) {
+          var picked = pickCarrierDisplay(g.revisions, false);
+          if (!picked) return;
+          anyShown = true;
+          html2 += renderCarrierCard(g.code, picked.current, picked.older, state.product, allRevisions);
+        });
+      }
       if (!anyShown) {
         html2 += '<div class="dam-explorer-empty">Brak aktualnych wariantów. Włącz <strong>Pokaż wszystko</strong>, aby zobaczyć nieaktualne.</div>';
       }
@@ -4673,7 +4804,7 @@
       if (!code) return;
       state.expandedCarriers[code] = !state.expandedCarriers[code];
       renderMain();
-      var card = document.getElementById("dam-carrier-" + code);
+      var card = document.getElementById(carrierCardDomId(code));
       if (card && state.expandedCarriers[code]) {
         setTimeout(function () {
           card.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -6755,6 +6886,7 @@
     local.updated_at = new Date().toISOString();
     saveLocalStatus(local);
     syncStatusMirrorFromLifecycle();
+    fresh.revisions = dedupeLifecycleTwinRevisions(fresh.revisions || []);
     state.product = fresh;
     return fresh;
   }

@@ -43,11 +43,10 @@ NAMING = _load_naming_dict()
 
 
 def resolve_marketing_base() -> Path:
-    """X: (live) > D: (legacy staging) — pierwszy istniejacy z - POLSKA."""
-    for candidate in (Path(r"X:/Marketing"), Path(r"D:/Marketing")):
-        if (candidate / "- POLSKA").is_dir():
-            return candidate
-    return Path(r"X:/Marketing")
+    """machine-config / M: (source) > X:/Marketing > D:/Marketing."""
+    from marketing_roots import resolve_marketing_base as _resolve
+
+    return _resolve()
 
 
 MARKETING_BASE = resolve_marketing_base()
@@ -392,6 +391,43 @@ LIFECYCLE_SUFFIX_RE = re.compile(r"\s+-\s+[FXD]$", re.IGNORECASE)
 def strip_lifecycle_suffix(name: str) -> str:
     """Usun koncowke statusu folderu: - F / - X / - D."""
     return LIFECYCLE_SUFFIX_RE.sub("", (name or "").rstrip()).rstrip()
+
+
+def lifecycle_letter_from_folder_name(name: str) -> str:
+    m = re.search(r"\s-\s([FXD])$", name or "", re.I)
+    return m.group(1).upper() if m else ""
+
+
+def dedupe_lifecycle_folder_twins(revisions: list[dict]) -> list[dict]:
+    """Gdy na dysku sa twin foldery (bez i z sufiksem F/X/D), zostaw jeden wpis w indeksie."""
+    by_base: dict[str, list[dict]] = defaultdict(list)
+    loose: list[dict] = []
+    for r in revisions:
+        folder = r.get("folder") or ""
+        if not folder:
+            loose.append(r)
+            continue
+        base = strip_lifecycle_suffix(folder).lower()
+        if not base:
+            loose.append(r)
+            continue
+        by_base[base].append(r)
+    out = list(loose)
+    for items in by_base.values():
+        if len(items) == 1:
+            out.append(items[0])
+            continue
+
+        def twin_rank(row: dict) -> tuple:
+            lit = lifecycle_letter_from_folder_name(row.get("folder") or "")
+            lit_pri = {"F": 3, "D": 2, "X": 1}.get(lit, 0)
+            has_lit = 1 if lit else 0
+            date_s = row.get("date") or ""
+            return (has_lit, lit_pri, date_s)
+
+        items_sorted = sorted(items, key=twin_rank, reverse=True)
+        out.append(items_sorted[0])
+    return out
 
 
 def parse_display_name(product_name: str) -> tuple[str, list[str]]:
@@ -1270,6 +1306,7 @@ def scan_revision_children(product_dir: Path, root: Path, brand: str, cat_name: 
             }
         )
 
+    revisions = dedupe_lifecycle_folder_twins(revisions)
     finalize_revision_groups(revisions, cat_name)
     return revisions
 
@@ -1684,7 +1721,17 @@ def pick_thumb_file(
     return max(pool, key=rank)
 
 
+def _is_valid_jpeg(path: Path) -> bool:
+    try:
+        with path.open("rb") as fh:
+            return fh.read(3) == b"\xff\xd8\xff"
+    except OSError:
+        return False
+
+
 def write_web_thumb(src: Path, dest: Path, max_edge: int = THUMB_MAX_EDGE) -> None:
+    """Zapis miniatury JPEG. NIGDY nie kopiuj TIF/PSD/AI pod rozszerzeniem .jpg
+    (2026-08-04: dk-doy-datesy-karmel mial 39MB TIFF jako .jpg -> Brak miniatury)."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
         from PIL import Image
@@ -1700,14 +1747,16 @@ def write_web_thumb(src: Path, dest: Path, max_edge: int = THUMB_MAX_EDGE) -> No
                 im = im.convert("RGB")
             im.thumbnail((max_edge, max_edge), Image.Resampling.LANCZOS)
             im.save(dest, "JPEG", quality=85, optimize=True)
+        if not _is_valid_jpeg(dest):
+            raise RuntimeError(f"thumb not jpeg after PIL save: {dest}")
         return
     except Exception:
         pass
-    if src.suffix.lower() in {".jpg", ".jpeg"}:
+    # Fallback: tylko prawdziwy JPEG zrodlowy - nigdy TIF/PNG/PSD jako .jpg
+    if src.suffix.lower() in {".jpg", ".jpeg"} and _is_valid_jpeg(src):
         shutil.copy2(src, dest)
         return
-    smallest = src
-    shutil.copy2(smallest, dest)
+    raise OSError(f"cannot build jpeg thumb from {src}")
 
 
 def build_search(products: list[dict]) -> dict:
@@ -1883,12 +1932,17 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
                     continue
                 thumb_name = safe_thumb_stem(pid, index_base, lang)
                 thumb_path = thumbs_dir / thumb_name
-                # Odswiez gdy zrodlo nowsze niz miniatura
+                # Odswiez gdy zrodlo nowsze LUB cache nie jest prawdziwym JPEG
+                # (stary fallback kopiowal TIF pod .jpg - mtime nowszy niz PNG).
                 try:
                     src_path = Path(thumb_src["path"])
                     need = True
                     if thumb_path.is_file() and src_path.is_file():
-                        need = src_path.stat().st_mtime > thumb_path.stat().st_mtime + 0.5
+                        need = (
+                            src_path.stat().st_mtime > thumb_path.stat().st_mtime + 0.5
+                            or not _is_valid_jpeg(thumb_path)
+                            or thumb_path.stat().st_size > 2_500_000
+                        )
                     if need:
                         write_web_thumb(src_path, thumb_path)
                 except (OSError, PermissionError) as exc:
@@ -2139,23 +2193,6 @@ def main() -> None:
             print(f"enrich-product-associations: exit={code2}")
     except Exception as exc:  # noqa: BLE001
         print(f"WARN: enrich-product-associations failed: {exc}")
-
-    # Zywy dump bazy produktow (DK+GC) na dysku Marketing - Notion / audyt.
-    try:
-        import importlib.util
-
-        export_baza = Path(__file__).resolve().parents[2] / "scripts" / "export" / "export-produkty-baza.py"
-        spec3 = importlib.util.spec_from_file_location("export_produkty_baza", export_baza)
-        if spec3 and spec3.loader:
-            mod3 = importlib.util.module_from_spec(spec3)
-            spec3.loader.exec_module(mod3)
-            stats = mod3.export_produkty_baza(index_path=OUT)
-            print(
-                "export-produkty-baza: "
-                f"products={stats['products']} dk={stats['dk']} gc={stats['gc']} -> {stats['out']}"
-            )
-    except Exception as exc:  # noqa: BLE001
-        print(f"WARN: export-produkty-baza failed: {exc}")
 
 
 if __name__ == "__main__":
