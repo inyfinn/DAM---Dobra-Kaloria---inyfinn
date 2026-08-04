@@ -299,8 +299,9 @@
 }
 
 .dam-tut-invite__mascot {
-  /* C4: +15% vs 75 => 86.25 */
-  --tut-medal: 86.25px;
+  /* invite: +20% vs 86.25 => 103.5; przesuniecie w lewo o 45px */
+  --tut-medal: 103.5px;
+  margin-left: -45px;
 }
 
 .dam-tut-invite__text {
@@ -314,6 +315,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 15px;
 }
 
 .dam-tut-invite__actions .dam-tut__btn {
