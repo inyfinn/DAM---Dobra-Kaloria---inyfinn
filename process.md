@@ -13328,3 +13328,57 @@ ode --check OK. Live Playwright: branding product open phases hydrate 1ms; wall-
 
 **Źródła:** dam-assoc-edit.js, HTML ?v=, process prior dfc22b03, dam-brand.css .dam-tag-edit-popover--wide
 
+
+## 2026-08-03 12:16 — layout bin + DAM.exe (P0-P2)
+
+**Komenda/Akcja:** Przebudowa P:\DAM = DAM.exe + bin + git; kit THEME/inyfinn-geex-kit; hybryda sync script; SQLite-only; fix pywebview pip install.
+
+**Log/Status:**
+1. Move drzewa do bin\ (GIT_ROOT zostaje P:\DAM)
+2. CONTENT_ROOT / GIT_ROOT w runtime_config + dam_sync/dam_db
+3. DAM.exe (PyInstaller) + skrot pulpitu
+4. PI: workspace.layout_bin, db.sqlite_only_until_synology, workspace.hybrid_ssd_p_share
+5. pip install -r bin/apps/desktop/requirements.txt (pywebview)
+6. Smoke: UI :8765 explorer.html 200; Bridge :8766/health 200
+
+**Efekt/Fix:** Launcher dziala po instalacji pywebview; komunikat bledy wskazuje bin/apps/desktop/requirements.txt
+
+**Test/Ewaluacja:** smoke-dam-ports.ps1 exit 0
+
+**Zrodla:** plan dam_bin_layout; ADR-007/009
+
+
+## 2026-08-03 — assoc_adequacy rev3 (plant based over-rank)
+
+- **Komenda:** Follow-up po branding OCR batch: fix rankingu ssoc_adequacy - generyczne frazy kategorii nie bic linii produktu.
+- **Root cause:** fraza `plant based` z nazwy/folderu `03 - PLANT BASED` dostawala 99 (ocr_line_phrase) i wygrywala z `daktyl-limonka-raw` (55, sam token limonka) na OCR Kulki Limonka (br-005033).
+- **Fix (rev3):**
+  - `_ULTRA_GENERIC_PHRASES` / `_ULTRA_GENERIC_TOKENS` (plant based, vegan, bio, natural, good calories, dobra kaloria, ...) - same max 38 (generic_category_only).
+  - Generyczna fraza + wyrazisty token linii w OCR → ~70 (generic_plus_line), np. BALLS+PLANT BASED.
+  - Cross-frazy kategoria×smak (`kulki limonka`) z folderu produktu.
+  - Frazy ultra-generic odfiltrowane z `_phrases_from_product`. **Bez banlisty owocow.**
+- **Sync:** workspace `apps/web/scripts/assoc_adequacy.py` = `P:\DAM\bin\...` (SHA256 zgodny). recognition + batch-report zaktualizowane (re-rank bez pelnego OCR).
+- **Override:** br-005067 nadal `linked=[blackcurrant-cake-cashews]`.
+- **Test (re-score, bez batch 56k):**
+
+| Case | Before | After | Verdict |
+|------|--------|-------|---------|
+| br-005033 Kulki Limonka | balls-plant-based 99 (plant based) | daktyl-limonka-raw 93 (kulki limonka); burgers 38 | PASS |
+| br-005067 Porzeczka GC | blackcurrant-cake-cashews 96 | 96 (bez zmian); override intact | PASS |
+| br-005049 Matcha_Mango | mango-lassi-nerkowcowy 99 | 99 | PASS |
+| br-005097 jesienne smaki | muffin-jagodowy-nerkowcowy 99 | 99 | PASS |
+
+- **Zrodla:** assoc_adequacy.py, branding-recognition.json, branding-ocr-assoc-batch-report.json, plan dam-m-drive-assoc-ocr.
+
+## 2026-08-03 — refilter branding-index links (assoc_adequacy rev3)
+
+- assets_touched=41785 links_removed=186653 override_enforced=3 backup=branding-index.backup-20260803T151958Z.json
+- Verify PASS: br-005067 / baseball+tennis SVG / Kulki Limonka no burgers / br-009287 limonka SKU
+- Script: apps/web/scripts/refilter-branding-links.py
+
+## 2026-08-05 — move D + dirty-close
+
+- Repo+bin przeniesione na D (robocopy); runtime launch.py/local_bridge z D (8765/8766).
+- Dirty-close: confirmUnsavedClose + assoc picker; dashboard labels Odrzuc / Nie wroc / Zapisz zmiany.
+- OCR: file-index drifted (7744358); branding-index 361381875 OK. Golden 513377… niedostepny po wipe WS.
+- Cache-bust: ?v=restore20260805b.

@@ -449,9 +449,54 @@
       .replace(/\stype="button"/gi, "");
   }
 
+  /** Chip „PL · 6900002” / sam indeks - NIE uzywac jako tytulu produktu. */
+  function looksLikeIndexChipLabel(s) {
+    s = String(s || "").trim();
+    if (!s) return true;
+    if (/^\d{5,8}(\.\d+)?$/.test(s)) return true;
+    if (/^[A-Z]{2}(\s*[·,/]\s*[A-Z]{2}){0,6}\s*[·]\s*\d{5,}/i.test(s)) return true;
+    if (/^[A-Z]{2}\s*[·\-]\s*\d{5,}/i.test(s)) return true;
+    return false;
+  }
+
+  /** Kanoniczny tytul wiersza pickera: nazwa produktu (PL), nie indeks/chip jezyka. */
+  function pickerItemDisplayTitle(it) {
+    if (!it) return "";
+    var brand = it.brand || "";
+    var cands = [
+      it.productName,
+      it.product_name,
+      it.display_name,
+      it.label,
+      it.name,
+    ];
+    var title = "";
+    for (var i = 0; i < cands.length; i++) {
+      var c = String(cands[i] || "").trim();
+      if (!c || looksLikeIndexChipLabel(c)) continue;
+      title = c;
+      break;
+    }
+    if (
+      global.DamLabels &&
+      typeof global.DamLabels.cleanProductDisplayName === "function"
+    ) {
+      title = global.DamLabels.cleanProductDisplayName(title) || title;
+    }
+    if (
+      global.DamLabels &&
+      typeof global.DamLabels.localizedProductTitle === "function"
+    ) {
+      title = global.DamLabels.localizedProductTitle(title, brand) || title;
+    }
+    if (title) return title;
+    var idx = String(it.sub || it.index || it.index_base || "").split(".")[0].trim();
+    return idx || String(it.id || "").trim();
+  }
+
   /** Wiersz listy pickera — kompakt jak eksplorator (#damSearchResults). */
   function pickerSearchHitBodyHtml(it, badge, tagsInline, isMat) {
-    var title = it.label || it.name || it.id || "";
+    var title = pickerItemDisplayTitle(it);
     var meta = pickerCompactMetaLine(it, isMat);
     var safeTags = pickerSanitizeInlineTags(tagsInline);
     var tagsRow = safeTags
@@ -581,6 +626,14 @@
       marketing_id: mid,
       index: mid,
       search_blob: entry.search_blob || "",
+      tags: entry.tags || entry.appearance_tags || [],
+      appearance_tags: entry.appearance_tags || entry.tags || [],
+      asset_role: entry.asset_role || "",
+      media_type: entry.media_type || "",
+      brand: entry.brand || "",
+      campaign_id: entry.campaign_id || "",
+      folder_group_id: entry.folder_group_id || "",
+      format_technical: entry.format_technical || [],
     };
   }
 
@@ -635,7 +688,7 @@
     var parts = [name];
     if (langBit) parts.push(langBit);
     if (idx) parts.push(idx);
-    return parts.join(" · ");
+    return parts.join(" \u00B7 ");
   }
 
   /** Po wyborze jednej rewizji — dodaj wszystkie rewizje produktu (PL+EN z file-index). */
@@ -776,6 +829,8 @@
         brand: full.brand || p.brand || "",
         category: full.category || p.category || "",
         subcategory: full.subcategory_label || p.subcategory_label || "",
+        tags: full.tags || p.tags || [],
+        tag_groups: full.tag_groups || p.tag_groups || {},
         langs: rev0.langs || [],
         revCount: revCount,
       };
@@ -803,6 +858,8 @@
               brand: full.brand || "",
               category: full.category || "",
               subcategory: full.subcategory_label || "",
+              tags: full.tags || [],
+              tag_groups: full.tag_groups || {},
               langs: rev.langs || rev0.langs || [],
               isRevisionRow: true,
               productName: prodName,
@@ -2077,15 +2134,22 @@
       "box-shadow:inset 3px 0 0 #ab54db!important;}" +
       ".dam-assoc-edit-popover__opt.is-pinned:not(.is-selected) .dam-assoc-edit-popover__check{color:#e2506b;}" +
       ".dam-assoc-edit-popover__opt.is-pinned:not(.is-selected) .dam-assoc-edit-popover__check{width:22px;font-size:17px;}" +
+      /* Pinned check = staly kwadrat 20px (NIGDY min-width:72 / etykieta „wybrane” = fioletowy prostokat). */
       ".dam-assoc-edit-popover__opt.is-pinned.is-selected .dam-search-hit__check," +
-      ".dam-assoc-edit-popover__pinned .dam-search-hit__check.is-on{display:inline-flex;align-items:center;gap:4px;" +
-      "width:auto;min-width:72px;max-width:100%;justify-content:flex-end;font-size:15px;color:#ab54db;}" +
+      ".dam-assoc-edit-popover__pinned .dam-search-hit__check.is-on{" +
+      "display:inline-flex!important;align-items:center;justify-content:center;" +
+      "width:20px!important;min-width:20px!important;max-width:20px!important;height:20px!important;" +
+      "gap:0;font-size:14px;flex:none;}" +
       ".dam-assoc-edit-popover__opt.is-pinned.is-selected .dam-search-hit__check .uil-check," +
       ".dam-assoc-edit-popover__pinned .dam-search-hit__check.is-on .uil-check{flex:0 0 auto;}" +
-      ".dam-assoc-edit-popover__opt.is-pinned .dam-assoc-edit-popover__check .uil-times{" +
-      "font-size:17px!important;line-height:1;display:inline-block;width:auto;height:auto;" +
-      "background:none!important;box-shadow:none!important;color:#e2506b!important;}" +
-      ".dam-assoc-edit-popover__check-label{font-size:11px;font-weight:600;color:#ab54db;letter-spacing:.02em;white-space:nowrap;line-height:1.2;}" +
+      ".dam-assoc-edit-popover__opt.is-pinned .dam-assoc-edit-popover__check .uil-times," +
+      ".dam-assoc-edit-popover__pinned .dam-search-hit__check .uil-times{" +
+      "font-size:14px!important;line-height:1;display:inline-block;width:auto;height:auto;" +
+      "background:none!important;box-shadow:none!important;}" +
+      ".dam-assoc-edit-popover__check-label{display:none!important;}" +
+      ".dam-assoc-edit-popover__opt .dam-search-hit__check{width:20px!important;min-width:20px!important;" +
+      "max-width:20px!important;height:20px!important;box-sizing:border-box;}" +
+      ".dam-assoc-edit-popover__opt{grid-template-columns:20px 60px minmax(0,1fr)!important;}" +
       ".dam-assoc-edit-popover__opt.is-preview-active:not(.is-pinned){background:#f8f4fd!important;" +
       "box-shadow:inset 0 0 0 1px #e2d3f2;}" +
       ".dam-assoc-edit-popover__opt:hover{background:#f8f4fd;}" +
@@ -2592,6 +2656,8 @@
   }
 
   function closePicker() {
+    var dirtyAsk = document.getElementById("damUnsavedCloseOverlay");
+    if (dirtyAsk) dirtyAsk.remove();
     var overlay = document.getElementById("damAssocEditOverlay");
     if (overlay) overlay.remove();
     hideThumbZoom();
@@ -2603,13 +2669,22 @@
   function onDocClick(e) {
     var overlay = document.getElementById("damAssocEditOverlay");
     if (!overlay) return;
+    if (document.getElementById("damUnsavedCloseOverlay")) return;
     var pop = document.getElementById("damAssocEditPopover");
-    if (pop && !pop.contains(e.target) && e.target === overlay) closePicker();
+    if (pop && !pop.contains(e.target) && e.target === overlay) {
+      if (typeof pop._damAssocRequestClose === "function") pop._damAssocRequestClose();
+      else closePicker();
+    }
   }
 
   function onDocKey(e) {
     if (document.getElementById("damThumbPicker")) return;
-    if (e.key === "Escape") closePicker();
+    if (document.getElementById("damUnsavedCloseOverlay")) return;
+    if (e.key === "Escape") {
+      var pop = document.getElementById("damAssocEditPopover");
+      if (pop && typeof pop._damAssocRequestClose === "function") pop._damAssocRequestClose();
+      else closePicker();
+    }
   }
 
   function openActionMenu(anchorEl, product) {
@@ -2743,6 +2818,7 @@
         /* Viz: pinned = warianty stripu; wyszukiwarka = produkty → rozwijane rewizje. */
         pinnedIds = (opts.pinnedIds || []).slice();
         selected = {};
+        opts._initialPickerPinnedIds = pinnedIds.slice();
       } else {
         (opts.selectedIds || []).forEach(function (id) {
           selected[id] = true;
@@ -2763,6 +2839,45 @@
       pinnedIds.forEach(function (id) {
         pinnedSet[id] = true;
       });
+      if (!opts.productSearchForVariants) {
+        opts._initialPickerPinnedIds = pinnedIds.slice();
+      }
+      function selectionSnapshot() {
+        var selKeys = Object.keys(selected)
+          .filter(function (k) {
+            return selected[k];
+          })
+          .slice()
+          .sort();
+        var pinKeys = pinnedIds.slice().sort();
+        return pinKeys.join("\0") + "||" + selKeys.join("\0");
+      }
+      var baselineSnap = selectionSnapshot();
+      function isPickerDirty() {
+        return selectionSnapshot() !== baselineSnap;
+      }
+      function requestClosePicker() {
+        if (
+          global.DamModalShared &&
+          typeof global.DamModalShared.confirmUnsavedClose === "function"
+        ) {
+          global.DamModalShared.confirmUnsavedClose({
+            isDirty: isPickerDirty,
+            onDiscard: closePicker,
+            onStay: function () {},
+            onSave: function () {
+              if (typeof pop._damAssocRunConfirm === "function") pop._damAssocRunConfirm();
+              else closePicker();
+            },
+          });
+          return;
+        }
+        if (isPickerDirty()) {
+          if (window.confirm("Masz niezapisane zmiany. Porzucic?")) closePicker();
+          return;
+        }
+        closePicker();
+      }
 
       var overlay = document.createElement("div");
       overlay.id = "damAssocEditOverlay";
@@ -2774,7 +2889,7 @@
       pop.className = "dam-thumb-picker-box dam-assoc-edit-popover";
       pop.setAttribute("role", "dialog");
       pop.setAttribute("aria-modal", "true");
-
+      pop._damAssocRequestClose = requestClosePicker;
       var head =
         opts.kind === "variant"
           ? opts.head || "Warianty materiału"
@@ -2885,7 +3000,7 @@
             }
           }
           var v = (opts.variantCandidates || []).find(function (x) {
-            return x && x.id === id;
+            return x && (x.id === id || (x.path && x.path === id));
           });
           if (v) {
             var matCand =
@@ -2896,7 +3011,18 @@
             return {
               id: rowCand.id || v.id,
               kind: isBrandingMaterialId(rowCand.id || v.id) ? "material" : "variant",
-              label: shortAssocLabel(rowCand.label || rowCand.name || v.name || v.label),
+              label: shortAssocLabel(
+                pickerItemDisplayTitle(
+                  Object.assign({}, rowCand, v, {
+                    product_name: v.product_name || rowCand.product_name || "",
+                    productName: v.productName || rowCand.productName || v.product_name || "",
+                    label: rowCand.label || v.label || "",
+                    name: rowCand.name || v.name || "",
+                  })
+                )
+              ),
+              product_name: v.product_name || rowCand.product_name || "",
+              productName: v.productName || rowCand.productName || v.product_name || "",
               thumb:
                 rowCand.thumb ||
                 v.thumb ||
@@ -2911,11 +3037,13 @@
                 rowCand.marketing_id ||
                 rowCand.index ||
                 v.marketing_id ||
+                v.index ||
                 marketingIdForBranding(rowCand) ||
                 normIndexKey(v.index || v.id) ||
                 "",
               langs: v.lang ? [v.lang] : v.langs || [],
               path: rowCand.path || v.path || "",
+              brand: v.brand || rowCand.brand || "",
             };
           }
           if (opts.productSearchForVariants) {
@@ -3025,12 +3153,9 @@
         };
       }
 
-      function checkIconHtml(on, pinned) {
-        if (on && pinned) {
-          return (
-            '<i class="uil uil-check"></i>' +
-            '<span class="dam-assoc-edit-popover__check-label">wybrane</span>'
-          );
+      function checkIconHtml(on, pinned, it) {
+        if (opts.productSearchForVariants && it && it.isRevisionRow && on) {
+          return '<i class="uil uil-times" title="Kliknij, aby odznaczyc"></i>';
         }
         if (on) return '<i class="uil uil-check"></i>';
         if (pinned) return '<i class="uil uil-times" title="Kliknij, aby usunac skojarzenie"></i>';
@@ -3268,7 +3393,7 @@
           '<span class="dam-search-hit__check' +
           (on ? " is-on" : "") +
           '" aria-hidden="true">' +
-          checkIconHtml(on, pinned) +
+          checkIconHtml(on, pinned, it) +
           "</span>";
         return (
           '<li class="dam-assoc-edit-popover__opt-row dam-search-hit dam-search-hit--' +
@@ -3355,6 +3480,10 @@
           return;
         }
         if (opts.productSearchForVariants) {
+          var initialPinned = opts._initialPickerPinnedIds || opts.pinnedIds || [];
+          if (initialPinned.indexOf(removedId) < 0) {
+            return;
+          }
           var actxV = opts.assocCtx || {};
           var parsed = parseRevisionPickerKey(removedId);
           if (parsed && typeof actxV.onRemoveProductVariant === "function") {
@@ -3407,6 +3536,9 @@
               var sPin = pop.querySelector("#damAssocEditSearch");
               scheduleListPaint(sPin ? sPin.value : "");
               persistPinnedRemoval(id);
+              if (opts.productSearchForVariants && String(id).indexOf("rev:") === 0) {
+                toast("Odznaczono wariant");
+              }
               return;
             }
             if (opts.productSearchForVariants && String(id).indexOf("rev:") !== 0) {
@@ -3436,8 +3568,12 @@
                 return;
               }
             }
-            if (selected[id]) delete selected[id];
-            else {
+            if (selected[id]) {
+              delete selected[id];
+              if (opts.productSearchForVariants && String(id).indexOf("rev:") === 0) {
+                toast("Odznaczono wariant");
+              }
+            } else {
               if (opts.kind === "product") {
                 var itNew = lookupItem(id);
                 var newKey = normIndexKey((itNew && itNew.sub) || "");
@@ -4150,6 +4286,9 @@
       }
 
       if (search) {
+        if (global.DamSearchSuggest && typeof global.DamSearchSuggest.attach === "function") {
+          global.DamSearchSuggest.attach(search);
+        }
         /* HARD 4.0.66: scheduleListPaint(raw) natychmiast (rAF).
            q≥2 product/viz → DamSearch async → renderOptionsDebounced po settle.
            Browse q<2 = for+break CAP via scheduleListPaint; NIE podwójny sync paint. */
@@ -4288,20 +4427,21 @@
               e.preventDefault();
               e.stopPropagation();
             }
-            closePicker();
+            requestClosePicker();
           });
           if (
             global.DamModalShared &&
             typeof global.DamModalShared.bindModalClose === "function"
           ) {
-            global.DamModalShared.bindModalClose(closeBtn, closePicker);
+            closeBtn.dataset.damModalCloseBound = "";
+            global.DamModalShared.bindModalClose(closeBtn, requestClosePicker);
           }
         }
         var cancelEl = pop.querySelector("[data-cancel]");
-        if (cancelEl) cancelEl.onclick = closePicker;
+        if (cancelEl) cancelEl.onclick = requestClosePicker;
         var confirmEl = pop.querySelector("[data-confirm]");
         if (confirmEl) {
-          confirmEl.onclick = function () {
+          pop._damAssocRunConfirm = function () {
             /* Parity product/variant/material: pinned must survive confirm even if toggle race. */
             pinnedIds.forEach(function (pid) {
               if (selected[pid] !== false) selected[pid] = true;
@@ -4340,6 +4480,9 @@
             }
             closePicker();
             if (typeof opts.onConfirm === "function") opts.onConfirm(ids, selected);
+          };
+          confirmEl.onclick = function () {
+            pop._damAssocRunConfirm();
           };
         }
         var comboEl = pop.querySelector("[data-goto-combo]");
@@ -4616,7 +4759,13 @@
           if (!row || !row.id) continue;
           row.linked_product_ids = entry.linked_product_ids || [];
           row.linked_variant_ids = entry.linked_variant_ids || [];
-          row.folder_group_id = entry.folder_group_id || "";
+          row.folder_group_id = entry.folder_group_id || row.folder_group_id || "";
+          row.tags = entry.tags || entry.appearance_tags || row.tags || [];
+          row.appearance_tags = entry.appearance_tags || entry.tags || row.appearance_tags || [];
+          row.asset_role = entry.asset_role || row.asset_role || "";
+          row.media_type = entry.media_type || row.media_type || "";
+          row.brand = entry.brand || row.brand || "";
+          row.format_technical = entry.format_technical || row.format_technical || [];
           out.push(row);
           if (out.length >= PICKER_LIST_CAP) break;
         }

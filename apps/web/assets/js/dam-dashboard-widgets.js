@@ -4289,11 +4289,11 @@
       "</aside></div>" +
       '<div class="dam-dash-modal__confirm" id="damDashDirtyConfirm" hidden>' +
       '<div class="dam-dash-modal__confirm-card" role="alertdialog" aria-labelledby="damDashDirtyTitle">' +
-      '<h4 id="damDashDirtyTitle">Masz niezapisane zmiany</h4>' +
-      "<p>Chcesz zapisac ustawienia pulpitu, czy wyjsc bez zapisu?</p>" +
+      '<h4 id="damDashDirtyTitle">Czy chcesz porzuci\u0107 zmiany?</h4>' +
+      "<p>Masz niezapisane wybory. Mo\u017cesz je zapisa\u0107, odrzuci\u0107 albo wr\u00f3ci\u0107 do edycji.</p>" +
       '<div class="dam-dash-modal__confirm-actions dam-dialog-actions">' +
-      '<button type="button" class="geex-btn geex-btn--secondary" data-dirty="discard">Nie zapisuj</button>' +
-      '<button type="button" class="geex-btn geex-btn--ghost" data-dirty="back">Wroc do wyboru</button>' +
+      '<button type="button" class="geex-btn geex-btn--secondary" data-dirty="discard">Odrzu\u0107</button>' +
+      '<button type="button" class="geex-btn geex-btn--ghost" data-dirty="back">Nie, wr\u00f3\u0107</button>' +
       '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
       '<button type="button" class="geex-btn geex-btn--primary" data-dirty="save">Zapisz zmiany</button>' +
       "</div></div></div>";

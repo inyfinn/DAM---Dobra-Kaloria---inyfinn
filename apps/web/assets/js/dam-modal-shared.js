@@ -406,6 +406,102 @@
     };
   }
 
+  /**
+   * Dialog przy zamykaniu brudnego pickera/modala.
+   * TYLKO Zatwierdz/OK zapisuje bez pytania; X / Wstecz / klik poza / Esc
+   * przy zmianach → Odrzuc | Nie, wroc | Zapisz zmiany.
+   * opts: { isDirty, onDiscard, onStay, onSave, title, body }
+   * Zwraca true gdy zamkniecie odroczone (dialog otwarty).
+   */
+  function confirmUnsavedClose(opts) {
+    opts = opts || {};
+    if (typeof opts.isDirty === "function" ? !opts.isDirty() : !opts.isDirty) {
+      if (typeof opts.onDiscard === "function") opts.onDiscard();
+      return false;
+    }
+    ensureUnsavedCloseCss();
+    var prev = document.getElementById("damUnsavedCloseOverlay");
+    if (prev) prev.remove();
+    var wrap = document.createElement("div");
+    wrap.id = "damUnsavedCloseOverlay";
+    wrap.className = "dam-unsaved-close-overlay";
+    wrap.setAttribute("role", "presentation");
+    wrap.innerHTML =
+      '<div class="dam-unsaved-close-card" role="alertdialog" aria-modal="true" aria-labelledby="damUnsavedCloseTitle">' +
+      '<h4 id="damUnsavedCloseTitle">' +
+      (opts.title || "Czy chcesz porzuci\u0107 zmiany?") +
+      "</h4>" +
+      "<p>" +
+      (opts.body ||
+        "Masz niezapisane wybory. Mo\u017cesz je zapisa\u0107, odrzuci\u0107 albo wr\u00f3ci\u0107 do edycji.") +
+      "</p>" +
+      '<div class="dam-unsaved-close-actions dam-dialog-actions">' +
+      '<button type="button" class="geex-btn geex-btn--secondary" data-unsaved="discard">Odrzu\u0107</button>' +
+      '<button type="button" class="geex-btn geex-btn--ghost" data-unsaved="stay">Nie, wr\u00f3\u0107</button>' +
+      '<span class="dam-unsaved-close-spacer dam-dialog-actions__spacer" aria-hidden="true"></span>' +
+      '<button type="button" class="geex-btn geex-btn--primary" data-unsaved="save">Zapisz zmiany</button>' +
+      "</div></div>";
+    document.body.appendChild(wrap);
+    function finish(act) {
+      wrap.remove();
+      if (act === "discard" && typeof opts.onDiscard === "function") opts.onDiscard();
+      else if (act === "stay" && typeof opts.onStay === "function") opts.onStay();
+      else if (act === "save" && typeof opts.onSave === "function") opts.onSave();
+    }
+    wrap.addEventListener("click", function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest("[data-unsaved]") : null;
+      if (!btn) {
+        if (e.target === wrap) finish("stay");
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      finish(btn.getAttribute("data-unsaved"));
+    });
+    document.addEventListener(
+      "keydown",
+      function onEsc(e) {
+        if (e.key !== "Escape") return;
+        e.preventDefault();
+        e.stopPropagation();
+        document.removeEventListener("keydown", onEsc, true);
+        finish("stay");
+      },
+      true
+    );
+    var stayBtn = wrap.querySelector('[data-unsaved="stay"]');
+    if (stayBtn) stayBtn.focus();
+    return true;
+  }
+
+  function ensureUnsavedCloseCss() {
+    var css =
+      ".dam-unsaved-close-overlay{position:fixed;inset:0;z-index:13050;display:flex;" +
+      "align-items:center;justify-content:center;padding:24px;" +
+      "background:rgba(28,25,38,.45);backdrop-filter:blur(2px);}" +
+      ".dam-unsaved-close-card{max-width:560px;width:min(560px,96vw);background:#fff;border-radius:16px;" +
+      "box-shadow:0 18px 48px rgba(28,25,38,.22);padding:22px 22px 18px;border:1px solid rgba(70,66,85,.12);}" +
+      ".dam-unsaved-close-card h4{margin:0 0 8px;font-size:18px;font-weight:700;color:#2d2a37;}" +
+      ".dam-unsaved-close-card p{margin:0 0 18px;font-size:14px;line-height:1.45;color:#5c5668;}" +
+      /* Global: odrzuc/anuluj lewo, zatwierdz prawo, jeden rzad (jak .dam-dialog-actions). */
+      ".dam-unsaved-close-actions.dam-dialog-actions," +
+      ".dam-unsaved-close-actions{display:grid!important;" +
+      "grid-template-columns:auto auto 1fr auto!important;align-items:center;gap:8px;" +
+      "min-height:0;padding:0;margin:0;border:none;background:transparent;flex:none;}" +
+      ".dam-unsaved-close-actions > [data-unsaved=discard]{grid-column:1;justify-self:start;}" +
+      ".dam-unsaved-close-actions > [data-unsaved=stay]{grid-column:2;justify-self:start;}" +
+      ".dam-unsaved-close-actions > .dam-unsaved-close-spacer{grid-column:3;display:block!important;min-width:8px;}" +
+      ".dam-unsaved-close-actions > [data-unsaved=save]{grid-column:4;justify-self:end;}" +
+      ".dam-unsaved-close-actions .geex-btn{white-space:nowrap;flex:0 0 auto;margin:0;}";
+    var st = document.getElementById("damUnsavedCloseCss");
+    if (!st) {
+      st = document.createElement("style");
+      st.id = "damUnsavedCloseCss";
+      document.head.appendChild(st);
+    }
+    st.textContent = css;
+  }
+
   window.DamModalShared = {
     CARD_ZOOM_KEY: CARD_ZOOM_KEY,
     CARD_ZOOM_MIN: CARD_ZOOM_MIN,
@@ -425,6 +521,7 @@
     initZoomDock: initZoomDock,
     bindPreviewNav: bindPreviewNav,
     bindModalClose: bindModalClose,
+    confirmUnsavedClose: confirmUnsavedClose,
   };
 
   /**

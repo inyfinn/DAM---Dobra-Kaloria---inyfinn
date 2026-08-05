@@ -1,7 +1,17 @@
 # memory.md - DAM ETA (zasady trwale)
 
-Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-07-18**.  
-Workspace: **tylko `P:\DAM`**. Wykonawca: Composer 2.5 / Monday.
+Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-08-03**.  
+Workspace: **`P:\DAM`** = GIT_ROOT (`DAM.exe` + `.git`); kod = **`P:\DAM\bin`** (CONTENT_ROOT).  
+Wykonawca: Composer 2.5 / Monday.
+
+## Layout bin + launcher (2026-08-03)
+
+- Top-level: `P:\DAM\DAM.exe`, `P:\DAM\bin\`, `.git`.
+- `CONTENT_ROOT` = `P:\DAM\bin`; `GIT_ROOT` = `P:\DAM` (`runtime_config.py`).
+- Root `bin\` != `bin\tooling\bin\` (CLI cache).
+- Baza na razie: **tylko SQLite** (`bin\apps\desktop\data\dam-local.sqlite`); bez lokalnego Postgresa do powrotu Synology. Multi-PC live = PG na NAS (ADR-009), nie sync pliku SQLite.
+- Hybryda dysku (P2): daily edit preferuj lokalny SSD + `git push`; `P:\DAM` = lustro `git pull` / `scripts\ops\sync-to-p-dam.ps1`.
+- Skrypt: `bin\scripts\ops\sync-to-p-dam.ps1` (`-DryRun`, `-RebuildExe`). Nie robocopy /MIR tooling przy kazdym save.
 
 ## Polskie znaki UTF-8 — copy tylko w UTF-8 (2026-07-29)
 
@@ -1324,3 +1334,22 @@ Browser: zakaz Browser MCP navigate (zacina agenta) - headless CDP / curl.
 - **Indeks:** `re-enrich-branding-index.py` po zmianach (linked_product_id); `file-index` `linked_products` tylko gdy oba czlonki grupy aliasow istnieja w `products[]`.
 - **QA weryfikacja (circuit breaker):** zawsze `node scripts/qa/sim-assoc-dodaj.js` + `curl --max-time 5` smoke; browser/Playwright/CDP gdy daja dowod (smoke 5 s, jedna proba/hipoteze, abort ~10 s, screenshot+Read lub blocker).
 
+## Workspace D ONLY (2026-08-05)
+
+- **Kanoniczny root:** `D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn`
+- `GIT_ROOT` = ten folder; `CONTENT_ROOT` = `...\bin`; UI/bridge z `DAM.cmd` / `bin\apps\desktop\launch.py` (WEB_ROOT = `bin\apps\web`).
+- **Zakaz pracy na P:\DAM** jako primary — P moze byc lustrem NFS; edycje i runtime tylko D.
+- Folder OneDrive/FeRp: pin Always available (`attrib +P`); nie ufaj pustym cloud-placeholderom.
+
+## Dirty-close UX (2026-08-05) — HARD
+
+- TYLKO **Zatwierdz / Potwierdz / OK / Okay** zapisuje wybory bez pytania.
+- **X / Wstecz / klik poza / Esc** przy brudnym stanie → dialog **„Czy chcesz porzucic zmiany?”** z 3 przyciskami: **Odrzuc** | **Nie, wroc** | **Zapisz zmiany**.
+- Helper: `DamModalShared.confirmUnsavedClose` (`dam-modal-shared.js`); wired w pickerze assoc (`dam-assoc-edit.js`) + etykiety dashboard dirty.
+- Zapisz zmiany = ten sam commit co Zatwierdz w danym kontekscie.
+
+## OCR gate (2026-08-05)
+
+- Golden `file-index.json` sha `513377b61b710cf9…` / size 7760231 **zginal** z WS przy cloud-wipe; aktualnie na D: size **7744358** hash `6cc609b519e8e20a…` (drift bridge).
+- `branding-index.json` size **361381875** OK.
+- Manifest: `bin\_restore_snapshots\session-20260804-…\manifest\data-pre.json` (lub `_restore_snapshots` po copy). Nie nadpisuj OCR z git archive.

@@ -273,7 +273,7 @@
    * Hero karty w widoku Wszystko: preferuj rewizje Z wizka.
    * Kolejnosc: is_latest+thumb > thumb > has_viz > pierwszy (tylko gdy caly produkt bez wizki).
    */
-  function pickCardHero(items) {
+  function pickCardHero(items, preferProductId) {
     if (!items || !items.length) return null;
     var withViz = items.filter(itemHasViz);
     if (!withViz.length) return items[0];
@@ -281,6 +281,13 @@
       return !!v.is_latest;
     });
     var pool = latest.length ? latest : withViz;
+    var preferPid = String(preferProductId || "").trim();
+    if (preferPid) {
+      var hostPool = pool.filter(function (v) {
+        return String((v && v.product_id) || "").trim() === preferPid;
+      });
+      if (hostPool.length) pool = hostPool;
+    }
     pool.sort(function (a, b) {
       var ad = revisionFolderDateScore(a);
       var bd = revisionFolderDateScore(b);
@@ -381,15 +388,23 @@
     if (window.DamLabels && typeof window.DamLabels.cleanProductDisplayName === "function") {
       name = window.DamLabels.cleanProductDisplayName(name) || name;
     }
+    if (window.DamLabels && typeof window.DamLabels.localizedProductTitle === "function") {
+      name = window.DamLabels.localizedProductTitle(name, meta && meta.brand) || name;
+    }
     return name;
   }
 
   /** Tytul modala = karta produktu (group.pid), nie product_name z merged linked folder. */
   function modalProductIdForGroup(group, first) {
     var rawPid = String((group && group.pid) || "").trim();
+    var firstPid = String((first && first.product_id) || "").trim();
+    if (!rawPid && !firstPid) return "";
+    var hostResolved = rawPid ? resolveBrandingProductId(rawPid, "") : "";
+    if (hostResolved && productMeta(hostResolved)) {
+      if (firstPid && firstPid !== hostResolved && productMeta(firstPid)) return firstPid;
+      return hostResolved;
+    }
     if (rawPid) {
-      var hostResolved = resolveBrandingProductId(rawPid, "");
-      if (hostResolved && productMeta(hostResolved)) return hostResolved;
       var hostMeta = productMeta(rawPid);
       var idxFromHost =
         (hostMeta && (hostMeta.index || (hostMeta.index_bases && hostMeta.index_bases[0]))) || "";
@@ -400,11 +415,14 @@
         "";
       if (idx) {
         var byIdx = resolveBrandingProductId("", idx);
-        if (byIdx && productMeta(byIdx)) return byIdx;
+        if (byIdx && productMeta(byIdx)) {
+          if (firstPid && firstPid !== byIdx && productMeta(firstPid)) return firstPid;
+          return byIdx;
+        }
       }
+      if (firstPid && productMeta(firstPid)) return firstPid;
       return hostResolved || rawPid;
     }
-    var firstPid = String((first && first.product_id) || "").trim();
     var resolved = firstPid ? resolveBrandingProductId(firstPid, "") : "";
     if (resolved && productMeta(resolved)) return resolved;
     var idx2 = displayIndex(first) || String((first && first.index_base) || "").split(".")[0] || "";
@@ -1550,17 +1568,34 @@
       .map(function (v, i) {
         if (!v) return null;
         var id = String(v.id || v.path || v.revision_path || "viz-" + i);
-        var label = variantChipLabel(v, null) || v.product_name || id;
+        var productTitle = String(v.product_name || "").trim();
+        if (!productTitle && v.product_id && typeof productMeta === "function") {
+          var pm = productMeta(v.product_id);
+          if (pm) productTitle = String(pm.display_name || pm.name || "").trim();
+        }
+        if (window.DamLabels && typeof window.DamLabels.cleanProductDisplayName === "function") {
+          productTitle = window.DamLabels.cleanProductDisplayName(productTitle) || productTitle;
+        }
+        if (window.DamLabels && typeof window.DamLabels.localizedProductTitle === "function") {
+          productTitle =
+            window.DamLabels.localizedProductTitle(productTitle, v.brand) || productTitle;
+        }
+        /* Chip PL·indeks zostaje na stripie; w pickerze tytul = nazwa produktu. */
+        var chip = variantChipLabel(v, null) || "";
+        var label = productTitle || chip || id;
         var idx = v.index_base || v.index || v.product_index || "";
         return {
           id: id,
           variant_key: productVariantKey(v),
           name: label,
           label: label,
+          product_name: productTitle,
+          productName: productTitle,
           path: v.path || v.revision_path || "",
           thumb: v.thumb_url || "",
           thumb_url: v.thumb_url || "",
           index: idx,
+          brand: v.brand || "",
           lang: v.lang || "",
           langs: v.lang ? [v.lang] : [],
         };
@@ -2723,8 +2758,10 @@
     mergeLinkedVariantsIntoItems(items, (group && group.pid) || "");
     items = filterUnlinkedVariants(items, (group && group.pid) || "");
     global._damVizLastModalItems = items.length;
-    var first = pickCardHero(items) || items[0];
+    var modalProductId = modalProductIdForGroup(group, items[0]);
+    var first = pickCardHero(items, modalProductId) || items[0];
     if (!first) return;
+    modalProductId = modalProductIdForGroup(group, first);
     var productViewMode = !opts.initialVariantKey;
     var activeIdx = Math.max(0, items.indexOf(first));
     if (opts.initialVariantKey) {
@@ -2737,7 +2774,6 @@
         return false;
       });
     }
-    var modalProductId = modalProductIdForGroup(group, first);
     var productName = productLevelDisplayName(modalProductId, null);
     var brand = first.brand || "DK";
     var syEnabled = localStorage.getItem("dam_synology_enabled") !== "false";
@@ -3660,12 +3696,30 @@
     function syncModalTitleForVariant(v) {
       var titleEl = document.getElementById("damVizModalTitle");
       if (!titleEl) return;
-      /* Host card (group.pid / modalProductId) — never linked variant product_id/product_name. */
-      var hostPid = String(modalProductId || "").trim();
-      var name = productLevelDisplayName(hostPid, productName);
+      var vItem = v || items[activeIdx] || first;
+      var hostPid = productViewMode
+        ? String(modalProductId || "").trim()
+        : String((vItem && vItem.product_id) || modalProductId || "").trim();
+      var meta = hostPid ? productMeta(hostPid) : null;
+      var rawName =
+        (meta && (meta.display_name || meta.name)) ||
+        (vItem && vItem.product_name) ||
+        productName ||
+        hostPid;
+      if (window.DamLabels && typeof window.DamLabels.cleanProductDisplayName === "function") {
+        rawName = window.DamLabels.cleanProductDisplayName(rawName) || rawName;
+      }
+      var name =
+        window.DamLabels && typeof window.DamLabels.localizedProductTitle === "function"
+          ? window.DamLabels.localizedProductTitle(rawName, (meta && meta.brand) || (vItem && vItem.brand) || brand)
+          : rawName;
       var plHtml =
         window.DamLabels && typeof window.DamLabels.productNamePlMarkup === "function"
-          ? window.DamLabels.productNamePlMarkup(name, (v && v.brand) || brand, esc)
+          ? window.DamLabels.productNamePlMarkup(
+              rawName,
+              (meta && meta.brand) || (vItem && vItem.brand) || brand,
+              esc
+            )
           : "";
       titleEl.innerHTML = esc(name) + plHtml;
     }

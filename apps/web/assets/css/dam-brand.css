@@ -2451,6 +2451,18 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-assoc-edit-popover__pinned .dam-search-hit__check {
   grid-area: check;
   margin: 0;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 20px !important;
+  box-sizing: border-box;
+}
+.dam-assoc-edit-popover__list .dam-assoc-edit-popover__opt,
+.dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt {
+  grid-template-columns: 20px 60px minmax(0, 1fr);
+}
+.dam-assoc-edit-popover__check-label {
+  display: none !important;
 }
 .dam-assoc-edit-popover__list .dam-assoc-edit-popover__expand,
 .dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__expand {
@@ -4400,7 +4412,10 @@ body::-webkit-scrollbar-button,
   transform: none;
 }
 
-/* Viz / Branding: bez full-bleed 100vw — sticky chrome nie wchodzi pod sidebar */
+/* Viz / Branding: bez full-bleed 100vw — sticky chrome nie wchodzi pod sidebar.
+   HARD: display:contents na .dam-global-search-block NIE zmienia selektorow DOM —
+   trzeba tez sciezki ... > .dam-global-search-block > .dam-viz-secondary-filters
+   (inakzej margin-left: calc(50% - 50vw) wchodzi pod sidebar). */
 .geex-content > .dam-global-search-block > .dam-explorer-toolbar,
 .geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar {
   margin-left: 0;
@@ -4419,14 +4434,18 @@ body::-webkit-scrollbar-button,
 }
 .geex-content > .dam-viz-secondary-filters,
 .geex-content__section-wrapper > .dam-viz-secondary-filters,
+.geex-content > .dam-global-search-block > .dam-viz-secondary-filters,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-viz-secondary-filters,
 .geex-content > .dam-projects-grid-toolbar {
-  margin-left: 0;
-  margin-right: 0;
-  padding-left: 0;
-  padding-right: 0;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 20px;
+  padding-right: 24px;
 }
 .geex-content > .dam-viz-secondary-filters::before,
 .geex-content__section-wrapper > .dam-viz-secondary-filters::before,
+.geex-content > .dam-global-search-block > .dam-viz-secondary-filters::before,
+.geex-content__section-wrapper > .dam-global-search-block > .dam-viz-secondary-filters::before,
 .geex-content > .dam-projects-grid-toolbar::before {
   width: 100%;
   left: 0;
@@ -6485,6 +6504,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   box-shadow: 0 0 0 2px rgba(40, 199, 111, 0.1);
 }
 
+
+
 .dam-carrier-card--outdated {
   border-color: rgba(108, 117, 125, 0.28);
   background: linear-gradient(180deg, #fafafa 0%, #f8f7fb 100%);
@@ -6502,6 +6523,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-carrier-card--flat + .dam-carrier-card--flat {
   margin-top: 10px;
 }
+
 
 /* Pasek nosnika: CSS Grid stref body | meta | end (RWD przez @container) */
 .dam-carrier-toggle-row {
