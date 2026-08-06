@@ -1364,3 +1364,11 @@ avigate/cdp hang >10s = **abort natychmiast** (nie czekac)
 ode bin/scripts/qa/dam-pakiet-cdp-smoke.js
 - Hang MCP != serwer down (smoke curl 5s najpierw)
 
+
+## Branding head + quiz + tytuly (2026-08-06)
+
+- `branding-grid-head` NIE moze brac assetow z pustym `asset_role` (PDF FIRMOWE) — tylko HEAD_ROLES + graphic media; klient odrzuca head z wiekszoscia dokumentow.
+- Tytul karty Branding = nazwa pliku, nie folder kubelek `01- CHLODZONE` / `02 – SLIDERY…`.
+- Quiz skojarzen: przycisk tylko admin+toggle; pusty pending → fallback z siatki bez linkow + jasny copy.
+- Viz: thumbs Datesy 690000x istnieja w `data/thumbs`; onerror → fallback `/media`.
+

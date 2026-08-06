@@ -1316,6 +1316,22 @@
     return GENERIC_FOLDER_RE.test(String(name || "").trim());
   }
 
+  /** Foldery typu "01- CHŁODZONE" / "02 – SLIDERY…" — sortowanie katalogu, nie tytuł karty. */
+  function isNumberedBucketFolder(name) {
+    var n = String(name || "").trim();
+    if (!n) return false;
+    return /^\d{1,3}\s*[-–—.]\s*\S/.test(n) || /^\d{1,3}\s+[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]/.test(n);
+  }
+
+  function isWeakFolderLabel(name) {
+    var n = String(name || "").trim();
+    if (!n) return true;
+    if (isGenericFolderName(n) || isTechnicalFolderName(n)) return true;
+    if (isNumberedBucketFolder(n)) return true;
+    if (/^(backup|www|ikony|statyki)$/i.test(n)) return true;
+    return false;
+  }
+
   function meaningfulFolderLabel(path) {
     var parts = String(path || "")
       .replace(/\\/g, "/")
@@ -1323,7 +1339,12 @@
       .filter(Boolean);
     parts.pop();
     var depth = 0;
-    while (parts.length > 0 && depth < 8 && isTechnicalFolderName(parts[parts.length - 1])) {
+    while (
+      parts.length > 0 &&
+      depth < 8 &&
+      (isTechnicalFolderName(parts[parts.length - 1]) ||
+        isNumberedBucketFolder(parts[parts.length - 1]))
+    ) {
       parts.pop();
       depth++;
     }
@@ -1403,23 +1424,27 @@
     if (!primary) return "Materiał";
     var campTitle = humanizeCampaignLabel(primary.campaign_id || primary.campaign_name);
     if (campTitle) return campTitle;
+    /* Najpierw nazwa pliku — foldery (01- CHŁODZONE) to tylko kubełki sortujące. */
+    var smart = smartTitleFromFilename(primary.name);
+    if (smart) return smart;
+    var human = humanizeMarketingFilename(primary.name);
+    if (human && human.length >= 3 && !isWeakFolderLabel(human)) {
+      if (human.length > 42) return human.slice(0, 40) + "…";
+      return human;
+    }
     var tags = (primary.appearance_tags || []).filter(function (t) {
       return !isGenericAppearanceTag(t);
     });
     if (tags.length) return tags.slice(0, 2).join(" · ");
     var folderLabel = meaningfulFolderLabel(primary.path);
-    if (folderLabel && !isTechnicalFolderName(folderLabel) && !isGenericFolderName(folderLabel)) {
+    if (folderLabel && !isWeakFolderLabel(folderLabel)) {
       return cleanFolderName(folderLabel);
     }
-    var smart = smartTitleFromFilename(primary.name);
-    if (smart) return smart;
-    var human = humanizeMarketingFilename(primary.name);
-    if (human.length > 42) {
-      var short = smartTitleFromFilename(primary.name);
-      if (short) return short;
-      return human.slice(0, 40) + "…";
+    if (human) {
+      if (human.length > 42) return human.slice(0, 40) + "…";
+      return human;
     }
-    return human;
+    return primary.name || "Materiał";
   }
 
   function extractYearFromAsset(a) {
@@ -2806,6 +2831,26 @@
       return true;
     }
 
+    /** Odrzuc head z PDF/DOC (stary bug: empty role) — inaczej podwójne ładowanie „firmowe” → branding. */
+    function isUsableInstantHead(data) {
+      var assets = (data && data.assets) || [];
+      if (assets.length < 40) return false;
+      var sample = assets.slice(0, 60);
+      var graphic = 0;
+      var docish = 0;
+      for (var i = 0; i < sample.length; i++) {
+        var a = sample[i];
+        var mt = String((a && a.media_type) || "").toLowerCase();
+        var nm = String((a && (a.name || a.path)) || "").toLowerCase();
+        if (mt === "image" || mt === "raster" || mt === "vector") graphic++;
+        else if (/\.(png|jpe?g|webp|gif|svg)$/.test(nm)) graphic++;
+        if (mt === "document" || /\.(pdf|docx?|pptx?|xlsx?)$/.test(nm)) docish++;
+      }
+      if (docish > graphic * 0.55) return false;
+      if (graphic < Math.min(20, sample.length * 0.35)) return false;
+      return true;
+    }
+
     // Instant: head first (small), then hydrate full slim in background.
     for (var h = 0; h < headUrls.length; h++) {
       try {
@@ -2816,6 +2861,10 @@
         }
         setBootStatus("Przygotowanie kart…");
         var head = await hr.json();
+        if (!isUsableInstantHead(head)) {
+          lastErr = new Error("head_not_graphic");
+          continue;
+        }
         if (adopt(head, true)) {
           scheduleFullGridHydrate(fullUrls);
           return index;

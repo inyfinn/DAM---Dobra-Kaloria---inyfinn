@@ -1,8 +1,38 @@
 {
-  "version": 16,
+  "version": 17,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-08-06T10:30:00+02:00",
+  "updated_at": "2026-08-06T15:35:00+02:00",
   "instructions": [
+    {
+      "id": "branding.quiz_viz_handoff_20260806",
+      "priority": "critical",
+      "title_pl": "Handoff Branding/Quiz/Viz — nastepna wiadomosc = naprawa",
+      "category": "branding",
+      "updated_at": "2026-08-06",
+      "must": [
+        "Przed pracą nad Branding/Quiz/Viz przeczytaj HANDOFF-BRANDING-QUIZ-VIZ.md (GIT_ROOT).",
+        "Jakakolwiek wiadomość użytkownika o Brandingu, Quizie skojarzeń, Wizualizacjach, miniaturach Datesy, mapowaniu skojarzeń lub „napraw” = kontynuuj listę NIE OK z handoff (runtime QA screenshot, pipeline pending assoc, thumbs jeśli nadal Brak miniatury).",
+        "OK już w kodzie: head grafik (nie PDF empty-role), tytuły z nazwy pliku nie folderu-kubełka, quiz tylko admin+toggle, fallback kolejki z siatki, viz thumb onerror→/media.",
+        "Nie zamykaj jako done bez Ctrl+F5 + screenshot+Read Branding i Viz."
+      ],
+      "must_not": [
+        "Uznawać handoff za zamknięty tylko dlatego że kod jest w git.",
+        "Ładować fat branding-index.json na hot path UI.",
+        "Pokazywać Quiz skojarzeń użytkownikowi bez roli admin + dam_admin_mode=1.",
+        "Używać nazwy folderu numerowanego (01- CHŁODZONE) jako tytułu karty Branding."
+      ],
+      "related_code": [
+        "HANDOFF-BRANDING-QUIZ-VIZ.md",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-assoc-quiz.js",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/scripts/build-branding-grid-index.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-06: częściowy fix Branding/Quiz/Viz. Następny agent naprawia NIE OK z HANDOFF-BRANDING-QUIZ-VIZ.md."
+    },
     {
       "id": "workspace.layout_bin",
       "priority": "critical",

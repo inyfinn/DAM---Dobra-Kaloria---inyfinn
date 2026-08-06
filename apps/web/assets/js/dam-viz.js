@@ -767,7 +767,18 @@
       var live = mediaPreviewUrl(v.path);
       if (live) return live;
     }
-    return v.thumb_url || mediaPreviewUrl(v.path) || "";
+    var t = v.thumb_url ? String(v.thumb_url) : "";
+    if (t) {
+      /* Relatywne data/thumbs/… z file-index — zawsze z roota UI, nie z podścieżki. */
+      if (t.indexOf("data/thumbs/") === 0 || t.indexOf("./data/thumbs/") === 0) {
+        t = t.replace(/^\.\//, "");
+        if (t.charAt(0) !== "/" && t.indexOf("http") !== 0) {
+          /* ok relative to page */
+        }
+      }
+      return t;
+    }
+    return mediaPreviewUrl(v.path) || "";
   }
 
   function normFolderPath(p) {
@@ -4533,6 +4544,16 @@
   /* ------------------------------------------------------------------ */
 
   function onThumbError(img) {
+    var tried = img.getAttribute("data-thumb-fallback");
+    if (!tried) {
+      var path = img.getAttribute("data-media-path") || "";
+      var live = path ? mediaPreviewUrl(path) : "";
+      if (live && live !== img.getAttribute("src")) {
+        img.setAttribute("data-thumb-fallback", "1");
+        img.src = live;
+        return;
+      }
+    }
     img.onerror = null;
     img.src = PLACEHOLDER_SVG;
     img.classList.add("dam-viz-thumb__img--placeholder");
@@ -4543,7 +4564,16 @@
     ensureVizGridCardCss();
     var items = group.items.map(applyOverrideToItem);
     var first = items[0];
-    var thumb = cardThumbSrc(first);
+    var thumbPick = null;
+    for (var ti = 0; ti < items.length; ti++) {
+      var cand = cardThumbSrc(items[ti]);
+      if (cand) {
+        thumbPick = cand;
+        first = items[ti];
+        break;
+      }
+    }
+    var thumb = thumbPick || cardThumbSrc(first);
     var brand = first.brand || "DK";
     var uniq = uniqueModalVariants(items);
     var variantReps = productVariantRepresentatives(items);
@@ -4701,7 +4731,11 @@
           (noViz
             ? '<div class="dam-viz-thumb__noviz"><i class="uil uil-image-slash"></i><span>Brak wizualizacji</span></div>'
             : thumb
-            ? '<img class="dam-viz-thumb__img" src="' + esc(thumb) + '" alt="" loading="lazy" onerror="window.damVizThumbError(this)">'
+            ? '<img class="dam-viz-thumb__img" src="' +
+              esc(thumb) +
+              '" alt="" loading="lazy" data-media-path="' +
+              esc(first.path || "") +
+              '" onerror="window.damVizThumbError(this)">'
             : '<img class="dam-viz-thumb__img dam-viz-thumb__img--placeholder" src="' + PLACEHOLDER_SVG.replace(/"/g, "&quot;") + '" alt="">') +
         '</div>' +
         '<div class="dam-viz-card__body">' +
