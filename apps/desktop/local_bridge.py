@@ -40,6 +40,9 @@ Endpoints:
   GET  /folder-browse?path=...&mode=assets  foldery + pliki (AI/PDF/PNG...) do wskazania ELEMENTY
   POST /elements-link  reczne powiazanie folderu/plikow Elementy -> apps/web/data/elements-overrides.json
   POST /viz-flag  demo/hidden/manual -> apps/web/data/viz-flags.json
+  GET  /thumb-cache?path=&profile=grid  AVIF/JPG miniatura z PAMIEC-PODRECZNA (on-demand encode)
+  POST /thumb-cache/warm  {"paths":[...],"profile":"grid"}  podgrzewanie cache
+  GET  /thumb-cache/status  stan katalogu pamieci podrecznej
   POST /thumb-override  wybor miniatury -> apps/web/data/thumb-overrides.json
   POST /audit    {"action","user","path","detail",...}
   GET  /audit?limit=100
@@ -69,6 +72,11 @@ from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
+
+# Embeddable CPython (bin/runtime/win/python): python*._pth omits script dir / cwd.
+_DESKTOP_BOOT = Path(__file__).resolve().parent
+if str(_DESKTOP_BOOT) not in sys.path:
+    sys.path.insert(0, str(_DESKTOP_BOOT))
 
 from auth_store import (
     init_db as auth_init_db,
@@ -108,37 +116,21 @@ except ImportError:
     invoice_erp_mod = None  # type: ignore
 
 try:
-    import invoice_mail as invoice_mail_mod
+    import dam_thumb_cache
 except ImportError:
-    invoice_mail_mod = None  # type: ignore
+    dam_thumb_cache = None  # type: ignore
 
 try:
-    import dam_redis
+    import branding_asset_routes
 except ImportError:
-    dam_redis = None  # type: ignore
-
-try:
-    import dam_path_resolve as dam_path_resolve_mod
-except ImportError:
-    dam_path_resolve_mod = None  # type: ignore
-
-try:
-    import dam_file_availability as dam_file_availability_mod
-except ImportError:
-    dam_file_availability_mod = None  # type: ignore
-
-try:
-    import dam_thumb_cache as dam_thumb_cache_mod
-except ImportError:
-    dam_thumb_cache_mod = None  # type: ignore
+    branding_asset_routes = None  # type: ignore
 
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
-BRIDGE_API_VERSION = 7
+BRIDGE_API_VERSION = 6
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
-DEBUG_SESSION_LOG = WEB_ROOT.parent.parent / "debug-0f6c29.log"
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
 INDEX_FILE = WEB_ROOT / "data" / "file-index.json"
 # Inyfinn Image / Photo Resizer (GUI launcher + opcjonalny CLI w BIN/dev)
@@ -155,11 +147,11 @@ USER_PREFS_FILE = DESKTOP_DIR / "data" / "user-prefs.json"
 SYNOLOGY_SCRIPT = DESKTOP_DIR / "synology_get_link.ps1"
 REQUIRED_ROOT_FOLDERS = ("-- ARCHIWUM --", "- EKSPORT", "- POLSKA")
 CORS_ORIGIN = os.environ.get("DAM_UI_ORIGIN", "http://127.0.0.1:8765")
-# Kolejnosc: ten komputer (X:) -> staging D: -> legacy root M:
+# Kolejnosc: M: (komputer zrodlowy Synology) -> X:/Marketing -> staging D:
 MARKETING_CANDIDATES = (
+    Path("M:/"),
     Path("X:/Marketing"),
     Path("D:/Marketing"),
-    Path("M:/"),
 )
 
 _index_lock = threading.Lock()
@@ -1455,13 +1447,6 @@ _INDEX_RE = re.compile(r"^(FOL\d+|\d{5,9})(\.\d{2})?$", re.IGNORECASE)
 
 
 def _is_under_marketing(path: Path) -> bool:
-    if dam_path_resolve_mod is not None:
-        return dam_path_resolve_mod.is_under_marketing(
-            path,
-            resolve_base_path=resolve_base_path_for_current_device,
-            marketing_candidates=MARKETING_CANDIDATES,
-            machine_config_path=MACHINE_CONFIG,
-        )
     try:
         resolved = path.resolve()
     except OSError:
@@ -2125,303 +2110,14 @@ BULK_PACKAGING_FILE = WEB_ROOT / "data" / "bulk-packaging.json"
 SHOP_CATEGORIES_FILE = WEB_ROOT / "data" / "shop-categories.json"
 BRANDING_INDEX_FILE = WEB_ROOT / "data" / "branding-index.json"
 BRANDING_SEARCH_INDEX_FILE = WEB_ROOT / "data" / "branding-search-index.json"
-BR_MIGRATION_MAPPING_FILE = WEB_ROOT / "data" / "br-migration-mapping.json"
-_BRANDING_SEARCH_INDEX_MEM: dict | None = None
-_BR_MIGRATION_MAPPING_MEM: dict[str, str] | None = None
-
-
-def _load_br_migration_mapping() -> dict[str, str]:
-    """Legacy br-* -> marketing ID (F-1). Pusty gdy brak pliku."""
-    global _BR_MIGRATION_MAPPING_MEM
-    if _BR_MIGRATION_MAPPING_MEM is not None:
-        return _BR_MIGRATION_MAPPING_MEM
-    raw = _load_json(BR_MIGRATION_MAPPING_FILE, None)
-    mapping: dict[str, str] = {}
-    if isinstance(raw, dict):
-        m = raw.get("mapping")
-        if isinstance(m, dict):
-            mapping = {str(k): str(v) for k, v in m.items() if k and v}
-    _BR_MIGRATION_MAPPING_MEM = mapping
-    return mapping
-
-
-def _resolve_branding_asset_id(asset_id: str) -> str:
-    """Kanoniczny marketing ID; legacy br-* przez mapping (okres przejsciowy)."""
-    aid = str(asset_id or "").strip()
-    if not aid:
-        return aid
-    if re.match(r"^br-\d+$", aid, re.I):
-        mapped = _load_br_migration_mapping().get(aid) or _load_br_migration_mapping().get(
-            aid.lower()
-        )
-        if mapped:
-            return mapped
-    return aid
-
-
-def _find_branding_asset(asset_id: str, assets: list) -> dict | None:
-    """Szukaj assetu po marketing ID lub legacy br-* (mapping + indeks)."""
-    aid = str(asset_id or "").strip()
-    if not aid:
-        return None
-    canonical = _resolve_branding_asset_id(aid)
-    for a in assets:
-        if not isinstance(a, dict):
-            continue
-        eid = str(a.get("id") or "")
-        if eid == canonical or eid == aid:
-            return a
-    # Odwrotne: query marketing, indeks juz zmigrowany
-    if canonical != aid:
-        for a in assets:
-            if isinstance(a, dict) and str(a.get("id") or "") == canonical:
-                return a
-    return None
-
-
-def _branding_search_index_mem() -> dict:
-    global _BRANDING_SEARCH_INDEX_MEM
-    if _BRANDING_SEARCH_INDEX_MEM is None:
-        loaded = _load_json(BRANDING_SEARCH_INDEX_FILE, None)
-        _BRANDING_SEARCH_INDEX_MEM = loaded if isinstance(loaded, dict) else {"entries": []}
-    return _BRANDING_SEARCH_INDEX_MEM
-
-
-def _branding_picker_title(entry: dict) -> str:
-    blob = str(entry.get("search_blob") or "")
-    low = blob.lower()
-    sep = low.find(" x:")
-    if sep > 0:
-        return blob[:sep].strip()
-    path = str(entry.get("path") or "").replace("\\", "/")
-    if path:
-        base = path.rsplit("/", 1)[-1]
-        if base:
-            dot = base.rfind(".")
-            if dot > 0:
-                return base[:dot]
-            return base
-    return str(entry.get("id") or "")
-
-
-def _branding_picker_is_source_path(path: str) -> bool:
-    """PSD/PSB/AI/PDF — zrodla edycyjne, nie deliverable w pickerze B warianty."""
-    p = str(path or "").replace("\\", "/").lower()
-    if not p:
-        return False
-    dot = p.rfind(".")
-    if dot < 0:
-        return False
-    ext = p[dot + 1:]
-    return ext in {"psd", "psb", "ai", "indd", "eps", "pdf"}
-
-
-def _light_branding_picker_entry(entry: dict) -> dict:
-    path = str(entry.get("path") or "").replace("\\", "/")
-    title = _branding_picker_title(entry)
-    thumb_url = ""
-    if path and path.lower().endswith((".jpg", ".jpeg", ".png", ".webp", ".gif", ".tif", ".tiff")):
-        from urllib.parse import quote
-
-        thumb_url = "/media?path=" + quote(path) + "&preview=1"
-    blob = str(entry.get("search_blob") or "")
-    if len(blob) > 240:
-        blob = blob[:240]
-    return {
-        "id": entry.get("id") or "",
-        "name": title,
-        "title": title,
-        "path": path,
-        "search_blob": blob,
-        "thumb_url": thumb_url,
-    }
-
-
-def resolve_branding_search_picker(query: str, limit: int = 80, include_ids: list | None = None) -> dict:
-    """Light picker search — never ship full branding-search-index (~40MB) to browser."""
-    data = _branding_search_index_mem()
-    entries = data.get("entries") if isinstance(data.get("entries"), list) else []
-    limit = max(1, min(int(limit or 80), 80))
-    q = str(query or "").strip().lower()
-    include_ids = [str(x).strip() for x in (include_ids or []) if str(x).strip()]
-    out: list[dict] = []
-    seen: set[str] = set()
-    # Resolve includes without building a full by_id map of 50k+ entries when possible.
-    if include_ids:
-        want = set(include_ids)
-        for entry in entries:
-            if not want:
-                break
-            if not isinstance(entry, dict):
-                continue
-            eid = str(entry.get("id") or "").strip()
-            if eid in want and eid not in seen:
-                if _branding_picker_is_source_path(str(entry.get("path") or "")):
-                    want.discard(eid)
-                    continue
-                seen.add(eid)
-                want.discard(eid)
-                out.append(_light_branding_picker_entry(entry))
-    # Empty query: return includes only (do NOT fill to limit from index head).
-    if not q:
-        return {"ok": True, "entries": out, "count": len(out), "query": q}
-    for entry in entries:
-        if len(out) >= limit:
-            break
-        if not isinstance(entry, dict):
-            continue
-        eid = str(entry.get("id") or "").strip()
-        if not eid or eid in seen:
-            continue
-        if _branding_picker_is_source_path(str(entry.get("path") or "")):
-            continue
-        blob = str(entry.get("search_blob") or eid or entry.get("path") or "").lower()
-        if not _branding_picker_query_matches(eid, blob, q):
-            continue
-        seen.add(eid)
-        out.append(_light_branding_picker_entry(entry))
-    return {"ok": True, "entries": out, "count": len(out), "query": q}
-
-
-def _branding_digits_only(s) -> str:
-    return re.sub(r"\D", "", str(s or ""))
-
-
-def _branding_marketing_core_digits(br_id: str) -> list[str]:
-    """Cores M-{TYP}{typeNum}{brDigits[1:]} — szukanie 405515 / 249510 bez pełnego indeksu."""
-    m = re.match(r"^br-(\d+)$", str(br_id or "").strip(), re.I)
-    if not m:
-        return []
-    digits = m.group(1)
-    if len(digits) < 2:
-        return [digits]
-    cores = [digits]
-    for type_num in range(1, 13):
-        cores.append(str(type_num) + digits[1:])
-    return cores
-
-
-def _branding_picker_query_matches(eid: str, blob: str, query: str) -> bool:
-    q = str(query or "").strip().lower()
-    if not q:
-        return False
-    if q in blob or q in str(eid or "").lower():
-        return True
-    qd = _branding_digits_only(q)
-    if len(qd) < 4:
-        return False
-    if qd in _branding_digits_only(blob):
-        return True
-    id_digits = _branding_digits_only(eid)
-    if qd in id_digits:
-        return True
-    for core in _branding_marketing_core_digits(eid):
-        if qd in core or core in qd:
-            return True
-    # M-IMG249510-07-26 / IMG249510 → core 249510
-    mk = re.match(r"^(?:m[-_])?([a-z]{2,8})[_-]?(\d{5,6})", q.replace(" ", ""), re.I)
-    if mk:
-        want_core = mk.group(2)
-        if want_core in _branding_digits_only(blob) or want_core in blob:
-            return True
-        for core in _branding_marketing_core_digits(eid):
-            if want_core in core or core in want_core:
-                return True
-    return False
-
-
-def _branding_is_archived(a: dict) -> bool:
-    if not isinstance(a, dict):
-        return False
-    if "ARCHIWUM" in (a.get("tags") or []) or a.get("is_archive"):
-        return True
-    return "ARCHIWUM" in str(a.get("path") or "").upper()
-
-
-def _branding_asset_matches(a: dict, product_id: str, tokens: list) -> bool:
-    """Port 1:1 z dam-product-correlation.js brandingAssetMatches (UI nie parsuje 388MB)."""
-    ids = list(a.get("linked_product_ids") or []) + list(a.get("product_ids") or [])
-    if product_id and product_id in ids:
-        return True
-    sku = str(a.get("sku") or "")
-    if sku:
-        for t in tokens:
-            if not t:
-                continue
-            if sku == t or sku.startswith(t) or t.startswith(sku):
-                return True
-    hay = (
-        str(a.get("path") or "")
-        + " "
-        + str(a.get("name") or "")
-        + " "
-        + str(a.get("search_blob") or "")
-    ).lower()
-    for tok in tokens:
-        tl = str(tok or "").lower()
-        if len(tl) >= 6 and tl in hay:
-            return True
-        td = _branding_digits_only(tl)
-        if len(td) >= 6 and td in hay:
-            return True
-    return False
-
-
-def resolve_branding_for_product(
-    product_id: str,
-    tokens: list,
-    limit: int = 400,
-    include_archive: bool = False,
-    sort: str = "",
-) -> dict:
-    """Filtr pelnego branding-index po stronie bridge — UI dostaje tylko dopasowane assety.
-
-    Bez product_id/tokens: zwraca wszystkie nie-archiwalne (dla sort=recent widget dashboardu).
-    """
-    data = _load_json(BRANDING_INDEX_FILE, None)
-    assets = (
-        data.get("assets")
-        if isinstance(data, dict) and isinstance(data.get("assets"), list)
-        else []
-    )
-    limit = max(1, min(int(limit or 400), 2000))
-    tokens = [str(t).strip() for t in (tokens or []) if str(t).strip()]
-    product_id = str(product_id or "").strip()
-    has_filter = bool(product_id or tokens)
-    out: list = []
-    for a in assets:
-        if not isinstance(a, dict):
-            continue
-        if not include_archive and _branding_is_archived(a):
-            continue
-        if has_filter and not _branding_asset_matches(a, product_id, tokens):
-            continue
-        out.append(a)
-        if not sort and len(out) >= limit:
-            break
-    if sort == "recent":
-        out.sort(
-            key=lambda x: str(x.get("mtime") or x.get("modified") or x.get("date") or ""),
-            reverse=True,
-        )
-    out = out[:limit]
-    return {"ok": True, "assets": out, "count": len(out), "product_id": product_id}
-
-
 BRANDING_OVERRIDES_FILE = WEB_ROOT / "data" / "branding-metadata-overrides.json"
 BRANDING_ASSOC_OVERRIDES_FILE = WEB_ROOT / "data" / "branding-associations-overrides.json"
 BRANDING_STATUS_FILE = WEB_ROOT / "data" / "branding-build-status.json"
 BRANDING_RECOGNIZE_STATUS_FILE = WEB_ROOT / "data" / "branding-recognize-status.json"
 WYKROJNIKI_REGISTRY_FILE = WEB_ROOT / "data" / "wykrojniki-registry.json"
-SLEEVE_STOCK_FILE = WEB_ROOT / "data" / "sleeve-stock.json"
-PRODUCTION_COST_CATALOG_FILE = WEB_ROOT / "data" / "production-cost-catalog.json"
-DEFAULT_SLEEVE_STOCK_XLSX = Path(
-    r"X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/STANY RĘKAWKÓW 2026.xlsx"
-)
 BUILD_BRANDING_INDEX = WEB_ROOT / "scripts" / "build-branding-index.py"
 FETCH_PRODUCT_PRICES = WEB_ROOT / "scripts" / "fetch-product-prices.py"
 IMPORT_WYKROJNIKI = WEB_ROOT / "scripts" / "import-wykrojniki-xlsx.py"
-IMPORT_SLEEVE_STOCK = WEB_ROOT / "scripts" / "import-sleeve-stock-xlsx.py"
 LINK_WYKROJNIKI = WEB_ROOT / "scripts" / "link-wykrojniki-products.py"
 ENRICH_BRANDING_RECOGNIZE = WEB_ROOT / "scripts" / "enrich-branding-recognize.py"
 COST_RATES_FILE = WEB_ROOT / "data" / "cost-rates.json"
@@ -2560,6 +2256,8 @@ def _invalidate_branding_data_caches() -> None:
     for rel in (
         "data/branding-index.json",
         "data/branding-search-index.json",
+        "data/branding-grid-index.json",
+        "data/branding-grid-head.json",
         "data/campaigns.json",
     ):
         _drop_json_cache(WEB_ROOT / rel)
@@ -2656,48 +2354,6 @@ def _extract_post_csv(raw: bytes, content_type: str, data: dict | None = None) -
             if body:
                 return body.decode("utf-8", errors="replace")
     return ""
-
-
-def _extract_multipart_file(raw: bytes, content_type: str) -> tuple[bytes | None, str]:
-    """Return (file_bytes, filename) from multipart upload; empty if none."""
-    import re
-
-    if not raw or "multipart/form-data" not in (content_type or "").lower():
-        return None, ""
-    m = re.search(r"boundary=([^;\s]+)", content_type or "")
-    if not m:
-        return None, ""
-    boundary = m.group(1).strip().strip('"')
-    marker = ("--" + boundary).encode("ascii", errors="ignore")
-    for part in raw.split(marker):
-        if b"Content-Disposition" not in part or b"filename=" not in part:
-            continue
-        head, _, body = part.partition(b"\r\n\r\n")
-        if not body:
-            head, _, body = part.partition(b"\n\n")
-        body = body.rstrip(b"\r\n-")
-        fm = re.search(br'filename="([^"]+)"', head) or re.search(br"filename=([^\r\n;]+)", head)
-        name = fm.group(1).decode("utf-8", errors="replace").strip() if fm else "upload.bin"
-        if body:
-            return body, name
-    return None, ""
-
-
-def _run_sleeve_stock_import(path: Path) -> dict:
-    """Import sleeve stock via script module (in-process) and push KV."""
-    import importlib.util
-
-    if not IMPORT_SLEEVE_STOCK.is_file():
-        raise FileNotFoundError("import_sleeve_stock_script_missing")
-    spec = importlib.util.spec_from_file_location("import_sleeve_stock_xlsx", IMPORT_SLEEVE_STOCK)
-    if spec is None or spec.loader is None:
-        raise RuntimeError("import_sleeve_stock_load_failed")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    data = mod.import_path(path, dry_run=False, write=True)
-    # Ensure KV mirror via _save_json
-    _save_json(SLEEVE_STOCK_FILE, data)
-    return data
 
 
 def _fmcg_default_catalog() -> dict:
@@ -2978,10 +2634,13 @@ def _patch_branding_metadata(asset_id: str, field: str, value) -> tuple[bool, st
     if not isinstance(idx, dict):
         return False, "branding_index_missing"
     assets = idx.get("assets") or []
-    found = _find_branding_asset(aid, assets)
+    found = None
+    for a in assets:
+        if a.get("id") == aid:
+            found = a
+            break
     if not found:
         return False, "asset_not_found"
-    aid = str(found.get("id") or aid)
     if fld == "asset_role":
         found["asset_role"] = str(value or "").strip() or None
     elif fld == "appearance_primary":
@@ -3063,8 +2722,6 @@ def _patch_branding_associations(
     linked_product_ids: list,
     linked_variant_ids: list | None,
     updated_by: str = "local_bridge",
-    product_link_id: str = "",
-    product_link_action: str = "",
 ) -> tuple[bool, str | None]:
     """Reczna edycja skojarzen produktow / wariantow w branding-index + overrides."""
     aid = str(asset_id or "").strip()
@@ -3075,45 +2732,18 @@ def _patch_branding_associations(
     if not isinstance(idx, dict):
         return False, "branding_index_missing"
     assets = idx.get("assets") or []
-    target = _find_branding_asset(aid, assets)
+    target = None
+    for a in assets:
+        if a.get("id") == aid:
+            target = a
+            break
     if not target:
         return False, "asset_not_found"
-    aid = str(target.get("id") or aid)
     if not group:
         group = str(target.get("folder_group_id") or "").strip().lower()
     file_index = _load_json(INDEX_FILE, {"products": []})
-    delta_pid = str(product_link_id or "").strip()
-    delta_action = str(product_link_action or "").strip().lower()
-    if delta_pid:
-        if delta_action not in ("add", "remove"):
-            return False, "invalid_product_link_action"
-        existing_pids = list(target.get("linked_product_ids") or [])
-        if not existing_pids:
-            existing_pids = [
-                item.get("id")
-                for item in (target.get("linked_products") or [])
-                if isinstance(item, dict) and item.get("id")
-            ]
-        pids = [str(x).strip() for x in existing_pids if str(x).strip()]
-        if delta_action == "add" and delta_pid not in pids:
-            pids.append(delta_pid)
-        elif delta_action == "remove":
-            pids = [pid for pid in pids if pid != delta_pid]
-        vids = [
-            str(x).strip()
-            for x in (
-                linked_variant_ids
-                if linked_variant_ids is not None
-                else target.get("linked_variant_ids") or []
-            )
-            if str(x).strip()
-        ]
-    else:
-        pids = [str(x).strip() for x in (linked_product_ids or []) if str(x).strip()]
-        vids = [str(x).strip() for x in (linked_variant_ids or []) if str(x).strip()]
-    pids = list(dict.fromkeys(pids))
-    vids = [_resolve_branding_asset_id(v) for v in vids]
-    vids = list(dict.fromkeys(vids))
+    pids = [str(x).strip() for x in (linked_product_ids or []) if str(x).strip()]
+    vids = [str(x).strip() for x in (linked_variant_ids or []) if str(x).strip()]
 
     ov = _load_json(
         BRANDING_ASSOC_OVERRIDES_FILE,
@@ -3267,7 +2897,7 @@ def _seed_naming_policy_to_postgres() -> None:
     ]
 
     app_settings = {
-        "version": 3,
+        "version": 2,
         "naming": {
             "source_kv": "naming-dictionary",
             "carrier_display_in_ui": policy.get("carrier_display_in_ui") or "label_pl",
@@ -3286,14 +2916,6 @@ def _seed_naming_policy_to_postgres() -> None:
         or (instructions.get("updated_at") if instructions else "")
         or "",
     }
-    existing = _load_json(APP_SETTINGS_FILE, {})
-    if isinstance(existing, dict) and isinstance(existing.get("elementy_conversion"), dict):
-        app_settings["elementy_conversion"] = existing["elementy_conversion"]
-    else:
-        app_settings["elementy_conversion"] = _default_elementy_conversion()
-        app_settings["elementy_conversion"]["description_pl"] = (
-            "Globalne ustawienia konwersji Links -> ELEMENTY w modalu wizualizacji."
-        )
     _save_json(APP_SETTINGS_FILE, app_settings)
     if naming:
         _save_json(NAMING_DICTIONARY_FILE, naming)
@@ -3839,7 +3461,7 @@ def create_or_apply_tag_proposal(
                 "product_id": payload.get("product_id") or "",
                 "product_name": payload.get("product_name") or "",
             })
-        return {"ok": result.get("ok", False), "applied": True, "immediate": True, "new_carrier_code": new_code, **result}
+        return {"ok": result.get("ok", False), "applied": True, "immediate": True, **result}
 
     data = load_tag_proposals()
     proposals = data.setdefault("proposals", [])
@@ -4444,57 +4066,6 @@ def manage_carrier_type(payload: dict) -> dict:
 
 
 _VARIANT_CODE_RE = re.compile(r"^[A-Z0-9][A-Z0-9\-]{0,15}$")
-_SUBCATEGORY_SLUG_RE = re.compile(r"^[a-z0-9-]{1,48}$")
-
-
-def add_global_subcategory(payload: dict, *, actor: str = "") -> dict:
-    """Global subcategory append to naming-dictionary.subcategories[] (no Szablony copytree)."""
-    slug = str(payload.get("slug") or "").strip().lower()
-    label_pl = str(payload.get("label_pl") or "").strip()
-    if not slug:
-        return {"ok": False, "error": "slug_required", "message": "Podaj slug podkategorii."}
-    if not _SUBCATEGORY_SLUG_RE.match(slug):
-        return {
-            "ok": False,
-            "error": "slug_invalid",
-            "message": "Slug: 1-48 znakow, male litery/cyfry/myslnik.",
-        }
-    if not label_pl:
-        return {"ok": False, "error": "label_pl_required", "message": "Podaj etykiete PL."}
-
-    naming = _load_json(NAMING_DICTIONARY_FILE, {})
-    if not isinstance(naming, dict):
-        naming = {}
-    subs = naming.setdefault("subcategories", [])
-    if not isinstance(subs, list):
-        subs = []
-        naming["subcategories"] = subs
-    for row in subs:
-        if isinstance(row, dict) and str(row.get("slug") or "").strip().lower() == slug:
-            return {
-                "ok": False,
-                "error": "already_exists",
-                "message": f"Podkategoria {slug} juz istnieje.",
-            }
-
-    entry = {
-        "slug": slug,
-        "label_pl": label_pl,
-        "added_at": utc_now(),
-        "added_by": actor or "",
-        "custom": True,
-    }
-    subs.append(entry)
-    naming["version"] = int(naming.get("version") or 1) + 1
-    _save_json(NAMING_DICTIONARY_FILE, naming)
-    reload_naming_policy_from_disk()
-    return {
-        "ok": True,
-        "slug": slug,
-        "label_pl": label_pl,
-        "subcategory": entry,
-        "message": f"Dodano podkategorie globalna: {label_pl} ({slug}).",
-    }
 
 
 def add_global_variant_type(payload: dict, *, actor: str = "") -> dict:
@@ -5105,9 +4676,12 @@ def create_print_package(
     product_id: str = "",
     index: str = "",
     dry_run: bool = False,
+    dest_dir: str = "",
 ) -> dict:
     """
-    Spakuj 2 - PROJEKT(+y) + 4 - WIZKI/WIZUALIZACJE do ZIP w 3 - DRUK.
+    Spakuj 2 - PROJEKT(+y) + 4 - WIZKI/WIZUALIZACJE do ZIP.
+    Domyslnie ZIP ląduje w 3 - DRUK wariantu. Opcjonalnie dest_dir = inny folder
+    (np. wybor Windows Explorer przy masowym eksporcie).
     Nazwa ZIP = stem glownego .ai (bez SZKICE). Preferuj 7-Zip Ultra zip.
     """
     import shutil
@@ -5157,10 +4731,38 @@ def create_print_package(
             "projekt_path": str(projekt),
         }
 
-    if druk is None:
-        druk = rev / "3 - DRUK"
+    custom_dest: Path | None = None
+    dest_raw = str(dest_dir or "").strip()
+    if dest_raw:
+        custom_dest = Path(normalize_path(dest_raw))
+        try:
+            if not custom_dest.exists():
+                custom_dest.mkdir(parents=True, exist_ok=True)
+            if not custom_dest.is_dir():
+                return {
+                    "ok": False,
+                    "error": "dest_not_dir",
+                    "message": "Cel eksportu nie jest folderem.",
+                }
+        except OSError as exc:
+            return {
+                "ok": False,
+                "error": "dest_mkdir_failed",
+                "detail": str(exc),
+                "message": "Nie mozna utworzyc folderu docelowego.",
+            }
+
+    if custom_dest is not None:
+        out_dir = custom_dest
+        slot_label = str(custom_dest)
+    else:
+        if druk is None:
+            druk = rev / "3 - DRUK"
+        out_dir = druk
+        slot_label = druk.name if druk else "3 - DRUK"
+
     zip_name = stem + ".zip"
-    out_zip = druk / zip_name
+    out_zip = out_dir / zip_name
     entries = _collect_pack_entries(projekt, wizki)
     if not entries:
         return {
@@ -5174,24 +4776,26 @@ def create_print_package(
         "revision_path": str(rev),
         "projekt_path": str(projekt),
         "wizki_path": str(wizki),
-        "druk_path": str(druk),
+        "druk_path": str(druk) if druk else "",
+        "dest_dir": str(out_dir),
         "zip_name": zip_name,
         "zip_path": str(out_zip),
         "ai_stem": stem,
         "file_count": len(entries),
+        "entries": [{"name": Path(arc).name, "arc": arc} for _abs, arc in entries[:200]],
         "dry_run": bool(dry_run),
     }
     if dry_run:
         return result_base
 
     try:
-        druk.mkdir(parents=True, exist_ok=True)
+        out_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         return {
             "ok": False,
             "error": "druk_mkdir_failed",
             "detail": str(exc),
-            "message": "Nie mozna utworzyc folderu 3 - DRUK.",
+            "message": "Nie mozna utworzyc folderu docelowego (3 - DRUK lub dest).",
         }
 
     if out_zip.is_file():
@@ -5291,7 +4895,7 @@ def create_print_package(
                 "size": size,
                 "mtime": mtime,
                 "lang": "",
-                "slot": druk.name if druk else "3 - DRUK",
+                "slot": slot_label,
                 "role": "print",
             },
         }
@@ -5430,248 +5034,6 @@ def resolve_product_links_elementy(
     }
 
 
-_LINKS_CONVERT_EXT = {".tif", ".tiff", ".psd", ".psb"}
-
-
-def _default_elementy_conversion() -> dict:
-    return {
-        "enabled": True,
-        "quality": 50,
-        "formats": {"png": True, "jpg": True},
-        "png_transparency": True,
-    }
-
-
-def load_elementy_conversion_settings() -> dict:
-    """Globalne ustawienia konwersji Links -> ELEMENTY (app-settings.json)."""
-    data = _load_json(APP_SETTINGS_FILE, {})
-    raw = data.get("elementy_conversion") if isinstance(data, dict) else {}
-    if not isinstance(raw, dict):
-        raw = {}
-    defaults = _default_elementy_conversion()
-    formats_raw = raw.get("formats") if isinstance(raw.get("formats"), dict) else {}
-    try:
-        quality = int(raw.get("quality", defaults["quality"]))
-    except (TypeError, ValueError):
-        quality = defaults["quality"]
-    return {
-        "enabled": bool(raw.get("enabled", defaults["enabled"])),
-        "quality": max(1, min(quality, 100)),
-        "formats": {
-            "png": bool(formats_raw.get("png", defaults["formats"]["png"])),
-            "jpg": bool(formats_raw.get("jpg", defaults["formats"]["jpg"])),
-        },
-        "png_transparency": bool(
-            raw.get("png_transparency", defaults["png_transparency"])
-        ),
-    }
-
-
-def save_elementy_conversion_settings(patch: dict) -> dict:
-    """Zapis globalnych ustawien konwersji elementow (admin)."""
-    current = _load_json(APP_SETTINGS_FILE, {})
-    if not isinstance(current, dict):
-        current = {}
-    merged = load_elementy_conversion_settings()
-    if isinstance(patch, dict):
-        if "enabled" in patch:
-            merged["enabled"] = bool(patch.get("enabled"))
-        if "quality" in patch:
-            try:
-                merged["quality"] = max(1, min(int(patch.get("quality")), 100))
-            except (TypeError, ValueError):
-                pass
-        if isinstance(patch.get("formats"), dict):
-            fm = patch["formats"]
-            if "png" in fm:
-                merged["formats"]["png"] = bool(fm.get("png"))
-            if "jpg" in fm:
-                merged["formats"]["jpg"] = bool(fm.get("jpg"))
-        if "png_transparency" in patch:
-            merged["png_transparency"] = bool(patch.get("png_transparency"))
-    current["elementy_conversion"] = {
-        **merged,
-        "description_pl": (
-            "Globalne ustawienia konwersji Links -> ELEMENTY w modalu wizualizacji. "
-            "PNG z przezroczystoscia (dematte czarnego matte) + opcjonalnie JPG. "
-            "Jakosc/kompresja w skali 1-100 (domyslnie 50%)."
-        ),
-    }
-    current["updated_at"] = utc_now()[:10]
-    _save_json(APP_SETTINGS_FILE, current)
-    return merged
-
-
-def _open_raster_image(path: Path):
-    """Otworz TIFF/PSD/PSB do konwersji elementow (Pillow + psd-tools)."""
-    ext = path.suffix.lower()
-    if ext not in _LINKS_CONVERT_EXT:
-        return None
-    from PIL import Image  # type: ignore
-
-    try:
-        with Image.open(path) as pil_im:
-            return pil_im.copy()
-    except Exception:
-        if ext in {".psd", ".psb"}:
-            from psd_tools import PSDImage  # type: ignore
-
-            return PSDImage.open(path).composite()
-        raise
-
-
-def _save_elementy_png_file(im, dest: Path, *, quality: int = 50) -> None:
-    """Zapis PNG do ELEMENTY: dematte + downscale wg quality (~50 domyslnie)."""
-    from PIL import Image  # type: ignore
-
-    rgba = _dematte_black_to_alpha(im)
-    q = max(1, min(int(quality), 100))
-    max_side = max(800, int(3200 * q / 100))
-    if max(rgba.size) > max_side:
-        rgba.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    rgba.save(dest, format="PNG", optimize=True)
-
-
-def _save_elementy_jpg_file(im, dest: Path, *, quality: int = 50) -> None:
-    """Zapis JPG do ELEMENTY: dematte -> biale tlo, kompresja wg quality."""
-    from PIL import Image  # type: ignore
-
-    rgba = _dematte_black_to_alpha(im)
-    q = max(1, min(int(quality), 100))
-    max_side = max(800, int(3200 * q / 100))
-    if max(rgba.size) > max_side:
-        rgba.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
-    bg = Image.new("RGB", rgba.size, (255, 255, 255))
-    bg.paste(rgba, mask=rgba.split()[-1])
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    bg.save(dest, format="JPEG", quality=q, optimize=True)
-
-
-def convert_links_elementy(
-    product_id: str = "",
-    index: str = "",
-    revision_path: str = "",
-    quality: int | None = None,
-    formats: dict | None = None,
-) -> dict:
-    """
-    Built-in Links -> ELEMENTY: TIFF/PSD/PSB do PNG (dematte, alpha) + JPG.
-    Nie usuwa oryginalow w Links. Ustawienia globalne z app-settings.json.
-    """
-    settings = load_elementy_conversion_settings()
-    if not settings.get("enabled"):
-        return {"ok": False, "error": "conversion_disabled", "settings": settings}
-
-    q = settings["quality"] if quality is None else max(1, min(int(quality), 100))
-    fmt = settings["formats"] if not isinstance(formats, dict) else {
-        "png": bool(formats.get("png", settings["formats"]["png"])),
-        "jpg": bool(formats.get("jpg", settings["formats"]["jpg"])),
-    }
-    if not fmt.get("png") and not fmt.get("jpg"):
-        return {"ok": False, "error": "no_output_formats", "settings": settings}
-    info = resolve_product_links_elementy(product_id, index, revision_path)
-    if not info.get("ok"):
-        return {"ok": False, "error": info.get("error") or "revision_not_found", "info": info}
-
-    links_raw = (info.get("links_path") or "").strip()
-    if not links_raw:
-        return {"ok": False, "error": "links_not_found", "info": info}
-
-    links_p = Path(normalize_path(links_raw))
-    if not links_p.is_dir() or not _is_under_marketing(links_p):
-        return {"ok": False, "error": "links_invalid", "links_path": links_raw}
-
-    elementy_raw = (info.get("elementy_path") or "").strip()
-    elementy_p = Path(normalize_path(elementy_raw)) if elementy_raw else None
-    if elementy_p is None:
-        rev = Path(normalize_path(info.get("revision_path") or ""))
-        materials = _child_dir_prefix(rev, "1 - materia")
-        nested = _child_dir_named(materials, "elementy") if materials else None
-        elementy_p = nested
-    if elementy_p is None:
-        return {"ok": False, "error": "elementy_not_found", "info": info}
-    if not _is_under_marketing(elementy_p):
-        return {"ok": False, "error": "elementy_outside_marketing", "elementy_path": str(elementy_p)}
-
-    try:
-        elementy_p.mkdir(parents=True, exist_ok=True)
-    except OSError as exc:
-        return {"ok": False, "error": f"elementy_mkdir_failed:{exc}", "elementy_path": str(elementy_p)}
-
-    converted: list[dict] = []
-    failed: list[dict] = []
-    skipped: list[str] = []
-
-    try:
-        for root, _dirs, files in os.walk(links_p):
-            for fname in files:
-                src = Path(root) / fname
-                if src.suffix.lower() not in _LINKS_CONVERT_EXT:
-                    continue
-                try:
-                    im = _open_raster_image(src)
-                    if im is None:
-                        failed.append(
-                            {"source": str(src).replace("\\", "/"), "error": "unsupported_format"}
-                        )
-                        continue
-                    wrote_any = False
-                    if fmt.get("png"):
-                        dest_png = elementy_p / f"{src.stem}.png"
-                        if dest_png.is_file():
-                            skipped.append(str(dest_png).replace("\\", "/"))
-                        else:
-                            _save_elementy_png_file(im, dest_png, quality=q)
-                            converted.append(
-                                {
-                                    "source": str(src).replace("\\", "/"),
-                                    "output": str(dest_png).replace("\\", "/"),
-                                    "format": "png",
-                                }
-                            )
-                            wrote_any = True
-                    if fmt.get("jpg"):
-                        dest_jpg = elementy_p / f"{src.stem}.jpg"
-                        if dest_jpg.is_file():
-                            skipped.append(str(dest_jpg).replace("\\", "/"))
-                        else:
-                            _save_elementy_jpg_file(im, dest_jpg, quality=q)
-                            converted.append(
-                                {
-                                    "source": str(src).replace("\\", "/"),
-                                    "output": str(dest_jpg).replace("\\", "/"),
-                                    "format": "jpg",
-                                }
-                            )
-                            wrote_any = True
-                    if not wrote_any and not (
-                        (fmt.get("png") and (elementy_p / f"{src.stem}.png").is_file())
-                        or (fmt.get("jpg") and (elementy_p / f"{src.stem}.jpg").is_file())
-                    ):
-                        skipped.append(str(src).replace("\\", "/"))
-                except Exception as exc:  # noqa: BLE001
-                    failed.append(
-                        {"source": str(src).replace("\\", "/"), "error": str(exc)}
-                    )
-    except OSError as exc:
-        return {"ok": False, "error": f"links_walk_failed:{exc}", "info": info}
-
-    return {
-        "ok": True,
-        "converted_count": len(converted),
-        "converted": converted,
-        "failed": failed,
-        "skipped": skipped,
-        "links_path": str(links_p).replace("\\", "/"),
-        "elementy_path": str(elementy_p).replace("\\", "/"),
-        "quality": q,
-        "formats": fmt,
-        "warning": "Konwersja automatyczna moze dac elementy slabej jakosci.",
-        "info": info,
-    }
-
-
 def open_image_resizer(input_path: str = "", output_path: str = "", product_id: str = "", index: str = "") -> dict:
     """
     STREFA A3 / pkt 37: otworz Inyfinn Photo Resizer.
@@ -5780,7 +5142,7 @@ def open_image_resizer(input_path: str = "", output_path: str = "", product_id: 
 
 def read_viz_flags() -> dict:
     flags_file = WEB_ROOT / "data" / "viz-flags.json"
-    default = {"demo": {}, "hidden": {}, "manual": [], "linked_variants": {}, "unlinked_variants": {}, "updated_at": ""}
+    default = {"demo": {}, "hidden": {}, "manual": [], "updated_at": ""}
     raw = _load_json(flags_file, default)
     if not isinstance(raw, dict):
         return default
@@ -5788,8 +5150,6 @@ def read_viz_flags() -> dict:
         "demo": raw.get("demo") if isinstance(raw.get("demo"), dict) else {},
         "hidden": raw.get("hidden") if isinstance(raw.get("hidden"), dict) else {},
         "manual": raw.get("manual") if isinstance(raw.get("manual"), list) else [],
-        "linked_variants": raw.get("linked_variants") if isinstance(raw.get("linked_variants"), dict) else {},
-        "unlinked_variants": raw.get("unlinked_variants") if isinstance(raw.get("unlinked_variants"), dict) else {},
         "updated_at": raw.get("updated_at") or "",
     }
 
@@ -5805,10 +5165,6 @@ def write_viz_flags(payload: dict) -> dict:
         current["hidden"] = incoming.get("hidden") if isinstance(incoming.get("hidden"), dict) else current["hidden"]
         if isinstance(incoming.get("manual"), list):
             current["manual"] = incoming["manual"]
-        if isinstance(incoming.get("linked_variants"), dict):
-            current["linked_variants"] = incoming["linked_variants"]
-        if isinstance(incoming.get("unlinked_variants"), dict):
-            current["unlinked_variants"] = incoming["unlinked_variants"]
     elif action in ("demo", "hidden"):
         key = (payload.get("key") or "").strip()
         if key:
@@ -6209,18 +5565,8 @@ def _resolve_missing_media_path(raw: str) -> str | None:
     return None
 
 
-def _coerce_media_target(path: str, email: str = "") -> str:
-    """Exact path, device-scoped rebase, or fuzzy resolve when index drifted."""
-    if dam_path_resolve_mod is not None:
-        return dam_path_resolve_mod.resolve_physical_path(
-            path,
-            email,
-            normalize_path=normalize_path,
-            resolve_base_path=resolve_base_path_for_current_device,
-            marketing_candidates=MARKETING_CANDIDATES,
-            machine_config_path=MACHINE_CONFIG,
-            fuzzy_resolve=_resolve_missing_media_path,
-        )
+def _coerce_media_target(path: str) -> str:
+    """Exact path, or fuzzy resolve when index drifted after revision rename."""
     target = normalize_path(path)
     try:
         if os.path.isfile(target):
@@ -6439,24 +5785,8 @@ class Handler(BaseHTTPRequestHandler):
             return None
         return user
 
-    def _localhost_dev_user(self) -> dict | None:
-        """Opcjonalny stub admin na 127.0.0.1 gdy brak Bearer (DAM_LOCAL_DEV_AUTH=1)."""
-        flag = os.environ.get("DAM_LOCAL_DEV_AUTH", "").strip().lower()
-        if flag not in ("1", "true", "yes", "on"):
-            return None
-        addr = (self.client_address[0] or "").strip()
-        if addr not in ("127.0.0.1", "::1"):
-            return None
-        return {
-            "email": "dev@localhost",
-            "name": "Local Dev",
-            "role": "admin",
-        }
-
     def _require_login(self) -> dict | None:
         user = self._session_user()
-        if not user:
-            user = self._localhost_dev_user()
         if not user:
             self._json(
                 401,
@@ -6511,11 +5841,14 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path != "/oauth/callback" and not self._origin_ok():
             self._json(403, {"ok": False, "error": "origin_forbidden"})
             return
+        if branding_asset_routes is not None:
+            try:
+                if branding_asset_routes.handle_get(self, parsed):
+                    return
+            except Exception as exc:  # noqa: BLE001
+                self._json(500, {"ok": False, "error": "branding_routes", "detail": str(exc)})
+                return
         if parsed.path == "/health":
-            redis_info = dam_redis.status() if dam_redis else {"redis": "down", "circuit": "open", "reason": "module_missing"}
-            warm_info = dam_thumb_cache_mod.warm_status() if dam_thumb_cache_mod else {}
-            circuit = redis_info.get("circuit") or "open"
-            redis_state = redis_info.get("redis") or "down"
             self._json(
                 200,
                 {
@@ -6523,31 +5856,17 @@ class Handler(BaseHTTPRequestHandler):
                     "service": "dam-local-bridge",
                     "port": PORT,
                     "api_version": BRIDGE_API_VERSION,
-                    "redis_status": redis_state,
-                    "redis_circuit": circuit,
-                    "redis_detail": redis_info,
-                    "redis": {
-                        "ok": redis_state == "ok",
-                        "circuit": circuit,
-                        "state": redis_state,
-                        "detail": redis_info,
-                    },
-                    "warm": warm_info,
-                    "redis_fallback_matrix": dam_redis.fallback_matrix() if dam_redis else [],
                     "hub_routes": [
                         "/branding-index",
+                        "/branding-grid-index",
+                        "/branding/asset",
+                        "/assoc/queue",
                         "/branding-search-index",
-                        "/branding-search-picker",
-                        "/branding-for-product",
                         "/product-catalog",
                         "/bulk-packaging",
                         "/branding/status",
                         "/wykrojniki-registry",
                         "/wykrojnik-mapping-queue",
-                        "/sleeve-stock",
-                        "/sleeve-stock/reimport",
-                        "/sleeve-stock/import",
-                        "/production-cost-catalog",
                         "/integrations/config",
                         "/integrations/status",
                         "/integrations/asana/sync",
@@ -6561,115 +5880,9 @@ class Handler(BaseHTTPRequestHandler):
                         "/finance/invoices/import",
                         "/finance/invoices/export",
                         "/finance/invoices/erp-status",
-                        "/finance/invoices/outlook-draft",
-                        "/file-availability",
-                        "/thumb-cache",
-                        "/thumb-cache/warm",
                     ],
                 },
             )
-            return
-        if parsed.path == "/file-availability":
-            # Localhost jail - Bearer optional (img/onerror paths); UDP email when present
-            qs = parse_qs(parsed.query)
-            path = (qs.get("path") or [""])[0]
-            paths_raw = (qs.get("paths") or [""])[0]
-            user = self._session_user()
-            email = str((user or {}).get("email") or "").strip()
-            has_root = None
-            if email:
-                try:
-                    has_root = bool(resolve_base_path_for_current_device(email).get("has_path"))
-                except Exception:
-                    has_root = None
-            elif not resolve_base_path_for_current_device("").get("has_path"):
-                # machine-config may still set base
-                try:
-                    mc = read_machine_config()
-                    has_root = bool((mc.get("base_path") or "").strip()) if isinstance(mc, dict) else None
-                except Exception:
-                    has_root = None
-            if dam_file_availability_mod is None:
-                self._json(500, {"ok": False, "error": "module_missing"})
-                return
-
-            def _resolve(p: str, em: str = "") -> str:
-                return _coerce_media_target(p, em or email)
-
-            if paths_raw:
-                plist = [p.strip() for p in paths_raw.split("|") if p.strip()]
-                self._json(
-                    200,
-                    dam_file_availability_mod.classify_batch(
-                        plist,
-                        email=email,
-                        resolve_physical=_resolve,
-                        has_marketing_root=has_root,
-                    ),
-                )
-                return
-            if not path:
-                self._json(400, {"ok": False, "error": "path_required"})
-                return
-            self._json(
-                200,
-                dam_file_availability_mod.classify_path(
-                    path,
-                    email=email,
-                    resolve_physical=_resolve,
-                    has_marketing_root=has_root,
-                ),
-            )
-            return
-        if parsed.path == "/thumb-cache":
-            qs = parse_qs(parsed.query)
-            path = (qs.get("path") or [""])[0]
-            profile = (qs.get("profile") or ["grid"])[0]
-            if not path:
-                self._json(400, {"ok": False, "error": "path_required"})
-                return
-            if dam_thumb_cache_mod is None:
-                self._json(500, {"ok": False, "error": "module_missing"})
-                return
-            target = _coerce_media_target(path)
-            if not os.path.isfile(target) or not _is_under_marketing(Path(target)):
-                self._json(403 if os.path.isfile(target) else 404, {"ok": False, "error": "path_outside_marketing" if os.path.isfile(target) else "not_found", "path": path})
-                return
-
-            def _resolve(p: str, em: str = "") -> str:
-                return _coerce_media_target(p, em)
-
-            def _rel(p: str, em: str = "") -> str:
-                if dam_path_resolve_mod is None:
-                    return Path(p).name
-                return dam_path_resolve_mod.marketing_relative_key(
-                    p,
-                    email=em,
-                    resolve_base_path=resolve_base_path_for_current_device,
-                    marketing_candidates=MARKETING_CANDIDATES,
-                    machine_config_path=MACHINE_CONFIG,
-                )
-
-            t0 = time.time()
-            code, body, ctype, meta = dam_thumb_cache_mod.get_or_build_thumb(
-                path,
-                profile=profile,
-                resolve_physical=_resolve,
-                marketing_relative=_rel,
-            )
-            meta["ms"] = int((time.time() - t0) * 1000)
-            if code != 200:
-                self._json(code if code in (403, 404, 422) else 404, {"ok": False, "error": meta.get("error") or "thumb_failed", "path": path, **meta})
-                return
-            self.send_response(200)
-            self._cors()
-            self.send_header("Content-Type", ctype)
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "private, max-age=86400")
-            self.send_header("X-DAM-Cache-Hit", "1" if meta.get("cache_hit") else "0")
-            self.send_header("X-DAM-Thumb-Ms", str(meta.get("ms") or 0))
-            self.end_headers()
-            self.wfile.write(body)
             return
         if parsed.path == "/detect-marketing-bases":
             # Lokalny most 127.0.0.1 - status dysku bez Bearer (UI pyta przed / bez sesji)
@@ -6804,6 +6017,67 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(500, {"ok": False, "error": "dam_db_missing"})
                 return
             self._json(200, {"ok": True, "prefer": dam_db.load_prefer()})
+            return
+        if parsed.path == "/thumb-cache/status":
+            if not dam_thumb_cache:
+                self._json(500, {"ok": False, "error": "dam_thumb_cache_missing"})
+                return
+            root = dam_thumb_cache.cache_root()
+            try:
+                files = list(root.glob("*")) if root.is_dir() else []
+                avif_n = sum(1 for p in files if p.suffix.lower() == ".avif")
+                jpg_n = sum(1 for p in files if p.suffix.lower() == ".jpg")
+            except OSError:
+                files, avif_n, jpg_n = [], 0, 0
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "root": str(root),
+                    "exists": root.is_dir(),
+                    "files": len(files),
+                    "avif": avif_n,
+                    "jpg": jpg_n,
+                    "module": True,
+                },
+            )
+            return
+        if parsed.path == "/thumb-cache":
+            # <img src> bez Bearer - jail przez resolve + isfile w dam_thumb_cache
+            if not dam_thumb_cache:
+                self._json(500, {"ok": False, "error": "dam_thumb_cache_missing"})
+                return
+            qs = parse_qs(parsed.query)
+            path = (qs.get("path") or [""])[0]
+            profile = (qs.get("profile") or ["grid"])[0] or "grid"
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required"})
+                return
+
+            def _resolve(p: str, _email: str = "") -> str:
+                return _coerce_media_target(p)
+
+            code, body, ctype, meta = dam_thumb_cache.get_or_build_thumb(
+                path,
+                profile=profile,
+                resolve_physical=_resolve,
+            )
+            if code != 200:
+                self._json(code, meta if isinstance(meta, dict) else {"ok": False})
+                return
+            self.send_response(200)
+            self._cors()
+            self.send_header("Content-Type", ctype or "image/jpeg")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header(
+                "Cache-Control",
+                "private, max-age=86400" if meta.get("cache_hit") else "private, max-age=60",
+            )
+            if meta.get("digest"):
+                self.send_header("X-Dam-Thumb-Digest", str(meta.get("digest")))
+            self.send_header("X-Dam-Thumb-Hit", "1" if meta.get("cache_hit") else "0")
+            self.end_headers()
+            self.wfile.write(body)
             return
         if parsed.path == "/media":
             # Miniatury w <img src> nie moga wyslac Authorization - localhost + jail Marketing
@@ -7064,19 +6338,6 @@ class Handler(BaseHTTPRequestHandler):
             }
             self._json(200, {"ok": True, "groups": clean})
             return
-        if parsed.path == "/app-settings":
-            data = _load_json(APP_SETTINGS_FILE, {})
-            if not isinstance(data, dict):
-                data = {}
-            self._json(
-                200,
-                {
-                    "ok": True,
-                    "settings": data,
-                    "elementy_conversion": load_elementy_conversion_settings(),
-                },
-            )
-            return
         if parsed.path == "/oauth/callback":
             # Redirect z Asana / Microsoft - wymiana code, potem HTML z komunikatem
             import html as _html
@@ -7164,33 +6425,25 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, **data})
             return
         if parsed.path == "/branding-index":
+            # HARD: pelny dump ~340MB zamraza UI i most. Domyslnie zakaz.
+            # Skrypty/admin: GET /branding-index?full=1
+            qs = parse_qs(parsed.query or "")
+            full = str((qs.get("full") or [""])[0] or "").strip().lower()
+            if full not in ("1", "true", "yes"):
+                self._json(
+                    403,
+                    {
+                        "ok": False,
+                        "error": "use_branding_grid_index",
+                        "hint": "GET /branding-grid-index, /branding-grid-head, /branding/asset?id= ; full dump requires ?full=1",
+                    },
+                )
+                return
             data = _load_json(BRANDING_INDEX_FILE, None)
             if not isinstance(data, dict):
                 self._json(404, {"ok": False, "error": "branding_index_missing"})
                 return
             self._json(200, {"ok": True, **data})
-            return
-        if parsed.path == "/branding-for-product":
-            qs = parse_qs(parsed.query or "")
-            tokens = [
-                t.strip()
-                for t in (qs.get("tokens") or [""])[0].split(",")
-                if t.strip()
-            ]
-            try:
-                lim = int((qs.get("limit") or ["400"])[0])
-            except Exception:
-                lim = 400
-            self._json(
-                200,
-                resolve_branding_for_product(
-                    (qs.get("product_id") or [""])[0],
-                    tokens,
-                    lim,
-                    (qs.get("include_archive") or ["0"])[0] in ("1", "true"),
-                    (qs.get("sort") or [""])[0],
-                ),
-            )
             return
         if parsed.path == "/product-links-elementy":
             # STREFA A3: Links (surowe) vs ELEMENTY (gotowe) dla rewizji produktu
@@ -7211,21 +6464,6 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, {"ok": True, **data})
             return
-        if parsed.path == "/branding-search-picker":
-            qs = parse_qs(parsed.query or "")
-            q = (qs.get("q") or [""])[0]
-            try:
-                lim = int((qs.get("limit") or ["80"])[0])
-            except (TypeError, ValueError):
-                lim = 80
-            raw_include = (qs.get("include") or [""])[0]
-            include_ids = [x.strip() for x in str(raw_include).split(",") if x.strip()]
-            data = _branding_search_index_mem()
-            if not isinstance(data, dict) or not isinstance(data.get("entries"), list):
-                self._json(404, {"ok": False, "error": "branding_search_index_missing"})
-                return
-            self._json(200, resolve_branding_search_picker(q, lim, include_ids))
-            return
         if parsed.path in ("/branding/status", "/branding/recognize/status"):
             status_file = BRANDING_RECOGNIZE_STATUS_FILE if "recognize" in parsed.path else BRANDING_STATUS_FILE
             data = _load_json(status_file, {"ok": False, "state": "unknown"})
@@ -7236,24 +6474,6 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(data, dict):
                 self._json(404, {"ok": False, "error": "wykrojniki_registry_missing"})
                 return
-            self._json(200, {"ok": True, **data})
-            return
-        if parsed.path == "/sleeve-stock":
-            if self._require_login() is None:
-                return
-            data = _load_json(SLEEVE_STOCK_FILE, None)
-            if not isinstance(data, dict):
-                self._json(404, {"ok": False, "error": "sleeve_stock_missing"})
-                return
-            self._json(200, {"ok": True, **data})
-            return
-        if parsed.path == "/production-cost-catalog":
-            if self._require_login() is None:
-                return
-            data = _load_json(
-                PRODUCTION_COST_CATALOG_FILE,
-                {"version": 1, "currency": "PLN", "lines": []},
-            )
             self._json(200, {"ok": True, **data})
             return
         if parsed.path == "/wykrojnik-mapping-queue":
@@ -7334,79 +6554,6 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         content_type = self.headers.get("Content-Type") or ""
 
-        if parsed.path == "/debug-ingest":
-            if not self._origin_ok():
-                self._json(403, {"ok": False, "error": "origin_forbidden"})
-                return
-            try:
-                payload = json.loads(raw.decode("utf-8") or "{}")
-            except json.JSONDecodeError:
-                self._json(400, {"ok": False, "error": "invalid_json"})
-                return
-            line = json.dumps(payload, ensure_ascii=False) + "\n"
-            for dbg_path in (
-                DEBUG_SESSION_LOG,
-                WEB_ROOT / "data" / "debug-0f6c29.log",
-            ):
-                try:
-                    dbg_path.parent.mkdir(parents=True, exist_ok=True)
-                    with open(dbg_path, "a", encoding="utf-8") as dbg_f:
-                        dbg_f.write(line)
-                except OSError:
-                    pass
-            self._json(200, {"ok": True})
-            return
-
-        if parsed.path == "/thumb-cache/warm":
-            if not self._origin_ok():
-                self._json(403, {"ok": False, "error": "origin_forbidden"})
-                return
-            if dam_thumb_cache_mod is None:
-                self._json(500, {"ok": False, "error": "module_missing"})
-                return
-            try:
-                data = json.loads(raw.decode("utf-8") or "{}")
-            except json.JSONDecodeError:
-                self._json(400, {"ok": False, "error": "invalid_json"})
-                return
-            paths = data.get("paths") if isinstance(data.get("paths"), list) else []
-            if not paths and data.get("path"):
-                paths = [str(data.get("path"))]
-            paths = [str(p).strip() for p in paths if str(p).strip()]
-            profile = str(data.get("profile") or "grid").strip() or "grid"
-            async_warm = bool(data.get("async"))
-            user = self._session_user()
-            email = str((user or {}).get("email") or "").strip()
-
-            def _resolve(p: str, em: str = "") -> str:
-                return _coerce_media_target(p, em or email)
-
-            def _rel(p: str, em: str = "") -> str:
-                if dam_path_resolve_mod is None:
-                    return Path(p).name
-                return dam_path_resolve_mod.marketing_relative_key(
-                    p,
-                    email=em or email,
-                    resolve_base_path=resolve_base_path_for_current_device,
-                    marketing_candidates=MARKETING_CANDIDATES,
-                    machine_config_path=MACHINE_CONFIG,
-                )
-
-            if async_warm:
-                self._json(200, dam_thumb_cache_mod.enqueue_warm(paths, profile=profile, email=email))
-                return
-            self._json(
-                200,
-                dam_thumb_cache_mod.warm_paths(
-                    paths,
-                    email=email,
-                    profile=profile,
-                    resolve_physical=_resolve,
-                    marketing_relative=_rel,
-                ),
-            )
-            return
-
         if parsed.path in ("/finance/fmcg-import", "/finance/invoices/import"):
             if parsed.path != "/oauth/callback" and not self._origin_ok():
                 self._json(403, {"ok": False, "error": "origin_forbidden"})
@@ -7446,51 +6593,6 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
 
-        if parsed.path == "/sleeve-stock/import" and "multipart/form-data" in content_type.lower():
-            if not self._origin_ok():
-                self._json(403, {"ok": False, "error": "origin_forbidden"})
-                return
-            if self._require_admin() is None:
-                return
-            import tempfile
-
-            blob, fname = _extract_multipart_file(raw, content_type)
-            if not blob:
-                self._json(400, {"ok": False, "error": "file_required"})
-                return
-            suffix = Path(fname).suffix.lower() or ".xlsx"
-            try:
-                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                    tmp.write(blob)
-                    tmp_path = Path(tmp.name)
-                result = _run_sleeve_stock_import(tmp_path)
-                try:
-                    tmp_path.unlink(missing_ok=True)
-                except OSError:
-                    pass
-                append_audit(
-                    {
-                        "action": "sleeve_stock_import",
-                        "user": str((self._session_user() or {}).get("email") or "admin"),
-                        "meta": {
-                            "entry_count": result.get("entry_count"),
-                            "filename": fname,
-                        },
-                    }
-                )
-                self._json(
-                    200,
-                    {
-                        "ok": True,
-                        "entry_count": result.get("entry_count"),
-                        "updated_at": result.get("updated_at"),
-                        "source_xlsx": result.get("source_xlsx"),
-                    },
-                )
-            except Exception as exc:  # noqa: BLE001
-                self._json(500, {"ok": False, "error": str(exc)})
-            return
-
         try:
             data = json.loads(raw.decode("utf-8") or "{}")
         except json.JSONDecodeError:
@@ -7500,6 +6602,13 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path != "/oauth/callback" and not self._origin_ok():
             self._json(403, {"ok": False, "error": "origin_forbidden"})
             return
+        if branding_asset_routes is not None:
+            try:
+                if branding_asset_routes.handle_post(self, parsed, data if isinstance(data, dict) else {}):
+                    return
+            except Exception as exc:  # noqa: BLE001
+                self._json(500, {"ok": False, "error": "branding_routes_post", "detail": str(exc)})
+                return
         if parsed.path == "/reveal":
             # #region agent log
             try:
@@ -7550,25 +6659,6 @@ class Handler(BaseHTTPRequestHandler):
                     (data.get("output") or "").strip(),
                     (data.get("product_id") or "").strip(),
                     (data.get("index") or "").strip(),
-                ),
-            )
-            return
-        if parsed.path == "/convert-links-elementy":
-            settings = load_elementy_conversion_settings()
-            try:
-                q_raw = data.get("quality")
-                quality = int(q_raw) if q_raw is not None else settings["quality"]
-            except (TypeError, ValueError):
-                quality = settings["quality"]
-            formats = data.get("formats") if isinstance(data.get("formats"), dict) else None
-            self._json(
-                200,
-                convert_links_elementy(
-                    (data.get("product_id") or "").strip(),
-                    (data.get("index") or "").strip(),
-                    (data.get("revision_path") or "").strip(),
-                    quality,
-                    formats,
                 ),
             )
             return
@@ -7824,8 +6914,6 @@ class Handler(BaseHTTPRequestHandler):
                 data.get("linked_product_ids") or [],
                 data.get("linked_variant_ids"),
                 updated_by=str(user.get("email") or user.get("name") or "user"),
-                product_link_id=data.get("product_link_id") or "",
-                product_link_action=data.get("product_link_action") or "",
             )
             if not ok:
                 self._json(400, {"ok": False, "error": err or "patch_failed"})
@@ -7837,8 +6925,6 @@ class Handler(BaseHTTPRequestHandler):
                     "asset_id": data.get("asset_id"),
                     "linked_product_ids": data.get("linked_product_ids") or [],
                     "linked_variant_ids": data.get("linked_variant_ids") or [],
-                    "product_link_id": data.get("product_link_id") or "",
-                    "product_link_action": data.get("product_link_action") or "",
                 },
             )
             return
@@ -7879,86 +6965,6 @@ class Handler(BaseHTTPRequestHandler):
                     },
                 )
             except OSError as exc:
-                self._json(500, {"ok": False, "error": str(exc)})
-            return
-        if parsed.path == "/sleeve-stock/reimport":
-            if self._require_admin() is None:
-                return
-            xlsx = Path(str(data.get("path") or DEFAULT_SLEEVE_STOCK_XLSX))
-            try:
-                result = _run_sleeve_stock_import(xlsx)
-                append_audit(
-                    {
-                        "action": "sleeve_stock_reimport",
-                        "user": str((self._session_user() or {}).get("email") or "admin"),
-                        "meta": {
-                            "entry_count": result.get("entry_count"),
-                            "source": result.get("source_xlsx"),
-                        },
-                    }
-                )
-                self._json(
-                    200,
-                    {
-                        "ok": True,
-                        "entry_count": result.get("entry_count"),
-                        "updated_at": result.get("updated_at"),
-                        "source_xlsx": result.get("source_xlsx"),
-                    },
-                )
-            except FileNotFoundError:
-                self._json(404, {"ok": False, "error": "xlsx_not_found", "path": str(xlsx)})
-            except Exception as exc:  # noqa: BLE001
-                self._json(500, {"ok": False, "error": str(exc)})
-            return
-        if parsed.path == "/sleeve-stock/import":
-            # Multipart handled before JSON parse - re-read is not possible; use early branch.
-            # If we reached here, body was JSON with optional base64.
-            if self._require_admin() is None:
-                return
-            import base64
-            import tempfile
-
-            b64 = data.get("file_base64") or data.get("content_base64")
-            fname = str(data.get("filename") or "sleeve-stock.xlsx")
-            if not b64:
-                self._json(400, {"ok": False, "error": "file_required"})
-                return
-            try:
-                blob = base64.b64decode(b64)
-            except Exception:  # noqa: BLE001
-                self._json(400, {"ok": False, "error": "invalid_base64"})
-                return
-            suffix = Path(fname).suffix.lower() or ".xlsx"
-            try:
-                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-                    tmp.write(blob)
-                    tmp_path = Path(tmp.name)
-                result = _run_sleeve_stock_import(tmp_path)
-                try:
-                    tmp_path.unlink(missing_ok=True)
-                except OSError:
-                    pass
-                append_audit(
-                    {
-                        "action": "sleeve_stock_import",
-                        "user": str((self._session_user() or {}).get("email") or "admin"),
-                        "meta": {
-                            "entry_count": result.get("entry_count"),
-                            "filename": fname,
-                        },
-                    }
-                )
-                self._json(
-                    200,
-                    {
-                        "ok": True,
-                        "entry_count": result.get("entry_count"),
-                        "updated_at": result.get("updated_at"),
-                        "source_xlsx": result.get("source_xlsx"),
-                    },
-                )
-            except Exception as exc:  # noqa: BLE001
                 self._json(500, {"ok": False, "error": str(exc)})
             return
         if parsed.path == "/wykrojniki/link-products":
@@ -8136,8 +7142,28 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, append_thumb_override(pid, data if isinstance(data, dict) else {}))
             return
+        if parsed.path == "/thumb-cache/warm":
+            if not dam_thumb_cache:
+                self._json(500, {"ok": False, "error": "dam_thumb_cache_missing"})
+                return
+            paths = data.get("paths") if isinstance(data, dict) else None
+            if not isinstance(paths, list):
+                self._json(400, {"ok": False, "error": "paths_required"})
+                return
+            profile = str((data.get("profile") if isinstance(data, dict) else None) or "grid")
+
+            def _resolve(p: str, _email: str = "") -> str:
+                return _coerce_media_target(p)
+
+            result = dam_thumb_cache.warm_paths(
+                [str(x) for x in paths if x],
+                profile=profile,
+                resolve_physical=_resolve,
+            )
+            self._json(200, result)
+            return
         if parsed.path == "/viz-flag":
-            if self._require_power_user_or_admin() is None:
+            if self._require_admin() is None:
                 return
             self._json(200, write_viz_flags(data if isinstance(data, dict) else {}))
             return
@@ -8297,7 +7323,6 @@ class Handler(BaseHTTPRequestHandler):
                 demo=bool(payload.get("demo")),
                 dry_run=dry_run,
                 confirm=confirm,
-                existing_product_path=str(payload.get("existing_product_path") or ""),
             )
             if result.get("ok") and not result.get("dry_run"):
                 try:
@@ -8362,18 +7387,6 @@ class Handler(BaseHTTPRequestHandler):
             )
             self._json(200 if result.get("ok") else 400, result)
             return
-        if parsed.path == "/explorer/add-subcategory":
-            # Admin: globalna podkategoria → naming-dictionary.subcategories[]
-            user = self._require_admin()
-            if user is None:
-                return
-            payload = data if isinstance(data, dict) else {}
-            result = add_global_subcategory(
-                payload,
-                actor=str(user.get("email") or user.get("name") or ""),
-            )
-            self._json(200 if result.get("ok") else 400, result)
-            return
         if parsed.path == "/explorer/pack-print":
             # PAKIET: ZIP 2-PROJEKT + 4-WIZKI -> 3-DRUK (bez SZKICE); nazwa = stem .ai
             user = self._require_login()
@@ -8391,6 +7404,12 @@ class Handler(BaseHTTPRequestHandler):
                 product_id=str(payload.get("product_id") or "").strip(),
                 index=str(payload.get("index") or payload.get("revision_index") or "").strip(),
                 dry_run=bool(payload.get("dry_run")),
+                dest_dir=str(
+                    payload.get("dest_dir")
+                    or payload.get("destination")
+                    or payload.get("out_dir")
+                    or ""
+                ).strip(),
             )
             if result.get("ok") and not result.get("dry_run"):
                 try:
@@ -8716,49 +7735,6 @@ class Handler(BaseHTTPRequestHandler):
             )
             self._json(200, result)
             return
-        if parsed.path == "/finance/invoices/outlook-draft":
-            if self._require_admin() is None:
-                return
-            if invoice_mail_mod is None:
-                self._json(503, {"ok": False, "error": "invoice_mail_unavailable"})
-                return
-            ids = data.get("invoice_ids") or data.get("ids") or []
-            if not isinstance(ids, list) or not ids:
-                self._json(400, {"ok": False, "error": "invoice_ids_required"})
-                return
-            to = data.get("to") or []
-            if isinstance(to, str):
-                to = [x.strip() for x in to.replace(";", ",").split(",") if x.strip()]
-            if not isinstance(to, list) or not to:
-                self._json(400, {"ok": False, "error": "recipients_required"})
-                return
-            result = invoice_mail_mod.prepare_invoice_mail(
-                WEB_ROOT,
-                invoice_ids=[str(x) for x in ids],
-                to=[str(x) for x in to],
-                accounting_no=str(data.get("accounting_no") or "509012414"),
-                body=str(data.get("body") or data.get("body_note") or ""),
-                load_json=_load_json,
-                invoices_file=INVOICES_FILE,
-            )
-            append_audit(
-                {
-                    "action": "invoice_outlook_draft",
-                    "user": str((self._session_user() or {}).get("email") or "admin"),
-                    "meta": {
-                        "invoice_ids": ids,
-                        "to": to,
-                        "ok": result.get("ok"),
-                        "error": result.get("error"),
-                    },
-                }
-            )
-            # Expose zip via relative data path for browser fallback
-            if result.get("zip_name"):
-                result["zip_url"] = f"/data/_invoice_mail_stage/{result['zip_name']}"
-            status = 200 if result.get("ok") or result.get("zip_path") else 500
-            self._json(status, result)
-            return
         if parsed.path == "/finance/invoices":
             if self._require_admin() is None:
                 return
@@ -8832,20 +7808,9 @@ class Handler(BaseHTTPRequestHandler):
             }
             self._json(200, {"ok": True, "groups": clean})
             return
-        if parsed.path == "/app-settings":
+        if parsed.path in ("/db/reconnect", "/db/refresh"):
             if self._require_admin() is None:
                 return
-            patch = data.get("elementy_conversion")
-            if patch is None and isinstance(data.get("settings"), dict):
-                patch = data["settings"].get("elementy_conversion")
-            if not isinstance(patch, dict):
-                self._json(400, {"ok": False, "error": "elementy_conversion_required"})
-                return
-            merged = save_elementy_conversion_settings(patch)
-            self._json(200, {"ok": True, "elementy_conversion": merged})
-            return
-        if parsed.path in ("/db/reconnect", "/db/refresh"):
-            # Jak GET /db/status: reconnect + opcjonalny pull dump na localhost (bez Bearera).
             if not dam_db:
                 self._json(500, {"ok": False, "error": "dam_db_missing"})
                 return
@@ -8897,26 +7862,28 @@ def _kv_cache_watcher() -> None:
 
 def main() -> None:
     AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if branding_asset_routes is not None:
+        sqlite_path = None
+        try:
+            if dam_db is not None:
+                sqlite_path = getattr(dam_db, "DB_CANONICAL", None)
+        except Exception:
+            sqlite_path = None
+
+        def _require_admin_wrap(handler):
+            return handler._require_admin() is not None
+
+        branding_asset_routes.configure(
+            web_root=WEB_ROOT,
+            branding_index_file=BRANDING_INDEX_FILE,
+            load_json=_load_json,
+            sqlite_path=sqlite_path,
+            require_admin=_require_admin_wrap,
+        )
     try:
         if dam_db is not None:
             print("db:", dam_db.init_db())
         auth_init_db()
-        if dam_redis:
-            try:
-                dam_redis.bootstrap()
-            except Exception as exc:  # noqa: BLE001
-                print("dam_redis.bootstrap warning:", exc)
-        if dam_thumb_cache_mod is not None and os.environ.get("DAM_WARM_BOOT_CONSUMER", "1") == "1":
-            if os.environ.get("DAM_WARM_BOOT_ENQUEUE", "0") != "0":
-                print("[C-WARM] DAM_WARM_BOOT_ENQUEUE must stay 0 on boot path")
-            warm_json = os.environ.get(
-                "DAM_WARM_LOCAL_JSON",
-                str(DESKTOP_DIR.parent.parent / "PAMIEC-PODRECZNA" / "warm-local-20260722.json"),
-            )
-            try:
-                dam_thumb_cache_mod.dam_warm_boot_consumer(warm_json)
-            except Exception as exc:  # noqa: BLE001
-                print("dam_warm_boot_consumer warning:", exc)
         seed_owner_from_env()
     except Exception as exc:
         print("auth/db seed:", exc)
@@ -8926,14 +7893,6 @@ def main() -> None:
         print("naming policy seed:", exc)
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     threading.Thread(target=_kv_cache_watcher, daemon=True).start()
-    try:
-        from dam_sync import spawn_sync_quiet, start_periodic_sync
-
-        if dam_db and not dam_db.latest_database_dump():
-            spawn_sync_quiet(push=False, no_commit=True)
-        start_periodic_sync()
-    except Exception as exc:
-        print("db dump bootstrap:", exc)
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"DAM local bridge http://{HOST}:{PORT}")
     try:

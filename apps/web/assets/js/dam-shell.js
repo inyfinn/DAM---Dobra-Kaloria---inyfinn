@@ -2974,10 +2974,15 @@
     if (window.DamI18n && typeof window.DamI18n.whenReady === "function") {
       window.DamI18n.whenReady(release);
       /* failsafe: nigdy nie trzymac body opacity:0 w nieskonczonosc */
-      setTimeout(release, 1800);
+      setTimeout(release, 1200);
+      setTimeout(release, 2800);
     } else {
       release();
     }
+    /* Extra: nawet gdy scheduleBootReveal nigdy nie wywołany (init hang) */
+    setTimeout(function () {
+      if (!bootFinished) finishBoot(true);
+    }, 3500);
   }
 
   // Main init

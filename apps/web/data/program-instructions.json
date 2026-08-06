@@ -1,352 +1,139 @@
 {
-  "version": 26,
+  "version": 16,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-07-29T00:00:00+02:00",
+  "updated_at": "2026-08-06T10:30:00+02:00",
   "instructions": [
     {
-      "id": "ui.assoc_edit_shell_adapters",
-      "must": [
-        "Assoc Edit = wspolny shell #damAssocEditOverlay > #damAssocEditPopover (Skojarzone produkty / warianty) - NIE jest COMBO",
-        "COMBO = osobny #damThumbPicker / DamFolderPicker (trzy widoki, sciezka, Otworz Eksplorator Windows); footer Assoc: Dodaj z dysku + Eksplorator [data-goto-combo]",
-        "Cztery entry: viz suggestions, viz variants, branding product, branding material variant - kazda z jawnym adapterem danych",
-        "ensureInjectedCss: early-return PRZED budowa stringa CSS; bez static dam-assoc-edit.css w HTML (FOUC minus)",
-        "Click path paint-first: shell + 'Ladowanie…' synchronicznie; renderPinned/renderOptions/loadBrandingMaterialCandidates/ensureFileIndex dopiero w setTimeout(0) po paint (budget click <16ms)",
-        "bindVizAssocCtas: jeden delegowany listener na root; aktualizuj opts przy kazdym wywolaniu (CTA moga dojsc po pierwszym bind)",
-        "Zapis: DamApi.ensureSession() przed POST /branding/asset-associations; login_required = jawny blad; optimistic UI + status corner + rollback",
-        "Browser circuit breaker: smoke 5s, jedna proba/hipoteze ~10s, abort przy stall; nie absolutny ban",
-        "Preserve v4.0.14 /db/reconnect bez auth i lokalny dump OK"
-      ],
-      "body_pl": "HARD 2026-07-26: freeze = sync populate w click stacku (nie zly root). Shell natychmiast; ciezkie kandydaty async. v4.0.21.",
-      "category": "ui",
-      "must_not": [
-        "Przywracac buildAssocMediaPickerUi / ensureSearchIndexBootstrap / sync parse branding-index.json na click",
-        "Uzywac editBtn.click() z viz CTA suggestions",
-        "Wolac asset-associations bez assetCtx (viz variants produktu)",
-        "Laczyc COMBO i Assoc Edit w jeden overlay",
-        "Cofac v4.0.14 reconnect / dump semantics",
-        "Wywolywac renderOptions/renderPinned/loadBrandingMaterialCandidates synchronicznie w click stacku przed return handlera"
-      ],
+      "id": "workspace.layout_bin",
       "priority": "critical",
-      "title_pl": "Assoc Edit: shell + 4 adaptery + COMBO osobno",
+      "title_pl": "Layout GIT_ROOT + bin CONTENT_ROOT",
+      "category": "workspace",
+      "updated_at": "2026-08-06",
+      "must": [
+        "GIT_ROOT = katalog z .git i DAM.exe (obecnie D:\\Marketing\\...\\DAM---Dobra-Kaloria---inyfinn).",
+        "CONTENT_ROOT = GIT_ROOT\\bin (apps, THEME, memory, runtime, scripts).",
+        "runtime_config: CONTENT_ROOT = DESKTOP_DIR.parent.parent; GIT_ROOT = CONTENT_ROOT.parent; git cwd = GIT_ROOT.",
+        "Launcher: DAM.exe lub DAM.cmd -> bin\\runtime\\win\\python\\pythonw.exe + bin\\apps\\desktop\\launch.py."
+      ],
+      "must_not": [
+        "Zakladac ze apps/ lezy na wierzchu GIT_ROOT jako kanoniczna tresc (to moze byc tylko junction/lustro).",
+        "Uruchamiac git w CONTENT_ROOT (bin) zamiast GIT_ROOT.",
+        "Wymagac systemowego Python w PATH dla uzytkownika koncowego."
+      ],
+      "related_code": [
+        "bin/apps/desktop/runtime_config.py",
+        "bin/apps/desktop/dam_root_launcher.py",
+        "DAM.cmd"
+      ],
       "related_kv": [
         "program-instructions"
       ],
-      "updated_at": "2026-07-26",
-      "related_code": [
-        "apps/web/assets/js/dam-assoc-edit.js",
-        "apps/web/assets/js/dam-media-preview.js",
-        "apps/web/assets/js/dam-viz.js",
-        "apps/web/assets/js/dam-folder-picker.js"
-      ]
+      "body_pl": "HARD 2026-08-06: primary workspace D: (nie P:\\DAM). Portable = bin/runtime/win."
     },
     {
-      "id": "ui.folder_picker_combo_only",
-      "must": [
-        "Jedyny folder/file picker w panelu DAM to DamFolderPicker.open / #damThumbPicker (widok combo domyslnie)",
-        "Call sites (assoc Dodaj z dysku, explorer elementy, mapuj wariant, viz SetThumb) wołaja DamFolderPicker - branding nie zalezy od dam-viz.js",
-        "COMBO chrome: przycisk 'Otwórz Eksplorator Windows' w toolbarze przy .dam-thumb-picker__views; box 70vw x 90vh; grid padding baseline+10px"
-      ],
-      "body_pl": "HARD 2026-07-22: stary #damAssocFolderPicker / openFolderGrid oraz #damElementsPicker usuniete. Extract: apps/web/assets/js/dam-folder-picker.js.",
-      "category": "ui",
-      "must_not": [
-        "Pokazywac #damAssocFolderPicker albo openFolderGrid",
-        "Tworzyc stary #damElementsPicker overlay",
-        "Uzywac primary paste-path jako jedynej drogi mapowania wariantu (footer = COMBO)"
-      ],
-      "priority": "high",
-      "title_pl": "Folder picker: tylko COMBO DamFolderPicker",
-      "related_kv": [
-        "program-instructions"
-      ],
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/web/assets/js/dam-folder-picker.js",
-        "apps/web/assets/js/dam-assoc-edit.js",
-        "apps/web/assets/js/dam-explorer.js",
-        "apps/web/assets/js/dam-viz.js"
-      ]
-    },
-    {
-      "id": "dashboard.quick_links_custom",
-      "must": [
-        "Widget quick_links = kompaktowe przyciski (chip ~40-48px), nie wysokie kafelki",
-        "Kazdy user moze dodawac/usuwac skroty przez Plus + wyszukiwalny picker z puli istniejacych stron DAM",
-        "Picker bez tworzenia nowych URL / bez trybu admina",
-        "Persist per user: localStorage dam_quick_links_v1:{email}; domyslnie Wizualizacje, Koszty, Eksplorer, Faktury",
-        "Pula = DamShell.getNavItems() (katalog nawigacji)"
-      ],
-      "body_pl": "HARD 2026-07-22: Szybkie skroty na dashboardzie sa personalizowane przez usera (nie tylko admina). Tylko istniejace strony z menu.",
-      "category": "dashboard",
-      "must_not": [
-        "Wymagac trybu admina do Plus / personalizacji skrotow",
-        "Pozwalac tworzyc dowolne custom URL w pickerze",
-        "Redesignowac anatomie kart BENTO (C3 freeze) - tylko body widgetu quick_links"
-      ],
-      "priority": "high",
-      "title_pl": "Dashboard: personalizowane Szybkie skroty (quick_links)",
-      "related_kv": [
-        "program-instructions"
-      ],
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/web/assets/js/dam-dashboard-widgets.js",
-        "apps/web/assets/css/dam-dashboard.css",
-        "apps/web/assets/js/dam-shell.js",
-        "apps/web/assets/js/dam-bento-resize.js"
-      ]
-    },
-    {
-      "id": "nav.tasks_page",
-      "must": [
-        "Sidebar: pozycja Zadania (tasks.html) bezposrednio pod Wiadomosci",
-        "Strona tasks.html = pelny kokpit Asana Home (IA) w Geex light+dark",
-        "Loading = skeleton per-element (#e8e8ee), NIGDY tekst Wczytywanie zadan Asana",
-        "Sidebar i header nigdy nie sa skeletonem",
-        "Lokalne oznaczenie ukonczone NIE usuwa wiersza z biezacej zakladki (Nadchodzace/Zalegle): styl is-done, mozna odznaczyc; znika dopiero po zmianie zakladki",
-        "Stan ukonczen lokalnych: localStorage dam_asana_local_done_v1 (nie mutuje Asana API dopoki A1 OAuth)"
-      ],
-      "body_pl": "HARD 2026-07-22: nawigacja Zadania + tasks.html. Interakcje: taby, checkbox lokalny (sticky w widoku), expand subtaskow, kafelki projektow, stub create/AI.",
-      "category": "dashboard",
-      "must_not": [
-        "Mutowac asana.com z poziomu DAM",
-        "Uzywac samotnego p.dam-widget__meta jako loadera Zadan",
-        "Natychmiast filtrowac ukonczone zadanie z Nadchodzacych/Zaleglych po kliknieciu checkboxa"
-      ],
+      "id": "runtime.portable_embed_path",
       "priority": "critical",
-      "title_pl": "Nav + strona Zadania (Asana Home)",
+      "title_pl": "Embeddable Python: sys.path entry scripts",
+      "category": "runtime",
+      "updated_at": "2026-08-06",
+      "must": [
+        "Entry points launch.py / serve_browser.py / local_bridge.py wstawiaja katalog desktop do sys.path (embed ._pth nie dodaje cwd).",
+        "DAM.exe / DAM.cmd preferuje wylacznie bin\\runtime\\win\\python\\pythonw.exe.",
+        "Deps (pywebview, bcrypt, Pillow, ...) w bin\\runtime\\win\\python\\Lib\\site-packages (vendor-runtime-win.ps1)."
+      ],
+      "must_not": [
+        "Liczyc na PYTHONPATH przy embeddable (jest ignorowany gdy istnieje python*._pth).",
+        "Wymagac pip install na maszynie uzytkownika / MsgBox Zainstaluj Python."
+      ],
+      "related_code": [
+        "bin/apps/desktop/launch.py",
+        "bin/scripts/ops/vendor-runtime-win.ps1"
+      ],
       "related_kv": [
         "program-instructions"
       ],
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/web/tasks.html",
-        "apps/web/assets/js/dam-tasks.js",
-        "apps/web/assets/css/dam-tasks.css",
-        "apps/web/assets/js/dam-shell.js"
-      ]
+      "body_pl": "Root cause 2026-08-06: ModuleNotFoundError bridge_supervisor przy pythonw z bin/runtime."
     },
     {
-      "id": "dashboard.asana_home_widget",
-      "must": [
-        "Widget id asana_home jest domyslnym szerokim bento (~span 9) na dashboardzie",
-        "Pokazuje Moje zadania z zakladkami Nadchodzace / Zalegle / Ukonczone, pill projektu i relative due",
-        "Preferuj live Asana API (bridge /integrations/asana/sync); fallback: data/asana-tasks.json export",
-        "Gdy brak OAuth: uczciwy stan zrodla (eksport/cache), bez fake template Teams/Asana"
-      ],
-      "body_pl": "HARD 2026-07-22: kokpit Asana Home w DAM jako widget asana_home (Geex light). IA z Asana Home, styl Geex nie purple AI slop.",
-      "category": "dashboard",
-      "must_not": [
-        "Pokazywac same powtarzalne nazwy subtaskow bez kontekstu projektu/rodzica gdy dane sa w eksporcie",
-        "Uzywac fake wiadomosci Teams gdy brak sync"
-      ],
-      "priority": "high",
-      "title_pl": "Dashboard: widget Asana Home (asana_home)",
-      "related_kv": [
-        "program-instructions"
-      ],
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/web/assets/js/dam-dashboard-widgets.js",
-        "apps/web/assets/js/dam-dashboard.js",
-        "apps/web/assets/css/dam-dashboard.css",
-        "apps/desktop/local_bridge.py"
-      ]
-    },
-    {
-      "id": "preview.file_state.local",
-      "must": [
-        "Stan local = bajty pliku dostepne lokalnie; UI pokazuje podglad bez ostrzezenia Synology",
-        "sync_pending (recall w toku) traktuj jak local w UI (treat_as_local=true)"
-      ],
-      "body_pl": "HARD 2026-07-21: stany dostepnosci pliku z mostu GET /file-availability.",
-      "category": "preview",
-      "must_not": [
-        "Pokazywac 'Synology Drive / brak sync' gdy plik jest local lub sync_pending"
-      ],
+      "id": "perf.no_fat_branding_index_hotpath",
       "priority": "critical",
-      "title_pl": "Preview: stan local / sync_pending",
+      "title_pl": "Zakaz hot-path branding-index.json (~340MB)",
+      "category": "performance",
+      "updated_at": "2026-08-06",
+      "must": [
+        "Cold UI: branding-grid-head.json + branding-grid-index.json (lub bridge /branding-grid-*).",
+        "Modal/asset: GET /branding/asset?id= lub /branding-for-product.",
+        "UI :8765 i bridge :8766 odmawiaja pelnego branding-index bez ?full=1 (403 use_branding_grid_index).",
+        "Cel cold open kart: <1s na lokalnym dysku (grid-head <100ms)."
+      ],
+      "must_not": [
+        "fetch/parse data/branding-index.json ani GET /branding-index bez ?full=1 w sciezce UI.",
+        "Serwowac backupy branding-index.* do przegladarki jako normalny asset."
+      ],
+      "related_code": [
+        "bin/apps/web/assets/js/dam-branding.js",
+        "bin/apps/web/assets/js/dam-media-preview.js",
+        "bin/apps/desktop/dam_ui_http.py",
+        "bin/apps/desktop/local_bridge.py"
+      ],
       "related_kv": [
         "program-instructions"
       ],
-      "updated_at": "2026-07-21",
-      "related_code": [
-        "apps/desktop/dam_file_availability.py",
-        "apps/web/assets/js/dam-preview-truth.js"
-      ]
+      "body_pl": "RC 2026-08-06: pierwsze 32MB fat index = 4.1s I/O; grid-head 0.02s. Regresja vs ~1.5 tyg. temu = rozrost indeksu + sciezki full dump."
     },
     {
-      "id": "preview.file_state.online_only",
-      "must": [
-        "Etykieta PL: 'Element z dysku dostepny tylko online - Synology' (bez em-dash)",
-        "Nie mylic z legalnym Synology Share / Uzyskaj lacze"
-      ],
-      "body_pl": "HARD: online_only = cloud-only / recall timeout. To nie jest blad onerror obrazka.",
-      "category": "preview",
-      "must_not": [
-        "Uzywac tekstu 'Synology Drive / brak sync' jako uniwersalnego fallbacku onerror"
-      ],
+      "id": "db.sqlite_only_until_synology",
       "priority": "critical",
-      "title_pl": "Preview: online_only label",
+      "title_pl": "Tylko SQLite do powrotu Synology",
+      "category": "database",
+      "updated_at": "2026-08-06",
+      "must": [
+        "Silnik lokalny: SQLite (bin/apps/desktop/data/dam-local.sqlite).",
+        "dam_db mode = sqlite (nie auto/pg) az do Postgres na NAS."
+      ],
+      "must_not": [
+        "Wymagac lokalnego Postgresa do startu aplikacji.",
+        "Obiecywac multi-PC live bez Synology + PG na NAS.",
+        "Syncowac pliku .sqlite przez Drive/udzial jako wspolna baze."
+      ],
+      "related_code": [
+        "bin/apps/desktop/dam_db.py"
+      ],
       "related_kv": [
         "program-instructions"
       ],
-      "updated_at": "2026-07-21",
-      "related_code": [
-        "apps/desktop/dam_file_availability.py",
-        "apps/web/assets/js/dam-preview-truth.js"
-      ]
+      "body_pl": "Decyzja planu dam_bin_layout 2026-08-03; potwierdzona 2026-08-06."
     },
     {
-      "id": "preview.file_state.missing_root",
-      "must": [
-        "Gdy Marketing root unset: CTA do settings.html#damDisk",
-        "Stan root_unset / missing z jasna etykieta PL"
-      ],
-      "body_pl": "Brak sciezki Marketing na urzadzeniu nie jest awaria Synology.",
-      "category": "preview",
-      "must_not": [
-        "Obwinianie Synology gdy user nie ustawil sciezki dysku"
-      ],
-      "priority": "high",
-      "title_pl": "Preview: root unset CTA",
-      "related_kv": [
-        "program-instructions"
-      ],
-      "updated_at": "2026-07-21",
-      "related_code": [
-        "apps/web/assets/js/dam-preview-truth.js",
-        "apps/web/assets/js/dam-device-paths.js"
-      ]
-    },
-    {
-      "id": "preview.cache.disk",
-      "must": [
-        "Miniatury dyskowe tylko w {repo}/PAMIEC-PODRECZNA na D: (DAM_CACHE_ROOT override)",
-        "Nigdy nie zapisywac cache na X:/Marketing ani M:/",
-        "AVIF preferowane (~q35), JPEG fallback"
-      ],
-      "body_pl": "Disk SoT dla thumb-cache; Redis tylko przyspiesza metadata.",
-      "category": "preview",
-      "must_not": [
-        "Kasowac assetow Marketing przy budowie miniatur",
-        "Commitowac binariow .avif/.jpg z PAMIEC-PODRECZNA"
-      ],
+      "id": "assoc.no_sibling_spray_mixed",
       "priority": "critical",
-      "title_pl": "Preview cache: PAMIEC-PODRECZNA na D:",
+      "title_pl": "Zakaz sibling spray w SLIDERY / mixed",
+      "category": "assoc",
+      "updated_at": "2026-08-05",
+      "must": [
+        "W SLIDERY / KATEGORIE GLOWNE / folderach mixed: linked_product_ids tylko per-plik (name+OCR+SKU / path_hints wlasne), NIE kopiuj folder_linked_product_ids na siblings.",
+        "Kulki nie moga dostac mix-6x-mini-batoniki-mixy ze sprayu folderu.",
+        "Path hint folder-level OK tylko gdy folder jednoznacznie jednego produktu; mixed_depth => bez sprayu blobu grupy."
+      ],
+      "must_not": [
+        "Kopiowac group_product_ids na wszystkie pliki w folderze mixed / SLIDERY.",
+        "Traktowac sibling stem jako wspolne skojarzenia produktow."
+      ],
+      "related_code": [
+        "apps/web/scripts/brand_folder_context.py",
+        "apps/web/scripts/refilter-branding-links.py"
+      ],
       "related_kv": [
         "program-instructions"
       ],
-      "updated_at": "2026-07-21",
-      "related_code": [
-        "apps/desktop/dam_thumb_cache.py",
-        "PAMIEC-PODRECZNA/README.md"
-      ]
-    },
-    {
-      "id": "preview.cache.redis",
-      "must": [
-        "Redis opcjonalny (Docker nie wymagany do UI); DAM_REDIS_URL default redis://127.0.0.1:6379/0",
-        "Circuit breaker: po 3 bledach OPEN = pelny bypass Redis (zero connect per HTTP request)",
-        "Background probe co ~12s; HALF-OPEN jedna proba; sukces = CLOSED bez restartu mostu",
-        "Fallback matrix: avail=RAM/recompute; thumb meta=disk SoT; dry-run FORCE=RAM; warm=no-op/sync",
-        "Rola Redis/warm: TYLKO przyspieszyc pierwsze pokazanie (szybszy load strony/siatki) - nigdy trwaly obiekt UI"
-      ],
-      "body_pl": "HARD 2026-07-21 + 2026-07-22: circuit breaker + fallback. Redis/warm = booster pierwszego paintu, nie zrodlo po kliknieciu.",
-      "category": "preview",
-      "must_not": [
-        "Probowa connect Redis na kazdym requescie gdy circuit OPEN",
-        "Udawac ze RAM fallback przezywa restart mostu dla rol wymagajacych trwalosci (thumbs = dysk)",
-        "Traktowac Redis/PAMIEC jako staly obiekt wyswietlany po kliknieciu zamiast zrodla z dysku"
-      ],
-      "priority": "critical",
-      "title_pl": "Redis: circuit breaker + fallback matrix",
-      "related_kv": [
-        "program-instructions"
-      ],
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/desktop/dam_redis.py",
-        "apps/desktop/docker-compose.redis.yml",
-        "apps/desktop/local_bridge.py"
-      ]
-    },
-    {
-      "id": "preview.cache.ephemeral_only",
-      "must": [
-        "PAMIEC-PODRECZNA / Redis /thumb-cache = TYLKO szybki pierwszy paint (karty siatki, skeleton, warm)",
-        "Po zaladowaniu / po kliknieciu (modal, lightbox, podglad pelny, odtwarzanie) ZAWSZE zrodlo z dysku przez /media (albo natywna sciezka Marketing)",
-        "Cache moze zniknac, przegenerowac sie, byc AVIF/JPEG - UI nie moze zalezec od niego jako jedynego obrazu po interakcji"
-      ],
-      "body_pl": "HARD 2026-07-22 (user): pamiec podreczna nie jest stalym obiektem. Laduje sie przez Redis zeby strona szybciej sie pokazala; klik = grafika zrodlowa z dysku, nie cache.",
-      "category": "preview",
-      "must_not": [
-        "Zostawiac /thumb-cache jako src w modalu/lightboxie/pelnym podgladzie po kliknieciu",
-        "Uzywac cache jako jedynego trwalego podgladu assetu",
-        "Mylc warm/Redis z plikiem Marketing na dysku"
-      ],
-      "priority": "critical",
-      "title_pl": "Cache ephemeral: tylko first paint, klik = dysk",
-      "related_kv": [
-        "program-instructions"
-      ],
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/web/assets/js/dam-preview-truth.js",
-        "apps/web/assets/js/dam-media-preview.js",
-        "apps/desktop/dam_thumb_cache.py"
-      ]
-    },
-    {
-      "id": "paths.topology.device_scoped",
-      "must": [
-        "Resolve Marketing: user-device-paths current + MARKETING_CANDIDATES + machine-config",
-        "Uzywac dam_path_resolve / resolve_base_path_for_current_device - bez hardcodu jednego dysku"
-      ],
-      "body_pl": "Sciezki per urzadzenie; thumb key = marketing_relative + mtime + profile.",
-      "category": "paths",
-      "must_not": [
-        "Zakladac ze zawsze X:\\Marketing na kazdym PC"
-      ],
-      "priority": "critical",
-      "title_pl": "Paths: topologia device-scoped",
-      "related_kv": [
-        "program-instructions",
-        "user-device-paths"
-      ],
-      "updated_at": "2026-07-21",
-      "related_code": [
-        "apps/desktop/dam_path_resolve.py",
-        "apps/web/assets/js/dam-device-paths.js"
-      ]
-    },
-    {
-      "id": "preview.onerror_not_synology",
-      "must": [
-        "onerror miniatury = 'Podglad niedostepny' / brak podgladu - bez 'Synology Drive / brak sync'",
-        "Prawdziwy online_only tylko z GET /file-availability (DamPreviewTruth)"
-      ],
-      "body_pl": "HARD: fałszywy tooltip Synology na onerror usuniety. Legalne Synology Share zostaje.",
-      "category": "preview",
-      "must_not": [
-        "Wstawiac 'Synology Drive / brak sync' w title/aria onerror obrazka"
-      ],
-      "priority": "critical",
-      "title_pl": "Preview: onerror != Synology lie",
-      "related_kv": [
-        "program-instructions"
-      ],
-      "updated_at": "2026-07-21",
-      "related_code": [
-        "apps/web/assets/js/dam-media-preview.js",
-        "apps/web/assets/js/dam-branding.js",
-        "apps/web/assets/js/dam-preview-truth.js"
-      ]
+      "body_pl": "HARD 2026-08-05 Instant+assoc: root cause Kulki->MIX = sibling spray w enrich_folder_groups."
     },
     {
       "id": "ui.branding_grid_graphics_sort_overflow",
       "must": [
-        "Tylko grafiki (#damBrandingGraphicsOnly): ukrywa dokumenty, wideo ORAZ pliki zrodlowe PSD/PSB/AI/INDD/EPS (media_type=source, artwork_source); JPG z tagiem Edytowalny zostaje",
-        "Tip przelacznika informuje ze zrodla tez sa ukryte; nadal dostepne po tagach Dokument / Wideo / Zrodlo",
+        "Tylko grafiki (#damBrandingGraphicsOnly): ukrywa dokumenty, wideo, pliki zrodlowe PSD/PSB/AI/INDD/EPS (media_type=source, artwork_source) ORAZ asset_role=product_element (Element produktu); JPG z tagiem Edytowalny zostaje",
+        "Tip przelacznika: zrodla i elementy produktu ukryte; nadal dostepne po tagach Dokument / Wideo / Zrodlo / role:product_element",
+        "Etykieta PL asset_role product_element = 'Element produktu' (DamAssetTaxonomy.ASSET_ROLE_LABELS) - nigdy angielski fallback 'product element'",
         "Sort Priorytet uzycia: folderClusterRank (www→social→campaigns→…) potem folderDepthRank (plycej wyzej), potem rok desc, rola, mtime — bez wymyslonego open-count",
         "DamCardZoom CARD_IMG_BASE_SCALE=1 (nie 1.2); thumbs clipowane w .dam-viz-thumb (overflow/clip-path/contain:paint)"
       ],
@@ -414,17 +201,17 @@
         "Hierarchia tworzonych folderow (ikony + wciecia) widoczna pod statusem: kategoria = 1 wezel; produkt = folder produktu + tylko ZAZNACZONE warianty jako dzieci",
         "Wszystkie checkboxy w #damExplorerCreateModal maja accent-color purpurowy (var(--dam-primary, #AB54DB)) - zakaz natywnego oranzowego checkboxa",
         "Nowy wariant globalny (3 pola: kod PL/skrot dysku, kod EN/alias, pelna nazwa) zapisuje sie do naming-dictionary.json (carriers[]) + carrier-types.json przez POST /explorer/add-variant-type (admin) - respektowane programowo (etykiety, prefiks na dysku)",
-        "Dodaj typ (tag-edit i Explorer): POST /explorer/add-variant-type robi dict + copytree folderow w Szablony folderow (PL+EN/KRE+CRE) - zgodnie z ui.tag_edit_dodaj_typ_tag",
         "Po sukcesie tworzenia: panel potwierdzenia (nie tylko toast) z przyciskami Przejdz do folderu / Zatwierdz / Cofnij + odliczanie ~2 min; Cofnij wywoluje POST /explorer/undo-create (usuwa TYLKO swiezo utworzony, potwierdzony wiekiem katalog)"
       ],
-      "body_pl": "Handoff z audytu UX (2026-07-20, usability-brief): modal 'Dodaj kategorie/produkt' mial zargonowy podglad, statyczny (tylko po kliknieciu Podglad), sztywny numer kategorii, mysteriozna pusta czerwona ramka bledu, domyslnie zaznaczone wszystkie warianty i natywne oranzowe checkboxy. Naprawa: apps/web/assets/js/dam-explorer-add-product.js (+ apps/desktop/explorer_create.py: seq, undo_create; local_bridge.py: /explorer/next-category-seq, /explorer/undo-create, /explorer/add-variant-type). HARD 2026-07-22: Szablony YES - Dodaj typ tworzy foldery w Szablonach.",
+      "body_pl": "Handoff z audytu UX (2026-07-20, usability-brief): modal 'Dodaj kategorie/produkt' mial zargonowy podglad, statyczny (tylko po kliknieciu Podglad), sztywny numer kategorii, mysteriozna pusta czerwona ramka bledu, domyslnie zaznaczone wszystkie warianty i natywne oranzowe checkboxy. Naprawa: apps/web/assets/js/dam-explorer-add-product.js (+ apps/desktop/explorer_create.py: seq, undo_create; local_bridge.py: /explorer/next-category-seq, /explorer/undo-create, /explorer/add-variant-type).",
       "category": "explorer",
       "must_not": [
         "Wyswietlac tekstu 'Plan: skopiuj szablon...' / 'Drzewo:' w #damExpPreview",
         "Zaznaczac warianty domyslnie (checked) w #damExpVariants",
         "Pokazywac pustej czerwonej ramki #damExpErr gdy brak komunikatu",
         "Uzywac natywnego accent-color checkboxa (oranzowy) w modalu tworzenia",
-        "Usuwac na Cofnij starszy niz ~2-3 min katalog (guard st_ctime w undo_create)"
+        "Usuwac na Cofnij starszy niz ~2-3 min katalog (guard st_ctime w undo_create)",
+        "Tworzyc fizycznego podfolderu wariantu w szablonie produktu na X: z samego dodania globalnego wariantu - to tylko etykieta/prefiks, fizyczny folder szablonu wymaga recznej pracy admina na dysku"
       ],
       "priority": "high",
       "title_pl": "Explorer: modal tworzenia kategorii/produktu (UX + undo + wariant globalny)",
@@ -1428,14 +1215,11 @@
         "Bezpieczne usuwanie (hold-to-delete) domyslnie ON",
         "Preferencja w Postgres dam_kv_store klucz user-prefs:{email} pole prefs.safe_delete (bridge GET/POST /user-prefs)",
         "localStorage tylko cache zsynchronizowany z DB",
-        "DEFAULT holdMs = 2000 ms (2 s); media preview moze byc 3000 ms",
-        "Ring postepu przy kursorze (fixed) + na przycisku podczas hold",
-        "Krotki klik / krotkie przytrzymanie przy hold ON: toast na dole 'Sprobuj przytrzymac…' + akcja 'Wylacz bezpieczne usuwanie'",
-        "Gdy safe_delete OFF: Usun/Anuluj dziala na zwykly klik",
-        "Reuse DamDanger - bez trzeciego systemu hold",
-        "Dashboard: w trybie Dostosuj pulpit #damDashCustomizeBtn = Zatwierdz, #damDashCustomizeCancel = Anuluj (hold 2 s)"
+        "Krotki klik przy hold ON: toast 'Sprobuj przytrzymac, by usunac' + akcja 'Wylacz bezpieczne usuwanie' (przywrocenie w ustawieniach profilu)",
+        "Gdy safe_delete OFF: Usun dziala na zwykly klik",
+        "Reuse DamDanger - bez trzeciego systemu hold"
       ],
-      "body_pl": "Globalna preferencja UX: destrukcyjne Usun/Anuluj wymaga przytrzymania (~2 s w DamDanger) z kółkiem przy kursorze. Wylaczenie w ustawieniach profilu (Preferencje / Bezpieczenstwo) zapisuje sie w bazie per konto.",
+      "body_pl": "Globalna preferencja UX: destrukcyjne Usun wymaga przytrzymania (~1 s w FMCG / DamDanger). Wylaczenie w ustawieniach profilu (Preferencje / Bezpieczenstwo) zapisuje sie w bazie per konto.",
       "category": "ui",
       "must_not": [
         "Traktowac localStorage jako jedyne zrodlo prawdy preferencji safe_delete",
@@ -1443,7 +1227,7 @@
       ],
       "priority": "high",
       "title_pl": "UI: bezpieczne usuwanie (hold-to-delete)",
-      "updated_at": "2026-07-22",
+      "updated_at": "2026-07-20",
       "related_code": [
         "apps/web/assets/js/dam-danger.js",
         "apps/web/assets/js/dam-user-prefs.js",
@@ -1839,156 +1623,67 @@
       ]
     },
     {
-      "id": "ui.dashboard_branding_latest_filter",
+      "id": "paths.marketing_root_m_drive",
       "must": [
-        "Widget branding_latest (.dam-widget--branding-latest): tylko gotowe grafiki raster/SVG z indeksu branding (packshot / material marketingowy)",
-        "Tytuly wierszy = nazwa produktu/assetu (nie folder WIZKI / links / ELEMENTY)",
-        "Gdy brak pliku na dysku: honest gray 'brak podgladu'; preferuj kolejny asset z czytelnym thumb (file-availability local/sync_pending)"
+        "Na komputerze zrodlowym marketing root = M:\\ (foldery - POLSKA, - EKSPORT, -- ARCHIWUM -- bezposrednio pod M:\\)",
+        "machine-config.users.<WindowsUser>.base_path wygrywa nad hardcodem X:/Marketing",
+        "Skrypty indeksu (build-file-index, build-branding-index, brand_marketing_segments) uzywaja apps/web/scripts/marketing_roots.py",
+        "Kolejnosc kandydatow: machine-config -> M:/ -> X:/Marketing -> D:/Marketing",
+        "Status lifecycle F/X/D przez POST /lifecycle-status odswieza UI AJAX bez restartu programu; restart bridge tylko po zmianie kodu Pythona"
       ],
-      "body_pl": "HARD 2026-07-22: lista Najnowsze materialy branding nie moze pokazywac smieci folderowych ani zrodel — ten sam duch co Tylko grafiki w Brandingu.",
-      "category": "ui",
+      "body_pl": "HARD 2026-08-03: User wskazuje M:\\ jako zrodlo kompletne. DAM nie 'musi' czytac z X — czyta ze wskazanego base_path. Indeks i thumbs budowac spod M:\\.",
+      "category": "paths",
       "must_not": [
-        "Pokazywac w branding_latest assetow z ELEMENTY w sciezce/nazwie",
-        "Pokazywac folder links / segment sciezki /links (product_element Links)",
-        "Pokazywac plikow zrodlowych PSD/PSB/AI/INDD/EPS/TIF ani media_type=source / asset_role=artwork_source / product_element",
-        "Uzywac tytulow wiersza '4 - WIZKI', 'links', 'ELEMENTY' zamiast nazwy produktu/assetu"
+        "Zakladac na stale ze X:/Marketing jest jedynym live rootem na PC zrodlowym",
+        "Wymagac restartu DAM po samym rename folderu ... - F / - X / - D"
       ],
       "priority": "critical",
-      "title_pl": "Dashboard: branding_latest tylko packshot/grafiki",
+      "title_pl": "Marketing root = wskazany dysk (M:\\ na PC zrodlowym)",
       "related_kv": [
         "program-instructions"
       ],
-      "updated_at": "2026-07-22",
+      "updated_at": "2026-08-03",
       "related_code": [
-        "apps/web/assets/js/dam-dashboard-widgets.js",
-        "apps/web/dashboard.html"
+        "apps/web/scripts/marketing_roots.py",
+        "apps/desktop/local_bridge.py",
+        "apps/desktop/machine-config.json",
+        "apps/desktop/lifecycle_status.py"
       ]
     },
     {
-      "id": "integrations.menu_label",
+      "id": "branding.assoc_adequate_not_keyword",
       "must": [
-        "Etykieta menu sidebar i tytul strony: Integracja i produkcja (nie samo Integracje)",
-        "i18n nav.integrations = Integracja i produkcja; fallback w dam-shell.js zgodny",
-        "Hub obejmuje OAuth/FMCG + Wykrojniki + Stany rekawkow"
+        "Skojarzenia produktow do materialow brandingowych musza byc ADEKWATNE (ten sam SKU / ta sama linia produktu), nie tylko wspolne slowo w nazwie (np. porzeczka)",
+        "M-SHOP404317-02-26 (REFORMATY PORZECZKA GC / Blackcurrant Cake) -> tylko produkt blackcurrant-cake-cashews (6300669)",
+        "Kazdy kafelek skojarzonego produktu z data-product-id musi byc klikalny do explorer.html?product=... nawet bez miniatury",
+        "Podwojne klikniecie na grafice w DamMediaPreview powieksza / wraca (lightbox zoom)",
+        "OCR branding: OLMOCR2 (AllenAI olmOCR-2 via HuggingFace / PACKAGING-CHECKER qa_ocr_olmocr) - NIE Ollama; RapidOCR jako fallback",
+        "Adekwatnosc = OCR+SKU+frazy linii produktu z file-index / product-associations; pliki bez SKU/smaku w nazwie tez linkujemy gdy OCR wskazuje produkt",
+        "Reczne override z branding-associations-overrides.json nigdy nie nadpisywac pipeline OCR/link"
       ],
-      "body_pl": "HARD 2026-07-22: pozycja menu i naglowek strony integrations.html = Integracja i produkcja.",
-      "category": "integrations",
+      "body_pl": "HARD 2026-08-03 (rev2): Keyword-only 'porzeczka' sklejal kulki/owsianke z kafelkiem GC Blackcurrant Cake - blad. Adekwatnosc = OCR (OLMOCR2) + SKU + frazy linii. ZAKAZ hardcodowanych list odrzucajacych tokeny owocow (WEAK_FLAVOR_TOKENS). Porzeczka w OCR moze poprawnie trafic w czarna porzeczka / blackcurrant cake gdy kontekst linii jest jasny.",
+      "category": "branding",
       "must_not": [
-        "Zostawiac etykiete Integracje w sidebar gdy i18n jest zaladowane"
-      ],
-      "priority": "high",
-      "title_pl": "Nav: Integracja i produkcja",
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/web/i18n/pl.json",
-        "apps/web/assets/js/dam-shell.js",
-        "apps/web/integrations.html"
-      ]
-    },
-    {
-      "id": "sleeve.stock_panel",
-      "must": [
-        "Panel Stany rekawkow na integrations.html pod Wykrojniki↔produkty (dam-sleeve-stock.js)",
-        "Zrodlo: sleeve-stock.json; reimport z X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/STANY RĘKAWKÓW 2026.xlsx lub upload CSV/XLSX",
-        "Tagi: critical / order_now / on_order / waiting_retailer / transition / automat_alias / ok z progow w JSON",
-        "GET /sleeve-stock; POST /sleeve-stock/reimport; POST /sleeve-stock/import (admin)",
-        "Stakeholders UI: Dzial zakupow + Inni (lista w sleeve-stock.json) - bez ACL v1"
-      ],
-      "body_pl": "HARD 2026-07-22: stany rekawkow z XLSX zakupow; tagi zagrozenia i wyprzedzenie zamowienia. Cross-ref article_code do produktow DAM gdy mozliwe.",
-      "category": "integrations",
-      "must_not": [
-        "Traktowac localStorage jako zrodlo prawdy stanow",
-        "Kasowac komentarze/tagi zakupow przy samym reimportcie bez zachowania pol UI"
+        "Laczyc material GC mini-bars Blackcurrant Cake z produktami DK kulki/owsianka tylko przez slowo porzeczka",
+        "Wylaczac nawigacje do produktu gdy brak thumb_url",
+        "Uzywac hardcodowanej listy WEAK_FLAVOR_TOKENS / banlisty owocow jako jedynej bramki adekwatnosci",
+        "Wymagac Ollamy do OCR brandingu",
+        "Nadpisywac branding-associations-overrides.json wynikami OCR"
       ],
       "priority": "critical",
-      "title_pl": "Integracja i produkcja: Stany rekawkow",
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/web/data/sleeve-stock.json",
-        "apps/web/scripts/import-sleeve-stock-xlsx.py",
-        "apps/web/assets/js/dam-sleeve-stock.js",
-        "apps/desktop/local_bridge.py",
-        "apps/web/integrations.html"
-      ]
-    },
-    {
-      "id": "production.asana_costing",
-      "must": [
-        "Panel dam-inv-asana na invoices.html: zadania Asana + kosztorys z production-cost-catalog.json",
-        "Match task name → line (regex); seed ceny wyimaginowane do edycji pozniej",
-        "Wygeneruj pozycje faktury + Dodaj do faktury (bridge POST /finance/invoices)",
-        "Fallback asana-tasks.json gdy brak OAuth (A1)"
-      ],
-      "body_pl": "HARD 2026-07-22: przeliczanie zadan Asana (proof/druk) na pozycje faktury wg katalogu kosztow seed.",
-      "category": "finance",
-      "must_not": [
-        "Wymagac live Asana OAuth do pokazania kosztorysu na eksporcie JSON"
-      ],
-      "priority": "high",
-      "title_pl": "Faktury: kosztorys Asana → pozycje",
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/web/data/production-cost-catalog.json",
-        "apps/web/assets/js/dam-invoices.js",
-        "apps/web/invoices.html"
-      ]
-    },
-    {
-      "id": "finance.invoice_mail_outlook",
-      "must": [
-        "Panel wysylki faktur: odbiorcy faktury@kubara.pl + alina.andzel@kubara.pl; nr ksiegowosci 509012414",
-        "POST /finance/invoices/outlook-draft (admin, Win32 Outlook COM) z zalacznikami PDF/CSV",
-        "Fallback web-only: ZIP + mailto tresci bez zalacznikow + komunikat desktop DAM",
-        "Nie usuwac istniejacego ERP stub export",
-        "Checkboxy na Faktury (Asana kosztorys + panel mail): custom Geex purple (.dam-inv-cb__input), appearance:none - nigdy natywny pomaranczowy",
-        "Kolumna szacunku (.dam-inv-asana-item__est) ma staly minmax w gridzie i text-align:left - lewe krawedzie etykiet/cen w jednej linii miedzy wierszami"
-      ],
-      "body_pl": "HARD 2026-07-22: przygotowanie maila z fakturami w Outlooku (zalaczniki). Mailto w przegladarce nie dolacza plikow. HARD 2026-07-22b: checkboxy Geex purple + wyrównanie prawej kolumny kosztorysu Asana.",
-      "category": "finance",
-      "must_not": [
-        "Udawac wysylke SMTP gdy brak konfiguracji",
-        "Wysylac mail bez potwierdzenia usera (tylko draft Outlook)",
-        "Uzywac natywnego pomaranczowego checkboxa w #damInvAsanaCard / #damInvMailPanel"
-      ],
-      "priority": "critical",
-      "title_pl": "Faktury: Outlook draft z zalacznikami",
-      "updated_at": "2026-07-22",
-      "related_code": [
-        "apps/desktop/invoice_mail.py",
-        "apps/desktop/local_bridge.py",
-        "apps/web/assets/js/dam-invoices.js",
-        "apps/web/invoices.html"
-      ]
-    },
-    {
-      "id": "viz.elementy_links_conversion",
-      "must": [
-        "Konwersja Links -> ELEMENTY w modalu wizualizacji: globalne ustawienia admina w app-settings.json (elementy_conversion) + Ustawienia -> Konwersja",
-        "Domyslnie: PNG z przezroczystoscia (dematte czarnego matte) + JPG, jakosc/kompresja 50%",
-        "Zrodla wejsciowe: TIFF/PSD/PSB z folderu Links; oryginaly w Links NIE sa usuwane",
-        "Przycisk 'Podejmij probe konwersji elementow' widoczny tylko gdy ELEMENTY puste i Links ma pliki (can_generate)",
-        "POST /convert-links-elementy przyjmuje quality i formats z globalnych ustawien lub body requestu"
-      ],
-      "body_pl": "HARD 2026-07-29: built-in konwersja elementow (nie Photo Resizer GUI) - PNG alpha + JPG, kompresja konfigurowalna globalnie przez admina.",
-      "category": "viz",
-      "must_not": [
-        "Trzymac ustawien konwersji elementow per-user w localStorage",
-        "Usuwac oryginalow TIFF/PSD/PSB z folderu Links po konwersji",
-        "Pokazywac CTA konwersji gdy elementy_conversion.enabled=false"
-      ],
-      "priority": "high",
-      "title_pl": "Viz: konwersja Links -> ELEMENTY (PNG+JPG)",
+      "title_pl": "Skojarzenia adekwatne + OLMOCR2 + klikalne + dblclick zoom",
       "related_kv": [
-        "app-settings",
         "program-instructions"
       ],
-      "updated_at": "2026-07-29",
+      "updated_at": "2026-08-03",
       "related_code": [
-        "apps/desktop/local_bridge.py",
+        "apps/web/data/branding-associations-overrides.json",
+        "apps/web/assets/js/dam-assoc-edit.js",
         "apps/web/assets/js/dam-media-preview.js",
-        "apps/web/assets/js/dam-settings.js",
-        "apps/web/data/app-settings.json",
-        "apps/web/settings.html"
+        "apps/web/scripts/assoc_adequacy.py",
+        "apps/web/scripts/dam_olmocr2.py",
+        "apps/web/scripts/assoc-from-ocr.py",
+        "apps/web/scripts/link-branding-products.py"
       ]
     }
   ],

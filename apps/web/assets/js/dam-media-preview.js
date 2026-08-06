@@ -1743,26 +1743,36 @@
 
   function loadIndexAssets() {
     if (_indexAssetsPromise) return _indexAssetsPromise;
-    // Reuzyj indeksu zaladowanego przez dam-branding.js (ta sama sesja) zamiast
-    // pobierac ~35 MB drugi raz.
+    /* HARD: NIGDY fetch/parse pelnego branding-index.json (~340MB).
+       Quality/source fallback uzywa slim grid (~18MB) albo juz zaladowanego indeksu. */
+    if (window.__damBrandingGridIndex && window.__damBrandingGridIndex.assets) {
+      _indexAssetsPromise = Promise.resolve(window.__damBrandingGridIndex.assets);
+      return _indexAssetsPromise;
+    }
     if (window.__damBrandingIndex && window.__damBrandingIndex.assets) {
       _indexAssetsPromise = Promise.resolve(window.__damBrandingIndex.assets);
       return _indexAssetsPromise;
     }
-    _indexAssetsPromise = fetch(bridgeUrl() + "/branding-index")
+    var cb = encodeURIComponent(String(window.DAM_APP_VERSION || "1"));
+    _indexAssetsPromise = fetch(bridgeUrl() + "/branding-grid-index?v=" + cb, {
+      cache: "no-store",
+    })
       .then(function (r) {
-        if (!r.ok) throw new Error("bridge_branding_index");
+        if (!r.ok) throw new Error("bridge_branding_grid");
         return r.json();
       })
       .catch(function () {
-        return fetch("data/branding-index.json").then(function (r) {
-          return r.ok ? r.json() : null;
-        });
+        return fetch("data/branding-grid-index.json?v=" + cb, { cache: "no-store" }).then(
+          function (r) {
+            return r.ok ? r.json() : null;
+          }
+        );
       })
       .then(function (d) {
-        if (d && d.assets && !window.__damBrandingIndex) {
+        if (d && d.assets) {
           try {
-            window.__damBrandingIndex = d;
+            window.__damBrandingGridIndex = d;
+            if (!window.__damBrandingIndex) window.__damBrandingIndex = d;
           } catch (eShare) {
             /* ignore */
           }
@@ -5421,6 +5431,20 @@
           options.productContext &&
           (options.productContext.name || options.productContext.display_name);
         if (productTitle) {
+          var titleBrand =
+            (options.productContext && options.productContext.brand) || a.brand || "";
+          var assetPid = String(a.product_id || (groupContext && groupContext.product_id) || "").trim();
+          var ctxPid = String((options.productContext && options.productContext.id) || "").trim();
+          if (assetPid && ctxPid && assetPid !== ctxPid) {
+            var assetRec = resolveProductRecordForAssoc({ id: assetPid });
+            productTitle =
+              (assetRec && (assetRec.display_name || assetRec.name)) || productTitle;
+            titleBrand = (assetRec && assetRec.brand) || titleBrand;
+          }
+          if (window.DamLabels && typeof window.DamLabels.localizedProductTitle === "function") {
+            productTitle =
+              window.DamLabels.localizedProductTitle(productTitle, titleBrand) || productTitle;
+          }
           title.textContent = String(productTitle);
         } else if (options.mode === "viz-studio") {
           title.innerHTML = titleHtml(a.name, a.id);

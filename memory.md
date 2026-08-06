@@ -1,17 +1,19 @@
 # memory.md - DAM ETA (zasady trwale)
 
 Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-08-03**.  
-Workspace: **`P:\DAM`** = GIT_ROOT (`DAM.exe` + `.git`); kod = **`P:\DAM\bin`** (CONTENT_ROOT).  
+Workspace: **GIT_ROOT** = katalog z `DAM.exe` + `.git` (primary **D:** …`DAM---Dobra-Kaloria---inyfinn`); kod = **`...\bin`** (CONTENT_ROOT).  
 Wykonawca: Composer 2.5 / Monday.
 
-## Layout bin + launcher (2026-08-03)
+## Layout bin + launcher (2026-08-03, upd 2026-08-06)
 
-- Top-level: `P:\DAM\DAM.exe`, `P:\DAM\bin\`, `.git`.
-- `CONTENT_ROOT` = `P:\DAM\bin`; `GIT_ROOT` = `P:\DAM` (`runtime_config.py`).
+- Top-level: `DAM.exe`, `bin\`, `.git` (primary **D:**; `P:\DAM` historyczny).
+- `CONTENT_ROOT` = `GIT_ROOT\bin`; git cwd = `GIT_ROOT` (`runtime_config.py`).
+- **Portable HARD:** `bin\runtime\win\python\` (embed + site-packages); entry scripts dokladaja desktop do `sys.path` (embed `._pth` nie widzi cwd).
 - Root `bin\` != `bin\tooling\bin\` (CLI cache).
-- Baza na razie: **tylko SQLite** (`bin\apps\desktop\data\dam-local.sqlite`); bez lokalnego Postgresa do powrotu Synology. Multi-PC live = PG na NAS (ADR-009), nie sync pliku SQLite.
-- Hybryda dysku (P2): daily edit preferuj lokalny SSD + `git push`; `P:\DAM` = lustro `git pull` / `scripts\ops\sync-to-p-dam.ps1`.
-- Skrypt: `bin\scripts\ops\sync-to-p-dam.ps1` (`-DryRun`, `-RebuildExe`). Nie robocopy /MIR tooling przy kazdym save.
+- Baza: **tylko SQLite** do powrotu Synology. Multi-PC live = PG na NAS.
+- **Perf HARD:** UI nie laduje `branding-index.json` (~340MB); cold path = `branding-grid-head` + `branding-grid-index`; most/UI 403 bez `?full=1`.
+- Hybryda (P2): SSD daily + sync na share; skrypt `bin\scripts\ops\sync-to-p-dam.ps1`.
+- Skrypt vendor: `bin\scripts\ops\vendor-runtime-win.ps1`.
 
 ## Polskie znaki UTF-8 — copy tylko w UTF-8 (2026-07-29)
 
@@ -1353,3 +1355,12 @@ Browser: zakaz Browser MCP navigate (zacina agenta) - headless CDP / curl.
 - Golden `file-index.json` sha `513377b61b710cf9…` / size 7760231 **zginal** z WS przy cloud-wipe; aktualnie na D: size **7744358** hash `6cc609b519e8e20a…` (drift bridge).
 - `branding-index.json` size **361381875** OK.
 - Manifest: `bin\_restore_snapshots\session-20260804-…\manifest\data-pre.json` (lub `_restore_snapshots` po copy). Nie nadpisuj OCR z git archive.
+
+## Browser MCP hang (2026-08-06 HARD)
+- Przed MCP: powershell -File bin/scripts/ops/dam-pre-browser.ps1 albo dam-agent-unstick.ps1
+- MCP rowser_tabs/
+avigate/cdp hang >10s = **abort natychmiast** (nie czekac)
+- Weryfikacja PAKIET bez MCP: 
+ode bin/scripts/qa/dam-pakiet-cdp-smoke.js
+- Hang MCP != serwer down (smoke curl 5s najpierw)
+

@@ -13382,3 +13382,33 @@ ode --check OK. Live Playwright: branding product open phases hydrate 1ms; wall-
 - Dirty-close: confirmUnsavedClose + assoc picker; dashboard labels Odrzuc / Nie wroc / Zapisz zmiany.
 - OCR: file-index drifted (7744358); branding-index 361381875 OK. Golden 513377… niedostepny po wipe WS.
 - Cache-bust: ?v=restore20260805b.
+
+## 2026-08-06 - Browser MCP hang: recovery toolkit restored
+
+**Objaw:** rowser_tabs / rowser_navigate / rowser_cdp wisialy w nieskonczonosc; curl :8765/:8766 2xx w <50ms.
+
+**Przyczyna:** Brak plikow odzyskiwania (dam-connection-watchdog.ps1, dam-agent-unstick.ps1, dam-browser-probe.js) mimo ze dam-pre-browser.ps1 je wolal. Agent czekal na MCP zamiast zamknac polaczenie i isc headless CDP.
+
+**Fix:**
+1. Odtworzono in/scripts/ops/dam-connection-watchdog.ps1, dam-agent-unstick.ps1, dam-cdp-resilience-watchdog.ps1
+2. Odtworzono in/scripts/qa/dam-browser-probe.js
+3. Dodano in/scripts/qa/dam-pakiet-cdp-smoke.js (headless Chrome + hard timeout, ZERO MCP)
+4. dam-agent-unstick PASS 1s; dam-pakiet-cdp-smoke PASS (choice + picker screenshots)
+
+**Zasada:** MCP hang >10s = abort. Najpierw unstick/pre-browser, potem headless CDP. Nie czekac na spinner MCP.
+
+
+## 2026-08-06 - Blank explorer (opacity:0 stuck) + MCP ban
+
+**Objaw:** Cursor tab Eksplorator bialy; MCP browser_cdp wisi minuty.
+**Przyczyna UI:** `body.is-booting { opacity:0 }` + failsafe zdejmowal klasy TYLKO gdy `html.dam-booting` jeszcze bylo - po czesciowym boot bez cleanup body zostaje niewidoczny.
+**Fix:** CSS animation failsafe 2.8s; JS unlock zawsze (2.8s/6s); shell release 1.2/2.8/3.5s; smoke `dam-explorer-boot-smoke.js` PASS (opacity 0@800ms -> 1@2000ms).
+**Zasada:** NIGDY cursor-ide-browser gdy wisi; headless CDP + hard job timeout.
+
+
+## 2026-08-06 - Cursor MCP navigate hang = blocking CDN on explorer
+
+**Problem:** Agent nie moze odswiezyc TAB Eksplorator - `browser_navigate` / CDP wisi, bo strona nie konczy `document.complete` (sync TinyMCE no-api-key + fullcalendar + apex + dragula + swiper z CDN przed dam-*.js).
+**Fix:** Usunieto blocking CDN z `explorer.html`; stuby pod Geex `main.js`; fonts/unicons non-blocking; smoke `dam-explorer-navfix-smoke.js`.
+**Zasada:** MCP hang na navigate = najpierw sprawdz sync `<script src=https://...>` w HTML, nie czekaj na tool.
+

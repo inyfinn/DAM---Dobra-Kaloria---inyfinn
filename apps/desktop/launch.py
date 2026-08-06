@@ -17,6 +17,11 @@ import threading
 import time
 from pathlib import Path
 
+# Embeddable CPython (bin/runtime/win/python): python*._pth omits script dir / cwd.
+_DESKTOP_BOOT = Path(__file__).resolve().parent
+if str(_DESKTOP_BOOT) not in sys.path:
+    sys.path.insert(0, str(_DESKTOP_BOOT))
+
 from bridge_supervisor import BridgeSupervisor, LOCAL_BRIDGE
 from dam_ui_http import make_handler_class, prepare_runtime
 from runtime_config import (
@@ -261,7 +266,8 @@ def require_pywebview():
             APP_TITLE,
             "Brak biblioteki pywebview.\n\n"
             "Zainstaluj zaleznosci desktop:\n"
-            "  pip install -r apps/desktop/requirements.txt\n\n"
+            "  pip install -r bin/apps/desktop/requirements.txt\n"
+            "(z katalogu P:\\DAM / GIT_ROOT)\n\n"
             "Potem uruchom ponownie skrot DAM.",
         )
         raise SystemExit(1)
@@ -403,11 +409,15 @@ class DamJsApi:
             return {"ok": False, "error": "no_window"}
         win = windows[0]
         try:
+            dialog_dir = start_dir if start_dir else str(Path.home())
             result = win.create_file_dialog(
                 webview.FOLDER_DIALOG,
-                directory=start_dir or None,
+                directory=dialog_dir,
                 allow_multiple=False,
             )
+        except TypeError as exc:
+            # pywebview/_path_exists crash when directory is None
+            return {"ok": False, "error": f"_path_exists: {exc}"}
         except Exception as exc:
             return {"ok": False, "error": str(exc)}
 
@@ -797,12 +807,28 @@ def main() -> None:
                 daemon=True,
             ).start()
     except Exception as exc:
-        win_message(
-            APP_TITLE,
-            "Nie udalo sie uruchomic okna aplikacji.\n\n"
-            f"Szczegoly: {exc}\n\n"
-            "Upewnij sie, ze masz zainstalowany Microsoft Edge WebView2 Runtime.",
-        )
+        heal = DESKTOP_DIR / "boot-heal.html"
+        try:
+            import webbrowser
+
+            if heal.is_file():
+                webbrowser.open(heal.resolve().as_uri() + "?reason=webview2")
+            else:
+                win_message(
+                    APP_TITLE,
+                    "Nie udalo sie uruchomic okna aplikacji.\n\n"
+                    f"Szczegoly: {exc}\n\n"
+                    "Pobierz WebView2 Evergreen Bootstrapper:\n"
+                    "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+                )
+        except Exception:
+            win_message(
+                APP_TITLE,
+                "Nie udalo sie uruchomic okna aplikacji.\n\n"
+                f"Szczegoly: {exc}\n\n"
+                "Pobierz WebView2 Evergreen Bootstrapper:\n"
+                "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+            )
         raise SystemExit(1) from exc
     finally:
         bridge_supervisor.stop()

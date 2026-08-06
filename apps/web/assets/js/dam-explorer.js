@@ -4840,6 +4840,10 @@
       btn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
+        if (window.DamPakiet && typeof window.DamPakiet.openFromButton === "function") {
+          window.DamPakiet.openFromButton(this);
+          return;
+        }
         packPrintPackage(this);
       });
     });
@@ -7875,7 +7879,7 @@
   window.DamExplorer = {
     state: state,
     openProduct: openProduct,
-    reload:      refreshIndex,
+    reload: refreshIndex,
     exportStatus: exportStatusJson,
     getElementsLink: getElementsLink,
     setRevisionStatus: setRevisionStatus,
@@ -7883,6 +7887,10 @@
     applyLifecycleStatus: applyLifecycleStatus,
     forceApplyLifecycle: forceApplyLifecycleToDisk,
     pullLifecycle: pullLifecycleFromBridge,
+    showToast: showToast,
+    renderMain: renderMain,
+    applyPakietFileToProduct: applyPakietFileToProduct,
+    packPrintPackage: packPrintPackage,
     /** QA helper: FORCE confirm from real dry-run (or explicit planned). No disk write. */
     debugForcePreview: function (planned) {
       if (Array.isArray(planned) && planned.length) {

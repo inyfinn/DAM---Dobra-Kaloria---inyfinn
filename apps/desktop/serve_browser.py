@@ -13,6 +13,12 @@ import sys
 import threading
 import time
 import webbrowser
+from pathlib import Path
+
+# Embeddable CPython (bin/runtime/win/python): python*._pth omits script dir / cwd.
+_DESKTOP_BOOT = Path(__file__).resolve().parent
+if str(_DESKTOP_BOOT) not in sys.path:
+    sys.path.insert(0, str(_DESKTOP_BOOT))
 
 from bridge_supervisor import BridgeSupervisor, LOCAL_BRIDGE
 from dam_ui_http import make_handler_class, prepare_runtime

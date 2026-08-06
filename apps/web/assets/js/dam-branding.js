@@ -329,18 +329,21 @@
 
   function passesGraphicsOnlyFilter(a) {
     if (!graphicsOnlyActive()) return true;
-    /* Jawny tag Dokument / Wideo / Zrodlo nadpisuje przelacznik */
+    /* Jawny tag Dokument / Wideo / Zrodlo / Element produktu nadpisuje przelacznik */
     if (
       activeTagFilters["media:document"] ||
       activeTagFilters["media:video"] ||
       activeTagFilters["media:source"] ||
-      activeTagFilters["format:editable"]
+      activeTagFilters["format:editable"] ||
+      activeTagFilters["role:product_element"]
     ) {
       return true;
     }
     var mt = normalizeMediaType(a.media_type);
     if (mt === "document" || mt === "video") return false;
     if (isSourceEditableAsset(a)) return false;
+    /* Elementy produktu (wycinki/warstwy) = nie gotowa grafika marketingowa */
+    if (String(a.asset_role || "") === "product_element") return false;
     var ext = String((a && (a.name || a.path)) || "")
       .split(".")
       .pop()
@@ -2768,43 +2771,131 @@
   }
 
   async function loadIndex() {
-    if (index) return index;
-    // Wspoldziel indeks z innymi modulami (np. dam-media-preview.js), zeby nie
-    // pobierac ~35 MB drugi raz w tej samej sesji.
-    if (window.__damBrandingIndex && window.__damBrandingIndex.assets) {
-      index = window.__damBrandingIndex;
+    if (index && !index.partial) return index;
+    if (
+      window.__damBrandingGridIndex &&
+      window.__damBrandingGridIndex.assets &&
+      !window.__damBrandingGridIndex.partial
+    ) {
+      index = window.__damBrandingGridIndex;
       clearBrandingComputeCache();
       return index;
     }
-    setBootStatus("Ładowanie indeksu branding…");
-    // Cache-bust tylko przez ?v=CB (zmienia sie przy deployu). BEZ Date.now(),
-    // ktore blokowalo cache HTTP/WebView2 i wymuszalo pobranie 35 MB za kazdym
-    // wejsciem. Po przebudowie indeksu mtime pliku rosnie -> serwer i tak
-    // zwroci swiezy plik (If-Modified-Since), a invalidateBrandingIndexCache()
-    // czysci pamiec sesji.
-    var urls = [
-      "data/branding-index.json?v=" + CB,
-      bridgeUrl() + "/branding-index?v=" + CB,
+    setBootStatus("Ładowanie siatki…");
+    var headUrls = [
+      "data/branding-grid-head.json?v=" + CB,
+      bridgeUrl() + "/branding-grid-head?v=" + CB,
+    ];
+    var fullUrls = [
+      "data/branding-grid-index.json?v=" + CB,
+      bridgeUrl() + "/branding-grid-index?v=" + CB,
     ];
     var lastErr = null;
-    for (var u = 0; u < urls.length; u++) {
+
+    function adopt(data, isPartial) {
+      if (!data || !data.assets) return false;
+      index = data;
+      index.partial = !!isPartial || !!data.partial;
       try {
-        var r = await fetch(urls[u]);
-        if (!r.ok) continue;
-        setBootStatus("Przetwarzanie indeksu…");
-        index = await r.json();
-        try {
-          window.__damBrandingIndex = index;
-        } catch (eShare) {
-          /* ignore */
+        window.__damBrandingGridIndex = index;
+        window.__damBrandingIndex = index;
+      } catch (eShare) {
+        /* ignore */
+      }
+      clearBrandingComputeCache();
+      return true;
+    }
+
+    // Instant: head first (small), then hydrate full slim in background.
+    for (var h = 0; h < headUrls.length; h++) {
+      try {
+        var hr = await fetch(headUrls[h]);
+        if (!hr.ok) {
+          lastErr = new Error("http_" + hr.status);
+          continue;
         }
-        clearBrandingComputeCache();
-        return index;
+        setBootStatus("Przygotowanie kart…");
+        var head = await hr.json();
+        if (adopt(head, true)) {
+          scheduleFullGridHydrate(fullUrls);
+          return index;
+        }
+      } catch (eHead) {
+        lastErr = eHead;
+      }
+    }
+
+    for (var u = 0; u < fullUrls.length; u++) {
+      try {
+        var r = await fetch(fullUrls[u]);
+        if (!r.ok) {
+          lastErr = new Error("http_" + r.status);
+          continue;
+        }
+        setBootStatus("Przygotowanie kart…");
+        var full = await r.json();
+        if (adopt(full, false)) return index;
+        lastErr = new Error("grid_index_invalid");
+        index = null;
       } catch (eLoad) {
         lastErr = eLoad;
       }
     }
-    throw lastErr || new Error("branding-index");
+    setBootStatus("Brak branding-grid-index. Uruchom build-branding-grid-index.");
+    throw lastErr || new Error("branding-grid-index");
+  }
+
+  function scheduleFullGridHydrate(fullUrls) {
+    if (window.__damBrandingGridHydrateStarted) return;
+    window.__damBrandingGridHydrateStarted = true;
+    (async function () {
+      for (var u = 0; u < fullUrls.length; u++) {
+        try {
+          var r = await fetch(fullUrls[u]);
+          if (!r.ok) continue;
+          var full = await r.json();
+          if (!full || !full.assets) continue;
+          full.partial = false;
+          index = full;
+          try {
+            window.__damBrandingGridIndex = full;
+            window.__damBrandingIndex = full;
+          } catch (e2) {
+            /* ignore */
+          }
+          clearBrandingComputeCache();
+          try {
+            performance.mark("dam-branding-full-ready");
+          } catch (eMark) {
+            /* ignore */
+          }
+          var tab =
+            (document.querySelector(".dam-branding-tab.is-active") &&
+              document
+                .querySelector(".dam-branding-tab.is-active")
+                .getAttribute("data-tab")) ||
+            "all";
+          activateTab(tab, { skipHash: true, keepDiscovery: true });
+          setBootStatus("");
+          return;
+        } catch (eHyd) {
+          /* try next */
+        }
+      }
+    })();
+  }
+
+  async function fetchFullAsset(assetId) {
+    var id = String(assetId || "");
+    if (!id) return null;
+    try {
+      var r = await fetch(bridgeUrl() + "/branding/asset?id=" + encodeURIComponent(id));
+      if (!r.ok) return null;
+      var j = await r.json();
+      return (j && j.asset) || null;
+    } catch (e) {
+      return null;
+    }
   }
 
   async function loadTokens() {
@@ -4165,7 +4256,26 @@
     if (window.DamAssocEdit && typeof window.DamAssocEdit.loadAssocOverrides === "function") {
       chain = window.DamAssocEdit.loadAssocOverrides();
     }
-    chain.then(launchModal);
+    chain
+      .then(function () {
+        return fetchFullAsset(id);
+      })
+      .then(function (full) {
+        if (full && typeof full === "object") {
+          primary = Object.assign({}, primary, full, { id: primary.id || full.id });
+          assetsById[id] = primary;
+          if (index && Array.isArray(index.assets)) {
+            var ix = index.assets.findIndex(function (x) {
+              return x && x.id === id;
+            });
+            if (ix >= 0) index.assets[ix] = Object.assign({}, index.assets[ix], primary);
+          }
+        }
+        launchModal();
+      })
+      .catch(function () {
+        launchModal();
+      });
   }
 
   function closeModal() {
@@ -4853,11 +4963,12 @@
       bindBrandingCardZoomControl();
       bindBrandingPageSizeControl();
       scheduleMetaFiltersReveal();
-      var searchPromise = loadSearchIndex();
+      // Instant: first card z slim; search-index (~41MB) lazy po siatce / on-demand.
+      var searchPromise = null;
+      performance.mark("dam-branding-boot-start");
       await Promise.all([loadIndex(), loadAssociations(), loadTokens()]);
       clearBootSkeletonBusy();
-      // renderTagFilters() celowo pominiete tutaj: activateTab() nizej robi
-      // pelny render juz z zaladowanym search-indexem (bylo liczone 2x na boot).
+      performance.mark("dam-branding-index-ready");
       var rebuild = document.getElementById("damBrandingRebuild");
       if (rebuild) {
         var role =
@@ -4898,10 +5009,63 @@
       var qs = params.get("q") || params.get("search");
       var productParam = params.get("product");
       var tabParam = params.get("tab");
-      await searchPromise;
-      if (window.DamProductCorrelation) {
-        await DamProductCorrelation.ensureSearchIndex();
-        productCorrelation = DamProductCorrelation.resolveFromUrl(productParam, qs);
+      var needsSearch =
+        !!(qs || productParam) ||
+        !!(window.DamProductCorrelation && productParam);
+      if (needsSearch) {
+        searchPromise = loadSearchIndex();
+        await searchPromise;
+        if (window.DamProductCorrelation) {
+          await DamProductCorrelation.ensureSearchIndex();
+          productCorrelation = DamProductCorrelation.resolveFromUrl(productParam, qs);
+        }
+      } else {
+        /* HARD perf: nie ciagnij ~41MB search-index rownolegle z grid hydrate.
+           First paint z grid; search dopiero focus/input albo idle ~8-12s. */
+        function kickSearchIndex() {
+          if (searchPromise) return searchPromise;
+          searchPromise = loadSearchIndex().then(function () {
+            try {
+              performance.mark("dam-branding-search-ready");
+              performance.measure(
+                "dam-search-index-ms",
+                "dam-branding-boot-start",
+                "dam-branding-search-ready"
+              );
+            } catch (eMark) {
+              /* ignore */
+            }
+            renderTagFilters();
+          });
+          return searchPromise;
+        }
+        var searchInput = document.getElementById("damBrandingSearch");
+        if (searchInput) {
+          var onceSearch = function () {
+            searchInput.removeEventListener("focus", onceSearch);
+            searchInput.removeEventListener("input", onceSearch);
+            kickSearchIndex();
+          };
+          searchInput.addEventListener("focus", onceSearch);
+          searchInput.addEventListener("input", onceSearch);
+        }
+        if (typeof requestIdleCallback === "function") {
+          requestIdleCallback(
+            function () {
+              kickSearchIndex();
+            },
+            { timeout: 12000 }
+          );
+        } else {
+          setTimeout(function () {
+            kickSearchIndex();
+          }, 8000);
+        }
+        try {
+          renderTagFilters();
+        } catch (eTags) {
+          /* ignore */
+        }
       }
       if (qs || productParam) {
         var search = document.getElementById("damBrandingSearch");
@@ -4933,6 +5097,19 @@
       } else {
         activateTab("all", { skipHash: true });
       }
+      try {
+        performance.mark("dam-branding-first-card");
+        performance.measure(
+          "dam-cold-ms",
+          "dam-branding-boot-start",
+          "dam-branding-first-card"
+        );
+        window.__damInstantMetrics = {
+          cold_ms: Math.round(
+            (performance.getEntriesByName("dam-cold-ms")[0] || {}).duration || 0
+          ),
+        };
+      } catch (eCold) { /* ignore */ }
       if (assetId) openModal(assetId);
       else if (qs) tryAutoOpenSingleMarketingSearch(qs);
       window.addEventListener("hashchange", function () {
