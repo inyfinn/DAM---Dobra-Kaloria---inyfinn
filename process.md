@@ -1,3 +1,33 @@
+## 2026-07-30 - SSH NAS: panel-klienta + porty DAM (follow-up shell 452646)
+
+**Komenda/Akcja:** Find panel-klienta source and DAM services on NAS (ssh syno find/systemctl/netstat).
+
+**Log/Status:** Pierwsza komenda exit 127 — `grep -E "8765|8766"` pipe zinterpretowany jako shell (`sh: 8766: command not found`). Retry: porty + ścieżki docelowe.
+
+**Efekt/Fix:** Brak `panel-klienta.conf` na NAS; moduł: `/volume1/KANCELARIA WIECZOREK/SERWER DANYCH/panel-klienta/`. Port **8765** = panel-admin uvicorn (`synology-mcp/panel-admin`). **8766/8776** — nie nasłuchują. Panel-DAM nginx: `/volume1/web/_nginx/dsm.panel-dam.conf`, pliki: `/volume1/web/Panel-DAM/`.
+
+**Źródła:** ssh syno, sd_panel_docs, docs/SYNOLOGY-WEB-PANEL.md
+
+## 2026-07-30 - Assoc popover grouping UX fix (v5.0.128)
+
+**Komenda/Akcja:** Dokończenie fixu UX popovera skojarzeń (#damAssocEditPopover): grupowanie branding Logo/Sygnet, rozwijane warianty produktów, subtelny stan wybrane, caption podglądu 45px/29px.
+
+**Log/Status:** `groupBrandingAssetsForPicker` → `DamBranding.groupBrandingAssets` (logoGroupKey); export `groupBrandingAssets`/`groupDisplayLabel`/`isLogoAsset`/`logoGroupKey`; sekcje KUBARA/DK/GC Logo|Sygnet; product picker `asProductRow`+`expandedProductId`; CSS wybrane bez fioletu; caption 45px/29px; bump 5.0.128 + ?v=.
+
+**Efekt/Fix:** Lista materiałów jak panel branding (grupy logo z wariantami M-IMG); produkty z „1 wariant”; pinned/check czytelne.
+
+**Źródła:** dam-assoc-edit.js, dam-branding.js, dam-media-preview.js, visualizations.html/branding.html/explorer.html/dashboard.html (+ dam-branding.js na viz/explorer/dashboard z boot guard)
+
+## 2026-07-30 - Commit 4b51fd3 + deploy Synology Panel-DAM v5.0.127
+
+**Komenda/Akcja:** User: commit na git i deploy na syno.
+
+**Log/Status:** git commit 4b51fd3 (47 plikow); install-panel-dam-synology.ps1 -WithDsm5001Nginx OK.
+
+**Efekt/Fix:** https://inyfinn.synology.me/Panel-DAM/ + guest snapshot + 550 thumbs + instalator ZIP w releases/; redirecty :5001 -> 443.
+
+**Zrodla:** commit 4b51fd3, scripts/ops/install-panel-dam-synology.ps1
+
 ## 2026-07-30 - Follow-up cache subagentow: export snapshot Python (v5.0.127)
 
 **Komenda/Akcja:** Follow-up po [Guest cache](5030a016-5c03-480d-a91a-15e91605dfe2) + [Thumb cache](a1bba907-06a7-4dc6-9d36-633954e161db).

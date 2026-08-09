@@ -111,6 +111,9 @@
       "opacity:1!important;visibility:visible!important;pointer-events:auto!important;}",
       /* 4) +N badge up 5px vs prior top:4px */
       ".dam-media-preview__assoc-variant-badge{top:-1px!important;}",
+      /* 5) Assoc popover preview caption: 45px below image, 29px type (modal title 36px - 7px) */
+      ".dam-assoc-edit-popover__preview-caption{margin-top:45px!important;font-size:29px!important;" +
+      "font-weight:600!important;line-height:1.25!important;color:#464255!important;}",
     ].join("");
     (document.head || document.documentElement).appendChild(st);
   }

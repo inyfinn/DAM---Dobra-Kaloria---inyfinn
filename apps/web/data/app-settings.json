@@ -1,17 +1,16 @@
 {
+  "version": 3,
   "naming": {
     "source_kv": "naming-dictionary",
-    "description_pl": "W programie zawsze pelna nazwa nosnika (DOYPACK, FOLIA, BATON). Na dysku Windows (rename folderu/pliku) zawsze skrot (DOY, FOL, BAT). Skroty istnieja tylko po to, zeby nazwy w Eksploratorze zajmowaly mniej miejsca.",
-    "dictionary_version": 3,
     "carrier_display_in_ui": "label_pl",
-    "carrier_prefix_on_disk": "short"
+    "carrier_prefix_on_disk": "short",
+    "description_pl": "W programie zawsze pelna nazwa nosnika (DOYPACK, FOLIA, BATON). Na dysku Windows (rename folderu/pliku) zawsze skrot (DOY, FOL, BAT). Skroty istnieja tylko po to, zeby nazwy w Eksploratorze zajmowaly mniej miejsca.",
+    "dictionary_version": 3
   },
-  "version": 3,
-  "updated_at": "2026-07-18",
   "instructions": {
-    "count": 83,
-    "version": 26,
     "source_kv": "program-instructions",
+    "version": 26,
+    "count": 83,
     "critical_ids": [
       "ui.assoc_edit_shell_adapters",
       "nav.tasks_page",
@@ -58,6 +57,7 @@
     ],
     "settings_anchor": "settings.html#damProgramInstructions"
   },
+  "updated_at": "2026-07-18",
   "elementy_conversion": {
     "enabled": true,
     "formats": {

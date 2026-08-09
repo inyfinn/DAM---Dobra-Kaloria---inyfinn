@@ -1324,8 +1324,8 @@
   }
 
   function groupBrandingAssetsForPicker(list) {
-    if (global.DamBranding && typeof global.DamBranding.groupMarketingAssets === "function") {
-      return global.DamBranding.groupMarketingAssets(list);
+    if (global.DamBranding && typeof global.DamBranding.groupBrandingAssets === "function") {
+      return global.DamBranding.groupBrandingAssets(list, {});
     }
     var groups = groupPickerRowsByFolder(list);
     return groups.map(function (g) {
@@ -1354,9 +1354,11 @@
       var primary = g.primary || bucket[0];
       var label =
         g.label ||
-        (global.DamBranding && typeof global.DamBranding.marketingGroupLabelForAssets === "function"
-          ? global.DamBranding.marketingGroupLabelForAssets(bucket)
-          : "") ||
+        (global.DamBranding && typeof global.DamBranding.groupDisplayLabel === "function"
+          ? global.DamBranding.groupDisplayLabel(bucket)
+          : global.DamBranding && typeof global.DamBranding.marketingGroupLabelForAssets === "function"
+            ? global.DamBranding.marketingGroupLabelForAssets(bucket)
+            : "") ||
         shortAssocLabel(primary.label || primary.name || primary.id);
       var childIds = bucket.map(function (b) {
         return b && b.id;
@@ -1430,6 +1432,92 @@
       }
     });
     return display;
+  }
+
+  var BRANDING_PICKER_SECTION_ORDER = [
+    "kubara:logo",
+    "kubara:sygnet",
+    "kubara:other",
+    "dk:logo",
+    "dk:sygnet",
+    "dk:other",
+    "gc:logo",
+    "gc:sygnet",
+    "gc:other",
+    "other:logo",
+    "other:sygnet",
+    "other:other",
+  ];
+
+  function brandingPickerBrandKey(row) {
+    var blob = ((row && (row.path || "")) + " " + (row && (row.name || row.label || ""))).toLowerCase();
+    if (/kubara/.test(blob)) return "kubara";
+    if (/good\s*calories|good-calories|\bgc\b/.test(blob) || blob.indexOf("/gc/") !== -1) return "gc";
+    if (/dobra\s*kaloria|dobra-kaloria/.test(blob) || (row && row.brand === "DK")) return "dk";
+    return "other";
+  }
+
+  function brandingPickerTypeKey(row) {
+    var blob = ((row && (row.path || "")) + " " + (row && (row.name || row.label || ""))).toLowerCase();
+    if (/\bsygnet\b/.test(blob)) return "sygnet";
+    if (
+      global.DamBranding &&
+      typeof global.DamBranding.isLogoAsset === "function" &&
+      global.DamBranding.isLogoAsset(row)
+    ) {
+      return "logo";
+    }
+    if (/\blogo\b|logotyp|brandbook|favicon|znak\s*firmowy/.test(blob)) return "logo";
+    return "other";
+  }
+
+  function brandingPickerSectionKey(row) {
+    return brandingPickerBrandKey(row) + ":" + brandingPickerTypeKey(row);
+  }
+
+  function brandingPickerSectionLabel(brandKey, typeKey) {
+    var brands = { kubara: "KUBARA", dk: "Dobra Kaloria", gc: "Good Calories", other: "Inne" };
+    var types = { logo: "Logo", sygnet: "Sygnet", other: "Materiały" };
+    var brand = brands[brandKey] || brands.other;
+    var type = types[typeKey] || types.other;
+    if (typeKey === "other") return brand + " — materiały";
+    return brand + " — " + type;
+  }
+
+  function renderBrandingPickerSectionedList(groupedItems, expandedGroupKey, renderRowFn) {
+    var buckets = {};
+    (groupedItems || []).forEach(function (it) {
+      if (!it) return;
+      var sk = brandingPickerSectionKey(it);
+      if (!buckets[sk]) buckets[sk] = [];
+      buckets[sk].push(it);
+    });
+    var html = "";
+    BRANDING_PICKER_SECTION_ORDER.forEach(function (sk) {
+      var list = buckets[sk];
+      if (!list || !list.length) return;
+      var parts = sk.split(":");
+      var label = brandingPickerSectionLabel(parts[0], parts[1]);
+      var display = buildBrandingPickerDisplayRows(list, expandedGroupKey);
+      var rows = display
+        .map(function (it) {
+          return renderRowFn(it, false);
+        })
+        .join("");
+      html +=
+        '<div class="dam-assoc-edit-popover__folder-block" role="group" aria-label="' +
+        esc(label) +
+        '">' +
+        '<p class="dam-assoc-edit-popover__folder-label">' +
+        esc(label) +
+        ' <span class="dam-assoc-edit-popover__folder-count">(' +
+        list.length +
+        ")</span></p>" +
+        '<ul class="dam-search-hits dam-search-hits--panel">' +
+        rows +
+        "</ul></div>";
+    });
+    return html;
   }
 
   function collectVizGridGroupedRows(optsCollect) {
@@ -1949,8 +2037,8 @@
       ".dam-assoc-edit-popover__preview.is-empty .dam-assoc-edit-popover__preview-empty{display:flex;}" +
       /* Assoc empty copy — NOT .dam-tag-edit-popover__empty (tutorial MO + showSad = freeze). */
       ".dam-assoc-edit-popover__empty-msg{margin:12px 8px;padding:0;color:#8b8d97;font-size:13px;line-height:1.4;text-align:center;}" +
-      ".dam-assoc-edit-popover__preview-caption{font-size:12px;font-weight:600;color:#464255;line-height:1.3;" +
-      "text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}" +
+      ".dam-assoc-edit-popover__preview-caption{margin-top:45px;font-size:29px;font-weight:600;color:#464255;line-height:1.25;" +
+      "text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}" +
       ".dam-assoc-edit-popover__preview-meta{font-size:10px;font-weight:600;color:#8b8d97;text-align:center;" +
       "letter-spacing:.02em;font-variant-numeric:tabular-nums;}" +
       /* List: CSS Grid rows — kompakt, czytelne */
@@ -2006,7 +2094,7 @@
       ".dam-assoc-edit-popover__opt .dam-search-hit__check{grid-area:check;flex:none;align-self:center;margin:0;" +
       "width:20px;height:20px;border-radius:5px;}" +
       ".dam-assoc-edit-popover__opt.is-selected .dam-search-hit__check.is-on," +
-      ".dam-assoc-edit-popover__opt.is-selected .dam-search-hit__check{border-color:#ab54db;background:#ab54db;color:#fff;}" +
+      ".dam-assoc-edit-popover__opt.is-selected .dam-search-hit__check{border-color:#c8c8d0;background:#fff;color:#464255;}" +
       ".dam-assoc-edit-popover__opt-row.is-expanded>.dam-assoc-edit-popover__expand{color:#7a3aa8;}" +
       ".dam-assoc-edit-popover__thumb-wrap{flex:0 0 60px;width:60px;height:60px;border-radius:6px;" +
       "overflow:hidden;background:linear-gradient(180deg,#faf9fc 0%,#f3f1f7 100%);" +
@@ -2043,11 +2131,11 @@
       ".dam-assoc-edit-popover__opt--product{margin-top:0;margin-bottom:0;}" +
       ".dam-assoc-edit-popover__opt--product .dam-assoc-edit-popover__label{font-weight:600;}" +
       ".dam-assoc-edit-popover__opt--product,.dam-assoc-edit-popover__opt--group-parent{cursor:pointer;}" +
-      ".dam-assoc-edit-popover__opt--product.is-expanded,.dam-assoc-edit-popover__opt--group-parent.is-expanded{background:#f8f4fd!important;" +
-      "box-shadow:inset 0 0 0 1px #e2d3f2;}" +
+      ".dam-assoc-edit-popover__opt--product.is-expanded,.dam-assoc-edit-popover__opt--group-parent.is-expanded{background:#f4f4f6!important;" +
+      "box-shadow:inset 0 0 0 1px #e8e8ec;}" +
       ".dam-assoc-edit-popover__opt-row.is-expanded>.dam-assoc-edit-popover__opt--product," +
-      ".dam-assoc-edit-popover__opt-row.is-expanded>.dam-assoc-edit-popover__opt--group-parent{background:#f8f4fd!important;" +
-      "box-shadow:inset 0 0 0 1px #e2d3f2;}" +
+      ".dam-assoc-edit-popover__opt-row.is-expanded>.dam-assoc-edit-popover__opt--group-parent{background:#f4f4f6!important;" +
+      "box-shadow:inset 0 0 0 1px #e8e8ec;}" +
       ".dam-assoc-edit-popover__expand{flex:0 0 22px;display:inline-flex;align-items:center;" +
       "justify-content:center;color:#8b8d97;font-size:18px;line-height:1;cursor:pointer;border-radius:6px;" +
       "transition:color .12s ease,background .12s ease;}" +
@@ -2079,15 +2167,15 @@
       ".dam-assoc-edit-popover__opt.is-pinned:not(.is-selected) .dam-assoc-edit-popover__check{width:22px;font-size:17px;}" +
       ".dam-assoc-edit-popover__opt.is-pinned.is-selected .dam-search-hit__check," +
       ".dam-assoc-edit-popover__pinned .dam-search-hit__check.is-on{display:inline-flex;align-items:center;gap:4px;" +
-      "width:auto;min-width:72px;max-width:100%;justify-content:flex-end;font-size:15px;color:#ab54db;}" +
+      "width:auto;min-width:72px;max-width:100%;justify-content:flex-end;font-size:15px;color:#464255;}" +
       ".dam-assoc-edit-popover__opt.is-pinned.is-selected .dam-search-hit__check .uil-check," +
       ".dam-assoc-edit-popover__pinned .dam-search-hit__check.is-on .uil-check{flex:0 0 auto;}" +
       ".dam-assoc-edit-popover__opt.is-pinned .dam-assoc-edit-popover__check .uil-times{" +
       "font-size:17px!important;line-height:1;display:inline-block;width:auto;height:auto;" +
       "background:none!important;box-shadow:none!important;color:#e2506b!important;}" +
-      ".dam-assoc-edit-popover__check-label{font-size:11px;font-weight:600;color:#ab54db;letter-spacing:.02em;white-space:nowrap;line-height:1.2;}" +
-      ".dam-assoc-edit-popover__opt.is-preview-active:not(.is-pinned){background:#f8f4fd!important;" +
-      "box-shadow:inset 0 0 0 1px #e2d3f2;}" +
+      ".dam-assoc-edit-popover__check-label{font-size:10px;font-weight:500;color:#6b6b76;letter-spacing:.01em;white-space:nowrap;line-height:1.2;}" +
+      ".dam-assoc-edit-popover__opt.is-preview-active:not(.is-pinned){background:#f4f4f6!important;" +
+      "box-shadow:inset 0 0 0 1px #e8e8ec;}" +
       ".dam-assoc-edit-popover__opt:hover{background:#f8f4fd;}" +
       ".dam-assoc-edit-popover__pinned{max-height:min(34dvh,280px);overflow-x:hidden;overflow-y:auto;}" +
       ".dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt-row{min-height:84px;}" +
@@ -3415,6 +3503,15 @@
               scheduleListPaint(sExpand ? sExpand.value : "");
               return;
             }
+            if (opts.kind === "product") {
+              var rowProd = lookupItem(id);
+              if (rowProd && rowProd.isProductRow) {
+                expandedProductId = expandedProductId === id ? null : id;
+                var sExpandProd = pop.querySelector("#damAssocEditSearch");
+                scheduleListPaint(sExpandProd ? sExpandProd.value : "");
+                return;
+              }
+            }
             if (pickerUsesBrandingGroups(opts)) {
               var groupIt = lookupItem(id);
               if (groupIt && groupIt.isGroupParent) {
@@ -3885,7 +3982,9 @@
               q: "",
               filterType: opts.filterType || "product",
               cap: PICKER_LIST_CAP,
-              asProductRow: false,
+              asProductRow: true,
+              expandedProductId: expandedProductId,
+              productsById: productsById,
             });
           } else {
             items = collectProductPickerRows(products, {
@@ -3894,7 +3993,9 @@
               q: productQ,
               filterType: opts.filterType || "product",
               cap: PICKER_LIST_CAP,
-              asProductRow: false,
+              asProductRow: true,
+              expandedProductId: expandedProductId,
+              productsById: productsById,
             });
           }
         }
@@ -3931,26 +4032,20 @@
         var displayItems = pickerUsesBrandingGroups(opts)
           ? buildBrandingPickerDisplayRows(items, expandedBrandingGroupKey)
           : items;
-        var rowsHtml =
-          pickerUsesBrandingGroups(opts)
-            ? displayItems
-                .map(function (it) {
-                  return optionButtonHtml(it, false);
-                })
-                .join("")
-            : opts.kind === "material" || (opts.kind === "variant" && opts.brandingSearch)
+        var rowsHtml = pickerUsesBrandingGroups(opts)
+          ? renderBrandingPickerSectionedList(items, expandedBrandingGroupKey, optionButtonHtml)
+          : opts.kind === "material" || (opts.kind === "variant" && opts.brandingSearch)
             ? renderPickerFolderGroups(items, optionButtonHtml)
             : items
                 .map(function (it) {
                   return optionButtonHtml(it, false);
                 })
                 .join("");
-        listEl.innerHTML =
-          pickerUsesBrandingGroups(opts)
-            ? '<ul class="dam-search-hits dam-search-hits--panel dam-assoc-edit-popover__hits">' +
-              rowsHtml +
-              "</ul>"
-            : opts.kind === "material" || (opts.kind === "variant" && opts.brandingSearch)
+        listEl.innerHTML = pickerUsesBrandingGroups(opts)
+          ? '<div class="dam-assoc-edit-popover__hits dam-assoc-edit-popover__hits--sections">' +
+            rowsHtml +
+            "</div>"
+          : opts.kind === "material" || (opts.kind === "variant" && opts.brandingSearch)
             ? rowsHtml.indexOf("dam-assoc-edit-popover__folder-block") >= 0
               ? '<div class="dam-assoc-edit-popover__hits">' + rowsHtml + "</div>"
               : '<ul class="dam-search-hits dam-search-hits--panel dam-assoc-edit-popover__hits">' +

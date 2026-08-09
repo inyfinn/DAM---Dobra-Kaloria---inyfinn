@@ -1,7 +1,7 @@
 {
-  "version": "5.0.127",
+  "version": "5.0.128",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-07-30",
-  "note": "5.0.127: export guest-snapshot via Python (duzy file-index)."
+  "note": "5.0.128: assoc popover branding groups Logo/Sygnet, product expand, subtle selected state."
 }

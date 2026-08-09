@@ -4845,6 +4845,12 @@
   }
 
   async function boot() {
+    if (
+      !document.getElementById("damBrandingSectionGrid") &&
+      !document.getElementById("damBrandbookGrid")
+    ) {
+      return;
+    }
     try {
       showInitialBootSkeletons();
       bindTabs();
@@ -4982,6 +4988,10 @@
     marketingGroupLabelForAssets: marketingGroupLabel,
     marketingGroupKey: marketingGroupKey,
     groupMarketingAssets: groupMarketingAssets,
+    groupBrandingAssets: groupBrandingAssets,
+    groupDisplayLabel: groupDisplayLabel,
+    isLogoAsset: isLogoAsset,
+    logoGroupKey: logoGroupKey,
     buildPickerBrowseRows: buildPickerBrowseRows,
     brandingCardDisplayAssets: brandingCardDisplayAssets,
     brandingCardIndexLabels: brandingCardIndexLabels,
