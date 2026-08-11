@@ -1,4 +1,4 @@
-"""
+﻿"""
 DAM - Dobra Kaloria - Inyfinn - lokalna aplikacja desktop (pywebview + WebView2).
 
 Uruchomienie: dwuklik skrotu na pulpicie albo:
@@ -29,6 +29,7 @@ from runtime_config import (
     DEFAULT_BRIDGE_PORT,
     DEFAULT_UI_PORT,
     DESKTOP_DIR,
+    CONTENT_ROOT,
     HOST,
     MUTEX_NAME,
     WEB_ROOT,
@@ -494,7 +495,7 @@ def _is_foreground_dam_window() -> bool:
             return False
         if fg == hwnd:
             return True
-        # WebView2 host moze byc child — idz w gore drzewa
+        # WebView2 host moze byc child â€” idz w gore drzewa
         walk = fg
         for _ in range(12):
             parent = user32.GetParent(walk)
@@ -509,7 +510,7 @@ def _is_foreground_dam_window() -> bool:
 
 
 def start_hard_reset_watchdog(api: "DamJsApi") -> None:
-    """F5 / Ctrl+R poza wątkiem JS — dziala gdy WebView2 UI zamrozone.
+    """F5 / Ctrl+R poza wÄ…tkiem JS â€” dziala gdy WebView2 UI zamrozone.
 
     pywebview w non-debug czesto wylacza natywne skroty przegladarki;
     ten watchdog restartuje cala aplikacje niezaleznie od stanu strony.
@@ -637,7 +638,44 @@ def verify_machine_before_start() -> dict:
     return result
 
 
+def _load_ipc_names() -> dict:
+    for base in (DESKTOP_DIR, CONTENT_ROOT / "apps" / "desktop"):
+        path = base / "ipc_names.json"
+        if path.is_file():
+            try:
+                import json
+
+                return json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                break
+    return {}
+
+
+def _verify_engine_handshake(ipc: dict) -> None:
+    """When launched via dam-appw, confirm bootstrap pipe handshake (exit 17 if bypass)."""
+    if os.environ.get("DAM_ENGINE_LAUNCHED") == "1":
+        return
+    if getattr(sys, "frozen", False):
+        exe = Path(sys.executable).name.lower()
+        if exe not in ("dam-appw.exe", "engine_launcher.exe"):
+            return
+    else:
+        return
+    pipe_key = str(ipc.get("env_handshake_pipe") or "DAM_HANDSHAKE_PIPE")
+    nonce_key = str(ipc.get("env_handshake_nonce") or "DAM_HANDSHAKE_NONCE")
+    if os.environ.get(pipe_key) and os.environ.get(nonce_key):
+        return
+    win_message(
+        APP_TITLE,
+        "Nie uruchamiaj silnika bezposrednio.\n\nUzyj skrotu DAM.exe na pulpicie.",
+    )
+    raise SystemExit(int(ipc.get("exit_bypass_without_handshake") or 17))
+
+
 def main() -> None:
+    ipc = _load_ipc_names()
+    _verify_engine_handshake(ipc)
+
     if not WEB_ROOT.is_dir():
         win_message(APP_TITLE, f"Brak folderu UI:\n{WEB_ROOT}")
         raise SystemExit(1)
@@ -699,7 +737,7 @@ def main() -> None:
             pass
 
     def _on_shown() -> None:
-        # WinForms bierze ikone z webview.start(icon=...); WM_SETICON to pas bezpieczeństwa.
+        # WinForms bierze ikone z webview.start(icon=...); WM_SETICON to pas bezpieczeĹ„stwa.
         if icon_path:
             apply_native_window_icon(icon_path)
 
@@ -735,7 +773,7 @@ def main() -> None:
 
         tray_stop = start_tray(title=APP_TITLE, on_show=_show_window, on_quit=_shutdown_all)
         if tray_stop is None:
-            _log_tray("pystray niedostepny — brak ikony w zasobniku (pip install pystray Pillow)")
+            _log_tray("pystray niedostepny â€” brak ikony w zasobniku (pip install pystray Pillow)")
         else:
             tray_active = True
     except Exception as exc:

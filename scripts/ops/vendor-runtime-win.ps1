@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Vendor Windows embeddable CPython + site-packages into bin/runtime/win/python.
@@ -6,7 +6,7 @@
 #>
 $ErrorActionPreference = "Stop"
 
-$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
+$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $ContentRoot = Join-Path $GitRoot "bin"
 $PyVer = "3.12.10"
 $EmbedName = "python-$PyVer-embed-amd64.zip"
@@ -52,26 +52,15 @@ New-Item -ItemType Directory -Force -Path $RuntimePy | Out-Null
 Write-Host "Expanding embed zip..."
 Expand-Archive -LiteralPath $zipPath -DestinationPath $RuntimePy -Force
 
-# Enable site-packages for embeddable layout
 $pth = Get-ChildItem -LiteralPath $RuntimePy -Filter "python*._pth" | Select-Object -First 1
 if (-not $pth) { throw "Brak python*._pth w embed" }
-$pthText = @"
-python312.zip
-.
-Lib\site-packages
-import site
-"@
-# Detect actual zip name
 $zipDll = Get-ChildItem -LiteralPath $RuntimePy -Filter "python*.zip" | Select-Object -First 1
-if ($zipDll) {
-  $pthText = @"
-$($zipDll.Name)
-.
-Lib\site-packages
-import site
-"@
-}
-[System.IO.File]::WriteAllText($pth.FullName, $pthText, [System.Text.UTF8Encoding]::new($false))
+$pthLines = @()
+if ($zipDll) { $pthLines += $zipDll.Name }
+$pthLines += "."
+$pthLines += "Lib\site-packages"
+$pthLines += "import site"
+[System.IO.File]::WriteAllText($pth.FullName, ($pthLines -join "`r`n") + "`r`n", [System.Text.UTF8Encoding]::new($false))
 
 $site = Join-Path $RuntimePy "Lib\site-packages"
 New-Item -ItemType Directory -Force -Path $site | Out-Null

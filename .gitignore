@@ -1,23 +1,24 @@
-# Env and secrets
+﻿# Env and secrets
 .env
 .env.*
 !.env.example
 **/hosts.yml
 **/*token*
-# Design tokens CSS (nie secret) — wymagane w repo (Geex realign F2+)
+# Design tokens CSS (nie secret) â€” wymagane w repo (Geex realign F2+)
 !bin/apps/web/assets/css/dam-tokens.css
 !apps/web/assets/css/dam-tokens.css
 **/*secret*
 *.pem
 *.p12
 
-# Layout root (GIT_ROOT = DAM.exe + git; CONTENT_ROOT = bin/ mirror — never commit)
+# Layout root (GIT_ROOT = DAM.exe + git; CONTENT_ROOT = bin/ mirror â€” never commit)
 /bin/
 /DAM.exe
 /DAM.cmd
 /_move_preflight.txt
 /build-dam-exe/
 /DAM.spec
+!/DAM.spec
 
 # Lokalna baza kont (hashe bcrypt) - nie commitowac
 bin/apps/desktop/data/*.sqlite
@@ -28,7 +29,7 @@ bin/apps/desktop/data/db-prefer.json
 bin/apps/desktop/machine-config.json
 bin/apps/web/data/dam-runtime.json
 bin/apps/web/data/dam-identity.json
-# legacy paths (pre-bin layout) — keep if someone checks out old tree
+# legacy paths (pre-bin layout) â€” keep if someone checks out old tree
 apps/desktop/data/*.sqlite
 apps/desktop/data/*.sqlite-*
 apps/desktop/data/bound-session.json
@@ -105,7 +106,7 @@ apps/web/data/thumbs/
 apps/web/data/audit-log.jsonl
 apps/web/data/_invoice_mail_stage/
 
-# PAMIEC-PODRECZNA — disk thumb cache (binaries never in git; keep README)
+# PAMIEC-PODRECZNA â€” disk thumb cache (binaries never in git; keep README)
 bin/PAMIEC-PODRECZNA/**
 !bin/PAMIEC-PODRECZNA/README.md
 !bin/PAMIEC-PODRECZNA/.gitkeep
