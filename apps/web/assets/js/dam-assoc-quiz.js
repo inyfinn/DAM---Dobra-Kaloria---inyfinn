@@ -55,11 +55,30 @@
     return STATE.items[STATE.idx] || null;
   }
 
+  function localPath(path) {
+    if (global.DamPaths && typeof global.DamPaths.toLocal === "function") {
+      return global.DamPaths.toLocal(path);
+    }
+    return path || "";
+  }
+
   function thumbUrl(item) {
     if (!item) return "";
     var path = item.path || "";
     if (!path) return "";
-    return bridge() + "/thumb?path=" + encodeURIComponent(path) + "&w=480";
+    if (
+      global.DamPreviewTruth &&
+      typeof global.DamPreviewTruth.thumbCacheUrl === "function"
+    ) {
+      return global.DamPreviewTruth.thumbCacheUrl(path, "grid");
+    }
+    return (
+      bridge() +
+      "/thumb-cache?path=" +
+      encodeURIComponent(localPath(path)) +
+      "&profile=" +
+      encodeURIComponent("grid")
+    );
   }
 
   function assetHasLinks(a) {
@@ -336,7 +355,9 @@
         esc(thumbUrl(item)) +
         '" alt="' +
         esc(item.name || "") +
-        '" loading="lazy" />' +
+        '" loading="lazy" data-path="' +
+        esc(item.path || "") +
+        '" onerror="window.__damBrandingThumbFallback&&__damBrandingThumbFallback(this)" />' +
         '<div class="dam-assoc-quiz__file"><strong>' +
         esc(item.name || item.asset_id) +
         "</strong><small>" +

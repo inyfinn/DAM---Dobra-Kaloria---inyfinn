@@ -1941,3 +1941,13 @@ Skrót — **bind = dwie osobne rzeczy**:
 
 **Wersja:** `5.0.80`.
 
+#### Lekcja 2026-08-11: file-availability + grid search + viz thumb parity (v5.0.130)
+
+**Objawy:** (1) Branding „gazetki” 0 wyników przy `gazetka` w ścieżce. (2) Viz vs branding różne statusy online/offline. (3) `img.dam-widget__thumb` ucinane z góry (`object-fit: cover`). (4) Podgląd modalu wolny (defer source scan 1200 ms + hero bez thumb-cache). (5) `GET /file-availability` w JS, brak trasy w bridge.
+
+**Przyczyny:** `assetBlobNorm` bez `path` (slim grid bez `search_blob`). Plural „gazetki” ≠ „gazetka”. Viz `onThumbError` bez `DamPreviewTruth.fileAvailability`. Bridge nie importował `dam_file_availability.py`. Hero `heroSrcFromAsset` = pełny `/media` zamiast `/thumb-cache`.
+
+**Fix:** Trasa `/file-availability` w `local_bridge.py`. `assetBlobNorm` + `path`; synonimy/stem `gazetki↔gazetka`. Viz `cardThumbSrc` + `onThumbError` przez PreviewTruth. Widget thumb `object-fit: contain`. Hero thumb-cache first; source fallback 200 ms. Head `br-*` → `M-*` skrypt `migrate-branding-head-m-ids.py`.
+
+**Wersja:** `5.0.130`.
+

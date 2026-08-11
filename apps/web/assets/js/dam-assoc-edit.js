@@ -3322,7 +3322,11 @@
           tag(String(t), "dam-viz-badge--subcat");
         });
         if (it.asset_role) {
-          var roleLbl = String(it.asset_role).replace(/_/g, " ");
+          var roleLbl =
+            global.DamAssetTaxonomy &&
+            typeof DamAssetTaxonomy.assetRoleLabel === "function"
+              ? DamAssetTaxonomy.assetRoleLabel(it.asset_role)
+              : String(it.asset_role).replace(/_/g, " ");
           if (roleLbl === "web banner") roleLbl = "Baner WWW";
           tag(roleLbl, "dam-viz-badge--cat");
         }

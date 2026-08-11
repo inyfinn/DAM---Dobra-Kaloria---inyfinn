@@ -279,29 +279,69 @@
   background: var(--dam-brand-green, #008244);
 }
 
-/* Dymek zaproszenia (pierwsze wejscie) - prawy dolny rog, nieinwazyjny */
+/* Zaproszenie: karta 390px; bialy prostokat pod maskotka (bez kolka ::before) */
 .dam-tut-invite {
+  --tut-medal: 103.5px;
+  --tut-invite-hang: calc(var(--tut-medal) + 18px);
   position: fixed;
   right: 86px;
   bottom: 24px;
   z-index: 14010;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
   width: min(390px, calc(100vw - 110px));
   padding: 24px 26px;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  font-family: var(--dam-font, "Jost", sans-serif);
+  pointer-events: auto;
+  isolation: isolate;
+}
+
+/* Biale tlo + obrys: nachodzi w lewo pod maskotke */
+.dam-tut-invite::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: calc(-1 * var(--tut-invite-hang));
   background: var(--dam-surface, #fff);
-  color: var(--dam-text, #464255);
   border: 1px solid var(--dam-border, #ececf2);
   border-radius: var(--dam-radius-md, 12px);
   box-shadow: 0 16px 40px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.26);
-  font-family: var(--dam-font, "Jost", sans-serif);
+  pointer-events: none;
 }
 
-.dam-tut-invite__mascot {
-  /* invite: +20% vs 86.25 => 103.5; przesuniecie w lewo o 45px */
-  --tut-medal: 103.5px;
-  margin-left: -45px;
+.dam-tut-invite .dam-tut-invite__mascot {
+  position: absolute;
+  left: calc(-1 * var(--tut-invite-hang));
+  top: 6px;
+  margin: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Invite: bez bialego medalionu (::before) - tylko postac na tle karty */
+.dam-tut-invite .dam-tut-invite__mascot::before {
+  content: none;
+  display: none;
+}
+
+.dam-tut-invite .dam-tut-invite__mascot-img {
+  left: -10.5%;
+  width: 121%;
+  background-position: center bottom;
+  filter: none;
+}
+
+.dam-tut-invite__body {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+  color: var(--dam-text, #464255);
 }
 
 .dam-tut-invite__text {
@@ -343,6 +383,17 @@
   }
   .dam-tut__phase-label {
     font-size: var(--dam-fs-xs, 11px);
+  }
+  .dam-tut-invite {
+    right: 12px;
+    width: min(390px, calc(100vw - 24px));
+    --tut-medal: 88px;
+    --tut-invite-hang: calc(var(--tut-medal) + 14px);
+    padding: 18px 16px;
+  }
+  .dam-tut-invite .dam-tut-invite__mascot {
+    left: calc(-1 * var(--tut-invite-hang));
+    top: 4px;
   }
 }
 

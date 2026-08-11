@@ -101,8 +101,9 @@
       "status": "nieaktualne"
     },
     "6300727.00": {
-      "note": "MALINA - podstawowy DOY",
-      "status": "nieaktualne"
+      "status": "aktualne",
+      "note": "Lifecycle F",
+      "letter": "F"
     },
     "6300727.01": {
       "note": "MALINA - ZELAZO",
@@ -117,8 +118,9 @@
       "status": "aktualne"
     },
     "6300754.00": {
-      "note": "MALINA - MAGNEZ & ZELAZO",
-      "status": "aktualne"
+      "status": "aktualne",
+      "note": "Lifecycle F",
+      "letter": "F"
     },
     "6300782.00": {
       "note": "Lifecycle F",
@@ -376,7 +378,27 @@
       "note": "Lifecycle X",
       "letter": "X",
       "status": "nieaktualne"
+    },
+    "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F": {
+      "status": "aktualne",
+      "note": "Lifecycle F",
+      "letter": "F"
+    },
+    "M:/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - 65 g - 24.02.2026 - 6300727.00": {
+      "status": "aktualne",
+      "note": "Lifecycle F",
+      "letter": "F"
+    },
+    "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F": {
+      "status": "aktualne",
+      "note": "Lifecycle F",
+      "letter": "F"
+    },
+    "M:/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00": {
+      "status": "aktualne",
+      "note": "Lifecycle F",
+      "letter": "F"
     }
   },
-  "updated_at": "2026-07-28T23:36:15.154431+00:00"
+  "updated_at": "2026-08-04T06:57:47.494164+00:00"
 }

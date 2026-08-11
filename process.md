@@ -13412,3 +13412,90 @@ ode --check OK. Live Playwright: branding product open phases hydrate 1ms; wall-
 **Fix:** Usunieto blocking CDN z `explorer.html`; stuby pod Geex `main.js`; fonts/unicons non-blocking; smoke `dam-explorer-navfix-smoke.js`.
 **Zasada:** MCP hang na navigate = najpierw sprawdz sync `<script src=https://...>` w HTML, nie czekaj na tool.
 
+
+## 2026-08-10 — live grid publish + assoc seed dry-run (backend)
+
+**Command / Action:** Backup live grid/head/sqlite; run `build-branding-grid-index.py --from-sqlite`; seed dry-run (no --force/--apply).
+
+**Log / Status:**
+- Smoke `:8765`/`:8766` = 200/200.
+- Backup: `bin/apps/desktop/data/backups-live-grid-20260810150322/` (grid-index 18848345, head 369166, sqlite 5681152).
+- Grid publish: `generation_id=395b62542b94c15a`, full count=54665, head_count=0, `links_from_sqlite=true`, zero packshot/WIZKI via eligibility.
+- Assoc before/after: confirmed=22 (unchanged). Seed dry-run quality_gate FAIL `spray_product:burger-klasyczny-niemiesne:1129:0.24` — NOT applied.
+- Tests: backend 9/9 OK; projection 8/8 OK.
+
+**Effect / Fix:** Live packshot head replaced; head empty because Composer `HEAD_ROLES` (www/social/campaign/brandbook) absent in eligible role set (brand_asset/social_asset/…). Quiz pending still 0 pending seed blocker.
+
+**Backup:** `bin/apps/desktop/data/backups-live-grid-20260810150322/` + builder `branding-grid-index.json.bak-*` if present.
+
+**Test / Evaluation:** Grid gates PASS (gen/subset/packshot/wizki/nonempty/sqlite). Seed gate FAIL (no apply). Plan not done — parent UI Branding+Quiz remaining.
+
+**Sources:** `bin/apps/web/scripts/build-branding-grid-index.py`, `seed-asset-product-links.py`, PI `branding.grid_no_wizki_visuals_packshot` / `assoc.seed_dry_run_gate`.
+
+## 2026-08-10 — branding grid HEAD_ROLES taxonomy fix (frontend projection)
+
+**Command / Action:** Diagnose live `asset_role` distribution on cleaned full grid; align `HEAD_ROLES` with `dam-asset-role-mapping.json` controlled taxonomy; extend projection tests; hash-gate sync builder/tests apps→bin; rebuild live grid/head with `--from-sqlite`.
+
+**Log / Status:**
+- Root cause: legacy `HEAD_ROLES={www,social,campaign,brandbook}` matched 0 rows in live eligible set (`brand_asset`, `social_asset`, `web_banner`, …); `(empty)` role 47449 excluded by design (no fallback).
+- New `HEAD_ROLES`: `brand_asset`, `icon`, `brandbook`, `web_banner`, `web_bundle_tile`, `web_hero_slider`, `web_product_tile`, `ecommerce_ad`, `www`, `social_asset`, `social_video`, `social`, `key_visual`, `pos_material`, `outdoor_material`, `private_label_artwork`, `campaign` — priority sort (WWW/social/campaign before brand flood).
+- Live rebuild: `generation_id=395b62542b94c15a`, full=54665, head=800, `links_from_sqlite=true`, subset OK, ineligible/packshot/WIZKI=0 in head+full sample.
+- Python: `py_compile` OK; projection tests **12/12** OK.
+- Smoke `:8765`/`:8766` ≤5s OK.
+- Branding UI 3× CDP: cards=100, gen stable `395b62542b94c15a`, fat `branding-index.json` requests=0, grid-head=1, packshot tab hidden, badRole/wizki=0. **Quiz PASS not declared** (seed gate still pending).
+
+**Effect / Fix:** Instant head non-empty (800 marketing graphics: social/web/campaign mix); no client cache-bust change.
+
+**Backup:** prior builder `.bak-*` preserved by atomic replace.
+
+**Test / Evaluation:** Screenshots `_qa_screenshots/branding-grid-head-pass{1,2,3}-20260810.png`. `dam-viz.js` untouched (datesy fix retained).
+
+**Sources:** `apps/web/scripts/build-branding-grid-index.py`, `test_branding_grid_projection.py`, PI `branding.grid_no_wizki_visuals_packshot`, `dam-asset-role-mapping.json`.
+
+
+## 2026-08-10 — seed spray quarantine (STOP przed apply)
+
+**Command / Action:** Analiza `refilter-pending.jsonl`; generalna kwarantanna w `seed-asset-product-links.py`; dry-run; STOP bez `--apply` (sample nieadekwatne).
+
+**Root cause:** Artifact 4974 linii; 1129× `burger-klasyczny-niemiesne` (24%) wszystkie `token_plus_context` score=55 (logo BURGER / keyword), bez OCR/SKU. Systemowy weak-token spray (takze kaszanka/jablko/…).
+
+**Quarantine:** 1911 usunietych z accepted (burger 1129 spray + kolejne grupy n>=80 token spray). Accepted after=2796. Formal gate `ok=true`.
+
+**Adequacy FAIL (blocker apply):** po kwarantannie tok_share≈0.69; sample `malina-owocowe` lezy w path `WIŚNIA - TRUFLE`; `daktyl-wisnia-raw` z bannerow multi-smak; mismatch weak≈5.5%. Zgodnie z PI: NIE `--apply`.
+
+**Counts:** confirmed 22 → 22 (bez mutacji). pending/auto=0.
+
+**Backup:** `bin/apps/desktop/data/backups-seed-quarantine-20260810151244/`
+
+**Tests:** backend 12/12 OK (w tym 3 SeedQuarantine); projection 12/12 OK. Sync apps→bin seed+test+PI.
+
+**Quiz API:** `/assoc/queue` = login_required (bez sesji); SQLite pending=0.
+
+
+## 2026-08-10 — strong-only SKU/OCR seed + grid republish
+
+**Command / Action:** `--strong-only` live scan (assoc_adequacy `sku_match` / `ocr_line_phrase`); dry-run PASS; `--apply --strong-only`; grid rebuild `--from-sqlite`; queue statuses pending+auto; bridge restart.
+
+**Evidence counts:** sku_match=9325, ocr_line_phrase=26, total accepted=9351. Ambiguous SKU skipped=787. token_plus_context seeded=0.
+
+**DB:** before confirmed=22 → after confirmed=22, auto=9351, rejected=0. Idempotent re-apply OK.
+
+**Grid:** generation_id=`4a49bd013f7f114a`, head=800, full=54665, packshot/WIZKI=0, links_from_sqlite=true, assets_with_links≈15190. Builder apps/bin hash match (Composer HEAD_ROLES).
+
+**Backup:** `bin/apps/desktop/data/dam-local.sqlite.1786367934.bak` (+ `.1786367988.bak`), `bin/apps/desktop/data/backups-strong-seed-grid-20260810151909/`.
+
+**API:** `/branding/status` head=800 gen match; `/assoc/queue` = login_required (parent browser session). Repo queue: auto+confirmed, score/reason present, grid_fallback=false in route.
+
+**Tests:** backend 16/16; projection 12/12. Sync apps↔bin. No commit/push.
+
+
+## 2026-08-10 — /assoc/queue previewable-first (Quiz UX)
+
+**Command / Action:** Prefer PNG/JPG/WEBP/GIF/SVG before TIF/PSD w `branding_asset_routes`; DISTINCT 200 assets + all suggestions; restart `serve_browser` (auth DB zachowane).
+
+**Effect:** Pierwszy item po auth: `br-004616` PNG + `sku_match` 100. source=sqlite, grid_fallback=false. Seed/statusy/grid nietkniete.
+
+**Test:** AssocQueuePreviewTests + full backend 22 OK. Smoke ports 200/200.
+
+**Backup:** n/a (bez mutacji SQLite assoc).
+

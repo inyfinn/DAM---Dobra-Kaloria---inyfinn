@@ -3245,6 +3245,56 @@
       },
       "revision_index": "6300525.00",
       "lifecycle_history_id": "lc_1785281774322"
+    },
+    {
+      "id": "chg_1785826360738",
+      "ts": "2026-08-04T06:52:40.738559+00:00",
+      "action": "lifecycle_status",
+      "scope": "variant",
+      "status": "aktualne",
+      "letter": "F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "product_id": "malina-owocowe",
+      "revision_index": "6300727.00",
+      "path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F",
+      "folder_rename": {
+        "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00",
+        "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F"
+      },
+      "path_renames": [
+        {
+          "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00",
+          "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F",
+          "kind": "variant"
+        }
+      ],
+      "lifecycle_history_id": "lc_1785826360618",
+      "notes": []
+    },
+    {
+      "id": "chg_1785826667277",
+      "ts": "2026-08-04T06:57:47.277049+00:00",
+      "action": "lifecycle_status",
+      "scope": "variant",
+      "status": "aktualne",
+      "letter": "F",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "product_id": "malina-owocowe",
+      "revision_index": "6300754.00",
+      "path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F",
+      "folder_rename": {
+        "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00",
+        "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F"
+      },
+      "path_renames": [
+        {
+          "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00",
+          "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F",
+          "kind": "variant"
+        }
+      ],
+      "lifecycle_history_id": "lc_1785826667153",
+      "notes": []
     }
   ]
 }

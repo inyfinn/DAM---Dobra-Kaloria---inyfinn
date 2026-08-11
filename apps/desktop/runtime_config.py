@@ -8,11 +8,17 @@ from pathlib import Path
 
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = DESKTOP_DIR.parent / "web"
+# Layout: GIT_ROOT (DAM.exe + .git) / bin = CONTENT_ROOT (apps, THEME, runtime, …)
+# Primary 2026-08-05+: D:\\...\\DAM---Dobra-Kaloria---inyfinn (nie P:\\DAM).
+CONTENT_ROOT = DESKTOP_DIR.parent.parent
+GIT_ROOT = CONTENT_ROOT.parent
+# Back-compat alias: content tree (not .git location after bin/ layout)
+REPO_ROOT = CONTENT_ROOT
 DEFAULT_UI_PORT = 8765
 DEFAULT_BRIDGE_PORT = 8766
 HOST = "127.0.0.1"
 APP_TITLE = "DAM - Dobra Kaloria - Inyfinn"
-APP_VERSION = "5.0.121"  # sync z apps/web/version.json + dam-version.js
+APP_VERSION = "5.0.130"  # sync z apps/web/version.json + dam-version.js
 MUTEX_NAME = "Global\\DAM_DOBRA_KALORIA_INYFINN_SINGLE_INSTANCE"
 
 

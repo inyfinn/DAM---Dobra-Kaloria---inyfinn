@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DAM - pomoc uruchomienia</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --accent: #0f6cbd;
+      --border: #e2e8f0;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(160deg, #eef2f6 0%, var(--bg) 45%, #e8eef5 100%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    main {
+      width: min(440px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px 24px;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    .actions { display: flex; flex-direction: column; gap: 10px; }
+    a.btn, button.btn {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+    }
+    a.btn.secondary, button.btn.secondary {
+      background: #fff;
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
+    code {
+      font-size: 0.8rem;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="title">DAM nie moze sie uruchomic</h1>
+    <p id="body">Trwa rozpoznawanie problemu…</p>
+    <div class="actions" id="actions"></div>
+  </main>
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var reason = (q.get("reason") || "missing_runtime").toLowerCase();
+      var title = document.getElementById("title");
+      var body = document.getElementById("body");
+      var actions = document.getElementById("actions");
+
+      function btn(label, href, secondary) {
+        var a = document.createElement(href ? "a" : "button");
+        a.className = "btn" + (secondary ? " secondary" : "");
+        a.textContent = label;
+        if (href) a.href = href;
+        else a.type = "button";
+        return a;
+      }
+
+      if (reason === "missing_runtime") {
+        title.textContent = "Brak silnika w folderze";
+        body.innerHTML =
+          "Aplikacja szuka Pythona w <code>bin\\runtime\\win\\python</code>. " +
+          "Nie trzeba nic instalowac w systemie. Skopiuj kompletny folder DAM albo popros IT o paczke z runtime.";
+        actions.appendChild(btn("Zamknij te karte", null, true));
+        actions.lastChild.addEventListener("click", function () { window.close(); });
+      } else if (reason === "missing_launch") {
+        title.textContent = "Uszkodzona instalacja";
+        body.textContent = "Brak pliku launch.py w bin\\apps\\desktop. Przywroc folder aplikacji z zaufanej kopii.";
+      } else if (reason === "webview2") {
+        title.textContent = "Brak WebView2";
+        body.textContent =
+          "Do okna DAM potrzebny jest Microsoft Edge WebView2 Runtime (zwykle juz jest z Edge). " +
+          "Jesli go brakuje, pobierz Evergreen Bootstrapper (dziala bez uprawnien administratora w wiekszosci firm).";
+        actions.appendChild(
+          btn("Pobierz WebView2", "https://go.microsoft.com/fwlink/p/?LinkId=2124703", false)
+        );
+      } else if (reason === "port_busy") {
+        title.textContent = "Port zajety";
+        body.textContent =
+          "Port 8765 lub 8766 jest zajety. Zamknij druga kopie DAM w Menedzerze zadan, potem uruchom ponownie skrot.";
+      } else {
+        title.textContent = "Problem z uruchomieniem";
+        body.textContent = "Kod: " + reason + ". Skontaktuj sie z IT z logiem launch-last-error.txt.";
+      }
+    })();
+  </script>
+</body>
+</html>

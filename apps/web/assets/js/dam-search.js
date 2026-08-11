@@ -40,17 +40,31 @@
     return loadIndexes();
   }
 
-  function loadIndexes() {
+  function loadIndexes(opts) {
+    opts = opts || {};
+    if (opts.force) {
+      searchIndex = null;
+      fileIndex = null;
+      loading = null;
+      try {
+        window._DAM_SEARCH_INDEX = null;
+        window._DAM_FILE_INDEX = null;
+      } catch (eForce) {
+        /* ignore */
+      }
+    }
     /* HARD: reuse window warm caches — never re-fetch/re-parse 7MB+ JSON
        (picker #damAssocEditSearch freeze after first DamSearch.search). */
-    if (!fileIndex && typeof window !== "undefined" && window._DAM_FILE_INDEX) {
-      fileIndex = window._DAM_FILE_INDEX;
-    }
-    if (!searchIndex && typeof window !== "undefined" && window._DAM_SEARCH_INDEX) {
-      searchIndex = window._DAM_SEARCH_INDEX;
-    }
-    if (searchIndex && fileIndex) {
-      return Promise.resolve({ searchIndex: searchIndex, fileIndex: fileIndex });
+    if (!opts.force) {
+      if (!fileIndex && typeof window !== "undefined" && window._DAM_FILE_INDEX) {
+        fileIndex = window._DAM_FILE_INDEX;
+      }
+      if (!searchIndex && typeof window !== "undefined" && window._DAM_SEARCH_INDEX) {
+        searchIndex = window._DAM_SEARCH_INDEX;
+      }
+      if (searchIndex && fileIndex) {
+        return Promise.resolve({ searchIndex: searchIndex, fileIndex: fileIndex });
+      }
     }
     if (loading) return loading;
     var bust = Date.now();
@@ -947,8 +961,12 @@
       .replace(/"/g, "&quot;");
   }
 
+  function load(opts) {
+    return loadIndexes(opts || {});
+  }
+
   window.DamSearch = {
-    load: loadIndexes,
+    load: load,
     reload: reload,
     search: search,
     bindSearchBox: bindSearchBox,

@@ -295,9 +295,10 @@
       var al = a.is_latest ? 1 : 0;
       var bl = b.is_latest ? 1 : 0;
       if (al !== bl) return bl - al;
-      var at = a.thumb_url ? 1 : 0;
-      var bt = b.thumb_url ? 1 : 0;
-      return bt - at;
+      var at = hasStaticDataThumb(a) ? 2 : a.thumb_url ? 1 : 0;
+      var bt = hasStaticDataThumb(b) ? 2 : b.thumb_url ? 1 : 0;
+      if (at !== bt) return bt - at;
+      return 0;
     });
     var i;
     for (i = 0; i < pool.length; i++) {
@@ -382,6 +383,13 @@
   }
 
   function productLevelDisplayName(productId, fallback) {
+    var ovKey = "dam_display_title:" + String(productId || "").trim();
+    try {
+      var ov = localStorage.getItem(ovKey);
+      if (ov && String(ov).trim()) return String(ov).trim();
+    } catch (eOv) {
+      /* ignore */
+    }
     var meta = productId ? productMeta(productId) : null;
     /* Product-level title = folder produktu z file-index, nie product_name z wiersza wiz (merged variant). */
     var name = (meta && (meta.display_name || meta.name)) || fallback || productId || "Produkt";
@@ -676,9 +684,19 @@
     return v;
   }
 
+  function hasStaticDataThumb(v) {
+    var t = String((v && v.thumb_url) || "").replace(/^\.\//, "");
+    if (!t) return false;
+    /* Cache-bust ?v= from file-index must not invalidate static card thumb. */
+    var base = t.split(/[?#]/)[0];
+    return /^data\/thumbs\/[^/]+\.(?:jpe?g|png|webp)$/i.test(base);
+  }
+
   function enrichVizRowFromProducts(data, row) {
     /* Re-pick wizki path with carrier-aware rule (KAR6X -> FRONT-L). */
     var v = Object.assign({}, row);
+    var preserveCardThumb = hasStaticDataThumb(v);
+    var cardThumb = preserveCardThumb ? String(v.thumb_url) : "";
     var pid = v.product_id;
     var ib = resolveIndexBase(v);
     var prod = (data.products || []).find(function (p) {
@@ -699,14 +717,19 @@
         if (rev.wizki && rev.wizki.length) {
           var picked = firstWizkiPath(rev);
           if (picked) {
+            v.modal_path = picked;
             v.path = picked;
             var pickedBase = String(picked).replace(/\\/g, "/").split("/").pop() || "";
             if (pickedBase) {
               v.file = pickedBase;
               v.rel = pickedBase;
             }
-            /* Stary data/thumbs/*.jpg moze byc z ENFACE - karta musi trafic w FRONT. */
-            v.thumb_url = mediaPreviewUrl(picked) || v.thumb_url;
+            /* Card: keep static data/thumbs; modal uses /media via path/modal_path. */
+            if (!preserveCardThumb) {
+              v.thumb_url = mediaPreviewUrl(picked) || v.thumb_url;
+            } else if (cardThumb) {
+              v.thumb_url = cardThumb;
+            }
           }
         }
         if (Array.isArray(rev.langs) && rev.langs.length) {
@@ -761,7 +784,15 @@
 
   function cardThumbSrc(v) {
     if (!v) return "";
+    if (hasStaticDataThumb(v)) {
+      var staticThumb = String(v.thumb_url).replace(/^\.\//, "");
+      return staticThumb;
+    }
     syncKar6xFrontThumb(v);
+    if (v.path && global.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
+      var cached = DamPreviewTruth.thumbCacheUrl(v.path, "grid");
+      if (cached) return cached;
+    }
     if (v.thumb_url && String(v.thumb_url).indexOf("/media?") >= 0) return v.thumb_url;
     if (isKar6xCarrier(v) && v.path && /FRONT/i.test(v.path) && !/ENFACE/i.test(v.path)) {
       var live = mediaPreviewUrl(v.path);
@@ -4544,13 +4575,43 @@
   /* ------------------------------------------------------------------ */
 
   function onThumbError(img) {
-    var tried = img.getAttribute("data-thumb-fallback");
-    if (!tried) {
-      var path = img.getAttribute("data-media-path") || "";
-      var live = path ? mediaPreviewUrl(path) : "";
-      if (live && live !== img.getAttribute("src")) {
+    var path = img.getAttribute("data-media-path") || "";
+    if (
+      path &&
+      global.DamPreviewTruth &&
+      typeof DamPreviewTruth.fileAvailability === "function" &&
+      typeof DamPreviewTruth.onErrorTitle === "function"
+    ) {
+      DamPreviewTruth.fileAvailability(path).then(function (avail) {
+        if (!img || !img.parentNode) return;
+        avail = avail || {};
+        if (avail.treat_as_local && avail.state !== "online_only" && avail.state !== "missing") {
+          var tried = img.getAttribute("data-thumb-fallback");
+          if (!tried) {
+            var live = mediaPreviewUrl(path);
+            if (live && live !== img.getAttribute("src")) {
+              img.setAttribute("data-thumb-fallback", "1");
+              img.src = live;
+              return;
+            }
+          }
+        }
+        img.onerror = null;
+        img.title = DamPreviewTruth.onErrorTitle(avail.state);
+        img.src = PLACEHOLDER_SVG;
+        img.classList.add("dam-viz-thumb__img--placeholder");
+        if (avail.state === "online_only") {
+          img.classList.add("dam-viz-thumb__img--online-only");
+        }
+      });
+      return;
+    }
+    var triedLegacy = img.getAttribute("data-thumb-fallback");
+    if (!triedLegacy) {
+      var liveLegacy = path ? mediaPreviewUrl(path) : "";
+      if (liveLegacy && liveLegacy !== img.getAttribute("src")) {
         img.setAttribute("data-thumb-fallback", "1");
-        img.src = live;
+        img.src = liveLegacy;
         return;
       }
     }
@@ -4565,12 +4626,24 @@
     var items = group.items.map(applyOverrideToItem);
     var first = items[0];
     var thumbPick = null;
-    for (var ti = 0; ti < items.length; ti++) {
-      var cand = cardThumbSrc(items[ti]);
-      if (cand) {
-        thumbPick = cand;
+    var ti;
+    for (ti = 0; ti < items.length; ti++) {
+      if (!hasStaticDataThumb(items[ti])) continue;
+      var staticCand = cardThumbSrc(items[ti]);
+      if (staticCand) {
+        thumbPick = staticCand;
         first = items[ti];
         break;
+      }
+    }
+    if (!thumbPick) {
+      for (ti = 0; ti < items.length; ti++) {
+        var cand = cardThumbSrc(items[ti]);
+        if (cand) {
+          thumbPick = cand;
+          first = items[ti];
+          break;
+        }
       }
     }
     var thumb = thumbPick || cardThumbSrc(first);
@@ -5700,7 +5773,6 @@
       }
     }
 
-    var lastIndexMtime = 0;
 
     function loadIndex() {
       if (window.DamLoader && typeof window.DamLoader.start === "function") {
@@ -5728,24 +5800,16 @@
       grid.innerHTML = '<p style="color:#FF5653">Blad indeksu: ' + esc(err.message) + "</p>";
     });
 
-    /* Near-instant: poll mtime indeksu (watcher / POST /index/rebuild) */
-    function pollIndexFresh() {
-      var bridge = (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function")
-        ? window.DamRuntime.bridgeUrl()
-        : ((window.DamRuntime && window.DamRuntime.bridge) || "http://127.0.0.1:8766");
-      fetch(bridge + "/index/status", { cache: "no-store" })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (st) {
-          if (!st || !st.mtime) return;
-          if (lastIndexMtime && st.mtime > lastIndexMtime) {
-            loadIndex().then(boot).catch(function () {});
-          }
-          lastIndexMtime = st.mtime;
-        })
-        .catch(function () {});
+    /* Live refresh via shared poller (visible/focus + 10s, backoff while rebuild). */
+    if (window.DamIndexPoller && typeof window.DamIndexPoller.create === "function") {
+      window.DamIndexPoller.create({
+        name: "viz",
+        statusPath: "/index/status",
+        onChange: function () {
+          loadIndex().then(boot).catch(function () {});
+        },
+      });
     }
-    setInterval(pollIndexFresh, 4000);
-    setTimeout(pollIndexFresh, 800);
 
     var langSel = document.getElementById("vizLangFilter");
     var search = document.getElementById("vizSearch");

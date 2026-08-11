@@ -5,12 +5,29 @@
 **/hosts.yml
 **/*token*
 # Design tokens CSS (nie secret) — wymagane w repo (Geex realign F2+)
+!bin/apps/web/assets/css/dam-tokens.css
 !apps/web/assets/css/dam-tokens.css
 **/*secret*
 *.pem
 *.p12
 
+# Layout root (P:\DAM = DAM.exe + bin + git)
+/DAM.exe
+/DAM.cmd
+/_move_preflight.txt
+/build-dam-exe/
+/DAM.spec
+
 # Lokalna baza kont (hashe bcrypt) - nie commitowac
+bin/apps/desktop/data/*.sqlite
+bin/apps/desktop/data/*.sqlite-*
+bin/apps/desktop/data/bound-session.json
+bin/apps/desktop/data/webview2-profile/
+bin/apps/desktop/data/db-prefer.json
+bin/apps/desktop/machine-config.json
+bin/apps/web/data/dam-runtime.json
+bin/apps/web/data/dam-identity.json
+# legacy paths (pre-bin layout) — keep if someone checks out old tree
 apps/desktop/data/*.sqlite
 apps/desktop/data/*.sqlite-*
 apps/desktop/data/bound-session.json
@@ -20,23 +37,42 @@ apps/web/data/dam-runtime.json
 apps/web/data/dam-identity.json
 
 # Postgres na Synology (ADR-009) - haslo/host per-maszyna, nigdy w Git
+bin/apps/desktop/data/pg-config.json
+bin/apps/desktop/data/pg-config.json.off
+bin/apps/desktop/dam-connection.env
 apps/desktop/data/pg-config.json
 apps/desktop/dam-connection.env
 .tmp-syno-deploy/
+bin/.tmp-syno-deploy/
 
 # Dependencies
 node_modules/
 /vendor/
+bin/apps/api/vendor/
 apps/api/vendor/
 # UWAGA: apps/web/assets/vendor/ (Bootstrap, jQuery) MUSI byc w repo - nie ignorowac
 
 # Vault (blobs)
+bin/storage/originals/**
+!bin/storage/originals/.gitkeep
+bin/storage/derivatives/**
+!bin/storage/derivatives/.gitkeep
 storage/originals/**
 !storage/originals/.gitkeep
 storage/derivatives/**
 !storage/derivatives/.gitkeep
 
 # Tooling - NEVER commit binaries / local stacks (~1GB+)
+# root bin\ = content tree; tooling\bin\ = CLI cache (different)
+bin/tooling/bin/
+bin/tooling/downloads/**
+!bin/tooling/downloads/.gitkeep
+bin/tooling/choco-cache/**
+!bin/tooling/choco-cache/.gitkeep
+bin/tooling/npm-cache/**
+!bin/tooling/npm-cache/.gitkeep
+bin/tooling/composer-home/**
+!bin/tooling/composer-home/.gitkeep
 tooling/bin/
 tooling/downloads/**
 !tooling/downloads/.gitkeep
@@ -48,6 +84,11 @@ tooling/composer-home/**
 !tooling/composer-home/.gitkeep
 
 # Postgres data cluster (local)
+bin/data/postgres/
+bin/data/postgres-logs/
+bin/data/postgres/data/**
+!bin/data/postgres/.gitkeep
+bin/data/postgres/*.log
 data/postgres/
 data/postgres-logs/
 data/postgres/data/**
@@ -55,35 +96,41 @@ data/postgres/data/**
 data/postgres/*.log
 
 # Generated thumbs (regenerate locally)
+bin/apps/web/data/thumbs/
+bin/apps/web/data/audit-log.jsonl
+bin/apps/web/data/_invoice_mail_stage/
 apps/web/data/thumbs/
 apps/web/data/audit-log.jsonl
-
-# Invoice Outlook mail staging (ZIP/PDF/CSV runtime)
 apps/web/data/_invoice_mail_stage/
 
-# PAMIEC-PODRECZNA — disk thumb cache on D: (binaries never in git; keep README)
+# PAMIEC-PODRECZNA — disk thumb cache (binaries never in git; keep README)
+bin/PAMIEC-PODRECZNA/**
+!bin/PAMIEC-PODRECZNA/README.md
+!bin/PAMIEC-PODRECZNA/.gitkeep
 PAMIEC-PODRECZNA/**
 !PAMIEC-PODRECZNA/README.md
 !PAMIEC-PODRECZNA/.gitkeep
 *.avif
 
-# PAMIEC-PODRECZNA - disk AVIF/JPEG thumbs (D: only; NEVER under X:/ or M:/)
-PAMIEC-PODRECZNA/thumbs/
-PAMIEC-PODRECZNA/**/*.avif
-PAMIEC-PODRECZNA/**/*.jpg
-PAMIEC-PODRECZNA/**/*.jpeg
-PAMIEC-PODRECZNA/**/*.webp
-!PAMIEC-PODRECZNA/README.md
-!PAMIEC-PODRECZNA/.gitkeep
+bin/PAMIEC-PODRECZNA/thumbs/
+bin/PAMIEC-PODRECZNA/**/*.avif
+bin/PAMIEC-PODRECZNA/**/*.jpg
+bin/PAMIEC-PODRECZNA/**/*.jpeg
+bin/PAMIEC-PODRECZNA/**/*.webp
 
 # Geex logo backups / local only
 *.geex-backup.svg
 
 # Cursor / local agent noise
 .cursor/
+bin/.cursor/
 ui-complete/
+bin/ui-complete/
 
 # Theme vendor noise (keep geex-html-main source, skip zip + vendor docs)
+bin/THEME/*.zip
+bin/THEME/documentation/
+bin/THEME/geex-html-main/**/*.map
 THEME/*.zip
 THEME/documentation/
 THEME/geex-html-main/**/*.map
@@ -98,12 +145,41 @@ Thumbs.db
 
 # Agent / debug logs (lokalne, nie commitowac)
 debug-*.log
+bin/debug-*.log
 
 # Scratch QA + duze backupy bundli (lokalne, nie commitowac)
+_qa/
+_qa_screenshots/
+.qa-screenshots/
+Sesja3/
+guest-snapshot.json
+DATABASE/*.sql.gz
+_restore_backups/
+_restore_snapshots/
+_restore_stage/
+apps/web/data/branding-grid-head.backup-*.json
+apps/web/data/branding-index.backup-*.json
+apps/web/data/branding-index.json.drifted*
+apps/web/data/branding-index_*Conflict.json
+apps/web/data/file-index.json.*
+apps/web/data/search-index.json.*
+apps/web/data/*.tmp
+apps/desktop/data/*.bak
+apps/desktop/data/backup-*/
+apps/desktop/data/*.sqlite.*
 tmp-qa-hub/
+bin/tmp-qa-hub/
 backups/**/*.bundle
+bin/backups/**/*.bundle
 
-# Geex realign visual regression PNG (poza repo — patrz agents/shared/geex-realign-plan)
+# Geex realign visual regression PNG
+bin/apps/web/_qa/geex-realign-baseline/**/*.png
+bin/apps/web/_qa/geex-realign-baseline/**/*.json
+bin/apps/desktop/data/*.lock
+bin/apps/desktop/logs/
+bin/.ralph/logs/
+bin/tmp/
+bin/tmp_*.txt
 apps/web/_qa/geex-realign-baseline/**/*.png
 apps/web/_qa/geex-realign-baseline/**/*.json
 apps/desktop/data/*.lock
@@ -116,12 +192,19 @@ tmp_*.txt
 __pycache__/
 *.pyc
 .venv/
+bin/apps/desktop/.venv/
 apps/desktop/.venv/
 dist/
 build/
 *.egg-info/
 
 # Laravel
+bin/apps/api/storage/logs/*
+bin/apps/api/storage/framework/cache/*
+bin/apps/api/storage/framework/sessions/*
+bin/apps/api/storage/framework/views/*
+bin/apps/api/bootstrap/cache/*
+!bin/apps/api/storage/logs/.gitkeep
 apps/api/storage/logs/*
 apps/api/storage/framework/cache/*
 apps/api/storage/framework/sessions/*
@@ -130,3 +213,4 @@ apps/api/bootstrap/cache/*
 !apps/api/storage/logs/.gitkeep
 
 THEME/**/*.zip
+bin/THEME/**/*.zip

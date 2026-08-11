@@ -4,7 +4,7 @@
   var index = null;
   var tokens = null;
   var campaigns = null;
-  var CB = "bust20260720a";
+  var CB = "liveidx20260810a";
   /** B3: lokalny poster gdy bridge/ffmpeg nie odda klatki (data-URI SVG). */
   var VIDEO_POSTER_FALLBACK =
     "data:image/svg+xml," +
@@ -17,6 +17,35 @@
         'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
     );
   var TAG_COUNTS_KEY = "dam_branding_show_tag_counts";
+
+  /** PI branding.grid_excludes_product_visualizations + viz.assoc_no_visualization_loop defense-in-depth. */
+  function isBrandingGridEligible(a) {
+    if (!a) return false;
+    var role = String(a.asset_role || "").toLowerCase();
+    if (role === "packshot") return false;
+    var src = String(a.source || "").toLowerCase();
+    if (src === "wizki" || src === "visuals" || src === "visualization") return false;
+    var tags = a.tags || [];
+    for (var ti = 0; ti < tags.length; ti++) {
+      if (String(tags[ti] || "").toUpperCase() === "WIZKI") return false;
+    }
+    var path = String(a.path || "").replace(/\\/g, "/").toLowerCase();
+    if (path && (/\/4\s*-\s*wizki\b/.test(path) || /\/4\s*-\s*visuals\b/.test(path))) return false;
+    return true;
+  }
+
+  function filterEligibleGridAssets(list) {
+    return (list || []).filter(isBrandingGridEligible);
+  }
+
+  function hidePackshotsTab() {
+    document.querySelectorAll('.dam-branding-tab[data-tab="packshots"]').forEach(function (btn) {
+      btn.hidden = true;
+      btn.setAttribute("aria-hidden", "true");
+      btn.tabIndex = -1;
+    });
+  }
+
   var selectedCampaignId = null;
   var selectedChannel = "";
   var discoveryWhen = "";
@@ -457,6 +486,8 @@
   }
 
   var SEARCH_SYNONYM_MAP = {
+    gazetki: ["gazetka", "gazetk"],
+    gazetka: ["gazetki", "gazetk"],
     "bez tla": ["przezroczyste", "transparent", "przezroczyste tlo"],
     "tlo usuniete": ["przezroczyste", "transparent", "przezroczyste tlo"],
     "przezroczyste": ["transparent", "przezroczyste tlo", "bez tla"],
@@ -485,6 +516,8 @@
   function searchTokenGroups(q) {
     return rawSearchTokens(q).map(function (t) {
       var alts = [t];
+      var stem = polishStemToken(t);
+      if (stem && stem.length >= 4 && alts.indexOf(stem) === -1) alts.push(stem);
       (SEARCH_SYNONYM_MAP[t] || []).forEach(function (s) {
         var ns = normTag(s);
         if (ns && alts.indexOf(ns) === -1) alts.push(ns);
@@ -1234,7 +1267,7 @@
 
   function assetSectionId(a) {
     if (!a) return "other";
-    if (a.perspective || a.source === "wizki") return "packshots";
+    if (!isBrandingGridEligible(a)) return "other";
     var p = String(a.path || "").toUpperCase();
     /* 07-E-COMMERCE/02-KAMPANIE E-COMMERCE = materiały kampanii (nie zakładka WWW). */
     if (/02\s*-\s*KAMPANIE\s*E-COMMERCE/i.test(p)) return "campaigns";
@@ -1247,11 +1280,8 @@
 
   function assetInSectionTab(a, tab) {
     if (!a || !tab) return false;
+    if (tab === "packshots") return false;
     if (tab === "all") return true;
-    if (tab === "packshots") {
-      if (!a.perspective) return false;
-      return a.size === "XL" || a.size === "L" || a.size === "S" || a.size === "S_SKLEP";
-    }
     if (tab === "brandbook") {
       var up = String(a.path || "").toUpperCase();
       return (
@@ -1574,7 +1604,9 @@
     }
     extra += " " + marketingSearchTokens(a);
     return normTag(
-      (a.search_blob || "") +
+      (a.path || "") +
+        " " +
+        (a.search_blob || "") +
         " " +
         (a.name || "") +
         " " +
@@ -2819,6 +2851,7 @@
 
     function adopt(data, isPartial) {
       if (!data || !data.assets) return false;
+      data.assets = filterEligibleGridAssets(data.assets);
       index = data;
       index.partial = !!isPartial || !!data.partial;
       try {
@@ -2898,13 +2931,16 @@
     if (window.__damBrandingGridHydrateStarted) return;
     window.__damBrandingGridHydrateStarted = true;
     (async function () {
+      var headGen = index && index.generation_id ? String(index.generation_id) : "";
       for (var u = 0; u < fullUrls.length; u++) {
         try {
           var r = await fetch(fullUrls[u]);
           if (!r.ok) continue;
           var full = await r.json();
           if (!full || !full.assets) continue;
+          full.assets = filterEligibleGridAssets(full.assets);
           full.partial = false;
+          var fullGen = full.generation_id ? String(full.generation_id) : "";
           index = full;
           try {
             window.__damBrandingGridIndex = full;
@@ -2917,6 +2953,11 @@
             performance.mark("dam-branding-full-ready");
           } catch (eMark) {
             /* ignore */
+          }
+          if (headGen && fullGen && headGen === fullGen) {
+            scheduleBrandingRender({ tags: true, section: true });
+            setBootStatus("");
+            return;
           }
           var tab =
             (document.querySelector(".dam-branding-tab.is-active") &&
@@ -2995,6 +3036,7 @@
     var skipTagKey = extra.skipTagKey || "";
 
     var list = ((index && index.assets) || []).filter(function (a) {
+      if (!isBrandingGridEligible(a)) return false;
       if (!includeArchive() && isArchived(a)) return false;
       if (!assetMatchesDateRange(a)) return false;
       if (skipTagKey) {
@@ -3077,6 +3119,8 @@
     campaignAssetMap = {};
     try {
       window.__damBrandingIndex = null;
+      window.__damBrandingGridIndex = null;
+      window.__damBrandingGridHydrateStarted = false;
     } catch (eShare) {
       /* ignore */
     }
@@ -3249,7 +3293,7 @@
   }
 
   function bestTabForTagKey(key) {
-    var tabs = ["packshots", "www", "campaigns", "social", "brandbook"];
+    var tabs = ["www", "campaigns", "social", "brandbook"];
     var best = "";
     var bestN = 0;
     tabs.forEach(function (tab) {
@@ -3264,7 +3308,7 @@
 
   /** Pick tab with most search hits for ?q= (avoids false "Brak wynikow" on default campaigns). */
   function bestTabForSearchQuery(q) {
-    var tabs = ["packshots", "www", "campaigns", "social", "brandbook"];
+    var tabs = ["www", "campaigns", "social", "brandbook"];
     var best = "campaigns";
     var bestN = 0;
     var qLower = String(q || "").toLowerCase().trim();
@@ -4550,7 +4594,7 @@
 
   function normalizeTab(tab) {
     if (tab === "browse" || tab === "layout") return "all";
-    if (tab === "keyvisuale") return "packshots";
+    if (tab === "packshots" || tab === "keyvisuale" || tab === "packshoty") return "all";
     if (tab === "channels") return "social";
     if (tab === "wszystko" || tab === "pokaz-wszystko") return "all";
     return tab || "all";
@@ -5003,10 +5047,40 @@
     });
   }
 
+  function refreshBrandingGridKeepFilters() {
+    var activeTab =
+      (document.querySelector(".dam-branding-tab.is-active") &&
+        document.querySelector(".dam-branding-tab.is-active").getAttribute("data-tab")) ||
+      "all";
+    invalidateBrandingIndexCache();
+    return loadIndex()
+      .then(function () {
+        activateTab(normalizeTab(activeTab), { skipHash: true, keepDiscovery: true });
+      })
+      .catch(function () {});
+  }
+
+  function bindBrandingIndexPoller() {
+    if (!window.DamIndexPoller || typeof window.DamIndexPoller.create !== "function") return;
+    window.DamIndexPoller.create({
+      name: "branding",
+      statusPath: "/branding/status",
+      getGeneration: function (st) {
+        if (st && st.generation_id) return String(st.generation_id);
+        if (st && st.grid && st.grid.generation_id) return String(st.grid.generation_id);
+        return window.DamIndexPoller.pickGeneration(st);
+      },
+      onChange: function () {
+        refreshBrandingGridKeepFilters();
+      },
+    });
+  }
+
   async function boot() {
     try {
       showInitialBootSkeletons();
       bindTabs();
+      hidePackshotsTab();
       bindFilters();
       bindCategoryHintUi();
       bindBrandingCardZoomControl();
@@ -5129,7 +5203,6 @@
       var hashTab = tabFromHash();
       var allowedTabs = {
         all: 1,
-        packshots: 1,
         www: 1,
         campaigns: 1,
         social: 1,
@@ -5165,6 +5238,7 @@
         var t = tabFromHash();
         if (t) activateTab(t, { skipHash: true });
       });
+      bindBrandingIndexPoller();
       scheduleMetaFiltersReveal();
     } catch (e) {
       var grid = document.getElementById("damBrandingGrid");
@@ -5211,6 +5285,7 @@
     buildPickerBrowseRows: buildPickerBrowseRows,
     brandingCardDisplayAssets: brandingCardDisplayAssets,
     brandingCardIndexLabels: brandingCardIndexLabels,
+    isBrandingGridEligible: isBrandingGridEligible,
   };
 
   document.addEventListener("DOMContentLoaded", boot);

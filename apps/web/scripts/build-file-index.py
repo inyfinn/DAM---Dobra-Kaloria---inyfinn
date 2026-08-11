@@ -15,6 +15,7 @@ import argparse
 import json
 import re
 import shutil
+import sys
 import time
 import unicodedata
 from collections import Counter, defaultdict
@@ -44,20 +45,45 @@ NAMING = _load_naming_dict()
 
 def resolve_marketing_base() -> Path:
     """machine-config / M: (source) > X:/Marketing > D:/Marketing."""
+    # Keep scripts/ on path when launched from another cwd (watcher / bridge).
+    _scripts = Path(__file__).resolve().parent
+    if str(_scripts) not in sys.path:
+        sys.path.insert(0, str(_scripts))
     from marketing_roots import resolve_marketing_base as _resolve
 
     return _resolve()
 
 
-MARKETING_BASE = resolve_marketing_base()
-DEFAULT_ROOT = MARKETING_BASE / "- POLSKA" / "01 - PRODUKTY" / "- DK"
-GC_ROOT = MARKETING_BASE / "- EKSPORT" / "01 - PRODUCTS" / "- GC"
-MARKETING_ROOT = MARKETING_BASE / "- POLSKA"
+# Lazy roots: do NOT touch Marketing drives at import ( --help / lock-before-scan ).
+MARKETING_BASE: Path | None = None
+DEFAULT_ROOT: Path | None = None
+GC_ROOT: Path | None = None
+MARKETING_ROOT: Path | None = None
+ROOTS: list[dict] = []
 
-ROOTS = [
-    {"brand": "DK", "path": DEFAULT_ROOT},
-    {"brand": "GC", "path": GC_ROOT},
-]
+
+def _ensure_roots() -> None:
+    global MARKETING_BASE, DEFAULT_ROOT, GC_ROOT, MARKETING_ROOT, ROOTS
+    if MARKETING_BASE is not None and ROOTS:
+        return
+    MARKETING_BASE = resolve_marketing_base()
+    DEFAULT_ROOT = MARKETING_BASE / "- POLSKA" / "01 - PRODUKTY" / "- DK"
+    GC_ROOT = MARKETING_BASE / "- EKSPORT" / "01 - PRODUCTS" / "- GC"
+    MARKETING_ROOT = MARKETING_BASE / "- POLSKA"
+    ROOTS = [
+        {"brand": "DK", "path": DEFAULT_ROOT},
+        {"brand": "GC", "path": GC_ROOT},
+    ]
+
+
+def _atomic_write_json(path: Path, payload: dict) -> None:
+    """Temp + os.replace so readers never see partial file-index/search-index."""
+    import os
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + f".{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, path)
 
 _LANGS_FROM_DICT = NAMING.get("languages") or {}
 # HARD 2026-07-21: UK/GB/EN = English = kanonicznie "en" (chip EN). Ukraina = UA. NIGDY UK→Ukraina.
@@ -430,6 +456,97 @@ def dedupe_lifecycle_folder_twins(revisions: list[dict]) -> list[dict]:
     return out
 
 
+GRAM_SUFFIX_RE = re.compile(r"\s*\d+\s*g\b", re.I)
+PRODUCT_TECH_PREFIX_RE = re.compile(r"^(?:DK|GC)[-_]", re.I)
+INDEX_TAIL_RE = re.compile(r"\s+(?P<base>\d{6,8})(?:\.\d{2})?\s*$")
+
+
+def to_title_case_pl(s: str) -> str:
+    raw = (s or "").strip()
+    if not raw:
+        return raw
+    return re.sub(
+        r"(^|[\s\-_/])(\S)",
+        lambda m: m.group(1) + m.group(2)[:1].upper() + m.group(2)[1:].lower(),
+        raw.lower(),
+    )
+
+
+def split_glued_flavor_token(token: str) -> str:
+    """LEMONCHEESECAKE -> Lemon Cheesecake (vocab longest-first)."""
+    letters = re.sub(r"[^a-zA-ZĄĆĘŁŃÓŚŹŻąćęłńóśźż]", "", token or "")
+    if not letters:
+        return (token or "").strip()
+    if re.search(r"\s", token or ""):
+        return to_title_case_pl(token)
+    lower = norm(letters).replace(" ", "")
+    if len(lower) <= 4:
+        return to_title_case_pl(letters)
+    vocab = sorted(
+        {
+            norm(h).replace(" ", "")
+            for h in FLAVOR_HINTS
+            + PRODUCT_HINTS
+            + ["cheesecake", "cheese", "cake", "brownie", "muffin", "burger", "sznyce", "mielone"]
+        },
+        key=len,
+        reverse=True,
+    )
+    parts: list[str] = []
+    i = 0
+    while i < len(lower):
+        matched = False
+        for v in vocab:
+            if len(v) >= 3 and lower.startswith(v, i):
+                parts.append(v)
+                i += len(v)
+                matched = True
+                break
+        if matched:
+            continue
+        j = i + 1
+        while j <= len(lower):
+            if any(lower.startswith(v, j) for v in vocab if len(v) >= 3) or j == len(lower):
+                parts.append(lower[i:j])
+                i = j
+                break
+            j += 1
+        else:
+            parts.append(lower[i:])
+            break
+    if not parts:
+        return to_title_case_pl(letters)
+    return " ".join(to_title_case_pl(p) for p in parts if p)
+
+
+def polish_display_title(s: str) -> str:
+    """Gramatura/indeks z tytulu; rozbij sklejone smaki (LEMONCHEESECAKE)."""
+    out = GRAM_SUFFIX_RE.sub("", s or "").strip()
+    out = INDEX_TAIL_RE.sub("", out).strip()
+    if not out:
+        return out
+    letters = re.sub(r"[^a-zA-Z]", "", out)
+    if letters and letters == letters.upper() and len(letters) > 5 and not re.search(r"\s", out):
+        return split_glued_flavor_token(out)
+    if out == out.upper() or out == out.lower():
+        return to_title_case_pl(out)
+    return out
+
+
+def strip_technical_product_prefix(display: str) -> str:
+    """DK-DOY-DATESY - LEMONCHEESECAKE 100 g -> LEMONCHEESECAKE 100 g (typ w tagach)."""
+    if " - " not in display:
+        return display
+    left, right = display.split(" - ", 1)
+    left = left.strip()
+    right = right.strip()
+    if not right:
+        return display
+    if PRODUCT_TECH_PREFIX_RE.match(left) and "-" in left:
+        return right
+    return display
+
+
 def parse_display_name(product_name: str) -> tuple[str, list[str]]:
     bracket_tags: list[str] = []
     clean_name = strip_lifecycle_suffix(product_name)
@@ -439,6 +556,8 @@ def parse_display_name(product_name: str) -> tuple[str, list[str]]:
             bracket_tags.append(hint)
     display = DISPLAY_BRACKET_RE.sub("", clean_name).strip()
     display = re.sub(r"\s+", " ", display)
+    display = strip_technical_product_prefix(display)
+    display = polish_display_title(display)
     if not display:
         display = clean_name or product_name
     return display, bracket_tags
@@ -2080,11 +2199,25 @@ def merge_product_catalog_packaging(products: list[dict]) -> None:
 
 
 def main() -> None:
+    global OUT, SEARCH_OUT, THUMBS_DIR
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default="", help="Single root override (disables multi-root)")
     ap.add_argument("--brand", default="", help="Brand tag when using --root")
     ap.add_argument("--max-products", type=int, default=0, help="0 = all")
+    ap.add_argument(
+        "--out-dir",
+        default="",
+        help="Write file-index/search-index here (fixtures/tests). Default: apps/web/data",
+    )
     args = ap.parse_args()
+
+    if args.out_dir:
+        out_dir = Path(args.out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        OUT = out_dir / "file-index.json"
+        SEARCH_OUT = out_dir / "search-index.json"
+        THUMBS_DIR = out_dir / "thumbs"
+        THUMBS_DIR.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()
     products: list[dict] = []
@@ -2098,7 +2231,13 @@ def main() -> None:
         prods, cats, _ = scan_root(root, brand, args.max_products, 0)
         products.extend(prods)
         categories.extend(cats)
+        marketing_root = root
+        for p in root.parents:
+            if (p / "- POLSKA").is_dir() or p.name.upper() in ("MARKETING",):
+                marketing_root = p / "- POLSKA" if (p / "- POLSKA").is_dir() else p
+                break
     else:
+        _ensure_roots()
         total = 0
         for cfg in ROOTS:
             root = cfg["path"]
@@ -2109,9 +2248,10 @@ def main() -> None:
             categories.extend(cats)
             if args.max_products and total >= args.max_products:
                 break
+        marketing_root = MARKETING_ROOT
 
     attach_marketing_links(products)
-    discover_marketing_materials(products, MARKETING_ROOT)
+    discover_marketing_materials(products, marketing_root)
     apply_product_aliases(products)
     apply_lang_overrides(products)
     merge_product_catalog_packaging(products)
@@ -2132,17 +2272,14 @@ def main() -> None:
         "viz_latest": viz,
         "lang_labels": LANG_LABELS,
     }
-    OUT.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-    SEARCH_OUT.write_text(
-        json.dumps(
-            {
-                "generated_at": payload["generated_at"],
-                "product_count": len(products),
-                **search,
-            },
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
+    _atomic_write_json(OUT, payload)
+    _atomic_write_json(
+        SEARCH_OUT,
+        {
+            "generated_at": payload["generated_at"],
+            "product_count": len(products),
+            **search,
+        },
     )
 
     sample = [p for p in products if "tarta" in norm(p.get("display_name", "")) and "malin" in norm(p.get("display_name", ""))]

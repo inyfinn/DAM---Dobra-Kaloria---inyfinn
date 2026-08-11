@@ -274,6 +274,50 @@
     s = s.replace(/^\s*-\s*MIX\s*-\s*/i, "");
     s = s.replace(/^\s*MIX\s*-\s*/i, "");
     s = s.replace(/^\s*-\s*/, "");
+    s = s.replace(/\s+/g, " ").trim();
+    /* DK-DOY-DATESY - LEMONCHEESECAKE 100 g -> Lemon Cheesecake (typ w tagach) */
+    var dash = s.indexOf(" - ");
+    if (dash > 0 && /^(?:DK|GC)[-_]/i.test(s.slice(0, dash)) && s.slice(0, dash).indexOf("-") >= 0) {
+      s = s.slice(dash + 3).trim();
+    }
+    s = s.replace(/\s*\d+\s*g\b/gi, "").trim();
+    s = s.replace(/\s+\d{6,8}(?:\.\d{2})?\s*$/i, "").trim();
+    var letters = s.replace(/[^a-zA-ZĄĆĘŁŃÓŚŹŻąćęłńóśźż]/g, "");
+    if (letters && letters === letters.toUpperCase() && letters.length > 5 && !/\s/.test(s)) {
+      var vocab = [
+        "cheesecake", "lemon", "cheese", "cake", "brownie", "muffin", "burger", "sznyce", "mielone",
+        "czekolada", "kakao", "malina", "banoffee", "tiramisu", "orzech", "proteina", "cytryna",
+        "matcha", "porzeczka", "wanilia", "karmel", "pistacja", "truskawka", "mango", "kawa",
+      ].sort(function (a, b) { return b.length - a.length; });
+      var lower = s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+      var parts = [];
+      var i = 0;
+      while (i < lower.length) {
+        var hit = false;
+        for (var vi = 0; vi < vocab.length; vi++) {
+          var v = vocab[vi];
+          if (v.length >= 3 && lower.indexOf(v, i) === i) {
+            parts.push(v);
+            i += v.length;
+            hit = true;
+            break;
+          }
+        }
+        if (hit) continue;
+        var j = i + 1;
+        while (j <= lower.length) {
+          var next = false;
+          for (var vj = 0; vj < vocab.length; vj++) {
+            if (vocab[vj].length >= 3 && lower.indexOf(vocab[vj], j) === j) { next = true; break; }
+          }
+          if (next || j === lower.length) { parts.push(lower.slice(i, j)); i = j; break; }
+          j++;
+        }
+      }
+      if (parts.length) s = parts.map(function (p) { return toTitleCasePl(p); }).join(" ");
+    } else if (s === s.toUpperCase() || s === s.toLowerCase()) {
+      s = toTitleCasePl(s);
+    }
     return s.replace(/\s+/g, " ").trim() || name;
   }
 
@@ -437,7 +481,7 @@
   }
 
   /**
-   * Etykieta UI nosnika - z policy.carrier_display_in_ui (domyślnie label_pl = DOYPACK).
+   * Etykieta UI nosnika - z policy.carrier_display_in_ui (domyslnie label_pl = DOYPACK).
    * Skrot (DOY) tylko gdy policy wymusi short LUB przy rename na dysku (bridge).
    */
   function carrierLabel(code, gramFromName, opts) {
@@ -478,7 +522,7 @@
     return c.toUpperCase();
   }
 
-  /** PL vs eksport z kanonicznej ścieżki indeksu */
+  /** PL vs eksport z kanonicznej sciezki indeksu */
   function detectMarketFromPath(path) {
     var p = String(path || "").replace(/\\/g, "/").toUpperCase();
     if (p.indexOf("/- EKSPORT") !== -1 || p.indexOf("/-EKSPORT") !== -1 || /\/-?\s*GC\b/.test(p) || p.indexOf("/GC/") !== -1) {
@@ -624,7 +668,7 @@
     var ext = (u.split(".").pop() || "");
     if (ext === "AI" || ext === "PSD" || ext === "INDD") return "edytowalny";
     if (/FQ/.test(u) && ext === "PDF") return "druk";
-    if (/\bPREV\b/.test(u) || /[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u)) return "podgląd";
+    if (/\bPREV\b/.test(u) || /[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u)) return "podglad";
     // ZIP/RAR: zwykle pakiet do druku. NIGDY wizualizacja (nawet gdy lezy w 4-WIZKI).
     if (ext === "ZIP" || ext === "RAR" || ext === "7Z") {
       if (layer === "source" && !/PAKIET|FQ|DRUK|KUBARA|PRODUKCYJ|POLZDOB/.test(u)) return "inny";
@@ -670,6 +714,26 @@
     });
   }
 
+  function lookupProductNamePl(raw) {
+    var key = String(raw || "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, " ");
+    if (!key) return "";
+    var pl = PRODUCT_NAME_PL[key] || "";
+    if (!pl || pl.toUpperCase() === key) return "";
+    return pl;
+  }
+
+  /**
+   * Tytul produktu w UI (PL gdy jest mapowanie EN->PL, niezaleznie od marki).
+   */
+  function localizedProductTitle(name, brand) {
+    var raw = cleanProductDisplayName(name) || String(name || "").trim();
+    if (!raw) return "";
+    return lookupProductNamePl(raw) || raw;
+  }
+
   /**
    * Polska nazwa dla angielskiego produktu (GC).
    * Pusta gdy brak mapowania albo nazwa juz PL / taka sama.
@@ -677,14 +741,7 @@
   function productNamePl(name, brand) {
     var raw = cleanProductDisplayName(name) || String(name || "").trim();
     if (!raw) return "";
-    var b = String(brand || "").toUpperCase();
-    /* GC = angielskie nazwy folderow; DK zwykle juz PL */
-    if (b && b !== "GC") return "";
-    var key = raw.toUpperCase().replace(/\s+/g, " ");
-    var pl = PRODUCT_NAME_PL[key] || "";
-    if (!pl) return "";
-    if (pl.toUpperCase() === key) return "";
-    return pl;
+    return lookupProductNamePl(raw);
   }
 
   /** Tekst w nawiasie ze spacjami: "( Mielone )" */
@@ -698,15 +755,31 @@
    * escFn - funkcja escape HTML (np. z dam-viz).
    */
   function productNamePlMarkup(name, brand, escFn) {
-    var pl = productNamePl(name, brand);
+    var raw = cleanProductDisplayName(name) || String(name || "").trim();
+    if (!raw) return "";
+    var pl = lookupProductNamePl(raw);
     if (!pl) return "";
     var e = typeof escFn === "function" ? escFn : function (s) { return String(s || ""); };
+    var titlePl = localizedProductTitle(raw, brand);
+    /* Gdy tytul jest juz po PL — EN w nawiasie (GC). Gdy tytul EN — PL pod spodem. */
+    if (titlePl === pl) {
+      if (String(brand || "").toUpperCase() !== "GC") return "";
+      return (
+        '<br><span class="dam-viz-card__title-pl">' +
+        '<span class="dam-viz-card__title-pl-paren">(</span> ' +
+        '<span class="dam-viz-card__title-pl-text">' +
+        e(raw) +
+        "</span> " +
+        '<span class="dam-viz-card__title-pl-paren">)</span>' +
+        "</span>"
+      );
+    }
     return (
       '<br><span class="dam-viz-card__title-pl">' +
       '<span class="dam-viz-card__title-pl-paren">(</span> ' +
       '<span class="dam-viz-card__title-pl-text">' +
       e(pl) +
-      '</span> ' +
+      "</span> " +
       '<span class="dam-viz-card__title-pl-paren">)</span>' +
       "</span>"
     );
@@ -804,6 +877,8 @@
     cleanProductDisplayName: cleanProductDisplayName,
     PRODUCT_NAME_PL: PRODUCT_NAME_PL,
     applyProductNamePl: applyProductNamePl,
+    lookupProductNamePl: lookupProductNamePl,
+    localizedProductTitle: localizedProductTitle,
     productNamePl: productNamePl,
     productNamePlParen: productNamePlParen,
     productNamePlMarkup: productNamePlMarkup,

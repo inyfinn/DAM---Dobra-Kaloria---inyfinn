@@ -31,7 +31,9 @@ DB_LEGACY_AUTH = DATA_DIR / "dam-auth.sqlite"
 _LEGACY_MARKETING_REL = Path(".dam-eta") / "dam-shared.sqlite"
 MACHINE_CONFIG = DESKTOP_DIR / "machine-config.json"
 PREFER_PATH = DATA_DIR / "db-prefer.json"
-REPO_DATABASE = DESKTOP_DIR.parent.parent / "DATABASE"
+CONTENT_ROOT = DESKTOP_DIR.parent.parent
+GIT_ROOT = CONTENT_ROOT.parent
+REPO_DATABASE = CONTENT_ROOT / "DATABASE"
 SYNC_SCRIPT = DESKTOP_DIR / "scripts" / "sync-database-backups-to-git.py"
 _LOCK = threading.Lock()
 _INITIALIZED = False
@@ -52,8 +54,9 @@ _OFFLINE_HINT = (
     "X:/Marketing/- POLSKA/99 - WYMIANA/Krzysztof/CURSOR/Database DAM."
 )
 _DEFAULT_PREFER: dict[str, Any] = {
-    "mode": "auto",  # auto | postgres | sqlite
-    "sources": {"synology": True, "github": True, "local": True},
+    # 2026-08-03: zero Postgres until Synology returns — single canonical engine
+    "mode": "sqlite",  # auto | postgres | sqlite
+    "sources": {"synology": False, "github": True, "local": True},
 }
 
 
@@ -334,6 +337,25 @@ def _init_sqlite() -> dict[str, Any]:
               detail TEXT NOT NULL DEFAULT '',
               meta_json TEXT NOT NULL DEFAULT '{}'
             );
+            CREATE TABLE IF NOT EXISTS asset_product_links (
+              asset_id TEXT NOT NULL,
+              product_id TEXT NOT NULL,
+              score REAL,
+              source TEXT NOT NULL DEFAULT 'refilter',
+              status TEXT NOT NULL DEFAULT 'pending',
+              reason TEXT NOT NULL DEFAULT '',
+              updated_at TEXT NOT NULL DEFAULT '',
+              updated_by TEXT NOT NULL DEFAULT '',
+              PRIMARY KEY (asset_id, product_id)
+            );
+            CREATE INDEX IF NOT EXISTS asset_product_links_status_idx
+              ON asset_product_links (status, score DESC);
+            CREATE TABLE IF NOT EXISTS dam_kv_local (
+              store_key TEXT PRIMARY KEY,
+              payload TEXT NOT NULL,
+              updated_at TEXT NOT NULL,
+              updated_by TEXT NOT NULL DEFAULT ''
+            );
             CREATE INDEX IF NOT EXISTS audit_log_ts_idx ON audit_log (ts DESC);
             CREATE INDEX IF NOT EXISTS audit_log_user_idx ON audit_log (username);
             CREATE INDEX IF NOT EXISTS audit_log_action_idx ON audit_log (action);
@@ -564,7 +586,7 @@ def pull_database_dump_now() -> dict[str, Any]:
             try:
                 proc = subprocess.run(
                     [py_exe, str(SYNC_SCRIPT), "--no-commit", "--quiet"],
-                    cwd=str(DESKTOP_DIR.parent.parent),
+                    cwd=str(GIT_ROOT),
                     capture_output=True,
                     text=True,
                     timeout=120,

@@ -1,8 +1,149 @@
 {
-  "version": 17,
+  "version": 18,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-08-06T15:35:00+02:00",
+  "updated_at": "2026-08-10T14:15:00+02:00",
   "instructions": [
+    {
+      "id": "branding.grid_no_wizki_visuals_packshot",
+      "priority": "critical",
+      "title_pl": "Branding grid bez WIZKI/VISUALS/packshot",
+      "category": "branding",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Siatka Branding (grid/head/UI) NIE pokazuje assetow WIZKI, VISUALS ani roli packshot.",
+        "Predykat wspolny: source=wizki, asset_role=packshot, tag WIZKI, sciezki 4 - WIZKI / 4 - VISUALS.",
+        "Fat branding-index.json ZACHOWUJE te rekordy (OCR, lookup, /branding/asset).",
+        "UI laduje tylko branding-grid-head + branding-grid-index; nigdy fat na hot path."
+      ],
+      "must_not": [
+        "Renderowac packshoty / wizualizacje produktowe (WIZKI) w pierwszej warstwie Brandingu.",
+        "Usuwac WIZKI z fat branding-index przy rebuildzie.",
+        "Ladowac branding-index.json w UI bez ?full=1."
+      ],
+      "related_code": [
+        "apps/web/scripts/build-branding-grid-index.py",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/desktop/local_bridge.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: Branding grid bez WIZKI/VISUALS/packshot. Fat index zostaje zapleczem lookup."
+    },
+    {
+      "id": "index.continuous_auto_indexing",
+      "priority": "critical",
+      "title_pl": "Ciagle automatyczne indeksowanie podczas pracy",
+      "category": "indexing",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Indeksy produktowe (file-index/search-index/thumbs) aktualizuja sie automatycznie podczas pracy aplikacji.",
+        "Watcher i reczny rebuild wspoldziela O_EXCL lock (PID/started_at/stage/TTL) ze stale recovery.",
+        "Status /index/status ujawnia watcher_ok, last_ok/error/rc, stan stale - bez cichego DEVNULL jako jedynego zrodla bledu.",
+        "Log i status w gitignored apps/desktop/data (rotowany)."
+      ],
+      "must_not": [
+        "Ukrywac bledy rebuildu przez stdout/stderr=DEVNULL bez rotowanego logu.",
+        "Uruchamiac niekontrolowany pelny skan Marketing przed zdobyciem locka i zapisem statusu.",
+        "Traktowac file-index jako niezmienny po starcie sesji."
+      ],
+      "related_code": [
+        "apps/web/scripts/watch-file-index.py",
+        "apps/web/scripts/build-file-index.py",
+        "apps/desktop/index_supervisor.py",
+        "apps/desktop/local_bridge.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: indeksy zyja podczas pracy; błędy watchera widoczne w statusie/logu."
+    },
+    {
+      "id": "index.supervisor_singleton_bridge_owned",
+      "priority": "critical",
+      "title_pl": "Jeden supervisor indeksow (bridge owner)",
+      "category": "indexing",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Jeden supervisor indeksow dziala zarowno dla launch.py jak i serve_browser.py.",
+        "Preferowany wlasciciel: local_bridge; singleton cross-process (lock PID) zapobiega duplikatom.",
+        "Kolejki: produktowa (file-index) i brandingowa (fat->grid) z debounce."
+      ],
+      "must_not": [
+        "Startowac drugi niezalezny watch-file-index z launch.py gdy bridge juz supervisuje.",
+        "Tworzyc zombie-duplikaty watcherow."
+      ],
+      "related_code": [
+        "apps/desktop/index_supervisor.py",
+        "apps/desktop/local_bridge.py",
+        "apps/desktop/launch.py",
+        "apps/desktop/serve_browser.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: bridge jest wlascicielem supervisora indeksow; launch/serve_browser nie dubluja."
+    },
+    {
+      "id": "assoc.sqlite_sot_unified_write",
+      "priority": "critical",
+      "title_pl": "SQLite SoT skojarzen - jedna sciezka zapisu",
+      "category": "assoc",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Zrodlo prawdy skojarzen: SQLite asset_product_links (ADR-010).",
+        "Quiz i reczny editor zapisuja przez jedna funkcje repozytorium; JSON override = lustro kompatybilnosci.",
+        "Po decyzji: debounced slim publish (--from-sqlite), bez pelnego fat rebuild.",
+        "/health i /branding/status ujawniaja counts statusow i bledy schematu - nie maskuja jako pusta kolejka."
+      ],
+      "must_not": [
+        "Zapisac decyzje quiz/editor tylko do JSON z pominieciem SQLite.",
+        "Nadpisywac confirmed/rejected przy seedzie pending/auto.",
+        "Seedowac masowo bez dry-run walidacji asset_id/product_id.",
+        "Uzywac Postgres/Redis jako SoT skojarzen."
+      ],
+      "related_code": [
+        "apps/desktop/assoc_repo.py",
+        "apps/desktop/branding_asset_routes.py",
+        "apps/desktop/scripts/seed-asset-product-links.py",
+        "apps/desktop/local_bridge.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: SQLite SoT + mirror override; seed tylko po dry-run/bramce jakosci."
+    },
+    {
+      "id": "assoc.seed_dry_run_gate",
+      "priority": "critical",
+      "title_pl": "Seed pending: dry-run i bramka jakosci",
+      "category": "assoc",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Przed seedem refilter-pending: waliduj asset_id vs fat index i product_id vs file-index.",
+        "Raportuj odrzucone i probke jakosci; przy niskiej jakosci tylko dry-run + bramka, bez masowego insertu.",
+        "Seed transakcyjny idempotentny; confirmed/rejected nietkniete.",
+        "Generalna kwarantanna spray: grupy product_id przy progach share>=0.15 i n>=80 oraz token_plus_context dominance (grupy n>=80) bez mocnego OCR/SKU/multi_token usuwane z accepted_rows (rejected/quarantined w raporcie); bez hardcode product_id; bez --force.",
+        "Po kwarantannie: jesli gate formalnie OK, ale sample paths nieadekwatne (sibling/mixed, keyword-only), NIE --apply.",
+        "Tryb jawny --strong-only: seed tylko z live fat+file via assoc_adequacy sku_match lub ocr_line_phrase (nie path/generic_plus/multi_token/token_plus_context); status=auto dla siatki; /assoc/queue serwuje pending+auto."
+      ],
+      "must_not": [
+        "Wprowadzac masowo ~4974 pending bez walidacji i zatwierdzenia jakosci.",
+        "Kasowac istniejace confirmed przy seedzie.",
+        "Omijac kwarantanne spray przez --force bez human review.",
+        "Hardcodowac pojedyncze product_id (np. burger) w validatorze seed.",
+        "Seedowac token_plus_context / sibling keyword jako pending/auto bez --strong-only SKU/OCR."
+      ],
+      "related_code": [
+        "apps/desktop/scripts/seed-asset-product-links.py",
+        "apps/web/scripts/assoc_adequacy.py",
+        "apps/desktop/branding_asset_routes.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: dry-run/bramka + kwarantanna + --strong-only (SKU/OCR live). Artifact refilter keyword-only nie seedujemy."
+    },
     {
       "id": "branding.quiz_viz_handoff_20260806",
       "priority": "critical",

@@ -31,7 +31,7 @@
   var CHEER_SESSION_MAX = 4;
   var EXPLORE_COPY_THROTTLE_MS = 12000;
   var COPY_URL = "data/dobrokalorius-copy.json";
-  var COPY_CACHE_TOKEN = "cheerSlideR70t20260722a";
+  var COPY_CACHE_TOKEN = "tutorialPraiseToast20260721b";
 
   // ---------------------------------------------------------------------------
   // Pozy: 1-9 klasyczne + arkusze sad/joy/approve + media teaching (sheet 7/8/9).
@@ -354,22 +354,9 @@
       ".dam-tut-companion__x{position:absolute;top:16px;right:16px;width:28px;height:28px;border:0;border-radius:8px;" +
       "background:transparent;color:#7a7489;cursor:pointer;font-size:18px;line-height:1;}" +
       ".dam-tut-companion__x:hover{background:#f3f1f7;color:#464255;}" +
-      /* Cheer: +70px w prawo vs poprzednie right:116 (=46); slide+fade; tekst po 1s */
-      "@keyframes damTutCheerIn{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:translateX(0)}}" +
-      "@keyframes damTutCheerOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(48px)}}" +
-      "@keyframes damTutCheerTextIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}" +
-      ".dam-tut-cheer{position:fixed;right:46px;bottom:100px;z-index:13950;pointer-events:none;" +
-      "display:flex;flex-direction:column;align-items:center;gap:8px;width:min(220px,calc(100vw - 56px));" +
-      "opacity:0;transform:translateX(48px);}" +
-      ".dam-tut-cheer.is-on{animation:damTutCheerIn .45s cubic-bezier(.22,.9,.3,1) both;}" +
-      ".dam-tut-cheer.is-out{animation:damTutCheerOut .32s ease-in both;}" +
-      ".dam-tut-cheer .dam-tut-companion__mascot{flex:0 0 125px;width:125px;height:147px;margin-top:0;}" +
-      ".dam-tut-cheer .dam-tut-companion__mascot::before{left:5px;bottom:3px;width:115px;height:115px;}" +
-      ".dam-tut-cheer__text{margin:0;max-width:100%;padding:8px 12px;border-radius:12px;" +
-      "background:#fff;border:1px solid #ececf2;box-shadow:0 8px 20px rgba(23,22,30,.12);" +
-      "font-family:var(--dam-font,'Jost',sans-serif);font-size:13px;font-weight:600;line-height:1.35;" +
-      "color:#008244;text-align:center;opacity:0;}" +
-      ".dam-tut-cheer.is-on .dam-tut-cheer__text{animation:damTutCheerTextIn .4s ease-out 1s both;}" +
+      ".dam-tut-cheer{position:fixed;right:16px;bottom:20px;z-index:13950;pointer-events:none;" +
+      "width:96px;height:110px;opacity:0;}" +
+      ".dam-tut-cheer.is-on{opacity:1;transition:opacity .35s ease;}" +
       ".dam-tut-praise-toast{position:fixed;right:20px;bottom:112px;z-index:14120;" +
       "width:min(280px,calc(100vw - 40px));padding:16px 18px;background:#fff;color:#464255;" +
       "border:1px solid #ececf2;border-left:3px solid var(--dam-brand-green,#008244);border-radius:12px;" +
@@ -405,11 +392,7 @@
       "@keyframes damTutBurst2{0%{opacity:.85;transform:translate(-50%,-50%) rotate(0)}100%{opacity:0;transform:translate(calc(-50% + var(--bx,0)),calc(-50% + var(--by,-20px))) rotate(40deg)}}" +
       "@keyframes damTutBurst3{0%{opacity:.9;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(calc(-50% + var(--bx,0)),calc(-50% + var(--by,-20px))) scale(.35)}}" +
       "@media (prefers-reduced-motion:reduce){" +
-      ".dam-tut-cheer{transform:none;}" +
-      ".dam-tut-cheer.is-on,.dam-tut-cheer.is-out{animation:none;opacity:1;transform:none;}" +
-      ".dam-tut-cheer.is-out{opacity:0;}" +
-      ".dam-tut-cheer.is-on .dam-tut-cheer__text{animation:none;opacity:1;transform:none;" +
-      "transition:opacity .2s ease 1s;}" +
+      ".dam-tut-cheer.is-on{transition:none;}" +
       ".dam-tut-companion.is-enter{animation:none;opacity:1;transform:none;}" +
       ".dam-tut-companion__mascot-img.is-pose-swap,.dam-tut__mascot-img.is-pose-swap{animation:none;opacity:1;}" +
       ".dam-tut-praise-toast.is-on,.dam-tut-praise-toast.is-out{transition:opacity .12s ease;transform:none;}" +
@@ -584,7 +567,7 @@
         {
           pose: "explain",
           title: "Faktury",
-          text: "Sekcja Faktury to dokumenty sprzedażowe i kosztówe w jednym miejscu, z podglądem i statusami.",
+          text: "Sekcja Faktury to dokumenty sprzedażowe i kosztowe w jednym miejscu, z podglądem i statusami.",
           target: [".geex-content__section-wrapper", sideLink("invoices.html")]
         },
         {
@@ -618,13 +601,13 @@
     },
     {
       key: "integrations",
-      label: "Integracja i produkcja",
+      label: "Integracje",
       href: "integrations.html",
       steps: [
         {
           pose: "explain",
-          title: "Integracja i produkcja",
-          text: "Tu łączysz panel z Asaną, Teams i LDAP oraz zarządzasz wykrojnikami i stanami rękawków. Sprawdzisz status połączeń i skonfigurujesz nowe.",
+          title: "Integracje",
+          text: "Integracje łączą panel z Asaną, Teams i innymi narzędziami. Tu sprawdzisz status połączeń i skonfigurujesz nowe.",
           target: [".geex-content__section-wrapper", sideLink("integrations.html")],
           go: true
         },
@@ -638,53 +621,7 @@
     }
   ];
 
-  /* 20 krotkich, zabawnych zachęt przy cheer (slide-in); rotate bez powtorzen */
-  var CHEER_TEXTS = [
-    "Łał, świetnie sobie radzisz!",
-    "Fajnie sobie klikasz!",
-    "Hop siup, masz to!",
-    "Akrobatyczny klik!",
-    "Salto w dziesiątkę!",
-    "Piruet idealny!",
-    "Fikołek zaliczony!",
-    "Hopsasa, brawo!",
-    "Jak na trampolinie!",
-    "Super zwrotka!",
-    "Klik z wirażem!",
-    "Lądujesz czysto!",
-    "Rzut na medal!",
-    "Szpagat perfekcyjny!",
-    "Mocne podbicie!",
-    "Wirujesz jak mistrz!",
-    "Skok w punkt!",
-    "Obrót i brawo!",
-    "Dynamika level max!",
-    "Cudowny fikoł!"
-  ];
-  var cheerTextOrder = null;
-  var cheerTextIdx = 0;
-
-  function shuffleCheerTextOrder() {
-    cheerTextOrder = [];
-    var i;
-    for (i = 0; i < CHEER_TEXTS.length; i++) cheerTextOrder.push(i);
-    for (i = cheerTextOrder.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var tmp = cheerTextOrder[i];
-      cheerTextOrder[i] = cheerTextOrder[j];
-      cheerTextOrder[j] = tmp;
-    }
-    cheerTextIdx = 0;
-  }
-
-  function nextCheerText() {
-    if (!cheerTextOrder || cheerTextIdx >= cheerTextOrder.length) shuffleCheerTextOrder();
-    var t = CHEER_TEXTS[cheerTextOrder[cheerTextIdx]];
-    cheerTextIdx += 1;
-    return t;
-  }
-
-  // 40 krotkich pochwal (DobroKaloriuś) - toast po celnych klikach; bez powtorzen az do wyczerpania
+  // 40 krotkich pochwal (DobroKaloriuś) - ~polowa dlugosci; bez powtorzen az do wyczerpania
   var PRAISES = [
     { pose: "approve", text: "Brawo, {name}!" },
     { pose: "happy", text: "Masz to!" },
@@ -1631,28 +1568,15 @@
     ensureCopy(function (copy) {
       var poses = (copy && copy.cheer_poses) || ["joy-4", "joy-5", "joy-6", "approve-8"];
       var pose = poses[Math.floor(Math.random() * poses.length)];
-      var line = nextCheerText();
       var el = document.getElementById("damTutCheer");
       if (!el) {
         el = document.createElement("div");
         el.id = "damTutCheer";
         el.className = "dam-tut-cheer";
-        el.setAttribute("aria-live", "polite");
-        el.innerHTML =
-          '<div class="dam-tut-companion__mascot" aria-hidden="true"><span class="dam-tut-companion__mascot-img"></span></div>' +
-          '<p class="dam-tut-cheer__text"></p>';
+        el.innerHTML = '<div class="dam-tut-companion__mascot" aria-hidden="true"><span class="dam-tut-companion__mascot-img"></span></div>';
         document.body.appendChild(el);
-      } else if (!el.querySelector(".dam-tut-cheer__text")) {
-        var p = document.createElement("p");
-        p.className = "dam-tut-cheer__text";
-        el.appendChild(p);
       }
       applyPose(el.querySelector(".dam-tut-companion__mascot"), pose);
-      var textEl = el.querySelector(".dam-tut-cheer__text");
-      if (textEl) textEl.textContent = nbspPl(line);
-      el.classList.remove("is-out");
-      /* restart enter animation + delayed text fade */
-      void el.offsetWidth;
       el.classList.add("is-on");
       try {
         sessionStorage.setItem(CHEER_AT_KEY, String(Date.now()));
@@ -1660,13 +1584,8 @@
         sessionStorage.setItem(CHEER_BUDGET_KEY, String(budget + 1));
       } catch (e) { /* ignore */ }
       global.setTimeout(function () {
-        if (!el.parentNode) return;
         el.classList.remove("is-on");
-        el.classList.add("is-out");
-        global.setTimeout(function () {
-          el.classList.remove("is-out");
-        }, 340);
-      }, 3800);
+      }, 2800);
     });
   }
 
@@ -1706,40 +1625,13 @@
   }
 
   function maybeEmptySearchSad() {
-    /* HARD: never react to #damAssocEditPopover empty copy — class reuse with
-       .dam-tag-edit-popover__empty + showSad DOM inject = MutationObserver loop (app freeze). */
-    if (
-      document.getElementById("damAssocEditPopover") ||
-      document.getElementById("damAssocEditOverlay")
-    ) {
-      return;
-    }
-    if (maybeEmptySearchSad._lock) return;
     var empty = document.querySelector(
       ".dam-tag-edit-popover__empty:not([hidden]), .dam-assoc-edit-popover__empty, [data-empty]:not([hidden]), .dam-explorer-empty, .dam-empty"
     );
     if (!empty) return;
-    if (
-      empty.closest &&
-      empty.closest(
-        "#damAssocEditPopover, #damAssocEditOverlay, .dam-assoc-edit-popover__empty-msg"
-      )
-    ) {
-      return;
-    }
-    if (empty.classList && empty.classList.contains("dam-assoc-edit-popover__empty-msg")) {
-      return;
-    }
     var style = global.getComputedStyle ? global.getComputedStyle(empty) : null;
     if (style && style.display === "none") return;
-    maybeEmptySearchSad._lock = true;
-    try {
-      showSad("empty-search");
-    } finally {
-      global.setTimeout(function () {
-        maybeEmptySearchSad._lock = false;
-      }, 800);
-    }
+    showSad("empty-search");
   }
 
   function watchEmptyResults() {
@@ -1930,6 +1822,38 @@
     restart();
   }
 
+  /**
+   * Header pomocy: pod X kontrola „Włącz samouczek ponownie”.
+   * Modal tworzy dam-shortcuts.js (head jest trwaly) - dopinamy raz.
+   */
+  function injectHelpRestartControl(head) {
+    if (!head || head.querySelector("[data-dam-tut-restart]")) return;
+    var closeBtn = head.querySelector(".dam-help-modal__close");
+    if (!closeBtn) return;
+
+    var actions = head.querySelector(".dam-help-modal__head-actions");
+    if (!actions) {
+      actions = document.createElement("div");
+      actions.className = "dam-help-modal__head-actions";
+      closeBtn.parentNode.insertBefore(actions, closeBtn);
+      actions.appendChild(closeBtn);
+    }
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "dam-help-modal__restart";
+    btn.setAttribute("data-dam-tut-restart", "1");
+    btn.setAttribute("aria-label", "Włącz samouczek ponownie");
+    btn.innerHTML =
+      '<i class="uil uil-refresh" aria-hidden="true"></i>' +
+      "<span>Włącz samouczek ponownie</span>";
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      closeHelpThenRestart();
+    });
+    actions.appendChild(btn);
+  }
+
   // ---------------------------------------------------------------------------
   // Wpis "Uruchom samouczek" w panelu pomocy (modal tworzy dam-shortcuts.js;
   // panel jest trwaly, przebudowywane jest tylko body - dopinamy stopke raz)
@@ -1941,6 +1865,7 @@
       var panel = document.querySelector("#damHelpModal .dam-help-modal__panel");
       if (panel) {
         global.clearInterval(timer);
+        injectHelpRestartControl(panel.querySelector(".dam-help-modal__head"));
         if (panel.querySelector(".dam-tut-help-entry")) return;
         var wrap = document.createElement("div");
         wrap.className = "dam-tut-help-entry";
@@ -1995,19 +1920,9 @@
 
   function registerServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
-    var CACHE_MARK = "dam-page-1h-v4";
-    // S4b: register only when live sw.js text contains v4 (Parent B settle).
-    fetch("./sw.js", { cache: "no-store" })
-      .then(function (res) {
-        return res.text();
-      })
-      .then(function (text) {
-        if (!text || text.indexOf(CACHE_MARK) === -1) return;
-        return navigator.serviceWorker
-          .register("./sw.js?v=swGateV5a20260722a", { scope: "./" })
-          .catch(function () { /* ignore */ });
-      })
-      .catch(function () { /* ignore */ });
+    try {
+      navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(function () { /* ignore */ });
+    } catch (e) { /* ignore */ }
   }
 
   global.DamTutorial = {

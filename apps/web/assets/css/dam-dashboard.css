@@ -1566,7 +1566,8 @@ html[data-theme="dark"] .dam-widget-skel__line::after {
   width: 52px;
   height: 52px;
   border-radius: var(--dam-control-radius);
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center center;
   background: var(--dam-surface-muted);
   flex-shrink: 0;
   border: 1px solid var(--dam-border);

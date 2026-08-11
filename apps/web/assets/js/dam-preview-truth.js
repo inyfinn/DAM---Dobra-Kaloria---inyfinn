@@ -8,12 +8,10 @@
 (function (global) {
   "use strict";
 
-  /* TYMCZASOWO (decyzja usera 2026-07-22): cache miniatur WYLACZONY calkowicie.
-   * Powod: /thumb-cache serwowal niskiej jakosci placeholder, ktory "zostawal na zawsze"
-   * zamiast realnego pliku z dysku, plus zzeral RAM (warm/Redis). Wracamy do /media (pelny plik).
-   * Aby wrocic do cache: usun te linie lub ustaw window.DAM_DISABLE_THUMB_WARM = false przed tym plikiem. */
+  /* Thumb-cache WŁĄCZONY: /thumb-cache → PAMIEC-PODRECZNA (AVIF/JPG).
+   * Wyłączenie awaryjne: window.DAM_DISABLE_THUMB_WARM = true przed tym plikiem. */
   if (typeof global.DAM_DISABLE_THUMB_WARM === "undefined") {
-    global.DAM_DISABLE_THUMB_WARM = true;
+    global.DAM_DISABLE_THUMB_WARM = false;
   }
 
   var LABEL_ONLINE_ONLY = "Element z dysku dostępny tylko online - Synology";

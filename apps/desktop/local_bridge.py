@@ -121,6 +121,11 @@ except ImportError:
     dam_thumb_cache = None  # type: ignore
 
 try:
+    import dam_file_availability
+except ImportError:
+    dam_file_availability = None  # type: ignore
+
+try:
     import branding_asset_routes
 except ImportError:
     branding_asset_routes = None  # type: ignore
@@ -162,7 +167,28 @@ _index_state: dict = {
     "last_ok": None,
     "last_error": "",
     "last_rc": None,
+    "stage": "",
 }
+_branding_rebuild_lock = threading.Lock()
+_branding_rebuild_state: dict = {
+    "running": False,
+    "last_started": "",
+    "last_finished": "",
+    "last_ok": None,
+    "last_error": "",
+    "last_rc": None,
+    "stage": "",
+    "generation_id": "",
+    "slim_pending": False,
+    "slim_last_ok": None,
+    "slim_last_rc": None,
+    "slim_last_error": "",
+    "slim_last_finished": "",
+    "slim_coalesced": 0,
+}
+SLIM_PUBLISH_DEBOUNCE_SEC = 2.0
+BRANDING_LOCK_TTL_SEC = 7200.0
+_slim_publisher: Any = None
 
 
 def utc_now() -> str:
@@ -1353,6 +1379,18 @@ def read_audit(limit: int = 100) -> list:
     return rows
 
 
+def _assoc_status_payload() -> dict:
+    try:
+        import assoc_repo
+
+        db_path = None
+        if dam_db is not None:
+            db_path = getattr(dam_db, "DB_CANONICAL", None)
+        return assoc_repo.status_counts(db_path)
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "counts": {}, "schema_error": str(exc), "total": 0}
+
+
 def index_status() -> dict:
     mtime = None
     size = 0
@@ -1363,6 +1401,14 @@ def index_status() -> dict:
     db = dam_db.status() if dam_db else {"ok": False, "error": "dam_db_missing"}
     with _index_lock:
         state = dict(_index_state)
+    watcher = {}
+    try:
+        import index_supervisor
+
+        watcher = index_supervisor.public_status()
+    except Exception as exc:  # noqa: BLE001
+        watcher = {"ok": False, "watcher_ok": False, "last_error": str(exc), "stale": False}
+    last_ok = watcher.get("last_ok") if watcher.get("last_ok") is not None else state.get("last_ok")
     return {
         "ok": True,
         "index_path": str(INDEX_FILE),
@@ -1371,7 +1417,30 @@ def index_status() -> dict:
         "size": size,
         "rebuild": state,
         "database": db,
+        "watcher_ok": bool(watcher.get("watcher_ok")),
+        "index_run_ok": last_ok is True,
+        "awaiting_first_rebuild": last_ok is None,
+        "watcher": watcher.get("watcher") or watcher,
+        "last_ok": last_ok,
+        "last_error": watcher.get("last_error") or state.get("last_error") or "",
+        "last_rc": watcher.get("last_rc") if watcher.get("last_rc") is not None else state.get("last_rc"),
+        "stale": bool(watcher.get("stale")),
+        "assoc": _assoc_status_payload(),
     }
+
+
+def _append_rebuild_log(line: str) -> None:
+    try:
+        DESKTOP_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        with INDEX_REBUILD_LOG_FILE.open("a", encoding="utf-8", errors="replace") as fh:
+            fh.write(f"{utc_now()} {line}\n")
+        if INDEX_REBUILD_LOG_FILE.is_file() and INDEX_REBUILD_LOG_FILE.stat().st_size > 2_000_000:
+            bak = INDEX_REBUILD_LOG_FILE.with_suffix(".log.1")
+            if bak.is_file():
+                bak.unlink()
+            INDEX_REBUILD_LOG_FILE.replace(bak)
+    except OSError:
+        pass
 
 
 def _run_index_rebuild() -> None:
@@ -1382,24 +1451,51 @@ def _run_index_rebuild() -> None:
         _index_state["running"] = True
         _index_state["last_started"] = utc_now()
         _index_state["last_error"] = ""
+        _index_state["stage"] = "starting"
+    lock_handle = None
     try:
+        from rebuild_lock import acquire_lock
+
+        lock_handle, meta = acquire_lock(
+            INDEX_REBUILD_LOCK_FILE,
+            stage="manual:starting",
+            ttl_sec=3600,
+            extra={"owner": "local_bridge"},
+        )
+        if lock_handle is None:
+            with _index_lock:
+                _index_state["last_ok"] = False
+                _index_state["last_error"] = "lock_held"
+                _index_state["stage"] = "skipped_lock_held"
+                _index_state["last_finished"] = utc_now()
+            _append_rebuild_log(f"skip lock_held meta={meta}")
+            return
         if not BUILD_INDEX.is_file():
             raise FileNotFoundError(str(BUILD_INDEX))
         _drop_json_cache(INDEX_FILE)
         _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
-        rc = subprocess.call(
-            [sys.executable, str(BUILD_INDEX)],
-            creationflags=_no_win,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        DESKTOP_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        with _index_lock:
+            _index_state["stage"] = "building"
+        lock_handle.update(stage="manual:building")
+        with INDEX_REBUILD_LOG_FILE.open("a", encoding="utf-8", errors="replace") as log_f:
+            log_f.write(f"\n==== rebuild start {utc_now()} pid={os.getpid()} ====\n")
+            log_f.flush()
+            rc = subprocess.call(
+                [sys.executable, str(BUILD_INDEX)],
+                creationflags=_no_win,
+                stdin=subprocess.DEVNULL,
+                stdout=log_f,
+                stderr=subprocess.STDOUT,
+            )
         with _index_lock:
             _index_state["last_rc"] = rc
             _index_state["last_ok"] = rc == 0
             _index_state["last_finished"] = utc_now()
+            _index_state["stage"] = "idle" if rc == 0 else "error"
             if rc != 0:
                 _index_state["last_error"] = f"build_rc_{rc}"
+        _append_rebuild_log(f"finished rc={rc}")
         append_audit(
             {
                 "action": "index_rebuild",
@@ -1428,7 +1524,14 @@ def _run_index_rebuild() -> None:
             _index_state["last_ok"] = False
             _index_state["last_error"] = str(exc)
             _index_state["last_finished"] = utc_now()
+            _index_state["stage"] = "error"
+        _append_rebuild_log(f"error {exc}")
     finally:
+        if lock_handle is not None:
+            try:
+                lock_handle.release()
+            except Exception:
+                pass
         with _index_lock:
             _index_state["running"] = False
 
@@ -1441,6 +1544,198 @@ def start_index_rebuild() -> dict:
     # Daj watkowi chwile na ustawienie flagi
     time.sleep(0.05)
     return {"ok": True, "started": True, "running": True, "rebuild": index_status()["rebuild"]}
+
+
+def _canonical_sqlite_path() -> Path:
+    """Kanoniczny dam-local.sqlite (ADR-007/010) dla --from-sqlite Path."""
+    from branding_publish import canonical_sqlite_path
+
+    return canonical_sqlite_path(
+        dam_db_module=dam_db,
+        desktop_dir=Path(__file__).resolve().parent,
+    )
+
+
+def _grid_from_sqlite_argv(sqlite_path: Path | None = None) -> list[str]:
+    """Argv for build-branding-grid-index.py --from-sqlite <Path> (required Path)."""
+    from branding_publish import grid_from_sqlite_argv
+
+    db = Path(sqlite_path) if sqlite_path is not None else _canonical_sqlite_path()
+    return grid_from_sqlite_argv(BUILD_BRANDING_GRID_INDEX, db)
+
+
+def _branding_generation_id() -> str:
+    """generation_id = fat mtime/size + SQLite assoc revision."""
+    try:
+        st = BRANDING_INDEX_FILE.stat()
+        fat_sig = f"{int(st.st_mtime)}:{st.st_size}"
+    except OSError:
+        fat_sig = "0:0"
+    assoc = _assoc_status_payload()
+    return f"{fat_sig}:assoc{assoc.get('total', 0)}"
+
+
+def _write_branding_status(extra: dict | None = None) -> None:
+    with _branding_rebuild_lock:
+        payload = {
+            "ok": _branding_rebuild_state.get("last_ok") is not False,
+            "state": "running" if _branding_rebuild_state.get("running") else (
+                "ok" if _branding_rebuild_state.get("last_ok") else (
+                    "error" if _branding_rebuild_state.get("last_ok") is False else "idle"
+                )
+            ),
+            **dict(_branding_rebuild_state),
+            "assoc": _assoc_status_payload(),
+            "sqlite_path": str(_canonical_sqlite_path()),
+            "updated_at": utc_now(),
+        }
+    if extra:
+        payload.update(extra)
+    try:
+        _save_json(BRANDING_STATUS_FILE, payload)
+    except Exception:
+        BRANDING_STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        BRANDING_STATUS_FILE.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+
+def _run_branding_rebuild() -> None:
+    global _branding_rebuild_state
+    with _branding_rebuild_lock:
+        if _branding_rebuild_state["running"]:
+            return
+        _branding_rebuild_state["running"] = True
+        _branding_rebuild_state["last_started"] = utc_now()
+        _branding_rebuild_state["last_error"] = ""
+        _branding_rebuild_state["stage"] = "starting"
+        _branding_rebuild_state["generation_id"] = _branding_generation_id()
+    lock_handle = None
+    try:
+        from rebuild_lock import acquire_lock
+
+        lock_handle, meta = acquire_lock(
+            BRANDING_REBUILD_LOCK_FILE,
+            stage="branding:starting",
+            ttl_sec=BRANDING_LOCK_TTL_SEC,
+            extra={
+                "owner": "local_bridge_full",
+                "mode": "full",
+                "generation_id": _branding_rebuild_state["generation_id"],
+            },
+        )
+        if lock_handle is None:
+            with _branding_rebuild_lock:
+                _branding_rebuild_state["last_ok"] = False
+                _branding_rebuild_state["last_error"] = "lock_held"
+                _branding_rebuild_state["stage"] = "skipped_lock_held"
+                _branding_rebuild_state["last_finished"] = utc_now()
+            _write_branding_status({"lock": meta.get("lock")})
+            return
+        if not BUILD_BRANDING_INDEX.is_file():
+            raise FileNotFoundError(str(BUILD_BRANDING_INDEX))
+        _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+        # Stage 1: fat builder (keeps WIZKI)
+        with _branding_rebuild_lock:
+            _branding_rebuild_state["stage"] = "fat"
+        lock_handle.update(stage="branding:fat")
+        _write_branding_status()
+        rc = subprocess.call([sys.executable, str(BUILD_BRANDING_INDEX)], creationflags=_no_win)
+        if rc != 0:
+            raise RuntimeError(f"fat_build_rc_{rc}")
+        # Stage 2: slim grid from SQLite (explicit Path — argparse requires it)
+        if BUILD_BRANDING_GRID_INDEX.is_file():
+            with _branding_rebuild_lock:
+                _branding_rebuild_state["stage"] = "grid_from_sqlite"
+            lock_handle.update(stage="branding:grid_from_sqlite")
+            _write_branding_status()
+            grid_cmd = _grid_from_sqlite_argv()
+            _append_rebuild_log(f"full_grid_cmd {' '.join(grid_cmd)}")
+            rc2 = subprocess.call(grid_cmd, creationflags=_no_win)
+            if rc2 != 0:
+                raise RuntimeError(f"grid_build_rc_{rc2}")
+        # Stage 3: invalidate caches only after success
+        with _branding_rebuild_lock:
+            _branding_rebuild_state["stage"] = "cache_invalidate"
+        _invalidate_branding_data_caches()
+        with _branding_rebuild_lock:
+            _branding_rebuild_state["last_rc"] = 0
+            _branding_rebuild_state["last_ok"] = True
+            _branding_rebuild_state["last_finished"] = utc_now()
+            _branding_rebuild_state["stage"] = "idle"
+            _branding_rebuild_state["generation_id"] = _branding_generation_id()
+        _write_branding_status()
+    except Exception as exc:  # noqa: BLE001
+        with _branding_rebuild_lock:
+            _branding_rebuild_state["last_ok"] = False
+            _branding_rebuild_state["last_error"] = str(exc)
+            _branding_rebuild_state["last_finished"] = utc_now()
+            _branding_rebuild_state["stage"] = "error"
+        _write_branding_status()
+    finally:
+        if lock_handle is not None:
+            try:
+                lock_handle.release()
+            except Exception:
+                pass
+        with _branding_rebuild_lock:
+            _branding_rebuild_state["running"] = False
+        _write_branding_status()
+
+
+def start_branding_rebuild() -> dict:
+    with _branding_rebuild_lock:
+        if _branding_rebuild_state["running"]:
+            return {
+                "ok": True,
+                "started": False,
+                "running": True,
+                "rebuild": dict(_branding_rebuild_state),
+            }
+    threading.Thread(target=_run_branding_rebuild, daemon=True).start()
+    time.sleep(0.05)
+    with _branding_rebuild_lock:
+        state = dict(_branding_rebuild_state)
+    return {"ok": True, "started": True, "running": True, "rebuild": state}
+
+
+def _ensure_slim_publisher() -> Any:
+    """Lazy SlimGridPublisher bound to bridge branding state/paths."""
+    global _slim_publisher
+    from branding_publish import SlimGridPublisher
+
+    if _slim_publisher is not None:
+        # Refresh paths that may be patched in tests
+        _slim_publisher.grid_script = BUILD_BRANDING_GRID_INDEX
+        _slim_publisher.lock_file = BRANDING_REBUILD_LOCK_FILE
+        _slim_publisher.sqlite_path = _canonical_sqlite_path()
+        return _slim_publisher
+
+    def _write(extra: dict | None) -> None:
+        _write_branding_status(extra)
+
+    _slim_publisher = SlimGridPublisher(
+        grid_script=BUILD_BRANDING_GRID_INDEX,
+        lock_file=BRANDING_REBUILD_LOCK_FILE,
+        sqlite_path=_canonical_sqlite_path(),
+        invalidate_caches=_invalidate_branding_data_caches,
+        write_status=_write,
+        append_log=_append_rebuild_log,
+        generation_id_fn=_branding_generation_id,
+        state=_branding_rebuild_state,
+        state_lock=_branding_rebuild_lock,
+        debounce_sec=SLIM_PUBLISH_DEBOUNCE_SEC,
+        lock_ttl_sec=BRANDING_LOCK_TTL_SEC,
+    )
+    return _slim_publisher
+
+
+def _schedule_slim_grid_publish(delay_sec: float | None = None) -> None:
+    """Debounced slim publish: one pending timer/generation; runner uses branding O_EXCL lock."""
+    if not BUILD_BRANDING_GRID_INDEX.is_file():
+        return
+    pub = _ensure_slim_publisher()
+    pub.schedule(delay_sec=delay_sec)
 
 
 _INDEX_RE = re.compile(r"^(FOL\d+|\d{5,9})(\.\d{2})?$", re.IGNORECASE)
@@ -2116,6 +2411,12 @@ BRANDING_STATUS_FILE = WEB_ROOT / "data" / "branding-build-status.json"
 BRANDING_RECOGNIZE_STATUS_FILE = WEB_ROOT / "data" / "branding-recognize-status.json"
 WYKROJNIKI_REGISTRY_FILE = WEB_ROOT / "data" / "wykrojniki-registry.json"
 BUILD_BRANDING_INDEX = WEB_ROOT / "scripts" / "build-branding-index.py"
+BUILD_BRANDING_GRID_INDEX = WEB_ROOT / "scripts" / "build-branding-grid-index.py"
+DESKTOP_DATA_DIR = Path(__file__).resolve().parent / "data"
+INDEX_REBUILD_LOCK_FILE = DESKTOP_DATA_DIR / "index-rebuild.lock.json"
+INDEX_WATCHER_STATUS_FILE = DESKTOP_DATA_DIR / "index-watcher-status.json"
+INDEX_REBUILD_LOG_FILE = DESKTOP_DATA_DIR / "index-rebuild.log"
+BRANDING_REBUILD_LOCK_FILE = DESKTOP_DATA_DIR / "branding-rebuild.lock.json"
 FETCH_PRODUCT_PRICES = WEB_ROOT / "scripts" / "fetch-product-prices.py"
 IMPORT_WYKROJNIKI = WEB_ROOT / "scripts" / "import-wykrojniki-xlsx.py"
 LINK_WYKROJNIKI = WEB_ROOT / "scripts" / "link-wykrojniki-products.py"
@@ -2723,85 +3024,87 @@ def _patch_branding_associations(
     linked_variant_ids: list | None,
     updated_by: str = "local_bridge",
 ) -> tuple[bool, str | None]:
-    """Reczna edycja skojarzen produktow / wariantow w branding-index + overrides."""
+    """Reczna edycja: SQLite SoT + mirror override; fat index patch best-effort."""
     aid = str(asset_id or "").strip()
     group = str(folder_group_id or "").strip().lower()
     if not aid:
         return False, "asset_id_required"
-    idx = _load_json(BRANDING_INDEX_FILE, None)
-    if not isinstance(idx, dict):
-        return False, "branding_index_missing"
-    assets = idx.get("assets") or []
-    target = None
-    for a in assets:
-        if a.get("id") == aid:
-            target = a
-            break
-    if not target:
-        return False, "asset_not_found"
-    if not group:
-        group = str(target.get("folder_group_id") or "").strip().lower()
-    file_index = _load_json(INDEX_FILE, {"products": []})
     pids = [str(x).strip() for x in (linked_product_ids or []) if str(x).strip()]
     vids = [str(x).strip() for x in (linked_variant_ids or []) if str(x).strip()]
 
-    ov = _load_json(
-        BRANDING_ASSOC_OVERRIDES_FILE,
-        {"version": 1, "updated_at": "", "assets": {}, "folder_groups": {}},
-    )
-    if not isinstance(ov, dict):
-        ov = {"version": 1, "updated_at": "", "assets": {}, "folder_groups": {}}
-    ov.setdefault("assets", {})
-    ov.setdefault("folder_groups", {})
-    ov["assets"][aid] = {
-        "linked_product_ids": pids,
-        "linked_variant_ids": vids,
-        "folder_group_id": group,
-        "updated_by": updated_by,
-    }
-    if group:
-        ov["folder_groups"][group] = {
-            "linked_product_ids": pids,
-            "linked_variant_ids": vids,
-            "updated_by": updated_by,
-        }
-    ov["updated_at"] = utc_now()
-    _save_json(BRANDING_ASSOC_OVERRIDES_FILE, ov)
+    # Unified SQLite write + JSON mirror (ADR-010)
+    try:
+        import assoc_repo
 
-    linked_meta = _build_linked_product_meta(pids, file_index)
-    assets_by_id = {a.get("id"): a for a in assets if a.get("id")}
+        db_path = getattr(dam_db, "DB_CANONICAL", None) if dam_db is not None else None
+        result = assoc_repo.upsert_confirmed_links(
+            aid,
+            pids,
+            db_path=db_path,
+            source="manual",
+            reason="editor_confirm",
+            updated_by=updated_by,
+            reject_other_pending=True,
+            mirror=True,
+            overrides_path=BRANDING_ASSOC_OVERRIDES_FILE,
+            variant_ids=vids,
+            folder_group_id=group,
+            schedule_publish=True,
+        )
+        if not result.get("ok"):
+            return False, str(result.get("error") or "assoc_write_failed")
+    except Exception as exc:  # noqa: BLE001
+        return False, f"assoc_sqlite:{exc}"
 
-    def apply_to_asset(a: dict) -> None:
-        a["linked_product_ids"] = list(pids)
-        a["folder_linked_product_ids"] = list(pids)
-        a["linked_products"] = list(linked_meta)
-        if vids:
-            a["linked_variant_ids"] = list(vids)
-            variants = []
-            for vid in vids:
-                va = assets_by_id.get(vid)
-                if not va:
-                    continue
-                variants.append(
-                    {
-                        "id": vid,
-                        "name": va.get("name") or vid,
-                        "path": va.get("path") or "",
-                        "label": va.get("name") or "Plik",
-                        "media_type": va.get("media_type") or "",
-                    }
-                )
-            if variants:
-                a["folder_variants"] = variants
-
-    apply_to_asset(target)
-    if group:
+    # Best-effort fat index patch for offline consumers (not SoT)
+    idx = _load_json(BRANDING_INDEX_FILE, None)
+    if isinstance(idx, dict):
+        assets = idx.get("assets") or []
+        target = None
         for a in assets:
-            ag = str(a.get("folder_group_id") or "").strip().lower()
-            if ag == group:
-                apply_to_asset(a)
+            if a.get("id") == aid:
+                target = a
+                break
+        if target is not None:
+            if not group:
+                group = str(target.get("folder_group_id") or "").strip().lower()
+            file_index = _load_json(INDEX_FILE, {"products": []})
+            linked_meta = _build_linked_product_meta(pids, file_index)
+            assets_by_id = {a.get("id"): a for a in assets if a.get("id")}
 
-    _save_json(BRANDING_INDEX_FILE, idx)
+            def apply_to_asset(a: dict) -> None:
+                a["linked_product_ids"] = list(pids)
+                a["folder_linked_product_ids"] = list(pids)
+                a["linked_products"] = list(linked_meta)
+                if vids:
+                    a["linked_variant_ids"] = list(vids)
+                    variants = []
+                    for vid in vids:
+                        va = assets_by_id.get(vid)
+                        if not va:
+                            continue
+                        variants.append(
+                            {
+                                "id": vid,
+                                "name": va.get("name") or vid,
+                                "path": va.get("path") or "",
+                                "label": va.get("name") or "Plik",
+                                "media_type": va.get("media_type") or "",
+                            }
+                        )
+                    if variants:
+                        a["folder_variants"] = variants
+
+            apply_to_asset(target)
+            if group:
+                for a in assets:
+                    ag = str(a.get("folder_group_id") or "").strip().lower()
+                    if ag == group:
+                        apply_to_asset(a)
+            try:
+                _save_json(BRANDING_INDEX_FILE, idx)
+            except Exception:
+                pass
     return True, None
 
 
@@ -5841,6 +6144,25 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path != "/oauth/callback" and not self._origin_ok():
             self._json(403, {"ok": False, "error": "origin_forbidden"})
             return
+        if parsed.path == "/file-availability":
+            if dam_file_availability is None:
+                self._json(500, {"ok": False, "error": "dam_file_availability_missing"})
+                return
+            qs = parse_qs(parsed.query)
+            path = (qs.get("path") or [""])[0]
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required"})
+                return
+            bases = detect_marketing_bases()
+            has_root = bool(bases.get("recommended"))
+            out = dam_file_availability.classify_path(
+                path,
+                email="",
+                resolve_physical=lambda p, _e="": _coerce_media_target(p),
+                has_marketing_root=has_root,
+            )
+            self._json(200, out)
+            return
         if branding_asset_routes is not None:
             try:
                 if branding_asset_routes.handle_get(self, parsed):
@@ -5849,6 +6171,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(500, {"ok": False, "error": "branding_routes", "detail": str(exc)})
                 return
         if parsed.path == "/health":
+            assoc = _assoc_status_payload()
+            watcher = {}
+            try:
+                import index_supervisor
+
+                watcher = index_supervisor.public_status()
+            except Exception as exc:  # noqa: BLE001
+                watcher = {"ok": False, "watcher_ok": False, "last_error": str(exc)}
             self._json(
                 200,
                 {
@@ -5856,6 +6186,10 @@ class Handler(BaseHTTPRequestHandler):
                     "service": "dam-local-bridge",
                     "port": PORT,
                     "api_version": BRIDGE_API_VERSION,
+                    "assoc": assoc,
+                    "assoc_schema_error": assoc.get("schema_error") or "",
+                    "watcher_ok": bool(watcher.get("watcher_ok")),
+                    "watcher": watcher,
                     "hub_routes": [
                         "/branding-index",
                         "/branding-grid-index",
@@ -6467,7 +6801,24 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path in ("/branding/status", "/branding/recognize/status"):
             status_file = BRANDING_RECOGNIZE_STATUS_FILE if "recognize" in parsed.path else BRANDING_STATUS_FILE
             data = _load_json(status_file, {"ok": False, "state": "unknown"})
-            self._json(200, data if isinstance(data, dict) else {"ok": False})
+            if not isinstance(data, dict):
+                data = {"ok": False}
+            if "recognize" not in parsed.path:
+                with _branding_rebuild_lock:
+                    live = dict(_branding_rebuild_state)
+                data = {
+                    **data,
+                    **live,
+                    "assoc": _assoc_status_payload(),
+                    "generation_id": live.get("generation_id") or data.get("generation_id") or _branding_generation_id(),
+                }
+                try:
+                    from rebuild_lock import status_from_lock
+
+                    data["rebuild_lock"] = status_from_lock(BRANDING_REBUILD_LOCK_FILE, ttl_sec=7200)
+                except Exception:
+                    pass
+            self._json(200, data)
             return
         if parsed.path == "/wykrojniki-registry":
             data = _load_json(WYKROJNIKI_REGISTRY_FILE, None)
@@ -6850,18 +7201,7 @@ class Handler(BaseHTTPRequestHandler):
             if not BUILD_BRANDING_INDEX.is_file():
                 self._json(500, {"ok": False, "error": "build_branding_missing"})
                 return
-            try:
-                _invalidate_branding_data_caches()
-                _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
-                rc = subprocess.call(
-                    [sys.executable, str(BUILD_BRANDING_INDEX)],
-                    creationflags=_no_win,
-                )
-                if rc == 0:
-                    _invalidate_branding_data_caches()
-                self._json(200, {"ok": rc == 0, "rc": rc})
-            except OSError as exc:
-                self._json(500, {"ok": False, "error": str(exc)})
+            self._json(200, start_branding_rebuild())
             return
         if parsed.path == "/branding/recognize":
             if self._require_admin() is None:
@@ -7862,6 +8202,7 @@ def _kv_cache_watcher() -> None:
 
 def main() -> None:
     AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    DESKTOP_DATA_DIR.mkdir(parents=True, exist_ok=True)
     if branding_asset_routes is not None:
         sqlite_path = None
         try:
@@ -7873,12 +8214,24 @@ def main() -> None:
         def _require_admin_wrap(handler):
             return handler._require_admin() is not None
 
+        def _mirror_override(asset_id: str, product_ids: list) -> None:
+            import assoc_repo
+
+            assoc_repo.mirror_override(
+                asset_id,
+                product_ids,
+                overrides_path=BRANDING_ASSOC_OVERRIDES_FILE,
+                updated_by="quiz",
+            )
+
         branding_asset_routes.configure(
             web_root=WEB_ROOT,
             branding_index_file=BRANDING_INDEX_FILE,
             load_json=_load_json,
             sqlite_path=sqlite_path,
             require_admin=_require_admin_wrap,
+            mirror_override=_mirror_override,
+            assoc_decide=None,  # wired below after assoc_repo import
         )
     try:
         if dam_db is not None:
@@ -7891,6 +8244,33 @@ def main() -> None:
         _seed_naming_policy_to_postgres()
     except Exception as exc:
         print("naming policy seed:", exc)
+    try:
+        import assoc_repo
+
+        db_path = getattr(dam_db, "DB_CANONICAL", None) if dam_db is not None else None
+        assoc_repo.set_slim_publish_callback(_schedule_slim_grid_publish)
+        if branding_asset_routes is not None:
+
+            def _assoc_decide(handler, body: dict) -> dict:
+                return assoc_repo.decide_quiz(
+                    str(body.get("asset_id") or ""),
+                    str(body.get("action") or ""),
+                    list(body.get("product_ids") or []),
+                    db_path=db_path,
+                    updated_by=str(body.get("user") or "quiz"),
+                    schedule_publish=True,
+                )
+
+            branding_asset_routes.configure(assoc_decide=_assoc_decide)
+    except Exception as exc:
+        print("assoc_repo wire:", exc)
+    try:
+        import index_supervisor
+
+        sup = index_supervisor.ensure_index_supervisor(interval=5.0)
+        print("index_supervisor:", {k: sup.get(k) for k in ("ok", "owned", "started", "reason")})
+    except Exception as exc:
+        print("index_supervisor:", exc)
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     threading.Thread(target=_kv_cache_watcher, daemon=True).start()
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)
@@ -7900,6 +8280,12 @@ def main() -> None:
     except KeyboardInterrupt:
         pass
     finally:
+        try:
+            import index_supervisor
+
+            index_supervisor.stop_index_supervisor()
+        except Exception:
+            pass
         httpd.shutdown()
 
 

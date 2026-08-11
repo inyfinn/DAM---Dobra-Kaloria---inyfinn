@@ -794,17 +794,37 @@ def enrich_folder_groups(assets: list[dict[str, Any]], file_index: dict) -> None
                 fmt = [f for f in fmt if f != "editable"]
             a["format_technical"] = fmt
 
-            if path_hints:
+            # HARD: zakaz sibling spray w SLIDERY / KATEGORIE GLOWNE / mixed folders.
+            # Path hint = folder-level product (OK). Bez path hint: tylko per-plik
+            # (name+OCR+SKU), NIE kopiuj group_product_ids na siblings.
+            path_u = (path or "").upper().replace("\\", "/")
+            mixed_depth = (
+                "/SLIDERY/" in path_u
+                or "/KATEGORIE" in path_u
+                or "/KATEGORIE G" in path_u
+                or path_u.count("/") >= 6
+            )
+            if path_hints and not mixed_depth:
                 linked = list(group_product_ids)
+                a["linked_product_ids"] = linked[:MAX_FOLDER_PRODUCTS]
+                a["folder_linked_product_ids"] = list(group_product_ids)
+                a["linked_products"] = build_linked_product_meta(group_product_ids, file_index)
+            elif path_hints and mixed_depth:
+                # Folder hint OK for self, but do not spray sibling group blob.
+                own = _filter_product_ids(list(a.get("linked_product_ids") or []), file_index)
+                for pid in path_hints:
+                    if pid not in own:
+                        own.append(pid)
+                linked = own[:MAX_FOLDER_PRODUCTS]
+                a["linked_product_ids"] = linked
+                a["folder_linked_product_ids"] = list(path_hints)[:MAX_FOLDER_PRODUCTS]
+                a["linked_products"] = build_linked_product_meta(linked, file_index)
             else:
                 linked = _filter_product_ids(list(a.get("linked_product_ids") or []), file_index)
-                for pid in group_product_ids:
-                    if pid not in linked:
-                        linked.append(pid)
                 linked = linked[:MAX_FOLDER_PRODUCTS]
-            a["linked_product_ids"] = linked
-            a["folder_linked_product_ids"] = group_product_ids
-            a["linked_products"] = build_linked_product_meta(group_product_ids, file_index)
+                a["linked_product_ids"] = linked
+                a["folder_linked_product_ids"] = list(linked)
+                a["linked_products"] = build_linked_product_meta(linked, file_index)
             apply_global_product_links(a, file_index)
 
             stem_key = norm(variant_stem(a.get("name") or ""))

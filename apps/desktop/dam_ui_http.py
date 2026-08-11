@@ -63,6 +63,7 @@ class DamUiRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):  # noqa: N802
         path = self.path.split("?", 1)[0]
+        qs = self.path.split("?", 1)[1] if "?" in self.path else ""
         if path == "/dam-runtime.json":
             body = json_bytes(self.runtime)
             self.send_response(200)
@@ -73,6 +74,29 @@ class DamUiRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         if path == "/dam/ensure-services":
             self._handle_ensure_services()
+            return
+        # HARD: nie serwuj branding-index.json (~340MB) ani backupow do przegladarki.
+        # Slim: branding-grid-head.json / branding-grid-index.json. Admin: ?full=1
+        base = path.rsplit("/", 1)[-1]
+        fat_branding = base == "branding-index.json" or (
+            base.startswith("branding-index.")
+            and base.endswith(".json")
+            and "grid" not in base
+            and "search" not in base
+        )
+        if fat_branding and "full=1" not in qs:
+            body = json_bytes(
+                {
+                    "ok": False,
+                    "error": "use_branding_grid_index",
+                    "hint": "Use data/branding-grid-head.json or branding-grid-index.json",
+                }
+            )
+            self.send_response(403)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
             return
         super().do_GET()
 

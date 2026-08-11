@@ -226,21 +226,12 @@ class ReusableTCPServer(socketserver.TCPServer):
 
 
 def start_index_watcher() -> subprocess.Popen | None:
-    """Odswiezanie miniatur/indeksu co ~5s gdy zmienisz pliki w WIZKI."""
-    if not WATCH_INDEX.is_file():
-        return None
-    try:
-        flags = CREATE_NO_WINDOW if sys.platform == "win32" else 0
-        return subprocess.Popen(
-            [_silent_python(), str(WATCH_INDEX), "--interval", "5"],
-            cwd=str(WEB_ROOT.parent.parent),
-            creationflags=flags,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    except Exception:
-        return None
+    """DEPRECATED: watcher owned by bridge index_supervisor (singleton).
+
+    Kept as no-op so launch.py and serve_browser.py share one owner and
+    never spawn DEVNULL duplicates.
+    """
+    return None
 
 
 def start_ui_server(
@@ -681,6 +672,7 @@ def main() -> None:
     bridge_supervisor = BridgeSupervisor(ui_port, bridge_port)
     bridge_supervisor.ensure_running()
     bridge_supervisor.start_supervisor_thread()
+    # Product/branding index watcher: owned by local_bridge index_supervisor.
     watch_proc = start_index_watcher()
     httpd, _thread = start_ui_server(ui_port, bridge_port, bridge_supervisor)
     start_url = runtime_payload(ui_port, bridge_port)["start_url"]

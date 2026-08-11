@@ -726,21 +726,6 @@ a.geex-btn__primary {
   /* NIGDY --secondary-color (#B7DBF9) ani Bootstrap text-muted blekit */
 }
 
-/* Dark: subtitle must stay light on charcoal (tokens remap --dark-color → text). */
-html[data-theme="dark"] .dam-action-desc,
-html[data-theme="dark"] .dam-page-sub,
-html[data-theme="dark"] .dam-page-status,
-html[data-theme="dark"] .geex-content__header__subtitle.dam-page-sub,
-html[data-theme="dark"] .geex-content__header > .geex-content__header__content > .geex-content__header__subtitle {
-  color: var(--dam-text-muted, #b8b3c6) !important;
-  opacity: 1 !important;
-}
-
-html[data-theme="dark"] .geex-content__header__title,
-html[data-theme="dark"] h2.geex-content__header__title {
-  color: var(--dam-text, #eeeaf6) !important;
-}
-
 @supports (text-wrap: balance) {
   .dam-page-sub,
   .geex-content__header__subtitle.dam-page-sub {

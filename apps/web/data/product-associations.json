@@ -39,6 +39,17 @@
       "dishes": [],
       "ingredients": []
     },
+    "blackcurrant-cake-cashews": {
+      "terms": [
+        "blackcurrant cake",
+        "blackcurrant",
+        "ciasto porzeczkowe",
+        "delight mini bars",
+        "mini bars with cashews"
+      ],
+      "dishes": ["blackcurrant cake"],
+      "ingredients": ["cashews", "porzeczka"]
+    },
     "banoffee-kakao-deserowe": {
       "terms": ["banoffee", "banoffee kakao"],
       "dishes": ["deser"],

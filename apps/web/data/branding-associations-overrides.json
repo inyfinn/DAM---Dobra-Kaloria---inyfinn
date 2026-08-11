@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-28T18:55:56.000000+00:00",
+  "updated_at": "2026-08-05T12:45:52.437520+00:00",
   "assets": {
     "M-SHOP405237-05-22": {
       "linked_product_ids": [],
@@ -63,6 +63,83 @@
       "linked_variant_ids": [],
       "folder_group_id": "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/proteina - kartony  mini batoniki - super cena na start",
       "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "M-SHOP404317-02-26": {
+      "linked_product_ids": [
+        "blackcurrant-cake-cashews"
+      ],
+      "linked_variant_ids": [
+        "br-005067",
+        "br-005068",
+        "br-005069"
+      ],
+      "folder_group_id": "m:/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/porzeczka",
+      "updated_by": "agent-assoc-fix-rebuild-remap"
+    },
+    "br-005067": {
+      "linked_product_ids": [
+        "blackcurrant-cake-cashews"
+      ],
+      "linked_variant_ids": [
+        "br-005067",
+        "br-005068",
+        "br-005069"
+      ],
+      "folder_group_id": "m:/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/porzeczka",
+      "updated_by": "agent-assoc-fix-rebuild-remap"
+    },
+    "br-005068": {
+      "linked_product_ids": [
+        "blackcurrant-cake-cashews"
+      ],
+      "linked_variant_ids": [
+        "br-005067",
+        "br-005068",
+        "br-005069"
+      ],
+      "folder_group_id": "m:/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/porzeczka",
+      "updated_by": "agent-assoc-fix-rebuild-remap"
+    },
+    "br-005069": {
+      "linked_product_ids": [
+        "blackcurrant-cake-cashews"
+      ],
+      "linked_variant_ids": [
+        "br-005067",
+        "br-005068",
+        "br-005069"
+      ],
+      "folder_group_id": "m:/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/porzeczka",
+      "updated_by": "agent-assoc-fix-rebuild-remap"
+    },
+    "br-003871": {
+      "linked_product_ids": [
+        "malina-owocowe",
+        "czarna-porzeczka-owocowe"
+      ],
+      "linked_variant_ids": [
+        "br-003871",
+        "6300727.00",
+        "6300754.00",
+        "6300726.00",
+        "6300753.00"
+      ],
+      "folder_group_id": "m:/- polska/06 - strony www - internet/01 - strona dobra kaloria/02 - slidery  kategorie główne",
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "br-005275": {
+      "linked_product_ids": [
+        "pasztet-pomidor-niemiesne"
+      ],
+      "linked_variant_ids": [
+        "br-005275",
+        "br-005277",
+        "br-005276",
+        "000120.00",
+        "6300411.00"
+      ],
+      "folder_group_id": "m:/- polska/06 - strony www - internet/01 - strona dobra kaloria/06 - slidery na główną/dzień bez mięsa 2026",
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
     }
   },
   "folder_groups": {
@@ -104,6 +181,44 @@
         "mix-6x-mini-batoniki-mixy"
       ],
       "linked_variant_ids": [],
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "x:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/04 - grafiki do zestawów/02 - słodkie/porzeczka": {
+      "linked_product_ids": [
+        "blackcurrant-cake-cashews"
+      ],
+      "linked_variant_ids": [
+        "br-005067",
+        "br-005068",
+        "br-005069"
+      ],
+      "updated_by": "agent-assoc-fix-rebuild-remap"
+    },
+    "m:/- polska/06 - strony www - internet/01 - strona dobra kaloria/02 - slidery  kategorie główne": {
+      "linked_product_ids": [
+        "malina-owocowe",
+        "czarna-porzeczka-owocowe"
+      ],
+      "linked_variant_ids": [
+        "br-003871",
+        "6300727.00",
+        "6300754.00",
+        "6300726.00",
+        "6300753.00"
+      ],
+      "updated_by": "krzysztof.wieczorek@kubara.pl"
+    },
+    "m:/- polska/06 - strony www - internet/01 - strona dobra kaloria/06 - slidery na główną/dzień bez mięsa 2026": {
+      "linked_product_ids": [
+        "pasztet-pomidor-niemiesne"
+      ],
+      "linked_variant_ids": [
+        "br-005275",
+        "br-005277",
+        "br-005276",
+        "000120.00",
+        "6300411.00"
+      ],
       "updated_by": "krzysztof.wieczorek@kubara.pl"
     }
   }

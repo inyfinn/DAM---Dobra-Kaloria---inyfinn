@@ -7832,6 +7832,25 @@
       applyDeepLink();
       setStatus("");
       runDeferredLifecycleBoot();
+      if (window.DamIndexPoller && typeof window.DamIndexPoller.create === "function") {
+        window.DamIndexPoller.create({
+          name: "explorer",
+          statusPath: "/index/status",
+          onChange: function () {
+            if (window.DamSearch && typeof window.DamSearch.load === "function") {
+              window.DamSearch.load({ force: true })
+                .then(function () {
+                  refreshIndex({ silent: true });
+                })
+                .catch(function () {
+                  refreshIndex({ silent: true });
+                });
+            } else {
+              refreshIndex({ silent: true });
+            }
+          },
+        });
+      }
     }).catch(function (err) {
       dismissExplorerLoader();
       setStatus("Błąd indeksu: " + (err && err.message ? err.message : err));

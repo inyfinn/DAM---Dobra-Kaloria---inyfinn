@@ -42,6 +42,7 @@
     web_hero_slider: "Slider główny",
     ecommerce_ad: "Reklama e-commerce",
     key_visual: "Key visual kampanii",
+    product_element: "Element produktu",
     icon: "Ikona",
   };
 
@@ -50,6 +51,7 @@
     "key_visual",
     "brand_asset",
     "product_photo",
+    "product_element",
     "social_video",
     "social_asset",
     "web_hero_slider",

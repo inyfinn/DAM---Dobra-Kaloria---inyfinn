@@ -983,8 +983,17 @@
   gap: 6px;
   font-style: normal;
   color: var(--dam-text-muted, #6b7280);
-  padding: 12px 0 4px;
+  padding: 14px 12px;
   max-width: 100%;
+  border-radius: var(--dam-control-radius, 8px);
+  background: linear-gradient(145deg, rgb(99 102 241 / 0.06) 0%, rgb(99 102 241 / 0.02) 100%);
+  border: 1px dashed rgb(99 102 241 / 0.22);
+}
+
+.dam-media-preview__assoc-empty-icon {
+  font-size: 20px;
+  color: var(--dam-brand-purple, #6366f1);
+  margin-bottom: 2px;
 }
 
 .dam-media-preview__assoc-empty--guide strong {

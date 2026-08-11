@@ -1239,6 +1239,8 @@
 
       var origin = { c: start.c, r: start.r, w: start.w, h: start.h };
       var hover = { c: origin.c, r: origin.r };
+      /* Freeze layout at drag start so live preview can reflow neighbors from baseline. */
+      var baseline = cloneSolidItems(state.items);
       state.moving = { id: id };
 
       showSkelGrid(host, state.items);
@@ -1251,6 +1253,31 @@
       host.classList.add("is-bento-dragging");
       document.body.classList.add("dam-bento-moving");
 
+      function previewNeighborShift(nextHover) {
+        var preview = placeDraggedAt(
+          baseline,
+          id,
+          nextHover.c,
+          nextHover.r,
+          state.opts,
+          host
+        );
+        preview = enforceMinsAndReflow(
+          preview,
+          Object.keys(preview),
+          state.opts,
+          host
+        );
+        /* Keep dragged tile in place (hole); neighbors jump to tentative slots. */
+        var visual = cloneSolidItems(preview);
+        visual[id] = { c: origin.c, r: origin.r, w: origin.w, h: origin.h };
+        applyStyles(host, visual, state.opts);
+        if (typeof state.opts.onResizePreview === "function") {
+          state.opts.onResizePreview(visual);
+        }
+        return preview;
+      }
+
       function onMove(e) {
         hover = pointerToCell(host, e.clientX, e.clientY, origin.w, origin.h);
         setGhostRect(
@@ -1258,9 +1285,7 @@
           { c: hover.c, r: hover.r, w: origin.w, h: origin.h },
           origin.w + "×" + origin.h
         );
-        if (typeof state.opts.onResizePreview === "function") {
-          state.opts.onResizePreview(state.items);
-        }
+        previewNeighborShift(hover);
       }
 
       function onUp(e) {
@@ -1270,7 +1295,7 @@
           hover = pointerToCell(host, e.clientX, e.clientY, origin.w, origin.h);
         }
         var placed = placeDraggedAt(
-          state.items,
+          baseline,
           id,
           hover.c,
           hover.r,

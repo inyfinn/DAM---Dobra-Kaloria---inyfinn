@@ -28,8 +28,9 @@
   function assocEmptyMaterialsHtml() {
     return (
       '<p class="dam-media-preview__assoc-empty dam-media-preview__assoc-empty--guide">' +
+      '<i class="uil uil-info-circle dam-media-preview__assoc-empty-icon" aria-hidden="true"></i>' +
       "<strong>Brak skojarzonych materiałów</strong>" +
-      '<span class="dam-media-preview__assoc-empty-hint">System nie wykrył skojarzeń. Dodaj ręcznie.</span>' +
+      '<span class="dam-media-preview__assoc-empty-hint">System nie wykrył skojarzeń dla tego produktu. Użyj „Dodaj materiały” lub quiz skojarzeń (admin).</span>' +
       "</p>"
     );
   }
@@ -1177,9 +1178,13 @@
     return t;
   }
 
-  /** Hero / assoc: thumb_url z indeksu, potem /media?path= */
+  /** Hero / assoc: thumb-cache first paint, potem pelny /media. */
   function heroSrcFromAsset(a) {
     if (!a) return "";
+    if (a.path && global.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
+      var cacheFirst = DamPreviewTruth.thumbCacheUrl(a.path, "modal");
+      if (cacheFirst) return cacheFirst;
+    }
     var fromIndex = normalizeMediaThumbUrl(a.thumb_url || a.preview_url || "");
     if (fromIndex) return fromIndex;
     if (a.path) return mediaUrl(a.path, a);
@@ -5415,7 +5420,7 @@
         });
       }
       /* Defer past first paint + assoc CTA window. */
-      setTimeout(runWhenIdle, 1200);
+      setTimeout(runWhenIdle, 200);
     }
 
     function renderMeta(a) {

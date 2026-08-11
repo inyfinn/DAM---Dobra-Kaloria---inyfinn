@@ -1,0 +1,11 @@
+# Portable cold-start deps (build machine vendors into bin/runtime/win/python).
+# Heavy OCR/PSD optional — not required to open the window.
+pywebview>=5.0
+pythonnet>=3.0
+pystray>=0.19
+Pillow>=10.0
+bcrypt>=4.0
+cryptography>=42.0
+openpyxl>=3.1
+redis>=5.0
+psycopg2-binary>=2.9

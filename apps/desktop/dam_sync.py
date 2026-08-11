@@ -9,9 +9,10 @@ import threading
 import time
 from pathlib import Path
 
-from runtime_config import DESKTOP_DIR
+from runtime_config import CONTENT_ROOT, DESKTOP_DIR, GIT_ROOT
 
-REPO_ROOT = DESKTOP_DIR.parent.parent
+REPO_ROOT = CONTENT_ROOT  # content tree (bin); git cwd = GIT_ROOT
+GIT_CWD = GIT_ROOT
 
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
 DATA_DIR = DESKTOP_DIR / "data"
@@ -102,7 +103,7 @@ def spawn_sync_quiet(*, push: bool = True, no_commit: bool = False) -> bool:
             flags = subprocess.CREATE_NO_WINDOW | getattr(subprocess, "DETACHED_PROCESS", 0x00000008)
             subprocess.Popen(
                 ["wscript.exe", str(VBS_SILENT)],
-                cwd=str(REPO_ROOT),
+                cwd=str(GIT_CWD),
                 creationflags=flags,
                 close_fds=True,
                 stdin=subprocess.DEVNULL,
@@ -122,7 +123,7 @@ def spawn_sync_quiet(*, push: bool = True, no_commit: bool = False) -> bool:
             flags |= getattr(subprocess, "DETACHED_PROCESS", 0x00000008)
         subprocess.Popen(
             cmd,
-            cwd=str(REPO_ROOT),
+            cwd=str(GIT_CWD),
             creationflags=flags,
             close_fds=True,
             stdin=subprocess.DEVNULL,
@@ -151,7 +152,7 @@ def run_sync_blocking(*, push: bool = False, no_commit: bool = False, timeout: i
     try:
         proc = subprocess.run(
             cmd,
-            cwd=str(REPO_ROOT),
+            cwd=str(GIT_CWD),
             capture_output=True,
             text=True,
             timeout=timeout,
