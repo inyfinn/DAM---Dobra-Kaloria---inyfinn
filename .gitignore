@@ -11,7 +11,8 @@
 *.pem
 *.p12
 
-# Layout root (P:\DAM = DAM.exe + bin + git)
+# Layout root (GIT_ROOT = DAM.exe + git; CONTENT_ROOT = bin/ mirror — never commit)
+/bin/
 /DAM.exe
 /DAM.cmd
 /_move_preflight.txt
@@ -41,6 +42,7 @@ bin/apps/desktop/data/pg-config.json
 bin/apps/desktop/data/pg-config.json.off
 bin/apps/desktop/dam-connection.env
 apps/desktop/data/pg-config.json
+apps/desktop/data/pg-config.json.off
 apps/desktop/dam-connection.env
 .tmp-syno-deploy/
 bin/.tmp-syno-deploy/
@@ -146,6 +148,22 @@ Thumbs.db
 # Agent / debug logs (lokalne, nie commitowac)
 debug-*.log
 bin/debug-*.log
+
+# Runtime / seed / watcher noise (lokalne, nie commitowac)
+apps/desktop/data/assoc-seed-*.json
+apps/desktop/data/backups-*/
+apps/desktop/data/index-watcher.log
+apps/desktop/data/index-watcher-status.json
+apps/desktop/data/index-supervisor.lock.json
+apps/desktop/data/index-fullrebuild-followup*.log
+apps/desktop/data/db-prefer.json
+apps/desktop/data/user-*.json
+apps/web/data/branding-build-run*.log
+apps/web/data/branding-ocr-assoc-*.log
+apps/web/data/branding-ocr-assoc-*.json
+apps/web/data/_ocr_batch_ids.json
+apps/web/data/_refilter-*.json
+agents/shared/planner-runs/
 
 # Scratch QA + duze backupy bundli (lokalne, nie commitowac)
 _qa/

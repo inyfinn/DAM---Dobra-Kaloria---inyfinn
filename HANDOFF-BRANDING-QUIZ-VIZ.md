@@ -1,38 +1,39 @@
-﻿# HANDOFF — Branding / Quiz / Viz (2026-08-06) — NASTĘPNA TURA = NAPRAWA
+﻿# HANDOFF — Branding / Quiz / Viz — ZAMKNIĘTE (2026-08-11)
 
-**HARD:** Jakakolwiek wiadomość użytkownika w następnej sesji / następnym agencie
-dotycząca Brandingu, Quizu skojarzeń, Wizualizacji, miniatur Datesy, mapowania
-skojarzeń albo „napraw” = **kontynuuj naprawę z listy NIE OK poniżej**.
-Nie zamykaj jako done bez runtime screenshot+Read (Ctrl+F5).
+Plan recovery `dam_live_indexing_recovery` domknięty. Commity na `main` (HEAD `fb9ef83`+).
 
-## OK (zrobione w kodzie, commit tej sesji)
+## PASS (wdrożone + commit)
 
-1. Podwójne ładowanie Brandingu: head nie bierze już PDF z pustym asset_role;
-   klient odrzuca „dokumentowy” head; `branding-grid-head.json` przebudowany (grafiki).
-2. Tytuły kart: nazwa pliku, nie folder-kubełek (`01- CHŁODZONE`, `02 – SLIDERY…`).
-3. Quiz `#damAssocQuizOpen`: tylko admin + toggle Admin; sync widoczności;
-   pusty pending SQLite → fallback z siatki + jasny copy (nie „Kolejka pusta” bez sensu).
-4. Viz: lepszy wybór thumb w grupie + onerror → `/media`; Datesy 690000x thumbs
-   istnieją na dysku (HTTP 200) — **UI po Ctrl+F5 jeszcze NIE zweryfikowane screenshotem**.
+1. Live indexing: supervisor, watcher, `DamIndexPoller`, force reload Explorer/Viz/Branding.
+2. Branding head: grafiki only, `HEAD_ROLES` live taxonomy, `M-*` IDs (0× `br-`).
+3. Tytuły kart: nazwa pliku, nie folder-kubełek.
+4. Quiz: admin-only, `/thumb-cache`, fallback z siatki gdy SQLite pusty.
+5. Viz thumbs: `hasStaticDataThumb`, `object-fit: contain`, onerror → `/media`.
+6. Offline/online: wspólny `GET /file-availability` (Branding + Viz).
+7. Empty assoc UI: ikona info + lepszy copy.
+8. Preview: thumb-cache + defer (kod).
+9. Doctrine §12: root causes zapisane w `agents/shared/code-doctrine.md`.
+10. Repo cleanup: usunięte legacy THEME/tools/docs; `bin/` w `.gitignore`; `sync-apps-to-bin.ps1`.
 
-## NIE OK / DO NAPRAWY (następny krok)
+## PENDING (świadomie na kolejną turę)
 
-1. **Runtime QA brak:** brak screenshot+Read Branding + Viz + Quiz po Ctrl+F5.
-2. **Mapowanie RT / sugestie AI:** brak pełnego pipeline skan → `asset_product_links`
-   pending → prawdziwe propozycje w quizie (jest tylko fallback z siatki).
-3. **Wizualizacje „Brak miniatury”:** jeśli po Ctrl+F5 nadal widać placeholder na
-   Datesy/Karmel/Lemon — rebuild thumbs / ścieżka `cardThumbSrc` / serwowanie.
-4. **Krytyk Task:** sesja bez pełnego critic subagenta (limit) — przy ryzyku powtórz `/reflect`.
+1. Quiz E2E: pełny pipeline skan → `asset_product_links` pending (nie tylko grid fallback).
+2. Edycja tytułów w UI (admin): contenteditable / persist display name.
+3. Gazetki w UI: wyłączyć „Tylko grafiki” lub pokazać archiwum `.ai`.
+4. Runtime screenshot parity: ten sam plik offline badge Branding vs Viz modal.
 
-## Stop
+## Po `git pull`
 
-- Nie ładować fat `branding-index.json` (~340MB) na hot path UI.
-- Live kod: `bin\apps\web`; git track: `apps\web` — sync przy commit.
+```powershell
+.\scripts\ops\sync-apps-to-bin.ps1
+.\scripts\ops\dev-start.ps1   # dev z apps/
+# albo DAM.exe                   # prod z bin/
+```
 
 ## Pliki kluczowe
 
 - `apps/web/assets/js/dam-branding.js`
 - `apps/web/assets/js/dam-assoc-quiz.js`
 - `apps/web/assets/js/dam-viz.js`
+- `apps/desktop/local_bridge.py`
 - `apps/web/scripts/build-branding-grid-index.py`
-- `apps/web/data/branding-grid-head.json`

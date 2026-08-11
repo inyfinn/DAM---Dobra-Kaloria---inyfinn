@@ -1,4 +1,0 @@
-inbox.html: <p class="geex-content__header__subtitle dam-page-sub" data-i18n="messages.subtitle">Zadania i zgłoszenia. Filtr po źródle. Po 72 h bez decyzji - przypomnienie. Nic nie zapisuje się samo.</p>
-branding.html: <p class="geex-content__header__subtitle dam-page-sub" data-i18n="branding.subtitle">Reklamy, filmy i grafiki marki. Szukaj albo kliknij tag.</p>
-explorer.html: <p class="geex-content__header__subtitle" data-i18n="explorer.subtitle">Pełna struktura produktów Dobra Kaloria i Good Calories</p>
-index.html: <p class="geex-content__header__subtitle dam-page-sub" data-i18n="projects.subtitle">Lista projektów opakowań i ich kompletności plików.</p>

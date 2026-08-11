@@ -21,12 +21,14 @@ import sys
 import time
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-DATABASE_DIR = REPO_ROOT / "DATABASE"
+CONTENT_ROOT = Path(__file__).resolve().parents[3]
+GIT_ROOT = CONTENT_ROOT.parent
+REPO_ROOT = CONTENT_ROOT  # DATABASE + apps live under bin/
+DATABASE_DIR = CONTENT_ROOT / "DATABASE"
 REMOTE_DIR = "/volume1/docker/dam-eta-postgres/DATABASE"
 MAX_DAYS = 72
 SSH_HOST = "syno"
-LOG_DIR = REPO_ROOT / "apps" / "desktop" / "logs"
+LOG_DIR = CONTENT_ROOT / "apps" / "desktop" / "logs"
 SYNC_LOG = LOG_DIR / "database-sync.log"
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
 
@@ -47,7 +49,7 @@ def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
     flags = CREATE_NO_WINDOW if sys.platform == "win32" else 0
     return subprocess.run(
         cmd,
-        cwd=str(REPO_ROOT),
+        cwd=str(GIT_ROOT),
         check=check,
         capture_output=True,
         text=True,
