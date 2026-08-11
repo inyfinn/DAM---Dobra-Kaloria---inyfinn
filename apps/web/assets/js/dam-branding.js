@@ -356,8 +356,20 @@
     return /^(psd|psb|ai|indd|indt|eps)$/.test(ext);
   }
 
-  function passesGraphicsOnlyFilter(a) {
+  function passesGraphicsOnlyFilter(a, opts) {
+    opts = opts || {};
+    var q = opts.searchQuery != null ? opts.searchQuery : elVal("damBrandingSearch").toLowerCase();
     if (!graphicsOnlyActive()) return true;
+    /* Aktywne wyszukiwanie: archiwum / źródła (.ai) pasujące do zapytania (np. gazetka). */
+    if (!opts.ignoreSearchBypass && q && assetMatchesSearchQuery(a, q)) {
+      if (
+        isSourceEditableAsset(a) ||
+        normalizeMediaType(a.media_type) === "document" ||
+        isArchived(a)
+      ) {
+        return true;
+      }
+    }
     /* Jawny tag Dokument / Wideo / Zrodlo / Element produktu nadpisuje przelacznik */
     if (
       activeTagFilters["media:document"] ||
@@ -387,6 +399,26 @@
    * klik w Wideo/Dokument jawnie nadpisuje przelacznik (passesGraphicsOnlyFilter),
    * wiec tag nie moze byc wygaszony z licznikiem 0, gdy materialy istnieja.
    */
+  function resolveAssetDisplayTitle(asset, fallback) {
+    if (
+      window.DamModalShared &&
+      typeof window.DamModalShared.getAssetDisplayTitle === "function"
+    ) {
+      return window.DamModalShared.getAssetDisplayTitle(asset, fallback) || fallback || "";
+    }
+    return fallback || "";
+  }
+
+  function countGraphicsOnlyHiddenSearchHits(assetList, q) {
+    if (!q || !graphicsOnlyActive() || !assetList || !assetList.length) return 0;
+    var n = 0;
+    assetList.forEach(function (a) {
+      if (!assetMatchesSearchQuery(a, q)) return;
+      if (!passesGraphicsOnlyFilter(a, { ignoreSearchBypass: true, searchQuery: q })) n++;
+    });
+    return n;
+  }
+
   function chipCountIgnoresGraphicsOnly(key) {
     return String(key || "").indexOf("media:") === 0 || String(key || "").indexOf("format:") === 0;
   }
@@ -1740,10 +1772,27 @@
     );
   }
 
-  function brandingCardTitleHtml(displayTitle, subtitleHtml, idChipHtml) {
+  function brandingCardTitleHtml(displayTitle, subtitleHtml, idChipHtml, asset) {
+    var adminCls =
+      window.DamModalShared &&
+      typeof window.DamModalShared.isAdminEditMode === "function" &&
+      window.DamModalShared.isAdminEditMode()
+        ? " dam-editable-title dam-editable-title--admin"
+        : "";
+    var dataAttrs = asset
+      ? ' data-asset-path="' +
+        esc(asset.path || "") +
+        '" data-asset-id="' +
+        esc(asset.id || "") +
+        '"'
+      : "";
     return (
       '<div class="dam-viz-card__title-wrap">' +
-      '<h5 class="dam-viz-card__title" title="' +
+      '<h5 class="dam-viz-card__title' +
+      adminCls +
+      '"' +
+      dataAttrs +
+      ' title="' +
       esc(displayTitle) +
       '">' +
       esc(displayTitle) +
@@ -2673,28 +2722,41 @@
 
   window.__damBrandingThumbFallback = function (img) {
     if (!img) return;
-    function replaceWithReadablePlaceholder() {
+    var path = img.getAttribute("data-path") || "";
+    function replaceWithReadablePlaceholder(state) {
       img.onerror = null;
       var card = img.closest(".dam-branding-card, .dam-viz-card");
       var chip = card && card.querySelector(".dam-branding-card__id-chip, .dam-branding-id-chip");
       var titleEl = card && card.querySelector(".dam-viz-card__title");
       var idText =
-        (chip && (chip.getAttribute("data-copy-id") || chip.getAttribute("data-tag-value") || chip.textContent || "").trim()) ||
+        (chip &&
+          (chip.getAttribute("data-copy-id") ||
+            chip.getAttribute("data-tag-value") ||
+            chip.textContent ||
+            "").trim()) ||
         "";
       var nameText = (titleEl && (titleEl.textContent || "").trim()) || "";
-      var path = img.getAttribute("data-path") || "";
       var base = path ? path.split(/[/\\]/).pop() : "";
       var label = idText || nameText || base || "plik";
+      var isOnline = state === "online_only";
       var wrap = document.createElement("div");
-      wrap.className = "dam-viz-thumb__noviz dam-branding-thumb__icon dam-branding-thumb__icon--nosync";
+      wrap.className =
+        "dam-viz-thumb__noviz dam-branding-thumb__icon dam-branding-thumb__icon--nosync" +
+        (isOnline ? " dam-branding-thumb__icon--online-only" : "");
       wrap.setAttribute("role", "img");
-      wrap.setAttribute("aria-label", "Podglad niedostępny: " + label);
-      wrap.title =
-        (window.DamPreviewTruth && DamPreviewTruth.onErrorTitle()) ||
-        "Podglad niedostępny";
+      var titleText =
+        (window.DamPreviewTruth && typeof DamPreviewTruth.onErrorTitle === "function"
+          ? DamPreviewTruth.onErrorTitle(state)
+          : null) || "Podglad niedostepny";
+      wrap.setAttribute("aria-label", titleText + ": " + label);
+      wrap.title = titleText;
       wrap.innerHTML =
-        '<i class="uil uil-cloud-slash" aria-hidden="true"></i>' +
-        "<span>Podglad niedostępny</span>" +
+        '<i class="uil uil-' +
+        (isOnline ? "cloud-check" : "cloud-slash") +
+        '" aria-hidden="true"></i>' +
+        "<span>" +
+        (isOnline ? "Tylko online" : "Podglad niedostepny") +
+        "</span>" +
         (label
           ? '<span class="dam-branding-thumb__nosync-id">' +
             String(label)
@@ -2705,12 +2767,33 @@
           : "");
       if (img.parentNode) img.replaceWith(wrap);
     }
+    if (
+      window.DamModalShared &&
+      typeof window.DamModalShared.applyThumbAvailabilityFallback === "function"
+    ) {
+      window.DamModalShared.applyThumbAvailabilityFallback(img, path, {
+        liveUrl: path
+          ? function (p) {
+              var name = p.split(/[/\\]/).pop();
+              var ext = (name.split(".").pop() || "").toLowerCase();
+              var mt = /^(psd|psb|tif|tiff|bmp)$/i.test(ext) ? "source" : "raster";
+              return mediaUrl(p, { path: p, name: name, media_type: mt });
+            }
+          : "",
+        onFinal: function (state) {
+          if (img.parentNode && img.parentNode.querySelector(".dam-branding-thumb__icon--nosync")) {
+            return;
+          }
+          replaceWithReadablePlaceholder(state);
+        },
+      });
+      return;
+    }
     if (img.dataset.fallbackTried === "1") {
-      replaceWithReadablePlaceholder();
+      replaceWithReadablePlaceholder("missing");
       return;
     }
     img.dataset.fallbackTried = "1";
-    var path = img.getAttribute("data-path");
     if (path) {
       var name = path.split(/[/\\]/).pop();
       var ext = (name.split(".").pop() || "").toLowerCase();
@@ -2718,7 +2801,7 @@
       img.src = mediaUrl(path, { path: path, name: name, media_type: mt });
       return;
     }
-    replaceWithReadablePlaceholder();
+    replaceWithReadablePlaceholder("missing");
   };
 
   function bindVideoPosterFallback(vid, bridgePoster) {
@@ -3043,7 +3126,9 @@
 
     var list = ((index && index.assets) || []).filter(function (a) {
       if (!isBrandingGridEligible(a)) return false;
-      if (!includeArchive() && isArchived(a)) return false;
+      if (!includeArchive() && isArchived(a)) {
+        if (!q || !assetMatchesSearchQuery(a, q)) return false;
+      }
       if (!assetMatchesDateRange(a)) return false;
       if (skipTagKey) {
         var keys = Object.keys(activeTagFilters).filter(function (k) {
@@ -3556,7 +3641,10 @@
             })
             .join(",")
         : "";
-    var displayTitle = cardOpts.title || cardAsset.name;
+    var displayTitle = resolveAssetDisplayTitle(
+      cardAsset,
+      cardOpts.title || cardAsset.name
+    );
     var metaLine = brandingCardTypeMeta(cardAsset);
     var isVideoCard = cardAsset.media_type === "video";
     return (
@@ -3576,7 +3664,7 @@
       '<div class="dam-viz-card__badges">' +
       badgesHtml(cardAsset) +
       "</div>" +
-      brandingCardTitleHtml(displayTitle, brandingCardSubtitle(cardAsset, displayTitle), "") +
+      brandingCardTitleHtml(displayTitle, brandingCardSubtitle(cardAsset, displayTitle), "", cardAsset) +
       brandingCardMetaHtml(metaLine || hint || cardAsset.sku || "Materiał", metaAssetIdsForCard(cardAsset, assetList)) +
       '<div class="dam-viz-card__footer">' +
       brandingCardIndexBlockHtml(assetList) +
@@ -3605,7 +3693,7 @@
       .join(",");
     var displayAssets = brandingCardDisplayAssets(assets);
     var displayCount = displayAssets.length || assets.length;
-    var groupTitle = entry.label || primary.name;
+    var groupTitle = resolveAssetDisplayTitle(primary, entry.label || primary.name);
     var groupMeta = brandingCardTypeMeta(primary);
     var cardTitle = isProject
       ? "Kliknij, aby przejrzeć pliki projektu"
@@ -3630,7 +3718,7 @@
       '<div class="dam-viz-card__badges">' +
       badgesHtml(primary) +
       "</div>" +
-      brandingCardTitleHtml(groupTitle, brandingCardSubtitle(primary, groupTitle), "") +
+      brandingCardTitleHtml(groupTitle, brandingCardSubtitle(primary, groupTitle), "", primary) +
       brandingCardMetaHtml(groupMeta || hint || "Materiał", metaAssetIdsForCard(primary, assets)) +
       '<div class="dam-viz-card__footer">' +
       brandingCardIndexBlockHtml(assets) +
@@ -3831,13 +3919,23 @@
     );
   }
 
-  function emptyGridMessage(defaultMsg, totalBeforeLimit) {
+  function emptyGridMessage(defaultMsg, totalBeforeLimit, sectionAll) {
+    var q = elVal("damBrandingSearch").toLowerCase();
+    var hiddenByGraphics = countGraphicsOnlyHiddenSearchHits(sectionAll || [], q);
+    var graphicsHint =
+      hiddenByGraphics > 0
+        ? '<p class="dam-branding-empty__hint">Filtr „Tylko grafiki” ukrywa ' +
+          hiddenByGraphics +
+          " trafien w archiwum / plikach źródłowych (.ai, PDF). Wyłącz przełącznik lub użyj tagu Dokument.</p>"
+        : "";
     if (totalBeforeLimit > 0) {
       return wrapEmptyWithMascot(
         '<div class="dam-branding-empty dam-branding-empty--limited" role="status">' +
           '<p class="dam-branding-empty__desc">' +
           esc(defaultMsg) +
-          "</p></div>"
+          "</p>" +
+          graphicsHint +
+          "</div>"
       );
     }
     var filters = activeFilterLabels();
@@ -3855,6 +3953,7 @@
         '<div class="dam-branding-empty__icon" aria-hidden="true"><i class="uil uil-image-slash"></i></div>' +
         '<h3 class="dam-branding-empty__title">Brak wyników</h3>' +
         '<p class="dam-branding-empty__desc">Żaden materiał nie pasuje do aktywnych filtrów w tej sekcji.</p>' +
+        graphicsHint +
         filterHtml +
         '<button type="button" class="geex-btn geex-btn--primary-transparent dam-branding-clear-filters">Wyczyść filtry</button>' +
         "</div>"
@@ -3875,12 +3974,14 @@
             return gridEntryHtml(entry, gridOpts);
           })
           .join("")
-      : '<div class="dam-branding-empty-wrap">' + emptyGridMessage(emptyMsg || "Brak wyników dla wybranych filtrów.", total) + "</div>";
+      : '<div class="dam-branding-empty-wrap">' + emptyGridMessage(emptyMsg || "Brak wyników dla wybranych filtrów.", total, list) + "</div>";
     var clearBtn = grid.querySelector(".dam-branding-clear-filters");
     if (clearBtn) {
       clearBtn.addEventListener("click", clearAllBrandingFilters);
     }
     bindCards(grid);
+    bindEditableCardTitles(grid);
+    bindMetaTooltips(grid);
     hydrateVideoPosters(grid);
     currentGridAssets = [];
     slice.forEach(function (entry) {
@@ -3951,11 +4052,39 @@
     }
   }
 
+  function bindEditableCardTitles(grid) {
+    if (
+      !grid ||
+      !window.DamModalShared ||
+      typeof window.DamModalShared.isAdminEditMode !== "function" ||
+      !window.DamModalShared.isAdminEditMode()
+    ) {
+      return;
+    }
+    grid.querySelectorAll(".dam-viz-card__title[data-asset-id]").forEach(function (titleEl) {
+      var aid = titleEl.getAttribute("data-asset-id") || "";
+      var path = titleEl.getAttribute("data-asset-path") || "";
+      var asset =
+        ((index && index.assets) || []).find(function (a) {
+          return a && a.id === aid;
+        }) || { id: aid, path: path, name: titleEl.textContent };
+      window.DamModalShared.bindEditableAssetTitle(
+        titleEl,
+        asset,
+        titleEl.textContent,
+        function (next) {
+          titleEl.setAttribute("title", next);
+        }
+      );
+    });
+  }
+
   function bindCards(grid) {
     grid.querySelectorAll(".dam-branding-card").forEach(function (btn) {
       btn.addEventListener("click", function (ev) {
         if (ev.target.closest(".dam-viz-badge")) return;
         if (ev.target.closest(".dam-viz-card__actions")) return;
+        if (ev.target.closest(".dam-editable-title--admin")) return;
         var id = btn.getAttribute("data-id");
         var ids = (btn.getAttribute("data-group-ids") || "").split(",").filter(Boolean);
         var siblings = null;

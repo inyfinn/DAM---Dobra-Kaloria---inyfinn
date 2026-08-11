@@ -502,6 +502,173 @@
     st.textContent = css;
   }
 
+  function injectCssOnce(id, css) {
+    var st = document.getElementById(id);
+    if (!st) {
+      st = document.createElement("style");
+      st.id = id;
+      document.head.appendChild(st);
+    }
+    st.textContent = css;
+  }
+
+  var ASSET_TITLE_PREFIX = "dam_asset_display_title:";
+
+  function assetTitleKey(asset) {
+    var path =
+      typeof asset === "string" ? asset : (asset && (asset.path || asset.id)) || "";
+    return ASSET_TITLE_PREFIX + String(path).trim();
+  }
+
+  function isAdminEditMode() {
+    try {
+      var role =
+        (window.DamApi && typeof window.DamApi.role === "function" && window.DamApi.role()) ||
+        localStorage.getItem("dam_role") ||
+        "";
+      if (String(role).toLowerCase() !== "admin") return false;
+      return (
+        localStorage.getItem("dam_admin_mode") === "1" ||
+        localStorage.getItem("dam_viz_admin_mode") === "1"
+      );
+    } catch (eAdmin) {
+      return false;
+    }
+  }
+
+  function getAssetDisplayTitle(asset, fallback) {
+    try {
+      var ov = localStorage.getItem(assetTitleKey(asset));
+      if (ov && String(ov).trim()) return String(ov).trim();
+    } catch (eGet) {
+      /* ignore */
+    }
+    return fallback || "";
+  }
+
+  function setAssetDisplayTitle(asset, title) {
+    var key = assetTitleKey(asset);
+    var val = String(title || "").trim();
+    try {
+      if (!val) localStorage.removeItem(key);
+      else localStorage.setItem(key, val);
+    } catch (eSet) {
+      /* ignore */
+    }
+  }
+
+  function ensureEditableTitleCss() {
+    injectCssOnce(
+      "damEditableTitleCss",
+      ".dam-editable-title--admin{outline:none;cursor:text;border-radius:6px;transition:box-shadow .15s ease,background .15s ease;}" +
+        ".dam-editable-title--admin:hover,.dam-editable-title--admin:focus{box-shadow:0 0 0 2px rgba(171,84,219,.28);background:rgba(171,84,219,.06);}" +
+        ".dam-editable-title--admin::after{content:'';display:inline-block;width:14px;height:14px;margin-left:6px;vertical-align:middle;" +
+        "background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ab54db'%3E%3Cpath d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E\") center/contain no-repeat;opacity:.55;}" +
+        ".dam-viz-thumb__img--online-only{outline:2px dashed rgba(171,84,219,.45);outline-offset:-2px;}" +
+        ".dam-branding-thumb__icon--online-only{border:2px dashed rgba(171,84,219,.45);}"
+    );
+  }
+
+  /**
+   * Honest thumb onerror: /file-availability before placeholder (parity Branding + Viz + modal).
+   */
+  function applyThumbAvailabilityFallback(img, path, opts) {
+    opts = opts || {};
+    if (!img) return;
+    path = path || img.getAttribute("data-path") || img.getAttribute("data-media-path") || "";
+    var tried = img.getAttribute("data-thumb-fallback") || img.dataset.fallbackTried;
+    var liveUrl = typeof opts.liveUrl === "function" ? opts.liveUrl(path) : opts.liveUrl || "";
+    var onFinal =
+      typeof opts.onFinal === "function"
+        ? opts.onFinal
+        : function (state) {
+            img.onerror = null;
+            img.src =
+              opts.placeholder ||
+              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='90'%3E%3Crect fill='%23eceaf3' width='120' height='90'/%3E%3C/svg%3E";
+            img.classList.add("dam-viz-thumb__img--placeholder");
+            if (state === "online_only") img.classList.add("dam-viz-thumb__img--online-only");
+            if (window.DamPreviewTruth && typeof DamPreviewTruth.applyFallbackEl === "function") {
+              DamPreviewTruth.applyFallbackEl(img, state);
+            }
+          };
+
+    if (
+      path &&
+      window.DamPreviewTruth &&
+      typeof window.DamPreviewTruth.fileAvailability === "function"
+    ) {
+      window.DamPreviewTruth.fileAvailability(path).then(function (avail) {
+        if (!img.parentNode) return;
+        avail = avail || {};
+        if (avail.treat_as_local && avail.state !== "online_only" && avail.state !== "missing") {
+          if (!tried && liveUrl && liveUrl !== img.getAttribute("src")) {
+            img.setAttribute("data-thumb-fallback", "1");
+            img.dataset.fallbackTried = "1";
+            img.src = liveUrl;
+            return;
+          }
+        }
+        onFinal(avail.state || "missing", avail);
+      });
+      return;
+    }
+    if (!tried && liveUrl && liveUrl !== img.getAttribute("src")) {
+      img.setAttribute("data-thumb-fallback", "1");
+      img.dataset.fallbackTried = "1";
+      img.src = liveUrl;
+      return;
+    }
+    onFinal("missing", {});
+  }
+
+  function bindEditableAssetTitle(titleEl, asset, fallback, onSaved) {
+    if (!titleEl || !asset) return;
+    ensureEditableTitleCss();
+    var resolved = getAssetDisplayTitle(asset, fallback);
+    if (titleEl.getAttribute("data-editable-title-bound") === "1") {
+      if (document.activeElement !== titleEl) {
+        titleEl.textContent = resolved;
+      }
+      return;
+    }
+    titleEl.setAttribute("data-editable-title-bound", "1");
+    titleEl.setAttribute("data-asset-title-key", assetTitleKey(asset));
+    if (!isAdminEditMode()) {
+      titleEl.classList.remove("dam-editable-title", "dam-editable-title--admin");
+      titleEl.removeAttribute("contenteditable");
+      titleEl.textContent = resolved;
+      return;
+    }
+    titleEl.classList.add("dam-editable-title", "dam-editable-title--admin");
+    titleEl.setAttribute("contenteditable", "true");
+    titleEl.setAttribute("spellcheck", "false");
+    titleEl.setAttribute("role", "textbox");
+    titleEl.setAttribute(
+      "data-dam-tip",
+      "Kliknij tytuł, aby zmienić nazwę wyświetlaną (zapis lokalny)"
+    );
+    titleEl.textContent = resolved;
+    function commit() {
+      var next = String(titleEl.textContent || "").trim();
+      if (!next) next = fallback || resolved;
+      setAssetDisplayTitle(asset, next);
+      titleEl.textContent = next;
+      if (typeof onSaved === "function") onSaved(next);
+    }
+    titleEl.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        titleEl.blur();
+      }
+      e.stopPropagation();
+    });
+    titleEl.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+    titleEl.addEventListener("blur", commit);
+  }
+
   window.DamModalShared = {
     CARD_ZOOM_KEY: CARD_ZOOM_KEY,
     CARD_ZOOM_MIN: CARD_ZOOM_MIN,
@@ -522,6 +689,12 @@
     bindPreviewNav: bindPreviewNav,
     bindModalClose: bindModalClose,
     confirmUnsavedClose: confirmUnsavedClose,
+    assetTitleKey: assetTitleKey,
+    isAdminEditMode: isAdminEditMode,
+    getAssetDisplayTitle: getAssetDisplayTitle,
+    setAssetDisplayTitle: setAssetDisplayTitle,
+    bindEditableAssetTitle: bindEditableAssetTitle,
+    applyThumbAvailabilityFallback: applyThumbAvailabilityFallback,
   };
 
   /**

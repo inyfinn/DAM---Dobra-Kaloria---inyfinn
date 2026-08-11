@@ -122,14 +122,33 @@
 
   async function loadQueue() {
     STATE.source = "sqlite";
+    STATE.queueError = "";
     try {
       var r = await fetch(bridge() + "/assoc/queue", { headers: authHeaders() });
       var j = await r.json();
+      if (j && j.error === "login_required") {
+        STATE.items = [];
+        STATE.source = "auth_required";
+        STATE.queueError = j.hint || "Zaloguj sie jako admin.";
+        return STATE.items;
+      }
+      if (j && j.ok === false && (j.schema_error || j.error)) {
+        STATE.items = [];
+        STATE.source = "sqlite_error";
+        STATE.queueError = j.schema_error || j.error || "sqlite_error";
+        return STATE.items;
+      }
       STATE.items = (j && j.items) || [];
+      if (j && j.source) STATE.source = j.source;
+      if (STATE.items.length && (j.grid_fallback === false || j.pending_count > 0 || j.ok)) {
+        STATE.source = "sqlite";
+      }
     } catch (e) {
       STATE.items = [];
+      STATE.source = "sqlite_error";
+      STATE.queueError = String(e && e.message ? e.message : e);
     }
-    if (!STATE.items.length) {
+    if (!STATE.items.length && STATE.source !== "auth_required" && STATE.source !== "sqlite_error") {
       STATE.items = fallbackQueueFromGrid();
       STATE.source = STATE.items.length ? "grid_fallback" : "empty";
     }
@@ -328,7 +347,15 @@
         : "0";
     }
     if (banner) {
-      if (STATE.source === "grid_fallback") {
+      if (STATE.source === "auth_required") {
+        banner.hidden = false;
+        banner.textContent =
+          "Zaloguj sie i wlacz tryb Admin — kolejka pending wymaga sesji mostu (8766).";
+      } else if (STATE.source === "sqlite_error") {
+        banner.hidden = false;
+        banner.textContent =
+          "Baza skojarzen niedostepna: " + (STATE.queueError || "sqlite_error");
+      } else if (STATE.source === "grid_fallback") {
         banner.hidden = false;
         banner.textContent =
           "Brak pending w bazie — pokazuję grafiki Branding bez skojarzeń. Wyszukaj produkt po prawej i zatwierdź.";

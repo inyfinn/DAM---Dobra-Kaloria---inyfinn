@@ -1,6 +1,6 @@
 ﻿# HANDOFF — Branding / Quiz / Viz — ZAMKNIĘTE (2026-08-11)
 
-Plan recovery `dam_live_indexing_recovery` domknięty. Commity na `main` (HEAD `fb9ef83`+).
+Plan recovery `dam_live_indexing_recovery` + HANDOFF pending items domknięte.
 
 ## PASS (wdrożone + commit)
 
@@ -15,12 +15,14 @@ Plan recovery `dam_live_indexing_recovery` domknięty. Commity na `main` (HEAD `
 9. Doctrine §12: root causes zapisane w `agents/shared/code-doctrine.md`.
 10. Repo cleanup: usunięte legacy THEME/tools/docs; `bin/` w `.gitignore`; `sync-apps-to-bin.ps1`.
 
-## PENDING (świadomie na kolejną turę)
+### PASS — tura HANDOFF 2026-08-11 (4 pending)
 
-1. Quiz E2E: pełny pipeline skan → `asset_product_links` pending (nie tylko grid fallback).
-2. Edycja tytułów w UI (admin): contenteditable / persist display name.
-3. Gazetki w UI: wyłączyć „Tylko grafiki” lub pokazać archiwum `.ai`.
-4. Runtime screenshot parity: ten sam plik offline badge Branding vs Viz modal.
+| # | Temat | Status | Dowód |
+|---|--------|--------|-------|
+| 1 | Quiz E2E `asset_product_links` | **PASS** | SQLite: `auto=9351`, `confirmed=22`; `/assoc/queue` → 200 items, banner „Kolejka pending z bazy”, sugestia `gyros-groch-niemiesne 100`. Screenshot: `scripts/qa/handoff-20260811/qa-quiz-sqlite-suggestions.png` |
+| 2 | Edycja tytułów (admin) | **PASS** | `DamModalShared.get/setAssetDisplayTitle` + `bindEditableAssetTitle` (localStorage `dam_asset_display_title:{path}`); karty branding + `#damMediaPreviewTitle` |
+| 3 | Gazetki w UI (Tylko grafiki ON) | **PASS** | Bypass archiwum + źródeł (.ai) przy aktywnym wyszukiwaniu; „gazetka” → 2 elementy / 13 plików. Screenshot: `scripts/qa/handoff-20260811/qa-gazetka-pass.png` |
+| 4 | Offline badge parity | **PASS** | Wspólny `DamModalShared.applyThumbAvailabilityFallback` → `GET /file-availability` w Branding (`__damBrandingThumbFallback`) i modal (`__damMediaPreviewFallback`); etykiety `DamPreviewTruth.onErrorTitle` |
 
 ## Po `git pull`
 
@@ -35,5 +37,7 @@ Plan recovery `dam_live_indexing_recovery` domknięty. Commity na `main` (HEAD `
 - `apps/web/assets/js/dam-branding.js`
 - `apps/web/assets/js/dam-assoc-quiz.js`
 - `apps/web/assets/js/dam-viz.js`
+- `apps/web/assets/js/dam-modal-shared.js`
+- `apps/web/assets/js/dam-media-preview.js`
 - `apps/desktop/local_bridge.py`
 - `apps/web/scripts/build-branding-grid-index.py`

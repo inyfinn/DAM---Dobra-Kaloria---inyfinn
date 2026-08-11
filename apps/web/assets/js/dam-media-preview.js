@@ -4456,13 +4456,24 @@
     };
 
     window.__damMediaPreviewFallback = function (img) {
-      if (!img || img.dataset.fallbackTried) {
+      if (!img) return;
+      var path = img.getAttribute("data-path") || "";
+      if (
+        window.DamModalShared &&
+        typeof window.DamModalShared.applyThumbAvailabilityFallback === "function"
+      ) {
+        window.DamModalShared.applyThumbAvailabilityFallback(img, path, {
+          liveUrl: path ? previewUrl(path) : "",
+          placeholder: PLACEHOLDER_SVG,
+        });
+        return;
+      }
+      if (img.dataset.fallbackTried) {
         img.onerror = null;
         img.src = PLACEHOLDER_SVG;
         return;
       }
       img.dataset.fallbackTried = "1";
-      var path = img.getAttribute("data-path");
       if (path) {
         img.src = previewUrl(path);
         return;
@@ -5455,7 +5466,54 @@
           title.innerHTML = titleHtml(a.name, a.id);
         } else {
           /* Branding: title = basename bez .ext (ext jako chip), filename poniżej. */
-          title.innerHTML = titleHtml(a.name, a.id);
+          var nameParts = splitNameExt(a.name || a.id || "Material");
+          var brandingBase =
+            window.DamModalShared &&
+            typeof window.DamModalShared.getAssetDisplayTitle === "function"
+              ? window.DamModalShared.getAssetDisplayTitle(
+                  a,
+                  nameParts.base || a.name || a.id
+                )
+              : nameParts.base || a.name || a.id;
+          var brandingExtTag = nameParts.ext
+            ? '<span class="dam-media-preview__ext-tag ' +
+              extTagClass(nameParts.ext) +
+              '">' +
+              esc(nameParts.ext.toUpperCase()) +
+              "</span>"
+            : "";
+          function paintBrandingTitle(next) {
+            var p = splitNameExt(a.name || a.id || "Material");
+            var extTag = p.ext
+              ? '<span class="dam-media-preview__ext-tag ' +
+                extTagClass(p.ext) +
+                '">' +
+                esc(p.ext.toUpperCase()) +
+                "</span>"
+              : "";
+            title.innerHTML =
+              '<span class="dam-media-preview__title-base">' + esc(next) + "</span>" + extTag;
+          }
+          paintBrandingTitle(brandingBase);
+          if (
+            window.DamModalShared &&
+            typeof window.DamModalShared.bindEditableAssetTitle === "function"
+          ) {
+            (function bindBrandingTitleEdit() {
+              var titleBaseEl = title.querySelector(".dam-media-preview__title-base");
+              if (!titleBaseEl) return;
+              titleBaseEl.removeAttribute("data-editable-title-bound");
+              window.DamModalShared.bindEditableAssetTitle(
+                titleBaseEl,
+                a,
+                nameParts.base || a.name,
+                function (next) {
+                  paintBrandingTitle(next);
+                  bindBrandingTitleEdit();
+                }
+              );
+            })();
+          }
         }
       }
       setFilenameLine(a.path || "", a.name || "");
