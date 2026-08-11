@@ -485,6 +485,12 @@
     return true;
   }
 
+  function polishStemToken(t) {
+    var s = String(t || "").toLowerCase();
+    if (s.length < 5) return s;
+    return s.replace(/(owych|owymi|owymi|owie|ami|ach|owi|owe|owy|owa|ego|emu|ymi|ym|ich|ych|ej|ą|ę|e|y|a)$/i, "");
+  }
+
   var SEARCH_SYNONYM_MAP = {
     gazetki: ["gazetka", "gazetk"],
     gazetka: ["gazetki", "gazetk"],
