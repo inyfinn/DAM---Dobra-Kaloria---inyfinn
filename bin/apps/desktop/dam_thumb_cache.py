@@ -1,7 +1,7 @@
 """
 Disk thumb cache under {repo}/PAMIEC-PODRECZNA (D: only).
 
-Key = sha256(marketing_relative + mtime + profile). Prefer AVIF q~35, JPEG fallback.
+Key = sha256(marketing_relative + mtime + profile). Prefer AVIF q~30, JPEG fallback.
 NEVER write cache under X:/ or M:/.
 
 Redis role: thumb-cache key→path (metadata accelerator only).
@@ -147,13 +147,13 @@ def _encode_thumb(src: str, dest_avif: Path, dest_jpg: Path, max_side: int) -> t
             if max(im.size) > max_side:
                 im.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
 
-            # Prefer AVIF ~q35
+            # Prefer AVIF ~q30 (fast grid cards, progressive upgrade via /media in modal)
             try:
                 rgba_or_rgb = im
                 if rgba_or_rgb.mode not in ("RGB", "RGBA"):
                     rgba_or_rgb = rgba_or_rgb.convert("RGBA" if "A" in im.getbands() else "RGB")
                 dest_avif.parent.mkdir(parents=True, exist_ok=True)
-                rgba_or_rgb.save(dest_avif, format="AVIF", quality=35)
+                rgba_or_rgb.save(dest_avif, format="AVIF", quality=30)
                 if dest_avif.is_file() and dest_avif.stat().st_size > 0:
                     return dest_avif, "image/avif"
             except Exception:

@@ -6364,8 +6364,11 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, list_folder_browse(path, mode=mode))
             return
         if parsed.path in ("/db/status", "/pg/status"):
-            # Pill "Baza online/offline" - bez Bearera (localhost)
-            self._json(200, dam_db.status() if dam_db else {"ok": False, "error": "dam_db_missing"})
+            # Pill "Baza online/offline" - bez Bearera (localhost); cache 30s (status_light)
+            self._json(
+                200,
+                dam_db.status_light() if dam_db else {"ok": False, "error": "dam_db_missing"},
+            )
             return
         if parsed.path == "/db/ping":
             self._json(200, dam_db.ping() if dam_db else {"ok": False, "error": "dam_db_missing"})
@@ -6409,8 +6412,9 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(500, {"ok": False, "error": "dam_thumb_cache_missing"})
                 return
             root = dam_thumb_cache.cache_root()
+            thumbs_dir = root / "thumbs"
             try:
-                files = list(root.glob("*")) if root.is_dir() else []
+                files = list(thumbs_dir.glob("*")) if thumbs_dir.is_dir() else []
                 avif_n = sum(1 for p in files if p.suffix.lower() == ".avif")
                 jpg_n = sum(1 for p in files if p.suffix.lower() == ".jpg")
             except OSError:
@@ -6420,11 +6424,13 @@ class Handler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "root": str(root),
-                    "exists": root.is_dir(),
+                    "thumbs_dir": str(thumbs_dir),
+                    "exists": thumbs_dir.is_dir(),
                     "files": len(files),
                     "avif": avif_n,
                     "jpg": jpg_n,
                     "module": True,
+                    "warm": dam_thumb_cache.warm_status(),
                 },
             )
             return

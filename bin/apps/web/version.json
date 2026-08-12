@@ -1,9 +1,9 @@
 {
-  "version": "5.0.137",
+  "version": "5.0.138",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-08-12",
-  "note": "5.0.137: logowanie tylko email+hasło (ukryte imię). 5.0.136: db ping, telemetria, debug daemon.",
+  "note": "5.0.138: thumb-cache AVIF q30 cache-first na kartach Viz, warm po renderze, status_light na /db/status. 5.0.137: logowanie email+hasło.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

@@ -695,7 +695,8 @@
   function enrichVizRowFromProducts(data, row) {
     /* Re-pick wizki path with carrier-aware rule (KAR6X -> FRONT-L). */
     var v = Object.assign({}, row);
-    var preserveCardThumb = hasStaticDataThumb(v);
+    var preserveCardThumb =
+      hasStaticDataThumb(v) && global.DAM_DISABLE_THUMB_WARM;
     var cardThumb = preserveCardThumb ? String(v.thumb_url) : "";
     var pid = v.product_id;
     var ib = resolveIndexBase(v);
@@ -784,14 +785,20 @@
 
   function cardThumbSrc(v) {
     if (!v) return "";
+    syncKar6xFrontThumb(v);
+    /* Cache-first: AVIF ~30% z PAMIEC-PODRECZNA (instant paint); static data/thumbs = fallback. */
+    if (
+      v.path &&
+      !global.DAM_DISABLE_THUMB_WARM &&
+      global.DamPreviewTruth &&
+      typeof DamPreviewTruth.thumbCacheUrl === "function"
+    ) {
+      var cached = DamPreviewTruth.thumbCacheUrl(v.path, "grid");
+      if (cached) return cached;
+    }
     if (hasStaticDataThumb(v)) {
       var staticThumb = String(v.thumb_url).replace(/^\.\//, "");
       return staticThumb;
-    }
-    syncKar6xFrontThumb(v);
-    if (v.path && global.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
-      var cached = DamPreviewTruth.thumbCacheUrl(v.path, "grid");
-      if (cached) return cached;
     }
     if (v.thumb_url && String(v.thumb_url).indexOf("/media?") >= 0) return v.thumb_url;
     if (isKar6xCarrier(v) && v.path && /FRONT/i.test(v.path) && !/ENFACE/i.test(v.path)) {
@@ -810,6 +817,16 @@
       return t;
     }
     return mediaPreviewUrl(v.path) || "";
+  }
+
+  function staticCardThumbFallback(v) {
+    if (!v) return "";
+    if (hasStaticDataThumb(v)) return String(v.thumb_url).replace(/^\.\//, "");
+    var idx = displayIndex(v);
+    if (idx && v.path) {
+      return thumbStem(v.product_id || v.pid || "p", idx, v.lang || "pl");
+    }
+    return "";
   }
 
   function normFolderPath(p) {
@@ -4576,6 +4593,16 @@
 
   function onThumbError(img) {
     var path = img.getAttribute("data-media-path") || "";
+    var src = img.getAttribute("src") || "";
+    var tried = img.getAttribute("data-thumb-fallback") || "";
+    if (!tried) {
+      var staticFb = img.getAttribute("data-static-thumb") || "";
+      if (staticFb && staticFb !== src) {
+        img.setAttribute("data-thumb-fallback", "static");
+        img.src = staticFb;
+        return;
+      }
+    }
     if (
       path &&
       global.DamPreviewTruth &&
@@ -4626,27 +4653,16 @@
     var items = group.items.map(applyOverrideToItem);
     var first = items[0];
     var thumbPick = null;
-    var ti;
-    for (ti = 0; ti < items.length; ti++) {
-      if (!hasStaticDataThumb(items[ti])) continue;
-      var staticCand = cardThumbSrc(items[ti]);
-      if (staticCand) {
-        thumbPick = staticCand;
+    for (var ti = 0; ti < items.length; ti++) {
+      var cand = cardThumbSrc(items[ti]);
+      if (cand) {
+        thumbPick = cand;
         first = items[ti];
         break;
       }
     }
-    if (!thumbPick) {
-      for (ti = 0; ti < items.length; ti++) {
-        var cand = cardThumbSrc(items[ti]);
-        if (cand) {
-          thumbPick = cand;
-          first = items[ti];
-          break;
-        }
-      }
-    }
     var thumb = thumbPick || cardThumbSrc(first);
+    var staticThumbFb = staticCardThumbFallback(first);
     var brand = first.brand || "DK";
     var uniq = uniqueModalVariants(items);
     var variantReps = productVariantRepresentatives(items);
@@ -4808,7 +4824,11 @@
               esc(thumb) +
               '" alt="" loading="lazy" data-media-path="' +
               esc(first.path || "") +
-              '" onerror="window.damVizThumbError(this)">'
+              '"' +
+              (staticThumbFb && staticThumbFb !== thumb
+                ? ' data-static-thumb="' + esc(staticThumbFb) + '"'
+                : "") +
+              ' onerror="window.damVizThumbError(this)">'
             : '<img class="dam-viz-thumb__img dam-viz-thumb__img--placeholder" src="' + PLACEHOLDER_SVG.replace(/"/g, "&quot;") + '" alt="">') +
         '</div>' +
         '<div class="dam-viz-card__body">' +
@@ -5084,6 +5104,19 @@
     }
 
     grid.innerHTML = groups.map(renderGroup).join("");
+    if (
+      !global.DAM_DISABLE_THUMB_WARM &&
+      global.DamPreviewTruth &&
+      typeof DamPreviewTruth.warmThumbs === "function"
+    ) {
+      var warmPaths = [];
+      for (var gi = 0; gi < groups.length && warmPaths.length < 40; gi++) {
+        var g0 = groups[gi];
+        var it0 = g0 && g0.items && g0.items[0];
+        if (it0 && it0.path) warmPaths.push(it0.path);
+      }
+      if (warmPaths.length) DamPreviewTruth.warmThumbs(warmPaths, "grid");
+    }
     if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
       window.DamBadges.bindClicks(grid, "viz");
     }
