@@ -1,0 +1,11 @@
+{
+  "note": "Reczne jezyki wariantu. Priorytet NAJWYZSZY - rebuild indeksu NIGDY nie nadpisuje tych wpisow (apply_lang_overrides po auto). Klucz: index (6300572.00) lub pelna sciezka revision.",
+  "policy": {
+    "auto_source": "folder_name + file_names only",
+    "no_brand_default": true,
+    "unknown_ui": "?",
+    "manual_wins": true
+  },
+  "overrides": {},
+  "updated_at": "2026-07-18T21:20:00"
+}

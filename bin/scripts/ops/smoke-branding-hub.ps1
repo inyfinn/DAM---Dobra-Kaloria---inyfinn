@@ -59,7 +59,7 @@ foreach ($route in $hubRoutes) {
 }
 
 # JSON lokalne (bez serwera)
-$repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $dataFiles = @(
     "apps/web/data/branding-index.json",
     "apps/web/data/campaigns.json",
@@ -89,3 +89,4 @@ if ($fail -gt 0) {
 }
 Write-Host "Wynik: PASS"
 exit 0
+

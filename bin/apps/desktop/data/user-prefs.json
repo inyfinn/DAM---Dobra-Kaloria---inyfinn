@@ -1,0 +1,19 @@
+{
+  "users": {
+    "krzysztof.wieczorek@kubara.pl": {
+      "prefs": {
+        "safe_delete": true,
+        "branding_page_size": 100,
+        "card_zoom": 100,
+        "assoc_split": {},
+        "explorer_show_all": false,
+        "explorer_lang_filter": "",
+        "explorer_viz_view": "tiles",
+        "explorer_viz_scale": 140,
+        "reveal_low_tags": false,
+        "sidebar_collapsed": false
+      },
+      "updated_at": "2026-08-12T07:16:55.160570+00:00"
+    }
+  }
+}

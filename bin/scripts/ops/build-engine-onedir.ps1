@@ -1,11 +1,11 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Build dam-appw.exe (PyInstaller onedir) into bin/runtime/win/dam-app/
 #>
 $ErrorActionPreference = "Stop"
 
-$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $ContentRoot = Join-Path $GitRoot "bin"
 $EngineDir = Join-Path $ContentRoot "runtime\win\dam-app"
 $Entry = Join-Path $ContentRoot "apps\desktop\engine_launcher.py"
@@ -69,3 +69,4 @@ if (Test-Path $built) {
 }
 if (-not (Test-Path $target)) { throw "Brak $target po build" }
 Write-Host "OK engine: $target"
+

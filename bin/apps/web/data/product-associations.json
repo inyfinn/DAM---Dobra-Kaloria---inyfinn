@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "updated_at": "2026-07-19T14:30:00+02:00",
+  "products": {
+    "babka-cytrynowa-nerkowcowy": {
+      "terms": ["nerkowiec", "nerkowcowy", "cytryna", "cytrynowa", "babka"],
+      "dishes": ["babka cytrynowa"],
+      "ingredients": ["nerkowiec", "cytryna"]
+    },
+    "dk-doy-datesy-karmel-100-g": {
+      "terms": ["dates", "datesy", "karmel", "karmelowy", "daktyle"],
+      "dishes": [],
+      "ingredients": ["karmel", "daktyle"]
+    },
+    "mix-6x-mini-batoniki-mixy": {
+      "terms": [
+        "mini batoniki",
+        "mini-batoniki",
+        "mini baton",
+        "batoniki",
+        "postanowienia",
+        "zadan specjalnych",
+        "wielkanoc",
+        "zdrowych swiat",
+        "dpd pickup",
+        "pysznosci",
+        "swiateczne pysz"
+      ],
+      "dishes": [],
+      "ingredients": []
+    },
+    "paczek-rozany-nerkowcowy": {
+      "terms": ["paczek rozany", "pączek różany", "paczek roz"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "ciasto-porzeczkowe-nerkowcowy": {
+      "terms": ["czarna porzeczka", "porzeczka", "ciasto porzeczkowe"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "blackcurrant-cake-cashews": {
+      "terms": [
+        "blackcurrant cake",
+        "blackcurrant",
+        "ciasto porzeczkowe",
+        "delight mini bars",
+        "mini bars with cashews"
+      ],
+      "dishes": ["blackcurrant cake"],
+      "ingredients": ["cashews", "porzeczka"]
+    },
+    "banoffee-kakao-deserowe": {
+      "terms": ["banoffee", "banoffee kakao"],
+      "dishes": ["deser"],
+      "ingredients": []
+    },
+    "tiramisu-czekolada-kakao-deserowe": {
+      "terms": ["tiramisu", "tiramisu czekolada"],
+      "dishes": ["deser"],
+      "ingredients": []
+    },
+    "tarta-malinowa-nerkowcowy": {
+      "terms": ["tarta malinowa", "malinowa tarta"],
+      "dishes": [],
+      "ingredients": ["malina"]
+    },
+    "muffin-jagodowy-nerkowcowy": {
+      "terms": ["muffin jagodowy", "jagodowy muffin"],
+      "dishes": [],
+      "ingredients": ["jagoda"]
+    },
+    "sernik-waniliowy-nerkowcowy": {
+      "terms": ["sernik waniliowy", "waniliowy sernik"],
+      "dishes": [],
+      "ingredients": ["wanilia"]
+    },
+    "daktyl-wisnia-raw": {
+      "terms": ["daktyl wisnia", "kakao wisnia", "kulki raw kakao", "raw kakao wisnia"],
+      "dishes": [],
+      "ingredients": ["wisnia", "kakao"]
+    },
+    "jab-ko-cynamon-daktylowy": {
+      "terms": ["jablko cynamon", "jabłko cynamon"],
+      "dishes": [],
+      "ingredients": ["cynamon", "jablko"]
+    },
+    "falafel-niemiesne": {
+      "terms": ["falafel", "kofta"],
+      "dishes": ["falafel"],
+      "ingredients": []
+    },
+    "nuggets-niemiesne": {
+      "terms": ["nuggets", "nuggetsy", "swietuj"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "rogal-poznanski-nerkowcowy": {
+      "terms": ["rogal poznanski", "rogal poznański", "rogal"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "kielbaska-wegierska-niemiesne": {
+      "terms": ["kielbaska wegierska", "kielbaski wegierskie", "wegierska", "hot dog"],
+      "dishes": ["hot dog"],
+      "ingredients": []
+    },
+    "kielbaska-klasyczna-niemiesne": {
+      "terms": ["kielbaski", "kielbaska klasyczna"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "kielbasa-grill-niemiesne": {
+      "terms": ["grill", "grillowane"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "kielbaska-chipotle-cheddar-niemiesne": {
+      "terms": ["chipotle", "cheddar"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "parowka-roslinna-niemiesne": {
+      "terms": ["parowka", "parówka", "parowki", "parówki"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "roladka-wo-owa-niemiesne": {
+      "terms": ["rolada", "roladka"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "mix-na-grill-slaska-kaszanka-niemiesne": {
+      "terms": ["kaszanka", "grill mix"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "mix-tuba-30-szt-xmas-mixy": {
+      "terms": ["swieta", "święta", "xmas", "boze narodzenie"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "mix-kalendarz-adwentowy-mixy": {
+      "terms": ["adwent", "kalendarz adwentowy", "swieta"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "mix-zestaw-makowiec-x-rogal-x-piernik-mixy": {
+      "terms": ["prezent", "ksiazka", "książka", "super prezent"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "burger-klasyczny-niemiesne": {
+      "terms": ["burger", "dzien bez miesa"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "orzech-czekolada-daktylowy": {
+      "terms": ["back to school", "orzech czekolada"],
+      "dishes": [],
+      "ingredients": []
+    },
+    "chrupiacy-orzech-daktylowy": {
+      "terms": ["back to school", "chrupiacy orzech"],
+      "dishes": [],
+      "ingredients": []
+    }
+  },
+  "reverse": {
+    "sliwka": ["ciasto-sliwkowe-kruszonka"],
+    "sliweczka": ["ciasto-sliwkowe-kruszonka"],
+    "sliwkowe": ["ciasto-sliwkowe-kruszonka"],
+    "kruszonka": ["ciasto-sliwkowe-kruszonka"],
+    "kruche ciasto": ["ciasto-sliwkowe-kruszonka"],
+    "jablko": ["jablko-cynamon"],
+    "jablecznik": ["jablko-cynamon"],
+    "szarlotka": ["jablko-cynamon"],
+    "cynamonka": ["jablko-cynamon"],
+    "nerkowiec": ["babka-cytrynowa-nerkowcowy"],
+    "cytrynowa": ["babka-cytrynowa-nerkowcowy"],
+    "2f": ["dk-doy-datesy-karmel-100-g"],
+    "2x12": ["dk-doy-datesy-karmel-100-g"],
+    "2×12": ["dk-doy-datesy-karmel-100-g"],
+    "kielbaski": ["kielbaska-wegierska-niemiesne", "kielbaska-klasyczna-niemiesne"],
+    "kielbaska": ["kielbaska-wegierska-niemiesne", "kielbaska-klasyczna-niemiesne"],
+    "wegierska": ["kielbaska-wegierska-niemiesne"],
+    "wegierskiej": ["kielbaska-wegierska-niemiesne"],
+    "deserowe": ["banoffee-kakao-deserowe", "tiramisu-czekolada-kakao-deserowe"],
+    "tarta malinowa": ["tarta-malinowa-nerkowcowy"],
+    "muffin jagodowy": ["muffin-jagodowy-nerkowcowy"],
+    "sernik waniliowy": ["sernik-waniliowy-nerkowcowy"],
+    "daktyl wisnia": ["daktyl-wisnia-raw"],
+    "kakao wisnia": ["daktyl-wisnia-raw"],
+    "jablko cynamon": ["jab-ko-cynamon-daktylowy"],
+    "rolada": ["parowka-roslinna-niemiesne", "roladka-wo-owa-niemiesne"],
+    "parowki": ["parowka-roslinna-niemiesne"],
+    "parowka": ["parowka-roslinna-niemiesne"],
+    "falafel": ["falafel-niemiesne"],
+    "kofta": ["falafel-niemiesne"],
+    "grill": ["kielbasa-grill-niemiesne", "mix-na-grill-slaska-kaszanka-niemiesne"],
+    "kaszanka": ["mix-na-grill-slaska-kaszanka-niemiesne"],
+    "chipotle": ["kielbaska-chipotle-cheddar-niemiesne"],
+    "postanowienia": ["mix-6x-mini-batoniki-mixy"],
+    "noworoczne": ["mix-6x-mini-batoniki-mixy"],
+    "back to school": ["orzech-czekolada-daktylowy", "chrupiacy-orzech-daktylowy"],
+    "swietuj": ["nuggets-niemiesne"],
+    "nuggets": ["nuggets-niemiesne"],
+    "rogal poznanski": ["rogal-poznanski-nerkowcowy"],
+    "swieta": ["mix-tuba-30-szt-xmas-mixy", "mix-kalendarz-adwentowy-mixy"],
+    "ksiazka": ["mix-zestaw-makowiec-x-rogal-x-piernik-mixy", "mix-6x-mini-batoniki-mixy"],
+    "prezent": ["mix-zestaw-makowiec-x-rogal-x-piernik-mixy", "mix-6x-mini-batoniki-mixy"],
+    "wielkanoc": ["mix-6x-mini-batoniki-mixy"],
+    "zdrowych swiat": ["mix-6x-mini-batoniki-mixy"],
+    "dpd pickup": ["mix-6x-mini-batoniki-mixy"],
+    "pysznosci": ["mix-6x-mini-batoniki-mixy"],
+    "mini baton": ["mix-6x-mini-batoniki-mixy"],
+    "paczek rozany": ["paczek-rozany-nerkowcowy", "mix-6x-mini-batoniki-mixy"],
+    "czarna porzeczka": ["ciasto-porzeczkowe-nerkowcowy", "mix-6x-mini-batoniki-mixy"]
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "ok": true,
+  "segment": "WWW grafiki zestawow + slidery (missing SKU, weak/empty links), limit 12",
+  "full_batch_deferred": true,
+  "full_batch_reason": "56822 assets; OLMOCR2 HF ~30-60s/img = days; expand after adequacy tune",
+  "engine": "olmocr2",
+  "count": 12,
+  "pass": 9,
+  "fail_no_match": 2,
+  "locked": 1,
+  "results": [
+    {
+      "id": "br-005067",
+      "verdict": "LOCKED",
+      "top": "blackcurrant-cake-cashews",
+      "score": 96,
+      "reason": "ocr_line_phrase:blackcurrant cake",
+      "chars": 228,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-005033",
+      "verdict": "PASS",
+      "top": "daktyl-limonka-raw",
+      "score": 93,
+      "reason": "ocr_line_phrase:kulki limonka",
+      "chars": 184,
+      "engine": "olmocr2",
+      "adequacy_rev": 3
+    },
+    {
+      "id": "br-005049",
+      "verdict": "PASS",
+      "top": "mango-lassi-nerkowcowy",
+      "score": 99,
+      "reason": "ocr_line_phrase:mango lassi",
+      "chars": 206,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-005058",
+      "verdict": "PASS",
+      "top": "kokos-czekolada-daktylowy",
+      "score": 99,
+      "reason": "ocr_line_phrase:kokos czekolada",
+      "chars": 321,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-005091",
+      "verdict": "PASS",
+      "top": "kokos-czekolada-daktylowy",
+      "score": 99,
+      "reason": "ocr_line_phrase:kokos czekolada",
+      "chars": 284,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-005094",
+      "verdict": "PASS",
+      "top": "owies-czekolada-sniadanie",
+      "score": 55,
+      "reason": "token_plus_context:czekolada",
+      "chars": 170,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-005096",
+      "verdict": "PASS",
+      "top": "mix-6x-mini-batoniki-mixy",
+      "score": 96,
+      "reason": "ocr_line_phrase:mini batoniki",
+      "chars": 265,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-005097",
+      "verdict": "PASS",
+      "top": "muffin-jagodowy-nerkowcowy",
+      "score": 99,
+      "reason": "ocr_line_phrase:muffin jagodowy",
+      "chars": 500,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-005099",
+      "verdict": "PASS",
+      "top": "mix-6x-mini-batoniki-mixy",
+      "score": 93,
+      "reason": "ocr_line_phrase:mini batoniki",
+      "chars": 38,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-005101",
+      "verdict": "FAIL_NO_MATCH",
+      "top": null,
+      "score": null,
+      "reason": null,
+      "chars": 45,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-005109",
+      "verdict": "PASS",
+      "top": "orzech-laskowy-daktylowy",
+      "score": 99,
+      "reason": "ocr_line_phrase:orzech laskowy",
+      "chars": 166,
+      "engine": "olmocr2"
+    },
+    {
+      "id": "br-003871",
+      "verdict": "FAIL_NO_MATCH",
+      "top": null,
+      "score": null,
+      "reason": null,
+      "chars": 217,
+      "engine": "olmocr2"
+    }
+  ],
+  "finished_at": "2026-08-03T15:09:46.185661+00:00",
+  "notes": [
+    "SHOP404317 remap after rebuild: br-005067/68/69; override remapped; linked=[blackcurrant-cake-cashews]",
+    "UTF-8 fix in dam_olmocr2 subprocess encoding (empty_stdout on cp1250)",
+    "2026-08-03 adequacy rev3: ultra-generic phrases (plant based/vegan/bio/natural/brand) down-weighted; br-005033 Kulki Limonka -> daktyl-limonka-raw (93), burgers no longer top"
+  ],
+  "adequacy_rev3_at": "2026-08-03T15:13:45.611438+00:00"
+}

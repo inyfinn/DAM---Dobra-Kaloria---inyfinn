@@ -1,0 +1,1874 @@
+{
+  "version": 18,
+  "title_pl": "Instrukcje programu DAM",
+  "updated_at": "2026-08-10T14:15:00+02:00",
+  "instructions": [
+    {
+      "id": "branding.grid_no_wizki_visuals_packshot",
+      "priority": "critical",
+      "title_pl": "Branding grid bez WIZKI/VISUALS/packshot",
+      "category": "branding",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Siatka Branding (grid/head/UI) NIE pokazuje assetow WIZKI, VISUALS ani roli packshot.",
+        "Predykat wspolny: source=wizki, asset_role=packshot, tag WIZKI, sciezki 4 - WIZKI / 4 - VISUALS.",
+        "Fat branding-index.json ZACHOWUJE te rekordy (OCR, lookup, /branding/asset).",
+        "UI laduje tylko branding-grid-head + branding-grid-index; nigdy fat na hot path."
+      ],
+      "must_not": [
+        "Renderowac packshoty / wizualizacje produktowe (WIZKI) w pierwszej warstwie Brandingu.",
+        "Usuwac WIZKI z fat branding-index przy rebuildzie.",
+        "Ladowac branding-index.json w UI bez ?full=1."
+      ],
+      "related_code": [
+        "apps/web/scripts/build-branding-grid-index.py",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/desktop/local_bridge.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: Branding grid bez WIZKI/VISUALS/packshot. Fat index zostaje zapleczem lookup."
+    },
+    {
+      "id": "index.continuous_auto_indexing",
+      "priority": "critical",
+      "title_pl": "Ciagle automatyczne indeksowanie podczas pracy",
+      "category": "indexing",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Indeksy produktowe (file-index/search-index/thumbs) aktualizuja sie automatycznie podczas pracy aplikacji.",
+        "Watcher i reczny rebuild wspoldziela O_EXCL lock (PID/started_at/stage/TTL) ze stale recovery.",
+        "Status /index/status ujawnia watcher_ok, last_ok/error/rc, stan stale - bez cichego DEVNULL jako jedynego zrodla bledu.",
+        "Log i status w gitignored apps/desktop/data (rotowany)."
+      ],
+      "must_not": [
+        "Ukrywac bledy rebuildu przez stdout/stderr=DEVNULL bez rotowanego logu.",
+        "Uruchamiac niekontrolowany pelny skan Marketing przed zdobyciem locka i zapisem statusu.",
+        "Traktowac file-index jako niezmienny po starcie sesji."
+      ],
+      "related_code": [
+        "apps/web/scripts/watch-file-index.py",
+        "apps/web/scripts/build-file-index.py",
+        "apps/desktop/index_supervisor.py",
+        "apps/desktop/local_bridge.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: indeksy zyja podczas pracy; błędy watchera widoczne w statusie/logu."
+    },
+    {
+      "id": "index.supervisor_singleton_bridge_owned",
+      "priority": "critical",
+      "title_pl": "Jeden supervisor indeksow (bridge owner)",
+      "category": "indexing",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Jeden supervisor indeksow dziala zarowno dla launch.py jak i serve_browser.py.",
+        "Preferowany wlasciciel: local_bridge; singleton cross-process (lock PID) zapobiega duplikatom.",
+        "Kolejki: produktowa (file-index) i brandingowa (fat->grid) z debounce."
+      ],
+      "must_not": [
+        "Startowac drugi niezalezny watch-file-index z launch.py gdy bridge juz supervisuje.",
+        "Tworzyc zombie-duplikaty watcherow."
+      ],
+      "related_code": [
+        "apps/desktop/index_supervisor.py",
+        "apps/desktop/local_bridge.py",
+        "apps/desktop/launch.py",
+        "apps/desktop/serve_browser.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: bridge jest wlascicielem supervisora indeksow; launch/serve_browser nie dubluja."
+    },
+    {
+      "id": "assoc.sqlite_sot_unified_write",
+      "priority": "critical",
+      "title_pl": "SQLite SoT skojarzen - jedna sciezka zapisu",
+      "category": "assoc",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Zrodlo prawdy skojarzen: SQLite asset_product_links (ADR-010).",
+        "Quiz i reczny editor zapisuja przez jedna funkcje repozytorium; JSON override = lustro kompatybilnosci.",
+        "Po decyzji: debounced slim publish (--from-sqlite), bez pelnego fat rebuild.",
+        "/health i /branding/status ujawniaja counts statusow i bledy schematu - nie maskuja jako pusta kolejka."
+      ],
+      "must_not": [
+        "Zapisac decyzje quiz/editor tylko do JSON z pominieciem SQLite.",
+        "Nadpisywac confirmed/rejected przy seedzie pending/auto.",
+        "Seedowac masowo bez dry-run walidacji asset_id/product_id.",
+        "Uzywac Postgres/Redis jako SoT skojarzen."
+      ],
+      "related_code": [
+        "apps/desktop/assoc_repo.py",
+        "apps/desktop/branding_asset_routes.py",
+        "apps/desktop/scripts/seed-asset-product-links.py",
+        "apps/desktop/local_bridge.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: SQLite SoT + mirror override; seed tylko po dry-run/bramce jakosci."
+    },
+    {
+      "id": "assoc.seed_dry_run_gate",
+      "priority": "critical",
+      "title_pl": "Seed pending: dry-run i bramka jakosci",
+      "category": "assoc",
+      "updated_at": "2026-08-10",
+      "must": [
+        "Przed seedem refilter-pending: waliduj asset_id vs fat index i product_id vs file-index.",
+        "Raportuj odrzucone i probke jakosci; przy niskiej jakosci tylko dry-run + bramka, bez masowego insertu.",
+        "Seed transakcyjny idempotentny; confirmed/rejected nietkniete.",
+        "Generalna kwarantanna spray: grupy product_id przy progach share>=0.15 i n>=80 oraz token_plus_context dominance (grupy n>=80) bez mocnego OCR/SKU/multi_token usuwane z accepted_rows (rejected/quarantined w raporcie); bez hardcode product_id; bez --force.",
+        "Po kwarantannie: jesli gate formalnie OK, ale sample paths nieadekwatne (sibling/mixed, keyword-only), NIE --apply.",
+        "Tryb jawny --strong-only: seed tylko z live fat+file via assoc_adequacy sku_match lub ocr_line_phrase (nie path/generic_plus/multi_token/token_plus_context); status=auto dla siatki; /assoc/queue serwuje pending+auto."
+      ],
+      "must_not": [
+        "Wprowadzac masowo ~4974 pending bez walidacji i zatwierdzenia jakosci.",
+        "Kasowac istniejace confirmed przy seedzie.",
+        "Omijac kwarantanne spray przez --force bez human review.",
+        "Hardcodowac pojedyncze product_id (np. burger) w validatorze seed.",
+        "Seedowac token_plus_context / sibling keyword jako pending/auto bez --strong-only SKU/OCR."
+      ],
+      "related_code": [
+        "apps/desktop/scripts/seed-asset-product-links.py",
+        "apps/web/scripts/assoc_adequacy.py",
+        "apps/desktop/branding_asset_routes.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-10: dry-run/bramka + kwarantanna + --strong-only (SKU/OCR live). Artifact refilter keyword-only nie seedujemy."
+    },
+    {
+      "id": "branding.quiz_viz_handoff_20260806",
+      "priority": "critical",
+      "title_pl": "Handoff Branding/Quiz/Viz — nastepna wiadomosc = naprawa",
+      "category": "branding",
+      "updated_at": "2026-08-06",
+      "must": [
+        "Przed pracą nad Branding/Quiz/Viz przeczytaj HANDOFF-BRANDING-QUIZ-VIZ.md (GIT_ROOT).",
+        "Jakakolwiek wiadomość użytkownika o Brandingu, Quizie skojarzeń, Wizualizacjach, miniaturach Datesy, mapowaniu skojarzeń lub „napraw” = kontynuuj listę NIE OK z handoff (runtime QA screenshot, pipeline pending assoc, thumbs jeśli nadal Brak miniatury).",
+        "OK już w kodzie: head grafik (nie PDF empty-role), tytuły z nazwy pliku nie folderu-kubełka, quiz tylko admin+toggle, fallback kolejki z siatki, viz thumb onerror→/media.",
+        "Nie zamykaj jako done bez Ctrl+F5 + screenshot+Read Branding i Viz."
+      ],
+      "must_not": [
+        "Uznawać handoff za zamknięty tylko dlatego że kod jest w git.",
+        "Ładować fat branding-index.json na hot path UI.",
+        "Pokazywać Quiz skojarzeń użytkownikowi bez roli admin + dam_admin_mode=1.",
+        "Używać nazwy folderu numerowanego (01- CHŁODZONE) jako tytułu karty Branding."
+      ],
+      "related_code": [
+        "HANDOFF-BRANDING-QUIZ-VIZ.md",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-assoc-quiz.js",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/scripts/build-branding-grid-index.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-06: częściowy fix Branding/Quiz/Viz. Następny agent naprawia NIE OK z HANDOFF-BRANDING-QUIZ-VIZ.md."
+    },
+    {
+      "id": "workspace.layout_bin",
+      "priority": "critical",
+      "title_pl": "Layout GIT_ROOT + bin CONTENT_ROOT",
+      "category": "workspace",
+      "updated_at": "2026-08-06",
+      "must": [
+        "GIT_ROOT = katalog z .git i DAM.exe (obecnie D:\\Marketing\\...\\DAM---Dobra-Kaloria---inyfinn).",
+        "CONTENT_ROOT = GIT_ROOT\\bin (apps, THEME, memory, runtime, scripts).",
+        "runtime_config: CONTENT_ROOT = DESKTOP_DIR.parent.parent; GIT_ROOT = CONTENT_ROOT.parent; git cwd = GIT_ROOT.",
+        "Launcher: DAM.exe lub DAM.cmd -> bin\\runtime\\win\\python\\pythonw.exe + bin\\apps\\desktop\\launch.py."
+      ],
+      "must_not": [
+        "Zakladac ze apps/ lezy na wierzchu GIT_ROOT jako kanoniczna tresc (to moze byc tylko junction/lustro).",
+        "Uruchamiac git w CONTENT_ROOT (bin) zamiast GIT_ROOT.",
+        "Wymagac systemowego Python w PATH dla uzytkownika koncowego."
+      ],
+      "related_code": [
+        "bin/apps/desktop/runtime_config.py",
+        "bin/apps/desktop/dam_root_launcher.py",
+        "DAM.cmd"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-06: primary workspace D: (nie P:\\DAM). Portable = bin/runtime/win."
+    },
+    {
+      "id": "runtime.portable_embed_path",
+      "priority": "critical",
+      "title_pl": "Embeddable Python: sys.path entry scripts",
+      "category": "runtime",
+      "updated_at": "2026-08-06",
+      "must": [
+        "Entry points launch.py / serve_browser.py / local_bridge.py wstawiaja katalog desktop do sys.path (embed ._pth nie dodaje cwd).",
+        "DAM.exe / DAM.cmd preferuje wylacznie bin\\runtime\\win\\python\\pythonw.exe.",
+        "Deps (pywebview, bcrypt, Pillow, ...) w bin\\runtime\\win\\python\\Lib\\site-packages (vendor-runtime-win.ps1)."
+      ],
+      "must_not": [
+        "Liczyc na PYTHONPATH przy embeddable (jest ignorowany gdy istnieje python*._pth).",
+        "Wymagac pip install na maszynie uzytkownika / MsgBox Zainstaluj Python."
+      ],
+      "related_code": [
+        "bin/apps/desktop/launch.py",
+        "bin/scripts/ops/vendor-runtime-win.ps1"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "Root cause 2026-08-06: ModuleNotFoundError bridge_supervisor przy pythonw z bin/runtime."
+    },
+    {
+      "id": "perf.no_fat_branding_index_hotpath",
+      "priority": "critical",
+      "title_pl": "Zakaz hot-path branding-index.json (~340MB)",
+      "category": "performance",
+      "updated_at": "2026-08-06",
+      "must": [
+        "Cold UI: branding-grid-head.json + branding-grid-index.json (lub bridge /branding-grid-*).",
+        "Modal/asset: GET /branding/asset?id= lub /branding-for-product.",
+        "UI :8765 i bridge :8766 odmawiaja pelnego branding-index bez ?full=1 (403 use_branding_grid_index).",
+        "Cel cold open kart: <1s na lokalnym dysku (grid-head <100ms)."
+      ],
+      "must_not": [
+        "fetch/parse data/branding-index.json ani GET /branding-index bez ?full=1 w sciezce UI.",
+        "Serwowac backupy branding-index.* do przegladarki jako normalny asset."
+      ],
+      "related_code": [
+        "bin/apps/web/assets/js/dam-branding.js",
+        "bin/apps/web/assets/js/dam-media-preview.js",
+        "bin/apps/desktop/dam_ui_http.py",
+        "bin/apps/desktop/local_bridge.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "RC 2026-08-06: pierwsze 32MB fat index = 4.1s I/O; grid-head 0.02s. Regresja vs ~1.5 tyg. temu = rozrost indeksu + sciezki full dump."
+    },
+    {
+      "id": "db.sqlite_only_until_synology",
+      "priority": "critical",
+      "title_pl": "Tylko SQLite do powrotu Synology",
+      "category": "database",
+      "updated_at": "2026-08-06",
+      "must": [
+        "Silnik lokalny: SQLite (bin/apps/desktop/data/dam-local.sqlite).",
+        "dam_db mode = sqlite (nie auto/pg) az do Postgres na NAS."
+      ],
+      "must_not": [
+        "Wymagac lokalnego Postgresa do startu aplikacji.",
+        "Obiecywac multi-PC live bez Synology + PG na NAS.",
+        "Syncowac pliku .sqlite przez Drive/udzial jako wspolna baze."
+      ],
+      "related_code": [
+        "bin/apps/desktop/dam_db.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "Decyzja planu dam_bin_layout 2026-08-03; potwierdzona 2026-08-06."
+    },
+    {
+      "id": "assoc.no_sibling_spray_mixed",
+      "priority": "critical",
+      "title_pl": "Zakaz sibling spray w SLIDERY / mixed",
+      "category": "assoc",
+      "updated_at": "2026-08-05",
+      "must": [
+        "W SLIDERY / KATEGORIE GLOWNE / folderach mixed: linked_product_ids tylko per-plik (name+OCR+SKU / path_hints wlasne), NIE kopiuj folder_linked_product_ids na siblings.",
+        "Kulki nie moga dostac mix-6x-mini-batoniki-mixy ze sprayu folderu.",
+        "Path hint folder-level OK tylko gdy folder jednoznacznie jednego produktu; mixed_depth => bez sprayu blobu grupy."
+      ],
+      "must_not": [
+        "Kopiowac group_product_ids na wszystkie pliki w folderze mixed / SLIDERY.",
+        "Traktowac sibling stem jako wspolne skojarzenia produktow."
+      ],
+      "related_code": [
+        "apps/web/scripts/brand_folder_context.py",
+        "apps/web/scripts/refilter-branding-links.py"
+      ],
+      "related_kv": [
+        "program-instructions"
+      ],
+      "body_pl": "HARD 2026-08-05 Instant+assoc: root cause Kulki->MIX = sibling spray w enrich_folder_groups."
+    },
+    {
+      "id": "ui.branding_grid_graphics_sort_overflow",
+      "must": [
+        "Tylko grafiki (#damBrandingGraphicsOnly): ukrywa dokumenty, wideo, pliki zrodlowe PSD/PSB/AI/INDD/EPS (media_type=source, artwork_source) ORAZ asset_role=product_element (Element produktu); JPG z tagiem Edytowalny zostaje",
+        "Tip przelacznika: zrodla i elementy produktu ukryte; nadal dostepne po tagach Dokument / Wideo / Zrodlo / role:product_element",
+        "Etykieta PL asset_role product_element = 'Element produktu' (DamAssetTaxonomy.ASSET_ROLE_LABELS) - nigdy angielski fallback 'product element'",
+        "Sort Priorytet uzycia: folderClusterRank (www→social→campaigns→…) potem folderDepthRank (plycej wyzej), potem rok desc, rola, mtime — bez wymyslonego open-count",
+        "DamCardZoom CARD_IMG_BASE_SCALE=1 (nie 1.2); thumbs clipowane w .dam-viz-thumb (overflow/clip-path/contain:paint)"
+      ],
+      "body_pl": "HARD 2026-07-21: DamCardZoom w media-preview byl zrodlem prawdy dla --dam-viz-img-scale i trzymal 1.2 mimo fixu w dam-branding.js. Fix wlasciciela skali + weryfikacja CDP bleed.",
+      "category": "ui",
+      "must_not": [
+        "Ustawiac CARD_IMG_BASE_SCALE>1 w DamCardZoom / dam-branding gdy karta ma overflow:visible na article",
+        "Ukrywac JPG tylko dlatego ze ma badge Edytowalny",
+        "Mieszac META/kampanie 2021 na poczatku siatki przy sort=priority gdy istnieja assety WWW/E-COMMERCE"
+      ],
+      "priority": "high",
+      "title_pl": "Branding: Tylko grafiki, sort folderowy, skala thumb=1",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/css/dam-branding.css"
+      ]
+    },
+    {
+      "id": "ui.viz_modal_parity_explorer",
+      "must": [
+        "Layout kanoniczny modalu podgladu = #damVizModal .dam-viz-modal__body (Wizualizacje); #damMediaPreview .dam-viz-modal__body (Eksplorator) prezentuje sie tak samo (studio frames, spacing, hierarchia)",
+        "WARIANT produktu = inny INDEKS (pasek chipow indeks/jezyk); nigdy perspektywa FRONT/BACK/ENFACE jako 'wariant produktu'",
+        "Warianty wizualizacji = tylko 3 ramki studio: TLO | PERSPEKTYWA | JAKOSC (.dam-media-preview__studio-frame)",
+        "W Eksploratorze (#damMediaPreview): nie renderowac WARIANTY MATERIALU jako paska perspektyw tego samego produktu; perspektywy tylko w ramce PERSPEKTYWA; pasek wariantow tylko przy realnie roznych indeksach produktu",
+        "W Wizualizacjach (#damVizModal): pasek wariantow produktu (indeksy) + 3 ramki studio TLO/PERSPEKTYWA/JAKOSC",
+        "Przycisk 'Pokaz wszystkie' w modalu: pokazuje wszystkie pliki wizualizacji (z tlem/bez tla, wszystkie perspektywy i jakosci), pogrupowane ponizej, z fade-in / transition (szanuj prefers-reduced-motion)",
+        "W Brandingu WARIANTY MATERIALU (.variant-grid): tylko siblingi RASTER/VIDEO (JPG/PNG/…); PSD/PSB/AI/PDF/INDD/EPS tylko jako CTA w belce akcji (SourceMount / Przejdz Folder PSD) — wszedzie"
+      ],
+      "body_pl": "User 2026-07-21 HARD: modal Wizualizacje jest wzorcem; Eksplorator ma ten sam layout. Semantyka: wariant = produkt (indeks), nie perspektywa. Osie pliku wizualizacji = Tlo / Perspektywa / Jakosc. Pokaz wszystkie = ekspand pelnej siatki plikow z animacja. Zrodla PSD/PSB/AI/PDF nigdy jako kafelki WARIANTY — tylko podlinkowane w belce akcji.",
+      "category": "ui",
+      "must_not": [
+        "Traktowac paska perspektyw (FRONT/BACK/ENFACE) jako wariantow produktu w #damMediaPreview",
+        "Pokazywac w Eksploratorze 'WARIANTY MATERIALU' zlozonego z roznych perspektyw tego samego indeksu",
+        "Usuwac paska wariantow produktu (rozne indeksy) z #damVizModal",
+        "Mylnie nazywac JAKOSC (XL/L/S) wariantem produktu",
+        "Pokazywac PSD/PSB/AI/PDF/INDD/EPS jako kafelki w .dam-media-preview__variant-grid"
+      ],
+      "priority": "critical",
+      "title_pl": "Modal: Wizualizacje = kanon; Eksplorator parity; wariant = indeks",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/web/assets/css/dam-branding.css",
+        "apps/web/assets/css/dam-brand.css"
+      ]
+    },
+    {
+      "id": "explorer.create_modal_ux",
+      "must": [
+        "Podglad sciezki (#damExpPreview) tylko jedna czysta linia: 'Tworzenie: {pelna_sciezka}' - bez zargonu 'Plan:', 'skopiuj szablon', 'Drzewo:'",
+        "Podglad aktualizuje sie na biezaco (input/change na nazwie, podkategorii, folderze kategorii, marce, liczniku) - klik 'Podglad' tylko odpytuje most o walidacje/warianty, nie jest jedynym trigerem tekstu",
+        "Numer kategorii (NN w '{NN} - NAZWA') jest edytowalny w UI (pole liczbowe), domyslnie podpowiedz z /explorer/next-category-seq, mozliwe nadpisanie przed zapisem",
+        "#damExpErr/status pusty = brak elementu w DOM lub display:none (bez pustej czerwonej ramki); pokazuje sie tylko z realna trescia (blad albo krotki status)",
+        "Warianty (#damExpVariants): checkbox domyslnie ODZNACZONY dla kazdego wariantu (user wybiera co kopiowac)",
+        "Wiersz wariantu: TAG = pelna etykieta z naming-dictionary (label_pl, np. BATON/DOYPACK) po lewej, podglad koncowej nazwy folderu po prawej (aktualizowany na biezaco z pol data/indeks)",
+        "Hierarchia tworzonych folderow (ikony + wciecia) widoczna pod statusem: kategoria = 1 wezel; produkt = folder produktu + tylko ZAZNACZONE warianty jako dzieci",
+        "Wszystkie checkboxy w #damExplorerCreateModal maja accent-color purpurowy (var(--dam-primary, #AB54DB)) - zakaz natywnego oranzowego checkboxa",
+        "Nowy wariant globalny (3 pola: kod PL/skrot dysku, kod EN/alias, pelna nazwa) zapisuje sie do naming-dictionary.json (carriers[]) + carrier-types.json przez POST /explorer/add-variant-type (admin) - respektowane programowo (etykiety, prefiks na dysku)",
+        "Po sukcesie tworzenia: panel potwierdzenia (nie tylko toast) z przyciskami Przejdz do folderu / Zatwierdz / Cofnij + odliczanie ~2 min; Cofnij wywoluje POST /explorer/undo-create (usuwa TYLKO swiezo utworzony, potwierdzony wiekiem katalog)"
+      ],
+      "body_pl": "Handoff z audytu UX (2026-07-20, usability-brief): modal 'Dodaj kategorie/produkt' mial zargonowy podglad, statyczny (tylko po kliknieciu Podglad), sztywny numer kategorii, mysteriozna pusta czerwona ramka bledu, domyslnie zaznaczone wszystkie warianty i natywne oranzowe checkboxy. Naprawa: apps/web/assets/js/dam-explorer-add-product.js (+ apps/desktop/explorer_create.py: seq, undo_create; local_bridge.py: /explorer/next-category-seq, /explorer/undo-create, /explorer/add-variant-type).",
+      "category": "explorer",
+      "must_not": [
+        "Wyswietlac tekstu 'Plan: skopiuj szablon...' / 'Drzewo:' w #damExpPreview",
+        "Zaznaczac warianty domyslnie (checked) w #damExpVariants",
+        "Pokazywac pustej czerwonej ramki #damExpErr gdy brak komunikatu",
+        "Uzywac natywnego accent-color checkboxa (oranzowy) w modalu tworzenia",
+        "Usuwac na Cofnij starszy niz ~2-3 min katalog (guard st_ctime w undo_create)",
+        "Tworzyc fizycznego podfolderu wariantu w szablonie produktu na X: z samego dodania globalnego wariantu - to tylko etykieta/prefiks, fizyczny folder szablonu wymaga recznej pracy admina na dysku"
+      ],
+      "priority": "high",
+      "title_pl": "Explorer: modal tworzenia kategorii/produktu (UX + undo + wariant globalny)",
+      "related_kv": [
+        "naming-dictionary",
+        "carrier-types",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-explorer-add-product.js",
+        "apps/desktop/explorer_create.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/data/naming-dictionary.json",
+        "apps/web/data/carrier-types.json"
+      ]
+    },
+    {
+      "id": "device-scoped-base-paths",
+      "must": [
+        "Sciezka bazowa Marketing (litera dysku / root) jest PER-URZADZENIE (device_id + hostname), nie globalnie per konto na wszystkie maszyny",
+        "Runtime resolve root path bierze wpis dla AKTUALNEGO device_id z mostu (/auth/identity), nigdy 'ostatnio ustawiony na innym PC'",
+        "Profil / Sesja urzadzenia / Ustawienia#damDisk: ta sama karta DamDevicePaths (dam-device-paths.js) - jedna logika CRUD, nie osobny formularz settingBasePath",
+        "User wskazuje folder przez picker (desktop pywebview lub bridge POST /pick-folder); Wykryj i Sprawdz zostaja; reczne klepanie sciezki jest opcja a nie wymog",
+        "Gdy wskazany podfolder (np. X:\\Marketing\\- POLSKA): znormalizuj do rootu Marketing (struktura ARCHIWUM / EKSPORT / POLSKA) przed zapisem",
+        "Nowe urzadzenie (pierwsze logowanie konta na nowej maszynie): user ustawia sciezke dla TEGO device_id; zapis do bazy (Postgres dam_kv_store klucz user-device-paths:{email} + lokalny cache)",
+        "localStorage.dam_base_path i machine-config.json to tylko cache lokalny biezacego PC; zrodlo prawdy = baza per user+device"
+      ],
+      "body_pl": "Dużo ludzi pracuje zdalnie: w domu X:/, w pracy D:/. Zalogowane konto NIE przenosi litery dysku między komputerami. Nazwa urządzenia (hostname / device_id z mostu) identyfikuje stację; w profilu i w Ustawieniach (Dysk) widać tę samą listę urządzeń ze ścieżkami. Folder wybiera się w Eksploratorze; jeśli wskażesz podfolder POLSKA/EKSPORT/ARCHIWUM, program zapisze root Marketing.",
+      "category": "paths",
+      "must_not": [
+        "Traktowac dam_base_path / machine-config jako jedyna prawde wspolna dla wszystkich PC konta",
+        "Nadpisywac sciezke urzadzenia A wartoscia z urzadzenia B przy logowaniu / sync",
+        "Uzywac auto-detect do nadpisania juz zapisanej sciezki danego urzadzenia",
+        "Trzymac druga, rozna logike edycji sciezki w settings.html poza DamDevicePaths"
+      ],
+      "priority": "critical",
+      "title_pl": "Sciezka Marketing tylko dla biezacego urzadzenia",
+      "related_kv": [
+        "user-device-paths",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-paths.js",
+        "apps/web/assets/js/dam-device-paths.js",
+        "apps/web/profile.html",
+        "apps/web/settings.html",
+        "apps/desktop/local_bridge.py",
+        "docs/ADR/ADR-008-device-session-binding.md"
+      ]
+    },
+    {
+      "id": "data.lang_provenance_only",
+      "must": [
+        "Kod jezyka tylko z: (1) lang-overrides.json, (2) token w nazwie folderu rewizji (np. ' - PL EN - '), (3) token w nazwie pliku TYLKO ze slotow PROJEKT/PROJECT oraz 4-WIZKI/VISUALS",
+        "Brak sygnalu = puste langs / UI '?' (DK: baseline PL bez tokenu)",
+        "Zapisywac langs_source: override|folder|file|brand_dk|brand_dk+raw|unknown",
+        "Stosowac agents/shared/lang-provenance.md przy kazdej zmianie wykrywania jezykow"
+      ],
+      "body_pl": "HARD 2026-07-21: czy cos jest EN/PL/innym jezykiem - weryfikuj TYLKO z folderu rewizji oraz plikow w PROJEKT i/lub 4-WIZKI. Magnific / MATERIALY '...-uk_...' to zbieg okolicznosci - IGNORUJ. Domysl z marki GC=EN albo ze sciezki EKSPORT/POLSKA zakazany (DK=PL to swiadomy pewnik marki). Rebuild nie nadpisuje lang-overrides.json.",
+      "category": "data",
+      "must_not": [
+        "Domyslac jezyka z marki GC, rynku, screenshota opakowania",
+        "Brac tokenow jezyka z MATERIALY / Magnific / 1-MATERIALY (coincidence uk/en w nazwie)",
+        "Traktowac 'indeks X = jezyk Y' jako regula biznesowa zamiast dowodu z nazwy",
+        "Nadpisywac reczne override przy rebuildzie indeksu",
+        "Mapowac UK na Ukraina (UK/GB = English = EN; Ukraina = UA)"
+      ],
+      "priority": "critical",
+      "title_pl": "Jezyk tylko z PROJEKT+WIZKI / folder / override",
+      "related_kv": [
+        "lang-overrides",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "agents/shared/lang-provenance.md",
+        "apps/web/scripts/build-file-index.py",
+        "apps/web/data/lang-overrides.json",
+        "apps/web/data/naming-dictionary.json",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/assets/js/dam-labels.js"
+      ]
+    },
+    {
+      "id": "data.lang_uk_not_ukraine",
+      "must": [
+        "UK / GB / EN = English; kanoniczny kod przechowywany i wyswietlany jako EN (nie GB)",
+        "Alias gb+uk+en -> en w normalizeLangCode / lang_aliases",
+        "Ukraina tylko kod UA (opcjonalnie ukr -> ua); nigdy UK jako Ukraina",
+        "Chip short / picker / filtr: EN; DamLabels.normalizeLangCode + naming-dictionary.lang_aliases"
+      ],
+      "body_pl": "HARD 2026-07-21 (aktualizacja): tag UI GB znika - wszedzie EN. Pliki z GB lub EN w nazwie = tag EN. UK != UA. Stary blad (uk=Ukraina) etykietowal angielskie warianty jako Ukraina.",
+      "category": "data",
+      "must_not": [
+        "Pokazywac chip GB zamiast EN w pickerze / filtrach / badge",
+        "Etykietowac kod UK jako Ukraina",
+        "Aliasiowac UA do UK",
+        "Myliti locale UI i18n (ISO 639-1 uk=ukrainski w dam-i18n) z kodami rynku produktu"
+      ],
+      "priority": "critical",
+      "title_pl": "UK/GB/EN = EN (English); Ukraina = tylko UA",
+      "related_kv": [
+        "naming-dictionary",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/data/naming-dictionary.json",
+        "apps/web/assets/js/dam-labels.js",
+        "apps/web/assets/js/dam-badges.js",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/scripts/build-file-index.py",
+        "agents/shared/lang-provenance.md"
+      ]
+    },
+    {
+      "id": "ui.lang_labels_are_languages",
+      "must": [
+        "Etykiety jezykow w UI = odmiany przymiotnikowe (Polski, Niemiecki, Angielski), nie nazwy krajow (Polska, Niemcy, Wielka Brytania)",
+        "Zrodlo: naming-dictionary.json languages + DamLabels.LANG_LABELS + build-file-index LANG_LABELS",
+        "Wyswietlanie preferuje DamLabels.langLabel(code) nad stale lang_label z file-index"
+      ],
+      "body_pl": "HARD 2026-07-21: user - wszedzie jezyk, nie kraj. EN = Angielski (nie Wielka Brytania). PL = Polski. DE = Niemiecki. Dotyczy meta Typ pliku, tipow wariantow, filtrów, indeksera.",
+      "category": "ui",
+      "must_not": [
+        "Pokazywac Polska/Niemcy/Wielka Brytania jako etykiete kodu jezyka produktu",
+        "Ufanie stalej lang_label z indeksu gdy DamLabels zna poprawna odmiane"
+      ],
+      "priority": "critical",
+      "title_pl": "Etykiety jezykow = Polski/Niemiecki/Angielski (nie kraje)",
+      "related_kv": [
+        "naming-dictionary",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/data/naming-dictionary.json",
+        "apps/web/assets/js/dam-labels.js",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/scripts/build-file-index.py"
+      ]
+    },
+    {
+      "id": "naming.folder_lang_tokens",
+      "must": [
+        "Przy 2+ jezykach wstawiac w nazwie folderu rewizji segment ' - LANG LANG - ' miedzy nazwa/data a indeksem (np. ' - PL EN - 6300783.00')",
+        "Przy jednym jezyku (DK domyslnie PL): NIE dodawac samotnego ' - PL - '",
+        "Parser indeksu czyta segment jezykow; reczne dodanie tagu jezyka przez admina rename'uje folder + pliki z tym wzorcem",
+        "Nie robic slepego find-replace '- 6300' - poprawnie wstawiac tokeny miedzy nazwa a indeksem"
+      ],
+      "body_pl": "HARD 2026-07-21: user wstawia ' - PL EN - ' przed indeksem (Find/Replace na Marketing). Indexer i rename musza rozumiec ten wzorzec. DK single-lang = bez '- PL -' w nazwie.",
+      "category": "naming",
+      "must_not": [
+        "Dodawac '- PL -' gdy produkt ma tylko PL (DK baseline)",
+        "Wklejac tokeny jezykow w srodek indeksu albo zamiast daty"
+      ],
+      "priority": "critical",
+      "title_pl": "Folder rewizji: ' - PL EN - ' tylko przy multi-lang",
+      "related_kv": [
+        "lang-overrides",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/scripts/build-file-index.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-tag-edit.js"
+      ]
+    },
+    {
+      "id": "admin.tag_instant_apply_ajax",
+      "must": [
+        "Sesja role=admin: zmiana tagu/jezyka/nosnika stosuje sie NATYCHMIAST (dysk + slownik + UI), bez kolejki moderacji",
+        "UI aktualizuje badge/filtry/karty AJAX - bez pelnego reload strony",
+        "Toast 'Zgloszenie trafia do moderacji' NIE wolno pokazywac adminowi przy udanym apply",
+        "Non-admin / power_user bez privilege: moze zostac kolejka propozycji (tag-proposals + inbox)"
+      ],
+      "body_pl": "HARD 2026-07-21: Admin z wazna sesja = instant apply. Bez refresh. Bez komunikatu moderacji.",
+      "category": "admin",
+      "must_not": [
+        "Wymagac full page reload po zatwierdzeniu tagu przez admina",
+        "Pokazywac toast moderacji gdy role=admin i zapis sie udal",
+        "Ufanie body.role / body.admin_mode zamiast sesji Bearer (anti-spoof zostaje)"
+      ],
+      "priority": "critical",
+      "title_pl": "Admin: natychmiastowy apply tagow (AJAX, bez moderacji)",
+      "related_kv": [
+        "tag-proposals",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-tag-edit.js",
+        "apps/web/assets/js/dam-viz.js"
+      ]
+    },
+    {
+      "id": "viz.kar6x_thumb_front_l",
+      "must": [
+        "Dla nosnika KAR6X / KARTON 6x MINI: preferuj miniatury FRONT-L (nie ENFACE) gdy dostepne",
+        "pick_thumb_file i firstWizkiPath carrier-aware dla tej reguly"
+      ],
+      "body_pl": "HARD 2026-07-21: karton 6x mini - thumb = FRONT L.",
+      "category": "ui",
+      "must_not": [
+        "Preferowac ENFACE nad FRONT-L dla KAR6X gdy FRONT-L istnieje"
+      ],
+      "priority": "high",
+      "title_pl": "KAR6X: miniatura FRONT-L",
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/scripts/build-file-index.py",
+        "apps/web/assets/js/dam-viz.js"
+      ]
+    },
+    {
+      "id": "ui.tag_edit_dodaj_typ_tag",
+      "must": [
+        "Przycisk + Dodaj typ w #damTagEditPopover dziala jak Explorer: POST /explorer/add-variant-type + foldery w Szablony folderow (PL+EN) + wpis w naming-dictionary/carrier-types",
+        "Przycisk + Dodaj (tag): wyglad jak assoc empty-state dashed tile; kategoria z ktorej otwarto edycje pierwsza; Zmień kategorię przełącza kind; confirm = AJAX, admin instant",
+        "Cache-bust ?v= po zmianach JS/CSS"
+      ],
+      "body_pl": "HARD 2026-07-21: UX edycji tagow w modalu - Dodaj typ + Dodaj tag z kategoriami.",
+      "category": "ui",
+      "must_not": [
+        "Zostawiac martwy data-add-type bez handlera / z endpointem ktory nie rejestruje globalnie"
+      ],
+      "priority": "high",
+      "title_pl": "Tag edit: Dodaj typ + Dodaj tag (kategorie)",
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-tag-edit.js",
+        "apps/desktop/local_bridge.py",
+        "apps/desktop/explorer_create.py"
+      ]
+    },
+    {
+      "id": "meta.source_of_truth",
+      "must": [
+        "Przed zmianą reguły biznesowej: przeczytaj program-instructions z KV/cache",
+        "Po decyzji użytkownika: natychmiast dopisz/zaktualizuj instrukcję i wypchnij do Postgres",
+        "Nie odwracaj reguły bez jawnej nowej instrukcji z datą"
+      ],
+      "body_pl": "Wszystkie newralgiczne reguły (nazewnictwo, status F/X/D, aktywny/nieaktywny, zakazy UI, zachowanie admina) muszą być zapisane w dam_kv_store jako program-instructions. Agent nie może 'pamiętać inaczej' między sesjami - przed zmianą zachowania czyta ten magazyn. memory.md / process.md tylko odzwierciedlają i logują.",
+      "category": "meta",
+      "must_not": [
+        "Traktować memory.md jako jedyne źródło prawdy",
+        "Zmieniać zachowanie 'bo tak wyglądało w poprzedniej sesji' bez wpisu w program-instructions"
+      ],
+      "priority": "critical",
+      "title_pl": "Instrukcje żyją w bazie, nie tylko w memory",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "naming.carrier_ui_vs_disk",
+      "must": [
+        "UI (badge, meta karty, picker, pasek historii): label_pl (DOYPACK, FOLIA, BATON)",
+        "Rename folderu/pliku na dysku: short (DOY, FOL, BAT) przez CARRIER_FOLDER_PREFIX ze słownika",
+        "Źródło mapowania: naming-dictionary.policy + carriers[].label_pl/short (+ app-settings.naming)"
+      ],
+      "body_pl": "DOY, FOL, BAT to tylko skróty w Eksploratorze Windows, żeby nazwy zajmowały mniej miejsca. W programie zawsze rozwinięte: DOYPACK, FOLIA, BATON. Skrót stosujesz wyłącznie przy zmianie nazwy / aktualizacji folderu na dysku.",
+      "category": "naming",
+      "must_not": [
+        "Pokazywać DOY/FOL/BAT jako główną etykietę UI",
+        "Zapisywać na dysku prefiksu DOYPACK/BATON/FOLIA przy nowym rename (stare foldery wolno wykrywać i skracać)"
+      ],
+      "priority": "critical",
+      "title_pl": "Nośnik: w programie pełna nazwa, na dysku skrót",
+      "related_kv": [
+        "naming-dictionary",
+        "app-settings"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "apps/web/assets/js/dam-labels.js",
+        "apps/desktop/local_bridge.py",
+        "apps/web/settings.html#damNamingPolicy"
+      ]
+    },
+    {
+      "id": "naming.multi_means_multilang",
+      "must": [
+        "Używać ui.multi_lang_label z naming-dictionary (domyślnie Multijęzyczny)",
+        "Tag Multi / Multijęzyczny mapuje na association multi-lang; search_blob i szukanie UI zawieraja synonimy: multijezyczny, multijęzyczny, multi, wielojezykowy, wiele jezykow, wiele języków, multilang",
+        "Wyszukiwanie 'Multijęzyczny' znajduje produkty z langs.length>=2"
+      ],
+      "body_pl": "HARD 2026-07-21: Tag Multi = wariant wielojęzyczny. Szukanie 'Multijęzyczny' nie moze dawac 0 wynikow gdy produkt ma PL+EN.",
+      "category": "naming",
+      "must_not": [
+        "Mylenie Multi z typem opakowania / nośnikiem",
+        "Pomijac synonimow Multijęzyczny w search_blob / filtrze wizualizacji"
+      ],
+      "priority": "critical",
+      "title_pl": "Multi = Multijęzyczny (+ synonimy w search)",
+      "related_kv": [
+        "naming-dictionary"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/scripts/build-file-index.py",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/assets/js/dam-badges.js",
+        "apps/web/data/naming-dictionary.json"
+      ]
+    },
+    {
+      "id": "ops.change_log_is_truth",
+      "must": [
+        "Przy cofaniu/naprawie: apps/web/data/change-log.json (+ carrier-assignment-log, lifecycle-status)",
+        "Po operacji admina: upewnij się że wpis w logu istnieje"
+      ],
+      "body_pl": "Każda istotna operacja (rename nośnika, indeks, lifecycle) trafia do change-log i powiązanych logów. Przy naprawie błędnych rename najpierw czytaj change-log.json / carrier-assignment-log, nie przeszukuj dysku na ślepo.",
+      "category": "operations",
+      "must_not": [
+        "Zgadywanie ścieżek folderów bez wpisu w logu gdy log jest dostępny"
+      ],
+      "priority": "critical",
+      "title_pl": "Operacje programu są w logu - nie szukaj na ślepo",
+      "related_kv": [
+        "carrier-assignment-log"
+      ],
+      "updated_at": "2026-07-18",
+      "related_files": [
+        "apps/web/data/change-log.json",
+        "apps/web/data/lifecycle-status.json"
+      ]
+    },
+    {
+      "id": "lifecycle.status_fxd",
+      "must": [
+        "F = aktualne / skończony; X = nieaktualne / archiwum; D = demo / prototyp",
+        "Dysk: dopinać ' - F' / ' - X' / ' - D' do nazwy folderu (lifecycle_status.py)",
+        "Produkt X: cascade na warianty + przeniesienie do archiwum kategorii",
+        "Wariant X: archiwum z wrapperem produktu",
+        "Produkt D: cascade - D na warianty; odznaczenie wariantu z D przy produkcie D czyści literkę produktu",
+        "API: POST/GET /lifecycle-status (tylko admin)",
+        "UI tag: Aktualne / Nieaktualne (dam-badge-tag data-tag-kind=status); Admin Shift/dbl"
+      ],
+      "body_pl": "Admin oznacza stan literką w nazwie folderu na dysku. F = aktualne, X = nieaktualne (archiwum), D = demo. Odznacz = usuń literkę. Historia previous_name + previous_path w lifecycle-status + change-log.",
+      "category": "lifecycle",
+      "must_not": [
+        "Zmieniać status realnych produktów bez potwierdzenia użytkownika gdy trwa TEST GATE",
+        "Gubić previous_path przy rename statusu (musi dać się cofnąć)"
+      ],
+      "notes_pl": "Produkt testowy: TEST LIFECYCLE / indeks TEST-TEST. Litera archiwum na dysku: folder — ARCHIWUM (jak na Marketing).",
+      "priority": "critical",
+      "title_pl": "Status produktu/wariantu: F / X / D",
+      "related_kv": [
+        "lifecycle-status",
+        "product-status",
+        "carrier-overrides"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "apps/desktop/lifecycle_status.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-explorer.js"
+      ]
+    },
+    {
+      "id": "lifecycle.product_status_mirror",
+      "must": [
+        "Po sukcesie /lifecycle-status wywołać mirror_lifecycle_to_product_status",
+        "Tag statusu w UI: Aktualne / Nieaktualne (nie surowe F/X w badge jeśli jest ludzka etykieta)"
+      ],
+      "body_pl": "Po zmianie lifecycle most zapisuje też mirror do product-status.json (revisions + products), żeby Eksplorer/Wizualizacje widziały Aktualne/Nieaktualne spójnie z dyskiem.",
+      "category": "lifecycle",
+      "priority": "high",
+      "title_pl": "Status w UI + mirror w product-status",
+      "updated_at": "2026-07-18",
+      "related_files": [
+        "apps/web/data/product-status.json",
+        "apps/web/data/lifecycle-status.json"
+      ]
+    },
+    {
+      "id": "ui.em_dash_ban",
+      "must": [
+        "Używać tylko '-'"
+      ],
+      "body_pl": "W UI, commitach i copy agentów zakaz znaków — i –. Tylko zwykły myślnik -.",
+      "category": "ui",
+      "must_not": [
+        "Wstawiać U+2014 lub U+2013 w tekstach programu / commitach"
+      ],
+      "priority": "critical",
+      "title_pl": "Zakaz em-dash w copy",
+      "updated_at": "2026-07-16"
+    },
+    {
+      "id": "ui.verify_screenshot",
+      "must": [
+        "Screenshot expanded + collapsed sidebar gdy dotyczy logo",
+        "Sprawdzić konkretnie to, o co prosił user"
+      ],
+      "body_pl": "Po każdej zmianie CSS/HTML/JS wpływającej na wygląd: odśwież z cache bust, zrób screenshot narzędziem przeglądarki, przeczytaj plik obrazu (vision). Bez tego nie oddawać.",
+      "category": "ui",
+      "must_not": [
+        "Oddać 'powinno działać' bez screenshot→Read"
+      ],
+      "priority": "critical",
+      "title_pl": "Weryfikacja UI = screenshot + Read",
+      "updated_at": "2026-07-18",
+      "related_files": [
+        ".cursor/rules/verify-ui-after-changes.mdc"
+      ]
+    },
+    {
+      "id": "ui.geex_only",
+      "must": [
+        "Tokeny dam-tokens.css / dam-brand.css"
+      ],
+      "body_pl": "Motyw wyłącznie Geex (#AB54DB). Nie budować Next.js skina ani obcego design systemu w panelu DAM.",
+      "category": "ui",
+      "must_not": [
+        "Wprowadzać Tailwind/shadcn jako deliverable panelu DAM"
+      ],
+      "priority": "critical",
+      "title_pl": "UI tylko Geex",
+      "updated_at": "2026-07-16"
+    },
+    {
+      "id": "admin.header_switch_only",
+      "must": [
+        "localStorage.dam_admin_mode + event dam:admin-mode",
+        "Widoczny tylko dla role=admin"
+      ],
+      "body_pl": "Jedyny przełącznik Admin: w headerze tuż po lewej od avatara. Zakaz lokalnych toggle na explorer/viz.",
+      "category": "admin",
+      "must_not": [
+        "#damAdminToggle / #vizAdminToggle / label.dam-admin-toggle"
+      ],
+      "priority": "high",
+      "title_pl": "Tryb admina tylko switch w headerze",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "auth.roles_and_privilege",
+      "must": [
+        "Sprawdzać Authorization: Bearer na bridge"
+      ],
+      "body_pl": "Role: admin | power_user | user. Decyzje mutate (rename, lifecycle, carrier-types, overrides, undo/redo, index rebuild) tylko admin z Bearer. Body.role / admin_mode NIE dają privilege.",
+      "category": "auth",
+      "must_not": [
+        "Ufanie spoofowanemu role w JSON body"
+      ],
+      "priority": "critical",
+      "title_pl": "Role i privilege na bridge",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "storage.marketing_sensitive",
+      "must": [
+        "Walidacja folderów -- ARCHIWUM --, - EKSPORT, - POLSKA",
+        "Backup / previous_path przy destrukcyjnych rename"
+      ],
+      "body_pl": "Ścieżka bazowa to ustawienie użytkownika (np. X:\\Marketing). Operacje rename/move tylko przez most z logiem. Nie kasować hurtowo, nie zgadywać liter dysku.",
+      "category": "storage",
+      "must_not": [
+        "Destrukcja bez logu i bez możliwości cofnięcia gdy da się zachować historię"
+      ],
+      "priority": "critical",
+      "title_pl": "Dysk Marketing jest wrażliwy",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "carrier.do_not_guess",
+      "must": [
+        "Zgłaszać do potwierdzenia zamiast zgadywać"
+      ],
+      "body_pl": "Rozpoznanie: 1) overrides, 2) prefiks pliku wizki, 3) prefiks folderu. Gdy brak tokenu - puste / do potwierdzenia, nie zgadywać FOLIA/DOY.",
+      "category": "naming",
+      "must_not": [
+        "Ustawiać nośnik na podstawie samej daty w nazwie folderu"
+      ],
+      "priority": "critical",
+      "title_pl": "Nośnika nie zgaduj",
+      "updated_at": "2026-07-18"
+    },
+    {
+      "id": "ui.tag_casing_global",
+      "must": [
+        "DamLabels.formatTagLabel(label, kind) przy kazdym renderze badge/pill",
+        "category/subcategory/smak/typ = Title Case; carrier/brand/lang/index = jak w slowniku (wersaliki)",
+        "opakowanie w filtrze mapuj do label_pl nosnika (doypack -> DOYPACK)"
+      ],
+      "body_pl": "Tagi sa globalne (karty, filtr, explorer, inbox). Kody (DK, GC, DOYPACK, FOLIA, GB, indeks) zostaja WERSALIKAMI jak w slowniku. Etykiety ludzkie (Kulki, Kulki Surowe, Mini batoniki, Warianty) piszemy jak w zdaniu z duza litera. Nie mieszac stylow na jednej karcie (nie KULKI obok Kulki Surowe). Formatter: DamLabels.formatTagLabel.",
+      "category": "ui",
+      "must_not": [
+        "CSS text-transform:uppercase na etykietach ludzkich tagow",
+        "Rozne casingi tej samej kategorii w roznych widokach"
+      ],
+      "priority": "critical",
+      "title_pl": "Tagi globalne: wersaliki albo jak w zdaniu - bez mieszania",
+      "related_kv": [
+        "naming-dictionary",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "apps/web/assets/js/dam-labels.js",
+        "apps/web/assets/js/dam-badges.js",
+        "apps/web/assets/js/dam-tag-bar.js"
+      ]
+    },
+    {
+      "id": "ui.product_name_pl_under_en",
+      "must": [
+        "DamLabels.productNamePlParen + .dam-viz-card__title-pl",
+        "Slownik w dam_kv_store.product-name-pl",
+        "Format: ( Nazwa ) ze spacjami w nawiasie"
+      ],
+      "body_pl": "Gdy produkt ma angielska nazwe (marka GC), pod tytulem zawsze pokazuj polskie tlumaczenie po nowej linii w nawiasie ze spacjami, np. MINCED / ( Mielone ). Rozmiar jak meta karty, kolor jak tytul. Slownik: product-name-pl.json (KV).",
+      "category": "ui",
+      "must_not": [
+        "Ukrywac PL gdy jest w slowniku",
+        "Szary kolor jak meta - ma byc kolor tytulu"
+      ],
+      "priority": "high",
+      "title_pl": "Angielska nazwa GC + polska w nawiasie pod tytulem",
+      "related_kv": [
+        "product-name-pl"
+      ],
+      "updated_at": "2026-07-18",
+      "related_code": [
+        "apps/web/assets/js/dam-labels.js",
+        "apps/web/assets/js/dam-viz.js"
+      ]
+    },
+    {
+      "id": "search.product_people",
+      "must": [
+        "Mapa kto↔produkt w product-people.json (+ KV product-people)",
+        "enrich-search-tags.py wlewa autorow do authors / search_blob / by_tag / tag_groups.autor",
+        "tag_groups.autor = tylko Krzysztof, Sylwia, Szymon, Highlite (AUTHOR_ALLOWLIST w skrypcie)",
+        "Szukajka: sylwia / krzysztof / szymon / highlite znajduje przypisane produkty"
+      ],
+      "body_pl": "Osoba przy produkcie sluzy do WYSZUKIWANIA (statusy Sylwii, spis Szymona, dziennik KW), nie do glosnych badge TAG na kartach. Zrodlo: apps/web/data/product-people.json. Po aktualizacji mapy: python apps/web/scripts/enrich-search-tags.py (+ seed KV).",
+      "category": "search",
+      "must_not": [
+        "Renderowac imion jako glowne badge na kartach wizualizacji (chyba ze user poprosi)",
+        "Kasowac mape przy rebuildzie file-index bez ponownego enrich"
+      ],
+      "priority": "high",
+      "title_pl": "Osoba przy produkcie = wyszukiwanie, nie TAG na karcie",
+      "related_kv": [
+        "product-people",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/product-people.json",
+        "apps/web/scripts/enrich-search-tags.py",
+        "apps/web/assets/js/dam-search.js"
+      ]
+    },
+    {
+      "id": "branding.disk_read_only",
+      "must": [
+        "Dysk X:/Marketing tylko do odczytu",
+        "Indeks JSON + UI, zero rename na dysku"
+      ],
+      "body_pl": "Branding DAM i katalog produktu bazują na skanach read-only. Zakaz modyfikacji struktury Marketing.",
+      "category": "branding",
+      "must_not": [
+        "Rename/move na X:/Marketing bez osobnej instrukcji"
+      ],
+      "priority": "critical",
+      "title_pl": "Marketing read-only",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "branding.navigation_associations",
+      "must": [
+        "Nawigacja Branding = skojarzenia (search, tagi, osie Kiedy/Co/Gdzie), nie drzewo folderów dysku",
+        "source_path tylko w metadanych i akcji Otwórz w Eksploratorze",
+        "Panel startowy: ostatnio używane, szybkie skojarzenia, kolekcje kuratorowane, kafelki produktów",
+        "Wyszukiwanie korzysta z product-associations.json i branding-search-index.json (synonimy, by_tag, linked_product_ids)"
+      ],
+      "body_pl": "Użytkownik nie zna struktury 08-KAMPANIE/DV360_GIFF/LISTONIC. UI nie pokazuje hierarchii folderów Marketing jako głównej nawigacji. Szukanie po temacie (burger, grill, proteina) lub płaskie filtry Kiedy/Co/Kanał zastępują sidebar folderowy.",
+      "category": "branding",
+      "must_not": [
+        "Główna nawigacja przez drzewo folderów dysku (#damBrandingFolderNav)",
+        "Wyświetlanie nazw technicznych folderów (DV360_GIFF, LISTONIC, DO EDYCJI) jako etykiet nawigacji",
+        "Wymaganie znajomości ścieżki dyskowej do znalezienia materiału"
+      ],
+      "priority": "critical",
+      "title_pl": "Branding: nawigacja skojarzeniowa, nie hierarchia folderów",
+      "related_kv": [
+        "program-instructions",
+        "product-associations"
+      ],
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/branding.html",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/data/product-associations.json",
+        "apps/web/data/branding-search-index.json"
+      ]
+    },
+    {
+      "id": "branding.perspectives",
+      "must": [
+        "ENFACE, TYL_ENFACE, FRONT, BACK zgodnie z brand-perspectives.json"
+      ],
+      "body_pl": "Cztery perspektywy opakowania — parser WIZKI rozróżnia ENFACE vs FRONT.",
+      "category": "branding",
+      "must_not": [
+        "Mylić ENFACE z FRONT w UI"
+      ],
+      "priority": "high",
+      "title_pl": "Perspektywy opakowania",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "branding.video_is_video",
+      "must": [
+        "media_type video zawsze odtwarzacz video, nie statyczna miniatura jako substytut"
+      ],
+      "body_pl": "Filmy z 05 SOCIAL MEDIA = video w UI Branding.",
+      "category": "branding",
+      "must_not": [
+        "Udawać mp4 jako zwykły obrazek bez controls"
+      ],
+      "priority": "critical",
+      "title_pl": "Wideo to wideo",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "product.catalog_card",
+      "must": [
+        "project.html pokazuje sekcję Katalog produktu z product-catalog.json",
+        "null = em dash + hint"
+      ],
+      "body_pl": "Karta katalogowa: wymiary, waga, cena, paletyzacja, pakowanie.",
+      "category": "product",
+      "must_not": [
+        "Wymyślać wymiarów bez danych użytkownika"
+      ],
+      "priority": "high",
+      "title_pl": "Karta katalogowa na project.html",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "packaging.tag_format",
+      "must": [
+        "Badge pakowania: {nF} · {kolumny}×{szt}",
+        "ID JSON: pak:{nf}-{grid}",
+        "tier low"
+      ],
+      "body_pl": "Np. 2F · 2×12 dla Datesy. Nie używać nazwy folderu produktu jako tagu kartonu.",
+      "category": "packaging",
+      "must_not": [
+        "Tag DATESY na kartonie zbiorczym"
+      ],
+      "priority": "high",
+      "title_pl": "Format tagu pakowania zbiorczego",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "packaging.tag_tiers",
+      "must": [
+        "primary zawsze widoczne",
+        "pakowanie = tier low, domyślnie w +N",
+        "Explorer/Viz/Projekty: toggle „Info Pakowania” poza paskiem wyszukiwania"
+      ],
+      "body_pl": "Toggle „Info Pakowania” pokazuje tagi low/minimal (np. 2F·2×12). Bez toggle tylko primary.",
+      "category": "packaging",
+      "must_not": [
+        "Pokazywać 2F·2×12 domyślnie w Explorer bez toggle"
+      ],
+      "priority": "high",
+      "title_pl": "Tiery tagów pakowania",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "search.associations",
+      "must": [
+        "Wyszukiwanie rozszerza query o product-associations reverse",
+        "Warstwa search-only"
+      ],
+      "body_pl": "Synonimy: śliwka → ciasto śliwkowe, jabłecznik → jabłko-cynamon.",
+      "category": "search",
+      "must_not": [
+        "Osobna grupa UI Skojarzenia"
+      ],
+      "priority": "high",
+      "title_pl": "Wyszukiwanie skojarzeniowe",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "naming.good_calories",
+      "must": [
+        "UI: Good Calories, nie Good Choice",
+        "GC = skrót marki eksportowej"
+      ],
+      "body_pl": "Rename marki w settings, privacy, dam-brand-filter.",
+      "category": "naming",
+      "must_not": [
+        "Good Choice w UI DAM"
+      ],
+      "priority": "high",
+      "title_pl": "Good Calories w UI",
+      "updated_at": "2026-07-19"
+    },
+    {
+      "id": "branding.hub_viz_cards",
+      "must": [
+        "branding.html używa dam-viz-card + DamBadges.renderBranding",
+        "Tagi primary/low/minimal na kartach siatki"
+      ],
+      "body_pl": "Hub Branding ma wyglądać jak Wizualizacje/Eksplorer (Geex, dam-shell), nie osobny zielony marketing UI.",
+      "category": "branding",
+      "must_not": [
+        "Osobny layout bez dam-shell",
+        "object-fit: cover na wordmarku w wąskim slocie"
+      ],
+      "priority": "high",
+      "title_pl": "Branding hub = dam-viz-card + badge",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/branding.html",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-badges.js"
+      ]
+    },
+    {
+      "id": "branding.project_marketing",
+      "must": [
+        "project.html sekcja Materiały marketingowe: mini-siatka do 6 kart + link do Branding",
+        "Dopasowanie: linked_product_ids, product_ids, SKU, indeks w ścieżce (bez ARCHIWUM domyślnie)"
+      ],
+      "body_pl": "Karta produktu pokazuje podgląd assetów z branding-index.json (fetch lokalny), nie przez bridge API.",
+      "category": "branding",
+      "must_not": [
+        "Tylko licznik bez miniaturek i tagów",
+        "Pokazywać ARCHIWUM domyślnie"
+      ],
+      "priority": "high",
+      "title_pl": "Marketing na project.html",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/project.html",
+        "apps/web/assets/js/dam-project.js"
+      ]
+    },
+    {
+      "id": "branding.taxonomy_three_axes",
+      "must": [
+        "media_type wyliczany automatycznie z rozszerzenia (image/vector/video/source/document) — nigdy recznie",
+        "asset_role kontrolowany slownik z dam-asset-role-mapping.json — etykiety PL w UI",
+        "format_technical osobna os (raster, tlo, edytowalny)",
+        "perspective/size tylko dla packshot — osobna oś Wizualizacja",
+        "Shift+klik na tagu asset_role lub appearance otwiera picker (admin/power_user)",
+        "Etykiety tagow ZAWSZE po polsku w UI"
+      ],
+      "body_pl": "Taksonomia IPTC: format ≠ rola ≠ kontekst. Logo to asset_role=brand_asset + media_type z pliku, nie osobny typ pliku.",
+      "category": "branding",
+      "must_not": [
+        "Jedno pole typ mieszajace wektor/logo/wideo/dokument",
+        "Angielskie etykiety w chipach i badge (poza kodami wewnetrznymi)",
+        "Nowe asset_role ad-hoc bez ADR"
+      ],
+      "priority": "critical",
+      "title_pl": "Branding: 3 osie taksonomii + edycja Shift+klik",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/dam-asset-role-mapping.json",
+        "apps/web/scripts/asset_role_utils.py",
+        "apps/web/assets/js/dam-asset-taxonomy.js",
+        "apps/web/assets/js/dam-tag-edit.js"
+      ]
+    },
+    {
+      "id": "branding.marketing_dual_roots",
+      "must": [
+        "Indeksuj obie lokalizacje: X:/Marketing/- POLSKA oraz X:/Marketing/-- ARCHIWUM --",
+        "Przy nakładce tego samego pliku (stem kampanii + wymiary z nazwy, np. back to school:992x600) wygrywa - POLSKA — wpis z archiwum nie trafia do indeksu",
+        "Tagi Archiwum i Stara struktura tylko dla plików wyłącznie ze starego archiwum (brak odpowiednika w - POLSKA)",
+        "Po zmianie reguł: python apps/web/scripts/build-branding-index.py"
+      ],
+      "body_pl": "Marketing ma dwie główne lokalizacje do skojarzeń. Większość materiałów się nakłada — deduplikacja POLSKA-first, bez przenosin na dysku. Wersja z - POLSKA nie dostaje tagów archiwum.",
+      "category": "branding",
+      "must_not": [
+        "Indeksować duplikat z -- ARCHIWUM -- gdy ten sam plik jest już w - POLSKA",
+        "Oznaczać tagiem Archiwum materiały z aktywnej struktury - POLSKA",
+        "Przenosić/rename plików na X:/Marketing przy deduplikacji"
+      ],
+      "priority": "critical",
+      "title_pl": "Branding: dwie lokalizacje Marketing (POLSKA > archiwum)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/scripts/build-branding-index.py",
+        "apps/web/scripts/brand_folder_context.py"
+      ]
+    },
+    {
+      "id": "branding.slider_shop_tags",
+      "must": [
+        "Slidery sklepu dobrakaloria.pl: tagi Slidery + Na sklep + Desktop/Tablet/Mobile",
+        "Każdy plik w folderze SLIDERY (segment ścieżki) dostaje tag Slidery + Na sklep — bez względu na nazwę pliku",
+        "Desktop = 1920×600, Tablet = 992×600, Mobile = 576×600 (±2 px)",
+        "Wykrywanie z nazwy pliku, ścieżki (06 - STRONY WWW, 07 - E-COMMERCE/SLIDERY…) i wymiarów",
+        "Filtr Slidery w UI przełącza zakładkę WWW (nie Kampanie)",
+        "Po zmianie reguł: python apps/web/scripts/build-branding-index.py"
+      ],
+      "body_pl": "Materiały sliderów na sklep WWW mają osobne tagi filtra: Slidery, Na sklep oraz urządzenie (Desktop/Tablet/Mobile) według breakpointów sklepu. Źródło reguł: brand_tag_utils.extract_placement_tags.",
+      "category": "branding",
+      "must_not": [
+        "Mylić sliderów WWW (600 px wys.) z formatami Google Ads (1200×1200 itd.) bez kontekstu slider/sklep"
+      ],
+      "priority": "high",
+      "title_pl": "Branding: tagi sliderów sklepu WWW",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/scripts/brand_tag_utils.py",
+        "apps/web/scripts/enrich-branding-tags.py",
+        "apps/web/assets/js/dam-branding.js"
+      ]
+    },
+    {
+      "id": "integrations.hub_bridge",
+      "must": [
+        "Panel Wykrojniki↔produkty na integrations.html (dam-wykrojnik-queue.js)",
+        "Zrodlo mapowania: XLSX Kubara via POST /wykrojniki/reimport → wykrojniki-registry.json",
+        "Powiazania: POST /wykrojniki/link-products oraz POST /wykrojniki/set-link (admin)",
+        "Kolejka GET/POST /wykrojnik-mapping-queue tylko dla pozycji do zatwierdzenia; localStorage nie jest zrodlem prawdy"
+      ],
+      "body_pl": "Hub Integracje: panel mapowan wykrojnikow (nie „kolejka + python w terminalu”). Admin wczytuje XLSX Kubara i laczy z produktami przez bridge. Konfig OAuth/LDAP, sync Asana i FMCG bez zmian.",
+      "category": "integrations",
+      "must_not": [
+        "Wymagac od admina uruchamiania python w terminalu jako glownego UX",
+        "Traktowac localStorage jako zrodlo prawdy kolejki wykrojnikow",
+        "Pokazywac placeholder row-N bez kodu/nazwy jako realne wykrojniki"
+      ],
+      "priority": "high",
+      "title_pl": "Integracje: Wykrojniki ↔ produkty + bridge",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/integrations.html",
+        "apps/web/assets/js/dam-wykrojnik-queue.js",
+        "apps/web/assets/css/dam-wykrojnik-queue.css",
+        "apps/web/scripts/import-wykrojniki-xlsx.py",
+        "apps/web/scripts/link-wykrojniki-products.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/data/wykrojniki-registry.json",
+        "apps/web/data/wykrojnik-mapping-queue.json"
+      ]
+    },
+    {
+      "id": "wykrojnik.registry_xlsx_kubara",
+      "must": [
+        "Import XLSX szuka wierszy naglowka z kolumna „oznaczenie Kubara” (wielosekcyjny arkusz)",
+        "Kod = oznaczenie Kubara; nazwa = asortyment; product_index = numer indeksu GC/DK gdy wypelniony",
+        "Reimport zachowuje istniejace linked_product_ids dla tych samych kodow"
+      ],
+      "body_pl": "Plik zrodlowy: X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/opakowania_Kubara_baza_danych.xlsx. Parser nie uzywa wiersza 0 jako jedynego naglowka - stamtad wczesniej powstaly smieci row-N.",
+      "category": "wykrojnik",
+      "must_not": [
+        "Generowac row-N gdy brak kolumny kod w pierwszym wierszu arkusza",
+        "Kasowac powiazania produktow przy samym reimportcie XLSX"
+      ],
+      "priority": "critical",
+      "title_pl": "Wykrojniki: parser XLSX Kubara",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/scripts/import-wykrojniki-xlsx.py",
+        "apps/web/data/wykrojniki-registry.json"
+      ]
+    },
+    {
+      "id": "finance.rates_admin",
+      "must": [
+        "Admin edytuje cost-rates.json przez bridge GET/POST /finance/cost-rates",
+        "Stawki osob i mapa godzin zadan tylko przez bridge (nie reczny edit pliku w normalnym flow)"
+      ],
+      "body_pl": "Stawki pracy (net, employer_mult, allocation) i mapa godzin zadan Asana w cost-rates.json. POST wymaga sesji admin.",
+      "category": "finance",
+      "must_not": [
+        "Nadpisywac cost-rates bez autoryzacji admin na bridge"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: stawki kosztow (admin)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/cost-rates.json",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "finance.invoices_import",
+      "must": [
+        "Import faktur CSV przez bridge POST /finance/invoices/import (admin)",
+        "GET/POST /finance/invoices dla listy i upsert"
+      ],
+      "body_pl": "Faktury w apps/web/data/invoices.json. Import CSV: kolumny id, client, project, amount, currency, issue_date, due_date, status, type.",
+      "category": "finance",
+      "must_not": [
+        "Importowac faktury bez walidacji admin na bridge"
+      ],
+      "priority": "medium",
+      "title_pl": "Finanse: import faktur CSV",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/invoices.json",
+        "apps/web/invoices.html",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "invoice.erp_bidirectional",
+      "must": [
+        "Dwukierunkowy kontrakt ERP faktur: import (ERP→DAM) + export/push (DAM→ERP)",
+        "GET /finance/invoices/erp-status dokumentuje direction=bidirectional oraz last_import/last_export/status",
+        "POST /finance/invoices/export (alias /push) zapisuje stub payload i stan w invoice-erp-sync.json (admin)",
+        "UI Faktury: stan sync + przyciski Import / Eksport ERP (admin), etykiety PL, klasa .dam-int-cta",
+        "Istniejacy POST /finance/invoices/import aktualizuje last_import w sync state"
+      ],
+      "body_pl": "C2: kontrakt dwukierunkowy (stub, nie live ERP). Stan: apps/web/data/invoice-erp-sync.json. Export stage: invoice-erp-export-last.json. Provider=stub do podpiecia prawdziwego ERP.",
+      "category": "finance",
+      "must_not": [
+        "Udawac live polaczenie z ERP bez provider stub/kontraktu",
+        "Eksportowac faktury bez roli admin",
+        "Usuwac import CSV - pozostaje kanalem erp_to_dam"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: dwukierunkowy ERP faktur (kontrakt)",
+      "related_kv": [
+        "program-instructions",
+        "invoice-erp-sync"
+      ],
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/data/invoice-erp-sync.json",
+        "apps/web/invoices.html",
+        "apps/web/assets/js/dam-invoices.js",
+        "apps/desktop/invoice_erp.py",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "finance.fmcg_catalog",
+      "must": [
+        "Katalog lancucha kosztow FMCG w fmcg-cost-catalog.json",
+        "Import CSV/XLSX przez bridge POST /finance/fmcg-import (admin)",
+        "GET /finance/fmcg-compute sumuje kwoty po stage",
+        "Reczna edycja mapowan i pozycji katalogu bez wymaganego pliku CSV (CTA Edytuj w Integracjach)"
+      ],
+      "body_pl": "Pelny lancuch FMCG: procurement, prepress, production, warehouse, logistics. Szablon CSV w data/templates/fmcg-cost-import-template.csv. Mapowanie kolumn: fmcg-cost-import-map.json. Brak pliku nie blokuje edycji mapowan ani wpisywania kwot recznie.",
+      "category": "finance",
+      "must_not": [
+        "Traktowac fmcg-cost-averages.json jako jedyne zrodlo kwot po wdrozeniu katalogu",
+        "Blokowac UI komunikatem musisz najpierw wgrac CSV gdy katalog lub mapa sa puste"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: katalog kosztow FMCG",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/data/fmcg-cost-catalog.json",
+        "apps/web/data/fmcg-cost-import-map.json",
+        "apps/web/assets/js/dam-fmcg-catalog.js",
+        "apps/web/assets/js/dam-integrations.js",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "finance.fmcg_manual_edit",
+      "must": [
+        "W panelu Konfiguruj Katalog FMCG CTA Edytuj otwiera edytor mapowania pol i danych recznych",
+        "GET/POST /finance/fmcg-import-map zapisuje fmcg-cost-import-map.json (admin)",
+        "POST /finance/fmcg-catalog action=patch (opcjonalnie upsert) zapisuje kwoty/pozycje bez importu pliku",
+        "Pusty katalog lub brak pliku: pusta tabela + Dodaj wiersz nadal dostepne",
+        "Overlay #damFmcgEditOverlay: dialog ~80vw x 80vh, scroll w .dam-fmcg-edit__table-wrap (trap wheel; body lock), CTA akcji = .dam-int-cta, zamkniecie = .dam-modal-x (ikona X, nie fat CTA)",
+        "Usun wiersz: hold ~1s via DamDanger gdy ui.safe_delete ON"
+      ],
+      "body_pl": "FMCG: reczna edycja mapowan kolumn CSV→catalog_id oraz wierszy katalogu/kwot bez wgranego pliku. Import CSV pozostaje; Edytuj to rownolegla sciezka zapisu do tego samego store. Modal duzy, scroll w tabeli, bez scrolla tla; Zamknij = cichy X jak inne modale DAM.",
+      "category": "finance",
+      "must_not": [
+        "Tworzyc rownoleglego CRUD poza fmcg-cost-catalog.json / fmcg-cost-import-map.json",
+        "Wymagac uploadu CSV przed edycja mapowania lub kwot",
+        "Uzywac geex-btn--primary / osobnych stylow Usun/Zamknij konkurujacych z systemem CTA",
+        "Pozwalac wheel na tle strony gdy overlay otwarty"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: FMCG Edytuj mapowanie i dane reczne",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-fmcg-catalog.js",
+        "apps/web/assets/js/dam-integrations.js",
+        "apps/web/assets/js/dam-danger.js",
+        "apps/desktop/local_bridge.py",
+        "apps/web/data/fmcg-cost-import-map.json"
+      ]
+    },
+    {
+      "id": "ui.safe_delete",
+      "must": [
+        "Bezpieczne usuwanie (hold-to-delete) domyslnie ON",
+        "Preferencja w Postgres dam_kv_store klucz user-prefs:{email} pole prefs.safe_delete (bridge GET/POST /user-prefs)",
+        "localStorage tylko cache zsynchronizowany z DB",
+        "Krotki klik przy hold ON: toast 'Sprobuj przytrzymac, by usunac' + akcja 'Wylacz bezpieczne usuwanie' (przywrocenie w ustawieniach profilu)",
+        "Gdy safe_delete OFF: Usun dziala na zwykly klik",
+        "Reuse DamDanger - bez trzeciego systemu hold"
+      ],
+      "body_pl": "Globalna preferencja UX: destrukcyjne Usun wymaga przytrzymania (~1 s w FMCG / DamDanger). Wylaczenie w ustawieniach profilu (Preferencje / Bezpieczenstwo) zapisuje sie w bazie per konto.",
+      "category": "ui",
+      "must_not": [
+        "Traktowac localStorage jako jedyne zrodlo prawdy preferencji safe_delete",
+        "Forkowac osobnego hold-delete obok DamDanger"
+      ],
+      "priority": "high",
+      "title_pl": "UI: bezpieczne usuwanie (hold-to-delete)",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-danger.js",
+        "apps/web/assets/js/dam-user-prefs.js",
+        "apps/web/assets/js/dam-settings.js",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "finance.fmcg_no_double_count",
+      "must": [
+        "Robocizna z Asana (project-costs / cost-rates) nie jest podwojnie liczona z pozycja katalogu gdy zadanie ma mapowanie asana_keywords",
+        "GET /finance/fmcg-compute raportuje missing count osobno od labor Asana"
+      ],
+      "body_pl": "Przy landed cost: jesli pozycja katalogu ma asana_keywords pasujace do zadania juz policzonego w project-costs, nie dodawaj drugi raz tej samej pracy.",
+      "category": "finance",
+      "must_not": [
+        "Sumowac tej samej robocizny z Asana i z katalogu FMCG bez deduplikacji"
+      ],
+      "priority": "high",
+      "title_pl": "Finanse: brak podwojnego liczenia labor",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/data/fmcg-cost-catalog.json",
+        "apps/web/data/project-costs.json",
+        "apps/web/assets/js/dam-fmcg-cost.js"
+      ]
+    },
+    {
+      "id": "branding.linked_product_derived",
+      "must": [
+        "Link do produktu (linked_product_id) nie jest osobnym polem do wypełnienia ręcznie — jest wyliczany automatycznie z linku do wariantu przez tabelę variant→product (file-index revisions.index → product.id)",
+        "Przy zapisie skojarzenia asset→wariant (SKU/indeks) system zawsze propaguje linked_product_id na poziom rodziny produktu",
+        "Branding, Projekty i Wizualizacje czytają to samo pole linked_product_id / linked_product_ids — zero osobnych kopii linków"
+      ],
+      "body_pl": "Gdy materiał marketingowy jest skojarzony z wariantem (np. 6300684.01 Babka Cytrynowa), musi być widoczny na całej rodzinie produktu BABKA CYTRYNOWA, nie tylko przy jednym numerze. linked_variant_ids trzyma indeksy; linked_product_id jest DERIVED. Jeśli zmienia się to ręcznie w dwóch miejscach, model jest zepsuty.",
+      "category": "data",
+      "must_not": [
+        "Wymagać ręcznego wypełniania linked_product_id niezależnie od wariantu",
+        "Trzymać osobne, rozjeżdżające się mapy skojarzeń w Branding vs Projekty vs Wizualizacje"
+      ],
+      "priority": "critical",
+      "title_pl": "Skojarzenia branding: produkt z wariantu (globalnie)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/scripts/brand_folder_context.py",
+        "apps/web/scripts/re-enrich-branding-index.py",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-media-preview.js"
+      ]
+    },
+    {
+      "id": "branding.marketing_asset_id_format",
+      "must": [
+        "Wyświetlany ID materiału marketingowego ma format M-{TYP}{nrTypu}{idBezPierwszejCyfry}-{MM}-{RR} np. M-VID606305-01-25",
+        "Wewnętrzny klucz br-XXXXXX pozostaje w data-tag-value, indeksie i API — nie zmieniać",
+        "Typy: VID=6 (wideo), SLI=5 (slider), BAN=3 (baner), SHOP=4 (sklep), META=7, GOG=8 (Google), GIF=9, KV=1 (key visual), IMG=2 (domyślnie)"
+      ],
+      "body_pl": "Prefiks M = marketing. Użytkownik rozpoznaje typ z trzyliterowego kodu i numeru typu. MM-RR z ścieżki kampanii (folder 01_NUGGETS w 2025) lub campaign_id / mtime.",
+      "category": "naming",
+      "must_not": [
+        "Pokazywać surowe br-XXXXXX jako jedyny identyfikator w UI kart i podglądu",
+        "Zmieniać klucza br-* w indeksie JSON bez migracji"
+      ],
+      "priority": "high",
+      "title_pl": "ID marketingowe materiałów (M-VID…)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/assets/js/dam-marketing-id.js",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-media-preview.js"
+      ]
+    },
+    {
+      "id": "branding.png_default_transparent",
+      "must": [
+        "PNG i WebP bez pola background i bez skanu pikseli traktować w UI jako przezroczyste tło (format:transparent)",
+        "Zachować wyniki pixel-scan z indeksu (background transparent/white) — nie nadpisywać",
+        "JPG/JPEG/WebP bez alpha i pliki z background:white lub format_technical:white — nie traktować jako przezroczyste"
+      ],
+      "body_pl": "Tymczasowa reguła do dopracowania w tygodniu 2026-07-21. Większość PNG w marketingu to wycinki bez tła; dopóki plik nie ma jawnego white ani wyniku skanu, filtr i badge 'Przezroczyste tło' działają jak dla transparent.",
+      "category": "branding",
+      "must_not": [
+        "Traktować JPG jako domyślnie przezroczyste",
+        "Usuwać z indeksu background ustawiony przez patch-branding-backgrounds / enrich_raster_backgrounds"
+      ],
+      "priority": "high",
+      "title_pl": "PNG/WebP bez skanu = domyślnie bez tła (UI)",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/web/assets/js/dam-asset-taxonomy.js",
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-badges.js",
+        "apps/web/scripts/asset_role_utils.py",
+        "apps/web/scripts/patch-branding-backgrounds.py"
+      ]
+    },
+    {
+      "id": "lifecycle.history_visible",
+      "must": [
+        "Każda operacja F/X/D/clear na produkcie lub wariancie trafia do lifecycle-status.history i change-log",
+        "Historia jest widoczna w Eksplorerze przy produkcie oraz w Inbox → Historia",
+        "Nawet status ostatecznie usunięty musi zostać w historii"
+      ],
+      "body_pl": "Historia lifecycle nie może być tylko w JSON bez UI. User musi zobaczyć pełny ślad operacji posegregowany po indeksie / product_id.",
+      "category": "ui",
+      "must_not": [
+        "Ukrywać operacji F/X/D po usunięciu statusu",
+        "Mylić Historii lifecycle ze zgłoszeniami tagów w Inbox"
+      ],
+      "priority": "high",
+      "title_pl": "Historia F/X/D zawsze widoczna",
+      "updated_at": "2026-07-19",
+      "related_code": [
+        "apps/desktop/lifecycle_status.py",
+        "apps/web/assets/js/dam-explorer.js",
+        "apps/web/assets/js/dam-inbox.js"
+      ]
+    },
+    {
+      "id": "lifecycle.history_restore",
+      "must": [
+        "Modal Historia statusów: u góry wiersz Aktualny stan (także bez statusu)",
+        "Każdy wpis historii ma hashtag (#lc_…) obok daty",
+        "Przywróć stan z wpisu historii → nowy wpis u góry z restored_from",
+        "Cofnij zmianę tylko na najnowszym wpisie po przywróceniu (1 poziom undo)",
+        "Przywracanie/cofanie przez ten sam most /lifecycle-status + oczekiwanie na rebuild indeksu"
+      ],
+      "body_pl": "Historia to nie tylko podgląd: admin może przywrócić F/X/D lub bez statusu z dowolnego wpisu. Przywrócenie dostaje własny hashtag i adnotację „Przywrócono z #…”. Undo cofa ostatnie przywrócenie do stanu sprzed niego.",
+      "category": "lifecycle",
+      "must_not": [
+        "Przywracać bez trybu admin i Bearer",
+        "Pokazywać Cofnij na starszych wpisach niż najnowszy po restore"
+      ],
+      "priority": "high",
+      "title_pl": "Historia lifecycle: hashtag, przywróć, cofnij",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-explorer.js",
+        "apps/desktop/lifecycle_status.py"
+      ]
+    },
+    {
+      "id": "desktop.background_tray",
+      "must": [
+        "Aplikacja desktop moze dzialac w tle w zasobniku systemowym (pystray + dam_tray.py)",
+        "Zamkniecie okna (X) chowa okno do zasobnika, a NIE ubija mostu/sync/indeksu (window.events.closing -> window.hide(), return False gdy tray aktywny)",
+        "Calkowite wyjscie tylko przez menu tray 'Zatrzymaj DAM calkowicie' (_shutdown_all -> os._exit)"
+      ],
+      "body_pl": "Cel: szybki powrot do aplikacji bez zimnego startu i bez zrywania sesji mostu. Gdy pystray niedostepny (tray_active=False), X zamyka normalnie. Menu tray: 'Pokaz okno DAM', 'Zatrzymaj DAM calkowicie'.",
+      "category": "desktop",
+      "must_not": [
+        "Konczyc procesu mostu 8766 przy zwyklym zamknieciu okna gdy tray aktywny",
+        "Dodawac Electron/Qt do trybu tray (zostajemy przy pywebview + pystray)"
+      ],
+      "priority": "high",
+      "title_pl": "Desktop: tryb w tle / zasobnik systemowy",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/desktop/launch.py",
+        "apps/desktop/dam_tray.py"
+      ]
+    },
+    {
+      "id": "ui.motion_tokens",
+      "must": [
+        "Wspolne tempo animacji z tokenow w dam-tokens.css: --dam-anim (0.4s wejscie), --dam-anim-hover (0.22s stany), --dam-anim-slow, --dam-anim-ease",
+        "Tagi/pille/badge i belki (toolbary, context bar, filtry tagow) maja transition (dotad byly bez animacji)",
+        "Wejscie belek animuje dam-grid-reveal.js -> revealBars() (jednorazowo, znacznik data-dam-bar-revealed); reveal kart = 0.4s"
+      ],
+      "body_pl": "Uzytkownik chce, by animowalo sie 'wszystko' - w tym tagi i belki - i by wejscia byly dluzsze (0.3s -> 0.4s). prefers-reduced-motion nadal wylacza ruch. Nowe transition sa addytywne (fallback w var()).",
+      "category": "ui",
+      "must_not": [
+        "Uzywac transition: all na duzych kontenerach (perf)",
+        "Animowac kazdego taga osobno w reveal (belki animujemy jako bloki)"
+      ],
+      "priority": "medium",
+      "title_pl": "UI: tokeny ruchu + animacje tagow/belek",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/css/dam-tokens.css",
+        "apps/web/assets/css/dam-brand.css",
+        "apps/web/assets/css/dam-branding.css",
+        "apps/web/assets/js/dam-grid-reveal.js"
+      ]
+    },
+    {
+      "id": "branding.load_cache",
+      "must": [
+        "Indeks branding cache'owany przez HTTP: cache-bust tylko ?v=CB, BEZ Date.now() (pozwala WebView2 cache'owac ~35 MB miedzy wejsciami)",
+        "Indeks wspoldzielony w sesji przez window.__damBrandingIndex (dam-branding.js i dam-media-preview.js nie pobieraja go dwa razy)",
+        "Po przebudowie indeksu invalidateBrandingIndexCache() czysci pamiec sesji i window.__damBrandingIndex"
+      ],
+      "body_pl": "Branding dlugo sie otwieral przez ~43 MB JSON pobierane za kazdym wejsciem + podwojny renderTagFilters na boot. Fix: cache-bust off, wspoldzielenie indeksu, jeden render tagow, wideo w siatce preload=none.",
+      "category": "branding",
+      "must_not": [
+        "Dodawac &_=Date.now() do URL branding-index / branding-search-index",
+        "Wolac renderTagFilters() dwa razy na boot (activateTab juz go robi)"
+      ],
+      "priority": "high",
+      "title_pl": "Branding: cache i szybkosc otwierania",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-branding.js",
+        "apps/web/assets/js/dam-media-preview.js"
+      ]
+    },
+    {
+      "id": "viz.assoc_no_visualization_loop",
+      "must": [
+        "W modalu wizualizacji (#damVizModal) i DamMediaPreview mode=viz-studio kolumna 'Skojarzone materialy' pokazuje WYLACZNIE materialy marketingowe z Brandingu (slidery, banery, social, POS, key visual, kampanie WWW) oraz osobno Elementy / Surowe elementy",
+        "NIGDY: inne wizualizacje produktu, warianty jezykowe tej samej wizki, packshoty (takze z Marketing/Archiwum/wp-content bez asset_role=packshot), karty produktu ani 'produkty' jako kafelki skojarzen",
+        "Asset typu visualization (packshot, source=wizki, sciezka 4 - WIZKI / 4 - VISUALS, nazwy GC_/DK_/wiz_* packshot, _RGB/_CMYK/_ENFACE) NIGDY nie trafia do Skojarzonych materialow — zero petli wiz→wiz",
+        "Layout modala viz: CSS Grid 2 kolumny (desktop ≥768): lewa = hero + meta + warianty + akcje, prawa = skojarzenia; mobile (<768) stack: hero → meta → assoc",
+        "Filtr anty-petli po stronie UI (isVisualizationAsset + looksLikePackshotOrPrintAsset w renderLinkedBrandingAssets); indekser nie powinien linkowac wizki jako material brandingowy przy innym packshocie"
+      ],
+      "body_pl": "HARD 2026-07-20 (doprecyzowanie wieczorem): w skojarzeniach do wizualizacji NIE wolno pokazywac tych samych / innych wariantow wizualizacji produktu. Tylko materialy brandingowe + Elementy/Surowe. Packshoty z WIZKI i z Marketing (np. GC_balls_*_RGB, wiz_GC_*) zostaja wariantami produktu, nie 'materialami'.",
+      "category": "ui",
+      "must_not": [
+        "Pokazywac asset_role=packshot / source=wizki / sciezki 4 - WIZKI|VISUALS / packshot-like PNG z Marketing w kolumnie Skojarzone materialy przy podgladzie wizualizacji",
+        "Traktowac inne packshoty / warianty jezykowe produktu jako skojarzone materialy marketingowe",
+        "Listowac produkty lub karty produktu w Skojarzonych materialach modala wizualizacji"
+      ],
+      "priority": "critical",
+      "title_pl": "Wizualizacje: zakaz petli skojarzen wiz→wiz + layout assoc po prawej",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/web/assets/js/dam-viz.js",
+        "apps/web/assets/css/dam-viz-modal.css",
+        "apps/web/scripts/build-branding-index.py"
+      ]
+    },
+    {
+      "id": "branding.element_assoc_skladniki_owoce",
+      "must": [
+        "Indekser branding indeksuje pliki ELEMENTY produktu spod 01 - PRODUKTY: `2 - PROJEKT/Links` (surowe) oraz `1 - MATERIALY/ELEMENTY` (gotowe), source/asset_role=product_element",
+        "Skojarzenia wyszukiwawcze 'skladniki' / 'owoce' / 'owocki' trafiaja do search_blob (nie nowy tag kanoniczny / facet globalny)",
+        "Elementy owocowe (cytryna, malina, jagoda…) dostaja terminy owoce+owocki+skladniki; pozostale sloty ELEMENTY/Links - skladniki",
+        "linked_products dla product_element wyliczane z SKU w sciezce rewizji (+ associations); UI modalu viz grupuje je w ELEMENTY / LINKS",
+        "Incremental: preferuj enrich-branding-element-assoc.py zamiast pelnego wipe indeksu"
+      ],
+      "body_pl": "Handoff A3 / brief pkt 35: UI filtruje ELEMENTY po sciezce i search_blob, ale product-folder Links/ELEMENTY nie byly w branding-index. Fix indeksera = skojarzenia skladniki/owoce/owocki + merge product_element.",
+      "category": "branding",
+      "must_not": [
+        "Dodawac 'skladniki'/'owoce'/'owocki' jako kanoniczny facet w CANONICAL_TAGS (to skojarzenie search, nie tag UI)",
+        "Kasowac/resetowac caly branding-index przy samym enrich elementow",
+        "Linkowac product_element jako packshot / naruszac viz.assoc_no_visualization_loop"
+      ],
+      "priority": "high",
+      "title_pl": "Branding: skojarzenia ELEMENTY (skladniki/owoce/owocki)",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/web/scripts/brand_element_assoc.py",
+        "apps/web/scripts/enrich-branding-element-assoc.py",
+        "apps/web/scripts/build-branding-index.py",
+        "apps/web/assets/js/dam-media-preview.js"
+      ]
+    },
+    {
+      "id": "explorer.product_from_template",
+      "must": [
+        "Nowa kategoria / produkt na dysku tylko z szablonow: {Marketing}/- POLSKA/01 - PRODUKTY/Szablony folderow/00 - KATEGORIA (DK) lub 00 - CATEGORY (GC)",
+        "API mostu: POST /explorer/create-category oraz POST /explorer/create-product (sesja admin)",
+        "dry_run:true zwraca planned_path / planned_tree BEZ zapisu; realny zapis tylko gdy dry_run:false AND confirm:true",
+        "Kategorie DK pod - POLSKA/01 - PRODUKTY/- DK jako NN - NAZWA; GC pod - EKSPORT/01 - PRODUCTS/- GC",
+        "Nazwa folderu produktu jak na dysku: NAZWA — [ podkategoria ] (separator jak w szablonie / istniejacych produktach)",
+        "create-category: copytree szablonu kategorii, usun zagniezdzony placeholder produktu (kategoria startuje pusta)",
+        "create-product: copytree szablonu produktu; warianty z variants[] (template_folder + date + index); po sukcesie index_rebuild_suggested / POST /index/rebuild",
+        "NIGDY nie kasowac istniejacych drzew usera - tylko operacje na swiezo skopiowanym drzewie z szablonu"
+      ],
+      "body_pl": "Tworzenie kategorii i produktow w Eksploratorze idzie przez most: kopia szablonow z dysku Marketing, nigdy recezne sklejanie pustych folderow. Dry-run pokazuje plan sciezek; zapis wymaga confirm. Po utworzeniu przebuduj indeks plikow.",
+      "category": "explorer",
+      "must_not": [
+        "Zapisywac na dysk przy samym dry_run albo bez confirm:true",
+        "Usuwac / nadpisywac istniejace kategorie lub produkty usera",
+        "Omijac szablony i tworzyc gole foldery bez struktury wariantow z Szablony folderow"
+      ],
+      "priority": "critical",
+      "title_pl": "Explorer: kategoria/produkt ze szablonu dysku",
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/desktop/explorer_create.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-explorer.js"
+      ]
+    },
+    {
+      "id": "explorer.demo_index_rules",
+      "must": [
+        "Suffix demo na dysku: ' - D' (jak lifecycle.status_fxd litera D)",
+        "Doklej ' - D' gdy demo:true w create-product LUB gdy index brakuje / jest placeholder 6300XXX(.00)",
+        "Regula dotyczy nazwy folderu produktu i/lub wariantu tworzonego ze szablonu",
+        "Po nadaniu prawdziwego indeksu (rename-index) admin moze zdjac - D przez lifecycle clear/status"
+      ],
+      "body_pl": "Produkty i warianty bez realnego indeksu (6300XXX albo pusty) traktuj jak DEMO: dopisz ' - D' do nazwy folderu przy tworzeniu ze szablonu. To spójne z lifecycle D = demo/prototyp.",
+      "category": "explorer",
+      "must_not": [
+        "Tworzyc folder z 6300XXX bez oznaczenia demo gdy API nie wymusza inaczej",
+        "Myllic - D (demo) z - F (aktualne) ani - X (nieaktualne)"
+      ],
+      "priority": "critical",
+      "title_pl": "Explorer: reguly indeksu DEMO / 6300XXX",
+      "related_kv": [
+        "lifecycle-status",
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-20",
+      "related_code": [
+        "apps/desktop/explorer_create.py",
+        "apps/desktop/lifecycle_status.py",
+        "apps/desktop/local_bridge.py"
+      ]
+    },
+    {
+      "id": "ui.tutorial_dobrokalorius_hard",
+      "must": [
+        "Po poprawnym kliku w cel kroku (lub sukcesie Przejdz tam): ZAWSZE advance natychmiast (nextStep lub nawigacja); dopiero POTEM opcjonalny nieblokujacy toast praise ~25%; toast NIE opoznia zmiany kroku; NIE wymaga Dalej; NIE ustawia is-congrats / praiseLock na tipie",
+        "Toast praise: CONGRATS_MS=2275 (3500*0.65); krotkie linie (~polowa dlugosci); prefers-reduced-motion = opacity only (bez burst anim); 75% hitow bez toastu",
+        "Rzadki micro-burst (petardy): max 3 warianty CSS; tylko subset praise (BURST_CHANCE~0.12 sposrod toastow); NIE przy kazdym praise ani kazdym kliku",
+        "Klik poza celem = enter exploreMode: companion BR z tryExplore (>=40, joy/approve), slide-in; .dam-tut__spot display:none (bez inset hole / box-shadow dim); pointer-events overlay nie blokuje UI; faza/krok NIE advance; Wroc do samouczka przywraca tip",
+        "Kroki Wizualizacje: primary target label[for=vizShowAll] / #vizShowAll (tytul Pokaż wszystkie) oraz osobny krok label[for=damRevealLowTags] / #damRevealLowTags (Info Pakowania); fallback dopiero secondary-filters / sideLink; NIE celowac w .dam-viz-toolbar (to search)",
+        "Nawigacja sidebara / zmiana strony podczas aktywnego samouczka NIGDY nie wywoluje finish/stop ani damTutorialFinished; restore na docelowej stronie z damTutorialPhase (i explore z damTutorialExplore); index.html (Projekty) MUSI ladowac dam-tutorial.js",
+        "Kolejne off-path w exploreMode NIE zmieniaja copy co klik (throttle max raz / 12s albo raz przy wejsciu); NIE spamowac sad/wander",
+        "Teksty tryExplore/wander/sad w JSON ze slotami {name}/{nameVocative}/{nameDim}/{trySelf}; gender tylko z jawnej mapy (unknown = neutral, nigdy zgadywanie)",
+        "Kroki media/nosniki/pliki/wizualizacje brandingowe: pozy media-assets|media-image|media-video (explain-assets/image/video); NIGDY pose-5 / ksiazka Pyszne roslinne",
+        "Companion BR: padding karty >=16-20px (jak dropdown profilu), animacja appear + pose-swap (respect reduced-motion)",
+        "Pozy smutku tylko: zgloszenie braku/usterki, puste wyniki wyszukiwania, brak propozycji materialow (NIE default off-path)",
+        "Po zakonczeniu samouczka: rzadki cheer (joy-4/5/6, approve-8) na pozytywnych akcjach z throttle sesyjnym",
+        "Tip card min. inset 12-16px od krawedzi viewport; spotlight na poprawnym elemencie kroku",
+        "Przycisk Wlacz samouczek ponownie obecny w pomocy na KAZDEJ stronie shell (dam-shortcuts + DamTutorial)",
+        "Stan samouczka w localStorage/sessionStorage przezywa nawigacje; cache assetow stron ~1h (SW lub Cache-Control), network-first dla URL z ?v="
+      ],
+      "body_pl": "HARD 2026-07-21e (targets): Wizualizacje - spotlight na label[for=vizShowAll] (Pokaż wszystkie) i label[for=damRevealLowTags] (Info Pakowania), NIE na .dam-viz-toolbar/search; CTRL+scroll osobny krok; exploreMode ukrywa .dam-tut__spot (bez dziury/dim), companion zostaje, UI klikalne; nawigacja (np. Projekty/index.html) NIGDY nie ustawia finished ani nie kasuje phase - restore z damTutorialPhase + opcjonalnie damTutorialExplore; index.html laduje dam-tutorial.js; KEEP advance-first toast praise ~25% / burst ~12%; cache ?v=tutorialTargets20260721a.",
+      "category": "ui",
+      "must_not": [
+        "Traktowac dowolnego kliku poza UI samouczka jako gratulacje / auto-Dalej",
+        "Opozniać advance / nextStep czekajac na praise lub Dalej",
+        "Blokowac tip karty klasa is-congrats / praiseLock przez toast pochwaly",
+        "Pokazywac carnival confetti / purple neon glow przy kazdym praise",
+        "Konczyc samouczek przez off-path click lub przypadkowa nawigacje (tylko Zakoncz / Esc / koniec faz)",
+        "Zostawiac spotlight hole / dim w exploreMode (stary target z dziura w scrim)",
+        "Celowac krok Pokaż wszystkie w .dam-viz-toolbar / pasek wyszukiwania zamiast switcha #vizShowAll",
+        "Blokowac pointer-events UI w exploreMode (preventDefault na kazdym kliku / dim lock)",
+        "Spamowac nowy sad/wander text przy kazdym off-path kliku",
+        "Uzywac pozy ksiazki / Pyszne roslinne (pose-5 / present) w krokach samouczka",
+        "Uzywac em-dash w copy UI maskotki",
+        "Spamowac cheer przy kazdej akcji (wymagany throttle)",
+        "Zgadywac plci z koncowki imienia gdy brak w mapie",
+        "Cacheowac na slepo pliki JS/CSS z tokenem ?v= (dev cache-bust musi dzialac)"
+      ],
+      "priority": "critical",
+      "title_pl": "Samouczek + DobroKalorius: cele switchy, explore bez spot, nav nie konczy",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-tutorial.js",
+        "apps/web/assets/css/dam-tutorial.css",
+        "apps/web/assets/js/dam-shortcuts.js",
+        "apps/web/data/dobrokalorius-copy.json",
+        "apps/web/sw.js"
+      ]
+    },
+    {
+      "id": "explorer.pack_print_pakiet",
+      "must": [
+        "Przycisk PAKIET w .dam-carrier-toggle-row__end (obok akcji sciezki) na karcie nosnika",
+        "PAKIET zipuje foldery 2 - PROJEKT/PROJEKTY oraz 4 - WIZKI/WIZUALIZACJE (case-insensitive aliasy) biezacego wariantu",
+        "Nazwa ZIP = stem glownego pliku .ai z 2 - PROJEKT (nie SZKICE); wyjscie w 3 - DRUK",
+        "W pakiecie NIGDY nie wlaczaj plikow *SZKICE* / *szkice*",
+        "Pokaż wszystkie OFF: lista Projekt / zrodlo tylko z 2 - PROJEKT bez SZKICE; ON: szersza (archiwum/szkice)",
+        "Kompresja: 7-Zip -tzip -mx=9 -mmt=on, potem Chocolatey 7zip, potem Compress-Archive / zipfile",
+        "UI: DamLoader podczas pakowania; toast bledu gdy brak folderow; po sukcesie odswiez sekcje Pliki do druku"
+      ],
+      "body_pl": "HARD 2026-07-21: Eksplorator - PAKIET przy nosniku. Most POST /explorer/pack-print. Filtr Pokaż wszystkie steruje widocznoscia zrodel (OFF = realne projekty).",
+      "category": "explorer",
+      "must_not": [
+        "Traktowac plikow SZKICE jako prawdziwego projektu zrodlowego",
+        "Uzywac nazwy ZIP ze SZKICE lub z archiwum zamiast stem .ai z 2 - PROJEKT",
+        "Outputowac .7z gdy user wymaga .zip (format deliverable = zip)"
+      ],
+      "priority": "high",
+      "title_pl": "PAKIET: ZIP 2-PROJEKT + 4-WIZKI do 3-DRUK",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-07-21",
+      "related_code": [
+        "apps/web/assets/js/dam-explorer.js",
+        "apps/desktop/local_bridge.py",
+        "apps/web/explorer.html"
+      ]
+    },
+    {
+      "id": "paths.marketing_root_m_drive",
+      "must": [
+        "Na komputerze zrodlowym marketing root = M:\\ (foldery - POLSKA, - EKSPORT, -- ARCHIWUM -- bezposrednio pod M:\\)",
+        "machine-config.users.<WindowsUser>.base_path wygrywa nad hardcodem X:/Marketing",
+        "Skrypty indeksu (build-file-index, build-branding-index, brand_marketing_segments) uzywaja apps/web/scripts/marketing_roots.py",
+        "Kolejnosc kandydatow: machine-config -> M:/ -> X:/Marketing -> D:/Marketing",
+        "Status lifecycle F/X/D przez POST /lifecycle-status odswieza UI AJAX bez restartu programu; restart bridge tylko po zmianie kodu Pythona"
+      ],
+      "body_pl": "HARD 2026-08-03: User wskazuje M:\\ jako zrodlo kompletne. DAM nie 'musi' czytac z X — czyta ze wskazanego base_path. Indeks i thumbs budowac spod M:\\.",
+      "category": "paths",
+      "must_not": [
+        "Zakladac na stale ze X:/Marketing jest jedynym live rootem na PC zrodlowym",
+        "Wymagac restartu DAM po samym rename folderu ... - F / - X / - D"
+      ],
+      "priority": "critical",
+      "title_pl": "Marketing root = wskazany dysk (M:\\ na PC zrodlowym)",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-03",
+      "related_code": [
+        "apps/web/scripts/marketing_roots.py",
+        "apps/desktop/local_bridge.py",
+        "apps/desktop/machine-config.json",
+        "apps/desktop/lifecycle_status.py"
+      ]
+    },
+    {
+      "id": "branding.assoc_adequate_not_keyword",
+      "must": [
+        "Skojarzenia produktow do materialow brandingowych musza byc ADEKWATNE (ten sam SKU / ta sama linia produktu), nie tylko wspolne slowo w nazwie (np. porzeczka)",
+        "M-SHOP404317-02-26 (REFORMATY PORZECZKA GC / Blackcurrant Cake) -> tylko produkt blackcurrant-cake-cashews (6300669)",
+        "Kazdy kafelek skojarzonego produktu z data-product-id musi byc klikalny do explorer.html?product=... nawet bez miniatury",
+        "Podwojne klikniecie na grafice w DamMediaPreview powieksza / wraca (lightbox zoom)",
+        "OCR branding: OLMOCR2 (AllenAI olmOCR-2 via HuggingFace / PACKAGING-CHECKER qa_ocr_olmocr) - NIE Ollama; RapidOCR jako fallback",
+        "Adekwatnosc = OCR+SKU+frazy linii produktu z file-index / product-associations; pliki bez SKU/smaku w nazwie tez linkujemy gdy OCR wskazuje produkt",
+        "Reczne override z branding-associations-overrides.json nigdy nie nadpisywac pipeline OCR/link"
+      ],
+      "body_pl": "HARD 2026-08-03 (rev2): Keyword-only 'porzeczka' sklejal kulki/owsianke z kafelkiem GC Blackcurrant Cake - blad. Adekwatnosc = OCR (OLMOCR2) + SKU + frazy linii. ZAKAZ hardcodowanych list odrzucajacych tokeny owocow (WEAK_FLAVOR_TOKENS). Porzeczka w OCR moze poprawnie trafic w czarna porzeczka / blackcurrant cake gdy kontekst linii jest jasny.",
+      "category": "branding",
+      "must_not": [
+        "Laczyc material GC mini-bars Blackcurrant Cake z produktami DK kulki/owsianka tylko przez slowo porzeczka",
+        "Wylaczac nawigacje do produktu gdy brak thumb_url",
+        "Uzywac hardcodowanej listy WEAK_FLAVOR_TOKENS / banlisty owocow jako jedynej bramki adekwatnosci",
+        "Wymagac Ollamy do OCR brandingu",
+        "Nadpisywac branding-associations-overrides.json wynikami OCR"
+      ],
+      "priority": "critical",
+      "title_pl": "Skojarzenia adekwatne + OLMOCR2 + klikalne + dblclick zoom",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-03",
+      "related_code": [
+        "apps/web/data/branding-associations-overrides.json",
+        "apps/web/assets/js/dam-assoc-edit.js",
+        "apps/web/assets/js/dam-media-preview.js",
+        "apps/web/scripts/assoc_adequacy.py",
+        "apps/web/scripts/dam_olmocr2.py",
+        "apps/web/scripts/assoc-from-ocr.py",
+        "apps/web/scripts/link-branding-products.py"
+      ]
+    }
+  ],
+  "description_pl": "Newralgiczne ustalenia użytkownika. Źródło prawdy dla kodu i agentów: Postgres dam_kv_store.program-instructions (+ lokalny cache ten plik). memory.md jest tylko notatką operacyjną - przy konflikcie wygrywa ten magazyn. Po każdej nowej krytycznej decyzji: dopisz instrukcję tutaj, zapisz przez bridge (seed KV), dopiero potem zmieniaj kod.",
+  "source_of_truth": {
+    "related": [
+      "naming-dictionary",
+      "app-settings",
+      "lifecycle-status",
+      "change-log",
+      "carrier-assignment-log"
+    ],
+    "local_cache": "apps/web/data/program-instructions.json",
+    "postgres_kv": "program-instructions",
+    "settings_ui": "settings.html#damProgramInstructions"
+  }
+}

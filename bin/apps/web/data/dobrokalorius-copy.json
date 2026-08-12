@@ -1,0 +1,624 @@
+{
+  "version": 2,
+  "updated_at": "2026-07-21",
+  "slots": [
+    "{name}",
+    "{nameVocative}",
+    "{nameDim}",
+    "{trySelf}"
+  ],
+  "tryExplore": [
+    {
+      "id": "t01",
+      "text": "Super, fajnie że próbujesz! Poklikaj {trySelf}, ja poczekam w rogu.",
+      "pose": "joy-4"
+    },
+    {
+      "id": "t02",
+      "text": "Tak właśnie, {name}! Spróbuj {trySelf} - samouczek nie ucieknie.",
+      "pose": "joy-5"
+    },
+    {
+      "id": "t03",
+      "text": "O, eksploracja! Świetnie, {nameVocative}. Testuj spokojnie.",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t04",
+      "text": "Fajnie, że chcesz poczuć UI. Ja robię bokiem, Ty działasz.",
+      "pose": "joy-6"
+    },
+    {
+      "id": "t05",
+      "text": "{nameDim}, tryb próbny włączony. Klikaj co Cię ciekawi!",
+      "pose": "joy-1"
+    },
+    {
+      "id": "t06",
+      "text": "Brawo za ciekawość! Przetestuj to, a potem wrócimy do kroku.",
+      "pose": "joy-2"
+    },
+    {
+      "id": "t07",
+      "text": "Tak się uczy panelu: spróbuj {trySelf}. Jestem tu jak coś.",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t08",
+      "text": "Hej {name}! Super, że nie boisz się kliknąć. Dawaj!",
+      "pose": "joy-3"
+    },
+    {
+      "id": "t09",
+      "text": "Lubię ten entuzjazm. Poklikaj swobodnie, spotlight może poczekać.",
+      "pose": "joy-4"
+    },
+    {
+      "id": "t10",
+      "text": "{nameVocative}, to właśnie moment na próbę. Zero stresu, pełna freestyle.",
+      "pose": "joy-5"
+    },
+    {
+      "id": "t11",
+      "text": "Fajnie że próbujesz! Ja w rogu, Ty przy sterach.",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t12",
+      "text": "Odkrywaj, {nameDim}. Samouczek stoi w miejscu, nie pogania.",
+      "pose": "joy-6"
+    },
+    {
+      "id": "t13",
+      "text": "Spróbuj {trySelf} - tak najlepiej zapamiętasz gdzie co leży.",
+      "pose": "joy-1"
+    },
+    {
+      "id": "t14",
+      "text": "Tak, klikaj! To nie egzamin, to plac zabaw z listkiem w tle.",
+      "pose": "joy-2"
+    },
+    {
+      "id": "t15",
+      "text": "{name}, masz wolną rękę. Przetestuj zaproponowany kawałek UI.",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t16",
+      "text": "Super decyzja: najpierw spróbować. Wróć gdy będziesz gotowy.",
+      "pose": "joy-3"
+    },
+    {
+      "id": "t17",
+      "text": "Widzę, że lubisz działać. Dawaj {trySelf}, kibicuję z BR!",
+      "pose": "joy-4"
+    },
+    {
+      "id": "t18",
+      "text": "{nameVocative}, tryb odkrywania ON. Żadnego smutku, sama radość z klikania.",
+      "pose": "joy-5"
+    },
+    {
+      "id": "t19",
+      "text": "Fajnie, że tu zaglądasz. Poklikaj, a ja nie będę przerywał co chwilę.",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t20",
+      "text": "Eksperymentujesz? Idealnie. Panel lubi takie podejście.",
+      "pose": "joy-6"
+    },
+    {
+      "id": "t21",
+      "text": "{nameDim}, spróbuj {trySelf}. Jak coś, belka na dole też żyje.",
+      "pose": "joy-1"
+    },
+    {
+      "id": "t22",
+      "text": "Tak właśnie się uczy: klik, patrz, czuj. Jestem w rogu na zapas.",
+      "pose": "joy-2"
+    },
+    {
+      "id": "t23",
+      "text": "Super, że próbujesz po swojemu! Cel poczeka, Ty działaj.",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t24",
+      "text": "{name}, odsuwam się w bok - testuj spokojnie zaproponowane elementy.",
+      "pose": "joy-3"
+    },
+    {
+      "id": "t25",
+      "text": "Brawo za odwagę klikania! To nie błąd, to eksploracja.",
+      "pose": "joy-4"
+    },
+    {
+      "id": "t26",
+      "text": "Poklikaj {trySelf}. Jak wrócisz do samouczka, będziemy w tym samym kroku.",
+      "pose": "joy-5"
+    },
+    {
+      "id": "t27",
+      "text": "{nameVocative}, masz zielone światło na próbę. Ja tylko macham z rogu.",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t28",
+      "text": "Fajnie że nie czekasz biernie. Przetestuj UI, potem wracamy.",
+      "pose": "joy-6"
+    },
+    {
+      "id": "t29",
+      "text": "Tryb próbny: zero kary, pełna ciekawość. Dawaj, {nameDim}!",
+      "pose": "joy-1"
+    },
+    {
+      "id": "t30",
+      "text": "Tak, klikaj dalej! Nie zmieniam kroku, tylko kibicuję.",
+      "pose": "joy-2"
+    },
+    {
+      "id": "t31",
+      "text": "{name}, super że chcesz poczuć panel. Spróbuj {trySelf}.",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t32",
+      "text": "Lubię ten styl: najpierw spróbować, potem wrócić do lekcji.",
+      "pose": "joy-3"
+    },
+    {
+      "id": "t33",
+      "text": "Odkrywaj spokojnie. Spotlight jest miękki, UI zostaje klikalne.",
+      "pose": "joy-4"
+    },
+    {
+      "id": "t34",
+      "text": "{nameVocative}, to Twój moment na test. Ja nie spamuję smutnymi minami.",
+      "pose": "joy-5"
+    },
+    {
+      "id": "t35",
+      "text": "Fajnie, że próbujesz! Gdy skończysz, kliknij Wróć do samouczka.",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t36",
+      "text": "Swobodnie, {nameDim}. Przetestuj to miejsce, o którym mówiłem.",
+      "pose": "joy-6"
+    },
+    {
+      "id": "t37",
+      "text": "Super energia! Poklikaj {trySelf} - tak uczy się najszybciej.",
+      "pose": "joy-1"
+    },
+    {
+      "id": "t38",
+      "text": "Widzę ciekawość i to lubię. Ja w BR, Ty przy panelu.",
+      "pose": "joy-2"
+    },
+    {
+      "id": "t39",
+      "text": "{name}, tryb eksploracji: zachęcam, nie karzę. Dawaj!",
+      "pose": "approve-8"
+    },
+    {
+      "id": "t40",
+      "text": "Tak właśnie, {nameVocative}! Spróbuj {trySelf} i wróć kiedy chcesz.",
+      "pose": "joy-4"
+    }
+  ],
+  "wander": [
+    {
+      "id": "w01",
+      "text": "Wiem, że trochę przynudzam, ale fajnie, że podoba Ci się ta opcja!",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w02",
+      "text": "Widzę, że działasz na własną rękę, Zuch! Jak coś, to wiesz gdzie jestem.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w03",
+      "text": "{nameVocative}, lubię Twoją ciekawość! Samouczek poczeka w rogu.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w04",
+      "text": "O, {nameDim}, zboczenie z trasy? Spoko, jestem tu jak coś.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w05",
+      "text": "Eksplorujesz po swojemu? Super. Ja poczekam przy celu.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w06",
+      "text": "Widzę, że {name} ma własny plan. Trzymam kciuki i dymek!",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w07",
+      "text": "Nie poganiam, {nameVocative}. Gdy będziesz gotowy, wróć do podświetlonego miejsca.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w08",
+      "text": "Fajnie, że klikasz wokół. Samouczek nie ucieknie.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w09",
+      "text": "Hej {nameDim}! Odkładam lekcję na bok, ale nie znikam.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w10",
+      "text": "Twoja trasa, Twoje tempo. Ja siedzę w prawym dolnym rogu.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w11",
+      "text": "Wiem, że panel kusi. Jak się znudzisz, wracamy do kroku.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w12",
+      "text": "{nameVocative}, jestem jak listkowy GPS: milczący, ale gotowy.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w13",
+      "text": "Zero stresu, {name}. Cel nadal świeci, gdy będziesz chciał.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w14",
+      "text": "Ciekawość to zaleta! Samouczek czeka bez dramatu.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w15",
+      "text": "Odkrywasz UI? Kocham to. Ja poczekam z boku.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w16",
+      "text": "{nameDim}, jak coś się zgubi, kliknij mnie albo belkę na dole.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w17",
+      "text": "Nie przerywam przygody. Tylko macham z rogu.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w18",
+      "text": "Widzę entuzjazm! Jak wrócisz, kontynuujemy od tego samego miejsca.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w19",
+      "text": "{nameVocative}, samouczek nie uraża się klikami. Spokojnie.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w20",
+      "text": "Masz wolną rękę. Ja mam wolny róg ekranu.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w21",
+      "text": "To nie test, to spacer. Jak będziesz gotowy, wracamy.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w22",
+      "text": "Podoba Ci się coś innego? Ok! Cel nadal jest zaznaczony.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w23",
+      "text": "{name}, jestem cierpliwy jak kisiel. Prawie.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w24",
+      "text": "Własna ścieżka mile widziana. Ja nie gaszę spotlightu.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w25",
+      "text": "Hej! Nie kończę samouczka przez ciekawość. To zasada.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w26",
+      "text": "{nameDim}, jak chcesz wrócić: kliknij mnie albo Dalej w belce.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w27",
+      "text": "Panel jest duży, wiem. Ja nie znikam z misji.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w28",
+      "text": "Zuch z Ciebie, {nameVocative}. Samouczek poczeka.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w29",
+      "text": "Klik poza celem = ja w rogu, nie koniec świata.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w30",
+      "text": "Fajnie, że patrzysz szerzej. Wracamy gdy powiesz.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w31",
+      "text": "{name}, trzymam krok w pamięci. Zero kary za detour.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w32",
+      "text": "Jestem listkiem-towarzyszem, nie policjantem tras.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w33",
+      "text": "Swobodnie! Spotlight zostaje, ja robię sobie przerwę w BR.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w34",
+      "text": "{nameVocative}, gdy skończysz zagłębiać, jestem o krok.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w35",
+      "text": "Nie zamykam samouczka. Tylko się odsunąłem.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w36",
+      "text": "Twoja eksploracja = OK. Moja misja = nadal aktywna.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w37",
+      "text": "{nameDim}, jakby co, belka na dole też działa.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "w38",
+      "text": "Lubię, gdy ktoś klika z ciekawości. Do zobaczenia przy celu!",
+      "pose": "sad-2"
+    },
+    {
+      "id": "w39",
+      "text": "Spokojnie, {name}. Nic się nie zepsuło, tylko zboczyliśmy.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "w40",
+      "text": "Widzę, że działasz na własną rękę, {nameVocative}! Jak coś, to wiesz gdzie jestem.",
+      "pose": "sad-1"
+    }
+  ],
+  "sad": [
+    {
+      "id": "s01",
+      "text": "Może nie wszystko jeszcze działa, ale się staram.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "s02",
+      "text": "Może z innym produktem pójdzie lepiej?",
+      "pose": "sad-2"
+    },
+    {
+      "id": "s03",
+      "text": "Zgłaszamy to do Krzysztofa?",
+      "pose": "sad-3"
+    },
+    {
+      "id": "s04",
+      "text": "Wiem, {name}, że to frustruje. Jestem tu z Tobą.",
+      "pose": "sad-report"
+    },
+    {
+      "id": "s05",
+      "text": "Pusto jak w lodówce w niedzielę. Spróbuj innego hasła?",
+      "pose": "think-q"
+    },
+    {
+      "id": "s06",
+      "text": "{nameVocative}, brak wyników mnie też smuci. Razem damy radę.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "s07",
+      "text": "Hmm. Może filtr jest zbyt ostry?",
+      "pose": "sad-2"
+    },
+    {
+      "id": "s08",
+      "text": "Nie znalazłem. Ale nie poddaję się, {nameDim}!",
+      "pose": "sad-3"
+    },
+    {
+      "id": "s09",
+      "text": "Zerowe propozycje materiałów. Damy znać zespołowi?",
+      "pose": "sad-report"
+    },
+    {
+      "id": "s10",
+      "text": "Coś tu nie gra. Spiszemy to dla Ewy z brandingu?",
+      "pose": "think-q"
+    },
+    {
+      "id": "s11",
+      "text": "{name}, pusta lista nie oznacza końca świata.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "s12",
+      "text": "Szukam, szukam... i nic. Zmieńmy zapytanie?",
+      "pose": "sad-2"
+    },
+    {
+      "id": "s13",
+      "text": "Może literówka? Albo inny indeks?",
+      "pose": "sad-3"
+    },
+    {
+      "id": "s14",
+      "text": "Smutno mi jak listkowi bez słońca. Spróbujmy inaczej.",
+      "pose": "sad-report"
+    },
+    {
+      "id": "s15",
+      "text": "{nameVocative}, zgłoszenie przyjęte. Trzymam kciuki za fix.",
+      "pose": "think-q"
+    },
+    {
+      "id": "s16",
+      "text": "Brak sugestii. Czasem baza potrzebuje chwili.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "s17",
+      "text": "Nie ma wyników, ale jestem przy Tobie, {nameDim}.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "s18",
+      "text": "Może produkt jeszcze nie trafił do indeksu?",
+      "pose": "sad-3"
+    },
+    {
+      "id": "s19",
+      "text": "Pusto. Chcesz, żebym przypomniał o tym Piotrkowi?",
+      "pose": "sad-report"
+    },
+    {
+      "id": "s20",
+      "text": "{name}, wiem że to irytuje. Sprawdźmy synonimy.",
+      "pose": "think-q"
+    },
+    {
+      "id": "s21",
+      "text": "Zero trafień. Oddech, nowe hasło, jedziemy.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "s22",
+      "text": "Może tag jest inny niż myślisz?",
+      "pose": "sad-2"
+    },
+    {
+      "id": "s23",
+      "text": "Nie znalazłem pliku. Ale znalazłem cierpliwość.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "s24",
+      "text": "{nameVocative}, raportuję pustkę. Trzymam kciuki razem z Tobą.",
+      "pose": "sad-report"
+    },
+    {
+      "id": "s25",
+      "text": "Brak materiałów do podpowiedzi. Wracamy do szerszego widoku?",
+      "pose": "think-q"
+    },
+    {
+      "id": "s26",
+      "text": "Smutna mina, ale praktyczna rada: spróbuj krótszego słowa.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "s27",
+      "text": "Może status F/X/D chowa wynik? Sprawdź filtry.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "s28",
+      "text": "{nameDim}, dam znać Krzysztofowi jeśli to wygląda na bug.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "s29",
+      "text": "Pusta siatka. Czasem wystarczy wyczyścić wyszukiwarkę.",
+      "pose": "sad-report"
+    },
+    {
+      "id": "s30",
+      "text": "Nie ma propozycji. To nie Twoja wina, {name}.",
+      "pose": "think-q"
+    },
+    {
+      "id": "s31",
+      "text": "Zgłoszone. Ja zostaję ze smutną miną, Ty z misją.",
+      "pose": "sad-1"
+    },
+    {
+      "id": "s32",
+      "text": "Może inna kategoria będzie łaskawsza?",
+      "pose": "sad-2"
+    },
+    {
+      "id": "s33",
+      "text": "{nameVocative}, brak wyników = ja w trybie wsparcia.",
+      "pose": "sad-3"
+    },
+    {
+      "id": "s34",
+      "text": "Zero. Ale panel żyje, a my też.",
+      "pose": "sad-report"
+    },
+    {
+      "id": "s35",
+      "text": "Spróbuj indeksu liczbowego, czasem łatwiej trafić.",
+      "pose": "think-q"
+    },
+    {
+      "id": "s36",
+      "text": "Nic tu nie ma. Chcesz wrócić do Eksplorera?",
+      "pose": "sad-1"
+    },
+    {
+      "id": "s37",
+      "text": "{name}, odnotowane. Poprawki lecą do kolejki.",
+      "pose": "sad-2"
+    },
+    {
+      "id": "s38",
+      "text": "Pusto jak folder bez plików. Zmieńmy perspektywę?",
+      "pose": "sad-3"
+    },
+    {
+      "id": "s39",
+      "text": "Wiem, że to nie to. Jestem tu, żeby nie było samemu.",
+      "pose": "sad-report"
+    },
+    {
+      "id": "s40",
+      "text": "Może z innym produktem pójdzie lepiej, {nameDim}?",
+      "pose": "think-q"
+    }
+  ],
+  "cheer_poses": [
+    "joy-4",
+    "joy-5",
+    "joy-6",
+    "approve-8",
+    "joy-1"
+  ],
+  "congrats_title": "Brawo!"
+}

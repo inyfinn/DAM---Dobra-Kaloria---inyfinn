@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "state": "done",
+  "engine": "olmocr2",
+  "count": 1,
+  "results": [
+    {
+      "id": "br-005033",
+      "name": "ZESTAWY-doypack - Kulki Limonka GC - 848x1200 RGB.jpg",
+      "path": "M:\\- POLSKA\\06 - STRONY WWW - INTERNET\\01 - Strona Dobra Kaloria\\04 - GRAFIKI DO ZESTAWÓW\\02 - SŁODKIE\\Doypack Kulki Limonka\\ZESTAWY-doypack - Kulki Limonka GC - 848x1200 RGB.jpg",
+      "locked_override": false,
+      "ocr_text": "good calories\nDELIGHT BITES\nCOCOA & LIME\nNO ADDED SUGAR\nPLANT BASED 65g\n6 SZTUK\ngood calories\nDELIGHT BITES\nCOCOA & LIME\nNO ADDED SUGAR\nPLANT BASED 65g\nKULKI LIMONKA | 0% DODATKU CUKRU",
+      "engine": "olmocr2",
+      "suggestions": [
+        {
+          "product_id": "daktyl-limonka-raw",
+          "score": 93,
+          "reason": "ocr_line_phrase:kulki limonka"
+        }
+      ],
+      "applied": true,
+      "ocr_meta": {
+        "ok": true,
+        "chars": 184,
+        "error": null,
+        "engine": "olmocr2",
+        "python": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\Program  do sprawdzania\\PACKAGING-CHECKER\\app\\venv\\Scripts\\python.exe"
+      }
+    }
+  ],
+  "finished_at": "2026-08-03T15:22:13.089237+00:00"
+}

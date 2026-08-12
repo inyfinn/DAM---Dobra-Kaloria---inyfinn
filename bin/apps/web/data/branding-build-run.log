@@ -1,0 +1,183 @@
+scan primary: M:\- POLSKA\- BRANDING i MARKA -
+  primary_scanned=500 indexed=239
+  primary_scanned=1000 indexed=732
+  primary_scanned=1500 indexed=1231
+  primary_scanned=2000 indexed=1731
+  primary_scanned=2500 indexed=2231
+scan primary: M:\- POLSKA\02 - FIRMOWE MATERIA£Y
+  primary_scanned=3000 indexed=2712
+  primary_scanned=3500 indexed=3133
+scan primary: M:\- POLSKA\03 - MATERIA£Y GRAFICZNE
+scan primary: M:\- POLSKA\04 - PROCESY
+  primary_scanned=4000 indexed=3597
+scan primary: M:\- POLSKA\05 - SOCIAL MEDIA
+scan primary: M:\- POLSKA\06 - STRONY WWW - INTERNET
+  primary_scanned=4500 indexed=3944
+  primary_scanned=5000 indexed=4433
+  primary_scanned=5500 indexed=4890
+  primary_scanned=6000 indexed=5367
+scan primary: M:\- POLSKA\07 - E-COMMERCE
+scan primary: M:\- POLSKA\08 - KAMAPANIE
+  primary_scanned=6500 indexed=5848
+  primary_scanned=7000 indexed=6251
+scan legacy: M:\-- ARCHIWUM --
+  legacy_scanned=500 indexed=410 skip_overlap=1
+  legacy_scanned=1000 indexed=828 skip_overlap=3
+  legacy_scanned=1500 indexed=1261 skip_overlap=10
+  legacy_scanned=2000 indexed=1631 skip_overlap=14
+  legacy_scanned=2500 indexed=2060 skip_overlap=19
+  legacy_scanned=3000 indexed=2476 skip_overlap=21
+  legacy_scanned=3500 indexed=2899 skip_overlap=25
+  legacy_scanned=4000 indexed=3323 skip_overlap=27
+  legacy_scanned=4500 indexed=3732 skip_overlap=28
+  legacy_scanned=5000 indexed=4185 skip_overlap=28
+  legacy_scanned=5500 indexed=4621 skip_overlap=30
+  legacy_scanned=6000 indexed=5086 skip_overlap=43
+  legacy_scanned=6500 indexed=5552 skip_overlap=51
+  legacy_scanned=7000 indexed=5951 skip_overlap=51
+  legacy_scanned=7500 indexed=6392 skip_overlap=51
+  legacy_scanned=8000 indexed=6769 skip_overlap=88
+  legacy_scanned=8500 indexed=7170 skip_overlap=88
+  legacy_scanned=9000 indexed=7483 skip_overlap=88
+  legacy_scanned=9500 indexed=7844 skip_overlap=88
+  legacy_scanned=10000 indexed=8195 skip_overlap=88
+  legacy_scanned=10500 indexed=8528 skip_overlap=103
+  legacy_scanned=11000 indexed=8928 skip_overlap=103
+  legacy_scanned=11500 indexed=9407 skip_overlap=109
+  legacy_scanned=12000 indexed=9858 skip_overlap=116
+  legacy_scanned=12500 indexed=10189 skip_overlap=216
+  legacy_scanned=13000 indexed=10295 skip_overlap=588
+  legacy_scanned=13500 indexed=10440 skip_overlap=902
+  legacy_scanned=14000 indexed=10547 skip_overlap=1197
+  legacy_scanned=14500 indexed=10547 skip_overlap=1697
+  legacy_scanned=15000 indexed=10547 skip_overlap=2195
+  legacy_scanned=15500 indexed=10547 skip_overlap=2695
+  legacy_scanned=16000 indexed=10547 skip_overlap=3195
+  legacy_scanned=16500 indexed=10572 skip_overlap=3454
+  legacy_scanned=17000 indexed=10608 skip_overlap=3774
+  legacy_scanned=17500 indexed=10633 skip_overlap=4161
+  legacy_scanned=18000 indexed=10641 skip_overlap=4529
+  legacy_scanned=18500 indexed=10642 skip_overlap=4859
+  legacy_scanned=19000 indexed=10646 skip_overlap=5300
+  legacy_scanned=19500 indexed=10755 skip_overlap=5585
+  legacy_scanned=20000 indexed=11124 skip_overlap=5586
+  legacy_scanned=20500 indexed=11424 skip_overlap=5739
+  legacy_scanned=21000 indexed=11829 skip_overlap=5818
+  legacy_scanned=21500 indexed=12171 skip_overlap=5969
+  legacy_scanned=22000 indexed=12495 skip_overlap=6011
+  legacy_scanned=22500 indexed=12945 skip_overlap=6023
+  legacy_scanned=23000 indexed=13436 skip_overlap=6023
+  legacy_scanned=23500 indexed=13928 skip_overlap=6023
+  legacy_scanned=24000 indexed=14174 skip_overlap=6023
+  legacy_scanned=24500 indexed=14174 skip_overlap=6023
+  legacy_scanned=25000 indexed=14174 skip_overlap=6023
+  legacy_scanned=25500 indexed=14174 skip_overlap=6023
+  legacy_scanned=26000 indexed=14245 skip_overlap=6023
+  legacy_scanned=26500 indexed=14295 skip_overlap=6023
+  legacy_scanned=27000 indexed=14295 skip_overlap=6023
+  legacy_scanned=27500 indexed=14521 skip_overlap=6023
+  legacy_scanned=28000 indexed=14757 skip_overlap=6023
+  legacy_scanned=28500 indexed=14920 skip_overlap=6023
+  legacy_scanned=29000 indexed=14998 skip_overlap=6023
+  legacy_scanned=29500 indexed=14998 skip_overlap=6023
+  legacy_scanned=30000 indexed=14998 skip_overlap=6023
+  legacy_scanned=30500 indexed=14998 skip_overlap=6023
+  legacy_scanned=31000 indexed=15012 skip_overlap=6023
+  legacy_scanned=31500 indexed=15090 skip_overlap=6023
+  legacy_scanned=32000 indexed=15179 skip_overlap=6023
+  legacy_scanned=32500 indexed=15179 skip_overlap=6023
+  legacy_scanned=33000 indexed=15258 skip_overlap=6023
+  legacy_scanned=33500 indexed=15258 skip_overlap=6023
+  legacy_scanned=34000 indexed=15363 skip_overlap=6023
+  legacy_scanned=34500 indexed=15559 skip_overlap=6023
+  legacy_scanned=35000 indexed=15597 skip_overlap=6023
+  legacy_scanned=35500 indexed=15679 skip_overlap=6023
+  legacy_scanned=36000 indexed=15729 skip_overlap=6023
+  legacy_scanned=36500 indexed=15729 skip_overlap=6023
+  legacy_scanned=37000 indexed=15868 skip_overlap=6023
+  legacy_scanned=37500 indexed=16071 skip_overlap=6023
+  legacy_scanned=38000 indexed=16571 skip_overlap=6023
+  legacy_scanned=38500 indexed=17039 skip_overlap=6055
+  legacy_scanned=39000 indexed=17539 skip_overlap=6055
+  legacy_scanned=39500 indexed=18038 skip_overlap=6055
+  legacy_scanned=40000 indexed=18538 skip_overlap=6055
+  legacy_scanned=40500 indexed=18836 skip_overlap=6055
+  legacy_scanned=41000 indexed=18863 skip_overlap=6055
+  legacy_scanned=41500 indexed=18863 skip_overlap=6055
+  legacy_scanned=42000 indexed=18918 skip_overlap=6055
+  legacy_scanned=42500 indexed=18944 skip_overlap=6055
+  legacy_scanned=43000 indexed=19300 skip_overlap=6055
+  legacy_scanned=43500 indexed=19622 skip_overlap=6055
+  legacy_scanned=44000 indexed=19894 skip_overlap=6055
+  legacy_scanned=44500 indexed=20115 skip_overlap=6055
+  legacy_scanned=45000 indexed=20615 skip_overlap=6055
+  legacy_scanned=45500 indexed=21115 skip_overlap=6055
+  legacy_scanned=46000 indexed=21529 skip_overlap=6055
+  legacy_scanned=46500 indexed=21997 skip_overlap=6055
+  legacy_scanned=47000 indexed=22497 skip_overlap=6055
+  legacy_scanned=47500 indexed=22997 skip_overlap=6055
+  legacy_scanned=48000 indexed=23419 skip_overlap=6055
+  legacy_scanned=48500 indexed=23819 skip_overlap=6055
+  legacy_scanned=49000 indexed=24261 skip_overlap=6055
+  legacy_scanned=49500 indexed=24707 skip_overlap=6055
+  legacy_scanned=50000 indexed=25155 skip_overlap=6055
+  legacy_scanned=50500 indexed=25632 skip_overlap=6055
+  legacy_scanned=51000 indexed=26115 skip_overlap=6055
+  legacy_scanned=51500 indexed=26589 skip_overlap=6059
+  legacy_scanned=52000 indexed=27059 skip_overlap=6059
+  legacy_scanned=52500 indexed=27532 skip_overlap=6059
+  legacy_scanned=53000 indexed=27996 skip_overlap=6059
+  legacy_scanned=53500 indexed=28454 skip_overlap=6059
+  legacy_scanned=54000 indexed=28925 skip_overlap=6059
+  legacy_scanned=54500 indexed=29343 skip_overlap=6059
+  legacy_scanned=55000 indexed=29780 skip_overlap=6060
+  legacy_scanned=55500 indexed=30251 skip_overlap=6060
+  legacy_scanned=56000 indexed=30700 skip_overlap=6060
+  legacy_scanned=56500 indexed=31153 skip_overlap=6060
+  legacy_scanned=57000 indexed=31506 skip_overlap=6061
+  legacy_scanned=57500 indexed=31817 skip_overlap=6061
+  legacy_scanned=58000 indexed=32218 skip_overlap=6061
+  legacy_scanned=58500 indexed=32624 skip_overlap=6061
+  legacy_scanned=59000 indexed=32873 skip_overlap=6061
+  legacy_scanned=59500 indexed=33080 skip_overlap=6062
+  legacy_scanned=60000 indexed=33328 skip_overlap=6062
+  legacy_scanned=60500 indexed=33609 skip_overlap=6063
+  legacy_scanned=61000 indexed=33995 skip_overlap=6069
+  legacy_scanned=61500 indexed=34406 skip_overlap=6105
+  legacy_scanned=62000 indexed=34827 skip_overlap=6142
+  legacy_scanned=62500 indexed=35294 skip_overlap=6142
+  legacy_scanned=63000 indexed=35778 skip_overlap=6142
+  legacy_scanned=63500 indexed=36192 skip_overlap=6143
+  legacy_scanned=64000 indexed=36657 skip_overlap=6153
+  legacy_scanned=64500 indexed=37045 skip_overlap=6172
+  legacy_scanned=65000 indexed=37448 skip_overlap=6212
+  legacy_scanned=65500 indexed=37856 skip_overlap=6226
+  legacy_scanned=66000 indexed=38233 skip_overlap=6245
+  legacy_scanned=66500 indexed=38588 skip_overlap=6259
+  legacy_scanned=67000 indexed=38905 skip_overlap=6355
+  legacy_scanned=67500 indexed=39159 skip_overlap=6355
+  legacy_scanned=68000 indexed=39374 skip_overlap=6378
+  legacy_scanned=68500 indexed=39710 skip_overlap=6424
+  legacy_scanned=69000 indexed=40192 skip_overlap=6438
+  legacy_scanned=69500 indexed=40500 skip_overlap=6528
+  legacy_scanned=70000 indexed=40993 skip_overlap=6532
+  legacy_scanned=70500 indexed=41418 skip_overlap=6553
+  legacy_scanned=71000 indexed=41840 skip_overlap=6555
+  legacy_scanned=71500 indexed=42253 skip_overlap=6559
+  legacy_scanned=72000 indexed=42607 skip_overlap=6564
+  legacy_scanned=72500 indexed=42810 skip_overlap=6568
+  legacy_scanned=73000 indexed=43210 skip_overlap=6572
+  legacy_scanned=73500 indexed=43687 skip_overlap=6572
+  legacy_scanned=74000 indexed=44074 skip_overlap=6607
+  legacy_scanned=74500 indexed=44275 skip_overlap=6820
+  legacy_scanned=75000 indexed=44495 skip_overlap=6882
+  legacy_scanned=75500 indexed=44800 skip_overlap=6918
+  legacy_scanned=76000 indexed=45062 skip_overlap=7052
+  legacy_scanned=76500 indexed=45342 skip_overlap=7146
+  legacy_scanned=77000 indexed=45754 skip_overlap=7146
+  legacy_scanned=77500 indexed=46140 skip_overlap=7158
+marketing scan: primary=7281 legacy_scanned=77638 legacy_skipped_overlap=7167 legacy_indexed=46252
+wizki scan: 2086
+product element scan (Links/ELEMENTY): 1999
+element assoc: tagged=17678 product_paths=1999 owoce=7656 skladniki=17688
+Wrote \\NFS01.kubara.net\User\krzysztof.wieczorek\DAM\bin\apps\web\data\branding-index.json assets=56822 wizki=2086 perspective=1859 linked=45284 elapsed=1662.9s

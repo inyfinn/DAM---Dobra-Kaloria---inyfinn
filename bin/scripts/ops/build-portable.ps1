@@ -11,7 +11,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $BinRoot = Join-Path $GitRoot "bin"
 $GoExe = Join-Path $GitRoot "bin\tooling\go\bin\go.exe"
 if (-not (Test-Path -LiteralPath $GoExe)) { $GoExe = "go" }
@@ -128,3 +128,4 @@ $evidence = Join-Path $GitRoot "dist\evidence\portable-build.log"
 
 Write-Host ("OK zip={0} runtime_mb={1:N1}" -f $zipPath, ($rtSize/1MB))
 exit 0
+

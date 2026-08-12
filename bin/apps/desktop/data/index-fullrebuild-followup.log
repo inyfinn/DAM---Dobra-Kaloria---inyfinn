@@ -1,0 +1,48 @@
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 56
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 67
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemiêsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemiêsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemiêsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemiêsne ]
+  [archive] produkt tylko archiwum: PASZTET ŒLIWKA — [ niemiêsne ]
+  [DK] 03 - ROSLINNE archiwum: +5 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 107
+  [DK] 04 - SYPKIE: products so far 121
+  [DK] 05 - NAPOJE: products so far 125
+  [DK] 06 - PRZETWORY: products so far 128
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 132
+  [GC] 01 - BARS: products so far 154
+  [GC] 02 - BALLS: products so far 159
+  [GC] 03 - PLANT BASED: products so far 175
+  [GC] 04 - BREAKFAST: products so far 175
+  [GC] 05 - DRINKS: products so far 175
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5641 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (314 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (698 files)
+products=186 viz=401 elapsed=11.69s
+  viz sample: Date Orange [GC] lang=en thumb=data/thumbs/date-orange-balls-raw__6300624_en.jpg?v=1784205634 file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb=data/thumbs/date-orange-balls-raw__6300624_hr.jpg?v=1784205634 file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb=data/thumbs/date-orange-balls-raw__6300624_hu.jpg?v=1784205634 file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb=data/thumbs/date-orange-balls-raw__6300624_sk.jpg?v=1784205634 file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb=data/thumbs/date-orange-balls-raw__6300490_en.jpg?v=1784205633 file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb=data/thumbs/coconut-orange-date__000000_de.jpg?v=1775042850 file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 58 by_tag_sylwia 23 by_tag_krzysztof 49
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+[watch] base=D:\Marketing roots=2 interval=5.0s
+[watch]   D:\Marketing\- POLSKA\01 - PRODUKTY\- DK
+[watch]   D:\Marketing\- EKSPORT\01 - PRODUCTS\- GC

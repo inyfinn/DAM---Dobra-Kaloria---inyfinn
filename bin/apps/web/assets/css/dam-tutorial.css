@@ -1,0 +1,409 @@
+/**
+ * DAM - samouczek (dam-tutorial.js). Warstwa ~14000 (nad modalami i loaderem).
+ * Scrim = box-shadow "dziury" (.dam-tut__spot), pointer-events: none - klikanie
+ * w strone NIE jest blokowane; interaktywne sa tylko dymek i panel sterujacy.
+ */
+
+.dam-tut {
+  position: fixed;
+  inset: 0;
+  z-index: 14000;
+  pointer-events: none;
+  font-family: var(--dam-font, "Jost", sans-serif);
+}
+
+/* Spotlight: przezroczyste okno, gigantyczny cien = scrim z dziura */
+.dam-tut__spot {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 14px;
+  box-shadow: 0 0 0 200vmax rgba(15, 14, 22, 0.62);
+  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline-offset: -1px;
+  pointer-events: none;
+}
+
+/* Dymek maskotki */
+.dam-tut__bubble {
+  /* C4: medal hoist - body min-height sync z kolumna maskotki */
+  --tut-medal: 103.5px;
+  position: fixed;
+  left: 50%;
+  top: 40%;
+  width: min(454px, calc(100vw - 32px));
+  display: flex;
+  align-items: stretch;
+  gap: 36px; /* C4: +10px vs 26px - odsun maskotke od tekstow */
+  padding: 26px 30px 16px; /* C4: mniejszy dolny pad - bez pustki pod mini-nav */
+  background: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
+  border: 1px solid var(--dam-border, #ececf2);
+  border-radius: var(--dam-radius-md, 12px);
+  box-shadow: 0 18px 44px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.28);
+  pointer-events: auto;
+}
+
+/*
+ * Maskotka = dwie NIEZALEZNE warstwy:
+ *   ::before  = bialy medalion (kolko), ZAWSZE nieruchomy (bez transformacji),
+ *   .dam-tut__mascot-img = przezroczysty PNG pozy (--dam-tut-pose), TYLKO ta
+ *     warstwa bobuje gora-dol (GSAP animuje y wewnetrznego elementu, nie
+ *     kontenera). Glowa/rece moga wystawac u gory; nogi w obrebie kolka.
+ * Kontener nie ma wlasnej transformacji, wiec medalion sie nie rusza.
+ */
+.dam-tut__mascot,
+.dam-tut-invite__mascot {
+  /* C4: kolko +15% (90 -> 103.5px); invite nadpisuje --tut-medal */
+  --tut-medal: 103.5px;
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--tut-medal);
+  /* wiecej miejsca na wystajaca glowe (img 121%) */
+  height: calc(var(--tut-medal) * 1.32);
+  align-self: flex-start;
+}
+
+.dam-tut__mascot::before,
+.dam-tut-invite__mascot::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--tut-medal);
+  height: var(--tut-medal);
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--dam-border, #ececf2);
+  /* C4: cien z zielonym tintem marki (#008244 / --dam-brand-green) */
+  box-shadow:
+    0 8px 22px rgba(0, 130, 68, 0.38),
+    0 2px 6px rgba(0, 130, 68, 0.22);
+}
+
+/* Warstwa obrazka: +10% vs poprzednie 110% => 121%. Nogi w obrebie kolka
+ * (bottom inset), glowa/rece wystaja u gory. GSAP bobuje tylko ta warstwe. */
+.dam-tut__mascot-img,
+.dam-tut-invite__mascot-img {
+  position: absolute;
+  left: -10.5%;
+  bottom: 6px; /* nogi w srodku kolka, nie na krawedzi */
+  width: 121%;
+  height: 121%;
+  background-image: var(--dam-tut-pose);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center bottom;
+  filter: drop-shadow(0 2px 3px rgba(0, 130, 68, 0.18));
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* C4: kolumna body min = wysokosc maskotki; tytul gora, tekst flex-grow,
+ * mini-nav ZAWSZE przyklejony do dolu (margin-top: auto). */
+.dam-tut__bubble-body {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-height: calc(var(--tut-medal) * 1.32);
+  gap: 10px;
+}
+
+.dam-tut__title {
+  margin: 0;
+  flex: 0 0 auto;
+  font-size: var(--dam-fs-lg, 16px);
+  font-weight: 600;
+  color: var(--dam-text, #464255);
+}
+
+.dam-tut__text {
+  margin: 0;
+  flex: 1 1 auto;
+  font-size: var(--dam-fs-base, 14px);
+  line-height: 1.5;
+  color: var(--dam-text, #464255);
+}
+
+.dam-tut__go {
+  margin: 0;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--dam-brand-green, #008244);
+  color: #fff;
+  font: inherit;
+  font-size: var(--dam-fs-md, 13px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter var(--dam-anim-hover, 0.22s) ease;
+}
+
+.dam-tut__go:hover {
+  filter: brightness(1.1);
+}
+
+/* Lokalny mini-pasek Wstecz/Dalej - ZAWSZE na dole kolumny body */
+.dam-tut__mini-nav {
+  display: flex;
+  gap: 8px;
+  margin: auto 0 0;
+  padding-top: 10px;
+  flex: 0 0 auto;
+  border-top: 1px solid var(--dam-border, #ececf2);
+}
+
+.dam-tut__mini-nav .dam-tut__btn {
+  flex: 1 1 0;
+  justify-content: center;
+  min-height: var(--dam-control-h, 44px);
+}
+
+/* Panel sterujacy: ZAWSZE dol-srodek */
+.dam-tut__ctrl {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #ececf2);
+  border-radius: 999px;
+  box-shadow: 0 14px 36px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.3);
+  pointer-events: auto;
+  max-width: calc(100vw - 24px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Alias → Geex CTA anatomy (F3): pad/radius/height tokens; keep tut color roles */
+.dam-tut__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: var(--dam-space-btn-y, 15px) var(--dam-space-btn-x, 25px);
+  min-height: var(--dam-control-h, 44px);
+  border: 1px solid var(--dam-btn-outline-border, var(--dam-border, #ececf2));
+  border-radius: var(--dam-radius-btn, 18px);
+  background: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
+  font: inherit;
+  font-size: var(--dam-fs-md, 13px);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dam-anim-hover, 0.22s) ease,
+    color var(--dam-anim-hover, 0.22s) ease,
+    border-color var(--dam-anim-hover, 0.22s) ease;
+}
+
+.dam-tut__btn:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--dam-primary, #ab54db) 10%,
+    var(--dam-surface, #fff)
+  );
+  border-color: var(--dam-btn-outline-border, var(--dam-border, #ececf2));
+  color: var(--dam-primary, #ab54db);
+}
+
+.dam-tut__btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.dam-tut__btn--primary {
+  background: var(--dam-brand-green, #008244);
+  border-color: var(--dam-brand-green, #008244);
+  color: #fff;
+}
+
+.dam-tut__btn--primary:hover:not(:disabled) {
+  background: #006b38;
+  border-color: #006b38;
+  color: #fff;
+}
+
+.dam-tut__btn--quiet {
+  border-color: transparent;
+  color: var(--dam-text-muted, #8f8b9f);
+}
+
+.dam-tut__btn--end {
+  color: var(--dam-danger, #ff5b5b);
+}
+
+.dam-tut__progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+}
+
+.dam-tut__phase-label {
+  font-size: var(--dam-fs-sm, 12px);
+  font-weight: 600;
+  color: var(--dam-text, #464255);
+  white-space: nowrap;
+}
+
+.dam-tut__dots {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.dam-tut__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dam-border, #ececf2);
+  transition: background var(--dam-anim-hover, 0.22s) ease;
+}
+
+.dam-tut__dot.is-on {
+  background: var(--dam-brand-green, #008244);
+}
+
+/* Zaproszenie: karta 390px; bialy prostokat pod maskotka (bez kolka ::before) */
+.dam-tut-invite {
+  --tut-medal: 103.5px;
+  --tut-invite-hang: calc(var(--tut-medal) + 18px);
+  position: fixed;
+  right: 86px;
+  bottom: 24px;
+  z-index: 14010;
+  width: min(390px, calc(100vw - 110px));
+  padding: 24px 26px;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  font-family: var(--dam-font, "Jost", sans-serif);
+  pointer-events: auto;
+  isolation: isolate;
+}
+
+/* Biale tlo + obrys: nachodzi w lewo pod maskotke */
+.dam-tut-invite::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: calc(-1 * var(--tut-invite-hang));
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #ececf2);
+  border-radius: var(--dam-radius-md, 12px);
+  box-shadow: 0 16px 40px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.26);
+  pointer-events: none;
+}
+
+.dam-tut-invite .dam-tut-invite__mascot {
+  position: absolute;
+  left: calc(-1 * var(--tut-invite-hang));
+  top: 6px;
+  margin: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Invite: bez bialego medalionu (::before) - tylko postac na tle karty */
+.dam-tut-invite .dam-tut-invite__mascot::before {
+  content: none;
+  display: none;
+}
+
+.dam-tut-invite .dam-tut-invite__mascot-img {
+  left: -10.5%;
+  width: 121%;
+  background-position: center bottom;
+  filter: none;
+}
+
+.dam-tut-invite__body {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+  color: var(--dam-text, #464255);
+}
+
+.dam-tut-invite__text {
+  margin: 2px 0 10px;
+  font-size: var(--dam-fs-base, 14px);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.dam-tut-invite__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 15px;
+}
+
+.dam-tut-invite__actions .dam-tut__btn {
+  padding: 10px 16px;
+  min-height: var(--dam-control-h, 44px);
+  font-size: var(--dam-fs-sm, 12px);
+}
+
+/* Wpis w panelu pomocy (+10px vs poprzedni rytm body) */
+.dam-tut-help-entry {
+  padding: 22px 34px 28px;
+  border-top: 1px solid var(--dam-border, #ececf2);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .dam-tut__ctrl {
+    gap: 6px;
+    padding: 16px 18px;
+  }
+  .dam-tut__btn {
+    padding: 10px 14px;
+    min-height: var(--dam-control-h, 44px);
+    font-size: var(--dam-fs-sm, 12px);
+  }
+  .dam-tut__phase-label {
+    font-size: var(--dam-fs-xs, 11px);
+  }
+  .dam-tut-invite {
+    right: 12px;
+    width: min(390px, calc(100vw - 24px));
+    --tut-medal: 88px;
+    --tut-invite-hang: calc(var(--tut-medal) + 14px);
+    padding: 18px 16px;
+  }
+  .dam-tut-invite .dam-tut-invite__mascot {
+    left: calc(-1 * var(--tut-invite-hang));
+    top: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-tut__spot,
+  .dam-tut__bubble,
+  .dam-tut__mascot,
+  .dam-tut-invite,
+  .dam-tut-invite__mascot {
+    transition: none !important;
+    animation: none !important;
+  }
+}

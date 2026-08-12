@@ -1,0 +1,177 @@
+/**
+ * DAM accent overlay — chrome UI follows --dam-primary.
+ * TAGI (.dam-badge-tag / .dam-viz-badge / palette smak|typ|opakowanie|autor) NIGDY nie dziedzicza.
+ * Nie wymaga body.dam-app.
+ */
+:root {
+  --primary-color: var(--dam-primary, #ab54db);
+  --primary-color-transparent: color-mix(
+    in srgb,
+    var(--dam-primary, #ab54db) 15%,
+    transparent
+  );
+}
+
+/* --- Chrome: FAB pomocy --- */
+.dam-help-fab {
+  background: var(--dam-primary, #ab54db) !important;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent) !important;
+}
+.dam-help-fab:hover {
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 88%, #000) !important;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent) !important;
+}
+.dam-help-fab:focus-visible {
+  outline-color: var(--dam-primary, #ab54db) !important;
+}
+
+/* --- Chrome: primary buttons --- */
+.geex-btn--primary:not(.dam-badge-tag):not(.dam-viz-badge),
+.dam-btn-primary:not(.dam-badge-tag),
+button.geex-btn.geex-btn--primary {
+  background: var(--dam-primary, #ab54db) !important;
+  border-color: var(--dam-primary, #ab54db) !important;
+  color: #fff !important;
+}
+.geex-btn--primary:not(.dam-badge-tag):hover,
+.dam-btn-primary:not(.dam-badge-tag):hover,
+button.geex-btn.geex-btn--primary:hover {
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 88%, #000) !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 88%, #000) !important;
+}
+
+/* Generic Geex btn hover/active — follow accent (nie tagi) */
+.geex-btn:not(.dam-badge-tag):not(.dam-viz-badge):not(.geex-btn--danger):not(.geex-btn--success):hover,
+.geex-btn:not(.dam-badge-tag):not(.dam-viz-badge):not(.geex-btn--danger):not(.geex-btn--success).active {
+  background-color: var(--dam-primary, #ab54db) !important;
+  color: #fff !important;
+  border-color: var(--dam-primary, #ab54db) !important;
+}
+
+/* --- Chrome: ADMIN header --- */
+.dam-admin-header-switch {
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, #fff);
+}
+.dam-admin-header-switch .dam-switch__label {
+  color: var(--dam-primary, #ab54db);
+}
+.dam-admin-header-switch .dam-switch__input:checked + .dam-switch__track {
+  background: var(--dam-primary, #ab54db) !important;
+}
+.dam-admin-header-switch.is-off,
+.dam-admin-header-switch:has(.dam-switch__input:not(:checked)) {
+  background: var(--dam-surface-muted, #f5f5f7);
+  border-color: var(--dam-border, #e7e7e7);
+}
+
+/* --- Chrome: sidebar active + hover (nadpisuje hardcoded Geex purple wash) --- */
+.geex-sidebar__menu__link.default-active,
+.geex-sidebar__menu__link.active,
+.geex-sidebar__menu__link:hover,
+.geex-sidebar__menu__item.active > .geex-sidebar__menu__link,
+a.geex-sidebar__menu__link[aria-current="page"] {
+  color: var(--dam-primary, #ab54db) !important;
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 15%, transparent) !important;
+  background-clip: border-box !important;
+  box-shadow: none !important;
+}
+.geex-sidebar__menu__link.default-active,
+.geex-sidebar__menu__link.active,
+.geex-sidebar__menu__item.active > .geex-sidebar__menu__link,
+a.geex-sidebar__menu__link[aria-current="page"] {
+  border-radius: 6px 18px 18px 6px !important;
+}
+.geex-sidebar__menu__link.default-active i,
+.geex-sidebar__menu__link.active i,
+.geex-sidebar__menu__link:hover i,
+.geex-sidebar__menu__link.active svg,
+a.geex-sidebar__menu__link[aria-current="page"] i {
+  color: var(--dam-primary, #ab54db) !important;
+}
+.geex-sidebar__menu__link.default-active svg path,
+.geex-sidebar__menu__link.active svg path,
+.geex-sidebar__menu__link:hover svg path {
+  fill: var(--dam-primary, #ab54db) !important;
+}
+
+/* --- Chrome: header actions / links (nie globalne a:hover) --- */
+.geex-header__menu__item a.active,
+.geex-header__menu__item a:hover,
+.geex-content__header__action a:hover,
+.geex-content__header__action__btn.active,
+.geex-content__header__action__btn:hover,
+.geex-content__header__popup__link:hover .geex-content__header__popup__item__title,
+.geex-footer__menu__item a:hover {
+  color: var(--dam-primary, #ab54db);
+}
+.geex-header__menu__item a.active svg path,
+.geex-header__menu__item a:hover svg path {
+  fill: var(--dam-primary, #ab54db);
+}
+
+/* --- Chrome: breadcrumb --- */
+.dam-breadcrumb__link {
+  color: var(--dam-primary, #ab54db);
+}
+
+/* --- Chrome: search scope pills --- */
+.dam-search-scope__btn.is-on {
+  background: var(--dam-primary, #ab54db) !important;
+  border-color: var(--dam-primary, #ab54db) !important;
+  color: #fff !important;
+}
+.dam-search-scope__btn:focus-visible {
+  outline-color: var(--dam-primary, #ab54db) !important;
+}
+.dam-search-scope__btn:hover:not(:disabled):not(.is-disabled):not(.is-on) {
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #e0d6f2));
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, #fff);
+}
+
+/* --- Chrome: explorer cards hover --- */
+.dam-explorer-card:hover {
+  border-color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 6%, #fff);
+}
+
+/* --- Chrome: brand tabs active --- */
+.dam-brand-tabs .is-active,
+.dam-explorer-brand-tab.is-active,
+button.dam-brand-tab.is-on {
+  background: var(--dam-primary, #ab54db) !important;
+  border-color: var(--dam-primary, #ab54db) !important;
+  color: #fff !important;
+}
+
+/* --- Chrome: focus rings / outlines --- */
+:focus-visible {
+  outline-color: var(--dam-primary, #ab54db);
+}
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--dam-primary, #ab54db) !important;
+  box-shadow: 0 0 0 3px var(--primary-color-transparent) !important;
+}
+
+/* --- Chrome: pagination / load more --- */
+.geex-pagination__link:hover,
+.geex-pagination__link.active,
+.load-more-btn:hover {
+  background-color: var(--dam-primary, #ab54db) !important;
+  border-color: var(--dam-primary, #ab54db) !important;
+  color: #fff !important;
+}
+
+/* Tagi — twarda izolacja */
+.dam-badge-tag,
+.dam-viz-badge,
+.dam-tag-groups .dam-badge-tag,
+.dam-search-tags .dam-badge-tag,
+button.dam-badge-tag,
+.dam-tag-chip[data-tag-group],
+.dam-search-tags .dam-tag-chip {
+  /* kolory z dam-brand.css --smak/--typ/--opakowanie/--autor pozostaja */
+}

@@ -3,7 +3,7 @@
 )
 
 $ErrorActionPreference = "Stop"
-$repo = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $serve = Join-Path $repo "apps\desktop\serve_browser.py"
 if (-not (Test-Path $serve)) {
   Write-Error "Brak serve_browser.py: $serve"
@@ -16,3 +16,4 @@ Write-Host "DAM browser mode: UI :8765 + bridge :8766"
 Write-Host "Ctrl+C aby zatrzymac."
 Set-Location (Join-Path $repo "apps\desktop")
 python $serve
+

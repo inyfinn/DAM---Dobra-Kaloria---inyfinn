@@ -6,7 +6,7 @@
 #>
 $ErrorActionPreference = "Stop"
 
-$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $ContentRoot = Join-Path $GitRoot "bin"
 $PyVer = "3.12.10"
 $EmbedName = "python-$PyVer-embed-amd64.zip"
@@ -82,3 +82,4 @@ if ($LASTEXITCODE -ne 0) { throw "Smoke import failed" }
 $size = (Get-ChildItem -LiteralPath $RuntimePy -Recurse -File | Measure-Object -Property Length -Sum).Sum
 Write-Host ("OK runtime size_mb={0:N1}" -f ($size / 1MB))
 Write-Host "Runtime: $RuntimePy"
+

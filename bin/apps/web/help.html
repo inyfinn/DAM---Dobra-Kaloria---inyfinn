@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="pl" dir="ltr" class="dam-booting">
+<head>
+  <script>(function(){function g(){try{var u=location.pathname+location.search,h=location.hash||"";location.replace(u+(u.indexOf("?")>=0?"&":"?")+"_damr="+Date.now()+h);}catch(e){try{location.reload();}catch(x){}}}addEventListener("keydown",function(e){if(e.key==="F5"||(e.ctrlKey&&!e.shiftKey&&(e.key==="r"||e.key==="R")))g();},true);window.__damInlineHardReset=g;})();</script>
+  <script src="./assets/js/dam-panic-reload.js?v=restore20260805c"></script>
+  <style id="dam-shell-boot-critical">
+html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
+  </style>
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=restore20260805c">
+  <script>
+  (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAM - Pomoc</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
+  <link rel="stylesheet" href="./assets/css/style.css">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=restore20260805c">
+  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=restore20260805c">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=restore20260805c">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=restore20260805c">
+  <link rel="stylesheet" href="./assets/css/dam-bento.css?v=restore20260805c">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
+</head>
+<body class="geex-dashboard dam-app is-booting">
+  <div class="dam-sidebar-backdrop" id="damSidebarBackdrop"></div>
+  <header class="geex-header">
+    <div class="geex-header__wrapper">
+      <div class="geex-header__logo-wrapper">
+        <a href="index.html" class="geex-header__logo">
+          <img class="logo-lite" src="assets/img/logo-dark.svg" alt="DAM" />
+          <img class="logo-dark" src="assets/img/logo-lite.svg" alt="DAM" />
+        </a>
+      </div>
+    </div>
+  </header>
+  <main class="geex-main-content">
+    <div class="geex-sidebar" id="damSidebar">
+      <a href="#" class="geex-sidebar__close" id="damSidebarClose" aria-label="Zamknij menu"><i class="uil uil-times"></i></a>
+      <div class="geex-sidebar__wrapper">
+        <nav class="geex-sidebar__menu-wrapper">
+          <ul class="geex-sidebar__menu"></ul>
+        </nav>
+      </div>
+    </div>
+    <div class="geex-content">
+      <div class="geex-content__header">
+        <div class="geex-content__header__content">
+          <h2 class="geex-content__header__title">Pomoc</h2>
+          <p class="geex-content__header__subtitle">Wyszukaj problem albo przeglądaj tematy - jak korzystać z DAM</p>
+        </div>
+      </div>
+
+      <div class="dam-help-page">
+        <div class="dam-help-page__search-wrap">
+          <label class="dam-help-page__search" for="damHelpSearch">
+            <i class="uil uil-search" aria-hidden="true"></i>
+            <input
+              type="search"
+              id="damHelpSearch"
+              placeholder="Szukaj problemu (np. shift, offline, indeks, marka, zoom?))"
+              autocomplete="off"
+              aria-label="Szukaj w pomocy"
+            />
+          </label>
+          <p class="dam-help-page__meta" id="damHelpSearchMeta">Szybkie skróty: <kbd>F1</kbd> lub ikona <strong>?</strong> w prawym dolnym rogu.</p>
+        </div>
+
+        <div id="damHelpEmpty" class="dam-help-page__empty" hidden>
+          Nic nie pasuje do tego wyszukiwania. Spróbuj: <em>shift</em>, <em>offline</em>, <em>tag</em>, <em>marka</em>, <em>zoom</em>.
+        </div>
+
+        <section class="dam-help-page__group" data-help-group>
+          <h3 class="dam-help-page__group-title"><i class="uil uil-keyboard" aria-hidden="true"></i> Skróty i nawigacja</h3>
+          <div class="dam-faq-item" data-help-item data-keywords="f1 pomoc skroty pytanie fab ikona">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak otworzyć pomoc?</div>
+            <p class="dam-faq-a">Naciśnij <kbd>F1</kbd> albo małą ikonę <strong>?</strong> w prawym dolnym rogu. <kbd>Esc</kbd> zamyka okno.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="f5 odśwież ctrl r restart">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak odświeżyć widok?</div>
+            <p class="dam-faq-a"><kbd>F5</kbd> lub <kbd>Ctrl</kbd>+<kbd>R</kbd> = <strong>twardy reset</strong> (przerywa wszystko na stronie). W oknie desktop DAM zamyka i uruchamia aplikację od nowa.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="wstecz nawigacja historia panel">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co robi przycisk Wstecz w panelu?</div>
+            <p class="dam-faq-a">Cofa w historii Eksploratora (produkt ? kategoria ? root) albo zamyka otwarty podgląd / filtr - nie wychodzi z aplikacji.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="zoom scroll ctrl alt przyblizenie wizualizacja lightbox">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak przybliżyć wizualizację?</div>
+            <p class="dam-faq-a">W modalu Wizualizacji: <kbd>Ctrl</kbd> lub <kbd>Alt</kbd> + scroll myszy. Przy zoomie przeciągnij obraz. W lightboxie Eksplorera: przyciski +/- albo klawisze <kbd>+</kbd> / <kbd>-</kbd>.</p>
+          </div>
+        </section>
+
+        <section class="dam-help-page__group" data-help-group>
+          <h3 class="dam-help-page__group-title"><i class="uil uil-sitemap" aria-hidden="true"></i> Eksplorer i produkty</h3>
+          <div class="dam-faq-item" data-help-item data-keywords="znalezc produkt wyszukaj indeks kategoria czekolada 6300">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak znaleźć produkt?</div>
+            <p class="dam-faq-a">Menu lewe ? Eksplorer. Wybierz kategorię albo wpisz indeks / nazwę  (np. <em>6300</em>, <em>czekolada</em>). Ostatnio otwarte produkty są pod spodem na starcie.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="marka dk gc filtr kategorie chipy">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Gdzie filtruję marki DK i GC?</div>
+            <p class="dam-faq-a">Przy nagłówku <strong>Kategorie</strong> (lewy panel) - dwa chipy DK / GC. Kolorowe = włączone, prawie białe = wyłączone. Zwykle obie są włączone. Ustawienie zapisuje się i synchronizuje z Wizualizacjami.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="pokaz wszystko nieaktualne starsze indeks wariant status">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Dlaczego nie widzę starego indeksu…</div>
+            <p class="dam-faq-a">Domyślnie produkt pokazuje tylko <strong>aktualne</strong> warianty. Włącz switch <strong>Pokaż wszystko</strong> nad listą nośników - pojawią się nieaktualne i starsze (np. stary karton).</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="nosnik folia doy karton rozwin checklista pliki">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co robi klik w wiersz nośnika?</div>
+            <p class="dam-faq-a">Rozwija kartę: checklista kompletności, pliki źródłowe / do druku, wizualizacje, marketing. Ikony obok otwierają folder Windows lub kopiują ścieżkę.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="warianty liczba prawa strona lista produktów">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznacza ?4 Warianty? na liście produktów?</div>
+            <p class="dam-faq-a">Liczba wariantów / indeksów produktu. Blok jest po <strong>prawej</strong> stronie wiersza. Klik w wiersz otwiera produkt.</p>
+          </div>
+        </section>
+
+        <section class="dam-help-page__group" data-help-group>
+          <h3 class="dam-help-page__group-title"><i class="uil uil-tag-alt" aria-hidden="true"></i> Tagi (globalne)</h3>
+          <div class="dam-faq-item" data-help-item data-keywords="tag klik filtr ppm kopiuj">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak działają tagi?</div>
+            <p class="dam-faq-a">Jeden styl wszędzie (Eksplorer, Wizualizacje, Projekty). Zwykły klik = filtr. Prawy przycisk myszy = kopiuj tekst tagu do schowka.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="shift typ nosnik admin picker folia doy">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak zmienić typ nośnika (FOLIA ? DOY)?</div>
+            <p class="dam-faq-a"><strong>Admin</strong> + włączony <em>Tryb admina</em>: <kbd>Shift</kbd>+klik na pomarańczowym tagu typu (albo podwójny klik). Otwiera picker. Zwykły użytkownik zgłasza propozycję - decyzja admina w Wiadomościach.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="aktualne nieaktualne status shift baza">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak oznaczyć wariant jako nieaktualny?</div>
+            <p class="dam-faq-a">Admin + Tryb admina: przyciski <kbd>F</kbd> / <kbd>X</kbd> / <kbd>D</kbd> / Bez statusu przy produkcie lub wariancie w Eksploratorze (albo Shift+klik na tagu statusu). <strong>X</strong> dopina <code> - X</code> do nazwy folderu i przenosi do <code>"ARCHIWUM</code> (wariant z wrapperem produktu; produkt LIVE zostaje). Historia poprzedniej nazwy i ścieżki jest zapisywana.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="lifecycle F X D demo archiwum folder status produkt wariant">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznaczają przyciski F, X, D przy produkcie?</div>
+            <p class="dam-faq-a"><strong>F</strong> = aktualny/skończony (<code> - F</code> w nazwie folderu). <strong>X</strong> na produkcie = cascade X na warianty + przeniesienie produktu do <code>"ARCHIWUM</code>. <strong>X</strong> na wariancie = tylko wariant do archiwum (produkt LIVE bez X). <strong>D</strong> = demo/szkic. <strong>Bez statusu</strong> zdejmuje literkę; przywrócenie wariantu z archiwum trafia do istniejącego produktu z jego aktualną literką. Wymaga Admin + Tryb admina. Testuj na <em>TEST LIFECYCLE</em> (TEST-TEST). <strong>Odśwież listę</strong> synchronizuje UI z literkami na dysku.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="multijezyczny jezyk badge wariant">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznacza badge Multijęzyczny?</div>
+            <p class="dam-faq-a">Produkt ma wizualizacje w więcej niż jednym języku. Otwórz miniaturę / studio, żeby wybrać wariant językowy.</p>
+          </div>
+        </section>
+
+        <section class="dam-help-page__group" data-help-group>
+          <h3 class="dam-help-page__group-title"><i class="uil uil-image" aria-hidden="true"></i> Wizualizacje i udostępnianie</h3>
+          <div class="dam-faq-item" data-help-item data-keywords="udostępnij synology drive link most">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Jak udostępnić wizualizację?</div>
+            <p class="dam-faq-a">W galerii kliknij miniaturę, potem <strong>Udostępnij</strong>. DAM wywołuje Synology Drive Client (Uzyskaj łącze) przez most (port 8766). Wymaga zainstalowanego klienta i działającego bridge.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="pokaz wszystkie demo prototyp stare wizualizacje">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Gdzie są dema i stare wizualizacje?</div>
+            <p class="dam-faq-a">Switch <strong>Pokaż wszystkie</strong> na pasku Wizualizacji. OFF = tylko aktualne. ON = prototypy, dema, starsze wersje.</p>
+          </div>
+        </section>
+
+        <section class="dam-help-page__group" data-help-group>
+          <h3 class="dam-help-page__group-title"><i class="uil uil-hdd" aria-hidden="true"></i> Pliki, ścieżki, most</h3>
+          <div class="dam-faq-item" data-help-item data-keywords="offline pliki most bridge launch">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Widz? "Pliki offline? - co robić.</div>
+            <p class="dam-faq-a">Uruchom skrót <strong>DAM</strong> z pulpitu. W przeglądarce: <code>python apps/desktop/serve_browser.py</code> albo osobno <code>local_bridge.py</code> na porcie 8766.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="ścieżka marketing dysk ustawienia wykryj">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Dlaczego ścieżki zaczynają się od D:\Marketing?</div>
+            <p class="dam-faq-a">Struktura folderów jest wspólna. Na każdym PC ustawiasz własną ścieżkę bazową Marketing w Ustawieniach (np. <code>X:\Marketing</code>). "Wykryj" tylko podpowiada - zapisujesz przyciskiem Zapisz.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="pokaz w eksploratorze folder windows kopiuj">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co robi "Pokaż w eksploratorze.</div>
+            <p class="dam-faq-a">Otwiera folder w Windows i zaznacza plik (nie otwiera pliku). Wymaga mostu online.</p>
+          </div>
+        </section>
+
+        <section class="dam-help-page__group" data-help-group>
+          <h3 class="dam-help-page__group-title"><i class="uil uil-palette" aria-hidden="true"></i> Branding i karta produktu</h3>
+          <div class="dam-faq-item" data-help-item data-keywords="enface front back perspektywa wizki opakowanie">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co oznaczają perspektywy ENFACE, FRONT, BACK?</div>
+            <p class="dam-faq-a"><strong>ENFACE</strong> to przód na płasko. <strong>FRONT</strong> to przód w pochyleniu (widać prawy bok). <strong>BACK</strong> to tył w pochyleniu (widać lewy bok). <strong>TYŁ-ENFACE</strong> to tył na płasko.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="2f 2x12 pakowanie zbiorcze datesy karton badge odsloń">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co znaczy badge 2F / 2×12?</div>
+            <p class="dam-faq-a">Pakowanie zbiorcze: 2 face i układ 2×12 (24 szt.). Tag tier low jest domyślnie w +N. Włącz <strong>Info Pakowania</strong> na Projekty lub Wizualizacjach (nie na Branding).</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="branding kampanie marketing indeks katalog cena">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Gdzie jest karta katalogowa i Branding?</div>
+            <p class="dam-faq-a">Karta katalogowa (wymiary, cena, paletyzacja) jest na stronie <strong>Projekt</strong>. Moduł <strong>Branding</strong> w menu: kampanie, filtry perspektyw i rozmiarów, brandbook.</p>
+          </div>
+        </section>
+
+        <section class="dam-help-page__group" data-help-group>
+          <h3 class="dam-help-page__group-title"><i class="uil uil-comment-alt-dots" aria-hidden="true"></i> Wiadomości i kontakt</h3>
+          <div class="dam-faq-item" data-help-item data-keywords="wiadomosci asana teams zgloszenie moderacja tag">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Co jest w Wiadomościach?</div>
+            <p class="dam-faq-a">Zadania Asana / Teams oraz zgłoszenia zmiany tagów. Admin moderuje propozycje (zatwierdź / odrzuć / wybierz inny typ). Badge przy ikonie = liczba otwartych.</p>
+          </div>
+          <div class="dam-faq-item" data-help-item data-keywords="kontakt inyfinn administrator">
+            <div class="dam-faq-q"><i class="uil uil-question-circle"></i> Kontakt w sprawie DAM</div>
+            <p class="dam-faq-a">Autor: <a href="https://inyfinn.art" target="_blank" rel="noopener noreferrer">inyfinn.art</a>. Zgłoszenia operacyjne: Asana lub Teams. Administrator: krzysztof.wieczorek@kubara.pl</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script src="./assets/vendor/js/jquery/jquery-3.5.1.min.js"></script>
+  <script src="./assets/vendor/js/bootstrap/bootstrap.min.js"></script>
+  <script src="./assets/js/main.js"></script>
+  <script src="./assets/js/dam-app.js?v=restore20260805c"></script>
+  <script src="./assets/js/dam-api.js?v=restore20260805c"></script>
+  <script src="./assets/js/dam-i18n.js?v=restore20260805c"></script>
+  <script src="./assets/js/dam-runtime.js?v=restore20260805c"></script>
+  <script src="./assets/js/dam-version.js?v=restore20260805c"></script>
+	<script src="./assets/js/dam-shell.js?v=restore20260805c"></script>
+  <script>
+    (function () {
+      var input = document.getElementById("damHelpSearch");
+      var meta = document.getElementById("damHelpSearchMeta");
+      var empty = document.getElementById("damHelpEmpty");
+      if (!input) return;
+
+      function norm(s) {
+        return String(s || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/ł/g, "l");
+      }
+
+      function filter() {
+        var q = norm(input.value).trim();
+        var items = document.querySelectorAll("[data-help-item]");
+        var groups = document.querySelectorAll("[data-help-group]");
+        var shown = 0;
+        items.forEach(function (el) {
+          var hay = norm(el.getAttribute("data-keywords") + " " + el.textContent);
+          var ok = !q || hay.indexOf(q) !== -1;
+          el.hidden = !ok;
+          if (ok) shown++;
+        });
+        groups.forEach(function (g) {
+          var any = g.querySelector("[data-help-item]:not([hidden])");
+          g.hidden = !any;
+        });
+        if (empty) empty.hidden = shown > 0;
+        if (meta) {
+          if (!q) {
+            meta.innerHTML =
+              "Szybkie skróty: <kbd>F1</kbd> lub ikona <strong>?</strong> w prawym dolnym rogu.";
+          } else {
+            var m10 = shown % 10;
+            var m100 = shown % 100;
+            var word =
+              shown === 1
+                ? "temat"
+                : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)
+                  ? "tematy"
+                  : "tematów";
+            meta.textContent = "Znaleziono: " + shown + " " + word;
+          }
+        }
+      }
+
+      input.addEventListener("input", filter);
+      input.addEventListener("search", filter);
+    })();
+  </script>
+</body>
+</html>

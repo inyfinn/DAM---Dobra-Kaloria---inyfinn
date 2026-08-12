@@ -1,4 +1,4 @@
-# Gate before cursor-ide-browser MCP: HTTP smoke + probe (5s). Exit 0 = server OK.
+﻿# Gate before cursor-ide-browser MCP: HTTP smoke + probe (5s). Exit 0 = server OK.
 # Chrome headless is diagnostic only (WARN, not FAIL). On fail run unstick once.
 param(
   [int]$MaxAttempts = 5,
@@ -6,7 +6,7 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$RepoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $Watchdog = Join-Path $PSScriptRoot "dam-connection-watchdog.ps1"
 $Unstick = Join-Path $PSScriptRoot "dam-agent-unstick.ps1"
 $ProbeJs = Join-Path $RepoRoot "scripts\qa\dam-browser-probe.js"
@@ -32,3 +32,4 @@ for ($i = 1; $i -le $MaxAttempts; $i++) {
 
 Write-Host "[pre-browser] FAIL after $MaxAttempts attempts - do NOT use browser_navigate; check logs/dam-connection/"
 exit 1
+

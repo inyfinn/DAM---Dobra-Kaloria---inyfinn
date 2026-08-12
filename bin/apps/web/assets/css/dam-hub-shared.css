@@ -1,0 +1,185 @@
+/**
+ * DAM Hub — wspólne tokeny i komponenty: karta katalogowa, branding, badge pakowanie.
+ * Kolory semantyczne: tylko var(--dam-*). Layout sekcji w plikach stron.
+ */
+:root {
+  --dam-hub-card-radius: var(--dam-radius-md, 12px);
+  --dam-hub-card-pad: 16px;
+  --dam-hub-grid-gap: 12px;
+  --dam-hub-pack-bg: rgba(0, 130, 68, 0.1);
+  --dam-hub-pack-fg: #006b38;
+  --dam-hub-muted: var(--dam-text-muted, #8f8b9f);
+  --dam-hub-border: var(--dam-border, #ececf2);
+  --dam-hub-shadow: 0 4px 18px rgba(23, 22, 30, 0.06);
+}
+
+.dam-catalog-card,
+.dam-branding-card {
+  border-radius: var(--dam-hub-card-radius);
+  border: 1px solid var(--dam-hub-border);
+  background: var(--dam-surface, #fff);
+}
+
+/* Kafelek gradientowy — ten sam wzorzec co dam-project-card--ok / --incomplete */
+.dam-gradient-tile {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.dam-branding-card.dam-gradient-tile,
+.dam-catalog-card.dam-gradient-tile {
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.dam-gradient-tile::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 8.625rem;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dam-gradient-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  z-index: 2;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.dam-gradient-tile > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Pliki zrodlowe: krotki wash od dolu (konczy sie kolo nazwy), start ~30% bardziej przezroczysty */
+.dam-gradient-tile--editable::before {
+  top: auto;
+  bottom: 0;
+  height: min(128px, 32%);
+  background: linear-gradient(
+    0deg,
+    rgba(29, 78, 216, 0.084) 0%,
+    rgba(29, 78, 216, 0.042) 45%,
+    rgba(29, 78, 216, 0.014) 72%,
+    rgba(29, 78, 216, 0) 100%
+  );
+}
+
+.dam-gradient-tile--editable::after {
+  padding: 2px;
+  background: linear-gradient(
+    0deg,
+    rgba(29, 78, 216, 0.238) 0%,
+    rgba(29, 78, 216, 0.126) 40%,
+    rgba(29, 78, 216, 0.042) 70%,
+    rgba(29, 78, 216, 0) 92%
+  );
+}
+
+/* ARCHIWUM: czerwony gradient obrysu (jak editable, ale czerwony) */
+.dam-gradient-tile--archive::before {
+  top: auto;
+  bottom: 0;
+  height: min(128px, 32%);
+  background: linear-gradient(
+    0deg,
+    rgba(220, 38, 38, 0.084) 0%,
+    rgba(220, 38, 38, 0.042) 45%,
+    rgba(220, 38, 38, 0.014) 72%,
+    rgba(220, 38, 38, 0) 100%
+  );
+}
+
+.dam-gradient-tile--archive::after {
+  padding: 2px;
+  background: linear-gradient(
+    0deg,
+    rgba(220, 38, 38, 0.28) 0%,
+    rgba(220, 38, 38, 0.15) 40%,
+    rgba(220, 38, 38, 0.05) 70%,
+    rgba(220, 38, 38, 0) 92%
+  );
+}
+
+.dam-viz-card.dam-gradient-tile--archive {
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Wektor / dokument źródłowy: AI, PDF */
+.dam-gradient-tile--vector::before {
+  top: auto;
+  bottom: 0;
+  height: min(110px, 28%);
+  background: linear-gradient(
+    0deg,
+    rgba(180, 83, 9, 0.028) 0%,
+    rgba(180, 83, 9, 0.01) 55%,
+    rgba(180, 83, 9, 0) 100%
+  );
+}
+
+.dam-gradient-tile--vector::after {
+  padding: 1px;
+  background: linear-gradient(
+    0deg,
+    rgba(180, 83, 9, 0.154) 0%,
+    rgba(180, 83, 9, 0.084) 48%,
+    rgba(180, 83, 9, 0.028) 72%,
+    rgba(180, 83, 9, 0) 92%
+  );
+}
+
+.dam-catalog-pack-badge .dam-badge-tag--tier-low,
+.dam-viz-badge--pakowanie.dam-badge-tag--tier-low {
+  background: var(--dam-hub-pack-bg);
+  color: var(--dam-hub-pack-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.dam-tag-reveal-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--dam-fs-sm, 12px);
+  color: var(--dam-text, #464255);
+  cursor: pointer;
+  min-height: 44px;
+  padding: 4px 0;
+}
+
+.dam-tag-reveal-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--dam-brand-green, #008244);
+}
+
+.dam-hub-section-title {
+  font-size: var(--dam-fs-lg, 16px);
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--dam-dark, #17161e);
+}
+
+.dam-hub-section-desc {
+  font-size: var(--dam-fs-base, 14px);
+  color: var(--dam-hub-muted);
+  margin: 0 0 12px;
+  max-width: 65ch;
+}

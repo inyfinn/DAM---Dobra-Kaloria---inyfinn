@@ -1,0 +1,535 @@
+﻿/**
+ * DAM Geex primitives ÔÇö anatomia CTA / badge / panel (skeleton Faza 2).
+ * Konsument tokenow z dam-tokens.css. Anatomie wypelniaja Agenci 3/4 (F3/F4).
+ * Zrodlo miar: agents/shared/geex-realign-audit-2026-07-21.md ┬ž5.
+ */
+
+/* === BUTTONS === */
+/* Canonical: .geex-btn (+ --primary / --secondary / --danger / --ghost / --sm).
+   Alias (F3): .dam-win-btn, .dam-btn-primary share anatomy; HTML classes kept.
+   Tokens: --dam-radius-btn 18, --dam-space-btn-* 15×25, --dam-control-h 44.
+   Anti white-flash: hover uses color-mix / tinted primary — never force #fff fill
+   that fights colored text (Geex default hover white-on-primary is OK for filled). */
+.geex-btn {
+  --_dam-btn-pad-y: var(--dam-space-btn-y, 15px);
+  --_dam-btn-pad-x: var(--dam-space-btn-x, 25px);
+  --_dam-btn-radius: var(--dam-radius-btn, 18px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: var(--dam-control-h, 44px);
+  padding: var(--_dam-btn-pad-y) var(--_dam-btn-pad-x);
+  border-radius: var(--_dam-btn-radius);
+  border: none;
+  font: inherit;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background-color var(--dam-anim-hover, 0.22s) ease,
+    color var(--dam-anim-hover, 0.22s) ease,
+    border-color var(--dam-anim-hover, 0.22s) ease,
+    box-shadow var(--dam-anim-hover, 0.22s) ease;
+}
+
+.geex-btn--sm {
+  --_dam-btn-pad-y: var(--dam-space-btn-sm-y, 8px);
+  --_dam-btn-pad-x: calc(var(--dam-space-btn-sm-x, 14px) + 8px);
+  padding: var(--_dam-btn-pad-y) var(--_dam-btn-pad-x);
+  font-size: 13px;
+  min-height: var(--dam-control-h, 44px);
+}
+
+/*
+  Compact CTA aliases — KEEP product look (outline/neutral), unify pad/radius/min-h only.
+  Do not restyle colors to Geex primary fill.
+*/
+.dam-int-cta,
+button.dam-int-cta,
+a.dam-int-cta {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--dam-control-h-sm, 34px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 12px);
+  border-radius: var(--dam-radius-btn-compact, 8px);
+  /* Explorer-like outline — bez UA czarnej grubej ramki (button default) */
+  border: 1px solid #e7e7e7;
+  background: #fff;
+  color: #464255;
+  box-shadow: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.dam-int-cta:hover,
+button.dam-int-cta:hover,
+a.dam-int-cta:hover {
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, #e7e7e7);
+  background: #fbf7fe;
+  color: var(--dam-primary, #ab54db);
+}
+
+.dam-search-scope__btn {
+  box-sizing: border-box;
+  min-height: var(--dam-control-h-sm, 36px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.geex-btn.dam-lifecycle-history__open,
+.dam-lifecycle-history__open.geex-btn--sm {
+  min-height: var(--dam-control-h, 44px);
+  gap: 8px;
+}
+
+.geex-btn.dam-branding-preview-btn:not(.dam-btn-icon):not(.dam-btn-icon-only) {
+  min-height: var(--dam-control-h, 44px);
+  padding: var(--dam-space-btn-y, 15px) var(--dam-space-btn-x, 25px);
+  border-radius: var(--dam-radius-btn, 18px);
+  font: inherit;
+}
+
+/* Primary — filled */
+.geex-btn--primary,
+.dam-btn-primary {
+  color: var(--white-color, #fff);
+  background-color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  border: none !important;
+}
+
+.geex-btn--primary:hover,
+.geex-btn--primary:focus-visible,
+.geex-btn--primary.active,
+.dam-btn-primary:hover,
+.dam-btn-primary:focus-visible {
+  color: var(--white-color, #fff) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, var(--primary-color, #ab54db)) 86%,
+    #000
+  ) !important;
+}
+
+/* Secondary / win-btn — outline, no white-flash hover */
+.geex-btn--secondary,
+.geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger),
+.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger) {
+  color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  background-color: var(--dam-surface, #fff) !important;
+  border: 1px solid var(--dam-btn-outline-border) !important;
+  box-shadow: none !important;
+}
+
+.geex-btn--secondary:hover,
+.geex-btn--secondary:focus-visible,
+.geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
+.geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus-visible,
+.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
+.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus-visible {
+  color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, var(--primary-color, #ab54db)) 10%,
+    var(--dam-surface, #fff)
+  ) !important;
+  border-color: var(--dam-btn-outline-border) !important;
+}
+
+/* Danger */
+.geex-btn--danger {
+  color: var(--white-color, #fff);
+  background-color: var(--dam-danger, var(--danger-color, #ff5b5b)) !important;
+}
+
+.geex-btn--danger:hover,
+.geex-btn--danger:focus-visible,
+.geex-btn--danger.active {
+  color: var(--white-color, #fff) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--dam-danger, var(--danger-color, #ff5b5b)) 86%,
+    #000
+  ) !important;
+}
+
+/* Ghost / transparent — no opaque white flash */
+.geex-btn--ghost,
+.geex-btn--transparent {
+  color: var(--dam-text, var(--dark-color, #464255)) !important;
+  background-color: transparent !important;
+  border: 2px solid var(--dam-border, var(--dark-color, #464255)) !important;
+}
+
+.geex-btn--ghost:hover,
+.geex-btn--ghost:focus-visible,
+.geex-btn--transparent:hover,
+.geex-btn--transparent:focus-visible,
+.geex-btn--transparent.active {
+  color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, var(--primary-color, #ab54db)) 10%,
+    transparent
+  ) !important;
+  border-color: var(--dam-btn-outline-border) !important;
+}
+
+/* Alias: share Geex pad/radius/height without deleting HTML classes */
+.dam-win-btn,
+.dam-btn-primary {
+  box-sizing: border-box;
+  min-height: var(--dam-control-h, 44px);
+  border-radius: var(--dam-radius-btn, 18px);
+}
+
+.dam-btn-primary:not(.geex-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: var(--dam-space-btn-y, 15px) var(--dam-space-btn-x, 25px);
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+}
+
+/*
+  Icon-only / square controls — 44×44 touch.
+  HARD: never force equal w/h on labeled CTAs (.dam-btn-icon alone, .dam-viz-modal__cta).
+  Square only for true icon buttons.
+*/
+.dam-icon-btn,
+.dam-menu-toggle,
+.dam-viz-icon-btn,
+.dam-btn-icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: var(--dam-control-h, 44px);
+  min-width: var(--dam-control-h, 44px);
+  width: var(--dam-control-h, 44px);
+  height: var(--dam-control-h, 44px);
+  padding: 0;
+  border-radius: var(--dam-radius-sm, var(--dam-control-radius, 8px));
+  border: 1px solid var(--dam-btn-outline-border);
+  background-color: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
+  cursor: pointer;
+  transition:
+    background-color var(--dam-anim-hover, 0.22s) ease,
+    color var(--dam-anim-hover, 0.22s) ease,
+    border-color var(--dam-anim-hover, 0.22s) ease;
+}
+
+/*
+  Icon+label CTAs (.dam-btn-icon without -only): compact rectangle, auto width.
+  Used by modal Przejdź/Folder, project card Przejdź, viz card labeled actions.
+*/
+.dam-btn-icon:not(.dam-btn-icon-only) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: var(--dam-control-h-sm, 34px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 12px);
+  font-size: 12px;
+  border-radius: var(--dam-radius-btn-compact, 8px);
+  border: 1px solid var(--dam-btn-outline-border);
+  background-color: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: visible;
+  transition:
+    background-color var(--dam-anim-hover, 0.22s) ease,
+    color var(--dam-anim-hover, 0.22s) ease,
+    border-color var(--dam-anim-hover, 0.22s) ease;
+}
+
+.dam-icon-btn:hover,
+.dam-icon-btn:focus-visible,
+.dam-menu-toggle:hover,
+.dam-menu-toggle:focus-visible,
+.dam-viz-icon-btn:hover:not(:disabled):not(.is-disabled),
+.dam-viz-icon-btn:focus-visible,
+.dam-btn-icon:not(.dam-btn-icon-only):hover,
+.dam-btn-icon:not(.dam-btn-icon-only):focus-visible,
+.dam-btn-icon-only:hover {
+  color: var(--dam-primary, #ab54db);
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, #ab54db) 10%,
+    var(--dam-surface, #fff)
+  );
+  border-color: var(--dam-btn-outline-border);
+}
+
+html[data-theme="dark"] .geex-btn--secondary,
+html[data-theme="dark"] .geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger),
+html[data-theme="dark"] .dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger),
+html[data-theme="dark"] .dam-icon-btn,
+html[data-theme="dark"] .dam-menu-toggle,
+html[data-theme="dark"] .dam-viz-icon-btn,
+html[data-theme="dark"] .dam-btn-icon:not(.dam-btn-icon-only),
+html[data-theme="dark"] .dam-btn-icon-only {
+  background-color: var(--dam-surface, #201f28) !important;
+}
+
+html[data-theme="dark"] .geex-btn--secondary:hover,
+html[data-theme="dark"] .geex-btn--secondary:focus-visible,
+html[data-theme="dark"] .geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
+html[data-theme="dark"] .dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
+html[data-theme="dark"] .dam-icon-btn:hover,
+html[data-theme="dark"] .dam-viz-icon-btn:hover:not(:disabled):not(.is-disabled) {
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, #ab54db) 16%,
+    var(--dam-surface, #201f28)
+  ) !important;
+  color: var(--dam-primary, #ab54db) !important;
+}
+/* === /BUTTONS === */
+
+/* === BADGES === */
+/* Canonical families: .dam-viz-badge, .dam-badge-tag, .dam-status-badge.
+   Scale: --dam-badge-scale (1.05). Pill fs: --dam-tag-fs-pill. Badge fs: --dam-tag-fs-badge.
+   MASTER anatomy: .dam-viz-badge.dam-badge-tag — radius 14; modifiers = color only.
+   Specificity (element+class / compound) beats later single-class 999px in dam-brand.css. */
+.dam-viz-badge,
+.dam-badge-tag,
+.dam-status-badge,
+span.dam-viz-badge,
+button.dam-viz-badge,
+button.dam-badge-tag,
+button.dam-status-badge {
+  --_dam-badge-scale: var(--dam-badge-scale, 1.05);
+  --_dam-badge-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: none;
+  border-radius: var(--_dam-badge-radius);
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  white-space: nowrap;
+  vertical-align: middle;
+  max-width: 100%;
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale));
+  padding: calc(2px * var(--_dam-badge-scale)) calc(8px * var(--_dam-badge-scale));
+}
+
+/* MASTER compound — branding tag chips (both classes) */
+.dam-viz-badge.dam-badge-tag,
+button.dam-viz-badge.dam-badge-tag {
+  --_dam-badge-radius: 14px;
+  border-radius: var(--_dam-badge-radius);
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale));
+  padding: calc(2px * var(--_dam-badge-scale)) calc(8px * var(--_dam-badge-scale));
+}
+
+/*
+  Radius win vs later dam-brand / dam-branding 999px:
+  higher specificity (html body + compound) so early primitives still win cascade.
+*/
+html body .dam-viz-badge,
+html body .dam-badge-tag,
+html body .dam-status-badge,
+html body span.dam-viz-badge,
+html body button.dam-viz-badge,
+html body button.dam-badge-tag,
+html body .dam-viz-badge.dam-badge-tag,
+html body button.dam-viz-badge.dam-badge-tag,
+html body .dam-branding-tag-filters .dam-tag-group-pills .dam-viz-badge,
+html body .dam-branding-tag-filters .dam-tag-group-pills .dam-viz-badge.is-active,
+html body .dam-branding-tag-filters .dam-branding-tag-group--przeznaczenie-tiles .dam-tag-group-pills .dam-viz-badge,
+html body .dam-viz-card .dam-viz-badge,
+html body .dam-viz-card button.dam-viz-badge,
+html body .dam-project-card__badges .dam-viz-badge,
+html body .dam-inbox-item__tags .dam-viz-badge,
+html body .dam-widget__viz-badges .dam-viz-badge,
+html body .dam-media-preview__ext-tag {
+  --_dam-badge-radius: 14px;
+  border-radius: var(--_dam-badge-radius);
+}
+
+/* Card / modal badge denser padding (scale path only — no local *1.1) */
+.dam-viz-card .dam-viz-badge,
+.dam-viz-card button.dam-viz-badge,
+.dam-viz-modal__body #damVizModalBadges .dam-viz-badge,
+.dam-viz-modal__body #damVizModalBadges button.dam-viz-badge,
+.dam-viz-modal__body #damMediaPreviewBadges .dam-viz-badge,
+.dam-viz-modal__body #damMediaPreviewBadges button.dam-viz-badge {
+  border-radius: var(--_dam-badge-radius, 14px);
+  padding: calc(5px * var(--_dam-badge-scale, 1.05)) calc(11px * var(--_dam-badge-scale, 1.05));
+  font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale, 1.05));
+}
+
+/* ext-tag = small variant of MASTER badge (not +10% local bypass) */
+.dam-media-preview__ext-tag {
+  --_dam-badge-scale: var(--dam-badge-scale, 1.05);
+  --_dam-badge-radius: 14px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: none;
+  border-radius: var(--_dam-badge-radius);
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: calc(4px * var(--_dam-badge-scale)) calc(9px * var(--_dam-badge-scale));
+  font-size: calc(var(--dam-tag-fs-pill, 10.5px) * var(--_dam-badge-scale));
+}
+
+/* Status uses badge fs token; --lg is size mod only */
+.dam-status-badge {
+  font-size: calc(var(--dam-tag-fs-badge, 14px) * 0.85 * var(--_dam-badge-scale, 1.05));
+  padding: calc(3px * var(--_dam-badge-scale, 1.05)) calc(9px * var(--_dam-badge-scale, 1.05));
+}
+.dam-status-badge--lg {
+  font-size: calc(var(--dam-tag-fs-badge, 14px) * var(--_dam-badge-scale, 1.05));
+}
+
+/* Dark AA — muted chips (color only; anatomy unchanged) */
+html[data-theme="dark"] .dam-viz-badge--index,
+html[data-theme="dark"] .dam-badge-tag.dam-viz-badge--index {
+  background: rgba(230, 228, 238, 0.12);
+  color: #d4d1de;
+}
+html[data-theme="dark"] .dam-viz-badge--index-miss {
+  background: rgba(230, 228, 238, 0.1);
+  color: #b8b4c4;
+}
+html[data-theme="dark"] .dam-viz-badge--more {
+  background: rgba(230, 228, 238, 0.1);
+  color: #c9c5d4;
+}
+html[data-theme="dark"] .dam-media-preview__ext-tag--default {
+  background: rgba(230, 228, 238, 0.12);
+  color: #d4d1de;
+}
+html[data-theme="dark"] .dam-viz-badge--brand,
+html[data-theme="dark"] .dam-viz-badge--meta {
+  color: #c894e8;
+}
+html[data-theme="dark"] .dam-viz-badge--cat {
+  color: #5ee0a0;
+}
+html[data-theme="dark"] .dam-viz-badge--lang {
+  color: #5ed4c4;
+}
+html[data-theme="dark"] .dam-viz-badge--subcat {
+  color: #c4a0e0;
+}
+html[data-theme="dark"] .dam-viz-badge--carrier,
+html[data-theme="dark"] .dam-viz-badge--multilang {
+  color: #f0b878;
+}
+html[data-theme="dark"] .dam-viz-badge--variants {
+  color: #5ecfc4;
+}
+/* === /BADGES === */
+
+/* === PANELS === */
+/* F5a: radius / padding / gap / shadow / bg tokens only.
+   FORBIDDEN here: clip-path, visibility, display, opacity rest on reveal-observed cards. */
+.dam-dash-panel {
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #ececf2);
+  border-radius: var(--dam-radius-md, 12px);
+  box-shadow: none;
+  padding: 16px 18px;
+}
+
+.dam-bento__cell {
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #ececf2);
+  border-radius: var(--dam-radius-md, 12px);
+  box-shadow: none;
+  padding: 16px 18px;
+  gap: 10px;
+}
+
+.dam-bento__cell--muted {
+  background: var(--dam-surface-muted, #f5f6fa);
+}
+
+.dam-bento__cell--bare {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.dam-dash-panel__item,
+.dam-dash-panel__row {
+  border-radius: var(--dam-radius-sm, 8px);
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.dam-dash-panel__item:hover,
+.dam-dash-panel__row:hover {
+  background: var(--dam-surface-muted, #f5f6fa);
+}
+
+.dam-dash-modal__panel {
+  background: var(--dam-surface, #fff);
+  border-radius: var(--dam-radius-lg, 24px);
+  box-shadow: var(--dam-shadow);
+  padding: 20px 22px;
+  gap: 12px;
+}
+
+/* Sidebar chrome surfaces (spacing/radius/bg only; no reveal props) */
+.geex-sidebar {
+  background: var(--dam-surface, #fff);
+}
+
+.geex-sidebar__header {
+  border-radius: 0;
+  padding: 12px 14px;
+  gap: 10px;
+}
+
+.geex-sidebar__menu__link {
+  border-radius: var(--dam-radius-sm, 8px);
+  padding: 10px 12px;
+  gap: 10px;
+  min-height: var(--dam-control-h, 44px);
+}
+
+/* F5b change-1: popover surfaces only (no opacity/clip-path — doctrine §7 IO rest=opacity tween-only) */
+.geex-content__header__popup,
+.geex-content__header__popup.show,
+.dam-tag-edit-popover {
+  background: var(--dam-surface, #fff);
+  border: 1px solid var(--dam-border, #ececf2);
+  border-radius: var(--dam-radius-md, 12px);
+  box-shadow: var(--dam-shadow);
+  padding: 12px 14px;
+}
+/* === /PANELS === */

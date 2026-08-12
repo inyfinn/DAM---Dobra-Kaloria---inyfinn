@@ -1,0 +1,407 @@
+/**
+ * DAM Bento v2 — shared CSS Grid primitives.
+ * Gold standard: dashboard gap 16px, radius --dam-radius-md, asymmetric spans.
+ * Page chrome + explorer shells use these tokens. Viz/branding/project cards
+ * and media/viz modals stay visually frozen (do not restyle here).
+ */
+
+:root {
+  --dam-bento-gap: 16px;
+  --dam-bento-gap-sm: 12px;
+  --dam-bento-radius: var(--dam-radius-md, 14px);
+  --dam-bento-radius-sm: 12px;
+  --dam-bento-cols: 12;
+  --dam-bento-surface: var(--dam-surface, #fff);
+  --dam-bento-muted: var(--dam-surface-muted, #f4f3f8);
+  --dam-bento-border: var(--dam-border, rgba(70, 66, 85, 0.12));
+  --dam-bento-shadow: 0 2px 12px rgb(var(--dam-shadow-rgb, 70 66 85) / 0.04);
+}
+
+/* Generic page chrome grid (12-col) */
+.dam-bento {
+  display: grid;
+  grid-template-columns: repeat(var(--dam-bento-cols), minmax(0, 1fr));
+  grid-auto-rows: minmax(0, auto);
+  align-items: stretch;
+  align-content: start;
+  gap: var(--dam-bento-gap);
+  min-width: 0;
+}
+
+.dam-bento__cell {
+  min-width: 0;
+  max-width: 100%;
+  background: var(--dam-bento-surface);
+  border: 1px solid var(--dam-bento-border);
+  border-radius: var(--dam-bento-radius);
+  box-shadow: var(--dam-bento-shadow);
+  padding: 16px 18px;
+  box-sizing: border-box;
+}
+
+.dam-bento__cell--flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.dam-bento__cell--muted {
+  background: var(--dam-bento-muted);
+}
+
+.dam-bento__cell--bare {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* Size helpers (12-col page chrome) */
+.dam-bento__cell--sm {
+  grid-column: span 3;
+}
+
+.dam-bento__cell--md {
+  grid-column: span 4;
+}
+
+.dam-bento__cell--lg {
+  grid-column: span 6;
+}
+
+.dam-bento__cell--xl {
+  grid-column: span 8;
+}
+
+.dam-bento__cell--strip {
+  grid-column: span 3;
+}
+
+.dam-bento__cell--full {
+  grid-column: 1 / -1;
+}
+
+.dam-bento__cell--span-3 {
+  grid-column: span 3;
+}
+
+.dam-bento__cell--span-4 {
+  grid-column: span 4;
+}
+
+.dam-bento__cell--span-6 {
+  grid-column: span 6;
+}
+
+.dam-bento__cell--span-8 {
+  grid-column: span 8;
+}
+
+.dam-bento__cell--span-9 {
+  grid-column: span 9;
+}
+
+.dam-bento__cell--span-12 {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+  .dam-bento {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .dam-bento__cell--sm,
+  .dam-bento__cell--strip,
+  .dam-bento__cell--span-3 {
+    grid-column: span 3;
+  }
+
+  .dam-bento__cell--md,
+  .dam-bento__cell--lg,
+  .dam-bento__cell--span-4,
+  .dam-bento__cell--span-6 {
+    grid-column: span 6;
+  }
+
+  .dam-bento__cell--xl,
+  .dam-bento__cell--span-8,
+  .dam-bento__cell--span-9,
+  .dam-bento__cell--full,
+  .dam-bento__cell--span-12 {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 575px) {
+  .dam-bento {
+    grid-template-columns: 1fr;
+    gap: var(--dam-bento-gap-sm);
+  }
+
+  .dam-bento__cell,
+  .dam-bento__cell--sm,
+  .dam-bento__cell--md,
+  .dam-bento__cell--lg,
+  .dam-bento__cell--xl,
+  .dam-bento__cell--strip,
+  .dam-bento__cell--full,
+  .dam-bento__cell--span-3,
+  .dam-bento__cell--span-4,
+  .dam-bento__cell--span-6,
+  .dam-bento__cell--span-8,
+  .dam-bento__cell--span-9,
+  .dam-bento__cell--span-12 {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Dashboard parity: consume shared gap/radius tokens */
+.dam-dash-layout {
+  gap: var(--dam-bento-gap);
+}
+
+.dam-dash-main {
+  gap: var(--dam-bento-gap);
+}
+
+.dam-dash-grid {
+  gap: var(--dam-bento-gap);
+}
+
+.dam-dash-grid .dam-widget {
+  border-radius: var(--dam-bento-radius);
+}
+
+/* Settings parity */
+.dam-settings-page {
+  --ds-gap: var(--dam-bento-gap);
+}
+
+.dam-settings-grid {
+  gap: var(--dam-bento-gap);
+}
+
+.dam-settings-grid .dam-widget {
+  border-radius: var(--dam-bento-radius);
+}
+
+/* ------------------------------------------------------------------ */
+/* Explorer shell — CSS Grid (replaces Bootstrap row/col float chaos) */
+/* ------------------------------------------------------------------ */
+
+.dam-explorer-shell {
+  --dam-bento-gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dam-bento-gap);
+  min-width: 0;
+}
+
+.dam-explorer-shell > .dam-global-search-block,
+.dam-explorer-shell > .dam-admin-bar,
+.dam-explorer-shell > .dam-explorer-status-line,
+.dam-explorer-shell > .dam-explorer-grid-toolbar,
+.dam-explorer-shell > .dam-explorer-secondary-filters {
+  min-width: 0;
+}
+
+.dam-explorer-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  gap: var(--dam-bento-gap);
+  align-items: start;
+  min-width: 0;
+}
+
+.dam-explorer-layout__cats {
+  min-width: 0;
+}
+
+.dam-explorer-layout__main {
+  min-width: 0;
+}
+
+.dam-explorer-layout .dam-cat-panel {
+  padding: 12px;
+  border-radius: var(--dam-bento-radius-sm);
+  background: var(--dam-bento-surface);
+  box-shadow: var(--dam-bento-shadow);
+  border: 1px solid var(--dam-bento-border);
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.dam-explorer-results {
+  border-radius: var(--dam-bento-radius);
+  border: 1px solid var(--dam-bento-border);
+  background: var(--dam-bento-surface);
+  box-shadow: var(--dam-bento-shadow);
+  min-width: 0;
+  overflow: hidden;
+}
+/* Empty: grid already fits; allow tip/shadow (no horizontal bleed) */
+.dam-explorer-results:has(.dam-branding-empty-wrap),
+.dam-explorer-results:has(.dam-empty-mascot-row) {
+  overflow: visible;
+}
+.dam-explorer-layout__main:has(.dam-branding-empty-wrap) {
+  min-width: 0;
+  overflow: visible;
+}
+
+.dam-explorer-results__toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px var(--dam-bento-gap);
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--dam-bento-border);
+  min-width: 0;
+}
+
+.dam-explorer-results__meta {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--dam-text-muted, #8b8d97);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.dam-explorer-results__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dam-explorer-results__actions .geex-btn {
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.dam-explorer-results__body {
+  padding: 14px 18px 18px;
+  min-width: 0;
+}
+
+@media (max-width: 992px) {
+  .dam-explorer-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .dam-explorer-layout .dam-cat-panel {
+    max-height: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .dam-explorer-results__toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .dam-explorer-results__actions {
+    justify-content: stretch;
+  }
+
+  .dam-explorer-results__actions .geex-btn,
+  .dam-explorer-results__actions .dam-admin-slot {
+    flex: 1 1 auto;
+  }
+
+  .dam-explorer-results__actions .geex-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Carrier / older-rev row anatomy lives in dam-brand.css (flex-wrap).
+   Bento only owns explorer shell chrome — no grid overrides on hot rows. */
+
+/* ------------------------------------------------------------------ */
+/* Product row — restore dam-brand column rhythm (no inner grid hack)  */
+/* ------------------------------------------------------------------ */
+
+.dam-explorer-shell .dam-prod-row {
+  min-width: 0;
+}
+
+.dam-explorer-shell .dam-prod-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dam-explorer-shell .dam-prod-row__tags,
+.dam-explorer-shell .dam-prod-row__sub {
+  margin-top: 0;
+}
+
+@media (max-width: 575px) {
+  .dam-explorer-shell .dam-prod-row__variants,
+  .dam-explorer-shell .dam-prod-row__end {
+    justify-self: start;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Hub page chrome shells (filters/toolbar only — not asset cards)     */
+/* ------------------------------------------------------------------ */
+
+.dam-hub-bento {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dam-bento-gap);
+  min-width: 0;
+}
+
+.geex-content:has(#vizGrid),
+.geex-content:has(#damBrandingSectionGrid),
+.geex-content:has(#damProjectsGrid) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dam-bento-gap);
+}
+
+.geex-content:has(#vizGrid) > .dam-global-search-block,
+.geex-content:has(#damBrandingSectionGrid) > .dam-global-search-block,
+.geex-content:has(#damProjectsGrid) > .dam-global-search-block,
+.geex-content:has(#vizGrid) > .dam-viz-secondary-filters,
+.geex-content:has(#vizGrid) > .dam-viz-grid-toolbar,
+.geex-content:has(#damProjectsGrid) > .dam-projects-grid-toolbar {
+  min-width: 0;
+}
+
+.dam-projects-grid-toolbar {
+  gap: 10px var(--dam-bento-gap);
+  border-radius: var(--dam-bento-radius);
+  border: 1px solid var(--dam-bento-border);
+  box-shadow: var(--dam-bento-shadow);
+  padding: 12px 16px;
+}
+
+/* Inbox: keep existing two-column layout, unify gap/radius */
+.dam-inbox-layout {
+  gap: var(--dam-bento-gap);
+}
+
+.dam-inbox-side,
+.dam-inbox-main {
+  border-radius: var(--dam-bento-radius);
+}
+
+/* Help: stack groups with bento gap */
+.dam-help-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dam-bento-gap);
+  min-width: 0;
+}
+
+.dam-help-page__search-wrap,
+.dam-help-page__group {
+  border-radius: var(--dam-bento-radius);
+}

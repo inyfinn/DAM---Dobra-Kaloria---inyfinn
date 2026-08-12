@@ -1,0 +1,32 @@
+UMOWA LICENCYJNA - DAM DOBRA KALORIA (Inyfinn)
+
+Copyright (c) Inyfinn. Wszelkie prawa zastrzezone.
+
+1. LICENCJA
+   Niniejszy instalator i oprogramowanie DAM - Dobra Kaloria sa wlasnoscia
+   Inyfinn i przeznaczone wylacznie dla upowaznionych uzytkownikow firmy
+   oraz partnerow z umowa pisemna.
+
+2. DOZWOLONE UZYCIE
+   Mozesz instalowac i uzywac oprogramowania na komputerach sluzbowych w celu
+   zarzadzania zasobami marketingowymi Dobra Kaloria / Good Calories.
+
+3. ZAKAZY
+   Zabronione jest: dekompilacja, odsprzedaz, udostepnianie osobom trzecim
+   bez zgody Inyfinn, usuwanie informacji o prawach autorskich.
+
+4. DANE I BAZA
+   Aplikacja moze laczyc sie z baza PostgreSQL na serwerze Synology oraz
+   utrzymywac lokalna kopie zapasowa (SQLite / dump). Odpowiedzialnosc za
+   hasla i kopie zapasowe lezy po stronie administratora IT.
+
+5. AKTUALIZACJE
+   Oprogramowanie moze automatycznie sprawdzac nowe wersje na GitHub Inyfinn
+   i proponowac instalacje aktualizacji.
+
+6. GWARANCJA
+   Oprogramowanie dostarczane jest "tak jak jest", bez gwarancji domyslnych.
+   Inyfinn nie ponosi odpowiedzialnosci za utrate danych wynikajaca z blednej
+   konfiguracji sieci, Synology lub lokalnego dysku.
+
+Klikajac "Zgadzam sie", akceptujesz powyzsze warunki.

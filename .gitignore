@@ -10,13 +10,14 @@
 *.pem
 *.p12
 
-# Layout: GIT_ROOT = DAM.exe + installer + bin/ (CONTENT_ROOT). Source lives IN bin/.
+# Layout: GIT_ROOT = DAM.exe + DAM-Setup.exe + bin/ (CONTENT_ROOT). Source lives IN bin/.
 /bin/*
 !/bin/apps/
 !/bin/agents/
 !/bin/scripts/
 !/bin/THEME/
 !/bin/docs/
+!/bin/installer/
 /DAM.exe
 /DAM-Setup.exe
 /DAM-Setup-*.exe
@@ -25,6 +26,8 @@
 # Lokalna baza kont (hashe bcrypt) - nie commitowac
 bin/apps/desktop/data/*.sqlite
 bin/apps/desktop/data/*.sqlite-*
+bin/apps/desktop/data/backup*/
+bin/apps/desktop/data/backups*/
 bin/apps/desktop/data/bound-session.json
 bin/apps/desktop/data/webview2-profile/
 bin/apps/desktop/data/db-prefer.json
@@ -157,6 +160,7 @@ apps/desktop/data/assoc-seed-*.json
 apps/desktop/data/backups-*/
 apps/desktop/data/index-watcher.log
 apps/desktop/data/index-watcher-status.json
+bin/apps/desktop/data/index-supervisor.lock.json
 apps/desktop/data/index-supervisor.lock.json
 apps/desktop/data/index-fullrebuild-followup*.log
 apps/desktop/data/db-prefer.json
@@ -178,8 +182,15 @@ DATABASE/*.sql.gz
 _restore_backups/
 _restore_snapshots/
 _restore_stage/
-apps/web/data/branding-grid-head.backup-*.json
-apps/web/data/branding-index.backup-*.json
+bin/apps/web/data/branding-grid-head.backup-*.json
+bin/apps/web/data/branding-index.backup-*.json
+bin/apps/web/data/branding-index.json
+bin/apps/web/data/branding-index.json.*
+bin/apps/web/data/branding-index_*Conflict.json
+bin/apps/web/data/branding-search-index.json
+bin/apps/web/data/branding-grid-index.json
+bin/apps/web/assets/img/maskotka/_trim_backup_*/
+apps/web/data/branding-index.json
 apps/web/data/branding-index.json.drifted*
 apps/web/data/branding-index_*Conflict.json
 apps/web/data/file-index.json.*
@@ -240,5 +251,7 @@ bin/THEME/**/*.zip
 /DAM-Setup-*.exe
 
 installer/redist/
+bin/installer/redist/
+bin/dist/
 DAM-Setup.exe
 

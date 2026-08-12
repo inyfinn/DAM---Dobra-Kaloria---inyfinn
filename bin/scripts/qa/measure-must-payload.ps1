@@ -1,5 +1,5 @@
 ﻿param(
-    [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
+    [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path,
     [string]$OutFile = ""
 )
 $ErrorActionPreference = "Stop"
@@ -68,3 +68,4 @@ $result | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $OutFile -Encoding 
 Write-Host "Wrote $OutFile max_mb=$maxMb branding-index NOT in payload: $(-not $fatInPayload)"
 if ($fatInPayload) { exit 2 }
 exit 0
+

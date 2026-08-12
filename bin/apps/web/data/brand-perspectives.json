@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "perspectives": {
+    "ENFACE": {
+      "label_pl": "ENFACE",
+      "aliases": ["ENFACE"],
+      "description_pl": "Przód na płasko (flat front)"
+    },
+    "TYL_ENFACE": {
+      "label_pl": "TYŁ-ENFACE",
+      "aliases": ["TYŁ", "TYL", "TYŁ-ENFACE", "TYL-ENFACE", "BACK"],
+      "description_pl": "Tył na płasko"
+    },
+    "FRONT": {
+      "label_pl": "FRONT",
+      "aliases": ["FRONT"],
+      "description_pl": "Przód w pochyleniu, widoczny prawy bok"
+    },
+    "BACK": {
+      "label_pl": "BACK",
+      "aliases": ["BACK"],
+      "description_pl": "Tył w pochyleniu, widoczny lewy bok"
+    }
+  }
+}

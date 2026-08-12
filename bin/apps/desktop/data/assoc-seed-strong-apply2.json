@@ -1,0 +1,572 @@
+{
+  "ok": true,
+  "dry_run": false,
+  "strong_only": true,
+  "seed_path": "live:fat+file-index",
+  "asset_id_universe": 56822,
+  "product_id_universe": 186,
+  "validation": {
+    "lines": 9351,
+    "valid_pending": 0,
+    "valid_auto": 9351,
+    "reject_bad_json": 0,
+    "reject_missing_ids": 0,
+    "reject_unknown_asset": 0,
+    "reject_unknown_product": 0,
+    "reject_low_score": 0,
+    "reject_weak_evidence": 0,
+    "reject_ambiguous_sku": 787,
+    "reject_quarantined": 0,
+    "duplicates": 0,
+    "sample_valid": [
+      {
+        "asset_id": "br-003403",
+        "product_id": "kokos-czekolada-daktylowy",
+        "score": 100.0,
+        "status": "auto",
+        "reason": "sku_match"
+      },
+      {
+        "asset_id": "br-003404",
+        "product_id": "orzech-laskowy-daktylowy",
+        "score": 100.0,
+        "status": "auto",
+        "reason": "sku_match"
+      },
+      {
+        "asset_id": "br-003405",
+        "product_id": "orzech-czekolada-daktylowy",
+        "score": 100.0,
+        "status": "auto",
+        "reason": "sku_match"
+      },
+      {
+        "asset_id": "br-003418",
+        "product_id": "kokos-czekolada-daktylowy",
+        "score": 100.0,
+        "status": "auto",
+        "reason": "sku_match"
+      },
+      {
+        "asset_id": "br-003419",
+        "product_id": "orzech-laskowy-daktylowy",
+        "score": 100.0,
+        "status": "auto",
+        "reason": "sku_match"
+      },
+      {
+        "asset_id": "br-003420",
+        "product_id": "orzech-czekolada-daktylowy",
+        "score": 100.0,
+        "status": "auto",
+        "reason": "sku_match"
+      },
+      {
+        "asset_id": "br-004616",
+        "product_id": "gyros-groch-niemiesne",
+        "score": 100.0,
+        "status": "auto",
+        "reason": "sku_match"
+      },
+      {
+        "asset_id": "br-004617",
+        "product_id": "kaszanka-niemiesne",
+        "score": 100.0,
+        "status": "auto",
+        "reason": "sku_match"
+      }
+    ],
+    "sample_rejected": [],
+    "sample_quarantined": [],
+    "quarantine_by_product": {},
+    "quarantine_tags": {},
+    "id_valid_total": 9351,
+    "id_valid_ratio": 1.0,
+    "mode": "strong_only_live_scan",
+    "evidence_reason_counts": {
+      "sku_match": 9325,
+      "ocr_line_phrase": 26
+    },
+    "sample_evidence": [
+      {
+        "asset_id": "br-003403",
+        "product_id": "kokos-czekolada-daktylowy",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300469"
+        ],
+        "product_indexes": [
+          "6300456.00",
+          "6300457.00",
+          "6300469.00"
+        ],
+        "asset_name": "DK_Baton_daktyl_kokos_czekolada_6300469_CMYK.tif",
+        "asset_path_tail": "- MATERIAŁY GRAFICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/links/DK_Baton_daktyl_kokos_czekolada_6300469_CMYK.tif",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-003404",
+        "product_id": "orzech-laskowy-daktylowy",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300546"
+        ],
+        "product_indexes": [
+          "6300546.00",
+          "6300619.00",
+          "6300620.00"
+        ],
+        "asset_name": "DK_Baton_daktyl_orzech_laskowy_czekolada_6300546_CMYK (1).tif",
+        "asset_path_tail": "RAFICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/links/DK_Baton_daktyl_orzech_laskowy_czekolada_6300546_CMYK (1).tif",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-003405",
+        "product_id": "orzech-czekolada-daktylowy",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300348"
+        ],
+        "product_indexes": [
+          "6300348.00",
+          "6300365.00",
+          "6300421.00",
+          "6300429.00"
+        ],
+        "asset_name": "DK_orzeszki_czekolada_6300348_CMYK_A4.tif",
+        "asset_path_tail": "SKA/03 - MATERIAŁY GRAFICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/links/DK_orzeszki_czekolada_6300348_CMYK_A4.tif",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-003418",
+        "product_id": "kokos-czekolada-daktylowy",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300469"
+        ],
+        "product_indexes": [
+          "6300456.00",
+          "6300457.00",
+          "6300469.00"
+        ],
+        "asset_name": "DK_Baton_daktyl_kokos_czekolada_6300469_CMYK.tif",
+        "asset_path_tail": "ICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/display_rossman/links/DK_Baton_daktyl_kokos_czekolada_6300469_CMYK.tif",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-003419",
+        "product_id": "orzech-laskowy-daktylowy",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300546"
+        ],
+        "product_indexes": [
+          "6300546.00",
+          "6300619.00",
+          "6300620.00"
+        ],
+        "asset_name": "DK_Baton_daktyl_orzech_laskowy_czekolada_6300546_CMYK (1).tif",
+        "asset_path_tail": "S - Wsparcie sprzedaży/05 - Display/2024_display_rossman/display_rossman/links/DK_Baton_daktyl_orzech_laskowy_czekolada_6300546_CMYK (1).tif",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-003420",
+        "product_id": "orzech-czekolada-daktylowy",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300348"
+        ],
+        "product_indexes": [
+          "6300348.00",
+          "6300365.00",
+          "6300421.00",
+          "6300429.00"
+        ],
+        "asset_name": "DK_orzeszki_czekolada_6300348_CMYK_A4.tif",
+        "asset_path_tail": "ŁY GRAFICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/display_rossman/links/DK_orzeszki_czekolada_6300348_CMYK_A4.tif",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-004616",
+        "product_id": "gyros-groch-niemiesne",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300329"
+        ],
+        "product_indexes": [
+          "000152.00",
+          "6300329.00"
+        ],
+        "asset_name": "DK_Gyros_Groch_6300329_WEB_RGB_no_background.png",
+        "asset_path_tail": "TRONY WWW - INTERNET/01 - Strona Dobra Kaloria/03 - PRZEPISY/2022/01_VIDEO_PRZEPISY/Projekt/DK_Gyros_Groch_6300329_WEB_RGB_no_background.png",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-004617",
+        "product_id": "kaszanka-niemiesne",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300633"
+        ],
+        "product_indexes": [
+          "000100.00",
+          "6300345.00",
+          "6300474.00",
+          "6300633.00",
+          "6300768.00",
+          "6300768.01"
+        ],
+        "asset_name": "DK_Kaszanka_grill2025_04_01_6300633_RGB.png",
+        "asset_path_tail": "6 - STRONY WWW - INTERNET/01 - Strona Dobra Kaloria/03 - PRZEPISY/2022/01_VIDEO_PRZEPISY/Projekt/DK_Kaszanka_grill2025_04_01_6300633_RGB.png",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-004619",
+        "product_id": "mielone-wolowe-niemiesne",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300406"
+        ],
+        "product_indexes": [
+          "000138.00",
+          "6300406.00",
+          "6300406.01",
+          "6300798.00"
+        ],
+        "asset_name": "DK_mielone_ala_wolowe_6300406_wiz_RGB_bez_tla.png",
+        "asset_path_tail": "RONY WWW - INTERNET/01 - Strona Dobra Kaloria/03 - PRZEPISY/2022/01_VIDEO_PRZEPISY/Projekt/DK_mielone_ala_wolowe_6300406_wiz_RGB_bez_tla.png",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-005925",
+        "product_id": "burger-wolowy-niemiesne",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300632"
+        ],
+        "product_indexes": [
+          "000137.00",
+          "6300154.00",
+          "6300560.00",
+          "6300612.00",
+          "6300632.00",
+          "6300632.01"
+        ],
+        "asset_name": "DK_Burger_wol_grill2025_04_01_6300632_RGB.png",
+        "asset_path_tail": "/20250422_dobra_kaloria_02/(Footage)/WORK/20250418_dobra kaloria_plansza końcowa 1920x1080.aep/DK_Burger_wol_grill2025_04_01_6300632_RGB.png",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-005926",
+        "product_id": "kaszanka-niemiesne",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300633"
+        ],
+        "product_indexes": [
+          "000100.00",
+          "6300345.00",
+          "6300474.00",
+          "6300633.00",
+          "6300768.00",
+          "6300768.01"
+        ],
+        "asset_name": "DK_Kaszanka_grill2025_04_01_6300633_RGB_maly.png",
+        "asset_path_tail": "250422_dobra_kaloria_02/(Footage)/WORK/20250418_dobra kaloria_plansza końcowa 1920x1080.aep/DK_Kaszanka_grill2025_04_01_6300633_RGB_maly.png",
+        "ocr_len": 0
+      },
+      {
+        "asset_id": "br-006171",
+        "product_id": "burger-wolowy-niemiesne",
+        "score": 100,
+        "reason": "sku_match",
+        "matched_skus": [
+          "6300632"
+        ],
+        "product_indexes": [
+          "000137.00",
+          "6300154.00",
+          "6300560.00",
+          "6300612.00",
+          "6300632.00",
+          "6300632.01"
+        ],
+        "asset_name": "DK_Burger_wol_grill2025_04_01_6300632_RGB.png",
+        "asset_path_tail": "M:/- POLSKA/08 - KAMAPANIE/2026/FILMY/DO EDYCJI/(Footage)/DK_Burger_wol_grill2025_04_01_6300632_RGB.png",
+        "ocr_len": 0
+      }
+    ],
+    "valid_total": 9351,
+    "valid_ratio": 1.0,
+    "reject_total": 787,
+    "top_product_id": "orzeszki-kukurydza-miod-sniadanie",
+    "top_product_count": 347,
+    "top_product_share": 0.0371
+  },
+  "evidence_reason_counts": {
+    "sku_match": 9325,
+    "ocr_line_phrase": 26
+  },
+  "sample_evidence": [
+    {
+      "asset_id": "br-003403",
+      "product_id": "kokos-czekolada-daktylowy",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300469"
+      ],
+      "product_indexes": [
+        "6300456.00",
+        "6300457.00",
+        "6300469.00"
+      ],
+      "asset_name": "DK_Baton_daktyl_kokos_czekolada_6300469_CMYK.tif",
+      "asset_path_tail": "- MATERIAŁY GRAFICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/links/DK_Baton_daktyl_kokos_czekolada_6300469_CMYK.tif",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-003404",
+      "product_id": "orzech-laskowy-daktylowy",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300546"
+      ],
+      "product_indexes": [
+        "6300546.00",
+        "6300619.00",
+        "6300620.00"
+      ],
+      "asset_name": "DK_Baton_daktyl_orzech_laskowy_czekolada_6300546_CMYK (1).tif",
+      "asset_path_tail": "RAFICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/links/DK_Baton_daktyl_orzech_laskowy_czekolada_6300546_CMYK (1).tif",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-003405",
+      "product_id": "orzech-czekolada-daktylowy",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300348"
+      ],
+      "product_indexes": [
+        "6300348.00",
+        "6300365.00",
+        "6300421.00",
+        "6300429.00"
+      ],
+      "asset_name": "DK_orzeszki_czekolada_6300348_CMYK_A4.tif",
+      "asset_path_tail": "SKA/03 - MATERIAŁY GRAFICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/links/DK_orzeszki_czekolada_6300348_CMYK_A4.tif",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-003418",
+      "product_id": "kokos-czekolada-daktylowy",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300469"
+      ],
+      "product_indexes": [
+        "6300456.00",
+        "6300457.00",
+        "6300469.00"
+      ],
+      "asset_name": "DK_Baton_daktyl_kokos_czekolada_6300469_CMYK.tif",
+      "asset_path_tail": "ICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/display_rossman/links/DK_Baton_daktyl_kokos_czekolada_6300469_CMYK.tif",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-003419",
+      "product_id": "orzech-laskowy-daktylowy",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300546"
+      ],
+      "product_indexes": [
+        "6300546.00",
+        "6300619.00",
+        "6300620.00"
+      ],
+      "asset_name": "DK_Baton_daktyl_orzech_laskowy_czekolada_6300546_CMYK (1).tif",
+      "asset_path_tail": "S - Wsparcie sprzedaży/05 - Display/2024_display_rossman/display_rossman/links/DK_Baton_daktyl_orzech_laskowy_czekolada_6300546_CMYK (1).tif",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-003420",
+      "product_id": "orzech-czekolada-daktylowy",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300348"
+      ],
+      "product_indexes": [
+        "6300348.00",
+        "6300365.00",
+        "6300421.00",
+        "6300429.00"
+      ],
+      "asset_name": "DK_orzeszki_czekolada_6300348_CMYK_A4.tif",
+      "asset_path_tail": "ŁY GRAFICZNE/02 - POS - Wsparcie sprzedaży/05 - Display/2024_display_rossman/display_rossman/links/DK_orzeszki_czekolada_6300348_CMYK_A4.tif",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-004616",
+      "product_id": "gyros-groch-niemiesne",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300329"
+      ],
+      "product_indexes": [
+        "000152.00",
+        "6300329.00"
+      ],
+      "asset_name": "DK_Gyros_Groch_6300329_WEB_RGB_no_background.png",
+      "asset_path_tail": "TRONY WWW - INTERNET/01 - Strona Dobra Kaloria/03 - PRZEPISY/2022/01_VIDEO_PRZEPISY/Projekt/DK_Gyros_Groch_6300329_WEB_RGB_no_background.png",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-004617",
+      "product_id": "kaszanka-niemiesne",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300633"
+      ],
+      "product_indexes": [
+        "000100.00",
+        "6300345.00",
+        "6300474.00",
+        "6300633.00",
+        "6300768.00",
+        "6300768.01"
+      ],
+      "asset_name": "DK_Kaszanka_grill2025_04_01_6300633_RGB.png",
+      "asset_path_tail": "6 - STRONY WWW - INTERNET/01 - Strona Dobra Kaloria/03 - PRZEPISY/2022/01_VIDEO_PRZEPISY/Projekt/DK_Kaszanka_grill2025_04_01_6300633_RGB.png",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-004619",
+      "product_id": "mielone-wolowe-niemiesne",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300406"
+      ],
+      "product_indexes": [
+        "000138.00",
+        "6300406.00",
+        "6300406.01",
+        "6300798.00"
+      ],
+      "asset_name": "DK_mielone_ala_wolowe_6300406_wiz_RGB_bez_tla.png",
+      "asset_path_tail": "RONY WWW - INTERNET/01 - Strona Dobra Kaloria/03 - PRZEPISY/2022/01_VIDEO_PRZEPISY/Projekt/DK_mielone_ala_wolowe_6300406_wiz_RGB_bez_tla.png",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-005925",
+      "product_id": "burger-wolowy-niemiesne",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300632"
+      ],
+      "product_indexes": [
+        "000137.00",
+        "6300154.00",
+        "6300560.00",
+        "6300612.00",
+        "6300632.00",
+        "6300632.01"
+      ],
+      "asset_name": "DK_Burger_wol_grill2025_04_01_6300632_RGB.png",
+      "asset_path_tail": "/20250422_dobra_kaloria_02/(Footage)/WORK/20250418_dobra kaloria_plansza końcowa 1920x1080.aep/DK_Burger_wol_grill2025_04_01_6300632_RGB.png",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-005926",
+      "product_id": "kaszanka-niemiesne",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300633"
+      ],
+      "product_indexes": [
+        "000100.00",
+        "6300345.00",
+        "6300474.00",
+        "6300633.00",
+        "6300768.00",
+        "6300768.01"
+      ],
+      "asset_name": "DK_Kaszanka_grill2025_04_01_6300633_RGB_maly.png",
+      "asset_path_tail": "250422_dobra_kaloria_02/(Footage)/WORK/20250418_dobra kaloria_plansza końcowa 1920x1080.aep/DK_Kaszanka_grill2025_04_01_6300633_RGB_maly.png",
+      "ocr_len": 0
+    },
+    {
+      "asset_id": "br-006171",
+      "product_id": "burger-wolowy-niemiesne",
+      "score": 100,
+      "reason": "sku_match",
+      "matched_skus": [
+        "6300632"
+      ],
+      "product_indexes": [
+        "000137.00",
+        "6300154.00",
+        "6300560.00",
+        "6300612.00",
+        "6300632.00",
+        "6300632.01"
+      ],
+      "asset_name": "DK_Burger_wol_grill2025_04_01_6300632_RGB.png",
+      "asset_path_tail": "M:/- POLSKA/08 - KAMAPANIE/2026/FILMY/DO EDYCJI/(Footage)/DK_Burger_wol_grill2025_04_01_6300632_RGB.png",
+      "ocr_len": 0
+    }
+  ],
+  "quarantine": {
+    "quarantined_total": 0,
+    "by_product": {},
+    "tags": {},
+    "sample": [],
+    "accepted_after": 9351,
+    "id_valid_total": 9351,
+    "id_valid_ratio": 1.0,
+    "accepted_ratio_after_quarantine": 0.0
+  },
+  "quality_gate": {
+    "ok": true,
+    "reason": "ok"
+  },
+  "applied": true,
+  "note": "",
+  "backup": "data\\dam-local.sqlite.1786367941.bak",
+  "overrides_rows": 22,
+  "jsonl_applied": {
+    "pending": 0,
+    "auto": 9351
+  },
+  "counts_before": {
+    "auto": 9351,
+    "confirmed": 22
+  },
+  "counts_after": {
+    "auto": 9351,
+    "confirmed": 22
+  },
+  "forced": false
+}

@@ -1,0 +1,496 @@
+/**
+ * DAM Integrations — Bento tiles (hub page).
+ * Scoped under .dam-integrations-page--bento so settings.html stays on hub CSS.
+ * Tokens: dam-tokens.css + dam-bento.css.
+ */
+
+.dam-integrations-page--bento {
+  max-width: 1180px;
+}
+
+.dam-integrations-page--bento .dam-int-section {
+  margin-bottom: 22px;
+}
+
+.dam-integrations-page--bento .dam-int-section__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--dam-text-muted, #8b8d97);
+  margin: 0 0 12px;
+}
+
+/* ---- Bento grid: 4 / 2 / 1 ---- */
+.dam-int-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--dam-bento-gap, 16px);
+  align-items: stretch;
+}
+
+@media (max-width: 1100px) {
+  .dam-int-bento-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .dam-int-bento-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Tile ---- */
+.dam-integrations-page--bento .dam-int-card,
+.dam-integrations-page--bento .dam-int-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 132px;
+  padding: 14px 14px 12px;
+  min-width: 0;
+  border: 1px solid var(--dam-bento-border, var(--dam-border, #ececf2));
+  border-radius: var(--dam-bento-radius, 14px);
+  background: var(--dam-bento-surface, var(--dam-surface, #fff));
+  box-shadow: var(--dam-bento-shadow, 0 2px 12px rgb(var(--dam-shadow-rgb, 70 66 85) / 0.04));
+  overflow: hidden;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.dam-integrations-page--bento .dam-int-tile--live {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--dam-ok, #00b074) 10%, var(--dam-surface, #fff)) 0%,
+      var(--dam-surface, #fff) 55%
+    );
+  border-color: color-mix(in srgb, var(--dam-ok, #00b074) 28%, var(--dam-border, #ececf2));
+}
+
+.dam-integrations-page--bento .dam-int-tile--planned {
+  background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 55%, var(--dam-surface, #fff));
+}
+
+.dam-integrations-page--bento .dam-int-tile--feature {
+  grid-column: span 2;
+}
+
+@media (max-width: 560px) {
+  .dam-integrations-page--bento .dam-int-tile--feature {
+    grid-column: span 1;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dam-integrations-page--bento .dam-int-tile:hover {
+    border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, var(--dam-border, #ececf2));
+    box-shadow: 0 6px 20px rgb(var(--dam-shadow-rgb, 70 66 85) / 0.08);
+    transform: translateY(-1px);
+  }
+}
+
+.dam-int-tile__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dam-integrations-page--bento .dam-int-card__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 20px;
+}
+
+.dam-integrations-page--bento .dam-int-card__name {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.25;
+  color: var(--dam-text, #464255);
+}
+
+.dam-integrations-page--bento .dam-int-card__desc {
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0;
+  color: var(--dam-text-muted, #8b8d97);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1 1 auto;
+}
+
+.dam-integrations-page--bento .dam-int-card__head,
+.dam-integrations-page--bento .dam-int-card__top {
+  display: contents;
+}
+
+/* Compact status chip — never a full-width bar */
+.dam-int-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  align-self: flex-start;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  /* Never stretch into a status bar */
+  box-sizing: border-box;
+}
+
+.dam-int-chip.dam-int-st--ok {
+  color: #0a7a4f;
+  background: color-mix(in srgb, var(--dam-ok, #00b074) 16%, #fff);
+  border-color: color-mix(in srgb, var(--dam-ok, #00b074) 28%, transparent);
+}
+
+.dam-int-chip.dam-int-st--ready {
+  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, #fff);
+  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 24%, transparent);
+}
+
+.dam-int-chip.dam-int-st--wait {
+  color: #6a6570;
+  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, #fff);
+  border-color: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 28%, transparent);
+}
+
+.dam-int-chip.dam-int-st--err {
+  color: var(--dam-danger, #ff5b5b);
+  background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 12%, #fff);
+  border-color: color-mix(in srgb, var(--dam-danger, #ff5b5b) 28%, transparent);
+}
+
+/*
+ * Planned = same chip anatomy as Połączono/Brak (pill, weight, pad).
+ * Only allow 2-line wrap for long "Wdrożenie planowane" label.
+ */
+.dam-int-chip.dam-int-chip--planned {
+  max-width: 9.25rem;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+  hyphens: manual;
+}
+
+/* FMCG action row: same CTA family as foot links (never Geex primary) */
+.dam-int-fmcg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.dam-int-fmcg-actions .dam-int-cta,
+.dam-int-fmcg-actions label.dam-int-cta {
+  width: fit-content;
+  min-height: 34px;
+}
+
+.dam-integrations-page--bento .dam-int-card__body {
+  padding: 0;
+  font-size: 11px;
+}
+
+.dam-integrations-page--bento .dam-int-card__foot,
+.dam-integrations-page--bento .dam-int-tile__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 0;
+  border-top: none;
+  background: transparent;
+}
+
+/*
+ * Foot CTA = profil `.dam-welcome-link` (neutral solid outline).
+ * Nie lavender `.geex-btn--primary-transparent`.
+ */
+.dam-int-cta,
+.dam-integrations-page--bento .dam-int-tile__foot .dam-int-cta,
+.dam-integrations-page--bento .dam-int-tile__foot .geex-btn:not(.geex-btn--primary) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--dam-control-h-sm, 36px);
+  padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
+  margin: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  border-radius: var(--dam-radius-btn-compact, 8px);
+  border: 1px solid var(--dam-border, #e7e7e7);
+  background: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.dam-int-cta:hover,
+.dam-integrations-page--bento .dam-int-tile__foot .dam-int-cta:hover,
+.dam-integrations-page--bento .dam-int-tile__foot .geex-btn:not(.geex-btn--primary):hover {
+  border-color: var(--dam-primary, #ab54db);
+  background: #fbf7fe;
+  color: var(--dam-primary, #ab54db);
+}
+
+.dam-int-cta:focus-visible,
+.dam-integrations-page--bento .dam-int-tile__foot .dam-int-cta:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* Disabled Zaloguj only - not Wkrótce */
+.dam-int-cta:disabled,
+.dam-integrations-page--bento .dam-int-tile__foot .dam-int-cta:disabled,
+.dam-integrations-page--bento .dam-int-tile__foot .geex-btn:disabled:not(.dam-int-soon) {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-style: solid;
+  pointer-events: auto;
+}
+
+/*
+ * Wkrótce: dashed neutral/accent outline, white fill, full-contrast ink.
+ * Own control (no .geex-btn) — avoids lavender fill + disabled wash.
+ */
+.dam-int-soon,
+.dam-int-soon:disabled,
+.dam-int-soon[aria-disabled="true"],
+.dam-integrations-page--bento .dam-int-soon,
+.dam-integrations-page--bento .dam-int-soon:disabled,
+.dam-integrations-page--bento .dam-int-soon[aria-disabled="true"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 14px;
+  margin: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 8px;
+  opacity: 1 !important;
+  cursor: default;
+  pointer-events: auto;
+  color: #1a1820 !important;
+  -webkit-text-fill-color: #1a1820 !important;
+  background: transparent !important;
+  background-color: #fff !important;
+  border: 1px dashed #8b8d97 !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dam-int-soon:hover,
+.dam-int-soon:disabled:hover,
+.dam-int-soon[aria-disabled="true"]:hover,
+.dam-integrations-page--bento .dam-int-soon:hover,
+.dam-integrations-page--bento .dam-int-soon:disabled:hover,
+.dam-integrations-page--bento .dam-int-soon[aria-disabled="true"]:hover {
+  color: #1a1820 !important;
+  -webkit-text-fill-color: #1a1820 !important;
+  background: transparent !important;
+  background-color: #f4f5f8 !important;
+  border-color: color-mix(in srgb, var(--dam-text, #464255) 35%, #8b8d97) !important;
+}
+
+.dam-int-soon:focus-visible,
+.dam-integrations-page--bento .dam-int-soon:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* Config accordion → ten sam outline co `.dam-int-cta` / welcome-link */
+.dam-integrations-page--bento .dam-int-tile__foot {
+  align-items: flex-start;
+}
+
+.dam-integrations-page--bento .dam-int-tile__config {
+  display: inline-flex;
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+.dam-integrations-page--bento .dam-int-config {
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  width: auto;
+  max-width: 100%;
+}
+
+.dam-integrations-page--bento .dam-int-config > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 8px 12px;
+  margin: 0;
+  width: auto;
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e7e7e7;
+  background: #fff;
+  color: #464255;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.dam-integrations-page--bento .dam-int-config > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dam-integrations-page--bento .dam-int-config > summary::after {
+  content: none;
+}
+
+.dam-integrations-page--bento .dam-int-config > summary:hover {
+  border-color: var(--dam-primary, #ab54db);
+  background: #fbf7fe;
+  color: var(--dam-primary, #ab54db);
+}
+
+.dam-integrations-page--bento .dam-int-config[open] > summary {
+  border-color: var(--dam-primary, #ab54db);
+  background: #fbf7fe;
+  color: var(--dam-primary, #ab54db);
+}
+
+.dam-integrations-page--bento .dam-int-config > summary:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.dam-integrations-page--bento .dam-int-config__panel {
+  position: static;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--dam-border, #ececf2);
+  background: var(--dam-surface, #fff);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dam-integrations-page--bento .dam-int-auth-warn {
+  margin-bottom: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-integrations-page--bento .dam-int-tile {
+    transition: none;
+  }
+
+  .dam-integrations-page--bento .dam-int-tile:hover {
+    transform: none;
+  }
+}
+
+html[data-theme="dark"] .dam-integrations-page--bento .dam-int-tile--live {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--dam-ok, #00b074) 18%, var(--dam-surface, #1a1d1b)) 0%,
+      var(--dam-surface, #1a1d1b) 55%
+    );
+}
+
+html[data-theme="dark"] .dam-integrations-page--bento .dam-int-tile--planned {
+  background: color-mix(in srgb, var(--dam-surface-muted, #222) 70%, var(--dam-surface, #1a1d1b));
+}
+
+/* ---- Skeleton loading: solid fill (readable on light canvas) ----
+   Global .dam-skeleton uses --dam-surface-muted (#f5f6fa) which nearly
+   vanishes on page bg #f3f5f4. Hub override: solid --dam-border #ececf2
+   + hairline edge so blocks read at rest (shimmer alone is not enough). */
+.dam-integrations-page .dam-skeleton__line,
+.dam-integrations-page .dam-skeleton__row,
+.dam-integrations-page .dam-skeleton__card {
+  background: var(--dam-border, #ececf2);
+  border: 1px solid color-mix(in srgb, var(--dam-text-muted, #8f8b9f) 28%, var(--dam-border, #ececf2));
+}
+
+/* Bento skeleton: reuse live grid + tile--feature span-2 (not auto-fill pills) */
+.dam-integrations-page .dam-skeleton--int-bento {
+  display: block;
+  gap: 0;
+}
+
+.dam-integrations-page .dam-skeleton--int-bento .dam-int-bento-grid > .dam-skeleton__card {
+  height: 132px;
+  min-height: 132px;
+  border-radius: var(--dam-bento-radius, 14px);
+  box-sizing: border-box;
+}
+
+.dam-integrations-page .dam-skeleton__line::after,
+.dam-integrations-page .dam-skeleton__row::after,
+.dam-integrations-page .dam-skeleton__card::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.7),
+    transparent
+  );
+}
+
+html[data-theme="dark"] .dam-integrations-page .dam-skeleton__line,
+html[data-theme="dark"] .dam-integrations-page .dam-skeleton__row,
+html[data-theme="dark"] .dam-integrations-page .dam-skeleton__card {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme="dark"] .dam-integrations-page .dam-skeleton__line::after,
+html[data-theme="dark"] .dam-integrations-page .dam-skeleton__row::after,
+html[data-theme="dark"] .dam-integrations-page .dam-skeleton__card::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.14),
+    transparent
+  );
+}

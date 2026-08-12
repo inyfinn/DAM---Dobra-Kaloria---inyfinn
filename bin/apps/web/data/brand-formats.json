@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "sizes": {
+    "XL": { "label": "XL", "compressed": false, "typical_px": null },
+    "L": { "label": "L", "compressed": true, "typical_px": null },
+    "S": { "label": "S", "compressed": true, "typical_px": "1200x1200" },
+    "S_SKLEP": { "label": "S-SKLEP", "compressed": true, "typical_px": "848x1200" }
+  },
+  "background_by_ext": {
+    "png": "transparent",
+    "jpg": "white",
+    "jpeg": "white"
+  },
+  "media_types": {
+    "video": ["mp4", "mov", "webm", "avi"],
+    "vector": ["ai", "eps", "svg"],
+    "raster": ["png", "jpg", "jpeg", "tif", "tiff", "psd"],
+    "source": ["psd", "psb", "indd"],
+    "document": ["pdf", "docx", "xlsx"]
+  }
+}

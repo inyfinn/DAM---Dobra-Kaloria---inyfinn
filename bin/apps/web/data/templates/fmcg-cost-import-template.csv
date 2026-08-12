@@ -1,0 +1,46 @@
+catalog_id,label_pl,stage,unit,amount,currency,vendor,notes
+foil_pe_film,Folia PE/PP,procurement,per_1000,12.34,PLN,,Folia laminowana
+cardboard_primary,Karton glowny,procurement,per_1000,320.0,PLN,,Tektura falista
+cardboard_secondary,Karton zbiorczy,procurement,per_1000,210.0,PLN,,Display / shipper
+labels_primary,Etykiety samoprzylepne,procurement,per_1000,95.0,PLN,,Etykieta front/back
+inks_varnish,Farby i lakiery,procurement,per_kg,48.0,PLN,,Flexo UV
+adhesives,Kleje i lakier UV,procurement,per_kg,36.0,PLN,,Klej hotmelt
+shrink_sleeve,Rekaw termokurczliwy,procurement,per_1000,85.0,PLN,,Rękaw sleeve
+pallet_wrap,Folia stretch paletowa,procurement,per_pallet,85.0,PLN,,Stretch folia
+plate_cylinder,Formy drukowe / klisze,prepress,per_order,250.0,PLN,,Klisze flexo
+color_matching,Dobor kolorow Delta E,prepress,per_order,250.0,PLN,,Proof lab
+prepress_artwork,Przygotowanie pliku do druku,prepress,per_order,250.0,PLN,,RIP + imposition
+die_cut_prep,Przygotowanie wykrojnika,prepress,per_order,250.0,PLN,,Wykrojnik nowy
+barcode_check,Weryfikacja kodow kreskowych,prepress,per_order,250.0,PLN,,GS1 check
+regulatory_text,Korekta tekstow prawnych,prepress,per_hour,250.0,PLN,,Prawnik / QA
+mockup_3d,Mockup 3D opakowania,prepress,per_sku,250.0,PLN,,Wizualizacja
+line_setup,Przebrojenie linii,production,per_order,160.0,PLN,,Changeover
+qa_inspection,Kontrola jakosci,production,per_sku,160.0,PLN,,AQL sampling
+batch_testing,Testy partii,production,per_order,160.0,PLN,,Lab mikrobiologia
+rework,Poprawki produkcyjne,production,per_hour,160.0,PLN,,Rework line
+consumables,Materialy eksploatacyjne,production,per_order,160.0,PLN,,"Noze, tasmy"
+energy_line,Energia linii produkcyjnej,production,per_hour,160.0,PLN,,Prad + gaz
+waste_disposal,Utylizacja odpadow,production,per_kg,160.0,PLN,,Odpady produkcyjne
+packaging_line_rent,Najem linii kontraktowej,production,per_hour,160.0,PLN,,Co-packing
+inbound_receiving,Przyjecie surowca,warehouse,per_pallet,70.0,PLN,,Przyjecie WZ
+storage_cold,Magazyn chlodniczy,warehouse,per_pallet,70.0,PLN,,Chlodnia
+storage_ambient,Magazyn ambient,warehouse,per_pallet,70.0,PLN,,Regal paletowy
+picking,Kompletacja zamowien,warehouse,per_order,70.0,PLN,,Pick and pack
+inventory_count,Inwentaryzacja,warehouse,fixed_month,70.0,PLN,,Stock take
+repacking,Przepakowanie / relabel,warehouse,per_sku,70.0,PLN,,Relabeling
+returns_handling,Obsluga zwrotow,warehouse,per_order,70.0,PLN,,Zwroty B2B
+packaging_materials_wh,Materialy pakowe magazyn,warehouse,per_order,70.0,PLN,,Kartony wypelnienie
+domestic_freight,Transport krajowy,logistics,per_pallet,45.0,PLN,,FTL/LTL PL
+export_freight,Transport export,logistics,per_pallet,45.0,PLN,,CMR export
+customs_clearance,Odprawa celna,logistics,per_order,45.0,PLN,,Agencja celna
+last_mile,Dostawa last mile,logistics,per_order,45.0,PLN,,Kurier lokalny
+courier_express,Kurier express,logistics,per_order,45.0,PLN,,DHL/UPS
+pallet_handling,Obsluga palet,logistics,per_pallet,45.0,PLN,,Przeladunek
+fuel_surcharge,Doplata paliwowa,logistics,pct_revenue,45.0,PLN,,Indeks paliw
+insurance_cargo,Ubezpieczenie przesylki,logistics,pct_revenue,45.0,PLN,,Cargo insurance
+cross_dock,Cross-docking,logistics,per_pallet,45.0,PLN,,Cross dock hub
+raw_material_per_1000,Surowiec opakowania / 1000 szt.,procurement,per_1000,420,PLN,,Srednia folia/kartonik short-run PL
+production_labor,Robocizna produkcji / wariant,production,per_sku,180,PLN,,Przezbrojenie + kontrola jakosci
+warehouse_packing,Kompletacja magazynowa / wariant,warehouse,per_sku,95,PLN,,Pakowanie i etykietowanie wewnetrzne
+proofing,Proof / akceptacja kolorow,prepress,per_order,320,PLN,,Proof cyfrowy lub kontrakcja
+print_flexo_offset,Druk fleksograficzny / offset mini,prepress,per_order,1100,PLN,,Sredni koszt setup + krotki naklad

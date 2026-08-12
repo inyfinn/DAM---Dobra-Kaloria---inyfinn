@@ -1,0 +1,454 @@
+{
+  "generated_at": "2026-08-10T14:20:13",
+  "product_count": 0,
+  "by_prefix": {},
+  "by_tag": {},
+  "by_base": {},
+  "tag_groups": {
+    "smak": [
+      "arachid",
+      "banoffee",
+      "chia",
+      "cynamon",
+      "cynamonka",
+      "cytryna",
+      "czekolada",
+      "deserowe",
+      "imbir",
+      "jagoda",
+      "jagodowy",
+      "kakao",
+      "karmel",
+      "kawa",
+      "kokos",
+      "lemon",
+      "malina",
+      "malinowa",
+      "mango",
+      "matcha",
+      "mct",
+      "migdal",
+      "miod",
+      "morela"
+    ],
+    "typ": [
+      "boost",
+      "burger",
+      "dates",
+      "funkcjonalny",
+      "gyros",
+      "jaglanka",
+      "kotlet",
+      "krem",
+      "kulki",
+      "mini batoniki",
+      "mix",
+      "mixy",
+      "napoj",
+      "niemiesne",
+      "nuggets",
+      "owies",
+      "pasztet",
+      "roslinne",
+      "sniadaniowe",
+      "sypkie"
+    ],
+    "opakowanie": [
+      "doypack",
+      "baton",
+      "mini baton",
+      "tuba",
+      "karton 6x",
+      "karton",
+      "bigpak",
+      "folia",
+      "etykieta",
+      "etykieta butelka",
+      "etykieta sloik",
+      "rekaw",
+      "shot",
+      "doy 6x",
+      "sasz",
+      "obwoluta"
+    ],
+    "autor": [
+      "Krzysztof",
+      "Sylwia",
+      "Szymon",
+      "Highlite"
+    ],
+    "osoba": [
+      "Krzysztof",
+      "Sylwia",
+      "Szymon",
+      "Highlite"
+    ],
+    "inne": []
+  },
+  "entries": [],
+  "association_reverse": {
+    "sliwka": [
+      "ciasto-sliwkowe-kruszonka"
+    ],
+    "sliweczka": [
+      "ciasto-sliwkowe-kruszonka"
+    ],
+    "sliwkowe": [
+      "ciasto-sliwkowe-kruszonka"
+    ],
+    "kruszonka": [
+      "ciasto-sliwkowe-kruszonka"
+    ],
+    "kruche ciasto": [
+      "ciasto-sliwkowe-kruszonka"
+    ],
+    "jablko": [
+      "jab-ko-cynamon-daktylowy",
+      "jablko-cynamon"
+    ],
+    "jablecznik": [
+      "jablko-cynamon"
+    ],
+    "szarlotka": [
+      "jablko-cynamon"
+    ],
+    "cynamonka": [
+      "jablko-cynamon"
+    ],
+    "nerkowiec": [
+      "babka-cytrynowa-nerkowcowy"
+    ],
+    "cytrynowa": [
+      "babka-cytrynowa-nerkowcowy"
+    ],
+    "2f": [
+      "dk-doy-datesy-karmel-100-g"
+    ],
+    "2x12": [
+      "dk-doy-datesy-karmel-100-g"
+    ],
+    "2×12": [
+      "dk-doy-datesy-karmel-100-g"
+    ],
+    "kielbaski": [
+      "kielbaska-klasyczna-niemiesne",
+      "kielbaska-wegierska-niemiesne"
+    ],
+    "kielbaska": [
+      "kielbaska-klasyczna-niemiesne",
+      "kielbaska-wegierska-niemiesne"
+    ],
+    "wegierska": [
+      "kielbaska-wegierska-niemiesne"
+    ],
+    "wegierskiej": [
+      "kielbaska-wegierska-niemiesne"
+    ],
+    "deserowe": [
+      "banoffee-kakao-deserowe",
+      "tiramisu-czekolada-kakao-deserowe"
+    ],
+    "tarta malinowa": [
+      "tarta-malinowa-nerkowcowy"
+    ],
+    "muffin jagodowy": [
+      "muffin-jagodowy-nerkowcowy"
+    ],
+    "sernik waniliowy": [
+      "sernik-waniliowy-nerkowcowy"
+    ],
+    "daktyl wisnia": [
+      "daktyl-wisnia-raw"
+    ],
+    "kakao wisnia": [
+      "daktyl-wisnia-raw"
+    ],
+    "jablko cynamon": [
+      "jab-ko-cynamon-daktylowy"
+    ],
+    "rolada": [
+      "parowka-roslinna-niemiesne",
+      "roladka-wo-owa-niemiesne"
+    ],
+    "parowki": [
+      "parowka-roslinna-niemiesne"
+    ],
+    "parowka": [
+      "parowka-roslinna-niemiesne"
+    ],
+    "falafel": [
+      "falafel-niemiesne"
+    ],
+    "kofta": [
+      "falafel-niemiesne"
+    ],
+    "grill": [
+      "kielbasa-grill-niemiesne",
+      "mix-na-grill-slaska-kaszanka-niemiesne"
+    ],
+    "kaszanka": [
+      "mix-na-grill-slaska-kaszanka-niemiesne"
+    ],
+    "chipotle": [
+      "kielbaska-chipotle-cheddar-niemiesne"
+    ],
+    "postanowienia": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "noworoczne": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "back to school": [
+      "chrupiacy-orzech-daktylowy",
+      "orzech-czekolada-daktylowy"
+    ],
+    "swietuj": [
+      "nuggets-niemiesne"
+    ],
+    "nuggets": [
+      "nuggets-niemiesne"
+    ],
+    "rogal poznanski": [
+      "rogal-poznanski-nerkowcowy"
+    ],
+    "swieta": [
+      "mix-kalendarz-adwentowy-mixy",
+      "mix-tuba-30-szt-xmas-mixy"
+    ],
+    "ksiazka": [
+      "mix-6x-mini-batoniki-mixy",
+      "mix-zestaw-makowiec-x-rogal-x-piernik-mixy"
+    ],
+    "prezent": [
+      "mix-6x-mini-batoniki-mixy",
+      "mix-zestaw-makowiec-x-rogal-x-piernik-mixy"
+    ],
+    "wielkanoc": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "zdrowych swiat": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "dpd pickup": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "pysznosci": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "mini baton": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "paczek rozany": [
+      "mix-6x-mini-batoniki-mixy",
+      "paczek-rozany-nerkowcowy"
+    ],
+    "czarna porzeczka": [
+      "ciasto-porzeczkowe-nerkowcowy",
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "nerkowcowy": [
+      "babka-cytrynowa-nerkowcowy"
+    ],
+    "cytryna": [
+      "babka-cytrynowa-nerkowcowy"
+    ],
+    "babka": [
+      "babka-cytrynowa-nerkowcowy"
+    ],
+    "babka cytrynowa": [
+      "babka-cytrynowa-nerkowcowy"
+    ],
+    "dates": [
+      "dk-doy-datesy-karmel-100-g"
+    ],
+    "datesy": [
+      "dk-doy-datesy-karmel-100-g"
+    ],
+    "karmel": [
+      "dk-doy-datesy-karmel-100-g"
+    ],
+    "karmelowy": [
+      "dk-doy-datesy-karmel-100-g"
+    ],
+    "daktyle": [
+      "dk-doy-datesy-karmel-100-g"
+    ],
+    "mini batoniki": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "mini-batoniki": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "batoniki": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "zadan specjalnych": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "swiateczne pysz": [
+      "mix-6x-mini-batoniki-mixy"
+    ],
+    "paczek roz": [
+      "paczek-rozany-nerkowcowy"
+    ],
+    "porzeczka": [
+      "blackcurrant-cake-cashews",
+      "ciasto-porzeczkowe-nerkowcowy"
+    ],
+    "ciasto porzeczkowe": [
+      "blackcurrant-cake-cashews",
+      "ciasto-porzeczkowe-nerkowcowy"
+    ],
+    "blackcurrant cake": [
+      "blackcurrant-cake-cashews"
+    ],
+    "blackcurrant": [
+      "blackcurrant-cake-cashews"
+    ],
+    "delight mini bars": [
+      "blackcurrant-cake-cashews"
+    ],
+    "mini bars with cashews": [
+      "blackcurrant-cake-cashews"
+    ],
+    "cashews": [
+      "blackcurrant-cake-cashews"
+    ],
+    "banoffee": [
+      "banoffee-kakao-deserowe"
+    ],
+    "banoffee kakao": [
+      "banoffee-kakao-deserowe"
+    ],
+    "deser": [
+      "banoffee-kakao-deserowe",
+      "tiramisu-czekolada-kakao-deserowe"
+    ],
+    "tiramisu": [
+      "tiramisu-czekolada-kakao-deserowe"
+    ],
+    "tiramisu czekolada": [
+      "tiramisu-czekolada-kakao-deserowe"
+    ],
+    "malinowa tarta": [
+      "tarta-malinowa-nerkowcowy"
+    ],
+    "malina": [
+      "tarta-malinowa-nerkowcowy"
+    ],
+    "jagodowy muffin": [
+      "muffin-jagodowy-nerkowcowy"
+    ],
+    "jagoda": [
+      "muffin-jagodowy-nerkowcowy"
+    ],
+    "waniliowy sernik": [
+      "sernik-waniliowy-nerkowcowy"
+    ],
+    "wanilia": [
+      "sernik-waniliowy-nerkowcowy"
+    ],
+    "kulki raw kakao": [
+      "daktyl-wisnia-raw"
+    ],
+    "raw kakao wisnia": [
+      "daktyl-wisnia-raw"
+    ],
+    "wisnia": [
+      "daktyl-wisnia-raw"
+    ],
+    "kakao": [
+      "daktyl-wisnia-raw"
+    ],
+    "jabłko cynamon": [
+      "jab-ko-cynamon-daktylowy"
+    ],
+    "cynamon": [
+      "jab-ko-cynamon-daktylowy"
+    ],
+    "nuggetsy": [
+      "nuggets-niemiesne"
+    ],
+    "rogal": [
+      "rogal-poznanski-nerkowcowy"
+    ],
+    "kielbaska wegierska": [
+      "kielbaska-wegierska-niemiesne"
+    ],
+    "kielbaski wegierskie": [
+      "kielbaska-wegierska-niemiesne"
+    ],
+    "hot dog": [
+      "kielbaska-wegierska-niemiesne"
+    ],
+    "kielbaska klasyczna": [
+      "kielbaska-klasyczna-niemiesne"
+    ],
+    "grillowane": [
+      "kielbasa-grill-niemiesne"
+    ],
+    "cheddar": [
+      "kielbaska-chipotle-cheddar-niemiesne"
+    ],
+    "roladka": [
+      "roladka-wo-owa-niemiesne"
+    ],
+    "grill mix": [
+      "mix-na-grill-slaska-kaszanka-niemiesne"
+    ],
+    "xmas": [
+      "mix-tuba-30-szt-xmas-mixy"
+    ],
+    "boze narodzenie": [
+      "mix-tuba-30-szt-xmas-mixy"
+    ],
+    "adwent": [
+      "mix-kalendarz-adwentowy-mixy"
+    ],
+    "kalendarz adwentowy": [
+      "mix-kalendarz-adwentowy-mixy"
+    ],
+    "super prezent": [
+      "mix-zestaw-makowiec-x-rogal-x-piernik-mixy"
+    ],
+    "burger": [
+      "burger-klasyczny-niemiesne"
+    ],
+    "dzien bez miesa": [
+      "burger-klasyczny-niemiesne"
+    ],
+    "orzech czekolada": [
+      "orzech-czekolada-daktylowy"
+    ],
+    "chrupiacy orzech": [
+      "chrupiacy-orzech-daktylowy"
+    ],
+    "·": [],
+    "1f": [],
+    "6x1": [],
+    "3f": [],
+    "4x6": [],
+    "1x1": [],
+    "280x210": [],
+    "511x472": [],
+    "14xmini_914_403": [],
+    "2x7xmini6x_892x405": [],
+    "2x15xbaton_wiekszy_785x423mm": [],
+    "785x348": [],
+    "706x412": [],
+    "7x6xmini_920x276mm": [],
+    "14x6xmini_892x225mm": [],
+    "6x11mini_1262x251": [],
+    "608x343": [],
+    "570x828": [],
+    "570x299": [],
+    "955x304": [],
+    "2xdoypack_kulki_1062x307mm": [],
+    "15xbaton_standard_714x383mm": [],
+    "500x206": [],
+    "749x225": [],
+    "1067x461": [],
+    "1055x408": [],
+    "1208x481": []
+  }
+}

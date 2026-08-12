@@ -1,0 +1,20 @@
+C:\Users\krzysztof.wieczorek\AppData\Local\Programs\Python\Python312\Lib\site-packages\PIL\Image.py:3578: DecompressionBombWarning: Image size (112527454 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
+  warnings.warn(
+C:\Users\krzysztof.wieczorek\AppData\Local\Programs\Python\Python312\Lib\site-packages\PIL\Image.py:3578: DecompressionBombWarning: Image size (101081088 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
+  warnings.warn(
+C:\Users\krzysztof.wieczorek\AppData\Local\Programs\Python\Python312\Lib\site-packages\PIL\Image.py:3578: DecompressionBombWarning: Image size (167126565 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
+  warnings.warn(
+More samples per pixel than can be decoded: 7
+C:\Users\krzysztof.wieczorek\AppData\Local\Programs\Python\Python312\Lib\site-packages\PIL\Image.py:3578: DecompressionBombWarning: Image size (117575868 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
+  warnings.warn(
+More samples per pixel than can be decoded: 7
+C:\Users\krzysztof.wieczorek\AppData\Local\Programs\Python\Python312\Lib\site-packages\PIL\Image.py:3578: DecompressionBombWarning: Image size (127263760 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
+  warnings.warn(
+More samples per pixel than can be decoded: 8
+More samples per pixel than can be decoded: 9
+More samples per pixel than can be decoded: 7
+More samples per pixel than can be decoded: 7
+More samples per pixel than can be decoded: 7
+More samples per pixel than can be decoded: 7
+More samples per pixel than can be decoded: 7
+More samples per pixel than can be decoded: 7

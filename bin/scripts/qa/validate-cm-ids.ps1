@@ -2,7 +2,7 @@
 # Expected: exit 0; unresolved = 0
 param(
     [string]$PlanPath = "C:\Users\krzysztof.wieczorek\.cursor\plans\dam-portable-installer-synology.plan.md",
-    [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
+    [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path,
     [switch]$VerboseReport
 )
 
@@ -159,3 +159,4 @@ if ($distinctUnresolved.Count -gt 0) {
 
 Write-Host "OK: all CM references resolved (0 unresolved)"
 exit 0
+

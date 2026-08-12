@@ -1,0 +1,21 @@
+{
+  "groups": [
+    {
+      "note": "OWIES MIOD (DK, PL) i CORNFLAKES PEANUTS HONEY (GC, eksport) to ten sam produkt - wariant jezykowy. Przykład uzytkownika 2026-07-18.",
+      "members": [
+        {
+          "brand": "DK",
+          "product_id": "owies-miod-sniadanie"
+        },
+        {
+          "brand": "GC",
+          "product_id": "cornflakes-peanuts-honey-balls-crispy"
+        }
+      ],
+      "linked_by": "index",
+      "canonical_id": "owies-miod-sniadanie",
+      "shared_index_base": "6300699"
+    }
+  ],
+  "_readme": "Aliasy = TEN SAM produkt pod inna marka/jezykiem (DK<->GC). Powiazanie: 1) po wspolnym indeksie (linked_by=index) 2) recznie przez admina/power_user - wskazanie folderu lub wpisanie indeksow (linked_by=manual). Zapis przez Faze 4 (kolejka moderacji) - patrz tag-proposals.json."
+}

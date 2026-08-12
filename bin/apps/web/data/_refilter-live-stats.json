@@ -1,0 +1,339 @@
+{
+  "asset_count": 56822,
+  "assets_with_links_before": 45293,
+  "assets_touched": 41785,
+  "override_enforced": 3,
+  "links_before": 225567,
+  "links_after": 38914,
+  "links_removed": 186653,
+  "iconish_touched": 5479,
+  "iconish_links_removed": 20088,
+  "dry_run": false,
+  "backup": "\\\\NFS01.kubara.net\\User\\krzysztof.wieczorek\\DAM\\bin\\apps\\web\\data\\branding-index.backup-20260803T151958Z.json",
+  "backup_bytes": 412984067,
+  "samples": {
+    "br-000458": {
+      "name": "baseball-cap-bold.svg",
+      "path_tail": " i MARKA -/DOBRA KALORIA/03 - IKONY/SVG/kolekcja-grube-700/baseball-cap-bold.svg",
+      "iconish": true,
+      "min_score": 70,
+      "override_enforced": false,
+      "before": [
+        "burger-klasyczny-niemiesne",
+        "burger-plant-based"
+      ],
+      "kept": [],
+      "scores": [],
+      "removed": [
+        "burger-klasyczny-niemiesne",
+        "burger-plant-based"
+      ]
+    },
+    "br-001003": {
+      "name": "tennis-ball-bold.svg",
+      "path_tail": "G i MARKA -/DOBRA KALORIA/03 - IKONY/SVG/kolekcja-grube-700/tennis-ball-bold.svg",
+      "iconish": true,
+      "min_score": 70,
+      "override_enforced": false,
+      "before": [
+        "burger-klasyczny-niemiesne",
+        "burger-plant-based"
+      ],
+      "kept": [],
+      "scores": [],
+      "removed": [
+        "burger-klasyczny-niemiesne",
+        "burger-plant-based"
+      ]
+    },
+    "br-001567": {
+      "name": "g-baseball-bold.svg",
+      "path_tail": " MARKA -/DOBRA KALORIA/03 - IKONY/SVG/nasz_styl_wygenerowane/g-baseball-bold.svg",
+      "iconish": true,
+      "min_score": 70,
+      "override_enforced": false,
+      "before": [
+        "babka-cytrynowa-nerkowcowy",
+        "jab-ko-cynamon-daktylowy",
+        "jablko-cynamon",
+        "tarta-malinowa-nerkowcowy",
+        "burger-klasyczny-niemiesne",
+        "rogal-poznanski-nerkowcowy",
+        "malina-owocowe",
+        "burger-plant-based"
+      ],
+      "kept": [],
+      "scores": [],
+      "removed": [
+        "babka-cytrynowa-nerkowcowy",
+        "jab-ko-cynamon-daktylowy",
+        "jablko-cynamon",
+        "tarta-malinowa-nerkowcowy",
+        "burger-klasyczny-niemiesne",
+        "rogal-poznanski-nerkowcowy",
+        "malina-owocowe",
+        "burger-plant-based"
+      ]
+    },
+    "br-001568": {
+      "name": "g-baseball-cap-bold.svg",
+      "path_tail": "KA -/DOBRA KALORIA/03 - IKONY/SVG/nasz_styl_wygenerowane/g-baseball-cap-bold.svg",
+      "iconish": true,
+      "min_score": 70,
+      "override_enforced": false,
+      "before": [
+        "babka-cytrynowa-nerkowcowy",
+        "jab-ko-cynamon-daktylowy",
+        "jablko-cynamon",
+        "tarta-malinowa-nerkowcowy",
+        "burger-klasyczny-niemiesne",
+        "rogal-poznanski-nerkowcowy",
+        "malina-owocowe",
+        "burger-plant-based"
+      ],
+      "kept": [],
+      "scores": [],
+      "removed": [
+        "babka-cytrynowa-nerkowcowy",
+        "jab-ko-cynamon-daktylowy",
+        "jablko-cynamon",
+        "tarta-malinowa-nerkowcowy",
+        "burger-klasyczny-niemiesne",
+        "rogal-poznanski-nerkowcowy",
+        "malina-owocowe",
+        "burger-plant-based"
+      ]
+    },
+    "br-001569": {
+      "name": "g-baseball-helmet-bold.svg",
+      "path_tail": "-/DOBRA KALORIA/03 - IKONY/SVG/nasz_styl_wygenerowane/g-baseball-helmet-bold.svg",
+      "iconish": true,
+      "min_score": 70,
+      "override_enforced": false,
+      "before": [
+        "babka-cytrynowa-nerkowcowy",
+        "jab-ko-cynamon-daktylowy",
+        "jablko-cynamon",
+        "tarta-malinowa-nerkowcowy",
+        "burger-klasyczny-niemiesne",
+        "rogal-poznanski-nerkowcowy",
+        "malina-owocowe",
+        "burger-plant-based"
+      ],
+      "kept": [],
+      "scores": [],
+      "removed": [
+        "babka-cytrynowa-nerkowcowy",
+        "jab-ko-cynamon-daktylowy",
+        "jablko-cynamon",
+        "tarta-malinowa-nerkowcowy",
+        "burger-klasyczny-niemiesne",
+        "rogal-poznanski-nerkowcowy",
+        "malina-owocowe",
+        "burger-plant-based"
+      ]
+    },
+    "br-002399": {
+      "name": "g-tennis-ball-bold.svg",
+      "path_tail": "RKA -/DOBRA KALORIA/03 - IKONY/SVG/nasz_styl_wygenerowane/g-tennis-ball-bold.svg",
+      "iconish": true,
+      "min_score": 70,
+      "override_enforced": false,
+      "before": [
+        "babka-cytrynowa-nerkowcowy",
+        "jab-ko-cynamon-daktylowy",
+        "jablko-cynamon",
+        "tarta-malinowa-nerkowcowy",
+        "burger-klasyczny-niemiesne",
+        "rogal-poznanski-nerkowcowy",
+        "malina-owocowe",
+        "burger-plant-based"
+      ],
+      "kept": [],
+      "scores": [],
+      "removed": [
+        "babka-cytrynowa-nerkowcowy",
+        "jab-ko-cynamon-daktylowy",
+        "jablko-cynamon",
+        "tarta-malinowa-nerkowcowy",
+        "burger-klasyczny-niemiesne",
+        "rogal-poznanski-nerkowcowy",
+        "malina-owocowe",
+        "burger-plant-based"
+      ]
+    },
+    "br-005033": {
+      "name": "ZESTAWY-doypack - Kulki Limonka GC - 848x1200 RGB.jpg",
+      "path_tail": "DKIE/Doypack Kulki Limonka/ZESTAWY-doypack - Kulki Limonka GC - 848x1200 RGB.jpg",
+      "iconish": false,
+      "min_score": 50,
+      "override_enforced": false,
+      "before": [
+        "balls-plant-based",
+        "burger-beef-plant-based",
+        "burger-chicken-plant-based",
+        "burger-plant-based"
+      ],
+      "kept": [],
+      "scores": [],
+      "removed": [
+        "balls-plant-based",
+        "burger-beef-plant-based",
+        "burger-chicken-plant-based",
+        "burger-plant-based"
+      ]
+    },
+    "br-005044": {
+      "name": "Baner - KULKI kakao limonka pomarancza i wisnia- 848x1200 RGB.jpg",
+      "path_tail": "ancza I Wisnia/Baner - KULKI kakao limonka pomarancza i wisnia- 848x1200 RGB.jpg",
+      "iconish": false,
+      "min_score": 50,
+      "override_enforced": false,
+      "before": [
+        "daktyl-wisnia-raw",
+        "czekolada-banan-orzechowe",
+        "kokos-czekolada-daktylowy",
+        "kokos-pomarancza-daktylowy",
+        "orzech-czekolada-daktylowy",
+        "owies-czekolada-sniadaniowe",
+        "daktyl-pomarancza-raw",
+        "owies-czekolada-sniadanie"
+      ],
+      "kept": [
+        "daktyl-pomarancza-raw",
+        "daktyl-wisnia-raw"
+      ],
+      "scores": [
+        {
+          "id": "daktyl-pomarancza-raw",
+          "score": 55,
+          "reason": "token_plus_context:pomarancza"
+        },
+        {
+          "id": "daktyl-wisnia-raw",
+          "score": 55,
+          "reason": "token_plus_context:wisnia"
+        }
+      ],
+      "removed": [
+        "czekolada-banan-orzechowe",
+        "kokos-czekolada-daktylowy",
+        "kokos-pomarancza-daktylowy",
+        "orzech-czekolada-daktylowy",
+        "owies-czekolada-sniadaniowe",
+        "owies-czekolada-sniadanie"
+      ]
+    },
+    "br-005045": {
+      "name": "Baner - KULKI kakao limonka pomarancza i wisnia- 848x1200 RGB.psb",
+      "path_tail": "ancza I Wisnia/Baner - KULKI kakao limonka pomarancza i wisnia- 848x1200 RGB.psb",
+      "iconish": false,
+      "min_score": 50,
+      "override_enforced": false,
+      "before": [
+        "daktyl-wisnia-raw",
+        "czekolada-banan-orzechowe",
+        "kokos-czekolada-daktylowy",
+        "kokos-pomarancza-daktylowy",
+        "orzech-czekolada-daktylowy",
+        "owies-czekolada-sniadaniowe",
+        "daktyl-pomarancza-raw",
+        "owies-czekolada-sniadanie"
+      ],
+      "kept": [
+        "daktyl-pomarancza-raw",
+        "daktyl-wisnia-raw"
+      ],
+      "scores": [
+        {
+          "id": "daktyl-pomarancza-raw",
+          "score": 55,
+          "reason": "token_plus_context:pomarancza"
+        },
+        {
+          "id": "daktyl-wisnia-raw",
+          "score": 55,
+          "reason": "token_plus_context:wisnia"
+        }
+      ],
+      "removed": [
+        "czekolada-banan-orzechowe",
+        "kokos-czekolada-daktylowy",
+        "kokos-pomarancza-daktylowy",
+        "orzech-czekolada-daktylowy",
+        "owies-czekolada-sniadaniowe",
+        "owies-czekolada-sniadanie"
+      ]
+    },
+    "br-005067": {
+      "name": "REFORMATY - PORZECZKA GC  - 1200x1200.jpg",
+      "path_tail": "IKI DO ZESTAWÓW/02 - SŁODKIE/Porzeczka/REFORMATY - PORZECZKA GC  - 1200x1200.jpg",
+      "iconish": false,
+      "min_score": 50,
+      "override_enforced": true,
+      "before": [
+        "blackcurrant-cake-cashews",
+        "ciasto-porzeczkowe-nerkowcowy",
+        "czarna-porzeczka-owocowe",
+        "owsianka-figa-porzeczka-sniadaniowe"
+      ],
+      "kept": [
+        "blackcurrant-cake-cashews"
+      ],
+      "scores": [
+        {
+          "id": "blackcurrant-cake-cashews",
+          "score": 100,
+          "reason": "override_forced"
+        }
+      ],
+      "removed": [
+        "ciasto-porzeczkowe-nerkowcowy",
+        "czarna-porzeczka-owocowe",
+        "owsianka-figa-porzeczka-sniadaniowe"
+      ]
+    },
+    "br-009287": {
+      "name": "DK_kulki_limonka_6300447_2024_02_01.ai",
+      "path_tail": "LKI_RAW/DAKTYL_LIMONKA/2024_02_02_6300447/DK_kulki_limonka_6300447_2024_02_01.ai",
+      "iconish": false,
+      "min_score": 50,
+      "override_enforced": false,
+      "before": [
+        "daktyl-limonka-raw"
+      ],
+      "kept": [
+        "daktyl-limonka-raw"
+      ],
+      "scores": [
+        {
+          "id": "daktyl-limonka-raw",
+          "score": 100,
+          "reason": "sku_match"
+        }
+      ],
+      "removed": []
+    },
+    "br-009288": {
+      "name": "DK_kulki_limonka_6300447_2024_02_01.pdf",
+      "path_tail": "KI_RAW/DAKTYL_LIMONKA/2024_02_02_6300447/DK_kulki_limonka_6300447_2024_02_01.pdf",
+      "iconish": false,
+      "min_score": 50,
+      "override_enforced": false,
+      "before": [
+        "daktyl-limonka-raw"
+      ],
+      "kept": [
+        "daktyl-limonka-raw"
+      ],
+      "scores": [
+        {
+          "id": "daktyl-limonka-raw",
+          "score": 100,
+          "reason": "sku_match"
+        }
+      ],
+      "removed": []
+    }
+  }
+}

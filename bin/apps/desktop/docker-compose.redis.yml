@@ -1,0 +1,24 @@
+# DAM local Redis - OPTIONAL FALLBACK only (Docker Desktop).
+# Preferred: native Windows Redis / Memurai on 127.0.0.1:6379
+#   see apps/desktop/README-redis.md  ("Redis bez Dockera: tak")
+#
+# Usage (only if Docker already runs):
+#   docker compose -f apps/desktop/docker-compose.redis.yml up -d
+# Env for bridge (unchanged):
+#   DAM_REDIS_URL=redis://127.0.0.1:6379/0
+#
+# Without Docker/Redis: dam_redis.py circuit OPEN + role fallbacks.
+
+services:
+  dam-redis:
+    image: redis:7-alpine
+    container_name: dam-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - dam-redis-data:/data
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    restart: unless-stopped
+
+volumes:
+  dam-redis-data:

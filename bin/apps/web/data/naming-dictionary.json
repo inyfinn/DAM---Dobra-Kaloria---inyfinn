@@ -1,0 +1,352 @@
+{
+  "ui": {
+    "demo_label": "Demo",
+    "mix_prefix": "MIX - ",
+    "no_index_label": "Bez indeksu",
+    "multi_lang_label": "Multijęzyczny",
+    "multi_index_label": "Warianty"
+  },
+  "sizes": {
+    "L": "krótsza krawędź >= 1300 px",
+    "S": "krótsza krawędź < 1300 px"
+  },
+  "brands": {
+    "DK": {
+      "path_hint": "- POLSKA/01 - PRODUKTY/- DK",
+      "default_lang": "pl"
+    },
+    "GC": {
+      "path_hint": "- EKSPORT/01 - PRODUCTS/- GC",
+      "default_lang": "gb"
+    }
+  },
+  "policy": {
+    "tag_casing": {
+      "note_pl": "Tagi globalne: kody (DK, DOYPACK, GB) zostaja WERSALIKAMI. Etykiety ludzkie (Kulki, Kulki Surowe, Mini batoniki) jak w zdaniu z duza litera. Nie mieszac stylow.",
+      "code_kinds": [
+        "brand",
+        "lang",
+        "carrier",
+        "index"
+      ],
+      "code_style": "uppercase_as_stored",
+      "human_kinds": [
+        "category",
+        "subcategory",
+        "smak",
+        "typ",
+        "status",
+        "flag",
+        "autor"
+      ],
+      "human_style": "title_case"
+    },
+    "updated_at": "2026-07-18",
+    "description_pl": "W programie zawsze pelna nazwa nosnika (DOYPACK, FOLIA, BATON). Na dysku Windows (rename folderu/pliku) zawsze skrot (DOY, FOL, BAT). Skroty istnieja tylko po to, zeby nazwy w Eksploratorze zajmowaly mniej miejsca.",
+    "carrier_display_in_ui": "label_pl",
+    "carrier_prefix_on_disk": "short"
+  },
+  "version": 3,
+  "carriers": {
+    "BAT": {
+      "short": "BAT",
+      "aliases": [
+        "BAT",
+        "BATON",
+        "BAR"
+      ],
+      "label_pl": "BATON"
+    },
+    "DOY": {
+      "short": "DOY",
+      "aliases": [
+        "DOY",
+        "DOYPACK",
+        "POUCH"
+      ],
+      "label_pl": "DOYPACK"
+    },
+    "ETY": {
+      "short": "ETY",
+      "aliases": [
+        "ETY",
+        "ETYKIETA",
+        "LABEL"
+      ],
+      "label_pl": "ETYKIETA"
+    },
+    "KAR": {
+      "short": "KAR",
+      "aliases": [
+        "KAR",
+        "KARTON",
+        "CARTON"
+      ],
+      "label_pl": "KARTON"
+    },
+    "OBW": {
+      "short": "OBW",
+      "aliases": [
+        "OBW",
+        "OBWOLUTA"
+      ],
+      "label_pl": "OBWOLUTA"
+    },
+    "MINI": {
+      "short": "MINI",
+      "aliases": [
+        "MINI",
+        "MINI BATON",
+        "MINI BAR"
+      ],
+      "label_pl": "MINI BATON"
+    },
+    "SASZ": {
+      "short": "SASZ",
+      "aliases": [
+        "SASZ",
+        "SACHET"
+      ],
+      "label_pl": "SASZETKA"
+    },
+    "SHOT": {
+      "short": "SHOT",
+      "aliases": [
+        "SHOT"
+      ],
+      "label_pl": "SHOT"
+    },
+    "TUBA": {
+      "short": "TUBA",
+      "aliases": [
+        "TUBA",
+        "TUBE"
+      ],
+      "label_pl": "TUBA"
+    },
+    "DOY6X": {
+      "short": "DOY6X",
+      "aliases": [
+        "DOY6X",
+        "DOY 6X",
+        "DOYPACK 6"
+      ],
+      "label_pl": "DOYPACK 6x MINI"
+    },
+    "FOLIA": {
+      "short": "FOL",
+      "aliases": [
+        "FOLIA",
+        "FOL",
+        "FOIL"
+      ],
+      "label_pl": "FOLIA"
+    },
+    "KAR6X": {
+      "short": "KAR6X",
+      "aliases": [
+        "KAR6X",
+        "KAR 6X",
+        "KARTON 6",
+        "CARTON 6x MINI"
+      ],
+      "label_pl": "KARTON 6x MINI"
+    },
+    "REKAW": {
+      "short": "REKAW",
+      "aliases": [
+        "REKAW",
+        "RĘKAW",
+        "SLEEVE",
+        "OWIJKA"
+      ],
+      "label_pl": "RĘKAW"
+    },
+    "WIZKA": {
+      "short": "WIZKA",
+      "aliases": [
+        "WIZKA",
+        "WIZKI"
+      ],
+      "label_pl": "WIZUALIZACJE"
+    },
+    "BIGPAK": {
+      "short": "BIGPAK",
+      "aliases": [
+        "BIGPAK",
+        "BIGPACK",
+        "BIG PAK"
+      ],
+      "label_pl": "BIGPAK"
+    },
+    "ETY-BUT": {
+      "short": "ETY-BUT",
+      "aliases": [
+        "ETY-BUT",
+        "ETY BUT",
+        "LABEL-GLASS"
+      ],
+      "label_pl": "ETYKIETA BUTELKA"
+    },
+    "ETY-SLO": {
+      "short": "ETY-SLO",
+      "aliases": [
+        "ETY-SLO",
+        "ETY SLO",
+        "LABEL-JAR"
+      ],
+      "label_pl": "ETYKIETA SŁOIK"
+    }
+  },
+  "ai_states": {
+    "": "robocza",
+    "-F": "Finished - layout skonczony",
+    "-FQ": "Finished Quality - zatwierdzony do druku"
+  },
+  "languages": {
+    "at": "Austria",
+    "be": "Belgia",
+    "bg": "Bułgaria",
+    "ch": "Szwajcaria",
+    "cz": "Czechy",
+    "de": "Niemcy",
+    "dk": "Dania",
+    "ee": "Estonia",
+    "es": "Hiszpania",
+    "fi": "Finlandia",
+    "fr": "Francja",
+    "gb": "Wielka Brytania",
+    "gr": "Grecja",
+    "hr": "Chorwacja",
+    "hu": "Węgry",
+    "ie": "Irlandia",
+    "it": "Włochy",
+    "lt": "Litwa",
+    "lv": "Łotwa",
+    "nl": "Holandia",
+    "no": "Norwegia",
+    "pl": "Polska",
+    "pt": "Portugalia",
+    "ro": "Rumunia",
+    "ru": "Rosja",
+    "se": "Szwecja",
+    "si": "Słowenia",
+    "sk": "Słowacja",
+    "uk": "Ukraina"
+  },
+  "categories": [
+    {
+      "id": "BATONY",
+      "title": "Batony",
+      "labels": [
+        "BATONY",
+        "BARS"
+      ]
+    },
+    {
+      "id": "KULKI",
+      "title": "Kulki",
+      "labels": [
+        "KULKI",
+        "BALLS"
+      ]
+    },
+    {
+      "id": "ROSLINNE",
+      "title": "Roślinne",
+      "labels": [
+        "ROSLINNE",
+        "ROŚLINNE",
+        "PLANT BASED",
+        "PLANT-BASED"
+      ]
+    },
+    {
+      "id": "SYPKIE",
+      "title": "Sypkie",
+      "labels": [
+        "SYPKIE",
+        "BREAKFAST"
+      ]
+    },
+    {
+      "id": "NAPOJE",
+      "title": "Napoje",
+      "labels": [
+        "NAPOJE",
+        "DRINKS"
+      ]
+    },
+    {
+      "id": "PRZETWORY",
+      "title": "Przetwory",
+      "labels": [
+        "PRZETWORY",
+        "SPREADS",
+        "CREAMS",
+        "KREMY"
+      ]
+    },
+    {
+      "id": "DATESY",
+      "title": "Datesy",
+      "labels": [
+        "DATESY",
+        "DATES"
+      ]
+    }
+  ],
+  "lang_aliases": {
+    "en": "gb",
+    "ua": "uk"
+  },
+  "perspectives": {
+    "BACK": [
+      "BACK",
+      "TYL",
+      "TYŁ"
+    ],
+    "LEFT": [
+      "LEFT",
+      "LEWO"
+    ],
+    "OPEN": [
+      "OPEN",
+      "OTWARTE"
+    ],
+    "FRONT": [
+      "FRONT"
+    ],
+    "RIGHT": [
+      "RIGHT",
+      "PRAWO"
+    ],
+    "CLOSED": [
+      "CLOSED",
+      "ZAMKNIETE",
+      "ZAMKNIĘTE"
+    ],
+    "MOCKUP": [
+      "MOCKUP"
+    ]
+  },
+  "carrier_detect_order": [
+    "KAR6X",
+    "DOY6X",
+    "ETY-BUT",
+    "ETY-SLO",
+    "DOY",
+    "KAR",
+    "MINI",
+    "BAT",
+    "BIGPAK",
+    "TUBA",
+    "FOLIA",
+    "SASZ",
+    "REKAW",
+    "OBW",
+    "ETY",
+    "SHOT",
+    "WIZKA"
+  ]
+}

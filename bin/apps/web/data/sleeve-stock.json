@@ -1,0 +1,569 @@
+{
+  "version": 1,
+  "updated_at": "2026-07-22T13:32:26.071888+00:00",
+  "source_xlsx": "X:/Marketing/- POLSKA/01 - PRODUKTY/01 - WYKROJNIKI/STANY RĘKAWKÓW 2026.xlsx",
+  "entry_count": 29,
+  "thresholds": {
+    "critical_months": 1.0,
+    "order_now_months": 2.0,
+    "ok_months": 3.0
+  },
+  "stakeholders": {
+    "zakupy": [
+      "Anna Polańska",
+      "Marta Zasępa",
+      "Justyna Zroślak"
+    ],
+    "inni": [
+      "Karolina Poznar",
+      "Szymon Ryngwelski",
+      "Krzysztof Wieczorek",
+      "Sylwia Zarychta",
+      "Beata Ścibik",
+      "Agata Karoń"
+    ]
+  },
+  "schedule_lead_days": {
+    "new_product_existing_die": 46,
+    "new_flavor_family": 30,
+    "reformat": 19,
+    "export_consult": 5,
+    "export_legal": 10
+  },
+  "entries": [
+    {
+      "article_code": "6300612",
+      "extra_name": null,
+      "name": "Rękaw DK Burger wołowy v3 alergen",
+      "avg_monthly_usage": null,
+      "stock": null,
+      "months_of_stock": null,
+      "on_order": 0,
+      "months_with_order": null,
+      "die_type": "automat",
+      "comment": "do zrobienia na wrzesień",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300611",
+      "extra_name": null,
+      "name": "RĘKAW DK BURGER ROŚLINNY 170G V5 ALERGEN",
+      "avg_monthly_usage": null,
+      "stock": 4500,
+      "months_of_stock": null,
+      "on_order": 0,
+      "months_with_order": null,
+      "die_type": "automat",
+      "comment": "do zrobienia na wrzesień",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300650",
+      "extra_name": null,
+      "name": "RĘKAW DK NUGGETS XXL 300 G",
+      "avg_monthly_usage": null,
+      "stock": 12095,
+      "months_of_stock": null,
+      "on_order": 0,
+      "months_with_order": null,
+      "die_type": "nd",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300633",
+      "extra_name": null,
+      "name": "RĘKAW DK KASZANKA GRILL V4",
+      "avg_monthly_usage": 83266,
+      "stock": null,
+      "months_of_stock": null,
+      "on_order": 0,
+      "months_with_order": null,
+      "die_type": "bez zmian",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300578",
+      "extra_name": null,
+      "name": "RĘKAW DK BURGER BURACZANY V3",
+      "avg_monthly_usage": 5673,
+      "stock": 193,
+      "months_of_stock": 0.03,
+      "on_order": 0,
+      "months_with_order": 0.03,
+      "die_type": "bez zmian",
+      "comment": "JEST AUTOMAT  6300757",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "critical",
+        "order_now",
+        "automat_alias"
+      ],
+      "order_lead_weeks": 9
+    },
+    {
+      "article_code": "6300357",
+      "extra_name": null,
+      "name": "RĘKAW GC KIEŁBASKI WĘGIERSKIE 180G CZ SK V2",
+      "avg_monthly_usage": 2114,
+      "stock": 1237,
+      "months_of_stock": 0.59,
+      "on_order": 0,
+      "months_with_order": 0.59,
+      "die_type": "bez zmian",
+      "comment": "do zrobienia",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "critical",
+        "order_now"
+      ],
+      "order_lead_weeks": 7
+    },
+    {
+      "article_code": "6300794",
+      "extra_name": null,
+      "name": "RĘKAW (DK) SZNYCEL 190G AUTOMAT",
+      "avg_monthly_usage": 61430,
+      "stock": 0,
+      "months_of_stock": null,
+      "on_order": 45000,
+      "months_with_order": 0.73,
+      "die_type": "automat",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "on_order"
+      ],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300632",
+      "extra_name": null,
+      "name": "RĘKAW DK BURGER WOŁOWY V4 GRILL ALERGEN",
+      "avg_monthly_usage": 50929,
+      "stock": 38620,
+      "months_of_stock": 0.76,
+      "on_order": 0,
+      "months_with_order": 0.76,
+      "die_type": "automat",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "critical",
+        "order_now"
+      ],
+      "order_lead_weeks": 6
+    },
+    {
+      "article_code": "6300755",
+      "extra_name": null,
+      "name": "RĘKAW DK BURGER ROŚLINNY GRILL AUTOMAT",
+      "avg_monthly_usage": 22681,
+      "stock": 18294,
+      "months_of_stock": 0.81,
+      "on_order": 0,
+      "months_with_order": 0.81,
+      "die_type": "automat",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "critical",
+        "order_now"
+      ],
+      "order_lead_weeks": 6
+    },
+    {
+      "article_code": "6300635",
+      "extra_name": null,
+      "name": "RĘKAW (DK) SZNYCEL 190G",
+      "avg_monthly_usage": 61430,
+      "stock": 50444,
+      "months_of_stock": 0.82,
+      "on_order": 0,
+      "months_with_order": 0.82,
+      "die_type": "automat",
+      "comment": "JEST AUTOMAT  6300794",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "critical",
+        "order_now",
+        "automat_alias"
+      ],
+      "order_lead_weeks": 6
+    },
+    {
+      "article_code": "6300768",
+      "extra_name": null,
+      "name": "RĘKAW DK ROŚLINNA KASZANKA WĘDZONA DYMEM BUKOWYM 180 G",
+      "avg_monthly_usage": 83266,
+      "stock": 73056,
+      "months_of_stock": 0.88,
+      "on_order": 0,
+      "months_with_order": 0.88,
+      "die_type": "bez zmian",
+      "comment": "czekamy na informację z lidla",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "critical",
+        "order_now",
+        "waiting_retailer"
+      ],
+      "order_lead_weeks": 5
+    },
+    {
+      "article_code": "6300744",
+      "extra_name": null,
+      "name": "RĘKAW (DK) ROŚLINNA KOFTA 200G",
+      "avg_monthly_usage": 32468,
+      "stock": 33245,
+      "months_of_stock": 1.02,
+      "on_order": 0,
+      "months_with_order": 1.02,
+      "die_type": "bez zmian",
+      "comment": "koniec w Lidlu 35 tydz",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "order_now",
+        "waiting_retailer"
+      ],
+      "order_lead_weeks": 5
+    },
+    {
+      "article_code": "6300697",
+      "extra_name": null,
+      "name": "RĘKAW DK ROLADKI ALA WOŁOWE Z PIECZARKAMI 160 G",
+      "avg_monthly_usage": 16036,
+      "stock": 16644,
+      "months_of_stock": 1.04,
+      "on_order": 0,
+      "months_with_order": 1.04,
+      "die_type": "bez zmian",
+      "comment": "do zrobienia",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "order_now"
+      ],
+      "order_lead_weeks": 5
+    },
+    {
+      "article_code": "6300631",
+      "extra_name": null,
+      "name": "RĘKAW DK BURGER ROŚLINNY 170G V6 GRILL ALERGEN",
+      "avg_monthly_usage": 22681,
+      "stock": 26765,
+      "months_of_stock": 1.18,
+      "on_order": 0,
+      "months_with_order": 1.18,
+      "die_type": "bez zmian",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "order_now"
+      ],
+      "order_lead_weeks": 4
+    },
+    {
+      "article_code": "6300329",
+      "extra_name": null,
+      "name": "RĘKAW DK GYROS GROCHOWY V2",
+      "avg_monthly_usage": 22856,
+      "stock": 12888,
+      "months_of_stock": 0.56,
+      "on_order": 15000,
+      "months_with_order": 1.22,
+      "die_type": "przejściowy",
+      "comment": "planowane przejście na nowy rękaw (przejściowy!) od 01.09.2026",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "critical",
+        "order_now",
+        "on_order",
+        "transition"
+      ],
+      "order_lead_weeks": 7
+    },
+    {
+      "article_code": "6300746",
+      "extra_name": null,
+      "name": "RĘKAW (DK) ROŚLINNE KIEŁBASKI WĘGIERSKIE 180 G W ALGINIANIE",
+      "avg_monthly_usage": 20339,
+      "stock": 25850,
+      "months_of_stock": 1.27,
+      "on_order": 0,
+      "months_with_order": 1.27,
+      "die_type": "bez zmian",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "order_now"
+      ],
+      "order_lead_weeks": 4
+    },
+    {
+      "article_code": "6300745",
+      "extra_name": null,
+      "name": "RĘKAW (DK) ROŚLINNY FALAFEL 175G",
+      "avg_monthly_usage": 65980,
+      "stock": 85873,
+      "months_of_stock": 1.3,
+      "on_order": 0,
+      "months_with_order": 1.3,
+      "die_type": "bez zmian",
+      "comment": "czekamy na informację z lidla",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "order_now",
+        "waiting_retailer"
+      ],
+      "order_lead_weeks": 4
+    },
+    {
+      "article_code": "6300586",
+      "extra_name": null,
+      "name": "RĘKAW DK NUGGETS",
+      "avg_monthly_usage": 15670,
+      "stock": 23644,
+      "months_of_stock": 1.51,
+      "on_order": 0,
+      "months_with_order": 1.51,
+      "die_type": "przejściowy",
+      "comment": "do zrobienia planowane przejście na nowy rękaw (przejściowy!) od 01.09.2026",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "order_now",
+        "transition"
+      ],
+      "order_lead_weeks": 4
+    },
+    {
+      "article_code": "6300786",
+      "extra_name": null,
+      "name": "Rękaw (DK) Roślinne kiełbaski węgierskie 180 g BEZ OSŁONKI",
+      "avg_monthly_usage": 20400,
+      "stock": 32400,
+      "months_of_stock": 1.59,
+      "on_order": 0,
+      "months_with_order": 1.59,
+      "die_type": "bez zmian",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "order_now"
+      ],
+      "order_lead_weeks": 4
+    },
+    {
+      "article_code": "6300572",
+      "extra_name": null,
+      "name": "RĘKAW GC BURGER 170G CZ SK V4",
+      "avg_monthly_usage": 1965,
+      "stock": 3252,
+      "months_of_stock": 1.65,
+      "on_order": 0,
+      "months_with_order": 1.65,
+      "die_type": "automat",
+      "comment": "do zrobienia",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "order_now"
+      ],
+      "order_lead_weeks": 4
+    },
+    {
+      "article_code": "6300283",
+      "extra_name": null,
+      "name": "KARTONIK DK PASZTET ŻURAWINA V2",
+      "avg_monthly_usage": 1861,
+      "stock": 3136,
+      "months_of_stock": 1.69,
+      "on_order": 0,
+      "months_with_order": 1.69,
+      "die_type": "bez zmian",
+      "comment": "czekamy",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "order_now",
+        "waiting_retailer"
+      ],
+      "order_lead_weeks": 4
+    },
+    {
+      "article_code": "6300406",
+      "extra_name": "6300406.01 zmiana z 15.07.26",
+      "name": "RĘKAW DK MIELONE WOŁOWE - PRZEPISY V 4",
+      "avg_monthly_usage": 17216,
+      "stock": 14828,
+      "months_of_stock": 0.86,
+      "on_order": 30000,
+      "months_with_order": 2.6,
+      "die_type": "bez zmian",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "critical",
+        "order_now",
+        "on_order"
+      ],
+      "order_lead_weeks": 5
+    },
+    {
+      "article_code": "6300610",
+      "extra_name": "6300610.01 zmiana z 03.07.26",
+      "name": "RĘKAW GC NUGGETS 175G CZ SK",
+      "avg_monthly_usage": 1672,
+      "stock": 5116,
+      "months_of_stock": 3.06,
+      "on_order": 0,
+      "months_with_order": 3.06,
+      "die_type": "przejściowy",
+      "comment": "planowane przejście na nowy rękaw (przejściowy!) od 01.09.2026",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "ok",
+        "transition"
+      ],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300411",
+      "extra_name": null,
+      "name": "KARTONIK DK PASZTET POMIDOR_V3",
+      "avg_monthly_usage": 9356,
+      "stock": 29693,
+      "months_of_stock": 3.17,
+      "on_order": 0,
+      "months_with_order": 3.17,
+      "die_type": "bez zmian",
+      "comment": "do zrobienia",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "ok"
+      ],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300757",
+      "extra_name": null,
+      "name": "Rękaw DK Burger buraczany automat",
+      "avg_monthly_usage": 5673,
+      "stock": 21800,
+      "months_of_stock": 3.84,
+      "on_order": 0,
+      "months_with_order": 3.84,
+      "die_type": "automat",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "ok"
+      ],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300656",
+      "extra_name": "6300656.01 zmiana z 03.07.26",
+      "name": "RĘKAW GC MIELONE WOŁOWE 150G CZ SK V4",
+      "avg_monthly_usage": 1909,
+      "stock": 11454,
+      "months_of_stock": 6.0,
+      "on_order": 0,
+      "months_with_order": 6.0,
+      "die_type": "bez zmian",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "ok"
+      ],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300356",
+      "extra_name": null,
+      "name": "RĘKAW GC GYROS GROCHOWY 150G CZ SK V2",
+      "avg_monthly_usage": 1808,
+      "stock": 14111,
+      "months_of_stock": 7.81,
+      "on_order": 0,
+      "months_with_order": 7.81,
+      "die_type": "przejściowy",
+      "comment": "planowane przejście na nowy rękaw (przejściowy!) od 01.09.2026",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "ok",
+        "transition"
+      ],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300281",
+      "extra_name": null,
+      "name": "KARTONIK DK PASZTET Z SUSZONYMI ŚLIWKAMI V2",
+      "avg_monthly_usage": 2662,
+      "stock": 21762,
+      "months_of_stock": 8.18,
+      "on_order": 0,
+      "months_with_order": 8.18,
+      "die_type": "bez zmian",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "ok"
+      ],
+      "order_lead_weeks": null
+    },
+    {
+      "article_code": "6300662",
+      "extra_name": null,
+      "name": "RĘKAW (GC) SZNYCEL_190G_CZ_SK",
+      "avg_monthly_usage": 729,
+      "stock": 78400,
+      "months_of_stock": 107.61,
+      "on_order": 0,
+      "months_with_order": 107.61,
+      "die_type": "automat",
+      "comment": "",
+      "linked_wyk_kod": null,
+      "linked_product_ids": [],
+      "tags": [
+        "ok"
+      ],
+      "order_lead_weeks": null
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 param(
   [switch]$SkipSync,
   [switch]$SkipVendor,
@@ -25,7 +25,7 @@ function Invoke-Robo([string]$src, [string]$dst, [string[]]$xd, [string[]]$xf) {
   if ($LASTEXITCODE -ge 8) { throw "robocopy failed ($LASTEXITCODE): $src" }
 }
 
-$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $BinRoot = Join-Path $GitRoot "bin"
 
 $Iscc = Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"
@@ -36,7 +36,7 @@ if (-not (Test-Path $Iscc)) {
 }
 
 if (-not $Version) {
-  $verJson = Join-Path $GitRoot "apps\web\version.json"
+  $verJson = Join-Path $BinRoot "apps\web\version.json"
   if (Test-Path $verJson) {
     try {
       $vj = Get-Content $verJson -Raw | ConvertFrom-Json
@@ -63,7 +63,7 @@ if ($SkipExeBuild -and (Test-Path (Join-Path $GitRoot "DAM.exe"))) {
   & (Join-Path $BinRoot "scripts\ops\build-dam-root-exe.ps1")
 }
 
-$stageRoot = Join-Path $GitRoot "dist\staging\DAM-install"
+$stageRoot = Join-Path $BinRoot "dist\staging\DAM-install"
 Remove-TreeForce $stageRoot
 New-Item -ItemType Directory -Force -Path $stageRoot | Out-Null
 Copy-Item (Join-Path $GitRoot "DAM.exe") (Join-Path $stageRoot "DAM.exe") -Force
@@ -103,25 +103,26 @@ New-Item -ItemType Directory -Force -Path (Join-Path $webDataDst "thumbs") | Out
 New-Item -ItemType Directory -Force -Path (Join-Path $binDst "apps\desktop\data") | Out-Null
 Set-Content -Path (Join-Path $webDataDst "branding-index.json") -Value '{"version":1,"items":[],"note":"empty-shipped-installer"}' -Encoding UTF8
 
-$readmeSrc = Join-Path $GitRoot "installer\README.txt"
+$readmeSrc = Join-Path $BinRoot "installer\README.txt"
 if (Test-Path $readmeSrc) { Copy-Item $readmeSrc (Join-Path $stageRoot "README.txt") -Force }
 
-$vcRedist = Join-Path $GitRoot "installer\redist\vc_redist.x64.exe"
+$vcRedist = Join-Path $BinRoot "installer\redist\vc_redist.x64.exe"
 New-Item -ItemType Directory -Force -Path (Split-Path $vcRedist) | Out-Null
 if (-not (Test-Path $vcRedist)) {
   Write-Host "Downloading VC++ redist..."
   Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile $vcRedist -UseBasicParsing
 }
 
-$releaseDir = Join-Path $GitRoot "dist\release\installer"
-$iss = Join-Path $GitRoot "installer\DAM-Setup.iss"
+$releaseDir = $GitRoot
+$iss = Join-Path $BinRoot "installer\DAM-Setup.iss"
 & $Iscc "/DMyAppVersion=$Version" "/DStageDir=$stageRoot" "/DGitRoot=$GitRoot" "/DReleaseDir=$releaseDir" $iss
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
 
-$setupExe = Join-Path $releaseDir ("DAM-Setup-" + $Version + ".exe")
+$setupExe = Join-Path $releaseDir "DAM-Setup.exe"
 if (-not (Test-Path $setupExe)) { throw "Brak $setupExe" }
 $sizeMb = [math]::Round((Get-Item $setupExe).Length / 1MB, 1)
 Write-Host ""
-Write-Host "GOTOWE - kliknij DAM-Setup.exe w folderze glownym:"
+Write-Host "GOTOWE - kliknij:"
 Write-Host ('  {0}  ({1} MB)' -f $setupExe, $sizeMb)
 Write-Host ""
+

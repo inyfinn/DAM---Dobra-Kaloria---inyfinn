@@ -1,0 +1,15 @@
+================================================================================
+  DAM - DOBRA KALORIA  |  CO KLIKNAC
+================================================================================
+
+NOWY KOMPUTER:
+  >>> DAM-Setup.exe  (obok folderu bin, w glownym folderze DAM)
+
+CODZIENNIE:
+  >>> Skrot na pulpicie:  DAM - Dobra Kaloria
+
+TY (dev):
+  >>> DAM.exe
+
+Wszystko inne jest w folderze bin\ - nie ruszaj.
+================================================================================

@@ -1,0 +1,27 @@
+{
+  "users": {
+    "test.device@example.com": {
+      "devices": [],
+      "updated_at": "2026-07-20T15:47:32.079308+00:00"
+    },
+    "krzysztof.wieczorek@kubara.pl": {
+      "devices": [
+        {
+          "device_id": "dam-dev-a6a2acce751029d4e04eb1e410740948",
+          "hostname": "inyfinn",
+          "base_path": "X:\\Marketing",
+          "label": "Dom",
+          "updated_at": "2026-07-20T15:50:15.488923+00:00"
+        },
+        {
+          "device_id": "dam-dev-d86f232411381e6c7de4caebffe7cbce",
+          "hostname": "krzysztofwi",
+          "base_path": "D:\\Marketing",
+          "label": "Praca",
+          "updated_at": "2026-08-06T13:16:33.465558+00:00"
+        }
+      ],
+      "updated_at": "2026-08-06T13:16:33.465558+00:00"
+    }
+  }
+}
