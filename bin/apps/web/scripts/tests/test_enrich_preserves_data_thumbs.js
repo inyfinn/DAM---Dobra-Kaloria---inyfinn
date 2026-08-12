@@ -1,28 +1,18 @@
 /**
- * Static check: enrichVizRowFromProducts preserves data/thumbs on card.
- * Run: node apps/web/scripts/tests/test_enrich_preserves_data_thumbs.js
+ * Static check: enrich / card thumbs never prefer legacy data/thumbs JPG.
  */
-"use strict";
+const fs = require("fs");
+const path = require("path");
+const vizPath = path.join(__dirname, "..", "..", "assets", "js", "dam-viz.js");
+const code = fs.readFileSync(vizPath, "utf8");
 
-var fs = require("fs");
-var path = require("path");
+function fail(msg) {
+  console.error("FAIL:", msg);
+  process.exit(1);
+}
 
-var jsPath = path.join(__dirname, "..", "..", "assets", "js", "dam-viz.js");
-var code = fs.readFileSync(jsPath, "utf8");
-
-var required = [
-  "function hasStaticDataThumb",
-  "preserveCardThumb",
-  "if (!preserveCardThumb)",
-  "hasStaticDataThumb(v)",
-  "split(/[?#]/)[0]",
-];
-
-required.forEach(function (needle) {
-  if (code.indexOf(needle) === -1) {
-    console.error("FAIL: dam-viz.js missing", needle);
-    process.exit(1);
-  }
+["function hasStaticDataThumb", "function cardThumbSrc", "DamPreviewTruth.thumbCacheUrl"].forEach(function (needle) {
+  if (code.indexOf(needle) === -1) fail("missing " + needle);
 });
-
-console.log("OK enrich preserves static data/thumbs contract present");
+if (code.indexOf('return "data/thumbs/"') !== -1) fail("legacy data/thumbs builder still present");
+console.log("OK enrich/card contract: thumb-cache only (no static JPG)");

@@ -2049,23 +2049,11 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
                     )
                 if not thumb_src:
                     continue
+                # Legacy data/thumbs JPG WYLACZONE — UI /thumb-cache AVIF (PAMIEC-PODRECZNA).
                 thumb_name = safe_thumb_stem(pid, index_base, lang)
-                thumb_path = thumbs_dir / thumb_name
-                # Odswiez gdy zrodlo nowsze LUB cache nie jest prawdziwym JPEG
-                # (stary fallback kopiowal TIF pod .jpg - mtime nowszy niz PNG).
                 try:
                     src_path = Path(thumb_src["path"])
-                    need = True
-                    if thumb_path.is_file() and src_path.is_file():
-                        need = (
-                            src_path.stat().st_mtime > thumb_path.stat().st_mtime + 0.5
-                            or not _is_valid_jpeg(thumb_path)
-                            or thumb_path.stat().st_size > 2_500_000
-                        )
-                    if need:
-                        write_web_thumb(src_path, thumb_path)
-                except (OSError, PermissionError) as exc:
-                    print(f"  thumb skip {thumb_name}: {exc}")
+                except (OSError, TypeError, KeyError):
                     continue
                 langs_out = revision_langs if revision_langs else (
                     [] if lang in ("?", "unknown", "xx") else [lang]
@@ -2100,7 +2088,7 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
                         "lang": "?" if lang_unknown else lang,
                         "lang_label": "?" if lang_unknown else lang_label(lang),
                         "lang_unknown": lang_unknown,
-                        "thumb_url": f"data/thumbs/{thumb_name}?v={int(Path(thumb_src['path']).stat().st_mtime) if Path(thumb_src['path']).exists() else 0}",
+                        "thumb_url": "",  # AVIF via /thumb-cache from path; no static JPG
                         "file": thumb_src["name"],
                         "path": thumb_src["path"],
                         "rel": thumb_src.get("rel"),

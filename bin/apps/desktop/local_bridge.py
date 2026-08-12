@@ -2988,20 +2988,15 @@ def _patch_branding_metadata(asset_id: str, field: str, value) -> tuple[bool, st
 
 
 def _resolve_viz_thumb(product_id: str, file_index: dict) -> str:
-    """Miniatura produktu z file-index (jak brand_folder_context.resolve_viz_thumb)."""
+    """Sciezka zrodlowa wizki (UI buduje /thumb-cache AVIF). Bez legacy data/thumbs JPG."""
     products_by_id = {p.get("id"): p for p in (file_index.get("products") or []) if p.get("id")}
     p = products_by_id.get(product_id) or {}
     for rev in p.get("revisions") or []:
         for key in ("viz_path", "thumb_path", "path"):
             vp = rev.get(key) or ""
             if vp and re.search(r"\.(jpe?g|png|webp|gif|tif{1,2})$", vp, re.I):
-                rel = vp.replace("\\", "/")
-                if rel.lower().startswith("x:/"):
-                    slug = product_id.replace("/", "-")
-                    base = Path(rel).stem
-                    return f"data/thumbs/{slug}__{base}_pl.jpg"
-    slug = product_id.replace("/", "-")
-    return f"data/thumbs/{slug}__000098_pl.jpg"
+                return str(vp)
+    return ""
 
 
 def _build_linked_product_meta(product_ids: list, file_index: dict) -> list:

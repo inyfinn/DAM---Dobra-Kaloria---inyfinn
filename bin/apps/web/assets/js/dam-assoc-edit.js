@@ -1027,14 +1027,12 @@
     return byId;
   }
 
-  /** List thumbs: static/data OK; /media blocked here (lazy hydrate via data-path). */
+  /** List thumbs: /thumb-cache only; never legacy data/thumbs JPG. */
   function listSafeThumb(url) {
     var u = String(url || "");
     if (!u || u === PLACEHOLDER_SVG) return PLACEHOLDER_SVG;
     if (u.indexOf("/thumb-cache?") >= 0) return u;
-    if (u.indexOf("data/thumbs/") >= 0 || (u.indexOf("data/") === 0 && u.indexOf("/media?") === -1)) {
-      return u;
-    }
+    if (u.indexOf("data/thumbs/") >= 0) return PLACEHOLDER_SVG;
     if (u.indexOf("/media?") !== -1 || u.indexOf("preview=1") !== -1) return PLACEHOLDER_SVG;
     return u;
   }
@@ -1200,7 +1198,8 @@
       if (cached) return cached;
     }
     var t = it.thumb || it.thumb_url || "";
-    if (t && t.indexOf("data/thumbs/") >= 0) return t;
+    if (t && t.indexOf("/thumb-cache?") >= 0) return t;
+    if (t && t.indexOf("data/thumbs/") >= 0) t = "";
     var safe = listSafeThumb(t);
     if (safe !== PLACEHOLDER_SVG) return safe;
     var pid = "";
@@ -2404,8 +2403,17 @@
     var i;
     for (i = 0; i < latest.length; i++) {
       var row = latest[i];
-      if (row && row.product_id === pid && row.thumb_url) {
-        return stripThumbQuery(row.thumb_url);
+      if (row && row.product_id === pid) {
+        var path = row.path || row.modal_path || "";
+        if (
+          path &&
+          global.DamPreviewTruth &&
+          typeof global.DamPreviewTruth.thumbCacheUrl === "function"
+        ) {
+          return global.DamPreviewTruth.thumbCacheUrl(path, "grid");
+        }
+        var t = row.thumb_url ? stripThumbQuery(row.thumb_url) : "";
+        if (t && t.indexOf("data/thumbs/") < 0) return t;
       }
     }
     return "";
@@ -2423,26 +2431,43 @@
     var existing = p.thumb_url != null ? String(p.thumb_url).trim() : "";
     if (existing && existing.indexOf("data:image/svg+xml") !== 0) {
       existing = stripThumbQuery(existing);
-      if (/^(data:|blob:|https?:|\/|data\/)/i.test(existing) || existing.indexOf("thumbs/") >= 0) {
+      if (existing.indexOf("data/thumbs/") >= 0) {
+        /* legacy JPG — ignore */
+      } else if (/^(data:|blob:|https?:|\/)/i.test(existing) || existing.indexOf("/thumb-cache?") >= 0) {
         rememberProductThumb(pid, existing);
         return existing;
       }
     }
-    var slug = String(p.id || "")
-      .replace(/[^a-zA-Z0-9_-]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 96)
-      .toLowerCase();
-    if (!slug) return PLACEHOLDER_SVG;
-    var idx = latestProductIndexBase(p);
-    if (!idx && p.index_bases && p.index_bases.length) {
-      idx = String(p.index_bases[p.index_bases.length - 1]);
+    /* Prefer revision wizki path → /thumb-cache */
+    var revs = p.revisions || [];
+    var r;
+    for (var ri = 0; ri < revs.length; ri++) {
+      r = revs[ri];
+      var wiz = (r && r.wizki) || [];
+      for (var wi = 0; wi < wiz.length; wi++) {
+        var wp = wiz[wi] && (wiz[wi].path || wiz[wi].rel);
+        if (
+          wp &&
+          global.DamPreviewTruth &&
+          typeof global.DamPreviewTruth.thumbCacheUrl === "function"
+        ) {
+          var cu = global.DamPreviewTruth.thumbCacheUrl(wp, "grid");
+          rememberProductThumb(pid, cu);
+          return cu;
+        }
+      }
+      if (
+        r &&
+        r.path &&
+        global.DamPreviewTruth &&
+        typeof global.DamPreviewTruth.thumbCacheUrl === "function"
+      ) {
+        var cu2 = global.DamPreviewTruth.thumbCacheUrl(r.path, "grid");
+        rememberProductThumb(pid, cu2);
+        return cu2;
+      }
     }
-    if (!idx) return PLACEHOLDER_SVG;
-    var base = String(idx).replace(/[^0-9A-Za-z]+/g, "") || idx;
-    var built = "data/thumbs/" + slug + "__" + base + "_pl.jpg";
-    rememberProductThumb(pid, built);
-    return built;
+    return PLACEHOLDER_SVG;
   }
 
   function linkedProductIndexFallback(lp) {

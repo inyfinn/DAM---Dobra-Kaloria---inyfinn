@@ -174,7 +174,7 @@ def connect():
                 dbname=cfg["dbname"],
                 user=cfg["user"],
                 password=cfg["password"],
-                connect_timeout=6,
+                connect_timeout=2,
                 cursor_factory=psycopg2.extras.RealDictCursor,
             )
             _LAST_HOST = host

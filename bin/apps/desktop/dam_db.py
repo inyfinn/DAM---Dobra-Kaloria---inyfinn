@@ -85,7 +85,7 @@ def load_prefer() -> dict[str, Any]:
     data["sources"] = dict(_DEFAULT_PREFER["sources"])
     try:
         if PREFER_PATH.is_file():
-            raw = json.loads(PREFER_PATH.read_text(encoding="utf-8"))
+            raw = json.loads(PREFER_PATH.read_text(encoding="utf-8-sig"))
             if isinstance(raw, dict):
                 mode = str(raw.get("mode") or "auto").strip().lower()
                 if mode in ("auto", "postgres", "sqlite"):
@@ -668,7 +668,7 @@ def ping() -> dict[str, Any]:
                     "latency_ms": latency,
                     "offline_mode": False,
                 }
-            raise RuntimeError("postgres_ping_failed")
+            _enter_offline(str(pg.get("error") or "postgres_ping_failed"))
         conn = _connect_sqlite()
         try:
             conn.execute("SELECT 1").fetchone()
@@ -681,15 +681,36 @@ def ping() -> dict[str, Any]:
             "latency_ms": round((time.time() - t0) * 1000, 1),
             "offline_mode": _OFFLINE_MODE,
             "path": str(db_path()),
+            "synology_reachable": False if _OFFLINE_MODE else None,
         }
     except Exception as exc:  # noqa: BLE001
-        return {
-            "ok": False,
-            "engine": engine_name(),
-            "error": str(exc),
-            "latency_ms": round((time.time() - t0) * 1000, 1),
-            "offline_mode": _OFFLINE_MODE,
-        }
+        try:
+            if synology_allowed() and pg_configured():
+                _enter_offline(str(exc))
+        except Exception:
+            pass
+        try:
+            conn = _connect_sqlite()
+            try:
+                conn.execute("SELECT 1").fetchone()
+            finally:
+                conn.close()
+            return {
+                "ok": True,
+                "engine": "sqlite-offline",
+                "latency_ms": round((time.time() - t0) * 1000, 1),
+                "offline_mode": True,
+                "path": str(db_path()),
+                "error": str(exc),
+            }
+        except Exception as exc2:  # noqa: BLE001
+            return {
+                "ok": False,
+                "engine": engine_name(),
+                "error": str(exc2),
+                "latency_ms": round((time.time() - t0) * 1000, 1),
+                "offline_mode": _OFFLINE_MODE,
+            }
 
 
 def status_light() -> dict[str, Any]:

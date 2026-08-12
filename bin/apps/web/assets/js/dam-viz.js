@@ -295,14 +295,14 @@
       var al = a.is_latest ? 1 : 0;
       var bl = b.is_latest ? 1 : 0;
       if (al !== bl) return bl - al;
-      var at = hasStaticDataThumb(a) ? 2 : a.thumb_url ? 1 : 0;
-      var bt = hasStaticDataThumb(b) ? 2 : b.thumb_url ? 1 : 0;
+      var at = a.path ? 2 : a.thumb_url ? 1 : 0;
+      var bt = b.path ? 2 : b.thumb_url ? 1 : 0;
       if (at !== bt) return bt - at;
       return 0;
     });
     var i;
     for (i = 0; i < pool.length; i++) {
-      if (pool[i].thumb_url) return pool[i];
+      if (pool[i].path || pool[i].thumb_url) return pool[i];
     }
     return pool[0];
   }
@@ -585,11 +585,8 @@
   }
 
   function thumbStem(pid, indexBase, lang) {
-    var p = String(pid || "p").replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 96).toLowerCase();
-    var raw = isRealIndex(indexBase) ? String(indexBase) : "pending";
-    var base = raw.replace(/[^0-9A-Za-z]+/g, "") || "pending";
-    var lg = String(lang || "xx").toLowerCase().replace(/[^a-z0-9]+/g, "") || "xx";
-    return "data/thumbs/" + p + "__" + base + "_" + lg + ".jpg";
+    /* Legacy stem removed — cards use /thumb-cache AVIF only. */
+    return "";
   }
 
   /**
@@ -685,19 +682,13 @@
   }
 
   function hasStaticDataThumb(v) {
-    var t = String((v && v.thumb_url) || "").replace(/^\.\//, "");
-    if (!t) return false;
-    /* Cache-bust ?v= from file-index must not invalidate static card thumb. */
-    var base = t.split(/[?#]/)[0];
-    return /^data\/thumbs\/[^/]+\.(?:jpe?g|png|webp)$/i.test(base);
+    /* Stare data/thumbs/*.jpg USUNIĘTE — nigdy nie traktuj ich jako źródła. */
+    return false;
   }
 
   function enrichVizRowFromProducts(data, row) {
     /* Re-pick wizki path with carrier-aware rule (KAR6X -> FRONT-L). */
     var v = Object.assign({}, row);
-    var preserveCardThumb =
-      hasStaticDataThumb(v) && global.DAM_DISABLE_THUMB_WARM;
-    var cardThumb = preserveCardThumb ? String(v.thumb_url) : "";
     var pid = v.product_id;
     var ib = resolveIndexBase(v);
     var prod = (data.products || []).find(function (p) {
@@ -725,12 +716,8 @@
               v.file = pickedBase;
               v.rel = pickedBase;
             }
-            /* Card: keep static data/thumbs; modal uses /media via path/modal_path. */
-            if (!preserveCardThumb) {
-              v.thumb_url = mediaPreviewUrl(picked) || v.thumb_url;
-            } else if (cardThumb) {
-              v.thumb_url = cardThumb;
-            }
+            /* Karty: /thumb-cache AVIF; modal: /media ze źródła. */
+            v.thumb_url = "";
           }
         }
         if (Array.isArray(rev.langs) && rev.langs.length) {
@@ -786,47 +773,22 @@
   function cardThumbSrc(v) {
     if (!v) return "";
     syncKar6xFrontThumb(v);
-    /* Cache-first: AVIF ~30% z PAMIEC-PODRECZNA (instant paint); static data/thumbs = fallback. */
+    /* TYLKO /thumb-cache AVIF (PAMIEC-PODRECZNA). Zero data/thumbs JPG. */
     if (
       v.path &&
-      !global.DAM_DISABLE_THUMB_WARM &&
       global.DamPreviewTruth &&
       typeof DamPreviewTruth.thumbCacheUrl === "function"
     ) {
       var cached = DamPreviewTruth.thumbCacheUrl(v.path, "grid");
       if (cached) return cached;
     }
-    if (hasStaticDataThumb(v)) {
-      var staticThumb = String(v.thumb_url).replace(/^\.\//, "");
-      return staticThumb;
-    }
-    if (v.thumb_url && String(v.thumb_url).indexOf("/media?") >= 0) return v.thumb_url;
-    if (isKar6xCarrier(v) && v.path && /FRONT/i.test(v.path) && !/ENFACE/i.test(v.path)) {
-      var live = mediaPreviewUrl(v.path);
-      if (live) return live;
-    }
-    var t = v.thumb_url ? String(v.thumb_url) : "";
-    if (t) {
-      /* Relatywne data/thumbs/… z file-index — zawsze z roota UI, nie z podścieżki. */
-      if (t.indexOf("data/thumbs/") === 0 || t.indexOf("./data/thumbs/") === 0) {
-        t = t.replace(/^\.\//, "");
-        if (t.charAt(0) !== "/" && t.indexOf("http") !== 0) {
-          /* ok relative to page */
-        }
-      }
-      return t;
-    }
+    /* Awaria cache: lekki preview ze źródła — nie stare JPG. */
     return mediaPreviewUrl(v.path) || "";
   }
 
   function staticCardThumbFallback(v) {
-    if (!v) return "";
-    if (hasStaticDataThumb(v)) return String(v.thumb_url).replace(/^\.\//, "");
-    var idx = displayIndex(v);
-    if (idx && v.path) {
-      return thumbStem(v.product_id || v.pid || "p", idx, v.lang || "pl");
-    }
-    return "";
+    /* Stare data/thumbs usunięte — fallback = /media preview ze źródła. */
+    return v && v.path ? mediaPreviewUrl(v.path) || "" : "";
   }
 
   function normFolderPath(p) {
@@ -4595,11 +4557,12 @@
     var path = img.getAttribute("data-media-path") || "";
     var src = img.getAttribute("src") || "";
     var tried = img.getAttribute("data-thumb-fallback") || "";
-    if (!tried) {
-      var staticFb = img.getAttribute("data-static-thumb") || "";
-      if (staticFb && staticFb !== src) {
-        img.setAttribute("data-thumb-fallback", "static");
-        img.src = staticFb;
+    /* Progressive real: cache miss → /media preview ze źródła. Zero starych JPG. */
+    if (!tried && path) {
+      var live = mediaPreviewUrl(path);
+      if (live && live !== src) {
+        img.setAttribute("data-thumb-fallback", "media");
+        img.src = live;
         return;
       }
     }
@@ -4612,17 +4575,6 @@
       DamPreviewTruth.fileAvailability(path).then(function (avail) {
         if (!img || !img.parentNode) return;
         avail = avail || {};
-        if (avail.treat_as_local && avail.state !== "online_only" && avail.state !== "missing") {
-          var tried = img.getAttribute("data-thumb-fallback");
-          if (!tried) {
-            var live = mediaPreviewUrl(path);
-            if (live && live !== img.getAttribute("src")) {
-              img.setAttribute("data-thumb-fallback", "1");
-              img.src = live;
-              return;
-            }
-          }
-        }
         img.onerror = null;
         img.title = DamPreviewTruth.onErrorTitle(avail.state);
         img.src = PLACEHOLDER_SVG;
@@ -4632,15 +4584,6 @@
         }
       });
       return;
-    }
-    var triedLegacy = img.getAttribute("data-thumb-fallback");
-    if (!triedLegacy) {
-      var liveLegacy = path ? mediaPreviewUrl(path) : "";
-      if (liveLegacy && liveLegacy !== img.getAttribute("src")) {
-        img.setAttribute("data-thumb-fallback", "1");
-        img.src = liveLegacy;
-        return;
-      }
     }
     img.onerror = null;
     img.src = PLACEHOLDER_SVG;
@@ -4662,7 +4605,7 @@
       }
     }
     var thumb = thumbPick || cardThumbSrc(first);
-    var staticThumbFb = staticCardThumbFallback(first);
+    var staticThumbFb = "";
     var brand = first.brand || "DK";
     var uniq = uniqueModalVariants(items);
     var variantReps = productVariantRepresentatives(items);

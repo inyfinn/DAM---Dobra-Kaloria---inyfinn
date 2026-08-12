@@ -3323,14 +3323,15 @@
   }
 
   function thumbCandidates(f) {
-    var name = f.name || "";
-    var stem = name.replace(/\.[^.]+$/, "");
     var list = [];
+    if (
+      f.path &&
+      window.DamPreviewTruth &&
+      typeof window.DamPreviewTruth.thumbCacheUrl === "function"
+    ) {
+      list.push(window.DamPreviewTruth.thumbCacheUrl(f.path, "grid"));
+    }
     if (f.path) list.push(mediaUrl(f.path));
-    list.push(
-      "data/thumbs/" + encodeURIComponent(stem + ".jpg"),
-      "data/thumbs/" + encodeURIComponent(name.replace(/\.(png|tif|tiff|webp)$/i, ".jpg"))
-    );
     return list;
   }
 
