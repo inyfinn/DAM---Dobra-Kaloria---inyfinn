@@ -7,7 +7,9 @@
   "use strict";
 
   var POLL_MS = 15000;
+  var FULL_STATUS_MS = 60000;
   var _timer = null;
+  var _lastFullCheck = 0;
   var _last = null;
   var _panelOpen = false;
   var _syncToast = null;
@@ -542,15 +544,60 @@
     } catch (e) { /* ignore */ }
   }
 
-  function check() {
+  function applyPing(res) {
+    if (!res) {
+      setPill(false, "Baza offline", "Most nie odpowiada");
+      return;
+    }
+    var online = res.ok === true && !res.offline_mode;
+    var label = online ? "Baza online" : "Baza offline";
+    if (res.engine === "sqlite" && !res.offline_mode) label = "Baza lokalna";
+    var detail =
+      (res.engine || "") +
+      (res.host ? " @ " + res.host : res.path ? " · " + res.path : "") +
+      (res.latency_ms != null ? " · " + res.latency_ms + "ms" : "");
+    setPill(online, label, detail);
+    try {
+      window.dispatchEvent(new CustomEvent("dam:db-status", { detail: { online: !!online, res: res } }));
+    } catch (e) { /* ignore */ }
+  }
+
+  function checkFull() {
     return fetch(bridgeBase() + "/db/status", { cache: "no-store" })
       .then(function (r) {
         return r.json();
       })
       .then(function (res) {
         _last = res;
+        _lastFullCheck = Date.now();
         applyStatus(res);
         if (_panelOpen) renderPanel(res);
+        return res;
+      });
+  }
+
+  function check() {
+    var needFull = _panelOpen || !_last || Date.now() - _lastFullCheck > FULL_STATUS_MS;
+    if (needFull) {
+      return checkFull().catch(function () {
+        return pingOnly();
+      });
+    }
+    return pingOnly();
+  }
+
+  function pingOnly() {
+    return fetch(bridgeBase() + "/db/ping", { cache: "no-store" })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (res) {
+        if (_last && _last.sources) {
+          res.sources = _last.sources;
+          res.prefer = _last.prefer;
+          res.priority = _last.priority;
+        }
+        applyPing(res);
         return res;
       })
       .catch(function () {

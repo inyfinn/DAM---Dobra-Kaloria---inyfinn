@@ -1,4 +1,4 @@
-﻿"""
+"""
 DAM - Dobra Kaloria - Inyfinn - lokalna aplikacja desktop (pywebview + WebView2).
 
 Uruchomienie: dwuklik skrotu na pulpicie albo:
@@ -714,6 +714,12 @@ def main() -> None:
         import app_updates
 
         app_updates.ensure_scheduler_started()
+    except Exception:
+        pass
+    try:
+        import dam_debug
+
+        dam_debug.ensure_daemon_started(interval_sec=60.0)
     except Exception:
         pass
     # Product/branding index watcher: owned by local_bridge index_supervisor.

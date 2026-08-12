@@ -135,10 +135,15 @@ try:
 except ImportError:
     app_updates = None  # type: ignore
 
+try:
+    import dam_debug
+except ImportError:
+    dam_debug = None  # type: ignore
+
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
-BRIDGE_API_VERSION = 6
+BRIDGE_API_VERSION = 7
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
@@ -1396,6 +1401,17 @@ def _assoc_status_payload() -> dict:
         return {"ok": False, "counts": {}, "schema_error": str(exc), "total": 0}
 
 
+def _index_db_snapshot() -> dict:
+    if not dam_db:
+        return {"ok": False, "error": "dam_db_missing"}
+    try:
+        snap = dam_db.ping()
+        snap["online"] = bool(snap.get("ok")) and not snap.get("offline_mode")
+        return snap
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
 def index_status() -> dict:
     mtime = None
     size = 0
@@ -1403,7 +1419,7 @@ def index_status() -> dict:
         st = INDEX_FILE.stat()
         mtime = st.st_mtime
         size = st.st_size
-    db = dam_db.status() if dam_db else {"ok": False, "error": "dam_db_missing"}
+    db = _index_db_snapshot()
     with _index_lock:
         state = dict(_index_state)
     watcher = {}
@@ -6351,6 +6367,23 @@ class Handler(BaseHTTPRequestHandler):
             # Pill "Baza online/offline" - bez Bearera (localhost)
             self._json(200, dam_db.status() if dam_db else {"ok": False, "error": "dam_db_missing"})
             return
+        if parsed.path == "/db/ping":
+            self._json(200, dam_db.ping() if dam_db else {"ok": False, "error": "dam_db_missing"})
+            return
+        if parsed.path == "/telemetry/tail":
+            qs = parse_qs(parsed.query)
+            limit = int((qs.get("limit") or ["100"])[0] or 100)
+            if dam_debug is None:
+                self._json(500, {"ok": False, "error": "dam_debug_missing"})
+                return
+            self._json(200, {"ok": True, "events": dam_debug.read_tail(limit=limit)})
+            return
+        if parsed.path == "/debug/self-test":
+            if dam_debug is None:
+                self._json(500, {"ok": False, "error": "dam_debug_missing"})
+                return
+            self._json(200, dam_debug.run_self_test())
+            return
         if parsed.path == "/app-update/check":
             if app_updates is None:
                 self._json(500, {"ok": False, "error": "app_updates_missing"})
@@ -7199,6 +7232,15 @@ class Handler(BaseHTTPRequestHandler):
                     payload.get("machine_id") or "",
                 ),
             )
+            return
+        if parsed.path == "/telemetry/batch":
+            payload = data if isinstance(data, dict) else {}
+            events = payload.get("events") if isinstance(payload.get("events"), list) else []
+            if dam_debug is None:
+                self._json(500, {"ok": False, "error": "dam_debug_missing"})
+                return
+            n = dam_debug.append_batch(events)
+            self._json(200, {"ok": True, "written": n})
             return
         if parsed.path == "/audit":
             user = self._require_login()
@@ -8307,6 +8349,11 @@ def main() -> None:
         print("index_supervisor:", {k: sup.get(k) for k in ("ok", "owned", "started", "reason")})
     except Exception as exc:
         print("index_supervisor:", exc)
+    if dam_debug is not None:
+        try:
+            dam_debug.ensure_daemon_started(interval_sec=60.0)
+        except Exception as exc:
+            print("dam_debug:", exc)
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     threading.Thread(target=_kv_cache_watcher, daemon=True).start()
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)

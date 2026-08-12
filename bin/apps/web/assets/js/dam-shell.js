@@ -3020,10 +3020,19 @@
     // Status bazy danych (obok Pliki online)
     if (!window.DamDbStatus) {
       var dbs = document.createElement("script");
-      dbs.src = "assets/js/dam-db-status.js?v=4.0.14-dbDumpFix20260725";
+      dbs.src = "assets/js/dam-db-status.js?v=5.0.136-dbPing";
       document.head.appendChild(dbs);
     } else if (typeof window.DamDbStatus.start === "function") {
       window.DamDbStatus.start();
+    }
+
+    // Telemetria UI (kliknięcia, błędy, wolne fetch) -> desktop/logs/telemetry-*.jsonl
+    if (!window.DamTelemetry) {
+      var tel = document.createElement("script");
+      tel.src = "assets/js/dam-telemetry.js?v=5.0.136";
+      document.head.appendChild(tel);
+    } else if (typeof window.DamTelemetry.start === "function") {
+      window.DamTelemetry.start();
     }
 
     // F1 pomoc / F5 odśwież

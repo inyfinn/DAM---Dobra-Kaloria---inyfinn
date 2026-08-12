@@ -1,9 +1,9 @@
 {
-  "version": "5.0.135",
+  "version": "5.0.137",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
-  "released_at": "2026-08-11",
-  "note": "5.0.130: file-availability bridge, viz/branding preview parity, grid-head M-ids, search path+gazetki.",
+  "released_at": "2026-08-12",
+  "note": "5.0.137: logowanie tylko email+hasło (ukryte imię). 5.0.136: db ping, telemetria, debug daemon.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

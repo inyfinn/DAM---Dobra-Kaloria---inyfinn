@@ -137,6 +137,11 @@
       text-align: center;
       text-transform: none;
     }
+    /* Geex .form-group { display:flex } wygrywa nad atrybutem hidden — login bez imienia */
+    #nameWrap[hidden],
+    #nameWrap.dam-auth-hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body class="geex-dashboard authentication-page dam-app">
@@ -162,7 +167,7 @@
               <button type="button" id="tabRegister" data-tab="register">Utworz konto</button>
             </div>
 
-            <div class="geex-content__authentication__form-group" id="nameWrap" hidden>
+            <div class="geex-content__authentication__form-group dam-auth-hidden" id="nameWrap" hidden>
               <label for="authName">Imie i nazwisko</label>
               <input type="text" id="authName" name="name" placeholder="np. Jan Kowalski" autocomplete="name">
               <i class="uil-user" aria-hidden="true"></i>
@@ -237,6 +242,7 @@
         tabLogin.setAttribute("aria-selected", m === "login" ? "true" : "false");
         tabRegister.setAttribute("aria-selected", m === "register" ? "true" : "false");
         nameWrap.hidden = m !== "register";
+        nameWrap.classList.toggle("dam-auth-hidden", m !== "register");
         pass.autocomplete = m === "register" ? "new-password" : "current-password";
         pass.minLength = m === "register" ? 8 : 4;
         pass.setAttribute("minlength", m === "register" ? "8" : "4");

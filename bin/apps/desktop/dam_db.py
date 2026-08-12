@@ -37,6 +37,12 @@ REPO_DATABASE = CONTENT_ROOT / "DATABASE"
 SYNC_SCRIPT = DESKTOP_DIR / "scripts" / "sync-database-backups-to-git.py"
 _LOCK = threading.Lock()
 _INITIALIZED = False
+_INIT_RESULT: dict[str, Any] | None = None
+_STATUS_CACHE: dict[str, Any] | None = None
+_STATUS_CACHE_TS = 0.0
+_STATUS_CACHE_TTL = 30.0
+_MIRROR_LAST_TS = 0.0
+_MIRROR_INTERVAL_SEC = 600.0
 _RESOLVED_PATH: Path | None = None
 _OFFLINE_MODE = False
 _OFFLINE_REASON = ""
@@ -262,9 +268,12 @@ def db_path() -> Path:
 
 
 def reset_path_cache() -> None:
-    global _RESOLVED_PATH, _INITIALIZED
+    global _RESOLVED_PATH, _INITIALIZED, _INIT_RESULT, _STATUS_CACHE, _STATUS_CACHE_TS
     _RESOLVED_PATH = None
     _INITIALIZED = False
+    _INIT_RESULT = None
+    _STATUS_CACHE = None
+    _STATUS_CACHE_TS = 0.0
 
 
 def _connect_sqlite() -> sqlite3.Connection:
@@ -469,16 +478,21 @@ def _init_postgres() -> dict[str, Any]:
         conn.close()
 
 
-def init_db() -> dict[str, Any]:
-    global _INITIALIZED
+def init_db(*, force: bool = False) -> dict[str, Any]:
+    global _INITIALIZED, _INIT_RESULT, _MIRROR_LAST_TS
     with _LOCK:
+        if _INITIALIZED and _INIT_RESULT and not force:
+            return dict(_INIT_RESULT)
         if synology_allowed() and pg_configured():
             try:
                 result = _init_postgres()
-                try:
-                    _mirror_pg_users_to_sqlite()
-                except Exception:
-                    pass
+                now = time.time()
+                if now - _MIRROR_LAST_TS >= _MIRROR_INTERVAL_SEC:
+                    try:
+                        _mirror_pg_users_to_sqlite()
+                    except Exception:
+                        pass
+                    _MIRROR_LAST_TS = now
             except Exception as exc:  # noqa: BLE001
                 _enter_offline(str(exc))
                 result = _init_sqlite()
@@ -488,7 +502,8 @@ def init_db() -> dict[str, Any]:
                 _leave_offline()
             result = _init_sqlite()
         _INITIALIZED = True
-        return result
+        _INIT_RESULT = dict(result)
+        return dict(_INIT_RESULT)
 
 
 def _sources_payload(active_engine: str, dump: Path | None) -> dict[str, Any]:
@@ -540,9 +555,12 @@ def _sources_payload(active_engine: str, dump: Path | None) -> dict[str, Any]:
 
 def force_reconnect(*, pull_dump: bool = False) -> dict[str, Any]:
     """Natychmiastowe ponowne polaczenie (bez czekania 120s) + opcjonalny sync dumpa."""
-    global _INITIALIZED, _OFFLINE_SINCE
+    global _INITIALIZED, _OFFLINE_SINCE, _INIT_RESULT, _STATUS_CACHE, _STATUS_CACHE_TS
     with _LOCK:
         _INITIALIZED = False
+        _INIT_RESULT = None
+        _STATUS_CACHE = None
+        _STATUS_CACHE_TS = 0.0
         _OFFLINE_SINCE = 0.0
         if synology_allowed() and pg_configured():
             _leave_offline()
@@ -630,6 +648,60 @@ def pull_database_dump_now() -> dict[str, Any]:
         "error": result.get("error") or "no_local_dump",
         "hint": "Brak dam_eta_*.sql.gz w DATABASE/. Uruchom sync-database-backups-to-git.py lub backup na Synology.",
     }
+
+
+def ping() -> dict[str, Any]:
+    """Lekki test polaczenia (bez COUNT, bez pelnego init_db przy kazdym poll)."""
+    t0 = time.time()
+    try:
+        if _should_try_postgres():
+            import pg_db
+
+            pg = pg_db.ping()
+            latency = round((time.time() - t0) * 1000, 1)
+            if pg.get("ok"):
+                _leave_offline()
+                return {
+                    "ok": True,
+                    "engine": "postgres",
+                    "host": pg_db.last_host(),
+                    "latency_ms": latency,
+                    "offline_mode": False,
+                }
+            raise RuntimeError("postgres_ping_failed")
+        conn = _connect_sqlite()
+        try:
+            conn.execute("SELECT 1").fetchone()
+        finally:
+            conn.close()
+        engine = "sqlite-offline" if _OFFLINE_MODE else "sqlite"
+        return {
+            "ok": True,
+            "engine": engine,
+            "latency_ms": round((time.time() - t0) * 1000, 1),
+            "offline_mode": _OFFLINE_MODE,
+            "path": str(db_path()),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "ok": False,
+            "engine": engine_name(),
+            "error": str(exc),
+            "latency_ms": round((time.time() - t0) * 1000, 1),
+            "offline_mode": _OFFLINE_MODE,
+        }
+
+
+def status_light() -> dict[str, Any]:
+    """Cache pelnego status() na STATUS_CACHE_TTL (pollery indeksu)."""
+    global _STATUS_CACHE, _STATUS_CACHE_TS
+    now = time.time()
+    if _STATUS_CACHE and (now - _STATUS_CACHE_TS) < _STATUS_CACHE_TTL:
+        return dict(_STATUS_CACHE)
+    full = status()
+    _STATUS_CACHE = dict(full)
+    _STATUS_CACHE_TS = now
+    return dict(full)
 
 
 def status() -> dict[str, Any]:
