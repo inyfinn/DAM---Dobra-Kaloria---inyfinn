@@ -1180,16 +1180,19 @@
     return t;
   }
 
-  /** Hero / assoc: thumb-cache first paint, potem pelny /media. */
+  /** Hero / assoc: live /media first (modal), thumb-cache jako fallback. */
   function heroSrcFromAsset(a) {
     if (!a) return "";
+    if (a.path) {
+      var live = previewUrl(a.path, a);
+      if (live) return live;
+    }
+    var fromIndex = normalizeMediaThumbUrl(a.thumb_url || a.preview_url || "");
+    if (fromIndex) return fromIndex;
     if (a.path && global.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
       var cacheFirst = DamPreviewTruth.thumbCacheUrl(a.path, "modal");
       if (cacheFirst) return cacheFirst;
     }
-    var fromIndex = normalizeMediaThumbUrl(a.thumb_url || a.preview_url || "");
-    if (fromIndex) return fromIndex;
-    if (a.path) return mediaUrl(a.path, a);
     return "";
   }
 
@@ -4661,8 +4664,8 @@
         img.onerror = function () {
           window.__damMediaPreviewFallback && window.__damMediaPreviewFallback(img);
         };
-        var heroSrc = heroSrcFromAsset(a);
-        if (heroSrc) img.src = heroSrc;
+        var heroSrc = heroSrcFromAsset(a) || (a.path ? previewUrl(a.path, a) : "") || PLACEHOLDER_SVG;
+        img.src = heroSrc;
         thumb.appendChild(img);
         heroEl = img;
         return;
@@ -5536,9 +5539,17 @@
       if (sourceMount) {
         sourceMount.innerHTML = sourceFileActionHtml(a, groupContext);
         bindSourceButtons(sourceMount);
-        if (!sourceMount.firstChild) renderSourceFallback(a, sourceMount);
+        if (!sourceMount.firstChild) {
+          setTimeout(function () {
+            if (!document.getElementById("damMediaPreview")) return;
+            renderSourceFallback(a, sourceMount);
+          }, 0);
+        }
       }
-      renderQualityPills(a);
+      setTimeout(function () {
+        if (!document.getElementById("damMediaPreview")) return;
+        renderQualityPills(a);
+      }, 0);
       if (assocHost) {
         var paintAssoc = function () {
           parkStudioOutsideAssoc();
@@ -5811,9 +5822,32 @@
       pushBrandingNavState(idx);
     }
 
-    enrichAssocOnOpen(asset, groupContext).then(function () {
+    modal._damPreviewPatch = function (patchAsset, patchOpts) {
+      patchOpts = patchOpts || {};
+      if (!patchAsset || !asset || patchAsset.id !== asset.id) return false;
+      Object.assign(asset, patchAsset);
+      if (patchOpts.siblings && patchOpts.siblings.length) {
+        siblings = patchOpts.siblings.slice();
+        if (typeof patchOpts.index === "number") idx = patchOpts.index;
+        else {
+          idx = siblings.findIndex(function (x) {
+            return x && x.id === asset.id;
+          });
+          if (idx < 0) idx = 0;
+        }
+      }
+      if (patchOpts.groupContext) groupContext = patchOpts.groupContext;
       renderMeta(asset);
-    });
+      return true;
+    };
+
+    setTimeout(function () {
+      if (!document.getElementById("damMediaPreview")) return;
+      enrichAssocOnOpen(asset, groupContext).then(function () {
+        if (!document.getElementById("damMediaPreview")) return;
+        renderMeta(asset);
+      });
+    }, 0);
 
     if (shared && typeof shared.bindZoom === "function") {
       zoomCtrl = shared.bindZoom({
@@ -5996,6 +6030,11 @@
 
   window.DamMediaPreview = {
     openAsset: openAsset,
+    patchOpenAsset: function (patchAsset, patchOpts) {
+      var modal = document.getElementById("damMediaPreview");
+      if (!modal || typeof modal._damPreviewPatch !== "function") return false;
+      return modal._damPreviewPatch(patchAsset, patchOpts);
+    },
     /* Pkt 6/7: pozwala innym modulom (dam-viz) osadzic "Skojarzone materialy" */
     renderLinkedAssetsInto: function (mount, labelEl, productContext) {
       renderLinkedBrandingAssets({ mount: mount, labelEl: labelEl, productContext: productContext });

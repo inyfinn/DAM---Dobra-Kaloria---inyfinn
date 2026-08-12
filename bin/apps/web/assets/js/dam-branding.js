@@ -3201,6 +3201,28 @@
 
   function clearBrandingComputeCache() {
     facetCountCache = null;
+    _brandingIndexCaches = { gen: "", byId: null, byFolder: null };
+  }
+
+  var _brandingIndexCaches = { gen: "", byId: null, byFolder: null };
+
+  function ensureBrandingIndexCaches() {
+    var gen = brandingIndexFingerprint();
+    if (_brandingIndexCaches.gen === gen && _brandingIndexCaches.byId) {
+      return _brandingIndexCaches;
+    }
+    var byId = {};
+    var byFolder = {};
+    ((index && index.assets) || []).forEach(function (a) {
+      if (!a || !a.id) return;
+      byId[a.id] = a;
+      var g = a.folder_group_id || folderDirFromPath(a.path);
+      if (!g) return;
+      if (!byFolder[g]) byFolder[g] = [];
+      byFolder[g].push(a);
+    });
+    _brandingIndexCaches = { gen: gen, byId: byId, byFolder: byFolder };
+    return _brandingIndexCaches;
   }
 
   function invalidateBrandingIndexCache() {
@@ -4272,7 +4294,7 @@
     return [primary].concat(rest);
   }
 
-  function buildBrandingGroupContext(primary, assetsById, optSiblings) {
+  function buildBrandingGroupContext(primary, assetsById, optSiblings, byFolder) {
     var variants = filterFolderVariantsForPrimary(
       primary,
       (primary && primary.folder_variants) || [],
@@ -4298,12 +4320,19 @@
       });
     } else if ((!variants || variants.length <= 1) && groupId && assetsById) {
       var mates = [];
-      Object.keys(assetsById).forEach(function (id) {
-        var x = assetsById[id];
-        if (!x || !isRasterAssetName(x.name)) return;
-        var xGroup = x.folder_group_id || folderDirFromPath(x.path);
-        if (xGroup === groupId) mates.push(x);
-      });
+      var folderMates = byFolder && byFolder[groupId];
+      if (folderMates && folderMates.length) {
+        folderMates.forEach(function (x) {
+          if (x && isRasterAssetName(x.name)) mates.push(x);
+        });
+      } else {
+        Object.keys(assetsById).forEach(function (id) {
+          var x = assetsById[id];
+          if (!x || !isRasterAssetName(x.name)) return;
+          var xGroup = x.folder_group_id || folderDirFromPath(x.path);
+          if (xGroup === groupId) mates.push(x);
+        });
+      }
       if (mates.length > 1) {
         variants = mates.map(function (x) {
           return {
@@ -4331,10 +4360,9 @@
       }
     }
     if ((!linked || !linked.length) && groupId && assetsById) {
-      Object.keys(assetsById).some(function (fid) {
-        var x = assetsById[fid];
+      var folderForLinked = (byFolder && byFolder[groupId]) || [];
+      var linkedFound = folderForLinked.some(function (x) {
         if (!x) return false;
-        if ((x.folder_group_id || folderDirFromPath(x.path)) !== groupId) return false;
         if (x.linked_products && x.linked_products.length) {
           linked = x.linked_products;
           return true;
@@ -4347,6 +4375,24 @@
         }
         return false;
       });
+      if (!linkedFound) {
+        Object.keys(assetsById).some(function (fid) {
+          var x = assetsById[fid];
+          if (!x) return false;
+          if ((x.folder_group_id || folderDirFromPath(x.path)) !== groupId) return false;
+          if (x.linked_products && x.linked_products.length) {
+            linked = x.linked_products;
+            return true;
+          }
+          if (x.folder_linked_product_ids && x.folder_linked_product_ids.length) {
+            linked = x.folder_linked_product_ids.map(function (pid) {
+              return { id: pid, display_name: pid, thumb_url: "" };
+            });
+            return true;
+          }
+          return false;
+        });
+      }
     }
 
     /* Cross-folder linked_variant_ids (np. M-SHOP405515 → M-IMG205857) — grid wariantów. */
@@ -4381,10 +4427,9 @@
       editable.forEach(function (f) {
         if (f && f.path) seenPath[String(f.path).toLowerCase()] = true;
       });
-      Object.keys(assetsById).forEach(function (id) {
-        var x = assetsById[id];
+      var folderForEdit = (byFolder && byFolder[groupId]) || [];
+      var pushEditable = function (x) {
         if (!x || !/\.(psd|psb|ai|eps|indd)$/i.test(x.name || "")) return;
-        if ((x.folder_group_id || folderDirFromPath(x.path)) !== groupId) return;
         var key = String(x.path || "").toLowerCase();
         if (!key || seenPath[key]) return;
         seenPath[key] = true;
@@ -4395,7 +4440,17 @@
           mtime: x.mtime || null,
           mtime_ms: typeof x.mtime_ms === "number" ? x.mtime_ms : null,
         });
-      });
+      };
+      if (folderForEdit.length) {
+        folderForEdit.forEach(pushEditable);
+      } else {
+        Object.keys(assetsById).forEach(function (id) {
+          var x = assetsById[id];
+          if (!x) return;
+          if ((x.folder_group_id || folderDirFromPath(x.path)) !== groupId) return;
+          pushEditable(x);
+        });
+      }
     }
 
     return {
@@ -4408,77 +4463,109 @@
   }
 
   function openModal(id, siblings) {
-    var assetsById = {};
-    ((index && index.assets) || []).forEach(function (a) {
-      assetsById[a.id] = a;
-    });
+    var caches = ensureBrandingIndexCaches();
+    var assetsById = caches.byId;
+    var byFolder = caches.byFolder;
     var primary = assetsById[id];
     if (!primary) return;
 
-    function launchModal() {
+    function buildModalPayload(hydratedPrimary) {
+      var p = hydratedPrimary || primary;
       if (window.DamAssocEdit && typeof window.DamAssocEdit.applyAssetAssocOverrides === "function") {
-        primary = window.DamAssocEdit.applyAssetAssocOverrides(primary);
-        assetsById[id] = primary;
+        p = window.DamAssocEdit.applyAssetAssocOverrides(p);
+        assetsById[id] = p;
+        primary = p;
       }
-    var list = [];
-    if (siblings && siblings.length > 1) {
-      list = siblings.filter(Boolean);
-    }
-    if (!list.length) {
-      list = [primary];
-      if (primary.folder_variants && primary.folder_variants.length) {
-        filterFolderVariantsForPrimary(primary, primary.folder_variants, assetsById).forEach(
-          function (v) {
-            if (!v || !v.id || v.id === primary.id) return;
+      var list = [];
+      if (siblings && siblings.length > 1) {
+        list = siblings.filter(Boolean);
+      }
+      if (!list.length) {
+        list = [p];
+        if (p.folder_variants && p.folder_variants.length) {
+          filterFolderVariantsForPrimary(p, p.folder_variants, assetsById).forEach(function (v) {
+            if (!v || !v.id || v.id === p.id) return;
             var va = assetsById[v.id];
-            if (va && !list.some(function (x) {
-              return x.id === va.id;
-            })) {
+            if (
+              va &&
+              !list.some(function (x) {
+                return x.id === va.id;
+              })
+            ) {
               list.push(va);
             }
-          }
-        );
+          });
+        }
       }
-    }
-    list = ensurePrimaryFirstInList(list, primary);
+      list = ensurePrimaryFirstInList(list, p);
 
-    var displayList = brandingCardDisplayAssets(list);
-    if (displayList.length > 1) {
-      list = ensurePrimaryFirstInList(displayList, primary);
-    }
-
-    var groupContext = buildBrandingGroupContext(primary, assetsById, list.length > 1 ? list : null);
-    if (list.length <= 1 && groupContext.variants && groupContext.variants.length > 1) {
-      var fromGc = groupContext.variants
-        .map(function (v) {
-          return v.id && assetsById[v.id];
-        })
-        .filter(Boolean)
-        .filter(function (va) {
-          return variantSameFolderAsPrimary(primary, va, assetsById);
-        });
-      if (fromGc.length > 1) {
-        list = ensurePrimaryFirstInList(fromGc, primary);
-        groupContext = buildBrandingGroupContext(primary, assetsById, list);
+      var displayList = brandingCardDisplayAssets(list);
+      if (displayList.length > 1) {
+        list = ensurePrimaryFirstInList(displayList, p);
       }
-    }
 
-    var idx = list.findIndex(function (x) {
-      return x.id === id;
-    });
-    if (idx < 0) idx = 0;
-    var a = list[idx] || primary;
-    if (!a) return;
-    trackRecentAsset(a);
-    if (window.DamMediaPreview && typeof window.DamMediaPreview.openAsset === "function") {
-      window.DamMediaPreview.openAsset(a, {
-        siblings: list,
-        index: idx,
-        alwaysShowAssociations: true,
-        groupContext: groupContext,
+      var groupContext = buildBrandingGroupContext(
+        p,
+        assetsById,
+        list.length > 1 ? list : null,
+        byFolder
+      );
+      if (list.length <= 1 && groupContext.variants && groupContext.variants.length > 1) {
+        var fromGc = groupContext.variants
+          .map(function (v) {
+            return v.id && assetsById[v.id];
+          })
+          .filter(Boolean)
+          .filter(function (va) {
+            return variantSameFolderAsPrimary(p, va, assetsById);
+          });
+        if (fromGc.length > 1) {
+          list = ensurePrimaryFirstInList(fromGc, p);
+          groupContext = buildBrandingGroupContext(p, assetsById, list, byFolder);
+        }
+      }
+
+      var idx = list.findIndex(function (x) {
+        return x.id === id;
       });
+      if (idx < 0) idx = 0;
+      var a = assetsById[id] || list[idx] || p;
+      return { asset: a, list: list, idx: idx, groupContext: groupContext };
     }
+
+    function launchModal(hydratedPrimary) {
+      var payload = buildModalPayload(hydratedPrimary);
+      if (!payload.asset) return payload;
+      trackRecentAsset(payload.asset);
+      if (window.DamMediaPreview && typeof window.DamMediaPreview.openAsset === "function") {
+        window.DamMediaPreview.openAsset(payload.asset, {
+          siblings: payload.list,
+          index: payload.idx,
+          alwaysShowAssociations: true,
+          groupContext: payload.groupContext,
+        });
+      }
+      return payload;
     }
+
+    function patchModal(hydratedPrimary) {
+      var payload = buildModalPayload(hydratedPrimary);
+      if (!payload.asset) return;
+      if (
+        window.DamMediaPreview &&
+        typeof window.DamMediaPreview.patchOpenAsset === "function" &&
+        window.DamMediaPreview.patchOpenAsset(payload.asset, {
+          siblings: payload.list,
+          index: payload.idx,
+          groupContext: payload.groupContext,
+        })
+      ) {
+        return;
+      }
+      launchModal(hydratedPrimary);
+    }
+
+    launchModal(primary);
 
     var chain = Promise.resolve();
     if (window.DamAssocEdit && typeof window.DamAssocEdit.loadAssocOverrides === "function") {
@@ -4489,20 +4576,21 @@
         return fetchFullAsset(id);
       })
       .then(function (full) {
-        if (full && typeof full === "object") {
-          primary = Object.assign({}, primary, full, { id: primary.id || full.id });
-          assetsById[id] = primary;
-          if (index && Array.isArray(index.assets)) {
-            var ix = index.assets.findIndex(function (x) {
-              return x && x.id === id;
-            });
-            if (ix >= 0) index.assets[ix] = Object.assign({}, index.assets[ix], primary);
-          }
+        if (!full || typeof full !== "object") return;
+        var merged = Object.assign({}, primary, full, { id: primary.id || full.id });
+        assetsById[id] = merged;
+        primary = merged;
+        if (index && Array.isArray(index.assets)) {
+          var ix = index.assets.findIndex(function (x) {
+            return x && x.id === id;
+          });
+          if (ix >= 0) index.assets[ix] = Object.assign({}, index.assets[ix], merged);
         }
-        launchModal();
+        ensureBrandingIndexCaches();
+        patchModal(merged);
       })
       .catch(function () {
-        launchModal();
+        /* modal already open with grid data */
       });
   }
 
