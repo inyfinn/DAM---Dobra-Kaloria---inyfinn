@@ -26,13 +26,15 @@
     );
 
   function assocEmptyMaterialsHtml() {
-    return (
-      '<p class="dam-media-preview__assoc-empty dam-media-preview__assoc-empty--guide">' +
-      '<i class="uil uil-info-circle dam-media-preview__assoc-empty-icon" aria-hidden="true"></i>' +
-      "<strong>Brak skojarzonych materiałów</strong>" +
-      '<span class="dam-media-preview__assoc-empty-hint">System nie wykrył skojarzeń dla tego produktu. Użyj „Dodaj materiały” lub quiz skojarzeń (admin).</span>' +
-      "</p>"
-    );
+    return '<p class="dam-media-preview__assoc-empty">Brak materiałów</p>';
+  }
+
+  function formatAssocMaterialsLabel(fileCount, groupCount) {
+    if (!fileCount) return "Skojarzone materiały";
+    if (groupCount > 0 && groupCount !== fileCount) {
+      return "Skojarzone materiały (" + groupCount + " grup · " + fileCount + " plików)";
+    }
+    return "Skojarzone materiały (" + fileCount + ")";
   }
 
   var PREVIEW_EXTS = { tif: 1, tiff: 1, psd: 1, psb: 1, bmp: 1 };
@@ -3135,7 +3137,7 @@
             })
             .join("") +
           "</div>"
-        : '<p class="dam-media-preview__elementy-hint">Brak elementów dla tego produktu.</p>') +
+        : "") +
       "</div>"
     );
   }
@@ -3184,21 +3186,20 @@
     opts = opts || {};
     var ready = (groups && groups.ready) || [];
     var links = opts.showLinks ? (groups && groups.links) || [] : [];
-    var forceToggle = !!opts.forceShowElementyToggle;
-    if (!ready.length && !links.length && !forceToggle) {
+    if (!ready.length && !links.length) {
       host.hidden = true;
       host.innerHTML = "";
       return;
     }
     host.hidden = false;
     host.innerHTML =
-      (ready.length || forceToggle
+      (ready.length
         ? elementyToggleBlockHtml("Elementy", ready, "data-element-asset-idx")
         : "") +
       (links.length
         ? elementyToggleBlockHtml("Surowe elementy", links, "data-element-link-idx")
         : "");
-    if (ready.length || forceToggle) bindElementyToggle(host, "data-element-asset-idx", ready);
+    if (ready.length) bindElementyToggle(host, "data-element-asset-idx", ready);
     if (links.length) bindElementyToggle(host, "data-element-link-idx", links);
   }
 
@@ -3229,6 +3230,15 @@
           png_transparency: true,
         };
       });
+  }
+
+  function syncAssocPaneBottom(mount, bottomHost, productId) {
+    if (!bottomHost) return;
+    var hasBottom = paneBottomHasContent(bottomHost);
+    bottomHost.hidden = !hasBottom;
+    if (!mount) return;
+    if (hasBottom) ensureAssocElementySplit(mount, bottomHost, productId);
+    else teardownAssocElementySplit(mount, bottomHost);
   }
 
   function renderResizerCta(host, productContext, opts) {
@@ -3262,10 +3272,12 @@
           var fmtLabel = fmtParts.length ? fmtParts.join(" + ") : "PNG";
           host.hidden = false;
           host.innerHTML =
-            '<p class="dam-media-preview__resizer-warn">Konwersja automatyczna może dać elementy słabej jakości. Jeśli wynik nie jest satysfakcjonujący - poproś grafików.</p>' +
             '<button type="button" class="dam-media-preview__resizer-btn" data-convert-links-elementy>' +
             '<i class="uil uil-compress-arrows" aria-hidden="true"></i>' +
-            "<span>Podejmij próbę konwersji elementów</span></button>";
+            "<span>Konwertuj elementy z Links</span></button>";
+          if (opts.mount && opts.bottomHost) {
+            syncAssocPaneBottom(opts.mount, opts.bottomHost, ctx.id || ctx.index || "");
+          }
           var btn = host.querySelector("[data-convert-links-elementy]");
           if (!btn) return;
           btn.addEventListener("click", function () {
@@ -3299,7 +3311,7 @@
               })
               .then(function (res) {
                 btn.disabled = false;
-                if (lbl) lbl.textContent = "Podejmij próbę konwersji elementów";
+                if (lbl) lbl.textContent = "Konwertuj elementy z Links";
                 if (!res || !res.ok) {
                   window.alert(
                     "Nie udało się przekonwertować elementów: " +
@@ -3324,7 +3336,7 @@
               })
               .catch(function () {
                 btn.disabled = false;
-                if (lbl) lbl.textContent = "Podejmij próbę konwersji elementów";
+                if (lbl) lbl.textContent = "Konwertuj elementy z Links";
                 window.alert("Błąd połączenia z mostem (8766).");
               });
           });
@@ -3407,10 +3419,7 @@
       var optCount = optimisticAssets.length;
       var optGroupCount = optGrouped.length;
       if (labelEl) {
-        labelEl.textContent =
-          optGroupCount > 0 && optGroupCount !== optCount
-            ? "Skojarzone materiały (" + optGroupCount + " grup · " + optCount + " plików)"
-            : "Skojarzone materiały (" + optCount + ")";
+        labelEl.textContent = formatAssocMaterialsLabel(optCount, optGroupCount);
       }
       mount.innerHTML = optGrouped
         .map(function (g, i) {
@@ -3600,10 +3609,7 @@
       var fileCount = materials.length;
       var groupCount = grouped.length;
       if (labelEl) {
-        labelEl.textContent =
-          groupCount > 0 && groupCount !== fileCount
-            ? "Skojarzone materiały (" + groupCount + " grup · " + fileCount + " plików)"
-            : "Skojarzone materiały (" + fileCount + ")";
+        labelEl.textContent = formatAssocMaterialsLabel(fileCount, groupCount);
       }
       clearAssocPaneLoadingState(mount);
       if (!materials.length) {
@@ -3704,13 +3710,17 @@
           ready: elementsReady.slice(0, 40),
           links: isVizModalMaterialsPane ? [] : elementsLinks.slice(0, 40),
         },
-        { showLinks: !isVizModalMaterialsPane, forceShowElementyToggle: isVizModalMaterialsPane }
+        { showLinks: !isVizModalMaterialsPane }
       );
       if (isVizModalMaterialsPane) {
         renderResizerCta(resizerHost, ctx, {
           onConverted: function () {
             refreshLinkedBrandingAfterEdit();
           },
+          mount: mount,
+          bottomHost:
+            document.getElementById("damVizModalAssocPaneBottom") ||
+            document.getElementById("damMediaPreviewAssocPaneBottom"),
         });
       } else if (resizerHost) {
         resizerHost.hidden = true;
@@ -3722,7 +3732,7 @@
             document.getElementById("damMediaPreviewAssocPaneBottom")
           : null;
       if (isVizModalMaterialsPane && bottomHost) {
-        ensureAssocElementySplit(mount, bottomHost, pid);
+        syncAssocPaneBottom(mount, bottomHost, pid);
       } else {
         teardownAssocElementySplit(mount, bottomHost || elementyHost);
       }
