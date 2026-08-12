@@ -1,12 +1,20 @@
 # Handoff: preview cache / Redis / file-availability
 
-Watchdog: read **latest markers** here (and process.md). Do **not** interrupt while
+Watchdog: read **latest markers** here (and process.md / LOGI.md). Do **not** interrupt while
 `probe_wait` / `recall_pending` / `generating_thumb` is younger than 5 minutes.
+
+## Status 2026-08-12 (home continue)
+
+- Legacy `data/thumbs/*.jpg` **REMOVED** — cards use `/thumb-cache` AVIF q30 only.
+- **Synology Postgres NOT reachable** from office (TCP 5433 refuse/timeout). See `LOGI.md` + `handoff-continue-home-2026-08-12.md`.
+- Runtime: SQLite offline until port 5433 works at home.
 
 ## Markers (append-only during K2/K3)
 
 <!-- worker appends ISO lines below -->
 
+- `2026-08-12T16:45:00+02:00` `synology_down` TCP 5433 refuse/timeout (inyfinn.synology.me + 192.168.0.145); continue at home after pull
+- `2026-08-12T16:45:00+02:00` `legacy_thumbs_purged` data/thumbs JPG deleted; UI thumb-cache only
 - `2026-07-21T23:09:36+02:00` `probe_wait` rketing\- POLSKA\- BRANDING i MARKA -\KUBARA\01 - LOGO\11x\KUBARA LOGO -  10.png
 - `2026-07-21T23:09:36+02:00` `probe_done` readable
 - `2026-07-21T23:09:37+02:00` `generating_thumb` 50bda4a14d434d42
@@ -45756,3 +45764,13 @@ INI\2025_03_04_6300620\links\mini_baza_pantone_czern.psd
 - `2026-08-10T11:05:46+02:00` `generating_thumb` 64ce6049917754b7
 - `2026-08-10T11:05:48+02:00` `generating_thumb` e331e5837d572da4
 - `2026-08-10T15:30:53+02:00` `generating_thumb` abd1d2bb5eb8cd3e
+- `2026-08-12T13:03:50+02:00` `probe_wait` MCT — [ funkcjonalny ]\MINI - 29.07.2025 - 6300654.00\2 - PROJEKT\links\Cień.tif
+- `2026-08-12T13:03:50+02:00` `probe_done` readable
+- `2026-08-12T13:03:55+02:00` `probe_wait`  I KOLACJE\04 ŚNIADANKA OD NELI SAWICKIEJ\DK_boost_proteina_DRUK_A4_CMYK_wiz.tif
+- `2026-08-12T13:03:55+02:00` `probe_done` readable
+- `2026-08-12T13:03:56+02:00` `probe_wait` D:\Marketing\-- ARCHIWUM --\wymiana\proteinaMCT\2 kostki.tif
+- `2026-08-12T13:03:56+02:00` `probe_done` readable
+- `2026-08-12T13:04:30+02:00` `probe_wait` \-- ARCHIWUM --\02_Materiały marketingowe\PL\POS\Roll-up\links-proteina\Mini.psb
+- `2026-08-12T13:04:30+02:00` `probe_done` readable
+- `2026-08-12T15:49:40+02:00` `generating_thumb` 62642173868c6d93
+- `2026-08-12T16:42:54+02:00` `generating_thumb` 4610573d9c780c9f

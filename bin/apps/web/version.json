@@ -1,9 +1,9 @@
 {
-  "version": "5.0.139",
+  "version": "5.0.140",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-08-12",
-  "note": "5.0.139: usunięte legacy data/thumbs JPG; tylko /thumb-cache AVIF q30; szybki offline gdy Synology:5433 padnie.",
+  "note": "5.0.140: handoff/LOGI — Synology:5433 down z biura; kontynuacja w domu po pull. 5.0.139: zero legacy JPG, AVIF only.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",
