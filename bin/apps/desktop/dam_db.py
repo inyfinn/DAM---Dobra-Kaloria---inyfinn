@@ -727,7 +727,8 @@ def _sources_payload(active_engine: str, dump: Path | None) -> dict[str, Any]:
     syn_on = bool(pref["sources"].get("synology", True)) and pref["mode"] != "sqlite"
     return {
         "prefer": pref,
-        "priority": ["synology", "github", "local"],
+        "priority": ["local", "synology"],
+        "dump_only": ["github"],
         "sources": {
             "synology": {
                 "id": "synology",
@@ -740,14 +741,14 @@ def _sources_payload(active_engine: str, dump: Path | None) -> dict[str, Any]:
             },
             "github": {
                 "id": "github",
-                "label": "GitHub (DATABASE/)",
+                "label": "Kopia zapasowa (dump GitHub)",
                 "enabled": bool(pref["sources"].get("github", True)),
                 "configured": bool(dump),
                 "available": bool(dump),
                 "active": False,
                 "detail": str(dump.name) if dump else "Brak dam_eta_*.sql.gz w DATABASE/",
                 "mtime": dump_mtime,
-                "note": "Kopia zapasowa (dump). Nie jest silnikiem live - odśwież pobiera najnowszy dump.",
+                "note": "Dump nie jest silnikiem live. Przycisk „Pobierz dump” synchronizuje plik do bin/DATABASE/.",
             },
             "local": {
                 "id": "local",

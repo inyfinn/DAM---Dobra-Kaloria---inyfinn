@@ -8432,6 +8432,17 @@ button.dam-status-badge.dam-tag-editable:hover {
   -webkit-line-clamp: 3;
   overflow: hidden;
 }
+.dam-db-source__note a {
+  color: var(--primary-color, #AB54DB);
+  text-decoration: underline;
+}
+.dam-db-source--dump {
+  flex-direction: column;
+}
+.dam-db-source--dump .geex-btn {
+  margin-top: 8px;
+  align-self: flex-start;
+}
 @media (max-width: 480px) {
   .dam-db-status__panel {
     right: 0;

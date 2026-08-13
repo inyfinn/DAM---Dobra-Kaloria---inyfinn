@@ -96,9 +96,28 @@ def thumb_key(
     prof = (profile or "grid").strip().lower()
     if prof not in PROFILES:
         prof = "grid"
-    material = f"{rel}|{mt:.6f}|{prof}".encode("utf-8", errors="replace")
+    material = f"{rel}|{mt:.6f}|{prof}|whitebg-v1".encode("utf-8", errors="replace")
     digest = hashlib.sha256(material).hexdigest()
     return digest, rel, mt
+
+
+def _flatten_white(im):
+    """Przezroczystosc zawsze na biale tlo (AVIF/JPEG). Bez alphy w pliku wyjsciowym."""
+    from PIL import Image  # type: ignore
+
+    if im.mode in ("RGBA", "LA"):
+        rgba = im.convert("RGBA") if im.mode == "LA" else im
+        bg = Image.new("RGB", rgba.size, (255, 255, 255))
+        bg.paste(rgba, mask=rgba.split()[-1])
+        return bg
+    if im.mode == "P" and "transparency" in im.info:
+        rgba = im.convert("RGBA")
+        bg = Image.new("RGB", rgba.size, (255, 255, 255))
+        bg.paste(rgba, mask=rgba.split()[-1])
+        return bg
+    if im.mode != "RGB":
+        return im.convert("RGB")
+    return im
 
 
 def _cache_paths(digest: str) -> tuple[Path, Path]:
@@ -138,37 +157,24 @@ def _encode_thumb(src: str, dest_avif: Path, dest_jpg: Path, max_side: int) -> t
     try:
         with Image.open(src) as im:
             if im.mode in ("CMYK", "P"):
-                im = im.convert("RGB")
-            elif im.mode in ("RGBA", "LA"):
-                # Keep alpha for AVIF; flatten for JPEG later
-                pass
-            elif im.mode != "RGB":
-                im = im.convert("RGB")
+                # P z transparency obsluzy _flatten_white
+                if im.mode == "CMYK":
+                    im = im.convert("RGB")
             if max(im.size) > max_side:
                 im.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
 
-            # Prefer AVIF ~q30 (fast grid cards, progressive upgrade via /media in modal)
+            rgb = _flatten_white(im)
+
+            # Prefer AVIF ~q30 — zawsze RGB na bialym tle (bez alphy = bez zielonej maty)
             try:
-                rgba_or_rgb = im
-                if rgba_or_rgb.mode not in ("RGB", "RGBA"):
-                    rgba_or_rgb = rgba_or_rgb.convert("RGBA" if "A" in im.getbands() else "RGB")
                 dest_avif.parent.mkdir(parents=True, exist_ok=True)
-                rgba_or_rgb.save(dest_avif, format="AVIF", quality=30)
+                rgb.save(dest_avif, format="AVIF", quality=30)
                 if dest_avif.is_file() and dest_avif.stat().st_size > 0:
                     return dest_avif, "image/avif"
             except Exception:
                 pass
 
             # JPEG fallback
-            rgb = im
-            if rgb.mode in ("RGBA", "LA"):
-                bg = Image.new("RGB", rgb.size, (255, 255, 255))
-                if rgb.mode == "LA":
-                    rgb = rgb.convert("RGBA")
-                bg.paste(rgb, mask=rgb.split()[-1])
-                rgb = bg
-            elif rgb.mode != "RGB":
-                rgb = rgb.convert("RGB")
             dest_jpg.parent.mkdir(parents=True, exist_ok=True)
             rgb.save(dest_jpg, format="JPEG", quality=82, optimize=True)
             if dest_jpg.is_file():

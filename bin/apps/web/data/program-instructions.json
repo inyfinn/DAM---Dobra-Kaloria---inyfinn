@@ -1,8 +1,31 @@
 {
-  "version": 18,
+  "version": 19,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-08-10T14:15:00+02:00",
+  "updated_at": "2026-08-13T16:30:00+02:00",
   "instructions": [
+    {
+      "id": "ui.no_fake_controls",
+      "priority": "critical",
+      "title_pl": "Kontrolki bez atrap",
+      "category": "ux",
+      "updated_at": "2026-08-13",
+      "must": [
+        "Kazdy checkbox, radio, przycisk i toggle musi miec realny skutek w backendzie albo byc placeholderem.",
+        "Placeholder: tekst „Wkrótce dostępne” albo link do integracji / ustawien — nigdy udawane wlaczniki.",
+        "Panel bazy: silnik live = Lokalna SQLite albo Synology Postgres; dump GitHub tylko przyciskiem Pobierz dump."
+      ],
+      "must_not": [
+        "Pokazywac checkboxow ktore zapisuja preferencje bez auth albo bez zmiany silnika.",
+        "Udawac ze dump GitHub jest silnikiem live."
+      ],
+      "related_code": [
+        "apps/web/assets/js/dam-db-status.js",
+        "apps/desktop/dam_db.py",
+        "apps/desktop/local_bridge.py"
+      ],
+      "related_kv": ["program-instructions"],
+      "body_pl": "HARD 2026-08-13: brak atrap w UI — dziala albo placeholder/link."
+    },
     {
       "id": "branding.grid_no_wizki_visuals_packshot",
       "priority": "critical",

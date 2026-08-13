@@ -338,53 +338,34 @@
     if (!panel) return;
     var sources = (data && data.sources) || {};
     var prefer = (data && data.prefer) || { mode: "auto", sources: {} };
-    var order = (data && data.priority) || ["synology", "github", "local"];
-    var rows = order
-      .map(function (id) {
-        var s = sources[id] || {};
-        var checked = s.enabled !== false;
-        var active = !!s.active;
-        var avail = !!s.available;
-        return (
-          '<label class="dam-db-source' +
-          (active ? " is-active" : "") +
-          (!avail && id !== "local" ? " is-dim" : "") +
-          '">' +
-          '<span class="dam-db-check">' +
-          '<input type="checkbox" data-source="' +
-          esc(id) +
-          '"' +
-          (checked ? " checked" : "") +
-          (id === "local" ? " disabled" : "") +
-          " />" +
-          '<span class="dam-db-check__box" aria-hidden="true"></span>' +
-          "</span>" +
-          '<span class="dam-db-source__body">' +
-          '<span class="dam-db-source__title">' +
-          esc(s.label || id) +
-          (active ? ' <em class="dam-db-source__badge">aktywna</em>' : "") +
-          "</span>" +
-          '<span class="dam-db-source__detail" title="' +
-          esc(s.detail || "") +
-          '">' +
-          esc(s.detail || "") +
-          "</span>" +
-          (s.note
-            ? '<span class="dam-db-source__note" title="' + esc(s.note) + '">' + esc(s.note) + "</span>"
-            : "") +
-          "</span>" +
-          "</label>"
-        );
-      })
-      .join("");
-
+    var syn = sources.synology || {};
+    var gh = sources.github || {};
+    var loc = sources.local || {};
     var mode = prefer.mode || "auto";
+    var engine = String((data && data.engine) || "");
+    var liveActive =
+      engine === "postgres"
+        ? "synology"
+        : engine.indexOf("sqlite") >= 0
+          ? "local"
+          : "";
+    var pathOrHost =
+      (data && data.host) ||
+      (data && data.path) ||
+      (loc.detail || "") ||
+      "";
+    var synOk = !!syn.active && engine === "postgres";
+    var synWanted = mode === "postgres" || mode === "auto";
+    var synFail =
+      synWanted && !synOk && (!!data.offline_mode || engine.indexOf("sqlite") >= 0);
+
     var metaBits = [];
-    if (data.engine) metaBits.push(String(data.engine));
-    if (data.host) metaBits.push(String(data.host));
+    if (engine) metaBits.push(engine);
+    if (pathOrHost) metaBits.push(String(pathOrHost));
+
     panel.innerHTML =
       '<div class="dam-db-panel__head">' +
-      "<strong>Źródła bazy</strong>" +
+      "<strong>Silnik bazy</strong>" +
       (metaBits.length
         ? '<span class="dam-db-panel__meta" title="' +
           esc(metaBits.join(" · ")) +
@@ -393,7 +374,7 @@
           "</span>"
         : "") +
       "</div>" +
-      '<p class="dam-db-panel__hint">Auto bierze pierwsze działające źródło. Wymuś Synology albo lokalną bazę poniżej.</p>' +
+      '<p class="dam-db-panel__hint">Wybierz silnik live: lokalny SQLite albo Postgres na Synology. Dump GitHub to kopia zapasowa — nie silnik.</p>' +
       '<div class="dam-db-panel__mode" role="radiogroup" aria-label="Tryb połączenia">' +
       '<label class="dam-db-mode-chip">' +
       '<input type="radio" name="damDbMode" value="auto"' +
@@ -412,13 +393,51 @@
       "<span>Lokalna</span></label>" +
       "</div>" +
       '<div class="dam-db-panel__sources">' +
-      rows +
+      '<div class="dam-db-source' +
+      (liveActive === "local" ? " is-active" : "") +
+      '">' +
+      '<span class="dam-db-source__body">' +
+      '<span class="dam-db-source__title">Lokalna (SQLite)' +
+      (liveActive === "local" ? ' <em class="dam-db-source__badge">aktywna</em>' : "") +
+      "</span>" +
+      '<span class="dam-db-source__detail" title="' +
+      esc(loc.detail || "bin/DATABASE/dam-local.sqlite") +
+      '">' +
+      esc(loc.detail || "bin/DATABASE/dam-local.sqlite") +
+      "</span>" +
+      '<span class="dam-db-source__note">Działa offline. Kanon: bin/DATABASE.</span>' +
+      "</span></div>" +
+      '<div class="dam-db-source' +
+      (synOk ? " is-active" : synFail ? " is-dim" : "") +
+      '">' +
+      '<span class="dam-db-source__body">' +
+      '<span class="dam-db-source__title">Synology (Postgres)' +
+      (synOk ? ' <em class="dam-db-source__badge">aktywna</em>' : "") +
+      "</span>" +
+      '<span class="dam-db-source__detail">' +
+      esc(syn.detail || "inyfinn.synology.me:5433") +
+      "</span>" +
+      (synFail
+        ? '<span class="dam-db-source__note">Niedostępna — zostaje SQLite. Sprawdź port 5433 / DDNS albo <a href="settings.html#integracje">integrację Postgres</a>.</span>'
+        : !syn.configured
+          ? '<span class="dam-db-source__note">Brak pg-config — <a href="settings.html#integracje">skonfiguruj w Ustawieniach</a>.</span>'
+          : '<span class="dam-db-source__note">Live multi-PC gdy port 5433 dostępny.</span>') +
+      "</span></div>" +
+      '<div class="dam-db-source dam-db-source--dump">' +
+      '<span class="dam-db-source__body">' +
+      '<span class="dam-db-source__title">Kopia zapasowa (dump GitHub)</span>' +
+      '<span class="dam-db-source__detail">' +
+      esc(gh.detail || "Brak dam_eta_*.sql.gz w bin/DATABASE/") +
+      "</span>" +
+      '<span class="dam-db-source__note">To nie jest silnik live. Przycisk pobiera dump do bin/DATABASE.</span>' +
+      '<button type="button" class="geex-btn geex-btn--sm" id="damDbPullDump">Pobierz dump</button>' +
+      "</span></div>" +
       "</div>" +
       (data.offline_hint
         ? '<p class="dam-db-panel__warn">' + esc(data.offline_hint) + "</p>"
         : "") +
       '<div class="dam-db-panel__actions">' +
-      '<button type="button" class="geex-btn geex-btn--sm" id="damDbApplyPrefer">Zapisz wybór</button>' +
+      '<button type="button" class="geex-btn geex-btn--sm" id="damDbApplyPrefer">Zastosuj tryb</button>' +
       '<button type="button" class="geex-btn geex-btn--sm geex-btn--primary" id="damDbForceRefresh">Odśwież teraz</button>' +
       "</div>";
 
@@ -433,6 +452,13 @@
     if (force) {
       force.addEventListener("click", function (e) {
         e.preventDefault();
+        reconnect(false);
+      });
+    }
+    var pull = panel.querySelector("#damDbPullDump");
+    if (pull) {
+      pull.addEventListener("click", function (e) {
+        e.preventDefault();
         reconnect(true);
       });
     }
@@ -442,31 +468,44 @@
     var panel = document.getElementById("damDbStatusPanel");
     var modeEl = panel && panel.querySelector('input[name="damDbMode"]:checked');
     var mode = modeEl ? modeEl.value : "auto";
-    var sources = { synology: true, github: true, local: true };
-    if (panel) {
-      panel.querySelectorAll("input[data-source]").forEach(function (inp) {
-        sources[inp.getAttribute("data-source")] = !!inp.checked;
-      });
-    }
-    sources.local = true;
-    return { mode: mode, sources: sources };
+    return {
+      mode: mode,
+      sources: {
+        synology: mode !== "sqlite",
+        github: true,
+        local: true,
+      },
+    };
   }
 
   function savePreferFromPanel() {
     var payload = collectPrefer();
     return fetch(bridgeBase() + "/db/prefer", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify(payload),
     })
       .then(function (r) {
-        return r.json();
+        return r.json().then(function (body) {
+          body._httpStatus = r.status;
+          return body;
+        });
       })
       .then(function (res) {
+        if (res._httpStatus === 401 || res._httpStatus === 403 || res.error === "admin_required" || res.error === "login_required") {
+          toast("Zmiana trybu wymaga konta admina");
+          return res;
+        }
+        if (res.ok === false && res.error) {
+          toast("Nie udało się zmienić trybu: " + res.error);
+          return res;
+        }
         _last = res;
         applyStatus(res);
         renderPanel(res);
-        toast("Zapisano źródła bazy");
+        var eng = res.engine || "?";
+        var where = res.host || res.path || "";
+        toast("Tryb zapisany → " + eng + (where ? " · " + where : ""));
         return res;
       })
       .catch(function () {
@@ -529,11 +568,25 @@
       } catch (e) { /* ignore */ }
       return;
     }
+    var mode = (res.prefer && res.prefer.mode) || "auto";
     var online = res.online !== false && res.ok !== false;
-    if (res.offline_mode && res.prefer && res.prefer.sources && res.prefer.sources.synology !== false && res.prefer.mode !== "sqlite") {
+    // Intentional SQLite = lokalna OK, nie czerwona „offline”
+    if (mode === "sqlite" && String(res.engine || "").indexOf("sqlite") >= 0) {
+      online = true;
+    } else if (
+      res.offline_mode &&
+      mode !== "sqlite" &&
+      res.prefer &&
+      res.prefer.sources &&
+      res.prefer.sources.synology !== false
+    ) {
       online = false;
     }
     var label = res.label || (online ? "Baza online" : "Baza offline");
+    if (mode === "sqlite" || (online && String(res.engine || "").indexOf("sqlite") >= 0 && !res.offline_mode)) {
+      label = "Baza lokalna";
+    }
+    if (online && res.engine === "postgres") label = "Baza online";
     var detail =
       (res.engine || "") +
       (res.host ? " @ " + res.host : res.path ? " · " + res.path : "") +

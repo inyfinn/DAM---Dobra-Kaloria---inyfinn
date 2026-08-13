@@ -1,9 +1,9 @@
 {
-  "version": "5.0.145",
+  "version": "5.0.146",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-08-13",
-  "note": "5.0.145: SQLite kanon bin/DATABASE, dashboard AVIF thumbs, branding raz, panel W toku.",
+  "note": "5.0.146: panel bazy bez atrap; AVIF thumbs białe tło + contain (bez przycięcia).",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",
