@@ -22,7 +22,10 @@ if str(DESKTOP) not in sys.path:
     sys.path.insert(0, str(DESKTOP))
 
 DATA = DESKTOP / "data"
-DB = DATA / "dam-local.sqlite"
+try:
+    from dam_db import DB_CANONICAL as DB
+except Exception:
+    DB = DESKTOP.parent.parent / "DATABASE" / "dam-local.sqlite"
 WEB = DESKTOP.parent / "web"
 OVERRIDES = WEB / "data" / "branding-associations-overrides.json"
 FAT_INDEX = WEB / "data" / "branding-index.json"

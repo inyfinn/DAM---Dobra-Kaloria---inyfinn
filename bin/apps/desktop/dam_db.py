@@ -26,15 +26,17 @@ from typing import Any
 
 DESKTOP_DIR = Path(__file__).resolve().parent
 DATA_DIR = DESKTOP_DIR / "data"
-DB_CANONICAL = DATA_DIR / "dam-local.sqlite"
-DB_LEGACY_AUTH = DATA_DIR / "dam-auth.sqlite"
-USERS_SEED = DATA_DIR / "users-seed.sqlite"
-_LEGACY_MARKETING_REL = Path(".dam-eta") / "dam-shared.sqlite"
-MACHINE_CONFIG = DESKTOP_DIR / "machine-config.json"
-PREFER_PATH = DATA_DIR / "db-prefer.json"
 CONTENT_ROOT = DESKTOP_DIR.parent.parent
 GIT_ROOT = CONTENT_ROOT.parent
 REPO_DATABASE = CONTENT_ROOT / "DATABASE"
+# Kanon lokalnej bazy SQLite — ZAWSZE bin/DATABASE/dam-local.sqlite (nie apps/desktop/data).
+DB_CANONICAL = REPO_DATABASE / "dam-local.sqlite"
+DB_LEGACY_DESKTOP = DATA_DIR / "dam-local.sqlite"
+DB_LEGACY_AUTH = DATA_DIR / "dam-auth.sqlite"
+USERS_SEED = REPO_DATABASE / "users-seed.sqlite"
+_LEGACY_MARKETING_REL = Path(".dam-eta") / "dam-shared.sqlite"
+MACHINE_CONFIG = DESKTOP_DIR / "machine-config.json"
+PREFER_PATH = DATA_DIR / "db-prefer.json"
 SYNC_SCRIPT = DESKTOP_DIR / "scripts" / "sync-database-backups-to-git.py"
 _LOCK = threading.Lock()
 _INITIALIZED = False
@@ -43,7 +45,7 @@ _STATUS_CACHE: dict[str, Any] | None = None
 _STATUS_CACHE_TS = 0.0
 _STATUS_CACHE_TTL = 30.0
 _MIRROR_LAST_TS = 0.0
-_MIRROR_INTERVAL_SEC = 600.0
+_MIRROR_INTERVAL_SEC = 60.0
 _RESOLVED_PATH: Path | None = None
 _OFFLINE_MODE = False
 _OFFLINE_REASON = ""
@@ -56,7 +58,7 @@ _OFFLINE_HINT = (
     "CGNAT / nie zamknął NAT przy zmiennym IP - wtedy DDNS może wskazywać "
     "zły adres mimo poprawnej konfiguracji serwera. "
     "Aplikacja działa w trybie OFFLINE na lokalnym SQLite "
-    "(apps/desktop/data/dam-local.sqlite). "
+    "(bin/DATABASE/dam-local.sqlite). "
     "Backup/dump: folder DATABASE/ w repo (GitHub) oraz "
     "X:/Marketing/- POLSKA/99 - WYMIANA/Krzysztof/CURSOR/Database DAM."
 )
@@ -240,21 +242,54 @@ def _copy_if_newer_or_missing(src: Path, dst: Path) -> bool:
     return False
 
 
-def _migrate_into_repo() -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    if DB_LEGACY_AUTH.is_file() and (
-        not DB_CANONICAL.is_file() or DB_CANONICAL.stat().st_size == 0
-    ):
+def _migrate_sqlite_canonical() -> None:
+    """Jedna kanoniczna sciezka: bin/DATABASE/dam-local.sqlite. Migruj ze starych lokalizacji."""
+    REPO_DATABASE.mkdir(parents=True, exist_ok=True)
+    old_seed = DATA_DIR / "users-seed.sqlite"
+    if old_seed.is_file() and not USERS_SEED.is_file():
         try:
-            shutil.copy2(DB_LEGACY_AUTH, DB_CANONICAL)
+            shutil.copy2(old_seed, USERS_SEED)
         except OSError:
             pass
 
+    sources: list[Path] = []
+    if DB_LEGACY_AUTH.is_file():
+        sources.append(DB_LEGACY_AUTH)
+    if DB_LEGACY_DESKTOP.is_file():
+        sources.append(DB_LEGACY_DESKTOP)
     base = _marketing_base_from_config()
-    if base is None:
+    if base is not None:
+        legacy_shared = base / _LEGACY_MARKETING_REL
+        if legacy_shared.is_file():
+            sources.append(legacy_shared)
+
+    if not DB_CANONICAL.is_file() or DB_CANONICAL.stat().st_size == 0:
+        for src in sources:
+            if _copy_if_newer_or_missing(src, DB_CANONICAL):
+                print(f"dam_db: zmigrowano SQLite -> {DB_CANONICAL}")
+                return
         return
-    legacy_shared = base / _LEGACY_MARKETING_REL
-    _copy_if_newer_or_missing(legacy_shared, DB_CANONICAL)
+
+    # Kanon istnieje — jesli stara kopia nowsza/wieksza, podnies do DATABASE/
+    best = DB_CANONICAL
+    best_score = (best.stat().st_mtime, best.stat().st_size)
+    for src in sources:
+        if not src.is_file() or src.resolve() == DB_CANONICAL.resolve():
+            continue
+        score = (src.stat().st_mtime, src.stat().st_size)
+        if score > best_score:
+            best = src
+            best_score = score
+    if best is not DB_CANONICAL:
+        try:
+            shutil.copy2(best, DB_CANONICAL)
+            print(f"dam_db: zaktualizowano kanon z {best}")
+        except OSError as exc:
+            print("dam_db migrate canonical warning:", exc)
+
+
+def _migrate_into_repo() -> None:
+    _migrate_sqlite_canonical()
 
 
 def db_path() -> Path:
@@ -263,7 +298,7 @@ def db_path() -> Path:
     if _RESOLVED_PATH is not None:
         return _RESOLVED_PATH
     _migrate_into_repo()
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    REPO_DATABASE.mkdir(parents=True, exist_ok=True)
     _RESOLVED_PATH = DB_CANONICAL
     return _RESOLVED_PATH
 
@@ -539,7 +574,8 @@ def init_db(*, force: bool = False) -> dict[str, Any]:
             try:
                 result = _init_postgres()
                 now = time.time()
-                if now - _MIRROR_LAST_TS >= _MIRROR_INTERVAL_SEC:
+                # Zawsze mirror przy starcie; potem co _MIRROR_INTERVAL_SEC.
+                if _MIRROR_LAST_TS <= 0 or now - _MIRROR_LAST_TS >= _MIRROR_INTERVAL_SEC:
                     try:
                         _mirror_pg_users_to_sqlite()
                     except Exception:
@@ -553,6 +589,15 @@ def init_db(*, force: bool = False) -> dict[str, Any]:
                 # Swiadomie lokalnie - nie traktuj jako awarii sieci.
                 _leave_offline()
             result = _init_sqlite()
+        # Offline tez: uzupelnij konta z seed jesli brakuje.
+        if result.get("engine") in ("sqlite", "sqlite-offline"):
+            try:
+                restored = _restore_users_from_seed()
+                if restored:
+                    result = dict(result)
+                    result["users_restored_from_seed"] = restored
+            except Exception:
+                pass
         _INITIALIZED = True
         _INIT_RESULT = dict(result)
         return dict(_INIT_RESULT)

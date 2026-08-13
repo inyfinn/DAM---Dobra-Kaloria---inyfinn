@@ -12,7 +12,10 @@ from typing import Any, Callable
 DESKTOP_DIR = Path(__file__).resolve().parent
 DATA_DIR = DESKTOP_DIR / "data"
 WEB_ROOT = DESKTOP_DIR.parent / "web"
-DEFAULT_DB = DATA_DIR / "dam-local.sqlite"
+try:
+    from dam_db import DB_CANONICAL as DEFAULT_DB
+except Exception:  # pragma: no cover
+    DEFAULT_DB = DATA_DIR.parent.parent / "DATABASE" / "dam-local.sqlite"
 DEFAULT_OVERRIDES = WEB_ROOT / "data" / "branding-associations-overrides.json"
 
 _SCHEMA_SQL = """

@@ -25,7 +25,15 @@ except ImportError:  # pragma: no cover
 
 DESKTOP_DIR = Path(__file__).resolve().parent
 DATA_DIR = DESKTOP_DIR / "data"
-DB_PATH = DATA_DIR / "dam-local.sqlite"
+
+
+def _db_path() -> Path:
+    from dam_db import db_path
+
+    return db_path()
+
+
+DB_PATH = _db_path()  # legacy alias; prefer db_path() at runtime
 DB_PATH_LEGACY = DATA_DIR / "dam-auth.sqlite"
 _LOCK = threading.Lock()
 

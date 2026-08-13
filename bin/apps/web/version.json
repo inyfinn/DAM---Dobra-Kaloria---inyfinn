@@ -1,9 +1,9 @@
 {
-  "version": "5.0.141",
+  "version": "5.0.142",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-08-13",
-  "note": "5.0.141: login tylko email+haslo, bez backdoora admina, seed 18 kont przy pustej bazie.",
+  "note": "5.0.142: kanon SQLite w bin/DATABASE/, cleanup root dist/installer, mirror PG co 60s.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

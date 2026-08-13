@@ -18,15 +18,21 @@
 !/bin/THEME/
 !/bin/docs/
 !/bin/installer/
+!/bin/DATABASE/
 /DAM.exe
 /DAM-Setup.exe
 /DAM-Setup-*.exe
 /build-dam-exe/
+/dist/
+/installer/
 
-# Lokalna baza kont (hashe bcrypt) - nie commitowac
+# Lokalna baza kont (hashe bcrypt) - kanon: bin/DATABASE/dam-local.sqlite
+bin/DATABASE/dam-local.sqlite
+bin/DATABASE/dam-local.sqlite-*
+!bin/DATABASE/users-seed.sqlite
+!bin/DATABASE/README.md
 bin/apps/desktop/data/*.sqlite
 bin/apps/desktop/data/*.sqlite-*
-!bin/apps/desktop/data/users-seed.sqlite
 bin/apps/desktop/data/backup*/
 bin/apps/desktop/data/backups*/
 bin/apps/desktop/data/bound-session.json

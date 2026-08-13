@@ -29,7 +29,7 @@ def canonical_sqlite_path(
         if p is not None:
             return Path(p)
     base = Path(desktop_dir) if desktop_dir is not None else Path(__file__).resolve().parent
-    return base / "data" / "dam-local.sqlite"
+    return base.parent.parent / "DATABASE" / "dam-local.sqlite"
 
 
 def grid_from_sqlite_argv(
