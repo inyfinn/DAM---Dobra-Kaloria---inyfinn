@@ -354,6 +354,14 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
 
+### 2026-08-13 - v5.0.147: polling formularza i start WebView przed mostem
+
+**Objaw:** radio trybu bazy wracalo do Auto przed kliknieciem Zastosuj, a poprawne miniatury zostawaly jako "brak podgladu" po starcie DAM.exe.
+
+**Przyczyna:** cykliczne `renderPanel(_last)` przebudowywalo radio z zapisanej preferencji i kasowalo niezapisany wybor. Rownolegle WebView potrafil wyslac pierwsze `<img src=/thumb-cache>` zanim most `:8766` zaczal nasluchiwac; dwa natychmiastowe `error` utrwalaly placeholder do konca sesji.
+
+**Zasada:** formularz odswiezany pollingiem musi miec osobny stan draft do czasu zapisu. Zasoby localhost uruchamiane rownolegle z UI musza zachowac oryginalny URL i wykonac ograniczony retry z backoff; nie wolno traktowac pierwszego connection-refused jak trwalego braku pliku.
+
 ### 2026-07-29 — v5.0.79: polskie znaki UTF-8 — korupcja `?` w źródle HTML/JS
 
 **Przyczyna (NIE serwer, NIE meta, NIE pl.json):** pliki `apps/web/*.html` i część `dam-*.js` miały literalne `?` zamiast diakrytyków po edycjach narzędzi zapisujących non-ASCII jako `?` (np. `Poka? wszystkie`, `j?zyk`, `Wyczy?? filtry`).

@@ -24,6 +24,12 @@ if (widgets.indexOf("DamPreviewTruth.thumbCacheUrl") === -1) {
 }
 if (widgets.indexOf("data/thumbs/") !== -1) fail("must not use data/thumbs JPG");
 if (widgets.indexOf("projects_in_progress") === -1) fail("missing third stat panel");
+if (widgets.indexOf("_damOriginalThumbSrc") === -1) {
+  fail("dashboard must retain the original thumb URL for bridge-start retries");
+}
+if (widgets.indexOf("dam_retry=") === -1) {
+  fail("dashboard must retry thumbs after the bridge startup race");
+}
 
 const truth = fs.readFileSync(path.join(jsDir, "dam-preview-truth.js"), "utf8");
 if (truth.indexOf("/thumb-cache?path=") === -1) fail("preview-truth missing /thumb-cache");

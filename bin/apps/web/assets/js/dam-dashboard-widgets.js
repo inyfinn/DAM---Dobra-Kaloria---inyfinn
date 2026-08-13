@@ -780,11 +780,38 @@
     root.querySelectorAll("img.dam-widget__thumb").forEach(function (img) {
       if (img._damHonestThumb) return;
       img._damHonestThumb = true;
+      var initialSrc = img.getAttribute("src") || "";
+      img._damOriginalThumbSrc =
+        initialSrc && initialSrc.indexOf("data:image/") !== 0 ? initialSrc : "";
+      img._damThumbRetryCount = 0;
+      img.addEventListener("load", function () {
+        if (img.getAttribute("src") === ph) return;
+        img.classList.remove("dam-widget__thumb--fallback");
+        img.removeAttribute("title");
+        img._damThumbRetryCount = 0;
+      });
       img.addEventListener("error", function () {
         var path =
           img.getAttribute("data-path") ||
           img.getAttribute("data-media-path") ||
           "";
+        /*
+         * DAM.exe uruchamia WebView rownolegle z mostem. Pierwszy request obrazu
+         * moze trafic w kilkuset-ms okno przed startem :8766. Nie utrwalaj wtedy
+         * placeholdera do konca sesji - ponow oryginalny /thumb-cache z backoff.
+         */
+        if (img._damOriginalThumbSrc && img._damThumbRetryCount < 3) {
+          img._damThumbRetryCount += 1;
+          var retryNo = img._damThumbRetryCount;
+          img.src = ph;
+          img.classList.add("dam-widget__thumb--fallback");
+          setTimeout(function () {
+            if (!document.documentElement.contains(img)) return;
+            var sep = img._damOriginalThumbSrc.indexOf("?") >= 0 ? "&" : "?";
+            img.src = img._damOriginalThumbSrc + sep + "dam_retry=" + retryNo;
+          }, retryNo * 700);
+          return;
+        }
         if (img.dataset.damThumbFallback !== "1" && path) {
           var live = mediaPreviewUrl(path);
           if (live && live !== img.getAttribute("src")) {

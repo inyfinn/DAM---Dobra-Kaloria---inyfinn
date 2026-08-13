@@ -3020,7 +3020,7 @@
     // Status bazy danych (obok Pliki online)
     if (!window.DamDbStatus) {
       var dbs = document.createElement("script");
-      dbs.src = "assets/js/dam-db-status.js?v=5.0.146";
+      dbs.src = "assets/js/dam-db-status.js?v=5.0.147";
       document.head.appendChild(dbs);
     } else if (typeof window.DamDbStatus.start === "function") {
       window.DamDbStatus.start();

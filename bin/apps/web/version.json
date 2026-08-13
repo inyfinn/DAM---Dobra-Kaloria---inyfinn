@@ -1,9 +1,9 @@
 {
-  "version": "5.0.146",
+  "version": "5.0.147",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-08-13",
-  "note": "5.0.146: panel bazy bez atrap; AVIF thumbs białe tło + contain (bez przycięcia).",
+  "note": "5.0.147: wybór bazy odporny na polling; miniatury ponawiane po starcie mostu.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

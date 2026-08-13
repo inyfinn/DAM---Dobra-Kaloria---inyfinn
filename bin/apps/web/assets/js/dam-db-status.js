@@ -12,6 +12,7 @@
   var _lastFullCheck = 0;
   var _last = null;
   var _panelOpen = false;
+  var _draftMode = null;
   var _syncToast = null;
   var _syncTween = null;
 
@@ -341,7 +342,8 @@
     var syn = sources.synology || {};
     var gh = sources.github || {};
     var loc = sources.local || {};
-    var mode = prefer.mode || "auto";
+    /* Poll statusu nie moze kasowac wyboru pomiedzy kliknieciem radio i Zastosuj. */
+    var mode = _draftMode || prefer.mode || "auto";
     var engine = String((data && data.engine) || "");
     var liveActive =
       engine === "postgres"
@@ -442,6 +444,11 @@
       "</div>";
 
     var apply = panel.querySelector("#damDbApplyPrefer");
+    panel.querySelectorAll('input[name="damDbMode"]').forEach(function (radio) {
+      radio.addEventListener("change", function () {
+        if (radio.checked) _draftMode = radio.value;
+      });
+    });
     if (apply) {
       apply.addEventListener("click", function (e) {
         e.preventDefault();
@@ -500,6 +507,7 @@
           toast("Nie udało się zmienić trybu: " + res.error);
           return res;
         }
+        _draftMode = null;
         _last = res;
         applyStatus(res);
         renderPanel(res);
@@ -543,6 +551,7 @@
     var el = ensureUi();
     var panel = document.getElementById("damDbStatusPanel");
     if (!el || !panel) return;
+    _draftMode = null;
     _panelOpen = true;
     el.setAttribute("aria-expanded", "true");
     panel.hidden = false;
@@ -555,6 +564,7 @@
   function closePanel() {
     var el = document.getElementById("damDbStatus");
     var panel = document.getElementById("damDbStatusPanel");
+    _draftMode = null;
     _panelOpen = false;
     if (el) el.setAttribute("aria-expanded", "false");
     if (panel) panel.hidden = true;

@@ -35,4 +35,10 @@ if (saveSlice.indexOf('"Content-Type": "application/json"') !== -1 && saveSlice.
 if (code.indexOf("admina") === -1) {
   fail("must toast on admin_required");
 }
+if (code.indexOf("_draftMode || prefer.mode") === -1) {
+  fail("status poll must preserve the unsaved radio selection");
+}
+if (code.indexOf('_draftMode = radio.value') === -1) {
+  fail("radio change must store the pending engine mode");
+}
 console.log("OK dam-db-status panel: real engine modes + auth dump");
