@@ -11,7 +11,7 @@
   var MAX_ROWS = 42;
   /* v6: media --bento-h accounts for CSS row-gap (no phantom under-card space);
    * mins = chrome floor only; stack adjacent (no +1 row). */
-  var BENTO_LAYOUT_VERSION = 6;
+  var BENTO_LAYOUT_VERSION = 7;
   var ROW_PX = 48;
   var STORAGE_PREFIX = "dam_bento_v1:";
   var MIN_W = 2;
@@ -39,6 +39,7 @@
     products_count: { w: 3, h: 3 },
     asana_open: { w: 3, h: 3 },
     projects_this_month: { w: 3, h: 3 },
+    projects_in_progress: { w: 3, h: 3 },
     checklists_ok: { w: 3, h: 3 },
     tasks_next: { w: 3, h: 5 },
     tasks_by_section: { w: 3, h: 5 },
@@ -1749,7 +1750,7 @@
     return {
       products_count: { c: 1, r: 1, w: 3, h: 3 },
       projects_this_month: { c: 4, r: 1, w: 3, h: 3 },
-      asana_open: { c: 7, r: 1, w: 3, h: 3 },
+      projects_in_progress: { c: 7, r: 1, w: 3, h: 3 },
       newest_viz_3: { c: 1, r: 4, w: 9, h: 7 },
       newest_products_f: { c: 1, r: 11, w: 9, h: 7 },
       branding_latest: { c: 1, r: 18, w: 9, h: 7 },

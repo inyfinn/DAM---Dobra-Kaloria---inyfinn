@@ -4,6 +4,27 @@ Format: Data | Akcja | Status | Efekt | Dalej
 
 ---
 
+## 2026-08-13 — v5.0.145 biuro
+
+| Pole | Treść |
+|------|--------|
+| Wersja | **5.0.145** |
+| SQLite live | **TYLKO** `bin/DATABASE/dam-local.sqlite` (nie `D:\Marketing\DATABASE`) |
+| Seed / dumpy | `bin/DATABASE/users-seed.sqlite`, `dam_eta_*.sql.gz` |
+| Merge | pelna baza (users/size) wygrywa z nowsza pusta ~45 KB |
+| Dashboard thumbs | AVIF `/thumb-cache` first, potem `/media`; wylaczono `DAM_DISABLE_THUMB_WARM` |
+| Branding | boot single-shot; hydrate nie maluje siatki drugi raz |
+| Panel | trzeci kafelek „W toku” = produkty bez pliku F / FQ (definicja robocza) |
+| Start | `DAM.exe` / `URUCHOM-DAM.bat` — bez instalatora |
+| Postgres | NIE przelaczamy; port 5433 do odblokowania w domu |
+
+### Zakaz
+
+- Live DB nie w `{Marketing ROOT}/DATABASE`
+- Nie commituj `*.sqlite`, `pg-config.json`, sekretow
+
+---
+
 ## 2026-08-12 — sesja biuro (przed domem)
 
 | Pole | Treść |

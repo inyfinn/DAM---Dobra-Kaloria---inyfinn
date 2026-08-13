@@ -3043,6 +3043,20 @@
           } catch (eMark) {
             /* ignore */
           }
+          var gridHasCards = !!(
+            document.querySelector("#damBrandingSectionGrid .dam-branding-card") ||
+            document.querySelector("#damBrandingGrid .dam-branding-card")
+          );
+          /* First paint already happened from head — do not tear down the grid. */
+          if (gridHasCards) {
+            try {
+              renderTagFilters();
+            } catch (eTagsHydrate) {
+              /* ignore */
+            }
+            setBootStatus("");
+            return;
+          }
           if (headGen && fullGen && headGen === fullGen) {
             scheduleBrandingRender({ tags: true, section: true });
             setBootStatus("");
@@ -5299,7 +5313,10 @@
     });
   }
 
+  var bootStarted = false;
   async function boot() {
+    if (bootStarted) return;
+    bootStarted = true;
     try {
       showInitialBootSkeletons();
       bindTabs();
@@ -5511,5 +5528,9 @@
     isBrandingGridEligible: isBrandingGridEligible,
   };
 
-  document.addEventListener("DOMContentLoaded", boot);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
 })();

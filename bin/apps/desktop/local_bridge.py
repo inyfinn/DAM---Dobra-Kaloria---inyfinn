@@ -6380,7 +6380,7 @@ class Handler(BaseHTTPRequestHandler):
                     "path": str(dam_db.db_path()),
                     "dir": str(dam_db.canonical_db_dir()),
                     "marketing_root": str(root) if root else "",
-                    "source": "marketing-root" if root else "bin-fallback",
+                    "source": "bin-database",
                 },
             )
             return

@@ -38,18 +38,24 @@
    * Redis/PAMIEC przyspiesza pokazanie karty — NIGDY nie uzywac jako stale src
    * po kliknieciu (modal/lightbox = /media, źródło z dysku).
    */
+  function mediaPreviewUrl(path) {
+    if (!path) return "";
+    var local = toLocal(path);
+    if (!local) return "";
+    var name = String(local).split(/[/\\]/).pop() || "";
+    if (!/\.[A-Za-z0-9]{2,8}$/.test(name)) return "";
+    var ext = String(name.split(".").pop() || "").toLowerCase();
+    var url = bridgeUrl() + "/media?path=" + encodeURIComponent(local);
+    if (/^(png|jpe?g|webp|gif|tif|tiff|bmp|psd|psb|ai|pdf|avif|svg)$/i.test(ext)) {
+      url += "&preview=1";
+    }
+    return url;
+  }
+
   function thumbCacheUrl(path, profile) {
     if (!path) return "";
     if (global.DAM_DISABLE_THUMB_WARM) {
-      /* Cache off: use bridge preview (disk), NOT Redis /thumb-cache and NOT raw multi-MB /media. */
-      var localDirect = toLocal(path);
-      var ext = String(localDirect.split(".").pop() || "").toLowerCase();
-      var url =
-        bridgeUrl() + "/media?path=" + encodeURIComponent(localDirect);
-      if (/^(png|jpe?g|webp|gif|tif|tiff|bmp|psd|psb|ai|pdf)$/i.test(ext)) {
-        url += "&preview=1";
-      }
-      return url;
+      return mediaPreviewUrl(path);
     }
     var local = toLocal(path);
     var p = (profile || "grid").trim() || "grid";
@@ -177,6 +183,7 @@
     LABEL_HINT: LABEL_HINT,
     LABEL_ROOT: LABEL_ROOT,
     thumbCacheUrl: thumbCacheUrl,
+    mediaPreviewUrl: mediaPreviewUrl,
     onErrorTitle: onErrorTitle,
     fallbackHint: fallbackHint,
     fileAvailability: fileAvailability,

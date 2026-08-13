@@ -58,9 +58,10 @@ _OFFLINE_HINT = (
     "CGNAT / nie zamknął NAT przy zmiennym IP - wtedy DDNS może wskazywać "
     "zły adres mimo poprawnej konfiguracji serwera. "
     "Aplikacja działa w trybie OFFLINE na lokalnym SQLite "
-    "(ROOT/DATABASE/dam-local.sqlite — ROOT = wybrany folder Marketing). "
-    "Backup/dump: folder DATABASE/ w repo (GitHub) oraz "
-    "X:/Marketing/- POLSKA/99 - WYMIANA/Krzysztof/CURSOR/Database DAM."
+    "(bin/DATABASE/dam-local.sqlite w projekcie DAM). "
+    "Backup/dump: folder bin/DATABASE/ (GitHub) oraz "
+    "X:/Marketing/- POLSKA/99 - WYMIANA/Krzysztof/CURSOR/Database DAM. "
+    "Postgres Synology (port 5433) — później, gdy port będzie otwarty."
 )
 _DEFAULT_PREFER: dict[str, Any] = {
     "mode": "auto",  # auto | postgres | sqlite — Synology gdy dostepny
@@ -231,15 +232,12 @@ def resolve_marketing_root() -> Path | None:
 
 
 def canonical_db_dir() -> Path:
-    """Katalog bazy: ROOT/DATABASE gdy ROOT ustawiony, inaczej bin/DATABASE."""
-    root = resolve_marketing_root()
-    if root is not None:
-        return root / "DATABASE"
+    """Kanon live SQLite: bin/DATABASE w projekcie DAM. Nie ROOT/DATABASE Marketing."""
     return REPO_DATABASE
 
 
 def canonical_db_path() -> Path:
-    return canonical_db_dir() / "dam-local.sqlite"
+    return REPO_DATABASE / "dam-local.sqlite"
 
 
 # Back-compat alias (dynamiczny — nie uzywac przed db_path()).
@@ -281,24 +279,79 @@ def _marketing_base_from_config() -> Path | None:
     return None
 
 
-def _copy_if_newer_or_missing(src: Path, dst: Path) -> bool:
-    if not src.is_file() or src.stat().st_size <= 0:
-        return False
+# Schema-only / empty-users SQLite is ~40–60 KB. Full 18-user DB is ~7 MB.
+_INCOMPLETE_DB_BYTES = 200_000
+
+
+def _sqlite_user_count(path: Path) -> int:
+    """Ile kont w pliku. Przy błędzie: 1 gdy plik duży (nie traktuj 7 MB jako pustego)."""
+    if not path.is_file():
+        return 0
     try:
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
-        if not dst.is_file() or dst.stat().st_size == 0:
-            shutil.copy2(src, dst)
-            return True
-        if src.stat().st_mtime > dst.stat().st_mtime or src.stat().st_size > dst.stat().st_size:
-            shutil.copy2(src, dst)
-            return True
+        size = path.stat().st_size
+    except OSError:
+        return 0
+    if size <= 0:
+        return 0
+    try:
+        conn = sqlite3.connect(str(path), timeout=3)
+        try:
+            row = conn.execute("SELECT COUNT(*) FROM users").fetchone()
+            return int(row[0] or 0) if row else 0
+        finally:
+            conn.close()
+    except Exception:  # noqa: BLE001
+        return 1 if size >= _INCOMPLETE_DB_BYTES else 0
+
+
+def _source_score(path: Path) -> tuple[int, int, float]:
+    """(users, size, mtime) — pełna baza wygrywa z nowszą pustą kopią."""
+    if not path.is_file():
+        return (0, 0, 0.0)
+    try:
+        st = path.stat()
+    except OSError:
+        return (0, 0, 0.0)
+    size = int(st.st_size)
+    if size <= 0:
+        return (0, 0, 0.0)
+    return (_sqlite_user_count(path), size, float(st.st_mtime))
+
+
+def _is_incomplete_db(path: Path) -> bool:
+    if not path.is_file():
+        return True
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return True
+    if size < _INCOMPLETE_DB_BYTES:
+        return True
+    return _sqlite_user_count(path) <= 0
+
+
+def _same_file(a: Path, b: Path) -> bool:
+    try:
+        return a.resolve() == b.resolve()
     except OSError:
         return False
-    return False
+
+
+def _pick_best_sqlite(sources: list[Path], target: Path) -> Path | None:
+    best: Path | None = None
+    best_score = (0, 0, 0.0)
+    for src in sources:
+        if not src.is_file() or _same_file(src, target):
+            continue
+        score = _source_score(src)
+        if score > best_score:
+            best = src
+            best_score = score
+    return best
 
 
 def _migrate_sqlite_canonical() -> None:
-    """Kanon: ROOT/DATABASE/dam-local.sqlite. Scal kopie z bin/DATABASE i legacy."""
+    """Kanon: bin/DATABASE/dam-local.sqlite. Scal z legacy desktop/data, nie z ROOT Marketing."""
     target = canonical_db_path()
     target.parent.mkdir(parents=True, exist_ok=True)
     REPO_DATABASE.mkdir(parents=True, exist_ok=True)
@@ -323,56 +376,27 @@ def _migrate_sqlite_canonical() -> None:
         sources.append(DB_LEGACY_DESKTOP)
     if DB_REPO.is_file():
         sources.append(DB_REPO)
+    # ROOT/DATABASE tylko jako ŹRÓDŁO odzysku (gdy wcześniejszy błąd tam skopiował pełną bazę).
     root = resolve_marketing_root()
     if root is not None:
         legacy_shared = root / _LEGACY_MARKETING_REL
         if legacy_shared.is_file():
             sources.append(legacy_shared)
         root_db = root / _LEGACY_MARKETING_DB
-        if root_db.is_file():
+        if root_db.is_file() and not _same_file(root_db, target):
             sources.append(root_db)
 
-    if not target.is_file() or target.stat().st_size == 0:
-        best_src: Path | None = None
-        best_score = (0.0, 0)
-        for src in sources:
-            if not src.is_file():
-                continue
-            try:
-                if src.resolve() == target.resolve():
-                    continue
-            except OSError:
-                pass
-            score = (src.stat().st_mtime, src.stat().st_size)
-            if score > best_score:
-                best_src = src
-                best_score = score
-        if best_src is not None:
-            try:
-                shutil.copy2(best_src, target)
-                print(f"dam_db: scalono SQLite -> {target} (z {best_src})")
-            except OSError as exc:
-                print("dam_db migrate canonical warning:", exc)
+    best_src = _pick_best_sqlite(sources, target)
+    if best_src is None:
         return
 
-    best = target
-    best_score = (best.stat().st_mtime, best.stat().st_size)
-    for src in sources:
-        if not src.is_file():
-            continue
+    best_score = _source_score(best_src)
+    target_missing = _is_incomplete_db(target)
+    target_score = (0, 0, 0.0) if target_missing else _source_score(target)
+    if target_missing or best_score > target_score:
         try:
-            if src.resolve() == target.resolve():
-                continue
-        except OSError:
-            pass
-        score = (src.stat().st_mtime, src.stat().st_size)
-        if score > best_score:
-            best = src
-            best_score = score
-    if best != target:
-        try:
-            shutil.copy2(best, target)
-            print(f"dam_db: zaktualizowano kanon z {best}")
+            shutil.copy2(best_src, target)
+            print(f"dam_db: scalono SQLite -> {target} (z {best_src}, users/size={best_score[0]}/{best_score[1]})")
         except OSError as exc:
             print("dam_db migrate canonical warning:", exc)
 

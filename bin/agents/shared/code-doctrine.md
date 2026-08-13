@@ -1951,3 +1951,13 @@ Skrót — **bind = dwie osobne rzeczy**:
 
 **Wersja:** `5.0.130`.
 
+#### Lekcja 2026-08-13: kanon SQLite = bin/DATABASE; dashboard thumbs vs branding (v5.0.145)
+
+**Objawy:** (1) Karty dashboardu „brak podglądu”. (2) Branding ładuje się dwa razy. (3) Baza „rozjeżdża się” — pusta kopia wygrywała z pełną 18-user. (4) Myślono, że live DB jest w `{ROOT}/DATABASE` Marketing.
+
+**Przyczyny:** (1) `dam-dashboard.js` ustawiał `DAM_DISABLE_THUMB_WARM=true` (surowe `/media`) + `viz_latest.thumb_url=""` bez `/thumb-cache`. (2) Head malował siatkę, hydrate full wywoływał `scheduleBrandingRender` / `activateTab` drugi raz. (3) Merge score `(mtime, size)` — nowszy 45 KB bił starszy 7.4 MB. (4) `canonical_db_dir()` szedł do ROOT/DATABASE.
+
+**Fix:** Live SQLite **tylko** `bin/DATABASE/dam-local.sqlite`. Merge: `(users, size, mtime)`. Dashboard: thumb-cache AVIF, fallback `/media`. Branding: `bootStarted` + skip drugiego paint gdy karty już są.
+
+**Wersja:** `5.0.145`.
+

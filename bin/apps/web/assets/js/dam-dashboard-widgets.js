@@ -5,8 +5,8 @@
   "use strict";
 
   var LAYOUT_PREFIX = "dam_dash_layout_v1:";
-  /* v3: always persist newest_products_f after newest_viz_3; reset crushed 1x4 tile */
-  var LAYOUT_VERSION = 3;
+  /* v4: third stat panel projects_in_progress next to products + month */
+  var LAYOUT_VERSION = 4;
   var registry = [];
   var draftOrder = null;
 
@@ -109,6 +109,30 @@
     return next;
   }
 
+  function migrateProjectsInProgressOrder(order) {
+    var known = {};
+    allIds().forEach(function (id) {
+      known[id] = true;
+    });
+    var next = (order || []).filter(function (id) {
+      return known[id];
+    });
+    if (!known.projects_in_progress) return next;
+    if (next.indexOf("projects_in_progress") >= 0) return next;
+    var afterMonth = next.indexOf("projects_this_month");
+    if (afterMonth >= 0) {
+      next.splice(afterMonth + 1, 0, "projects_in_progress");
+      return next;
+    }
+    var afterProd = next.indexOf("products_count");
+    if (afterProd >= 0) {
+      next.splice(afterProd + 1, 0, "projects_in_progress");
+      return next;
+    }
+    next.splice(0, 0, "projects_in_progress");
+    return next;
+  }
+
   function loadLayout() {
     defineWidgets();
     var key = LAYOUT_PREFIX + userKey();
@@ -136,6 +160,10 @@
       }
       if (order.indexOf("newest_products_f") < 0) {
         order = migrateNewestProductsFOrder(order);
+        dirty = true;
+      }
+      if (order.indexOf("projects_in_progress") < 0) {
+        order = migrateProjectsInProgressOrder(order);
         dirty = true;
       }
       if ((parsed.version || 1) < 3) {
@@ -236,33 +264,57 @@
     return count + " " + tpl;
   }
 
+  function looksLikeThumbFile(pathOrName) {
+    var name = String(pathOrName || "").split(/[/\\]/).pop() || "";
+    return /\.(png|jpe?g|webp|gif|avif|svg|tif|tiff|bmp|psd|psb|ai|pdf)$/i.test(name);
+  }
+
+  function mediaPreviewUrl(path) {
+    if (
+      global.DamPreviewTruth &&
+      typeof DamPreviewTruth.mediaPreviewUrl === "function"
+    ) {
+      return DamPreviewTruth.mediaPreviewUrl(path);
+    }
+    var p = String(path || "");
+    if (!p || !looksLikeThumbFile(p)) return "";
+    var bridge =
+      (global.DamPaths && typeof DamPaths.bridgeUrl === "function" && DamPaths.bridgeUrl()) ||
+      (global.DamRuntime && typeof DamRuntime.bridgeUrl === "function" && DamRuntime.bridgeUrl()) ||
+      "http://127.0.0.1:8766";
+    var local =
+      global.DamPaths && typeof DamPaths.toLocal === "function"
+        ? DamPaths.toLocal(p)
+        : p;
+    return bridge + "/media?path=" + encodeURIComponent(local) + "&preview=1";
+  }
+
+  function cardThumbUrl(path) {
+    if (!path || !looksLikeThumbFile(path)) return "";
+    if (
+      global.DamPreviewTruth &&
+      typeof DamPreviewTruth.thumbCacheUrl === "function"
+    ) {
+      return DamPreviewTruth.thumbCacheUrl(path, "card");
+    }
+    return mediaPreviewUrl(path);
+  }
+
   function resolveProductThumbUrl(viz, revPath, revFolder) {
     var paths = [];
     if (viz && viz.path) paths.push(String(viz.path));
-    if (viz && viz.thumb_url && String(viz.thumb_url).indexOf("placeholder") === -1) {
-      paths.push(String(viz.thumb_url));
-    }
     if (revPath) paths.push(String(revPath));
-    if (revFolder) paths.push(String(revFolder));
     if (viz && viz.revision_folder) paths.push(String(viz.revision_folder));
+    if (revFolder) paths.push(String(revFolder));
     var seen = {};
     for (var i = 0; i < paths.length; i++) {
       var path = paths[i];
       if (!path || seen[path]) continue;
       seen[path] = true;
-      var name = path.split(/[/\\]/).pop() || path;
-      if (
-        global.DamPreviewTruth &&
-        typeof DamPreviewTruth.thumbCacheUrl === "function" &&
-        isRasterPreviewPath(name || path)
-      ) {
-        var cached = DamPreviewTruth.thumbCacheUrl(path, "card");
-        if (cached) return cached;
-      }
-      var viaBridge = brandingThumbUrl({ path: path, name: name });
-      if (viaBridge) return viaBridge;
+      var cached = cardThumbUrl(path);
+      if (cached) return cached;
     }
-    return "assets/img/placeholder-product.svg";
+    return "";
   }
 
   /** B5: dashboard-only layout safety (header wrap). Tile template lives in dam-dashboard.css. */
@@ -530,7 +582,7 @@
   function isRasterPreviewPath(pathOrName) {
     var p = String(pathOrName || "");
     if (!p || /(^|[\\/])\._/.test(p)) return false;
-    return /\.(png|jpe?g|webp|gif)$/i.test(p);
+    return /\.(png|jpe?g|webp|gif|avif|svg)$/i.test(p);
   }
 
   function isBrandingLatestSourceFile(a) {
@@ -696,22 +748,9 @@
   function brandingThumbUrl(asset) {
     var path = (asset && asset.path) || "";
     if (!path) return "";
-    if (
-      global.DamPreviewTruth &&
-      typeof DamPreviewTruth.thumbCacheUrl === "function" &&
-      isRasterPreviewPath(asset.name || path)
-    ) {
-      return DamPreviewTruth.thumbCacheUrl(path, "card");
-    }
-    var bridge =
-      (global.DamPaths && typeof DamPaths.bridgeUrl === "function" && DamPaths.bridgeUrl()) ||
-      (global.DamRuntime && typeof DamRuntime.bridgeUrl === "function" && DamRuntime.bridgeUrl()) ||
-      "http://127.0.0.1:8766";
-    var local =
-      global.DamPaths && typeof DamPaths.toLocal === "function"
-        ? DamPaths.toLocal(path)
-        : path;
-    return bridge + "/media?path=" + encodeURIComponent(local);
+    var cached = cardThumbUrl(path);
+    if (cached) return cached;
+    return mediaPreviewUrl(path);
   }
 
   /** Honest PL placeholder (never Synology Drive lie). */
@@ -742,8 +781,21 @@
       if (img._damHonestThumb) return;
       img._damHonestThumb = true;
       img.addEventListener("error", function () {
-        if (img.dataset.damThumbFallback === "1") return;
-        img.dataset.damThumbFallback = "1";
+        var path =
+          img.getAttribute("data-path") ||
+          img.getAttribute("data-media-path") ||
+          "";
+        if (img.dataset.damThumbFallback !== "1" && path) {
+          var live = mediaPreviewUrl(path);
+          if (live && live !== img.getAttribute("src")) {
+            img.dataset.damThumbFallback = "1";
+            img.removeAttribute("srcset");
+            img.src = live;
+            return;
+          }
+        }
+        if (img.dataset.damThumbFallback === "2") return;
+        img.dataset.damThumbFallback = "2";
         img.removeAttribute("srcset");
         img.src = ph;
         img.alt = title;
@@ -1572,6 +1624,38 @@
     return diskLit === "F";
   }
 
+  function revisionHasFinalOrFq(rev) {
+    if (!rev) return false;
+    if (letterFromFolderName(rev.path || "") === "F") return true;
+    if (letterFromFolderName(rev.folder || "") === "F") return true;
+    var blob = String(rev.folder || "") + " " + String(rev.path || "");
+    var fbr = rev.files_by_role || {};
+    Object.keys(fbr).forEach(function (k) {
+      (fbr[k] || []).forEach(function (f) {
+        if (typeof f === "string") blob += " " + f;
+        else blob += " " + String((f && (f.name || f.path || f.file)) || "");
+      });
+    });
+    (rev.wizki || []).forEach(function (w) {
+      blob += " " + String((w && (w.name || w.path || w.file)) || "");
+    });
+    if (/\bFQ(?:[-_.]|\b)/i.test(blob)) return true;
+    if (/\s-\sF(?:\s|$|[\\/])/i.test(blob)) return true;
+    return false;
+  }
+
+  function countProjectsInProgress(ctx) {
+    var products = (ctx.fileIndex && ctx.fileIndex.products) || [];
+    var n = 0;
+    products.forEach(function (prod) {
+      var pid = prod.id || "";
+      var name = prod.display_name || prod.name || pid;
+      if (/test-lifecycle/i.test(pid) || /^test\b/i.test(name)) return;
+      if (!((prod.revisions || []).some(revisionHasFinalOrFq))) n += 1;
+    });
+    return n;
+  }
+
   function flattenProductTags(prod) {
     var tags = prod && prod.tags;
     if (!tags || typeof tags !== "object") return [];
@@ -1684,7 +1768,19 @@
         ? "Otworz produkt w Eksplorerze"
         : "Otworz wizualizacje produktu";
     var primaryTitle = linkTarget === "explorer" ? "Eksplorer" : "Wizualizacje";
-    var thumb = v.thumb_url || "assets/img/placeholder-product.svg";
+    var thumbSrc = "";
+    if (
+      v.thumb_url &&
+      String(v.thumb_url).indexOf("placeholder") === -1 &&
+      (String(v.thumb_url).indexOf("/thumb-cache") >= 0 ||
+        String(v.thumb_url).indexOf("/media?") >= 0)
+    ) {
+      thumbSrc = v.thumb_url;
+    }
+    if (!thumbSrc && path && looksLikeThumbFile(path)) {
+      thumbSrc = cardThumbUrl(path);
+    }
+    if (!thumbSrc) thumbSrc = brandingThumbPlaceholderDataUri();
     var winIcon =
       global.DamIcons && typeof DamIcons.winExplorerSvg === "function"
         ? DamIcons.winExplorerSvg()
@@ -1747,7 +1843,9 @@
       escapeHtml(primaryTip) +
       '">' +
       '<img class="dam-widget__thumb" src="' +
-      escapeHtml(thumb) +
+      escapeHtml(thumbSrc) +
+      '" data-path="' +
+      escapeHtml(path) +
       '" alt="' +
       escapeHtml(name) +
       '" loading="lazy" />' +
@@ -1971,6 +2069,11 @@
       label: "Projekty w tym miesiącu",
       description:
         "Ile nowych lub aktywnych projektow / wizualizacji pojawilo sie w biezacym miesiącu."
+    },
+    projects_in_progress: {
+      label: "Projekty w toku",
+      description:
+        "Definicja robocza: ile produktów w indeksie nie ma jeszcze pliku F / FQ (folder „ - F” albo PDF/ZIP FQ). Do doprecyzowania."
     },
     newest_viz_3: {
       label: "Najnowsze wizualizacje produktów",
@@ -2423,6 +2526,26 @@
         }
       },
       {
+        id: "projects_in_progress",
+        title: t("dash.widget.projects_wip", "W toku"),
+        size: "sm",
+        defaultOn: true,
+        render: function (el, ctx) {
+          var n = countProjectsInProgress(ctx);
+          el.outerHTML = shell(
+            this,
+            statBody(
+              n,
+              t(
+                "dash.widget.projects_wip_meta",
+                "Bez pliku F / FQ (definicja robocza)"
+              )
+            ),
+            "dam-widget--stat dam-widget--fill-info"
+          );
+        }
+      },
+      {
         id: "newest_viz_3",
         title: t("dash.widget.newest_viz", "Najnowsze wizualizacje"),
         size: "md",
@@ -2707,6 +2830,8 @@
                         (g.hasSafeCover ? "" : " dam-widget__thumb--fallback") +
                         '" src="' +
                         escapeHtml(thumb) +
+                        '" data-path="' +
+                        escapeHtml(a.path || "") +
                         '" alt="' +
                         escapeHtml(g.label) +
                         '" loading="lazy" />' +
@@ -3759,7 +3884,7 @@
 
     if (!needsRepair && !dashBentoItemsOverlap(items)) return false;
 
-    ["products_count", "asana_open", "projects_this_month"].forEach(function (sid, idx) {
+    ["products_count", "projects_this_month", "projects_in_progress"].forEach(function (sid, idx) {
       if (!items[sid]) return;
       items[sid] = { c: 1 + idx * 3, r: 1, w: 3, h: 3 };
     });
@@ -4394,6 +4519,7 @@
       case "checklists_ok":
       case "checklists_gap":
       case "projects_this_month":
+      case "projects_in_progress":
       case "tasks_overdue":
       case "viz_flags":
       case "missing_thumbs":

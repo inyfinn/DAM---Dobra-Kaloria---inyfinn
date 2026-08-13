@@ -1,3 +1,13 @@
+## 2026-08-13 - v5.0.145: bin/DATABASE kanon, dashboard thumbs, branding raz, W toku
+
+**Komenda/Akcja:** User zly: dashboard bez grafik, branding 2x, trzeci panel, baza rozjezdzala sie. Potem korekta: live SQLite TYLKO bin/DATABASE (nie D:\Marketing\DATABASE).
+
+**Log/Status:** `canonical_db_dir` = `bin/DATABASE`; merge (users, size, mtime); usunieto `DAM_DISABLE_THUMB_WARM`; karty `/thumb-cache` + fallback `/media`; branding `bootStarted` + skip hydrate re-paint; widget `projects_in_progress`.
+
+**Efekt/Fix:** Kanon DB w projekcie DAM; karty AVIF; branding raz; panel „Bez pliku F / FQ (definicja robocza)”. Start: DAM.exe / URUCHOM-DAM.bat.
+
+**Źródła:** dam_db.py, dam-dashboard.js, dam-dashboard-widgets.js, dam-branding.js, dam-preview-truth.js, DATABASE/README.md
+
 ## 2026-07-30 - deploy Panel-DAM Synology + commit v5.0.121
 
 **Komenda/Akcja:** User: commit+push; hostowac Panel-DAM na inyfinn.synology.me (web folder NAS).

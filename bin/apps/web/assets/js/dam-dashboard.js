@@ -297,8 +297,10 @@
     if (window.__DAM_DASH_INIT__) return;
     window.__DAM_DASH_INIT__ = true;
 
-    /* Tymczasowo: bez warm Redis/RAM — bezposrednie /media na kartach. */
-    window.DAM_DISABLE_THUMB_WARM = true;
+    /* Karty: /thumb-cache AVIF (PAMIEC-PODRECZNA), potem /media. Nie wylaczac cache. */
+    if (window.DAM_DISABLE_THUMB_WARM === true) {
+      window.DAM_DISABLE_THUMB_WARM = false;
+    }
 
     var ctxRef = { current: {} };
     wireCustomize(ctxRef);
