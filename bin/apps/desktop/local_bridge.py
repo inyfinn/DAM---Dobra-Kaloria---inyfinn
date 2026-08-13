@@ -6368,6 +6368,22 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/db/ping":
             self._json(200, dam_db.ping() if dam_db else {"ok": False, "error": "dam_db_missing"})
             return
+        if parsed.path == "/db/path":
+            if not dam_db:
+                self._json(500, {"ok": False, "error": "dam_db_missing"})
+                return
+            root = dam_db.resolve_marketing_root()
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "path": str(dam_db.db_path()),
+                    "dir": str(dam_db.canonical_db_dir()),
+                    "marketing_root": str(root) if root else "",
+                    "source": "marketing-root" if root else "bin-fallback",
+                },
+            )
+            return
         if parsed.path == "/telemetry/tail":
             qs = parse_qs(parsed.query)
             limit = int((qs.get("limit") or ["100"])[0] or 100)

@@ -4,13 +4,14 @@ Oficjalna baza DAM ETA: **PostgreSQL 16** na Synology (kontener `dam-eta-postgre
 
 ## Lokalny SQLite (offline / mirror)
 
-**Kanoniczna sciezka:** `bin/DATABASE/dam-local.sqlite` (gitignored).
+**Kanoniczna sciezka:** `{ROOT}/DATABASE/dam-local.sqlite`
 
-- Konta, sesje, audit, assoc — jeden plik, zawsze tutaj.
-- `users-seed.sqlite` w tym samym folderze — seed 18 kont przy pustej instalacji.
-- Stara sciezka `apps/desktop/data/dam-local.sqlite` jest migrowana automatycznie przy starcie.
+- `ROOT` = folder Marketing wybrany per uzytkownik/urzadzenie (`machine-config.json`, `user-device-paths`).
+- Przy starcie aplikacja **scala** kopie z `bin/DATABASE/`, `apps/desktop/data/` i legacy `.dam-eta/`.
+- Gdy ROOT nie jest ustawiony: fallback `bin/DATABASE/dam-local.sqlite`.
+- Zapisow kolejkowane per konto (`db_user_queue.py`).
 
-## Co tu lezy
+## Co tu lezy (repo bin/DATABASE)
 
 Pliki `dam_eta_YYYY-MM-DD.sql.gz` - wynik `pg_dump` (pelny dump logiczny, nie surowy katalog PGDATA).
 

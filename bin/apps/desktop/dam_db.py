@@ -29,12 +29,12 @@ DATA_DIR = DESKTOP_DIR / "data"
 CONTENT_ROOT = DESKTOP_DIR.parent.parent
 GIT_ROOT = CONTENT_ROOT.parent
 REPO_DATABASE = CONTENT_ROOT / "DATABASE"
-# Kanon lokalnej bazy SQLite — ZAWSZE bin/DATABASE/dam-local.sqlite (nie apps/desktop/data).
-DB_CANONICAL = REPO_DATABASE / "dam-local.sqlite"
+DB_REPO = REPO_DATABASE / "dam-local.sqlite"
 DB_LEGACY_DESKTOP = DATA_DIR / "dam-local.sqlite"
 DB_LEGACY_AUTH = DATA_DIR / "dam-auth.sqlite"
 USERS_SEED = REPO_DATABASE / "users-seed.sqlite"
 _LEGACY_MARKETING_REL = Path(".dam-eta") / "dam-shared.sqlite"
+_LEGACY_MARKETING_DB = Path("DATABASE") / "dam-local.sqlite"
 MACHINE_CONFIG = DESKTOP_DIR / "machine-config.json"
 PREFER_PATH = DATA_DIR / "db-prefer.json"
 SYNC_SCRIPT = DESKTOP_DIR / "scripts" / "sync-database-backups-to-git.py"
@@ -58,7 +58,7 @@ _OFFLINE_HINT = (
     "CGNAT / nie zamknął NAT przy zmiennym IP - wtedy DDNS może wskazywać "
     "zły adres mimo poprawnej konfiguracji serwera. "
     "Aplikacja działa w trybie OFFLINE na lokalnym SQLite "
-    "(bin/DATABASE/dam-local.sqlite). "
+    "(ROOT/DATABASE/dam-local.sqlite — ROOT = wybrany folder Marketing). "
     "Backup/dump: folder DATABASE/ w repo (GitHub) oraz "
     "X:/Marketing/- POLSKA/99 - WYMIANA/Krzysztof/CURSOR/Database DAM."
 )
@@ -191,6 +191,61 @@ def latest_database_dump() -> Path | None:
     return files[-1] if files else None
 
 
+def _marketing_root_from_udp() -> Path | None:
+    """ROOT z user-device-paths (biezacy hostname) — bez logowania."""
+    udp = DATA_DIR / "user-device-paths.json"
+    if not udp.is_file():
+        return None
+    try:
+        import socket
+
+        data = json.loads(udp.read_text(encoding="utf-8"))
+        host = (socket.gethostname() or "").strip().lower()
+        users = data.get("users") if isinstance(data, dict) else {}
+        if not isinstance(users, dict):
+            return None
+        for _email, payload in users.items():
+            if not isinstance(payload, dict):
+                continue
+            for dev in payload.get("devices") or []:
+                if not isinstance(dev, dict):
+                    continue
+                h = str(dev.get("hostname") or "").strip().lower()
+                base = str(dev.get("base_path") or "").strip()
+                if base and (not host or h == host):
+                    p = Path(base)
+                    if p.is_dir():
+                        return p
+    except (OSError, json.JSONDecodeError, TypeError):
+        return None
+    return None
+
+
+def resolve_marketing_root() -> Path | None:
+    """ROOT Marketing wybrany przez uzytkownika (machine-config / user-device-paths)."""
+    for resolver in (_marketing_base_from_config, _marketing_root_from_udp):
+        base = resolver()
+        if base is not None:
+            return base
+    return None
+
+
+def canonical_db_dir() -> Path:
+    """Katalog bazy: ROOT/DATABASE gdy ROOT ustawiony, inaczej bin/DATABASE."""
+    root = resolve_marketing_root()
+    if root is not None:
+        return root / "DATABASE"
+    return REPO_DATABASE
+
+
+def canonical_db_path() -> Path:
+    return canonical_db_dir() / "dam-local.sqlite"
+
+
+# Back-compat alias (dynamiczny — nie uzywac przed db_path()).
+DB_CANONICAL = DB_REPO
+
+
 def _marketing_base_from_config() -> Path | None:
     if not MACHINE_CONFIG.is_file():
         return None
@@ -243,12 +298,21 @@ def _copy_if_newer_or_missing(src: Path, dst: Path) -> bool:
 
 
 def _migrate_sqlite_canonical() -> None:
-    """Jedna kanoniczna sciezka: bin/DATABASE/dam-local.sqlite. Migruj ze starych lokalizacji."""
+    """Kanon: ROOT/DATABASE/dam-local.sqlite. Scal kopie z bin/DATABASE i legacy."""
+    target = canonical_db_path()
+    target.parent.mkdir(parents=True, exist_ok=True)
     REPO_DATABASE.mkdir(parents=True, exist_ok=True)
+
     old_seed = DATA_DIR / "users-seed.sqlite"
-    if old_seed.is_file() and not USERS_SEED.is_file():
+    seed_dst = canonical_db_dir() / "users-seed.sqlite"
+    if not seed_dst.is_file() and USERS_SEED.is_file():
         try:
-            shutil.copy2(old_seed, USERS_SEED)
+            shutil.copy2(USERS_SEED, seed_dst)
+        except OSError:
+            pass
+    if old_seed.is_file() and not seed_dst.is_file():
+        try:
+            shutil.copy2(old_seed, seed_dst)
         except OSError:
             pass
 
@@ -257,32 +321,57 @@ def _migrate_sqlite_canonical() -> None:
         sources.append(DB_LEGACY_AUTH)
     if DB_LEGACY_DESKTOP.is_file():
         sources.append(DB_LEGACY_DESKTOP)
-    base = _marketing_base_from_config()
-    if base is not None:
-        legacy_shared = base / _LEGACY_MARKETING_REL
+    if DB_REPO.is_file():
+        sources.append(DB_REPO)
+    root = resolve_marketing_root()
+    if root is not None:
+        legacy_shared = root / _LEGACY_MARKETING_REL
         if legacy_shared.is_file():
             sources.append(legacy_shared)
+        root_db = root / _LEGACY_MARKETING_DB
+        if root_db.is_file():
+            sources.append(root_db)
 
-    if not DB_CANONICAL.is_file() or DB_CANONICAL.stat().st_size == 0:
+    if not target.is_file() or target.stat().st_size == 0:
+        best_src: Path | None = None
+        best_score = (0.0, 0)
         for src in sources:
-            if _copy_if_newer_or_missing(src, DB_CANONICAL):
-                print(f"dam_db: zmigrowano SQLite -> {DB_CANONICAL}")
-                return
+            if not src.is_file():
+                continue
+            try:
+                if src.resolve() == target.resolve():
+                    continue
+            except OSError:
+                pass
+            score = (src.stat().st_mtime, src.stat().st_size)
+            if score > best_score:
+                best_src = src
+                best_score = score
+        if best_src is not None:
+            try:
+                shutil.copy2(best_src, target)
+                print(f"dam_db: scalono SQLite -> {target} (z {best_src})")
+            except OSError as exc:
+                print("dam_db migrate canonical warning:", exc)
         return
 
-    # Kanon istnieje — jesli stara kopia nowsza/wieksza, podnies do DATABASE/
-    best = DB_CANONICAL
+    best = target
     best_score = (best.stat().st_mtime, best.stat().st_size)
     for src in sources:
-        if not src.is_file() or src.resolve() == DB_CANONICAL.resolve():
+        if not src.is_file():
             continue
+        try:
+            if src.resolve() == target.resolve():
+                continue
+        except OSError:
+            pass
         score = (src.stat().st_mtime, src.stat().st_size)
         if score > best_score:
             best = src
             best_score = score
-    if best is not DB_CANONICAL:
+    if best != target:
         try:
-            shutil.copy2(best, DB_CANONICAL)
+            shutil.copy2(best, target)
             print(f"dam_db: zaktualizowano kanon z {best}")
         except OSError as exc:
             print("dam_db migrate canonical warning:", exc)
@@ -298,8 +387,7 @@ def db_path() -> Path:
     if _RESOLVED_PATH is not None:
         return _RESOLVED_PATH
     _migrate_into_repo()
-    REPO_DATABASE.mkdir(parents=True, exist_ok=True)
-    _RESOLVED_PATH = DB_CANONICAL
+    _RESOLVED_PATH = canonical_db_path()
     return _RESOLVED_PATH
 
 

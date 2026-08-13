@@ -1,9 +1,9 @@
 {
-  "version": "5.0.143",
+  "version": "5.0.144",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-08-13",
-  "note": "5.0.143: sprawdzanie wersji przy starcie (signin bez logowania), portable=restart DAM.exe.",
+  "note": "5.0.144: baza w ROOT/DATABASE (Marketing), URUCHOM-DAM.bat, kolejka zapisow per user.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

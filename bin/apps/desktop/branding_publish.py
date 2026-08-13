@@ -25,6 +25,9 @@ def canonical_sqlite_path(
     desktop_dir: Path | None = None,
 ) -> Path:
     if dam_db_module is not None:
+        fn = getattr(dam_db_module, "canonical_db_path", None)
+        if callable(fn):
+            return Path(fn())
         p = getattr(dam_db_module, "DB_CANONICAL", None)
         if p is not None:
             return Path(p)
