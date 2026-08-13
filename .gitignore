@@ -26,6 +26,7 @@
 # Lokalna baza kont (hashe bcrypt) - nie commitowac
 bin/apps/desktop/data/*.sqlite
 bin/apps/desktop/data/*.sqlite-*
+!bin/apps/desktop/data/users-seed.sqlite
 bin/apps/desktop/data/backup*/
 bin/apps/desktop/data/backups*/
 bin/apps/desktop/data/bound-session.json

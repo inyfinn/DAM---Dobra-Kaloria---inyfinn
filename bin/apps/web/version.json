@@ -1,9 +1,9 @@
 {
-  "version": "5.0.140",
+  "version": "5.0.141",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
-  "released_at": "2026-08-12",
-  "note": "5.0.140: handoff/LOGI — Synology:5433 down z biura; kontynuacja w domu po pull. 5.0.139: zero legacy JPG, AVIF only.",
+  "released_at": "2026-08-13",
+  "note": "5.0.141: login tylko email+haslo, bez backdoora admina, seed 18 kont przy pustej bazie.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

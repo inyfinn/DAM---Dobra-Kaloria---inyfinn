@@ -143,7 +143,7 @@ except ImportError:
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
-BRIDGE_API_VERSION = 7
+BRIDGE_API_VERSION = 8
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
@@ -6263,9 +6263,9 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, read_user_prefs(email))
             return
         if parsed.path == "/auth/registration-open":
-            # Publiczny (localhost): czy UI moze pokazac "Utworz konto".
+            # Publiczna rejestracja wylaczona — konta zaklada admin (ustawienia) lub Cursor.
             n = users_count()
-            self._json(200, {"ok": True, "open": n == 0, "users": n})
+            self._json(200, {"ok": True, "open": False, "users": n})
             return
         if parsed.path == "/auth/identity":
             try:
@@ -7180,12 +7180,10 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if res.get("ok") else 401, res)
             return
         if parsed.path == "/auth/register":
-            # Bootstrap: pierwsze konto w systemie (zawsze role=admin).
-            # Potem: tylko admin moze zakladac konta (wczesniej kazdy lokalny mogl).
+            # Tylko zalogowany admin moze zakladac konta (panel ustawien / zarzadzanie kontami).
             admin = self._session_user()
             is_admin = bool(admin and (admin.get("role") or "") == "admin")
-            bootstrap = users_count() == 0
-            if not bootstrap and not is_admin:
+            if not is_admin:
                 self._json(
                     403,
                     {
@@ -7196,10 +7194,6 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 return
             requested_role = (data.get("role") or "user").strip().lower()
-            if bootstrap:
-                requested_role = "admin"
-            elif not is_admin:
-                requested_role = "user"
             if requested_role not in ("admin", "power_user", "user"):
                 requested_role = "user"
             self._json(

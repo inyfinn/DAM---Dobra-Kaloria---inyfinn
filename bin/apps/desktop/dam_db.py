@@ -28,6 +28,7 @@ DESKTOP_DIR = Path(__file__).resolve().parent
 DATA_DIR = DESKTOP_DIR / "data"
 DB_CANONICAL = DATA_DIR / "dam-local.sqlite"
 DB_LEGACY_AUTH = DATA_DIR / "dam-auth.sqlite"
+USERS_SEED = DATA_DIR / "users-seed.sqlite"
 _LEGACY_MARKETING_REL = Path(".dam-eta") / "dam-shared.sqlite"
 MACHINE_CONFIG = DESKTOP_DIR / "machine-config.json"
 PREFER_PATH = DATA_DIR / "db-prefer.json"
@@ -305,6 +306,53 @@ def connect():
     return _connect_sqlite()
 
 
+def _restore_users_from_seed() -> int:
+    """Gdy lokalny SQLite nie ma pelnego zestawu kont - wczytaj/uzupelnij z seed."""
+    if not USERS_SEED.is_file():
+        return 0
+    sq = _connect_sqlite()
+    try:
+        n = int(sq.execute("SELECT COUNT(*) AS c FROM users").fetchone()["c"])
+        seed = sqlite3.connect(str(USERS_SEED))
+        seed.row_factory = sqlite3.Row
+        try:
+            rows = seed.execute(
+                """
+                SELECT email, name, role, password_hash, auth_provider, created_at, updated_at
+                FROM users
+                """
+            ).fetchall()
+        finally:
+            seed.close()
+        if not rows:
+            return 0
+        if n >= len(rows):
+            return 0
+        restored = 0
+        for u in rows:
+            sq.execute(
+                """
+                INSERT INTO users (email, name, role, password_hash, auth_provider, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(email) DO UPDATE SET
+                  name=excluded.name, role=excluded.role,
+                  password_hash=excluded.password_hash, updated_at=excluded.updated_at
+                """,
+                (
+                    u["email"], u["name"], u["role"], u["password_hash"],
+                    u["auth_provider"], u["created_at"], u["updated_at"],
+                ),
+            )
+            restored += 1
+        sq.commit()
+        return restored
+    except Exception as exc:  # noqa: BLE001
+        print("dam_db restore users seed warning:", exc)
+        return 0
+    finally:
+        sq.close()
+
+
 def _init_sqlite() -> dict[str, Any]:
     conn = _connect_sqlite()
     try:
@@ -379,6 +427,9 @@ def _init_sqlite() -> dict[str, Any]:
             if name not in cols:
                 conn.execute(sql)
         conn.commit()
+        restored = _restore_users_from_seed()
+        if restored:
+            print(f"dam_db: przywrocono {restored} kont z users-seed.sqlite")
         path = db_path()
         dump = latest_database_dump()
         return {
@@ -391,6 +442,7 @@ def _init_sqlite() -> dict[str, Any]:
             "offline_reason": _OFFLINE_REASON,
             "offline_hint": _OFFLINE_HINT if _OFFLINE_MODE else "",
             "github_dump": str(dump) if dump else None,
+            "users_restored_from_seed": restored,
         }
     finally:
         conn.close()

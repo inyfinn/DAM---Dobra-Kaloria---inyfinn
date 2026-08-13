@@ -101,6 +101,14 @@ foreach ($name in $keepData) {
 }
 New-Item -ItemType Directory -Force -Path (Join-Path $webDataDst "thumbs") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $binDst "apps\desktop\data") | Out-Null
+$usersSeedSrc = Join-Path $BinRoot "apps\desktop\data\users-seed.sqlite"
+$usersSeedDst = Join-Path $binDst "apps\desktop\data\users-seed.sqlite"
+if (Test-Path -LiteralPath $usersSeedSrc) {
+  Copy-Item -LiteralPath $usersSeedSrc -Destination $usersSeedDst -Force
+  Write-Host "Shipped users-seed.sqlite ($((Get-Item $usersSeedSrc).Length) bytes)"
+} else {
+  Write-Warning "Brak users-seed.sqlite - swieza instalacja bez kont!"
+}
 Set-Content -Path (Join-Path $webDataDst "branding-index.json") -Value '{"version":1,"items":[],"note":"empty-shipped-installer"}' -Encoding UTF8
 
 $readmeSrc = Join-Path $BinRoot "installer\README.txt"

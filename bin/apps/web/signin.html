@@ -136,11 +136,7 @@
       font-size: 14px;
       text-align: center;
       text-transform: none;
-    }
-    /* Geex .form-group { display:flex } wygrywa nad atrybutem hidden — login bez imienia */
-    #nameWrap[hidden],
-    #nameWrap.dam-auth-hidden {
-      display: none !important;
+      color: var(--body-color, #464255);
     }
   </style>
 </head>
@@ -159,19 +155,8 @@
           <form id="damAuthForm" class="geex-content__authentication__form" autocomplete="on">
             <h2 class="geex-content__authentication__title">Witaj w DAM</h2>
             <p class="geex-content__authentication__subtitle">
-              Zaloguj się kontem firmowym. Możesz wylogować się w menu użytkownika.
+              Zaloguj się kontem firmowym (email i hasło).
             </p>
-
-            <div class="dam-auth-mode" id="authModeTabs" role="tablist" aria-label="Tryb konta" hidden>
-              <button type="button" class="is-active" id="tabLogin" data-tab="login">Zaloguj</button>
-              <button type="button" id="tabRegister" data-tab="register">Utworz konto</button>
-            </div>
-
-            <div class="geex-content__authentication__form-group dam-auth-hidden" id="nameWrap" hidden>
-              <label for="authName">Imie i nazwisko</label>
-              <input type="text" id="authName" name="name" placeholder="np. Jan Kowalski" autocomplete="name">
-              <i class="uil-user" aria-hidden="true"></i>
-            </div>
 
             <div class="geex-content__authentication__form-group">
               <label for="authEmail">Email</label>
@@ -204,7 +189,7 @@
             <p class="dam-auth-msg" id="authMsg" role="status" aria-live="polite"></p>
 
             <div class="geex-content__authentication__form-footer" id="authFooter">
-              Nie masz konta. Poproś administratora o dostęp.
+              Nie masz konta? Poproś administratora o dostęp.
             </div>
           </form>
         </div>
@@ -220,75 +205,10 @@
   <script src="./assets/js/dam-api.js?v=restore20260805c"></script>
   <script>
     (function () {
-      var mode = "login";
-      var registrationOpen = false;
-      var tabLogin = document.getElementById("tabLogin");
-      var tabRegister = document.getElementById("tabRegister");
-      var modeTabs = document.getElementById("authModeTabs");
-      var nameWrap = document.getElementById("nameWrap");
       var submitBtn = document.getElementById("authSubmit");
       var msg = document.getElementById("authMsg");
       var pass = document.getElementById("authPassword");
-      var footer = document.getElementById("authFooter");
       var toggle = document.getElementById("togglePassword");
-
-      function setMode(m) {
-        if (m === "register" && !registrationOpen) {
-          m = "login";
-        }
-        mode = m;
-        tabLogin.classList.toggle("is-active", m === "login");
-        tabRegister.classList.toggle("is-active", m === "register");
-        tabLogin.setAttribute("aria-selected", m === "login" ? "true" : "false");
-        tabRegister.setAttribute("aria-selected", m === "register" ? "true" : "false");
-        nameWrap.hidden = m !== "register";
-        nameWrap.classList.toggle("dam-auth-hidden", m !== "register");
-        pass.autocomplete = m === "register" ? "new-password" : "current-password";
-        pass.minLength = m === "register" ? 8 : 4;
-        pass.setAttribute("minlength", m === "register" ? "8" : "4");
-        submitBtn.textContent = m === "register" ? "Utworz konto" : "Zaloguj";
-        if (registrationOpen) {
-          footer.innerHTML = m === "register"
-            ? 'Masz juz konto. <a href="#" id="switchToLogin">Zaloguj się</a>'
-            : 'Pierwsze uruchomienie: <a href="#" id="switchToRegister">Utworz konto admina</a>';
-          var link = footer.querySelector("a");
-          if (link) {
-            link.addEventListener("click", function (e) {
-              e.preventDefault();
-              setMode(m === "register" ? "login" : "register");
-            });
-          }
-        } else {
-          footer.textContent = "Nie masz konta. Poproś administratora o dostęp.";
-        }
-        msg.textContent = "";
-        msg.className = "dam-auth-msg";
-      }
-
-      function applyRegistrationPolicy(open) {
-        registrationOpen = !!open;
-        modeTabs.hidden = !registrationOpen;
-        setMode("login");
-      }
-
-      /* Domyślnie produkcja: rejestracja ukryta; bootstrap tylko gdy API mowi open. */
-      applyRegistrationPolicy(false);
-      try {
-        var base = (window.DamRuntime && typeof DamRuntime.bridgeUrl === "function")
-          ? DamRuntime.bridgeUrl()
-          : "http://127.0.0.1:8766";
-        fetch(String(base).replace(/\/$/, "") + "/auth/registration-open", { cache: "no-store" })
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            if (data && data.ok && data.open === true) {
-              applyRegistrationPolicy(true);
-            }
-          })
-          .catch(function () { /* zostaw ukryte */ });
-      } catch (_e) { /* zostaw ukryte */ }
-
-      tabLogin.addEventListener("click", function () { setMode("login"); });
-      tabRegister.addEventListener("click", function () { setMode("register"); });
 
       function flipPassword() {
         var show = pass.type === "password";
@@ -313,29 +233,19 @@
           msg.textContent = "Brak polaczenia z aplikacja. Uruchom DAM z pulpitu.";
           return;
         }
-        if (mode === "register" && !registrationOpen) {
-          msg.className = "dam-auth-msg is-err";
-          msg.textContent = "Rejestracja publiczna wyłączona. Poproś administratora.";
-          return;
-        }
         var email = (document.getElementById("authEmail").value || "").trim();
         var password = pass.value || "";
-        var name = (document.getElementById("authName").value || "").trim();
         submitBtn.disabled = true;
         msg.className = "dam-auth-msg";
-        msg.textContent = mode === "register" ? "Tworzenie konta..." : "Logowanie...";
+        msg.textContent = "Logowanie...";
 
-        var p = mode === "register"
-          ? DamApi.register(email, password, name)
-          : DamApi.login(email, password);
-
-        p.then(function () {
+        DamApi.login(email, password).then(function () {
           msg.className = "dam-auth-msg is-ok";
           msg.textContent = "Zalogowano. Przekierowanie...";
           setTimeout(function () { location.replace("dashboard.html"); }, 300);
         }).catch(function (err) {
           msg.className = "dam-auth-msg is-err";
-          msg.textContent = (err && err.message) || "Nie udalo sie zalogowac";
+          msg.textContent = (err && err.message) || "Nieprawidlowy email lub haslo.";
           submitBtn.disabled = false;
         });
       });
