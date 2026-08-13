@@ -13,6 +13,8 @@ from typing import Any
 
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = DESKTOP_DIR.parent / "web"
+CONTENT_ROOT = DESKTOP_DIR.parent.parent
+GIT_ROOT = CONTENT_ROOT.parent
 VERSION_JSON = WEB_ROOT / "version.json"
 STATE_PATH = DESKTOP_DIR / "data" / "update-check-state.json"
 PREFS_PATH = DESKTOP_DIR / "data" / "update-prefs.json"
@@ -20,7 +22,7 @@ PREFS_PATH = DESKTOP_DIR / "data" / "update-prefs.json"
 DEFAULT_REPO = "inyfinn/DAM---Dobra-Kaloria---inyfinn"
 DEFAULT_ASSET = "DAM-Setup.exe"
 CHECK_INTERVAL_SEC = 5 * 3600
-_STARTUP_DELAY_SEC = 60
+_STARTUP_DELAY_SEC = 0
 
 _LOCK = threading.Lock()
 _SCHEDULER_STARTED = False
@@ -103,6 +105,14 @@ def _github_latest(repo: str) -> dict[str, Any]:
         return json.loads(resp.read().decode("utf-8"))
 
 
+def is_portable_repo() -> bool:
+    """DAM.exe + bin/ w jednym GIT_ROOT — bez instalatora, restart DAM.exe."""
+    try:
+        return (GIT_ROOT / ".git").is_dir() or (GIT_ROOT / ".git").is_file()
+    except OSError:
+        return False
+
+
 def check_for_updates(force: bool = False) -> dict[str, Any]:
     cfg = load_update_config()
     repo = str(cfg.get("github_repo") or DEFAULT_REPO)
@@ -117,6 +127,8 @@ def check_for_updates(force: bool = False) -> dict[str, Any]:
         "release_notes": "",
         "published_at": "",
         "checked_at": time.time(),
+        "portable": is_portable_repo(),
+        "update_mode": "restart_exe",
     }
     try:
         rel = _github_latest(repo)
@@ -195,8 +207,19 @@ def download_and_launch_installer(download_url: str) -> dict[str, Any]:
         return {"ok": False, "error": str(exc)}
 
 
+def check_on_startup() -> dict[str, Any]:
+    """Natychmiastowe sprawdzenie wersji przy starcie DAM (przed logowaniem)."""
+    try:
+        return check_for_updates(force=True)
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
 def _scheduler_loop() -> None:
-    time.sleep(_STARTUP_DELAY_SEC)
+    try:
+        check_on_startup()
+    except Exception:
+        pass
     while True:
         prefs = load_prefs()
         if prefs.get("auto_check", True):

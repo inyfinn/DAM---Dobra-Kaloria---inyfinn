@@ -1,9 +1,9 @@
 {
-  "version": "5.0.142",
+  "version": "5.0.143",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-08-13",
-  "note": "5.0.142: kanon SQLite w bin/DATABASE/, cleanup root dist/installer, mirror PG co 60s.",
+  "note": "5.0.143: sprawdzanie wersji przy starcie (signin bez logowania), portable=restart DAM.exe.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

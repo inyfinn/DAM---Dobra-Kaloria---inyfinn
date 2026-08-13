@@ -1104,6 +1104,12 @@
       }
       if (installBtn) {
         installBtn.hidden = !lastCheck.update_available;
+        if (lastCheck.portable) {
+          installBtn.textContent = "Uruchom ponownie DAM.exe";
+          installBtn.title = "Zamknij aplikacje i kliknij DAM.exe w folderze projektu";
+        } else {
+          installBtn.textContent = "Pobierz i zainstaluj";
+        }
       }
     }
 
@@ -1141,6 +1147,12 @@
     }
     if (installBtn) {
       installBtn.addEventListener("click", function () {
+        if (lastCheck && lastCheck.portable) {
+          if (window.DamNotify) {
+            DamNotify.info("Zamknij DAM i uruchom ponownie DAM.exe z folderu projektu.");
+          }
+          return;
+        }
         installBtn.disabled = true;
         fetch(bridge() + "/app-update/apply", {
           method: "POST",

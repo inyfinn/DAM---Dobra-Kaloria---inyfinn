@@ -3035,6 +3035,13 @@
       window.DamTelemetry.start();
     }
 
+    // Wersja + aktualizacje (takze przed logowaniem na signin)
+    if (!window.DamAppUpdate) {
+      var upd = document.createElement("script");
+      upd.src = "assets/js/dam-app-update.js?v=5.0.143";
+      document.head.appendChild(upd);
+    }
+
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
