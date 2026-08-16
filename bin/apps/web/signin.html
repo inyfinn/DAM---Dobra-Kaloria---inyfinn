@@ -154,14 +154,14 @@
 
           <form id="damAuthForm" class="geex-content__authentication__form" autocomplete="on">
             <h2 class="geex-content__authentication__title">Witaj w DAM</h2>
-            <p class="geex-content__authentication__subtitle">
-              Zaloguj się kontem firmowym (email i hasło).
+            <p class="geex-content__authentication__subtitle" id="authSubtitle">
+              Zaloguj się kontem firmowym.
             </p>
 
             <div class="geex-content__authentication__form-group">
               <label for="authEmail">Email</label>
               <input type="email" id="authEmail" name="email" required
-                     placeholder="np. imie.nazwisko@firma.pl" autocomplete="username">
+                     placeholder="np. ktos@kubara.pl" autocomplete="username">
               <i class="uil-envelope" aria-hidden="true"></i>
             </div>
 
@@ -189,7 +189,11 @@
             <p class="dam-auth-msg" id="authMsg" role="status" aria-live="polite"></p>
 
             <div class="geex-content__authentication__form-footer" id="authFooter">
-              Nie masz konta? Poproś administratora o dostęp.
+              Nie masz konta?
+              <button type="button" id="authModeToggle" class="dam-auth-link"
+                      style="background:none;border:0;color:#6c5ce7;cursor:pointer;padding:0;font:inherit;text-decoration:underline">
+                Utwórz konto
+              </button>
             </div>
           </form>
         </div>
@@ -201,16 +205,47 @@
   </main>
 
   <script src="./assets/js/main.js"></script>
-  <script src="./assets/js/dam-runtime.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-api.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-version.js?v=5.0.147"></script>
-  <script src="./assets/js/dam-app-update.js?v=5.0.143"></script>
+  <script src="./assets/js/dam-runtime.js?v=5.0.149"></script>
+  <script src="./assets/js/dam-api.js?v=5.0.149"></script>
+  <script src="./assets/js/dam-version.js?v=5.0.149"></script>
+  <script src="./assets/js/dam-app-update.js?v=5.0.149"></script>
   <script>
     (function () {
       var submitBtn = document.getElementById("authSubmit");
       var msg = document.getElementById("authMsg");
       var pass = document.getElementById("authPassword");
       var toggle = document.getElementById("togglePassword");
+      var subtitle = document.getElementById("authSubtitle");
+      var modeToggle = document.getElementById("authModeToggle");
+      var mode = "login";
+
+      function setMode(next) {
+        mode = next === "register" ? "register" : "login";
+        if (subtitle) {
+          subtitle.textContent = mode === "register"
+            ? "Utwórz konto."
+            : "Zaloguj się kontem firmowym.";
+        }
+        if (submitBtn) {
+          submitBtn.textContent = mode === "register" ? "Utwórz konto" : "Zaloguj";
+        }
+        if (modeToggle) {
+          modeToggle.textContent = mode === "register" ? "Zaloguj się" : "Utwórz konto";
+        }
+        if (pass) {
+          pass.setAttribute("autocomplete", mode === "register" ? "new-password" : "current-password");
+        }
+        if (msg) {
+          msg.className = "dam-auth-msg";
+          msg.textContent = "";
+        }
+      }
+
+      if (modeToggle) {
+        modeToggle.addEventListener("click", function () {
+          setMode(mode === "login" ? "register" : "login");
+        });
+      }
 
       function flipPassword() {
         var show = pass.type === "password";
@@ -239,9 +274,13 @@
         var password = pass.value || "";
         submitBtn.disabled = true;
         msg.className = "dam-auth-msg";
-        msg.textContent = "Logowanie...";
+        msg.textContent = mode === "register" ? "Tworzenie konta..." : "Logowanie...";
 
-        DamApi.login(email, password).then(function () {
+        var action = mode === "register"
+          ? DamApi.register(email, password, "")
+          : DamApi.login(email, password);
+
+        action.then(function () {
           msg.className = "dam-auth-msg is-ok";
           msg.textContent = "Zalogowano. Przekierowanie...";
           setTimeout(function () { location.replace("dashboard.html"); }, 300);

@@ -617,7 +617,14 @@
     fetchIdentity: fetchIdentity,
     clearLocalAuth: clearLocalAuth,
     async login(email, password) {
-      // 1) Lokalna baza kont (bridge) - bcrypt + machine_id / session_id
+      // Lokalna baza kont (bridge) - bcrypt + machine_id / session_id
+      // Laravel fallback tylko gdy jawnie wlaczony (inaczej Failed to fetch myli usera).
+      try {
+        if (window.DamRuntime && typeof window.DamRuntime.ensureServices === "function") {
+          await window.DamRuntime.ensureServices({ skipEnsure: false });
+        }
+      } catch (eEnsure) { /* ignore */ }
+      var bridgeErr = null;
       try {
         var ident = await fetchIdentity();
         var br = await fetch(bridgeAuthUrl() + "/auth/login", {
@@ -641,40 +648,52 @@
         if (bdata && bdata.error === "machine_id_required") {
           throw new Error("Brak ID maszyny - uruchom DAM przez skrot desktop.");
         }
+        if (bdata && bdata.error) {
+          throw new Error(String(bdata.error));
+        }
       } catch (e) {
         if (e && e.message && /Nieprawidlowy|Brak ID/.test(e.message)) throw e;
-        /* bridge offline - sprobuj Laravel */
+        bridgeErr = e;
       }
-      try {
-        var r = await apiFetch(API + "/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ email: email, password: password }),
-        });
-        var data = await parse(r);
-        persistSession(data);
-        return data;
-      } catch (e2) {
-        throw e2 instanceof Error ? e2 : new Error("Logowanie nieudane");
+      if (window.DAM_LARAVEL_AUTH) {
+        try {
+          var r = await apiFetch(API + "/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({ email: email, password: password }),
+          });
+          var data = await parse(r);
+          persistSession(data);
+          return data;
+        } catch (e2) {
+          throw e2 instanceof Error ? e2 : new Error("Logowanie nieudane");
+        }
       }
+      throw new Error(
+        "Most DAM niedostepny (port 8766). Uruchom URUCHOM-DAM.bat / skrot pulpitu." +
+          (bridgeErr && bridgeErr.message ? " (" + bridgeErr.message + ")" : "")
+      );
     },
     async register(email, password, name) {
+      try {
+        if (window.DamRuntime && typeof window.DamRuntime.ensureServices === "function") {
+          await window.DamRuntime.ensureServices({ skipEnsure: false });
+        }
+      } catch (eEnsure) { /* ignore */ }
       var r = await fetch(bridgeAuthUrl() + "/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ email: email, password: password, name: name || "" }),
       });
-      var data = await r.json();
+      var data = await r.json().catch(function () { return null; });
       if (!data || !data.ok) {
         var err = (data && data.error) || "register_failed";
         if (err === "email_taken") throw new Error("Konto z tym emailem juz istnieje.");
-        if (err === "password_too_short") throw new Error("Haslo min. 8 znakow.");
-        if (err === "admin_required") {
-          throw new Error("Nowe konta zaklada tylko administrator.");
-        }
+        if (err === "password_too_short") throw new Error("Haslo min. 4 znaki.");
+        if (err === "invalid_email") throw new Error("Podaj poprawny email.");
         throw new Error("Nie udalo sie utworzyc konta.");
       }
-      // Po rejestracji od razu zaloguj na tym urządzeńiu
+      // Po rejestracji od razu zaloguj na tym urzadzeniu
       return this.login(email, password);
     },
     logout: async function () {

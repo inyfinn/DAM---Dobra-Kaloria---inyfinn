@@ -6263,9 +6263,9 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, read_user_prefs(email))
             return
         if parsed.path == "/auth/registration-open":
-            # Publiczna rejestracja wylaczona — konta zaklada admin (ustawienia) lub Cursor.
+            # Self-service: email + haslo (bez imienia/nazwiska).
             n = users_count()
-            self._json(200, {"ok": True, "open": False, "users": n})
+            self._json(200, {"ok": True, "open": True, "users": n})
             return
         if parsed.path == "/auth/identity":
             try:
