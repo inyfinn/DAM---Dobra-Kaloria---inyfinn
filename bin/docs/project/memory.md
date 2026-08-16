@@ -1372,3 +1372,14 @@ ode bin/scripts/qa/dam-pakiet-cdp-smoke.js
 - Quiz skojarzen: przycisk tylko admin+toggle; pusty pending → fallback z siatki bez linkow + jasny copy.
 - Viz: thumbs Datesy 690000x istnieja w `data/thumbs`; onerror → fallback `/media`.
 
+## Workflow agenta + copy UI (2026-08-16) — HARD
+
+- **Po każdej zmianie kodu:** `dam-git add` → `commit` → `push` na `main` (bez pytania usera, bez odkladania). NAS: `/usr/local/bin/dam-git` w katalogu projektu DAM.
+- **Copy formularzy:** bez dopiskow typu „(email i haslo)”, „(email + haslo)” — pola mowia same za siebie. Nie komentuj oczywistych pol formularza.
+
+## Synology Panel-DAM + auth (2026-08-16)
+
+- UI statyczne: `/volume1/web/Panel-DAM/` (Web Station). Auth API: nginx `/dam-api/` → `local_bridge` `:8766`.
+- Skrypty ops: `bin/scripts/ops/synology/` (start bridge, dam-git, nginx proxy). Deploy UI: `deploy-panel-dam-synology.ps1` (Windows → `W:\web\Panel-DAM`).
+- Konta @kubara.pl: seed `seed_kubara_users.py`; haslo dev `test` (min 4 znaki). Rejestracja: email + haslo, bez imienia/nazwiska.
+
