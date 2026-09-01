@@ -48,11 +48,10 @@ shows "Pliki offline".
 - **SSH do Synology (alias `syno` / `nas`):** sekrety i runbook w
   `inyfinn/synology-mcp` (private — `NAS_SSH_*` w Cursor Environment **Synology MCP — Cloud SSH**,
   port **5022**). `.cursor/environment.json` w DAM woła `clone-synology-mcp.sh`, potem
-  `synology-mcp/scripts/cloud-agent-ssh-setup.sh`. **Dostęp Git do private synology-mcp:**
-  GitHub → Settings → Applications → **Cursor** → Configure → dodaj `inyfinn/synology-mcp`
-  (albo sekret `GITHUB_PAT` w Environment, albo collaborator `cursor[bot]` z Write).
-  Skrypt: `bash bin/scripts/ops/clone-synology-mcp.sh`. Push hardeningu:
-  `bash bin/scripts/ops/push-synology-mcp-security.sh`.
+  `synology-mcp/scripts/cloud-agent-ssh-setup.sh`. **Git private synology-mcp:** instalacja
+  Cursor „All repositories” u użytkownika **nie** rozszerza tokena agenta DAM (per-repo → 404).
+  Działa: sekret **`GITHUB_PAT`** w Environment, albo Cloud Agent **na repo synology-mcp**,
+  albo merge bundle ręcznie (`bin/docs/ops/synology-mcp-security/`).
   Sekrety SSH **nie są w Git** — Cursor wstrzykuje je gdy agent ma podpięte Environment.
   Test: `ssh syno 'docker ps'`. Bez SSH: `curl -sk https://inyfinn.synology.me/dam-api/db/status`.
 - **Laravel API on Linux:** configure `apps/api/.env` with `DB_CONNECTION=sqlite`
