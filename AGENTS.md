@@ -45,15 +45,14 @@ shows "Pliki offline".
   `search-index.json`, `program-instructions.json`). These are regenerated
   artifacts — do **not** commit them; `git checkout -- bin/apps/desktop/data bin/apps/web/data`
   to reset.
-- **SSH do Synology (alias `syno` / `nas`):** kanoniczna konfiguracja i sekrety sa w repo
-  [`inyfinn/synology-mcp`](https://github.com/inyfinn/synology-mcp) (`docs/dom/cloud-agent-ssh.md`).
-  SSH z internetu: **`inyfinn.synology.me:5022`** (nie port 22). Sekrety w Cursor Cloud
-  Environment (nie w gicie): `NAS_SSH_KEY`, `NAS_SSH_USER=Inyfinn`, `NAS_SSH_HOST`,
-  `NAS_SSH_PORT=5022`. Ten repo ma `.cursor/environment.json` — **podlacz te same sekrety**
-  do Environment agenta DAM (obecny run bez linked environment nie widzi `NAS_SSH_*`).
-  Setup: `bash bin/scripts/ops/setup-cloud-ssh-syno.sh` (czyta `NAS_SSH_KEY` →
-  `~/.ssh/cloud-agent-nas`, aliasy `nas` + `syno`). Test: `ssh syno 'docker ps'`.
-  `sync-database-backups-to-git.py` wymaga `ssh syno`. Diagnostyka PG bez SSH:
+- **SSH do Synology (alias `syno` / `nas`):** sekrety i runbook w
+  [`inyfinn/synology-mcp`](https://github.com/inyfinn/synology-mcp) (`NAS_SSH_*` w Cursor
+  Environment **Synology MCP — Cloud SSH**, port **5022**). `.cursor/environment.json`
+  w DAM ma **tę samą nazwę** i woła `synology-mcp/scripts/cloud-agent-ssh-setup.sh`.
+  Sekrety **nie są w Git** — Cursor wstrzykuje je tylko gdy agent ma **podpięte**
+  Environment (ten run setup miał `environment: null` → brak `NAS_SSH_KEY` w shellu).
+  Na dashboardzie: to samo Environment przypisz też do repo DAM (bez ponownego wpisywania
+  klucza). Test: `ssh syno 'docker ps'`. Diagnostyka bez SSH:
   `curl -sk https://inyfinn.synology.me/dam-api/db/status`.
 - **Laravel API on Linux:** configure `apps/api/.env` with `DB_CONNECTION=sqlite`
   (default `.env.example` points at Postgres `:5433`), `touch database/database.sqlite`,
