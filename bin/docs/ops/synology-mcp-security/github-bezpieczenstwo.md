@@ -8,14 +8,23 @@ Repo `inyfinn/synology-mcp` powinno być **Private**.
 
 Po ustawieniu Private agent traci clone/push (404). **Jeden** z poniższych:
 
-### A) Aplikacja Cursor (zalecane)
+### A) Aplikacja Cursor (instalacja użytkownika)
 
-1. https://github.com/settings/installations
-2. **Cursor** → **Configure**
-3. **Repository access** → wybierz **inyfinn/synology-mcp** (lub All repositories)
-4. Save
+https://github.com/settings/installations → **Cursor** → **All repositories** — OK dla
+użytkownika, ale **token Cloud Agenta jest per-repo**: agent na DAM widzi tylko repo DAM
+(`gh api repos/inyfinn/synology-mcp` → 404). To nie wystarczy do clone/push synology-mcp
+z agenta DAM.
 
-### B) Collaborator
+**Co działa:**
+
+1. **Agent na repo `inyfinn/synology-mcp`** (token wtedy dotyczy tego repo) — wypchnij
+   gałąź `cursor/secure-github-repo-90ad` lub uruchom skrypt z bundle w DAM.
+2. **Sekret `GITHUB_PAT`** w Cursor Environment (fine-grained, repo synology-mcp) — używa
+   `clone-synology-mcp.sh` / `push-synology-mcp-security.sh`.
+3. **Collaborator `cursor[bot]`** na synology-mcp **+ agent uruchomiony na synology-mcp**
+   (nie na DAM).
+
+### B) Collaborator (Write)
 
 https://github.com/inyfinn/synology-mcp/settings/access → Invite **cursor[bot]** → rola **Write**
 
