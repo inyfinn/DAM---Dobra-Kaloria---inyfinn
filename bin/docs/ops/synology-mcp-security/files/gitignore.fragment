@@ -1,0 +1,36 @@
+# Sekrety i stan runtime — nigdy w repo
+.cursor/cloud-agent-nas
+.cursor/cloud-agent-nas.pub
+**/smtp.secret
+**/*.secret
+**/.env
+**/.env.*
+!**/.env.example
+**/credentials.json
+**/*credentials*
+**/id_rsa
+**/id_ed25519
+**/*.pem
+**/*.p12
+**/data/
+**/*.sqlite
+**/*.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+mcp_venv/
+
+# OS / edytor
+.DS_Store
+*~
+.idea/
+.vscode/
+
+# Backup DSM
+*.bak.*
+
+# Frontend
+**/node_modules/
+**/dist/

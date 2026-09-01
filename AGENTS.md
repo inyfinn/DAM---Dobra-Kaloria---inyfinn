@@ -46,14 +46,15 @@ shows "Pliki offline".
   artifacts — do **not** commit them; `git checkout -- bin/apps/desktop/data bin/apps/web/data`
   to reset.
 - **SSH do Synology (alias `syno` / `nas`):** sekrety i runbook w
-  [`inyfinn/synology-mcp`](https://github.com/inyfinn/synology-mcp) (`NAS_SSH_*` w Cursor
-  Environment **Synology MCP — Cloud SSH**, port **5022**). `.cursor/environment.json`
-  w DAM ma **tę samą nazwę** i woła `synology-mcp/scripts/cloud-agent-ssh-setup.sh`.
-  Sekrety **nie są w Git** — Cursor wstrzykuje je tylko gdy agent ma **podpięte**
-  Environment (ten run setup miał `environment: null` → brak `NAS_SSH_KEY` w shellu).
-  Na dashboardzie: to samo Environment przypisz też do repo DAM (bez ponownego wpisywania
-  klucza). Test: `ssh syno 'docker ps'`. Diagnostyka bez SSH:
-  `curl -sk https://inyfinn.synology.me/dam-api/db/status`.
+  `inyfinn/synology-mcp` (private — `NAS_SSH_*` w Cursor Environment **Synology MCP — Cloud SSH**,
+  port **5022**). `.cursor/environment.json` w DAM woła `clone-synology-mcp.sh`, potem
+  `synology-mcp/scripts/cloud-agent-ssh-setup.sh`. **Dostęp Git do private synology-mcp:**
+  GitHub → Settings → Applications → **Cursor** → Configure → dodaj `inyfinn/synology-mcp`
+  (albo sekret `GITHUB_PAT` w Environment, albo collaborator `cursor[bot]` z Write).
+  Skrypt: `bash bin/scripts/ops/clone-synology-mcp.sh`. Push hardeningu:
+  `bash bin/scripts/ops/push-synology-mcp-security.sh`.
+  Sekrety SSH **nie są w Git** — Cursor wstrzykuje je gdy agent ma podpięte Environment.
+  Test: `ssh syno 'docker ps'`. Bez SSH: `curl -sk https://inyfinn.synology.me/dam-api/db/status`.
 - **Laravel API on Linux:** configure `apps/api/.env` with `DB_CONNECTION=sqlite`
   (default `.env.example` points at Postgres `:5433`), `touch database/database.sqlite`,
   then `php artisan key:generate && php artisan migrate`. The Sanctum
