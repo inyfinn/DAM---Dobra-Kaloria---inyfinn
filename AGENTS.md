@@ -45,16 +45,16 @@ shows "Pliki offline".
   `search-index.json`, `program-instructions.json`). These are regenerated
   artifacts — do **not** commit them; `git checkout -- bin/apps/desktop/data bin/apps/web/data`
   to reset.
-- **SSH do Synology (alias `syno`):** skrypt `sync-database-backups-to-git.py` uzywa
-  `ssh syno`. Na Cloud VM uruchom raz:
-  `bash bin/scripts/ops/setup-cloud-ssh-syno.sh` (klucz `~/.ssh/id_ed25519_dam` +
-  wpis w `~/.ssh/config`). **Klucz prywatny nie jest w repo** — na NAS dodaj wydrukowany
-  pubkey do `/var/services/homes/Inyfinn/.ssh/authorized_keys`. W DSM: Panel sterowania →
-  Terminal i SNMP → wlacz usluge SSH; na routerze przekieruj port SSH (domyslnie 22).
-  Z tego VM (2026-09-01): `:22` na `inyfinn.synology.me` = **Connection refused**
-  (tylko `:443` otwarty) — bez forwardingu SSH polaczenie z chmury nie zadziala mimo
-  klucza. Diagnostyka PG bez SSH: `curl -sk https://inyfinn.synology.me/dam-api/db/status`.
-  Opcjonalnie env: `DAM_SSH_HOST`, `DAM_SSH_PORT`, `DAM_SSH_USER`.
+- **SSH do Synology (alias `syno` / `nas`):** kanoniczna konfiguracja i sekrety sa w repo
+  [`inyfinn/synology-mcp`](https://github.com/inyfinn/synology-mcp) (`docs/dom/cloud-agent-ssh.md`).
+  SSH z internetu: **`inyfinn.synology.me:5022`** (nie port 22). Sekrety w Cursor Cloud
+  Environment (nie w gicie): `NAS_SSH_KEY`, `NAS_SSH_USER=Inyfinn`, `NAS_SSH_HOST`,
+  `NAS_SSH_PORT=5022`. Ten repo ma `.cursor/environment.json` — **podlacz te same sekrety**
+  do Environment agenta DAM (obecny run bez linked environment nie widzi `NAS_SSH_*`).
+  Setup: `bash bin/scripts/ops/setup-cloud-ssh-syno.sh` (czyta `NAS_SSH_KEY` →
+  `~/.ssh/cloud-agent-nas`, aliasy `nas` + `syno`). Test: `ssh syno 'docker ps'`.
+  `sync-database-backups-to-git.py` wymaga `ssh syno`. Diagnostyka PG bez SSH:
+  `curl -sk https://inyfinn.synology.me/dam-api/db/status`.
 - **Laravel API on Linux:** configure `apps/api/.env` with `DB_CONNECTION=sqlite`
   (default `.env.example` points at Postgres `:5433`), `touch database/database.sqlite`,
   then `php artisan key:generate && php artisan migrate`. The Sanctum
