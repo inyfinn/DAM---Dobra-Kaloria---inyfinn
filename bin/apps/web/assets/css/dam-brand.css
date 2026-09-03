@@ -3157,8 +3157,8 @@ body.file-manager .geex-content__header__subtitle {
   content: "";
   position: absolute;
   left: 0;
-  top: 8px;
-  bottom: 8px;
+  top: var(--dam-sidebar-nav-active-inset, 6.8px);
+  bottom: var(--dam-sidebar-nav-active-inset, 6.8px);
   width: 3px;
   border-radius: 0 2px 2px 0;
   background: var(--dam-primary, #ab54db);
@@ -3429,7 +3429,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapsed-meta {
 body.dam-sidebar-collapsed .geex-sidebar__wrapper {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: calc(11px * var(--dam-sidebar-nav-scale, 0.85));
   min-height: 100%;
   height: 100%;
   position: relative;
@@ -3444,7 +3444,7 @@ body.dam-sidebar-collapsed .geex-sidebar__menu-wrapper {
 }
 
 body.dam-sidebar-collapsed .geex-sidebar__menu {
-  gap: 4px;
+  gap: calc(4px * var(--dam-sidebar-nav-scale, 0.85));
 }
 body.dam-sidebar-collapsed .geex-sidebar__menu__item:first-child,
 body.dam-sidebar-collapsed .geex-sidebar__menu__item:last-child {
@@ -3462,8 +3462,8 @@ body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link {
   white-space: nowrap;
   font-size: 0; /* ukryj ewentualny tekst poza <span>/<i> */
   line-height: 0;
-  min-height: 44px;
-  height: 44px;
+  min-height: var(--dam-sidebar-nav-min-h, 37.4px);
+  height: var(--dam-sidebar-nav-min-h, 37.4px);
   color: #52545c;
 }
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__item {
@@ -3472,17 +3472,19 @@ body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__item {
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i {
   margin-right: 0 !important;
   margin-left: 0 !important;
-  font-size: 22px !important;
+  font-size: calc(22px * var(--dam-sidebar-nav-scale, 0.85)) !important;
   line-height: 1 !important;
-  width: 24px !important;
+  width: calc(24px * var(--dam-sidebar-nav-scale, 0.85)) !important;
   text-align: center;
   flex-shrink: 0;
+  top: var(--dam-sidebar-nav-icon-nudge, 1px);
   color: #52545c !important;
 }
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link svg {
-  width: 24px !important;
-  height: 24px !important;
+  width: calc(24px * var(--dam-sidebar-nav-scale, 0.85)) !important;
+  height: calc(24px * var(--dam-sidebar-nav-scale, 0.85)) !important;
   flex-shrink: 0;
+  top: var(--dam-sidebar-nav-icon-nudge, 1px);
 }
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link svg path {
   fill: #52545c;
@@ -12571,8 +12573,4 @@ html[data-theme="dark"] .dam-admin-header-switch:has(.dam-switch__input:checked)
   line-height: 1;
   color: var(--dam-count-bubble-color);
   background: var(--dam-count-bubble-bg);
-  box-shadow: var(--dam-count-bubble-shadow);
-  pointer-events: none;
-}
-
-
+  box-shadow: var(--dam-count-bubble

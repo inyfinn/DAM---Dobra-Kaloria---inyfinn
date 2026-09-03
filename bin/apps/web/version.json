@@ -1,12 +1,24 @@
 {
-  "version": "5.0.147",
+
+  "version": "5.0.159",
+
   "name": "DAM - Dobra Kaloria - Inyfinn",
+
   "codename": "integracja-produkcja",
-  "released_at": "2026-08-13",
-  "note": "5.0.147: wybór bazy odporny na polling; miniatury ponawiane po starcie mostu.",
+
+  "released_at": "2026-09-03",
+
+  "note": "5.0.159: branding PDF card thumbs via /thumb-cache (pdftoppm first page); prefer .pdf over .ai in group.",
+
   "updates": {
+
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
+
     "asset_name": "DAM-Setup.exe",
+
     "check_interval_hours": 5
+
   }
+
 }
+

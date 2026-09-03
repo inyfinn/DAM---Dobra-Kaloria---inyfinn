@@ -46,6 +46,14 @@ if (!DamSearch || typeof DamSearch.load !== "function") {
   console.error("FAIL: DamSearch.load not exported");
   process.exit(1);
 }
+if (typeof DamSearch.productMatchesTextQuery !== "function") {
+  console.error("FAIL: DamSearch.productMatchesTextQuery not exported");
+  process.exit(1);
+}
+if (typeof DamSearch.normQuery !== "function" || typeof DamSearch.digitsOnly !== "function") {
+  console.error("FAIL: DamSearch.normQuery/digitsOnly not exported");
+  process.exit(1);
+}
 
 sandbox.window._DAM_FILE_INDEX = { products: [{ id: "cached" }] };
 sandbox.window._DAM_SEARCH_INDEX = { products: [] };

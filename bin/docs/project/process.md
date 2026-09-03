@@ -1,3 +1,17 @@
+## 2026-09-02 - v5.0.148: swiezy file-index + jeden lot DamSearch
+
+**Komenda/Akcja:** Pull najnowszego main; odswiezyc indeks produktow; dopracowac search/picker bez nowego silnika.
+
+**Log/Status:** DAM UI+bridge 8765/8766; admin POST /index/rebuild. file-index generated_at 2026-09-02, product_count 185->191, viz_count 404->408. Reczny skan zapisuje tez index-watcher-status last_finished. DamSearch eksportuje productMatchesTextQuery. Explorer bez drugiego search na scope.
+
+**Efekt/Fix:** Panel widzi produkty po 13.08. #damFileSearch jeden lot DamSearch.search; #damProjectsSearch filtr listy tym samym matcherem; #vizSearch lokalny applyFilters; #damBrandingSearch osobny search-index. Picker nadal scheduleProductSearchFetch.
+
+**Backup:** brak.
+
+**Test/Ewaluacja:** node test_dam_search_force.js, test_explorer_single_search_flight.js; smoke portow; CDP q=6300.
+
+**Zrodla:** local_bridge.py, dam-search.js, dam-explorer.js, build-file-index.py
+
 ## 2026-08-13 - v5.0.145: bin/DATABASE kanon, dashboard thumbs, branding raz, W toku
 
 **Komenda/Akcja:** User zly: dashboard bez grafik, branding 2x, trzeci panel, baza rozjezdzala sie. Potem korekta: live SQLite TYLKO bin/DATABASE (nie D:\Marketing\DATABASE).
@@ -13508,4 +13522,14 @@ ode --check OK. Live Playwright: branding product open phases hydrate 1ms; wall-
 **Test:** AssocQueuePreviewTests + full backend 22 OK. Smoke ports 200/200.
 
 **Backup:** n/a (bez mutacji SQLite assoc).
+
+## 2026-09-03 — hotfix branding preview basename drift (M-SLI503871 / kulki)
+
+**Command / Action:** `_resolve_marketing_basename_drift` w `local_bridge.py`; restart mostu `:8766`; unittest `test_resolve_media_path.py`.
+
+**Effect:** Indexed path `…/02 - SLIDERY KATEGORIE GLOWNE/kulki.png` resolve → `…/SUCHE/gotowe/kulki.png`. `/thumb-cache` + `/media` 200 bez rebuild fat indeksu.
+
+**Test:** unittest 5/5; curl before 404/404 → after 200/200; branding UI 3× PASS (karta + modal 680×340).
+
+**Backup:** n/a.
 

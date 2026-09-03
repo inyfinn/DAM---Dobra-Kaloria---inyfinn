@@ -6938,18 +6938,8 @@
           }
         }
       );
-      /* Po zmianie scope odśwież AJAX panel (reuse single search path) */
-      if (scopeEl && !scopeEl._damPanelScopeBound) {
-        scopeEl._damPanelScopeBound = true;
-        scopeEl.addEventListener("click", function () {
-          if ((input.value || "").trim().length >= 2) {
-            clearTimeout(state.searchPanelTimer);
-            state.searchPanelTimer = setTimeout(function () {
-              applySearchToPanel(input.value);
-            }, 160);
-          }
-        });
-      }
+      /* Scope chips: bindSearchBox → bindScopeChips → runSearch → onResults.
+         Nie wołaj tu applySearchToPanel (drugi DamSearch.search na ten sam input). */
     }
     /* Panel clear for short query only — full search owned by bindSearchBox.onResults */
     if (input) bindSearchPanelSync(input);
@@ -7733,7 +7723,7 @@
         applySearchToPanel(q);
       }, 160);
     });
-    if ((input.value || "").trim().length >= 2) {
+    if (!boxOwnsSearch && (input.value || "").trim().length >= 2) {
       applySearchToPanel(input.value);
     }
   }

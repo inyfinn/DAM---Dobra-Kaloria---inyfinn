@@ -13,6 +13,9 @@
         "</svg>"
     );
 
+  /* NFS/M: /thumb-cache bywa pending bez onerror (kulki ~14s przy cache-hit). */
+  var HERO_LOAD_TIMEOUT_MS = 1200;
+
   /** B3: lokalny poster gdy ffmpeg/bridge nie odda klatki. */
   var VIDEO_POSTER_FALLBACK =
     "data:image/svg+xml," +
@@ -1180,7 +1183,7 @@
     return t;
   }
 
-  /** Hero / assoc: live /media first (modal), thumb-cache jako fallback. */
+  /** Hero / assoc: /media preview ze zrodla (PI); thumb-cache tylko fallback. */
   function heroSrcFromAsset(a) {
     if (!a) return "";
     if (a.path) {
@@ -1189,9 +1192,9 @@
     }
     var fromIndex = normalizeMediaThumbUrl(a.thumb_url || a.preview_url || "");
     if (fromIndex) return fromIndex;
-    if (a.path && global.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
-      var cacheFirst = DamPreviewTruth.thumbCacheUrl(a.path, "modal");
-      if (cacheFirst) return cacheFirst;
+    if (a.path && window.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
+      var cacheFallback = DamPreviewTruth.thumbCacheUrl(a.path, "modal");
+      if (cacheFallback) return cacheFallback;
     }
     return "";
   }
@@ -1211,6 +1214,39 @@
 
   function mediaUrl(path, asset) {
     return previewUrl(path, asset);
+  }
+
+  function clearHeroLoadWatch(img) {
+    if (!img) return;
+    if (img._damHeroTimer) {
+      clearTimeout(img._damHeroTimer);
+      img._damHeroTimer = null;
+    }
+  }
+
+  /** Pending /thumb-cache bez onerror → po HERO_LOAD_TIMEOUT_MS wymus fallback /media. */
+  function armHeroLoadWatch(img) {
+    if (!img) return;
+    var src = String(img.getAttribute("src") || img.src || "");
+    if (src.indexOf("/thumb-cache") < 0) return;
+    clearHeroLoadWatch(img);
+    var gen = (img._damHeroGen = (img._damHeroGen || 0) + 1);
+    function finishOk() {
+      if (img._damHeroGen !== gen) return;
+      clearHeroLoadWatch(img);
+    }
+    img.addEventListener("load", finishOk, { once: true });
+    img._damHeroTimer = setTimeout(function () {
+      if (img._damHeroGen !== gen || !img.isConnected) return;
+      if (img.complete && img.naturalWidth > 0) {
+        clearHeroLoadWatch(img);
+        return;
+      }
+      clearHeroLoadWatch(img);
+      if (window.__damMediaPreviewFallback) {
+        window.__damMediaPreviewFallback(img);
+      }
+    }, HERO_LOAD_TIMEOUT_MS);
   }
 
   function isRasterPreviewable(asset) {
@@ -4662,10 +4698,12 @@
         img.loading = "eager";
         img.decoding = "async";
         img.onerror = function () {
+          clearHeroLoadWatch(img);
           window.__damMediaPreviewFallback && window.__damMediaPreviewFallback(img);
         };
         var heroSrc = heroSrcFromAsset(a) || (a.path ? previewUrl(a.path, a) : "") || PLACEHOLDER_SVG;
         img.src = heroSrc;
+        armHeroLoadWatch(img);
         thumb.appendChild(img);
         heroEl = img;
         return;

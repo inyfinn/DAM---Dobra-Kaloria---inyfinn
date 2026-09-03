@@ -511,15 +511,59 @@ html[data-theme="dark"] .dam-viz-badge--variants {
 
 .geex-sidebar__header {
   border-radius: 0;
-  padding: 12px 14px;
-  gap: 10px;
+  padding: calc(12px * var(--dam-sidebar-nav-scale, 0.85)) calc(14px * var(--dam-sidebar-nav-scale, 0.85));
+  gap: var(--dam-sidebar-nav-gap, 8.5px);
+}
+
+.geex-sidebar__menu__item:first-child {
+  margin-top: var(--dam-sidebar-nav-item-edge, 12.75px);
+}
+
+.geex-sidebar__menu__item:last-child {
+  margin-bottom: var(--dam-sidebar-nav-item-edge, 12.75px);
 }
 
 .geex-sidebar__menu__link {
-  border-radius: var(--dam-radius-sm, 8px);
-  padding: 10px 12px;
-  gap: 10px;
-  min-height: var(--dam-control-h, 44px);
+  border-radius: var(--dam-sidebar-nav-radius, 15.3px);
+  padding: var(--dam-sidebar-nav-py, 8.5px) var(--dam-sidebar-nav-px, 10.2px);
+  gap: var(--dam-sidebar-nav-gap, 8.5px);
+  min-height: var(--dam-sidebar-nav-min-h, 37.4px);
+  font-size: var(--dam-sidebar-nav-fs, 13.6px);
+  line-height: var(--dam-sidebar-nav-lh, 20.4px);
+  align-items: center;
+}
+
+.geex-sidebar__menu__link i,
+.geex-sidebar__menu__link .uil {
+  font-size: var(--dam-sidebar-nav-icon-fs, 19.55px);
+  line-height: 1;
+  position: relative;
+  top: var(--dam-sidebar-nav-icon-nudge, 1px);
+}
+
+.geex-sidebar__menu__link svg {
+  width: var(--dam-sidebar-nav-icon-fs, 19.55px);
+  height: var(--dam-sidebar-nav-icon-fs, 19.55px);
+  flex-shrink: 0;
+  position: relative;
+  top: var(--dam-sidebar-nav-icon-nudge, 1px);
+}
+
+.geex-sidebar__submenu .geex-sidebar__menu__link {
+  padding: calc(8px * var(--dam-sidebar-nav-scale, 0.85)) calc(25px * var(--dam-sidebar-nav-scale, 0.85));
+}
+
+@media only screen and (max-width: 575px) {
+  .geex-sidebar__menu__link {
+    font-size: calc(14px * var(--dam-sidebar-nav-scale, 0.85));
+    padding: calc(12px * var(--dam-sidebar-nav-scale, 0.85)) calc(25px * var(--dam-sidebar-nav-scale, 0.85));
+    gap: calc(10px * var(--dam-sidebar-nav-scale, 0.85));
+  }
+
+  .geex-sidebar__menu__link i,
+  .geex-sidebar__menu__link .uil {
+    font-size: calc(20px * var(--dam-sidebar-nav-scale, 0.85));
+  }
 }
 
 /* F5b change-1: popover surfaces only (no opacity/clip-path — doctrine §7 IO rest=opacity tween-only) */

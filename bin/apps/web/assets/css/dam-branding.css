@@ -952,6 +952,31 @@
   display: none !important;
 }
 
+.dam-branding-card .dam-viz-card__indexes-anchor.is-expanded .dam-viz-card__indexes-wrap {
+  display: flex !important;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  position: static;
+  width: 100%;
+  margin-top: 6px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  max-height: none;
+  overflow: visible;
+}
+
+.dam-branding-card .dam-viz-card__indexes-anchor.is-expanded .dam-viz-card__indexes-wrap .dam-viz-badge--index {
+  flex: 0 1 auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .dam-index-popover {
   box-sizing: border-box;
   padding: 12px;
@@ -1733,6 +1758,21 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, var(--dam-surface, #fff));
 }
 
+.dam-branding-card.dam-viz-card--clickable {
+  pointer-events: auto;
+}
+
+.dam-branding-card .dam-viz-thumb {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.dam-branding-card .dam-viz-thumb__img,
+.dam-branding-thumb-stack,
+.dam-branding-thumb-stack__layer {
+  pointer-events: none;
+}
+
 .dam-branding-thumb-stack {
   position: relative;
   width: 100%;
@@ -1756,6 +1796,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   max-height: 100%;
   object-fit: contain;
   object-position: center center;
+  pointer-events: none;
 }
 
 .dam-branding-thumb-stack__layer--back {

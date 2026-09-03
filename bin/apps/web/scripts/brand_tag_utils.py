@@ -83,6 +83,8 @@ FOLDER_SEGMENT_TAGS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("slidery na glowna", ("Slidery", "Na sklep")),
     ("slidery kategorie", ("Slidery", "Na sklep")),
     ("slidery kategorie glowne", ("Slidery", "Na sklep")),
+    ("04 - drukowane materia", ("Drukowane",)),
+    ("drukowane materia", ("Drukowane",)),
 )
 
 

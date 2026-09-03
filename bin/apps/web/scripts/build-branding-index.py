@@ -48,10 +48,10 @@ def norm(s: str) -> str:
 
 
 def resolve_marketing_base() -> Path:
-    for candidate in (Path(r"X:/Marketing"), Path(r"D:/Marketing")):
-        if (candidate / "- POLSKA").is_dir():
-            return candidate
-    return Path(r"X:/Marketing")
+    """machine-config / M: > X:/Marketing > D:/Marketing (parity build-file-index)."""
+    from marketing_roots import resolve_marketing_base as _resolve
+
+    return _resolve()
 
 
 def is_archive_path(path: str) -> bool:
@@ -177,6 +177,9 @@ def build_tags(
         tags.append("ARCHIWUM")
     if is_legacy_root_archive(path):
         tags.extend(["Archiwum", "Stara struktura"])
+    path_up = (path or "").replace("\\", "/").upper()
+    if "04 - DRUKOWANE MATERIA" in path_up or "/DRUKOWANE MATERIA" in path_up:
+        tags.append("Drukowane")
     if source == "wizki":
         tags.append("WIZKI")
     if source == "product_element":

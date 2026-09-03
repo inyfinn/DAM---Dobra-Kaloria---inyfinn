@@ -978,6 +978,9 @@
     getScopeMode: getScopeMode,
     setScopeMode: setScopeMode,
     productById: productById,
+    normQuery: norm,
+    digitsOnly: digitsOnly,
+    productMatchesTextQuery: productMatchesTextQuery,
     /** Sync-adopt window._DAM_* without fetch/JSON.parse. */
     adoptWarmCaches: adoptWarmCaches,
     /** True when module already holds parsed indexes (no pending JSON.parse). */

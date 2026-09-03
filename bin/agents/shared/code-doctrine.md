@@ -354,6 +354,53 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
 
+### 2026-09-03 - branding: `04 - DRUKOWANE Materiały` → tag Drukowane + marketing_roots
+
+**Objaw:** Kartka FALAFEL 2026 widoczna na dysku `…/03 - MATERIAŁY GRAFICZNE/04 - DRUKOWANE Materiały/…`, w brandingu tylko stary wpis `-- ARCHIWUM --` (M-IMG215823), brak tagu Drukowane.
+
+**Przyczyna:** `build-branding-index.py` mial wlasny `resolve_marketing_base()` (X:/Marketing > D:) zamiast `marketing_roots.py` (machine-config / M: / D:). X: mial 1 plik w DRUKOWANE — caly folder FALAFEL nie trafil do indeksu POLSKA.
+
+**Fix:** Wspolny `marketing_roots.resolve_marketing_base()`; tag `Drukowane` z segmentu sciezki (`brand_tag_utils.FOLDER_SEGMENT_TAGS`, `build_tags`); facet `appearance:drukowane` w `dam-branding.js`.
+
+**Zasada:** Skrypty indeksu brandingu MUSZA uzywac tego samego root co `build-file-index.py`. Folder `04 - DRUKOWANE Materiały` = tag **Drukowane** (nie mylic ze starym ARCHIWUM).
+
+### 2026-09-03 - /thumb-cache pending ≠ onerror (kulki NFS)
+
+**Objaw:** Branding ~1s zacina; karta/modal `kulki` (M-SLI503871) hero biale, spinner bez końca; licznik 100/152 (limit kart, nie hydrate hang).
+
+**Przyczyna:** `GET /thumb-cache` na M: potrafi wisiec **>10 s nawet przy cache-hit** (pomiar grid 13.8 s, Hit=1). Browser `<img>` wtedy nie odpala `onerror` — fallback `/media` nigdy nie startuje.
+
+**Fix:** most `_thumb_cache_with_timeout` 2.5 s → 504; UI `HERO_LOAD_TIMEOUT_MS` + `DamGridReveal.armThumbLoadTimeout` wymuszaja fallback. Nie mylic z drift sciezki SUCHE/gotowe (osobna lekcja).
+
+
+### 2026-09-03 - branding slider: drift sciezki SUCHE/gotowe vs flat index
+
+**Objaw:** Karta `M-SLI503871-01-00` (kulki.png) w branding: „Podglad niedostepny” + modal bez obrazu; inne karty OK.
+
+**Przyczyna:** `branding-grid-head.json` ma plaska sciezke `…/02 - SLIDERY KATEGORIE GLOWNE/kulki.png`; plik jest w `…/SUCHE/gotowe/kulki.png`. `_resolve_missing_media_path` obslugiwal tylko drift rewizji produktowych (7-cyfrowy indeks) — slider WWW nie wchodzil → `/thumb-cache` i `/media` 404.
+
+**Fix:** `_resolve_marketing_basename_drift` w `local_bridge.py`: gdy plik nie istnieje, szukaj `basename` w istniejacym katalogu nadrzednym (max glebokosc 4, jail Marketing), preferuj `SUCHE/gotowe`; przy remisie score — nie zgaduj (404). `/file-availability` korzysta z tego samego `_coerce_media_target`.
+
+**Zasada:** Drift marketingowy ≠ drift rewizji produktu. Nie rebuild fat indeksu „przy okazji”; naprawa po stronie mostu. Nie skanuj calego M:\.
+
+### 2026-09-03 - branding karty: thumb-cache + delegacja klikow
+
+**Objaw:** Stack karty (np. Kulki_daktylowe) — lag na `/media`, klik nie otwiera modalu lub z opoznieniem.
+
+**Przyczyna:** `mediaUrl()`/`previewUrl` dawaly pelny `/media` na karcie; per-element `addEventListener` na kartach nie dzialal po GSAP `DamGridReveal` (opacity 0 / rebind); `data-id` grid-head (`M-SLI*`) ≠ full index (`br-*`) bez `assetStubFromCard`.
+
+**Fix:** `cardThumbSrc` → `DamPreviewTruth.thumbCacheUrl(path,"card")`; `bindBrandingGridDelegation` na `#damBrandingSectionGrid` (jednorazowo w boot); `openCardModalFromEl` + stub z `data-path`; CSS `pointer-events:none` na stack/img, `auto` na `.dam-viz-thumb`; fallback `liveUrl:""` (bez upgrade do `/media`). **Krytyczne:** zdefiniuj `brandingIndexFingerprint()` (inaczej `openModal` → ReferenceError); w `heroSrcFromAsset` uzywaj `window.DamPreviewTruth`, nie `global`.
+
+**Zasada:** Karty branding = thumb-cache jak viz. Klik = delegacja na grid, nie per-karta po kazdym renderze. Modal hero = thumb-cache modal profile first.
+
+### 2026-09-02 - v5.0.148: reczny skan vs status watchera; matcher listy projektow
+
+**Objaw:** panel nie widzial produktow z dysku po 13.08; `#damProjectsSearch` nie uzywal silnika DamSearch mimo wywolania `productMatchesTextQuery`.
+
+**Przyczyna:** `file-index.json` stary. Reczny `POST /index/rebuild` aktualizowal `/index/status`, ale nie `index-watcher-status.json` (last_finished zostawalo z sierpnia). `window.DamSearch` nie eksportowal `productMatchesTextQuery` / `normQuery` / `digitsOnly`, wiec lista projektow spadala na lokalny haystack. Drugi listener scope w explorerze odpalal drugi `DamSearch.search`.
+
+**Zasada:** Skanuj dysk musi zsynchronizowac status watchera. Filtr listy, ktory deklaruje ten sam matcher co DamSearch, musi dostac go z eksportu. Jeden input = jeden lot `DamSearch.search`.
+
 ### 2026-08-13 - v5.0.147: polling formularza i start WebView przed mostem
 
 **Objaw:** radio trybu bazy wracalo do Auto przed kliknieciem Zastosuj, a poprawne miniatury zostawaly jako "brak podgladu" po starcie DAM.exe.

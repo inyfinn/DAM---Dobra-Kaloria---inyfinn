@@ -120,6 +120,54 @@ try:
 except ImportError:
     dam_thumb_cache = None  # type: ignore
 
+# NFS/M: bywa wolne: cache-hit /thumb-cache potrafi wisiec >10s (kulki 2026-09-03).
+# Klient <img> nie dostaje onerror przy pending — hard timeout na odpowiedzi HTTP.
+THUMB_CACHE_TIMEOUT_S = float(os.environ.get("DAM_THUMB_CACHE_TIMEOUT_S", "2.5"))
+
+
+def _thumb_cache_with_timeout(
+    path: str,
+    *,
+    profile: str = "grid",
+    resolve_physical=None,
+    timeout_s: float | None = None,
+) -> tuple[int, bytes, str, dict]:
+    """Uruchom get_or_build_thumb w watku; po timeout zwroc 504 (onerror → /media)."""
+    if not dam_thumb_cache:
+        return 500, b"", "application/json", {"ok": False, "error": "dam_thumb_cache_missing"}
+    limit = THUMB_CACHE_TIMEOUT_S if timeout_s is None else float(timeout_s)
+    box: dict = {}
+
+    def _worker() -> None:
+        try:
+            box["result"] = dam_thumb_cache.get_or_build_thumb(
+                path,
+                profile=profile,
+                resolve_physical=resolve_physical,
+            )
+        except Exception as exc:  # noqa: BLE001
+            box["error"] = str(exc)
+
+    t = threading.Thread(target=_worker, daemon=True, name="dam-thumb-cache")
+    t.start()
+    t.join(timeout=max(0.2, limit))
+    if "result" in box:
+        return box["result"]
+    if "error" in box:
+        return 500, b"", "application/json", {"ok": False, "error": "thumb_build_failed", "detail": box["error"]}
+    return (
+        504,
+        b"",
+        "application/json",
+        {
+            "ok": False,
+            "error": "thumb_timeout",
+            "timeout_s": limit,
+            "path": path,
+            "profile": profile,
+        },
+    )
+
 try:
     import dam_file_availability
 except ImportError:
@@ -1517,6 +1565,26 @@ def _run_index_rebuild() -> None:
             if rc != 0:
                 _index_state["last_error"] = f"build_rc_{rc}"
         _append_rebuild_log(f"finished rc={rc}")
+        try:
+            import index_supervisor
+
+            prev = index_supervisor.read_watcher_status()
+            index_supervisor.write_watcher_status(
+                {
+                    "ok": rc == 0,
+                    "watcher_ok": bool(prev.get("watcher_ok", True)),
+                    "stage": prev.get("stage") or "monitoring",
+                    "pid": prev.get("pid"),
+                    "last_ok": rc == 0,
+                    "last_rc": rc,
+                    "last_error": "" if rc == 0 else f"build_rc_{rc}",
+                    "last_started": _index_state.get("last_started") or "",
+                    "last_finished": _index_state.get("last_finished") or utc_now(),
+                },
+                preserve_last=False,
+            )
+        except Exception as status_exc:  # noqa: BLE001
+            _append_rebuild_log(f"watcher_status_sync {status_exc}")
         append_audit(
             {
                 "action": "index_rebuild",
@@ -5599,6 +5667,21 @@ def _image_to_png_preview_bytes(im, *, dematte: bool = True) -> bytes:
     return buf.getvalue()
 
 
+def _media_preview_pdf(target: str) -> tuple[int, bytes, str] | None:
+    """Pierwsza strona PDF -> JPEG (pdftoppm via dam_thumb_cache)."""
+    if Path(target).suffix.lower() != ".pdf":
+        return None
+    if not dam_thumb_cache:
+        return None
+    try:
+        body = dam_thumb_cache.raster_pdf_first_page_jpeg(target, max_side=2400)
+        if body:
+            return 200, body, "image/jpeg"
+    except Exception:
+        pass
+    return None
+
+
 def _media_preview_jpeg(target: str) -> tuple[int, bytes, str] | None:
     """Konwersja TIFF/PSD/PSB/BMP do JPEG pod podglad w przegladarce."""
     ext = Path(target).suffix.lower()
@@ -5754,6 +5837,87 @@ _MEDIA_REV_HINT_RE = re.compile(
     r"(KAR|MINI|MIX|FOL|\d{2}[.\s/-]\d{2}[.\s/-]\d{2,4})",
     re.IGNORECASE,
 )
+_MARKETING_BASENAME_MAX_DEPTH = 4
+
+
+def _score_marketing_basename_hit(hit: Path, search_root: Path) -> tuple[int, int]:
+    """Lower tuple = better. Prefer SUCHE/gotowe, then shorter relative path."""
+    try:
+        rel_parts = hit.relative_to(search_root).parts
+    except ValueError:
+        rel_parts = hit.parts
+    rel_lower = [x.lower() for x in rel_parts]
+    score = 0
+    if "suche" in rel_lower and "gotowe" in rel_lower:
+        score -= 100
+    return (score, len(rel_parts))
+
+
+def _resolve_marketing_basename_drift(raw: str) -> str | None:
+    """Marketing/slider drift: index flat path, file nested under existing parent dir."""
+    if not raw:
+        return None
+    target = Path(normalize_path(raw))
+    filename = target.name
+    if not filename or len(target.parts) < 2:
+        return None
+    try:
+        if target.is_file():
+            return str(target)
+    except OSError:
+        pass
+
+    search_root = None
+    cur = target.parent
+    for _ in range(4):
+        try:
+            if cur.is_dir():
+                search_root = cur
+                break
+        except OSError:
+            pass
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+    if search_root is None:
+        return None
+    try:
+        if not _is_under_marketing(search_root):
+            return None
+    except OSError:
+        return None
+
+    hits: list[Path] = []
+    root_depth = len(search_root.parts)
+    try:
+        for dirpath, dirnames, filenames in os.walk(search_root):
+            depth = len(Path(dirpath).parts) - root_depth
+            if depth > _MARKETING_BASENAME_MAX_DEPTH:
+                dirnames[:] = []
+                continue
+            if filename not in filenames:
+                continue
+            cand = Path(dirpath) / filename
+            try:
+                if cand.is_file() and _is_under_marketing(cand):
+                    hits.append(cand)
+            except OSError:
+                continue
+    except OSError:
+        return None
+
+    if not hits:
+        return None
+    if len(hits) == 1:
+        return str(hits[0])
+
+    hits.sort(key=lambda p: _score_marketing_basename_hit(p, search_root))
+    best = hits[0]
+    if len(hits) > 1 and _score_marketing_basename_hit(best, search_root) == _score_marketing_basename_hit(
+        hits[1], search_root
+    ):
+        return None
+    return str(best)
 
 
 def _resolve_missing_media_path(raw: str) -> str | None:
@@ -5795,7 +5959,7 @@ def _resolve_missing_media_path(raw: str) -> str | None:
                 index = m.group(1)
                 break
     if rev_i is None or rev_i < 1:
-        return None
+        return _resolve_marketing_basename_drift(raw)
 
     product_dir = Path(*parts[:rev_i])
     try:
@@ -5881,7 +6045,7 @@ def _resolve_missing_media_path(raw: str) -> str | None:
                     continue
         except OSError:
             continue
-    return None
+    return _resolve_marketing_basename_drift(raw)
 
 
 def _coerce_media_target(path: str) -> str:
@@ -5928,6 +6092,11 @@ def serve_media(path: str, preview: bool = False, matte: bool = False) -> tuple[
         ext == ".png" and _path_is_elementy_folder(target)
     )
     if preview or want_matte:
+        if preview and ext == ".pdf":
+            converted = _media_preview_pdf(target)
+            if converted:
+                return converted
+            return 422, b"", "application/json"
         if preview and ext in _PREVIEW_RASTER_EXT:
             converted = _media_preview_jpeg(target)
             if converted:
@@ -6460,7 +6629,7 @@ class Handler(BaseHTTPRequestHandler):
             def _resolve(p: str, _email: str = "") -> str:
                 return _coerce_media_target(p)
 
-            code, body, ctype, meta = dam_thumb_cache.get_or_build_thumb(
+            code, body, ctype, meta = _thumb_cache_with_timeout(
                 path,
                 profile=profile,
                 resolve_physical=_resolve,

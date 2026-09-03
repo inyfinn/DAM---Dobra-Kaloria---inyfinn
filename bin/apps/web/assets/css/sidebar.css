@@ -144,11 +144,11 @@ Sidebar
 }
 
 .geex-sidebar__menu__item:first-child {
-  margin-top: 15px;
+  margin-top: var(--dam-sidebar-nav-item-edge, 12.75px);
 }
 
 .geex-sidebar__menu__item:last-child {
-  margin-bottom: 15px;
+  margin-bottom: var(--dam-sidebar-nav-item-edge, 12.75px);
 }
 
 .geex-sidebar__menu__link {
@@ -156,32 +156,36 @@ Sidebar
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  gap: 15px;
+  gap: var(--dam-sidebar-nav-gap, 8.5px);
   color: var(--body-color);
-  padding: 16px 25px;
-  font-size: 16px;
-  line-height: 24px;
-  border-radius: 18px;
+  padding: var(--dam-sidebar-nav-py, 8.5px) var(--dam-sidebar-nav-px, 10.2px);
+  font-size: var(--dam-sidebar-nav-fs, 13.6px);
+  line-height: var(--dam-sidebar-nav-lh, 20.4px);
+  border-radius: var(--dam-sidebar-nav-radius, 15.3px);
   -webkit-transition: all 0.3s ease;
   transition: all 0.3s ease;
+  align-items: center;
 }
 
 @media only screen and (max-width: 575px) {
   .geex-sidebar__menu__link {
-    gap: 10px;
-    font-size: 14px;
-    padding: 12px 25px;
+    gap: calc(10px * var(--dam-sidebar-nav-scale, 0.85));
+    font-size: calc(14px * var(--dam-sidebar-nav-scale, 0.85));
+    padding: calc(12px * var(--dam-sidebar-nav-scale, 0.85)) calc(25px * var(--dam-sidebar-nav-scale, 0.85));
   }
 }
 
 .geex-sidebar__menu__link i {
-  font-size: 23px;
+  font-size: var(--dam-sidebar-nav-icon-fs, 19.55px);
   color: var(--grayThree-color);
+  line-height: 1;
+  position: relative;
+  top: var(--dam-sidebar-nav-icon-nudge, 1px);
 }
 
 @media only screen and (max-width: 575px) {
   .geex-sidebar__menu__link i {
-    font-size: 20px;
+    font-size: calc(20px * var(--dam-sidebar-nav-scale, 0.85));
   }
 }
 
@@ -218,7 +222,7 @@ Sidebar
 
 .geex-sidebar__submenu .geex-sidebar__menu__link {
   cursor: pointer;
-  padding: 8px 25px;
+  padding: calc(8px * var(--dam-sidebar-nav-scale, 0.85)) calc(25px * var(--dam-sidebar-nav-scale, 0.85));
   background: transparent;
 }
 
@@ -257,9 +261,4 @@ Sidebar
   border-radius: 5px;
   border: none;
   -webkit-transition: all 0.3s ease;
-  transition: all 0.3s ease;
-}
-
-.geex-sidebar__action__btn:hover {
-  background: #ccc4c4;
-}
+  transition

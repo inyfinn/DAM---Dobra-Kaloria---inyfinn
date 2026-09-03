@@ -12,10 +12,14 @@ Warm queue role: degrade to no-op / sync generate on demand when circuit OPEN.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
+import shutil
+import subprocess
 import threading
 import time
+import tempfile
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -147,6 +151,67 @@ def _store_meta(digest: str, rel_cache: str, content_type: str, profile: str) ->
         pass
 
 
+def _find_pdftoppm() -> Optional[str]:
+    """Poppler pdftoppm — PATH or bundled under bin/runtime."""
+    for name in ("pdftoppm", "pdftoppm.exe"):
+        hit = shutil.which(name)
+        if hit:
+            return hit
+    runtime = REPO_ROOT / "runtime"
+    for rel in (
+        "win/poppler/Library/bin/pdftoppm.exe",
+        "win/tools/poppler/pdftoppm.exe",
+    ):
+        p = runtime / rel
+        if p.is_file():
+            return str(p)
+    return None
+
+
+def raster_pdf_first_page_jpeg(src: str, *, max_side: int = 2400) -> Optional[bytes]:
+    """Raster first PDF page to JPEG via pdftoppm (Poppler)."""
+    if Path(src).suffix.lower() != ".pdf":
+        return None
+    exe = _find_pdftoppm()
+    if not exe:
+        return None
+    try:
+        if not os.path.isfile(src):
+            return None
+    except OSError:
+        return None
+    scale = max(64, min(int(max_side), 4096))
+    try:
+        with tempfile.TemporaryDirectory(prefix="dam-pdf-") as td:
+            out_prefix = str(Path(td) / "page")
+            proc = subprocess.run(
+                [
+                    exe,
+                    "-jpeg",
+                    "-singlefile",
+                    "-f",
+                    "1",
+                    "-l",
+                    "1",
+                    "-scale-to",
+                    str(scale),
+                    src,
+                    out_prefix,
+                ],
+                capture_output=True,
+                timeout=90,
+                check=False,
+            )
+            if proc.returncode != 0:
+                return None
+            jpg = Path(out_prefix + ".jpg")
+            if not jpg.is_file() or jpg.stat().st_size == 0:
+                return None
+            return jpg.read_bytes()
+    except Exception:
+        return None
+
+
 def _encode_thumb(src: str, dest_avif: Path, dest_jpg: Path, max_side: int) -> tuple[Optional[Path], str]:
     """Create AVIF or JPEG thumb. Returns (path, content_type)."""
     try:
@@ -154,8 +219,15 @@ def _encode_thumb(src: str, dest_avif: Path, dest_jpg: Path, max_side: int) -> t
     except ImportError:
         return None, ""
 
+    open_target: str | io.BytesIO = src
+    if Path(src).suffix.lower() == ".pdf":
+        pdf_jpg = raster_pdf_first_page_jpeg(src, max_side=max(max_side, 480))
+        if not pdf_jpg:
+            return None, ""
+        open_target = io.BytesIO(pdf_jpg)
+
     try:
-        with Image.open(src) as im:
+        with Image.open(open_target) as im:
             if im.mode in ("CMYK", "P"):
                 # P z transparency obsluzy _flatten_white
                 if im.mode == "CMYK":
