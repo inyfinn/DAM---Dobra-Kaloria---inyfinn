@@ -40,6 +40,22 @@
 
   function ensureSidebarVersionEl() {
 
+    /* De-dupe: dam-version mounts before dam-shell rebuilds the nav menu, so a
+     * second #damSidebarVersion (and its .dam-nav-version li) can appear ->
+     * "wersja pokazana dwa razy". Keep exactly one. */
+
+    var dupes = document.querySelectorAll("#damSidebarVersion");
+
+    for (var d = 1; d < dupes.length; d++) {
+
+      var li = dupes[d].closest ? dupes[d].closest(".dam-nav-version") : null;
+
+      if (li && li.parentNode) li.parentNode.removeChild(li);
+
+      else if (dupes[d].parentNode) dupes[d].parentNode.removeChild(dupes[d]);
+
+    }
+
     var existing = document.getElementById("damSidebarVersion");
 
     if (existing) return existing;
