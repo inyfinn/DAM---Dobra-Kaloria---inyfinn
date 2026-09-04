@@ -96,8 +96,15 @@ def supervisor_lock_status() -> dict[str, Any]:
 class IndexSupervisor:
     """Owns watch-file-index subprocess + status/log files."""
 
-    def __init__(self, *, interval: float = 5.0, roots: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        interval: float = 2.0,
+        depth: int = 5,
+        roots: list[str] | None = None,
+    ) -> None:
         self.interval = float(interval)
+        self.depth = max(1, int(depth))
         self.roots = list(roots or [])
         self._proc: subprocess.Popen | None = None
         self._stop = threading.Event()
@@ -150,11 +157,24 @@ class IndexSupervisor:
         _rotate_log_if_needed(WATCHER_LOG)
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         log_f = open(WATCHER_LOG, "a", encoding="utf-8", errors="replace")
+        try:
+            from branding_publish import resolve_script_python
+
+            watcher_py = resolve_script_python(require_ijson=False)
+        except Exception:
+            watcher_py = sys.executable
+            exe = Path(sys.executable)
+            if exe.name.lower() == "pythonw.exe":
+                sibling = exe.with_name("python.exe")
+                if sibling.is_file():
+                    watcher_py = str(sibling)
         cmd = [
-            sys.executable,
+            watcher_py,
             str(WATCH_SCRIPT),
             "--interval",
             str(self.interval),
+            "--depth",
+            str(self.depth),
             "--status-file",
             str(WATCHER_STATUS),
             "--lock-file",
@@ -255,7 +275,7 @@ class IndexSupervisor:
         self._owned = False
 
 
-def ensure_index_supervisor(*, interval: float = 5.0) -> dict[str, Any]:
+def ensure_index_supervisor(*, interval: float = 2.0, depth: int = 5) -> dict[str, Any]:
     """Idempotent: start supervisor if this process can own the lock."""
     global _owner
     with _state_lock:
@@ -276,7 +296,7 @@ def ensure_index_supervisor(*, interval: float = 5.0) -> dict[str, Any]:
                 "started": False,
                 "watcher": read_watcher_status(),
             }
-        sup = IndexSupervisor(interval=interval)
+        sup = IndexSupervisor(interval=interval, depth=depth)
         result = sup.start()
         if result.get("owned"):
             _owner = sup

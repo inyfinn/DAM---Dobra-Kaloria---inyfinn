@@ -19,6 +19,62 @@ DEFAULT_DEBOUNCE_SEC = 2.0
 DEFAULT_LOCK_TTL_SEC = 7200.0
 
 
+def _python_can_import(exe: Path, module: str, *, timeout: float = 12.0) -> bool:
+    """True if ``exe -c 'import module'`` exits 0 (CREATE_NO_WINDOW on Win)."""
+    if not exe.is_file():
+        return False
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+    try:
+        rc = subprocess.call(
+            [str(exe), "-c", f"import {module}"],
+            creationflags=flags,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=timeout,
+        )
+        return rc == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
+def resolve_script_python(*, require_ijson: bool = False) -> str:
+    """Interpreter for index/branding subprocesses.
+
+    Bridge often runs as ``pythonw.exe`` (no console). Grid builder needs ``ijson``
+    in the same runtime site-packages. Prefer sibling ``python.exe`` (same Lib),
+    then current executable. Never silently fall back to a different Python that
+    lacks the module when ``require_ijson`` is set — raise instead.
+    """
+    exe = Path(sys.executable).resolve()
+    candidates: list[Path] = []
+    if exe.name.lower() == "pythonw.exe":
+        sibling = exe.with_name("python.exe")
+        if sibling.is_file():
+            candidates.append(sibling)
+    candidates.append(exe)
+    # Dedupe while preserving order
+    seen: set[str] = set()
+    ordered: list[Path] = []
+    for c in candidates:
+        key = str(c).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        ordered.append(c)
+
+    if not require_ijson:
+        return str(ordered[0] if ordered else exe)
+
+    for c in ordered:
+        if _python_can_import(c, "ijson"):
+            return str(c)
+    raise RuntimeError(
+        "ijson_missing: install ijson into bin/runtime/win/python/Lib/site-packages "
+        f"(tried: {', '.join(str(c) for c in ordered)})"
+    )
+
+
 def canonical_sqlite_path(
     *,
     dam_db_module: Any = None,
@@ -42,7 +98,7 @@ def grid_from_sqlite_argv(
     python_exe: str | None = None,
 ) -> list[str]:
     """Build argv: python build-branding-grid-index.py --from-sqlite <Path>."""
-    exe = python_exe or sys.executable
+    exe = python_exe or resolve_script_python(require_ijson=True)
     db = Path(sqlite_path)
     return [exe, str(grid_script), "--from-sqlite", str(db)]
 
@@ -83,7 +139,11 @@ class SlimGridPublisher:
         self._generation = 0
 
     def argv(self) -> list[str]:
-        return grid_from_sqlite_argv(self.grid_script, self.sqlite_path)
+        return grid_from_sqlite_argv(
+            self.grid_script,
+            self.sqlite_path,
+            python_exe=resolve_script_python(require_ijson=True),
+        )
 
     def schedule(self, delay_sec: float | None = None) -> int:
         if not self.grid_script.is_file():
@@ -169,7 +229,11 @@ class SlimGridPublisher:
             cmd = self.argv()
             self.append_log(f"slim_grid_cmd {' '.join(cmd)}")
             _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
-            rc = self._subprocess_call(cmd, creationflags=_no_win)
+            rc = self._subprocess_call(
+                cmd,
+                creationflags=_no_win,
+                cwd=str(self.grid_script.parent),
+            )
             if rc != 0:
                 with self.state_lock:
                     self.state["slim_last_ok"] = False

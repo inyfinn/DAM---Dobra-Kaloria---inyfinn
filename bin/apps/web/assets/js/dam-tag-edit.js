@@ -358,7 +358,7 @@
       "#damTagEditPopover .dam-tag-edit-popover__list{flex:1 1 auto!important;min-height:0!important;max-height:none!important;}" +
       "#damTagEditPopover .dam-thumb-picker__footer," +
       "#damTagEditPopover .dam-tag-edit-popover__actions{" +
-      "display:grid!important;grid-template-columns:minmax(96px,auto) minmax(148px,auto) 1fr minmax(120px,auto)!important;" +
+      "display:grid!important;grid-template-columns:auto 1fr auto!important;" +
       "align-items:center!important;gap:8px!important;min-height:65px!important;box-sizing:border-box!important;" +
       "padding:12px 14px!important;margin:0!important;border-top:1px solid #ececf2!important;" +
       "background:#f7f6fa!important;flex:0 0 auto!important;border-radius:0!important;}" +
@@ -367,7 +367,7 @@
       "#damTagEditPopover .dam-thumb-picker__footer > [data-cancel]," +
       "#damTagEditPopover .dam-tag-edit-popover__actions > [data-cancel]{grid-column:1!important;}" +
       "#damTagEditPopover .dam-thumb-picker__footer > [data-confirm]," +
-      "#damTagEditPopover .dam-tag-edit-popover__actions > [data-confirm]{grid-column:4!important;justify-self:end!important;margin-left:0!important;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__actions > [data-confirm]{grid-column:3!important;justify-self:end!important;margin-left:0!important;" +
       "#damTagEditPopover .dam-tag-edit-popover__foot{" +
       "display:grid!important;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;" +
       "padding:10px 12px;border-top:1px solid #ececf2;flex:0 0 auto;box-sizing:border-box;}" +
@@ -920,7 +920,8 @@
       current_langs: (ctx.currentLangs || []).join(","),
       user_email: userLabel(),
     };
-    return fetch(bridgeUrl() + "/revision-langs", {
+    function postRevisionLangs() {
+      return fetch(bridgeUrl() + "/revision-langs", {
       method: "POST",
       headers: bridgeAuthHeaders(),
       body: JSON.stringify(payload),
@@ -965,6 +966,17 @@
       .catch(function () {
         showToast("Bridge offline - nie zapisano jezykow.");
       });
+    }
+    if (global.DamApi && typeof global.DamApi.ensureSession === "function") {
+      return global.DamApi.ensureSession().then(function (sess) {
+        if (!sess || !sess.ok) {
+          showToast("Blad: login_required");
+          return sess || { ok: false, error: "login_required" };
+        }
+        return postRevisionLangs();
+      });
+    }
+    return postRevisionLangs();
   }
 
   function applyTagPickerChoice(kind, ctx, newCode) {

@@ -72,19 +72,21 @@
   --dam-control-fs: 12px;
   --dam-control-radius: 8px;
 
-  /* Sidebar nav — compact scale (−15%, 2026-09-03) */
+  /* Sidebar nav — compact scale (−15%, 2026-09-03); v-compact −20% vertical rhythm only */
   --dam-sidebar-nav-scale: 0.85;
+  --dam-sidebar-nav-v-compact: 0.8;
   --dam-sidebar-nav-fs: calc(16px * var(--dam-sidebar-nav-scale));
   --dam-sidebar-nav-lh: calc(24px * var(--dam-sidebar-nav-scale));
-  --dam-sidebar-nav-py: calc(10px * var(--dam-sidebar-nav-scale));
+  --dam-sidebar-nav-py: calc(10px * var(--dam-sidebar-nav-scale) * var(--dam-sidebar-nav-v-compact));
   --dam-sidebar-nav-px: calc(12px * var(--dam-sidebar-nav-scale));
   --dam-sidebar-nav-gap: calc(10px * var(--dam-sidebar-nav-scale));
   --dam-sidebar-nav-icon-fs: calc(23px * var(--dam-sidebar-nav-scale));
   --dam-sidebar-nav-icon-nudge: 1px;
-  --dam-sidebar-nav-item-edge: calc(15px * var(--dam-sidebar-nav-scale));
-  --dam-sidebar-nav-min-h: calc(44px * var(--dam-sidebar-nav-scale));
-  --dam-sidebar-nav-active-inset: calc(8px * var(--dam-sidebar-nav-scale));
+  --dam-sidebar-nav-item-edge: calc(15px * var(--dam-sidebar-nav-scale) * var(--dam-sidebar-nav-v-compact));
+  --dam-sidebar-nav-min-h: calc(56px * var(--dam-sidebar-nav-v-compact));
+  --dam-sidebar-nav-active-inset: calc(8px * var(--dam-sidebar-nav-scale) * var(--dam-sidebar-nav-v-compact));
   --dam-sidebar-nav-radius: calc(18px * var(--dam-sidebar-nav-scale));
+  --dam-sidebar-nav-logout-mt: calc(50px * var(--dam-sidebar-nav-v-compact));
 
   /* Outline / ghost CTAs (icon-btn, win-btn outline, modal geex secondary) — 50% alpha */
   --dam-btn-outline-border: color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent);

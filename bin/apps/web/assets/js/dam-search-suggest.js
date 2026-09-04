@@ -136,9 +136,22 @@
     attached.add(input);
     opts = opts || {};
     ensureSuggestCss();
-    var host = input.closest(".dam-search-wrap") || input.parentElement;
+    var host =
+      input.closest(".dam-search-input-wrap") ||
+      input.closest(".dam-search-wrap") ||
+      input.parentElement;
     if (host && !host.classList.contains("dam-search-suggest-host")) {
       host.classList.add("dam-search-suggest-host");
+    }
+    if (host && host.classList.contains("dam-search-input-wrap") && !host._damFocusBound) {
+      host._damFocusBound = true;
+      host.addEventListener("mousedown", function (e) {
+        if (e.button !== 0) return;
+        if (e.target === input) return;
+        if (e.target.closest && e.target.closest(".dam-search-clear")) return;
+        e.preventDefault();
+        input.focus({ preventScroll: true });
+      });
     }
     var list = document.createElement("ul");
     list.className = "dam-search-suggest";

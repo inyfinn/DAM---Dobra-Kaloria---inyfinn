@@ -1608,6 +1608,14 @@ def _run_index_rebuild() -> None:
                         "meta": {},
                     }
                 )
+            # Hook: branding grid/search must follow file-index (one pipeline, no second watcher).
+            try:
+                br = start_branding_rebuild()
+                _append_rebuild_log(
+                    f"branding_hook_after_index started={br.get('started')} running={br.get('running')}"
+                )
+            except Exception as br_exc:  # noqa: BLE001
+                _append_rebuild_log(f"branding_hook_after_index_error {br_exc}")
     except Exception as exc:  # noqa: BLE001
         with _index_lock:
             _index_state["last_ok"] = False
@@ -1724,12 +1732,20 @@ def _run_branding_rebuild() -> None:
         if not BUILD_BRANDING_INDEX.is_file():
             raise FileNotFoundError(str(BUILD_BRANDING_INDEX))
         _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
-        # Stage 1: fat builder (keeps WIZKI)
+        from branding_publish import resolve_script_python
+
+        # Prefer python.exe (+ bundled ijson) over pythonw for builders.
+        try:
+            script_py = resolve_script_python(require_ijson=True)
+        except RuntimeError as ijson_exc:
+            raise RuntimeError(str(ijson_exc)) from ijson_exc
+        # Stage 1: fat builder (keeps WIZKI) — fat does not need ijson; same exe for consistency
         with _branding_rebuild_lock:
             _branding_rebuild_state["stage"] = "fat"
         lock_handle.update(stage="branding:fat")
         _write_branding_status()
-        rc = subprocess.call([sys.executable, str(BUILD_BRANDING_INDEX)], creationflags=_no_win)
+        _append_rebuild_log(f"branding_script_python {script_py}")
+        rc = subprocess.call([script_py, str(BUILD_BRANDING_INDEX)], creationflags=_no_win)
         if rc != 0:
             raise RuntimeError(f"fat_build_rc_{rc}")
         # Stage 2: slim grid from SQLite (explicit Path — argparse requires it)
@@ -1740,7 +1756,11 @@ def _run_branding_rebuild() -> None:
             _write_branding_status()
             grid_cmd = _grid_from_sqlite_argv()
             _append_rebuild_log(f"full_grid_cmd {' '.join(grid_cmd)}")
-            rc2 = subprocess.call(grid_cmd, creationflags=_no_win)
+            rc2 = subprocess.call(
+                grid_cmd,
+                creationflags=_no_win,
+                cwd=str(BUILD_BRANDING_GRID_INDEX.parent),
+            )
             if rc2 != 0:
                 raise RuntimeError(f"grid_build_rc_{rc2}")
         # Stage 3: invalidate caches only after success
@@ -2119,7 +2139,7 @@ PRODUCT_STATUS_FILE = WEB_ROOT / "data" / "product-status.json"
 LANG_OVERRIDES_FILE = WEB_ROOT / "data" / "lang-overrides.json"
 PROPOSAL_TTL_HOURS = 72
 
-_LANG_ALIAS_CANON = {"gb": "en", "uk": "en", "ukr": "ua"}
+_LANG_ALIAS_CANON = {"gb": "en", "uk": "en", "ukr": "ua"}  # UA stays ua — never ua->uk
 _KNOWN_LANG_FOR_FOLDER = frozenset({
     "pl", "de", "en", "ua", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
     "fr", "it", "es", "nl", "ru", "hr", "si", "bg", "at", "be", "dk",
@@ -2131,6 +2151,8 @@ def canonicalize_lang_code(code: str) -> str:
     c = (code or "").strip().lower()
     if not c or c in ("?", "unknown", "xx"):
         return ""
+    if c == "ua":
+        return "ua"
     c = _LANG_ALIAS_CANON.get(c, c)
     if c in ("gb", "uk"):
         return "en"
@@ -6266,12 +6288,24 @@ class Handler(BaseHTTPRequestHandler):
     def _session_user(self) -> dict | None:
         """User z Bearer tokena (Postgres/SQLite). None = brak / niewazna sesja."""
         res = resolve_session(self._bearer())
-        if not res.get("ok"):
-            return None
-        user = res.get("user") or {}
-        if not user.get("email") and not user.get("role"):
-            return None
-        return user
+        if res.get("ok"):
+            user = res.get("user") or {}
+            if user.get("email") or user.get("role"):
+                return user
+        # Desktop: wygasly Bearer, ale bound-session na maszynie — rehydrate bez hasla.
+        try:
+            rh = auth_rehydrate(
+                session_id=(self.headers.get("X-Dam-Session-Id") or "").strip(),
+                device_id=(self.headers.get("X-Dam-Device-Id") or "").strip(),
+                machine_id=(self.headers.get("X-Dam-Machine-Id") or "").strip(),
+            )
+            if rh.get("ok"):
+                user = rh.get("user") or {}
+                if user.get("email") or user.get("role"):
+                    return user
+        except Exception:
+            pass
+        return None
 
     def _require_login(self) -> dict | None:
         user = self._session_user()
@@ -8525,7 +8559,8 @@ def main() -> None:
     try:
         import index_supervisor
 
-        sup = index_supervisor.ensure_index_supervisor(interval=5.0)
+        # 2s poll + depth 5: DK→kat→produkt→wariant→WIZKI→RGB (bylo 5s/depth3 = slepe WIZKI)
+        sup = index_supervisor.ensure_index_supervisor(interval=2.0, depth=5)
         print("index_supervisor:", {k: sup.get(k) for k in ("ok", "owned", "started", "reason")})
     except Exception as exc:
         print("index_supervisor:", exc)

@@ -63,22 +63,19 @@
     }
   }
 
-  function ensureVersionPill() {
-    var el = document.getElementById("damAppVersionPill");
-    if (el) return el;
-    el = document.createElement("div");
-    el.id = "damAppVersionPill";
-    el.style.cssText =
-      "position:fixed;right:12px;bottom:12px;z-index:9998;padding:6px 10px;" +
-      "border-radius:8px;font:600 12px/1 Jost,system-ui,sans-serif;" +
-      "background:rgba(23,22,30,.75);color:#fff;pointer-events:none;";
-    document.body.appendChild(el);
-    return el;
-  }
-
   function setVersionPill(text) {
-    var el = ensureVersionPill();
-    el.textContent = text;
+    if (global.DamVersion && typeof global.DamVersion.setSidebarLabel === "function") {
+      global.DamVersion.setSidebarLabel(text);
+      return;
+    }
+    if (global.DamVersion && typeof global.DamVersion.hideFloatingPill === "function") {
+      global.DamVersion.hideFloatingPill();
+    }
+    var legacy = document.getElementById("damAppVersionPill");
+    if (legacy) {
+      legacy.hidden = true;
+      legacy.style.display = "none";
+    }
   }
 
   function hardReload(reason) {

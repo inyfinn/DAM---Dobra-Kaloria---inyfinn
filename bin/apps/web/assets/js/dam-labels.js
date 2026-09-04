@@ -501,13 +501,106 @@
     return base;
   }
 
-  /** Canonical market code: EN/GB/UK -> en (English). UKR -> ua. UA stays ua. */
+  /** Canonical market code: EN/GB/UK -> en (English). UKR -> ua. UA stays ua (Ukrainian). */
   function normalizeLangCode(code) {
     var c = String(code || "").toLowerCase().trim();
     if (!c) return "";
+    if (c === "ua") return "ua";
     if (c === "en" || c === "uk" || c === "gb") return "en";
     if (c === "ukr") return "ua";
     return c;
+  }
+
+  var _LANG_CODES_ORDER = [
+    "pl", "de", "en", "gb", "ua", "uk", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
+    "fr", "it", "es", "nl", "ru", "hr", "si", "bg", "ar",
+  ];
+
+  function parseLangsFromText(text) {
+    var n = String(text || "")
+      .toLowerCase()
+      .replace(/\\/g, "/")
+      .replace(/[^a-z0-9/_.\-\s\u2013\u2014]+/g, " ")
+      .replace(/[\u2013\u2014]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!n) return [];
+    var found = [];
+    var seen = {};
+    _LANG_CODES_ORDER.forEach(function (code) {
+      var re = new RegExp("(^|[^a-z])" + code + "([^a-z]|$)");
+      if (re.test(n)) {
+        var mapped = normalizeLangCode(code);
+        if (mapped && mapped.length === 2 && !seen[mapped]) {
+          seen[mapped] = true;
+          found.push(mapped);
+        }
+      }
+    });
+    return found;
+  }
+
+  function parseFolderLangs(folderName) {
+    var langs = [];
+    var seen = {};
+    function addToken(tok) {
+      var code = normalizeLangCode(tok);
+      if (!code || code.length !== 2 || seen[code]) return;
+      seen[code] = true;
+      langs.push(code);
+    }
+    var parts = String(folderName || "")
+      .split(" - ")
+      .map(function (p) {
+        return p.trim();
+      })
+      .filter(Boolean);
+    if (!parts.length) return langs;
+    var dateRe = /^\d{2}[./-]\d{2}[./-]\d{2,4}$/;
+    var indexRe = /^\d{5,9}(?:\.\d{2})?$/;
+    parts.forEach(function (part) {
+      if (dateRe.test(part) || indexRe.test(part)) return;
+      var toks = part.split(/[\s,;/]+/).filter(Boolean);
+      var langOnly =
+        toks.length &&
+        toks.every(function (t) {
+          var c = normalizeLangCode(t);
+          return c && c.length === 2;
+        });
+      if (langOnly) {
+        toks.forEach(addToken);
+        return;
+      }
+      toks.forEach(addToken);
+    });
+    return langs;
+  }
+
+  function resolveRevisionLangs(revision, storedLangs) {
+    var folder = (revision && (revision.folder || revision.revision_folder)) || "";
+    var path = (revision && (revision.path || revision.revision_path)) || "";
+    var fromFolder = parseFolderLangs(folder);
+    var fromText = parseLangsFromText(folder + " " + path);
+    var evidence = fromFolder.length ? fromFolder : fromText;
+    if (!evidence.length && revision && revision.wizki && revision.wizki.length) {
+      revision.wizki.some(function (f) {
+        evidence = parseLangsFromText((f && f.name) || "");
+        return evidence.length > 0;
+      });
+    }
+    var stored = (storedLangs || [])
+      .map(function (x) {
+        return normalizeLangCode(x);
+      })
+      .filter(Boolean);
+    if (!evidence.length) return stored;
+    if (!stored.length) return evidence;
+    var same =
+      evidence.length === stored.length &&
+      evidence.every(function (c) {
+        return stored.indexOf(c) !== -1;
+      });
+    return same ? stored : evidence;
   }
 
   function langLabel(code) {
@@ -894,6 +987,9 @@
     carrierLabelLong: carrierLabelLong,
     carrierLabel: carrierLabel,
     normalizeLangCode: normalizeLangCode,
+    parseLangsFromText: parseLangsFromText,
+    parseFolderLangs: parseFolderLangs,
+    resolveRevisionLangs: resolveRevisionLangs,
     langLabel: langLabel,
     langShort: langShort,
     detectMarketFromPath: detectMarketFromPath,

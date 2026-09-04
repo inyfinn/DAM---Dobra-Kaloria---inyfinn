@@ -354,6 +354,16 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
 
+### 2026-09-04 - WIZKI w podfolderach RGB = 0 w indeksie (flat scan)
+
+**Objaw:** Wizualizacje nie pokazuja MINI Cynamonka 6300782 / Śliwka 6300784 mimo plikow w `4 - WIZKI/INTERNET-PREZENTACJE-RGB/` (i glebiej `data/RGB`). Produkty w Eksplorerze sa; `files_by_role.viz=[]`, `wizki_count=0`.
+
+**Przyczyna:** `scan_slot_files` listuje tylko pliki bezposrednio w slocie (1 poziom). Nowe pakiety WIZKI trzymaja RGB w podfolderach. Watcher: `--depth` bylo default 3 i **nie przekazywane** do `roots_mtime` → mtime konczylo na folderze wariantu, nie widzialo WIZKI.
+
+**Fix:** `scan_viz_slot_files` (rekurencja depth≤4) dla `slot_role=="viz"`; watcher interval 5→2 s, depth 3→5, `roots_mtime(..., max_depth=depth)`; supervisor/bridge `--interval 2 --depth 5`.
+
+**Zasada:** Slot 4-WIZKI = skan zagnieżdżony (jak ELEMENTY), nie flat. `--depth` watchera musi byc podpiety do `tree_mtime`. figa=0 przy pustym `4-WIZKI` na dysku to nie bug matchera.
+
 ### 2026-09-03 - branding: `04 - DRUKOWANE Materiały` → tag Drukowane + marketing_roots
 
 **Objaw:** Kartka FALAFEL 2026 widoczna na dysku `…/03 - MATERIAŁY GRAFICZNE/04 - DRUKOWANE Materiały/…`, w brandingu tylko stary wpis `-- ARCHIWUM --` (M-IMG215823), brak tagu Drukowane.
@@ -2015,4 +2025,14 @@ Skrót — **bind = dwie osobne rzeczy**:
 **Fix:** Live SQLite **tylko** `bin/DATABASE/dam-local.sqlite`. Merge: `(users, size, mtime)`. Dashboard: thumb-cache AVIF, fallback `/media`. Branding: `bootStarted` + skip drugiego paint gdy karty już są.
 
 **Wersja:** `5.0.145`.
+
+#### Lekcja 2026-09-04: branding grid + pythonw bez ijson (v5.0.161)
+
+**Objaw:** `POST /branding/rebuild` fat OK, grid `rc=2`; UI nie widzi nowych materiałów (falafel / `04 DRUKOWANE`); grid `generated_at` zostaje stary.
+
+**Przyczyna:** most/`pythonw` z `bin/runtime/win/python` bez `ijson` w site-packages; `sys.executable` przekazywany do `build-branding-grid-index.py` → exit 2. Dodatkowo subprocess z `cwd=desktop` → `ModuleNotFoundError: branding_grid_eligibility` (exit 1). Watcher patrzył tylko na DK/GC produkty — zmiany w `03 - MATERIAŁY GRAFICZNE` nie odpalały brandingu. Kilka mostów = kilka `watch-file-index` (nie singleton).
+
+**Fix:** vendor `ijson` do runtime site-packages; `branding_publish.resolve_script_python(require_ijson=True)` (prefer `python.exe`); `sys.path` + `cwd=scripts` dla grid; hook po `file-index` w `_run_index_rebuild` + `watch-file-index` → `scripts/ops/rebuild-branding-pipeline.py`; watch roots branding; jeden supervisor/watcher. UI nadal **nie** ładuje `branding-index.json`.
+
+**Wersja:** `5.0.161`.
 

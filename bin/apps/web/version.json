@@ -1,14 +1,14 @@
-{
+﻿{
 
-  "version": "5.0.159",
+  "version": "5.0.163",
 
   "name": "DAM - Dobra Kaloria - Inyfinn",
 
   "codename": "integracja-produkcja",
 
-  "released_at": "2026-09-03",
+  "released_at": "2026-09-04",
 
-  "note": "5.0.159: branding PDF card thumbs via /thumb-cache (pdftoppm first page); prefer .pdf over .ai in group.",
+  "note": "5.0.163: mascot + single sidebar version; nested 4-WIZKI index; UA=Ukrainian; Zatwierdź visible",
 
   "updates": {
 

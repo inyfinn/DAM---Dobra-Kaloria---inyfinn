@@ -82,7 +82,6 @@
     { key: "media:video", label: "Wideo", group: "format_pliku" },
     { key: "media:source", label: "Źródło", group: "format_pliku" },
     { key: "media:document", label: "Dokument", group: "format_pliku" },
-    { key: "appearance:drukowane", label: "Drukowane", group: "przeznaczenie" },
     { key: "format:raster", label: "Raster", group: "cechy" },
     { key: "format:transparent", label: "Przezroczyste tło", group: "cechy" },
     { key: "format:white", label: "Tło białe", group: "cechy" },
@@ -451,6 +450,17 @@
     return !!elVal("damBrandingSearch");
   }
 
+  /** Slim branding-grid-index omits brand — infer jak build-branding-index.py. */
+  function inferAssetBrand(a) {
+    if (!a) return "";
+    var explicit = String(a.brand || "").toUpperCase();
+    if (explicit === "DK" || explicit === "GC") return explicit;
+    var path = String(a.path || "").toUpperCase();
+    if (path.indexOf("/- EKSPORT/") !== -1 || path.indexOf("/01 - PRODUCTS/") !== -1) return "GC";
+    /* POLSKA marketing / grid slim: domyslnie DK gdy pole brand puste. */
+    return "DK";
+  }
+
   function assetMatchesTagKey(a, key) {
     if (!key) return true;
     var parts = key.split(":");
@@ -481,7 +491,7 @@
     if (kind === "perspective") return a.perspective === val;
     if (kind === "size") return a.size === val;
     if (kind === "background") return a.background === val;
-    if (kind === "brand") return a.brand === val;
+    if (kind === "brand") return inferAssetBrand(a) === String(val || "").toUpperCase();
     if (kind === "channel") return assetMatchesChannel(a, val);
     if (kind === "appearance") {
       var wantApp = normTag(val);
@@ -5556,6 +5566,36 @@
     });
   }
 
+  /** Quiz (dam-assoc-quiz.js) domyslnie appenduje do .dam-branding-toolbar — przenies do slotu w view-tools. */
+  function relocateAssocQuizEntry() {
+    var mount = document.getElementById("damAssocQuizMount");
+    var btn = document.getElementById("damAssocQuizOpen");
+    if (!mount || !btn) return;
+    if (btn.parentElement !== mount) mount.appendChild(btn);
+    btn.classList.add("dam-branding-quiz-btn");
+    mount.hidden = false;
+  }
+
+  function watchAssocQuizEntry() {
+    relocateAssocQuizEntry();
+    var host =
+      document.querySelector(".dam-branding-toolbar") ||
+      document.querySelector(".dam-branding-filters__view-tools");
+    if (host && typeof MutationObserver === "function") {
+      var obs = new MutationObserver(function () {
+        relocateAssocQuizEntry();
+      });
+      obs.observe(host, { childList: true, subtree: true });
+    }
+    document.addEventListener("dam:admin-mode", relocateAssocQuizEntry);
+    window.addEventListener("storage", function (e) {
+      if (e.key === "dam_admin_mode" || e.key === "dam_role") relocateAssocQuizEntry();
+    });
+    [400, 1200, 2500].forEach(function (ms) {
+      setTimeout(relocateAssocQuizEntry, ms);
+    });
+  }
+
   var bootStarted = false;
   async function boot() {
     if (bootStarted) return;
@@ -5570,6 +5610,7 @@
       bindBrandingPageSizeControl();
       bindBrandingGridDelegation(document.getElementById("damBrandingSectionGrid"));
       bindBrandingGridDelegation(document.getElementById("damBrandbookGrid"));
+      watchAssocQuizEntry();
       scheduleMetaFiltersReveal();
       // Instant: first card z slim; search-index (~41MB) lazy po siatce / on-demand.
       var searchPromise = null;

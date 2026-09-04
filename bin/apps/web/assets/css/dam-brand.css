@@ -3345,13 +3345,49 @@ body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link .dam-nav-labe
   line-height: 0 !important;
 }
 .geex-sidebar__footer__author .dam-app-version {
-  display: inline;
-  margin-left: 0.35em;
-  color: var(--dam-text-muted, #8a8696);
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+.geex-sidebar__menu__item.dam-nav-version {
+  list-style: none;
+  margin: calc(6px * var(--dam-sidebar-nav-v-compact, 0.8)) 0 0;
+  padding: 0 var(--dam-sidebar-nav-px, 10.2px) 0 calc(25px * var(--dam-sidebar-nav-scale, 0.85));
+  pointer-events: none;
+}
+
+.dam-sidebar-version {
+  display: block;
+  font-size: calc(11px * var(--dam-sidebar-nav-scale, 0.85));
   font-weight: 600;
-  font-size: 0.92em;
+  line-height: 1.3;
+  color: var(--dam-text-muted, #8a8696);
   letter-spacing: 0.02em;
   white-space: nowrap;
+}
+
+body.dam-sidebar-collapsed .geex-sidebar__menu__item.dam-nav-version {
+  display: none !important;
+}
+
+#damAppVersionPill {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Empty-state Dobrokalorius: sprite nad białym kołem (medal) */
+.dam-empty-mascot-row__mascot::before {
+  z-index: 0;
+}
+.dam-empty-mascot-row__mascot-img {
+  z-index: 1;
 }
 .dam-footer-author-link {
   color: inherit;
@@ -3560,6 +3596,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 }
 .dam-search-input-wrap {
   position: relative;
+  z-index: 1;
 }
 .dam-search-input-wrap .uil-search {
   position: absolute;
@@ -10649,6 +10686,14 @@ button.dam-viz-badge:focus-visible,
 }
 /* Footer flush: shared .dam-dialog-actions / .dam-modal-footer grid above.
    Keep button anatomy aligned with COMBO (#damThumbPicker). */
+#damTagEditPopover .dam-tag-edit-popover__confirm span,
+#damTagEditPopover .dam-tag-edit-popover__confirm[data-confirm] span {
+  display: inline;
+  visibility: visible;
+  white-space: nowrap;
+  overflow: visible;
+  max-width: none;
+}
 #damTagEditPopover .dam-tag-edit-popover__confirm,
 #damTagEditPopover .dam-tag-edit-popover__cancel,
 .dam-tag-edit-popover__confirm,

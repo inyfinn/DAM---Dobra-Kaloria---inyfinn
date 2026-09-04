@@ -703,7 +703,9 @@
     ' data-dam-tip="Wyloguj z konta DAM">' +
     '<i class="uil uil-signout" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
     '<span class="dam-nav-label" data-i18n="nav.logout">' + logoutLabel + '</span>' +
-    '</a></li>';
+    '</a></li>' +
+    '<li class="geex-sidebar__menu__item dam-nav-version" aria-hidden="true">' +
+    '<span class="dam-sidebar-version" id="damSidebarVersion" title="Wersja programu DAM"></span></li>';
   }
 
   /** Sidebar: Sesja urządzenia -> profil z CRUD ścieżek per device (nie logout). */
@@ -822,7 +824,7 @@
       "margin-top:8px!important;padding-top:0!important;" +
       "border-top:1px solid rgba(255,255,255,0.1);}" +
       "/* Wyloguj: +50px friction od Sesji - TEN SAM gap expanded i collapsed */" +
-      ".geex-sidebar__menu__item.dam-nav-logout{margin-top:50px!important;}" +
+      ".geex-sidebar__menu__item.dam-nav-logout{margin-top:var(--dam-sidebar-nav-logout-mt,40px)!important;}" +
       "/* Flex column; footer/logo na dole przez margin-top:auto NA FOOTER, nie na Sesji */" +
       ".geex-sidebar__menu-wrapper{" +
       "display:flex!important;flex-direction:column!important;" +
@@ -842,7 +844,7 @@
       "/* Y-STABLE min 56px; height:auto + wrap so long labels (Integracja i produkcja) do not clip pill */" +
       ".geex-sidebar .geex-sidebar__menu__link{" +
       "box-sizing:border-box!important;" +
-      "min-height:56px!important;height:auto!important;" +
+      "min-height:var(--dam-sidebar-nav-min-h,44.8px)!important;height:auto!important;" +
       "white-space:normal!important;" +
       "overflow:visible!important;" +
       "align-items:center!important;}" +
@@ -1156,11 +1158,13 @@
           '<a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer" data-i18n="footer.made_by">' +
             madeBy +
           "</a> &copy; " + year +
-          ' <span class="dam-app-version" title="Wersja programu DAM">v' + ver + "</span>" +
         "</p>";
       /* Morph GSAP moze zostawic autoAlpha:0 - twardy reset widocznosci expanded. */
       footer.style.removeProperty("opacity");
       footer.style.removeProperty("visibility");
+    }
+    if (window.DamVersion && typeof window.DamVersion.setSidebarLabel === "function") {
+      window.DamVersion.setSidebarLabel(window.DAM_APP_VERSION || ver);
     }
     var meta = document.querySelector(".dam-sidebar-collapsed-meta");
     if (meta) {
@@ -3038,7 +3042,7 @@
     // Wersja + aktualizacje (takze przed logowaniem na signin)
     if (!window.DamAppUpdate) {
       var upd = document.createElement("script");
-      upd.src = "assets/js/dam-app-update.js?v=5.0.143";
+      upd.src = "assets/js/dam-app-update.js?v=5.0.163";
       document.head.appendChild(upd);
     }
 

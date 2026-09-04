@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-11T12:19:09",
-  "product_count": 186,
+  "generated_at": "2026-09-04T13:27:58",
+  "product_count": 192,
   "by_prefix": {
     "0000": [
       "chrupiacy-orzech-daktylowy",
@@ -30,6 +30,8 @@
       "energia-boosty",
       "jaglanka-jab-ko-cynamon-sniadaniowe",
       "proteina-boosty",
+      "apple-cinnamon-date",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "cheesecake-cashews",
       "coconut-orange-date",
@@ -47,6 +49,8 @@
     "00000": [
       "energia-boosty",
       "proteina-boosty",
+      "apple-cinnamon-date",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "cheesecake-cashews",
       "coconut-orange-date",
@@ -62,6 +66,8 @@
       "oats-chocolate-balls-crispy"
     ],
     "000000": [
+      "apple-cinnamon-date",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "cheesecake-cashews",
       "coconut-orange-date",
@@ -77,6 +83,8 @@
       "oats-chocolate-balls-crispy"
     ],
     "0000000": [
+      "apple-cinnamon-date",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "cheesecake-cashews",
       "coconut-orange-date",
@@ -92,6 +100,8 @@
       "oats-chocolate-balls-crispy"
     ],
     "00000000": [
+      "apple-cinnamon-date",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "cheesecake-cashews",
       "coconut-orange-date",
@@ -107,6 +117,8 @@
       "oats-chocolate-balls-crispy"
     ],
     "000000000": [
+      "apple-cinnamon-date",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "cheesecake-cashews",
       "coconut-orange-date",
@@ -999,6 +1011,7 @@
       "mix-zestaw-makowiec-x-rogal-x-piernik-mixy",
       "mix-zestaw-mix-ciast-1-mixy",
       "mix-zestaw-mix-ciast-2-mixy",
+      "mix-funkcjonalny-3x-batony-duzy",
       "babka-cytrynowa-nerkowcowy",
       "chrupiacy-orzech-daktylowy",
       "ciasto-marchewkowe-nerkowcowy",
@@ -1044,6 +1057,7 @@
       "daktyl-limonka-raw",
       "daktyl-pomarancza-raw",
       "daktyl-wisnia-raw",
+      "figa-z-makiem-owocowe",
       "malina-owocowe",
       "orzeszki-kukurydza-miod-sniadanie",
       "owies-czekolada-sniadanie",
@@ -1091,9 +1105,13 @@
       "proteina-lemon-cheesecake-krem-orzechowy",
       "3pack-oat-bars-mix",
       "3pack-protein-bars-protein",
+      "apple-cinnamon-date",
       "blackcurrant-cake-cashews",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "cheesecake-cashews",
+      "chocolate-coconut-date",
+      "chocolate-peanuts-date",
       "crunchy-peanuts-date",
       "energy-bars-functional",
       "gi-banoffee-bars-protein",
@@ -1102,6 +1120,7 @@
       "hazelnut-chocolate-date",
       "lemon-bundt-cake-cashews",
       "mango-cashews-bars-date",
+      "mango-cashews-date",
       "peanut-cream-caramel-bars-protein",
       "peanut-cream-salt-bars-protein",
       "peanut-cream-vanilla-bars-protein",
@@ -1256,6 +1275,7 @@
     "63002": [
       "dk-pasztet-sliwka-6300281-niemiesne",
       "pasztet-zurawina-niemiesne",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "peanut-cream-salt-bars-protein",
       "peanut-cream-vanilla-bars-protein",
@@ -1285,6 +1305,7 @@
       "cashews-coconut-date"
     ],
     "630027": [
+      "blueberry-muffin-cashews",
       "peanut-cream-salt-bars-protein",
       "peanut-cream-vanilla-bars-protein",
       "raspberry-tart-cashews",
@@ -1345,6 +1366,15 @@
     ],
     "630027600": [
       "raspberry-tart-cashews"
+    ],
+    "6300277": [
+      "blueberry-muffin-cashews"
+    ],
+    "63002770": [
+      "blueberry-muffin-cashews"
+    ],
+    "630027700": [
+      "blueberry-muffin-cashews"
     ],
     "630028": [
       "dk-pasztet-sliwka-6300281-niemiesne",
@@ -1478,6 +1508,8 @@
       "bio-pszenica-z-miodem-sniadaniowe",
       "chrupiaca-gryka-z-migdalami-sniadaniowe",
       "chrupiaca-pszenica-z-migdalami-sniadaniowe",
+      "apple-cinnamon-date",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "cheesecake-cashews",
       "crunchy-peanuts-date",
@@ -1497,6 +1529,7 @@
       "sousages-spicy-plant-based"
     ],
     "630030": [
+      "blueberry-muffin-cashews",
       "cheesecake-cashews",
       "crunchy-peanuts-date",
       "salty-nut-bars-date",
@@ -1537,6 +1570,15 @@
     ],
     "630030700": [
       "cheesecake-cashews"
+    ],
+    "6300308": [
+      "blueberry-muffin-cashews"
+    ],
+    "63003080": [
+      "blueberry-muffin-cashews"
+    ],
+    "630030800": [
+      "blueberry-muffin-cashews"
     ],
     "630031": [
       "klopsiki-kurczak-niemiesne",
@@ -1636,6 +1678,7 @@
       "pina-colada-nerkowcowy",
       "burger-kurczak-niemiesne",
       "kielbaska-chipotle-cheddar-niemiesne",
+      "blueberry-muffin-cashews",
       "gingerbread-cashews"
     ],
     "6300330": [
@@ -1655,6 +1698,15 @@
     ],
     "630033100": [
       "kielbaska-chipotle-cheddar-niemiesne"
+    ],
+    "6300333": [
+      "blueberry-muffin-cashews"
+    ],
+    "63003330": [
+      "blueberry-muffin-cashews"
+    ],
+    "630033300": [
+      "blueberry-muffin-cashews"
     ],
     "6300334": [
       "gingerbread-cashews"
@@ -1872,6 +1924,7 @@
       "cheesecake-cashews"
     ],
     "630037": [
+      "apple-cinnamon-date",
       "cashews-coconut-date",
       "peanut-cream-caramel-bars-protein",
       "peanut-cream-salt-bars-protein",
@@ -1905,6 +1958,15 @@
     ],
     "630037200": [
       "peanut-cream-caramel-bars-protein"
+    ],
+    "6300373": [
+      "apple-cinnamon-date"
+    ],
+    "63003730": [
+      "apple-cinnamon-date"
+    ],
+    "630037300": [
+      "apple-cinnamon-date"
     ],
     "6300374": [
       "cashews-coconut-date"
@@ -2038,11 +2100,16 @@
       "klopsiki-kimchi-niemiesne",
       "mielone-wolowe-niemiesne",
       "pasztet-pomidor-niemiesne",
+      "apple-cinnamon-date",
+      "blueberry-muffin-cashews",
       "cashews-coconut-date",
       "cheesecake-cashews",
+      "chocolate-peanuts-date",
       "crunchy-peanuts-date",
       "gingerbread-cashews",
       "mango-cashews-bars-date",
+      "mango-cashews-date",
+      "peanut-cream-caramel-bars-protein",
       "peanut-cream-salt-bars-protein",
       "peanut-cream-vanilla-bars-protein",
       "raspberry-tart-cashews",
@@ -2309,8 +2376,21 @@
     ],
     "630046": [
       "kokos-czekolada-daktylowy",
+      "apple-cinnamon-date",
       "cashews-coconut-date",
       "crunchy-peanuts-date"
+    ],
+    "6300460": [
+      "apple-cinnamon-date"
+    ],
+    "63004600": [
+      "apple-cinnamon-date"
+    ],
+    "630046000": [
+      "apple-cinnamon-date"
+    ],
+    "630046001": [
+      "apple-cinnamon-date"
     ],
     "6300462": [
       "cashews-coconut-date"
@@ -2342,10 +2422,22 @@
     "630047": [
       "burger-klasyczny-niemiesne",
       "kaszanka-niemiesne",
+      "apple-cinnamon-date",
+      "blueberry-muffin-cashews",
+      "chocolate-peanuts-date",
       "raspberry-tart-cashews",
       "cornflakes-peanuts-honey-balls-crispy",
       "oats-chocolate-balls-crispy",
       "minced-plant-based"
+    ],
+    "6300470": [
+      "chocolate-peanuts-date"
+    ],
+    "63004700": [
+      "chocolate-peanuts-date"
+    ],
+    "630047000": [
+      "chocolate-peanuts-date"
     ],
     "6300471": [
       "raspberry-tart-cashews"
@@ -2355,6 +2447,15 @@
     ],
     "630047100": [
       "raspberry-tart-cashews"
+    ],
+    "6300472": [
+      "blueberry-muffin-cashews"
+    ],
+    "63004720": [
+      "blueberry-muffin-cashews"
+    ],
+    "630047200": [
+      "blueberry-muffin-cashews"
     ],
     "6300473": [
       "burger-klasyczny-niemiesne"
@@ -2401,11 +2502,23 @@
     "630047800": [
       "cornflakes-peanuts-honey-balls-crispy"
     ],
+    "6300479": [
+      "apple-cinnamon-date"
+    ],
+    "63004790": [
+      "apple-cinnamon-date"
+    ],
+    "630047900": [
+      "apple-cinnamon-date"
+    ],
     "630048": [
       "krem-orzechowy-wanilia-proteinowy",
       "cashews-coconut-date",
+      "chocolate-peanuts-date",
       "crunchy-peanuts-date",
       "mango-cashews-bars-date",
+      "mango-cashews-date",
+      "peanut-cream-caramel-bars-protein",
       "peanut-cream-salt-bars-protein",
       "peanut-cream-vanilla-bars-protein",
       "salty-nut-bars-date",
@@ -2439,14 +2552,26 @@
     "630048200": [
       "salty-nut-bars-date"
     ],
+    "6300483": [
+      "chocolate-peanuts-date"
+    ],
+    "63004830": [
+      "chocolate-peanuts-date"
+    ],
+    "630048300": [
+      "chocolate-peanuts-date"
+    ],
     "6300484": [
-      "mango-cashews-bars-date"
+      "mango-cashews-bars-date",
+      "mango-cashews-date"
     ],
     "63004840": [
-      "mango-cashews-bars-date"
+      "mango-cashews-bars-date",
+      "mango-cashews-date"
     ],
     "630048400": [
-      "mango-cashews-bars-date"
+      "mango-cashews-bars-date",
+      "mango-cashews-date"
     ],
     "6300485": [
       "peanut-cream-salt-bars-protein"
@@ -2469,6 +2594,15 @@
       "krem-orzechowy-wanilia-proteinowy",
       "peanut-cream-vanilla-bars-protein"
     ],
+    "6300487": [
+      "peanut-cream-caramel-bars-protein"
+    ],
+    "63004870": [
+      "peanut-cream-caramel-bars-protein"
+    ],
+    "630048700": [
+      "peanut-cream-caramel-bars-protein"
+    ],
     "6300488": [
       "date-cherry-balls-raw"
     ],
@@ -2488,7 +2622,9 @@
       "date-lime-balls-raw"
     ],
     "630049": [
+      "blueberry-muffin-cashews",
       "cheesecake-cashews",
+      "chocolate-peanuts-date",
       "crunchy-peanuts-date",
       "gingerbread-cashews",
       "raspberry-tart-cashews",
@@ -2521,6 +2657,15 @@
     "630049200": [
       "raspberry-tart-cashews"
     ],
+    "6300493": [
+      "blueberry-muffin-cashews"
+    ],
+    "63004930": [
+      "blueberry-muffin-cashews"
+    ],
+    "630049300": [
+      "blueberry-muffin-cashews"
+    ],
     "6300494": [
       "gingerbread-cashews"
     ],
@@ -2538,6 +2683,15 @@
     ],
     "630049500": [
       "crunchy-peanuts-date"
+    ],
+    "6300496": [
+      "chocolate-peanuts-date"
+    ],
+    "63004960": [
+      "chocolate-peanuts-date"
+    ],
+    "630049600": [
+      "chocolate-peanuts-date"
     ],
     "63005": [
       "mix-6x-mini-batoniki-mixy",
@@ -2569,6 +2723,8 @@
       "nuggets-niemiesne",
       "3pack-oat-bars-mix",
       "3pack-protein-bars-protein",
+      "chocolate-coconut-date",
+      "raspberry-tart-cashews",
       "date-cherry-balls-raw",
       "balls-plant-based",
       "burger-chicken-plant-based",
@@ -2576,7 +2732,27 @@
     ],
     "630050": [
       "mix-na-grill-slaska-kaszanka-niemiesne",
+      "chocolate-coconut-date",
+      "raspberry-tart-cashews",
       "balls-plant-based"
+    ],
+    "6300500": [
+      "chocolate-coconut-date"
+    ],
+    "63005000": [
+      "chocolate-coconut-date"
+    ],
+    "630050000": [
+      "chocolate-coconut-date"
+    ],
+    "6300501": [
+      "raspberry-tart-cashews"
+    ],
+    "63005010": [
+      "raspberry-tart-cashews"
+    ],
+    "630050100": [
+      "raspberry-tart-cashews"
     ],
     "6300502": [
       "balls-plant-based"
@@ -3030,10 +3206,12 @@
       "sznycel-niemiesne",
       "quinoa-z-czekolada-i-truskawkami-sniadaniowe",
       "blackcurrant-cake-cashews",
+      "chocolate-coconut-date",
       "crunchy-peanuts-date",
       "energy-bars-functional",
       "hazelnut-chocolate-date",
       "lemon-bundt-cake-cashews",
+      "peanut-cream-caramel-bars-protein",
       "peanut-cream-salt-bars-protein",
       "peanut-cream-vanilla-bars-protein",
       "cornflakes-peanuts-honey-balls-crispy",
@@ -3046,6 +3224,7 @@
       "energia-funkcjonalny",
       "odpornosc-funkcjonalny",
       "kotlety-mielone-niemiesne",
+      "chocolate-coconut-date",
       "hazelnut-chocolate-date"
     ],
     "6300600": [
@@ -3099,6 +3278,15 @@
     "630060400": [
       "kotlety-mielone-niemiesne"
     ],
+    "6300606": [
+      "chocolate-coconut-date"
+    ],
+    "63006060": [
+      "chocolate-coconut-date"
+    ],
+    "630060600": [
+      "chocolate-coconut-date"
+    ],
     "6300607": [
       "hazelnut-chocolate-date"
     ],
@@ -3107,6 +3295,15 @@
     ],
     "630060700": [
       "hazelnut-chocolate-date"
+    ],
+    "6300608": [
+      "chocolate-coconut-date"
+    ],
+    "63006080": [
+      "chocolate-coconut-date"
+    ],
+    "630060800": [
+      "chocolate-coconut-date"
     ],
     "6300609": [
       "hazelnut-chocolate-date"
@@ -3234,9 +3431,6 @@
       "burger-wolowy-niemiesne"
     ],
     "630063200": [
-      "burger-wolowy-niemiesne"
-    ],
-    "630063201": [
       "burger-wolowy-niemiesne"
     ],
     "6300633": [
@@ -3457,6 +3651,7 @@
       "serce-funkcjonalny",
       "blackcurrant-cake-cashews",
       "energy-bars-functional",
+      "peanut-cream-caramel-bars-protein",
       "peanut-cream-salt-bars-protein",
       "peanut-cream-vanilla-bars-protein",
       "sznycel-plant-based"
@@ -3499,6 +3694,15 @@
     ],
     "630066500": [
       "peanut-cream-vanilla-bars-protein"
+    ],
+    "6300666": [
+      "peanut-cream-caramel-bars-protein"
+    ],
+    "63006660": [
+      "peanut-cream-caramel-bars-protein"
+    ],
+    "630066600": [
+      "peanut-cream-caramel-bars-protein"
     ],
     "6300668": [
       "energy-bars-functional"
@@ -4076,7 +4280,8 @@
       "daktyl-limonka-raw",
       "orzeszki-kukurydza-miod-sniadanie",
       "owies-czekolada-sniadanie",
-      "kaszanka-niemiesne"
+      "kaszanka-niemiesne",
+      "kofta-niemiesne"
     ],
     "6300760": [
       "daktyl-limonka-raw"
@@ -4104,6 +4309,15 @@
     ],
     "630076300": [
       "jab-ko-cynamon-daktylowy"
+    ],
+    "6300765": [
+      "kofta-niemiesne"
+    ],
+    "63007650": [
+      "kofta-niemiesne"
+    ],
+    "630076500": [
+      "kofta-niemiesne"
     ],
     "6300766": [
       "owies-czekolada-sniadanie"
@@ -4253,7 +4467,8 @@
     "630079": [
       "mix-tuba-30-szt-xmas-mixy",
       "mielone-wolowe-niemiesne",
-      "sznycel-niemiesne"
+      "sznycel-niemiesne",
+      "burger-plant-based"
     ],
     "6300793": [
       "mix-tuba-30-szt-xmas-mixy"
@@ -4263,6 +4478,15 @@
     ],
     "630079300": [
       "mix-tuba-30-szt-xmas-mixy"
+    ],
+    "6300796": [
+      "burger-plant-based"
+    ],
+    "63007960": [
+      "burger-plant-based"
+    ],
+    "630079600": [
+      "burger-plant-based"
     ],
     "6300798": [
       "mielone-wolowe-niemiesne",
@@ -4277,10 +4501,68 @@
       "sznycel-niemiesne"
     ],
     "63008": [
-      "burger-klasyczny-niemiesne"
+      "mix-funkcjonalny-3x-batony-duzy",
+      "energia-funkcjonalny",
+      "prebiotyk-funkcjonalny",
+      "figa-z-makiem-owocowe",
+      "burger-klasyczny-niemiesne",
+      "burger-wolowy-niemiesne",
+      "gyros-groch-niemiesne",
+      "kaszanka-niemiesne",
+      "nuggets-niemiesne",
+      "pasztet-pomidor-niemiesne",
+      "roladka-wo-owa-niemiesne"
+    ],
+    "630080": [
+      "figa-z-makiem-owocowe",
+      "gyros-groch-niemiesne",
+      "nuggets-niemiesne",
+      "roladka-wo-owa-niemiesne"
+    ],
+    "6300806": [
+      "roladka-wo-owa-niemiesne"
+    ],
+    "63008060": [
+      "roladka-wo-owa-niemiesne"
+    ],
+    "630080600": [
+      "roladka-wo-owa-niemiesne"
+    ],
+    "6300807": [
+      "nuggets-niemiesne"
+    ],
+    "63008070": [
+      "nuggets-niemiesne"
+    ],
+    "630080700": [
+      "nuggets-niemiesne"
+    ],
+    "6300808": [
+      "figa-z-makiem-owocowe"
+    ],
+    "63008080": [
+      "figa-z-makiem-owocowe"
+    ],
+    "630080800": [
+      "figa-z-makiem-owocowe"
+    ],
+    "6300809": [
+      "gyros-groch-niemiesne"
+    ],
+    "63008090": [
+      "gyros-groch-niemiesne"
+    ],
+    "630080900": [
+      "gyros-groch-niemiesne"
     ],
     "630081": [
-      "burger-klasyczny-niemiesne"
+      "mix-funkcjonalny-3x-batony-duzy",
+      "energia-funkcjonalny",
+      "prebiotyk-funkcjonalny",
+      "burger-klasyczny-niemiesne",
+      "burger-wolowy-niemiesne",
+      "kaszanka-niemiesne",
+      "pasztet-pomidor-niemiesne"
     ],
     "6300810": [
       "burger-klasyczny-niemiesne"
@@ -4290,6 +4572,60 @@
     ],
     "630081000": [
       "burger-klasyczny-niemiesne"
+    ],
+    "6300811": [
+      "burger-wolowy-niemiesne"
+    ],
+    "63008110": [
+      "burger-wolowy-niemiesne"
+    ],
+    "630081100": [
+      "burger-wolowy-niemiesne"
+    ],
+    "6300812": [
+      "kaszanka-niemiesne"
+    ],
+    "63008120": [
+      "kaszanka-niemiesne"
+    ],
+    "630081200": [
+      "kaszanka-niemiesne"
+    ],
+    "6300813": [
+      "mix-funkcjonalny-3x-batony-duzy"
+    ],
+    "63008130": [
+      "mix-funkcjonalny-3x-batony-duzy"
+    ],
+    "630081300": [
+      "mix-funkcjonalny-3x-batony-duzy"
+    ],
+    "6300814": [
+      "pasztet-pomidor-niemiesne"
+    ],
+    "63008140": [
+      "pasztet-pomidor-niemiesne"
+    ],
+    "630081400": [
+      "pasztet-pomidor-niemiesne"
+    ],
+    "6300815": [
+      "prebiotyk-funkcjonalny"
+    ],
+    "63008150": [
+      "prebiotyk-funkcjonalny"
+    ],
+    "630081500": [
+      "prebiotyk-funkcjonalny"
+    ],
+    "6300817": [
+      "energia-funkcjonalny"
+    ],
+    "63008170": [
+      "energia-funkcjonalny"
+    ],
+    "630081700": [
+      "energia-funkcjonalny"
     ],
     "6303": [
       "oats-chocolate-balls-crispy"
@@ -4396,8 +4732,11 @@
       "proteina-banoffee-krem-orzechowy"
     ],
     "baton": [
+      "apple-cinnamon-date",
       "babka-cytrynowa-nerkowcowy",
       "cheesecake-cashews",
+      "chocolate-coconut-date",
+      "chocolate-peanuts-date",
       "chrupiacy-orzech-daktylowy",
       "ciasto-marchewkowe-nerkowcowy",
       "ciasto-porzeczkowe-nerkowcowy",
@@ -4422,11 +4761,13 @@
       "latte-waniliowe-nerkowcowy",
       "makowiec-nerkowcowy",
       "mango-cashews-bars-date",
+      "mango-cashews-date",
       "mango-lassi-nerkowcowy",
       "matcha-lemon-nerkowcowy",
       "mix-12x-xmas-mixy",
       "mix-6x-mini-batoniki-mixy",
       "mix-bombonierka-11-szt-mini-mixy",
+      "mix-funkcjonalny-3x-batony-duzy",
       "mix-kalendarz-adwentowy-mixy",
       "mix-tuba-30-szt-xmas-mixy",
       "mix-zestaw-15x-mini-batoniki-mixy",
@@ -4492,6 +4833,7 @@
     ],
     "cashews": [
       "blackcurrant-cake-cashews",
+      "blueberry-muffin-cashews",
       "cheesecake-cashews",
       "gingerbread-cashews",
       "lemon-bundt-cake-cashews",
@@ -4538,13 +4880,20 @@
       "solony-orzech-daktylowy"
     ],
     "date": [
+      "apple-cinnamon-date",
       "cashews-coconut-date",
+      "chocolate-coconut-date",
+      "chocolate-peanuts-date",
       "coconut-orange-date",
       "crunchy-peanuts-date",
-      "hazelnut-chocolate-date"
+      "hazelnut-chocolate-date",
+      "mango-cashews-date"
     ],
     "dates": [
+      "apple-cinnamon-date",
       "cashews-coconut-date",
+      "chocolate-coconut-date",
+      "chocolate-peanuts-date",
       "coconut-orange-date",
       "crunchy-peanuts-date",
       "date-cherry-balls-raw",
@@ -4558,6 +4907,7 @@
       "karmel-daktyle",
       "lemon-cheesecake-daktyle",
       "mango-cashews-bars-date",
+      "mango-cashews-date",
       "marakuja-daktyle",
       "salty-nut-bars-date",
       "yuzu-daktyle"
@@ -4568,7 +4918,10 @@
     ],
     "doy 6x": [
       "blackcurrant-cake-cashews",
+      "blueberry-muffin-cashews",
       "cheesecake-cashews",
+      "chocolate-coconut-date",
+      "chocolate-peanuts-date",
       "chrupiacy-orzech-daktylowy",
       "crunchy-peanuts-date",
       "gingerbread-cashews",
@@ -4595,12 +4948,14 @@
       "dk-doy-datesy-yuzu-100-g-x",
       "energia-boosty",
       "energy-bars-functional",
+      "figa-z-makiem-owocowe",
       "gi-banoffee-bars-protein",
       "gi-caramel-bars-protein",
       "gi-lemon-cheesecake-bars-protein",
       "karmel-daktyle",
       "klopsiki-klasyczne-niemiesne",
       "klopsy-niemiesne",
+      "kulki-z-kreatyna-kreatyna",
       "lemon-cheesecake-daktyle",
       "malina-owocowe",
       "marakuja-daktyle",
@@ -4619,13 +4974,11 @@
       "proteina-banoffee-krem-orzechowy",
       "proteina-karmel-krem-orzechowy",
       "proteina-lemon-cheesecake-krem-orzechowy",
-      "shot-funkcjonalne",
-      "shot-funkcjonalny"
+      "shot-funkcjonalne"
     ],
     "etykieta butelka": [
       "chia-postbiotyk",
-      "shot-funkcjonalne",
-      "shot-funkcjonalny"
+      "shot-funkcjonalne"
     ],
     "folia": [
       "balans-boosty",
@@ -4647,6 +5000,7 @@
       "krem-orzechowy-karmel-proteinowy",
       "krem-orzechowy-sol-proteinowy",
       "krem-orzechowy-wanilia-proteinowy",
+      "mix-funkcjonalny-3x-batony-duzy",
       "muffin-jagodowy-nerkowcowy",
       "nerkowce-banan-ziomki",
       "nerkowce-mango-ziomki",
@@ -4672,11 +5026,11 @@
     "funkcjonalny": [
       "dla-serca-funkcjonalny",
       "energia-funkcjonalny",
+      "mix-funkcjonalny-3x-batony-duzy",
       "odpornosc-funkcjonalny",
       "prebiotyk-funkcjonalny",
       "proteina-karmel-mct-funkcjonalny",
       "serce-funkcjonalny",
-      "shot-funkcjonalny",
       "starter-pack-funkcjonalny"
     ],
     "gyros": [
@@ -4707,6 +5061,7 @@
     ],
     "karton": [
       "dk-pasztet-sliwka-6300281-niemiesne",
+      "mix-funkcjonalny-3x-batony-duzy",
       "mix-zestaw-makowiec-x-rogal-x-piernik-mixy",
       "mix-zestaw-mix-ciast-1-mixy",
       "odpornosc-funkcjonalny",
@@ -4727,6 +5082,7 @@
       "makowiec-nerkowcowy",
       "mango-lassi-nerkowcowy",
       "matcha-lemon-nerkowcowy",
+      "mix-funkcjonalny-3x-batony-duzy",
       "mix-zestaw-mix-ciast-2-mixy",
       "muffin-jagodowy-nerkowcowy",
       "odpornosc-funkcjonalny",
@@ -4759,6 +5115,9 @@
     "kotlet": [
       "kotlety-mielone-niemiesne"
     ],
+    "kreatyna": [
+      "kulki-z-kreatyna-kreatyna"
+    ],
     "krem": [
       "krem-orzechowy-karmel-proteinowy",
       "krem-orzechowy-sol-proteinowy",
@@ -4769,9 +5128,12 @@
     ],
     "krzysztof": [
       "babka-cytrynowa-nerkowcowy",
+      "blueberry-muffin-cashews",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
       "cheesecake-cashews",
+      "chocolate-coconut-date",
+      "chocolate-peanuts-date",
       "ciasto-porzeczkowe-nerkowcowy",
       "ciasto-sliwkowe-nerkowcowy",
       "cornflakes-peanuts-honey-balls-crispy",
@@ -4814,15 +5176,17 @@
       "proteina-lemon-cheesecake-krem-orzechowy",
       "raspberry-tart-cashews",
       "shot-funkcjonalne",
-      "shot-funkcjonalny",
       "sznycel-niemiesne",
       "sznycel-plant-based"
     ],
     "krzysztof wieczorek": [
       "babka-cytrynowa-nerkowcowy",
+      "blueberry-muffin-cashews",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
       "cheesecake-cashews",
+      "chocolate-coconut-date",
+      "chocolate-peanuts-date",
       "ciasto-porzeczkowe-nerkowcowy",
       "ciasto-sliwkowe-nerkowcowy",
       "cornflakes-peanuts-honey-balls-crispy",
@@ -4865,7 +5229,6 @@
       "proteina-lemon-cheesecake-krem-orzechowy",
       "raspberry-tart-cashews",
       "shot-funkcjonalne",
-      "shot-funkcjonalny",
       "sznycel-niemiesne",
       "sznycel-plant-based"
     ],
@@ -4875,8 +5238,10 @@
       "daktyl-limonka-raw",
       "daktyl-pomarancza-raw",
       "daktyl-wisnia-raw",
+      "figa-z-makiem-owocowe",
       "kokos-ananas-ziomki",
       "kokos-truskawka-ziomki",
+      "kulki-z-kreatyna-kreatyna",
       "malina-owocowe",
       "orzeszki-kukurydza-miod-sniadanie",
       "orzeszki-miod-sniadanie",
@@ -4901,6 +5266,7 @@
     ],
     "mango": [
       "mango-cashews-bars-date",
+      "mango-cashews-date",
       "mango-lassi-nerkowcowy",
       "nerkowce-mango-ziomki"
     ],
@@ -4924,6 +5290,7 @@
     ],
     "mini baton": [
       "babka-cytrynowa-nerkowcowy",
+      "blueberry-muffin-cashews",
       "cheesecake-cashews",
       "chrupiacy-orzech-daktylowy",
       "ciasto-marchewkowe-nerkowcowy",
@@ -4984,6 +5351,7 @@
       "mix-12x-xmas-mixy",
       "mix-6x-mini-batoniki-mixy",
       "mix-bombonierka-11-szt-mini-mixy",
+      "mix-funkcjonalny-3x-batony-duzy",
       "mix-kalendarz-adwentowy-mixy",
       "mix-na-grill-burger-kaszanka-niemiesne",
       "mix-na-grill-slaska-kaszanka-niemiesne",
@@ -5005,13 +5373,13 @@
       "mix-zestaw-mix-ciast-2-mixy"
     ],
     "muffin": [
+      "blueberry-muffin-cashews",
       "muffin-jagodowy-nerkowcowy"
     ],
     "napoj": [
       "chia-postbiotyk",
       "energia-funkcjonalne",
-      "shot-funkcjonalne",
-      "shot-funkcjonalny"
+      "shot-funkcjonalne"
     ],
     "nerkowcowy": [
       "babka-cytrynowa-nerkowcowy",
@@ -5037,7 +5405,6 @@
     "niemiesne": [
       "01-kabanos-bbq-niemiesne",
       "02-kabanos-klas-niemiesne",
-      "6300-000-17.11.2025-niemiesne",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
       "burger-klasyczny-xxl-niemiesne",
@@ -5086,9 +5453,6 @@
       "nuggets-plant-based",
       "nuggets-xxl-niemiesne"
     ],
-    "obwoluta": [
-      "roladki-szpinakowe-niemiesne"
-    ],
     "orzech": [
       "chrupiacy-orzech-daktylowy",
       "czekolada-banan-orzechowe",
@@ -5115,6 +5479,7 @@
     ],
     "owocowe": [
       "czarna-porzeczka-owocowe",
+      "figa-z-makiem-owocowe",
       "malina-owocowe"
     ],
     "parow": [
@@ -5205,6 +5570,7 @@
       "poledwiczka-niemiesne",
       "rissoless-plant-based",
       "roladka-wo-owa-niemiesne",
+      "roladki-szpinakowe-niemiesne",
       "sousages-bbq-plant-based",
       "sousages-spicy-plant-based",
       "sznycel-niemiesne",
@@ -5214,7 +5580,6 @@
     "roslinne": [
       "01-kabanos-bbq-niemiesne",
       "02-kabanos-klas-niemiesne",
-      "6300-000-17.11.2025-niemiesne",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
       "burger-klasyczny-xxl-niemiesne",
@@ -5263,8 +5628,7 @@
       "mix-tuba-30-szt-xmas-mixy"
     ],
     "shot": [
-      "shot-funkcjonalne",
-      "shot-funkcjonalny"
+      "shot-funkcjonalne"
     ],
     "sliwka": [
       "dk-pasztet-sliwka-6300281-niemiesne",
@@ -5383,9 +5747,12 @@
     ],
     "wieczorek": [
       "babka-cytrynowa-nerkowcowy",
+      "blueberry-muffin-cashews",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
       "cheesecake-cashews",
+      "chocolate-coconut-date",
+      "chocolate-peanuts-date",
       "ciasto-porzeczkowe-nerkowcowy",
       "ciasto-sliwkowe-nerkowcowy",
       "cornflakes-peanuts-honey-balls-crispy",
@@ -5428,7 +5795,6 @@
       "proteina-lemon-cheesecake-krem-orzechowy",
       "raspberry-tart-cashews",
       "shot-funkcjonalne",
-      "shot-funkcjonalny",
       "sznycel-niemiesne",
       "sznycel-plant-based"
     ],
@@ -5466,6 +5832,11 @@
   },
   "by_base": {
     "000000": [
+      {
+        "product_id": "apple-cinnamon-date",
+        "index": "000000.00",
+        "name": "Apple Cinnamon"
+      },
       {
         "product_id": "cheesecake-cashews",
         "index": "000000.00",
@@ -5523,6 +5894,16 @@
       }
     ],
     "0000000": [
+      {
+        "product_id": "apple-cinnamon-date",
+        "index": "0000000.00",
+        "name": "Apple Cinnamon"
+      },
+      {
+        "product_id": "blueberry-muffin-cashews",
+        "index": "0000000.00",
+        "name": "Blueberry Muffin"
+      },
       {
         "product_id": "cashews-coconut-date",
         "index": "0000000.00",
@@ -6279,6 +6660,13 @@
         "name": "Raspberry Tart"
       }
     ],
+    "6300277": [
+      {
+        "product_id": "blueberry-muffin-cashews",
+        "index": "6300277.00",
+        "name": "Blueberry Muffin"
+      }
+    ],
     "6300281": [
       {
         "product_id": "dk-pasztet-sliwka-6300281-niemiesne",
@@ -6377,6 +6765,13 @@
         "name": "Cheesecake"
       }
     ],
+    "6300308": [
+      {
+        "product_id": "blueberry-muffin-cashews",
+        "index": "6300308.00",
+        "name": "Blueberry Muffin"
+      }
+    ],
     "6300310": [
       {
         "product_id": "bio-pszenica-z-miodem-sniadaniowe",
@@ -6452,6 +6847,13 @@
         "product_id": "kielbaska-chipotle-cheddar-niemiesne",
         "index": "6300331.00",
         "name": "Kielbaska Chipotle Cheddar"
+      }
+    ],
+    "6300333": [
+      {
+        "product_id": "blueberry-muffin-cashews",
+        "index": "6300333.00",
+        "name": "Blueberry Muffin"
       }
     ],
     "6300334": [
@@ -6628,6 +7030,13 @@
         "product_id": "peanut-cream-caramel-bars-protein",
         "index": "6300372.00",
         "name": "Peanut Cream Caramel"
+      }
+    ],
+    "6300373": [
+      {
+        "product_id": "apple-cinnamon-date",
+        "index": "6300373.00",
+        "name": "Apple Cinnamon"
       }
     ],
     "6300374": [
@@ -6880,6 +7289,18 @@
         "name": "Kokos Czekolada"
       }
     ],
+    "6300460": [
+      {
+        "product_id": "apple-cinnamon-date",
+        "index": "6300460.00",
+        "name": "Apple Cinnamon"
+      },
+      {
+        "product_id": "apple-cinnamon-date",
+        "index": "6300460.01",
+        "name": "Apple Cinnamon"
+      }
+    ],
     "6300462": [
       {
         "product_id": "cashews-coconut-date",
@@ -6901,11 +7322,25 @@
         "name": "Kokos Czekolada"
       }
     ],
+    "6300470": [
+      {
+        "product_id": "chocolate-peanuts-date",
+        "index": "6300470.00",
+        "name": "Chocolate Peanuts"
+      }
+    ],
     "6300471": [
       {
         "product_id": "raspberry-tart-cashews",
         "index": "6300471.00",
         "name": "Raspberry Tart"
+      }
+    ],
+    "6300472": [
+      {
+        "product_id": "blueberry-muffin-cashews",
+        "index": "6300472.00",
+        "name": "Blueberry Muffin"
       }
     ],
     "6300473": [
@@ -6943,6 +7378,13 @@
         "name": "Cornflakes Peanuts Honey"
       }
     ],
+    "6300479": [
+      {
+        "product_id": "apple-cinnamon-date",
+        "index": "6300479.00",
+        "name": "Apple Cinnamon"
+      }
+    ],
     "6300480": [
       {
         "product_id": "cashews-coconut-date",
@@ -6964,9 +7406,21 @@
         "name": "Salty Nut"
       }
     ],
+    "6300483": [
+      {
+        "product_id": "chocolate-peanuts-date",
+        "index": "6300483.00",
+        "name": "Chocolate Peanuts"
+      }
+    ],
     "6300484": [
       {
         "product_id": "mango-cashews-bars-date",
+        "index": "6300484.00",
+        "name": "Mango Cashews"
+      },
+      {
+        "product_id": "mango-cashews-date",
         "index": "6300484.00",
         "name": "Mango Cashews"
       }
@@ -6988,6 +7442,13 @@
         "product_id": "peanut-cream-vanilla-bars-protein",
         "index": "6300486.00",
         "name": "Peanut Cream Vanilla"
+      }
+    ],
+    "6300487": [
+      {
+        "product_id": "peanut-cream-caramel-bars-protein",
+        "index": "6300487.00",
+        "name": "Peanut Cream Caramel"
       }
     ],
     "6300488": [
@@ -7025,6 +7486,13 @@
         "name": "Raspberry Tart"
       }
     ],
+    "6300493": [
+      {
+        "product_id": "blueberry-muffin-cashews",
+        "index": "6300493.00",
+        "name": "Blueberry Muffin"
+      }
+    ],
     "6300494": [
       {
         "product_id": "gingerbread-cashews",
@@ -7037,6 +7505,27 @@
         "product_id": "crunchy-peanuts-date",
         "index": "6300495.00",
         "name": "Crunchy Peanuts"
+      }
+    ],
+    "6300496": [
+      {
+        "product_id": "chocolate-peanuts-date",
+        "index": "6300496.00",
+        "name": "Chocolate Peanuts"
+      }
+    ],
+    "6300500": [
+      {
+        "product_id": "chocolate-coconut-date",
+        "index": "6300500.00",
+        "name": "Chocolate Coconut"
+      }
+    ],
+    "6300501": [
+      {
+        "product_id": "raspberry-tart-cashews",
+        "index": "6300501.00",
+        "name": "Raspberry Tart"
       }
     ],
     "6300502": [
@@ -7385,11 +7874,25 @@
         "name": "Kotlety Mielone"
       }
     ],
+    "6300606": [
+      {
+        "product_id": "chocolate-coconut-date",
+        "index": "6300606.00",
+        "name": "Chocolate Coconut"
+      }
+    ],
     "6300607": [
       {
         "product_id": "hazelnut-chocolate-date",
         "index": "6300607.00",
         "name": "Hazelnut Chocolate"
+      }
+    ],
+    "6300608": [
+      {
+        "product_id": "chocolate-coconut-date",
+        "index": "6300608.00",
+        "name": "Chocolate Coconut"
       }
     ],
     "6300609": [
@@ -7473,11 +7976,6 @@
       {
         "product_id": "burger-wolowy-niemiesne",
         "index": "6300632.00",
-        "name": "Burger Wolowy"
-      },
-      {
-        "product_id": "burger-wolowy-niemiesne",
-        "index": "6300632.01",
         "name": "Burger Wolowy"
       }
     ],
@@ -7680,6 +8178,13 @@
         "product_id": "peanut-cream-vanilla-bars-protein",
         "index": "6300665.00",
         "name": "Peanut Cream Vanilla"
+      }
+    ],
+    "6300666": [
+      {
+        "product_id": "peanut-cream-caramel-bars-protein",
+        "index": "6300666.00",
+        "name": "Peanut Cream Caramel"
       }
     ],
     "6300668": [
@@ -8087,6 +8592,13 @@
         "name": "Jabłko Cynamon"
       }
     ],
+    "6300765": [
+      {
+        "product_id": "kofta-niemiesne",
+        "index": "6300765.00",
+        "name": "Kofta"
+      }
+    ],
     "6300766": [
       {
         "product_id": "owies-czekolada-sniadanie",
@@ -8202,6 +8714,13 @@
         "name": "- Mix - Tuba 30 Szt Xmas"
       }
     ],
+    "6300796": [
+      {
+        "product_id": "burger-plant-based",
+        "index": "6300796.00",
+        "name": "Burger"
+      }
+    ],
     "6300798": [
       {
         "product_id": "mielone-wolowe-niemiesne",
@@ -8214,11 +8733,81 @@
         "name": "Sznyce L"
       }
     ],
+    "6300806": [
+      {
+        "product_id": "roladka-wo-owa-niemiesne",
+        "index": "6300806.00",
+        "name": "Roladka Wołowa"
+      }
+    ],
+    "6300807": [
+      {
+        "product_id": "nuggets-niemiesne",
+        "index": "6300807.00",
+        "name": "Nuggets"
+      }
+    ],
+    "6300808": [
+      {
+        "product_id": "figa-z-makiem-owocowe",
+        "index": "6300808.00",
+        "name": "Figa Z Makiem"
+      }
+    ],
+    "6300809": [
+      {
+        "product_id": "gyros-groch-niemiesne",
+        "index": "6300809.00",
+        "name": "Gyros Groch"
+      }
+    ],
     "6300810": [
       {
         "product_id": "burger-klasyczny-niemiesne",
         "index": "6300810.00",
         "name": "Burger Klasyczny"
+      }
+    ],
+    "6300811": [
+      {
+        "product_id": "burger-wolowy-niemiesne",
+        "index": "6300811.00",
+        "name": "Burger Wolowy"
+      }
+    ],
+    "6300812": [
+      {
+        "product_id": "kaszanka-niemiesne",
+        "index": "6300812.00",
+        "name": "Kaszanka"
+      }
+    ],
+    "6300813": [
+      {
+        "product_id": "mix-funkcjonalny-3x-batony-duzy",
+        "index": "6300813.00",
+        "name": "- MIX- Funkcjonalny - 3x batony_duzy"
+      }
+    ],
+    "6300814": [
+      {
+        "product_id": "pasztet-pomidor-niemiesne",
+        "index": "6300814.00",
+        "name": "Pasztet Pomidor"
+      }
+    ],
+    "6300815": [
+      {
+        "product_id": "prebiotyk-funkcjonalny",
+        "index": "6300815.00",
+        "name": "Prebiotyk"
+      }
+    ],
+    "6300817": [
+      {
+        "product_id": "energia-funkcjonalny",
+        "index": "6300817.00",
+        "name": "Energia"
       }
     ],
     "630369": [
@@ -8288,40 +8877,40 @@
       "kokos",
       "miod",
       "cynamon",
+      "mango",
       "banoffee",
       "kakao",
-      "mango",
       "mct",
+      "owocowe",
       "orzechowe",
       "matcha",
+      "muffin",
       "tarta",
       "deserowe",
-      "owocowe",
       "porzeczka",
       "truskawka",
       "migdal",
       "cynamonka",
-      "wanilia",
-      "jagodowy"
+      "wanilia"
     ],
     "typ": [
       "niemiesne",
       "roslinne",
       "dates",
-      "sypkie",
-      "sniadaniowe",
-      "mix",
       "kulki",
+      "sypkie",
+      "mix",
+      "sniadaniowe",
       "burger",
       "mixy",
       "funkcjonalny",
       "krem",
       "pasztet",
       "gyros",
-      "napoj",
       "owies",
       "nuggets",
       "boost",
+      "napoj",
       "mini batoniki",
       "jaglanka",
       "kotlet"
@@ -8698,6 +9287,44 @@
       "authors": []
     },
     {
+      "id": "mix-funkcjonalny-3x-batony-duzy",
+      "name": "- MIX- Funkcjonalny - 3x batony_duzy",
+      "display_name": "- MIX- Funkcjonalny - 3x batony_duzy",
+      "category": "01 - BATONY",
+      "tags": [
+        "baton",
+        "folia",
+        "funkcjonalny",
+        "karton 6x",
+        "karton",
+        "mix"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "mix",
+          "funkcjonalny"
+        ],
+        "opakowanie": [
+          "baton",
+          "folia",
+          "karton",
+          "karton 6x"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "6300813.00"
+      ],
+      "index_bases": [
+        "6300813"
+      ],
+      "search_blob": "mix funkcjonalny 3x batony duzy mix funkcjonalny 3x batony duzy baton folia funkcjonalny karton 6x karton mix 6300813.00 dk karton funkc szkic1 2026 08 16 6300813 folder kar6x 21 08 2026 6300813 d marketing polska 01 produkty dk 01 batony mix funkcjonalny 3x batony duzy dk karton funkc szkic1 2026 08 16 6300813 folder d marketing polska 01 produkty dk 01 batony mix funkcjonalny 3x batony duzy kar6x 21 08 2026 6300813 6300813.00 6300813.00 mix funkcjonalny 3x batony duzy baton folia funkcjonalny karton 6x karton mix 6300813.00",
+      "authors": []
+    },
+    {
       "id": "babka-cytrynowa-nerkowcowy",
       "name": "Babka Cytrynowa",
       "display_name": "Babka Cytrynowa",
@@ -9064,15 +9691,17 @@
         "6300584.00",
         "6300600.00",
         "6300602.00",
-        "6300602.01"
+        "6300602.01",
+        "6300817.00"
       ],
       "index_bases": [
         "6300583",
         "6300584",
         "6300600",
-        "6300602"
+        "6300602",
+        "6300817"
       ],
-      "search_blob": "energia energia funkcjonalny baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300583.00 6300584.00 6300600.00 6300602.00 6300602.01 08.12.2024 6300583.00 baton 45g 31.07.2026 6300584 kar6x 13.12.2024 6300602.00 kar6x 2026 07 15 6300602.01 mini 09.12.2024 6300600.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny 08.12.2024 6300583.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny baton 45g 31.07.2026 6300584 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 13.12.2024 6300602.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 2026 07 15 6300602.01 d marketing polska 01 produkty dk 01 batony energia funkcjonalny mini 09.12.2024 6300600.00 6300583.00 6300584.00 6300602.00 6300602.01 6300600.00 energia baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300583.00 6300584.00 6300600.00 6300602.00 6300602.01",
+      "search_blob": "energia energia funkcjonalny baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300583.00 6300584.00 6300600.00 6300602.00 6300602.01 6300817.00 08.12.2024 6300583.00 baton 45g 31.07.2026 6300584 kar6x 13.12.2024 6300602.00 kar6x 2026 07 15 6300602.01 kar6x 2026 08 18 6300817 mini 09.12.2024 6300600.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny 08.12.2024 6300583.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny baton 45g 31.07.2026 6300584 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 13.12.2024 6300602.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 2026 07 15 6300602.01 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 2026 08 18 6300817 d marketing polska 01 produkty dk 01 batony energia funkcjonalny mini 09.12.2024 6300600.00 6300583.00 6300584.00 6300602.00 6300602.01 6300817.00 6300600.00 energia baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300583.00 6300584.00 6300600.00 6300602.00 6300602.01 6300817.00",
       "authors": [
         "Sylwia"
       ]
@@ -9123,7 +9752,7 @@
         "6300763",
         "6300768"
       ],
-      "search_blob": "jab ko cynamon jab ko cynamon daktylowy baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 02.09.2024 6300428.00 bat 35 g 14.05.2026 6300768 bat 35 g 15.05.2026 6300763 bat 35 g 24.03.2022 fol000091.00 bat 35 g 26.06.2025 5300658.00 bat 35 g 27.05.2026 6300768 doy6x 09.02.2024 6300384.00 mini 09.02.2024 6300455.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy 02.09.2024 6300428.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 14.05.2026 6300768 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 15.05.2026 6300763 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 24.03.2022 fol000091.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 26.06.2025 5300658.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 27.05.2026 6300768 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy doy6x 09.02.2024 6300384.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy mini 09.02.2024 6300455.00 6300428.00 6300768.00 6300763.00 000091.00 5300658.00 6300768.00 6300384.00 6300455.00 jab ko cynamon baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 jablko cynamon jabłko cynamon cynamon jablko",
+      "search_blob": "jab ko cynamon jab ko cynamon daktylowy baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 02.09.2024 6300428.00 bat 35 g 14.05.2026 6300768 bat 35 g 15.05.2026 6300763 pl ua bat 35 g 24.03.2022 fol000091.00 bat 35 g 26.06.2025 5300658.00 bat 35 g 27.05.2026 6300768 doy6x 09.02.2024 6300384.00 mini 09.02.2024 6300455.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy 02.09.2024 6300428.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 14.05.2026 6300768 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 15.05.2026 6300763 pl ua d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 24.03.2022 fol000091.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 26.06.2025 5300658.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 27.05.2026 6300768 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy doy6x 09.02.2024 6300384.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy mini 09.02.2024 6300455.00 6300428.00 6300768.00 6300763.00 000091.00 5300658.00 6300768.00 6300384.00 6300455.00 jab ko cynamon baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 jablko cynamon jabłko cynamon cynamon jablko",
       "authors": []
     },
     {
@@ -10088,14 +10717,16 @@
         "6300652.00",
         "6300653.00",
         "6300653.01",
-        "6300703.00"
+        "6300703.00",
+        "6300815.00"
       ],
       "index_bases": [
         "6300652",
         "6300653",
-        "6300703"
+        "6300703",
+        "6300815"
       ],
-      "search_blob": "prebiotyk prebiotyk funkcjonalny baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300652.00 6300653.00 6300653.01 6300703.00 bat 35 g 09.10.2025 6300703.00 kar6x 06.06.2025 6300653.00 kar6x 2026 07 10 6300653.01 mini 06.06.2025 6300652.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny bat 35 g 09.10.2025 6300703.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 06.06.2025 6300653.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 2026 07 10 6300653.01 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny mini 06.06.2025 6300652.00 6300703.00 6300653.00 6300653.01 6300652.00 prebiotyk baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300652.00 6300653.00 6300653.01 6300703.00",
+      "search_blob": "prebiotyk prebiotyk funkcjonalny baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300652.00 6300653.00 6300653.01 6300703.00 6300815.00 bat 35 g 09.10.2025 6300703.00 kar6x 06.06.2025 6300653.00 kar6x 2026 07 10 6300653.01 kar6x 13.08.2026 6300815 mini 06.06.2025 6300652.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny bat 35 g 09.10.2025 6300703.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 06.06.2025 6300653.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 2026 07 10 6300653.01 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 13.08.2026 6300815 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny mini 06.06.2025 6300652.00 6300703.00 6300653.00 6300653.01 6300815.00 6300652.00 prebiotyk baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300652.00 6300653.00 6300653.01 6300703.00 6300815.00",
       "authors": [
         "Sylwia"
       ]
@@ -10862,6 +11493,39 @@
       ]
     },
     {
+      "id": "figa-z-makiem-owocowe",
+      "name": "Figa Z Makiem",
+      "display_name": "Figa Z Makiem",
+      "category": "02 - KULKI",
+      "tags": [
+        "doypack",
+        "kulki",
+        "owocowe"
+      ],
+      "tag_groups": {
+        "smak": [
+          "owocowe"
+        ],
+        "typ": [
+          "kulki"
+        ],
+        "opakowanie": [
+          "doypack"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "6300808.00"
+      ],
+      "index_bases": [
+        "6300808"
+      ],
+      "search_blob": "figa z makiem figa z makiem owocowe doypack kulki owocowe 6300808.00 doy 65g 2026 08 31 6300808 szablony foderow d marketing polska 01 produkty dk 02 kulki figa z makiem owocowe doy 65g 2026 08 31 6300808 d marketing polska 01 produkty dk 02 kulki figa z makiem owocowe szablony foderow 6300808.00 figa z makiem doypack kulki owocowe 6300808.00",
+      "authors": []
+    },
+    {
       "id": "kokos-ananas-ziomki",
       "name": "Kokos Ananas",
       "display_name": "Kokos Ananas",
@@ -10929,6 +11593,33 @@
         "000105"
       ],
       "search_blob": "kokos truskawka kokos truskawka ziomki folia kokos kulki truskawka ziomki 000105.00 02.07.2022 fol000105.00 d marketing polska 01 produkty dk 02 kulki kokos truskawka ziomki 02.07.2022 fol000105.00 000105.00 kokos truskawka folia kokos kulki truskawka ziomki 000105.00",
+      "authors": []
+    },
+    {
+      "id": "kulki-z-kreatyna-kreatyna",
+      "name": "Kulki Z Kreatyną",
+      "display_name": "Kulki Z Kreatyną",
+      "category": "02 - KULKI",
+      "tags": [
+        "doypack",
+        "kulki",
+        "kreatyna"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "kulki"
+        ],
+        "opakowanie": [
+          "doypack"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [],
+      "index_bases": [],
+      "search_blob": "kulki z kreatyna kulki z kreatyna kreatyna doypack kulki kreatyna doy 00 g dd mm rrrr 6300xxx.00 d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 00 g dd mm rrrr 6300xxx.00 6300xxx.00 kulki z kreatyna doypack kulki kreatyna",
       "authors": []
     },
     {
@@ -11149,31 +11840,6 @@
       ]
     },
     {
-      "id": "6300-000-17.11.2025-niemiesne",
-      "name": "6300 000 - 17.11.2025",
-      "display_name": "6300 000 - 17.11.2025",
-      "category": "03 - ROSLINNE",
-      "tags": [
-        "niemiesne",
-        "roslinne"
-      ],
-      "tag_groups": {
-        "smak": [],
-        "typ": [
-          "niemiesne",
-          "roslinne"
-        ],
-        "opakowanie": [],
-        "autor": [],
-        "osoba": [],
-        "inne": []
-      },
-      "indexes": [],
-      "index_bases": [],
-      "search_blob": "6300 000 17.11.2025 6300 000 17.11.2025 niemiesne niemiesne roslinne 24.02.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne 6300 000 17.11.2025 niemiesne 24.02.2026 6300xxx.00 6300xxx.00 6300 000 17.11.2025 niemiesne roslinne",
-      "authors": []
-    },
-    {
       "id": "burger-buraczany-niemiesne",
       "name": "Burger Buraczany",
       "display_name": "Burger Buraczany",
@@ -11336,16 +12002,17 @@
         "6300560.00",
         "6300612.00",
         "6300632.00",
-        "6300632.01"
+        "6300811.00"
       ],
       "index_bases": [
         "000137",
         "6300154",
         "6300560",
         "6300612",
-        "6300632"
+        "6300632",
+        "6300811"
       ],
-      "search_blob": "burger wolowy burger wolowy niemiesne burger niemiesne rekaw roslinne 000137.00 6300154.00 6300560.00 6300612.00 6300632.00 6300632.01 11.10.2024 6300154.00 rekaw 03.04.2025 6300632.00 rekaw 07.08.2026 6300632.01 rekaw 11.10.2024 6300560.00 rekaw 18.02.2025 6300612.00 rekaw 26.09.2022 kar000137.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne 11.10.2024 6300154.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 03.04.2025 6300632.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 07.08.2026 6300632.01 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 11.10.2024 6300560.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 18.02.2025 6300612.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 26.09.2022 kar000137.00 6300154.00 6300632.00 6300632.01 6300560.00 6300612.00 000137.00 burger wolowy burger niemiesne rekaw roslinne 000137.00 6300154.00 6300560.00 6300612.00 6300632.00 6300632.01",
+      "search_blob": "burger wolowy burger wolowy niemiesne burger niemiesne rekaw roslinne 000137.00 6300154.00 6300560.00 6300612.00 6300632.00 6300811.00 11.10.2024 6300154.00 rekaw 03.04.2025 6300632.00 rekaw 11.10.2024 6300560.00 rekaw 13.08.2026 6300811 rekaw 18.02.2025 6300612.00 rekaw 26.09.2022 kar000137.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne 11.10.2024 6300154.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 03.04.2025 6300632.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 11.10.2024 6300560.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 13.08.2026 6300811 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 18.02.2025 6300612.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 26.09.2022 kar000137.00 6300154.00 6300632.00 6300560.00 6300811.00 6300612.00 000137.00 burger wolowy burger niemiesne rekaw roslinne 000137.00 6300154.00 6300560.00 6300612.00 6300632.00 6300811.00",
       "authors": []
     },
     {
@@ -11452,13 +12119,15 @@
       },
       "indexes": [
         "000152.00",
-        "6300329.00"
+        "6300329.00",
+        "6300809.00"
       ],
       "index_bases": [
         "000152",
-        "6300329"
+        "6300329",
+        "6300809"
       ],
-      "search_blob": "gyros groch gyros groch niemiesne gyros niemiesne rekaw roslinne 000152.00 6300329.00 28.09.2023 6300329.00 rekaw 14.12.2022 kar000152.00 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne 28.09.2023 6300329.00 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 14.12.2022 kar000152.00 6300329.00 000152.00 gyros groch gyros niemiesne rekaw roslinne 000152.00 6300329.00",
+      "search_blob": "gyros groch gyros groch niemiesne gyros niemiesne rekaw roslinne 000152.00 6300329.00 6300809.00 rekaw 18.08.2026 6300809 rekaw 14.12.2022 kar000152.00 rekaw 28.09.2023 6300329.00 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 18.08.2026 6300809 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 14.12.2022 kar000152.00 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 28.09.2023 6300329.00 6300809.00 000152.00 6300329.00 gyros groch gyros niemiesne rekaw roslinne 000152.00 6300329.00 6300809.00",
       "authors": []
     },
     {
@@ -11526,16 +12195,18 @@
         "6300474.00",
         "6300633.00",
         "6300768.00",
-        "6300768.01"
+        "6300768.01",
+        "6300812.00"
       ],
       "index_bases": [
         "000100",
         "6300345",
         "6300474",
         "6300633",
-        "6300768"
+        "6300768",
+        "6300812"
       ],
-      "search_blob": "kaszanka kaszanka niemiesne niemiesne rekaw roslinne 000100.00 6300345.00 6300474.00 6300633.00 6300768.00 6300768.01 01 archiwum 17.03.2022 kar000100.00 2026 04 24 22.04.2026 6300xxx.00 rekaw 03.04.2025 6300633.00 rekaw 07.08.2026 6300768.01 rekaw 22.04.2026 6300xxx.00 rekaw 23.04.2024 6300474.00 rekaw 26.04.2023 6300345.00 rekaw 28.05.2026 6300768.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne 01 archiwum 17.03.2022 kar000100.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne 2026 04 24 22.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 03.04.2025 6300633.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 07.08.2026 6300768.01 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 22.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 23.04.2024 6300474.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 26.04.2023 6300345.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 28.05.2026 6300768.00 000100.00 6300xxx.00 6300633.00 6300768.01 6300xxx.00 6300474.00 6300345.00 6300768.00 kaszanka niemiesne rekaw roslinne 000100.00 6300345.00 6300474.00 6300633.00 6300768.00 6300768.01",
+      "search_blob": "kaszanka kaszanka niemiesne niemiesne rekaw roslinne 000100.00 6300345.00 6300474.00 6300633.00 6300768.00 6300768.01 6300812.00 01 archiwum 17.03.2022 kar000100.00 2026 04 24 22.04.2026 6300xxx.00 rekaw 03.04.2025 6300633.00 rekaw 07.08.2026 6300768.01 rekaw 12.08.2026 6300812 rekaw 22.04.2026 6300xxx.00 rekaw 23.04.2024 6300474.00 rekaw 26.04.2023 6300345.00 rekaw 28.05.2026 6300768.00 wariant 23.04.2024 6300474.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne 01 archiwum 17.03.2022 kar000100.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne 2026 04 24 22.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 03.04.2025 6300633.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 07.08.2026 6300768.01 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 12.08.2026 6300812 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 22.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 23.04.2024 6300474.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 26.04.2023 6300345.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 28.05.2026 6300768.00 d marketing polska 01 produkty dk 03 roslinne archiwum kaszanka niemiesne wariant 23.04.2024 6300474.00 000100.00 6300xxx.00 6300633.00 6300768.01 6300812.00 6300xxx.00 6300474.00 6300345.00 6300768.00 6300474.00 kaszanka niemiesne rekaw roslinne 000100.00 6300345.00 6300474.00 6300633.00 6300768.00 6300768.01 6300812.00",
       "authors": []
     },
     {
@@ -11601,7 +12272,7 @@
         "000103",
         "6300647"
       ],
-      "search_blob": "kielbaska bbq kielbaska bbq niemiesne niemiesne rekaw roslinne 000103.00 6300647.00 rekaw 24.03.2022 kar000103.00 rekaw 48.04.2025 6300647.00 d marketing polska 01 produkty dk 03 roslinne kielbaska bbq niemiesne rekaw 24.03.2022 kar000103.00 d marketing polska 01 produkty dk 03 roslinne kielbaska bbq niemiesne rekaw 48.04.2025 6300647.00 000103.00 6300647.00 kielbaska bbq niemiesne rekaw roslinne 000103.00 6300647.00",
+      "search_blob": "kielbaska bbq kielbaska bbq niemiesne niemiesne rekaw roslinne 000103.00 6300647.00 rekaw 24.03.2022 kar000103.00 rekaw 48.04.2025 6300647.00 wariant 24.03.2022 kar000103.00 d marketing polska 01 produkty dk 03 roslinne kielbaska bbq niemiesne rekaw 24.03.2022 kar000103.00 d marketing polska 01 produkty dk 03 roslinne kielbaska bbq niemiesne rekaw 48.04.2025 6300647.00 d marketing polska 01 produkty dk 03 roslinne archiwum kielbaska bbq niemiesne wariant 24.03.2022 kar000103.00 000103.00 6300647.00 000103.00 kielbaska bbq niemiesne rekaw roslinne 000103.00 6300647.00",
       "authors": []
     },
     {
@@ -12007,13 +12678,15 @@
       },
       "indexes": [
         "6300744.00",
-        "63007442.00"
+        "63007442.00",
+        "6300765.00"
       ],
       "index_bases": [
         "6300744",
-        "63007442"
+        "63007442",
+        "6300765"
       ],
-      "search_blob": "kofta kofta niemiesne niemiesne rekaw roslinne 6300744.00 63007442.00 rekaw 27.03.2026 63007442.00 rekaw 200 g 27.03.2026 6300744.00 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 27.03.2026 63007442.00 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 27.03.2026 6300744.00 63007442.00 6300744.00 kofta niemiesne rekaw roslinne 6300744.00 63007442.00",
+      "search_blob": "kofta kofta niemiesne niemiesne rekaw roslinne 6300744.00 63007442.00 6300765.00 rekaw 200 g 12.08.2026 6300765 rekaw 200 g 27.03.2026 6300744 rekaw 200 g 27.03.2026 63007442 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 12.08.2026 6300765 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 27.03.2026 6300744 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 27.03.2026 63007442 6300765.00 6300744.00 63007442.00 kofta niemiesne rekaw roslinne 6300744.00 63007442.00 6300765.00",
       "authors": []
     },
     {
@@ -12047,7 +12720,7 @@
         "000079",
         "6300322"
       ],
-      "search_blob": "kotleciki rybne kotleciki rybne niemiesne niemiesne rekaw roslinne 000079.00 6300322.00 rekaw 03.11.2021 kar000079.00 rekaw 27.02.2023 6300322.00 d marketing polska 01 produkty dk 03 roslinne kotleciki rybne niemiesne rekaw 03.11.2021 kar000079.00 d marketing polska 01 produkty dk 03 roslinne kotleciki rybne niemiesne rekaw 27.02.2023 6300322.00 000079.00 6300322.00 kotleciki rybne niemiesne rekaw roslinne 000079.00 6300322.00",
+      "search_blob": "kotleciki rybne kotleciki rybne niemiesne niemiesne rekaw roslinne 000079.00 6300322.00 rekaw 03.11.2021 kar000079.00 rekaw 27.02.2023 6300322.00 wariant 27.02.2023 6300322.00 d marketing polska 01 produkty dk 03 roslinne kotleciki rybne niemiesne rekaw 03.11.2021 kar000079.00 d marketing polska 01 produkty dk 03 roslinne kotleciki rybne niemiesne rekaw 27.02.2023 6300322.00 d marketing polska 01 produkty dk 03 roslinne archiwum kotleciki rybne niemiesne wariant 27.02.2023 6300322.00 000079.00 6300322.00 6300322.00 kotleciki rybne niemiesne rekaw roslinne 000079.00 6300322.00",
       "authors": []
     },
     {
@@ -12315,12 +12988,14 @@
         "inne": []
       },
       "indexes": [
-        "6300586.00"
+        "6300586.00",
+        "6300807.00"
       ],
       "index_bases": [
-        "6300586"
+        "6300586",
+        "6300807"
       ],
-      "search_blob": "nuggets nuggets niemiesne niemiesne nuggets rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300586.00 rekaw 22.11.2024 6300586.00 d marketing polska 01 produkty dk 03 roslinne nuggets niemiesne rekaw 22.11.2024 6300586.00 6300586.00 nuggets niemiesne nuggets rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300586.00 nuggets nuggetsy swietuj",
+      "search_blob": "nuggets nuggets niemiesne niemiesne nuggets rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300586.00 6300807.00 rekaw 19.08.2026 6300807 rekaw 22.11.2024 6300586.00 d marketing polska 01 produkty dk 03 roslinne nuggets niemiesne rekaw 19.08.2026 6300807 d marketing polska 01 produkty dk 03 roslinne nuggets niemiesne rekaw 22.11.2024 6300586.00 6300807.00 6300586.00 nuggets niemiesne nuggets rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300586.00 6300807.00 nuggets nuggetsy swietuj",
       "authors": [
         "Krzysztof"
       ]
@@ -12386,13 +13061,15 @@
       },
       "indexes": [
         "000120.00",
-        "6300411.00"
+        "6300411.00",
+        "6300814.00"
       ],
       "index_bases": [
         "000120",
-        "6300411"
+        "6300411",
+        "6300814"
       ],
-      "search_blob": "pasztet pomidor pasztet pomidor niemiesne karton niemiesne pasztet roslinne 000120.00 6300411.00 archiwum 19.09.2022 kar000120.00 karton 08.11.2023 6300411.00 d marketing polska 01 produkty dk 03 roslinne pasztet pomidor niemiesne archiwum 19.09.2022 kar000120.00 d marketing polska 01 produkty dk 03 roslinne pasztet pomidor niemiesne karton 08.11.2023 6300411.00 000120.00 6300411.00 pasztet pomidor karton niemiesne pasztet roslinne 000120.00 6300411.00",
+      "search_blob": "pasztet pomidor pasztet pomidor niemiesne karton niemiesne pasztet roslinne 000120.00 6300411.00 6300814.00 archiwum 19.09.2022 kar000120.00 karton 08.11.2023 6300411.00 karton 17.08.2026 6300814 d marketing polska 01 produkty dk 03 roslinne pasztet pomidor niemiesne archiwum 19.09.2022 kar000120.00 d marketing polska 01 produkty dk 03 roslinne pasztet pomidor niemiesne karton 08.11.2023 6300411.00 d marketing polska 01 produkty dk 03 roslinne pasztet pomidor niemiesne karton 17.08.2026 6300814 000120.00 6300411.00 6300814.00 pasztet pomidor karton niemiesne pasztet roslinne 000120.00 6300411.00 6300814.00",
       "authors": []
     },
     {
@@ -12485,12 +13162,14 @@
         "inne": []
       },
       "indexes": [
-        "6300697.00"
+        "6300697.00",
+        "6300806.00"
       ],
       "index_bases": [
-        "6300697"
+        "6300697",
+        "6300806"
       ],
-      "search_blob": "roladka wo owa roladka wo owa niemiesne niemiesne rekaw roslinne 6300697.00 rekaw 08.10.2025 6300697.00 d marketing polska 01 produkty dk 03 roslinne roladka wo owa niemiesne rekaw 08.10.2025 6300697.00 6300697.00 roladka wo owa niemiesne rekaw roslinne 6300697.00 rolada roladka",
+      "search_blob": "roladka wo owa roladka wo owa niemiesne niemiesne rekaw roslinne 6300697.00 6300806.00 rekaw 08.10.2025 6300697.00 rekaw 13.08.2026 6300806 d marketing polska 01 produkty dk 03 roslinne roladka wo owa niemiesne rekaw 08.10.2025 6300697.00 d marketing polska 01 produkty dk 03 roslinne roladka wo owa niemiesne rekaw 13.08.2026 6300806 6300697.00 6300806.00 roladka wo owa niemiesne rekaw roslinne 6300697.00 6300806.00 rolada roladka",
       "authors": []
     },
     {
@@ -12500,7 +13179,7 @@
       "category": "03 - ROSLINNE",
       "tags": [
         "niemiesne",
-        "obwoluta",
+        "rekaw",
         "roslinne"
       ],
       "tag_groups": {
@@ -12510,7 +13189,7 @@
           "roslinne"
         ],
         "opakowanie": [
-          "obwoluta"
+          "rekaw"
         ],
         "autor": [
           "Sylwia"
@@ -12522,7 +13201,7 @@
       },
       "indexes": [],
       "index_bases": [],
-      "search_blob": "roladki szpinakowe roladki szpinakowe niemiesne niemiesne obwoluta roslinne sylwia sylwia zarychta sylwia zarychta obw 14.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne roladki szpinakowe niemiesne obw 14.04.2026 6300xxx.00 6300xxx.00 roladki szpinakowe niemiesne obwoluta roslinne sylwia sylwia zarychta sylwia zarychta",
+      "search_blob": "roladki szpinakowe roladki szpinakowe niemiesne niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta rekaw 14.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne roladki szpinakowe niemiesne rekaw 14.04.2026 6300xxx.00 6300xxx.00 roladki szpinakowe niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta",
       "authors": [
         "Sylwia"
       ]
@@ -13323,44 +14002,6 @@
       ]
     },
     {
-      "id": "shot-funkcjonalny",
-      "name": "Shot",
-      "display_name": "Shot",
-      "category": "05 - NAPOJE",
-      "tags": [
-        "etykieta",
-        "etykieta butelka",
-        "funkcjonalny",
-        "napoj",
-        "shot"
-      ],
-      "tag_groups": {
-        "smak": [],
-        "typ": [
-          "napoj",
-          "funkcjonalny"
-        ],
-        "opakowanie": [
-          "etykieta",
-          "etykieta butelka",
-          "shot"
-        ],
-        "autor": [
-          "Krzysztof"
-        ],
-        "osoba": [
-          "Krzysztof"
-        ],
-        "inne": []
-      },
-      "indexes": [],
-      "index_bases": [],
-      "search_blob": "shot shot funkcjonalny etykieta etykieta butelka funkcjonalny napoj shot krzysztof krzysztof wieczorek krzysztof wieczorek ety but 100 ml 30.04.2026 6300xxx.00 d marketing polska 01 produkty dk 05 napoje shot funkcjonalny ety but 100 ml 30.04.2026 6300xxx.00 6300xxx.00 shot etykieta etykieta butelka funkcjonalny napoj shot krzysztof krzysztof wieczorek krzysztof wieczorek",
-      "authors": [
-        "Krzysztof"
-      ]
-    },
-    {
       "id": "proteina-banoffee-krem-orzechowy",
       "name": "Proteina Banoffee",
       "display_name": "Proteina Banoffee",
@@ -13845,6 +14486,46 @@
       "authors": []
     },
     {
+      "id": "apple-cinnamon-date",
+      "name": "Apple Cinnamon",
+      "display_name": "Apple Cinnamon",
+      "category": "01 - BARS",
+      "tags": [
+        "baton",
+        "dates",
+        "date"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "dates"
+        ],
+        "opakowanie": [
+          "baton"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "000000.00",
+        "0000000.00",
+        "6300373.00",
+        "6300460.00",
+        "6300460.01",
+        "6300479.00"
+      ],
+      "index_bases": [
+        "000000",
+        "0000000",
+        "6300373",
+        "6300460",
+        "6300479"
+      ],
+      "search_blob": "apple cinnamon apple cinnamon date baton dates date 000000.00 0000000.00 6300373.00 6300460.00 6300460.01 6300479.00 bar 03.07.2023 6300373.00 gb de bar 06.02.2023 gb se fi dk de 000000.00 bar 20.09.2024 gb ar 6300479.00 gb ar bar 22.02.2024 6300460.00 gb ee lt lv ro bar 23.02.2024 6300460.01 gb cz sk hu hk bar 27.01.2023 0000000.00 gb ar fr nl bar 30.09.2024 6300479.00 gb d marketing eksport 01 products gc 01 bars apple cinnamon date bar 03.07.2023 6300373.00 gb de d marketing eksport 01 products gc 01 bars apple cinnamon date bar 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 01 bars apple cinnamon date bar 20.09.2024 gb ar 6300479.00 gb ar d marketing eksport 01 products gc 01 bars apple cinnamon date bar 22.02.2024 6300460.00 gb ee lt lv ro d marketing eksport 01 products gc 01 bars apple cinnamon date bar 23.02.2024 6300460.01 gb cz sk hu hk d marketing eksport 01 products gc 01 bars apple cinnamon date bar 27.01.2023 0000000.00 gb ar fr nl d marketing eksport 01 products gc 01 bars apple cinnamon date bar 30.09.2024 6300479.00 gb 6300373.00 000000.00 6300479.00 6300460.00 6300460.01 0000000.00 6300479.00 apple cinnamon baton dates date 000000.00 0000000.00 6300373.00 6300460.00 6300460.01 6300479.00",
+      "authors": []
+    },
+    {
       "id": "blackcurrant-cake-cashews",
       "name": "Blackcurrant Cake",
       "display_name": "Blackcurrant Cake",
@@ -13871,6 +14552,55 @@
       ],
       "search_blob": "blackcurrant cake blackcurrant cake cashews doy 6x cashews 6300669.00 doy6x 10.07.2025 6300669.00 d marketing eksport 01 products gc 01 bars blackcurrant cake cashews doy6x 10.07.2025 6300669.00 6300669.00 blackcurrant cake doy 6x cashews 6300669.00 blackcurrant cake blackcurrant ciasto porzeczkowe delight mini bars mini bars with cashews blackcurrant cake cashews porzeczka",
       "authors": []
+    },
+    {
+      "id": "blueberry-muffin-cashews",
+      "name": "Blueberry Muffin",
+      "display_name": "Blueberry Muffin",
+      "category": "01 - BARS",
+      "tags": [
+        "doy 6x",
+        "mini baton",
+        "muffin",
+        "cashews"
+      ],
+      "tag_groups": {
+        "smak": [
+          "muffin"
+        ],
+        "typ": [],
+        "opakowanie": [
+          "doy 6x",
+          "mini baton"
+        ],
+        "autor": [
+          "Krzysztof"
+        ],
+        "osoba": [
+          "Krzysztof"
+        ],
+        "inne": []
+      },
+      "indexes": [
+        "0000000.00",
+        "6300277.00",
+        "6300308.00",
+        "6300333.00",
+        "6300472.00",
+        "6300493.00"
+      ],
+      "index_bases": [
+        "0000000",
+        "6300277",
+        "6300308",
+        "6300333",
+        "6300472",
+        "6300493"
+      ],
+      "search_blob": "blueberry muffin blueberry muffin cashews doy 6x mini baton muffin cashews krzysztof krzysztof wieczorek krzysztof wieczorek 0000000.00 6300277.00 6300308.00 6300333.00 6300472.00 6300493.00 doy6x 02.04.2024 6300472.00 gb cz sk hu hr doy6x 06.02.2023 gb se fi dk de 0000000.00 gb se fi dk de doy6x 14.03.2023 6300333.00 gb cz sk hu hr doy6x 24.01.2023 6300308.00 gb lt lv ee ro doy6x 27.01.2023 0000000.00 gb ar fr nl doy6x 30.09.2024 6300493.00 gb ar mini 13.01.2023 6300277.00 gb d marketing eksport 01 products gc 01 bars blueberry muffin cashews doy6x 02.04.2024 6300472.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars blueberry muffin cashews doy6x 06.02.2023 gb se fi dk de 0000000.00 gb se fi dk de d marketing eksport 01 products gc 01 bars blueberry muffin cashews doy6x 14.03.2023 6300333.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars blueberry muffin cashews doy6x 24.01.2023 6300308.00 gb lt lv ee ro d marketing eksport 01 products gc 01 bars blueberry muffin cashews doy6x 27.01.2023 0000000.00 gb ar fr nl d marketing eksport 01 products gc 01 bars blueberry muffin cashews doy6x 30.09.2024 6300493.00 gb ar d marketing eksport 01 products gc 01 bars blueberry muffin cashews mini 13.01.2023 6300277.00 gb 6300472.00 0000000.00 6300333.00 6300308.00 0000000.00 6300493.00 6300277.00 blueberry muffin doy 6x mini baton muffin cashews krzysztof krzysztof wieczorek krzysztof wieczorek 0000000.00 6300277.00 6300308.00 6300333.00 6300472.00 6300493.00",
+      "authors": [
+        "Krzysztof"
+      ]
     },
     {
       "id": "cashews-coconut-date",
@@ -13960,6 +14690,92 @@
       "authors": [
         "Krzysztof",
         "krzysztof"
+      ]
+    },
+    {
+      "id": "chocolate-coconut-date",
+      "name": "Chocolate Coconut",
+      "display_name": "Chocolate Coconut",
+      "category": "01 - BARS",
+      "tags": [
+        "baton",
+        "dates",
+        "doy 6x",
+        "date"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "dates"
+        ],
+        "opakowanie": [
+          "baton",
+          "doy 6x"
+        ],
+        "autor": [
+          "Krzysztof"
+        ],
+        "osoba": [
+          "Krzysztof"
+        ],
+        "inne": []
+      },
+      "indexes": [
+        "6300500.00",
+        "6300606.00",
+        "6300608.00"
+      ],
+      "index_bases": [
+        "6300500",
+        "6300606",
+        "6300608"
+      ],
+      "search_blob": "chocolate coconut chocolate coconut date baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300500.00 6300606.00 6300608.00 0 archive bar 35 g 04.03.2025 6300606.00 doy6x 16.05.2024 6300500.00 gb doy6x 16.05.2024 6300500.00 gb lt lv ee ro doy6x 23.12.2024 6300608.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars chocolate coconut date 0 archive d marketing eksport 01 products gc 01 bars chocolate coconut date bar 35 g 04.03.2025 6300606.00 d marketing eksport 01 products gc 01 bars chocolate coconut date doy6x 16.05.2024 6300500.00 gb d marketing eksport 01 products gc 01 bars chocolate coconut date doy6x 16.05.2024 6300500.00 gb lt lv ee ro d marketing eksport 01 products gc 01 bars chocolate coconut date doy6x 23.12.2024 6300608.00 gb cz sk hu hr 6300606.00 6300500.00 6300500.00 6300608.00 chocolate coconut baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300500.00 6300606.00 6300608.00",
+      "authors": [
+        "Krzysztof"
+      ]
+    },
+    {
+      "id": "chocolate-peanuts-date",
+      "name": "Chocolate Peanuts",
+      "display_name": "Chocolate Peanuts",
+      "category": "01 - BARS",
+      "tags": [
+        "baton",
+        "dates",
+        "doy 6x",
+        "date"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "dates"
+        ],
+        "opakowanie": [
+          "baton",
+          "doy 6x"
+        ],
+        "autor": [
+          "Krzysztof"
+        ],
+        "osoba": [
+          "Krzysztof"
+        ],
+        "inne": []
+      },
+      "indexes": [
+        "6300470.00",
+        "6300483.00",
+        "6300496.00"
+      ],
+      "index_bases": [
+        "6300470",
+        "6300483",
+        "6300496"
+      ],
+      "search_blob": "chocolate peanuts chocolate peanuts date baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300470.00 6300483.00 6300496.00 bar 14.02.2025 6300470.00 gb lt lv ee rv bar 19.04.2024 6300470.00 gb ee lt lv ro bar 20.09.2024 gb ar 6300483.00 gb ar bar 30.09.2024 6300483.00 gb doy6x 23.10.2024 6300496.00 gb ar doy6x 30.09.2024 6300496.00 gb d marketing eksport 01 products gc 01 bars chocolate peanuts date bar 14.02.2025 6300470.00 gb lt lv ee rv d marketing eksport 01 products gc 01 bars chocolate peanuts date bar 19.04.2024 6300470.00 gb ee lt lv ro d marketing eksport 01 products gc 01 bars chocolate peanuts date bar 20.09.2024 gb ar 6300483.00 gb ar d marketing eksport 01 products gc 01 bars chocolate peanuts date bar 30.09.2024 6300483.00 gb d marketing eksport 01 products gc 01 bars chocolate peanuts date doy6x 23.10.2024 6300496.00 gb ar d marketing eksport 01 products gc 01 bars chocolate peanuts date doy6x 30.09.2024 6300496.00 gb 6300470.00 6300470.00 6300483.00 6300483.00 6300496.00 6300496.00 chocolate peanuts baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300470.00 6300483.00 6300496.00",
+      "authors": [
+        "Krzysztof"
       ]
     },
     {
@@ -14264,7 +15080,7 @@
         "6300641",
         "6300716"
       ],
-      "search_blob": "hazelnut chocolate hazelnut chocolate date baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00 bar 21.02.2025 6300607.00 doy6x 07.05.2025 6300641.00 gb lt lv ee doy6x 23.12.2024 6300609.00 gb cz sk hu hr doy6x 28.11.2025 6300716.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars hazelnut chocolate date bar 21.02.2025 6300607.00 d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 07.05.2025 6300641.00 gb lt lv ee d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 23.12.2024 6300609.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 28.11.2025 6300716.00 gb cz sk hu hr 6300607.00 6300641.00 6300609.00 6300716.00 hazelnut chocolate baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00",
+      "search_blob": "hazelnut chocolate hazelnut chocolate date baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00 bar 21.02.2025 6300607.00 gb cz sk hu doy6x 07.05.2025 6300641.00 gb lt lv ee doy6x 23.12.2024 6300609.00 gb cz sk hu hr doy6x 28.11.2025 6300716.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars hazelnut chocolate date bar 21.02.2025 6300607.00 gb cz sk hu d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 07.05.2025 6300641.00 gb lt lv ee d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 23.12.2024 6300609.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 28.11.2025 6300716.00 gb cz sk hu hr 6300607.00 6300641.00 6300609.00 6300716.00 hazelnut chocolate baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00",
       "authors": [
         "Krzysztof"
       ]
@@ -14340,6 +15156,40 @@
       "authors": []
     },
     {
+      "id": "mango-cashews-date",
+      "name": "Mango Cashews",
+      "display_name": "Mango Cashews",
+      "category": "01 - BARS",
+      "tags": [
+        "baton",
+        "dates",
+        "mango",
+        "date"
+      ],
+      "tag_groups": {
+        "smak": [
+          "mango"
+        ],
+        "typ": [
+          "dates"
+        ],
+        "opakowanie": [
+          "baton"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [
+        "6300484.00"
+      ],
+      "index_bases": [
+        "6300484"
+      ],
+      "search_blob": "mango cashews mango cashews date baton dates mango date 6300484.00 bar 20.09.2024 gb ar 6300484.00 gb ar d marketing eksport 01 products gc 01 bars mango cashews date bar 20.09.2024 gb ar 6300484.00 gb ar 6300484.00 mango cashews baton dates mango date 6300484.00",
+      "authors": []
+    },
+    {
       "id": "matcha-lemon-cashews",
       "name": "Matcha Lemon",
       "display_name": "Matcha Lemon",
@@ -14410,12 +15260,16 @@
         "inne": []
       },
       "indexes": [
-        "6300372.00"
+        "6300372.00",
+        "6300487.00",
+        "6300666.00"
       ],
       "index_bases": [
-        "6300372"
+        "6300372",
+        "6300487",
+        "6300666"
       ],
-      "search_blob": "peanut cream caramel peanut cream caramel bars protein proteina 6300372.00 05.07.2023 6300372.00 gb de d marketing eksport 01 products gc 01 bars peanut cream caramel bars protein 05.07.2023 6300372.00 gb de 6300372.00 peanut cream caramel proteina 6300372.00",
+      "search_blob": "peanut cream caramel peanut cream caramel bars protein proteina 6300372.00 6300487.00 6300666.00 05.07.2023 6300372.00 gb de 12.06.2025 6300666.00 gb es pt fr 20.09.2024 6300487.00 gb ar d marketing eksport 01 products gc 01 bars peanut cream caramel bars protein 05.07.2023 6300372.00 gb de d marketing eksport 01 products gc 01 bars peanut cream caramel bars protein 12.06.2025 6300666.00 gb es pt fr d marketing eksport 01 products gc 01 bars peanut cream caramel bars protein 20.09.2024 6300487.00 gb ar 6300372.00 6300666.00 6300487.00 peanut cream caramel proteina 6300372.00 6300487.00 6300666.00",
       "authors": []
     },
     {
@@ -14532,7 +15386,8 @@
         "6300349.00",
         "6300367.00",
         "6300471.00",
-        "6300492.00"
+        "6300492.00",
+        "6300501.00"
       ],
       "index_bases": [
         "000000",
@@ -14541,9 +15396,10 @@
         "6300349",
         "6300367",
         "6300471",
-        "6300492"
+        "6300492",
+        "6300501"
       ],
-      "search_blob": "raspberry tart raspberry tart cashews baton doy 6x mini baton tarta cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300276.00 6300349.00 6300367.00 6300471.00 6300492.00 bar 05.07.2023 6300367.00 gb de doy6x 01.10.2024 6300492.00 gb ar doy6x 02.04.2024 6300471.00 gb cz sk hu hr doy6x 06.02.2023 gb se fi dk de 000000.00 doy6x 24.01.2023 6300276.00 gb lt lv ee ro doy6x 27.01.2023 0000000.00 gb ar fr nl mini 18.10.2022 en lt lv ee ro 0000000.00 en lt lv ee ro mini 19.04.2023 6300349.00 gb d marketing eksport 01 products gc 01 bars raspberry tart cashews bar 05.07.2023 6300367.00 gb de d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 01.10.2024 6300492.00 gb ar d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 02.04.2024 6300471.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 24.01.2023 6300276.00 gb lt lv ee ro d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 27.01.2023 0000000.00 gb ar fr nl d marketing eksport 01 products gc 01 bars raspberry tart cashews mini 18.10.2022 en lt lv ee ro 0000000.00 en lt lv ee ro d marketing eksport 01 products gc 01 bars raspberry tart cashews mini 19.04.2023 6300349.00 gb 6300367.00 6300492.00 6300471.00 000000.00 6300276.00 0000000.00 0000000.00 6300349.00 raspberry tart baton doy 6x mini baton tarta cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300276.00 6300349.00 6300367.00 6300471.00 6300492.00",
+      "search_blob": "raspberry tart raspberry tart cashews baton doy 6x mini baton tarta cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300276.00 6300349.00 6300367.00 6300471.00 6300492.00 6300501.00 bar 05.07.2023 6300367.00 gb de doy6x 01.10.2024 6300492.00 gb ar doy6x 02.04.2024 6300471.00 gb cz sk hu hr doy6x 05.06.2024 6300501.00 gb lt lv ee ro doy6x 06.02.2023 gb se fi dk de 000000.00 doy6x 24.01.2023 6300276.00 gb lt lv ee ro doy6x 27.01.2023 0000000.00 gb ar fr nl mini 18.10.2022 en lt lv ee ro 0000000.00 en lt lv ee ro mini 19.04.2023 6300349.00 gb d marketing eksport 01 products gc 01 bars raspberry tart cashews bar 05.07.2023 6300367.00 gb de d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 01.10.2024 6300492.00 gb ar d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 02.04.2024 6300471.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 05.06.2024 6300501.00 gb lt lv ee ro d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 24.01.2023 6300276.00 gb lt lv ee ro d marketing eksport 01 products gc 01 bars raspberry tart cashews doy6x 27.01.2023 0000000.00 gb ar fr nl d marketing eksport 01 products gc 01 bars raspberry tart cashews mini 18.10.2022 en lt lv ee ro 0000000.00 en lt lv ee ro d marketing eksport 01 products gc 01 bars raspberry tart cashews mini 19.04.2023 6300349.00 gb 6300367.00 6300492.00 6300471.00 6300501.00 000000.00 6300276.00 0000000.00 0000000.00 6300349.00 raspberry tart baton doy 6x mini baton tarta cashews krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300276.00 6300349.00 6300367.00 6300471.00 6300492.00 6300501.00",
       "authors": [
         "Krzysztof"
       ]
@@ -14624,7 +15480,7 @@
         "6300478",
         "6300699"
       ],
-      "search_blob": "cornflakes peanuts honey cornflakes peanuts honey balls crispy folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01 04.07.2023 6300370.00 gb de 06.02.2023 gb se fi dk de 000000.00 09.01.2023 6300273.00 gb ee lt lv ro 2025 10 30 gb de 6300699.01 80 g 05.07.2024 6300699.00 27.01.2023 0000000.00 gb ar fr nl d folia 20.09.2024 6300478.00 gb ar d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 04.07.2023 6300370.00 gb de d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 09.01.2023 6300273.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 2025 10 30 gb de 6300699.01 80 g 05.07.2024 6300699.00 d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 27.01.2023 0000000.00 gb ar fr nl d d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy folia 20.09.2024 6300478.00 gb ar 6300370.00 000000.00 6300273.00 6300699.01 0000000.00 6300478.00 cornflakes peanuts honey folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01",
+      "search_blob": "cornflakes peanuts honey cornflakes peanuts honey balls crispy folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01 04.07.2023 6300370.00 gb de 06.02.2023 gb se fi dk de 000000.00 09.01.2023 6300273.00 gb ee lt lv ro 2025 10 30 6300699.01 gb de 27.01.2023 0000000.00 gb ar fr nl d folia 20.09.2024 6300478.00 gb ar d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 04.07.2023 6300370.00 gb de d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 09.01.2023 6300273.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 2025 10 30 6300699.01 gb de d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 27.01.2023 0000000.00 gb ar fr nl d d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy folia 20.09.2024 6300478.00 gb ar 6300370.00 000000.00 6300273.00 6300699.01 0000000.00 6300478.00 cornflakes peanuts honey folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01",
       "authors": [
         "Krzysztof"
       ]
@@ -14939,7 +15795,7 @@
         "6300355",
         "6300579"
       ],
-      "search_blob": "burger chicken burger chicken plant based burger rekaw 000123.00 000161.00 6300294.00 6300355.00 6300579.00 sleeve 03.06.2023 6300355.00 sleeve 12.01.2023 6300294.00 sleeve 16.05.2023 6300355.00 sleeve 21.12.2022 kar000161.00 sleeve 29.08.2022 kar000123.00 wizualizacje 16.10.2024 6300579.00 cz d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 03.06.2023 6300355.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 12.01.2023 6300294.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 16.05.2023 6300355.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 21.12.2022 kar000161.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 29.08.2022 kar000123.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based wizualizacje 16.10.2024 6300579.00 cz 6300355.00 6300294.00 6300355.00 000161.00 000123.00 6300579.00 burger chicken burger rekaw 000123.00 000161.00 6300294.00 6300355.00 6300579.00",
+      "search_blob": "burger chicken burger chicken plant based burger rekaw 000123.00 000161.00 6300294.00 6300355.00 6300579.00 sleeve 03.06.2023 6300355.00 sleeve 12.01.2023 6300294.00 sleeve 16.05.2023 6300355.00 sleeve 16.10.2024 6300579.00 cz sleeve 21.12.2022 kar000161.00 sleeve 29.08.2022 kar000123.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 03.06.2023 6300355.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 12.01.2023 6300294.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 16.05.2023 6300355.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 16.10.2024 6300579.00 cz d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 21.12.2022 kar000161.00 d marketing eksport 01 products gc 03 plant based burger chicken plant based sleeve 29.08.2022 kar000123.00 6300355.00 6300294.00 6300355.00 6300579.00 000161.00 000123.00 burger chicken burger rekaw 000123.00 000161.00 6300294.00 6300355.00 6300579.00",
       "authors": []
     },
     {
@@ -14970,7 +15826,8 @@
         "6300354.00",
         "6300514.00",
         "6300572.00",
-        "6300773.00"
+        "6300773.00",
+        "6300796.00"
       ],
       "index_bases": [
         "000105",
@@ -14979,9 +15836,10 @@
         "6300354",
         "6300514",
         "6300572",
-        "6300773"
+        "6300773",
+        "6300796"
       ],
-      "search_blob": "burger burger plant based burger rekaw 000105.00 000160.00 6300293.00 6300354.00 6300514.00 6300572.00 6300773.00 sleeve 01.17.2025 6300572.00 sleeve 03.06.2024 6300354.00 sleeve 12.01.2023 6300293.00 sleeve 29.08.2022 kar000105.00 sleeve 29.12.2022 kar000160.00 sleeve 19.06.2026 de 6300773 wizualizacje 31.07.2024 6300514.00 cz d marketing eksport 01 products gc 03 plant based burger plant based sleeve 01.17.2025 6300572.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 03.06.2024 6300354.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 12.01.2023 6300293.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 29.08.2022 kar000105.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 29.12.2022 kar000160.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 19.06.2026 de 6300773 d marketing eksport 01 products gc 03 plant based burger plant based wizualizacje 31.07.2024 6300514.00 cz 6300572.00 6300354.00 6300293.00 000105.00 000160.00 6300773.00 6300514.00 burger burger rekaw 000105.00 000160.00 6300293.00 6300354.00 6300514.00 6300572.00 6300773.00",
+      "search_blob": "burger burger plant based burger rekaw 000105.00 000160.00 6300293.00 6300354.00 6300514.00 6300572.00 6300773.00 6300796.00 sleeve 01.17.2025 6300572.00 sleeve 03.06.2024 6300354.00 sleeve 12.01.2023 6300293.00 sleeve 21.08.2026 6300796 sleeve 29.08.2022 kar000105.00 sleeve 29.12.2022 kar000160.00 sleeve 31.07.2024 6300514.00 cz sleeve 19.06.2026 de 6300773 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 01.17.2025 6300572.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 03.06.2024 6300354.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 12.01.2023 6300293.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 21.08.2026 6300796 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 29.08.2022 kar000105.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 29.12.2022 kar000160.00 d marketing eksport 01 products gc 03 plant based burger plant based sleeve 31.07.2024 6300514.00 cz d marketing eksport 01 products gc 03 plant based burger plant based sleeve 19.06.2026 de 6300773 6300572.00 6300354.00 6300293.00 6300796.00 000105.00 000160.00 6300514.00 6300773.00 burger burger rekaw 000105.00 000160.00 6300293.00 6300354.00 6300514.00 6300572.00 6300773.00 6300796.00",
       "authors": []
     },
     {
@@ -15071,7 +15929,7 @@
         "6300346",
         "6300356"
       ],
-      "search_blob": "gyros pea gyros pea plant based gyros rekaw 6300346.00 6300356.00 sleeve 22.12.2023 6300346.00 wizualizacje 03.06.2024 6300356.00 cz d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 22.12.2023 6300346.00 d marketing eksport 01 products gc 03 plant based gyros pea plant based wizualizacje 03.06.2024 6300356.00 cz 6300346.00 6300356.00 gyros pea gyros rekaw 6300346.00 6300356.00",
+      "search_blob": "gyros pea gyros pea plant based gyros rekaw 6300346.00 6300356.00 sleeve 03.06.2024 6300356.00 cz sleeve 22.12.2023 6300346.00 d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 03.06.2024 6300356.00 cz d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 22.12.2023 6300346.00 6300356.00 6300346.00 gyros pea gyros rekaw 6300346.00 6300356.00",
       "authors": []
     },
     {

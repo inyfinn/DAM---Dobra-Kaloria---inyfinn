@@ -95,6 +95,8 @@ KNOWN_LANG_CODES = frozenset(_LANGS_FROM_DICT.keys()) | frozenset({
 LANG_ALIASES = dict(NAMING.get("lang_aliases") or {"gb": "en", "uk": "en", "ukr": "ua"})
 # Always force English market aliases onto en (dictionary may lag).
 LANG_ALIASES.update({"gb": "en", "uk": "en", "ukr": "ua"})
+# HARD: UA = Ukrainian (ISO). Never map ua -> uk/en (legacy dict had ua:uk).
+LANG_ALIASES.pop("ua", None)
 # HARD 2026-07-21: etykiety = nazwy JEZYKOW (Polski, Niemiecki), nie krajow.
 LANG_LABELS = {
     "pl": "Polski",
@@ -1073,6 +1075,49 @@ def scan_slot_files(slot_dir: Path, root: Path, *, slot_name: str = "") -> list[
     return files
 
 
+def scan_viz_slot_files(
+    slot_dir: Path,
+    root: Path,
+    *,
+    slot_name: str = "",
+    max_depth: int = 4,
+) -> list[dict]:
+    """WIZKI: pliki w slocie + zagniezdzenia (INTERNET-PREZENTACJE-RGB, data/RGB, ...).
+
+    Flat scan_slot_files pomija RGB w podfolderach → puste viz mimo plikow na dysku
+    (CYNAMONKA/ŚLIWKA MINI 6300782/6300784, 2026-09-04).
+    """
+    files: list[dict] = []
+    seen: set[str] = set()
+
+    def walk(p: Path, depth: int) -> None:
+        if depth > max_depth:
+            return
+        try:
+            children = list(p.iterdir())
+        except (PermissionError, OSError):
+            return
+        for child in children:
+            try:
+                if child.is_file() and child.suffix.lower() in SCAN_EXT:
+                    ent = file_entry(child, root)
+                    if slot_name:
+                        ent["slot"] = slot_name
+                    key = ent.get("path") or child.name
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    files.append(ent)
+                elif child.is_dir():
+                    walk(child, depth + 1)
+            except (PermissionError, OSError):
+                continue
+
+    walk(slot_dir, 0)
+    files.sort(key=lambda x: x.get("name", ""))
+    return files
+
+
 def classify_special_document(filename: str) -> str | None:
     """Karty wprowadzenia / strategie pozycjonowania - dodatkowy tag NIEZALEZNY
     od podstawowej roli (source/print/...), tylko dla checklisty rozszerzonej."""
@@ -1168,7 +1213,11 @@ def scan_revision_slots(child: Path, root: Path) -> tuple[list[str], dict[str, l
                 except (PermissionError, OSError):
                     pass
                 continue
-            scanned = scan_slot_files(sub, root, slot_name=sn)
+            # HARD: 4-WIZKI czesto trzyma RGB w podfolderach — flat scan = 0 wizki
+            if slot_role == "viz":
+                scanned = scan_viz_slot_files(sub, root, slot_name=sn)
+            else:
+                scanned = scan_slot_files(sub, root, slot_name=sn)
             for f in scanned:
                 role = resolve_file_role(slot_role, f.get("name") or "")
                 if not role:
@@ -1549,10 +1598,12 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
 
 
 def canonicalize_lang_code(code: str) -> str:
-    """Map gb/uk/en -> en; ukr -> ua. Empty for junk."""
+    """Map gb/uk/en -> en; ukr -> ua. UA stays ua (Ukrainian). Empty for junk."""
     c = (code or "").lower().strip()
     if not c or c in ("?", "unknown", "xx"):
         return ""
+    if c == "ua":
+        return "ua"
     c = LANG_ALIASES.get(c, c)
     if c in ("gb", "uk", "en"):
         return "en"
@@ -1597,8 +1648,8 @@ def parse_folder_langs(folder_name: str) -> list[str]:
 
 
 _LANG_CODES_ORDER = (
-    "pl", "de", "en", "gb", "uk", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
-    "fr", "it", "es", "nl", "ru", "ua", "hr", "si", "bg", "ar",
+    "pl", "de", "en", "gb", "ua", "uk", "cz", "sk", "hu", "ro", "lt", "lv", "ee",
+    "fr", "it", "es", "nl", "ru", "hr", "si", "bg", "ar",
 )
 
 

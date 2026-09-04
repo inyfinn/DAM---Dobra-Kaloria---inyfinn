@@ -23,7 +23,9 @@
         "apps/desktop/dam_db.py",
         "apps/desktop/local_bridge.py"
       ],
-      "related_kv": ["program-instructions"],
+      "related_kv": [
+        "program-instructions"
+      ],
       "body_pl": "HARD 2026-08-13: brak atrap w UI — dziala albo placeholder/link."
     },
     {

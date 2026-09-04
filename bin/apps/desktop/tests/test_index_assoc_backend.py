@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import time
@@ -882,6 +883,79 @@ class SeedStrongOnlyTests(unittest.TestCase):
             self.assertEqual(statuses[("br-9", "p-new")], "auto")
             self.assertEqual(reasons[("br-9", "p-new")], "sku_match")
             self.assertEqual(after1, after2)
+
+
+class ScriptPythonIjsonTests(unittest.TestCase):
+    def test_resolve_script_python_has_ijson(self):
+        from branding_publish import resolve_script_python
+
+        exe = resolve_script_python(require_ijson=True)
+        self.assertTrue(Path(exe).is_file())
+        self.assertNotEqual(Path(exe).name.lower(), "pythonw.exe")
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+        rc = subprocess.call(
+            [exe, "-c", "import ijson"],
+            creationflags=flags,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        self.assertEqual(rc, 0)
+
+    def test_watch_has_branding_hook_and_pipeline_script(self):
+        watch = DESKTOP.parent / "web" / "scripts" / "watch-file-index.py"
+        pipeline = DESKTOP.parent.parent / "scripts" / "ops" / "rebuild-branding-pipeline.py"
+        self.assertTrue(watch.is_file())
+        self.assertTrue(pipeline.is_file())
+        src = watch.read_text(encoding="utf-8")
+        self.assertIn("spawn_branding_pipeline", src)
+        self.assertIn("rebuild-branding-pipeline.py", src)
+        self.assertIn("watch_branding_roots", src)
+        self.assertIn("default=2.0", src)
+        self.assertIn("default=5", src)
+        self.assertIn("max_depth=depth", src)
+        bridge = (DESKTOP / "local_bridge.py").read_text(encoding="utf-8")
+        self.assertIn("branding_hook_after_index", bridge)
+        self.assertIn("resolve_script_python", bridge)
+        self.assertIn("interval=2.0", bridge)
+        self.assertIn("depth=5", bridge)
+        sup_src = (DESKTOP / "index_supervisor.py").read_text(encoding="utf-8")
+        self.assertIn('"--depth"', sup_src)
+
+
+class NestedVizSlotScanTests(unittest.TestCase):
+    """WIZKI w INTERNET-PREZENTACJE-RGB (1–2 poziomy) musza trafic do wizki_files."""
+
+    def test_scan_revision_slots_nested_rgb(self):
+        import importlib.util
+
+        build = DESKTOP.parent / "web" / "scripts" / "build-file-index.py"
+        spec = importlib.util.spec_from_file_location("build_file_index_nested_viz", build)
+        self.assertIsNotNone(spec)
+        mod = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(mod)
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            rev = root / "MINI - 18 06 2026 - 6300782.00 - F"
+            rgb = rev / "4 - WIZKI" / "INTERNET-PREZENTACJE-RGB"
+            deep = rev / "4 - WIZKI" / "18.06.2026 - 6300782.00" / "INTERNET-PREZENTACJE-RGB"
+            rgb.mkdir(parents=True)
+            deep.mkdir(parents=True)
+            (rgb / "DK-MINI-NERK-CYNAMONKA-6300782.00-RGB-FRONT-S.png").write_bytes(b"png")
+            (deep / "DK-MINI-NERK-CIASTO-6300784.00-RGB-FRONT-S.jpg").write_bytes(b"jpg")
+            (rev / "4 - WIZKI" / "DK-6300782.00-Pakiet.zip").write_bytes(b"zip")
+
+            slots, files_by_role, wizki = mod.scan_revision_slots(rev, root)
+            self.assertTrue(any("WIZKI" in s.upper() for s in slots))
+            names = {f.get("name") for f in wizki}
+            self.assertIn("DK-MINI-NERK-CYNAMONKA-6300782.00-RGB-FRONT-S.png", names)
+            self.assertIn("DK-MINI-NERK-CIASTO-6300784.00-RGB-FRONT-S.jpg", names)
+            self.assertEqual(len(wizki), 2)
+            # ZIP w WIZKI → print, nie galeria
+            viz_names = {f.get("name") for f in (files_by_role.get("viz") or [])}
+            self.assertNotIn("DK-6300782.00-Pakiet.zip", viz_names)
 
 
 if __name__ == "__main__":

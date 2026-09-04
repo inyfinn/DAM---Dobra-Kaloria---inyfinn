@@ -152,9 +152,68 @@
       if (via) return via;
     }
     var c = String(code).toLowerCase();
+    if (c === "ua") return langLabels.ua || "Ukraiński";
     if (c === "en" || c === "uk" || c === "gb") c = "en";
     if (c === "ukr") c = "ua";
     return langLabels[c] || langLabels[code] || String(c).toUpperCase();
+  }
+
+  function langsLabelList(codes) {
+    var list = (codes || [])
+      .map(function (c) {
+        return labelForLang(c);
+      })
+      .filter(Boolean);
+    return list.join(" · ");
+  }
+
+  function revisionLangsForRow(r) {
+    if (window.DamLabels && typeof window.DamLabels.resolveRevisionLangs === "function") {
+      return window.DamLabels.resolveRevisionLangs(r, r && r.langs);
+    }
+    return (r && r.langs && r.langs.length) ? r.langs.slice() : ["pl"];
+  }
+
+  function ensureVizLangPickerFooterCss() {
+    if (document.getElementById("dam-viz-lang-picker-footer-css")) return;
+    var s = document.createElement("style");
+    s.id = "dam-viz-lang-picker-footer-css";
+    s.textContent =
+      "#damTagEditPopover .dam-thumb-picker__footer," +
+      "#damTagEditPopover .dam-tag-edit-popover__actions{" +
+      "display:grid!important;grid-template-columns:auto 1fr auto!important;" +
+      "align-items:center!important;gap:8px!important;min-height:65px!important;" +
+      "padding:12px 14px!important;overflow:visible!important;flex-shrink:0!important;" +
+      "width:100%!important;max-width:100%!important;box-sizing:border-box!important;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__actions > [data-cancel]," +
+      "#damTagEditPopover .dam-thumb-picker__footer > [data-cancel]{grid-column:1!important;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__actions > [data-confirm]," +
+      "#damTagEditPopover .dam-thumb-picker__footer > [data-confirm]{" +
+      "grid-column:3!important;justify-self:end!important;max-width:100%!important;" +
+      "display:inline-flex!important;align-items:center!important;gap:6px!important;" +
+      "min-width:44px!important;padding:0 16px!important;overflow:visible!important;}" +
+      "#damTagEditPopover .dam-tag-edit-popover__confirm span," +
+      "#damTagEditPopover .dam-tag-edit-popover__confirm[data-confirm] span{" +
+      "display:inline!important;visibility:visible!important;white-space:nowrap!important;}";
+    document.head.appendChild(s);
+  }
+
+  function patchVizTagSaveSession() {
+    if (global._damVizTagSavePatched || !global.DamTagEdit) return;
+    global._damVizTagSavePatched = true;
+    var origOpen = global.DamTagEdit.openTagPicker;
+    if (typeof origOpen !== "function") return;
+    global.DamTagEdit.openTagPicker = function (anchorEl, ctx) {
+      ensureVizLangPickerFooterCss();
+      var run = function () {
+        origOpen.call(global.DamTagEdit, anchorEl, ctx);
+      };
+      if (global.DamApi && typeof global.DamApi.ensureSession === "function") {
+        global.DamApi.ensureSession().then(run).catch(run);
+        return;
+      }
+      run();
+    };
   }
 
   /* Przy parowaniu z folderem innego jezyka (Dodaj miniature) - zgadnij kod
@@ -673,6 +732,7 @@
       v.index_base = "";
     }
     if (v.lang === "gb" || v.lang === "uk") v.lang = "en";
+    if (v.lang === "ua") v.lang = "ua";
     /* HARD: zawsze odmiana jezyka (Polski/Angielski), nie kraj ze starego indeksu */
     if (v.lang && v.lang !== "?" && v.lang !== "unknown") {
       var fresh = labelForLang(v.lang);
@@ -734,6 +794,7 @@
       }
     }
     if (v.lang === "gb" || v.lang === "uk") v.lang = "en";
+    if (v.lang === "ua") v.lang = "ua";
     /* KAR6X: path juz FRONT-L w indeksie, ale thumb_url/file zostaly na ENFACE po patchu. */
     syncKar6xFrontThumb(v);
     return normalizeVizRow(v);
@@ -1116,7 +1177,7 @@
     var name = prod.display_name || prod.name || pid;
     var wizki = r.wizki || [];
     var hasViz = wizki.length > 0 || r.wizki_count > 0;
-    var langs = (r.langs && r.langs.length) ? r.langs.slice() : [];
+    var langs = revisionLangsForRow(r);
     langs = langs
       .map(function (lg) {
         if (window.DamLabels && typeof window.DamLabels.normalizeLangCode === "function") {
@@ -1209,7 +1270,7 @@
            Domyślnie (onlyLatest=true) - jak dawniej, calkowicie pominiete. */
         if (!hasViz && onlyLatest) return;
         /* Langs z indeksu. DK ma PL z buildera (baseline). Zakaz GC=en bez dowodu. */
-        var langs = (r.langs && r.langs.length) ? r.langs.slice() : [];
+        var langs = revisionLangsForRow(r);
         langs = langs
           .map(function (lg) {
             if (window.DamLabels && typeof window.DamLabels.normalizeLangCode === "function") {
@@ -3044,8 +3105,19 @@
         var langBit0 = "";
         if (first.lang_unknown || first.lang === "?" || first.lang === "unknown") {
           langBit0 = " · ?";
-        } else if (first.lang) {
-          langBit0 = " · " + (labelForLang(first.lang) || first.lang_label || "");
+        } else {
+          var revLangs =
+            (first.langs && first.langs.length && first.langs) ||
+            revisionLangsForRow({
+              folder: first.revision_folder,
+              path: first.revision_path || first.path,
+              langs: first.langs,
+            });
+          if (revLangs && revLangs.length > 1) {
+            langBit0 = " · " + langsLabelList(revLangs);
+          } else if (first.lang) {
+            langBit0 = " · " + (labelForLang(first.lang) || first.lang_label || "");
+          }
         }
         var typeLine =
           (carrierHuman(first.carrier || "", first) || "BRAK TYPU") +
@@ -5433,6 +5505,10 @@
     var grid = document.getElementById("vizGrid");
     if (!grid) return;
 
+    ensureVizLangPickerFooterCss();
+    patchVizTagSaveSession();
+    document.addEventListener("DOMContentLoaded", patchVizTagSaveSession);
+
     if (window.DamGridReveal && typeof window.DamGridReveal.skeleton === "function") {
       window.DamGridReveal.skeleton(grid, { variant: "cards", layout: "viz-grid", responsive: true });
     }
@@ -5894,7 +5970,8 @@
                 (res.new_path && v.path === res.new_path)
               ) {
                 v.langs = res.langs.slice();
-                v.lang = res.langs[0] || v.lang;
+                v.lang = res.langs.indexOf(v.lang) !== -1 ? v.lang : res.langs[0] || v.lang;
+                v.lang_label = labelForLang(v.lang) || v.lang_label;
                 if (res.new_path) {
                   v.path = res.new_path;
                   v.revision_path = res.new_path;

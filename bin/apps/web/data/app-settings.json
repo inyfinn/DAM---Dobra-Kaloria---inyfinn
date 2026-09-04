@@ -9,9 +9,10 @@
   },
   "instructions": {
     "source_kv": "program-instructions",
-    "version": 18,
-    "count": 77,
+    "version": 19,
+    "count": 78,
     "critical_ids": [
+      "ui.no_fake_controls",
       "branding.grid_no_wizki_visuals_packshot",
       "index.continuous_auto_indexing",
       "index.supervisor_singleton_bridge_owned",

@@ -298,7 +298,9 @@
   ],
   "lang_aliases": {
     "en": "gb",
-    "ua": "uk"
+    "uk": "en",
+    "gb": "en",
+    "ukr": "ua"
   },
   "perspectives": {
     "BACK": [

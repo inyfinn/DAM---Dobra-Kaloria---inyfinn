@@ -4,6 +4,18 @@ Format: Data | Akcja | Status | Efekt | Dalej
 
 ---
 
+2026-09-04 | release 5.0.163 push+gh release | OK | Unified version 5.0.163; commit mascot+WIZKI+UA lang; gh release v5.0.163 + DAM-Setup.exe | Kierownik: QA
+
+2026-09-04 | WIZKI nested scan + faster watcher (cynamonka/śliwka) | OK | Root cause: `scan_slot_files` flat → `4-WIZKI/INTERNET-PREZENTACJE-RGB` = 0 wizki mimo plikow na D:/M:. Fix: `scan_viz_slot_files` (depth≤4) w build-file-index; watcher interval **5s→2s**, depth **3→5** (arg `--depth` wreszcie uzywany); supervisor/bridge spawn `--interval 2 --depth 5`. Disk: CYNA MINI 6300782 WIZKI=20; SLIWKA MINI 6300784 WIZKI=41 (40 img). Index AFTER: viz **406→438**; 6300782 wizki=20; 6300784 wizki=40. figa: produkty w indeksie, `4-WIZKI` puste na dysku → 0 wynikow = poprawne. Testy NestedVizSlotScan + watch defaults OK. Bez dam-viz.js / jezyk / commit. | Kierownik: push+release
+
+2026-09-04 | v5.0.162 sidebar version once + viz empty Dobrokalorius | OK | dam-version.js syncFooterVersion ukrywa .dam-app-version; dam-shell.js footer bez v-span; visualizations.html + dam-empty-mascot.js?v=5.0.162; dam-brand.css hide footer ver + mascot z-index; version.json/runtime_config 5.0.162; curl 8765=200 | Kierownik: QA visualizations ?v=5.0.162
+
+2026-09-04 | v5.0.161 full reindex + branding auto-hook / ijson | OK | BEFORE grid 2026-09-03/8822 → AFTER **2026-09-04T07:59:17Z / 8842**; file-index **2026-09-04T09:55:28** p191 viz406; POST /index/rebuild + hook branding; bundled ijson + resolve_script_python; grid sys.path fix (cwd desktop); watcher PID **1** (74916); curl 8765/8766=200; falafel+DRUKOWANE=6 | Kierownik: DONE?
+
+2026-09-04 | v5.0.161 branding quiz toolbar + DK/GC tag fix | OK | Quiz przeniesiony do view-tools (#damAssocQuizMount); DK/GC: inferAssetBrand() bo slim grid-index nie ma pola brand (renderTagFilters L2696 disabled); usunięty duplikat appearance:drukowane vs facet:drukowane; mniejszy gap tag-filters | browser branding ?v=5.0.161 — czeka QA
+
+---
+
 ## 2026-09-03 — v5.0.159 branding PDF card thumb (kartka FALAFEL)
 
 | Pole | Treść |
@@ -17,7 +29,7 @@ Format: Data | Akcja | Status | Efekt | Dalej
 
 ---
 
-2026-09-03 | ERR_CONNECTION_RESET :8765 diagnoza | OK (po restarcie) | Przyczyna: serve_browser martwy/zawieszony (PID 54764, curl HTTP:000); nie crash branding.html; curl branding.html=HTTP 200; PID 8765=73412 serve_browser, 8766=75300 local_bridge; smoke+browser 5.0.157 siatka 100/152 | weryfikacja twarda 13:18
+2026-09-03 | v5.0.160 search focus + sidebar version + nav densify | OK | (1) suggest-host na input-wrap + pointer-events branding-chrome; (2) wersja pod #damShellLogout, #damAppVersionPill ukryty; (3) --dam-sidebar-nav-v-compact:0.8 na py/min-h/item-edge | browser branding ?v=5.0.160 | czeka QA
 
 2026-09-03 | dam-grid-reveal.js 5.0.157 zapis | OK | THUMB 1200ms, bez DamLoader.done w timeout; HTML grid-reveal ?v=5.0.157 (9 stron); curl :8765 200; branding 100 kart opacity=1 | PASS smoke
 
@@ -196,3 +208,5 @@ Format: Data | Akcja | Status | Efekt | Dalej
 ---
 
 *Dopisuj nowe wiersze na końcu tego pliku.*
+
+2026-09-04 | UA≠EN lang fix 6300763 + Zatwierdź + login_required | OK | naming-dictionary ua→uk usunięty; dam-labels/viz/bridge; test_lang_parse PASS | Czeka Kierownik push

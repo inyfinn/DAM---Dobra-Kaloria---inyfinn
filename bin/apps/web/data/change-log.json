@@ -3295,6 +3295,25 @@
       ],
       "lifecycle_history_id": "lc_1785826667153",
       "notes": []
+    },
+    {
+      "id": "chg_1788520908006",
+      "ts": "2026-09-04T11:21:48.006151+00:00",
+      "action": "set_langs",
+      "category": "lang",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "langs": [
+        "en",
+        "ua"
+      ],
+      "folder_rename": {
+        "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\JABŁKO CYNAMON — [ daktylowy ]\\BAT - 35 g - 15.05.2026 – 6300763",
+        "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\JABŁKO CYNAMON — [ daktylowy ]\\BAT - 35 g - 15.05.2026 – 6300763 - EN UA",
+        "old_name": "BAT - 35 g - 15.05.2026 – 6300763",
+        "new_name": "BAT - 35 g - 15.05.2026 – 6300763 - EN UA"
+      },
+      "product_id": "jab-ko-cynamon-daktylowy",
+      "product_name": "Jabłko Cynamon"
     }
   ]
 }

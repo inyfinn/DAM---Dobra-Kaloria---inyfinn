@@ -5,6 +5,9 @@ Watcher: szybkie odswiezanie indeksu + miniatur po zmianie wizualizacji na dysku
 Wspoldzielony O_EXCL lock z recznym POST /index/rebuild.
 Status + log sterowane przez index_supervisor (bridge owner).
 
+Po udanym file-index: hook branding (scripts/ops/rebuild-branding-pipeline.py) —
+jeden watcher, bez drugiego demona.
+
 Usage:
   python apps/web/scripts/watch-file-index.py
   python apps/web/scripts/watch-file-index.py --interval 5 --no-initial
@@ -25,6 +28,8 @@ BUILD = SCRIPT.parent / "build-file-index.py"
 DESKTOP_DATA = SCRIPT.parents[2] / "desktop" / "data"
 DEFAULT_STATUS = DESKTOP_DATA / "index-watcher-status.json"
 DEFAULT_LOCK = DESKTOP_DATA / "index-rebuild.lock.json"
+BIN_ROOT = SCRIPT.parents[3]
+BRANDING_PIPELINE = BIN_ROOT / "scripts" / "ops" / "rebuild-branding-pipeline.py"
 
 # Ensure sibling marketing_roots import works when cwd differs
 if str(SCRIPT.parent) not in sys.path:
@@ -41,7 +46,22 @@ def resolve_marketing_base() -> Path:
     return _resolve()
 
 
-def watch_roots(base: Path) -> list[Path]:
+def _script_python() -> str:
+    """Prefer python.exe with ijson when available (branding hook / builders)."""
+    try:
+        from branding_publish import resolve_script_python
+
+        return resolve_script_python(require_ijson=False)
+    except Exception:
+        exe = Path(sys.executable)
+        if exe.name.lower() == "pythonw.exe":
+            sibling = exe.with_name("python.exe")
+            if sibling.is_file():
+                return str(sibling)
+        return str(exe)
+
+
+def watch_product_roots(base: Path) -> list[Path]:
     roots = [
         base / "- POLSKA" / "01 - PRODUKTY" / "- DK",
         base / "- EKSPORT" / "01 - PRODUCTS" / "- GC",
@@ -49,8 +69,34 @@ def watch_roots(base: Path) -> list[Path]:
     return [r for r in roots if r.is_dir()]
 
 
-def tree_mtime(root: Path, max_depth: int = 3) -> float:
-    """Najnowszy mtime do max_depth (0=root). Szybkie, bez walku calego dysku."""
+def watch_branding_roots(base: Path) -> list[Path]:
+    """Materials / print / branding folders — changes trigger branding pipeline only."""
+    roots = [
+        base / "- POLSKA" / "03 - MATERIAŁY GRAFICZNE",
+        base / "- POLSKA" / "03 - MATERIALY GRAFICZNE",
+    ]
+    out: list[Path] = []
+    seen: set[str] = set()
+    for r in roots:
+        if not r.is_dir():
+            continue
+        try:
+            key = str(r.resolve()).lower()
+        except OSError:
+            key = str(r).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(r)
+    return out
+
+
+def tree_mtime(root: Path, max_depth: int = 5) -> float:
+    """Najnowszy mtime do max_depth (0=root). Szybkie, bez walku calego dysku.
+
+    depth 5 od -DK: kat→produkt→wariant→4-WIZKI→INTERNET-PREZENTACJE-RGB.
+    depth 3 konczylo na folderze wariantu i nie widzialo nowych plikow w WIZKI.
+    """
     latest = 0.0
     try:
         latest = root.stat().st_mtime
@@ -74,7 +120,11 @@ def tree_mtime(root: Path, max_depth: int = 3) -> float:
                 latest = st.st_mtime
             name_u = child.name.upper()
             if child.is_dir() and (
-                depth < max_depth or "WIZ" in name_u or "VISUAL" in name_u
+                depth < max_depth
+                or "WIZ" in name_u
+                or "VISUAL" in name_u
+                or "DRUK" in name_u
+                or "BRAND" in name_u
             ):
                 walk(child, depth + 1)
 
@@ -82,8 +132,8 @@ def tree_mtime(root: Path, max_depth: int = 3) -> float:
     return latest
 
 
-def roots_mtime(roots: list[Path]) -> float:
-    return max((tree_mtime(r) for r in roots), default=0.0)
+def roots_mtime(roots: list[Path], max_depth: int = 5) -> float:
+    return max((tree_mtime(r, max_depth=max_depth) for r in roots), default=0.0)
 
 
 def _write_status(path: Path, payload: dict, *, preserve_last: bool = True) -> None:
@@ -115,6 +165,55 @@ def _write_status(path: Path, payload: dict, *, preserve_last: bool = True) -> N
             pass
 
 
+def spawn_branding_pipeline(*, status_file: Path | None = None) -> None:
+    """Fire-and-forget branding fat+grid (same lock as POST /branding/rebuild)."""
+    if not BRANDING_PIPELINE.is_file():
+        print(f"[watch] branding hook skip: missing {BRANDING_PIPELINE}")
+        return
+    try:
+        py = _script_python()
+        try:
+            from branding_publish import resolve_script_python
+
+            py = resolve_script_python(require_ijson=True)
+        except RuntimeError as exc:
+            print(f"[watch] branding hook FAIL ijson: {exc}")
+            if status_file is not None:
+                _write_status(
+                    status_file,
+                    {
+                        "ok": False,
+                        "watcher_ok": True,
+                        "branding_hook_error": str(exc),
+                        "stage": "branding_hook_failed",
+                    },
+                )
+            return
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+        proc = subprocess.Popen(
+            [py, str(BRANDING_PIPELINE)],
+            cwd=str(BIN_ROOT),
+            creationflags=flags,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print(f"[watch] branding hook spawned pid={proc.pid} via {py}")
+        if status_file is not None:
+            _write_status(
+                status_file,
+                {
+                    "ok": True,
+                    "watcher_ok": True,
+                    "branding_hook_pid": proc.pid,
+                    "branding_hook_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "stage": "branding_hook_spawned",
+                },
+            )
+    except Exception as exc:  # noqa: BLE001
+        print(f"[watch] branding hook spawn error: {exc}")
+
+
 def rebuild_with_lock(
     *,
     lock_file: Path,
@@ -122,12 +221,12 @@ def rebuild_with_lock(
     root_args: list[str] | None = None,
     out_dir: Path | None = None,
     stage_prefix: str = "product",
+    branding_hook: bool = True,
 ) -> int:
     """Acquire shared lock, then run build-file-index. No scan before lock."""
     try:
         from rebuild_lock import acquire_lock
     except ImportError:
-        # Minimal fallback O_EXCL
         acquire_lock = None  # type: ignore
 
     handle = None
@@ -152,7 +251,6 @@ def rebuild_with_lock(
             print("[watch] skip rebuild: lock held")
             return 2
     else:
-        # Extremely defensive fallback
         lock_file.parent.mkdir(parents=True, exist_ok=True)
         try:
             fd = os.open(str(lock_file), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
@@ -162,7 +260,8 @@ def rebuild_with_lock(
             print("[watch] skip rebuild: lock held (fallback)")
             return 2
 
-    cmd = [sys.executable, str(BUILD)]
+    py = _script_python()
+    cmd = [py, str(BUILD)]
     for r in root_args or []:
         cmd.extend(["--root", r])
     if out_dir is not None:
@@ -212,13 +311,20 @@ def rebuild_with_lock(
     )
     if handle is not None:
         handle.release()
+    if rc == 0 and branding_hook:
+        spawn_branding_pipeline(status_file=status_file)
     return int(rc)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--interval", type=float, default=5.0, help="Sekundy miedzy checkami")
-    ap.add_argument("--depth", type=int, default=3)
+    ap.add_argument("--interval", type=float, default=2.0, help="Sekundy miedzy checkami")
+    ap.add_argument(
+        "--depth",
+        type=int,
+        default=5,
+        help="Glebokosc mtime (DK→kat→produkt→wariant→WIZKI→RGB); bylo 3 i nie siegalo WIZKI",
+    )
     ap.add_argument("--once", action="store_true", help="Jeden rebuild i wyjscie")
     ap.add_argument("--no-initial", action="store_true", help="Nie rob initial rebuild przy starcie")
     ap.add_argument("--root", action="append", default=[], help="Fixture/test root (moze byc wielokrotnie)")
@@ -230,6 +336,11 @@ def main() -> None:
         default=None,
         help="Przekaz do build-file-index --out-dir (OBOWIAZKOWE przy --root fixture)",
     )
+    ap.add_argument(
+        "--no-branding-hook",
+        action="store_true",
+        help="Nie odpalaj rebuild-branding-pipeline po file-index",
+    )
     args = ap.parse_args()
 
     if args.root and not args.out_dir:
@@ -237,7 +348,6 @@ def main() -> None:
             "HARD: --root (fixture) wymaga --out-dir, aby nie nadpisac live file-index.json"
         )
 
-    # Status BEFORE any Marketing scan (preserve prior last_ok/rc — no false reset)
     _write_status(
         args.status_file,
         {
@@ -248,7 +358,6 @@ def main() -> None:
         },
     )
 
-    # Verify marketing_roots import early (surfaces ModuleNotFoundError in status)
     try:
         import marketing_roots  # noqa: F401
     except Exception as exc:  # noqa: BLE001
@@ -264,17 +373,22 @@ def main() -> None:
         )
         raise SystemExit(f"Brak marketing_roots: {exc}")
 
+    branding_hook = not args.no_branding_hook
+    branding_roots: list[Path] = []
+
     if args.root:
         roots = [Path(r) for r in args.root]
         roots = [r for r in roots if r.is_dir()]
         base = roots[0] if roots else Path(".")
         root_args = [str(r) for r in roots]
+        product_roots = roots
     else:
         base = resolve_marketing_base()
-        roots = watch_roots(base)
-        root_args = None  # build-file-index uses its own dual roots
+        product_roots = watch_product_roots(base)
+        branding_roots = watch_branding_roots(base)
+        root_args = None
 
-    if not roots:
+    if not product_roots and not args.root:
         _write_status(
             args.status_file,
             {
@@ -287,9 +401,15 @@ def main() -> None:
         )
         raise SystemExit(f"Brak rootow produktow pod {base}")
 
-    print(f"[watch] base={base} roots={len(roots)} interval={args.interval}s")
-    for r in roots:
-        print(f"[watch]   {r}")
+    depth = max(1, int(args.depth))
+    print(
+        f"[watch] base={base} product_roots={len(product_roots)} "
+        f"branding_roots={len(branding_roots)} interval={args.interval}s depth={depth}"
+    )
+    for r in product_roots:
+        print(f"[watch]   product {r}")
+    for r in branding_roots:
+        print(f"[watch]   branding {r}")
 
     if args.once:
         raise SystemExit(
@@ -298,10 +418,12 @@ def main() -> None:
                 status_file=args.status_file,
                 root_args=root_args,
                 out_dir=args.out_dir,
+                branding_hook=branding_hook,
             )
         )
 
-    last = roots_mtime(roots)
+    last_product = roots_mtime(product_roots, max_depth=depth) if product_roots else 0.0
+    last_branding = roots_mtime(branding_roots, max_depth=depth) if branding_roots else 0.0
     if not args.no_initial:
         print("[watch] initial rebuild...")
         rc = rebuild_with_lock(
@@ -309,9 +431,15 @@ def main() -> None:
             status_file=args.status_file,
             root_args=root_args,
             out_dir=args.out_dir,
+            branding_hook=branding_hook,
         )
         if rc == 0:
-            last = roots_mtime(roots)
+            last_product = (
+                roots_mtime(product_roots, max_depth=depth) if product_roots else last_product
+            )
+            last_branding = (
+                roots_mtime(branding_roots, max_depth=depth) if branding_roots else last_branding
+            )
             print("[watch] initial OK")
         else:
             print(f"[watch] initial rebuild failed rc={rc} - dalej monitoruje")
@@ -330,24 +458,38 @@ def main() -> None:
     while True:
         time.sleep(max(1.0, float(args.interval)))
         try:
-            current = roots_mtime(roots)
+            cur_product = roots_mtime(product_roots, max_depth=depth) if product_roots else 0.0
+            cur_branding = roots_mtime(branding_roots, max_depth=depth) if branding_roots else 0.0
         except OSError as e:
             print(f"[watch] skip: {e}")
             continue
-        if current <= last:
+        product_changed = bool(product_roots) and cur_product > last_product
+        branding_changed = bool(branding_roots) and cur_branding > last_branding
+        if not product_changed and not branding_changed:
             continue
-        print(f"[watch] change {last:.0f} -> {current:.0f}; rebuild...")
-        rc = rebuild_with_lock(
-            lock_file=args.lock_file,
-            status_file=args.status_file,
-            root_args=root_args,
-            out_dir=args.out_dir,
-        )
-        if rc == 0:
-            last = current
-            print("[watch] rebuild OK")
-        else:
-            print(f"[watch] rebuild failed rc={rc}")
+        if product_changed:
+            print(f"[watch] product change {last_product:.0f} -> {cur_product:.0f}; rebuild...")
+            rc = rebuild_with_lock(
+                lock_file=args.lock_file,
+                status_file=args.status_file,
+                root_args=root_args,
+                out_dir=args.out_dir,
+                branding_hook=branding_hook,
+            )
+            if rc == 0:
+                last_product = cur_product
+                last_branding = cur_branding
+                print("[watch] rebuild OK")
+            else:
+                print(f"[watch] rebuild failed rc={rc}")
+        elif branding_changed:
+            print(
+                f"[watch] branding change {last_branding:.0f} -> {cur_branding:.0f}; "
+                "branding pipeline only..."
+            )
+            if branding_hook:
+                spawn_branding_pipeline(status_file=args.status_file)
+            last_branding = cur_branding
 
 
 if __name__ == "__main__":
