@@ -359,6 +359,28 @@
    * Measure li-driven card height and write --bento-h so grid cell matches content.
    * Always re-pack viz → products → branding (no phantom empty rows between).
    */
+  /** Read live bento placement (--bento-c/r/w/h) straight from the DOM.
+   * Fallback when no layout is persisted yet (first visit): the mount seeds
+   * defaults onto elements but may not have written localStorage, so height
+   * reconciliation must still run to prevent first-paint overlap. */
+  function readLiveBentoItems(mount) {
+    var items = {};
+    if (!mount) return items;
+    mount.querySelectorAll("[data-bento-id]").forEach(function (el) {
+      var id = el.getAttribute("data-bento-id");
+      if (!id || el.classList.contains("dam-bento-spacer")) return;
+      function num(prop) {
+        return parseInt(el.style.getPropertyValue(prop), 10) || 0;
+      }
+      var c = num("--bento-c");
+      var r = num("--bento-r");
+      var w = num("--bento-w");
+      var h = num("--bento-h");
+      if (c && r && w && h) items[id] = { c: c, r: r, w: w, h: h };
+    });
+    return items;
+  }
+
   var _syncMediaHeightsLock = false;
   function syncMediaTileBentoHeights(mount) {
     mount = mount || document.getElementById("damDashGrid");
@@ -368,7 +390,11 @@
     }
     var scope = "dashboard";
     var saved = BR.loadLayout(scope);
-    if (!saved || !saved.items) return false;
+    if (!saved || !saved.items) {
+      var live = readLiveBentoItems(mount);
+      if (!Object.keys(live).length) return false;
+      saved = { items: live };
+    }
     var rowPx = BR.ROW_PX || 48;
     /* CSS gap inflates cell height: n*row + (n-1)*gap — must count in row math
      * or --bento-h overshoots and leaves ~160px phantom space under cards. */
@@ -399,8 +425,11 @@
       void el.offsetHeight;
       var px = Math.ceil(el.getBoundingClientRect().height || 0);
       if (!(px > 40)) return;
+      /* Reserve exactly enough rows for the MEASURED card height. A fixed cap
+       * (was 14/16) let tall tiles overflow their grid area and overlap the
+       * next widget (the "absolute-looking" bug). Only guard against runaway. */
       var need = Math.max(floor, rowsForContentPx(px));
-      need = Math.min(need, layout === "1x6" ? 16 : 14);
+      need = Math.min(need, (BR.MAX_ROWS || 80) - 1);
       if (saved.items[id].h !== need) {
         saved.items[id].h = need;
         changed = true;
@@ -479,6 +508,73 @@
     setTimeout(function () {
       syncMediaTileBentoHeights(mount);
     }, 350);
+  }
+
+  var _mediaSyncDebounce = null;
+  function debouncedMediaSync(mount) {
+    if (_mediaSyncDebounce) clearTimeout(_mediaSyncDebounce);
+    _mediaSyncDebounce = setTimeout(function () {
+      syncMediaTileBentoHeights(mount || document.getElementById("damDashGrid"));
+    }, 80);
+  }
+
+  /**
+   * Keep reserved grid rows in lock-step with real card height. Media tiles grow
+   * AFTER first measure (thumbnails load) and on viewport width changes (card
+   * wrap). Without live re-sync the reserved --bento-h stays too small and the
+   * tile overflows onto the next widget -> visual overlap. ResizeObserver +
+   * image load + window resize eliminate that class of bug for good.
+   */
+  function ensureMediaTileAutoSync(mount) {
+    if (!mount) return;
+    var ids = ["newest_viz_3", "newest_products_f", "branding_latest"];
+    if (typeof ResizeObserver === "function") {
+      if (mount._damMediaRo) {
+        try {
+          mount._damMediaRo.disconnect();
+        } catch (eRo) {
+          /* ignore */
+        }
+      }
+      var ro = new ResizeObserver(function () {
+        debouncedMediaSync(mount);
+      });
+      ids.forEach(function (id) {
+        var el = mount.querySelector('[data-widget-id="' + id + '"]');
+        if (el) ro.observe(el);
+      });
+      mount._damMediaRo = ro;
+    }
+    ids.forEach(function (id) {
+      var el = mount.querySelector('[data-widget-id="' + id + '"]');
+      if (!el) return;
+      el.querySelectorAll("img").forEach(function (img) {
+        if (img._damSyncBound) return;
+        img._damSyncBound = true;
+        if (!img.complete) {
+          img.addEventListener(
+            "load",
+            function () {
+              debouncedMediaSync(mount);
+            },
+            { once: true }
+          );
+          img.addEventListener(
+            "error",
+            function () {
+              debouncedMediaSync(mount);
+            },
+            { once: true }
+          );
+        }
+      });
+    });
+    if (!mount._damMediaResizeBound) {
+      mount._damMediaResizeBound = true;
+      window.addEventListener("resize", function () {
+        debouncedMediaSync(mount);
+      });
+    }
   }
 
   function layoutToggleHtml(widgetId, layout) {
@@ -2011,25 +2107,28 @@
       var mt = String(v.mtime || "");
       var mtClean = mt.length >= 16 && bulk[mt.slice(0, 16)] ? "" : mt;
       if (!mtClean) return;
+      /* Asana = wzbogacenie (projekt), NIE filtr. Wizualizacja bez projektu
+       * Asany nadal jest wizualizacja i musi rywalizowac o "najnowsze". */
       var asana = matchAsanaProject(name, v.category || "", catalog);
-      if (!asana) return;
       var revDate = parseRevisionDate(v.revision_folder, "");
       rows.push({
         row: v,
         mtClean: mtClean,
         revDate: revDate,
-        asanaStart: asana.start || "",
-        asanaKey: asana.norm || asana.name || "",
+        asanaStart: (asana && asana.start) || "",
+        asanaKey: (asana && (asana.norm || asana.name)) || "",
         brand: v.brand || "",
       });
     });
-    /* Ranking: projekt Asana (start) > data pliku (anti-bulk) > data rewizji */
+    /* Ranking: realna swiezosc pliku (anti-bulk) > data rewizji >
+     * projekt Asana (tie-break) > DK. "Najnowsze" = najnowsze wg dysku,
+     * a nie wg daty startu projektu Asana. */
     rows.sort(function (a, b) {
-      var cmp = String(b.asanaStart || "").localeCompare(String(a.asanaStart || ""));
-      if (cmp) return cmp;
-      cmp = String(b.mtClean || "").localeCompare(String(a.mtClean || ""));
+      var cmp = String(b.mtClean || "").localeCompare(String(a.mtClean || ""));
       if (cmp) return cmp;
       cmp = String(b.revDate || "").localeCompare(String(a.revDate || ""));
+      if (cmp) return cmp;
+      cmp = String(b.asanaStart || "").localeCompare(String(a.asanaStart || ""));
       if (cmp) return cmp;
       if (a.brand === "DK" && b.brand !== "DK") return -1;
       if (b.brand === "DK" && a.brand !== "DK") return 1;
@@ -4080,6 +4179,7 @@
         DamBentoResize.mount(mount, opts);
         syncQuickLinksLayout(mount);
         scheduleSyncMediaTileHeights();
+        ensureMediaTileAutoSync(mount);
         lastSig = sig;
       } finally {
         applying = false;
