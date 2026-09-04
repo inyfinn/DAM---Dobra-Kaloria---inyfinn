@@ -96,6 +96,64 @@ def is_under_marketing(
     return False
 
 
+def _slash(s: str | Path) -> str:
+    return str(s or "").replace("\\", "/")
+
+
+def _strip_root_prefix(path_slash: str, root_slash: str) -> Optional[str]:
+    """Return the remainder of path under root (string compare), else None.
+
+    Case-insensitive and OS-independent so Windows-style index paths
+    (``D:\\Marketing\\...``) resolve correctly even on a Linux host, where
+    ``Path("D:\\...").resolve()`` would otherwise mangle the path.
+    """
+    r = root_slash.rstrip("/")
+    if not r:
+        return None
+    p_l = path_slash.lower()
+    r_l = r.lower()
+    if p_l == r_l:
+        return ""
+    if p_l.startswith(r_l + "/"):
+        return path_slash[len(r) + 1:].lstrip("/")
+    return None
+
+
+def _root_strings(
+    *,
+    email: str,
+    resolve_base_path: Optional[Callable[[str], dict]],
+    marketing_candidates: Sequence[Path],
+    machine_config_path: Optional[Path],
+) -> list[str]:
+    """Root paths as raw slash strings (NOT Path.resolve'd, so Windows drive
+    roots survive on Linux for prefix stripping)."""
+    out: list[str] = []
+
+    def add(v) -> None:
+        s = _slash(v).strip()
+        if s and s not in out:
+            out.append(s)
+
+    if resolve_base_path and email:
+        try:
+            info = resolve_base_path(email) or {}
+            add(info.get("base_path") or "")
+        except Exception:
+            pass
+    if machine_config_path and machine_config_path.is_file():
+        try:
+            import json
+
+            data = json.loads(machine_config_path.read_text(encoding="utf-8"))
+            add((data.get("base_path") or data.get("path") or "").strip())
+        except (OSError, ValueError, TypeError):
+            pass
+    for c in marketing_candidates:
+        add(c)
+    return out
+
+
 def marketing_relative_key(
     path: Path | str,
     *,
@@ -104,7 +162,33 @@ def marketing_relative_key(
     marketing_candidates: Sequence[Path] = DEFAULT_MARKETING_CANDIDATES,
     machine_config_path: Optional[Path] = None,
 ) -> str:
-    """Relative key under Marketing root (forward slashes, lower drive-agnostic)."""
+    """Relative key under Marketing root (forward slashes, drive-agnostic).
+
+    Cross-platform: strips configured/candidate roots by string prefix so
+    ``D:\\Marketing\\...`` and ``M:\\...`` index paths map to the same relative
+    key on both Windows and Linux.
+    """
+    raw = _slash(path)
+
+    # 1) String-prefix against configured + candidate roots (works on any OS).
+    for root in _root_strings(
+        email=email,
+        resolve_base_path=resolve_base_path,
+        marketing_candidates=marketing_candidates,
+        machine_config_path=machine_config_path,
+    ):
+        rel = _strip_root_prefix(raw, root)
+        if rel is not None:
+            return rel
+
+    # 2) Generic Windows drive path: strip "X:/Marketing/" or bare "X:/".
+    import re
+
+    m = re.match(r"^[A-Za-z]:/(?:marketing/)?(.*)$", raw, re.IGNORECASE)
+    if m:
+        return m.group(1).lstrip("/")
+
+    # 3) Real local absolute path: try relative_to resolved roots.
     try:
         resolved = Path(path).resolve()
     except OSError:
