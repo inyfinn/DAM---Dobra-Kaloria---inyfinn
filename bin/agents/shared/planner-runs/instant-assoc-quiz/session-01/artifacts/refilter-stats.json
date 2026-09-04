@@ -1,0 +1,81 @@
+{
+  "asset_count": 56822,
+  "assets_with_links_before": 20791,
+  "assets_touched": 8532,
+  "override_enforced": 4,
+  "links_before": 38920,
+  "links_after": 23694,
+  "links_removed": 15226,
+  "pending_count": 4974,
+  "auto_count": 23686,
+  "iconish_touched": 0,
+  "iconish_links_removed": 0,
+  "dry_run": false,
+  "backup": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\_restore_backups\\branding-index-20260805T134532Z.json",
+  "backup_bytes": 361383776,
+  "samples": {
+    "br-005067": {
+      "name": "REFORMATY - PORZECZKA GC  - 1200x1200.jpg",
+      "path_tail": "IKI DO ZESTAWÓW/02 - SŁODKIE/Porzeczka/REFORMATY - PORZECZKA GC  - 1200x1200.jpg",
+      "iconish": false,
+      "min_score": 50,
+      "override_enforced": true,
+      "before": [
+        "blackcurrant-cake-cashews"
+      ],
+      "kept": [
+        "blackcurrant-cake-cashews"
+      ],
+      "pending": [],
+      "scores": [
+        {
+          "id": "blackcurrant-cake-cashews",
+          "score": 100,
+          "reason": "override_forced"
+        }
+      ],
+      "removed": []
+    },
+    "br-015432": {
+      "name": "Karton Vitanella 2 Face Kulki Mini batoniki 6300537 siatka.pdf",
+      "path_tail": "RTONY/CZESTOCHOWA/Karton Vitanella 2 Face Kulki Mini batoniki 6300537 siatka.pdf",
+      "iconish": false,
+      "min_score": 50,
+      "override_enforced": false,
+      "before": [
+        "mix-6x-mini-batoniki-mixy",
+        "mix-zestaw-15x-mini-batoniki-mixy"
+      ],
+      "kept": [],
+      "pending": [],
+      "scores": [],
+      "removed": [
+        "mix-6x-mini-batoniki-mixy",
+        "mix-zestaw-15x-mini-batoniki-mixy"
+      ]
+    },
+    "br-015433": {
+      "name": "Karton Vitanella 2 Face Kulki Mini batoniki 6300537.pdf",
+      "path_tail": "wum/_KARTONY/CZESTOCHOWA/Karton Vitanella 2 Face Kulki Mini batoniki 6300537.pdf",
+      "iconish": false,
+      "min_score": 50,
+      "override_enforced": false,
+      "before": [
+        "mix-6x-mini-batoniki-mixy",
+        "mix-zestaw-15x-mini-batoniki-mixy"
+      ],
+      "kept": [],
+      "pending": [],
+      "scores": [],
+      "removed": [
+        "mix-6x-mini-batoniki-mixy",
+        "mix-zestaw-15x-mini-batoniki-mixy"
+      ]
+    }
+  },
+  "auto_min": 75,
+  "pending_min": 50,
+  "pending_out": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\agents\\shared\\planner-runs\\instant-assoc-quiz\\session-01\\artifacts\\refilter-pending.jsonl",
+  "pending_lines": 4974,
+  "sha256_before": "615c50e2df1c78d1f4511946e611bf43f5cbc8b12fe3db990c372ff5b8862608"
+}

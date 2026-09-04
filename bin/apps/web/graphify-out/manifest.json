@@ -1,0 +1,2474 @@
+{
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\_brand_auth_fix.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "45215ae54e3a93c549b0d57e041a7f31",
+    "semantic_hash": "45215ae54e3a93c549b0d57e041a7f31"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\_fix_explorer_costs.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9a8eaeb77c970325567ad61bfb50c46f",
+    "semantic_hash": "9a8eaeb77c970325567ad61bfb50c46f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\_polish_html.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4b16f02a27928becfaa1d15e3baf6e61",
+    "semantic_hash": "4b16f02a27928becfaa1d15e3baf6e61"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\_polish_html2.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "507b87f261561eac47f89575260b979a",
+    "semantic_hash": "507b87f261561eac47f89575260b979a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\_wire_nav.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fd786a718d0ad7a00ba4d0c65e4ee049",
+    "semantic_hash": "fd786a718d0ad7a00ba4d0c65e4ee049"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-accent.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "592459441391031a08da610c8e829fbd",
+    "semantic_hash": "592459441391031a08da610c8e829fbd"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-api.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6b8111d026d6253dece27ed387179fdf",
+    "semantic_hash": "6b8111d026d6253dece27ed387179fdf"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-app-update.js": {
+    "mtime": 1786627931.5728085,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3502317785a01f2dbd38f84eeebd63eb",
+    "semantic_hash": "3502317785a01f2dbd38f84eeebd63eb"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-app.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "10ca882d015c21f87832ff17cc94abf0",
+    "semantic_hash": "10ca882d015c21f87832ff17cc94abf0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-asset-taxonomy.js": {
+    "mtime": 1785934939.5451286,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c6da187a02f762d60414a0d4fe26a664",
+    "semantic_hash": "c6da187a02f762d60414a0d4fe26a664"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-assoc-action-tips.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d41bb78fc747da255400601273d91a04",
+    "semantic_hash": "d41bb78fc747da255400601273d91a04"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-assoc-edit.js": {
+    "mtime": 1786545891.9237735,
+    "seen": 1788355519.1755757,
+    "ast_hash": "7ebec809b6cff2ad271b38b1e11f3e45",
+    "semantic_hash": "7ebec809b6cff2ad271b38b1e11f3e45"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-assoc-quiz.js": {
+    "mtime": 1786449413.6244886,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d0f7239c6cf4920e3d24c9cf5a9f0bea",
+    "semantic_hash": "d0f7239c6cf4920e3d24c9cf5a9f0bea"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-badges.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e87e335d86f11531a7c52e6b56391a7c",
+    "semantic_hash": "e87e335d86f11531a7c52e6b56391a7c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-bento-resize.js": {
+    "mtime": 1788272606.5438528,
+    "seen": 1788355519.1755757,
+    "ast_hash": "55ad3e4e706141ade96f0418e139c009",
+    "semantic_hash": "55ad3e4e706141ade96f0418e139c009"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-brand-filter.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "7139d43e775b93014bec86ec58858190",
+    "semantic_hash": "7139d43e775b93014bec86ec58858190"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-branding.js": {
+    "mtime": 1788272606.7013886,
+    "seen": 1788355519.1755757,
+    "ast_hash": "79497e1d7d66239b2a245755420a08ea",
+    "semantic_hash": "79497e1d7d66239b2a245755420a08ea"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-cost.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "cfa82dfe85e3a440d3e7c9c2235c7cec",
+    "semantic_hash": "cfa82dfe85e3a440d3e7c9c2235c7cec"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-danger.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6ae7aa19b6f622750eee0d0e1606eef1",
+    "semantic_hash": "6ae7aa19b6f622750eee0d0e1606eef1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-dashboard-widgets.js": {
+    "mtime": 1788272606.7053874,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8727302749e34a608f9b085b258f5893",
+    "semantic_hash": "8727302749e34a608f9b085b258f5893"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-dashboard.js": {
+    "mtime": 1788272606.7043853,
+    "seen": 1788355519.1755757,
+    "ast_hash": "524ef12b4b528533e00bfd2873bb8161",
+    "semantic_hash": "524ef12b4b528533e00bfd2873bb8161"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-date-picker.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "bab792d19dce95c7c4350ca75301f231",
+    "semantic_hash": "bab792d19dce95c7c4350ca75301f231"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-db-status.js": {
+    "mtime": 1786633229.8250515,
+    "seen": 1788355519.1755757,
+    "ast_hash": "889bd5fb0dc1802732c72e04316d4482",
+    "semantic_hash": "889bd5fb0dc1802732c72e04316d4482"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-device-paths.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2700ac24cdf3d2b61ee776a01573ab3d",
+    "semantic_hash": "2700ac24cdf3d2b61ee776a01573ab3d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-empty-mascot.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "efdd327651be3372e25e8ac05bc36bd1",
+    "semantic_hash": "efdd327651be3372e25e8ac05bc36bd1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-explorer-add-product.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "426f7b0a5e3fcc3f0e4e2d423e3fb4cf",
+    "semantic_hash": "426f7b0a5e3fcc3f0e4e2d423e3fb4cf"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-explorer.js": {
+    "mtime": 1786545891.9260125,
+    "seen": 1788355519.1755757,
+    "ast_hash": "0db59d927bba8750d43b319ec13c756f",
+    "semantic_hash": "0db59d927bba8750d43b319ec13c756f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-fmcg-catalog.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "606f9d80cecf37910287f8fc5a9cb66d",
+    "semantic_hash": "606f9d80cecf37910287f8fc5a9cb66d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-fmcg-cost.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a349f99e8a16ab3b6bd9db293a9f3a84",
+    "semantic_hash": "a349f99e8a16ab3b6bd9db293a9f3a84"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-folder-picker.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a6f59a25238066af1db7a8959fa3c4f5",
+    "semantic_hash": "a6f59a25238066af1db7a8959fa3c4f5"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-grid-reveal.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "7d0e73d7ec9cbdb197350f3b5de30f3a",
+    "semantic_hash": "7d0e73d7ec9cbdb197350f3b5de30f3a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-i18n.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "477349551115cf18564882f18a5de0f5",
+    "semantic_hash": "477349551115cf18564882f18a5de0f5"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-icons.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3bfb35e45e4a23a051f0092acc1397f0",
+    "semantic_hash": "3bfb35e45e4a23a051f0092acc1397f0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-inbox.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "55a34c861845c6a00fb951c39e461459",
+    "semantic_hash": "55a34c861845c6a00fb951c39e461459"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-index-poller.js": {
+    "mtime": 1786364301.1362653,
+    "seen": 1788355519.1755757,
+    "ast_hash": "55dda13722286963c27977c93493c3bf",
+    "semantic_hash": "55dda13722286963c27977c93493c3bf"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-integrations.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "736dfb98782c3a694262000ae91e3ff3",
+    "semantic_hash": "736dfb98782c3a694262000ae91e3ff3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-invoices.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ce1c6d4a6367b5879d405c68ee578304",
+    "semantic_hash": "ce1c6d4a6367b5879d405c68ee578304"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-labels.js": {
+    "mtime": 1785850335.7029786,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9f7eee80a0ac0ff3b193ac81772ad4a0",
+    "semantic_hash": "9f7eee80a0ac0ff3b193ac81772ad4a0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-loader.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "eece43127234ceaf75de50587486807b",
+    "semantic_hash": "eece43127234ceaf75de50587486807b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-marketing-id.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "dd91f9a7181ba344a08c33bc8dd3fb77",
+    "semantic_hash": "dd91f9a7181ba344a08c33bc8dd3fb77"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-media-preview.js": {
+    "mtime": 1786533215.4584098,
+    "seen": 1788355519.1755757,
+    "ast_hash": "025648914c01aa4d59193e57197f69c5",
+    "semantic_hash": "025648914c01aa4d59193e57197f69c5"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-modal-shared.js": {
+    "mtime": 1786449470.4387636,
+    "seen": 1788355519.1755757,
+    "ast_hash": "45f8c143304b3201c5c17bddf8eb92af",
+    "semantic_hash": "45f8c143304b3201c5c17bddf8eb92af"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-notify.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "21efdac66e94c17780fb4793e4bef3bc",
+    "semantic_hash": "21efdac66e94c17780fb4793e4bef3bc"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-pakiet.js": {
+    "mtime": 1786344566.554096,
+    "seen": 1788355519.1755757,
+    "ast_hash": "601a7b0e6dd1dad738c50feff176964f",
+    "semantic_hash": "601a7b0e6dd1dad738c50feff176964f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-panic-reload.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2ecf4e1e3ff2233af33718ddefb67d85",
+    "semantic_hash": "2ecf4e1e3ff2233af33718ddefb67d85"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-paths.js": {
+    "mtime": 1785837421.4771824,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b0e59de7394b7655dd5d5280712b7bf8",
+    "semantic_hash": "b0e59de7394b7655dd5d5280712b7bf8"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-preview-truth.js": {
+    "mtime": 1788272606.7053874,
+    "seen": 1788355519.1755757,
+    "ast_hash": "af5a6502c511db5f4d6f1e3eabd7aef1",
+    "semantic_hash": "af5a6502c511db5f4d6f1e3eabd7aef1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-product-correlation.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "7aa578a772db89cb877f7d1727f14e94",
+    "semantic_hash": "7aa578a772db89cb877f7d1727f14e94"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-project.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6cf48adb1d54a57245f2e91a6ebd6a23",
+    "semantic_hash": "6cf48adb1d54a57245f2e91a6ebd6a23"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-projects.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d4f6e68376764b69f90065f90124c1d3",
+    "semantic_hash": "d4f6e68376764b69f90065f90124c1d3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-root-status.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3d74cdbe822246033c76df0752179da2",
+    "semantic_hash": "3d74cdbe822246033c76df0752179da2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-runtime.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "95830e83a6f1553be5d534e8eb74b69a",
+    "semantic_hash": "95830e83a6f1553be5d534e8eb74b69a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-search-suggest.js": {
+    "mtime": 1785849792.2709546,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d9b38c508be042c6982664b58311e4d7",
+    "semantic_hash": "d9b38c508be042c6982664b58311e4d7"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-search.js": {
+    "mtime": 1786364311.3311198,
+    "seen": 1788355519.1755757,
+    "ast_hash": "acb9692afd95dd785f5df0f49dba0645",
+    "semantic_hash": "acb9692afd95dd785f5df0f49dba0645"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-settings.js": {
+    "mtime": 1786627954.8908367,
+    "seen": 1788355519.1755757,
+    "ast_hash": "eb534f676150d16f7260bc5435aa9f8b",
+    "semantic_hash": "eb534f676150d16f7260bc5435aa9f8b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-shell.js": {
+    "mtime": 1786633229.821849,
+    "seen": 1788355519.1755757,
+    "ast_hash": "bbd758e3210ba3083a952e8568cf9b5a",
+    "semantic_hash": "bbd758e3210ba3083a952e8568cf9b5a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-shortcuts.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b17c5c5789ce171aaec429fe3c23943e",
+    "semantic_hash": "b17c5c5789ce171aaec429fe3c23943e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-sleeve-stock.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "35b6abd42b258d88edb7940b08bdd299",
+    "semantic_hash": "35b6abd42b258d88edb7940b08bdd299"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-sticky-chrome.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "bd9234ea71e0054e459e2a47d7ac8a5b",
+    "semantic_hash": "bd9234ea71e0054e459e2a47d7ac8a5b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-tag-bar.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f0c166ed14e3ab908944a0aa34cc698a",
+    "semantic_hash": "f0c166ed14e3ab908944a0aa34cc698a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-tag-edit.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "499251ae551543bbea013952a239f8ac",
+    "semantic_hash": "499251ae551543bbea013952a239f8ac"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-tasks.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5224f7afde17b268d9e0207c16235081",
+    "semantic_hash": "5224f7afde17b268d9e0207c16235081"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-telemetry.js": {
+    "mtime": 1786538660.5587137,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b9a9052b7502b47446223f6546735f43",
+    "semantic_hash": "b9a9052b7502b47446223f6546735f43"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-theme.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "87245f2051b87438d1752a3a92672bc3",
+    "semantic_hash": "87245f2051b87438d1752a3a92672bc3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-tooltips.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "cdcb409c7d6f46d880093f7549a6d90c",
+    "semantic_hash": "cdcb409c7d6f46d880093f7549a6d90c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-tutorial.js": {
+    "mtime": 1785845424.870058,
+    "seen": 1788355519.1755757,
+    "ast_hash": "189311599f34e730325d18fd77b3cb28",
+    "semantic_hash": "189311599f34e730325d18fd77b3cb28"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-ui-cta.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "69461edc9db6d0a0a892e948521a04d3",
+    "semantic_hash": "69461edc9db6d0a0a892e948521a04d3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-user-prefs.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c630d1cc16c0f0e201bbbb2f68a1cd42",
+    "semantic_hash": "c630d1cc16c0f0e201bbbb2f68a1cd42"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-version.js": {
+    "mtime": 1788272606.7043853,
+    "seen": 1788355519.1755757,
+    "ast_hash": "53010982b8da3547edb0d6dedddb99ce",
+    "semantic_hash": "53010982b8da3547edb0d6dedddb99ce"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-viz-request.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ae4c93e854e2001435fa4a446a9fa6ed",
+    "semantic_hash": "ae4c93e854e2001435fa4a446a9fa6ed"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-viz.js": {
+    "mtime": 1786545891.9260125,
+    "seen": 1788355519.1755757,
+    "ast_hash": "bcdeace249c6a1cd4efa68beac445eea",
+    "semantic_hash": "bcdeace249c6a1cd4efa68beac445eea"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\dam-wykrojnik-queue.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6b4a8319b5d94246a63b2f6790f81d2b",
+    "semantic_hash": "6b4a8319b5d94246a63b2f6790f81d2b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\js\\main.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "95624000b83433b57af27336510886b2",
+    "semantic_hash": "95624000b83433b57af27336510886b2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\vendor\\js\\bootstrap\\bootstrap.min.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "bd31cd6c0de0972f2e5d260a09ba121f",
+    "semantic_hash": "bd31cd6c0de0972f2e5d260a09ba121f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\vendor\\js\\gsap\\gsap.min.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8931cf8f6c506174e5e1f037946ac153",
+    "semantic_hash": "8931cf8f6c506174e5e1f037946ac153"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\vendor\\js\\jquery\\jquery-3.5.1.min.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b61aa6e2d68d21b3546b5b418bf0e9c3",
+    "semantic_hash": "b61aa6e2d68d21b3546b5b418bf0e9c3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\vendor\\js\\jquery\\jquery-ui.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b4baecb73b7a75044853d7f4d363cb49",
+    "semantic_hash": "b4baecb73b7a75044853d7f4d363cb49"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\dam-runtime.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "242f8bd17012072c36cd587ac1826ff4",
+    "semantic_hash": "242f8bd17012072c36cd587ac1826ff4"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\_ocr_batch_ids.json": {
+    "mtime": 1785768607.5525556,
+    "seen": 1788355519.1755757,
+    "ast_hash": "36ee662add81a706d8a2e54818e223b8",
+    "semantic_hash": "36ee662add81a706d8a2e54818e223b8"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\_refilter-dry-run.json": {
+    "mtime": 1785770351.9724402,
+    "seen": 1788355519.1755757,
+    "ast_hash": "40845361554682d1e32e0aff737c664c",
+    "semantic_hash": "40845361554682d1e32e0aff737c664c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\_refilter-live-stats.json": {
+    "mtime": 1785770410.0689662,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2b57eab7e2d317a87aedd7ecd8be2e18",
+    "semantic_hash": "2b57eab7e2d317a87aedd7ecd8be2e18"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\app-settings.json": {
+    "mtime": 1786632372.0236387,
+    "seen": 1788355519.1755757,
+    "ast_hash": "84c07d162be34bceedd647742a2a42d9",
+    "semantic_hash": "84c07d162be34bceedd647742a2a42d9"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\asana-tasks.json": {
+    "mtime": 1784273972.5902884,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b700eecb26a31e6f41e8a11bc668b1f3",
+    "semantic_hash": "b700eecb26a31e6f41e8a11bc668b1f3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\brand-formats.json": {
+    "mtime": 1785739061.3445227,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1dd0cb6d85ae6ecf6600af00859f7a07",
+    "semantic_hash": "1dd0cb6d85ae6ecf6600af00859f7a07"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\brand-perspectives.json": {
+    "mtime": 1785739061.360154,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f5d9a8b8066b8779b9a6e1b27b9a1b0d",
+    "semantic_hash": "f5d9a8b8066b8779b9a6e1b27b9a1b0d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-associations-overrides.json": {
+    "mtime": 1785933952.438512,
+    "seen": 1788355519.1755757,
+    "ast_hash": "593d0b8e3acf63351b85b376322b6ac0",
+    "semantic_hash": "593d0b8e3acf63351b85b376322b6ac0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-background-scan.json": {
+    "mtime": 1785739061.4070232,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e60b664faa32c9f1544a03bcbf32a5bb",
+    "semantic_hash": "e60b664faa32c9f1544a03bcbf32a5bb"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-build-status.json": {
+    "mtime": 1786448341.3870459,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3389f47d5cb098d31fc814d7532cee13",
+    "semantic_hash": "3389f47d5cb098d31fc814d7532cee13"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-grid-head.json": {
+    "mtime": 1786447086.3222673,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c621118dba58f601274a8a88a308592d",
+    "semantic_hash": "c621118dba58f601274a8a88a308592d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-metadata-overrides.json": {
+    "mtime": 1785739062.3156936,
+    "seen": 1788355519.1755757,
+    "ast_hash": "450e2736ed7130c18145002b657b3024",
+    "semantic_hash": "450e2736ed7130c18145002b657b3024"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-ocr-assoc-batch-report.json": {
+    "mtime": 1785770025.6550665,
+    "seen": 1788355519.1755757,
+    "ast_hash": "19b9404e7962c5d1157b1c5c6a65d272",
+    "semantic_hash": "19b9404e7962c5d1157b1c5c6a65d272"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-ocr-assoc-status.json": {
+    "mtime": 1785770533.1415644,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5b5628ac4a28131bd62fca6825684430",
+    "semantic_hash": "5b5628ac4a28131bd62fca6825684430"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-recognition.json": {
+    "mtime": 1785770517.236408,
+    "seen": 1788355519.1755757,
+    "ast_hash": "dd7705658edb4c51e6a5a331387989ed",
+    "semantic_hash": "dd7705658edb4c51e6a5a331387989ed"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-recognize-status.json": {
+    "mtime": 1785739062.3625703,
+    "seen": 1788355519.1755757,
+    "ast_hash": "89d24ae63f39e654eaefebf7f65a18ef",
+    "semantic_hash": "89d24ae63f39e654eaefebf7f65a18ef"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\branding-segments.json": {
+    "mtime": 1785739062.3938227,
+    "seen": 1788355519.1755757,
+    "ast_hash": "23038c56632ccc911ee8e7b99da70b9e",
+    "semantic_hash": "23038c56632ccc911ee8e7b99da70b9e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\bulk-packaging.json": {
+    "mtime": 1785739062.4094546,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a3ed4b677b206753de85e00e11960a44",
+    "semantic_hash": "a3ed4b677b206753de85e00e11960a44"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\campaigns.json": {
+    "mtime": 1785768535.1776857,
+    "seen": 1788355519.1755757,
+    "ast_hash": "59a9129758039f9e2622df4d08a48fb6",
+    "semantic_hash": "59a9129758039f9e2622df4d08a48fb6"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\carrier-assignment-log.json": {
+    "mtime": 1785739062.4406946,
+    "seen": 1788355519.1755757,
+    "ast_hash": "313af1ca1e255eef89478da18964bbe9",
+    "semantic_hash": "313af1ca1e255eef89478da18964bbe9"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\carrier-overrides.json": {
+    "mtime": 1785739062.4719436,
+    "seen": 1788355519.1755757,
+    "ast_hash": "86071d5d5639f39dfff0f141e25c5cad",
+    "semantic_hash": "86071d5d5639f39dfff0f141e25c5cad"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\carrier-types.json": {
+    "mtime": 1785739062.4875722,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9a810f997a1a50ed37ae9bd19fc27bda",
+    "semantic_hash": "9a810f997a1a50ed37ae9bd19fc27bda"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\change-log.json": {
+    "mtime": 1786632384.079738,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e9204547dd3b4c5d482dad9324be27f6",
+    "semantic_hash": "e9204547dd3b4c5d482dad9324be27f6"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\cost-rates.json": {
+    "mtime": 1784300246.164008,
+    "seen": 1788355519.1755757,
+    "ast_hash": "340bb2036a4c3952b5c2247bcdf03a27",
+    "semantic_hash": "340bb2036a4c3952b5c2247bcdf03a27"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\dam-asset-role-mapping.json": {
+    "mtime": 1785739062.518826,
+    "seen": 1788355519.1755757,
+    "ast_hash": "88a4361725ced1b98208590b442deefa",
+    "semantic_hash": "88a4361725ced1b98208590b442deefa"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\dobrokalorius-copy.json": {
+    "mtime": 1785739062.534453,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ea2c097ed25b54a50577e351ebbac3e9",
+    "semantic_hash": "ea2c097ed25b54a50577e351ebbac3e9"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\elements-overrides.json": {
+    "mtime": 1785739062.5500717,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1189649119c930f8a7c21bdc3f6f11bb",
+    "semantic_hash": "1189649119c930f8a7c21bdc3f6f11bb"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\file-index.json": {
+    "mtime": 1786636708.2190855,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b980a51c3aef8efd6a75bebb9eaebe12",
+    "semantic_hash": "b980a51c3aef8efd6a75bebb9eaebe12"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\fmcg-cost-averages.json": {
+    "mtime": 1785739062.9563165,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f496be2825ba47c1427ebd3e8c0d1750",
+    "semantic_hash": "f496be2825ba47c1427ebd3e8c0d1750"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\fmcg-cost-catalog.json": {
+    "mtime": 1785739062.971952,
+    "seen": 1788355519.1755757,
+    "ast_hash": "beef11f9a5612cc11a5e99ef660fe7c0",
+    "semantic_hash": "beef11f9a5612cc11a5e99ef660fe7c0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\fmcg-cost-import-map.json": {
+    "mtime": 1785739062.9875782,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d72f6f25a08a13cae125461712c425fa",
+    "semantic_hash": "d72f6f25a08a13cae125461712c425fa"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\inbox-items.json": {
+    "mtime": 1785739063.0031996,
+    "seen": 1788355519.1755757,
+    "ast_hash": "725ab3697b12bc80a588e3dc3f844e5f",
+    "semantic_hash": "725ab3697b12bc80a588e3dc3f844e5f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\invoice-erp-export-last.json": {
+    "mtime": 1785739063.0188282,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d8d7bb86589869ecdefe41a431760750",
+    "semantic_hash": "d8d7bb86589869ecdefe41a431760750"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\invoice-erp-sync.json": {
+    "mtime": 1785739063.034449,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ea852eea899c954f31bcfe8700f4f590",
+    "semantic_hash": "ea852eea899c954f31bcfe8700f4f590"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\invoices.json": {
+    "mtime": 1784294920.119639,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2c691710306f774aa2b19e5742d7dde1",
+    "semantic_hash": "2c691710306f774aa2b19e5742d7dde1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\lang-overrides.json": {
+    "mtime": 1785739063.0500813,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c8efa54205c9f7562cd1e36f42ba02f3",
+    "semantic_hash": "c8efa54205c9f7562cd1e36f42ba02f3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\lifecycle-status.json": {
+    "mtime": 1786632388.1681323,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ca82f1194015b9dbfd44086a9fd560d0",
+    "semantic_hash": "ca82f1194015b9dbfd44086a9fd560d0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\materialy-to-projekt-dryrun.json": {
+    "mtime": 1785739063.2063162,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b75e09c536cbbc4dd7a00a6f3006e56a",
+    "semantic_hash": "b75e09c536cbbc4dd7a00a6f3006e56a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\naming-dictionary.json": {
+    "mtime": 1786632376.036759,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8507306e5e5b04ee285a041d365021d9",
+    "semantic_hash": "8507306e5e5b04ee285a041d365021d9"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\notification-groups.json": {
+    "mtime": 1785739063.2532034,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a72ff16f4be3f31cc36338516b7377bc",
+    "semantic_hash": "a72ff16f4be3f31cc36338516b7377bc"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\product-aliases.json": {
+    "mtime": 1785739063.268825,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c3c40199d4427bf610ea92c1986597eb",
+    "semantic_hash": "c3c40199d4427bf610ea92c1986597eb"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\product-associations.json": {
+    "mtime": 1785766999.5987847,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6e141dea08df722859942898ffd9d0b2",
+    "semantic_hash": "6e141dea08df722859942898ffd9d0b2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\product-catalog.json": {
+    "mtime": 1785739063.3000765,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ca9c3887ecfc3e418e3614929c949297",
+    "semantic_hash": "ca9c3887ecfc3e418e3614929c949297"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\product-name-pl.json": {
+    "mtime": 1786632396.214874,
+    "seen": 1788355519.1755757,
+    "ast_hash": "454e540f38d60b752e03a4f8f9d9a499",
+    "semantic_hash": "454e540f38d60b752e03a4f8f9d9a499"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\product-people.json": {
+    "mtime": 1786632400.2330873,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c858c5042d524667a391121c2a095f22",
+    "semantic_hash": "c858c5042d524667a391121c2a095f22"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\product-prices-cache.json": {
+    "mtime": 1785753377.7296479,
+    "seen": 1788355519.1755757,
+    "ast_hash": "21a1fb051ed1272b1e9672071867eb4e",
+    "semantic_hash": "21a1fb051ed1272b1e9672071867eb4e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\product-status.json": {
+    "mtime": 1786632392.1903427,
+    "seen": 1788355519.1755757,
+    "ast_hash": "be3d89a652eee3458bf5fb327a1b5e3b",
+    "semantic_hash": "be3d89a652eee3458bf5fb327a1b5e3b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\production-cost-catalog.json": {
+    "mtime": 1785739063.3938162,
+    "seen": 1788355519.1755757,
+    "ast_hash": "11a65f5949b599d78dfa45d141a2596b",
+    "semantic_hash": "11a65f5949b599d78dfa45d141a2596b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\program-instructions.json": {
+    "mtime": 1786632380.0595322,
+    "seen": 1788355519.1755757,
+    "ast_hash": "97cbe19463245180d43b0046748833ab",
+    "semantic_hash": "97cbe19463245180d43b0046748833ab"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\project-costs.json": {
+    "mtime": 1784295226.8932984,
+    "seen": 1788355519.1755757,
+    "ast_hash": "36625a1af21a6a27c98ec9eb47c87f44",
+    "semantic_hash": "36625a1af21a6a27c98ec9eb47c87f44"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\search-index.json": {
+    "mtime": 1786636708.3192952,
+    "seen": 1788355519.1755757,
+    "ast_hash": "41c5e5a9eac8ddb336cc1c0962c13d1f",
+    "semantic_hash": "41c5e5a9eac8ddb336cc1c0962c13d1f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\shop-categories.json": {
+    "mtime": 1785739063.456316,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c42b29a9bfcb7bdf30d8c6a759fe6b38",
+    "semantic_hash": "c42b29a9bfcb7bdf30d8c6a759fe6b38"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\sleeve-stock.json": {
+    "mtime": 1785739063.4875672,
+    "seen": 1788355519.1755757,
+    "ast_hash": "61b7cc120cd3b499c242685c180a4d87",
+    "semantic_hash": "61b7cc120cd3b499c242685c180a4d87"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\tag-proposals.json": {
+    "mtime": 1785739063.5031924,
+    "seen": 1788355519.1755757,
+    "ast_hash": "bf0ded3319f659374770f84d69dcd3cd",
+    "semantic_hash": "bf0ded3319f659374770f84d69dcd3cd"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\thumb-overrides.json": {
+    "mtime": 1785739063.5344467,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c8cf05eee72281062e68d71647dda390",
+    "semantic_hash": "c8cf05eee72281062e68d71647dda390"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\viz-flags.json": {
+    "mtime": 1785912911.4480217,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ad16f2dc90af869d6c37328819eb0c51",
+    "semantic_hash": "ad16f2dc90af869d6c37328819eb0c51"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\wykrojnik-mapping-queue.json": {
+    "mtime": 1785739063.565694,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4c3f33b021dd2fb68e97d824f4b14041",
+    "semantic_hash": "4c3f33b021dd2fb68e97d824f4b14041"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\wykrojniki-registry.json": {
+    "mtime": 1785739063.5969398,
+    "seen": 1788355519.1755757,
+    "ast_hash": "0c83e8b4f0225abffb2b6c25ee9c405b",
+    "semantic_hash": "0c83e8b4f0225abffb2b6c25ee9c405b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\cs.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e4071c75021122b184d284aca1adb675",
+    "semantic_hash": "e4071c75021122b184d284aca1adb675"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\da.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5794f09f24f96d84ea54d9aa40bdef3e",
+    "semantic_hash": "5794f09f24f96d84ea54d9aa40bdef3e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\de.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "02fe85bc6f880e8cb8e5d666753deff6",
+    "semantic_hash": "02fe85bc6f880e8cb8e5d666753deff6"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\en.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "bb8c2709a45e9e444ba3af8d9f6820eb",
+    "semantic_hash": "bb8c2709a45e9e444ba3af8d9f6820eb"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\es.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fdf64071808397ad6614fe6fffaea0aa",
+    "semantic_hash": "fdf64071808397ad6614fe6fffaea0aa"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\fr.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8599e7efecc393ccb55362a24b28470d",
+    "semantic_hash": "8599e7efecc393ccb55362a24b28470d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\it.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "40626b21b5b1915ef31fbdff13256031",
+    "semantic_hash": "40626b21b5b1915ef31fbdff13256031"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\nl.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c535f184c2e611e7685b533435a8d20d",
+    "semantic_hash": "c535f184c2e611e7685b533435a8d20d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\pl.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "04d07dfcf6340d6b6d96df43675a19d9",
+    "semantic_hash": "04d07dfcf6340d6b6d96df43675a19d9"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\ru.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1b2f65c8e2de4503b539f819a23e1a79",
+    "semantic_hash": "1b2f65c8e2de4503b539f819a23e1a79"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\sk.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "866a5eda08a37942d16ae8b479e74ca4",
+    "semantic_hash": "866a5eda08a37942d16ae8b479e74ca4"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\i18n\\uk.json": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c05b1c30473628b6c3d50bc4fe10c214",
+    "semantic_hash": "c05b1c30473628b6c3d50bc4fe10c214"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\_make_viz_page.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "97c29a45394cc79bd6cf3b605b6440f0",
+    "semantic_hash": "97c29a45394cc79bd6cf3b605b6440f0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\_ralph_finish_ux2.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8f049da0f642baebb61d9f16011a3107",
+    "semantic_hash": "8f049da0f642baebb61d9f16011a3107"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\_ralph_screenshots.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ef42990d80264633e867c419b6c3396e",
+    "semantic_hash": "ef42990d80264633e867c419b6c3396e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\_ralph_screenshots_ux2.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "28a446f0fd824edebac4ed664cab78b1",
+    "semantic_hash": "28a446f0fd824edebac4ed664cab78b1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\asset_role_utils.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5d2739d57e635aafcdb6ca82a68cbb37",
+    "semantic_hash": "5d2739d57e635aafcdb6ca82a68cbb37"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\assoc-from-ocr.py": {
+    "mtime": 1785766698.276506,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2d3bf9ead3bf44eea8347e4f7a004340",
+    "semantic_hash": "2d3bf9ead3bf44eea8347e4f7a004340"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\assoc_adequacy.py": {
+    "mtime": 1785937271.4000487,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a58013e5ca34021518992bd3e5cda4ee",
+    "semantic_hash": "a58013e5ca34021518992bd3e5cda4ee"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\audit-branding-coverage.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "682b19eea15c10415df51bb120641854",
+    "semantic_hash": "682b19eea15c10415df51bb120641854"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\brand_element_assoc.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fcc944b3103130e5d2430c760ca09b90",
+    "semantic_hash": "fcc944b3103130e5d2430c760ca09b90"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\brand_folder_context.py": {
+    "mtime": 1785936909.0264995,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f4859de090c6ebf66901edac4d321f77",
+    "semantic_hash": "f4859de090c6ebf66901edac4d321f77"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\brand_marketing_segments.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9ac09c94f8e4074b275b41d85fe8f257",
+    "semantic_hash": "9ac09c94f8e4074b275b41d85fe8f257"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\brand_tag_utils.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1211efc04f8be66c0eab928d416a1f95",
+    "semantic_hash": "1211efc04f8be66c0eab928d416a1f95"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\branding_grid_eligibility.py": {
+    "mtime": 1786364204.5161767,
+    "seen": 1788355519.1755757,
+    "ast_hash": "0182211fbbf4e47543ac7e2d7a44592d",
+    "semantic_hash": "0182211fbbf4e47543ac7e2d7a44592d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\build-branding-grid-index.py": {
+    "mtime": 1786367222.3152268,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3f0a30b4a3be64ac854fbb24d72d07a7",
+    "semantic_hash": "3f0a30b4a3be64ac854fbb24d72d07a7"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\build-branding-index.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9664abad949e67f925667217fcf57680",
+    "semantic_hash": "9664abad949e67f925667217fcf57680"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\build-branding-segments.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a587b4e8ecfde4fa8e943a56b23f57f9",
+    "semantic_hash": "a587b4e8ecfde4fa8e943a56b23f57f9"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\build-file-index.py": {
+    "mtime": 1786545686.3410683,
+    "seen": 1788355519.1755757,
+    "ast_hash": "0df8330fc04c41e59a0db0c0a19a69e7",
+    "semantic_hash": "0df8330fc04c41e59a0db0c0a19a69e7"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\build-project-costs.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a2793b74b999145ae6d7ca5813b338da",
+    "semantic_hash": "a2793b74b999145ae6d7ca5813b338da"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\cut-mascot-sprite.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9514ee0d0c02f37d39bb9a5fb7493728",
+    "semantic_hash": "9514ee0d0c02f37d39bb9a5fb7493728"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\enrich-branding-element-assoc.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "411b0f3924920810ee16edc60be74e3f",
+    "semantic_hash": "411b0f3924920810ee16edc60be74e3f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\enrich-branding-recognize.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "351eab3ae1ea59faa4ed27513eb35086",
+    "semantic_hash": "351eab3ae1ea59faa4ed27513eb35086"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\enrich-branding-tags.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fd47d9ed51fadf43a1579463284b3a2c",
+    "semantic_hash": "fd47d9ed51fadf43a1579463284b3a2c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\enrich-product-associations.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4e2b3c75f37e641fbc87e72ac3166448",
+    "semantic_hash": "4e2b3c75f37e641fbc87e72ac3166448"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\enrich-search-tags.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f20750d81c73b02b232664d65aa0167d",
+    "semantic_hash": "f20750d81c73b02b232664d65aa0167d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\fetch-product-prices.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "25a1cac88cd655dd06186f982e8e1d1c",
+    "semantic_hash": "25a1cac88cd655dd06186f982e8e1d1c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\import-sleeve-stock-xlsx.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "16c4dbb11c7513cd2033cc5c0d39daea",
+    "semantic_hash": "16c4dbb11c7513cd2033cc5c0d39daea"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\import-wykrojniki-xlsx.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8052367b75fab9fd1503c6091aec11da",
+    "semantic_hash": "8052367b75fab9fd1503c6091aec11da"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\link-branding-products.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "271dddf1270f863c3a0096d588bd7b7b",
+    "semantic_hash": "271dddf1270f863c3a0096d588bd7b7b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\link-wykrojniki-products.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e3060e5145bb9f871e55870860d9fd3a",
+    "semantic_hash": "e3060e5145bb9f871e55870860d9fd3a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\marketing_roots.py": {
+    "mtime": 1785766011.791059,
+    "seen": 1788355519.1755757,
+    "ast_hash": "36d2ace463ab876cbde6186eb00325d0",
+    "semantic_hash": "36d2ace463ab876cbde6186eb00325d0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\migrate-branding-head-m-ids.py": {
+    "mtime": 1786446378.127656,
+    "seen": 1788355519.1755757,
+    "ast_hash": "13809a3beb4013a9d9052539016a3687",
+    "semantic_hash": "13809a3beb4013a9d9052539016a3687"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\patch-branding-backgrounds.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f609162bc9727003534016213fde9dca",
+    "semantic_hash": "f609162bc9727003534016213fde9dca"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\patch-elements-in-index.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "73cc12373aaf07bc2058849fa56c998c",
+    "semantic_hash": "73cc12373aaf07bc2058849fa56c998c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\process-branding-segment.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3d3fdb887a3f554dbb9f00f9cc093bba",
+    "semantic_hash": "3d3fdb887a3f554dbb9f00f9cc093bba"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\re-enrich-branding-index.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6bb471eaf290eb7c0ab737e56d5df506",
+    "semantic_hash": "6bb471eaf290eb7c0ab737e56d5df506"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\refilter-branding-links.py": {
+    "mtime": 1785937322.8838298,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a8ceb71bcf8958b4754f1130c3e4072f",
+    "semantic_hash": "a8ceb71bcf8958b4754f1130c3e4072f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\repair-materialy-to-projekt.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "7e69f3d38297384f01eadfcdb2179825",
+    "semantic_hash": "7e69f3d38297384f01eadfcdb2179825"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\repair-missing-indexes.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2e59030e94fddf33d3bfcabe5174c6d1",
+    "semantic_hash": "2e59030e94fddf33d3bfcabe5174c6d1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\repair-tag-taxonomy.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5a380b11608c2d8e1a77a69cea599a64",
+    "semantic_hash": "5a380b11608c2d8e1a77a69cea599a64"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\repair-viz-thumbs.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e22d2f0c9054da434d1b227ca136354e",
+    "semantic_hash": "e22d2f0c9054da434d1b227ca136354e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\restore-pl-diacritics.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "22cd5e96b333973ae8e551a09fb3a0c8",
+    "semantic_hash": "22cd5e96b333973ae8e551a09fb3a0c8"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\scan-bulk-packaging.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c22305bb29b8e1031b420bd2a33b01c4",
+    "semantic_hash": "c22305bb29b8e1031b420bd2a33b01c4"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\sync-gc-viz-from-g.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8b90fabbb0b65270ddfe4270a727ca9b",
+    "semantic_hash": "8b90fabbb0b65270ddfe4270a727ca9b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\tests\\test_branding_grid_projection.py": {
+    "mtime": 1786367237.189036,
+    "seen": 1788355519.1755757,
+    "ast_hash": "82b0de3eb0666ef39a20f2abe00529b3",
+    "semantic_hash": "82b0de3eb0666ef39a20f2abe00529b3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\tests\\test_dam_assoc_quiz_thumb.js": {
+    "mtime": 1786368741.2301953,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fb7dcad15dbc013bff16edb74662509b",
+    "semantic_hash": "fb7dcad15dbc013bff16edb74662509b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\tests\\test_dam_search_force.js": {
+    "mtime": 1786364474.3579662,
+    "seen": 1788355519.1755757,
+    "ast_hash": "333abb9748364739c198b33298d133f4",
+    "semantic_hash": "333abb9748364739c198b33298d133f4"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\tests\\test_dashboard_thumb_cache.js": {
+    "mtime": 1786633229.8188422,
+    "seen": 1788355519.1755757,
+    "ast_hash": "67f7d08378640195d2935ca2904f150a",
+    "semantic_hash": "67f7d08378640195d2935ca2904f150a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\tests\\test_db_panel_no_fake.js": {
+    "mtime": 1786633229.821849,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fb95165312d5285f90c5a8ecf4081357",
+    "semantic_hash": "fb95165312d5285f90c5a8ecf4081357"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\tests\\test_enrich_preserves_data_thumbs.js": {
+    "mtime": 1786545891.9207745,
+    "seen": 1788355519.1755757,
+    "ast_hash": "998b100268867bd1bfcb9760781bb4fb",
+    "semantic_hash": "998b100268867bd1bfcb9760781bb4fb"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\tests\\test_viz_datesy_group_thumb.js": {
+    "mtime": 1786545891.9207745,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9ed3eb6966f33f65b55b0ecafb7c43b8",
+    "semantic_hash": "9ed3eb6966f33f65b55b0ecafb7c43b8"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\tests\\test_viz_no_legacy_thumbs.js": {
+    "mtime": 1786545891.9207745,
+    "seen": 1788355519.1755757,
+    "ast_hash": "80e61d0434cf2caa9179cef943375bb0",
+    "semantic_hash": "80e61d0434cf2caa9179cef943375bb0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\watch-file-index.py": {
+    "mtime": 1786364676.7835126,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d88c8415882024e4f12a1418449a98de",
+    "semantic_hash": "d88c8415882024e4f12a1418449a98de"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\wyszukiwanie-brandingu\\verify-branding-fixtures.py": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "93fbb5fea65ab52e8bb06cc093cef4f4",
+    "semantic_hash": "93fbb5fea65ab52e8bb06cc093cef4f4"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\sw.js": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e9474a3b4e08a6c50087bee84ec76164",
+    "semantic_hash": "e9474a3b4e08a6c50087bee84ec76164"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\version.json": {
+    "mtime": 1788272606.5438528,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f08f8f0d5f1d3cebcc55246566b0e9de",
+    "semantic_hash": "f08f8f0d5f1d3cebcc55246566b0e9de"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\activity.html": {
+    "mtime": 1786632812.8636932,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1bd3336369ad2a832b68957a66a4fcc2",
+    "semantic_hash": "1bd3336369ad2a832b68957a66a4fcc2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\billing.html": {
+    "mtime": 1786632812.8671176,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1dc59d4831100e205b7d92fba9b88456",
+    "semantic_hash": "1dc59d4831100e205b7d92fba9b88456"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\branding.html": {
+    "mtime": 1788272606.7053874,
+    "seen": 1788355519.1755757,
+    "ast_hash": "0e4e183737bd3546e303522586b47035",
+    "semantic_hash": "0e4e183737bd3546e303522586b47035"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\consents.html": {
+    "mtime": 1786632812.8680048,
+    "seen": 1788355519.1755757,
+    "ast_hash": "950b590a481578e259a2010e498b5100",
+    "semantic_hash": "950b590a481578e259a2010e498b5100"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\costs.html": {
+    "mtime": 1786632812.870496,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b39358bbaf6acf20c4e424989b5dda42",
+    "semantic_hash": "b39358bbaf6acf20c4e424989b5dda42"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\dashboard.html": {
+    "mtime": 1788272606.5438528,
+    "seen": 1788355519.1755757,
+    "ast_hash": "21b137f7b00b3af14fa9dab6ab6de16d",
+    "semantic_hash": "21b137f7b00b3af14fa9dab6ab6de16d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\data\\sync-gc-viz-log.txt": {
+    "mtime": 1784298718.2940311,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b54a483b76518c87a9002eaafda5398c",
+    "semantic_hash": "b54a483b76518c87a9002eaafda5398c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\docs-security.html": {
+    "mtime": 1786632812.877524,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b51d6930fac494f4bd0dd6ff5f6b5163",
+    "semantic_hash": "b51d6930fac494f4bd0dd6ff5f6b5163"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\explorer.html": {
+    "mtime": 1788272606.5438528,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1025773924dfeb49995b5909ba8608c1",
+    "semantic_hash": "1025773924dfeb49995b5909ba8608c1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\help.html": {
+    "mtime": 1786632812.8795242,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b1d495448f1538a24d5469c3e0ef9528",
+    "semantic_hash": "b1d495448f1538a24d5469c3e0ef9528"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\inbox.html": {
+    "mtime": 1786632812.8805249,
+    "seen": 1788355519.1755757,
+    "ast_hash": "35207a0ade6d4c0f6f09e09e249e1b1e",
+    "semantic_hash": "35207a0ade6d4c0f6f09e09e249e1b1e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\index.html": {
+    "mtime": 1786632812.8805249,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6aacbfbbf7d86b394c9e054de816d06d",
+    "semantic_hash": "6aacbfbbf7d86b394c9e054de816d06d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\integrations.html": {
+    "mtime": 1786632812.881524,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a697d162a57aba3309a7b9d482b932fc",
+    "semantic_hash": "a697d162a57aba3309a7b9d482b932fc"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\invoices.html": {
+    "mtime": 1786632812.882534,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e873ffcfb89e990335baa371cbed3319",
+    "semantic_hash": "e873ffcfb89e990335baa371cbed3319"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\license.html": {
+    "mtime": 1786632812.8836038,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6239fefbea4dbe07fc2ab4b3adc118ea",
+    "semantic_hash": "6239fefbea4dbe07fc2ab4b3adc118ea"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\privacy.html": {
+    "mtime": 1786632812.8843071,
+    "seen": 1788355519.1755757,
+    "ast_hash": "23b30fa9f7ece949717e2f7b919ff62e",
+    "semantic_hash": "23b30fa9f7ece949717e2f7b919ff62e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\profile.html": {
+    "mtime": 1786632812.8853142,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4c30a7188acca90706463b2385bde528",
+    "semantic_hash": "4c30a7188acca90706463b2385bde528"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\project.html": {
+    "mtime": 1786632812.8863106,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9994b262e3560e70c9dbbc232b020697",
+    "semantic_hash": "9994b262e3560e70c9dbbc232b020697"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\serve-thumbs-note.md": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "19f7c2844846c18f56e8eb2d679c9eaf",
+    "semantic_hash": "19f7c2844846c18f56e8eb2d679c9eaf"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\scripts\\wyszukiwanie-brandingu\\README.md": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "76581701a289e24b278affbfe6692d63",
+    "semantic_hash": "76581701a289e24b278affbfe6692d63"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\settings.html": {
+    "mtime": 1786632812.8903108,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3e2bd101f2561c33b759ed97cf2f4987",
+    "semantic_hash": "3e2bd101f2561c33b759ed97cf2f4987"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\signin-geex.html": {
+    "mtime": 1785915464.1269753,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d257f9001575449244763bf52b5760ef",
+    "semantic_hash": "d257f9001575449244763bf52b5760ef"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\signin.html": {
+    "mtime": 1786632812.8917706,
+    "seen": 1788355519.1755757,
+    "ast_hash": "35c665bb80f4c4821ae5271aec3f8335",
+    "semantic_hash": "35c665bb80f4c4821ae5271aec3f8335"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\tasks.html": {
+    "mtime": 1788272606.7053874,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c07216ae981427be7426990037fd53a3",
+    "semantic_hash": "c07216ae981427be7426990037fd53a3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\terms.html": {
+    "mtime": 1786632812.8935513,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f3d9ba339ecc13a2c6f44cc86a0d353c",
+    "semantic_hash": "f3d9ba339ecc13a2c6f44cc86a0d353c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\visualizations.html": {
+    "mtime": 1786632812.8945549,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5c63f81b6e5732d5771b38cd49afc709",
+    "semantic_hash": "5c63f81b6e5732d5771b38cd49afc709"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\fonts\\theme-icons.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f2efd2a788c7796e28c8cc36ee4d76b3",
+    "semantic_hash": "f2efd2a788c7796e28c8cc36ee4d76b3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\check-circle.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "62590419b6213ce152190eb69642dd21",
+    "semantic_hash": "62590419b6213ce152190eb69642dd21"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\edit.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "52f0ccd2c2f24006704caae6a1a41b55",
+    "semantic_hash": "52f0ccd2c2f24006704caae6a1a41b55"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\envelope-open.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ab7942c50f35002a21c9cc2316b673cb",
+    "semantic_hash": "ab7942c50f35002a21c9cc2316b673cb"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\facebook-square.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "851f97f136bf07b9ae9abae9a89b2500",
+    "semantic_hash": "851f97f136bf07b9ae9abae9a89b2500"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\facebook.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "851f97f136bf07b9ae9abae9a89b2500",
+    "semantic_hash": "851f97f136bf07b9ae9abae9a89b2500"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\github.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6119470fa7e3f319c9c6b12f4b23f74e",
+    "semantic_hash": "6119470fa7e3f319c9c6b12f4b23f74e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\globe-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f95cc5b6ad5baf2b3f8f17910d6bc263",
+    "semantic_hash": "f95cc5b6ad5baf2b3f8f17910d6bc263"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\instagram.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f418954c1a522d69dd26d8c787457719",
+    "semantic_hash": "f418954c1a522d69dd26d8c787457719"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\link-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "dbc819d3b6e7b750e022eafe752274aa",
+    "semantic_hash": "dbc819d3b6e7b750e022eafe752274aa"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\linkedin-in.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "af1eaf5deeddc419c7603b72cab41863",
+    "semantic_hash": "af1eaf5deeddc419c7603b72cab41863"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\linkedin.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6b3a10b12554d4d2db601025187cf405",
+    "semantic_hash": "6b3a10b12554d4d2db601025187cf405"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\long-arrow-alt-left-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3e9ef979c4d9a54cab85323b2eb0ba71",
+    "semantic_hash": "3e9ef979c4d9a54cab85323b2eb0ba71"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\long-arrow-alt-right-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9f0668a22e84106502cf0c321d46813f",
+    "semantic_hash": "9f0668a22e84106502cf0c321d46813f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\map-marker-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5e49cee90fa79524a1be91da0e464ab1",
+    "semantic_hash": "5e49cee90fa79524a1be91da0e464ab1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\map.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b58960c53c815a90b0e6c9228ac00360",
+    "semantic_hash": "b58960c53c815a90b0e6c9228ac00360"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\phone-alt-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e1a8b320454150e4cef054925a866a92",
+    "semantic_hash": "e1a8b320454150e4cef054925a866a92"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\phone-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "825dd4ea3db052de5c29e90c3f5ceb1b",
+    "semantic_hash": "825dd4ea3db052de5c29e90c3f5ceb1b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\pinterest.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a57757a946574543c90d8cc0a52c7fbd",
+    "semantic_hash": "a57757a946574543c90d8cc0a52c7fbd"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\plus-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "42c5a593240931321056d119469dcee2",
+    "semantic_hash": "42c5a593240931321056d119469dcee2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\reddit.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "280bf87472d8644f1a374ddbd651bc33",
+    "semantic_hash": "280bf87472d8644f1a374ddbd651bc33"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\reply-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a48a3115115778affe0bd04a8937a24e",
+    "semantic_hash": "a48a3115115778affe0bd04a8937a24e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\search-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fb1968d008800d982c0f8a52f6529054",
+    "semantic_hash": "fb1968d008800d982c0f8a52f6529054"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\th-list-solid.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6ce47e7dfb6d2cb4449f07195c5e9c3f",
+    "semantic_hash": "6ce47e7dfb6d2cb4449f07195c5e9c3f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\tumblr.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "20db186b16665f3585efb33509d1f474",
+    "semantic_hash": "20db186b16665f3585efb33509d1f474"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\twitter.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "41873a2b1bedb38e683ce45ef1fd6eee",
+    "semantic_hash": "41873a2b1bedb38e683ce45ef1fd6eee"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\user.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f3135d87280cea58ff8c5254305f20ad",
+    "semantic_hash": "f3135d87280cea58ff8c5254305f20ad"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\vimeo.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "36367a5849a1e1865c290d2a9d85cc1c",
+    "semantic_hash": "36367a5849a1e1865c290d2a9d85cc1c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\vk.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a5fc8a9976f67fde8a8006d425fea4f7",
+    "semantic_hash": "a5fc8a9976f67fde8a8006d425fea4f7"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\icons\\youtube.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "da410bb26486d458eb4d56537644cb81",
+    "semantic_hash": "da410bb26486d458eb4d56537644cb81"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\authentication.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1d9a2a888068084b2fdd7a06946d81df",
+    "semantic_hash": "1d9a2a888068084b2fdd7a06946d81df"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\author.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fef55e54b7a0c4049f415b94d871f1a2",
+    "semantic_hash": "fef55e54b7a0c4049f415b94d871f1a2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\avatar-female.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ab556c602c6f79703c3ac483a5d8e406",
+    "semantic_hash": "ab556c602c6f79703c3ac483a5d8e406"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\avatar-male.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "60e049455f508c01fdd52aacdf1ebed0",
+    "semantic_hash": "60e049455f508c01fdd52aacdf1ebed0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\chat.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "95d6c82bb277dcbc157c91353bee0c13",
+    "semantic_hash": "95d6c82bb277dcbc157c91353bee0c13"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\chat\\1.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3b1d262a211b073234aa850c5c1f7b76",
+    "semantic_hash": "3b1d262a211b073234aa850c5c1f7b76"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\notification.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "38cd020acd5219308b5443c051fae80f",
+    "semantic_hash": "38cd020acd5219308b5443c051fae80f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\search.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4c7ca2b35de33e67bb95f9244db6383a",
+    "semantic_hash": "4c7ca2b35de33e67bb95f9244db6383a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\t1.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1ed2c0c363a2b773a970f56b4ba46a73",
+    "semantic_hash": "1ed2c0c363a2b773a970f56b4ba46a73"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\t2.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4f70976b6bf1007f7d9c3e46e2ff2dea",
+    "semantic_hash": "4f70976b6bf1007f7d9c3e46e2ff2dea"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\t3.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "61832f7c0c13194fd20fc5bea38e82b2",
+    "semantic_hash": "61832f7c0c13194fd20fc5bea38e82b2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\1.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fee48a25d4398240bbbad6197059e4e1",
+    "semantic_hash": "fee48a25d4398240bbbad6197059e4e1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\10.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a410e4d2333ca196b5cc8322604c4c7f",
+    "semantic_hash": "a410e4d2333ca196b5cc8322604c4c7f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\11.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "86a7b78b4f3000f577255529eb7f05f9",
+    "semantic_hash": "86a7b78b4f3000f577255529eb7f05f9"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\2.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9d8717f7e412285c1dd2ed92be7bcac7",
+    "semantic_hash": "9d8717f7e412285c1dd2ed92be7bcac7"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\3.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "81df7f1f80680e8daff1ab295857c5d1",
+    "semantic_hash": "81df7f1f80680e8daff1ab295857c5d1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\4.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fd59c4920f38a1293a71485f88344a3a",
+    "semantic_hash": "fd59c4920f38a1293a71485f88344a3a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\5.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2bf93387d34e1843c1ab39472c1f0d43",
+    "semantic_hash": "2bf93387d34e1843c1ab39472c1f0d43"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\6.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "23a7e4bb6ba8fde9b1c9d38ece17722b",
+    "semantic_hash": "23a7e4bb6ba8fde9b1c9d38ece17722b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\7.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4fab832eec94bc5d921c48db17491be8",
+    "semantic_hash": "4fab832eec94bc5d921c48db17491be8"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\8.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "0bec66ccfcb31bb02f42e1f6895ed086",
+    "semantic_hash": "0bec66ccfcb31bb02f42e1f6895ed086"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\todo\\9.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "811203ed2e987abee99c1cb4d57f0e1e",
+    "semantic_hash": "811203ed2e987abee99c1cb4d57f0e1e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\user.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "33270eee62c0f4441d931c5d21a38178",
+    "semantic_hash": "33270eee62c0f4441d931c5d21a38178"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\user1.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "87d2e97f6e4ff6e12315b8410595a071",
+    "semantic_hash": "87d2e97f6e4ff6e12315b8410595a071"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\user2.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "102806fafa4eec9e018f12e48b0d91e0",
+    "semantic_hash": "102806fafa4eec9e018f12e48b0d91e0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\user3.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fb88572e42c8c410a0fd573e9cc83d9d",
+    "semantic_hash": "fb88572e42c8c410a0fd573e9cc83d9d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\user4.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "dc4ee3f43a6a2de38f64ffb7354ae7d9",
+    "semantic_hash": "dc4ee3f43a6a2de38f64ffb7354ae7d9"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\avatar\\user5.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9ecfb5edb476bb728af2d0868bcb9b8c",
+    "semantic_hash": "9ecfb5edb476bb728af2d0868bcb9b8c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\balance-bg.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "30035acc9be8833b311eed07f832d335",
+    "semantic_hash": "30035acc9be8833b311eed07f832d335"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\1.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "97ad997f23ea57e17f7c74881b5a0993",
+    "semantic_hash": "97ad997f23ea57e17f7c74881b5a0993"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\2.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "342d6938c1e33357f82e4798fcdca0b3",
+    "semantic_hash": "342d6938c1e33357f82e4798fcdca0b3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\3.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "bd15b3608d470dad8349a01c21860e87",
+    "semantic_hash": "bd15b3608d470dad8349a01c21860e87"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\4.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "27cf0927a9fd5156468e33f7c835c6b5",
+    "semantic_hash": "27cf0927a9fd5156468e33f7c835c6b5"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\5.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d44bd71b4fc9a49ac6903ab72e612382",
+    "semantic_hash": "d44bd71b4fc9a49ac6903ab72e612382"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\6.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d5a6742c122aa76054bee02e9893d6d5",
+    "semantic_hash": "d5a6742c122aa76054bee02e9893d6d5"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\7.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "27cf0927a9fd5156468e33f7c835c6b5",
+    "semantic_hash": "27cf0927a9fd5156468e33f7c835c6b5"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\8.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9ab177309ce0918403b02e9d21d13c10",
+    "semantic_hash": "9ab177309ce0918403b02e9d21d13c10"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\9.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ff8f4e5444addba72ebde61183409722",
+    "semantic_hash": "ff8f4e5444addba72ebde61183409722"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\details.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1ae30e99b104b5e57a7d0fb87ed008a3",
+    "semantic_hash": "1ae30e99b104b5e57a7d0fb87ed008a3"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\blog\\details1.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "bc1c8533357bea5eb8d5824e5fe3c0de",
+    "semantic_hash": "bc1c8533357bea5eb8d5824e5fe3c0de"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\01.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3119ff717940fb3ae15890569b77ce3d",
+    "semantic_hash": "3119ff717940fb3ae15890569b77ce3d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\02.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "188ff86078a339f56bbfafca18470c2f",
+    "semantic_hash": "188ff86078a339f56bbfafca18470c2f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\03.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "253e7ed945cbb700f91ecce6fde7fccd",
+    "semantic_hash": "253e7ed945cbb700f91ecce6fde7fccd"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\04.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8e393c1c367bff1e3bf0007b2999c995",
+    "semantic_hash": "8e393c1c367bff1e3bf0007b2999c995"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\05.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3270c4d7366eef41b2399f3189006fa7",
+    "semantic_hash": "3270c4d7366eef41b2399f3189006fa7"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\06.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b0b9ba92fcf05f90d6d5e7d2ea3cbfb1",
+    "semantic_hash": "b0b9ba92fcf05f90d6d5e7d2ea3cbfb1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\07.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8a2c9ad991a82e1612b774aef5602ba9",
+    "semantic_hash": "8a2c9ad991a82e1612b774aef5602ba9"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\08.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4c0ddc921612bb92b774223ce7ecc9a1",
+    "semantic_hash": "4c0ddc921612bb92b774223ce7ecc9a1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\09.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8cbec0a03bd37d2fbe95cb61b9ec9580",
+    "semantic_hash": "8cbec0a03bd37d2fbe95cb61b9ec9580"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\10.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f8b7fd3ba73afca35fc45bf324ce6544",
+    "semantic_hash": "f8b7fd3ba73afca35fc45bf324ce6544"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\11.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d9fc534713ebd19c9ad705a5731f9508",
+    "semantic_hash": "d9fc534713ebd19c9ad705a5731f9508"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\12.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a59cec6dbd7e32d110688483e13094ac",
+    "semantic_hash": "a59cec6dbd7e32d110688483e13094ac"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\contact\\xzj64cbl.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "14bf7e13db00f7cb6d4b62f38a124577",
+    "semantic_hash": "14bf7e13db00f7cb6d4b62f38a124577"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\favicon-dk.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6ea26603d89dc6a6683106d94675c13c",
+    "semantic_hash": "6ea26603d89dc6a6683106d94675c13c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\favicon.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6ea26603d89dc6a6683106d94675c13c",
+    "semantic_hash": "6ea26603d89dc6a6683106d94675c13c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\feature\\01.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "486adbd405c1a843834ada574c39618d",
+    "semantic_hash": "486adbd405c1a843834ada574c39618d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\feature\\02.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9d6767a680dd72bad4d8515b7a375256",
+    "semantic_hash": "9d6767a680dd72bad4d8515b7a375256"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\feature\\03.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "df1782006c759e171e43c4f722650fd7",
+    "semantic_hash": "df1782006c759e171e43c4f722650fd7"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\feature\\04.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "700b2a9d59d9456d12902557baaaefa6",
+    "semantic_hash": "700b2a9d59d9456d12902557baaaefa6"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\feature\\feature-1.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "7453f2468bdaa6949b567116b84ae26e",
+    "semantic_hash": "7453f2468bdaa6949b567116b84ae26e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\feature\\feature-2.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1df57d9d32b16f7e0e35fb4860f50f07",
+    "semantic_hash": "1df57d9d32b16f7e0e35fb4860f50f07"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\feature\\feature-3.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "56234665d419871e436ced4bed64967b",
+    "semantic_hash": "56234665d419871e436ced4bed64967b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\file\\01.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "270b1e5eb0f25a8cc82153aa80e06466",
+    "semantic_hash": "270b1e5eb0f25a8cc82153aa80e06466"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\file\\02.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "7af13fe85b8816df6f45c8b9895f76d8",
+    "semantic_hash": "7af13fe85b8816df6f45c8b9895f76d8"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\file\\03.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c9b73d00892593529d77296d0ad4bebd",
+    "semantic_hash": "c9b73d00892593529d77296d0ad4bebd"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\file\\04.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ac6b3bdef3738922269d010bbaa6876d",
+    "semantic_hash": "ac6b3bdef3738922269d010bbaa6876d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\file\\05.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "215acd619fd776287e8c2a057481a466",
+    "semantic_hash": "215acd619fd776287e8c2a057481a466"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\file\\06.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "64937753cf19aed7dfd3359a9d4c89e2",
+    "semantic_hash": "64937753cf19aed7dfd3359a9d4c89e2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\file\\07.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4b2171118327647ae3bf768fe20346bb",
+    "semantic_hash": "4b2171118327647ae3bf768fe20346bb"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\app.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fb42f66b1b6cdf99fbf6835e8065f0cf",
+    "semantic_hash": "fb42f66b1b6cdf99fbf6835e8065f0cf"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\apple.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a7a3bc1be98164df4efbe323ed15fb5c",
+    "semantic_hash": "a7a3bc1be98164df4efbe323ed15fb5c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\close.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "caa8112b1dadc2eab59c8ca9e674734b",
+    "semantic_hash": "caa8112b1dadc2eab59c8ca9e674734b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\dark.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "81d50bd02168908c304e1be0561ddb4e",
+    "semantic_hash": "81d50bd02168908c304e1be0561ddb4e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\double-check.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "88bfa78b1fa8058a0a6835c56f6efbf7",
+    "semantic_hash": "88bfa78b1fa8058a0a6835c56f6efbf7"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\dropbox.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "09f145f33954c4403f131613703ae79f",
+    "semantic_hash": "09f145f33954c4403f131613703ae79f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\facebook.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9dcbd81850d42d0e73dba3e8b0078698",
+    "semantic_hash": "9dcbd81850d42d0e73dba3e8b0078698"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\feature.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5b2b64210e36771e0ac4b7e17fc7645f",
+    "semantic_hash": "5b2b64210e36771e0ac4b7e17fc7645f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\google.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "39e992723e26131cd4a20e3b2eb35340",
+    "semantic_hash": "39e992723e26131cd4a20e3b2eb35340"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\home.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "813b35fbf7a704d62cf66af91559884c",
+    "semantic_hash": "813b35fbf7a704d62cf66af91559884c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\layout.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f7971d46768dc378a9e432eee2e332b4",
+    "semantic_hash": "f7971d46768dc378a9e432eee2e332b4"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\light.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "7135f35c4099312f75c9abea3786f045",
+    "semantic_hash": "7135f35c4099312f75c9abea3786f045"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\ltr.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b1964ad0323e92a172ef327c9153cff1",
+    "semantic_hash": "b1964ad0323e92a172ef327c9153cff1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\mastercard-icon.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e088938597f3e713544954fd0ff1428c",
+    "semantic_hash": "e088938597f3e713544954fd0ff1428c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\pages.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "59fa11fdb686f4750045b5d7848b24ef",
+    "semantic_hash": "59fa11fdb686f4750045b5d7848b24ef"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\quote.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1c974c400a902d325a9cc11739f8abef",
+    "semantic_hash": "1c974c400a902d325a9cc11739f8abef"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\quotes.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f6bd557c69526321722db6b6b75e279c",
+    "semantic_hash": "f6bd557c69526321722db6b6b75e279c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\rtl.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "88d3df6ec6709fcf6a1a53a17a176b03",
+    "semantic_hash": "88d3df6ec6709fcf6a1a53a17a176b03"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\icon\\youtube.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2646d64742e4618db3666413fa62a14e",
+    "semantic_hash": "2646d64742e4618db3666413fa62a14e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\01.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ec2ed6d8045c0b5106b593445d606437",
+    "semantic_hash": "ec2ed6d8045c0b5106b593445d606437"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\02.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ecef3bc6583b9b8adb33d6471a67d545",
+    "semantic_hash": "ecef3bc6583b9b8adb33d6471a67d545"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\03.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1d3b5e03a201830a26b97fbc1e07255f",
+    "semantic_hash": "1d3b5e03a201830a26b97fbc1e07255f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\04.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ecef3bc6583b9b8adb33d6471a67d545",
+    "semantic_hash": "ecef3bc6583b9b8adb33d6471a67d545"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\05.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ec2ed6d8045c0b5106b593445d606437",
+    "semantic_hash": "ec2ed6d8045c0b5106b593445d606437"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\06.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5b3c49b74575602268a45dbcf350a7b2",
+    "semantic_hash": "5b3c49b74575602268a45dbcf350a7b2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\07.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9da6ab8d00894db3f6425095a463076b",
+    "semantic_hash": "9da6ab8d00894db3f6425095a463076b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\08.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2c9b953b969bcee375f6bfaf28237f93",
+    "semantic_hash": "2c9b953b969bcee375f6bfaf28237f93"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\09.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f73a6895b784bb6213be1199e299e690",
+    "semantic_hash": "f73a6895b784bb6213be1199e299e690"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\10.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "28b6c03a33c7866fb0dbc00db2887d84",
+    "semantic_hash": "28b6c03a33c7866fb0dbc00db2887d84"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\11.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a03b028dd2529414d7463b981c5cb70a",
+    "semantic_hash": "a03b028dd2529414d7463b981c5cb70a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\12.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "21b44692e60741ccb8a50736321965c4",
+    "semantic_hash": "21b44692e60741ccb8a50736321965c4"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\13.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "31c493ce4009773343a584d6e9b2fc8c",
+    "semantic_hash": "31c493ce4009773343a584d6e9b2fc8c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\14.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "168570ec6f1d6d85d18ae8310b780691",
+    "semantic_hash": "168570ec6f1d6d85d18ae8310b780691"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\15.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5f62fdda58b708ecb54b8004b357b702",
+    "semantic_hash": "5f62fdda58b708ecb54b8004b357b702"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\16.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e165b5c1c73528f0304568f5eb41ef71",
+    "semantic_hash": "e165b5c1c73528f0304568f5eb41ef71"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\17.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c0d39932d702d2203eabf572e4e699e5",
+    "semantic_hash": "c0d39932d702d2203eabf572e4e699e5"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\18.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "5b0e89fdbff3da4c69013b5ec6c45d44",
+    "semantic_hash": "5b0e89fdbff3da4c69013b5ec6c45d44"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\19.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "08cd9f941f515ab488b119203b79fa73",
+    "semantic_hash": "08cd9f941f515ab488b119203b79fa73"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\kanban\\20.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "c0ae3bdc461788c5ced7c982e5e5bd56",
+    "semantic_hash": "c0ae3bdc461788c5ced7c982e5e5bd56"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\logo-dark.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1006341874ed35c69b480cc058dec28e",
+    "semantic_hash": "1006341874ed35c69b480cc058dec28e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\logo-dk-green.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1006341874ed35c69b480cc058dec28e",
+    "semantic_hash": "1006341874ed35c69b480cc058dec28e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\logo-dk-white.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fabfbfb9cfa9e8a9b400b6e36dc5c859",
+    "semantic_hash": "fabfbfb9cfa9e8a9b400b6e36dc5c859"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\logo-dobra-kaloria.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1006341874ed35c69b480cc058dec28e",
+    "semantic_hash": "1006341874ed35c69b480cc058dec28e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\logo-lite.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1006341874ed35c69b480cc058dec28e",
+    "semantic_hash": "1006341874ed35c69b480cc058dec28e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\logo.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "431a61c62624882b9ec4ae1bc5bde1c1",
+    "semantic_hash": "431a61c62624882b9ec4ae1bc5bde1c1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maintanence.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "21f1590a65741dc6b175b83fd40b8404",
+    "semantic_hash": "21f1590a65741dc6b175b83fd40b8404"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka-bobek.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a350d9b01a5cf2da952e9d49b75de17c",
+    "semantic_hash": "a350d9b01a5cf2da952e9d49b75de17c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\_sheets\\sheet-dobo3.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "eff30bbd2b6b38a1d4cfacea02d519de",
+    "semantic_hash": "eff30bbd2b6b38a1d4cfacea02d519de"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\_sheets\\sheet-dobro2.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9b49cf673b4a321c5d3eb0110ddb13a6",
+    "semantic_hash": "9b49cf673b4a321c5d3eb0110ddb13a6"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\_sheets\\sheet-joy.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\_sheets\\sheet-sad.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "363f4ee0159e457eeb138dc76ead8762",
+    "semantic_hash": "363f4ee0159e457eeb138dc76ead8762"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-1.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "df14213c106ae67d5c64365d2b6965c5",
+    "semantic_hash": "df14213c106ae67d5c64365d2b6965c5"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-2.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ed5ef51337fd5e412b1dd2e296248cfd",
+    "semantic_hash": "ed5ef51337fd5e412b1dd2e296248cfd"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-3.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "16df92657a499e39e5d63331298b4333",
+    "semantic_hash": "16df92657a499e39e5d63331298b4333"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-4.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "fae8cebf991dda234b8b962b506a1cf0",
+    "semantic_hash": "fae8cebf991dda234b8b962b506a1cf0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-5.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b1b4e24cd12a4cc23d66f91860ad7f4f",
+    "semantic_hash": "b1b4e24cd12a4cc23d66f91860ad7f4f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-6.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "b445ec9d913e9b038e909f40e194673c",
+    "semantic_hash": "b445ec9d913e9b038e909f40e194673c"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-7.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "4b253058c9a17d37fdf88644476cbf3f",
+    "semantic_hash": "4b253058c9a17d37fdf88644476cbf3f"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-8.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9e3c982da6d761e51fdd121e175ce498",
+    "semantic_hash": "9e3c982da6d761e51fdd121e175ce498"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-9.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "e0a791ccde3a20f3ce9251c36e6bae03",
+    "semantic_hash": "e0a791ccde3a20f3ce9251c36e6bae03"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-approve-8.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "3bab216b8ba273a4245ca3a810257158",
+    "semantic_hash": "3bab216b8ba273a4245ca3a810257158"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-explain-assets.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "f041b42b660c68ba3f3768606ce8dc9a",
+    "semantic_hash": "f041b42b660c68ba3f3768606ce8dc9a"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-explain-image.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "6a1db14c75c3314a23ca2dfba43dcf8d",
+    "semantic_hash": "6a1db14c75c3314a23ca2dfba43dcf8d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-explain-video.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "a10c248c864cfa2561617a5a876701bd",
+    "semantic_hash": "a10c248c864cfa2561617a5a876701bd"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-joy-1.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "22af07ca544c8554f77f16c23b9bd0ff",
+    "semantic_hash": "22af07ca544c8554f77f16c23b9bd0ff"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-joy-2.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "63dd98545d16d35cddbf3bf6e17c2bc6",
+    "semantic_hash": "63dd98545d16d35cddbf3bf6e17c2bc6"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-joy-3.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "24ea0810f056a5544ca95ef576cfb8cd",
+    "semantic_hash": "24ea0810f056a5544ca95ef576cfb8cd"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-joy-4.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "88f80bc99069993c7a33d0376e2139b2",
+    "semantic_hash": "88f80bc99069993c7a33d0376e2139b2"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-joy-5.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "7e888d860e4379eec370ff67d6323e42",
+    "semantic_hash": "7e888d860e4379eec370ff67d6323e42"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-joy-6.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "dc58801870caa04be1b09f2754b610f6",
+    "semantic_hash": "dc58801870caa04be1b09f2754b610f6"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-megaphone.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "53295a2a021dfbaa8882da4b94817d2d",
+    "semantic_hash": "53295a2a021dfbaa8882da4b94817d2d"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-neutral.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "59c5a8f2672dcfa1e3e9c649efda0c0b",
+    "semantic_hash": "59c5a8f2672dcfa1e3e9c649efda0c0b"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-sad-1.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "95f807aff86ad328e75cb5140a21f707",
+    "semantic_hash": "95f807aff86ad328e75cb5140a21f707"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-sad-2.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "2b2a6e7639489a8df269e22a7a40e1e1",
+    "semantic_hash": "2b2a6e7639489a8df269e22a7a40e1e1"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-sad-3.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "ae4eb7256badfee474df8f1d6f576e05",
+    "semantic_hash": "ae4eb7256badfee474df8f1d6f576e05"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-sad-report.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "938082280efd91578384e177b857e165",
+    "semantic_hash": "938082280efd91578384e177b857e165"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-think-dots.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "848095d1541c034035f2b1249ba3f101",
+    "semantic_hash": "848095d1541c034035f2b1249ba3f101"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\maskotka\\pose-think-q.png": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "591df1ceecae4796fd770596d5fa9c84",
+    "semantic_hash": "591df1ceecae4796fd770596d5fa9c84"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\mastercard-bg.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "900b68e094009313b9e39a07950380ca",
+    "semantic_hash": "900b68e094009313b9e39a07950380ca"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\testimonial\\01.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "0ce63116a3afa10172491ab6c7a72aae",
+    "semantic_hash": "0ce63116a3afa10172491ab6c7a72aae"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\testimonial\\1.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "9b891cb4e6e8559908d1cfc61639e3f7",
+    "semantic_hash": "9b891cb4e6e8559908d1cfc61639e3f7"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\testimonial\\2.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "1b3797231d29c1f6923d823543b7fcd0",
+    "semantic_hash": "1b3797231d29c1f6923d823543b7fcd0"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\testimonial\\3.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "8560101b384c0ffb636e5271edeb4335",
+    "semantic_hash": "8560101b384c0ffb636e5271edeb4335"
+  },
+  "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\web\\assets\\img\\testimonial\\4.svg": {
+    "mtime": 1785366901.0,
+    "seen": 1788355519.1755757,
+    "ast_hash": "be4c84e901fec9dd3698c29f45fd9ae2",
+    "semantic_hash": "be4c84e901fec9dd3698c29f45fd9ae2"
+  }
+}

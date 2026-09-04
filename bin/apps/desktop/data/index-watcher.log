@@ -197,4 +197,2020 @@ Traceback (most recent call last):
     rc = rebuild_with_lock(
          ^^^^^^^^^^^^^^^^^^
   File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 181, in rebuild_with_lock
-    handl
+    handl[watch] base=D:\Marketing roots=2 interval=5.0s
+[watch]   D:\Marketing\- POLSKA\01 - PRODUKTY\- DK
+[watch]   D:\Marketing\- EKSPORT\01 - PRODUCTS\- GC
+[watch] --no-initial: monitor only
+[watch] change 1786519672 -> 1786525791; rebuild...
+[watch] rebuild OK
+[watch] change 1786525791 -> 1786525807; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525807; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525807; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525807; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525807; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525807; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525845; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525845; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525845; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525845; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786525791 -> 1786525845; rebuild...
+[watch] rebuild OK
+[watch] change 1786525845 -> 1786526141; rebuild...
+[watch] rebuild OK
+[watch] change 1786526141 -> 1786526759; rebuild...
+Traceback (most recent call last):
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 354, in <module>
+    main()
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 340, in main
+    rc = rebuild_with_lock(
+         ^^^^^^^^^^^^^^^^^^
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 181, in rebuild_with_lock
+    handle.update(stage=f"{stage_prefix}:building")
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 50, in update
+    _write_atomic(self.path, self.payload)
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 77, in _write_atomic
+    os.replace(tmp, path)
+PermissionError: [WinError 5] Odmowa dostępu: 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json.tmp' -> 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json'
+[watch] base=D:\Marketing roots=2 interval=5.0s
+[watch]   D:\Marketing\- POLSKA\01 - PRODUKTY\- DK
+[watch]   D:\Marketing\- EKSPORT\01 - PRODUCTS\- GC
+[watch] --no-initial: monitor only
+[watch] change 1786526759 -> 1786526794; rebuild...
+[watch] rebuild OK
+[watch] change 1786526794 -> 1786526801; rebuild...
+[watch] rebuild OK
+[watch] change 1786526801 -> 1786527991; rebuild...
+[watch] rebuild OK
+[watch] change 1786527991 -> 1786528027; rebuild...
+[watch] rebuild OK
+[watch] change 1786528027 -> 1786528100; rebuild...
+[watch] rebuild OK
+[watch] change 1786528100 -> 1786528785; rebuild...
+[watch] rebuild OK
+[watch] change 1786528785 -> 1786528799; rebuild...
+[watch] rebuild OK
+[watch] change 1786528799 -> 1786531338; rebuild...
+[watch] rebuild OK
+[watch] change 1786531338 -> 1786531373; rebuild...
+[watch] rebuild OK
+[watch] change 1786531373 -> 1786531448; rebuild...
+[watch] rebuild OK
+[watch] change 1786531448 -> 1786531505; rebuild...
+[watch] rebuild OK
+[watch] change 1786531505 -> 1786531759; rebuild...
+[watch] rebuild OK
+[watch] change 1786531759 -> 1786531776; rebuild...
+[watch] rebuild OK
+[watch] change 1786531776 -> 1786532284; rebuild...
+[watch] rebuild OK
+[watch] change 1786532284 -> 1786532813; rebuild...
+[watch] rebuild OK
+[watch] change 1786532813 -> 1786532837; rebuild...
+[watch] rebuild OK
+[watch] change 1786532837 -> 1786532908; rebuild...
+[watch] rebuild OK
+[watch] change 1786532908 -> 1786532960; rebuild...
+[watch] rebuild OK
+[watch] change 1786532960 -> 1786533038; rebuild...
+[watch] rebuild OK
+[watch] change 1786533038 -> 1786533106; rebuild...
+[watch] rebuild OK
+[watch] change 1786533106 -> 1786533153; rebuild...
+[watch] rebuild OK
+[watch] change 1786533153 -> 1786533221; rebuild...
+[watch] rebuild OK
+[watch] change 1786533221 -> 1786533285; rebuild...
+[watch] rebuild OK
+[watch] change 1786533285 -> 1786533381; rebuild...
+[watch] rebuild OK
+[watch] change 1786533381 -> 1786533448; rebuild...
+[watch] rebuild OK
+[watch] change 1786533448 -> 1786533490; rebuild...
+[watch] rebuild OK
+[watch] change 1786533490 -> 1786533561; rebuild...
+[watch] rebuild OK
+[watch] change 1786533561 -> 1786533624; rebuild...
+[watch] rebuild OK
+[watch] change 1786533624 -> 1786533740; rebuild...
+[watch] rebuild OK
+[watch] change 1786533740 -> 1786533819; rebuild...
+[watch] rebuild OK
+[watch] change 1786533819 -> 1786533848; rebuild...
+[watch] rebuild OK
+[watch] change 1786533848 -> 1786533951; rebuild...
+[watch] rebuild OK
+[watch] change 1786533951 -> 1786533980; rebuild...
+[watch] rebuild OK
+[watch] change 1786533980 -> 1786534276; rebuild...
+Traceback (most recent call last):
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 354, in <module>
+    main()
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 340, in main
+    rc = rebuild_with_lock(
+         ^^^^^^^^^^^^^^^^^^
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 181, in rebuild_with_lock
+    handle.update(stage=f"{stage_prefix}:building")
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 50, in update
+    _write_atomic(self.path, self.payload)
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 77, in _write_atomic
+    os.replace(tmp, path)
+PermissionError: [WinError 5] Odmowa dostępu: 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json.tmp' -> 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json'
+[watch] base=D:\Marketing roots=2 interval=5.0s
+[watch]   D:\Marketing\- POLSKA\01 - PRODUKTY\- DK
+[watch]   D:\Marketing\- EKSPORT\01 - PRODUCTS\- GC
+[watch] --no-initial: monitor only
+[watch] change 1786627552 -> 1786629185; rebuild...
+Traceback (most recent call last):
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 354, in <module>
+    main()
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 340, in main
+    rc = rebuild_with_lock(
+         ^^^^^^^^^^^^^^^^^^
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 181, in rebuild_with_lock
+    handle.update(stage=f"{stage_prefix}:building")
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 50, in update
+    _write_atomic(self.path, self.payload)
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 77, in _write_atomic
+    os.replace(tmp, path)
+PermissionError: [WinError 5] Odmowa dostępu: 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json.tmp' -> 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json'
+[watch] base=D:\Marketing roots=2 interval=5.0s
+[watch]   D:\Marketing\- POLSKA\01 - PRODUKTY\- DK
+[watch]   D:\Marketing\- EKSPORT\01 - PRODUCTS\- GC
+[watch] --no-initial: monitor only
+[watch] change 1786629185 -> 1786629193; rebuild...
+[watch] rebuild OK
+[watch] change 1786629193 -> 1786629204; rebuild...
+Traceback (most recent call last):
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 354, in <module>
+    main()
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 340, in main
+    rc = rebuild_with_lock(
+         ^^^^^^^^^^^^^^^^^^
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 181, in rebuild_with_lock
+    handle.update(stage=f"{stage_prefix}:building")
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 50, in update
+    _write_atomic(self.path, self.payload)
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 77, in _write_atomic
+    os.replace(tmp, path)
+PermissionError: [WinError 5] Odmowa dostępu: 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json.tmp' -> 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json'
+[watch] base=D:\Marketing roots=2 interval=5.0s
+[watch]   D:\Marketing\- POLSKA\01 - PRODUKTY\- DK
+[watch]   D:\Marketing\- EKSPORT\01 - PRODUCTS\- GC
+[watch] --no-initial: monitor only
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786630221 -> 1786633805; rebuild...
+[watch] rebuild OK
+[watch] change 1786633805 -> 1786634263; rebuild...
+[watch] rebuild OK
+[watch] change 1786634263 -> 1786634580; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786634263 -> 1786634580; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786634263 -> 1786634580; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786634263 -> 1786634580; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786634263 -> 1786634580; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786634263 -> 1786634580; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786634263 -> 1786634580; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1786634263 -> 1786634580; rebuild...
+Traceback (most recent call last):
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 354, in <module>
+    main()
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 340, in main
+    rc = rebuild_with_lock(
+         ^^^^^^^^^^^^^^^^^^
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 181, in rebuild_with_lock
+    handle.update(stage=f"{stage_prefix}:building")
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 50, in update
+    _write_atomic(self.path, self.payload)
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 77, in _write_atomic
+    os.replace(tmp, path)
+PermissionError: [WinError 5] Odmowa dostępu: 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json.tmp' -> 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json'
+[watch] base=D:\Marketing roots=2 interval=5.0s
+[watch]   D:\Marketing\- POLSKA\01 - PRODUKTY\- DK
+[watch]   D:\Marketing\- EKSPORT\01 - PRODUCTS\- GC
+[watch] --no-initial: monitor only
+[watch] change 1788353882 -> 1788423835; rebuild...
+Traceback (most recent call last):
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 354, in <module>
+    main()
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 340, in main
+    rc = rebuild_with_lock(
+         ^^^^^^^^^^^^^^^^^^
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 181, in rebuild_with_lock
+    handle.update(stage=f"{stage_prefix}:building")
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 50, in update
+    _write_atomic(self.path, self.payload)
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 77, in _write_atomic
+    os.replace(tmp, path)
+PermissionError: [WinError 5] Odmowa dostępu: 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json.tmp' -> 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json'
+[watch] base=D:\Marketing roots=2 interval=5.0s
+[watch]   D:\Marketing\- POLSKA\01 - PRODUKTY\- DK
+[watch]   D:\Marketing\- EKSPORT\01 - PRODUCTS\- GC
+[watch] --no-initial: monitor only
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788423835 -> 1788438667; rebuild...
+[watch] rebuild OK
+[watch] change 1788438667 -> 1788503543; rebuild...
+[watch] rebuild OK
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] change 1788503543 -> 1788503890; rebuild...
+Traceback (most recent call last):
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 354, in <module>
+    main()
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 340, in main
+    rc = rebuild_with_lock(
+         ^^^^^^^^^^^^^^^^^^
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\scripts\watch-file-index.py", line 181, in rebuild_with_lock
+    handle.update(stage=f"{stage_prefix}:building")
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 50, in update
+    _write_atomic(self.path, self.payload)
+  File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\desktop\rebuild_lock.py", line 77, in _write_atomic
+    os.replace(tmp, path)
+PermissionError: [WinError 5] Odmowa dostępu: 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json.tmp' -> 'D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\bin\\apps\\desktop\\data\\index-rebuild.lock.json'
+e thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT � [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD � [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 69
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ � [ niemi�sne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS � [ niemi�sne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL � [ niemi�sne ]
+  [archive] produkt tylko archiwum: KLOPSY � [ niemi�sne ]
+  [archive] produkt tylko archiwum: PASZTET �LIWKA � [ niemi�sne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 108
+  [DK] 04 - SYPKIE: products so far 122
+  [DK] 05 - NAPOJE: products so far 125
+  [DK] 06 - PRZETWORY: products so far 128
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 132
+  [GC] 01 - BARS: products so far 159
+  [GC] 02 - BALLS: products so far 164
+  [GC] 03 - PLANT BASED: products so far 180
+  [GC] 04 - BREAKFAST: products so far 180
+  [GC] 05 - DRINKS: products so far 180
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5985 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=191 viz=406 elapsed=13.82s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 69
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 108
+  [DK] 04 - SYPKIE: products so far 122
+  [DK] 05 - NAPOJE: products so far 125
+  [DK] 06 - PRZETWORY: products so far 128
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 132
+  [GC] 01 - BARS: products so far 159
+  [GC] 02 - BALLS: products so far 164
+  [GC] 03 - PLANT BASED: products so far 180
+  [GC] 04 - BREAKFAST: products so far 180
+  [GC] 05 - DRINKS: products so far 180
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5984 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=191 viz=406 elapsed=93.24s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 69
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 108
+  [DK] 04 - SYPKIE: products so far 122
+  [DK] 05 - NAPOJE: products so far 125
+  [DK] 06 - PRZETWORY: products so far 128
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 132
+  [GC] 01 - BARS: products so far 159
+  [GC] 02 - BALLS: products so far 164
+  [GC] 03 - PLANT BASED: products so far 180
+  [GC] 04 - BREAKFAST: products so far 180
+  [GC] 05 - DRINKS: products so far 180
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5984 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=191 viz=406 elapsed=43.67s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5992 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (336 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=58.31s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5986 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=45.91s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5986 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=59.75s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5986 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=47.97s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5986 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=46.43s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5987 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=40.95s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5986 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=55.45s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5986 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=44.71s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5986 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=45.92s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5986 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=42.11s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5987 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=38.13s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5987 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=71.42s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5987 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=52.73s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5987 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (334 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=69.33s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5988 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=63.81s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5988 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=36.46s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5988 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=45.82s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5988 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=51.3s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5988 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=45.09s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5988 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=36.72s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5988 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=36.86s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5989 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=49.39s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5989 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=48.86s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+watch] rebuild OK
+[watch] product change 1788513417 -> 1788513483; rebuild...
+[watch] branding hook spawned pid=50772 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788513483 -> 1788513557; rebuild...
+[watch] branding hook spawned pid=75128 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788513557 -> 1788516295; rebuild...
+[watch] branding hook spawned pid=68664 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788516295 -> 1788516300; rebuild...
+[watch] branding hook spawned pid=17084 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788516300 -> 1788518803; rebuild...
+[watch] branding hook spawned pid=57964 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788518803 -> 1788519827; rebuild...
+[watch] branding hook spawned pid=33112 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788519827 -> 1788519844; rebuild...
+[watch] branding hook spawned pid=67220 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788519844 -> 1788519936; rebuild...
+[watch] branding hook spawned pid=42916 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788519936 -> 1788519943; rebuild...
+[watch] branding hook spawned pid=33668 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788519943 -> 1788520027; rebuild...
+[watch] branding hook spawned pid=44896 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788520027 -> 1788520323; rebuild...
+[watch] branding hook spawned pid=44472 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788520323 -> 1788520334; rebuild...
+[watch] branding hook spawned pid=81620 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788520334 -> 1788520908; rebuild...
+[watch] branding hook spawned pid=84368 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (5989 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=406 elapsed=51.97s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (6641 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=438 elapsed=39.22s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (6640 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=438 elapsed=48.38s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+  [archive] produkt tylko archiwum: PROTEINA - KARMEL MCT — [ funkcjonalny ]
+  [DK] 01 - BATONY archiwum: +4 wariant(ow)
+  [DK] 01 - BATONY: products so far 57
+  [archive] produkt tylko archiwum: ORZESZKI MIOD — [ sniadanie ]
+  [DK] 02 - KULKI archiwum: +2 wariant(ow)
+  [DK] 02 - KULKI: products so far 70
+  [archive] produkt tylko archiwum: 01 KABANOS BBQ — [ niemięsne ]
+  [archive] produkt tylko archiwum: 02 KABANOS KLAS — [ niemięsne ]
+  [archive] produkt tylko archiwum: BURGER KLASYCZNY XXL — [ niemięsne ]
+  [archive] produkt tylko archiwum: KLOPSY — [ niemięsne ]
+  [archive] produkt tylko archiwum: PASZTET ŚLIWKA — [ niemięsne ]
+  [DK] 03 - ROSLINNE archiwum: +8 wariant(ow)
+  [DK] 03 - ROSLINNE: products so far 109
+  [DK] 04 - SYPKIE: products so far 123
+  [DK] 05 - NAPOJE: products so far 126
+  [DK] 06 - PRZETWORY: products so far 129
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - KARMEL 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - MARAKUJA 100 g - X
+  [archive] produkt tylko archiwum: DK-DOY-DATESY - YUZU 100 g - X
+  [DK] 07 - DATESY archiwum: +4 wariant(ow)
+  [DK] 07 - DATESY: products so far 133
+  [GC] 01 - BARS: products so far 160
+  [GC] 02 - BALLS: products so far 165
+  [GC] 03 - PLANT BASED: products so far 181
+  [GC] 04 - BREAKFAST: products so far 181
+  [GC] 05 - DRINKS: products so far 181
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\file-index.json (6640 KB)
+Wrote D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\search-index.json (335 KB)
+Thumbs dir: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\thumbs (0 files)
+products=192 viz=438 elapsed=45.34s
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hr thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=hu thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=sk thumb= file=WARIANT-DATE-ORANGE-6300624-FRONT-S.png
+  viz sample: Date Orange [GC] lang=en thumb= file=WARIANT-DATE-ORANGE-6300490-FRONT-S.png
+  viz sample: Coconut Orange [GC] lang=de thumb= file=GC_balls_cocoa-lime_000000_2023_02_06_GB_SE_FI_DK_DE-PREV.png
+BANOFFEE display_name: Banoffee Kakao related: 0
+TARTA display_name: Tarta Malinowa related: 1
+Asana: D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\apps\web\data\asana-tasks-kw.csv indexes_with_author=39
+product-people: by_id=39 by_index=14 prefix=1
+OK tag_groups: {'smak': 24, 'typ': 20, 'opakowanie': 16, 'autor': 4, 'osoba': 4} products_with_authors 60 by_tag_sylwia 23 by_tag_krzysztof 51
+enrich-search-tags: exit=0
+enriched search-index association_reverse keys=134
+enrich-product-associations: exit=0
+[watch] base=D:\Marketing product_roots=2 branding_roots=1 interval=2.0s depth=5
+[watch]   product D:\Marketing\- POLSKA\01 - PRODUKTY\- DK
+[watch]   product D:\Marketing\- EKSPORT\01 - PRODUCTS\- GC
+[watch]   branding D:\Marketing\- POLSKA\03 - MATERIAŁY GRAFICZNE
+[watch] --no-initial: monitor only
+[watch] product change 1788521011 -> 1788522801; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788521011 -> 1788522804; rebuild...
+[watch] branding hook spawned pid=81596 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788522804 -> 1788523125; rebuild...
+[watch] branding hook spawned pid=36700 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe
+[watch] rebuild OK
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] skip rebuild: lock held
+[watch] rebuild failed rc=2
+[watch] product change 1788523125 -> 1788523154; rebuild...
+[watch] branding hook spawned pid=18764 via D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\runtime\win\python\python.exe

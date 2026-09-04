@@ -1,13 +1,14 @@
 {
   "ok": true,
   "watcher_ok": true,
-  "stage": "monitoring",
-  "pid": 22028,
+  "branding_hook_pid": 18764,
+  "branding_hook_at": "2026-09-04T12:02:12Z",
+  "stage": "branding_hook_spawned",
   "last_ok": true,
   "last_rc": 0,
   "last_error": "",
-  "last_started": "2026-08-11T10:19:00Z",
-  "last_finished": "2026-08-11T10:19:09Z",
+  "last_started": "2026-09-04T12:01:26Z",
+  "last_finished": "2026-09-04T12:02:12Z",
   "awaiting_first_rebuild": false,
-  "updated_at": "2026-08-12T07:16:46Z"
+  "updated_at": "2026-09-04T12:02:12Z"
 }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-04T13:27:58",
+  "generated_at": "2026-09-04T14:02:11",
   "roots": [
     {
       "brand": "DK",
@@ -11,7 +11,7 @@
     }
   ],
   "root": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-  "elapsed_sec": 61.57,
+  "elapsed_sec": 45.34,
   "category_count": 12,
   "product_count": 192,
   "viz_count": 438,
@@ -10342,7 +10342,7 @@
           "wizki_count": 8,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -18800,7 +18800,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -19235,7 +19235,7 @@
           "wizki_count": 0,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -47879,7 +47879,7 @@
           "wizki_count": 40,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -49155,7 +49155,7 @@
           "wizki_count": 40,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -50488,7 +50488,7 @@
           "wizki_count": 40,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -54063,7 +54063,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -56973,7 +56973,7 @@
           "wizki_count": 18,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -58364,7 +58364,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -104923,7 +104923,6 @@
             "1 - MATERIAŁY",
             "1 - MATERIAŁY/ELEMENTY",
             "2 - PROJEKT",
-            "2 - PROJEKT/Linki",
             "2 - PROJEKT/links",
             "3 - DRUK",
             "4 - WIZKI"
@@ -104997,17 +104996,6 @@
                 "lang": "",
                 "slot": "3 - DRUK",
                 "role": "print"
-              },
-              {
-                "name": "DOYPACK - DATESY - KARMEL .zip",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/4 - WIZKI/DOYPACK - DATESY - KARMEL .zip",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/4 - WIZKI/DOYPACK - DATESY - KARMEL .zip",
-                "ext": "zip",
-                "size": 34869981,
-                "mtime": "2026-08-21T13:52:28",
-                "lang": "",
-                "slot": "4 - WIZKI",
-                "role": "print"
               }
             ],
             "viz": [
@@ -105048,8 +105036,8 @@
             "elements": [
               {
                 "name": "FRONT-SAME-KARMELKI_SEP.psd",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/FRONT-SAME-KARMELKI_SEP.psd",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/FRONT-SAME-KARMELKI_SEP.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/FRONT-SAME-KARMELKI_SEP.psd",
+                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/FRONT-SAME-KARMELKI_SEP.psd",
                 "ext": "psd",
                 "size": 1480566,
                 "mtime": "2026-06-25T04:06:37",
@@ -105057,8 +105045,8 @@
               },
               {
                 "name": "SAM-SPLASH-KARMEL_SEP.psd",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAM-SPLASH-KARMEL_SEP.psd",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAM-SPLASH-KARMEL_SEP.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAM-SPLASH-KARMEL_SEP.psd",
+                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAM-SPLASH-KARMEL_SEP.psd",
                 "ext": "psd",
                 "size": 4771551,
                 "mtime": "2026-06-25T04:15:03",
@@ -105066,8 +105054,8 @@
               },
               {
                 "name": "SAME-DATESY.psd",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAME-DATESY.psd",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAME-DATESY.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAME-DATESY.psd",
+                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAME-DATESY.psd",
                 "ext": "psd",
                 "size": 2277372,
                 "mtime": "2026-06-25T04:07:24",
@@ -105075,8 +105063,8 @@
               },
               {
                 "name": "SAME-DATESY_tyl_sep.psd",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAME-DATESY_tyl_sep.psd",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAME-DATESY_tyl_sep.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAME-DATESY_tyl_sep.psd",
+                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAME-DATESY_tyl_sep.psd",
                 "ext": "psd",
                 "size": 3535332,
                 "mtime": "2026-06-25T04:10:35",
@@ -105581,17 +105569,6 @@
                 "mtime": "2026-07-06T12:58:32",
                 "lang": "",
                 "slot": "3 - DRUK",
-                "role": "print"
-              },
-              {
-                "name": "DOYPACK - DATESY - Marakuja.zip",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/MARAKUJA - [ daktyle ]/DOY - MARAKUJA 100 g - 04.08.2026 - BEZ INDEKSU/4 - WIZKI/DOYPACK - DATESY - Marakuja.zip",
-                "rel": "07 - DATESY/MARAKUJA - [ daktyle ]/DOY - MARAKUJA 100 g - 04.08.2026 - BEZ INDEKSU/4 - WIZKI/DOYPACK - DATESY - Marakuja.zip",
-                "ext": "zip",
-                "size": 34422215,
-                "mtime": "2026-08-21T13:49:52",
-                "lang": "",
-                "slot": "4 - WIZKI",
                 "role": "print"
               }
             ],
@@ -151035,11 +151012,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758 - F",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-WIŚNIA-PL-UA-6300758-RGB-FRONT-S.png",
@@ -151071,11 +151048,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758 - F",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-WIŚNIA-PL-UA-6300758-RGB-FRONT-S.png",
@@ -151107,11 +151084,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL POMARAŃCZA — [ raw ]/doy - 15.05.2026 - 6300759",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-POMARANCZA-PL-UA-6300759-RGB-FRONT-S.png",
@@ -151143,11 +151120,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL POMARAŃCZA — [ raw ]/doy - 15.05.2026 - 6300759",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-POMARANCZA-PL-UA-6300759-RGB-FRONT-S.png",
@@ -151179,11 +151156,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-LIMONKA-PL-UA-6300760-RGB-FRONT-S.png",
@@ -151215,11 +151192,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-LIMONKA-PL-UA-6300760-RGB-FRONT-S.png",
@@ -159518,11 +159495,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
@@ -159557,11 +159534,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
@@ -159634,11 +159611,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767 - F",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
@@ -159672,11 +159649,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767 - F",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
@@ -159823,11 +159800,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "ORZESZKI-MIOD-6300699-FRONT-S.png",
@@ -159861,11 +159838,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "ORZESZKI-MIOD-6300699-FRONT-S.png",
@@ -160268,11 +160245,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763 - PL UA",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
@@ -160307,11 +160284,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763 - PL UA",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
@@ -160418,11 +160395,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",
@@ -160457,11 +160434,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",
