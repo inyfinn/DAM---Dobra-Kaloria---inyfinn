@@ -142,7 +142,21 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       <a href="#" class="geex-sidebar__close" id="damSidebarClose" aria-label="Zamknij menu"><i class="uil uil-times"></i></a>
       <div class="geex-sidebar__wrapper">
         <nav class="geex-sidebar__menu-wrapper">
-          <ul class="geex-sidebar__menu"><!-- wypelni dam-shell.js --></ul>
+          <ul class="geex-sidebar__menu" data-dam-nav="1">
+				<li class="geex-sidebar__menu__item"><a href="dashboard.html" class="geex-sidebar__menu__link" title="Dashboard" aria-label="Dashboard"><i class="uil uil-apps" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.dashboard">Dashboard</span></a></li>
+				<li class="geex-sidebar__menu__item"><a href="explorer.html" class="geex-sidebar__menu__link" title="Eksplorer" aria-label="Eksplorer"><i class="uil uil-sitemap" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.explorer">Eksplorer</span></a></li>
+				<li class="geex-sidebar__menu__item"><a href="visualizations.html" class="geex-sidebar__menu__link" title="Wizualizacje" aria-label="Wizualizacje"><i class="uil uil-image" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.visualizations">Wizualizacje</span></a></li>
+				<li class="geex-sidebar__menu__item"><a href="branding.html" class="geex-sidebar__menu__link" title="Branding" aria-label="Branding"><i class="uil uil-palette" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.branding">Branding</span></a></li>
+				<li class="geex-sidebar__menu__item"><a href="index.html" class="geex-sidebar__menu__link" title="Projekty" aria-label="Projekty"><i class="uil uil-box" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.projects">Projekty</span></a></li>
+				<li class="geex-sidebar__menu__item"><a href="inbox.html" class="geex-sidebar__menu__link" title="Wiadomości" aria-label="Wiadomości"><i class="uil uil-envelope" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.inbox">Wiadomości</span></a></li>
+				<li class="geex-sidebar__menu__item"><a href="tasks.html" class="geex-sidebar__menu__link" title="Zadania" aria-label="Zadania"><i class="uil uil-check-square" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.tasks">Zadania</span></a></li>
+				<li class="geex-sidebar__menu__item"><a href="invoices.html" class="geex-sidebar__menu__link" title="Faktury" aria-label="Faktury"><i class="uil uil-invoice" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.invoices">Faktury</span></a></li>
+				<li class="geex-sidebar__menu__item"><a href="costs.html" class="geex-sidebar__menu__link" title="Kalkulator kosztów" aria-label="Kalkulator kosztów"><i class="uil uil-calculator-alt" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.costs">Kalkulator kosztów</span></a></li>
+				<li class="geex-sidebar__menu__item"><a href="integrations.html" class="geex-sidebar__menu__link" title="Integracja i produkcja" aria-label="Integracja i produkcja"><i class="uil uil-plug" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.integrations">Integracja i produkcja</span></a></li>
+				<li class="geex-sidebar__menu__item dam-nav-device-session"><a href="profile.html#damDevicePathsRoot" class="geex-sidebar__menu__link dam-device-session-btn" id="damShellDeviceSession" title="Sesja urządzenia - ścieżki Marketing" aria-label="Sesja urządzenia" data-dam-tip="Sesja urządzenia: ścieżki Marketing na tym PC"><i class="uil uil-desktop" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label">Sesja urządzenia</span></a></li>
+				<li class="geex-sidebar__menu__item dam-nav-logout"><a href="#" class="geex-sidebar__menu__link dam-logout-btn" id="damShellLogout" title="Wyloguj" aria-label="Wyloguj" data-dam-tip="Wyloguj z konta DAM"><i class="uil uil-signout" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i><span class="dam-nav-label" data-i18n="nav.logout">Wyloguj</span></a></li>
+				<li class="geex-sidebar__menu__item dam-nav-version" aria-hidden="true"><span class="dam-sidebar-version" id="damSidebarVersion" title="Wersja programu DAM"></span></li>
+			</ul>
         </nav>
       </div>
     </div>
@@ -230,7 +244,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
   <script src="./assets/js/dam-i18n.js?v=restore20260805c"></script>
   <script src="./assets/js/dam-runtime.js?v=restore20260805c"></script>
   <script src="./assets/js/dam-version.js?v=5.0.164"></script>
-	<script src="./assets/js/dam-shell.js?v=5.0.163"></script>
+	<script src="./assets/js/dam-shell.js?v=5.0.164"></script>
   <script src="./assets/js/dam-loader.js?v=restore20260805c"></script>
   <script src="./assets/js/dam-tooltips.js?v=restore20260805c"></script>
   <script src="./assets/js/dam-paths.js?v=restore20260805c"></script>
