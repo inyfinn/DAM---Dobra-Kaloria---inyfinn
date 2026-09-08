@@ -257,6 +257,15 @@ def normalize_path(p: str) -> str:
     return str(Path(p)).replace("/", "\\")
 
 
+def _os_path(p: str) -> Path:
+    """Path usable on the current OS. Windows index paths use backslashes; on
+    POSIX convert them to slashes so validation/probes work cross-platform."""
+    s = str(p or "").strip()
+    if os.sep == "/":
+        s = s.replace("\\", "/")
+    return Path(s)
+
+
 def is_probably_file(p: str) -> bool:
     name = Path(p).name
     return "." in name and not name.startswith(".")
@@ -755,7 +764,7 @@ def invoke_synology_share(target: str) -> dict:
 
 
 def validate_base(path: str) -> dict:
-    base = Path(normalize_path(path))
+    base = _os_path(path)
     if not base.exists() or not base.is_dir():
         return {"ok": False, "error": "not_a_directory", "path": str(base)}
     missing = [name for name in REQUIRED_ROOT_FOLDERS if not (base / name).is_dir()]
@@ -6078,6 +6087,23 @@ def _coerce_media_target(path: str) -> str:
             return target
     except OSError:
         pass
+    # Cross-platform rebase onto the configured Marketing base (machine-config).
+    # Index paths are Windows (`D:\\Marketing\\...`); on Linux / a different
+    # drive letter they must be re-rooted onto the local base or every thumb
+    # 404s and the UI shows perpetual placeholders.
+    try:
+        import dam_path_resolve as _pr
+
+        phys = _pr.resolve_physical_path(
+            path,
+            normalize_path=normalize_path,
+            marketing_candidates=list(MARKETING_CANDIDATES),
+            machine_config_path=MACHINE_CONFIG,
+        )
+        if phys and os.path.isfile(phys):
+            return phys
+    except Exception:
+        pass
     resolved = _resolve_missing_media_path(target)
     return resolved or target
 
@@ -6508,7 +6534,7 @@ class Handler(BaseHTTPRequestHandler):
             probe_ok = False
             if online:
                 try:
-                    polska = Path(normalize_path(root)) / "- POLSKA"
+                    polska = _os_path(root) / "- POLSKA"
                     probe_ok = polska.is_dir() and any(polska.iterdir())
                 except OSError:
                     probe_ok = False

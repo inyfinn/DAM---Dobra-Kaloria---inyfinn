@@ -7,11 +7,12 @@
   "use strict";
 
   var COLS = 9;
-  /* 42: dashboard stack viz+products+branding+notify+quick+asana (compact mins) */
-  var MAX_ROWS = 42;
-  /* v6: media --bento-h accounts for CSS row-gap (no phantom under-card space);
-   * mins = chrome floor only; stack adjacent (no +1 row). */
-  var BENTO_LAYOUT_VERSION = 7;
+  /* 80: headroom for tall media stacks (viz+products+branding at 1x6) so grid
+   * never clamps a tile shorter than its measured content -> no overlap. */
+  var MAX_ROWS = 80;
+  /* v8: media --bento-h == measured content rows (no artificial 14/16 cap);
+   * resync via ResizeObserver/img-load/resize. Bump discards stale capped v7. */
+  var BENTO_LAYOUT_VERSION = 8;
   var ROW_PX = 48;
   var STORAGE_PREFIX = "dam_bento_v1:";
   var MIN_W = 2;

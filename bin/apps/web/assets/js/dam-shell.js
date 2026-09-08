@@ -708,6 +708,27 @@
     '<span class="dam-sidebar-version" id="damSidebarVersion" title="Wersja programu DAM"></span></li>';
   }
 
+  /** Set active nav state on a baked static menu (no innerHTML rewrite). */
+  function setSidebarActiveState(menuEl) {
+    if (!menuEl) return;
+    var active = sidebarActiveKey();
+    var wanted = null;
+    NAV_ITEMS.forEach(function (item) {
+      if (item.key === active) wanted = item.href;
+    });
+    menuEl.querySelectorAll(".geex-sidebar__menu__item").forEach(function (li) {
+      var a = li.querySelector("a.geex-sidebar__menu__link");
+      var href = a ? (a.getAttribute("href") || "") : "";
+      var on = !!wanted && href === wanted;
+      li.classList.toggle("active", on);
+      if (a) {
+        a.classList.toggle("active", on);
+        if (on) a.setAttribute("aria-current", "page");
+        else a.removeAttribute("aria-current");
+      }
+    });
+  }
+
   /** Sidebar: Sesja urządzenia -> profil z CRUD ścieżek per device (nie logout). */
   function goDeviceSessionPaths(e) {
     if (e) e.preventDefault();
@@ -3005,7 +3026,15 @@
 
     var sidebarMenu = document.querySelector(".geex-sidebar__menu");
     if (sidebarMenu) {
-      sidebarMenu.innerHTML = buildSidebarNav();
+      /* Interface baked into static HTML (data-dam-nav) -> do NOT rewrite the
+       * nav at runtime (no demo->DAM "warstwa"). Only set active state; JS keeps
+       * language (i18n) + behaviour. Legacy pages (no marker) still get rebuilt. */
+      if (sidebarMenu.hasAttribute("data-dam-nav")) {
+        setSidebarActiveState(sidebarMenu);
+      } else {
+        sidebarMenu.innerHTML = buildSidebarNav();
+        sidebarMenu.setAttribute("data-dam-nav", "1");
+      }
       injectSidebarCollapse();
       bindLogoutAndDeviceLinks();
     }
@@ -3054,8 +3083,9 @@
     }
 
     var headerMenu = document.querySelector(".geex-header__menu");
-    if (headerMenu) {
+    if (headerMenu && !headerMenu.hasAttribute("data-dam-nav")) {
       headerMenu.innerHTML = buildHeaderNav();
+      headerMenu.setAttribute("data-dam-nav", "1");
     }
 
     ensureAppearanceCustomizer();
