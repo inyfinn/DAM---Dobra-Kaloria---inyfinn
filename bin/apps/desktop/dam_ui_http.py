@@ -3,9 +3,70 @@ from __future__ import annotations
 
 import http.server
 import json
+import socket
+import socketserver
+import sys
 from typing import TYPE_CHECKING
 
 from runtime_config import WEB_ROOT, runtime_payload, write_runtime_file
+
+_CLIENT_GONE = (ConnectionAbortedError, ConnectionResetError, BrokenPipeError, TimeoutError, ConnectionError)
+
+
+def _is_backup_static_path(path: str) -> bool:
+    """Refuse HTTP for backup copies sitting under the static web tree."""
+    base = (path or "").rsplit("/", 1)[-1].lower()
+    if not base:
+        return False
+    if base.endswith(".sql.gz") or base.endswith(".old"):
+        return True
+    if "backup" in base:
+        return True
+    if ".bak-" in base or base.endswith(".bak"):
+        return True
+    return False
+
+
+class ThreadingReusableTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    """Concurrent UI GETs so in-tab reload is not blocked by an aborted copyfile.
+
+    Single-thread TCPServer + WinError 10053 during shutil.copyfile left :8765
+    unable to finish F5 in an already-open tab; a new browser (fresh sockets)
+    still worked. Reload-in-tab is a first-class bug, not "localhost cache".
+    """
+
+    allow_reuse_address = True
+    daemon_threads = True
+    block_on_close = False
+    request_queue_size = 64
+
+    def server_bind(self):
+        # Windows SO_REUSEADDR allows two processes on :8765. Dual bind split
+        # Chrome reload across servers (white document; new browser "worked").
+        if sys.platform == "win32":
+            self.allow_reuse_address = False
+            try:
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+            except (OSError, AttributeError):
+                pass
+        super().server_bind()
+
+    def finish_request(self, request, client_address):
+        try:
+            request.settimeout(45)
+        except OSError:
+            pass
+        super().finish_request(request, client_address)
+
+    def handle_error(self, request, client_address):
+        err = sys.exc_info()[1]
+        if isinstance(err, _CLIENT_GONE):
+            return
+        winerr = getattr(err, "winerror", None)
+        if isinstance(err, OSError) and winerr in (10053, 10054, 10038, 32):
+            return
+        super().handle_error(request, client_address)
+
 
 if TYPE_CHECKING:
     from bridge_supervisor import BridgeSupervisor
@@ -30,22 +91,52 @@ class DamUiRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def end_headers(self):
         path = self.path.split("?", 1)[0]
-        qs = self.path.split("?", 1)[1] if "?" in self.path else ""
         if self.cache_control_static == "no-store":
             self.send_header("Cache-Control", "no-store")
-        elif "v=" in qs and (
+        elif path.endswith(
+            (
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".webp",
+                ".avif",
+                ".gif",
+                ".svg",
+                ".ico",
+                ".woff",
+                ".woff2",
+                ".ttf",
+                ".otf",
+            )
+        ):
+            self.send_header("Cache-Control", "private, max-age=3600")
+        # Edytowalne pliki (CSS/JS/JSON/HTML) musza byc swieze nawet bez ?v= — inaczej
+        # zapomniany token w HTML wysyla przegladarke w godzine twardego cache.
+        elif (
             path.endswith(".js")
             or path.endswith(".css")
             or path.endswith(".json")
+            or path.endswith(".html")
+            or path.endswith(".map")
+            or path.endswith("/")
+            or path.endswith("sw.js")
         ):
-            self.send_header("Cache-Control", "no-cache, max-age=0, must-revalidate")
-        elif path.endswith(".html") or path.endswith("/") or path.endswith("sw.js"):
             self.send_header("Cache-Control", "no-cache, max-age=0, must-revalidate")
         elif path.startswith("/assets/") or path.startswith("assets/"):
             self.send_header("Cache-Control", "private, max-age=3600")
         else:
             self.send_header("Cache-Control", "private, max-age=3600")
         super().end_headers()
+
+    def copyfile(self, source, outputfile):
+        try:
+            super().copyfile(source, outputfile)
+        except _CLIENT_GONE:
+            return
+        except OSError as exc:
+            if getattr(exc, "winerror", None) in (10053, 10054, 10038, 32):
+                return
+            raise
 
     def guess_type(self, path):
         ctype = super().guess_type(path)
@@ -77,6 +168,9 @@ class DamUiRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         # HARD: nie serwuj branding-index.json (~340MB) ani backupow do przegladarki.
         # Slim: branding-grid-head.json / branding-grid-index.json. Admin: ?full=1
+        if _is_backup_static_path(path):
+            self.send_error(404, "Not Found")
+            return
         base = path.rsplit("/", 1)[-1]
         fat_branding = base == "branding-index.json" or (
             base.startswith("branding-index.")

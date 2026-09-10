@@ -8,7 +8,6 @@ Uzyj tego skryptu albo skrotu pulpitu DAM ETA (launch.py).
 """
 from __future__ import annotations
 
-import socketserver
 import sys
 import threading
 import time
@@ -21,14 +20,10 @@ if str(_DESKTOP_BOOT) not in sys.path:
     sys.path.insert(0, str(_DESKTOP_BOOT))
 
 from bridge_supervisor import BridgeSupervisor, LOCAL_BRIDGE
-from dam_ui_http import make_handler_class, prepare_runtime
+from dam_ui_http import ThreadingReusableTCPServer, make_handler_class, prepare_runtime
 from runtime_config import DEFAULT_BRIDGE_PORT, DEFAULT_UI_PORT, HOST, WEB_ROOT
 
 DESKTOP_DIR = LOCAL_BRIDGE.parent
-
-
-class ReusableTCPServer(socketserver.TCPServer):
-    allow_reuse_address = True
 
 
 def main() -> None:
@@ -59,7 +54,7 @@ def main() -> None:
 
     runtime = prepare_runtime(ui_port, bridge_port)
     Handler = make_handler_class(runtime, supervisor, cache_control_static="dev")
-    httpd = ReusableTCPServer((HOST, ui_port), Handler)
+    httpd = ThreadingReusableTCPServer((HOST, ui_port), Handler)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     thread.start()
 

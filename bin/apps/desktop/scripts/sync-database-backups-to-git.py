@@ -3,7 +3,11 @@
 Pobierz dump Postgresa z Synology (DATABASE/) do repo DAM/DATABASE/
 i wypchnij na Git (prywatne repo).
 
-Retencja lokalna w repo: max 72 plikow dam_eta_YYYY-MM-DD.sql.gz (1 / dzien).
+Retencja lokalna w repo: 48 godzinowych dam_eta_YYYY-MM-DD_HH.sql.gz
+oraz 72 dziennych dam_eta_YYYY-MM-DD.sql.gz.
+
+Zrzut sluzy TYLKO do odtwarzania po katastrofie. Nie scalaj dumpow
+z dwoch maszyn (SERIAL / BIGSERIAL). Git commit nigdy nie wywala mostu.
 
 Uzycie (Windows, w katalogu repo):
   python apps/desktop/scripts/sync-database-backups-to-git.py
@@ -27,6 +31,7 @@ REPO_ROOT = CONTENT_ROOT  # DATABASE + apps live under bin/
 DATABASE_DIR = CONTENT_ROOT / "DATABASE"
 REMOTE_DIR = "/volume1/docker/dam-eta-postgres/DATABASE"
 MAX_DAYS = 72
+MAX_HOURLY = 48
 SSH_HOST = "syno"
 LOG_DIR = CONTENT_ROOT / "apps" / "desktop" / "logs"
 SYNC_LOG = LOG_DIR / "database-sync.log"
@@ -66,7 +71,11 @@ def pull_from_syno() -> int:
         text=True,
         creationflags=CREATE_NO_WINDOW if sys.platform == "win32" else 0,
     )
-    remote_files = [ln.strip() for ln in (ls.stdout or "").splitlines() if ln.strip().endswith(".sql.gz")]
+    remote_files = [
+        ln.strip()
+        for ln in (ls.stdout or "").splitlines()
+        if ln.strip().endswith(".sql.gz")
+    ]
     if not remote_files:
         _log("Brak dumpow na Synology jeszcze (uruchom backup-postgres-database.sh).")
         return 0
@@ -81,7 +90,7 @@ def pull_from_syno() -> int:
         if result.returncode != 0 or not result.stdout:
             err = (result.stderr or b"").decode("utf-8", errors="replace")
             _log(f"ssh cat error ({name}): {err}")
-            sys.exit(1)
+            continue
         local.write_bytes(result.stdout)
         _log(f"pobrano: {name} ({len(result.stdout)} B)")
     files = sorted(DATABASE_DIR.glob("dam_eta_*.sql.gz"))
@@ -90,26 +99,34 @@ def pull_from_syno() -> int:
 
 
 def rotate_local() -> None:
-    files = sorted(DATABASE_DIR.glob("dam_eta_*.sql.gz"))
-    if len(files) <= MAX_DAYS:
-        return
-    for old in files[: len(files) - MAX_DAYS]:
-        _log(f"Rotacja (kasuj): {old.name}")
-        old.unlink(missing_ok=True)
+    hourly = sorted(DATABASE_DIR.glob("dam_eta_????-??-??_??.sql.gz"))
+    if len(hourly) > MAX_HOURLY:
+        for old in hourly[: len(hourly) - MAX_HOURLY]:
+            _log(f"Rotacja godzinowa (kasuj): {old.name}")
+            old.unlink(missing_ok=True)
+    daily = sorted(DATABASE_DIR.glob("dam_eta_????-??-??.sql.gz"))
+    if len(daily) > MAX_DAYS:
+        for old in daily[: len(daily) - MAX_DAYS]:
+            _log(f"Rotacja dzienna (kasuj): {old.name}")
+            old.unlink(missing_ok=True)
 
 
 def git_commit_push(do_push: bool) -> None:
-    run(["git", "add", "DATABASE/"])
-    status = run(["git", "status", "--porcelain", "DATABASE/"], check=False)
-    if not (status.stdout or "").strip():
-        _log("Brak zmian w DATABASE/ — nic do commita.")
-        return
-    msg = "chore(database): rotate Postgres dumps (max 72 daily)"
-    run(["git", "commit", "-m", msg])
-    _log("Commit OK: " + msg)
-    if do_push:
-        run(["git", "push"])
-        _log("Push OK")
+    """Git nigdy nie wywala procesu (most / supervisor)."""
+    try:
+        run(["git", "add", "DATABASE/"], check=False)
+        status = run(["git", "status", "--porcelain", "DATABASE/"], check=False)
+        if not (status.stdout or "").strip():
+            _log("Brak zmian w DATABASE/ - nic do commita.")
+            return
+        msg = "chore(database): rotate Postgres dumps (hourly+daily)"
+        run(["git", "commit", "-m", msg], check=False)
+        _log("Commit OK: " + msg)
+        if do_push:
+            run(["git", "push"], check=False)
+            _log("Push OK")
+    except Exception as exc:  # noqa: BLE001
+        _log(f"git sync warning (ignored): {exc}")
 
 
 def main() -> None:
@@ -126,7 +143,15 @@ def main() -> None:
         action="store_true",
         help="bez konsoli — log do apps/desktop/logs/database-sync.log",
     )
+    ap.add_argument(
+        "--from-bridge",
+        action="store_true",
+        help="wywolanie z mostu: bez commita, bledy nie koncza procesu",
+    )
     args = ap.parse_args()
+    if args.from_bridge:
+        args.no_commit = True
+        args.quiet = True
 
     if args.quiet:
         os.environ["DAM_SYNC_QUIET"] = "1"

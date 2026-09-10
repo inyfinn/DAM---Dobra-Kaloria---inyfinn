@@ -1,10 +1,13 @@
 #!/bin/sh
 # Backup PostgreSQL DAM ETA na Synology (ADR-009).
-# Cron: co godzine. Retencja: 1 plik / dzien, max 72 dni.
+# Cron / most: co godzine. Nazwa z godzina, zeby 24 zrzuty na dobe wspolistnialy.
+# Retencja: 48 plikow godzinowych + 72 zrzuty dzienne.
+# Tylko odtwarzanie po katastrofie. NIE scalac zrzutow miedzy maszynami
+# (users.id SERIAL / audit_log.id BIGSERIAL = kolizja kluczy).
 #
 # Zapis:
-#   /volume1/docker/dam-eta-postgres/DATABASE/dam_eta_YYYY-MM-DD.sql.gz
-#   (opcjonalnie kopia do share Drive, jesli istnieje)
+#   /volume1/docker/dam-eta-postgres/DATABASE/dam_eta_YYYY-MM-DD_HH.sql.gz
+#   /volume1/docker/dam-eta-postgres/DATABASE/dam_eta_YYYY-MM-DD.sql.gz (dzienny)
 #
 # Uruchomienie reczne:
 #   /volume1/docker/dam-eta-postgres/backup-postgres-database.sh
@@ -17,12 +20,14 @@ PGUSER="dam_eta"
 PGDB="dam_eta"
 BASE="/volume1/docker/dam-eta-postgres"
 OUT_DIR="${BASE}/DATABASE"
-MAX_DAYS=72
-TODAY="$(date +%Y-%m-%d)"
-OUT_FILE="${OUT_DIR}/dam_eta_${TODAY}.sql.gz"
+MAX_DAILY=72
+MAX_HOURLY=48
+STAMP_HOUR="$(date +%Y-%m-%d_%H)"
+STAMP_DAY="$(date +%Y-%m-%d)"
+OUT_HOURLY="${OUT_DIR}/dam_eta_${STAMP_HOUR}.sql.gz"
+OUT_DAILY="${OUT_DIR}/dam_eta_${STAMP_DAY}.sql.gz"
 LOG="${OUT_DIR}/backup.log"
 
-# Opcjonalna kopia widoczna w Synology Drive (jesli folder istnieje)
 DRIVE_MIRROR="/volume1/homes/Inyfinn/Drive/DATABASE"
 
 export PATH="${PATH}:/var/packages/ContainerManager/target/usr/bin"
@@ -34,19 +39,20 @@ if ! "${DOCKER_BIN}" ps --format '{{.Names}}' 2>/dev/null | grep -qx "${CONTAINE
   exit 1
 fi
 
-# pg_dump w kontenerze → gzip na hostcie (nadpisuje dzisiejszy plik)
 "${DOCKER_BIN}" exec -t "${CONTAINER}" pg_dump -U "${PGUSER}" -d "${PGDB}" --no-owner --no-acl \
-  | gzip -c > "${OUT_FILE}.tmp"
-mv -f "${OUT_FILE}.tmp" "${OUT_FILE}"
+  | gzip -c > "${OUT_HOURLY}.tmp"
+mv -f "${OUT_HOURLY}.tmp" "${OUT_HOURLY}"
+cp -f "${OUT_HOURLY}" "${OUT_DAILY}"
 
-# Retencja: zostaw max MAX_DAYS plikow (portable — bez head -n -N, BusyBox)
-rotate_dir() {
+rotate_glob() {
   _dir="$1"
-  _count="$(ls -1 "${_dir}"/dam_eta_*.sql.gz 2>/dev/null | wc -l | tr -d ' ')"
+  _glob="$2"
+  _keep="$3"
+  _count="$(ls -1 ${_dir}/${_glob} 2>/dev/null | wc -l | tr -d ' ')"
   _count="${_count:-0}"
-  if [ "${_count}" -gt "${MAX_DAYS}" ]; then
-    _drop=$((_count - MAX_DAYS))
-    ls -1 "${_dir}"/dam_eta_*.sql.gz 2>/dev/null | sort | head -n "${_drop}" | while read -r old; do
+  if [ "${_count}" -gt "${_keep}" ]; then
+    _drop=$((_count - _keep))
+    ls -1 ${_dir}/${_glob} 2>/dev/null | sort | head -n "${_drop}" | while read -r old; do
       [ -n "${old}" ] || continue
       rm -f "${old}"
       echo "$(date '+%Y-%m-%dT%H:%M:%S') rotated away: ${old}" >> "${LOG}"
@@ -54,14 +60,17 @@ rotate_dir() {
   fi
 }
 
-rotate_dir "${OUT_DIR}"
+rotate_glob "${OUT_DIR}" "dam_eta_????-??-??_??.sql.gz" "${MAX_HOURLY}"
+rotate_glob "${OUT_DIR}" "dam_eta_????-??-??.sql.gz" "${MAX_DAILY}"
 
 if [ -d "/volume1/homes/Inyfinn/Drive" ]; then
   mkdir -p "${DRIVE_MIRROR}"
-  cp -f "${OUT_FILE}" "${DRIVE_MIRROR}/"
-  rotate_dir "${DRIVE_MIRROR}"
+  cp -f "${OUT_HOURLY}" "${DRIVE_MIRROR}/"
+  cp -f "${OUT_DAILY}" "${DRIVE_MIRROR}/"
+  rotate_glob "${DRIVE_MIRROR}" "dam_eta_????-??-??_??.sql.gz" "${MAX_HOURLY}"
+  rotate_glob "${DRIVE_MIRROR}" "dam_eta_????-??-??.sql.gz" "${MAX_DAILY}"
 fi
 
-SIZE="$(wc -c < "${OUT_FILE}" | tr -d ' ')"
-echo "$(date -Iseconds) OK ${OUT_FILE} (${SIZE} bytes)" >> "${LOG}"
+SIZE="$(wc -c < "${OUT_HOURLY}" | tr -d ' ')"
+echo "$(date -Iseconds) OK ${OUT_HOURLY} (${SIZE} bytes)" >> "${LOG}"
 exit 0

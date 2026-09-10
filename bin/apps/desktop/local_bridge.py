@@ -46,6 +46,11 @@ Endpoints:
   POST /thumb-override  wybor miniatury -> apps/web/data/thumb-overrides.json
   POST /audit    {"action","user","path","detail",...}
   GET  /audit?limit=100
+  GET  /file-index  pelny file-index.json (gzip gdy Accept-Encoding);
+                    ?fields=viz_latest = lekki wycinek;
+                    ?fields=explorer = produkty bez files_by_role/wizki/viz_latest (first paint)
+  GET  /file-index/product?id=  pelny produkt (pliki rewizji) do openProduct
+  GET  /file-index/viz-latest?index=&revision_path=&product_id=  pojedynczy wiersz viz_latest
   GET  /index/status  mtime file-index + postgres
   POST /index/rebuild  przebudowa indeksu + miniatur (async)
   POST /rename-revision-prefix  kazdy zalogowany: kolejka JSON (tag-proposals).
@@ -188,10 +193,15 @@ try:
 except ImportError:
     dam_debug = None  # type: ignore
 
+try:
+    import dam_semantic_search
+except Exception:  # noqa: BLE001
+    dam_semantic_search = None  # type: ignore
+
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
-BRIDGE_API_VERSION = 9
+BRIDGE_API_VERSION = 10
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
@@ -1454,7 +1464,8 @@ def _index_db_snapshot() -> dict:
         return {"ok": False, "error": "dam_db_missing"}
     try:
         snap = dam_db.ping()
-        snap["online"] = bool(snap.get("ok")) and not snap.get("offline_mode")
+        snap["online"] = bool(snap.get("ok"))
+        snap["writes_ok"] = not bool(snap.get("writes_paused") or snap.get("offline_mode"))
         return snap
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc)}
@@ -1616,6 +1627,13 @@ def _run_index_rebuild() -> None:
                 )
             except Exception as br_exc:  # noqa: BLE001
                 _append_rebuild_log(f"branding_hook_after_index_error {br_exc}")
+            try:
+                warm = _warm_viz_thumbs_from_index(limit=64)
+                _append_rebuild_log(
+                    f"viz_thumb_warm queued={warm.get('queued')} ok={warm.get('ok')}"
+                )
+            except Exception as warm_exc:  # noqa: BLE001
+                _append_rebuild_log(f"viz_thumb_warm_error {warm_exc}")
     except Exception as exc:  # noqa: BLE001
         with _index_lock:
             _index_state["last_ok"] = False
@@ -2656,11 +2674,187 @@ def _pg_available() -> bool:
         return False
 
 
+def _kv_key_or_none(raw: str) -> str | None:
+    key = str(raw or "").strip()
+    return key if key in KV_STORE_KEYS else None
+
+
+def _db_changes_payload(since: str) -> dict:
+    """GET /db/changes - tani SELECT, bez payload. Przy braku PG: szybko db_unavailable."""
+    try:
+        import pg_db
+    except Exception:
+        return {"ok": False, "error": "db_unavailable"}
+    health = pg_db.cached_health()
+    if not health.get("ok"):
+        return {"ok": False, "error": "db_unavailable"}
+    try:
+        return pg_db.kv_changes_since(since)
+    except Exception:
+        return {"ok": False, "error": "db_unavailable"}
+
+
+def _db_kv_get_payload(store_key: str) -> dict:
+    try:
+        import pg_db
+    except Exception:
+        return {"ok": False, "error": "db_unavailable"}
+    health = pg_db.cached_health()
+    if not health.get("ok"):
+        return {"ok": False, "error": "db_unavailable"}
+    try:
+        row = pg_db.kv_get_meta(store_key)
+    except Exception:
+        return {"ok": False, "error": "db_unavailable"}
+    if not row:
+        return {"ok": False, "error": "not_found", "store_key": store_key}
+    return {
+        "ok": True,
+        "store_key": store_key,
+        "payload": row.get("payload"),
+        "updated_at": row.get("updated_at") or "",
+        "updated_by": row.get("updated_by") or "",
+    }
+
+
+def _db_kv_set_payload(
+    store_key: str,
+    payload,
+    *,
+    expected_updated_at: str | None,
+    updated_by: str,
+) -> tuple[int, dict]:
+    dest = WEB_ROOT / "data" / f"{store_key}.json"
+    try:
+        import pg_db
+
+        new_ts = _save_json(
+            dest,
+            payload,
+            expected_updated_at=expected_updated_at,
+            updated_by=updated_by,
+        )
+        return 200, {
+            "ok": True,
+            "store_key": store_key,
+            "updated_at": new_ts or "",
+            "updated_by": updated_by,
+        }
+    except Exception as exc:
+        if exc.__class__.__name__ == "StaleKvVersion":
+            return 409, {
+                "ok": False,
+                "error": "stale_version",
+                "store_key": store_key,
+                "current_updated_at": getattr(exc, "current_updated_at", ""),
+            }
+        return 503, {"ok": False, "error": "writes_paused_db", "detail": str(exc)}
+
+
 _JSON_FILE_CACHE: dict[str, tuple[float, object]] = {}
+_EXPLORER_SLIM_CACHE: dict = {"mtime": None, "raw": None, "gz": None}
+
+_EXPLORER_REV_KEEP = (
+    "folder",
+    "path",
+    "rel",
+    "index",
+    "index_base",
+    "index_rev",
+    "date",
+    "langs",
+    "langs_source",
+    "langs_manual",
+    "carrier",
+    "is_latest",
+    "wizki_count",
+    "in_archive",
+    "archive_wrapper",
+    "carrier_guessed",
+)
+
+
+def _invalidate_explorer_slim_cache() -> None:
+    _EXPLORER_SLIM_CACHE["mtime"] = None
+    _EXPLORER_SLIM_CACHE["raw"] = None
+    _EXPLORER_SLIM_CACHE["gz"] = None
 
 
 def _drop_json_cache(path: Path) -> None:
     _JSON_FILE_CACHE.pop(str(path.resolve()), None)
+    try:
+        if path.resolve() == INDEX_FILE.resolve():
+            _invalidate_explorer_slim_cache()
+    except OSError:
+        pass
+
+
+def _file_index_explorer_slim(data: dict) -> dict:
+    """First-paint explorer catalog: drop files_by_role, wizki lists, viz_latest."""
+    products = []
+    for prod in data.get("products") or []:
+        if not isinstance(prod, dict):
+            continue
+        slim_revs = []
+        for rev in prod.get("revisions") or []:
+            if not isinstance(rev, dict):
+                continue
+            slim_revs.append({k: rev[k] for k in _EXPLORER_REV_KEEP if k in rev})
+        row = {k: prod[k] for k in prod if k not in ("revisions", "related_materials")}
+        row["revisions"] = slim_revs
+        row["files_slim"] = True
+        products.append(row)
+    return {
+        "ok": True,
+        "slim": True,
+        "fields": "explorer",
+        "generated_at": data.get("generated_at"),
+        "product_count": data.get("product_count") or len(products),
+        "category_count": data.get("category_count"),
+        "viz_count": data.get("viz_count"),
+        "roots": data.get("roots"),
+        "root": data.get("root"),
+        "categories": data.get("categories"),
+        "lang_labels": data.get("lang_labels"),
+        "tag_groups": data.get("tag_groups"),
+        "products": products,
+    }
+
+
+def _file_index_product_by_id(data: dict, pid: str) -> dict | None:
+    needle = str(pid or "").strip()
+    if not needle:
+        return None
+    products = data.get("products") or []
+    for prod in products:
+        if isinstance(prod, dict) and str(prod.get("id") or "") == needle:
+            return prod
+    if needle.isdigit():
+        for prod in products:
+            if not isinstance(prod, dict):
+                continue
+            if str(prod.get("index") or "") == needle:
+                return prod
+            bases = [str(x) for x in (prod.get("index_bases") or [])]
+            idxs = [str(x) for x in (prod.get("indexes") or [])]
+            if needle in bases or needle in idxs:
+                return prod
+    return None
+
+
+def _explorer_slim_bytes(data: dict, mtime: float) -> tuple[bytes, bytes | None]:
+    if (
+        _EXPLORER_SLIM_CACHE["mtime"] == mtime
+        and _EXPLORER_SLIM_CACHE["raw"] is not None
+    ):
+        return _EXPLORER_SLIM_CACHE["raw"], _EXPLORER_SLIM_CACHE["gz"]
+    payload = _file_index_explorer_slim(data)
+    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    gz = gzip.compress(raw, compresslevel=6) if len(raw) > 4096 else None
+    _EXPLORER_SLIM_CACHE["mtime"] = mtime
+    _EXPLORER_SLIM_CACHE["raw"] = raw
+    _EXPLORER_SLIM_CACHE["gz"] = gz
+    return raw, gz
 
 
 def _invalidate_branding_data_caches() -> None:
@@ -2692,29 +2886,202 @@ def _load_json(path: Path, default):
         return default
 
 
-def _save_json(path: Path, data) -> None:
-    """Zapis lokalnego cache + (gdy PG skonfigurowany) upsert do dam_kv_store
-    z SELECT ... FOR UPDATE - chroni przed utrata rownoleglych decyzji moderacji."""
+def _save_json(path: Path, data, *, expected_updated_at: str | None = None, updated_by: str = "local_bridge") -> str | None:
+    """Zapis lokalnego cache + (gdy PG skonfigurowany) upsert do dam_kv_store.
+
+    expected_updated_at podany (POST /db/kv): slepy upsert + StaleKvVersion / 409.
+    expected_updated_at is None i path w KV_STORE_KEYS: scalenie merge_document.
+    Pozostale pliki (indeksy, finanse): slepy zapis na dysk, bez PG.
+    Lokalny JSON i cache - po commicie, wynikiem scalenia.
+    """
+    store_key = _path_to_store_key(path)
+    new_ts = None
+    to_write = data
+    if store_key and _pg_available():
+        try:
+            import pg_db
+
+            if expected_updated_at is not None:
+                conn = pg_db.connect()
+                try:
+                    cur = conn.cursor()
+                    pg_db.kv_get_for_update(store_key, None, cur)
+                    new_ts = pg_db.kv_set_in_txn(
+                        store_key,
+                        data,
+                        updated_by or "local_bridge",
+                        cur,
+                        expected_updated_at=expected_updated_at,
+                    )
+                    conn.commit()
+                finally:
+                    conn.close()
+            else:
+                result = pg_db.kv_apply_change(
+                    store_key,
+                    {"op": "merge_document", "payload": data if isinstance(data, dict) else {}},
+                    updated_by=updated_by or "local_bridge",
+                )
+                if not result.get("ok"):
+                    raise RuntimeError(result.get("error") or "kv_apply_change_failed")
+                new_ts = result.get("updated_at") or None
+                if isinstance(result.get("payload"), dict):
+                    to_write = result["payload"]
+        except Exception as exc:
+            if exc.__class__.__name__ == "StaleKvVersion":
+                raise
+            print(f"kv_store save warning ({store_key}):", exc)
     path.parent.mkdir(parents=True, exist_ok=True)
     _drop_json_cache(path)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-    store_key = _path_to_store_key(path)
-    if not store_key or not _pg_available():
-        return
-    try:
-        import pg_db
+    path.write_text(json.dumps(to_write, ensure_ascii=False, indent=2), encoding="utf-8")
+    return new_ts
 
-        conn = pg_db.connect()
-        try:
-            cur = conn.cursor()
-            # Blokada wiersza - druga stacja poczeka zanim nadpisze
-            pg_db.kv_get_for_update(store_key, None, cur)
-            pg_db.kv_set_in_txn(store_key, data, updated_by="local_bridge", cur=cur)
-            conn.commit()
-        finally:
-            conn.close()
-    except Exception as exc:
-        print(f"kv_store save warning ({store_key}):", exc)
+
+# --- Gruby indeks brandingu: zapis poza watkiem zadania ----------------------
+# branding-index.json ma ~48 MB i NIE jest zrodlem prawdy (SoT = SQLite przez
+# assoc_repo.upsert_confirmed_links). Czytanie i przepisywanie go w watku
+# zadania bylo przyczyna zamrozen UI przy dodawaniu skojarzen: json.loads
+# 47,9 MB + json.dumps(indent=2) calosci na KAZDY zapisany asset. Teraz
+# zadanie zglasza latke i wraca, a jeden watek w tle scala wszystkie latki
+# z okna ciszy i zapisuje plik raz, kompaktowo.
+_FAT_ASSOC_QUIET_S = 0.75
+_FAT_ASSOC_MAX_WAIT_S = 10.0
+_FAT_ASSOC_LOCK = threading.Lock()
+_FAT_ASSOC_PENDING: list[dict] = []
+_FAT_ASSOC_WAKE = threading.Event()
+_FAT_ASSOC_THREAD: threading.Thread | None = None
+
+
+def _write_json_compact(path: Path, data) -> None:
+    """Atomowy zapis bez wciec - dla duzych plikow czytanych tylko maszynowo."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    os.replace(tmp, path)
+    # Utrzymaj cache goracy: bez tego nastepny czyt kosztuje ponowny parse 48 MB.
+    try:
+        _JSON_FILE_CACHE[str(path.resolve())] = (path.stat().st_mtime, data)
+    except OSError:
+        _drop_json_cache(path)
+
+
+def _apply_assoc_patch_to_index(
+    patch: dict,
+    assets: list,
+    assets_by_id: dict,
+    file_index: dict,
+) -> None:
+    aid = str(patch.get("asset_id") or "")
+    pids = list(patch.get("linked_product_ids") or [])
+    vids = list(patch.get("linked_variant_ids") or [])
+    group = str(patch.get("folder_group_id") or "").strip().lower()
+    target = assets_by_id.get(aid)
+    if target is None:
+        return
+    if not group:
+        group = str(target.get("folder_group_id") or "").strip().lower()
+    linked_meta = _build_linked_product_meta(pids, file_index)
+
+    def apply_to_asset(a: dict) -> None:
+        a["linked_product_ids"] = list(pids)
+        a["folder_linked_product_ids"] = list(pids)
+        a["linked_products"] = list(linked_meta)
+        if vids:
+            a["linked_variant_ids"] = list(vids)
+            variants = []
+            for vid in vids:
+                va = assets_by_id.get(vid)
+                if not va:
+                    continue
+                variants.append(
+                    {
+                        "id": vid,
+                        "name": va.get("name") or vid,
+                        "path": va.get("path") or "",
+                        "label": va.get("name") or "Plik",
+                        "media_type": va.get("media_type") or "",
+                    }
+                )
+            if variants:
+                a["folder_variants"] = variants
+
+    apply_to_asset(target)
+    if group:
+        for a in assets:
+            ag = str(a.get("folder_group_id") or "").strip().lower()
+            if ag == group:
+                apply_to_asset(a)
+
+
+def _flush_assoc_index_patches() -> int:
+    """Zastosuj wszystkie zgloszone latki i zapisz gruby indeks RAZ."""
+    with _FAT_ASSOC_LOCK:
+        batch = list(_FAT_ASSOC_PENDING)
+        del _FAT_ASSOC_PENDING[:]
+    if not batch:
+        return 0
+    try:
+        idx = _load_json(BRANDING_INDEX_FILE, None)
+        if not isinstance(idx, dict):
+            return 0
+        assets = idx.get("assets") or []
+        assets_by_id = {a.get("id"): a for a in assets if a.get("id")}
+        file_index = _load_json(INDEX_FILE, {"products": []})
+        for patch in batch:
+            try:
+                _apply_assoc_patch_to_index(patch, assets, assets_by_id, file_index)
+            except Exception as exc:  # noqa: BLE001
+                print("assoc fat-index patch warning:", exc)
+        _write_json_compact(BRANDING_INDEX_FILE, idx)
+        return len(batch)
+    except Exception as exc:  # noqa: BLE001
+        print("assoc fat-index flush failed:", exc)
+        return 0
+
+
+def _assoc_index_worker() -> None:
+    while True:
+        _FAT_ASSOC_WAKE.wait()
+        deadline = time.monotonic() + _FAT_ASSOC_MAX_WAIT_S
+        # Okno ciszy: dobierz kolejne latki, zanim ruszysz plik 48 MB.
+        while True:
+            _FAT_ASSOC_WAKE.clear()
+            time.sleep(_FAT_ASSOC_QUIET_S)
+            if not _FAT_ASSOC_WAKE.is_set() or time.monotonic() >= deadline:
+                break
+        _flush_assoc_index_patches()
+
+
+def _enqueue_assoc_index_patch(
+    asset_id: str,
+    folder_group_id: str,
+    linked_product_ids: list,
+    linked_variant_ids: list | None,
+) -> None:
+    global _FAT_ASSOC_THREAD
+    with _FAT_ASSOC_LOCK:
+        _FAT_ASSOC_PENDING.append(
+            {
+                "asset_id": str(asset_id or ""),
+                "folder_group_id": str(folder_group_id or ""),
+                "linked_product_ids": list(linked_product_ids or []),
+                "linked_variant_ids": list(linked_variant_ids or []),
+            }
+        )
+        if _FAT_ASSOC_THREAD is None or not _FAT_ASSOC_THREAD.is_alive():
+            _FAT_ASSOC_THREAD = threading.Thread(
+                target=_assoc_index_worker, name="dam-assoc-index", daemon=True
+            )
+            _FAT_ASSOC_THREAD.start()
+    _FAT_ASSOC_WAKE.set()
+
+
+try:  # zamkniecie procesu nie moze zgubic zgloszonych latek
+    import atexit as _atexit
+
+    _atexit.register(_flush_assoc_index_patches)
+except Exception:  # noqa: BLE001
+    pass
 
 
 def _parse_csv_text(text: str) -> list[dict[str, str]]:
@@ -3079,12 +3446,24 @@ def _patch_branding_metadata(asset_id: str, field: str, value) -> tuple[bool, st
 
 def _resolve_viz_thumb(product_id: str, file_index: dict) -> str:
     """Sciezka zrodlowa wizki (UI buduje /thumb-cache AVIF). Bez legacy data/thumbs JPG."""
+    pid = (product_id or "").strip()
+    if pid:
+        for row in file_index.get("viz_latest") or []:
+            if not isinstance(row, dict):
+                continue
+            if str(row.get("product_id") or "") == pid and row.get("path"):
+                return str(row["path"])
     products_by_id = {p.get("id"): p for p in (file_index.get("products") or []) if p.get("id")}
     p = products_by_id.get(product_id) or {}
     for rev in p.get("revisions") or []:
+        rp = (rev.get("path") or "").strip()
+        if rp:
+            hit = _lookup_viz_path_from_index(rp, file_index)
+            if hit:
+                return hit
         for key in ("viz_path", "thumb_path", "path"):
             vp = rev.get(key) or ""
-            if vp and re.search(r"\.(jpe?g|png|webp|gif|tif{1,2})$", vp, re.I):
+            if vp and _VIZ_IMAGE_EXT.search(str(vp)):
                 return str(vp)
     return ""
 
@@ -3162,55 +3541,8 @@ def _patch_branding_associations(
     except Exception as exc:  # noqa: BLE001
         return False, f"assoc_sqlite:{exc}"
 
-    # Best-effort fat index patch for offline consumers (not SoT)
-    idx = _load_json(BRANDING_INDEX_FILE, None)
-    if isinstance(idx, dict):
-        assets = idx.get("assets") or []
-        target = None
-        for a in assets:
-            if a.get("id") == aid:
-                target = a
-                break
-        if target is not None:
-            if not group:
-                group = str(target.get("folder_group_id") or "").strip().lower()
-            file_index = _load_json(INDEX_FILE, {"products": []})
-            linked_meta = _build_linked_product_meta(pids, file_index)
-            assets_by_id = {a.get("id"): a for a in assets if a.get("id")}
-
-            def apply_to_asset(a: dict) -> None:
-                a["linked_product_ids"] = list(pids)
-                a["folder_linked_product_ids"] = list(pids)
-                a["linked_products"] = list(linked_meta)
-                if vids:
-                    a["linked_variant_ids"] = list(vids)
-                    variants = []
-                    for vid in vids:
-                        va = assets_by_id.get(vid)
-                        if not va:
-                            continue
-                        variants.append(
-                            {
-                                "id": vid,
-                                "name": va.get("name") or vid,
-                                "path": va.get("path") or "",
-                                "label": va.get("name") or "Plik",
-                                "media_type": va.get("media_type") or "",
-                            }
-                        )
-                    if variants:
-                        a["folder_variants"] = variants
-
-            apply_to_asset(target)
-            if group:
-                for a in assets:
-                    ag = str(a.get("folder_group_id") or "").strip().lower()
-                    if ag == group:
-                        apply_to_asset(a)
-            try:
-                _save_json(BRANDING_INDEX_FILE, idx)
-            except Exception:
-                pass
+    # Fat index (48 MB) is not SoT - patch it off the request thread.
+    _enqueue_assoc_index_patch(aid, group, pids, vids)
     return True, None
 
 
@@ -6070,16 +6402,174 @@ def _resolve_missing_media_path(raw: str) -> str | None:
     return _resolve_marketing_basename_drift(raw)
 
 
-def _coerce_media_target(path: str) -> str:
-    """Exact path, or fuzzy resolve when index drifted after revision rename."""
-    target = normalize_path(path)
+_VIZ_IMAGE_EXT = re.compile(r"\.(jpe?g|png|webp|gif|tif{1,2})$", re.I)
+
+
+def _norm_path_key(p: str) -> str:
+    return normalize_path(p or "").replace("\\", "/").lower().rstrip("/")
+
+
+def _lookup_viz_path_from_index(raw: str, file_index: dict | None = None) -> str:
+    """Map revision folder / index / drifted path → viz_latest.path (FRONT-S RGB)."""
+    if not raw:
+        return ""
+    fi = file_index if isinstance(file_index, dict) else _load_json(INDEX_FILE, {})
+    if not fi:
+        return ""
+    key = _norm_path_key(raw)
+    idx_hint = ""
+    m = re.search(r"(6\d{6}|69\d{5})\.\d{2}", raw)
+    if m:
+        idx_hint = m.group(0)
+    base_hint = idx_hint.split(".")[0] if idx_hint else ""
+    best = ""
+    best_score = -1
+    for row in fi.get("viz_latest") or []:
+        if not isinstance(row, dict):
+            continue
+        vp = str(row.get("path") or "")
+        if not vp or not _VIZ_IMAGE_EXT.search(vp):
+            continue
+        rp = str(row.get("revision_path") or "")
+        rpk = _norm_path_key(rp)
+        vpk = _norm_path_key(vp)
+        score = 0
+        if key and key == vpk:
+            score = 100
+        elif key and rpk and (key == rpk or key.startswith(rpk + "/") or rpk.startswith(key)):
+            score = 90
+        elif idx_hint and str(row.get("index") or "") == idx_hint:
+            score = 80
+        elif base_hint and str(row.get("index_base") or "") == base_hint:
+            score = 70
+        elif idx_hint and idx_hint in key and idx_hint in vpk:
+            score = 60
+        if score > best_score:
+            best_score = score
+            best = vp
+    if best:
+        resolved = normalize_path(best)
+        try:
+            if os.path.isfile(resolved):
+                return resolved
+        except OSError:
+            pass
+    return ""
+
+
+def _scan_revision_folder_viz(rev_dir: str) -> str:
+    """Last resort: walk revision 4-WIZKI for FRONT-S png/jpg."""
+    root = Path(normalize_path(rev_dir))
+    try:
+        if not root.is_dir():
+            return ""
+    except OSError:
+        return ""
+    candidates: list[tuple[int, str, float]] = []
+    for slot in ("4 - WIZKI", "4 - VISUALS"):
+        vr = root / slot
+        if not vr.is_dir():
+            continue
+        try:
+            for hit in vr.rglob("*"):
+                try:
+                    if not hit.is_file():
+                        continue
+                except OSError:
+                    continue
+                if hit.suffix.lower() not in {
+                    ".png",
+                    ".jpg",
+                    ".jpeg",
+                    ".webp",
+                    ".gif",
+                    ".tif",
+                    ".tiff",
+                }:
+                    continue
+                name = hit.name.upper()
+                tier = 9
+                if "FRONT-S" in name or "ENFACE-S" in name:
+                    tier = 0
+                elif "FRONT" in name and "SKLEP" not in name:
+                    tier = 2
+                elif "FRONT" in name:
+                    tier = 3
+                try:
+                    mt = hit.stat().st_mtime
+                except OSError:
+                    mt = 0.0
+                candidates.append((tier, str(hit), mt))
+        except OSError:
+            continue
+    if not candidates:
+        return ""
+    candidates.sort(key=lambda x: (x[0], -x[2]))
+    return candidates[0][1]
+
+
+def _resolve_viz_image_for_thumb(path: str) -> str:
+    """Thumb-cache/media: file path, revision folder, or index drift → raster viz file."""
+    raw = (path or "").strip()
+    if not raw:
+        return ""
+    target = normalize_path(raw)
     try:
         if os.path.isfile(target):
             return target
     except OSError:
         pass
+    from_index = _lookup_viz_path_from_index(raw)
+    if from_index:
+        return from_index
+    try:
+        if os.path.isdir(target):
+            scanned = _scan_revision_folder_viz(target)
+            if scanned:
+                return scanned
+    except OSError:
+        pass
     resolved = _resolve_missing_media_path(target)
-    return resolved or target
+    if resolved:
+        try:
+            if os.path.isfile(resolved):
+                return resolved
+        except OSError:
+            pass
+    return target
+
+
+def _warm_viz_thumbs_from_index(limit: int = 48) -> dict:
+    """Podgrzej PAMIEC-PODRECZNA dla najnowszych viz_latest po rebuild indeksu."""
+    if not dam_thumb_cache:
+        return {"ok": False, "error": "dam_thumb_cache_missing"}
+    fi = _load_json(INDEX_FILE, {})
+    paths: list[str] = []
+    seen: set[str] = set()
+    for row in fi.get("viz_latest") or []:
+        if not isinstance(row, dict):
+            continue
+        p = str(row.get("path") or "").strip()
+        if not p or p in seen:
+            continue
+        seen.add(p)
+        paths.append(p)
+        if len(paths) >= max(1, int(limit)):
+            break
+
+    def _resolve(p: str, _email: str = "") -> str:
+        return _resolve_viz_image_for_thumb(p)
+
+    return dam_thumb_cache.warm_paths(
+        paths,
+        profile="grid",
+        resolve_physical=_resolve,
+    )
+
+
+def _coerce_media_target(path: str) -> str:
+    """Exact file, revision folder → viz raster, or fuzzy resolve after rename."""
+    return _resolve_viz_image_for_thumb(path)
 
 
 def serve_media(path: str, preview: bool = False, matte: bool = False) -> tuple[int, bytes, str]:
@@ -6259,7 +6749,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Encoding", encoding)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _bytes(self, code: int, body: bytes, content_type: str):
         self.send_response(code)
@@ -6278,6 +6769,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(204)
         self._cors()
         self.end_headers()
+
+    def do_HEAD(self):  # noqa: N802
+        self.do_GET()
 
     def _bearer(self) -> str:
         auth = self.headers.get("Authorization") or ""
@@ -6357,6 +6851,52 @@ class Handler(BaseHTTPRequestHandler):
             return None
         return user
 
+    def _require_lifecycle_writer(self) -> dict | None:
+        """Status F/X/D na dysku: admin, power_user lub grupa Graficy (notification-groups grafik)."""
+        user = self._require_login()
+        if user is None:
+            return None
+        role = (user.get("role") or "").strip().lower()
+        if role in ("admin", "power_user"):
+            return user
+        email = str(user.get("email") or "").strip().lower()
+        if email:
+            for g in load_notification_group("grafik"):
+                gemail = str((g or {}).get("email") or "").strip().lower()
+                if gemail and gemail == email:
+                    return user
+        self._json(
+            403,
+            {
+                "ok": False,
+                "error": "lifecycle_writer_required",
+                "hint": (
+                    "Zmiana statusu F/X/D wymaga roli admin lub power_user "
+                    "albo czlonkostwa w grupie Graficy."
+                ),
+            },
+        )
+        return None
+
+    def _reject_unless_db_online(self) -> bool:
+        """True = already responded (blocked). Cache thumbs are not a DB."""
+        hint = "Zapis wstrzymany - baza"
+        if not dam_db:
+            self._json(403, {"ok": False, "error": "db_unavailable", "hint": hint})
+            return True
+        gate = dam_db.allows_mutations()
+        if gate.get("ok"):
+            return False
+        self._json(
+            403,
+            {
+                "ok": False,
+                "error": gate.get("error") or "db_required",
+                "hint": hint,
+            },
+        )
+        return True
+
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)
         # OAuth callback moze przyjsc z Origin zewnetrznego IdP - nie blokuj.
@@ -6415,6 +6955,7 @@ class Handler(BaseHTTPRequestHandler):
                         "/branding/asset",
                         "/assoc/queue",
                         "/branding-search-index",
+                        "/search/semantic",
                         "/product-catalog",
                         "/bulk-packaging",
                         "/branding/status",
@@ -6531,6 +7072,120 @@ class Handler(BaseHTTPRequestHandler):
             limit = int((qs.get("limit") or ["100"])[0])
             self._json(200, {"ok": True, "items": read_audit(max(1, min(limit, 500)))})
             return
+        if parsed.path == "/file-index/viz-latest":
+            qs = parse_qs(parsed.query)
+            index = (qs.get("index") or [""])[0].strip()
+            revision_path = (qs.get("revision_path") or qs.get("path") or [""])[0].strip()
+            product_id = (qs.get("product_id") or [""])[0].strip()
+            fi = _load_json(INDEX_FILE, {})
+            hit: dict | None = None
+            idx_base = index.split(".")[0] if index else ""
+            for row in fi.get("viz_latest") or []:
+                if not isinstance(row, dict):
+                    continue
+                if product_id and str(row.get("product_id") or "") != product_id:
+                    continue
+                if index and str(row.get("index") or "") != index:
+                    if not idx_base or str(row.get("index_base") or "") != idx_base:
+                        continue
+                if revision_path:
+                    rp = _norm_path_key(str(row.get("revision_path") or ""))
+                    qk = _norm_path_key(revision_path)
+                    if rp and qk and rp != qk and not qk.startswith(rp):
+                        continue
+                hit = row
+                break
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "row": hit,
+                    "path": (hit or {}).get("path") or "",
+                    "index_path": str(INDEX_FILE),
+                },
+            )
+            return
+        if parsed.path == "/file-index/product":
+            if not INDEX_FILE.is_file():
+                self._json(
+                    404,
+                    {"ok": False, "error": "file_index_missing", "path": str(INDEX_FILE)},
+                )
+                return
+            qs = parse_qs(parsed.query)
+            pid = (qs.get("id") or qs.get("product_id") or [""])[0].strip()
+            data = _load_json(INDEX_FILE, {})
+            hit = _file_index_product_by_id(data, pid)
+            if not hit:
+                self._json(404, {"ok": False, "error": "product_not_found", "id": pid})
+                return
+            self._json(200, {"ok": True, "product": hit})
+            return
+        if parsed.path == "/file-index":
+            if not INDEX_FILE.is_file():
+                self._json(
+                    404,
+                    {"ok": False, "error": "file_index_missing", "path": str(INDEX_FILE)},
+                )
+                return
+            qs = parse_qs(parsed.query)
+            fields = (qs.get("fields") or [""])[0].strip().lower()
+            try:
+                if fields == "viz_latest":
+                    data = _load_json(INDEX_FILE, {})
+                    self._json(
+                        200,
+                        {
+                            "ok": True,
+                            "generated_at": data.get("generated_at"),
+                            "product_count": data.get("product_count"),
+                            "viz_count": data.get("viz_count"),
+                            "viz_latest": data.get("viz_latest") or [],
+                        },
+                    )
+                    return
+                if fields == "explorer":
+                    data = _load_json(INDEX_FILE, {})
+                    st = INDEX_FILE.stat()
+                    raw, gz = _explorer_slim_bytes(data, st.st_mtime)
+                    accept = (self.headers.get("Accept-Encoding") or "").lower()
+                    body = gz if (gz and "gzip" in accept) else raw
+                    self.send_response(200)
+                    self._cors()
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    if body is gz:
+                        self.send_header("Content-Encoding", "gzip")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.send_header("X-Dam-Index-Mtime", str(int(st.st_mtime)))
+                    self.send_header("X-Dam-Index-Fields", "explorer")
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
+                body = INDEX_FILE.read_bytes()
+                accept = (self.headers.get("Accept-Encoding") or "").lower()
+                st = INDEX_FILE.stat()
+                if "gzip" in accept and len(body) > 4096:
+                    body = gzip.compress(body)
+                    self.send_response(200)
+                    self._cors()
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Encoding", "gzip")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.send_header("X-Dam-Index-Mtime", str(int(st.st_mtime)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
+                self.send_response(200)
+                self._cors()
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("X-Dam-Index-Mtime", str(int(st.st_mtime)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            except OSError as exc:
+                self._json(500, {"ok": False, "error": "file_index_read_failed", "detail": str(exc)})
+                return
         if parsed.path == "/index/status":
             self._json(200, index_status())
             return
@@ -6570,6 +7225,19 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/db/ping":
             self._json(200, dam_db.ping() if dam_db else {"ok": False, "error": "dam_db_missing"})
+            return
+        if parsed.path == "/db/changes":
+            qs = parse_qs(parsed.query)
+            since = (qs.get("since") or [""])[0]
+            self._json(200, _db_changes_payload(since))
+            return
+        if parsed.path == "/db/kv":
+            qs = parse_qs(parsed.query)
+            key = _kv_key_or_none((qs.get("key") or [""])[0])
+            if not key:
+                self._json(400, {"ok": False, "error": "store_key_required"})
+                return
+            self._json(200, _db_kv_get_payload(key))
             return
         if parsed.path == "/db/path":
             if not dam_db:
@@ -6682,8 +7350,11 @@ class Handler(BaseHTTPRequestHandler):
             if meta.get("digest"):
                 self.send_header("X-Dam-Thumb-Digest", str(meta.get("digest")))
             self.send_header("X-Dam-Thumb-Hit", "1" if meta.get("cache_hit") else "0")
+            src = str(meta.get("thumb_source") or ("cache" if meta.get("cache_hit") else "original"))
+            self.send_header("X-DAM-Thumb-Source", src)
             self.end_headers()
-            self.wfile.write(body)
+            if self.command != "HEAD":
+                self.wfile.write(body)
             return
         if parsed.path == "/media":
             # Miniatury w <img src> nie moga wyslac Authorization - localhost + jail Marketing
@@ -7062,6 +7733,65 @@ class Handler(BaseHTTPRequestHandler):
                     (qs.get("revision_path") or [""])[0],
                 ),
             )
+            return
+        if parsed.path == "/search/semantic":
+            qs = parse_qs(parsed.query or "")
+            q = (qs.get("q") or [""])[0]
+            try:
+                limit = int((qs.get("limit") or ["80"])[0] or "80")
+            except ValueError:
+                limit = 80
+            limit = max(1, min(limit, 500))
+            if dam_semantic_search is None:
+                self._json(
+                    503,
+                    {
+                        "ok": False,
+                        "error": "semantic_unavailable",
+                        "detail": "Moduł wyszukiwania semantycznego nie jest dostępny.",
+                        "hits": [],
+                    },
+                )
+                return
+            try:
+                out = dam_semantic_search.search(q, limit=limit)
+            except FileNotFoundError as exc:
+                self._json(
+                    503,
+                    {
+                        "ok": False,
+                        "error": "semantic_data_missing",
+                        "detail": "Brak pliku danych wyszukiwania: " + str(exc),
+                        "hits": [],
+                    },
+                )
+                return
+            except Exception as exc:  # noqa: BLE001
+                self._json(
+                    500,
+                    {
+                        "ok": False,
+                        "error": "semantic_search_failed",
+                        "detail": str(exc),
+                        "hits": [],
+                    },
+                )
+                return
+            if not isinstance(out, dict):
+                self._json(
+                    500,
+                    {
+                        "ok": False,
+                        "error": "semantic_bad_payload",
+                        "detail": "Wyszukiwanie semantyczne zwróciło nieprawidłową odpowiedź.",
+                        "hits": [],
+                    },
+                )
+                return
+            if not out.get("ok"):
+                self._json(503, out)
+                return
+            self._json(200, out)
             return
         if parsed.path == "/branding-search-index":
             data = _load_json(BRANDING_SEARCH_INDEX_FILE, None)
@@ -7796,8 +8526,10 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/lifecycle-status":
-            user = self._require_admin()
+            user = self._require_lifecycle_writer()
             if user is None:
+                return
+            if self._reject_unless_db_online():
                 return
             if lifecycle_status_mod is None:
                 self._json(500, {"ok": False, "error": "lifecycle_module_missing"})
@@ -8432,6 +9164,28 @@ class Handler(BaseHTTPRequestHandler):
             pull_dump = bool(data.get("pull_dump") or data.get("github") or False)
             self._json(200, dam_db.force_reconnect(pull_dump=pull_dump))
             return
+        if parsed.path == "/db/kv":
+            user = self._require_login()
+            if user is None:
+                return
+            key = _kv_key_or_none(str((data or {}).get("store_key") or (data or {}).get("key") or ""))
+            if not key:
+                self._json(400, {"ok": False, "error": "store_key_required"})
+                return
+            if "payload" not in (data or {}):
+                self._json(400, {"ok": False, "error": "payload_required"})
+                return
+            code, body = _db_kv_set_payload(
+                key,
+                data.get("payload"),
+                expected_updated_at=str(
+                    data.get("updated_at") or data.get("expected_updated_at") or ""
+                )
+                or None,
+                updated_by=str(user.get("email") or user.get("name") or "local_bridge"),
+            )
+            self._json(code, body)
+            return
         if parsed.path == "/db/prefer":
             if self._require_admin() is None:
                 return
@@ -8473,6 +9227,147 @@ def _tag_proposal_watcher() -> None:
         except Exception as exc:
             print("tag-proposals watcher error:", exc)
         time.sleep(15 * 60)
+
+
+def _pg_dump_python(conn) -> bytes:
+    """Logiczny zrzut COPY (odtwarzanie po katastrofie, nie merge)."""
+    from io import StringIO
+
+    buf = StringIO()
+    buf.write("-- DAM ETA hourly dump (psycopg2 COPY). Disaster recovery only.\n")
+    buf.write("-- Do not merge dumps from two machines (SERIAL keys collide).\n")
+    for table in ("users", "device_sessions", "audit_log", "dam_kv_store"):
+        buf.write(f"TRUNCATE {table} CASCADE;\n")
+        copy_buf = StringIO()
+        cur = conn.cursor()
+        cur.copy_expert(f"COPY {table} TO STDOUT", copy_buf)
+        buf.write(f"COPY {table} FROM stdin;\n")
+        buf.write(copy_buf.getvalue())
+        buf.write("\\.\n")
+    return gzip.compress(buf.getvalue().encode("utf-8"))
+
+
+def _write_hourly_dump_bytes(raw_gz: bytes, when=None) -> list[Path]:
+    """Jeden przebieg zapisuje plik godzinowy i dzienny. Nigdy nie podklada pliku
+    "poprzedniej godziny" - dwa pliki z ta sama sekunda to falszywy dowod na to,
+    ze harmonogram dziala."""
+    from datetime import datetime as _dt, timezone as _tz
+
+    stamp = when or _dt.now(_tz.utc).astimezone()
+    out_dir = DESKTOP_DIR.parent.parent / "DATABASE"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    hourly = out_dir / f"dam_eta_{stamp.strftime('%Y-%m-%d_%H')}.sql.gz"
+    daily = out_dir / f"dam_eta_{stamp.strftime('%Y-%m-%d')}.sql.gz"
+    hourly.write_bytes(raw_gz)
+    daily.write_bytes(raw_gz)
+    return [hourly, daily]
+
+
+def _pg_backup_interval_s() -> float:
+    raw = (os.environ.get("DAM_PG_BACKUP_INTERVAL_S") or "").strip()
+    try:
+        n = float(raw) if raw else 3600.0
+    except ValueError:
+        n = 3600.0
+    if n <= 0:
+        n = 3600.0
+    return n
+
+
+def _pg_backup_log_path() -> Path:
+    return DESKTOP_DIR.parent.parent / "DATABASE" / "pg-backup-watcher.log"
+
+
+def _pg_backup_log(msg: str) -> None:
+    from datetime import datetime as _dt
+
+    line = f"{_dt.now().isoformat(timespec='seconds')} {msg}"
+    print("pg hourly backup:", msg, flush=True)
+    try:
+        p = _pg_backup_log_path()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with p.open("a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+    except OSError:
+        pass
+
+
+def run_hourly_pg_backup() -> dict:
+    """Zrzut godzinowy z procesu mostu (watek, nie blokuje HTTP)."""
+    try:
+        import pg_db
+
+        health: dict = {}
+        for _attempt in range(6):
+            health = pg_db.cached_health()
+            if not health.get("ok"):
+                try:
+                    pg_db.ping_live()
+                except Exception as exc:  # noqa: BLE001
+                    health = {"ok": False, "error": str(exc)}
+                else:
+                    health = pg_db.cached_health()
+            if health.get("ok"):
+                break
+            time.sleep(2)
+        if not health.get("ok"):
+            _pg_backup_log(f"skip health_pending={health}")
+            return {"ok": False, "error": "health_pending", "health": health}
+        conn = pg_db.connect()
+        try:
+            raw = _pg_dump_python(conn)
+        finally:
+            conn.close()
+        paths = _write_hourly_dump_bytes(raw)
+        return {
+            "ok": True,
+            "files": [str(p.name) for p in paths],
+            "bytes": len(raw),
+        }
+    except Exception as exc:  # noqa: BLE001
+        _pg_backup_log(f"warning {exc}")
+        return {"ok": False, "error": str(exc)}
+
+
+def _pg_backup_git_sync() -> None:
+    script = DESKTOP_DIR / "scripts" / "sync-database-backups-to-git.py"
+    if not script.is_file():
+        return
+    try:
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
+        subprocess.run(
+            [sys.executable, str(script), "--from-bridge", "--skip-pull", "--no-commit", "--quiet"],
+            cwd=str(DESKTOP_DIR),
+            timeout=120,
+            check=False,
+            creationflags=flags,
+        )
+    except Exception as exc:  # noqa: BLE001
+        print("pg backup git sync warning:", exc)
+
+
+def _pg_backup_watcher() -> None:
+    """Co godzine (albo DAM_PG_BACKUP_INTERVAL_S). Watek mostu, nie supervisor UI.
+    Git sync w osobnym watku, nigdy nie wywala mostu.
+    Zimny start: pierwszy zrzut nie ginie po cichu - log skip/ok jest zawsze."""
+    interval = _pg_backup_interval_s()
+    _pg_backup_log(f"watcher_start interval_s={interval}")
+    time.sleep(min(8.0, max(2.0, interval)))
+    while True:
+        try:
+            result = run_hourly_pg_backup()
+            if result.get("ok"):
+                _pg_backup_log(f"ok files={result.get('files')} bytes={result.get('bytes')}")
+                threading.Thread(
+                    target=_pg_backup_git_sync,
+                    daemon=True,
+                    name="dam-pg-backup-git",
+                ).start()
+            else:
+                _pg_backup_log(f"skip {result}")
+        except Exception as exc:  # noqa: BLE001
+            _pg_backup_log(f"watcher_error {exc}")
+        time.sleep(interval)
 
 
 def _kv_cache_watcher() -> None:
@@ -8571,6 +9466,7 @@ def main() -> None:
             print("dam_debug:", exc)
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     threading.Thread(target=_kv_cache_watcher, daemon=True).start()
+    threading.Thread(target=_pg_backup_watcher, daemon=True, name="dam-pg-backup").start()
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"DAM local bridge http://{HOST}:{PORT}")
     try:

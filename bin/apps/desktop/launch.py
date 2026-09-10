@@ -23,7 +23,7 @@ if str(_DESKTOP_BOOT) not in sys.path:
     sys.path.insert(0, str(_DESKTOP_BOOT))
 
 from bridge_supervisor import BridgeSupervisor, LOCAL_BRIDGE
-from dam_ui_http import make_handler_class, prepare_runtime
+from dam_ui_http import ThreadingReusableTCPServer, make_handler_class, prepare_runtime
 from runtime_config import (
     APP_TITLE,
     DEFAULT_BRIDGE_PORT,
@@ -222,10 +222,6 @@ def acquire_single_instance() -> bool:
         return True
 
 
-class ReusableTCPServer(socketserver.TCPServer):
-    allow_reuse_address = True
-
-
 def start_index_watcher() -> subprocess.Popen | None:
     """DEPRECATED: watcher owned by bridge index_supervisor (singleton).
 
@@ -242,7 +238,7 @@ def start_ui_server(
 ) -> tuple[socketserver.TCPServer, threading.Thread]:
     runtime = prepare_runtime(ui_port, bridge_port)
     Handler = make_handler_class(runtime, supervisor)
-    httpd = ReusableTCPServer((HOST, ui_port), Handler)
+    httpd = ThreadingReusableTCPServer((HOST, ui_port), Handler)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     thread.start()
     return httpd, thread

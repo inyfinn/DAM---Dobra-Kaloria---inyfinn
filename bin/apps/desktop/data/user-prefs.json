@@ -5,7 +5,11 @@
         "safe_delete": true,
         "branding_page_size": 100,
         "card_zoom": 100,
-        "assoc_split": {},
+        "assoc_split": {
+          "cynamonka-nerkowcowy": 0.2,
+          "banoffee-kakao-deserowe": 0.398,
+          "tiramisu-czekolada-kakao-deserowe": 0.415
+        },
         "explorer_show_all": false,
         "explorer_lang_filter": "",
         "explorer_viz_view": "tiles",
@@ -13,7 +17,7 @@
         "reveal_low_tags": false,
         "sidebar_collapsed": false
       },
-      "updated_at": "2026-08-12T07:16:55.160570+00:00"
+      "updated_at": "2026-09-10T14:31:26.582899+00:00"
     }
   }
 }

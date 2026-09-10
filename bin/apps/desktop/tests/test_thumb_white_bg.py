@@ -10,7 +10,7 @@ DESKTOP = Path(__file__).resolve().parents[1]
 if str(DESKTOP) not in sys.path:
     sys.path.insert(0, str(DESKTOP))
 
-from dam_thumb_cache import _encode_thumb, _flatten_white, thumb_key  # noqa: E402
+from dam_thumb_cache import MAX_THUMB_BYTES, _encode_thumb, _flatten_white, thumb_key  # noqa: E402
 
 
 def test_flatten_rgba_white():
@@ -39,6 +39,10 @@ def test_encode_avif_no_alpha():
         assert ctype in ("image/avif", "image/jpeg")
         with Image.open(path) as got:
             assert "A" not in got.getbands()
+            assert got.mode == "RGB"
+            assert path.stat().st_size <= MAX_THUMB_BYTES
+            assert not got.info.get("icc_profile")
+            assert not got.info.get("exif")
             # corners white (or near-white after lossy)
             px = got.convert("RGB").getpixel((0, 0))
             assert all(c >= 240 for c in px), px

@@ -57,3 +57,20 @@ CREATE TABLE IF NOT EXISTS dam_kv_store (
   updated_at TEXT NOT NULL,
   updated_by TEXT NOT NULL DEFAULT ''
 );
+
+CREATE INDEX IF NOT EXISTS dam_kv_store_updated_at_idx ON dam_kv_store (updated_at);
+
+-- Przeglad sprzecznosci przy scalaniu dokumentow wspoldzielonych (ADR-009).
+CREATE TABLE IF NOT EXISTS dam_kv_merge_review (
+  id BIGSERIAL PRIMARY KEY,
+  store_key TEXT NOT NULL,
+  field TEXT NOT NULL DEFAULT '',
+  item_key TEXT NOT NULL DEFAULT '',
+  kept JSONB,
+  overwritten JSONB,
+  updated_by TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS dam_kv_merge_review_store_idx
+  ON dam_kv_merge_review (store_key, created_at DESC);

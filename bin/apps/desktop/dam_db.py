@@ -861,66 +861,69 @@ def pull_database_dump_now() -> dict[str, Any]:
 
 
 def ping() -> dict[str, Any]:
-    """Lekki test polaczenia (bez COUNT, bez pelnego init_db przy kazdym poll)."""
+    """Lekki status: cache zdrowia PG, bez connect() na sciezce HTTP."""
     t0 = time.time()
+    pg_ok = False
+    pg_host = None
+    pg_err = ""
     try:
-        if _should_try_postgres():
+        if synology_allowed() and pg_configured():
             import pg_db
 
-            pg = pg_db.ping()
-            latency = round((time.time() - t0) * 1000, 1)
-            if pg.get("ok"):
+            snap = pg_db.cached_health()
+            pg_ok = bool(snap.get("ok"))
+            pg_host = snap.get("host")
+            pg_err = str(snap.get("error") or "")
+            if pg_ok:
                 _leave_offline()
-                return {
-                    "ok": True,
-                    "engine": "postgres",
-                    "host": pg_db.last_host(),
-                    "latency_ms": latency,
-                    "offline_mode": False,
-                }
-            _enter_offline(str(pg.get("error") or "postgres_ping_failed"))
+            elif snap.get("error") not in (None, "", "health_pending"):
+                _enter_offline(pg_err or "postgres_ping_failed")
+    except Exception as exc:  # noqa: BLE001
+        pg_err = str(exc)
+        try:
+            if synology_allowed() and pg_configured():
+                _enter_offline(pg_err)
+        except Exception:
+            pass
+    latency = round((time.time() - t0) * 1000, 1)
+    if pg_ok:
+        return {
+            "ok": True,
+            "engine": "postgres",
+            "host": pg_host,
+            "latency_ms": latency,
+            "offline_mode": False,
+            "writes_paused": False,
+            "write_block_reason": "",
+        }
+    try:
         conn = _connect_sqlite()
         try:
             conn.execute("SELECT 1").fetchone()
         finally:
             conn.close()
-        engine = "sqlite-offline" if _OFFLINE_MODE else "sqlite"
+        writes_paused = bool(synology_allowed() and pg_configured() and not pg_ok)
         return {
             "ok": True,
-            "engine": engine,
-            "latency_ms": round((time.time() - t0) * 1000, 1),
-            "offline_mode": _OFFLINE_MODE,
+            "engine": "sqlite-offline" if writes_paused or _OFFLINE_MODE else "sqlite",
+            "latency_ms": latency,
+            "offline_mode": writes_paused or _OFFLINE_MODE,
+            "writes_paused": writes_paused,
+            "write_block_reason": "Zapis wstrzymany - baza" if writes_paused else "",
             "path": str(db_path()),
-            "synology_reachable": False if _OFFLINE_MODE else None,
+            "synology_reachable": False if writes_paused else None,
+            "error": pg_err or None,
         }
-    except Exception as exc:  # noqa: BLE001
-        try:
-            if synology_allowed() and pg_configured():
-                _enter_offline(str(exc))
-        except Exception:
-            pass
-        try:
-            conn = _connect_sqlite()
-            try:
-                conn.execute("SELECT 1").fetchone()
-            finally:
-                conn.close()
-            return {
-                "ok": True,
-                "engine": "sqlite-offline",
-                "latency_ms": round((time.time() - t0) * 1000, 1),
-                "offline_mode": True,
-                "path": str(db_path()),
-                "error": str(exc),
-            }
-        except Exception as exc2:  # noqa: BLE001
-            return {
-                "ok": False,
-                "engine": engine_name(),
-                "error": str(exc2),
-                "latency_ms": round((time.time() - t0) * 1000, 1),
-                "offline_mode": _OFFLINE_MODE,
-            }
+    except Exception as exc2:  # noqa: BLE001
+        return {
+            "ok": False,
+            "engine": engine_name(),
+            "error": str(exc2),
+            "latency_ms": latency,
+            "offline_mode": _OFFLINE_MODE,
+            "writes_paused": True,
+            "write_block_reason": "Zapis wstrzymany - baza",
+        }
 
 
 def status_light() -> dict[str, Any]:
@@ -935,29 +938,80 @@ def status_light() -> dict[str, Any]:
     return dict(full)
 
 
+def mutations_allowed_from_status(
+    snap: dict[str, Any] | None,
+    prefer: dict[str, Any] | None = None,
+) -> bool:
+    """Czy wolno zapisywac F/X/D. Cache plikow nie wystarcza; trzeba zywej bazy.
+
+    Lokalny SQLite jako wybrany silnik (mode=sqlite) = baza jest.
+    offline_mode (chcieliśmy Synology, padło) = brak polaczenia = zakaz mutacji.
+    """
+    if not isinstance(snap, dict):
+        return False
+    pref = prefer if isinstance(prefer, dict) else {}
+    mode = str(pref.get("mode") or "auto").strip().lower()
+    engine = str(snap.get("engine") or "").lower()
+    if mode == "sqlite" and "sqlite" in engine:
+        return snap.get("ok") is not False
+    if snap.get("offline_mode"):
+        return False
+    if snap.get("ok") is False or snap.get("online") is False:
+        return False
+    return snap.get("ok") is True or snap.get("online") is True
+
+
+def allows_mutations() -> dict[str, Any]:
+    """Gate zapisow lifecycle: ok=True tylko gdy live DB (PG albo lokalny SQLite)."""
+    try:
+        prefer = load_prefer()
+    except Exception:  # noqa: BLE001
+        prefer = {}
+    try:
+        snap = status_light()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": "db_unavailable", "detail": str(exc)}
+    if mutations_allowed_from_status(snap, prefer):
+        return {
+            "ok": True,
+            "engine": snap.get("engine"),
+            "mode": (prefer or {}).get("mode") or "auto",
+        }
+    return {
+        "ok": False,
+        "error": "writes_paused_db",
+        "engine": snap.get("engine"),
+        "offline_mode": bool(snap.get("offline_mode")),
+        "writes_paused": True,
+        "write_block_reason": "Zapis wstrzymany - baza",
+        "online": snap.get("online"),
+    }
+
+
 def status() -> dict[str, Any]:
     try:
-        info = init_db()
+        info = ping()
         dump = latest_database_dump()
         engine = str(info.get("engine") or engine_name())
+        writes_paused = bool(info.get("writes_paused"))
         base = {
             "offline_mode": bool(info.get("offline_mode") or _OFFLINE_MODE),
             "offline_reason": info.get("offline_reason") or _OFFLINE_REASON,
             "offline_hint": info.get("offline_hint") or (_OFFLINE_HINT if _OFFLINE_MODE else ""),
             "github_dump": info.get("github_dump") or (str(dump) if dump else None),
             "docker_required": False,
+            "writes_paused": writes_paused,
+            "write_block_reason": info.get("write_block_reason") or (
+                "Zapis wstrzymany - baza" if writes_paused else ""
+            ),
             **_sources_payload(engine, dump),
         }
-        online = engine == "postgres" or (
-            engine in ("sqlite", "sqlite-offline") and not (engine == "sqlite-offline" and synology_allowed())
-        )
-        # Pill: online gdy aktywny silnik dziala; offline tylko gdy chcielismy Synology a padlo.
         if engine == "postgres":
             online = True
             label = "Baza online"
         elif _OFFLINE_MODE and synology_allowed():
-            online = False
-            label = "Baza offline"
+            online = True
+            label = "Zapis wstrzymany - baza"
         else:
             online = True
             label = "Baza lokalna"
@@ -1008,7 +1062,7 @@ def status() -> dict[str, Any]:
             "offline_mode": _OFFLINE_MODE,
             "offline_hint": _OFFLINE_HINT if _OFFLINE_MODE else "",
             "online": False,
-            "label": "Baza offline",
+            "label": "Zapis wstrzymany - baza",
             **_sources_payload(engine_name(), dump),
         }
 
@@ -1131,3 +1185,18 @@ def read_audit(limit: int = 100) -> dict[str, Any]:
         "store": engine_name(),
         "path": "postgres" if use_postgres() else str(db_path()),
     }
+
+
+def apply_shared_change(store_key: str, change: dict, *, updated_by: str = "") -> dict[str, Any]:
+    """Scalenie dokumentu wspoldzielonego w transakcji PG. Bez mostu HTTP.
+
+    Nie polega na cached_health() - swiezy proces ma health_pending i
+    falszywie wstrzymuje zapis. connect() w kv_apply_change jest wyrocznia.
+    """
+    try:
+        import pg_db
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": "pg_db_missing", "detail": str(exc)}
+    if not pg_db.is_configured():
+        return {"ok": False, "error": "pg_not_configured"}
+    return pg_db.kv_apply_change(store_key, change, updated_by=updated_by)

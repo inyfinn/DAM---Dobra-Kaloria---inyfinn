@@ -17,6 +17,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import threading
 import time
 import tempfile
@@ -45,6 +46,9 @@ PROFILES = {
     "poster": 640,
 }
 
+MAX_THUMB_BYTES = 70 * 1024
+AVIF_QUALITY_STEPS = (30, 24, 18, 12, 8, 5)
+
 _warm_lock = threading.Lock()
 _warm_queue: list[dict] = []
 _warm_workers_started = False
@@ -54,6 +58,10 @@ _warm_jobs_done = 0
 _warm_local_json_path = ""
 _warm_worker_count = max(1, int(os.environ.get("DAM_WARM_WORKERS", "24") or "24"))
 _warm_batch_cap = max(1, int(os.environ.get("DAM_WARM_BATCH", "200") or "200"))
+_REL_INDEX_LOCK = threading.Lock()
+_REL_INDEX: dict[str, dict] | None = None
+# Indeks rel|profile -> digest: pozwala trafic w cache BEZ mtime oryginalu.
+# Istniejace pliki thumbs/{sha256}.avif zostaja; nowy indeks ich nie rusza.
 
 
 def cache_root() -> Path:
@@ -122,6 +130,46 @@ def _flatten_white(im):
     if im.mode != "RGB":
         return im.convert("RGB")
     return im
+
+
+def _rgb_bitmap(im):
+    """Detach a display-only RGB bitmap from source layers, profiles and metadata."""
+    from PIL import Image  # type: ignore
+
+    flattened = _flatten_white(im)
+    rgb = Image.new("RGB", flattened.size, (255, 255, 255))
+    rgb.paste(flattened)
+    return rgb
+
+
+def _save_avif_capped(rgb, dest_avif: Path, max_bytes: int = MAX_THUMB_BYTES) -> bool:
+    """Save metadata-free RGB AVIF, reducing quality/size until the hard cap is met."""
+    from PIL import Image  # type: ignore
+
+    dest_avif.parent.mkdir(parents=True, exist_ok=True)
+    base = _rgb_bitmap(rgb)
+    side_steps = (max(base.size), 960, 720, 560, 480, 400, 320, 256, 192, 160)
+    seen: set[tuple[int, int]] = set()
+    for max_side in side_steps:
+        candidate = base.copy()
+        if max(candidate.size) > max_side:
+            candidate.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+        if candidate.size in seen:
+            continue
+        seen.add(candidate.size)
+        for quality in AVIF_QUALITY_STEPS:
+            tmp = dest_avif.with_suffix(dest_avif.suffix + ".tmp")
+            try:
+                candidate.save(tmp, format="AVIF", quality=quality)
+                if tmp.stat().st_size <= max_bytes:
+                    os.replace(tmp, dest_avif)
+                    return True
+            finally:
+                try:
+                    tmp.unlink(missing_ok=True)
+                except OSError:
+                    pass
+    return False
 
 
 def _cache_paths(digest: str) -> tuple[Path, Path]:
@@ -213,7 +261,7 @@ def raster_pdf_first_page_jpeg(src: str, *, max_side: int = 2400) -> Optional[by
 
 
 def _encode_thumb(src: str, dest_avif: Path, dest_jpg: Path, max_side: int) -> tuple[Optional[Path], str]:
-    """Create AVIF or JPEG thumb. Returns (path, content_type)."""
+    """Create a display-only RGB thumb capped at 70 KiB. Returns (path, content_type)."""
     try:
         from PIL import Image  # type: ignore
     except ImportError:
@@ -235,25 +283,244 @@ def _encode_thumb(src: str, dest_avif: Path, dest_jpg: Path, max_side: int) -> t
             if max(im.size) > max_side:
                 im.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
 
-            rgb = _flatten_white(im)
+            rgb = _rgb_bitmap(im)
 
-            # Prefer AVIF ~q30 — zawsze RGB na bialym tle (bez alphy = bez zielonej maty)
+            # AVIF is a flattened RGB bitmap only: no layers, spot/extra channels,
+            # source ICC profile, EXIF or other source metadata.
             try:
-                dest_avif.parent.mkdir(parents=True, exist_ok=True)
-                rgb.save(dest_avif, format="AVIF", quality=30)
-                if dest_avif.is_file() and dest_avif.stat().st_size > 0:
+                if _save_avif_capped(rgb, dest_avif):
                     return dest_avif, "image/avif"
             except Exception:
                 pass
 
-            # JPEG fallback
+            # JPEG fallback follows the same cap and metadata-free RGB rule.
             dest_jpg.parent.mkdir(parents=True, exist_ok=True)
-            rgb.save(dest_jpg, format="JPEG", quality=82, optimize=True)
-            if dest_jpg.is_file():
-                return dest_jpg, "image/jpeg"
+            for side in (max(rgb.size), 720, 560, 480, 400, 320, 256, 192):
+                candidate = rgb.copy()
+                if max(candidate.size) > side:
+                    candidate.thumbnail((side, side), Image.Resampling.LANCZOS)
+                for quality in (70, 55, 42, 30, 20):
+                    candidate.save(dest_jpg, format="JPEG", quality=quality, optimize=True)
+                    if dest_jpg.stat().st_size <= MAX_THUMB_BYTES:
+                        return dest_jpg, "image/jpeg"
+            dest_jpg.unlink(missing_ok=True)
     except Exception:
         return None, ""
     return None, ""
+
+
+def _rel_index_path() -> Path:
+    return cache_root() / "thumb-rel-index.json"
+
+
+def _rel_index_key(rel: str, profile: str) -> str:
+    return f"{rel}|{profile}"
+
+
+def _rel_from_logical(path: str) -> str:
+    """Klucz wzgledny bez stat/resolve - nie tyka dysku sieciowego."""
+    s = (path or "").strip().replace("\\", "/")
+    low = s.lower()
+    marker = "/marketing/"
+    idx = low.find(marker)
+    if idx >= 0:
+        return s[idx + len(marker) :].lstrip("/")
+    if len(s) >= 3 and s[1] == ":" and s[2] == "/":
+        return s[3:].lstrip("/")
+    return s.lstrip("/")
+
+
+def _load_rel_index() -> dict[str, dict]:
+    global _REL_INDEX
+    with _REL_INDEX_LOCK:
+        if _REL_INDEX is not None:
+            return _REL_INDEX
+        data: dict[str, dict] = {}
+        p = _rel_index_path()
+        if p.is_file():
+            try:
+                raw = json.loads(p.read_text(encoding="utf-8"))
+                if isinstance(raw, dict):
+                    data = {str(k): v for k, v in raw.items() if isinstance(v, dict)}
+            except (OSError, json.JSONDecodeError):
+                data = {}
+        _REL_INDEX = data
+        return data
+
+
+def _save_rel_index() -> None:
+    with _REL_INDEX_LOCK:
+        payload = dict(_REL_INDEX or {})
+    tmp = _rel_index_path().with_suffix(".json.tmp")
+    try:
+        tmp.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        os.replace(tmp, _rel_index_path())
+    except OSError:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _remember_rel(rel: str, profile: str, digest: str, mtime: float) -> None:
+    if not rel or not digest:
+        return
+    idx = _load_rel_index()
+    key = _rel_index_key(rel, profile)
+    with _REL_INDEX_LOCK:
+        idx[key] = {"digest": digest, "mtime": float(mtime or 0.0)}
+        _REL_INDEX = idx
+    _save_rel_index()
+
+
+def _lookup_by_rel(rel: str, profile: str) -> tuple[Optional[Path], str, str]:
+    """Zwraca (plik, ctype, digest) gdy cache istnieje dla rel|profile."""
+    idx = _load_rel_index()
+    row = idx.get(_rel_index_key(rel, profile))
+    if not isinstance(row, dict):
+        return None, "", ""
+    digest = str(row.get("digest") or "")
+    if not digest:
+        return None, "", ""
+    avif_p, jpg_p = _cache_paths(digest)
+    if avif_p.is_file():
+        return avif_p, "image/avif", digest
+    if jpg_p.is_file():
+        return jpg_p, "image/jpeg", digest
+    return None, "", digest
+
+
+def _drive_letter_alive(path: str) -> bool:
+    """Szybki test litery dysku bez wchodzenia w udzial sieciowy."""
+    s = (path or "").replace("/", "\\")
+    if len(s) >= 2 and s[1] == ":":
+        root = s[:2] + "\\"
+        try:
+            return os.path.isdir(root)
+        except OSError:
+            return False
+    return True
+
+
+def _mtime_quick(path: str, timeout_s: float = 0.08) -> float | None:
+    """mtime oryginalu z twardym timeoutem. None = dysk nie odpowiada."""
+    if not path or not _drive_letter_alive(path):
+        return None
+    box: dict = {}
+
+    def _worker() -> None:
+        try:
+            box["mt"] = float(os.path.getmtime(path))
+        except OSError:
+            box["mt"] = None
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+    t.join(timeout=max(0.02, timeout_s))
+    if "mt" not in box:
+        return None
+    return box["mt"]
+
+
+def _marketing_cache_only() -> bool:
+    """No reachable marketing root → do not touch original disk."""
+    try:
+        scripts = Path(__file__).resolve().parent.parent / "web" / "scripts"
+        if str(scripts) not in sys.path:
+            sys.path.insert(0, str(scripts))
+        import marketing_roots  # type: ignore
+
+        return bool(marketing_roots.is_cache_only())
+    except Exception:
+        return False
+
+
+def _serve_cached(
+    hit_path: Path,
+    ctype: str,
+    digest: str,
+    prof: str,
+    rel: str,
+    mt: float,
+    source: str,
+) -> tuple[int, bytes, str, dict]:
+    try:
+        body = hit_path.read_bytes()
+    except OSError:
+        return 404, b"", "application/json", {"ok": False, "error": "cache_read_failed"}
+    rel_cache = str(hit_path.relative_to(cache_root())).replace("\\", "/")
+    _store_meta(digest, rel_cache, ctype, prof)
+    # Cache hit with mt=0 must not stamp the index (would hide source changes).
+    if source != "cache" or mt > 0:
+        _remember_rel(rel, prof, digest, mt)
+    meta = {
+        "ok": True,
+        "digest": digest,
+        "profile": prof,
+        "cache_hit": source == "cache",
+        "cache_path": rel_cache,
+        "source_mtime": mt,
+        "rel": rel,
+        "bytes": len(body),
+        "thumb_source": source,
+    }
+    return 200, body, ctype, meta
+
+
+def _revalidate_thumb(
+    path: str,
+    *,
+    email: str,
+    profile: str,
+    resolve_physical: Optional[Callable[..., str]],
+    marketing_relative: Optional[Callable[..., str]],
+    known_digest: str,
+    lookup_rel: str = "",
+) -> None:
+    """Po odpowiedzi: jesli mtime oryginalu sie zmienil, przebuduj cache.
+
+    HARD: update the SAME rel|profile key that get_or_build_thumb uses
+    for lookup (_rel_from_logical), not only thumb_key's relative path.
+    """
+    try:
+        if _marketing_cache_only():
+            return
+        physical = path
+        if resolve_physical:
+            try:
+                physical = resolve_physical(path, email) or path
+            except Exception:
+                physical = path
+        mt = _mtime_quick(physical, timeout_s=0.4)
+        if mt is None:
+            return
+        idx = _load_rel_index()
+        key_rel = lookup_rel or _rel_from_logical(path)
+        row = idx.get(_rel_index_key(key_rel, profile)) if key_rel else None
+        stored_mt = float((row or {}).get("mtime") or 0.0)
+        stored_digest = str((row or {}).get("digest") or known_digest or "")
+        if stored_mt and abs(stored_mt - float(mt)) < 0.0005 and stored_digest == known_digest:
+            return
+        digest, rel_key, _ = thumb_key(
+            path,
+            email=email,
+            profile=profile,
+            resolve_physical=resolve_physical,
+            marketing_relative=marketing_relative,
+        )
+        if digest == stored_digest and stored_mt and abs(stored_mt - float(mt)) < 0.0005:
+            return
+        if digest == known_digest and stored_mt and abs(stored_mt - float(mt)) < 0.0005:
+            return
+        avif_p, jpg_p = _cache_paths(digest)
+        built, _ctype = _encode_thumb(physical, avif_p, jpg_p, PROFILES.get(profile, 480))
+        if built is not None:
+            if key_rel:
+                _remember_rel(key_rel, profile, digest, mt)
+            if rel_key and rel_key != key_rel:
+                _remember_rel(rel_key, profile, digest, mt)
+    except Exception:
+        return
 
 
 def get_or_build_thumb(
@@ -265,77 +532,97 @@ def get_or_build_thumb(
     marketing_relative: Optional[Callable[..., str]] = None,
 ) -> tuple[int, bytes, str, dict]:
     """
+    Cache-first: najpierw indeks rel|profile, potem oryginal.
     Returns (http_code, body, content_type, meta).
-    200 with bytes; 404/422/403 as appropriate.
     """
     prof = (profile or "grid").strip().lower()
     if prof not in PROFILES:
         prof = "grid"
     max_side = PROFILES[prof]
+    rel = _rel_from_logical(path)
+    cache_only = _marketing_cache_only()
+
+    cached_path, cached_ctype, cached_digest = _lookup_by_rel(rel, prof)
+    if cached_path is not None:
+        if not cache_only:
+            threading.Thread(
+                target=_revalidate_thumb,
+                kwargs={
+                    "path": path,
+                    "email": email,
+                    "profile": prof,
+                    "resolve_physical": resolve_physical,
+                    "marketing_relative": marketing_relative,
+                    "known_digest": cached_digest,
+                    "lookup_rel": rel,
+                },
+                daemon=True,
+                name="dam-thumb-revalidate",
+            ).start()
+        return _serve_cached(cached_path, cached_ctype, cached_digest, prof, rel, 0.0, "cache")
+
+    if cache_only:
+        return 404, b"", "application/json", {
+            "ok": False,
+            "error": "not_found",
+            "thumb_source": "cache",
+            "cache_only": True,
+        }
 
     physical = path
-    if resolve_physical:
+    root_missing = not _drive_letter_alive(path)
+    if not root_missing and resolve_physical:
         try:
             physical = resolve_physical(path, email) or path
         except Exception:
             physical = path
-    try:
-        if not os.path.isfile(physical):
-            return 404, b"", "application/json", {"ok": False, "error": "not_found"}
-    except OSError:
-        return 404, b"", "application/json", {"ok": False, "error": "not_found"}
+        root_missing = not _drive_letter_alive(physical)
 
-    # Safety: refuse writing/serving outside cache for weird paths - source must exist
-    digest, rel, mt = thumb_key(
+    if root_missing:
+        return 404, b"", "application/json", {
+            "ok": False,
+            "error": "not_found",
+            "thumb_source": "cache",
+            "cache_only": True,
+        }
+
+    mt = _mtime_quick(physical)
+    if mt is None:
+        return 404, b"", "application/json", {
+            "ok": False,
+            "error": "not_found",
+            "thumb_source": "cache",
+            "cache_only": True,
+        }
+
+    digest, rel2, mt2 = thumb_key(
         path,
         email=email,
         profile=prof,
         resolve_physical=resolve_physical,
         marketing_relative=marketing_relative,
     )
+    logical = _rel_from_logical(path)
+    if rel2:
+        rel = rel2
+    if logical and logical != rel:
+        _remember_rel(logical, prof, digest, mt2)
     avif_p, jpg_p = _cache_paths(digest)
-
-    hit_path: Optional[Path] = None
-    ctype = ""
     if avif_p.is_file():
-        hit_path, ctype = avif_p, "image/avif"
-    elif jpg_p.is_file():
-        hit_path, ctype = jpg_p, "image/jpeg"
-
-    cache_hit = False
-    if hit_path is not None:
-        cache_hit = True
-    else:
-        # Watchdog marker: long encode must not look like a hung worker
-        try:
-            from dam_file_availability import _mark as _avail_mark
-
-            _avail_mark("generating_thumb", digest[:16])
-        except Exception:
-            pass
-        built, ctype = _encode_thumb(physical, avif_p, jpg_p, max_side)
-        if built is None:
-            return 422, b"", "application/json", {"ok": False, "error": "encode_failed"}
-        hit_path = built
+        return _serve_cached(avif_p, "image/avif", digest, prof, rel, mt2, "cache")
+    if jpg_p.is_file():
+        return _serve_cached(jpg_p, "image/jpeg", digest, prof, rel, mt2, "cache")
 
     try:
-        body = hit_path.read_bytes()
-    except OSError:
-        return 404, b"", "application/json", {"ok": False, "error": "cache_read_failed"}
+        from dam_file_availability import _mark as _avail_mark
 
-    rel_cache = str(hit_path.relative_to(cache_root())).replace("\\", "/")
-    _store_meta(digest, rel_cache, ctype, prof)
-    meta = {
-        "ok": True,
-        "digest": digest,
-        "profile": prof,
-        "cache_hit": cache_hit,
-        "cache_path": rel_cache,
-        "source_mtime": mt,
-        "rel": rel,
-        "bytes": len(body),
-    }
-    return 200, body, ctype, meta
+        _avail_mark("generating_thumb", digest[:16])
+    except Exception:
+        pass
+    built, ctype = _encode_thumb(physical, avif_p, jpg_p, max_side)
+    if built is None:
+        return 422, b"", "application/json", {"ok": False, "error": "encode_failed"}
+    return _serve_cached(built, ctype, digest, prof, rel, mt2, "original")
 
 
 def warm_paths(
