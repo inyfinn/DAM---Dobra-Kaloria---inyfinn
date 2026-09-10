@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-04T13:27:58",
-  "product_count": 192,
+  "generated_at": "2026-09-10T14:46:59",
+  "product_count": 193,
   "by_prefix": {
     "0000": [
       "chrupiacy-orzech-daktylowy",
@@ -2728,7 +2728,8 @@
       "date-cherry-balls-raw",
       "balls-plant-based",
       "burger-chicken-plant-based",
-      "burger-plant-based"
+      "burger-plant-based",
+      "gyros-pea-plant-based"
     ],
     "630050": [
       "mix-na-grill-slaska-kaszanka-niemiesne",
@@ -2868,7 +2869,17 @@
       "sernik-waniliowy-nerkowcowy",
       "tarta-malinowa-nerkowcowy",
       "kielbaska-slaska-niemiesne",
-      "kielbaska-warzywna-niemiesne"
+      "kielbaska-warzywna-niemiesne",
+      "gyros-pea-plant-based"
+    ],
+    "6300531": [
+      "gyros-pea-plant-based"
+    ],
+    "63005310": [
+      "gyros-pea-plant-based"
+    ],
+    "630053100": [
+      "gyros-pea-plant-based"
     ],
     "6300532": [
       "piernik-korzenny-nerkowcowy",
@@ -3725,7 +3736,8 @@
     "630067": [
       "mango-lassi-nerkowcowy",
       "rogal-poznanski-nerkowcowy",
-      "lemon-bundt-cake-cashews"
+      "lemon-bundt-cake-cashews",
+      "nuggets-plant-based"
     ],
     "6300670": [
       "lemon-bundt-cake-cashews"
@@ -3735,6 +3747,15 @@
     ],
     "630067000": [
       "lemon-bundt-cake-cashews"
+    ],
+    "6300674": [
+      "nuggets-plant-based"
+    ],
+    "63006740": [
+      "nuggets-plant-based"
+    ],
+    "630067400": [
+      "nuggets-plant-based"
     ],
     "6300678": [
       "mango-lassi-nerkowcowy"
@@ -4504,7 +4525,9 @@
       "mix-funkcjonalny-3x-batony-duzy",
       "energia-funkcjonalny",
       "prebiotyk-funkcjonalny",
+      "banoffee-kakao-deserowe",
       "figa-z-makiem-owocowe",
+      "tiramisu-czekolada-kakao-deserowe",
       "burger-klasyczny-niemiesne",
       "burger-wolowy-niemiesne",
       "gyros-groch-niemiesne",
@@ -4626,6 +4649,28 @@
     ],
     "630081700": [
       "energia-funkcjonalny"
+    ],
+    "630083": [
+      "banoffee-kakao-deserowe",
+      "tiramisu-czekolada-kakao-deserowe"
+    ],
+    "6300837": [
+      "tiramisu-czekolada-kakao-deserowe"
+    ],
+    "63008370": [
+      "tiramisu-czekolada-kakao-deserowe"
+    ],
+    "630083700": [
+      "tiramisu-czekolada-kakao-deserowe"
+    ],
+    "6300838": [
+      "banoffee-kakao-deserowe"
+    ],
+    "63008380": [
+      "banoffee-kakao-deserowe"
+    ],
+    "630083800": [
+      "banoffee-kakao-deserowe"
     ],
     "6303": [
       "oats-chocolate-balls-crispy"
@@ -5246,6 +5291,7 @@
       "orzeszki-kukurydza-miod-sniadanie",
       "orzeszki-miod-sniadanie",
       "owies-czekolada-sniadanie",
+      "projekty-wstepne",
       "tiramisu-czekolada-kakao-deserowe"
     ],
     "lemon": [
@@ -7608,6 +7654,13 @@
         "name": "Muffin Jagodowy"
       }
     ],
+    "6300531": [
+      {
+        "product_id": "gyros-pea-plant-based",
+        "index": "6300531.00",
+        "name": "Gyros Pea"
+      }
+    ],
     "6300532": [
       {
         "product_id": "piernik-korzenny-nerkowcowy",
@@ -8206,6 +8259,13 @@
         "product_id": "lemon-bundt-cake-cashews",
         "index": "6300670.00",
         "name": "Lemon Bundt Cake"
+      }
+    ],
+    "6300674": [
+      {
+        "product_id": "nuggets-plant-based",
+        "index": "6300674.00",
+        "name": "Nuggets"
       }
     ],
     "6300678": [
@@ -8808,6 +8868,20 @@
         "product_id": "energia-funkcjonalny",
         "index": "6300817.00",
         "name": "Energia"
+      }
+    ],
+    "6300837": [
+      {
+        "product_id": "tiramisu-czekolada-kakao-deserowe",
+        "index": "6300837.00",
+        "name": "Tiramisu Czekolada Kakao"
+      }
+    ],
+    "6300838": [
+      {
+        "product_id": "banoffee-kakao-deserowe",
+        "index": "6300838.00",
+        "name": "Banoffee Kakao"
       }
     ],
     "630369": [
@@ -11330,12 +11404,14 @@
         "inne": []
       },
       "indexes": [
-        "6300728.00"
+        "6300728.00",
+        "6300838.00"
       ],
       "index_bases": [
-        "6300728"
+        "6300728",
+        "6300838"
       ],
-      "search_blob": "banoffee kakao banoffee kakao deserowe banoffee deserowe doypack kakao kulki 6300728.00 doy 65 g 24.03.2026 6300728.00 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65 g 24.03.2026 6300728.00 6300728.00 banoffee kakao banoffee deserowe doypack kakao kulki 6300728.00 banoffee banoffee kakao deser",
+      "search_blob": "banoffee kakao banoffee kakao deserowe banoffee deserowe doypack kakao kulki 6300728.00 6300838.00 doy 65 g 24.03.2026 6300728.00 doy 65g 04.09.2026 6300838 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65 g 24.03.2026 6300728.00 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65g 04.09.2026 6300838 6300728.00 6300838.00 banoffee kakao banoffee deserowe doypack kakao kulki 6300728.00 6300838.00 banoffee banoffee kakao deser",
       "authors": []
     },
     {
@@ -11619,7 +11695,7 @@
       },
       "indexes": [],
       "index_bases": [],
-      "search_blob": "kulki z kreatyna kulki z kreatyna kreatyna doypack kulki kreatyna doy 00 g dd mm rrrr 6300xxx.00 d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 00 g dd mm rrrr 6300xxx.00 6300xxx.00 kulki z kreatyna doypack kulki kreatyna",
+      "search_blob": "kulki z kreatyna kulki z kreatyna kreatyna doypack kulki kreatyna doy 00 g 09 09 2026 6300xxx.00 doy 00 g dd mm rrrr 6300xxx.00 d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 00 g 09 09 2026 6300xxx.00 d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 00 g dd mm rrrr 6300xxx.00 6300xxx.00 6300xxx.00 kulki z kreatyna doypack kulki kreatyna",
       "authors": []
     },
     {
@@ -11789,12 +11865,14 @@
         "inne": []
       },
       "indexes": [
-        "6300729.00"
+        "6300729.00",
+        "6300837.00"
       ],
       "index_bases": [
-        "6300729"
+        "6300729",
+        "6300837"
       ],
-      "search_blob": "tiramisu czekolada kakao tiramisu czekolada kakao deserowe czekolada deserowe doypack kakao kulki tiramisu 6300729.00 doy 65 g 24.03.2026 6300729.00 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65 g 24.03.2026 6300729.00 6300729.00 tiramisu czekolada kakao czekolada deserowe doypack kakao kulki tiramisu 6300729.00 tiramisu tiramisu czekolada deser",
+      "search_blob": "tiramisu czekolada kakao tiramisu czekolada kakao deserowe czekolada deserowe doypack kakao kulki tiramisu 6300729.00 6300837.00 doy 65 g 24.03.2026 6300729.00 doy 65g 07.09.2026 6300837 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65 g 24.03.2026 6300729.00 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65g 07.09.2026 6300837 6300729.00 6300837.00 tiramisu czekolada kakao czekolada deserowe doypack kakao kulki tiramisu 6300729.00 6300837.00 tiramisu tiramisu czekolada deser",
       "authors": []
     },
     {
@@ -13996,7 +14074,7 @@
       },
       "indexes": [],
       "index_bases": [],
-      "search_blob": "shot shot funkcjonalne etykieta etykieta butelka napoj shot funkcjonalne krzysztof krzysztof wieczorek krzysztof wieczorek ety but 100 ml 30.04.2026 6300xxx.00 d marketing polska 01 produkty dk 05 napoje shot funkcjonalne ety but 100 ml 30.04.2026 6300xxx.00 6300xxx.00 shot etykieta etykieta butelka napoj shot funkcjonalne krzysztof krzysztof wieczorek krzysztof wieczorek",
+      "search_blob": "shot shot funkcjonalne etykieta etykieta butelka napoj shot funkcjonalne krzysztof krzysztof wieczorek krzysztof wieczorek ety but 100 ml 30.04.2026 6300xxx.00 ety but 100 ml 09 09 2026 6300xxx.00 d marketing polska 01 produkty dk 05 napoje shot funkcjonalne ety but 100 ml 30.04.2026 6300xxx.00 d marketing polska 01 produkty dk 05 napoje shot funkcjonalne ety but 100 ml 09 09 2026 6300xxx.00 6300xxx.00 6300xxx.00 shot etykieta etykieta butelka napoj shot funkcjonalne krzysztof krzysztof wieczorek krzysztof wieczorek",
       "authors": [
         "Krzysztof"
       ]
@@ -14430,6 +14508,29 @@
         "Sylwia",
         "Krzysztof"
       ]
+    },
+    {
+      "id": "projekty-wstepne",
+      "name": "Projekty Wstępne",
+      "display_name": "Projekty Wstępne",
+      "category": "08 - CHRUPKULKI",
+      "tags": [
+        "kulki"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "kulki"
+        ],
+        "opakowanie": [],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [],
+      "index_bases": [],
+      "search_blob": "projekty wstepne projekty wstepne kulki chrupkulki d marketing polska 01 produkty dk 08 chrupkulki projekty wstepne chrupkulki projekty wstepne kulki",
+      "authors": []
     },
     {
       "id": "3pack-oat-bars-mix",
@@ -15923,13 +16024,15 @@
       },
       "indexes": [
         "6300346.00",
-        "6300356.00"
+        "6300356.00",
+        "6300531.00"
       ],
       "index_bases": [
         "6300346",
-        "6300356"
+        "6300356",
+        "6300531"
       ],
-      "search_blob": "gyros pea gyros pea plant based gyros rekaw 6300346.00 6300356.00 sleeve 03.06.2024 6300356.00 cz sleeve 22.12.2023 6300346.00 d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 03.06.2024 6300356.00 cz d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 22.12.2023 6300346.00 6300356.00 6300346.00 gyros pea gyros rekaw 6300346.00 6300356.00",
+      "search_blob": "gyros pea gyros pea plant based gyros rekaw 6300346.00 6300356.00 6300531.00 sleeve 03.06.2024 6300356.00 cz sleeve 04.09.2026 6300531 cz sk sleeve 22.12.2023 6300346.00 d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 03.06.2024 6300356.00 cz d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 04.09.2026 6300531 cz sk d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 22.12.2023 6300346.00 6300356.00 6300531.00 6300346.00 gyros pea gyros rekaw 6300346.00 6300356.00 6300531.00",
       "authors": []
     },
     {
@@ -16032,14 +16135,16 @@
       "indexes": [
         "6300610.01",
         "6300650.00",
+        "6300674.00",
         "6300771.00"
       ],
       "index_bases": [
         "6300610",
         "6300650",
+        "6300674",
         "6300771"
       ],
-      "search_blob": "nuggets nuggets plant based nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300771.00 nuggets xxl 08.05.2025 6300650.00 sleeve cz sk 16.01.2025 6300610.01 sleeve de 19.06.2025 6300771 d marketing eksport 01 products gc 03 plant based nuggets plant based nuggets xxl 08.05.2025 6300650.00 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 16.01.2025 6300610.01 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve de 19.06.2025 6300771 6300650.00 6300610.01 6300771.00 nuggets nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300771.00",
+      "search_blob": "nuggets nuggets plant based nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300674.00 6300771.00 nuggets xxl 08.05.2025 6300650.00 sleeve cz sk 16.01.2025 6300610.01 sleeve cz sk 6300674 sleeve de 19.06.2025 6300771 d marketing eksport 01 products gc 03 plant based nuggets plant based nuggets xxl 08.05.2025 6300650.00 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 16.01.2025 6300610.01 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 6300674 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve de 19.06.2025 6300771 6300650.00 6300610.01 6300674.00 6300771.00 nuggets nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300674.00 6300771.00",
       "authors": [
         "Krzysztof"
       ]

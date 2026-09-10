@@ -27,12 +27,14 @@ SLIM_KEYS = (
     "path",
     "name",
     "tags",
+    "appearance_tags",
     "asset_role",
     "media_type",
     "linked_product_ids",
     "is_archive",
     "sku",
     "source",
+    "brand",
 )
 
 # Controlled taxonomy (dam-asset-role-mapping.json) + legacy aliases www/social/campaign/brandbook.

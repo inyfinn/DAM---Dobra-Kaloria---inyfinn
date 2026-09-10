@@ -227,6 +227,8 @@ TARGETS = [
     WEB / "index.html",
     WEB / "inbox.html",
     WEB / "explorer.html",
+    WEB / "visualizations.html",
+    WEB / "branding.html",
     WEB / "assets" / "js" / "dam-shell.js",
     WEB / "assets" / "js" / "dam-projects.js",
     WEB / "assets" / "js" / "dam-project.js",

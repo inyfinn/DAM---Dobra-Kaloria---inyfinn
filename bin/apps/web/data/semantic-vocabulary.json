@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "updated_at": "2026-09-10",
+  "note_pl": "Slownik znaczen do wyszukiwarki brandingowej. Kazdy koncept ma id, krotki opis i liste aliasow (formy potoczne). Dopasowanie jest dokladne po aliasie, bez obcinania koncowek. Mozna dopisywac nowe aliasy recznie.",
+  "stopwords": [
+    "zdjecie",
+    "zdjęcie",
+    "zdjecia",
+    "zdjęcia",
+    "foto",
+    "fotka",
+    "fotki",
+    "gdzie",
+    "jest",
+    "to",
+    "z",
+    "ze",
+    "na",
+    "w",
+    "i",
+    "o",
+    "a",
+    "jakies",
+    "jakieś",
+    "pokaz",
+    "pokaż",
+    "znajdz",
+    "znajdź",
+    "szukam"
+  ],
+  "concepts": [
+    {
+      "id": "product:kulki",
+      "label_pl": "Kulki",
+      "opis": "Kulki produktowe (delight bites, balls). Folder KULKI / KULKA.",
+      "aliases": [
+        "kulka",
+        "kulki",
+        "kulke",
+        "kulkę",
+        "kulką",
+        "kuleczka",
+        "kuleczkę",
+        "kuleczką",
+        "kuleczki",
+        "kulek",
+        "kulkami",
+        "kuleczek",
+        "balls",
+        "ball"
+      ]
+    },
+    {
+      "id": "subject:kobieta",
+      "label_pl": "Kobieta",
+      "opis": "Kobieta, modelka, dziewczyna na zdjeciu. Na zdjeciach postaci (POSTACI) tez sie liczy.",
+      "query_satisfied_by": ["subject:czlowiek"],
+      "aliases": [
+        "laska",
+        "laski",
+        "laskę",
+        "dziewczyna",
+        "dziewczyny",
+        "dziewczyną",
+        "dziewczynę",
+        "modelka",
+        "modelki",
+        "modelkę",
+        "modelką",
+        "kobieta",
+        "kobiety",
+        "kobietą",
+        "kobietę",
+        "pani",
+        "babka",
+        "dziewczę"
+      ]
+    },
+    {
+      "id": "action:jedzenie",
+      "label_pl": "Jedzenie",
+      "opis": "Czynnosc: ktos je, gryzie, kasa produkt.",
+      "aliases": [
+        "je",
+        "jedzenie",
+        "jedząca",
+        "jedzaca",
+        "zjada",
+        "zjadająca",
+        "zjadajaca",
+        "gryzie",
+        "gryząca",
+        "gryzaca",
+        "kąsa",
+        "kasa",
+        "kęs",
+        "kes",
+        "próbuje",
+        "probuje",
+        "degustuje"
+      ]
+    },
+    {
+      "id": "subject:czlowiek",
+      "label_pl": "Człowiek / postać",
+      "opis": "Ludzie i postaci na zdjeciach kampanii (folder POSTACI, postacia).",
+      "aliases": [
+        "postac",
+        "postać",
+        "postaci",
+        "postacia",
+        "postacią",
+        "ludzie",
+        "człowiek",
+        "czlowiek",
+        "model",
+        "modele"
+      ]
+    },
+    {
+      "id": "product:batony",
+      "label_pl": "Batony",
+      "opis": "Kategoria produktowa Batony / Bars (folder 01 - BATONY).",
+      "aliases": [
+        "baton",
+        "batony",
+        "batonik",
+        "batoniki",
+        "batonów",
+        "batonow",
+        "bars",
+        "bar"
+      ]
+    },
+    {
+      "id": "product:niemieso",
+      "label_pl": "Niemięsa",
+      "opis": "Zamienniki miesa, linia niemięsna. Kampanie Grill / Niemięsa.",
+      "aliases": [
+        "niemieso",
+        "niemięso",
+        "niemięsa",
+        "niemięsne",
+        "niemiesne",
+        "niemies",
+        "roślinne",
+        "roslinne",
+        "wegańskie",
+        "weganskie",
+        "wegan"
+      ]
+    },
+    {
+      "id": "product:roslinne",
+      "label_pl": "Roślinne",
+      "opis": "Kategoria produktowa Roślinne / Plant based (folder 03 - ROSLINNE).",
+      "aliases": [
+        "roślinne",
+        "roslinne",
+        "roślinna",
+        "roslinna",
+        "plant based",
+        "plant-based",
+        "plantbased",
+        "plant"
+      ]
+    },
+    {
+      "id": "product:sypkie",
+      "label_pl": "Sypkie",
+      "opis": "Kategoria produktowa Sypkie / Breakfast (folder 04 - SYPKIE).",
+      "aliases": [
+        "sypkie",
+        "sypka",
+        "breakfast",
+        "platki",
+        "płatki",
+        "musli",
+        "muesli"
+      ]
+    },
+    {
+      "id": "product:napoje",
+      "label_pl": "Napoje",
+      "opis": "Kategoria produktowa Napoje / Drinks (folder 05 - NAPOJE).",
+      "aliases": [
+        "napoje",
+        "napoj",
+        "napój",
+        "drinks",
+        "drink",
+        "shot",
+        "shoty"
+      ]
+    },
+    {
+      "id": "product:przetwory",
+      "label_pl": "Przetwory",
+      "opis": "Kategoria produktowa Przetwory / Spreads / Kremy (folder 06 - PRZETWORY).",
+      "aliases": [
+        "przetwory",
+        "przetwor",
+        "spreads",
+        "spread",
+        "creams",
+        "kremy",
+        "krem"
+      ]
+    },
+    {
+      "id": "product:datesy",
+      "label_pl": "Datesy",
+      "opis": "Kategoria produktowa Datesy / Dates (folder 07 - DATESY).",
+      "aliases": [
+        "datesy",
+        "dates",
+        "date",
+        "daktyle datesy"
+      ]
+    },
+    {
+      "id": "product:chrupkulki",
+      "label_pl": "Chrupkulki",
+      "opis": "Kategoria produktowa Chrupkulki (folder 08 - CHRUPKULKI). To NIE sa zwykłe kulki.",
+      "aliases": [
+        "chrupkulki",
+        "chrupkulka",
+        "chrupkulek",
+        "chrup kulek"
+      ]
+    }
+  ]
+}

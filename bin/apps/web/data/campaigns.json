@@ -6,7 +6,7 @@
       "nazwa": "2021_zmiana_logo-dk_harmonogram_aktualizacja_zmiana_logo_",
       "rok": 2021,
       "asset_ids": [
-        "br-005870"
+        "br-005888"
       ],
       "asset_count": 1
     },
@@ -15,7 +15,7 @@
       "nazwa": "2021_zmiana_logo-dk_lifting_logo_2023_na_nowo.pdf",
       "rok": 2021,
       "asset_ids": [
-        "br-005871"
+        "br-005889"
       ],
       "asset_count": 1
     },
@@ -24,65 +24,6 @@
       "nazwa": "2021_zmiana_logo-lifrint_logo_2023",
       "rok": 2021,
       "asset_ids": [
-        "br-005873",
-        "br-005874",
-        "br-005875",
-        "br-005876",
-        "br-005877",
-        "br-005878",
-        "br-005879",
-        "br-005880",
-        "br-005881"
-      ],
-      "asset_count": 9
-    },
-    {
-      "id": "2023_grill-dobra kaloria_ grill 2023.pdf",
-      "nazwa": "2023_grill-dobra kaloria_ grill 2023.pdf",
-      "rok": 2023,
-      "asset_ids": [
-        "br-005872"
-      ],
-      "asset_count": 1
-    },
-    {
-      "id": "2023_grill-opusb_dobra kaloria_komunikacja2024_2312",
-      "nazwa": "2023_grill-opusb_dobra kaloria_komunikacja2024_2312",
-      "rok": 2023,
-      "asset_ids": [
-        "br-005882"
-      ],
-      "asset_count": 1
-    },
-    {
-      "id": "2024-2024_batony_funkcjonalne",
-      "nazwa": "2024-2024_batony_funkcjonalne",
-      "rok": 2024,
-      "asset_ids": [
-        "br-005888"
-      ],
-      "asset_count": 1
-    },
-    {
-      "id": "2024-foodtruck",
-      "nazwa": "2024-foodtruck",
-      "rok": 2024,
-      "asset_ids": [
-        "br-005883"
-      ],
-      "asset_count": 1
-    },
-    {
-      "id": "2024-grill",
-      "nazwa": "2024-grill",
-      "rok": 2024,
-      "asset_ids": [
-        "br-005884",
-        "br-005885",
-        "br-005886",
-        "br-005887",
-        "br-005889",
-        "br-005890",
         "br-005891",
         "br-005892",
         "br-005893",
@@ -91,29 +32,62 @@
         "br-005896",
         "br-005897",
         "br-005898",
-        "br-005899",
-        "br-005900",
-        "br-005901",
+        "br-005899"
+      ],
+      "asset_count": 9
+    },
+    {
+      "id": "2023_grill-dobra kaloria_ grill 2023.pdf",
+      "nazwa": "2023_grill-dobra kaloria_ grill 2023.pdf",
+      "rok": 2023,
+      "asset_ids": [
+        "br-005890"
+      ],
+      "asset_count": 1
+    },
+    {
+      "id": "2023_grill-opusb_dobra kaloria_komunikacja2024_2312",
+      "nazwa": "2023_grill-opusb_dobra kaloria_komunikacja2024_2312",
+      "rok": 2023,
+      "asset_ids": [
+        "br-005900"
+      ],
+      "asset_count": 1
+    },
+    {
+      "id": "2024-2024_batony_funkcjonalne",
+      "nazwa": "2024-2024_batony_funkcjonalne",
+      "rok": 2024,
+      "asset_ids": [
+        "br-005906"
+      ],
+      "asset_count": 1
+    },
+    {
+      "id": "2024-foodtruck",
+      "nazwa": "2024-foodtruck",
+      "rok": 2024,
+      "asset_ids": [
+        "br-005901"
+      ],
+      "asset_count": 1
+    },
+    {
+      "id": "2024-grill",
+      "nazwa": "2024-grill",
+      "rok": 2024,
+      "asset_ids": [
         "br-005902",
         "br-005903",
         "br-005904",
         "br-005905",
-        "br-005906",
         "br-005907",
         "br-005908",
         "br-005909",
         "br-005910",
         "br-005911",
         "br-005912",
-        "br-005913"
-      ],
-      "asset_count": 29
-    },
-    {
-      "id": "2024-minibatoniki o smaku ciast",
-      "nazwa": "2024-minibatoniki o smaku ciast",
-      "rok": 2024,
-      "asset_ids": [
+        "br-005913",
         "br-005914",
         "br-005915",
         "br-005916",
@@ -131,7 +105,15 @@
         "br-005928",
         "br-005929",
         "br-005930",
-        "br-005931",
+        "br-005931"
+      ],
+      "asset_count": 29
+    },
+    {
+      "id": "2024-minibatoniki o smaku ciast",
+      "nazwa": "2024-minibatoniki o smaku ciast",
+      "rok": 2024,
+      "asset_ids": [
         "br-005932",
         "br-005933",
         "br-005934",
@@ -186,15 +168,7 @@
         "br-005983",
         "br-005984",
         "br-005985",
-        "br-005986"
-      ],
-      "asset_count": 73
-    },
-    {
-      "id": "2024-znamy smak_dobry sklad",
-      "nazwa": "2024-znamy smak_dobry sklad",
-      "rok": 2024,
-      "asset_ids": [
+        "br-005986",
         "br-005987",
         "br-005988",
         "br-005989",
@@ -212,7 +186,15 @@
         "br-006001",
         "br-006002",
         "br-006003",
-        "br-006004",
+        "br-006004"
+      ],
+      "asset_count": 73
+    },
+    {
+      "id": "2024-znamy smak_dobry sklad",
+      "nazwa": "2024-znamy smak_dobry sklad",
+      "rok": 2024,
+      "asset_ids": [
         "br-006005",
         "br-006006",
         "br-006007",
@@ -260,15 +242,16 @@
         "br-006049",
         "br-006050",
         "br-006051",
-        "br-006052"
-      ],
-      "asset_count": 66
-    },
-    {
-      "id": "2025-01_nuggets",
-      "nazwa": "2025-01_nuggets",
-      "rok": 2025,
-      "asset_ids": [
+        "br-006052",
+        "br-006053",
+        "br-006054",
+        "br-006055",
+        "br-006056",
+        "br-006057",
+        "br-006058",
+        "br-006059",
+        "br-006060",
+        "br-006061",
         "br-006062",
         "br-006063",
         "br-006064",
@@ -277,16 +260,15 @@
         "br-006067",
         "br-006068",
         "br-006069",
-        "br-006070",
-        "br-006071",
-        "br-006072",
-        "br-006073",
-        "br-006074",
-        "br-006075",
-        "br-006076",
-        "br-006077",
-        "br-006078",
-        "br-006079",
+        "br-006070"
+      ],
+      "asset_count": 66
+    },
+    {
+      "id": "2025-01_nuggets",
+      "nazwa": "2025-01_nuggets",
+      "rok": 2025,
+      "asset_ids": [
         "br-006080",
         "br-006081",
         "br-006082",
@@ -301,26 +283,10 @@
         "br-006091",
         "br-006092",
         "br-006093",
-        "br-006094"
-      ],
-      "asset_count": 33
-    },
-    {
-      "id": "2025-02_platforma",
-      "nazwa": "2025-02_platforma",
-      "rok": 2025,
-      "asset_ids": [
+        "br-006094",
         "br-006095",
         "br-006096",
-        "br-006097"
-      ],
-      "asset_count": 3
-    },
-    {
-      "id": "2025-03_grill",
-      "nazwa": "2025-03_grill",
-      "rok": 2025,
-      "asset_ids": [
+        "br-006097",
         "br-006098",
         "br-006099",
         "br-006100",
@@ -335,10 +301,26 @@
         "br-006109",
         "br-006110",
         "br-006111",
-        "br-006112",
+        "br-006112"
+      ],
+      "asset_count": 33
+    },
+    {
+      "id": "2025-02_platforma",
+      "nazwa": "2025-02_platforma",
+      "rok": 2025,
+      "asset_ids": [
         "br-006113",
         "br-006114",
-        "br-006115",
+        "br-006115"
+      ],
+      "asset_count": 3
+    },
+    {
+      "id": "2025-03_grill",
+      "nazwa": "2025-03_grill",
+      "rok": 2025,
+      "asset_ids": [
         "br-006116",
         "br-006117",
         "br-006118",
@@ -416,15 +398,7 @@
         "br-006190",
         "br-006191",
         "br-006192",
-        "br-006193"
-      ],
-      "asset_count": 96
-    },
-    {
-      "id": "2025-04_przekaski",
-      "nazwa": "2025-04_przekaski",
-      "rok": 2025,
-      "asset_ids": [
+        "br-006193",
         "br-006194",
         "br-006195",
         "br-006196",
@@ -442,7 +416,15 @@
         "br-006208",
         "br-006209",
         "br-006210",
-        "br-006211",
+        "br-006211"
+      ],
+      "asset_count": 96
+    },
+    {
+      "id": "2025-04_przekaski",
+      "nazwa": "2025-04_przekaski",
+      "rok": 2025,
+      "asset_ids": [
         "br-006212",
         "br-006213",
         "br-006214",
@@ -546,40 +528,7 @@
         "br-006312",
         "br-006313",
         "br-006314",
-        "br-006315"
-      ],
-      "asset_count": 122
-    },
-    {
-      "id": "2025-05_wytyczne vod",
-      "nazwa": "2025-05_wytyczne vod",
-      "rok": 2025,
-      "asset_ids": [
-        "br-006053",
-        "br-006054"
-      ],
-      "asset_count": 2
-    },
-    {
-      "id": "2025-06_media plan",
-      "nazwa": "2025-06_media plan",
-      "rok": 2025,
-      "asset_ids": [
-        "br-006055",
-        "br-006056",
-        "br-006057",
-        "br-006058",
-        "br-006059",
-        "br-006060",
-        "br-006061"
-      ],
-      "asset_count": 7
-    },
-    {
-      "id": "2025-parowka",
-      "nazwa": "2025-parowka",
-      "rok": 2025,
-      "asset_ids": [
+        "br-006315",
         "br-006316",
         "br-006317",
         "br-006318",
@@ -593,19 +542,44 @@
         "br-006326",
         "br-006327",
         "br-006328",
-        "br-006329"
-      ],
-      "asset_count": 14
-    },
-    {
-      "id": "2025-rolada",
-      "nazwa": "2025-rolada",
-      "rok": 2025,
-      "asset_ids": [
+        "br-006329",
         "br-006330",
         "br-006331",
         "br-006332",
-        "br-006333",
+        "br-006333"
+      ],
+      "asset_count": 122
+    },
+    {
+      "id": "2025-05_wytyczne vod",
+      "nazwa": "2025-05_wytyczne vod",
+      "rok": 2025,
+      "asset_ids": [
+        "br-006071",
+        "br-006072"
+      ],
+      "asset_count": 2
+    },
+    {
+      "id": "2025-06_media plan",
+      "nazwa": "2025-06_media plan",
+      "rok": 2025,
+      "asset_ids": [
+        "br-006073",
+        "br-006074",
+        "br-006075",
+        "br-006076",
+        "br-006077",
+        "br-006078",
+        "br-006079"
+      ],
+      "asset_count": 7
+    },
+    {
+      "id": "2025-parowka",
+      "nazwa": "2025-parowka",
+      "rok": 2025,
+      "asset_ids": [
         "br-006334",
         "br-006335",
         "br-006336",
@@ -619,7 +593,15 @@
         "br-006344",
         "br-006345",
         "br-006346",
-        "br-006347",
+        "br-006347"
+      ],
+      "asset_count": 14
+    },
+    {
+      "id": "2025-rolada",
+      "nazwa": "2025-rolada",
+      "rok": 2025,
+      "asset_ids": [
         "br-006348",
         "br-006349",
         "br-006350",
@@ -632,15 +614,11 @@
         "br-006357",
         "br-006358",
         "br-006359",
-        "br-006360"
-      ],
-      "asset_count": 31
-    },
-    {
-      "id": "2026-filmy",
-      "nazwa": "2026-filmy",
-      "rok": 2026,
-      "asset_ids": [
+        "br-006360",
+        "br-006361",
+        "br-006362",
+        "br-006363",
+        "br-006364",
         "br-006365",
         "br-006366",
         "br-006367",
@@ -654,24 +632,20 @@
         "br-006375",
         "br-006376",
         "br-006377",
-        "br-006378",
-        "br-006379",
-        "br-006380",
-        "br-006381",
-        "br-006382",
+        "br-006378"
+      ],
+      "asset_count": 31
+    },
+    {
+      "id": "2026-filmy",
+      "nazwa": "2026-filmy",
+      "rok": 2026,
+      "asset_ids": [
         "br-006383",
         "br-006384",
         "br-006385",
         "br-006386",
-        "br-006387"
-      ],
-      "asset_count": 23
-    },
-    {
-      "id": "2026-grill",
-      "nazwa": "2026-grill",
-      "rok": 2026,
-      "asset_ids": [
+        "br-006387",
         "br-006388",
         "br-006389",
         "br-006390",
@@ -689,7 +663,15 @@
         "br-006402",
         "br-006403",
         "br-006404",
-        "br-006405",
+        "br-006405"
+      ],
+      "asset_count": 23
+    },
+    {
+      "id": "2026-grill",
+      "nazwa": "2026-grill",
+      "rok": 2026,
+      "asset_ids": [
         "br-006406",
         "br-006407",
         "br-006408",
@@ -732,31 +714,11 @@
         "br-006445",
         "br-006446",
         "br-006447",
-        "br-006448"
-      ],
-      "asset_count": 61
-    },
-    {
-      "id": "2026-proteiny niskie ig",
-      "nazwa": "2026-proteiny niskie ig",
-      "rok": 2026,
-      "asset_ids": [
-        "br-006361",
-        "br-006362",
-        "br-006363",
-        "br-006364",
+        "br-006448",
         "br-006449",
         "br-006450",
         "br-006451",
-        "br-006452"
-      ],
-      "asset_count": 8
-    },
-    {
-      "id": "2026-przekaski",
-      "nazwa": "2026-przekaski",
-      "rok": 2026,
-      "asset_ids": [
+        "br-006452",
         "br-006453",
         "br-006454",
         "br-006455",
@@ -770,11 +732,31 @@
         "br-006463",
         "br-006464",
         "br-006465",
-        "br-006466",
+        "br-006466"
+      ],
+      "asset_count": 61
+    },
+    {
+      "id": "2026-proteiny niskie ig",
+      "nazwa": "2026-proteiny niskie ig",
+      "rok": 2026,
+      "asset_ids": [
+        "br-006379",
+        "br-006380",
+        "br-006381",
+        "br-006382",
         "br-006467",
         "br-006468",
         "br-006469",
-        "br-006470",
+        "br-006470"
+      ],
+      "asset_count": 8
+    },
+    {
+      "id": "2026-przekaski",
+      "nazwa": "2026-przekaski",
+      "rok": 2026,
+      "asset_ids": [
         "br-006471",
         "br-006472",
         "br-006473",
@@ -827,15 +809,7 @@
         "br-006520",
         "br-006521",
         "br-006522",
-        "br-006523"
-      ],
-      "asset_count": 71
-    },
-    {
-      "id": "2026-sesja",
-      "nazwa": "2026-sesja",
-      "rok": 2026,
-      "asset_ids": [
+        "br-006523",
         "br-006524",
         "br-006525",
         "br-006526",
@@ -853,7 +827,15 @@
         "br-006538",
         "br-006539",
         "br-006540",
-        "br-006541",
+        "br-006541"
+      ],
+      "asset_count": 71
+    },
+    {
+      "id": "2026-sesja",
+      "nazwa": "2026-sesja",
+      "rok": 2026,
+      "asset_ids": [
         "br-006542",
         "br-006543",
         "br-006544",
@@ -1003,7 +985,25 @@
         "br-006688",
         "br-006689",
         "br-006690",
-        "br-006691"
+        "br-006691",
+        "br-006692",
+        "br-006693",
+        "br-006694",
+        "br-006695",
+        "br-006696",
+        "br-006697",
+        "br-006698",
+        "br-006699",
+        "br-006700",
+        "br-006701",
+        "br-006702",
+        "br-006703",
+        "br-006704",
+        "br-006705",
+        "br-006706",
+        "br-006707",
+        "br-006708",
+        "br-006709"
       ],
       "asset_count": 168
     }

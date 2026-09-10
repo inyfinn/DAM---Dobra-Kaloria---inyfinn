@@ -1,21 +1,21 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pl" dir="ltr">
 <head>
-  <script>(function(){function g(){try{var u=location.pathname+location.search,h=location.hash||"";location.replace(u+(u.indexOf("?")>=0?"&":"?")+"_damr="+Date.now()+h);}catch(e){try{location.reload();}catch(x){}}}addEventListener("keydown",function(e){if(e.key==="F5"||(e.ctrlKey&&!e.shiftKey&&(e.key==="r"||e.key==="R")))g();},true);window.__damInlineHardReset=g;})();</script>
-  <script src="./assets/js/dam-panic-reload.js?v=restore20260805c"></script>
+  <script src="./assets/js/dam-panic-reload.js?v=5.0.196"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>DAM - Dobra Kaloria - Logowanie</title>
-  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
-  <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=5.0.163">
-  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.163">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=restore20260805c">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.163">
+  <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-fonts.css?v=5.0.196">
+
+  <link rel="stylesheet" href="./assets/css/style.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-auth.css?v=5.0.196">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   <script>
     if (localStorage.theme) document.documentElement.setAttribute("data-theme", localStorage.theme);
     (function () {
@@ -136,7 +136,11 @@
       font-size: 14px;
       text-align: center;
       text-transform: none;
-      color: var(--body-color, #464255);
+    }
+    /* Geex .form-group { display:flex } wygrywa nad atrybutem hidden — login bez imienia */
+    #nameWrap[hidden],
+    #nameWrap.dam-auth-hidden {
+      display: none !important;
     }
   </style>
 </head>
@@ -154,14 +158,25 @@
 
           <form id="damAuthForm" class="geex-content__authentication__form" autocomplete="on">
             <h2 class="geex-content__authentication__title">Witaj w DAM</h2>
-            <p class="geex-content__authentication__subtitle" id="authSubtitle">
-              Zaloguj się kontem firmowym.
+            <p class="geex-content__authentication__subtitle">
+              Zaloguj się kontem firmowym. Możesz wylogować się w menu użytkownika.
             </p>
+
+            <div class="dam-auth-mode" id="authModeTabs" role="tablist" aria-label="Tryb konta" hidden>
+              <button type="button" class="is-active" id="tabLogin" data-tab="login">Zaloguj</button>
+              <button type="button" id="tabRegister" data-tab="register">Utwórz konto</button>
+            </div>
+
+            <div class="geex-content__authentication__form-group dam-auth-hidden" id="nameWrap" hidden>
+              <label for="authName">Imie i nazwisko</label>
+              <input type="text" id="authName" name="name" placeholder="np. Jan Kowalski" autocomplete="name">
+              <i class="uil-user" aria-hidden="true"></i>
+            </div>
 
             <div class="geex-content__authentication__form-group">
               <label for="authEmail">Email</label>
               <input type="email" id="authEmail" name="email" required
-                     placeholder="np. ktos@kubara.pl" autocomplete="username">
+                     placeholder="np. imie.nazwisko@firma.pl" autocomplete="username">
               <i class="uil-envelope" aria-hidden="true"></i>
             </div>
 
@@ -189,63 +204,94 @@
             <p class="dam-auth-msg" id="authMsg" role="status" aria-live="polite"></p>
 
             <div class="geex-content__authentication__form-footer" id="authFooter">
-              Nie masz konta?
-              <button type="button" id="authModeToggle" class="dam-auth-link"
-                      style="background:none;border:0;color:#6c5ce7;cursor:pointer;padding:0;font:inherit;text-decoration:underline">
-                Utwórz konto
-              </button>
+              Nie masz konta. Poproś administratora o dostęp.
             </div>
           </form>
         </div>
       </div>
       <div class="geex-content__authentication__img">
-        <img src="./assets/img/authentication.svg" alt="">
+        <picture>
+          <source type="image/avif" srcset="./assets/img/auth/kubara-building.avif">
+          <img src="./assets/img/auth/kubara-building.jpg" alt="Budynek siedziby Kubara w Konstancinie-Jeziornie">
+        </picture>
       </div>
     </div>
   </main>
 
-  <script src="./assets/js/main.js"></script>
-  <script src="./assets/js/dam-runtime.js?v=5.0.149"></script>
-  <script src="./assets/js/dam-api.js?v=5.0.149"></script>
-  <script src="./assets/js/dam-version.js?v=5.0.163"></script>
-  <script src="./assets/js/dam-app-update.js?v=5.0.149"></script>
+  <script src="./assets/js/main.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-runtime.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-api.js?v=5.0.196"></script>
   <script>
     (function () {
+      var mode = "login";
+      var registrationOpen = false;
+      var tabLogin = document.getElementById("tabLogin");
+      var tabRegister = document.getElementById("tabRegister");
+      var modeTabs = document.getElementById("authModeTabs");
+      var nameWrap = document.getElementById("nameWrap");
       var submitBtn = document.getElementById("authSubmit");
       var msg = document.getElementById("authMsg");
       var pass = document.getElementById("authPassword");
+      var footer = document.getElementById("authFooter");
       var toggle = document.getElementById("togglePassword");
-      var subtitle = document.getElementById("authSubtitle");
-      var modeToggle = document.getElementById("authModeToggle");
-      var mode = "login";
 
-      function setMode(next) {
-        mode = next === "register" ? "register" : "login";
-        if (subtitle) {
-          subtitle.textContent = mode === "register"
-            ? "Utwórz konto."
-            : "Zaloguj się kontem firmowym.";
+      function setMode(m) {
+        if (m === "register" && !registrationOpen) {
+          m = "login";
         }
-        if (submitBtn) {
-          submitBtn.textContent = mode === "register" ? "Utwórz konto" : "Zaloguj";
+        mode = m;
+        tabLogin.classList.toggle("is-active", m === "login");
+        tabRegister.classList.toggle("is-active", m === "register");
+        tabLogin.setAttribute("aria-selected", m === "login" ? "true" : "false");
+        tabRegister.setAttribute("aria-selected", m === "register" ? "true" : "false");
+        nameWrap.hidden = m !== "register";
+        nameWrap.classList.toggle("dam-auth-hidden", m !== "register");
+        pass.autocomplete = m === "register" ? "new-password" : "current-password";
+        pass.minLength = m === "register" ? 8 : 4;
+        pass.setAttribute("minlength", m === "register" ? "8" : "4");
+        submitBtn.textContent = m === "register" ? "Utwórz konto" : "Zaloguj";
+        if (registrationOpen) {
+          footer.innerHTML = m === "register"
+            ? 'Masz juz konto. <a href="#" id="switchToLogin">Zaloguj się</a>'
+            : 'Pierwsze uruchomienie: <a href="#" id="switchToRegister">Utwórz konto admina</a>';
+          var link = footer.querySelector("a");
+          if (link) {
+            link.addEventListener("click", function (e) {
+              e.preventDefault();
+              setMode(m === "register" ? "login" : "register");
+            });
+          }
+        } else {
+          footer.textContent = "Nie masz konta. Poproś administratora o dostęp.";
         }
-        if (modeToggle) {
-          modeToggle.textContent = mode === "register" ? "Zaloguj się" : "Utwórz konto";
-        }
-        if (pass) {
-          pass.setAttribute("autocomplete", mode === "register" ? "new-password" : "current-password");
-        }
-        if (msg) {
-          msg.className = "dam-auth-msg";
-          msg.textContent = "";
-        }
+        msg.textContent = "";
+        msg.className = "dam-auth-msg";
       }
 
-      if (modeToggle) {
-        modeToggle.addEventListener("click", function () {
-          setMode(mode === "login" ? "register" : "login");
-        });
+      function applyRegistrationPolicy(open) {
+        registrationOpen = !!open;
+        modeTabs.hidden = !registrationOpen;
+        setMode("login");
       }
+
+      /* Domyślnie produkcja: rejestracja ukryta; bootstrap tylko gdy API mowi open. */
+      applyRegistrationPolicy(false);
+      try {
+        var base = (window.DamRuntime && typeof DamRuntime.bridgeUrl === "function")
+          ? DamRuntime.bridgeUrl()
+          : "http://127.0.0.1:8766";
+        fetch(String(base).replace(/\/$/, "") + "/auth/registration-open", { cache: "no-store" })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && data.ok && data.open === true) {
+              applyRegistrationPolicy(true);
+            }
+          })
+          .catch(function () { /* zostaw ukryte */ });
+      } catch (_e) { /* zostaw ukryte */ }
+
+      tabLogin.addEventListener("click", function () { setMode("login"); });
+      tabRegister.addEventListener("click", function () { setMode("register"); });
 
       function flipPassword() {
         var show = pass.type === "password";
@@ -270,23 +316,29 @@
           msg.textContent = "Brak polaczenia z aplikacja. Uruchom DAM z pulpitu.";
           return;
         }
+        if (mode === "register" && !registrationOpen) {
+          msg.className = "dam-auth-msg is-err";
+          msg.textContent = "Rejestracja publiczna wyłączona. Poproś administratora.";
+          return;
+        }
         var email = (document.getElementById("authEmail").value || "").trim();
         var password = pass.value || "";
+        var name = (document.getElementById("authName").value || "").trim();
         submitBtn.disabled = true;
         msg.className = "dam-auth-msg";
         msg.textContent = mode === "register" ? "Tworzenie konta..." : "Logowanie...";
 
-        var action = mode === "register"
-          ? DamApi.register(email, password, "")
+        var p = mode === "register"
+          ? DamApi.register(email, password, name)
           : DamApi.login(email, password);
 
-        action.then(function () {
+        p.then(function () {
           msg.className = "dam-auth-msg is-ok";
           msg.textContent = "Zalogowano. Przekierowanie...";
           setTimeout(function () { location.replace("dashboard.html"); }, 300);
         }).catch(function (err) {
           msg.className = "dam-auth-msg is-err";
-          msg.textContent = (err && err.message) || "Nieprawidlowy email lub haslo.";
+          msg.textContent = (err && err.message) || "Nie udalo sie zalogowac";
           submitBtn.disabled = false;
         });
       });

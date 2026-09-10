@@ -1,149 +1,196 @@
 {
-  "version": 19,
+  "version": 22,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-08-13T16:30:00+02:00",
+  "updated_at": "2026-09-10T11:50:00+02:00",
   "instructions": [
     {
-      "id": "ui.no_fake_controls",
+      "id": "preview.cache.offline_browse",
+      "must": [
+        "PAMIEC-PODRECZNA/thumbs + indeksy w instalacji pozwalaja przegladac produkty i miniatury bez polaczenia z udzialem plikow (Marketing / Synology).",
+        "Po instalacji inni operatorzy i agenci moga od razu pracowac na cache (szukanie, siatka, podglad).",
+        "Oryginal z dysku zawsze wygrywa, gdy jest dostepny; cache to placeholder, nie zrodlo prawdy do zapisu."
+      ],
+      "body_pl": "HARD 2026-09-10: cache po instalacji = dzialanie bez udzialu plikow. Mutacje lifecycle to osobna bramka bazy.",
+      "category": "cache",
+      "must_not": [
+        "Blokowac przegladania / search / thumbs tylko dlatego, ze nie ma polaczenia z dyskiem plikow.",
+        "Udawac, ze cache-only obiekt jest zapisany jako Final na dysku."
+      ],
       "priority": "critical",
-      "title_pl": "Kontrolki bez atrap",
-      "category": "ux",
-      "updated_at": "2026-08-13",
+      "title_pl": "Pamięć podręczna = podgląd bez dysku plików",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-10",
+      "related_code": [
+        "apps/desktop/dam_thumb_cache.py",
+        "apps/web/assets/js/dam-explorer.js"
+      ]
+    },
+    {
+      "id": "lifecycle.requires_db",
+      "must": [
+        "Zapis F/X/D i Stosuj zmiany wymaga zywej bazy (Postgres online albo lokalny SQLite jako wybrany silnik).",
+        "Gdy baza jest offline (offline_mode / pill Baza offline) przyciski F/X/D/Bez statusu sa wylaczone.",
+        "Most POST /lifecycle-status i /lifecycle-force odrzuca db_required, nawet gdy cache thumbs istnieje.",
+        "Lokalny SQLite w DATABASE/ (Baza lokalna, nie tryb awarii) liczy sie jako polaczenie z baza."
+      ],
+      "body_pl": "HARD 2026-09-10: cache != baza. F/X/D zapisuje sie tylko gdy DamDbStatus.allowsMutations() / dam_db.allows_mutations().",
+      "category": "lifecycle",
+      "must_not": [
+        "Pozwalac na Final / X / D / clear przy braku polaczenia z baza tylko dlatego, ze jest PAMIEC-PODRECZNA.",
+        "Traktowac brak dysku Marketing jako zgode na mutacje cache-only."
+      ],
+      "priority": "critical",
+      "title_pl": "Final F/X/D tylko przy polaczeniu z baza",
+      "related_kv": [
+        "lifecycle-status"
+      ],
+      "updated_at": "2026-09-10",
+      "related_code": [
+        "apps/desktop/dam_db.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-explorer.js",
+        "apps/web/assets/js/dam-db-status.js"
+      ]
+    },
+    {
+      "id": "ui.no_fake_controls",
       "must": [
         "Kazdy checkbox, radio, przycisk i toggle musi miec realny skutek w backendzie albo byc placeholderem.",
         "Placeholder: tekst „Wkrótce dostępne” albo link do integracji / ustawien — nigdy udawane wlaczniki.",
         "Panel bazy: silnik live = Lokalna SQLite albo Synology Postgres; dump GitHub tylko przyciskiem Pobierz dump."
       ],
+      "body_pl": "HARD 2026-08-13: brak atrap w UI — dziala albo placeholder/link.",
+      "category": "ux",
       "must_not": [
         "Pokazywac checkboxow ktore zapisuja preferencje bez auth albo bez zmiany silnika.",
         "Udawac ze dump GitHub jest silnikiem live."
       ],
+      "priority": "critical",
+      "title_pl": "Kontrolki bez atrap",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-13",
       "related_code": [
         "apps/web/assets/js/dam-db-status.js",
         "apps/desktop/dam_db.py",
         "apps/desktop/local_bridge.py"
-      ],
-      "related_kv": [
-        "program-instructions"
-      ],
-      "body_pl": "HARD 2026-08-13: brak atrap w UI — dziala albo placeholder/link."
+      ]
     },
     {
       "id": "branding.grid_no_wizki_visuals_packshot",
-      "priority": "critical",
-      "title_pl": "Branding grid bez WIZKI/VISUALS/packshot",
-      "category": "branding",
-      "updated_at": "2026-08-10",
       "must": [
         "Siatka Branding (grid/head/UI) NIE pokazuje assetow WIZKI, VISUALS ani roli packshot.",
         "Predykat wspolny: source=wizki, asset_role=packshot, tag WIZKI, sciezki 4 - WIZKI / 4 - VISUALS.",
         "Fat branding-index.json ZACHOWUJE te rekordy (OCR, lookup, /branding/asset).",
         "UI laduje tylko branding-grid-head + branding-grid-index; nigdy fat na hot path."
       ],
+      "body_pl": "HARD 2026-08-10: Branding grid bez WIZKI/VISUALS/packshot. Fat index zostaje zapleczem lookup.",
+      "category": "branding",
       "must_not": [
         "Renderowac packshoty / wizualizacje produktowe (WIZKI) w pierwszej warstwie Brandingu.",
         "Usuwac WIZKI z fat branding-index przy rebuildzie.",
         "Ladowac branding-index.json w UI bez ?full=1."
       ],
+      "priority": "critical",
+      "title_pl": "Branding grid bez WIZKI/VISUALS/packshot",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-10",
       "related_code": [
         "apps/web/scripts/build-branding-grid-index.py",
         "apps/web/assets/js/dam-branding.js",
         "apps/desktop/local_bridge.py"
-      ],
-      "related_kv": [
-        "program-instructions"
-      ],
-      "body_pl": "HARD 2026-08-10: Branding grid bez WIZKI/VISUALS/packshot. Fat index zostaje zapleczem lookup."
+      ]
     },
     {
       "id": "index.continuous_auto_indexing",
-      "priority": "critical",
-      "title_pl": "Ciagle automatyczne indeksowanie podczas pracy",
-      "category": "indexing",
-      "updated_at": "2026-08-10",
       "must": [
         "Indeksy produktowe (file-index/search-index/thumbs) aktualizuja sie automatycznie podczas pracy aplikacji.",
         "Watcher i reczny rebuild wspoldziela O_EXCL lock (PID/started_at/stage/TTL) ze stale recovery.",
         "Status /index/status ujawnia watcher_ok, last_ok/error/rc, stan stale - bez cichego DEVNULL jako jedynego zrodla bledu.",
         "Log i status w gitignored apps/desktop/data (rotowany)."
       ],
+      "body_pl": "HARD 2026-08-10: indeksy zyja podczas pracy; błędy watchera widoczne w statusie/logu.",
+      "category": "indexing",
       "must_not": [
         "Ukrywac bledy rebuildu przez stdout/stderr=DEVNULL bez rotowanego logu.",
         "Uruchamiac niekontrolowany pelny skan Marketing przed zdobyciem locka i zapisem statusu.",
         "Traktowac file-index jako niezmienny po starcie sesji."
       ],
+      "priority": "critical",
+      "title_pl": "Ciagle automatyczne indeksowanie podczas pracy",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-10",
       "related_code": [
         "apps/web/scripts/watch-file-index.py",
         "apps/web/scripts/build-file-index.py",
         "apps/desktop/index_supervisor.py",
         "apps/desktop/local_bridge.py"
-      ],
-      "related_kv": [
-        "program-instructions"
-      ],
-      "body_pl": "HARD 2026-08-10: indeksy zyja podczas pracy; błędy watchera widoczne w statusie/logu."
+      ]
     },
     {
       "id": "index.supervisor_singleton_bridge_owned",
-      "priority": "critical",
-      "title_pl": "Jeden supervisor indeksow (bridge owner)",
-      "category": "indexing",
-      "updated_at": "2026-08-10",
       "must": [
         "Jeden supervisor indeksow dziala zarowno dla launch.py jak i serve_browser.py.",
         "Preferowany wlasciciel: local_bridge; singleton cross-process (lock PID) zapobiega duplikatom.",
         "Kolejki: produktowa (file-index) i brandingowa (fat->grid) z debounce."
       ],
+      "body_pl": "HARD 2026-08-10: bridge jest wlascicielem supervisora indeksow; launch/serve_browser nie dubluja.",
+      "category": "indexing",
       "must_not": [
         "Startowac drugi niezalezny watch-file-index z launch.py gdy bridge juz supervisuje.",
         "Tworzyc zombie-duplikaty watcherow."
       ],
+      "priority": "critical",
+      "title_pl": "Jeden supervisor indeksow (bridge owner)",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-10",
       "related_code": [
         "apps/desktop/index_supervisor.py",
         "apps/desktop/local_bridge.py",
         "apps/desktop/launch.py",
         "apps/desktop/serve_browser.py"
-      ],
-      "related_kv": [
-        "program-instructions"
-      ],
-      "body_pl": "HARD 2026-08-10: bridge jest wlascicielem supervisora indeksow; launch/serve_browser nie dubluja."
+      ]
     },
     {
       "id": "assoc.sqlite_sot_unified_write",
-      "priority": "critical",
-      "title_pl": "SQLite SoT skojarzen - jedna sciezka zapisu",
-      "category": "assoc",
-      "updated_at": "2026-08-10",
       "must": [
         "Zrodlo prawdy skojarzen: SQLite asset_product_links (ADR-010).",
         "Quiz i reczny editor zapisuja przez jedna funkcje repozytorium; JSON override = lustro kompatybilnosci.",
         "Po decyzji: debounced slim publish (--from-sqlite), bez pelnego fat rebuild.",
         "/health i /branding/status ujawniaja counts statusow i bledy schematu - nie maskuja jako pusta kolejka."
       ],
+      "body_pl": "HARD 2026-08-10: SQLite SoT + mirror override; seed tylko po dry-run/bramce jakosci.",
+      "category": "assoc",
       "must_not": [
         "Zapisac decyzje quiz/editor tylko do JSON z pominieciem SQLite.",
         "Nadpisywac confirmed/rejected przy seedzie pending/auto.",
         "Seedowac masowo bez dry-run walidacji asset_id/product_id.",
         "Uzywac Postgres/Redis jako SoT skojarzen."
       ],
+      "priority": "critical",
+      "title_pl": "SQLite SoT skojarzen - jedna sciezka zapisu",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-10",
       "related_code": [
         "apps/desktop/assoc_repo.py",
         "apps/desktop/branding_asset_routes.py",
         "apps/desktop/scripts/seed-asset-product-links.py",
         "apps/desktop/local_bridge.py"
-      ],
-      "related_kv": [
-        "program-instructions"
-      ],
-      "body_pl": "HARD 2026-08-10: SQLite SoT + mirror override; seed tylko po dry-run/bramce jakosci."
+      ]
     },
     {
       "id": "assoc.seed_dry_run_gate",
-      "priority": "critical",
-      "title_pl": "Seed pending: dry-run i bramka jakosci",
-      "category": "assoc",
-      "updated_at": "2026-08-10",
       "must": [
         "Przed seedem refilter-pending: waliduj asset_id vs fat index i product_id vs file-index.",
         "Raportuj odrzucone i probke jakosci; przy niskiej jakosci tylko dry-run + bramka, bez masowego insertu.",
@@ -152,6 +199,8 @@
         "Po kwarantannie: jesli gate formalnie OK, ale sample paths nieadekwatne (sibling/mixed, keyword-only), NIE --apply.",
         "Tryb jawny --strong-only: seed tylko z live fat+file via assoc_adequacy sku_match lub ocr_line_phrase (nie path/generic_plus/multi_token/token_plus_context); status=auto dla siatki; /assoc/queue serwuje pending+auto."
       ],
+      "body_pl": "HARD 2026-08-10: dry-run/bramka + kwarantanna + --strong-only (SKU/OCR live). Artifact refilter keyword-only nie seedujemy.",
+      "category": "assoc",
       "must_not": [
         "Wprowadzac masowo ~4974 pending bez walidacji i zatwierdzenia jakosci.",
         "Kasowac istniejace confirmed przy seedzie.",
@@ -159,170 +208,177 @@
         "Hardcodowac pojedyncze product_id (np. burger) w validatorze seed.",
         "Seedowac token_plus_context / sibling keyword jako pending/auto bez --strong-only SKU/OCR."
       ],
+      "priority": "critical",
+      "title_pl": "Seed pending: dry-run i bramka jakosci",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-10",
       "related_code": [
         "apps/desktop/scripts/seed-asset-product-links.py",
         "apps/web/scripts/assoc_adequacy.py",
         "apps/desktop/branding_asset_routes.py"
-      ],
-      "related_kv": [
-        "program-instructions"
-      ],
-      "body_pl": "HARD 2026-08-10: dry-run/bramka + kwarantanna + --strong-only (SKU/OCR live). Artifact refilter keyword-only nie seedujemy."
+      ]
     },
     {
       "id": "branding.quiz_viz_handoff_20260806",
-      "priority": "critical",
-      "title_pl": "Handoff Branding/Quiz/Viz — nastepna wiadomosc = naprawa",
-      "category": "branding",
-      "updated_at": "2026-08-06",
       "must": [
         "Przed pracą nad Branding/Quiz/Viz przeczytaj HANDOFF-BRANDING-QUIZ-VIZ.md (GIT_ROOT).",
         "Jakakolwiek wiadomość użytkownika o Brandingu, Quizie skojarzeń, Wizualizacjach, miniaturach Datesy, mapowaniu skojarzeń lub „napraw” = kontynuuj listę NIE OK z handoff (runtime QA screenshot, pipeline pending assoc, thumbs jeśli nadal Brak miniatury).",
         "OK już w kodzie: head grafik (nie PDF empty-role), tytuły z nazwy pliku nie folderu-kubełka, quiz tylko admin+toggle, fallback kolejki z siatki, viz thumb onerror→/media.",
         "Nie zamykaj jako done bez Ctrl+F5 + screenshot+Read Branding i Viz."
       ],
+      "body_pl": "HARD 2026-08-06: częściowy fix Branding/Quiz/Viz. Następny agent naprawia NIE OK z HANDOFF-BRANDING-QUIZ-VIZ.md.",
+      "category": "branding",
       "must_not": [
         "Uznawać handoff za zamknięty tylko dlatego że kod jest w git.",
         "Ładować fat branding-index.json na hot path UI.",
         "Pokazywać Quiz skojarzeń użytkownikowi bez roli admin + dam_admin_mode=1.",
         "Używać nazwy folderu numerowanego (01- CHŁODZONE) jako tytułu karty Branding."
       ],
+      "priority": "critical",
+      "title_pl": "Handoff Branding/Quiz/Viz — nastepna wiadomosc = naprawa",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-06",
       "related_code": [
         "HANDOFF-BRANDING-QUIZ-VIZ.md",
         "apps/web/assets/js/dam-branding.js",
         "apps/web/assets/js/dam-assoc-quiz.js",
         "apps/web/assets/js/dam-viz.js",
         "apps/web/scripts/build-branding-grid-index.py"
-      ],
-      "related_kv": [
-        "program-instructions"
-      ],
-      "body_pl": "HARD 2026-08-06: częściowy fix Branding/Quiz/Viz. Następny agent naprawia NIE OK z HANDOFF-BRANDING-QUIZ-VIZ.md."
+      ]
     },
     {
       "id": "workspace.layout_bin",
-      "priority": "critical",
-      "title_pl": "Layout GIT_ROOT + bin CONTENT_ROOT",
-      "category": "workspace",
-      "updated_at": "2026-08-06",
       "must": [
         "GIT_ROOT = katalog z .git i DAM.exe (obecnie D:\\Marketing\\...\\DAM---Dobra-Kaloria---inyfinn).",
         "CONTENT_ROOT = GIT_ROOT\\bin (apps, THEME, memory, runtime, scripts).",
         "runtime_config: CONTENT_ROOT = DESKTOP_DIR.parent.parent; GIT_ROOT = CONTENT_ROOT.parent; git cwd = GIT_ROOT.",
         "Launcher: DAM.exe lub DAM.cmd -> bin\\runtime\\win\\python\\pythonw.exe + bin\\apps\\desktop\\launch.py."
       ],
+      "body_pl": "HARD 2026-08-06: primary workspace D: (nie P:\\DAM). Portable = bin/runtime/win.",
+      "category": "workspace",
       "must_not": [
         "Zakladac ze apps/ lezy na wierzchu GIT_ROOT jako kanoniczna tresc (to moze byc tylko junction/lustro).",
         "Uruchamiac git w CONTENT_ROOT (bin) zamiast GIT_ROOT.",
         "Wymagac systemowego Python w PATH dla uzytkownika koncowego."
       ],
+      "priority": "critical",
+      "title_pl": "Layout GIT_ROOT + bin CONTENT_ROOT",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-06",
       "related_code": [
         "bin/apps/desktop/runtime_config.py",
         "bin/apps/desktop/dam_root_launcher.py",
         "DAM.cmd"
-      ],
-      "related_kv": [
-        "program-instructions"
-      ],
-      "body_pl": "HARD 2026-08-06: primary workspace D: (nie P:\\DAM). Portable = bin/runtime/win."
+      ]
     },
     {
       "id": "runtime.portable_embed_path",
-      "priority": "critical",
-      "title_pl": "Embeddable Python: sys.path entry scripts",
-      "category": "runtime",
-      "updated_at": "2026-08-06",
       "must": [
         "Entry points launch.py / serve_browser.py / local_bridge.py wstawiaja katalog desktop do sys.path (embed ._pth nie dodaje cwd).",
         "DAM.exe / DAM.cmd preferuje wylacznie bin\\runtime\\win\\python\\pythonw.exe.",
         "Deps (pywebview, bcrypt, Pillow, ...) w bin\\runtime\\win\\python\\Lib\\site-packages (vendor-runtime-win.ps1)."
       ],
+      "body_pl": "Root cause 2026-08-06: ModuleNotFoundError bridge_supervisor przy pythonw z bin/runtime.",
+      "category": "runtime",
       "must_not": [
         "Liczyc na PYTHONPATH przy embeddable (jest ignorowany gdy istnieje python*._pth).",
         "Wymagac pip install na maszynie uzytkownika / MsgBox Zainstaluj Python."
       ],
-      "related_code": [
-        "bin/apps/desktop/launch.py",
-        "bin/scripts/ops/vendor-runtime-win.ps1"
-      ],
+      "priority": "critical",
+      "title_pl": "Embeddable Python: sys.path entry scripts",
       "related_kv": [
         "program-instructions"
       ],
-      "body_pl": "Root cause 2026-08-06: ModuleNotFoundError bridge_supervisor przy pythonw z bin/runtime."
+      "updated_at": "2026-08-06",
+      "related_code": [
+        "bin/apps/desktop/launch.py",
+        "bin/scripts/ops/vendor-runtime-win.ps1"
+      ]
     },
     {
       "id": "perf.no_fat_branding_index_hotpath",
-      "priority": "critical",
-      "title_pl": "Zakaz hot-path branding-index.json (~340MB)",
-      "category": "performance",
-      "updated_at": "2026-08-06",
       "must": [
         "Cold UI: branding-grid-head.json + branding-grid-index.json (lub bridge /branding-grid-*).",
         "Modal/asset: GET /branding/asset?id= lub /branding-for-product.",
         "UI :8765 i bridge :8766 odmawiaja pelnego branding-index bez ?full=1 (403 use_branding_grid_index).",
         "Cel cold open kart: <1s na lokalnym dysku (grid-head <100ms)."
       ],
+      "body_pl": "RC 2026-08-06: pierwsze 32MB fat index = 4.1s I/O; grid-head 0.02s. Regresja vs ~1.5 tyg. temu = rozrost indeksu + sciezki full dump.",
+      "category": "performance",
       "must_not": [
         "fetch/parse data/branding-index.json ani GET /branding-index bez ?full=1 w sciezce UI.",
         "Serwowac backupy branding-index.* do przegladarki jako normalny asset."
       ],
+      "priority": "critical",
+      "title_pl": "Zakaz hot-path branding-index.json (~340MB)",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-08-06",
       "related_code": [
         "bin/apps/web/assets/js/dam-branding.js",
         "bin/apps/web/assets/js/dam-media-preview.js",
         "bin/apps/desktop/dam_ui_http.py",
         "bin/apps/desktop/local_bridge.py"
-      ],
-      "related_kv": [
-        "program-instructions"
-      ],
-      "body_pl": "RC 2026-08-06: pierwsze 32MB fat index = 4.1s I/O; grid-head 0.02s. Regresja vs ~1.5 tyg. temu = rozrost indeksu + sciezki full dump."
+      ]
     },
     {
-      "id": "db.sqlite_only_until_synology",
-      "priority": "critical",
-      "title_pl": "Tylko SQLite do powrotu Synology",
-      "category": "database",
-      "updated_at": "2026-08-06",
+      "id": "db.postgres_synology_live",
       "must": [
-        "Silnik lokalny: SQLite (bin/apps/desktop/data/dam-local.sqlite).",
-        "dam_db mode = sqlite (nie auto/pg) az do Postgres na NAS."
+        "Silnik live: Postgres Docker dam-eta-postgres na NAS, port 5433, baza/user dam_eta.",
+        "Hosty w tej kolejnosci: inyfinn.synology.me (DDNS/WAN), 212.87.249.132 (IP WAN), 192.168.1.145 (LAN w domu).",
+        "dam_db mode = postgres (synology=true). db-prefer.json na stacji: mode postgres, sources.synology true.",
+        "Gdy PG padnie: OFFLINE na lokalny SQLite + jasny hint, nie udawac online.",
+        "Klucze SSH NAS w %USERPROFILE%\\.ssh (syno_ed25519, cursor-cloud-agent). Nigdy w Git."
       ],
+      "body_pl": "2026-09-10: kontener dam-eta-postgres uruchomiony ponownie; SSH :5022 i PG :5433 z biura OK. Zastepuje db.sqlite_only_until_synology.",
+      "category": "database",
       "must_not": [
+        "Trzymac mode=sqlite i synology=false gdy NAS i port 5433 zyja.",
         "Wymagac lokalnego Postgresa do startu aplikacji.",
-        "Obiecywac multi-PC live bez Synology + PG na NAS.",
-        "Syncowac pliku .sqlite przez Drive/udzial jako wspolna baze."
+        "Syncowac pliku .sqlite przez Drive/udzial jako wspolna baze.",
+        "Commitowac prywatnego klucza SSH ani hasla PG do repo."
       ],
-      "related_code": [
-        "bin/apps/desktop/dam_db.py"
-      ],
+      "priority": "critical",
+      "title_pl": "Zywy Postgres na Synology (DDNS :5433)",
       "related_kv": [
         "program-instructions"
       ],
-      "body_pl": "Decyzja planu dam_bin_layout 2026-08-03; potwierdzona 2026-08-06."
+      "updated_at": "2026-09-10",
+      "related_code": [
+        "bin/apps/desktop/dam_db.py",
+        "bin/apps/desktop/pg_db.py"
+      ]
     },
     {
       "id": "assoc.no_sibling_spray_mixed",
-      "priority": "critical",
-      "title_pl": "Zakaz sibling spray w SLIDERY / mixed",
-      "category": "assoc",
-      "updated_at": "2026-08-05",
       "must": [
         "W SLIDERY / KATEGORIE GLOWNE / folderach mixed: linked_product_ids tylko per-plik (name+OCR+SKU / path_hints wlasne), NIE kopiuj folder_linked_product_ids na siblings.",
         "Kulki nie moga dostac mix-6x-mini-batoniki-mixy ze sprayu folderu.",
         "Path hint folder-level OK tylko gdy folder jednoznacznie jednego produktu; mixed_depth => bez sprayu blobu grupy."
       ],
+      "body_pl": "HARD 2026-08-05 Instant+assoc: root cause Kulki->MIX = sibling spray w enrich_folder_groups.",
+      "category": "assoc",
       "must_not": [
         "Kopiowac group_product_ids na wszystkie pliki w folderze mixed / SLIDERY.",
         "Traktowac sibling stem jako wspolne skojarzenia produktow."
       ],
-      "related_code": [
-        "apps/web/scripts/brand_folder_context.py",
-        "apps/web/scripts/refilter-branding-links.py"
-      ],
+      "priority": "critical",
+      "title_pl": "Zakaz sibling spray w SLIDERY / mixed",
       "related_kv": [
         "program-instructions"
       ],
-      "body_pl": "HARD 2026-08-05 Instant+assoc: root cause Kulki->MIX = sibling spray w enrich_folder_groups."
+      "updated_at": "2026-08-05",
+      "related_code": [
+        "apps/web/scripts/brand_folder_context.py",
+        "apps/web/scripts/refilter-branding-links.py"
+      ]
     },
     {
       "id": "ui.branding_grid_graphics_sort_overflow",
@@ -746,14 +802,16 @@
         "Produkt X: cascade na warianty + przeniesienie do archiwum kategorii",
         "Wariant X: archiwum z wrapperem produktu",
         "Produkt D: cascade - D na warianty; odznaczenie wariantu z D przy produkcie D czyści literkę produktu",
-        "API: POST/GET /lifecycle-status (tylko admin)",
-        "UI tag: Aktualne / Nieaktualne (dam-badge-tag data-tag-kind=status); Admin Shift/dbl"
+        "API: POST/GET /lifecycle-status (writer + zywa baza)",
+        "UI tag: Aktualne / Nieaktualne (dam-badge-tag data-tag-kind=status); Admin Shift/dbl",
+        "Bramka: F/X/D i Stosuj zmiany tylko gdy baza online (lifecycle.requires_db); cache nie uprawnia"
       ],
-      "body_pl": "Admin oznacza stan literką w nazwie folderu na dysku. F = aktualne, X = nieaktualne (archiwum), D = demo. Odznacz = usuń literkę. Historia previous_name + previous_path w lifecycle-status + change-log.",
+      "body_pl": "Admin oznacza stan literką w nazwie folderu na dysku, gdy jest polaczenie z baza. F = aktualne, X = nieaktualne (archiwum), D = demo. Odznacz = usuń literkę. Cache po instalacji pozwala tylko przegladac. Historia previous_name + previous_path w lifecycle-status + change-log.",
       "category": "lifecycle",
       "must_not": [
         "Zmieniać status realnych produktów bez potwierdzenia użytkownika gdy trwa TEST GATE",
-        "Gubić previous_path przy rename statusu (musi dać się cofnąć)"
+        "Gubić previous_path przy rename statusu (musi dać się cofnąć)",
+        "Zapisowac F/X/D przy bazie offline albo na obiektach tylko z pamieci podrecznej"
       ],
       "notes_pl": "Produkt testowy: TEST LIFECYCLE / indeks TEST-TEST. Litera archiwum na dysku: folder — ARCHIWUM (jak na Marketing).",
       "priority": "critical",

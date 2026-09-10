@@ -1,0 +1,355 @@
+                Utw�rz konto
+              Zapami�taj to urz�dzenie
+            : "temat�w";
+            ? "Utw�rz konto."
+            Po cofni�ciu masz 30&nbsp;s n
+          .replace(/�/g, "l");
+          <li>U�ywanie poza zakresem
+          Pe�ny tekst: plik <code
+          Zaloguj si� kontem firmowym.
+          �adna inna firma ani 
+         <strong>Pon�w</strong> = ostatni
+         <tr><td>Has�o Postgres</td><td>e
+         <tr><td>Has�o konta</td><td><str
+        "Szybkie skr�ty: <kbd>F1</kbd> lu
+        <p>Dane mog� by� przetwarzane na
+        <p>Dost�p, sprostowanie, usu
+        <p>Has�a nigdy nie s� szyfr
+        <p>Has�a: bcrypt (koszt 12)
+        <p>Po��czenie Asana / Micro
+       : "Zaloguj si� kontem firmowym.";
+       <li>Odsprzeda�, sublicencja, publi
+       <li>Sesja urz�dzenia: token sesji,
+      <p>DAM to wewn�trzna aplikacja desk
+    /* Pe�na szeroko�� w siatce 12-col (b
+    /* Trash odbiorc�w (lista powiadomie�
+    set_base_path: "�cie�ka bazowa",
+   <li>Metadane plik�w Marketing (�cie�ki
+   data-dam-tip="Otw�rz pe�ny panel Histo
+  <title>Bezpiecze�stwo - DAM</title>
+  <title>Wiadomo�ci - DAM</title>
+ 0 8px">7. Bezpiecze�stwo</h3>
+ <!-- Preferencje tu� po Dysk: para Bento
+ Ikony obok otwieraj� folder Windows lub 
+ Outlook), bezpiecze�stwo i audit.</p>
+ Tokeny OAuth: do od��czenia integracji l
+ Zapisz ustawienia, �eby p�niej wr�ci� do
+ aktualn� literk�. Wymaga Admin + Try
+ aria-live="polite">��czenie...</p>
+ class="dam-inbox-zg�osze�ie-tabs" id="in
+ copy_path: "Kopiuj �cie�k�",
+ dla os�b trzecich.</p>
+ dla tego urz�dzenia</strong>. Wsk
+ dodaj do faktury. P�niej zaktualizujesz 
+ gwarantuje dostępno�ci API stron trzecic
+ jest w nazwach plik�w firmowych.</li>
+ konta - u dostawc�w: Asana Inc., Micro
+ problem albo przegl�daj tematy - jak kor
+ propozycj� - decyzja admina w 
+ wpisz indeks / nazw�  (np. <em>6300</em>
+ z pulpitu. W przegl�darce: <code>python 
+ zawiera�: <strong>-- ARCHIWU
+" data-count-for="zg�osze�ie">0</span>
+" data-count-for="zg�osze�ie_historia">0<
+" data-count-for="zg�osze�ie_typy">0</spa
+" data-count-for="zg�osze�ie_wiz">0</span
+"4" placeholder="Has�o" autocomplete="cur
+">4. Integracje zewn�trzne</h3>
+"></i> Gdzie filtruj� marki DK i GC?</div
+"></i> Jak udostępni� wizualizacj�?</div>
+"Wyczyść filtr, poka� wszystkie karty" ti
+"dam-faq-a">Przy nag��wku <strong>Kategor
+"dam-setting-desc">O�wiadczam, �e zapozna
+"damNamingUiRule">Pe�ne nazwy: DOYPACK, F
+"dash.open_cost">Otw�rz kalkulator kosztó
+"name_desc">Nazwa: Z�A</option>
+(bez dziury obok Urz�dze�) -->
+(jak Historia status�w)">
+(~0,3&nbsp;s) - zwyk�e klikni�cie nic nie
+). Wyłączenie = zwyk�y klik. Zapis w prof
+, aby pokazać Przejd� i Folder Windows.</
+, indeksy) - bez tre�ci dokument�w osobow
+, jakie pliki zapisa� do folderu ELEMENTY
+, opakowanie) zostaj� bez zmian.</p>
+, synchronizacja zg�osze� i checklisty m
+- zgodnie z procedur� IT. U�ytkownik zg�a
+-dam-tip="Szuka w li�cie projekt�w na tej
+-faq-a">Rozwija kart�: checklista komplet
+-inbox-side__title">�r�d�a</h3>
+-tip="Przywraca domy�lny fiolet panelu">P
+. Przy zoomie przeci�gnij obraz. W lightb
+.subtitle">Zadania i�zg�oszenia. Filtr po
+/kbd>+klik na pomara�czowym tagu typu (al
+0% pomniejsza grafik� w kafelku; powyżej 
+16px">Zadania Asana � kosztorys faktury</
+: udostępnianie hase�, obchodzenie kontro
+<li>Usuwanie oznacze� praw autorskich.</l
+<strong>Anuluj cofni�cie</strong>.
+<strong>Cofnij zmian� na dysku</strong> (
+="damNotifyName">Imi� i nazwisko</label>
+="name_asc">Nazwa: A�Z</option>
+="profil profile imi� imie nazwa stanowis
+="true"></i> Pliki, �cie�ki, most</h3>
+="true"></i> Wiadomo�ci i kontakt</h3>
+="visually-hidden">W�asny kolor</label>
+== "register" ? "Utw�rz konto" : "Zaloguj
+></i> Cofnij ostatni�
+>BACK</strong> to ty� w pochyleniu (wida�
+>Dane operacyjne: zg�oszenia JSON, audit 
+>Drobne wygodne prze��czniki: podpowiedzi
+>PNG z przezroczysto�ci�</p>
+>Wczytywanie statusu�</p></div>
+>inyfinn.art</a>. Zg�oszenia operacyjne: 
+FACE</strong> to prz�d na p�asko. <strong
+Filtr sekcji ustawie�" id="damSettingsFil
+Integrations">Przejd� do Integracji</a></
+K / GC. Kolorowe = w��czone, prawie bia�e
+L, BAT�</p>
+Manager dla materia��w marketingowych (ma
+N. Szczeg�y: <a href="docs-sec
+OLIA, BATON�</p>
+Odśwież listę = prze�aduj karty z ju� wcz
+Privacy policy URL: �cie�ka aplikacji <co
+RONT</strong> to prz�d w pochyleniu (wida
+RedoLast" title="Pon�w ostatnio wycofan� 
+Refresh" title="Prze�aduj listę z bie��ce
+Refresh" title="Prze�aduj listę">
+Wczytywanie historii�</p></div>
+Wiadomo�ciach.</p>
+__subtitle">Log dzia�an: kopiowanie �cie�
+a ?4 Warianty? na li�cie produktów?</div>
+a">Domyślnie 50%. Ni�sza warto�� = mniejs
+a-search="dysk disk �cie�ka �cie�ka path 
+abel">Propozycje typ�w</span>
+abel="Szukaj projekt�w"
+ader__title">Wiadomo�ci</h2>
+ail przy zg�oszeniu zapotrzebowa
+aje pe�nej szeroko�ci -->
+ak program nazywa no�niki na ekranie i ja
+alue="recent">Przegl�daj ostatnie</option
+am instructions regu�y reguly pi policy">
+am-widget__meta">Sta�e zasady DAM (status
+ams, Outlook), gdy b�dziesz gotowy. Token
+anego indeksu w pami�ci/bridge. Nie skanu
+anego klienta i dzia�aj�cego bridge.</p>
+anie kosztów projekt�w...</p>
+ap synology oauth po��czenia polaczenia">
+apisane w tej przegl�darce. <strong>Nie w
+aq-a">Jeden styl wsz�dzie (Eksplorer, Wiz
+aq-a">Liczba wariant�w / indeks�w produkt
+ass="dam-faq-a">Naci�nij <kbd>F1</kbd> al
+ateria��w, integracja z narz
+atte czarnego matte � kana� alpha (jak po
+azewnictwo naming no�niki nosniki doypack
+a� folder przyciskiem 
+a� wariant j�zykowy.</p>
+ba nie może korzysta� z Programu bez
+biorcze: 2 face i uk�ad 2×12 (24 szt.). T
+bo ma�� ikon� <strong>?</strong> 
+bo podw�jny klik). Otwiera p
+box" aria-label="Skr�ty do paneli"></ul>
+boxZg�o�zenieTabs" hidden ro
+ce - zgodnie z ich w�asnymi licencjami.</
+checklistę kompletno�ci i zg�oszeniami. N
+chy do hold; czerwie� = destrukcja, nie d
+circle"></i> Gdzie s� dema i stare wizual
+cje, Projekty). Zwyk�y klik = filtr. Praw
+cle"></i> Jak zmieni� typ no�nika (FOLIA 
+cted="false" data-zg�osze�ie-sub="histori
+cted="false" data-zg�osze�ie-sub="wizuali
+czone. Zwykle obie s� w��czone. Ustawieni
+d synology bezpiecze�stwo bezpieczenstwo 
+dam-sw-row__desc">Kr�tkie opisy po najech
+dam-widget__meta">Po��cz Asanę i Microsof
+dden="true"></i> Otw�rz panel
+dden="true"></i> Pon�w
+dden="true"></i> Skr�ty i nawigacja</h3>
+dden="true"></i> Urz�dzenia i �cie�ki Mar
+den="true"></i> Wygl�d panelu</h2>
+den="true"></i> Wygl�d</button>
+dget__meta">Lista os�b, kt�re dostan� e-m
+do synchronizacji zg�osze� w Inbox. Mog� 
+drożenia wewn�trznego. Backup i re
+duktów. To samo (skr�t) na pasku Wizualiz
+e zapisuje si� i synchronizuje z W
+e"></i> Jak odświeży� widok?</div>
+e">Ładowanie indeksu�</div>
+e: adres e-mail, imi� i nazwisko, rola (<
+e="font-size:9px">Cz�onek Zarz�du / Dyrek
+ected="true" data-zg�osze�ie-sub="typy" t
+ego zalogowania i zg�d (patrz <a href="co
+emna, je�li zawarta.</p>
+eniasz tutaj - obowi�zuje dla wszystkich.
+ent do 15 użytkownik�w</li>
+er (nie musisz klepa� �cie�ki). Root musi
+er">inyfinn.art</a> � 2026</p>
+er</code>), hash has�a (bcrypt).</li>
+er</strong> - przegl�danie, zg�oszenia JS
+er__title">Bezpiecze�stwo techniczne</h2>
+erze: o� czasu, filtry F/X/D
+es pracodawcy - narz�dzie wewn�trzne) ora
+ewy bok). <strong>TY�-ENFACE</strong> to 
+extContent = "0 wpis�w";
+g-desc">Wyrażam zgod� na dostęp aplikacji
+g-desc">Wyrażam zgod� na odczyt zada� Asa
+g>Admin</strong> + w��czony <em>Tryb admi
+go wyszukiwania. Spr�buj: <em>shift</em>,
+h.customize_hint">Uk�ad pulpitu zapisuje 
+header__subtitle">Tw�j profil, wygląd pan
+i offline? - co robi�.</div>
+i pole nie odświeżaj� siatki na �ywo - za
+i uruchamia aplikacj� od nowa.</p>
+i> Co jest w Wiadomo�ciach?</div>
+i> Dlaczego nie widz� starego indeksu�</d
+iadomienia do grafik�w</h2>
+icense.html">Licencj�</a> DAM i zobowiązu
+icker. Zwyk�y użytkownik zg�asza
+idzisz w panelu: imi�, kolory, jasny/ciem
+ie jest us�ug� publiczn� typu SaaS
+ie oznacza akceptacj� nowej wersji, o ile
+ierzytelnianie, zarz�dzanie uprawnieniami
+inbox-tag__label">Zg�oszenia DAM</span></
+ip="Skanuj dysk = pe�ny ingest Marketing:
+ircle"></i> Jak dzia�aj� tagi?</div>
+ister" ? "Zaloguj si�" : "Utw�rz konto";
+isuje si� samo.</p>
+item data-keywords="�cie�ka marketing dys
+item__top">Brak wpis�w</div><div class="d
+itle="Cofnij ostatni� zmian� na dysku z c
+itle="Propozycje typ�w" aria-label="Propo
+iu OAuth. Poniżej pe�na tre�� o�wiadcze� 
+j: historia, motyw, �cie�ka, wiadomości�"
+j</strong>. DAM wywo�uje Synology Drive C
+je nad wynikami (bia�e t�o) - search zost
+ję si� ich przestrzega�.</
+karta co w profilu: �cie�ka <strong>tylko
+kategorię poni�ej, �eby zobaczy� tylko p
+keting pozostaj� w�asno�ci� organizacji
+kopiuj� �cie�k�.</p>
+ks produktów. Trwa d�u�ej ni� Odśwież lis
+le"></i> Co oznaczaj� perspektywy ENFACE,
+le"></i> Co oznaczaj� przyciski F, X, D p
+le"></i> Jak otworzy� pomoc?</div>
+le"></i> Jak oznaczy� wariant jako nieakt
+le"></i> Jak przybli�y� wizualizacj�?</di
+li r�l, masowe kasowanie 
+lient (Uzyskaj ��cze) przez most (por
+likacja dostarczana �jak jest� w ramach w
+likacja musi je wysy�a� do Asana/Graph.</
+log dzia�a� w panelu, preferenc
+lokalne w tej przegl�darce. Wymagaj� <str
+lokalnym. Sesje powi�zane z machine_id. P
+lonym prawem. Szczeg�y - osobna umowa pis
+lu Wiadomo�ci.</span></span>
+m-faq-a">Uruchom skr�t <strong>DAM</stron
+m-widget__meta">DAM � <a href="https://in
+m: zgodnie z retencj� backup�w (max. 72 d
+mNamingDiskRule">Skr�ty folderów: DOY, FO
+ma wizualizacje w wi�cej ni� jednym j�zyk
+marketing folder urz�dzenie urz�dzenie de
+ment do 5 użytkownik�w</li>
+menu, przyciski, pod�wietlenia) oraz jasn
+meta">Ładowanie stan�w r�kawek.</p>
+month">Ostatni miesi�c</button>
+n</strong> należy wy��cznie do:
+na powi�zanych z prac� marke
+ng__empty">Ładowanie�</p>
+nia konwersji Links � ELEMENTY w modalu w
+nie danych poza kana�y firmowe. Pliki Mar
+nie myli� z �Wróć do kolejki�.).
+nie panelu wykrojnik�w.</p>
+nimy dane użytkownik�w w DAM</p>
+ni�cie, ograniczenie, p
+no�ci, pliki �r�d�owe / do druku, wizu
+nt-note">Zmiana dzia�a od razu na ca�ym p
+ntyConvQuality">Jako�� / kompresja (%)</l
+ny motyw i �cie�k� do plik�w. Wybierz 
+o otwarte produkty s� pod spodem na starc
+obi klik w wiersz no�nika?</div>
+odz� z konta (bez edycji
+odłączyć integracj� w każdej chwili.</s
+ojekt</strong>. Modu� <strong>Branding</s
+old na trash odbiorc�w - bez edycji dam-s
+on możesz zmieni�. E-mail i rola poch
+ong> zdejmuje literk�; przywr�cenie waria
+ong>. Nie rusza plik�w na dysku.</p>
+ontentLoaded może ju� min�" gdy inline sc
+ost-toolbar__badge">�r�d�o: snapshot loka
+owanie listy projekt�w">
+ox-tag" data-tag="zg�osze�ie">
+oznacza badge Multij�zyczny?</div>
+oś potrzebę albo otw�rz hub / folder / As
+ośników - pojawią si� nieaktualne i stars
+o�72�h�bez�decyzji. Nic nie zap
+o��czenie do Postgres: 
+perspektyw i rozmiar�w, brandbook.</p>
+piecznie bezpiecze�stwo bezpieczenstwo 
+pletno�ci plik�w.</p>
+plikacja DAM to wewn�trzny Digital Asset 
+poprzedniej nazwy i �cie�ki jest zapisywa
+propozycje (zatwierd� / odrzu� / wybierz 
+r="authPassword">Has�o</label>
+ra folderów jest wsp�lna. Na ka�dym PC us
+rchMeta">Szybkie skr�ty: <kbd>F1</kbd> lu
+rcle"></i> Dlaczego �cie�ki zaczynaj� si�
+rcle"></i> Jak znale�� produkt?</div>
+rganizacji oraz - wy��cznie po po��czeniu
+ria-label="Rodzaj zg�oszenia">
+rii kliknij miniatur�, potem <strong>Udos
+ript si� rejestruje */
+rity.html">Bezpiecze�stwo techniczne</a>.
+rong> = aktualny/sko�czony (<code> - F</c
+rong>Historia status�w</strong> w Eksplor
+rzywr�� domy�lny</button>
+sana / Teams oraz zg�oszenia zmiany tagów
+search="usuwanie usu� usun bezpieczne bez
+sie� firmowa / DDNS / VP
+si� lokalnie dla Twojeg
+st-empty">Ładowanie �a�cucha FMCG...</p>
+sza b��dy administratorowi.
+szczeniu możesz cofn�� przez ok. 8&nbsp;s
+szystkich użytkownik�w. PNG z przezroczys
+t dam-int-st--wait">�r�d�o: -</span>
+tawiasz w�asn� �cie�k� bazow� Marketing 
+tems.length + " wpis�w";
+tingowych powiadomie�.</p>
+tingow� i wy�wietlenie ich w pane
+tip opis hover wskaz�wki wskazowki">
+title">Lista projekt�w opakowań i�ich kom
+top/web do zarz�dzania plikami marke
+to�ci� (dematte czarnego m
+trolce zmienia warto��.">
+trong>Cofnij ostatni�</strong> = cofa ren
+trong>Nie usuwa plik�w</strong> z dysku a
+trzebne karty. Na ko�cu kliknij Zapisz.</
+tting-desc">Akceptuj� <a href="privacy.ht
+ttingProfileName">Wy�wietlana nazwa</labe
+twierd� przyciskiem OK. K�k
+ty� na p�asko.</p>
+u. Imi�, stanowisko i telef
+u. Otw�rz miniatur� / studio, �eby wybr
+ub wyga�ni�cia refresh token. D
+ubtitle">DAM ? obowi�zuje od 2026-07-18</
+uj / drzewo / przywr�� - dla <strong>wszy
+um trafia do istniej�cego produktu z jego
+u�ywanych w aplikacji 
+w ustawieniach i skr�tach panelu</label>
+w__name">Formaty wyj�ciowe</p>
+widget__meta">Jak wy�wietlamy Ci� w panel
+wnictwo, zakazy). Mo�esz je przeczyta�, a
+wojego pliku? Sprawd�, czy masz zaznaczon
+wykrojniki i stany r�kawek. Sekrety w dam
+x">5. Odpowiedzialno��</h3>
+y karton badge odslo�">
+y zostaj� na tym komputerze.<
+zmian, integracje, u�ytkownicy, infrastru
+zmian� na dysku">
+zyciski Usuń wymagaj� przytrzymania (~1 s
+zycje typ�w">
+zysta� z DAM</p>
+ą dobr� kategorię. Ewentual
+łem/am si� z <a href="terms.ht
+żej). Kwoty bazowe s� punktem wyj�cia, ni
+� prawy bok). <strong
+�dziami pracy (Asana,
+��r�dle. Przypomnienie p

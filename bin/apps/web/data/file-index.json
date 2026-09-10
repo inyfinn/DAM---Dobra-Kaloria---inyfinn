@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-04T13:27:58",
+  "generated_at": "2026-09-10T14:46:59",
   "roots": [
     {
       "brand": "DK",
@@ -11,10 +11,10 @@
     }
   ],
   "root": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
-  "elapsed_sec": 61.57,
-  "category_count": 12,
-  "product_count": 192,
-  "viz_count": 438,
+  "elapsed_sec": 57.44,
+  "category_count": 13,
+  "product_count": 193,
+  "viz_count": 441,
   "categories": [
     {
       "name": "01 - BATONY",
@@ -49,6 +49,11 @@
     {
       "name": "07 - DATESY",
       "rel": "07 - DATESY",
+      "brand": "DK"
+    },
+    {
+      "name": "08 - CHRUPKULKI",
+      "rel": "08 - CHRUPKULKI",
       "brand": "DK"
     },
     {
@@ -8161,10 +8166,110 @@
                 "lang": "",
                 "slot": "2 - PROJEKT",
                 "role": "source"
+              },
+              {
+                "name": "MIX-DoBRE-WSPARCIE.zip",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/2 - PROJEKT/MIX-DoBRE-WSPARCIE.zip",
+                "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/2 - PROJEKT/MIX-DoBRE-WSPARCIE.zip",
+                "ext": "zip",
+                "size": 142832826,
+                "mtime": "2026-09-03T13:25:48",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
               }
             ],
             "print": [],
-            "viz": [],
+            "viz": [
+              {
+                "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_front_CMYK.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_front_CMYK.tif",
+                "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_front_CMYK.tif",
+                "ext": "tif",
+                "size": 17701976,
+                "mtime": "2026-09-09T11:57:27",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_tyl_CMYK.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_tyl_CMYK.tif",
+                "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_tyl_CMYK.tif",
+                "ext": "tif",
+                "size": 12083660,
+                "mtime": "2026-09-09T11:45:22",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_front_CMYK.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_front_CMYK.tif",
+                "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_front_CMYK.tif",
+                "ext": "tif",
+                "size": 4891044,
+                "mtime": "2026-09-09T11:57:47",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_tyl_CMYK.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_tyl_CMYK.tif",
+                "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_tyl_CMYK.tif",
+                "ext": "tif",
+                "size": 3862660,
+                "mtime": "2026-09-09T11:45:47",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_1200px.jpg",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_1200px.jpg",
+                "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_1200px.jpg",
+                "ext": "jpg",
+                "size": 560644,
+                "mtime": "2026-09-09T12:00:12",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_bez_tla_1200px.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_bez_tla_1200px.png",
+                "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_bez_tla_1200px.png",
+                "ext": "png",
+                "size": 1019713,
+                "mtime": "2026-09-09T11:59:49",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_1200px.jpg",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_1200px.jpg",
+                "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_1200px.jpg",
+                "ext": "jpg",
+                "size": 532811,
+                "mtime": "2026-09-09T11:48:16",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_bez_tla_1200px.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_bez_tla_1200px.png",
+                "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_bez_tla_1200px.png",
+                "ext": "png",
+                "size": 777398,
+                "mtime": "2026-09-09T11:56:39",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              }
+            ],
             "elements": [
               {
                 "name": "DK_Energia_45g.tif",
@@ -8249,8 +8354,97 @@
               }
             ]
           },
-          "wizki": [],
-          "wizki_count": 0,
+          "wizki": [
+            {
+              "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_front_CMYK.tif",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_front_CMYK.tif",
+              "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_front_CMYK.tif",
+              "ext": "tif",
+              "size": 17701976,
+              "mtime": "2026-09-09T11:57:27",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_tyl_CMYK.tif",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_tyl_CMYK.tif",
+              "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A4_tyl_CMYK.tif",
+              "ext": "tif",
+              "size": 12083660,
+              "mtime": "2026-09-09T11:45:22",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_front_CMYK.tif",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_front_CMYK.tif",
+              "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_front_CMYK.tif",
+              "ext": "tif",
+              "size": 4891044,
+              "mtime": "2026-09-09T11:57:47",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_tyl_CMYK.tif",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_tyl_CMYK.tif",
+              "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_A5_tyl_CMYK.tif",
+              "ext": "tif",
+              "size": 3862660,
+              "mtime": "2026-09-09T11:45:47",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_1200px.jpg",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_1200px.jpg",
+              "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_1200px.jpg",
+              "ext": "jpg",
+              "size": 560644,
+              "mtime": "2026-09-09T12:00:12",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_bez_tla_1200px.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_bez_tla_1200px.png",
+              "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_bez_tla_1200px.png",
+              "ext": "png",
+              "size": 1019713,
+              "mtime": "2026-09-09T11:59:49",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_1200px.jpg",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_1200px.jpg",
+              "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_1200px.jpg",
+              "ext": "jpg",
+              "size": 532811,
+              "mtime": "2026-09-09T11:48:16",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_bez_tla_1200px.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_bez_tla_1200px.png",
+              "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_tyl_RGB_bez_tla_1200px.png",
+              "ext": "png",
+              "size": 777398,
+              "mtime": "2026-09-09T11:56:39",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            }
+          ],
+          "wizki_count": 8,
           "langs": [
             "pl"
           ],
@@ -10342,7 +10536,7 @@
           "wizki_count": 8,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -17496,8 +17690,7 @@
             "2 - PROJEKT",
             "2 - PROJEKT/links",
             "3 - DRUK",
-            "4 - WIZKI",
-            "4 – WIZKI"
+            "4 - WIZKI"
           ],
           "files_by_role": {
             "source": [
@@ -17561,57 +17754,57 @@
             "viz": [
               {
                 "name": "DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
-                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
+                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
                 "ext": "tif",
                 "size": 14494820,
                 "mtime": "2026-08-26T11:26:34",
                 "lang": "",
-                "slot": "4 – WIZKI",
+                "slot": "4 - WIZKI",
                 "role": "viz"
               },
               {
                 "name": "DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
-                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
+                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
                 "ext": "tif",
                 "size": 2894652,
                 "mtime": "2026-08-26T11:26:48",
                 "lang": "",
-                "slot": "4 – WIZKI",
+                "slot": "4 - WIZKI",
                 "role": "viz"
               },
               {
                 "name": "DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
-                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
+                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
                 "ext": "jpg",
                 "size": 366595,
                 "mtime": "2026-08-26T11:27:55",
                 "lang": "",
-                "slot": "4 – WIZKI",
+                "slot": "4 - WIZKI",
                 "role": "viz"
               },
               {
                 "name": "DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
-                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
+                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
                 "ext": "png",
                 "size": 403007,
                 "mtime": "2026-08-26T11:27:36",
                 "lang": "",
-                "slot": "4 – WIZKI",
+                "slot": "4 - WIZKI",
                 "role": "viz"
               },
               {
                 "name": "DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
-                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
+                "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
                 "ext": "png",
                 "size": 4153387,
                 "mtime": "2026-08-26T11:27:10",
                 "lang": "",
-                "slot": "4 – WIZKI",
+                "slot": "4 - WIZKI",
                 "role": "viz"
               }
             ],
@@ -17620,57 +17813,57 @@
           "wizki": [
             {
               "name": "DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
-              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
-              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
+              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A4.tif",
               "ext": "tif",
               "size": 14494820,
               "mtime": "2026-08-26T11:26:34",
               "lang": "",
-              "slot": "4 – WIZKI",
+              "slot": "4 - WIZKI",
               "role": "viz"
             },
             {
               "name": "DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
-              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
-              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
+              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_CMYK_A5.tif",
               "ext": "tif",
               "size": 2894652,
               "mtime": "2026-08-26T11:26:48",
               "lang": "",
-              "slot": "4 – WIZKI",
+              "slot": "4 - WIZKI",
               "role": "viz"
             },
             {
               "name": "DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
-              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
-              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
+              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_1200px.jpg",
               "ext": "jpg",
               "size": 366595,
               "mtime": "2026-08-26T11:27:55",
               "lang": "",
-              "slot": "4 – WIZKI",
+              "slot": "4 - WIZKI",
               "role": "viz"
             },
             {
               "name": "DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
-              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
-              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
+              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
               "ext": "png",
               "size": 403007,
               "mtime": "2026-08-26T11:27:36",
               "lang": "",
-              "slot": "4 – WIZKI",
+              "slot": "4 - WIZKI",
               "role": "viz"
             },
             {
               "name": "DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
-              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
-              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
+              "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_Big.png",
               "ext": "png",
               "size": 4153387,
               "mtime": "2026-08-26T11:27:10",
               "lang": "",
-              "slot": "4 – WIZKI",
+              "slot": "4 - WIZKI",
               "role": "viz"
             }
           ],
@@ -18800,7 +18993,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -19235,7 +19428,7 @@
           "wizki_count": 0,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -44432,12 +44625,14 @@
         "inne": []
       },
       "indexes": [
-        "6300728.00"
+        "6300728.00",
+        "6300838.00"
       ],
       "index_bases": [
-        "6300728"
+        "6300728",
+        "6300838"
       ],
-      "revision_count": 1,
+      "revision_count": 2,
       "revisions": [
         {
           "folder": "DOY - 65 g - 24.03.2026 - 6300728.00",
@@ -45614,11 +45809,247 @@
           "langs_manual": false,
           "langs_source": "brand_dk",
           "is_latest": true
+        },
+        {
+          "folder": "DOY – 65g - 04.09.2026 - 6300838",
+          "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838",
+          "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838",
+          "carrier": "DOY",
+          "index_base": "6300838",
+          "index_rev": "00",
+          "index": "6300838.00",
+          "date": "2026-09-04",
+          "slots": [
+            "2 - PROJEKT",
+            "2 - PROJEKT/Links"
+          ],
+          "files_by_role": {
+            "source": [
+              {
+                "name": "DK_doy_kulki_banofee_2026_09_04_6300838_F.ai",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/DK_doy_kulki_banofee_2026_09_04_6300838_F.ai",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/DK_doy_kulki_banofee_2026_09_04_6300838_F.ai",
+                "ext": "ai",
+                "size": 2462298,
+                "mtime": "2026-09-08T13:19:25",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "DK_doy_kulki_banofee_2026_09_04_6300838_FQ.ai",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/DK_doy_kulki_banofee_2026_09_04_6300838_FQ.ai",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/DK_doy_kulki_banofee_2026_09_04_6300838_FQ.ai",
+                "ext": "ai",
+                "size": 3504199,
+                "mtime": "2026-09-08T13:19:25",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "DK_doy_kulki_banofee_2026_09_04_6300838_FQ.pdf",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/DK_doy_kulki_banofee_2026_09_04_6300838_FQ.pdf",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/DK_doy_kulki_banofee_2026_09_04_6300838_FQ.pdf",
+                "ext": "pdf",
+                "size": 4992362,
+                "mtime": "2026-09-08T13:19:25",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "DK_doy_kulki_banofee_2026_09_04_6300838_FQ_PODGLAD.pdf",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/DK_doy_kulki_banofee_2026_09_04_6300838_FQ_PODGLAD.pdf",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/DK_doy_kulki_banofee_2026_09_04_6300838_FQ_PODGLAD.pdf",
+                "ext": "pdf",
+                "size": 1481166,
+                "mtime": "2026-09-08T13:19:25",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              }
+            ],
+            "print": [],
+            "viz": [],
+            "elements": [
+              {
+                "name": "BANAN-1.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN-1.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN-1.tif",
+                "ext": "tif",
+                "size": 5495064,
+                "mtime": "2026-09-08T13:19:30",
+                "lang": ""
+              },
+              {
+                "name": "BANAN-2.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN-2.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN-2.tif",
+                "ext": "tif",
+                "size": 10019640,
+                "mtime": "2026-09-08T13:19:31",
+                "lang": ""
+              },
+              {
+                "name": "BANAN-3.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN-3.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN-3.tif",
+                "ext": "tif",
+                "size": 6363172,
+                "mtime": "2026-09-08T13:19:31",
+                "lang": ""
+              },
+              {
+                "name": "BANAN_01.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_01.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_01.tif",
+                "ext": "tif",
+                "size": 5315432,
+                "mtime": "2026-09-08T13:19:26",
+                "lang": ""
+              },
+              {
+                "name": "BANAN_02.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_02.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_02.tif",
+                "ext": "tif",
+                "size": 6303432,
+                "mtime": "2026-09-08T13:19:26",
+                "lang": ""
+              },
+              {
+                "name": "BANAN_03.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_03.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_03.tif",
+                "ext": "tif",
+                "size": 6016904,
+                "mtime": "2026-09-08T13:19:26",
+                "lang": ""
+              },
+              {
+                "name": "BANAN_04.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_04.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_04.tif",
+                "ext": "tif",
+                "size": 6128952,
+                "mtime": "2026-09-08T13:19:28",
+                "lang": ""
+              },
+              {
+                "name": "BANAN_05.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_05.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_05.tif",
+                "ext": "tif",
+                "size": 6264440,
+                "mtime": "2026-09-08T13:19:26",
+                "lang": ""
+              },
+              {
+                "name": "BANAN_06.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_06.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_06.tif",
+                "ext": "tif",
+                "size": 6856560,
+                "mtime": "2026-09-08T13:19:28",
+                "lang": ""
+              },
+              {
+                "name": "BANAN_07.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_07.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANAN_07.tif",
+                "ext": "tif",
+                "size": 15547692,
+                "mtime": "2026-09-08T13:19:28",
+                "lang": ""
+              },
+              {
+                "name": "BANOFFEE - do kulek.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANOFFEE - do kulek.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/BANOFFEE - do kulek.tif",
+                "ext": "tif",
+                "size": 92823488,
+                "mtime": "2026-09-08T13:19:40",
+                "lang": ""
+              },
+              {
+                "name": "Cień KULKA- 1.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/Cień KULKA- 1.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/Cień KULKA- 1.tif",
+                "ext": "tif",
+                "size": 2142960,
+                "mtime": "2026-09-08T13:19:26",
+                "lang": ""
+              },
+              {
+                "name": "KULKI Ugryzione.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/KULKI Ugryzione.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/KULKI Ugryzione.tif",
+                "ext": "tif",
+                "size": 271455840,
+                "mtime": "2026-09-08T13:19:40",
+                "lang": ""
+              },
+              {
+                "name": "KULKI pełne.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/KULKI pełne.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/KULKI pełne.tif",
+                "ext": "tif",
+                "size": 117555920,
+                "mtime": "2026-09-08T13:19:33",
+                "lang": ""
+              },
+              {
+                "name": "Kawka.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/Kawka.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/Kawka.tif",
+                "ext": "tif",
+                "size": 85187252,
+                "mtime": "2026-09-08T13:19:29",
+                "lang": ""
+              },
+              {
+                "name": "NERKOWIEC3.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/NERKOWIEC3.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/NERKOWIEC3.tif",
+                "ext": "tif",
+                "size": 1929568,
+                "mtime": "2026-09-08T13:19:26",
+                "lang": ""
+              },
+              {
+                "name": "TIRAMISU-kompozycja.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/TIRAMISU-kompozycja.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/TIRAMISU-kompozycja.tif",
+                "ext": "tif",
+                "size": 42566736,
+                "mtime": "2026-09-08T13:19:25",
+                "lang": ""
+              },
+              {
+                "name": "ZIARENKA KAWY-4.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/ZIARENKA KAWY-4.tif",
+                "rel": "02 - KULKI/BANOFFEE KAKAO — [ deserowe ]/DOY – 65g - 04.09.2026 - 6300838/2 - PROJEKT/Links/ZIARENKA KAWY-4.tif",
+                "ext": "tif",
+                "size": 17866572,
+                "mtime": "2026-09-08T13:19:31",
+                "lang": ""
+              }
+            ]
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true
         }
       ],
       "related_materials": [],
       "authors": [],
-      "search_blob": "banoffee kakao banoffee kakao deserowe banoffee deserowe doypack kakao kulki 6300728.00 doy 65 g 24.03.2026 6300728.00 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65 g 24.03.2026 6300728.00 6300728.00"
+      "search_blob": "banoffee kakao banoffee kakao deserowe banoffee deserowe doypack kakao kulki 6300728.00 6300838.00 doy 65 g 24.03.2026 6300728.00 doy 65g 04.09.2026 6300838 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65 g 24.03.2026 6300728.00 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65g 04.09.2026 6300838 6300728.00 6300838.00"
     },
     {
       "id": "czarna-porzeczka-owocowe",
@@ -47879,7 +48310,7 @@
           "wizki_count": 40,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -49155,7 +49586,7 @@
           "wizki_count": 40,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -50488,7 +50919,7 @@
           "wizki_count": 40,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -51163,8 +51594,583 @@
       },
       "indexes": [],
       "index_bases": [],
-      "revision_count": 1,
+      "revision_count": 2,
       "revisions": [
+        {
+          "folder": "DOY - 00 g - 09 09 2026 - 6300XXX.00",
+          "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00",
+          "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00",
+          "carrier": "DOY",
+          "index_base": null,
+          "index_rev": null,
+          "index": null,
+          "date": "2026-09-09",
+          "slots": [
+            "0 - ARCHIWUM",
+            "1 - MATERIAŁY",
+            "1 - MATERIAŁY/ELEMENTY",
+            "2 - PROJEKT",
+            "2 - PROJEKT/links",
+            "3 - DRUK",
+            "4 - WIZKI"
+          ],
+          "files_by_role": {
+            "source": [
+              {
+                "name": "DK-DOY-ŻELKI_Z_KREATYNA -  65 g - 6300XXX.00-F.ai",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/DK-DOY-ŻELKI_Z_KREATYNA -  65 g - 6300XXX.00-F.ai",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/DK-DOY-ŻELKI_Z_KREATYNA -  65 g - 6300XXX.00-F.ai",
+                "ext": "ai",
+                "size": 25895824,
+                "mtime": "2026-09-09T23:50:49",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              }
+            ],
+            "print": [],
+            "viz": [
+              {
+                "name": "DOYPACK -zelki kreatynowe-10-09-1.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1.png",
+                "ext": "png",
+                "size": 8641167,
+                "mtime": "2026-09-10T09:35:11",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe-10-09-1b.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1b.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1b.png",
+                "ext": "png",
+                "size": 8726445,
+                "mtime": "2026-09-10T09:20:05",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe-10-09-1c.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1c.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1c.png",
+                "ext": "png",
+                "size": 8506143,
+                "mtime": "2026-09-10T09:20:45",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe-10-09-2b.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2b.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2b.png",
+                "ext": "png",
+                "size": 2622289,
+                "mtime": "2026-09-10T10:20:46",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe-10-09-2c.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2c.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2c.png",
+                "ext": "png",
+                "size": 2368829,
+                "mtime": "2026-09-10T10:19:46",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe.png",
+                "ext": "png",
+                "size": 7986328,
+                "mtime": "2026-09-09T10:20:32",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe1.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe1.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe1.png",
+                "ext": "png",
+                "size": 9435716,
+                "mtime": "2026-09-09T12:40:06",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe10.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe10.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe10.png",
+                "ext": "png",
+                "size": 9367980,
+                "mtime": "2026-09-09T12:45:18",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe11.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe11.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe11.png",
+                "ext": "png",
+                "size": 8844139,
+                "mtime": "2026-09-09T12:51:21",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe2.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe2.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe2.png",
+                "ext": "png",
+                "size": 7970445,
+                "mtime": "2026-09-09T10:22:18",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe3.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe3.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe3.png",
+                "ext": "png",
+                "size": 7667255,
+                "mtime": "2026-09-09T10:23:36",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe4.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe4.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe4.png",
+                "ext": "png",
+                "size": 7936903,
+                "mtime": "2026-09-09T10:25:09",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe5.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe5.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe5.png",
+                "ext": "png",
+                "size": 9095731,
+                "mtime": "2026-09-09T10:28:27",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe6.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe6.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe6.png",
+                "ext": "png",
+                "size": 9302053,
+                "mtime": "2026-09-09T10:31:09",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe7.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe7.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe7.png",
+                "ext": "png",
+                "size": 9448309,
+                "mtime": "2026-09-09T10:32:50",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe8.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe8.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe8.png",
+                "ext": "png",
+                "size": 9189662,
+                "mtime": "2026-09-09T10:34:25",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "DOYPACK -zelki kreatynowe9.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe9.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe9.png",
+                "ext": "png",
+                "size": 9228617,
+                "mtime": "2026-09-09T10:36:27",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              }
+            ],
+            "elements": [
+              {
+                "name": "Kulki z kreatyna_16.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/Kulki z kreatyna_16.tif",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/Kulki z kreatyna_16.tif",
+                "ext": "tif",
+                "size": 13466348,
+                "mtime": "2026-09-09T09:43:20",
+                "lang": ""
+              },
+              {
+                "name": "Kulki z kreatyna_17.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/Kulki z kreatyna_17.tif",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/Kulki z kreatyna_17.tif",
+                "ext": "tif",
+                "size": 13270028,
+                "mtime": "2026-09-09T09:44:03",
+                "lang": ""
+              },
+              {
+                "name": "Kulki z kreatyna_4.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/Kulki z kreatyna_4.tif",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/Kulki z kreatyna_4.tif",
+                "ext": "tif",
+                "size": 13212192,
+                "mtime": "2026-09-09T09:06:29",
+                "lang": ""
+              },
+              {
+                "name": "freepik_create-illustrated-yuzu-f_2823257646_0000_Warstwa-1.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/freepik_create-illustrated-yuzu-f_2823257646_0000_Warstwa-1.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/freepik_create-illustrated-yuzu-f_2823257646_0000_Warstwa-1.png",
+                "ext": "png",
+                "size": 144578,
+                "mtime": "2026-04-20T12:35:13",
+                "lang": ""
+              },
+              {
+                "name": "freepik_create-illustrated-yuzu-f_2823257646_0002_Warstwa-3.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/freepik_create-illustrated-yuzu-f_2823257646_0002_Warstwa-3.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/freepik_create-illustrated-yuzu-f_2823257646_0002_Warstwa-3.png",
+                "ext": "png",
+                "size": 138413,
+                "mtime": "2026-04-20T12:35:13",
+                "lang": ""
+              },
+              {
+                "name": "kulka-ok.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/kulka-ok.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/kulka-ok.png",
+                "ext": "png",
+                "size": 3140450,
+                "mtime": "2026-09-08T14:19:42",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-isometric-view-_w4A6Gje7EI_0000_Warstwa-2.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-isometric-view-_w4A6Gje7EI_0000_Warstwa-2.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-isometric-view-_w4A6Gje7EI_0000_Warstwa-2.png",
+                "ext": "png",
+                "size": 2581896,
+                "mtime": "2026-09-08T15:27:41",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_ksJbYQQ16B_0000_Warstwa-2.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJbYQQ16B_0000_Warstwa-2.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJbYQQ16B_0000_Warstwa-2.png",
+                "ext": "png",
+                "size": 150411,
+                "mtime": "2026-09-04T10:26:25",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_ksJbYQQ16B_0002_Warstwa-4.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJbYQQ16B_0002_Warstwa-4.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJbYQQ16B_0002_Warstwa-4.png",
+                "ext": "png",
+                "size": 94424,
+                "mtime": "2026-09-04T10:26:26",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_ksJbYQQ16B_0004_Warstwa-6.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJbYQQ16B_0004_Warstwa-6.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJbYQQ16B_0004_Warstwa-6.png",
+                "ext": "png",
+                "size": 110659,
+                "mtime": "2026-09-04T10:26:27",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_ksJbYQQ16B_0011_Warstwa-13.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJbYQQ16B_0011_Warstwa-13.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJbYQQ16B_0011_Warstwa-13.png",
+                "ext": "png",
+                "size": 304006,
+                "mtime": "2026-09-04T10:26:30",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_ksJblEO16B_0001_Warstwa-1.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJblEO16B_0001_Warstwa-1.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJblEO16B_0001_Warstwa-1.png",
+                "ext": "png",
+                "size": 645809,
+                "mtime": "2026-09-04T10:21:50",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_ksJblEO16B_0002_Warstwa-0.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJblEO16B_0002_Warstwa-0.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_ksJblEO16B_0002_Warstwa-0.png",
+                "ext": "png",
+                "size": 686515,
+                "mtime": "2026-09-04T10:21:51",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0000_Warstwa-1.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0000_Warstwa-1.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0000_Warstwa-1.png",
+                "ext": "png",
+                "size": 47929,
+                "mtime": "2026-09-04T10:21:11",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0001_Warstwa-2.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0001_Warstwa-2.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0001_Warstwa-2.png",
+                "ext": "png",
+                "size": 35523,
+                "mtime": "2026-09-04T10:21:11",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0002_Warstwa-3.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0002_Warstwa-3.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0002_Warstwa-3.png",
+                "ext": "png",
+                "size": 39971,
+                "mtime": "2026-09-04T10:21:12",
+                "lang": ""
+              },
+              {
+                "name": "magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0003_Warstwa-4.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0003_Warstwa-4.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/2 - PROJEKT/links/magnific_a-closeup-normal-perspect_s7Nx6rdl8e_0003_Warstwa-4.png",
+                "ext": "png",
+                "size": 20388,
+                "mtime": "2026-09-04T10:21:12",
+                "lang": ""
+              }
+            ]
+          },
+          "wizki": [
+            {
+              "name": "DOYPACK -zelki kreatynowe-10-09-1.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1.png",
+              "ext": "png",
+              "size": 8641167,
+              "mtime": "2026-09-10T09:35:11",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe-10-09-1b.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1b.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1b.png",
+              "ext": "png",
+              "size": 8726445,
+              "mtime": "2026-09-10T09:20:05",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe-10-09-1c.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1c.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-1c.png",
+              "ext": "png",
+              "size": 8506143,
+              "mtime": "2026-09-10T09:20:45",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe-10-09-2b.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2b.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2b.png",
+              "ext": "png",
+              "size": 2622289,
+              "mtime": "2026-09-10T10:20:46",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe-10-09-2c.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2c.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2c.png",
+              "ext": "png",
+              "size": 2368829,
+              "mtime": "2026-09-10T10:19:46",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe.png",
+              "ext": "png",
+              "size": 7986328,
+              "mtime": "2026-09-09T10:20:32",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe1.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe1.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe1.png",
+              "ext": "png",
+              "size": 9435716,
+              "mtime": "2026-09-09T12:40:06",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe10.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe10.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe10.png",
+              "ext": "png",
+              "size": 9367980,
+              "mtime": "2026-09-09T12:45:18",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe11.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe11.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe11.png",
+              "ext": "png",
+              "size": 8844139,
+              "mtime": "2026-09-09T12:51:21",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe2.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe2.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe2.png",
+              "ext": "png",
+              "size": 7970445,
+              "mtime": "2026-09-09T10:22:18",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe3.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe3.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe3.png",
+              "ext": "png",
+              "size": 7667255,
+              "mtime": "2026-09-09T10:23:36",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe4.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe4.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe4.png",
+              "ext": "png",
+              "size": 7936903,
+              "mtime": "2026-09-09T10:25:09",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe5.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe5.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe5.png",
+              "ext": "png",
+              "size": 9095731,
+              "mtime": "2026-09-09T10:28:27",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe6.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe6.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe6.png",
+              "ext": "png",
+              "size": 9302053,
+              "mtime": "2026-09-09T10:31:09",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe7.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe7.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe7.png",
+              "ext": "png",
+              "size": 9448309,
+              "mtime": "2026-09-09T10:32:50",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe8.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe8.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe8.png",
+              "ext": "png",
+              "size": 9189662,
+              "mtime": "2026-09-09T10:34:25",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "DOYPACK -zelki kreatynowe9.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe9.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe9.png",
+              "ext": "png",
+              "size": 9228617,
+              "mtime": "2026-09-09T10:36:27",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            }
+          ],
+          "wizki_count": 17,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true
+        },
         {
           "folder": "DOY - 00 g - DD MM RRRR - 6300XXX.00",
           "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00",
@@ -51186,23 +52192,157 @@
           "files_by_role": {
             "source": [
               {
+                "name": "CYTRYNA 1.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/CYTRYNA 1.psd",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/CYTRYNA 1.psd",
+                "ext": "psd",
+                "size": 34472489,
+                "mtime": "2026-09-09T12:06:45",
+                "lang": "",
+                "slot": "1 - MATERIAŁY",
+                "role": "source"
+              },
+              {
+                "name": "CYTRYNA 1.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/CYTRYNA 1.tif",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/CYTRYNA 1.tif",
+                "ext": "tif",
+                "size": 26425824,
+                "mtime": "2026-09-09T12:07:11",
+                "lang": "",
+                "slot": "1 - MATERIAŁY",
+                "role": "source"
+              },
+              {
+                "name": "CYTRYNA 2.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/CYTRYNA 2.psd",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/CYTRYNA 2.psd",
+                "ext": "psd",
+                "size": 29900276,
+                "mtime": "2026-09-09T11:57:23",
+                "lang": "",
+                "slot": "1 - MATERIAŁY",
+                "role": "source"
+              },
+              {
+                "name": "Cola.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/Cola.psd",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/Cola.psd",
+                "ext": "psd",
+                "size": 105927273,
+                "mtime": "2026-09-09T12:23:13",
+                "lang": "",
+                "slot": "1 - MATERIAŁY",
+                "role": "source"
+              },
+              {
+                "name": "Cola.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/Cola.tif",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/Cola.tif",
+                "ext": "tif",
+                "size": 27229348,
+                "mtime": "2026-09-09T12:26:50",
+                "lang": "",
+                "slot": "1 - MATERIAŁY",
+                "role": "source"
+              },
+              {
+                "name": "DK-DOY-KREA- Kulki z kreatyna 65g - 6300728.00_F-SZKICE 08.09.2026.ai",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/0 - ARCHIWUM/DK-DOY-KREA- Kulki z kreatyna 65g - 6300728.00_F-SZKICE 08.09.2026.ai",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/0 - ARCHIWUM/DK-DOY-KREA- Kulki z kreatyna 65g - 6300728.00_F-SZKICE 08.09.2026.ai",
+                "ext": "ai",
+                "size": 10788921,
+                "mtime": "2026-09-08T08:36:42",
+                "lang": "",
+                "slot": "0 - ARCHIWUM",
+                "role": "source"
+              },
+              {
+                "name": "DK-DOY-KREA- Kulki z kreatyna 65g - 6300728.00_F-SZKICE 09.09.2026.ai",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/0 - ARCHIWUM/DK-DOY-KREA- Kulki z kreatyna 65g - 6300728.00_F-SZKICE 09.09.2026.ai",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/0 - ARCHIWUM/DK-DOY-KREA- Kulki z kreatyna 65g - 6300728.00_F-SZKICE 09.09.2026.ai",
+                "ext": "ai",
+                "size": 30092866,
+                "mtime": "2026-09-09T14:06:31",
+                "lang": "",
+                "slot": "0 - ARCHIWUM",
+                "role": "source"
+              },
+              {
                 "name": "DK-DOY-KREA- Kulki z kreatyna 65g - 6300728.00_F.ai",
                 "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/2 - PROJEKT/DK-DOY-KREA- Kulki z kreatyna 65g - 6300728.00_F.ai",
                 "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/2 - PROJEKT/DK-DOY-KREA- Kulki z kreatyna 65g - 6300728.00_F.ai",
                 "ext": "ai",
-                "size": 4378519,
-                "mtime": "2026-09-04T13:12:13",
+                "size": 15782919,
+                "mtime": "2026-09-10T09:37:42",
                 "lang": "",
                 "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "inspiracje.pdf",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/inspiracje.pdf",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/1 - MATERIAŁY/inspiracje.pdf",
+                "ext": "pdf",
+                "size": 1284771,
+                "mtime": "2026-09-04T14:32:08",
+                "lang": "",
+                "slot": "1 - MATERIAŁY",
                 "role": "source"
               }
             ],
             "print": [],
-            "viz": [],
+            "viz": [
+              {
+                "name": "KULKI-KREATYNA1.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA1.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA1.png",
+                "ext": "png",
+                "size": 2428865,
+                "mtime": "2026-09-10T10:30:49",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              },
+              {
+                "name": "KULKI-KREATYNA2.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA2.png",
+                "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA2.png",
+                "ext": "png",
+                "size": 2503390,
+                "mtime": "2026-09-10T10:27:19",
+                "lang": "",
+                "slot": "4 - WIZKI",
+                "role": "viz"
+              }
+            ],
             "elements": []
           },
-          "wizki": [],
-          "wizki_count": 0,
+          "wizki": [
+            {
+              "name": "KULKI-KREATYNA1.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA1.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA1.png",
+              "ext": "png",
+              "size": 2428865,
+              "mtime": "2026-09-10T10:30:49",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            },
+            {
+              "name": "KULKI-KREATYNA2.png",
+              "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA2.png",
+              "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA2.png",
+              "ext": "png",
+              "size": 2503390,
+              "mtime": "2026-09-10T10:27:19",
+              "lang": "",
+              "slot": "4 - WIZKI",
+              "role": "viz"
+            }
+          ],
+          "wizki_count": 2,
           "langs": [
             "pl"
           ],
@@ -51213,7 +52353,7 @@
       ],
       "related_materials": [],
       "authors": [],
-      "search_blob": "kulki z kreatyna kulki z kreatyna kreatyna doypack kulki kreatyna doy 00 g dd mm rrrr 6300xxx.00 d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 00 g dd mm rrrr 6300xxx.00 6300xxx.00"
+      "search_blob": "kulki z kreatyna kulki z kreatyna kreatyna doypack kulki kreatyna doy 00 g 09 09 2026 6300xxx.00 doy 00 g dd mm rrrr 6300xxx.00 d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 00 g 09 09 2026 6300xxx.00 d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 00 g dd mm rrrr 6300xxx.00 6300xxx.00 6300xxx.00"
     },
     {
       "id": "malina-owocowe",
@@ -54063,7 +55203,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -56973,7 +58113,7 @@
           "wizki_count": 18,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -58364,7 +59504,7 @@
           "wizki_count": 16,
           "langs": [
             "pl",
-            "en"
+            "ua"
           ],
           "langs_manual": false,
           "langs_source": "brand_dk+raw",
@@ -59952,12 +61092,14 @@
         "inne": []
       },
       "indexes": [
-        "6300729.00"
+        "6300729.00",
+        "6300837.00"
       ],
       "index_bases": [
-        "6300729"
+        "6300729",
+        "6300837"
       ],
-      "revision_count": 1,
+      "revision_count": 2,
       "revisions": [
         {
           "folder": "DOY - 65 g - 24.03.2026 - 6300729.00",
@@ -60910,11 +62052,256 @@
           "langs_manual": false,
           "langs_source": "brand_dk",
           "is_latest": true
+        },
+        {
+          "folder": "DOY - 65g - 07.09.2026 - 6300837",
+          "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837",
+          "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837",
+          "carrier": "DOY",
+          "index_base": "6300837",
+          "index_rev": "00",
+          "index": "6300837.00",
+          "date": "2026-09-07",
+          "slots": [
+            "2 - PROJEKT",
+            "2 - PROJEKT/Links"
+          ],
+          "files_by_role": {
+            "source": [
+              {
+                "name": "DK_doy_kulki_tiramisu_2026_09_07_6300837_F.ai",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/DK_doy_kulki_tiramisu_2026_09_07_6300837_F.ai",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/DK_doy_kulki_tiramisu_2026_09_07_6300837_F.ai",
+                "ext": "ai",
+                "size": 111283526,
+                "mtime": "2026-09-07T17:14:20",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "DK_doy_kulki_tiramisu_2026_09_07_6300837_FQ.ai",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/DK_doy_kulki_tiramisu_2026_09_07_6300837_FQ.ai",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/DK_doy_kulki_tiramisu_2026_09_07_6300837_FQ.ai",
+                "ext": "ai",
+                "size": 121699746,
+                "mtime": "2026-09-07T17:06:44",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "DK_doy_kulki_tiramisu_2026_09_07_6300837_FQ.pdf",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/DK_doy_kulki_tiramisu_2026_09_07_6300837_FQ.pdf",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/DK_doy_kulki_tiramisu_2026_09_07_6300837_FQ.pdf",
+                "ext": "pdf",
+                "size": 15945437,
+                "mtime": "2026-09-07T17:07:05",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "DK_doy_kulki_tiramisu_2026_09_07_6300837_FQ_podglad.pdf",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/DK_doy_kulki_tiramisu_2026_09_07_6300837_FQ_podglad.pdf",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/DK_doy_kulki_tiramisu_2026_09_07_6300837_FQ_podglad.pdf",
+                "ext": "pdf",
+                "size": 1768784,
+                "mtime": "2026-09-07T17:09:44",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              }
+            ],
+            "print": [],
+            "viz": [],
+            "elements": [
+              {
+                "name": "CZEKOLADA_01.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_01.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_01.tif",
+                "ext": "tif",
+                "size": 5530152,
+                "mtime": "2026-03-05T14:53:24",
+                "lang": ""
+              },
+              {
+                "name": "CZEKOLADA_02.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_02.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_02.tif",
+                "ext": "tif",
+                "size": 7454952,
+                "mtime": "2026-03-05T14:53:35",
+                "lang": ""
+              },
+              {
+                "name": "CZEKOLADA_03.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_03.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_03.tif",
+                "ext": "tif",
+                "size": 9305708,
+                "mtime": "2026-03-05T14:53:43",
+                "lang": ""
+              },
+              {
+                "name": "CZEKOLADA_04.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_04.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_04.tif",
+                "ext": "tif",
+                "size": 10286096,
+                "mtime": "2026-03-05T14:51:21",
+                "lang": ""
+              },
+              {
+                "name": "CZEKOLADA_05.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_05.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_05.tif",
+                "ext": "tif",
+                "size": 8348260,
+                "mtime": "2026-03-05T14:51:39",
+                "lang": ""
+              },
+              {
+                "name": "CZEKOLADA_06.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_06.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_06.tif",
+                "ext": "tif",
+                "size": 9089640,
+                "mtime": "2026-03-05T14:51:55",
+                "lang": ""
+              },
+              {
+                "name": "CZEKOLADA_07.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_07.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_07.tif",
+                "ext": "tif",
+                "size": 8717256,
+                "mtime": "2026-03-05T14:52:10",
+                "lang": ""
+              },
+              {
+                "name": "CZEKOLADA_08.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_08.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/CZEKOLADA_08.tif",
+                "ext": "tif",
+                "size": 9043312,
+                "mtime": "2026-03-19T13:35:13",
+                "lang": ""
+              },
+              {
+                "name": "Cień KULKA- 1.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/Cień KULKA- 1.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/Cień KULKA- 1.tif",
+                "ext": "tif",
+                "size": 2142960,
+                "mtime": "2026-05-06T14:51:35",
+                "lang": ""
+              },
+              {
+                "name": "KULKI Ugryzione.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/KULKI Ugryzione.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/KULKI Ugryzione.tif",
+                "ext": "tif",
+                "size": 271455840,
+                "mtime": "2026-05-05T15:06:24",
+                "lang": ""
+              },
+              {
+                "name": "KULKI pełne.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/KULKI pełne.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/KULKI pełne.tif",
+                "ext": "tif",
+                "size": 117555920,
+                "mtime": "2026-02-25T17:21:53",
+                "lang": ""
+              },
+              {
+                "name": "Kawka-filizanka.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/Kawka-filizanka.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/Kawka-filizanka.tif",
+                "ext": "tif",
+                "size": 30698620,
+                "mtime": "2026-03-23T17:45:38",
+                "lang": ""
+              },
+              {
+                "name": "NERKOWIEC3.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/NERKOWIEC3.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/NERKOWIEC3.tif",
+                "ext": "tif",
+                "size": 1929568,
+                "mtime": "2025-12-18T18:43:13",
+                "lang": ""
+              },
+              {
+                "name": "TIRAMISU-kompozycja.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/TIRAMISU-kompozycja.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/TIRAMISU-kompozycja.tif",
+                "ext": "tif",
+                "size": 42566736,
+                "mtime": "2026-03-12T13:20:30",
+                "lang": ""
+              },
+              {
+                "name": "TIRAMISU.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/TIRAMISU.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/TIRAMISU.tif",
+                "ext": "tif",
+                "size": 145010536,
+                "mtime": "2026-04-30T13:45:25",
+                "lang": ""
+              },
+              {
+                "name": "ZIARENKA KAWY-1.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/ZIARENKA KAWY-1.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/ZIARENKA KAWY-1.tif",
+                "ext": "tif",
+                "size": 20616964,
+                "mtime": "2026-03-04T14:12:24",
+                "lang": ""
+              },
+              {
+                "name": "ZIARENKA KAWY-2.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/ZIARENKA KAWY-2.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/ZIARENKA KAWY-2.tif",
+                "ext": "tif",
+                "size": 16945200,
+                "mtime": "2026-03-04T14:12:34",
+                "lang": ""
+              },
+              {
+                "name": "ZIARENKA KAWY-3.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/ZIARENKA KAWY-3.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/ZIARENKA KAWY-3.tif",
+                "ext": "tif",
+                "size": 16261452,
+                "mtime": "2026-03-04T14:12:46",
+                "lang": ""
+              },
+              {
+                "name": "ZIARENKA KAWY-4.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/ZIARENKA KAWY-4.tif",
+                "rel": "02 - KULKI/TIRAMISU CZEKOLADA KAKAO — [ deserowe ]/DOY - 65g - 07.09.2026 - 6300837/2 - PROJEKT/Links/ZIARENKA KAWY-4.tif",
+                "ext": "tif",
+                "size": 17866572,
+                "mtime": "2026-03-04T14:12:56",
+                "lang": ""
+              }
+            ]
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true
         }
       ],
       "related_materials": [],
       "authors": [],
-      "search_blob": "tiramisu czekolada kakao tiramisu czekolada kakao deserowe czekolada deserowe doypack kakao kulki tiramisu 6300729.00 doy 65 g 24.03.2026 6300729.00 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65 g 24.03.2026 6300729.00 6300729.00"
+      "search_blob": "tiramisu czekolada kakao tiramisu czekolada kakao deserowe czekolada deserowe doypack kakao kulki tiramisu 6300729.00 6300837.00 doy 65 g 24.03.2026 6300729.00 doy 65g 07.09.2026 6300837 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65 g 24.03.2026 6300729.00 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65g 07.09.2026 6300837 6300729.00 6300837.00"
     },
     {
       "id": "orzeszki-miod-sniadanie",
@@ -98179,6 +99566,17 @@
                 "role": "source"
               },
               {
+                "name": "DK_ETYKIETA-butelka - CHIA 200 ml-10_09_2026 - 6300XXX.00-.ai",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/CHIA — [ postbiotyk ]/ETY-BUT - 200 ml - 30.04.2026 - 6300XXX.00/2 - PROJEKT/DK_ETYKIETA-butelka - CHIA 200 ml-10_09_2026 - 6300XXX.00-.ai",
+                "rel": "05 - NAPOJE/CHIA — [ postbiotyk ]/ETY-BUT - 200 ml - 30.04.2026 - 6300XXX.00/2 - PROJEKT/DK_ETYKIETA-butelka - CHIA 200 ml-10_09_2026 - 6300XXX.00-.ai",
+                "ext": "ai",
+                "size": 7608461,
+                "mtime": "2026-09-10T11:38:53",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
                 "name": "DK_ETYKIETA-butelka - CHIA 200 ml-24_04_2026 - 6300XXX.00-.ai",
                 "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/CHIA — [ postbiotyk ]/ETY-BUT - 200 ml - 30.04.2026 - 6300XXX.00/2 - PROJEKT/DK_ETYKIETA-butelka - CHIA 200 ml-24_04_2026 - 6300XXX.00-.ai",
                 "rel": "05 - NAPOJE/CHIA — [ postbiotyk ]/ETY-BUT - 200 ml - 30.04.2026 - 6300XXX.00/2 - PROJEKT/DK_ETYKIETA-butelka - CHIA 200 ml-24_04_2026 - 6300XXX.00-.ai",
@@ -101643,7 +103041,7 @@
       },
       "indexes": [],
       "index_bases": [],
-      "revision_count": 1,
+      "revision_count": 2,
       "revisions": [
         {
           "folder": "ETY-BUT - 100 ml - 30.04.2026 - 6300XXX.00",
@@ -102892,13 +104290,140 @@
           "langs_manual": false,
           "langs_source": "brand_dk",
           "is_latest": true
+        },
+        {
+          "folder": "ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00",
+          "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00",
+          "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00",
+          "carrier": "ETY-BUT",
+          "index_base": null,
+          "index_rev": null,
+          "index": null,
+          "date": "2026-09-09",
+          "slots": [
+            "0 - ARCHIWUM",
+            "1 - MATERIAŁY",
+            "1 - MATERIAŁY/ELEMENTY",
+            "2 - PROJEKT",
+            "2 - PROJEKT/Links",
+            "3 - DRUK",
+            "4 - WIZKI"
+          ],
+          "files_by_role": {
+            "source": [
+              {
+                "name": "DK_ETY-shot - razem 100 ml-09_09_2026 - 6300XXX.ai",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/DK_ETY-shot - razem 100 ml-09_09_2026 - 6300XXX.ai",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/DK_ETY-shot - razem 100 ml-09_09_2026 - 6300XXX.ai",
+                "ext": "ai",
+                "size": 3205147,
+                "mtime": "2026-09-09T10:57:43",
+                "lang": "",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              }
+            ],
+            "print": [],
+            "viz": [],
+            "elements": [
+              {
+                "name": "GUARANA.tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/GUARANA.tif",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/GUARANA.tif",
+                "ext": "tif",
+                "size": 3788956,
+                "mtime": "2026-05-19T12:46:48",
+                "lang": ""
+              },
+              {
+                "name": "LISCIE - cytryna (1).tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/LISCIE - cytryna (1).tif",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/LISCIE - cytryna (1).tif",
+                "ext": "tif",
+                "size": 1264436,
+                "mtime": "2025-08-27T10:02:55",
+                "lang": ""
+              },
+              {
+                "name": "LISCIE - cytryna (5).tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/LISCIE - cytryna (5).tif",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/LISCIE - cytryna (5).tif",
+                "ext": "tif",
+                "size": 2816096,
+                "mtime": "2025-08-27T10:04:35",
+                "lang": ""
+              },
+              {
+                "name": "LISCIE - cytryna (6).tif",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/LISCIE - cytryna (6).tif",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/LISCIE - cytryna (6).tif",
+                "ext": "tif",
+                "size": 4374132,
+                "mtime": "2025-08-27T10:04:26",
+                "lang": ""
+              },
+              {
+                "name": "magnific_create-a-cohesive-set-of-_aF12EtPfSh_0001_Warstwa-8.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_aF12EtPfSh_0001_Warstwa-8.png",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_aF12EtPfSh_0001_Warstwa-8.png",
+                "ext": "png",
+                "size": 339680,
+                "mtime": "2026-09-03T12:28:51",
+                "lang": ""
+              },
+              {
+                "name": "magnific_create-a-cohesive-set-of-_rgyeUfyxtc_0003_Warstwa-4.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_rgyeUfyxtc_0003_Warstwa-4.png",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_rgyeUfyxtc_0003_Warstwa-4.png",
+                "ext": "png",
+                "size": 126946,
+                "mtime": "2026-09-03T12:25:17",
+                "lang": ""
+              },
+              {
+                "name": "magnific_create-a-cohesive-set-of-_s7No68Tl8e_0001_Warstwa-2.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_s7No68Tl8e_0001_Warstwa-2.png",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_s7No68Tl8e_0001_Warstwa-2.png",
+                "ext": "png",
+                "size": 127378,
+                "mtime": "2026-09-03T12:21:16",
+                "lang": ""
+              },
+              {
+                "name": "magnific_create-a-cohesive-set-of-_s7No68Tl8e_0003_Warstwa-4.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_s7No68Tl8e_0003_Warstwa-4.png",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_s7No68Tl8e_0003_Warstwa-4.png",
+                "ext": "png",
+                "size": 135999,
+                "mtime": "2026-09-03T12:21:17",
+                "lang": ""
+              },
+              {
+                "name": "magnific_create-a-cohesive-set-of-_s7No68Tl8e_0004_Warstwa-5.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_s7No68Tl8e_0004_Warstwa-5.png",
+                "rel": "05 - NAPOJE/SHOT — [ funkcjonalne ]/ETY-BUT - 100 ml 09 09 2026 - 6300XXX.00/2 - PROJEKT/Links/magnific_create-a-cohesive-set-of-_s7No68Tl8e_0004_Warstwa-5.png",
+                "ext": "png",
+                "size": 80855,
+                "mtime": "2026-09-03T12:21:17",
+                "lang": ""
+              }
+            ]
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true
         }
       ],
       "related_materials": [],
       "authors": [
         "Krzysztof"
       ],
-      "search_blob": "shot shot funkcjonalne etykieta etykieta butelka napoj shot funkcjonalne krzysztof krzysztof wieczorek krzysztof wieczorek ety but 100 ml 30.04.2026 6300xxx.00 d marketing polska 01 produkty dk 05 napoje shot funkcjonalne ety but 100 ml 30.04.2026 6300xxx.00 6300xxx.00"
+      "search_blob": "shot shot funkcjonalne etykieta etykieta butelka napoj shot funkcjonalne krzysztof krzysztof wieczorek krzysztof wieczorek ety but 100 ml 30.04.2026 6300xxx.00 ety but 100 ml 09 09 2026 6300xxx.00 d marketing polska 01 produkty dk 05 napoje shot funkcjonalne ety but 100 ml 30.04.2026 6300xxx.00 d marketing polska 01 produkty dk 05 napoje shot funkcjonalne ety but 100 ml 09 09 2026 6300xxx.00 6300xxx.00 6300xxx.00"
     },
     {
       "id": "proteina-banoffee-krem-orzechowy",
@@ -104923,7 +106448,6 @@
             "1 - MATERIAŁY",
             "1 - MATERIAŁY/ELEMENTY",
             "2 - PROJEKT",
-            "2 - PROJEKT/Linki",
             "2 - PROJEKT/links",
             "3 - DRUK",
             "4 - WIZKI"
@@ -104997,17 +106521,6 @@
                 "lang": "",
                 "slot": "3 - DRUK",
                 "role": "print"
-              },
-              {
-                "name": "DOYPACK - DATESY - KARMEL .zip",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/4 - WIZKI/DOYPACK - DATESY - KARMEL .zip",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/4 - WIZKI/DOYPACK - DATESY - KARMEL .zip",
-                "ext": "zip",
-                "size": 34869981,
-                "mtime": "2026-08-21T13:52:28",
-                "lang": "",
-                "slot": "4 - WIZKI",
-                "role": "print"
               }
             ],
             "viz": [
@@ -105048,8 +106561,8 @@
             "elements": [
               {
                 "name": "FRONT-SAME-KARMELKI_SEP.psd",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/FRONT-SAME-KARMELKI_SEP.psd",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/FRONT-SAME-KARMELKI_SEP.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/FRONT-SAME-KARMELKI_SEP.psd",
+                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/FRONT-SAME-KARMELKI_SEP.psd",
                 "ext": "psd",
                 "size": 1480566,
                 "mtime": "2026-06-25T04:06:37",
@@ -105057,8 +106570,8 @@
               },
               {
                 "name": "SAM-SPLASH-KARMEL_SEP.psd",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAM-SPLASH-KARMEL_SEP.psd",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAM-SPLASH-KARMEL_SEP.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAM-SPLASH-KARMEL_SEP.psd",
+                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAM-SPLASH-KARMEL_SEP.psd",
                 "ext": "psd",
                 "size": 4771551,
                 "mtime": "2026-06-25T04:15:03",
@@ -105066,8 +106579,8 @@
               },
               {
                 "name": "SAME-DATESY.psd",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAME-DATESY.psd",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAME-DATESY.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAME-DATESY.psd",
+                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAME-DATESY.psd",
                 "ext": "psd",
                 "size": 2277372,
                 "mtime": "2026-06-25T04:07:24",
@@ -105075,8 +106588,8 @@
               },
               {
                 "name": "SAME-DATESY_tyl_sep.psd",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAME-DATESY_tyl_sep.psd",
-                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/Linki/SAME-DATESY_tyl_sep.psd",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAME-DATESY_tyl_sep.psd",
+                "rel": "07 - DATESY/KARMEL - [ daktyle ]/DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU/2 - PROJEKT/links/SAME-DATESY_tyl_sep.psd",
                 "ext": "psd",
                 "size": 3535332,
                 "mtime": "2026-06-25T04:10:35",
@@ -105581,17 +107094,6 @@
                 "mtime": "2026-07-06T12:58:32",
                 "lang": "",
                 "slot": "3 - DRUK",
-                "role": "print"
-              },
-              {
-                "name": "DOYPACK - DATESY - Marakuja.zip",
-                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/07 - DATESY/MARAKUJA - [ daktyle ]/DOY - MARAKUJA 100 g - 04.08.2026 - BEZ INDEKSU/4 - WIZKI/DOYPACK - DATESY - Marakuja.zip",
-                "rel": "07 - DATESY/MARAKUJA - [ daktyle ]/DOY - MARAKUJA 100 g - 04.08.2026 - BEZ INDEKSU/4 - WIZKI/DOYPACK - DATESY - Marakuja.zip",
-                "ext": "zip",
-                "size": 34422215,
-                "mtime": "2026-08-21T13:49:52",
-                "lang": "",
-                "slot": "4 - WIZKI",
                 "role": "print"
               }
             ],
@@ -107216,6 +108718,131 @@
         "Krzysztof"
       ],
       "search_blob": "yuzu dk doy datesy yuzu 100 g x dates doypack sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6900004.00 dk doy datesy yuzu 100 g d marketing polska 01 produkty dk 07 datesy archiwum dk doy datesy yuzu 100 g x dk doy datesy yuzu 100 g 6900004.00"
+    },
+    {
+      "id": "projekty-wstepne",
+      "name": "PROJEKTY WSTĘPNE",
+      "display_name": "Projekty Wstępne",
+      "category": "08 - CHRUPKULKI",
+      "brand": "DK",
+      "subcategory_slug": "",
+      "subcategory_label": "",
+      "root_key": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK",
+      "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/08 - CHRUPKULKI/PROJEKTY WSTĘPNE",
+      "rel": "08 - CHRUPKULKI/PROJEKTY WSTĘPNE",
+      "tags": [
+        "kulki"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "kulki"
+        ],
+        "opakowanie": [],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [],
+      "index_bases": [],
+      "revision_count": 1,
+      "revisions": [
+        {
+          "folder": "CHRUPKULKI",
+          "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI",
+          "rel": "08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI",
+          "carrier": "OTHER",
+          "index_base": null,
+          "index_rev": null,
+          "index": null,
+          "date": null,
+          "slots": [
+            "razem-wybrane-1-09_Folder",
+            "razem-wybrane-1-09_Folder/Links"
+          ],
+          "files_by_role": {
+            "source": [],
+            "print": [],
+            "viz": [],
+            "elements": [
+              {
+                "name": "falling-corn-balls-isolated-white-background-with-clipping-path_0002_Warstwa-3.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/falling-corn-balls-isolated-white-background-with-clipping-path_0002_Warstwa-3.png",
+                "rel": "08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/falling-corn-balls-isolated-white-background-with-clipping-path_0002_Warstwa-3.png",
+                "ext": "png",
+                "size": 691784,
+                "mtime": "2026-09-01T11:14:25",
+                "lang": ""
+              },
+              {
+                "name": "freepik_balanced-composition-of-c_2850245174_0000_Warstwa-1.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/freepik_balanced-composition-of-c_2850245174_0000_Warstwa-1.png",
+                "rel": "08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/freepik_balanced-composition-of-c_2850245174_0000_Warstwa-1.png",
+                "ext": "png",
+                "size": 57175,
+                "mtime": "2026-04-23T15:23:19",
+                "lang": ""
+              },
+              {
+                "name": "freepik_set-of-isolated-food-elem_2848118980_0008_Warstwa-9.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/freepik_set-of-isolated-food-elem_2848118980_0008_Warstwa-9.png",
+                "rel": "08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/freepik_set-of-isolated-food-elem_2848118980_0008_Warstwa-9.png",
+                "ext": "png",
+                "size": 19085,
+                "mtime": "2026-04-23T11:20:10",
+                "lang": ""
+              },
+              {
+                "name": "freepik_small-parsley-leaves-and-_2848383507-2.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/freepik_small-parsley-leaves-and-_2848383507-2.png",
+                "rel": "08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/freepik_small-parsley-leaves-and-_2848383507-2.png",
+                "ext": "png",
+                "size": 267010,
+                "mtime": "2026-04-23T12:18:35",
+                "lang": ""
+              },
+              {
+                "name": "magnific_dodaj-kawaki-pietruszki-d_s79C1zml8e2.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/magnific_dodaj-kawaki-pietruszki-d_s79C1zml8e2.png",
+                "rel": "08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/magnific_dodaj-kawaki-pietruszki-d_s79C1zml8e2.png",
+                "ext": "png",
+                "size": 3038380,
+                "mtime": "2026-09-01T12:29:42",
+                "lang": ""
+              },
+              {
+                "name": "magnific_use-the-reference-image-i_fH1VvYWCDY_0001_Warstwa-0.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/magnific_use-the-reference-image-i_fH1VvYWCDY_0001_Warstwa-0.png",
+                "rel": "08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/magnific_use-the-reference-image-i_fH1VvYWCDY_0001_Warstwa-0.png",
+                "ext": "png",
+                "size": 1133163,
+                "mtime": "2026-09-01T12:34:48",
+                "lang": ""
+              },
+              {
+                "name": "okruszki.png",
+                "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/okruszki.png",
+                "rel": "08 - CHRUPKULKI/PROJEKTY WSTĘPNE/CHRUPKULKI/razem-wybrane-1-09_Folder/Links/okruszki.png",
+                "ext": "png",
+                "size": 229017,
+                "mtime": "2026-09-02T15:09:27",
+                "lang": ""
+              }
+            ]
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "pl"
+          ],
+          "langs_manual": false,
+          "langs_source": "brand_dk",
+          "is_latest": true
+        }
+      ],
+      "related_materials": [],
+      "authors": [],
+      "search_blob": "projekty wstepne projekty wstepne kulki chrupkulki d marketing polska 01 produkty dk 08 chrupkulki projekty wstepne chrupkulki"
     },
     {
       "id": "3pack-oat-bars-mix",
@@ -142559,13 +144186,15 @@
       },
       "indexes": [
         "6300346.00",
-        "6300356.00"
+        "6300356.00",
+        "6300531.00"
       ],
       "index_bases": [
         "6300346",
-        "6300356"
+        "6300356",
+        "6300531"
       ],
-      "revision_count": 2,
+      "revision_count": 3,
       "revisions": [
         {
           "folder": "SLEEVE - 03.06.2024 - 6300356.00 - CZ",
@@ -142802,6 +144431,34 @@
           "is_latest": true
         },
         {
+          "folder": "SLEEVE - 04.09.2026 - 6300531 - CZ SK",
+          "path": "D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/GYROS PEA — [ plant based ]/SLEEVE - 04.09.2026 - 6300531 - CZ SK",
+          "rel": "03 - PLANT BASED/GYROS PEA — [ plant based ]/SLEEVE - 04.09.2026 - 6300531 - CZ SK",
+          "carrier": "REKAW",
+          "index_base": "6300531",
+          "index_rev": "00",
+          "index": "6300531.00",
+          "date": "2026-09-04",
+          "slots": [
+            "2 - PROJEKT"
+          ],
+          "files_by_role": {
+            "source": [],
+            "print": [],
+            "viz": [],
+            "elements": []
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "cz",
+            "sk"
+          ],
+          "langs_manual": false,
+          "langs_source": "raw",
+          "is_latest": true
+        },
+        {
           "folder": "SLEEVE - 22.12.2023 - 6300346.00",
           "path": "D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/GYROS PEA — [ plant based ]/SLEEVE - 22.12.2023 - 6300346.00",
           "rel": "03 - PLANT BASED/GYROS PEA — [ plant based ]/SLEEVE - 22.12.2023 - 6300346.00",
@@ -142985,7 +144642,7 @@
       ],
       "related_materials": [],
       "authors": [],
-      "search_blob": "gyros pea gyros pea plant based gyros rekaw 6300346.00 6300356.00 sleeve 03.06.2024 6300356.00 cz sleeve 22.12.2023 6300346.00 d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 03.06.2024 6300356.00 cz d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 22.12.2023 6300346.00 6300356.00 6300346.00"
+      "search_blob": "gyros pea gyros pea plant based gyros rekaw 6300346.00 6300356.00 6300531.00 sleeve 03.06.2024 6300356.00 cz sleeve 04.09.2026 6300531 cz sk sleeve 22.12.2023 6300346.00 d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 03.06.2024 6300356.00 cz d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 04.09.2026 6300531 cz sk d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 22.12.2023 6300346.00 6300356.00 6300531.00 6300346.00"
     },
     {
       "id": "gyros-wheat-plant-based",
@@ -145731,14 +147388,16 @@
       "indexes": [
         "6300610.01",
         "6300650.00",
+        "6300674.00",
         "6300771.00"
       ],
       "index_bases": [
         "6300610",
         "6300650",
+        "6300674",
         "6300771"
       ],
-      "revision_count": 3,
+      "revision_count": 4,
       "revisions": [
         {
           "folder": "NUGGETS XXL - 08.05.2025 - 6300650.00",
@@ -146566,6 +148225,91 @@
           "is_latest": true
         },
         {
+          "folder": "SLEEVE CZ-SK - 6300674",
+          "path": "D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674",
+          "rel": "03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674",
+          "carrier": "REKAW",
+          "index_base": "6300674",
+          "index_rev": "00",
+          "index": "6300674.00",
+          "date": null,
+          "slots": [
+            "2 - PROJEKT"
+          ],
+          "files_by_role": {
+            "source": [
+              {
+                "name": "GC_Nuggets_CZ_SK_2026_09_03_6300674_F.ai",
+                "path": "D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/GC_Nuggets_CZ_SK_2026_09_03_6300674_F.ai",
+                "rel": "03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/GC_Nuggets_CZ_SK_2026_09_03_6300674_F.ai",
+                "ext": "ai",
+                "size": 45681425,
+                "mtime": "2026-09-07T09:09:32",
+                "lang": "cz",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "GC_Nuggets_CZ_SK_2026_09_03_6300674_FQ.ai",
+                "path": "D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/GC_Nuggets_CZ_SK_2026_09_03_6300674_FQ.ai",
+                "rel": "03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/GC_Nuggets_CZ_SK_2026_09_03_6300674_FQ.ai",
+                "ext": "ai",
+                "size": 48634218,
+                "mtime": "2026-09-07T09:10:02",
+                "lang": "cz",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "GC_Nuggets_CZ_SK_2026_09_03_6300674_FQ.pdf",
+                "path": "D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/GC_Nuggets_CZ_SK_2026_09_03_6300674_FQ.pdf",
+                "rel": "03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/GC_Nuggets_CZ_SK_2026_09_03_6300674_FQ.pdf",
+                "ext": "pdf",
+                "size": 12377054,
+                "mtime": "2026-09-07T09:10:13",
+                "lang": "cz",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "GC_Nuggets_CZ_SK_2026_09_03_6300674_FQ_podglad.pdf",
+                "path": "D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/GC_Nuggets_CZ_SK_2026_09_03_6300674_FQ_podglad.pdf",
+                "rel": "03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/GC_Nuggets_CZ_SK_2026_09_03_6300674_FQ_podglad.pdf",
+                "ext": "pdf",
+                "size": 1415777,
+                "mtime": "2026-09-07T09:10:46",
+                "lang": "cz",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              },
+              {
+                "name": "nuggets_sz_F_EXPORT_DE_nowy_format.psd",
+                "path": "D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/nuggets_sz_F_EXPORT_DE_nowy_format.psd",
+                "rel": "03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE CZ-SK - 6300674/2 - PROJEKT/nuggets_sz_F_EXPORT_DE_nowy_format.psd",
+                "ext": "psd",
+                "size": 453499070,
+                "mtime": "2026-08-28T07:09:45",
+                "lang": "de",
+                "slot": "2 - PROJEKT",
+                "role": "source"
+              }
+            ],
+            "print": [],
+            "viz": [],
+            "elements": []
+          },
+          "wizki": [],
+          "wizki_count": 0,
+          "langs": [
+            "cz",
+            "sk",
+            "de"
+          ],
+          "langs_manual": false,
+          "langs_source": "raw",
+          "is_latest": true
+        },
+        {
           "folder": "SLEEVE DE - 19.06.2025 - 6300771",
           "path": "D:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE DE - 19.06.2025 - 6300771",
           "rel": "03 - PLANT BASED/NUGGETS — [ plant based ]/SLEEVE DE - 19.06.2025 - 6300771",
@@ -146658,7 +148402,7 @@
       "authors": [
         "Krzysztof"
       ],
-      "search_blob": "nuggets nuggets plant based nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300771.00 nuggets xxl 08.05.2025 6300650.00 sleeve cz sk 16.01.2025 6300610.01 sleeve de 19.06.2025 6300771 d marketing eksport 01 products gc 03 plant based nuggets plant based nuggets xxl 08.05.2025 6300650.00 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 16.01.2025 6300610.01 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve de 19.06.2025 6300771 6300650.00 6300610.01 6300771.00"
+      "search_blob": "nuggets nuggets plant based nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300674.00 6300771.00 nuggets xxl 08.05.2025 6300650.00 sleeve cz sk 16.01.2025 6300610.01 sleeve cz sk 6300674 sleeve de 19.06.2025 6300771 d marketing eksport 01 products gc 03 plant based nuggets plant based nuggets xxl 08.05.2025 6300650.00 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 16.01.2025 6300610.01 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 6300674 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve de 19.06.2025 6300771 6300650.00 6300610.01 6300674.00 6300771.00"
     },
     {
       "id": "pate-tomato-plant-based",
@@ -150013,6 +151757,114 @@
   ],
   "viz_latest": [
     {
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "product_name": "Kulki Z Kreatyną",
+      "category": "02 - KULKI",
+      "brand": "DK",
+      "subcategory_slug": "",
+      "subcategory_label": "",
+      "linked_products": [],
+      "alias_langs": [],
+      "carrier": "DOY",
+      "carrier_label": "DOYPACK",
+      "carrier_guessed": false,
+      "is_mix": false,
+      "index": null,
+      "index_base": "pending",
+      "revision_folder": "DOY - 00 g - DD MM RRRR - 6300XXX.00",
+      "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00",
+      "langs": [
+        "pl"
+      ],
+      "langs_manual": false,
+      "lang": "pl",
+      "lang_label": "Polska",
+      "lang_unknown": false,
+      "thumb_url": "",
+      "file": "KULKI-KREATYNA1.png",
+      "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA1.png",
+      "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - DD MM RRRR - 6300XXX.00/4 - WIZKI/KULKI-KREATYNA1.png",
+      "mtime": "2026-09-10T10:30:49",
+      "tags": [
+        "doypack",
+        "kulki",
+        "kreatyna"
+      ]
+    },
+    {
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "product_name": "Kulki Z Kreatyną",
+      "category": "02 - KULKI",
+      "brand": "DK",
+      "subcategory_slug": "",
+      "subcategory_label": "",
+      "linked_products": [],
+      "alias_langs": [],
+      "carrier": "DOY",
+      "carrier_label": "DOYPACK",
+      "carrier_guessed": false,
+      "is_mix": false,
+      "index": null,
+      "index_base": "pending",
+      "revision_folder": "DOY - 00 g - 09 09 2026 - 6300XXX.00",
+      "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00",
+      "langs": [
+        "pl"
+      ],
+      "langs_manual": false,
+      "lang": "pl",
+      "lang_label": "Polska",
+      "lang_unknown": false,
+      "thumb_url": "",
+      "file": "DOYPACK -zelki kreatynowe-10-09-2b.png",
+      "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2b.png",
+      "rel": "02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00/4 - WIZKI/DOYPACK -zelki kreatynowe-10-09-2b.png",
+      "mtime": "2026-09-10T10:20:46",
+      "tags": [
+        "doypack",
+        "kulki",
+        "kreatyna"
+      ]
+    },
+    {
+      "product_id": "mix-funkcjonalny-3x-batony-duzy",
+      "product_name": "- MIX- Funkcjonalny - 3x batony_duzy",
+      "category": "01 - BATONY",
+      "brand": "DK",
+      "subcategory_slug": "",
+      "subcategory_label": "",
+      "linked_products": [],
+      "alias_langs": [],
+      "carrier": "KAR6X",
+      "carrier_label": "MIX - KARTON 6x MINI",
+      "carrier_guessed": false,
+      "is_mix": true,
+      "index": "6300813.00",
+      "index_base": "6300813",
+      "revision_folder": "KAR6X - 21 08 2026 - 6300813",
+      "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813",
+      "langs": [
+        "pl"
+      ],
+      "langs_manual": false,
+      "lang": "pl",
+      "lang_label": "Polska",
+      "lang_unknown": false,
+      "thumb_url": "",
+      "file": "DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_bez_tla_1200px.png",
+      "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_bez_tla_1200px.png",
+      "rel": "01 - BATONY/- MIX- Funkcjonalny - 3x batony_duzy/KAR6X - 21 08 2026 - 6300813/4 - WIZKI/DK_6pak_dobre_wsparcie_2026_09_09_6300813_front_RGB_bez_tla_1200px.png",
+      "mtime": "2026-09-09T11:59:49",
+      "tags": [
+        "baton",
+        "folia",
+        "funkcjonalny",
+        "karton 6x",
+        "karton",
+        "mix"
+      ]
+    },
+    {
       "product_id": "ciasto-sliwkowe-nerkowcowy",
       "product_name": "Ciasto Śliwkowe",
       "category": "01 - BATONY",
@@ -150971,8 +152823,8 @@
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
-      "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
-      "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 – WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
+      "path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
+      "rel": "01 - BATONY/ENERGIA — [ funkcjonalny ]/Baton_45g - 31.07.2026 - 6300584/4 - WIZKI/DK_Energia_45g_2026_07_31_6300584_RGB_bez_tla_1200px.png",
       "mtime": "2026-08-26T11:27:36",
       "tags": [
         "baton",
@@ -151035,11 +152887,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758 - F",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-WIŚNIA-PL-UA-6300758-RGB-FRONT-S.png",
@@ -151071,11 +152923,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL WIŚNIA — [ raw ]/DOY - 15.05.2026 - 6300758 - F",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-WIŚNIA-PL-UA-6300758-RGB-FRONT-S.png",
@@ -151107,11 +152959,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL POMARAŃCZA — [ raw ]/doy - 15.05.2026 - 6300759",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-POMARANCZA-PL-UA-6300759-RGB-FRONT-S.png",
@@ -151143,11 +152995,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL POMARAŃCZA — [ raw ]/doy - 15.05.2026 - 6300759",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-POMARANCZA-PL-UA-6300759-RGB-FRONT-S.png",
@@ -151179,11 +153031,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-LIMONKA-PL-UA-6300760-RGB-FRONT-S.png",
@@ -151215,11 +153067,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/DAKTYL LIMONKA — [ raw ]/DOY - 23.06.2026 - 6300760",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-KULKI-LIMONKA-PL-UA-6300760-RGB-FRONT-S.png",
@@ -159518,11 +161370,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
@@ -159557,11 +161409,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/OWIES CZEKOLADA — [ sniadanie ]/DOY - 02.07.2026 - PL UA - 6300766",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DOY-OWIES-CZEKOLADA-6300766-FRONT-S.png",
@@ -159634,11 +161486,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767 - F",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
@@ -159672,11 +161524,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/FOLIA - 3.07.2026 - PL UA - 6300767 - F",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "PROJEKT-OWIES-MIOD-6300524-FRONT-S.png",
@@ -159823,11 +161675,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "ORZESZKI-MIOD-6300699-FRONT-S.png",
@@ -159861,11 +161713,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/ORZESZKI KUKURYDZA MIOD — [ sniadanie ]/DOY - 3.07.2026 - PL UA - 6300699.01",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "ORZESZKI-MIOD-6300699-FRONT-S.png",
@@ -160268,11 +162120,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763 - PL UA",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
@@ -160307,11 +162159,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/JABŁKO CYNAMON — [ daktylowy ]/BAT - 35 g - 15.05.2026 – 6300763 - PL UA",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "DK-BAT-DAKT-JABLKO-CYNAMON-PL-UA-6300763-FRONT-S.png",
@@ -160418,11 +162270,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "en",
-      "lang_label": "Angielski",
+      "lang": "pl",
+      "lang_label": "Polska",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",
@@ -160457,11 +162309,11 @@
       "revision_path": "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CHRUPIĄCY ORZECH — [ daktylowy ]/BAT - 35 g - 28.06.2026 - 6300761",
       "langs": [
         "pl",
-        "en"
+        "ua"
       ],
       "langs_manual": false,
-      "lang": "pl",
-      "lang_label": "Polska",
+      "lang": "ua",
+      "lang_label": "Ukrainski",
       "lang_unknown": false,
       "thumb_url": "",
       "file": "BAT-CHRUPIĄCY-ORZECH-6300657-FRONT-S.png",

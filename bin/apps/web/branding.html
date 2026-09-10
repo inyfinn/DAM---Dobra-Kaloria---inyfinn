@@ -1,35 +1,34 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pl" dir="ltr" class="dam-booting">
 <head>
-  <script>(function(){function g(){try{var u=location.pathname+location.search,h=location.hash||"";location.replace(u+(u.indexOf("?")>=0?"&":"?")+"_damr="+Date.now()+h);}catch(e){try{location.reload();}catch(x){}}}addEventListener("keydown",function(e){if(e.key==="F5"||(e.ctrlKey&&!e.shiftKey&&(e.key==="r"||e.key==="R")))g();},true);window.__damInlineHardReset=g;})();</script>
-  <script src="./assets/js/dam-panic-reload.js?v=restore20260805c"></script>
+    <script src="./assets/js/dam-panic-reload.js?v=5.0.196"></script>
   <script>(function(){try{var r=document.documentElement,p=localStorage.getItem('dam_theme_pref')||localStorage.getItem('theme')||'light',t=p;if(p==='system'){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t!=='dark'&&t!=='light')t='light';r.setAttribute('data-theme',t);r.style.colorScheme=t;if(p==='system'||p==='dark'||p==='light')r.setAttribute('data-dam-theme-pref',p);}catch(e){}})();</script>
   <style id="dam-shell-boot-critical">
 html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{background:#101412}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
   </style>
-  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=restore20260805c">
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=5.0.196">
   <script>
-  (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(r.classList.contains("dam-booting")){r.classList.remove("dam-booting");r.classList.add("dam-booted");if(document.body)document.body.classList.remove("is-booting");}},4500);})();
+  (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(window.__damBootWatchdog)window.__damBootWatchdog("4.5s");},4500);})();
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Branding - DAM</title>
-  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css">
-  <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=5.0.163">
-  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.163">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=restore20260805c">
-  <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=restore20260805c">
-  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=restore20260805c">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.163">
-  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=5.0.163">
-  <link rel="stylesheet" href="./assets/css/dam-assoc-quiz.css?v=fix20260806c">
-  <link rel="stylesheet" href="./assets/css/dam-date-picker.css?v=restore20260805c">
-  <link rel="stylesheet" href="./assets/css/dam-bento.css?v=restore20260805c">
+  <link rel="stylesheet" href="./assets/vendor/css/bootstrap/bootstrap.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-fonts.css?v=5.0.196">
+
+  <link rel="stylesheet" href="./assets/css/style.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-hub-shared.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-branding.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-assoc-quiz.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-date-picker.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.196">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@iconscout/unicons@4.0.8/css/line.min.css">
   
 </head>
 <body class="geex-dashboard dam-app is-booting">
@@ -86,7 +85,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
           <div class="dam-search-wrap dam-search-wrap--panel dam-search-wrap--branding-chrome">
             <div class="dam-search-input-wrap">
               <i class="uil uil-search" aria-hidden="true"></i>
-              <input type="search" id="damBrandingSearch" class="form-control dam-search-input" placeholder="Np. burger, grill, proteina, slider niemięsa, film lato 2026?" autocomplete="off" aria-label="Szukaj w branding" data-i18n-placeholder="branding.search_placeholder" data-i18n-tip="branding.search_tip" data-dam-tip="Szuka po znaczeniu (tagi, skojarzenia produktów, nazwy kampanii) - nie po ścieżce folderu" />
+              <input type="search" id="damBrandingSearch" class="form-control dam-search-input" placeholder="Np. burger, grill, proteina, slider niemęsa, film lato 2026?" autocomplete="off" aria-label="Szukaj w branding" data-i18n-placeholder="branding.search_placeholder" data-i18n-tip="branding.search_tip" data-dam-tip="Szuka po znaczeniu (tagi, skojarzenia produktów, nazwy kampanii) - nie po ścieżce folderu" />
             </div>
             <div class="dam-branding-tabs" role="tablist" aria-label="Sekcje branding">
               <button type="button" class="dam-branding-tab dam-branding-tab--all is-active" data-tab="all" role="tab" aria-selected="true" data-i18n="branding.show_all">Pokaż wszystko</button>
@@ -107,9 +106,11 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
                   <span class="dam-branding-date-range__label">Sortuj</span>
                   <select id="damBrandingSort" aria-label="Sortowanie wyników">
                     <option value="priority" selected data-i18n="branding.sort_priority">Priorytet użycia</option>
-                    <option value="newest">Najnowsze</option>
+                    <option value="introduced" data-i18n="sort.introduced_desc">Wprowadzenie: najnowsze</option>
+                    <option value="newest" data-i18n="sort.mtime_desc">Modyfikacja: najnowsze</option>
+                    <option value="created" data-i18n="sort.created_desc">Utworzenie: najnowsze</option>
                     <option value="oldest">Najstarsze</option>
-                    <option value="name">Nazwa</option>
+                    <option value="name" data-i18n="sort.name">Nazwa: A→Z</option>
                   </select>
                 </label>
                 <label class="dam-switch dam-switch--compact" for="damBrandingTagCounts" data-dam-tip="Pokaż liczby dopasowań obok tagów (domyślnie wyłączone)">
@@ -138,7 +139,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       <div class="dam-branding-tag-filters" id="damBrandingTagFilters" role="group" aria-label="Filtry tagami"></div>
       <div class="dam-viz-secondary-filters dam-branding-filters dam-branding-filters--meta" role="group" aria-label="Opcje widoku">
         <button type="button" class="dam-branding-clear-btn" id="damBrandingClearTags" data-i18n="branding.clear_filters">Wyczyść filtry</button>
-        <label class="dam-switch dam-switch--compact" for="damBrandingGraphicsOnly" data-dam-tip="Ukrywa PDF, Excel, Word, wideo oraz pliki ?r�d?owe (PSD, AI, INDD). Nadal dostępne po tagach Dokument / Wideo.">
+        <label class="dam-switch dam-switch--compact" for="damBrandingGraphicsOnly" data-dam-tip="Ukrywa PDF, Excel, Word, wideo oraz pliki źródłowe (PSD, AI, INDD). Nadal dostępne po tagach Dokument / Wideo.">
           <input type="checkbox" id="damBrandingGraphicsOnly" class="dam-switch__input" checked />
           <span class="dam-switch__track" aria-hidden="true"></span>
           <span class="dam-switch__label" data-i18n="branding.graphics_only">Tylko grafiki</span>
@@ -161,7 +162,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
       </div>
 
       <div id="damBrandingContextBar" class="dam-branding-context" hidden>
-        <button type="button" class="dam-branding-context__back" id="damBrandingBackBtn" data-i18n="branding.back_browse">Wróć do przeglądania<i class="uil uil-arrow-left" aria-hidden="true"></i> Wr�? do przeglądania</button>
+        <button type="button" class="dam-branding-context__back" id="damBrandingBackBtn" data-i18n="branding.back_browse">Wróć do przeglądania<i class="uil uil-arrow-left" aria-hidden="true"></i> Wr?? do przeglądania</button>
         <div class="dam-branding-context__chips" id="damBrandingContextChips" aria-label="Aktywne filtry"></div>
       </div>
 
@@ -171,7 +172,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
         <div id="damBrandingGridCount" class="dam-branding-grid-count" aria-live="polite" hidden></div>
       </div>
       <div id="damBrandingCategoryHint" class="dam-branding-cat-hint" hidden role="status" aria-live="polite">
-        <button type="button" class="dam-branding-cat-hint__close" id="damBrandingCategoryHintClose" aria-label="Zamknij podpowiedAo">
+        <button type="button" class="dam-branding-cat-hint__close" id="damBrandingCategoryHintClose" aria-label="Zamknij podpowiedź">
           <i class="uil uil-times" aria-hidden="true"></i>
         </button>
         <p class="dam-branding-cat-hint__text" data-i18n="branding.cat_hint">Nie widzisz swojego pliku? Sprawdź, czy masz zaznaczoną dobrą kategorię. Ewentualnie naciśnij Pokaż wszystko.</p>
@@ -185,43 +186,42 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
     </div>
   </main>
 
-  <script src="./assets/vendor/js/jquery/jquery-3.5.1.min.js"></script>
-  <script src="./assets/vendor/js/bootstrap/bootstrap.min.js"></script>
-  <script src="./assets/js/main.js"></script>
-  <script src="./assets/js/dam-api.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-i18n.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-runtime.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-version.js?v=5.0.163"></script>
-  <script src="./assets/js/dam-shell.js?v=5.0.163"></script>
-  <script src="./assets/js/dam-paths.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-folder-picker.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-tooltips.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-assoc-action-tips.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-icons.js?v=restore20260805c"></script>
-  <script src="./assets/vendor/js/gsap/gsap.min.js"></script>
-  <script src="./assets/js/dam-tag-bar.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-asset-taxonomy.js?v=restore20260805f"></script>
-  <script src="./assets/js/dam-badges.js?v=restore20260805f"></script>
-  <script src="./assets/js/dam-search.js?v=5.0.148"></script>
-  <script src="./assets/js/dam-index-poller.js?v=liveidx20260810a"></script>
-  <script src="./assets/js/dam-search-suggest.js?v=5.0.163"></script>
-  <script src="./assets/js/dam-user-prefs.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-danger.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-assoc-edit.js?v=5.0.139"></script>
-  <script src="./assets/js/dam-tag-edit.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-marketing-id.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-modal-shared.js?v=handoff20260811a"></script>
-  <script src="./assets/js/dam-preview-truth.js?v=5.0.155"></script>
-	<script src="./assets/js/dam-media-preview.js?v=5.0.159"></script>
-	<script src="./assets/js/dam-card-index-popover.js?v=restore20260805c"></script>
-	<script src="./assets/js/dam-branding.js?v=5.0.163"></script>
-  <script src="./assets/js/dam-assoc-quiz.js?v=handoff20260811a"></script>
-  <script src="./assets/js/dam-product-correlation.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-loader.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-grid-reveal.js?v=5.0.159"></script>
-  <script src="./assets/js/dam-date-picker.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-empty-mascot.js?v=restore20260805c"></script>
-  <script src="./assets/js/dam-tutorial.js?v=restore20260805c"></script>
+  <script src="./assets/vendor/js/jquery/jquery-3.5.1.min.js?v=5.0.196"></script>
+  <script src="./assets/vendor/js/bootstrap/bootstrap.min.js?v=5.0.196"></script>
+  <script src="./assets/js/main.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-api.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-i18n.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-runtime.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-version.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-shell.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-paths.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-folder-picker.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-tooltips.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-assoc-action-tips.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-icons.js?v=5.0.196"></script>
+  <script src="./assets/vendor/js/gsap/gsap.min.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-tag-bar.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-asset-taxonomy.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-badges.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-search.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-index-poller.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-search-suggest.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-user-prefs.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-danger.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-assoc-edit.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-tag-edit.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-marketing-id.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-modal-shared.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-preview-truth.js?v=5.0.196"></script>
+	<script src="./assets/js/dam-media-preview.js?v=5.0.196"></script>
+	<script src="./assets/js/dam-card-index-popover.js?v=5.0.196"></script>
+	<script src="./assets/js/dam-branding.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-assoc-quiz.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-product-correlation.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-loader.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-grid-reveal.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-date-picker.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-empty-mascot.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-tutorial.js?v=5.0.196"></script>
 </body>
 </html>
-         

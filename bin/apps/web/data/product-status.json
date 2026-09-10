@@ -101,9 +101,9 @@
       "status": "nieaktualne"
     },
     "6300727.00": {
-      "status": "aktualne",
       "note": "Lifecycle F",
-      "letter": "F"
+      "letter": "F",
+      "status": "aktualne"
     },
     "6300727.01": {
       "note": "MALINA - ZELAZO",
@@ -118,9 +118,9 @@
       "status": "aktualne"
     },
     "6300754.00": {
-      "status": "aktualne",
       "note": "Lifecycle F",
-      "letter": "F"
+      "letter": "F",
+      "status": "aktualne"
     },
     "6300782.00": {
       "note": "Lifecycle F",
@@ -141,6 +141,16 @@
       "note": "Lifecycle clear",
       "letter": null,
       "status": "clear"
+    },
+    "M:/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - 65 g - 24.02.2026 - 6300727.00": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
+    },
+    "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
     },
     "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - 65 g - 24.02.2026 - 6300727.00": {
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
@@ -179,6 +189,11 @@
     "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - MAGNEZ - 65 g - 24.02.2026 - 6300727.02": {
       "note": "Zastapione wariantem MAGNEZ & ZELAZO",
       "status": "nieaktualne"
+    },
+    "M:/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
     },
     "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/CIASTO ŚLIWKOWE — [ nerkowcowy ]/KAR6X - 20.05.2026 - 6300785.00": {
       "note": "Lifecycle F",
@@ -237,6 +252,11 @@
       "note": "Lifecycle clear",
       "letter": null,
       "status": "clear"
+    },
+    "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F": {
+      "note": "Lifecycle F",
+      "letter": "F",
+      "status": "aktualne"
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026 - 6300785.00 - F": {
       "note": "Lifecycle F",
@@ -378,27 +398,7 @@
       "note": "Lifecycle X",
       "letter": "X",
       "status": "nieaktualne"
-    },
-    "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F": {
-      "status": "aktualne",
-      "note": "Lifecycle F",
-      "letter": "F"
-    },
-    "M:/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - 65 g - 24.02.2026 - 6300727.00": {
-      "status": "aktualne",
-      "note": "Lifecycle F",
-      "letter": "F"
-    },
-    "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F": {
-      "status": "aktualne",
-      "note": "Lifecycle F",
-      "letter": "F"
-    },
-    "M:/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00": {
-      "status": "aktualne",
-      "note": "Lifecycle F",
-      "letter": "F"
     }
   },
-  "updated_at": "2026-08-04T06:57:47.494164+00:00"
+  "updated_at": "2026-09-10T12:41:39.697702+00:00"
 }

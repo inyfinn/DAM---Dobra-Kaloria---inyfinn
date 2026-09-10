@@ -3249,71 +3249,77 @@
     {
       "id": "chg_1785826360738",
       "ts": "2026-08-04T06:52:40.738559+00:00",
-      "action": "lifecycle_status",
-      "scope": "variant",
-      "status": "aktualne",
-      "letter": "F",
-      "actor": "krzysztof.wieczorek@kubara.pl",
-      "product_id": "malina-owocowe",
-      "revision_index": "6300727.00",
       "path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F",
-      "folder_rename": {
-        "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00",
-        "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F"
-      },
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "malina-owocowe",
       "path_renames": [
         {
-          "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00",
+          "kind": "variant",
           "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F",
-          "kind": "variant"
+          "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00"
         }
       ],
-      "lifecycle_history_id": "lc_1785826360618",
-      "notes": []
+      "folder_rename": {
+        "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F",
+        "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00"
+      },
+      "revision_index": "6300727.00",
+      "lifecycle_history_id": "lc_1785826360618"
     },
     {
       "id": "chg_1785826667277",
       "ts": "2026-08-04T06:57:47.277049+00:00",
-      "action": "lifecycle_status",
-      "scope": "variant",
-      "status": "aktualne",
-      "letter": "F",
-      "actor": "krzysztof.wieczorek@kubara.pl",
-      "product_id": "malina-owocowe",
-      "revision_index": "6300754.00",
       "path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F",
-      "folder_rename": {
-        "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00",
-        "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F"
-      },
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "F",
+      "status": "aktualne",
+      "product_id": "malina-owocowe",
       "path_renames": [
         {
-          "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00",
+          "kind": "variant",
           "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F",
-          "kind": "variant"
+          "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00"
         }
       ],
-      "lifecycle_history_id": "lc_1785826667153",
-      "notes": []
+      "folder_rename": {
+        "new_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F",
+        "old_path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00"
+      },
+      "revision_index": "6300754.00",
+      "lifecycle_history_id": "lc_1785826667153"
     },
     {
-      "id": "chg_1788520908006",
-      "ts": "2026-09-04T11:21:48.006151+00:00",
-      "action": "set_langs",
-      "category": "lang",
+      "id": "chg_1789044091958",
+      "ts": "2026-09-10T12:41:31.958958+00:00",
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\_http_merge_a_1789044090 - D",
       "actor": "krzysztof.wieczorek@kubara.pl",
-      "langs": [
-        "en",
-        "ua"
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": "D",
+      "status": "demo",
+      "product_id": "_http_merge_a_1789044090",
+      "path_renames": [
+        {
+          "kind": "product",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\_http_merge_a_1789044090 - D",
+          "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\_http_merge_a_1789044090"
+        }
       ],
       "folder_rename": {
-        "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\JABŁKO CYNAMON — [ daktylowy ]\\BAT - 35 g - 15.05.2026 – 6300763",
-        "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\JABŁKO CYNAMON — [ daktylowy ]\\BAT - 35 g - 15.05.2026 – 6300763 - EN UA",
-        "old_name": "BAT - 35 g - 15.05.2026 – 6300763",
-        "new_name": "BAT - 35 g - 15.05.2026 – 6300763 - EN UA"
+        "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\_http_merge_a_1789044090 - D",
+        "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\_http_merge_a_1789044090"
       },
-      "product_id": "jab-ko-cynamon-daktylowy",
-      "product_name": "Jabłko Cynamon"
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1789044091828"
     }
   ]
 }
