@@ -53,7 +53,7 @@ Bez tego agent "zapomina" miedzy sesjami i robi cos innego.
 - Desktop + browser
 - Em-dash ban
 - Auth: Entra ID / Synology LDAP + role `admin` | `power_user` | `user` (ADR-006)
-- DB (2026-08-03): SQLite only do powrotu Synology; multi-PC live wymaga PG na NAS
+- DB (2026-09-10): Postgres Synology `inyfinn.synology.me:5433`; SQLite = OFFLINE
 - **Weryfikacja UI:** po zmianach wizualnych zawsze screenshot + Read (regula `.cursor/rules/verify-ui-after-changes.mdc`). Bez tego nie oddawac.
 - **Serwery przed przeglądarką (HARD):** `:8765` i `:8766` muszą dać HTTP 2xx w **5 s** (`scripts/ops/smoke-dam-ports.ps1` lub curl `--max-time 5`). Brak odpowiedzi = restart `python bin/apps/desktop/serve_browser.py` (z GIT_ROOT) albo `python apps/desktop/serve_browser.py` (z CONTENT_ROOT), potem kontynuuj. Nigdy nie wisieć na navigate; timeout = napraw, nie czekaj. Reguła: `.cursor/rules/server-timeout-never-hang.mdc`, doktryna §5.0.
 - **Instrukcje programu:** `program-instructions` w KV (patrz wyzej).

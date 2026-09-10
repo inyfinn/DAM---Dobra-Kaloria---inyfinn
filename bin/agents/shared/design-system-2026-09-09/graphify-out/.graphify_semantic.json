@@ -1,0 +1,1169 @@
+{
+  "nodes": [
+    {
+      "id": "corpus_js_dam_explorer_init",
+      "label": "DamExplorer.init",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8475",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_damexplorer",
+      "label": "DamExplorer",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8609",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_startexplorerindexbind",
+      "label": "startExplorerIndexBind",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8401",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_resumeexplorerafterrestore",
+      "label": "resumeExplorerAfterRestore",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8443",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_bindexplorerdata",
+      "label": "bindExplorerData",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7438",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_paintcategoryskeleton",
+      "label": "paintCategorySkeleton",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L1416",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_loadexplorerprimaryindex",
+      "label": "loadExplorerPrimaryIndex",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7148",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_responsejsonoffmain",
+      "label": "responseJsonOffMain",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7125",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_fetchwithtimeout",
+      "label": "fetchWithTimeout",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L2198",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_unlockexplorerboot",
+      "label": "unlockExplorerBoot",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7060",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_bindexplorerresumelisteners",
+      "label": "bindExplorerResumeListeners",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8459",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_applyexplorerindexbundle",
+      "label": "applyExplorerIndexBundle",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8362",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_explorerneedsbind",
+      "label": "explorerNeedsBind",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8335",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_dismissexplorerloader",
+      "label": "dismissExplorerLoader",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7074",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_panic_reload___damregisterabort",
+      "label": "__damRegisterAbort",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-panic-reload.js",
+      "source_location": "L19",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_panic_reload___damabortall",
+      "label": "__damAbortAll",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-panic-reload.js",
+      "source_location": "L37",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_panic_reload_unlockbootfailsafe",
+      "label": "unlockBootFailsafe",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-panic-reload.js",
+      "source_location": "L79",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_search_reload",
+      "label": "DamSearch.reload",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L43",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_search_loadindexes",
+      "label": "loadIndexes",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L137",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_search_parsejsoninworker",
+      "label": "parseJsonInWorker",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L84",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_search_adoptwarmcaches",
+      "label": "adoptWarmCaches",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L478",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_search_main_parse_max",
+      "label": "MAIN_PARSE_MAX",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L65",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_tag_bar_damtagbar",
+      "label": "DamTagBar",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-tag-bar.js",
+      "source_location": "L326",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_tag_bar_automount",
+      "label": "DamTagBar.autoMount",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-tag-bar.js",
+      "source_location": "L307",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_tag_bar_fetchtaggroups",
+      "label": "fetchTagGroups",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-tag-bar.js",
+      "source_location": "L46",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_viz_loadindex",
+      "label": "loadIndex",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-viz.js",
+      "source_location": "L6063",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_viz_fetchvizindexfrombridge",
+      "label": "fetchVizIndexFromBridge",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-viz.js",
+      "source_location": "L123",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_shell_finishboot",
+      "label": "finishBoot",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-shell.js",
+      "source_location": "L2900",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_paths_ensureuserbase",
+      "label": "ensureUserBase",
+      "file_type": "code",
+      "source_file": "corpus/js/dam-paths.js",
+      "source_location": "L546",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_js_dam_explorer_damloader",
+      "label": "DamLoader",
+      "file_type": "concept",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8539",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "corpus_code_doctrine_explorer_freeze_after_wizualizacje",
+      "label": "Explorer freeze after Wizualizacje",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2094",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Ten sam profil Chrome: Eksplorator OK → Wizualizacje → powrót na Eksplorator. Po wiz DamSearch.reload ciągnie ~9MB file-index z :8765; abort na leave + keep-alive w tym samym user-data-dir potrafi zwisnąć na kolejnym explorer.html mimo curl 200."
+    },
+    {
+      "id": "corpus_code_doctrine_explorer_return_freeze",
+      "label": "Explorer return freeze",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2094",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "First paint OK, powrót z Wizualizacji: status Ładowanie indeksu, counts …, puste #damExplorerMain. init() jednorazowy bez pageshow/visibilitychange; AbortError na leave fetch; skeleton CATEGORY_CANON z … zostaje."
+    },
+    {
+      "id": "corpus_code_doctrine_category_skeleton_ellipsis",
+      "label": "Category skeleton ellipsis",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2098",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "paintCategorySkeleton renderuje CATEGORY_CANON od razu z placeholder count … (data-dam-skeleton=1). Puste Kategorie ≠ brak danych na dysku; applyExplorerIndexBundle/bindExplorerData musi zastąpić skeleton po slim index."
+    },
+    {
+      "id": "corpus_code_doctrine_ladowanie_indeksu",
+      "label": "Ładowanie indeksu",
+      "file_type": "concept",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2082",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Status UI podczas bind slim file-index; explorerNeedsBind traktuje ten tekst jako sygnał niedokończonego bindu. Watchdog 8s pokazuje błąd gdy bind nie kończy."
+    },
+    {
+      "id": "corpus_code_doctrine_browser_mcp_hang",
+      "label": "cursor-ide-browser stall",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L626",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "browser_tabs/browser_navigate/browser_cdp Runtime.evaluate wisi minuty podczas gdy curl :8765/:8766 wraca 2xx w ~2ms. Hang MCP ≠ server down; weryfikuj curl przed browser_navigate."
+    },
+    {
+      "id": "corpus_code_doctrine_cdp_runtime_evaluate_hang",
+      "label": "CDP Runtime.evaluate hang",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L157",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Agent death gdy CDP Runtime.evaluate lub browser MCP wisi na ciężkiej stronie po viz; headless --screenshot na tym samym user-data-dir potrafi zablokować kolejny probe mimo zdrowego serwera."
+    },
+    {
+      "id": "corpus_code_doctrine_html_dam_booting",
+      "label": "html.dam-booting",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2084",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Klasa na documentElement trzyma pointer-events:none / body opacity:0 do unlock. Musi być zdjęta wraz z body.is-booting; failsafe 0ms/50ms/4s w dam-panic-reload + finishBoot/unlockExplorerBoot."
+    },
+    {
+      "id": "corpus_code_doctrine_file_index_slim_explorer",
+      "label": "file-index slim fields=explorer",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L373",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "First paint explorera = GET :8766/file-index?fields=explorer (~512KB) bez files_by_role/wizki/viz_latest. NIGDY data/file-index.json ~9MB na :8765 na main thread."
+    },
+    {
+      "id": "corpus_code_doctrine_damsearch_reload_vs_searchonly",
+      "label": "DamSearch.reload vs searchOnly",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2086",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Na explorer.html i visualizations.html reload/loadIndexes musi używać searchOnly:true — nie czyścić _DAM_FILE_INDEX ani nie fetchować 9MB file-index. Pełny index tylko poza explorer/viz."
+    },
+    {
+      "id": "corpus_code_doctrine_skip_global_abort",
+      "label": "skipGlobalAbort",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2098",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Slim index fetch nie może jechać __damRegisterAbort — Chrome abortuje signal przy hide/leave; Escape nadal abortuje inne fetch. pageshow/visibilitychange restartuje bind."
+    },
+    {
+      "id": "corpus_code_doctrine_explorer_f5_white_screen",
+      "label": "Explorer F5 white screen",
+      "file_type": "rationale",
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L379",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "window.stop/location.replace równolegle z natywnym F5 ucina dokument; jednowątkowy :8765 + Chrome abort 10053. Fix: zero intercept F5, natywny reload, ThreadingMixIn, dam-panic-reload failsafe pageshow."
+    },
+    {
+      "id": "concept_window_dam_file_index",
+      "label": "window._DAM_FILE_INDEX",
+      "file_type": "concept",
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7179",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_window_dam_search_index",
+      "label": "window._DAM_SEARCH_INDEX",
+      "file_type": "concept",
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L202",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "corpus_js_dam_explorer_init",
+      "target": "corpus_js_dam_explorer_paintcategoryskeleton",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8537",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_init",
+      "target": "corpus_js_dam_explorer_bindexplorerresumelisteners",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8541",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_init",
+      "target": "corpus_js_dam_explorer_startexplorerindexbind",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8572",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_init",
+      "target": "corpus_js_dam_explorer_dismissexplorerloader",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8540",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_damexplorer",
+      "target": "corpus_js_dam_explorer_init",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8644",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_damexplorer",
+      "target": "corpus_js_dam_explorer_resumeexplorerafterrestore",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8611",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_startexplorerindexbind",
+      "target": "corpus_js_dam_explorer_paintcategoryskeleton",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8410",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_startexplorerindexbind",
+      "target": "corpus_js_dam_explorer_loadexplorerprimaryindex",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8414",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_startexplorerindexbind",
+      "target": "corpus_js_dam_explorer_applyexplorerindexbundle",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8416",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_startexplorerindexbind",
+      "target": "corpus_js_dam_explorer_dismissexplorerloader",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8412",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_startexplorerindexbind",
+      "target": "corpus_js_dam_explorer_unlockexplorerboot",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8438",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_startexplorerindexbind",
+      "target": "corpus_js_dam_explorer_startexplorerindexbind",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8427",
+      "weight": 0.8
+    },
+    {
+      "source": "corpus_js_dam_explorer_resumeexplorerafterrestore",
+      "target": "corpus_js_dam_explorer_unlockexplorerboot",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8444",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_resumeexplorerafterrestore",
+      "target": "corpus_js_dam_explorer_dismissexplorerloader",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8445",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_resumeexplorerafterrestore",
+      "target": "corpus_js_dam_explorer_startexplorerindexbind",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8455",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_bindexplorerresumelisteners",
+      "target": "corpus_js_dam_explorer_resumeexplorerafterrestore",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8466",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_bindexplorerresumelisteners",
+      "target": "corpus_js_dam_explorer_unlockexplorerboot",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8464",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_loadexplorerprimaryindex",
+      "target": "corpus_js_dam_explorer_fetchwithtimeout",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7162",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_loadexplorerprimaryindex",
+      "target": "corpus_js_dam_explorer_responsejsonoffmain",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7173",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_loadexplorerprimaryindex",
+      "target": "corpus_js_dam_search_adoptwarmcaches",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7180",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_responsejsonoffmain",
+      "target": "corpus_js_dam_search_parsejsoninworker",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7131",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_fetchwithtimeout",
+      "target": "corpus_js_dam_panic_reload___damregisterabort",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L2211",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_applyexplorerindexbundle",
+      "target": "corpus_js_dam_explorer_bindexplorerdata",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8375",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_applyexplorerindexbundle",
+      "target": "corpus_js_dam_explorer_unlockexplorerboot",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8381",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_dismissexplorerloader",
+      "target": "corpus_js_dam_explorer_unlockexplorerboot",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7080",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_explorerneedsbind",
+      "target": "corpus_js_dam_explorer_paintcategoryskeleton",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8335",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_search_reload",
+      "target": "corpus_js_dam_search_loadindexes",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_viz_loadindex",
+      "target": "corpus_js_dam_viz_fetchvizindexfrombridge",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-viz.js",
+      "source_location": "L6067",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_viz_fetchvizindexfrombridge",
+      "target": "corpus_js_dam_search_parsejsoninworker",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-viz.js",
+      "source_location": "L141",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_viz_fetchvizindexfrombridge",
+      "target": "corpus_js_dam_search_adoptwarmcaches",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-viz.js",
+      "source_location": "L152",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_tag_bar_fetchtaggroups",
+      "target": "corpus_js_dam_search_parsejsoninworker",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-tag-bar.js",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_loadexplorerprimaryindex",
+      "target": "concept_window_dam_file_index",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7179",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_viz_fetchvizindexfrombridge",
+      "target": "concept_window_dam_file_index",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-viz.js",
+      "source_location": "L150",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_search_loadindexes",
+      "target": "concept_window_dam_file_index",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L200",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_search_loadindexes",
+      "target": "concept_window_dam_search_index",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L202",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_paintcategoryskeleton",
+      "target": "corpus_code_doctrine_category_skeleton_ellipsis",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L1432",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_loadexplorerprimaryindex",
+      "target": "corpus_code_doctrine_file_index_slim_explorer",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7163",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_fetchwithtimeout",
+      "target": "corpus_code_doctrine_skip_global_abort",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7167",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_search_reload",
+      "target": "corpus_code_doctrine_damsearch_reload_vs_searchonly",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_viz_loadindex",
+      "target": "corpus_code_doctrine_file_index_slim_explorer",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "corpus/js/dam-viz.js",
+      "source_location": "L122",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_tag_bar_automount",
+      "target": "corpus_code_doctrine_ladowanie_indeksu",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-tag-bar.js",
+      "source_location": "L298",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_panic_reload_unlockbootfailsafe",
+      "target": "corpus_code_doctrine_html_dam_booting",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-panic-reload.js",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_shell_finishboot",
+      "target": "corpus_code_doctrine_html_dam_booting",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-shell.js",
+      "source_location": "L2905",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_unlockexplorerboot",
+      "target": "corpus_code_doctrine_html_dam_booting",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7063",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_code_doctrine_explorer_return_freeze",
+      "target": "corpus_js_dam_explorer_resumeexplorerafterrestore",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2100",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_code_doctrine_explorer_return_freeze",
+      "target": "corpus_js_dam_explorer_bindexplorerresumelisteners",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2100",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_code_doctrine_explorer_freeze_after_wizualizacje",
+      "target": "corpus_js_dam_search_reload",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2108",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_code_doctrine_explorer_freeze_after_wizualizacje",
+      "target": "corpus_js_dam_viz_loadindex",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2108",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_code_doctrine_explorer_freeze_after_wizualizacje",
+      "target": "corpus_js_dam_paths_ensureuserbase",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2108",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_code_doctrine_explorer_f5_white_screen",
+      "target": "corpus_js_dam_panic_reload_unlockbootfailsafe",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2100",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_code_doctrine_cdp_runtime_evaluate_hang",
+      "target": "corpus_code_doctrine_browser_mcp_hang",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L626",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_code_doctrine_explorer_freeze_after_wizualizacje",
+      "target": "corpus_code_doctrine_explorer_return_freeze",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2094",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_panic_reload_unlockbootfailsafe",
+      "target": "corpus_js_dam_shell_finishboot",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "corpus/js/dam-panic-reload.js",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_panic_reload_unlockbootfailsafe",
+      "target": "corpus_js_dam_explorer_unlockexplorerboot",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "corpus/js/dam-panic-reload.js",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_search_parsejsoninworker",
+      "target": "corpus_js_dam_search_main_parse_max",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-search.js",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_init",
+      "target": "corpus_js_dam_explorer_damloader",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8539",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_viz_loadindex",
+      "target": "corpus_js_dam_explorer_damloader",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-viz.js",
+      "source_location": "L6065",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_dismissexplorerloader",
+      "target": "corpus_js_dam_explorer_damloader",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L7075",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_startexplorerindexbind",
+      "target": "corpus_code_doctrine_ladowanie_indeksu",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js",
+      "source_location": "L8411",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_paths_ensureuserbase",
+      "target": "concept_window_dam_file_index",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-paths.js",
+      "source_location": "L568",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_code_doctrine_browser_mcp_hang",
+      "target": "corpus_code_doctrine_explorer_freeze_after_wizualizacje",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.25,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2108",
+      "weight": 0.6
+    },
+    {
+      "source": "corpus_js_dam_tag_bar_automount",
+      "target": "corpus_js_dam_explorer_init",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "corpus/js/dam-tag-bar.js",
+      "source_location": "L308",
+      "weight": 1.0
+    },
+    {
+      "source": "corpus_js_dam_explorer_responsejsonoffmain",
+      "target": "corpus_code_doctrine_explorer_return_freeze",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "corpus/code-doctrine.md",
+      "source_location": "L2090",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "explorer_index_bind_flow",
+      "label": "Explorer slim index bind flow",
+      "nodes": [
+        "corpus_js_dam_explorer_init",
+        "corpus_js_dam_explorer_startexplorerindexbind",
+        "corpus_js_dam_explorer_loadexplorerprimaryindex",
+        "corpus_js_dam_explorer_applyexplorerindexbundle",
+        "corpus_js_dam_explorer_bindexplorerdata",
+        "corpus_js_dam_explorer_paintcategoryskeleton"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/js/dam-explorer.js"
+    },
+    {
+      "id": "explorer_return_restore_flow",
+      "label": "Explorer return restore after Wizualizacje",
+      "nodes": [
+        "corpus_js_dam_explorer_bindexplorerresumelisteners",
+        "corpus_js_dam_explorer_resumeexplorerafterrestore",
+        "corpus_js_dam_explorer_startexplorerindexbind",
+        "corpus_code_doctrine_explorer_return_freeze",
+        "corpus_code_doctrine_skip_global_abort"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "corpus/code-doctrine.md"
+    },
+    {
+      "id": "boot_unlock_failsafe_chain",
+      "label": "html.dam-booting unlock failsafe chain",
+      "nodes": [
+        "corpus_js_dam_panic_reload_unlockbootfailsafe",
+        "corpus_js_dam_shell_finishboot",
+        "corpus_js_dam_explorer_unlockexplorerboot",
+        "corpus_code_doctrine_html_dam_booting"
+      ],
+      "relation": "implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "corpus/js/dam-panic-reload.js"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

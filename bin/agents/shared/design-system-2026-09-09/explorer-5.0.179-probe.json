@@ -1,0 +1,74 @@
+[
+  {
+    "pass": 1,
+    "probe": {
+      "href": "http://127.0.0.1:8765/explorer.html?v=5.0.179",
+      "title": "Eksplorator - DAM",
+      "htmlClass": "dam-booted",
+      "booting": false,
+      "booted": true,
+      "bodyOpacity": "1",
+      "bodyPE": "auto",
+      "folderItems": 8,
+      "skeletonItems": 0,
+      "folderOpacity": "1",
+      "folderVis": "visible",
+      "status": "",
+      "statusHidden": true,
+      "loaderDisplay": "none",
+      "loaderOpacity": "0",
+      "loaderPE": "none",
+      "v": "5.0.179"
+    },
+    "bytes": 170096,
+    "png": "explorer-5.0.179-r1.png"
+  },
+  {
+    "pass": 2,
+    "probe": {
+      "href": "http://127.0.0.1:8765/explorer.html?v=5.0.179",
+      "title": "Eksplorator - DAM",
+      "htmlClass": "dam-booted",
+      "booting": false,
+      "booted": true,
+      "bodyOpacity": "1",
+      "bodyPE": "auto",
+      "folderItems": 8,
+      "skeletonItems": 0,
+      "folderOpacity": "1",
+      "folderVis": "visible",
+      "status": "",
+      "statusHidden": true,
+      "loaderDisplay": "none",
+      "loaderOpacity": "0",
+      "loaderPE": "none",
+      "v": "5.0.179"
+    },
+    "bytes": 168931,
+    "png": "explorer-5.0.179-r2.png"
+  },
+  {
+    "pass": 3,
+    "probe": {
+      "href": "http://127.0.0.1:8765/explorer.html?v=5.0.179",
+      "title": "Eksplorator - DAM",
+      "htmlClass": "dam-booted",
+      "booting": false,
+      "booted": true,
+      "bodyOpacity": "1",
+      "bodyPE": "auto",
+      "folderItems": 8,
+      "skeletonItems": 0,
+      "folderOpacity": "1",
+      "folderVis": "visible",
+      "status": "",
+      "statusHidden": true,
+      "loaderDisplay": "none",
+      "loaderOpacity": "0",
+      "loaderPE": "none",
+      "v": "5.0.179"
+    },
+    "bytes": 168931,
+    "png": "explorer-5.0.179-r3.png"
+  }
+]

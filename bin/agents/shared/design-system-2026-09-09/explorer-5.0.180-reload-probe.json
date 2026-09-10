@@ -1,0 +1,128 @@
+{
+  "curl": {
+    "htmlStatus": 200,
+    "htmlCache": "no-cache, max-age=0, must-revalidate",
+    "htmlLen": 173630,
+    "jsStatus": 200,
+    "jsCache": "no-cache, max-age=0, must-revalidate",
+    "jsHasStop": false,
+    "jsHasPrevent": false
+  },
+  "results": [
+    {
+      "step": "nav",
+      "probe": {
+        "href": "http://127.0.0.1:8765/explorer.html",
+        "title": "Eksplorator - DAM",
+        "readyState": "interactive",
+        "htmlClass": "dam-booted",
+        "booting": false,
+        "booted": true,
+        "bodyOpacity": "1",
+        "bodyPE": "auto",
+        "folderItems": 8,
+        "bodyTextLen": 1358,
+        "loaderDisplay": "none",
+        "loaderOpacity": "0",
+        "v": "5.0.180",
+        "hasHardReload": true,
+        "panicInstalled": true
+      },
+      "bytes": 158531,
+      "png": "explorer-5.0.180-nav.png",
+      "fail": false
+    },
+    {
+      "step": "reload1",
+      "probe": {
+        "href": "http://127.0.0.1:8765/explorer.html",
+        "title": "Eksplorator - DAM",
+        "readyState": "interactive",
+        "htmlClass": "dam-booted",
+        "booting": false,
+        "booted": true,
+        "bodyOpacity": "1",
+        "bodyPE": "auto",
+        "folderItems": 8,
+        "bodyTextLen": 1356,
+        "loaderDisplay": "none",
+        "loaderOpacity": "0",
+        "v": "5.0.180",
+        "hasHardReload": true,
+        "panicInstalled": true
+      },
+      "bytes": 164829,
+      "png": "explorer-5.0.180-reload1.png",
+      "fail": false
+    },
+    {
+      "step": "reload2",
+      "probe": {
+        "href": "http://127.0.0.1:8765/explorer.html",
+        "title": "Eksplorator - DAM",
+        "readyState": "complete",
+        "htmlClass": "dam-booted",
+        "booting": false,
+        "booted": true,
+        "bodyOpacity": "1",
+        "bodyPE": "auto",
+        "folderItems": 8,
+        "bodyTextLen": 1078,
+        "loaderDisplay": "none",
+        "loaderOpacity": "0",
+        "v": "5.0.180",
+        "hasHardReload": true,
+        "panicInstalled": true
+      },
+      "bytes": 164624,
+      "png": "explorer-5.0.180-reload2.png",
+      "fail": false
+    },
+    {
+      "step": "reload3",
+      "probe": {
+        "href": "http://127.0.0.1:8765/explorer.html",
+        "title": "Eksplorator - DAM",
+        "readyState": "complete",
+        "htmlClass": "dam-booted",
+        "booting": false,
+        "booted": true,
+        "bodyOpacity": "1",
+        "bodyPE": "auto",
+        "folderItems": 8,
+        "bodyTextLen": 1343,
+        "loaderDisplay": "none",
+        "loaderOpacity": "0",
+        "v": "5.0.180",
+        "hasHardReload": true,
+        "panicInstalled": true
+      },
+      "bytes": 164824,
+      "png": "explorer-5.0.180-reload3.png",
+      "fail": false
+    },
+    {
+      "step": "cachebust",
+      "probe": {
+        "href": "http://127.0.0.1:8765/explorer.html?_damr=cachebust",
+        "title": "Eksplorator - DAM",
+        "readyState": "complete",
+        "htmlClass": "dam-booted",
+        "booting": false,
+        "booted": true,
+        "bodyOpacity": "1",
+        "bodyPE": "auto",
+        "folderItems": 8,
+        "bodyTextLen": 1078,
+        "loaderDisplay": "none",
+        "loaderOpacity": "0",
+        "v": "5.0.180",
+        "hasHardReload": true,
+        "panicInstalled": true
+      },
+      "bytes": 164635,
+      "png": "explorer-5.0.180-cachebust.png",
+      "fail": false
+    }
+  ]
+}

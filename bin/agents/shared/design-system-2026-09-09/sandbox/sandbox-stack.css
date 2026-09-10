@@ -1,0 +1,12 @@
+/**
+ * P3 lab — Explorer panel stack only (P1-ownership-map).
+ * @import paths relative to this file; target bin/apps/web/assets/
+ */
+@import url("../../../../apps/web/assets/vendor/css/bootstrap/bootstrap.css");
+@import url("../../../../apps/web/assets/css/style.css");
+@import url("../../../../apps/web/assets/css/dam-tokens.css");
+@import url("../../../../apps/web/assets/css/dam-primitives.css");
+@import url("../../../../apps/web/assets/css/dam-app.css");
+@import url("../../../../apps/web/assets/css/dam-tutorial.css");
+@import url("../../../../apps/web/assets/css/dam-brand.css");
+@import url("../../../../apps/web/assets/css/dam-bento.css");

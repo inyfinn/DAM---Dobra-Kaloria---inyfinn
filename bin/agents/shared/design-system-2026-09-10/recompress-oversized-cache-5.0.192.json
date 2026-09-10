@@ -1,0 +1,30 @@
+{
+  "started_at": "2026-09-10T10:11:49+0200",
+  "elapsed_s": 58.654,
+  "cap_bytes": 71680,
+  "workers": 24,
+  "before": {
+    "files": 12860,
+    "over_cap": 3742,
+    "total_bytes": 2390010899,
+    "over_cap_bytes": 2311125949,
+    "max_bytes": 732059,
+    "named": {
+      "00a0a162c190f13e0c0859e86b56f5715907879a574782a75579a1effbb72f7e.avif": 559245,
+      "00d9abadfe2eac6ac2746a70ee9cd4cb516a03c119e8225fae44c6899a251a38.avif": 660443
+    }
+  },
+  "after": {
+    "files": 12860,
+    "over_cap": 0,
+    "total_bytes": 100806252,
+    "over_cap_bytes": 0,
+    "max_bytes": 37975,
+    "named": {
+      "00a0a162c190f13e0c0859e86b56f5715907879a574782a75579a1effbb72f7e.avif": 1974,
+      "00d9abadfe2eac6ac2746a70ee9cd4cb516a03c119e8225fae44c6899a251a38.avif": 6010
+    }
+  },
+  "processed": 3742,
+  "failures": []
+}

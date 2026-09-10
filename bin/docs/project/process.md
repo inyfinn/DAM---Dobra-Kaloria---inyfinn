@@ -1,3 +1,46 @@
+## 2026-09-09 - v5.0.187: tutorial Projekty Dalej + glossary
+
+**Komenda/Akcja:** Parent interrupt: samouczek stuck na Projekty, Dalej znika/ghost; glossary Info Pakowania / Asana / Teams / PAKIET / Skojarzenia / ikony.
+
+**Log/Status:** 8765/8766 200. `index.html` dostaje `dam-tutorial.css` + `dam-tutorial.js?v=5.0.187`.
+
+**Efekt/Fix:** renderStep od razu (nie czeka na GSAP fade). Dalej = nextStep, bez nawigacji. Brak enterExploreMode na losowy klik. Czekanie na węzeł max 3 s + kopia „ładowanie kroku”. Spotlight nie traktuje `.dam-tut` jako bloker. Glossary w `pl.json`/`en.json`. aria-label na copy/folder/PAKIET/chevron. Media tiles: po pomiarze `removeProperty(height/align-self)`.
+
+**Backup:** brak. Commit: nie.
+
+**Test/Ewaluacja:** dashboard-pass-01-live.png 312028B; dashboard-pass-02-projekty.png 266751B spotlight Info Pakowania; dashboard-pass-03-dalej.png 248222B Faza 6/9 na index.html (Dalej nie zniknął). Nie seria 20 PNG.
+
+**Zrodla:** dam-tutorial.js 35, 1326, 1404; index.html 144; pl.json 315, 329-343; dam-paths.js 1060; dam-explorer.js 4005; dam-dashboard-widgets.js 531
+
+## 2026-09-09 - v5.0.186: Viz boot unlock + Explorer return
+
+
+**Komenda/Akcja:** Hands: operator live freeze po Wizualizacje → Eksplorer. Headed Chrome click, screenshot+Read, fix JS, bump +0.0.1.
+
+**Log/Status:** 8765/8766 200. Serwowane `dam-explorer.js?v=5.0.186`. Viz HTML miał `pointer-events:none` do 4.5 s.
+
+**Efekt/Fix:** visualizations.html boot jak explorer (auto + unlock 0/50 ms + panic-reload). dam-viz.js: brak DamLoader.start, brak worker, brak 9MB. dam-explorer.js: pageshow zawsze rebind. dam-loader.js: pageshow reset.
+
+**Backup:** brak. Commit: nie.
+
+**Test/Ewaluacja:** explorer-186-return.png 1280x1800 164023B Read Batony 85 / Kulki 19 / Roślinne 60. v5.0.186.
+
+**Zrodla:** visualizations.html:8-20; dam-viz.js:139,6063; dam-explorer.js:8501; dam-loader.js:407
+
+## 2026-09-09 - v5.0.185: Explorer return bind (Wizualizacje → Eksplorer)
+
+**Komenda/Akcja:** Parent reject 5.0.184; operator live freeze `...` + Ładowanie. Hands: headed Chrome click/navigate, screenshot+Read, fix, bump.
+
+**Log/Status:** 8765/8766 200. Slim explorer 513414B ~5ms. Cursor `browser_navigate` = no tab. Chrome headed opened then died twice (no evaluate/CDP Runtime). CopyFromScreen łapał Illustrator/Spotify — camera = PrintWindow.
+
+**Efekt/Fix:** 5.0.184 return PNG freeze. 5.0.185: `startExplorerIndexBind` always drops dead inFlight on pageshow/reentry; `init._damDone` reentry; slim `JSON.parse` on main; `dam-branding.js` usunięty z visualizations.html.
+
+**Backup:** brak. Commit: nie.
+
+**Test/Ewaluacja:** hands-headed-6-return-8s.png 1400x900 119339B Read freeze. hands-headed-10-return-8s.png 1630x1228 163531B Read Batony 85 / Kulki 19 / Roślinne 60. v5.0.185. Parent nie dostaje PASS od Hands.
+
+**Zrodla:** dam-explorer.js 8454, 8511, 8535; visualizations.html (brak branding.js); version.json 5.0.185
+
 ## 2026-09-02 - v5.0.148: swiezy file-index + jeden lot DamSearch
 
 **Komenda/Akcja:** Pull najnowszego main; odswiezyc indeks produktow; dopracowac search/picker bez nowego silnika.
@@ -13532,4 +13575,39 @@ ode --check OK. Live Playwright: branding product open phases hydrate 1ms; wall-
 **Test:** unittest 5/5; curl before 404/404 → after 200/200; branding UI 3× PASS (karta + modal 680×340).
 
 **Backup:** n/a.
+
+## 2026-09-09 — 5.0.191 samouczek + pełny indeks + cache AVIF 30%
+
+**Command / Action:** Dokończyć samouczek (ściany tekstu / PAKIET), potem `POST /index/rebuild`, potem skasować `PAMIEC-PODRECZNA/thumbs` i przebudować AVIF quality=30 dla wszystkich zaindeksowanych lokalnych ścieżek.
+
+**Log/Status:**
+1. Phase A: IIFE `})(window)`; jedno zdanie na krok; auto-expand wiersza; chip PAKIET w dymku; allowClick bez zniszczenia overlay.
+2. Phase B: `local_bridge.start_index_rebuild` → `apps/web/scripts/build-file-index.py`; ~34 s; last_ok.
+3. Phase C: `dam_thumb_cache._encode_thumb` (`rgb.save(..., format="AVIF", quality=30)`); skrypt `rebuild-avif-cache-5.0.191.py`; 7311 ścieżek × grid+card = 14622 jobów.
+
+**Effect/Fix:** Samouczek startuje; PAKIET widoczny na zrzucie; indeks 193/440/13; cache 12860 `.avif`, 0 `.jpg`.
+
+**Backup:** Brak zip — 601 starych thumbs skasowane przed rebuildem.
+
+**Test/Ewaluacja:** PNG 1966×1061 w `bin/agents/shared/design-system-2026-09-09/`; curl `/index/status` i `/thumb-cache/status`; Read obrazków. Hover tooltip nie potwierdzony wizualnie.
+
+**Źródła:** `dam-tutorial.js`, `dam-explorer.js` `revealCarrierForTutorial`, `dam_thumb_cache.py`, `local_bridge.py` L1648.
+
+## 2026-09-10 - 5.0.192 cache AVIF 70 KiB + originals-first
+
+**Komenda/Akcja:** Census 12860 plików cache, selektywna rekompresja wszystkich 3742 AVIF >70 KiB, utrwalenie limitu w kanonicznym encoderze i poprawa ładowania cache/original w Explorer/Viz/Branding.
+
+**Log/Status:**
+1. Przed: 3742 >71680 B; 2390010899 B razem; oversized 2311125949 B; max 732059 B.
+2. `dam_thumb_cache._save_avif_capped`: odłączona bitmapa RGB, bez profilu/metadanych, quality 30 w dół + redukcja rozdzielczości do limitu.
+3. Recompress: 3742/3742 w 58.654 s, bez kasowania pozostałych 9118 plików.
+4. `DamPreviewTruth`: cache jest pierwszym paintem; IntersectionObserver natychmiast uruchamia `/media` dla widocznego elementu; gotowy oryginał zastępuje cache.
+
+**Efekt/Fix:** Po: 0 >71680 B; 100806252 B razem; max 37975 B. Nazwane próbki: 660443->6010 B oraz 559245->1974 B. Wersja 5.0.192.
+
+**Backup:** Brak; selektywne nadpisanie 3742 oversized AVIF zgodnie z poleceniem.
+
+**Test/Ewaluacja:** Python compile + `test_thumb_white_bg.py`; node --check 4 JS; smoke 8765/8766 HTTP 200; screenshot+Read `design-system-2026-09-10/explorer-thumbs-5.0.192.png` 910x746, FRONT/BACK czytelne. Raport JSON: `recompress-oversized-cache-5.0.192.json`; failures=[].
+
+**Źródła:** `apps/desktop/dam_thumb_cache.py`; `apps/web/assets/js/dam-preview-truth.js`; `dam-explorer.js`; `dam-viz.js`; `dam-branding.js`; `memory.md`.
 

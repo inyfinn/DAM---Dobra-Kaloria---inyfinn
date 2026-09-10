@@ -352,7 +352,62 @@ Most: `apps/desktop/local_bridge.py` (endpointy: `/folder-browse`, `/folder-imag
 
 ---
 
-## 12. Dziennik lekcji (DOPISUJ tu nowe odkrycia)
+## 12. Dziennik lekcji (operacyjny)
+
+**Jak dopisywać:** po każdej nieoczywistej naprawie dodaj wpis **na końcu tej sekcji** (najnowsze na dole). Format obowiązkowy:
+
+1. **Wersja** (`5.0.xxx`)
+2. **Objaw** (co widzial user / agent)
+3. **Przyczyna źródłowa** (warstwa, plik, linia)
+4. **Fix** (krotko)
+5. **Dowod** (curl, screenshot+Read WxH, test)
+6. **Zasada** (jedno zdanie na przyszlosc)
+
+Nie usuwaj starych wpisow. `AGENTS.md` i skill projektu wskazuja tutaj, nie do `process.md` (process = log operacyjny).
+
+**Zasada reload (HARD, potwierdzona w 17 plikach HTML):** Reload w tej samej karcie jest first-class. **NIGDY** `preventDefault` na F5. **NIGDY** `window.stop` / `location.replace` na keydown F5/Ctrl+R. Kod lamal to w 17 shell HTML + `dam-panic-reload.js` / `dam-shortcuts.js` (naprawione 5.0.180+). Patrz tez wpis 2026-09-08 F5 ponizej.
+
+### 2026-09-08 - Viz sort „Wprowadzenie” = pierwsza rewizja SKU, nie ostatnia wizka
+
+**Objaw:** Sort „Wprowadzenie: najnowsze” dawał Gyros / Roladkę / Koftę przed DATESY.
+
+**Przyczyna:** score = MAX daty folderu widocznej wizki. Gyros `18.08.2026` to nowa wizualizacja starego produktu (`14.12.2022`). DATESY `04.08.2026` to pierwsze wprowadzenie linii.
+
+**Fix:** `groupIntroductionScore` = MIN daty ze wszystkich `revisions` w `file-index`. Modyfikacja / utworzenie zostają MAX.
+
+**Zasada:** Wprowadzenie produktu ≠ data ostatniej wizki.
+
+### 2026-09-08 - Explorer „nie odpowiada”: `dam-branding.js` na explorer.html
+
+**Objaw:** Wizualizacje działają, cały Eksplorer martwy (klik/scroll). Rano działał.
+
+**Przyczyna:** Uncommitted 5.0.174 dopisał `<script dam-branding.js>` do `explorer.html` (rano go nie było). Parse + ewentualny grid-index na stronie drzewa produktów + `DamLoader.start("Skojarzenia…")` na first paint = freeze / overlay. `html.dam-booting` trzyma `pointer-events:none` aż unlock.
+
+**Fix (5.0.175):** usuń `dam-branding.js` z explorera; nie startuj DamLoader przy init; unlock boot 400 ms; timeout indeksu 8 s.
+
+**Fix (5.0.177):** first paint = `GET /file-index?fields=explorer` (bez `files_by_role` / `wizki` / `viz_latest`) + `JSON.parse` w Workerze. Pełne pliki dopiero `GET /file-index/product?id=` przy openProduct. DamSearch na explorerze: `searchOnly` (nie wolno `reload()` 9 MB). `html.dam-booting` header/sidebar `pointer-events:auto`.
+
+**Fix (5.0.178):** puste Kategorie + ghost chipy (intermittent). `Promise.all(slim, meta)` blokował drzewo gdy `product-status` / `search-index` wisiał; watchdog szukał „Ładowanie indeksu” w `#damExplorerMain` (pusty), status był `hidden`. `DamTagBar` 3× `r.json()` ~491 KB na starcie + GSAP `autoAlpha` na `.dam-tag-groups`. First paint = tylko slim index; meta max 3 s; tag bar po idle; skip GSAP bars na explorerze; `MAIN_PARSE_MAX` 1.2 MB (fallback slim).
+
+**Fix (5.0.179):** ten sam objaw w prawdziwej sesji mimo 5.0.178. Slim JSON był OK (193 prod, ~512 KB, 26 ms) — wina prezentacji. `DamTagBar.autoMount` nadal 3× na explorerze (DOMContentLoaded+120+700 ms) i Worker `postMessage` clone search-index blokował wątek UI zanim `bindExplorerData` namalowało `#damFolderList`. `Promise.race(8s)` porzucał późny sukces. `responseJsonOffMain` pchał 512 KB do Workera zamiast `JSON.parse` na main. P6 headless (czysty profil) mijał race; karta usera nie.
+
+**Fix (5.0.180):** F5 / odśwież w **już otwartej** karcie Explorera nigdy nie kończyło dokumentu (biały `explorer.html`, bez shella). To **nie** jest „cache localhost” i **nie** jest empty-tree 5.0.179.
+
+Przyczyny (dowód): (1) inline `<head>` + `dam-panic-reload.js` + `dam-shortcuts.js` na F5 robiły `window.stop()` i `location.replace(?_damr=)` **równolegle z natywnym reload** — `stop()` ucinał nowy dokument. Screenshot usera: URL bez `?v=` / `_damr=`, karta „ukończona”, treść biała. (2) UI `:8765` = jednowątkowy `TCPServer`; Chrome abort przy F5 → `ConnectionAbortedError` 10053 w `copyfile` (log `worker-serve-combined.log`); pula keep-alive tej samej przeglądarki wisiała, **nowa przeglądarka** (świeże sockety) działała. (3) `sw.js` activate `client.navigate()` na wszystkich oknach + tutorial `register("./sw.js")` + shell purge `!hasV4` (self-destruct SW) = druga nawigacja w trakcie F5.
+
+**Zasada:** Reload w tej samej karcie jest first-class. **NIGDY** `preventDefault` na F5. **NIGDY** `window.stop` / `location.replace` na keydown F5/Ctrl+R. Natywny F5 / Ctrl+R / Ctrl+Shift+R / Enter w pasku URL musi dokończyć load. Serve UI = `ThreadingMixIn` + Windows `SO_EXCLUSIVEADDRUSE` (jeden proces na :8765). SW self-destruct nie nawiguje klientów. Nie wolno tłumaczyć białej karty po F5 jako „localhost cache”.
+
+**Zasada:** Explorer NIE ładuje modułu brandingu. Picker assoc na explorerze = DamAssocEdit bez full `DamBranding.boot`. First paint explorera NIE robi `JSON.parse` pełnego `file-index.json` na wątku UI. Drzewo kategorii NIE czeka na search-index ani product-status. Na explorerze TagBar NIE autoMountuje. Slim ≤1.2 MB parse na main (bez Worker clone). `Promise.race` nie może porzucić późnego sukcesu indeksu. Skeleton CATEGORY_CANON od razu - puste Kategorie ≠ brak danych na dysku.
+
+### 2026-09-08 - Dashboard white / „brak podglądu”: bridge down + folder path w thumb-cache
+
+**Objaw:** „4 najnowsze wizualizacje” biale kafelki (6900001, 6300782, 6300728); „4 Najnowsze” SVG „brak podglądu”. 6300784 czasem OK. Indeks w pliku jest; user mowi „indeks niedostepny”.
+
+**Przyczyna (dowod curl):** `8765/8766` = **000** (most/UI nie dziala) → `<img /thumb-cache>` error → placeholder. Osobno: widget `newest_products_f` przekazuje **folder rewizji** w `data-path`; fallback `mediaPreviewUrl(folder)` nie ma rozszerzenia → pusty src. String „Indeks niedostępny” **nie istnieje** w repo; najblizej: viz `Blad indeksu: file-index`, branding `Indeks branding niedostępny`, explorer `Ładowanie indeksu dysku...`.
+
+**Fix (backend, bez dashboard JS):** `local_bridge._resolve_viz_image_for_thumb` — folder rewizji / indeks → `viz_latest.path`; GET `/file-index`, `/file-index/viz-latest`; warm po rebuild. Indeks OK: viz_count=438, wszystkie 4 probe IDs maja path na dysku + thumb 200.
+
+**Zasada:** Przed diagnoza UI: `curl.exe 8765` + `8766/health`. `/thumb-cache?path=<folder rewizji>` musi dzialac (nie tylko sciezka PNG). Dashboard JS = osobny worker.
 
 ### 2026-09-04 - WIZKI w podfolderach RGB = 0 w indeksie (flat scan)
 
@@ -761,6 +816,7 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   - smoke curl przed navigate; restart `serve_browser.py`; **nie czekać w nieskończoność**;
   timeout na każde żądanie; po blockerze **kontynuuj pracę** (kod/test/process.md).
   Skrypt: `scripts/ops/smoke-dam-ports.ps1`. Reguła: `.cursor/rules/server-timeout-never-hang.mdc`.
+- 2026-09-09 | Explorer F5 bialy ekran | odswiez w otwartej karcie nigdy nie konczy dokumentu; nowa przegladarka dziala | (a) F5: `window.stop()` + `location.replace` sciga sie z natywnym reload; (b) jednowatkowy `:8765` + abort 10053; (c) SW `client.navigate` | **Reload-in-tab = first-class, nie „localhost cache”.** Zero intercept F5. `ThreadingMixIn` na UI. Lekcja: v5.0.180.
 - 2026-07-22 | stale Geex Demo shell | user widzi Demo/Layout/App/Features/Pages
   + footer v1.00 zamiast DAM nav + `#damDashGrid` | (a) `dashboard.html` trzymał
   markup Geex jako pre-rewrite (DamShell dopiero po JS); (b) SW `dam-page-1h-*`
@@ -2036,3 +2092,196 @@ Skrót — **bind = dwie osobne rzeczy**:
 
 **Wersja:** `5.0.161`.
 
+#### Lekcja 2026-09-09: Explorer freeze + F5 po zawieszeniu (v5.0.181)
+
+**Objawy:** (1) Eksplorator „nie odpowiada” na first paint — puste Kategorie, status „Ładowanie indeksu…”. (2) Po zawieszeniu F5 nie odświeża (biały ekran / kliknięcia martwe). (3) `pointer-events: none` zostaje mimo że drzewo widać.
+
+**Przyczyny:** (1) `responseJsonOffMain` robił `JSON.parse` ~512 KB slim index na main thread zamiast `DamSearch.parseJsonInWorker`. (2) `DamSearch.reload()` na explorer.html czyścił `window._DAM_FILE_INDEX` i próbował `data/file-index.json` (~9 MB). (3) Race: `location.replace` / `window.stop` / custom F5 handler vs natywny reload WebView2; `html.dam-booting` zdjęte bez `body.is-booting` cleanup.
+
+**Fix:** First paint = **tylko** `GET :8766/file-index?fields=explorer` + `parseJsonInWorker`. `DamSearch.reload()` na explorer → `searchOnly: true` (bez 9 MB). `dam-panic-reload.js` + `dam-shell-boot.css`: failsafe 4s/6s + CSS `html.dam-booted body.is-booting { pointer-events: auto }`. F5/Ctrl+R: **zero** `preventDefault`, `window.stop`, `location.replace` na keydown. Explorer **nie** ładuje `dam-branding.js`.
+
+**Weryfikacja:** `smoke-dam-ports.ps1`; `curl.exe --max-time 8 http://127.0.0.1:8765/explorer.html`; grep HTML bez `dam-branding.js`; `curl -I :8766/file-index?fields=explorer` → `X-Dam-Index-Fields: explorer`; `node --check` na JS.
+
+**Fix (5.0.182):** `html.dam-booting body` **nigdy** `pointer-events: none` (tylko `auto`). Unlock boot 0 ms / 50 ms. Parse slim w Workerze; fallback `JSON.parse` po `setTimeout(0)` żeby natywny F5 wszedł w event loop.
+
+**Wersja:** `5.0.182`.
+
+#### Lekcja 2026-09-09: Explorer return freeze ≠ first load (v5.0.183)
+
+**Objaw:** First paint Eksploratora bywa OK (liczby przy kategoriach). Klik Wizualizacje, powrót na Eksplorer: status „Ładowanie indeksu…”, counts `…`, puste `#damExplorerMain`. To nie ten sam bug co zimny start.
+
+**Przyczyny:** (1) `init()` jednorazowy (`init._damDone`) — brak `pageshow` / `visibilitychange`; po bfcache albo AbortError na leave fetch slim nigdy nie wraca. (2) `fetchWithTimeout` wpisywał AbortController do `__damRegisterAbort`; Chrome ucina fetch przy zdejmowaniu dokumentu. (3) Skeleton `CATEGORY_CANON` z `…` zostaje, bo `applyExplorerIndex` nie odpala się drugi raz. (4) Wizualizacje: `DamSearch.reload()` ciągnie pełny `file-index.json` z `:8765`; po abort keep-alive / ten sam Chrome user-data-dir potrafi zwisnąć na kolejnym `explorer.html` (CLI `--screenshot` 35s, curl nadal 200).
+
+**Fix:** `startExplorerIndexBind` + `resumeExplorerAfterRestore` na `pageshow` (w tym `event.persisted`) i `visibilitychange`; slim GET z `skipGlobalAbort`; `dam-panic-reload.js` unlock boot na pageshow. Bez `preventDefault` F5, bez `window.stop`, bez `dam-branding.js` na explorerze.
+
+**Wersja:** `5.0.183`.
+
+#### Lekcja 2026-09-09: Viz 9MB :8765 truuje powrot na Eksplorer (v5.0.184)
+
+**Objaw:** Ten sam profil Chrome: Eksplorer (OK) -> Wizualizacje -> Eksplorer. CLI `--screenshot` po viz wisial 35-40s; curl `explorer.html` w tym czasie 200 ~15ms. Fresh profile to nie ten bug.
+
+**Przyczyny:** (1) `dam-viz.js` `loadIndex` -> `DamSearch.reload()` -> `data/file-index.json` ~9MB z `:8765`; abort na leave. (2) `dam-paths.js` `ensureUserBase` tez fetch 9MB na viz/explorer. (3) `--headless=new` po ciezkiej stronie viz potrafi zablokowac kolejny `--screenshot` na tym samym user-data-dir mimo zdrowego serwera.
+
+**Fix:** first paint viz z `:8766/file-index?fields=viz_latest` (~0.5MB); `DamSearch.reload` `searchOnly` na viz; brak 9MB w `dam-paths` na explorer/viz; brak eager `branding-grid-head` na viz. Explorer bind 5.0.183 zostaje.
+
+**Wersja:** `5.0.184`.
+
+#### Lekcja 2026-09-09: Viz inline boot `pointer-events:none` (v5.0.186)
+
+**Objaw:** Operator: po Wizualizacje sidebar Eksplorer — Kategorie `…`, status Ładowanie indeksu, puste main, UI frozen. Klik Eksplorer na stronie viz bywał połykany 8–12 s.
+
+**Przyczyny:** (1) `visualizations.html` inline `#dam-shell-boot-critical` miał `html.dam-booting body { pointer-events:none }` i unlock dopiero po 4500 ms — explorer już miał `pointer-events:auto` + unlock 0/50 ms. (2) `DamLoader.start` na first paint viz + `parseJsonInWorker` na viz_latest. (3) `pageshow` na explorerze wznawiał bind tylko gdy `explorerNeedsBind()`.
+
+**Fix:** ten sam boot co explorer (`pointer-events:auto`, panic-reload, unlock 0/50 ms). `loadIndex` bez DamLoader; viz_latest `JSON.parse` z limitem 2.5 MB, nigdy `data/file-index.json`. `resumeExplorerAfterRestore` zawsze zrzuca inFlight. `DamLoader.reset` na pageshow.
+
+**Wersja:** `5.0.186`.
+
+#### Lekcja 2026-09-10: cache != baza (v5.0.193)
+
+**Objaw / intencja:** Pamiec podreczna ma dawac podglad po instalacji bez udzialu plikow. Final (F/X/D) nie moze dzialac bez polaczenia z baza.
+
+**Przyczyna:** `canWriteLifecycleStatus()` sprawdzalo tylko role. Most `POST /lifecycle-status` zapisywal na dysk bez `dam_db` online.
+
+**Fix:** UI wylacza F/X/D gdy `DamDbStatus.allowsMutations()` jest false. Most zwraca `db_required`. Przegladanie / thumbs / search zostaja. Lokalny SQLite jako silnik = baza jest.
+
+**Wersja:** `5.0.193`.
+
+#### Lekcja 2026-08-07: kolejka zapisu skojarzen enqueueAssocSave (v5.0.113)
+
+**Objaw:** Shift-minus usuwa skojarzenia losowo; toast „zapis przekroczyl 5 s / Failed to fetch”; UI rollback przy wolnym bridge.
+
+**Przyczyna:** Synchroniczny POST bez retry; rollback UI przy timeout.
+
+**Fix:** `enqueueAssocSave` + `drainAssocSaveQueue` w `dam-assoc-edit.js` (~5328+): timeout 15 s, do 10 retry z backoff, persist sessionStorage; optimistic UI bez rollbacku.
+
+**Dowod:** `process.md` wpis 5.0.113; test = prawdziwy klik w picker (tryb B), nie `openPicker()` z konsoli.
+
+**Wersja:** `5.0.113`.
+
+#### Lekcja 2026-09-10: zamrozenie skojarzen = most Python, nie JS (v5.0.195)
+
+**Objaw:** Dodawanie skojarzen w brandingu/explorerze wisi; lata poprawek JS nic nie dalo.
+
+**Przyczyna:** `POST /branding/asset-associations` (`local_bridge.py:8166-8192`) historycznie w watku zadania robil `json.loads` calego `branding-index.json` (~48 MB) + `file-index.json` (~9 MB) i `json.dumps(..., indent=2)` na kazdy asset. Komentarz: „not SoT” mimo blokowania (`local_bridge.py:2919-2925`).
+
+**Fix (strefa kodu):** zapis latki + jeden watek tla, kompaktowy JSON (`_write_json_compact` `:2934-2939`).
+
+**Zasada:** Przy „UI zamrozone” na zapisie szukaj najpierw **mostu Python** (rozmiar pliku, sync I/O), dopiero potem JS.
+
+**Wersja:** `5.0.195`.
+
+#### Lekcja 2026-09-10: Geex demo = balast bootu, nie awaria (v5.0.195)
+
+**Objaw:** Uzytkownik widzi cudzy motyw (Dropbox, fałszywe wiadomosci, wykresy demo) miedzy load a shellem DAM.
+
+**Przyczyna:** Demo Geex wklejone w shell HTML (historycznie `explorer.html` ~1370 linii atrapy od ~962; `dashboard.html:650-806`); `main.js:1450-1565` tworzy ApexCharts na `#chart-5/6/7` niewidocznych w DOM; `dam-panic-reload.js` fail-open odsłania DOM zanim shell gotowy.
+
+**Zasada:** Usuwac atrapę z HTML produkcyjnego; boot = **fail-safe** (`__damBootWatchdog` 4.5s, `dam-panic-reload.js:184-187`). Geex `style.css` = TRAP (§2 DESIGN_SYSTEM).
+
+**Wersja:** `5.0.195`.
+
+#### Lekcja 2026-09-10: cache miniatur cache-first (v5.0.195)
+
+**Objaw:** `/thumb-cache` zwraca 404 mimo gotowego AVIF gdy dysk M:/X: wolny lub offline.
+
+**Przyczyna (historyczna):** `get_or_build_thumb` sprawdzal `os.path.isfile(physical)` przed cache.
+
+**Fix / kontrakt:** `dam_thumb_cache.py:get_or_build_thumb` `:491-525` — `_lookup_by_rel` najpierw, revalidate w tle; jesli oryginal nie dojdzie w ~1 s, serwuj cache, potem podmiana.
+
+**Zasada:** Postgres (metadane) > oryginal ROOT > cache akcelerator. Cache nigdy SoT.
+
+**Wersja:** `5.0.195`.
+
+#### Lekcja 2026-09-10: dam_kv_store clobber + 30 min lag (v5.0.195)
+
+**Objaw:** Praca uzytkownikow ginie bezglosem; drugi zapis nadpisuje pierwszy.
+
+**Przyczyna:** `dam_kv_store` = caly JSON w jednym wierszu (`pg_schema.sql:54-59`); klucze w `local_bridge.py:2633-2651`; kazdy POST wysyla caly dokument; lokalny plik = cache + watcher co 30 min (`:2632`, `:2868`).
+
+**Zasada:** Rozstrzyganie konfliktow na poziomie operacji (immutable device id, suma zbiorow, last-write pol); **nie** merge zrzutow PG w Gitcie (`backup-postgres-database.sh:5-6`).
+
+**Wersja:** `5.0.195`.
+
+#### Lekcja 2026-09-10: Git dump != sync uzytkownikow (v5.0.195)
+
+**Objaw:** Proba scalenia dwoch zrzutow PG daje stan, ktory nigdy nie istnial (duplikaty PK).
+
+**Przyczyna:** `pg_dump` to snapshot calego stanu; `users.id SERIAL`, `audit_log.id BIGSERIAL` — dwie maszyny nadaja te same numery.
+
+**Zasada:** Zrzut tylko disaster recovery (`backup-postgres-database.sh:42-45`, hourly/daily). Brak `.sql.gz` w `bin/DATABASE` = brak lokalnych kopii, nie zaproszenie do commitowania dumpow.
+
+**Wersja:** `5.0.195`.
+
+#### Lekcja 2026-09-10: chaos tokenow ?v= (v5.0.195)
+
+**Objaw:** Fix w JS „nie dziala”; `dam-paths.js` zamrożony na `restore20260805c`.
+
+**Przyczyna:** `explorer.html` ladowal 14 roznych tokenow `?v=`; `dam-shell.js` w 4+ wersjach miedzy stronami; token URL strony nie odswieza `<script src>`.
+
+**Zasada:** Grep `nazwa.js?v=` we **wszystkich** HTML po kazdej edycji assetu; bump w kazdym ladowacielu.
+
+**Wersja:** `5.0.195`.
+
+#### Lekcja 2026-09-10: explorer pad 20px 0px = defekt kanonu (v5.0.195)
+
+**Objaw:** `label.dam-db-mode-chip` left≈333px vs `button.dam-search-scope__btn.is-on` left≈357px (24 px); roznica wysokosci 2 px (34 vs 36).
+
+**Przyczyna:** `.dam-search-wrap--panel` `padding: 20px var(--dam-panel-pad-x)` (`dam-brand.css:3584-3590`); explorer historycznie `padding-left/right: 0` (`:4445-4449`) by skasowac `100vw` bleed (`:4324-4333`); regula `.geex-content > .dam-viz-secondary-filters` (`:4478-4486`) nie obejmowala `.dam-explorer-shell`.
+
+**Zasada:** DESIGN_SYSTEM §10.1 — jedna szyna `--dam-panel-pad-x`, jedna `--dam-chip-h`. **Nigdy** nie opisuj `20px 0px` jako ownership exception.
+
+**Wersja:** `5.0.195`.
+
+#### Lekcja 2026-09-10: protokol weryfikacji ( falszywe PASS ) (v5.0.195)
+
+**Objaw:** Agent PASS, kierownik FAIL (Explorer return, skojarzenia, alignment).
+
+**Przyczyna:** (1) `openPicker()` z konsoli = sync paint 0 ms, falszywy PASS zapisu skojarzen. (2) Swiezy profil / headless PASS, zalogowany user FAIL na Explorer->Viz->Explorer. (3) Screenshot 0 B lub bez WxH. (4) Mniej niz 3 przeloty wizualne.
+
+**Zasada:** Jeden przelot = kod + test techniczny + screenshot **Read z WxH** + lista defektow. Min. 3 przeloty UI. Skojarzenia = klik tryb B. Nawigacja paneli = profil zalogowany. **ZAKAZ** headless/fresh profile jako dowod PASS nawigacji.
+
+**Wersja:** `5.0.195`.
+
+
+
+## 13. Jeden plik ma jednego pisarza (2026-09-10, HARD)
+
+**Co sie stalo.** Dwie strefy dostaly rownolegle zlecenia dotykajace
+`bin/apps/desktop/local_bridge.py`. Jedna dopisala trase `/search/semantic`
+(14:33), druga scalanie w `_save_json` (14:36). Okolo 14:41 plik zostal **obciety**
+z ~9486 do ~8531 linii, w srodku `do_POST`, bez `main()`. Most przestal wstawac.
+Strefa, ktora to zauwazyla, odtworzyla ogon z HEAD - i tym samym skasowala **~141
+linii** niecommitowanej pracy: cala rodzine godzinowego zrzutu Postgresa
+(`_pg_dump_python`, `_write_hourly_dump_bytes`, `run_hourly_pg_backup`,
+`_pg_backup_git_sync`, `_pg_backup_interval_s`, `_pg_backup_log`,
+`_pg_backup_watcher`) razem z uruchomieniem watku w `main()`.
+
+Ironia jest calkowita: stracilismy kod przez dokladnie ten mechanizm, ktory ten kod
+mial chronic - dwa zapisy bez wersjonowania nadpisujace sie wzajemnie.
+
+**Zasady (HARD).**
+
+1. **Jeden plik = jeden pisarz w danym momencie.** `local_bridge.py` (9,5 tys.
+   linii) jest wspolny dla wielu domen, wiec jest najbardziej narazony. Jesli dwa
+   zadania go dotykaja, ida **po kolei**, nie rownolegle. Kolejnosc ustala kierownik.
+2. **Przed edycja duzego pliku: commit albo kopia.** Praca niecommitowana nie ma
+   sciezki powrotu. `git show HEAD:<plik>` odtworzy tylko to, co bylo w commicie.
+3. **Nie odtwarzaj ogona z HEAD, gdy prefiks jest nowszy.** To sklejenie dwoch epok
+   pliku. Kompiluje sie i wyglada zdrowo, a ciche skutki to znikniete funkcje.
+   Najpierw ustal **liste brakujacych symboli**, potem odtworz je punktowo.
+4. **Licznik linii w PowerShellu klamie.** `Measure-Object -Line` **pomija puste
+   linie** - dawal 8662 tam, gdzie plik mial 9345. Uzywaj `(Get-Content plik).Count`.
+   Na blednym liczniku mozna wyciagnac wniosek zawyzony ponad piec razy.
+5. **Zrodlo odtworzenia: transkrypty subagentow.**
+   `.cursor/projects/<projekt>/agent-transcripts/<sesja>/subagents/*.jsonl`
+   zawieraja kod, ktory worker czytal i pisal. To realne archiwum, gdy git nie ma
+   commita, a historia lokalna edytora jest pusta. Szukaj po nazwie funkcji.
+   Odtwarzaj **finalna** wersje z transkryptu, nie pierwsza - w tym wypadku pierwsza
+   wersja `_write_hourly_dump_bytes` dopisywala plik "poprzedniej godziny", co bylo
+   zrodlem falszywego dowodu na dzialajacy harmonogram.
+6. **Po odtworzeniu PASS workera przestaje obowiazywac.** Jego test lecial na kodzie,
+   ktorego juz nie ma. Kierownik powtarza dowody na zywym procesie: kompilacja to
+   **nie** dowod, dowodem jest log samoczynnego wyzwolenia i odpowiedz HTTP.
+7. **Zakres grepa to czesc dowodu.** `_is_backup_static_path` zglosilo zero trafien
+   w moscie i wygladalo na stracone - a zylo w `dam_ui_http.py` i dzialalo (404 dla
+   `.bak`, 200 dla danych). Zanim ogloszysz regresje, sprawdz wlasciwy plik.

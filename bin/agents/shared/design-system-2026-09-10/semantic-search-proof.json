@@ -1,0 +1,150 @@
+{
+  "phrases": [
+    {
+      "query": "zdjecie gdzie laska je kulke",
+      "concepts": [
+        "subject:kobieta",
+        "action:jedzenie",
+        "product:kulki"
+      ],
+      "strict_count": 200,
+      "associated_count": 200,
+      "NEW_in_strict": true,
+      "ALT_in_strict": true,
+      "pass": true
+    },
+    {
+      "query": "dziewczyna z kuleczką",
+      "concepts": [
+        "subject:kobieta",
+        "product:kulki"
+      ],
+      "strict_count": 200,
+      "associated_count": 200,
+      "NEW_in_strict": true,
+      "ALT_in_strict": true,
+      "pass": true
+    },
+    {
+      "query": "kulki dziewczyna",
+      "concepts": [
+        "product:kulki",
+        "subject:kobieta"
+      ],
+      "strict_count": 200,
+      "associated_count": 200,
+      "NEW_in_strict": true,
+      "ALT_in_strict": true,
+      "pass": true
+    },
+    {
+      "query": "kulki kobieta",
+      "concepts": [
+        "product:kulki",
+        "subject:kobieta"
+      ],
+      "strict_count": 200,
+      "associated_count": 200,
+      "NEW_in_strict": true,
+      "ALT_in_strict": true,
+      "pass": true
+    },
+    {
+      "query": "modelka je kulkę",
+      "concepts": [
+        "subject:kobieta",
+        "action:jedzenie",
+        "product:kulki"
+      ],
+      "strict_count": 200,
+      "associated_count": 200,
+      "NEW_in_strict": true,
+      "ALT_in_strict": true,
+      "pass": true
+    },
+    {
+      "query": "modelka gryzie kulke",
+      "concepts": [
+        "subject:kobieta",
+        "action:jedzenie",
+        "product:kulki"
+      ],
+      "strict_count": 200,
+      "associated_count": 200,
+      "NEW_in_strict": true,
+      "ALT_in_strict": true,
+      "pass": true
+    }
+  ],
+  "all_six_pass": true,
+  "negative": {
+    "query": "traktor na ksiezycu",
+    "concepts": [],
+    "counts": {
+      "strict": 0,
+      "associated": 0
+    },
+    "pass": true
+  },
+  "order": {
+    "baton_in_strict_without_kulka": 0,
+    "niemieso_in_strict_without_kulka": 0,
+    "baton_in_associated": 35,
+    "niem_in_associated": 0,
+    "assoc_reason_sample": [
+      "kampania 2025/04_PRZEKASKI",
+      "kampania 2025/04_PRZEKASKI",
+      "kampania 2025/04_PRZEKASKI",
+      "kampania 2025/04_PRZEKASKI",
+      "kampania 2025/04_PRZEKASKI"
+    ],
+    "associated_first_names": [
+      "KV_DOBRA_MINI_NEW.jpg",
+      "KV_DOBRA_MINI_NEW.psb",
+      "KV_DOBRA_ORZESZKI_NEW.jpg",
+      "KV_DOBRA_ORZESZKI_NEW.psb",
+      "dobra kaloria_BSA  4362_20250521.jpg"
+    ]
+  },
+  "ranks_kulki_dziewczyna": [
+    {
+      "rank": 6,
+      "name": "dobra kaloria_BSA  5061_ALT.tif",
+      "matched": [
+        "product:kulki",
+        "subject:kobieta"
+      ],
+      "sources": {
+        "product:kulki": "path:kulka",
+        "subject:kobieta": "path:ludzie (subject:czlowiek)"
+      },
+      "path": "D:/Marketing/- POLSKA/08 - KAMAPANIE/2025/04_PRZEKASKI/KV_ludzie i produkt/KULKA_kwadrat z produktem i postacia/dobra kaloria_BSA  5061_ALT.tif"
+    },
+    {
+      "rank": 7,
+      "name": "dobra kaloria_BSA  5061_ALT.tif",
+      "matched": [
+        "product:kulki",
+        "subject:kobieta"
+      ],
+      "sources": {
+        "product:kulki": "path:kulka",
+        "subject:kobieta": "path:ludzie (subject:czlowiek)"
+      },
+      "path": "D:/Marketing/- POLSKA/08 - KAMAPANIE/2025/04_PRZEKASKI/KV_ludzie i produkt/KULKA_kwadrat z produktem i postacia-kopia/dobra kaloria_BSA  5061_ALT.tif"
+    },
+    {
+      "rank": 8,
+      "name": "dobra kaloria_BSA  5061_NEW.jpg",
+      "matched": [
+        "product:kulki",
+        "subject:kobieta"
+      ],
+      "sources": {
+        "product:kulki": "shoot:bsa 5061 / dobra kaloria_BSA  5061_ALT.tif",
+        "subject:kobieta": "path:postaci (subject:czlowiek)"
+      },
+      "path": "D:/Marketing/- POLSKA/08 - KAMAPANIE/2025/04_PRZEKASKI/ZDJECIA POSTACI/dobra kaloria_BSA  5061_NEW.jpg"
+    }
+  ]
+}

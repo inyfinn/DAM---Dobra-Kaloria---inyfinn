@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pl" class="dam-booted">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>P3 — Explorer secondary filter band (sandbox)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="sandbox-stack.css" />
+</head>
+<body class="geex-dashboard">
+  <main class="geex-main-content">
+    <div class="geex-content">
+      <header class="geex-content__header">
+        <h2 class="geex-content__header__title">Eksplorator</h2>
+        <p class="geex-content__header__subtitle">Pełna struktura produktów Dobra&nbsp;Kaloria i&nbsp;Good&nbsp;Calories</p>
+      </header>
+
+      <div class="dam-explorer-shell">
+        <div class="dam-viz-secondary-filters dam-explorer-secondary-filters" role="group" aria-label="Filtry widoku">
+          <div id="damExplorerCatMode" class="dam-explorer-cat-mode" role="radiogroup" aria-label="Kategorie eksploratora">
+            <label class="dam-db-mode-chip">
+              <input type="radio" name="damExplorerCatMode" value="PRODUCT" checked />
+              Produkty
+            </label>
+            <label class="dam-db-mode-chip">
+              <input type="radio" name="damExplorerCatMode" value="MATERIAL" />
+              Materiały
+            </label>
+          </div>
+
+          <label class="dam-switch is-off" for="damExplorerShowAll">
+            <input type="checkbox" id="damExplorerShowAll" class="dam-switch__input" />
+            <span class="dam-switch__track" aria-hidden="true"></span>
+            <span class="dam-switch__label">Pokaż wszystkie</span>
+          </label>
+
+          <div id="damExplorerBrandMount" class="dam-sidebar-brand-mount" aria-label="Filtr marki">
+            <div class="dam-brand-chips" role="group" aria-label="Filtr marki">
+              <button type="button" class="dam-brand-chip-btn dam-brand-chip-btn--dk is-active" data-brand="DK" aria-pressed="true" title="Dobra Kaloria (PL)">DK</button>
+              <button type="button" class="dam-brand-chip-btn dam-brand-chip-btn--gc is-active" data-brand="GC" aria-pressed="true" title="Good Calories (eksport)">GC</button>
+            </div>
+          </div>
+
+          <select id="damExplorerLangFilter" class="form-select dam-control dam-control--select" aria-label="Filtr języka">
+            <option value="">Wszystkie języki</option>
+            <option value="pl">Polski</option>
+            <option value="en">Angielski</option>
+          </select>
+        </div>
+
+        <div id="damExplorerMain" class="dam-explorer-main">
+          <div class="dam-explorer-panel dam-explorer-welcome">
+            <h5 class="dam-explorer-panel__title">Eksplorator DAM</h5>
+            <p class="dam-explorer-panel__lead">Wybierz kategorie po lewej lub wyszukaj indeks / skojarzenie (np. <strong>6300</strong>, <strong>czekolada</strong>).</p>
+            <p class="dam-explorer-panel__meta">193 produktów — wybierz kategorie z panelu bocznego.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -17,7 +17,7 @@ Odrzucone:
   synchronizowane atomowo; klasyczny sposob na uszkodzenie bazy przy
   rownoczesnym zapisie (dokumentowane przez autorow SQLite).
 
-NAS (`192.168.0.145`, DSM 7.3.2) ma juz Container Manager (Docker 24).
+NAS (`192.168.1.145` w LAN, WAN `inyfinn.synology.me` / `212.87.249.132`, DSM 7.3.2) ma juz Container Manager (Docker 24).
 Systemowy Postgres Synology nasluchuje tylko na `127.0.0.1:5432` (Contacts,
 Calendar, Photos...) - **nie wolno go reuzywac**.
 
@@ -30,8 +30,7 @@ Calendar, Photos...) - **nie wolno go reuzywac**.
    - haslo w `/volume1/docker/dam-eta-postgres/.env` (chmod 600, poza Gitem)
    - compose: `restart: unless-stopped`, healthcheck `pg_isready`
 
-2. **Host priorytet (2026-07-18):** zawsze **DDNS** `inyfinn.synology.me:5433`.
-   LAN `192.168.0.145` tylko awaryjnie. QuickConnect / `:5001` = DSM, nie PG.
+2. **Host priorytet (2026-09-10):** zawsze **DDNS** `inyfinn.synology.me:5433`, potem IP WAN `212.87.249.132`, LAN `192.168.1.145` tylko w domu. QuickConnect / `:5001` = DSM, nie PG.
    Klient (`pg_db`) sortuje hostname przed prywatnymi IP.
 
 3. **Tier 1 - zywe zapytania gdy online** (`users`, `device_sessions`, `audit_log`):
@@ -51,7 +50,7 @@ Calendar, Photos...) - **nie wolno go reuzywac**.
 
 5. **Konfiguracja klienta** (per maszyna, gitignored):
    - `apps/desktop/data/pg-config.json` (szablon: `pg-config.example.json`)
-   - albo `dam-connection.env` / env `DAM_PG_HOSTS=inyfinn.synology.me,192.168.0.145`
+   - albo `dam-connection.env` / env `DAM_PG_HOSTS=inyfinn.synology.me,212.87.249.132,192.168.1.145`
 
 6. **Lokalny SQLite** (`dam-local.sqlite`) = offline + mirror userow gdy PG online.
    Nie jest usuwany automatycznie.
