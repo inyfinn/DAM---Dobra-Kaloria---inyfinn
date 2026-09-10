@@ -319,7 +319,7 @@
   width: auto !important;
   height: auto !important;
   min-width: 0 !important;
-  min-height: var(--dam-control-h-sm, 36px) !important;
+  min-height: var(--dam-chip-h) !important;
   max-width: none;
   padding: var(--dam-space-btn-sm-y, 8px) calc(var(--dam-space-btn-sm-x, 14px) + 2px) !important;
   border-radius: var(--dam-radius-btn-compact, 8px) !important;
@@ -402,7 +402,7 @@
 #damVizModal .dam-viz-modal__actions .dam-admin-control,
 #damMediaPreview .dam-viz-modal__actions .dam-admin-control {
   padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px) !important;
-  min-height: var(--dam-control-h-sm, 36px) !important;
+  min-height: var(--dam-chip-h) !important;
   white-space: nowrap;
   overflow: visible;
 }

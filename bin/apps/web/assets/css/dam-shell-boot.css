@@ -3,6 +3,8 @@
  * Body ukryty (html.dam-booting) az DamShell przepisze chrome.
  * HARD: NO full-page skeleton overlay. Sidebar/header NEVER skel.
  * Per-object skeletons live in widget bodies (see dam-dashboard.css).
+ * Fail-safe: brak automatycznego odsloniecia po 2.8 s. Sukces = html.dam-booted.
+ * Awaria = html.dam-boot-failed + #damBootFail (wlasny ekran DAM).
  */
 html.dam-booting {
   background: #f3f5f4;
@@ -12,26 +14,126 @@ html.dam-booting[data-theme="dark"] {
   background: #101412;
 }
 
-/* Krytyczne: nie pokazuj surowego Geex Demo/Server Management przed shell init */
+html.dam-boot-failed {
+  background: #f3f5f4;
+}
+
+html.dam-boot-failed[data-theme="dark"] {
+  background: #101412;
+}
+
+/* Krytyczne: nie pokazuj surowego chrome zanim boot sie uda. Zero auto-reveal. */
 html.dam-booting body,
 body.is-booting {
   opacity: 0 !important;
-  pointer-events: none;
-  /* JS martwy / main-thread freeze: i tak odsłoń po ~2.8s (Cursor blank-tab fix 2026-08-06) */
-  animation: damBootFailsafeReveal 0.01s linear 2.8s forwards !important;
+  pointer-events: auto !important;
+  animation: none !important;
 }
 
-@keyframes damBootFailsafeReveal {
-  to {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
-}
-
-html.dam-booted body {
+html.dam-booted body,
+html.dam-boot-failed body {
   animation: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+}
+
+/* Explorer: GSAP autoAlpha residue must not ghost tag chips / toolbar / tree. */
+html.dam-booting .dam-explorer-shell #damFolderList,
+html.dam-booting .dam-explorer-shell .dam-cat-list,
+html.dam-booting .dam-explorer-shell .dam-folder-item,
+html.dam-booted .dam-explorer-shell .dam-tag-groups,
+html.dam-booted .dam-explorer-shell .dam-explorer-toolbar,
+html.dam-booted .dam-explorer-shell #damFolderList,
+html.dam-booted .dam-explorer-shell .dam-cat-list,
+html.dam-booted .dam-explorer-shell .dam-folder-item {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Nav stays clickable even if main-thread parse stalls boot unlock. */
+html.dam-booting .geex-header,
+html.dam-booting .geex-sidebar {
+  pointer-events: auto !important;
+}
+
+/* Awaria: schowaj chrome motywu, zostaw wlasny ekran DAM. */
+html.dam-boot-failed .geex-header,
+html.dam-boot-failed .geex-sidebar,
+html.dam-boot-failed .geex-main-content,
+html.dam-boot-failed .geex-customizer,
+html.dam-boot-failed .geex-content:not(.dam-boot-fail) {
+  visibility: hidden !important;
+}
+
+.dam-boot-fail {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #f3f5f4;
+  color: #17161E;
+  font-family: Jost, "Segoe UI", sans-serif;
+}
+
+html[data-theme="dark"] .dam-boot-fail {
+  background: #101412;
+  color: #f3f5f4;
+}
+
+.dam-boot-fail__card {
+  max-width: 28rem;
+  width: 100%;
+  padding: 28px 24px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(23, 22, 30, 0.12);
+}
+
+html[data-theme="dark"] .dam-boot-fail__card {
+  background: #17161E;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.dam-boot-fail__brand {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #008244;
+}
+
+.dam-boot-fail__title {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.dam-boot-fail__text {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.dam-boot-fail__btn {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: #008244;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dam-boot-fail__btn:focus-visible {
+  outline: 2px solid #008244;
+  outline-offset: 3px;
 }
 
 /* Legacy cleanup: hide old full-page skel if cached HTML still injects it */

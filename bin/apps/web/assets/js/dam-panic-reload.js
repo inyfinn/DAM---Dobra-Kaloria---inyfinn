@@ -1,12 +1,13 @@
 /**
- * DAM HARD RESET — pierwszy skrypt w <head>.
+ * DAM boot helpers — pierwszy skrypt w <head>.
  *
- * F5 / Ctrl+R:
- * - NIE wywoluje dam:panic-reset (re-entry freeze)
- * - NIE preventDefault — natywny reload WebView2/Chrome musi dzialac gdy JS zamrozone
- * - JS path: abort fetch + window.stop + navigate / restart_window
+ * F5 / Ctrl+R / toolbar refresh / URL Enter:
+ * - NIE preventDefault (doktryna: natywny reload WebView2/Chrome musi dzialac)
+ * - NIE window.stop — przerywa dokument w polowie i zostawia bialy ekran
+ * - NIE location.replace cache-bust na keydown — sciga sie z natywnym F5
  *
- * Desktop: pelny restart okna robi tez Python watchdog (launch.py) — poza watkiem JS.
+ * Ten plik: rejestr abort (Escape), fail-SAFE boot (nie fail-open).
+ * __damHardReload zostaje dla jawnego UI (pomoc) i robi samo location.reload().
  */
 (function () {
   "use strict";
@@ -38,54 +39,22 @@
   function hardReload() {
     if (window.__damHardReloadInProgress) return;
     window.__damHardReloadInProgress = true;
-
     try {
-      abortAll();
-    } catch (e0) {
-      /* ignore */
-    }
-
-    try {
-      window.stop();
-    } catch (e1) {
-      /* ignore */
-    }
-
-    try {
-      if (
-        window.pywebview &&
-        window.pywebview.api &&
-        typeof window.pywebview.api.restart_window === "function"
-      ) {
-        window.pywebview.api.restart_window();
-        return;
-      }
-    } catch (eDesk) {
-      /* ignore */
-    }
-
-    try {
-      var url = window.location.pathname + window.location.search;
-      var sep = url.indexOf("?") >= 0 ? "&" : "?";
-      window.location.replace(url + sep + "_damr=" + Date.now() + (window.location.hash || ""));
-      return;
-    } catch (eNav) {
-      /* ignore */
-    }
-
-    try {
-      window.location.href =
-        window.location.pathname + window.location.search + (window.location.hash || "");
-    } catch (eHref) {
-      try {
-        window.location.reload();
-      } catch (eRel) {
-        /* native F5 fallback — only works if preventDefault was NOT called */
-      }
+      window.location.reload();
+    } catch (eRel) {
+      window.__damHardReloadInProgress = false;
     }
   }
 
   window.__damHardReload = hardReload;
+
+  function isSigninPage() {
+    try {
+      return (location.pathname || "").indexOf("signin") !== -1;
+    } catch (eP) {
+      return false;
+    }
+  }
 
   function softInterrupt(e) {
     if (!e) return;
@@ -113,37 +82,112 @@
     }
   }
 
-  function onHardResetKey(e) {
-    if (!e) return;
-    var key = e.key || e.code || "";
-    var isReloadKey = key === "F5";
-    var isCtrlR =
-      (e.ctrlKey || e.metaKey) && !e.shiftKey && (key === "r" || key === "R");
-    if (!isReloadKey && !isCtrlR) return;
-
-    hardReload();
-    /* HARD: zero preventDefault — zaden kod aplikacji nie moze zablokowac natywnego F5. */
-  }
-
-  window.addEventListener("keydown", onHardResetKey, true);
   window.addEventListener("keydown", softInterrupt, true);
 
-  /* Failsafe: html.dam-booting trzyma body opacity:0 — odblokuj po 6s gdy shell nie domknie boot. */
-  setTimeout(function () {
+  function unlockBootSuccess() {
     try {
       var root = document.documentElement;
       var body = document.body;
-      if (!root || !root.classList.contains("dam-booting")) return;
+      if (!root) return;
       root.classList.remove("dam-booting");
+      root.classList.remove("dam-boot-failed");
       root.classList.add("dam-booted");
       if (body) {
         body.classList.remove("is-booting");
         body.style.setProperty("opacity", "1", "important");
-        body.style.setProperty("pointer-events", "auto");
+        body.style.setProperty("pointer-events", "auto", "important");
       }
-      console.warn("DAM: boot failsafe — shell nie domknal dam-booting w 6s, wymuszono reveal");
+      var fail = document.getElementById("damBootFail");
+      if (fail && fail.parentNode) fail.parentNode.removeChild(fail);
     } catch (eBootFs) {
       /* ignore */
     }
-  }, 6000);
+  }
+
+  function showBootFail(reason) {
+    if (window.__damBootSucceeded) return;
+    if (isSigninPage()) {
+      unlockBootSuccess();
+      return;
+    }
+    try {
+      var root = document.documentElement;
+      var body = document.body || document.documentElement;
+      root.classList.remove("dam-booting");
+      root.classList.add("dam-boot-failed");
+      if (document.body) {
+        document.body.classList.remove("is-booting");
+        document.body.style.setProperty("opacity", "1", "important");
+        document.body.style.setProperty("pointer-events", "auto", "important");
+      }
+      var existing = document.getElementById("damBootFail");
+      if (existing) {
+        existing.hidden = false;
+        return;
+      }
+      var wrap = document.createElement("div");
+      wrap.id = "damBootFail";
+      wrap.className = "dam-boot-fail";
+      wrap.setAttribute("role", "alertdialog");
+      wrap.setAttribute("aria-labelledby", "damBootFailTitle");
+      wrap.setAttribute("aria-describedby", "damBootFailText");
+      wrap.innerHTML =
+        '<div class="dam-boot-fail__card">' +
+        '<p class="dam-boot-fail__brand">DAM Dobra Kaloria</p>' +
+        '<h1 id="damBootFailTitle" class="dam-boot-fail__title">Nie udało się uruchomić aplikacji</h1>' +
+        '<p id="damBootFailText" class="dam-boot-fail__text">Program nie połączył się z danymi. Spróbuj ponownie, a&nbsp;jeśli to nie pomoże, zamknij i&nbsp;uruchom aplikację jeszcze raz.</p>' +
+        '<button type="button" class="dam-boot-fail__btn" id="damBootFailRetry">Spróbuj ponownie</button>' +
+        "</div>";
+      body.appendChild(wrap);
+      var btn = document.getElementById("damBootFailRetry");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          hardReload();
+        });
+      }
+    } catch (eFail) {
+      /* ignore */
+    }
+  }
+
+  window.__damMarkBootOk = function () {
+    if (window.__damForceBootFail) {
+      showBootFail("forced");
+      return;
+    }
+    window.__damBootSucceeded = true;
+    unlockBootSuccess();
+  };
+
+  window.__damShowBootFail = showBootFail;
+
+  window.__damBootWatchdog = function (tag) {
+    if (window.__damBootSucceeded) return;
+    if (isSigninPage()) {
+      unlockBootSuccess();
+      return;
+    }
+    showBootFail(tag || "watchdog");
+  };
+
+  window.__damForceBootFail =
+    (function () {
+      try {
+        return /(?:\?|&)dam_boot_fail=1(?:&|$)/.test(location.search || "");
+      } catch (eF) {
+        return false;
+      }
+    })();
+
+  if (window.__damForceBootFail) {
+    showBootFail("forced");
+    setTimeout(function () {
+      showBootFail("forced");
+    }, 80);
+  }
+
+  /* Fail-safe: po 4.5 s bez sukcesu pokaż ekran DAM, nie odsłaniaj surowego motywu. */
+  setTimeout(function () {
+    window.__damBootWatchdog("4.5s");
+  }, 4500);
 })();

@@ -62,31 +62,14 @@
           if (n && n.parentNode) n.parentNode.removeChild(n);
         });
     } catch (eDom) { /* ignore */ }
-    try {
-      window.stop();
-    } catch (eStop) { /* ignore */ }
   }
 
   function refreshApp() {
-    if (typeof window.__damHardReload === "function") {
-      window.__damHardReload();
-      return;
-    }
+    /* Native F5/Ctrl+R must win. Do not call window.stop or location.replace here. */
     try {
-      window.stop();
-    } catch (eStop) {
+      window.location.reload();
+    } catch (eRel) {
       /* ignore */
-    }
-    try {
-      var url = window.location.pathname + window.location.search;
-      var sep = url.indexOf("?") >= 0 ? "&" : "?";
-      window.location.replace(url + sep + "_damr=" + Date.now() + (window.location.hash || ""));
-    } catch (eNav) {
-      try {
-        window.location.reload();
-      } catch (eRel) {
-        /* ignore */
-      }
     }
   }
 
@@ -113,8 +96,8 @@
 
     var keys =
       keyRow(kbd("F1") + " / " + kbd("?"), "Otwiera to okno pomocy (ikona ? w prawym dolnym rogu)") +
-      keyRow(kbd("F5"), "Twardy reset aplikacji (jak wyłącz/włącz). Przerywa wszystko na stronie.") +
-      keyRow(kbd("Ctrl") + "+" + kbd("R"), "To samo co F5 — twardy reset") +
+      keyRow(kbd("F5"), "Odśwież stronę (natywny reload przeglądarki).") +
+      keyRow(kbd("Ctrl") + "+" + kbd("R"), "To samo co F5") +
       keyRow(kbd("Esc"), "Zamyka pomoc, lightbox, popupy i panele") +
       keyRow(kbd("Ctrl") + " / " + kbd("Alt") + " + scroll", "Przybliża / oddala obraz w studio wizualizacji") +
       keyRow(kbd("+") + " / " + kbd("-"), "Zoom w podglądzie (lightbox) w Eksploratorze");
@@ -310,7 +293,7 @@
         } else {
           // Lazy-load samouczka gdy strona nie dolaczyla skryptu w HTML
           var s = document.createElement("script");
-          s.src = "assets/js/dam-tutorial.js?v=5.0.56";
+          s.src = "assets/js/dam-tutorial.js?v=5.0.196";
           s.onload = function () {
             if (window.DamTutorial && typeof window.DamTutorial.restart === "function") {
               window.DamTutorial.restart();
@@ -332,7 +315,8 @@
     btn.type = "button";
     btn.className = "dam-help-fab";
     btn.setAttribute("aria-label", "Pomoc i skróty (F1)");
-    btn.setAttribute("data-dam-tip", "Pomoc i skróty klawiszowe (F1)");
+    btn.setAttribute("title", "Pomoc i skróty klawiszowe (F1)");
+    btn.setAttribute("data-dam-tip", "Pomoc i skróty klawiszowe (F1). Stąd też włączysz samouczek ponownie.");
     btn.innerHTML = '<i class="uil uil-question" aria-hidden="true"></i>';
     btn.addEventListener("click", function (e) {
       e.preventDefault();
@@ -378,14 +362,14 @@
     }
 
     if (key === "F5") {
-      refreshApp();
-      /* NIE preventDefault — natywny F5 musi dzialac gdy JS zamrozone. */
+      /* HARD: native F5 only. Custom reload raced window.stop + location.replace
+         and left a white explorer.html. */
       return;
     }
 
     if ((e.ctrlKey || e.metaKey) && (key === "r" || key === "R")) {
-      refreshApp();
-      /* NIE preventDefault */
+      if (e.shiftKey) return;
+      return;
     }
   }
 
@@ -394,6 +378,9 @@
     document.addEventListener("keydown", onKey, true);
     ensureModal();
     ensureFab();
+    if (window.DamTutorial && typeof window.DamTutorial.attachHelp === "function") {
+      try { window.DamTutorial.attachHelp(); } catch (eAtt) { /* ignore */ }
+    }
   }
 
   window.DamShortcuts = {

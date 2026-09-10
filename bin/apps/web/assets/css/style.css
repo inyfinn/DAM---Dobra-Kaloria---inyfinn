@@ -11,7 +11,8 @@ CSS INDEX
 #. Header
 ---------------------------------------*/
 /* BEM Element and Modifier */
-@import url("//fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap");
+/* Fonty sa zwendoryzowane lokalnie w dam-fonts.css. Zadnych zapytan zewnetrznych:
+   aplikacja musi ruszyc na komputerze bez internetu. Nie przywracaj @import. */
 @-webkit-keyframes spin {
   0% {
     -webkit-transform: rotate(0deg);
@@ -820,7 +821,7 @@ Sidebar
   --warning-color-transparent: #FFBB5426;
   --info-color-transparent: #58CDFF26;
   --danger-color-transparent: #FF5B5B26;
-  --poppins: 'Poppins', sans-serif;
+  --poppins: 'Jost', sans-serif;
 }
 
 /*---------------------------------------

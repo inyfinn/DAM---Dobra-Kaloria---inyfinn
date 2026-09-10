@@ -149,20 +149,22 @@
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
-  gap: 4px;
+  gap: var(--dam-bento-gap-sm, 12px);
 }
 
 .dam-widget__layout-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  min-height: 32px;
+  min-height: 44px;
+  min-width: 44px;
   padding: 4px 10px;
   border: 1px solid var(--dam-border);
   border-radius: 999px;
-  background: var(--dam-surface, #fff);
-  color: var(--dam-text-muted, #64748b);
-  font-size: 12px;
+  background: var(--dam-surface);
+  color: var(--dam-text-muted);
+  font-size: var(--dam-fs-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
@@ -170,10 +172,49 @@
 
 .dam-widget__layout-btn:hover,
 .dam-widget__layout-btn:focus-visible {
-  color: var(--dam-primary, #ab54db);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, var(--dam-border));
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, #fff);
+  color: var(--dam-primary);
+  border-color: color-mix(in srgb, var(--dam-primary) 40%, var(--dam-border));
+  background: color-mix(in srgb, var(--dam-primary) 8%, var(--dam-surface));
   outline: none;
+}
+
+.dam-widget__layout-btn:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 2px;
+}
+
+.dam-widget__count-field {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.dam-widget__count-select {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--dam-border);
+  border-radius: 999px;
+  background: var(--dam-surface);
+  color: var(--dam-text);
+  font-size: var(--dam-fs-sm);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.dam-widget__count-select:hover,
+.dam-widget__count-select:focus-visible {
+  color: var(--dam-primary);
+  border-color: color-mix(in srgb, var(--dam-primary) 40%, var(--dam-border));
+  background: color-mix(in srgb, var(--dam-primary) 8%, var(--dam-surface));
+}
+
+.dam-widget__count-select:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 2px;
 }
 
 .dam-widget__layout-label {
@@ -212,7 +253,7 @@
   container-type: inline-size;
   container-name: viz-latest;
   padding: 18px 20px 20px;
-  overflow: clip;
+  overflow: visible;
 }
 
 .dam-dash-grid:not(.is-bento-active) .dam-widget--md.dam-widget--viz-latest {
@@ -230,14 +271,15 @@
 }
 
 /*
- * ONE media container (viz / products / branding):
- * rows (li) define card height — never stretch empty white under tiles.
+ * Media tiles stay inside the bento cell. Height:auto + align-self:start
+ * painted viz into products (operator overlap). Cell size comes from --bento-h.
  */
 .dam-dash-grid.is-bento-active > .dam-widget.dam-widget--media-latest[data-bento-id] {
-  align-self: start !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
+  align-self: start;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  z-index: 1;
 }
 
 .dam-widget.dam-widget--media-latest {
@@ -248,28 +290,31 @@
 }
 
 .dam-widget.dam-widget--media-latest .dam-widget__body {
-  flex: 0 0 auto !important;
-  height: auto !important;
-  min-height: 0 !important;
-  overflow: visible !important;
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 /* .dam-widget__list — double class wins cascade; rows size to content */
 .dam-widget__list.dam-widget__list--media {
-  gap: 14px;
+  gap: var(--dam-bento-gap);
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: row;
   grid-auto-rows: auto;
   align-content: start;
+  justify-items: stretch;
   min-height: 0;
   height: auto;
 }
 
-/* User layout (localStorage) overrides container auto-responsive */
-.dam-widget__list--media.dam-widget__list--grid-2x2 {
-  grid-template-columns: 1fr 1fr;
-  gap: 14px 16px;
+.dam-widget__list--media.dam-widget__list--bento,
+.dam-widget__list--viz.dam-widget__list--bento {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--dam-bento-gap);
+  grid-auto-flow: row;
   grid-auto-rows: auto;
   align-content: start;
 }
@@ -375,22 +420,19 @@
   grid-row: span 6;
 }
 
-/* HARD: product/viz media rows must never escape article bounds */
+/* Media cards hug content; bento cell height comes from measured --bento-h. */
 .dam-widget--viz-latest,
 .dam-widget--media-latest,
 .dam-widget--branding-latest {
-  overflow: clip;
+  overflow: visible;
 }
 
-/* Unified media tile body: scroll inside bento when 1x6 overflows */
 .dam-widget--viz-latest .dam-widget__body,
 .dam-widget--media-latest .dam-widget__body,
 .dam-widget--branding-latest .dam-widget__body {
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: visible;
   min-height: 0;
-  flex: 1 1 auto;
-  scrollbar-gutter: stable;
+  flex: 0 0 auto;
 }
 
 /* 1x4 / 1x6: content-sized rows — NEVER 1fr squeeze inside bento body */
@@ -1014,12 +1056,13 @@
 }
 
 .dam-widget__list--viz {
-  gap: 14px;
-  flex: 1 1 auto;
+  gap: var(--dam-bento-gap);
+  flex: 0 0 auto;
   display: grid;
-  grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;
-  align-content: stretch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: row;
+  grid-auto-rows: auto;
+  align-content: start;
   min-height: 0;
 }
 
@@ -1471,10 +1514,13 @@ html[data-theme="dark"] .dam-widget-skel__line::after {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 575px) {
   .dam-widget__list--media.dam-widget__list--grid-2x2,
-  .dam-widget__list--viz.dam-widget__list--grid-2x2 {
-    grid-template-columns: 1fr;
+  .dam-widget__list--viz.dam-widget__list--grid-2x2,
+  .dam-widget__list--media.dam-widget__list--bento,
+  .dam-widget__list--viz.dam-widget__list--bento,
+  .dam-widget__list.dam-widget__list--media {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1581,6 +1627,7 @@ html[data-theme="dark"] .dam-widget-skel__line::after {
   border-radius: 0;
   object-fit: contain;
   background: var(--dam-surface, #fff);
+  opacity: 1;
 }
 
 .dam-widget__notify {

@@ -136,7 +136,7 @@
       return;
     }
     var s = document.createElement("script");
-    s.src = "./assets/vendor/js/gsap/gsap.min.js";
+    s.src = "./assets/vendor/js/gsap/gsap.min.js?v=5.0.196";
     s.setAttribute("data-dam-gsap", "1");
     s.onload = function () {
       cb(global.gsap || null);
@@ -316,6 +316,7 @@
     el.style.paddingLeft = "";
     el.style.paddingRight = "";
     el.style.visibility = "visible";
+    el.style.display = "flex";
 
     if (prefersReducedMotion()) {
       clearDockTimers();
@@ -359,6 +360,8 @@
     var finish = function () {
       if (!el) return;
       el.style.opacity = "0";
+      el.style.visibility = "hidden";
+      el.style.display = "none";
       docked = false;
     };
     if (global.gsap && !prefersReducedMotion()) {
@@ -368,6 +371,10 @@
         duration: 0.28,
         ease: "power2.out",
         onComplete: function () {
+          if (el) {
+            el.style.visibility = "hidden";
+            el.style.display = "none";
+          }
           docked = false;
         },
       });
@@ -388,12 +395,20 @@
     if (el) {
       if (global.gsap) global.gsap.killTweensOf([el, innerEl]);
       el.style.opacity = "0";
+      el.style.visibility = "hidden";
+      el.style.display = "none";
       el.style.width = "";
       el.style.paddingLeft = "";
       el.style.paddingRight = "";
     }
     docked = false;
   }
+
+  window.addEventListener("pageshow", function () {
+    try {
+      reset();
+    } catch (_ps) { /* ignore */ }
+  });
 
   global.DamLoader = {
     start: start,

@@ -232,7 +232,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: var(--dam-control-h-sm, 36px);
+  min-height: var(--dam-chip-h);
   padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
   margin: 0;
   font-family: inherit;

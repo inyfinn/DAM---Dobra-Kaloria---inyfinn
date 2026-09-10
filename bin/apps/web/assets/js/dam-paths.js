@@ -557,9 +557,20 @@
       readMachineConfigRemote().catch(function () { return null; }),
       fetchCurrentDevicePath(),
       identPromise,
-      fetch("data/file-index.json?v=" + Date.now())
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .catch(function () { return null; })
+      (function fetchIndexRootsOptional() {
+        var pn = "";
+        try {
+          pn = String((typeof location !== "undefined" && location.pathname) || "").toLowerCase();
+        } catch (_pn) { /* ignore */ }
+        /* Explorer/Viz first paint: never pull 9MB data/file-index.json from :8765
+           (abort on leave wedges the next explorer.html in the same Chrome profile). */
+        if (pn.indexOf("explorer.html") !== -1 || pn.indexOf("visualizations.html") !== -1) {
+          return Promise.resolve(window._DAM_FILE_INDEX || null);
+        }
+        return fetch("data/file-index.json?v=" + Date.now())
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; });
+      })()
     ]).then(function (pack) {
       var detect = pack[0];
       var machine = pack[1];
@@ -1046,10 +1057,10 @@
     return (
       '<div class="dam-path-actions' + cls + '">' +
         '<button type="button" class="dam-file-copy" data-path="' + esc(indexPath) + '" ' +
-          'data-dam-tip="Kopiuj sciezke lokalna (po mapowaniu dysku)" title="Kopiuj sciezke">' +
+          'aria-label="Kopiuj ścieżkę lokalną" data-dam-tip="Kopiuj ścieżkę lokalną (po mapowaniu dysku)" title="Kopiuj ścieżkę">' +
           '<i class="uil uil-copy" aria-hidden="true"></i></button>' +
         '<button type="button" class="dam-file-reveal" data-path="' + esc(indexPath) + '" ' +
-          'data-dam-tip="Pokaz w Eksploratorze Windows (zaznacz plik / otworz folder)" title="Pokaz w eksploratorze">' +
+          'aria-label="Pokaż w Eksploratorze Windows" data-dam-tip="Pokaż w Eksploratorze Windows (zaznacz plik / otwórz folder)" title="Pokaż w eksploratorze">' +
           '<i class="uil uil-folder-open" aria-hidden="true"></i></button>' +
       "</div>"
     );

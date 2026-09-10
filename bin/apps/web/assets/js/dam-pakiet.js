@@ -5,7 +5,7 @@
 (function (global) {
   "use strict";
 
-  var CB = "pakiet20260806c";
+  var CB = "5.0.196";
   /* DamLoader = 13000 (center "ładowanie") - PAKIET must sit ABOVE it. */
   var Z_CHOICE = 13120;
   var Z_PICKER = 13130;

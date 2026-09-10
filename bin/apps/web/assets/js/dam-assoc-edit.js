@@ -250,10 +250,31 @@
     }, 3600);
   }
 
+  function parseResponseJsonOffMain(r, label) {
+    return r.text().then(function (text) {
+      if (typeof text !== "string") {
+        throw new Error((label || "json") + "_not_text");
+      }
+      if (text.length <= 1200000) {
+        return JSON.parse(text);
+      }
+      if (global.DamSearch && typeof global.DamSearch.parseJsonInWorker === "function") {
+        return global.DamSearch.parseJsonInWorker(text, label || "json", 25000);
+      }
+      return JSON.parse(text);
+    });
+  }
+
   function ensureFileIndex() {
     if (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products) {
       return Promise.resolve(global._DAM_FILE_INDEX);
     }
+    try {
+      var pn = String((typeof location !== "undefined" && location.pathname) || "").toLowerCase();
+      if (pn.indexOf("explorer.html") !== -1 || pn.indexOf("visualizations.html") !== -1) {
+        return Promise.resolve(global._DAM_FILE_INDEX || { products: [] });
+      }
+    } catch (ePage) { /* ignore */ }
     if (global.DamSearch && typeof global.DamSearch.load === "function") {
       return global.DamSearch.load().then(function (bundle) {
         var fi = (bundle && bundle.fileIndex) || global._DAM_FILE_INDEX || { products: [] };
@@ -264,7 +285,7 @@
     /* 3.1.5: fetch + worker race — szybsze pierwsze otwarcie pickera produktów. */
     var fetchP = fetch("data/file-index.json?v=" + Date.now())
       .then(function (r) {
-        return r.json();
+        return parseResponseJsonOffMain(r, "file-index");
       })
       .then(function (d) {
         global._DAM_FILE_INDEX = d;
@@ -305,7 +326,7 @@
     return fetch("data/file-index.json?v=" + Date.now())
       .then(function (r) {
         if (!r.ok) throw new Error("file-index");
-        return r.json();
+        return parseResponseJsonOffMain(r, "file-index-picker");
       })
       .then(function (d) {
         global._DAM_FILE_INDEX = d;
@@ -1488,86 +1509,6 @@
     return display;
   }
 
-  function collectVizGridGroupedRows(optsCollect) {
-    optsCollect = optsCollect || {};
-    var q = String(optsCollect.q || "").toLowerCase().trim();
-    var cap = optsCollect.cap || PICKER_LIST_CAP;
-    var fi = global._DAM_FILE_INDEX;
-    var list = (fi && fi.viz_latest) || [];
-    var productsById = optsCollect.productsById || productsByIdFromCache();
-    var byProduct = {};
-    var order = [];
-    for (var i = 0; i < list.length; i++) {
-      if (Object.keys(byProduct).length >= cap) break;
-      var v = list[i];
-      if (!v || !v.product_id) continue;
-      if (isExcludedMarketingDupPath(v.path || v.revision_path || "")) continue;
-      var blob = String(
-        (v.product_name || "") +
-          " " +
-          (v.index || "") +
-          " " +
-          (v.index_base || "") +
-          " " +
-          (v.carrier || "") +
-          " " +
-          (v.file || "")
-      ).toLowerCase();
-      if (q && blob.indexOf(q) === -1) continue;
-      var pid = String(v.product_id);
-      if (!byProduct[pid]) {
-        byProduct[pid] = [];
-        order.push(pid);
-      }
-      byProduct[pid].push(v);
-    }
-    var items = [];
-    for (var oi = 0; oi < order.length; oi++) {
-      if (items.length >= cap) break;
-      var productId = order[oi];
-      var variants = byProduct[productId] || [];
-      if (!variants.length) continue;
-      var prod = (productsById && productsById[productId]) || {
-        id: productId,
-        display_name: variants[0].product_name || productId,
-      };
-      var groupKey = "viz:" + productId;
-      var childIds = variants.map(function (vv, idx) {
-        return "vizgrid:" + productId + ":" + idx;
-      });
-      items.push({
-        id: "vizprod:" + productId,
-        isGroupParent: true,
-        isVizGridGroup: true,
-        groupKey: groupKey,
-        childIds: childIds,
-        childCount: variants.length,
-        label: prod.display_name || prod.name || productId,
-        thumb: variants[0].thumb_url || productThumb(prod),
-        sub: productIndexOf(prod) || variants[0].index_base || "",
-        brand: prod.brand || variants[0].brand || "",
-        category: prod.category || "",
-        subcategory: prod.subcategory_label || "",
-        tag_groups: prod.tag_groups || {},
-        children: variants.map(function (vv, idx) {
-          return {
-            id: childIds[idx],
-            isGroupChild: true,
-            isVizGridRow: true,
-            groupKey: groupKey,
-            label: (vv.carrier || vv.file || vv.index || "Wariant").replace(/\.[^.]+$/, ""),
-            thumb: vv.thumb_url || "",
-            sub: vv.index || vv.index_base || "",
-            path: vv.path || "",
-            brand: vv.brand || prod.brand || "",
-            langs: vv.lang ? [vv.lang] : vv.langs || [],
-          };
-        }),
-      });
-    }
-    return items;
-  }
-
   function renderPickerFolderGroups(items, renderRow) {
     var groups = groupPickerRowsByFolder(items);
     if (groups.length <= 1 && groups[0] && groups[0].items.length <= 1) {
@@ -1860,11 +1801,34 @@
     }
   }
 
+  function assocIdsSig(productIds, variantIds) {
+    return JSON.stringify({
+      p: (productIds || []).map(String).slice().sort(),
+      v: (variantIds || []).map(String).slice().sort(),
+    });
+  }
+
+  function bumpAssocSaveGen(ctx) {
+    if (!ctx) return 0;
+    ctx._assocSaveGen = (ctx._assocSaveGen || 0) + 1;
+    return ctx._assocSaveGen;
+  }
+
+  function callAssocOnSaved(ctx, productIds, variantIds) {
+    if (!ctx || typeof ctx.onSaved !== "function") return;
+    try {
+      global.__damAssocOnSavedCalls = (global.__damAssocOnSavedCalls || 0) + 1;
+    } catch (eCnt) { /* ignore */ }
+    ctx.onSaved(productIds, variantIds);
+  }
+
   /** Natychmiastowy UI po Zatwierdz (zapis bridge w tle). */
   function flushOptimisticAssocUi(ctx, productIds, variantIds) {
     patchCtxProductIds(ctx, productIds);
     patchCtxVariantIds(ctx, variantIds);
-    if (typeof ctx.onSaved === "function") ctx.onSaved(productIds, variantIds);
+    ctx._assocOptimisticSig = assocIdsSig(productIds, variantIds);
+    ctx._assocOptimisticGen = bumpAssocSaveGen(ctx);
+    callAssocOnSaved(ctx, productIds, variantIds);
     if (typeof ctx.onRefresh === "function") ctx.onRefresh();
     bustAssocThumbsInScope();
   }
@@ -3384,15 +3348,30 @@
           isGroupParent ||
           isGroupChild ||
           (!isProd && !isRev && isBrandingMaterialId(it.id));
+        var materialPickerMode = opts.kind === "material";
         var badge =
-          isRev || it.kind === "variant"
-            ? "Wariant"
+          materialPickerMode
+            ? isRev || it.kind === "variant"
+              ? "Wariant"
+              : "Materiał"
+            : isRev || it.kind === "variant"
+              ? "Wariant"
+              : isProd || it.isVizGridGroup
+                ? "Produkt"
+                : isMat
+                  ? "Materiał"
+                  : "Produkt";
+        var hitKind = materialPickerMode
+          ? isRev || it.kind === "variant"
+            ? "variant"
+            : "material"
+          : isRev
+            ? "variant"
             : isProd || it.isVizGridGroup
-              ? "Produkt"
+              ? "product"
               : isMat
-                ? "Materiał"
-                : "Produkt";
-        var hitKind = isRev ? "variant" : isProd || it.isVizGridGroup ? "product" : isMat ? "material" : "product";
+                ? "material"
+                : "product";
         var trailing = "";
         if (isProd || isGroupParent) {
           trailing =
@@ -4024,16 +4003,14 @@
               activeTags: pickerActiveTags,
             }
           );
-          if (opts.pickerMode === PICKER_MODE_VIZ_SUGGESTIONS) {
-            var vizGroups = collectVizGridGroupedRows({
-              q: q,
-              cap: Math.max(12, Math.floor(PICKER_LIST_CAP / 3)),
-              productsById: productsById,
-            });
-            items = groupBrandingPickerRows(brandingFlat).concat(vizGroups);
-          } else {
-            items = groupBrandingPickerRows(brandingFlat);
-          }
+          /* Material picker: branding/viz assets only — never product SKU rows (vizGroups). */
+          items = groupBrandingPickerRows(brandingFlat).filter(function (it) {
+            if (!it) return false;
+            if (it.isProductRow || it.isVizGridGroup || it.isRevisionRow) return false;
+            if (String(it.id || "").indexOf("vizprod:") === 0) return false;
+            if (String(it.id || "").indexOf("vizgrid:") === 0) return false;
+            return true;
+          });
         } else if (opts.kind === "product") {
           /* GOLDEN: browse q<2 = CAP; q≥2 = DamSearch hits; cold = local CAP+q (no JSON.parse). */
           if (
@@ -4961,8 +4938,20 @@
   var ASSOC_SAVE_TIMEOUT_MS = 15000;
   var ASSOC_SAVE_MAX_ATTEMPTS = 10;
   var ASSOC_SAVE_PENDING_KEY = "dam_assoc_save_pending_v1";
+  var ASSOC_SAVE_LS_KEY = "dam_assoc_save_pending_v2";
+  var ASSOC_IDB_NAME = "dam-assoc-save-queue";
+  var ASSOC_IDB_STORE = "jobs";
+  var ASSOC_IDB_META = "meta";
+  var ASSOC_IDB_VER = 1;
+  var ASSOC_SAVE_CONCURRENCY = 4;
+  var DB_SYNC_INTERVAL_MS = 5000;
+  var DB_SYNC_SINCE_KEY = "dam_db_changes_since";
   var _assocSaveInflightKey = null;
   var _assocSavePending = Object.create(null);
+  var _assocIdbOpen = null;
+  var _dbSyncTimer = 0;
+  var _dbSyncInFlight = false;
+  var _dbSyncStarted = false;
 
   function assocSaveAssetKey(ctx) {
     return ctx && ctx.asset && ctx.asset.id ? String(ctx.asset.id) : "";
@@ -4990,44 +4979,248 @@
     if (global.DamBranding && typeof global.DamBranding.clearComputeCache === "function") {
       global.DamBranding.clearComputeCache();
     }
-    if (typeof ctx.onSaved === "function") ctx.onSaved(productIds, variantIds);
+    var incoming = assocIdsSig(productIds, variantIds);
+    var startedGen = opts.startedGen;
+    var stale =
+      startedGen != null && (ctx._assocSaveGen || 0) !== startedGen;
+    var alreadyShown = ctx._assocOptimisticSig === incoming;
+    if (!stale && !alreadyShown) {
+      callAssocOnSaved(ctx, productIds, variantIds);
+    }
     bustAssocThumbsInScope();
   }
 
-  function persistAssocSaveOffline(job) {
-    if (!job || !job.payload) return;
+  function newAssocJobId() {
+    if (global.crypto && typeof global.crypto.randomUUID === "function") {
+      return global.crypto.randomUUID();
+    }
+    return "j-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
+  }
+
+  function openAssocSaveDb() {
+    if (_assocIdbOpen) return _assocIdbOpen;
+    _assocIdbOpen = new Promise(function (resolve, reject) {
+      if (!global.indexedDB) {
+        reject(new Error("no_idb"));
+        return;
+      }
+      var req = indexedDB.open(ASSOC_IDB_NAME, ASSOC_IDB_VER);
+      req.onupgradeneeded = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains(ASSOC_IDB_STORE)) {
+          var store = db.createObjectStore(ASSOC_IDB_STORE, { keyPath: "id" });
+          store.createIndex("localSeq", "localSeq", { unique: false });
+        }
+        if (!db.objectStoreNames.contains(ASSOC_IDB_META)) {
+          db.createObjectStore(ASSOC_IDB_META, { keyPath: "key" });
+        }
+      };
+      req.onsuccess = function () {
+        resolve(req.result);
+      };
+      req.onerror = function () {
+        _assocIdbOpen = null;
+        reject(req.error || new Error("idb_open"));
+      };
+    });
+    return _assocIdbOpen;
+  }
+
+  function idbReq(req) {
+    return new Promise(function (resolve, reject) {
+      req.onsuccess = function () {
+        resolve(req.result);
+      };
+      req.onerror = function () {
+        reject(req.error);
+      };
+    });
+  }
+
+  function readLocalAssocQueue() {
     try {
-      var list = JSON.parse(sessionStorage.getItem(ASSOC_SAVE_PENDING_KEY) || "[]");
-      if (!Array.isArray(list)) list = [];
-      list.push({
-        payload: job.payload,
-        attempt: job.attempt || 0,
-        ts: Date.now(),
-      });
-      sessionStorage.setItem(ASSOC_SAVE_PENDING_KEY, JSON.stringify(list.slice(-40)));
-    } catch (e) {
-      /* quota / private mode */
+      var list = JSON.parse(localStorage.getItem(ASSOC_SAVE_LS_KEY) || "[]");
+      return Array.isArray(list) ? list : [];
+    } catch (eLs) {
+      return [];
     }
   }
 
-  function flushPersistedAssocSaves() {
+  function writeLocalAssocQueue(list) {
+    try {
+      localStorage.setItem(ASSOC_SAVE_LS_KEY, JSON.stringify(list || []));
+    } catch (eLs) { /* quota */ }
+  }
+
+  function persistAssocSaveOffline(job) {
+    if (!job || !job.payload) return Promise.resolve(null);
+    var entry = {
+      id: job.id || newAssocJobId(),
+      localSeq: Number(job.localSeq) || 0,
+      payload: job.payload,
+      attempt: job.attempt || 0,
+      ts: job.ts || Date.now(),
+    };
+    return openAssocSaveDb()
+      .then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction([ASSOC_IDB_STORE, ASSOC_IDB_META], "readwrite");
+          var meta = tx.objectStore(ASSOC_IDB_META);
+          var store = tx.objectStore(ASSOC_IDB_STORE);
+          var nextReq = meta.get("nextSeq");
+          nextReq.onsuccess = function () {
+            var row = nextReq.result;
+            var next = row && row.value ? Number(row.value) : 1;
+            if (!isFinite(next) || next < 1) next = 1;
+            if (!entry.localSeq) {
+              entry.localSeq = next;
+              meta.put({ key: "nextSeq", value: next + 1 });
+            }
+            store.put(entry);
+          };
+          tx.oncomplete = function () {
+            resolve(entry);
+          };
+          tx.onerror = function () {
+            reject(tx.error);
+          };
+        });
+      })
+      .catch(function () {
+        var list = readLocalAssocQueue().filter(function (row) {
+          return !row || row.id !== entry.id;
+        });
+        var maxSeq = 0;
+        list.forEach(function (row) {
+          if (row && row.localSeq > maxSeq) maxSeq = row.localSeq;
+        });
+        if (!entry.localSeq) entry.localSeq = maxSeq + 1;
+        list.push(entry);
+        writeLocalAssocQueue(list);
+        return entry;
+      });
+  }
+
+  function listPersistedAssocSaves() {
+    return openAssocSaveDb()
+      .then(function (db) {
+        return idbReq(db.transaction(ASSOC_IDB_STORE).objectStore(ASSOC_IDB_STORE).getAll());
+      })
+      .catch(function () {
+        return [];
+      })
+      .then(function (idbList) {
+        var merged = (idbList || []).concat(readLocalAssocQueue());
+        var seen = {};
+        var out = [];
+        merged.forEach(function (row) {
+          if (!row || !row.payload) return;
+          var id = row.id || newAssocJobId();
+          if (seen[id]) return;
+          seen[id] = true;
+          row.id = id;
+          row.localSeq = Number(row.localSeq) || 0;
+          out.push(row);
+        });
+        out.sort(function (a, b) {
+          return (a.localSeq || 0) - (b.localSeq || 0);
+        });
+        return out;
+      });
+  }
+
+  function removePersistedAssocSave(entry) {
+    if (!entry || !entry.id) return Promise.resolve();
+    return openAssocSaveDb()
+      .then(function (db) {
+        return idbReq(db.transaction(ASSOC_IDB_STORE, "readwrite").objectStore(ASSOC_IDB_STORE).delete(entry.id));
+      })
+      .catch(function () { /* ignore */ })
+      .then(function () {
+        writeLocalAssocQueue(
+          readLocalAssocQueue().filter(function (row) {
+            return !row || row.id !== entry.id;
+          })
+        );
+      });
+  }
+
+  function migrateSessionAssocQueue() {
     var list = [];
     try {
       list = JSON.parse(sessionStorage.getItem(ASSOC_SAVE_PENDING_KEY) || "[]");
-      if (!Array.isArray(list) || !list.length) return;
       sessionStorage.removeItem(ASSOC_SAVE_PENDING_KEY);
-    } catch (e) {
-      return;
+    } catch (eMig) {
+      return Promise.resolve();
     }
-    list.forEach(function (entry) {
-      if (!entry || !entry.payload) return;
-      ensureBridgeSession()
-        .then(function () {
-          return saveAssociationsHttp(entry.payload, { timeoutMs: ASSOC_SAVE_TIMEOUT_MS });
-        })
-        .catch(function () {
-          persistAssocSaveOffline({ payload: entry.payload, attempt: (entry.attempt || 0) + 1 });
+    if (!Array.isArray(list) || !list.length) return Promise.resolve();
+    var chain = Promise.resolve();
+    list.forEach(function (row) {
+      if (!row || !row.payload) return;
+      chain = chain.then(function () {
+        return persistAssocSaveOffline({
+          payload: row.payload,
+          attempt: row.attempt || 0,
+          ts: row.ts,
         });
+      });
+    });
+    return chain;
+  }
+
+  var _assocFlushInFlight = null;
+  function flushPersistedAssocSaves() {
+    if (_assocFlushInFlight) return _assocFlushInFlight;
+    _assocFlushInFlight = migrateSessionAssocQueue()
+      .then(function () {
+        return listPersistedAssocSaves();
+      })
+      .then(function (list) {
+        if (!list.length) return { ok: true, sent: 0 };
+        var sent = 0;
+        var chain = Promise.resolve();
+        list.forEach(function (entry) {
+          chain = chain.then(function () {
+            return ensureBridgeSession()
+              .then(function () {
+                return saveAssociationsHttp(entry.payload, { timeoutMs: ASSOC_SAVE_TIMEOUT_MS });
+              })
+              .then(function (r) {
+                return r.json().then(function (res) {
+                  if (!r.ok || !res || !res.ok) {
+                    throw new Error((res && res.error) || "save_failed");
+                  }
+                  sent += 1;
+                  return removePersistedAssocSave(entry);
+                });
+              })
+              .catch(function () {
+                return persistAssocSaveOffline({
+                  id: entry.id,
+                  localSeq: entry.localSeq,
+                  payload: entry.payload,
+                  attempt: (entry.attempt || 0) + 1,
+                  ts: entry.ts,
+                });
+              });
+          });
+        });
+        return chain.then(function () {
+          try {
+            global.__damAssocQueueFlushed = sent;
+          } catch (eProbe) { /* ignore */ }
+          return { ok: true, sent: sent };
+        });
+      })
+      .finally(function () {
+        _assocFlushInFlight = null;
+      });
+    return _assocFlushInFlight;
+  }
+
+  function countPersistedAssocSaves() {
+    return listPersistedAssocSaves().then(function (list) {
+      return list.length;
     });
   }
 
@@ -5110,6 +5303,7 @@
       silentToast: true,
       suppressErrorToast: true,
       timeoutMs: ASSOC_SAVE_TIMEOUT_MS,
+      startedGen: job.gen,
     }).then(function (res) {
       _assocSaveInflightKey = null;
       if (res && res.ok !== false) {
@@ -5156,6 +5350,7 @@
       variantIds: (variantIds || []).slice(),
       opts: opts,
       attempt: 0,
+      gen: ctx._assocSaveGen || 0,
     };
     drainAssocSaveQueue();
     return Promise.resolve({ ok: true, queued: true });
@@ -5186,31 +5381,61 @@
     var touched = added.concat(removed);
     if (!touched.length) return Promise.resolve({ ok: true, unchanged: true });
 
+    var saveStartedAt =
+      global.performance && performance.now ? performance.now() : Date.now();
+    try {
+      global.__damMaterialSaveCount = touched.length;
+      global.__damMaterialSaveMs = 0;
+    } catch (eProbe) { /* ignore */ }
+
     return ensureBridgeSession()
       .then(function () {
-        var chain = Promise.resolve();
-        touched.forEach(function (assetId) {
-          chain = chain.then(function () {
-            return fetch(bridgeUrl() + "/branding/asset-associations", {
-              method: "POST",
-              headers: authHeaders(),
-              body: JSON.stringify({
-                asset_id: assetId,
-                product_link_id: productId,
-                product_link_action: added.indexOf(assetId) !== -1 ? "add" : "remove",
-              }),
-            }).then(function (r) {
-              return r.json().then(function (res) {
-                if (!r.ok || !res || !res.ok) {
-                  throw new Error((res && res.error) || "save_failed");
-                }
-              });
-            });
-          });
+        /* Most przyjmuje jeden asset na POST. Wsadowy wariant mostu bylby
+           lepszy; tu ograniczamy wspolbieznosc zamiast lancucha. */
+        var i = 0;
+        var running = 0;
+        return new Promise(function (resolve, reject) {
+          function pump() {
+            if (i >= touched.length && running === 0) {
+              resolve();
+              return;
+            }
+            while (running < ASSOC_SAVE_CONCURRENCY && i < touched.length) {
+              (function (assetId) {
+                running += 1;
+                saveAssociationsHttp(
+                  {
+                    asset_id: assetId,
+                    product_link_id: productId,
+                    product_link_action: added.indexOf(assetId) !== -1 ? "add" : "remove",
+                  },
+                  { timeoutMs: ASSOC_SAVE_TIMEOUT_MS }
+                )
+                  .then(function (r) {
+                    return r.json().then(function (res) {
+                      if (!r.ok || !res || !res.ok) {
+                        throw new Error((res && res.error) || "save_failed");
+                      }
+                    });
+                  })
+                  .then(function () {
+                    running -= 1;
+                    pump();
+                  })
+                  .catch(reject);
+              })(touched[i]);
+              i += 1;
+            }
+          }
+          pump();
         });
-        return chain;
       })
       .then(function () {
+        try {
+          var ended =
+            global.performance && performance.now ? performance.now() : Date.now();
+          global.__damMaterialSaveMs = Math.round(ended - saveStartedAt);
+        } catch (eMs) { /* ignore */ }
         toast("Zapisano skojarzone materiały.");
         bustMaterialAssocCaches();
         if (
@@ -6765,6 +6990,107 @@
     return false;
   }
 
+  function dbSyncSince() {
+    try {
+      return localStorage.getItem(DB_SYNC_SINCE_KEY) || "";
+    } catch (eSince) {
+      return "";
+    }
+  }
+
+  function setDbSyncSince(value) {
+    try {
+      if (value) localStorage.setItem(DB_SYNC_SINCE_KEY, String(value));
+    } catch (eSince) { /* ignore */ }
+  }
+
+  function noteDbSync(patch) {
+    try {
+      global.__damDbSyncMeta = Object.assign(
+        {
+          intervalMs: DB_SYNC_INTERVAL_MS,
+          endpoint: "/db/changes",
+          lastHttp: 0,
+          endpointAlive: false,
+          lastErrorSilent: true,
+        },
+        global.__damDbSyncMeta || {},
+        patch || {}
+      );
+    } catch (eMeta) { /* ignore */ }
+  }
+
+  function fetchChangedStore(storeKey) {
+    var key = String(storeKey || "").replace(/[^a-z0-9_-]/gi, "");
+    if (!key) return Promise.resolve(null);
+    return fetch("data/" + encodeURIComponent(key) + ".json?_=" + Date.now(), {
+      cache: "no-store",
+    })
+      .then(function (r) {
+        if (!r.ok) return null;
+        return r.json().then(function (data) {
+          return { store_key: key, data: data };
+        });
+      })
+      .catch(function () {
+        return null;
+      });
+  }
+
+  function applyRemoteStoreRows(rows) {
+    (rows || []).forEach(function (row) {
+      if (!row || !row.store_key) return;
+      try {
+        global.dispatchEvent(
+          new CustomEvent("dam-db-store-changed", {
+            detail: { store_key: row.store_key, data: row.data },
+          })
+        );
+      } catch (eEv) { /* ignore */ }
+    });
+  }
+
+  function pollDbChanges() {
+    if (_dbSyncInFlight) return;
+    _dbSyncInFlight = true;
+    var since = dbSyncSince();
+    var url = bridgeUrl() + "/db/changes?since=" + encodeURIComponent(since);
+    fetch(url, { cache: "no-store" })
+      .then(function (r) {
+        noteDbSync({ lastHttp: r.status, endpointAlive: r.ok });
+        if (!r.ok) return null;
+        return r.json().catch(function () {
+          return null;
+        });
+      })
+      .then(function (body) {
+        if (!body) return;
+        if (body.ok === false) return;
+        if (body.now) setDbSyncSince(body.now);
+        var changed = body.changed || [];
+        var keys = [];
+        changed.forEach(function (row) {
+          if (row && row.store_key) keys.push(row.store_key);
+        });
+        if (!keys.length) return;
+        return Promise.all(keys.map(fetchChangedStore)).then(applyRemoteStoreRows);
+      })
+      .catch(function () {
+        noteDbSync({ lastHttp: 0, endpointAlive: false, lastErrorSilent: true });
+      })
+      .then(function () {
+        _dbSyncInFlight = false;
+      });
+  }
+
+  function startDbSync() {
+    if (_dbSyncStarted) return;
+    _dbSyncStarted = true;
+    noteDbSync({ intervalMs: DB_SYNC_INTERVAL_MS });
+    pollDbChanges();
+    _dbSyncTimer = setInterval(pollDbChanges, DB_SYNC_INTERVAL_MS);
+  }
+
   loadAssocOverrides();
 
   global.DamAssocEdit = {
@@ -6804,6 +7130,11 @@
     /** Shift+edit na karcie materialu brandingowego (viz assoc / Elementy). */
     openEditPicker: openEditPicker,
     save: saveAssociations,
+    saveProductMaterialSuggestions: saveProductMaterialSuggestions,
+    persistOfflineSave: persistAssocSaveOffline,
+    flushOfflineSaves: flushPersistedAssocSaves,
+    countOfflineSaves: countPersistedAssocSaves,
+    startDbSync: startDbSync,
   };
 
   /* Defer CSS inject — sync inject during script eval blocks DamAssocEdit boot CDP. */
@@ -6814,5 +7145,8 @@
     try {
       flushPersistedAssocSaves();
     } catch (eFlush) { /* ignore */ }
+    try {
+      startDbSync();
+    } catch (eSync) { /* ignore */ }
   }, 0);
 })(window);

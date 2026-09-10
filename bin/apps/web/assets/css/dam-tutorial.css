@@ -96,6 +96,8 @@
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center bottom;
+  object-fit: contain;
+  object-position: center bottom;
   filter: drop-shadow(0 2px 3px rgba(0, 130, 68, 0.18));
   will-change: transform;
   pointer-events: none;
@@ -128,6 +130,72 @@
   font-size: var(--dam-fs-base, 14px);
   line-height: 1.5;
   color: var(--dam-text, #464255);
+}
+
+.dam-tut__hint {
+  margin: 0;
+  flex: 0 0 auto;
+  font-size: var(--dam-fs-sm, 12px);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--dam-text-muted, #8f8b9f);
+}
+
+.dam-tut__sample {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-height: 28px;
+}
+
+.dam-tut__sample[hidden] {
+  display: none !important;
+}
+
+.dam-tut__sample-pakiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--dam-border, #ececf2);
+  background: var(--dam-surface, #fff);
+  color: var(--dam-text, #464255);
+  font-size: var(--dam-fs-xs, 11px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.dam-tut__sample-pakiet[hidden],
+.dam-tut__sample-icons[hidden] {
+  display: none !important;
+}
+
+.dam-tut__sample-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dam-tut__sample-ico {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--dam-text-muted, #8f8b9f);
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.dam-tut__sample-ico--folder {
+  color: var(--dam-primary, #ab54db);
 }
 
 .dam-tut__go {
@@ -174,6 +242,7 @@
   left: 50%;
   bottom: 22px;
   transform: translateX(-50%);
+  z-index: 14020;
   display: flex;
   align-items: center;
   gap: 12px;

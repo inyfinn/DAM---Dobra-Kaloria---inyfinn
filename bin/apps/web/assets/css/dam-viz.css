@@ -171,9 +171,7 @@
   margin-bottom: 14px;
 }
 
-.dam-global-search-block > .dam-viz-secondary-filters {
-  margin-bottom: 4px;
-}
+/* Nested mb: token owner dam-brand.css (shared viz + branding meta) */
 
 .dam-global-search-block > .dam-viz-secondary-filters + .dam-viz-grid-toolbar {
   margin-top: 0;
@@ -331,5 +329,12 @@ html[data-theme="dark"] .dam-viz-grid-count {
     margin-left: 0;
     justify-content: flex-end;
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 576px) {
+  #vizSearchScope .dam-search-scope__btn,
+  .dam-viz-secondary-filters button {
+    min-height: 44px;
   }
 }

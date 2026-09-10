@@ -201,7 +201,7 @@
       return;
     }
     var s = document.createElement("script");
-    s.src = "./assets/vendor/js/gsap/gsap.min.js";
+    s.src = "./assets/vendor/js/gsap/gsap.min.js?v=5.0.196";
     s.setAttribute("data-dam-gsap", "1");
     s.onload = function () {
       cb(global.gsap || null);
@@ -602,15 +602,20 @@
     var seq = [];
     var title = document.querySelector(".geex-content__header__title");
     if (title) seq.push(title);
-    Array.prototype.forEach.call(
-      document.querySelectorAll(BARS_SELECTOR),
-      function (el) {
-        if (el.getAttribute("data-dam-bar-revealed") !== "1" && isVisible(el)) {
-          el.setAttribute("data-dam-bar-revealed", "1");
-          seq.push(el);
+    /* Explorer: GSAP autoAlpha na .dam-tag-groups zostawia ghost chipy gdy
+       tween startuje pod dam-booting albo innerHTML paska się podmienia. */
+    var skipBars = /explorer\.html/i.test(String((global.location && global.location.pathname) || ""));
+    if (!skipBars) {
+      Array.prototype.forEach.call(
+        document.querySelectorAll(BARS_SELECTOR),
+        function (el) {
+          if (el.getAttribute("data-dam-bar-revealed") !== "1" && isVisible(el)) {
+            el.setAttribute("data-dam-bar-revealed", "1");
+            seq.push(el);
+          }
         }
-      }
-    );
+      );
+    }
     if (!seq.length) return;
     // Twarda kolejnosc gora->dol niezaleznie od kolejnosci w DOM.
     seq.sort(function (a, b) {

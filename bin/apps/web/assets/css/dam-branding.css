@@ -305,21 +305,21 @@
 }
 
 .dam-branding-status-row {
-  margin: 0 0 5px;
+  margin: 0 0 var(--dam-space-toolbar-nested-mb);
 }
 
-/* Meta → status: 12px visual (offset parent flex --dam-bento-gap) */
+/* Meta → status: stack-offset visual (offset parent flex --dam-bento-gap) */
 .dam-branding-filters--meta + .dam-branding-status-row {
-  margin-top: calc(12px - var(--dam-bento-gap, 16px));
+  margin-top: calc(var(--dam-space-toolbar-stack-offset) - var(--dam-bento-gap, 16px));
 }
 
 .dam-branding-status-row.dam-viz-grid-toolbar {
-  margin-bottom: 5px;
+  margin-bottom: var(--dam-space-toolbar-nested-mb);
 }
 
-/* Status → panel: 5px + 12px = 17px visual (offset one bento flex gap) */
+/* Status → panel: nested-mb + stack-offset visual (offset one bento flex gap) */
 .geex-content:has(#damBrandingSectionGrid) > .dam-branding-status-row ~ #damBrandingPanelSection {
-  margin-top: calc(12px - var(--dam-bento-gap, 16px));
+  margin-top: calc(var(--dam-space-toolbar-stack-offset) - var(--dam-bento-gap, 16px));
 }
 
 .dam-branding-status-row .dam-toolbar-status {
@@ -490,11 +490,11 @@
 }
 
 .dam-branding-grid-toolbar {
-  margin: 0 0 5px;
+  margin: 0 0 var(--dam-space-toolbar-nested-mb);
 }
 
 .dam-branding-filters {
-  margin-bottom: 12px;
+  margin-bottom: var(--dam-space-filter-mb);
 }
 
 .dam-branding-toolbar {
@@ -1176,7 +1176,6 @@
   font-family: inherit;
   font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
   font-weight: 400;
-  padding: 2px 8px;
   line-height: 1.25;
   min-height: 0;
   border-radius: var(--_dam-badge-radius, 14px); /* F4 MASTER — was 999px */
@@ -1498,13 +1497,13 @@
   --dam-branding-meta-fw: 500;
   --dam-branding-meta-h: 34px;
   --dam-branding-meta-radius: 8px;
+  --dam-space-filter-nested-mb: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 12px;
-  margin-bottom: 0;
-  /* Base .dam-viz-secondary-filters is 8px 12px; +12px all sides */
-  padding: 20px 24px;
+  gap: var(--dam-space-filter-gap-row) var(--dam-space-filter-gap-col);
+  margin-bottom: var(--dam-space-filter-nested-mb);
+  padding: var(--dam-space-filter-pad-y) var(--dam-space-filter-pad-x);
   font-family: inherit;
   font-size: var(--dam-branding-meta-fs);
   font-weight: var(--dam-branding-meta-fw);
@@ -3538,5 +3537,100 @@ html[data-theme="dark"] .dam-branding-filters--meta .dam-branding-sort select,
 html[data-theme="dark"] .dam-branding-filters--meta select {
   background: var(--dam-surface-elevated, #2a2833);
   color: var(--dam-text, #eeeaf6);
-  border-color: var(--dam-border, #2c2b36);
+  border-color: var(--dam-border);
 }
+
+.dam-branding-empty-wrap--status-only .dam-empty-mascot-row__speak {
+  display: none !important;
+}
+.dam-branding-empty .geex-btn.dam-empty-clear-btn {
+  align-self: center;
+  width: auto;
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+#vizGrid .dam-viz-empty--status-only .dam-empty-mascot-row__speak {
+  display: none !important;
+}
+
+.dam-branding-semantic {
+  margin-top: var(--dam-space-toolbar-mb);
+  padding-top: var(--dam-space-toolbar-mb);
+  border-top: 1px solid var(--dam-border);
+}
+
+.dam-branding-semantic__head {
+  margin: 0 0 12px;
+}
+
+.dam-branding-semantic__title {
+  margin: 0 0 4px;
+  font-family: var(--dam-font);
+  font-size: var(--dam-fs-lg);
+  font-weight: 600;
+  color: var(--dam-text);
+}
+
+.dam-branding-semantic__lede,
+.dam-branding-semantic__pending,
+.dam-branding-semantic__error,
+.dam-branding-semantic__reason {
+  margin: 0;
+  font-family: var(--dam-font);
+  font-size: var(--dam-fs-sm);
+  color: var(--dam-text-muted);
+  line-height: 1.4;
+}
+
+.dam-branding-semantic__error {
+  color: var(--dam-danger);
+}
+
+.dam-branding-semantic__group {
+  margin: 0 0 16px;
+}
+
+.dam-branding-semantic__group-title {
+  margin: 0 0 10px;
+  font-family: var(--dam-font);
+  font-size: var(--dam-fs-md);
+  font-weight: 600;
+  color: var(--dam-text);
+}
+
+.dam-branding-semantic__grid.dam-viz-grid {
+  grid-auto-rows: auto;
+}
+
+.dam-branding-semantic__item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dam-branding-semantic__item .dam-viz-card {
+  height: auto;
+}
+
+.dam-branding-semantic__reason {
+  padding: 0 2px;
+}
+
+@media (max-width: 576px) {
+  .dam-branding-tab,
+  .dam-search-wrap--branding-chrome .dam-branding-tab,
+  .dam-branding-sort,
+  #damBrandingSort,
+  .dam-search-wrap--branding-chrome .dam-branding-tabs > .dam-switch,
+  #damBrandingPageSizeOk {
+    min-height: 44px;
+  }
+  .dam-branding-tag-group--marka .dam-tag-group-label,
+  .dam-branding-tag-group--autor .dam-tag-group-label,
+  .dam-branding-tag-group--skojarzenia .dam-tag-group-label,
+  .dam-int-cta.dam-branding-page-size__ok {
+    font-size: 12px;
+  }
+}
+

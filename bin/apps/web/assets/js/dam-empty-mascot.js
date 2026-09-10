@@ -131,7 +131,7 @@
   }
 
   /* Cache-bust after alpha-trim of pose PNGs (medal size unchanged). */
-  var POSE_ASSET_V = "trimAlpha20260723b";
+  var POSE_ASSET_V = "5.0.196";
 
   function poseUrl(file) {
     var rel =

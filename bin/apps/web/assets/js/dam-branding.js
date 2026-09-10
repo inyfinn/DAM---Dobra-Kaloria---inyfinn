@@ -55,6 +55,8 @@
   var campaignAssetMap = {};
   var currentGridAssets = [];
   var searchIndex = null;
+  var SEMANTIC_SPARSE_MAX = 8;
+  var semanticFetchGen = 0;
   var productCorrelation = null;
   var activeTagFilters = {};
   /* Limit kart w siatce — sterowany z meta (suwak + OK); prefs.branding_page_size */
@@ -450,7 +452,7 @@
     return !!elVal("damBrandingSearch");
   }
 
-  /** Slim branding-grid-index omits brand — infer jak build-branding-index.py. */
+  /** Slim grid: brand + appearance_tags w indeksie; infer tylko fallback legacy. */
   function inferAssetBrand(a) {
     if (!a) return "";
     var explicit = String(a.brand || "").toUpperCase();
@@ -745,12 +747,54 @@
     return el && el.value ? el.value : "priority";
   }
 
+  function assetCreatedMs(a) {
+    if (!a) return 0;
+    if (typeof a.created_ms === "number" && a.created_ms > 0) return a.created_ms;
+    var raw = a.created || a.ctime || a.created_at;
+    if (raw) {
+      var t = Date.parse(String(raw));
+      if (!isNaN(t)) return t;
+    }
+    var name = String(a.name || "");
+    var m = /^(\d{4})(\d{2})(\d{2})/.exec(name);
+    if (m) {
+      var d = Date.parse(m[1] + "-" + m[2] + "-" + m[3] + "T12:00:00Z");
+      if (!isNaN(d)) return d;
+    }
+    return assetMtimeMs(a);
+  }
+
+  function assetIntroducedMs(a) {
+    var p = String((a && a.path) || "").replace(/\\/g, "/");
+    var m = p.match(/(\d{4})[_./-](\d{1,2})[_./-](\d{1,2})/);
+    if (m) {
+      var y = parseInt(m[1], 10);
+      var mo = parseInt(m[2], 10);
+      var day = parseInt(m[3], 10);
+      if (y >= 1990 && mo >= 1 && mo <= 12) {
+        var iso = y + "-" + String(mo).padStart(2, "0") + "-" + String(day).padStart(2, "0") + "T12:00:00Z";
+        var t = Date.parse(iso);
+        if (!isNaN(t)) return t;
+      }
+    }
+    var yr = folderYearRank(a);
+    return yr ? Date.parse(String(yr) + "-06-15T12:00:00Z") || 0 : 0;
+  }
+
   function compareAssetsForDisplay(a, b, ia, ib) {
     var mode = currentSortMode();
     var ma = assetMtimeMs(a);
     var mb = assetMtimeMs(b);
     if (mode === "newest") {
       if (mb !== ma) return mb - ma;
+    } else if (mode === "created") {
+      var ca = assetCreatedMs(a);
+      var cb = assetCreatedMs(b);
+      if (cb !== ca) return cb - ca;
+    } else if (mode === "introduced") {
+      var iaMs = assetIntroducedMs(a);
+      var ibMs = assetIntroducedMs(b);
+      if (ibMs !== iaMs) return ibMs - iaMs;
     } else if (mode === "oldest") {
       if (ma !== mb) return ma - mb;
     } else if (mode === "name") {
@@ -868,12 +912,28 @@
     if (!index && msg) showInitialBootSkeletons();
   }
 
+  function responseJsonOffMain(r, label) {
+    return r.text().then(function (text) {
+      if (typeof text !== "string") {
+        throw new Error((label || "json") + "_not_text");
+      }
+      if (
+        text.length > 1200000 &&
+        window.DamSearch &&
+        typeof window.DamSearch.parseJsonInWorker === "function"
+      ) {
+        return window.DamSearch.parseJsonInWorker(text, label || "json", 25000);
+      }
+      return JSON.parse(text);
+    });
+  }
+
   async function loadSearchIndex() {
     if (searchIndex) return searchIndex;
     searchIndex = { by_tag: {} };
     try {
       var r = await fetch(bridgeUrl() + "/branding-search-index?v=" + CB);
-      if (r.ok) searchIndex = await r.json();
+      if (r.ok) searchIndex = await responseJsonOffMain(r, "branding-search-index");
     } catch (eIdx) {
       /* bridge offline lub stary most bez tej trasy */
     }
@@ -2398,6 +2458,177 @@
     ensureListEndObserver();
   }
 
+  function ensureSemanticHost() {
+    var panel = document.getElementById("damBrandingPanelSection");
+    var end = document.getElementById("damBrandingListEnd");
+    var host = document.getElementById("damBrandingSemanticHost");
+    if (host) return host;
+    if (!panel) return null;
+    host = document.createElement("section");
+    host.id = "damBrandingSemanticHost";
+    host.className = "dam-branding-semantic";
+    host.hidden = true;
+    host.setAttribute("aria-label", "Wyniki skojarzeniowe");
+    if (end && end.parentNode === panel) {
+      panel.insertBefore(host, end);
+    } else {
+      panel.appendChild(host);
+    }
+    bindBrandingGridDelegation(host);
+    return host;
+  }
+
+  function clearSemanticHost() {
+    var host = document.getElementById("damBrandingSemanticHost");
+    if (!host) return;
+    host.hidden = true;
+    host.innerHTML = "";
+  }
+
+  function assetFromSemanticHit(hit) {
+    if (!hit) return null;
+    var caches = ensureBrandingIndexCaches();
+    var byId = (caches && caches.byId) || {};
+    if (hit.id && byId[hit.id]) return byId[hit.id];
+    var assets = (index && index.assets) || [];
+    var wantPath = String(hit.path || "").replace(/\\/g, "/").toLowerCase();
+    var wantName = String(hit.name || "");
+    var i;
+    for (i = 0; i < assets.length; i++) {
+      var p = String(assets[i].path || "").replace(/\\/g, "/").toLowerCase();
+      if (wantPath && p === wantPath) return assets[i];
+    }
+    if (wantName) {
+      for (i = 0; i < assets.length; i++) {
+        if (assets[i].name === wantName) return assets[i];
+      }
+    }
+    return {
+      id: hit.id || "",
+      path: hit.path || "",
+      name: hit.name || "",
+      media_type: "image",
+    };
+  }
+
+  function semanticGroupTitle(group, concepts) {
+    var list = concepts || [];
+    if (group === "1") {
+      if (list.indexOf("product:kulki") !== -1) return "Ściśle z kulkami";
+      return "Ściśle z szukanym produktem";
+    }
+    if (group === "2") return "Ta sama sesja zdjęciowa";
+    if (group === "3") return "Ta sama kampania";
+    return "Skojarzone";
+  }
+
+  function renderSemanticSection(host, data, nameIds, q) {
+    if (!host) return;
+    var hits = (data && data.hits) || [];
+    var seen = nameIds || {};
+    var byGroup = { "1": [], "2": [], "3": [] };
+    hits.forEach(function (hit) {
+      if (!hit) return;
+      if (hit.id && seen[hit.id]) return;
+      var g = String(hit.group || "3");
+      if (!byGroup[g]) byGroup[g] = [];
+      byGroup[g].push(hit);
+    });
+    var groups = ["1", "2", "3"].filter(function (g) {
+      return byGroup[g].length;
+    });
+    if (!groups.length) {
+      host.hidden = true;
+      host.innerHTML = "";
+      return;
+    }
+    var concepts = (data && data.concepts) || [];
+    var html =
+      '<header class="dam-branding-semantic__head">' +
+      '<h3 class="dam-branding-semantic__title">Wyniki skojarzeniowe</h3>' +
+      '<p class="dam-branding-semantic__lede">Szukane po opisie, nie po nazwie pliku' +
+      (q ? ": „" + esc(q) + "”" : "") +
+      ".</p></header>";
+    groups.forEach(function (g) {
+      html +=
+        '<div class="dam-branding-semantic__group" data-group="' +
+        esc(g) +
+        '"><h4 class="dam-branding-semantic__group-title">' +
+        esc(semanticGroupTitle(g, concepts)) +
+        "</h4>" +
+        '<div class="dam-viz-grid dam-branding-grid dam-branding-semantic__grid">';
+      byGroup[g].forEach(function (hit) {
+        var asset = assetFromSemanticHit(hit);
+        if (!asset) return;
+        var reason = hit.reason || hit.association_reason || "";
+        html +=
+          '<div class="dam-branding-semantic__item">' +
+          cardHtml(asset, [asset], {}) +
+          (reason
+            ? '<p class="dam-branding-semantic__reason">' + esc(reason) + "</p>"
+            : "") +
+          "</div>";
+      });
+      html += "</div></div>";
+    });
+    host.innerHTML = html;
+    host.hidden = false;
+    bindCards(host);
+    bindEditableCardTitles(host);
+    bindMetaTooltips(host);
+    hydrateVideoPosters(host);
+    if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
+      window.DamBadges.bindClicks(host, "branding");
+    }
+    if (window.DamGridReveal && typeof window.DamGridReveal.armPendingThumbs === "function") {
+      window.DamGridReveal.armPendingThumbs(host, 1200);
+    }
+  }
+
+  function scheduleSemanticSupplement(q, nameCount, nameIds) {
+    var host = ensureSemanticHost();
+    var query = String(q || "").trim();
+    if (!query || query.length < 4 || nameCount > SEMANTIC_SPARSE_MAX) {
+      semanticFetchGen += 1;
+      clearSemanticHost();
+      return;
+    }
+    if (!host) return;
+    var gen = ++semanticFetchGen;
+    host.hidden = false;
+    host.innerHTML =
+      '<p class="dam-branding-semantic__pending">Szukam też po opisie, nie tylko po nazwie pliku…</p>';
+    var headers =
+      (window.DamApi && DamApi.authHeaders && DamApi.authHeaders()) || {};
+    fetch(bridgeUrl() + "/search/semantic?q=" + encodeURIComponent(query) + "&limit=40", {
+      headers: headers,
+    })
+      .then(function (r) {
+        return r.json().then(function (body) {
+          return { okHttp: r.ok, body: body };
+        });
+      })
+      .then(function (pack) {
+        if (gen !== semanticFetchGen) return;
+        if (!pack.okHttp || !pack.body || pack.body.ok === false) {
+          var detail =
+            (pack.body && (pack.body.detail || pack.body.error)) ||
+            "Most nie zwrócił wyników skojarzeniowych.";
+          host.innerHTML =
+            '<p class="dam-branding-semantic__error">' + esc(String(detail)) + "</p>";
+          host.hidden = false;
+          return;
+        }
+        renderSemanticSection(host, pack.body, nameIds, query);
+      })
+      .catch(function () {
+        if (gen !== semanticFetchGen) return;
+        host.innerHTML =
+          '<p class="dam-branding-semantic__error">Nie udało się dopytać o wyniki skojarzeniowe.</p>';
+        host.hidden = false;
+      });
+  }
+
   function renderActiveSection() {
     try {
       var tab = currentSectionTab();
@@ -2409,6 +2640,7 @@
     if (tab === "brandbook") {
       updateGridCount([], [], GRID_LIMIT_TAB, {});
       hideCategoryHint();
+      clearSemanticHost();
       renderBrandbook();
       return;
     }
@@ -2423,13 +2655,21 @@
 
     var gridOpts = { groupMode: tab === "packshots" ? "keyvisuale" : "project" };
     var grid = document.getElementById("damBrandingSectionGrid");
-    var emptyMsg = elVal("damBrandingSearch")
-      ? "Brak wyników dla tego wyszukiwania — spróbuj innego skojarzenia (burger, grill, proteina)."
-      : "Brak materiałów — zmień filtr „Kiedy”, tag u góry albo wpisz słowo kluczowe.";
+    var qNow = elVal("damBrandingSearch");
+    var emptyMsg = qNow
+      ? list.length
+        ? "Brak wyników dla tego wyszukiwania. Spróbuj innego skojarzenia (burger, grill, proteina)."
+        : "Brak trafień po nazwie pliku. Poniżej szukam też po opisie."
+      : "Brak materiałów. Zmień filtr „Kiedy”, tag u góry albo wpisz słowo kluczowe.";
     var shown = renderAssetGrid(grid, list, GRID_LIMIT_TAB, emptyMsg, sectionAll.length, gridOpts);
     setStatusEl(document.getElementById("damBrandingStatus"), shown, list.length, GRID_LIMIT_TAB);
     updateGridCount(shown, list, GRID_LIMIT_TAB, gridOpts, lastGroupedTotal);
     syncCategoryHintForTab(tab);
+    var nameIds = {};
+    list.forEach(function (a) {
+      if (a && a.id) nameIds[a.id] = true;
+    });
+    scheduleSemanticSupplement(qNow, list.length, nameIds);
     } catch (eRender) {
       console.error("[DamBranding] renderActiveSection", eRender);
       var errGrid = document.getElementById("damBrandingSectionGrid");
@@ -2584,6 +2824,9 @@
   var tagFilterShowMore = false;
 
   function renderTagFilters() {
+    try {
+      window.__damBrandingRenderTagFilters = (window.__damBrandingRenderTagFilters || 0) + 1;
+    } catch (eCnt) { /* ignore */ }
     var host = document.getElementById("damBrandingTagFilters");
     if (!host) return;
     var chips = FACET_CHIPS.slice().concat(assetRoleChipsFromIndex());
@@ -2992,7 +3235,9 @@
     return "";
   }
 
-  async function loadIndex() {
+  async function loadIndex(opts) {
+    opts = opts || {};
+    var headOnly = !!opts.headOnly || !isBrandingPanelPage();
     if (index && !index.partial) return index;
     if (
       window.__damBrandingGridIndex &&
@@ -3072,6 +3317,11 @@
       }
     }
 
+    if (headOnly || !isBrandingPanelPage()) {
+      setBootStatus("");
+      throw lastErr || new Error("branding-grid-head_only");
+    }
+
     for (var u = 0; u < fullUrls.length; u++) {
       try {
         var r = await fetch(fullUrls[u]);
@@ -3093,19 +3343,18 @@
   }
 
   function scheduleFullGridHydrate(fullUrls) {
+    if (!isBrandingPanelPage()) return;
     if (window.__damBrandingGridHydrateStarted) return;
     window.__damBrandingGridHydrateStarted = true;
     (async function () {
-      var headGen = index && index.generation_id ? String(index.generation_id) : "";
       for (var u = 0; u < fullUrls.length; u++) {
         try {
           var r = await fetch(fullUrls[u]);
           if (!r.ok) continue;
-          var full = await r.json();
+          var full = await responseJsonOffMain(r, "branding-grid-index");
           if (!full || !full.assets) continue;
           full.assets = filterEligibleGridAssets(full.assets);
           full.partial = false;
-          var fullGen = full.generation_id ? String(full.generation_id) : "";
           index = full;
           try {
             window.__damBrandingGridIndex = full;
@@ -3123,28 +3372,17 @@
             document.querySelector("#damBrandingSectionGrid .dam-branding-card") ||
             document.querySelector("#damBrandingGrid .dam-branding-card")
           );
-          /* First paint already happened from head — do not tear down the grid. */
+          var tagsHost = document.getElementById("damBrandingTagFilters");
+          var tagsReady = !!(tagsHost && tagsHost.children && tagsHost.children.length);
+          /* First paint already happened from head — do not activateTab again. */
           if (gridHasCards) {
-            try {
-              renderTagFilters();
-            } catch (eTagsHydrate) {
-              /* ignore */
-            }
             setBootStatus("");
             return;
           }
-          if (headGen && fullGen && headGen === fullGen) {
-            scheduleBrandingRender({ tags: true, section: true });
-            setBootStatus("");
-            return;
-          }
-          var tab =
-            (document.querySelector(".dam-branding-tab.is-active") &&
-              document
-                .querySelector(".dam-branding-tab.is-active")
-                .getAttribute("data-tab")) ||
-            "all";
-          activateTab(tab, { skipHash: true, keepDiscovery: true });
+          scheduleBrandingRender({
+            tags: !tagsReady,
+            section: true,
+          });
           setBootStatus("");
           return;
         } catch (eHyd) {
@@ -3723,6 +3961,8 @@
       return (
         '<img class="dam-viz-thumb__img" data-path="' +
         esc(thumbPath) +
+        '" data-dam-original="' +
+        esc(thumbPath) +
         '" src="' +
         esc(cardThumbSrc(thumbPath, a)) +
         '" alt="" loading="lazy" onerror="window.__damBrandingThumbFallback&&__damBrandingThumbFallback(this)">'
@@ -3731,6 +3971,8 @@
     if (/\.(png|jpe?g|webp|gif|tiff?|psd|psb|bmp)$/i.test(thumbPath || a.name || "") || a.media_type === "source") {
       return (
         '<img class="dam-viz-thumb__img" data-path="' +
+        esc(thumbPath || a.path || "") +
+        '" data-dam-original="' +
         esc(thumbPath || a.path || "") +
         '" src="' +
         esc(cardThumbSrc(thumbPath || a.path, a)) +
@@ -5123,6 +5365,8 @@
 
   var brandingSearchDebounceTimer = 0;
   function bindFilters() {
+    if (bindFilters._damBound) return;
+    bindFilters._damBound = true;
     ["damBrandingSearch", "damBrandingGraphicsOnly", "damBrandingDateFrom", "damBrandingDateTo", "damBrandingSort"].forEach(
       function (id) {
         var el = document.getElementById(id);
@@ -5143,8 +5387,12 @@
               brandingSearchDebounceTimer = setTimeout(runFilter, 220);
             }
           : runFilter;
-        el.addEventListener("input", handler);
-        el.addEventListener("change", handler);
+        /* Jedno zdarzenie na akcje: input+change w Chrome dublowalo przebieg. */
+        if (id === "damBrandingSearch") {
+          el.addEventListener("input", handler);
+        } else {
+          el.addEventListener("change", handler);
+        }
       }
     );
     var arch = document.getElementById("damBrandingIncludeArchive");
@@ -5597,6 +5845,18 @@
   }
 
   var bootStarted = false;
+
+  /** Full grid boot only on branding.html — viz/explorer use DamAssocEdit API picker paths. */
+  function isBrandingPanelPage() {
+    if (document.getElementById("damBrandingSectionGrid")) return true;
+    try {
+      var p = String(location.pathname || "").replace(/\\/g, "/").toLowerCase();
+      return p.indexOf("branding.html") !== -1;
+    } catch (ePage) {
+      return false;
+    }
+  }
+
   async function boot() {
     if (bootStarted) return;
     bootStarted = true;
@@ -5673,7 +5933,7 @@
            First paint z grid; search dopiero focus/input albo idle ~8-12s. */
         function kickSearchIndex() {
           if (searchPromise) return searchPromise;
-          searchPromise = loadSearchIndex().then(function () {
+            searchPromise = loadSearchIndex().then(function () {
             try {
               performance.mark("dam-branding-search-ready");
               performance.measure(
@@ -5684,7 +5944,10 @@
             } catch (eMark) {
               /* ignore */
             }
-            renderTagFilters();
+            var tagsHost = document.getElementById("damBrandingTagFilters");
+            if (!tagsHost || !tagsHost.children || !tagsHost.children.length) {
+              renderTagFilters();
+            }
           });
           return searchPromise;
         }
@@ -5709,11 +5972,6 @@
           setTimeout(function () {
             kickSearchIndex();
           }, 8000);
-        }
-        try {
-          renderTagFilters();
-        } catch (eTags) {
-          /* ignore */
         }
       }
       if (qs || productParam) {
@@ -5794,6 +6052,22 @@
     clearBrandingComputeCache();
   });
 
+  window.addEventListener("dam-db-store-changed", function (ev) {
+    var d = ev && ev.detail;
+    if (!d || !d.store_key) return;
+    if (d.store_key === "product-aliases") {
+      try {
+        window.__damProductAliases = d.data;
+      } catch (eAlias) { /* ignore */ }
+      clearBrandingComputeCache();
+      return;
+    }
+    if (d.store_key === "product-associations" && d.data) {
+      associations = d.data;
+      clearBrandingComputeCache();
+    }
+  });
+
   window.DamBranding = {
     applyBadgeFilter: applyBadgeFilter,
     clearComputeCache: clearBrandingComputeCache,
@@ -5815,9 +6089,33 @@
     isBrandingGridEligible: isBrandingGridEligible,
   };
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
+  /** Viz only: head index for materials picker — never on explorer (blocks main thread). */
+  function isVisualizerPickerPage() {
+    try {
+      var p = String(location.pathname || "").replace(/\\/g, "/").toLowerCase();
+      return p.indexOf("visualizations.html") !== -1;
+    } catch (eVizPage) {
+      return false;
+    }
   }
+
+  /** Head-only index for pickers on viz — no grid boot, no full hydrate. */
+  async function initBrandingPickerHelpers() {
+    try {
+      await loadIndex({ headOnly: true });
+    } catch (ePickerIdx) {
+      /* DamAssocEdit falls back to bridge picker API */
+    }
+  }
+
+  if (isBrandingPanelPage()) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot);
+    } else {
+      boot();
+    }
+  }
+  /* Viz: do not fetch branding-grid-head.json (~343 KB) on first paint.
+     DamAssocEdit uses the bridge picker; eager head fetch + abort on leave
+     poisoned the next explorer.html in the same Chrome profile. */
 })();

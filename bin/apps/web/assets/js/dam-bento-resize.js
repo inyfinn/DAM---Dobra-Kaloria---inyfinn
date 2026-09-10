@@ -7,11 +7,10 @@
   "use strict";
 
   var COLS = 9;
-  /* 42: dashboard stack viz+products+branding+notify+quick+asana (compact mins) */
-  var MAX_ROWS = 42;
-  /* v6: media --bento-h accounts for CSS row-gap (no phantom under-card space);
-   * mins = chrome floor only; stack adjacent (no +1 row). */
-  var BENTO_LAYOUT_VERSION = 7;
+  /* Room for 3 media stacks of 10 tiles (5 rows) plus stats/notify/asana. */
+  var MAX_ROWS = 96;
+  /* v9: tile count 2-10, content-sized media height, no 1xN floors. */
+  var BENTO_LAYOUT_VERSION = 9;
   var ROW_PX = 48;
   var STORAGE_PREFIX = "dam_bento_v1:";
   var MIN_W = 2;
@@ -32,9 +31,9 @@
     notify_new_viz: { w: 3, h: 6 },
     /* Compact chips (~44px) + wrap; short floor (was h:8 for tall tiles) */
     quick_links: { w: 3, h: 4 },
-    newest_viz_3: { w: 9, h: 4 },
-    newest_products_f: { w: 9, h: 4 },
-    branding_latest: { w: 9, h: 4 },
+    newest_viz_3: { w: 9, h: 3 },
+    newest_products_f: { w: 9, h: 3 },
+    branding_latest: { w: 9, h: 3 },
     asana_home: { w: 6, h: 8 },
     products_count: { w: 3, h: 3 },
     asana_open: { w: 3, h: 3 },
@@ -75,7 +74,16 @@
     );
   }
 
-  /** Tile layout (localStorage) for media widgets; drives content-safe minH. */
+  /** Tile count (localStorage) for media widgets; drives content-safe minH. */
+  function migrateTileCountValue(raw) {
+    var v = String(raw == null ? "" : raw).trim();
+    if (v === "1x6") return "6";
+    if (v === "1x4" || v === "2x2") return "4";
+    var n = parseInt(v, 10);
+    if ([2, 4, 6, 8, 10].indexOf(n) >= 0) return String(n);
+    return "4";
+  }
+
   function readTileLayout(widgetId) {
     try {
       var key =
@@ -84,42 +92,28 @@
         ":" +
         widgetId;
       var v = localStorage.getItem(key);
-      if (v === "1x6" || v === "1x4" || v === "2x2") return v;
+      if (v != null && v !== "") return migrateTileCountValue(v);
     } catch (e) {
       /* ignore */
     }
-    if (widgetId === "newest_products_f" || widgetId === "newest_viz_3") return "2x2";
-    if (widgetId === "branding_latest") return "1x4";
-    return "2x2";
+    return "4";
   }
 
   function readProductsTileLayout() {
     return readTileLayout("newest_products_f");
   }
 
-  function mediaTileLayoutMinH(layout) {
-    /* Chrome-only floors. Measured content sets --bento-h; growing to
-     * 1x4/1x6 happens after layout toggle + sync, not via reserved grid rows. */
-    if (layout === "1x6") return 6;
-    if (layout === "1x4") return 5;
-    return 4;
+  function mediaTileLayoutMinH(_layout) {
+    return 3;
   }
 
-  function productsLayoutMinH(layout) {
-    return mediaTileLayoutMinH(layout === "2x2" ? "2x2" : layout);
+  function productsLayoutMinH(_layout) {
+    return 3;
   }
 
   function productsMinHForId(id) {
     if (id !== "newest_products_f") return null;
-    var layout = readProductsTileLayout();
-    var layoutH = productsLayoutMinH(layout);
-    if (layout === "2x2") return Math.max(MIN_H, layoutH);
-    return Math.max(
-      DEFAULT_MIN_SIZES.newest_products_f
-        ? DEFAULT_MIN_SIZES.newest_products_f.h
-        : MIN_H,
-      layoutH
-    );
+    return Math.max(MIN_H, 3);
   }
 
   function classBasedMins(el) {
@@ -1751,13 +1745,13 @@
       products_count: { c: 1, r: 1, w: 3, h: 3 },
       projects_this_month: { c: 4, r: 1, w: 3, h: 3 },
       projects_in_progress: { c: 7, r: 1, w: 3, h: 3 },
-      newest_viz_3: { c: 1, r: 4, w: 9, h: 7 },
-      newest_products_f: { c: 1, r: 11, w: 9, h: 7 },
-      branding_latest: { c: 1, r: 18, w: 9, h: 7 },
-      notify_new_viz: { c: 1, r: 25, w: 3, h: 4 },
-      checklists_ok: { c: 7, r: 25, w: 3, h: 4 },
-      quick_links: { c: 1, r: 29, w: 9, h: 3 },
-      asana_home: { c: 1, r: 32, w: 9, h: 8 }
+      newest_viz_3: { c: 1, r: 4, w: 9, h: 8 },
+      newest_products_f: { c: 1, r: 12, w: 9, h: 8 },
+      branding_latest: { c: 1, r: 20, w: 9, h: 8 },
+      notify_new_viz: { c: 1, r: 28, w: 3, h: 4 },
+      checklists_ok: { c: 7, r: 28, w: 3, h: 4 },
+      quick_links: { c: 1, r: 32, w: 9, h: 3 },
+      asana_home: { c: 1, r: 35, w: 9, h: 8 }
     };
   }
 

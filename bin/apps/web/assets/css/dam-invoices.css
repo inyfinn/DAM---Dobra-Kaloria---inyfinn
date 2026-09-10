@@ -307,3 +307,27 @@
     min-height: 36px;
   }
 }
+
+@media (max-width: 576px) {
+  .dam-inv-toolbar .dam-int-chip,
+  .dam-inv-toolbar .dam-int-st,
+  .dam-inv-filters .dam-int-filter,
+  .dam-inv-filters .inv-filter-btn,
+  .dam-inv-toolbar .dam-int-cta,
+  .dam-inv-toolbar label.dam-int-cta,
+  label.dam-inv-cb {
+    min-height: 44px;
+    height: auto;
+    max-height: none;
+    font-size: 12px;
+  }
+  span.dam-int-chip,
+  span.dam-int-st {
+    font-size: 12px;
+  }
+  .dam-inv-cb__input {
+    width: 22px;
+    height: 22px;
+    flex-basis: 22px;
+  }
+}

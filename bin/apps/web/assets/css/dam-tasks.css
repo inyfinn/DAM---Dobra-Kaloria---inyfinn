@@ -813,6 +813,41 @@ body.dam-tasks-page .dam-tasks-btn--primary:focus-visible {
   }
 }
 
+/* Telefon: bento 9-col z JS spanami nachodzi pionowo — stos kolumny */
+@media (max-width: 767.98px) {
+  .dam-tasks-bento,
+  .dam-tasks-bento.dam-bento-resize.is-bento-active {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    grid-template-columns: none;
+    grid-auto-rows: auto;
+  }
+  .dam-tasks-bento > * {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .dam-tasks-select,
+  .dam-tasks-btn,
+  .dam-tasks-ai__tab,
+  .dam-tasks-ai__chip,
+  .dam-tasks-tab {
+    min-height: 44px;
+  }
+  .dam-tasks-badge,
+  .dam-tasks-pill,
+  .dam-tasks-source,
+  .dam-tasks-ai__hint {
+    font-size: 12px;
+  }
+}
+
 html[data-theme="dark"] .dam-tasks-list::-webkit-scrollbar-thumb,
 html[data-theme="dark"] .dam-tasks-comments::-webkit-scrollbar-thumb {
   background: rgba(230, 228, 238, 0.22);

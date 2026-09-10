@@ -604,6 +604,15 @@
       .join(" ");
   }
 
+  function statusValueToLetter(value) {
+    var v = String(value || "").trim().toLowerCase();
+    if (v === "aktualne" || v === "f") return "F";
+    if (v === "nieaktualne" || v === "x") return "X";
+    if (v === "demo" || v === "d") return "D";
+    if (v === "clear" || v === "-" || v === "bez statusu" || v === "bez") return "-";
+    return "";
+  }
+
   function searchTokenForBadge(btn, kind, value) {
     var label = String((btn && btn.textContent) || "").trim();
     if (label && label.charAt(0) !== "+") {
@@ -649,6 +658,28 @@
   function applyTagFilter(kind, value, context, opts) {
     opts = opts || {};
     context = context || detectContext();
+
+    if (kind === "status") {
+      var letter = statusValueToLetter(value);
+      if (!letter && opts.btn) {
+        letter = statusValueToLetter(opts.btn.getAttribute("data-tag-value") || "");
+      }
+      if (!letter && opts.btn) {
+        letter = statusValueToLetter(String(opts.btn.textContent || "").trim());
+      }
+      if (letter) {
+        if (context === "viz" && typeof global.damVizApplyStatusLetterFilter === "function") {
+          global.damVizApplyStatusLetterFilter(letter);
+          return;
+        }
+        if (context === "explorer" && typeof global.damExplorerApplyStatusLetterFilter === "function") {
+          global.damExplorerApplyStatusLetterFilter(letter);
+          return;
+        }
+      }
+      return;
+    }
+
     var token =
       opts.token != null
         ? normalizeSearchToken(opts.token)

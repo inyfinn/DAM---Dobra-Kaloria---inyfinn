@@ -24,8 +24,10 @@
   var PROJECTS_RECENT_KEY = "dam_projects_recent";
 
   var SORT_OPTIONS = [
-    { id: "date_desc", label: "Data: najnowsze" },
-    { id: "date_asc", label: "Data: najstarsze" },
+    { id: "date_desc", label: "Wprowadzenie: najnowsze" },
+    { id: "date_asc", label: "Wprowadzenie: najstarsze" },
+    { id: "mtime_desc", label: "Modyfikacja: najnowsze" },
+    { id: "created_desc", label: "Utworzenie: najnowsze" },
     { id: "name_asc", label: "Nazwa: A–Z" },
     { id: "name_desc", label: "Nazwa: Z–A" },
     { id: "priority", label: "Priorytet: niekompletne" },
@@ -711,6 +713,47 @@
     return best;
   }
 
+  function takeTimeMs(v) {
+    if (typeof v === "number" && isFinite(v) && v > 0) return v;
+    var t = Date.parse(String(v || ""));
+    return t && !isNaN(t) ? t : 0;
+  }
+
+  function projectMtimeMs(p) {
+    var raw = rawProduct(p);
+    var best = 0;
+    function bump(v) {
+      var t = takeTimeMs(v);
+      if (t > best) best = t;
+    }
+    bump(p && (p.mtime_ms || p.mtime));
+    if (raw) {
+      bump(raw.mtime_ms || raw.mtime);
+      (raw.revisions || []).forEach(function (r) {
+        if (r) bump(r.mtime_ms || r.mtime);
+      });
+    }
+    return best;
+  }
+
+  function projectCreatedMs(p) {
+    var raw = rawProduct(p);
+    var best = 0;
+    function bumpEarliest(v) {
+      var t = takeTimeMs(v);
+      if (!t) return;
+      if (!best || t < best) best = t;
+    }
+    bumpEarliest(p && (p.created_ms || p.created || p.ctime || p.created_at));
+    if (raw) {
+      bumpEarliest(raw.created_ms || raw.created || raw.ctime);
+      (raw.revisions || []).forEach(function (r) {
+        if (r) bumpEarliest(r.created || r.ctime || r.date);
+      });
+    }
+    return best || projectDateScore(p);
+  }
+
   function projectDisplayName(p) {
     var meta = state.metaById[p.id] || {};
     return String(p.name || p.title || meta.index || p.product_index || p.id || "").trim();
@@ -796,6 +839,24 @@
         var pb = priorityRank(b);
         if (pa !== pb) return pa - pb;
         return projectDateScore(b) - projectDateScore(a);
+      });
+      return out;
+    }
+    if (mode === "mtime_desc") {
+      out.sort(function (a, b) {
+        var da = projectMtimeMs(a);
+        var db = projectMtimeMs(b);
+        if (da !== db) return db - da;
+        return projectDisplayName(a).localeCompare(projectDisplayName(b), "pl", { sensitivity: "base" });
+      });
+      return out;
+    }
+    if (mode === "created_desc") {
+      out.sort(function (a, b) {
+        var da = projectCreatedMs(a);
+        var db = projectCreatedMs(b);
+        if (da !== db) return db - da;
+        return projectDisplayName(a).localeCompare(projectDisplayName(b), "pl", { sensitivity: "base" });
       });
       return out;
     }

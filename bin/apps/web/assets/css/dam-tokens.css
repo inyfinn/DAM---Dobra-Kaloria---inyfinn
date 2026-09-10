@@ -49,6 +49,8 @@
 
   /* Typografia */
   --dam-font: "Jost", sans-serif;
+  /* Geex overlay: style.css paints body, headings and p with --poppins (Poppins TRAP). */
+  --poppins: var(--dam-font);
   --dam-text: #464255;
   --dam-text-muted: #8f8b9f;
   --dam-muted: var(--dam-text-muted);
@@ -105,6 +107,30 @@
   --dam-space-btn-sm-x: 14px;
   --dam-control-h-sm: 36px;
   --dam-radius-btn-compact: 8px;
+
+  /* Panel rhythm — filter / card / toolbar (v2 canonical, 2026-09-07) */
+  --dam-panel-pad-x: 24px;
+  --dam-space-filter-pad-y: 20px;
+  --dam-space-filter-pad-x: var(--dam-panel-pad-x);
+  /* Unified compact chip / scope-btn height (matches --dam-control-h-sm) */
+  --dam-chip-h: var(--dam-control-h-sm);
+  /* Auth hero gradient — brand green from logo-dk-green.svg */
+  --dam-brand-green-glow: color-mix(in srgb, var(--dam-brand-green) 55%, transparent);
+  --dam-space-filter-gap-row: 10px;
+  --dam-space-filter-gap-col: 12px;
+  --dam-space-filter-mb: 12px;
+  --dam-space-filter-nested-mb: 4px;
+  --dam-space-card-body-pad-top: 10px;
+  --dam-space-card-body-pad-x: 18px;
+  --dam-space-card-body-pad-bottom: 12px;
+  --dam-space-card-body-gap: 13px;
+  --dam-space-toolbar-row-gap: 8px;
+  --dam-space-toolbar-col-gap: 14px;
+  --dam-space-toolbar-mb: 12px;
+  --dam-space-toolbar-stack-offset: 12px;
+  --dam-space-toolbar-nested-mb: 5px;
+  --dam-space-badge-pill-y: 2px;
+  --dam-space-badge-pill-x: 8px;
 
   /* Cien */
   --dam-shadow-rgb: 23 22 30;

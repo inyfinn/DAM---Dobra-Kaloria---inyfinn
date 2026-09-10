@@ -84,7 +84,82 @@
   var brandFilter = { DK: true, GC: true };
   var synologyEnabled = true;
   var showAll = false;
+  var statusLetterFilter = null;
   var indexData = null;
+  var vizIndexAbort = null;
+
+  function vizBridgeUrl() {
+    if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
+      return window.DamRuntime.bridgeUrl();
+    }
+    return "http://127.0.0.1:8766";
+  }
+
+  function productsFromVizLatest(rows) {
+    var map = {};
+    (rows || []).forEach(function (v) {
+      if (!v || !v.product_id) return;
+      var id = String(v.product_id);
+      if (!map[id]) {
+        map[id] = {
+          id: id,
+          display_name: v.product_name || id,
+          name: v.product_name || id,
+          brand: v.brand,
+          category: v.category,
+          subcategory_slug: v.subcategory_slug,
+          subcategory_label: v.subcategory_label,
+          tags: v.tags || [],
+          linked_products: v.linked_products,
+          alias_langs: v.alias_langs,
+          revisions: []
+        };
+      }
+    });
+    return Object.keys(map).map(function (k) { return map[k]; });
+  }
+
+  /** First paint from :8766 viz_latest (~0.5 MB). NEVER data/file-index.json on :8765 (~9 MB). */
+  function fetchVizIndexFromBridge() {
+    if (vizIndexAbort) {
+      try { vizIndexAbort.abort(); } catch (_a) { /* ignore */ }
+    }
+    vizIndexAbort = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var url = vizBridgeUrl() + "/file-index?fields=viz_latest&_=" + Date.now();
+    var opts = {
+      headers: { Accept: "application/json", "Accept-Encoding": "gzip" },
+      cache: "no-store"
+    };
+    if (vizIndexAbort) opts.signal = vizIndexAbort.signal;
+    return fetch(url, opts)
+      .then(function (r) {
+        if (!r.ok) throw new Error("bridge_viz_index_" + r.status);
+        return r.text();
+      })
+      .then(function (text) {
+        /* Worker parse hung the Explorer return path. ~0.5MB JSON.parse on this turn. */
+        if (typeof text !== "string") throw new Error("viz_latest_not_text");
+        if (text.length > 2500000) throw new Error("viz_latest_too_large");
+        return JSON.parse(text);
+      })
+      .then(function (data) {
+        data = data || {};
+        if (!Array.isArray(data.products) || !data.products.length) {
+          data.products = productsFromVizLatest(data.viz_latest || []);
+        }
+        window._DAM_FILE_INDEX = data;
+        if (window.DamSearch && typeof window.DamSearch.adoptWarmCaches === "function") {
+          window.DamSearch.adoptWarmCaches();
+        }
+        return data;
+      });
+  }
+
+  window.addEventListener("pagehide", function () {
+    if (!vizIndexAbort) return;
+    try { vizIndexAbort.abort(); } catch (_ph) { /* ignore */ }
+    vizIndexAbort = null;
+  });
   var SHOW_ALL_KEY = "dam_viz_show_all";
   var LATEST_KEY_LEGACY = "dam_viz_latest_only";
   var CARD_ZOOM_KEY = "dam_viz_card_zoom";
@@ -92,6 +167,36 @@
   var CARD_ZOOM_MAX = 350;
   var CARD_IMG_BASE_SCALE = 1;
   var CARD_BASE_MIN_PX = 220;
+
+  function i18nText(key, fallback) {
+    if (window.DamI18n && typeof window.DamI18n.t === "function") {
+      var v = window.DamI18n.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback || key;
+  }
+
+  function rowStatusLetter(v) {
+    var nm = String((v && (v.revision_path || v.path)) || "").split(/[/\\]/).pop() || "";
+    var m = nm.match(/\s-\s([FXD])$/i);
+    return m ? m[1].toUpperCase() : "-";
+  }
+
+  function statusFilterLabelViz(letter) {
+    if (letter === "-") return i18nText("explorer.status_label_clear", "Bez statusu");
+    if (letter === "F") return i18nText("explorer.status_label_f", "Aktualne (F)");
+    if (letter === "X") return i18nText("explorer.status_label_x", "Nieaktualne (X)");
+    if (letter === "D") return i18nText("explorer.status_label_d", "Demo (D)");
+    return letter;
+  }
+
+  function applyStatusLetterFilterViz(letter) {
+    statusLetterFilter = letter || null;
+    var search = document.getElementById("vizSearch");
+    if (search) search.value = "";
+    applyFilters();
+  }
+  global.damVizApplyStatusLetterFilter = applyStatusLetterFilterViz;
 
   function readCardZoomPct() {
     if (window.DamCardZoom && typeof window.DamCardZoom.readPct === "function") {
@@ -414,6 +519,118 @@
       folder = (folderPathFromPicked(v.path) || "").split("/").pop() || "";
     }
     return parseFolderDateScore(folder);
+  }
+
+  var VIZ_SORT_KEY = "dam_viz_sort";
+
+  function currentVizSortMode() {
+    var el = document.getElementById("vizSort");
+    if (el && el.value) return el.value;
+    try {
+      var stored = localStorage.getItem(VIZ_SORT_KEY);
+      if (stored) return stored;
+    } catch (eSort) { /* ignore */ }
+    return "introduced_desc";
+  }
+
+  function rowMtimeMs(v) {
+    if (!v) return 0;
+    if (typeof v.mtime_ms === "number" && v.mtime_ms > 0) return v.mtime_ms;
+    var t = Date.parse(String(v.mtime || v.modified || ""));
+    return t && !isNaN(t) ? t : 0;
+  }
+
+  function rowCreatedMs(v) {
+    if (!v) return 0;
+    if (typeof v.created_ms === "number" && v.created_ms > 0) return v.created_ms;
+    var t = Date.parse(String(v.created || v.ctime || v.created_at || ""));
+    if (t && !isNaN(t)) return t;
+    return revisionFolderDateScore(v);
+  }
+
+  function groupSortName(g) {
+    var hero = g && g.items && g.items[0];
+    return String(
+      (hero && (hero.product_name || hero.display_name || hero.name)) ||
+        (g && g.pid) ||
+        ""
+    );
+  }
+
+  function groupBestScore(g, scoreFn) {
+    var best = 0;
+    ((g && g.items) || []).forEach(function (v) {
+      var s = scoreFn(v);
+      if (s > best) best = s;
+    });
+    return best;
+  }
+
+  /** Data wprowadzenia produktu = pierwsza (najstarsza) data w folderach rewizji.
+   *  Nie data ostatniej wizki: Gyros 18.08.2026 to nowa wizualizacja starego SKU;
+   *  DATESY 04.08.2026 to nowe wprowadzenie linii. */
+  function collectProductIntroductionScores(prod) {
+    var scores = [];
+    function add(raw) {
+      var n = parseFolderDateScore(raw);
+      if (n > 0) scores.push(n);
+    }
+    if (!prod) return scores;
+    add(prod.path);
+    add(prod.folder);
+    (prod.revisions || []).forEach(function (r) {
+      if (!r) return;
+      add(r.folder);
+      add(r.revision_folder);
+      add(r.path);
+      add(r.revision_path);
+    });
+    return scores;
+  }
+
+  function groupIntroductionScore(g) {
+    var hero = g && g.items && g.items[0];
+    var pid = (g && g.pid) || (hero && hero.product_id) || "";
+    var scores = [];
+    if (typeof productMeta === "function") {
+      scores = collectProductIntroductionScores(productMeta(pid));
+    }
+    ((g && g.items) || []).forEach(function (v) {
+      var n = revisionFolderDateScore(v);
+      if (n > 0) scores.push(n);
+    });
+    if (!scores.length) return 0;
+    var min = scores[0];
+    var i;
+    for (i = 1; i < scores.length; i++) {
+      if (scores[i] < min) min = scores[i];
+    }
+    return min;
+  }
+
+  function sortGridGroups(groups) {
+    var mode = currentVizSortMode();
+    var out = (groups || []).slice();
+    out.sort(function (a, b) {
+      if (mode === "name") {
+        return groupSortName(a).localeCompare(groupSortName(b), "pl", { sensitivity: "base" });
+      }
+      var sa;
+      var sb;
+      if (mode === "mtime_desc") {
+        sa = groupBestScore(a, rowMtimeMs);
+        sb = groupBestScore(b, rowMtimeMs);
+      } else if (mode === "created_desc") {
+        sa = groupBestScore(a, rowCreatedMs);
+        sb = groupBestScore(b, rowCreatedMs);
+      } else {
+        sa = groupIntroductionScore(a);
+        sb = groupIntroductionScore(b);
+      }
+      if (sb !== sa) return sb - sa;
+      return groupSortName(a).localeCompare(groupSortName(b), "pl", { sensitivity: "base" });
+    });
+    return out;
   }
 
   function groupGridItems(items) {
@@ -3211,12 +3428,12 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=5.0.77";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=5.0.196";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=5.0.77";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=5.0.196";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
@@ -3522,15 +3739,8 @@
     }
 
     function reloadFileIndexFresh() {
-      var p =
-        window.DamSearch && typeof window.DamSearch.load === "function"
-          ? window.DamSearch.load({ force: true })
-          : fetch("data/file-index.json?_=" + Date.now()).then(function (r) {
-              if (!r.ok) throw new Error("file-index");
-              return r.json();
-            });
-      return Promise.resolve(p).then(function (data) {
-        if (data && data.products) {
+      return fetchVizIndexFromBridge().then(function (data) {
+        if (data && (data.products || data.viz_latest)) {
           indexData = data;
           window._DAM_FILE_INDEX = data;
         }
@@ -4839,6 +5049,8 @@
               esc(thumb) +
               '" alt="" loading="lazy" data-media-path="' +
               esc(first.path || "") +
+              '" data-dam-original="' +
+              esc(first.path || "") +
               '"' +
               (staticThumbFb && staticThumbFb !== thumb
                 ? ' data-static-thumb="' + esc(staticThumbFb) + '"'
@@ -4994,6 +5206,7 @@
   }
 
   function clearVizFiltersSoft() {
+    statusLetterFilter = null;
     var search = document.getElementById("vizSearch");
     if (search) {
       search.value = "";
@@ -5024,6 +5237,7 @@
 
   function vizActiveFilterLabels() {
     var parts = [];
+    if (statusLetterFilter) parts.push(statusFilterLabelViz(statusLetterFilter));
     var q = ((document.getElementById("vizSearch") || {}).value || "").trim();
     if (q) parts.push("Szukaj: " + q);
     var lang = ((document.getElementById("vizLangFilter") || {}).value || "").trim();
@@ -5043,10 +5257,23 @@
 
   function renderVizEmptyState(grid) {
     if (!grid) return;
-    var bundle = pickVizEmptyBundle();
-    var pose = String(bundle.poseUrl || "").replace(/'/g, "%27");
-    var line = bundle.text || "";
+    var isStatusOnly = !!statusLetterFilter;
+    var bundle = isStatusOnly ? null : pickVizEmptyBundle();
+    var pose = String((bundle && bundle.poseUrl) || "").replace(/'/g, "%27");
+    var line = bundle ? bundle.text || "" : "";
     var filters = vizActiveFilterLabels();
+    var statusTitle = statusLetterFilter === "-"
+      ? i18nText("viz.empty_status_clear_title", "Brak wariantów bez statusu")
+      : i18nText("viz.empty_status_generic_title", "Brak wyników dla statusu");
+    var statusDesc = statusLetterFilter === "-"
+      ? i18nText(
+          "viz.empty_status_clear_desc",
+          "Wszystkie warianty w widoku mają już literkę F, X lub D w nazwie folderu."
+        )
+      : i18nText(
+          "viz.empty_status_generic_desc",
+          "Żaden wariant nie pasuje do wybranego filtra statusu."
+        );
     var filterHtml = filters.length
       ? '<ul class="dam-branding-empty__filters">' +
         filters
@@ -5058,29 +5285,37 @@
       : "";
     /* Unified with Branding: [bubble+mascot LEFT lower] | [card RIGHT higher]; pose by mood */
     grid.innerHTML =
-      '<div class="dam-viz-empty" role="status" aria-live="polite" aria-label="Brak wynik\u00f3w dla filtra">' +
-      '<div class="dam-empty-mascot-row" data-empty-mood="' +
-      esc(bundle.mood || "think") +
-      '">' +
-      '<div class="dam-empty-mascot-row__speak">' +
-      '<div class="dam-empty-mascot-row__bubble">' +
-      '<p class="dam-empty-mascot-row__bubble-text">' +
-      esc(line) +
-      "</p>" +
-      "</div>" +
-      '<div class="dam-empty-mascot-row__mascot" aria-hidden="true" style="--dam-empty-pose:url(\'' +
-      pose +
-      "')\">" +
-      '<span class="dam-empty-mascot-row__mascot-img"></span>' +
-      "</div>" +
-      "</div>" +
+      '<div class="dam-viz-empty' + (isStatusOnly ? " dam-viz-empty--status-only" : "") + '" role="status" aria-live="polite" aria-label="Brak wynik\u00f3w dla filtra">' +
+      (isStatusOnly
+        ? ""
+        : '<div class="dam-empty-mascot-row" data-empty-mood="' +
+          esc(bundle.mood || "think") +
+          '">' +
+          '<div class="dam-empty-mascot-row__speak">' +
+          '<div class="dam-empty-mascot-row__bubble">' +
+          '<p class="dam-empty-mascot-row__bubble-text">' +
+          esc(line) +
+          "</p>" +
+          "</div>" +
+          '<div class="dam-empty-mascot-row__mascot" aria-hidden="true" style="--dam-empty-pose:url(\'' +
+          pose +
+          "')\">" +
+          '<span class="dam-empty-mascot-row__mascot-img"></span>' +
+          "</div>" +
+          "</div>") +
       '<div class="dam-empty-mascot-row__card">' +
       '<div class="dam-branding-empty" role="presentation">' +
       '<div class="dam-branding-empty__icon" aria-hidden="true"><i class="uil uil-image-slash"></i></div>' +
-      '<h3 class="dam-branding-empty__title">Brak wynik\u00f3w</h3>' +
-      '<p class="dam-branding-empty__desc">\u017baden materia\u0142 nie pasuje do aktywnych filtr\u00f3w w tej sekcji.</p>' +
+      '<h3 class="dam-branding-empty__title">' +
+      esc(isStatusOnly ? statusTitle : "Brak wyników") +
+      "</h3>" +
+      '<p class="dam-branding-empty__desc">' +
+      esc(isStatusOnly ? statusDesc : "Żaden materiał nie pasuje do aktywnych filtrów w tej sekcji.") +
+      "</p>" +
       filterHtml +
-      '<button type="button" class="geex-btn geex-btn--primary-transparent dam-viz-empty__clear">Wyczy\u015b\u0107 filtry</button>' +
+      '<button type="button" class="geex-btn geex-btn--primary-transparent dam-empty-clear-btn dam-viz-empty__clear">' +
+      esc(i18nText("branding.clear_filters", "Wyczyść filtry")) +
+      "</button>" +
       "</div>" +
       "</div>" +
       "</div>" +
@@ -5104,7 +5339,7 @@
     var status = document.getElementById("vizStatus");
     if (!grid) return;
 
-    var groups = groupGridItems(filtered);
+    var groups = sortGridGroups(groupGridItems(filtered));
 
     if (status) {
       status.textContent =
@@ -5388,6 +5623,7 @@
       /* Bez "Pokaz wszystkie": ukryj ARCHIWUM (starsze rewizje z folderu ARCHIWUM) */
       if (!showAll && rowIsArchive(v)) return false;
       if (lang && (v.lang || "") !== lang) return false;
+      if (statusLetterFilter && rowStatusLetter(v) !== statusLetterFilter) return false;
       if (!parts.length) return true;
       var meta = productMeta(v.product_id) || {};
       var tg = meta.tag_groups || {};
@@ -5827,28 +6063,17 @@
 
 
     function loadIndex() {
-      if (window.DamLoader && typeof window.DamLoader.start === "function") {
-        window.DamLoader.start("Skojarzenia…");
+      /* HARD: no DamLoader on first paint — overlay + GSAP dock froze sidebar clicks. */
+      if (window.DamLoader && typeof window.DamLoader.reset === "function") {
+        window.DamLoader.reset();
       }
-      var p;
-      if (window.DamSearch && typeof window.DamSearch.reload === "function") {
-        p = window.DamSearch.reload().then(function () {
-          return window._DAM_FILE_INDEX;
-        });
-      } else {
-        p = fetch("data/file-index.json?_=" + Date.now()).then(function (r) {
-          if (!r.ok) throw new Error("file-index.json");
-          return r.json();
-        });
-      }
-      return p.finally(function () {
-        if (window.DamLoader && typeof window.DamLoader.done === "function") {
-          window.DamLoader.done();
-        }
-      });
+      return fetchVizIndexFromBridge();
     }
 
     loadIndex().then(boot).catch(function (err) {
+      if (err && (err.name === "AbortError" || /abort/i.test(String(err && err.message ? err.message : err)))) {
+        return;
+      }
       grid.innerHTML = '<p style="color:#FF5653">Blad indeksu: ' + esc(err.message) + "</p>";
     });
 
@@ -5884,6 +6109,21 @@
         if (wantProduct) {
           all = all.filter(function (v) { return v.product_id === wantProduct; });
         }
+        applyFilters();
+      });
+    }
+    var sortSel = document.getElementById("vizSort");
+    if (sortSel) {
+      try {
+        var storedSort = localStorage.getItem(VIZ_SORT_KEY);
+        if (storedSort && sortSel.querySelector('option[value="' + storedSort + '"]')) {
+          sortSel.value = storedSort;
+        }
+      } catch (eVizSort) { /* ignore */ }
+      sortSel.addEventListener("change", function () {
+        try {
+          localStorage.setItem(VIZ_SORT_KEY, sortSel.value || "introduced_desc");
+        } catch (ePersist) { /* ignore */ }
         applyFilters();
       });
     }

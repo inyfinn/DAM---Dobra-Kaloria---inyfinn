@@ -1,5 +1,41 @@
 /* DAM ETA app layer on Geex - layout only; colors from dam-tokens.css */
 
+/*
+ * Szuflada wygladu: position:fixed (NIE absolute). Chrome wlicza
+ * transform:translateX(100%) do scrollWidth nawet na fixed — dlatego
+ * zamkniety panel zostaje W viewportcie (right:0, transform:none) i
+ * chowa sie visibility/opacity. Nie maskujemy html/body overflow-x.
+ */
+.geex-customizer {
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  inset-inline-end: 0 !important;
+  right: 0 !important;
+  left: auto !important;
+  inset-inline-start: auto !important;
+  width: min(400px, 100%) !important;
+  max-width: 100% !important;
+  transform: none !important;
+  visibility: hidden;
+  pointer-events: none !important;
+}
+
+.geex-customizer.active {
+  transform: none !important;
+  visibility: visible;
+  pointer-events: auto !important;
+}
+
+.geex-customizer .geex-customizer-overlay,
+.geex-customizer.active .geex-customizer-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+}
+
 /* Safety: box-sizing reset (bez Bootstrapa layout sie rozjezdza) */
 *,
 *::before,
@@ -1069,5 +1105,116 @@ h2.geex-content__header__title.dam-project-title--light,
   .geex-sidebar,
   .dam-project-card .geex-btn {
     transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* RWD 8 progow — powloka: nadmiar poziomy + cele dotyku (telefon)    */
+/* ------------------------------------------------------------------ */
+.geex-main-content,
+.geex-content,
+.geex-content__header,
+.geex-content__header__action,
+.geex-content__header__action__wrap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.geex-content__header__action__wrap {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+  .geex-content__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .geex-content__header__action {
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .geex-content__header__action__wrap {
+    flex: 1 1 100%;
+    width: 100%;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .geex-content__header__quickaction {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .geex-content__header__customizer {
+    flex-wrap: wrap;
+    margin-inline-end: 0;
+    gap: 8px;
+  }
+
+  .geex-btn.geex-btn__customizer {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  /* Cele dotyku powloki — padding/min-height, nie skala calego UI */
+  .geex-content__header__action .geex-content__header__quickaction__link,
+  .geex-btn.geex-btn__toggle-sidebar,
+  a.dam-breadcrumb__link,
+  .dam-root-status__refresh,
+  .dam-db-status__refresh,
+  .dam-root-status__btn,
+  label.dam-switch.dam-admin-header-switch,
+  .dam-search-scope__btn,
+  button.dam-tag-pill,
+  .dam-cost-bucket {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .geex-content__header__action .geex-content__header__badge {
+    font-size: 12px !important;
+  }
+
+  .dam-switch__label,
+  .dam-tag-group-label,
+  .dam-cost-picker__selected-kicker,
+  .dam-cost-card__note,
+  .dam-cost-row-meta {
+    font-size: 12px;
+  }
+
+  button.dam-tag-pill,
+  .dam-tag-pill {
+    font-size: 12px;
+  }
+
+  .geex-content__header__popup--message,
+  .geex-content__header__popup--notification {
+    min-width: 0;
+    width: min(440px, calc(100% - 16px));
+  }
+
+  /* Signin — cele dotyku (dam-auth.css poza allowlista: nadpis z !important) */
+  .geex-content__authentication label,
+  .geex-content__authentication__checkbox-label,
+  .geex-content__authentication #switchToRegister,
+  .geex-content__authentication #togglePassword,
+  .toggle-password-type {
+    min-height: 44px !important;
+  }
+
+  .geex-content__authentication #togglePassword,
+  .toggle-password-type {
+    min-width: 44px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
   }
 }

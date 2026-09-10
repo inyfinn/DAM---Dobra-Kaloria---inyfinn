@@ -68,6 +68,71 @@
     );
   }
 
+  /**
+   * Cache paints immediately, but the source request starts in parallel and
+   * always replaces it when available. No delay and no cache-only steady state.
+   */
+  function preferOriginal(img, path) {
+    if (!img || !path || img.getAttribute("data-dam-original-started") === "1") return;
+    var original = mediaPreviewUrl(path);
+    if (!original || img.src === original) return;
+    img.setAttribute("data-dam-original-started", "1");
+    var probe = new Image();
+    probe.decoding = "async";
+    probe.onload = function () {
+      if (!img.isConnected || img.getAttribute("data-dam-original") !== path) return;
+      img.src = original;
+      img.setAttribute("data-dam-original-ready", "1");
+    };
+    probe.onerror = function () {
+      img.setAttribute("data-dam-original-unavailable", "1");
+    };
+    probe.src = original;
+  }
+
+  var _originalObserver =
+    global.IntersectionObserver
+      ? new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              _originalObserver.unobserve(entry.target);
+              preferOriginal(entry.target, entry.target.getAttribute("data-dam-original") || "");
+            });
+          },
+          { rootMargin: "320px 0px" }
+        )
+      : null;
+
+  function armOriginal(img) {
+    if (!img || img.getAttribute("data-dam-original-armed") === "1") return;
+    img.setAttribute("data-dam-original-armed", "1");
+    if (_originalObserver) _originalObserver.observe(img);
+    else preferOriginal(img, img.getAttribute("data-dam-original") || "");
+  }
+
+  function armOriginals(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll("img[data-dam-original]").forEach(function (img) {
+      armOriginal(img);
+    });
+    if (root && root.matches && root.matches("img[data-dam-original]")) {
+      armOriginal(root);
+    }
+  }
+
+  function observeOriginals() {
+    armOriginals(document);
+    if (!global.MutationObserver || !document.documentElement) return;
+    new MutationObserver(function (records) {
+      records.forEach(function (record) {
+        record.addedNodes.forEach(function (node) {
+          if (node && node.nodeType === 1) armOriginals(node);
+        });
+      });
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  }
+
   function fallbackTitle(state) {
     if (state === "online_only") return LABEL_ONLINE_ONLY;
     if (state === "root_unset") return LABEL_ROOT;
@@ -184,6 +249,8 @@
     LABEL_ROOT: LABEL_ROOT,
     thumbCacheUrl: thumbCacheUrl,
     mediaPreviewUrl: mediaPreviewUrl,
+    preferOriginal: preferOriginal,
+    armOriginals: armOriginals,
     onErrorTitle: onErrorTitle,
     fallbackHint: fallbackHint,
     fileAvailability: fileAvailability,
@@ -191,4 +258,10 @@
     rootUnsetCtaHref: rootUnsetCtaHref,
     applyFallbackEl: applyFallbackEl,
   };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", observeOriginals, { once: true });
+  } else {
+    observeOriginals();
+  }
 })(typeof window !== "undefined" ? window : globalThis);

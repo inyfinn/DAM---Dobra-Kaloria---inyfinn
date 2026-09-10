@@ -68,8 +68,200 @@
     materialBrowseCache: {},
     searchQuery:      "",
     searchHits:       null,
-    searchPanelTimer: null
+    searchPanelTimer: null,
+    statusLetterFilter: null,
+    _grafikEmails:    null
   };
+
+  var explorerIndexBound = false;
+  var explorerIndexInFlight = null;
+  var explorerResumeBound = false;
+  var explorerPollerStarted = false;
+  var explorerAbortRetries = 0;
+  var explorerWatchdogSoft = null;
+  var explorerWatchdogHard = null;
+  var explorerWatchdogGiveUp = null;
+
+  function i18nText(key, fallback) {
+    if (window.DamI18n && typeof window.DamI18n.t === "function") {
+      var v = window.DamI18n.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback || key;
+  }
+
+  function loadGrafikGroup() {
+    if (state._grafikEmails) return Promise.resolve(state._grafikEmails);
+    return fetch(bridgeUrl() + "/notification-groups", { headers: authHeaders() })
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (data) {
+        var map = {};
+        var list = (data && data.groups && data.groups.grafik) || [];
+        list.forEach(function (g) {
+          var em = String((g && g.email) || "").trim().toLowerCase();
+          if (em) map[em] = true;
+        });
+        state._grafikEmails = map;
+        return map;
+      })
+      .catch(function () {
+        state._grafikEmails = {};
+        return state._grafikEmails;
+      });
+  }
+
+  function currentUserEmail() {
+    try {
+      var u = JSON.parse(localStorage.getItem("dam_user") || "null");
+      if (u && u.email) return String(u.email).trim().toLowerCase();
+    } catch (e0) {
+      /* ignore */
+    }
+    return String(localStorage.getItem("dam_user_email") || "").trim().toLowerCase();
+  }
+
+  function canWriteLifecycleStatus() {
+    var role =
+      (window.DamApi && typeof window.DamApi.role === "function" && window.DamApi.role()) ||
+      localStorage.getItem("dam_role") ||
+      "";
+    role = String(role).toLowerCase();
+    if (role === "admin" || role === "power_user") return true;
+    var email = currentUserEmail();
+    return !!(email && state._grafikEmails && state._grafikEmails[email]);
+  }
+
+  function dbAllowsLifecycleMutations() {
+    if (window.DamDbStatus && typeof window.DamDbStatus.allowsMutations === "function") {
+      return !!window.DamDbStatus.allowsMutations();
+    }
+    if (window.DamDbStatus && typeof window.DamDbStatus.isOnline === "function") {
+      return !!window.DamDbStatus.isOnline();
+    }
+    return false;
+  }
+
+  function lifecycleNeedsDbMessage() {
+    return i18nText(
+      "explorer.lifecycle_needs_db",
+      "Zmiana statusu F, X lub D wymaga połączenia z bazą danych. Pamięć podręczna służy tylko do podglądu."
+    );
+  }
+
+  function isLifecycleAuthError(err, http) {
+    if (err === "db_required" || err === "db_unavailable") return false;
+    return (
+      err === "login_required" ||
+      err === "lifecycle_writer_required" ||
+      err === "admin_required" ||
+      http === 401 ||
+      http === 403
+    );
+  }
+
+  function syncLifecycleButtonsToDb(root) {
+    var allow = dbAllowsLifecycleMutations();
+    var tip = lifecycleNeedsDbMessage();
+    (root || document).querySelectorAll("[data-lifecycle='1']").forEach(function (btn) {
+      var blocked = btn.getAttribute("data-life-blocked") === "1";
+      if (!allow) {
+        if (!btn.getAttribute("data-dam-tip-orig")) {
+          btn.setAttribute(
+            "data-dam-tip-orig",
+            btn.getAttribute("data-dam-tip") || btn.getAttribute("title") || ""
+          );
+        }
+        btn.disabled = true;
+        btn.classList.add("is-disabled");
+        btn.setAttribute("aria-disabled", "true");
+        btn.setAttribute("data-db-offline", "1");
+        btn.setAttribute("data-dam-tip", tip);
+        btn.setAttribute("title", tip);
+        return;
+      }
+      btn.removeAttribute("data-db-offline");
+      var orig = btn.getAttribute("data-dam-tip-orig");
+      if (orig) {
+        btn.setAttribute("data-dam-tip", orig);
+        btn.setAttribute("title", orig);
+        btn.removeAttribute("data-dam-tip-orig");
+      }
+      if (blocked) {
+        btn.disabled = true;
+        btn.classList.add("is-disabled");
+        btn.setAttribute("aria-disabled", "true");
+      } else {
+        btn.disabled = false;
+        btn.classList.remove("is-disabled");
+        btn.removeAttribute("aria-disabled");
+      }
+    });
+  }
+
+  function statusFilterLabel(letter) {
+    if (letter === "-") return i18nText("explorer.status_label_clear", "Bez statusu");
+    if (letter === "F") return i18nText("explorer.status_label_f", "Aktualne (F)");
+    if (letter === "X") return i18nText("explorer.status_label_x", "Nieaktualne (X)");
+    if (letter === "D") return i18nText("explorer.status_label_d", "Demo (D)");
+    return letter;
+  }
+
+  function parseStatusLetterFromQuery(q) {
+    var n = String(q || "").trim().toLowerCase();
+    if (!n) return null;
+    if (n === "bez statusu" || n === "bez") return "-";
+    if (n === "aktualne" || n === "f") return "F";
+    if (n === "nieaktualne" || n === "x") return "X";
+    if (n === "demo" || n === "d") return "D";
+    return null;
+  }
+
+  function revisionStatusLetter(rev) {
+    var lit = lifecycleLetterLabel(getRevisionStatus(rev));
+    return lit || "-";
+  }
+
+  function productMatchesStatusLetter(p, letter) {
+    if (!p || !letter) return false;
+    var prodLit = lifecycleLetterLabel(getProductStatus(p)) || "-";
+    if (prodLit === letter) return true;
+    var revs = revisionsForProductView(p, state.showAllRevisions);
+    for (var i = 0; i < revs.length; i++) {
+      if (revisionStatusLetter(revs[i]) === letter) return true;
+    }
+    return false;
+  }
+
+  function productsForStatusLetterFilter(letter) {
+    var all = filterProductsForExplorerView((state.fileIndex && state.fileIndex.products) || []);
+    return all.filter(function (p) {
+      return productMatchesStatusLetter(p, letter);
+    });
+  }
+
+  function applyStatusLetterFilter(letter) {
+    state.statusLetterFilter = letter || null;
+    state.searchQuery = "";
+    state.searchHits = null;
+    state.product = null;
+    var inp = document.getElementById("damFileSearch");
+    if (inp) inp.value = "";
+    var res = document.getElementById("damSearchResults");
+    if (res) {
+      res.innerHTML = "";
+      res.style.display = "none";
+    }
+    renderMain();
+    renderBreadcrumb();
+  }
+
+  function clearStatusLetterFilter() {
+    state.statusLetterFilter = null;
+    renderMain();
+    renderBreadcrumb();
+  }
 
   function navSnapshot() {
     return {
@@ -421,7 +613,7 @@
       headActionsHtml =
         '<div class="dam-panel-head__actions">' +
           '<button type="button" class="dam-int-cta dam-explorer-add-variant-btn" id="damExplorerAddVariantHead"' +
-            ' aria-label="Dodaj wariant" title="Dodaj wariant" data-dam-tip="Utworz wariant ze Szablonow w tym produkcie">' +
+            ' aria-label="Dodaj wariant" title="Dodaj wariant" data-dam-tip="Utwórz wariant ze Szablonów w tym produkcie">' +
             '<i class="uil uil-plus" aria-hidden="true"></i>' +
             "<span>Dodaj wariant</span>" +
           "</button>" +
@@ -1277,7 +1469,114 @@
 
   function setStatus(msg) {
     var el = document.getElementById("damExplorerStatus");
-    if (el) el.textContent = msg || "";
+    if (!el) return;
+    el.textContent = msg || "";
+    if (msg) el.removeAttribute("hidden");
+    else el.setAttribute("hidden", "");
+  }
+
+  function explorerFolderEmpty() {
+    var folder = document.getElementById("damFolderList");
+    if (!folder) return true;
+    return !folder.querySelector(".dam-folder-item:not([data-dam-skeleton])");
+  }
+
+  function explorerHasNumericCounts() {
+    var folder = document.getElementById("damFolderList");
+    if (!folder) return false;
+    var item = folder.querySelector(".dam-folder-item:not([data-dam-skeleton])");
+    if (!item) return false;
+    var countEl = item.querySelector(".dam-folder-item__count");
+    var txt = countEl ? String(countEl.textContent || "") : "";
+    return /\d/.test(txt);
+  }
+
+  function paintCategorySkeleton() {
+    var mount = document.getElementById("damFolderList");
+    if (!mount || !explorerFolderEmpty()) return;
+    var cats = (DL && DL.CATEGORY_CANON) || [];
+    if (!cats.length) return;
+    var html = '<div class="dam-cat-list">';
+    cats.forEach(function (c) {
+      html +=
+        '<div class="dam-folder-item" data-canon-cat="' +
+        esc(c.id) +
+        '" data-dam-skeleton="1">' +
+        '<i class="uil uil-folder dam-folder-item__icon" aria-hidden="true"></i>' +
+        '<div class="dam-folder-item__text">' +
+        '<div class="dam-folder-item__name">' +
+        esc(c.title) +
+        "</div>" +
+        '<div class="dam-folder-item__count">…</div>' +
+        "</div></div>";
+    });
+    html += "</div>";
+    mount.innerHTML = html;
+  }
+
+  function clearExplorerRevealResidue() {
+    var sel =
+      ".dam-explorer-shell .dam-tag-groups, .dam-explorer-shell .dam-explorer-toolbar, " +
+      ".dam-explorer-shell #damFolderList, .dam-explorer-shell .dam-cat-list, " +
+      ".dam-explorer-shell .dam-folder-item";
+    var nodes = document.querySelectorAll(sel);
+    if (window.gsap && nodes.length) {
+      try {
+        window.gsap.killTweensOf(nodes);
+      } catch (_g) { /* ignore */ }
+    }
+    Array.prototype.forEach.call(nodes, function (el) {
+      el.style.removeProperty("opacity");
+      el.style.removeProperty("visibility");
+      el.style.removeProperty("transform");
+    });
+  }
+
+  function showExplorerIndexError(detail) {
+    var msg = detail || "Nie załadowano indeksu.";
+    var html =
+      '<div class="dam-explorer-empty"><p style="color:var(--dam-danger, #FF5653)">' +
+      esc(msg) +
+      "</p><p>Mostek: <code>http://127.0.0.1:8766/file-index?fields=explorer</code></p>" +
+      '<p><button type="button" class="geex-btn geex-btn--primary" data-dam-explorer-retry="1">Spróbuj ponownie</button></p></div>';
+    var folder = document.getElementById("damFolderList");
+    if (folder && explorerFolderEmpty()) folder.innerHTML = html;
+    var main = document.getElementById("damExplorerMain");
+    if (main && !main.querySelector(".dam-prod-row, .dam-carrier-card, .dam-folder-item")) {
+      main.innerHTML = html;
+    }
+    bindExplorerRetryButtons();
+  }
+
+  function bindExplorerRetryButtons() {
+    document.querySelectorAll("[data-dam-explorer-retry]").forEach(function (btn) {
+      if (btn._damRetryBound) return;
+      btn._damRetryBound = true;
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        retryExplorerIndex();
+      });
+    });
+  }
+
+  function retryExplorerIndex() {
+    setStatus("Ponowne ładowanie indeksu...");
+    explorerIndexBound = false;
+    return loadExplorerPrimaryIndex({ force: true })
+      .then(function (bundle) {
+        applyExplorerIndexBundle(bundle, "retry");
+      })
+      .catch(function (err) {
+        if (isAbortLike(err) && document.visibilityState !== "hidden") {
+          return startExplorerIndexBind("retry-abort");
+        }
+        setStatus("Błąd indeksu: " + (err && err.message ? err.message : err));
+        showExplorerIndexError(err && err.message ? err.message : "timeout");
+      })
+      .finally(function () {
+        dismissExplorerLoader();
+        unlockExplorerBoot();
+      });
   }
 
   /* ------------------------------------------------------------------ */
@@ -1977,16 +2276,24 @@
   function fetchWithTimeout(url, opts, timeoutMs) {
     timeoutMs = timeoutMs || 12000;
     opts = opts || {};
+    var skipGlobalAbort = !!opts.skipGlobalAbort;
+    var fetchOpts = Object.assign({}, opts);
+    delete fetchOpts.skipGlobalAbort;
     if (typeof AbortController === "undefined") {
-      return fetch(url, opts);
+      return fetch(url, fetchOpts);
     }
     var ac = new AbortController();
+    /* Index bind must not ride __damAbortAll / page teardown list — Escape still
+       uses other fetches. Chrome aborts this signal on hide; pageshow restarts. */
+    if (!skipGlobalAbort && typeof window.__damRegisterAbort === "function") {
+      window.__damRegisterAbort(ac);
+    }
     var tid = setTimeout(function () {
       try {
         ac.abort();
       } catch (_eAbort) { /* ignore */ }
     }, timeoutMs);
-    var merged = Object.assign({}, opts, { signal: ac.signal });
+    var merged = Object.assign({}, fetchOpts, { signal: ac.signal });
     return fetch(url, merged).finally(function () {
       clearTimeout(tid);
     });
@@ -1995,9 +2302,9 @@
   function showSessionRequiredToast(errCode) {
     var code = String(errCode || "login_required");
     var hint =
-      code === "admin_required"
-        ? "Tylko admin może zapisywać F/X/D na dysku."
-        : "Sesja wygasła - zaloguj się ponownie (profil w prawym górnym rogu), potem włącz ADMIN.";
+      code === "admin_required" || code === "lifecycle_writer_required"
+        ? "Brak uprawnień do zapisu F/X/D na dysku (admin, power user lub grafik)."
+        : "Sesja wygasła — zaloguj się ponownie (profil w prawym górnym rogu), potem włącz ADMIN.";
     showToast(hint, "error");
   }
 
@@ -2078,7 +2385,7 @@
 
   function renderLifecycleControls(opts) {
     opts = opts || {};
-    if (!state.adminMode) return "";
+    if (!canWriteLifecycleStatus()) return "";
     var scope = opts.scope || "variant";
     var current = opts.current || "clear";
     var path = opts.path || "";
@@ -2126,11 +2433,14 @@
         cls: "clear"
       }
     ];
+    var dbOff = !dbAllowsLifecycleMutations();
+    var dbTip = lifecycleNeedsDbMessage();
     var html = '<div class="dam-lifecycle" data-scope="' + esc(scope) + '" role="group" aria-label="Status lifecycle">';
     items.forEach(function (it) {
       var on = current === it.status;
       if (it.status === "clear") on = !lifecycleLetterLabel(current) && (current === "clear" || current === "starsza" || !current);
-      var disabled = !!it.disabled;
+      var disabled = !!it.disabled || dbOff;
+      var title = dbOff ? dbTip : it.title;
       html +=
         '<button type="button" class="dam-lifecycle__btn dam-lifecycle__btn--' +
         it.cls +
@@ -2150,14 +2460,16 @@
         esc(index) +
         '" data-ridx="' +
         esc(ridx) +
-        '" data-dam-tip="' +
-        esc(it.title) +
+        '"' +
+        (it.disabled ? ' data-life-blocked="1"' : "") +
+        ' data-dam-tip="' +
+        esc(title) +
         '" aria-pressed="' +
         (on ? "true" : "false") +
         '"' +
         (disabled ? ' aria-disabled="true" disabled' : "") +
         ' title="' +
-        esc(it.title) +
+        esc(title) +
         '">' +
         esc(it.label) +
         "</button>";
@@ -2909,6 +3221,7 @@
         b.disabled = false;
         b.classList.remove("is-disabled");
       });
+      syncLifecycleButtonsToDb(t.group);
     }
     if (t.card && t.card.classList) t.card.classList.remove("is-lifecycle-pending");
     state._lifecyclePending = null;
@@ -2926,9 +3239,13 @@
   function applyLifecycleStatusNow(opts) {
     opts = opts || {};
     var t0 = Date.now();
-    if (!isAdminRole() || !state.adminMode) {
-      showToast("Włącz tryb admina, aby zmieniać statusy F/X/D", "error");
+    if (!canWriteLifecycleStatus()) {
+      showToast("Brak uprawnień do zmiany statusów F/X/D (admin, power_user lub Graficy).", "error");
       return Promise.resolve({ ok: false });
+    }
+    if (!dbAllowsLifecycleMutations()) {
+      showToast(lifecycleNeedsDbMessage(), "error");
+      return Promise.resolve({ ok: false, error: "db_required" });
     }
     if (!hasBridgeToken()) {
       return ensureBridgeSession().then(function (sess) {
@@ -2976,7 +3293,11 @@
         if (!res.data || !res.data.ok) {
           var err = (res.data && res.data.error) || "lifecycle-status";
           var hint = (res.data && res.data.hint) || "";
-          if (err === "login_required" || err === "admin_required" || res.http === 401 || res.http === 403) {
+          if (err === "db_required" || err === "db_unavailable") {
+            showToast(hint || lifecycleNeedsDbMessage(), "error");
+            return res.data || { ok: false, error: err };
+          }
+          if (isLifecycleAuthError(err, res.http)) {
             showSessionRequiredToast(err);
             return res.data || { ok: false, error: err };
           }
@@ -3210,7 +3531,7 @@
     if (window.DamPaths && typeof window.DamPaths.pathActionsHtml === "function") {
       return window.DamPaths.pathActionsHtml(path);
     }
-    return '<button type="button" class="dam-file-copy" data-path="' + esc(path) + '" title="Kopiuj ścieżkę"><i class="uil uil-copy" aria-hidden="true"></i></button>';
+    return '<button type="button" class="dam-file-copy" data-path="' + esc(path) + '" title="Kopiuj ścieżkę" aria-label="Kopiuj ścieżkę lokalną" data-dam-tip="Kopiuj ścieżkę lokalną"><i class="uil uil-copy" aria-hidden="true"></i></button>';
   }
 
   function renderFileRow(f, role) {
@@ -3379,6 +3700,7 @@
         '<button type="button" class="dam-viz-hero__open" data-lightbox-idx="' + globalIdx + '" data-dam-tip="Otwórz studio podglądu">' +
           '<span class="dam-viz-hero__frame">' +
             '<img src="' + cands[0] + '" alt="' + esc(h.perspective + " - " + (f.name || "")) + '" ' +
+              'data-dam-original="' + esc(f.path || "") + '" ' +
               'data-fallbacks="' + esc(cands.slice(1).join("|")) + '" ' +
               'onerror="window.__damThumbFallback&&window.__damThumbFallback(this)">' +
             '<span class="dam-viz-mini__placeholder" hidden><i class="uil uil-image" aria-hidden="true"></i></span>' +
@@ -3397,23 +3719,94 @@
     return html;
   }
 
-  function renderMarketingSection(materials) {
+  function renderMarketingSection(materials, product) {
     var mats = (materials || []).filter(function (m) { return m.title; });
-    if (!mats.length) return "";
-    var html = '<div class="dam-file-layer" data-check-section="marketing"><div class="dam-file-layer__title">Materiały marketingowe</div>';
-    mats.forEach(function (m) {
-      html += '<div class="dam-marketing-row">' +
-        '<div class="dam-marketing-row__body">' +
-          '<div class="dam-marketing-row__title">' + esc(m.title) + "</div>" +
-          '<div class="dam-marketing-row__path">' + esc(m.path) + "</div>" +
-          '<div class="dam-marketing-row__meta">' + esc(m.type || "marketing") +
-            (m.file_count ? " - " + m.file_count + " plików" : "") +
-          "</div></div>" +
-        pathActions(m.path) +
-      "</div>";
-    });
+    var pid = (product && product.id) || "";
+    var html =
+      '<div class="dam-file-layer dam-explorer-marketing-layer" data-check-section="marketing"' +
+      (pid ? ' data-explorer-marketing-product="' + esc(pid) + '"' : "") +
+      '><div class="dam-file-layer__title">Materiały marketingowe</div>';
+    if (!mats.length && !pid) return "";
+    if (mats.length) {
+      mats.forEach(function (m) {
+        html += marketingRowHtml(m);
+      });
+    } else if (pid) {
+      html += '<p class="dam-explorer-marketing-loading">Ładowanie skojarzonych materiałów…</p>';
+    }
     html += '<p class="dam-marketing-hint">Sciezki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaz w Eksploratorze.</p></div>';
     return html;
+  }
+
+  function marketingRowHtml(m) {
+    return (
+      '<div class="dam-marketing-row">' +
+      '<div class="dam-marketing-row__body">' +
+      '<div class="dam-marketing-row__title">' +
+      esc(m.title) +
+      "</div>" +
+      '<div class="dam-marketing-row__path">' +
+      esc(m.path) +
+      "</div>" +
+      '<div class="dam-marketing-row__meta">' +
+      esc(m.type || "marketing") +
+      (m.file_count ? " - " + m.file_count + " plików" : "") +
+      "</div></div>" +
+      pathActions(m.path) +
+      "</div>"
+    );
+  }
+
+  function mergeMarketingRows(baseRows, extraRows) {
+    var seen = {};
+    var out = [];
+    (baseRows || []).concat(extraRows || []).forEach(function (m) {
+      if (!m || !m.title) return;
+      var key = String(m.path || m.title || "").toLowerCase();
+      if (!key || seen[key]) return;
+      seen[key] = true;
+      out.push(m);
+    });
+    return out;
+  }
+
+  function hydrateExplorerMarketingMaterials(scope, product) {
+    if (!scope || !product || !product.id) return;
+    var layer = scope.querySelector(
+      '.dam-explorer-marketing-layer[data-explorer-marketing-product="' + product.id + '"]'
+    );
+    if (!layer) return;
+    var MP = window.DamMediaPreview;
+    if (!MP || typeof MP.explorerMarketingRows !== "function") return;
+    var idx =
+      (product.revisions && product.revisions[0] && product.revisions[0].index) ||
+      (product.index_bases && product.index_bases[0]) ||
+      (product.indexes && product.indexes[0]) ||
+      "";
+    MP.explorerMarketingRows({
+      id: product.id,
+      name: product.display_name || product.name || "",
+      index: idx,
+    })
+      .then(function (linkedRows) {
+        if (!layer.isConnected) return;
+        var merged = mergeMarketingRows(product.related_materials || [], linkedRows || []);
+        if (!merged.length) {
+          layer.innerHTML =
+            '<div class="dam-file-layer__title">Materiały marketingowe</div>' +
+            '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów.</p>' +
+            '<p class="dam-marketing-hint">Sciezki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaz w Eksploratorze.</p>';
+          return;
+        }
+        layer.innerHTML =
+          '<div class="dam-file-layer__title">Materiały marketingowe</div>' +
+          merged.map(marketingRowHtml).join("") +
+          '<p class="dam-marketing-hint">Sciezki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaz w Eksploratorze.</p>';
+        bindCopyButtons(layer);
+      })
+      .catch(function () {
+        /* keep index-only rows on failure */
+      });
   }
 
   function renderAdminRevButtons(rev, idx) {
@@ -3662,7 +4055,7 @@
         ) +
         renderFileSection("Pliki do druku",   printFilesFromRevision(rev),  "print") +
         renderVizGroups(allViz) +
-        renderMarketingSection(product.related_materials) +
+        renderMarketingSection(product.related_materials, product) +
         extraCurrHtml +
         (state.showAllRevisions ? "" : olderHtml);
     }
@@ -3685,7 +4078,7 @@
       esc(rev.index || "") +
       '" data-pakiet-product="' +
       esc((product && product.id) || "") +
-      '" data-dam-tip="Spakuj 2 - PROJEKT i 4 - WIZKI do ZIP w 3 - DRUK (bez SZKICE; nazwa jak plik .ai)">' +
+      '" data-dam-tip="Spakuj 2 - PROJEKT i 4 - WIZKI do ZIP w 3 - DRUK (bez SZKICE; nazwa jak plik .ai)" title="Eksport PAKIET: ZIP 2 - PROJEKT + 4 - WIZKI do 3 - DRUK" aria-label="Eksport PAKIET: spakuj 2 - PROJEKT i 4 - WIZKI do ZIP w 3 - DRUK">' +
       "PAKIET</button>";
 
     return (
@@ -3732,9 +4125,13 @@
             '<div class="dam-carrier-toggle__actions" data-dam-tip="Kopiuj ścieżkę / otwórz folder w Windows">' +
               pathActions(rev.path || "") +
             "</div>" +
-            '<i class="uil dam-carrier-chevron ' +
+            '<span class="dam-carrier-chevron-hit" title="' +
+            (isExpanded ? "Zwiń nośnik" : "Rozwiń nośnik") +
+            '" aria-label="' +
+            (isExpanded ? "Zwiń nośnik" : "Rozwiń nośnik") +
+            '"><i class="uil dam-carrier-chevron ' +
             (isExpanded ? "uil-angle-up" : "uil-angle-down") +
-            '" aria-hidden="true"></i>' +
+            '" aria-hidden="true"></i></span>' +
           "</div>" +
         "</div>" +
         (state.showAllRevisions && !cardOpts.flatMode && olderHtml ? olderHtml : "") +
@@ -3840,17 +4237,20 @@
     html += "</div>";
     mount.innerHTML = html;
 
-    // Bind category clicks
-    mount.querySelectorAll(".dam-folder-item").forEach(function (item) {
-      item.addEventListener("click", function () {
-        state.canonCat = this.getAttribute("data-canon-cat");
+    if (!mount._damFolderClickBound) {
+      mount._damFolderClickBound = true;
+      mount._damFolderListenerCount = 1;
+      mount.addEventListener("click", function (e) {
+        var item = e.target && e.target.closest ? e.target.closest(".dam-folder-item") : null;
+        if (!item || !mount.contains(item)) return;
+        state.canonCat = item.getAttribute("data-canon-cat");
         state.product = null;
         state.expandedCarriers = {};
         state.showOlderCarriers = {};
         navPush();
         renderAll();
       });
-    });
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -4026,7 +4426,7 @@
         "</div>"
       : "";
     var pStatus = getProductStatus(p);
-    var lifeHtml = state.adminMode
+    var lifeHtml = canWriteLifecycleStatus()
       ? '<div class="dam-prod-row__lifecycle" data-stop-nav="1">' +
         renderLifecycleControls({
           scope: "product",
@@ -4053,7 +4453,7 @@
         '<div class="dam-prod-row__actions dam-carrier-toggle__actions" data-dam-tip="Kopiuj ścieżkę / otwórz folder w Windows">' +
         pathActions(productPath) +
         "</div>" +
-        '<i class="uil uil-angle-down dam-prod-row__chevron" aria-hidden="true"></i>' +
+        '<span class="dam-prod-row__chevron-hit" title="Rozwiń wiersz produktu" aria-label="Rozwiń wiersz produktu"><i class="uil uil-angle-down dam-prod-row__chevron" aria-hidden="true"></i></span>' +
         "</div>"
       : "";
     var rowCls = "dam-prod-row";
@@ -4303,7 +4703,86 @@
     });
   }
 
+  function renderStatusEmptyCard(letter) {
+    var isClear = letter === "-";
+    var title = isClear
+      ? i18nText("explorer.empty_status_clear_title", "Brak produktów bez statusu")
+      : i18nText("explorer.empty_status_generic_title", "Brak produktów z tym statusem");
+    var desc = isClear
+      ? i18nText(
+          "explorer.empty_status_clear_desc",
+          "W bieżącym widoku wszystkie produkty mają literkę F, X lub D w nazwie folderu na dysku."
+        )
+      : i18nText(
+          "explorer.empty_status_generic_desc",
+          "Żaden produkt ani wariant w bieżącym widoku nie pasuje do wybranego filtra statusu."
+        );
+    var clearLbl = i18nText("branding.clear_filters", "Wyczyść filtry");
+    return (
+      '<div class="dam-branding-empty-wrap dam-branding-empty-wrap--status-only">' +
+      '<div class="dam-branding-empty" role="status">' +
+      '<div class="dam-branding-empty__icon" aria-hidden="true"><i class="uil uil-layer-group"></i></div>' +
+      '<h3 class="dam-branding-empty__title">' + esc(title) + "</h3>" +
+      '<p class="dam-branding-empty__desc">' + esc(desc) + "</p>" +
+      '<ul class="dam-branding-empty__filters"><li>' + esc(statusFilterLabel(letter)) + "</li></ul>" +
+      '<button type="button" class="geex-btn geex-btn--primary-transparent dam-empty-clear-btn dam-explorer-clear-status">' +
+      esc(clearLbl) +
+      "</button></div></div>"
+    );
+  }
+
+  function renderStatusFilterPanel(mount) {
+    var letter = state.statusLetterFilter;
+    var products = productsForStatusLetterFilter(letter);
+    var label = statusFilterLabel(letter);
+    var html =
+      '<div class="dam-explorer-panel">' +
+      panelHeadHtml({
+        icon: "uil-layer-group",
+        kicker: i18nText("explorer.status_filter_kicker", "Filtr statusu"),
+        title: label,
+        meta:
+          products.length +
+          " " +
+          (products.length === 1
+            ? "trafiony produkt"
+            : products.length >= 2 && products.length <= 4
+              ? "trafione produkty"
+              : "trafionych produktów")
+      });
+    if (!products.length) {
+      html += renderStatusEmptyCard(letter) + "</div>";
+    } else {
+      html += '<div class="dam-prod-list">';
+      products.forEach(function (p) {
+        html += buildProductRowHtml(p);
+      });
+      html += "</div></div>";
+    }
+    mount.innerHTML = html;
+    bindPanelNav(mount);
+    bindProductRowClicks(mount);
+    bindLifecycleControls(mount);
+    var clearBtn = mount.querySelector(".dam-explorer-clear-status");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        clearStatusLetterFilter();
+      });
+    }
+    if (window.DamTooltips && typeof window.DamTooltips.refresh === "function") {
+      window.DamTooltips.refresh(mount);
+    }
+    revealExplorerModules(mount);
+  }
+
   function renderSearchResultsPanel(mount) {
+    var qEarly = state.searchQuery || "";
+    var statusQ = parseStatusLetterFromQuery(qEarly);
+    if (statusQ) {
+      applyStatusLetterFilter(statusQ);
+      return;
+    }
     var res = filterSearchResponse(state.searchHits || {}) || {};
     var products = (res.products || []).slice();
     var hits = res.hits || [];
@@ -4437,8 +4916,19 @@
       return;
     }
 
+    /* Filtr statusu F/X/D/- (nie wyszukiwanie tekstowe) */
+    if (!state.product && state.statusLetterFilter) {
+      renderStatusFilterPanel(mount);
+      return;
+    }
+
     /* Live search results in panel (AJAX) - zanim welcome / kategoria */
     if (!state.product && state.searchQuery && state.searchQuery.length >= 2 && state.searchHits) {
+      var statusFromQ = parseStatusLetterFromQuery(state.searchQuery);
+      if (statusFromQ) {
+        applyStatusLetterFilter(statusFromQ);
+        return;
+      }
       renderSearchResultsPanel(mount);
       return;
     }
@@ -4683,6 +5173,7 @@
 
   function onBrandFilterChange(brands) {
     state.brands = brands;
+    if (!state.fileIndex) return;
     renderExplorerGridStatus();
     renderSidebar();
     renderMain();
@@ -6338,6 +6829,10 @@
         e.preventDefault();
         e.stopPropagation();
         if (this.classList.contains("is-pending") || this.disabled) return;
+        if (!dbAllowsLifecycleMutations()) {
+          showToast(lifecycleNeedsDbMessage(), "error");
+          return;
+        }
         var uiBtn = this;
         var scope = this.getAttribute("data-scope") || "variant";
         var status = this.getAttribute("data-status") || "clear";
@@ -6413,6 +6908,7 @@
         });
       });
     });
+    syncLifecycleButtonsToDb(mount);
   }
 
   function bindAdminControls() {
@@ -6449,6 +6945,7 @@
       });
       window.addEventListener("dam:db-status", function () {
         updateAdminStatusTruthBar();
+        syncLifecycleButtonsToDb(document);
       });
       window.addEventListener("dam-runtime-ready", function () {
         updateAdminStatusTruthBar();
@@ -6522,6 +7019,9 @@
   /* ------------------------------------------------------------------ */
 
   function renderAll() {
+    try {
+      window.__damExplorerRenderAll = (window.__damExplorerRenderAll || 0) + 1;
+    } catch (eCnt) { /* ignore */ }
     renderBreadcrumb();
     renderExplorerGridStatus();
     syncExplorerShowAllUi();
@@ -6549,6 +7049,9 @@
     }
     if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
       window.DamBadges.bindClicks(mainEl, "explorer");
+    }
+    if (mainEl && state.product && state.product.id) {
+      hydrateExplorerMarketingMaterials(mainEl, state.product);
     }
 
     var meta = document.getElementById("damExplorerMeta");
@@ -6657,14 +7160,35 @@
       });
   }
 
-  function dismissExplorerLoader() {
-    if (window.DamLoader && typeof window.DamLoader.done === "function") {
-      window.DamLoader.done();
-    }
+  function unlockExplorerBoot() {
+    try {
+      var r = document.documentElement;
+      r.classList.remove("dam-booting");
+      r.classList.add("dam-booted");
+      var b = document.body;
+      if (b) {
+        b.classList.remove("is-booting");
+        b.style.setProperty("opacity", "1", "important");
+        b.style.setProperty("pointer-events", "auto");
+      }
+    } catch (_u) { /* ignore */ }
   }
 
+  function dismissExplorerLoader() {
+    if (window.DamLoader && typeof window.DamLoader.reset === "function") {
+      window.DamLoader.reset();
+    } else if (window.DamLoader && typeof window.DamLoader.done === "function") {
+      window.DamLoader.done();
+    }
+    unlockExplorerBoot();
+  }
+
+  var explorerRenderCoalesce = 0;
   function scheduleExplorerRender() {
+    if (explorerRenderCoalesce) return;
+    explorerRenderCoalesce = 1;
     var run = function () {
+      explorerRenderCoalesce = 0;
       renderAll();
       renderTagChips();
     };
@@ -6681,6 +7205,112 @@
       loadCarrierOverrides(),
       loadElementsLinks()
     ]);
+  }
+
+  /** Explorer first paint: file-index only via bridge (gzip). search-index lazy. */
+  function scheduleDeferredSearchIndexLoad() {
+    if (window._DAM_SEARCH_INDEX) return;
+    var run = function () {
+      if (window.DamSearch && typeof window.DamSearch.load === "function") {
+        window.DamSearch.load({ searchOnly: true }).then(function () {
+          try {
+            renderTagChips();
+            clearExplorerRevealResidue();
+          } catch (_r) { /* ignore */ }
+        }).catch(function () {
+          /* search optional for category tree browse */
+        });
+      }
+    };
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(run, { timeout: 8000 });
+    } else {
+      setTimeout(run, 400);
+    }
+  }
+
+  function responseJsonOffMain(r, label) {
+    return r.text().then(function (text) {
+      if (typeof text !== "string") {
+        throw new Error((label || "json") + "_not_text");
+      }
+      if (text.length > 1200000) {
+        throw new Error((label || "json") + "_too_large_for_main");
+      }
+      /* Slim explorer (~0.5MB): parse on this turn. Worker parse hung the
+         return path (Wizualizacje → Eksplorer) while :8766 already had 200. */
+      return JSON.parse(text);
+    });
+  }
+
+  function loadExplorerPrimaryIndex(opts) {
+    opts = opts || {};
+    if (
+      !opts.force &&
+      window._DAM_FILE_INDEX &&
+      window._DAM_FILE_INDEX.products &&
+      window._DAM_FILE_INDEX.products.length
+    ) {
+      return Promise.resolve({
+        fileIndex: window._DAM_FILE_INDEX,
+        searchIndex: window._DAM_SEARCH_INDEX || null,
+      });
+    }
+    var bust = Date.now();
+    return fetchWithTimeout(
+      bridgeUrl() + "/file-index?fields=explorer&_=" + bust,
+      {
+        headers: { Accept: "application/json", "Accept-Encoding": "gzip" },
+        cache: "no-store",
+        skipGlobalAbort: true
+      },
+      8000
+    )
+      .then(function (r) {
+        if (!r.ok) throw new Error("bridge_file_index_" + r.status);
+        return responseJsonOffMain(r, "file-index-explorer");
+      })
+      .then(function (fi) {
+        if (!fi || !Array.isArray(fi.products) || !fi.products.length) {
+          throw new Error("file_index_invalid");
+        }
+        window._DAM_FILE_INDEX = fi;
+        if (window.DamSearch && typeof window.DamSearch.adoptWarmCaches === "function") {
+          window.DamSearch.adoptWarmCaches();
+        }
+        scheduleDeferredSearchIndexLoad();
+        return { fileIndex: fi, searchIndex: window._DAM_SEARCH_INDEX || null };
+      })
+      .catch(function (errBridge) {
+        /* HARD: never fall back to 9MB data/file-index.json (main-thread freeze). Retry slim once. */
+        return fetchWithTimeout(
+          bridgeUrl() + "/file-index?fields=explorer&retry=1&_=" + Date.now(),
+          {
+            headers: { Accept: "application/json", "Accept-Encoding": "gzip" },
+            cache: "no-store",
+            skipGlobalAbort: true
+          },
+          8000
+        )
+          .then(function (r) {
+            if (!r.ok) throw new Error("bridge_file_index_retry_" + r.status);
+            return responseJsonOffMain(r, "file-index-explorer-retry");
+          })
+          .then(function (fi) {
+            if (!fi || !Array.isArray(fi.products) || !fi.products.length) {
+              throw new Error("file_index_invalid");
+            }
+            window._DAM_FILE_INDEX = fi;
+            if (window.DamSearch && typeof window.DamSearch.adoptWarmCaches === "function") {
+              window.DamSearch.adoptWarmCaches();
+            }
+            scheduleDeferredSearchIndexLoad();
+            return { fileIndex: fi, searchIndex: window._DAM_SEARCH_INDEX || null };
+          })
+          .catch(function () {
+            throw errBridge;
+          });
+      });
   }
 
   function runDeferredLifecycleBoot() {
@@ -6943,6 +7573,7 @@
     }
     /* Panel clear for short query only — full search owned by bindSearchBox.onResults */
     if (input) bindSearchPanelSync(input);
+    loadGrafikGroup();
   }
 
   function applyDeepLink() {
@@ -7148,6 +7779,10 @@
       showToast("Włącz tryb admina, aby stosować zmiany na dysku.", "error");
       return Promise.resolve({ ok: false });
     }
+    if (!dbAllowsLifecycleMutations()) {
+      showToast(lifecycleNeedsDbMessage(), "error");
+      return Promise.resolve({ ok: false, error: "db_required" });
+    }
     if (!hasBridgeToken()) {
       return ensureBridgeSession().then(function (sess) {
         if (!sess || !sess.ok) {
@@ -7169,12 +7804,12 @@
         if (!previewRes.data || !previewRes.data.ok) {
           var err =
             (previewRes.data && previewRes.data.error) || previewRes.http;
-          if (
-            err === "login_required" ||
-            err === "admin_required" ||
-            previewRes.http === 401 ||
-            previewRes.http === 403
-          ) {
+          if (err === "db_required" || err === "db_unavailable") {
+            showToast(
+              (previewRes.data && previewRes.data.hint) || lifecycleNeedsDbMessage(),
+              "error"
+            );
+          } else if (isLifecycleAuthError(err, previewRes.http)) {
             showSessionRequiredToast(err);
           }
           throw new Error(
@@ -7389,11 +8024,7 @@
       } else if (rebuildResult && rebuildResult.error && !silent) {
         showToast("Indeks dysku: " + rebuildResult.error + " - wczytuję ostatnią kopię.", "info");
       }
-      var reloader = window.DamSearch && window.DamSearch.reload
-        ? window.DamSearch.reload()
-        : fetch("data/file-index.json?v=" + Date.now())
-            .then(function (r) { if (!r.ok) throw new Error("file-index.json"); return r.json(); })
-            .then(function (d) { return { fileIndex: d }; });
+      var reloader = loadExplorerPrimaryIndex({ force: true });
       return reloader.then(afterBundle);
     }).catch(function (err) {
       setStatus("Błąd odświeżania: " + (err && err.message ? err.message : err));
@@ -7406,6 +8037,57 @@
   /* openProduct                                                          */
   /* ------------------------------------------------------------------ */
 
+  function productNeedsFileHydration(prod) {
+    if (!prod) return false;
+    if (prod.files_slim) return true;
+    var revs = prod.revisions || [];
+    if (!revs.length) return false;
+    var i;
+    for (i = 0; i < revs.length; i++) {
+      if (revs[i] && revs[i].files_by_role) return false;
+    }
+    return true;
+  }
+
+  function mergeHydratedExplorerProduct(full) {
+    if (!full || !full.id || !state.fileIndex || !state.fileIndex.products) return full;
+    var list = state.fileIndex.products;
+    var i;
+    for (i = 0; i < list.length; i++) {
+      if (list[i] && list[i].id === full.id) {
+        full.files_slim = false;
+        list[i] = full;
+        break;
+      }
+    }
+    window._DAM_FILE_INDEX = state.fileIndex;
+    _fileIndexIdSet = null;
+    _fileIndexIdSetSource = null;
+    return full;
+  }
+
+  function hydrateExplorerProduct(pid) {
+    var id = String(pid || "").trim();
+    if (!id) return Promise.resolve(null);
+    return fetchWithTimeout(
+      bridgeUrl() + "/file-index/product?id=" + encodeURIComponent(id),
+      { headers: { Accept: "application/json" } },
+      12000
+    )
+      .then(function (r) {
+        if (!r.ok) throw new Error("product_" + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        var full = (data && data.product) || null;
+        if (!full || !full.id) return null;
+        return mergeHydratedExplorerProduct(full);
+      })
+      .catch(function () {
+        return null;
+      });
+  }
+
   function openProduct(product) {
     if (!product) return;
     var resolved =
@@ -7415,6 +8097,7 @@
     if (!resolved || !resolved.id || !productInFileIndex(resolved.id)) return;
     product = resolved;
 
+    state.statusLetterFilter = null;
     state.searchQuery = "";
     state.searchHits = null;
     var inp = document.getElementById("damFileSearch");
@@ -7432,10 +8115,18 @@
     state.showOlderCarriers = {};
     trackRecentProduct(product);
     navPush();
-    renderAll();
+    scheduleExplorerRender();
+    if (productNeedsFileHydration(product)) {
+      hydrateExplorerProduct(product.id).then(function (full) {
+        if (!full || !state.product || state.product.id !== full.id) return;
+        state.product = full;
+        scheduleExplorerRender();
+      });
+    }
   }
 
   function clearSearchPanel() {
+    state.statusLetterFilter = null;
     state.searchQuery = "";
     state.searchHits = null;
     var inp = document.getElementById("damFileSearch");
@@ -7732,10 +8423,245 @@
   /* Init                                                                 */
   /* ------------------------------------------------------------------ */
 
+  function isAbortLike(err) {
+    var n = err && (err.name || err.message);
+    return /abort/i.test(String(n || ""));
+  }
+
+  function explorerStatusIsLoading() {
+    var st = document.getElementById("damExplorerStatus");
+    var txt = st ? String(st.textContent || "") : "";
+    return /ładowanie indeksu|ponowne ładowanie/i.test(txt);
+  }
+
+  function explorerNeedsBind() {
+    return explorerFolderEmpty() || !explorerHasNumericCounts() || explorerStatusIsLoading();
+  }
+
+  function clearExplorerIndexWatchdogs() {
+    clearTimeout(explorerWatchdogSoft);
+    clearTimeout(explorerWatchdogHard);
+    clearTimeout(explorerWatchdogGiveUp);
+    explorerWatchdogSoft = null;
+    explorerWatchdogHard = null;
+    explorerWatchdogGiveUp = null;
+  }
+
+  function armExplorerIndexWatchdogs() {
+    clearExplorerIndexWatchdogs();
+    explorerWatchdogSoft = setTimeout(function () {
+      try {
+        dismissExplorerLoader();
+        if (!explorerNeedsBind()) return;
+        explorerIndexInFlight = null;
+        explorerIndexBound = false;
+        startExplorerIndexBind("watchdog-soft");
+      } catch (_wd) { /* ignore */ }
+    }, 2500);
+    explorerWatchdogHard = setTimeout(function () {
+      try {
+        dismissExplorerLoader();
+        unlockExplorerBoot();
+        if (!explorerNeedsBind()) {
+          if (explorerStatusIsLoading()) setStatus("");
+          return;
+        }
+        explorerIndexInFlight = null;
+        explorerIndexBound = false;
+        startExplorerIndexBind("watchdog-hard");
+      } catch (_wd2) { /* ignore */ }
+    }, 8000);
+    explorerWatchdogGiveUp = setTimeout(function () {
+      try {
+        if (!explorerNeedsBind()) return;
+        setStatus("Przekroczono czas ładowania (8 s). Sprawdź most :8766.");
+        showExplorerIndexError("Nie udało się załadować drzewa w 8 s.");
+      } catch (_wd3) { /* ignore */ }
+    }, 11000);
+  }
+
+  function explorerHasOpenWork() {
+    return !!(
+      document.querySelector(".dam-assoc-picker") ||
+      document.querySelector(".dam-media-preview") ||
+      document.querySelector("[data-assoc-picker-open]") ||
+      document.getElementById("damMediaPreview")
+    );
+  }
+
+  window.addEventListener("dam-db-store-changed", function (ev) {
+    var d = ev && ev.detail;
+    if (!d || !d.store_key) return;
+    if (d.store_key === "lifecycle-status" && d.data) {
+      state.lifecycleStore = d.data;
+      syncStatusMirrorFromLifecycle();
+    } else if (d.store_key === "product-status" && d.data) {
+      state.statusStore = d.data;
+    } else if (d.store_key === "carrier-overrides" && d.data) {
+      state.carrierOverrides = d.data;
+    } else if (d.store_key === "elements-overrides" && d.data) {
+      state.elementsLinks = d.data;
+    } else {
+      return;
+    }
+    if (explorerHasOpenWork()) return;
+    scheduleExplorerRender();
+  });
+
+  function ensureExplorerIndexPoller() {
+    if (explorerPollerStarted) return;
+    if (!window.DamIndexPoller || typeof window.DamIndexPoller.create !== "function") return;
+    explorerPollerStarted = true;
+    window.DamIndexPoller.create({
+      name: "explorer",
+      statusPath: "/index/status",
+      onChange: function () {
+        if (window.DamSearch && typeof window.DamSearch.load === "function") {
+          window.DamSearch.load({ force: true, searchOnly: true })
+            .then(function () {
+              refreshIndex({ silent: true, skipRebuild: true });
+            })
+            .catch(function () {
+              refreshIndex({ silent: true, skipRebuild: true });
+            });
+        } else {
+          refreshIndex({ silent: true, skipRebuild: true });
+        }
+      },
+    });
+  }
+
+  function applyExplorerIndexBundle(bundle, reason) {
+    if (!bundle) return false;
+    if (explorerIndexBound && !explorerNeedsBind()) {
+      setStatus("");
+      unlockExplorerBoot();
+      dismissExplorerLoader();
+      return true;
+    }
+    explorerIndexBound = true;
+    explorerAbortRetries = 0;
+    dismissExplorerLoader();
+    bindExplorerData(bundle);
+    populateExplorerLangFilter();
+    bindGlobalExplorerFilters();
+    clearExplorerRevealResidue();
+    if (reason === "init") applyDeepLink();
+    setStatus("");
+    unlockExplorerBoot();
+    withTimeout(loadExplorerMetaLight(), 3000, "meta_timeout")
+      .then(function () {
+        scheduleExplorerRender();
+      })
+      .catch(function () {
+        scheduleExplorerRender();
+      });
+    scheduleDeferredSearchIndexLoad();
+    setTimeout(function () {
+      try {
+        renderTagChips();
+        clearExplorerRevealResidue();
+        if (explorerHasNumericCounts()) clearExplorerIndexWatchdogs();
+      } catch (_t) { /* ignore */ }
+    }, 50);
+    runDeferredLifecycleBoot();
+    ensureExplorerIndexPoller();
+    if (explorerHasNumericCounts()) clearExplorerIndexWatchdogs();
+    return true;
+  }
+
+  function startExplorerIndexBind(reason) {
+    reason = reason || "bind";
+    if (explorerIndexBound && !explorerNeedsBind()) {
+      setStatus("");
+      unlockExplorerBoot();
+      dismissExplorerLoader();
+      clearExplorerIndexWatchdogs();
+      return Promise.resolve();
+    }
+    var resumeReason =
+      reason === "pageshow" ||
+      reason === "pageshow-bfcache" ||
+      reason === "visible" ||
+      reason === "resume" ||
+      reason === "reentry" ||
+      reason === "watchdog-soft" ||
+      reason === "watchdog-hard" ||
+      reason === "abort-retry";
+    if (explorerIndexInFlight && !resumeReason) return explorerIndexInFlight;
+    explorerIndexInFlight = null;
+    if (explorerFolderEmpty()) paintCategorySkeleton();
+    if (explorerNeedsBind()) setStatus("Ładowanie indeksu...");
+    dismissExplorerLoader();
+    if (reason !== "watchdog-soft" && reason !== "watchdog-hard") {
+      armExplorerIndexWatchdogs();
+    }
+    var force = reason !== "init";
+    explorerIndexInFlight = loadExplorerPrimaryIndex({ force: force })
+      .then(function (bundle) {
+        applyExplorerIndexBundle(bundle, reason);
+      })
+      .catch(function (err) {
+        if (explorerIndexBound && !explorerNeedsBind()) return;
+        if (isAbortLike(err) && document.visibilityState === "hidden") return;
+        if (isAbortLike(err) && explorerAbortRetries < 2) {
+          explorerAbortRetries += 1;
+          explorerIndexInFlight = null;
+          explorerIndexBound = false;
+          return new Promise(function (resolve) {
+            setTimeout(function () {
+              resolve(startExplorerIndexBind("abort-retry"));
+            }, 80);
+          });
+        }
+        setStatus("Błąd indeksu: " + (err && err.message ? err.message : err));
+        showExplorerIndexError(err && err.message ? String(err.message) : "file-index");
+      })
+      .finally(function () {
+        explorerIndexInFlight = null;
+        dismissExplorerLoader();
+        clearExplorerRevealResidue();
+        unlockExplorerBoot();
+      });
+    return explorerIndexInFlight;
+  }
+
+  function resumeExplorerAfterRestore(tag) {
+    unlockExplorerBoot();
+    dismissExplorerLoader();
+    clearExplorerRevealResidue();
+    explorerIndexBound = false;
+    /* Return from Wizualizacje: Chrome may abort the first fetch and leave a
+       dead inFlight promise. Always drop it and bind again. */
+    explorerIndexInFlight = null;
+    startExplorerIndexBind(tag || "resume");
+  }
+
+  function bindExplorerResumeListeners() {
+    if (explorerResumeBound) return;
+    explorerResumeBound = true;
+    window.addEventListener("pageshow", function (ev) {
+      var persisted = !!(ev && ev.persisted);
+      unlockExplorerBoot();
+      resumeExplorerAfterRestore(persisted ? "pageshow-bfcache" : "pageshow");
+    });
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState !== "visible") return;
+      resumeExplorerAfterRestore("visible");
+    });
+  }
+
   function init() {
-    if (init._damDone) return;
     var main = document.getElementById("damExplorerMain");
     if (!main) return;
+    if (init._damDone) {
+      bindExplorerResumeListeners();
+      if (explorerIndexInFlight) return;
+      if (explorerIndexBound && !explorerNeedsBind()) return;
+      if (explorerFolderEmpty()) paintCategorySkeleton();
+      startExplorerIndexBind("reentry");
+      return;
+    }
     init._damDone = true;
 
     ensureExplorerCtaUnifyCss();
@@ -7760,12 +8686,8 @@
     }
     hydrateExplorerUiPrefsFromKv();
 
-    /* Tag bar NAJPIERW - zanim brand/admin cos rzuci */
-    try {
-      renderTagChips();
-      setTimeout(renderTagChips, 50);
-      setTimeout(renderTagChips, 600);
-    } catch (e) { /* ignore */ }
+    /* Tag bar PO indeksie (idle) — 3× fetch search-index.json na starcie
+       blokował :8765 i GSAP zostawiał chipy z opacity:0. */
 
     // Hide Geex demo sections below the live explorer shell
     var shell = document.querySelector(".dam-explorer-shell");
@@ -7798,60 +8720,15 @@
       }
     } catch (e) { /* ignore */ }
 
+    paintCategorySkeleton();
     setStatus("Ładowanie indeksu...");
-    if (window.DamLoader && typeof window.DamLoader.start === "function") {
-      window.DamLoader.start("Skojarzenia…");
-    }
+    /* HARD: nie startuj DamLoader na first paint — overlay + parse 9MB = „nie odpowiada”. */
+    dismissExplorerLoader();
+    bindExplorerResumeListeners();
 
-    var loader = Promise.all([
-      withTimeout(
-        window.DamSearch
-          ? window.DamSearch.load()
-          : fetch("data/file-index.json?v=20260717ux3").then(function (r) { return r.json(); }).then(function (d) { return { fileIndex: d }; }),
-        15000,
-        "index_load_timeout"
-      ),
-      loadExplorerMetaLight()
-    ]);
-
-    loader.then(function (pair) {
-      dismissExplorerLoader();
-      bindExplorerData(pair[0]);
-      populateExplorerLangFilter();
-      bindGlobalExplorerFilters();
-      renderTagChips();
-      applyDeepLink();
-      setStatus("");
-      runDeferredLifecycleBoot();
-      if (window.DamIndexPoller && typeof window.DamIndexPoller.create === "function") {
-        window.DamIndexPoller.create({
-          name: "explorer",
-          statusPath: "/index/status",
-          onChange: function () {
-            if (window.DamSearch && typeof window.DamSearch.load === "function") {
-              window.DamSearch.load({ force: true })
-                .then(function () {
-                  refreshIndex({ silent: true });
-                })
-                .catch(function () {
-                  refreshIndex({ silent: true });
-                });
-            } else {
-              refreshIndex({ silent: true });
-            }
-          },
-        });
-      }
-    }).catch(function (err) {
-      dismissExplorerLoader();
-      setStatus("Błąd indeksu: " + (err && err.message ? err.message : err));
-      main.innerHTML =
-        '<div class="dam-explorer-empty"><p style="color:#FF5653">Nie załadowano file-index.json</p>' +
-        "<p>Uruchom: <code>python apps/web/scripts/build-file-index.py</code></p></div>";
-      renderTagChips();
-    }).finally(function () {
-      dismissExplorerLoader();
-    });
+    /* First paint = TYLKO slim file-index. Watchdogs live inside
+       startExplorerIndexBind so pageshow/reentry can re-arm them. */
+    startExplorerIndexBind("init");
 
     var refreshBtn = document.getElementById("damIndexRefresh");
     if (refreshBtn && !refreshBtn._damBound) {
@@ -7886,15 +8763,60 @@
     setRevisionStatus(rev, next);
   };
 
+  window.damExplorerApplyStatusLetterFilter = applyStatusLetterFilter;
+
+  function pickTutorialProduct() {
+    var recent = getRecentProducts();
+    var i;
+    for (i = 0; i < recent.length; i++) {
+      if (recent[i] && recent[i].id && isBrandEnabled(recent[i])) return recent[i];
+    }
+    var all = (state.fileIndex && state.fileIndex.products) || [];
+    var vis = filterProductsForExplorerView(all);
+    if (vis.length) return vis[0];
+    for (i = 0; i < all.length; i++) {
+      if (all[i] && all[i].id) return all[i];
+    }
+    return null;
+  }
+
+  /** Tutorial: open a product and expand the first carrier so PAKIET is on-screen. */
+  function revealCarrierForTutorial() {
+    if (!state.fileIndex) return null;
+    if (!state.product) {
+      var pick = pickTutorialProduct();
+      if (pick) openProduct(pick);
+    }
+    if (!state.product) return null;
+    var row = document.querySelector("#damExplorerMain .dam-carrier-toggle-row[data-toggle-code]");
+    if (!row) return document.querySelector("#damExplorerMain .dam-pakiet-btn");
+    var code = row.getAttribute("data-toggle-code");
+    if (code && !state.expandedCarriers[code]) {
+      state.expandedCarriers[code] = true;
+      renderMain();
+    }
+    var btn = document.querySelector("#damExplorerMain .dam-pakiet-btn");
+    if (btn && typeof btn.scrollIntoView === "function") {
+      try {
+        btn.scrollIntoView({ block: "center", behavior: "auto" });
+      } catch (eScr) { /* ignore */ }
+    }
+    return btn || document.querySelector("#damExplorerMain .dam-carrier-toggle-row[data-toggle-code]");
+  }
+
   window.DamExplorer = {
+    retryIndex: retryExplorerIndex,
+    resumeIndex: resumeExplorerAfterRestore,
     state: state,
     openProduct: openProduct,
+    revealCarrierForTutorial: revealCarrierForTutorial,
     reload: refreshIndex,
     exportStatus: exportStatusJson,
     getElementsLink: getElementsLink,
     setRevisionStatus: setRevisionStatus,
     setProductStatus: setProductLifecycleStatus,
     applyLifecycleStatus: applyLifecycleStatus,
+    dbAllowsLifecycleMutations: dbAllowsLifecycleMutations,
     forceApplyLifecycle: forceApplyLifecycleToDisk,
     pullLifecycle: pullLifecycleFromBridge,
     showToast: showToast,

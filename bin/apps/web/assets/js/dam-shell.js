@@ -69,9 +69,7 @@
         sessionStorage.setItem(SESSION_PURGE_KEY, "1");
       } catch (eSs) { /* ignore */ }
       try {
-        var u = new URL(location.href);
-        u.searchParams.set("v", "swPurge" + Date.now().toString(36));
-        location.replace(u.toString());
+        location.reload();
         return true;
       } catch (eNav) {
         try { location.reload(); } catch (eRel) { /* ignore */ }
@@ -119,16 +117,18 @@
       })
       .then(function (text) {
         var hasV4 = !!(text && text.indexOf(CACHE_MARK) !== -1);
+        var selfDestruct = !!(text && /SELF-DESTRUCT/i.test(text));
         return listStaleKeys().then(function (stale) {
-          var needPurge = stale.length > 0 || !hasV4;
+          var needPurge = stale.length > 0 || (!hasV4 && !selfDestruct);
           if (!needPurge) return;
           if (running) return;
           running = true;
           return unregisterAll()
             .then(deleteDamPageCaches)
             .then(function () {
-              if (softReloadOnce()) return;
-              /* Already reloaded once this session: settle without loop; v4 register is tutorial S4b. */
+              /* Extra location.replace only when a real stale page-cache existed.
+                 Self-destruct sw.js (!v4) must NOT force a second navigation. */
+              if (stale.length > 0 && softReloadOnce()) return;
               return null;
             });
         });
@@ -154,7 +154,7 @@
     if (!head || head.querySelector('link[data-dam-accent-css]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "./assets/css/dam-accent.css?v=navPill20260723b";
+    link.href = "./assets/css/dam-accent.css?v=5.0.196";
     link.setAttribute("data-dam-accent-css", "1");
     head.appendChild(link);
   }
@@ -189,8 +189,8 @@
       el.setAttribute("content", content);
     }
 
-    upsertLink("icon", { type: "image/svg+xml", href: FAVICON_SRC + "?v=20260718dk1" });
-    upsertLink("shortcut icon", { type: "image/svg+xml", href: FAVICON_SRC + "?v=20260718dk1" });
+    upsertLink("icon", { type: "image/svg+xml", href: FAVICON_SRC + "?v=5.0.196" });
+    upsertLink("shortcut icon", { type: "image/svg+xml", href: FAVICON_SRC + "?v=5.0.196" });
     upsertLink("apple-touch-icon", { href: LOGO_SRC_LIGHT });
     upsertLink("manifest", { href: MANIFEST_HREF });
     upsertMeta("theme-color", "#008244");
@@ -703,9 +703,7 @@
     ' data-dam-tip="Wyloguj z konta DAM">' +
     '<i class="uil uil-signout" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
     '<span class="dam-nav-label" data-i18n="nav.logout">' + logoutLabel + '</span>' +
-    '</a></li>' +
-    '<li class="geex-sidebar__menu__item dam-nav-version" aria-hidden="true">' +
-    '<span class="dam-sidebar-version" id="damSidebarVersion" title="Wersja programu DAM"></span></li>';
+    '</a></li>';
   }
 
   /** Sidebar: Sesja urządzenia -> profil z CRUD ścieżek per device (nie logout). */
@@ -781,13 +779,13 @@
       "/* Appearance dock: body-mounted; closed = off-screen; header opens .active */" +
       ".geex-customizer{" +
       "z-index:12600!important;position:fixed!important;" +
-      "top:0!important;bottom:0!important;width:400px!important;" +
-      "max-width:min(400px,100vw)!important;" +
+      "top:0!important;bottom:0!important;width:min(400px,100%)!important;" +
+      "max-width:100%!important;" +
       "left:auto!important;inset-inline-start:auto!important;" +
       "right:0!important;inset-inline-end:0!important;" +
-      "transform:translateX(100%)!important;" +
-      "opacity:0!important;" +
-      "transition:transform .32s ease,opacity .28s ease!important;" +
+      "transform:none!important;" +
+      "opacity:0!important;visibility:hidden!important;" +
+      "transition:opacity .28s ease!important;" +
       "overflow:hidden!important;padding:0!important;" +
       "box-shadow:none!important;pointer-events:none!important;}" +
       ".dam-customizer-peek,button.dam-customizer-peek{" +
@@ -796,7 +794,7 @@
       "opacity:0!important;overflow:hidden!important;position:fixed!important;left:-9999px!important;" +
       "border:0!important;padding:0!important;margin:0!important;}" +
       ".geex-customizer.active{" +
-      "transform:translateX(0)!important;opacity:1!important;" +
+      "transform:none!important;opacity:1!important;visibility:visible!important;" +
       "padding:25px 30px!important;pointer-events:auto!important;" +
       "box-shadow:-8px 0 28px rgba(23,22,30,.12)!important;}" +
       ".geex-customizer:not(.active) .geex-customizer__header," +
@@ -808,7 +806,15 @@
       "visibility:visible!important;opacity:1!important;" +
       "animation:damCustomizerFadeIn .28s ease both!important;}" +
       "@keyframes damCustomizerFadeIn{from{opacity:0}to{opacity:1}}" +
-      ".geex-customizer .geex-customizer-overlay{z-index:0!important;}" +
+      ".geex-customizer .geex-customizer-overlay{z-index:0!important;position:fixed!important;inset:0!important;width:auto!important;height:auto!important;max-width:none!important;}" +
+      "@media (max-width:576px){" +
+      ".geex-content__header__action,.geex-content__header__action__wrap{flex-wrap:wrap!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:8px!important;}" +
+      ".geex-content__header__action__wrap{flex:1 1 100%!important;}" +
+      ".geex-content__header__quickaction{flex-wrap:wrap!important;gap:8px!important;width:100%!important;}" +
+      ".geex-content__header__action .geex-content__header__badge{font-size:12px!important;}" +
+      "a.dam-breadcrumb__link,.dam-root-status__refresh,.dam-db-status__refresh,.dam-root-status__btn,.dam-search-scope__btn,button.dam-tag-pill{min-width:44px!important;min-height:44px!important;}" +
+      "button.dam-tag-pill,.dam-tag-pill,.dam-switch__label,.dam-tag-group-label{font-size:12px!important;}" +
+      "}" +
       ".geex-customizer__header,.geex-customizer__body{position:relative;z-index:2;}" +
       "body:has(.geex-customizer.active) .geex-content__header{z-index:100!important;}" +
       "body.dam-sidebar-collapsed .geex-customizer," +
@@ -1152,13 +1158,13 @@
     var footer = ensureSidebarFooterEl();
     if (footer) {
       footer.innerHTML =
-        '<span class="geex-sidebar__footer__title" data-i18n="nav.brand">' + brand + '</span>' +
         '<p class="geex-sidebar__footer__copyright" data-i18n="nav.brand_sub">' + brandSub + '</p>' +
         '<p class="geex-sidebar__footer__author">' +
           '<a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer" data-i18n="footer.made_by">' +
             madeBy +
           "</a> &copy; " + year +
-        "</p>";
+        "</p>" +
+        '<span class="dam-sidebar-version" id="damSidebarVersion" title="Wersja programu DAM"></span>';
       /* Morph GSAP moze zostawic autoAlpha:0 - twardy reset widocznosci expanded. */
       footer.style.removeProperty("opacity");
       footer.style.removeProperty("visibility");
@@ -1651,7 +1657,11 @@
     var existing = header.querySelector(".geex-content__header__action");
     // inbox.html ma pusty #damHeaderAction - wypelnij, nie wychodz wczesnie
     if (existing) {
-      if (!existing.querySelector(".geex-content__header__quickaction")) {
+      var txt = existing.textContent || "";
+      var dirty =
+        /Mahabub|David Warner|John Doe|ThemeWant|Server Management/.test(txt) ||
+        !existing.querySelector("#damMsgBadge");
+      if (dirty || !existing.querySelector(".geex-content__header__quickaction")) {
         existing.innerHTML = headerQuickactionHtml();
       }
       ensureUserMenuMarkup();
@@ -2161,7 +2171,7 @@
     var email = userData.email || localStorage.getItem("dam_user_email") || "";
     var src = avatarForEmail(email);
     /* cache-bust SVG (czysta sylwetka bez czapeczki) */
-    if (src.indexOf("?") === -1) src = src + "?v=avatarflat20260720a";
+    if (src.indexOf("?") === -1) src = src + "?v=5.0.196";
     document.querySelectorAll(
       ".geex-content__header__popup--author img, .geex-content__header__quickaction__item .user-img"
     ).forEach(function (img) {
@@ -2286,7 +2296,7 @@
       return;
     }
     var s = document.createElement("script");
-    s.src = "./assets/vendor/js/gsap/gsap.min.js";
+    s.src = "./assets/vendor/js/gsap/gsap.min.js?v=5.0.196";
     s.setAttribute("data-dam-gsap", "1");
     s.onload = function () { cb(window.gsap || null); };
     s.onerror = function () { cb(null); };
@@ -2882,7 +2892,9 @@
   window.DamPageReady = {
     mark: pageReadyMark,
     isReady: pageReadyIsReady,
-    showSkeleton: function () { /* intentionally no-op: never full-page skel */ },
+    showSkeleton: function () {
+      if (window.__damShowBootFail) window.__damShowBootFail("page-ready");
+    },
     reveal: function () {
       pageReadyMark("content");
       purgeLegacyPageSkeleton();
@@ -2898,6 +2910,10 @@
   var bootFinished = false;
   var bootRevealScheduled = false;
   function finishBoot(force) {
+    if (window.__damForceBootFail) {
+      if (window.__damShowBootFail) window.__damShowBootFail("forced");
+      return;
+    }
     function reveal() {
       var root = document.documentElement;
       var body = document.body;
@@ -2915,11 +2931,12 @@
           }
         } catch (eAnim) { /* ignore */ }
         body.style.setProperty("opacity", "1", "important");
-        body.style.setProperty("pointer-events", "auto");
+        body.style.setProperty("pointer-events", "auto", "important");
       }
       bootFinished = true;
       bootRevealScheduled = false;
       pageReadyMark("shell");
+      if (window.__damMarkBootOk) window.__damMarkBootOk();
     }
     // Juz odsloniete i nie wymuszamy - nic nie rob
     if (bootFinished && !force && !document.documentElement.classList.contains("dam-booting")) {
@@ -2947,6 +2964,10 @@
    * html.dam-booting (body opacity:0 = pusty ekran).
    */
   function revealAfterOverlayReady() {
+    if (window.__damForceBootFail) {
+      if (window.__damShowBootFail) window.__damShowBootFail("forced");
+      return;
+    }
     try {
       if (window.DamI18n && typeof window.DamI18n.apply === "function") {
         window.DamI18n.apply();
@@ -2956,15 +2977,15 @@
       injectNavTrail();
     } catch (eBoot) {
       console.warn("DAM shell: boot chrome pass failed", eBoot);
-    } finally {
-      finishBoot(true);
-      if (window.DamGridReveal && typeof window.DamGridReveal.clearHeaderRevealInline === "function") {
-        /* odblokuj title/sub gdy entrance odpalił się za wcześnie pod dam-booting */
-        window.DamGridReveal.clearHeaderRevealInline();
-      }
-      if (window.DamGridReveal && typeof window.DamGridReveal.revealPageEntrance === "function") {
-        try { window.DamGridReveal.revealPageEntrance(); } catch (eEnt) { /* ignore */ }
-      }
+      if (window.__damShowBootFail) window.__damShowBootFail("exception");
+      return;
+    }
+    finishBoot(true);
+    if (window.DamGridReveal && typeof window.DamGridReveal.clearHeaderRevealInline === "function") {
+      window.DamGridReveal.clearHeaderRevealInline();
+    }
+    if (window.DamGridReveal && typeof window.DamGridReveal.revealPageEntrance === "function") {
+      try { window.DamGridReveal.revealPageEntrance(); } catch (eEnt) { /* ignore */ }
     }
   }
 
@@ -3015,7 +3036,7 @@
     // Status ROOT plików (czerwona kropka gdy offline)
     if (!window.DamRootStatus) {
       var rs = document.createElement("script");
-      rs.src = "assets/js/dam-root-status.js?v=5.0.80";
+      rs.src = "assets/js/dam-root-status.js?v=5.0.196";
       document.head.appendChild(rs);
     } else if (typeof window.DamRootStatus.start === "function") {
       window.DamRootStatus.start();
@@ -3024,7 +3045,7 @@
     // Status bazy danych (obok Pliki online)
     if (!window.DamDbStatus) {
       var dbs = document.createElement("script");
-      dbs.src = "assets/js/dam-db-status.js?v=5.0.147";
+      dbs.src = "assets/js/dam-db-status.js?v=5.0.196";
       document.head.appendChild(dbs);
     } else if (typeof window.DamDbStatus.start === "function") {
       window.DamDbStatus.start();
@@ -3033,7 +3054,7 @@
     // Telemetria UI (kliknięcia, błędy, wolne fetch) -> desktop/logs/telemetry-*.jsonl
     if (!window.DamTelemetry) {
       var tel = document.createElement("script");
-      tel.src = "assets/js/dam-telemetry.js?v=5.0.136";
+      tel.src = "assets/js/dam-telemetry.js?v=5.0.196";
       document.head.appendChild(tel);
     } else if (typeof window.DamTelemetry.start === "function") {
       window.DamTelemetry.start();
@@ -3042,14 +3063,14 @@
     // Wersja + aktualizacje (takze przed logowaniem na signin)
     if (!window.DamAppUpdate) {
       var upd = document.createElement("script");
-      upd.src = "assets/js/dam-app-update.js?v=5.0.163";
+      upd.src = "assets/js/dam-app-update.js?v=5.0.196";
       document.head.appendChild(upd);
     }
 
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=5.0.56";
+      sc.src = "assets/js/dam-shortcuts.js?v=5.0.196";
       document.head.appendChild(sc);
     }
 
@@ -3117,7 +3138,7 @@
     if (!document.querySelector(".dam-explorer-toolbar")) return;
     if (document.querySelector('script[data-dam-sticky-chrome]')) return;
     var s = document.createElement("script");
-    s.src = "./assets/js/dam-sticky-chrome.js?v=hub20260719sticky02";
+    s.src = "./assets/js/dam-sticky-chrome.js?v=5.0.196";
     s.setAttribute("data-dam-sticky-chrome", "1");
     s.defer = true;
     document.body.appendChild(s);

@@ -1,0 +1,65 @@
+/**
+ * DAM auth hero — overrides Geex style.css authentication panel (TRAP: do not edit style.css).
+ * Contract: signin.html links this sheet + <picture> with kubara-building.avif/jpg in .geex-content__authentication__img.
+ */
+
+/* Full-bleed photo panel — cancel Geex centering + side padding */
+.geex-content__authentication__img {
+  position: relative;
+  display: block;
+  flex: 0 0 40%;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+@media only screen and (max-width: 1440px) {
+  .geex-content__authentication__img {
+    flex: 1;
+    padding: 0;
+  }
+}
+
+/* picture/img fill container — crop, never stretch */
+.geex-content__authentication__img picture,
+.geex-content__authentication__img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  object-fit: cover;
+  object-position: center center;
+}
+
+/* Subtle brand-green gradient at bottom — closes edge without killing photo */
+.geex-content__authentication__img::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48%;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--dam-brand-green) 46%, transparent) 0%,
+    color-mix(in srgb, var(--dam-brand-green) 24%, transparent) 30%,
+    color-mix(in srgb, var(--dam-brand-green) 10%, transparent) 55%,
+    transparent 80%
+  );
+}
+
+/* Form column stays readable — left panel untouched by hero gradient */
+.geex-content__authentication__content {
+  position: relative;
+  z-index: 1;
+  background: var(--dam-surface, #fff);
+}
+
+html[data-theme="dark"] .geex-content__authentication__content {
+  background: var(--dam-surface, #201f28);
+}

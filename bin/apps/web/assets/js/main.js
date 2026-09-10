@@ -382,13 +382,17 @@
 		}, 300); // Adjust the duration as needed
 	});
 
-	// CountDown
+	// CountDown (tylko gdy markup Geex demo istnieje)
 	let day = document.querySelector('.geex-countdown__days');
 	let hour = document.querySelector('.geex-countdown__hours');
 	let minute = document.querySelector('.geex-countdown__minutes');
 	let second = document.querySelector('.geex-countdown__seconds');
+	let countdownRoot = document.getElementById("geex-countdown");
   
   	function setCountdown() {
+		if (!countdownRoot && !day && !hour && !minute && !second) {
+			return;
+		}
   
 		// Set countdown date
 		let countdownDate = new Date('Jan 01, 2025 16:40:25').getTime();
@@ -427,7 +431,9 @@
 			// if countdown expires
 			if(distance < 0){
 				clearInterval(updateCount);
-				document.getElementById("geex-countdown").innerHTML = '<h1>EXPIRED</h1>'
+				if (countdownRoot) {
+					countdownRoot.innerHTML = '<h1>EXPIRED</h1>';
+				}
 			}
 		}, 300)
 	}
@@ -1447,7 +1453,7 @@
 
 
 
-	if($("#chart-5").length){
+	if(typeof ApexCharts !== "undefined" && $("#chart-5").length){
 		var options = {
 			series: [80],
 			chart: {
@@ -1487,7 +1493,7 @@
 	};
 
 
-	if($("#chart-6").length){
+	if(typeof ApexCharts !== "undefined" && $("#chart-6").length){
 		var optionsTwo = {
 			series: [50],
 			chart: {
@@ -1526,7 +1532,7 @@
 		chart.render();
 	};
 
-	if($("#chart-7").length){
+	if(typeof ApexCharts !== "undefined" && $("#chart-7").length){
 		var optionsThree = {
 			series: [70],
 			chart: {
@@ -1566,7 +1572,7 @@
 		chart.render();
 	};
 
-	if($("#chart-8").length){
+	if(typeof ApexCharts !== "undefined" && $("#chart-8").length){
 		var optionsFour = {
 			series: [30],
 			chart: {

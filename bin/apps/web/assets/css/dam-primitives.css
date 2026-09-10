@@ -1,8 +1,22 @@
 ﻿/**
- * DAM Geex primitives ÔÇö anatomia CTA / badge / panel (skeleton Faza 2).
+ * DAM Geex primitives - anatomia CTA / badge / panel (skeleton Faza 2).
  * Konsument tokenow z dam-tokens.css. Anatomie wypelniaja Agenci 3/4 (F3/F4).
- * Zrodlo miar: agents/shared/geex-realign-audit-2026-07-21.md ┬ž5.
+ * Zrodlo miar: agents/shared/geex-realign-audit-2026-07-21.md §5.
  */
+
+/* === TYPE (Geex realign) === */
+/* style.css body/h1-h6/p use var(--poppins). Token overlay + this layer
+   make --dam-font (Jost) the live winner. Do not edit style.css. */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  font-family: var(--dam-font, "Jost", sans-serif);
+}
 
 /* === BUTTONS === */
 /* Canonical: .geex-btn (+ --primary / --secondary / --danger / --ghost / --sm).
@@ -54,7 +68,7 @@ a.dam-int-cta {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: var(--dam-control-h-sm, 34px);
+  min-height: var(--dam-chip-h);
   padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 12px);
   border-radius: var(--dam-radius-btn-compact, 8px);
   /* Explorer-like outline — bez UA czarnej grubej ramki (button default) */
@@ -79,7 +93,8 @@ a.dam-int-cta:hover {
 
 .dam-search-scope__btn {
   box-sizing: border-box;
-  min-height: var(--dam-control-h-sm, 36px);
+  min-height: var(--dam-chip-h);
+  height: var(--dam-chip-h);
   padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 14px);
   font: inherit;
   font-weight: 600;
@@ -246,7 +261,7 @@ a.dam-int-cta:hover {
   width: auto;
   height: auto;
   min-width: 0;
-  min-height: var(--dam-control-h-sm, 34px);
+  min-height: var(--dam-chip-h);
   padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 12px);
   font-size: 12px;
   border-radius: var(--dam-radius-btn-compact, 8px);
@@ -334,7 +349,7 @@ button.dam-status-badge {
   vertical-align: middle;
   max-width: 100%;
   font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale));
-  padding: calc(2px * var(--_dam-badge-scale)) calc(8px * var(--_dam-badge-scale));
+  padding: calc(var(--dam-space-badge-pill-y) * var(--_dam-badge-scale)) calc(var(--dam-space-badge-pill-x) * var(--_dam-badge-scale));
 }
 
 /* MASTER compound — branding tag chips (both classes) */
@@ -343,7 +358,7 @@ button.dam-viz-badge.dam-badge-tag {
   --_dam-badge-radius: 14px;
   border-radius: var(--_dam-badge-radius);
   font-size: calc((var(--dam-tag-fs-pill, 10.5px) + 1px) * var(--_dam-badge-scale));
-  padding: calc(2px * var(--_dam-badge-scale)) calc(8px * var(--_dam-badge-scale));
+  padding: calc(var(--dam-space-badge-pill-y) * var(--_dam-badge-scale)) calc(var(--dam-space-badge-pill-x) * var(--_dam-badge-scale));
 }
 
 /*

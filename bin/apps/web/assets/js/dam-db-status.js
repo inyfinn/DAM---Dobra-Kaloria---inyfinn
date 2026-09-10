@@ -11,6 +11,7 @@
   var _timer = null;
   var _lastFullCheck = 0;
   var _last = null;
+  var _pillOnline = false;
   var _panelOpen = false;
   var _draftMode = null;
   var _syncToast = null;
@@ -55,7 +56,7 @@
         return;
       }
       var s = document.createElement("script");
-      s.src = "assets/vendor/js/gsap/gsap.min.js";
+      s.src = "assets/vendor/js/gsap/gsap.min.js?v=5.0.196";
       s.setAttribute("data-dam-gsap", "1");
       s.onload = function () {
         resolve(window.gsap || null);
@@ -572,6 +573,7 @@
 
   function applyStatus(res) {
     if (!res) {
+      _pillOnline = false;
       setPill(false, "Baza offline", "Most nie odpowiada");
       try {
         window.dispatchEvent(new CustomEvent("dam:db-status", { detail: { online: false } }));
@@ -601,6 +603,7 @@
       (res.engine || "") +
       (res.host ? " @ " + res.host : res.path ? " · " + res.path : "") +
       (res.offline_hint ? "\n" + res.offline_hint : "");
+    _pillOnline = !!online;
     setPill(online, label, detail);
     try {
       window.dispatchEvent(new CustomEvent("dam:db-status", { detail: { online: !!online, res: res } }));
@@ -609,7 +612,11 @@
 
   function applyPing(res) {
     if (!res) {
+      _pillOnline = false;
       setPill(false, "Baza offline", "Most nie odpowiada");
+      try {
+        window.dispatchEvent(new CustomEvent("dam:db-status", { detail: { online: false } }));
+      } catch (e) { /* ignore */ }
       return;
     }
     var online = res.ok === true && !res.offline_mode;
@@ -619,6 +626,7 @@
       (res.engine || "") +
       (res.host ? " @ " + res.host : res.path ? " · " + res.path : "") +
       (res.latency_ms != null ? " · " + res.latency_ms + "ms" : "");
+    _pillOnline = !!online;
     setPill(online, label, detail);
     try {
       window.dispatchEvent(new CustomEvent("dam:db-status", { detail: { online: !!online, res: res } }));
@@ -793,9 +801,10 @@
     reconnect: reconnect,
     start: start,
     isOnline: function () {
-      if (!_last) return false;
-      if (_last.offline_mode) return false;
-      return _last.online !== false && _last.ok !== false;
+      return !!_pillOnline;
+    },
+    allowsMutations: function () {
+      return !!_pillOnline;
     },
     last: function () {
       return _last;

@@ -167,13 +167,7 @@
         dirty = true;
       }
       if ((parsed.version || 1) < 3) {
-        try {
-          if (localStorage.getItem(layoutStorageKey("newest_products_f")) === "1x4") {
-            localStorage.setItem(layoutStorageKey("newest_products_f"), "2x2");
-          }
-        } catch (eMigrate) {
-          /* ignore */
-        }
+        migrateAllTileCounts();
         dirty = true;
       }
       if (dirty) {
@@ -209,29 +203,46 @@
     return w.roles.indexOf(role) !== -1;
   }
 
-  var TILE_LAYOUTS = ["2x2", "1x4", "1x6"];
+  var TILE_COUNTS = [2, 4, 6, 8, 10];
+  var TILE_LAYOUTS = TILE_COUNTS.map(String);
+  var MEDIA_TILE_IDS = ["newest_viz_3", "newest_products_f", "branding_latest"];
 
   function layoutStorageKey(widgetId) {
     return "dam_dash_tile_layout:" + userKey() + ":" + widgetId;
   }
 
+  function migrateTileCountValue(raw) {
+    var v = String(raw == null ? "" : raw).trim();
+    if (v === "1x6") return "6";
+    if (v === "1x4" || v === "2x2") return "4";
+    var n = parseInt(v, 10);
+    if (TILE_COUNTS.indexOf(n) >= 0) return String(n);
+    return "4";
+  }
+
+  function migrateAllTileCounts() {
+    MEDIA_TILE_IDS.forEach(function (id) {
+      try {
+        var k = layoutStorageKey(id);
+        var cur = localStorage.getItem(k);
+        if (cur == null) return;
+        var next = migrateTileCountValue(cur);
+        if (next !== cur) localStorage.setItem(k, next);
+      } catch (eMigrate) {
+        /* ignore */
+      }
+    });
+  }
+
   function defaultTileLayout(widgetId) {
-    /* ONE media container — base layout is 2x2 for viz / products / branding. */
-    if (
-      widgetId === "newest_products_f" ||
-      widgetId === "newest_viz_3" ||
-      widgetId === "branding_latest"
-    ) {
-      return "2x2";
-    }
-    return "2x2";
+    return "4";
   }
 
   function getTileLayout(widgetId) {
     var fallback = defaultTileLayout(widgetId);
     try {
-      var v = localStorage.getItem(layoutStorageKey(widgetId)) || fallback;
-      return TILE_LAYOUTS.indexOf(v) >= 0 ? v : fallback;
+      var v = localStorage.getItem(layoutStorageKey(widgetId));
+      return migrateTileCountValue(v == null ? fallback : v);
     } catch (e) {
       return fallback;
     }
@@ -239,34 +250,91 @@
 
   function setTileLayout(widgetId, layout) {
     try {
-      localStorage.setItem(layoutStorageKey(widgetId), layout);
+      localStorage.setItem(layoutStorageKey(widgetId), migrateTileCountValue(layout));
     } catch (e) {}
   }
 
   function layoutCardCount(layout) {
-    if (layout === "1x6") return 6;
-    if (layout === "2x2") return 4;
-    return 4;
+    var n = parseInt(migrateTileCountValue(layout), 10);
+    return TILE_COUNTS.indexOf(n) >= 0 ? n : 4;
   }
 
-  /** i18n "4 najnowsze..." -> "N najnowsze..." for active tile layout. */
+  function newestTitleForCount(kind, n) {
+    var count = layoutCardCount(n);
+    var fallbacks = {
+      viz: {
+        2: "2 najnowsze wizualizacje",
+        4: "4 najnowsze wizualizacje",
+        6: "6 najnowszych wizualizacji",
+        8: "8 najnowszych wizualizacji",
+        10: "10 najnowszych wizualizacji"
+      },
+      products: {
+        2: "2 najnowsze produkty",
+        4: "4 najnowsze produkty",
+        6: "6 najnowszych produktów",
+        8: "8 najnowszych produktów",
+        10: "10 najnowszych produktów"
+      },
+      branding: {
+        2: "2 najnowsze materiały branding",
+        4: "4 najnowsze materiały branding",
+        6: "6 najnowszych materiałów branding",
+        8: "8 najnowszych materiałów branding",
+        10: "10 najnowszych materiałów branding"
+      }
+    };
+    var keyMap = { viz: "newest_viz", products: "newest_products_f", branding: "branding_latest" };
+    var key = "dash.widget." + keyMap[kind] + "_" + count;
+    var fb = (fallbacks[kind] && fallbacks[kind][count]) || fallbacks[kind][4];
+    return t(key, fb);
+  }
+
   function vizTitleForCount(n) {
-    var tpl = t("dash.widget.newest_viz", "4 najnowsze wizualizacje");
-    var count = Math.max(1, Number(n) || 4);
-    if (/^\d+/.test(tpl)) return tpl.replace(/^\d+/, String(count));
-    return count + " " + tpl;
+    return newestTitleForCount("viz", n);
   }
 
   function productsTitleForCount(n) {
-    var tpl = t("dash.widget.newest_products_f", "Najnowsze");
-    var count = Math.max(1, Number(n) || 4);
-    if (/^\d+/.test(tpl)) return tpl.replace(/^\d+/, String(count));
-    return count + " " + tpl;
+    return newestTitleForCount("products", n);
+  }
+
+  function brandingTitleForCount(n) {
+    return newestTitleForCount("branding", n);
+  }
+
+  function recordMtimeMs(rec) {
+    if (!rec) return 0;
+    var ms = Number(rec.mtime_ms);
+    if (ms && isFinite(ms)) return ms;
+    var raw =
+      rec.mtime ||
+      rec.sortDate ||
+      rec.date ||
+      rec.asanaStart ||
+      rec.revDate ||
+      rec.mtClean ||
+      "";
+    var t = Date.parse(String(raw || ""));
+    return t && isFinite(t) ? t : 0;
+  }
+
+  function compareNewestDesc(a, b) {
+    var am = recordMtimeMs(a);
+    var bm = recordMtimeMs(b);
+    if (!am && !bm) return 0;
+    if (!am) return 1;
+    if (!bm) return -1;
+    return bm - am;
   }
 
   function looksLikeThumbFile(pathOrName) {
     var name = String(pathOrName || "").split(/[/\\]/).pop() || "";
     return /\.(png|jpe?g|webp|gif|avif|svg|tif|tiff|bmp|psd|psb|ai|pdf)$/i.test(name);
+  }
+
+  /** Bridge expects forward slashes; Windows toLocal() may emit backslashes. */
+  function normThumbPath(pathOrName) {
+    return String(pathOrName || "").replace(/\\/g, "/");
   }
 
   function mediaPreviewUrl(path) {
@@ -290,31 +358,156 @@
   }
 
   function cardThumbUrl(path) {
-    if (!path || !looksLikeThumbFile(path)) return "";
+    var p = normThumbPath(path);
+    if (!p || !looksLikeThumbFile(p)) return "";
     if (
       global.DamPreviewTruth &&
       typeof DamPreviewTruth.thumbCacheUrl === "function"
     ) {
-      return DamPreviewTruth.thumbCacheUrl(path, "card");
+      /* Parity with dam-viz cardThumbSrc: profile=grid only (card AVIF fails in WebView). */
+      return DamPreviewTruth.thumbCacheUrl(p, "grid");
     }
-    return mediaPreviewUrl(path);
+    return mediaPreviewUrl(p);
   }
 
-  function resolveProductThumbUrl(viz, revPath, revFolder) {
-    var paths = [];
-    if (viz && viz.path) paths.push(String(viz.path));
-    if (revPath) paths.push(String(revPath));
-    if (viz && viz.revision_folder) paths.push(String(viz.revision_folder));
-    if (revFolder) paths.push(String(revFolder));
-    var seen = {};
-    for (var i = 0; i < paths.length; i++) {
-      var path = paths[i];
-      if (!path || seen[path]) continue;
-      seen[path] = true;
-      var cached = cardThumbUrl(path);
-      if (cached) return cached;
+  function collectRevWizki(rev) {
+    if (!rev) return [];
+    if (Array.isArray(rev.wizki) && rev.wizki.length) return rev.wizki.slice();
+    var out = [];
+    var fbr = rev.files_by_role || {};
+    ["viz", "visual", "render"].forEach(function (role) {
+      (fbr[role] || []).forEach(function (f) {
+        if (f) out.push(f);
+      });
+    });
+    return out;
+  }
+
+  /** Same FRONT-S tier rule as dam-viz firstWizkiPath (KAR6X -> FRONT-L). */
+  function firstWizkiPathFromRev(rev) {
+    var wizki = collectRevWizki(rev);
+    var imgs = [];
+    var i;
+    for (i = 0; i < wizki.length; i++) {
+      var f = wizki[i];
+      var ext = String((f && f.ext) || "").toLowerCase();
+      if (!ext && f && f.name) {
+        ext = String(f.name.split(".").pop() || "").toLowerCase();
+      }
+      if (["jpg", "jpeg", "png", "webp", "gif"].indexOf(ext) !== -1) imgs.push(f);
+    }
+    if (!imgs.length) {
+      return normThumbPath((wizki[0] && (wizki[0].path || wizki[0].rel)) || (rev && rev.path) || "");
+    }
+    var carrierU = String((rev && (rev.carrier || rev.carrier_code)) || "")
+      .toUpperCase()
+      .replace(/\s+/g, "");
+    var preferFrontL = carrierU.indexOf("KAR6X") !== -1 || carrierU.indexOf("KARTON6X") !== -1;
+    function tier(name) {
+      var n = String(name || "")
+        .toUpperCase()
+        .replace(/\u0141/g, "L")
+        .replace(/\u0142/g, "L");
+      var isEnface = n.indexOf("ENFACE") !== -1 && n.indexOf("TYL") === -1;
+      var isFrontToken = n.indexOf("FRONT") !== -1;
+      var isFront = isFrontToken || isEnface;
+      var isSklep = n.indexOf("SKLEP") !== -1;
+      var isXl = /[-_]XL\b/.test(n) || n.indexOf("XL.") !== -1;
+      var isFrontL = /FRONT[-_]?L\b/.test(n) || (isFrontToken && /[-_]L\./.test(n) && !isXl);
+      var isFrontS =
+        isFront &&
+        !isSklep &&
+        !isXl &&
+        (n.indexOf("FRONT-S") !== -1 ||
+          n.indexOf("ENFACE-S") !== -1 ||
+          /(?:FRONT|ENFACE)[-_]?S\b/.test(n) ||
+          /[-_]S\./.test(n));
+      if (preferFrontL && isFrontL && !isEnface) return 0;
+      if (preferFrontL && isEnface) return 4;
+      if (isFrontS) return preferFrontL ? 1 : 0;
+      if (isFront && isSklep && !isXl) return 2;
+      if (isFront && (isXl || isFrontL)) return 3;
+      if (isFront) return 4;
+      if (n.indexOf("PREV") !== -1 || n.indexOf("WIZKA") !== -1 || n.indexOf("WIZ_") !== -1) return 5;
+      if (n.indexOf("TYL") !== -1 || n.indexOf("BACK") !== -1) return 7;
+      return 6;
+    }
+    var best = 99;
+    imgs.forEach(function (f) {
+      var t = tier(f.name || f.path || "");
+      if (t < best) best = t;
+    });
+    var pool = imgs.filter(function (f) {
+      return tier(f.name || f.path || "") === best;
+    });
+    pool.sort(function (a, b) {
+      var ae = String(a.ext || "").toLowerCase();
+      var be = String(b.ext || "").toLowerCase();
+      var at = ae === "png" || ae === "webp" ? 1 : 0;
+      var bt = be === "png" || be === "webp" ? 1 : 0;
+      return bt - at;
+    });
+    var pick = pool[0] || imgs[0];
+    return normThumbPath(pick.path || pick.rel || "");
+  }
+
+  function resolveVizThumbPath(viz, rev) {
+    if (viz && viz.path && looksLikeThumbFile(viz.path)) {
+      return normThumbPath(viz.path);
+    }
+    if (rev) {
+      var fromRev = firstWizkiPathFromRev(rev);
+      if (fromRev && looksLikeThumbFile(fromRev)) return fromRev;
     }
     return "";
+  }
+
+  function resolveProductThumbUrl(viz, rev) {
+    var thumbPath = resolveVizThumbPath(viz, rev);
+    if (thumbPath) return cardThumbUrl(thumbPath);
+    return "";
+  }
+
+  function resolveDashboardThumbSrc(v, thumbPath) {
+    if (
+      v &&
+      v.thumb_url &&
+      String(v.thumb_url).indexOf("placeholder") === -1 &&
+      (String(v.thumb_url).indexOf("/thumb-cache") >= 0 ||
+        String(v.thumb_url).indexOf("/media?") >= 0)
+    ) {
+      return v.thumb_url;
+    }
+    var p =
+      normThumbPath(thumbPath || (v && v.thumb_path) || "") ||
+      (v && looksLikeThumbFile(v.path) ? normThumbPath(v.path) : "");
+    if (p) return cardThumbUrl(p);
+    return "";
+  }
+
+  function warmThumbPathsFromRows(rows) {
+    return (rows || [])
+      .map(function (v) {
+        if (!v) return "";
+        if (v.thumb_path) return normThumbPath(v.thumb_path);
+        if (looksLikeThumbFile(v.path)) return normThumbPath(v.path);
+        return "";
+      })
+      .filter(Boolean);
+  }
+
+  function ensureDashThumbReveal(root) {
+    if (!root) return;
+    root.querySelectorAll(".dam-widget__thumb").forEach(function (img) {
+      img.style.opacity = "1";
+      img.style.visibility = "visible";
+    });
+    if (
+      global.DamGridReveal &&
+      typeof DamGridReveal.armPendingThumbs === "function"
+    ) {
+      DamGridReveal.armPendingThumbs(root);
+    }
   }
 
   /** B5: dashboard-only layout safety (header wrap). Tile template lives in dam-dashboard.css. */
@@ -342,17 +535,15 @@
       "body.geex-dashboard .geex-content," +
       "body.geex-dashboard .geex-content__wrapper," +
       "body.geex-dashboard .geex-content__section-wrapper{" +
-      "min-width:0;max-width:100%;overflow-x:clip;}" +
+      "min-width:0;max-width:100%;}" +
       "body.geex-dashboard .geex-customizer{" +
       "position:fixed!important;}";
     document.head.appendChild(s);
   }
 
-  /** Chrome-only floor; measured --bento-h grows with layout (2x2 / 1x4 / 1x6). */
-  function mediaLayoutMinH(layout) {
-    if (layout === "1x6") return 6;
-    if (layout === "1x4") return 5;
-    return 4;
+  /** Chrome-only floor. Real --bento-h comes from measured content rows. */
+  function mediaLayoutMinH(_layout) {
+    return 3;
   }
 
   /**
@@ -392,21 +583,16 @@
       if (!el.classList.contains("dam-widget--media-latest")) {
         el.classList.add("dam-widget--media-latest");
       }
-      var layout = getTileLayout(id);
-      var floor = mediaLayoutMinH(layout);
       el.style.setProperty("height", "auto", "important");
       el.style.setProperty("align-self", "start", "important");
       void el.offsetHeight;
       var px = Math.ceil(el.getBoundingClientRect().height || 0);
-      if (!(px > 40)) return;
-      var need = Math.max(floor, rowsForContentPx(px));
-      need = Math.min(need, layout === "1x6" ? 16 : 14);
+      var need = px > 40 ? rowsForContentPx(px) : 3;
       if (saved.items[id].h !== need) {
         saved.items[id].h = need;
         changed = true;
       }
       el.style.setProperty("--bento-h", String(need));
-      /* Min = measured content (not future 1x4/1x6 reserve). */
       el.setAttribute("data-bento-min-h", String(need));
     });
 
@@ -473,31 +659,56 @@
   function scheduleSyncMediaTileHeights() {
     var mount = document.getElementById("damDashGrid");
     if (!mount) return;
-    setTimeout(function () {
-      syncMediaTileBentoHeights(mount);
-    }, 0);
-    setTimeout(function () {
-      syncMediaTileBentoHeights(mount);
-    }, 350);
+    mount.querySelectorAll("img.dam-widget__thumb").forEach(function (img) {
+      if (img._damBentoLoad) return;
+      img._damBentoLoad = true;
+      img.addEventListener("load", function () {
+        scheduleSyncMediaTileHeights();
+      });
+    });
+    [0, 400, 900, 1600].forEach(function (ms) {
+      setTimeout(function () {
+        syncMediaTileBentoHeights(mount);
+      }, ms);
+    });
   }
 
   function layoutToggleHtml(widgetId, layout) {
-    var labels = { "2x2": "Układ 2x2", "1x4": "Układ 1x4", "1x6": "Układ 1x6" };
+    var count = layoutCardCount(layout);
+    var aria = t(
+      "dash.widget.tile_count_aria",
+      "Liczba kafelków: 2, 4, 6, 8 albo 10"
+    );
+    var options = TILE_COUNTS.map(function (n) {
+      return (
+        '<option value="' +
+        n +
+        '"' +
+        (n === count ? " selected" : "") +
+        ">" +
+        n +
+        "</option>"
+      );
+    }).join("");
     return (
       '<div class="dam-widget__actions">' +
-      '<button type="button" class="dam-widget__layout-btn" data-widget-layout-toggle="' +
+      '<label class="dam-widget__count-field">' +
+      '<span class="visually-hidden">' +
+      escapeHtml(aria) +
+      "</span>" +
+      '<select class="dam-widget__count-select" data-widget-layout-toggle="' +
       escapeHtml(widgetId) +
       '" data-layout="' +
-      escapeHtml(layout) +
+      escapeHtml(String(count)) +
       '" aria-label="' +
-      escapeHtml(labels[layout] || "Układ kafelków") +
+      escapeHtml(aria) +
       '" title="' +
-      escapeHtml(labels[layout] || "Zmien układ") +
-      '" data-dam-tip="Przelacz uklad: 2x2 / 1x4 / 1x6">' +
-      '<i class="uil uil-apps" aria-hidden="true"></i>' +
-      '<span class="dam-widget__layout-label">' +
-      escapeHtml(layout) +
-      "</span></button></div>"
+      escapeHtml(aria) +
+      '" data-dam-tip="' +
+      escapeHtml(aria) +
+      '">' +
+      options +
+      "</select></label></div>"
     );
   }
 
@@ -679,9 +890,7 @@
   function pickBrandingCover(arr) {
     var list = (arr || []).slice();
     if (!list.length) return null;
-    list.sort(function (a, b) {
-      return String(b.mtime || "").localeCompare(String(a.mtime || ""));
-    });
+    list.sort(compareNewestDesc);
     var i;
     for (i = 0; i < list.length; i++) {
       if (isRasterPreviewPath(list[i].name || list[i].path || "")) return list[i];
@@ -792,8 +1001,9 @@
       });
       img.addEventListener("error", function () {
         var path =
-          img.getAttribute("data-path") ||
+          img.getAttribute("data-thumb-path") ||
           img.getAttribute("data-media-path") ||
+          img.getAttribute("data-path") ||
           "";
         /*
          * DAM.exe uruchamia WebView rownolegle z mostem. Pierwszy request obrazu
@@ -897,9 +1107,7 @@
       byDir[key].push(a);
     });
     var groups = Object.keys(byDir).map(function (k) {
-      var arr = byDir[k].slice().sort(function (a, b) {
-        return String(b.mtime || "").localeCompare(String(a.mtime || ""));
-      });
+      var arr = byDir[k].slice().sort(compareNewestDesc);
       var newest = arr[0];
       var cover = pickBrandingCover(arr) || newest;
       var hasSafeCover =
@@ -919,7 +1127,7 @@
     /* Prefer groups with a browser-safe cover, then newest mtime. */
     groups.sort(function (a, b) {
       if (!!a.hasSafeCover !== !!b.hasSafeCover) return a.hasSafeCover ? -1 : 1;
-      return String(b.mtime || "").localeCompare(String(a.mtime || ""));
+      return compareNewestDesc(a, b);
     });
     var limit = Math.max(maxGroups || 4, oversample || maxGroups || 4);
     return groups.slice(0, limit);
@@ -978,10 +1186,9 @@
     });
   }
 
-  function mediaListClass(layout) {
+  function mediaListClass(_layout) {
     return (
-      "dam-widget__list dam-widget__list--media dam-widget__list--grid-" +
-      (layout || "1x4")
+      "dam-widget__list dam-widget__list--media dam-widget__list--bento dam-widget__list--grid-2x2"
     );
   }
 
@@ -1251,12 +1458,8 @@
     );
     if (!btn || btn._damLayoutBound) return;
     btn._damLayoutBound = true;
-    btn.addEventListener("click", function (ev) {
-      ev.preventDefault();
-      if (btn._damLayoutBusy || global.__damDashLayoutMorphing) return;
-      var cur = getTileLayout(widgetId);
-      var idx = TILE_LAYOUTS.indexOf(cur);
-      var next = TILE_LAYOUTS[(idx + 1) % TILE_LAYOUTS.length];
+    var applyNext = function (next) {
+      next = migrateTileCountValue(next);
       setTileLayout(widgetId, next);
       if (!MEDIA_TILE_WIDGETS[widgetId]) {
         if (typeof onCycle === "function") onCycle(next);
@@ -1276,6 +1479,20 @@
           if (live) live._damLayoutBusy = false;
         }
       );
+    };
+    btn.addEventListener("change", function (ev) {
+      ev.preventDefault();
+      if (btn._damLayoutBusy || global.__damDashLayoutMorphing) return;
+      applyNext(btn.value);
+    });
+    btn.addEventListener("click", function (ev) {
+      if (btn.tagName === "SELECT") return;
+      ev.preventDefault();
+      if (btn._damLayoutBusy || global.__damDashLayoutMorphing) return;
+      var cur = layoutCardCount(getTileLayout(widgetId));
+      var idx = TILE_COUNTS.indexOf(cur);
+      var next = TILE_COUNTS[(idx + 1) % TILE_COUNTS.length];
+      applyNext(next);
     });
   }
 
@@ -1631,7 +1848,8 @@
   }
 
   function parseRevisionDate(folder, fallback) {
-    var m = String(folder || "").match(/(\d{2})\.(\d{2})\.(\d{4})/);
+    var s = String(folder || "");
+    var m = s.match(/(\d{2})[.\s](\d{2})[.\s](\d{4})/);
     if (m) return m[3] + "-" + m[2] + "-" + m[1];
     return fallback || "";
   }
@@ -1649,6 +1867,17 @@
       diskLit = letterFromFolderName(rev.folder);
     }
     return diskLit === "F";
+  }
+
+  function revisionEligibleForNewest(rev) {
+    if (!rev) return false;
+    if (revisionIsFinal(rev)) return true;
+    var lit =
+      letterFromFolderName(rev.path || "") || letterFromFolderName(rev.folder || "");
+    if (lit === "X" || lit === "D") return false;
+    var path = String(rev.path || "") + " " + String(rev.folder || "");
+    if (/archiwum/i.test(path)) return false;
+    return rev.is_latest === true;
   }
 
   function revisionHasFinalOrFq(rev) {
@@ -1701,7 +1930,7 @@
     var map = {};
     function put(key, v) {
       if (!key) return;
-      if (!map[key] || String(v.mtime || "") > String(map[key].mtime || "")) {
+      if (!map[key] || recordMtimeMs(v) > recordMtimeMs(map[key])) {
         map[key] = v;
       }
     }
@@ -1713,8 +1942,8 @@
   }
 
   /**
-   * Najnowsze warianty Final (F): suffix dysku " - F" w indeksie (lifecycle.status_fxd).
-   * Sort: revision.date z indeksu, fallback data z nazwy folderu rewizji.
+   * Najnowsze warianty na pulpicie: Final (F) oraz bieżące is_latest bez X/D/archiwum.
+   * Sort liczbowy po dacie rewizji (rev.date / folder), nie po tekście i nie po mtime pliku wizki.
    */
   function pickNewestProductsF(ctx, limit) {
     var products = (ctx.fileIndex && ctx.fileIndex.products) || [];
@@ -1725,17 +1954,20 @@
       var name = prod.display_name || prod.name || pid;
       if (/test-lifecycle/i.test(pid) || /^test\b/i.test(name)) return;
       (prod.revisions || []).forEach(function (rev) {
-        if (!revisionIsFinal(rev)) return;
+        if (!revisionEligibleForNewest(rev)) return;
         var idx = String(rev.index || rev.index_base || "");
         if (!idx || idx === "pending" || /^noid/i.test(idx) || idx.indexOf("000000") === 0) {
           return;
         }
         var viz = thumbByIndex[idx] || null;
+        var thumbPath = resolveVizThumbPath(viz, rev);
         var sortDate =
           rev.date ||
           parseRevisionDate(rev.folder || rev.path || "", "") ||
           (viz && parseRevisionDate(viz.revision_folder, "")) ||
           "";
+        var mtimeMs = recordMtimeMs({ date: sortDate, mtime: sortDate });
+        if (!mtimeMs && viz) mtimeMs = recordMtimeMs(viz);
         rows.push({
           product_id: pid,
           product_name: name,
@@ -1755,18 +1987,16 @@
             "",
           tags: flattenProductTags(prod).length ? flattenProductTags(prod) : viz && viz.tags,
           sortDate: sortDate,
-          thumb_url: resolveProductThumbUrl(
-            viz,
-            rev.path || "",
-            rev.folder || (viz && viz.revision_folder) || ""
-          ),
+          date: sortDate,
+          mtime: sortDate,
+          mtime_ms: mtimeMs,
+          thumb_path: thumbPath,
+          thumb_url: thumbPath ? cardThumbUrl(thumbPath) : "",
           is_mix: prod.is_mix || (viz && viz.is_mix) || false
         });
       });
     });
-    rows.sort(function (a, b) {
-      return String(b.sortDate || "").localeCompare(String(a.sortDate || ""));
-    });
+    rows.sort(compareNewestDesc);
     var seen = {};
     var unique = [];
     rows.forEach(function (r) {
@@ -1782,7 +2012,14 @@
     var linkTarget = opts.linkTarget === "explorer" ? "explorer" : "viz";
     var name = v.product_name || v.product_id || "Produkt";
     var pid = v.product_id || "";
-    var path = v.path || v.revision_path || "";
+    var thumbPath =
+      resolveVizThumbPath(v, null) ||
+      normThumbPath(v.thumb_path || "") ||
+      (looksLikeThumbFile(v.path) ? normThumbPath(v.path) : "");
+    var winPath = v.revision_path || v.path || "";
+    if (looksLikeThumbFile(winPath)) winPath = dirnamePath(winPath);
+    if (!winPath && thumbPath) winPath = dirnamePath(thumbPath);
+    var path = winPath;
     var vizHref = pid
       ? "visualizations.html?product=" + encodeURIComponent(pid)
       : "visualizations.html";
@@ -1795,18 +2032,7 @@
         ? "Otworz produkt w Eksplorerze"
         : "Otworz wizualizacje produktu";
     var primaryTitle = linkTarget === "explorer" ? "Eksplorer" : "Wizualizacje";
-    var thumbSrc = "";
-    if (
-      v.thumb_url &&
-      String(v.thumb_url).indexOf("placeholder") === -1 &&
-      (String(v.thumb_url).indexOf("/thumb-cache") >= 0 ||
-        String(v.thumb_url).indexOf("/media?") >= 0)
-    ) {
-      thumbSrc = v.thumb_url;
-    }
-    if (!thumbSrc && path && looksLikeThumbFile(path)) {
-      thumbSrc = cardThumbUrl(path);
-    }
+    var thumbSrc = resolveDashboardThumbSrc(v, thumbPath);
     if (!thumbSrc) thumbSrc = brandingThumbPlaceholderDataUri();
     var winIcon =
       global.DamIcons && typeof DamIcons.winExplorerSvg === "function"
@@ -1871,8 +2097,12 @@
       '">' +
       '<img class="dam-widget__thumb" src="' +
       escapeHtml(thumbSrc) +
+      '" data-thumb-path="' +
+      escapeHtml(thumbPath || "") +
+      '" data-media-path="' +
+      escapeHtml(thumbPath || "") +
       '" data-path="' +
-      escapeHtml(path) +
+      escapeHtml(thumbPath || "") +
       '" alt="' +
       escapeHtml(name) +
       '" loading="lazy" />' +
@@ -1990,7 +2220,7 @@
     viz.forEach(function (v) {
       var pid = v.product_id || "";
       if (!pid) return;
-      if (!byPid[pid] || String(v.mtime || "") > String(byPid[pid].mtime || "")) {
+      if (!byPid[pid] || recordMtimeMs(v) > recordMtimeMs(byPid[pid])) {
         byPid[pid] = v;
       }
     });
@@ -2025,11 +2255,17 @@
     });
     /* Ranking: projekt Asana (start) > data pliku (anti-bulk) > data rewizji */
     rows.sort(function (a, b) {
-      var cmp = String(b.asanaStart || "").localeCompare(String(a.asanaStart || ""));
+      var cmp = compareNewestDesc(
+        { mtime: a.asanaStart, date: a.asanaStart },
+        { mtime: b.asanaStart, date: b.asanaStart }
+      );
       if (cmp) return cmp;
-      cmp = String(b.mtClean || "").localeCompare(String(a.mtClean || ""));
+      cmp = compareNewestDesc(
+        { mtime: a.mtClean, mtime_ms: a.row && a.row.mtime_ms },
+        { mtime: b.mtClean, mtime_ms: b.row && b.row.mtime_ms }
+      );
       if (cmp) return cmp;
-      cmp = String(b.revDate || "").localeCompare(String(a.revDate || ""));
+      cmp = compareNewestDesc({ date: a.revDate }, { date: b.revDate });
       if (cmp) return cmp;
       if (a.brand === "DK" && b.brand !== "DK") return -1;
       if (b.brand === "DK" && a.brand !== "DK") return 1;
@@ -2105,17 +2341,17 @@
     newest_viz_3: {
       label: "Najnowsze wizualizacje produktów",
       description:
-        "Siatka najnowszych wizualizacji z miniaturami, tagami i skrotami do Eksplorera, folderu Windows oraz strony wizualizacji. Uklad 2x2 / 1x4 / 1x6."
+        "Siatka najnowszych wizualizacji z miniaturami, tagami i skrotami. Liczbę kafelków (2, 4, 6, 8 albo 10) wybierasz na karcie."
     },
     newest_products_f: {
-      label: "Najnowsze",
+      label: "Najnowsze produkty",
       description:
         "Najnowsze warianty produktów na dysku, posortowane po dacie rewizji. Miniatury, tagi DK/opakowanie/indeks oraz skroty jak przy wizualizacjach."
     },
     branding_latest: {
-      label: "Najnowsze materialy brandingowe",
+      label: "Najnowsze materiały branding",
       description:
-        "Ostatnie assety z Brandingu (miniatury, marka, warianty) ze skrotami do Brandingu, folderu i podglądu. Uklad jak przy wizualizacjach."
+        "Ostatnie assety z Brandingu (miniatury, marka, warianty) ze skrotami do Brandingu, folderu i podglądu."
     },
     notify_new_viz: {
       label: "Powiadomienia o nowych wizualizacjach",
@@ -2629,20 +2865,12 @@
           var hostViz = document.querySelector('[data-widget-id="newest_viz_3"]');
           rebindWidgetChrome(hostViz);
           bindHonestThumbFallbacks(hostViz);
+          ensureDashThumbReveal(hostViz);
           if (
             global.DamPreviewTruth &&
             typeof DamPreviewTruth.warmThumbs === "function"
           ) {
-            DamPreviewTruth.warmThumbs(
-              list
-                .filter(function (v) {
-                  return v && v.path;
-                })
-                .map(function (v) {
-                  return v.path;
-                }),
-              "card"
-            );
+            DamPreviewTruth.warmThumbs(warmThumbPathsFromRows(list), "grid");
           }
           bindLayoutToggle(self.id, function () {
             var host = document.querySelector('[data-widget-id="newest_viz_3"]');
@@ -2711,20 +2939,12 @@
           var hostProd = document.querySelector('[data-widget-id="newest_products_f"]');
           rebindWidgetChrome(hostProd);
           bindHonestThumbFallbacks(hostProd);
+          ensureDashThumbReveal(hostProd);
           if (
             global.DamPreviewTruth &&
             typeof DamPreviewTruth.warmThumbs === "function"
           ) {
-            DamPreviewTruth.warmThumbs(
-              list
-                .filter(function (v) {
-                  return v && (v.path || v.thumb_url);
-                })
-                .map(function (v) {
-                  return v.path || v.thumb_url;
-                }),
-              "card"
-            );
+            DamPreviewTruth.warmThumbs(warmThumbPathsFromRows(list), "grid");
           }
           bindLayoutToggle(self.id, function () {
             var host = document.querySelector('[data-widget-id="newest_products_f"]');
@@ -2743,6 +2963,8 @@
           ensureDashLayoutCss();
           var layout = getTileLayout(self.id);
           var n = layoutCardCount(layout);
+          var prevTitle = self.title;
+          self.title = brandingTitleForCount(n);
           /* Per-object skel inside widget body — mirrors real 2x2 media rows */
           el.outerHTML = shell(
             self,
@@ -2750,6 +2972,7 @@
             "dam-widget--branding-latest dam-widget--media-latest",
             layoutToggleHtml(self.id, layout)
           );
+          self.title = prevTitle;
           bindLayoutToggle(self.id, function () {
             var hostToggle = document.querySelector('[data-widget-id="branding_latest"]');
             if (hostToggle) self.render(hostToggle);
@@ -2790,6 +3013,7 @@
                 if (!elHost) return;
                 el = elHost;
                 self._brandingLoadTries = 0;
+                self.title = brandingTitleForCount(n);
                 if (!groups.length) {
                   el.outerHTML = shell(
                     self,
@@ -2887,6 +3111,7 @@
                 var hostBr = document.querySelector('[data-widget-id="branding_latest"]');
                 rebindWidgetChrome(hostBr);
                 bindHonestThumbFallbacks(hostBr);
+                ensureDashThumbReveal(hostBr);
                 if (
                   global.DamPreviewTruth &&
                   typeof DamPreviewTruth.warmThumbs === "function"
@@ -2897,9 +3122,9 @@
                         return g.hasSafeCover && g.path;
                       })
                       .map(function (g) {
-                        return g.path;
+                        return normThumbPath(g.path);
                       }),
-                    "card"
+                    "grid"
                   );
                 }
                 bindLayoutToggle(self.id, function () {
@@ -2938,6 +3163,7 @@
                   }, hasData ? 120 : 400);
                   return;
                 }
+                self.title = brandingTitleForCount(n);
                 failHost.outerHTML = shell(
                   self,
                   '<p class="dam-widget__meta">Indeks branding niedostępny. <a href="branding.html">Otworz Branding</a></p>',
@@ -3900,12 +4126,16 @@
       var el = mount.querySelector('[data-widget-id="' + id + '"]');
       var mins = BR.getMinSize(id, opts, el, saved.items[id]);
       var it = saved.items[id];
-      if (it.h > mins.h + 1 || it.w < mins.w) needsRepair = true;
+      var isMedia = !!MEDIA_TILE_WIDGETS[id];
+      if (!isMedia && (it.h > mins.h + 1 || it.w < mins.w)) needsRepair = true;
+      if (isMedia && it.w < mins.w) needsRepair = true;
       items[id] = {
         c: it.c || 1,
         r: it.r || 1,
         w: Math.max(mins.w, it.w || mins.w),
-        h: Math.max(mins.h, Math.min(it.h || mins.h, mins.h + 1)),
+        h: isMedia
+          ? Math.max(mins.h, it.h || mins.h)
+          : Math.max(mins.h, Math.min(it.h || mins.h, mins.h + 1)),
       };
     });
 
@@ -3918,16 +4148,16 @@
 
     var row = 4;
     if (items.newest_viz_3) {
-      items.newest_viz_3 = { c: 1, r: row, w: 9, h: minSizes.newest_viz_3.h };
-      row += minSizes.newest_viz_3.h;
+      items.newest_viz_3 = { c: 1, r: row, w: 9, h: items.newest_viz_3.h };
+      row += items.newest_viz_3.h;
     }
     if (items.newest_products_f) {
-      items.newest_products_f = { c: 1, r: row, w: 9, h: minSizes.newest_products_f.h };
-      row += minSizes.newest_products_f.h;
+      items.newest_products_f = { c: 1, r: row, w: 9, h: items.newest_products_f.h };
+      row += items.newest_products_f.h;
     }
     if (items.branding_latest) {
-      items.branding_latest = { c: 1, r: row, w: 9, h: minSizes.branding_latest.h };
-      row += minSizes.branding_latest.h;
+      items.branding_latest = { c: 1, r: row, w: 9, h: items.branding_latest.h };
+      row += items.branding_latest.h;
     }
     /* Bottom band: notify | checklists same row+height; quick_links full width under. */
     var bandH = Math.max(
@@ -4221,6 +4451,12 @@
         stagger: 0.04,
         y: 10
       });
+      setTimeout(function () {
+        ensureDashThumbReveal(mount);
+      }, 500);
+      setTimeout(function () {
+        ensureDashThumbReveal(mount);
+      }, 1500);
     } else if (window.DamGridReveal) {
       window.DamGridReveal.reveal(mount, window.DamGridReveal.selectors.dashboardWidget, {
         duration: 0.4

@@ -1068,3 +1068,20 @@
     width: 100%;
   }
 }
+
+@media (max-width: 576px) {
+  .dam-settings-jump {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .dam-settings-jump__chip,
+  .dam-settings-jump__clear {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .dam-settings-page code,
+  .dam-instr-item__meta,
+  .dam-settings-jump-results__where {
+    font-size: 12px;
+  }
+}

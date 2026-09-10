@@ -31,7 +31,28 @@
     return String(s || "").replace(/\D/g, "");
   }
 
+  function pageIsViz() {
+    try {
+      var pv = String((typeof location !== "undefined" && location.pathname) || "").toLowerCase();
+      return pv.indexOf("visualizations.html") !== -1;
+    } catch (eViz) {
+      return false;
+    }
+  }
+
   function reload() {
+    /* Explorer + Viz: never re-fetch 9MB data/file-index.json from :8765
+       (single-thread serve hang on next explorer.html in the same profile). */
+    if (pageIsExplorer() || pageIsViz()) {
+      searchIndex = null;
+      loading = null;
+      try {
+        window._DAM_SEARCH_INDEX = null;
+      } catch (eExp) {
+        /* ignore */
+      }
+      return loadIndexes({ searchOnly: true, force: true });
+    }
     searchIndex = null;
     fileIndex = null;
     loading = null;
@@ -40,17 +61,96 @@
     return loadIndexes();
   }
 
+  /* Slim explorer ~512KB must be allowed on main if Worker parse fails. 9MB full index stays blocked. */
+  var MAIN_PARSE_MAX = 1200000;
+
+  function pageIsExplorer() {
+    try {
+      var p = String((typeof location !== "undefined" && location.pathname) || "").toLowerCase();
+      return p.indexOf("explorer.html") !== -1;
+    } catch (ePage) {
+      return false;
+    }
+  }
+
+  function parseJsonMaybeMain(text, label) {
+    if (typeof text !== "string") return text;
+    if (text.length > MAIN_PARSE_MAX) {
+      throw new Error((label || "json") + "_too_large_for_main");
+    }
+    return JSON.parse(text);
+  }
+
+  function parseJsonInWorker(text, label, timeoutMs) {
+    timeoutMs = timeoutMs || 20000;
+    label = label || "json";
+    if (typeof text !== "string") {
+      return Promise.resolve(text);
+    }
+    if (typeof Worker === "undefined" || typeof Blob === "undefined") {
+      return Promise.resolve(parseJsonMaybeMain(text, label));
+    }
+    return new Promise(function (resolve, reject) {
+      var src =
+        "self.onmessage=function(e){try{self.postMessage({ok:1,data:JSON.parse(e.data)});}catch(err){self.postMessage({ok:0,error:String(err)});}};";
+      var blob = new Blob([src], { type: "text/javascript" });
+      var url = URL.createObjectURL(blob);
+      var worker;
+      try {
+        worker = new Worker(url);
+      } catch (errW) {
+        URL.revokeObjectURL(url);
+        try {
+          resolve(parseJsonMaybeMain(text, label));
+        } catch (errP) {
+          reject(errP);
+        }
+        return;
+      }
+      var tid = setTimeout(function () {
+        try { worker.terminate(); } catch (eT) { /* ignore */ }
+        URL.revokeObjectURL(url);
+        reject(new Error(label + "_parse_timeout"));
+      }, timeoutMs);
+      worker.onmessage = function (ev) {
+        clearTimeout(tid);
+        try { worker.terminate(); } catch (eM) { /* ignore */ }
+        URL.revokeObjectURL(url);
+        var msg = ev.data || {};
+        if (msg.ok) resolve(msg.data);
+        else reject(new Error(msg.error || label + "_parse"));
+      };
+      worker.onerror = function () {
+        clearTimeout(tid);
+        try { worker.terminate(); } catch (eE) { /* ignore */ }
+        URL.revokeObjectURL(url);
+        try {
+          resolve(parseJsonMaybeMain(text, label));
+        } catch (errP2) {
+          reject(errP2);
+        }
+      };
+      worker.postMessage(text);
+    });
+  }
+
   function loadIndexes(opts) {
     opts = opts || {};
     if (opts.force) {
       searchIndex = null;
-      fileIndex = null;
       loading = null;
       try {
         window._DAM_SEARCH_INDEX = null;
-        window._DAM_FILE_INDEX = null;
-      } catch (eForce) {
+      } catch (eSearch) {
         /* ignore */
+      }
+      if (!opts.searchOnly) {
+        fileIndex = null;
+        try {
+          window._DAM_FILE_INDEX = null;
+        } catch (eForce) {
+          /* ignore */
+        }
       }
     }
     /* HARD: reuse window warm caches — never re-fetch/re-parse 7MB+ JSON
@@ -69,7 +169,14 @@
     if (loading) return loading;
     var bust = Date.now();
     var needSearch = !searchIndex;
-    var needFile = !fileIndex;
+    /* Explorer first paint: NEVER r.json() ~9MB file-index.json (assoc freeze class). */
+    var skipFile =
+      !!opts.searchOnly ||
+      pageIsExplorer() ||
+      pageIsViz() ||
+      !!(fileIndex && fileIndex.products) ||
+      !!(typeof window !== "undefined" && window._DAM_FILE_INDEX && window._DAM_FILE_INDEX.products);
+    var needFile = !fileIndex && !skipFile;
     loading = Promise.all([
       needSearch
         ? fetch("data/search-index.json?v=20260717ux3&_=" + bust).then(function (r) {
@@ -80,15 +187,19 @@
       needFile
         ? fetch("data/file-index.json?v=20260717ux3&_=" + bust).then(function (r) {
             if (!r.ok) throw new Error("file-index.json");
-            return r.json();
+            return r.text().then(function (text) {
+              return parseJsonInWorker(text, "file-index", 20000);
+            });
           })
         : Promise.resolve(fileIndex),
     ])
       .then(function (pair) {
         searchIndex = pair[0];
-        fileIndex = pair[1];
+        if (pair[1]) {
+          fileIndex = pair[1];
+          window._DAM_FILE_INDEX = fileIndex;
+        }
         window._DAM_SEARCH_INDEX = searchIndex;
-        window._DAM_FILE_INDEX = fileIndex;
         loading = null;
         return { searchIndex: searchIndex, fileIndex: fileIndex };
       })
@@ -450,7 +561,9 @@
       });
     }
 
-    return loadIndexes().then(function () {
+    return loadIndexes({
+      searchOnly: pageIsExplorer() || !!(typeof window !== "undefined" && window._DAM_FILE_INDEX)
+    }).then(function () {
       var fi = getActiveFileIndex(opts);
       var dig = digitsOnly(q);
       var nq = norm(q);
@@ -961,8 +1074,401 @@
       .replace(/"/g, "&quot;");
   }
 
+  /* --- Wyszukiwanie semantyczne branding (frazy potoczne) ---
+     Wpięcie w dam-branding.js (FORBIDDEN tutaj) - 2 latki:
+
+     1) assetMatchesSearchQuery, zaraz po `if (!q) return true;`:
+          if (window.DamSearch && DamSearch.semanticQueryHasConcepts && DamSearch.semanticQueryHasConcepts(q)) {
+            if (index && index.assets) DamSearch.semanticPrepare(index.assets);
+            return DamSearch.semanticAssetInResults(a, q);
+          }
+
+     2) sortAssetsForDisplay, na poczatku po `list = asAssetList(list);`:
+          if (q && window.DamSearch && DamSearch.semanticOrderAssets && DamSearch.semanticQueryHasConcepts(q)) {
+            return DamSearch.semanticOrderAssets(list, q);
+          }
+  */
+  var semanticVocab = null;
+  var semanticPrepared = null;
+  var semanticPrepareSig = "";
+  var PL_FOLD = {
+    "ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n", "ó": "o", "ś": "s", "ź": "z", "ż": "z",
+    "Ą": "a", "Ć": "c", "Ę": "e", "Ł": "l", "Ń": "n", "Ó": "o", "Ś": "s", "Ź": "z", "Ż": "z"
+  };
+
+  function semanticFold(text) {
+    var s = String(text || "");
+    var out = "";
+    var i;
+    for (i = 0; i < s.length; i++) {
+      out += PL_FOLD[s.charAt(i)] || s.charAt(i);
+    }
+    try {
+      out = out.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    } catch (eFold) { /* ignore */ }
+    return out.toLowerCase();
+  }
+
+  function semanticCollapse(text) {
+    return String(text || "").replace(/\s+/g, " ").trim();
+  }
+
+  function semanticTokens(text) {
+    return semanticFold(text).split(/[^a-z0-9]+/).filter(Boolean);
+  }
+
+  function semanticBuildVocab(raw) {
+    var stop = {};
+    var aliasToIds = {};
+    var byId = {};
+    var maxN = 1;
+    (raw.stopwords || []).forEach(function (w) {
+      var f = semanticFold(w);
+      if (f) stop[f] = true;
+    });
+    (raw.concepts || []).forEach(function (item) {
+      var cid = String(item.id || "").trim();
+      if (!cid) return;
+      byId[cid] = item;
+      (item.aliases || []).forEach(function (alias) {
+        var folded = semanticCollapse(semanticFold(alias));
+        if (!folded) return;
+        if (!aliasToIds[folded]) aliasToIds[folded] = [];
+        if (aliasToIds[folded].indexOf(cid) === -1) aliasToIds[folded].push(cid);
+        var n = folded.split(" ").length;
+        if (n > maxN) maxN = n;
+      });
+    });
+    return { stop: stop, aliasToIds: aliasToIds, byId: byId, maxN: maxN };
+  }
+
+  function semanticLoadVocab() {
+    if (semanticVocab) return Promise.resolve(semanticVocab);
+    return fetch("data/semantic-vocabulary.json")
+      .then(function (r) {
+        if (!r.ok) throw new Error("vocab_" + r.status);
+        return r.json();
+      })
+      .then(function (raw) {
+        semanticVocab = semanticBuildVocab(raw);
+        return semanticVocab;
+      })
+      .catch(function () {
+        semanticVocab = semanticBuildVocab({ concepts: [], stopwords: [] });
+        return semanticVocab;
+      });
+  }
+
+  function semanticMatchAliases(tokens, vocab) {
+    var hits = {};
+    var i = 0;
+    var n = tokens.length;
+    while (i < n) {
+      var matchedN = 0;
+      var size;
+      for (size = Math.min(vocab.maxN, n - i); size >= 1; size--) {
+        var span = tokens.slice(i, i + size).join(" ");
+        var ids = vocab.aliasToIds[span];
+        if (ids && ids.length) {
+          ids.forEach(function (cid) {
+            if (!hits[cid]) hits[cid] = span;
+          });
+          matchedN = size;
+          break;
+        }
+      }
+      i += matchedN || 1;
+    }
+    return hits;
+  }
+
+  function semanticQueryConcepts(query) {
+    if (!semanticVocab) return [];
+    var tokens = semanticTokens(query).filter(function (t) {
+      return !semanticVocab.stop[t];
+    });
+    return Object.keys(semanticMatchAliases(tokens, semanticVocab));
+  }
+
+  function semanticCampaign(path) {
+    var raw = String(path || "").replace(/\\/g, "/");
+    var m = raw.match(/08\s*-\s*KAMAPANIE\/+(\d{4})\/+([^/]+)/i);
+    if (!m) return { key: "", label: "" };
+    var label = m[1] + "/" + m[2];
+    return { key: semanticFold(label), label: label };
+  }
+
+  function semanticLeaf(path) {
+    var raw = String(path || "").replace(/\\/g, "/").replace(/\/+$/, "");
+    var i = raw.lastIndexOf("/");
+    return i === -1 ? raw : raw.slice(0, i);
+  }
+
+  function semanticShoots(name) {
+    var folded = semanticCollapse(semanticFold(name));
+    var re = /(?:^|[^a-z0-9])(bsa\s+\d+)(?![a-z0-9])/g;
+    var out = [];
+    var m;
+    while ((m = re.exec(folded))) {
+      var key = semanticCollapse(m[1]);
+      if (key && out.indexOf(key) === -1) out.push(key);
+    }
+    return out;
+  }
+
+  function semanticFileConcepts(asset, vocab) {
+    var found = {};
+    function add(cid, source, via) {
+      if (!cid || found[cid]) return;
+      found[cid] = { source: source, via: via };
+    }
+    var parent = semanticLeaf(asset.path || "");
+    var pathHits = semanticMatchAliases(semanticTokens(parent), vocab);
+    Object.keys(pathHits).forEach(function (cid) {
+      add(cid, "path", pathHits[cid]);
+    });
+    var pathProducts = {};
+    Object.keys(found).forEach(function (cid) {
+      if (cid.indexOf("product:") === 0) pathProducts[cid] = true;
+    });
+    var tags = (asset.appearance_tags || []).concat(asset.tags || []);
+    var tagHits = semanticMatchAliases(semanticTokens(tags.join(" ")), vocab);
+    Object.keys(tagHits).forEach(function (cid) {
+      add(cid, "association", "tag:" + tagHits[cid]);
+    });
+    (asset.linked_product_ids || []).forEach(function (pid) {
+      var p = productById(pid);
+      if (!p) return;
+      var blob = semanticFold(p.category || p.category_title || "");
+      var cids = [];
+      if (blob.indexOf("chrupkulk") !== -1) cids.push("product:chrupkulki");
+      else {
+        if (blob.indexOf("kulki") !== -1 || blob.indexOf("balls") !== -1) cids.push("product:kulki");
+        if (blob.indexOf("baton") !== -1 || blob.indexOf("bars") !== -1) cids.push("product:batony");
+        if (blob.indexOf("roslinn") !== -1 || blob.indexOf("plant") !== -1) {
+          cids.push("product:roslinne");
+          cids.push("product:niemieso");
+        }
+        if (blob.indexOf("niemies") !== -1) cids.push("product:niemieso");
+        if (blob.indexOf("sypkie") !== -1) cids.push("product:sypkie");
+        if (blob.indexOf("napoj") !== -1) cids.push("product:napoje");
+        if (blob.indexOf("przetwor") !== -1) cids.push("product:przetwory");
+        if (blob.indexOf("dates") !== -1) cids.push("product:datesy");
+      }
+      cids.forEach(function (cid) {
+        if (cid.indexOf("product:") === 0 && Object.keys(pathProducts).length && !pathProducts[cid]) return;
+        add(cid, "association", "product:" + pid);
+      });
+    });
+    var ocr = String(asset.ocr_text || "");
+    if (ocr) {
+      var ocrHits = semanticMatchAliases(semanticTokens(ocr), vocab);
+      Object.keys(ocrHits).forEach(function (cid) {
+        add(cid, "ocr", ocrHits[cid]);
+      });
+    }
+    var nameHits = semanticMatchAliases(semanticTokens(asset.name || ""), vocab);
+    Object.keys(nameHits).forEach(function (cid) {
+      add(cid, "filename", nameHits[cid]);
+    });
+    return found;
+  }
+
+  function semanticQueryMatched(cid, fileCids, vocab) {
+    if (fileCids[cid]) return true;
+    var rec = (vocab.byId || {})[cid] || {};
+    var alts = rec.query_satisfied_by || [];
+    var i;
+    for (i = 0; i < alts.length; i++) {
+      if (fileCids[alts[i]]) return true;
+    }
+    return false;
+  }
+
+  function semanticPrepare(assets) {
+    if (!semanticVocab || !assets) return null;
+    var sig = String(assets.length) + ":" + ((assets[0] && assets[0].id) || "");
+    if (semanticPrepared && semanticPrepareSig === sig) return semanticPrepared;
+    var rows = [];
+    var shootProducts = {};
+    assets.forEach(function (a) {
+      var camp = semanticCampaign(a.path || "");
+      var rec = {
+        asset: a,
+        id: a.id || "",
+        path: a.path || "",
+        name: a.name || "",
+        campaign_key: camp.key,
+        campaign_label: camp.label,
+        shoots: semanticShoots(a.name || ""),
+        concepts: semanticFileConcepts(a, semanticVocab)
+      };
+      rows.push(rec);
+      if (!rec.campaign_key) return;
+      Object.keys(rec.concepts).forEach(function (cid) {
+        if (cid.indexOf("product:") !== 0) return;
+        var meta = rec.concepts[cid];
+        var via = String(meta.via || "");
+        if (meta.source !== "path" && meta.source !== "ocr" && !(meta.source === "association" && via.indexOf("tag:") === 0)) {
+          return;
+        }
+        rec.shoots.forEach(function (shoot) {
+          var key = rec.campaign_key + "|" + shoot;
+          if (!shootProducts[key]) shootProducts[key] = {};
+          if (!shootProducts[key][cid]) shootProducts[key][cid] = rec.name || rec.path;
+        });
+      });
+    });
+    rows.forEach(function (rec) {
+      if (!rec.campaign_key) return;
+      rec.shoots.forEach(function (shoot) {
+        var inherited = shootProducts[rec.campaign_key + "|" + shoot] || {};
+        Object.keys(inherited).forEach(function (cid) {
+          if (!rec.concepts[cid]) {
+            rec.concepts[cid] = { source: "shoot", via: shoot + " / " + inherited[cid] };
+          }
+        });
+      });
+    });
+    semanticPrepared = { rows: rows, byId: {} };
+    rows.forEach(function (rec) {
+      if (rec.id) semanticPrepared.byId[rec.id] = rec;
+    });
+    semanticPrepareSig = sig;
+    return semanticPrepared;
+  }
+
+  function semanticRun(query, limit) {
+    var q = String(query || "");
+    var concepts = semanticQueryConcepts(q);
+    var productNeeded = [];
+    concepts.forEach(function (c) {
+      if (c.indexOf("product:") === 0) productNeeded.push(c);
+    });
+    if (!concepts.length || !semanticPrepared) {
+      return { query: q, concepts: concepts, strict: [], associated: [], byId: {} };
+    }
+    var cap = limit || 200;
+    var vocab = semanticVocab;
+    var strict = [];
+    semanticPrepared.rows.forEach(function (rec) {
+      var fileCids = rec.concepts;
+      var ok;
+      if (productNeeded.length) {
+        ok = productNeeded.every(function (cid) {
+          return semanticQueryMatched(cid, fileCids, vocab);
+        });
+      } else {
+        ok = concepts.some(function (cid) {
+          return semanticQueryMatched(cid, fileCids, vocab);
+        });
+      }
+      if (!ok) return;
+      var matched = concepts.filter(function (cid) {
+        return semanticQueryMatched(cid, fileCids, vocab);
+      });
+      strict.push({ rec: rec, matched: matched, score: matched.length });
+    });
+    strict.sort(function (a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      return String(a.rec.name || "").localeCompare(String(b.rec.name || ""), "pl");
+    });
+    strict = strict.slice(0, cap);
+    var strictIds = {};
+    var camps = {};
+    var preferred = [];
+    strict.forEach(function (row) {
+      if (row.rec.id) strictIds[row.rec.id] = true;
+      var k = recCampaign(row);
+      if (k && !camps[k]) {
+        preferred.push(k);
+        camps[k] = row.rec.campaign_label || k;
+      }
+    });
+    function recCampaign(row) {
+      return row.rec.campaign_key || "";
+    }
+    var campRank = {};
+    preferred.forEach(function (k, i) {
+      campRank[k] = i;
+    });
+    var associated = [];
+    if (productNeeded.length && preferred.length) {
+      semanticPrepared.rows.forEach(function (rec) {
+        if (strictIds[rec.id]) return;
+        if (!camps[rec.campaign_key]) return;
+        var fileCids = rec.concepts;
+        var hasAll = productNeeded.every(function (cid) {
+          return semanticQueryMatched(cid, fileCids, vocab);
+        });
+        if (hasAll) return;
+        var matched = concepts.filter(function (cid) {
+          return semanticQueryMatched(cid, fileCids, vocab);
+        });
+        associated.push({
+          rec: rec,
+          matched: matched,
+          score: matched.length,
+          reason: "kampania " + (camps[rec.campaign_key] || rec.campaign_key)
+        });
+      });
+      associated.sort(function (a, b) {
+        var ra = campRank[a.rec.campaign_key];
+        var rb = campRank[b.rec.campaign_key];
+        if (ra == null) ra = 999;
+        if (rb == null) rb = 999;
+        if (ra !== rb) return ra - rb;
+        if (b.score !== a.score) return b.score - a.score;
+        return String(a.rec.name || "").localeCompare(String(b.rec.name || ""), "pl");
+      });
+      associated = associated.slice(0, cap);
+    }
+    var byId = {};
+    var order = [];
+    strict.forEach(function (row, i) {
+      byId[row.rec.id] = { group: "strict", score: row.score, rank: i };
+      order.push(row.rec.asset);
+    });
+    associated.forEach(function (row, i) {
+      byId[row.rec.id] = {
+        group: "associated",
+        score: row.score,
+        rank: 10000 + i,
+        reason: row.reason
+      };
+      order.push(row.rec.asset);
+    });
+    return {
+      query: q,
+      concepts: concepts,
+      strict: strict,
+      associated: associated,
+      byId: byId,
+      order: order
+    };
+  }
+
+  var semanticLast = null;
+  var semanticLastQ = "";
+
+  function semanticEnsureRun(q) {
+    if (!semanticVocab || !semanticPrepared) return null;
+    if (semanticLast && semanticLastQ === q) return semanticLast;
+    semanticLast = semanticRun(q, 200);
+    semanticLastQ = q;
+    return semanticLast;
+  }
+
   function load(opts) {
     return loadIndexes(opts || {});
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      semanticLoadVocab();
+    });
+  } else {
+    semanticLoadVocab();
   }
 
   window.DamSearch = {
@@ -978,6 +1484,7 @@
     getScopeMode: getScopeMode,
     setScopeMode: setScopeMode,
     productById: productById,
+    parseJsonInWorker: parseJsonInWorker,
     normQuery: norm,
     digitsOnly: digitsOnly,
     productMatchesTextQuery: productMatchesTextQuery,
@@ -989,6 +1496,38 @@
       return !!(searchIndex && fileIndex);
     },
     latestRevisions: latestRevisions,
-    suggestIndexes: suggestIndexes
+    suggestIndexes: suggestIndexes,
+    semanticLoadVocab: semanticLoadVocab,
+    semanticPrepare: function (assets) {
+      if (!semanticVocab) return null;
+      semanticLast = null;
+      semanticLastQ = "";
+      return semanticPrepare(assets);
+    },
+    semanticQueryHasConcepts: function (q) {
+      return semanticQueryConcepts(q).length > 0;
+    },
+    semanticQueryConcepts: semanticQueryConcepts,
+    semanticAssetInResults: function (a, q) {
+      var run = semanticEnsureRun(q);
+      if (!run || !run.concepts.length) return false;
+      var id = a && a.id;
+      return !!(id && run.byId[id]);
+    },
+    semanticOrderAssets: function (list, q) {
+      var run = semanticEnsureRun(q);
+      if (!run) return list;
+      var rankOf = function (a) {
+        var row = run.byId[a && a.id];
+        return row ? row.rank : 999999;
+      };
+      return list.slice().sort(function (a, b) {
+        return rankOf(a) - rankOf(b);
+      });
+    },
+    semanticSearch: function (query, assets, limit) {
+      if (assets) semanticPrepare(assets);
+      return semanticRun(query, limit || 200);
+    }
   };
 })();

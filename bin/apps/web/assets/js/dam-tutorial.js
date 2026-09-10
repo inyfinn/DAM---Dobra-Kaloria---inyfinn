@@ -31,7 +31,8 @@
   var CHEER_SESSION_MAX = 4;
   var EXPLORE_COPY_THROTTLE_MS = 12000;
   var COPY_URL = "data/dobrokalorius-copy.json";
-  var COPY_CACHE_TOKEN = "tutorialPraiseToast20260721b";
+  var COPY_CACHE_TOKEN = "tutorialDash188";
+  var TARGET_WAIT_MS = 3000;
 
   // ---------------------------------------------------------------------------
   // Pozy: 1-9 klasyczne + arkusze sad/joy/approve + media teaching (sheet 7/8/9).
@@ -104,6 +105,25 @@
     }
     el.style.setProperty("--dam-tut-pose", "url('" + abs + "')");
     el.setAttribute("data-dam-pose", name || "standard");
+    if (img && img.tagName === "IMG") {
+      img.setAttribute("alt", "DobroKaloriuś");
+      img.src = abs;
+    }
+  }
+
+  function tutT(key, fallback) {
+    if (global.DamI18n && typeof DamI18n.t === "function") {
+      var v = DamI18n.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback || key;
+  }
+
+  function stepCopy(step, field) {
+    var key = step[field + "Key"];
+    var fb = step[field] || "";
+    if (!key) return fb;
+    return tutT(key, fb);
   }
 
   // ---------------------------------------------------------------------------
@@ -328,10 +348,11 @@
       "@keyframes damTutFadeIn{from{opacity:0}to{opacity:1}}" +
       ".dam-tut__bubble.is-fade-in{animation:damTutFadeIn .45s ease-out both;}" +
       "@media (prefers-reduced-motion:reduce){.dam-tut__bubble.is-fade-in{animation:none;opacity:1!important;}}" +
-      ".dam-tut.is-companion .dam-tut__bubble{display:none!important;}" +
+      ".dam-tut{opacity:1!important;}" +
+      ".dam-tut__ctrl{z-index:14020!important;pointer-events:auto!important;}" +
+      ".dam-tut__bubble{z-index:14015!important;pointer-events:auto!important;}" +
       ".dam-tut.is-explore .dam-tut__spot{box-shadow:0 0 0 200vmax rgba(15,14,22,.07)!important;" +
       "outline:2px dashed rgba(0,130,68,.35)!important;outline-offset:2px;pointer-events:none!important;}" +
-      ".dam-tut.is-explore{pointer-events:none!important;}" +
       "@keyframes damTutCompanionIn{from{opacity:0;transform:translate(28px,18px)}to{opacity:1;transform:translate(0,0)}}" +
       "@keyframes damTutPoseSwap{0%{opacity:.35}100%{opacity:1}}" +
       ".dam-tut-companion{position:fixed;right:20px;bottom:100px;z-index:14050;width:min(360px,calc(100vw - 40px));" +
@@ -435,21 +456,64 @@
       steps: [
         {
           pose: "wave",
+          titleKey: "tut.dash.hello_title",
+          textKey: "tut.dash.hello_text",
+          hintKey: "tut.hint.dalej",
           title: "Cześć, tu DobroKaloriuś!",
-          text: "Jestem listkiem Dobrej Kalorii i oprowadzę Cię po panelu DAM. Zaczynamy od Dashboardu, czyli centrum dowodzenia. Klikaj Dalej albo używaj strzałek na klawiaturze.",
+          text: "Oprowadzę Cię po DAM — zaczynamy od Dashboardu.",
+          hint: "Kliknij Dalej (albo strzałkę w prawo).",
           target: [sideLink("dashboard.html")]
         },
         {
           pose: "explain",
-          title: "Co tu znajdziesz",
-          text: "Dashboard zbiera najświeższe materiały, statystyki i skróty do sekcji, z których korzystasz najczęściej. Rzut oka wystarczy, żeby wiedzieć co się dzieje.",
-          target: [".dam-widget--stat", "#damDashGrid", ".geex-content__section-wrapper"]
+          titleKey: "tut.dash.customize_title",
+          textKey: "tut.dash.customize_text",
+          hintKey: "tut.hint.dalej",
+          title: "Dostosuj pulpit",
+          text: "Dostosuj pulpit otwiera listę kart tego ekranu.",
+          hint: "Nie musisz klikać. Kliknij Dalej.",
+          target: ["#damDashCustomizeBtn"]
         },
         {
           pose: "happy",
-          title: "Od czego zacząć",
-          text: "U góry masz wyszukiwarkę i powiadomienia. Wpisz indeks albo nazwę produktu, a panel zaprowadzi Cię prosto na miejsce.",
-          target: [".geex-content__header__quickaction", ".geex-content__header", "header"]
+          titleKey: "tut.dash.stats_title",
+          textKey: "tut.dash.stats_text",
+          hintKey: "tut.hint.dalej",
+          title: "Trzy karty na górze",
+          text: "Te trzy karty to liczniki z indeksu DAM, nie z Asany.",
+          hint: "Tylko odczyt. Kliknij Dalej.",
+          target: [".dam-widget--stat"],
+          targetAll: ".dam-widget--stat"
+        },
+        {
+          pose: "media-image",
+          titleKey: "tut.dash.viz_title",
+          textKey: "tut.dash.viz_text",
+          hintKey: "tut.hint.dalej",
+          title: "Najnowsze wizualizacje",
+          text: "Tu widać ostatnie packshoty z indeksu.",
+          hint: "Tylko odczyt. Kliknij Dalej.",
+          target: ['[data-widget-id="newest_viz_3"]', ".dam-widget--media-latest"]
+        },
+        {
+          pose: "explain",
+          titleKey: "tut.dash.asana_title",
+          textKey: "tut.dash.asana_text",
+          hintKey: "tut.hint.dalej",
+          title: "Asana w szynie powiadomień",
+          text: "Zakładka Asana to zadania z eksportu Asany, nie pliki DAM.",
+          hint: "Tylko odczyt. Kliknij Dalej.",
+          target: ["#damDashSide", ".dam-dash-panel", "#damPanelAsana"]
+        },
+        {
+          pose: "think",
+          titleKey: "tut.dash.teams_title",
+          textKey: "tut.dash.teams_text",
+          hintKey: "tut.hint.dalej",
+          title: "Teams",
+          text: "Teams czyta skrzynkę DAM z tagiem teams — pusta lista oznacza brak sync.",
+          hint: "Tylko odczyt. Kliknij Dalej.",
+          target: ['.dam-dash-panel__tab[data-bs-target="#damPanelTeams"]', "#damPanelTeams", "#damDashSide"]
         }
       ]
     },
@@ -460,22 +524,50 @@
       steps: [
         {
           pose: "explain",
+          titleKey: "tut.ex.hello_title",
+          textKey: "tut.ex.hello_text",
+          hintKey: "tut.hint.dalej",
           title: "Eksplorer",
-          text: "To serce panelu. Wszystkie produkty leżą tu poukładane w kategorie, jak na sklepowej półce. Każdy produkt ma swoje indeksy i nośniki.",
+          text: "Tu leżą produkty i nośniki — rozwiń wiersz, żeby zobaczyć pliki.",
+          hint: "Tylko odczyt. Kliknij Dalej.",
           target: ["#damExplorerMain", sideLink("explorer.html")]
         },
         {
           pose: "media-assets",
-          title: "Nośniki i pliki",
-          text: "Każdy produkt ma nośniki (folia, karton i inne) z plikami oraz checklistą kompletności. Kliknięcie w wiersz rozwija szczegóły.",
-          target: ["#damExplorerMain", ".dam-prod-row", sideLink("explorer.html")]
+          titleKey: "tut.ex.assoc_title",
+          textKey: "tut.ex.assoc_text",
+          hintKey: "tut.hint.dalej",
+          title: "Skojarzenia",
+          text: "Skojarzenie łączy produkt z materiałem — wpisz indeks w to pole.",
+          hint: "Kliknij Dalej.",
+          target: ["#damFileSearch"]
         },
         {
           pose: "think",
-          title: "Od czego zacząć",
-          text: "Wybierz kategorię z lewego panelu albo wpisz w wyszukiwarkę indeks, na przykład 6300, lub nazwę smaku. Reszta znajdzie się sama.",
-          target: [".dam-explorer-layout__cats", "#damFileSearch", sideLink("explorer.html")],
+          titleKey: "tut.ex.pakiet_title",
+          textKey: "tut.ex.pakiet_text",
+          hintKey: "tut.hint.click_or_dalej",
+          title: "Eksport PAKIET",
+          text: "PAKIET spakuje 2-PROJEKT i 4-WIZKI do ZIP w 3-DRUK.",
+          hint: "Ten przycisk. Możesz kliknąć albo Dalej.",
+          target: [".dam-pakiet-btn"],
+          prepare: "explorer-carrier",
+          sample: "pakiet",
+          allowClick: true,
           go: true
+        },
+        {
+          pose: "standard",
+          titleKey: "tut.ex.icons_title",
+          textKey: "tut.ex.icons_text",
+          hintKey: "tut.hint.click_or_dalej",
+          title: "Ikony bez podpisu",
+          text: "Ikony kopiuj i folder: najedź, żeby zobaczyć nazwę.",
+          hint: "Najedź albo kliknij Dalej.",
+          target: [".dam-carrier-toggle-row .dam-path-actions", ".dam-path-actions"],
+          prepare: "explorer-carrier",
+          sample: "icons",
+          allowClick: true
         }
       ]
     },
@@ -526,15 +618,34 @@
       steps: [
         {
           pose: "explain",
+          titleKey: "tut.proj.hello_title",
+          textKey: "tut.proj.hello_text",
+          hintKey: "tut.hint.dalej_or_go",
           title: "Projekty",
-          text: "Karty projektów z tagami i statusami. Z projektu przeskoczysz prosto do Eksplorera albo do folderu na dysku.",
-          target: ["#damProjectsGrid", ".geex-content__section-wrapper", sideLink("index.html")]
+          text: "Karty opakowań i kompletności — Dalej idzie dalej nawet przy ładowaniu.",
+          hint: "Kliknij Dalej, żeby pominąć czekanie. Przejdź tam otwiera stronę Projektów.",
+          target: [
+            ".dam-projects-grid-toolbar",
+            "#damProjectsStatus",
+            "#damProjectsGrid",
+            sideLink("index.html")
+          ],
+          go: true
         },
         {
           pose: "standard",
-          title: "Widok całości",
-          text: "Zaglądaj tu, gdy chcesz mieć widok całości prac. Jedno spojrzenie i wiesz, co jest w toku.",
-          target: [sideLink("index.html")],
+          titleKey: "tut.proj.pack_title",
+          textKey: "tut.proj.pack_text",
+          hintKey: "tut.hint.dalej",
+          title: "Info Pakowania",
+          text: "Info Pakowania pokazuje na kartach opakowanie zbiorcze, nie ZIP.",
+          hint: "Tylko odczyt. Kliknij Dalej, nawet jeśli przełącznika jeszcze nie widać.",
+          target: [
+            "label[for='damRevealLowTags']",
+            "#damRevealLowTags",
+            ".dam-projects-grid-toolbar",
+            sideLink("index.html")
+          ],
           go: true
         }
       ]
@@ -705,7 +816,10 @@
     els: null,
     raf: 0,
     congratsTimer: 0,
-    praiseStats: { shown: 0, skipped: 0, bursts: 0 }
+    praiseStats: { shown: 0, skipped: 0, bursts: 0 },
+    waitPoll: 0,
+    waitTimer: 0,
+    waitGen: 0
   };
 
   function prefersReducedMotion() {
@@ -721,32 +835,34 @@
 
   // GSAP - ladowanie identyczne jak w dam-grid-reveal.js
   function loadGsap(cb) {
+    var done = false;
+    var finish = function (g) {
+      if (done) return;
+      done = true;
+      cb(g || global.gsap || null);
+    };
     if (global.gsap) {
-      cb(global.gsap);
+      finish(global.gsap);
       return;
     }
     var existing = document.querySelector('script[data-dam-gsap="1"]');
     if (existing) {
-      var done = false;
-      var finish = function () {
-        if (done) return;
-        done = true;
-        cb(global.gsap || null);
-      };
-      existing.addEventListener("load", finish);
-      if (global.gsap) finish();
+      existing.addEventListener("load", function () { finish(global.gsap); });
+      existing.addEventListener("error", function () { finish(null); });
+      global.setTimeout(function () { finish(global.gsap); }, 2000);
       return;
     }
     var s = document.createElement("script");
-    s.src = "./assets/vendor/js/gsap/gsap.min.js";
+    s.src = "./assets/vendor/js/gsap/gsap.min.js?v=5.0.196";
     s.setAttribute("data-dam-gsap", "1");
     s.onload = function () {
-      cb(global.gsap || null);
+      finish(global.gsap || null);
     };
     s.onerror = function () {
-      cb(null);
+      finish(null);
     };
     document.body.appendChild(s);
+    global.setTimeout(function () { finish(global.gsap); }, 2000);
   }
 
   function currentPageKey() {
@@ -789,10 +905,18 @@
     root.innerHTML =
       '<div class="dam-tut__spot" aria-hidden="true"></div>' +
       '<div class="dam-tut__bubble" role="dialog" aria-live="polite" aria-label="Samouczek">' +
-        '<div class="dam-tut__mascot" aria-hidden="true"><span class="dam-tut__mascot-img"></span></div>' +
+        '<div class="dam-tut__mascot" aria-hidden="true"><img class="dam-tut__mascot-img" alt="DobroKaloriuś" src="assets/img/maskotka/pose-1.png"></div>' +
         '<div class="dam-tut__bubble-body">' +
           '<h3 class="dam-tut__title"></h3>' +
           '<p class="dam-tut__text"></p>' +
+          '<div class="dam-tut__sample" hidden>' +
+            '<span class="dam-tut__sample-pakiet" hidden>PAKIET</span>' +
+            '<span class="dam-tut__sample-icons" hidden>' +
+              '<span class="dam-tut__sample-ico" title="Kopiuj ścieżkę"><i class="uil uil-copy" aria-hidden="true"></i></span>' +
+              '<span class="dam-tut__sample-ico dam-tut__sample-ico--folder" title="Folder Windows"><i class="uil uil-folder-open" aria-hidden="true"></i></span>' +
+            "</span>" +
+          "</div>" +
+          '<p class="dam-tut__hint"></p>' +
           '<button type="button" class="dam-tut__go" hidden>Przejdź tam <i class="uil uil-arrow-right" aria-hidden="true"></i></button>' +
           '<div class="dam-tut__mini-nav">' +
             '<button type="button" class="dam-tut__btn dam-tut__btn--mini-prev" title="Wstecz (strzałka w lewo)">' +
@@ -824,6 +948,10 @@
       mascotImg: root.querySelector(".dam-tut__mascot-img"),
       title: root.querySelector(".dam-tut__title"),
       text: root.querySelector(".dam-tut__text"),
+      sample: root.querySelector(".dam-tut__sample"),
+      samplePakiet: root.querySelector(".dam-tut__sample-pakiet"),
+      sampleIcons: root.querySelector(".dam-tut__sample-icons"),
+      hint: root.querySelector(".dam-tut__hint"),
       go: root.querySelector(".dam-tut__go"),
       miniPrev: root.querySelector(".dam-tut__btn--mini-prev"),
       miniNext: root.querySelector(".dam-tut__btn--mini-next"),
@@ -864,39 +992,58 @@
   // ---------------------------------------------------------------------------
   // Spotlight + dymek
   // ---------------------------------------------------------------------------
-  function resolveTarget(step) {
-    var sels = (step && step.target) || [];
-    var phase = PHASES[state.phase];
-    var onOwnPage = phase && currentPageKey() === phase.key;
-    // Off-page: preferuj link sidebara fazy (nie losowy widget / aktywna pozycja menu).
-    if (!onOwnPage && phase && phase.href) {
-      var navSel = sideLink(phase.href);
-      try {
-        var navEl = document.querySelector(navSel);
-        if (navEl && navEl.getBoundingClientRect) {
-          var nr = navEl.getBoundingClientRect();
-          if (nr.width > 4 && nr.height > 4) return navEl;
-        }
-      } catch (e0) { /* ignore */ }
+  function elVisibleEnough(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    try {
+      var style = global.getComputedStyle ? global.getComputedStyle(el) : null;
+      if (style && (style.visibility === "hidden" || style.display === "none")) return false;
+      var r = el.getBoundingClientRect();
+      return r.width > 4 && r.height > 4;
+    } catch (eVis) {
+      return false;
     }
-    // Na wlasnej stronie: unikaj celu schowanego pod otwartym overlayem.
+  }
+
+  function collectTargets(step) {
+    var out = [];
+    var seen = [];
+    function add(el) {
+      if (!el || seen.indexOf(el) !== -1) return;
+      if (!elVisibleEnough(el)) return;
+      seen.push(el);
+      out.push(el);
+    }
+    if (step && step.targetAll) {
+      try {
+        var all = document.querySelectorAll(step.targetAll);
+        for (var a = 0; a < all.length; a++) add(all[a]);
+      } catch (eAll) { /* ignore */ }
+    }
+    var sels = (step && step.target) || [];
     for (var i = 0; i < sels.length; i++) {
       try {
-        var el = document.querySelector(sels[i]);
-        if (el && el.getBoundingClientRect) {
-          var r = el.getBoundingClientRect();
-          if (r.width > 4 && r.height > 4 && isTargetInteractable(el)) return el;
-        }
-      } catch (e) { /* zly selektor - pomin */ }
+        add(document.querySelector(sels[i]));
+      } catch (eSel) { /* ignore */ }
+    }
+    return out;
+  }
+
+  function resolveTarget(step) {
+    var phase = PHASES[state.phase];
+    var onOwnPage = phase && currentPageKey() === phase.key;
+    var found = collectTargets(step);
+    if (found.length) return found[0];
+    if (!onOwnPage && phase && phase.href) {
+      try {
+        var navEl = document.querySelector(sideLink(phase.href));
+        if (elVisibleEnough(navEl)) return navEl;
+      } catch (eNav) { /* ignore */ }
     }
     return null;
   }
 
   function isTargetInteractable(el) {
-    if (!el) return false;
-    var style = global.getComputedStyle ? global.getComputedStyle(el) : null;
-    if (style && (style.visibility === "hidden" || style.display === "none")) return false;
-    // Jesli nad celem lezy modal pomocy / media - nie celuj w to pod spodem.
+    if (!elVisibleEnough(el)) return false;
     try {
       var r = el.getBoundingClientRect();
       var cx = r.left + Math.min(24, r.width / 2);
@@ -904,15 +1051,15 @@
       var topEl = document.elementFromPoint(cx, cy);
       if (!topEl) return true;
       if (el === topEl || el.contains(topEl) || topEl.contains(el)) return true;
+      if (topEl.closest && topEl.closest(".dam-tut")) return true;
       if (topEl.closest && (
         topEl.closest("#damHelpModal") ||
         topEl.closest("#damVizModal") ||
-        topEl.closest("#damMediaPreview") ||
-        topEl.closest(".dam-tut")
+        topEl.closest("#damMediaPreview")
       )) {
         return false;
       }
-    } catch (e) { /* ignore */ }
+    } catch (eInt) { /* ignore */ }
     return true;
   }
 
@@ -947,6 +1094,42 @@
       width: Math.min(global.innerWidth - 4, r.width + pad * 2),
       height: Math.min(global.innerHeight - 4, r.height + pad * 2)
     };
+  }
+
+  function spotRectForStep(step) {
+    var list = collectTargets(step);
+    if (step && step.targetAll && list.length > 1) {
+      var pad = 8;
+      var left = Infinity;
+      var top = Infinity;
+      var right = -Infinity;
+      var bottom = -Infinity;
+      for (var i = 0; i < list.length; i++) {
+        var r = list[i].getBoundingClientRect();
+        if (r.left < left) left = r.left;
+        if (r.top < top) top = r.top;
+        if (r.right > right) right = r.right;
+        if (r.bottom > bottom) bottom = r.bottom;
+      }
+      return {
+        left: Math.max(2, left - pad),
+        top: Math.max(2, top - pad),
+        width: Math.min(global.innerWidth - 4, right - left + pad * 2),
+        height: Math.min(global.innerHeight - 4, bottom - top + pad * 2)
+      };
+    }
+    return spotRectFor(list[0] || resolveTarget(step));
+  }
+
+  function clearTargetWait() {
+    if (state.waitPoll) {
+      global.clearInterval(state.waitPoll);
+      state.waitPoll = 0;
+    }
+    if (state.waitTimer) {
+      global.clearTimeout(state.waitTimer);
+      state.waitTimer = 0;
+    }
   }
 
   function setSpotRect(rect, animate) {
@@ -1124,8 +1307,7 @@
       state.raf = 0;
       var step = currentStep();
       if (!step) return;
-      var el = resolveTarget(step);
-      var rect = spotRectFor(el);
+      var rect = spotRectForStep(step);
       setSpotRect(rect, false);
       placeBubble(rect);
     });
@@ -1140,6 +1322,33 @@
     return phase.steps[state.step] || null;
   }
 
+  function prepareNamedTarget(step) {
+    if (!step || !step.prepare) return;
+    if (step.prepare === "explorer-carrier") {
+      try {
+        var ex = global.DamExplorer;
+        if (ex && typeof ex.revealCarrierForTutorial === "function") {
+          ex.revealCarrierForTutorial();
+        }
+      } catch (ePrep) { /* ignore */ }
+    }
+  }
+
+  function syncSample(step) {
+    var els = state.els;
+    if (!els || !els.sample) return;
+    var kind = (step && step.sample) || "";
+    if (!kind) {
+      els.sample.hidden = true;
+      if (els.samplePakiet) els.samplePakiet.hidden = true;
+      if (els.sampleIcons) els.sampleIcons.hidden = true;
+      return;
+    }
+    els.sample.hidden = false;
+    if (els.samplePakiet) els.samplePakiet.hidden = kind !== "pakiet";
+    if (els.sampleIcons) els.sampleIcons.hidden = kind !== "icons";
+  }
+
   function renderStep(animate) {
     var phase = PHASES[state.phase];
     var step = currentStep();
@@ -1148,13 +1357,22 @@
       return;
     }
     var els = state.els;
+    if (!els) return;
     savePhase();
+    clearTargetWait();
+    if (state.els.root) {
+      state.els.root.classList.remove("is-companion", "is-explore");
+    }
+    prepareNamedTarget(step);
+    syncSample(step);
 
-    els.title.textContent = nbspPl(step.title || phase.label);
-    els.text.textContent = nbspPl(step.text || "");
+    els.title.textContent = nbspPl(stepCopy(step, "title") || phase.label);
+    els.text.textContent = nbspPl(stepCopy(step, "text") || "");
+    if (els.hint) {
+      els.hint.textContent = nbspPl(stepCopy(step, "hint") || tutT("tut.hint.dalej", "Kliknij Dalej."));
+    }
     applyPose(els.mascot, step.pose || "standard");
 
-    // Przycisk "Przejdz tam" tylko gdy faza opisuje INNA strone
     var onOwnPage = currentPageKey() === phase.key;
     if (step.go && !onOwnPage) {
       els.go.hidden = false;
@@ -1162,7 +1380,6 @@
       els.go.hidden = true;
     }
 
-    // postep: Faza X/9 + kropki krokow
     els.phaseLabel.textContent = "Faza " + (state.phase + 1) + "/" + PHASES.length + " - " + phase.label;
     var dotsHtml = "";
     for (var i = 0; i < phase.steps.length; i++) {
@@ -1177,30 +1394,63 @@
       : 'Dalej <i class="uil uil-angle-right" aria-hidden="true"></i>';
     els.miniNext.innerHTML = els.next.innerHTML;
 
-    var el = resolveTarget(step);
-    // C4: natychmiastowe kotwiczenie (bez "latania" na srodku przed timeoutem)
-    var rect0 = spotRectFor(el);
-    setSpotRect(rect0, false);
-    placeBubble(rect0);
+    function paint(foundNow, waiting) {
+      if (!state.active || !state.els) return;
+      var rect = foundNow ? spotRectForStep(step) : spotRectFor(resolveTarget(step));
+      setSpotRect(rect, animate !== false && !waiting);
+      placeBubble(rect);
+      if (waiting && els.hint) {
+        els.hint.textContent = tutT("tut.hint.loading", "Ładowanie kroku… max 3 s.");
+      }
+    }
+
+    var found = collectTargets(step);
+    var el = found[0] || resolveTarget(step);
+    paint(found.length > 0, !el && onOwnPage);
 
     if (el && typeof el.scrollIntoView === "function") {
       var r = el.getBoundingClientRect();
       if (r.top < 0 || r.bottom > global.innerHeight - 120) {
-        try { el.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" }); } catch (e) { /* ignore */ }
+        try { el.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" }); } catch (eScr) { /* ignore */ }
       }
     }
-    // doprecyzowanie po ewentualnym scrollu
+
     global.setTimeout(function () {
       if (!state.active) return;
-      var el2 = resolveTarget(step);
-      var rect = spotRectFor(el2);
-      setSpotRect(rect, animate !== false);
-      placeBubble(rect);
+      paint(collectTargets(step).length > 0, false);
       animateBubbleIn();
     }, el ? 120 : 0);
+
+    if (!el && onOwnPage) {
+      var gen = ++state.waitGen;
+      var started = Date.now();
+      var waitMs = step.prepare ? 10000 : TARGET_WAIT_MS;
+      state.waitPoll = global.setInterval(function () {
+        if (!state.active || gen !== state.waitGen) {
+          clearTargetWait();
+          return;
+        }
+        var later = collectTargets(step);
+        if (!later.length) prepareNamedTarget(step);
+        later = collectTargets(step);
+        if (later.length || Date.now() - started >= waitMs) {
+          clearTargetWait();
+          if (!later.length && els.hint) {
+            els.hint.textContent = tutT(
+              "tut.hint.loading_skip",
+              "Ten ekran jeszcze się ładuje. Kliknij Dalej."
+            );
+          } else if (els.hint) {
+            els.hint.textContent = nbspPl(stepCopy(step, "hint") || tutT("tut.hint.dalej", "Kliknij Dalej."));
+          }
+          paint(later.length > 0, false);
+        }
+      }, 120);
+    }
   }
 
   function nextStep() {
+    clearTargetWait();
     var phase = PHASES[state.phase];
     if (!phase) { stop(); return; }
     if (state.step < phase.steps.length - 1) {
@@ -1471,51 +1721,13 @@
     if (t.closest && t.closest(".dam-tut__spot")) return;
 
     var step = currentStep();
-    if (!step) return;
+    /* Clicks on the page (incl. spotlighted PAKIET) must not hide the overlay.
+       Explore-mode used to steal the bubble; stay on the step unless clickToAdvance. */
+    if (!step || !step.clickToAdvance) return;
     var targetEl = resolveTarget(step);
-    if (clickHitsTarget(e, targetEl)) {
-      try {
-        e.preventDefault();
-        e.stopPropagation();
-      } catch (err) { /* ignore */ }
-      if (state.companionMode || state.exploreMode) destroyCompanion();
-      // Advance-first: step/phase change BEFORE any praise toast.
-      if (!state.active) return;
-      var phase = PHASES[state.phase];
-      var href = targetEl && targetEl.getAttribute && targetEl.getAttribute("href");
-      if (href && phase && href.indexOf(phase.href) !== -1 && currentPageKey() !== phase.key) {
-        if (state.step < phase.steps.length - 1) {
-          state.step += 1;
-        } else if (state.phase < PHASES.length - 1) {
-          state.phase += 1;
-          state.step = 0;
-        }
-        savePhase();
-        maybeQueuePraiseToast();
-        global.location.href = phase.href;
-        return;
-      }
-      nextStep();
-      maybeShowPraiseToast();
-      return;
-    }
-
-    if (state.exploreMode) {
-      enterExploreMode();
-      return;
-    }
-
-    try {
-      var link = t.closest("a[href]");
-      if (link) {
-        var href = link.getAttribute("href") || "";
-        if (href && href.charAt(0) !== "#" && href.indexOf("javascript:") !== 0) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }
-    } catch (err2) { /* ignore */ }
-    enterExploreMode();
+    if (!clickHitsTarget(e, targetEl)) return;
+    if (state.companionMode || state.exploreMode) destroyCompanion();
+    nextStep();
   }
 
 
@@ -1695,18 +1907,18 @@
     if (state.step < 0 || state.step > maxStep) state.step = 0;
 
     buildOverlay();
+    if (state.els && state.els.root) {
+      state.els.root.style.opacity = "1";
+    }
     document.addEventListener("click", onDocClick, true);
     document.addEventListener("keydown", onKeyDown, true);
     global.addEventListener("scroll", onViewportChange, true);
     global.addEventListener("resize", onViewportChange);
 
+    renderStep(false);
     loadGsap(function () {
       if (!state.active) return;
-      renderStep(false);
       startMascotBob();
-      if (!prefersReducedMotion() && global.gsap && state.els) {
-        global.gsap.fromTo(state.els.root, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" });
-      }
       flushPendingPraiseToast();
     });
   }
@@ -1720,6 +1932,7 @@
       global.cancelAnimationFrame(state.raf);
       state.raf = 0;
     }
+    clearTargetWait();
     destroyPraiseToast();
     destroyCompanion();
     state.active = false;
@@ -1859,26 +2072,39 @@
   // panel jest trwaly, przebudowywane jest tylko body - dopinamy stopke raz)
   // ---------------------------------------------------------------------------
   function injectHelpEntry() {
+    function tryInject() {
+      var panel = document.querySelector("#damHelpModal .dam-help-modal__panel");
+      if (!panel) return false;
+      injectHelpRestartControl(panel.querySelector(".dam-help-modal__head"));
+      if (panel.querySelector(".dam-tut-help-entry")) return true;
+      var wrap = document.createElement("div");
+      wrap.className = "dam-tut-help-entry";
+      wrap.innerHTML =
+        '<button type="button" class="dam-tut__btn dam-tut__btn--primary dam-tut-help-entry__btn">' +
+          '<i class="uil uil-map-marker-question" aria-hidden="true"></i> Uruchom samouczek</button>';
+      panel.appendChild(wrap);
+      wrap.querySelector("button").addEventListener("click", function (e) {
+        e.preventDefault();
+        closeHelpThenRestart();
+      });
+      return true;
+    }
+    if (tryInject()) return;
+    var obs = null;
+    try {
+      obs = new MutationObserver(function () {
+        if (tryInject()) {
+          if (obs) obs.disconnect();
+        }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    } catch (eObs) { /* ignore */ }
     var tries = 0;
     var timer = global.setInterval(function () {
       tries += 1;
-      var panel = document.querySelector("#damHelpModal .dam-help-modal__panel");
-      if (panel) {
+      if (tryInject() || tries > 120) {
         global.clearInterval(timer);
-        injectHelpRestartControl(panel.querySelector(".dam-help-modal__head"));
-        if (panel.querySelector(".dam-tut-help-entry")) return;
-        var wrap = document.createElement("div");
-        wrap.className = "dam-tut-help-entry";
-        wrap.innerHTML =
-          '<button type="button" class="dam-tut__btn dam-tut__btn--primary dam-tut-help-entry__btn">' +
-            '<i class="uil uil-map-marker-question" aria-hidden="true"></i> Uruchom samouczek</button>';
-        panel.appendChild(wrap);
-        wrap.querySelector("button").addEventListener("click", function (e) {
-          e.preventDefault();
-          closeHelpThenRestart();
-        });
-      } else if (tries > 20) {
-        global.clearInterval(timer);
+        if (obs) obs.disconnect();
       }
     }, 500);
   }
@@ -1888,12 +2114,42 @@
   // ---------------------------------------------------------------------------
   function boot() {
     if (global.location.pathname.indexOf("signin") !== -1) return;
-    ensureTutCss();
-    ensureCopy();
-    injectHelpEntry();
-    bindCheerHooks();
-    watchEmptyResults();
-    registerServiceWorker();
+    try {
+      ensureTutCss();
+    } catch (eCss) { /* ignore */ }
+    try {
+      ensureCopy();
+    } catch (eCopy) { /* ignore */ }
+    try {
+      injectHelpEntry();
+    } catch (eHelp) { /* ignore */ }
+    try {
+      bindCheerHooks();
+      watchEmptyResults();
+    } catch (eHook) { /* ignore */ }
+
+    var qTut = "";
+    try {
+      qTut = String(new URLSearchParams(global.location.search).get("damTut") || "");
+    } catch (eQ) {
+      qTut = "";
+    }
+    if (qTut) {
+      var qp = qTut.split(":");
+      var qPhase = parseInt(qp[0], 10);
+      var qStep = parseInt(qp[1], 10);
+      global.setTimeout(function () {
+        if (!state.active) {
+          try {
+            start({
+              phase: isNaN(qPhase) ? 0 : qPhase,
+              step: isNaN(qStep) ? 0 : qStep
+            });
+          } catch (eStart) { /* ignore */ }
+        }
+      }, 800);
+      return;
+    }
 
     // wznowienie po nawigacji ("Przejdz tam" lub klik w link podczas samouczka)
     var saved = lsGet(PHASE_KEY);
@@ -1903,7 +2159,7 @@
       var st = parseInt(parts[1], 10);
       global.setTimeout(function () {
         if (!state.active) start({ phase: isNaN(ph) ? 0 : ph, step: isNaN(st) ? 0 : st });
-      }, 900);
+      }, 250);
       return;
     }
 
@@ -1918,17 +2174,13 @@
     }, 2000);
   }
 
-  function registerServiceWorker() {
-    if (!("serviceWorker" in navigator)) return;
-    try {
-      navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(function () { /* ignore */ });
-    } catch (e) { /* ignore */ }
-  }
-
   global.DamTutorial = {
     start: start,
     stop: stop,
     restart: restart,
+    attachHelp: function () {
+      try { injectHelpEntry(); } catch (eAtt) { /* ignore */ }
+    },
     isActive: function () { return state.active; },
     showInvite: showInvite,
     showSad: showSad,
@@ -1945,7 +2197,6 @@
         congratsMs: CONGRATS_MS
       };
     },
-    /** QA: force non-blocking praise toast (after advance). opts: {burst, burstVariant, ms} */
     debugShowPraise: function (opts) {
       opts = opts || {};
       showPraiseToast({

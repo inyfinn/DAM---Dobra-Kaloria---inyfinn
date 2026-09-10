@@ -44,13 +44,24 @@
   }
 
   function fetchTagGroups(cb) {
-    fetch("data/search-index.json?_=" + Date.now())
+    var bust =
+      (typeof window !== "undefined" && window.DAM_APP_VERSION) || "1";
+    fetch("data/search-index.json?v=" + encodeURIComponent(bust))
       .then(function (r) {
-        return r.ok ? r.json() : {};
+        if (!r.ok) return {};
+        return r.text().then(function (text) {
+          if (
+            window.DamSearch &&
+            typeof window.DamSearch.parseJsonInWorker === "function"
+          ) {
+            return window.DamSearch.parseJsonInWorker(text, "search-index", 8000);
+          }
+          return JSON.parse(text);
+        });
       })
       .then(function (si) {
-        window._DAM_SEARCH_INDEX = si;
-        cb(si.tag_groups || {});
+        window._DAM_SEARCH_INDEX = si || {};
+        cb((si && si.tag_groups) || {});
       })
       .catch(function () {
         cb({});
@@ -283,8 +294,18 @@
     return api;
   }
 
-  /* Cold-load: sam montuje #damSearchTags (nie czekaj na ciezkie init Explorera) */
+  /* Cold-load: sam montuje #damSearchTags (nie czekaj na ciezkie init Explorera).
+     HARD: na explorer.html NIE — 3× fetch search-index (~491 KB) + Worker clone
+     blokuje first paint drzewa (puste Kategorie + „Ładowanie indeksu...”). */
+  function pageIsExplorer() {
+    try {
+      return /explorer\.html/i.test(String((location && location.pathname) || ""));
+    } catch (_eExp) {
+      return false;
+    }
+  }
   function autoMount() {
+    if (pageIsExplorer()) return;
     var el = document.getElementById("damSearchTags");
     if (!el) return;
     if (el.querySelector(".dam-tag-pill")) return;

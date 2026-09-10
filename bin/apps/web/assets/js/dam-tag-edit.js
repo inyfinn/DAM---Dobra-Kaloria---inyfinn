@@ -552,6 +552,12 @@
       return Promise.resolve(true);
     }
     if (global._DAM_SUBCATEGORY_CATALOG_P) return global._DAM_SUBCATEGORY_CATALOG_P;
+    try {
+      var pn = String((typeof location !== "undefined" && location.pathname) || "").toLowerCase();
+      if (pn.indexOf("explorer.html") !== -1 || pn.indexOf("visualizations.html") !== -1) {
+        return Promise.resolve(false);
+      }
+    } catch (ePage) { /* ignore */ }
     global._DAM_SUBCATEGORY_CATALOG_P = fetch("data/file-index.json?v=" + Date.now())
       .then(function (r) {
         return r.ok ? r.text() : "";
@@ -2171,7 +2177,7 @@
         ? "-"
         : p.letter || "-";
     var scope = String(entry.scope || "").toLowerCase();
-    var scopeLabel = p.scope || (isLife ? "Status" : "Zmiana");
+    var scopeLabel = p.scope || (isLife ? "Status" : "Plik na dysku");
     return {
       id: id,
       chg_id: String(entry.id || ""),
@@ -2180,7 +2186,7 @@
       status: entry.status || entry.status_to || lifeHistStatusCode(letter),
       scope: scope || (isLife ? "variant" : "disk"),
       scopeLabel: scopeLabel,
-      title: p.title || "zmiana na dysku",
+      title: (p.title || changeLogRowDetail(entry) || "zmiana na dysku"),
       product_id: String(entry.product_id || ""),
       product_name: p.product || productLabelForLog(entry) || "",
       revision_index: p.index || String(entry.revision_index || entry.index || "").trim(),
@@ -2360,16 +2366,21 @@
         : "") +
       "</span></span>" +
       '<span class="dam-life-hist__detail">' +
-      esc(h.title || "zmiana na dysku") +
+      esc(h.title || (h.kind === "disk" ? "Zmiana na dysku" : "Zmiana statusu")) +
+      (pname && h.title && h.title.indexOf(pname) === -1 ? " · " + esc(pname) : "") +
       "</span>" +
       '<span class="dam-life-hist__row2">' +
       (pname
         ? '<span class="dam-viz-badge" title="Produkt">' + esc(pname) + "</span>"
         : "") +
       (idxShow && idxShow !== pname
-        ? '<span class="dam-viz-badge dam-viz-badge--index" title="Indeks">' +
+        ? '<span class="dam-viz-badge dam-viz-badge--index dam-life-hist__index" title="Indeks" data-life-index="' +
           esc(idxShow) +
-          "</span>"
+          '" data-life-path="' +
+          esc(h.path || "") +
+          '"><span class="dam-life-hist__index-label">' +
+          esc(idxShow) +
+          '</span><span class="dam-life-hist__index-preview" aria-hidden="true"><img alt="" loading="lazy" decoding="async" /></span></span>'
         : "") +
       (who.label
         ? '<span class="dam-life-hist__author" title="' +
@@ -2382,6 +2393,53 @@
         : "") +
       "</span></span></li>"
     );
+  }
+
+
+  function resolveLifeHistThumbPath(idx, pathHint) {
+    if (pathHint) return String(pathHint);
+    var fi = global._DAM_FILE_INDEX;
+    if (!fi || !fi.products) return "";
+    var ik = String(idx || "").trim();
+    for (var pi = 0; pi < fi.products.length; pi++) {
+      var p = fi.products[pi];
+      var revs = (p && p.revisions) || [];
+      for (var ri = 0; ri < revs.length; ri++) {
+        var r = revs[ri];
+        if (r && r.index === ik && r.path) return r.path;
+      }
+    }
+    return "";
+  }
+
+  function bindLifeHistIndexPreviews(root) {
+    if (!root) return;
+    root.querySelectorAll(".dam-life-hist__index").forEach(function (el) {
+      if (el._damIdxPrevBound) return;
+      el._damIdxPrevBound = true;
+      var img = el.querySelector(".dam-life-hist__index-preview img");
+      if (!img) return;
+      var loaded = "";
+      function showThumb() {
+        var path = resolveLifeHistThumbPath(
+          el.getAttribute("data-life-index") || "",
+          el.getAttribute("data-life-path") || ""
+        );
+        if (!path) return;
+        var url =
+          global.DamPreviewTruth && typeof global.DamPreviewTruth.thumbCacheUrl === "function"
+            ? global.DamPreviewTruth.thumbCacheUrl(path, "card")
+            : "";
+        if (!url) return;
+        if (loaded !== url) {
+          loaded = url;
+          img.src = url;
+        }
+        el.classList.add("is-preview-ready");
+      }
+      el.addEventListener("mouseenter", showThumb);
+      el.addEventListener("focus", showThumb);
+    });
   }
 
   function lifeHistListHtml(rows, opts) {
@@ -2697,8 +2755,11 @@
       });
     }
 
-    root._damLifeHistRepaint = repaint;
-    repaint();
+    root._damLifeHistRepaint = function () {
+      repaint();
+      bindLifeHistIndexPreviews(root.querySelector("[data-life-hist-list]"));
+    };
+    root._damLifeHistRepaint();
   }
 
   function refreshAllLifeHistViews() {

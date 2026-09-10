@@ -6051,7 +6051,7 @@
   };
 
   function ensureVizModalCss() {
-    var href = "assets/css/dam-viz-modal.css?v=5.0.77";
+    var href = "assets/css/dam-viz-modal.css?v=5.0.196";
     var existing = document.getElementById("dam-viz-modal-css");
     if (existing) {
       if (existing.tagName === "LINK" && existing.getAttribute("href") !== href) {
@@ -6066,6 +6066,60 @@
     document.head.appendChild(link);
   }
 
+  function brandingAssetToExplorerMarketingRow(asset) {
+    if (!asset) return null;
+    var path = String(asset.path || asset.folder_group_id || "").replace(/\\/g, "/");
+    if (!path) return null;
+    var folderPath = path;
+    if (/\.[a-z0-9]{2,8}$/i.test(path)) {
+      var slash = path.lastIndexOf("/");
+      if (slash > 0) folderPath = path.slice(0, slash);
+    }
+    var tag =
+      (asset.tags && asset.tags.length && asset.tags[0]) ||
+      asset.asset_role ||
+      "marketing";
+    return {
+      title:
+        asset.name ||
+        asset.label ||
+        asset.display_name ||
+        path.split("/").pop() ||
+        asset.id,
+      path: folderPath,
+      type: String(tag).toLowerCase(),
+      file_count: 0,
+    };
+  }
+
+  function explorerMarketingRows(ctx) {
+    ctx = ctx || {};
+    var explicit = {};
+    if (window.DamViz && typeof window.DamViz.getLinkedMaterialIds === "function" && ctx.id) {
+      window.DamViz.getLinkedMaterialIds(ctx.id).forEach(function (id) {
+        if (id) explicit[String(id)] = true;
+      });
+    }
+    return loadLinkedBrandingForContext(ctx).then(function (all) {
+      var rows = [];
+      var seen = {};
+      (all || []).forEach(function (asset) {
+        if (!asset || !asset.id) return;
+        if (explicit[asset.id]) {
+          /* always keep explicit picker links */
+        } else if (!passesMarketingAssocMaterial(asset)) return;
+        else if (!isRelevantMaterialForProduct(asset, ctx)) return;
+        var row = brandingAssetToExplorerMarketingRow(asset);
+        if (!row) return;
+        var key = String(row.path || row.title || "").toLowerCase();
+        if (!key || seen[key]) return;
+        seen[key] = true;
+        rows.push(row);
+      });
+      return rows;
+    });
+  }
+
   window.DamMediaPreview = {
     openAsset: openAsset,
     patchOpenAsset: function (patchAsset, patchOpts) {
@@ -6077,6 +6131,7 @@
     renderLinkedAssetsInto: function (mount, labelEl, productContext) {
       renderLinkedBrandingAssets({ mount: mount, labelEl: labelEl, productContext: productContext });
     },
+    explorerMarketingRows: explorerMarketingRows,
     refreshLinkedAssetsAfterEdit: refreshLinkedBrandingAfterEdit,
     bustLinkedBrandingCache: function () {
       _indexAssetsPromise = null;
