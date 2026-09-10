@@ -77,7 +77,8 @@ $xdCommon = @(
 )
 $xfCommon = @(
   "*.pyc", "*.bak*", "*backup*", "*Conflict*", "*.drifted*", "*.pre-*",
-  "index-watcher.log", "audit-log.jsonl", "branding-index.json"
+  "index-watcher.log", "audit-log.jsonl", "branding-index.json",
+  "machine-config.json"
 )
 
 Write-Host "Staging bin (runtime + THEME + apps)..."
@@ -122,11 +123,17 @@ Set-Content -Path (Join-Path $webDataDst "branding-index.json") -Value '{"versio
 $readmeSrc = Join-Path $BinRoot "installer\README.txt"
 if (Test-Path $readmeSrc) { Copy-Item $readmeSrc (Join-Path $stageRoot "README.txt") -Force }
 
-$vcRedist = Join-Path $BinRoot "installer\redist\vc_redist.x64.exe"
-New-Item -ItemType Directory -Force -Path (Split-Path $vcRedist) | Out-Null
+$redistDir = Join-Path $BinRoot "installer\redist"
+New-Item -ItemType Directory -Force -Path $redistDir | Out-Null
+$vcRedist = Join-Path $redistDir "vc_redist.x64.exe"
 if (-not (Test-Path $vcRedist)) {
   Write-Host "Downloading VC++ redist..."
   Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile $vcRedist -UseBasicParsing
+}
+$wv2Bootstrap = Join-Path $redistDir "MicrosoftEdgeWebview2Setup.exe"
+if (-not (Test-Path $wv2Bootstrap)) {
+  Write-Host "Downloading WebView2 bootstrapper..."
+  Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $wv2Bootstrap -UseBasicParsing
 }
 
 $releaseDir = $GitRoot

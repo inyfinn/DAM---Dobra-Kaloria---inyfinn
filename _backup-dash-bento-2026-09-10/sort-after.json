@@ -1,0 +1,76 @@
+{
+  "row_count": 399,
+  "unique": 374,
+  "top10": [
+    {
+      "name": "Tiramisu Czekolada Kakao",
+      "index": "6300837.00",
+      "sortDate": "2026-09-07",
+      "mtime_ms": 1788739200000,
+      "date": "2026-09-07"
+    },
+    {
+      "name": "Banoffee Kakao",
+      "index": "6300838.00",
+      "sortDate": "2026-09-04",
+      "mtime_ms": 1788480000000,
+      "date": "2026-09-04"
+    },
+    {
+      "name": "Gyros Pea",
+      "index": "6300531.00",
+      "sortDate": "2026-09-04",
+      "mtime_ms": 1788480000000,
+      "date": "2026-09-04"
+    },
+    {
+      "name": "- MIX- Funkcjonalny - 3x batony_duzy",
+      "index": "6300813.00",
+      "sortDate": "2026-08-21",
+      "mtime_ms": 1787270400000,
+      "date": "2026-08-21"
+    },
+    {
+      "name": "Burger",
+      "index": "6300796.00",
+      "sortDate": "2026-08-21",
+      "mtime_ms": 1787270400000,
+      "date": "2026-08-21"
+    },
+    {
+      "name": "Nuggets",
+      "index": "6300807.00",
+      "sortDate": "2026-08-19",
+      "mtime_ms": 1787097600000,
+      "date": "2026-08-19"
+    },
+    {
+      "name": "Gyros Groch",
+      "index": "6300809.00",
+      "sortDate": "2026-08-18",
+      "mtime_ms": 1787011200000,
+      "date": "2026-08-18"
+    },
+    {
+      "name": "Pasztet Pomidor",
+      "index": "6300814.00",
+      "sortDate": "2026-08-17",
+      "mtime_ms": 1786924800000,
+      "date": "2026-08-17"
+    },
+    {
+      "name": "Prebiotyk",
+      "index": "6300815.00",
+      "sortDate": "2026-08-13",
+      "mtime_ms": 1786579200000,
+      "date": "2026-08-13"
+    },
+    {
+      "name": "Burger Wolowy",
+      "index": "6300811.00",
+      "sortDate": "2026-08-13",
+      "mtime_ms": 1786579200000,
+      "date": "2026-08-13"
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "product_count": 193,
+  "final_rows": 13,
+  "sample_rev_keys": [
+    "carrier",
+    "date",
+    "files_by_role",
+    "folder",
+    "index",
+    "index_base",
+    "index_rev",
+    "is_latest",
+    "langs",
+    "langs_manual",
+    "langs_source",
+    "path",
+    "rel",
+    "slots",
+    "wizki",
+    "wizki_count"
+  ],
+  "before_text_sort_top10": [
+    {
+      "name": "Ciasto Śliwkowe",
+      "index": "6300784.00",
+      "sortDate": "2026-06-18",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1781733600000,
+      "computed_iso": "2026-06-17 22:00:00 UTC"
+    },
+    {
+      "name": "Cynamonka",
+      "index": "6300782.00",
+      "sortDate": "2026-06-18",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1781733600000,
+      "computed_iso": "2026-06-17 22:00:00 UTC"
+    },
+    {
+      "name": "Ciasto Śliwkowe",
+      "index": "6300785.00",
+      "sortDate": "2026-05-20",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1779228000000,
+      "computed_iso": "2026-05-19 22:00:00 UTC"
+    },
+    {
+      "name": "Cynamonka",
+      "index": "6300783.00",
+      "sortDate": "2026-05-20",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1779228000000,
+      "computed_iso": "2026-05-19 22:00:00 UTC"
+    },
+    {
+      "name": "Daktyl Wiśnia",
+      "index": "6300758.00",
+      "sortDate": "2026-05-15",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1778796000000,
+      "computed_iso": "2026-05-14 22:00:00 UTC"
+    },
+    {
+      "name": "Malina",
+      "index": "6300727.00",
+      "sortDate": "2026-02-24",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1771887600000,
+      "computed_iso": "2026-02-23 23:00:00 UTC"
+    },
+    {
+      "name": "Malina",
+      "index": "6300754.00",
+      "sortDate": "2026-02-24",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1771887600000,
+      "computed_iso": "2026-02-23 23:00:00 UTC"
+    },
+    {
+      "name": "Rogal Poznański",
+      "index": "6300682.00",
+      "sortDate": "2025-12-30",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1767049200000,
+      "computed_iso": "2025-12-29 23:00:00 UTC"
+    },
+    {
+      "name": "Pączek Różany",
+      "index": "6300687.00",
+      "sortDate": "2025-11-28",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1764284400000,
+      "computed_iso": "2025-11-27 23:00:00 UTC"
+    },
+    {
+      "name": "Pączek Różany",
+      "index": "6300686.00",
+      "sortDate": "2025-11-27",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1764198000000,
+      "computed_iso": "2025-11-26 23:00:00 UTC"
+    }
+  ],
+  "numeric_sort_top10": [
+    {
+      "name": "Ciasto Śliwkowe",
+      "index": "6300784.00",
+      "sortDate": "2026-06-18",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1781733600000,
+      "computed_iso": "2026-06-17 22:00:00 UTC"
+    },
+    {
+      "name": "Cynamonka",
+      "index": "6300782.00",
+      "sortDate": "2026-06-18",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1781733600000,
+      "computed_iso": "2026-06-17 22:00:00 UTC"
+    },
+    {
+      "name": "Ciasto Śliwkowe",
+      "index": "6300785.00",
+      "sortDate": "2026-05-20",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1779228000000,
+      "computed_iso": "2026-05-19 22:00:00 UTC"
+    },
+    {
+      "name": "Cynamonka",
+      "index": "6300783.00",
+      "sortDate": "2026-05-20",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1779228000000,
+      "computed_iso": "2026-05-19 22:00:00 UTC"
+    },
+    {
+      "name": "Daktyl Wiśnia",
+      "index": "6300758.00",
+      "sortDate": "2026-05-15",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1778796000000,
+      "computed_iso": "2026-05-14 22:00:00 UTC"
+    },
+    {
+      "name": "Malina",
+      "index": "6300727.00",
+      "sortDate": "2026-02-24",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1771887600000,
+      "computed_iso": "2026-02-23 23:00:00 UTC"
+    },
+    {
+      "name": "Malina",
+      "index": "6300754.00",
+      "sortDate": "2026-02-24",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1771887600000,
+      "computed_iso": "2026-02-23 23:00:00 UTC"
+    },
+    {
+      "name": "Rogal Poznański",
+      "index": "6300682.00",
+      "sortDate": "2025-12-30",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1767049200000,
+      "computed_iso": "2025-12-29 23:00:00 UTC"
+    },
+    {
+      "name": "Pączek Różany",
+      "index": "6300687.00",
+      "sortDate": "2025-11-28",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1764284400000,
+      "computed_iso": "2025-11-27 23:00:00 UTC"
+    },
+    {
+      "name": "Pączek Różany",
+      "index": "6300686.00",
+      "sortDate": "2025-11-27",
+      "mtime": null,
+      "mtime_ms": null,
+      "computed_ms": 1764198000000,
+      "computed_iso": "2025-11-26 23:00:00 UTC"
+    }
+  ]
+}

@@ -1,0 +1,351 @@
+{
+  "v-dashboard": {
+    "url": "http://127.0.0.1:8765/dashboard.html",
+    "hits": [],
+    "js": {
+      "title": "Dashboard - DAM - Dobra Kaloria",
+      "boot": "dam-booted",
+      "hasCustomizer": true,
+      "hasMsgBadge": true,
+      "folderKids": 0,
+      "charts": [
+        false,
+        false,
+        false
+      ],
+      "apex": "undefined",
+      "fail": false,
+      "failText": "",
+      "demo": []
+    },
+    "external": [
+      "http://fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    ],
+    "net_n": 149,
+    "shot": {
+      "stem": "v-dashboard",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-dashboard.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 196739
+    }
+  },
+  "customizer": {
+    "clicked": true,
+    "active": true,
+    "shot": {
+      "stem": "v-customizer",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-customizer.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 197385
+    }
+  },
+  "v-explorer": {
+    "url": "http://127.0.0.1:8765/explorer.html",
+    "hits": [],
+    "js": {
+      "title": "Eksplorator - DAM",
+      "boot": "dam-booted",
+      "hasCustomizer": true,
+      "hasMsgBadge": true,
+      "folderKids": 1,
+      "charts": [
+        false,
+        false,
+        false
+      ],
+      "apex": "function",
+      "fail": false,
+      "failText": "",
+      "demo": []
+    },
+    "external": [
+      "http://fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    ],
+    "net_n": 133,
+    "shot": {
+      "stem": "v-explorer",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-explorer.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 127747
+    }
+  },
+  "v-viz": {
+    "url": "http://127.0.0.1:8765/visualizations.html",
+    "hits": [],
+    "js": {
+      "title": "Wizualizacje - DAM",
+      "boot": "dam-booted",
+      "hasCustomizer": true,
+      "hasMsgBadge": true,
+      "folderKids": 0,
+      "charts": [
+        false,
+        false,
+        false
+      ],
+      "apex": "undefined",
+      "fail": false,
+      "failText": "",
+      "demo": []
+    },
+    "external": [
+      "http://fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    ],
+    "net_n": 144,
+    "shot": {
+      "stem": "v-viz",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-viz.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 164142
+    }
+  },
+  "v-costs": {
+    "url": "http://127.0.0.1:8765/costs.html",
+    "hits": [],
+    "js": {
+      "title": "Kalkulator kosztów - DAM",
+      "boot": "dam-booted",
+      "hasCustomizer": true,
+      "hasMsgBadge": true,
+      "folderKids": 0,
+      "charts": [
+        false,
+        false,
+        false
+      ],
+      "apex": "undefined",
+      "fail": false,
+      "failText": "",
+      "demo": []
+    },
+    "external": [
+      "http://fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    ],
+    "net_n": 89,
+    "shot": {
+      "stem": "v-costs",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-costs.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 145234
+    }
+  },
+  "v-invoices": {
+    "url": "http://127.0.0.1:8765/invoices.html",
+    "hits": [],
+    "js": {
+      "title": "Faktury - DAM",
+      "boot": "dam-booted",
+      "hasCustomizer": true,
+      "hasMsgBadge": true,
+      "folderKids": 0,
+      "charts": [
+        false,
+        false,
+        false
+      ],
+      "apex": "undefined",
+      "fail": false,
+      "failText": "",
+      "demo": []
+    },
+    "external": [
+      "http://fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    ],
+    "net_n": 98,
+    "shot": {
+      "stem": "v-invoices",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-invoices.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 127921
+    }
+  },
+  "ex1": {
+    "kids": 1,
+    "shot": {
+      "stem": "v-ex-before-viz",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-ex-before-viz.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 127623
+    }
+  },
+  "ex2": {
+    "url": "http://127.0.0.1:8765/visualizations.html",
+    "shot": {
+      "stem": "v-ex-on-viz",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-ex-on-viz.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 168630
+    }
+  },
+  "ex3": {
+    "kids": 1,
+    "url": "http://127.0.0.1:8765/explorer.html",
+    "hasKids": true,
+    "sample": "Batony\n85 prod.\nKulki\n19 prod.\nRoślinne\n60 prod.\nSypkie\n14 prod.\nNapoje\n3 prod.\nPrzetwory\n3 prod.\nDatesy\n8 prod.\nChrupkulki\n1 prod.",
+    "shot": {
+      "stem": "v-ex-return",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-ex-return.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 131135
+    }
+  },
+  "signin": {
+    "ext": [
+      "http://fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    ],
+    "net": [
+      "http://127.0.0.1:8765/signin.html",
+      "http://127.0.0.1:8765/assets/js/dam-panic-reload.js?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/vendor/css/bootstrap/bootstrap.css",
+      "http://127.0.0.1:8765/assets/css/dam-fonts.css",
+      "http://127.0.0.1:8765/assets/css/style.css",
+      "http://127.0.0.1:8765/assets/css/dam-tokens.css?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/css/dam-primitives.css?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/css/dam-app.css?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/css/dam-brand.css?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/css/dam-auth.css",
+      "http://127.0.0.1:8765/assets/img/logo-dobra-kaloria.svg",
+      "http://127.0.0.1:8765/assets/img/auth/kubara-building.avif",
+      "http://127.0.0.1:8765/assets/js/main.js",
+      "http://127.0.0.1:8765/assets/js/dam-runtime.js?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/js/dam-api.js?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/vendor/icons/unicons-line.css",
+      "http://fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap",
+      "http://127.0.0.1:8765/dam-runtime.json",
+      "http://127.0.0.1:8766/auth/registration-open",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-500.woff2",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-400.woff2",
+      "http://127.0.0.1:8765/assets/vendor/icons/fonts/line/unicons-8.woff2",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-ext-500.woff2",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-ext-400.woff2",
+      "http://127.0.0.1:8765/assets/vendor/icons/fonts/line/unicons-15.woff2",
+      "http://127.0.0.1:8765/assets/vendor/icons/fonts/line/unicons-7.woff2",
+      "http://127.0.0.1:8766/health",
+      "http://127.0.0.1:8765/assets/img/favicon.svg",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-600.woff2",
+      "http://127.0.0.1:8765/signin-geex.html",
+      "http://127.0.0.1:8765/signin.html",
+      "http://127.0.0.1:8765/assets/js/dam-panic-reload.js?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/vendor/css/bootstrap/bootstrap.css",
+      "http://127.0.0.1:8765/assets/css/dam-fonts.css",
+      "http://127.0.0.1:8765/assets/css/style.css",
+      "http://127.0.0.1:8765/assets/css/dam-tokens.css?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/css/dam-primitives.css?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/css/dam-app.css?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/css/dam-brand.css?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/css/dam-auth.css",
+      "http://127.0.0.1:8765/assets/img/logo-dobra-kaloria.svg",
+      "http://127.0.0.1:8765/assets/img/auth/kubara-building.avif",
+      "http://127.0.0.1:8765/assets/js/main.js",
+      "http://127.0.0.1:8765/assets/js/dam-runtime.js?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/js/dam-api.js?v=restore20260805c",
+      "http://127.0.0.1:8765/assets/vendor/icons/unicons-line.css",
+      "http://fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap",
+      "http://127.0.0.1:8765/dam-runtime.json",
+      "http://127.0.0.1:8765/assets/vendor/icons/fonts/line/unicons-15.woff2",
+      "http://127.0.0.1:8765/assets/vendor/icons/fonts/line/unicons-7.woff2",
+      "http://127.0.0.1:8765/assets/vendor/icons/fonts/line/unicons-8.woff2",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-400.woff2",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-500.woff2",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-600.woff2",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-ext-400.woff2",
+      "http://127.0.0.1:8765/assets/vendor/fonts/jost-latin-ext-500.woff2",
+      "http://127.0.0.1:8766/auth/registration-open",
+      "http://127.0.0.1:8766/health",
+      "http://127.0.0.1:8765/assets/img/favicon.svg"
+    ],
+    "hasPicture": true,
+    "hasAuthCss": true,
+    "hasSvg": false,
+    "shot": {
+      "stem": "v-signin",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-signin.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 442926
+    }
+  },
+  "signin-geex": {
+    "url": "http://127.0.0.1:8765/signin.html",
+    "title": "DAM - Dobra Kaloria - Logowanie",
+    "shot": {
+      "stem": "v-signin-geex",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-signin-geex.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 442926
+    }
+  },
+  "fail": {
+    "js": {
+      "fail": false,
+      "title": "",
+      "geexDemo": false,
+      "boot": "dam-booted"
+    },
+    "shot": {
+      "stem": "v-boot-fail",
+      "path": "D:\\Marketing\\- POLSKA\\99 - WYMIANA\\Krzysztof\\--- Moj obszar pracy\\DAM---Dobra-Kaloria---inyfinn\\_backup-shell-geex-2026-09-10\\v-boot-fail.png",
+      "w": 1280,
+      "h": 900,
+      "bytes": 145356
+    }
+  },
+  "dash-net": {
+    "ext": [
+      "http://fonts.googleapis.com/css2?family=Lexend:wght@100;200&family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    ],
+    "n": 122,
+    "urls": [
+      "http://127.0.0.1:8765/dashboard.html",
+      "http://127.0.0.1:8766/telemetry/batch",
+      "http://127.0.0.1:8765/assets/css/dam-shell-boot.css?v=5.0.182",
+      "http://127.0.0.1:8765/assets/vendor/css/bootstrap/bootstrap.css",
+      "http://127.0.0.1:8765/assets/css/dam-fonts.css",
+      "http://127.0.0.1:8765/assets/vendor/css/jquery-ui/jquery-ui.css",
+      "http://127.0.0.1:8765/assets/css/style.css",
+      "http://127.0.0.1:8765/assets/css/dam-tokens.css?v=5.0.170",
+      "http://127.0.0.1:8765/assets/css/dam-primitives.css?v=5.0.170",
+      "http://127.0.0.1:8765/assets/css/dam-app.css?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/css/dam-brand.css?v=5.0.165",
+      "http://127.0.0.1:8765/assets/css/dam-dashboard.css?v=5.0.170",
+      "http://127.0.0.1:8765/assets/css/dam-bento.css?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/css/dam-tutorial.css?v=5.0.190",
+      "http://127.0.0.1:8765/assets/img/logo-dark.svg",
+      "http://127.0.0.1:8765/assets/img/logo-lite.svg",
+      "http://127.0.0.1:8765/assets/img/avatar/avatar-male.svg",
+      "http://127.0.0.1:8765/assets/vendor/js/jquery/jquery-3.5.1.min.js",
+      "http://127.0.0.1:8765/assets/vendor/js/jquery/jquery-ui.js",
+      "http://127.0.0.1:8765/assets/vendor/js/bootstrap/bootstrap.min.js",
+      "http://127.0.0.1:8765/assets/js/main.js",
+      "http://127.0.0.1:8765/assets/js/dam-api.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-i18n.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-runtime.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-version.js?v=5.0.195",
+      "http://127.0.0.1:8765/assets/js/dam-shell.js?v=5.0.188",
+      "http://127.0.0.1:8765/assets/js/dam-fmcg-cost.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-user-prefs.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-fmcg-catalog.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-notify.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-labels.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-icons.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-badges.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-paths.js?v=5.0.188",
+      "http://127.0.0.1:8765/assets/js/dam-folder-picker.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-tooltips.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-assoc-action-tips.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-modal-shared.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-marketing-id.js?v=restore20260805e",
+      "http://127.0.0.1:8765/assets/js/dam-assoc-edit.js?v=5.0.139"
+    ]
+  }
+}

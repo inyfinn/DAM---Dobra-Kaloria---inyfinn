@@ -1,0 +1,7 @@
+900: - 2026-07-21 | viz variants spam | dziesiatki `PL � index` w `#damVizModal` |
+1193: failsafe clear skeleton; po `revealRows` r�b `gsap.killTweensOf` + force
+1230: + rozr�?nij `login_required` vs sie?; copy PL: ?Most zmian niedost?pny -
+1231: Cofnij/Pon�w lokalnie?. Cofnij/Pon�w = undo/redo rename typu/indeksu/plik�w
+1233: - 2026-07-20 | BENTO C3 | pokusa redesignu kart przy chrome hub�w | anatomia
+1234: `.dam-viz-card` / `.dam-branding-card` zamro?ona (memory �123) | freeze spec
+1307: badge N na kafelku; label `N grup � M plikow`; klik = primary (prefer DESKTOP /
