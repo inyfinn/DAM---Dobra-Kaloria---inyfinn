@@ -1,12 +1,12 @@
 # DATABASE - backupy PostgreSQL (ADR-009) + lokalny SQLite
 
-Oficjalna baza DAM ETA (gdy port 5433 otwarty): **PostgreSQL 16** na Synology
-(kontener `dam-eta-postgres`, port hosta **5433**). Teraz silnik zostaje na
-**SQLite offline** (auto), az do odblokowania portu w domu.
+Oficjalna baza DAM ETA: **PostgreSQL 16** na Synology
+(kontener `dam-eta-postgres`, port hosta **5433**, DDNS `inyfinn.synology.me`).
+Silnik live od 2026-09-10: **Postgres**. Lokalny SQLite = OFFLINE / lustro.
 
-## Lokalny SQLite (live, offline)
+## Lokalny SQLite (offline + mirror)
 
-**Kanoniczna sciezka (NA RAZIE JEDYNA live):** `bin/DATABASE/dam-local.sqlite`
+**Kanoniczna sciezka lustra / awarii:** `bin/DATABASE/dam-local.sqlite`
 
 To jest katalog **w projekcie DAM**, nie folder Marketing (`D:\Marketing\DATABASE`
 ani `{ROOT}/DATABASE` — tego NIE uzywamy jako live).
@@ -17,9 +17,9 @@ Na tej maszynie:
 
 (w domu ten sam drzewo projektu bywa mapowane jako `M:\- POLSKA\99 - WYMIANA\...`).
 
-- `dam-local.sqlite` — live, **gitignored**
+- `dam-local.sqlite` — lustro / OFFLINE, **gitignored**
 - `users-seed.sqlite` — seed kont
-- `dam_eta_*.sql.gz` — dumpy Postgres (gdy bedzie online)
+- `dam_eta_*.sql.gz` — dumpy Postgres
 
 Przy starcie aplikacja **scala** kopie z `apps/desktop/data/dam-local.sqlite`
 (legacy) do `bin/DATABASE/`, **preferujac pelna baze (wiecej users / wiekszy plik)**,
@@ -27,8 +27,7 @@ nigdy nowsza pusta kopie ~45 KB nad ~7 MB / 18 kont.
 
 Zapisow kolejkowane per konto (`db_user_queue.py`).
 
-Pozniej: odblokowac Synology TCP 5433 i przejsc na Postgres (mode auto).
-Nie przelaczamy teraz.
+Live = Postgres `inyfinn.synology.me:5433`. SQLite tylko gdy PG nie odpowiada.
 
 ## Co tu lezy (repo bin/DATABASE)
 
@@ -62,8 +61,9 @@ Wymaga SSH hosta `syno` w `~/.ssh/config`. Nie commituje hasel - tylko `.sql.gz`
 
 | Skad | Host |
 |------|------|
-| Domyslnie (wszedzie) | `inyfinn.synology.me:5433` (DDNS) |
-| Awaryjnie (LAN) | `192.168.0.145:5433` |
+| Domyslnie (WAN / DDNS) | `inyfinn.synology.me:5433` |
+| Ten sam WAN, gdy DNS padnie | `212.87.249.132:5433` |
+| W domu (LAN) | `192.168.1.145:5433` |
 
 Aplikacja proboje hosty po kolei (patrz `pg-config.example.json` / `dam-connection.env.example`).
 
