@@ -1269,6 +1269,35 @@
     );
   }
 
+  function bindDashIndexAnchors(host) {
+    if (!host) return;
+    if (global.DamCardIndexPopover && typeof DamCardIndexPopover.bind === "function") {
+      DamCardIndexPopover.bind(host);
+      return;
+    }
+    host.querySelectorAll(".dam-viz-card__show-indexes").forEach(function (btn) {
+      if (btn._damDashIdxBound) return;
+      btn._damDashIdxBound = true;
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var anchor = btn.closest(".dam-viz-card__indexes-anchor");
+        var wrap =
+          (anchor && anchor.querySelector(".dam-viz-card__indexes-wrap")) ||
+          (btn.parentNode && btn.parentNode.querySelector(".dam-viz-card__indexes-wrap"));
+        if (!wrap) return;
+        var open = !(anchor && anchor.classList.contains("is-expanded"));
+        if (anchor) {
+          if (open) anchor.classList.add("is-expanded");
+          else anchor.classList.remove("is-expanded");
+        }
+        if (open) wrap.removeAttribute("hidden");
+        else wrap.setAttribute("hidden", "");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+    });
+  }
+
   function rebindWidgetChrome(host) {
     if (!host) return;
     if (global.DamIcons && typeof DamIcons.bindWinButtons === "function") {
@@ -1277,6 +1306,7 @@
     if (global.DamBadges && typeof DamBadges.bindClicks === "function") {
       DamBadges.bindClicks(host, "dashboard");
     }
+    bindDashIndexAnchors(host);
     if (host.classList && host.classList.contains("dam-widget--media-latest")) {
       scheduleSyncMediaTileHeights();
     }
@@ -1941,9 +1971,100 @@
     return map;
   }
 
+  function hashSeriesKey(key) {
+    var h = 2166136261;
+    var s = String(key || "");
+    var i;
+    for (i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function pickStableSeriesRep(variants, seriesKey) {
+    var arr = (variants || []).slice().sort(function (a, b) {
+      return String(a.index || "").localeCompare(String(b.index || ""));
+    });
+    if (!arr.length) return null;
+    return arr[hashSeriesKey(seriesKey) % arr.length];
+  }
+
+  function variantExtraAria(extra) {
+    var n = Number(extra) || 0;
+    if (n <= 0) return "";
+    if (n === 1) return t("dash.widget.variant_extra_1", "+1 wariant");
+    if (n <= 4) {
+      return t("dash.widget.variant_extra_few", "+" + n + " warianty").replace(
+        "{n}",
+        String(n)
+      );
+    }
+    return t("dash.widget.variant_extra_many", "+" + n + " wariantów").replace(
+      "{n}",
+      String(n)
+    );
+  }
+
+  function productVariantBadgeHtml(displayCount) {
+    if (!displayCount || displayCount <= 1) return "";
+    var extra = displayCount - 1;
+    return (
+      '<span class="dam-viz-card__variant-badge" aria-label="' +
+      escapeHtml(variantExtraAria(extra)) +
+      '">+' +
+      extra +
+      "</span>"
+    );
+  }
+
+  function productIndexesBlockHtml(variants) {
+    var labels = [];
+    var seen = {};
+    (variants || []).forEach(function (v) {
+      var idx = String((v && (v.index || v.product_index || v.index_base)) || "");
+      if (!idx || seen[idx]) return;
+      seen[idx] = true;
+      labels.push(idx);
+    });
+    if (labels.length <= 1) return "";
+    return (
+      '<div class="dam-viz-card__indexes-anchor">' +
+      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-card__show-indexes" data-dam-tip="' +
+      escapeHtml(
+        t(
+          "dash.widget.show_indexes_tip",
+          "Pokaż wszystkie indeksy wariantów (klik = kopiuj)"
+        )
+      ) +
+      '" aria-expanded="false">' +
+      '<i class="uil uil-layer-group" aria-hidden="true"></i><span>' +
+      escapeHtml(t("dash.widget.show_indexes", "Pokaż indeksy")) +
+      "</span></button>" +
+      '<div class="dam-viz-card__indexes-wrap dam-index-popover" hidden>' +
+      labels
+        .map(function (idx) {
+          return (
+            '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip" data-copy-id="' +
+            escapeHtml(idx) +
+            '" data-tag-value="' +
+            escapeHtml(idx) +
+            '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj indeks ' +
+            escapeHtml(idx) +
+            '"><i class="uil uil-copy" aria-hidden="true"></i>' +
+            escapeHtml(idx) +
+            "</button>"
+          );
+        })
+        .join("") +
+      "</div></div>"
+    );
+  }
+
   /**
-   * Najnowsze warianty na pulpicie: Final (F) oraz bieżące is_latest bez X/D/archiwum.
-   * Sort liczbowy po dacie rewizji (rev.date / folder), nie po tekście i nie po mtime pliku wizki.
+   * Najnowsze produkty Final (F), zgrupowane w serie po znormalizowanej nazwie.
+   * Licznik kafelków = liczba serii. Data serii = najnowszy wariant.
+   * Reprezentant stały: skrót klucza serii modulo liczba wariantów.
    */
   function pickNewestProductsF(ctx, limit) {
     var products = (ctx.fileIndex && ctx.fileIndex.products) || [];
@@ -1954,7 +2075,7 @@
       var name = prod.display_name || prod.name || pid;
       if (/test-lifecycle/i.test(pid) || /^test\b/i.test(name)) return;
       (prod.revisions || []).forEach(function (rev) {
-        if (!revisionEligibleForNewest(rev)) return;
+        if (!revisionIsFinal(rev)) return;
         var idx = String(rev.index || rev.index_base || "");
         if (!idx || idx === "pending" || /^noid/i.test(idx) || idx.indexOf("000000") === 0) {
           return;
@@ -1967,7 +2088,6 @@
           (viz && parseRevisionDate(viz.revision_folder, "")) ||
           "";
         var mtimeMs = recordMtimeMs({ date: sortDate, mtime: sortDate });
-        if (!mtimeMs && viz) mtimeMs = recordMtimeMs(viz);
         rows.push({
           product_id: pid,
           product_name: name,
@@ -1997,14 +2117,44 @@
       });
     });
     rows.sort(compareNewestDesc);
-    var seen = {};
-    var unique = [];
+    var byKey = {};
+    var keyOrder = [];
     rows.forEach(function (r) {
-      if (seen[r.index]) return;
-      seen[r.index] = true;
-      unique.push(r);
+      var key = normDashText(r.product_name || "");
+      if (!key) key = "idx:" + String(r.index || r.product_id || "");
+      if (!byKey[key]) {
+        byKey[key] = { variants: [], seenIdx: {} };
+        keyOrder.push(key);
+      }
+      var g = byKey[key];
+      if (g.seenIdx[r.index]) return;
+      g.seenIdx[r.index] = true;
+      g.variants.push(r);
     });
-    return unique.slice(0, limit || 4);
+    var series = keyOrder.map(function (key) {
+      var vars = byKey[key].variants;
+      var newestMs = 0;
+      vars.forEach(function (v) {
+        var ms = recordMtimeMs(v);
+        if (ms > newestMs) newestMs = ms;
+      });
+      var rep = pickStableSeriesRep(vars, key);
+      var out = Object.assign({}, rep, {
+        series_key: key,
+        series_count: vars.length,
+        series_variants: vars,
+        mtime_ms: newestMs
+      });
+      if (newestMs) {
+        var iso = new Date(newestMs).toISOString().slice(0, 10);
+        out.date = iso;
+        out.mtime = iso;
+        out.sortDate = iso;
+      }
+      return out;
+    });
+    series.sort(compareNewestDesc);
+    return series.slice(0, limit || 4);
   }
 
   function buildMediaLatestRowHtml(v, opts) {
@@ -2039,6 +2189,9 @@
         ? DamIcons.winExplorerSvg()
         : '<i class="uil uil-folder" aria-hidden="true"></i>';
     var indexVal = v.index || v.product_index || v.index_base || "";
+    var seriesCount = Number(v.series_count) || 0;
+    var variantBadge = productVariantBadgeHtml(seriesCount);
+    var indexesBlock = productIndexesBlockHtml(v.series_variants);
     var badges =
       global.DamBadges && typeof DamBadges.render === "function"
         ? DamBadges.render({
@@ -2069,7 +2222,13 @@
           ) +
           "</span>";
     return (
-      '<li class="dam-widget__viz-row">' +
+      '<li class="dam-widget__viz-row" data-series-key="' +
+      escapeHtml(v.series_key || "") +
+      '" data-rep-index="' +
+      escapeHtml(indexVal) +
+      '" data-variant-count="' +
+      escapeHtml(String(seriesCount || 1)) +
+      '">' +
       '<div class="dam-nav-circles dam-nav-circles--stack dam-nav-circles--tiles">' +
       '<a class="dam-viz-icon-btn dam-viz-icon-btn--explorer" href="' +
       escapeHtml(explorerHref) +
@@ -2106,6 +2265,7 @@
       '" alt="' +
       escapeHtml(name) +
       '" loading="lazy" />' +
+      variantBadge +
       "</a>" +
       '<div class="dam-widget__viz-body">' +
       '<a href="' +
@@ -2117,7 +2277,9 @@
       "</a>" +
       '<div class="dam-widget__viz-badges">' +
       badges +
-      "</div></div></div></li>"
+      "</div>" +
+      indexesBlock +
+      "</div></div></li>"
     );
   }
 

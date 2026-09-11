@@ -1,9 +1,9 @@
 {
-  "version": "5.0.197",
+  "version": "5.0.198",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-09-10",
-  "note": "5.0.197: dashboard bento tile count 2-10, numeric newest sort",
+  "note": "5.0.198: dashboard product series collapse + variant bubble",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

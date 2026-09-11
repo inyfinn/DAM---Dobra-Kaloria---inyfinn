@@ -354,3 +354,151 @@ pokazuje w interfejsie dzialajacy przycisk **"Dostosuj"** — panel jest uzywany
 Usuniecie go dla wygody pomiaru zabiloby funkcje. Hipoteza do weryfikacji przez strefe
 naprawy: panel stoi na `position: absolute` zamiast `fixed`, wiec choc odsuniety za
 krawedz, **rozciaga szerokosc dokumentu** (element `fixed` nie powieksza `scrollWidth`).
+
+## Nocna zmiana, 2026-09-10 16:25 - 16:45
+
+Wlasciciel odszedl od komputera. Jego slowa, doslownie:
+
+> ja idę. i już mnie nie będzie. wrócę dopiero rano., masz sam się wyłapać z tego
+> stanu, zę nic się nie dzieje. Dokończ swoją pracę. ja idę.
+
+Poprzednio, tuz przed odejsciem:
+
+> dziąłaj dalej. nie widzę pusha. ani nie wiem, co się dzieje. i czy skończyłęś
+> oraz czy uważasz że workerzy wykonali swoją pracę. upewnij się.
+
+Mial racje w kazdym punkcie. Nie bylo pusha, dwie strefy milczaly, a ja nie
+wiedzialem, czy sa zywe.
+
+### 1. Obie strefy byly martwe, nie zajete
+
+Nie mam narzedzia, ktore odpytuje strefe o stan. Ale mam probe posrednia:
+**proba wznowienia strefy udaje sie tylko wtedy, gdy strefa nie pracuje.** Wznowilem
+obie - **obie proby przeszly**. To dowod, ze zakonczyly sie same, a ich raporty do
+mnie nie dotarly. Nie byly zajete. Byly ciche.
+
+Zanim wydalem im nowe polecenia, sprawdzilem **sam**, czy nie zostawily gruzu -
+bo w tym projekcie plik mostu zostal juz raz obciety w polowie edycji:
+
+| Sprawdzenie | Wynik |
+|---|---|
+| `dam-dashboard-widgets.js` (5476 linii) | `node --check` OK |
+| `dam-bento-resize.js` (1780 linii) | `node --check` OK |
+| `dam-shell.js` (3189 linii) | `node --check` OK |
+| `dam-dashboard.css` | nawiasy 494 / 494 zbilansowane |
+| `dam-bento.css` | 71 / 71 zbilansowane |
+| `dam-app.css` | 169 / 169 zbilansowane |
+| `dam-tasks.css` | 144 / 144 zbilansowane |
+| `dashboard.html`, `tasks.html`, `costs.html`, `/health` | 200 |
+| porty 8765 / 8766 | jeden PID na port (95240, 17808) |
+
+Strefa bento zdazyla dopisac okolo 107 linii i **zostawila plik w stanie
+poprawnym**. Nic nie bylo zepsute. To wazny wniosek: cicha smierc strefy nie
+oznacza uszkodzonego produktu, ale **wymaga wlasnego sprawdzenia**, nie zaufania.
+
+**Lekcja do doktryny.** Proba wznowienia jest jednoczesnie **badaniem zywotnosci**
+i **poleceniem** - jesli strefa zyje, proba odbija sie bez szkody; jesli nie zyje,
+polecenie od razu wchodzi. Nie marnuj cyklu na samo pytanie "czy zyjesz". Kaz cos
+zrobic i zazadaj raportu w pierwszej kolejnosci.
+
+### 2. Push nie padl z powodu, ktory zalozylem
+
+Trzy nieudane proby, trzy rozne komunikaty:
+
+1. `error: RPC failed; HTTP 408` - to odpowiedz **serwera**, wiec laczosc byla
+2. `error: RPC failed; curl 55 Send failure: Connection was reset`
+3. `fatal: unable to access ... Failed to connect to github.com port 443 after 21083 ms`
+
+Moja pierwsza diagnoza brzmiala "za maly bufor zadania HTTP". Podnioslem
+`http.postBuffer` do 500 MB, wymusilem HTTP/1.1, dodalem `--no-thin`. **Nie
+pomoglo.** Diagnoza byla bledna.
+
+Prawda z pomiaru:
+
+- **port 22 (SSH): zamkniety** - `connect to host github.com port 22: Connection
+  timed out`. W tej sieci SSH do GitHuba nie istnieje. Zostaje HTTPS.
+- **port 443: otwarty, ale z przerwami** - o 16:25 serwer odpowiadal, o 16:29 nie,
+  o 16:33 znowu tak.
+- proxy: brak (`Direct access`), wiec nie o to chodzilo
+
+Skuteczne okazalo sie **dzielenie na male paczki**. Jeden commit z 459 plikami
+zamienilem na szesc commitow tematycznych (dokumentacja 244, zrzuty bazy 7,
+pulpit i styl 84, strony i dane 54, most i desktop 25, reszta 49) i wysylam
+**po jednym**: `git push origin <sha>:refs/heads/main`. Pierwszy z nich,
+`d735395` z cala dokumentacja, **doszedl**.
+
+### 3. Wlasny blad pomiaru, ktory prawie mnie oszukal
+
+Moj skrypt ocenial powodzenie pushu po **tekscie wyjscia** - szukal slow
+`error|fatal|rejected`. PowerShell owija stderr gita we wlasny rekord bledu z
+nazwa `NativeCommandError`, a `-match` jest domyslnie **nieczule na wielkosc
+liter**. Slowo "Error" w nazwie identyfikatora zostalo odczytane jako awaria.
+**Log mowil "nieudana", a commit lezal juz na zdalnej galezi.**
+
+Poprawka: jedynym dowodem powodzenia jest **ref zdalny** - czy `origin/main`
+przeskoczyl na wysylany skrot. Wyjscie gita biore przez `cmd /c`, ktore nie owija
+stderr w rekordy PowerShella.
+
+To ten sam blad w innym przebraniu, co `overflow-x: clip` przy nadmiarze i status
+200 przy dwoch mostach na jednym porcie: **mierzenie objawu zamiast stanu.**
+
+### 4. Backup, ktory nie zalezy od sieci
+
+Skoro GitHub potrafi zniknac na cztery minuty, backup nie moze na nim stac.
+Zrobilem paczke calego repozytorium **poza katalogiem projektu**:
+
+- `_DAM-backup-2026-09-10.bundle`, **83,0 MB**
+- `git bundle verify` -> `is okay`, **pelna historia**, **44 galezie**
+- lezy obok katalogu projektu, nie w nim - inaczej kolejne `git add -A` wciagnelo
+  by ja do commitu
+
+Od tej pory praca jest zabezpieczona nawet przy calkowitym braku sieci.
+
+### 5. Doktryna: uszkodzone znaki naprawione, konsola przylapana na klamstwie
+
+W `code-doctrine.md` bylo **9 znakow zastepczych U+FFFD** we wpisach z 20-21 lipca.
+Odtworzylem je z sensu zdan i potwierdzilem **nazwami punktow kodowych**:
+
+| Bylo | Jest | Punkt kodowy potwierdzony |
+|---|---|---|
+| `PL ? index` | `PL -> index` | RIGHTWARDS ARROW |
+| `r?b` | `rob` z kreska | LATIN SMALL LETTER O WITH ACUTE |
+| `rozr??nij` | `rozroznij` | O WITH ACUTE + Z WITH DOT ABOVE |
+| `sie?` | `siec` | C WITH ACUTE |
+| `?Most zmian niedost?pny` | polski cudzyslow + `niedostepny` | DOUBLE LOW-9 QUOTATION MARK + E WITH OGONEK |
+| `Pon?w`, `plik?w`, `hub?w` | `Ponow`, `plikow`, `hubow` | O WITH ACUTE |
+| `lokalnie?.` | polski cudzyslow zamykajacy | RIGHT DOUBLE QUOTATION MARK |
+| `zamro?ona` | `zamrozona` | Z WITH DOT ABOVE |
+| `memory ?123` | `memory paragraf 123` | SECTION SIGN |
+| `N grup ? M plikow` | kropka srodkowa jako separator | MIDDLE DOT |
+
+Po naprawie: **0 znakow zastepczych**, 2288 linii bez zmiany.
+
+**Dwie pulapki, na ktore sie natknalem.**
+
+Pierwsza: **czesc uszkodzen to nie U+FFFD, a zwykly znak zapytania ASCII** - tekst
+byl zniszczony wczesniej i bezpowrotnie. Wzorzec z U+FFFD ich **nie znajduje**.
+Z 12 podstawien pierwszej tury trafilo 6; pozostale wymagaly wzorcow ze zwyklym
+`?` i czytania sensu zdania.
+
+Druga, powazniejsza: **konsola cp1250 pokazala mi falszywa awarie.** Po poprawnej
+naprawie odczytalem plik i zobaczylem `Pon?w`. Uznalem, ze zapis sie nie udal, i
+bylem gotow "naprawiac" drugi raz tekst, ktory byl w porzadku. Strona kodowa
+cp1250 nie ma `o z kreska`, strzalki ani kropki srodkowej - wiec ich nie pokazuje.
+**Plik byl poprawny od pierwszej tury.**
+
+Wniosek, ktory wszedl do `memory.md`: **nie oceniaj polskich znakow po wygladzie w
+terminalu.** Kontroluj `unicodedata.name(ch)` i licz `text.count('\ufffd')`
+programowo. Inaczej agent bedzie w petli "naprawial" poprawny tekst.
+
+### Stan na 16:45
+
+| Pozycja | Stan |
+|---|---|
+| Praca w commitach lokalnych | 6 commitow, 463 pliki |
+| Paczka backupu poza repo | 83 MB, zweryfikowana |
+| Na zdalnej galezi | 1 z 6 commitow; petla dowozi reszte sama |
+| Doktryna: znaki zastepcze | 0 |
+| Aplikacja | 200 na wszystkich sprawdzonych trasach, jeden most |
+| Strefy | trzy pracuja: bento + warianty, responsywnosc, wyszukiwanie skojarzeniowe |
+| Wersja 6.0.0 | **zablokowana** do slowa wlasciciela |

@@ -51,6 +51,8 @@ _CAMPAIGN_RE = re.compile(
 )
 _SHOOT_RE = re.compile(r"(?<![a-z0-9])bsa\s+\d+(?![a-z0-9])", re.IGNORECASE)
 _TOKEN_SPLIT_RE = re.compile(r"[^a-z0-9]+")
+_KOPIA_SEG_RE = re.compile(r"(?i)-kopia$")
+_NON_DIGITS_RE = re.compile(r"\D+")
 
 _CACHE: dict[str, Any] = {
     "vocab": None,
@@ -212,10 +214,32 @@ def _ensure_product_concepts() -> dict[str, list[str]]:
     return _CACHE["product_concepts"]
 
 
-def _merge_ocr(asset: dict, recognition: dict) -> str:
+def _recognition_by_id(recognition: dict) -> dict[str, dict]:
+    """Mapa id -> rekord OCR plus skróty z cyfr (M-SHOP404317 <-> 404317)."""
+    assets_map = recognition.get("assets") or {}
+    if not isinstance(assets_map, dict):
+        return {}
+    out: dict[str, dict] = {}
+    for key, rec in assets_map.items():
+        if not isinstance(rec, dict):
+            continue
+        out[str(key)] = rec
+        digits = _NON_DIGITS_RE.sub("", str(key))
+        if len(digits) >= 6:
+            out.setdefault(digits, rec)
+            out.setdefault(digits[-6:], rec)
+    return out
+
+
+def _merge_ocr(asset: dict, recognition: dict, by_id: dict[str, dict] | None = None) -> str:
     text = str(asset.get("ocr_text") or "").strip()
     aid = str(asset.get("id") or "")
-    rec = (recognition.get("assets") or {}).get(aid) or {}
+    lookup = by_id if by_id is not None else _recognition_by_id(recognition)
+    rec = lookup.get(aid) or {}
+    if not rec:
+        digits = _NON_DIGITS_RE.sub("", aid)
+        if len(digits) >= 6:
+            rec = lookup.get(digits) or lookup.get(digits[-6:]) or {}
     rec_text = str(rec.get("ocr_text") or "").strip()
     if rec_text and len(rec_text) > len(text):
         return rec_text
@@ -379,6 +403,7 @@ def _load_assets_unlocked() -> list[dict[str, Any]]:
     product_map = _ensure_product_concepts()
     fat = _load_json(WEB_DATA / "branding-index.json", {})
     recognition = _load_json(WEB_DATA / "branding-recognition.json", {})
+    rec_by_id = _recognition_by_id(recognition)
     assets_in = fat.get("assets") or []
     if not assets_in:
         slim = _load_json(WEB_DATA / "branding-grid-index.json", {})
@@ -388,7 +413,7 @@ def _load_assets_unlocked() -> list[dict[str, Any]]:
     for a in assets_in:
         path = str(a.get("path") or "")
         name = str(a.get("name") or "")
-        ocr = _merge_ocr(a, recognition)
+        ocr = _merge_ocr(a, recognition, rec_by_id)
         camp = campaign_from_path(path)
         rec = {
             "id": str(a.get("id") or ""),
@@ -521,7 +546,7 @@ def _product_group(rec: dict[str, Any], product_needed: list[str]) -> str:
     return "1"
 
 
-def _folder_reason_pl(rec: dict[str, Any]) -> str:
+def _folder_labels(rec: dict[str, Any]) -> list[str]:
     leaf = str(rec.get("leaf") or "").replace("\\", "/")
     parts = [p for p in leaf.split("/") if p]
     labels: list[str] = []
@@ -540,35 +565,147 @@ def _folder_reason_pl(rec: dict[str, Any]) -> str:
             short = part if len(part) <= 48 else part[:45] + "..."
             if short not in labels:
                 labels.append(short)
+    return labels
+
+
+def _folder_reason_pl(rec: dict[str, Any]) -> str:
+    labels = _folder_labels(rec)
     if labels:
-        return "folder: " + ", ".join(labels)
-    return "folder z szukanym produktem"
+        return "W folderze „" + ", ".join(labels) + "”"
+    return "W folderze z szukanym produktem"
+
+
+def _product_label_pl(product_needed: list[str]) -> str:
+    vocab = _ensure_vocab()
+    for cid in product_needed:
+        rec = vocab["by_id"].get(cid) or {}
+        label = str(rec.get("label_pl") or "").strip()
+        if label:
+            return label
+    return "szukanym produktem"
+
+
+def _has_person(rec: dict[str, Any]) -> bool:
+    return any(str(c).startswith("subject:") for c in (rec.get("_concepts") or {}))
 
 
 def _reason_pl(rec: dict[str, Any], group: str, product_needed: list[str]) -> str:
+    product_lbl = _product_label_pl(product_needed)
+    person = " Na zdjęciu jest osoba." if _has_person(rec) else ""
     if group == "3":
         camp = rec.get("campaign_label") or rec.get("campaign_key") or ""
-        return "ta sama kampania: " + camp if camp else "ta sama kampania"
+        if camp:
+            return (
+                "Z tej samej kampanii co zdjęcia z produktem „"
+                + product_lbl
+                + "”: "
+                + camp
+                + "."
+                + person
+            )
+        return (
+            "Z tej samej kampanii co zdjęcia z produktem „"
+            + product_lbl
+            + "”."
+            + person
+        )
     if group == "2":
         shoots = [collapse_spaces(str(x)).upper() for x in (rec.get("shoots") or []) if x]
-        if shoots:
-            return "ta sama sesja: " + ", ".join(shoots)
+        shoot = ", ".join(shoots)
+        if shoot:
+            return (
+                "Ta sama sesja zdjęciowa "
+                + shoot
+                + " - ta sama osoba, co na zdjęciach z produktem „"
+                + product_lbl
+                + "”."
+            )
         meta = _product_meta(rec, product_needed)
         via = meta.get("via") or ""
-        return "ta sama sesja: " + via if via else "ta sama sesja zdjęciowa"
+        if via:
+            return (
+                "Ta sama sesja zdjęciowa ("
+                + via
+                + ") - ta sama osoba, co na zdjęciach z produktem „"
+                + product_lbl
+                + "”."
+            )
+        return (
+            "Ta sama sesja zdjęciowa - ta sama osoba, co na zdjęciach z produktem „"
+            + product_lbl
+            + "”."
+        )
     meta = _product_meta(rec, product_needed)
     src = meta.get("source") or ""
     via = meta.get("via") or ""
     if src == "association" and via.startswith("tag:"):
         tag = via[4:].strip() or "produkt"
-        return "tag wyglądu: " + tag
-    if src == "path" or not src:
-        return _folder_reason_pl(rec)
+        return "Oznaczone tagiem wyglądu „" + tag + "”." + person
     if src == "filename":
-        return "nazwa pliku: " + (rec.get("name") or via or "")
+        return (
+            "Nazwa pliku „"
+            + (rec.get("name") or via or "")
+            + "” wskazuje na produkt „"
+            + product_lbl
+            + "”."
+            + person
+        )
     if src == "ocr":
-        return "tekst z grafiki: " + via
-    return _folder_reason_pl(rec)
+        return (
+            "Na grafice widać napis związany z produktem „"
+            + product_lbl
+            + "” („"
+            + via
+            + "”)."
+            + person
+        )
+    folder = _folder_reason_pl(rec)
+    return (
+        folder
+        + " - tu są zdjęcia z produktem „"
+        + product_lbl
+        + "”, nawet gdy nazwa pliku tego nie mówi."
+        + person
+    )
+
+
+def _path_is_kopia(path: str) -> bool:
+    parts = str(path or "").replace("\\", "/").split("/")
+    return any(bool(_KOPIA_SEG_RE.search(part)) for part in parts)
+
+
+def _canonical_hit_key(hit: dict[str, Any]) -> str:
+    p = str(hit.get("path") or "").replace("\\", "/")
+    parts = [_KOPIA_SEG_RE.sub("", part) for part in p.split("/")]
+    return "/".join(parts).lower()
+
+
+def _collapse_kopia_hits(hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Warstwa prezentacji: jeden wynik na oryginał+kopię folderu -kopia.
+
+    Nie rusza indeksu. Preferuje ścieżkę bez -kopia. Jeśli jest tylko kopia,
+    zostawia ją z is_copy=True.
+    """
+    groups: dict[str, list[dict[str, Any]]] = {}
+    order: list[str] = []
+    for hit in hits:
+        key = _canonical_hit_key(hit)
+        if key not in groups:
+            order.append(key)
+            groups[key] = []
+        groups[key].append(hit)
+    out: list[dict[str, Any]] = []
+    for key in order:
+        bunch = groups[key]
+        orig = [h for h in bunch if not _path_is_kopia(str(h.get("path") or ""))]
+        copies = [h for h in bunch if _path_is_kopia(str(h.get("path") or ""))]
+        keep = dict(orig[0] if orig else bunch[0])
+        if copies:
+            keep["merged_copy_count"] = len(copies) if orig else 0
+            keep["is_copy"] = not bool(orig)
+            keep["copy_paths"] = [str(h.get("path") or "") for h in copies]
+        out.append(keep)
+    return out
 
 
 def _empty_search(query: str, concepts: list[str] | None = None) -> dict[str, Any]:
@@ -691,6 +828,7 @@ def search(query: str, limit: int = 200) -> dict[str, Any]:
         hits.extend(group3[: cap - len(hits)])
     else:
         hits = hits[:cap]
+    hits = _collapse_kopia_hits(hits)
 
     strict = [h for h in hits if str(h.get("group") or "") in ("1", "2")]
     associated = [h for h in hits if str(h.get("group") or "") == "3"]

@@ -1091,6 +1091,7 @@
   var semanticVocab = null;
   var semanticPrepared = null;
   var semanticPrepareSig = "";
+  var semanticRecognition = null;
   var PL_FOLD = {
     "ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n", "ó": "o", "ś": "s", "ź": "z", "ż": "z",
     "Ą": "a", "Ć": "c", "Ę": "e", "Ł": "l", "Ń": "n", "Ó": "o", "Ś": "s", "Ź": "z", "Ż": "z"
@@ -1115,6 +1116,149 @@
 
   function semanticTokens(text) {
     return semanticFold(text).split(/[^a-z0-9]+/).filter(Boolean);
+  }
+
+  function semanticDigitsKey(id) {
+    var d = String(id || "").replace(/\D/g, "");
+    if (d.length < 6) return "";
+    return d.slice(-6);
+  }
+
+  function semanticLoadRecognition() {
+    if (semanticRecognition) return Promise.resolve(semanticRecognition);
+    return fetch("data/branding-recognition.json")
+      .then(function (r) {
+        return r.ok ? r.json() : { assets: {} };
+      })
+      .then(function (raw) {
+        var map = (raw && raw.assets) || {};
+        semanticRecognition = map;
+        Object.keys(map).forEach(function (key) {
+          var d = semanticDigitsKey(key);
+          if (d && !semanticRecognition[d]) semanticRecognition[d] = map[key];
+        });
+        return semanticRecognition;
+      })
+      .catch(function () {
+        semanticRecognition = {};
+        return semanticRecognition;
+      });
+  }
+
+  function semanticPathIsKopia(path) {
+    var parts = String(path || "").replace(/\\/g, "/").split("/");
+    return parts.some(function (part) {
+      return /-kopia$/i.test(part);
+    });
+  }
+
+  function semanticCanonicalPath(path) {
+    return String(path || "")
+      .replace(/\\/g, "/")
+      .split("/")
+      .map(function (part) {
+        return part.replace(/-kopia$/i, "");
+      })
+      .join("/")
+      .toLowerCase();
+  }
+
+  function collapseCopyHits(hits) {
+    var list = hits || [];
+    var groups = {};
+    var order = [];
+    list.forEach(function (hit) {
+      if (!hit) return;
+      var key = semanticCanonicalPath(hit.path || "");
+      if (!groups[key]) {
+        order.push(key);
+        groups[key] = [];
+      }
+      groups[key].push(hit);
+    });
+    return order.map(function (key) {
+      var bunch = groups[key];
+      var orig = bunch.filter(function (h) {
+        return !semanticPathIsKopia(h.path || "");
+      });
+      var copies = bunch.filter(function (h) {
+        return semanticPathIsKopia(h.path || "");
+      });
+      var keep = orig[0] || bunch[0];
+      if (!copies.length) return keep;
+      var out = {};
+      Object.keys(keep).forEach(function (k) {
+        out[k] = keep[k];
+      });
+      out.merged_copy_count = orig.length ? copies.length : 0;
+      out.is_copy = !orig.length;
+      out.copy_paths = copies.map(function (h) {
+        return h.path || "";
+      });
+      return out;
+    });
+  }
+
+  function humanizeConceptSource(cid, via) {
+    var v = String(via || "").toLowerCase();
+    if (v.indexOf("subject:czlowiek") !== -1 || v.indexOf("ludzie") !== -1) {
+      return "w folderze ze zdjęciami ludzi (to ta osoba)";
+    }
+    if (cid === "product:kulki" && v.indexOf("path:") === 0) {
+      return "w folderze z kulkami";
+    }
+    if (v.indexOf("tag:") !== -1) {
+      var tag = String(via || "").replace(/^[\s\S]*tag:/i, "").trim();
+      return tag ? "oznaczone tagiem „" + tag + "”" : "";
+    }
+    if (v.indexOf("ocr") === 0 || v.indexOf(":ocr") !== -1) {
+      var ocrVia = String(via || "").replace(/^ocr:/i, "").trim();
+      return ocrVia ? "napis na grafice: „" + ocrVia + "”" : "napis na grafice";
+    }
+    return "";
+  }
+
+  function formatSemanticReason(hit) {
+    if (!hit) return "";
+    var raw = String(hit.reason || hit.association_reason || "").trim();
+    var group = String(hit.group || "");
+    var sources = hit.concept_sources || {};
+    var extras = [];
+    Object.keys(sources).forEach(function (cid) {
+      var bit = humanizeConceptSource(cid, sources[cid]);
+      if (bit && extras.indexOf(bit) === -1) extras.push(bit);
+    });
+    var human = raw;
+    if (/^folder:\s*/i.test(raw)) {
+      human = "W folderze „" + raw.replace(/^folder:\s*/i, "") + "” - tu są zdjęcia z szukanym produktem, nawet gdy nazwa pliku tego nie mówi.";
+    } else if (/^tag wyglądu:\s*/i.test(raw)) {
+      human = "Oznaczone tagiem wyglądu „" + raw.replace(/^tag wyglądu:\s*/i, "") + "”.";
+    } else if (/^ta sama sesja:\s*/i.test(raw)) {
+      human = "Ta sama sesja zdjęciowa " + raw.replace(/^ta sama sesja:\s*/i, "") + " - ta sama osoba, co na zdjęciach z szukanym produktem.";
+    } else if (/^ta sama kampania:\s*/i.test(raw)) {
+      human = "Z tej samej kampanii " + raw.replace(/^ta sama kampania:\s*/i, "") + ".";
+    } else if (/^nazwa pliku:\s*/i.test(raw)) {
+      human = "Nazwa pliku „" + raw.replace(/^nazwa pliku:\s*/i, "") + "”.";
+    } else if (/^tekst z grafiki:\s*/i.test(raw)) {
+      human = "Na grafice widać napis „" + raw.replace(/^tekst z grafiki:\s*/i, "") + "”.";
+    }
+    if (!human && extras.length) {
+      human = extras.join("; ") + ".";
+    } else if (
+      extras.length &&
+      human.indexOf("W folderze") === -1 &&
+      human.indexOf("Oznaczone tagiem") === -1 &&
+      group !== "3"
+    ) {
+      var extraJoin = extras.join("; ");
+      if (human.indexOf(extraJoin) === -1) {
+        human = human.replace(/\.*\s*$/, "") + ". " + extraJoin.charAt(0).toUpperCase() + extraJoin.slice(1) + ".";
+      }
+    }
+    if (hit.is_copy) {
+      human = (human ? human.replace(/\.*\s*$/, "") + " " : "") + "To kopia folderu (folder kończy się na -kopia).";
+    }
+    return human.trim();
   }
 
   function semanticBuildVocab(raw) {
@@ -1261,6 +1405,10 @@
       });
     });
     var ocr = String(asset.ocr_text || "");
+    if (!ocr && semanticRecognition) {
+      var rec = semanticRecognition[asset.id] || semanticRecognition[semanticDigitsKey(asset.id)];
+      ocr = String((rec && rec.ocr_text) || "");
+    }
     if (ocr) {
       var ocrHits = semanticMatchAliases(semanticTokens(ocr), vocab);
       Object.keys(ocrHits).forEach(function (cid) {
@@ -1466,9 +1614,11 @@
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
       semanticLoadVocab();
+      semanticLoadRecognition();
     });
   } else {
     semanticLoadVocab();
+    semanticLoadRecognition();
   }
 
   window.DamSearch = {
@@ -1528,6 +1678,9 @@
     semanticSearch: function (query, assets, limit) {
       if (assets) semanticPrepare(assets);
       return semanticRun(query, limit || 200);
-    }
+    },
+    formatSemanticReason: formatSemanticReason,
+    collapseCopyHits: collapseCopyHits,
+    semanticLoadRecognition: semanticLoadRecognition
   };
 })();

@@ -897,7 +897,7 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   `data-linked-asset-idx` siedzi na `.dam-media-preview__assoc-thumb-btn`, nie na
   `.assoc-item` | selektor minus = `.assoc-item--asset` + idx z child `[data-linked-asset-idx]`;
   nie duplikowac drugiej Shift UX w dam-viz ? tylko `DamAssocEdit.bindMaterialsPane`.
-- 2026-07-21 | viz variants spam | dziesiatki `PL � index` w `#damVizModal` |
+- 2026-07-21 | viz variants spam | dziesiatki `PL → index` w `#damVizModal` |
   `expandModalWizkiVariants` sp?aszcza ka?dy plik WIZKI do chipa | UI = branding
   studio (`T?o`/`Perspektywa`/`Jako??` via DamLabels), nie flat `variantChipLabel`.
 - 2026-07-20 | sidebar morph | jank przy collapse/expand mimo GSAP 0.5s |
@@ -1190,7 +1190,7 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   DamIntegrations.refresh)` robi? pe?ny remount (skeleton + wipe `<details>`) |
   NIE remountuj na focus; najwy?ej `visibilitychange` z guardem
   `details[open]` / form focus + debounce; Promise.all z `withTimeout` +
-  failsafe clear skeleton; po `revealRows` r�b `gsap.killTweensOf` + force
+  failsafe clear skeleton; po `revealRows` rób `gsap.killTweensOf` + force
   opacity (mid-tween wygl?da jak pusty hub / ?zostal skeleton?).
 - 2026-07-20 | Sidebar morph / icon recenter jank | width `--dam-sidebar-w` p?ynny,
   ale na `onComplete` klasa `dam-sidebar-collapsed` snapuje `padding` 29?10,
@@ -1227,11 +1227,11 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   (`_require_login`); fetch BEZ `Authorization` dostaje `ok:false,
   login_required`, a UI traktowa? ka?dy `!ok` jak offline. ?Baza online? =
   Postgres/status pill, nie most change-log. Fix: `bridgeAuthHeaders()` na GET
-  + rozr�?nij `login_required` vs sie?; copy PL: ?Most zmian niedost?pny -
-  Cofnij/Pon�w lokalnie?. Cofnij/Pon�w = undo/redo rename typu/indeksu/plik�w
+  + rozróżnij `login_required` vs sieć; copy PL: „Most zmian niedostępny -
+  Cofnij/Ponów lokalnie”. Cofnij/Ponów = undo/redo rename typu/indeksu/plików
   na dysku X: przez most 8766 (tylko admin).
-- 2026-07-20 | BENTO C3 | pokusa redesignu kart przy chrome hub�w | anatomia
-  `.dam-viz-card` / `.dam-branding-card` zamro?ona (memory �123) | freeze spec
+- 2026-07-20 | BENTO C3 | pokusa redesignu kart przy chrome hubów | anatomia
+  `.dam-viz-card` / `.dam-branding-card` zamrożona (memory §123) | freeze spec
   `agents/shared/bento-card-freeze.md` + komentarze FROZEN w CSS; chrome OK,
   kart bez ADR nie restylowa?.
 - 2026-07-20 | Kolizja nazw WORKER A/B/C | przygotowano prompty Explorera
@@ -1304,7 +1304,7 @@ Format wpisu: data | obszar | objaw | przyczyna | zasada.
   per MOBILE/DESKTOP/TABLET i WxH | grupuj po `folder_group_id` (scope jak branding
   `marketingGroupKey`) + `familyCreativeKey` (creativeKey + strip device +
   `\d+-x-\d+` / `\d+x\d+` - po normalizacji separatorow wymiary sa z myslnikiem) |
-  badge N na kafelku; label `N grup � M plikow`; klik = primary (prefer DESKTOP /
+  badge N na kafelku; label `N grup · M plikow`; klik = primary (prefer DESKTOP /
   najwiekszy) + siblings = czlonkowie grupy. Nie ruszac `creativeKey` (Rule A
   jakosci - bez strip WxH). Style badge wstrzykniete w `injectA3Styles` (nie
   dam-brand.css - sibling CSS).

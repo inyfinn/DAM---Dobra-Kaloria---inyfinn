@@ -57,6 +57,7 @@
   var searchIndex = null;
   var SEMANTIC_SPARSE_MAX = 8;
   var semanticFetchGen = 0;
+  var semanticAbort = null;
   var productCorrelation = null;
   var activeTagFilters = {};
   /* Limit kart w siatce — sterowany z meta (suwak + OK); prefs.branding_page_size */
@@ -2522,9 +2523,23 @@
     return "Skojarzone";
   }
 
+  function collapseSemanticHits(hits) {
+    if (window.DamSearch && typeof window.DamSearch.collapseCopyHits === "function") {
+      return window.DamSearch.collapseCopyHits(hits || []);
+    }
+    return hits || [];
+  }
+
+  function humanSemanticReason(hit) {
+    if (window.DamSearch && typeof window.DamSearch.formatSemanticReason === "function") {
+      return window.DamSearch.formatSemanticReason(hit);
+    }
+    return String((hit && (hit.reason || hit.association_reason)) || "");
+  }
+
   function renderSemanticSection(host, data, nameIds, q) {
     if (!host) return;
-    var hits = (data && data.hits) || [];
+    var hits = collapseSemanticHits((data && data.hits) || []);
     var seen = nameIds || {};
     var byGroup = { "1": [], "2": [], "3": [] };
     hits.forEach(function (hit) {
@@ -2560,10 +2575,16 @@
       byGroup[g].forEach(function (hit) {
         var asset = assetFromSemanticHit(hit);
         if (!asset) return;
-        var reason = hit.reason || hit.association_reason || "";
+        var reason = humanSemanticReason(hit);
+        var copyMark = hit.is_copy
+          ? '<span class="dam-viz-badge dam-viz-badge--meta" style="align-self:flex-start">kopia</span>'
+          : "";
         html +=
-          '<div class="dam-branding-semantic__item">' +
+          '<div class="dam-branding-semantic__item" data-semantic-path="' +
+          esc(hit.path || "") +
+          '">' +
           cardHtml(asset, [asset], {}) +
+          copyMark +
           (reason
             ? '<p class="dam-branding-semantic__reason">' + esc(reason) + "</p>"
             : "") +
@@ -2588,21 +2609,41 @@
   function scheduleSemanticSupplement(q, nameCount, nameIds) {
     var host = ensureSemanticHost();
     var query = String(q || "").trim();
-    if (!query || query.length < 4 || nameCount > SEMANTIC_SPARSE_MAX) {
+    var hasConcepts =
+      window.DamSearch &&
+      typeof window.DamSearch.semanticQueryHasConcepts === "function" &&
+      window.DamSearch.semanticQueryHasConcepts(query);
+    var wordCount = query.split(/\s+/).filter(Boolean).length;
+    if (!query || query.length < 4 || (nameCount > SEMANTIC_SPARSE_MAX && !hasConcepts && wordCount < 3)) {
       semanticFetchGen += 1;
+      if (semanticAbort && typeof semanticAbort.abort === "function") {
+        try {
+          semanticAbort.abort();
+        } catch (eAbortClear) { /* ignore */ }
+      }
+      semanticAbort = null;
       clearSemanticHost();
       return;
     }
     if (!host) return;
     var gen = ++semanticFetchGen;
+    if (semanticAbort && typeof semanticAbort.abort === "function") {
+      try {
+        semanticAbort.abort();
+      } catch (eAbortPrev) { /* ignore */ }
+    }
+    var ac = typeof AbortController !== "undefined" ? new AbortController() : null;
+    semanticAbort = ac;
     host.hidden = false;
     host.innerHTML =
       '<p class="dam-branding-semantic__pending">Szukam też po opisie, nie tylko po nazwie pliku…</p>';
     var headers =
       (window.DamApi && DamApi.authHeaders && DamApi.authHeaders()) || {};
-    fetch(bridgeUrl() + "/search/semantic?q=" + encodeURIComponent(query) + "&limit=40", {
-      headers: headers,
-    })
+    /* POST /search/semantic = 404 (do_POST mostu nie ma tej trasy). Żywa trasa = GET. */
+    var url = bridgeUrl() + "/search/semantic?q=" + encodeURIComponent(query) + "&limit=200";
+    var fetchOpts = { headers: headers, cache: "no-store" };
+    if (ac) fetchOpts.signal = ac.signal;
+    fetch(url, fetchOpts)
       .then(function (r) {
         return r.json().then(function (body) {
           return { okHttp: r.ok, body: body };
@@ -2621,8 +2662,9 @@
         }
         renderSemanticSection(host, pack.body, nameIds, query);
       })
-      .catch(function () {
+      .catch(function (err) {
         if (gen !== semanticFetchGen) return;
+        if (err && err.name === "AbortError") return;
         host.innerHTML =
           '<p class="dam-branding-semantic__error">Nie udało się dopytać o wyniki skojarzeniowe.</p>';
         host.hidden = false;
@@ -6087,6 +6129,13 @@
     brandingCardDisplayAssets: brandingCardDisplayAssets,
     brandingCardIndexLabels: brandingCardIndexLabels,
     isBrandingGridEligible: isBrandingGridEligible,
+    semanticUiVersion: 2,
+    runAssociativeSearch: function (q) {
+      var search = document.getElementById("damBrandingSearch");
+      if (search) search.value = String(q || "");
+      clearBrandingComputeCache();
+      scheduleBrandingRender({ tags: true, section: true });
+    }
   };
 
   /** Viz only: head index for materials picker — never on explorer (blocks main thread). */

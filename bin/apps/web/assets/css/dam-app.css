@@ -1120,11 +1120,16 @@ h2.geex-content__header__title.dam-project-title--light,
   max-width: 100%;
 }
 
-.geex-content__header__action__wrap {
+.geex-content__header__action__wrap,
+.geex-content__header__quickaction {
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
-@media (max-width: 576px) {
+/* 767.98 = prog schowania sidebara. Przy pomiarze DPR 1.1 progi 480/576
+   zadaje sie jako 538/644, wiec max-width:576px NIE wstaje na prawdziwym 576. */
+@media (max-width: 767.98px) {
   .geex-content__header {
     flex-direction: column;
     align-items: stretch;

@@ -807,10 +807,10 @@
       "animation:damCustomizerFadeIn .28s ease both!important;}" +
       "@keyframes damCustomizerFadeIn{from{opacity:0}to{opacity:1}}" +
       ".geex-customizer .geex-customizer-overlay{z-index:0!important;position:fixed!important;inset:0!important;width:auto!important;height:auto!important;max-width:none!important;}" +
-      "@media (max-width:576px){" +
+      "@media (max-width:767.98px){" +
       ".geex-content__header__action,.geex-content__header__action__wrap{flex-wrap:wrap!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:8px!important;}" +
       ".geex-content__header__action__wrap{flex:1 1 100%!important;}" +
-      ".geex-content__header__quickaction{flex-wrap:wrap!important;gap:8px!important;width:100%!important;}" +
+      ".geex-content__header__quickaction{flex-wrap:wrap!important;gap:8px!important;width:100%!important;max-width:100%!important;min-width:0!important;}" +
       ".geex-content__header__action .geex-content__header__badge{font-size:12px!important;}" +
       "a.dam-breadcrumb__link,.dam-root-status__refresh,.dam-db-status__refresh,.dam-root-status__btn,.dam-search-scope__btn,button.dam-tag-pill{min-width:44px!important;min-height:44px!important;}" +
       "button.dam-tag-pill,.dam-tag-pill,.dam-switch__label,.dam-tag-group-label{font-size:12px!important;}" +

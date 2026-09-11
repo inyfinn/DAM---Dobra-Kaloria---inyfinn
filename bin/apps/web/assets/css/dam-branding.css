@@ -3634,3 +3634,19 @@ html[data-theme="dark"] .dam-branding-filters--meta select {
   }
 }
 
+/* Przycisk +N nie moze wystawac poza viewport — rzad tagow sie zawija */
+@media (max-width: 767.98px) {
+  .dam-tag-group-row,
+  .dam-tag-group-pills,
+  [class*="dam-branding-tag-group"] {
+    flex-wrap: wrap !important;
+    min-width: 0;
+    max-width: 100%;
+  }
+  button.dam-tag-more,
+  .dam-tag-more {
+    flex: 0 1 auto;
+    max-width: 100%;
+  }
+}
+
