@@ -247,16 +247,26 @@
 .dam-project-card__top {
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
+  min-width: 0;
+}
+
+.dam-project-card__top > .dam-int-chip {
+  flex: 0 0 auto;
 }
 
 .dam-project-card__index-corner {
   display: flex;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
   margin-left: auto;
+  min-width: 0;
+  max-width: calc(100% - 6.5rem);
 }
 
 .dam-project-card__index-corner .dam-viz-badge,
@@ -1222,4 +1232,70 @@ h2.geex-content__header__title.dam-project-title--light,
     align-items: center;
     justify-content: center;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Explorer tool stack: tags + status + secondary filters as one band */
+/* Parent .dam-explorer-shell gap is 16px in dam-bento.css — pull to   */
+/* --dam-space-toolbar-row-gap (8px). Higher spec beats later sheets. */
+/* ------------------------------------------------------------------ */
+.dam-explorer-shell.dam-explorer-shell {
+  gap: var(--dam-space-toolbar-row-gap);
+}
+
+.dam-explorer-shell.dam-explorer-shell > .dam-global-search-block > .dam-explorer-toolbar {
+  margin-bottom: 0;
+}
+
+.dam-explorer-shell .dam-global-search-block .dam-tag-groups,
+.dam-explorer-shell > .dam-tag-groups {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.dam-explorer-shell > .dam-viz-grid-toolbar.dam-explorer-grid-toolbar {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.dam-explorer-shell > .dam-viz-secondary-filters.dam-explorer-secondary-filters {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.dam-explorer-shell > .dam-explorer-layout {
+  margin-top: calc(var(--dam-bento-gap, 16px) - var(--dam-space-toolbar-row-gap));
+}
+
+i.uil.uil-folder.dam-folder-item__icon {
+  transform: translateY(-3px);
+}
+
+/* Project index badges: keep 6300xxx.01 / .00 fully inside the card (not clipped). */
+#damProjectsGrid article.dam-project-card .dam-project-card__top {
+  align-items: flex-start;
+  min-width: 0;
+}
+
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner,
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner--multi {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: calc(100% - 7.25rem);
+  flex: 1 1 auto;
+}
+
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner--multi {
+  max-width: min(9.5rem, calc(100% - 7.25rem));
+}
+
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner .dam-viz-badge,
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner button.dam-viz-badge {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }

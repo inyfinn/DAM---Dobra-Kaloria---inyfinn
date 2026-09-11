@@ -264,6 +264,172 @@
     return window.DamRuntime && DamRuntime.bridgeUrl ? DamRuntime.bridgeUrl() : "http://127.0.0.1:8766";
   }
 
+  function damBridgeAuthHeaders() {
+    var headers = {};
+    try {
+      if (window.DamApi && typeof window.DamApi.authHeaders === "function") {
+        return window.DamApi.authHeaders();
+      }
+      var tok = localStorage.getItem("dam_token");
+      if (tok) headers.Authorization = "Bearer " + tok;
+    } catch (eTok) {
+      /* ignore */
+    }
+    return headers;
+  }
+
+  function brandingAssetMtimeMs(a) {
+    if (!a) return 0;
+    var ms = Number(a.mtime_ms);
+    if (ms && isFinite(ms)) return ms;
+    if (a.mtime) {
+      var t = Date.parse(String(a.mtime));
+      if (!isNaN(t)) return t;
+    }
+    return 0;
+  }
+
+  function mergeBrandingMtime(target, fat) {
+    if (!target || !fat) return;
+    var ms = Number(fat.mtime_ms);
+    if (ms && isFinite(ms)) target.mtime_ms = ms;
+    if (fat.mtime) target.mtime = fat.mtime;
+    if (!target.path && fat.path) target.path = fat.path;
+    if (!target.name && fat.name) target.name = fat.name;
+  }
+
+  function brandingAssetLooksLikeTuba(a) {
+    var blob = String((a && (a.path || a.name)) || "").replace(/\\/g, "/");
+    return /TUBA---PREZENT/i.test(blob);
+  }
+
+  var brandingMtimeHydratePromise = null;
+
+  function collectBrandingMtimeNeed(data, maxIds) {
+    var assets = (data && data.assets) || [];
+    var byId = Object.create(null);
+    var tubaIds = [];
+    var need = [];
+    var i;
+    var a;
+    for (i = 0; i < assets.length; i++) {
+      a = assets[i];
+      if (!a || !a.id) continue;
+      byId[String(a.id)] = a;
+      if (brandingAssetMtimeMs(a)) continue;
+      if (brandingAssetLooksLikeTuba(a)) tubaIds.push(String(a.id));
+      else need.push(String(a.id));
+    }
+    var ordered = tubaIds.concat(need);
+    if (maxIds && ordered.length > maxIds) ordered = ordered.slice(0, maxIds);
+    return { ids: ordered, byId: byId };
+  }
+
+  function fetchBrandingMtimeChunk(ids) {
+    if (!ids || !ids.length) return Promise.resolve([]);
+    var url =
+      bridgeUrl().replace(/\/$/, "") +
+      "/branding/asset?ids=" +
+      encodeURIComponent(ids.join(","));
+    return fetch(url, { cache: "no-store", headers: damBridgeAuthHeaders() })
+      .then(function (r) {
+        if (!r.ok) throw new Error("http-" + r.status);
+        return r.json();
+      })
+      .then(function (j) {
+        var list = (j && j.assets) || [];
+        if (j && j.asset) list = list.concat([j.asset]);
+        return list;
+      })
+      .catch(function () {
+        return [];
+      });
+  }
+
+  function enrichBrandingMtimes(data, opts) {
+    opts = opts || {};
+    if (!data || !Array.isArray(data.assets) || !data.assets.length) {
+      return Promise.resolve(data);
+    }
+    if (data.__damMtimesEnriched && !opts.force) return Promise.resolve(data);
+    var pack = collectBrandingMtimeNeed(data, opts.maxIds || 0);
+    var need = pack.ids;
+    if (!need.length) {
+      data.__damMtimesEnriched = true;
+      return Promise.resolve(data);
+    }
+    var CHUNK = 40;
+    var PARALLEL = 3;
+    var chunks = [];
+    var i;
+    for (i = 0; i < need.length; i += CHUNK) {
+      chunks.push(need.slice(i, i + CHUNK));
+    }
+    var done = 0;
+    function runAt(offset) {
+      if (offset >= chunks.length) {
+        data.__damMtimesEnriched = true;
+        return Promise.resolve(data);
+      }
+      var slice = chunks.slice(offset, offset + PARALLEL);
+      return Promise.all(slice.map(fetchBrandingMtimeChunk)).then(function (rows) {
+        rows.forEach(function (list) {
+          (list || []).forEach(function (fat) {
+            if (!fat || !fat.id) return;
+            mergeBrandingMtime(pack.byId[String(fat.id)], fat);
+          });
+        });
+        done += slice.length;
+        if (opts.onProgress && chunks.length > 1) {
+          opts.onProgress(Math.min(done, chunks.length), chunks.length);
+        }
+        return runAt(offset + PARALLEL);
+      });
+    }
+    return runAt(0);
+  }
+
+  function ensureBrandingMtimesReady(opts) {
+    opts = opts || {};
+    if (!index || !index.assets) return Promise.resolve();
+    if (index.__damMtimesEnriched && !opts.force) return Promise.resolve();
+    if (brandingMtimeHydratePromise && !opts.force) return brandingMtimeHydratePromise;
+    var statusEl = document.getElementById("damBrandingStatus");
+    var prevStatus = statusEl ? statusEl.textContent : "";
+    brandingMtimeHydratePromise = enrichBrandingMtimes(index, {
+      maxIds: opts.maxIds || 0,
+      force: !!opts.force,
+      onProgress: function (done, total) {
+        if (!statusEl || total < 2) return;
+        statusEl.textContent = "Daty plików: " + done + "/" + total + "…";
+      },
+    })
+      .then(function () {
+        clearBrandingComputeCache();
+        if (statusEl && prevStatus && !prevStatus.match(/Daty plików/)) {
+          statusEl.textContent = prevStatus;
+        }
+        return index;
+      })
+      .finally(function () {
+        brandingMtimeHydratePromise = null;
+      });
+    return brandingMtimeHydratePromise;
+  }
+
+  function scheduleBrandingMtimeHydrate(opts) {
+    ensureBrandingMtimesReady(opts).then(function () {
+      clearBrandingComputeCache();
+      scheduleBrandingRender({ tags: true, section: true });
+    });
+  }
+
+  function needsMtimeHydration() {
+    var mode = currentSortMode();
+    var bounds = dateRangeBounds();
+    return mode === "newest" || mode === "oldest" || bounds.from != null || bounds.to != null;
+  }
+
   function cardLiveThumbSrc(path) {
     if (!path) return "";
     if (window.DamPreviewTruth && typeof DamPreviewTruth.mediaPreviewUrl === "function") {
@@ -787,6 +953,8 @@
     var ma = assetMtimeMs(a);
     var mb = assetMtimeMs(b);
     if (mode === "newest") {
+      ma = brandingAssetMtimeMs(a) || ma;
+      mb = brandingAssetMtimeMs(b) || mb;
       if (mb !== ma) return mb - ma;
     } else if (mode === "created") {
       var ca = assetCreatedMs(a);
@@ -853,10 +1021,17 @@
     };
   }
 
+  function assetDateMsForFilter(a) {
+    var mode = currentSortMode();
+    if (mode === "introduced") return assetIntroducedMs(a);
+    if (mode === "created") return assetCreatedMs(a);
+    return brandingAssetMtimeMs(a) || assetMtimeMs(a);
+  }
+
   function assetMatchesDateRange(a) {
     var bounds = dateRangeBounds();
     if (bounds.from == null && bounds.to == null) return true;
-    var ms = assetMtimeMs(a);
+    var ms = assetDateMsForFilter(a);
     if (!ms) return false;
     if (bounds.from != null && ms < bounds.from) return false;
     if (bounds.to != null && ms > bounds.to) return false;
@@ -1930,14 +2105,18 @@
       : "";
     return (
       '<div class="dam-viz-card__title-wrap">' +
-      '<h5 class="dam-viz-card__title' +
-      adminCls +
-      '"' +
+      '<h5 class="dam-viz-card__title"' +
       dataAttrs +
-      ' title="' +
+      ' data-dam-native-title="' +
+      esc(displayTitle) +
+      '" title="' +
       esc(displayTitle) +
       '">' +
+      '<span class="dam-branding-card__title-text' +
+      adminCls +
+      '">' +
       esc(displayTitle) +
+      "</span>" +
       (subtitleHtml || "") +
       "</h5>" +
       (idChipHtml || "") +
@@ -3352,6 +3531,7 @@
         }
         if (adopt(head, true)) {
           scheduleFullGridHydrate(fullUrls);
+          scheduleBrandingMtimeHydrate();
           return index;
         }
       } catch (eHead) {
@@ -3373,7 +3553,10 @@
         }
         setBootStatus("Przygotowanie kart…");
         var full = await r.json();
-        if (adopt(full, false)) return index;
+        if (adopt(full, false)) {
+          scheduleBrandingMtimeHydrate();
+          return index;
+        }
         lastErr = new Error("grid_index_invalid");
         index = null;
       } catch (eLoad) {
@@ -3405,6 +3588,7 @@
             /* ignore */
           }
           clearBrandingComputeCache();
+          scheduleBrandingMtimeHydrate();
           try {
             performance.mark("dam-branding-full-ready");
           } catch (eMark) {
@@ -3564,8 +3748,10 @@
       elVal("damBrandingDateTo"),
       elVal("damBrandingSearch").toLowerCase(),
       graphicsOnlyActive() ? "1" : "0",
+      currentSortMode(),
       index && index.built_at ? index.built_at : "",
       index && index.asset_count ? String(index.asset_count) : "0",
+      index && index.__damMtimesEnriched ? "1" : "0",
     ].join("\u0001");
   }
 
@@ -3581,7 +3767,40 @@
       index && index.built_at ? index.built_at : "",
       index && index.asset_count ? String(index.asset_count) : "0",
       index && index.assets ? String(index.assets.length) : "0",
+      index && index.__damMtimesEnriched ? "1" : "0",
+      currentSortMode(),
     ].join("\u0001");
+  }
+
+  function groupEntrySortMs(entry) {
+    var assets = (entry && entry.assets) || [];
+    var best = 0;
+    var i;
+    for (i = 0; i < assets.length; i++) {
+      var v = assetDateMsForFilter(assets[i]);
+      if (v > best) best = v;
+    }
+    return best;
+  }
+
+  function sortGroupedEntriesForDisplay(entries) {
+    entries = entries || [];
+    var mode = currentSortMode();
+    if (mode !== "newest" && mode !== "oldest" && mode !== "introduced" && mode !== "created") {
+      return entries;
+    }
+    return entries.slice().sort(function (a, b) {
+      var sa = groupEntrySortMs(a);
+      var sb = groupEntrySortMs(b);
+      if (mode === "oldest") {
+        if (sa !== sb) return sa - sb;
+      } else {
+        if (sb !== sa) return sb - sa;
+      }
+      var pa = (a.primary && a.primary.id) || (a.assets && a.assets[0] && a.assets[0].id) || "";
+      var pb = (b.primary && b.primary.id) || (b.assets && b.assets[0] && b.assets[0].id) || "";
+      return String(pa).localeCompare(String(pb), "pl");
+    });
   }
 
   function ensureBrandingIndexCaches() {
@@ -4281,31 +4500,121 @@
   function activeFilterLabels() {
     var parts = [];
     var q = elVal("damBrandingSearch");
-    if (q) parts.push("Szukaj: " + q);
+    if (q) parts.push({ label: "Szukaj: " + q, kind: "search" });
     Object.keys(activeTagFilters).forEach(function (key) {
       if (!activeTagFilters[key]) return;
       var label = key.split(":").slice(1).join(":");
-      parts.push(label);
+      parts.push({ label: label, kind: "tag", key: key });
     });
-    if (graphicsOnlyActive() && !activeTagFilters["media:document"]) parts.push("Tylko grafiki");
-    if (includeArchive()) parts.push("Archiwum");
+    if (graphicsOnlyActive() && !activeTagFilters["media:document"]) {
+      parts.push({ label: "Tylko grafiki", kind: "graphics" });
+    }
+    if (includeArchive()) parts.push({ label: "Archiwum", kind: "archive" });
     if (discoveryWhen) {
       var whenLbl = (WHEN_CHIPS.filter(function (w) { return w.id === discoveryWhen; })[0] || {}).label;
-      if (whenLbl) parts.push("Kiedy: " + whenLbl);
+      if (whenLbl) parts.push({ label: "Kiedy: " + whenLbl, kind: "when" });
     }
     var bounds = dateRangeBounds();
-    if (bounds.from || bounds.to) parts.push("Zakres dat");
+    if (bounds.from || bounds.to) parts.push({ label: "Zakres dat", kind: "dates" });
     return parts;
   }
 
+  function clearFiltersButtonHtml(extraClass) {
+    var label =
+      (window.DamI18n && typeof window.DamI18n.t === "function" && window.DamI18n.t("branding.clear_filters")) ||
+      "Wyczyść filtry";
+    return (
+      '<button type="button" class="dam-branding-clear-btn dam-branding-clear-btn--with-icon ' +
+      (extraClass || "") +
+      '">' +
+      '<i class="uil uil-times dam-branding-clear-btn__icon" aria-hidden="true"></i>' +
+      "<span>" +
+      esc(label) +
+      "</span></button>"
+    );
+  }
+
+  function decorateClearFilterButtons(root) {
+    var sel =
+      "#damBrandingClearTags, .dam-branding-clear-filters, .dam-branding-clear-btn:not(.dam-branding-clear-btn--with-icon)";
+    (root || document).querySelectorAll(sel).forEach(function (btn) {
+      if (btn.querySelector(".dam-branding-clear-btn__icon")) return;
+      var label = (btn.textContent || "").trim() || "Wyczyść filtry";
+      btn.innerHTML =
+        '<i class="uil uil-times dam-branding-clear-btn__icon" aria-hidden="true"></i><span>' +
+        esc(label) +
+        "</span>";
+      btn.classList.add("dam-branding-clear-btn--with-icon");
+    });
+  }
+
+  function emptyFilterChipHtml(entry) {
+    if (!entry || !entry.label) return "";
+    var kind = entry.kind || "generic";
+    return (
+      '<li><button type="button" class="dam-branding-empty__filter-chip" data-empty-filter="' +
+      esc(kind) +
+      '"' +
+      (entry.key ? ' data-empty-filter-key="' + esc(entry.key) + '"' : "") +
+      ">" +
+      esc(entry.label) +
+      "</button></li>"
+    );
+  }
+
+  function bindEmptyFilterChips(grid) {
+    if (!grid) return;
+    grid.querySelectorAll(".dam-branding-empty__filter-chip").forEach(function (btn) {
+      if (btn._damEmptyFilterBound) return;
+      btn._damEmptyFilterBound = true;
+      btn.addEventListener("click", function () {
+        var kind = btn.getAttribute("data-empty-filter") || "";
+        if (kind === "graphics") {
+          var gfx = document.getElementById("damBrandingGraphicsOnly");
+          if (gfx) gfx.checked = false;
+        } else if (kind === "dates") {
+          applyDatePreset("");
+        } else if (kind === "search") {
+          var search = document.getElementById("damBrandingSearch");
+          if (search) search.value = "";
+        } else if (kind === "archive") {
+          var arch = document.getElementById("damBrandingIncludeArchive");
+          if (arch) arch.checked = false;
+        } else if (kind === "when") {
+          discoveryWhen = "";
+        } else if (kind === "tag") {
+          var key = btn.getAttribute("data-empty-filter-key") || "";
+          if (key) delete activeTagFilters[key];
+        }
+        clearBrandingComputeCache();
+        renderTagFilters();
+        renderActiveSection();
+      });
+    });
+  }
+
   function pickEmptyMascotBundle() {
-    if (window.DamEmptyMascot && typeof window.DamEmptyMascot.pick === "function") {
-      return window.DamEmptyMascot.pick();
+    var safeMoods = ["sad", "think", "ok"];
+    if (window.DamEmptyMascot && window.DamEmptyMascot.lines && window.DamEmptyMascot.poses) {
+      var lines = window.DamEmptyMascot.lines.filter(function (entry) {
+        return safeMoods.indexOf(entry.m) >= 0;
+      });
+      var entry = lines.length
+        ? lines[Math.floor(Math.random() * lines.length)]
+        : { t: "Brak wyników dla filtrów.", m: "think" };
+      var mood = safeMoods.indexOf(entry.m) >= 0 ? entry.m : "think";
+      var poseList = window.DamEmptyMascot.poses[mood] || window.DamEmptyMascot.poses.think;
+      var poseFile = poseList[Math.floor(Math.random() * poseList.length)];
+      var poseUrl =
+        typeof window.DamEmptyMascot.poseUrl === "function"
+          ? window.DamEmptyMascot.poseUrl(poseFile)
+          : "assets/img/maskotka/" + poseFile;
+      return { text: entry.t, mood: mood, poseUrl: poseUrl };
     }
     return {
       text: "Skryło się to tak, że nawet najstarsi graficy tego nie znajdą.",
       mood: "think",
-      poseUrl: "assets/img/maskotka/pose-think-q.png"
+      poseUrl: "assets/img/maskotka/pose-think-q.png",
     };
   }
 
@@ -4358,11 +4667,7 @@
     var filters = activeFilterLabels();
     var filterHtml = filters.length
       ? '<ul class="dam-branding-empty__filters">' +
-        filters
-          .map(function (f) {
-            return "<li>" + esc(f) + "</li>";
-          })
-          .join("") +
+        filters.map(emptyFilterChipHtml).join("") +
         "</ul>"
       : "";
     return wrapEmptyWithMascot(
@@ -4372,7 +4677,7 @@
         '<p class="dam-branding-empty__desc">Żaden materiał nie pasuje do aktywnych filtrów w tej sekcji.</p>' +
         graphicsHint +
         filterHtml +
-        '<button type="button" class="geex-btn geex-btn--primary-transparent dam-branding-clear-filters">Wyczyść filtry</button>' +
+        clearFiltersButtonHtml("dam-branding-clear-filters geex-btn geex-btn--primary-transparent") +
         "</div>"
     );
   }
@@ -4381,7 +4686,7 @@
     if (!grid) return [];
     gridOpts = gridOpts || {};
     list = asAssetList(list);
-    var grouped = groupBrandingAssets(list, gridOpts);
+    var grouped = sortGroupedEntriesForDisplay(groupBrandingAssets(list, gridOpts));
     lastGroupedTotal = grouped.length;
     var slice = grouped.slice(0, limit);
     var total = totalCount != null ? totalCount : list.length;
@@ -4396,6 +4701,8 @@
     if (clearBtn) {
       clearBtn.addEventListener("click", clearAllBrandingFilters);
     }
+    decorateClearFilterButtons(grid);
+    bindEmptyFilterChips(grid);
     bindCards(grid);
     bindEditableCardTitles(grid);
     bindMetaTooltips(grid);
@@ -4475,26 +4782,33 @@
       !grid ||
       !window.DamModalShared ||
       typeof window.DamModalShared.isAdminEditMode !== "function" ||
-      !window.DamModalShared.isAdminEditMode()
+      typeof window.DamModalShared.bindEditableAssetTitle !== "function"
     ) {
       return;
     }
     grid.querySelectorAll(".dam-viz-card__title[data-asset-id]").forEach(function (titleEl) {
+      var textEl = titleEl.querySelector(".dam-branding-card__title-text") || titleEl;
       var aid = titleEl.getAttribute("data-asset-id") || "";
       var path = titleEl.getAttribute("data-asset-path") || "";
+      var fallback =
+        (textEl.textContent || "").trim() ||
+        titleEl.getAttribute("data-dam-native-title") ||
+        "";
       var asset =
         ((index && index.assets) || []).find(function (a) {
           return a && a.id === aid;
-        }) || { id: aid, path: path, name: titleEl.textContent };
-      window.DamModalShared.bindEditableAssetTitle(
-        titleEl,
-        asset,
-        titleEl.textContent,
-        function (next) {
-          titleEl.setAttribute("title", next);
-        }
-      );
+        }) || { id: aid, path: path, name: fallback };
+      window.DamModalShared.bindEditableAssetTitle(textEl, asset, fallback, function (next) {
+        titleEl.setAttribute("data-dam-native-title", next);
+        titleEl.setAttribute("title", next);
+      });
     });
+  }
+
+  function rebindEditableCardTitlesAll() {
+    bindEditableCardTitles(document.getElementById("damBrandingSectionGrid"));
+    bindEditableCardTitles(document.getElementById("damBrandingGrid"));
+    bindEditableCardTitles(document.getElementById("damBrandbookGrid"));
   }
 
   function resolveBrandingClickId(clickId) {
@@ -5419,7 +5733,21 @@
             syncDatePresetButtons();
           }
           clearBrandingComputeCache();
-          scheduleBrandingRender({ tags: true, section: true });
+          var after = function () {
+            scheduleBrandingRender({ tags: true, section: true });
+          };
+          if (
+            id === "damBrandingSort" &&
+            (el.value === "newest" || el.value === "oldest")
+          ) {
+            ensureBrandingMtimesReady().then(after);
+            return;
+          }
+          if (id === "damBrandingDateFrom" || id === "damBrandingDateTo") {
+            ensureBrandingMtimesReady().then(after);
+            return;
+          }
+          after();
         };
         /* Perf: search to jedyne pole z akcja "per-keystroke" - facet-scan (O(assets x chipow))
            bez debounce potrafil odczuwalnie zawiesic UI przy szybkim pisaniu. */
@@ -5460,10 +5788,13 @@
         var p = btn.getAttribute("data-preset") || "";
         if (datePresetActive === p) applyDatePreset("");
         else applyDatePreset(p);
-        renderTagFilters();
-        renderActiveSection();
+        ensureBrandingMtimesReady().then(function () {
+          renderTagFilters();
+          renderActiveSection();
+        });
       });
     }
+    decorateClearFilterButtons(document);
     var clearTags = document.getElementById("damBrandingClearTags");
     if (clearTags) {
       clearTags.addEventListener("click", clearAllBrandingFilters);
@@ -5877,9 +6208,15 @@
       });
       obs.observe(host, { childList: true, subtree: true });
     }
-    document.addEventListener("dam:admin-mode", relocateAssocQuizEntry);
+    document.addEventListener("dam:admin-mode", function () {
+      relocateAssocQuizEntry();
+      rebindEditableCardTitlesAll();
+    });
     window.addEventListener("storage", function (e) {
-      if (e.key === "dam_admin_mode" || e.key === "dam_role") relocateAssocQuizEntry();
+      if (e.key === "dam_admin_mode" || e.key === "dam_role") {
+        relocateAssocQuizEntry();
+        rebindEditableCardTitlesAll();
+      }
     });
     [400, 1200, 2500].forEach(function (ms) {
       setTimeout(relocateAssocQuizEntry, ms);

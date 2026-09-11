@@ -1937,83 +1937,68 @@
   function elementsOpenPath(rev) {
     var link = getElementsLink(rev);
     if (link) return link.folder || link.path || "";
-    var els = (rev && rev.files_by_role && rev.files_by_role.elements) || [];
+    var els = ((rev && rev.files_by_role && rev.files_by_role.elements) || []).filter(function (f) {
+      return window.DamApi && typeof window.DamApi.isReadyElementsFile === "function"
+        ? window.DamApi.isReadyElementsFile(f)
+        : false;
+    });
     if (els[0] && els[0].path) {
       var p = normPathKey(els[0].path);
       var i = p.lastIndexOf("/");
       return i > 0 ? p.slice(0, i) : p;
     }
-    return "";
+    var slim = rev && rev.checklist_paths && rev.checklist_paths.tech;
+    return slim || "";
   }
 
   function computeChecklist(rev, allProductRevisions, product) {
-    var fbr = rev.files_by_role || {};
-    var src  = fbr.source || [];
-    var viz  = filterVizImageFiles(fbr.viz || []);
-    var wizki = filterVizImageFiles(rev.wizki || []);
-
-    // AI / edytowalny
-    var hasAI = src.some(function (f) {
-      var e = fileExt(f.name);
-      return e === "ai" || e === "psd" || e === "indd";
-    });
-
-    // Podgląd akceptacji (PREV lub F bez FQ)
-    var hasPrev = src.some(function (f) {
-      if (!DL) return false;
-      return DL.fileRole(f.name) === "podgląd";
-    }) || src.some(function (f) {
-      var u = String(f.name || "").toUpperCase();
-      return /\bPREV\b/.test(u) || (/[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u));
-    });
-
-    // Pliki do druku (+ ZIP z 3-DRUK / Pakiet nawet gdy lezal w WIZKI)
-    var drukFiles = printFilesFromRevision(rev).filter(function (f) { return f && f.name; });
-    var hasDruk = drukFiles.length > 0;
-    // Also check source for FQ PDF
-    if (!hasDruk) {
-      hasDruk = src.some(function (f) {
-        var u = String(f.name || "").toUpperCase();
-        return /FQ/.test(u) && fileExt(f.name) === "pdf";
-      });
+    var roles =
+      window.DamApi && typeof window.DamApi.revisionRoles === "function"
+        ? window.DamApi.revisionRoles(rev, product)
+        : {};
+    var rolePaths =
+      window.DamApi && typeof window.DamApi.revisionRolePaths === "function"
+        ? window.DamApi.revisionRolePaths(rev, product)
+        : {};
+    if (!roles.artwork && !roles.prev && !roles.print_pdf && !roles.karta && !roles.presentation) {
+      var slimCl = rev && rev.checklist;
+      if (slimCl) {
+        roles = {
+          artwork: !!slimCl.artwork,
+          prev: !!slimCl.prev,
+          print_pdf: !!slimCl.print_pdf,
+          viz_3d: !!slimCl.viz_3d,
+          tech: false,
+          marketing: !!slimCl.marketing,
+          karta: !!slimCl.karta,
+          presentation: !!slimCl.presentation,
+        };
+      }
+      if (rev && rev.checklist_paths) {
+        rolePaths = {
+          artwork: rolePaths.artwork || rev.checklist_paths.artwork || "",
+          prev: rolePaths.prev || rev.checklist_paths.prev || "",
+          print_pdf: rolePaths.print_pdf || rev.checklist_paths.print_pdf || "",
+          viz_3d: rolePaths.viz_3d || rev.checklist_paths.viz_3d || "",
+          tech: rolePaths.tech || "",
+          marketing: rolePaths.marketing || rev.checklist_paths.marketing || "",
+          karta: rolePaths.karta || rev.checklist_paths.karta || "",
+          presentation: rolePaths.presentation || rev.checklist_paths.presentation || "",
+        };
+      }
     }
+
+    var drukFiles = printFilesFromRevision(rev).filter(function (f) { return f && f.name; });
     var drukarnia = "";
     drukFiles.forEach(function (f) {
       if (!drukarnia && DL) drukarnia = DL.detectDrukarnia(f.name);
     });
 
-    // Wizualizacje = tylko obrazy (nie ZIP)
-    var hasViz = viz.length > 0 || wizki.length > 0;
-
-    // Elementy: indeks, slot/path, albo reczne powiazanie (elements-overrides)
-    function revisionHasElements(r) {
-      if (getElementsLink(r)) return true;
-      var elFiles = (r.files_by_role && r.files_by_role.elements) || [];
-      if (elFiles.length > 0) return true;
-      var slotsR = r.slots || [];
-      if (slotsR.some(function (s) {
-        var su = String(s).toUpperCase();
-        return su.indexOf("ELEMENTY") >= 0 || su.indexOf("ELEMENTS") >= 0 ||
-          su.indexOf("SKLADNIKI") >= 0 || su.indexOf("SKŁADNIKI") >= 0 ||
-          su.indexOf("INGREDIENTS") >= 0;
-      })) return true;
-      var allf = ((r.files_by_role && r.files_by_role.source) || [])
-        .concat((r.files_by_role && r.files_by_role.print) || [])
-        .concat((r.files_by_role && r.files_by_role.viz) || [])
-        .concat(elFiles)
-        .concat(r.wizki || []);
-      return allf.some(function (f) {
-        var pa = String(f.path || f.name || "").toUpperCase().replace(/\//g, "\\");
-        return pa.indexOf("ELEMENTY") >= 0 || pa.indexOf("ELEMENTS") >= 0 ||
-          pa.indexOf("SKLADNIKI") >= 0 || pa.indexOf("INGREDIENTS") >= 0 ||
-          String(f.layer || "").toLowerCase() === "elements";
-      });
-    }
     var link = getElementsLink(rev);
-    var hasElements = revisionHasElements(rev);
+    var hasElements = !!roles.tech;
     var elementsNote = "";
-    var elementsLinked = !!(link && link.path);
-    var elementsPath = elementsOpenPath(rev);
+    var elementsLinked = !!(link && link.path && Number(link.file_count) > 0);
+    var elementsPath = elementsOpenPath(rev) || rolePaths.tech || "";
     if (elementsLinked) {
       hasElements = true;
       elementsNote = link.file_count
@@ -2024,7 +2009,11 @@
       var otherRev = null;
       (allProductRevisions || []).forEach(function (or_) {
         if (otherRev || or_ === rev || isBogus(or_.folder)) return;
-        if (revisionHasElements(or_)) otherRev = or_;
+        var otherRoles =
+          window.DamApi && typeof window.DamApi.revisionRoles === "function"
+            ? window.DamApi.revisionRoles(or_, product)
+            : {};
+        if (otherRoles.tech) otherRev = or_;
       });
       if (otherRev) {
         hasElements = true;
@@ -2035,31 +2024,27 @@
       }
     }
 
-    // Marketing
-    var hasMkt = ((product && product.related_materials) || []).some(function (m) { return m.file_count > 0; });
-
-    var fbr2 = rev.files_by_role || {};
-    var hasKarta =
-      ((fbr2.karty_wprowadzenia || []).length > 0) ||
-      src.some(function (f) {
-        var u = String(f.name || "").toUpperCase();
-        return /KARTA/.test(u) && /WPROWADZ/.test(u);
-      });
-    var hasPresentation =
-      ((fbr2.strategia || []).length > 0) ||
-      src.some(function (f) {
-        var e = fileExt(f.name);
-        var u = String(f.name || "").toUpperCase();
-        return (e === "pptx" || e === "ppt" || e === "key") &&
-          (/PREZENT|STRATEG|POZYCJON/.test(u));
-      });
+    var hasMkt = !!roles.marketing;
+    if (!hasMkt) {
+      hasMkt = ((product && product.related_materials) || []).some(function (m) { return m.file_count > 0; });
+    }
 
     return {
-      ai: hasAI, prev: hasPrev, druk: hasDruk, drukarnia: drukarnia,
-      viz: hasViz, elements: hasElements, elementsNote: elementsNote,
-      elementsLinked: elementsLinked, elementsPath: elementsPath,
-      revisionPath: normPathKey(rev && rev.path), revisionIndex: (rev && rev.index) || "",
-      marketing: hasMkt, karta: hasKarta, presentation: hasPresentation
+      ai: !!roles.artwork,
+      prev: !!roles.prev,
+      druk: !!roles.print_pdf,
+      drukarnia: drukarnia,
+      viz: !!roles.viz_3d,
+      elements: hasElements,
+      elementsNote: elementsNote,
+      elementsLinked: elementsLinked,
+      elementsPath: elementsPath,
+      revisionPath: normPathKey(rev && rev.path),
+      revisionIndex: (rev && rev.index) || "",
+      marketing: hasMkt,
+      karta: !!roles.karta,
+      presentation: !!roles.presentation,
+      rolePaths: rolePaths,
     };
   }
 
@@ -3558,7 +3543,7 @@
   }
 
   function renderChecklist(cl, rev, product) {
-    var pathEsc = String((rev && rev.path) || "").replace(/"/g, "&quot;");
+    var rolePaths = (cl && cl.rolePaths) || {};
     var winIcon =
       window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
         ? window.DamIcons.winExplorerSvg()
@@ -3568,8 +3553,8 @@
       var cls = ok ? "dam-check-ok" : "dam-check-brak";
       var icon = ok ? "uil-check-circle" : "uil-times-circle";
       var actionsHtml = extraActionsHtml || "";
+      var goPath = String(winPath || (rev && rev.path) || "").replace(/"/g, "&quot;");
       if (ok) {
-        var goPath = String(winPath || (rev && rev.path) || "").replace(/"/g, "&quot;");
         var scrollAttr = scrollSection
           ? ' data-scroll-section="' + esc(scrollSection) + '"'
           : "";
@@ -3578,10 +3563,10 @@
           '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-check-go dam-check-scroll"' +
           scrollAttr +
           ' title="Przewiń do plików" data-dam-tip="Przewiń do sekcji plików tego materiału w tym wariancie">' +
-          '<i class="uil uil-arrow-down" aria-hidden="true"></i><span>Przejdź</span></button>' +
+          '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdź</span></button>' +
           '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-btn-icon-only dam-win-btn dam-check-win" data-path="' +
           goPath +
-          '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwórz folder w Eksploratorze plików Windows (wymaga mostu online)">' +
+          '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwórz folder w Eksploratorze plików Windows">' +
           winIcon +
           "</button></span>";
       }
@@ -3590,7 +3575,7 @@
         cls +
         (ok ? " dam-check-row--interactive" : "") +
         '"' +
-        (ok ? ' data-path="' + pathEsc + '" tabindex="0" role="button"' : "") +
+        (ok ? ' data-path="' + goPath + '" tabindex="0" role="button"' : "") +
         ">" +
         '<i class="uil ' +
         icon +
@@ -3625,15 +3610,16 @@
             '<i class="uil uil-link-broken" aria-hidden="true"></i></button>'
           : "") +
       "</span>";
+    var fallback = (rev && rev.path) || "";
     return '<div class="dam-checklist dam-card-checklist" aria-label="Kompletność materiałów">' +
-      row(cl.ai,       "Plik źródłowy projektu graficznego", "", "source", rev && rev.path) +
-      row(cl.prev,     "Podgląd PDF projektu", "", "source", rev && rev.path) +
-      row(cl.druk,     "Pliki do druku", drukDetail, "print", rev && rev.path) +
-      row(cl.viz,      "Wizualizacje", "", "viz", rev && rev.path) +
-      row(cl.elements, "Elementy / składniki", elemDetail, "elements", cl.elementsPath || (rev && rev.path), elemActions) +
-      row(cl.marketing,"Materiały marketingowe", "", "marketing", rev && rev.path) +
-      row(cl.karta,    "Karta wprowadzenia", "", "source", rev && rev.path) +
-      row(!!cl.presentation, "Prezentacja", "", "source", rev && rev.path) +
+      row(cl.ai,       "Plik źródłowy projektu graficznego", "", "source", rolePaths.artwork || fallback) +
+      row(cl.prev,     "Podgląd PDF projektu", "", "source", rolePaths.prev || fallback) +
+      row(cl.druk,     "Pliki do druku", drukDetail, "print", rolePaths.print_pdf || fallback) +
+      row(cl.viz,      "Wizualizacje", "", "viz", rolePaths.viz_3d || fallback) +
+      row(cl.elements, "Elementy / składniki", elemDetail, "elements", cl.elementsPath || rolePaths.tech || fallback, cl.elements ? "" : elemActions) +
+      row(cl.marketing,"Materiały marketingowe", "", "marketing", rolePaths.marketing || fallback) +
+      row(cl.karta,    "Karta wprowadzenia", "", "source", rolePaths.karta || fallback) +
+      row(!!cl.presentation, "Prezentacja", "", "source", rolePaths.presentation || fallback) +
     "</div>";
   }
 
@@ -3783,19 +3769,25 @@
       (product.index_bases && product.index_bases[0]) ||
       (product.indexes && product.indexes[0]) ||
       "";
+    var emptyHtml =
+      '<div class="dam-file-layer__title">Materiały marketingowe</div>' +
+      '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów.</p>' +
+      '<p class="dam-marketing-hint">Sciezki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaz w Eksploratorze.</p>';
+    var loadingTimer = setTimeout(function () {
+      if (!layer.isConnected) return;
+      if (layer.querySelector(".dam-explorer-marketing-loading")) layer.innerHTML = emptyHtml;
+    }, 6000);
     MP.explorerMarketingRows({
       id: product.id,
       name: product.display_name || product.name || "",
       index: idx,
     })
       .then(function (linkedRows) {
+        clearTimeout(loadingTimer);
         if (!layer.isConnected) return;
         var merged = mergeMarketingRows(product.related_materials || [], linkedRows || []);
         if (!merged.length) {
-          layer.innerHTML =
-            '<div class="dam-file-layer__title">Materiały marketingowe</div>' +
-            '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów.</p>' +
-            '<p class="dam-marketing-hint">Sciezki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaz w Eksploratorze.</p>';
+          layer.innerHTML = emptyHtml;
           return;
         }
         layer.innerHTML =
@@ -3805,7 +3797,9 @@
         bindCopyButtons(layer);
       })
       .catch(function () {
-        /* keep index-only rows on failure */
+        clearTimeout(loadingTimer);
+        if (!layer.isConnected) return;
+        if (!layer.querySelector(".dam-marketing-row")) layer.innerHTML = emptyHtml;
       });
   }
 
@@ -7545,6 +7539,11 @@
     refreshOpenProductFromIndex();
     setStatus("");
     scheduleExplorerRender();
+    if (window.DamApi && typeof window.DamApi.loadChecklistExtras === "function") {
+      window.DamApi.loadChecklistExtras().then(function () {
+        scheduleExplorerRender();
+      });
+    }
 
     var input = document.getElementById("damFileSearch");
     var results = document.getElementById("damSearchResults");
@@ -8116,13 +8115,20 @@
     trackRecentProduct(product);
     navPush();
     scheduleExplorerRender();
-    if (productNeedsFileHydration(product)) {
-      hydrateExplorerProduct(product.id).then(function (full) {
-        if (!full || !state.product || state.product.id !== full.id) return;
+    var extrasP =
+      window.DamApi && typeof window.DamApi.loadChecklistExtras === "function"
+        ? window.DamApi.loadChecklistExtras()
+        : Promise.resolve(null);
+    var hydrateP = productNeedsFileHydration(product)
+      ? hydrateExplorerProduct(product.id)
+      : Promise.resolve(product);
+    Promise.all([extrasP, hydrateP]).then(function (pack) {
+      var full = pack[1];
+      if (full && state.product && state.product.id === full.id) {
         state.product = full;
-        scheduleExplorerRender();
-      });
-    }
+      }
+      scheduleExplorerRender();
+    });
   }
 
   function clearSearchPanel() {

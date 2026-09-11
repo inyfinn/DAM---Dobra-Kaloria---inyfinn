@@ -436,6 +436,24 @@
   flex: 0 0 auto;
 }
 
+.dam-widget--branding-latest .dam-widget__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.dam-widget--branding-latest .dam-widget__body > .dam-widget__meta {
+  margin: 0;
+  padding: 0 2px 2px;
+  flex: 0 0 auto;
+  line-height: 1.4;
+}
+
+.dam-dash-grid.is-bento-active > .dam-widget[data-widget-id="branding_latest"] .dam-widget__body {
+  flex: 0 0 auto;
+}
+
 /* 1x4 / 1x6: content-sized rows — NEVER 1fr squeeze inside bento body */
 .dam-widget__list--viz.dam-widget__list--grid-1x4,
 .dam-widget__list--media.dam-widget__list--grid-1x4,
@@ -617,6 +635,18 @@
 .dam-widget[data-widget-id="quick_links"] .dam-widget__body {
   overflow: hidden;
   min-height: 0;
+  flex: 0 0 auto;
+  height: auto;
+}
+
+.dam-dash-grid.is-bento-active > .dam-widget[data-widget-id="quick_links"] {
+  overflow: hidden;
+  max-height: 100%;
+}
+
+.dam-dash-grid.is-bento-active > .dam-widget[data-widget-id="quick_links"] .dam-widget__body {
+  flex: 0 0 auto;
+  height: auto;
 }
 
 .dam-dash-grid:not(.is-bento-active) .dam-widget--lg {
@@ -1713,7 +1743,7 @@ html[data-theme="dark"] .dam-widget-skel__line::after {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   align-content: flex-start;
   align-items: flex-start;
   min-height: 0;

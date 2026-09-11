@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-10T14:46:59",
+  "generated_at": "2026-09-11T16:33:30",
   "product_count": 193,
   "by_prefix": {
     "0000": [
@@ -1006,7 +1006,7 @@
       "mix-6x-mini-batoniki-mixy",
       "mix-bombonierka-11-szt-mini-mixy",
       "mix-kalendarz-adwentowy-mixy",
-      "mix-tuba-30-szt-xmas-mixy",
+      "mix-tuba-30-szt-mixy",
       "mix-zestaw-15x-mini-batoniki-mixy",
       "mix-zestaw-makowiec-x-rogal-x-piernik-mixy",
       "mix-zestaw-mix-ciast-1-mixy",
@@ -3887,7 +3887,7 @@
     ],
     "63007": [
       "mix-kalendarz-adwentowy-mixy",
-      "mix-tuba-30-szt-xmas-mixy",
+      "mix-tuba-30-szt-mixy",
       "mix-zestaw-mix-ciast-1-mixy",
       "mix-zestaw-mix-ciast-2-mixy",
       "chrupiacy-orzech-daktylowy",
@@ -4486,19 +4486,19 @@
       "kielbaska-wegierska-niemiesne"
     ],
     "630079": [
-      "mix-tuba-30-szt-xmas-mixy",
+      "mix-tuba-30-szt-mixy",
       "mielone-wolowe-niemiesne",
       "sznycel-niemiesne",
       "burger-plant-based"
     ],
     "6300793": [
-      "mix-tuba-30-szt-xmas-mixy"
+      "mix-tuba-30-szt-mixy"
     ],
     "63007930": [
-      "mix-tuba-30-szt-xmas-mixy"
+      "mix-tuba-30-szt-mixy"
     ],
     "630079300": [
-      "mix-tuba-30-szt-xmas-mixy"
+      "mix-tuba-30-szt-mixy"
     ],
     "6300796": [
       "burger-plant-based"
@@ -4814,7 +4814,7 @@
       "mix-bombonierka-11-szt-mini-mixy",
       "mix-funkcjonalny-3x-batony-duzy",
       "mix-kalendarz-adwentowy-mixy",
-      "mix-tuba-30-szt-xmas-mixy",
+      "mix-tuba-30-szt-mixy",
       "mix-zestaw-15x-mini-batoniki-mixy",
       "mix-zestaw-makowiec-x-rogal-x-piernik-mixy",
       "mix-zestaw-mix-ciast-1-mixy",
@@ -5202,7 +5202,6 @@
       "krem-orzechowy-wanilia-proteinowy",
       "lemon-bundt-cake-cashews",
       "matcha-lemon-nerkowcowy",
-      "mix-tuba-30-szt-xmas-mixy",
       "muffin-jagodowy-nerkowcowy",
       "nuggets-niemiesne",
       "nuggets-plant-based",
@@ -5255,7 +5254,6 @@
       "krem-orzechowy-wanilia-proteinowy",
       "lemon-bundt-cake-cashews",
       "matcha-lemon-nerkowcowy",
-      "mix-tuba-30-szt-xmas-mixy",
       "muffin-jagodowy-nerkowcowy",
       "nuggets-niemiesne",
       "nuggets-plant-based",
@@ -5359,7 +5357,7 @@
       "mix-12x-xmas-mixy",
       "mix-6x-mini-batoniki-mixy",
       "mix-bombonierka-11-szt-mini-mixy",
-      "mix-tuba-30-szt-xmas-mixy",
+      "mix-tuba-30-szt-mixy",
       "mix-zestaw-15x-mini-batoniki-mixy",
       "mix-zestaw-mix-ciast-2-mixy",
       "muffin-jagodowy-nerkowcowy",
@@ -5401,7 +5399,7 @@
       "mix-kalendarz-adwentowy-mixy",
       "mix-na-grill-burger-kaszanka-niemiesne",
       "mix-na-grill-slaska-kaszanka-niemiesne",
-      "mix-tuba-30-szt-xmas-mixy",
+      "mix-tuba-30-szt-mixy",
       "mix-zestaw-15x-mini-batoniki-mixy",
       "mix-zestaw-makowiec-x-rogal-x-piernik-mixy",
       "mix-zestaw-mix-ciast-1-mixy",
@@ -5412,7 +5410,7 @@
       "mix-6x-mini-batoniki-mixy",
       "mix-bombonierka-11-szt-mini-mixy",
       "mix-kalendarz-adwentowy-mixy",
-      "mix-tuba-30-szt-xmas-mixy",
+      "mix-tuba-30-szt-mixy",
       "mix-zestaw-15x-mini-batoniki-mixy",
       "mix-zestaw-makowiec-x-rogal-x-piernik-mixy",
       "mix-zestaw-mix-ciast-1-mixy",
@@ -5670,8 +5668,7 @@
       "wedlina-niemiesne"
     ],
     "ryngwelski": [
-      "mix-kalendarz-adwentowy-mixy",
-      "mix-tuba-30-szt-xmas-mixy"
+      "mix-kalendarz-adwentowy-mixy"
     ],
     "shot": [
       "shot-funkcjonalne"
@@ -5767,12 +5764,10 @@
       "quinoa-z-czekolada-i-truskawkami-sniadaniowe"
     ],
     "szymon": [
-      "mix-kalendarz-adwentowy-mixy",
-      "mix-tuba-30-szt-xmas-mixy"
+      "mix-kalendarz-adwentowy-mixy"
     ],
     "szymon ryngwelski": [
-      "mix-kalendarz-adwentowy-mixy",
-      "mix-tuba-30-szt-xmas-mixy"
+      "mix-kalendarz-adwentowy-mixy"
     ],
     "tarta": [
       "raspberry-tart-cashews",
@@ -5786,7 +5781,7 @@
       "quinoa-z-czekolada-i-truskawkami-sniadaniowe"
     ],
     "tuba": [
-      "mix-tuba-30-szt-xmas-mixy"
+      "mix-tuba-30-szt-mixy"
     ],
     "wanilia": [
       "krem-orzechowy-wanilia-proteinowy"
@@ -5822,7 +5817,6 @@
       "krem-orzechowy-wanilia-proteinowy",
       "lemon-bundt-cake-cashews",
       "matcha-lemon-nerkowcowy",
-      "mix-tuba-30-szt-xmas-mixy",
       "muffin-jagodowy-nerkowcowy",
       "nuggets-niemiesne",
       "nuggets-plant-based",
@@ -8769,9 +8763,9 @@
     ],
     "6300793": [
       {
-        "product_id": "mix-tuba-30-szt-xmas-mixy",
+        "product_id": "mix-tuba-30-szt-mixy",
         "index": "6300793.00",
-        "name": "- Mix - Tuba 30 Szt Xmas"
+        "name": "- Mix - Tuba 30 Szt"
       }
     ],
     "6300796": [
@@ -9176,9 +9170,9 @@
       ]
     },
     {
-      "id": "mix-tuba-30-szt-xmas-mixy",
-      "name": "- Mix - Tuba 30 Szt Xmas",
-      "display_name": "- Mix - Tuba 30 Szt Xmas",
+      "id": "mix-tuba-30-szt-mixy",
+      "name": "- Mix - Tuba 30 Szt",
+      "display_name": "- Mix - Tuba 30 Szt",
       "category": "01 - BATONY",
       "tags": [
         "baton",
@@ -9198,14 +9192,8 @@
           "mini baton",
           "tuba"
         ],
-        "autor": [
-          "Krzysztof",
-          "Szymon"
-        ],
-        "osoba": [
-          "Krzysztof",
-          "Szymon"
-        ],
+        "autor": [],
+        "osoba": [],
         "inne": []
       },
       "indexes": [
@@ -9214,11 +9202,8 @@
       "index_bases": [
         "6300793"
       ],
-      "search_blob": "mix tuba 30 szt xmas mix tuba 30 szt xmas mixy baton mini baton mix mixy tuba krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300793.00 tuba mini 28.02.2026 6300xxx.00 tuba mini duzo dobra 07.07.2026 6300793.00 d marketing polska 01 produkty dk 01 batony mix tuba 30 szt xmas mixy tuba mini 28.02.2026 6300xxx.00 d marketing polska 01 produkty dk 01 batony mix tuba 30 szt xmas mixy tuba mini duzo dobra 07.07.2026 6300793.00 6300xxx.00 6300793.00 mix tuba 30 szt xmas baton mini baton mix mixy tuba krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300793.00 swieta swieta xmas boze narodzenie",
-      "authors": [
-        "Krzysztof",
-        "Szymon"
-      ]
+      "search_blob": "mix tuba 30 szt mix tuba 30 szt mixy baton mini baton mix mixy tuba 6300793.00 tuba mini 28.02.2026 6300xxx.00 tuba mini duzo dobra 07.07.2026 6300793.00 d marketing polska 01 produkty dk 01 batony mix tuba 30 szt mixy tuba mini 28.02.2026 6300xxx.00 d marketing polska 01 produkty dk 01 batony mix tuba 30 szt mixy tuba mini duzo dobra 07.07.2026 6300793.00 6300xxx.00 6300793.00 mix tuba 30 szt baton mini baton mix mixy tuba 6300793.00",
+      "authors": []
     },
     {
       "id": "mix-zestaw-15x-mini-batoniki-mixy",
@@ -11598,7 +11583,7 @@
       "index_bases": [
         "6300808"
       ],
-      "search_blob": "figa z makiem figa z makiem owocowe doypack kulki owocowe 6300808.00 doy 65g 2026 08 31 6300808 szablony foderow d marketing polska 01 produkty dk 02 kulki figa z makiem owocowe doy 65g 2026 08 31 6300808 d marketing polska 01 produkty dk 02 kulki figa z makiem owocowe szablony foderow 6300808.00 figa z makiem doypack kulki owocowe 6300808.00",
+      "search_blob": "figa z makiem figa z makiem owocowe doypack kulki owocowe 6300808.00 doy 65g 2026 08 31 6300808 d marketing polska 01 produkty dk 02 kulki figa z makiem owocowe doy 65g 2026 08 31 6300808 6300808.00 figa z makiem doypack kulki owocowe 6300808.00",
       "authors": []
     },
     {

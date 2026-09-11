@@ -203,82 +203,12 @@
   /* Mini-checklista jak Eksplorator - z najnowszej rewizji produktu. */
   function computeWideChecklist(product, queryOpt) {
     var rev = pickLatestRevision(product, queryOpt);
-    var fbr = (rev && rev.files_by_role) || {};
-    var src = fbr.source || [];
-    var prt = fbr.print || [];
-    var viz = (fbr.viz || []).filter(function (f) {
-      return isVizImageName(f.name);
-    });
-    var wizki = ((rev && rev.wizki) || []).filter(function (f) {
-      return isVizImageName(f.name);
-    });
-    var elements = fbr.elements || [];
-    var archivePrint = []
-      .concat(fbr.viz || [])
-      .concat((rev && rev.wizki) || [])
-      .filter(function (f) {
-        return isArchiveName(f.name);
-      });
-
-    var artwork = src.some(function (f) {
-      var e = fileExt(f.name);
-      return e === "ai" || e === "psd" || e === "indd";
-    });
-
-    var prev = src.some(function (f) {
-      var u = String(f.name || "").toUpperCase();
-      return /\bPREV\b/.test(u) || (/[-_]F([-_.]|$)/.test(u) && !/FQ/.test(u));
-    });
-
-    var print_pdf =
-      prt.length > 0 ||
-      archivePrint.length > 0 ||
-      src.some(function (f) {
-        var u = String(f.name || "").toUpperCase();
-        return /FQ/.test(u) && fileExt(f.name) === "pdf";
-      });
-
-    var viz_3d = viz.length > 0 || wizki.length > 0;
-
-    var tech =
-      elements.length > 0 ||
-      ((rev && rev.slots) || []).some(function (s) {
-        var su = String(s).toUpperCase();
-        return su.indexOf("ELEMENTY") >= 0 || su.indexOf("ELEMENTS") >= 0 || su.indexOf("TECH") >= 0;
-      });
-
-    var marketing = ((product && product.related_materials) || []).some(function (m) {
-      return m && m.file_count > 0;
-    });
-    if (!marketing && window.DamProductCorrelation && product && product.id) {
-      marketing = DamProductCorrelation.hasBrandingMaterials(product.id);
+    if (window.DamApi && typeof window.DamApi.revisionRoles === "function") {
+      return window.DamApi.revisionRoles(rev, product);
     }
-
-    var karta =
-      ((fbr.karty_wprowadzenia || []).length > 0) ||
-      src.some(function (f) {
-        var u = String(f.name || "").toUpperCase();
-        return /KARTA/.test(u) && /WPROWADZ/.test(u);
-      });
-
-    var presentation =
-      ((fbr.strategia || []).length > 0) ||
-      src.some(function (f) {
-        var e = fileExt(f.name);
-        var u = String(f.name || "").toUpperCase();
-        return (e === "pptx" || e === "ppt" || e === "key") &&
-          (/PREZENT|STRATEG|POZYCJON/.test(u));
-      });
-
     return {
-      artwork: !!artwork,
-      prev: !!prev,
-      print_pdf: !!print_pdf,
-      viz_3d: !!viz_3d,
-      tech: !!tech,
-      marketing: !!marketing,
-      karta: !!karta,
-      presentation: !!presentation,
+      artwork: false, prev: false, print_pdf: false, viz_3d: false,
+      tech: false, marketing: false, karta: false, presentation: false,
     };
   }
 
@@ -304,7 +234,11 @@
       missSet[r] = true;
     });
     var folderPath = p.path || "";
-    var pathEsc = String(folderPath).replace(/"/g, "&quot;");
+    var rawRev = raw ? pickLatestRevision(raw, state.query) : null;
+    var rolePaths =
+      window.DamApi && typeof window.DamApi.revisionRolePaths === "function" && rawRev
+        ? window.DamApi.revisionRolePaths(rawRev, raw)
+        : {};
     var winIcon =
       window.DamIcons && typeof window.DamIcons.winExplorerSvg === "function"
         ? window.DamIcons.winExplorerSvg()
@@ -317,14 +251,11 @@
         ok = flags[r];
       } else if (r === "artwork" || r === "viz_3d" || r === "print_pdf") {
         ok = !missSet[r];
-      } else if (r === "tech") {
-        var assets = (((p.variants || [])[0] || {}).assets) || [];
-        ok = assets.some(function (a) {
-          return a.asset_role === "tech" && a.current_revision_id;
-        });
       } else {
         ok = false;
       }
+      var rowPath = rolePaths[r] || folderPath;
+      var rowEsc = String(rowPath).replace(/"/g, "&quot;");
       var cls = ok ? "dam-check-ok" : "dam-check-brak";
       var icon = ok ? "uil-check-circle" : "uil-times-circle";
       var actions = "";
@@ -336,7 +267,7 @@
           '" title="Przejdź do Eksplorera" data-dam-tip="Otwórz slot w Eksplorerze">' +
           '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdź</span></a>' +
           '<button type="button" class="dam-int-cta dam-int-cta--icon dam-btn-icon dam-btn-icon-only dam-win-btn dam-check-win" data-path="' +
-          pathEsc +
+          rowEsc +
           '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwórz folder w Eksploratorze plików Windows">' +
           winIcon +
           "</button></span>";
@@ -346,7 +277,7 @@
         cls +
         (ok ? " dam-check-row--interactive" : "") +
         '" data-path="' +
-        pathEsc +
+        rowEsc +
         '"' +
         (ok ? ' tabindex="0" role="button"' : "") +
         ">" +
@@ -1112,6 +1043,12 @@
         if (cached && cached.products) {
           applyFileIndexMeta(cached);
           scheduleRenderGrid(grid, statusEl);
+        }
+        if (window.DamApi && typeof window.DamApi.loadChecklistExtras === "function") {
+          window.DamApi.loadChecklistExtras().then(function () {
+            if (cached && cached.products) applyFileIndexMeta(cached);
+            scheduleRenderGrid(grid, statusEl);
+          });
         }
       } catch (ignore) {}
     } catch (e) {

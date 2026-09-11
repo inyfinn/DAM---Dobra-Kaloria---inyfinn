@@ -173,6 +173,14 @@
   min-height: 0;
 }
 
+.dam-dash-grid.is-bento-active > .dam-widget[data-widget-id="quick_links"] {
+  align-self: stretch;
+}
+
+.dam-dash-grid.is-bento-active > .dam-widget[data-widget-id="branding_latest"] {
+  align-self: stretch;
+}
+
 .dam-dash-grid .dam-widget {
   border-radius: var(--dam-bento-radius);
 }

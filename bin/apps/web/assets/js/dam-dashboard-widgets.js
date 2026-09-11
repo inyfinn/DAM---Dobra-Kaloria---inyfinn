@@ -618,14 +618,50 @@
         }).length;
       if (!(cols > 0)) cols = 2;
       var nRows = Math.ceil(rows.length / cols);
-      var listH = nRows * firstH + Math.max(0, nRows - 1) * listGap;
+      var listH = Math.ceil(list.scrollHeight || 0);
+      if (!(listH > 8)) {
+        listH = nRows * firstH + Math.max(0, nRows - 1) * listGap;
+      }
       var csEl = global.getComputedStyle(el);
       var padY =
         (parseFloat(csEl.paddingTop) || 0) + (parseFloat(csEl.paddingBottom) || 0);
       var extra = 0;
       var foot = el.querySelector(".dam-widget__body > .dam-widget__meta");
-      if (foot) extra += Math.ceil(foot.getBoundingClientRect().height || 0) + 8;
-      return Math.ceil(headH + listH + padY + extra + 8);
+      if (foot) {
+        extra += Math.ceil(foot.getBoundingClientRect().height || 0) + 10;
+      }
+      return Math.ceil(headH + listH + padY + extra + 4);
+    }
+    function quickLinksContentPx(el) {
+      var head =
+        el.querySelector(".dam-widget__head") ||
+        el.querySelector(".dam-widget__title") ||
+        el.querySelector("h3");
+      var headH = head ? Math.ceil(head.getBoundingClientRect().height || 0) : 28;
+      var links = el.querySelector(".dam-widget__links");
+      var linksH = 44;
+      if (links) {
+        var prevFlex = links.style.flex;
+        var prevH = links.style.height;
+        links.style.flex = "0 0 auto";
+        links.style.height = "auto";
+        linksH = Math.ceil(links.scrollHeight || links.getBoundingClientRect().height || 0);
+        links.style.flex = prevFlex;
+        links.style.height = prevH;
+      }
+      if (!(linksH > 8)) linksH = 44;
+      var csEl = global.getComputedStyle(el);
+      var padY =
+        (parseFloat(csEl.paddingTop) || 0) + (parseFloat(csEl.paddingBottom) || 0);
+      var headMb = 0;
+      if (head) {
+        try {
+          headMb = parseFloat(global.getComputedStyle(head).marginBottom) || 0;
+        } catch (eMb) {
+          headMb = 8;
+        }
+      }
+      return Math.ceil(headH + headMb + linksH + padY + 4);
     }
     ids.forEach(function (id) {
       var el = mount.querySelector('[data-widget-id="' + id + '"]');
@@ -670,10 +706,18 @@
     }
     row += bandH;
     if (saved.items.quick_links) {
+      var qEl = mount.querySelector('[data-widget-id="quick_links"]');
+      if (qEl) qEl.setAttribute("data-bento-id", "quick_links");
+      var qPx = qEl ? quickLinksContentPx(qEl) : 96;
+      var qNeed = Math.max(2, rowsForContentPx(qPx));
       var q0 = saved.items.quick_links;
-      if (q0.c !== 1 || q0.r !== row || q0.w !== 9 || q0.h !== 3) changed = true;
-      saved.items.quick_links = { c: 1, r: row, w: 9, h: 3 };
-      row += 3;
+      if (q0.c !== 1 || q0.r !== row || q0.w !== 9 || q0.h !== qNeed) changed = true;
+      saved.items.quick_links = { c: 1, r: row, w: 9, h: qNeed };
+      if (qEl) {
+        qEl.style.setProperty("--bento-h", String(qNeed));
+        qEl.setAttribute("data-bento-min-h", String(qNeed));
+      }
+      row += qNeed;
     }
     if (saved.items.asana_home) {
       var aH = saved.items.asana_home.h || 8;
@@ -802,7 +846,7 @@
 
   /** Folder names that must never become branding_latest row titles. */
   var BRANDING_LATEST_JUNK_FOLDER_RE =
-    /^(?:\d+\s*-\s*)?(?:elementy|elements|links?|wizki|visuals?|wizualizacje|packshots?|miniatura|galeria|preview|thumbs?|exports?|web_rgb|print_cmyk|internet_prezentacje_rgb)$/i;
+    /^(?:\d+\s*-\s*)?(?:elementy|elements|links?|wizki|visuals?|wizualizacje|packshots?|miniatura|galeria|preview|thumbs?|exports?|web_rgb|print_cmyk|internet_prezentacje_rgb|gotowe|ready|finals?)$/i;
 
   function folderLabel(path, asset) {
     var parts = dirnamePath(path).split("/").filter(Boolean);
@@ -828,6 +872,8 @@
     if (/^\d+x$/i.test(last) && prev) return prev + " / " + last;
     if (/^\d{2}\s*-\s*/.test(last) && prev) return prev + " / " + last;
     var fileHint = String((asset && (asset.name || asset.file_name)) || "");
+    var stem = fileHint.replace(/\.[a-z0-9]+$/i, "").trim();
+    if (stem && /---/.test(stem) && stem.length >= 8) return stem;
     var m = fileHint.match(/^(.+?)\s*-\s*\d+\.(png|jpg|jpeg|webp|svg)$/i);
     if (m && m[1] && m[1].length >= 4) return m[1].trim();
     return last;
@@ -1122,14 +1168,229 @@
     return { assets: data.assets, partial: !!partial || !!data.partial };
   }
 
+  function damBridgeAuthHeaders() {
+    var headers = {};
+    try {
+      var tok = localStorage.getItem("dam_token");
+      if (tok) headers.Authorization = "Bearer " + tok;
+    } catch (eTok) {
+      /* ignore */
+    }
+    return headers;
+  }
+
+  function brandingAssetLooksLikeTuba(a) {
+    var blob = String((a && (a.path || a.name)) || "").replace(/\\/g, "/");
+    return /TUBA---PREZENT/i.test(blob);
+  }
+
+  function mergeBrandingMtime(target, fat) {
+    if (!target || !fat) return;
+    var ms = Number(fat.mtime_ms);
+    if (ms && isFinite(ms)) target.mtime_ms = ms;
+    if (fat.mtime) target.mtime = fat.mtime;
+    if (!target.path && fat.path) target.path = fat.path;
+    if (!target.name && fat.name) target.name = fat.name;
+  }
+
+  /**
+   * Slim grid-head has no mtime_ms (sorted by role+id). Pull numeric file
+   * mtime from /branding/asset so dashboard newest is real file date.
+   */
+  function enrichBrandingMtimes(data) {
+    if (!data || !Array.isArray(data.assets) || !data.assets.length) {
+      return Promise.resolve(data);
+    }
+    if (data.__damMtimesEnriched) return Promise.resolve(data);
+    var byId = Object.create(null);
+    var need = [];
+    var i;
+    var a;
+    var PRIORITY_ROLES = {
+      web_hero_slider: 1,
+      key_visual: 1,
+      campaign: 1,
+      web_banner: 1,
+      www: 1,
+      web_bundle_tile: 1,
+      ecommerce_ad: 1,
+      social_asset: 1,
+      social: 1
+    };
+    for (i = 0; i < data.assets.length; i++) {
+      a = data.assets[i];
+      if (!a || !a.id) continue;
+      byId[String(a.id)] = a;
+      if (!isBrandingWidgetThumb(a)) continue;
+      if (brandingAssetMtimeMs(a)) continue;
+      need.push(String(a.id));
+    }
+    if (need.length > 720) {
+      var tubaIds = [];
+      var roleIds = [];
+      var restIds = [];
+      need.forEach(function (id) {
+        var row = byId[id];
+        if (brandingAssetLooksLikeTuba(row)) tubaIds.push(id);
+        else if (PRIORITY_ROLES[String((row && row.asset_role) || "").toLowerCase()]) {
+          roleIds.push(id);
+        } else restIds.push(id);
+      });
+      need = tubaIds.concat(roleIds, restIds).slice(0, 720);
+    }
+    if (!need.length) {
+      data.__damMtimesEnriched = true;
+      return Promise.resolve(data);
+    }
+    var base = brandingBridgeBase().replace(/\/$/, "");
+    var CHUNK = 40;
+    var chunks = [];
+    for (i = 0; i < need.length; i += CHUNK) {
+      chunks.push(need.slice(i, i + CHUNK));
+    }
+    function fetchChunk(ids) {
+      var url = base + "/branding/asset?ids=" + encodeURIComponent(ids.join(","));
+      return fetch(url, { cache: "no-store", headers: damBridgeAuthHeaders() })
+        .then(function (r) {
+          if (!r.ok) throw new Error("http-" + r.status);
+          return r.json();
+        })
+        .then(function (j) {
+          var list = (j && j.assets) || [];
+          if (j && j.asset) list = list.concat([j.asset]);
+          return list;
+        })
+        .catch(function () {
+          return [];
+        });
+    }
+    var PARALLEL = 3;
+    function runAt(offset) {
+      if (offset >= chunks.length) return Promise.resolve();
+      var slice = chunks.slice(offset, offset + PARALLEL);
+      return Promise.all(slice.map(fetchChunk)).then(function (rows) {
+        rows.forEach(function (list) {
+          (list || []).forEach(function (fat) {
+            if (!fat || !fat.id) return;
+            mergeBrandingMtime(byId[String(fat.id)], fat);
+          });
+        });
+        return runAt(offset + PARALLEL);
+      });
+    }
+    return runAt(0).then(function () {
+      data.__damMtimesEnriched = true;
+      return data;
+    });
+  }
+
+  function ensureTubaBrandingAsset(data) {
+    if (!data || !Array.isArray(data.assets)) return Promise.resolve(data);
+    var has = data.assets.some(brandingAssetLooksLikeTuba);
+    if (has) return Promise.resolve(data);
+    var cb = encodeURIComponent(String(global.DAM_APP_VERSION || "1"));
+    var base = brandingBridgeBase().replace(/\/$/, "");
+    var gridUrls = [
+      "data/branding-grid-index.json?v=" + cb,
+      base + "/branding-grid-index?v=" + cb
+    ];
+    function findInGrid(i) {
+      if (i >= gridUrls.length) return Promise.resolve(null);
+      return fetchJsonOk(gridUrls[i])
+        .then(function (grid) {
+          var list = (grid && grid.assets) || [];
+          var hit = null;
+          var gi;
+          for (gi = 0; gi < list.length; gi++) {
+            if (brandingAssetLooksLikeTuba(list[gi])) {
+              hit = list[gi];
+              break;
+            }
+          }
+          if (hit) return hit;
+          return findInGrid(i + 1);
+        })
+        .catch(function () {
+          return findInGrid(i + 1);
+        });
+    }
+    return findInGrid(0).then(function (slim) {
+      if (!slim || !slim.id) return data;
+      var url = base + "/branding/asset?id=" + encodeURIComponent(slim.id);
+      return fetch(url, { cache: "no-store", headers: damBridgeAuthHeaders() })
+        .then(function (r) {
+          if (!r.ok) throw new Error("http-" + r.status);
+          return r.json();
+        })
+        .then(function (j) {
+          var fat = (j && j.asset) || slim;
+          mergeBrandingMtime(slim, fat);
+          if (!isBrandingWidgetThumb(fat) && !isBrandingWidgetThumb(slim)) {
+            return data;
+          }
+          data.assets = [fat.path ? fat : slim].concat(data.assets);
+          return data;
+        })
+        .catch(function () {
+          data.assets = [slim].concat(data.assets);
+          return data;
+        });
+    });
+  }
+
+  function enrichTubaFirst(data) {
+    if (!data || !Array.isArray(data.assets)) return Promise.resolve(data);
+    var hit = null;
+    var i;
+    for (i = 0; i < data.assets.length; i++) {
+      if (brandingAssetLooksLikeTuba(data.assets[i])) {
+        hit = data.assets[i];
+        break;
+      }
+    }
+    if (!hit) return Promise.resolve(data);
+    if (brandingAssetMtimeMs(hit)) {
+      data.__damTubaReady = true;
+      return Promise.resolve(data);
+    }
+    var base = brandingBridgeBase().replace(/\/$/, "");
+    var url = base + "/branding/asset?id=" + encodeURIComponent(hit.id || "");
+    return fetch(url, { cache: "no-store", headers: damBridgeAuthHeaders() })
+      .then(function (r) {
+        if (!r.ok) throw new Error("http-" + r.status);
+        return r.json();
+      })
+      .then(function (j) {
+        mergeBrandingMtime(hit, (j && j.asset) || {});
+        data.__damTubaReady = true;
+        return data;
+      })
+      .catch(function () {
+        data.__damTubaReady = true;
+        return data;
+      });
+  }
+
   function loadBrandingIndex() {
-    if (global.__damBrandingIndex && global.__damBrandingIndex.assets) {
+    if (
+      global.__damBrandingIndex &&
+      global.__damBrandingIndex.assets &&
+      (global.__damBrandingIndex.__damMtimesEnriched || global.__damBrandingIndex.__damTubaReady)
+    ) {
       return Promise.resolve(global.__damBrandingIndex);
     }
-    if (global.__damBrandingGridIndex && global.__damBrandingGridIndex.assets) {
+    if (
+      global.__damBrandingGridIndex &&
+      global.__damBrandingGridIndex.assets &&
+      (global.__damBrandingGridIndex.__damMtimesEnriched || global.__damBrandingGridIndex.__damTubaReady)
+    ) {
       return Promise.resolve(global.__damBrandingGridIndex);
     }
     if (global.__damBrandingIndexPromise) return global.__damBrandingIndexPromise;
+    var cached =
+      (global.__damBrandingIndex && global.__damBrandingIndex.assets && global.__damBrandingIndex) ||
+      (global.__damBrandingGridIndex && global.__damBrandingGridIndex.assets && global.__damBrandingGridIndex) ||
+      null;
     var cb = encodeURIComponent(String(global.DAM_APP_VERSION || "1"));
     var base = brandingBridgeBase().replace(/\/$/, "");
     var urls = [
@@ -1150,12 +1411,27 @@
           return tryNext(i + 1);
         });
     }
-    global.__damBrandingIndexPromise = tryNext(0)
+    var start = cached ? Promise.resolve(cached) : tryNext(0);
+    global.__damBrandingIndexPromise = start
       .then(function (data) {
+        return ensureTubaBrandingAsset(data);
+      })
+      .then(function (data) {
+        return enrichTubaFirst(data);
+      })
+      .then(function (data) {
+        enrichBrandingMtimes(data).catch(function () {
+          /* background */
+        });
         global.__damBrandingIndexPromise = null;
         try {
-          if (!global.__damBrandingGridIndex) global.__damBrandingGridIndex = data;
+          global.__damBrandingGridIndex = data;
         } catch (eShare) {
+          /* ignore */
+        }
+        try {
+          global.__damBrandingIndex = data;
+        } catch (eIdx) {
           /* ignore */
         }
         return data;
@@ -1194,14 +1470,16 @@
         !!cover &&
         (isRasterPreviewPath(cover.name || cover.path || "") ||
           /\.svg$/i.test(String(cover.name || cover.path || "")));
+      var groupNewest = cover || newest;
       return {
         key: k,
         label: folderLabel((cover && cover.path) || (newest && newest.path) || "", cover || newest),
         count: arr.length,
-        newest: cover || newest,
+        newest: groupNewest,
         hasSafeCover: hasSafeCover,
         path: (cover && cover.path) || (newest && newest.path) || "",
         mtime: (newest && newest.mtime) || (cover && cover.mtime) || "",
+        mtime_ms: brandingAssetMtimeMs(newest) || brandingAssetMtimeMs(cover)
       };
     });
     /* Prefer groups with a browser-safe cover, then newest mtime. */
@@ -4366,7 +4644,7 @@
         h: mediaLayoutMinH(getTileLayout("branding_latest")),
       },
       notify_new_viz: { w: 3, h: 4 },
-      quick_links: { w: 9, h: 3 },
+      quick_links: { w: 9, h: 2 },
       checklists_ok: { w: 3, h: 4 },
     });
   }

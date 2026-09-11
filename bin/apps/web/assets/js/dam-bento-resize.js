@@ -10,7 +10,7 @@
   /* Room for 3 media stacks of 10 tiles (5 rows) plus stats/notify/asana. */
   var MAX_ROWS = 96;
   /* v10: always re-stamp --bento-* after media outerHTML; content-sized h. */
-  var BENTO_LAYOUT_VERSION = 10;
+  var BENTO_LAYOUT_VERSION = 11;
   var ROW_PX = 48;
   var STORAGE_PREFIX = "dam_bento_v1:";
   var MIN_W = 2;
@@ -29,8 +29,8 @@
   var DEFAULT_MIN_SIZES = {
     /* dashboard */
     notify_new_viz: { w: 3, h: 6 },
-    /* Compact chips (~44px) + wrap; short floor (was h:8 for tall tiles) */
-    quick_links: { w: 3, h: 4 },
+    /* Compact chips (~44px) + wrap; hug floor (was h:4 / h:3 leftover) */
+    quick_links: { w: 3, h: 2 },
     newest_viz_3: { w: 9, h: 3 },
     newest_products_f: { w: 9, h: 3 },
     branding_latest: { w: 9, h: 3 },
@@ -150,7 +150,7 @@
     var base = fromOpts || fromDefault || fromClass || { w: MIN_W, h: MIN_H };
     var minW = Math.max(MIN_W, clamp(base.w != null ? base.w : MIN_W, MIN_W, COLS));
     var minH = Math.max(MIN_H, clamp(base.h != null ? base.h : MIN_H, MIN_H, MAX_ROWS));
-    /* quick_links: compact chips wrap; short floor in both aspects */
+    /* quick_links: compact chips wrap; hug content (wide row = 2 rows) */
     if (id === "quick_links") {
       var cw =
         current && current.w != null
@@ -158,8 +158,8 @@
           : el
             ? parseInt(el.style.getPropertyValue("--bento-w"), 10) || minW
             : minW;
-      if (cw >= 6) minH = Math.max(MIN_H, 3);
-      else minH = Math.max(MIN_H, 4);
+      if (cw >= 6) minH = Math.max(MIN_H, 2);
+      else minH = Math.max(MIN_H, 3);
       minW = Math.max(minW, 3);
     }
     if (id === "newest_products_f" || id === "newest_viz_3" || id === "branding_latest") {
@@ -1750,7 +1750,7 @@
       branding_latest: { c: 1, r: 20, w: 9, h: 8 },
       notify_new_viz: { c: 1, r: 28, w: 3, h: 4 },
       checklists_ok: { c: 7, r: 28, w: 3, h: 4 },
-      quick_links: { c: 1, r: 32, w: 9, h: 3 },
+      quick_links: { c: 1, r: 32, w: 9, h: 2 },
       asana_home: { c: 1, r: 35, w: 9, h: 8 }
     };
   }

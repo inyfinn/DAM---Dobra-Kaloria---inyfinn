@@ -173,6 +173,15 @@
 
 /* Nested mb: token owner dam-brand.css (shared viz + branding meta) */
 
+.geex-content__section-wrapper > .dam-global-search-block > .dam-explorer-toolbar {
+  margin-bottom: 0;
+}
+
+.geex-content__section-wrapper > .dam-global-search-block > .dam-tag-groups {
+  margin-top: var(--dam-space-toolbar-row-gap);
+  margin-bottom: var(--dam-space-toolbar-row-gap);
+}
+
 .dam-global-search-block > .dam-viz-secondary-filters + .dam-viz-grid-toolbar {
   margin-top: 0;
   margin-bottom: 0;

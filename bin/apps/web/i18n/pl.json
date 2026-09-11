@@ -293,6 +293,8 @@
   "branding.clear_filters": "Wyczyść filtry",
   "branding.date_week": "Ostatni tydzień",
   "branding.date_month": "Ostatni miesiąc",
+  "branding.date_from_aria": "Data od (rrrr-mm-dd)",
+  "branding.date_to_aria": "Data do (rrrr-mm-dd)",
   "common.sort": "Sortuj",
   "sort.introduced_desc": "Wprowadzenie: najnowsze",
   "sort.introduced_tip": "Data wejścia produktu na rynek (pierwszy folder rewizji), nie data nowej wizki.",

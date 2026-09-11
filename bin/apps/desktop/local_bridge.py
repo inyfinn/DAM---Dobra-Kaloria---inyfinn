@@ -37,6 +37,7 @@ Endpoints:
   GET  /auth/me  Authorization: Bearer <token>
   GET  /files/status?root=...  czy ROOT plikow online
   GET  /folder-images?path=...  lista obrazow w folderze Marketing (picker miniatury)
+  GET  /checklist-extras?index=6300808  karty (D/G Projekty opakowań) + OK.pdf (Projekty wstępne)
   GET  /folder-browse?path=...&mode=assets  foldery + pliki (AI/PDF/PNG...) do wskazania ELEMENTY
   POST /elements-link  reczne powiazanie folderu/plikow Elementy -> apps/web/data/elements-overrides.json
   POST /viz-flag  demo/hidden/manual -> apps/web/data/viz-flags.json
@@ -2796,10 +2797,24 @@ def _file_index_explorer_slim(data: dict) -> dict:
         if not isinstance(prod, dict):
             continue
         slim_revs = []
+        extras_mod = None
+        try:
+            import dam_path_resolve as extras_mod  # type: ignore
+        except Exception:
+            extras_mod = None
         for rev in prod.get("revisions") or []:
             if not isinstance(rev, dict):
                 continue
-            slim_revs.append({k: rev[k] for k in _EXPLORER_REV_KEEP if k in rev})
+            slim_row = {k: rev[k] for k in _EXPLORER_REV_KEEP if k in rev}
+            if extras_mod is not None:
+                try:
+                    extra = extras_mod.extras_for_index(str(rev.get("index") or ""))
+                    flags, paths = extras_mod.revision_checklist(rev, extras=extra)
+                    slim_row["checklist"] = flags
+                    slim_row["checklist_paths"] = paths
+                except Exception:
+                    pass
+            slim_revs.append(slim_row)
         row = {k: prod[k] for k in prod if k not in ("revisions", "related_materials")}
         row["revisions"] = slim_revs
         row["files_slim"] = True
@@ -7105,6 +7120,29 @@ class Handler(BaseHTTPRequestHandler):
                 },
             )
             return
+        if parsed.path == "/checklist-extras":
+            qs = parse_qs(parsed.query)
+            needle = (qs.get("index") or [""])[0].strip()
+            try:
+                import dam_path_resolve as _dpr  # type: ignore
+
+                by_index = _dpr.scan_extra_documents()
+            except Exception as exc:
+                self._json(200, {"ok": False, "by_index": {}, "error": str(exc)})
+                return
+            if needle:
+                digits = _dpr.extras_digits(needle)
+                self._json(
+                    200,
+                    {
+                        "ok": True,
+                        "index": digits,
+                        "by_index": {digits: by_index.get(digits) or {}} if digits else {},
+                    },
+                )
+                return
+            self._json(200, {"ok": True, "by_index": by_index})
+            return
         if parsed.path == "/file-index/product":
             if not INDEX_FILE.is_file():
                 self._json(
@@ -7119,6 +7157,32 @@ class Handler(BaseHTTPRequestHandler):
             if not hit:
                 self._json(404, {"ok": False, "error": "product_not_found", "id": pid})
                 return
+            try:
+                import copy as _copy
+                import dam_path_resolve as _dpr  # type: ignore
+
+                hit = _copy.deepcopy(hit)
+                for rev in hit.get("revisions") or []:
+                    if not isinstance(rev, dict):
+                        continue
+                    extra = _dpr.extras_for_index(str(rev.get("index") or ""))
+                    fbr = rev.setdefault("files_by_role", {})
+                    if extra.get("karta") and not fbr.get("karty_wprowadzenia"):
+                        fbr["karty_wprowadzenia"] = [
+                            {
+                                "name": Path(extra["karta"]).name,
+                                "path": extra["karta"].replace("\\", "/"),
+                            }
+                        ]
+                    if extra.get("presentation") and not fbr.get("strategia"):
+                        fbr["strategia"] = [
+                            {
+                                "name": Path(extra["presentation"]).name,
+                                "path": extra["presentation"].replace("\\", "/"),
+                            }
+                        ]
+            except Exception:
+                pass
             self._json(200, {"ok": True, "product": hit})
             return
         if parsed.path == "/file-index":
