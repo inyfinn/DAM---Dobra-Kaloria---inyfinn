@@ -1087,42 +1087,181 @@
     if (!curEl) return;
 
     var lastCheck = null;
+    var pollTimer = 0;
+    var section = document.getElementById("damAppUpdates");
+    if (section) {
+      var headMeta = section.querySelector(".dam-widget__head .dam-widget__meta");
+      if (headMeta) {
+        headMeta.textContent = "Nowe wersje z GitHub Inyfinn. Sprawdzanie codziennie o 9:00 albo ręcznie.";
+      }
+      var autoDesc = section.querySelector("#damUpdateAutoCheck")
+        ? autoEl && autoEl.closest(".dam-sw-row") && autoEl.closest(".dam-sw-row").querySelector(".dam-sw-row__desc")
+        : null;
+      if (autoDesc) autoDesc.textContent = "Codziennie o 9:00 czasu lokalnego";
+    }
+
+    function t(key, fallback, vars) {
+      var s = fallback;
+      if (window.DamI18n && typeof DamI18n.t === "function") {
+        var v = DamI18n.t(key);
+        if (v && v !== key) s = v;
+      }
+      if (vars) {
+        Object.keys(vars).forEach(function (k) {
+          s = String(s).split("{" + k + "}").join(String(vars[k]));
+        });
+      }
+      return s;
+    }
+
+    function isReal(data) {
+      if (window.DamAppUpdate && typeof DamAppUpdate.isRealUpdate === "function") {
+        return DamAppUpdate.isRealUpdate(data);
+      }
+      if (!data || data.ok === false || data.update_available !== true || data.error) return false;
+      var cur = String(data.current || "");
+      var lat = String(data.latest || "");
+      return !!(lat && cur && lat !== cur);
+    }
+
+    function setInstallMode(mode) {
+      if (!installBtn) return;
+      if (mode === "hidden") {
+        installBtn.hidden = true;
+        installBtn.disabled = false;
+        return;
+      }
+      installBtn.hidden = false;
+      installBtn.disabled = mode === "busy";
+      if (mode === "download") {
+        installBtn.textContent = t("update.download", "Pobierz");
+      } else if (mode === "install") {
+        installBtn.textContent = t("update.install", "Instaluj");
+      } else if (mode === "busy") {
+        installBtn.textContent = t("update.downloading", "Pobieranie w tle…");
+      } else if (mode === "portable") {
+        installBtn.textContent = t("update.restart_exe", "Uruchom ponownie DAM.exe");
+      }
+    }
 
     function renderCheck(data) {
       lastCheck = data || lastCheck;
       if (!lastCheck) return;
-      curEl.textContent = "Wersja " + (lastCheck.current || "?");
-      latEl.textContent = lastCheck.latest || "-";
-      if (notesEl) {
-        if (lastCheck.update_available && lastCheck.release_notes) {
+      var cur = lastCheck.current || "?";
+      var lat = lastCheck.latest || "-";
+      curEl.textContent = t("update.installed", "Wersja {current}", { current: cur });
+      if (lastCheck.ok === false || lastCheck.error) {
+        latEl.textContent = t("update.check_failed", "Nie udało się sprawdzić aktualizacji");
+        if (notesEl) {
           notesEl.hidden = false;
-          notesEl.textContent = lastCheck.release_notes;
+          notesEl.textContent = t(
+            "update.check_failed_hint",
+            "Sprawdzenie nie powiodło się. To nie oznacza, że jest nowa wersja."
+          );
+        }
+        setInstallMode("hidden");
+        if (window.DamAppUpdate && DamAppUpdate.hideBanner) DamAppUpdate.hideBanner();
+        return;
+      }
+      latEl.textContent = lat;
+      var real = isReal(lastCheck);
+      if (notesEl) {
+        if (real) {
+          notesEl.hidden = false;
+          notesEl.textContent = t(
+            "update.available",
+            "Dostępna wersja {latest} (masz {current}).",
+            { latest: lat, current: cur }
+          );
         } else {
-          notesEl.hidden = true;
-          notesEl.textContent = "";
+          notesEl.hidden = false;
+          notesEl.textContent = t("update.already_latest", "Masz najnowszą wersję.");
         }
       }
-      if (installBtn) {
-        installBtn.hidden = !lastCheck.update_available;
-        if (lastCheck.portable) {
-          installBtn.textContent = "Uruchom ponownie DAM.exe";
-          installBtn.title = "Zamknij aplikacje i kliknij DAM.exe w folderze projektu";
-        } else {
-          installBtn.textContent = "Pobierz i zainstaluj";
-        }
+      if (!real) {
+        setInstallMode("hidden");
+        if (window.DamAppUpdate && DamAppUpdate.hideBanner) DamAppUpdate.hideBanner();
+        return;
+      }
+      if (lastCheck.portable) {
+        setInstallMode("portable");
+        installBtn.title = t(
+          "update.portable_hint",
+          "Zamknij DAM i uruchom ponownie DAM.exe z folderu projektu."
+        );
+        return;
+      }
+      if (lastCheck.installer_ready) {
+        setInstallMode("install");
+      } else {
+        setInstallMode("download");
       }
     }
 
     function check(force) {
       var url = bridge() + "/app-update/check" + (force ? "?force=1" : "");
-      if (latEl) latEl.textContent = "Sprawdzanie...";
+      if (latEl) latEl.textContent = t("update.checking", "Sprawdzanie…");
       fetch(url)
         .then(function (r) {
           return r.json();
         })
-        .then(renderCheck)
+        .then(function (data) {
+          renderCheck(data);
+          if (force && window.DamNotify) {
+            if (data && data.ok === false) {
+              DamNotify.info(t("update.check_failed", "Nie udało się sprawdzić aktualizacji"));
+            } else if (isReal(data)) {
+              DamNotify.info(
+                t("update.available", "Dostępna wersja {latest} (masz {current}).", {
+                  latest: data.latest,
+                  current: data.current,
+                })
+              );
+            } else {
+              DamNotify.info(t("update.already_latest", "Masz najnowszą wersję."));
+            }
+          }
+        })
         .catch(function () {
-          if (latEl) latEl.textContent = "Blad polaczenia z mostem";
+          if (latEl) latEl.textContent = t("update.bridge_error", "Brak połączenia z mostem");
+          if (notesEl) {
+            notesEl.hidden = false;
+            notesEl.textContent = t("update.check_failed", "Nie udało się sprawdzić aktualizacji");
+          }
+          setInstallMode("hidden");
+        });
+    }
+
+    function pollDownload() {
+      fetch(bridge() + "/app-update/status")
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (st) {
+          if (!st) return;
+          if (st.status === "ready" || st.installer_ready) {
+            if (lastCheck) lastCheck.installer_ready = true;
+            setInstallMode("install");
+            if (notesEl) {
+              notesEl.hidden = false;
+              notesEl.textContent = t("update.downloaded", "Pobrano. Możesz zainstalować.");
+            }
+            return;
+          }
+          if (st.status === "error") {
+            setInstallMode("download");
+            if (window.DamNotify) {
+              DamNotify.error(t("update.download_failed", "Nie udało się pobrać aktualizacji"));
+            }
+            return;
+          }
+          if (st.status === "downloading") {
+            setInstallMode("busy");
+            pollTimer = setTimeout(pollDownload, 1500);
+          }
+        })
+        .catch(function () {
+          setInstallMode("download");
         });
     }
 
@@ -1149,15 +1288,22 @@
       installBtn.addEventListener("click", function () {
         if (lastCheck && lastCheck.portable) {
           if (window.DamNotify) {
-            DamNotify.info("Zamknij DAM i uruchom ponownie DAM.exe z folderu projektu.");
+            DamNotify.info(
+              t("update.portable_hint", "Zamknij DAM i uruchom ponownie DAM.exe z folderu projektu.")
+            );
           }
           return;
         }
+        if (!isReal(lastCheck) && !(lastCheck && lastCheck.installer_ready)) {
+          return;
+        }
+        var action = lastCheck && lastCheck.installer_ready ? "install" : "download";
         installBtn.disabled = true;
         fetch(bridge() + "/app-update/apply", {
           method: "POST",
           headers: authHeaders(),
           body: JSON.stringify({
+            action: action,
             download_url: lastCheck && lastCheck.download_url ? lastCheck.download_url : "",
           }),
         })
@@ -1165,11 +1311,35 @@
             return r.json();
           })
           .then(function (res) {
+            if (action === "download") {
+              if (res && (res.status === "downloading" || res.status === "ready")) {
+                if (res.status === "ready" || res.installer_ready) {
+                  if (lastCheck) lastCheck.installer_ready = true;
+                  setInstallMode("install");
+                  if (notesEl) {
+                    notesEl.hidden = false;
+                    notesEl.textContent = t("update.downloaded", "Pobrano. Możesz zainstalować.");
+                  }
+                } else {
+                  setInstallMode("busy");
+                  pollDownload();
+                }
+                return;
+              }
+              installBtn.disabled = false;
+              if (window.DamNotify) {
+                DamNotify.error(t("update.download_failed", "Nie udało się pobrać aktualizacji"));
+              }
+              return;
+            }
             installBtn.disabled = false;
-            if (res && res.ok && window.DamNotify) {
-              DamNotify.info("Uruchomiono instalator aktualizacji.");
+            if (res && res.ok && res.launched && window.DamNotify) {
+              DamNotify.info(t("update.launched", "Uruchomiono instalator aktualizacji."));
+            } else if (res && res.status === "downloading") {
+              setInstallMode("busy");
+              pollDownload();
             } else if (window.DamNotify) {
-              DamNotify.error((res && res.error) || "Nie udalo sie pobrac aktualizacji");
+              DamNotify.error(t("update.download_failed", "Nie udało się pobrać aktualizacji"));
             }
           })
           .catch(function () {

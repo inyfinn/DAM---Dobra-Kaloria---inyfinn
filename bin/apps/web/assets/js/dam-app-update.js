@@ -1,12 +1,12 @@
 /**
- * DAM — sprawdzanie wersji przy starcie (takze signin, bez logowania).
- * 1) Lokalny build: version.json vs DAM_APP_VERSION -> auto-reload.
- * 2) GitHub: /app-update/check -> banner (portable = restart DAM.exe, nie installer).
+ * DAM — lokalny build vs GitHub. Banner tylko po zalogowaniu,
+ * tylko gdy most potwierdzi prawdziwie nowsza wersje z DAM-Setup.exe.
  */
 (function (global) {
   "use strict";
 
   var RELOAD_KEY = "dam_version_reload_ts";
+  var DISMISS_KEY = "dam_update_banner_dismissed";
 
   function parseVer(v) {
     var p = String(v || "0").replace(/^v/i, "").split(/[.\-]/);
@@ -29,6 +29,73 @@
     return 0;
   }
 
+  function tr(key, fallback, vars) {
+    var s = fallback;
+    if (global.DamI18n && typeof global.DamI18n.t === "function") {
+      var v = global.DamI18n.t(key);
+      if (v && v !== key) s = v;
+    }
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        s = String(s).split("{" + k + "}").join(String(vars[k]));
+      });
+    }
+    return s;
+  }
+
+  function isSigninPage() {
+    var path = String((location && location.pathname) || "");
+    return /signin/i.test(path);
+  }
+
+  function isLoggedIn() {
+    try {
+      var token = localStorage.getItem("dam_token") || "";
+      if (!token || token === "demo-admin-dev-token" || token === "qa") return false;
+      return true;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function todayStamp() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1);
+    var day = String(d.getDate());
+    if (m.length < 2) m = "0" + m;
+    if (day.length < 2) day = "0" + day;
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+
+  function dismissedToday() {
+    try {
+      return localStorage.getItem(DISMISS_KEY) === todayStamp();
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function dismissToday() {
+    try {
+      localStorage.setItem(DISMISS_KEY, todayStamp());
+    } catch (_e) { /* ignore */ }
+    hideBanner();
+  }
+
+  function isSetupUrl(url) {
+    var u = String(url || "").toLowerCase();
+    return u.indexOf("https://") === 0 && u.indexOf("github.com") !== -1 && u.indexOf("dam-setup.exe") !== -1;
+  }
+
+  function isRealUpdate(data) {
+    if (!data || data.ok === false || data.update_available !== true) return false;
+    var cur = String(data.current || global.DAM_APP_VERSION || "");
+    var lat = String(data.latest || "");
+    if (!lat || !cur || cmpVer(lat, cur) <= 0) return false;
+    if (data.error) return false;
+    return isSetupUrl(data.download_url);
+  }
+
   function bridgeUrl() {
     if (global.DamRuntime && typeof global.DamRuntime.bridgeUrl === "function") {
       return String(global.DamRuntime.bridgeUrl()).replace(/\/$/, "");
@@ -47,9 +114,19 @@
     el.style.cssText =
       "position:fixed;left:0;right:0;top:0;z-index:99999;padding:10px 16px;" +
       "font:600 14px/1.4 Jost,system-ui,sans-serif;text-align:center;" +
-      "background:#2d1b4e;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.2);";
+      "background:var(--dam-primary);color:var(--dam-surface);" +
+      "box-shadow:0 2px 12px rgba(0,0,0,.2);display:flex;gap:12px;" +
+      "align-items:center;justify-content:center;flex-wrap:wrap;";
     document.body.appendChild(el);
     return el;
+  }
+
+  function hideBanner() {
+    var el = document.getElementById("damAppUpdateBanner");
+    if (el) {
+      el.hidden = true;
+      el.innerHTML = "";
+    }
   }
 
   function showBanner(html, opts) {
@@ -85,7 +162,7 @@
       if (last && now - last < 8000) return;
       sessionStorage.setItem(RELOAD_KEY, String(now));
     } catch (_e) { /* ignore */ }
-    showBanner("Nowa wersja DAM (" + reason + "). Odswiezam...", { autoHideMs: 2500 });
+    showBanner("Nowa wersja DAM (" + reason + "). Odświeżam…", { autoHideMs: 2500 });
     setTimeout(function () {
       try {
         var u = location.pathname + location.search;
@@ -117,28 +194,60 @@
       });
   }
 
-  function checkRemote() {
-    return fetch(bridgeUrl() + "/app-update/check?force=1", { cache: "no-store" })
+  function renderUpdateBanner(data) {
+    if (isSigninPage() || !isLoggedIn() || dismissedToday() || !isRealUpdate(data)) {
+      hideBanner();
+      return data;
+    }
+    var cur = String(data.current || global.DAM_APP_VERSION || "?");
+    var lat = String(data.latest || cur);
+    var msg = tr(
+      "update.banner",
+      "Dostępna wersja {latest} (masz {current}).",
+      { latest: lat, current: cur }
+    );
+    var dismiss = tr("update.dismiss", "Ukryj na dziś");
+    var settings = tr("update.open_settings", "Ustawienia");
+    var html =
+      "<span>" + msg + "</span>" +
+      "<a href=\"settings.html#damAppUpdates\" style=\"color:inherit;text-decoration:underline;\">" +
+      settings + "</a>" +
+      "<button type=\"button\" id=\"damAppUpdateDismiss\" class=\"geex-btn geex-btn--sm\" " +
+      "style=\"background:var(--dam-surface);color:var(--dam-primary);border:0;min-height:44px;padding:8px 14px;\">" +
+      dismiss + "</button>";
+    showBanner(html);
+    var btn = document.getElementById("damAppUpdateDismiss");
+    if (btn) btn.addEventListener("click", dismissToday);
+    return data;
+  }
+
+  function checkRemote(force) {
+    if (isSigninPage()) {
+      hideBanner();
+      return Promise.resolve(null);
+    }
+    if (!isLoggedIn()) {
+      hideBanner();
+      return Promise.resolve(null);
+    }
+    var q = force ? "?force=1" : "";
+    return fetch(bridgeUrl() + "/app-update/check" + q, { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        if (!data || !data.ok) return data;
-        var cur = String(data.current || global.DAM_APP_VERSION || "?");
-        var lat = String(data.latest || cur);
+        var cur = String((data && data.current) || global.DAM_APP_VERSION || "?");
         setVersionPill("DAM v" + cur);
-        if (!data.update_available) return data;
-        var portable = !!data.portable;
-        var msg = portable
-          ? "Dostepna wersja <b>" + lat + "</b> (masz " + cur + "). Zamknij DAM i uruchom ponownie <b>DAM.exe</b> z folderu projektu."
-          : "Dostepna wersja <b>" + lat + "</b>. Zaktualizuj w Ustawieniach lub uruchom DAM.exe ponownie.";
-        showBanner(msg);
-        return data;
+        return renderUpdateBanner(data);
       })
-      .catch(function () { return null; });
+      .catch(function () {
+        hideBanner();
+        return null;
+      });
   }
 
   function boot() {
+    if (isSigninPage()) return;
     syncLocalBuild().then(function () {
-      checkRemote();
+      checkRemote(false);
     });
   }
 
@@ -152,5 +261,7 @@
     syncLocalBuild: syncLocalBuild,
     checkRemote: checkRemote,
     cmpVer: cmpVer,
+    isRealUpdate: isRealUpdate,
+    hideBanner: hideBanner,
   };
 })(typeof window !== "undefined" ? window : globalThis);

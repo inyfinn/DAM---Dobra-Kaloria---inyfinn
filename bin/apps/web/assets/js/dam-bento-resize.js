@@ -9,8 +9,8 @@
   var COLS = 9;
   /* Room for 3 media stacks of 10 tiles (5 rows) plus stats/notify/asana. */
   var MAX_ROWS = 96;
-  /* v9: tile count 2-10, content-sized media height, no 1xN floors. */
-  var BENTO_LAYOUT_VERSION = 9;
+  /* v10: always re-stamp --bento-* after media outerHTML; content-sized h. */
+  var BENTO_LAYOUT_VERSION = 10;
   var ROW_PX = 48;
   var STORAGE_PREFIX = "dam_bento_v1:";
   var MIN_W = 2;

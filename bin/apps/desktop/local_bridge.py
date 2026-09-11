@@ -7277,6 +7277,12 @@ class Handler(BaseHTTPRequestHandler):
             force = (qs.get("force") or ["0"])[0] in ("1", "true", "yes")
             self._json(200, app_updates.check_for_updates(force=force))
             return
+        if parsed.path == "/app-update/status":
+            if app_updates is None:
+                self._json(500, {"ok": False, "error": "app_updates_missing"})
+                return
+            self._json(200, app_updates.download_status())
+            return
         if parsed.path == "/app-update/prefs":
             if app_updates is None:
                 self._json(500, {"ok": False, "error": "app_updates_missing"})
@@ -9209,9 +9215,13 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(500, {"ok": False, "error": "app_updates_missing"})
                 return
             url = str((data or {}).get("download_url") or "").strip()
-            if not url:
-                chk = app_updates.check_for_updates(force=True)
-                url = str(chk.get("download_url") or "")
+            action = str((data or {}).get("action") or "apply").strip().lower()
+            if action == "download":
+                self._json(200, app_updates.start_background_download(url))
+                return
+            if action in ("install", "apply"):
+                self._json(200, app_updates.install_downloaded(url))
+                return
             self._json(200, app_updates.download_and_launch_installer(url))
             return
         self._json(404, {"ok": False, "error": "not_found"})
@@ -9464,6 +9474,11 @@ def main() -> None:
             dam_debug.ensure_daemon_started(interval_sec=60.0)
         except Exception as exc:
             print("dam_debug:", exc)
+    if app_updates is not None:
+        try:
+            app_updates.ensure_scheduler_started()
+        except Exception:
+            pass
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     threading.Thread(target=_kv_cache_watcher, daemon=True).start()
     threading.Thread(target=_pg_backup_watcher, daemon=True, name="dam-pg-backup").start()

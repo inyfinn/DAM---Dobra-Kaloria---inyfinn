@@ -167,6 +167,12 @@
   gap: var(--dam-bento-gap);
 }
 
+/* Media widgets occupy their measured grid cell — no overflow into the next card. */
+.dam-dash-grid.dam-bento-resize.is-bento-active > .dam-widget.dam-widget--media-latest[data-bento-id] {
+  align-self: stretch;
+  min-height: 0;
+}
+
 .dam-dash-grid .dam-widget {
   border-radius: var(--dam-bento-radius);
 }

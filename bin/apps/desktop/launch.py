@@ -709,7 +709,6 @@ def main() -> None:
     try:
         import app_updates
 
-        app_updates.check_on_startup()
         app_updates.ensure_scheduler_started()
     except Exception:
         pass

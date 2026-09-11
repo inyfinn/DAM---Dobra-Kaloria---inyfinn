@@ -51,6 +51,12 @@ def main() -> None:
     if not boot.get("ok"):
         print(f"Bridge nie wstal: {boot}")
     supervisor.start_supervisor_thread()
+    try:
+        import app_updates
+
+        app_updates.ensure_scheduler_started()
+    except Exception:
+        pass
 
     runtime = prepare_runtime(ui_port, bridge_port)
     Handler = make_handler_class(runtime, supervisor, cache_control_static="dev")

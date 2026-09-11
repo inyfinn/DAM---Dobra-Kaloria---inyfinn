@@ -271,12 +271,12 @@
 }
 
 /*
- * Media tiles stay inside the bento cell. Height:auto + align-self:start
- * painted viz into products (operator overlap). Cell size comes from --bento-h.
+ * Media tiles fill the bento cell after JS measures --bento-h from content.
+ * height:auto + align-self:start painted viz into products (operator overlap).
  */
 .dam-dash-grid.is-bento-active > .dam-widget.dam-widget--media-latest[data-bento-id] {
-  align-self: start;
-  height: auto;
+  align-self: stretch;
+  height: 100%;
   max-height: none;
   overflow: visible;
   z-index: 1;
@@ -541,7 +541,7 @@
   min-height: 0 !important;
   height: auto;
   max-height: none;
-  align-items: flex-start;
+  align-items: center;
   padding: clamp(10px, 1.2cqi, 14px) clamp(12px, 1.4cqi, 16px);
 }
 
@@ -1238,6 +1238,9 @@
 .dam-widget--branding-latest .dam-nav-circles--stack,
 .dam-widget--media-latest .dam-nav-circles--stack {
   gap: 6px;
+  align-self: center;
+  justify-content: center;
+  margin-block: auto;
 }
 
 .dam-widget--viz-latest .dam-nav-circles--tiles .dam-viz-icon-btn,
@@ -1546,7 +1549,7 @@ html[data-theme="dark"] .dam-widget-skel__line::after {
     flex-direction: row;
     flex-wrap: nowrap;
     gap: 4px;
-    align-self: flex-start;
+    align-self: center;
   }
 
   .dam-widget--viz-latest .dam-nav-circles--tiles .dam-viz-icon-btn,
@@ -3355,7 +3358,7 @@ html[data-theme="dark"] .dam-widget-skel__line::after {
     flex-direction: column;
     flex-wrap: nowrap;
     gap: 4px;
-    align-self: flex-start;
+    align-self: center;
   }
 
   .dam-widget__links--chips .dam-ql-chip {
@@ -3639,4 +3642,46 @@ body.geex-dashboard .dam-widget__list--grid-1x4 .dam-widget__viz-body > a {
   white-space: normal !important;
   overflow: visible !important;
   text-overflow: unset !important;
+}
+
+/* Global: nav circle stack sits in the middle of the tile (both axes of the li column). */
+body.geex-dashboard .dam-widget--media-latest .dam-widget__list li.dam-widget__viz-row,
+body.geex-dashboard .dam-widget--viz-latest .dam-widget__list li.dam-widget__viz-row,
+body.geex-dashboard .dam-widget--branding-latest .dam-widget__list li.dam-widget__viz-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+
+body.geex-dashboard .dam-widget--media-latest .dam-nav-circles--stack.dam-nav-circles--tiles,
+body.geex-dashboard .dam-widget--viz-latest .dam-nav-circles--stack.dam-nav-circles--tiles,
+body.geex-dashboard .dam-widget--branding-latest .dam-nav-circles--stack.dam-nav-circles--tiles {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  margin-block: auto !important;
+}
+
+/* Dashboard-only: Pokaż indeksy 25% smaller (padding + font + icon). */
+body.geex-dashboard .dam-widget--media-latest .dam-viz-card__show-indexes.geex-btn,
+body.geex-dashboard .dam-widget--viz-latest .dam-viz-card__show-indexes.geex-btn,
+body.geex-dashboard .dam-widget--branding-latest .dam-viz-card__show-indexes.geex-btn {
+  min-height: calc(var(--dam-control-h, 44px) * 0.75);
+  height: calc(var(--dam-control-h, 44px) * 0.75);
+  padding: 0 8px;
+  font-size: calc(var(--dam-fs-sm, 12px) * 0.75);
+  line-height: 1.2;
+  gap: 4px;
+}
+
+body.geex-dashboard .dam-widget--media-latest .dam-viz-card__show-indexes.geex-btn i,
+body.geex-dashboard .dam-widget--viz-latest .dam-viz-card__show-indexes.geex-btn i,
+body.geex-dashboard .dam-widget--branding-latest .dam-viz-card__show-indexes.geex-btn i,
+body.geex-dashboard .dam-widget--media-latest .dam-viz-card__show-indexes.geex-btn span,
+body.geex-dashboard .dam-widget--viz-latest .dam-viz-card__show-indexes.geex-btn span,
+body.geex-dashboard .dam-widget--branding-latest .dam-viz-card__show-indexes.geex-btn span {
+  font-size: inherit;
+  line-height: 1.2;
 }

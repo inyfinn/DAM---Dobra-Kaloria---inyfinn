@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""Sprawdzanie aktualizacji DAM z GitHub Releases (jak Inyfinn Photo Resizer)."""
+"""Sprawdzanie aktualizacji DAM z GitHub Releases.
+
+Powiadomienie tylko gdy latest > current i jest prawdziwy DAM-Setup.exe.
+Repo prywatne wymaga tokenu z lokalnych sekretow (nigdy w JS / logach).
+Harmonogram: codziennie o 09:00 czasu lokalnego, nie co 5 godzin.
+"""
 from __future__ import annotations
 
 import json
+import os
 import re
 import threading
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -18,19 +25,48 @@ GIT_ROOT = CONTENT_ROOT.parent
 VERSION_JSON = WEB_ROOT / "version.json"
 STATE_PATH = DESKTOP_DIR / "data" / "update-check-state.json"
 PREFS_PATH = DESKTOP_DIR / "data" / "update-prefs.json"
+INSTALLER_DIR = DESKTOP_DIR / "data" / "updates"
 
 DEFAULT_REPO = "inyfinn/DAM---Dobra-Kaloria---inyfinn"
 DEFAULT_ASSET = "DAM-Setup.exe"
-CHECK_INTERVAL_SEC = 5 * 3600
-_STARTUP_DELAY_SEC = 0
+DAILY_CHECK_HOUR = 9
+DAILY_CHECK_MINUTE = 0
+TOKEN_KEYS = ("GITHUB_TOKEN", "GH_TOKEN", "DAM_GITHUB_TOKEN")
+MIN_INSTALLER_BYTES = 1_000_000
 
 _LOCK = threading.Lock()
 _SCHEDULER_STARTED = False
+_DL_LOCK = threading.Lock()
+_DL_STATE: dict[str, Any] = {
+    "status": "idle",
+    "path": "",
+    "error": "",
+    "bytes": 0,
+}
+_TOKEN_CACHE: str | None = None
+
+
+def _strip_v(raw: str) -> str:
+    return re.sub(r"^[vV]", "", str(raw or "").strip())
+
+
+def parse_version(raw: str) -> tuple[int, ...]:
+    parts = re.findall(r"\d+", _strip_v(raw))
+    return tuple(int(p) for p in parts) if parts else (0,)
+
+
+def is_newer(latest: str, current: str) -> bool:
+    """True tylko gdy latest jest sciśle nowszy od current (prefiks v obcięty)."""
+    a = parse_version(latest)
+    b = parse_version(current)
+    n = max(len(a), len(b))
+    a = a + (0,) * (n - len(a))
+    b = b + (0,) * (n - len(b))
+    return a > b
 
 
 def _parse_version(raw: str) -> tuple[int, ...]:
-    parts = re.findall(r"\d+", str(raw or "0"))
-    return tuple(int(p) for p in parts) if parts else (0,)
+    return parse_version(raw)
 
 
 def _load_json(path: Path, default: dict[str, Any]) -> dict[str, Any]:
@@ -49,18 +85,102 @@ def _save_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _load_dotenv_file(path: Path) -> None:
+    """KEY=VALUE bez nadpisywania juz ustawionych env. Nie loguje wartosci."""
+    if not path.is_file():
+        return
+    try:
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            val = val.strip().strip("'").strip('"')
+            if key and key not in os.environ:
+                os.environ[key] = val
+    except OSError:
+        pass
+
+
+def _token_from_mapping(data: Any) -> str:
+    if not isinstance(data, dict):
+        return ""
+    for key in TOKEN_KEYS:
+        val = data.get(key) or data.get(key.lower())
+        if isinstance(val, str) and val.strip():
+            return val.strip()
+    return ""
+
+
+def _load_secret_files() -> None:
+    sibling_env = (DESKTOP_DIR / "data" / "pg-config.json").with_name("pg-config.env")
+    for path in (
+        CONTENT_ROOT / ".env",
+        DESKTOP_DIR / "dam-connection.env",
+        DESKTOP_DIR / "data" / ".env",
+        sibling_env,
+        DESKTOP_DIR / "data" / "pg-config.env",
+    ):
+        _load_dotenv_file(path)
+
+
+def _token_from_gh_cli() -> str:
+    """Lokalny keyring `gh` (to samo konto co git). Nigdy nie loguje stdout."""
+    try:
+        import subprocess
+
+        proc = subprocess.run(
+            ["gh", "auth", "token"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+            check=False,
+        )
+        val = (proc.stdout or "").strip()
+        if proc.returncode == 0 and val:
+            return val
+    except Exception:
+        pass
+    return ""
+
+
+def _resolve_github_token() -> str:
+    global _TOKEN_CACHE
+    if _TOKEN_CACHE is not None:
+        return _TOKEN_CACHE
+    _load_secret_files()
+    found = ""
+    for key in TOKEN_KEYS:
+        val = (os.environ.get(key) or "").strip()
+        if val:
+            found = val
+            break
+    if not found:
+        try:
+            pg_path = DESKTOP_DIR / "data" / "pg-config.json"
+            if pg_path.is_file():
+                found = _token_from_mapping(json.loads(pg_path.read_text(encoding="utf-8")))
+        except Exception:
+            found = ""
+    if not found:
+        found = _token_from_gh_cli()
+    _TOKEN_CACHE = found
+    return found
+
+
 def load_update_config() -> dict[str, Any]:
     cfg = {
         "github_repo": DEFAULT_REPO,
         "asset_name": DEFAULT_ASSET,
-        "check_interval_hours": 5,
+        "check_hour_local": DAILY_CHECK_HOUR,
     }
     try:
         if VERSION_JSON.is_file():
             vj = json.loads(VERSION_JSON.read_text(encoding="utf-8"))
             upd = vj.get("updates") if isinstance(vj, dict) else None
             if isinstance(upd, dict):
-                cfg.update({k: v for k, v in upd.items() if v})
+                cfg.update({k: v for k, v in upd.items() if v not in (None, "")})
     except Exception:
         pass
     return cfg
@@ -92,19 +212,6 @@ def save_prefs(payload: dict[str, Any] | None) -> dict[str, Any]:
     return prefs
 
 
-def _github_latest(repo: str) -> dict[str, Any]:
-    url = f"https://api.github.com/repos/{repo}/releases/latest"
-    req = urllib.request.Request(
-        url,
-        headers={
-            "Accept": "application/vnd.github+json",
-            "User-Agent": "DAM-Dobra-Kaloria-Updater",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        return json.loads(resp.read().decode("utf-8"))
-
-
 def is_portable_repo() -> bool:
     """DAM.exe + bin/ w jednym GIT_ROOT — bez instalatora, restart DAM.exe."""
     try:
@@ -113,13 +220,69 @@ def is_portable_repo() -> bool:
         return False
 
 
-def check_for_updates(force: bool = False) -> dict[str, Any]:
-    cfg = load_update_config()
-    repo = str(cfg.get("github_repo") or DEFAULT_REPO)
-    asset_name = str(cfg.get("asset_name") or DEFAULT_ASSET)
+def installer_path() -> Path:
+    return INSTALLER_DIR / DEFAULT_ASSET
+
+
+def installer_ready() -> bool:
+    path = installer_path()
+    try:
+        return path.is_file() and path.stat().st_size >= MIN_INSTALLER_BYTES
+    except OSError:
+        return False
+
+
+def _is_setup_download_url(url: str, asset_name: str = DEFAULT_ASSET) -> bool:
+    u = (url or "").strip().lower()
+    name = (asset_name or DEFAULT_ASSET).lower()
+    if not u.startswith("https://"):
+        return False
+    if "github.com" not in u:
+        return False
+    return name in u and u.endswith(".exe")
+
+
+def next_daily_run_at(now: datetime, last_check_ts: float | None) -> datetime:
+    """Kiedy odpalic auto-check (czas lokalny).
+
+    - last check wczoraj (albo brak) i now >= 09:00 -> natychmiast
+    - last check wczoraj i now < 09:00 -> dzisiaj 09:00
+    - last check dzisiaj -> jutro 09:00
+    """
+    today_nine = now.replace(
+        hour=DAILY_CHECK_HOUR,
+        minute=DAILY_CHECK_MINUTE,
+        second=0,
+        microsecond=0,
+    )
+    last_date = None
+    if last_check_ts:
+        try:
+            last_date = datetime.fromtimestamp(float(last_check_ts)).date()
+        except (OSError, OverflowError, ValueError, TypeError):
+            last_date = None
+    if last_date is None or last_date < now.date():
+        if now >= today_nine:
+            return now
+        return today_nine
+    tomorrow = now.date() + timedelta(days=1)
+    return datetime.combine(tomorrow, today_nine.time())
+
+
+def seconds_until_next_daily_check(
+    now: datetime | None = None,
+    last_check_ts: float | None = None,
+) -> float:
+    current = now or datetime.now()
+    nxt = next_daily_run_at(current, last_check_ts)
+    delay = (nxt - current).total_seconds()
+    return 0.0 if delay < 1.0 else delay
+
+
+def _empty_result(error: str = "") -> dict[str, Any]:
     cur = current_version()
     out: dict[str, Any] = {
-        "ok": True,
+        "ok": not bool(error),
         "current": cur,
         "latest": cur,
         "update_available": False,
@@ -128,109 +291,366 @@ def check_for_updates(force: bool = False) -> dict[str, Any]:
         "published_at": "",
         "checked_at": time.time(),
         "portable": is_portable_repo(),
-        "update_mode": "restart_exe",
+        "update_mode": "restart_exe" if is_portable_repo() else "installer",
+        "installer_ready": installer_ready(),
+        "auth_configured": bool(_resolve_github_token()),
     }
-    try:
-        rel = _github_latest(repo)
-        tag = str(rel.get("tag_name") or rel.get("name") or "").lstrip("vV")
-        out["latest"] = tag or cur
-        out["release_notes"] = str(rel.get("body") or "")[:4000]
-        out["published_at"] = str(rel.get("published_at") or "")
-        assets = rel.get("assets") if isinstance(rel.get("assets"), list) else []
-        for asset in assets:
-            if not isinstance(asset, dict):
-                continue
-            if str(asset.get("name") or "") == asset_name:
-                out["download_url"] = str(asset.get("browser_download_url") or "")
-                break
-        if not out["download_url"]:
-            html_url = str(rel.get("html_url") or "")
-            if html_url:
-                out["download_url"] = html_url
-        out["update_available"] = _parse_version(out["latest"]) > _parse_version(cur)
-    except urllib.error.HTTPError as exc:
+    if error:
         out["ok"] = False
-        out["error"] = f"github_http_{exc.code}"
-    except Exception as exc:  # noqa: BLE001
-        out["ok"] = False
-        out["error"] = str(exc)
-
-    if out["ok"] or force:
-        state = _load_json(STATE_PATH, {})
-        state.update(
-            {
-                "last_check": out["checked_at"],
-                "last_result": {
-                    k: out[k]
-                    for k in (
-                        "current",
-                        "latest",
-                        "update_available",
-                        "download_url",
-                        "error",
-                    )
-                    if k in out
-                },
-            }
-        )
-        _save_json(STATE_PATH, state)
+        out["error"] = error
     return out
 
 
-def download_and_launch_installer(download_url: str) -> dict[str, Any]:
+def _public_result(data: dict[str, Any]) -> dict[str, Any]:
+    """Zawsze przepusc przez porownanie vs biezaca wersja. Bez tokenu."""
+    cur = current_version()
+    latest = str(data.get("latest") or cur)
+    url = str(data.get("download_url") or "")
+    err = str(data.get("error") or "")
+    ok = bool(data.get("ok", True)) and not err
+    newer = is_newer(latest, cur)
+    setup_ok = _is_setup_download_url(url)
+    out = {
+        "ok": ok,
+        "current": cur,
+        "latest": latest or cur,
+        "update_available": bool(ok and newer and setup_ok),
+        "download_url": url if setup_ok else "",
+        "release_notes": str(data.get("release_notes") or "")[:4000],
+        "published_at": str(data.get("published_at") or ""),
+        "checked_at": data.get("checked_at") or time.time(),
+        "portable": is_portable_repo(),
+        "update_mode": "restart_exe" if is_portable_repo() else "installer",
+        "installer_ready": installer_ready(),
+        "auth_configured": bool(_resolve_github_token()),
+    }
+    if err:
+        out["ok"] = False
+        out["error"] = err
+        out["update_available"] = False
+        out["download_url"] = ""
+    if data.get("asset_api_url"):
+        out["asset_api_url"] = str(data.get("asset_api_url") or "")
+    return out
+
+
+def _persist_attempt(out: dict[str, Any]) -> None:
+    state = _load_json(STATE_PATH, {})
+    keep_keys = (
+        "ok",
+        "current",
+        "latest",
+        "update_available",
+        "download_url",
+        "asset_api_url",
+        "error",
+        "published_at",
+    )
+    last_result = {k: out[k] for k in keep_keys if k in out}
+    nxt = next_daily_run_at(datetime.now(), float(out.get("checked_at") or time.time()))
+    state.update(
+        {
+            "last_check": out.get("checked_at") or time.time(),
+            "next_run": nxt.isoformat(timespec="seconds"),
+            "last_result": last_result,
+        }
+    )
+    _save_json(STATE_PATH, state)
+
+
+def _github_headers(token: str, *, download: bool = False) -> dict[str, str]:
+    headers = {
+        "Accept": "application/octet-stream" if download else "application/vnd.github+json",
+        "User-Agent": "DAM-Dobra-Kaloria-Updater",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
+def _github_get_json(url: str, token: str) -> Any:
+    req = urllib.request.Request(url, headers=_github_headers(token))
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            raw = resp.read().decode("utf-8")
+    except urllib.error.HTTPError as exc:
+        raise
+    except TimeoutError as exc:
+        raise TimeoutError("github_timeout") from exc
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("github_malformed") from exc
+
+
+def _pick_setup_asset(rel: dict[str, Any], asset_name: str) -> dict[str, str] | None:
+    assets = rel.get("assets") if isinstance(rel.get("assets"), list) else []
+    for asset in assets:
+        if not isinstance(asset, dict):
+            continue
+        if str(asset.get("name") or "") != asset_name:
+            continue
+        url = str(asset.get("browser_download_url") or "")
+        api = str(asset.get("url") or "")
+        if not _is_setup_download_url(url, asset_name):
+            continue
+        return {"download_url": url, "asset_api_url": api}
+    return None
+
+
+def _select_release(
+    releases: list[Any], asset_name: str
+) -> tuple[dict[str, Any], dict[str, str]] | None:
+    stable: list[tuple[dict[str, Any], dict[str, str]]] = []
+    pre: list[tuple[dict[str, Any], dict[str, str]]] = []
+    for rel in releases:
+        if not isinstance(rel, dict) or rel.get("draft"):
+            continue
+        asset = _pick_setup_asset(rel, asset_name)
+        if not asset:
+            continue
+        if rel.get("prerelease"):
+            pre.append((rel, asset))
+        else:
+            stable.append((rel, asset))
+    if stable:
+        return stable[0]
+    if pre:
+        return pre[0]
+    return None
+
+
+def _perform_github_check(token: str) -> dict[str, Any]:
+    out = _empty_result()
+    if not token:
+        out["ok"] = False
+        out["error"] = "github_auth_missing"
+        out["auth_configured"] = False
+        return out
+    cfg = load_update_config()
+    repo = str(cfg.get("github_repo") or DEFAULT_REPO)
+    asset_name = str(cfg.get("asset_name") or DEFAULT_ASSET)
+    url = f"https://api.github.com/repos/{repo}/releases?per_page=15"
+    try:
+        payload = _github_get_json(url, token)
+    except urllib.error.HTTPError as exc:
+        out["ok"] = False
+        out["error"] = f"github_http_{exc.code}"
+        return out
+    except TimeoutError:
+        out["ok"] = False
+        out["error"] = "github_timeout"
+        return out
+    except ValueError:
+        out["ok"] = False
+        out["error"] = "github_malformed"
+        return out
+    except Exception:
+        out["ok"] = False
+        out["error"] = "github_error"
+        return out
+
+    if not isinstance(payload, list):
+        out["ok"] = False
+        out["error"] = "github_malformed"
+        return out
+
+    picked = _select_release(payload, asset_name)
+    if not picked:
+        out["ok"] = False
+        out["error"] = "github_no_setup_asset"
+        return out
+
+    rel, asset = picked
+    tag = _strip_v(str(rel.get("tag_name") or rel.get("name") or ""))
+    out["latest"] = tag or out["current"]
+    out["release_notes"] = str(rel.get("body") or "")[:4000]
+    out["published_at"] = str(rel.get("published_at") or "")
+    out["download_url"] = asset["download_url"]
+    out["asset_api_url"] = asset.get("asset_api_url") or ""
+    out["ok"] = True
+    return _public_result(out)
+
+
+def check_for_updates(force: bool = False, *, token: str | None = None) -> dict[str, Any]:
+    """force=True tylko z Ustawien albo dziennego schedulera.
+
+    Bez force: zwroc cache (przefiltrowany). Nigdy nie udawaj update.
+    token= None -> sekret z plikow; token="" -> test galezi bez auth.
+    """
+    if not force:
+        state = _load_json(STATE_PATH, {})
+        last = state.get("last_result") if isinstance(state.get("last_result"), dict) else {}
+        if last:
+            cached = _public_result({**last, "checked_at": state.get("last_check") or time.time()})
+            cached["from_cache"] = True
+            return cached
+        empty = _empty_result()
+        empty["from_cache"] = True
+        return empty
+
+    tok = _resolve_github_token() if token is None else str(token or "")
+    out = _perform_github_check(tok)
+    _persist_attempt(out)
+    return out
+
+
+def download_status() -> dict[str, Any]:
+    with _DL_LOCK:
+        st = dict(_DL_STATE)
+    st["installer_ready"] = installer_ready()
+    st["path"] = str(installer_path()) if installer_ready() or st.get("path") else st.get("path") or ""
+    st["ok"] = st.get("status") not in ("error",)
+    st["portable"] = is_portable_repo()
+    return st
+
+
+def _download_file(url: str, token: str, dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_suffix(dest.suffix + ".part")
+    download = "api.github.com" in url.lower() and "/releases/assets/" in url.lower()
+    req = urllib.request.Request(url, headers=_github_headers(token, download=download))
+    with urllib.request.urlopen(req, timeout=120) as resp, tmp.open("wb") as fh:
+        total = 0
+        while True:
+            chunk = resp.read(1024 * 256)
+            if not chunk:
+                break
+            fh.write(chunk)
+            total += len(chunk)
+            with _DL_LOCK:
+                _DL_STATE["bytes"] = total
+    if tmp.stat().st_size < MIN_INSTALLER_BYTES:
+        tmp.unlink(missing_ok=True)
+        raise OSError("installer_too_small")
+    tmp.replace(dest)
+
+
+def _download_worker(url: str) -> None:
+    token = _resolve_github_token()
+    dest = installer_path()
+    try:
+        _download_file(url, token, dest)
+        with _DL_LOCK:
+            _DL_STATE.update(
+                {
+                    "status": "ready",
+                    "path": str(dest),
+                    "error": "",
+                    "bytes": dest.stat().st_size,
+                }
+            )
+    except Exception as exc:  # noqa: BLE001
+        with _DL_LOCK:
+            _DL_STATE.update({"status": "error", "error": "download_failed", "path": ""})
+        _ = str(exc)
+
+
+def start_background_download(download_url: str = "") -> dict[str, Any]:
+    if is_portable_repo():
+        return {"ok": False, "error": "portable_skip", "portable": True, "status": "idle"}
+    chk = check_for_updates(force=False)
+    if not chk.get("update_available"):
+        return {"ok": False, "error": "no_update", "update_available": False, "status": "idle"}
+    url = str(chk.get("asset_api_url") or chk.get("download_url") or download_url or "").strip()
+    if not url:
+        return {"ok": False, "error": "missing_download_url", "status": "idle"}
+    if url.startswith("https://github.com/") and not _is_setup_download_url(url):
+        return {"ok": False, "error": "bad_download_url", "status": "idle"}
+    if installer_ready():
+        with _DL_LOCK:
+            _DL_STATE.update({"status": "ready", "path": str(installer_path()), "error": ""})
+        return download_status()
+    with _DL_LOCK:
+        if _DL_STATE.get("status") == "downloading":
+            return dict(_DL_STATE)
+        _DL_STATE.update({"status": "downloading", "path": "", "error": "", "bytes": 0})
+    t = threading.Thread(target=_download_worker, args=(url,), name="dam-update-dl", daemon=True)
+    t.start()
+    return download_status()
+
+
+def _launch_installer(path: Path) -> dict[str, Any]:
     import subprocess
     import sys
 
-    if not download_url:
-        return {"ok": False, "error": "missing_download_url"}
-    tmp = DESKTOP_DIR / "data" / "updates"
-    tmp.mkdir(parents=True, exist_ok=True)
-    target = tmp / DEFAULT_ASSET
-    try:
-        req = urllib.request.Request(download_url, headers={"User-Agent": "DAM-Dobra-Kaloria-Updater"})
-        with urllib.request.urlopen(req, timeout=120) as resp, target.open("wb") as fh:
-            while True:
-                chunk = resp.read(1024 * 256)
-                if not chunk:
-                    break
-                fh.write(chunk)
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": str(exc)}
-
+    if not path.is_file():
+        return {"ok": False, "error": "installer_missing"}
+    args = [str(path), "/VERYSILENT", "/NORESTART"]
     try:
         if sys.platform == "win32":
-            subprocess.Popen([str(target)], shell=True)
+            subprocess.Popen(args)
         else:
-            subprocess.Popen([str(target)])
-        return {"ok": True, "path": str(target)}
+            subprocess.Popen([str(path)])
+        return {"ok": True, "path": str(path), "launched": True}
     except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": str(exc)}
+        return {"ok": False, "error": "launch_failed", "detail": type(exc).__name__}
+
+
+def install_downloaded(download_url: str = "") -> dict[str, Any]:
+    if is_portable_repo():
+        return {"ok": False, "error": "portable_skip", "portable": True}
+    chk = check_for_updates(force=False)
+    if not chk.get("update_available") and not installer_ready():
+        return {"ok": False, "error": "no_update", "update_available": False}
+    if installer_ready():
+        return _launch_installer(installer_path())
+    started = start_background_download(download_url)
+    if not started.get("ok") and started.get("status") != "downloading":
+        return started
+    return {"ok": True, "status": "downloading", "error": "wait_for_download"}
+
+
+def download_and_launch_installer(download_url: str) -> dict[str, Any]:
+    """Kompatybilnosc: pobierz w tle; jesli plik juz jest, odpal instalator."""
+    if is_portable_repo():
+        return {"ok": False, "error": "portable_skip", "portable": True}
+    if installer_ready():
+        return _launch_installer(installer_path())
+    return start_background_download(download_url)
 
 
 def check_on_startup() -> dict[str, Any]:
-    """Natychmiastowe sprawdzenie wersji przy starcie DAM (przed logowaniem)."""
+    """Zachowane API: nie wymusza GitHub przed 09:00 i nie gdy juz sprawdzono dzis."""
     try:
+        state = _load_json(STATE_PATH, {})
+        delay = seconds_until_next_daily_check(datetime.now(), state.get("last_check"))
+        if delay > 0:
+            cached = check_for_updates(force=False)
+            cached["deferred"] = True
+            return cached
         return check_for_updates(force=True)
     except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": str(exc)}
+        out = _empty_result("github_error")
+        out["ok"] = False
+        _ = str(exc)
+        return out
 
 
 def _scheduler_loop() -> None:
-    try:
-        check_on_startup()
-    except Exception:
-        pass
     while True:
         prefs = load_prefs()
-        if prefs.get("auto_check", True):
+        state = _load_json(STATE_PATH, {})
+        delay = seconds_until_next_daily_check(datetime.now(), state.get("last_check"))
+        if delay > 0:
+            time.sleep(min(delay, 60.0))
+            continue
+        if not prefs.get("auto_check", True):
+            time.sleep(60.0)
+            continue
+        try:
+            check_for_updates(force=True)
+        except Exception:
             try:
-                check_for_updates()
+                _persist_attempt(_empty_result("github_error"))
             except Exception:
                 pass
-        time.sleep(CHECK_INTERVAL_SEC)
+        time.sleep(2.0)
 
 
 def ensure_scheduler_started() -> None:
+    """Jeden watek na proces. Dwa procesy nie dubluja GitHub: cache z dzisiaj wygrywa."""
     global _SCHEDULER_STARTED
     with _LOCK:
         if _SCHEDULER_STARTED:

@@ -554,12 +554,26 @@
   function syncMediaTileBentoHeights(mount) {
     mount = mount || document.getElementById("damDashGrid");
     var BR = global.DamBentoResize;
-    if (!mount || !BR || typeof BR.loadLayout !== "function" || _syncMediaHeightsLock) {
+    if (!mount || !BR || typeof BR.loadLayout !== "function") {
+      return false;
+    }
+    if (_syncMediaHeightsLock) {
+      setTimeout(function () {
+        syncMediaTileBentoHeights(mount);
+      }, 160);
       return false;
     }
     var scope = "dashboard";
     var saved = BR.loadLayout(scope);
-    if (!saved || !saved.items) return false;
+    if (!saved || !saved.items) {
+      saved = {
+        version: BR.BENTO_LAYOUT_VERSION != null ? BR.BENTO_LAYOUT_VERSION : 10,
+        items:
+          typeof BR.defaultDashboardLayout === "function"
+            ? BR.defaultDashboardLayout()
+            : {}
+      };
+    }
     var rowPx = BR.ROW_PX || 48;
     /* CSS gap inflates cell height: n*row + (n-1)*gap — must count in row math
      * or --bento-h overshoots and leaves ~160px phantom space under cards. */
@@ -577,16 +591,50 @@
     }
     var ids = ["newest_viz_3", "newest_products_f", "branding_latest"];
     var changed = false;
+    function mediaContentPx(el) {
+      var list = el.querySelector(".dam-widget__list");
+      var head =
+        el.querySelector(".dam-widget__head") ||
+        el.querySelector(".dam-widget__title") ||
+        el.querySelector("h3");
+      var headH = head ? Math.ceil(head.getBoundingClientRect().height || 0) : 48;
+      if (!list) {
+        var meta = el.querySelector(".dam-widget__meta");
+        return headH + (meta ? Math.ceil(meta.getBoundingClientRect().height || 0) + 24 : 32) + 24;
+      }
+      var rows = list.querySelectorAll("li.dam-widget__viz-row");
+      if (!rows.length) {
+        return headH + 48;
+      }
+      var firstH = Math.ceil(rows[0].getBoundingClientRect().height || 0);
+      if (!(firstH > 8)) firstH = 128;
+      var cs = global.getComputedStyle(list);
+      var listGap = parseFloat(cs.rowGap);
+      if (!(listGap > 0)) listGap = 16;
+      var cols = (cs.gridTemplateColumns || "")
+        .split(" ")
+        .filter(function (p) {
+          return p && p !== "none";
+        }).length;
+      if (!(cols > 0)) cols = 2;
+      var nRows = Math.ceil(rows.length / cols);
+      var listH = nRows * firstH + Math.max(0, nRows - 1) * listGap;
+      var csEl = global.getComputedStyle(el);
+      var padY =
+        (parseFloat(csEl.paddingTop) || 0) + (parseFloat(csEl.paddingBottom) || 0);
+      var extra = 0;
+      var foot = el.querySelector(".dam-widget__body > .dam-widget__meta");
+      if (foot) extra += Math.ceil(foot.getBoundingClientRect().height || 0) + 8;
+      return Math.ceil(headH + listH + padY + extra + 8);
+    }
     ids.forEach(function (id) {
       var el = mount.querySelector('[data-widget-id="' + id + '"]');
       if (!el || !saved.items[id]) return;
       if (!el.classList.contains("dam-widget--media-latest")) {
         el.classList.add("dam-widget--media-latest");
       }
-      el.style.setProperty("height", "auto", "important");
-      el.style.setProperty("align-self", "start", "important");
-      void el.offsetHeight;
-      var px = Math.ceil(el.getBoundingClientRect().height || 0);
+      el.setAttribute("data-bento-id", id);
+      var px = mediaContentPx(el);
       var need = px > 40 ? rowsForContentPx(px) : 3;
       if (saved.items[id].h !== need) {
         saved.items[id].h = need;
@@ -634,15 +682,19 @@
       saved.items.asana_home = { c: 1, r: row, w: 9, h: aH };
     }
 
-    if (!changed) return false;
-
+    /* ALWAYS write --bento-* onto live articles. outerHTML replace drops
+     * data-bento-id and grid placement; skipping when saved.h is unchanged
+     * left branding/products auto-placed on top of viz. */
     _syncMediaHeightsLock = true;
     try {
       if (typeof BR.saveLayout === "function") BR.saveLayout(scope, saved.items);
       Object.keys(saved.items).forEach(function (id) {
-        var el = mount.querySelector('[data-bento-id="' + id + '"]');
+        var el =
+          mount.querySelector('[data-widget-id="' + id + '"]') ||
+          mount.querySelector('[data-bento-id="' + id + '"]');
         var it = saved.items[id];
         if (!el || !it || it.spacer) return;
+        el.setAttribute("data-bento-id", id);
         el.style.setProperty("--bento-c", String(it.c));
         el.style.setProperty("--bento-r", String(it.r));
         el.style.setProperty("--bento-w", String(it.w));
@@ -1051,34 +1103,62 @@
   }
 
   /*
-   * HARD freeze fix (2026-07-23): widget NIGDY nie pobiera pelnego
-   * data/branding-index.json (~388MB) ani bridge /branding-index — parse w watku
-   * UI zamraza cala aplikacje. Bridge /branding-for-product?sort=recent zwraca
-   * maly wycinek (limit 200). Reuzywamy indeks w pamieci tylko gdy strona
-   * Branding juz go zaladowala.
+   * HARD freeze fix: NEVER fetch data/branding-index.json (~388MB).
+   * /branding-for-product is not a bridge route (404) — dashboard used it and
+   * painted "Indeks branding niedostępny". Same sources as branding.html:
+   * branding-grid-head.json then branding-grid-index.json (static + bridge).
    */
+  function fetchJsonOk(url) {
+    return fetch(url, { cache: "no-store" }).then(function (r) {
+      if (!r.ok) throw new Error("http-" + r.status);
+      return r.json();
+    });
+  }
+
+  function adoptBrandingSlice(data, partial) {
+    if (!data || !Array.isArray(data.assets) || !data.assets.length) {
+      throw new Error("branding-index-unavailable");
+    }
+    return { assets: data.assets, partial: !!partial || !!data.partial };
+  }
+
   function loadBrandingIndex() {
     if (global.__damBrandingIndex && global.__damBrandingIndex.assets) {
       return Promise.resolve(global.__damBrandingIndex);
     }
+    if (global.__damBrandingGridIndex && global.__damBrandingGridIndex.assets) {
+      return Promise.resolve(global.__damBrandingGridIndex);
+    }
     if (global.__damBrandingIndexPromise) return global.__damBrandingIndexPromise;
     var cb = encodeURIComponent(String(global.DAM_APP_VERSION || "1"));
-    var url =
-      brandingBridgeBase().replace(/\/$/, "") +
-      "/branding-for-product?sort=recent&limit=200&v=" +
-      cb;
-    global.__damBrandingIndexPromise = fetch(url)
-      .then(function (r) {
-        if (!r.ok) throw new Error("branding-for-product-http-" + r.status);
-        return r.json();
-      })
+    var base = brandingBridgeBase().replace(/\/$/, "");
+    var urls = [
+      { href: "data/branding-grid-head.json?v=" + cb, partial: true },
+      { href: base + "/branding-grid-head?v=" + cb, partial: true },
+      { href: "data/branding-grid-index.json?v=" + cb, partial: false },
+      { href: base + "/branding-grid-index?v=" + cb, partial: false }
+    ];
+    function tryNext(i) {
+      if (i >= urls.length) {
+        return Promise.reject(new Error("branding-index-unavailable"));
+      }
+      return fetchJsonOk(urls[i].href)
+        .then(function (data) {
+          return adoptBrandingSlice(data, urls[i].partial);
+        })
+        .catch(function () {
+          return tryNext(i + 1);
+        });
+    }
+    global.__damBrandingIndexPromise = tryNext(0)
       .then(function (data) {
         global.__damBrandingIndexPromise = null;
-        if (!data || !Array.isArray(data.assets)) {
-          throw new Error("branding-index-unavailable");
+        try {
+          if (!global.__damBrandingGridIndex) global.__damBrandingGridIndex = data;
+        } catch (eShare) {
+          /* ignore */
         }
-        /* Celowo NIE zapisujemy do __damBrandingIndex — to tylko wycinek. */
-        return { assets: data.assets, partial: true };
+        return data;
       })
       .catch(function (err) {
         global.__damBrandingIndexPromise = null;
@@ -1333,6 +1413,15 @@
     if (grid && typeof grid._damBentoRemount === "function") {
       setTimeout(grid._damBentoRemount, 0);
     }
+  }
+
+  function afterMediaHostReplace(host) {
+    if (host) {
+      var id = host.getAttribute("data-widget-id");
+      if (id) host.setAttribute("data-bento-id", id);
+    }
+    requestDashBentoRemount();
+    scheduleSyncMediaTileHeights();
   }
 
   var MEDIA_TILE_WIDGETS = {
@@ -3179,7 +3268,16 @@
                 if (!groups.length) {
                   el.outerHTML = shell(
                     self,
-                    '<p class="dam-widget__meta">Brak miniatur graficznych do podglądu. <a href="branding.html">Otworz Branding</a></p>',
+                    '<p class="dam-widget__meta">' +
+                      escapeHtml(
+                        t(
+                          "dash.widget.branding_no_thumbs",
+                          "Brak miniatur graficznych do podglądu."
+                        )
+                      ) +
+                      ' <a href="branding.html">' +
+                      escapeHtml(t("dash.widget.open_branding", "Otwórz Branding")) +
+                      "</a></p>",
                     "dam-widget--branding-latest dam-widget--media-latest",
                     layoutToggleHtml(self.id, layout)
                   );
@@ -3187,6 +3285,9 @@
                     var host = document.querySelector('[data-widget-id="branding_latest"]');
                     if (host) self.render(host);
                   });
+                  afterMediaHostReplace(
+                    document.querySelector('[data-widget-id="branding_latest"]')
+                  );
                   if (global.DamPageReady && typeof DamPageReady.mark === "function") {
                     DamPageReady.mark("dashboard-branding");
                   }
@@ -3263,7 +3364,9 @@
                       );
                     })
                     .join("") +
-                  '</ul><p class="dam-widget__meta"><a href="branding.html">Otworz Branding</a></p>';
+                  '</ul><p class="dam-widget__meta"><a href="branding.html">' +
+                  escapeHtml(t("dash.widget.open_branding", "Otwórz Branding")) +
+                  "</a></p>";
                 el.outerHTML = shell(
                   self,
                   html,
@@ -3293,6 +3396,7 @@
                   var host = document.querySelector('[data-widget-id="branding_latest"]');
                   if (host) self.render(host);
                 });
+                afterMediaHostReplace(hostBr);
                 if (global.DamPageReady && typeof DamPageReady.mark === "function") {
                   DamPageReady.mark("dashboard-branding");
                 }
@@ -3328,7 +3432,16 @@
                 self.title = brandingTitleForCount(n);
                 failHost.outerHTML = shell(
                   self,
-                  '<p class="dam-widget__meta">Indeks branding niedostępny. <a href="branding.html">Otworz Branding</a></p>',
+                  '<p class="dam-widget__meta">' +
+                    escapeHtml(
+                      t(
+                        "dash.widget.branding_index_unavailable",
+                        "Nie udało się wczytać indeksu branding."
+                      )
+                    ) +
+                    ' <a href="branding.html">' +
+                    escapeHtml(t("dash.widget.open_branding", "Otwórz Branding")) +
+                    "</a></p>",
                   "dam-widget--branding-latest dam-widget--media-latest",
                   layoutToggleHtml(self.id, layout)
                 );
@@ -3339,6 +3452,9 @@
                     self.render(host);
                   }
                 });
+                afterMediaHostReplace(
+                  document.querySelector('[data-widget-id="branding_latest"]')
+                );
                 if (global.DamPageReady && typeof DamPageReady.mark === "function") {
                   DamPageReady.mark("dashboard-branding");
                 }

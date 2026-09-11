@@ -5,7 +5,7 @@
 (function (global) {
   "use strict";
 
-  global.DAM_APP_VERSION = "5.0.198";
+  global.DAM_APP_VERSION = "5.0.201";
 
   function formatVersion(v) {
     return String(v || "3.1.0").replace(/^v/i, "");
