@@ -1,9 +1,9 @@
 {
-  "version": "5.0.203",
+  "version": "5.0.204",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
-  "released_at": "2026-09-11",
-  "note": "5.0.202: dashboard hug quick-links; branding newest by file mtime; Otwórz Branding inside card",
+  "released_at": "2026-09-12",
+  "note": "5.0.204: installer ships Unicons/Jost + branding-grid-head; first-run pg-config.example; no v6.0.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

@@ -4,6 +4,13 @@ Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-08-03**.
 Workspace: **GIT_ROOT** = katalog z `DAM.exe` + `.git` (primary **D:** …`DAM---Dobra-Kaloria---inyfinn`); kod = **`...\bin`** (CONTENT_ROOT).  
 Wykonawca: Composer 2.5 / Monday.
 
+## Instalator Windows — vendor + pg-config + branding slim (HARD, 2026-09-12)
+
+- **Ikony:** `build-installer.ps1` MUSI shipować `apps/web/assets/vendor` (nie wykluczać `vendor` z robocopy web). HTML: bezpośredni `<link>` `unicons-line.css` (WebView bywa ślepy na `@import` w `dam-fonts.css`).
+- **Branding:** Setup pakuje `branding-grid-head.json` i `branding-grid-index.json` (slim; index można sklonować z head przy braku pliku). Fat `branding-index.json` (~340MB) nie jedzie w Setupie. Bez head = `http_404`.
+- **Synology:** `pg-config.json` = sekret, gitignored. Setup wstawia tylko `pg-config.example.json` do `apps/desktop/data/`. Świeża instalacja = SQLite aż ktoś skopiuje example → `pg-config.json` z hasłem (DDNS `inyfinn.synology.me` / LAN, port 5433).
+- **Wersja:** linia publiczna to **5.0.x** (nie ma v6.0).
+
 ## Layout bin + launcher (2026-08-03, upd 2026-08-06)
 
 - Top-level: `DAM.exe`, `bin\`, `.git` (primary **D:**; `P:\DAM` historyczny).

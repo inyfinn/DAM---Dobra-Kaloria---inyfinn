@@ -85,7 +85,18 @@ Write-Host "Staging bin (runtime + THEME + apps)..."
 Invoke-Robo (Join-Path $BinRoot "runtime") (Join-Path $binDst "runtime") $xdCommon $xfCommon
 Invoke-Robo (Join-Path $BinRoot "THEME") (Join-Path $binDst "THEME") @("__pycache__", "documentation") @("*.zip", "*.map")
 Invoke-Robo (Join-Path $BinRoot "apps\desktop") (Join-Path $binDst "apps\desktop") $xdCommon $xfCommon
-Invoke-Robo (Join-Path $BinRoot "apps\web") (Join-Path $binDst "apps\web") ($xdCommon + @("data")) $xfCommon
+# apps/web: NIE wykluczaj assets/vendor (Jost + Unicons). Bez tego ikony w WebView giną.
+$xdWeb = @($xdCommon | Where-Object { $_ -ne "vendor" }) + @("data")
+Invoke-Robo (Join-Path $BinRoot "apps\web") (Join-Path $binDst "apps\web") $xdWeb $xfCommon
+$webVendorSrc = Join-Path $BinRoot "apps\web\assets\vendor"
+$webVendorDst = Join-Path $binDst "apps\web\assets\vendor"
+if (Test-Path -LiteralPath $webVendorSrc) {
+  New-Item -ItemType Directory -Force -Path $webVendorDst | Out-Null
+  Invoke-Robo $webVendorSrc $webVendorDst @() @()
+  Write-Host "Shipped apps/web/assets/vendor (fonts/icons)."
+} else {
+  Write-Warning "Brak apps/web/assets/vendor — instalator bez lokalnych Unicons/Jost!"
+}
 
 $webDataSrc = Join-Path $BinRoot "apps\web\data"
 $webDataDst = Join-Path $binDst "apps\web\data"
@@ -94,14 +105,32 @@ $keepData = @(
   "app-settings.json", "program-instructions.json", "naming-dictionary.json",
   "product-name-pl.json", "product-people.json", "product-status.json",
   "lifecycle-status.json", "search-index.json", "file-index.json",
-  "change-log.json", "pg-config.example.json"
+  "change-log.json", "pg-config.example.json",
+  "branding-grid-head.json", "branding-grid-index.json",
+  "branding-search-index.json", "branding-segments.json",
+  "brand-formats.json", "brand-perspectives.json"
 )
 foreach ($name in $keepData) {
   $src = Join-Path $webDataSrc $name
   if (Test-Path -LiteralPath $src) { Copy-Item -LiteralPath $src -Destination (Join-Path $webDataDst $name) -Force }
 }
+$headSrc = Join-Path $webDataSrc "branding-grid-head.json"
+$indexDst = Join-Path $webDataDst "branding-grid-index.json"
+if ((-not (Test-Path -LiteralPath $indexDst)) -and (Test-Path -LiteralPath $headSrc)) {
+  Copy-Item -LiteralPath $headSrc -Destination $indexDst -Force
+  Write-Host "Staged branding-grid-index.json from head (slim)."
+}
+if (-not (Test-Path -LiteralPath (Join-Path $webDataDst "branding-grid-head.json"))) {
+  Write-Warning "Brak branding-grid-head.json — Branding po Setup bedzie http_404."
+}
 New-Item -ItemType Directory -Force -Path (Join-Path $webDataDst "thumbs") | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $binDst "apps\desktop\data") | Out-Null
+$deskDataDst = Join-Path $binDst "apps\desktop\data"
+New-Item -ItemType Directory -Force -Path $deskDataDst | Out-Null
+$pgEx = Join-Path $BinRoot "apps\desktop\pg-config.example.json"
+if (Test-Path -LiteralPath $pgEx) {
+  Copy-Item -LiteralPath $pgEx -Destination (Join-Path $deskDataDst "pg-config.example.json") -Force
+  Copy-Item -LiteralPath $pgEx -Destination (Join-Path $binDst "apps\desktop\pg-config.example.json") -Force
+}
 New-Item -ItemType Directory -Force -Path (Join-Path $binDst "DATABASE") | Out-Null
 $usersSeedSrc = Join-Path $BinRoot "DATABASE\users-seed.sqlite"
 if (-not (Test-Path -LiteralPath $usersSeedSrc)) {
@@ -118,7 +147,9 @@ $readmeDb = Join-Path $BinRoot "DATABASE\README.md"
 if (Test-Path -LiteralPath $readmeDb) {
   Copy-Item -LiteralPath $readmeDb -Destination (Join-Path $binDst "DATABASE\README.md") -Force
 }
-Set-Content -Path (Join-Path $webDataDst "branding-index.json") -Value '{"version":1,"items":[],"note":"empty-shipped-installer"}' -Encoding UTF8
+if (-not (Test-Path -LiteralPath (Join-Path $webDataDst "branding-index.json"))) {
+  Set-Content -Path (Join-Path $webDataDst "branding-index.json") -Value '{"version":1,"assets":[],"note":"slim-only-installer-use-branding-grid-head"}' -Encoding UTF8
+}
 
 $readmeSrc = Join-Path $BinRoot "installer\README.txt"
 if (Test-Path $readmeSrc) { Copy-Item $readmeSrc (Join-Path $stageRoot "README.txt") -Force }

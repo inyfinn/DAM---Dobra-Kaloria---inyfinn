@@ -737,7 +737,11 @@ def _sources_payload(active_engine: str, dump: Path | None) -> dict[str, Any]:
                 "configured": syn_cfg,
                 "available": syn_cfg,
                 "active": active_engine == "postgres",
-                "detail": "inyfinn.synology.me:5433" if syn_cfg else "Brak pg-config",
+                "detail": (
+                    "inyfinn.synology.me:5433"
+                    if syn_cfg
+                    else "Brak data/pg-config.json — skopiuj pg-config.example.json i wpisz hasło (DDNS inyfinn.synology.me / LAN, port 5433)."
+                ),
             },
             "github": {
                 "id": "github",

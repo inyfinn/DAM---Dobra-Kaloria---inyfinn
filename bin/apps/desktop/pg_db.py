@@ -163,7 +163,20 @@ def reset_config_cache() -> None:
     _LAST_HOST = None
 
 
+def ensure_pg_config_example_in_data() -> None:
+    """First-run: szablon w data/ (hasła NIE kopiować do pg-config.json)."""
+    dest = DESKTOP_DIR / "data" / "pg-config.example.json"
+    try:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.is_file() or not CONFIG_EXAMPLE_PATH.is_file():
+            return
+        dest.write_bytes(CONFIG_EXAMPLE_PATH.read_bytes())
+    except OSError:
+        return
+
+
 def is_configured() -> bool:
+    ensure_pg_config_example_in_data()
     try:
         _load_config()
         return True
