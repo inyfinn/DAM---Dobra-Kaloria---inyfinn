@@ -78,7 +78,7 @@ $xdCommon = @(
 $xfCommon = @(
   "*.pyc", "*.bak*", "*backup*", "*Conflict*", "*.drifted*", "*.pre-*",
   "index-watcher.log", "audit-log.jsonl", "branding-index.json",
-  "machine-config.json"
+  "machine-config.json", "dam-connection.env", "pg-config.json"
 )
 
 Write-Host "Staging bin (runtime + THEME + apps)..."
