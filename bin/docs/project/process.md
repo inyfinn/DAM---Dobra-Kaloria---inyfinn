@@ -4,7 +4,7 @@
 
 **Log/Status:** 5.0.204 wciaz kazal kopiowac example. `build-installer.ps1` embeduje `pg-config.json` z sekretu maszyny (FAIL gdy brak). UI/README bez „skopiuj”. First-run `ensure_pg_config_ready` + `_ensure_grid_index`.
 
-**Efekt/Fix:** Dummy user = dwuklik Setup. Sekret nie jedzie do gita.
+**Efekt/Fix:** Dummy user = dwuklik Setup. Sekret nie jedzie do gita. Push `a3873a5`. Release [v5.0.205](https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v5.0.205) — DAM-Setup.exe 45,4 MB. Staging: vendor Unicons+Jost, branding-grid 343 KB, passworded pg-config. `/db/status` synology active, Branding 200 kart.
 
 **Źródła:** build-installer.ps1, pg_db.py, dam_db.py, dam-db-status.js, branding_asset_routes.py, installer/README.txt
 
