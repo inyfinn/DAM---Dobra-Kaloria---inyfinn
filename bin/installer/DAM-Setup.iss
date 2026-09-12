@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "5.0.205"
+  #define MyAppVersion "6.0.0"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -62,6 +62,44 @@ Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "Utworz skrot na pulpicie"; GroupDescription: "Skroty:"; Flags: checkedonce
+
+; Aktualizacja = czysty klad od nowa. Bez tego stare moduly JS/HTML i pliki
+; usuniete w nowej wersji zostaja na dysku i wracaja do gry przy niezbumpowanym ?v=.
+; web = kasuj caly kod (katalogi + pliki w korzeniu); NIE kasuj apps\web\data.
+; Inno nie umie "delete tree except data" — enumerujemy katalogi kodu + leftover.
+; NIE czyscimy: apps\web\data, apps\desktop\data, DATABASE, PAMIEC-PODRECZNA.
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\bin\apps\web\assets"
+Type: filesandordirs; Name: "{app}\bin\apps\web\i18n"
+Type: filesandordirs; Name: "{app}\bin\apps\web\scripts"
+Type: filesandordirs; Name: "{app}\bin\apps\web\_qa"
+Type: filesandordirs; Name: "{app}\bin\apps\web\pages"
+Type: filesandordirs; Name: "{app}\bin\apps\web\src"
+Type: filesandordirs; Name: "{app}\bin\apps\web\vendor"
+Type: filesandordirs; Name: "{app}\bin\apps\web\css"
+Type: filesandordirs; Name: "{app}\bin\apps\web\js"
+Type: filesandordirs; Name: "{app}\bin\apps\web\tests"
+Type: filesandordirs; Name: "{app}\bin\apps\web\tooling"
+Type: filesandordirs; Name: "{app}\bin\apps\web\static"
+Type: filesandordirs; Name: "{app}\bin\apps\web\dist"
+Type: filesandordirs; Name: "{app}\bin\apps\web\public"
+Type: filesandordirs; Name: "{app}\bin\apps\web\components"
+Type: files; Name: "{app}\bin\apps\web\*.html"
+Type: files; Name: "{app}\bin\apps\web\*.js"
+Type: files; Name: "{app}\bin\apps\web\*.py"
+Type: files; Name: "{app}\bin\apps\web\*.css"
+Type: files; Name: "{app}\bin\apps\web\*.json"
+Type: files; Name: "{app}\bin\apps\web\*.webmanifest"
+Type: filesandordirs; Name: "{app}\bin\apps\api"
+Type: filesandordirs; Name: "{app}\bin\THEME"
+Type: filesandordirs; Name: "{app}\bin\runtime"
+Type: filesandordirs; Name: "{app}\bin\scripts"
+Type: filesandordirs; Name: "{app}\bin\docs"
+Type: filesandordirs; Name: "{app}\bin\agents"
+Type: files; Name: "{app}\bin\apps\desktop\*.py"
+Type: files; Name: "{app}\bin\apps\desktop\*.html"
+Type: filesandordirs; Name: "{app}\bin\apps\desktop\scripts"
+Type: filesandordirs; Name: "{app}\bin\apps\desktop\tests"
 
 [Files]
 Source: "{#StageDir}\DAM.exe"; DestDir: "{app}"; Flags: ignoreversion

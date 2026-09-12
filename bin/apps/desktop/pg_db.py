@@ -172,6 +172,26 @@ def _pg_config_looks_ready(path: Path) -> bool:
         return False
 
 
+def _pg_config_candidates() -> list[Path]:
+    """Staged Setup file, bundled copy, then installed Programs\\DAM (dummy user never copies)."""
+    local = os.environ.get("LOCALAPPDATA") or ""
+    install_desktop = Path(local) / "Programs" / "DAM" / "bin" / "apps" / "desktop"
+    env_path = (os.environ.get("DAM_PG_CONFIG") or "").strip()
+    out: list[Path] = []
+    if env_path:
+        out.append(Path(env_path))
+    out.extend(
+        [
+            DESKTOP_DIR / "pg-config.json",
+            DESKTOP_DIR / "data" / "pg-config.bundled.json",
+            install_desktop / "data" / "pg-config.json",
+            install_desktop / "pg-config.json",
+            install_desktop / "data" / "pg-config.bundled.json",
+        ]
+    )
+    return out
+
+
 def ensure_pg_config_example_in_data() -> None:
     """First-run: szablon example zostaje w data/ (IT). Live = pg-config.json z Setupu."""
     dest = DESKTOP_DIR / "data" / "pg-config.example.json"
@@ -191,12 +211,8 @@ def ensure_pg_config_ready() -> None:
         dest.parent.mkdir(parents=True, exist_ok=True)
         if dest.is_file() and _pg_config_looks_ready(dest):
             return
-        candidates = (
-            DESKTOP_DIR / "pg-config.json",
-            DESKTOP_DIR / "data" / "pg-config.bundled.json",
-        )
         dest_res = dest.resolve() if dest.exists() else dest
-        for src in candidates:
+        for src in _pg_config_candidates():
             try:
                 if not src.is_file() or not _pg_config_looks_ready(src):
                     continue
@@ -303,6 +319,22 @@ def _ensure_kv_index(conn) -> None:
         cur.execute(
             "CREATE INDEX IF NOT EXISTS dam_kv_merge_review_store_idx "
             "ON dam_kv_merge_review (store_key, created_at DESC)"
+        )
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS dam_thumb_cache_index (
+              store_key TEXT PRIMARY KEY,
+              digest TEXT NOT NULL,
+              mtime DOUBLE PRECISION,
+              size_bytes BIGINT,
+              publisher TEXT NOT NULL DEFAULT '',
+              published_at TEXT NOT NULL
+            )
+            """
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS dam_thumb_cache_index_digest_idx "
+            "ON dam_thumb_cache_index (digest)"
         )
         conn.commit()
         _INDEX_READY = True
@@ -897,6 +929,78 @@ def kv_merge_review_recent(store_key: str = "", *, limit: int = 20) -> list[dict
                 (max(1, min(int(limit), 100)),),
             )
         return [dict(r) for r in cur.fetchall()]
+    finally:
+        conn.close()
+
+
+THUMB_CACHE_MANIFEST_KEY = "thumb-cache-manifest"
+
+
+def upsert_thumb_cache_manifest(payload: Any, updated_by: str = "") -> bool:
+    """Tiny JSONB pointer to NAS cache. Never store file-index here."""
+    try:
+        kv_set(THUMB_CACHE_MANIFEST_KEY, payload, updated_by=updated_by or "dam-cache")
+        return True
+    except Exception:
+        return False
+
+
+def upsert_thumb_cache_rows(entries: list, *, publisher: str = "") -> bool:
+    if not entries:
+        return True
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS dam_thumb_cache_index (
+              store_key TEXT PRIMARY KEY,
+              digest TEXT NOT NULL,
+              mtime DOUBLE PRECISION,
+              size_bytes BIGINT,
+              publisher TEXT NOT NULL DEFAULT '',
+              published_at TEXT NOT NULL
+            )
+            """
+        )
+        for row in entries:
+            if not isinstance(row, dict):
+                continue
+            key = str(row.get("rel_profile") or row.get("store_key") or "").strip()
+            digest = str(row.get("digest") or "").strip()
+            if not key or not digest:
+                continue
+            try:
+                mt = float(row.get("mtime") or 0.0)
+            except (TypeError, ValueError):
+                mt = 0.0
+            try:
+                size = int(row.get("size") or row.get("size_bytes") or 0)
+            except (TypeError, ValueError):
+                size = 0
+            cur.execute(
+                """
+                INSERT INTO dam_thumb_cache_index
+                  (store_key, digest, mtime, size_bytes, publisher, published_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (store_key) DO UPDATE SET
+                  digest = EXCLUDED.digest,
+                  mtime = EXCLUDED.mtime,
+                  size_bytes = EXCLUDED.size_bytes,
+                  publisher = EXCLUDED.publisher,
+                  published_at = EXCLUDED.published_at
+                """,
+                (key, digest, mt, size, publisher or "", now),
+            )
+        conn.commit()
+        return True
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        return False
     finally:
         conn.close()
 

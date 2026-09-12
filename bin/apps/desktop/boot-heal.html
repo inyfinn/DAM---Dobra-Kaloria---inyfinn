@@ -119,9 +119,20 @@
         title.textContent = "Port zajety";
         body.textContent =
           "Port 8765 lub 8766 jest zajety. Zamknij druga kopie DAM w Menedzerze zadan, potem uruchom ponownie skrot.";
+      } else if (reason === "missing_modules") {
+        title.textContent = "Brak bibliotek Pythona";
+        body.innerHTML =
+          "Silnik Pythona jest, ale brakuje bibliotek (webview, bcrypt, PostgreSQL, ijson). " +
+          "Instalacja jest niepelna. Zainstaluj DAM ponownie z DAM-Setup.exe.<br><br>" +
+          "Szczegoly: <code>%LOCALAPPDATA%\\DAM\\launch-error.log</code>";
+      } else if (reason === "launch_exit") {
+        title.textContent = "DAM zamknal sie po starcie";
+        body.innerHTML =
+          "Program wystartowal i od razu sie zakonczyl. " +
+          "Zobacz log: <code>%LOCALAPPDATA%\\DAM\\launch-error.log</code>";
       } else {
         title.textContent = "Problem z uruchomieniem";
-        body.textContent = "Kod: " + reason + ". Skontaktuj sie z IT z logiem launch-last-error.txt.";
+        body.textContent = "Kod: " + reason + ". Skontaktuj sie z IT z logiem %LOCALAPPDATA%\\DAM\\launch-error.log.";
       }
     })();
   </script>

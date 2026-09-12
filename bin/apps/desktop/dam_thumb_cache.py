@@ -803,3 +803,713 @@ def _warm_worker_loop() -> None:
         with _warm_lock:
             _warm_jobs_done += 1
         _warm_last_activity = time.time()
+
+
+# ---------------------------------------------------------------------------
+# NAS seed download + publish (not in Windows installer).
+# Remote: W:\web\Panel-DAM\pamiec-podreczna  (RaiDrive /volume1/web/Panel-DAM)
+# HTTPS:  https://inyfinn.synology.me/Panel-DAM/pamiec-podreczna/
+# Local:  {REPO_ROOT}/PAMIEC-PODRECZNA  (bin/PAMIEC-PODRECZNA). Never X: or M:.
+# ---------------------------------------------------------------------------
+import socket
+import urllib.error
+import urllib.request
+
+NAS_CACHE_URL_DEFAULT = "https://inyfinn.synology.me/Panel-DAM/pamiec-podreczna"
+NAS_CACHE_PATH_DEFAULT = Path(r"W:\web\Panel-DAM\pamiec-podreczna")
+SEED_THUMB_HINT = 329
+LOW_LOCAL_THUMBS = 80
+SYNC_STATUS_FILE = DESKTOP_DIR / "data" / "cache-sync-status.json"
+PUBLISH_QUEUE_FILE = DESKTOP_DIR / "data" / "cache-publish-queue.json"
+
+_sync_lock = threading.Lock()
+_sync_state: dict = {
+    "running": False,
+    "phase": "idle",
+    "done": 0,
+    "total": 0,
+    "copied": 0,
+    "skipped": 0,
+    "error": "",
+    "source": "",
+    "started_at": "",
+    "finished_at": "",
+    "eta_sec": None,
+    "message": "",
+}
+_sync_thread_started = False
+_publish_lock = threading.Lock()
+
+
+def nas_cache_url() -> str:
+    return (os.environ.get("DAM_NAS_CACHE_URL") or NAS_CACHE_URL_DEFAULT).rstrip("/")
+
+
+def nas_cache_path() -> Path:
+    override = (os.environ.get("DAM_NAS_CACHE_PATH") or "").strip()
+    return Path(override) if override else NAS_CACHE_PATH_DEFAULT
+
+
+def _utc_iso() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _write_json_atomic(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    try:
+        tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+    except OSError:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _read_json_file(path: Path) -> dict:
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def local_thumb_stats() -> dict:
+    thumbs = cache_root() / "thumbs"
+    avif_n = 0
+    jpg_n = 0
+    try:
+        if thumbs.is_dir():
+            for p in thumbs.iterdir():
+                if not p.is_file():
+                    continue
+                suf = p.suffix.lower()
+                if suf == ".avif":
+                    avif_n += 1
+                elif suf in (".jpg", ".jpeg"):
+                    jpg_n += 1
+    except OSError:
+        pass
+    return {
+        "root": str(cache_root()),
+        "thumbs_dir": str(thumbs),
+        "avif": avif_n,
+        "jpg": jpg_n,
+        "files": avif_n + jpg_n,
+    }
+
+
+def _persist_sync_state() -> None:
+    with _sync_lock:
+        snap = dict(_sync_state)
+    snap["updated_at"] = _utc_iso()
+    _write_json_atomic(SYNC_STATUS_FILE, snap)
+
+
+def _set_sync(**fields) -> None:
+    with _sync_lock:
+        _sync_state.update(fields)
+    _persist_sync_state()
+
+
+def sync_status() -> dict:
+    disk = _read_json_file(SYNC_STATUS_FILE)
+    with _sync_lock:
+        live = dict(_sync_state)
+    out = {**disk, **live}
+    stats = local_thumb_stats()
+    nas_p = nas_cache_path()
+    nas_ok = False
+    try:
+        nas_ok = nas_p.is_dir()
+    except OSError:
+        nas_ok = False
+    out.update(
+        {
+            "ok": True,
+            "local": stats,
+            "nas_url": nas_cache_url(),
+            "nas_path": str(nas_p),
+            "nas_writable": False,
+            "nas_present": nas_ok,
+            "needs_download": bool(stats["avif"] < LOW_LOCAL_THUMBS),
+            "seed_hint": SEED_THUMB_HINT,
+        }
+    )
+    if nas_ok:
+        try:
+            probe = nas_p / ".dam-write-probe"
+            probe.write_text("ok", encoding="utf-8")
+            probe.unlink(missing_ok=True)
+            out["nas_writable"] = True
+        except OSError:
+            out["nas_writable"] = False
+    q = _read_json_file(PUBLISH_QUEUE_FILE)
+    pending = q.get("pending") if isinstance(q.get("pending"), list) else []
+    out["publish_queue"] = len(pending)
+    return out
+
+
+def _http_get_bytes(url: str, timeout: float = 25.0) -> bytes | None:
+    ctx = None
+    try:
+        import ssl
+
+        try:
+            import certifi  # type: ignore
+
+            ctx = ssl.create_default_context(cafile=certifi.where())
+        except Exception:
+            ctx = ssl.create_default_context()
+    except Exception:
+        ctx = None
+    req = urllib.request.Request(url, headers={"User-Agent": "DAM-ETA-cache-sync/1"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
+            status = int(getattr(resp, "status", 200) or 200)
+            if status >= 400:
+                return None
+            return resp.read()
+    except (urllib.error.URLError, OSError, TimeoutError, ValueError):
+        return None
+
+
+def _load_manifest_https() -> tuple[dict | None, str]:
+    url = nas_cache_url() + "/manifest.json"
+    raw = _http_get_bytes(url)
+    if not raw:
+        return None, "https_fail"
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None, "https_bad_json"
+    if not isinstance(data, dict):
+        return None, "https_bad_json"
+    return data, "https"
+
+
+def _load_manifest_nas_file() -> tuple[dict | None, str]:
+    p = nas_cache_path() / "manifest.json"
+    if not p.is_file():
+        return None, "nas_missing"
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return data, "nas_file"
+    except (OSError, json.JSONDecodeError):
+        return None, "nas_bad_json"
+    return None, "nas_bad_json"
+
+
+def load_remote_manifest() -> tuple[dict | None, str]:
+    data, src = _load_manifest_https()
+    if data:
+        return data, src
+    data2, src2 = _load_manifest_nas_file()
+    if data2:
+        return data2, src2
+    return None, src if src != "https_fail" else src2
+
+
+def _manifest_files(manifest: dict) -> list[dict]:
+    files = manifest.get("files")
+    if isinstance(files, list) and files:
+        out = []
+        for item in files:
+            if isinstance(item, dict) and item.get("digest"):
+                out.append(item)
+            elif isinstance(item, str) and item:
+                out.append({"digest": item, "ext": "avif"})
+        return out
+    thumbs = manifest.get("thumbs")
+    if isinstance(thumbs, dict):
+        out = []
+        for digest, meta in thumbs.items():
+            row = {"digest": str(digest), "ext": "avif"}
+            if isinstance(meta, dict):
+                row.update({k: meta.get(k) for k in ("ext", "size", "rel") if k in meta})
+            out.append(row)
+        return out
+    return []
+
+
+def _copy_bytes_atomic(dest: Path, body: bytes) -> bool:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_suffix(dest.suffix + ".tmp")
+    try:
+        tmp.write_bytes(body)
+        os.replace(tmp, dest)
+        return True
+    except OSError:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return False
+
+
+def _copy_path_atomic(src: Path, dest: Path) -> bool:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_suffix(dest.suffix + ".tmp")
+    try:
+        shutil.copy2(src, tmp)
+        os.replace(tmp, dest)
+        return True
+    except OSError:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return False
+
+
+def _fetch_remote_thumb(digest: str, ext: str, source: str) -> bytes | None:
+    name = f"{digest}.{ext.lstrip('.')}"
+    if source == "https":
+        return _http_get_bytes(nas_cache_url() + "/thumbs/" + name)
+    p = nas_cache_path() / "thumbs" / name
+    try:
+        if p.is_file():
+            return p.read_bytes()
+    except OSError:
+        return None
+    return None
+
+
+def _merge_rel_index_from_remote(source: str) -> None:
+    remote_idx: dict = {}
+    if source == "https":
+        raw = _http_get_bytes(nas_cache_url() + "/thumb-rel-index.json", timeout=40.0)
+        if raw:
+            try:
+                parsed = json.loads(raw.decode("utf-8"))
+                if isinstance(parsed, dict):
+                    remote_idx = parsed
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                remote_idx = {}
+    else:
+        p = nas_cache_path() / "thumb-rel-index.json"
+        if p.is_file():
+            try:
+                parsed = json.loads(p.read_text(encoding="utf-8"))
+                if isinstance(parsed, dict):
+                    remote_idx = parsed
+            except (OSError, json.JSONDecodeError):
+                remote_idx = {}
+    if not remote_idx:
+        return
+    global _REL_INDEX
+    local = _load_rel_index()
+    changed = False
+    with _REL_INDEX_LOCK:
+        for key, row in remote_idx.items():
+            if not isinstance(row, dict):
+                continue
+            if key not in local:
+                local[key] = row
+                changed = True
+                continue
+            try:
+                remote_mt = float(row.get("mtime") or 0.0)
+                local_mt = float((local.get(key) or {}).get("mtime") or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if remote_mt > local_mt:
+                local[key] = row
+                changed = True
+        _REL_INDEX = local
+    if changed:
+        _save_rel_index()
+
+
+def run_cache_download(*, force: bool = False) -> dict:
+    """Copy missing NAS thumbs into local PAMIEC-PODRECZNA. Never writes X:/M:."""
+    stats = local_thumb_stats()
+    if not force and stats["avif"] >= LOW_LOCAL_THUMBS:
+        _set_sync(
+            running=False,
+            phase="idle",
+            message="local_ok",
+            done=stats["avif"],
+            total=stats["avif"],
+            error="",
+        )
+        return {"ok": True, "started": False, "reason": "local_ok", "local": stats}
+
+    manifest, source = load_remote_manifest()
+    if not manifest:
+        fallback_dir = nas_cache_path() / "thumbs"
+        files: list[dict] = []
+        try:
+            if fallback_dir.is_dir():
+                for p in fallback_dir.iterdir():
+                    if p.suffix.lower() in (".avif", ".jpg") and p.is_file():
+                        files.append({"digest": p.stem, "ext": p.suffix.lstrip(".").lower(), "size": p.stat().st_size})
+                source = "nas_file"
+        except OSError:
+            files = []
+        if not files:
+            _set_sync(
+                running=False,
+                phase="error",
+                error="manifest_unavailable",
+                source=source,
+                message="Brak manifestu NAS",
+            )
+            return {"ok": False, "error": "manifest_unavailable", "source": source, "local": stats}
+        manifest = {"files": files, "thumb_count": len(files)}
+    else:
+        files = _manifest_files(manifest)
+
+    total = len(files) or int(manifest.get("thumb_count") or 0)
+    t0 = time.time()
+    _set_sync(
+        running=True,
+        phase="download",
+        done=0,
+        total=total,
+        copied=0,
+        skipped=0,
+        error="",
+        source=source,
+        started_at=_utc_iso(),
+        finished_at="",
+        eta_sec=None,
+        message="Pobieram pamiec podreczna",
+    )
+    copied = 0
+    skipped = 0
+    done = 0
+    local_thumbs = cache_root() / "thumbs"
+    local_thumbs.mkdir(parents=True, exist_ok=True)
+    for item in files:
+        digest = str(item.get("digest") or "").strip().lower()
+        ext = str(item.get("ext") or "avif").lstrip(".").lower() or "avif"
+        if not digest:
+            continue
+        dest = local_thumbs / f"{digest}.{ext}"
+        if dest.is_file() and dest.stat().st_size > 0:
+            skipped += 1
+            done += 1
+        else:
+            body = _fetch_remote_thumb(digest, ext, "https" if source == "https" else "nas_file")
+            if body and _copy_bytes_atomic(dest, body):
+                copied += 1
+                done += 1
+            else:
+                done += 1
+        elapsed = max(0.2, time.time() - t0)
+        rate = done / elapsed
+        remain = max(0, total - done)
+        eta = int(remain / rate) if rate > 0 else None
+        _set_sync(
+            running=True,
+            phase="download",
+            done=done,
+            total=total,
+            copied=copied,
+            skipped=skipped,
+            eta_sec=eta,
+            source=source,
+            message=f"Pobieram pamiec podreczna ({done}/{total})",
+        )
+    try:
+        _merge_rel_index_from_remote("https" if source == "https" else "nas_file")
+    except Exception:
+        pass
+    _set_sync(
+        running=False,
+        phase="idle",
+        done=done,
+        total=total,
+        copied=copied,
+        skipped=skipped,
+        finished_at=_utc_iso(),
+        eta_sec=0,
+        message="Gotowe",
+        error="",
+    )
+    return {
+        "ok": True,
+        "started": True,
+        "copied": copied,
+        "skipped": skipped,
+        "total": total,
+        "source": source,
+        "local": local_thumb_stats(),
+    }
+
+
+def start_cache_download(*, force: bool = False) -> dict:
+    global _sync_thread_started
+    with _sync_lock:
+        if _sync_state.get("running"):
+            return {"ok": True, "started": False, "running": True, "sync": dict(_sync_state)}
+    stats = local_thumb_stats()
+    if not force and stats["avif"] >= LOW_LOCAL_THUMBS:
+        return {"ok": True, "started": False, "reason": "local_ok", "local": stats}
+
+    def _worker() -> None:
+        global _sync_thread_started
+        try:
+            run_cache_download(force=force)
+        except Exception as exc:  # noqa: BLE001
+            _set_sync(running=False, phase="error", error=str(exc), message="Blad pobierania")
+        finally:
+            _sync_thread_started = False
+
+    with _sync_lock:
+        _sync_state["running"] = True
+        _sync_state["phase"] = "download"
+        _sync_thread_started = True
+    threading.Thread(target=_worker, daemon=True, name="dam-cache-download").start()
+    return {"ok": True, "started": True, "running": True, "local": stats}
+
+
+def ensure_boot_sync() -> dict:
+    """Bridge boot: first-run download if local thumbs are sparse. Non-blocking."""
+    return start_cache_download(force=False)
+
+
+def _publisher_name() -> str:
+    try:
+        return socket.gethostname() or "dam-pc"
+    except OSError:
+        return "dam-pc"
+
+
+def build_local_manifest(*, publisher: str = "") -> dict:
+    stats = local_thumb_stats()
+    thumbs = cache_root() / "thumbs"
+    files: list[dict] = []
+    try:
+        if thumbs.is_dir():
+            for p in sorted(thumbs.iterdir(), key=lambda x: x.name):
+                if not p.is_file():
+                    continue
+                suf = p.suffix.lower()
+                if suf not in (".avif", ".jpg", ".jpeg"):
+                    continue
+                try:
+                    size = int(p.stat().st_size)
+                except OSError:
+                    size = 0
+                files.append(
+                    {
+                        "digest": p.stem,
+                        "ext": suf.lstrip("."),
+                        "size": size,
+                    }
+                )
+    except OSError:
+        pass
+    idx = _load_rel_index()
+    entries = []
+    for key, row in idx.items():
+        if not isinstance(row, dict):
+            continue
+        digest = str(row.get("digest") or "")
+        if not digest:
+            continue
+        try:
+            mt = float(row.get("mtime") or 0.0)
+        except (TypeError, ValueError):
+            mt = 0.0
+        size = 0
+        avif_p, jpg_p = _cache_paths(digest)
+        hit = avif_p if avif_p.is_file() else jpg_p if jpg_p.is_file() else None
+        if hit is not None:
+            try:
+                size = int(hit.stat().st_size)
+            except OSError:
+                size = 0
+        entries.append(
+            {
+                "rel_profile": key,
+                "digest": digest,
+                "mtime": mt,
+                "size": size,
+            }
+        )
+    return {
+        "version": 1,
+        "generated_at": _utc_iso(),
+        "publisher": publisher or _publisher_name(),
+        "thumb_count": stats["avif"] + stats["jpg"],
+        "avif": stats["avif"],
+        "jpg": stats["jpg"],
+        "files": files,
+        "rel_index": "thumb-rel-index.json",
+        "rel_count": len(entries),
+        "entries": entries[:8000],
+    }
+
+
+def _queue_publish(items: list[dict]) -> None:
+    q = _read_json_file(PUBLISH_QUEUE_FILE)
+    pending = q.get("pending") if isinstance(q.get("pending"), list) else []
+    seen = {str(x.get("digest")) for x in pending if isinstance(x, dict)}
+    for it in items:
+        d = str(it.get("digest") or "")
+        if d and d not in seen:
+            pending.append(it)
+            seen.add(d)
+    _write_json_atomic(
+        PUBLISH_QUEUE_FILE,
+        {"pending": pending, "updated_at": _utc_iso()},
+    )
+
+
+def _nas_dir_writable(root: Path) -> bool:
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        (root / "thumbs").mkdir(parents=True, exist_ok=True)
+        probe = root / ".dam-write-probe"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink(missing_ok=True)
+        return True
+    except OSError:
+        return False
+
+
+def publish_new_thumbs(*, publisher: str = "") -> dict:
+    """Copy local thumbs missing on NAS. Queue when W: is absent."""
+    with _publish_lock:
+        return _publish_new_thumbs_locked(publisher=publisher or _publisher_name())
+
+
+def _publish_new_thumbs_locked(*, publisher: str) -> dict:
+    local_thumbs = cache_root() / "thumbs"
+    nas_root = nas_cache_path()
+    queued_only = False
+    if not _nas_dir_writable(nas_root):
+        queued_only = True
+    files: list[Path] = []
+    try:
+        if local_thumbs.is_dir():
+            files = [
+                p
+                for p in local_thumbs.iterdir()
+                if p.is_file() and p.suffix.lower() in (".avif", ".jpg", ".jpeg")
+            ]
+    except OSError:
+        files = []
+    copied = 0
+    skipped = 0
+    queued: list[dict] = []
+    if queued_only:
+        for p in files:
+            queued.append({"digest": p.stem, "ext": p.suffix.lstrip("."), "src": str(p)})
+        _queue_publish(queued)
+        return {
+            "ok": False,
+            "error": "nas_not_writable",
+            "queued": len(queued),
+            "nas_path": str(nas_root),
+            "copied": 0,
+        }
+    nas_thumbs = nas_root / "thumbs"
+    try:
+        nas_thumbs.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        _queue_publish([{"digest": p.stem, "ext": p.suffix.lstrip("."), "src": str(p)} for p in files])
+        return {"ok": False, "error": f"nas_mkdir:{exc}", "queued": len(files)}
+    q = _read_json_file(PUBLISH_QUEUE_FILE)
+    pending = q.get("pending") if isinstance(q.get("pending"), list) else []
+    extra_src = []
+    for item in pending:
+        if not isinstance(item, dict):
+            continue
+        src = Path(str(item.get("src") or ""))
+        if src.is_file():
+            extra_src.append(src)
+    seen_names = set()
+    work = []
+    for p in list(files) + extra_src:
+        if p.name in seen_names:
+            continue
+        seen_names.add(p.name)
+        work.append(p)
+    for p in work:
+        dest = nas_thumbs / p.name
+        try:
+            if dest.is_file() and dest.stat().st_size > 0:
+                skipped += 1
+                continue
+        except OSError:
+            pass
+        if _copy_path_atomic(p, dest):
+            copied += 1
+        else:
+            queued.append({"digest": p.stem, "ext": p.suffix.lstrip("."), "src": str(p)})
+    if queued:
+        _queue_publish(queued)
+    else:
+        _write_json_atomic(PUBLISH_QUEUE_FILE, {"pending": [], "updated_at": _utc_iso()})
+    manifest = build_local_manifest(publisher=publisher)
+    try:
+        (nas_root / "manifest.json").write_text(
+            json.dumps({k: v for k, v in manifest.items() if k != "entries"}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        return {
+            "ok": False,
+            "error": f"manifest_write:{exc}",
+            "copied": copied,
+            "skipped": skipped,
+            "nas_path": str(nas_root),
+        }
+    try:
+        shutil.copy2(_rel_index_path(), nas_root / "thumb-rel-index.json")
+    except OSError:
+        pass
+    kv_ok = False
+    table_ok = False
+    try:
+        import pg_db
+
+        kv_ok = bool(
+            pg_db.upsert_thumb_cache_manifest(
+                {
+                    "version": 1,
+                    "nas_url": nas_cache_url() + "/",
+                    "nas_path": str(nas_root).replace("/", "\\"),
+                    "thumb_count": manifest["thumb_count"],
+                    "avif": manifest.get("avif"),
+                    "publisher": publisher,
+                    "published_at": manifest["generated_at"],
+                    "rel_count": manifest.get("rel_count") or 0,
+                },
+                updated_by=publisher,
+            )
+        )
+        table_ok = bool(pg_db.upsert_thumb_cache_rows(manifest.get("entries") or [], publisher=publisher))
+    except Exception:
+        kv_ok = False
+        table_ok = False
+    return {
+        "ok": True,
+        "copied": copied,
+        "skipped": skipped,
+        "queued": len(queued),
+        "nas_path": str(nas_root),
+        "publisher": publisher,
+        "kv": kv_ok,
+        "table": table_ok,
+        "thumb_count": manifest["thumb_count"],
+    }
+
+
+def start_publish_after_index() -> dict:
+    def _worker() -> None:
+        try:
+            publish_new_thumbs()
+        except Exception:
+            pass
+
+    threading.Thread(target=_worker, daemon=True, name="dam-cache-publish").start()
+    return {"ok": True, "started": True}

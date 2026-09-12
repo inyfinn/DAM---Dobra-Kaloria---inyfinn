@@ -232,6 +232,15 @@ def canonical_db_path() -> Path:
     return REPO_DATABASE / "dam-local.sqlite"
 
 
+def sqlite_location_label(path: Path | None = None) -> str:
+    """repo = drzewo gita; install = %LOCALAPPDATA%\\Programs\\DAM."""
+    p = path or canonical_db_path()
+    s = str(p).replace("/", "\\").lower()
+    if "\\programs\\dam\\" in s:
+        return "install"
+    return "repo"
+
+
 # Back-compat alias (dynamiczny — nie uzywac przed db_path()).
 DB_CANONICAL = DB_REPO
 
@@ -576,7 +585,7 @@ def _init_sqlite() -> dict[str, Any]:
             "path": str(path),
             "engine": "sqlite-offline" if _OFFLINE_MODE else "sqlite",
             "shared": False,
-            "location": "repo",
+            "location": sqlite_location_label(path),
             "offline_mode": _OFFLINE_MODE,
             "offline_reason": _OFFLINE_REASON,
             "offline_hint": _OFFLINE_HINT if _OFFLINE_MODE else "",
@@ -1041,7 +1050,7 @@ def status() -> dict[str, Any]:
             "engine": info.get("engine") or "sqlite",
             "path": str(path),
             "shared": False,
-            "location": "repo",
+            "location": sqlite_location_label(path),
             "wal": str(mode).lower() == "wal",
             "users": users,
             "audit_rows": audits,
@@ -1054,7 +1063,7 @@ def status() -> dict[str, Any]:
             "error": str(exc),
             "path": str(db_path()),
             "shared": False,
-            "location": "repo",
+            "location": sqlite_location_label(path),
             "offline_mode": _OFFLINE_MODE,
             "offline_hint": _OFFLINE_HINT if _OFFLINE_MODE else "",
             "online": False,

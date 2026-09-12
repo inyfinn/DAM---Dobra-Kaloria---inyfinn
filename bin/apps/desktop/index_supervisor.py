@@ -15,7 +15,14 @@ import time
 from pathlib import Path
 from typing import Any
 
-from rebuild_lock import DATA_DIR, acquire_lock, lock_is_stale, read_lock, status_from_lock
+from rebuild_lock import (
+    DATA_DIR,
+    acquire_lock,
+    lock_is_stale,
+    mark_cancel_requested,
+    read_lock,
+    status_from_lock,
+)
 
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = DESKTOP_DIR.parent / "web"
@@ -24,7 +31,10 @@ SUPERVISOR_LOCK = DATA_DIR / "index-supervisor.lock.json"
 WATCHER_STATUS = DATA_DIR / "index-watcher-status.json"
 WATCHER_LOG = DATA_DIR / "index-watcher.log"
 PRODUCT_REBUILD_LOCK = DATA_DIR / "index-rebuild.lock.json"
+CONTROL_FILE = DATA_DIR / "index-control.json"
 MAX_LOG_BYTES = 2_000_000
+HOURLY_SEC_DEFAULT = float(os.environ.get("DAM_INDEX_HOURLY_SEC", "3600") or "3600")
+FIRST_DELAY_SEC_DEFAULT = float(os.environ.get("DAM_INDEX_FIRST_DELAY_SEC", "20") or "20")
 
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
 
@@ -52,7 +62,7 @@ def write_watcher_status(payload: dict[str, Any], *, preserve_last: bool = True)
     body = dict(payload)
     if preserve_last:
         prev = read_watcher_status()
-        for key in ("last_ok", "last_rc", "last_error", "last_started", "last_finished"):
+        for key in ("last_ok", "last_rc", "last_error", "last_started", "last_finished", "last_duration_sec"):
             if key not in body and key in prev and prev.get(key) is not None:
                 body[key] = prev.get(key)
     # Explicit run state: null last_ok = no successful rebuild yet (not a green success).
@@ -93,6 +103,252 @@ def supervisor_lock_status() -> dict[str, Any]:
     return status_from_lock(SUPERVISOR_LOCK, ttl_sec=120)
 
 
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
+    text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+    try:
+        tmp.write_text(text, encoding="utf-8")
+        os.replace(tmp, path)
+    except OSError:
+        try:
+            path.write_text(text, encoding="utf-8")
+        except OSError:
+            pass
+        try:
+            if tmp.is_file():
+                tmp.unlink()
+        except OSError:
+            pass
+
+
+def read_control() -> dict[str, Any]:
+    if not CONTROL_FILE.is_file():
+        return {}
+    try:
+        data = json.loads(CONTROL_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def write_control(payload: dict[str, Any]) -> None:
+    body = dict(payload)
+    body["updated_at"] = _utc()
+    _write_json_atomic(CONTROL_FILE, body)
+
+
+def _parse_iso(ts: str):
+    if not ts:
+        return None
+    try:
+        from datetime import datetime
+
+        return datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
+def is_snoozed() -> bool:
+    until = str(read_control().get("snooze_until") or "")
+    dt = _parse_iso(until)
+    if dt is None:
+        return False
+    try:
+        from datetime import datetime
+
+        now = datetime.now().astimezone()
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=now.tzinfo)
+        return now < dt
+    except Exception:
+        return False
+
+
+def snooze_until_end_of_day() -> dict[str, Any]:
+    from datetime import datetime
+
+    now = datetime.now().astimezone()
+    eod = now.replace(hour=23, minute=59, second=59, microsecond=0)
+    body = read_control()
+    body["snooze_until"] = eod.isoformat()
+    body["snooze_set_at"] = now.isoformat()
+    body["cancel_requested"] = False
+    write_control(body)
+    return {
+        "ok": True,
+        "snoozed": True,
+        "snooze_until": body["snooze_until"],
+        "control_path": str(CONTROL_FILE),
+    }
+
+
+def clear_snooze() -> dict[str, Any]:
+    body = read_control()
+    body["snooze_until"] = ""
+    write_control(body)
+    return {"ok": True, "snoozed": False, "control_path": str(CONTROL_FILE)}
+
+
+def peek_cancel() -> bool:
+    return bool(read_control().get("cancel_requested"))
+
+
+def consume_cancel() -> bool:
+    body = read_control()
+    hit = bool(body.get("cancel_requested"))
+    if hit:
+        body["cancel_requested"] = False
+        body["cancel_consumed_at"] = _utc()
+        write_control(body)
+    return hit
+
+
+def request_cancel() -> dict[str, Any]:
+    body = read_control()
+    body["cancel_requested"] = True
+    body["cancel_at"] = _utc()
+    write_control(body)
+    killed = terminate_rebuild_child()
+    try:
+        mark_cancel_requested(PRODUCT_REBUILD_LOCK)
+    except Exception:
+        pass
+    return {
+        "ok": True,
+        "cancel_requested": True,
+        "control_path": str(CONTROL_FILE),
+        **killed,
+    }
+
+
+def _terminate_pid(pid: int) -> bool:
+    pid = int(pid or 0)
+    if pid <= 0:
+        return False
+    try:
+        if sys.platform == "win32":
+            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+            subprocess.run(
+                ["taskkill", "/PID", str(pid), "/T", "/F"],
+                capture_output=True,
+                timeout=8,
+                creationflags=flags,
+                check=False,
+            )
+            return True
+        os.kill(pid, 15)
+        return True
+    except Exception:
+        return False
+
+
+def terminate_rebuild_child() -> dict[str, Any]:
+    lock = read_lock(PRODUCT_REBUILD_LOCK)
+    child = int(lock.get("child_pid") or 0)
+    killed = False
+    if child:
+        killed = _terminate_pid(child)
+    return {"child_pid": child, "killed": killed}
+
+
+def wait_rebuild_proc(
+    proc: subprocess.Popen,
+    *,
+    lock_handle=None,
+    on_tick=None,
+    poll_sec: float = 0.4,
+) -> int:
+    """Wait for build-file-index; stop on cancel flag or lock.cancel_requested."""
+    from rebuild_lock import lock_cancel_requested
+
+    while True:
+        rc = proc.poll()
+        if rc is not None:
+            return int(rc)
+        if peek_cancel() or lock_cancel_requested(PRODUCT_REBUILD_LOCK):
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+            _terminate_pid(int(getattr(proc, "pid", 0) or 0))
+            try:
+                proc.wait(timeout=8)
+            except Exception:
+                pass
+            consume_cancel()
+            return 130
+        if callable(on_tick):
+            try:
+                on_tick()
+            except Exception:
+                pass
+        if lock_handle is not None:
+            try:
+                lock_handle.update(heartbeat_at=_utc())
+            except Exception:
+                pass
+        time.sleep(max(0.2, float(poll_sec)))
+
+
+def public_control() -> dict[str, Any]:
+    body = read_control()
+    snoozed = is_snoozed()
+    return {
+        "control_path": str(CONTROL_FILE),
+        "cancel_requested": bool(body.get("cancel_requested")),
+        "snoozed": snoozed,
+        "snooze_until": str(body.get("snooze_until") or ""),
+        "updated_at": body.get("updated_at") or "",
+    }
+
+
+def _progress_from_watcher(w: dict[str, Any], rebuild: dict[str, Any]) -> dict[str, Any]:
+    running = bool((rebuild.get("held")) or str(w.get("stage") or "").endswith(":building") or str(w.get("stage") or "") == "building")
+    started = str(w.get("last_started") or (rebuild.get("lock") or {}).get("started_at") or "")
+    elapsed = w.get("elapsed_sec")
+    eta = w.get("eta_sec")
+    remaining = w.get("remaining_sec")
+    kind = w.get("rebuild_kind") or w.get("kind") or ""
+    last_dur = w.get("last_duration_sec")
+    if running and started and elapsed is None:
+        dt = _parse_iso(started)
+        if dt is not None:
+            try:
+                from datetime import datetime
+
+                now = datetime.now().astimezone()
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=now.tzinfo)
+                elapsed = max(0, int((now - dt).total_seconds()))
+            except Exception:
+                elapsed = None
+        if last_dur and elapsed is not None:
+            try:
+                remaining = max(0, int(float(last_dur) - float(elapsed)))
+                eta = remaining
+            except (TypeError, ValueError):
+                pass
+    pct = None
+    if running and last_dur:
+        try:
+            pct = max(1, min(99, int(100.0 * float(elapsed or 0) / float(last_dur))))
+        except (TypeError, ValueError, ZeroDivisionError):
+            pct = None
+    return {
+        "running": running,
+        "kind": kind or ("hourly" if "hourly" in str(w.get("stage") or "") else ""),
+        "stage": w.get("stage") or "",
+        "started_at": started,
+        "elapsed_sec": elapsed,
+        "eta_sec": eta,
+        "remaining_sec": remaining if remaining is not None else eta,
+        "pct": pct,
+        "last_duration_sec": last_dur,
+        "message": w.get("progress_message") or "",
+    }
+
+
 class IndexSupervisor:
     """Owns watch-file-index subprocess + status/log files."""
 
@@ -102,10 +358,16 @@ class IndexSupervisor:
         interval: float = 2.0,
         depth: int = 5,
         roots: list[str] | None = None,
+        hourly_sec: float | None = None,
+        first_delay_sec: float | None = None,
     ) -> None:
         self.interval = float(interval)
         self.depth = max(1, int(depth))
         self.roots = list(roots or [])
+        self.hourly_sec = float(hourly_sec if hourly_sec is not None else HOURLY_SEC_DEFAULT)
+        self.first_delay_sec = float(
+            first_delay_sec if first_delay_sec is not None else FIRST_DELAY_SEC_DEFAULT
+        )
         self._proc: subprocess.Popen | None = None
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
@@ -179,6 +441,12 @@ class IndexSupervisor:
             str(WATCHER_STATUS),
             "--lock-file",
             str(PRODUCT_REBUILD_LOCK),
+            "--control-file",
+            str(CONTROL_FILE),
+            "--hourly",
+            str(self.hourly_sec),
+            "--first-delay",
+            str(self.first_delay_sec),
             "--no-initial",
         ]
         for r in self.roots:
@@ -317,6 +585,8 @@ def public_status() -> dict[str, Any]:
     rebuild = status_from_lock(PRODUCT_REBUILD_LOCK, ttl_sec=3600)
     last_ok = w.get("last_ok")
     awaiting = last_ok is None
+    control = public_control()
+    progress = _progress_from_watcher(w, rebuild)
     # watcher_ok = process alive; index_run_ok = last rebuild succeeded (no false green).
     return {
         "ok": True,
@@ -333,4 +603,12 @@ def public_status() -> dict[str, Any]:
         "last_rc": w.get("last_rc"),
         "stale": bool(lock.get("stale") or rebuild.get("stale")),
         "log": str(WATCHER_LOG),
+        "progress": progress,
+        "control": control,
+        "control_path": str(CONTROL_FILE),
+        "snoozed": bool(control.get("snoozed")),
+        "snooze_until": control.get("snooze_until") or "",
+        "cancelable": bool(progress.get("running") or rebuild.get("held")),
+        "hourly_sec": HOURLY_SEC_DEFAULT,
+        "hourly_pending": bool(w.get("hourly_pending")) and not snoozed,
     }

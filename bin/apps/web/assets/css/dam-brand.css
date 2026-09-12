@@ -8301,11 +8301,27 @@ button.dam-status-badge.dam-tag-editable:hover {
   padding: 10px 12px;
 }
 .dam-db-panel__mode {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-  width: 100%;
+  display: none;
+}
+.dam-db-auto {
+  align-self: flex-start;
+  margin: 0;
+  font: inherit;
+}
+button.dam-db-mode-chip {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+}
+button.dam-db-mode-chip[aria-pressed="true"] {
+  border-color: var(--dam-primary, #AB54DB);
+  background: var(--dam-primary, #AB54DB);
+  color: #fff;
+  box-shadow: none;
+}
+button.dam-db-mode-chip:focus-visible {
+  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline-offset: 2px;
 }
 .dam-db-mode-chip {
   position: relative;
@@ -8323,7 +8339,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.28s ease;
 }
 .dam-db-mode-chip input {
   position: absolute;
@@ -8366,12 +8382,19 @@ button.dam-status-badge.dam-tag-editable:hover {
   cursor: pointer;
   min-width: 0;
   width: 100%;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  min-height: 44px;
+  text-align: left;
+  transition: border-color 0.2s ease, background-color 0.2s ease, opacity 0.28s ease;
 }
 .dam-db-source:hover {
   border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
 }
-.dam-db-source.is-active {
+.dam-db-source:focus-visible {
+  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline-offset: 2px;
+}
+.dam-db-source.is-active,
+.dam-db-source.is-dump-picked {
   border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, transparent);
   background: color-mix(in srgb, var(--dam-primary, #ab54db) 7%, transparent);
 }
@@ -8470,6 +8493,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+  word-break: normal;
+  overflow-wrap: anywhere;
 }
 .dam-db-source__note {
   display: -webkit-box;
@@ -8484,9 +8509,14 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-db-source--dump {
   flex-direction: column;
 }
-.dam-db-source--dump .geex-btn {
+.dam-db-source--dump .geex-btn,
+.dam-db-source--dump .dam-db-source__cta {
   margin-top: 8px;
   align-self: flex-start;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 @media (max-width: 480px) {
   .dam-db-status__panel {

@@ -313,7 +313,20 @@
       });
   }
 
+  function loadCacheSync() {
+    if (window.DamCacheSync) {
+      if (typeof window.DamCacheSync.start === "function") window.DamCacheSync.start();
+      return;
+    }
+    if (document.querySelector("script[data-dam-cache-sync]")) return;
+    var s = document.createElement("script");
+    s.src = "assets/js/dam-cache-sync.js?v=6.0.0";
+    s.setAttribute("data-dam-cache-sync", "1");
+    document.head.appendChild(s);
+  }
+
   function start() {
+    loadCacheSync();
     if (window.location.pathname.indexOf("signin") !== -1) return;
     ensureUi();
     function go() {

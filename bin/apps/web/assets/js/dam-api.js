@@ -198,9 +198,10 @@
   function mergeSlimChecklist(rev, roles) {
     var slim = rev && rev.checklist;
     if (!slim || !roles) return roles;
-    /* Fill gaps from slim bridge checklist (karta / OK.pdf). NEVER promote tech —
-       empty ELEMENTY / Links-as-elements must stay red. */
-    ["artwork", "prev", "print_pdf", "viz_3d", "marketing", "karta", "presentation"].forEach(function (k) {
+    /* Fill gaps from slim bridge checklist (karta / OK.pdf). Promote tech when
+       slim.tech is true: slim is built from is_ready_elements_path, never from an
+       empty ELEMENTY folder name. Leaving tech false caused BRAK on first paint. */
+    ["artwork", "prev", "print_pdf", "viz_3d", "tech", "marketing", "karta", "presentation"].forEach(function (k) {
       if (slim[k] === true) roles[k] = true;
     });
     return roles;

@@ -47,15 +47,64 @@ if (-not $Version) {
 }
 
 Write-Host "GIT_ROOT=$GitRoot Version=$Version"
+$appsSrc = Join-Path $GitRoot "apps"
+if (-not $SkipSync -and -not (Test-Path -LiteralPath $appsSrc)) {
+  Write-Host "Skip sync: brak GIT_ROOT\apps (X: CONTENT-only). Uzywam bin\apps."
+  $SkipSync = $true
+}
 if (-not $SkipSync) { & (Join-Path $PSScriptRoot "sync-apps-to-bin.ps1") }
 
 $rtPy = Join-Path $BinRoot "runtime\win\python\pythonw.exe"
-if ($SkipVendor -and (Test-Path $rtPy)) {
-  Write-Host "Skip vendor."
+$rtPyExe = Join-Path $BinRoot "runtime\win\python\python.exe"
+$rtSite = Join-Path $BinRoot "runtime\win\python\Lib\site-packages"
+$rtModules = "webview,bcrypt,psycopg2,PIL,ijson,openpyxl,cryptography"
+
+# Sam pythonw.exe NIE jest brama: embed CPython bez site-packages startuje,
+# ale launch.py pada na "import webview" i launcher tlumi stderr = klik bez efektu.
+$script:RuntimeDepsError = ""
+function Test-RuntimeDeps {
+  if (-not (Test-Path -LiteralPath $rtPyExe)) {
+    $script:RuntimeDepsError = "brak python.exe: $rtPyExe"
+    return $false
+  }
+  $errFile = [System.IO.Path]::GetTempFileName()
+  try {
+    & $rtPyExe -c "import $rtModules" 1>$null 2>$errFile
+    if ($LASTEXITCODE -eq 0) {
+      $script:RuntimeDepsError = ""
+      return $true
+    }
+    $errTxt = ""
+    if (Test-Path -LiteralPath $errFile) {
+      $errTxt = (Get-Content -LiteralPath $errFile -Raw -ErrorAction SilentlyContinue)
+    }
+    if (-not $errTxt) { $errTxt = "python.exe import exit $LASTEXITCODE (brak stderr)" }
+    $script:RuntimeDepsError = $errTxt.Trim()
+    return $false
+  } finally {
+    Remove-Item -LiteralPath $errFile -Force -ErrorAction SilentlyContinue
+  }
+}
+
+if ($SkipVendor -and (Test-RuntimeDeps)) {
+  Write-Host "Skip vendor (runtime kompletny)."
+} elseif ($SkipVendor) {
+  throw "SkipVendor: runtime bez bibliotek. Nie odpalam vendor-runtime. $($script:RuntimeDepsError)"
 } else {
   & (Join-Path $PSScriptRoot "vendor-runtime-win.ps1")
   if (-not (Test-Path $rtPy)) { throw "Brak pythonw po vendor." }
 }
+
+$rtSiteCount = 0
+if (Test-Path -LiteralPath $rtSite) {
+  $rtSiteCount = (Get-ChildItem -LiteralPath $rtSite -Recurse -File -ErrorAction SilentlyContinue | Measure-Object).Count
+}
+if ($rtSiteCount -lt 500) {
+  throw "Runtime site-packages ma $rtSiteCount plikow (<500). Setup NIE moze wyjechac - DAM nie wstanie na czystym PC."
+}
+& $rtPyExe -c "import $rtModules; print('runtime_deps_ok')"
+if ($LASTEXITCODE -ne 0) { throw "Runtime bez bibliotek ($rtModules). Setup NIE moze wyjechac." }
+Write-Host "Runtime OK: $rtSiteCount plikow w site-packages."
 
 if ($SkipExeBuild -and (Test-Path (Join-Path $GitRoot "DAM.exe"))) {
   Write-Host "Skip DAM.exe build."
@@ -66,7 +115,34 @@ if ($SkipExeBuild -and (Test-Path (Join-Path $GitRoot "DAM.exe"))) {
 $stageRoot = Join-Path $BinRoot "dist\staging\DAM-install"
 Remove-TreeForce $stageRoot
 New-Item -ItemType Directory -Force -Path $stageRoot | Out-Null
-Copy-Item (Join-Path $GitRoot "DAM.exe") (Join-Path $stageRoot "DAM.exe") -Force
+$damSrc = Join-Path $GitRoot "DAM.exe"
+$damDst = Join-Path $stageRoot "DAM.exe"
+$damReadable = $false
+if (Test-Path -LiteralPath $damSrc) {
+  try {
+    $fs = [System.IO.File]::Open($damSrc, "Open", "Read", "ReadWrite")
+    $probe = New-Object byte[] 64
+    $n = $fs.Read($probe, 0, 64)
+    $fs.Close()
+    $damReadable = ($n -gt 0)
+  } catch {
+    Write-Warning "GIT_ROOT DAM.exe nieczytelny (chmura/X:): $($_.Exception.Message)"
+    $damReadable = $false
+  }
+}
+if (-not $damReadable) {
+  $damAlt = Join-Path $env:LOCALAPPDATA "Programs\DAM\DAM.exe"
+  if (Test-Path -LiteralPath $damAlt) {
+    Write-Warning "Uzywam DAM.exe z zainstalowanego DAM: $damAlt"
+    $damSrc = $damAlt
+  } else {
+    throw "Brak czytelnego DAM.exe (GIT_ROOT chmura + brak $env:LOCALAPPDATA\Programs\DAM\DAM.exe)."
+  }
+}
+Copy-Item -LiteralPath $damSrc -Destination $damDst -Force
+if (-not (Test-Path -LiteralPath $damDst) -or ((Get-Item -LiteralPath $damDst).Length -lt 100000)) {
+  throw "Nie skopiowano DAM.exe do staging (src=$damSrc)."
+}
 
 $binDst = Join-Path $stageRoot "bin"
 New-Item -ItemType Directory -Force -Path $binDst | Out-Null
@@ -81,10 +157,28 @@ $xfCommon = @(
   "machine-config.json", "dam-connection.env", "pg-config.json"
 )
 
-Write-Host "Staging bin (runtime + THEME + apps)..."
-Invoke-Robo (Join-Path $BinRoot "runtime") (Join-Path $binDst "runtime") $xdCommon $xfCommon
+Write-Host "Staging bin (runtime + THEME + apps + scripts + docs + agents)..."
+$xdRuntime = @($xdCommon | Where-Object { $_ -ne "data" })
+Invoke-Robo (Join-Path $BinRoot "runtime") (Join-Path $binDst "runtime") $xdRuntime $xfCommon
 Invoke-Robo (Join-Path $BinRoot "THEME") (Join-Path $binDst "THEME") @("__pycache__", "documentation") @("*.zip", "*.map")
 Invoke-Robo (Join-Path $BinRoot "apps\desktop") (Join-Path $binDst "apps\desktop") $xdCommon $xfCommon
+# Lustro repo w paczce: skrypty ops/qa (README do nich odsyla), dokumentacja, wykladnia agentow.
+# agents: NIE pakuj dumpow design-system/graphify (MAX_PATH w ISCC).
+$xdAgents = $xdCommon + @(
+  "graphify-out",
+  "design-system-2026-09-07",
+  "design-system-2026-09-09",
+  "design-system-2026-09-10",
+  "sandbox"
+)
+foreach ($tree in @("apps\api", "scripts", "docs", "agents")) {
+  $src = Join-Path $BinRoot $tree
+  if (Test-Path -LiteralPath $src) {
+    $xd = if ($tree -eq "agents") { $xdAgents } else { $xdCommon }
+    Invoke-Robo $src (Join-Path $binDst $tree) $xd $xfCommon
+    Write-Host "Shipped bin\$tree."
+  }
+}
 # apps/web: NIE wykluczaj assets/vendor (Jost + Unicons). Bez tego ikony w WebView giną.
 $xdWeb = @($xdCommon | Where-Object { $_ -ne "vendor" }) + @("data")
 Invoke-Robo (Join-Path $BinRoot "apps\web") (Join-Path $binDst "apps\web") $xdWeb $xfCommon
@@ -114,19 +208,14 @@ Write-Host "Shipped apps/web/assets/vendor (fonts/icons)."
 $webDataSrc = Join-Path $BinRoot "apps\web\data"
 $webDataDst = Join-Path $binDst "apps\web\data"
 New-Item -ItemType Directory -Force -Path $webDataDst | Out-Null
-$keepData = @(
-  "app-settings.json", "program-instructions.json", "naming-dictionary.json",
-  "product-name-pl.json", "product-people.json", "product-status.json",
-  "lifecycle-status.json", "search-index.json", "file-index.json",
-  "change-log.json", "pg-config.example.json",
-  "branding-grid-head.json", "branding-grid-index.json",
-  "branding-search-index.json", "branding-segments.json",
-  "brand-formats.json", "brand-perspectives.json"
+# Pelne dane, bez whitelisty: kazdy ekran (Wykrojniki, Kampanie, Koszty) ma dane
+# od pierwszego uruchomienia. Wykluczamy tylko smieci, logi, fat index i pliki per-maszyna.
+$xfData = $xfCommon + @(
+  "*.tmp", "*.log", "*.jsonl", "*.lock.json", "dam-runtime.json", "dam-identity.json",
+  "branding-index.json.*", "file-index.json.*", "search-index.json.*",
+  "_refilter-*.json", "_ocr_batch_ids.json", "warm-*.json"
 )
-foreach ($name in $keepData) {
-  $src = Join-Path $webDataSrc $name
-  if (Test-Path -LiteralPath $src) { Copy-Item -LiteralPath $src -Destination (Join-Path $webDataDst $name) -Force }
-}
+Invoke-Robo $webDataSrc $webDataDst @("thumbs", "_invoice_mail_stage", "__pycache__", "backups", "backup") $xfData
 $headSrc = Join-Path $webDataSrc "branding-grid-head.json"
 $indexDst = Join-Path $webDataDst "branding-grid-index.json"
 if ((-not (Test-Path -LiteralPath $indexDst) -or ((Get-Item -LiteralPath $indexDst).Length -lt 1000)) -and (Test-Path -LiteralPath $headSrc)) {

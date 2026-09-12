@@ -72,8 +72,12 @@
             return;
           }
           if (isRunning(st)) {
-            state.backoffMs = Math.min(Math.max(state.backoffMs * 2, MIN_BACKOFF_MS), MAX_BACKOFF_MS);
-            schedule(state.backoffMs);
+            try {
+              if (typeof global.dispatchEvent === "function") {
+                global.dispatchEvent(new CustomEvent("dam:index-progress", { detail: st }));
+              }
+            } catch (_e) {}
+            schedule(MIN_BACKOFF_MS);
             return;
           }
           state.backoffMs = MIN_BACKOFF_MS;

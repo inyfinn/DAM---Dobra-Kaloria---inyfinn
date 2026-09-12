@@ -576,7 +576,44 @@
       "html[data-theme=dark] #damExplorerConfirmModal .dam-force-chip{" +
       "background:transparent;border-color:rgba(255,255,255,.18);color:#c4c0ce}" +
       "html[data-theme=dark] #damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--cancel{" +
-      "background:transparent!important;border-color:rgba(255,255,255,.22)!important;color:#e8e6ef!important}";
+      "background:transparent!important;border-color:rgba(255,255,255,.22)!important;color:#e8e6ef!important}" +
+      /* Slot CTAs: always RIGHT, equal 34px icons, fade-in on press (opacity only). */ +
+      ".dam-card-checklist .dam-check-ok," +
+      ".dam-card-checklist .dam-check-brak," +
+      ".dam-checklist.dam-card-checklist .dam-check-ok," +
+      ".dam-checklist.dam-card-checklist .dam-check-brak{" +
+      "display:flex!important;flex-wrap:nowrap!important;align-items:center;" +
+      "gap:8px}" +
+      ".dam-card-checklist .dam-check-label{flex:1 1 auto;min-width:0}" +
+      ".dam-card-checklist .dam-check-row__actions," +
+      ".dam-checklist.dam-card-checklist .dam-check-row__actions," +
+      ".dam-card-checklist .dam-check-actions{" +
+      "display:inline-flex!important;align-items:center;justify-content:flex-end;" +
+      "gap:6px;margin:0 0 0 auto!important;flex:0 0 auto!important;" +
+      "opacity:0;pointer-events:none;transform:none;" +
+      "transition:opacity .22s ease}" +
+      ".dam-card-checklist .dam-check-row--open .dam-check-row__actions," +
+      ".dam-card-checklist .dam-check-row--open .dam-check-actions," +
+      ".dam-checklist.dam-card-checklist .dam-check-row--open .dam-check-row__actions," +
+      ".dam-card-checklist .dam-check-row--interactive:focus-visible .dam-check-row__actions{" +
+      "opacity:1;pointer-events:auto}" +
+      ".dam-card-checklist .dam-check-row__actions[hidden]," +
+      ".dam-checklist.dam-card-checklist .dam-check-row__actions[hidden]{" +
+      "display:inline-flex!important}" +
+      ".dam-card-checklist .dam-check-row__actions .geex-btn," +
+      ".dam-card-checklist .dam-check-row__actions .dam-btn-icon," +
+      ".dam-card-checklist .dam-check-row__actions .dam-btn-icon-only," +
+      ".dam-card-checklist .dam-check-row__actions .dam-check-action," +
+      ".dam-card-checklist .dam-check-actions .dam-check-action{" +
+      "width:34px!important;min-width:34px!important;max-width:34px;" +
+      "height:34px!important;min-height:34px!important;padding:0!important;" +
+      "border-radius:8px;display:inline-flex;align-items:center;justify-content:center;" +
+      "box-sizing:border-box}" +
+      ".dam-card-checklist .dam-check-row__actions .geex-btn span," +
+      ".dam-card-checklist .dam-check-row__actions .dam-btn-icon span{display:none}" +
+      ".dam-card-checklist .dam-check-brak.dam-check-row--interactive:hover," +
+      ".dam-checklist.dam-card-checklist .dam-check-brak.dam-check-row--open{" +
+      "background:rgba(255,86,83,.08)}";
     var style = document.getElementById(EXPLORER_CTA_STYLE_ID);
     if (!style) {
       style = document.createElement("style");
@@ -1968,7 +2005,7 @@
           prev: !!slimCl.prev,
           print_pdf: !!slimCl.print_pdf,
           viz_3d: !!slimCl.viz_3d,
-          tech: false,
+          tech: !!slimCl.tech,
           marketing: !!slimCl.marketing,
           karta: !!slimCl.karta,
           presentation: !!slimCl.presentation,
@@ -1980,7 +2017,7 @@
           prev: rolePaths.prev || rev.checklist_paths.prev || "",
           print_pdf: rolePaths.print_pdf || rev.checklist_paths.print_pdf || "",
           viz_3d: rolePaths.viz_3d || rev.checklist_paths.viz_3d || "",
-          tech: rolePaths.tech || "",
+          tech: rolePaths.tech || rev.checklist_paths.tech || "",
           marketing: rolePaths.marketing || rev.checklist_paths.marketing || "",
           karta: rolePaths.karta || rev.checklist_paths.karta || "",
           presentation: rolePaths.presentation || rev.checklist_paths.presentation || "",
@@ -3552,31 +3589,34 @@
     function row(ok, label, detail, scrollSection, winPath, extraActionsHtml) {
       var cls = ok ? "dam-check-ok" : "dam-check-brak";
       var icon = ok ? "uil-check-circle" : "uil-times-circle";
-      var actionsHtml = extraActionsHtml || "";
       var goPath = String(winPath || (rev && rev.path) || "").replace(/"/g, "&quot;");
-      if (ok) {
-        var scrollAttr = scrollSection
-          ? ' data-scroll-section="' + esc(scrollSection) + '"'
-          : "";
-        actionsHtml =
-          '<span class="dam-check-row__actions" hidden>' +
-          '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-check-go dam-check-scroll"' +
-          scrollAttr +
-          ' title="Przewiń do plików" data-dam-tip="Przewiń do sekcji plików tego materiału w tym wariancie">' +
-          '<i class="uil uil-arrow-right" aria-hidden="true"></i><span>Przejdź</span></button>' +
-          '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-btn-icon-only dam-win-btn dam-check-win" data-path="' +
-          goPath +
-          '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwórz folder w Eksploratorze plików Windows">' +
-          winIcon +
-          "</button></span>";
-      }
+      var scrollAttr = scrollSection
+        ? ' data-scroll-section="' + esc(scrollSection) + '"'
+        : "";
+      var actionsHtml =
+        '<span class="dam-check-row__actions">' +
+        (scrollSection
+          ? '<button type="button" class="dam-check-action dam-check-go dam-check-scroll"' +
+            scrollAttr +
+            ' title="Przewiń do plików" aria-label="Przewiń do plików" data-dam-tip="Przewiń do sekcji plików">' +
+            '<i class="uil uil-arrow-right" aria-hidden="true"></i></button>'
+          : "") +
+        (goPath
+          ? '<button type="button" class="dam-check-action dam-win-btn dam-check-win" data-path="' +
+            goPath +
+            '" aria-label="Folder Windows" title="Folder Windows" data-dam-tip="Otwórz folder w Eksploratorze plików Windows">' +
+            winIcon +
+            "</button>"
+          : "") +
+        (extraActionsHtml || "") +
+        "</span>";
       return (
         '<div class="' +
         cls +
-        (ok ? " dam-check-row--interactive" : "") +
-        '"' +
-        (ok ? ' data-path="' + goPath + '" tabindex="0" role="button"' : "") +
-        ">" +
+        ' dam-check-row--interactive"' +
+        ' data-path="' +
+        goPath +
+        '" tabindex="0" role="button">' +
         '<i class="uil ' +
         icon +
         ' dam-check-icon" aria-hidden="true"></i>' +
@@ -3591,16 +3631,11 @@
     var drukDetail = cl.drukarnia ? "drukarnia: " + cl.drukarnia : "";
     var elemDetail = cl.elementsNote ? cl.elementsNote : (cl.elements ? "" : "BRAK");
     var elemActions =
-      '<span class="dam-check-actions">' +
-        (cl.elementsPath
-          ? '<button type="button" class="dam-check-action" data-elements-open="' + esc(cl.elementsPath) +
-            '" title="Otwórz folder Elementy w Eksploratorze" data-dam-tip="Otwórz folder Elementy">' +
-            '<i class="uil uil-folder-open" aria-hidden="true"></i></button>'
-          : "") +
         '<button type="button" class="dam-check-action" data-elements-link="' + esc(cl.revisionPath || "") +
           '" data-elements-index="' + esc(cl.revisionIndex || "") +
+          '" data-elements-start="' + esc(cl.elementsPath || cl.revisionPath || "") +
           '" title="Wskaż folder lub pliki Elementy" data-dam-tip="Wskaż folder / pliki Elementy">' +
-          '<i class="uil uil-link" aria-hidden="true"></i></button>' +
+          '<i class="uil uil-pen" aria-hidden="true"></i></button>' +
         (cl.elementsLinked
           ? '<button type="button" class="dam-check-action dam-check-action--danger" data-elements-unlink="' +
             esc(cl.revisionPath || "") + '" data-elements-index="' + esc(cl.revisionIndex || "") +
@@ -3608,15 +3643,14 @@
             ' data-dam-hint="Przytrzymaj, aby usunac powiazanie"' +
             ' title="Przytrzymaj, aby usunac powiazanie" data-dam-tip="Przytrzymaj, aby usunac reczne powiazanie">' +
             '<i class="uil uil-link-broken" aria-hidden="true"></i></button>'
-          : "") +
-      "</span>";
+          : "");
     var fallback = (rev && rev.path) || "";
     return '<div class="dam-checklist dam-card-checklist" aria-label="Kompletność materiałów">' +
       row(cl.ai,       "Plik źródłowy projektu graficznego", "", "source", rolePaths.artwork || fallback) +
       row(cl.prev,     "Podgląd PDF projektu", "", "source", rolePaths.prev || fallback) +
       row(cl.druk,     "Pliki do druku", drukDetail, "print", rolePaths.print_pdf || fallback) +
       row(cl.viz,      "Wizualizacje", "", "viz", rolePaths.viz_3d || fallback) +
-      row(cl.elements, "Elementy / składniki", elemDetail, "elements", cl.elementsPath || rolePaths.tech || fallback, cl.elements ? "" : elemActions) +
+      row(cl.elements, "Elementy / składniki", elemDetail, "elements", cl.elementsPath || rolePaths.tech || fallback, elemActions) +
       row(cl.marketing,"Materiały marketingowe", "", "marketing", rolePaths.marketing || fallback) +
       row(cl.karta,    "Karta wprowadzenia", "", "source", rolePaths.karta || fallback) +
       row(!!cl.presentation, "Prezentacja", "", "source", rolePaths.presentation || fallback) +
@@ -5365,7 +5399,8 @@
         e.stopPropagation();
         openElementsLinkPicker(
           this.getAttribute("data-elements-link") || "",
-          this.getAttribute("data-elements-index") || ""
+          this.getAttribute("data-elements-index") || "",
+          this.getAttribute("data-elements-start") || ""
         );
       });
     });
@@ -6230,8 +6265,12 @@
       });
   }
 
-  function openElementsLinkPicker(revPath, index) {
-    var startDir = revPath || "X:\\";
+  function openElementsLinkPicker(revPath, index, startHint) {
+    var startDir = startHint || revPath || "";
+    if (window.DamPaths && typeof window.DamPaths.toLocal === "function" && startDir) {
+      startDir = window.DamPaths.toLocal(startDir);
+    }
+    if (!startDir) startDir = "X:\\Marketing";
     if (!window.DamFolderPicker || typeof window.DamFolderPicker.open !== "function") {
       showToast("DamFolderPicker niedostępny - odśwież stronę (cache).");
       return;

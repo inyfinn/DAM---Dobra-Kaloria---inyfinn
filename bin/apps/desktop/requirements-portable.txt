@@ -9,3 +9,5 @@ cryptography>=42.0
 openpyxl>=3.1
 redis>=5.0
 psycopg2-binary>=2.9
+# Branding grid builder: branding_publish.resolve_script_python(require_ijson=True)
+ijson>=3.3

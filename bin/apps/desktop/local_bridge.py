@@ -43,7 +43,10 @@ Endpoints:
   POST /viz-flag  demo/hidden/manual -> apps/web/data/viz-flags.json
   GET  /thumb-cache?path=&profile=grid  AVIF/JPG miniatura z PAMIEC-PODRECZNA (on-demand encode)
   POST /thumb-cache/warm  {"paths":[...],"profile":"grid"}  podgrzewanie cache
-  GET  /thumb-cache/status  stan katalogu pamieci podrecznej
+  GET  /thumb-cache/status  stan katalogu pamieci podrecznej (+ sync)
+  GET  /thumb-cache/sync/status  postep pobierania cache z NAS
+  POST /thumb-cache/sync/start  first-run download z Synology (manifest)
+  POST /thumb-cache/publish  wyslij nowe thumbs na NAS (W:\\web\\Panel-DAM\\pamiec-podreczna)
   POST /thumb-override  wybor miniatury -> apps/web/data/thumb-overrides.json
   POST /audit    {"action","user","path","detail",...}
   GET  /audit?limit=100
@@ -52,8 +55,10 @@ Endpoints:
                     ?fields=explorer = produkty bez files_by_role/wizki/viz_latest (first paint)
   GET  /file-index/product?id=  pelny produkt (pliki rewizji) do openProduct
   GET  /file-index/viz-latest?index=&revision_path=&product_id=  pojedynczy wiersz viz_latest
-  GET  /index/status  mtime file-index + postgres
+  GET  /index/status  mtime file-index + postgres + ETA/cancel/snooze
   POST /index/rebuild  przebudowa indeksu + miniatur (async)
+  GET/POST /index/cancel  przerwij biezacy rebuild (index-control.json)
+  GET/POST /index/snooze  odroc hourly+watch do konca dnia
   POST /rename-revision-prefix  kazdy zalogowany: kolejka JSON (tag-proposals).
                                  Natychmiastowy zapis dysku TYLKO sesja admin + admin_mode.
   GET  /tag-proposals  lista kolejki (po TTL: eskalacja do inbox, BEZ auto-zapisu)
@@ -199,6 +204,11 @@ try:
 except Exception:  # noqa: BLE001
     dam_semantic_search = None  # type: ignore
 
+try:
+    import dam_path_resolve
+except ImportError:
+    dam_path_resolve = None  # type: ignore
+
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
@@ -237,6 +247,8 @@ _index_state: dict = {
     "last_error": "",
     "last_rc": None,
     "stage": "",
+    "kind": "",
+    "child_pid": None,
 }
 _branding_rebuild_lock = threading.Lock()
 _branding_rebuild_state: dict = {
@@ -551,7 +563,16 @@ def _reveal_worker(target: str, mode: str, args: list) -> None:
 
 
 def reveal_in_explorer(target: str) -> dict:
-    target = normalize_path(target)
+    target = (
+        dam_path_resolve.resolve_physical_path(
+            target,
+            normalize_path=normalize_path,
+            marketing_candidates=MARKETING_CANDIDATES,
+            machine_config_path=MACHINE_CONFIG,
+        )
+        if dam_path_resolve
+        else normalize_path(target)
+    )
     if not os.path.exists(target):
         # #region agent log
         try:
@@ -676,7 +697,16 @@ def reveal_in_explorer(target: str) -> dict:
 
 def open_in_default_app(target: str) -> dict:
     """Otworz plik domyslna aplikacja Windows (os.startfile). Tylko pliki w Marketing."""
-    target = normalize_path(target)
+    target = (
+        dam_path_resolve.resolve_physical_path(
+            target,
+            normalize_path=normalize_path,
+            marketing_candidates=MARKETING_CANDIDATES,
+            machine_config_path=MACHINE_CONFIG,
+        )
+        if dam_path_resolve
+        else normalize_path(target)
+    )
     if not os.path.exists(target):
         return {"ok": False, "error": "path_not_found", "path": target}
     if not _is_under_marketing(Path(target)):
@@ -790,7 +820,17 @@ def pick_folder_dialog(start: str = "") -> dict:
     raw = (start or "").strip()
     if raw:
         try:
-            p = Path(normalize_path(raw))
+            resolved = (
+                dam_path_resolve.resolve_physical_path(
+                    raw,
+                    normalize_path=normalize_path,
+                    marketing_candidates=MARKETING_CANDIDATES,
+                    machine_config_path=MACHINE_CONFIG,
+                )
+                if dam_path_resolve
+                else normalize_path(raw)
+            )
+            p = Path(resolved)
             if p.is_dir():
                 start_dir = str(p)
             elif p.parent.is_dir():
@@ -1490,6 +1530,36 @@ def index_status() -> dict:
     except Exception as exc:  # noqa: BLE001
         watcher = {"ok": False, "watcher_ok": False, "last_error": str(exc), "stale": False}
     last_ok = watcher.get("last_ok") if watcher.get("last_ok") is not None else state.get("last_ok")
+    progress = watcher.get("progress") if isinstance(watcher.get("progress"), dict) else {}
+    if state.get("running"):
+        elapsed = None
+        started = state.get("last_started") or ""
+        if started:
+            try:
+                ts = started.replace("Z", "+00:00")
+                dt = datetime.fromisoformat(ts)
+                elapsed = max(0, int((datetime.now(timezone.utc) - dt).total_seconds()))
+            except Exception:
+                elapsed = None
+        last_dur = (watcher.get("watcher") or {}).get("last_duration_sec") if isinstance(watcher.get("watcher"), dict) else None
+        remaining = None
+        if last_dur and elapsed is not None:
+            try:
+                remaining = max(0, int(float(last_dur) - elapsed))
+            except (TypeError, ValueError):
+                remaining = None
+        progress = {
+            "running": True,
+            "kind": state.get("kind") or "manual",
+            "stage": state.get("stage") or "building",
+            "started_at": started,
+            "elapsed_sec": elapsed,
+            "eta_sec": remaining,
+            "remaining_sec": remaining,
+            "pct": progress.get("pct"),
+            "message": "Indeksowanie",
+        }
+    snoozed = bool(watcher.get("snoozed"))
     return {
         "ok": True,
         "index_path": str(INDEX_FILE),
@@ -1497,6 +1567,7 @@ def index_status() -> dict:
         "mtime_iso": datetime.fromtimestamp(mtime, timezone.utc).isoformat() if mtime else "",
         "size": size,
         "rebuild": state,
+        "rebuild_running": bool(state.get("running") or progress.get("running")),
         "database": db,
         "watcher_ok": bool(watcher.get("watcher_ok")),
         "index_run_ok": last_ok is True,
@@ -1507,6 +1578,13 @@ def index_status() -> dict:
         "last_rc": watcher.get("last_rc") if watcher.get("last_rc") is not None else state.get("last_rc"),
         "stale": bool(watcher.get("stale")),
         "assoc": _assoc_status_payload(),
+        "progress": progress,
+        "cancelable": bool(state.get("running") or watcher.get("cancelable") or progress.get("running")),
+        "snoozed": snoozed,
+        "snooze_until": watcher.get("snooze_until") or "",
+        "control_path": watcher.get("control_path") or str(DESKTOP_DATA_DIR / "index-control.json"),
+        "hourly_sec": watcher.get("hourly_sec"),
+        "hourly_pending": bool(watcher.get("hourly_pending")),
     }
 
 
@@ -1533,6 +1611,7 @@ def _run_index_rebuild() -> None:
         _index_state["last_started"] = utc_now()
         _index_state["last_error"] = ""
         _index_state["stage"] = "starting"
+        _index_state["kind"] = "manual"
     lock_handle = None
     try:
         from rebuild_lock import acquire_lock
@@ -1562,19 +1641,33 @@ def _run_index_rebuild() -> None:
         with INDEX_REBUILD_LOG_FILE.open("a", encoding="utf-8", errors="replace") as log_f:
             log_f.write(f"\n==== rebuild start {utc_now()} pid={os.getpid()} ====\n")
             log_f.flush()
-            rc = subprocess.call(
+            proc = subprocess.Popen(
                 [sys.executable, str(BUILD_INDEX)],
                 creationflags=_no_win,
                 stdin=subprocess.DEVNULL,
                 stdout=log_f,
                 stderr=subprocess.STDOUT,
             )
+            try:
+                lock_handle.update(child_pid=proc.pid)
+            except Exception:
+                pass
+            with _index_lock:
+                _index_state["child_pid"] = proc.pid
+            try:
+                import index_supervisor
+
+                rc = index_supervisor.wait_rebuild_proc(proc, lock_handle=lock_handle)
+            except Exception:
+                rc = int(proc.wait())
         with _index_lock:
             _index_state["last_rc"] = rc
             _index_state["last_ok"] = rc == 0
             _index_state["last_finished"] = utc_now()
-            _index_state["stage"] = "idle" if rc == 0 else "error"
-            if rc != 0:
+            _index_state["stage"] = "cancelled" if rc == 130 else ("idle" if rc == 0 else "error")
+            if rc == 130:
+                _index_state["last_error"] = "cancelled"
+            elif rc != 0:
                 _index_state["last_error"] = f"build_rc_{rc}"
         _append_rebuild_log(f"finished rc={rc}")
         try:
@@ -1635,6 +1728,12 @@ def _run_index_rebuild() -> None:
                 )
             except Exception as warm_exc:  # noqa: BLE001
                 _append_rebuild_log(f"viz_thumb_warm_error {warm_exc}")
+            try:
+                if dam_thumb_cache:
+                    pub = dam_thumb_cache.start_publish_after_index()
+                    _append_rebuild_log(f"cache_publish started={pub.get('started')}")
+            except Exception as pub_exc:  # noqa: BLE001
+                _append_rebuild_log(f"cache_publish_error {pub_exc}")
     except Exception as exc:  # noqa: BLE001
         with _index_lock:
             _index_state["last_ok"] = False
@@ -1660,6 +1759,26 @@ def start_index_rebuild() -> dict:
     # Daj watkowi chwile na ustawienie flagi
     time.sleep(0.05)
     return {"ok": True, "started": True, "running": True, "rebuild": index_status()["rebuild"]}
+
+
+def index_cancel() -> dict:
+    try:
+        import index_supervisor
+
+        return index_supervisor.request_cancel()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
+def index_snooze(*, until: str = "eod") -> dict:
+    try:
+        import index_supervisor
+
+        if str(until or "eod").strip().lower() in ("clear", "off", "0"):
+            return index_supervisor.clear_snooze()
+        return index_supervisor.snooze_until_end_of_day()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
 
 
 def _canonical_sqlite_path() -> Path:
@@ -2102,7 +2221,17 @@ def upsert_elements_link(payload: dict) -> dict:
 
 def list_folder_browse(path: str, mode: str = "assets") -> dict:
     """Lista folderow + plikow (nie tylko obrazow) do wskazania ELEMENTY w przegladarce."""
-    target = Path(normalize_path(path or ""))
+    raw = (
+        dam_path_resolve.resolve_physical_path(
+            path or "",
+            normalize_path=normalize_path,
+            marketing_candidates=MARKETING_CANDIDATES,
+            machine_config_path=MACHINE_CONFIG,
+        )
+        if dam_path_resolve
+        else normalize_path(path or "")
+    )
+    target = Path(raw)
     if not target.exists():
         return {"ok": False, "error": "path_not_found", "path": str(target), "files": [], "folders": []}
     if target.is_file():
@@ -2655,6 +2784,7 @@ KV_STORE_KEYS = frozenset({
     "elements-overrides",
     "viz-flags",
     "thumb-overrides",
+    "thumb-cache-manifest",
 })
 
 
@@ -5105,7 +5235,17 @@ def list_folder_images(path: str) -> dict:
     """Lista obrazow + podfolderow w folderze Marketing (picker miniatury/parowania w przegladarce).
     Zwraca rowniez `parent` (jesli wciaz pod Marketing) - admin moze nawigowac
     w gore/w dol, zeby wskazac folder wizualizacji INNEGO jezyka/wariantu (parowanie, 2026-07-18)."""
-    target = Path(normalize_path(path or ""))
+    raw = (
+        dam_path_resolve.resolve_physical_path(
+            path or "",
+            normalize_path=normalize_path,
+            marketing_candidates=MARKETING_CANDIDATES,
+            machine_config_path=MACHINE_CONFIG,
+        )
+        if dam_path_resolve
+        else normalize_path(path or "")
+    )
+    target = Path(raw)
     if not target.exists():
         return {"ok": False, "error": "path_not_found", "path": str(target), "files": [], "folders": []}
     if target.is_file():
@@ -7253,6 +7393,20 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/index/status":
             self._json(200, index_status())
             return
+        if parsed.path == "/index/cancel":
+            self._json(200, index_cancel())
+            return
+        if parsed.path == "/index/snooze":
+            qs = parse_qs(parsed.query)
+            until = (qs.get("until") or ["eod"])[0]
+            self._json(200, index_snooze(until=until))
+            return
+        if parsed.path == "/thumb-cache/sync/status":
+            if not dam_thumb_cache:
+                self._json(500, {"ok": False, "error": "dam_thumb_cache_missing"})
+                return
+            self._json(200, dam_thumb_cache.sync_status())
+            return
         if parsed.path == "/meta/status":
             try:
                 import meta_store
@@ -7383,6 +7537,7 @@ class Handler(BaseHTTPRequestHandler):
                     "jpg": jpg_n,
                     "module": True,
                     "warm": dam_thumb_cache.warm_status(),
+                    "sync": dam_thumb_cache.sync_status(),
                 },
             )
             return
@@ -8269,6 +8424,26 @@ class Handler(BaseHTTPRequestHandler):
             if self._require_admin() is None:
                 return
             self._json(200, start_index_rebuild())
+            return
+        if parsed.path == "/index/cancel":
+            self._json(200, index_cancel())
+            return
+        if parsed.path == "/index/snooze":
+            until = str((data.get("until") if isinstance(data, dict) else None) or "eod")
+            self._json(200, index_snooze(until=until))
+            return
+        if parsed.path == "/thumb-cache/sync/start":
+            if not dam_thumb_cache:
+                self._json(500, {"ok": False, "error": "dam_thumb_cache_missing"})
+                return
+            force = bool(data.get("force")) if isinstance(data, dict) else False
+            self._json(200, dam_thumb_cache.start_cache_download(force=force))
+            return
+        if parsed.path == "/thumb-cache/publish":
+            if not dam_thumb_cache:
+                self._json(500, {"ok": False, "error": "dam_thumb_cache_missing"})
+                return
+            self._json(200, dam_thumb_cache.publish_new_thumbs())
             return
         if parsed.path == "/branding/rebuild":
             if self._require_admin() is None:
@@ -9533,6 +9708,12 @@ def main() -> None:
         print("index_supervisor:", {k: sup.get(k) for k in ("ok", "owned", "started", "reason")})
     except Exception as exc:
         print("index_supervisor:", exc)
+    try:
+        if dam_thumb_cache:
+            boot = dam_thumb_cache.ensure_boot_sync()
+            print("thumb_cache_sync:", {k: boot.get(k) for k in ("ok", "started", "reason", "running")})
+    except Exception as exc:
+        print("thumb_cache_sync:", exc)
     if dam_debug is not None:
         try:
             dam_debug.ensure_daemon_started(interval_sec=60.0)

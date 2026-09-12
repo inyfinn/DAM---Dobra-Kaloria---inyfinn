@@ -69,8 +69,25 @@ CREATE TABLE IF NOT EXISTS dam_kv_merge_review (
   kept JSONB,
   overwritten JSONB,
   updated_by TEXT NOT NULL DEFAULT '',
-  created_at TEXT NOT NULL
+              created_at TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS dam_kv_merge_review_store_idx
   ON dam_kv_merge_review (store_key, created_at DESC);
+
+-- Published thumb cache (NAS pamiec-podreczna). Summary pointer also lives in
+-- dam_kv_store.store_key = 'thumb-cache-manifest' (NOT file-index).
+CREATE TABLE IF NOT EXISTS dam_thumb_cache_index (
+  store_key TEXT PRIMARY KEY,
+  digest TEXT NOT NULL,
+  mtime DOUBLE PRECISION,
+  size_bytes BIGINT,
+  publisher TEXT NOT NULL DEFAULT '',
+  published_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS dam_thumb_cache_index_digest_idx
+  ON dam_thumb_cache_index (digest);
+
+CREATE INDEX IF NOT EXISTS dam_thumb_cache_index_published_idx
+  ON dam_thumb_cache_index (published_at DESC);

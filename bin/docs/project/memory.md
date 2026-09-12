@@ -4,6 +4,32 @@ Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-08-03**.
 Workspace: **GIT_ROOT** = katalog z `DAM.exe` + `.git` (primary **D:** …`DAM---Dobra-Kaloria---inyfinn`); kod = **`...\bin`** (CONTENT_ROOT).  
 Wykonawca: Composer 2.5 / Monday.
 
+## Panel silnika bazy — karty klikalne, bez rzędu chipów (HARD, 2026-09-12)
+
+- Rząd `Auto | Synology | Lokalna` (`role=radiogroup` Tryb połączenia) = USUNIĘTY.
+- Auto = jeden chip **nad** kartą Lokalna (`#damDbAutoBtn`).
+- Karty `div.dam-db-source` są kontrolkami (role=button, cursor, Enter/Space). Klik Synology = force postgres; Lokalna = force sqlite; Auto = auto. Zastosuj tryb zbędne (apply od razu). Dump: klik karty = Pobierz dump.
+- Fade `is-active` = opacity tween; spoczynek = opacity, bez clip-path.
+- Dummy user nigdy nie kopiuje `pg-config` ani nie sprawdza portu 5433.
+
+## localhost Cursor browser ≠ zainstalowany DAM (HARD, 2026-09-12)
+
+- `http://127.0.0.1:8765/dashboard.html` w Cursor / MCP **nie** jest produktem.
+- Prawda = `C:\Users\xpret\AppData\Local\Programs\DAM\DAM.exe` (WebView2).
+- Po fixie: patch `bin/` **i** drzewo instalacji. Bump `?v=` w HTML instalacji. Screenshot localhost nie jest Pass.
+
+## ELEMENTY path_not_found przy istniejacym folderze (HARD, 2026-09-12)
+
+- Indeks: `D:/Marketing/...`. Live: `X:\Marketing\...`. Folder np. Cynamonka `...\1 - MATERIAŁY\ELEMENTY` (em-dash w nazwie, podwojna spacja w rewizji).
+- Resolver mostu musi remapowac **katalogi** (nie tylko pliki). Picker `/folder-images` bez remap = `path_not_found`.
+- Slim checklist: promuj `tech` gdy `checklist.tech===true`. User NIE kopiuje plikow.
+
+## Checklist slot CTA (HARD, 2026-09-12)
+
+- Wszystkie wiersze materialow (Wizualizacje, Elementy, …): ikony **zawsze po PRAWEJ**, ten sam rozmiar (34px).
+- Klik wiersza = fade-in (opacity). Stan spoczynku = opacity 0, bez clip-path / display:none.
+- Zakaz layoutu Wizualizacje-only: lewy `Przejdź` + obrazek.
+
 ## Instalator Windows — zero krokow uzytkownika (HARD, 2026-09-12)
 
 - **Zakaz:** zaden user NIGDY nic nie kopiuje. Setup = dwuklik → DAM dziala (ikony, Synology, Branding). ZERO „skopiuj pg-config”, ZERO „uruchom build-branding-grid-index”, ZERO „sprawdz port 5433” jako akcja usera.

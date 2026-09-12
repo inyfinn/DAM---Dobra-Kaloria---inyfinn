@@ -1248,6 +1248,7 @@
     parentOf: parentOf,
     basename: basename,
     resolveWinFolderPath: resolveWinFolderPath,
+    bridgeErrorMessage: bridgeErrorMessage,
     toPortablePath: toPortablePath,
     copyPortablePath: copyPortablePath,
     copyPath: copyPath,

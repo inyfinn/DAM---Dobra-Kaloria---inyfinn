@@ -3036,16 +3036,22 @@
     // Status ROOT plików (czerwona kropka gdy offline)
     if (!window.DamRootStatus) {
       var rs = document.createElement("script");
-      rs.src = "assets/js/dam-root-status.js?v=5.0.196";
+      rs.src = "assets/js/dam-root-status.js?v=6.0.0";
       document.head.appendChild(rs);
     } else if (typeof window.DamRootStatus.start === "function") {
       window.DamRootStatus.start();
+    }
+    if (!window.DamCacheSync && !document.querySelector("script[data-dam-cache-sync]")) {
+      var cs = document.createElement("script");
+      cs.src = "assets/js/dam-cache-sync.js?v=6.0.0";
+      cs.setAttribute("data-dam-cache-sync", "1");
+      document.head.appendChild(cs);
     }
 
     // Status bazy danych (obok Pliki online)
     if (!window.DamDbStatus) {
       var dbs = document.createElement("script");
-      dbs.src = "assets/js/dam-db-status.js?v=5.0.205";
+      dbs.src = "assets/js/dam-db-status.js?v=6.0.0";
       document.head.appendChild(dbs);
     } else if (typeof window.DamDbStatus.start === "function") {
       window.DamDbStatus.start();

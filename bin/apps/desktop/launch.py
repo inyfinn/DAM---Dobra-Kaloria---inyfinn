@@ -112,12 +112,45 @@ def _focus_existing_window() -> bool:
         return False
 
 
+def _kill_listeners_on_dam_ports() -> int:
+    """Zwolnij 8765/8766 zajete przez python (repo serve_browser vs DAM.exe)."""
+    if sys.platform != "win32":
+        return 0
+    my_pid = os.getpid()
+    try:
+        ps = (
+            f"$mine={my_pid};"
+            "$names=@('python','python.exe','pythonw','pythonw.exe');"
+            f"Get-NetTCPConnection -LocalPort {DEFAULT_UI_PORT},{DEFAULT_BRIDGE_PORT} "
+            "-ErrorAction SilentlyContinue | "
+            "Where-Object { $_.State -eq 'Listen' -and $_.OwningProcess -ne $mine } | "
+            "ForEach-Object { "
+            "  $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; "
+            "  if ($p -and ($names -contains $p.ProcessName -or $names -contains $p.Name)) { "
+            "    Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; $p.Id "
+            "  } "
+            "}"
+        )
+        proc = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", ps],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        lines = [ln.strip() for ln in (proc.stdout or "").splitlines() if ln.strip().isdigit()]
+        return len(set(lines))
+    except Exception:
+        return 0
+
+
 def _kill_stale_dam_processes() -> int:
     """Ubija zombie launch / bridge / serve_browser / http.server:8765 (nie siebie).
 
     Dev czasem zostawia `serve_browser.py` albo `python -m http.server 8765`
     bez okna desktop - wtedy skrot wyglada jakby "nie chcial sie otworzyc"
-    (mutex / porty / Pliki offline).
+    (mutex / porty / Pliki offline). Dummy user: DAM.exe MUSI odzyskac 8765/8766
+    nawet gdy leftover jest z drzewa gita, nie z Programs\\DAM.
     """
     if sys.platform != "win32":
         return 0
@@ -139,6 +172,8 @@ def _kill_stale_dam_processes() -> int:
             "    $_.CommandLine.ToLower().Contains($a) -or "
             "    $_.CommandLine.ToLower().Contains($b) -or "
             "    $_.CommandLine.ToLower().Contains($c) -or "
+            "    $_.CommandLine.ToLower().Contains('serve_browser.py') -or "
+            "    $_.CommandLine.ToLower().Contains('local_bridge.py') -or "
             "    ($_.CommandLine.ToLower().Contains('http.server') -and "
             "     $_.CommandLine.ToLower().Contains('8765') -and "
             "     $_.CommandLine.ToLower().Contains('web'))"
@@ -158,6 +193,7 @@ def _kill_stale_dam_processes() -> int:
         killed = len(lines)
     except Exception:
         killed = 0
+    killed += _kill_listeners_on_dam_ports()
     if killed:
         time.sleep(0.8)
     return killed
@@ -675,6 +711,13 @@ def main() -> None:
     if not WEB_ROOT.is_dir():
         win_message(APP_TITLE, f"Brak folderu UI:\n{WEB_ROOT}")
         raise SystemExit(1)
+
+    try:
+        import pg_db
+
+        pg_db.ensure_pg_config_ready()
+    except Exception:
+        pass
 
     binding = verify_machine_before_start()
     if binding.get("ok") is False and binding.get("error"):

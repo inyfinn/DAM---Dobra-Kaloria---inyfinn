@@ -1,3 +1,83 @@
+## 2026-09-12 - v6.0.0: produkt 6.0.0 (206 installer + 207 Elementy/DB + merge X)
+
+**Komenda/Akcja:** User: STOP 5.0.208. Target 6.0.0. Bez git commit/push. Parent sędzi z plików.
+
+**Log/Status:**
+- version.json / dam-version.js / runtime_config.py APP_VERSION / DAM-Setup.iss MyAppVersion / README.txt = 6.0.0
+- HTML ?v=6.0.0 na assetach merge; dam-shell injectors 6.0.0; dam-root-status cache-sync 6.0.0
+- local_bridge.py 9747 linii; list_folder_images + list_folder_browse + pick_folder_dialog + reveal/open = resolve_physical_path
+- py_compile local_bridge.py pg_db.py runtime_config.py exit 0
+- node --check dam-shell.js dam-explorer.js dam-db-status.js exit 0
+- smoke :8765 explorer.html HTTP 200 t=0.0057s; :8766/health HTTP 200 t=0.0146s
+- PNG: bin/docs/project/qa-6.0.0-explorer-elementy.png 98907 B (openProduct cynamonka-nerkowcowy; CDP [data-elements-link]=true; checklist Elementy / skladniki)
+- PNG: bin/docs/project/qa-6.0.0-db-panel.png 167923 B (panel Silnik bazy: Auto / Lokalna / Synology / dump)
+- PNG: bin/docs/project/qa-6.0.0-settings-db.png 186859 B (Ustawienia + ten sam panel)
+- Chunk H: build-installer.ps1 exit 0; Version=6.0.0; DAM-Setup.exe 75093887 B (71.6 MB) mtime 2026-09-12T15:40:58; staging PAMIEC dirs=0; ISCC Successful compile
+
+**Efekt/Fix:** bump 6.0.0. Commit: nie.
+
+**Backup:** D:\_DAM-BACKUP-X-20260912 (nie ruszany).
+
+**Test/Ewaluacja:** compile + smoke + 3 PNG na dysku. G/H w planie nie odhaczone.
+
+**Zrodla:** version.json, dam-version.js, runtime_config.py, DAM-Setup.iss, README.txt, HTML web, dam-shell.js, local_bridge.py, qa-6.0.0-*.png
+
+## 2026-09-12 - v5.0.208: merge installer 206 + Elementy/DB 207
+
+**Komenda/Akcja:** User: dzialaj dalej, w pelni wprowadzony plan. Stay on X. Bump 5.0.208. Bez commit/push/force-pull. Bez checkout D -- most.
+
+**Log/Status:** Chunk E hunks juz na X (union pg_db, resolve_physical_path na reveal/open + listing ELEMENTY, shell cache-sync + db-status, signin tags, doktryna 8-9 + vendor-gate). Chunk F: jedna wersja 5.0.208.
+
+**Efekt/Fix:** version.json / dam-version.js / runtime_config.py / DAM-Setup.iss + ?v= assetow (brand/api/paths/icons/picker/explorer/db-status/shell/version/cache-sync/index-poller/root-status).
+
+**Backup:** `D:\_DAM-BACKUP-X-20260912` (nie ruszany). Commit: nie.
+
+**Test/Ewaluacja:** py_compile + node --check + smoke :8765/:8766 + screenshot Elementy/DB.
+
+**Zrodla:** version.json, dam-version.js, runtime_config.py, DAM-Setup.iss, HTML web, dam-shell.js, local_bridge.py, pg_db.py
+
+## 2026-09-12 - v5.0.207: DB panel karty + packed Synology
+
+**Komenda/Akcja:** User HARD: localhost ≠ DAM.exe. Dummy user: Synology bez kopiowania. Usunąć rząd chipów Auto|Synology|Lokalna; Auto nad kartą Lokalna; karty `div.dam-db-source` = klikalne kontrolki.
+
+**Log/Status:** Root cause: `serve_browser.py` z gita trzyma :8765, a `_kill_stale` zabijał tylko procesy z WŁASNEGO drzewa → DAM.exe schodził na 8767 albo agenci oglądali repo (SQLite `D:\--- INYFINN...`). Panel: chipy wyglądały jak wybór, karty miały `cursor:pointer` bez handlera.
+
+**Efekt/Fix:** Karty role=button + apply od razu; Auto `#damDbAutoBtn` nad Lokalna; dump-karta = Pobierz dump. `launch.py` zabija python na 8765/8766 (także repo). `ensure_pg_config_ready` szuka też Programs\DAM. SQLite `location=install` gdy ścieżka Programs\DAM. v5.0.207 skopiowane do instalacji (bez revertu plików ELEMENTY).
+
+**Backup:** brak. Commit: nie.
+
+**Test/Ewaluacja:** `node --check` dam-db-status.js; unittest canonical+location; prawda = DAM.exe po restarcie.
+
+**Źródła:** dam-db-status.js, dam-brand.css, dam-shell.js, pg_db.py, launch.py, dam_db.py
+
+## 2026-09-12 - v5.0.206: ELEMENTY D:/→X: + CTA right fade
+
+**Komenda/Akcja:** Worker: `path_not_found` na `Wskaż Elementy / składniki` mimo ze folder X: istnieje (Cynamonka / Ciasto Sliwkowe). CTA Wizualizacje lewo vs Elementy prawo — ujednolicic RIGHT + fade. Prawda = DAM.exe, nie localhost 8765.
+
+**Log/Status:** Indeks `D:/Marketing/...`, dysk `X:\Marketing\...`. `resolve_physical_path` tylko `is_file` → folder listing 404. Slim `checklist.tech=true` nie bylo promuowane → BRAK. CTA: usunieto lewy Przejdz; 34px ikony right; opacity tween.
+
+**Efekt/Fix:** `dam_path_resolve` file+dir; `list_folder_images`/`browse`/`reveal` remap; hydrate remap + probe ELEMENTY; slim.tech; CSS-in-JS slot CTAs. Wersja 5.0.206. Kopia do `%LOCALAPPDATA%\Programs\DAM\`.
+
+**Backup:** brak. Commit: nie.
+
+**Test/Ewaluacja:** unittest DirDriveRebaseTests; `node --check` JS; Test-Path ELEMENTY; list_folder_images(D: path) ok.
+
+**Źródła:** dam_path_resolve.py, local_bridge.py, dam-api.js, dam-explorer.js, dam-icons.js, dam-folder-picker.js, dam-paths.js
+
+## 2026-09-12 - v5.0.206: installer runtime gate + full data + InstallDelete
+
+**Komenda/Akcja:** Intern: dokonczenie 5.0.206 (brama importow, pelne dane, InstallDelete, cache-bust, README, doktryna). X: force-pull `618f0ad` -> `5e50962`. Backup: `D:\_DAM-BACKUP-X-20260912`.
+
+**Log/Status:** SkipVendor tylko gdy `python.exe -c import webview,bcrypt,psycopg2,PIL,ijson,openpyxl,cryptography` exit 0 i site-packages >= 500. Brak GIT_ROOT\apps = auto SkipSync. Staging kopiuje `apps\api`, `scripts`, `docs`, `agents` + CALY `web/data` (bez whitelisty; wykluczenia: thumbs/_invoice_mail_stage/backups + smieci). `[InstallDelete]` kasuje kod web (assets/i18n/scripts/_qa/pages/src/vendor + html/js/py) i api/THEME/runtime/scripts/docs/agents/desktop py; NIE rusza `apps\web\data`, `desktop\data`, DATABASE, PAMIEC-PODRECZNA. Launcher: stderr do `%LOCALAPPDATA%\DAM\launch-error.log` + MessageBox przy braku modulow. pg-config passworded zostaje. Cache miniatur nie jedzie w Setup.
+
+**Efekt/Fix:** Dummy user = Setup + login z seeda. Synology OOTB. Skrypty w paczce (nie "brakuje").
+
+**Backup:** `D:\_DAM-BACKUP-X-20260912`
+
+**Test/Ewaluacja:** SkipVendor OK (1549 src / 933 staging site-packages, import exit 0). ISCC 6.7.3. DAM-Setup.exe 70,3 MB. Setup 5.0.206 wiezie przebudowany dzisiaj launcher DAM.exe (Go bootstrap 2026-09-12 14:12, SHA 9CD13314, nie stary exe z LocalAppData). Bez PASS OOTB / bez VM.
+
+**Zrodla:** build-installer.ps1, DAM-Setup.iss, README.txt, requirements-portable.txt, version.json, dam-version.js, runtime_config.py, dam_root_launcher.py, sync-apps-to-bin.ps1, code-doctrine.md §12
+
 ## 2026-09-12 - v5.0.205: Setup embed pg-config + ZERO user copies
 
 **Komenda/Akcja:** User (angry, HARD): zaden uzytkownik nigdy nic nie kopiuje. Instalator robi wszystko: vendor, passworded pg-config, branding-grid, Synology default. Pull, bump, build, push, GitHub Release.

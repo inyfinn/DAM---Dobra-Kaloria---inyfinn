@@ -168,6 +168,25 @@ def acquire_lock(
     return LockHandle(path, payload), {"ok": True, "acquired": True, "recovered_stale": recovered, "lock": payload}
 
 
+def mark_cancel_requested(path: Path) -> dict[str, Any]:
+    """Stamp cancel_requested on a live lock so the rebuild child can stop."""
+    payload = read_lock(path)
+    if not payload:
+        return {"ok": False, "error": "no_lock"}
+    payload["cancel_requested"] = True
+    payload["updated_at"] = _utc_iso()
+    try:
+        _write_atomic(path, payload)
+    except OSError as exc:
+        return {"ok": False, "error": str(exc), "lock": payload}
+    return {"ok": True, "lock": payload}
+
+
+def lock_cancel_requested(path: Path) -> bool:
+    payload = read_lock(path)
+    return bool(payload.get("cancel_requested"))
+
+
 def status_from_lock(path: Path, ttl_sec: float = DEFAULT_TTL_SEC) -> dict[str, Any]:
     payload = read_lock(path)
     if not payload:

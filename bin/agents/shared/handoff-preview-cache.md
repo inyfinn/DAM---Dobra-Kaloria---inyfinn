@@ -60585,3 +60585,106 @@ INI\2025_03_04_6300620\links\mini_baza_pantone_czern.psd
 - `2026-09-10T13:28:16+02:00` `generating_thumb` 9818fd877d6ea08b
 - `2026-09-10T13:28:16+02:00` `generating_thumb` da223b8dda40204c
 - `2026-09-10T13:38:48+02:00` `generating_thumb` 9eeb4b086e648ab5
+- `2026-09-12T13:07:14+02:00` `generating_thumb` 15f788463759e003
+- `2026-09-12T13:07:14+02:00` `generating_thumb` 93bc9ff2ab73c29c
+- `2026-09-12T13:07:14+02:00` `generating_thumb` a7032b95457cd718
+- `2026-09-12T13:07:14+02:00` `generating_thumb` f4e34367b4db3be6
+- `2026-09-12T13:07:14+02:00` `generating_thumb` 0eb06ed04ecdf184
+- `2026-09-12T13:07:14+02:00` `generating_thumb` 0313d2e6d4d87169
+- `2026-09-12T13:07:14+02:00` `probe_wait` loria\06 - SLIDERY NA GŁÓWNĄ\Babka Cytrynowa\Babka cytrynowa slider yana (1).jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` ra Kaloria\06 - SLIDERY NA GŁÓWNĄ\Back To School\Back to school -  992 x 600.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait`  SLIDERY NA GŁÓWNĄ\Do Zadan Specjalnych\Baner - DO ZADAŃ specjalnych 780x780.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` Cos Dobrego\GOOD FRIDAY zrobmy cos dobrego   - SLIDER -  MOBILE - 576 x 600_.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` Y NA GŁÓWNĄ\falafel i kofta\KIEŁBASKI PROMO  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` \Dzień bez mięsa 2026\ŚWIĘTO dnia bez mięsa  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `generating_thumb` a7143de2b9c3840a
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_wait` ERY NA GŁÓWNĄ\GRILL-dostawa\KIEŁBASKI PROMO  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` jsce Swietuj Z Nami\I MIEJSCE SWIETUJ Z NAMI - SLIDER -  MOBILE - 576 x 600_.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` DERY NA GŁÓWNĄ\Indeks Glikemiczny\baner--INDEKS-GLIKEMICZNY-produkty---28.10.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` SLIDERY NA GŁÓWNĄ\Kielbaski\KIEŁBASKI PROMO  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` gierskie - w nowej odsłonce\KIEŁBASKI PROMO  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` ERNET\01 - Strona Dobra Kaloria\06 - SLIDERY NA GŁÓWNĄ\kremy\slider 1920x600.png
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_wait` - Strona Dobra Kaloria\06 - SLIDERY NA GŁÓWNĄ\kulki deserowe\slider 1920x600.png
+- `2026-09-12T13:07:14+02:00` `probe_wait` nowienia Noworoczne\POSTANOWIENIA noworoczne - SLIDER -  MOBILE - 576 x 600_.jpg
+- `2026-09-12T13:07:14+02:00` `probe_wait` JA NIEMIĘSA - 5 zł\PROMOCJA NIEMIĘSA - 5 zł  - SLIDER -  MOBILE - 576 x 600_.png
+- `2026-09-12T13:07:14+02:00` `probe_wait` Y NA GŁÓWNĄ\Rogal Poznanski\ROGAL POZNANSKI  - SLIDER -  MOBILE - 576 x 600_.jpg
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:14+02:00` `probe_done` readable
+- `2026-09-12T13:07:44+02:00` `recall_pending` timeout
+- `2026-09-12T13:07:44+02:00` `generating_thumb` 8fbeeb9adfac9065
+- `2026-09-12T13:07:44+02:00` `generating_thumb` 8fbeeb9adfac9065
+- `2026-09-12T13:07:44+02:00` `generating_thumb` 96241adb81d924e1
+- `2026-09-12T13:07:44+02:00` `generating_thumb` 8bbe229a03feddd5
+- `2026-09-12T13:07:44+02:00` `generating_thumb` 8bbe229a03feddd5
+- `2026-09-12T13:08:18+02:00` `generating_thumb` e1424dc444b3cc9d
+- `2026-09-12T13:08:18+02:00` `generating_thumb` 41af09ba9ce74996
+- `2026-09-12T13:08:18+02:00` `generating_thumb` e54a9cf45a341ec2
+- `2026-09-12T13:08:18+02:00` `generating_thumb` af07cb79012fd98a
+- `2026-09-12T13:08:18+02:00` `generating_thumb` 59986b7fdf77ddcb
+- `2026-09-12T13:08:18+02:00` `generating_thumb` 3a934338a6c74993
+- `2026-09-12T13:08:18+02:00` `generating_thumb` fa25bfedbb66fa74
+- `2026-09-12T13:08:18+02:00` `generating_thumb` b74c50d25d58d834
+- `2026-09-12T13:08:18+02:00` `generating_thumb` b862e4d6621fe3f6
+- `2026-09-12T13:08:18+02:00` `generating_thumb` 8c61badaf45799c3
+- `2026-09-12T13:08:19+02:00` `generating_thumb` a6fd5376d53cc582
+- `2026-09-12T13:08:19+02:00` `generating_thumb` b4202ee1145ca6ab
+- `2026-09-12T13:08:19+02:00` `generating_thumb` 4c4a79dd776df91d
+- `2026-09-12T13:08:19+02:00` `generating_thumb` d068ce9ab9c85241
+- `2026-09-12T13:08:19+02:00` `generating_thumb` 4bdbcfe84ac1f549
+- `2026-09-12T13:08:19+02:00` `generating_thumb` 75a1c0bf4dd61698
+- `2026-09-12T15:01:16+02:00` `generating_thumb` 93bc9ff2ab73c29c
+- `2026-09-12T15:01:16+02:00` `generating_thumb` 0eb06ed04ecdf184
+- `2026-09-12T15:01:16+02:00` `generating_thumb` 0313d2e6d4d87169
+- `2026-09-12T15:01:16+02:00` `generating_thumb` 0313d2e6d4d87169
+- `2026-09-12T15:01:16+02:00` `generating_thumb` 93bc9ff2ab73c29c
+- `2026-09-12T15:01:16+02:00` `generating_thumb` 15f788463759e003
+- `2026-09-12T15:01:16+02:00` `generating_thumb` f4e34367b4db3be6
+- `2026-09-12T15:01:16+02:00` `generating_thumb` a7032b95457cd718
+- `2026-09-12T15:01:22+02:00` `probe_wait` loria\06 - SLIDERY NA GŁÓWNĄ\Babka Cytrynowa\Babka cytrynowa slider yana (1).jpg
+- `2026-09-12T15:01:22+02:00` `probe_wait` ra Kaloria\06 - SLIDERY NA GŁÓWNĄ\Back To School\Back to school -  992 x 600.jpg
+- `2026-09-12T15:01:22+02:00` `probe_wait` Cos Dobrego\GOOD FRIDAY zrobmy cos dobrego   - SLIDER -  MOBILE - 576 x 600_.jpg
+- `2026-09-12T15:01:22+02:00` `generating_thumb` a7143de2b9c3840a
+- `2026-09-12T15:01:22+02:00` `probe_done` readable
+- `2026-09-12T15:01:22+02:00` `generating_thumb` a7143de2b9c3840a
+- `2026-09-12T15:01:22+02:00` `probe_wait`  SLIDERY NA GŁÓWNĄ\Do Zadan Specjalnych\Baner - DO ZADAŃ specjalnych 780x780.jpg
+- `2026-09-12T15:01:22+02:00` `probe_done` readable
+- `2026-09-12T15:01:22+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_wait` \Dzień bez mięsa 2026\ŚWIĘTO dnia bez mięsa  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_wait` Y NA GŁÓWNĄ\falafel i kofta\KIEŁBASKI PROMO  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T15:01:23+02:00` `probe_wait` ERY NA GŁÓWNĄ\GRILL-dostawa\KIEŁBASKI PROMO  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_wait` jsce Swietuj Z Nami\I MIEJSCE SWIETUJ Z NAMI - SLIDER -  MOBILE - 576 x 600_.jpg
+- `2026-09-12T15:01:23+02:00` `probe_wait` DERY NA GŁÓWNĄ\Indeks Glikemiczny\baner--INDEKS-GLIKEMICZNY-produkty---28.10.jpg
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_wait` SLIDERY NA GŁÓWNĄ\Kielbaski\KIEŁBASKI PROMO  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_wait` gierskie - w nowej odsłonce\KIEŁBASKI PROMO  - SLIDER - DESKTOP - 1920 x 600.jpg
+- `2026-09-12T15:01:23+02:00` `probe_wait` ERNET\01 - Strona Dobra Kaloria\06 - SLIDERY NA GŁÓWNĄ\kremy\slider 1920x600.png
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_wait` - Strona Dobra Kaloria\06 - SLIDERY NA GŁÓWNĄ\kulki deserowe\slider 1920x600.png
+- `2026-09-12T15:01:23+02:00` `probe_wait` nowienia Noworoczne\POSTANOWIENIA noworoczne - SLIDER -  MOBILE - 576 x 600_.jpg
+- `2026-09-12T15:01:23+02:00` `probe_wait` JA NIEMIĘSA - 5 zł\PROMOCJA NIEMIĘSA - 5 zł  - SLIDER -  MOBILE - 576 x 600_.png
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_wait` Y NA GŁÓWNĄ\Rogal Poznanski\ROGAL POZNANSKI  - SLIDER -  MOBILE - 576 x 600_.jpg
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:01:23+02:00` `probe_done` readable
+- `2026-09-12T15:42:43+02:00` `generating_thumb` 2ad46288c9ddfa82

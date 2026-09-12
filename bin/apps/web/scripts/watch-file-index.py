@@ -145,7 +145,7 @@ def _write_status(path: Path, payload: dict, *, preserve_last: bool = True) -> N
         except (OSError, json.JSONDecodeError):
             prev = {}
         if isinstance(prev, dict):
-            for key in ("last_ok", "last_rc", "last_error", "last_started", "last_finished"):
+            for key in ("last_ok", "last_rc", "last_error", "last_started", "last_finished", "last_duration_sec"):
                 if key not in body and prev.get(key) is not None:
                     body[key] = prev.get(key)
     if body.get("last_ok") is None:
@@ -214,6 +214,16 @@ def spawn_branding_pipeline(*, status_file: Path | None = None) -> None:
         print(f"[watch] branding hook spawn error: {exc}")
 
 
+def _publish_cache_after_index() -> None:
+    try:
+        import dam_thumb_cache
+
+        dam_thumb_cache.start_publish_after_index()
+        print("[watch] cache publish queued")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[watch] cache publish skip: {exc}")
+
+
 def rebuild_with_lock(
     *,
     lock_file: Path,
@@ -222,12 +232,17 @@ def rebuild_with_lock(
     out_dir: Path | None = None,
     stage_prefix: str = "product",
     branding_hook: bool = True,
+    last_duration_sec: float | None = None,
 ) -> int:
     """Acquire shared lock, then run build-file-index. No scan before lock."""
     try:
         from rebuild_lock import acquire_lock
     except ImportError:
         acquire_lock = None  # type: ignore
+    try:
+        import index_supervisor as idx_sup
+    except ImportError:
+        idx_sup = None  # type: ignore
 
     handle = None
     if acquire_lock is not None:
@@ -267,20 +282,67 @@ def rebuild_with_lock(
     if out_dir is not None:
         cmd.extend(["--out-dir", str(out_dir)])
 
+    started_ts = time.time()
+    started_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    kind = "hourly" if stage_prefix == "hourly" else ("watch" if stage_prefix == "product" else stage_prefix)
+
+    def _tick() -> None:
+        elapsed = int(time.time() - started_ts)
+        eta = None
+        remaining = None
+        if last_duration_sec:
+            remaining = max(0, int(float(last_duration_sec) - elapsed))
+            eta = remaining
+        pct = None
+        if last_duration_sec:
+            try:
+                pct = max(1, min(99, int(100.0 * elapsed / float(last_duration_sec))))
+            except (TypeError, ValueError, ZeroDivisionError):
+                pct = None
+        _write_status(
+            status_file,
+            {
+                "ok": True,
+                "watcher_ok": True,
+                "stage": f"{stage_prefix}:building",
+                "rebuild_kind": kind,
+                "kind": kind,
+                "last_started": started_iso,
+                "elapsed_sec": elapsed,
+                "eta_sec": eta,
+                "remaining_sec": remaining,
+                "progress_pct": pct,
+                "last_duration_sec": last_duration_sec,
+                "progress_message": "Indeksowanie ROOT" if stage_prefix == "hourly" else "Indeksowanie",
+                "hourly_pending": False,
+            },
+        )
+
     _write_status(
         status_file,
         {
             "ok": True,
             "watcher_ok": True,
             "stage": f"{stage_prefix}:building",
-            "last_started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "rebuild_kind": kind,
+            "kind": kind,
+            "last_started": started_iso,
+            "elapsed_sec": 0,
+            "eta_sec": int(last_duration_sec) if last_duration_sec else None,
+            "remaining_sec": int(last_duration_sec) if last_duration_sec else None,
+            "last_duration_sec": last_duration_sec,
+            "progress_message": "Indeksowanie ROOT" if stage_prefix == "hourly" else "Indeksowanie",
+            "hourly_pending": False,
         },
     )
-    if handle is not None:
-        handle.update(stage=f"{stage_prefix}:building")
-
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
     try:
-        rc = subprocess.call(cmd)
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(BIN_ROOT),
+            creationflags=flags,
+            stdin=subprocess.DEVNULL,
+        )
     except Exception as exc:  # noqa: BLE001
         _write_status(
             status_file,
@@ -297,6 +359,19 @@ def rebuild_with_lock(
             handle.release()
         return 1
 
+    if handle is not None:
+        try:
+            handle.update(stage=f"{stage_prefix}:building", child_pid=proc.pid)
+        except Exception:
+            pass
+
+    if idx_sup is not None:
+        rc = idx_sup.wait_rebuild_proc(proc, lock_handle=handle, on_tick=_tick)
+    else:
+        rc = int(proc.wait())
+
+    duration = int(time.time() - started_ts)
+    cancelled = rc == 130
     _write_status(
         status_file,
         {
@@ -304,15 +379,22 @@ def rebuild_with_lock(
             "watcher_ok": True,
             "last_ok": rc == 0,
             "last_rc": rc,
-            "last_error": "" if rc == 0 else f"build_rc_{rc}",
+            "last_error": "cancelled" if cancelled else ("" if rc == 0 else f"build_rc_{rc}"),
             "last_finished": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "stage": f"{stage_prefix}:idle",
+            "last_duration_sec": duration if rc == 0 else last_duration_sec,
+            "elapsed_sec": duration,
+            "eta_sec": 0,
+            "remaining_sec": 0,
+            "stage": "cancelled" if cancelled else (f"{stage_prefix}:idle" if rc == 0 else f"{stage_prefix}:error"),
+            "rebuild_kind": kind,
         },
     )
     if handle is not None:
         handle.release()
     if rc == 0 and branding_hook:
         spawn_branding_pipeline(status_file=status_file)
+    if rc == 0:
+        _publish_cache_after_index()
     return int(rc)
 
 
@@ -330,6 +412,24 @@ def main() -> None:
     ap.add_argument("--root", action="append", default=[], help="Fixture/test root (moze byc wielokrotnie)")
     ap.add_argument("--status-file", type=Path, default=DEFAULT_STATUS)
     ap.add_argument("--lock-file", type=Path, default=DEFAULT_LOCK)
+    ap.add_argument(
+        "--control-file",
+        type=Path,
+        default=DESKTOP_DATA / "index-control.json",
+        help="Cancel/snooze JSON (apps/desktop/data/index-control.json)",
+    )
+    ap.add_argument(
+        "--hourly",
+        type=float,
+        default=float(os.environ.get("DAM_INDEX_HOURLY_SEC", "3600") or "3600"),
+        help="Pelny skan ROOT co N sekund (0 = wylacz). Domyslnie 3600.",
+    )
+    ap.add_argument(
+        "--first-delay",
+        type=float,
+        default=float(os.environ.get("DAM_INDEX_FIRST_DELAY_SEC", "20") or "20"),
+        help="Opoznienie pierwszego pelnego skanu (user moze kliknac Nie dzisiaj).",
+    )
     ap.add_argument(
         "--out-dir",
         type=Path,
@@ -452,11 +552,98 @@ def main() -> None:
                 "watcher_ok": True,
                 "stage": "monitoring",
                 "pid": os.getpid(),
+                "hourly_sec": float(args.hourly),
+                "first_delay_sec": float(args.first_delay),
+                "control_file": str(args.control_file),
+                "hourly_pending": True,
             },
         )
 
+    try:
+        import index_supervisor as idx_sup
+    except ImportError:
+        idx_sup = None  # type: ignore
+
+    loop_started = time.time()
+    last_hourly = 0.0
+    last_duration = None
+    try:
+        prev = json.loads(args.status_file.read_text(encoding="utf-8"))
+        if isinstance(prev, dict) and prev.get("last_duration_sec"):
+            last_duration = float(prev.get("last_duration_sec"))
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        last_duration = None
+
     while True:
         time.sleep(max(1.0, float(args.interval)))
+        snoozed = False
+        if idx_sup is not None:
+            try:
+                snoozed = bool(idx_sup.is_snoozed())
+            except Exception:
+                snoozed = False
+        hourly_sec = float(args.hourly or 0)
+        due_hourly = False
+        if hourly_sec > 0 and not snoozed:
+            now = time.time()
+            if last_hourly <= 0:
+                due_hourly = (now - loop_started) >= max(0.0, float(args.first_delay))
+            else:
+                due_hourly = (now - last_hourly) >= hourly_sec
+        if due_hourly:
+            print("[watch] hourly full ROOT scan...")
+            _write_status(
+                args.status_file,
+                {
+                    "ok": True,
+                    "watcher_ok": True,
+                    "stage": "hourly:queued",
+                    "rebuild_kind": "hourly",
+                    "kind": "hourly",
+                    "pid": os.getpid(),
+                },
+            )
+            rc = rebuild_with_lock(
+                lock_file=args.lock_file,
+                status_file=args.status_file,
+                root_args=root_args,
+                out_dir=args.out_dir,
+                stage_prefix="hourly",
+                branding_hook=branding_hook,
+                last_duration_sec=last_duration,
+            )
+            last_hourly = time.time()
+            if rc == 0:
+                try:
+                    st = json.loads(args.status_file.read_text(encoding="utf-8"))
+                    if isinstance(st, dict) and st.get("last_duration_sec"):
+                        last_duration = float(st.get("last_duration_sec"))
+                except (OSError, json.JSONDecodeError, TypeError, ValueError):
+                    pass
+                last_product = (
+                    roots_mtime(product_roots, max_depth=depth) if product_roots else last_product
+                )
+                last_branding = (
+                    roots_mtime(branding_roots, max_depth=depth) if branding_roots else last_branding
+                )
+                print("[watch] hourly OK")
+            elif rc == 130:
+                print("[watch] hourly cancelled")
+            else:
+                print(f"[watch] hourly failed rc={rc}")
+            continue
+        if snoozed:
+            _write_status(
+                args.status_file,
+                {
+                    "ok": True,
+                    "watcher_ok": True,
+                    "stage": "snoozed",
+                    "pid": os.getpid(),
+                    "snoozed": True,
+                },
+            )
+            continue
         try:
             cur_product = roots_mtime(product_roots, max_depth=depth) if product_roots else 0.0
             cur_branding = roots_mtime(branding_roots, max_depth=depth) if branding_roots else 0.0
@@ -475,6 +662,7 @@ def main() -> None:
                 root_args=root_args,
                 out_dir=args.out_dir,
                 branding_hook=branding_hook,
+                last_duration_sec=last_duration,
             )
             if rc == 0:
                 last_product = cur_product

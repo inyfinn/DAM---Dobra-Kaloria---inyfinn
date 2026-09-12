@@ -2242,7 +2242,15 @@ Skrót — **bind = dwie osobne rzeczy**:
 
 **Wersja:** `5.0.195`.
 
+#### Lekcja 2026-09-12: vendor gate nie moze byc "pythonw.exe istnieje" (v5.0.206)
 
+**Objaw:** DAM-Setup.exe z 5.0.205 na czystym PC: dwuklik bez okna. Embed CPython byl w paczce, `pythonw.exe` istnial, ale `site-packages` bylo puste / bez `webview`.
+
+**Przyczyna:** `build-installer.ps1 -SkipVendor` uznawal runtime za kompletny po `Test-Path pythonw.exe`. Embed CPython zawsze startuje. `launch.py` pada na `import webview`, launcher tluumi stderr.
+
+**Zasada:** Brama vendora = `python.exe -c "import webview,bcrypt,psycopg2,PIL,ijson,openpyxl,cryptography"` plus `Lib\site-packages` >= 500 plikow. **Nigdy** nie gatinguj vendora samym istnieniem `pythonw.exe`.
+
+**Wersja:** `5.0.206`.
 
 ## 13. Jeden plik ma jednego pisarza (2026-09-10, HARD)
 
@@ -2285,3 +2293,21 @@ mial chronic - dwa zapisy bez wersjonowania nadpisujace sie wzajemnie.
 7. **Zakres grepa to czesc dowodu.** `_is_backup_static_path` zglosilo zero trafien
    w moscie i wygladalo na stracone - a zylo w `dam_ui_http.py` i dzialalo (404 dla
    `.bak`, 200 dla danych). Zanim ogloszysz regresje, sprawdz wlasciwy plik.
+8. **2026-09-12 — ELEMENTY `path_not_found` vs live X: (v5.0.206).**
+   Indeks trzyma `D:/Marketing/...`. Maszyna usera ma share `X:\Marketing\...`.
+   `resolve_physical_path` remapowalo **pliki** (`is_file`), ale `list_folder_images`
+   / `list_folder_browse` / `reveal_in_explorer` sprawdzaly `exists()` na D: →
+   `path_not_found` mimo ze `X:\...\1 - MATERIALY\ELEMENTY` istnieje (Cynamonka).
+   Slim explorer nie promuje `checklist.tech` → BRAK na first paint.
+   Fix: resolver file **i** dir; slim.tech=true; CTA slotow zawsze RIGHT + opacity fade
+   (bez clip-path / display:none). Prawda = zainstalowany `DAM.exe`, nie Cursor :8765.
+
+9. **2026-09-12 — packed DAM.exe vs repo :8765 (v5.0.207).**
+   `serve_browser.py` z gita trzyma 8765/8766. `_kill_stale_dam_processes` porownywal
+   sciezki tylko wlasnego drzewa, wiec leftover z GIT_ROOT zostawal. DAM.exe bral
+   `pick_free_port` → 8767, a agenci ogladali :8765 = repo SQLite
+   (`D:\--- INYFINN ...\bin\DATABASE\dam-local.sqlite`). Panel bazy: chipy radio
+   + karty `cursor:pointer` bez klikniecia.
+   Fix: kill python listenerow 8765/8766 (dowolne drzewo); karty = role=button +
+   apply od razu; Auto nad Lokalna; `ensure_pg_config_ready` takze Programs\DAM.
+   Dummy user nie kopiuje pg-config. Prawda = `%LOCALAPPDATA%\Programs\DAM\DAM.exe`.

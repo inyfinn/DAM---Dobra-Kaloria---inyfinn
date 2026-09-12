@@ -792,8 +792,12 @@
     function loadDir(target) {
       var grid = document.getElementById("damThumbPickerGrid");
       if (grid) grid.innerHTML = '<p class="dam-thumb-picker__status">Ładowanie…</p>';
+      var local =
+        window.DamPaths && typeof window.DamPaths.toLocal === "function"
+          ? window.DamPaths.toLocal(target)
+          : target;
       fetchJsonWithTimeout(
-        bridgeBase() + "/folder-images?path=" + encodeURIComponent(target),
+        bridgeBase() + "/folder-images?path=" + encodeURIComponent(local || target),
         5000
       )
         .then(function (data) {
@@ -808,9 +812,14 @@
             return;
           }
           if (!data || !data.ok) {
+            var errCode = (data && data.error) || "?";
+            var hint =
+              window.DamPaths && typeof window.DamPaths.bridgeErrorMessage === "function"
+                ? window.DamPaths.bridgeErrorMessage(errCode)
+                : "";
             grid.innerHTML =
               '<p class="dam-thumb-picker__status">Nie udało się otworzyć: ' +
-              esc((data && data.error) || "?") +
+              esc(hint || errCode) +
               "</p>";
             return;
           }

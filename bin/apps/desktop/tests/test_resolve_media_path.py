@@ -146,5 +146,48 @@ class ThumbCacheTimeoutTests(unittest.TestCase):
             lb.dam_thumb_cache = orig
 
 
+class DirDriveRebaseTests(unittest.TestCase):
+    """Indexed D:/Marketing dirs must resolve onto live X: (ELEMENTY picker)."""
+
+    INDEXED_REV = (
+        "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/"
+        "CYNAMONKA — [ nerkowcowy ]/KAR6X - 20.05.2026  - PL EN - 6300783.00 - F"
+    )
+    INDEXED_EL = INDEXED_REV + "/1 - MATERIAŁY/ELEMENTY"
+
+    def test_resolve_physical_path_rebases_directory(self):
+        import dam_path_resolve as dpr
+
+        x_twin = Path("X:" + self.INDEXED_REV[1:].replace("/", "\\"))
+        if not x_twin.is_dir():
+            self.skipTest("Cynamonka ELEMENTY revision missing on X:")
+        hit = dpr.resolve_physical_path(self.INDEXED_REV)
+        self.assertTrue(Path(hit).is_dir(), hit)
+        self.assertTrue(str(hit).upper().startswith("X:"), hit)
+        self.assertFalse(Path(dpr._norm(self.INDEXED_REV)).exists())
+
+    def test_list_folder_images_d_drive_not_path_not_found(self):
+        if not Path(self.INDEXED_EL.replace("/", "\\").replace("D:", "X:", 1)).is_dir():
+            self.skipTest("Cynamonka ELEMENTY missing on X:")
+        res = lb.list_folder_images(self.INDEXED_REV)
+        self.assertTrue(res.get("ok"), res)
+        self.assertNotEqual(res.get("error"), "path_not_found")
+        el = lb.list_folder_images(self.INDEXED_EL)
+        self.assertTrue(el.get("ok"), el)
+        names = {f.get("name") for f in (el.get("files") or [])}
+        self.assertTrue(names, el)
+        self.assertTrue(any("CYNAMON" in n.upper() for n in names), names)
+
+    def test_remap_revision_live_paths_fills_elements(self):
+        rev = {"path": self.INDEXED_REV, "files_by_role": {"elements": []}}
+        if not Path(self.INDEXED_EL.replace("/", "\\").replace("D:", "X:", 1)).is_dir():
+            self.skipTest("Cynamonka ELEMENTY missing on X:")
+        lb._remap_revision_live_paths(rev)
+        els = rev.get("files_by_role", {}).get("elements") or []
+        self.assertTrue(els)
+        self.assertIn("ELEMENTY", str(els[0].get("path") or "").upper())
+        self.assertTrue(str(rev.get("path") or "").upper().startswith("X:"))
+
+
 if __name__ == "__main__":
     unittest.main()

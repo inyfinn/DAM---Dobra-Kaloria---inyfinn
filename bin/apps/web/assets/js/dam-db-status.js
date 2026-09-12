@@ -289,6 +289,7 @@
       togglePanel();
     });
     el.addEventListener("keydown", function (e) {
+      if (e.target && e.target.closest && e.target.closest("#damDbStatusPanel")) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         togglePanel();
@@ -377,28 +378,16 @@
           "</span>"
         : "") +
       "</div>" +
-      '<p class="dam-db-panel__hint">Wybierz silnik live: lokalny SQLite albo Postgres na Synology. Dump GitHub to kopia zapasowa — nie silnik.</p>' +
-      '<div class="dam-db-panel__mode" role="radiogroup" aria-label="Tryb połączenia">' +
-      '<label class="dam-db-mode-chip">' +
-      '<input type="radio" name="damDbMode" value="auto"' +
-      (mode === "auto" ? " checked" : "") +
-      " />" +
-      "<span>Auto</span></label>" +
-      '<label class="dam-db-mode-chip">' +
-      '<input type="radio" name="damDbMode" value="postgres"' +
-      (mode === "postgres" ? " checked" : "") +
-      " />" +
-      "<span>Synology</span></label>" +
-      '<label class="dam-db-mode-chip">' +
-      '<input type="radio" name="damDbMode" value="sqlite"' +
-      (mode === "sqlite" ? " checked" : "") +
-      " />" +
-      "<span>Lokalna</span></label>" +
-      "</div>" +
+      '<p class="dam-db-panel__hint">Kliknij kartę, żeby wybrać silnik. Auto łączy z bazą firmy, gdy jest dostępna — inaczej z kopią lokalną. Dump GitHub to kopia zapasowa, nie silnik.</p>' +
       '<div class="dam-db-panel__sources">' +
+      '<button type="button" class="dam-db-mode-chip dam-db-auto" id="damDbAutoBtn" aria-pressed="' +
+      (mode === "auto" ? "true" : "false") +
+      '">Auto</button>' +
       '<div class="dam-db-source' +
       (liveActive === "local" ? " is-active" : "") +
-      '">' +
+      '" role="button" tabindex="0" data-dam-db-mode="sqlite" aria-pressed="' +
+      (mode === "sqlite" ? "true" : "false") +
+      '" aria-label="Wybierz lokalną bazę SQLite">' +
       '<span class="dam-db-source__body">' +
       '<span class="dam-db-source__title">Lokalna (SQLite)' +
       (liveActive === "local" ? ' <em class="dam-db-source__badge">aktywna</em>' : "") +
@@ -408,11 +397,13 @@
       '">' +
       esc(loc.detail || "bin/DATABASE/dam-local.sqlite") +
       "</span>" +
-      '<span class="dam-db-source__note">Działa offline. Kanon: bin/DATABASE.</span>' +
+      '<span class="dam-db-source__note">Działa offline. Kanon: bin/DATABASE w folderze instalacji.</span>' +
       "</span></div>" +
       '<div class="dam-db-source' +
       (synOk ? " is-active" : synFail ? " is-dim" : "") +
-      '">' +
+      '" role="button" tabindex="0" data-dam-db-mode="postgres" aria-pressed="' +
+      (mode === "postgres" ? "true" : "false") +
+      '" aria-label="Wybierz bazę Synology Postgres">' +
       '<span class="dam-db-source__body">' +
       '<span class="dam-db-source__title">Synology (Postgres)' +
       (synOk ? ' <em class="dam-db-source__badge">aktywna</em>' : "") +
@@ -426,56 +417,109 @@
           ? '<span class="dam-db-source__note">Baza nie jest jeszcze podłączona.</span>'
           : '<span class="dam-db-source__note">Wspólna baza firmy.</span>') +
       "</span></div>" +
-      '<div class="dam-db-source dam-db-source--dump">' +
+      '<div class="dam-db-source dam-db-source--dump" role="button" tabindex="0" data-dam-db-action="dump" aria-label="Pobierz kopię zapasową dump GitHub">' +
       '<span class="dam-db-source__body">' +
       '<span class="dam-db-source__title">Kopia zapasowa (dump GitHub)</span>' +
       '<span class="dam-db-source__detail">' +
       esc(gh.detail || "Brak dam_eta_*.sql.gz w bin/DATABASE/") +
       "</span>" +
-      '<span class="dam-db-source__note">To nie jest silnik live. Przycisk pobiera dump do bin/DATABASE.</span>' +
-      '<button type="button" class="geex-btn geex-btn--sm" id="damDbPullDump">Pobierz dump</button>' +
+      '<span class="dam-db-source__note">To nie jest silnik live. Klik w kartę pobiera dump do bin/DATABASE.</span>' +
+      '<span class="geex-btn geex-btn--sm dam-db-source__cta" id="damDbPullDump" aria-hidden="true">Pobierz dump</span>' +
       "</span></div>" +
       "</div>" +
       (data.offline_hint
         ? '<p class="dam-db-panel__warn">' + esc(data.offline_hint) + "</p>"
         : "") +
       '<div class="dam-db-panel__actions">' +
-      '<button type="button" class="geex-btn geex-btn--sm" id="damDbApplyPrefer">Zastosuj tryb</button>' +
       '<button type="button" class="geex-btn geex-btn--sm geex-btn--primary" id="damDbForceRefresh">Odśwież teraz</button>' +
       "</div>";
 
-    var apply = panel.querySelector("#damDbApplyPrefer");
-    panel.querySelectorAll('input[name="damDbMode"]').forEach(function (radio) {
-      radio.addEventListener("change", function () {
-        if (radio.checked) _draftMode = radio.value;
+    bindSourceControls(panel);
+    tweenActiveSource(panel);
+  }
+
+  function tweenActiveSource(panel) {
+    if (!panel) return;
+    var active = panel.querySelector(".dam-db-source.is-active, .dam-db-source.is-dump-picked");
+    if (!active) return;
+    if (prefersReducedMotion()) {
+      active.style.opacity = "1";
+      return;
+    }
+    loadGsap().then(function (gsap) {
+      if (!gsap) {
+        active.style.opacity = "1";
+        return;
+      }
+      gsap.fromTo(active, { opacity: 0.42 }, { opacity: 1, duration: 0.32, ease: "power2.out" });
+    });
+  }
+
+  function bindSourceControls(panel) {
+    var autoBtn = panel.querySelector("#damDbAutoBtn");
+    if (autoBtn) {
+      autoBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        applyMode("auto");
+      });
+    }
+    panel.querySelectorAll(".dam-db-source[data-dam-db-mode]").forEach(function (card) {
+      function go() {
+        var next = card.getAttribute("data-dam-db-mode") || "auto";
+        applyMode(next);
+      }
+      card.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        go();
+      });
+      card.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          go();
+        }
       });
     });
-    if (apply) {
-      apply.addEventListener("click", function (e) {
+    var dumpCard = panel.querySelector('.dam-db-source[data-dam-db-action="dump"]');
+    if (dumpCard) {
+      function pullDump() {
+        dumpCard.classList.add("is-dump-picked");
+        tweenActiveSource(panel);
+        reconnect(true);
+      }
+      dumpCard.addEventListener("click", function (e) {
         e.preventDefault();
-        savePreferFromPanel();
+        e.stopPropagation();
+        pullDump();
+      });
+      dumpCard.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          pullDump();
+        }
       });
     }
     var force = panel.querySelector("#damDbForceRefresh");
     if (force) {
       force.addEventListener("click", function (e) {
         e.preventDefault();
+        e.stopPropagation();
         reconnect(false);
-      });
-    }
-    var pull = panel.querySelector("#damDbPullDump");
-    if (pull) {
-      pull.addEventListener("click", function (e) {
-        e.preventDefault();
-        reconnect(true);
       });
     }
   }
 
+  function applyMode(mode) {
+    _draftMode = mode || "auto";
+    return savePreferFromPanel();
+  }
+
   function collectPrefer() {
-    var panel = document.getElementById("damDbStatusPanel");
-    var modeEl = panel && panel.querySelector('input[name="damDbMode"]:checked');
-    var mode = modeEl ? modeEl.value : "auto";
+    var mode = _draftMode || (_last && _last.prefer && _last.prefer.mode) || "auto";
+    if (mode !== "auto" && mode !== "postgres" && mode !== "sqlite") mode = "auto";
     return {
       mode: mode,
       sources: {

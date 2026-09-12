@@ -92,17 +92,14 @@
           row.querySelector(".dam-check-row__actions") ||
           row.querySelector(".dam-slot-row__actions");
         if (!act) return;
-        var willOpen = act.hasAttribute("hidden");
-        root.querySelectorAll(".dam-check-row__actions, .dam-slot-row__actions").forEach(function (a) {
-          a.setAttribute("hidden", "");
-        });
+        var willOpen = !row.classList.contains("dam-check-row--open") &&
+          !row.classList.contains("dam-slot-row--open");
         root
           .querySelectorAll(".dam-check-row--open, .dam-slot-row--open")
           .forEach(function (r) {
             r.classList.remove("dam-check-row--open", "dam-slot-row--open");
           });
         if (willOpen) {
-          act.removeAttribute("hidden");
           row.classList.add(
             row.classList.contains("dam-slot-row") ? "dam-slot-row--open" : "dam-check-row--open"
           );

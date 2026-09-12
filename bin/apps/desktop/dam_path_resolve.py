@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import re
 import time
+import unicodedata
 from pathlib import Path
 from typing import Callable, Optional, Sequence
 
@@ -21,10 +22,17 @@ DEFAULT_MARKETING_CANDIDATES: tuple[Path, ...] = (
 
 
 def _norm(p: str | Path) -> str:
-    s = str(p or "").strip().replace("/", "\\")
+    s = unicodedata.normalize("NFC", str(p or "").strip().replace("/", "\\"))
     while "\\\\" in s:
         s = s.replace("\\\\", "\\")
     return s
+
+
+def _exists_file_or_dir(path: str | Path) -> bool:
+    try:
+        return os.path.isfile(path) or os.path.isdir(path)
+    except OSError:
+        return False
 
 
 def marketing_roots(
@@ -140,11 +148,15 @@ def resolve_physical_path(
     fuzzy_resolve: Optional[Callable[[str], Optional[str]]] = None,
 ) -> str:
     """
-    Resolve user/index path to a physical file path on the current device.
+    Resolve user/index path to a physical file OR directory on this device.
 
-    1) normalize
-    2) if file exists → return
-    3) rebase relative key onto each marketing root
+    Index often ships `D:/Marketing/...` while the live share is `X:/Marketing/...`.
+    Directory listing used to check is_file() only, so ELEMENTY folders 404'd as
+    path_not_found even when the X: twin existed.
+
+    1) NFC + normalize
+    2) if file or dir exists → return
+    3) rebase relative key onto each marketing root (file or dir)
     4) optional fuzzy_resolve (bridge rename drift)
     """
     raw = (path or "").strip()
@@ -153,13 +165,10 @@ def resolve_physical_path(
     if normalize_path:
         target = normalize_path(raw)
     else:
-        target = os.path.normpath(raw.replace("/", "\\"))
+        target = os.path.normpath(_norm(raw))
 
-    try:
-        if os.path.isfile(target):
-            return target
-    except OSError:
-        pass
+    if _exists_file_or_dir(target):
+        return target
 
     rel = marketing_relative_key(
         target,
@@ -175,9 +184,9 @@ def resolve_physical_path(
             marketing_candidates=marketing_candidates,
             machine_config_path=machine_config_path,
         ):
-            cand = root / Path(rel.replace("/", os.sep))
+            cand = root / Path(unicodedata.normalize("NFC", rel.replace("/", os.sep)))
             try:
-                if cand.is_file():
+                if cand.is_file() or cand.is_dir():
                     return str(cand)
             except OSError:
                 continue
@@ -185,7 +194,7 @@ def resolve_physical_path(
     if fuzzy_resolve:
         try:
             hit = fuzzy_resolve(target)
-            if hit:
+            if hit and _exists_file_or_dir(hit):
                 return hit
         except Exception:
             pass

@@ -42,6 +42,14 @@ class CanonicalPathTest(unittest.TestCase):
         fake_root = Path("D:/Marketing")
         self.assertNotEqual(dam_db.canonical_db_dir(), fake_root / "DATABASE")
 
+    def test_sqlite_location_label_install_vs_repo(self):
+        install = Path(r"C:\Users\xpret\AppData\Local\Programs\DAM\bin\DATABASE\dam-local.sqlite")
+        self.assertEqual(dam_db.sqlite_location_label(install), "install")
+        self.assertEqual(
+            dam_db.sqlite_location_label(Path(r"D:\proj\bin\DATABASE\dam-local.sqlite")),
+            "repo",
+        )
+
 
 class MergePrefersCompleteTest(unittest.TestCase):
     def test_newer_empty_loses_to_18_user_db(self):

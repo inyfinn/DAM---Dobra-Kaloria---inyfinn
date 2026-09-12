@@ -1,7 +1,7 @@
 {
-  "version": 22,
+  "version": 23,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-09-10T11:50:00+02:00",
+  "updated_at": "2026-09-12T14:20:00+02:00",
   "instructions": [
     {
       "id": "preview.cache.offline_browse",
@@ -1938,6 +1938,39 @@
         "apps/web/scripts/dam_olmocr2.py",
         "apps/web/scripts/assoc-from-ocr.py",
         "apps/web/scripts/link-branding-products.py"
+      ]
+    },
+    {
+      "id": "cache.nas_seed_and_hourly_index",
+      "must": [
+        "Cache miniatur NIE jest w instalatorze Windows. Po instalacji DAM pobiera seed z Synology: https://inyfinn.synology.me/Panel-DAM/pamiec-podreczna/manifest.json (fallback W:\\web\\Panel-DAM\\pamiec-podreczna).",
+        "Lokalny cache = GIT_ROOT\\bin\\PAMIEC-PODRECZNA (DAM_CACHE_ROOT override). Zakaz zapisu cache pod X: lub M: Marketing.",
+        "Po udanym rebuildzie indeksu PC publikuje nowe thumbs + thumb-rel-index.json na NAS, gdy W: jest zapisowalny; inaczej kolejka desktop/data/cache-publish-queue.json.",
+        "Postgres: dam_kv_store.thumb-cache-manifest (wskaznik) + tabela dam_thumb_cache_index (rel|profile, digest, mtime, size, publisher, ts). Nie wkladac file-index do KV.",
+        "Indeks: watcher 2s PLUS pelny skan ROOT co godzine. Toast w aplikacji (PL): postep, pozostalo, ETA, zwin. Przerwij albo Nie dzisiaj (snooze do 23:59 lokalnego).",
+        "Po instalacji: logowanie dziala; pobieranie cache startuje w tle; indeksowanie mozna odroczyc. Cancel/snooze: apps/desktop/data/index-control.json."
+      ],
+      "body_pl": "HARD 2026-09-12: cache z NAS po Setup, publikacja thumbs miedzy PC, hourly ROOT + cancel/snooze w UI.",
+      "category": "cache",
+      "must_not": [
+        "Pakowac PAMIEC-PODRECZNA do Setup.exe.",
+        "Kopiowac starego cache z D:\\...\\PAMIEC-PODRECZNA (777MB).",
+        "Wkladac 9MB file-index.json do dam_kv_store.",
+        "Blokowac logowania modalem postepu."
+      ],
+      "priority": "critical",
+      "title_pl": "Cache z NAS + godzinny indeks z anulowaniem",
+      "related_kv": [
+        "program-instructions",
+        "thumb-cache-manifest"
+      ],
+      "updated_at": "2026-09-12",
+      "related_code": [
+        "apps/desktop/dam_thumb_cache.py",
+        "apps/desktop/local_bridge.py",
+        "apps/desktop/index_supervisor.py",
+        "apps/web/scripts/watch-file-index.py",
+        "apps/web/assets/js/dam-cache-sync.js"
       ]
     }
   ],
