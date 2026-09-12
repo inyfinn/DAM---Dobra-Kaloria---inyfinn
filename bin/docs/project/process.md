@@ -4,7 +4,7 @@
 
 **Log/Status:** FF `origin/main` 87bbb22 (5.0.203). Setup 5.0.203 wycinał `vendor` i nie pakował `branding-grid-head` → puste ikony + Branding http_404. Poprawiono `build-installer.ps1`, HTML link Unicons, `pg_db.ensure_pg_config_example_in_data`, hint UI. NIE commitujemy `pg-config.json` ani fat branding-index.
 
-**Efekt/Fix:** Nowy DAM-Setup.exe 5.0.204.
+**Efekt/Fix:** Push `14846dd` + `6d2f7ec`. Tag/release [v5.0.204](https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v5.0.204) — DAM-Setup.exe 45,4 MB. Staging: vendor Unicons+Jost, branding-grid-head/index, pg-config.example; **bez** dam-connection.env.
 
 **Źródła:** build-installer.ps1, dam-fonts.css, branding-grid-head.json, pg-config.example.json
 
