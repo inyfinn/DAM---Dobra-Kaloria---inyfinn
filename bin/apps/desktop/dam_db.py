@@ -53,15 +53,7 @@ _OFFLINE_SINCE = 0.0
 # Co tyle sekund w trybie offline proboj znowu DDNS/Postgres (nie zostawaj offline na zawsze).
 _OFFLINE_RETRY_SEC = 120.0
 _OFFLINE_HINT = (
-    "Postgres (Synology) niedostępny. Sprawdź: (1) czy DDNS inyfinn.synology.me "
-    "działa, (2) czy router ma port forwarding TCP 5433, (3) czy ISP nie dał "
-    "CGNAT / nie zamknął NAT przy zmiennym IP - wtedy DDNS może wskazywać "
-    "zły adres mimo poprawnej konfiguracji serwera. "
-    "Aplikacja działa w trybie OFFLINE na lokalnym SQLite "
-    "(bin/DATABASE/dam-local.sqlite w projekcie DAM). "
-    "Backup/dump: folder bin/DATABASE/ (GitHub) oraz "
-    "X:/Marketing/- POLSKA/99 - WYMIANA/Krzysztof/CURSOR/Database DAM. "
-    "Postgres Synology (port 5433) — później, gdy port będzie otwarty."
+    "Baza chwilowo niedostępna. DAM działa na kopii lokalnej."
 )
 _DEFAULT_PREFER: dict[str, Any] = {
     "mode": "auto",  # auto | postgres | sqlite — Synology gdy dostepny
@@ -727,7 +719,7 @@ def _sources_payload(active_engine: str, dump: Path | None) -> dict[str, Any]:
     syn_on = bool(pref["sources"].get("synology", True)) and pref["mode"] != "sqlite"
     return {
         "prefer": pref,
-        "priority": ["local", "synology"],
+        "priority": ["synology", "local"],
         "dump_only": ["github"],
         "sources": {
             "synology": {
@@ -740,7 +732,7 @@ def _sources_payload(active_engine: str, dump: Path | None) -> dict[str, Any]:
                 "detail": (
                     "inyfinn.synology.me:5433"
                     if syn_cfg
-                    else "Brak data/pg-config.json — skopiuj pg-config.example.json i wpisz hasło (DDNS inyfinn.synology.me / LAN, port 5433)."
+                    else "Baza nie jest jeszcze podłączona."
                 ),
             },
             "github": {

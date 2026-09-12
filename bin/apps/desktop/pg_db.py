@@ -11,7 +11,7 @@ lokalne cache ze stanu w bazie (patrz _kv_cache_watcher w local_bridge.py).
 Config (kolejnosc ladowania):
   1) zmienne DAM_PG_* / apps/desktop/dam-connection.env
   2) apps/desktop/data/pg-config.json (gitignored)
-Szablon: pg-config.example.json + dam-connection.env.example.
+Instalator wgrywa data/pg-config.json. Uzytkownik nic nie kopiuje.
 
 hosts: priorytet DDNS inyfinn.synology.me, LAN (192.168.x) TYLKO awaryjnie.
 connect() uzywa JEDNEGO hosta z konfiguracji (krotki timeout).
@@ -59,7 +59,7 @@ _INDEX_READY = False
 
 
 class PgNotConfigured(RuntimeError):
-    """Brak apps/desktop/data/pg-config.json i zmiennych DAM_PG_* - patrz pg-config.example.json."""
+    """Brak wgranego pg-config.json (instalator powinien to zrobic sam)."""
 
 
 class StaleKvVersion(Exception):
@@ -147,10 +147,7 @@ def _load_config() -> dict[str, Any]:
     cfg["password"] = os.environ.get("DAM_PG_PASSWORD", cfg.get("password", ""))
     cfg["hosts"] = _hosts_from_cfg(cfg)
     if (not cfg.get("hosts") and not cfg.get("host")) or not cfg.get("password"):
-        raise PgNotConfigured(
-            f"Brak konfiguracji Postgresa. Skopiuj {CONFIG_EXAMPLE_PATH.name} do "
-            f"{CONFIG_PATH} (albo dam-connection.env) i wypelnij haslo."
-        )
+        raise PgNotConfigured("Baza Synology nie jest skonfigurowana.")
     if not cfg["hosts"]:
         cfg["hosts"] = [cfg["host"]]
     _CONFIG_CACHE = cfg
@@ -163,8 +160,20 @@ def reset_config_cache() -> None:
     _LAST_HOST = None
 
 
+def _pg_config_looks_ready(path: Path) -> bool:
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            return False
+        pw = str(raw.get("password") or "")
+        hosts = raw.get("hosts") or raw.get("host")
+        return bool(pw) and bool(hosts)
+    except Exception:
+        return False
+
+
 def ensure_pg_config_example_in_data() -> None:
-    """First-run: szablon w data/ (hasła NIE kopiować do pg-config.json)."""
+    """First-run: szablon example zostaje w data/ (IT). Live = pg-config.json z Setupu."""
     dest = DESKTOP_DIR / "data" / "pg-config.example.json"
     try:
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -175,8 +184,36 @@ def ensure_pg_config_example_in_data() -> None:
         return
 
 
-def is_configured() -> bool:
+def ensure_pg_config_ready() -> None:
+    """First-run: wgraj passworded pg-config z drzewa Setupu. Zero krokow uzytkownika."""
+    dest = CONFIG_PATH
+    try:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.is_file() and _pg_config_looks_ready(dest):
+            return
+        candidates = (
+            DESKTOP_DIR / "pg-config.json",
+            DESKTOP_DIR / "data" / "pg-config.bundled.json",
+        )
+        dest_res = dest.resolve() if dest.exists() else dest
+        for src in candidates:
+            try:
+                if not src.is_file() or not _pg_config_looks_ready(src):
+                    continue
+                if src.resolve() == dest_res:
+                    continue
+                dest.write_bytes(src.read_bytes())
+                reset_config_cache()
+                return
+            except OSError:
+                continue
+    except OSError:
+        pass
     ensure_pg_config_example_in_data()
+
+
+def is_configured() -> bool:
+    ensure_pg_config_ready()
     try:
         _load_config()
         return True

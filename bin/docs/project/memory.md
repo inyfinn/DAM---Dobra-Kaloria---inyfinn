@@ -4,11 +4,12 @@ Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-08-03**.
 Workspace: **GIT_ROOT** = katalog z `DAM.exe` + `.git` (primary **D:** …`DAM---Dobra-Kaloria---inyfinn`); kod = **`...\bin`** (CONTENT_ROOT).  
 Wykonawca: Composer 2.5 / Monday.
 
-## Instalator Windows — vendor + pg-config + branding slim (HARD, 2026-09-12)
+## Instalator Windows — zero krokow uzytkownika (HARD, 2026-09-12)
 
-- **Ikony:** `build-installer.ps1` MUSI shipować `apps/web/assets/vendor` (nie wykluczać `vendor` z robocopy web). HTML: bezpośredni `<link>` `unicons-line.css` (WebView bywa ślepy na `@import` w `dam-fonts.css`).
-- **Branding:** Setup pakuje `branding-grid-head.json` i `branding-grid-index.json` (slim; index można sklonować z head przy braku pliku). Fat `branding-index.json` (~340MB) nie jedzie w Setupie. Bez head = `http_404`.
-- **Synology:** `pg-config.json` = sekret, gitignored. Setup wstawia tylko `pg-config.example.json` do `apps/desktop/data/`. Świeża instalacja = SQLite aż ktoś skopiuje example → `pg-config.json` z hasłem (DDNS `inyfinn.synology.me` / LAN, port 5433).
+- **Zakaz:** zaden user NIGDY nic nie kopiuje. Setup = dwuklik → DAM dziala (ikony, Synology, Branding). ZERO „skopiuj pg-config”, ZERO „uruchom build-branding-grid-index”, ZERO „sprawdz port 5433” jako akcja usera.
+- **Ikony:** `build-installer.ps1` MUSI shipować `apps/web/assets/vendor` (nie wykluczać `vendor` z robocopy web). HTML: bezpośredni `<link>` `unicons-line.css`.
+- **Branding:** Setup pakuje prawdziwy slim `branding-grid-head.json` + `branding-grid-index.json`. Pusty stub = FORBIDDEN. Fat `branding-index.json` (~340MB) nie jedzie w Setupie. First-run: app klonuje head→index gdy brak.
+- **Synology:** `pg-config.json` = sekret, **gitignored**, **embed przy buildzie** z lokalnego pliku (`%LOCALAPPDATA%\Programs\DAM\...\pg-config.json` albo `bin/apps/desktop/data/pg-config.json`). Brak sekretu = FAIL buildu. First-run: app kopiuje staged `apps/desktop/pg-config.json` → `data/`. Domyslny silnik = Synology gdy config jest.
 - **Wersja:** linia publiczna to **5.0.x** (nie ma v6.0).
 
 ## Layout bin + launcher (2026-08-03, upd 2026-08-06)

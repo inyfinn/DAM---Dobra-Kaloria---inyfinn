@@ -35,6 +35,21 @@ def _grid_index_file() -> Path:
     return _web_root() / "data" / "branding-grid-index.json"
 
 
+def _ensure_grid_index() -> Path:
+    """First-run: index z head, jesli Setup wgral tylko head. Zero krokow uzytkownika."""
+    index = _grid_index_file()
+    try:
+        if index.is_file() and index.stat().st_size >= 1000:
+            return index
+        head = _web_root() / "data" / "branding-grid-head.json"
+        if head.is_file() and head.stat().st_size >= 1000:
+            index.parent.mkdir(parents=True, exist_ok=True)
+            index.write_bytes(head.read_bytes())
+    except OSError:
+        pass
+    return index
+
+
 def _load_json(path: Path, default: Any) -> Any:
     fn = _CTX.get("load_json")
     if callable(fn):
@@ -185,7 +200,7 @@ def handle_get(handler: Any, parsed: Any) -> bool:
     qs = parse_qs(parsed.query or "")
 
     if path == "/branding-grid-index":
-        data = _load_json(_grid_index_file(), None)
+        data = _load_json(_ensure_grid_index(), None)
         if not isinstance(data, dict):
             handler._json(404, {"ok": False, "error": "branding_grid_index_missing"})
             return True

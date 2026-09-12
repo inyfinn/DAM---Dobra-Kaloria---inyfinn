@@ -1,3 +1,13 @@
+## 2026-09-12 - v5.0.205: Setup embed pg-config + ZERO user copies
+
+**Komenda/Akcja:** User (angry, HARD): zaden uzytkownik nigdy nic nie kopiuje. Instalator robi wszystko: vendor, passworded pg-config, branding-grid, Synology default. Pull, bump, build, push, GitHub Release.
+
+**Log/Status:** 5.0.204 wciaz kazal kopiowac example. `build-installer.ps1` embeduje `pg-config.json` z sekretu maszyny (FAIL gdy brak). UI/README bez „skopiuj”. First-run `ensure_pg_config_ready` + `_ensure_grid_index`.
+
+**Efekt/Fix:** Dummy user = dwuklik Setup. Sekret nie jedzie do gita.
+
+**Źródła:** build-installer.ps1, pg_db.py, dam_db.py, dam-db-status.js, branding_asset_routes.py, installer/README.txt
+
 ## 2026-09-12 - v5.0.204: installer vendor + branding slim + pg-config first-run
 
 **Komenda/Akcja:** User: napraw instalator, pull, push, GitHub release, build Setup.

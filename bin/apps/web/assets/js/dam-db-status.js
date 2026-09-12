@@ -421,10 +421,10 @@
       esc(syn.detail || "inyfinn.synology.me:5433") +
       "</span>" +
       (synFail
-        ? '<span class="dam-db-source__note">Niedostępna — zostaje SQLite. Sprawdź port 5433 / DDNS albo <a href="settings.html#integracje">integrację Postgres</a>.</span>'
+        ? '<span class="dam-db-source__note">Chwilowo niedostępna — DAM działa na kopii lokalnej.</span>'
         : !syn.configured
-          ? '<span class="dam-db-source__note">Brak pg-config.json (hasło Synology). Skopiuj apps/desktop/data/pg-config.example.json → pg-config.json. Host: inyfinn.synology.me lub 192.168.0.145, port 5433. <a href="settings.html#integracje">Ustawienia</a>.</span>'
-          : '<span class="dam-db-source__note">Live multi-PC gdy port 5433 dostępny.</span>') +
+          ? '<span class="dam-db-source__note">Baza nie jest jeszcze podłączona.</span>'
+          : '<span class="dam-db-source__note">Wspólna baza firmy.</span>') +
       "</span></div>" +
       '<div class="dam-db-source dam-db-source--dump">' +
       '<span class="dam-db-source__body">' +

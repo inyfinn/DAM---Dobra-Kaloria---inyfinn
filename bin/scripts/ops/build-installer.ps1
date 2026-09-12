@@ -88,15 +88,28 @@ Invoke-Robo (Join-Path $BinRoot "apps\desktop") (Join-Path $binDst "apps\desktop
 # apps/web: NIE wykluczaj assets/vendor (Jost + Unicons). Bez tego ikony w WebView giną.
 $xdWeb = @($xdCommon | Where-Object { $_ -ne "vendor" }) + @("data")
 Invoke-Robo (Join-Path $BinRoot "apps\web") (Join-Path $binDst "apps\web") $xdWeb $xfCommon
+function Test-PgConfigSecret([string]$Path) {
+  if (-not (Test-Path -LiteralPath $Path)) { return $false }
+  try {
+    $j = Get-Content -LiteralPath $Path -Raw -Encoding UTF8 | ConvertFrom-Json
+    $pw = [string]$j.password
+    $portOk = ([string]$j.port) -eq "5433"
+    $dbOk = ([string]$j.dbname) -eq "dam_eta"
+    return ($pw.Length -ge 8) -and $portOk -and $dbOk
+  } catch {
+    return $false
+  }
+}
+
 $webVendorSrc = Join-Path $BinRoot "apps\web\assets\vendor"
 $webVendorDst = Join-Path $binDst "apps\web\assets\vendor"
-if (Test-Path -LiteralPath $webVendorSrc) {
-  New-Item -ItemType Directory -Force -Path $webVendorDst | Out-Null
-  Invoke-Robo $webVendorSrc $webVendorDst @() @()
-  Write-Host "Shipped apps/web/assets/vendor (fonts/icons)."
-} else {
-  Write-Warning "Brak apps/web/assets/vendor — instalator bez lokalnych Unicons/Jost!"
+$uniconsCss = Join-Path $webVendorSrc "icons\unicons-line.css"
+if (-not (Test-Path -LiteralPath $uniconsCss)) {
+  throw "Brak apps/web/assets/vendor/icons/unicons-line.css — Setup NIE moze wyjechac bez ikon."
 }
+New-Item -ItemType Directory -Force -Path $webVendorDst | Out-Null
+Invoke-Robo $webVendorSrc $webVendorDst @() @()
+Write-Host "Shipped apps/web/assets/vendor (fonts/icons)."
 
 $webDataSrc = Join-Path $BinRoot "apps\web\data"
 $webDataDst = Join-Path $binDst "apps\web\data"
@@ -116,12 +129,19 @@ foreach ($name in $keepData) {
 }
 $headSrc = Join-Path $webDataSrc "branding-grid-head.json"
 $indexDst = Join-Path $webDataDst "branding-grid-index.json"
-if ((-not (Test-Path -LiteralPath $indexDst)) -and (Test-Path -LiteralPath $headSrc)) {
+if ((-not (Test-Path -LiteralPath $indexDst) -or ((Get-Item -LiteralPath $indexDst).Length -lt 1000)) -and (Test-Path -LiteralPath $headSrc)) {
   Copy-Item -LiteralPath $headSrc -Destination $indexDst -Force
   Write-Host "Staged branding-grid-index.json from head (slim)."
 }
-if (-not (Test-Path -LiteralPath (Join-Path $webDataDst "branding-grid-head.json"))) {
-  Write-Warning "Brak branding-grid-head.json — Branding po Setup bedzie http_404."
+$headDst = Join-Path $webDataDst "branding-grid-head.json"
+if (-not (Test-Path -LiteralPath $headDst)) {
+  throw "Brak branding-grid-head.json — Setup NIE moze wyjechac z pustym Brandingiem."
+}
+if ((Get-Item -LiteralPath $headDst).Length -lt 1000) {
+  throw "branding-grid-head.json jest stubem (<1 KB) — Setup NIE moze wyjechac."
+}
+if (-not (Test-Path -LiteralPath $indexDst) -or ((Get-Item -LiteralPath $indexDst).Length -lt 1000)) {
+  throw "branding-grid-index.json pusty/brak — Setup NIE moze wyjechac."
 }
 New-Item -ItemType Directory -Force -Path (Join-Path $webDataDst "thumbs") | Out-Null
 $deskDataDst = Join-Path $binDst "apps\desktop\data"
@@ -131,6 +151,17 @@ if (Test-Path -LiteralPath $pgEx) {
   Copy-Item -LiteralPath $pgEx -Destination (Join-Path $deskDataDst "pg-config.example.json") -Force
   Copy-Item -LiteralPath $pgEx -Destination (Join-Path $binDst "apps\desktop\pg-config.example.json") -Force
 }
+$pgCands = @(
+  (Join-Path $env:LOCALAPPDATA "Programs\DAM\bin\apps\desktop\data\pg-config.json"),
+  (Join-Path $BinRoot "apps\desktop\data\pg-config.json")
+)
+$pgSrc = $pgCands | Where-Object { Test-PgConfigSecret $_ } | Select-Object -First 1
+if (-not $pgSrc) {
+  throw "Brak passworded pg-config.json (gitignored). Setup NIE moze wyjechac — dummy user nie kopiuje nic. Poloz sekret w bin\apps\desktop\data\pg-config.json albo w zainstalowanym DAM."
+}
+Copy-Item -LiteralPath $pgSrc -Destination (Join-Path $deskDataDst "pg-config.json") -Force
+Copy-Item -LiteralPath $pgSrc -Destination (Join-Path $binDst "apps\desktop\pg-config.json") -Force
+Write-Host "Embedded pg-config.json (Synology, passworded) from build-machine secret. Not committed."
 New-Item -ItemType Directory -Force -Path (Join-Path $binDst "DATABASE") | Out-Null
 $usersSeedSrc = Join-Path $BinRoot "DATABASE\users-seed.sqlite"
 if (-not (Test-Path -LiteralPath $usersSeedSrc)) {

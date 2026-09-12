@@ -1,9 +1,9 @@
 {
-  "version": "5.0.204",
+  "version": "5.0.205",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-09-12",
-  "note": "5.0.204: installer ships Unicons/Jost + branding-grid-head; first-run pg-config.example; no v6.0.",
+  "note": "5.0.205: Setup embeds Synology pg-config + vendor + branding grid; zero user copies.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",
