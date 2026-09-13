@@ -93,45 +93,45 @@
 
   /* Colorify pool (colorify-admin-schemes.php scheme_pool_raw). Skip colorify-custom. */
   var COLORIFY_POOL = [
-    ["colorify-deep", "Gleboka zielen", "green", "#020806", "#040E0A", "#4A9B84", "#6DB89F"],
-    ["colorify-hunter", "Mysliwska", "green", "#030908", "#05100C", "#355E3B", "#4A7C59"],
+    ["colorify-deep", "Głęboka zieleń", "green", "#020806", "#040E0A", "#4A9B84", "#6DB89F"],
+    ["colorify-hunter", "Myśliwska", "green", "#030908", "#05100C", "#355E3B", "#4A7C59"],
     ["colorify-marsh", "Bagno", "green", "#030A08", "#06100D", "#1C4B42", "#2A5C52"],
     ["colorify-pine", "Sosna", "green", "#040B09", "#07110F", "#1C4B42", "#2D6B5E"],
     ["colorify-jade", "Jadeit", "green", "#040C0A", "#081210", "#10B981", "#34D399"],
-    ["colorify-fern", "Paproc", "green", "#040D0A", "#091311", "#3D8B37", "#5CB85C"],
+    ["colorify-fern", "Paproć", "green", "#040D0A", "#091311", "#3D8B37", "#5CB85C"],
     ["colorify-eucalyptus", "Eukaliptus", "green", "#050D0B", "#0A1412", "#44D7A8", "#7AE582"],
     ["colorify-forest", "Las", "green", "#050E0B", "#0A1614", "#92C200", "#B4E717"],
     ["colorify-lime", "Limonka", "green", "#050F0C", "#0B1816", "#B4E717", "#C8F033"],
-    ["colorify-mint", "Mieta", "green", "#05100C", "#0B1A18", "#2DD4BF", "#5EEAD4"],
-    ["colorify-sage", "Szalwia", "green", "#05110D", "#0C1C1A", "#4A7C59", "#6B9E78"],
+    ["colorify-mint", "Mięta", "green", "#05100C", "#0B1A18", "#2DD4BF", "#5EEAD4"],
+    ["colorify-sage", "Szałwia", "green", "#05110D", "#0C1C1A", "#4A7C59", "#6B9E78"],
     ["colorify-seafoam", "Rubin", "warm", "#0A0407", "#160B12", "#E11D48", "#FB7185"],
-    ["colorify-chartreuse", "Szkarlat", "warm", "#0B0405", "#180C0D", "#DC2626", "#F87171"],
-    ["colorify-neon", "Wisnia", "warm", "#0A0306", "#170A10", "#BE123C", "#E11D48"],
+    ["colorify-chartreuse", "Szkarłat", "warm", "#0B0405", "#180C0D", "#DC2626", "#F87171"],
+    ["colorify-neon", "Wiśnia", "warm", "#0A0306", "#170A10", "#BE123C", "#E11D48"],
     ["colorify-lime-soft", "Koral", "warm", "#0C0504", "#1A0E0C", "#F97316", "#FB923C"],
     ["colorify-moss", "Wino", "warm", "#0A0308", "#160C14", "#9F1239", "#BE185D"],
     ["colorify-olive", "Rdza", "warm", "#0B0403", "#181008", "#C2410C", "#EA580C"],
-    ["colorify-avocado", "Miedz", "warm", "#0A0503", "#1A1209", "#B45309", "#D97706"],
-    ["colorify-basil", "Pomarancza", "warm", "#0B0503", "#1B1308", "#EA580C", "#F97316"],
-    ["colorify-canopy", "Zloto", "warm", "#0A0603", "#1C1509", "#CA8A04", "#EAB308"],
+    ["colorify-avocado", "Miedź", "warm", "#0A0503", "#1A1209", "#B45309", "#D97706"],
+    ["colorify-basil", "Pomarańcza", "warm", "#0B0503", "#1B1308", "#EA580C", "#F97316"],
+    ["colorify-canopy", "Złoto", "warm", "#0A0603", "#1C1509", "#CA8A04", "#EAB308"],
     ["colorify-spring", "Brzoskwinia", "warm", "#0B0605", "#1D120E", "#FDBA74", "#FCD34D"],
     ["colorify-grove", "Czekolada", "warm", "#080604", "#151008", "#92400E", "#B45309"],
-    ["colorify-onyx", "Czern", "blue", "#0A0A0A", "#141414", "#7C3AED", "#A78BFA"],
+    ["colorify-onyx", "Czerń", "blue", "#0A0A0A", "#141414", "#7C3AED", "#A78BFA"],
     ["colorify-indigo", "Indigo", "blue", "#0A0A0B", "#151515", "#6366F1", "#818CF8"],
     ["colorify-graphite", "Grafit", "blue", "#0A0A0A", "#1C1C1F", "#6366F1", "#818CF8"],
-    ["colorify-midnight", "Polnoc", "blue", "#0F172A", "#1E293B", "#06B6D4", "#22D3EE"],
+    ["colorify-midnight", "Północ", "blue", "#0F172A", "#1E293B", "#06B6D4", "#22D3EE"],
     ["colorify-blue", "Niebieski", "blue", "#0A0B0D", "#16171A", "#3B82F6", "#60A5FA"],
     ["colorify-cyan", "Cyjan", "blue", "#0B0B0D", "#17181B", "#06B6D4", "#22D3EE"],
-    ["colorify-sky", "Blekit", "blue", "#0B0C0E", "#18191C", "#0EA5E9", "#38BDF8"],
+    ["colorify-sky", "Błękit", "blue", "#0B0C0E", "#18191C", "#0EA5E9", "#38BDF8"],
     ["colorify-teal", "Morski", "blue", "#0B0C0F", "#181A1D", "#14B8A6", "#2DD4BF"],
     ["colorify-charcoal", "Antracyt", "blue", "#171717", "#262626", "#3B82F6", "#60A5FA"],
-    ["colorify-slate", "Lupkowy", "blue", "#18181B", "#27272A", "#0EA5E9", "#38BDF8"],
+    ["colorify-slate", "Łupkowy", "blue", "#18181B", "#27272A", "#0EA5E9", "#38BDF8"],
     ["colorify-smoke", "Dymny", "blue", "#111827", "#1F2937", "#94A3B8", "#CBD5E1"],
     ["colorify-violet", "Fiolet", "purple", "#0A0A0C", "#151618", "#7C3AED", "#A78BFA"],
     ["colorify-purple", "Purpura", "purple", "#0A0B0C", "#161619", "#9333EA", "#A855F7"],
     ["colorify-fuchsia", "Fuksja", "purple", "#0C0D10", "#191B1E", "#D946EF", "#E879F9"],
-    ["colorify-rose", "Roz", "purple", "#0C0E11", "#1A1C1F", "#F43F5E", "#FB7185"],
+    ["colorify-rose", "Róż", "purple", "#0C0E11", "#1A1C1F", "#F43F5E", "#FB7185"],
     ["colorify-amber", "Bursztyn", "earth", "#0D0F13", "#1C1E21", "#F59E0B", "#FBBF24"],
-    ["colorify-stone", "Kamien", "earth", "#1C1917", "#292524", "#F59E0B", "#FBBF24"],
+    ["colorify-stone", "Kamień", "earth", "#1C1917", "#292524", "#F59E0B", "#FBBF24"],
     ["colorify-emerald", "Szmaragd", "earth", "#0D0E12", "#1B1D20", "#10B981", "#34D399"],
   ];
 
@@ -151,7 +151,7 @@
   var SCHEME_GROUP_LABELS = {
     dam: "DAM",
     green: "Zielone",
-    warm: "Cieple",
+    warm: "Ciepłe",
     blue: "Niebieskie",
     purple: "Fioletowe",
     earth: "Ziemia",
@@ -737,19 +737,34 @@
     st.id = "damSchemeTilesCss";
     st.textContent =
       ".dam-appearance-schemes{width:100%;}" +
-      ".dam-scheme-groups{display:flex;flex-direction:column;gap:12px;}" +
-      ".dam-scheme-group__label{margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--dam-text-muted,#8b8d97);}" +
-      ".dam-scheme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;}" +
-      ".dam-scheme-tile{display:flex;flex-direction:column;gap:6px;min-height:44px;padding:8px;border:1px solid var(--dam-border,#ececf2);border-radius:12px;background:var(--dam-surface,#fff);color:var(--dam-text,#464255);cursor:pointer;text-align:left;font:inherit;box-sizing:border-box;}" +
+      ".dam-scheme-trigger-row{display:flex;align-items:stretch;gap:10px;width:100%;}" +
+      "#damSchemeCurrent.dam-scheme-current-tile{flex:1 1 auto;min-width:0;max-width:280px;}" +
+      "#damSchemeOpenPicker{flex:0 0 auto;min-height:44px;}" +
+      ".dam-scheme-groups{display:flex;flex-direction:column;gap:14px;}" +
+      ".dam-scheme-group__label{margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--dam-text-muted,#8b8d97);}" +
+      "#damSchemePickerOverlay .dam-scheme-grid,.dam-scheme-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%;}" +
+      ".dam-scheme-tile{display:flex;flex-direction:column;gap:6px;width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid var(--dam-border,#ececf2);border-radius:12px;background:var(--dam-surface,#fff);color:var(--dam-text,#464255);cursor:pointer;text-align:left;font:inherit;box-sizing:border-box;}" +
       ".dam-scheme-tile.is-active{border-color:var(--dam-primary,#ab54db);box-shadow:0 0 0 2px color-mix(in srgb,var(--dam-primary,#ab54db) 28%,transparent);}" +
       ".dam-scheme-tile:focus-visible{outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px;}" +
       ".dam-scheme-tile__swatches{display:grid;grid-template-columns:repeat(4,1fr);height:22px;border-radius:6px;overflow:hidden;border:1px solid color-mix(in srgb,var(--dam-text,#464255) 12%,transparent);}" +
       ".dam-scheme-tile__chip{display:block;min-width:0;height:100%;}" +
       ".dam-scheme-tile__label{font-size:11px;font-weight:600;line-height:1.25;color:var(--dam-text,#464255);}" +
-      ".dam-appearance-tune{max-width:min(50%,420px);width:100%;min-width:0;display:flex;flex-direction:column;gap:14px;}" +
+      ".dam-appearance-tune{width:100%;min-width:0;display:flex;flex-direction:column;gap:14px;}" +
       ".dam-accent-presets{display:flex;flex-wrap:wrap;gap:10px;}" +
+      "#damSchemePickerOverlay.dam-scheme-picker-overlay{position:fixed;inset:0;z-index:12300;display:none;align-items:stretch;justify-content:flex-end;padding:20px;box-sizing:border-box;background:rgba(8,10,16,.32);}" +
+      "#damSchemePickerOverlay.dam-scheme-picker-overlay.is-open{display:flex;}" +
+      "#damSchemePickerOverlay .dam-scheme-picker-dialog{width:min(520px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;min-width:0;background:var(--dam-surface-elevated,#fff);color:var(--dam-text,#464255);border:1px solid var(--dam-border,#ececf2);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.35);overflow:hidden;}" +
+      "#damSchemePickerOverlay .dam-scheme-picker__head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 8px;flex:0 0 auto;}" +
+      "#damSchemePickerOverlay .dam-scheme-picker__head h2{margin:0;font-size:16px;font-weight:700;line-height:1.3;}" +
+      "#damSchemePickerOverlay .dam-scheme-picker__close{flex:0 0 auto;width:44px;height:44px;min-width:44px;min-height:44px;border:0;border-radius:10px;background:transparent;color:inherit;cursor:pointer;font-size:22px;line-height:1;}" +
+      "#damSchemePickerOverlay .dam-scheme-picker__close:hover{background:color-mix(in srgb,var(--dam-primary,#ab54db) 12%,transparent);}" +
+      "#damSchemePickerOverlay .dam-scheme-picker__hint{margin:0 16px 10px;font-size:12px;line-height:1.4;color:var(--dam-text-muted,#8b8d97);}" +
+      "#damSchemePickerOverlay .dam-scheme-groups{flex:1 1 auto;min-height:0;overflow:auto;padding:0 16px 12px;}" +
+      "#damSchemePickerOverlay .dam-scheme-picker__foot{flex:0 0 auto;display:flex;justify-content:flex-end;padding:10px 16px 14px;border-top:1px solid var(--dam-border,#ececf2);}" +
+      "#damSchemePickerOverlay .dam-scheme-picker__foot [data-scheme-picker-close]{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--dam-primary,#ab54db);background:var(--dam-primary,#ab54db);color:#fff;font:inherit;font-weight:600;cursor:pointer;}" +
       "html.dark .dam-scheme-tile,html[data-theme=dark] .dam-scheme-tile{background:var(--dam-surface-elevated,#262730);border-color:var(--dam-border,#2c2b36);}" +
-      "html.dark .dam-scheme-tile__label,html[data-theme=dark] .dam-scheme-tile__label{color:var(--dam-text,#eeeaf6);}";
+      "html.dark .dam-scheme-tile__label,html[data-theme=dark] .dam-scheme-tile__label{color:var(--dam-text,#eeeaf6);}" +
+      "html.dark #damSchemePickerOverlay .dam-scheme-picker-dialog,html[data-theme=dark] #damSchemePickerOverlay .dam-scheme-picker-dialog{background:var(--dam-surface-elevated,#262730);border-color:var(--dam-border,#2c2b36);}";
     document.head.appendChild(st);
   }
 
@@ -780,10 +795,111 @@
     );
   }
 
-  function renderSchemeTiles() {
-    var grid = document.getElementById("damSchemeGrid");
-    if (!grid) return;
+  function currentPreviewInnerHtml() {
+    var scheme = resolveScheme();
+    var mode = resolve(currentPref());
+    var p = scheme[mode] || scheme.light;
+    var label = scheme.id === "custom" ? "Własny" : scheme.label;
+    return (
+      '<span class="dam-scheme-tile__swatches" aria-hidden="true">' +
+      schemeSwatchHtml(p) +
+      '</span><span class="dam-scheme-tile__label">' +
+      escHtml(label) +
+      "</span>"
+    );
+  }
+
+  function renderCurrentPreview() {
+    var el = document.getElementById("damSchemeCurrent");
+    if (!el) return;
+    var scheme = resolveScheme();
+    var label = scheme.id === "custom" ? "Własny" : scheme.label || scheme.id;
+    el.innerHTML = currentPreviewInnerHtml();
+    el.setAttribute("aria-label", "Aktualny zestaw: " + label + ". Otwórz listę zestawów.");
+    el.title = label;
+  }
+
+  function retireInlineSchemeGrid() {
+    var inline = document.getElementById("damSchemeGrid");
+    var overlay = document.getElementById("damSchemePickerOverlay");
+    if (inline && overlay && !overlay.contains(inline)) {
+      inline.id = "damSchemeGridLegacy";
+      inline.setAttribute("hidden", "hidden");
+      inline.innerHTML = "";
+    } else if (inline && !overlay) {
+      inline.id = "damSchemeGridLegacy";
+      inline.setAttribute("hidden", "hidden");
+      inline.innerHTML = "";
+    }
+  }
+
+  function ensurePickerOverlay() {
     injectSchemeCss();
+    retireInlineSchemeGrid();
+    var overlay = document.getElementById("damSchemePickerOverlay");
+    if (overlay) {
+      overlay.style.zIndex = "12300";
+      return overlay;
+    }
+    overlay = document.createElement("div");
+    overlay.id = "damSchemePickerOverlay";
+    overlay.className = "dam-scheme-picker-overlay";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.style.zIndex = "12300";
+    overlay.innerHTML =
+      '<div class="dam-scheme-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="damSchemePickerTitle">' +
+      '<div class="dam-scheme-picker__head">' +
+      '<h2 id="damSchemePickerTitle">Zestawy kolorystyczne</h2>' +
+      '<button type="button" class="dam-scheme-picker__close" data-scheme-picker-close aria-label="Zamknij">' +
+      '<i class="uil uil-times" aria-hidden="true"></i></button></div>' +
+      '<p class="dam-scheme-picker__hint">Kliknij zestaw, żeby zobaczyć go na całym panelu. Okno nie zamyka się po wyborze. Esc albo Zamknij kończy przeglądanie. Klik w tło nakładki nie zamyka okna.</p>' +
+      '<div id="damSchemeGrid" class="dam-scheme-groups" role="listbox" aria-label="Zestawy kolorystyczne"></div>' +
+      '<div class="dam-scheme-picker__foot">' +
+      '<button type="button" data-scheme-picker-close>Zamknij</button>' +
+      "</div></div>";
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function isSchemePickerOpen() {
+    var overlay = document.getElementById("damSchemePickerOverlay");
+    return !!(overlay && overlay.classList.contains("is-open"));
+  }
+
+  function openSchemePicker() {
+    var overlay = ensurePickerOverlay();
+    renderSchemeTiles();
+    overlay.classList.add("is-open");
+    overlay.setAttribute("aria-hidden", "false");
+    overlay.style.zIndex = "12300";
+    document.body.classList.add("dam-scheme-picker-open");
+    var opener = document.getElementById("damSchemeOpenPicker");
+    if (opener) opener.setAttribute("aria-expanded", "true");
+    var current = document.getElementById("damSchemeCurrent");
+    if (current) current.setAttribute("aria-expanded", "true");
+    var active = overlay.querySelector("#damSchemeGrid [data-scheme-id].is-active");
+    var first = overlay.querySelector("#damSchemeGrid [data-scheme-id]");
+    var focusEl = active || first || overlay.querySelector("[data-scheme-picker-close]");
+    if (focusEl) focusEl.focus();
+  }
+
+  function closeSchemePicker() {
+    var overlay = document.getElementById("damSchemePickerOverlay");
+    if (!overlay) return;
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("dam-scheme-picker-open");
+    var opener = document.getElementById("damSchemeOpenPicker");
+    if (opener) opener.setAttribute("aria-expanded", "false");
+    var current = document.getElementById("damSchemeCurrent");
+    if (current) current.setAttribute("aria-expanded", "false");
+    if (opener) opener.focus();
+  }
+
+  function renderSchemeTiles() {
+    var overlay = ensurePickerOverlay();
+    var grid = overlay.querySelector("#damSchemeGrid") || document.getElementById("damSchemeGrid");
+    if (!grid) return;
     var mode = resolve(currentPref());
     var groups = [];
     var seen = {};
@@ -816,6 +932,7 @@
   }
 
   function syncSchemeTiles() {
+    renderCurrentPreview();
     var grid = document.getElementById("damSchemeGrid");
     if (!grid) return;
     var id = currentSchemeId();
@@ -828,20 +945,63 @@
       var scheme = getScheme(sid);
       var sw = btn.querySelector(".dam-scheme-tile__swatches");
       if (sw && scheme) sw.innerHTML = schemeSwatchHtml(scheme[mode] || scheme.light);
+      var lab = btn.querySelector(".dam-scheme-tile__label");
+      if (lab && scheme) lab.textContent = scheme.label;
     });
   }
 
-  function bindSchemeGrid() {
-    var grid = document.getElementById("damSchemeGrid");
-    if (!grid) return;
-    renderSchemeTiles();
-    if (grid.getAttribute("data-dam-scheme-bound") === "1") return;
-    grid.setAttribute("data-dam-scheme-bound", "1");
-    grid.addEventListener("click", function (ev) {
-      var btn = ev.target.closest("[data-scheme-id]");
+  function bindSchemePicker() {
+    var opener = document.getElementById("damSchemeOpenPicker");
+    var current = document.getElementById("damSchemeCurrent");
+    if (!opener && !current) return;
+    injectSchemeCss();
+    renderCurrentPreview();
+    var overlay = ensurePickerOverlay();
+    if (overlay.getAttribute("data-dam-scheme-bound") === "1") {
+      renderSchemeTiles();
+      return;
+    }
+    overlay.setAttribute("data-dam-scheme-bound", "1");
+    overlay.addEventListener("click", function (ev) {
+      if (ev.target === overlay) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        return;
+      }
+      var closer = ev.target.closest("[data-scheme-picker-close]");
+      if (closer) {
+        ev.preventDefault();
+        closeSchemePicker();
+        return;
+      }
+      var btn = ev.target.closest("#damSchemeGrid [data-scheme-id]");
       if (!btn) return;
       applyScheme(btn.getAttribute("data-scheme-id"));
     });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key !== "Escape") return;
+      if (!isSchemePickerOpen()) return;
+      ev.preventDefault();
+      closeSchemePicker();
+    });
+    var openers = [
+      document.getElementById("damSchemeOpenPicker"),
+      document.getElementById("damSchemeCurrent"),
+    ];
+    openers.forEach(function (el) {
+      if (!el || el.getAttribute("data-dam-scheme-open-bound") === "1") return;
+      el.setAttribute("data-dam-scheme-open-bound", "1");
+      el.setAttribute("aria-expanded", "false");
+      el.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        openSchemePicker();
+      });
+    });
+    renderSchemeTiles();
+  }
+
+  function bindSchemeGrid() {
+    bindSchemePicker();
   }
 
   function bindSettings() {
@@ -954,5 +1114,8 @@
     bindSettings: bindSettings,
     renderSchemeTiles: renderSchemeTiles,
     syncSchemeTiles: syncSchemeTiles,
+    openSchemePicker: openSchemePicker,
+    closeSchemePicker: closeSchemePicker,
+    isSchemePickerOpen: isSchemePickerOpen,
   };
 })();

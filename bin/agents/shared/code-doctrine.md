@@ -2311,3 +2311,10 @@ mial chronic - dwa zapisy bez wersjonowania nadpisujace sie wzajemnie.
    Fix: kill python listenerow 8765/8766 (dowolne drzewo); karty = role=button +
    apply od razu; Auto nad Lokalna; `ensure_pg_config_ready` takze Programs\DAM.
    Dummy user nie kopiuje pg-config. Prawda = `%LOCALAPPDATA%\Programs\DAM\DAM.exe`.
+
+10. **2026-09-13 — zestawy Colorify na Wyglad (v6.0.7).**
+    41 kafelkow inline (`#damSchemeGrid` + `grid-template-columns: repeat(auto-fill, minmax(104px,1fr))`)
+    dawalo poszarpaną siatkę (9+2) i puste pole po prawej. User: osobne okienko,
+    2 kolumny na pełną szerokość dialogu, klik nie zamyka (żywy podgląd), zamyka
+    tylko X / Zamknij albo Esc. Klik w tło nakładki NIE zamyka. Overlay picker
+    `z-index:12300` (`#damSchemePickerOverlay`). Motyw i HSL zostają na karcie.

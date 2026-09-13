@@ -12998,15 +12998,60 @@ html[data-theme="dark"] .dam-theme-tune__row input[type="number"] {
 .dam-appearance-schemes {
   min-width: 0;
 }
+.dam-scheme-trigger-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+}
+#damSchemeCurrent.dam-scheme-current-tile {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 280px;
+}
+#damSchemeOpenPicker {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
 .dam-scheme-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
+  width: 100%;
+}
+#damSchemePickerOverlay.dam-scheme-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12300;
+  display: none;
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 20px;
+  box-sizing: border-box;
+  background: rgba(8, 10, 16, 0.32);
+}
+#damSchemePickerOverlay.dam-scheme-picker-overlay.is-open {
+  display: flex;
+}
+#damSchemePickerOverlay .dam-scheme-picker-dialog {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--dam-surface-elevated, #fff);
+  color: var(--dam-text, #464255);
+  border: 1px solid var(--dam-border, #ececf2);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 .dam-scheme-tile {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
+  min-width: 0;
   min-height: 44px;
   padding: 8px;
   border: 1px solid var(--dam-border, #ececf2);

@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pl" dir="ltr" class="dam-booting">
 <head>
   <script src="./assets/js/dam-panic-reload.js?v=5.0.196"></script>
@@ -22,14 +22,14 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=5.0.198">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=6.0.6b">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=6.0.7">
   <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-accent.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-settings.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-integrations.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-integrations-settings.css?v=5.0.196">
-  <script src="./assets/js/dam-theme.js?v=6.0.6b"></script>
+  <script src="./assets/js/dam-theme.js?v=6.0.7"></script>
   <script src="./assets/js/dam-accent.js?v=5.0.196"></script>
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
 </head>
@@ -163,8 +163,13 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
             </div>
             <div class="dam-sw-block dam-appearance-schemes">
               <p class="dam-sw-block__label">Zestawy kolorystyczne</p>
-              <p class="dam-accent-note">Kafelek ustawia tło, powierzchnię, akcent i tekst razem. Motyw jasny / ciemny / jak system zostaje. Kropki akcentu poniżej tylko nadpisują kolor po wyborze zestawu.</p>
-              <div id="damSchemeGrid" class="dam-scheme-groups" role="listbox" aria-label="Zestawy kolorystyczne"></div>
+              <p class="dam-accent-note">Aktualny zestaw na karcie. Pełna lista w osobnym oknie: klikasz kafelek, panel zmienia się od razu, okno zostaje otwarte aż zamkniesz je ręcznie (Zamknij albo Esc). Motyw jasny / ciemny zostaje na tej stronie. Kropki akcentu poniżej tylko nadpisują kolor po wyborze zestawu.</p>
+              <div class="dam-scheme-trigger-row">
+                <button type="button" id="damSchemeCurrent" class="dam-scheme-tile dam-scheme-current-tile" aria-haspopup="dialog" aria-controls="damSchemePickerOverlay" aria-expanded="false"></button>
+                <button type="button" class="dam-sw-btn dam-sw-btn--primary" id="damSchemeOpenPicker" aria-haspopup="dialog" aria-controls="damSchemePickerOverlay" aria-expanded="false">
+                  Wybierz zestaw
+                </button>
+              </div>
             </div>
             <div class="dam-appearance-tune">
                 <div class="dam-sw-block">
@@ -547,7 +552,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-api.js?v=6.0.0"></script>
   <script src="./assets/js/dam-i18n.js?v=5.0.196"></script>
   <script src="./assets/js/dam-runtime.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-version.js?v=6.0.6"></script>
+  <script src="./assets/js/dam-version.js?v=6.0.7"></script>
 	<script src="./assets/js/dam-shell.js?v=6.0.4"></script>
   <script src="./assets/js/dam-loader.js?v=5.0.196"></script>
   <script src="./assets/js/dam-tooltips.js?v=5.0.196"></script>
@@ -559,7 +564,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-danger.js?v=5.0.196"></script>
   <script src="./assets/js/dam-fmcg-catalog.js?v=5.0.196"></script>
   <script src="./assets/js/dam-integrations.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-settings.js?v=6.0.6b"></script>
+  <script src="./assets/js/dam-settings.js?v=6.0.7"></script>
   <script src="./assets/js/dam-device-paths.js?v=5.0.196"></script>
   <style id="damDangerZoneCss">
     /* Pełna szerokość w siatce 12-col (bez .dam-sw--danger w dam-settings.css) */

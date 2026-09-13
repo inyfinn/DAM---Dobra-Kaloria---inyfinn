@@ -1,3 +1,16 @@
+## 2026-09-13 - v6.0.7 scheme picker overlay (facts, bez PASS)
+
+**Komenda/Akcja:** 41 kafelkow z karty Wyglad do osobnego okna. 2 kolumny, klik nie zamyka. Commit + push + instalator.
+
+**Log/Status:**
+- Trigger: `#damSchemeCurrent` + `#damSchemeOpenPicker` (Wybierz zestaw). Grid `#damSchemeGrid` tylko w `#damSchemePickerOverlay`.
+- Overlay z-index 12300. Klik kafla = live apply, dialog zostaje. Zamknij/X/Esc zamyka. Klik tla NIE zamyka.
+- Grid CSS: `grid-template-columns: minmax(0,1fr) minmax(0,1fr)`. CDP col1=col2=234px.
+- PNG: `bin/docs/project/qa-6.0.7-scheme-picker.png` 150740 B; `qa-6.0.7-scheme-picker-open.png` 172367 B.
+- Wersja 6.0.7. Cache `?v=6.0.7` dam-theme.js / dam-brand.css.
+
+**Zrodla:** dam-theme.js, dam-brand.css, settings.html
+
 ## 2026-09-13 - v6.0.6: zestawy Colorify jako kafelki (facts, bez PASS)
 
 **Komenda/Akcja:** User FAIL: screenshot nadal 8 kropek akcentu. Worker: import ALL Colorify schemes jako TILES. HSL max 50%. Bez git commit/push.
